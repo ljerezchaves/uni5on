@@ -1,0 +1,76 @@
+# -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
+
+import os
+from waflib import Logs, Options
+from waflib.Errors import WafError
+
+
+def options(opt):
+    opt.add_option('--with-cplex',
+        help=('Path to cplex installation directory'),
+        default='', dest='with_cplex')
+
+def configure(conf):
+    if not Options.options.with_cplex:
+        conf.msg("Checking for cplex location", False)
+        conf.report_optional_feature("cplex", "NS-3 cplex integration", False,
+                                     "Cplex not enabled (see option --with-cplex)")
+        conf.env.MODULES_NOT_BUILT.append('cplex')
+        return
+
+    if os.path.isdir(Options.options.with_cplex):
+            conf.msg("Checking for cplex location", ("%s (given)" % Options.options.with_cplex))
+            conf.env.WITH_CPLEX = os.path.abspath(Options.options.with_cplex)
+        
+    if not conf.env.WITH_CPLEX:
+        conf.msg("Checking for cplex location", False)
+        conf.report_optional_feature("cplex", "NS-3 cplex integration", False,
+                                     "Cplex location not found (see option --with-cplex)")
+        conf.env.MODULES_NOT_BUILT.append('cplex')
+        return 
+
+    # Checking for libraries and configuring paths
+    conf.env.M = conf.check(mandatory=True, lib='m', define_name='M', uselib_store='M')
+    conf.env.PTHREAD = conf.check(mandatory=True, lib='pthread', define_name='PTHREAD', uselib_store='PTHREAD')
+    conf.env.CONCERT = conf.check(mandatory=True, lib='concert', 
+            libpath=os.path.abspath(os.path.join(conf.env['WITH_CPLEX'],'concert/lib/x86-64_linux/static_pic')), 
+            uselib_store='CONCERT')
+    conf.env.CPLEX = conf.check(mandatory=True, lib='cplex', 
+            libpath=os.path.abspath(os.path.join(conf.env['WITH_CPLEX'],'cplex/lib/x86-64_linux/static_pic')), 
+            uselib_store='CPLEX')
+
+    conf.env.DEFINES_CPLEX = ['NDEBUG', 'IL_STD']
+    conf.env.CXXFLAGS_CPLEX = ['-m64', '-O', '-fPIC', '-fno-strict-aliasing', '-fexceptions']
+    conf.env.LIB_CPLEX = ['m', 'pthread']
+    conf.env.STLIB_CPLEX = ['concert', 'ilocplex', 'cplex']
+    conf.env.INCLUDES_CPLEX = [
+            os.path.abspath(os.path.join(conf.env['WITH_CPLEX'],'cplex/include/')),
+            os.path.abspath(os.path.join(conf.env['WITH_CPLEX'],'concert/include/'))];
+   
+    conf.report_optional_feature("cplex", "NS-3 cplex integration",
+            conf.env.CPLEX, "libraries not found")
+    
+    if not conf.env.CPLEX:
+        conf.env.MODULES_NOT_BUILT.append('cplex')
+
+
+def build(bld):
+    # Don't do anything for this module if ofswitch13's not enabled.
+    if 'cplex' in bld.env.MODULES_NOT_BUILT:
+        return
+
+    module = bld.create_ns3_module('cplex', ['core'])
+    module.source = [
+        'model/cplex.cc',
+        ]
+    module.use.extend('CPLEX'.split())
+    module.use.extend('CONCERT'.split())
+
+    headers = bld(features='ns3header')
+    headers.module = 'cplex'
+    headers.source = [
+        'model/cplex.h',
+        ]
+
+    if bld.env['ENABLE_EXAMPLES']:
+        bld.recurse('examples')
