@@ -39,7 +39,8 @@ def configure(conf):
             libpath=os.path.abspath(os.path.join(conf.env['WITH_CPLEX'],'cplex/lib/x86-64_linux/static_pic')), 
             uselib_store='CPLEX')
 
-    conf.env.DEFINES_CPLEX = ['NDEBUG', 'IL_STD']
+#conf.env.DEFINES_CPLEX = ['NDEBUG', 'IL_STD']
+    conf.env.DEFINES_CPLEX = ['IL_STD']
     conf.env.CXXFLAGS_CPLEX = ['-m64', '-O', '-fPIC', '-fno-strict-aliasing', '-fexceptions']
     conf.env.LIB_CPLEX = ['m', 'pthread']
     conf.env.STLIB_CPLEX = ['concert', 'ilocplex', 'cplex']
@@ -61,7 +62,7 @@ def build(bld):
 
     module = bld.create_ns3_module('cplex', ['core'])
     module.source = [
-        'model/cplex.cc',
+        'model/cplex-ring-routing.cc',
         ]
     module.use.extend('CPLEX'.split())
     module.use.extend('CONCERT'.split())
@@ -69,7 +70,7 @@ def build(bld):
     headers = bld(features='ns3header')
     headers.module = 'cplex'
     headers.source = [
-        'model/cplex.h',
+        'model/cplex-ring-routing.h',
         ]
 
     if bld.env['ENABLE_EXAMPLES']:
