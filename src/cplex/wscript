@@ -62,7 +62,8 @@ def build(bld):
 
     module = bld.create_ns3_module('cplex', ['core'])
     module.source = [
-        'model/cplex-ring-routing.cc',
+        'model/cplex-generic-ring-routing.cc',
+        'model/cplex-lte-ring-routing.cc',
         ]
     module.use.extend('CPLEX'.split())
     module.use.extend('CONCERT'.split())
@@ -70,7 +71,8 @@ def build(bld):
     headers = bld(features='ns3header')
     headers.module = 'cplex'
     headers.source = [
-        'model/cplex-ring-routing.h',
+        'model/cplex-generic-ring-routing.h',
+        'model/cplex-lte-ring-routing.h',
         ]
 
     if bld.env['ENABLE_EXAMPLES']:
