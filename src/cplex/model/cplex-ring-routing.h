@@ -24,8 +24,8 @@
  * Optimization Studio. The main purpose is to allow ns3 software to use LPI to
  * solve optimization problems.
  */
-#ifndef CPLEX_RING_ROUTING_H
-#define CPLEX_RING_ROUTING_H
+#ifndef CPLEX_GENERIC_RING_ROUTING_H
+#define CPLEX_GENERIC_RING_ROUTING_H
 
 #include <ns3/core-module.h>
 #include <ilcplex/ilocplex.h>
@@ -34,14 +34,19 @@ namespace ns3 {
 
 /**
  * \ingroup cplex
- * A Ring network routing problem solved by CPLEX. 
- * \see Networking Routing book, by Deep Medhi (Chapter 25)
+ * A generic ring network routing problem solved by CPLEX. This model can solve
+ * routing problems for bidirectional demands between any two pair of nodes
+ * i:j in the ring (only for i < j).
+ *
+ * \see Medhi, Deepankar; Ramasamy, Karthikeyan. Networking Routing:
+ * algorithms, protocols, and architectures book. 2nd ed. Morgan Kaufmann.
+ * (Chapter 25)
  */
-class CplexRingRouting : public Object
+class CplexGenericRingRouting : public Object
 {
 public:
-  CplexRingRouting ();          //!< Default constructor
-  virtual ~CplexRingRouting (); //!< Dummy destructor, see DoDipose
+  CplexGenericRingRouting ();          //!< Default constructor
+  virtual ~CplexGenericRingRouting (); //!< Dummy destructor, see DoDipose
 
   /**
    * Register this type.
@@ -52,11 +57,34 @@ public:
   /** Destructor implementation */
   virtual void DoDispose ();
 
+  /**
+   * Set the number of nodes in the ring.
+   * \param nodes The number of nodes.
+   */
+  void SetNodes (uint16_t nodes);
+
+  /**
+   * Add a new demand for pair i:j.
+   * \param i Source node index.
+   * \param j Destination node index.
+   * \param demand The demand between i and j.
+   */
+  void AddDemand (uint16_t i, uint16_t j, int demand);
+
+  /**
+   * Get the optimun route between nodes i and j.
+   * \param i Source node index.
+   * \param j Destination node index.
+   * \return 1 for clockwise routing, 0 for counterclockwise routing.
+   */
+  int GetRoute (uint16_t i, uint16_t j);
+
   /** Solve the LPI problem */
   void Solve ();
 
 private:
-  /** Compute the factorial of x.
+  /** 
+   * Compute the factorial of x.
    * \param x The integer x.
    * \return The x!.
    */
@@ -70,15 +98,14 @@ private:
   uint32_t Combinations (uint16_t n, uint16_t k);
 
   /**
-   * Convert the i,j indexes from a upper diagonal matrix of order n into a
-   * linear array index. This linear array stores only elements for i < j (it
+   * Convert the i,j indexes from a upper diagonal matrix of order m_nodes into
+   * a linear array index. This linear array stores only elements for i < j (it
    * igonres the main diagonal).
    * \param i The row index (starting in 0).
    * \param j The column index (starting in 0).
-   * \param n The matrix order (number of lines/columns).
    * \return The linear array index.
    */
-  uint32_t GetIndex (uint16_t i, uint16_t j, uint16_t n);
+  uint32_t GetIndex (uint16_t i, uint16_t j);
 
   /**
    * Computes the value of $\delta_{i,j}^{l}$ for pair i:j and link l. 
@@ -89,12 +116,16 @@ private:
    */
   uint8_t UsesLink (uint16_t i, uint16_t j, uint16_t link);
 
-
-  uint16_t m_nodes;         //!< The number of nodes in the ring.
-  uint64_t m_capacity;      //!< The link capacity connecting the nodes.
+  uint16_t m_nodes;           //!< The number of nodes in the ring.
+  uint64_t m_capacity;        //!< The link capacity connecting the nodes.
+  uint32_t m_nElements;       //!< Number of pairs i:j
+  bool m_solved;              //!< Indicates that the problem has been solved.
+  
+  std::vector<int> m_demands; //!< Traffic demands for each pair i:j
+  std::vector<int> m_routes;  //!< Optimal route for each pair i:j
 };
 
 }
 
-#endif /* CPLEX_RING_ROUTING_H */
+#endif /* CPLEX_GENERIC_RING_ROUTING_H */
 

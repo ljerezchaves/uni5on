@@ -18,69 +18,101 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "cplex-ring-routing.h"
+#include "cplex-generic-ring-routing.h"
 
 ILOSTLBEGIN
 
-NS_LOG_COMPONENT_DEFINE ("CplexRingRouting");
+NS_LOG_COMPONENT_DEFINE ("CplexGenericRingRouting");
 
 namespace ns3 {
 
-CplexRingRouting::CplexRingRouting ()
+CplexGenericRingRouting::CplexGenericRingRouting ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 }
 
-CplexRingRouting::~CplexRingRouting ()
+CplexGenericRingRouting::~CplexGenericRingRouting ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 }
 
 void
-CplexRingRouting::DoDispose ()
+CplexGenericRingRouting::DoDispose ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 }
 
 TypeId 
-CplexRingRouting::GetTypeId (void)
+CplexGenericRingRouting::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::CplexRingRouting")
+  static TypeId tid = TypeId ("ns3::CplexGenericRingRouting")
     .SetParent<Object> ()
-    .AddConstructor<CplexRingRouting> ()
-    .AddAttribute ("NumberNodes", 
+    .AddConstructor<CplexGenericRingRouting> ()
+    .AddAttribute ("NumberNodes",
                    "The number of nodes in the ring",
                    UintegerValue (4),
-                   MakeUintegerAccessor (&CplexRingRouting::m_nodes),
+                   MakeUintegerAccessor (&CplexGenericRingRouting::SetNodes),
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("LinkCapacity", 
-                   "The capacity of each link in the ring",
+                   "The capacity of each link in the ring (bps)",
                    UintegerValue (16),
-                   MakeUintegerAccessor (&CplexRingRouting::m_capacity),
+                   MakeUintegerAccessor (&CplexGenericRingRouting::m_capacity),
                    MakeUintegerChecker<uint32_t> ())
   ;
   return tid;
 }
 
+void
+CplexGenericRingRouting::SetNodes (uint16_t nodes)
+{
+  m_solved = false;
+  m_nodes = nodes;
+  m_nElements = Combinations (m_nodes, 2);
+  m_demands.clear ();
+  m_demands.reserve (m_nElements);
+  for (uint16_t i = 0; i < m_nElements; i++)
+    {
+      m_demands [i] = 0;
+    }
+
+  m_routes.clear ();
+  m_routes.reserve (m_nElements);
+}
+
+void
+CplexGenericRingRouting::AddDemand (uint16_t i, uint16_t j, int demand)
+{
+  if (i == j) return;
+  uint16_t index = i < j ? GetIndex (i, j) : GetIndex (j, i);
+  m_demands [index] += demand;
+}
+
+int
+CplexGenericRingRouting::GetRoute (uint16_t i, uint16_t j)
+{
+  NS_ASSERT_MSG (m_solved, "Routing not solved yet.");
+  return m_routes [GetIndex (i, j)];
+}
+
 uint32_t
-CplexRingRouting::GetIndex (uint16_t i, uint16_t j, uint16_t n)
+CplexGenericRingRouting::GetIndex (uint16_t i, uint16_t j)
 {
   NS_ASSERT_MSG (i < j, "Invalide values for i and j indexes");
-  return (uint32_t)((i * n + j)/*A*/ - (i + 1)/*B*/ - (i * (i + 1) / 2)/*C*/);
+  return (uint32_t)((i * m_nodes + j)/*A*/ - (i + 1)/*B*/ - (i * (i + 1) / 2)/*C*/);
   // Note:  A --> common conversion from matrix to array
   //        B --> for the non-used elements in line i
   //        C --> for the non-used elements in lines i-1 to line 0
 }
 
 uint8_t
-CplexRingRouting::UsesLink (uint16_t i, uint16_t j, uint16_t link)
+CplexGenericRingRouting::UsesLink (uint16_t i, uint16_t j, uint16_t link)
 {
   NS_ASSERT_MSG (i < j, "Invalide values for i and j indexes");
   return (i <= link && j > link);
 }
 
 uint64_t 
-CplexRingRouting::Factorial (uint32_t x)
+CplexGenericRingRouting::Factorial (uint32_t x)
 {
   uint64_t f = 1;
   uint32_t i;
@@ -90,14 +122,14 @@ CplexRingRouting::Factorial (uint32_t x)
 }
 
 uint32_t
-CplexRingRouting::Combinations (uint16_t n, uint16_t k)
+CplexGenericRingRouting::Combinations (uint16_t n, uint16_t k)
 {
   NS_ASSERT (n > 0 && n >= k);
   return (uint32_t)(Factorial (n) / ( Factorial (k) * Factorial (n - k)));
 }
 
 void
-CplexRingRouting::Solve ()
+CplexGenericRingRouting::Solve ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   
@@ -108,39 +140,41 @@ CplexRingRouting::Solve ()
       IloModel model (env);
       IloInt i, j, l;
       
-      IloInt nElements = Combinations (m_nodes, 2);
-
       // These decision variables represents the routing choice for each pair i:j
       // (clockwise or counterclockwise).
-      IloBoolVarArray clock   = IloBoolVarArray (env);
-      IloBoolVarArray counter = IloBoolVarArray (env);
+      IloBoolVarArray u  = IloBoolVarArray (env);
+      IloBoolVarArray uc = IloBoolVarArray (env);
       for (i = 0; i < m_nodes -1; i++) 
         {
           for (j = i + 1; j < m_nodes; j++)
             {
-              std::ostringstream u, uc;
-              u  << "U_"  << i+1 << j+1;
-              uc << "C_" << i+1 << j+1;
-              clock.add   (IloBoolVar (env, u.str().c_str()));
-              counter.add (IloBoolVar (env, uc.str().c_str()));
+              std::ostringstream un, ucn;
+              un  << "U_"  << i << j;
+              ucn << "Uc_" << i << j;
+              u.add  (IloBoolVar (env, un.str().c_str()));
+              uc.add (IloBoolVar (env, ucn.str().c_str()));
             }
         }
 
-      // Traffic demmand for each pair i:j (values from book example)
-      IloIntArray demmand = IloIntArray (env, nElements, 4, 4, 8, 4, 8, 8);
-
+      // Traffic demand for each pair i:j (values set by AddDemand ())
+      IloIntArray h = IloIntArray (env);
+      for (i = 0; i < m_nElements; i++)
+        {
+          h.add (IloInt (m_demands [i]));
+        }
+  
       // Objective function
       // Load balancing factor, which we want to minimize
-      IloNumVar load = IloNumVar (env, 0.0, IloInfinity, "r");
-      model.add (IloMinimize (env, load));
+      IloNumVar r = IloNumVar (env, 0.0, IloInfinity, "r");
+      model.add (IloMinimize (env, r));
 
       // Constraint: load must be non-negative
-      model.add (load >= 0.0);
+      model.add (r >= 0.0);
 
       // Constraint: only one path can be selected: clockwise or counterclockwise
-      for (i = 0; i < nElements; i++)
+      for (i = 0; i < m_nElements; i++)
         {
-          model.add (1 == clock [i] + counter [i]);
+          model.add (u [i] + uc [i] == 1);
         }
 
       // Constraint: cannot exceed link capacity
@@ -151,16 +185,16 @@ CplexRingRouting::Solve ()
             {
               for (j = i + 1; j < m_nodes; j++)
                 {
-                  exp += demmand [GetIndex (i, j, m_nodes)] * UsesLink (i, j, l) * clock [GetIndex (i, j, m_nodes)];
-                  exp += demmand [GetIndex (i, j, m_nodes)] * (1 - UsesLink (i, j, l)) * counter [GetIndex (i, j, m_nodes)];
+                  exp += h [GetIndex (i, j)] *      UsesLink (i, j, l)  * u  [GetIndex (i, j)];
+                  exp += h [GetIndex (i, j)] * (1 - UsesLink (i, j, l)) * uc [GetIndex (i, j)];
                 }
             }
-          model.add (exp <= 16 * load);
+          model.add (exp <= 16 * r);
         }
 
       // Optimize
       IloCplex cplex (model);
-      cplex.exportModel ("ringrouting.lp");
+      cplex.exportModel ("GenericRingRouting.lp");
       cplex.setOut (env.getNullStream());
       cplex.setWarning (env.getNullStream());
       cplex.solve ();
@@ -168,27 +202,20 @@ CplexRingRouting::Solve ()
       // Print results
       if (cplex.getStatus () == IloAlgorithm::Infeasible)
         {
-          env.out () << "No Solution" << endl;
+          NS_LOG_WARN ("No GenericRingRouting solution.");
         }
-      env.out () << "Load-balancing factor: " << cplex.getObjValue () << endl;
-      
-      for (i = 0; i < m_nodes -1; i++) 
+    
+      if (cplex.getObjValue () > 1)
         {
-          for (j = i + 1; j < m_nodes; j++)
-            {
-              env.out () << "For " << i+1 << " to " << j+1 << ": ";
-              if (cplex.getValue (clock[GetIndex (i, j, m_nodes)]))
-                {
-                  env.out () << "clockwise" << endl; 
-                }
-              else
-                {
-                  env.out () << "counterclockwise" << endl;
-                }
-
-            }
+          NS_LOG_WARN ("Traffic demand exceeds ring capacity.");
         }
 
+      // Saving results
+      m_solved = true;
+      for (i = 0; i < m_nElements; i++)
+        {
+          m_routes [i] = cplex.getValue (u[i]);
+        }
     }
   catch (IloException& ex) 
     {
