@@ -114,18 +114,18 @@ RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node)
 {
   NS_LOG_FUNCTION (this << node);
   
-  // Connect the SgwPgw to switch with higher index (m_nodes - 1) and other
-  // eNBs to switchs 0 through (m_nodes - 2), in turns. In the case of a single
-  // node in the ring, connect all gateways and eNBs to it. As we know that the
-  // OpenFlowEpcHelper will callback here first for SgwPgw node, we use the
-  // static counter to identify this node.
+  // Connect the SgwPgw to switch 0 and other eNBs to switchs 1 through m_nodes
+  // - 1, in turns. In the case of a single node in the ring, connect all
+  // gateways and eNBs to it. As we know that the OpenFlowEpcHelper will
+  // callback here first for SgwPgw node, we use the static counter to identify
+  // this node.
   static uint32_t counter = 0;
   
   uint16_t idx;   // switch index
   if (m_nodes == 1 || counter == 0 /* SgwPgw node */)
-    idx = m_nodes - 1;
+    idx = 0;
   else
-    idx = ((counter - 1) % (m_nodes - 1));
+    idx = 1 + ((counter - 1) % (m_nodes - 1));
   counter++;
   
   RegisterNodeAtSwitch (idx, node);
