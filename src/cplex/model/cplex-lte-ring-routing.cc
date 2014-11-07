@@ -40,6 +40,10 @@ void
 CplexLteRingRouting::DoDispose ()
 {
   NS_LOG_FUNCTION_NOARGS ();
+  m_demands.clear ();
+  m_nodeMap.clear ();
+  m_indexMap.clear ();
+  m_routes.clear ();
 }
 
 TypeId 
@@ -48,117 +52,122 @@ CplexLteRingRouting::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::CplexLteRingRouting")
     .SetParent<Object> ()
     .AddConstructor<CplexLteRingRouting> ()
-    .AddAttribute ("NumberNodes",
-                   "The number of nodes in the ring",
-                   UintegerValue (4),
-                   MakeUintegerAccessor (&CplexLteRingRouting::SetNodes),
+    .AddAttribute ("NumSwitches", 
+                   "The number of OpenFlow switches in the ring.",
+                   UintegerValue (3),
+                   MakeUintegerAccessor (&CplexLteRingRouting::SetNumNodes),
                    MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("LinkCapacity", 
-                   "The capacity of each link in the ring (bps)",
-                   UintegerValue (16),
-                   MakeUintegerAccessor (&CplexLteRingRouting::m_capacity),
-                   MakeUintegerChecker<uint32_t> ())
+    .AddAttribute ("LinkDataRate", 
+                   "The capacity of each link in the ring",
+                   DataRateValue (DataRate ("10Mb/s")),
+                   MakeDataRateAccessor (&CplexLteRingRouting::m_LinkDataRate),
+                   MakeDataRateChecker ())
   ;
   return tid;
 }
 
 void
-CplexLteRingRouting::SetNodes (uint16_t nodes)
+CplexLteRingRouting::SetNumNodes (uint16_t nodes)
 {
   m_solved = false;
   m_nodes = nodes;
-  m_nElements = Combinations (m_nodes, 2);
   m_demands.clear ();
-  m_demands.reserve (m_nElements);
-  for (uint16_t i = 0; i < m_nElements; i++)
-    {
-      m_demands [i] = 0;
-    }
-
-  m_routes.clear ();
-  m_routes.reserve (m_nElements);
+  m_nodeMap.clear ();
+  m_indexMap.clear ();
 }
 
 void
-CplexLteRingRouting::AddDemand (uint16_t i, uint16_t j, int demand)
+CplexLteRingRouting::AddFlowDemand (uint16_t node, uint32_t flow, 
+                                    DataRate demand)
 {
-  if (i == j) return;
-  uint16_t index = i < j ? GetIndex (i, j) : GetIndex (j, i);
-  m_demands [index] += demand;
+  NS_ASSERT (node > 0 && flow > 0);
+
+  // Insert the demmand into vector
+  m_demands.push_back (demand.GetBitRate ());
+  m_nodeMap.push_back (node);
+  uint32_t index = m_demands.size () - 1;
+  
+  // Map the node,flow to vector index
+  std::pair<uint16_t, uint32_t> key = std::make_pair (node, flow);
+  std::pair<IndexMap_t::iterator, bool> ret;
+  ret = m_indexMap.insert (std::make_pair (key, index)); 
+  if (ret.second == true) 
+    {
+      NS_LOG_DEBUG ("Including demand for node " << node << 
+                    ", flow " << flow << " of " << demand);
+      return;
+    }
+
+  NS_FATAL_ERROR ("Pair <node,flow> already exists.");
 }
 
-int
-CplexLteRingRouting::GetRoute (uint16_t i, uint16_t j)
+bool
+CplexLteRingRouting::GetSolution (uint16_t node, uint32_t flow)
 {
-  NS_ASSERT_MSG (m_solved, "Routing not solved yet.");
-  return m_routes [GetIndex (i, j)];
+  NS_ASSERT (m_solved);
+
+  uint32_t index = GetNodeFlowIndex (node, flow);
+  return m_routes [index] ? true : false;
 }
 
 uint32_t
-CplexLteRingRouting::GetIndex (uint16_t i, uint16_t j)
+CplexLteRingRouting::GetNodeFlowIndex (uint16_t node, uint32_t flow)
 {
-  NS_ASSERT_MSG (i < j, "Invalide values for i and j indexes");
-  return (uint32_t)((i * m_nodes + j)/*A*/ - (i + 1)/*B*/ - (i * (i + 1) / 2)/*C*/);
-  // Note:  A --> common conversion from matrix to array
-  //        B --> for the non-used elements in line i
-  //        C --> for the non-used elements in lines i-1 to line 0
+  NS_ASSERT (node > 0 && flow > 0);
+
+  std::pair<uint16_t, uint32_t> key = std::make_pair (node, flow);
+  IndexMap_t::iterator ret;
+  ret = m_indexMap.find (key); 
+  if (ret != m_indexMap.end ()) 
+    {
+      return ret->second;
+    }
+  
+  NS_FATAL_ERROR ("Pair <node,flow> does not exists.");
 }
 
 uint8_t
-CplexLteRingRouting::UsesLink (uint16_t i, uint16_t j, uint16_t link)
+CplexLteRingRouting::UsesLink (uint16_t node, uint16_t link)
 {
-  NS_ASSERT_MSG (i < j, "Invalide values for i and j indexes");
-  return (i <= link && j > link);
-}
+  NS_ASSERT (node > 0); 
 
-uint64_t 
-CplexLteRingRouting::Factorial (uint32_t x)
-{
-  uint64_t f = 1;
-  uint32_t i;
-  for (i = 1; i <= x; i++)
-    f = f * i;
-  return f;
-}
-
-uint32_t
-CplexLteRingRouting::Combinations (uint16_t n, uint16_t k)
-{
-  NS_ASSERT (n > 0 && n >= k);
-  return (uint32_t)(Factorial (n) / ( Factorial (k) * Factorial (n - k)));
+  // The gateway node is always node 0, and the nodes are diposed in the ring
+  // following clockwise order. 
+  return (node <= link);
 }
 
 void
-CplexLteRingRouting::Solve ()
+CplexLteRingRouting::SolveLoadBalancing ()
 {
   NS_LOG_FUNCTION_NOARGS ();
+  m_solved = false;
+  m_routes.clear ();
   
   // Create the environment
   IloEnv env;   
   try 
     {
       IloModel model (env);
-      IloInt i, j, l;
+      IloNum c = m_LinkDataRate.GetBitRate ();
+      IloNum size = m_demands.size ();
+      IloNum i, l;
       
-      // These decision variables represents the routing choice for each pair i:j
-      // (clockwise or counterclockwise).
+      // These decision variables represents the routing choice for each pair
+      // <node,flow> (clockwise or counterclockwise).
       IloBoolVarArray u  = IloBoolVarArray (env);
       IloBoolVarArray uc = IloBoolVarArray (env);
-      for (i = 0; i < m_nodes -1; i++) 
+      for (i = 0; i < size; i++) 
         {
-          for (j = i + 1; j < m_nodes; j++)
-            {
-              std::ostringstream un, ucn;
-              un  << "U_"  << i << j;
-              ucn << "Uc_" << i << j;
-              u.add  (IloBoolVar (env, un.str().c_str()));
-              uc.add (IloBoolVar (env, ucn.str().c_str()));
-            }
+          std::ostringstream un, ucn;
+          un  << "U_"  << i;
+          ucn << "Uc_" << i;
+          u.add  (IloBoolVar (env, un.str().c_str()));
+          uc.add (IloBoolVar (env, ucn.str().c_str()));
         }
 
-      // Traffic demand for each pair i:j (values set by AddDemand ())
+      // Traffic demand for each pair <node,flow> (set by AddFlowDemand ())
       IloIntArray h = IloIntArray (env);
-      for (i = 0; i < m_nElements; i++)
+      for (i = 0; i < size; i++)
         {
           h.add (IloInt (m_demands [i]));
         }
@@ -171,8 +180,8 @@ CplexLteRingRouting::Solve ()
       // Constraint: load must be non-negative
       model.add (r >= 0.0);
 
-      // Constraint: only one path can be selected: clockwise or counterclockwise
-      for (i = 0; i < m_nElements; i++)
+      // Constraint: only one path can be used: clockwise or counterclockwise
+      for (i = 0; i < size; i++)
         {
           model.add (u [i] + uc [i] == 1);
         }
@@ -181,20 +190,17 @@ CplexLteRingRouting::Solve ()
       for (l = 0; l < m_nodes; l++)
         {
           IloExpr exp (env);
-          for (i = 0; i < m_nodes -1; i++) 
+          for (i = 0; i < size; i++) 
             {
-              for (j = i + 1; j < m_nodes; j++)
-                {
-                  exp += h [GetIndex (i, j)] *      UsesLink (i, j, l)  * u  [GetIndex (i, j)];
-                  exp += h [GetIndex (i, j)] * (1 - UsesLink (i, j, l)) * uc [GetIndex (i, j)];
-                }
+              exp += h[i] *      UsesLink (m_nodeMap[i], l)  *  u[i];
+              exp += h[i] * (1 - UsesLink (m_nodeMap[i], l)) * uc[i];
             }
-          model.add (exp <= 16 * r);
+          model.add (exp <= c * r);
         }
 
       // Optimize
       IloCplex cplex (model);
-      cplex.exportModel ("LTERingRouting.lp");
+      cplex.exportModel ("RingLoadBalancing.lp");
       cplex.setOut (env.getNullStream());
       cplex.setWarning (env.getNullStream());
       cplex.solve ();
@@ -202,19 +208,20 @@ CplexLteRingRouting::Solve ()
       // Print results
       if (cplex.getStatus () == IloAlgorithm::Infeasible)
         {
-          NS_LOG_WARN ("No LTERingRouting solution.");
+          NS_FATAL_ERROR ("No LTERingRouting solution.");
         }
-    
+      
+      NS_LOG_DEBUG ("Load-balancing factor: " << cplex.getObjValue ());
       if (cplex.getObjValue () > 1)
         {
-          NS_LOG_WARN ("Traffic demand exceeds ring capacity.");
+          NS_LOG_ERROR ("Traffic demand exceeds ring capacity.");
         }
 
       // Saving results
       m_solved = true;
-      for (i = 0; i < m_nElements; i++)
+      for (i = 0; i < size; i++)
         {
-          m_routes [i] = cplex.getValue (u[i]);
+          m_routes.push_back (cplex.getValue (u[i]));
         }
     }
   catch (IloException& ex) 

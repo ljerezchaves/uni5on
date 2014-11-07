@@ -60,7 +60,7 @@ def build(bld):
     if 'cplex' in bld.env.MODULES_NOT_BUILT:
         return
 
-    module = bld.create_ns3_module('cplex', ['core'])
+    module = bld.create_ns3_module('cplex', ['core', 'network'])
     module.source = [
         'model/cplex-generic-ring-routing.cc',
         'model/cplex-lte-ring-routing.cc',

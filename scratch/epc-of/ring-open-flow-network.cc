@@ -81,7 +81,7 @@ RingOpenFlowNetwork::CreateInternalTopology ()
   // If the number of nodes in the ring is 1, return with no links
   if (m_nodes == 1) return;
 
-  // Connecting switches in ring topology
+  // Connecting switches in ring topology (clockwise order)
   // FIXME Just for now, avoid loops... (i < m_nodes)
   for (uint16_t i = 0; i < m_nodes - 1; i++)
     {

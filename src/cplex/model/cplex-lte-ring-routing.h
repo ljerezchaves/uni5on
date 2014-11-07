@@ -21,8 +21,9 @@
 #ifndef CPLEX_LTE_RING_ROUTING_H
 #define CPLEX_LTE_RING_ROUTING_H
 
-#include <ns3/core-module.h>
 #include <ilcplex/ilocplex.h>
+#include <ns3/core-module.h>
+#include <ns3/data-rate.h>
 
 namespace ns3 {
 
@@ -51,68 +52,60 @@ public:
    * Set the number of nodes in the ring.
    * \param nodes The number of nodes.
    */
-  void SetNodes (uint16_t nodes);
+  void SetNumNodes (uint16_t nodes);
 
   /**
-   * Add a new demand for pair i:j.
-   * \param i Source node index.
-   * \param j Destination node index.
-   * \param demand The demand between i and j.
+   * Add a new flow demand for pair <node,flow>.
+   * \param node Source node index.
+   * \param flow Flow identifier.
+   * \param demand The data rate demand.
    */
-  void AddDemand (uint16_t i, uint16_t j, int demand);
+  void AddFlowDemand (uint16_t node, uint32_t flow, DataRate demand);
 
   /**
-   * Get the optimun route between nodes i and j.
-   * \param i Source node index.
-   * \param j Destination node index.
-   * \return 1 for clockwise routing, 0 for counterclockwise routing.
+   * Get the optimun route for pair <node,flow>.
+   * \param node Node index.
+   * \param flow Flow identifier.
+   * \return true for clockwise routing, false otherwise.
    */
-  int GetRoute (uint16_t i, uint16_t j);
+  bool GetSolution (uint16_t node, uint32_t flow);
 
-  /** Solve the LPI problem */
-  void Solve ();
+  /** 
+   * Solve the load-balancing optimization problem 
+   */
+  void SolveLoadBalancing ();
 
 private:
-  /** 
-   * Compute the factorial of x.
-   * \param x The integer x.
-   * \return The x!.
-   */
-  uint64_t Factorial (uint32_t x);
-
-  /** Compute the number of k-combinations in a set of n elements.
-   * \param n The number of elements n.
-   * \param k The k factor.
-   * \return The number of k-combinations.
-   */
-  uint32_t Combinations (uint16_t n, uint16_t k);
-
   /**
-   * Convert the i,j indexes from a upper diagonal matrix of order m_nodes into
-   * a linear array index. This linear array stores only elements for i < j (it
-   * igonres the main diagonal).
+   * Returns the vector index for the i,j indexes from a upper diagonal matrix
+   * of order m_nodes into a linear array index. This linear array stores only
+   * elements for i < j (it igonres the main diagonal).
    * \param i The row index (starting in 0).
    * \param j The column index (starting in 0).
-   * \return The linear array index.
+   * \return The vector index for pair node,flow.
    */
-  uint32_t GetIndex (uint16_t i, uint16_t j);
-
-  /**
-   * Computes the value of $\delta_{i,j}^{l}$ for pair i:j and link l. 
-   * \param i The source node index.
-   * \param j The destination node index.
-   * \param l The link connection node l to l + 1
-   * \returns 1 if the link l will be used in clockwise routing, 0 otherwise.
-   */
-  uint8_t UsesLink (uint16_t i, uint16_t j, uint16_t link);
-
-  uint16_t m_nodes;           //!< The number of nodes in the ring.
-  uint64_t m_capacity;        //!< The link capacity connecting the nodes.
-  uint32_t m_nElements;       //!< Number of pairs i:j
-  bool m_solved;              //!< Indicates that the problem has been solved.
+  uint32_t GetNodeFlowIndex (uint16_t node, uint32_t flow);
   
-  std::vector<int> m_demands; //!< Traffic demands for each pair i:j
-  std::vector<int> m_routes;  //!< Optimal route for each pair i:j
+  /**
+   * For a node index, this function computes the delta value, which indicates
+   * if the traffic in clockwise direction from node to gateway will use the
+   * link 'link'. 
+   * \param node The node index.
+   * \param link The link connection node 'link' to 'link + 1'.
+   * \returns 1 if true (will use link 'link'), 0 otherwise.
+   */
+  uint8_t UsesLink (uint16_t node, uint16_t link);
+
+  /** Mapping pair <node,flow> to linear index */
+  typedef std::map<std::pair<uint16_t, uint32_t>, uint32_t> IndexMap_t;
+  
+  uint16_t              m_nodes;        //!< The number of nodes in the ring.
+  DataRate              m_LinkDataRate; //!< The link data rate connecting the nodes.
+  bool                  m_solved;       //!< Indicates that the problem has been solved.
+  std::vector<uint64_t> m_demands;      //!< Traffic demand for each pair <node,flow>
+  std::vector<uint16_t> m_nodeMap;      //!< Map traffic demand to node index
+  std::vector<int>      m_routes;       //!< Optimal route for each pair <node,flow>
+  IndexMap_t            m_indexMap;     //!< Maps each pair <node,flow> to m_demands vector index
 };
 
 }
