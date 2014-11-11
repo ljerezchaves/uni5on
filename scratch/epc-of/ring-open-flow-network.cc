@@ -82,21 +82,35 @@ RingOpenFlowNetwork::CreateInternalTopology ()
   if (m_nodes == 1) return;
 
   // Connecting switches in ring topology (clockwise order)
-  // FIXME Just for now, avoid loops... (i < m_nodes)
-  for (uint16_t i = 0; i < m_nodes - 1; i++)
+  for (uint16_t i = 0; i < m_nodes; i++)
     {
-      int left = i % m_nodes;
-      int right = (i+1) % m_nodes;
+      int currentIndex = i;
+      int nextIndex = (i + 1) % m_nodes;  // In clockwise direction
 
       NodeContainer pair;
-      pair.Add (m_ofSwitches.Get (left));
-      pair.Add (m_ofSwitches.Get (right));
-
+      pair.Add (m_ofSwitches.Get (currentIndex));
+      pair.Add (m_ofSwitches.Get (nextIndex));
       NetDeviceContainer devs = m_ofCsmaHelper.Install (pair);
-      
-      // Adding csma switch ports to openflow devices
-      DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (left))->AddSwitchPort (devs.Get (0));
-      DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (right))->AddSwitchPort (devs.Get (1));
+    
+      // Adding csma switch ports to openflow devices.
+      Ptr<OFSwitch13NetDevice> currentDevice = DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (currentIndex));
+      int currentPort = currentDevice->AddSwitchPort (devs.Get (0));
+
+      Ptr<OFSwitch13NetDevice> nextDevice = DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (nextIndex));
+      int nextPort = nextDevice->AddSwitchPort (devs.Get (1));
+
+      // Installing default groups for EpcSdnController
+      // Group #1 is used to send packets from current switch to the next one
+      // in clockwise direction.
+      std::ostringstream currentCmd;
+      currentCmd << "group-mod cmd=add,type=ind,group=1 weight=0,port=any,group=any output=" << currentPort;
+      DynamicCast<EpcSdnController> (m_ofCtrlApp)->ScheduleCommand (currentDevice, currentCmd.str ());
+                                       
+      // Group #2 is used to send packets from the next switch to the current
+      // one in counterclockwise direction. 
+      std::ostringstream nextCmd;
+      nextCmd << "group-mod cmd=add,type=ind,group=2 weight=0,port=any,group=any output=" << nextPort;
+      DynamicCast<EpcSdnController> (m_ofCtrlApp)->ScheduleCommand (nextDevice, nextCmd.str ());
     }
 }
 

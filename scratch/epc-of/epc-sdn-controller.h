@@ -30,7 +30,7 @@ namespace ns3 {
 /**
  * Implementação do controlador para o EPC.
  */
-class EpcSdnController : public LearningController
+class EpcSdnController : public OFSwitch13Controller
 {
 public:
   EpcSdnController ();          //!< Default constructor
@@ -47,6 +47,42 @@ public:
 
   // typedef Callback<uint8_t, const uint64_t, const Ptr<EpcTft>, const EpsBearer> AddBearerCallback_t;
   uint8_t AddBearer (uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer);
+
+  /**
+   * Save a Dpctl command to be executed just after the conection stablishment
+   * between switch and controller. 
+   * \param textCmd The Dpctl command.
+   * \param device The Switch OFSwitch13NetDevice pointer.
+   */
+  void ScheduleCommand (Ptr<OFSwitch13NetDevice> device, const std::string textCmd);
+
+  /**
+   * Handle packet-in messages sent from switch to this controller. Look for L2
+   * switching information, update the structures and send a packet-out back.
+   * \param msg The packet-in message.
+   * \param swtch The switch information.
+   * \param xid Transaction id.
+   * \return 0 if everything's ok, otherwise an error number.
+   */
+  ofl_err HandlePacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, uint32_t xid);
+
+  /**
+   * Handle flow removed messages sent from switch to this controller. Look for L2
+   * switching information and removes associated entry.
+   * \param msg The flow removed message.
+   * \param swtch The switch information.
+   * \param xid Transaction id.
+   * \return 0 if everything's ok, otherwise an error number.
+   */
+  ofl_err HandleFlowRemoved (ofl_msg_flow_removed *msg, SwitchInfo swtch, uint32_t xid);
+
+private:
+  void ConnectionStarted (SwitchInfo swtch); //!< TCP connection callback
+
+  /** Multimap between device pointer and dpctl command */
+  typedef std::multimap<Ptr<OFSwitch13NetDevice>, std::string> DevCmdMap_t; 
+
+  DevCmdMap_t m_schedCommands; //!< Map of scheduled dpctl commands to be executed.
 };
 
 };  // namespace ns3
