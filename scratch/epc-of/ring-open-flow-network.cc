@@ -19,7 +19,6 @@
  */
 
 #include "ring-open-flow-network.h"
-#include "epc-sdn-controller.h"
 
 NS_LOG_COMPONENT_DEFINE ("RingOpenFlowNetwork");
 
@@ -27,9 +26,20 @@ namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (RingOpenFlowNetwork);
 
+// Initializing RingOpenFlowNetwork static members
+uint16_t RingOpenFlowNetwork::m_flowPrio = 2048;
+
 RingOpenFlowNetwork::RingOpenFlowNetwork ()
 {
   NS_LOG_FUNCTION_NOARGS ();
+  
+  // since we are using the OpenFlow network for S1-U links,
+  // we use a /16 subnet which can hold up to 254 eNBs addresses on same subnet
+  m_s1uIpv4AddressHelper.SetBase ("10.0.0.0", "255.255.255.0");
+
+  // we are also using the OpenFlow network for all X2 links, 
+  // but we still we use a /30 subnet which can hold exactly two addresses
+  m_x2Ipv4AddressHelper.SetBase ("12.0.0.0", "255.255.255.252");
 }
 
 RingOpenFlowNetwork::~RingOpenFlowNetwork ()
@@ -48,6 +58,21 @@ RingOpenFlowNetwork::GetTypeId (void)
                    UintegerValue (3),
                    MakeUintegerAccessor (&RingOpenFlowNetwork::m_nodes),
                    MakeUintegerChecker<uint16_t> ())
+    .AddAttribute ("LinkDataRate", 
+                   "The data rate to be used for the CSMA OpenFlow links to be created",
+                   DataRateValue (DataRate ("10Mb/s")),
+                   MakeDataRateAccessor (&RingOpenFlowNetwork::m_LinkDataRate),
+                   MakeDataRateChecker ())
+    .AddAttribute ("LinkDelay", 
+                   "The delay to be used for the CSMA OpenFlow links to be created",
+                   TimeValue (Seconds (0.01)),
+                   MakeTimeAccessor (&RingOpenFlowNetwork::m_LinkDelay),
+                   MakeTimeChecker ())
+    .AddAttribute ("LinkMtu", 
+                   "The MTU for CSMA OpenFlow links. Use at least 1500 bytes.",
+                   UintegerValue (2000),
+                   MakeUintegerAccessor (&RingOpenFlowNetwork::m_LinkMtu),
+                   MakeUintegerChecker<uint16_t> ())
   ;
   return tid; 
 }
@@ -58,6 +83,7 @@ RingOpenFlowNetwork::DoDispose ()
   NS_LOG_FUNCTION_NOARGS ();
   OpenFlowEpcNetwork::DoDispose ();
   Object::DoDispose ();
+  m_epcSdnApp = 0;
 }
 
 void
@@ -66,94 +92,149 @@ RingOpenFlowNetwork::CreateInternalTopology ()
   NS_LOG_FUNCTION (this);
   NS_ASSERT_MSG (m_nodes >= 1, "Invalid number of nodes for the ring");
 
-  // Creating switch nodes
+  m_epcSdnApp = DynamicCast<EpcSdnController> (m_ofCtrlApp);
+
+  // Creating the switch nodes
   m_ofSwitches.Create (m_nodes);
   for (uint16_t i = 0; i < m_nodes; i++)
     {
+      // Setting switch names
       std::ostringstream swName;
       swName << "sw" << i;
       Names::Add (swName.str(), m_ofSwitches.Get (i));
     }
 
-  // Creating the switch devices for each switch node
+  // Installing the Openflow switch devices for each switch node
   m_ofDevices = m_ofHelper.InstallSwitchesWithoutPorts (m_ofSwitches);
 
   // If the number of nodes in the ring is 1, return with no links
   if (m_nodes == 1) return;
 
+  // Configuring csma links to connect the switches
+  m_ofCsmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_LinkDataRate));
+  m_ofCsmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_LinkMtu));
+  m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_LinkDelay));
+
   // Connecting switches in ring topology (clockwise order)
   for (uint16_t i = 0; i < m_nodes; i++)
     {
       int currentIndex = i;
-      int nextIndex = (i + 1) % m_nodes;  // In clockwise direction
+      int nextIndex = (i + 1) % m_nodes;  // Next node in clockwise direction
 
+      // Creating a link between current and next node
       NodeContainer pair;
       pair.Add (m_ofSwitches.Get (currentIndex));
       pair.Add (m_ofSwitches.Get (nextIndex));
       NetDeviceContainer devs = m_ofCsmaHelper.Install (pair);
     
-      // Adding csma switch ports to openflow devices.
+      // Adding newly created csma devices as openflow switch ports.
       Ptr<OFSwitch13NetDevice> currentDevice = DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (currentIndex));
       int currentPort = currentDevice->AddSwitchPort (devs.Get (0));
 
       Ptr<OFSwitch13NetDevice> nextDevice = DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (nextIndex));
       int nextPort = nextDevice->AddSwitchPort (devs.Get (1));
 
-      // Installing default groups for EpcSdnController
-      // Group #1 is used to send packets from current switch to the next one
-      // in clockwise direction.
+      // Installing default groups for EpcSdnController ring routing
+      // Group #1 is used to send packets from current switch to the next one in clockwise direction.
       std::ostringstream currentCmd;
       currentCmd << "group-mod cmd=add,type=ind,group=1 weight=0,port=any,group=any output=" << currentPort;
-      DynamicCast<EpcSdnController> (m_ofCtrlApp)->ScheduleCommand (currentDevice, currentCmd.str ());
+      m_epcSdnApp->ScheduleCommand (currentDevice, currentCmd.str ());
                                        
-      // Group #2 is used to send packets from the next switch to the current
-      // one in counterclockwise direction. 
+      // Group #2 is used to send packets from the next switch to the current one in counterclockwise direction. 
       std::ostringstream nextCmd;
       nextCmd << "group-mod cmd=add,type=ind,group=2 weight=0,port=any,group=any output=" << nextPort;
-      DynamicCast<EpcSdnController> (m_ofCtrlApp)->ScheduleCommand (nextDevice, nextCmd.str ());
+      m_epcSdnApp->ScheduleCommand (nextDevice, nextCmd.str ());
     }
-}
-
-void
-RingOpenFlowNetwork::RegisterNodeAtSwitch (uint8_t swtch, Ptr<Node> node)
-{
-  uint32_t nodeId = node->GetId ();
-  m_nodeSwitchMap [nodeId];   // this creates a new entry if nodeId doesn't exist in the map
-  std::map<uint32_t, uint8_t>::iterator i = m_nodeSwitchMap.find (nodeId);
-  i->second = swtch;
 }
 
 Ptr<NetDevice>
 RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node)
 {
   NS_LOG_FUNCTION (this << node);
+  NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
   
-  // Connect the SgwPgw to switch 0 and other eNBs to switchs 1 through m_nodes
-  // - 1, in turns. In the case of a single node in the ring, connect all
-  // gateways and eNBs to it. As we know that the OpenFlowEpcHelper will
-  // callback here first for SgwPgw node, we use the static counter to identify
-  // this node.
+  // Connect SgwPgw node to switch index 0 and other eNBs to switchs indexes 1
+  // through m_nodes - 1, in turns. In the case of a single node in the ring,
+  // connect all gateways and eNBs to it. As we know that the OpenFlowEpcHelper
+  // will callback here first for SgwPgw node, we use the static counter to
+  // identify this node.
   static uint32_t counter = 0;
+  uint16_t switchIdx;
   
-  uint16_t idx;   // switch index
   if (m_nodes == 1 || counter == 0 /* SgwPgw node */)
-    idx = 0;
+    {
+      switchIdx = 0;
+    }
   else
-    idx = 1 + ((counter - 1) % (m_nodes - 1));
+    {
+      switchIdx = 1 + ((counter - 1) % (m_nodes - 1));
+    }
   counter++;
+
+  // Register this pair node/switch for furter use (X2 interfaces)
+  NS_ASSERT (switchIdx < m_ofDevices.GetN ());
+  RegisterNodeAtSwitch (switchIdx, node);
+
+  Ptr<Node> swtchNode = m_ofSwitches.Get (switchIdx);
+  Ptr<OFSwitch13NetDevice> swtchDev = DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (switchIdx));
+ 
+  // Creating a link between switch and node
+  NodeContainer pair;
+  pair.Add (swtchNode);
+  pair.Add (node);
+  NetDeviceContainer devices = m_ofCsmaHelper.Install (pair);
   
-  RegisterNodeAtSwitch (idx, node);
-  return SwitchAttach (idx, node);
+  // Set S1U IPv4 address for the new device at node
+  Ptr<NetDevice> nodeDev = devices.Get (1);
+  Ipv4InterfaceContainer nodeIpIfaces = m_s1uIpv4AddressHelper.Assign (NetDeviceContainer (nodeDev));
+  Ipv4Address nodeIpAddress = nodeIpIfaces.GetAddress (0);
+
+  // Adding newly created csma device as openflow switch port.
+  int portNum = swtchDev->AddSwitchPort (devices.Get (0));
+
+  // Installing OpenFlow rules for local delivery
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=add,table=0,prio=" << --m_flowPrio << 
+         " ip_dst=" << nodeIpAddress << " apply:output=" << portNum;
+  m_epcSdnApp->ScheduleCommand (swtchDev, cmd.str ());
+
+  return nodeDev;
 }
 
 Ptr<NetDevice>
 RingOpenFlowNetwork::AttachToX2 (Ptr<Node> node)
 {
   NS_LOG_FUNCTION (this << node);
+  NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
+
+  uint8_t switchIdx = GetSwitchIdxForNode (node);
+  NS_ASSERT (switchIdx < m_ofDevices.GetN ());
+
+  Ptr<Node> swtchNode = m_ofSwitches.Get (switchIdx);
+  Ptr<OFSwitch13NetDevice> swtchDev = DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (switchIdx));
+
+  // Creating a link between switch and node
+  NodeContainer pair;
+  pair.Add (swtchNode);
+  pair.Add (node);
+  NetDeviceContainer devices = m_ofCsmaHelper.Install (pair);
+
+  // Set X2 IPv4 address for the new device at node
+  Ptr<NetDevice> nodeDev = devices.Get (1);
+  Ipv4InterfaceContainer nodeIpIfaces = m_x2Ipv4AddressHelper.Assign (NetDeviceContainer (nodeDev));
+  Ipv4Address nodeIpAddress = nodeIpIfaces.GetAddress (0);
+  m_x2Ipv4AddressHelper.NewNetwork ();
   
-  // Get the switch index for this node
-  uint8_t idx = m_nodeSwitchMap [node->GetId ()];
-  return SwitchAttach (idx, node);
+  // Adding newly created csma device as openflow switch port.
+  int portNum = swtchDev->AddSwitchPort (devices.Get (0));
+
+  // Installing OpenFlow rules for local delivery
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=add,table=0,prio=" << --m_flowPrio << 
+         " ip_dst=" << nodeIpAddress << " output=" << portNum;
+  m_epcSdnApp->ScheduleCommand (swtchDev, cmd.str ());
+
+  return nodeDev;
 }
 
 };  // namespace ns3

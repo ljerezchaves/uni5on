@@ -48,67 +48,44 @@ public:
   virtual void DoDispose ();
  
   /**
-   * Function called by OpenFlowEpcHelper to proper connect the SgwPgw
-   * and eNBs to the S1-U OpenFlow network insfrastructure.
-   *
+   * Called by OpenFlowEpcHelper to proper connect the SgwPgw and eNBs to the
+   * S1-U OpenFlow network insfrastructure.
+   * \internal This method must create the NetDevice at node and assign an IPv4
+   * address to it.
    * \param node The SgwPgw or eNB node pointer.
    * \return A pointer to the NetDevice created at node.
    */
   virtual Ptr<NetDevice> AttachToS1u (Ptr<Node> node) = 0;
   
   /**
-   * Function called by OpenFlowEpcHelper to proper connect the eNBs
-   * nodes to the X2 OpenFlow network insfrastructure.
-   *
+   * Called by OpenFlowEpcHelper to proper connect the eNBs nodes to the X2
+   * OpenFlow network insfrastructure.
+   * \internal This method must create the NetDevice at node and assign an IPv4
+   * address to it.
    * \param node The eNB node pointer.
-   * \return A pointer to the NetDevice created at the eNB.
+   * \return A pointer to the NetDevice created at node.
    */
   virtual Ptr<NetDevice> AttachToX2 (Ptr<Node> node) = 0;
   
   /** 
    * Creates the OpenFlow network infrastructure with existing OpenFlow
-   * Controller application. 
+   * Controller application.
    * \param controller The OpenFlow controller application for this network.
    */
   virtual void CreateTopology (Ptr<OFSwitch13Controller> controller);
 
   /** 
-   * Enable pcap on OpenFlow links. 
+   * Enable pcap on switch data ports.
    * \param prefix The file prefix.
    * \param promiscuous If true, enable promisc trace.
    */
-  void EnablePcap (std::string prefix, bool promiscuous = false);
+  void EnableDataPcap (std::string prefix, bool promiscuous = false);
 
   /** 
-   * Enable pcap on OpenFlow controller channel. 
+   * Enable pcap on OpenFlow channel. 
    * \param prefix The file prefix.
    */
   void EnableOpenFlowPcap (std::string prefix);
-
-  /** 
-   * \return The CsmaHelper used to create the OpenFlow network. 
-   */
-  CsmaHelper GetCsmaHelper ();
-
-  /** 
-   * \return The NodeContainer with all OpenFlow switches nodes. 
-   */
-  NodeContainer GetSwitchNodes ();
-
-  /** 
-   * \return The NetDeviceContainer with all OFSwitch13NetDevice devices. 
-   */
-  NetDeviceContainer GetSwitchDevices ();
-
-  /** 
-   * \return The OpenFlow controller application.
-   */
-  Ptr<OFSwitch13Controller> GetControllerApp ();
-
-  /** 
-   * \return The OpenFlow controller node.
-   */
-  Ptr<Node> GetControllerNode ();
 
   /**
    * Set an attribute for ns3::OFSwitch13NetDevice
@@ -117,40 +94,49 @@ public:
    */
   void SetSwitchDeviceAttribute (std::string n1, const AttributeValue &v1);
 
+  /** \return The CsmaHelper used to create the OpenFlow network. */
+  CsmaHelper GetCsmaHelper ();
+
+  /** \return The NodeContainer with all OpenFlow switches nodes. */
+  NodeContainer GetSwitchNodes ();
+
+  /** \return The NetDeviceContainer with all OFSwitch13NetDevice devices. */
+  NetDeviceContainer GetSwitchDevices ();
+
+  /** \return The OpenFlow controller application. */
+  Ptr<OFSwitch13Controller> GetControllerApp ();
+
+  /** \return The OpenFlow controller node. */
+  Ptr<Node> GetControllerNode ();
+
 protected:
-
-  Ptr<OFSwitch13Controller> m_ofCtrlApp;      //!< Controller application
-  Ptr<Node>                 m_ofCtrlNode;     //!< Controller node
-  OFSwitch13Helper          m_ofHelper;       //!< OpenFlow helper
-  NodeContainer             m_ofSwitches;     //!< OpenFlow switch nodes
-  NetDeviceContainer        m_ofDevices;      //!< OpenFlow OFSwitch13NetDevice devices
-  CsmaHelper                m_ofCsmaHelper;   //!< Csma helper
-  DataRate                  m_LinkDataRate;   //!< Csma link data rate
-  Time                      m_LinkDelay;      //!< Csma link delay
-  uint16_t                  m_LinkMtu;        //!< Csma link mtu
-
-  /**
-   * Create a CSMA link between m_ofSwitches[switchIdx] and Ptr<Node> node,
-   * adding a new port to the switch and a new NetDevice to the node.
-   *
-   * \param switchIdx The switch index in m_ofSwitches.
-   * \param Ptr<Node> The Node pointer.
-   * \return The NetDevice created at the Node.
-   */
-  virtual Ptr<NetDevice> SwitchAttach (uint8_t switchIdx, Ptr<Node> node);
-
-  /** 
-   * Creates the OpenFlow internal network infrastructure. 
-   */
+  /** Creates the OpenFlow internal network infrastructure. */
   virtual void CreateInternalTopology () = 0;
 
-private:
-  /** 
-   * Install the OpenFlow controller application into controller node.
-   * \param controller The controller app.
-   * \return The new controller node.
+  /**
+   * Store the pair <node, switch index> for further use.
+   * \param switchIdx The switch index in m_ofSwitches.
+   * \param Ptr<Node> The node pointer.
    */
-  Ptr<Node> InstallControllerApp (Ptr<OFSwitch13Controller> controller);
+  void RegisterNodeAtSwitch (uint8_t switchIdx, Ptr<Node> node);
+
+  /**
+   * Retrieve the switch index for node pointer.
+   * \param Ptr<Node> The node pointer.
+   * \return The switch index in m_ofSwitches.
+   */
+  uint8_t GetSwitchIdxForNode (Ptr<Node> node);
+
+  Ptr<OFSwitch13Controller> m_ofCtrlApp;      //!< Controller application.
+  Ptr<Node>                 m_ofCtrlNode;     //!< Controller node.
+  NodeContainer             m_ofSwitches;     //!< Switch nodes.
+  NetDeviceContainer        m_ofDevices;      //!< Switch devices.
+  OFSwitch13Helper          m_ofHelper;       //!< OpenFlow helper.
+  CsmaHelper                m_ofCsmaHelper;   //!< Csma helper.
+
+private:
+  typedef std::map<Ptr<Node>, uint8_t> NodeSwitchMap_t; //!< Node / Switch index map.
+  NodeSwitchMap_t                      m_nodeSwitchMap; //!< Registered nodes per switch index.
 };
 
 };  // namespace ns3

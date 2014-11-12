@@ -43,21 +43,6 @@ OpenFlowEpcNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::OpenFlowEpcNetwork") 
     .SetParent<Object> ()
-    .AddAttribute ("LinkDataRate", 
-                   "The data rate to be used for the CSMA OpenFlow links to be created",
-                   DataRateValue (DataRate ("10Mb/s")),
-                   MakeDataRateAccessor (&OpenFlowEpcNetwork::m_LinkDataRate),
-                   MakeDataRateChecker ())
-    .AddAttribute ("LinkDelay", 
-                   "The delay to be used for the CSMA OpenFlow links to be created",
-                   TimeValue (Seconds (0.01)),
-                   MakeTimeAccessor (&OpenFlowEpcNetwork::m_LinkDelay),
-                   MakeTimeChecker ())
-    .AddAttribute ("LinkMtu", 
-                   "The MTU for CSMA OpenFlow links. Use at least 1500 bytes.",
-                   UintegerValue (2000),
-                   MakeUintegerAccessor (&OpenFlowEpcNetwork::m_LinkMtu),
-                   MakeUintegerChecker<uint16_t> ())
   ;
   return tid; 
 }
@@ -68,6 +53,7 @@ OpenFlowEpcNetwork::DoDispose ()
   NS_LOG_FUNCTION_NOARGS ();
   m_ofCtrlApp = 0;
   m_ofCtrlNode = 0;
+  m_nodeSwitchMap.clear ();
   Object::DoDispose ();
 }
 
@@ -81,18 +67,18 @@ OpenFlowEpcNetwork::CreateTopology (Ptr<OFSwitch13Controller> controller)
       return;
     }
 
-  // Configuring csma links
-  m_ofCsmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_LinkDataRate));
-  m_ofCsmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_LinkMtu));
-  m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_LinkDelay));
+  // Installing the controller app into a new controller node
+  m_ofCtrlNode = CreateObject<Node> ();
+  m_ofHelper.InstallControllerApp (m_ofCtrlNode, controller);
+  m_ofCtrlApp = controller;
 
-  m_ofCtrlNode = InstallControllerApp (controller);
+  // Create the internal topology
   CreateInternalTopology ();
   created = true;
 }
 
 void
-OpenFlowEpcNetwork::EnablePcap (std::string prefix, bool promiscuous)
+OpenFlowEpcNetwork::EnableDataPcap (std::string prefix, bool promiscuous)
 {
   m_ofCsmaHelper.EnablePcap (prefix, m_ofSwitches, promiscuous);
 }
@@ -140,31 +126,30 @@ OpenFlowEpcNetwork::SetSwitchDeviceAttribute (std::string n1,
   m_ofHelper.SetDeviceAttribute (n1, v1);
 } 
 
-Ptr<NetDevice>
-OpenFlowEpcNetwork::SwitchAttach (uint8_t switchIdx, Ptr<Node> node)
+void
+OpenFlowEpcNetwork::RegisterNodeAtSwitch (uint8_t switchIdx, Ptr<Node> node)
 {
-  NS_ASSERT (switchIdx < m_ofSwitches.GetN ());
-  NS_ASSERT (switchIdx < m_ofDevices.GetN ());
-
-  Ptr<Node> swtch = m_ofSwitches.Get (switchIdx);
-  NodeContainer nodes;
-  nodes.Add (swtch);
-  nodes.Add (node);
-  NetDeviceContainer devices = m_ofCsmaHelper.Install (nodes);
-
-  // Add csma device as switch port
-  DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (switchIdx))->AddSwitchPort (devices.Get (0));
-  
-  return devices.Get (1);
+  std::pair <NodeSwitchMap_t::iterator, bool> ret;
+  ret = m_nodeSwitchMap.insert (std::pair<Ptr<Node>, uint8_t> (node, switchIdx));
+  if (ret.second == true)
+    {
+      NS_LOG_DEBUG ("Node " << node << " registered at switch index " << (int)switchIdx);
+      return;
+    }
+  NS_FATAL_ERROR ("Can't register node at switch.");
 }
 
-Ptr<Node>
-OpenFlowEpcNetwork::InstallControllerApp (Ptr<OFSwitch13Controller> controller)
+uint8_t
+OpenFlowEpcNetwork::GetSwitchIdxForNode (Ptr<Node> node)
 {
-  Ptr<Node> node = CreateObject<Node> ();
-  m_ofHelper.InstallControllerApp (node, controller);
-  m_ofCtrlApp = controller;
-  return node;
+  NodeSwitchMap_t::iterator ret;
+  ret = m_nodeSwitchMap.find (node);
+  if (ret != m_nodeSwitchMap.end ())
+    {
+      NS_LOG_DEBUG ("Found switch index " << (int)ret->second << " for node " << node);
+      return ret->second;
+    }
+  NS_FATAL_ERROR ("Node not registered.");
 }
 
 };  // namespace ns3

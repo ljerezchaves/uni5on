@@ -20,6 +20,7 @@
 
 #include <ns3/core-module.h>
 #include "open-flow-epc-network.h"
+#include "epc-sdn-controller.h"
 
 namespace ns3 {
 
@@ -50,16 +51,20 @@ public:
   void CreateInternalTopology ();
   
 private:
-  uint16_t m_nodes; //!< Number of switches in the ring
+  static uint16_t       m_flowPrio;     //!< Flow-mod priority
   
-  std::map<uint32_t, uint8_t> m_nodeSwitchMap; //!< NodeId/SwitchIndex map.
+  Ptr<EpcSdnController> m_epcSdnApp;    //!< Casted controller app pointer
+  uint16_t              m_nodes;        //!< Number of switches in the ring
+  
+  DataRate              m_LinkDataRate; //!< Link data rate
+  Time                  m_LinkDelay;    //!< Link delay
+  uint16_t              m_LinkMtu;      //!< Link mtu
 
-  /**
-   * Register the Node at the map <node, switch> for use in AttachToX2.
-   * \param swtch The switch index.
-   * \param Ptr<Node> The node pointer.
-   */
-  void RegisterNodeAtSwitch (uint8_t swtch, Ptr<Node> node);
+  /** Helper to assign addresses to S1-U NetDevices */
+  Ipv4AddressHelper m_s1uIpv4AddressHelper;
+  
+  /** Helper to assign addresses to X2 NetDevices */
+  Ipv4AddressHelper m_x2Ipv4AddressHelper;
 
 }; // class RingOpenFlowNetwork
 }; // namespace ns3
