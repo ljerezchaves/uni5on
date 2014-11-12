@@ -41,28 +41,29 @@ class EpcX2;
 class EpcMme;
 
 /**
- * \brief Create an EPC network connected to an OpenFlow network
+ * \brief Create an EPC network connected to an OpenFlow network.
  *
  * This Helper will create an EPC network topology comprising of a single node
- * that implements both the SGW and PGW functionality, and an MME node. The
- * S1 and X2 interfaces are realized over an OpenFlow network.
+ * that implements both the SGW and PGW functionality, and an MME node. The S1
+ * and X2 interfaces are realized over an OpenFlow network.
  */
 class OpenFlowEpcHelper : public EpcHelper, public PcapHelperForDevice
 {
 public:
   
-  /** 
-   * Constructor
-   */
+  /** Default constructor. Initialize EPC structure. */
   OpenFlowEpcHelper ();
 
-  /** 
-   * Destructor
-   */  
+  /** Dummy destructor, see DoDispose. */
   virtual ~OpenFlowEpcHelper ();
   
-  // inherited from Object
+  /**
+   * Register this type.
+   * \return The object TypeId.
+   */
   static TypeId GetTypeId (void);
+
+  /** Destructor implementation. */
   virtual void DoDispose ();
 
   // inherited from EpcHelper
@@ -74,32 +75,27 @@ public:
   virtual Ipv4InterfaceContainer AssignUeIpv4Address (NetDeviceContainer ueDevices);
   virtual Ipv4Address GetUeDefaultGatewayAddress ();
 
-  /**
-    * \return The SgwPgw Ipv4Addrress of the S1-U interface (connected to the OpenFlow network).
-    */
-  virtual Ipv4Address GetSgwS1uAddress ();
  
   /**
-    * Enable Pcap output on all S1-U devices connected to OpenFlow network
-    *
+    * Enable Pcap output on all S1-U devices connected to OpenFlow network.
     * \param prefix Filename prefix to use for pcap files.
-    * \param promiscuous If true capture all possible packets available at the devices.
+    * \param promiscuous If true capture all packets available at the devices.
     * \param explicitFilename Treat the prefix as an explicit filename if true.
     */
-  void EnablePcapS1u (std::string prefix, bool promiscuous = false, bool explicitFilename = false);
+  void EnablePcapS1u (std::string prefix, bool promiscuous = false, 
+                      bool explicitFilename = false);
 
   /**
-    * Enable Pcap output on all X2-U devices (only on eNBs and SgwPgw node) connected to OpenFlow network
-    *
+    * Enable Pcap output on all X2-U devices connected to OpenFlow network.
     * \param prefix Filename prefix to use for pcap files.
-    * \param promiscuous If true capture all possible packets available at the devices.
+    * \param promiscuous If true capture all packets available at the devices.
     * \param explicitFilename Treat the prefix as an explicit filename if true.
     */
-  void EnablePcapX2 (std::string prefix, bool promiscuous = false, bool explicitFilename = false);
+  void EnablePcapX2 (std::string prefix, bool promiscuous = false, 
+                     bool explicitFilename = false);
 
   /**
-   * S1U and X2 attach callback signature
-   *
+   * S1U and X2 attach callback signature.
    * \param Ptr<Node> node to attach 
    * \returns Ptr<NetDevice> the device created at the Node
    */
@@ -108,115 +104,92 @@ public:
   /**
     * \brief Specify callbacks to allow the caller to proper connect the EPC
     * nodes (SgwPgw and eNBs) to the S1-U OpenFlow network insfrastructure.
-    *
-    * \param cb callback to invoked during AddEnb procedure to proper connect
-    *        the eNB Node to the OpenFlow network. This is also called by
-    *        SetS1uConnectCallback to proper connect the SgwPgw Node to the
-    *        OpenFlow network.
+    * \param cb Callback invoked during AddEnb procedure to proper connect
+    * the eNB Node to the OpenFlow network. This is also called by
+    * SetS1uConnectCallback to proper connect the SgwPgw Node to the OpenFlow
+    * network.
     */
   void SetS1uConnectCallback (S1uX2ConnectCallback_t cb);
 
   /**
-    * \brief Specify callbacks to allow the caller to proper connect the eNB
-    * nodes to the X2 OpenFlow network insfrastructure.
-    *
-    * \param cb callback to invoked during AddX2Interface procedure to
-    *        proper connect the eNB Node to the OpenFlow network. 
+    * Specify callbacks to allow the caller to proper connect the eNB nodes to
+    * the X2 OpenFlow network insfrastructure.
+    * \param cb Callback invoked during AddX2Interface procedure to proper
+    * connect the eNB Node to the OpenFlow network. 
     */
   void SetX2ConnectCallback (S1uX2ConnectCallback_t cb);
 
   /**
-    * \brief Callback used by EpcMme::AddBearer to notify the OpenFlow
-    * controller that a new EPS bearer will be created.
-    *
-    * \param func this callback is invoked by EpcMme::AddBearer before creating
-    * a new GBR bearers. When the callback isn't null, the bearer is created
-    * only if the callback returns zero.
+    * Callback used by EpcMme::AddBearer to notify the OpenFlow controller that
+    * a new EPS bearer will be created.
+    * \param cb Callback invoked by EpcMme::AddBearer before creating a new GBR
+    * bearer. When the callback isn't null, the bearer is created only if the
+    * callback returns zero.
     */
   void SetAddBearerCallback (EpcMme::AddBearerCallback_t cb);
  
 private:
   /**
    * \brief Enable pcap output on the indicated net device.
-   *
-   * NetDevice-specific implementation mechanism for hooking the trace and
-   * writing to the trace file.
-   *
+   * \internal This is the same implementation from CsmaNetDevice class, as the
+   * OpenFlow uses Csma devices.
    * \param prefix Filename prefix to use for pcap files.
    * \param nd Net device for which you want to enable tracing.
-   * \param promiscuous If true capture all possible packets available at the device.
-   * \param explicitFilename Treat the prefix as an explicit filename if true
+   * \param promiscuous If true capture all packets available at the device.
+   * \param explicitFilename Treat the prefix as an explicit filename if true.
    */
-  virtual void EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bool promiscuous, bool explicitFilename);
- 
+  virtual void EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, 
+                                   bool promiscuous, bool explicitFilename);
+
   /**
-   * Callback to connect nodes to S1-U OpenFlow network.
+   * Retrieve SgwPgw OpenFlow address.
+   * \return The SgwPgw Ipv4Addrress of the S1-U interface connected to the
+   * OpenFlow network.
    */
+  virtual Ipv4Address GetSgwS1uAddress ();
+
+  /**
+   * Retrieve eNB OpenFlow address for device.
+   * \param device NetDevice connected to the OpenFlow network.
+   * \return The Ipv4Addrress of the S1-U or X2 interface for the specific
+   * NetDevice connected to the OpenFlow network.
+   */
+  virtual Ipv4Address GetAddressForDevice (Ptr<NetDevice> device);
+
+  /** Callback to connect nodes to S1-U OpenFlow network. */
   S1uX2ConnectCallback_t m_s1uConnect;
 
-  /**
-   * Callback to connect nodes to X2 OpenFlow network.
-   */
+  /** Callback to connect nodes to X2 OpenFlow network. */
   S1uX2ConnectCallback_t m_x2Connect;
 
-  /**
-   * A collection of S1-U NetDevice
-   */
+  /** A collection of S1-U NetDevice */
   NetDeviceContainer m_s1uDevices;
   
-  /**
-   * A collection of X2 NetDevice
-   */
+  /** A collection of X2 NetDevice */
   NetDeviceContainer m_x2Devices;
 
-  /**
-   * The SGW NetDevice connected to the S1-U OpenFlow network switch
-   */
+  /** The SgwPgw NetDevice connected to the S1-U OpenFlow network switch */
   Ptr<NetDevice> m_sgwS1uDev;
 
-  /**
-   * SGW-PGW network element
-   */
+  /** SgwPgw network element */
   Ptr<Node> m_sgwPgw; 
 
-  /**
-   * SGW-PGW application
-   */
+  /** SgwPgw application */
   Ptr<EpcSgwPgwApplication> m_sgwPgwApp;
 
-  /**
-   * MME element
-   */
+  /** MME element */
   Ptr<EpcMme> m_mme;
 
-  /**
-   * VirtualNetDevice for TUN device implementing tunneling of user data over GTP-U/UDP/IP 
-   */
+  /** VirtualNetDevice for GTP tunneling implementation */
   Ptr<VirtualNetDevice> m_tunDevice;
   
-  /** 
-   * Helper to assign addresses to UE devices as well as to the TUN device of the SGW/PGW
-   */
+  /** Helper to assign addresses to UE devices as well as to the TUN device of the SGW/PGW */
   Ipv4AddressHelper m_ueAddressHelper; 
   
-  /** 
-   * Helper to assign addresses to S1-U NetDevices 
-   */
-  Ipv4AddressHelper m_s1uIpv4AddressHelper; 
-  
-  /** 
-   * Helper to assign addresses to X2 NetDevices 
-   */
-  Ipv4AddressHelper m_x2Ipv4AddressHelper;    
-  
-  /**
-   * UDP port where the GTP-U Socket is bound, fixed by the standard as 2152
-   */
+  /** UDP port where the GTP-U Socket is bound, fixed by the standard as 2152 */
   uint16_t m_gtpuUdpPort;
 
-  /**
-   * Map storing for each IMSI the corresponding eNB NetDevice
-   */
+  /** Map storing for each IMSI the corresponding eNB NetDevice */
   std::map<uint64_t, Ptr<NetDevice> > m_imsiEnbDeviceMap;
 };
 

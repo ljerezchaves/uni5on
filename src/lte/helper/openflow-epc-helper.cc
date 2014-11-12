@@ -42,26 +42,15 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcHelper")
-  ;
+NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcHelper");
 
-NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcHelper)
-  ;
+NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcHelper);
 
 
 OpenFlowEpcHelper::OpenFlowEpcHelper () 
   : m_gtpuUdpPort (2152)  // fixed by the standard
 {
   NS_LOG_FUNCTION (this);
-
-  // since the user is now using the same CSMA OpenFlow network for S1-U links,
-  // we use a /24 subnet which can hold up to 254 eNBs addresses on same subnet
-  m_s1uIpv4AddressHelper.SetBase ("10.0.0.0", "255.255.255.0");
-
-  // we are also using the CSMA OpenFlow network for all X2 links, 
-  // but we still we use a /30 subnet which can hold exactly two addresses 
-  // (remember that net broadcast and null address are not valid)
-  m_x2Ipv4AddressHelper.SetBase ("12.0.0.0", "255.255.255.252");
 
   // we use a /8 net for all UEs
   m_ueAddressHelper.SetBase ("7.0.0.0", "255.0.0.0");
@@ -83,7 +72,7 @@ OpenFlowEpcHelper::OpenFlowEpcHelper ()
 
   // yes we need this
   m_tunDevice->SetAddress (Mac48Address::Allocate ()); 
-  
+
   m_sgwPgw->AddDevice (m_tunDevice);
   NetDeviceContainer tunDeviceContainer;
   tunDeviceContainer.Add (m_tunDevice);
@@ -106,12 +95,10 @@ OpenFlowEpcHelper::OpenFlowEpcHelper ()
   m_sgwPgwApp->SetS11SapMme (m_mme->GetS11SapMme ());
 }
 
-
 OpenFlowEpcHelper::~OpenFlowEpcHelper ()
 {
   NS_LOG_FUNCTION (this);
 }
-
 
 TypeId
 OpenFlowEpcHelper::GetTypeId (void)
@@ -123,7 +110,6 @@ OpenFlowEpcHelper::GetTypeId (void)
   return tid;
 }
 
-
 void
 OpenFlowEpcHelper::DoDispose ()
 {
@@ -133,7 +119,6 @@ OpenFlowEpcHelper::DoDispose ()
   m_sgwPgwApp = 0;  
   m_sgwPgw->Dispose ();
 }
-
 
 void
 OpenFlowEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t cellId)
@@ -146,21 +131,18 @@ OpenFlowEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16
   // add an IPv4 stack to the previously created eNB
   InternetStackHelper internet;
   internet.Install (enb);
-  NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB after node creation: " << enb->GetObject<Ipv4> ()->GetNInterfaces ());
+  NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB after node creation: " << 
+                enb->GetObject<Ipv4> ()->GetNInterfaces ());
 
-  // Instead of creating a PointToPoint link to connect the eNb to the SgwPgw
-  // Node, we callback the user to proper connect this eNb to the OpenFlow
-  // network infrastructure. Note that the Ipv4 address is definde here, by
-  // this helper.
+ // Callback the OpenFlow network to connect each eNB to the network.
   Ptr<NetDevice> enbDevice = m_s1uConnect (enb);
   m_s1uDevices.Add (enbDevice);
 
-  NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB after installing OpenFlow dev: " << enb->GetObject<Ipv4> ()->GetNInterfaces ());  
-  Ipv4InterfaceContainer enbIpIface = m_s1uIpv4AddressHelper.Assign (NetDeviceContainer (enbDevice));
-  NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB after assigning Ipv4 addr to S1 dev: " << enb->GetObject<Ipv4> ()->GetNInterfaces ());
-  
+  NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB after OpenFlow dev + Ipv4 addr: " << 
+                enb->GetObject<Ipv4> ()->GetNInterfaces ());  
+
+  Ipv4Address enbAddress = GetAddressForDevice (enbDevice);
   Ipv4Address sgwAddress = GetSgwS1uAddress ();
-  Ipv4Address enbAddress = enbIpIface.GetAddress (0);
 
   // create S1-U socket for the ENB
   Ptr<Socket> enbS1uSocket = Socket::CreateSocket (enb, TypeId::LookupByName ("ns3::UdpSocketFactory"));
@@ -198,32 +180,21 @@ OpenFlowEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16
   enbApp->SetS1apSapMme (m_mme->GetS1apSapMme ());
 }
 
-
 void
 OpenFlowEpcHelper::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
 {
   NS_LOG_FUNCTION (this << enb1 << enb2);
   NS_ASSERT (!m_x2Connect.IsNull ());
 
-  // Instead of creating a PointToPoint link to connect both eNbs, we callback
-  // the user to proper connect this them to the OpenFlow network
-  // infrastructure. Note that the Ipv4 address is definde here, by this
-  // helper.
+  // Callback the OpenFlow network to connect each eNB to the network.
   NetDeviceContainer enbDevices;
   enbDevices.Add (m_x2Connect (enb1));
   enbDevices.Add (m_x2Connect (enb2));
   m_x2Devices.Add (enbDevices);
 
-  NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB #1 after installing csma dev: " << enb1->GetObject<Ipv4> ()->GetNInterfaces ());
-  NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB #2 after installing csma dev: " << enb2->GetObject<Ipv4> ()->GetNInterfaces ());
-  Ipv4InterfaceContainer enbIpIfaces = m_x2Ipv4AddressHelper.Assign (enbDevices);
-  m_x2Ipv4AddressHelper.NewNetwork ();
-  NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB #1 after assigning Ipv4 addr to X2 dev: " << enb1->GetObject<Ipv4> ()->GetNInterfaces ());
-  NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB #2 after assigning Ipv4 addr to X2 dev: " << enb2->GetObject<Ipv4> ()->GetNInterfaces ());
-
-  Ipv4Address enb1X2Address = enbIpIfaces.GetAddress (0);
-  Ipv4Address enb2X2Address = enbIpIfaces.GetAddress (1);
-
+  Ipv4Address enb1X2Address = GetAddressForDevice (enbDevices.Get (0));
+  Ipv4Address enb2X2Address = GetAddressForDevice (enbDevices.Get (1));
+  
   // Add X2 interface to both eNBs' X2 entities
   Ptr<EpcX2> enb1X2 = enb1->GetObject<EpcX2> ();
   Ptr<LteEnbNetDevice> enb1LteDev = enb1->GetDevice (0)->GetObject<LteEnbNetDevice> ();
@@ -242,7 +213,6 @@ OpenFlowEpcHelper::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
   enb2LteDev->GetRrc ()->AddX2Neighbour (enb1LteDev->GetCellId ());
 }
 
-
 void 
 OpenFlowEpcHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 {
@@ -251,7 +221,6 @@ OpenFlowEpcHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
   m_mme->AddUe (imsi);
   m_sgwPgwApp->AddUe (imsi);
 }
-
 
 void
 OpenFlowEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer)
@@ -278,13 +247,11 @@ OpenFlowEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Pt
     }
 }
 
-
 Ptr<Node>
 OpenFlowEpcHelper::GetPgwNode ()
 {
   return m_sgwPgw;
 }
-
 
 Ipv4InterfaceContainer 
 OpenFlowEpcHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
@@ -292,23 +259,12 @@ OpenFlowEpcHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
   return m_ueAddressHelper.Assign (ueDevices);
 }
 
-
 Ipv4Address
 OpenFlowEpcHelper::GetUeDefaultGatewayAddress ()
 {
   // return the address of the tun device
   return m_sgwPgw->GetObject<Ipv4> ()->GetAddress (1, 0).GetLocal ();
 }
-
-
-Ipv4Address
-OpenFlowEpcHelper::GetSgwS1uAddress ()
-{
-  Ptr<Ipv4> ipv4 = m_sgwPgw->GetObject<Ipv4> ();
-  int32_t idx = ipv4->GetInterfaceForDevice(m_sgwS1uDev);
-  return ipv4->GetAddress (idx, 0).GetLocal ();
-}
-
 
 void
 OpenFlowEpcHelper::EnablePcapS1u (std::string prefix, bool promiscuous, bool explicitFilename)
@@ -319,7 +275,6 @@ OpenFlowEpcHelper::EnablePcapS1u (std::string prefix, bool promiscuous, bool exp
   EnablePcap (prefix, m_sgwS1uDev, promiscuous);
 }
 
-
 void
 OpenFlowEpcHelper::EnablePcapX2 (std::string prefix, bool promiscuous, bool explicitFilename)
 {
@@ -328,19 +283,18 @@ OpenFlowEpcHelper::EnablePcapX2 (std::string prefix, bool promiscuous, bool expl
   EnablePcap (prefix, m_x2Devices, promiscuous);
 }
 
-
 void 
 OpenFlowEpcHelper::EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bool promiscuous, bool explicitFilename)
 {
-  NS_LOG_FUNCTION (this << prefix << nd << promiscuous << explicitFilename);
-  
+  //
   // All of the Pcap enable functions vector through here including the ones
   // that are wandering through all of devices on perhaps all of the nodes in
   // the system.  We can only deal with devices of type CsmaNetDevice.
+  //
   Ptr<CsmaNetDevice> device = nd->GetObject<CsmaNetDevice> ();
   if (device == 0)
     {
-      NS_LOG_INFO (this << " Device " << device << " not of type ns3::CsmaNetDevice");
+      NS_LOG_INFO ("CsmaHelper::EnablePcapInternal(): Device " << device << " not of type ns3::CsmaNetDevice");
       return;
     }
 
@@ -367,6 +321,22 @@ OpenFlowEpcHelper::EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bo
     }
 }
 
+Ipv4Address
+OpenFlowEpcHelper::GetSgwS1uAddress ()
+{
+  Ptr<Ipv4> ipv4 = m_sgwPgw->GetObject<Ipv4> ();
+  int32_t idx = ipv4->GetInterfaceForDevice(m_sgwS1uDev);
+  return ipv4->GetAddress (idx, 0).GetLocal ();
+}
+
+Ipv4Address
+OpenFlowEpcHelper::GetAddressForDevice (Ptr<NetDevice> device)
+{
+  Ptr<Node> node = device->GetNode ();
+  Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
+  int32_t idx = ipv4->GetInterfaceForDevice(device);
+  return ipv4->GetAddress (idx, 0).GetLocal ();
+}
 
 void
 OpenFlowEpcHelper::SetS1uConnectCallback (S1uX2ConnectCallback_t cb)
@@ -374,12 +344,10 @@ OpenFlowEpcHelper::SetS1uConnectCallback (S1uX2ConnectCallback_t cb)
   NS_LOG_FUNCTION (this << &cb);
   m_s1uConnect = cb;
 
-  // Connecting the SgwPgw 
+  // Connecting the SgwPgw to the OpenFlow network. 
   m_sgwS1uDev = m_s1uConnect (m_sgwPgw);
-  m_s1uIpv4AddressHelper.Assign (NetDeviceContainer (m_sgwS1uDev));
   NS_LOG_LOGIC ("Sgw S1 interface address: " << GetSgwS1uAddress ());
 }
-
 
 void
 OpenFlowEpcHelper::SetX2ConnectCallback (S1uX2ConnectCallback_t cb)
@@ -387,7 +355,6 @@ OpenFlowEpcHelper::SetX2ConnectCallback (S1uX2ConnectCallback_t cb)
   NS_LOG_FUNCTION (this << &cb);
   m_x2Connect = cb;
 }
-
 
 void
 OpenFlowEpcHelper::SetAddBearerCallback (EpcMme::AddBearerCallback_t cb)
