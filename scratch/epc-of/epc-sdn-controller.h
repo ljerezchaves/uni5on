@@ -23,12 +23,14 @@
 
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
+#include <ns3/network-module.h>
+#include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
 
 namespace ns3 {
 
 /**
- * Implementação do controlador para o EPC.
+ * OpenFlow EPC controller.
  */
 class EpcSdnController : public OFSwitch13Controller
 {
@@ -45,7 +47,10 @@ public:
   /** Destructor implementation */
   virtual void DoDispose ();
 
-  // typedef Callback<uint8_t, const uint64_t, const Ptr<EpcTft>, const EpsBearer> AddBearerCallback_t;
+  /** 
+   * AddBearer callback, used to prepare the OpenFlow network for bearer traffic.
+   * \param 
+   */
   uint8_t AddBearer (uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer);
 
   /**
@@ -77,12 +82,43 @@ public:
   ofl_err HandleFlowRemoved (ofl_msg_flow_removed *msg, SwitchInfo swtch, uint32_t xid);
 
 private:
-  void ConnectionStarted (SwitchInfo swtch); //!< TCP connection callback
+  /**
+   * Callback fired when the switch / controller connection is sucssefully
+   * stablished. This method will configure the switch, install table-miss
+   * entry and execute all dpctl scheduled commands for this switch.
+   * \param swtch The switch information.
+   */
+  void ConnectionStarted (SwitchInfo swtch);
 
+  /**
+   * Handle packet-in messages sent from switch to this controller with arp
+   * protocol. For an arp request, flood the packet over switch ports.
+   * \param msg The packet-in message.
+   * \param swtch The switch information.
+   * \param xid Transaction id.
+   * \return 0 if everything's ok, otherwise an error number.
+   */
+  ofl_err HandleArpPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, uint32_t xid);
+
+  /**
+   * \name Scheduller structures (used by ScheduleCommand)
+   */
+  //\{
   /** Multimap between device pointer and dpctl command */
   typedef std::multimap<Ptr<OFSwitch13NetDevice>, std::string> DevCmdMap_t; 
-
-  DevCmdMap_t m_schedCommands; //!< Map of scheduled dpctl commands to be executed.
+  
+  /** Map of scheduled dpctl commands to be executed. */
+  DevCmdMap_t m_schedCommands; 
+  //\}
+  
+  /**
+   * \name L2 switching structures (used by ARP)
+   */
+  //\{
+  typedef std::map<Mac48Address, uint32_t> L2Table_t;     //!< L2SwitchingTable: map MacAddress to port
+  typedef std::map<uint64_t, L2Table_t>    DatapathMap_t; //!< Map datapathID to L2SwitchingTable
+  DatapathMap_t                            m_learnedInfo; //!< Switching information for all dapataths
+  //\}
 };
 
 };  // namespace ns3
