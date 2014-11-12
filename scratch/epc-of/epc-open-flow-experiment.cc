@@ -47,11 +47,11 @@ main (int argc, char *argv[])
 {
   // Simulation parameters
   uint32_t  nUes = 2;
-  uint32_t  nEnbs = 2;
-  uint16_t  nRing = 3;
-  double    simTime = 10;
+  uint32_t  nEnbs = 4;
+  uint16_t  nRing = 5;
+  double    simTime = 5;
   bool      verbose = 0;
-  bool      progress = 0;
+  bool      progress = 1;
   bool      video = 0;
   bool      voip = 0;
   bool      http = 0;
