@@ -103,8 +103,17 @@ main (int argc, char *argv[])
   if (verbose) 
     {
       LogComponentEnable ("OpenFlowEpcExperiment", LOG_LEVEL_INFO);
-      LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_ALL);
-      LogComponentEnable ("LearningController", LOG_LEVEL_ALL);
+      
+      // Just for warnings and errors
+      LogComponentEnable ("OFSwitch13NetDevice", LOG_LEVEL_WARN);
+      LogComponentEnable ("OFSwitch13Interface", LOG_LEVEL_WARN);
+      LogComponentEnable ("OFSwitch13Helper", LOG_LEVEL_WARN);
+      LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_WARN);
+      LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
+      LogComponentEnable ("RingOpenFlowNetwork", LOG_LEVEL_WARN);
+
+      LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_DEBUG);
+      LogComponentEnable ("EpcSdnController", LOG_LEVEL_DEBUG);
     }
 
   /*****************************************************************************
@@ -179,7 +188,7 @@ main (int argc, char *argv[])
   webNetwork->EnablePcap ("web");
   // lteNetwork->EnableTraces ();
   opfNetwork->EnableOpenFlowPcap ("openflow-channel");
-  opfNetwork->EnablePcap ("ofn");
+  opfNetwork->EnableDataPcap ("ofn");
   epcHelper->EnablePcapS1u ("epc");
   // epcHelper->EnablePcapX2 ("epc");
 
