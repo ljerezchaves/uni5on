@@ -34,7 +34,7 @@ RingOpenFlowNetwork::RingOpenFlowNetwork ()
   NS_LOG_FUNCTION_NOARGS ();
   
   // since we are using the OpenFlow network for S1-U links,
-  // we use a /16 subnet which can hold up to 254 eNBs addresses on same subnet
+  // we use a /24 subnet which can hold up to 254 eNBs addresses on same subnet
   m_s1uIpv4AddressHelper.SetBase ("10.0.0.0", "255.255.255.0");
 
   // we are also using the OpenFlow network for all X2 links, 
@@ -118,32 +118,48 @@ RingOpenFlowNetwork::CreateInternalTopology ()
   // Connecting switches in ring topology (clockwise order)
   for (uint16_t i = 0; i < m_nodes; i++)
     {
-      int currentIndex = i;
+      int currIndex = i;
       int nextIndex = (i + 1) % m_nodes;  // Next node in clockwise direction
 
       // Creating a link between current and next node
       NodeContainer pair;
-      pair.Add (m_ofSwitches.Get (currentIndex));
+      pair.Add (m_ofSwitches.Get (currIndex));
       pair.Add (m_ofSwitches.Get (nextIndex));
       NetDeviceContainer devs = m_ofCsmaHelper.Install (pair);
     
       // Adding newly created csma devices as openflow switch ports.
-      Ptr<OFSwitch13NetDevice> currentDevice = DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (currentIndex));
-      int currentPort = currentDevice->AddSwitchPort (devs.Get (0));
+      Ptr<OFSwitch13NetDevice> currDevice = DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (currIndex));
+      int currPort = currDevice->AddSwitchPort (devs.Get (0));
 
       Ptr<OFSwitch13NetDevice> nextDevice = DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (nextIndex));
       int nextPort = nextDevice->AddSwitchPort (devs.Get (1));
 
       // Installing default groups for EpcSdnController ring routing
       // Group #1 is used to send packets from current switch to the next one in clockwise direction.
-      std::ostringstream currentCmd;
-      currentCmd << "group-mod cmd=add,type=ind,group=1 weight=0,port=any,group=any output=" << currentPort;
-      m_epcSdnApp->ScheduleCommand (currentDevice, currentCmd.str ());
+      std::ostringstream currCmd;
+      currCmd << "group-mod cmd=add,type=ind,group=1 weight=0,port=any,group=any output=" << currPort;
+      m_epcSdnApp->ScheduleCommand (currDevice, currCmd.str ());
                                        
       // Group #2 is used to send packets from the next switch to the current one in counterclockwise direction. 
       std::ostringstream nextCmd;
       nextCmd << "group-mod cmd=add,type=ind,group=2 weight=0,port=any,group=any output=" << nextPort;
       m_epcSdnApp->ScheduleCommand (nextDevice, nextCmd.str ());
+
+      // To avoid loops problems in the ring with ARP protocol, let's configure one single link to drop 
+      // packets when flooding over ports (OFPP_FLOOD). This is preety much like a Spanning Tree Protocol. 
+      // Here we are disabling the farthest gateway link configuring its ports to OFPPC_NO_FWD flag (0x20).
+      if (i == (uint16_t)(m_nodes / 2))
+        {
+          std::ostringstream currConfig;
+          Mac48Address currMacAddr = Mac48Address::ConvertFrom (devs.Get (0)->GetAddress ());
+          currConfig << "port-mod port=" << currPort << ",addr=" << currMacAddr << ",conf=0x00000020,mask=0x00000020";
+          m_epcSdnApp->ScheduleCommand (currDevice, currConfig.str ());
+
+          std::ostringstream nextConfig;
+          Mac48Address nextMacAddr = Mac48Address::ConvertFrom (devs.Get (1)->GetAddress ());
+          nextConfig << "port-mod port=" << nextPort << ",addr=" << nextMacAddr << ",conf=0x00000020,mask=0x00000020";
+          m_epcSdnApp->ScheduleCommand (nextDevice, nextConfig.str ());
+        }
     }
 }
 
@@ -192,10 +208,14 @@ RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node)
   // Adding newly created csma device as openflow switch port.
   int portNum = swtchDev->AddSwitchPort (devices.Get (0));
 
-  // Installing OpenFlow rules for local delivery
+  // Installing OpenFlow rules for local delivery.
+  // Check for match in ethernet and IPv4 destination address.
+  Mac48Address nodeMacAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ());
   std::ostringstream cmd;
-  cmd << "flow-mod cmd=add,table=0,prio=" << --m_flowPrio << 
-         " ip_dst=" << nodeIpAddress << " apply:output=" << portNum;
+  cmd << "flow-mod cmd=add,table=0,prio=" << m_flowPrio-- << 
+         " eth_type=0x800,eth_dst=" << nodeMacAddr <<
+         "ip_proto=17,ip_dst=" << nodeIpAddress << 
+         " apply:output=" << portNum;
   m_epcSdnApp->ScheduleCommand (swtchDev, cmd.str ());
 
   return nodeDev;
@@ -207,6 +227,7 @@ RingOpenFlowNetwork::AttachToX2 (Ptr<Node> node)
   NS_LOG_FUNCTION (this << node);
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
 
+  // Retrieve the registered pair node/switch
   uint8_t switchIdx = GetSwitchIdxForNode (node);
   NS_ASSERT (switchIdx < m_ofDevices.GetN ());
 
