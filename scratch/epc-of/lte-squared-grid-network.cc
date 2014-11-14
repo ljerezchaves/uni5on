@@ -30,13 +30,13 @@ NS_OBJECT_ENSURE_REGISTERED (LteSquaredGridNetwork)
 
 LteSquaredGridNetwork::LteSquaredGridNetwork ()
 {
-  NS_LOG_FUNCTION ();
+  NS_LOG_FUNCTION (this);
 }
 
 
 LteSquaredGridNetwork::~LteSquaredGridNetwork ()
 {
-  NS_LOG_FUNCTION ();
+  NS_LOG_FUNCTION (this);
 }
 
 
@@ -78,7 +78,7 @@ LteSquaredGridNetwork::GetTypeId (void)
 void
 LteSquaredGridNetwork::DoDispose ()
 {
-  NS_LOG_FUNCTION ();
+  NS_LOG_FUNCTION (this);
   m_lteHelper = 0;
   m_epcHelper = 0;
   Object::DoDispose ();
@@ -109,7 +109,7 @@ LteSquaredGridNetwork::EnableTraces ()
 void
 LteSquaredGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper)
 {
-  NS_LOG_FUNCTION ();
+  NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Topology with " << m_nEnbs << " eNBs and " << m_nUes << " UEs.");
   NS_ASSERT (epcHelper != 0);
 
@@ -147,7 +147,7 @@ LteSquaredGridNetwork::GetUeDevices ()
 void
 LteSquaredGridNetwork::SetLteNodePositions ()
 {
-  NS_LOG_FUNCTION ();
+  NS_LOG_FUNCTION (this);
 
   uint32_t nRooms;
   uint32_t plantedEnb = 0;

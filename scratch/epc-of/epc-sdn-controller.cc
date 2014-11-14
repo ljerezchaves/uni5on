@@ -26,19 +26,19 @@ namespace ns3 {
 
 EpcSdnController::EpcSdnController ()
 {
-  NS_LOG_FUNCTION ();
+  NS_LOG_FUNCTION (this);
   SetConnectionCallback (MakeCallback (&EpcSdnController::ConnectionStarted, this));
 }
 
 EpcSdnController::~EpcSdnController ()
 {
-  NS_LOG_FUNCTION ();
+  NS_LOG_FUNCTION (this);
 }
 
 void
 EpcSdnController::DoDispose ()
 {
-  NS_LOG_FUNCTION ();
+  NS_LOG_FUNCTION (this);
   m_schedCommands.clear ();
   m_arpTable.clear ();
 }

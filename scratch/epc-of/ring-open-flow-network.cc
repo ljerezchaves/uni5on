@@ -31,7 +31,7 @@ uint16_t RingOpenFlowNetwork::m_flowPrio = 2048;
 
 RingOpenFlowNetwork::RingOpenFlowNetwork ()
 {
-  NS_LOG_FUNCTION ();
+  NS_LOG_FUNCTION (this);
   
   // since we are using the OpenFlow network for S1-U links,
   // we use a /24 subnet which can hold up to 254 eNBs addresses on same subnet
@@ -44,7 +44,7 @@ RingOpenFlowNetwork::RingOpenFlowNetwork ()
 
 RingOpenFlowNetwork::~RingOpenFlowNetwork ()
 {
-  NS_LOG_FUNCTION ();
+  NS_LOG_FUNCTION (this);
 }
 
 TypeId 
@@ -80,7 +80,7 @@ RingOpenFlowNetwork::GetTypeId (void)
 void
 RingOpenFlowNetwork::DoDispose ()
 {
-  NS_LOG_FUNCTION ();
+  NS_LOG_FUNCTION (this);
   OpenFlowEpcNetwork::DoDispose ();
   Object::DoDispose ();
   m_epcSdnApp = 0;
