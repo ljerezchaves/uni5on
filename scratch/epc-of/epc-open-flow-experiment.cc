@@ -188,7 +188,7 @@ main (int argc, char *argv[])
   webNetwork->EnablePcap ("web");
   // lteNetwork->EnableTraces ();
   opfNetwork->EnableOpenFlowPcap ("openflow-channel");
-  opfNetwork->EnableDataPcap ("ofn");
+  opfNetwork->EnableDataPcap ("ofn", true);
   epcHelper->EnablePcapS1u ("epc");
   // epcHelper->EnablePcapX2 ("epc");
 
