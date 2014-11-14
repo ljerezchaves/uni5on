@@ -93,6 +93,7 @@ RingOpenFlowNetwork::CreateInternalTopology ()
   NS_ASSERT_MSG (m_nodes >= 1, "Invalid number of nodes for the ring");
 
   m_ringCtrlApp = DynamicCast<RingController> (m_ofCtrlApp);
+  NS_ASSERT_MSG (m_ringCtrlApp, "Invalid ring controller.");
 
   // Creating the switch nodes
   m_ofSwitches.Create (m_nodes);
@@ -210,14 +211,7 @@ RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node)
   int portNum = swtchDev->AddSwitchPort (devices.Get (0));
 
   // Installing OpenFlow rules for local delivery.
-  // Check for match in ethernet and IPv4 destination address.
-  Mac48Address nodeMacAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ());
-  std::ostringstream cmd;
-  cmd << "flow-mod cmd=add,table=0,prio=" << m_flowPrio-- << 
-         " eth_type=0x800,eth_dst=" << nodeMacAddr <<
-         "ip_proto=17,ip_dst=" << nodeIpAddress << 
-         " apply:output=" << portNum;
-  m_ringCtrlApp->ScheduleCommand (swtchDev, cmd.str ());
+  m_ringCtrlApp->ConfigurePortDelivery (swtchDev, nodeDev, nodeIpAddress, portNum);
 
   return nodeDev;
 }
@@ -251,10 +245,7 @@ RingOpenFlowNetwork::AttachToX2 (Ptr<Node> node)
   int portNum = swtchDev->AddSwitchPort (devices.Get (0));
 
   // Installing OpenFlow rules for local delivery
-  std::ostringstream cmd;
-  cmd << "flow-mod cmd=add,table=0,prio=" << --m_flowPrio << 
-         " ip_dst=" << nodeIpAddress << " output=" << portNum;
-  m_ringCtrlApp->ScheduleCommand (swtchDev, cmd.str ());
+  m_ringCtrlApp->ConfigurePortDelivery (swtchDev, nodeDev, nodeIpAddress, portNum);
 
   return nodeDev;
 }

@@ -82,6 +82,20 @@ EpcSdnController::NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip)
   NS_FATAL_ERROR ("This IP already existis in this network.");
 }
 
+void 
+EpcSdnController::ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch, 
+                                         Ptr<NetDevice> device, 
+                                         Ipv4Address deviceIp,
+                                         uint32_t devicePort)
+{
+  Mac48Address deviceMacAddr = Mac48Address::ConvertFrom (device->GetAddress ());
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=add,table=0,prio=40000" << // FIXME  
+         " eth_type=0x800,eth_dst=" << deviceMacAddr <<
+         "ip_proto=17,ip_dst=" << deviceIp << 
+         " apply:output=" << devicePort;
+  ScheduleCommand (swtch, cmd.str ());
+}
 
 ofl_err
 EpcSdnController::HandlePacketIn (ofl_msg_packet_in *msg, 

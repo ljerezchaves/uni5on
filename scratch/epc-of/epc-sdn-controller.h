@@ -79,6 +79,22 @@ public:
   void NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip);
 
   /**
+   * Install flow table entry for local delivery when a new IP device is
+   * connected to the OpenFlow network.  This entry will match both MAC address
+   * and IP address for the device in order to output packets on device port.
+   * \attention This device is not the one added as port to switch. Insted,
+   * this is the 'other' end of this connection, associated with a eNB or
+   * SgwPgw node.
+   * \param swtch The Switch OFSwitch13NetDevice pointer.
+   * \param device The device connected to the OpenFlow network.
+   * \param deviceIp The IPv4 address assigned to this device.
+   * \param devicePort The number of the switch port this device is attached to.
+   */
+  void ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch, 
+                              Ptr<NetDevice> device, Ipv4Address deviceIp, 
+                              uint32_t devicePort);   
+
+  /**
    * Handle packet-in messages sent from switch to this controller. Look for L2
    * switching information, update the structures and send a packet-out back.
    * \param msg The packet-in message.
