@@ -29,12 +29,12 @@ NS_OBJECT_ENSURE_REGISTERED (InternetNetwork)
 
 InternetNetwork::InternetNetwork ()
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION ();
 }
 
 InternetNetwork::~InternetNetwork ()
 { 
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION ();
 }
 
 TypeId 
@@ -101,14 +101,14 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
 void
 InternetNetwork::EnablePcap (std::string prefix)
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION ();
   m_p2pHeler.EnablePcap (prefix, m_webDevices);
 }
 
 void
 InternetNetwork::DoDispose ()
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION ();
   Object::DoDispose ();
 }
 

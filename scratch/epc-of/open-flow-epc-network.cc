@@ -30,12 +30,12 @@ OpenFlowEpcNetwork::OpenFlowEpcNetwork ()
   : m_ofCtrlApp (0),
     m_ofCtrlNode (0)
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION ();
 }
 
 OpenFlowEpcNetwork::~OpenFlowEpcNetwork ()
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION ();
 }
 
 TypeId 
@@ -50,7 +50,7 @@ OpenFlowEpcNetwork::GetTypeId (void)
 void
 OpenFlowEpcNetwork::DoDispose ()
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION ();
   m_ofCtrlApp = 0;
   m_ofCtrlNode = 0;
   m_nodeSwitchMap.clear ();

@@ -115,13 +115,13 @@ LteSimpleHandoverNetwork::LteSimpleHandoverNetwork ()
   : m_nEnbs (2),
     m_nUes (1)
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION ();
 }
 
 
 LteSimpleHandoverNetwork::~LteSimpleHandoverNetwork ()
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION ();
 }
 
 
@@ -143,7 +143,7 @@ LteSimpleHandoverNetwork::GetTypeId (void)
 void
 LteSimpleHandoverNetwork::DoDispose ()
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION ();
   m_lteHelper = 0;
   m_epcHelper = 0;
   Object::DoDispose ();
@@ -174,7 +174,7 @@ LteSimpleHandoverNetwork::EnableTraces ()
 void
 LteSimpleHandoverNetwork::CreateTopology (Ptr<EpcHelper> epcHelper)
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION ();
   NS_ASSERT (epcHelper != 0);
 
   m_epcHelper = epcHelper;
@@ -210,7 +210,7 @@ LteSimpleHandoverNetwork::GetUeDevices ()
 void
 LteSimpleHandoverNetwork::SetLteNodePositions ()
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION ();
   
   Ptr<ListPositionAllocator> positionAlloc = 
       CreateObject<ListPositionAllocator> ();
@@ -234,7 +234,7 @@ LteSimpleHandoverNetwork::SetLteNodePositions ()
 void
 LteSimpleHandoverNetwork::InstallProtocolStack ()
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION ();
 
   NS_ASSERT (m_epcHelper != 0);
   NS_ASSERT (m_lteHelper != 0);
@@ -263,7 +263,7 @@ LteSimpleHandoverNetwork::InstallProtocolStack ()
 void
 LteSimpleHandoverNetwork::SetHandoverConfiguration ()
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION ();
 
   // Add X2 inteface
   m_lteHelper->AddX2Interface (m_enbNodes);
