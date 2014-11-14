@@ -18,7 +18,7 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "open-flow-epc-network.h"
+#include "openflow-epc-network.h"
 
 NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcNetwork");
 

@@ -17,16 +17,18 @@
  *
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
+#ifndef RING_OPENFLOW_NETWORK_H
+#define RING_OPENFLOW_NETWORK_H
 
 #include <ns3/core-module.h>
-#include "open-flow-epc-network.h"
-#include "epc-sdn-controller.h"
+#include "openflow-epc-network.h"
+#include "ring-controller.h"
 
 namespace ns3 {
 
 /** 
  * This class generates and simple n-switch OpenFlow ring topology
- * controlled by EpcSdnController, which will be used by S1-U and
+ * controlled by RingController, which will be used by S1-U and
  * X2 EPC interfaces.
  *
  */
@@ -53,7 +55,7 @@ public:
 private:
   static uint16_t       m_flowPrio;     //!< Flow-mod priority
   
-  Ptr<EpcSdnController> m_epcSdnApp;    //!< Casted controller app pointer
+  Ptr<RingController>   m_ringCtrlApp;  //!< Casted controller app pointer
   uint16_t              m_nodes;        //!< Number of switches in the ring
   
   DataRate              m_LinkDataRate; //!< Link data rate
@@ -67,4 +69,6 @@ private:
   Ipv4AddressHelper m_x2Ipv4AddressHelper;
 
 }; // class RingOpenFlowNetwork
+
 }; // namespace ns3
+#endif // RING_OPENFLOW_NETWORK_H

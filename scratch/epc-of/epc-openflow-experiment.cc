@@ -24,10 +24,10 @@
 #include <ns3/flow-monitor-module.h>
 
 #include "internet-network.h"
-#include "ring-open-flow-network.h"
+#include "ring-openflow-network.h"
 #include "lte-squared-grid-network.h"
 #include "lte-applications.h"
-#include "epc-sdn-controller.h"
+#include "ring-controller.h"
 
 NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcExperiment");
 
@@ -114,15 +114,16 @@ main (int argc, char *argv[])
 
       LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_DEBUG);
       LogComponentEnable ("EpcSdnController", LOG_LEVEL_DEBUG);
+      LogComponentEnable ("RingController", LOG_LEVEL_DEBUG);
     }
 
   /*****************************************************************************
    * Creating the scenario topology, setting up callbacks
    */
 
-  // OpenFlow network (for EPC)
+  // OpenFlow ring network (for EPC)
   Ptr<OpenFlowEpcNetwork> opfNetwork = CreateObject<RingOpenFlowNetwork> ();
-  Ptr<EpcSdnController> controller = CreateObject<EpcSdnController> ();
+  Ptr<RingController> controller = CreateObject<RingController> ();
   opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
   opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("100Mb/s")));
   opfNetwork->CreateTopology (controller);

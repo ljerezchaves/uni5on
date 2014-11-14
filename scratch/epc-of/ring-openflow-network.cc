@@ -18,7 +18,7 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "ring-open-flow-network.h"
+#include "ring-openflow-network.h"
 
 NS_LOG_COMPONENT_DEFINE ("RingOpenFlowNetwork");
 
@@ -83,7 +83,7 @@ RingOpenFlowNetwork::DoDispose ()
   NS_LOG_FUNCTION (this);
   OpenFlowEpcNetwork::DoDispose ();
   Object::DoDispose ();
-  m_epcSdnApp = 0;
+  m_ringCtrlApp = 0;
 }
 
 void
@@ -92,7 +92,7 @@ RingOpenFlowNetwork::CreateInternalTopology ()
   NS_LOG_FUNCTION (this);
   NS_ASSERT_MSG (m_nodes >= 1, "Invalid number of nodes for the ring");
 
-  m_epcSdnApp = DynamicCast<EpcSdnController> (m_ofCtrlApp);
+  m_ringCtrlApp = DynamicCast<RingController> (m_ofCtrlApp);
 
   // Creating the switch nodes
   m_ofSwitches.Create (m_nodes);
@@ -134,16 +134,16 @@ RingOpenFlowNetwork::CreateInternalTopology ()
       Ptr<OFSwitch13NetDevice> nextDevice = DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (nextIndex));
       int nextPort = nextDevice->AddSwitchPort (devs.Get (1));
 
-      // Installing default groups for EpcSdnController ring routing
+      // Installing default groups for RingController ring routing
       // Group #1 is used to send packets from current switch to the next one in clockwise direction.
       std::ostringstream currCmd;
       currCmd << "group-mod cmd=add,type=ind,group=1 weight=0,port=any,group=any output=" << currPort;
-      m_epcSdnApp->ScheduleCommand (currDevice, currCmd.str ());
+      m_ringCtrlApp->ScheduleCommand (currDevice, currCmd.str ());
                                        
       // Group #2 is used to send packets from the next switch to the current one in counterclockwise direction. 
       std::ostringstream nextCmd;
       nextCmd << "group-mod cmd=add,type=ind,group=2 weight=0,port=any,group=any output=" << nextPort;
-      m_epcSdnApp->ScheduleCommand (nextDevice, nextCmd.str ());
+      m_ringCtrlApp->ScheduleCommand (nextDevice, nextCmd.str ());
 
       // To avoid loops problems in the ring with ARP protocol, let's configure one single link to drop 
       // packets when flooding over ports (OFPP_FLOOD). This is preety much like a Spanning Tree Protocol. 
@@ -153,12 +153,12 @@ RingOpenFlowNetwork::CreateInternalTopology ()
           std::ostringstream currConfig;
           Mac48Address currMacAddr = Mac48Address::ConvertFrom (devs.Get (0)->GetAddress ());
           currConfig << "port-mod port=" << currPort << ",addr=" << currMacAddr << ",conf=0x00000020,mask=0x00000020";
-          m_epcSdnApp->ScheduleCommand (currDevice, currConfig.str ());
+          m_ringCtrlApp->ScheduleCommand (currDevice, currConfig.str ());
 
           std::ostringstream nextConfig;
           Mac48Address nextMacAddr = Mac48Address::ConvertFrom (devs.Get (1)->GetAddress ());
           nextConfig << "port-mod port=" << nextPort << ",addr=" << nextMacAddr << ",conf=0x00000020,mask=0x00000020";
-          m_epcSdnApp->ScheduleCommand (nextDevice, nextConfig.str ());
+          m_ringCtrlApp->ScheduleCommand (nextDevice, nextConfig.str ());
         }
     }
 }
@@ -204,7 +204,7 @@ RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node)
   Ptr<NetDevice> nodeDev = devices.Get (1);
   Ipv4InterfaceContainer nodeIpIfaces = m_s1uIpv4AddressHelper.Assign (NetDeviceContainer (nodeDev));
   Ipv4Address nodeIpAddress = nodeIpIfaces.GetAddress (0);
-  m_epcSdnApp->NotifyNewIpDevice (nodeDev, nodeIpAddress);
+  m_ringCtrlApp->NotifyNewIpDevice (nodeDev, nodeIpAddress);
 
   // Adding newly created csma device as openflow switch port.
   int portNum = swtchDev->AddSwitchPort (devices.Get (0));
@@ -217,7 +217,7 @@ RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node)
          " eth_type=0x800,eth_dst=" << nodeMacAddr <<
          "ip_proto=17,ip_dst=" << nodeIpAddress << 
          " apply:output=" << portNum;
-  m_epcSdnApp->ScheduleCommand (swtchDev, cmd.str ());
+  m_ringCtrlApp->ScheduleCommand (swtchDev, cmd.str ());
 
   return nodeDev;
 }
@@ -254,7 +254,7 @@ RingOpenFlowNetwork::AttachToX2 (Ptr<Node> node)
   std::ostringstream cmd;
   cmd << "flow-mod cmd=add,table=0,prio=" << --m_flowPrio << 
          " ip_dst=" << nodeIpAddress << " output=" << portNum;
-  m_epcSdnApp->ScheduleCommand (swtchDev, cmd.str ());
+  m_ringCtrlApp->ScheduleCommand (swtchDev, cmd.str ());
 
   return nodeDev;
 }
