@@ -204,6 +204,7 @@ RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node)
   Ptr<NetDevice> nodeDev = devices.Get (1);
   Ipv4InterfaceContainer nodeIpIfaces = m_s1uIpv4AddressHelper.Assign (NetDeviceContainer (nodeDev));
   Ipv4Address nodeIpAddress = nodeIpIfaces.GetAddress (0);
+  m_epcSdnApp->NotifyNewIpDevice (nodeDev, nodeIpAddress);
 
   // Adding newly created csma device as openflow switch port.
   int portNum = swtchDev->AddSwitchPort (devices.Get (0));
