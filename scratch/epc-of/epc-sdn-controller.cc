@@ -24,6 +24,8 @@ NS_LOG_COMPONENT_DEFINE ("EpcSdnController");
 
 namespace ns3 {
 
+NS_OBJECT_ENSURE_REGISTERED (EpcSdnController);
+
 EpcSdnController::EpcSdnController ()
 {
   NS_LOG_FUNCTION (this);
@@ -58,15 +60,6 @@ EpcSdnController::AddBearer (uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer)
   return 0;
 }
 
-void
-EpcSdnController::ScheduleCommand (Ptr<OFSwitch13NetDevice> device, 
-                                   const std::string textCmd)
-{
-  NS_ASSERT (device);
-  std::pair<Ptr<OFSwitch13NetDevice>,std::string> entry (device, textCmd);
-  m_schedCommands.insert (entry);
-}
-
 void 
 EpcSdnController::NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip)
 {
@@ -88,13 +81,23 @@ EpcSdnController::ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch,
                                          Ipv4Address deviceIp,
                                          uint32_t devicePort)
 {
+  NS_LOG_FUNCTION (this << swtch << deviceIp << (int)devicePort);
+
   Mac48Address deviceMacAddr = Mac48Address::ConvertFrom (device->GetAddress ());
   std::ostringstream cmd;
-  cmd << "flow-mod cmd=add,table=0,prio=40000" << // FIXME  
+  cmd << "flow-mod cmd=add,table=0,prio=40000" <<
          " eth_type=0x800,eth_dst=" << deviceMacAddr <<
-         "ip_proto=17,ip_dst=" << deviceIp << 
-         " apply:output=" << devicePort;
+         ",ip_dst=" << deviceIp << " apply:output=" << devicePort;
   ScheduleCommand (swtch, cmd.str ());
+}
+
+void
+EpcSdnController::ScheduleCommand (Ptr<OFSwitch13NetDevice> device, 
+                                   const std::string textCmd)
+{
+  NS_ASSERT (device);
+  std::pair<Ptr<OFSwitch13NetDevice>,std::string> entry (device, textCmd);
+  m_schedCommands.insert (entry);
 }
 
 ofl_err
@@ -179,8 +182,6 @@ EpcSdnController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   return 0;
 }
 
-
-/********** Private methods **********/
 void
 EpcSdnController::ConnectionStarted (SwitchInfo swtch)
 {
@@ -191,7 +192,7 @@ EpcSdnController::ConnectionStarted (SwitchInfo swtch)
 
   // After a successfull handshake, let's install some default entries 
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");  // Table miss
-  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=65500 eth_type=0x0806 apply:output=ctrl");  // Arp handling
+  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=1 eth_type=0x0806 apply:output=ctrl");  // Arp handling
 
   // Executing any scheduled commands for this switch
   std::pair <DevCmdMap_t::iterator, DevCmdMap_t::iterator> ret;
@@ -201,77 +202,6 @@ EpcSdnController::ConnectionStarted (SwitchInfo swtch)
       DpctlCommand (swtch, it->second);
     }
   m_schedCommands.erase (ret.first, ret.second);
-}
-
-Mac48Address 
-EpcSdnController::ArpLookup (Ipv4Address ip)
-{
-  IpMacMap_t::iterator ret;
-  ret = m_arpTable.find (ip);
-  if (ret != m_arpTable.end ())
-    {
-      NS_LOG_DEBUG ("Found ARP entry: " << ip << " - " << ret->second);
-      return ret->second;
-    }
-  NS_FATAL_ERROR ("No ARP information for this IP.");
-}
-
-Ipv4Address 
-EpcSdnController::ExtractIpv4Address (uint32_t oxm_of, ofl_match* match)
-{
-  switch (oxm_of)
-    {
-      case OXM_OF_ARP_SPA:
-      case OXM_OF_ARP_TPA:
-      case OXM_OF_IPV4_DST:
-      case OXM_OF_IPV4_SRC:
-        {
-          uint32_t ip;
-          int size = OXM_LENGTH (oxm_of);
-          ofl_match_tlv *ipTlv = oxm_match_lookup (oxm_of, match);
-          memcpy (&ip, ipTlv->value, size);
-          return Ipv4Address (ntohl (ip));
-        }
-      default:
-        NS_FATAL_ERROR ("Invalid IP field.");
-    }
-}
-
-Ptr<Packet> 
-EpcSdnController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp, 
-                                  Mac48Address dstMac, Ipv4Address dstIp)
-{
-  Ptr<Packet> packet = Create<Packet> ();
-  
-  // ARP header
-  ArpHeader arp;
-  arp.SetReply (srcMac, srcIp, dstMac, dstIp);
-  packet->AddHeader (arp);
-  
-  // Ethernet header
-  EthernetHeader eth (false);
-  eth.SetSource (srcMac);
-  eth.SetDestination (dstMac);
-  if (packet->GetSize () < 46)
-    {
-      uint8_t buffer[46];
-      memset (buffer, 0, 46);
-      Ptr<Packet> padd = Create<Packet> (buffer, 46 - packet->GetSize ());
-      packet->AddAtEnd (padd);
-    }
-  eth.SetLengthType (ArpL3Protocol::PROT_NUMBER);
-  packet->AddHeader (eth);
-
-  // Ethernet trailer
-  EthernetTrailer trailer;
-  if (Node::ChecksumEnabled ())
-    {
-      trailer.EnableFcs (true);
-    }
-  trailer.CalcFcs (packet);
-  packet->AddTrailer (trailer);
-  
-  return packet;
 }
 
 ofl_err
@@ -338,6 +268,77 @@ EpcSdnController::HandleArpPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, u
   // All handlers must free the message when everything is ok
   ofl_msg_free ((ofl_msg_header*)msg, NULL /*dp->exp*/);
   return 0;
+}
+
+Mac48Address 
+EpcSdnController::ArpLookup (Ipv4Address ip)
+{
+  IpMacMap_t::iterator ret;
+  ret = m_arpTable.find (ip);
+  if (ret != m_arpTable.end ())
+    {
+      NS_LOG_DEBUG ("Found ARP entry: " << ip << " - " << ret->second);
+      return ret->second;
+    }
+  NS_FATAL_ERROR ("No ARP information for this IP.");
+}
+
+Ptr<Packet> 
+EpcSdnController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp, 
+                                  Mac48Address dstMac, Ipv4Address dstIp)
+{
+  Ptr<Packet> packet = Create<Packet> ();
+  
+  // ARP header
+  ArpHeader arp;
+  arp.SetReply (srcMac, srcIp, dstMac, dstIp);
+  packet->AddHeader (arp);
+  
+  // Ethernet header
+  EthernetHeader eth (false);
+  eth.SetSource (srcMac);
+  eth.SetDestination (dstMac);
+  if (packet->GetSize () < 46)
+    {
+      uint8_t buffer[46];
+      memset (buffer, 0, 46);
+      Ptr<Packet> padd = Create<Packet> (buffer, 46 - packet->GetSize ());
+      packet->AddAtEnd (padd);
+    }
+  eth.SetLengthType (ArpL3Protocol::PROT_NUMBER);
+  packet->AddHeader (eth);
+
+  // Ethernet trailer
+  EthernetTrailer trailer;
+  if (Node::ChecksumEnabled ())
+    {
+      trailer.EnableFcs (true);
+    }
+  trailer.CalcFcs (packet);
+  packet->AddTrailer (trailer);
+  
+  return packet;
+}
+
+Ipv4Address 
+EpcSdnController::ExtractIpv4Address (uint32_t oxm_of, ofl_match* match)
+{
+  switch (oxm_of)
+    {
+      case OXM_OF_ARP_SPA:
+      case OXM_OF_ARP_TPA:
+      case OXM_OF_IPV4_DST:
+      case OXM_OF_IPV4_SRC:
+        {
+          uint32_t ip;
+          int size = OXM_LENGTH (oxm_of);
+          ofl_match_tlv *ipTlv = oxm_match_lookup (oxm_of, match);
+          memcpy (&ip, ipTlv->value, size);
+          return Ipv4Address (ntohl (ip));
+        }
+      default:
+        NS_FATAL_ERROR ("Invalid IP field.");
+    }
 }
 
 };  // namespace ns3

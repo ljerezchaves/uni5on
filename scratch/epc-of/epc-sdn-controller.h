@@ -58,15 +58,6 @@ public:
   uint8_t AddBearer (uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer);
 
   /**
-   * Save a Dpctl command to be executed just after the conection stablishment
-   * between switch and controller. 
-   * \param textCmd The Dpctl command.
-   * \param device The Switch OFSwitch13NetDevice pointer.
-   */
-  void ScheduleCommand (Ptr<OFSwitch13NetDevice> device, 
-                        const std::string textCmd);
-
-  /**
    * Notify the controller of a new device connected to the OpenFlow network.
    * This function will save the IP address / MAC address wich will be further
    * used in ARP resolution. 
@@ -94,6 +85,16 @@ public:
                               Ptr<NetDevice> device, Ipv4Address deviceIp, 
                               uint32_t devicePort);   
 
+  /**
+   * Save a Dpctl command to be executed just after the conection stablishment
+   * between switch and controller. 
+   * \param textCmd The Dpctl command.
+   * \param device The Switch OFSwitch13NetDevice pointer.
+   */
+  void ScheduleCommand (Ptr<OFSwitch13NetDevice> device, 
+                        const std::string textCmd);
+
+protected:
   /**
    * Handle packet-in messages sent from switch to this controller. Look for L2
    * switching information, update the structures and send a packet-out back.
@@ -125,19 +126,21 @@ private:
   void ConnectionStarted (SwitchInfo swtch);
 
   /**
+   * Handle packet-in messages sent from switch with arp message.
+   * \param msg The packet-in message.
+   * \param swtch The switch information.
+   * \param xid Transaction id.
+   * \return 0 if everything's ok, otherwise an error number.
+   */
+  ofl_err HandleArpPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, 
+                             uint32_t xid);
+
+  /**
    * Perform an ARP resolution
    * \param ip The Ipv4Address to search.
    * \return The MAC address for this ip.
    */
   Mac48Address ArpLookup (Ipv4Address ip);
-
-  /**
-   * Extract an IPv4 address from packet match.
-   * \param oxm_of The OXM_IF_* IPv4 field.
-   * \param match The ofl_match structure pointer.
-   * \return The IPv4 address.
-   */
-  Ipv4Address ExtractIpv4Address (uint32_t oxm_of, ofl_match* match);
 
   /**
    * Create a Packet with an ARP reply, encapsulated inside of an Ehternet
@@ -152,24 +155,20 @@ private:
                               Mac48Address dstMac, Ipv4Address dstIp);
 
   /**
-   * Handle packet-in messages sent from switch with arp message.
-   * \param msg The packet-in message.
-   * \param swtch The switch information.
-   * \param xid Transaction id.
-   * \return 0 if everything's ok, otherwise an error number.
+   * Extract an IPv4 address from packet match.
+   * \param oxm_of The OXM_IF_* IPv4 field.
+   * \param match The ofl_match structure pointer.
+   * \return The IPv4 address.
    */
-  ofl_err HandleArpPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, 
-                             uint32_t xid);
+  Ipv4Address ExtractIpv4Address (uint32_t oxm_of, ofl_match* match);
 
   /** Multimap saving pair <pointer to device / dpctl command str> */
   typedef std::multimap<Ptr<OFSwitch13NetDevice>, std::string> DevCmdMap_t; 
-  
+  DevCmdMap_t   m_schedCommands;  //!< Scheduled commands for execution
+
   /** Map saving pair <IPv4 address / MAC address> */
   typedef std::map<Ipv4Address, Mac48Address> IpMacMap_t;
-  
-  DevCmdMap_t   m_schedCommands;  //!< Scheduled commands for execution
   IpMacMap_t    m_arpTable;       //!< ARP resolution table
-  //\}
 };
 
 };  // namespace ns3
