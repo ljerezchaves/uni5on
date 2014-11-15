@@ -53,8 +53,6 @@ public:
   void CreateInternalTopology ();
   
 private:
-  static uint16_t       m_flowPrio;     //!< Flow-mod priority
-  
   Ptr<RingController>   m_ringCtrlApp;  //!< Casted controller app pointer
   uint16_t              m_nodes;        //!< Number of switches in the ring
   

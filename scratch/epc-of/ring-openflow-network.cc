@@ -27,7 +27,7 @@ namespace ns3 {
 NS_OBJECT_ENSURE_REGISTERED (RingOpenFlowNetwork);
 
 // Initializing RingOpenFlowNetwork static members
-uint16_t RingOpenFlowNetwork::m_flowPrio = 2048;
+
 
 RingOpenFlowNetwork::RingOpenFlowNetwork ()
 {
@@ -90,10 +90,14 @@ void
 RingOpenFlowNetwork::CreateInternalTopology ()
 {
   NS_LOG_FUNCTION (this);
+
+  // Validating controller and number of switches in the ring
+  m_ringCtrlApp = DynamicCast<RingController> (m_ofCtrlApp);
+  NS_ASSERT_MSG (m_ringCtrlApp, "A RingOpenFlowNetwork expects a RingController.");
   NS_ASSERT_MSG (m_nodes >= 1, "Invalid number of nodes for the ring");
 
-  m_ringCtrlApp = DynamicCast<RingController> (m_ofCtrlApp);
-  NS_ASSERT_MSG (m_ringCtrlApp, "Invalid ring controller.");
+  m_ringCtrlApp->SetAttribute ("NumSwitches", UintegerValue (m_nodes));
+  m_ringCtrlApp->SetAttribute ("LinkDataRate", DataRateValue (m_LinkDataRate));
 
   // Creating the switch nodes
   m_ofSwitches.Create (m_nodes);

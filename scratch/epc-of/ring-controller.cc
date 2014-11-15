@@ -24,6 +24,10 @@ NS_LOG_COMPONENT_DEFINE ("RingController");
 
 namespace ns3 {
 
+NS_OBJECT_ENSURE_REGISTERED (RingController);
+
+uint16_t RingController::m_flowPrio = 2048;
+
 RingController::RingController ()
 {
   NS_LOG_FUNCTION (this);
@@ -46,6 +50,16 @@ RingController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RingController")
     .SetParent (EpcSdnController::GetTypeId ())
+    .AddAttribute ("NumSwitches", 
+                   "The number of OpenFlow switches in the ring.",
+                   UintegerValue (3),
+                   MakeUintegerAccessor (&RingController::m_nodes),
+                   MakeUintegerChecker<uint16_t> ())
+    .AddAttribute ("LinkDataRate", 
+                   "The data rate to be used for the CSMA OpenFlow links to be created",
+                   DataRateValue (DataRate ("10Mb/s")),
+                   MakeDataRateAccessor (&RingController::m_LinkDataRate),
+                   MakeDataRateChecker ())
   ;
   return tid;
 }

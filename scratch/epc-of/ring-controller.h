@@ -48,6 +48,11 @@ public:
   /** Destructor implementation */
   virtual void DoDispose ();
 
+private:
+  static uint16_t m_flowPrio;     //!< Flow-mod priority
+  uint16_t        m_nodes;        //!< Number of switches in the ring
+  DataRate        m_LinkDataRate; //!< Link data rate
+ 
 };
 
 };  // namespace ns3
