@@ -26,6 +26,7 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
+#include "openflow-epc-network.h"
 
 namespace ns3 {
 
@@ -55,7 +56,8 @@ public:
    * \param bearer
    * \return //FIXME
    */
-  uint8_t AddBearer (uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer);
+  virtual uint8_t NotifyNewBearer (uint64_t imsi, Ptr<EpcTft> tft, 
+                                   EpsBearer bearer);
 
   /**
    * Notify the controller of a new device connected to the OpenFlow network.
@@ -67,7 +69,13 @@ public:
    * \param dev The device connected to the OpenFlow network.
    * \param ip The IPv4 address assigned to this device.
    */
-  void NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip);
+  virtual void NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip);
+
+  /**
+   * Notify this controller of a new connection between two switches. 
+   * \param conInfo The connection information and metadata.
+   */ 
+  virtual void NotifyNewSwitchConnection (ConnectionInfo connInfo);
 
   /**
    * Install flow table entry for local delivery when a new IP device is
@@ -79,11 +87,46 @@ public:
    * \param swtch The Switch OFSwitch13NetDevice pointer.
    * \param device The device connected to the OpenFlow network.
    * \param deviceIp The IPv4 address assigned to this device.
-   * \param devicePort The number of the switch port this device is attached to.
+   * \param devicePort The number of switch port this device is attached to.
    */
-  void ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch, 
-                              Ptr<NetDevice> device, Ipv4Address deviceIp, 
-                              uint32_t devicePort);   
+  virtual void ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch, 
+                                      Ptr<NetDevice> device, 
+                                      Ipv4Address deviceIp, 
+                                      uint32_t devicePort);   
+  /**
+   * To avoid flooding problems when broadcasting packetes (like in ARP
+   * protocol), let's find a Spanning Tree and drop packets at selected ports
+   * when flooding (OFPP_FLOOD). This is accomplished by configuring the port
+   * with OFPPC_NO_FWD flag (0x20).
+   */
+  virtual void CreateSpanningTree ();
+
+  /**
+   * Populate the internal NetDeviceContainer with switch devices at networ.
+   * \param devs The NetDeviceContainer with switch devices.
+   */
+  void SetSwitchDevices (NetDeviceContainer devs);
+
+protected:
+  /**
+   * Search for connection information between two switches.
+   * \param sw1 First switch index.
+   * \param sw2 Second switch index.
+   * \return Pointer to connection info saved.
+   */
+  ConnectionInfo* GetConnectionInfo (uint16_t sw1, uint16_t sw2);
+
+  /**
+   * Get the OFSwitch13NetDevice of a specific switch.
+   * \param index The switch index.
+   * \return The pointer to the switch OFSwitch13NetDevice.
+   */
+  Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
+
+  /**
+   * \return Number of switches in the network.
+   */
+  uint16_t GetNSwitches ();
 
   /**
    * Save a Dpctl command to be executed just after the conection stablishment
@@ -94,7 +137,6 @@ public:
   void ScheduleCommand (Ptr<OFSwitch13NetDevice> device, 
                         const std::string textCmd);
 
-protected:
   /**
    * Handle packet-in messages sent from switch to this controller. Look for L2
    * switching information, update the structures and send a packet-out back.
@@ -169,6 +211,13 @@ private:
   /** Map saving pair <IPv4 address / MAC address> */
   typedef std::map<Ipv4Address, Mac48Address> IpMacMap_t;
   IpMacMap_t    m_arpTable;       //!< ARP resolution table
+
+  /** Map saving pair of switch indexes / connection information */
+  typedef std::map<std::pair<uint16_t,uint16_t>, ConnectionInfo> ConnInfoMap_t; 
+  ConnInfoMap_t m_connections;    //!< Connections between switches.
+
+  NetDeviceContainer  m_ofDevices;    //!< Switch devices.
+  uint16_t            m_nodes;        //!< Number of switches in the network.
 };
 
 };  // namespace ns3

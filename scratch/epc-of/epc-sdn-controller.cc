@@ -43,6 +43,7 @@ EpcSdnController::DoDispose ()
   NS_LOG_FUNCTION (this);
   m_schedCommands.clear ();
   m_arpTable.clear ();
+  m_connections.clear ();
 }
 
 TypeId 
@@ -50,12 +51,17 @@ EpcSdnController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::EpcSdnController")
     .SetParent (OFSwitch13Controller::GetTypeId ())
+    .AddAttribute ("NumSwitches", 
+                   "The number of OpenFlow switches in the ring.",
+                   UintegerValue (3),
+                   MakeUintegerAccessor (&EpcSdnController::m_nodes),
+                   MakeUintegerChecker<uint16_t> ())
   ;
   return tid;
 }
 
 uint8_t
-EpcSdnController::AddBearer (uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer)
+EpcSdnController::NotifyNewBearer (uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer)
 {
   return 0;
 }
@@ -75,6 +81,27 @@ EpcSdnController::NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip)
   NS_FATAL_ERROR ("This IP already existis in this network.");
 }
 
+void
+EpcSdnController::NotifyNewSwitchConnection (ConnectionInfo connInfo)
+{
+  // Save this connection info
+  std::pair<uint16_t,uint16_t> key;
+  key.first = std::min (connInfo.switchIdx1, connInfo.switchIdx2);
+  key.second = std::max (connInfo.switchIdx1, connInfo.switchIdx2);
+  std::pair<std::pair<uint16_t,uint16_t>, ConnectionInfo> entry (key, connInfo);
+  std::pair <ConnInfoMap_t::iterator, bool> ret = m_connections.insert (entry);
+  if (ret.second == true)
+    {
+      NS_LOG_DEBUG ("New connection info saved: switch " << 
+          key.first << " (" << connInfo.portNum1 << ") -- switch " << 
+          key.second << " (" << connInfo.portNum2 << ")");
+    }
+  else
+    {
+      NS_FATAL_ERROR ("Error saving connection info.");
+    }
+}
+
 void 
 EpcSdnController::ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch, 
                                          Ptr<NetDevice> device, 
@@ -89,6 +116,50 @@ EpcSdnController::ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch,
          " eth_type=0x800,eth_dst=" << deviceMacAddr <<
          ",ip_dst=" << deviceIp << " apply:output=" << devicePort;
   ScheduleCommand (swtch, cmd.str ());
+}
+
+void
+EpcSdnController::CreateSpanningTree ()
+{
+  NS_LOG_WARN ("No Spanning Tree Protocol implemented here.");
+}
+
+void 
+EpcSdnController::SetSwitchDevices (NetDeviceContainer devs)
+{
+  NS_ASSERT (devs.GetN () == m_nodes);
+  m_ofDevices = devs;
+}
+
+ConnectionInfo*
+EpcSdnController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
+{
+  std::pair<uint16_t,uint16_t> key;
+  key.first = std::min (sw1, sw2);
+  key.second = std::max (sw1, sw2);
+  ConnInfoMap_t::iterator it = m_connections.find (key);
+  if (it == m_connections.end ())
+    {
+      NS_LOG_ERROR ("No connection information available.");
+      return NULL;
+    }
+  else
+    {
+      return &(it->second);
+    }
+}
+
+Ptr<OFSwitch13NetDevice> 
+EpcSdnController::GetSwitchDevice (uint16_t index)
+{
+  NS_ASSERT (index < m_ofDevices.GetN ());
+  return DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (index));
+}
+
+uint16_t 
+EpcSdnController::GetNSwitches ()
+{
+  return m_nodes;
 }
 
 void
@@ -107,7 +178,7 @@ EpcSdnController::HandlePacketIn (ofl_msg_packet_in *msg,
   NS_LOG_FUNCTION (swtch.ipv4 << xid);
 
   char *m = ofl_structs_match_to_string ((struct ofl_match_header*)msg->match, NULL);
-  NS_LOG_DEBUG ("Packet in match: " << m);
+  // NS_LOG_DEBUG ("Packet in match: " << m);
   free (m);
 
   enum ofp_packet_in_reason reason = msg->reason;
@@ -263,6 +334,10 @@ EpcSdnController::HandleArpPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, u
         {
           NS_LOG_ERROR ("Error sending packet out with arp request"); 
         }
+    }
+  else 
+    {
+      NS_LOG_WARN ("This was not supposed to happen. Ignoring...");
     }
 
   // All handlers must free the message when everything is ok
