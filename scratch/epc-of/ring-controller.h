@@ -49,6 +49,16 @@ public:
   /** Destructor implementation */
   virtual void DoDispose ();
 
+  /** 
+   * AddBearer callback, used to prepare the OpenFlow network for bearer
+   * traffic routing. 
+   * \param imsi
+   * \param tft
+   * \param bearer
+   * \return //FIXME
+   */
+  uint8_t NotifyNewBearer (uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer);
+
   /**
    * Notify this ring controller of a new connection between two switches in
    * the ring. 
@@ -71,6 +81,16 @@ public:
   void CreateSpanningTree ();
 
 private:
+
+  /**
+   * Look for the routing path between srcSwitchIdx and dstSwitchIdx with
+   * lowest number of hops.
+   * \param srcSwitchIdx Sourche switch index.
+   * \param dstSwitchIdx Destination switch index.
+   * \return true for clockwise routing, false otherwise.
+   */
+  bool FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx = 0);
+
   static uint16_t     m_flowPrio;     //!< Flow-mod priority
   DataRate            m_LinkDataRate; //!< Link data rate
 };

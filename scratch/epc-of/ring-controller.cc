@@ -19,7 +19,6 @@
  */
 
 #include "ring-controller.h"
-#include <algorithm>
 
 NS_LOG_COMPONENT_DEFINE ("RingController");
 
@@ -57,6 +56,13 @@ RingController::GetTypeId (void)
                    MakeDataRateChecker ())
   ;
   return tid;
+}
+
+uint8_t
+RingController::NotifyNewBearer (uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer)
+{
+  NS_LOG_FUNCTION (this);
+  return 0;
 }
 
 void
@@ -97,6 +103,22 @@ RingController::CreateSpanningTree ()
   Mac48Address macAddr2 = Mac48Address::ConvertFrom (info->portDev2->GetAddress ());
   cmd2 << "port-mod port=" << info->portNum2 << ",addr=" << macAddr2 << ",conf=0x00000020,mask=0x00000020";
   ScheduleCommand (info->switchDev2, cmd2.str ());
+}
+
+bool
+RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)
+{
+  NS_ASSERT (srcSwitchIdx != dstSwitchIdx);
+  NS_ASSERT (std::max (srcSwitchIdx, dstSwitchIdx) <= GetNSwitches ());
+  
+  uint16_t maxHops = GetNSwitches () / 2;
+  int clockwiseDistance = dstSwitchIdx - srcSwitchIdx;
+  if (clockwiseDistance < 0)
+    {
+      clockwiseDistance += GetNSwitches ();
+    }
+  
+  return (clockwiseDistance <= maxHops) ? true : false;
 }
 
 };  // namespace ns3

@@ -60,12 +60,6 @@ EpcSdnController::GetTypeId (void)
   return tid;
 }
 
-uint8_t
-EpcSdnController::NotifyNewBearer (uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer)
-{
-  return 0;
-}
-
 void 
 EpcSdnController::NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip)
 {

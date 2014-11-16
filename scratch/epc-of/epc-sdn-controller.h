@@ -48,17 +48,6 @@ public:
   /** Destructor implementation */
   virtual void DoDispose ();
 
-  /** 
-   * AddBearer callback, used to prepare the OpenFlow network for bearer
-   * traffic routing. 
-   * \param imsi
-   * \param tft
-   * \param bearer
-   * \return //FIXME
-   */
-  virtual uint8_t NotifyNewBearer (uint64_t imsi, Ptr<EpcTft> tft, 
-                                   EpsBearer bearer);
-
   /**
    * Notify the controller of a new device connected to the OpenFlow network.
    * This function will save the IP address / MAC address wich will be further

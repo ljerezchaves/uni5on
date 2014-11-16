@@ -123,7 +123,7 @@ main (int argc, char *argv[])
 
   // OpenFlow ring network (for EPC)
   Ptr<OpenFlowEpcNetwork> opfNetwork = CreateObject<RingOpenFlowNetwork> ();
-  Ptr<EpcSdnController> controller = CreateObject<RingController> ();
+  Ptr<RingController> controller = CreateObject<RingController> ();
   opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
   opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("10Mb/s")));
   opfNetwork->CreateTopology (controller);
@@ -132,7 +132,7 @@ main (int argc, char *argv[])
   Ptr<OpenFlowEpcHelper> epcHelper = CreateObject<OpenFlowEpcHelper> ();
   epcHelper->SetS1uConnectCallback (MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, opfNetwork));
   epcHelper->SetX2ConnectCallback (MakeCallback (&OpenFlowEpcNetwork::AttachToX2, opfNetwork));
-  epcHelper->SetAddBearerCallback (MakeCallback (&EpcSdnController::NotifyNewBearer, controller));
+  epcHelper->SetAddBearerCallback (MakeCallback (&RingController::NotifyNewBearer, controller));
   
   // LTE radio access network
   Ptr<LteSquaredGridNetwork> lteNetwork = CreateObject<LteSquaredGridNetwork> ();
