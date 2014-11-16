@@ -19,6 +19,7 @@
  */
 
 #include "ring-controller.h"
+#include <algorithm>
 
 NS_LOG_COMPONENT_DEFINE ("RingController");
 
@@ -31,7 +32,6 @@ uint16_t RingController::m_flowPrio = 2048;
 RingController::RingController ()
 {
   NS_LOG_FUNCTION (this);
-  //SetConnectionCallback (MakeCallback (&RingController::ConnectionStarted, this));
 }
 
 RingController::~RingController ()
@@ -50,11 +50,6 @@ RingController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RingController")
     .SetParent (EpcSdnController::GetTypeId ())
-    .AddAttribute ("NumSwitches", 
-                   "The number of OpenFlow switches in the ring.",
-                   UintegerValue (3),
-                   MakeUintegerAccessor (&RingController::m_nodes),
-                   MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("LinkDataRate", 
                    "The data rate to be used for the CSMA OpenFlow links to be created",
                    DataRateValue (DataRate ("10Mb/s")),
@@ -62,6 +57,46 @@ RingController::GetTypeId (void)
                    MakeDataRateChecker ())
   ;
   return tid;
+}
+
+void
+RingController::NotifyNewSwitchConnection (ConnectionInfo connInfo)
+{
+  NS_LOG_FUNCTION (this);
+  
+  // Call base method which will save this information
+  EpcSdnController::NotifyNewSwitchConnection (connInfo);
+  
+  // Installing default groups for RingController ring routing.  Group #1 is
+  // used to send packets from current switch to the next one in clockwise
+  // direction.
+  std::ostringstream cmd1;
+  cmd1 << "group-mod cmd=add,type=ind,group=1 weight=0,port=any,group=any output=" << connInfo.portNum1;
+  ScheduleCommand (connInfo.switchDev1, cmd1.str ());
+                                   
+  // Group #2 is used to send packets from the next switch to the current one
+  // in counterclockwise direction. 
+  std::ostringstream cmd2;
+  cmd2 << "group-mod cmd=add,type=ind,group=2 weight=0,port=any,group=any output=" << connInfo.portNum2;
+  ScheduleCommand (connInfo.switchDev2, cmd2.str ());
+}
+
+void
+RingController::CreateSpanningTree ()
+{
+  uint16_t half = (GetNSwitches () / 2);
+  ConnectionInfo* info = GetConnectionInfo (half, half+1);
+  NS_LOG_DEBUG ("Disabling link from " << half << " to " << half+1 << " for broadcast messages.");
+  
+  std::ostringstream cmd1;
+  Mac48Address macAddr1 = Mac48Address::ConvertFrom (info->portDev1->GetAddress ());
+  cmd1 << "port-mod port=" << info->portNum1 << ",addr=" << macAddr1 << ",conf=0x00000020,mask=0x00000020";
+  ScheduleCommand (info->switchDev1, cmd1.str ());
+
+  std::ostringstream cmd2;
+  Mac48Address macAddr2 = Mac48Address::ConvertFrom (info->portDev2->GetAddress ());
+  cmd2 << "port-mod port=" << info->portNum2 << ",addr=" << macAddr2 << ",conf=0x00000020,mask=0x00000020";
+  ScheduleCommand (info->switchDev2, cmd2.str ());
 }
 
 };  // namespace ns3

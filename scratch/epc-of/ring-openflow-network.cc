@@ -93,7 +93,7 @@ RingOpenFlowNetwork::CreateInternalTopology ()
 
   // Validating controller and number of switches in the ring
   m_ringCtrlApp = DynamicCast<RingController> (m_ofCtrlApp);
-  NS_ASSERT_MSG (m_ringCtrlApp, "A RingOpenFlowNetwork expects a RingController.");
+  NS_ASSERT_MSG (m_ringCtrlApp, "Expecting a RingController.");
   NS_ASSERT_MSG (m_nodes >= 1, "Invalid number of nodes for the ring");
 
   m_ringCtrlApp->SetAttribute ("NumSwitches", UintegerValue (m_nodes));
@@ -111,6 +111,7 @@ RingOpenFlowNetwork::CreateInternalTopology ()
 
   // Installing the Openflow switch devices for each switch node
   m_ofDevices = m_ofHelper.InstallSwitchesWithoutPorts (m_ofSwitches);
+  DynamicCast<EpcSdnController> (m_ringCtrlApp)->SetSwitchDevices (m_ofDevices);
 
   // If the number of nodes in the ring is 1, return with no links
   if (m_nodes == 1) return;
@@ -123,8 +124,8 @@ RingOpenFlowNetwork::CreateInternalTopology ()
   // Connecting switches in ring topology (clockwise order)
   for (uint16_t i = 0; i < m_nodes; i++)
     {
-      int currIndex = i;
-      int nextIndex = (i + 1) % m_nodes;  // Next node in clockwise direction
+      uint16_t currIndex = i;
+      uint16_t nextIndex = (i + 1) % m_nodes;  // Next node in clockwise direction
 
       // Creating a link between current and next node
       NodeContainer pair;
@@ -133,39 +134,31 @@ RingOpenFlowNetwork::CreateInternalTopology ()
       NetDeviceContainer devs = m_ofCsmaHelper.Install (pair);
     
       // Adding newly created csma devices as openflow switch ports.
-      Ptr<OFSwitch13NetDevice> currDevice = DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (currIndex));
-      int currPort = currDevice->AddSwitchPort (devs.Get (0));
+      Ptr<OFSwitch13NetDevice> currDevice = GetSwitchDevice (currIndex);
+      Ptr<CsmaNetDevice> currPortDevice = DynamicCast<CsmaNetDevice> (devs.Get (0));
+      uint32_t currPortNum = currDevice->AddSwitchPort (currPortDevice);
 
-      Ptr<OFSwitch13NetDevice> nextDevice = DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (nextIndex));
-      int nextPort = nextDevice->AddSwitchPort (devs.Get (1));
+      Ptr<OFSwitch13NetDevice> nextDevice = GetSwitchDevice (nextIndex);
+      Ptr<CsmaNetDevice> nextPortDevice = DynamicCast<CsmaNetDevice> (devs.Get (1));
+      uint32_t nextPortNum = nextDevice->AddSwitchPort (nextPortDevice);
 
-      // Installing default groups for RingController ring routing
-      // Group #1 is used to send packets from current switch to the next one in clockwise direction.
-      std::ostringstream currCmd;
-      currCmd << "group-mod cmd=add,type=ind,group=1 weight=0,port=any,group=any output=" << currPort;
-      m_ringCtrlApp->ScheduleCommand (currDevice, currCmd.str ());
-                                       
-      // Group #2 is used to send packets from the next switch to the current one in counterclockwise direction. 
-      std::ostringstream nextCmd;
-      nextCmd << "group-mod cmd=add,type=ind,group=2 weight=0,port=any,group=any output=" << nextPort;
-      m_ringCtrlApp->ScheduleCommand (nextDevice, nextCmd.str ());
-
-      // To avoid loops problems in the ring with ARP protocol, let's configure one single link to drop 
-      // packets when flooding over ports (OFPP_FLOOD). This is preety much like a Spanning Tree Protocol. 
-      // Here we are disabling the farthest gateway link configuring its ports to OFPPC_NO_FWD flag (0x20).
-      if (i == (uint16_t)(m_nodes / 2))
-        {
-          std::ostringstream currConfig;
-          Mac48Address currMacAddr = Mac48Address::ConvertFrom (devs.Get (0)->GetAddress ());
-          currConfig << "port-mod port=" << currPort << ",addr=" << currMacAddr << ",conf=0x00000020,mask=0x00000020";
-          m_ringCtrlApp->ScheduleCommand (currDevice, currConfig.str ());
-
-          std::ostringstream nextConfig;
-          Mac48Address nextMacAddr = Mac48Address::ConvertFrom (devs.Get (1)->GetAddress ());
-          nextConfig << "port-mod port=" << nextPort << ",addr=" << nextMacAddr << ",conf=0x00000020,mask=0x00000020";
-          m_ringCtrlApp->ScheduleCommand (nextDevice, nextConfig.str ());
-        }
+      // Notify the ring controller of this new connection.
+      ConnectionInfo info = {
+        .switchIdx1 = currIndex,
+        .switchIdx2 = nextIndex,
+        .switchDev1 = currDevice,
+        .switchDev2 = nextDevice,
+        .portDev1 = currPortDevice,
+        .portDev2 = nextPortDevice,
+        .portNum1 = currPortNum,
+        .portNum2 = nextPortNum,
+        .nominalDataRate = m_LinkDataRate,
+        .availableDataRate = m_LinkDataRate
+      };
+      m_ringCtrlApp->NotifyNewSwitchConnection (info);
     }
+  
+  m_ringCtrlApp->CreateSpanningTree ();
 }
 
 Ptr<NetDevice>
@@ -197,7 +190,7 @@ RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node)
   RegisterNodeAtSwitch (switchIdx, node);
 
   Ptr<Node> swtchNode = m_ofSwitches.Get (switchIdx);
-  Ptr<OFSwitch13NetDevice> swtchDev = DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (switchIdx));
+  Ptr<OFSwitch13NetDevice> swtchDev = GetSwitchDevice (switchIdx); 
  
   // Creating a link between switch and node
   NodeContainer pair;
@@ -207,14 +200,16 @@ RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node)
   
   // Set S1U IPv4 address for the new device at node
   Ptr<NetDevice> nodeDev = devices.Get (1);
-  Ipv4InterfaceContainer nodeIpIfaces = m_s1uIpv4AddressHelper.Assign (NetDeviceContainer (nodeDev));
+  Ipv4InterfaceContainer nodeIpIfaces = 
+      m_s1uIpv4AddressHelper.Assign (NetDeviceContainer (nodeDev));
   Ipv4Address nodeIpAddress = nodeIpIfaces.GetAddress (0);
-  m_ringCtrlApp->NotifyNewIpDevice (nodeDev, nodeIpAddress);
 
   // Adding newly created csma device as openflow switch port.
-  int portNum = swtchDev->AddSwitchPort (devices.Get (0));
+  uint32_t portNum = swtchDev->AddSwitchPort (devices.Get (0));
 
-  // Installing OpenFlow rules for local delivery.
+  // Notify controller of a new IP device and configure flow table entry for
+  // local traffic delivery.
+  m_ringCtrlApp->NotifyNewIpDevice (nodeDev, nodeIpAddress);
   m_ringCtrlApp->ConfigurePortDelivery (swtchDev, nodeDev, nodeIpAddress, portNum);
 
   return nodeDev;
@@ -231,7 +226,7 @@ RingOpenFlowNetwork::AttachToX2 (Ptr<Node> node)
   NS_ASSERT (switchIdx < m_ofDevices.GetN ());
 
   Ptr<Node> swtchNode = m_ofSwitches.Get (switchIdx);
-  Ptr<OFSwitch13NetDevice> swtchDev = DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (switchIdx));
+  Ptr<OFSwitch13NetDevice> swtchDev = GetSwitchDevice (switchIdx); 
 
   // Creating a link between switch and node
   NodeContainer pair;
@@ -241,14 +236,17 @@ RingOpenFlowNetwork::AttachToX2 (Ptr<Node> node)
 
   // Set X2 IPv4 address for the new device at node
   Ptr<NetDevice> nodeDev = devices.Get (1);
-  Ipv4InterfaceContainer nodeIpIfaces = m_x2Ipv4AddressHelper.Assign (NetDeviceContainer (nodeDev));
+  Ipv4InterfaceContainer nodeIpIfaces = 
+      m_x2Ipv4AddressHelper.Assign (NetDeviceContainer (nodeDev));
   Ipv4Address nodeIpAddress = nodeIpIfaces.GetAddress (0);
   m_x2Ipv4AddressHelper.NewNetwork ();
   
   // Adding newly created csma device as openflow switch port.
-  int portNum = swtchDev->AddSwitchPort (devices.Get (0));
+  uint32_t portNum = swtchDev->AddSwitchPort (devices.Get (0));
 
-  // Installing OpenFlow rules for local delivery
+  // Notify controller of a new IP device and configure flow table entry for
+  // local traffic delivery.
+  m_ringCtrlApp->NotifyNewIpDevice (nodeDev, nodeIpAddress);
   m_ringCtrlApp->ConfigurePortDelivery (swtchDev, nodeDev, nodeIpAddress, portNum);
 
   return nodeDev;

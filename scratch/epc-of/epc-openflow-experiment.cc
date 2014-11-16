@@ -112,9 +112,9 @@ main (int argc, char *argv[])
       LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
       LogComponentEnable ("RingOpenFlowNetwork", LOG_LEVEL_WARN);
 
-      LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_DEBUG);
-      LogComponentEnable ("EpcSdnController", LOG_LEVEL_DEBUG);
-      LogComponentEnable ("RingController", LOG_LEVEL_DEBUG);
+      LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_WARN);
+      LogComponentEnable ("EpcSdnController", LOG_LEVEL_ALL);
+      LogComponentEnable ("RingController", LOG_LEVEL_ALL);
     }
 
   /*****************************************************************************
@@ -123,16 +123,16 @@ main (int argc, char *argv[])
 
   // OpenFlow ring network (for EPC)
   Ptr<OpenFlowEpcNetwork> opfNetwork = CreateObject<RingOpenFlowNetwork> ();
-  Ptr<RingController> controller = CreateObject<RingController> ();
+  Ptr<EpcSdnController> controller = CreateObject<RingController> ();
   opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
-  opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("100Mb/s")));
+  opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("10Mb/s")));
   opfNetwork->CreateTopology (controller);
  
   // LTE EPC core (with callbacks setup)
   Ptr<OpenFlowEpcHelper> epcHelper = CreateObject<OpenFlowEpcHelper> ();
   epcHelper->SetS1uConnectCallback (MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, opfNetwork));
   epcHelper->SetX2ConnectCallback (MakeCallback (&OpenFlowEpcNetwork::AttachToX2, opfNetwork));
-  epcHelper->SetAddBearerCallback (MakeCallback (&EpcSdnController::AddBearer, controller));
+  epcHelper->SetAddBearerCallback (MakeCallback (&EpcSdnController::NotifyNewBearer, controller));
   
   // LTE radio access network
   Ptr<LteSquaredGridNetwork> lteNetwork = CreateObject<LteSquaredGridNetwork> ();

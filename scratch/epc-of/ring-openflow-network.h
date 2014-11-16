@@ -26,6 +26,9 @@
 
 namespace ns3 {
 
+class EpcSdnController;
+class RingController;
+
 /** 
  * This class generates and simple n-switch OpenFlow ring topology
  * controlled by RingController, which will be used by S1-U and

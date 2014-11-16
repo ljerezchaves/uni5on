@@ -27,6 +27,7 @@
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
 #include "epc-sdn-controller.h"
+//#include "ring-openflow-network.h"
 
 namespace ns3 {
 
@@ -48,11 +49,30 @@ public:
   /** Destructor implementation */
   virtual void DoDispose ();
 
+  /**
+   * Notify this ring controller of a new connection between two switches in
+   * the ring. 
+   * \param conInfo The connection information and metadata.
+   */ 
+  void NotifyNewSwitchConnection (ConnectionInfo connInfo);
+
+  /**
+   * Populate the internal NetDeviceContainer with switch devices at  ring
+   * network.
+   * \param devs The NetDeviceContainer with switch devices.
+   */
+  void SetSwitchDevices (NetDeviceContainer devs);
+
+  /**
+   * Let's configure one single link to drop packets when flooding over ports
+   * (OFPP_FLOOD).  Here we are disabling the farthest gateway link,
+   * configuring its ports to OFPPC_NO_FWD flag (0x20).
+   */
+  void CreateSpanningTree ();
+
 private:
-  static uint16_t m_flowPrio;     //!< Flow-mod priority
-  uint16_t        m_nodes;        //!< Number of switches in the ring
-  DataRate        m_LinkDataRate; //!< Link data rate
- 
+  static uint16_t     m_flowPrio;     //!< Flow-mod priority
+  DataRate            m_LinkDataRate; //!< Link data rate
 };
 
 };  // namespace ns3
