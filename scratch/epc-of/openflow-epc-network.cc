@@ -126,6 +126,14 @@ OpenFlowEpcNetwork::SetSwitchDeviceAttribute (std::string n1,
   m_ofHelper.SetDeviceAttribute (n1, v1);
 } 
 
+Ptr<OFSwitch13NetDevice> 
+OpenFlowEpcNetwork::GetSwitchDevice (uint16_t index)
+{
+  NS_ASSERT (index < m_ofDevices.GetN ());
+  return DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (index));
+}
+
+
 void
 OpenFlowEpcNetwork::RegisterNodeAtSwitch (uint8_t switchIdx, Ptr<Node> node)
 {

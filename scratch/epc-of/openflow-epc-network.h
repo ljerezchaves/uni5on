@@ -29,6 +29,33 @@
 namespace ns3 {
 
 /**
+ * Metadata associated to a connection between two any switches in the OpenFlow
+ * network.
+ */
+struct ConnectionInfo
+{
+  // Switch indexes
+  uint16_t switchIdx1;
+  uint16_t switchIdx2;
+
+  // Switch OpenFlow devices
+  Ptr<OFSwitch13NetDevice> switchDev1;
+  Ptr<OFSwitch13NetDevice> switchDev2;
+  
+  // Port Csma devices
+  Ptr<CsmaNetDevice> portDev1;
+  Ptr<CsmaNetDevice> portDev2;
+
+  // Port numbers
+  uint32_t portNum1;
+  uint32_t portNum2;
+  
+  // Link information
+  DataRate nominalDataRate;
+  DataRate availableDataRate;
+};
+
+/**
  * Create an OpenFlow network infrastrutcure to be used by
  * OpenFlowEpcHelper on LTE networks.
  */
@@ -109,6 +136,13 @@ public:
   /** \return The OpenFlow controller node. */
   Ptr<Node> GetControllerNode ();
 
+  /**
+   * Get the OFSwitch13NetDevice of a specific switch.
+   * \param index The switch index.
+   * \return The pointer to the switch OFSwitch13NetDevice.
+   */
+  Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
+
 protected:
   /** Creates the OpenFlow internal network infrastructure. */
   virtual void CreateInternalTopology () = 0;
@@ -135,8 +169,9 @@ protected:
   CsmaHelper                m_ofCsmaHelper;   //!< Csma helper.
 
 private:
-  typedef std::map<Ptr<Node>, uint8_t> NodeSwitchMap_t; //!< Node / Switch index map.
-  NodeSwitchMap_t                      m_nodeSwitchMap; //!< Registered nodes per switch index.
+  /** Map saving Node / Switch indexes. */
+  typedef std::map<Ptr<Node>, uint8_t> NodeSwitchMap_t;  
+  NodeSwitchMap_t     m_nodeSwitchMap; //!< Registered nodes per switch index.
 };
 
 };  // namespace ns3
