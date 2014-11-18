@@ -271,7 +271,7 @@ OpenFlowEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Pt
     }
   else
     {
-      NS_LOG_WARN ("Bearer could not be created. Traffic will be sent over defaul bearer.");
+      NS_LOG_WARN ("Bearer could not be created. Traffic will be sent over default bearer.");
     }
 }
 
