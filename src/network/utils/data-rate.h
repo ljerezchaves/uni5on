@@ -144,6 +144,20 @@ public:
   bool operator != (const DataRate& rhs) const;
 
   /**
+   * \return the result of the subtraction
+   *
+   * \param rhs the datarate to subtract from this datarate
+   */   
+  DataRate operator - (const DataRate& rhs) const;
+
+  /**
+   * \return the result of the sum
+   *
+   * \param rhs the datarate to sum to this datarate
+   */   
+  DataRate operator + (const DataRate& rhs) const;
+
+  /**
    * \brief Calculate transmission time
    *
    * Calculates the transmission time at this data rate
