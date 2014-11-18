@@ -150,6 +150,24 @@ public:
    */
   void SetUeAddress (uint64_t imsi, Ipv4Address ueAddr);
 
+  /**
+   * Callback signature for create session request message.
+   * \param uint64_t The UE IMSI.
+   * \param uint16_t The eNB Cell ID.
+   * \param std::list<EpcS11SapSgw::BearerContextCreated> List of bearers
+   * context created.
+   */
+  typedef Callback<void, uint64_t, uint16_t, std::list<EpcS11SapMme::BearerContextCreated> > 
+      CreateSessionRequestCallback_t;
+
+  /**
+   * Callback used to notify the OpenFlow controller with the list of bearers
+   * context created. 
+   * \param cb Callback invoked by DoCreateSessionRequest before sending back
+   * the CreateSessionResponse message. 
+   */
+  void SetCreateSessionRequestCallback (CreateSessionRequestCallback_t cb);
+
 private:
 
   // S11 SAP SGW methods
@@ -255,6 +273,9 @@ private:
    * 
    */
   EpcS11SapSgw* m_s11SapSgw;
+
+  /** CreateSessionRequest callback */
+  CreateSessionRequestCallback_t m_createSessionCallback;
 
   struct EnbInfo
   {
