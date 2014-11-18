@@ -30,6 +30,7 @@
 #include <ns3/trace-helper.h>
 #include <ns3/net-device-container.h>
 #include <ns3/epc-mme.h>
+#include <ns3/epc-sgw-pgw-application.h>
 
 namespace ns3 {
 
@@ -95,11 +96,31 @@ public:
                      bool explicitFilename = false);
 
   /**
-   * S1U and X2 attach callback signature.
+   * S1U attach callback signature.
+   * \param Ptr<Node> node to attach.
+   * \param uint16_t eNB cell ID.
+   * \returns Ptr<NetDevice> the device created at the Node.
+   */
+  typedef Callback <Ptr<NetDevice>, Ptr<Node>, uint16_t > S1uConnectCallback_t;
+
+  /**
+   * X2 attach callback signature.
    * \param Ptr<Node> node to attach 
    * \returns Ptr<NetDevice> the device created at the Node
    */
-  typedef Callback <Ptr<NetDevice>, Ptr<Node> > S1uX2ConnectCallback_t;
+  typedef Callback <Ptr<NetDevice>, Ptr<Node> > X2ConnectCallback_t;
+ 
+  /**
+   * Callback signature for adding a new EPS bearer.
+   * \param uint64_t IMSI UE identifier.
+   * \param uint16_t eNB CellID to which the IMSI UE is attached to.
+   * \param Ptr<EpcTft> tft traffic flow template of the bearer.
+   * \param EpsBearer bearer QoS characteristics of the bearer.
+   * \returns true if successful (proceed with bearer creation), false
+   * otherwise (abort).
+   */
+  typedef Callback<bool, uint64_t, uint16_t, Ptr<EpcTft>, EpsBearer> 
+      AddBearerCallback_t;
 
   /**
     * \brief Specify callbacks to allow the caller to proper connect the EPC
@@ -109,7 +130,7 @@ public:
     * SetS1uConnectCallback to proper connect the SgwPgw Node to the OpenFlow
     * network.
     */
-  void SetS1uConnectCallback (S1uX2ConnectCallback_t cb);
+  void SetS1uConnectCallback (S1uConnectCallback_t cb);
 
   /**
     * Specify callbacks to allow the caller to proper connect the eNB nodes to
@@ -117,16 +138,26 @@ public:
     * \param cb Callback invoked during AddX2Interface procedure to proper
     * connect the eNB Node to the OpenFlow network. 
     */
-  void SetX2ConnectCallback (S1uX2ConnectCallback_t cb);
+  void SetX2ConnectCallback (X2ConnectCallback_t cb);
 
   /**
-    * Callback used by EpcMme::AddBearer to notify the OpenFlow controller that
-    * a new EPS bearer will be created.
-    * \param cb Callback invoked by EpcMme::AddBearer before creating a new GBR
-    * bearer. When the callback isn't null, the bearer is created only if the
-    * callback returns zero.
+    * Callback used to query the OpenFlow controller for the necessary
+    * resources before creating a new dedicated EPS bearer. Depending on the
+    * return of this callback, the bearer creation will proceed or abort.
+    * \param cb Callback invoked by ActivateEpsBearer before creating a new
+    * dedicated bearer. The bearer will be created only if the callback returns
+    * true.
     */
-  void SetAddBearerCallback (EpcMme::AddBearerCallback_t cb);
+  void SetAddBearerCallback (AddBearerCallback_t cb);
+
+  /**
+   * Callback used to notify the OpenFlow controller with the list of bearers
+   * context created. 
+   * \param cb Callback invoked by EpcSgwPgwApplication::DoCreateSessionRequest
+   * before sending back the CreateSessionResponse message. 
+   */
+  void SetCreateSessionRequestCallback (
+      EpcSgwPgwApplication::CreateSessionRequestCallback_t cb);
  
 private:
   /**
@@ -157,10 +188,13 @@ private:
   virtual Ipv4Address GetAddressForDevice (Ptr<NetDevice> device);
 
   /** Callback to connect nodes to S1-U OpenFlow network. */
-  S1uX2ConnectCallback_t m_s1uConnect;
+  S1uConnectCallback_t m_s1uConnect;
 
   /** Callback to connect nodes to X2 OpenFlow network. */
-  S1uX2ConnectCallback_t m_x2Connect;
+  X2ConnectCallback_t m_x2Connect;
+
+  /** AddBearer callback */
+  AddBearerCallback_t m_addBearerCallback;
 
   /** A collection of S1-U NetDevice */
   NetDeviceContainer m_s1uDevices;

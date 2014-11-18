@@ -108,30 +108,8 @@ public:
    */
   void AddBearer (uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer);
 
-  /**
-   * \param imsi UE identifier
-   * \param tft traffic flow template of the bearer
-   * \param bearer QoS characteristics of the bearer
-   * \returns 0 if successful, allowing the bearer cration. An error code otherwise.
-   */
-  typedef Callback<uint8_t, uint64_t, Ptr<EpcTft>, EpsBearer> AddBearerCallback_t;
 
-  /**
-   * \param cb Callback to invoke before adding a new EPS bearer. This will be
-   * mainly used by EpcSdnController to check for necessary EPC resources and
-   * to define, in advance, the OpenFlow routes for this bearer. 
-   *
-   * Note that when this callback is defines, the AddBearer function will only
-   * proceed if the callback returns 0, indicating that everything is ok.
-   */
-  void SetAddBearerCallback (AddBearerCallback_t cb);
-
-  
 private:
-  /** 
-   * AddBearer callback
-   */
-  AddBearerCallback_t m_addBearerCallback;
 
   // S1-AP SAP MME forwarded methods
   void DoInitialUeMessage (uint64_t mmeUeS1Id, uint16_t enbUeS1Id, uint64_t imsi, uint16_t ecgi);

@@ -107,13 +107,6 @@ EpcMme::AddUe (uint64_t imsi)
   ueInfo->bearerCounter = 0;
 }
 
-void
-EpcMme::SetAddBearerCallback (AddBearerCallback_t cb)
-{
-  NS_LOG_FUNCTION (&cb);
-  m_addBearerCallback = cb;
-}
-
 void 
 EpcMme::AddBearer (uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer)
 {
@@ -121,12 +114,6 @@ EpcMme::AddBearer (uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer)
   std::map<uint64_t, Ptr<UeInfo> >::iterator it = m_ueInfoMap.find (imsi);
   NS_ASSERT_MSG (it != m_ueInfoMap.end (), "could not find any UE with IMSI " << imsi);
   NS_ASSERT_MSG (it->second->bearerCounter < 11, "too many bearers already! " << it->second->bearerCounter);
-  
-  if (!m_addBearerCallback.IsNull ())
-    {
-       NS_ASSERT_MSG (m_addBearerCallback (imsi, tft, bearer) == 0, 
-           "Could not create this bearer due to lack of EPC OpenFlow resources.");
-    }
   BearerInfo bearerInfo;
   bearerInfo.bearerId = ++(it->second->bearerCounter);
   bearerInfo.tft = tft;

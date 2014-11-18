@@ -1,6 +1,6 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2011-2013 Centre Tecnologic de Telecomunicacions de Catalunya (CTTC)
+ * Copyright (c) 2014 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -39,6 +39,7 @@
 #include <ns3/lte-ue-net-device.h>
 #include <ns3/epc-mme.h>
 #include <ns3/epc-ue-nas.h>
+#include <ns3/lte-ue-rrc.h>
 
 namespace ns3 {
 
@@ -135,7 +136,7 @@ OpenFlowEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16
                 enb->GetObject<Ipv4> ()->GetNInterfaces ());
 
  // Callback the OpenFlow network to connect each eNB to the network.
-  Ptr<NetDevice> enbDevice = m_s1uConnect (enb);
+  Ptr<NetDevice> enbDevice = m_s1uConnect (enb, cellId);
   m_s1uDevices.Add (enbDevice);
 
   NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB after OpenFlow dev + Ipv4 addr: " << 
@@ -237,13 +238,40 @@ OpenFlowEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Pt
   NS_ASSERT (interface >= 0);
   NS_ASSERT (ueIpv4->GetNAddresses (interface) == 1);
   Ipv4Address ueAddr = ueIpv4->GetAddress (interface, 0).GetLocal ();
-  NS_LOG_LOGIC (" UE IP address: " << ueAddr);  m_sgwPgwApp->SetUeAddress (imsi, ueAddr);
+  NS_LOG_LOGIC (" UE IP address: " << ueAddr);  
+  m_sgwPgwApp->SetUeAddress (imsi, ueAddr);
   
-  m_mme->AddBearer (imsi, tft, bearer);
   Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
-  if (ueLteDevice)
+  Ptr<LteUeRrc> ueRrc = ueLteDevice->GetRrc ();
+
+  bool createBearer = true;
+  if (!m_addBearerCallback.IsNull ())
     {
-      ueLteDevice->GetNas ()->ActivateEpsBearer (bearer, tft);
+      // Check for default bearer
+      if ((bearer.qci == EpsBearer::NGBR_VIDEO_TCP_DEFAULT) && 
+          (tft->Matches (EpcTft::BIDIRECTIONAL, Ipv4Address ("0.0.0.0"), 
+                         Ipv4Address ("0.0.0.0"), 0, 0, 0)))
+        {
+          NS_LOG_DEBUG ("This is the default bearer for UE " << imsi);
+        }
+      else
+        {
+          NS_LOG_DEBUG ("Trying to create a dedicated bearer for UE " << imsi);
+          createBearer = m_addBearerCallback (imsi, ueRrc->GetCellId (), tft, bearer); 
+        }
+    }
+  
+  if (createBearer)
+    {
+      m_mme->AddBearer (imsi, tft, bearer);
+      if (ueLteDevice)
+        {
+          ueLteDevice->GetNas ()->ActivateEpsBearer (bearer, tft);
+        }
+    }
+  else
+    {
+      NS_LOG_WARN ("Bearer could not be created. Traffic will be sent over defaul bearer.");
     }
 }
 
@@ -339,28 +367,35 @@ OpenFlowEpcHelper::GetAddressForDevice (Ptr<NetDevice> device)
 }
 
 void
-OpenFlowEpcHelper::SetS1uConnectCallback (S1uX2ConnectCallback_t cb)
+OpenFlowEpcHelper::SetS1uConnectCallback (S1uConnectCallback_t cb)
 {
   NS_LOG_FUNCTION (this << &cb);
   m_s1uConnect = cb;
 
   // Connecting the SgwPgw to the OpenFlow network. 
-  m_sgwS1uDev = m_s1uConnect (m_sgwPgw);
+  m_sgwS1uDev = m_s1uConnect (m_sgwPgw, 0 /*SgwPgw with no cellId */);
   NS_LOG_LOGIC ("Sgw S1 interface address: " << GetSgwS1uAddress ());
 }
 
 void
-OpenFlowEpcHelper::SetX2ConnectCallback (S1uX2ConnectCallback_t cb)
+OpenFlowEpcHelper::SetX2ConnectCallback (X2ConnectCallback_t cb)
 {
   NS_LOG_FUNCTION (this << &cb);
   m_x2Connect = cb;
 }
 
 void
-OpenFlowEpcHelper::SetAddBearerCallback (EpcMme::AddBearerCallback_t cb)
+OpenFlowEpcHelper::SetAddBearerCallback (AddBearerCallback_t cb)
 {
   NS_LOG_FUNCTION (this << &cb);
-  m_mme->SetAddBearerCallback (cb);
+  m_addBearerCallback = cb;
+}
+
+void 
+OpenFlowEpcHelper::SetCreateSessionRequestCallback (
+      EpcSgwPgwApplication::CreateSessionRequestCallback_t cb)
+{
+  m_sgwPgwApp->SetCreateSessionRequestCallback (cb);
 }
 
 }; // namespace ns3
