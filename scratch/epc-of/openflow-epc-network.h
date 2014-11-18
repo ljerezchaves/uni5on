@@ -61,6 +61,9 @@ struct ConnectionInfo
  */
 class OpenFlowEpcNetwork : public Object
 {
+
+friend class EpcSdnController;
+
 public:
   OpenFlowEpcNetwork ();          //!< Default constructor
   virtual ~OpenFlowEpcNetwork (); //!< Dummy destructor, see DoDipose
@@ -80,9 +83,10 @@ public:
    * \internal This method must create the NetDevice at node and assign an IPv4
    * address to it.
    * \param node The SgwPgw or eNB node pointer.
+   * \param cellId The eNB cell ID.
    * \return A pointer to the NetDevice created at node.
    */
-  virtual Ptr<NetDevice> AttachToS1u (Ptr<Node> node) = 0;
+  virtual Ptr<NetDevice> AttachToS1u (Ptr<Node> node, uint16_t cellId) = 0;
   
   /**
    * Called by OpenFlowEpcHelper to proper connect the eNBs nodes to the X2
@@ -135,6 +139,9 @@ public:
 
   /** \return The OpenFlow controller node. */
   Ptr<Node> GetControllerNode ();
+  
+  /** \return Number of switches in the network. */
+  uint16_t GetNSwitches ();
 
   /**
    * Get the OFSwitch13NetDevice of a specific switch.
@@ -152,14 +159,28 @@ protected:
    * \param switchIdx The switch index in m_ofSwitches.
    * \param Ptr<Node> The node pointer.
    */
-  void RegisterNodeAtSwitch (uint8_t switchIdx, Ptr<Node> node);
+  void RegisterNodeAtSwitch (uint16_t switchIdx, Ptr<Node> node);
 
   /**
    * Retrieve the switch index for node pointer.
-   * \param Ptr<Node> The node pointer.
+   * \param node Ptr<Node> The node pointer.
    * \return The switch index in m_ofSwitches.
    */
-  uint8_t GetSwitchIdxForNode (Ptr<Node> node);
+  uint16_t GetSwitchIdxForNode (Ptr<Node> node);
+
+  /**
+   * Store the pair <cellID, switch index> for further use.
+   * \param switchIdx The switch index in m_ofSwitches.
+   * \param cellId The eNB cell ID.
+   */
+  void RegisterCellIdAtSwitch (uint16_t switchIdx, uint16_t cellId);
+
+  /**
+   * Retrieve the switch index for a cell ID
+   * \param cellId The eNB cell ID .
+   * \return The switch index in m_ofSwitches.
+   */
+  uint16_t GetSwitchIdxForCellId (uint16_t cellId);
 
   Ptr<OFSwitch13Controller> m_ofCtrlApp;      //!< Controller application.
   Ptr<Node>                 m_ofCtrlNode;     //!< Controller node.
@@ -170,8 +191,12 @@ protected:
 
 private:
   /** Map saving Node / Switch indexes. */
-  typedef std::map<Ptr<Node>, uint8_t> NodeSwitchMap_t;  
+  typedef std::map<Ptr<Node>, uint16_t> NodeSwitchMap_t;  
   NodeSwitchMap_t     m_nodeSwitchMap; //!< Registered nodes per switch index.
+
+  /** Map saving CellId / Switch indexes. */
+  typedef std::map<uint16_t, uint16_t> CellIdSwitchMap_t;  
+  CellIdSwitchMap_t     m_cellIdSwitchMap; //!< CellIds per switch index.
 };
 
 };  // namespace ns3

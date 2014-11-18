@@ -17,6 +17,7 @@
  *
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
+
 #ifndef RING_OPENFLOW_NETWORK_H
 #define RING_OPENFLOW_NETWORK_H
 
@@ -51,7 +52,7 @@ public:
   void DoDispose ();
 
   // Inherited from OpenFlowEpcNetowork
-  Ptr<NetDevice> AttachToS1u (Ptr<Node> node);
+  Ptr<NetDevice> AttachToS1u (Ptr<Node> node, uint16_t cellId);
   Ptr<NetDevice> AttachToX2  (Ptr<Node> node);
   void CreateInternalTopology ();
   

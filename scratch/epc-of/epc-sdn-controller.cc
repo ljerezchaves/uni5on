@@ -29,7 +29,7 @@ NS_OBJECT_ENSURE_REGISTERED (EpcSdnController);
 EpcSdnController::EpcSdnController ()
 {
   NS_LOG_FUNCTION (this);
-  SetConnectionCallback (MakeCallback (&EpcSdnController::ConnectionStarted, this));
+  SetConnectionCallback (MakeCallback (&EpcSdnController::NotifyConnectionStarted, this));
 }
 
 EpcSdnController::~EpcSdnController ()
@@ -51,11 +51,10 @@ EpcSdnController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::EpcSdnController")
     .SetParent (OFSwitch13Controller::GetTypeId ())
-    .AddAttribute ("NumSwitches", 
-                   "The number of OpenFlow switches in the ring.",
-                   UintegerValue (3),
-                   MakeUintegerAccessor (&EpcSdnController::m_nodes),
-                   MakeUintegerChecker<uint16_t> ())
+    .AddAttribute ("OFNetwork", "OpenFlowEpcNetwork object used to create the network.",
+                   PointerValue (),
+                   MakePointerAccessor (&EpcSdnController::m_ofNetwork),
+                   MakePointerChecker<OpenFlowEpcNetwork> ())
   ;
   return tid;
 }
@@ -80,20 +79,34 @@ EpcSdnController::NotifyNewSwitchConnection (ConnectionInfo connInfo)
 {
   // Save this connection info
   std::pair<uint16_t,uint16_t> key;
-  key.first = std::min (connInfo.switchIdx1, connInfo.switchIdx2);
+  key.first  = std::min (connInfo.switchIdx1, connInfo.switchIdx2);
   key.second = std::max (connInfo.switchIdx1, connInfo.switchIdx2);
   std::pair<std::pair<uint16_t,uint16_t>, ConnectionInfo> entry (key, connInfo);
   std::pair <ConnInfoMap_t::iterator, bool> ret = m_connections.insert (entry);
   if (ret.second == true)
     {
       NS_LOG_DEBUG ("New connection info saved: switch " << 
-          key.first << " (" << connInfo.portNum1 << ") -- switch " << 
-          key.second << " (" << connInfo.portNum2 << ")");
+          key.first   << " (" << connInfo.portNum1 << ") -- switch " << 
+          key.second  << " (" << connInfo.portNum2 << ")");
     }
   else
     {
       NS_FATAL_ERROR ("Error saving connection info.");
     }
+}
+
+bool
+EpcSdnController::RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId, 
+                                             Ptr<EpcTft> tft, EpsBearer bearer)
+{
+  return false;
+}
+
+void 
+EpcSdnController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
+    std::list<EpcS11SapMme::BearerContextCreated> bearerContextList)
+{
+  
 }
 
 void 
@@ -118,13 +131,6 @@ EpcSdnController::CreateSpanningTree ()
   NS_LOG_WARN ("No Spanning Tree Protocol implemented here.");
 }
 
-void 
-EpcSdnController::SetSwitchDevices (NetDeviceContainer devs)
-{
-  NS_ASSERT (devs.GetN () == m_nodes);
-  m_ofDevices = devs;
-}
-
 ConnectionInfo*
 EpcSdnController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
 {
@@ -146,14 +152,19 @@ EpcSdnController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
 Ptr<OFSwitch13NetDevice> 
 EpcSdnController::GetSwitchDevice (uint16_t index)
 {
-  NS_ASSERT (index < m_ofDevices.GetN ());
-  return DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (index));
+  return m_ofNetwork->GetSwitchDevice (index);
+}
+
+uint16_t 
+EpcSdnController::GetSwitchIdxForCellId (uint16_t cellId)
+{
+  return m_ofNetwork->GetSwitchIdxForCellId (cellId);
 }
 
 uint16_t 
 EpcSdnController::GetNSwitches ()
 {
-  return m_nodes;
+  return m_ofNetwork->GetNSwitches ();
 }
 
 void
@@ -183,10 +194,10 @@ EpcSdnController::HandlePacketIn (ofl_msg_packet_in *msg,
       ofl_match_tlv *inPortTlv = oxm_match_lookup (OXM_OF_IN_PORT, (ofl_match*)msg->match);
       memcpy (&inPort, inPortTlv->value, OXM_LENGTH (OXM_OF_IN_PORT));
  
-      // Just for testing, let's always send the packet in clockwise direction
+      // Just for testing, let's always send the packet in counterclockwise direction
       ofl_action_group *action = (ofl_action_group*)xmalloc (sizeof (ofl_action_group));
       action->header.type = OFPAT_GROUP;
-      action->group_id = 1;
+      action->group_id = 2;
 
       // Create the OpenFlow PacketOut message
       ofl_msg_packet_out reply;
@@ -248,7 +259,7 @@ EpcSdnController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
 }
 
 void
-EpcSdnController::ConnectionStarted (SwitchInfo swtch)
+EpcSdnController::NotifyConnectionStarted (SwitchInfo swtch)
 {
   NS_LOG_FUNCTION (this << swtch.ipv4);
   

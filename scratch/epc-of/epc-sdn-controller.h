@@ -26,6 +26,7 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
+#include <ns3/epc-s11-sap.h>
 #include "openflow-epc-network.h"
 
 namespace ns3 {
@@ -49,9 +50,9 @@ public:
   virtual void DoDispose ();
 
   /**
-   * Notify the controller of a new device connected to the OpenFlow network.
-   * This function will save the IP address / MAC address wich will be further
-   * used in ARP resolution. 
+   * Notify this controller of a new IP device connected to the OpenFlow
+   * network over some switch port. This function will save the IP address /
+   * MAC address from this IP device for further ARP resolution. 
    * \attention This dev is not the one added as port to switch. Insted, this
    * is the 'other' end of this connection, associated with a eNB or SgwPgw
    * node.
@@ -61,10 +62,44 @@ public:
   virtual void NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip);
 
   /**
-   * Notify this controller of a new connection between two switches. 
+   * Notify this controller of a new connection between two switches in the
+   * OpenFlow network. 
    * \param conInfo The connection information and metadata.
    */ 
   virtual void NotifyNewSwitchConnection (ConnectionInfo connInfo);
+
+  
+  /** 
+   * Callback fired before creating new dedicated EPC bearers. This is used to
+   * check for necessary resources in the network (mainly available data rate
+   * for GBR bearers. When returning false, it aborts the bearer creation
+   * process, and all traffic will be routed over defaul bearer.
+   * traffic routing. 
+   * \param uint64_t IMSI UE identifier.
+   * \param uint16_t eNB CellID to which the IMSI UE is attached to.
+   * \param Ptr<EpcTft> tft traffic flow template of the bearer.
+   * \param EpsBearer bearer QoS characteristics of the bearer.
+   * \returns true if successful (the bearer creation proccess will proceed),
+   * false otherwise (the bearer creation proccess will abort).
+   */
+  virtual bool RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId, 
+                                          Ptr<EpcTft> tft, EpsBearer bearer);
+
+  /** 
+   * Callback fired when the SgwPgw gateway is handling a CreateSessionRequest
+   * message. This is used to notify this controller with the list of bearers
+   * context created (this list will be sent back to the MME over S11 interface
+   * in the CreateSessionResponde message). With this information, the
+   * controller can configure the switches for GTP routing.
+   * \see 3GPP TS 29.274 7.2.1 for CreateSessionRequest message format.
+   * \param uint64_t IMSI UE identifier.
+   * \param uint16_t eNB CellID to which the IMSI UE is attached to.
+   * \param bearerContextList The list of bearers to be created.
+   */
+  virtual void NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
+      std::list<EpcS11SapMme::BearerContextCreated> bearerContextList);
+  
+  // virtual void NotifyContextModified ();
 
   /**
    * Install flow table entry for local delivery when a new IP device is
@@ -90,12 +125,6 @@ public:
    */
   virtual void CreateSpanningTree ();
 
-  /**
-   * Populate the internal NetDeviceContainer with switch devices at networ.
-   * \param devs The NetDeviceContainer with switch devices.
-   */
-  void SetSwitchDevices (NetDeviceContainer devs);
-
 protected:
   /**
    * Search for connection information between two switches.
@@ -111,6 +140,13 @@ protected:
    * \return The pointer to the switch OFSwitch13NetDevice.
    */
   Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
+
+  /**
+   * Retrieve the switch index for a cell ID
+   * \param cellId The eNB cell ID .
+   * \return The switch index in m_ofSwitches.
+   */
+  uint16_t GetSwitchIdxForCellId (uint16_t cellId);
 
   /**
    * \return Number of switches in the network.
@@ -154,7 +190,7 @@ private:
    * entry and execute all dpctl scheduled commands for this switch.
    * \param swtch The switch information.
    */
-  void ConnectionStarted (SwitchInfo swtch);
+  void NotifyConnectionStarted (SwitchInfo swtch);
 
   /**
    * Handle packet-in messages sent from switch with arp message.
@@ -205,8 +241,7 @@ private:
   typedef std::map<std::pair<uint16_t,uint16_t>, ConnectionInfo> ConnInfoMap_t; 
   ConnInfoMap_t m_connections;    //!< Connections between switches.
 
-  NetDeviceContainer  m_ofDevices;    //!< Switch devices.
-  uint16_t            m_nodes;        //!< Number of switches in the network.
+  Ptr<OpenFlowEpcNetwork> m_ofNetwork;    //!< Pointer to OpenFlow network
 };
 
 };  // namespace ns3

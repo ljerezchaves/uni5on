@@ -96,9 +96,6 @@ RingOpenFlowNetwork::CreateInternalTopology ()
   NS_ASSERT_MSG (m_ringCtrlApp, "Expecting a RingController.");
   NS_ASSERT_MSG (m_nodes >= 1, "Invalid number of nodes for the ring");
 
-  m_ringCtrlApp->SetAttribute ("NumSwitches", UintegerValue (m_nodes));
-  m_ringCtrlApp->SetAttribute ("LinkDataRate", DataRateValue (m_LinkDataRate));
-
   // Creating the switch nodes
   m_ofSwitches.Create (m_nodes);
   for (uint16_t i = 0; i < m_nodes; i++)
@@ -111,7 +108,6 @@ RingOpenFlowNetwork::CreateInternalTopology ()
 
   // Installing the Openflow switch devices for each switch node
   m_ofDevices = m_ofHelper.InstallSwitchesWithoutPorts (m_ofSwitches);
-  DynamicCast<EpcSdnController> (m_ringCtrlApp)->SetSwitchDevices (m_ofDevices);
 
   // If the number of nodes in the ring is 1, return with no links
   if (m_nodes == 1) return;
@@ -121,7 +117,7 @@ RingOpenFlowNetwork::CreateInternalTopology ()
   m_ofCsmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_LinkMtu));
   m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_LinkDelay));
 
-  // Connecting switches in ring topology (clockwise order)
+  // For more than 3 nodes, connecting switches in ring topology (clockwise order)
   for (uint16_t i = 0; i < m_nodes; i++)
     {
       uint16_t currIndex = i;
@@ -156,13 +152,22 @@ RingOpenFlowNetwork::CreateInternalTopology ()
         .availableDataRate = m_LinkDataRate
       };
       m_ringCtrlApp->NotifyNewSwitchConnection (info);
+  
+      // If the number of nodes in the ring is 2, create just a single link
+      if (m_nodes == 2)
+        {
+          break;
+        }
     }
   
-  m_ringCtrlApp->CreateSpanningTree ();
+  if (m_nodes > 2)
+    {
+      m_ringCtrlApp->CreateSpanningTree ();
+    }
 }
 
 Ptr<NetDevice>
-RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node)
+RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << node);
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
@@ -175,19 +180,26 @@ RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node)
   static uint32_t counter = 0;
   uint16_t switchIdx;
   
-  if (m_nodes == 1 || counter == 0 /* SgwPgw node */)
+  if (counter == 0)
     {
       switchIdx = 0;
+      
+      // This is the SgwPgw node
+      RegisterNodeAtSwitch (switchIdx, node);
     }
-  else
+  else  
     {
-      switchIdx = 1 + ((counter - 1) % (m_nodes - 1));
+      // Considers the special case of a single node in the ring
+      switchIdx = m_nodes == 1 ? 0 : 1 + ((counter - 1) % (m_nodes - 1));
+      
+      // This is an eNB node
+      RegisterNodeAtSwitch (switchIdx, node);
+      RegisterCellIdAtSwitch (switchIdx, cellId);
     }
   counter++;
 
   // Register this pair node/switch for furter use (X2 interfaces)
   NS_ASSERT (switchIdx < m_ofDevices.GetN ());
-  RegisterNodeAtSwitch (switchIdx, node);
 
   Ptr<Node> swtchNode = m_ofSwitches.Get (switchIdx);
   Ptr<OFSwitch13NetDevice> swtchDev = GetSwitchDevice (switchIdx); 
@@ -222,7 +234,7 @@ RingOpenFlowNetwork::AttachToX2 (Ptr<Node> node)
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
 
   // Retrieve the registered pair node/switch
-  uint8_t switchIdx = GetSwitchIdxForNode (node);
+  uint16_t switchIdx = GetSwitchIdxForNode (node);
   NS_ASSERT (switchIdx < m_ofDevices.GetN ());
 
   Ptr<Node> swtchNode = m_ofSwitches.Get (switchIdx);

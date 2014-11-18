@@ -108,9 +108,9 @@ main (int argc, char *argv[])
       LogComponentEnable ("OFSwitch13NetDevice", LOG_LEVEL_WARN);
       LogComponentEnable ("OFSwitch13Interface", LOG_LEVEL_WARN);
       LogComponentEnable ("OFSwitch13Helper", LOG_LEVEL_WARN);
-      LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_WARN);
-      LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
-      LogComponentEnable ("RingOpenFlowNetwork", LOG_LEVEL_WARN);
+      LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_DEBUG);
+      LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_DEBUG);
+      LogComponentEnable ("RingOpenFlowNetwork", LOG_LEVEL_DEBUG);
 
       LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_WARN);
       LogComponentEnable ("EpcSdnController", LOG_LEVEL_ALL);
@@ -123,16 +123,18 @@ main (int argc, char *argv[])
 
   // OpenFlow ring network (for EPC)
   Ptr<OpenFlowEpcNetwork> opfNetwork = CreateObject<RingOpenFlowNetwork> ();
-  Ptr<RingController> controller = CreateObject<RingController> ();
+  Ptr<EpcSdnController> controller = CreateObject<RingController> ();
   opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
-  opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("10Mb/s")));
+  opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("300Kb/s")));
+  controller->SetAttribute ("OFNetwork", PointerValue (opfNetwork));
   opfNetwork->CreateTopology (controller);
  
   // LTE EPC core (with callbacks setup)
   Ptr<OpenFlowEpcHelper> epcHelper = CreateObject<OpenFlowEpcHelper> ();
   epcHelper->SetS1uConnectCallback (MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, opfNetwork));
   epcHelper->SetX2ConnectCallback (MakeCallback (&OpenFlowEpcNetwork::AttachToX2, opfNetwork));
-  epcHelper->SetAddBearerCallback (MakeCallback (&RingController::NotifyNewBearer, controller));
+  epcHelper->SetAddBearerCallback (MakeCallback (&EpcSdnController::RequestNewDedicatedBearer, controller));
+  epcHelper->SetCreateSessionRequestCallback (MakeCallback (&EpcSdnController::NotifyNewContextCreated, controller));
   
   // LTE radio access network
   Ptr<LteSquaredGridNetwork> lteNetwork = CreateObject<LteSquaredGridNetwork> ();

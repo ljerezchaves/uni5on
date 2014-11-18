@@ -49,20 +49,8 @@ RingController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RingController")
     .SetParent (EpcSdnController::GetTypeId ())
-    .AddAttribute ("LinkDataRate", 
-                   "The data rate to be used for the CSMA OpenFlow links to be created",
-                   DataRateValue (DataRate ("10Mb/s")),
-                   MakeDataRateAccessor (&RingController::m_LinkDataRate),
-                   MakeDataRateChecker ())
   ;
   return tid;
-}
-
-uint8_t
-RingController::NotifyNewBearer (uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer)
-{
-  NS_LOG_FUNCTION (this);
-  return 0;
 }
 
 void
@@ -77,48 +65,184 @@ RingController::NotifyNewSwitchConnection (ConnectionInfo connInfo)
   // used to send packets from current switch to the next one in clockwise
   // direction.
   std::ostringstream cmd1;
-  cmd1 << "group-mod cmd=add,type=ind,group=1 weight=0,port=any,group=any output=" << connInfo.portNum1;
+  cmd1 << "group-mod cmd=add,type=ind,group=" << RingController::CLOCK <<
+          " weight=0,port=any,group=any output=" << connInfo.portNum1;
   ScheduleCommand (connInfo.switchDev1, cmd1.str ());
                                    
   // Group #2 is used to send packets from the next switch to the current one
   // in counterclockwise direction. 
   std::ostringstream cmd2;
-  cmd2 << "group-mod cmd=add,type=ind,group=2 weight=0,port=any,group=any output=" << connInfo.portNum2;
+  cmd2 << "group-mod cmd=add,type=ind,group=" << RingController::COUNTERCLOCK <<
+          " weight=0,port=any,group=any output=" << connInfo.portNum2;
   ScheduleCommand (connInfo.switchDev2, cmd2.str ());
+}
+
+bool
+RingController::RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId, 
+                                           Ptr<EpcTft> tft, EpsBearer bearer)
+{
+  NS_LOG_FUNCTION (this << imsi << cellId);
+
+  // Check for GBR bearer
+  if (bearer.IsGbr ())
+    {
+      DataRate downlinkGbr (bearer.gbrQosInfo.gbrDl);
+      DataRate uplinkGbr   (bearer.gbrQosInfo.gbrUl);
+      DataRate requestedBandwitdh = std::max (downlinkGbr, uplinkGbr);
+      
+      uint16_t source = GetSwitchIdxForCellId (cellId);
+      Direction routingPath = FindShortestPath (source, 0);
+      DataRate availableBandwidth = GetAvailableBandwidth (source, 0, routingPath);
+      NS_LOG_DEBUG ("Available bandwidth from " << source << 
+                    " to gateway: " << availableBandwidth);
+      if (availableBandwidth < requestedBandwitdh)
+        {
+          NS_LOG_WARN ("Not enougth resources for bearer: " << requestedBandwitdh);
+          return false;
+        }
+      return ReserveBandwidth (source, 0, routingPath, requestedBandwitdh);
+    }
+  return true;
+}
+
+void 
+RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
+    std::list<EpcS11SapMme::BearerContextCreated> bearerContextList)
+{
+  NS_LOG_FUNCTION (this << imsi << cellId);
 }
 
 void
 RingController::CreateSpanningTree ()
 {
+  // Let's configure one single link to drop packets when flooding over ports
+  // (OFPP_FLOOD).  Here we are disabling the farthest gateway link,
+  // configuring its ports to OFPPC_NO_FWD flag (0x20).
+  
   uint16_t half = (GetNSwitches () / 2);
   ConnectionInfo* info = GetConnectionInfo (half, half+1);
-  NS_LOG_DEBUG ("Disabling link from " << half << " to " << half+1 << " for broadcast messages.");
+  NS_LOG_DEBUG ("Disabling link from " << half << " to " << 
+                 half+1 << " for broadcast messages.");
   
   std::ostringstream cmd1;
-  Mac48Address macAddr1 = Mac48Address::ConvertFrom (info->portDev1->GetAddress ());
-  cmd1 << "port-mod port=" << info->portNum1 << ",addr=" << macAddr1 << ",conf=0x00000020,mask=0x00000020";
+  Mac48Address macAddr1 = 
+      Mac48Address::ConvertFrom (info->portDev1->GetAddress ());
+  cmd1 << "port-mod port=" << info->portNum1 << ",addr=" << 
+           macAddr1 << ",conf=0x00000020,mask=0x00000020";
   ScheduleCommand (info->switchDev1, cmd1.str ());
 
   std::ostringstream cmd2;
-  Mac48Address macAddr2 = Mac48Address::ConvertFrom (info->portDev2->GetAddress ());
-  cmd2 << "port-mod port=" << info->portNum2 << ",addr=" << macAddr2 << ",conf=0x00000020,mask=0x00000020";
+  Mac48Address macAddr2 = 
+      Mac48Address::ConvertFrom (info->portDev2->GetAddress ());
+  cmd2 << "port-mod port=" << info->portNum2 << ",addr=" << 
+           macAddr2 << ",conf=0x00000020,mask=0x00000020";
   ScheduleCommand (info->switchDev2, cmd2.str ());
 }
 
-bool
+RingController::Direction
 RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)
 {
   NS_ASSERT (srcSwitchIdx != dstSwitchIdx);
-  NS_ASSERT (std::max (srcSwitchIdx, dstSwitchIdx) <= GetNSwitches ());
+  NS_ASSERT (std::max (srcSwitchIdx, dstSwitchIdx) < GetNSwitches ());
   
-  uint16_t maxHops = GetNSwitches () / 2;
-  int clockwiseDistance = dstSwitchIdx - srcSwitchIdx;
-  if (clockwiseDistance < 0)
+  if (GetNSwitches () == 2)
     {
-      clockwiseDistance += GetNSwitches ();
+      // For a ring with two swithces, there existing a single link.
+      return (srcSwitchIdx < dstSwitchIdx) ? 
+        RingController::CLOCK : 
+        RingController::COUNTERCLOCK;
     }
+  else
+    {
+      // General rule for ring with 3 or more switches
+      uint16_t maxHops = GetNSwitches () / 2;
+      int clockwiseDistance = dstSwitchIdx - srcSwitchIdx;
+      if (clockwiseDistance < 0)
+        {
+          clockwiseDistance += GetNSwitches ();
+        }
+      
+      return (clockwiseDistance <= maxHops) ? 
+          RingController::CLOCK : 
+          RingController::COUNTERCLOCK;
+    }
+}
+
+DataRate 
+RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx, 
+                                       uint16_t dstSwitchIdx,
+                                       Direction routingPath)
+{
+  NS_ASSERT (srcSwitchIdx != dstSwitchIdx);
   
-  return (clockwiseDistance <= maxHops) ? true : false;
+  // Get bandwitdh for first hop
+  uint16_t current = srcSwitchIdx;
+  uint16_t next = NextSwitchIndex (current, routingPath);
+  ConnectionInfo* conn = GetConnectionInfo (current, next);
+  DataRate bandwidth = conn->availableDataRate;
+
+  // Repeat the proccess for next hops
+  while (next != dstSwitchIdx)
+    {
+      current = next;
+      next = NextSwitchIndex (current, routingPath);
+      conn = GetConnectionInfo (current, next);
+      if (conn->availableDataRate < bandwidth)
+        {
+          bandwidth = conn->availableDataRate;
+        }
+    }
+  return bandwidth;
+}
+
+bool 
+RingController::ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+                                  Direction routingPath, DataRate bandwidth)
+{
+  uint16_t current = srcSwitchIdx;
+  while (current != dstSwitchIdx)
+    {
+      uint16_t next = NextSwitchIndex (current, routingPath);
+      ConnectionInfo* conn = GetConnectionInfo (current, next);
+      conn->availableDataRate = conn->availableDataRate - bandwidth;
+      NS_ABORT_IF (conn->availableDataRate < 0);
+      current = next;
+    }
+  return true;
+}
+
+bool 
+RingController::ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+                                  Direction routingPath, DataRate bandwidth)
+{
+  uint16_t current = srcSwitchIdx;
+  while (current != dstSwitchIdx)
+    {
+      uint16_t next = NextSwitchIndex (current, routingPath);
+      ConnectionInfo* conn = GetConnectionInfo (current, next);
+      conn->availableDataRate = conn->availableDataRate + bandwidth;
+      current = next;
+    }
+  return true;
+}
+
+uint16_t 
+RingController::NextSwitchIndex (uint16_t current, Direction path)
+{
+  if (path == RingController::CLOCK)
+    {
+      return (current + 1) % GetNSwitches ();
+    }
+  else
+    {
+      return current == 0 ? GetNSwitches () - 1 : (current - 1);
+    }
+}
+
+DataRate 
+RingController::GetTunnelAverageTraffic ()
+{
+  return DataRate ();
 }
 
 };  // namespace ns3
