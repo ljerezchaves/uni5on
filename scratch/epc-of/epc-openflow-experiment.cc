@@ -65,9 +65,11 @@ main (int argc, char *argv[])
   // Increasing SrsPeriodicity to allow more UEs per eNB.
   Config::SetDefault ("ns3::LteEnbRrc::SrsPeriodicity", UintegerValue (320));
 
-  // Configuring dl and up transmission bandwidth in number of RBs
-  Config::SetDefault ("ns3::LteEnbNetDevice::UlBandwidth", UintegerValue (75));
-  Config::SetDefault ("ns3::LteEnbNetDevice::DlBandwidth", UintegerValue (75));
+  // Configuring dl and up channel and bandwidth (channel band #7 bandwidth: 20Mhz)
+  Config::SetDefault ("ns3::LteEnbNetDevice::UlBandwidth", UintegerValue (100));
+  Config::SetDefault ("ns3::LteEnbNetDevice::DlBandwidth", UintegerValue (100));
+  Config::SetDefault ("ns3::LteEnbNetDevice::DlEarfcn", UintegerValue (2750));
+  Config::SetDefault ("ns3::LteEnbNetDevice::UlEarfcn", UintegerValue (20750));
 
   // The defaul value for TCP MSS is 536, and there's no dynamic MTU discovery
   // implemented yet. We defined this value to 1420, considering 1500 bytes for
@@ -95,6 +97,15 @@ main (int argc, char *argv[])
   cmd.AddValue ("dualDown",   "  dual config: downlink traffic", dualDown);
   cmd.AddValue ("dualUp",     "  dual config: uplink traffic", dualUp);
   cmd.Parse (argc, argv);
+
+  // Get default values from config input (override command line values)
+  // Config::SetDefault ("ns3::ConfigStore::Mode", StringValue ("Load"));
+  // Config::SetDefault ("ns3::ConfigStore::FileFormat", StringValue ("RawText"));
+  // Config::SetDefault ("ns3::ConfigStore::Filename", 
+  //     StringValue ("/home/luciano/epc-ofswitch13/scratch/epc-of/epc-openflow-defaults.txt"));
+  // ConfigStore inputConfig;
+  // inputConfig.ConfigureDefaults ();
+  // cmd.Parse (argc, argv);
 
   // Enabling log components
   if (progress)
