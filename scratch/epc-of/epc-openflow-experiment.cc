@@ -119,13 +119,13 @@ main (int argc, char *argv[])
       LogComponentEnable ("OFSwitch13NetDevice", LOG_LEVEL_WARN);
       LogComponentEnable ("OFSwitch13Interface", LOG_LEVEL_WARN);
       LogComponentEnable ("OFSwitch13Helper", LOG_LEVEL_WARN);
-      LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_DEBUG);
-      LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_DEBUG);
-      LogComponentEnable ("RingOpenFlowNetwork", LOG_LEVEL_DEBUG);
+      LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_WARN);
+      LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
+      LogComponentEnable ("RingOpenFlowNetwork", LOG_LEVEL_WARN);
 
       LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_WARN);
-      LogComponentEnable ("EpcSdnController", LOG_LEVEL_ALL);
-      LogComponentEnable ("RingController", LOG_LEVEL_ALL);
+      LogComponentEnable ("EpcSdnController", LOG_LEVEL_FUNCTION);
+      LogComponentEnable ("RingController", LOG_LEVEL_FUNCTION);
     }
 
   /*****************************************************************************
@@ -134,10 +134,11 @@ main (int argc, char *argv[])
 
   // OpenFlow ring network (for EPC)
   Ptr<OpenFlowEpcNetwork> opfNetwork = CreateObject<RingOpenFlowNetwork> ();
-  Ptr<EpcSdnController> controller = CreateObject<RingController> ();
   opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
   opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("300Kb/s")));
-  controller->SetAttribute ("OFNetwork", PointerValue (opfNetwork));
+
+  Ptr<EpcSdnController> controller = CreateObject<RingController> ();
+  controller->SetOpenFlowNetwork (opfNetwork);
   opfNetwork->CreateTopology (controller);
  
   // LTE EPC core (with callbacks setup)

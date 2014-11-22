@@ -51,7 +51,6 @@ SetHttpTraffic (Ptr<Node> server, NodeContainer clients,
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
   Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
 
-  
   for (uint32_t u = 0; u < clients.GetN (); u++, g_tcpHttpPort++)
     {
       Ptr<Node> client = clients.Get (u);
@@ -96,15 +95,14 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
     NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper, 
     Ptr<UniformRandomVariable> rngStart)
 {
-  /* VoIP traffic pattern using G.729 codec (~8.5 kbps)
-   * Check http://goo.gl/iChPGQ for bandwidth calculation */
   uint16_t voipPacketSize = 60;
   double   voipPacketInterval = 0.06;
  
   Ptr<Ipv4> serverIpv4 = server->GetObject<Ipv4> ();
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
   Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
-  
+
+  ApplicationContainer serverApps;
   for (uint32_t u = 0; u < clients.GetN (); u++, g_udpVoipPort++)
     {
       Ptr<Node> client = clients.Get (u);
@@ -115,29 +113,47 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
       Ipv4Address clientAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
       Ipv4Mask clientMask = clientIpv4->GetAddress (1, 0).GetMask ();
 
-      // VoIP server
+      ApplicationContainer clientApps;
       VoipServerHelper voipServer (g_udpVoipPort);
       voipServer.SetAttribute ("Interval", TimeValue (Seconds (voipPacketInterval)));
       voipServer.SetAttribute ("PacketSize", UintegerValue (voipPacketSize));
-      ApplicationContainer serverApps = voipServer.Install (server);
-      serverApps.Start (Seconds (0.1));
+
+      // Downlink VoIP traffic
+      VoipClientHelper voipClientDown (serverAddr, g_udpVoipPort);
+      serverApps.Add (voipServer.Install (server));
+      clientApps.Add (voipClientDown.Install (client));
       
-      // VoIP client
-      VoipClientHelper voipClient (serverAddr, g_udpVoipPort);
-      ApplicationContainer clientApps = voipClient.Install (client);
-      clientApps.Start (Seconds (rngStart->GetValue ()));
+      EpcTft::PacketFilter filterDown;
+      filterDown.direction = EpcTft::DOWNLINK;
+      filterDown.remoteAddress = serverAddr;
+      filterDown.remoteMask = serverMask;
+      filterDown.localAddress = clientAddr;
+      filterDown.localMask = clientMask;
+      filterDown.remotePortStart = g_udpVoipPort;
+      filterDown.remotePortEnd = g_udpVoipPort;
+
+      // Uplink VoIP traffic
+      VoipClientHelper voipClientUp (clientAddr, g_udpVoipPort);
+      serverApps.Add (voipServer.Install (client));
+      clientApps.Add (voipClientUp.Install (server));
+
+      EpcTft::PacketFilter filterUp;
+      filterUp.direction = EpcTft::UPLINK;
+      filterUp.remoteAddress = serverAddr;
+      filterUp.remoteMask = serverMask;
+      filterUp.localAddress = clientAddr;
+      filterUp.localMask = clientMask;
+      filterUp.localPortStart = g_udpVoipPort;
+      filterUp.localPortEnd = g_udpVoipPort;
+
+      // Start/Stop distribution configurations
+      double start = rngStart->GetValue ();
+      clientApps.Start (Seconds (start));
 
       // Traffic Flow Template
       Ptr<EpcTft> tft = Create<EpcTft> ();
-      EpcTft::PacketFilter filter;
-      filter.direction = EpcTft::DOWNLINK;
-      filter.remoteAddress = serverAddr;
-      filter.remoteMask = serverMask;
-      filter.localAddress = clientAddr;
-      filter.localMask = clientMask;
-      filter.remotePortStart = g_udpVoipPort;
-      filter.remotePortEnd = g_udpVoipPort;
-      tft->Add (filter);
+      tft->Add (filterDown);
+      tft->Add (filterUp);
  
       // Dedicated GBR EPS bearer (QCI 1)
       GbrQosInformation qos;
@@ -146,6 +162,7 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
       EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
       lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
+    serverApps.Start (Seconds (0));
 }
 
  
@@ -184,7 +201,7 @@ SetVideoTraffic (Ptr<Node> server, NodeContainer clients,
       UdpServerHelper udpHelper (g_udpVideoPort);
       ApplicationContainer clientApps = udpHelper.Install (client); 
       clientApps.Start (Seconds (rngStart->GetValue ()));
-      clientApps.Start (Seconds (0.1));
+      clientApps.Start (Seconds (0.1)); // FIXME????
      
       // Traffic Flow Template
       Ptr<EpcTft> tft = Create<EpcTft> ();

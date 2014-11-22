@@ -44,6 +44,7 @@ EpcSdnController::DoDispose ()
   m_schedCommands.clear ();
   m_arpTable.clear ();
   m_connections.clear ();
+  m_createdBearers.clear ();
 }
 
 TypeId 
@@ -51,12 +52,14 @@ EpcSdnController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::EpcSdnController")
     .SetParent (OFSwitch13Controller::GetTypeId ())
-    .AddAttribute ("OFNetwork", "OpenFlowEpcNetwork object used to create the network.",
-                   PointerValue (),
-                   MakePointerAccessor (&EpcSdnController::m_ofNetwork),
-                   MakePointerChecker<OpenFlowEpcNetwork> ())
   ;
   return tid;
+}
+
+void 
+EpcSdnController::SetOpenFlowNetwork (Ptr<OpenFlowEpcNetwork> ptr)
+{
+  m_ofNetwork = ptr;
 }
 
 void 
@@ -99,14 +102,27 @@ bool
 EpcSdnController::RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId, 
                                              Ptr<EpcTft> tft, EpsBearer bearer)
 {
-  return false;
+  // Allowing new bearers
+  return true;
 }
 
 void 
 EpcSdnController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
     std::list<EpcS11SapMme::BearerContextCreated> bearerContextList)
 {
+  NS_LOG_FUNCTION (this << imsi << cellId);
   
+  // FIXME Precisa aqui dar um jeito de salvar essa informação de maneira mais fácil pra recuperar depois.
+  // Save the list of bearers into 
+  ContextKey_t key (imsi, cellId);
+  std::pair <ContextKey_t, std::list<EpcS11SapMme::BearerContextCreated> > 
+      entry (key, bearerContextList);
+  std::pair <ContextMap_t::iterator, bool> ret;
+  ret = m_createdBearers.insert (entry);
+  if (ret.second == false)
+    {
+      NS_FATAL_ERROR ("Error saving context created.");
+    }
 }
 
 void 
@@ -162,6 +178,12 @@ EpcSdnController::GetSwitchIdxForCellId (uint16_t cellId)
 }
 
 uint16_t 
+EpcSdnController::GetSwitchIdxForGateway ()
+{
+  return m_ofNetwork->GetSwitchIdxForGateway ();
+}
+
+uint16_t 
 EpcSdnController::GetNSwitches ()
 {
   return m_ofNetwork->GetNSwitches ();
@@ -189,34 +211,17 @@ EpcSdnController::HandlePacketIn (ofl_msg_packet_in *msg,
   enum ofp_packet_in_reason reason = msg->reason;
   if (reason == OFPR_NO_MATCH)
     {
-      // Get input port
-      uint32_t inPort;
-      ofl_match_tlv *inPortTlv = oxm_match_lookup (OXM_OF_IN_PORT, (ofl_match*)msg->match);
-      memcpy (&inPort, inPortTlv->value, OXM_LENGTH (OXM_OF_IN_PORT));
- 
-      // Just for testing, let's always send the packet in counterclockwise direction
-      ofl_action_group *action = (ofl_action_group*)xmalloc (sizeof (ofl_action_group));
-      action->header.type = OFPAT_GROUP;
-      action->group_id = 2;
-
-      // Create the OpenFlow PacketOut message
-      ofl_msg_packet_out reply;
-      reply.header.type = OFPT_PACKET_OUT;
-      reply.buffer_id = msg->buffer_id;
-      reply.in_port = inPort;
-      reply.data_length = 0;
-      reply.data = 0;
-      reply.actions_num = 1;
-      reply.actions = (ofl_action_header**)&action;
-      if (msg->buffer_id == OFP_NO_BUFFER)
+      // (Table #1 is used only for GTP TEID routing)
+      uint8_t tableId = msg->table_id;
+      if (tableId == 1)
         {
-          // No packet buffer. Send data back to switch
-          reply.data_length = msg->data_length;
-          reply.data = msg->data;
+          uint32_t teid;
+          ofl_match_tlv *teidTlv = oxm_match_lookup (OXM_OF_GTPU_TEID, (ofl_match*)msg->match);
+          memcpy (&teid, teidTlv->value, OXM_LENGTH (OXM_OF_GTPU_TEID));
+
+          NS_LOG_DEBUG ("New PacketIn from TEID routing table miss: " << teid);
+          return HandleGtpuTeidPacketIn (msg, swtch, xid, teid);
         }
-    
-      SendToSwitch (&swtch, (ofl_msg_header*)&reply, xid);
-      free (action);
     }
   else if (reason == OFPR_ACTION)
     {
@@ -230,16 +235,9 @@ EpcSdnController::HandlePacketIn (ofl_msg_packet_in *msg,
         {
           return HandleArpPacketIn (msg, swtch, xid);
         }
-      NS_LOG_WARN ("Packet sent to controller, but we can't handle it.");
     }
-  else if (reason == OFPR_INVALID_TTL)
-    {
-      NS_LOG_WARN ("Discarding packet sent to controller with invalid TTL.");
-    }
-  else
-    {
-      NS_FATAL_ERROR ("Error handling PacketIn message.");
-    }
+
+  NS_LOG_WARN ("Ignoring packet sent to controller.");
   
   // All handlers must free the message when everything is ok
   ofl_msg_free ((ofl_msg_header*)msg, NULL /*dp->exp*/);
@@ -258,6 +256,46 @@ EpcSdnController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   return 0;
 }
 
+ofl_err
+EpcSdnController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, 
+                                          uint32_t xid, uint32_t teid)
+{
+  NS_LOG_FUNCTION (this << swtch.ipv4 << teid);
+
+  // Get input port
+  uint32_t inPort;
+  ofl_match_tlv *inPortTlv = oxm_match_lookup (OXM_OF_IN_PORT, (ofl_match*)msg->match);
+  memcpy (&inPort, inPortTlv->value, OXM_LENGTH (OXM_OF_IN_PORT));
+
+  // Just for testing, let's always send the packet in counterclockwise direction
+  ofl_action_group *action = (ofl_action_group*)xmalloc (sizeof (ofl_action_group));
+  action->header.type = OFPAT_GROUP;
+  action->group_id = 2;
+
+  // Create the OpenFlow PacketOut message
+  ofl_msg_packet_out reply;
+  reply.header.type = OFPT_PACKET_OUT;
+  reply.buffer_id = msg->buffer_id;
+  reply.in_port = inPort;
+  reply.data_length = 0;
+  reply.data = 0;
+  reply.actions_num = 1;
+  reply.actions = (ofl_action_header**)&action;
+  if (msg->buffer_id == OFP_NO_BUFFER)
+    {
+      // No packet buffer. Send data back to switch
+      reply.data_length = msg->data_length;
+      reply.data = msg->data;
+    }
+  
+  SendToSwitch (&swtch, (ofl_msg_header*)&reply, xid);
+  free (action);
+
+  // All handlers must free the message when everything is ok
+  ofl_msg_free ((ofl_msg_header*)msg, NULL /*dp->exp*/);
+  return 0;
+}
+
 void
 EpcSdnController::NotifyConnectionStarted (SwitchInfo swtch)
 {
@@ -269,6 +307,10 @@ EpcSdnController::NotifyConnectionStarted (SwitchInfo swtch)
   // After a successfull handshake, let's install some default entries 
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");  // Table miss
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=1 eth_type=0x0806 apply:output=ctrl");  // Arp handling
+
+  // Handling GTP tunnels at flow table #1
+  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=2 eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152 goto:1");
+  DpctlCommand (swtch, "flow-mod cmd=add,table=1,prio=0 apply:output=ctrl");  // Table miss
 
   // Executing any scheduled commands for this switch
   std::pair <DevCmdMap_t::iterator, DevCmdMap_t::iterator> ret;
@@ -342,7 +384,7 @@ EpcSdnController::HandleArpPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, u
     }
   else 
     {
-      NS_LOG_WARN ("This was not supposed to happen. Ignoring...");
+      NS_LOG_WARN ("Not supposed to get ARP reply. Ignoring...");
     }
 
   // All handlers must free the message when everything is ok

@@ -153,19 +153,6 @@ OpenFlowEpcNetwork::RegisterNodeAtSwitch (uint16_t switchIdx, Ptr<Node> node)
   NS_FATAL_ERROR ("Can't register node at switch.");
 }
 
-uint16_t
-OpenFlowEpcNetwork::GetSwitchIdxForNode (Ptr<Node> node)
-{
-  NodeSwitchMap_t::iterator ret;
-  ret = m_nodeSwitchMap.find (node);
-  if (ret != m_nodeSwitchMap.end ())
-    {
-      NS_LOG_DEBUG ("Found switch index " << (int)ret->second << " for node " << node);
-      return ret->second;
-    }
-  NS_FATAL_ERROR ("Node not registered.");
-}
-
 void
 OpenFlowEpcNetwork::RegisterCellIdAtSwitch (uint16_t switchIdx, uint16_t cellId)
 {
@@ -179,6 +166,25 @@ OpenFlowEpcNetwork::RegisterCellIdAtSwitch (uint16_t switchIdx, uint16_t cellId)
   NS_FATAL_ERROR ("Can't register cell ID at switch.");
 }
 
+void
+OpenFlowEpcNetwork::RegisterGatewayAtSwitch (uint16_t switchIdx)
+{
+  m_gatewaySwitch = switchIdx;
+}
+
+uint16_t
+OpenFlowEpcNetwork::GetSwitchIdxForNode (Ptr<Node> node)
+{
+  NodeSwitchMap_t::iterator ret;
+  ret = m_nodeSwitchMap.find (node);
+  if (ret != m_nodeSwitchMap.end ())
+    {
+      NS_LOG_DEBUG ("Found switch index " << (int)ret->second << " for node " << node);
+      return ret->second;
+    }
+  NS_FATAL_ERROR ("Node not registered.");
+}
+
 uint16_t
 OpenFlowEpcNetwork::GetSwitchIdxForCellId (uint16_t cellId)
 {
@@ -190,6 +196,12 @@ OpenFlowEpcNetwork::GetSwitchIdxForCellId (uint16_t cellId)
       return ret->second;
     }
   NS_FATAL_ERROR ("Cell ID not registered.");
+}
+
+uint16_t
+OpenFlowEpcNetwork::GetSwitchIdxForGateway ()
+{
+  return m_gatewaySwitch;
 }
 
 };  // namespace ns3

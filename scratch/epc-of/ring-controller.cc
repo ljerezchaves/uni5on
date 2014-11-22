@@ -26,8 +26,6 @@ namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (RingController);
 
-uint16_t RingController::m_flowPrio = 2048;
-
 RingController::RingController ()
 {
   NS_LOG_FUNCTION (this);
@@ -42,6 +40,7 @@ void
 RingController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+  EpcSdnController::DoDispose ();
 }
 
 TypeId 
@@ -61,7 +60,7 @@ RingController::NotifyNewSwitchConnection (ConnectionInfo connInfo)
   // Call base method which will save this information
   EpcSdnController::NotifyNewSwitchConnection (connInfo);
   
-  // Installing default groups for RingController ring routing.  Group #1 is
+  // Installing default groups for RingController ring routing. Group #1 is
   // used to send packets from current switch to the next one in clockwise
   // direction.
   std::ostringstream cmd1;
@@ -87,21 +86,24 @@ RingController::RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId,
   if (bearer.IsGbr ())
     {
       DataRate downlinkGbr (bearer.gbrQosInfo.gbrDl);
-      DataRate uplinkGbr   (bearer.gbrQosInfo.gbrUl);
-      DataRate requestedBandwitdh = std::max (downlinkGbr, uplinkGbr);
+      DataRate uplinkGbr (bearer.gbrQosInfo.gbrUl);
+      DataRate maxGbr = std::max (downlinkGbr, uplinkGbr);
       
       uint16_t source = GetSwitchIdxForCellId (cellId);
-      Direction routingPath = FindShortestPath (source, 0);
-      DataRate availableBandwidth = GetAvailableBandwidth (source, 0, routingPath);
-      NS_LOG_DEBUG ("Available bandwidth from " << source << 
-                    " to gateway: " << availableBandwidth);
-      if (availableBandwidth < requestedBandwitdh)
+      uint16_t gateway = GetSwitchIdxForGateway ();
+
+      Direction path = FindShortestPath (source, gateway); 
+      DataRate bandwidth = GetAvailableBandwidth (source, gateway, path);
+      NS_LOG_DEBUG ("Bandwidth from " << source << " to gateway: " << bandwidth);
+      if (bandwidth < maxGbr)
         {
-          NS_LOG_WARN ("Not enougth resources for bearer: " << requestedBandwitdh);
+          NS_LOG_WARN ("Not enougth resources for bearer: " << maxGbr);
           return false;
         }
-      return ReserveBandwidth (source, 0, routingPath, requestedBandwitdh);
+      return ReserveBandwidth (source, 0, path, maxGbr);
     }
+
+  // Non-GBR bearers can always be created
   return true;
 }
 
@@ -110,13 +112,14 @@ RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
     std::list<EpcS11SapMme::BearerContextCreated> bearerContextList)
 {
   NS_LOG_FUNCTION (this << imsi << cellId);
+  EpcSdnController::NotifyNewContextCreated (imsi, cellId, bearerContextList); 
 }
 
 void
 RingController::CreateSpanningTree ()
 {
   // Let's configure one single link to drop packets when flooding over ports
-  // (OFPP_FLOOD).  Here we are disabling the farthest gateway link,
+  // (OFPP_FLOOD). Here we are disabling the farthest gateway link,
   // configuring its ports to OFPPC_NO_FWD flag (0x20).
   
   uint16_t half = (GetNSwitches () / 2);
@@ -139,33 +142,64 @@ RingController::CreateSpanningTree ()
   ScheduleCommand (info->switchDev2, cmd2.str ());
 }
 
+ofl_err
+RingController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, 
+                                        uint32_t xid, uint32_t teid)
+{
+  NS_LOG_FUNCTION (this << swtch.ipv4 << teid);
+
+  // Get input port
+  uint32_t inPort;
+  ofl_match_tlv *inPortTlv = oxm_match_lookup (OXM_OF_IN_PORT, (ofl_match*)msg->match);
+  memcpy (&inPort, inPortTlv->value, OXM_LENGTH (OXM_OF_IN_PORT));
+
+  // Just for testing, let's always send the packet in counterclockwise direction
+  ofl_action_group *action = (ofl_action_group*)xmalloc (sizeof (ofl_action_group));
+  action->header.type = OFPAT_GROUP;
+  action->group_id = 2;
+
+  // Create the OpenFlow PacketOut message
+  ofl_msg_packet_out reply;
+  reply.header.type = OFPT_PACKET_OUT;
+  reply.buffer_id = msg->buffer_id;
+  reply.in_port = inPort;
+  reply.data_length = 0;
+  reply.data = 0;
+  reply.actions_num = 1;
+  reply.actions = (ofl_action_header**)&action;
+  if (msg->buffer_id == OFP_NO_BUFFER)
+    {
+      // No packet buffer. Send data back to switch
+      reply.data_length = msg->data_length;
+      reply.data = msg->data;
+    }
+  
+  SendToSwitch (&swtch, (ofl_msg_header*)&reply, xid);
+  free (action);
+
+  // All handlers must free the message when everything is ok
+  ofl_msg_free ((ofl_msg_header*)msg, NULL /*dp->exp*/);
+  return 0;
+}
+
+
 RingController::Direction
 RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)
 {
   NS_ASSERT (srcSwitchIdx != dstSwitchIdx);
   NS_ASSERT (std::max (srcSwitchIdx, dstSwitchIdx) < GetNSwitches ());
   
-  if (GetNSwitches () == 2)
+  // General rule for ring with 3 or more switches
+  uint16_t maxHops = GetNSwitches () / 2;
+  int clockwiseDistance = dstSwitchIdx - srcSwitchIdx;
+  if (clockwiseDistance < 0)
     {
-      // For a ring with two swithces, there existing a single link.
-      return (srcSwitchIdx < dstSwitchIdx) ? 
-        RingController::CLOCK : 
-        RingController::COUNTERCLOCK;
+      clockwiseDistance += GetNSwitches ();
     }
-  else
-    {
-      // General rule for ring with 3 or more switches
-      uint16_t maxHops = GetNSwitches () / 2;
-      int clockwiseDistance = dstSwitchIdx - srcSwitchIdx;
-      if (clockwiseDistance < 0)
-        {
-          clockwiseDistance += GetNSwitches ();
-        }
-      
-      return (clockwiseDistance <= maxHops) ? 
-          RingController::CLOCK : 
-          RingController::COUNTERCLOCK;
-    }
+  
+  return (clockwiseDistance <= maxHops) ? 
+      RingController::CLOCK : 
+      RingController::COUNTERCLOCK;
 }
 
 DataRate 

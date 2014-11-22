@@ -143,6 +143,7 @@ public:
   /** \return Number of switches in the network. */
   uint16_t GetNSwitches ();
 
+protected:
   /**
    * Get the OFSwitch13NetDevice of a specific switch.
    * \param index The switch index.
@@ -150,7 +151,6 @@ public:
    */
   Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
 
-protected:
   /** Creates the OpenFlow internal network infrastructure. */
   virtual void CreateInternalTopology () = 0;
 
@@ -162,13 +162,6 @@ protected:
   void RegisterNodeAtSwitch (uint16_t switchIdx, Ptr<Node> node);
 
   /**
-   * Retrieve the switch index for node pointer.
-   * \param node Ptr<Node> The node pointer.
-   * \return The switch index in m_ofSwitches.
-   */
-  uint16_t GetSwitchIdxForNode (Ptr<Node> node);
-
-  /**
    * Store the pair <cellID, switch index> for further use.
    * \param switchIdx The switch index in m_ofSwitches.
    * \param cellId The eNB cell ID.
@@ -176,11 +169,30 @@ protected:
   void RegisterCellIdAtSwitch (uint16_t switchIdx, uint16_t cellId);
 
   /**
+   * Store the switch index at which the gateway is connected.
+   * \param switchIdx The switch index in m_ofSwitches.
+   */
+  void RegisterGatewayAtSwitch (uint16_t switchIdx);
+
+  /**
+   * Retrieve the switch index for node pointer.
+   * \param node Ptr<Node> The node pointer.
+   * \return The switch index in m_ofSwitches.
+   */
+  uint16_t GetSwitchIdxForNode (Ptr<Node> node);
+
+  /**
    * Retrieve the switch index for a cell ID
    * \param cellId The eNB cell ID .
    * \return The switch index in m_ofSwitches.
    */
   uint16_t GetSwitchIdxForCellId (uint16_t cellId);
+
+  /**
+   * Retrieve the switch index  at which the gateway is connected.
+   * \return The switch index in m_ofSwitches.
+   */
+  uint16_t GetSwitchIdxForGateway ();
 
   Ptr<OFSwitch13Controller> m_ofCtrlApp;      //!< Controller application.
   Ptr<Node>                 m_ofCtrlNode;     //!< Controller node.
@@ -190,13 +202,15 @@ protected:
   CsmaHelper                m_ofCsmaHelper;   //!< Csma helper.
 
 private:
+  uint16_t            m_gatewaySwitch;    //!< Gateway switch index
+
   /** Map saving Node / Switch indexes. */
   typedef std::map<Ptr<Node>, uint16_t> NodeSwitchMap_t;  
-  NodeSwitchMap_t     m_nodeSwitchMap; //!< Registered nodes per switch index.
+  NodeSwitchMap_t     m_nodeSwitchMap;    //!< Registered nodes per switch index.
 
   /** Map saving CellId / Switch indexes. */
   typedef std::map<uint16_t, uint16_t> CellIdSwitchMap_t;  
-  CellIdSwitchMap_t     m_cellIdSwitchMap; //!< CellIds per switch index.
+  CellIdSwitchMap_t   m_cellIdSwitchMap;  //!< CellIds per switch index.
 };
 
 };  // namespace ns3

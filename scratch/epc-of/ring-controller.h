@@ -36,8 +36,14 @@ namespace ns3 {
 class RingController : public EpcSdnController
 {
 public:
+  /** Indicates the direction that the traffic should be routed in the ring. */
+  enum Direction {
+    CLOCK = 1,
+    COUNTERCLOCK = 2
+  };
+
   RingController ();          //!< Default constructor
-  virtual ~RingController (); //!< Dummy destructor, see DoDipose
+  ~RingController (); //!< Dummy destructor, see DoDipose
 
   /**
    * Register this type.
@@ -46,21 +52,21 @@ public:
   static TypeId GetTypeId (void);
 
   /** Destructor implementation */
-  virtual void DoDispose ();
-
-  /** Indicates the direction that the traffic should be routed in the ring. */
-  enum Direction {
-    CLOCK = 1,
-    COUNTERCLOCK = 2
-  };
+  void DoDispose ();
 
   // Inherited from EpcSdnController
   void NotifyNewSwitchConnection (ConnectionInfo connInfo);
   bool RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId, 
                                   Ptr<EpcTft> tft, EpsBearer bearer);
   void NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
-      std::list<EpcS11SapMme::BearerContextCreated> bearerContextList);
+                                std::list<EpcS11SapMme::BearerContextCreated> bearerContextList);
   void CreateSpanningTree ();
+
+protected:
+  // Inherited from EpcSdnController
+  ofl_err HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, 
+                                  SwitchInfo swtch, 
+                                  uint32_t xid, uint32_t teid);
 
 private:
   /**
@@ -124,8 +130,6 @@ private:
    * \return Average traffic for specific tunnel.
    */
   DataRate GetTunnelAverageTraffic ();
-
-  static uint16_t          m_flowPrio;     //!< Flow-mod priority
 };
 
 };  // namespace ns3

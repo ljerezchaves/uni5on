@@ -54,10 +54,10 @@ RingOpenFlowNetwork::GetTypeId (void)
     .SetParent<OpenFlowEpcNetwork> ()
     .AddConstructor<RingOpenFlowNetwork> ()
     .AddAttribute ("NumSwitches", 
-                   "The number of OpenFlow switches in the ring.",
+                   "The number of OpenFlow switches in the ring (at least 3).",
                    UintegerValue (3),
                    MakeUintegerAccessor (&RingOpenFlowNetwork::m_nodes),
-                   MakeUintegerChecker<uint16_t> ())
+                   MakeUintegerChecker<uint16_t> (3))
     .AddAttribute ("LinkDataRate", 
                    "The data rate to be used for the CSMA OpenFlow links to be created",
                    DataRateValue (DataRate ("10Mb/s")),
@@ -94,7 +94,7 @@ RingOpenFlowNetwork::CreateInternalTopology ()
   // Validating controller and number of switches in the ring
   m_ringCtrlApp = DynamicCast<RingController> (m_ofCtrlApp);
   NS_ASSERT_MSG (m_ringCtrlApp, "Expecting a RingController.");
-  NS_ASSERT_MSG (m_nodes >= 1, "Invalid number of nodes for the ring");
+  NS_ASSERT_MSG (m_nodes >= 3, "Invalid number of nodes for the ring");
 
   // Creating the switch nodes
   m_ofSwitches.Create (m_nodes);
@@ -108,9 +108,6 @@ RingOpenFlowNetwork::CreateInternalTopology ()
 
   // Installing the Openflow switch devices for each switch node
   m_ofDevices = m_ofHelper.InstallSwitchesWithoutPorts (m_ofSwitches);
-
-  // If the number of nodes in the ring is 1, return with no links
-  if (m_nodes == 1) return;
 
   // Configuring csma links to connect the switches
   m_ofCsmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_LinkDataRate));
@@ -152,18 +149,8 @@ RingOpenFlowNetwork::CreateInternalTopology ()
         .availableDataRate = m_LinkDataRate
       };
       m_ringCtrlApp->NotifyNewSwitchConnection (info);
-  
-      // If the number of nodes in the ring is 2, create just a single link
-      if (m_nodes == 2)
-        {
-          break;
-        }
     }
-  
-  if (m_nodes > 2)
-    {
-      m_ringCtrlApp->CreateSpanningTree ();
-    }
+  m_ringCtrlApp->CreateSpanningTree ();
 }
 
 Ptr<NetDevice>
@@ -186,20 +173,17 @@ RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
       
       // This is the SgwPgw node
       RegisterNodeAtSwitch (switchIdx, node);
+      RegisterGatewayAtSwitch (switchIdx);
     }
   else  
     {
-      // Considers the special case of a single node in the ring
-      switchIdx = m_nodes == 1 ? 0 : 1 + ((counter - 1) % (m_nodes - 1));
+      switchIdx = 1 + ((counter - 1) % (m_nodes - 1));
       
       // This is an eNB node
       RegisterNodeAtSwitch (switchIdx, node);
       RegisterCellIdAtSwitch (switchIdx, cellId);
     }
   counter++;
-
-  // Register this pair node/switch for furter use (X2 interfaces)
-  NS_ASSERT (switchIdx < m_ofDevices.GetN ());
 
   Ptr<Node> swtchNode = m_ofSwitches.Get (switchIdx);
   Ptr<OFSwitch13NetDevice> swtchDev = GetSwitchDevice (switchIdx); 
@@ -219,8 +203,7 @@ RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   // Adding newly created csma device as openflow switch port.
   uint32_t portNum = swtchDev->AddSwitchPort (devices.Get (0));
 
-  // Notify controller of a new IP device and configure flow table entry for
-  // local traffic delivery.
+  // Notify controller of a new IP device and configure local traffic delivery.
   m_ringCtrlApp->NotifyNewIpDevice (nodeDev, nodeIpAddress);
   m_ringCtrlApp->ConfigurePortDelivery (swtchDev, nodeDev, nodeIpAddress, portNum);
 

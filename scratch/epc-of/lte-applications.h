@@ -34,10 +34,17 @@ SetPingTraffic (Ptr<Node> dstNode, NodeContainer clients,
     Ptr<UniformRandomVariable> rngStart);
 
 
-/* HTTP traffic over dedicated Non-GBR EPS bearer (QCI 8) 
+/* HTTP/TCP traffic over dedicated Non-GBR EPS bearer (QCI 8) 
  * This QCI 8 could be used for a dedicated 'premium bearer' for any
  * subscriber, or could be used for the default bearer of a for 'premium
  * subscribers'.
+ *
+ * This HTTP model is based on the distributions indicated in the paper 'An
+ * HTTP Web Traffic Model Based on the Top One Million Visited Web Pages' by
+ * Rastin Pries et. al. Each client will send a get request to the server at
+ * port 80 and will get the page content back including inline content. These
+ * requests repeats over time following appropriate distribution. 
+ * The request goes over default bearer???? FIXME
  */
 void 
 SetHttpTraffic (Ptr<Node> server, NodeContainer clients, 
@@ -45,8 +52,14 @@ SetHttpTraffic (Ptr<Node> server, NodeContainer clients,
     Ptr<UniformRandomVariable> rngStart);
 
 
-/* VoIP traffic over dedicated GBR EPS bearer (QCI 1). 
+/* VoIP/UDP bidiretional traffic over dedicated GBR EPS bearer (QCI 1). 
  * This QCI is typically associated with an operator controlled service.
+ *
+ * This VoIP traffic simulates the G.729 codec (~8.5 kbps for payload). Check
+ * http://goo.gl/iChPGQ for bandwidth calculation and discussion. This code
+ * will install a bidirectional voip traffic between UE and WebServer (in fact,
+ * in install a client and a server application at each node). The request goes
+ * over default bearer and voip packets goes over dedicated bearer.
  */
 void
 SetVoipTraffic (Ptr<Node> server, NodeContainer clients, 
@@ -54,7 +67,7 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
     Ptr<UniformRandomVariable> rngStart);
 
 
-/* Buffered video streaming over dedicated GBR EPS bearer (QCI 4).
+/* UDP downlink video streaming over dedicated GBR EPS bearer (QCI 4).
  * This QCI is typically associated with an operator controlled service.
  */
 void
@@ -71,6 +84,7 @@ SetLenaDualStripeTraffic (Ptr<Node> server, NodeContainer clients,
     NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper, 
     Ptr<UniformRandomVariable> rngStart, uint32_t nBearers = 1, 
     bool useUdp = false, bool uplink = true, bool downlink = true);
+
 
 #endif // LTE_APPLICATIONS_H
 

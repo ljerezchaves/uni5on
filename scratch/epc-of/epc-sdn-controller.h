@@ -50,6 +50,12 @@ public:
   virtual void DoDispose ();
 
   /**
+   * Set the OpenFlowEpcNetwork object used to create the network.
+   * \param ptr The object pointer.
+   */
+  void SetOpenFlowNetwork (Ptr<OpenFlowEpcNetwork> ptr);
+
+  /**
    * Notify this controller of a new IP device connected to the OpenFlow
    * network over some switch port. This function will save the IP address /
    * MAC address from this IP device for further ARP resolution. 
@@ -149,6 +155,12 @@ protected:
   uint16_t GetSwitchIdxForCellId (uint16_t cellId);
 
   /**
+   * Retrieve the switch index for the SgwPgw gateway
+   * \return The switch index in m_ofSwitches.
+   */
+  uint16_t GetSwitchIdxForGateway ();
+
+  /**
    * \return Number of switches in the network.
    */
   uint16_t GetNSwitches ();
@@ -180,8 +192,20 @@ protected:
    * \param xid Transaction id.
    * \return 0 if everything's ok, otherwise an error number.
    */
-  ofl_err HandleFlowRemoved (ofl_msg_flow_removed *msg, SwitchInfo swtch, 
-                             uint32_t xid);
+  virtual ofl_err HandleFlowRemoved (ofl_msg_flow_removed *msg, 
+                                     SwitchInfo swtch, uint32_t xid);
+
+  /**
+   * Handle packet-in messages sent from switch with unknwon TEID routing.
+   * \param msg The packet-in message.
+   * \param swtch The switch information.
+   * \param xid Transaction id.
+   * \param teid The GTPU TEID identifier.
+   * \return 0 if everything's ok, otherwise an error number.
+   */
+  virtual ofl_err HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, 
+                                          SwitchInfo swtch, 
+                                          uint32_t xid, uint32_t teid);
 
 private:
   /**
@@ -240,6 +264,11 @@ private:
   /** Map saving pair of switch indexes / connection information */
   typedef std::map<std::pair<uint16_t,uint16_t>, ConnectionInfo> ConnInfoMap_t; 
   ConnInfoMap_t m_connections;    //!< Connections between switches.
+
+  /** Map saving pair ContextKey_t / ContextBearers_t */
+  typedef std::pair<uint64_t,uint16_t> ContextKey_t; //!< ContextMap_t Key: IMSI/CellId
+  typedef std::map<ContextKey_t, std::list<EpcS11SapMme::BearerContextCreated> > ContextMap_t;
+  ContextMap_t m_createdBearers; //!< Created bearers in network.
 
   Ptr<OpenFlowEpcNetwork> m_ofNetwork;    //!< Pointer to OpenFlow network
 };
