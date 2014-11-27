@@ -1,6 +1,7 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2013 Federal University of Uberlandia
+ *               2014 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -15,6 +16,7 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Saulo da Mata <damata.saulo@gmail.com>
+ *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
 #ifndef VOIP_CLIENT_H_
@@ -26,24 +28,6 @@
 #include "ns3/ipv4-address.h"
 #include "ns3/seq-ts-header.h"
 
-//#include <sys/types.h>
-//#include <sys/stat.h>
-//#include <netinet/in.h>
-//#include <stdio.h>
-//#include <string.h>
-
-#include <fstream>
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-
-using std::ifstream;
-using std::ofstream;
-using std::ostream;
-
-using std::ios;
-using std::endl;
-
 using namespace std;
 
 namespace ns3 {
@@ -52,48 +36,104 @@ class Socket;
 class Packet;
 
 /**
- * \class VoipClient
- * \brief A Udp client. Sends UDP packet carrying sequence number and time stamp
- *  in their payloads
- *
+ * This class is similar to an OnOffApplication, which send packets following
+ * VoIP traffic pattern togheter with an UdpServer to receive the packets.
  */
 class VoipClient : public Application
 {
 public:
-
-
-  static TypeId
-  GetTypeId (void);
-
+  /**
+   * \brief Register this type.
+   * \return the object TypeId
+   */ 
+  static TypeId GetTypeId (void);
+  
   VoipClient ();
-
   virtual ~VoipClient ();
 
-  /**
-   * \brief set the remote address and port
-   * \param ip remote IP address
-   * \param port remote port
-   */
   void SetRemote (Ipv4Address ip, uint16_t port);
+  void SetRemote (Ipv6Address ip, uint16_t port);
+  void SetRemote (Address ip, uint16_t port);
+
+ /**
+  * \brief Assign a fixed random variable stream number to the random variables
+  * used by this model.
+  *
+  * \param stream first stream index to use
+  * \return the number of stream indices assigned by this model
+  */
+  void AssignStreams (int64_t stream);
 
 protected:
+  /** Destructor implementation */
   virtual void DoDispose (void);
 
 private:
+  // inherited from Application base class.
+  virtual void StartApplication (void);    // Called at time specified by Start
+  virtual void StopApplication (void);     // Called at time specified by Stop
 
-  virtual void StartApplication (void);
-  virtual void StopApplication (void);
+  /**
+   * \brief Cancel all pending events.
+   */
+  void CancelEvents ();
 
-  void Send (void);
-  void HandleRead (Ptr<Socket> socket);
+  /**
+   * \brief Start an On period
+   */
+  void StartSending ();
+  
+  /**
+   * \brief Start an Off period
+   */
+  void StopSending ();
+  
+  /**
+   * \brief Send a packet
+   */
+  void SendPacket ();
 
-  Ptr<Socket> m_socket;
-  Ipv4Address m_peerAddress;
-  uint16_t    m_peerPort;
-  EventId     m_sendEvent;
+  /**
+   * \brief Schedule the next packet transmission
+   */
+  void ScheduleNextTx ();
+  
+  /**
+   * \brief Schedule the next On period start
+   */
+  void ScheduleStartEvent ();
+  
+  /**
+   * \brief Schedule the next Off period start
+   */
+  void ScheduleStopEvent ();
+
+  /**
+   * \brief Handle a Connection Succeed event
+   * \param socket the connected socket
+   */
+  void ConnectionSucceeded (Ptr<Socket> socket);
+  
+  /**
+   * \brief Handle a Connection Failed event
+   * \param socket the not connected socket
+   */
+  void ConnectionFailed (Ptr<Socket> socket);
+
+  Time        m_interval;               //!< Interval between packets
+  uint32_t    m_size;                   //!< Packet size
+  uint32_t    m_sent;                   //!< Number of packets send
+  Ptr<Socket> m_socket;                 //!< Associated socket
+  Address     m_peerAddress;            //!< Peer address
+  uint16_t    m_peerPort;               //!< Peer port
+  bool        m_connected;              //!< True if connected
+  Time        m_lastStartTime;          //!< Time last packet sent
+  uint32_t    m_totBytes;               //!< Total bytes sent so far
+  EventId     m_startStopEvent;         //!< Event id for next start or stop event
+  EventId     m_sendEvent;              //!< Event id of pending 'send packet' event
+  Ptr<RandomVariableStream>  m_onTime;  //!< rng for On Time
+  Ptr<RandomVariableStream>  m_offTime; //!< rng for Off Time
 };
 
 } // namespace ns3
-
-
 #endif /* VOIP_CLIENT_H_ */

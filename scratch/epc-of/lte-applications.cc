@@ -102,7 +102,7 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
   Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
 
-  ApplicationContainer serverApps;
+  ApplicationContainer sinkApps;
   for (uint32_t u = 0; u < clients.GetN (); u++, g_udpVoipPort++)
     {
       Ptr<Node> client = clients.Get (u);
@@ -113,29 +113,30 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
       Ipv4Address clientAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
       Ipv4Mask clientMask = clientIpv4->GetAddress (1, 0).GetMask ();
 
-      ApplicationContainer clientApps;
-      VoipServerHelper voipServer (g_udpVoipPort);
-      voipServer.SetAttribute ("Interval", TimeValue (Seconds (voipPacketInterval)));
-      voipServer.SetAttribute ("PacketSize", UintegerValue (voipPacketSize));
+      ApplicationContainer senderApps;
 
       // Downlink VoIP traffic
-      VoipClientHelper voipClientDown (serverAddr, g_udpVoipPort);
-      serverApps.Add (voipServer.Install (server));
-      clientApps.Add (voipClientDown.Install (client));
-      
+      UdpServerHelper voipSinkDown (g_udpVoipPort);
+      sinkApps.Add (voipSinkDown.Install (client));
+      VoipClientHelper voipSenderDown (clientAddr, g_udpVoipPort);
+      voipSenderDown.SetAttribute ("Stream", IntegerValue (u));
+      senderApps.Add (voipSenderDown.Install (server));
+
       EpcTft::PacketFilter filterDown;
       filterDown.direction = EpcTft::DOWNLINK;
       filterDown.remoteAddress = serverAddr;
       filterDown.remoteMask = serverMask;
       filterDown.localAddress = clientAddr;
       filterDown.localMask = clientMask;
-      filterDown.remotePortStart = g_udpVoipPort;
-      filterDown.remotePortEnd = g_udpVoipPort;
+      filterDown.localPortStart = g_udpVoipPort;
+      filterDown.localPortEnd = g_udpVoipPort;
 
       // Uplink VoIP traffic
-      VoipClientHelper voipClientUp (clientAddr, g_udpVoipPort);
-      serverApps.Add (voipServer.Install (client));
-      clientApps.Add (voipClientUp.Install (server));
+      UdpServerHelper voipSinkUp (g_udpVoipPort);
+      sinkApps.Add (voipSinkUp.Install (server));
+      VoipClientHelper voipSenderUp (serverAddr, g_udpVoipPort);
+      voipSenderUp.SetAttribute ("Stream", IntegerValue (u));
+      senderApps.Add (voipSenderUp.Install (client));
 
       EpcTft::PacketFilter filterUp;
       filterUp.direction = EpcTft::UPLINK;
@@ -143,12 +144,8 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
       filterUp.remoteMask = serverMask;
       filterUp.localAddress = clientAddr;
       filterUp.localMask = clientMask;
-      filterUp.localPortStart = g_udpVoipPort;
-      filterUp.localPortEnd = g_udpVoipPort;
-
-      // Start/Stop distribution configurations
-      double start = rngStart->GetValue ();
-      clientApps.Start (Seconds (start));
+      filterUp.remotePortStart = g_udpVoipPort;
+      filterUp.remotePortEnd = g_udpVoipPort;
 
       // Traffic Flow Template
       Ptr<EpcTft> tft = Create<EpcTft> ();
@@ -161,8 +158,10 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
       qos.mbrDl = qos.gbrDl;
       EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
       lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
+      
+      senderApps.Start (Seconds (1));
     }
-    serverApps.Start (Seconds (0));
+    sinkApps.Start (Seconds (0));
 }
 
  

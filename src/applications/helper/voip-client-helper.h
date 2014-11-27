@@ -1,6 +1,7 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2013 Federal University of Uberlandia
+ *               2014 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -15,49 +16,36 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Saulo da Mata <damata.saulo@gmail.com>
+ *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef VOIP_SERVER_H_
-#define VOIP_SERVER_H_
+#ifndef VOIP_CLIENT_HELPER_H_
+#define VOIP_CLIENT_HELPER_H_
 
-#include "ns3/application.h"
-#include "ns3/event-id.h"
-#include "ns3/ptr.h"
+#include <stdint.h>
+#include <string>
+#include "ns3/object-factory.h"
 #include "ns3/address.h"
-#include "ns3/ipv4-address.h"
-#include "ns3/seq-ts-header.h"
-#include "ns3/socket.h"
+#include "ns3/attribute.h"
+#include "ns3/net-device.h"
+#include "ns3/node-container.h"
+#include "ns3/application-container.h"
 
 namespace ns3 {
 
-class VoipServer : public Application
+class VoipClientHelper
 {
 public:
-  static TypeId GetTypeId (void);
-  VoipServer ();
-  virtual ~VoipServer ();
+  VoipClientHelper ();
+  VoipClientHelper (Ipv4Address ip, uint16_t port);
 
-protected:
-  virtual void DoDispose (void);
+  void SetAttribute (std::string name, const AttributeValue &value);
 
+  ApplicationContainer Install (NodeContainer c);
 private:
-
-  virtual void StartApplication (void);
-  virtual void StopApplication (void);
-
-  void HandleRead (Ptr<Socket> socket);
-  void Send();
-
-  uint16_t    m_packetSize;
-  uint32_t    m_packetId;
-  uint16_t    m_port;
-  Ptr<Socket> m_socket;
-  Address     m_peerAddress;
-  EventId     m_sendEvent;
-  Time        m_interval;
-
+  ObjectFactory m_factory;
 };
 
 } // namespace ns3
 
-#endif /* VOIP_SERVER_H_ */
+#endif /* VOIP_CLIENT_HELPER_H_ */
