@@ -126,6 +126,11 @@ main (int argc, char *argv[])
       LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_WARN);
       LogComponentEnable ("EpcSdnController", LOG_LEVEL_FUNCTION);
       LogComponentEnable ("RingController", LOG_LEVEL_FUNCTION);
+      
+      LogComponentEnable ("VoipClient", LOG_LEVEL_ALL);
+      LogComponentEnable ("UdpServer", LOG_LEVEL_ALL);
+
+      LogComponentEnable ("OnOffUdpTraceClient", LOG_LEVEL_ALL);
     }
 
   /*****************************************************************************
@@ -167,25 +172,21 @@ main (int argc, char *argv[])
   NodeContainer ueNodes = lteNetwork->GetUeNodes ();
   NetDeviceContainer ueDevices = lteNetwork->GetUeDevices ();
   Ptr<LteHelper> lteHelper = lteNetwork->GetLteHelper ();
-  
-  Ptr<UniformRandomVariable> appRngStart = CreateObject<UniformRandomVariable> ();
-  appRngStart->SetAttribute ("Min", DoubleValue (0.5));
-  appRngStart->SetAttribute ("Max", DoubleValue (1.0));
 
   // ICMP ping over default Non-GBR EPS bearer (QCI 9)
-  if (ping) SetPingTraffic (webHost, ueNodes, appRngStart);
+  if (ping) SetPingTraffic (webHost, ueNodes);
 
   // HTTP traffic over dedicated Non-GBR EPS bearer (QCI 8) 
-  if (http) SetHttpTraffic (webHost, ueNodes, ueDevices, lteHelper, appRngStart);
+  if (http) SetHttpTraffic (webHost, ueNodes, ueDevices, lteHelper);
 
   // VoIP traffic over dedicated GBR EPS bearer (QCI 1) 
-  if (voip) SetVoipTraffic (webHost, ueNodes, ueDevices, lteHelper, appRngStart);
+  if (voip) SetVoipTraffic (webHost, ueNodes, ueDevices, lteHelper, controller);
 
   // Buffered video streaming over dedicated GBR EPS bearer (QCI 4)
-  if (video) SetVideoTraffic (webHost, ueNodes, ueDevices, lteHelper, appRngStart);
+  if (video) SetVideoTraffic (webHost, ueNodes, ueDevices, lteHelper, controller);
 
   // TCP/UDP Downlink/Uplink traffic over dedicated Non-GBR EPS beareres (QCI 8)
-  if (dual) SetLenaDualStripeTraffic (webHost, ueNodes, ueDevices, lteHelper, appRngStart, 
+  if (dual) SetLenaDualStripeTraffic (webHost, ueNodes, ueDevices, lteHelper, 
                                       dualFlows, dualUseUdp, dualUp, dualDown);
 
   /*****************************************************************************

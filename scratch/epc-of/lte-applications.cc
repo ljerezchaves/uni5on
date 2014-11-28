@@ -27,30 +27,31 @@ uint16_t g_udpVideoPort = 20000;
 uint16_t g_tcpUdpDualUePort = 50000;
 uint16_t g_tcpUdpDualServerPort = 60000;
 
-std::string g_videoTrace = "ns3/movies/jurassic-low.data";
+std::string g_videoTrace = "ns3/movies/jurassic-hig.data";
+Ptr<UniformRandomVariable> g_appRngStart = CreateObject<UniformRandomVariable> ();
 
-  
+
 void 
-SetPingTraffic (Ptr<Node> dstNode, NodeContainer clients, 
-    Ptr<UniformRandomVariable> rngStart)
+SetPingTraffic (Ptr<Node> dstNode, NodeContainer clients)
 {
+
   Ptr<Ipv4> dstIpv4 = dstNode->GetObject<Ipv4> ();
   Ipv4Address dstAddr = dstIpv4->GetAddress (1,0).GetLocal ();
   V4PingHelper ping = V4PingHelper (dstAddr);
   ApplicationContainer clientApps = ping.Install (clients);
-  clientApps.Start (Seconds (rngStart->GetValue ()));
+  clientApps.Start (Seconds (g_appRngStart->GetValue (0.1, 1.0)));
 }
 
 
 void
 SetHttpTraffic (Ptr<Node> server, NodeContainer clients, 
-    NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper, 
-    Ptr<UniformRandomVariable> rngStart)
+    NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper)
 {
   Ptr<Ipv4> serverIpv4 = server->GetObject<Ipv4> ();
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
   Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
 
+  ApplicationContainer serverApps, clientApps;
   for (uint32_t u = 0; u < clients.GetN (); u++, g_tcpHttpPort++)
     {
       Ptr<Node> client = clients.Get (u);
@@ -63,13 +64,12 @@ SetHttpTraffic (Ptr<Node> server, NodeContainer clients,
 
       // HTTP server
       HttpServerHelper httpServer (g_tcpHttpPort);
-      ApplicationContainer serverApps = httpServer.Install (server);
-      serverApps.Start (Seconds (0.1));
+      serverApps.Add (httpServer.Install (server));
 
       // HTTP client
       HttpClientHelper httpClient (serverAddr, g_tcpHttpPort);
-      ApplicationContainer clientApps = httpClient.Install (client);
-      clientApps.Start (Seconds (rngStart->GetValue ()));
+      clientApps.Add (httpClient.Install (client));
+      clientApps.Start (Seconds (g_appRngStart->GetValue (0.1, 1.0)));
 
       // Traffic Flow Templat
       Ptr<EpcTft> tft = Create<EpcTft> ();
@@ -87,13 +87,15 @@ SetHttpTraffic (Ptr<Node> server, NodeContainer clients,
       EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
       lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
+  clientApps.Start (Seconds (1));
+  serverApps.Start (Seconds (0));
 }
 
 
 void
 SetVoipTraffic (Ptr<Node> server, NodeContainer clients, 
-    NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper, 
-    Ptr<UniformRandomVariable> rngStart)
+    NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper,
+    Ptr<EpcSdnController> controller)
 {
   uint16_t voipPacketSize = 60;
   double   voipPacketInterval = 0.06;
@@ -102,7 +104,7 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
   Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
 
-  ApplicationContainer sinkApps;
+  ApplicationContainer sinkApps, senderApps;
   for (uint32_t u = 0; u < clients.GetN (); u++, g_udpVoipPort++)
     {
       Ptr<Node> client = clients.Get (u);
@@ -112,8 +114,6 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
       Ptr<Ipv4> clientIpv4 = client->GetObject<Ipv4> ();
       Ipv4Address clientAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
       Ipv4Mask clientMask = clientIpv4->GetAddress (1, 0).GetMask ();
-
-      ApplicationContainer senderApps;
 
       // Downlink VoIP traffic
       UdpServerHelper voipSinkDown (g_udpVoipPort);
@@ -158,27 +158,34 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
       qos.mbrDl = qos.gbrDl;
       EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
       lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
-      
-      senderApps.Start (Seconds (1));
     }
-    sinkApps.Start (Seconds (0));
+  senderApps.Start (Seconds (1));
+  sinkApps.Start (Seconds (0));
+
+  // Setting up app start callback to controller
+  for (ApplicationContainer::Iterator i = senderApps.Begin (); i != senderApps.End (); ++i)
+    {
+      Ptr<VoipClient> app = DynamicCast<VoipClient> (*i);
+      app->SetAppStartCallback (MakeCallback (&EpcSdnController::NotifyAppStart, controller));
+    }
 }
 
  
 void
 SetVideoTraffic (Ptr<Node> server, NodeContainer clients, 
-    NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper, 
-    Ptr<UniformRandomVariable> rngStart)
+    NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper,
+    Ptr<EpcSdnController> controller)
 {
   // Max and Average bitrate info extracted from
   // http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf
-  uint64_t avgBitRate = 150000;
-  uint64_t maxBitRate = 1600000;
+  uint64_t avgBitRate = 770000;
+  uint64_t maxBitRate = 3300000;
 
   Ptr<Ipv4> serverIpv4 = server->GetObject<Ipv4> ();
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
   Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
 
+  ApplicationContainer sinkApps, senderApps;
   for (uint32_t u = 0; u < clients.GetN (); u++, g_udpVideoPort++)
     {
       Ptr<Node> client = clients.Get (u);
@@ -191,16 +198,13 @@ SetVideoTraffic (Ptr<Node> server, NodeContainer clients,
  
       // Video server (send UDP datagrams to client)
       uint32_t MaxPacketSize = 1472;  // Back off 20 (IP) + 8 (UDP) bytes from MTU
-      UdpTraceClientHelper traceClient (clientAddr, g_udpVideoPort, g_videoTrace);
-      traceClient.SetAttribute ("MaxPacketSize", UintegerValue (MaxPacketSize));
-      ApplicationContainer serverApps = traceClient.Install (server);
-      serverApps.Start (Seconds (rngStart->GetValue ()));
+      OnOffUdpTraceClientHelper videoSender (clientAddr, g_udpVideoPort, g_videoTrace);
+      videoSender.SetAttribute ("MaxPacketSize", UintegerValue (MaxPacketSize));
+      senderApps.Add (videoSender.Install (server));
       
-      // Video client (receive UDP datagramas from server)
-      UdpServerHelper udpHelper (g_udpVideoPort);
-      ApplicationContainer clientApps = udpHelper.Install (client); 
-      clientApps.Start (Seconds (rngStart->GetValue ()));
-      clientApps.Start (Seconds (0.1)); // FIXME????
+      // Video sink (receive UDP datagramas from server)
+      UdpServerHelper videoSink (g_udpVideoPort);
+      sinkApps.Add (videoSink.Install (client)); 
      
       // Traffic Flow Template
       Ptr<EpcTft> tft = Create<EpcTft> ();
@@ -221,14 +225,22 @@ SetVideoTraffic (Ptr<Node> server, NodeContainer clients,
       EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
       lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
+  senderApps.Start (Seconds (1));
+  sinkApps.Start (Seconds (0));
+
+  // Setting up app start callback to controller
+  for (ApplicationContainer::Iterator i = senderApps.Begin (); i != senderApps.End (); ++i)
+    {
+      Ptr<OnOffUdpTraceClient> app = DynamicCast<OnOffUdpTraceClient> (*i);
+      app->SetAppStartCallback (MakeCallback (&EpcSdnController::NotifyAppStart, controller));
+    }
 }
 
 
 void
 SetLenaDualStripeTraffic (Ptr<Node> server, NodeContainer clients, 
     NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper, 
-    Ptr<UniformRandomVariable> rngStart, uint32_t nBearers, bool useUdp, 
-    bool uplink, bool downlink) 
+    uint32_t nBearers, bool useUdp, bool uplink, bool downlink) 
 {
   Ptr<Ipv4> serverIpv4 = server->GetObject<Ipv4> ();
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
@@ -343,7 +355,7 @@ SetLenaDualStripeTraffic (Ptr<Node> server, NodeContainer clients,
             }
 
           sinkApps.Start (Seconds (0));
-          senderApps.Start (Seconds (rngStart->GetValue ()));
+          senderApps.Start (Seconds (g_appRngStart->GetValue (0.1, 1.0)));
         } // end for bearer b
     } // end for user u
 }

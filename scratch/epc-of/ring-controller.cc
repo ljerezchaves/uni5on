@@ -115,6 +115,12 @@ RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   EpcSdnController::NotifyNewContextCreated (imsi, cellId, bearerContextList); 
 }
 
+void 
+RingController::NotifyAppStart (Ptr<Application> app, Time simTime)
+{
+  NS_LOG_FUNCTION (this << app << simTime);
+}
+
 void
 RingController::CreateSpanningTree ()
 {

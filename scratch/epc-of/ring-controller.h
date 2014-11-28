@@ -60,6 +60,7 @@ public:
                                   Ptr<EpcTft> tft, EpsBearer bearer);
   void NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
                                 std::list<EpcS11SapMme::BearerContextCreated> bearerContextList);
+  void NotifyAppStart (Ptr<Application> app, Time simTime);
   void CreateSpanningTree ();
 
 protected:

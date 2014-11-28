@@ -126,6 +126,12 @@ EpcSdnController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
 }
 
 void 
+EpcSdnController::NotifyAppStart (Ptr<Application> app, Time simTime)
+{
+  NS_LOG_UNCOND ("App " << app << " will start sending packets now!");
+}
+
+void 
 EpcSdnController::ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch, 
                                          Ptr<NetDevice> device, 
                                          Ipv4Address deviceIp,

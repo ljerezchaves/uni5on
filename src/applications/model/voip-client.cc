@@ -84,11 +84,11 @@ VoipClient::GetTypeId (void)
 }
 
 VoipClient::VoipClient ()
+  : m_socket (0),
+    m_connected (false),
+    m_totBytes (0)
 {
   NS_LOG_FUNCTION (this);
-  m_sent = 0;
-  m_socket = 0;
-  m_sendEvent = EventId ();
 }
 
 VoipClient::~VoipClient ()
@@ -129,9 +129,16 @@ VoipClient::AssignStreams (int64_t stream)
 }
 
 void
+VoipClient::SetAppStartCallback (AppStartCallback_t cb)
+{
+  m_startCallback = cb;
+}
+
+void
 VoipClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
+  m_socket = 0;
   Application::DoDispose ();
 }
 
@@ -175,7 +182,8 @@ VoipClient::StopApplication ()
     }
 }
 
-void VoipClient::CancelEvents ()
+void 
+VoipClient::CancelEvents ()
 {
   NS_LOG_FUNCTION (this);
   Simulator::Cancel (m_sendEvent);
@@ -186,23 +194,20 @@ void
 VoipClient::StartSending ()
 {
   NS_LOG_FUNCTION (this);
-  m_lastStartTime = Simulator::Now ();
-  ScheduleNextTx ();  // Schedule the send packet event
+  if (!m_startCallback.IsNull ())
+    {
+      m_startCallback (this, Simulator::Now ());
+    }
+  m_sendEvent = Simulator::Schedule (m_interval, &VoipClient::SendPacket, this);
   ScheduleStopEvent ();
 }
 
-void VoipClient::StopSending ()
+void 
+VoipClient::StopSending ()
 {
   NS_LOG_FUNCTION (this);
   CancelEvents ();
   ScheduleStartEvent ();
-}
-
-void 
-VoipClient::ScheduleNextTx ()
-{
-  NS_LOG_FUNCTION (this);
-  m_sendEvent = Simulator::Schedule (m_interval, &VoipClient::SendPacket, this);
 }
 
 void 
@@ -236,8 +241,8 @@ VoipClient::SendPacket ()
   SeqTsHeader seqTs;
   seqTs.SetSeq (m_sent);
 
-  // Using compressed IP/UDP/RTP header. 40 bytes become 2 bytes. 
-  // Then, 38 bytes must be removed from payload.
+  // Using compressed IP/UDP/RTP header. 
+  // 38 bytes must be removed from payload.
   Ptr<Packet> p = Create<Packet> (m_size - (38));
   p->AddHeader (seqTs);
   m_totBytes += p->GetSize ();
@@ -265,8 +270,7 @@ VoipClient::SendPacket ()
       NS_LOG_INFO ("Error sending VoIP " << m_size << " bytes to "
                                          << peerAddressStringStream.str ());
     }
-  m_lastStartTime = Simulator::Now ();
-  ScheduleNextTx ();
+  m_sendEvent = Simulator::Schedule (m_interval, &VoipClient::SendPacket, this);
 }
 
 void 

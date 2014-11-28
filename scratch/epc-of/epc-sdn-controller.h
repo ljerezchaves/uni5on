@@ -108,6 +108,14 @@ public:
   // virtual void NotifyContextModified ();
 
   /**
+   * Notify this controller of a application starting sending traffic over EPC
+   * OpenFlow network.
+   * \param app The application pointer.
+   * \param simTime The simulation start time.
+   */ 
+  virtual void NotifyAppStart (Ptr<Application> app, Time simTime);
+
+  /**
    * Install flow table entry for local delivery when a new IP device is
    * connected to the OpenFlow network.  This entry will match both MAC address
    * and IP address for the device in order to output packets on device port.
@@ -130,6 +138,13 @@ public:
    * with OFPPC_NO_FWD flag (0x20).
    */
   virtual void CreateSpanningTree ();
+
+  /**
+   * Callback signature for application start event.
+   * \param Ptr<Application> Application.
+   * \param Time Application start time (sending packets).
+   */
+  typedef Callback<void, Ptr<Application>, Time> AppStartCallback_t;
 
 protected:
   /**
