@@ -129,12 +129,6 @@ VoipClient::AssignStreams (int64_t stream)
 }
 
 void
-VoipClient::SetAppStartCallback (AppStartCallback_t cb)
-{
-  m_startCallback = cb;
-}
-
-void
 VoipClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
@@ -194,9 +188,9 @@ void
 VoipClient::StartSending ()
 {
   NS_LOG_FUNCTION (this);
-  if (!m_startCallback.IsNull ())
+  if (!m_startSendingCallback.IsNull ())
     {
-      m_startCallback (this, Simulator::Now ());
+      m_startSendingCallback (this);
     }
   m_sendEvent = Simulator::Schedule (m_interval, &VoipClient::SendPacket, this);
   ScheduleStopEvent ();

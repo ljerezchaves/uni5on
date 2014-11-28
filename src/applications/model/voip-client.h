@@ -64,19 +64,6 @@ public:
   */
   void AssignStreams (int64_t stream);
 
-  /**
-   * Callback signature for application start event.
-   * \param Ptr<Application> Application.
-   * \param Time Application start time (sending packets).
-   */
-  typedef Callback<void, Ptr<Application>, Time> AppStartCallback_t;
-
-  /**
-   * Set Application start callback
-   * \param cb The callback to invoke
-   */
-  void SetAppStartCallback (AppStartCallback_t cb);
-
 protected:
   /** Destructor implementation */
   virtual void DoDispose (void);
@@ -140,7 +127,6 @@ private:
   EventId     m_sendEvent;              //!< Event id of pending 'send packet' event
   Ptr<RandomVariableStream>  m_onTime;  //!< rng for On Time
   Ptr<RandomVariableStream>  m_offTime; //!< rng for Off Time
-  AppStartCallback_t  m_startCallback;  //!< Start callback signature
 };
 
 } // namespace ns3

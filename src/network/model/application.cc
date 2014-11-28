@@ -113,6 +113,12 @@ Application::SetNode (Ptr<Node> node)
   m_node = node;
 }
 
+void 
+Application::SetAppStartSendingCallback (AppStartSendingCallback_t cb)
+{
+  m_startSendingCallback = cb;
+}
+
 // Protected methods
 // StartApp and StopApp will likely be overridden by application subclasses
 void Application::StartApplication ()

@@ -104,6 +104,18 @@ public:
    */
   void SetNode (Ptr<Node> node);
 
+  /**
+   * Callback signature for application start sending.
+   * \param Ptr<Application> Application.
+   */
+  typedef Callback<void, Ptr<Application> > AppStartSendingCallback_t;
+
+  /**
+   * Set Application start sending callback
+   * \param cb The callback to invoke
+   */
+  void SetAppStartSendingCallback (AppStartSendingCallback_t cb);
+
 private:
   /**
    * \brief Application specific startup code
@@ -131,6 +143,8 @@ protected:
   Time m_stopTime;          //!< The simulation time that the application will end
   EventId m_startEvent;     //!< The event that will fire at m_startTime to start the application
   EventId m_stopEvent;      //!< The event that will fire at m_stopTime to end the application
+  
+  AppStartSendingCallback_t  m_startSendingCallback;  //!< Application start sending callback
 };
 
 } // namespace ns3

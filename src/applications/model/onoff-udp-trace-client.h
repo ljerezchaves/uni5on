@@ -124,19 +124,6 @@ public:
    */
   void SetMaxPacketSize (uint16_t maxPacketSize);
 
-  /**
-   * Callback signature for application start event.
-   * \param Ptr<Application> Application.
-   * \param Time Application start time (sending packets).
-   */
-  typedef Callback<void, Ptr<Application>, Time> AppStartCallback_t;
-
-  /**
-   * Set Application start callback
-   * \param cb The callback to invoke
-   */
-  void SetAppStartCallback (AppStartCallback_t cb);
-
 protected:
   virtual void DoDispose (void);
 
@@ -226,8 +213,6 @@ private:
   static struct TraceEntry g_defaultEntries[];  //!< Default trace to send
   std::vector<struct TraceEntry> m_entries;     //!< Entries in the trace to send
   uint32_t m_currentEntry;                      //!< Current entry index
-  
-  AppStartCallback_t m_startCallback;   //!< Start callback signature
 };
 
 } // namespace ns3

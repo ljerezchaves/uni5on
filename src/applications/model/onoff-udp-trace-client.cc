@@ -170,13 +170,6 @@ OnOffUdpTraceClient::SetTraceFile (std::string traceFile)
 }
 
 void
-OnOffUdpTraceClient::SetAppStartCallback (AppStartCallback_t cb)
-{
-  m_startCallback = cb;
-}
-
-
-void
 OnOffUdpTraceClient::SetMaxPacketSize (uint16_t maxPacketSize)
 {
   NS_LOG_FUNCTION (this << maxPacketSize);
@@ -307,9 +300,9 @@ void
 OnOffUdpTraceClient::StartSending ()
 {
   NS_LOG_FUNCTION (this);
-  if (!m_startCallback.IsNull ())
+  if (!m_startSendingCallback.IsNull ())
     {
-      m_startCallback (this, Simulator::Now ());
+      m_startSendingCallback (this);
     }
   Send ();
   ScheduleStopEvent ();
