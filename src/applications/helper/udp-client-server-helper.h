@@ -27,6 +27,8 @@
 #include "ns3/ipv4-address.h"
 #include "ns3/udp-server.h"
 #include "ns3/udp-client.h"
+#include "ns3/onoff-udp-trace-client.h"
+
 namespace ns3 {
 /**
  * \ingroup udpclientserver
@@ -219,6 +221,73 @@ public:
 private:
   ObjectFactory m_factory; //!< Object factory.
 };
+
+/**
+ * \ingroup onoff
+ * Create OnOffUdpTraceClient application which sends UDP packets based on a
+ * trace file of an MPEG4 stream. Also, it stars and stops the sending based on
+ * on/off random variables. 
+*/
+class OnOffUdpTraceClientHelper
+{
+public:
+  /**
+   * Create OnOffUdpTraceClientHelper which will make life easier for people
+   * trying to set up simulations with onoff-udp-client-server.
+   *
+   */
+  OnOffUdpTraceClientHelper ();
+
+  /**
+   * Create OnOffUdpTraceClientHelper which will make life easier for people
+   * trying to set up simulations with onoff-udp-client-server.
+   *
+   * \param ip The IP address of the remote UDP server
+   * \param port The port number of the remote UDP server
+   * \param filename the file from which packet traces will be loaded
+   */
+  OnOffUdpTraceClientHelper (Address ip, uint16_t port, std::string filename);
+  /**
+   * Create OnOffUdpTraceClientHelper which will make life easier for people
+   * trying to set up simulations with onoff-udp-client-server.
+   *
+   * \param ip The IPv4 address of the remote UDP server
+   * \param port The port number of the remote UDP server
+   * \param filename the file from which packet traces will be loaded
+   */
+  OnOffUdpTraceClientHelper (Ipv4Address ip, uint16_t port, std::string filename);
+  /**
+   * Create OnOffUdpTraceClientHelper which will make life easier for people
+   * trying to set up simulations with onoff-udp-client-server.
+   *
+   * \param ip The IPv6 address of the remote UDP server
+   * \param port The port number of the remote UDP server
+   * \param filename the file from which packet traces will be loaded
+   */
+  OnOffUdpTraceClientHelper (Ipv6Address ip, uint16_t port, std::string filename);
+
+  /**
+    * Record an attribute to be set in each Application after it is is created.
+    *
+    * \param name the name of the attribute to set
+    * \param value the value of the attribute to set
+    */
+  void SetAttribute (std::string name, const AttributeValue &value);
+
+  /**
+    * \param c the nodes
+    *
+    * Create one OnOff UDP trace client application on each of the input
+    * nodes.
+    *
+    * \returns the applications created, one application per input node.
+    */
+  ApplicationContainer Install (NodeContainer c);
+
+private:
+  ObjectFactory m_factory; //!< Object factory.
+};
+
 
 } // namespace ns3
 

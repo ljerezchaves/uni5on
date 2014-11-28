@@ -21,6 +21,7 @@
 #include "ns3/udp-server.h"
 #include "ns3/udp-client.h"
 #include "ns3/udp-trace-client.h"
+#include "ns3/onoff-udp-trace-client.h"
 #include "ns3/uinteger.h"
 #include "ns3/string.h"
 
@@ -151,6 +152,54 @@ UdpTraceClientHelper::Install (NodeContainer c)
     {
       Ptr<Node> node = *i;
       Ptr<UdpTraceClient> client = m_factory.Create<UdpTraceClient> ();
+      node->AddApplication (client);
+      apps.Add (client);
+    }
+  return apps;
+}
+
+OnOffUdpTraceClientHelper::OnOffUdpTraceClientHelper ()
+{
+}
+
+OnOffUdpTraceClientHelper::OnOffUdpTraceClientHelper (Address address, uint16_t port, std::string filename)
+{
+  m_factory.SetTypeId (OnOffUdpTraceClient::GetTypeId ());
+  SetAttribute ("RemoteAddress", AddressValue (address));
+  SetAttribute ("RemotePort", UintegerValue (port));
+  SetAttribute ("TraceFilename", StringValue (filename));
+}
+
+OnOffUdpTraceClientHelper::OnOffUdpTraceClientHelper (Ipv4Address address, uint16_t port, std::string filename)
+{
+  m_factory.SetTypeId (OnOffUdpTraceClient::GetTypeId ());
+  SetAttribute ("RemoteAddress", AddressValue (Address (address)));
+  SetAttribute ("RemotePort", UintegerValue (port));
+  SetAttribute ("TraceFilename", StringValue (filename));
+}
+
+OnOffUdpTraceClientHelper::OnOffUdpTraceClientHelper (Ipv6Address address, uint16_t port, std::string filename)
+{
+  m_factory.SetTypeId (OnOffUdpTraceClient::GetTypeId ());
+  SetAttribute ("RemoteAddress", AddressValue (Address (address)));
+  SetAttribute ("RemotePort", UintegerValue (port));
+  SetAttribute ("TraceFilename", StringValue (filename));
+}
+
+void
+OnOffUdpTraceClientHelper::SetAttribute (std::string name, const AttributeValue &value)
+{
+  m_factory.Set (name, value);
+}
+
+ApplicationContainer
+OnOffUdpTraceClientHelper::Install (NodeContainer c)
+{
+  ApplicationContainer apps;
+  for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
+    {
+      Ptr<Node> node = *i;
+      Ptr<OnOffUdpTraceClient> client = m_factory.Create<OnOffUdpTraceClient> ();
       node->AddApplication (client);
       apps.Add (client);
     }
