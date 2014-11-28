@@ -65,7 +65,7 @@ main (int argc, char *argv[])
   // Increasing SrsPeriodicity to allow more UEs per eNB.
   Config::SetDefault ("ns3::LteEnbRrc::SrsPeriodicity", UintegerValue (320));
 
-  // Configuring dl and up channel and bandwidth (channel band #7 bandwidth: 20Mhz)
+  // Configuring dl and up channel and bandwidth (channel #7 bandwidth: 20Mhz)
   Config::SetDefault ("ns3::LteEnbNetDevice::UlBandwidth", UintegerValue (100));
   Config::SetDefault ("ns3::LteEnbNetDevice::DlBandwidth", UintegerValue (100));
   Config::SetDefault ("ns3::LteEnbNetDevice::DlEarfcn", UintegerValue (2750));
@@ -93,23 +93,16 @@ main (int argc, char *argv[])
   cmd.AddValue ("video",    "Enable video traffic", video);
   cmd.AddValue ("dual",     "Enable Lena Dual Stripe traffic", dual);
   cmd.AddValue ("dualFlows",  "  dual config: flows per UE", dualFlows);
-  cmd.AddValue ("dualUseUdp", "  dual config: UDP traffic (default TCP)", dualUseUdp);
+  cmd.AddValue ("dualUseUdp", "  dual config: UDP traffic [TCP]", dualUseUdp);
   cmd.AddValue ("dualDown",   "  dual config: downlink traffic", dualDown);
   cmd.AddValue ("dualUp",     "  dual config: uplink traffic", dualUp);
   cmd.Parse (argc, argv);
 
-  // Get default values from config input (override command line values)
-  // Config::SetDefault ("ns3::ConfigStore::Mode", StringValue ("Load"));
-  // Config::SetDefault ("ns3::ConfigStore::FileFormat", StringValue ("RawText"));
-  // Config::SetDefault ("ns3::ConfigStore::Filename", 
-  //     StringValue ("/home/luciano/epc-ofswitch13/scratch/epc-of/epc-openflow-defaults.txt"));
-  // ConfigStore inputConfig;
-  // inputConfig.ConfigureDefaults ();
-  // cmd.Parse (argc, argv);
-
   // Enabling log components
   if (progress)
-    Simulator::Schedule (Seconds (0), &PrintCurrentTime);
+    {
+      Simulator::Schedule (Seconds (0), &PrintCurrentTime);
+    }
 
   if (verbose) 
     {
@@ -133,14 +126,15 @@ main (int argc, char *argv[])
       LogComponentEnable ("OnOffUdpTraceClient", LOG_LEVEL_ALL);
     }
 
-  /*****************************************************************************
+  /****************************************************************************
    * Creating the scenario topology, setting up callbacks
    */
 
   // OpenFlow ring network (for EPC)
   Ptr<OpenFlowEpcNetwork> opfNetwork = CreateObject<RingOpenFlowNetwork> ();
   opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
-  opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("300Kb/s")));
+  opfNetwork->SetAttribute ("LinkDataRate", 
+                            DataRateValue (DataRate ("300Kb/s")));
 
   Ptr<EpcSdnController> controller = CreateObject<RingController> ();
   controller->SetOpenFlowNetwork (opfNetwork);
@@ -148,13 +142,18 @@ main (int argc, char *argv[])
  
   // LTE EPC core (with callbacks setup)
   Ptr<OpenFlowEpcHelper> epcHelper = CreateObject<OpenFlowEpcHelper> ();
-  epcHelper->SetS1uConnectCallback (MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, opfNetwork));
-  epcHelper->SetX2ConnectCallback (MakeCallback (&OpenFlowEpcNetwork::AttachToX2, opfNetwork));
-  epcHelper->SetAddBearerCallback (MakeCallback (&EpcSdnController::RequestNewDedicatedBearer, controller));
-  epcHelper->SetCreateSessionRequestCallback (MakeCallback (&EpcSdnController::NotifyNewContextCreated, controller));
+  epcHelper->SetS1uConnectCallback (
+      MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, opfNetwork));
+  epcHelper->SetX2ConnectCallback (
+      MakeCallback (&OpenFlowEpcNetwork::AttachToX2, opfNetwork));
+  epcHelper->SetAddBearerCallback (
+      MakeCallback (&EpcSdnController::RequestNewDedicatedBearer, controller));
+  epcHelper->SetCreateSessionRequestCallback (
+      MakeCallback (&EpcSdnController::NotifyNewContextCreated, controller));
   
   // LTE radio access network
-  Ptr<LteSquaredGridNetwork> lteNetwork = CreateObject<LteSquaredGridNetwork> ();
+  Ptr<LteSquaredGridNetwork> lteNetwork = 
+      CreateObject<LteSquaredGridNetwork> ();
   lteNetwork->SetAttribute ("Enbs", UintegerValue (nEnbs));
   lteNetwork->SetAttribute ("Ues", UintegerValue (nUes));
   lteNetwork->CreateTopology (epcHelper);
@@ -165,7 +164,7 @@ main (int argc, char *argv[])
   Ptr<Node> webHost = webNetwork->CreateTopology (pgw);
 
 
-  /*****************************************************************************
+  /****************************************************************************
    * Creating applications for traffic generation
    */
 
@@ -174,22 +173,37 @@ main (int argc, char *argv[])
   Ptr<LteHelper> lteHelper = lteNetwork->GetLteHelper ();
 
   // ICMP ping over default Non-GBR EPS bearer (QCI 9)
-  if (ping) SetPingTraffic (webHost, ueNodes);
+  if (ping) 
+    {
+      SetPingTraffic (webHost, ueNodes);
+    }
 
   // HTTP traffic over dedicated Non-GBR EPS bearer (QCI 8) 
-  if (http) SetHttpTraffic (webHost, ueNodes, ueDevices, lteHelper);
+  if (http) 
+    {
+      SetHttpTraffic (webHost, ueNodes, ueDevices, lteHelper);
+    }
 
   // VoIP traffic over dedicated GBR EPS bearer (QCI 1) 
-  if (voip) SetVoipTraffic (webHost, ueNodes, ueDevices, lteHelper, controller);
+  if (voip) 
+    {
+      SetVoipTraffic (webHost, ueNodes, ueDevices, lteHelper, controller);
+    }
 
   // Buffered video streaming over dedicated GBR EPS bearer (QCI 4)
-  if (video) SetVideoTraffic (webHost, ueNodes, ueDevices, lteHelper, controller);
+  if (video) 
+    {
+      SetVideoTraffic (webHost, ueNodes, ueDevices, lteHelper, controller);
+    }
 
-  // TCP/UDP Downlink/Uplink traffic over dedicated Non-GBR EPS beareres (QCI 8)
-  if (dual) SetLenaDualStripeTraffic (webHost, ueNodes, ueDevices, lteHelper, 
-                                      dualFlows, dualUseUdp, dualUp, dualDown);
+  // TCP/UDP Down/Uplink traffic over dedicated Non-GBR EPS beareres (QCI 8)
+  if (dual) 
+    {
+      SetLenaDualStripeTraffic (webHost, ueNodes, ueDevices, lteHelper, 
+                                dualFlows, dualUseUdp, dualUp, dualDown);
+    }
 
-  /*****************************************************************************
+  /****************************************************************************
    * Creating monitors and trace files
    */
 

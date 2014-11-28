@@ -28,7 +28,7 @@ uint16_t g_tcpUdpDualUePort = 50000;
 uint16_t g_tcpUdpDualServerPort = 60000;
 
 std::string g_videoTrace = "ns3/movies/jurassic-hig.data";
-Ptr<UniformRandomVariable> g_appRngStart = CreateObject<UniformRandomVariable> ();
+Ptr<UniformRandomVariable> g_rngStart = CreateObject<UniformRandomVariable> ();
 
 
 void 
@@ -39,7 +39,7 @@ SetPingTraffic (Ptr<Node> dstNode, NodeContainer clients)
   Ipv4Address dstAddr = dstIpv4->GetAddress (1,0).GetLocal ();
   V4PingHelper ping = V4PingHelper (dstAddr);
   ApplicationContainer clientApps = ping.Install (clients);
-  clientApps.Start (Seconds (g_appRngStart->GetValue (0.1, 1.0)));
+  clientApps.Start (Seconds (g_rngStart->GetValue (0.1, 1.0)));
 }
 
 
@@ -69,7 +69,7 @@ SetHttpTraffic (Ptr<Node> server, NodeContainer clients,
       // HTTP client
       HttpClientHelper httpClient (serverAddr, g_tcpHttpPort);
       clientApps.Add (httpClient.Install (client));
-      clientApps.Start (Seconds (g_appRngStart->GetValue (0.1, 1.0)));
+      clientApps.Start (Seconds (g_rngStart->GetValue (0.1, 1.0)));
 
       // Traffic Flow Templat
       Ptr<EpcTft> tft = Create<EpcTft> ();
@@ -163,10 +163,12 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
   sinkApps.Start (Seconds (0));
 
   // Setting up app start callback to controller
-  for (ApplicationContainer::Iterator i = senderApps.Begin (); i != senderApps.End (); ++i)
+  for (ApplicationContainer::Iterator i = senderApps.Begin (); 
+       i != senderApps.End (); ++i)
     {
-      Ptr<VoipClient> app = DynamicCast<VoipClient> (*i);
-      app->SetAppStartCallback (MakeCallback (&EpcSdnController::NotifyAppStart, controller));
+      Ptr<Application> app = *i;
+      app->SetAppStartSendingCallback (
+          MakeCallback (&EpcSdnController::NotifyAppStart, controller));
     }
 }
 
@@ -197,9 +199,12 @@ SetVideoTraffic (Ptr<Node> server, NodeContainer clients,
       Ipv4Mask clientMask = clientIpv4->GetAddress (1, 0).GetMask ();
  
       // Video server (send UDP datagrams to client)
-      uint32_t MaxPacketSize = 1472;  // Back off 20 (IP) + 8 (UDP) bytes from MTU
-      OnOffUdpTraceClientHelper videoSender (clientAddr, g_udpVideoPort, g_videoTrace);
-      videoSender.SetAttribute ("MaxPacketSize", UintegerValue (MaxPacketSize));
+      // Back off 20 (IP) + 8 (UDP) bytes from MTU
+      uint32_t MaxPacketSize = 1472;  
+      OnOffUdpTraceClientHelper videoSender (clientAddr, g_udpVideoPort, 
+                                             g_videoTrace);
+      videoSender.SetAttribute ("MaxPacketSize", 
+                                UintegerValue (MaxPacketSize));
       senderApps.Add (videoSender.Install (server));
       
       // Video sink (receive UDP datagramas from server)
@@ -229,10 +234,12 @@ SetVideoTraffic (Ptr<Node> server, NodeContainer clients,
   sinkApps.Start (Seconds (0));
 
   // Setting up app start callback to controller
-  for (ApplicationContainer::Iterator i = senderApps.Begin (); i != senderApps.End (); ++i)
+  for (ApplicationContainer::Iterator i = senderApps.Begin (); 
+       i != senderApps.End (); ++i)
     {
-      Ptr<OnOffUdpTraceClient> app = DynamicCast<OnOffUdpTraceClient> (*i);
-      app->SetAppStartCallback (MakeCallback (&EpcSdnController::NotifyAppStart, controller));
+      Ptr<Application> app = *i;
+      app->SetAppStartSendingCallback (
+          MakeCallback (&EpcSdnController::NotifyAppStart, controller));
     }
 }
 
@@ -269,20 +276,24 @@ SetLenaDualStripeTraffic (Ptr<Node> server, NodeContainer clients,
             {
               if (downlink)
                 {
-                  UdpClientHelper senderHelper (clientAddr, g_tcpUdpDualUePort);
+                  UdpClientHelper senderHelper (clientAddr, 
+                                                g_tcpUdpDualUePort);
                   senderApps.Add (senderHelper.Install (server));
 
                   PacketSinkHelper sinkHelper ("ns3::UdpSocketFactory", 
-                      InetSocketAddress (Ipv4Address::GetAny (), g_tcpUdpDualUePort));
+                      InetSocketAddress (Ipv4Address::GetAny (), 
+                                         g_tcpUdpDualUePort));
                   sinkApps.Add (sinkHelper.Install (client));
                 }
               if (uplink)
                 {
-                  UdpClientHelper senderHelper (serverAddr, g_tcpUdpDualServerPort);
+                  UdpClientHelper senderHelper (serverAddr, 
+                                                g_tcpUdpDualServerPort);
                   senderApps.Add (senderHelper.Install (client));
 
                   PacketSinkHelper sinkHelper ("ns3::UdpSocketFactory", 
-                      InetSocketAddress (Ipv4Address::GetAny (), g_tcpUdpDualServerPort));
+                      InetSocketAddress (Ipv4Address::GetAny (), 
+                                         g_tcpUdpDualServerPort));
                   sinkApps.Add (sinkHelper.Install (server));
                 }
             }
@@ -297,7 +308,8 @@ SetLenaDualStripeTraffic (Ptr<Node> server, NodeContainer clients,
                   senderApps.Add (senderHelper.Install (server));
                 
                   PacketSinkHelper sinkHelper ("ns3::TcpSocketFactory", 
-                      InetSocketAddress (Ipv4Address::GetAny (), g_tcpUdpDualUePort));
+                      InetSocketAddress (Ipv4Address::GetAny (), 
+                                         g_tcpUdpDualUePort));
                   sinkApps.Add (sinkHelper.Install (client));
                 }
               if (uplink)
@@ -307,7 +319,8 @@ SetLenaDualStripeTraffic (Ptr<Node> server, NodeContainer clients,
                   senderApps.Add (senderHelper.Install (client));
                 
                   PacketSinkHelper sinkHelper ("ns3::TcpSocketFactory", 
-                      InetSocketAddress (Ipv4Address::GetAny (), g_tcpUdpDualServerPort));
+                      InetSocketAddress (Ipv4Address::GetAny (), 
+                                         g_tcpUdpDualServerPort));
                   sinkApps.Add (sinkHelper.Install (server));
                 }
             }
@@ -355,7 +368,7 @@ SetLenaDualStripeTraffic (Ptr<Node> server, NodeContainer clients,
             }
 
           sinkApps.Start (Seconds (0));
-          senderApps.Start (Seconds (g_appRngStart->GetValue (0.1, 1.0)));
+          senderApps.Start (Seconds (g_rngStart->GetValue (0.1, 1.0)));
         } // end for bearer b
     } // end for user u
 }

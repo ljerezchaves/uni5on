@@ -29,7 +29,8 @@ NS_OBJECT_ENSURE_REGISTERED (EpcSdnController);
 EpcSdnController::EpcSdnController ()
 {
   NS_LOG_FUNCTION (this);
-  SetConnectionCallback (MakeCallback (&EpcSdnController::NotifyConnectionStarted, this));
+  SetConnectionCallback (
+      MakeCallback (&EpcSdnController::NotifyConnectionStarted, this));
 }
 
 EpcSdnController::~EpcSdnController ()
@@ -81,10 +82,10 @@ void
 EpcSdnController::NotifyNewSwitchConnection (ConnectionInfo connInfo)
 {
   // Save this connection info
-  std::pair<uint16_t,uint16_t> key;
+  ConnKey_t key;
   key.first  = std::min (connInfo.switchIdx1, connInfo.switchIdx2);
   key.second = std::max (connInfo.switchIdx1, connInfo.switchIdx2);
-  std::pair<std::pair<uint16_t,uint16_t>, ConnectionInfo> entry (key, connInfo);
+  std::pair<ConnKey_t,ConnectionInfo> entry (key, connInfo);
   std::pair <ConnInfoMap_t::iterator, bool> ret = m_connections.insert (entry);
   if (ret.second == true)
     {
@@ -108,15 +109,15 @@ EpcSdnController::RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId,
 
 void 
 EpcSdnController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
-    std::list<EpcS11SapMme::BearerContextCreated> bearerContextList)
+                                           ContextBearers_t bearerContextList)
 {
   NS_LOG_FUNCTION (this << imsi << cellId);
   
-  // FIXME Precisa aqui dar um jeito de salvar essa informação de maneira mais fácil pra recuperar depois.
+  // FIXME Precisa aqui dar um jeito de salvar essa informação de maneira mais
+  // fácil pra recuperar depois.
   // Save the list of bearers into 
   ContextKey_t key (imsi, cellId);
-  std::pair <ContextKey_t, std::list<EpcS11SapMme::BearerContextCreated> > 
-      entry (key, bearerContextList);
+  std::pair <ContextKey_t, ContextBearers_t> entry (key, bearerContextList);
   std::pair <ContextMap_t::iterator, bool> ret;
   ret = m_createdBearers.insert (entry);
   if (ret.second == false)
@@ -126,23 +127,23 @@ EpcSdnController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
 }
 
 void 
-EpcSdnController::NotifyAppStart (Ptr<Application> app, Time simTime)
+EpcSdnController::NotifyAppStart (Ptr<Application> app)
 {
-  NS_LOG_UNCOND ("App " << app << " will start sending packets now!");
+  NS_LOG_FUNCTION (this << app);
 }
 
 void 
 EpcSdnController::ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch, 
-                                         Ptr<NetDevice> device, 
+                                         Ptr<NetDevice> device,
                                          Ipv4Address deviceIp,
                                          uint32_t devicePort)
 {
   NS_LOG_FUNCTION (this << swtch << deviceIp << (int)devicePort);
 
-  Mac48Address deviceMacAddr = Mac48Address::ConvertFrom (device->GetAddress ());
+  Mac48Address devMacAddr = Mac48Address::ConvertFrom (device->GetAddress ());
   std::ostringstream cmd;
   cmd << "flow-mod cmd=add,table=0,prio=40000" <<
-         " eth_type=0x800,eth_dst=" << deviceMacAddr <<
+         " eth_type=0x800,eth_dst=" << devMacAddr <<
          ",ip_dst=" << deviceIp << " apply:output=" << devicePort;
   ScheduleCommand (swtch, cmd.str ());
 }
@@ -156,7 +157,7 @@ EpcSdnController::CreateSpanningTree ()
 ConnectionInfo*
 EpcSdnController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
 {
-  std::pair<uint16_t,uint16_t> key;
+  ConnKey_t key;
   key.first = std::min (sw1, sw2);
   key.second = std::max (sw1, sw2);
   ConnInfoMap_t::iterator it = m_connections.find (key);
@@ -210,7 +211,7 @@ EpcSdnController::HandlePacketIn (ofl_msg_packet_in *msg,
 {
   NS_LOG_FUNCTION (swtch.ipv4 << xid);
 
-  char *m = ofl_structs_match_to_string ((struct ofl_match_header*)msg->match, NULL);
+  char *m = ofl_structs_match_to_string ((ofl_match_header*)msg->match, NULL);
   // NS_LOG_DEBUG ("Packet in match: " << m);
   free (m);
 
@@ -222,7 +223,8 @@ EpcSdnController::HandlePacketIn (ofl_msg_packet_in *msg,
       if (tableId == 1)
         {
           uint32_t teid;
-          ofl_match_tlv *teidTlv = oxm_match_lookup (OXM_OF_GTPU_TEID, (ofl_match*)msg->match);
+          ofl_match_tlv *teidTlv = 
+              oxm_match_lookup (OXM_OF_GTPU_TEID, (ofl_match*)msg->match);
           memcpy (&teid, teidTlv->value, OXM_LENGTH (OXM_OF_GTPU_TEID));
 
           NS_LOG_DEBUG ("New PacketIn from TEID routing table miss: " << teid);
@@ -233,7 +235,8 @@ EpcSdnController::HandlePacketIn (ofl_msg_packet_in *msg,
     {
       // Get Ethernet frame type 
       uint16_t ethType;
-      ofl_match_tlv *ethTypeTlv = oxm_match_lookup (OXM_OF_ETH_TYPE, (ofl_match*)msg->match);
+      ofl_match_tlv *ethTypeTlv = 
+          oxm_match_lookup (OXM_OF_ETH_TYPE, (ofl_match*)msg->match);
       memcpy (&ethType, ethTypeTlv->value, OXM_LENGTH (OXM_OF_ETH_TYPE));
 
       // Check for ARP packet
@@ -263,18 +266,21 @@ EpcSdnController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
 }
 
 ofl_err
-EpcSdnController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, 
-                                          uint32_t xid, uint32_t teid)
+EpcSdnController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, 
+                                          SwitchInfo swtch, uint32_t xid, 
+                                          uint32_t teid)
 {
   NS_LOG_FUNCTION (this << swtch.ipv4 << teid);
 
   // Get input port
   uint32_t inPort;
-  ofl_match_tlv *inPortTlv = oxm_match_lookup (OXM_OF_IN_PORT, (ofl_match*)msg->match);
+  ofl_match_tlv *inPortTlv = 
+      oxm_match_lookup (OXM_OF_IN_PORT, (ofl_match*)msg->match);
   memcpy (&inPort, inPortTlv->value, OXM_LENGTH (OXM_OF_IN_PORT));
 
-  // Just for testing, let's always send the packet in counterclockwise direction
-  ofl_action_group *action = (ofl_action_group*)xmalloc (sizeof (ofl_action_group));
+  // Just for testing, let's send the packet in counterclockwise direction
+  ofl_action_group *action = 
+      (ofl_action_group*)xmalloc (sizeof (ofl_action_group));
   action->header.type = OFPAT_GROUP;
   action->group_id = 2;
 
@@ -314,9 +320,9 @@ EpcSdnController::NotifyConnectionStarted (SwitchInfo swtch)
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");  // Table miss
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=1 eth_type=0x0806 apply:output=ctrl");  // Arp handling
 
-  // Handling GTP tunnels at flow table #1
+  // Handling GTP tunnels at table #1
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=2 eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152 goto:1");
-  DpctlCommand (swtch, "flow-mod cmd=add,table=1,prio=0 apply:output=ctrl");  // Table miss
+  DpctlCommand (swtch, "flow-mod cmd=add,table=1,prio=0 apply:output=ctrl");  // TEID Table miss
 
   // Executing any scheduled commands for this switch
   std::pair <DevCmdMap_t::iterator, DevCmdMap_t::iterator> ret;
@@ -329,34 +335,41 @@ EpcSdnController::NotifyConnectionStarted (SwitchInfo swtch)
 }
 
 ofl_err
-EpcSdnController::HandleArpPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, uint32_t xid)
+EpcSdnController::HandleArpPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, 
+                                     uint32_t xid)
 {
   // Get ARP operation
   uint16_t arpOp;
-  ofl_match_tlv *arpOpTlv = oxm_match_lookup (OXM_OF_ARP_OP, (ofl_match*)msg->match);
+  ofl_match_tlv *arpOpTlv = 
+      oxm_match_lookup (OXM_OF_ARP_OP, (ofl_match*)msg->match);
   memcpy (&arpOp, arpOpTlv->value, OXM_LENGTH (OXM_OF_ARP_OP));
  
   // Get input port
   uint32_t inPort;
-  ofl_match_tlv *inPortTlv = oxm_match_lookup (OXM_OF_IN_PORT, (ofl_match*)msg->match);
+  ofl_match_tlv *inPortTlv = 
+      oxm_match_lookup (OXM_OF_IN_PORT, (ofl_match*)msg->match);
   memcpy (&inPort, inPortTlv->value, OXM_LENGTH (OXM_OF_IN_PORT));
 
   // Check for ARP request
   if (arpOp == ArpHeader::ARP_TYPE_REQUEST)
     {
       // Get target IP address
-      Ipv4Address dstIp = ExtractIpv4Address (OXM_OF_ARP_TPA, (ofl_match*)msg->match);
+      Ipv4Address dstIp = 
+          ExtractIpv4Address (OXM_OF_ARP_TPA, (ofl_match*)msg->match);
       
       // Get target MAC address from ARP table
       Mac48Address dstMac = ArpLookup (dstIp);
-      NS_LOG_UNCOND ("Got ARP request for IP " << dstIp << ", resolved to " << dstMac);
+      NS_LOG_UNCOND ("Got ARP request for IP " << dstIp << 
+                     ", resolved to " << dstMac);
 
       // Get source IP address
-      Ipv4Address srcIp = ExtractIpv4Address (OXM_OF_ARP_SPA, (ofl_match*)msg->match);
+      Ipv4Address srcIp = 
+          ExtractIpv4Address (OXM_OF_ARP_SPA, (ofl_match*)msg->match);
 
       // Get Source MAC address
       Mac48Address srcMac;
-      ofl_match_tlv *ethSrcTlv = oxm_match_lookup (OXM_OF_ARP_SHA, (ofl_match*)msg->match);
+      ofl_match_tlv *ethSrcTlv = 
+          oxm_match_lookup (OXM_OF_ARP_SHA, (ofl_match*)msg->match);
       srcMac.CopyFrom (ethSrcTlv->value);
 
       // Create the ARP reply packet
@@ -373,7 +386,8 @@ EpcSdnController::HandleArpPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, u
       reply.data = &pktData[0]; 
 
       // Send the ARP replay back to the input port
-      ofl_action_output *action = (ofl_action_output*)xmalloc (sizeof (ofl_action_output));
+      ofl_action_output *action = 
+          (ofl_action_output*)xmalloc (sizeof (ofl_action_output));
       action->header.type = OFPAT_OUTPUT;
       action->port = OFPP_IN_PORT;
       action->max_len = 0;

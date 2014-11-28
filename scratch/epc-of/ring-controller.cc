@@ -71,8 +71,10 @@ RingController::NotifyNewSwitchConnection (ConnectionInfo connInfo)
   // Group #2 is used to send packets from the next switch to the current one
   // in counterclockwise direction. 
   std::ostringstream cmd2;
-  cmd2 << "group-mod cmd=add,type=ind,group=" << RingController::COUNTERCLOCK <<
-          " weight=0,port=any,group=any output=" << connInfo.portNum2;
+  cmd2 << "group-mod cmd=add,type=ind,group=" << 
+          RingController::COUNTERCLOCK <<
+          " weight=0,port=any,group=any output=" << 
+          connInfo.portNum2;
   ScheduleCommand (connInfo.switchDev2, cmd2.str ());
 }
 
@@ -94,7 +96,8 @@ RingController::RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId,
 
       Direction path = FindShortestPath (source, gateway); 
       DataRate bandwidth = GetAvailableBandwidth (source, gateway, path);
-      NS_LOG_DEBUG ("Bandwidth from " << source << " to gateway: " << bandwidth);
+      NS_LOG_DEBUG ("Bandwidth from " << source << 
+                    " to gateway: " << bandwidth);
       if (bandwidth < maxGbr)
         {
           NS_LOG_WARN ("Not enougth resources for bearer: " << maxGbr);
@@ -109,16 +112,16 @@ RingController::RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId,
 
 void 
 RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
-    std::list<EpcS11SapMme::BearerContextCreated> bearerContextList)
+                                         ContextBearers_t bearerContextList)
 {
   NS_LOG_FUNCTION (this << imsi << cellId);
   EpcSdnController::NotifyNewContextCreated (imsi, cellId, bearerContextList); 
 }
 
 void 
-RingController::NotifyAppStart (Ptr<Application> app, Time simTime)
+RingController::NotifyAppStart (Ptr<Application> app)
 {
-  NS_LOG_FUNCTION (this << app << simTime);
+  NS_LOG_FUNCTION (this << app);
 }
 
 void
@@ -149,18 +152,21 @@ RingController::CreateSpanningTree ()
 }
 
 ofl_err
-RingController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, 
-                                        uint32_t xid, uint32_t teid)
+RingController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, 
+                                        SwitchInfo swtch, uint32_t xid, 
+                                        uint32_t teid)
 {
   NS_LOG_FUNCTION (this << swtch.ipv4 << teid);
 
   // Get input port
   uint32_t inPort;
-  ofl_match_tlv *inPortTlv = oxm_match_lookup (OXM_OF_IN_PORT, (ofl_match*)msg->match);
+  ofl_match_tlv *inPortTlv = 
+      oxm_match_lookup (OXM_OF_IN_PORT, (ofl_match*)msg->match);
   memcpy (&inPort, inPortTlv->value, OXM_LENGTH (OXM_OF_IN_PORT));
 
-  // Just for testing, let's always send the packet in counterclockwise direction
-  ofl_action_group *action = (ofl_action_group*)xmalloc (sizeof (ofl_action_group));
+  // Testing... let's always send the packet in counterclockwise direction
+  ofl_action_group *action = 
+      (ofl_action_group*)xmalloc (sizeof (ofl_action_group));
   action->header.type = OFPAT_GROUP;
   action->group_id = 2;
 

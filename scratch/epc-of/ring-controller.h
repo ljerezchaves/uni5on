@@ -56,11 +56,15 @@ public:
 
   // Inherited from EpcSdnController
   void NotifyNewSwitchConnection (ConnectionInfo connInfo);
+
   bool RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId, 
                                   Ptr<EpcTft> tft, EpsBearer bearer);
+  
   void NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
-                                std::list<EpcS11SapMme::BearerContextCreated> bearerContextList);
-  void NotifyAppStart (Ptr<Application> app, Time simTime);
+                                ContextBearers_t bearerContextList);
+  
+  void NotifyAppStart (Ptr<Application> app);
+  
   void CreateSpanningTree ();
 
 protected:
@@ -77,7 +81,7 @@ private:
    * \param dstSwitchIdx Destination switch index.
    * \return The routing direction.
    */
-  Direction FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx = 0);
+  Direction FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx);
 
   /**
    * Look for available bandwidth in routingPath from source to destination
