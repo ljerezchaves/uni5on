@@ -133,8 +133,6 @@ EpcSdnController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
 {
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr);
 
- // uint16_t switchIdx = GetSwitchIdxForCellId (cellId);
- 
   // Saving all information that can be useful in the future.
   ContextInfo info;
   info.imsi = imsi;
@@ -146,31 +144,6 @@ EpcSdnController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   info.bearerList = bearerContextList;
 
   m_contexts.push_back (info);
-
-
-//  // Register the pair IMSI / switch index
-//  {
-//    std::pair <uint64_t, uint16_t> entry (imsi, switchIdx);
-//    std::pair <ImsiMap_t::iterator, bool> ret;
-//    ret = m_imsiSwitch.insert (entry);
-//    if (ret.second == false)
-//      {
-//        NS_FATAL_ERROR ("Error saving IMSI / switch index.");
-//      }
-//  }
-//
-//  // Save TEID endpoints
-//  // Save the list of bearers
-//  {
-//    ContextKey_t key (imsi, cellId);
-//    std::pair <ContextKey_t, ContextBearers_t> entry (key, bearerContextList);
-//    std::pair <ContextMap_t::iterator, bool> ret;
-//    ret = m_createdBearers.insert (entry);
-//    if (ret.second == false)
-//      {
-//        NS_FATAL_ERROR ("Error saving context created.");
-//      }
-//  }
 }
 
 // void 
