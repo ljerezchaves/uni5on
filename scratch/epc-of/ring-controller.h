@@ -36,14 +36,31 @@ namespace ns3 {
 class RingController : public EpcSdnController
 {
 public:
-  /** Indicates the direction that the traffic should be routed in the ring. */
-  enum Direction {
+  /** Indicates the direction that the traffic should be routed in the ring in
+   * respect to source node. */
+  enum Routing {
     CLOCK = 1,
     COUNTERCLOCK = 2
   };
 
-  RingController ();          //!< Default constructor
-  ~RingController (); //!< Dummy destructor, see DoDipose
+  /**
+   * Metadata associated to a routing path between two any switches in the
+   * OpenFlow network.
+   */
+  struct RoutingInfo
+  {
+    uint16_t gatewayIdx;    //!< Gateway switch index
+    Ipv4Address gatewayAddr;//!< Gateway IPv4 address
+    uint16_t enbIdx;        //!< eNB switch index
+    Ipv4Address enbAddr;    //!< eNB IPv4 address
+    Routing path;           //!< Routing path (from gateway to eNB)
+    uint32_t teid;          //!< GTP tunnel TEID
+    DataRate reserved;      //!< GBR bandwitdh
+    Ptr<Application> app;   //!< Traffic source application
+  };
+
+  RingController ();        //!< Default constructor
+  ~RingController ();       //!< Dummy destructor, see DoDipose
 
   /**
    * Register this type.
@@ -56,21 +73,12 @@ public:
 
   // Inherited from EpcSdnController
   void NotifyNewSwitchConnection (ConnectionInfo connInfo);
-
-  bool RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId, 
-                                  Ptr<EpcTft> tft, EpsBearer bearer);
-  
-  void NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
-                                ContextBearers_t bearerContextList);
-  
   void NotifyAppStart (Ptr<Application> app);
-  
   void CreateSpanningTree ();
 
 protected:
   // Inherited from EpcSdnController
-  ofl_err HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, 
-                                  SwitchInfo swtch, 
+  ofl_err HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, 
                                   uint32_t xid, uint32_t teid);
 
 private:
@@ -79,63 +87,84 @@ private:
    * lowest number of hops.
    * \param srcSwitchIdx Sourche switch index.
    * \param dstSwitchIdx Destination switch index.
-   * \return The routing direction.
+   * \return The routing path.
    */
-  Direction FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx);
+  Routing FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx);
 
   /**
    * Look for available bandwidth in routingPath from source to destination
    * switch. It uses the information available at ConnectionInfo.  
    * \param srcSwitchIdx Sourche switch index.
    * \param dstSwitchIdx Destination switch index.
-   * \param routingPath The routing direction.
+   * \param routingPath The routing path.
    * \return The bandwidth for this datapath.
    */
   DataRate GetAvailableBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx, 
-                                  Direction routingPath);
+                                  Routing routingPath);
 
   /**
    * Reserve the bandwidth for each link between source and destination
-   * switches in routingPath direction. It modifies the ConnectionInfo
+   * switches in routing path. It modifies the ConnectionInfo
    * structures saved by controller.  
    * \param srcSwitchIdx Sourche switch index.
    * \param dstSwitchIdx Destination switch index.
-   * \param routingPath The routing direction.
+   * \param routingPath The routing path.
    * \param bandwidth The bandwidth to reserve.
    * \return True if success, false otherwise;
    */
   bool ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx, 
-                         Direction routingPath, DataRate bandwidth);
+                         Routing routingPath, DataRate bandwidth);
 
   /**
    * Release the bandwidth for each link between source and destination
-   * switches in routingPath direction. It modifies the ConnectionInfo
+   * switches in routing path. It modifies the ConnectionInfo
    * structures saved by controller.  
    * \param srcSwitchIdx Sourche switch index.
    * \param dstSwitchIdx Destination switch index.
-   * \param routingPath The routing direction.
+   * \param routingPath The routing path.
    * \param bandwidth The bandwidth to release.
    * \return True if success, false otherwise;
    */
   bool ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx, 
-                         Direction routingPath, DataRate bandwidth);
+                         Routing routingPath, DataRate bandwidth);
 
   /**
-   * Identify the next switch index base on path direction.
+   * Identify the next switch index base on routing path.
    * \param current Current switch index.
-   * \param path The routing direction.
+   * \param path The routing path.
    * \return The next switch index.
    */ 
-  inline uint16_t NextSwitchIndex (uint16_t current, Direction path);
+  inline uint16_t NextSwitchIndex (uint16_t current, Routing path);
 
   /**
    * Using an OpenFlow Multipart OFPMP_FLOW message, query the switches for
    * individual flow statistics and estimates an average traffic for a specific
    * GTP tunnel. 
+   * \param teid The GTP tunnel identifier.
    * \return Average traffic for specific tunnel.
    */
-  DataRate GetTunnelAverageTraffic ();
+  DataRate GetTunnelAverageTraffic (uint32_t teid);
+
+
+  // FIXME doc
+  void SaveTeidRouting (RoutingInfo info);
+
+  // FIXME doc
+  RoutingInfo GetTeidRoutingInfo (uint32_t teid);
+
+  // FIXME doc
+  bool HasTeidRoutingInfo (uint32_t teid);
+
+    // FIXME doc
+  bool ConfigureRoutingPath (uint32_t teid);
+
+  /** Map saving TEID routing information */
+  typedef std::map<uint32_t, RoutingInfo> TeidRouting_t;
+  
+  TeidRouting_t m_routes;       //!< Installed TEID routes.
 };
+
+
 
 };  // namespace ns3
 #endif // RING_CONTROLLER_H

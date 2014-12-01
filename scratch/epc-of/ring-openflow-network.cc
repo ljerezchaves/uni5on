@@ -59,12 +59,12 @@ RingOpenFlowNetwork::GetTypeId (void)
                    MakeUintegerAccessor (&RingOpenFlowNetwork::m_nodes),
                    MakeUintegerChecker<uint16_t> (3))
     .AddAttribute ("LinkDataRate", 
-                   "The data rate to be used for the CSMA OpenFlow links to be created",
+                   "The data rate to be used for the CSMA OpenFlow links.",
                    DataRateValue (DataRate ("10Mb/s")),
                    MakeDataRateAccessor (&RingOpenFlowNetwork::m_LinkDataRate),
                    MakeDataRateChecker ())
     .AddAttribute ("LinkDelay", 
-                   "The delay to be used for the CSMA OpenFlow links to be created",
+                   "The delay to be used for the CSMA OpenFlow links.",
                    TimeValue (Seconds (0.01)),
                    MakeTimeAccessor (&RingOpenFlowNetwork::m_LinkDelay),
                    MakeTimeChecker ())
@@ -110,15 +110,16 @@ RingOpenFlowNetwork::CreateInternalTopology ()
   m_ofDevices = m_ofHelper.InstallSwitchesWithoutPorts (m_ofSwitches);
 
   // Configuring csma links to connect the switches
-  m_ofCsmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_LinkDataRate));
+  m_ofCsmaHelper.SetChannelAttribute ("DataRate", 
+                                      DataRateValue (m_LinkDataRate));
   m_ofCsmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_LinkMtu));
   m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_LinkDelay));
 
-  // For more than 3 nodes, connecting switches in ring topology (clockwise order)
+  // Connecting switches in ring topology (clockwise order)
   for (uint16_t i = 0; i < m_nodes; i++)
     {
       uint16_t currIndex = i;
-      uint16_t nextIndex = (i + 1) % m_nodes;  // Next node in clockwise direction
+      uint16_t nextIndex = (i + 1) % m_nodes;  // Next clockwise node
 
       // Creating a link between current and next node
       NodeContainer pair;
@@ -127,13 +128,17 @@ RingOpenFlowNetwork::CreateInternalTopology ()
       NetDeviceContainer devs = m_ofCsmaHelper.Install (pair);
     
       // Adding newly created csma devices as openflow switch ports.
-      Ptr<OFSwitch13NetDevice> currDevice = GetSwitchDevice (currIndex);
-      Ptr<CsmaNetDevice> currPortDevice = DynamicCast<CsmaNetDevice> (devs.Get (0));
-      uint32_t currPortNum = currDevice->AddSwitchPort (currPortDevice);
+      Ptr<OFSwitch13NetDevice> currDevice, nextDevice;
+      Ptr<CsmaNetDevice> currPortDevice, nextPortDevice;
+      uint32_t currPortNum, nextPortNum;
 
-      Ptr<OFSwitch13NetDevice> nextDevice = GetSwitchDevice (nextIndex);
-      Ptr<CsmaNetDevice> nextPortDevice = DynamicCast<CsmaNetDevice> (devs.Get (1));
-      uint32_t nextPortNum = nextDevice->AddSwitchPort (nextPortDevice);
+      currDevice = GetSwitchDevice (currIndex);
+      currPortDevice = DynamicCast<CsmaNetDevice> (devs.Get (0));
+      currPortNum = currDevice->AddSwitchPort (currPortDevice);
+
+      nextDevice = GetSwitchDevice (nextIndex);
+      nextPortDevice = DynamicCast<CsmaNetDevice> (devs.Get (1));
+      nextPortNum = nextDevice->AddSwitchPort (nextPortDevice);
 
       // Notify the ring controller of this new connection.
       ConnectionInfo info = {
@@ -181,7 +186,7 @@ RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
       
       // This is an eNB node
       RegisterNodeAtSwitch (switchIdx, node);
-      RegisterCellIdAtSwitch (switchIdx, cellId);
+//      RegisterCellIdAtSwitch (switchIdx, cellId);
     }
   counter++;
 
@@ -204,9 +209,9 @@ RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   uint32_t portNum = swtchDev->AddSwitchPort (devices.Get (0));
 
   // Notify controller of a new IP device and configure local traffic delivery.
-  m_ringCtrlApp->NotifyNewIpDevice (nodeDev, nodeIpAddress);
-  m_ringCtrlApp->ConfigurePortDelivery (swtchDev, nodeDev, nodeIpAddress, portNum);
-
+  m_ringCtrlApp->NotifyNewIpDevice (nodeDev, nodeIpAddress, switchIdx);
+  m_ringCtrlApp->ConfigurePortDelivery (swtchDev, nodeDev, nodeIpAddress, 
+                                        portNum);
   return nodeDev;
 }
 
@@ -241,9 +246,9 @@ RingOpenFlowNetwork::AttachToX2 (Ptr<Node> node)
 
   // Notify controller of a new IP device and configure flow table entry for
   // local traffic delivery.
-  m_ringCtrlApp->NotifyNewIpDevice (nodeDev, nodeIpAddress);
-  m_ringCtrlApp->ConfigurePortDelivery (swtchDev, nodeDev, nodeIpAddress, portNum);
-
+  m_ringCtrlApp->NotifyNewIpDevice (nodeDev, nodeIpAddress, switchIdx);
+  m_ringCtrlApp->ConfigurePortDelivery (swtchDev, nodeDev, nodeIpAddress, 
+                                        portNum);
   return nodeDev;
 }
 

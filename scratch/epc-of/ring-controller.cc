@@ -73,55 +73,80 @@ RingController::NotifyNewSwitchConnection (ConnectionInfo connInfo)
   std::ostringstream cmd2;
   cmd2 << "group-mod cmd=add,type=ind,group=" << 
           RingController::COUNTERCLOCK <<
-          " weight=0,port=any,group=any output=" << 
-          connInfo.portNum2;
+          " weight=0,port=any,group=any output=" << connInfo.portNum2;
   ScheduleCommand (connInfo.switchDev2, cmd2.str ());
-}
-
-bool
-RingController::RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId, 
-                                           Ptr<EpcTft> tft, EpsBearer bearer)
-{
-  NS_LOG_FUNCTION (this << imsi << cellId);
-
-  // Check for GBR bearer
-  if (bearer.IsGbr ())
-    {
-      DataRate downlinkGbr (bearer.gbrQosInfo.gbrDl);
-      DataRate uplinkGbr (bearer.gbrQosInfo.gbrUl);
-      DataRate maxGbr = std::max (downlinkGbr, uplinkGbr);
-      
-      uint16_t source = GetSwitchIdxForCellId (cellId);
-      uint16_t gateway = GetSwitchIdxForGateway ();
-
-      Direction path = FindShortestPath (source, gateway); 
-      DataRate bandwidth = GetAvailableBandwidth (source, gateway, path);
-      NS_LOG_DEBUG ("Bandwidth from " << source << 
-                    " to gateway: " << bandwidth);
-      if (bandwidth < maxGbr)
-        {
-          NS_LOG_WARN ("Not enougth resources for bearer: " << maxGbr);
-          return false;
-        }
-      return ReserveBandwidth (source, 0, path, maxGbr);
-    }
-
-  // Non-GBR bearers can always be created
-  return true;
-}
-
-void 
-RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
-                                         ContextBearers_t bearerContextList)
-{
-  NS_LOG_FUNCTION (this << imsi << cellId);
-  EpcSdnController::NotifyNewContextCreated (imsi, cellId, bearerContextList); 
 }
 
 void 
 RingController::NotifyAppStart (Ptr<Application> app)
 {
-  NS_LOG_FUNCTION (this << app);
+//   NS_LOG_FUNCTION (this << app);
+// 
+//   AppEndpoint_t endpoints = GetAppEndpoint (app);
+//   uint16_t srcIdx = GetSwitchIdxForNode (endpoints.first);
+//   uint16_t dstIdx = GetSwitchIdxForNode (endpoints.second);
+// 
+//   NS_LOG_DEBUG ("Traffic about to start from: " << srcIdx << " to " << dstIdx);
+//   
+//   EpcS11SapMme::BearerContextCreated bearerContext;
+//   bearerContext = GetBearerFromTft (app->GetObject<EpcTft> ());
+//   uint32_t teid = bearerContext.sgwFteid.teid;
+//   EpsBearer bearer = bearerContext.bearerLevelQos;
+// 
+//   if (HasTeidRoutingInfo (teid))
+//     {
+//       NS_LOG_DEBUG ("Routing path for " << teid << " already defined.");
+//       return;
+//     }
+// 
+//   NS_LOG_DEBUG ("Bearer TEID " << teid);
+// 
+//   // Create and save routing information
+//   RoutingInfo info;
+//   if (srcIdx == GetSwitchIdxForGateway ())
+//     {
+//       info.gatewayIdx = srcIdx;
+//       info.enbIdx = dstIdx;
+//       NS_ASSERT (app->GetDirection () != Application::UPLINK);
+//     }
+//   else if (dstIdx == GetSwitchIdxForGateway ())
+//     {
+//       info.gatewayIdx = dstIdx;
+//       info.enbIdx = srcIdx;
+//       NS_ASSERT (app->GetDirection () != Application::DOWNLINK);
+//     }
+//  
+//   info.path = FindShortestPath (gatewayIdx, enbIdx); 
+//   info.app = app;
+//   info.gatewayAddr = bearerContext.sgwFteid.address;
+//   //info.enbAddr = GetAddr....
+//   info.teid = teid;
+// 
+//   // Check for GBR bearer resources
+//   if (bearer.IsGbr ())
+//     {
+//       DataRate downlinkGbr (bearer.gbrQosInfo.gbrDl);
+//       DataRate uplinkGbr (bearer.gbrQosInfo.gbrUl);
+//       DataRate reserve = std::max (downlinkGbr, uplinkGbr);
+//       NS_LOG_DEBUG ("Bearer " << teid << " requesting " << reserve);
+//       
+//       DataRate bandwidth = GetAvailableBandwidth (info.gatewayIdx, info.enbIdx, 
+//                                                   info.path);
+//       NS_LOG_DEBUG ("Bandwidth from " << srcIdx << 
+//                     " to " << dstIdx << ": " << bandwidth);
+//       
+//       if (bandwidth < reserve)
+//         {
+//           NS_FATAL_ERROR ("Not enougth resources for bearer: " << reserve);
+//           // FIXME Do something useful here
+//         }
+//       
+//       ReserveBandwidth (info.gatewayIdx, info.enbIdx, info.path, reserve);
+//       info.reserved = reserve;
+//     }
+//   
+//   SaveTeidRouting (info);
+//   ConfigureRoutingPath (teid);
 }
 
 void
@@ -195,7 +220,7 @@ RingController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
 }
 
 
-RingController::Direction
+RingController::Routing
 RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)
 {
   NS_ASSERT (srcSwitchIdx != dstSwitchIdx);
@@ -217,7 +242,7 @@ RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)
 DataRate 
 RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx, 
                                        uint16_t dstSwitchIdx,
-                                       Direction routingPath)
+                                       Routing routingPath)
 {
   NS_ASSERT (srcSwitchIdx != dstSwitchIdx);
   
@@ -243,7 +268,7 @@ RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx,
 
 bool 
 RingController::ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                                  Direction routingPath, DataRate bandwidth)
+                                  Routing routingPath, DataRate bandwidth)
 {
   uint16_t current = srcSwitchIdx;
   while (current != dstSwitchIdx)
@@ -259,7 +284,7 @@ RingController::ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
 
 bool 
 RingController::ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                                  Direction routingPath, DataRate bandwidth)
+                                  Routing routingPath, DataRate bandwidth)
 {
   uint16_t current = srcSwitchIdx;
   while (current != dstSwitchIdx)
@@ -273,7 +298,7 @@ RingController::ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
 }
 
 uint16_t 
-RingController::NextSwitchIndex (uint16_t current, Direction path)
+RingController::NextSwitchIndex (uint16_t current, Routing path)
 {
   if (path == RingController::CLOCK)
     {
@@ -286,9 +311,117 @@ RingController::NextSwitchIndex (uint16_t current, Direction path)
 }
 
 DataRate 
-RingController::GetTunnelAverageTraffic ()
+RingController::GetTunnelAverageTraffic (uint32_t teid)
 {
   return DataRate ();
+}
+
+void 
+RingController::SaveTeidRouting (RoutingInfo info)
+{
+  std::pair <uint32_t, RoutingInfo> entry (info.teid, info);
+  std::pair <TeidRouting_t::iterator, bool> ret;
+  ret = m_routes.insert (entry);
+  if (ret.second == false)
+    {
+      NS_FATAL_ERROR ("Existing routing information.");
+    }
+}
+
+RingController::RoutingInfo 
+RingController::GetTeidRoutingInfo (uint32_t teid)
+{
+  TeidRouting_t::iterator ret;
+  ret = m_routes.find (teid);
+  if (ret != m_routes.end ())
+    {
+      NS_LOG_DEBUG ("Found routing information for teid " << teid);
+      return ret->second;
+    }
+  NS_FATAL_ERROR ("No routing information.");
+}
+
+bool
+RingController::HasTeidRoutingInfo (uint32_t teid)
+{
+  bool found = false;
+  TeidRouting_t::iterator ret;
+  ret = m_routes.find (teid);
+  if (ret != m_routes.end ())
+    {
+      found = true;
+    }
+  return found;
+}
+
+bool 
+RingController::ConfigureRoutingPath (uint32_t teid)
+{
+  NS_LOG_FUNCTION (this << teid);
+
+  TeidRouting_t::iterator ret;
+  ret = m_routes.find (teid);
+  if (ret == m_routes.end ())
+    {
+      NS_FATAL_ERROR ("No routing information for teid " << teid);
+    }
+  RoutingInfo info = ret->second;
+ 
+  static int priority = 100;
+
+  // Configuring downlink routing
+  {
+    std::ostringstream cmdDl;
+    cmdDl << "flow-mod cmd=add,table=1,prio=" << priority++ << 
+             " eth_type=0x800,ip_proto=17,udp_src=2152," << 
+             "udp_dst=2152,ip_src=" << info.gatewayAddr <<
+             ",ip_dst=" << info.enbAddr <<
+             ",gtp_teid=" << info.teid <<
+             " apply:group=" << info.path;
+    
+    uint16_t current = info.gatewayIdx;
+    Ptr<OFSwitch13NetDevice> currentDevice = GetSwitchDevice (current);       
+    DpctlCommand (currentDevice, cmdDl.str ());
+
+    uint16_t next = NextSwitchIndex (current, info.path);
+    while (next != info.enbIdx)
+      {
+        current = next;
+        currentDevice = GetSwitchDevice (current); 
+        DpctlCommand (currentDevice, cmdDl.str ());
+        next = NextSwitchIndex (next, info.path);
+      }
+  }
+  
+  // Configuring uplink routing
+  {
+    // Inverting routing direction
+    Routing direction = info.path != RingController::CLOCK ? 
+                        RingController::CLOCK : 
+                        RingController::COUNTERCLOCK; 
+    
+    std::ostringstream cmdUl;
+    cmdUl << "flow-mod cmd=add,table=1,prio=" << priority++ <<
+             " eth_type=0x800,ip_proto=17,udp_src=2152," << 
+             "udp_dst=2152,ip_src=" << info.enbAddr <<
+             ",ip_dst=" << info.gatewayAddr <<
+             ",gtp_teid=" << info.teid <<
+             " apply:group=" << direction;  
+
+    uint16_t current = info.enbIdx;
+    Ptr<OFSwitch13NetDevice> currentDevice = GetSwitchDevice (current);
+    DpctlCommand (currentDevice, cmdUl.str ());
+
+    uint16_t next = NextSwitchIndex (current, direction);
+    while (next != info.gatewayIdx)
+      {
+        current = next;
+        currentDevice = GetSwitchDevice (current); 
+        DpctlCommand (currentDevice, cmdUl.str ());
+        next = NextSwitchIndex (next, direction);
+      }
+  }
+  return true;
 }
 
 };  // namespace ns3

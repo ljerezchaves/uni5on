@@ -31,6 +31,9 @@ EpcSdnController::EpcSdnController ()
   NS_LOG_FUNCTION (this);
   SetConnectionCallback (
       MakeCallback (&EpcSdnController::NotifyConnectionStarted, this));
+
+  //m_ueNetwork = Ipv4Address ("7.0.0.0");
+  //m_webNetwork = Ipv4Address ("192.168.0.0");
 }
 
 EpcSdnController::~EpcSdnController ()
@@ -45,7 +48,12 @@ EpcSdnController::DoDispose ()
   m_schedCommands.clear ();
   m_arpTable.clear ();
   m_connections.clear ();
-  m_createdBearers.clear ();
+  m_contexts.clear ();
+
+//  m_createdBearers.clear ();
+//  m_appEndpoints.clear ();
+//  m_imsiSwitch.clear ();
+//  m_teidEndpoints.clear ();
 }
 
 TypeId 
@@ -64,67 +72,122 @@ EpcSdnController::SetOpenFlowNetwork (Ptr<OpenFlowEpcNetwork> ptr)
 }
 
 void 
-EpcSdnController::NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip)
+EpcSdnController::NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip, 
+                                     uint16_t switchIdx)
 {
-  Mac48Address macAddr = Mac48Address::ConvertFrom (dev->GetAddress ());
-  std::pair<Ipv4Address, Mac48Address> entry (ip, macAddr);
-  std::pair <IpMacMap_t::iterator, bool> ret;
-  ret = m_arpTable.insert (entry);
-  if (ret.second == true)
-    {
-      NS_LOG_DEBUG ("New ARP entry: " << ip << " - " << macAddr);
-      return;
-    }
-  NS_FATAL_ERROR ("This IP already existis in this network.");
+  { // Save the pair IP/MAC in ARP table
+    Mac48Address macAddr = Mac48Address::ConvertFrom (dev->GetAddress ());
+    std::pair<Ipv4Address, Mac48Address> entry (ip, macAddr);
+    std::pair <IpMacMap_t::iterator, bool> ret;
+    ret = m_arpTable.insert (entry);
+    if (ret.second == false)
+      {
+        NS_FATAL_ERROR ("This IP already existis in this network.");
+      }
+    NS_LOG_DEBUG ("New ARP entry: " << ip << " - " << macAddr);
+  }
+
+  { // Save the pair IP/Switch index
+    std::pair<Ipv4Address, uint16_t> entry (ip, switchIdx);
+    std::pair <IpSwitchMap_t::iterator, bool> ret;
+    ret = m_ipSwitchTable.insert (entry);
+    if (ret.second == false)
+      {
+        NS_FATAL_ERROR ("This IP already existis in this network.");
+      }
+    NS_LOG_DEBUG ("New IP/Switch entry: " << ip << " - " << switchIdx);
+  }
 }
 
 void
 EpcSdnController::NotifyNewSwitchConnection (ConnectionInfo connInfo)
 {
   // Save this connection info
-  ConnKey_t key;
+  ConnectionKey_t key;
   key.first  = std::min (connInfo.switchIdx1, connInfo.switchIdx2);
   key.second = std::max (connInfo.switchIdx1, connInfo.switchIdx2);
-  std::pair<ConnKey_t,ConnectionInfo> entry (key, connInfo);
-  std::pair <ConnInfoMap_t::iterator, bool> ret = m_connections.insert (entry);
-  if (ret.second == true)
-    {
-      NS_LOG_DEBUG ("New connection info saved: switch " << 
-          key.first   << " (" << connInfo.portNum1 << ") -- switch " << 
-          key.second  << " (" << connInfo.portNum2 << ")");
-    }
-  else
+  std::pair<ConnectionKey_t, ConnectionInfo> entry (key, connInfo);
+  std::pair<ConnInfoMap_t::iterator, bool> ret;
+  ret = m_connections.insert (entry);
+  if (ret.second == false)
     {
       NS_FATAL_ERROR ("Error saving connection info.");
     }
+  NS_LOG_DEBUG ("New connection info saved: switch " << key.first << 
+                " (" << connInfo.portNum1 << ") -- switch " << key.second  << 
+                " (" << connInfo.portNum2 << ")");
 }
 
 bool
 EpcSdnController::RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId, 
                                              Ptr<EpcTft> tft, EpsBearer bearer)
 {
-  // Allowing new bearers
+  // Allowing any bearer creation
   return true;
 }
 
 void 
 EpcSdnController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
+                                           Ipv4Address enbAddr, Ipv4Address sgwAddr,
                                            ContextBearers_t bearerContextList)
 {
-  NS_LOG_FUNCTION (this << imsi << cellId);
-  
-  // FIXME Precisa aqui dar um jeito de salvar essa informação de maneira mais
-  // fácil pra recuperar depois.
-  // Save the list of bearers into 
-  ContextKey_t key (imsi, cellId);
-  std::pair <ContextKey_t, ContextBearers_t> entry (key, bearerContextList);
-  std::pair <ContextMap_t::iterator, bool> ret;
-  ret = m_createdBearers.insert (entry);
-  if (ret.second == false)
-    {
-      NS_FATAL_ERROR ("Error saving context created.");
-    }
+  NS_LOG_FUNCTION (this << imsi << cellId << enbAddr);
+
+ // uint16_t switchIdx = GetSwitchIdxForCellId (cellId);
+ 
+  // Saving all information that can be useful in the future.
+  ContextInfo info;
+  info.imsi = imsi;
+  info.cellId = cellId;
+  info.enbIdx = GetSwitchIdxFromIp (enbAddr);
+  info.sgwIdx = GetSwitchIdxFromIp (sgwAddr);
+  info.enbAddr = enbAddr;
+  info.sgwAddr = sgwAddr;
+  info.bearerList = bearerContextList;
+
+  m_contexts.push_back (info);
+
+
+//  // Register the pair IMSI / switch index
+//  {
+//    std::pair <uint64_t, uint16_t> entry (imsi, switchIdx);
+//    std::pair <ImsiMap_t::iterator, bool> ret;
+//    ret = m_imsiSwitch.insert (entry);
+//    if (ret.second == false)
+//      {
+//        NS_FATAL_ERROR ("Error saving IMSI / switch index.");
+//      }
+//  }
+//
+//  // Save TEID endpoints
+//  // Save the list of bearers
+//  {
+//    ContextKey_t key (imsi, cellId);
+//    std::pair <ContextKey_t, ContextBearers_t> entry (key, bearerContextList);
+//    std::pair <ContextMap_t::iterator, bool> ret;
+//    ret = m_createdBearers.insert (entry);
+//    if (ret.second == false)
+//      {
+//        NS_FATAL_ERROR ("Error saving context created.");
+//      }
+//  }
 }
+
+// void 
+// EpcSdnController::NotifyNewApp (Ptr<Application> app, Ptr<Node> source, 
+//                                 Ptr<Node> destination)
+// {
+//   AppEndpoint_t endpoint (source, destination);
+//   std::pair <Ptr<Application>, AppEndpoint_t> entry (app, endpoint);
+//   std::pair <AppMap_t::iterator, bool> ret;
+//   ret = m_appEndpoints.insert (entry);
+//   if (ret.second == false)
+//     {
+//       NS_FATAL_ERROR ("Error saving application endpoints.");
+//     }
+//   NS_LOG_DEBUG ("New app entry: " << app << " from: " << source << 
+//                 " to " << destination);
+// }
 
 void 
 EpcSdnController::NotifyAppStart (Ptr<Application> app)
@@ -157,20 +220,30 @@ EpcSdnController::CreateSpanningTree ()
 ConnectionInfo*
 EpcSdnController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
 {
-  ConnKey_t key;
+  ConnectionKey_t key;
   key.first = std::min (sw1, sw2);
   key.second = std::max (sw1, sw2);
   ConnInfoMap_t::iterator it = m_connections.find (key);
-  if (it == m_connections.end ())
-    {
-      NS_LOG_ERROR ("No connection information available.");
-      return NULL;
-    }
-  else
+  if (it != m_connections.end ())
     {
       return &(it->second);
     }
+  NS_FATAL_ERROR ("No connection information available.");
 }
+
+// std::pair<Ptr<Node>, Ptr<Node> > 
+// EpcSdnController::GetAppEndpoint (Ptr<Application> app)
+// {
+//   AppEndpoint_t ret;
+//   AppMap_t::iterator it = m_appEndpoints.find (app);
+//   if (it == m_appEndpoints.end ())
+//     {
+//       NS_LOG_ERROR ("No application information available.");
+//       return ret;
+//     }
+//   ret = it->second;
+//   return ret;
+// }
 
 Ptr<OFSwitch13NetDevice> 
 EpcSdnController::GetSwitchDevice (uint16_t index)
@@ -179,10 +252,59 @@ EpcSdnController::GetSwitchDevice (uint16_t index)
 }
 
 uint16_t 
-EpcSdnController::GetSwitchIdxForCellId (uint16_t cellId)
+EpcSdnController::GetSwitchIdxFromIp (Ipv4Address addr)
 {
-  return m_ofNetwork->GetSwitchIdxForCellId (cellId);
+  IpSwitchMap_t::iterator ret;
+  ret = m_ipSwitchTable.find (addr);
+  if (ret != m_ipSwitchTable.end ())
+    {
+      NS_LOG_DEBUG ("Found switch index " << (int)ret->second << 
+                    " for IP " << addr);
+      return ret->second;
+    }
+  NS_FATAL_ERROR ("IP not registered.");
 }
+
+// uint16_t 
+// EpcSdnController::GetSwitchIdxForCellId (uint16_t cellId)
+// {
+//   return m_ofNetwork->GetSwitchIdxForCellId (cellId);
+// }
+// 
+// uint16_t 
+// EpcSdnController::GetSwitchIdxForImsi (uint64_t imsi)
+// {
+//   ImsiMap_t::iterator ret;
+//   ret = m_imsiSwitch.find (imsi);
+//   if (ret != m_imsiSwitch.end ())
+//     {
+//       NS_LOG_DEBUG ("Found switch index " << (int)ret->second << 
+//                     " for IMSI " << imsi);
+//       return ret->second;
+//     }
+//   NS_FATAL_ERROR ("IMSI not registered.");
+// }
+
+// uint16_t 
+// EpcSdnController::GetSwitchIdxForNode (Ptr<Node> node)
+// {
+//   Ptr<Ipv4> nodeIpv4 = node->GetObject<Ipv4> ();
+//   Ipv4Address nodeAddr = nodeIpv4->GetAddress (1,0).GetLocal ();
+//   Ipv4Mask nodeMask = nodeIpv4->GetAddress (1,0).GetMask ();
+//   Ipv4Address nodeNetwork = nodeAddr.CombineMask (nodeMask);
+// 
+//   if (nodeNetwork.IsEqual (m_ueNetwork))
+//     {
+//       Ptr<LteUeNetDevice> lteDev = 
+//           DynamicCast<LteUeNetDevice> (node->GetDevice (0));
+//       return GetSwitchIdxForImsi (lteDev->GetImsi ());
+//     }
+//   else if (nodeNetwork.IsEqual (m_webNetwork))
+//     {
+//       return GetSwitchIdxForGateway ();
+//     }
+//   NS_FATAL_ERROR ("Invalid node.");
+// }
 
 uint16_t 
 EpcSdnController::GetSwitchIdxForGateway ()
@@ -194,6 +316,26 @@ uint16_t
 EpcSdnController::GetNSwitches ()
 {
   return m_ofNetwork->GetNSwitches ();
+}
+
+EpcS11SapMme::BearerContextCreated 
+EpcSdnController::GetBearerFromTft (Ptr<EpcTft> tft)
+{
+  ContextInfoList_t::iterator ctxIt;
+  for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
+    {
+      ContextBearers_t list = ctxIt->bearerList;
+      ContextBearers_t::iterator lit;
+      for (lit = list.begin (); lit != list.end (); lit++)
+        {
+          if (lit->tft == tft)
+            {
+              NS_LOG_DEBUG ("Found bearer for tft " << tft);
+              return *lit;
+            }
+        }
+    }
+  NS_FATAL_ERROR ("Invalid tft.");
 }
 
 void
@@ -272,36 +414,36 @@ EpcSdnController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
 {
   NS_LOG_FUNCTION (this << swtch.ipv4 << teid);
 
-  // Get input port
-  uint32_t inPort;
-  ofl_match_tlv *inPortTlv = 
-      oxm_match_lookup (OXM_OF_IN_PORT, (ofl_match*)msg->match);
-  memcpy (&inPort, inPortTlv->value, OXM_LENGTH (OXM_OF_IN_PORT));
-
-  // Just for testing, let's send the packet in counterclockwise direction
-  ofl_action_group *action = 
-      (ofl_action_group*)xmalloc (sizeof (ofl_action_group));
-  action->header.type = OFPAT_GROUP;
-  action->group_id = 2;
-
-  // Create the OpenFlow PacketOut message
-  ofl_msg_packet_out reply;
-  reply.header.type = OFPT_PACKET_OUT;
-  reply.buffer_id = msg->buffer_id;
-  reply.in_port = inPort;
-  reply.data_length = 0;
-  reply.data = 0;
-  reply.actions_num = 1;
-  reply.actions = (ofl_action_header**)&action;
-  if (msg->buffer_id == OFP_NO_BUFFER)
-    {
-      // No packet buffer. Send data back to switch
-      reply.data_length = msg->data_length;
-      reply.data = msg->data;
-    }
-  
-  SendToSwitch (&swtch, (ofl_msg_header*)&reply, xid);
-  free (action);
+//  // Get input port
+//  uint32_t inPort;
+//  ofl_match_tlv *inPortTlv = 
+//      oxm_match_lookup (OXM_OF_IN_PORT, (ofl_match*)msg->match);
+//  memcpy (&inPort, inPortTlv->value, OXM_LENGTH (OXM_OF_IN_PORT));
+//
+//  // Just for testing, let's send the packet in counterclockwise direction
+//  ofl_action_group *action = 
+//      (ofl_action_group*)xmalloc (sizeof (ofl_action_group));
+//  action->header.type = OFPAT_GROUP;
+//  action->group_id = 2;
+//
+//  // Create the OpenFlow PacketOut message
+//  ofl_msg_packet_out reply;
+//  reply.header.type = OFPT_PACKET_OUT;
+//  reply.buffer_id = msg->buffer_id;
+//  reply.in_port = inPort;
+//  reply.data_length = 0;
+//  reply.data = 0;
+//  reply.actions_num = 1;
+//  reply.actions = (ofl_action_header**)&action;
+//  if (msg->buffer_id == OFP_NO_BUFFER)
+//    {
+//      // No packet buffer. Send data back to switch
+//      reply.data_length = msg->data_length;
+//      reply.data = msg->data;
+//    }
+//  
+//  SendToSwitch (&swtch, (ofl_msg_header*)&reply, xid);
+//  free (action);
 
   // All handlers must free the message when everything is ok
   ofl_msg_free ((ofl_msg_header*)msg, NULL /*dp->exp*/);
