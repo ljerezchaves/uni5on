@@ -163,9 +163,6 @@ public:
   virtual void CreateSpanningTree ();
 
 protected:
-//  /** Pair identifying application endpoints */
-//  typedef std::pair<Ptr<Node>, Ptr<Node> > AppEndpoint_t;
-  
   /**
    * Search for connection information between two switches.
    * \param sw1 First switch index.
@@ -181,21 +178,12 @@ protected:
    */
   Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
 
+  /**
+   * Retrieve the switch index for EPC entity attached to OpenFlow network.
+   * \param addr The eNB or SgwPgw address
+   * \return The switch index in m_ofSwitches.
+   */
   uint16_t GetSwitchIdxFromIp (Ipv4Address addr);
-
-//  /**
-//   * Retrieve the switch index for an UE IMSI
-//   * \param imsi The UE IMSI..
-//   * \return The switch index in m_ofSwitches.
-//   */
-//  uint16_t GetSwitchIdxForImsi (uint64_t imsi);
-//
-//  /**
-//   * Retrieve the switch index for a node.
-//   * \param node The node.
-//   * \return The switch index in m_ofSwitches.
-//   */
-//  uint16_t GetSwitchIdxForNode (Ptr<Node> node);
 
   /**
    * Retrieve the switch index for the SgwPgw gateway
@@ -323,39 +311,13 @@ private:
   /** List of context info */
   typedef std::vector<ContextInfo> ContextInfoList_t;
   
-  
-//  /** Key indentifying pair IMSI/CellId */
-//  typedef std::pair<uint64_t, uint16_t> ContextKey_t;
-//  
-//  /** Map saving pair ContextKey_t / ContextBearers_t */
-//  typedef std::map<ContextKey_t, ContextBearers_t> ContextMap_t;
-//
-////  /** Map saving application / endpoints */
-////  typedef std::map<Ptr<Application>, AppEndpoint_t> AppMap_t;
-//
-//  /** Map saving pair IMSI / Switch index */
-//  typedef std::map<uint64_t, uint16_t> ImsiMap_t;
-//
-//  /** Pair of IPv4 TEID endpoints */
-//  typedef std::pair<Ipv4Address, Ipv4Address> PgwEnbAddr_t;
-//
-//  /** Map saving TEID endpoints */
-//  typedef std::map<uint32_t, PgwEnbAddr_t> TeidAddrMap_t;
-  
-  DevCmdMap_t       m_schedCommands;  //!< Scheduled commands for execution
-  IpMacMap_t        m_arpTable;       //!< ARP resolution table
-  IpSwitchMap_t     m_ipSwitchTable;  //!< IP / switch table
-  ConnInfoMap_t     m_connections;    //!< Connections between switches.
-  ContextInfoList_t m_contexts;       //!< List of contexts
+  DevCmdMap_t       m_schedCommands;    //!< Scheduled commands for execution
+  IpMacMap_t        m_arpTable;         //!< ARP resolution table
+  IpSwitchMap_t     m_ipSwitchTable;    //!< IP / switch table
+  ConnInfoMap_t     m_connections;      //!< Connections between switches.
+  ContextInfoList_t m_contexts;         //!< List of contexts
 
-//  ContextMap_t  m_createdBearers; //!< Created bearers in network.
-//  AppMap_t      m_appEndpoints;   //!< Application IP endpoints.
-//  TeidAddrMap_t m_teidEndpoints;  //!< TEID IPv4 endpoints.
-//  ImsiMap_t     m_imsiSwitch;     //!< Mapping IMSI to switch index.
-//  Ipv4Address   m_webNetwork;     //!< Internet IP address network.
-//  Ipv4Address   m_ueNetwork;      //!< UEs IP address network.
-
-  Ptr<OpenFlowEpcNetwork> m_ofNetwork;    //!< Pointer to OpenFlow network
+  Ptr<OpenFlowEpcNetwork> m_ofNetwork;  //!< Pointer to OpenFlow network
 };
 
 };  // namespace ns3

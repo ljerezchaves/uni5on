@@ -31,9 +31,6 @@ EpcSdnController::EpcSdnController ()
   NS_LOG_FUNCTION (this);
   SetConnectionCallback (
       MakeCallback (&EpcSdnController::NotifyConnectionStarted, this));
-
-  //m_ueNetwork = Ipv4Address ("7.0.0.0");
-  //m_webNetwork = Ipv4Address ("192.168.0.0");
 }
 
 EpcSdnController::~EpcSdnController ()
@@ -49,10 +46,6 @@ EpcSdnController::DoDispose ()
   m_arpTable.clear ();
   m_connections.clear ();
   m_contexts.clear ();
-
-//  m_createdBearers.clear ();
-//  m_imsiSwitch.clear ();
-//  m_teidEndpoints.clear ();
 }
 
 TypeId 
@@ -206,41 +199,6 @@ EpcSdnController::GetSwitchIdxFromIp (Ipv4Address addr)
     }
   NS_FATAL_ERROR ("IP not registered.");
 }
-
-// uint16_t 
-// EpcSdnController::GetSwitchIdxForImsi (uint64_t imsi)
-// {
-//   ImsiMap_t::iterator ret;
-//   ret = m_imsiSwitch.find (imsi);
-//   if (ret != m_imsiSwitch.end ())
-//     {
-//       NS_LOG_DEBUG ("Found switch index " << (int)ret->second << 
-//                     " for IMSI " << imsi);
-//       return ret->second;
-//     }
-//   NS_FATAL_ERROR ("IMSI not registered.");
-// }
-
-// uint16_t 
-// EpcSdnController::GetSwitchIdxForNode (Ptr<Node> node)
-// {
-//   Ptr<Ipv4> nodeIpv4 = node->GetObject<Ipv4> ();
-//   Ipv4Address nodeAddr = nodeIpv4->GetAddress (1,0).GetLocal ();
-//   Ipv4Mask nodeMask = nodeIpv4->GetAddress (1,0).GetMask ();
-//   Ipv4Address nodeNetwork = nodeAddr.CombineMask (nodeMask);
-// 
-//   if (nodeNetwork.IsEqual (m_ueNetwork))
-//     {
-//       Ptr<LteUeNetDevice> lteDev = 
-//           DynamicCast<LteUeNetDevice> (node->GetDevice (0));
-//       return GetSwitchIdxForImsi (lteDev->GetImsi ());
-//     }
-//   else if (nodeNetwork.IsEqual (m_webNetwork))
-//     {
-//       return GetSwitchIdxForGateway ();
-//     }
-//   NS_FATAL_ERROR ("Invalid node.");
-// }
 
 uint16_t 
 EpcSdnController::GetSwitchIdxForGateway ()
