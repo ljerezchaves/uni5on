@@ -59,7 +59,7 @@ public:
    *
    * \param node The node on which a HttpServerApplication will be installed.
    */
-  ApplicationContainer Install (Ptr<Node> node);
+  Ptr<Application> Install (Ptr<Node> node);
 
 private:
   ObjectFactory m_factory;
@@ -99,7 +99,7 @@ public:
    *
    * \param node The node on which a HttpClientApplication will be installed.
    */
-  ApplicationContainer Install (Ptr<Node> node);
+  Ptr<Application> Install (Ptr<Node> node);
 
 //  Ptr<http::HttpClient> GetClient (void);
 //

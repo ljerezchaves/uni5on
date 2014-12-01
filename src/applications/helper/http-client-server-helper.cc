@@ -35,14 +35,12 @@ HttpServerHelper::SetAttribute (std::string name, const AttributeValue &value)
   m_factory.Set (name, value);
 }
 
-ApplicationContainer
+Ptr<Application>
 HttpServerHelper::Install (Ptr<Node> node)
 {
-  ApplicationContainer apps;
   Ptr<HttpServer> server = m_factory.Create<HttpServer> ();
   node->AddApplication (server);
-  apps.Add (server);
-  return apps;
+  return server;
 }
 
 ApplicationContainer
@@ -90,14 +88,12 @@ HttpClientHelper::SetAttribute (std::string name, const AttributeValue &value)
   m_factory.Set (name, value);
 }
 
-ApplicationContainer
+Ptr<Application>
 HttpClientHelper::Install (Ptr<Node> node)
 {
-  ApplicationContainer apps;
   Ptr<HttpClient> client = m_factory.Create<HttpClient> ();
   node->AddApplication (client);
-  apps.Add (client);
-  return apps;
+  return client;
 }
 
 ApplicationContainer

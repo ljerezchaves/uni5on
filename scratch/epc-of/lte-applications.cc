@@ -61,18 +61,27 @@ SetHttpTraffic (Ptr<Node> server, NodeContainer clients,
       Ptr<Ipv4> clientIpv4 = client->GetObject<Ipv4> ();
       Ipv4Address clientAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
       Ipv4Mask clientMask = clientIpv4->GetAddress (1, 0).GetMask ();
+      
+      // Traffic Flow Template
+      Ptr<EpcTft> tft = CreateObject<EpcTft> ();
 
       // HTTP server
       HttpServerHelper httpServer (g_tcpHttpPort);
-      serverApps.Add (httpServer.Install (server));
+      Ptr<Application> httpServerApp = httpServer.Install (server);
+      serverApps.Add (httpServerApp);
+      httpServerApp->AggregateObject (tft);
+      httpServerApp->SetAttribute ("Direction", 
+                                   EnumValue (Application::BIDIRECTIONAL));
 
       // HTTP client
       HttpClientHelper httpClient (serverAddr, g_tcpHttpPort);
-      clientApps.Add (httpClient.Install (client));
-      clientApps.Start (Seconds (g_rngStart->GetValue (0.1, 1.0)));
+      Ptr<Application> httpClientApp = httpClient.Install (client);
+      clientApps.Add (httpClientApp);
+      httpClientApp->AggregateObject (tft);
+      httpServerApp->SetAttribute ("Direction", 
+                                   EnumValue (Application::BIDIRECTIONAL));
 
-      // Traffic Flow Templat
-      Ptr<EpcTft> tft = Create<EpcTft> ();
+      // TFT Packet filter
       EpcTft::PacketFilter filter;
       filter.remoteAddress = serverAddr;
       filter.remoteMask = serverMask;
@@ -114,14 +123,22 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
       Ptr<Ipv4> clientIpv4 = client->GetObject<Ipv4> ();
       Ipv4Address clientAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
       Ipv4Mask clientMask = clientIpv4->GetAddress (1, 0).GetMask ();
+      
+      // Traffic Flow Template
+      Ptr<EpcTft> tft = CreateObject<EpcTft> ();
 
       // Downlink VoIP traffic
       UdpServerHelper voipSinkDown (g_udpVoipPort);
       sinkApps.Add (voipSinkDown.Install (client));
       VoipClientHelper voipSenderDown (clientAddr, g_udpVoipPort);
       voipSenderDown.SetAttribute ("Stream", IntegerValue (u));
-      senderApps.Add (voipSenderDown.Install (server));
+      Ptr<Application> voipSenderDownApp = voipSenderDown.Install (server);
+      senderApps.Add (voipSenderDownApp);
+      voipSenderDownApp->AggregateObject (tft);
+      voipSenderDownApp->SetAttribute ("Direction", 
+                                       EnumValue (Application::BIDIRECTIONAL));
 
+      // TFT Packet filter
       EpcTft::PacketFilter filterDown;
       filterDown.direction = EpcTft::DOWNLINK;
       filterDown.remoteAddress = serverAddr;
@@ -130,14 +147,20 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
       filterDown.localMask = clientMask;
       filterDown.localPortStart = g_udpVoipPort;
       filterDown.localPortEnd = g_udpVoipPort;
+      tft->Add (filterDown);
 
       // Uplink VoIP traffic
       UdpServerHelper voipSinkUp (g_udpVoipPort);
       sinkApps.Add (voipSinkUp.Install (server));
       VoipClientHelper voipSenderUp (serverAddr, g_udpVoipPort);
       voipSenderUp.SetAttribute ("Stream", IntegerValue (u));
-      senderApps.Add (voipSenderUp.Install (client));
+      Ptr<Application> voipSenderUpApp = voipSenderUp.Install (client);
+      senderApps.Add (voipSenderUpApp);
+      voipSenderUpApp->AggregateObject (tft);
+      voipSenderUpApp->SetAttribute ("Direction", 
+                                     EnumValue (Application::BIDIRECTIONAL));
 
+      // TFT Packet filter
       EpcTft::PacketFilter filterUp;
       filterUp.direction = EpcTft::UPLINK;
       filterUp.remoteAddress = serverAddr;
@@ -146,16 +169,12 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
       filterUp.localMask = clientMask;
       filterUp.remotePortStart = g_udpVoipPort;
       filterUp.remotePortEnd = g_udpVoipPort;
-
-      // Traffic Flow Template
-      Ptr<EpcTft> tft = Create<EpcTft> ();
-      tft->Add (filterDown);
       tft->Add (filterUp);
  
       // Dedicated GBR EPS bearer (QCI 1)
       GbrQosInformation qos;
       qos.gbrDl = (voipPacketSize + 4) * 8 / voipPacketInterval;
-      qos.mbrDl = qos.gbrDl;
+      qos.mbrDl = qos.gbrUl = qos.mbrUl = qos.gbrDl;
       EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
       lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
@@ -197,6 +216,9 @@ SetVideoTraffic (Ptr<Node> server, NodeContainer clients,
       Ptr<Ipv4> clientIpv4 = client->GetObject<Ipv4> ();
       Ipv4Address clientAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
       Ipv4Mask clientMask = clientIpv4->GetAddress (1, 0).GetMask ();
+      
+      // Traffic Flow Template
+      Ptr<EpcTft> tft = CreateObject<EpcTft> ();
  
       // Video server (send UDP datagrams to client)
       // Back off 20 (IP) + 8 (UDP) bytes from MTU
@@ -205,14 +227,17 @@ SetVideoTraffic (Ptr<Node> server, NodeContainer clients,
                                              g_videoTrace);
       videoSender.SetAttribute ("MaxPacketSize", 
                                 UintegerValue (MaxPacketSize));
-      senderApps.Add (videoSender.Install (server));
+      Ptr<Application> videoSenderApp = videoSender.Install (server);
+      senderApps.Add (videoSenderApp);
+      videoSenderApp->AggregateObject (tft);
+      videoSenderApp->SetAttribute ("Direction", 
+                                    EnumValue (Application::DOWNLINK));
       
       // Video sink (receive UDP datagramas from server)
       UdpServerHelper videoSink (g_udpVideoPort);
       sinkApps.Add (videoSink.Install (client)); 
      
-      // Traffic Flow Template
-      Ptr<EpcTft> tft = Create<EpcTft> ();
+      // TFT Packet filter
       EpcTft::PacketFilter filter;
       filter.direction = EpcTft::DOWNLINK;
       filter.remoteAddress = serverAddr;
@@ -326,7 +351,7 @@ SetLenaDualStripeTraffic (Ptr<Node> server, NodeContainer clients,
             }
   
           // Traffic Flow Templates
-          Ptr<EpcTft> tft = Create<EpcTft> ();
+          Ptr<EpcTft> tft = CreateObject<EpcTft> ();
           uint8_t precedence = 255;
           if (downlink)
             {
