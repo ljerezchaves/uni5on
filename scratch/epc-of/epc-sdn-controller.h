@@ -40,7 +40,7 @@ public:
   /** List of created context bearers */
   typedef std::list<EpcS11SapMme::BearerContextCreated> ContextBearers_t;
 
-  /** LTE context information for controller usage */
+  /** Metadata associated to LTE context information for controller usage */
   struct ContextInfo {
     uint64_t imsi;                //!< UE IMSI
     uint16_t cellId;              //!< eNB Cell ID
@@ -62,7 +62,6 @@ public:
 
   /** Destructor implementation */
   virtual void DoDispose ();
-
 
   /**
    * Set the OpenFlowEpcNetwork object used to create the network.
@@ -196,6 +195,21 @@ protected:
    */
   uint16_t GetNSwitches ();
 
+  /**
+   * Retrieve the LTE context information from the traffic flow templated
+   * associated with an application.
+   * \param tft The Traffic Flow Template.
+   * \return The context info for this tft.
+   */
+  ContextInfo GetContextFromTft (Ptr<EpcTft> tft);
+
+  /**
+   * Retrieve the LTE context information from the GTP tunnel id
+   * \param teid The GTP tunnel id.
+   * \return The context info for this teid.
+   */
+  ContextInfo GetContextFromTeid (uint32_t teid);
+
   /** 
    * Iterate over the context bearers map looking for the bearer information
    * for a specific traffic flow template.
@@ -247,6 +261,14 @@ protected:
   HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, 
                           uint32_t xid, uint32_t teid);
 
+  /**
+   * Extract an IPv4 address from packet match.
+   * \param oxm_of The OXM_IF_* IPv4 field.
+   * \param match The ofl_match structure pointer.
+   * \return The IPv4 address.
+   */
+  Ipv4Address ExtractIpv4Address (uint32_t oxm_of, ofl_match* match);
+
 private:
   /**
    * Callback fired when the switch / controller connection is successfully
@@ -284,14 +306,6 @@ private:
    */
   Ptr<Packet> CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp, 
                               Mac48Address dstMac, Ipv4Address dstIp);
-
-  /**
-   * Extract an IPv4 address from packet match.
-   * \param oxm_of The OXM_IF_* IPv4 field.
-   * \param match The ofl_match structure pointer.
-   * \return The IPv4 address.
-   */
-  Ipv4Address ExtractIpv4Address (uint32_t oxm_of, ofl_match* match);
 
   /** Multimap saving pair <pointer to device / dpctl command str> */
   typedef std::multimap<Ptr<OFSwitch13NetDevice>, std::string> DevCmdMap_t; 

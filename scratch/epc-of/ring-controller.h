@@ -85,11 +85,18 @@ private:
   /**
    * Look for the routing path between srcSwitchIdx and dstSwitchIdx with
    * lowest number of hops.
-   * \param srcSwitchIdx Sourche switch index.
+   * \param srcSwitchIdx Source switch index.
    * \param dstSwitchIdx Destination switch index.
    * \return The routing path.
    */
   Routing FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx);
+
+  /** 
+   * Invert routing direction.
+   * \param original The original downlink routing path
+   * \return The reversed routing path.
+   */
+  Routing InvertRoutingDirection (Routing original);
 
   /**
    * Look for available bandwidth in routingPath from source to destination
@@ -145,17 +152,31 @@ private:
    */
   DataRate GetTunnelAverageTraffic (uint32_t teid);
 
-
-  // FIXME doc
+  /**
+   * Save the RoutingInfo metadata for further usage.
+   * \param info The routing information to save.
+   */
   void SaveTeidRouting (RoutingInfo info);
 
-  // FIXME doc
+  /**
+   * Retrieve stored information for a specific GTP tunnel
+   * \param teid The GTP tunnel ID.
+   * \return The routing information for this tunnel.
+   */
   RoutingInfo GetTeidRoutingInfo (uint32_t teid);
 
-  // FIXME doc
+  /**
+   * Check for tunnel routing information.
+   * \param teid The GTP tunnel ID.
+   * \return True if routing info present, false otherwise.
+   */ 
   bool HasTeidRoutingInfo (uint32_t teid);
 
-    // FIXME doc
+  /**
+   * Configure the switches with OpenFlow commands for teid routing.
+   * \param teid The GTP tunnel ID.
+   * \return True if configuration succeeded, false otherwise.
+   */
   bool ConfigureRoutingPath (uint32_t teid);
 
   /** Map saving TEID routing information */

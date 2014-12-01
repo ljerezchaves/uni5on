@@ -67,7 +67,7 @@ void
 EpcSdnController::NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip, 
                                      uint16_t switchIdx)
 {
-  { // Save the pair IP/MAC in ARP table
+  { // Save the pair IP/MAC address in ARP table
     Mac48Address macAddr = Mac48Address::ConvertFrom (dev->GetAddress ());
     std::pair<Ipv4Address, Mac48Address> entry (ip, macAddr);
     std::pair <IpMacMap_t::iterator, bool> ret;
@@ -79,7 +79,7 @@ EpcSdnController::NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip,
     NS_LOG_DEBUG ("New ARP entry: " << ip << " - " << macAddr);
   }
 
-  { // Save the pair IP/Switch index
+  { // Save the pair IP/Switch index in switch table
     std::pair<Ipv4Address, uint16_t> entry (ip, switchIdx);
     std::pair <IpSwitchMap_t::iterator, bool> ret;
     ret = m_ipSwitchTable.insert (entry);
@@ -125,7 +125,7 @@ EpcSdnController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
 {
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr);
 
-  // Saving all information that can be useful in the future.
+  // Create context info and save in context list.
   ContextInfo info;
   info.imsi = imsi;
   info.cellId = cellId;
@@ -134,7 +134,6 @@ EpcSdnController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   info.enbAddr = enbAddr;
   info.sgwAddr = sgwAddr;
   info.bearerList = bearerContextList;
-
   m_contexts.push_back (info);
 }
 
@@ -210,6 +209,46 @@ uint16_t
 EpcSdnController::GetNSwitches ()
 {
   return m_ofNetwork->GetNSwitches ();
+}
+
+EpcSdnController::ContextInfo 
+EpcSdnController::GetContextFromTft (Ptr<EpcTft> tft)
+{
+  ContextInfoList_t::iterator ctxIt;
+  for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
+    {
+      ContextBearers_t list = ctxIt->bearerList;
+      ContextBearers_t::iterator lit;
+      for (lit = list.begin (); lit != list.end (); lit++)
+        {
+          if (lit->tft == tft)
+            {
+              NS_LOG_DEBUG ("Found bearer for tft " << tft);
+              return *ctxIt;
+            }
+        }
+    }
+  NS_FATAL_ERROR ("Invalid tft.");
+}
+
+EpcSdnController::ContextInfo
+EpcSdnController::GetContextFromTeid (uint32_t teid)
+{
+  ContextInfoList_t::iterator ctxIt;
+  for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
+    {
+      ContextBearers_t list = ctxIt->bearerList;
+      ContextBearers_t::iterator lit;
+      for (lit = list.begin (); lit != list.end (); lit++)
+        {
+          if (lit->sgwFteid.teid == teid)
+            {
+              NS_LOG_DEBUG ("Found bearer for teid " << teid);
+              return *ctxIt;
+            }
+        }
+    }
+  NS_FATAL_ERROR ("Invalid teid.");
 }
 
 EpcS11SapMme::BearerContextCreated 
@@ -308,40 +347,30 @@ EpcSdnController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
 {
   NS_LOG_FUNCTION (this << swtch.ipv4 << teid);
 
-//  // Get input port
-//  uint32_t inPort;
-//  ofl_match_tlv *inPortTlv = 
-//      oxm_match_lookup (OXM_OF_IN_PORT, (ofl_match*)msg->match);
-//  memcpy (&inPort, inPortTlv->value, OXM_LENGTH (OXM_OF_IN_PORT));
-//
-//  // Just for testing, let's send the packet in counterclockwise direction
-//  ofl_action_group *action = 
-//      (ofl_action_group*)xmalloc (sizeof (ofl_action_group));
-//  action->header.type = OFPAT_GROUP;
-//  action->group_id = 2;
-//
-//  // Create the OpenFlow PacketOut message
-//  ofl_msg_packet_out reply;
-//  reply.header.type = OFPT_PACKET_OUT;
-//  reply.buffer_id = msg->buffer_id;
-//  reply.in_port = inPort;
-//  reply.data_length = 0;
-//  reply.data = 0;
-//  reply.actions_num = 1;
-//  reply.actions = (ofl_action_header**)&action;
-//  if (msg->buffer_id == OFP_NO_BUFFER)
-//    {
-//      // No packet buffer. Send data back to switch
-//      reply.data_length = msg->data_length;
-//      reply.data = msg->data;
-//    }
-//  
-//  SendToSwitch (&swtch, (ofl_msg_header*)&reply, xid);
-//  free (action);
-
   // All handlers must free the message when everything is ok
   ofl_msg_free ((ofl_msg_header*)msg, NULL /*dp->exp*/);
   return 0;
+}
+
+Ipv4Address 
+EpcSdnController::ExtractIpv4Address (uint32_t oxm_of, ofl_match* match)
+{
+  switch (oxm_of)
+    {
+      case OXM_OF_ARP_SPA:
+      case OXM_OF_ARP_TPA:
+      case OXM_OF_IPV4_DST:
+      case OXM_OF_IPV4_SRC:
+        {
+          uint32_t ip;
+          int size = OXM_LENGTH (oxm_of);
+          ofl_match_tlv *ipTlv = oxm_match_lookup (oxm_of, match);
+          memcpy (&ip, ipTlv->value, size);
+          return Ipv4Address (ntohl (ip));
+        }
+      default:
+        NS_FATAL_ERROR ("Invalid IP field.");
+    }
 }
 
 void
@@ -498,26 +527,6 @@ EpcSdnController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
   return packet;
 }
 
-Ipv4Address 
-EpcSdnController::ExtractIpv4Address (uint32_t oxm_of, ofl_match* match)
-{
-  switch (oxm_of)
-    {
-      case OXM_OF_ARP_SPA:
-      case OXM_OF_ARP_TPA:
-      case OXM_OF_IPV4_DST:
-      case OXM_OF_IPV4_SRC:
-        {
-          uint32_t ip;
-          int size = OXM_LENGTH (oxm_of);
-          ofl_match_tlv *ipTlv = oxm_match_lookup (oxm_of, match);
-          memcpy (&ip, ipTlv->value, size);
-          return Ipv4Address (ntohl (ip));
-        }
-      default:
-        NS_FATAL_ERROR ("Invalid IP field.");
-    }
-}
 
 };  // namespace ns3
 

@@ -80,73 +80,81 @@ RingController::NotifyNewSwitchConnection (ConnectionInfo connInfo)
 void 
 RingController::NotifyAppStart (Ptr<Application> app)
 {
-//   NS_LOG_FUNCTION (this << app);
-// 
-//   AppEndpoint_t endpoints = GetAppEndpoint (app);
-//   uint16_t srcIdx = GetSwitchIdxForNode (endpoints.first);
-//   uint16_t dstIdx = GetSwitchIdxForNode (endpoints.second);
-// 
-//   NS_LOG_DEBUG ("Traffic about to start from: " << srcIdx << " to " << dstIdx);
-//   
-//   EpcS11SapMme::BearerContextCreated bearerContext;
-//   bearerContext = GetBearerFromTft (app->GetObject<EpcTft> ());
-//   uint32_t teid = bearerContext.sgwFteid.teid;
-//   EpsBearer bearer = bearerContext.bearerLevelQos;
-// 
-//   if (HasTeidRoutingInfo (teid))
-//     {
-//       NS_LOG_DEBUG ("Routing path for " << teid << " already defined.");
-//       return;
-//     }
-// 
-//   NS_LOG_DEBUG ("Bearer TEID " << teid);
-// 
-//   // Create and save routing information
-//   RoutingInfo info;
-//   if (srcIdx == GetSwitchIdxForGateway ())
-//     {
-//       info.gatewayIdx = srcIdx;
-//       info.enbIdx = dstIdx;
-//       NS_ASSERT (app->GetDirection () != Application::UPLINK);
-//     }
-//   else if (dstIdx == GetSwitchIdxForGateway ())
-//     {
-//       info.gatewayIdx = dstIdx;
-//       info.enbIdx = srcIdx;
-//       NS_ASSERT (app->GetDirection () != Application::DOWNLINK);
-//     }
-//  
-//   info.path = FindShortestPath (gatewayIdx, enbIdx); 
-//   info.app = app;
-//   info.gatewayAddr = bearerContext.sgwFteid.address;
-//   //info.enbAddr = GetAddr....
-//   info.teid = teid;
-// 
-//   // Check for GBR bearer resources
-//   if (bearer.IsGbr ())
-//     {
-//       DataRate downlinkGbr (bearer.gbrQosInfo.gbrDl);
-//       DataRate uplinkGbr (bearer.gbrQosInfo.gbrUl);
-//       DataRate reserve = std::max (downlinkGbr, uplinkGbr);
-//       NS_LOG_DEBUG ("Bearer " << teid << " requesting " << reserve);
-//       
-//       DataRate bandwidth = GetAvailableBandwidth (info.gatewayIdx, info.enbIdx, 
-//                                                   info.path);
-//       NS_LOG_DEBUG ("Bandwidth from " << srcIdx << 
-//                     " to " << dstIdx << ": " << bandwidth);
-//       
-//       if (bandwidth < reserve)
-//         {
-//           NS_FATAL_ERROR ("Not enougth resources for bearer: " << reserve);
-//           // FIXME Do something useful here
-//         }
-//       
-//       ReserveBandwidth (info.gatewayIdx, info.enbIdx, info.path, reserve);
-//       info.reserved = reserve;
-//     }
-//   
-//   SaveTeidRouting (info);
-//   ConfigureRoutingPath (teid);
+  NS_LOG_FUNCTION (this << app);
+ 
+  Ptr<EpcTft> tft = app->GetObject<EpcTft> ();
+  ContextInfo contextInfo = GetContextFromTft (tft);
+
+  EpcS11SapMme::BearerContextCreated bearerContext;
+  bearerContext = GetBearerFromTft (tft);
+  uint32_t teid = bearerContext.sgwFteid.teid;
+  EpsBearer bearer = bearerContext.bearerLevelQos;
+
+  if (HasTeidRoutingInfo (teid))
+    {
+      NS_LOG_DEBUG ("Routing path for " << teid << " already defined.");
+      return;
+    }
+ 
+  NS_LOG_DEBUG ("Bearer TEID " << teid);
+ 
+  // Create and save routing information
+  RoutingInfo routingInfo;
+  routingInfo.gatewayIdx = contextInfo.sgwIdx;
+  routingInfo.enbIdx = contextInfo.enbIdx;
+  routingInfo.path = FindShortestPath (routingInfo.gatewayIdx, 
+                                       routingInfo.enbIdx); 
+  routingInfo.app = app;
+  routingInfo.gatewayAddr = contextInfo.sgwAddr;
+  routingInfo.enbAddr = contextInfo.enbAddr;
+  routingInfo.teid = teid;
+ 
+  // Check for GBR bearer resources
+  if (bearer.IsGbr ())
+    {
+      DataRate downlinkGbr (bearer.gbrQosInfo.gbrDl);
+      DataRate uplinkGbr (bearer.gbrQosInfo.gbrUl);
+      DataRate reserve = std::max (downlinkGbr, uplinkGbr);
+      NS_LOG_DEBUG ("Bearer " << teid << " requesting " << reserve);
+      
+      DataRate bandwidth = GetAvailableBandwidth (routingInfo.gatewayIdx, 
+                                                  routingInfo.enbIdx, 
+                                                  routingInfo.path);
+      NS_LOG_DEBUG ("Bandwidth from " << routingInfo.gatewayIdx << 
+                    " to " << routingInfo.enbIdx << ": " << bandwidth);
+      
+      if (bandwidth >= reserve)
+        {
+          ReserveBandwidth (routingInfo.gatewayIdx, routingInfo.enbIdx, 
+                            routingInfo.path, reserve);
+          routingInfo.reserved = reserve;
+        }
+      else 
+        {
+          NS_LOG_WARN ("Not enougth resources for bearer: " << reserve <<
+                       "in direction " << routingInfo.path);
+          
+          // Inverting routing direction and looking for available resources
+          Routing newDir = InvertRoutingDirection (routingInfo.path);
+          bandwidth = GetAvailableBandwidth (routingInfo.gatewayIdx, 
+                                             routingInfo.enbIdx, 
+                                             newDir);
+          if (bandwidth >= reserve)
+            {
+              routingInfo.path = newDir;
+              ReserveBandwidth (routingInfo.gatewayIdx, routingInfo.enbIdx, 
+                               routingInfo.path, reserve);
+              routingInfo.reserved = reserve;
+            }
+          else
+            {
+              NS_FATAL_ERROR ("Not enought resources in any direction.");
+            }
+        }
+    }
+  
+  SaveTeidRouting (routingInfo);
+  ConfigureRoutingPath (teid);
 }
 
 void
@@ -189,11 +197,34 @@ RingController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
       oxm_match_lookup (OXM_OF_IN_PORT, (ofl_match*)msg->match);
   memcpy (&inPort, inPortTlv->value, OXM_LENGTH (OXM_OF_IN_PORT));
 
-  // Testing... let's always send the packet in counterclockwise direction
+  // Creating group action.
   ofl_action_group *action = 
       (ofl_action_group*)xmalloc (sizeof (ofl_action_group));
   action->header.type = OFPAT_GROUP;
-  action->group_id = 2;
+  action->group_id = 1;
+
+  // Let's check for existing routing path 
+  if (HasTeidRoutingInfo (teid))
+    {
+      RoutingInfo rInfo = GetTeidRoutingInfo (teid);
+      ContextInfo cInfo = GetContextFromTeid (teid);
+      Ipv4Address dest = 
+          ExtractIpv4Address (OXM_OF_IPV4_DST, (ofl_match*)msg->match);
+      if (dest.IsEqual (cInfo.enbAddr))
+        {
+          // Downlink packet. Send in path direction
+          action->group_id = (int)rInfo.path;
+        }
+      else if (dest.IsEqual (cInfo.sgwAddr))
+        {
+          Routing invert = InvertRoutingDirection (rInfo.path);
+          action->group_id = (int) invert;
+        }
+    }
+  else
+    {
+      // FIXME Flood??? Discard???
+    }
 
   // Create the OpenFlow PacketOut message
   ofl_msg_packet_out reply;
@@ -219,7 +250,6 @@ RingController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
   return 0;
 }
 
-
 RingController::Routing
 RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)
 {
@@ -237,6 +267,14 @@ RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)
   return (clockwiseDistance <= maxHops) ? 
       RingController::CLOCK : 
       RingController::COUNTERCLOCK;
+}
+
+RingController::Routing 
+RingController::InvertRoutingDirection (Routing original)
+{
+  return original == RingController::CLOCK ? 
+                     RingController::COUNTERCLOCK : 
+                     RingController::CLOCK; 
 }
 
 DataRate 
@@ -357,6 +395,8 @@ RingController::HasTeidRoutingInfo (uint32_t teid)
 bool 
 RingController::ConfigureRoutingPath (uint32_t teid)
 {
+  static int priority = 100;
+  
   NS_LOG_FUNCTION (this << teid);
 
   TeidRouting_t::iterator ret;
@@ -367,10 +407,7 @@ RingController::ConfigureRoutingPath (uint32_t teid)
     }
   RoutingInfo info = ret->second;
  
-  static int priority = 100;
-
-  // Configuring downlink routing
-  {
+  { // Configuring downlink routing
     std::ostringstream cmdDl;
     cmdDl << "flow-mod cmd=add,table=1,prio=" << priority++ << 
              " eth_type=0x800,ip_proto=17,udp_src=2152," << 
@@ -393,12 +430,10 @@ RingController::ConfigureRoutingPath (uint32_t teid)
       }
   }
   
-  // Configuring uplink routing
-  {
+  { // Configuring uplink routing
+    
     // Inverting routing direction
-    Routing direction = info.path != RingController::CLOCK ? 
-                        RingController::CLOCK : 
-                        RingController::COUNTERCLOCK; 
+    Routing direction = InvertRoutingDirection (info.path); 
     
     std::ostringstream cmdUl;
     cmdUl << "flow-mod cmd=add,table=1,prio=" << priority++ <<

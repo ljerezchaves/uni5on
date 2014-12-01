@@ -183,7 +183,7 @@ RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   else  
     {
       switchIdx = 1 + ((counter - 1) % (m_nodes - 1));
-      
+      switchIdx = 4;
       // This is an eNB node
       RegisterNodeAtSwitch (switchIdx, node);
     }
