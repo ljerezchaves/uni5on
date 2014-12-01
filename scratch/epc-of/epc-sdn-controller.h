@@ -174,13 +174,6 @@ protected:
    */
   ConnectionInfo* GetConnectionInfo (uint16_t sw1, uint16_t sw2);
   
-//   /**
-//    * Get the application source and destiation nodes.
-//    * \param app The application pointer.
-//    * \return The pair of endpoint nodes.
-//    */
-//   AppEndpoint_t GetAppEndpoint (Ptr<Application> app);
-
   /**
    * Get the OFSwitch13NetDevice of a specific switch.
    * \param index The switch index.

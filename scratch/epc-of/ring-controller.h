@@ -53,7 +53,7 @@ public:
     Ipv4Address gatewayAddr;//!< Gateway IPv4 address
     uint16_t enbIdx;        //!< eNB switch index
     Ipv4Address enbAddr;    //!< eNB IPv4 address
-    Routing path;           //!< Routing path (from gateway to eNB)
+    Routing path;           //!< Downlink routing path (from gateway to eNB)
     uint32_t teid;          //!< GTP tunnel TEID
     DataRate reserved;      //!< GBR bandwitdh
     Ptr<Application> app;   //!< Traffic source application

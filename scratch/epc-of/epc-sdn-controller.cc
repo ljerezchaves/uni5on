@@ -51,7 +51,6 @@ EpcSdnController::DoDispose ()
   m_contexts.clear ();
 
 //  m_createdBearers.clear ();
-//  m_appEndpoints.clear ();
 //  m_imsiSwitch.clear ();
 //  m_teidEndpoints.clear ();
 }
@@ -187,20 +186,6 @@ EpcSdnController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
     }
   NS_FATAL_ERROR ("No connection information available.");
 }
-
-// std::pair<Ptr<Node>, Ptr<Node> > 
-// EpcSdnController::GetAppEndpoint (Ptr<Application> app)
-// {
-//   AppEndpoint_t ret;
-//   AppMap_t::iterator it = m_appEndpoints.find (app);
-//   if (it == m_appEndpoints.end ())
-//     {
-//       NS_LOG_ERROR ("No application information available.");
-//       return ret;
-//     }
-//   ret = it->second;
-//   return ret;
-// }
 
 Ptr<OFSwitch13NetDevice> 
 EpcSdnController::GetSwitchDevice (uint16_t index)
