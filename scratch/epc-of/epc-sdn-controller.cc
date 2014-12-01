@@ -146,22 +146,6 @@ EpcSdnController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   m_contexts.push_back (info);
 }
 
-// void 
-// EpcSdnController::NotifyNewApp (Ptr<Application> app, Ptr<Node> source, 
-//                                 Ptr<Node> destination)
-// {
-//   AppEndpoint_t endpoint (source, destination);
-//   std::pair <Ptr<Application>, AppEndpoint_t> entry (app, endpoint);
-//   std::pair <AppMap_t::iterator, bool> ret;
-//   ret = m_appEndpoints.insert (entry);
-//   if (ret.second == false)
-//     {
-//       NS_FATAL_ERROR ("Error saving application endpoints.");
-//     }
-//   NS_LOG_DEBUG ("New app entry: " << app << " from: " << source << 
-//                 " to " << destination);
-// }
-
 void 
 EpcSdnController::NotifyAppStart (Ptr<Application> app)
 {

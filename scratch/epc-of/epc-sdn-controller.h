@@ -129,16 +129,6 @@ public:
   
   // virtual void NotifyContextModified ();
 
-//  /**
-//   * Notify this controller of a new application configured to send traffic
-//   * from source to destination node.
-//   * \param app The application pointer.
-//   * \param source The source node, generating the traffic.
-//   * \param destination The destination node, consuming the traffic.
-//   */ 
-//  virtual void 
-//  NotifyNewApp (Ptr<Application> app, Ptr<Node> source, Ptr<Node> destination);
-
   /**
    * Notify this controller of a application starting sending traffic over EPC
    * OpenFlow network. This method expects that this application has a
