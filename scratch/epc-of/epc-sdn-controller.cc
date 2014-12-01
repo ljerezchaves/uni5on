@@ -208,12 +208,6 @@ EpcSdnController::GetSwitchIdxFromIp (Ipv4Address addr)
 }
 
 // uint16_t 
-// EpcSdnController::GetSwitchIdxForCellId (uint16_t cellId)
-// {
-//   return m_ofNetwork->GetSwitchIdxForCellId (cellId);
-// }
-// 
-// uint16_t 
 // EpcSdnController::GetSwitchIdxForImsi (uint64_t imsi)
 // {
 //   ImsiMap_t::iterator ret;

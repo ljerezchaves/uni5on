@@ -184,13 +184,6 @@ protected:
   uint16_t GetSwitchIdxFromIp (Ipv4Address addr);
 
 //  /**
-//   * Retrieve the switch index for a cell ID
-//   * \param cellId The eNB cell ID .
-//   * \return The switch index in m_ofSwitches.
-//   */
-//  uint16_t GetSwitchIdxForCellId (uint16_t cellId);
-//
-//  /**
 //   * Retrieve the switch index for an UE IMSI
 //   * \param imsi The UE IMSI..
 //   * \return The switch index in m_ofSwitches.

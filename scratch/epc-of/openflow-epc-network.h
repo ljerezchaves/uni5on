@@ -181,13 +181,6 @@ protected:
    */
   uint16_t GetSwitchIdxForNode (Ptr<Node> node);
 
-//  /**
-//   * Retrieve the switch index for a cell ID
-//   * \param cellId The eNB cell ID .
-//   * \return The switch index in m_ofSwitches.
-//   */
-//  uint16_t GetSwitchIdxForCellId (uint16_t cellId);
-
   /**
    * Retrieve the switch index at which the gateway is connected.
    * \return The switch index in m_ofSwitches.
@@ -206,12 +199,7 @@ private:
 
   /** Map saving Node / Switch indexes. */
   typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;  
-
-//  /** Map saving CellId / Switch indexes. */
-//  typedef std::map<uint16_t,uint16_t> CellIdSwitchMap_t; 
-  
   NodeSwitchMap_t     m_nodeSwitchMap;    //!< Registered nodes per switch idx.
-//  CellIdSwitchMap_t   m_cellIdSwitchMap;  //!< CellIds per switch index.
 };
 
 };  // namespace ns3
