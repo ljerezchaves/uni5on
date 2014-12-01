@@ -153,12 +153,14 @@ public:
   /**
    * Callback signature for create session request message.
    * \param uint64_t The UE IMSI.
+   * \param Ipv4Address eNB IPv4 address.
+   * \param Ipv4Address SgwPgw IPv4 address.
    * \param uint16_t The eNB Cell ID.
    * \param std::list<EpcS11SapSgw::BearerContextCreated> List of bearers
    * context created.
    */
-  typedef Callback<void, uint64_t, uint16_t, std::list<EpcS11SapMme::BearerContextCreated> > 
-      CreateSessionRequestCallback_t;
+  typedef Callback<void, uint64_t, uint16_t, Ipv4Address, Ipv4Address,
+      std::list<EpcS11SapMme::BearerContextCreated> > CreateSessionRequestCallback_t;
 
   /**
    * Callback used to notify the OpenFlow controller with the list of bearers

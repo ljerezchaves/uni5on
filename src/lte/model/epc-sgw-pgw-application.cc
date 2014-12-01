@@ -264,6 +264,7 @@ EpcSgwPgwApplication::DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequest
   std::map<uint16_t, EnbInfo>::iterator enbit = m_enbInfoByCellId.find (cellId);
   NS_ASSERT_MSG (enbit != m_enbInfoByCellId.end (), "unknown CellId " << cellId); 
   Ipv4Address enbAddr = enbit->second.enbAddr;
+  Ipv4Address sgwAddr = enbit->second.sgwAddr;
   ueit->second->SetEnbAddr (enbAddr);
 
   EpcS11SapMme::CreateSessionResponseMessage res;
@@ -282,7 +283,7 @@ EpcSgwPgwApplication::DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequest
 
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.teid = teid;
-      bearerContext.sgwFteid.address = enbit->second.sgwAddr;
+      bearerContext.sgwFteid.address = sgwAddr;
       bearerContext.epsBearerId =  bit->epsBearerId; 
       bearerContext.bearerLevelQos = bit->bearerLevelQos; 
       bearerContext.tft = bit->tft;
@@ -290,7 +291,7 @@ EpcSgwPgwApplication::DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequest
     }
   if (!m_createSessionCallback.IsNull ())
     {
-      m_createSessionCallback (req.imsi, req.uli.gci, res.bearerContextsCreated);
+      m_createSessionCallback (req.imsi, cellId, enbAddr, sgwAddr, res.bearerContextsCreated);
     }
   m_s11SapMme->CreateSessionResponse (res);
   
