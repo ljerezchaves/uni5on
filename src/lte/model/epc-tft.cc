@@ -30,6 +30,8 @@ namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("EpcTft");
 
+NS_OBJECT_ENSURE_REGISTERED (EpcTft);
+
 std::ostream& operator<< (std::ostream& os, EpcTft::Direction& d)
 {
  switch (d)
@@ -140,7 +142,7 @@ EpcTft::PacketFilter::Matches (Direction d,
 Ptr<EpcTft> 
 EpcTft::Default ()
 {
-  Ptr<EpcTft> tft = Create<EpcTft> ();
+  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter defaultPacketFilter;
   tft->Add (defaultPacketFilter);
   return tft;
@@ -151,6 +153,15 @@ EpcTft::EpcTft ()
   : m_numFilters (0)
 {
   NS_LOG_FUNCTION (this);
+}
+
+TypeId 
+EpcTft::GetTypeId (void) 
+{
+  static TypeId tid = TypeId ("ns3::EpcTft") 
+    .SetParent<Object> ()
+  ;
+  return tid; 
 }
 
 uint8_t 

@@ -25,6 +25,7 @@
 
 #include <ns3/simple-ref-count.h>
 #include <ns3/ipv4-address.h>
+#include <ns3/object.h>
 
 #include <list>
 
@@ -37,7 +38,7 @@ namespace ns3 {
  * which is the set of all packet filters associated with an EPS bearer. 
  * 
  */
-class EpcTft : public SimpleRefCount<EpcTft>
+class EpcTft : public Object
 {
 
 public:
@@ -120,6 +121,12 @@ public:
   
   EpcTft ();
   
+  /**
+   * Register this type.
+   * \return The object TypeId.
+   */
+  static TypeId GetTypeId (void);
+
 
   /** 
    * add a PacketFilter to the Traffic Flow Template
