@@ -42,6 +42,7 @@ public:
   void SetAttribute (std::string name, const AttributeValue &value);
 
   ApplicationContainer Install (NodeContainer c);
+  Ptr<Application>     Install (Ptr<Node> n);
 private:
   ObjectFactory m_factory;
 };

@@ -62,4 +62,12 @@ VoipClientHelper::Install (NodeContainer c)
   return apps;
 }
 
+Ptr<Application>
+VoipClientHelper::Install (Ptr<Node> n)
+{
+  Ptr<VoipClient> client = m_factory.Create<VoipClient> ();
+  n->AddApplication (client);
+  return client;
+}
+
 } // namespace ns3

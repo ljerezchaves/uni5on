@@ -234,14 +234,12 @@ public:
   /**
    * Create OnOffUdpTraceClientHelper which will make life easier for people
    * trying to set up simulations with onoff-udp-client-server.
-   *
    */
   OnOffUdpTraceClientHelper ();
 
   /**
    * Create OnOffUdpTraceClientHelper which will make life easier for people
    * trying to set up simulations with onoff-udp-client-server.
-   *
    * \param ip The IP address of the remote UDP server
    * \param port The port number of the remote UDP server
    * \param filename the file from which packet traces will be loaded
@@ -250,7 +248,6 @@ public:
   /**
    * Create OnOffUdpTraceClientHelper which will make life easier for people
    * trying to set up simulations with onoff-udp-client-server.
-   *
    * \param ip The IPv4 address of the remote UDP server
    * \param port The port number of the remote UDP server
    * \param filename the file from which packet traces will be loaded
@@ -259,7 +256,6 @@ public:
   /**
    * Create OnOffUdpTraceClientHelper which will make life easier for people
    * trying to set up simulations with onoff-udp-client-server.
-   *
    * \param ip The IPv6 address of the remote UDP server
    * \param port The port number of the remote UDP server
    * \param filename the file from which packet traces will be loaded
@@ -267,22 +263,27 @@ public:
   OnOffUdpTraceClientHelper (Ipv6Address ip, uint16_t port, std::string filename);
 
   /**
-    * Record an attribute to be set in each Application after it is is created.
-    *
-    * \param name the name of the attribute to set
-    * \param value the value of the attribute to set
-    */
+   * Record an attribute to be set in each Application after it is is created.
+   * \param name the name of the attribute to set
+   * \param value the value of the attribute to set
+   */
   void SetAttribute (std::string name, const AttributeValue &value);
 
   /**
-    * \param c the nodes
-    *
-    * Create one OnOff UDP trace client application on each of the input
-    * nodes.
-    *
-    * \returns the applications created, one application per input node.
-    */
+   * Create one OnOff UDP trace client application on each of the input
+   * nodes.
+   * \param c the nodes
+   * \returns the applications created, one application per input node.
+   */
   ApplicationContainer Install (NodeContainer c);
+
+  /**
+   * Create one OnOff UDP trace client application on node n.
+   * \param n the node
+   * \returns the applications created.
+   */
+  Ptr<Application>     Install (Ptr<Node> n);
+
 
 private:
   ObjectFactory m_factory; //!< Object factory.

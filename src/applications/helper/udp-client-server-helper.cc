@@ -206,4 +206,12 @@ OnOffUdpTraceClientHelper::Install (NodeContainer c)
   return apps;
 }
 
+Ptr<Application>
+OnOffUdpTraceClientHelper::Install (Ptr<Node> n)
+{
+  Ptr<OnOffUdpTraceClient> client = m_factory.Create<OnOffUdpTraceClient> ();
+  n->AddApplication (client);
+  return client;
+}
+
 } // namespace ns3
