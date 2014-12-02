@@ -239,17 +239,6 @@ protected:
   HandlePacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, uint32_t xid);
 
   /**
-   * Handle flow removed messages sent from switch to this controller. 
-   * \param msg The flow removed message.
-   * \param swtch The switch information.
-   * \param xid Transaction id.
-   * \return 0 if everything's ok, otherwise an error number.
-   */
-  virtual ofl_err 
-  HandleFlowRemoved (ofl_msg_flow_removed *msg, SwitchInfo swtch, 
-                     uint32_t xid);
-
-  /**
    * Handle packet-in messages sent from switch with unknown TEID routing.
    * \param msg The packet-in message.
    * \param swtch The switch information.
@@ -269,14 +258,10 @@ protected:
    */
   Ipv4Address ExtractIpv4Address (uint32_t oxm_of, ofl_match* match);
 
+  // Inherited from OFSwitch13Controller
+  void ConnectionStarted (SwitchInfo swtch);
+
 private:
-  /**
-   * Callback fired when the switch / controller connection is successfully
-   * established. This method will configure the switch, install table-miss
-   * entry and execute all dpctl scheduled commands for this switch.
-   * \param swtch The switch information.
-   */
-  void NotifyConnectionStarted (SwitchInfo swtch);
 
   /**
    * Handle packet-in messages sent from switch with arp message.

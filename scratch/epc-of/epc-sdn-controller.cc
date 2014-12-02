@@ -29,8 +29,6 @@ NS_OBJECT_ENSURE_REGISTERED (EpcSdnController);
 EpcSdnController::EpcSdnController ()
 {
   NS_LOG_FUNCTION (this);
-  SetConnectionCallback (
-      MakeCallback (&EpcSdnController::NotifyConnectionStarted, this));
 }
 
 EpcSdnController::~EpcSdnController ()
@@ -120,7 +118,8 @@ EpcSdnController::RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId,
 
 void 
 EpcSdnController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
-                                           Ipv4Address enbAddr, Ipv4Address sgwAddr,
+                                           Ipv4Address enbAddr, 
+                                           Ipv4Address sgwAddr,
                                            ContextBearers_t bearerContextList)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr);
@@ -287,7 +286,7 @@ EpcSdnController::HandlePacketIn (ofl_msg_packet_in *msg,
   NS_LOG_FUNCTION (swtch.ipv4 << xid);
 
   char *m = ofl_structs_match_to_string ((ofl_match_header*)msg->match, NULL);
-  // NS_LOG_DEBUG ("Packet in match: " << m);
+  NS_LOG_DEBUG ("Packet in match: " << m);
   free (m);
 
   enum ofp_packet_in_reason reason = msg->reason;
@@ -329,18 +328,6 @@ EpcSdnController::HandlePacketIn (ofl_msg_packet_in *msg,
 }
 
 ofl_err
-EpcSdnController::HandleFlowRemoved (ofl_msg_flow_removed *msg, 
-                                     SwitchInfo swtch, uint32_t xid)
-{
-  NS_LOG_FUNCTION (swtch.ipv4 << xid);
-  NS_LOG_DEBUG ( "Flow removed.");
-
-  // All handlers must free the message when everything is ok
-  ofl_msg_free_flow_removed (msg, true, NULL);
-  return 0;
-}
-
-ofl_err
 EpcSdnController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, 
                                           SwitchInfo swtch, uint32_t xid, 
                                           uint32_t teid)
@@ -374,7 +361,7 @@ EpcSdnController::ExtractIpv4Address (uint32_t oxm_of, ofl_match* match)
 }
 
 void
-EpcSdnController::NotifyConnectionStarted (SwitchInfo swtch)
+EpcSdnController::ConnectionStarted (SwitchInfo swtch)
 {
   NS_LOG_FUNCTION (this << swtch.ipv4);
   
@@ -424,8 +411,8 @@ EpcSdnController::HandleArpPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch,
       
       // Get target MAC address from ARP table
       Mac48Address dstMac = ArpLookup (dstIp);
-      NS_LOG_UNCOND ("Got ARP request for IP " << dstIp << 
-                     ", resolved to " << dstMac);
+      NS_LOG_DEBUG ("Got ARP request for IP " << dstIp << 
+                    ", resolved to " << dstMac);
 
       // Get source IP address
       Ipv4Address srcIp = 

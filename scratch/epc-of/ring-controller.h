@@ -36,24 +36,27 @@ namespace ns3 {
 class RingController : public EpcSdnController
 {
 public:
-  /** Indicates the direction that the traffic should be routed in the ring in
-   * respect to source node. */
-  enum Routing {
+  /** 
+   * Indicates the direction that the traffic should be routed in the ring in
+   * respect to source node. 
+   */
+  enum RoutingPath {
     CLOCK = 1,
     COUNTERCLOCK = 2
   };
 
   /**
    * Metadata associated to a routing path between two any switches in the
-   * OpenFlow network.
+   * OpenFlow ring network.
    */
   struct RoutingInfo
   {
-    uint16_t gatewayIdx;    //!< Gateway switch index
-    Ipv4Address gatewayAddr;//!< Gateway IPv4 address
+    uint16_t sgwIdx;        //!< Gateway switch index
     uint16_t enbIdx;        //!< eNB switch index
+    Ipv4Address sgwAddr;    //!< Gateway IPv4 address
     Ipv4Address enbAddr;    //!< eNB IPv4 address
-    Routing path;           //!< Downlink routing path (from gateway to eNB)
+    RoutingPath downPath;   //!< Downlink routing path (from gateway to eNB)
+    RoutingPath upPath;     //!< Downlink routing path (from gateway to eNB)
     uint32_t teid;          //!< GTP tunnel TEID
     DataRate reserved;      //!< GBR bandwitdh
     Ptr<Application> app;   //!< Traffic source application
@@ -81,6 +84,10 @@ protected:
   ofl_err HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, 
                                   uint32_t xid, uint32_t teid);
 
+  // Inherited from OFSwitch13Controller
+  ofl_err HandleFlowRemoved (ofl_msg_flow_removed *msg, SwitchInfo swtch, 
+                             uint32_t xid);
+
 private:
   /**
    * Look for the routing path between srcSwitchIdx and dstSwitchIdx with
@@ -89,14 +96,14 @@ private:
    * \param dstSwitchIdx Destination switch index.
    * \return The routing path.
    */
-  Routing FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx);
+  RoutingPath FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx);
 
   /** 
    * Invert routing direction.
    * \param original The original downlink routing path
    * \return The reversed routing path.
    */
-  Routing InvertRoutingDirection (Routing original);
+  RoutingPath InvertRoutingPath (RoutingPath original);
 
   /**
    * Look for available bandwidth in routingPath from source to destination
@@ -107,7 +114,7 @@ private:
    * \return The bandwidth for this datapath.
    */
   DataRate GetAvailableBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx, 
-                                  Routing routingPath);
+                                  RoutingPath routingPath);
 
   /**
    * Reserve the bandwidth for each link between source and destination
@@ -120,7 +127,7 @@ private:
    * \return True if success, false otherwise;
    */
   bool ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx, 
-                         Routing routingPath, DataRate bandwidth);
+                         RoutingPath routingPath, DataRate bandwidth);
 
   /**
    * Release the bandwidth for each link between source and destination
@@ -133,7 +140,7 @@ private:
    * \return True if success, false otherwise;
    */
   bool ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx, 
-                         Routing routingPath, DataRate bandwidth);
+                         RoutingPath routingPath, DataRate bandwidth);
 
   /**
    * Identify the next switch index base on routing path.
@@ -141,7 +148,7 @@ private:
    * \param path The routing path.
    * \return The next switch index.
    */ 
-  inline uint16_t NextSwitchIndex (uint16_t current, Routing path);
+  inline uint16_t NextSwitchIndex (uint16_t current, RoutingPath path);
 
   /**
    * Using an OpenFlow Multipart OFPMP_FLOW message, query the switches for
@@ -153,10 +160,10 @@ private:
   DataRate GetTunnelAverageTraffic (uint32_t teid);
 
   /**
-   * Save the RoutingInfo metadata for further usage.
-   * \param info The routing information to save.
+   * Save the RoutingInfo metadata for further usage and reserve the bandwith.
+   * \param rInfo The routing information to save.
    */
-  void SaveTeidRouting (RoutingInfo info);
+  void SaveTeidRoutingInfo (RoutingInfo rInfo);
 
   /**
    * Retrieve stored information for a specific GTP tunnel
@@ -171,6 +178,12 @@ private:
    * \return True if routing info present, false otherwise.
    */ 
   bool HasTeidRoutingInfo (uint32_t teid);
+
+  /**
+   * Remove the RoutingInfo metadata and release the bandwitdh.
+   * \param teid The GTP tunnel ID.
+   */
+  void DeleteTeidRoutingInfo (uint32_t teid);
 
   /**
    * Configure the switches with OpenFlow commands for teid routing.

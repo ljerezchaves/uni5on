@@ -109,21 +109,19 @@ main (int argc, char *argv[])
       LogComponentEnable ("OpenFlowEpcExperiment", LOG_LEVEL_INFO);
       
       // Just for warnings and errors
-      LogComponentEnable ("OFSwitch13NetDevice", LOG_LEVEL_DEBUG);
+      LogComponentEnable ("OFSwitch13NetDevice", LOG_LEVEL_WARN);
       LogComponentEnable ("OFSwitch13Interface", LOG_LEVEL_WARN);
       LogComponentEnable ("OFSwitch13Helper", LOG_LEVEL_WARN);
       LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_WARN);
-      LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_ALL);
-      LogComponentEnable ("RingOpenFlowNetwork", LOG_LEVEL_ALL);
+      LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
+      LogComponentEnable ("RingOpenFlowNetwork", LOG_LEVEL_WARN);
 
-      LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_DEBUG);
-      LogComponentEnable ("EpcSdnController", LOG_LEVEL_ALL);
-      LogComponentEnable ("RingController", LOG_LEVEL_ALL);
+      LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_WARN);
+      LogComponentEnable ("EpcSdnController", LOG_LEVEL_WARN);
+      LogComponentEnable ("RingController", LOG_LEVEL_WARN);
       
-      // LogComponentEnable ("VoipClient", LOG_LEVEL_ALL);
-      // LogComponentEnable ("UdpServer", LOG_LEVEL_ALL);
-
-      // LogComponentEnable ("OnOffUdpTraceClient", LOG_LEVEL_ALL);
+      LogComponentEnable ("VoipClient", LOG_LOGIC);
+      LogComponentEnable ("OnOffUdpTraceClient", LOG_LOGIC);
     }
 
   /****************************************************************************

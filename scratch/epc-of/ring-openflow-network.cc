@@ -174,20 +174,16 @@ RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   
   if (counter == 0)
     {
-      switchIdx = 0;
-      
       // This is the SgwPgw node
-      RegisterNodeAtSwitch (switchIdx, node);
+      switchIdx = 0;
       RegisterGatewayAtSwitch (switchIdx);
     }
   else  
     {
       switchIdx = 1 + ((counter - 1) % (m_nodes - 1));
-      switchIdx = 4;
-      // This is an eNB node
-      RegisterNodeAtSwitch (switchIdx, node);
     }
   counter++;
+  RegisterNodeAtSwitch (switchIdx, node);
 
   Ptr<Node> swtchNode = m_ofSwitches.Get (switchIdx);
   Ptr<OFSwitch13NetDevice> swtchDev = GetSwitchDevice (switchIdx); 
