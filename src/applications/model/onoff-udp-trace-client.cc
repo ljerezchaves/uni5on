@@ -323,7 +323,7 @@ OnOffUdpTraceClient::ScheduleStartEvent ()
   NS_LOG_FUNCTION (this);
 
   Time offInterval = Seconds (m_offTime->GetValue ());
-  NS_LOG_LOGIC ("Video " << this << " will start at " << offInterval.GetSeconds ());
+  NS_LOG_LOGIC ("Video " << this << " will start in +" << offInterval.GetSeconds ());
   m_startStopEvent = Simulator::Schedule (offInterval, &OnOffUdpTraceClient::StartSending, this);
 }
 
@@ -334,7 +334,7 @@ OnOffUdpTraceClient::ScheduleStopEvent ()
   NS_LOG_FUNCTION (this);
 
   Time onInterval = Seconds (m_onTime->GetValue ());
-  NS_LOG_LOGIC ("Video " << this << " will stop at " << onInterval.GetSeconds ());
+  NS_LOG_LOGIC ("Video " << this << " will stop in +" << onInterval.GetSeconds ());
   m_startStopEvent = Simulator::Schedule (onInterval, &OnOffUdpTraceClient::StopSending, this);
 }
 
