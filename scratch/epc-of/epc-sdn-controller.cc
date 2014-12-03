@@ -41,9 +41,11 @@ EpcSdnController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
+  m_ipSwitchTable.clear ();
   m_arpTable.clear ();
   m_connections.clear ();
   m_contexts.clear ();
+  m_ofNetwork = 0;
 }
 
 TypeId 
