@@ -51,6 +51,7 @@ main (int argc, char *argv[])
   uint16_t  nRing = 5;
   double    simTime = 5;
   bool      verbose = 0;
+  bool      liblog = 0;
   bool      progress = 1;
   bool      video = 0;
   bool      voip = 0;
@@ -82,6 +83,7 @@ main (int argc, char *argv[])
   // Parsing Command Line parameter
   CommandLine cmd;
   cmd.AddValue ("verbose",  "Enable verbose output", verbose);
+  cmd.AddValue ("liblog",   "Enable ofsoftswitch log component", liblog);
   cmd.AddValue ("progress", "Enable simulation time progress", progress);
   cmd.AddValue ("simTime",  "Simulation time (s)", simTime);
   cmd.AddValue ("nEnbs",    "Number of eNBs", nEnbs);
@@ -98,12 +100,13 @@ main (int argc, char *argv[])
   cmd.AddValue ("dualUp",     "  dual config: uplink traffic", dualUp);
   cmd.Parse (argc, argv);
 
-  // Enabling log components
+  // Enabling progress feedback
   if (progress)
     {
       Simulator::Schedule (Seconds (0), &PrintCurrentTime);
     }
 
+  // Enablig log components
   if (verbose) 
     {
       LogComponentEnable ("OpenFlowEpcExperiment", LOG_LEVEL_INFO);
@@ -124,20 +127,19 @@ main (int argc, char *argv[])
       LogComponentEnable ("OnOffUdpTraceClient", LOG_LOGIC);
     }
 
-  /****************************************************************************
-   * Creating the scenario topology, setting up callbacks
-   */
+// ---------------------------------------------------- //
+// Creating the scenario topology, setting up callbacks //
+// ---------------------------------------------------- //
 
   // OpenFlow ring network (for EPC)
   Ptr<OpenFlowEpcNetwork> opfNetwork = CreateObject<RingOpenFlowNetwork> ();
   opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
-  opfNetwork->SetAttribute ("LinkDataRate", 
-                            DataRateValue (DataRate ("1000Kb/s")));
+  opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("1000Kb/s")));
 
   Ptr<EpcSdnController> controller = CreateObject<RingController> ();
   controller->SetOpenFlowNetwork (opfNetwork);
   opfNetwork->CreateTopology (controller);
- 
+
   // LTE EPC core (with callbacks setup)
   Ptr<OpenFlowEpcHelper> epcHelper = CreateObject<OpenFlowEpcHelper> ();
   epcHelper->SetS1uConnectCallback (
@@ -150,8 +152,7 @@ main (int argc, char *argv[])
       MakeCallback (&EpcSdnController::NotifyNewContextCreated, controller));
   
   // LTE radio access network
-  Ptr<LteSquaredGridNetwork> lteNetwork = 
-      CreateObject<LteSquaredGridNetwork> ();
+  Ptr<LteSquaredGridNetwork> lteNetwork = CreateObject<LteSquaredGridNetwork> ();
   lteNetwork->SetAttribute ("Enbs", UintegerValue (nEnbs));
   lteNetwork->SetAttribute ("Ues", UintegerValue (nUes));
   lteNetwork->CreateTopology (epcHelper);
@@ -162,11 +163,9 @@ main (int argc, char *argv[])
   Ptr<Node> webHost = webNetwork->CreateTopology (pgw);
 
 
-
-
-  /****************************************************************************
-   * Creating applications for traffic generation
-   */
+// -------------------------------------------- //
+// Creating applications for traffic generation //
+// -------------------------------------------- //
 
   NodeContainer ueNodes = lteNetwork->GetUeNodes ();
   NetDeviceContainer ueDevices = lteNetwork->GetUeDevices ();
@@ -178,7 +177,7 @@ main (int argc, char *argv[])
       SetPingTraffic (webHost, ueNodes);
     }
 
-  // HTTP traffic over dedicated Non-GBR EPS bearer (QCI 8) 
+  // HTTP traffic over default Non-GBR EPS bearer (QCI 9) 
   if (http) 
     {
       SetHttpTraffic (webHost, ueNodes, ueDevices, lteHelper);
@@ -203,9 +202,9 @@ main (int argc, char *argv[])
                                 dualFlows, dualUseUdp, dualUp, dualDown);
     }
 
-  /****************************************************************************
-   * Creating monitors and trace files
-   */
+// --------------------------------- //
+// Creating monitors and trace files //
+// --------------------------------- //
 
   // Install FlowMonitor
   FlowMonitorHelper flowmonHelper;
@@ -213,18 +212,19 @@ main (int argc, char *argv[])
   nodesFlowmon.Add (webHost);
   nodesFlowmon.Add (ueNodes.Get (0));
   flowmonHelper.Install (nodesFlowmon);
-
+  
   // Enable LTE and PCAP traces
-//  webNetwork->EnablePcap ("web");
-  // lteNetwork->EnableTraces ();
+  webNetwork->EnablePcap ("web");
   opfNetwork->EnableOpenFlowPcap ("openflow-channel");
-//  opfNetwork->EnableDataPcap ("ofn", true);
-//  epcHelper->EnablePcapS1u ("epc");
+  opfNetwork->EnableDataPcap ("ofn", true);
+  epcHelper->EnablePcapS1u ("epc");
   // epcHelper->EnablePcapX2 ("epc");
+  // lteNetwork->EnableTraces ();
 
-  if (verbose) 
+  // Enabling library log
+  if (liblog) 
     {
-      //opfNetwork->EnableDatapathLogs ();
+      opfNetwork->EnableDatapathLogs ();
     }
 
   NS_LOG_INFO ("Simulating...");
