@@ -60,6 +60,7 @@ public:
     uint32_t teid;          //!< GTP tunnel TEID
     DataRate reserved;      //!< GBR bandwitdh
     Ptr<Application> app;   //!< Traffic source application
+    int timeout;            //!< Flow idle timeout
   };
 
   RingController ();        //!< Default constructor
@@ -76,6 +77,9 @@ public:
 
   // Inherited from EpcSdnController
   void NotifyNewSwitchConnection (ConnectionInfo connInfo);
+  void NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
+                                Ipv4Address enbAddr, Ipv4Address sgwAddr, 
+                                ContextBearers_t bearerContextList);
   void NotifyAppStart (Ptr<Application> app);
   void CreateSpanningTree ();
 
@@ -190,7 +194,7 @@ private:
    * \param teid The GTP tunnel ID.
    * \return True if configuration succeeded, false otherwise.
    */
-  bool ConfigureRoutingPath (uint32_t teid);
+  bool ConfigureTeidRouting (uint32_t teid);
 
   /** Map saving TEID routing information */
   typedef std::map<uint32_t, RoutingInfo> TeidRouting_t;

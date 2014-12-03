@@ -219,15 +219,6 @@ protected:
   EpcS11SapMme::BearerContextCreated GetBearerFromTft (Ptr<EpcTft> tft);
 
   /**
-   * Save a Dpctl command to be executed just after the connection
-   * establishment between switch and controller. 
-   * \param textCmd The Dpctl command.
-   * \param device The Switch OFSwitch13NetDevice pointer.
-   */
-  void 
-  ScheduleCommand (Ptr<OFSwitch13NetDevice> device, const std::string textCmd);
-
-  /**
    * Handle packet-in messages sent from switch to this controller. Look for L2
    * switching information, update the structures and send a packet-out back.
    * \param msg The packet-in message.
@@ -292,8 +283,6 @@ private:
   Ptr<Packet> CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp, 
                               Mac48Address dstMac, Ipv4Address dstIp);
 
-  /** Multimap saving pair <pointer to device / dpctl command str> */
-  typedef std::multimap<Ptr<OFSwitch13NetDevice>, std::string> DevCmdMap_t; 
 
   /** Map saving pair <IPv4 address / MAC address> */
   typedef std::map<Ipv4Address, Mac48Address> IpMacMap_t;
@@ -310,7 +299,6 @@ private:
   /** List of context info */
   typedef std::vector<ContextInfo> ContextInfoList_t;
   
-  DevCmdMap_t       m_schedCommands;    //!< Scheduled commands for execution
   IpMacMap_t        m_arpTable;         //!< ARP resolution table
   IpSwitchMap_t     m_ipSwitchTable;    //!< IP / switch table
   ConnInfoMap_t     m_connections;      //!< Connections between switches.

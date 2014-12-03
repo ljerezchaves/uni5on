@@ -90,6 +90,12 @@ OpenFlowEpcNetwork::EnableOpenFlowPcap (std::string prefix)
   m_ofHelper.EnableOpenFlowPcap (prefix);
 }
 
+void 
+OpenFlowEpcNetwork::EnableDatapathLogs (std::string level)
+{
+  m_ofHelper.EnableDatapathLogs (level);
+}
+
 CsmaHelper
 OpenFlowEpcNetwork::GetCsmaHelper ()
 {

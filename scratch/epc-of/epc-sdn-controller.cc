@@ -40,7 +40,7 @@ void
 EpcSdnController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_schedCommands.clear ();
+
   m_arpTable.clear ();
   m_connections.clear ();
   m_contexts.clear ();
@@ -155,7 +155,7 @@ EpcSdnController::ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch,
   cmd << "flow-mod cmd=add,table=0,prio=40000" <<
          " eth_type=0x800,eth_dst=" << devMacAddr <<
          ",ip_dst=" << deviceIp << " apply:output=" << devicePort;
-  ScheduleCommand (swtch, cmd.str ());
+  DpctlCommand (swtch, cmd.str ());
 }
 
 void
@@ -270,28 +270,19 @@ EpcSdnController::GetBearerFromTft (Ptr<EpcTft> tft)
   NS_FATAL_ERROR ("Invalid tft.");
 }
 
-void
-EpcSdnController::ScheduleCommand (Ptr<OFSwitch13NetDevice> device, 
-                                   const std::string textCmd)
-{
-  NS_ASSERT (device);
-  std::pair<Ptr<OFSwitch13NetDevice>,std::string> entry (device, textCmd);
-  m_schedCommands.insert (entry);
-}
-
 ofl_err
 EpcSdnController::HandlePacketIn (ofl_msg_packet_in *msg, 
                                   SwitchInfo swtch, uint32_t xid)
 {
   NS_LOG_FUNCTION (swtch.ipv4 << xid);
 
-  char *m = ofl_structs_match_to_string ((ofl_match_header*)msg->match, NULL);
-  NS_LOG_DEBUG ("Packet in match: " << m);
-  free (m);
-
   enum ofp_packet_in_reason reason = msg->reason;
   if (reason == OFPR_NO_MATCH)
     {
+      char *m = ofl_structs_match_to_string ((ofl_match_header*)msg->match, NULL);
+      NS_LOG_DEBUG ("Packet in match: " << m);
+      free (m);
+
       // (Table #1 is used only for GTP TEID routing)
       uint8_t tableId = msg->table_id;
       if (tableId == 1)
@@ -375,15 +366,6 @@ EpcSdnController::ConnectionStarted (SwitchInfo swtch)
   // Handling GTP tunnels at table #1
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=2 eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152 goto:1");
   DpctlCommand (swtch, "flow-mod cmd=add,table=1,prio=0 apply:output=ctrl");  // TEID Table miss
-
-  // Executing any scheduled commands for this switch
-  std::pair <DevCmdMap_t::iterator, DevCmdMap_t::iterator> ret;
-  ret = m_schedCommands.equal_range (swtch.netdev);
-  for (DevCmdMap_t::iterator it = ret.first; it != ret.second; it++)
-    {
-      DpctlCommand (swtch, it->second);
-    }
-  m_schedCommands.erase (ret.first, ret.second);
 }
 
 ofl_err

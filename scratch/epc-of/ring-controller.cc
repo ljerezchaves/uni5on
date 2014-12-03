@@ -19,6 +19,7 @@
  */
 
 #include "ring-controller.h"
+#include <sstream>
 
 NS_LOG_COMPONENT_DEFINE ("RingController");
 
@@ -67,7 +68,7 @@ RingController::NotifyNewSwitchConnection (ConnectionInfo connInfo)
   std::ostringstream cmd1;
   cmd1 << "group-mod cmd=add,type=ind,group=" << RingController::CLOCK <<
           " weight=0,port=any,group=any output=" << connInfo.portNum1;
-  ScheduleCommand (connInfo.switchDev1, cmd1.str ());
+  DpctlCommand (connInfo.switchDev1, cmd1.str ());
                                    
   // Group #2 is used to send packets from the next switch to the current one
   // in counterclockwise direction. 
@@ -75,7 +76,45 @@ RingController::NotifyNewSwitchConnection (ConnectionInfo connInfo)
   cmd2 << "group-mod cmd=add,type=ind,group=" << 
           RingController::COUNTERCLOCK <<
           " weight=0,port=any,group=any output=" << connInfo.portNum2;
-  ScheduleCommand (connInfo.switchDev2, cmd2.str ());
+  DpctlCommand (connInfo.switchDev2, cmd2.str ());
+}
+
+void 
+RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
+                                         Ipv4Address enbAddr, 
+                                         Ipv4Address sgwAddr,
+                                         ContextBearers_t bearerContextList)
+{
+  NS_LOG_FUNCTION (this << imsi << cellId << enbAddr);
+  EpcSdnController::NotifyNewContextCreated (imsi, cellId, enbAddr, sgwAddr, 
+                                             bearerContextList);
+  
+  // Create and save routing information for default bearer
+  EpcS11SapMme::BearerContextCreated bearerContext;
+  bearerContext = bearerContextList.front ();
+  NS_ASSERT (bearerContext.epsBearerId == 1); // Assert for default bearer
+  uint32_t teid = bearerContext.sgwFteid.teid;
+  
+  if (HasTeidRoutingInfo (teid))
+    {
+      NS_FATAL_ERROR ("Routing path for " << teid << " already defined.");
+      return;
+    }
+
+  RoutingInfo rInfo;
+  rInfo.sgwIdx = GetSwitchIdxFromIp (sgwAddr);
+  rInfo.enbIdx = GetSwitchIdxFromIp (enbAddr);
+  rInfo.downPath = FindShortestPath (rInfo.sgwIdx, rInfo.enbIdx); 
+  rInfo.upPath = InvertRoutingPath (rInfo.downPath);
+  rInfo.app = NULL;   // No app for default bearer
+  rInfo.sgwAddr = sgwAddr;
+  rInfo.enbAddr = enbAddr;
+  rInfo.teid = teid;
+  rInfo.reserved = 0;
+  rInfo.timeout = 0;  // No timeout for default bearer
+
+  SaveTeidRoutingInfo (rInfo);
+  ConfigureTeidRouting (teid);
 }
 
 void 
@@ -144,10 +183,11 @@ RingController::NotifyAppStart (Ptr<Application> app)
               rInfo.downPath = InvertRoutingPath (rInfo.downPath);
             }
         }
+      rInfo.timeout = 10;   // 10 sec idle timeout
       rInfo.reserved = reserve;
     }
   SaveTeidRoutingInfo (rInfo);
-  ConfigureRoutingPath (teid);
+  ConfigureTeidRouting (teid);
 }
 
 void
@@ -167,14 +207,14 @@ RingController::CreateSpanningTree ()
       Mac48Address::ConvertFrom (cInfo->portDev1->GetAddress ());
   cmd1 << "port-mod port=" << cInfo->portNum1 << ",addr=" << 
            macAddr1 << ",conf=0x00000020,mask=0x00000020";
-  ScheduleCommand (cInfo->switchDev1, cmd1.str ());
+  DpctlCommand (cInfo->switchDev1, cmd1.str ());
 
   std::ostringstream cmd2;
   Mac48Address macAddr2 = 
       Mac48Address::ConvertFrom (cInfo->portDev2->GetAddress ());
   cmd2 << "port-mod port=" << cInfo->portNum2 << ",addr=" << 
            macAddr2 << ",conf=0x00000020,mask=0x00000020";
-  ScheduleCommand (cInfo->switchDev2, cmd2.str ());
+  DpctlCommand (cInfo->switchDev2, cmd2.str ());
 }
 
 ofl_err
@@ -428,27 +468,21 @@ RingController::DeleteTeidRoutingInfo (uint32_t teid)
 }
 
 bool 
-RingController::ConfigureRoutingPath (uint32_t teid)
+RingController::ConfigureTeidRouting (uint32_t teid)
 {
-  static int priority = 100;
-  const int timeout = 10;
-  
   NS_LOG_FUNCTION (this << teid);
+  
+  static int priority = 100;  // Flow mode priority
+  RoutingInfo rInfo = GetTeidRoutingInfo (teid);
+  char teidHexStr [9];
+  sprintf (teidHexStr, "0x%x", teid);
 
-  TeidRouting_t::iterator ret;
-  ret = m_routes.find (teid);
-  if (ret == m_routes.end ())
-    {
-      NS_FATAL_ERROR ("No routing information for teid " << teid);
-    }
-  RoutingInfo rInfo = ret->second;
- 
   { // Configuring downlink routing
     std::ostringstream cmdDl;
     cmdDl << "flow-mod cmd=add,table=1,flags=0x1" <<
-             ",cookie=0x" << teid <<
+             ",cookie=" << teidHexStr <<
              ",prio=" << priority++ <<
-             ",idle=" << timeout <<
+             ",idle=" << rInfo.timeout <<
              " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152" << 
              ",ip_src=" << rInfo.sgwAddr <<
              ",ip_dst=" << rInfo.enbAddr <<
@@ -472,9 +506,9 @@ RingController::ConfigureRoutingPath (uint32_t teid)
   { // Configuring uplink routing
     std::ostringstream cmdUl;
     cmdUl << "flow-mod cmd=add,table=1,flags=0x1" << 
-             ",cookie=0x" << teid <<
+             ",cookie=" << teidHexStr <<
              ",prio=" << priority++ <<
-             ",idle=" << timeout <<
+             ",idle=" << rInfo.timeout <<
              " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152" << 
              ",ip_src=" << rInfo.enbAddr <<
              ",ip_dst=" << rInfo.sgwAddr <<

@@ -117,8 +117,8 @@ main (int argc, char *argv[])
       LogComponentEnable ("RingOpenFlowNetwork", LOG_LEVEL_WARN);
 
       LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_WARN);
-      LogComponentEnable ("EpcSdnController", LOG_LEVEL_WARN);
-      LogComponentEnable ("RingController", LOG_LEVEL_WARN);
+      LogComponentEnable ("EpcSdnController", LOG_LEVEL_ALL);
+      LogComponentEnable ("RingController", LOG_LEVEL_ALL);
       
       LogComponentEnable ("VoipClient", LOG_LOGIC);
       LogComponentEnable ("OnOffUdpTraceClient", LOG_LOGIC);
@@ -132,7 +132,7 @@ main (int argc, char *argv[])
   Ptr<OpenFlowEpcNetwork> opfNetwork = CreateObject<RingOpenFlowNetwork> ();
   opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
   opfNetwork->SetAttribute ("LinkDataRate", 
-                            DataRateValue (DataRate ("300Kb/s")));
+                            DataRateValue (DataRate ("1000Kb/s")));
 
   Ptr<EpcSdnController> controller = CreateObject<RingController> ();
   controller->SetOpenFlowNetwork (opfNetwork);
@@ -160,6 +160,8 @@ main (int argc, char *argv[])
   Ptr<InternetNetwork> webNetwork = CreateObject<InternetNetwork> ();
   Ptr<Node> pgw = epcHelper->GetPgwNode ();
   Ptr<Node> webHost = webNetwork->CreateTopology (pgw);
+
+
 
 
   /****************************************************************************
@@ -213,12 +215,17 @@ main (int argc, char *argv[])
   flowmonHelper.Install (nodesFlowmon);
 
   // Enable LTE and PCAP traces
-  webNetwork->EnablePcap ("web");
+//  webNetwork->EnablePcap ("web");
   // lteNetwork->EnableTraces ();
   opfNetwork->EnableOpenFlowPcap ("openflow-channel");
-  opfNetwork->EnableDataPcap ("ofn", true);
-  epcHelper->EnablePcapS1u ("epc");
+//  opfNetwork->EnableDataPcap ("ofn", true);
+//  epcHelper->EnablePcapS1u ("epc");
   // epcHelper->EnablePcapX2 ("epc");
+
+  if (verbose) 
+    {
+      //opfNetwork->EnableDatapathLogs ();
+    }
 
   NS_LOG_INFO ("Simulating...");
   Simulator::Stop (Seconds (simTime));

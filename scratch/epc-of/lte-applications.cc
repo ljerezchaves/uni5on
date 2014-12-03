@@ -49,7 +49,7 @@ SetHttpTraffic (Ptr<Node> server, NodeContainer clients,
 {
   Ptr<Ipv4> serverIpv4 = server->GetObject<Ipv4> ();
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
-  Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
+//  Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
 
   ApplicationContainer serverApps, clientApps;
   for (uint32_t u = 0; u < clients.GetN (); u++, g_tcpHttpPort++)
@@ -59,42 +59,42 @@ SetHttpTraffic (Ptr<Node> server, NodeContainer clients,
       NS_ASSERT (clientDev->GetNode () == client);
 
       Ptr<Ipv4> clientIpv4 = client->GetObject<Ipv4> ();
-      Ipv4Address clientAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
-      Ipv4Mask clientMask = clientIpv4->GetAddress (1, 0).GetMask ();
+//      Ipv4Address clientAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
+//      Ipv4Mask clientMask = clientIpv4->GetAddress (1, 0).GetMask ();
       
-      // Traffic Flow Template
-      Ptr<EpcTft> tft = CreateObject<EpcTft> ();
+//      // Traffic Flow Template
+//      Ptr<EpcTft> tft = CreateObject<EpcTft> ();
 
       // HTTP server
       HttpServerHelper httpServer (g_tcpHttpPort);
       Ptr<Application> httpServerApp = httpServer.Install (server);
       serverApps.Add (httpServerApp);
-      httpServerApp->AggregateObject (tft);
-      httpServerApp->SetAttribute ("Direction", 
-                                   EnumValue (Application::BIDIRECTIONAL));
+//      httpServerApp->AggregateObject (tft);
+//      httpServerApp->SetAttribute ("Direction", 
+//                                   EnumValue (Application::BIDIRECTIONAL));
 
       // HTTP client
       HttpClientHelper httpClient (serverAddr, g_tcpHttpPort);
       Ptr<Application> httpClientApp = httpClient.Install (client);
       clientApps.Add (httpClientApp);
-      httpClientApp->AggregateObject (tft);
-      httpServerApp->SetAttribute ("Direction", 
-                                   EnumValue (Application::BIDIRECTIONAL));
+//      httpClientApp->AggregateObject (tft);
+//      httpServerApp->SetAttribute ("Direction", 
+//                                   EnumValue (Application::BIDIRECTIONAL));
 
-      // TFT Packet filter
-      EpcTft::PacketFilter filter;
-      filter.remoteAddress = serverAddr;
-      filter.remoteMask = serverMask;
-      filter.localAddress = clientAddr;
-      filter.localMask = clientMask;
-      filter.remotePortStart = g_tcpHttpPort;
-      filter.remotePortEnd = g_tcpHttpPort;
-      tft->Add (filter);
-
-      // Dedicated Non-GBR EPS bearer (QCI 8)
-      GbrQosInformation qos;
-      EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
-      lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
+//      // TFT Packet filter
+//      EpcTft::PacketFilter filter;
+//      filter.remoteAddress = serverAddr;
+//      filter.remoteMask = serverMask;
+//      filter.localAddress = clientAddr;
+//      filter.localMask = clientMask;
+//      filter.remotePortStart = g_tcpHttpPort;
+//      filter.remotePortEnd = g_tcpHttpPort;
+//      tft->Add (filter);
+//
+//      // Dedicated Non-GBR EPS bearer (QCI 8)
+//      GbrQosInformation qos;
+//      EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
+//      lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
   clientApps.Start (Seconds (1));
   serverApps.Start (Seconds (0));

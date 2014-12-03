@@ -34,25 +34,16 @@ namespace ns3 {
  */
 struct ConnectionInfo
 {
-  // Switch indexes
-  uint16_t switchIdx1;
-  uint16_t switchIdx2;
-
-  // Switch OpenFlow devices
-  Ptr<OFSwitch13NetDevice> switchDev1;
-  Ptr<OFSwitch13NetDevice> switchDev2;
-  
-  // Port Csma devices
-  Ptr<CsmaNetDevice> portDev1;
-  Ptr<CsmaNetDevice> portDev2;
-
-  // Port numbers
-  uint32_t portNum1;
-  uint32_t portNum2;
-  
-  // Link information
-  DataRate nominalDataRate;
-  DataRate availableDataRate;
+  uint16_t switchIdx1;                  //!< Switch index 1
+  uint16_t switchIdx2;                  //!< Switch index 2
+  Ptr<OFSwitch13NetDevice> switchDev1;  //!< Switch OpenFlow device 1
+  Ptr<OFSwitch13NetDevice> switchDev2;  //!< Switch OpenFlow device 2
+  Ptr<CsmaNetDevice> portDev1;          //!< OpenFlow port csma device 1
+  Ptr<CsmaNetDevice> portDev2;          //!< OpenFlow port csma device 1
+  uint32_t portNum1;                    //!< OpenFlow port number 1
+  uint32_t portNum2;                    //!< OpenFlow port number 2
+  DataRate nominalDataRate;             //!< Maximum nominal data rate
+  DataRate availableDataRate;           //!< Avaliable bandwitdth
 };
 
 /**
@@ -117,6 +108,12 @@ public:
    * \param prefix The file prefix.
    */
   void EnableOpenFlowPcap (std::string prefix);
+
+  /** 
+   * Enable internal ofsoftswitch13 logging.
+   * \param level tring representing library logging level.
+   */
+  void EnableDatapathLogs (std::string level = "all");
 
   /**
    * Set an attribute for ns3::OFSwitch13NetDevice
