@@ -235,7 +235,7 @@ main (int argc, char *argv[])
   flowmonHelper.SerializeToXmlFile ("FlowMonitorStats.xml", false, false);
  
   std::cout << "Block ratio: " 
-            << DynamicCast<RingController> (controller)->GetBlockRatio ();
+            << DynamicCast<RingController> (controller)->GetBlockRatio ()
             << std::endl;
 
   Simulator::Destroy ();
