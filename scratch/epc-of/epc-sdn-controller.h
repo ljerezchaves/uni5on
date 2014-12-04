@@ -119,12 +119,12 @@ public:
    * \param cellId The eNB CellID to which the IMSI UE is attached to.
    * \param enbAddr The eNB IPv4 address.
    * \param sgwAddr The SgwPgw IPv4 address.
-   * \param bearerContextList The list of bearers to be created.
+   * \param bearerList The list of context bearers created.
    */
   virtual void 
   NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
                            Ipv4Address enbAddr, Ipv4Address sgwAddr,
-                           ContextBearers_t bearerContextList);
+                           ContextBearers_t bearerList);
   
   // virtual void NotifyContextModified ();
 
@@ -171,18 +171,16 @@ protected:
   ConnectionInfo* GetConnectionInfo (uint16_t sw1, uint16_t sw2);
   
   /**
+   * \return Number of switches in the network.
+   */
+  uint16_t GetNSwitches ();
+
+  /**
    * Get the OFSwitch13NetDevice of a specific switch.
    * \param index The switch index.
    * \return The pointer to the switch OFSwitch13NetDevice.
    */
   Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
-
-  /**
-   * Retrieve the switch index for EPC entity attached to OpenFlow network.
-   * \param addr The eNB or SgwPgw address
-   * \return The switch index in m_ofSwitches.
-   */
-  uint16_t GetSwitchIdxFromIp (Ipv4Address addr);
 
   /**
    * Retrieve the switch index for the SgwPgw gateway
@@ -191,9 +189,11 @@ protected:
   uint16_t GetSwitchIdxForGateway ();
 
   /**
-   * \return Number of switches in the network.
+   * Retrieve the switch index for EPC entity attached to OpenFlow network.
+   * \param addr The eNB or SgwPgw address
+   * \return The switch index in m_ofSwitches.
    */
-  uint16_t GetNSwitches ();
+  uint16_t GetSwitchIdxFromIp (Ipv4Address addr);
 
   /**
    * Retrieve the LTE context information from the traffic flow templated
@@ -290,11 +290,11 @@ private:
   /** Map saving pair <IPv4 address / Switch index > */
   typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;
 
-  /** Key identifying a pair of switches */
-  typedef std::pair<uint16_t, uint16_t> ConnectionKey_t; 
+  /** A pair of switches index */
+  typedef std::pair<uint16_t, uint16_t> SwitchPair_t; 
   
   /** Map saving pair of switch indexes / connection information */
-  typedef std::map<ConnectionKey_t, ConnectionInfo> ConnInfoMap_t; 
+  typedef std::map<SwitchPair_t, ConnectionInfo> ConnInfoMap_t; 
 
   /** List of context info */
   typedef std::vector<ContextInfo> ContextInfoList_t;

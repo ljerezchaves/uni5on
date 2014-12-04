@@ -42,7 +42,15 @@ public:
    */
   enum RoutingPath {
     CLOCK = 1,
-    COUNTERCLOCK = 2
+    COUNTER = 2
+  };
+
+  /**
+   * Routing strategy used by this controller to find the paths in the ring.
+   */
+  enum RoutingStrategy {
+    HOPS = 0,
+    BAND = 1
   };
 
   /**
@@ -51,18 +59,28 @@ public:
    */
   struct RoutingInfo
   {
+    uint32_t teid;          //!< GTP tunnel TEID
+    
     uint16_t sgwIdx;        //!< Gateway switch index
     uint16_t enbIdx;        //!< eNB switch index
     Ipv4Address sgwAddr;    //!< Gateway IPv4 address
     Ipv4Address enbAddr;    //!< eNB IPv4 address
+    
     RoutingPath downPath;   //!< Downlink routing path (from gateway to eNB)
     RoutingPath upPath;     //!< Downlink routing path (from gateway to eNB)
-    uint32_t teid;          //!< GTP tunnel TEID
-    DataRate reserved;      //!< GBR bandwitdh
+    
+    DataRate gbr;           //!< GBR bandwitdh
     Ptr<Application> app;   //!< Traffic source application
+
+    int priority;           //!< Flow priority
     int timeout;            //!< Flow idle timeout
+    bool installed;         //!< Rule installed into switches
+    
+    //!< LTE bearer QoS information
+    EpcS11SapMme::BearerContextCreated bearer;           
   };
 
+  
   RingController ();        //!< Default constructor
   ~RingController ();       //!< Dummy destructor, see DoDipose
 
@@ -75,11 +93,16 @@ public:
   /** Destructor implementation */
   void DoDispose ();
 
+  /**
+   * \return The GBR bearer block ratio
+   */
+  double GetBlockRatio ();
+
   // Inherited from EpcSdnController
   void NotifyNewSwitchConnection (ConnectionInfo connInfo);
   void NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
                                 Ipv4Address enbAddr, Ipv4Address sgwAddr, 
-                                ContextBearers_t bearerContextList);
+                                ContextBearers_t bearerList);
   void NotifyAppStart (Ptr<Application> app);
   void CreateSpanningTree ();
 
@@ -91,8 +114,16 @@ protected:
   // Inherited from OFSwitch13Controller
   ofl_err HandleFlowRemoved (ofl_msg_flow_removed *msg, SwitchInfo swtch, 
                              uint32_t xid);
+  ofl_err HandleMultipartReply (ofl_msg_multipart_reply_header *msg, 
+                                SwitchInfo swtch, uint32_t xid);
 
 private:
+  /**
+   * Process the GBR resource allocation based on current strategy/
+   * \param rInfo The routing information to process.
+   */
+  void ProcessGbrRequest (RoutingInfo *rInfo);
+
   /**
    * Look for the routing path between srcSwitchIdx and dstSwitchIdx with
    * lowest number of hops.
@@ -123,28 +154,20 @@ private:
   /**
    * Reserve the bandwidth for each link between source and destination
    * switches in routing path. It modifies the ConnectionInfo
-   * structures saved by controller.  
-   * \param srcSwitchIdx Sourche switch index.
-   * \param dstSwitchIdx Destination switch index.
-   * \param routingPath The routing path.
-   * \param bandwidth The bandwidth to reserve.
+   * structures saved by controller.
+   * \param rInfo The routing information to reserve.
    * \return True if success, false otherwise;
    */
-  bool ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx, 
-                         RoutingPath routingPath, DataRate bandwidth);
+  bool ReserveBandwidth (const RoutingInfo *rInfo);
 
   /**
    * Release the bandwidth for each link between source and destination
    * switches in routing path. It modifies the ConnectionInfo
-   * structures saved by controller.  
-   * \param srcSwitchIdx Sourche switch index.
-   * \param dstSwitchIdx Destination switch index.
-   * \param routingPath The routing path.
-   * \param bandwidth The bandwidth to release.
+   * structures saved by controller.
+   * \param rInfo The routing information to release.
    * \return True if success, false otherwise;
    */
-  bool ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx, 
-                         RoutingPath routingPath, DataRate bandwidth);
+  bool ReleaseBandwidth (const RoutingInfo *rInfo);
 
   /**
    * Identify the next switch index base on routing path.
@@ -191,15 +214,22 @@ private:
 
   /**
    * Configure the switches with OpenFlow commands for teid routing.
-   * \param teid The GTP tunnel ID.
+   * \param rInfo The routing information to configure.
    * \return True if configuration succeeded, false otherwise.
    */
-  bool ConfigureTeidRouting (uint32_t teid);
+  bool ConfigureTeidRouting (RoutingInfo rInfo);
 
-  /** Map saving TEID routing information */
-  typedef std::map<uint32_t, RoutingInfo> TeidRouting_t;
+  /** Map saving pair <TEID / RoutingInfo> */
+  typedef std::map<uint32_t, RoutingInfo> TeidRoutingMap_t;
   
-  TeidRouting_t m_routes;       //!< Installed TEID routes.
+  TeidRoutingMap_t  m_routes;     //!< TEID routes.
+  RoutingStrategy   m_strategy;   //!< Routing strategy in use.
+
+  //!< Performance metrics
+  //\{
+  uint32_t          m_gbrBearers; //!< Total of requests for gbr bearers
+  uint32_t          m_gbrBlocks;  //!< Total of blocked gbr requests
+  //\}
 };
 
 

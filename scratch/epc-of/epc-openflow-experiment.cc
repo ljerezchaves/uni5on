@@ -120,11 +120,11 @@ main (int argc, char *argv[])
       LogComponentEnable ("RingOpenFlowNetwork", LOG_LEVEL_WARN);
 
       LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_WARN);
-      LogComponentEnable ("EpcSdnController", LOG_LEVEL_ALL);
-      LogComponentEnable ("RingController", LOG_LEVEL_ALL);
+      LogComponentEnable ("EpcSdnController", LOG_LEVEL_WARN);
+      LogComponentEnable ("RingController", LOG_LEVEL_WARN);
       
-      LogComponentEnable ("VoipClient", LOG_LOGIC);
-      LogComponentEnable ("OnOffUdpTraceClient", LOG_LOGIC);
+      //LogComponentEnable ("VoipClient", LOG_LOGIC);
+      //LogComponentEnable ("OnOffUdpTraceClient", LOG_LOGIC);
     }
 
 // ---------------------------------------------------- //
@@ -233,7 +233,10 @@ main (int argc, char *argv[])
   
   // Flowmonitor statistcs
   flowmonHelper.SerializeToXmlFile ("FlowMonitorStats.xml", false, false);
-  
+ 
+  NS_LOG_UNCOND ("Block ratio: " << 
+          DynamicCast<RingController> (controller)->GetBlockRatio ());
+
   Simulator::Destroy ();
   NS_LOG_INFO ("End!");
 }
