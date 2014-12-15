@@ -25,7 +25,6 @@ static uint16_t g_tcpHttpPort = 80;
 static uint16_t g_udpVoipPort = 16000;
 static uint16_t g_udpVideoPort = 20000;
 
-static const std::string g_videoTrace = "ns3/movies/jurassic-hig.data";
 
 void 
 SetPingTraffic (Ptr<Node> dstNode, NodeContainer clients)
@@ -164,17 +163,30 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
   return sinkApps;
 }
 
+
+// MPEG4 trace files.
+// http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf
+static const std::string g_videoTrace [] = {"ns3/movies/jurassic.data",
+  "ns3/movies/silence.data", "ns3/movies/star-wars.data",
+  "ns3/movies/mr-bean.data", "ns3/movies/first-contact.data",
+  "ns3/movies/from-dusk.data", "ns3/movies/the-firm.data",
+  "ns3/movies/formula1.data", "ns3/movies/soccer.data",
+  "ns3/movies/ard-news.data", "ns3/movies/ard-talk.data",
+  "ns3/movies/ns3-talk.data", "ns3/movies/office-cam.data"};
+
+static const uint64_t g_avgBitRate [] = {770000, 580000, 280000, 580000, 
+  330000, 680000, 310000, 840000, 1100000, 720000, 540000, 550000, 400000};
+
+static const uint64_t g_maxBitRate [] = {3300000, 4400000, 1900000, 3100000, 
+  2500000, 3100000, 2100000, 2900000, 3600000, 3400000, 3100000, 3400000, 
+  2000000};
  
 ApplicationContainer
 SetVideoTraffic (Ptr<Node> server, NodeContainer clients, 
     NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper,
     Ptr<EpcSdnController> controller)
 {
-  // Max and Average bitrate info extracted from
-  // http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf
-  uint64_t avgBitRate = 770000;
-  uint64_t maxBitRate = 3300000;
-
+  Ptr<UniformRandomVariable> rngVideo = CreateObject<UniformRandomVariable> ();
   Ptr<Ipv4> serverIpv4 = server->GetObject<Ipv4> ();
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
   Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
@@ -195,11 +207,9 @@ SetVideoTraffic (Ptr<Node> server, NodeContainer clients,
  
       // Video server (send UDP datagrams to client)
       // Back off 20 (IP) + 8 (UDP) bytes from MTU
-      uint32_t MaxPacketSize = 1472;  
+      int videoIdx = rngVideo->GetInteger (0, 12);
       OnOffUdpTraceClientHelper videoSender (clientAddr, g_udpVideoPort, 
-                                             g_videoTrace);
-      videoSender.SetAttribute ("MaxPacketSize", 
-                                UintegerValue (MaxPacketSize));
+                                             g_videoTrace [videoIdx]);
       Ptr<Application> videoSenderApp = videoSender.Install (server);
       senderApps.Add (videoSenderApp);
       videoSenderApp->AggregateObject (tft);
@@ -223,8 +233,8 @@ SetVideoTraffic (Ptr<Node> server, NodeContainer clients,
  
       // Dedicated GBR EPS bearer (QCI 4).
       GbrQosInformation qos;
-      qos.gbrDl = avgBitRate;
-      qos.mbrDl = maxBitRate;
+      qos.gbrDl = g_avgBitRate [videoIdx];
+      qos.mbrDl = g_maxBitRate [videoIdx];
       EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
       lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
