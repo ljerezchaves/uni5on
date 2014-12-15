@@ -74,7 +74,7 @@ SetHttpTraffic (Ptr<Node> server, NodeContainer clients,
 }
 
 
-void
+ApplicationContainer
 SetVoipTraffic (Ptr<Node> server, NodeContainer clients, 
     NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper,
     Ptr<EpcSdnController> controller)
@@ -163,10 +163,11 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
           MakeCallback (&EpcSdnController::NotifyAppStart, controller),
           MakeCallback (&EpcSdnController::NotifyAppStop, controller));
     }
+  return sinkApps;
 }
 
  
-void
+ApplicationContainer
 SetVideoTraffic (Ptr<Node> server, NodeContainer clients, 
     NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper,
     Ptr<EpcSdnController> controller)
@@ -241,6 +242,7 @@ SetVideoTraffic (Ptr<Node> server, NodeContainer clients,
           MakeCallback (&EpcSdnController::NotifyAppStart, controller),
           MakeCallback (&EpcSdnController::NotifyAppStop, controller));
     }
+  return sinkApps;
 }
 
 

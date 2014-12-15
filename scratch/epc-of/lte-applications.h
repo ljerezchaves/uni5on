@@ -58,7 +58,7 @@ SetHttpTraffic (Ptr<Node> server, NodeContainer clients,
  * in install a VoipClient and an UdpServer application at each node). The
  * calls start and stop link in a Poisson procees.
  */
-void
+ApplicationContainer
 SetVoipTraffic (Ptr<Node> server, NodeContainer clients, 
     NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper,
     Ptr<EpcSdnController> controller);
@@ -73,7 +73,7 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
  * information. This code install an UdpTraceClient at the web server and an
  * UdpServer application at each client).
  */
-void
+ApplicationContainer
 SetVideoTraffic (Ptr<Node> server, NodeContainer clients, 
     NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper,
     Ptr<EpcSdnController> controller);
