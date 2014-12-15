@@ -37,8 +37,8 @@ class RingController : public EpcSdnController
 {
 public:
   /** 
-   * Indicates the direction that the traffic should be routed in the ring in
-   * respect to source node. 
+   * Indicates the direction that the traffic should 
+   * be routed in the ring in respect to source node. 
    */
   enum RoutingPath {
     CLOCK = 1,
@@ -46,7 +46,8 @@ public:
   };
 
   /**
-   * Routing strategy used by this controller to find the paths in the ring.
+   * Routing strategy used by this controller 
+   * to find the paths in the ring.
    */
   enum RoutingStrategy {
     HOPS = 0,
@@ -54,32 +55,38 @@ public:
   };
 
   /**
-   * Metadata associated to a routing path between two any switches in the
-   * OpenFlow ring network.
+   * Metadata associated to a routing path between
+   * two any switches in the OpenFlow ring network.
    */
-  struct RoutingInfo
+  class RoutingInfo : public SimpleRefCount<RoutingInfo>
   {
-    uint32_t teid;          //!< GTP tunnel TEID
+    friend class RingController;
+  
+  protected:
+    uint32_t teid;                              //!< GTP TEID
+    EpcS11SapMme::BearerContextCreated bearer;  //!< EPS bearer
     
-    uint16_t sgwIdx;        //!< Gateway switch index
-    uint16_t enbIdx;        //!< eNB switch index
-    Ipv4Address sgwAddr;    //!< Gateway IPv4 address
-    Ipv4Address enbAddr;    //!< eNB IPv4 address
+    uint16_t sgwIdx;                  //!< Sgw switch index
+    uint16_t enbIdx;                  //!< eNB switch index
+    Ipv4Address sgwAddr;              //!< Sgw IPv4 address
+    Ipv4Address enbAddr;              //!< eNB IPv4 address
     
-    RoutingPath downPath;   //!< Downlink routing path (from gateway to eNB)
-    RoutingPath upPath;     //!< Downlink routing path (from gateway to eNB)
-    
-    DataRate gbr;           //!< GBR bandwitdh
-    Ptr<Application> app;   //!< Traffic source application
+    RoutingPath downPath;             //!< Downlink routing path
+    RoutingPath upPath;               //!< Uplink routing path
+    DataRate reserved;                //!< Reserved data rate
 
-    int priority;           //!< Flow priority
-    int timeout;            //!< Flow idle timeout
-    bool installed;         //!< Rule installed into switches
+    DataRate downAvgRate;
+    DataRate upAvgRate;
+
+    Ptr<Application> app;             //!< Traffic application
+
+    int  priority;                    //!< Flow priority
+    int  timeout;                     //!< Flow idle timeout
     
-    //!< LTE bearer QoS information
-    EpcS11SapMme::BearerContextCreated bearer;           
+    bool isDefault;                   //!< This info is for default bearer
+    bool isInstalled;                 //!< Rule installed into switches
+    bool isActive;                    //!< Active traffic for this rule
   };
-
   
   RingController ();        //!< Default constructor
   ~RingController ();       //!< Dummy destructor, see DoDipose
@@ -96,14 +103,15 @@ public:
   /**
    * \return The GBR bearer block ratio
    */
-  double GetBlockRatio ();
+  double PrintBlockRatioStatistics ();
 
   // Inherited from EpcSdnController
-  void NotifyNewSwitchConnection (ConnectionInfo connInfo);
+  void NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo);
   void NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
                                 Ipv4Address enbAddr, Ipv4Address sgwAddr, 
                                 ContextBearers_t bearerList);
   void NotifyAppStart (Ptr<Application> app);
+  void NotifyAppStop (Ptr<Application> app);
   void CreateSpanningTree ();
 
 protected:
@@ -122,7 +130,7 @@ private:
    * Process the GBR resource allocation based on current strategy/
    * \param rInfo The routing information to process.
    */
-  void ProcessGbrRequest (RoutingInfo *rInfo);
+  void ProcessGbrRequest (Ptr<RoutingInfo> rInfo);
 
   /**
    * Look for the routing path between srcSwitchIdx and dstSwitchIdx with
@@ -158,7 +166,7 @@ private:
    * \param rInfo The routing information to reserve.
    * \return True if success, false otherwise;
    */
-  bool ReserveBandwidth (const RoutingInfo *rInfo);
+  bool ReserveBandwidth (const Ptr<RoutingInfo> rInfo);
 
   /**
    * Release the bandwidth for each link between source and destination
@@ -167,7 +175,7 @@ private:
    * \param rInfo The routing information to release.
    * \return True if success, false otherwise;
    */
-  bool ReleaseBandwidth (const RoutingInfo *rInfo);
+  bool ReleaseBandwidth (const Ptr<RoutingInfo> rInfo);
 
   /**
    * Identify the next switch index base on routing path.
@@ -190,40 +198,56 @@ private:
    * Save the RoutingInfo metadata for further usage and reserve the bandwith.
    * \param rInfo The routing information to save.
    */
-  void SaveTeidRoutingInfo (RoutingInfo rInfo);
+  void SaveTeidRoutingInfo (Ptr<RoutingInfo> rInfo);
 
   /**
    * Retrieve stored information for a specific GTP tunnel
    * \param teid The GTP tunnel ID.
    * \return The routing information for this tunnel.
    */
-  RoutingInfo GetTeidRoutingInfo (uint32_t teid);
-
-  /**
-   * Check for tunnel routing information.
-   * \param teid The GTP tunnel ID.
-   * \return True if routing info present, false otherwise.
-   */ 
-  bool HasTeidRoutingInfo (uint32_t teid);
-
-  /**
-   * Remove the RoutingInfo metadata and release the bandwitdh.
-   * \param teid The GTP tunnel ID.
-   */
-  void DeleteTeidRoutingInfo (uint32_t teid);
+  Ptr<RoutingInfo> GetTeidRoutingInfo (uint32_t teid);
 
   /**
    * Configure the switches with OpenFlow commands for teid routing.
    * \param rInfo The routing information to configure.
+   * \param buffer The buffered packet to apply this rule to.
    * \return True if configuration succeeded, false otherwise.
    */
-  bool ConfigureTeidRouting (RoutingInfo rInfo);
+  bool InstallTeidRouting (Ptr<RoutingInfo> rInfo, 
+                           uint32_t buffer = OFP_NO_BUFFER);
+
+  /**
+   * Query OpenFlow switch for Information about individual flow entries using
+   * the OFPMP_FLOW multipart request message
+   */
+  void QuerySwitchStats ();
+
+  /**
+   * Based on app traffic direction, check if this switch is the input switch
+   * for this traffic into the ring. 
+   * \param rInfo The routing information to check.
+   * \param switchIdx The switch index.
+   * \return True when this switch is the ring input switch for this traffic.
+   */
+  bool IsInputSwitch (const Ptr<RoutingInfo> rInfo, uint16_t switchIdx);
+
+  /**
+   * Update the internal traffic average bitrate based on information received
+   * from switches.
+   * \param rInfo The routing information to check.
+   * \param switchIdx The switch index.
+   * \param flowStats The multipart flow stats from switch.
+   */ 
+  void UpdateAverageTraffic (Ptr<RoutingInfo> rInfo, uint16_t switchIdx, 
+                             ofl_flow_stats* flowStats);
 
   /** Map saving pair <TEID / RoutingInfo> */
-  typedef std::map<uint32_t, RoutingInfo> TeidRoutingMap_t;
+  typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
   
   TeidRoutingMap_t  m_routes;     //!< TEID routes.
   RoutingStrategy   m_strategy;   //!< Routing strategy in use.
+  Time              m_timeout;    //!< Switch stats query timeout.
+  uint32_t          m_priority;   //!< Dedicated bearer flow mod priority.
 
   //!< Performance metrics
   //\{

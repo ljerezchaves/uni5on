@@ -182,15 +182,19 @@ main (int argc, char *argv[])
     }
 
   // VoIP traffic over dedicated GBR EPS bearer (QCI 1) 
+  ApplicationContainer voipServers;
   if (voip) 
     {
-      SetVoipTraffic (webHost, ueNodes, ueDevices, lteHelper, controller);
+      voipServers = SetVoipTraffic (webHost, ueNodes, ueDevices, lteHelper, 
+                                    controller);
     }
 
   // Buffered video streaming over dedicated GBR EPS bearer (QCI 4)
+  ApplicationContainer videoServers;
   if (video) 
     {
-      SetVideoTraffic (webHost, ueNodes, ueDevices, lteHelper, controller);
+      videoServers = SetVideoTraffic (webHost, ueNodes, ueDevices, lteHelper, 
+                                      controller);
     }
 
   // TCP/UDP Down/Uplink traffic over dedicated Non-GBR EPS beareres (QCI 8)
@@ -232,7 +236,32 @@ main (int argc, char *argv[])
   // Flowmonitor statistcs
   flowmonHelper.SerializeToXmlFile ("FlowMonitorStats.xml", false, false);
  
+  // Printing some other statistics
   DynamicCast<RingController> (controller)->PrintBlockRatioStatistics ();
+
+  ApplicationContainer::Iterator it;
+  
+  for (it = voipServers.Begin (); it != voipServers.End (); it++)
+    {
+      Ptr<UdpServer> server = DynamicCast<UdpServer> (*it);
+      std::cout << "For application " << server << ": " <<
+                   server->GetReceived () << " pkts received, " <<
+                   server->GetLost () << " pkts lost, " << 
+                   server->GetAverageDelay ().ToInteger (Time::MS) << " ms avg delay, " << 
+                   server->GetAverageJitter ().ToInteger (Time::MS) << " ms avg jitter." << std::endl;
+    }
+
+   for (it = videoServers.Begin (); it != videoServers.End (); it++)
+    {
+      Ptr<UdpServer> server = DynamicCast<UdpServer> (*it);
+      std::cout << "For application " << server << ": " <<
+                   server->GetReceived () << " pkts received, " <<
+                   server->GetLost () << " pkts lost, " << 
+                   server->GetAverageDelay ().ToInteger (Time::MS) << " ms avg delay, " << 
+                   server->GetAverageJitter ().ToInteger (Time::MS) << " ms avg jitter." << std::endl;
+    }
+
+
 
   Simulator::Destroy ();
   NS_LOG_INFO ("End!");
