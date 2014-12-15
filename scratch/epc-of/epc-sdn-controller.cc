@@ -238,7 +238,7 @@ EpcSdnController::GetContextFromTft (Ptr<EpcTft> tft)
         {
           if (blsIt->tft == tft)
             {
-              NS_LOG_DEBUG ("Found bearer for tft " << tft);
+              NS_LOG_DEBUG ("Found context for tft " << tft);
               return cInfo;
             }
         }
