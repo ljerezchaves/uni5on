@@ -123,9 +123,10 @@ Application::SetNode (Ptr<Node> node)
 }
 
 void 
-Application::SetAppStartSendingCallback (AppStartSendingCallback_t cb)
+Application::SetAppStartStopCallback (AppSendingCallback_t start, AppSendingCallback_t stop)
 {
-  m_startSendingCallback = cb;
+  m_startSendingCallback = start;
+  m_stopSendingCallback = stop;
 }
 
 Application::Direction 

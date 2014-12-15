@@ -312,6 +312,10 @@ void
 OnOffUdpTraceClient::StopSending ()
 {
   NS_LOG_FUNCTION (this);
+  if (!m_stopSendingCallback.IsNull ())
+    {
+      m_stopSendingCallback (this);
+    }
   CancelEvents ();
   ScheduleStartEvent ();
 }

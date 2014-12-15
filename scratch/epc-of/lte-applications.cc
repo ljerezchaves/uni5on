@@ -186,8 +186,9 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
        i != senderApps.End (); ++i)
     {
       Ptr<Application> app = *i;
-      app->SetAppStartSendingCallback (
-          MakeCallback (&EpcSdnController::NotifyAppStart, controller));
+      app->SetAppStartStopCallback (
+          MakeCallback (&EpcSdnController::NotifyAppStart, controller),
+          MakeCallback (&EpcSdnController::NotifyAppStop, controller));
     }
 }
 
@@ -263,8 +264,9 @@ SetVideoTraffic (Ptr<Node> server, NodeContainer clients,
        i != senderApps.End (); ++i)
     {
       Ptr<Application> app = *i;
-      app->SetAppStartSendingCallback (
-          MakeCallback (&EpcSdnController::NotifyAppStart, controller));
+      app->SetAppStartStopCallback (
+          MakeCallback (&EpcSdnController::NotifyAppStart, controller),
+          MakeCallback (&EpcSdnController::NotifyAppStop, controller));
     }
 }
 
