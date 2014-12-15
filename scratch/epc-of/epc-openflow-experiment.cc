@@ -22,12 +22,10 @@
 #include <ns3/network-module.h>
 #include <ns3/config-store-module.h>
 #include <ns3/flow-monitor-module.h>
-
 #include "internet-network.h"
 #include "ring-openflow-network.h"
 #include "lte-squared-grid-network.h"
 #include "lte-applications.h"
-#include "ring-controller.h"
 
 NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcExperiment");
 
@@ -120,11 +118,11 @@ main (int argc, char *argv[])
       LogComponentEnable ("RingOpenFlowNetwork", LOG_LEVEL_WARN);
 
       LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_WARN);
-      LogComponentEnable ("EpcSdnController", LOG_LEVEL_WARN);
-      LogComponentEnable ("RingController", LOG_LEVEL_WARN);
+      LogComponentEnable ("EpcSdnController", LOG_LEVEL_ALL);
+      LogComponentEnable ("RingController", LOG_LEVEL_ALL);
       
-      //LogComponentEnable ("VoipClient", LOG_LOGIC);
-      //LogComponentEnable ("OnOffUdpTraceClient", LOG_LOGIC);
+      LogComponentEnable ("VoipClient", LOG_LOGIC);
+      LogComponentEnable ("OnOffUdpTraceClient", LOG_LOGIC);
     }
 
 // ---------------------------------------------------- //
@@ -234,9 +232,7 @@ main (int argc, char *argv[])
   // Flowmonitor statistcs
   flowmonHelper.SerializeToXmlFile ("FlowMonitorStats.xml", false, false);
  
-  std::cout << "Block ratio: " 
-            << DynamicCast<RingController> (controller)->GetBlockRatio ()
-            << std::endl;
+  DynamicCast<RingController> (controller)->PrintBlockRatioStatistics ();
 
   Simulator::Destroy ();
   NS_LOG_INFO ("End!");
