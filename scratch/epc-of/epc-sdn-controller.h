@@ -26,10 +26,11 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
-#include <ns3/epc-s11-sap.h>
 #include "openflow-epc-network.h"
 
 namespace ns3 {
+
+class EpcSdnController;
 
 /**
  * OpenFlow EPC controller.
@@ -41,7 +42,12 @@ public:
   typedef std::list<EpcS11SapMme::BearerContextCreated> ContextBearers_t;
 
   /** Metadata associated to LTE context information for controller usage */
-  struct ContextInfo {
+  class ContextInfo : public SimpleRefCount<ContextInfo>
+  {
+    friend class EpcSdnController;
+    friend class RingController;
+  
+  protected:
     uint64_t imsi;                //!< UE IMSI
     uint16_t cellId;              //!< eNB Cell ID
     uint16_t enbIdx;              //!< eNB switch index
@@ -89,7 +95,7 @@ public:
    * \param conInfo The connection information and metadata.
    */ 
   virtual void 
-  NotifyNewSwitchConnection (ConnectionInfo connInfo);
+  NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo);
   
   /** 
    * Callback fired before creating new dedicated EPC bearers. This is used to
@@ -129,7 +135,7 @@ public:
   // virtual void NotifyContextModified ();
 
   /**
-   * Notify this controller of a application starting sending traffic over EPC
+   * Notify this controller of an application starts sending traffic over EPC
    * OpenFlow network. This method expects that this application has a
    * TrafficFlowTemplate aggregated to it, since it uses the TFT to search for
    * bearer information.
@@ -137,6 +143,16 @@ public:
    */ 
   virtual void 
   NotifyAppStart (Ptr<Application> app);
+
+  /**
+   * Notify this controller of an application stops sending traffic over EPC
+   * OpenFlow network. This method expects that this application has a
+   * TrafficFlowTemplate aggregated to it, since it uses the TFT to search for
+   * bearer information.
+   * \param app The application pointer.
+   */ 
+  virtual void 
+  NotifyAppStop (Ptr<Application> app);
 
   /**
    * Install flow table entry for local delivery when a new IP device is
@@ -168,7 +184,7 @@ protected:
    * \param sw2 Second switch index.
    * \return Pointer to connection info saved.
    */
-  ConnectionInfo* GetConnectionInfo (uint16_t sw1, uint16_t sw2);
+  Ptr<ConnectionInfo> GetConnectionInfo (uint16_t sw1, uint16_t sw2);
   
   /**
    * \return Number of switches in the network.
@@ -189,8 +205,15 @@ protected:
   uint16_t GetSwitchIdxForGateway ();
 
   /**
+   * Retrieve the switch index for the switch device
+   * \param dev The OpenFlow device pointer.
+   * \return The switch index in m_ofSwitches.
+   */
+  uint16_t GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev);
+
+  /**
    * Retrieve the switch index for EPC entity attached to OpenFlow network.
-   * \param addr The eNB or SgwPgw address
+   * \param addr The eNB or SgwPgw address.
    * \return The switch index in m_ofSwitches.
    */
   uint16_t GetSwitchIdxFromIp (Ipv4Address addr);
@@ -201,14 +224,14 @@ protected:
    * \param tft The Traffic Flow Template.
    * \return The context info for this tft.
    */
-  ContextInfo GetContextFromTft (Ptr<EpcTft> tft);
+  Ptr<ContextInfo> GetContextFromTft (Ptr<EpcTft> tft);
 
   /**
    * Retrieve the LTE context information from the GTP tunnel id
    * \param teid The GTP tunnel id.
    * \return The context info for this teid.
    */
-  ContextInfo GetContextFromTeid (uint32_t teid);
+  Ptr<ContextInfo> GetContextFromTeid (uint32_t teid);
 
   /** 
    * Iterate over the context bearers map looking for the bearer information
@@ -294,10 +317,10 @@ private:
   typedef std::pair<uint16_t, uint16_t> SwitchPair_t; 
   
   /** Map saving pair of switch indexes / connection information */
-  typedef std::map<SwitchPair_t, ConnectionInfo> ConnInfoMap_t; 
+  typedef std::map<SwitchPair_t, Ptr<ConnectionInfo> > ConnInfoMap_t; 
 
   /** List of context info */
-  typedef std::vector<ContextInfo> ContextInfoList_t;
+  typedef std::vector<Ptr<ContextInfo> > ContextInfoList_t;
   
   IpMacMap_t        m_arpTable;         //!< ARP resolution table
   IpSwitchMap_t     m_ipSwitchTable;    //!< IP / switch table

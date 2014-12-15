@@ -92,13 +92,13 @@ EpcSdnController::NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip,
 }
 
 void
-EpcSdnController::NotifyNewSwitchConnection (ConnectionInfo connInfo)
+EpcSdnController::NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo)
 {
   // Save this connection info
   SwitchPair_t key;
-  key.first  = std::min (connInfo.switchIdx1, connInfo.switchIdx2);
-  key.second = std::max (connInfo.switchIdx1, connInfo.switchIdx2);
-  std::pair<SwitchPair_t, ConnectionInfo> entry (key, connInfo);
+  key.first  = std::min (connInfo->switchIdx1, connInfo->switchIdx2);
+  key.second = std::max (connInfo->switchIdx1, connInfo->switchIdx2);
+  std::pair<SwitchPair_t, Ptr<ConnectionInfo> > entry (key, connInfo);
   std::pair<ConnInfoMap_t::iterator, bool> ret;
   ret = m_connections.insert (entry);
   if (ret.second == false)
@@ -106,8 +106,8 @@ EpcSdnController::NotifyNewSwitchConnection (ConnectionInfo connInfo)
       NS_FATAL_ERROR ("Error saving connection info.");
     }
   NS_LOG_DEBUG ("New connection info saved: switch " << key.first << 
-                " (" << connInfo.portNum1 << ") -- switch " << key.second  << 
-                " (" << connInfo.portNum2 << ")");
+                " (" << connInfo->portNum1 << ") -- switch " << key.second  << 
+                " (" << connInfo->portNum2 << ")");
 }
 
 bool
@@ -127,21 +127,26 @@ EpcSdnController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr);
 
   // Create context info and save in context list.
-  ContextInfo info = {
-   .imsi = imsi,
-   .cellId = cellId,
-   .enbIdx = GetSwitchIdxFromIp (enbAddr),
-   .sgwIdx = GetSwitchIdxFromIp (sgwAddr),
-   .enbAddr = enbAddr,
-   .sgwAddr = sgwAddr,
-   .bearerList = bearerList,
-  };
+  Ptr<ContextInfo> info = Create<ContextInfo> ();
+  info->imsi = imsi;
+  info->cellId = cellId;
+  info->enbIdx = GetSwitchIdxFromIp (enbAddr);
+  info->sgwIdx = GetSwitchIdxFromIp (sgwAddr);
+  info->enbAddr = enbAddr;
+  info->sgwAddr = sgwAddr;
+  info->bearerList = bearerList;
 
   m_contexts.push_back (info);
 }
 
 void 
 EpcSdnController::NotifyAppStart (Ptr<Application> app)
+{
+  NS_LOG_FUNCTION (this << app);
+}
+
+void 
+EpcSdnController::NotifyAppStop (Ptr<Application> app)
 {
   NS_LOG_FUNCTION (this << app);
 }
@@ -168,7 +173,7 @@ EpcSdnController::CreateSpanningTree ()
   NS_LOG_WARN ("No Spanning Tree Protocol implemented here.");
 }
 
-ConnectionInfo*
+Ptr<ConnectionInfo>
 EpcSdnController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
 {
   SwitchPair_t key;
@@ -177,7 +182,7 @@ EpcSdnController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
   ConnInfoMap_t::iterator it = m_connections.find (key);
   if (it != m_connections.end ())
     {
-      return &(it->second);
+      return it->second;
     }
   NS_FATAL_ERROR ("No connection information available.");
 }
@@ -200,6 +205,12 @@ EpcSdnController::GetSwitchIdxForGateway ()
   return m_ofNetwork->GetSwitchIdxForGateway ();
 }
 
+uint16_t
+EpcSdnController::GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev)
+{
+  return m_ofNetwork->GetSwitchIdxForDevice (dev);
+}
+
 uint16_t 
 EpcSdnController::GetSwitchIdxFromIp (Ipv4Address addr)
 {
@@ -214,40 +225,42 @@ EpcSdnController::GetSwitchIdxFromIp (Ipv4Address addr)
   NS_FATAL_ERROR ("IP not registered in switch index table.");
 }
 
-EpcSdnController::ContextInfo 
+Ptr<EpcSdnController::ContextInfo>
 EpcSdnController::GetContextFromTft (Ptr<EpcTft> tft)
 {
+  Ptr<ContextInfo> cInfo = 0;
   ContextInfoList_t::iterator ctxIt;
   for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
     {
-      ContextBearers_t bearerList = ctxIt->bearerList;
-      ContextBearers_t::iterator blsIt;
-      for (blsIt = bearerList.begin (); blsIt != bearerList.end (); blsIt++)
+      cInfo = *ctxIt;
+      ContextBearers_t::iterator blsIt = cInfo->bearerList.begin (); 
+      for ( ; blsIt != cInfo->bearerList.end (); blsIt++)
         {
           if (blsIt->tft == tft)
             {
               NS_LOG_DEBUG ("Found bearer for tft " << tft);
-              return *ctxIt;
+              return cInfo;
             }
         }
     }
   NS_FATAL_ERROR ("Invalid tft.");
 }
 
-EpcSdnController::ContextInfo
+Ptr<EpcSdnController::ContextInfo>
 EpcSdnController::GetContextFromTeid (uint32_t teid)
 {
+  Ptr<ContextInfo> cInfo = 0;
   ContextInfoList_t::iterator ctxIt;
   for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
     {
-      ContextBearers_t bearerList = ctxIt->bearerList;
-      ContextBearers_t::iterator blsIt;
-      for (blsIt = bearerList.begin (); blsIt != bearerList.end (); blsIt++)
+      cInfo = *ctxIt;
+      ContextBearers_t::iterator blsIt = cInfo->bearerList.begin (); 
+      for ( ; blsIt != cInfo->bearerList.end (); blsIt++)
         {
           if (blsIt->sgwFteid.teid == teid)
             {
               NS_LOG_DEBUG ("Found bearer for teid " << teid);
-              return *ctxIt;
+              return cInfo;
             }
         }
     }
@@ -257,12 +270,13 @@ EpcSdnController::GetContextFromTeid (uint32_t teid)
 EpcS11SapMme::BearerContextCreated 
 EpcSdnController::GetBearerFromTft (Ptr<EpcTft> tft)
 {
+  Ptr<ContextInfo> cInfo = 0;
   ContextInfoList_t::iterator ctxIt;
   for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
     {
-      ContextBearers_t bearerList = ctxIt->bearerList;
-      ContextBearers_t::iterator blsIt;
-      for (blsIt = bearerList.begin (); blsIt != bearerList.end (); blsIt++)
+      cInfo = *ctxIt;
+      ContextBearers_t::iterator blsIt = cInfo->bearerList.begin (); 
+      for ( ; blsIt != cInfo->bearerList.end (); blsIt++)
         {
           if (blsIt->tft == tft)
             {
