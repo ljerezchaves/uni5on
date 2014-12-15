@@ -265,48 +265,6 @@ RingController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
 
       // Reinstalling the rules, setting the buffer in flow-mod message;
       InstallTeidRouting (rInfo, msg->buffer_id);
-
-      // // Creating group action.
-      // ofl_action_group *action = 
-      //     (ofl_action_group*)xmalloc (sizeof (ofl_action_group));
-      // action->header.type = OFPAT_GROUP;
-
-      // Ptr<ContextInfo> cInfo = GetContextFromTeid (teid);
-      // Ipv4Address dest = 
-      //     ExtractIpv4Address (OXM_OF_IPV4_DST, (ofl_match*)msg->match);
-      // if (dest.IsEqual (cInfo->enbAddr))
-      //   {
-      //     // Downlink packet.
-      //     action->group_id = (int)rInfo->downPath;
-      //   }
-      // else if (dest.IsEqual (cInfo->sgwAddr))
-      //   {
-      //     // Uplink packet.
-      //     action->group_id = (int)rInfo->upPath;
-      //   }
-
-      // // Get input port number
-      // uint32_t inPort;
-      // ofl_match_tlv *input = 
-      //     oxm_match_lookup (OXM_OF_IN_PORT, (ofl_match*)msg->match);
-      // memcpy (&inPort, input->value, OXM_LENGTH (OXM_OF_IN_PORT));
-
-      // // Create the OpenFlow PacketOut message
-      // ofl_msg_packet_out reply;
-      // reply.header.type = OFPT_PACKET_OUT;
-      // reply.buffer_id = msg->buffer_id;
-      // reply.in_port = inPort;
-      // reply.data_length = 0;
-      // reply.data = 0;
-      // reply.actions_num = 1;
-      // reply.actions = (ofl_action_header**)&action;
-      // if (msg->buffer_id == OFP_NO_BUFFER)
-      //   {
-      //     reply.data_length = msg->data_length;
-      //     reply.data = msg->data;
-      //   }
-      // SendToSwitch (&swtch, (ofl_msg_header*)&reply, xid);
-      // free (action);
     }
   else
     {
