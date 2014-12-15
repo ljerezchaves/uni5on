@@ -34,6 +34,8 @@
 #include "seq-ts-header.h"
 #include "udp-server.h"
 
+#include <math.h>
+
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("UdpServer");
@@ -99,6 +101,20 @@ UdpServer::GetReceived (void) const
 {
   NS_LOG_FUNCTION (this);
   return m_received;
+}
+
+Time
+UdpServer::GetAverageDelay (void) const
+{
+  NS_LOG_FUNCTION (this);
+  return m_delaySum / (int64_t)m_received;
+}
+
+Time
+UdpServer::GetAverageJitter (void) const
+{
+  NS_LOG_FUNCTION (this);
+  return m_jitterSum / (int64_t)m_received;
 }
 
 void
@@ -181,6 +197,11 @@ UdpServer::HandleRead (Ptr<Socket> socket)
                            " RXtime: " << Simulator::Now () <<
                            " Delay: " << Simulator::Now () - seqTs.GetTs ());
             }
+
+          Time delay = Simulator::Now () - seqTs.GetTs ();
+          m_delaySum += delay;
+          m_jitterSum += delay - m_lastDelay;
+          m_lastDelay = delay;
 
           m_lossCounter.NotifyReceived (currentSequenceNumber);
           m_received++;

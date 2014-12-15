@@ -27,6 +27,7 @@
 #include "ns3/event-id.h"
 #include "ns3/ptr.h"
 #include "ns3/address.h"
+#include "ns3/nstime.h"
 #include "packet-loss-counter.h"
 namespace ns3 {
 /**
@@ -66,6 +67,18 @@ public:
   uint32_t GetReceived (void) const;
 
   /**
+   * \brief Returns the average packet delay
+   * \return the average packet delay
+   */
+  Time GetAverageDelay (void) const;
+
+  /**
+   * \brief Returns the packet jitter
+   * \return the packet jitter
+   */
+  Time GetAverageJitter (void) const;
+
+  /**
    * \brief Returns the size of the window used for checking loss.
    * \return the size of the window used for checking loss.
    */
@@ -99,6 +112,9 @@ private:
   Ptr<Socket> m_socket; //!< IPv4 Socket
   Ptr<Socket> m_socket6; //!< IPv6 Socket
   uint32_t m_received; //!< Number of received packets
+  Time m_lastDelay; //!< Delay of last received packet
+  Time m_delaySum; //!< Sum of packet delays
+  Time m_jitterSum; //!< Sum of packet jitters
   PacketLossCounter m_lossCounter; //!< Lost packet counter
 };
 
