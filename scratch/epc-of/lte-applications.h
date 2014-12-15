@@ -78,16 +78,4 @@ SetVideoTraffic (Ptr<Node> server, NodeContainer clients,
     NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper,
     Ptr<EpcSdnController> controller);
 
-
-/* TCP/UDP Downlink/Uplink traffic over dedicated Non-GBR EPS beareres (QCI 8).
- * This traffic code was extracted from lena-dual-stripe example.
- */
-void
-SetLenaDualStripeTraffic (Ptr<Node> server, NodeContainer clients, 
-    NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper, 
-    uint32_t nBearers = 1, bool useUdp = false, bool uplink = true, 
-    bool downlink = true);
-
-
 #endif // LTE_APPLICATIONS_H
-

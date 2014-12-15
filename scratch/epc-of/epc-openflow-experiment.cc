@@ -55,11 +55,6 @@ main (int argc, char *argv[])
   bool      voip = 0;
   bool      http = 0;
   bool      ping = 0;
-  bool      dual = 0;
-  uint32_t  dualFlows = 1;
-  bool      dualDown = 1;
-  bool      dualUp = 1;
-  bool      dualUseUdp = 0;
 
   // Increasing SrsPeriodicity to allow more UEs per eNB.
   Config::SetDefault ("ns3::LteEnbRrc::SrsPeriodicity", UintegerValue (320));
@@ -91,11 +86,6 @@ main (int argc, char *argv[])
   cmd.AddValue ("voip",     "Enable VoIP traffic", voip);
   cmd.AddValue ("http",     "Enable HTTP traffic", http);
   cmd.AddValue ("video",    "Enable video traffic", video);
-  cmd.AddValue ("dual",     "Enable Lena Dual Stripe traffic", dual);
-  cmd.AddValue ("dualFlows",  "  dual config: flows per UE", dualFlows);
-  cmd.AddValue ("dualUseUdp", "  dual config: UDP traffic [TCP]", dualUseUdp);
-  cmd.AddValue ("dualDown",   "  dual config: downlink traffic", dualDown);
-  cmd.AddValue ("dualUp",     "  dual config: uplink traffic", dualUp);
   cmd.Parse (argc, argv);
 
   // Enabling progress feedback
@@ -195,13 +185,6 @@ main (int argc, char *argv[])
     {
       videoServers = SetVideoTraffic (webHost, ueNodes, ueDevices, lteHelper, 
                                       controller);
-    }
-
-  // TCP/UDP Down/Uplink traffic over dedicated Non-GBR EPS beareres (QCI 8)
-  if (dual) 
-    {
-      SetLenaDualStripeTraffic (webHost, ueNodes, ueDevices, lteHelper, 
-                                dualFlows, dualUseUdp, dualUp, dualDown);
     }
 
 // --------------------------------- //
