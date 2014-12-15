@@ -32,8 +32,19 @@ namespace ns3 {
  * Metadata associated to a connection between two any switches in the OpenFlow
  * network.
  */
-struct ConnectionInfo
+class ConnectionInfo : public SimpleRefCount<ConnectionInfo>
 {
+  friend class OpenFlowEpcNetwork;
+  friend class RingOpenFlowNetwork;
+  friend class EpcSdnController;
+  friend class RingController;
+
+public:
+  DataRate GetAvailableDataRate ();     //!< Get available bandwitdth 
+  bool ReserveDataRate (DataRate dr);   //!< Reserve bandwitdth
+  bool ReleaseDataRate (DataRate dr);   //!< Release reserved bandwitdth
+
+protected:
   uint16_t switchIdx1;                  //!< Switch index 1
   uint16_t switchIdx2;                  //!< Switch index 2
   Ptr<OFSwitch13NetDevice> switchDev1;  //!< Switch OpenFlow device 1
@@ -42,8 +53,8 @@ struct ConnectionInfo
   Ptr<CsmaNetDevice> portDev2;          //!< OpenFlow port csma device 1
   uint32_t portNum1;                    //!< OpenFlow port number 1
   uint32_t portNum2;                    //!< OpenFlow port number 2
-  DataRate nominalDataRate;             //!< Maximum nominal data rate
-  DataRate availableDataRate;           //!< Avaliable bandwitdth
+  DataRate maxDataRate;                 //!< Maximum nominal bandwidth
+  DataRate reservedDataRate;            //!< Reserved bandwitdth
 };
 
 /**
@@ -158,13 +169,6 @@ protected:
    */
   void RegisterNodeAtSwitch (uint16_t switchIdx, Ptr<Node> node);
 
-//  /**
-//   * Store the pair <cellID, switch index> for further use.
-//   * \param switchIdx The switch index in m_ofSwitches.
-//   * \param cellId The eNB cell ID.
-//   */
-//  void RegisterCellIdAtSwitch (uint16_t switchIdx, uint16_t cellId);
-
   /**
    * Store the switch index at which the gateway is connected.
    * \param switchIdx The switch index in m_ofSwitches.
@@ -178,6 +182,13 @@ protected:
    */
   uint16_t GetSwitchIdxForNode (Ptr<Node> node);
 
+  /**
+   * Retrieve the switch index for switch device.
+   * \param dev The OpenFlow device pointer.
+   * \return The switch index in m_ofSwitches.
+   */
+  uint16_t GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev);
+  
   /**
    * Retrieve the switch index at which the gateway is connected.
    * \return The switch index in m_ofSwitches.

@@ -19,13 +19,32 @@
  */
 
 #include "openflow-epc-network.h"
-#include <ns3/lte-enb-net-device.h>
 
 NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcNetwork");
 
 namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcNetwork);
+
+DataRate
+ConnectionInfo::GetAvailableDataRate ()
+{
+  return maxDataRate - reservedDataRate;
+}
+
+bool
+ConnectionInfo::ReserveDataRate (DataRate dr)
+{
+  reservedDataRate = reservedDataRate + dr;
+  return (reservedDataRate <= maxDataRate);
+}
+
+bool
+ConnectionInfo::ReleaseDataRate (DataRate dr)
+{
+  reservedDataRate = reservedDataRate - dr;
+  return (reservedDataRate >= 0);
+}
 
 OpenFlowEpcNetwork::OpenFlowEpcNetwork ()
   : m_ofCtrlApp (0),
@@ -177,6 +196,20 @@ OpenFlowEpcNetwork::GetSwitchIdxForNode (Ptr<Node> node)
       return ret->second;
     }
   NS_FATAL_ERROR ("Node not registered.");
+}
+
+uint16_t
+OpenFlowEpcNetwork::GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev)
+{
+  uint16_t i;
+  for (i = 0; i < GetNSwitches (); i++)
+    {
+      if (dev == GetSwitchDevice (i))
+        {
+          return i;
+        }
+    }
+  NS_FATAL_ERROR ("Device not registered.");
 }
 
 uint16_t
