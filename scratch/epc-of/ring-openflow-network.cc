@@ -141,18 +141,16 @@ RingOpenFlowNetwork::CreateInternalTopology ()
       nextPortNum = nextDevice->AddSwitchPort (nextPortDevice);
 
       // Notify the ring controller of this new connection.
-      ConnectionInfo info = {
-        .switchIdx1 = currIndex,
-        .switchIdx2 = nextIndex,
-        .switchDev1 = currDevice,
-        .switchDev2 = nextDevice,
-        .portDev1 = currPortDevice,
-        .portDev2 = nextPortDevice,
-        .portNum1 = currPortNum,
-        .portNum2 = nextPortNum,
-        .nominalDataRate = m_LinkDataRate,
-        .availableDataRate = m_LinkDataRate
-      };
+      Ptr<ConnectionInfo> info = Create<ConnectionInfo> ();
+      info->switchIdx1 = currIndex;
+      info->switchIdx2 = nextIndex;
+      info->switchDev1 = currDevice;
+      info->switchDev2 = nextDevice;
+      info->portDev1 = currPortDevice;
+      info->portDev2 = nextPortDevice;
+      info->portNum1 = currPortNum;
+      info->portNum2 = nextPortNum;
+      info->maxDataRate = m_LinkDataRate;
       m_ringCtrlApp->NotifyNewSwitchConnection (info);
     }
   m_ringCtrlApp->CreateSpanningTree ();
