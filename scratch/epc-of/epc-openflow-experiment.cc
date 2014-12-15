@@ -40,22 +40,9 @@ PrintCurrentTime ()
   Simulator::Schedule (Seconds (1) , &PrintCurrentTime);
 }
 
-int 
-main (int argc, char *argv[])
+void
+ConfigureDefaults ()
 {
-  // Simulation parameters
-  uint32_t  nUes = 1;
-  uint32_t  nEnbs = 4;
-  uint16_t  nRing = 5;
-  double    simTime = 30;
-  bool      verbose = 0;
-  bool      liblog = 0;
-  bool      progress = 1;
-  bool      video = 0;
-  bool      voip = 0;
-  bool      http = 0;
-  bool      ping = 0;
-
   // Increasing SrsPeriodicity to allow more UEs per eNB.
   Config::SetDefault ("ns3::LteEnbRrc::SrsPeriodicity", UintegerValue (320));
 
@@ -72,29 +59,11 @@ main (int argc, char *argv[])
 
   // Enabling Checksum computations
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
+}
 
-  // Parsing Command Line parameter
-  CommandLine cmd;
-  cmd.AddValue ("verbose",  "Enable verbose output", verbose);
-  cmd.AddValue ("liblog",   "Enable ofsoftswitch log component", liblog);
-  cmd.AddValue ("progress", "Enable simulation time progress", progress);
-  cmd.AddValue ("simTime",  "Simulation time (s)", simTime);
-  cmd.AddValue ("nEnbs",    "Number of eNBs", nEnbs);
-  cmd.AddValue ("nUes",     "Number of UEs per eNB", nUes);
-  cmd.AddValue ("nRing",    "Number of switches in the ring", nRing);
-  cmd.AddValue ("ping",     "Enable ping traffic", ping);
-  cmd.AddValue ("voip",     "Enable VoIP traffic", voip);
-  cmd.AddValue ("http",     "Enable HTTP traffic", http);
-  cmd.AddValue ("video",    "Enable video traffic", video);
-  cmd.Parse (argc, argv);
-
-  // Enabling progress feedback
-  if (progress)
-    {
-      Simulator::Schedule (Seconds (0), &PrintCurrentTime);
-    }
-
-  // Enablig log components
+void
+EnableVerbose (bool verbose, bool progress)
+{
   if (verbose) 
     {
       LogComponentEnable ("OpenFlowEpcExperiment", LOG_LEVEL_INFO);
@@ -115,6 +84,47 @@ main (int argc, char *argv[])
       LogComponentEnable ("OnOffUdpTraceClient", LOG_LOGIC);
     }
 
+  if (progress)
+    {
+      // Enabling progress feedback
+      Simulator::Schedule (Seconds (0), &PrintCurrentTime);
+    }
+}
+
+int 
+main (int argc, char *argv[])
+{
+  // Parsing Command Line parameters
+  double   simTime = 30;
+  uint32_t nEnbs = 4;
+  uint32_t nUes = 1;
+  uint16_t nRing = 5;
+  bool     verbose = false;
+  bool     liblog = false;
+  bool     progress = true;
+  bool     ping = false;
+  bool     voip = false;
+  bool     http = false;
+  bool     video = false;
+
+  CommandLine cmd;
+  cmd.AddValue ("simTime",  "Simulation time (s)", simTime);
+  cmd.AddValue ("nEnbs",    "Number of eNBs", nEnbs);
+  cmd.AddValue ("nUes",     "Number of UEs per eNB", nUes);
+  cmd.AddValue ("nRing",    "Number of switches in the ring", nRing);
+  cmd.AddValue ("verbose",  "Enable verbose output", verbose);
+  cmd.AddValue ("liblog",   "Enable ofsoftswitch log component", liblog);
+  cmd.AddValue ("progress", "Enable simulation time progress", progress);
+  cmd.AddValue ("ping",     "Enable ping traffic", ping);
+  cmd.AddValue ("voip",     "Enable VoIP traffic", voip);
+  cmd.AddValue ("http",     "Enable HTTP traffic", http);
+  cmd.AddValue ("video",    "Enable video traffic", video);
+  cmd.Parse (argc, argv);
+
+  ConfigureDefaults ();
+  EnableVerbose (verbose, progress);
+
+  
 // ---------------------------------------------------- //
 // Creating the scenario topology, setting up callbacks //
 // ---------------------------------------------------- //
