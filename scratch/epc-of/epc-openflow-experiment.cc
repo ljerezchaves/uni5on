@@ -44,10 +44,10 @@ int
 main (int argc, char *argv[])
 {
   // Simulation parameters
-  uint32_t  nUes = 2;
+  uint32_t  nUes = 1;
   uint32_t  nEnbs = 4;
   uint16_t  nRing = 5;
-  double    simTime = 5;
+  double    simTime = 30;
   bool      verbose = 0;
   bool      liblog = 0;
   bool      progress = 1;
