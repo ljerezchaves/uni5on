@@ -107,14 +107,14 @@ Time
 UdpServer::GetAverageDelay (void) const
 {
   NS_LOG_FUNCTION (this);
-  return m_delaySum / (int64_t)m_received;
+  return m_received ? (m_delaySum / (int64_t)m_received) : m_delaySum;
 }
 
 Time
 UdpServer::GetAverageJitter (void) const
 {
   NS_LOG_FUNCTION (this);
-  return m_jitterSum / (int64_t)m_received;
+  return m_received ? (m_jitterSum / (int64_t)m_received) : m_jitterSum;
 }
 
 void
