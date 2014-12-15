@@ -21,20 +21,18 @@
 #include "lte-applications.h"
 
 /* Application port ranges */
-uint16_t g_tcpHttpPort = 80;
-uint16_t g_udpVoipPort = 16000;
-uint16_t g_udpVideoPort = 20000;
-uint16_t g_tcpUdpDualUePort = 50000;
-uint16_t g_tcpUdpDualServerPort = 60000;
+static uint16_t g_tcpHttpPort = 80;
+static uint16_t g_udpVoipPort = 16000;
+static uint16_t g_udpVideoPort = 20000;
 
-std::string g_videoTrace = "ns3/movies/jurassic-hig.data";
-Ptr<UniformRandomVariable> g_rngStart = CreateObject<UniformRandomVariable> ();
-
+static const std::string g_videoTrace = "ns3/movies/jurassic-hig.data";
 
 void 
 SetPingTraffic (Ptr<Node> dstNode, NodeContainer clients)
 {
-
+  Ptr<UniformRandomVariable> g_rngStart;
+  g_rngStart = CreateObject<UniformRandomVariable> ();
+  
   Ptr<Ipv4> dstIpv4 = dstNode->GetObject<Ipv4> ();
   Ipv4Address dstAddr = dstIpv4->GetAddress (1,0).GetLocal ();
   V4PingHelper ping = V4PingHelper (dstAddr);
