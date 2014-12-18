@@ -391,7 +391,7 @@ RingController::ProcessGbrRequest (Ptr<RoutingInfo> rInfo)
       if (bandwidth < reserve)
         {
           NS_LOG_WARN ("No resources for bearer " << rInfo->teid <<
-                       "in shortest path. Proceed without reservation.");
+                       " in shortest path. Proceed without reservation.");
           m_gbrBlocks++;
           return;
         }
@@ -401,13 +401,13 @@ RingController::ProcessGbrRequest (Ptr<RoutingInfo> rInfo)
       if (bandwidth < reserve)
         {
           NS_LOG_DEBUG ("No resources for bearer " << rInfo->teid <<
-                       "in shortest path. Checking the other path.");
+                       " in shortest path. Checking the other path.");
           bandwidth = GetAvailableBandwidth (rInfo->sgwIdx, rInfo->enbIdx, 
                                              rInfo->upPath);
           if (bandwidth < reserve)
             {
               NS_LOG_WARN ("No resources for bearer " << rInfo->teid <<
-                           "in both paths. Proceed without reservation.");
+                           " in both paths. Proceed without reservation.");
               m_gbrBlocks++;
               return;
             }
