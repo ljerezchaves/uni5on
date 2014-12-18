@@ -178,7 +178,7 @@ main (int argc, char *argv[])
   // HTTP traffic over default Non-GBR EPS bearer (QCI 9) 
   if (http) 
     {
-      SetHttpTraffic (webHost, ueNodes, ueDevices, lteHelper);
+      SetHttpTraffic (webHost, ueNodes, ueDevices, lteHelper, controller);
     }
 
   // VoIP traffic over dedicated GBR EPS bearer (QCI 1) 

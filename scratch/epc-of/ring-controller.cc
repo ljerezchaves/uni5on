@@ -34,7 +34,7 @@ RingController::RingController ()
   NS_LOG_FUNCTION (this);
 
   // Schedulle continuous stats update
-  Simulator::Schedule (m_timeout, &RingController::QuerySwitchStats, this);
+  // Simulator::Schedule (m_timeout, &RingController::QuerySwitchStats, this);
 }
 
 RingController::~RingController ()
@@ -309,7 +309,7 @@ RingController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
     {
       NS_LOG_DEBUG ("Routing info for TEID " << teid << " is active.");
       // In this case, the switch removed the flow entry of an active route.
-      // Instead of reinstalling the entry, let's wait for a packet in message.
+      // Let's reinstall the entry.
       InstallTeidRouting (rInfo);
       return 0;
     }

@@ -97,6 +97,11 @@ HttpClient::StartApplication ()
                           "HttpClient requires SOCK_STREAM or SOCK_SEQPACKET. "
                           "In other words, use TCP instead of UDP.");
         }
+  
+      if (!m_startSendingCallback.IsNull ())
+        {
+          m_startSendingCallback (this);
+        }
 
       if (Ipv4Address::IsMatchingType(m_peerAddress) == true)
         {
@@ -127,6 +132,11 @@ HttpClient::StopApplication ()
   else
     {
       NS_LOG_WARN ("HttpClientApplication found null socket to close in StopApplication");
+    }
+
+  if (!m_stopSendingCallback.IsNull ())
+    {
+      m_stopSendingCallback (this);
     }
 }
 

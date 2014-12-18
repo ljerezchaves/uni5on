@@ -20,12 +20,6 @@
 
 #include "lte-applications.h"
 
-/* Application port ranges */
-static uint16_t g_tcpHttpPort = 80;
-static uint16_t g_udpVoipPort = 16000;
-static uint16_t g_udpVideoPort = 20000;
-
-
 void 
 SetPingTraffic (Ptr<Node> dstNode, NodeContainer clients)
 {
@@ -42,32 +36,74 @@ SetPingTraffic (Ptr<Node> dstNode, NodeContainer clients)
 
 void
 SetHttpTraffic (Ptr<Node> server, NodeContainer clients, 
-    NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper)
+    NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper,
+    Ptr<EpcSdnController> controller)
 {
+  static uint16_t httpPort = 80;
+
   Ptr<Ipv4> serverIpv4 = server->GetObject<Ipv4> ();
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
+  Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
 
   ApplicationContainer serverApps, clientApps;
-  for (uint32_t u = 0; u < clients.GetN (); u++, g_tcpHttpPort++)
+  for (uint32_t u = 0; u < clients.GetN (); u++, httpPort++)
     {
       Ptr<Node> client = clients.Get (u);
       Ptr<NetDevice> clientDev = clientsDevs.Get (u);
       NS_ASSERT (clientDev->GetNode () == client);
 
       Ptr<Ipv4> clientIpv4 = client->GetObject<Ipv4> ();
+      Ipv4Address clientAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
+      Ipv4Mask clientMask = clientIpv4->GetAddress (1, 0).GetMask ();
+      
+      // Traffic Flow Template
+      Ptr<EpcTft> tft = CreateObject<EpcTft> ();
 
       // HTTP server
-      HttpServerHelper httpServer (g_tcpHttpPort);
+      HttpServerHelper httpServer (httpPort);
       Ptr<Application> httpServerApp = httpServer.Install (server);
       serverApps.Add (httpServerApp);
+      httpServerApp->AggregateObject (tft);
+      httpServerApp->SetAttribute ("Direction", 
+                                   EnumValue (Application::BIDIRECTIONAL));
 
       // HTTP client
-      HttpClientHelper httpClient (serverAddr, g_tcpHttpPort);
+      HttpClientHelper httpClient (serverAddr, httpPort);
       Ptr<Application> httpClientApp = httpClient.Install (client);
       clientApps.Add (httpClientApp);
+      httpClientApp->AggregateObject (tft);
+      httpServerApp->SetAttribute ("Direction", 
+                                   EnumValue (Application::BIDIRECTIONAL));
+
+      // TFT Packet filter
+      EpcTft::PacketFilter filter;
+      filter.remoteAddress = serverAddr;
+      filter.remoteMask = serverMask;
+      filter.localAddress = clientAddr;
+      filter.localMask = clientMask;
+      filter.remotePortStart = httpPort;
+      filter.remotePortEnd = httpPort;
+      tft->Add (filter);
+
+      // Dedicated Non-GBR EPS bearer (QCI 8)
+      GbrQosInformation qos;
+      //qos.mbrDl = qos.mbrUl = ; 
+      EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
+      lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
   clientApps.Start (Seconds (1));
   serverApps.Start (Seconds (0));
+
+  // Setting up app start callback to controller
+  for (ApplicationContainer::Iterator i = clientApps.Begin (); 
+       i != clientApps.End (); ++i)
+    {
+      Ptr<Application> app = *i;
+      app->SetAppStartStopCallback (
+          MakeCallback (&EpcSdnController::NotifyAppStart, controller),
+          MakeCallback (&EpcSdnController::NotifyAppStop, controller));
+    }
+
 }
 
 
@@ -76,6 +112,7 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
     NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper,
     Ptr<EpcSdnController> controller)
 {
+  static uint16_t voipPort = 16000;
   uint16_t voipPacketSize = 60;
   double   voipPacketInterval = 0.06;
  
@@ -84,7 +121,7 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
   Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
 
   ApplicationContainer sinkApps, senderApps;
-  for (uint32_t u = 0; u < clients.GetN (); u++, g_udpVoipPort++)
+  for (uint32_t u = 0; u < clients.GetN (); u++, voipPort++)
     {
       Ptr<Node> client = clients.Get (u);
       Ptr<NetDevice> clientDev = clientsDevs.Get (u);
@@ -98,9 +135,9 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
       Ptr<EpcTft> tft = CreateObject<EpcTft> ();
 
       // Downlink VoIP traffic
-      UdpServerHelper voipSinkDown (g_udpVoipPort);
+      UdpServerHelper voipSinkDown (voipPort);
       sinkApps.Add (voipSinkDown.Install (client));
-      VoipClientHelper voipSenderDown (clientAddr, g_udpVoipPort);
+      VoipClientHelper voipSenderDown (clientAddr, voipPort);
       voipSenderDown.SetAttribute ("Stream", IntegerValue (u));
       Ptr<Application> voipSenderDownApp = voipSenderDown.Install (server);
       senderApps.Add (voipSenderDownApp);
@@ -115,14 +152,14 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
       filterDown.remoteMask = serverMask;
       filterDown.localAddress = clientAddr;
       filterDown.localMask = clientMask;
-      filterDown.localPortStart = g_udpVoipPort;
-      filterDown.localPortEnd = g_udpVoipPort;
+      filterDown.localPortStart = voipPort;
+      filterDown.localPortEnd = voipPort;
       tft->Add (filterDown);
 
       // Uplink VoIP traffic
-      UdpServerHelper voipSinkUp (g_udpVoipPort);
+      UdpServerHelper voipSinkUp (voipPort);
       sinkApps.Add (voipSinkUp.Install (server));
-      VoipClientHelper voipSenderUp (serverAddr, g_udpVoipPort);
+      VoipClientHelper voipSenderUp (serverAddr, voipPort);
       voipSenderUp.SetAttribute ("Stream", IntegerValue (u));
       Ptr<Application> voipSenderUpApp = voipSenderUp.Install (client);
       senderApps.Add (voipSenderUpApp);
@@ -137,8 +174,8 @@ SetVoipTraffic (Ptr<Node> server, NodeContainer clients,
       filterUp.remoteMask = serverMask;
       filterUp.localAddress = clientAddr;
       filterUp.localMask = clientMask;
-      filterUp.remotePortStart = g_udpVoipPort;
-      filterUp.remotePortEnd = g_udpVoipPort;
+      filterUp.remotePortStart = voipPort;
+      filterUp.remotePortEnd = voipPort;
       tft->Add (filterUp);
  
       // Dedicated GBR EPS bearer (QCI 1)
@@ -186,13 +223,15 @@ SetVideoTraffic (Ptr<Node> server, NodeContainer clients,
     NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper,
     Ptr<EpcSdnController> controller)
 {
+  static uint16_t videoPort = 20000;
+
   Ptr<UniformRandomVariable> rngVideo = CreateObject<UniformRandomVariable> ();
   Ptr<Ipv4> serverIpv4 = server->GetObject<Ipv4> ();
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
   Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
 
   ApplicationContainer sinkApps, senderApps;
-  for (uint32_t u = 0; u < clients.GetN (); u++, g_udpVideoPort++)
+  for (uint32_t u = 0; u < clients.GetN (); u++, videoPort++)
     {
       Ptr<Node> client = clients.Get (u);
       Ptr<NetDevice> clientDev = clientsDevs.Get (u);
@@ -208,7 +247,7 @@ SetVideoTraffic (Ptr<Node> server, NodeContainer clients,
       // Video server (send UDP datagrams to client)
       // Back off 20 (IP) + 8 (UDP) bytes from MTU
       int videoIdx = rngVideo->GetInteger (0, 12);
-      OnOffUdpTraceClientHelper videoSender (clientAddr, g_udpVideoPort, 
+      OnOffUdpTraceClientHelper videoSender (clientAddr, videoPort, 
                                              g_videoTrace [videoIdx]);
       Ptr<Application> videoSenderApp = videoSender.Install (server);
       senderApps.Add (videoSenderApp);
@@ -217,7 +256,7 @@ SetVideoTraffic (Ptr<Node> server, NodeContainer clients,
                                     EnumValue (Application::DOWNLINK));
       
       // Video sink (receive UDP datagramas from server)
-      UdpServerHelper videoSink (g_udpVideoPort);
+      UdpServerHelper videoSink (videoPort);
       sinkApps.Add (videoSink.Install (client)); 
      
       // TFT Packet filter
@@ -227,8 +266,8 @@ SetVideoTraffic (Ptr<Node> server, NodeContainer clients,
       filter.remoteMask = serverMask;
       filter.localAddress = clientAddr;
       filter.localMask = clientMask;
-      filter.localPortStart = g_udpVideoPort;
-      filter.localPortEnd = g_udpVideoPort;
+      filter.localPortStart = videoPort;
+      filter.localPortEnd = videoPort;
       tft->Add (filter);
  
       // Dedicated GBR EPS bearer (QCI 4).

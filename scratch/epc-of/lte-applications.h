@@ -29,14 +29,18 @@
 
 using namespace ns3;
 
-/** IPv4 ICMP ping application over default EPS bearer (QCI 9) */
+/** IPv4 ICMP ping application over default EPS bearer (QCI 9).
+ * This QCI is typically used for the default bearer of a UE/PDN for non
+ * privileged subscribers. 
+ */
 void
 SetPingTraffic (Ptr<Node> dstNode, NodeContainer clients);
 
 
-/* HTTP/TCP download traffic over default Non-GBR EPS bearer (QCI 9). 
- * This QCI is typically used for the default bearer of a UE/PDN for non
- * privileged subscribers. 
+/* HTTP/TCP download traffic over dedicated Non-GBR EPS bearer (QCI 8). 
+ * This QCI 8 could be used for a dedicated 'premium bearer' for any
+ * subscriber, or could be used for the default bearer of a for 'premium
+ * subscribers'.
  *
  * This HTTP model is based on the distributions indicated in the paper 'An
  * HTTP Web Traffic Model Based on the Top One Million Visited Web Pages' by
@@ -46,7 +50,8 @@ SetPingTraffic (Ptr<Node> dstNode, NodeContainer clients);
  */
 void 
 SetHttpTraffic (Ptr<Node> server, NodeContainer clients, 
-    NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper);
+    NetDeviceContainer clientsDevs, Ptr<LteHelper> lteHelper, 
+    Ptr<EpcSdnController> controller);
 
 
 /* VoIP/UDP bidiretional traffic over dedicated GBR EPS bearer (QCI 1). 
