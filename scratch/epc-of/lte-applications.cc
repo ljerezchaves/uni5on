@@ -77,6 +77,7 @@ SetHttpTraffic (Ptr<Node> server, NodeContainer clients,
 
       // TFT Packet filter
       EpcTft::PacketFilter filter;
+      filter.direction = EpcTft::BIDIRECTIONAL;
       filter.remoteAddress = serverAddr;
       filter.remoteMask = serverMask;
       filter.localAddress = clientAddr;
@@ -87,7 +88,7 @@ SetHttpTraffic (Ptr<Node> server, NodeContainer clients,
 
       // Dedicated Non-GBR EPS bearer (QCI 8)
       GbrQosInformation qos;
-      //qos.mbrDl = qos.mbrUl = ; 
+      qos.mbrDl = qos.mbrUl = 250000;
       EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
       lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
@@ -103,7 +104,6 @@ SetHttpTraffic (Ptr<Node> server, NodeContainer clients,
           MakeCallback (&EpcSdnController::NotifyAppStart, controller),
           MakeCallback (&EpcSdnController::NotifyAppStop, controller));
     }
-
 }
 
 
