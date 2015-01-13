@@ -18,223 +18,367 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include <ns3/core-module.h>
-#include <ns3/network-module.h>
-#include <ns3/config-store-module.h>
-#include <ns3/flow-monitor-module.h>
-#include "internet-network.h"
-#include "ring-openflow-network.h"
-#include "lte-squared-grid-network.h"
-#include "lte-applications.h"
+#include "epc-openflow-experiment.h"
 
-NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcExperiment");
+NS_LOG_COMPONENT_DEFINE ("EpcOfExperiment");
 
-using namespace ns3;
+namespace ns3 {
 
-void
-PrintCurrentTime ()
+NS_OBJECT_ENSURE_REGISTERED (EpcOfExperiment);
+
+const std::string EpcOfExperiment::m_videoTrace [] = {
+  "ns3/movies/jurassic.data", "ns3/movies/silence.data",
+  "ns3/movies/star-wars.data", "ns3/movies/mr-bean.data",
+  "ns3/movies/first-contact.data", "ns3/movies/from-dusk.data",
+  "ns3/movies/the-firm.data", "ns3/movies/formula1.data",
+  "ns3/movies/soccer.data", "ns3/movies/ard-news.data",
+  "ns3/movies/ard-talk.data", "ns3/movies/ns3-talk.data",
+  "ns3/movies/office-cam.data"};
+
+const uint64_t EpcOfExperiment::m_avgBitRate [] = {770000, 580000, 280000,
+  580000, 330000, 680000, 310000, 840000, 1100000, 720000, 540000, 550000,
+  400000};
+
+const uint64_t EpcOfExperiment::m_maxBitRate [] = {3300000, 4400000, 1900000,
+  3100000, 2500000, 3100000, 2100000, 2900000, 3600000, 3400000, 3100000,
+  3400000, 2000000};
+
+
+EpcOfExperiment::EpcOfExperiment ()
+  : m_opfNetwork (0),
+    m_controller (0),
+    m_epcHelper (0),
+    m_lteNetwork (0),
+    m_webNetwork (0),
+    m_lteHelper (0),
+    m_webHost (0)
 {
-  std::cout << "Current simulation time: " 
-            << Simulator::Now ().As (Time::S)
-            << std::endl;
-  Simulator::Schedule (Seconds (1) , &PrintCurrentTime);
-}
-
-void
-ConfigureDefaults ()
-{
-  // Increasing SrsPeriodicity to allow more UEs per eNB.
-  Config::SetDefault ("ns3::LteEnbRrc::SrsPeriodicity", UintegerValue (320));
-
-  // Configuring dl and up channel and bandwidth (channel #7 bandwidth: 20Mhz)
-  Config::SetDefault ("ns3::LteEnbNetDevice::UlBandwidth", UintegerValue (100));
-  Config::SetDefault ("ns3::LteEnbNetDevice::DlBandwidth", UintegerValue (100));
-  Config::SetDefault ("ns3::LteEnbNetDevice::DlEarfcn", UintegerValue (2750));
-  Config::SetDefault ("ns3::LteEnbNetDevice::UlEarfcn", UintegerValue (20750));
-
-  // The defaul value for TCP MSS is 536, and there's no dynamic MTU discovery
-  // implemented yet. We defined this value to 1420, considering 1500 bytes for
-  // Ethernet payload and 80 bytes of headers (including GTP/UDP/IP tunnel).
-  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1420));
-
-  // Enabling Checksum computations
-  GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
-}
-
-void
-EnableVerbose (bool verbose, bool progress)
-{
-  if (verbose) 
-    {
-      LogComponentEnable ("OpenFlowEpcExperiment", LOG_LEVEL_INFO);
-      
-      // Just for warnings and errors
-      LogComponentEnable ("OFSwitch13NetDevice", LOG_LEVEL_WARN);
-      LogComponentEnable ("OFSwitch13Interface", LOG_LEVEL_WARN);
-      LogComponentEnable ("OFSwitch13Helper", LOG_LEVEL_WARN);
-      LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_WARN);
-      LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
-      LogComponentEnable ("RingOpenFlowNetwork", LOG_LEVEL_WARN);
-
-      LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_WARN);
-      LogComponentEnable ("EpcSdnController", LOG_LEVEL_ALL);
-      LogComponentEnable ("RingController", LOG_LEVEL_ALL);
-      
-      LogComponentEnable ("VoipClient", LOG_LOGIC);
-      LogComponentEnable ("OnOffUdpTraceClient", LOG_LOGIC);
-    }
-
-  if (progress)
-    {
-      // Enabling progress feedback
-      Simulator::Schedule (Seconds (0), &PrintCurrentTime);
-    }
-}
-
-int 
-main (int argc, char *argv[])
-{
-  // Parsing Command Line parameters
-  double   simTime = 30;
-  uint32_t nEnbs = 4;
-  uint32_t nUes = 1;
-  uint16_t nRing = 5;
-  bool     verbose = false;
-  bool     liblog = false;
-  bool     progress = true;
-  bool     ping = false;
-  bool     voip = false;
-  bool     http = false;
-  bool     video = false;
-
-  CommandLine cmd;
-  cmd.AddValue ("simTime",  "Simulation time (s)", simTime);
-  cmd.AddValue ("nEnbs",    "Number of eNBs", nEnbs);
-  cmd.AddValue ("nUes",     "Number of UEs per eNB", nUes);
-  cmd.AddValue ("nRing",    "Number of switches in the ring", nRing);
-  cmd.AddValue ("verbose",  "Enable verbose output", verbose);
-  cmd.AddValue ("liblog",   "Enable ofsoftswitch log component", liblog);
-  cmd.AddValue ("progress", "Enable simulation time progress", progress);
-  cmd.AddValue ("ping",     "Enable ping traffic", ping);
-  cmd.AddValue ("voip",     "Enable VoIP traffic", voip);
-  cmd.AddValue ("http",     "Enable HTTP traffic", http);
-  cmd.AddValue ("video",    "Enable video traffic", video);
-  cmd.Parse (argc, argv);
-
-  ConfigureDefaults ();
-  EnableVerbose (verbose, progress);
-
+  NS_LOG_FUNCTION (this);
   
-// ---------------------------------------------------- //
-// Creating the scenario topology, setting up callbacks //
-// ---------------------------------------------------- //
+  // Create the experiment with minimal configuration
+  EpcOfExperiment (1, 1, 3);
+}
+
+EpcOfExperiment::~EpcOfExperiment ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+EpcOfExperiment::EpcOfExperiment (uint32_t nEnbs, uint32_t nUes, uint32_t nRing)
+{
+  NS_LOG_FUNCTION (this);
 
   // OpenFlow ring network (for EPC)
-  Ptr<OpenFlowEpcNetwork> opfNetwork = CreateObject<RingOpenFlowNetwork> ();
-  opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
-  opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("1000Kb/s")));
+  m_opfNetwork = CreateObject<RingOpenFlowNetwork> ();
+  m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
+  m_opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("1000Kb/s")));
 
-  Ptr<EpcSdnController> controller = CreateObject<RingController> ();
-  controller->SetOpenFlowNetwork (opfNetwork);
-  opfNetwork->CreateTopology (controller);
+  m_controller = CreateObject<RingController> ();
+  m_controller->SetOpenFlowNetwork (m_opfNetwork);
+  m_opfNetwork->CreateTopology (m_controller);
 
   // LTE EPC core (with callbacks setup)
-  Ptr<OpenFlowEpcHelper> epcHelper = CreateObject<OpenFlowEpcHelper> ();
-  epcHelper->SetS1uConnectCallback (
-      MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, opfNetwork));
-  epcHelper->SetX2ConnectCallback (
-      MakeCallback (&OpenFlowEpcNetwork::AttachToX2, opfNetwork));
-  epcHelper->SetAddBearerCallback (
-      MakeCallback (&EpcSdnController::RequestNewDedicatedBearer, controller));
-  epcHelper->SetCreateSessionRequestCallback (
-      MakeCallback (&EpcSdnController::NotifyNewContextCreated, controller));
+  m_epcHelper = CreateObject<OpenFlowEpcHelper> ();
+  m_epcHelper->SetS1uConnectCallback (
+      MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, m_opfNetwork));
+  m_epcHelper->SetX2ConnectCallback (
+      MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
+  m_epcHelper->SetAddBearerCallback (
+      MakeCallback (&EpcSdnController::RequestNewDedicatedBearer, m_controller));
+  m_epcHelper->SetCreateSessionRequestCallback (
+      MakeCallback (&EpcSdnController::NotifyNewContextCreated, m_controller));
   
   // LTE radio access network
-  Ptr<LteSquaredGridNetwork> lteNetwork = CreateObject<LteSquaredGridNetwork> ();
-  lteNetwork->SetAttribute ("Enbs", UintegerValue (nEnbs));
-  lteNetwork->SetAttribute ("Ues", UintegerValue (nUes));
-  lteNetwork->CreateTopology (epcHelper);
+  m_lteNetwork = CreateObject<LteSquaredGridNetwork> ();
+  m_lteNetwork->SetAttribute ("Enbs", UintegerValue (nEnbs));
+  m_lteNetwork->SetAttribute ("Ues", UintegerValue (nUes));
+  m_lteNetwork->CreateTopology (m_epcHelper);
+  m_lteHelper = m_lteNetwork->GetLteHelper ();
 
   // Internet network
-  Ptr<InternetNetwork> webNetwork = CreateObject<InternetNetwork> ();
-  Ptr<Node> pgw = epcHelper->GetPgwNode ();
-  Ptr<Node> webHost = webNetwork->CreateTopology (pgw);
+  m_webNetwork = CreateObject<InternetNetwork> ();
+  Ptr<Node> pgw = m_epcHelper->GetPgwNode ();
+  m_webHost = m_webNetwork->CreateTopology (pgw);
 
+  // UE Nodes and UE devices
+  m_ueNodes = m_lteNetwork->GetUeNodes ();
+  m_ueDevices = m_lteNetwork->GetUeDevices ();
+}
 
-// -------------------------------------------- //
-// Creating applications for traffic generation //
-// -------------------------------------------- //
-
-  NodeContainer ueNodes = lteNetwork->GetUeNodes ();
-  NetDeviceContainer ueDevices = lteNetwork->GetUeDevices ();
-  Ptr<LteHelper> lteHelper = lteNetwork->GetLteHelper ();
-
-  // ICMP ping over default Non-GBR EPS bearer (QCI 9)
-  if (ping) 
-    {
-      SetPingTraffic (webHost, ueNodes);
-    }
-
-  // HTTP traffic over dedicated Non-GBR EPS bearer (QCI 8) 
-  if (http) 
-    {
-      SetHttpTraffic (webHost, ueNodes, ueDevices, lteHelper, controller);
-    }
-
-  // VoIP traffic over dedicated GBR EPS bearer (QCI 1) 
-  ApplicationContainer voipServers;
-  if (voip) 
-    {
-      voipServers = SetVoipTraffic (webHost, ueNodes, ueDevices, lteHelper, 
-                                    controller);
-    }
-
-  // Buffered video streaming over dedicated GBR EPS bearer (QCI 4)
-  ApplicationContainer videoServers;
-  if (video) 
-    {
-      videoServers = SetVideoTraffic (webHost, ueNodes, ueDevices, lteHelper, 
-                                      controller);
-    }
-
-// --------------------------------- //
-// Creating monitors and trace files //
-// --------------------------------- //
-
-  // Install FlowMonitor
-  FlowMonitorHelper flowmonHelper;
-  NodeContainer nodesFlowmon;
-  nodesFlowmon.Add (webHost);
-  nodesFlowmon.Add (ueNodes.Get (0));
-  flowmonHelper.Install (nodesFlowmon);
+void
+EpcOfExperiment::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
   
-  // Enable LTE and PCAP traces
-  webNetwork->EnablePcap ("web");
-  opfNetwork->EnableOpenFlowPcap ("openflow-channel");
-  opfNetwork->EnableDataPcap ("ofn", true);
-  epcHelper->EnablePcapS1u ("epc");
-  // epcHelper->EnablePcapX2 ("epc");
-  // lteNetwork->EnableTraces ();
+  m_controller = 0;
+  m_epcHelper = 0;
+  m_lteNetwork = 0;
+  m_webNetwork = 0;
+  m_lteHelper = 0;
+  m_webHost = 0;
+  m_opfNetwork = 0;
+}
 
-  // Enabling library log
-  if (liblog) 
-    {
-      opfNetwork->EnableDatapathLogs ();
-    }
+TypeId 
+EpcOfExperiment::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::EpcOfExperiment")
+    .SetParent<Object> ()
+  ;
+  return tid;
+}
 
-  NS_LOG_INFO ("Simulating...");
-  Simulator::Stop (Seconds (simTime));
-  Simulator::Run ();
+void 
+EpcOfExperiment::EnablePingTraffic ()
+{
+  Ptr<UniformRandomVariable> rngStart;
+  rngStart = CreateObject<UniformRandomVariable> ();
   
-  // Flowmonitor statistcs
-  flowmonHelper.SerializeToXmlFile ("FlowMonitorStats.xml", false, false);
+  Ptr<Ipv4> dstIpv4 = m_webHost->GetObject<Ipv4> ();
+  Ipv4Address dstAddr = dstIpv4->GetAddress (1,0).GetLocal ();
+  V4PingHelper ping = V4PingHelper (dstAddr);
+  ApplicationContainer clientApps = ping.Install (m_ueNodes);
+  clientApps.Start (Seconds (rngStart->GetValue (0.1, 1.0)));
+}
+
+void
+EpcOfExperiment::EnableHttpTraffic ()
+{
+  static uint16_t httpPort = 80;
+
+  Ptr<Ipv4> serverIpv4 = m_webHost->GetObject<Ipv4> ();
+  Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
+  Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
+
+  ApplicationContainer serverApps, clientApps;
+  for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, httpPort++)
+    {
+      Ptr<Node> client = m_ueNodes.Get (u);
+      Ptr<NetDevice> clientDev = m_ueDevices.Get (u);
+      NS_ASSERT (clientDev->GetNode () == client);
+
+      Ptr<Ipv4> clientIpv4 = client->GetObject<Ipv4> ();
+      Ipv4Address clientAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
+      Ipv4Mask clientMask = clientIpv4->GetAddress (1, 0).GetMask ();
+      
+      // Traffic Flow Template
+      Ptr<EpcTft> tft = CreateObject<EpcTft> ();
+
+      // HTTP server
+      HttpServerHelper httpServer (httpPort);
+      Ptr<Application> httpServerApp = httpServer.Install (m_webHost);
+      serverApps.Add (httpServerApp);
+      httpServerApp->AggregateObject (tft);
+      httpServerApp->SetAttribute ("Direction", 
+                                   EnumValue (Application::BIDIRECTIONAL));
+
+      // HTTP client
+      HttpClientHelper httpClient (serverAddr, httpPort);
+      Ptr<Application> httpClientApp = httpClient.Install (client);
+      clientApps.Add (httpClientApp);
+      httpClientApp->AggregateObject (tft);
+      httpServerApp->SetAttribute ("Direction", 
+                                   EnumValue (Application::BIDIRECTIONAL));
+
+      // TFT Packet filter
+      EpcTft::PacketFilter filter;
+      filter.direction = EpcTft::BIDIRECTIONAL;
+      filter.remoteAddress = serverAddr;
+      filter.remoteMask = serverMask;
+      filter.localAddress = clientAddr;
+      filter.localMask = clientMask;
+      filter.remotePortStart = httpPort;
+      filter.remotePortEnd = httpPort;
+      tft->Add (filter);
+
+      // Dedicated Non-GBR EPS bearer (QCI 8)
+      GbrQosInformation qos;
+      qos.mbrDl = qos.mbrUl = 250000;
+      EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
+      m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
+    }
+  clientApps.Start (Seconds (1));
+  serverApps.Start (Seconds (0));
+
+  // Setting up app start callback to controller
+  for (ApplicationContainer::Iterator i = clientApps.Begin (); 
+       i != clientApps.End (); ++i)
+    {
+      Ptr<Application> app = *i;
+      app->SetAppStartStopCallback (
+          MakeCallback (&EpcSdnController::NotifyAppStart, m_controller),
+          MakeCallback (&EpcSdnController::NotifyAppStop, m_controller));
+    }
+}
+
+void
+EpcOfExperiment::EnableVoipTraffic ()
+{
+    static uint16_t voipPort = 16000;
+  uint16_t voipPacketSize = 60;
+  double   voipPacketInterval = 0.06;
  
-  // Printing some other statistics
-  DynamicCast<RingController> (controller)->PrintBlockRatioStatistics ();
+  Ptr<Ipv4> serverIpv4 = m_webHost->GetObject<Ipv4> ();
+  Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
+  Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
 
-  ApplicationContainer::Iterator it;
+  ApplicationContainer senderApps;
+  for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, voipPort++)
+    {
+      Ptr<Node> client = m_ueNodes.Get (u);
+      Ptr<NetDevice> clientDev = m_ueDevices.Get (u);
+      NS_ASSERT (clientDev->GetNode () == client);
+
+      Ptr<Ipv4> clientIpv4 = client->GetObject<Ipv4> ();
+      Ipv4Address clientAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
+      Ipv4Mask clientMask = clientIpv4->GetAddress (1, 0).GetMask ();
+      
+      // Traffic Flow Template
+      Ptr<EpcTft> tft = CreateObject<EpcTft> ();
+
+      // Downlink VoIP traffic
+      UdpServerHelper voipSinkDown (voipPort);
+      m_voipServers.Add (voipSinkDown.Install (client));
+      VoipClientHelper voipSenderDown (clientAddr, voipPort);
+      voipSenderDown.SetAttribute ("Stream", IntegerValue (u));
+      Ptr<Application> voipSenderDownApp = voipSenderDown.Install (m_webHost);
+      senderApps.Add (voipSenderDownApp);
+      voipSenderDownApp->AggregateObject (tft);
+      voipSenderDownApp->SetAttribute ("Direction", 
+                                       EnumValue (Application::BIDIRECTIONAL));
+
+      // TFT Packet filter
+      EpcTft::PacketFilter filterDown;
+      filterDown.direction = EpcTft::DOWNLINK;
+      filterDown.remoteAddress = serverAddr;
+      filterDown.remoteMask = serverMask;
+      filterDown.localAddress = clientAddr;
+      filterDown.localMask = clientMask;
+      filterDown.localPortStart = voipPort;
+      filterDown.localPortEnd = voipPort;
+      tft->Add (filterDown);
+
+      // Uplink VoIP traffic
+      UdpServerHelper voipSinkUp (voipPort);
+      m_voipServers.Add (voipSinkUp.Install (m_webHost));
+      VoipClientHelper voipSenderUp (serverAddr, voipPort);
+      voipSenderUp.SetAttribute ("Stream", IntegerValue (u));
+      Ptr<Application> voipSenderUpApp = voipSenderUp.Install (client);
+      senderApps.Add (voipSenderUpApp);
+      voipSenderUpApp->AggregateObject (tft);
+      voipSenderUpApp->SetAttribute ("Direction", 
+                                     EnumValue (Application::BIDIRECTIONAL));
+
+      // TFT Packet filter
+      EpcTft::PacketFilter filterUp;
+      filterUp.direction = EpcTft::UPLINK;
+      filterUp.remoteAddress = serverAddr;
+      filterUp.remoteMask = serverMask;
+      filterUp.localAddress = clientAddr;
+      filterUp.localMask = clientMask;
+      filterUp.remotePortStart = voipPort;
+      filterUp.remotePortEnd = voipPort;
+      tft->Add (filterUp);
+ 
+      // Dedicated GBR EPS bearer (QCI 1)
+      GbrQosInformation qos;
+      qos.gbrDl = (voipPacketSize + 4) * 8 / voipPacketInterval;
+      qos.mbrDl = qos.gbrUl = qos.mbrUl = qos.gbrDl;
+      EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
+      m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
+    }
+  senderApps.Start (Seconds (1));
+  m_voipServers.Start (Seconds (0));
+
+  // Setting up app start callback to controller
+  for (ApplicationContainer::Iterator i = senderApps.Begin (); 
+       i != senderApps.End (); ++i)
+    {
+      Ptr<Application> app = *i;
+      app->SetAppStartStopCallback (
+          MakeCallback (&EpcSdnController::NotifyAppStart, m_controller),
+          MakeCallback (&EpcSdnController::NotifyAppStop, m_controller));
+    }
+}
+
+void
+EpcOfExperiment::EnableVideoTraffic ()
+{
+  static uint16_t videoPort = 20000;
+
+  Ptr<UniformRandomVariable> rngVideo = CreateObject<UniformRandomVariable> ();
+  Ptr<Ipv4> serverIpv4 = m_webHost->GetObject<Ipv4> ();
+  Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
+  Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
+
+  ApplicationContainer senderApps;
+  for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, videoPort++)
+    {
+      Ptr<Node> client = m_ueNodes.Get (u);
+      Ptr<NetDevice> clientDev = m_ueDevices.Get (u);
+      NS_ASSERT (clientDev->GetNode () == client);
+
+      Ptr<Ipv4> clientIpv4 = client->GetObject<Ipv4> ();
+      Ipv4Address clientAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
+      Ipv4Mask clientMask = clientIpv4->GetAddress (1, 0).GetMask ();
+      
+      // Traffic Flow Template
+      Ptr<EpcTft> tft = CreateObject<EpcTft> ();
+ 
+      // Video server (send UDP datagrams to client)
+      // Back off 20 (IP) + 8 (UDP) bytes from MTU
+      int videoIdx = rngVideo->GetInteger (0, 12);
+      OnOffUdpTraceClientHelper videoSender (clientAddr, videoPort, 
+                                             m_videoTrace [videoIdx]);
+      Ptr<Application> videoSenderApp = videoSender.Install (m_webHost);
+      senderApps.Add (videoSenderApp);
+      videoSenderApp->AggregateObject (tft);
+      videoSenderApp->SetAttribute ("Direction", 
+                                    EnumValue (Application::DOWNLINK));
+      
+      // Video sink (receive UDP datagramas from server)
+      UdpServerHelper videoSink (videoPort);
+      m_videoServers.Add (videoSink.Install (client)); 
+     
+      // TFT Packet filter
+      EpcTft::PacketFilter filter;
+      filter.direction = EpcTft::DOWNLINK;
+      filter.remoteAddress = serverAddr;
+      filter.remoteMask = serverMask;
+      filter.localAddress = clientAddr;
+      filter.localMask = clientMask;
+      filter.localPortStart = videoPort;
+      filter.localPortEnd = videoPort;
+      tft->Add (filter);
+ 
+      // Dedicated GBR EPS bearer (QCI 4).
+      GbrQosInformation qos;
+      qos.gbrDl = m_avgBitRate [videoIdx];
+      qos.mbrDl = m_maxBitRate [videoIdx];
+      EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
+      m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
+    }
+  senderApps.Start (Seconds (1));
+  m_videoServers.Start (Seconds (0));
+
+  // Setting up app start callback to controller
+  for (ApplicationContainer::Iterator i = senderApps.Begin (); 
+       i != senderApps.End (); ++i)
+    {
+      Ptr<Application> app = *i;
+      app->SetAppStartStopCallback (
+          MakeCallback (&EpcSdnController::NotifyAppStart, m_controller),
+          MakeCallback (&EpcSdnController::NotifyAppStop, m_controller));
+    }
+}
+
+void
+EpcOfExperiment::PrintStats ()
+{
+  DynamicCast<RingController> (m_controller)->PrintBlockRatioStatistics ();
   
-  for (it = voipServers.Begin (); it != voipServers.End (); it++)
+  ApplicationContainer::Iterator it;
+  for (it = m_voipServers.Begin (); it != m_voipServers.End (); it++)
     {
       Ptr<UdpServer> server = DynamicCast<UdpServer> (*it);
       std::cout << "For voip application " << server << ": " <<
@@ -243,8 +387,8 @@ main (int argc, char *argv[])
                    server->GetDelay ().ToInteger (Time::MS) << " ms avg delay, " << 
                    server->GetJitter ().ToInteger (Time::MS) << " ms avg jitter." << std::endl;
     }
-
-   for (it = videoServers.Begin (); it != videoServers.End (); it++)
+  
+   for (it = m_videoServers.Begin (); it != m_videoServers.End (); it++)
     {
       Ptr<UdpServer> server = DynamicCast<UdpServer> (*it);
       std::cout << "For video application " << server << ": " <<
@@ -253,9 +397,24 @@ main (int argc, char *argv[])
                    server->GetDelay ().ToInteger (Time::MS) << " ms avg delay, " << 
                    server->GetJitter ().ToInteger (Time::MS) << " ms avg jitter." << std::endl;
     }
-
-
-
-  Simulator::Destroy ();
-  NS_LOG_INFO ("End!");
+  
 }
+
+void
+EpcOfExperiment::EnableDatapathLogs ()
+{
+  m_opfNetwork->EnableDatapathLogs ();
+}
+
+void
+EpcOfExperiment::EnableTraces ()
+{
+  m_webNetwork->EnablePcap ("web");
+  m_opfNetwork->EnableOpenFlowPcap ("openflow-channel");
+  m_opfNetwork->EnableDataPcap ("ofn", true);
+  m_epcHelper->EnablePcapS1u ("epc");
+  // m_epcHelper->EnablePcapX2 ("epc");
+  // m_lteNetwork->EnableTraces ();
+}
+
+};  // namespace ns3
