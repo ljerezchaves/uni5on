@@ -84,9 +84,9 @@ SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nUes, uint32_t 
   m_epcHelper->SetX2ConnectCallback (
       MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
   m_epcHelper->SetAddBearerCallback (
-      MakeCallback (&EpcSdnController::RequestNewDedicatedBearer, m_controller));
+      MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, m_controller));
   m_epcHelper->SetCreateSessionRequestCallback (
-      MakeCallback (&EpcSdnController::NotifyNewContextCreated, m_controller));
+      MakeCallback (&OpenFlowEpcController::NotifyNewContextCreated, m_controller));
   
   // LTE radio access network
   m_lteNetwork = CreateObject<LteSquaredGridNetwork> ();
@@ -206,8 +206,8 @@ SimulationScenario::EnableHttpTraffic ()
     {
       Ptr<Application> app = *i;
       app->SetAppStartStopCallback (
-          MakeCallback (&EpcSdnController::NotifyAppStart, m_controller),
-          MakeCallback (&EpcSdnController::NotifyAppStop, m_controller));
+          MakeCallback (&OpenFlowEpcController::NotifyAppStart, m_controller),
+          MakeCallback (&OpenFlowEpcController::NotifyAppStop, m_controller));
     }
 }
 
@@ -296,8 +296,8 @@ SimulationScenario::EnableVoipTraffic ()
     {
       Ptr<Application> app = *i;
       app->SetAppStartStopCallback (
-          MakeCallback (&EpcSdnController::NotifyAppStart, m_controller),
-          MakeCallback (&EpcSdnController::NotifyAppStop, m_controller));
+          MakeCallback (&OpenFlowEpcController::NotifyAppStart, m_controller),
+          MakeCallback (&OpenFlowEpcController::NotifyAppStop, m_controller));
     }
 }
 
@@ -367,8 +367,8 @@ SimulationScenario::EnableVideoTraffic ()
     {
       Ptr<Application> app = *i;
       app->SetAppStartStopCallback (
-          MakeCallback (&EpcSdnController::NotifyAppStart, m_controller),
-          MakeCallback (&EpcSdnController::NotifyAppStop, m_controller));
+          MakeCallback (&OpenFlowEpcController::NotifyAppStart, m_controller),
+          MakeCallback (&OpenFlowEpcController::NotifyAppStop, m_controller));
     }
 }
 

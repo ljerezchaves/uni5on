@@ -25,9 +25,9 @@
 #include <ns3/network-module.h>
 #include <ns3/applications-module.h>
 #include "internet-network.h"
-#include "ring-openflow-network.h"
+#include "ring-network.h"
 #include "lte-squared-grid-network.h"
-#include "epc-sdn-controller.h"
+#include "openflow-epc-network.h"
 
 namespace ns3 {
 
@@ -119,7 +119,7 @@ public:
 
 private:
   Ptr<OpenFlowEpcNetwork> m_opfNetwork;         //!< LTE EPC network
-  Ptr<EpcSdnController> m_controller;           //!< OpenFLow controller
+  Ptr<OpenFlowEpcController> m_controller;      //!< OpenFLow controller
   Ptr<OpenFlowEpcHelper> m_epcHelper;           //!< LTE EPC helper
   Ptr<LteSquaredGridNetwork> m_lteNetwork;      //!< LTE radio network
   Ptr<InternetNetwork> m_webNetwork;            //!< Internet network

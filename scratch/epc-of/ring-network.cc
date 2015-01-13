@@ -18,7 +18,7 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "ring-openflow-network.h"
+#include "ring-network.h"
 
 NS_LOG_COMPONENT_DEFINE ("RingOpenFlowNetwork");
 

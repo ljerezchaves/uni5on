@@ -18,26 +18,26 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "epc-sdn-controller.h"
+#include "openflow-epc-controller.h"
 
-NS_LOG_COMPONENT_DEFINE ("EpcSdnController");
+NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcController");
 
 namespace ns3 {
 
-NS_OBJECT_ENSURE_REGISTERED (EpcSdnController);
+NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcController);
 
-EpcSdnController::EpcSdnController ()
+OpenFlowEpcController::OpenFlowEpcController ()
 {
   NS_LOG_FUNCTION (this);
 }
 
-EpcSdnController::~EpcSdnController ()
+OpenFlowEpcController::~OpenFlowEpcController ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 void
-EpcSdnController::DoDispose ()
+OpenFlowEpcController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -49,23 +49,23 @@ EpcSdnController::DoDispose ()
 }
 
 TypeId 
-EpcSdnController::GetTypeId (void)
+OpenFlowEpcController::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::EpcSdnController")
+  static TypeId tid = TypeId ("ns3::OpenFlowEpcController")
     .SetParent (OFSwitch13Controller::GetTypeId ())
   ;
   return tid;
 }
 
 void 
-EpcSdnController::SetOpenFlowNetwork (Ptr<OpenFlowEpcNetwork> ptr)
+OpenFlowEpcController::SetOpenFlowNetwork (Ptr<OpenFlowEpcNetwork> ptr)
 {
   m_ofNetwork = ptr;
 }
 
 void 
-EpcSdnController::NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip, 
-                                     uint16_t switchIdx)
+OpenFlowEpcController::NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip, 
+    uint16_t switchIdx)
 {
   { // Save the pair IP/MAC address in ARP table
     Mac48Address macAddr = Mac48Address::ConvertFrom (dev->GetAddress ());
@@ -92,7 +92,8 @@ EpcSdnController::NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip,
 }
 
 void
-EpcSdnController::NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo)
+OpenFlowEpcController::NotifyNewSwitchConnection (
+    const Ptr<ConnectionInfo> connInfo)
 {
   // Save this connection info
   SwitchPair_t key;
@@ -106,23 +107,21 @@ EpcSdnController::NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo)
       NS_FATAL_ERROR ("Error saving connection info.");
     }
   NS_LOG_DEBUG ("New connection info saved: switch " << key.first << 
-                " (" << connInfo->portNum1 << ") -- switch " << key.second  << 
+                " (" << connInfo->portNum1 << ") -- switch " << key.second << 
                 " (" << connInfo->portNum2 << ")");
 }
 
 bool
-EpcSdnController::RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId, 
-                                             Ptr<EpcTft> tft, EpsBearer bearer)
+OpenFlowEpcController::RequestNewDedicatedBearer (uint64_t imsi, 
+    uint16_t cellId, Ptr<EpcTft> tft, EpsBearer bearer)
 {
   // Allowing any bearer creation
   return true;
 }
 
 void 
-EpcSdnController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
-                                           Ipv4Address enbAddr, 
-                                           Ipv4Address sgwAddr,
-                                           ContextBearers_t bearerList)
+OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
+    Ipv4Address enbAddr, Ipv4Address sgwAddr, ContextBearers_t bearerList)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr);
 
@@ -140,24 +139,22 @@ EpcSdnController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
 }
 
 bool 
-EpcSdnController::NotifyAppStart (Ptr<Application> app)
+OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
 {
   NS_LOG_FUNCTION (this << app);
   return true;
 }
 
 bool
-EpcSdnController::NotifyAppStop (Ptr<Application> app)
+OpenFlowEpcController::NotifyAppStop (Ptr<Application> app)
 {
   NS_LOG_FUNCTION (this << app);
   return true;
 }
 
 void 
-EpcSdnController::ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch, 
-                                         Ptr<NetDevice> device,
-                                         Ipv4Address deviceIp,
-                                         uint32_t devicePort)
+OpenFlowEpcController::ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch, 
+    Ptr<NetDevice> device, Ipv4Address deviceIp, uint32_t devicePort)
 {
   NS_LOG_FUNCTION (this << swtch << deviceIp << (int)devicePort);
 
@@ -170,13 +167,13 @@ EpcSdnController::ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch,
 }
 
 void
-EpcSdnController::CreateSpanningTree ()
+OpenFlowEpcController::CreateSpanningTree ()
 {
   NS_LOG_WARN ("No Spanning Tree Protocol implemented here.");
 }
 
 Ptr<ConnectionInfo>
-EpcSdnController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
+OpenFlowEpcController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
 {
   SwitchPair_t key;
   key.first = std::min (sw1, sw2);
@@ -190,31 +187,31 @@ EpcSdnController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
 }
 
 uint16_t 
-EpcSdnController::GetNSwitches ()
+OpenFlowEpcController::GetNSwitches ()
 {
   return m_ofNetwork->GetNSwitches ();
 }
 
 Ptr<OFSwitch13NetDevice> 
-EpcSdnController::GetSwitchDevice (uint16_t index)
+OpenFlowEpcController::GetSwitchDevice (uint16_t index)
 {
   return m_ofNetwork->GetSwitchDevice (index);
 }
 
 uint16_t 
-EpcSdnController::GetSwitchIdxForGateway ()
+OpenFlowEpcController::GetSwitchIdxForGateway ()
 {
   return m_ofNetwork->GetSwitchIdxForGateway ();
 }
 
 uint16_t
-EpcSdnController::GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev)
+OpenFlowEpcController::GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev)
 {
   return m_ofNetwork->GetSwitchIdxForDevice (dev);
 }
 
 uint16_t 
-EpcSdnController::GetSwitchIdxFromIp (Ipv4Address addr)
+OpenFlowEpcController::GetSwitchIdxFromIp (Ipv4Address addr)
 {
   IpSwitchMap_t::iterator ret;
   ret = m_ipSwitchTable.find (addr);
@@ -227,8 +224,8 @@ EpcSdnController::GetSwitchIdxFromIp (Ipv4Address addr)
   NS_FATAL_ERROR ("IP not registered in switch index table.");
 }
 
-Ptr<EpcSdnController::ContextInfo>
-EpcSdnController::GetContextFromTft (Ptr<EpcTft> tft)
+Ptr<OpenFlowEpcController::ContextInfo>
+OpenFlowEpcController::GetContextFromTft (Ptr<EpcTft> tft)
 {
   Ptr<ContextInfo> cInfo = 0;
   ContextInfoList_t::iterator ctxIt;
@@ -248,8 +245,8 @@ EpcSdnController::GetContextFromTft (Ptr<EpcTft> tft)
   NS_FATAL_ERROR ("Invalid tft.");
 }
 
-Ptr<EpcSdnController::ContextInfo>
-EpcSdnController::GetContextFromTeid (uint32_t teid)
+Ptr<OpenFlowEpcController::ContextInfo>
+OpenFlowEpcController::GetContextFromTeid (uint32_t teid)
 {
   Ptr<ContextInfo> cInfo = 0;
   ContextInfoList_t::iterator ctxIt;
@@ -270,7 +267,7 @@ EpcSdnController::GetContextFromTeid (uint32_t teid)
 }
 
 EpcS11SapMme::BearerContextCreated 
-EpcSdnController::GetBearerFromTft (Ptr<EpcTft> tft)
+OpenFlowEpcController::GetBearerFromTft (Ptr<EpcTft> tft)
 {
   Ptr<ContextInfo> cInfo = 0;
   ContextInfoList_t::iterator ctxIt;
@@ -291,8 +288,8 @@ EpcSdnController::GetBearerFromTft (Ptr<EpcTft> tft)
 }
 
 ofl_err
-EpcSdnController::HandlePacketIn (ofl_msg_packet_in *msg, 
-                                  SwitchInfo swtch, uint32_t xid)
+OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg, 
+    SwitchInfo swtch, uint32_t xid)
 {
   NS_LOG_FUNCTION (swtch.ipv4 << xid);
   ofl_match_tlv *tlv;
@@ -338,9 +335,8 @@ EpcSdnController::HandlePacketIn (ofl_msg_packet_in *msg,
 }
 
 ofl_err
-EpcSdnController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, 
-                                          SwitchInfo swtch, uint32_t xid, 
-                                          uint32_t teid)
+OpenFlowEpcController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, 
+    SwitchInfo swtch, uint32_t xid, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << swtch.ipv4 << teid);
   NS_LOG_WARN ("No handling implemented here.");
@@ -351,7 +347,7 @@ EpcSdnController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
 }
 
 Ipv4Address 
-EpcSdnController::ExtractIpv4Address (uint32_t oxm_of, ofl_match* match)
+OpenFlowEpcController::ExtractIpv4Address (uint32_t oxm_of, ofl_match* match)
 {
   switch (oxm_of)
     {
@@ -372,7 +368,7 @@ EpcSdnController::ExtractIpv4Address (uint32_t oxm_of, ofl_match* match)
 }
 
 void
-EpcSdnController::ConnectionStarted (SwitchInfo swtch)
+OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
 {
   NS_LOG_FUNCTION (this << swtch.ipv4);
   
@@ -392,8 +388,8 @@ EpcSdnController::ConnectionStarted (SwitchInfo swtch)
 }
 
 ofl_err
-EpcSdnController::HandleArpPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, 
-                                     uint32_t xid)
+OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg, 
+    SwitchInfo swtch, uint32_t xid)
 {
   ofl_match_tlv *tlv;
 
@@ -469,7 +465,7 @@ EpcSdnController::HandleArpPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch,
 }
 
 Mac48Address 
-EpcSdnController::ArpLookup (Ipv4Address ip)
+OpenFlowEpcController::ArpLookup (Ipv4Address ip)
 {
   IpMacMap_t::iterator ret;
   ret = m_arpTable.find (ip);
@@ -482,8 +478,8 @@ EpcSdnController::ArpLookup (Ipv4Address ip)
 }
 
 Ptr<Packet> 
-EpcSdnController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp, 
-                                  Mac48Address dstMac, Ipv4Address dstIp)
+OpenFlowEpcController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp, 
+    Mac48Address dstMac, Ipv4Address dstIp)
 {
   Ptr<Packet> packet = Create<Packet> ();
   
@@ -517,7 +513,6 @@ EpcSdnController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
   
   return packet;
 }
-
 
 };  // namespace ns3
 

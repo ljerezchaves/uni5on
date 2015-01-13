@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef RING_OPENFLOW_NETWORK_H
-#define RING_OPENFLOW_NETWORK_H
+#ifndef RING_NETWORK_H
+#define RING_NETWORK_H
 
 #include <ns3/core-module.h>
 #include "openflow-epc-network.h"
@@ -27,7 +27,7 @@
 
 namespace ns3 {
 
-class EpcSdnController;
+class OpenFlowEpcController;
 class RingController;
 
 /** 
@@ -73,4 +73,4 @@ private:
 }; // class RingOpenFlowNetwork
 
 }; // namespace ns3
-#endif // RING_OPENFLOW_NETWORK_H
+#endif // RING_NETWORK_H

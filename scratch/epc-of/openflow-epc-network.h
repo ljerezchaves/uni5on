@@ -36,7 +36,7 @@ class ConnectionInfo : public SimpleRefCount<ConnectionInfo>
 {
   friend class OpenFlowEpcNetwork;
   friend class RingOpenFlowNetwork;
-  friend class EpcSdnController;
+  friend class OpenFlowEpcController;
   friend class RingController;
 
 public:
@@ -64,7 +64,7 @@ protected:
 class OpenFlowEpcNetwork : public Object
 {
 
-friend class EpcSdnController;
+friend class OpenFlowEpcController;
 
 public:
   OpenFlowEpcNetwork ();          //!< Default constructor

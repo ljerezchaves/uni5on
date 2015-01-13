@@ -26,14 +26,14 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "epc-sdn-controller.h"
+#include "openflow-epc-controller.h"
 
 namespace ns3 {
 
 /**
  * OpenFlow EPC controller for ring network.
  */
-class RingController : public EpcSdnController
+class RingController : public OpenFlowEpcController
 {
 public:
   /** 
@@ -105,7 +105,7 @@ public:
    */
   double PrintBlockRatioStatistics ();
 
-  // Inherited from EpcSdnController
+  // Inherited from OpenFlowEpcController
   void NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo);
   void NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
                                 Ipv4Address enbAddr, Ipv4Address sgwAddr, 
@@ -115,7 +115,7 @@ public:
   void CreateSpanningTree ();
 
 protected:
-  // Inherited from EpcSdnController
+  // Inherited from OpenFlowEpcController
   ofl_err HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, 
                                   uint32_t xid, uint32_t teid);
 

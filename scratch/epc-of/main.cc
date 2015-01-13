@@ -76,7 +76,7 @@ EnableVerbose ()
   LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
   LogComponentEnable ("RingOpenFlowNetwork", LOG_LEVEL_WARN);
   LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_WARN);
-  LogComponentEnable ("EpcSdnController", LOG_LEVEL_WARN);
+  LogComponentEnable ("OpenFlowEpcController", LOG_LEVEL_WARN);
   LogComponentEnable ("RingController", LOG_LEVEL_WARN);
 }
 

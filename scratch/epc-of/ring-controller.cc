@@ -46,7 +46,7 @@ void
 RingController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  EpcSdnController::DoDispose ();
+  OpenFlowEpcController::DoDispose ();
   m_routes.clear ();
 }
 
@@ -64,7 +64,7 @@ TypeId
 RingController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RingController")
-    .SetParent (EpcSdnController::GetTypeId ())
+    .SetParent (OpenFlowEpcController::GetTypeId ())
     .AddAttribute ("Strategy", 
                    "The ring routing strategy.",
                    EnumValue (RingController::HOPS),
@@ -86,7 +86,7 @@ RingController::NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo)
   NS_LOG_FUNCTION (this);
   
   // Call base method which will save connection information
-  EpcSdnController::NotifyNewSwitchConnection (connInfo);
+  OpenFlowEpcController::NotifyNewSwitchConnection (connInfo);
   
   // Installing default groups for RingController ring routing. Group
   // RingController::CLOCK is used to send packets from current switch to the
@@ -114,8 +114,8 @@ RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   static int defPrio = 100;  // Priority for default bearers
   
   // Call base method which will save context information
-  EpcSdnController::NotifyNewContextCreated (imsi, cellId, enbAddr, sgwAddr, 
-                                             bearerList);
+  OpenFlowEpcController::NotifyNewContextCreated (imsi, cellId, enbAddr, 
+      sgwAddr, bearerList);
   
   // Create and save routing information for default bearer
   EpcS11SapMme::BearerContextCreated defaultBearer = bearerList.front ();

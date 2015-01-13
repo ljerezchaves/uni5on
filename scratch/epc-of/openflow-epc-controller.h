@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef EPC_SDN_CONTROLLER_H
-#define EPC_SDN_CONTROLLER_H
+#ifndef OPENFLOW_EPC_CONTROLLER_H
+#define OPENFLOW_EPC_CONTROLLER_H
 
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
@@ -30,12 +30,12 @@
 
 namespace ns3 {
 
-class EpcSdnController;
+class OpenFlowEpcController;
 
 /**
  * OpenFlow EPC controller.
  */
-class EpcSdnController : public OFSwitch13Controller
+class OpenFlowEpcController : public OFSwitch13Controller
 {
 public:
   /** List of created context bearers */
@@ -44,7 +44,7 @@ public:
   /** Metadata associated to LTE context information for controller usage */
   class ContextInfo : public SimpleRefCount<ContextInfo>
   {
-    friend class EpcSdnController;
+    friend class OpenFlowEpcController;
     friend class RingController;
   
   protected:
@@ -57,8 +57,8 @@ public:
     ContextBearers_t bearerList;  //!< List of bearers
   };
 
-  EpcSdnController ();          //!< Default constructor
-  virtual ~EpcSdnController (); //!< Dummy destructor, see DoDipose
+  OpenFlowEpcController ();          //!< Default constructor
+  virtual ~OpenFlowEpcController (); //!< Dummy destructor, see DoDipose
 
   /**
    * Register this type.
@@ -333,5 +333,5 @@ private:
 };
 
 };  // namespace ns3
-#endif // EPC_SDN_CONTROLLER_H
+#endif // OPENFLOW_EPC_CONTROLLER_H
 
