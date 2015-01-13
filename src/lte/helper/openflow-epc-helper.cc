@@ -118,6 +118,9 @@ OpenFlowEpcHelper::DoDispose ()
   m_tunDevice->SetSendCallback (MakeNullCallback<bool, Ptr<Packet>, const Address&, const Address&, uint16_t> ());
   m_tunDevice = 0;
   m_sgwPgwApp = 0;  
+  m_s1uConnect = MakeNullCallback<Ptr<NetDevice>, Ptr<Node>, uint16_t> ();
+  m_x2Connect = MakeNullCallback<Ptr<NetDevice>, Ptr<Node> > ();
+  m_addBearerCallback = MakeNullCallback<bool, uint64_t, uint16_t, Ptr<EpcTft>, EpsBearer> ();
   m_sgwPgw->Dispose ();
 }
 

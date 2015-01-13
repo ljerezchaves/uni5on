@@ -94,6 +94,8 @@ Application::DoDispose (void)
   m_node = 0;
   m_startEvent.Cancel ();
   m_stopEvent.Cancel ();
+  m_startSendingCallback = MakeNullCallback<bool, Ptr<Application> > ();
+  m_stopSendingCallback = MakeNullCallback<bool, Ptr<Application> > ();
   Object::DoDispose ();
 }
 

@@ -104,6 +104,7 @@ EpcSgwPgwApplication::DoDispose ()
   NS_LOG_FUNCTION (this);
   m_s1uSocket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
   m_s1uSocket = 0;
+  m_createSessionCallback = MakeNullCallback<void, uint64_t, uint16_t, Ipv4Address, Ipv4Address, std::list<EpcS11SapMme::BearerContextCreated> > ();
   delete (m_s11SapSgw);
 }
 
