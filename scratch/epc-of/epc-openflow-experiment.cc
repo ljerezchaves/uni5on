@@ -175,7 +175,7 @@ main (int argc, char *argv[])
       SetPingTraffic (webHost, ueNodes);
     }
 
-  // HTTP traffic over default Non-GBR EPS bearer (QCI 9) 
+  // HTTP traffic over dedicated Non-GBR EPS bearer (QCI 8) 
   if (http) 
     {
       SetHttpTraffic (webHost, ueNodes, ueDevices, lteHelper, controller);
@@ -237,21 +237,21 @@ main (int argc, char *argv[])
   for (it = voipServers.Begin (); it != voipServers.End (); it++)
     {
       Ptr<UdpServer> server = DynamicCast<UdpServer> (*it);
-      std::cout << "For application " << server << ": " <<
+      std::cout << "For voip application " << server << ": " <<
                    server->GetReceived () << " pkts received, " <<
                    server->GetLost () << " pkts lost, " << 
-                   server->GetAverageDelay ().ToInteger (Time::MS) << " ms avg delay, " << 
-                   server->GetAverageJitter ().ToInteger (Time::MS) << " ms avg jitter." << std::endl;
+                   server->GetDelay ().ToInteger (Time::MS) << " ms avg delay, " << 
+                   server->GetJitter ().ToInteger (Time::MS) << " ms avg jitter." << std::endl;
     }
 
    for (it = videoServers.Begin (); it != videoServers.End (); it++)
     {
       Ptr<UdpServer> server = DynamicCast<UdpServer> (*it);
-      std::cout << "For application " << server << ": " <<
+      std::cout << "For video application " << server << ": " <<
                    server->GetReceived () << " pkts received, " <<
                    server->GetLost () << " pkts lost, " << 
-                   server->GetAverageDelay ().ToInteger (Time::MS) << " ms avg delay, " << 
-                   server->GetAverageJitter ().ToInteger (Time::MS) << " ms avg jitter." << std::endl;
+                   server->GetDelay ().ToInteger (Time::MS) << " ms avg delay, " << 
+                   server->GetJitter ().ToInteger (Time::MS) << " ms avg jitter." << std::endl;
     }
 
 

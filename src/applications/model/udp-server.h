@@ -70,13 +70,14 @@ public:
    * \brief Returns the average packet delay
    * \return the average packet delay
    */
-  Time GetAverageDelay (void) const;
+  Time GetDelay (void) const;
 
   /**
-   * \brief Returns the packet jitter
+   * \brief Returns the packet jitter estimation. The jitter is calculated
+   * using the RFC 1889 (RTP) jitter definition.
    * \return the packet jitter
    */
-  Time GetAverageJitter (void) const;
+  Time GetJitter (void) const;
 
   /**
    * \brief Returns the size of the window used for checking loss.
@@ -112,9 +113,10 @@ private:
   Ptr<Socket> m_socket; //!< IPv4 Socket
   Ptr<Socket> m_socket6; //!< IPv6 Socket
   uint32_t m_received; //!< Number of received packets
-  Time m_lastDelay; //!< Delay of last received packet
+  Time m_previousRx;   //!< Previous Rx time
+  Time m_previousRxTx; //!< Previous Rx or Tx time
+  int64_t m_jitter; //!< Jitter estimation
   Time m_delaySum; //!< Sum of packet delays
-  Time m_jitterSum; //!< Sum of packet jitters
   PacketLossCounter m_lossCounter; //!< Lost packet counter
 };
 

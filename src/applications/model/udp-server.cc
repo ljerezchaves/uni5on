@@ -64,10 +64,14 @@ UdpServer::GetTypeId (void)
 }
 
 UdpServer::UdpServer ()
-  : m_lossCounter (0)
+  : m_previousRx (Simulator::Now ()),
+    m_previousRxTx (Simulator::Now ()),
+    m_jitter (0),
+    m_lossCounter (0)
 {
   NS_LOG_FUNCTION (this);
   m_received=0;
+  m_delaySum = Time ();
 }
 
 UdpServer::~UdpServer ()
@@ -104,17 +108,17 @@ UdpServer::GetReceived (void) const
 }
 
 Time
-UdpServer::GetAverageDelay (void) const
+UdpServer::GetDelay (void) const
 {
   NS_LOG_FUNCTION (this);
   return m_received ? (m_delaySum / (int64_t)m_received) : m_delaySum;
 }
 
 Time
-UdpServer::GetAverageJitter (void) const
+UdpServer::GetJitter (void) const
 {
   NS_LOG_FUNCTION (this);
-  return m_received ? (m_jitterSum / (int64_t)m_received) : m_jitterSum;
+  return Time (m_jitter);
 }
 
 void
@@ -199,9 +203,11 @@ UdpServer::HandleRead (Ptr<Socket> socket)
             }
 
           Time delay = Simulator::Now () - seqTs.GetTs ();
+          Time delta = (Simulator::Now () - m_previousRx) - (seqTs.GetTs () - m_previousRxTx);
+          m_jitter += ((Abs (delta)).GetTimeStep () - m_jitter) >> 4;
+          m_previousRx = Simulator::Now ();
+          m_previousRxTx = seqTs.GetTs ();
           m_delaySum += delay;
-          m_jitterSum += delay - m_lastDelay;
-          m_lastDelay = delay;
 
           m_lossCounter.NotifyReceived (currentSequenceNumber);
           m_received++;
