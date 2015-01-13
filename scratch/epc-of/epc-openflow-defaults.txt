@@ -1,7 +1,0 @@
-default ns3::TcpSocket::SegmentSize "1420"
-default ns3::LteEnbRrc::SrsPeriodicity "320"
-default ns3::LteEnbNetDevice::UlBandwidth "100"
-default ns3::LteEnbNetDevice::DlBandwidth "100"
-default ns3::LteEnbNetDevice::DlEarfcn "2750"
-default ns3::LteEnbNetDevice::UlEarfcn "20750"
-global ChecksumEnabled "true"
