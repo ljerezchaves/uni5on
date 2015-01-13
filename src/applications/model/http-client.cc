@@ -100,7 +100,10 @@ HttpClient::StartApplication ()
   
       if (!m_startSendingCallback.IsNull ())
         {
-          m_startSendingCallback (this);
+          if (!m_startSendingCallback (this))
+            {
+              StopApplication ();
+            }
         }
 
       if (Ipv4Address::IsMatchingType(m_peerAddress) == true)

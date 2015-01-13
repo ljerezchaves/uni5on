@@ -110,8 +110,8 @@ public:
   void NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
                                 Ipv4Address enbAddr, Ipv4Address sgwAddr, 
                                 ContextBearers_t bearerList);
-  void NotifyAppStart (Ptr<Application> app);
-  void NotifyAppStop (Ptr<Application> app);
+  bool NotifyAppStart (Ptr<Application> app);
+  bool NotifyAppStop (Ptr<Application> app);
   void CreateSpanningTree ();
 
 protected:

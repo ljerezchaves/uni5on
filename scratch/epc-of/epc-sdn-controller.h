@@ -140,8 +140,9 @@ public:
    * TrafficFlowTemplate aggregated to it, since it uses the TFT to search for
    * bearer information.
    * \param app The application pointer.
+   * \return true to allow the app to start the traffic, false otherwise.
    */ 
-  virtual void 
+  virtual bool 
   NotifyAppStart (Ptr<Application> app);
 
   /**
@@ -150,8 +151,9 @@ public:
    * TrafficFlowTemplate aggregated to it, since it uses the TFT to search for
    * bearer information.
    * \param app The application pointer.
+   * \return true.
    */ 
-  virtual void 
+  virtual bool 
   NotifyAppStop (Ptr<Application> app);
 
   /**

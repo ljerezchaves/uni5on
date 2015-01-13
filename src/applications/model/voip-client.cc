@@ -190,7 +190,12 @@ VoipClient::StartSending ()
   NS_LOG_FUNCTION (this);
   if (!m_startSendingCallback.IsNull ())
     {
-      m_startSendingCallback (this);
+      if (!m_startSendingCallback (this))
+        {
+          CancelEvents ();
+          ScheduleStartEvent ();
+          return;
+        }
     }
   m_sendEvent = Simulator::Schedule (m_interval, &VoipClient::SendPacket, this);
   ScheduleStopEvent ();

@@ -145,7 +145,7 @@ RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   InstallTeidRouting (rInfo);
 }
 
-void 
+bool
 RingController::NotifyAppStart (Ptr<Application> app)
 {
   NS_LOG_FUNCTION (this << app);
@@ -196,9 +196,10 @@ RingController::NotifyAppStart (Ptr<Application> app)
     {
       NS_LOG_DEBUG ("Routing path for " << teid << " already installed.");
     }
+  return true;
 }
 
-void 
+bool
 RingController::NotifyAppStop (Ptr<Application> app)
 {
   NS_LOG_FUNCTION (this << app);
@@ -221,6 +222,7 @@ RingController::NotifyAppStop (Ptr<Application> app)
         }
       // No need to remove the rules... wait for idle timeout
     }
+  return true;
 }
 
 void

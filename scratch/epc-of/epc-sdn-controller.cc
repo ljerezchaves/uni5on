@@ -139,16 +139,18 @@ EpcSdnController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   m_contexts.push_back (info);
 }
 
-void 
+bool 
 EpcSdnController::NotifyAppStart (Ptr<Application> app)
 {
   NS_LOG_FUNCTION (this << app);
+  return true;
 }
 
-void 
+bool
 EpcSdnController::NotifyAppStop (Ptr<Application> app)
 {
   NS_LOG_FUNCTION (this << app);
+  return true;
 }
 
 void 

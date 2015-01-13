@@ -116,7 +116,7 @@ public:
    * Callback signature for application start sending.
    * \param Ptr<Application> Application.
    */
-  typedef Callback<void, Ptr<Application> > AppSendingCallback_t;
+  typedef Callback<bool, Ptr<Application> > AppSendingCallback_t;
 
   /**
    * Set Application start and stop sending callback
