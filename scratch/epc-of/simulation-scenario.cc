@@ -18,15 +18,15 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "epc-openflow-experiment.h"
+#include "simulation-scenario.h"
 
-NS_LOG_COMPONENT_DEFINE ("EpcOfExperiment");
+NS_LOG_COMPONENT_DEFINE ("SimulationScenario");
 
 namespace ns3 {
 
-NS_OBJECT_ENSURE_REGISTERED (EpcOfExperiment);
+NS_OBJECT_ENSURE_REGISTERED (SimulationScenario);
 
-const std::string EpcOfExperiment::m_videoTrace [] = {
+const std::string SimulationScenario::m_videoTrace [] = {
   "ns3/movies/jurassic.data", "ns3/movies/silence.data",
   "ns3/movies/star-wars.data", "ns3/movies/mr-bean.data",
   "ns3/movies/first-contact.data", "ns3/movies/from-dusk.data",
@@ -35,16 +35,16 @@ const std::string EpcOfExperiment::m_videoTrace [] = {
   "ns3/movies/ard-talk.data", "ns3/movies/ns3-talk.data",
   "ns3/movies/office-cam.data"};
 
-const uint64_t EpcOfExperiment::m_avgBitRate [] = {770000, 580000, 280000,
+const uint64_t SimulationScenario::m_avgBitRate [] = {770000, 580000, 280000,
   580000, 330000, 680000, 310000, 840000, 1100000, 720000, 540000, 550000,
   400000};
 
-const uint64_t EpcOfExperiment::m_maxBitRate [] = {3300000, 4400000, 1900000,
-  3100000, 2500000, 3100000, 2100000, 2900000, 3600000, 3400000, 3100000,
-  3400000, 2000000};
+const uint64_t SimulationScenario::m_maxBitRate [] = {3300000, 4400000,
+  1900000, 3100000, 2500000, 3100000, 2100000, 2900000, 3600000, 3400000,
+  3100000, 3400000, 2000000};
 
 
-EpcOfExperiment::EpcOfExperiment ()
+SimulationScenario::SimulationScenario ()
   : m_opfNetwork (0),
     m_controller (0),
     m_epcHelper (0),
@@ -56,15 +56,15 @@ EpcOfExperiment::EpcOfExperiment ()
   NS_LOG_FUNCTION (this);
   
   // Create the experiment with minimal configuration
-  EpcOfExperiment (1, 1, 3);
+  SimulationScenario (1, 1, 3);
 }
 
-EpcOfExperiment::~EpcOfExperiment ()
+SimulationScenario::~SimulationScenario ()
 {
   NS_LOG_FUNCTION (this);
 }
 
-EpcOfExperiment::EpcOfExperiment (uint32_t nEnbs, uint32_t nUes, uint32_t nRing)
+SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nUes, uint32_t nRing)
 {
   NS_LOG_FUNCTION (this);
 
@@ -106,7 +106,7 @@ EpcOfExperiment::EpcOfExperiment (uint32_t nEnbs, uint32_t nUes, uint32_t nRing)
 }
 
 void
-EpcOfExperiment::DoDispose ()
+SimulationScenario::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   
@@ -120,16 +120,16 @@ EpcOfExperiment::DoDispose ()
 }
 
 TypeId 
-EpcOfExperiment::GetTypeId (void)
+SimulationScenario::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::EpcOfExperiment")
+  static TypeId tid = TypeId ("ns3::SimulationScenario")
     .SetParent<Object> ()
   ;
   return tid;
 }
 
 void 
-EpcOfExperiment::EnablePingTraffic ()
+SimulationScenario::EnablePingTraffic ()
 {
   Ptr<UniformRandomVariable> rngStart;
   rngStart = CreateObject<UniformRandomVariable> ();
@@ -142,7 +142,7 @@ EpcOfExperiment::EnablePingTraffic ()
 }
 
 void
-EpcOfExperiment::EnableHttpTraffic ()
+SimulationScenario::EnableHttpTraffic ()
 {
   static uint16_t httpPort = 80;
 
@@ -212,7 +212,7 @@ EpcOfExperiment::EnableHttpTraffic ()
 }
 
 void
-EpcOfExperiment::EnableVoipTraffic ()
+SimulationScenario::EnableVoipTraffic ()
 {
     static uint16_t voipPort = 16000;
   uint16_t voipPacketSize = 60;
@@ -302,7 +302,7 @@ EpcOfExperiment::EnableVoipTraffic ()
 }
 
 void
-EpcOfExperiment::EnableVideoTraffic ()
+SimulationScenario::EnableVideoTraffic ()
 {
   static uint16_t videoPort = 20000;
 
@@ -373,7 +373,7 @@ EpcOfExperiment::EnableVideoTraffic ()
 }
 
 void
-EpcOfExperiment::PrintStats ()
+SimulationScenario::PrintStats ()
 {
   DynamicCast<RingController> (m_controller)->PrintBlockRatioStatistics ();
   
@@ -401,13 +401,13 @@ EpcOfExperiment::PrintStats ()
 }
 
 void
-EpcOfExperiment::EnableDatapathLogs ()
+SimulationScenario::EnableDatapathLogs ()
 {
   m_opfNetwork->EnableDatapathLogs ();
 }
 
 void
-EpcOfExperiment::EnableTraces ()
+SimulationScenario::EnableTraces ()
 {
   m_webNetwork->EnablePcap ("web");
   m_opfNetwork->EnableOpenFlowPcap ("openflow-channel");

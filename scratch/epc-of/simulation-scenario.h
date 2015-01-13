@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef EPC_OPENFLOW_EXPERIMENT_H
-#define EPC_OPENFLOW_EXPERIMENT_H
+#ifndef SIMULATION_SCENARIO_H
+#define SIMULATION_SCENARIO_H
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -32,21 +32,21 @@
 namespace ns3 {
 
 /**
- * Network for experimenting LTE EPC + OpenFlow 1.3
+ * Network simulation scenario for LTE EPC + OpenFlow 1.3
  */
-class EpcOfExperiment : public Object
+class SimulationScenario : public Object
 {
 public:
-  EpcOfExperiment ();           //!< Default constructor
-  virtual ~EpcOfExperiment ();  //!< Dummy destructor, see DoDipose
+  SimulationScenario ();           //!< Default constructor
+  virtual ~SimulationScenario ();  //!< Dummy destructor, see DoDipose
 
   /**
-   * Creates an experiment based on user preferences from command line.
+   * Creates a simulation scenario based on user preferences from command line.
    * \param nEnbs The number of eNBs in the LTE network.
    * \param nUes The number of UEs per eNB.
    * \param nRing The number of OpenFlow switches in the EPC ring network;
    */
-  EpcOfExperiment (uint32_t nEnbs, uint32_t nUes, uint32_t nRing);
+  SimulationScenario (uint32_t nEnbs, uint32_t nUes, uint32_t nRing);
 
   /**
    * Register this type.
@@ -138,4 +138,4 @@ private:
 };
 
 };  // namespace ns3
-#endif // EPC_SDN_CONTROLLER_H
+#endif // SIMULATION_SCENARIO_H

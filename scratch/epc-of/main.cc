@@ -20,7 +20,7 @@
 
 #include <ns3/core-module.h>
 #include <ns3/config-store-module.h>
-#include "epc-openflow-experiment.h"
+#include "simulation-scenario.h"
 
 NS_LOG_COMPONENT_DEFINE ("Main");
 
@@ -66,7 +66,7 @@ void
 EnableVerbose ()
 {
   LogComponentEnable ("Main", LOG_LEVEL_INFO);
-  LogComponentEnable ("EpcOfExperiment", LOG_LEVEL_INFO);
+  LogComponentEnable ("SimulationScenario", LOG_LEVEL_INFO);
   
   // Just for warnings and errors
   LogComponentEnable ("OFSwitch13NetDevice", LOG_LEVEL_WARN);
@@ -115,21 +115,21 @@ main (int argc, char *argv[])
   if (progress) EnableProgress ();
   if (verbose)  EnableVerbose ();
       
-  Ptr<EpcOfExperiment> experiment = 
-      CreateObject<EpcOfExperiment> (nEnbs, nUes, nRing);
-  if (liblog) experiment->EnableDatapathLogs ();
+  Ptr<SimulationScenario> scenario = 
+      CreateObject<SimulationScenario> (nEnbs, nUes, nRing);
+  if (liblog) scenario->EnableDatapathLogs ();
   
   // Application traffic Traffic
-  if (ping)   experiment->EnablePingTraffic ();
-  if (http)   experiment->EnableHttpTraffic ();
-  if (voip)   experiment->EnableVoipTraffic ();
-  if (video)  experiment->EnableVideoTraffic ();
+  if (ping)   scenario->EnablePingTraffic ();
+  if (http)   scenario->EnableHttpTraffic ();
+  if (voip)   scenario->EnableVoipTraffic ();
+  if (video)  scenario->EnableVideoTraffic ();
 
   NS_LOG_INFO ("Simulating...");
   Simulator::Stop (Seconds (simTime));
   Simulator::Run ();
 
-  experiment->PrintStats ();
+  scenario->PrintStats ();
   
   Simulator::Destroy ();
   NS_LOG_INFO ("End!");
