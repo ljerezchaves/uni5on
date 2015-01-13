@@ -64,14 +64,16 @@ SimulationScenario::~SimulationScenario ()
   NS_LOG_FUNCTION (this);
 }
 
-SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nUes, uint32_t nRing)
+SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nUes, 
+    uint32_t nRing)
 {
   NS_LOG_FUNCTION (this);
 
   // OpenFlow ring network (for EPC)
   m_opfNetwork = CreateObject<RingOpenFlowNetwork> ();
   m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
-  m_opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("1000Kb/s")));
+  m_opfNetwork->SetAttribute ("LinkDataRate", 
+      DataRateValue (DataRate ("1000Kb/s")));
 
   m_controller = CreateObject<RingController> ();
   m_controller->SetOpenFlowNetwork (m_opfNetwork);
@@ -84,9 +86,11 @@ SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nUes, uint32_t 
   m_epcHelper->SetX2ConnectCallback (
       MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
   m_epcHelper->SetAddBearerCallback (
-      MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, m_controller));
+      MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, 
+          m_controller));
   m_epcHelper->SetCreateSessionRequestCallback (
-      MakeCallback (&OpenFlowEpcController::NotifyNewContextCreated, m_controller));
+      MakeCallback (&OpenFlowEpcController::NotifyNewContextCreated, 
+          m_controller));
   
   // LTE radio access network
   m_lteNetwork = CreateObject<LteSquaredGridNetwork> ();
@@ -131,9 +135,7 @@ SimulationScenario::GetTypeId (void)
 void 
 SimulationScenario::EnablePingTraffic ()
 {
-  Ptr<UniformRandomVariable> rngStart;
-  rngStart = CreateObject<UniformRandomVariable> ();
-  
+  Ptr<UniformRandomVariable> rngStart = CreateObject<UniformRandomVariable> ();
   Ptr<Ipv4> dstIpv4 = m_webHost->GetObject<Ipv4> ();
   Ipv4Address dstAddr = dstIpv4->GetAddress (1,0).GetLocal ();
   V4PingHelper ping = V4PingHelper (dstAddr);
@@ -170,7 +172,7 @@ SimulationScenario::EnableHttpTraffic ()
       serverApps.Add (httpServerApp);
       httpServerApp->AggregateObject (tft);
       httpServerApp->SetAttribute ("Direction", 
-                                   EnumValue (Application::BIDIRECTIONAL));
+          EnumValue (Application::BIDIRECTIONAL));
 
       // HTTP client
       HttpClientHelper httpClient (serverAddr, httpPort);
@@ -178,7 +180,7 @@ SimulationScenario::EnableHttpTraffic ()
       clientApps.Add (httpClientApp);
       httpClientApp->AggregateObject (tft);
       httpServerApp->SetAttribute ("Direction", 
-                                   EnumValue (Application::BIDIRECTIONAL));
+          EnumValue (Application::BIDIRECTIONAL));
 
       // TFT Packet filter
       EpcTft::PacketFilter filter;
@@ -214,7 +216,7 @@ SimulationScenario::EnableHttpTraffic ()
 void
 SimulationScenario::EnableVoipTraffic ()
 {
-    static uint16_t voipPort = 16000;
+  static uint16_t voipPort = 16000;
   uint16_t voipPacketSize = 60;
   double   voipPacketInterval = 0.06;
  
@@ -245,7 +247,7 @@ SimulationScenario::EnableVoipTraffic ()
       senderApps.Add (voipSenderDownApp);
       voipSenderDownApp->AggregateObject (tft);
       voipSenderDownApp->SetAttribute ("Direction", 
-                                       EnumValue (Application::BIDIRECTIONAL));
+          EnumValue (Application::BIDIRECTIONAL));
 
       // TFT Packet filter
       EpcTft::PacketFilter filterDown;
@@ -267,7 +269,7 @@ SimulationScenario::EnableVoipTraffic ()
       senderApps.Add (voipSenderUpApp);
       voipSenderUpApp->AggregateObject (tft);
       voipSenderUpApp->SetAttribute ("Direction", 
-                                     EnumValue (Application::BIDIRECTIONAL));
+          EnumValue (Application::BIDIRECTIONAL));
 
       // TFT Packet filter
       EpcTft::PacketFilter filterUp;
@@ -334,7 +336,7 @@ SimulationScenario::EnableVideoTraffic ()
       senderApps.Add (videoSenderApp);
       videoSenderApp->AggregateObject (tft);
       videoSenderApp->SetAttribute ("Direction", 
-                                    EnumValue (Application::DOWNLINK));
+          EnumValue (Application::DOWNLINK));
       
       // Video sink (receive UDP datagramas from server)
       UdpServerHelper videoSink (videoPort);
@@ -397,7 +399,6 @@ SimulationScenario::PrintStats ()
                    server->GetDelay ().ToInteger (Time::MS) << " ms avg delay, " << 
                    server->GetJitter ().ToInteger (Time::MS) << " ms avg jitter." << std::endl;
     }
-  
 }
 
 void

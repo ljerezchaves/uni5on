@@ -25,9 +25,8 @@
 #include <ns3/network-module.h>
 #include <ns3/applications-module.h>
 #include "internet-network.h"
-#include "ring-network.h"
 #include "lte-squared-grid-network.h"
-#include "openflow-epc-network.h"
+#include "ring-network.h"
 
 namespace ns3 {
 
@@ -44,7 +43,7 @@ public:
    * Creates a simulation scenario based on user preferences from command line.
    * \param nEnbs The number of eNBs in the LTE network.
    * \param nUes The number of UEs per eNB.
-   * \param nRing The number of OpenFlow switches in the EPC ring network;
+   * \param nRing The number of OpenFlow switches in the EPC ring network.
    */
   SimulationScenario (uint32_t nEnbs, uint32_t nUes, uint32_t nRing);
 
