@@ -26,6 +26,68 @@ NS_LOG_COMPONENT_DEFINE ("Main");
 
 using namespace ns3;
 
+void ConfigureDefaults ();
+void PrintCurrentTime ();
+void EnableProgress ();
+void EnableVerbose ();
+
+int 
+main (int argc, char *argv[])
+{
+  // Parsing Command Line parameters
+  double   simTime = 30;
+  uint32_t nEnbs = 4;
+  uint32_t nUes = 1;
+  uint16_t nRing = 5;
+  bool     verbose = false;
+  bool     liblog = false;
+  bool     progress = true;
+  bool     ping = false;
+  bool     voip = false;
+  bool     http = false;
+  bool     video = false;
+
+  CommandLine cmd;
+  cmd.AddValue ("simTime",  "Simulation time (s)", simTime);
+  cmd.AddValue ("nEnbs",    "Number of eNBs", nEnbs);
+  cmd.AddValue ("nUes",     "Number of UEs per eNB", nUes);
+  cmd.AddValue ("nRing",    "Number of switches in the ring", nRing);
+  cmd.AddValue ("verbose",  "Enable verbose output", verbose);
+  cmd.AddValue ("liblog",   "Enable ofsoftswitch log component", liblog);
+  cmd.AddValue ("progress", "Enable simulation time progress", progress);
+  cmd.AddValue ("ping",     "Enable ping traffic", ping);
+  cmd.AddValue ("voip",     "Enable VoIP traffic", voip);
+  cmd.AddValue ("http",     "Enable HTTP traffic", http);
+  cmd.AddValue ("video",    "Enable video traffic", video);
+  cmd.Parse (argc, argv);
+  ConfigureDefaults ();
+  
+  if (progress) EnableProgress ();
+  if (verbose)  EnableVerbose ();
+  
+  Ptr<SimulationScenario> scenario = 
+      CreateObject<SimulationScenario> (nEnbs, nUes, nRing);
+  
+  if (liblog) scenario->EnableDatapathLogs ();
+  
+  // Application traffic Traffic
+  if (ping)   scenario->EnablePingTraffic ();
+  if (http)   scenario->EnableHttpTraffic ();
+  if (voip)   scenario->EnableVoipTraffic ();
+  if (video)  scenario->EnableVideoTraffic ();
+
+  if (verbose) scenario->EnableTraces ();
+
+  NS_LOG_INFO ("Simulating...");
+  Simulator::Stop (Seconds (simTime));
+  Simulator::Run ();
+
+  scenario->PrintStats ();
+
+  Simulator::Destroy ();
+  NS_LOG_INFO ("End!");
+}
+
 void
 ConfigureDefaults ()
 {
@@ -72,66 +134,16 @@ EnableVerbose ()
   LogComponentEnable ("OFSwitch13NetDevice", LOG_LEVEL_WARN);
   LogComponentEnable ("OFSwitch13Interface", LOG_LEVEL_WARN);
   LogComponentEnable ("OFSwitch13Helper", LOG_LEVEL_WARN);
+  LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_WARN);
+  
   LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_WARN);
   LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
-  LogComponentEnable ("RingOpenFlowNetwork", LOG_LEVEL_WARN);
-  LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_WARN);
-  LogComponentEnable ("OpenFlowEpcController", LOG_LEVEL_WARN);
-  LogComponentEnable ("RingController", LOG_LEVEL_WARN);
-}
-
-int 
-main (int argc, char *argv[])
-{
-  // Parsing Command Line parameters
-  double   simTime = 30;
-  uint32_t nEnbs = 4;
-  uint32_t nUes = 1;
-  uint16_t nRing = 5;
-  bool     verbose = false;
-  bool     liblog = false;
-  bool     progress = true;
-  bool     ping = false;
-  bool     voip = false;
-  bool     http = false;
-  bool     video = false;
-
-  CommandLine cmd;
-  cmd.AddValue ("simTime",  "Simulation time (s)", simTime);
-  cmd.AddValue ("nEnbs",    "Number of eNBs", nEnbs);
-  cmd.AddValue ("nUes",     "Number of UEs per eNB", nUes);
-  cmd.AddValue ("nRing",    "Number of switches in the ring", nRing);
-  cmd.AddValue ("verbose",  "Enable verbose output", verbose);
-  cmd.AddValue ("liblog",   "Enable ofsoftswitch log component", liblog);
-  cmd.AddValue ("progress", "Enable simulation time progress", progress);
-  cmd.AddValue ("ping",     "Enable ping traffic", ping);
-  cmd.AddValue ("voip",     "Enable VoIP traffic", voip);
-  cmd.AddValue ("http",     "Enable HTTP traffic", http);
-  cmd.AddValue ("video",    "Enable video traffic", video);
-  cmd.Parse (argc, argv);
-
-  ConfigureDefaults ();
+  LogComponentEnable ("OpenFlowEpcController", LOG_LEVEL_ALL);
   
-  if (progress) EnableProgress ();
-  if (verbose)  EnableVerbose ();
-      
-  Ptr<SimulationScenario> scenario = 
-      CreateObject<SimulationScenario> (nEnbs, nUes, nRing);
-  if (liblog) scenario->EnableDatapathLogs ();
-  
-  // Application traffic Traffic
-  if (ping)   scenario->EnablePingTraffic ();
-  if (http)   scenario->EnableHttpTraffic ();
-  if (voip)   scenario->EnableVoipTraffic ();
-  if (video)  scenario->EnableVideoTraffic ();
+  LogComponentEnable ("RingNetwork", LOG_LEVEL_WARN);
+  LogComponentEnable ("RingController", LOG_LEVEL_ALL);
 
-  NS_LOG_INFO ("Simulating...");
-  Simulator::Stop (Seconds (simTime));
-  Simulator::Run ();
-
-  scenario->PrintStats ();
-  
-  Simulator::Destroy ();
-  NS_LOG_INFO ("End!");
+  LogComponentEnable ("VoipClient", LOG_LOGIC);
+  LogComponentEnable ("OnOffUdpTraceClient", LOG_LOGIC);
 }
 

@@ -117,23 +117,24 @@ public:
   void PrintStats ();
 
 private:
-  Ptr<OpenFlowEpcNetwork> m_opfNetwork;         //!< LTE EPC network
-  Ptr<OpenFlowEpcController> m_controller;      //!< OpenFLow controller
-  Ptr<OpenFlowEpcHelper> m_epcHelper;           //!< LTE EPC helper
-  Ptr<LteSquaredGridNetwork> m_lteNetwork;      //!< LTE radio network
-  Ptr<InternetNetwork> m_webNetwork;            //!< Internet network
-  Ptr<LteHelper> m_lteHelper;                   //!< LTE radio helper
-  Ptr<Node> m_webHost;                          //!< Internet server node
-    
-  NodeContainer m_ueNodes;                      //!< LTE UE nodes
-  NetDeviceContainer m_ueDevices;               //!< LTE UE devices
+  Ptr<OpenFlowEpcNetwork> m_opfNetwork;       //!< LTE EPC network
+  Ptr<OpenFlowEpcController> m_controller;    //!< OpenFLow controller
+  Ptr<OpenFlowEpcHelper> m_epcHelper;         //!< LTE EPC helper
+  Ptr<LteSquaredGridNetwork> m_lteNetwork;    //!< LTE radio network
+  Ptr<InternetNetwork> m_webNetwork;          //!< Internet network
+  Ptr<LteHelper> m_lteHelper;                 //!< LTE radio helper
+  Ptr<Node> m_webHost;                        //!< Internet server node
+  Ptr<UniformRandomVariable> m_rngStart;      //!< Random app start time
+  
+  NodeContainer m_ueNodes;                    //!< LTE UE nodes
+  NetDeviceContainer m_ueDevices;             //!< LTE UE devices
 
-  ApplicationContainer m_voipServers;           //!< Voip applications
-  ApplicationContainer m_videoServers;          //!< Video applications
+  ApplicationContainer m_voipServers;         //!< Voip applications
+  ApplicationContainer m_videoServers;        //!< Video applications
 
-  static const std::string m_videoTrace [];     //!< Video trace filenames
-  static const uint64_t m_avgBitRate [];        //!< Video trace avg bitrate
-  static const uint64_t m_maxBitRate [];        //!< Video trace max bitrate
+  static const std::string m_videoTrace [];   //!< Video trace filenames
+  static const uint64_t m_avgBitRate [];      //!< Video trace avg bitrate
+  static const uint64_t m_maxBitRate [];      //!< Video trace max bitrate
 };
 
 };  // namespace ns3

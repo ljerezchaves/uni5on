@@ -70,12 +70,6 @@ public:
   virtual void DoDispose ();
 
   /**
-   * Set the OpenFlowEpcNetwork object used to create the network.
-   * \param ptr The object pointer.
-   */
-  void SetOpenFlowNetwork (Ptr<OpenFlowEpcNetwork> ptr);
-
-  /**
    * Notify this controller of a new IP device connected to the OpenFlow
    * network over some switch port. This function will save the IP address /
    * MAC address from this IP device for further ARP resolution. 

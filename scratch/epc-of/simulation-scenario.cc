@@ -51,7 +51,8 @@ SimulationScenario::SimulationScenario ()
     m_lteNetwork (0),
     m_webNetwork (0),
     m_lteHelper (0),
-    m_webHost (0)
+    m_webHost (0),
+    m_rngStart (0)
 {
   NS_LOG_FUNCTION (this);
   
@@ -70,15 +71,17 @@ SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nUes,
   NS_LOG_FUNCTION (this);
 
   // OpenFlow ring network (for EPC)
-  m_opfNetwork = CreateObject<RingOpenFlowNetwork> ();
-  m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
-  m_opfNetwork->SetAttribute ("LinkDataRate", 
-      DataRateValue (DataRate ("1000Kb/s")));
-
+  m_opfNetwork = CreateObject<RingNetwork> ();
   m_controller = CreateObject<RingController> ();
-  m_controller->SetOpenFlowNetwork (m_opfNetwork);
-  m_opfNetwork->CreateTopology (m_controller);
-
+  
+  m_controller->SetAttribute ("OFNetwork", PointerValue (m_opfNetwork));
+  m_controller->SetAttribute ("Strategy", EnumValue (RingController::BAND));
+  
+  m_opfNetwork->SetAttribute ("Controller", PointerValue (m_controller));
+  m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
+  m_opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("1Gb/s")));
+  m_opfNetwork->CreateTopology ();
+  
   // LTE EPC core (with callbacks setup)
   m_epcHelper = CreateObject<OpenFlowEpcHelper> ();
   m_epcHelper->SetS1uConnectCallback (
@@ -86,11 +89,9 @@ SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nUes,
   m_epcHelper->SetX2ConnectCallback (
       MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
   m_epcHelper->SetAddBearerCallback (
-      MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, 
-          m_controller));
+      MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, m_controller));
   m_epcHelper->SetCreateSessionRequestCallback (
-      MakeCallback (&OpenFlowEpcController::NotifyNewContextCreated, 
-          m_controller));
+      MakeCallback (&OpenFlowEpcController::NotifyNewContextCreated, m_controller));
   
   // LTE radio access network
   m_lteNetwork = CreateObject<LteSquaredGridNetwork> ();
@@ -107,6 +108,10 @@ SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nUes,
   // UE Nodes and UE devices
   m_ueNodes = m_lteNetwork->GetUeNodes ();
   m_ueDevices = m_lteNetwork->GetUeDevices ();
+
+  m_rngStart = CreateObject<UniformRandomVariable> ();
+  m_rngStart->SetAttribute ("Min", DoubleValue (0.));
+  m_rngStart->SetAttribute ("Max", DoubleValue (5.));
 }
 
 void
@@ -121,6 +126,7 @@ SimulationScenario::DoDispose ()
   m_lteHelper = 0;
   m_webHost = 0;
   m_opfNetwork = 0;
+  m_rngStart = 0;
 }
 
 TypeId 
@@ -135,12 +141,11 @@ SimulationScenario::GetTypeId (void)
 void 
 SimulationScenario::EnablePingTraffic ()
 {
-  Ptr<UniformRandomVariable> rngStart = CreateObject<UniformRandomVariable> ();
   Ptr<Ipv4> dstIpv4 = m_webHost->GetObject<Ipv4> ();
   Ipv4Address dstAddr = dstIpv4->GetAddress (1,0).GetLocal ();
   V4PingHelper ping = V4PingHelper (dstAddr);
   ApplicationContainer clientApps = ping.Install (m_ueNodes);
-  clientApps.Start (Seconds (rngStart->GetValue (0.1, 1.0)));
+  clientApps.Start (Seconds (m_rngStart->GetValue ()));
 }
 
 void
@@ -199,7 +204,6 @@ SimulationScenario::EnableHttpTraffic ()
       EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
-  clientApps.Start (Seconds (1));
   serverApps.Start (Seconds (0));
 
   // Setting up app start callback to controller
@@ -210,6 +214,9 @@ SimulationScenario::EnableHttpTraffic ()
       app->SetAppStartStopCallback (
           MakeCallback (&OpenFlowEpcController::NotifyAppStart, m_controller),
           MakeCallback (&OpenFlowEpcController::NotifyAppStop, m_controller));
+
+      // Random start time for each application
+      app->SetStartTime (Seconds (m_rngStart->GetValue ()));
     }
 }
 

@@ -19,6 +19,7 @@
  */
 
 #include "openflow-epc-network.h"
+#include "openflow-epc-controller.h"
 
 NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcNetwork");
 
@@ -63,6 +64,11 @@ OpenFlowEpcNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::OpenFlowEpcNetwork") 
     .SetParent<Object> ()
+    .AddAttribute ("Controller", 
+                   "The OpenFlow controller for this EPC OpenFlow network.",
+                   PointerValue (),
+                   MakePointerAccessor (&OpenFlowEpcNetwork::SetController),
+                   MakePointerChecker<OpenFlowEpcController> ())
   ;
   return tid; 
 }
@@ -78,23 +84,12 @@ OpenFlowEpcNetwork::DoDispose ()
 }
 
 void
-OpenFlowEpcNetwork::CreateTopology (Ptr<OFSwitch13Controller> controller)
+OpenFlowEpcNetwork::SetController (Ptr<OpenFlowEpcController> controller)
 {
-  static bool created = false;
-  if (created)
-    {
-      NS_LOG_WARN ("Topology already created.");
-      return;
-    }
-
   // Installing the controller app into a new controller node
   m_ofCtrlNode = CreateObject<Node> ();
   m_ofHelper.InstallControllerApp (m_ofCtrlNode, controller);
   m_ofCtrlApp = controller;
-
-  // Create the internal topology
-  CreateInternalTopology ();
-  created = true;
 }
 
 void

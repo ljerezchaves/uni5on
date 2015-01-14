@@ -28,6 +28,8 @@
 
 namespace ns3 {
 
+class OpenFlowEpcController;
+
 /**
  * Metadata associated to a connection between two any switches in the OpenFlow
  * network.
@@ -35,7 +37,7 @@ namespace ns3 {
 class ConnectionInfo : public SimpleRefCount<ConnectionInfo>
 {
   friend class OpenFlowEpcNetwork;
-  friend class RingOpenFlowNetwork;
+  friend class RingNetwork;
   friend class OpenFlowEpcController;
   friend class RingController;
 
@@ -78,7 +80,7 @@ public:
   
   /** Destructor implementation */
   virtual void DoDispose ();
- 
+
   /**
    * Called by OpenFlowEpcHelper to proper connect the SgwPgw and eNBs to the
    * S1-U OpenFlow network insfrastructure.
@@ -103,9 +105,8 @@ public:
   /** 
    * Creates the OpenFlow network infrastructure with existing OpenFlow
    * Controller application.
-   * \param controller The OpenFlow controller application for this network.
    */
-  virtual void CreateTopology (Ptr<OFSwitch13Controller> controller);
+  virtual void CreateTopology () = 0;
 
   /** 
    * Enable pcap on switch data ports.
@@ -159,9 +160,6 @@ protected:
    */
   Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
 
-  /** Creates the OpenFlow internal network infrastructure. */
-  virtual void CreateInternalTopology () = 0;
-
   /**
    * Store the pair <node, switch index> for further use.
    * \param switchIdx The switch index in m_ofSwitches.
@@ -195,15 +193,21 @@ protected:
    */
   uint16_t GetSwitchIdxForGateway ();
 
-  Ptr<OFSwitch13Controller> m_ofCtrlApp;      //!< Controller application.
-  Ptr<Node>                 m_ofCtrlNode;     //!< Controller node.
-  NodeContainer             m_ofSwitches;     //!< Switch nodes.
-  NetDeviceContainer        m_ofDevices;      //!< Switch devices.
-  OFSwitch13Helper          m_ofHelper;       //!< OpenFlow helper.
-  CsmaHelper                m_ofCsmaHelper;   //!< Csma helper.
+  /**
+   * Set the OpenFlow controller for this network.
+   * \param controller The controller application.
+   */ 
+  void SetController (Ptr<OpenFlowEpcController> controller);
+  
+  Ptr<OpenFlowEpcController>  m_ofCtrlApp;      //!< Controller application.
+  Ptr<Node>                   m_ofCtrlNode;     //!< Controller node.
+  NodeContainer               m_ofSwitches;     //!< Switch nodes.
+  NetDeviceContainer          m_ofDevices;      //!< Switch devices.
+  OFSwitch13Helper            m_ofHelper;       //!< OpenFlow helper.
+  CsmaHelper                  m_ofCsmaHelper;   //!< Csma helper.
 
 private:
-  uint16_t            m_gatewaySwitch;    //!< Gateway switch index
+  uint16_t                    m_gatewaySwitch;  //!< Gateway switch index
 
   /** Map saving Node / Switch indexes. */
   typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;  

@@ -36,11 +36,11 @@ class RingController;
  * X2 EPC interfaces.
  *
  */
-class RingOpenFlowNetwork : public OpenFlowEpcNetwork
+class RingNetwork : public OpenFlowEpcNetwork
 {
 public:
-  RingOpenFlowNetwork ();
-  ~RingOpenFlowNetwork ();
+  RingNetwork ();
+  ~RingNetwork ();
 
   /**
    * Register this type.
@@ -54,7 +54,7 @@ public:
   // Inherited from OpenFlowEpcNetowork
   Ptr<NetDevice> AttachToS1u (Ptr<Node> node, uint16_t cellId);
   Ptr<NetDevice> AttachToX2  (Ptr<Node> node);
-  void CreateInternalTopology ();
+  void CreateTopology ();
   
 private:
   Ptr<RingController>   m_ringCtrlApp;  //!< Casted controller app pointer
@@ -70,7 +70,7 @@ private:
   /** Helper to assign addresses to X2 NetDevices */
   Ipv4AddressHelper m_x2Ipv4AddressHelper;
 
-}; // class RingOpenFlowNetwork
+}; // class RingNetwork
 
 }; // namespace ns3
 #endif // RING_NETWORK_H

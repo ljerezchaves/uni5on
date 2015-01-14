@@ -53,14 +53,13 @@ OpenFlowEpcController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::OpenFlowEpcController")
     .SetParent (OFSwitch13Controller::GetTypeId ())
+    .AddAttribute ("OFNetwork",
+                   "The OpenFlow network controlled by this app.",
+                   PointerValue (),
+                   MakePointerAccessor (&OpenFlowEpcController::m_ofNetwork),
+                   MakePointerChecker<OpenFlowEpcNetwork> ())
   ;
   return tid;
-}
-
-void 
-OpenFlowEpcController::SetOpenFlowNetwork (Ptr<OpenFlowEpcNetwork> ptr)
-{
-  m_ofNetwork = ptr;
 }
 
 void 

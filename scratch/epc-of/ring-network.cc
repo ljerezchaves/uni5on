@@ -20,16 +20,13 @@
 
 #include "ring-network.h"
 
-NS_LOG_COMPONENT_DEFINE ("RingOpenFlowNetwork");
+NS_LOG_COMPONENT_DEFINE ("RingNetwork");
 
 namespace ns3 {
 
-NS_OBJECT_ENSURE_REGISTERED (RingOpenFlowNetwork);
+NS_OBJECT_ENSURE_REGISTERED (RingNetwork);
 
-// Initializing RingOpenFlowNetwork static members
-
-
-RingOpenFlowNetwork::RingOpenFlowNetwork ()
+RingNetwork::RingNetwork ()
 {
   NS_LOG_FUNCTION (this);
   
@@ -42,43 +39,43 @@ RingOpenFlowNetwork::RingOpenFlowNetwork ()
   m_x2Ipv4AddressHelper.SetBase ("12.0.0.0", "255.255.255.252");
 }
 
-RingOpenFlowNetwork::~RingOpenFlowNetwork ()
+RingNetwork::~RingNetwork ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId 
-RingOpenFlowNetwork::GetTypeId (void) 
+RingNetwork::GetTypeId (void) 
 {
-  static TypeId tid = TypeId ("ns3::RingOpenFlowNetwork") 
+  static TypeId tid = TypeId ("ns3::RingNetwork") 
     .SetParent<OpenFlowEpcNetwork> ()
-    .AddConstructor<RingOpenFlowNetwork> ()
+    .AddConstructor<RingNetwork> ()
     .AddAttribute ("NumSwitches", 
                    "The number of OpenFlow switches in the ring (at least 3).",
                    UintegerValue (3),
-                   MakeUintegerAccessor (&RingOpenFlowNetwork::m_nodes),
+                   MakeUintegerAccessor (&RingNetwork::m_nodes),
                    MakeUintegerChecker<uint16_t> (3))
     .AddAttribute ("LinkDataRate", 
                    "The data rate to be used for the CSMA OpenFlow links.",
                    DataRateValue (DataRate ("10Mb/s")),
-                   MakeDataRateAccessor (&RingOpenFlowNetwork::m_LinkDataRate),
+                   MakeDataRateAccessor (&RingNetwork::m_LinkDataRate),
                    MakeDataRateChecker ())
     .AddAttribute ("LinkDelay", 
                    "The delay to be used for the CSMA OpenFlow links.",
                    TimeValue (Seconds (0.01)),
-                   MakeTimeAccessor (&RingOpenFlowNetwork::m_LinkDelay),
+                   MakeTimeAccessor (&RingNetwork::m_LinkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("LinkMtu", 
                    "The MTU for CSMA OpenFlow links. Use at least 1500 bytes.",
                    UintegerValue (2000),
-                   MakeUintegerAccessor (&RingOpenFlowNetwork::m_LinkMtu),
+                   MakeUintegerAccessor (&RingNetwork::m_LinkMtu),
                    MakeUintegerChecker<uint16_t> ())
   ;
   return tid; 
 }
 
 void
-RingOpenFlowNetwork::DoDispose ()
+RingNetwork::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   OpenFlowEpcNetwork::DoDispose ();
@@ -87,14 +84,17 @@ RingOpenFlowNetwork::DoDispose ()
 }
 
 void
-RingOpenFlowNetwork::CreateInternalTopology ()
+RingNetwork::CreateTopology ()
 {
   NS_LOG_FUNCTION (this);
+  
+  static bool created = false;
+  NS_ASSERT_MSG (!created, "Topology already created.");
+  NS_ASSERT_MSG (m_ofCtrlApp, "Controller Application not set.");
+  NS_ASSERT_MSG (m_nodes >= 3, "Invalid number of nodes for the ring");
 
-  // Validating controller and number of switches in the ring
   m_ringCtrlApp = DynamicCast<RingController> (m_ofCtrlApp);
   NS_ASSERT_MSG (m_ringCtrlApp, "Expecting a RingController.");
-  NS_ASSERT_MSG (m_nodes >= 3, "Invalid number of nodes for the ring");
 
   // Creating the switch nodes
   m_ofSwitches.Create (m_nodes);
@@ -154,10 +154,12 @@ RingOpenFlowNetwork::CreateInternalTopology ()
       m_ringCtrlApp->NotifyNewSwitchConnection (info);
     }
   m_ringCtrlApp->CreateSpanningTree ();
+
+  created = true;
 }
 
 Ptr<NetDevice>
-RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
+RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << node);
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
@@ -210,7 +212,7 @@ RingOpenFlowNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
 }
 
 Ptr<NetDevice>
-RingOpenFlowNetwork::AttachToX2 (Ptr<Node> node)
+RingNetwork::AttachToX2 (Ptr<Node> node)
 {
   NS_LOG_FUNCTION (this << node);
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
