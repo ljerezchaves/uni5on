@@ -84,7 +84,7 @@ RingNetwork::DoDispose ()
 }
 
 void
-RingNetwork::CreateTopology ()
+RingNetwork::CreateTopology (std::vector<uint16_t> eNbSwitches)
 {
   NS_LOG_FUNCTION (this);
   
@@ -116,6 +116,7 @@ RingNetwork::CreateTopology ()
   m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_LinkDelay));
 
   // Connecting switches in ring topology (clockwise order)
+  m_eNbSwitchIdx = eNbSwitches;
   for (uint16_t i = 0; i < m_nodes; i++)
     {
       uint16_t currIndex = i;
@@ -164,11 +165,10 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   NS_LOG_FUNCTION (this << node);
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
   
-  // Connect SgwPgw node to switch index 0 and other eNBs to switchs indexes 1
-  // through m_nodes - 1, in turns. In the case of a single node in the ring,
-  // connect all gateways and eNBs to it. As we know that the OpenFlowEpcHelper
-  // will callback here first for SgwPgw node, we use the static counter to
-  // identify this node.
+  // Connect SgwPgw node to switch index 0 and other eNBs to switchs indexes
+  // indicated by the user. As we know that the OpenFlowEpcHelper will callback
+  // here first for SgwPgw node, we use the static counter to identify this
+  // node.
   static uint32_t counter = 0;
   uint16_t switchIdx;
   
@@ -180,8 +180,8 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
     }
   else  
     {
-      switchIdx = 1 + ((counter - 1) % (m_nodes - 1));
-      switchIdx = 3; //FIXME
+      // switchIdx = 1 + ((counter - 1) % (m_nodes - 1));
+      switchIdx = m_eNbSwitchIdx.at (counter - 1);
     }
   counter++;
   RegisterNodeAtSwitch (switchIdx, node);

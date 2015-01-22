@@ -50,11 +50,6 @@ LteSquaredGridNetwork::GetTypeId (void)
                    UintegerValue (1),
                    MakeUintegerAccessor (&LteSquaredGridNetwork::m_nEnbs),
                    MakeUintegerChecker<uint32_t> ())
-    .AddAttribute ("Ues", 
-                   "The number of UEs for each eNB in LTE Squared Grid Network",
-                   UintegerValue (1),
-                   MakeUintegerAccessor (&LteSquaredGridNetwork::m_nUes),
-                   MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("EnbHeight", 
                    "The eNB antenna height in LTE Squared Grid Network",
                    DoubleValue (5.0),
@@ -107,21 +102,24 @@ LteSquaredGridNetwork::EnableTraces ()
 
 
 void
-LteSquaredGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper)
+LteSquaredGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper, 
+    std::vector<uint32_t> nUes)
 {
   NS_LOG_FUNCTION (this);
-  NS_LOG_INFO ("Topology with " << m_nEnbs << " eNBs and " << m_nUes << " UEs.");
+  NS_LOG_INFO ("Topology with " << m_nEnbs << " eNBs");
   NS_ASSERT (epcHelper != 0);
 
   m_epcHelper = epcHelper;
   m_lteHelper = CreateObject<LteHelper> ();
   m_lteHelper->SetEpcHelper (m_epcHelper);
 
+  m_nUesPerEnb = nUes;
   m_enbNodes.Create (m_nEnbs);
   for (uint32_t i = 0; i < m_nEnbs; i++)
     {
+      NS_LOG_INFO (" eNB #" << i << " with " << m_nUesPerEnb.at (i) << " UEs");
       NodeContainer ueNc;
-      ueNc.Create (m_nUes);
+      ueNc.Create (m_nUesPerEnb.at (i));
       m_ueNodesPerEnb.push_back (ueNc);
       m_ueNodes.Add (ueNc);
     }
@@ -188,11 +186,11 @@ LteSquaredGridNetwork::SetLteNodePositions ()
       posY->SetAttribute ("Max", DoubleValue (enbPosition.at(i).y + m_roomLength * 0.5));
       
       positionAlloc = CreateObject<ListPositionAllocator> ();
-      for (uint32_t j = 0; j < m_nUes; j++)
+      for (uint32_t j = 0; j < m_nUesPerEnb.at (i); j++)
         {
           positionAlloc->Add (Vector (posX->GetValue (), posY->GetValue (), m_ueHeight));
-          mobility.SetPositionAllocator (positionAlloc);
         }
+      mobility.SetPositionAllocator (positionAlloc);
       mobility.Install (m_ueNodesPerEnb.at (i));
       BuildingsHelper::Install (m_ueNodesPerEnb.at (i));
     }
@@ -224,7 +222,7 @@ LteSquaredGridNetwork::InstallProtocolStack ()
 
       // Specifying static routes for each UE (default gateway)
       Ipv4StaticRoutingHelper ipv4RoutingHelper;
-      for (uint32_t j = 0; j < m_nUes; j++)
+      for (uint32_t j = 0; j < m_nUesPerEnb.at (i); j++)
         {
           Ptr<Node> n = ueNc.Get (j);
           std::ostringstream ueName;

@@ -52,14 +52,13 @@ public:
   NodeContainer GetUeNodes ();
 
   void EnableTraces ();
-  void CreateTopology (Ptr<EpcHelper> epcHelper); 
+  void CreateTopology (Ptr<EpcHelper> epcHelper, std::vector<uint32_t> nUes); 
   Ptr<LteHelper> GetLteHelper ();
   NetDeviceContainer GetUeDevices ();
 
 private:
   // Attributes
   uint32_t m_nEnbs;
-  uint32_t m_nUes;
   double m_enbHeight;
   double m_ueHeight;
   double m_roomLength;
@@ -70,6 +69,8 @@ private:
   NetDeviceContainer m_enbDevices;
   NetDeviceContainer m_ueDevices;
   std::vector<NodeContainer> m_ueNodesPerEnb;
+  std::vector<uint32_t> m_nUesPerEnb;
+
 
   // Helpers
   Ptr<LteHelper> m_lteHelper;

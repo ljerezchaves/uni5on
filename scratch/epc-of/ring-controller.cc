@@ -20,15 +20,28 @@
 
 #include "ring-controller.h"
 
+#define DEFAULT_TIMEOUT      0
+#define DEFAULT_PRIO       100
+#define DEDICATED_TIMEOUT   15
+#define DEDICATED_PRIO    1000
+
+#define RESERVED_BW        0.5
+
+
 NS_LOG_COMPONENT_DEFINE ("RingController");
 
 namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (RingController);
 
+bool
+RingController::RoutingInfo::IsGbr ()
+{
+  return (!isDefault && bearer.bearerLevelQos.IsGbr ());
+}
+
 RingController::RingController ()
-  : m_priority (1000),
-    m_gbrBearers (0),
+  : m_gbrBearers (0),
     m_gbrBlocks (0)
 {
   NS_LOG_FUNCTION (this);
@@ -53,10 +66,10 @@ RingController::DoDispose ()
 double
 RingController::PrintBlockRatioStatistics ()
 {
-  double ratio = (double)m_gbrBlocks/m_gbrBearers;
-  std::cout << "Number of GBR bearers request: " << m_gbrBearers << std::endl
-            << "Number of GBR bearers blocked: " << m_gbrBlocks << std::endl
-            << "Block ratio: " << ratio << std::endl;
+  double ratio = (double)m_gbrBlocks / (double)m_gbrBearers;
+  std::cout << "Number of GBR bearers request: " << m_gbrBearers  << std::endl
+            << "Number of GBR bearers blocked: " << m_gbrBlocks   << std::endl
+            << "Block ratio: "                   << ratio         << std::endl;
   return ratio;
 }
 
@@ -111,7 +124,6 @@ RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
                                          ContextBearers_t bearerList)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr);
-  static int defPrio = 100;  // Priority for default bearers
   
   // Call base method which will save context information
   OpenFlowEpcController::NotifyNewContextCreated (imsi, cellId, enbAddr, 
@@ -134,12 +146,12 @@ RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   rInfo->enbAddr = enbAddr;
   rInfo->downPath = FindShortestPath (rInfo->sgwIdx, rInfo->enbIdx);
   rInfo->upPath = InvertRoutingPath (rInfo->downPath);
-  rInfo->app = NULL;            // No app for default bearer
-  rInfo->priority = defPrio++;  // Priority for default bearer
-  rInfo->timeout = 0;           // No timeout for default bearer entries
-  rInfo->isInstalled = false;   // Rules not installed yet
-  rInfo->isActive = true;       // Default bearer is always active
-  rInfo->isDefault = true;      // This is a default bearer
+  rInfo->app = 0;                   // No app for default bearer
+  rInfo->priority = DEFAULT_PRIO;   // Priority for default bearer
+  rInfo->timeout = DEFAULT_TIMEOUT; // No timeout for default bearer entries
+  rInfo->isInstalled = false;       // Bearer rules not installed yet
+  rInfo->isActive = true;           // Default bearer is always active
+  rInfo->isDefault = true;          // This is a default bearer
 
   SaveTeidRoutingInfo (rInfo);
   InstallTeidRouting (rInfo);
@@ -154,7 +166,7 @@ RingController::NotifyAppStart (Ptr<Application> app)
   Ptr<EpcTft> tft = app->GetObject<EpcTft> ();
   EpcS11SapMme::BearerContextCreated dedicatedBearer = GetBearerFromTft (tft);
   uint32_t teid = dedicatedBearer.sgwFteid.teid;
-
+  
   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
   if (rInfo == 0)
     {
@@ -171,24 +183,49 @@ RingController::NotifyAppStart (Ptr<Application> app)
       rInfo->enbAddr = cInfo->enbAddr;
       rInfo->downPath = FindShortestPath (rInfo->sgwIdx, rInfo->enbIdx);
       rInfo->upPath = InvertRoutingPath (rInfo->downPath);
-      rInfo->app = app;               // App for this dedicated bearer
-      rInfo->priority = ++m_priority; // Priority for dedicated bearer
-      rInfo->timeout = 10;            // Default idle timeout (10 sec)
-      rInfo->isInstalled = false;     // Not installed yet
-      rInfo->isActive = false;        // Bearer not active yet
-      rInfo->isDefault = false;       // This is a dedicated bearer
+      rInfo->app = app;                   // App for this dedicated bearer
+      rInfo->priority = DEDICATED_PRIO;   // Priority for dedicated bearer
+      rInfo->timeout = DEDICATED_TIMEOUT; // Timeout for dedicated bearer
+      rInfo->isInstalled = false;         // Switch rules not installed yet
+      rInfo->isActive = false;            // Dedicated bearer not active yet
+      rInfo->isDefault = false;           // This is a dedicated bearer
 
       SaveTeidRoutingInfo (rInfo);
     }
+  else
+    {
+      if (rInfo->isDefault)
+        {
+          // If the application traffic is sent over default bearer, there is
+          // no need for resource reservation nor reinstall the switch rules.
+          // (Rules were supposed to remain installed during entire simulation)
+          NS_ASSERT_MSG (rInfo->isActive && rInfo->isInstalled, 
+                         "Default bearer with wrong parameters.");
+          return true;
+        }
+      else
+        {
+          if (!rInfo->isActive)
+            {
+              // Every time the application starts using an (old) existing
+              // bearer, let's inscrease the bearer priority and reinstall the
+              // rules on the switches. With this we avoid problems with old
+              // expired rules, and also, enable new routing paths.
+              rInfo->priority++;
+              rInfo->isInstalled = false;
+            }
+        }
+    }
 
-  // Check for dedicated GBR bearer
-  if (rInfo->isActive == false && rInfo->bearer.bearerLevelQos.IsGbr ())
+  // Check for dedicated GBR bearer not active yet, with no reserved resources
+  if (!rInfo->isActive && rInfo->IsGbr ())
     {
       ProcessGbrRequest (rInfo);
     }
 
-  rInfo->isActive = true;     // Activated by AppStartSending callback
-  if (rInfo->isInstalled == false)
+  // As the application is about to use this bearer, let's activate it.
+  rInfo->isActive = true;
+  if (!rInfo->isInstalled)
     {
       InstallTeidRouting (rInfo);
     }
@@ -216,7 +253,7 @@ RingController::NotifyAppStop (Ptr<Application> app)
   if (rInfo->isActive == true)
     {
       rInfo->isActive = false;
-      if (rInfo->bearer.bearerLevelQos.IsGbr ())
+      if (rInfo->IsGbr ())
         {
           ReleaseBandwidth (rInfo); 
         }
@@ -284,6 +321,7 @@ RingController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
 {
   uint8_t table = msg->stats->table_id;
   uint32_t teid = msg->stats->cookie;
+  uint16_t prio = msg->stats->priority;
   
   NS_LOG_FUNCTION (swtch.ipv4 << teid);
 
@@ -306,6 +344,14 @@ RingController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
       return 0;
     }
 
+  // Ignoring older rules with lower priority
+  if (rInfo->priority > prio)
+    {
+      NS_LOG_DEBUG ("Ignoring old rule for TEID " << teid << ".");
+      return 0;
+    }
+
+  NS_ASSERT_MSG (rInfo->priority == prio, "Invalid rInfo priority.");
   // Check for active application
   if (rInfo->isActive == true)
     {
@@ -313,11 +359,12 @@ RingController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
       // In this case, the switch removed the flow entry of an active route.
       // Let's reinstall the entry.
       InstallTeidRouting (rInfo);
-      return 0;
     }
-
-  // Set this rule as uninstalled
-  rInfo->isInstalled = false;
+  else
+    {
+      // Set this rule as uninstalled
+      rInfo->isInstalled = false;
+    }
   return 0;
 }
 
@@ -377,11 +424,9 @@ RingController::ProcessGbrRequest (Ptr<RoutingInfo> rInfo)
   m_gbrBearers++;
 
   EpsBearer bearer = rInfo->bearer.bearerLevelQos;
-  DataRate downlinkGbr (bearer.gbrQosInfo.gbrDl);
-  DataRate uplinkGbr (bearer.gbrQosInfo.gbrUl);
-  //DataRate reserve = std::max (downlinkGbr, uplinkGbr);
-  DataRate reserve = downlinkGbr + uplinkGbr;
+  DataRate reserve (bearer.gbrQosInfo.gbrDl + bearer.gbrQosInfo.gbrUl);
   NS_LOG_DEBUG ("Bearer " << rInfo->teid << " requesting " << reserve);
+  // This above reserve DataRate considers that the csma link is half-duplex
 
   DataRate bandwidth = GetAvailableBandwidth (rInfo->sgwIdx, rInfo->enbIdx, 
                                               rInfo->downPath);
@@ -563,13 +608,15 @@ RingController::GetTeidRoutingInfo (uint32_t teid)
 bool 
 RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
 {
-  NS_LOG_FUNCTION (this << rInfo->teid << buffer);
+  NS_LOG_FUNCTION (this << rInfo->teid << rInfo->priority << buffer);
   NS_ASSERT_MSG (rInfo->isActive, "Rule not active.");
+  NS_ASSERT_MSG (!rInfo->isInstalled, "Rule already installed.");
 
   char teidHexStr [9];
   sprintf (teidHexStr, "0x%x", rInfo->teid);
 
-  // flow-mod flags OFPFF_SEND_FLOW_REM
+  // flow-mod flags OFPFF_SEND_FLOW_REM, used to notify the controller when a
+  // flow entry timeout expires.
   char flagStr [7];
   sprintf (flagStr, "0x0001");
 

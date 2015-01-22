@@ -55,8 +55,8 @@ protected:
   Ptr<CsmaNetDevice> portDev2;          //!< OpenFlow port csma device 1
   uint32_t portNum1;                    //!< OpenFlow port number 1
   uint32_t portNum2;                    //!< OpenFlow port number 2
-  DataRate maxDataRate;                 //!< Maximum nominal bandwidth
-  DataRate reservedDataRate;            //!< Reserved bandwitdth
+  DataRate maxDataRate;                 //!< Maximum nominal bandwidth (half-duplex)
+  DataRate reservedDataRate;            //!< Reserved bandwitdth (half-duplex)
 };
 
 /**
@@ -105,8 +105,9 @@ public:
   /** 
    * Creates the OpenFlow network infrastructure with existing OpenFlow
    * Controller application.
+   * \param eNbSwitches The switch index for each eNB.
    */
-  virtual void CreateTopology () = 0;
+  virtual void CreateTopology (std::vector<uint16_t> eNbSwitches) = 0;
 
   /** 
    * Enable pcap on switch data ports.
@@ -186,7 +187,7 @@ protected:
    * \return The switch index in m_ofSwitches.
    */
   uint16_t GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev);
-  
+
   /**
    * Retrieve the switch index at which the gateway is connected.
    * \return The switch index in m_ofSwitches.
@@ -205,9 +206,10 @@ protected:
   NetDeviceContainer          m_ofDevices;      //!< Switch devices.
   OFSwitch13Helper            m_ofHelper;       //!< OpenFlow helper.
   CsmaHelper                  m_ofCsmaHelper;   //!< Csma helper.
+  std::vector<uint16_t>       m_eNbSwitchIdx;   //!< Switch index for each eNB.
 
 private:
-  uint16_t                    m_gatewaySwitch;  //!< Gateway switch index
+  uint16_t                    m_gatewaySwitch;  //!< Gateway switch index.
 
   /** Map saving Node / Switch indexes. */
   typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;  

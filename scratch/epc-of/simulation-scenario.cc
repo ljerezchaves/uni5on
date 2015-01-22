@@ -57,7 +57,11 @@ SimulationScenario::SimulationScenario ()
   NS_LOG_FUNCTION (this);
   
   // Create the experiment with minimal configuration
-  SimulationScenario (1, 1, 3);
+  std::vector<uint32_t> eNbUes (1);
+  std::vector<uint16_t> eNbSwitches (1);
+  eNbUes.at (0) = 1;
+  eNbSwitches.at (0) = 1;
+  SimulationScenario (1, 1, 3, eNbUes, eNbSwitches);
 }
 
 SimulationScenario::~SimulationScenario ()
@@ -66,7 +70,8 @@ SimulationScenario::~SimulationScenario ()
 }
 
 SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nUes, 
-    uint32_t nRing)
+    uint32_t nRing, std::vector<uint32_t> eNbUes, 
+    std::vector<uint16_t> eNbSwitches)
 {
   NS_LOG_FUNCTION (this);
 
@@ -80,24 +85,24 @@ SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nUes,
   m_opfNetwork->SetAttribute ("Controller", PointerValue (m_controller));
   m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
   m_opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("1Gb/s")));
-  m_opfNetwork->CreateTopology ();
+  m_opfNetwork->CreateTopology (eNbSwitches);
   
   // LTE EPC core (with callbacks setup)
   m_epcHelper = CreateObject<OpenFlowEpcHelper> ();
   m_epcHelper->SetS1uConnectCallback (
       MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, m_opfNetwork));
-  m_epcHelper->SetX2ConnectCallback (
-      MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
-  m_epcHelper->SetAddBearerCallback (
-      MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, m_controller));
+  // m_epcHelper->SetX2ConnectCallback (
+  //     MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
+  // m_epcHelper->SetAddBearerCallback (
+  //     MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, m_controller));
   m_epcHelper->SetCreateSessionRequestCallback (
       MakeCallback (&OpenFlowEpcController::NotifyNewContextCreated, m_controller));
   
   // LTE radio access network
   m_lteNetwork = CreateObject<LteSquaredGridNetwork> ();
+  m_lteNetwork->SetAttribute ("RoomLength", DoubleValue (100.0));
   m_lteNetwork->SetAttribute ("Enbs", UintegerValue (nEnbs));
-  m_lteNetwork->SetAttribute ("Ues", UintegerValue (nUes));
-  m_lteNetwork->CreateTopology (m_epcHelper);
+  m_lteNetwork->CreateTopology (m_epcHelper, eNbUes);
   m_lteHelper = m_lteNetwork->GetLteHelper ();
 
   // Internet network
@@ -291,8 +296,8 @@ SimulationScenario::EnableVoipTraffic ()
  
       // Dedicated GBR EPS bearer (QCI 1)
       GbrQosInformation qos;
-      qos.gbrDl = (voipPacketSize + 4) * 8 / voipPacketInterval;
-      qos.mbrDl = qos.gbrUl = qos.mbrUl = qos.gbrDl;
+      qos.gbrDl = qos.gbrUl = (voipPacketSize + 4) * 8 / voipPacketInterval;
+      qos.mbrDl = qos.mbrUl = (voipPacketSize + 4) * 8 / voipPacketInterval;
       EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }

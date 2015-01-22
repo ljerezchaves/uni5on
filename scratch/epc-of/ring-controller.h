@@ -61,7 +61,9 @@ public:
   class RoutingInfo : public SimpleRefCount<RoutingInfo>
   {
     friend class RingController;
-  
+ 
+    bool IsGbr ();
+    
   protected:
     uint32_t teid;                              //!< GTP TEID
     EpcS11SapMme::BearerContextCreated bearer;  //!< EPS bearer
@@ -75,8 +77,8 @@ public:
     RoutingPath upPath;               //!< Uplink routing path
     DataRate reserved;                //!< Reserved data rate
 
-    DataRate downAvgRate;
-    DataRate upAvgRate;
+//    DataRate downAvgRate;
+//    DataRate upAvgRate;
 
     Ptr<Application> app;             //!< Traffic application
 
@@ -247,7 +249,6 @@ private:
   TeidRoutingMap_t  m_routes;     //!< TEID routes.
   RoutingStrategy   m_strategy;   //!< Routing strategy in use.
   Time              m_timeout;    //!< Switch stats query timeout.
-  uint32_t          m_priority;   //!< Dedicated bearer flow mod priority.
 
   //!< Performance metrics
   //\{
