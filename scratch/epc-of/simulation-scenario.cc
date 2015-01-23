@@ -58,10 +58,10 @@ SimulationScenario::SimulationScenario ()
   
   // Create the experiment with minimal configuration
   std::vector<uint32_t> eNbUes (1);
-  std::vector<uint16_t> eNbSwitches (1);
+  std::vector<uint16_t> eNbSwt (1);
   eNbUes.at (0) = 1;
-  eNbSwitches.at (0) = 1;
-  SimulationScenario (1, 1, 3, eNbUes, eNbSwitches);
+  eNbSwt.at (0) = 1;
+  SimulationScenario (1, 1, 3, eNbUes, eNbSwt);
 }
 
 SimulationScenario::~SimulationScenario ()
@@ -71,7 +71,7 @@ SimulationScenario::~SimulationScenario ()
 
 SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nUes, 
     uint32_t nRing, std::vector<uint32_t> eNbUes, 
-    std::vector<uint16_t> eNbSwitches)
+    std::vector<uint16_t> eNbSwt)
 {
   NS_LOG_FUNCTION (this);
 
@@ -85,7 +85,7 @@ SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nUes,
   m_opfNetwork->SetAttribute ("Controller", PointerValue (m_controller));
   m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
   m_opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("1Gb/s")));
-  m_opfNetwork->CreateTopology (eNbSwitches);
+  m_opfNetwork->CreateTopology (eNbSwt);
   
   // LTE EPC core (with callbacks setup)
   m_epcHelper = CreateObject<OpenFlowEpcHelper> ();

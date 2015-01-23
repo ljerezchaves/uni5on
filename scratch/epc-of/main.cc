@@ -49,7 +49,7 @@ main (int argc, char *argv[])
   uint16_t    nRing     = 5;
   bool        verbose   = false;
   bool        liblog    = false;
-  bool        progress  = true;
+  bool        progress  = false;
   bool        ping      = false;
   bool        voip      = false;
   bool        http      = false;
@@ -76,7 +76,7 @@ main (int argc, char *argv[])
  
   std::vector<uint32_t> eNbUes (nEnbs);     // Number of UEs per eNb
   std::vector<uint16_t> eNbSwt (nEnbs);     // Switch index per eNb
-  ParseTopology (topoFile, nEnbs, nUes, nRing, eNbUes, eNbSwitches);
+  ParseTopology (topoFile, nEnbs, nUes, nRing, eNbUes, eNbSwt);
   
   Ptr<SimulationScenario> scenario = 
     CreateObject<SimulationScenario> (nEnbs, nUes, nRing, eNbUes, eNbSwt);

@@ -46,10 +46,10 @@ public:
    * \param nUes The number of UEs per eNB.
    * \param nRing The number of OpenFlow switches in the EPC ring network.
    * \param eNbUes Indicates, for each eNB, the number of UEs to create.
-   * \param eNbSwitches Indicates, for each eNB, the OpenFlow switch index to use.
+   * \param eNbSwt Indicates, for each eNB, the OpenFlow switch index to use.
    */
   SimulationScenario (uint32_t nEnbs, uint32_t nUes, uint32_t nRing, 
-       std::vector<uint32_t> eNbUes, std::vector<uint16_t> eNbSwitches);
+       std::vector<uint32_t> eNbUes, std::vector<uint16_t> eNbSwt);
 
   /**
    * Register this type.
