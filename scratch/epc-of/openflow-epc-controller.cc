@@ -296,7 +296,7 @@ OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg,
   enum ofp_packet_in_reason reason = msg->reason;
   if (reason == OFPR_NO_MATCH)
     {
-      char *m = ofl_structs_match_to_string (msg->match, NULL);
+      char *m = ofl_structs_match_to_string (msg->match, 0);
       NS_LOG_DEBUG ("Packet in match: " << m);
       free (m);
 
@@ -329,7 +329,7 @@ OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg,
   NS_LOG_WARN ("Ignoring packet sent to controller.");
   
   // All handlers must free the message when everything is ok
-  ofl_msg_free ((ofl_msg_header*)msg, NULL /*dp->exp*/);
+  ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
   return 0;
 }
 
@@ -341,7 +341,7 @@ OpenFlowEpcController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
   NS_LOG_WARN ("No handling implemented here.");
 
   // All handlers must free the message when everything is ok
-  ofl_msg_free ((ofl_msg_header*)msg, NULL /*dp->exp*/);
+  ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
   return 0;
 }
 
@@ -459,7 +459,7 @@ OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg,
     }
 
   // All handlers must free the message when everything is ok
-  ofl_msg_free ((ofl_msg_header*)msg, NULL /*dp->exp*/);
+  ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
   return 0;
 }
 

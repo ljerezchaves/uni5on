@@ -220,7 +220,11 @@ RingController::NotifyAppStart (Ptr<Application> app)
   // Check for dedicated GBR bearer not active yet, with no reserved resources
   if (!rInfo->isActive && rInfo->IsGbr ())
     {
-      ProcessGbrRequest (rInfo);
+      bool ok = ProcessGbrRequest (rInfo);
+      if (!ok)
+        {
+          return false;
+        }
     }
 
   // As the application is about to use this bearer, let's activate it.
@@ -311,7 +315,7 @@ RingController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
     }
   
   // All handlers must free the message when everything is ok
-  ofl_msg_free ((ofl_msg_header*)msg, NULL /*dp->exp*/);
+  ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
   return 0;
 }
 
@@ -327,7 +331,7 @@ RingController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
 
   // Since handlers must free the message when everything is ok, let's remove
   // it now as we can handle it anyway.
-  ofl_msg_free_flow_removed (msg, true, NULL);
+  ofl_msg_free_flow_removed (msg, true, 0);
 
   // Ignoring flows removed from tables other than teid table #1
   if (table != 1)
@@ -374,7 +378,7 @@ RingController::HandleMultipartReply (ofl_msg_multipart_reply_header *msg,
 {
   NS_LOG_FUNCTION (swtch.ipv4 << xid);
 
-  char *msg_str = ofl_msg_to_string ((ofl_msg_header*)msg, NULL);
+  char *msg_str = ofl_msg_to_string ((ofl_msg_header*)msg, 0);
   NS_LOG_DEBUG ("Multipart reply: " << msg_str);
   free (msg_str);
 
@@ -413,61 +417,72 @@ RingController::HandleMultipartReply (ofl_msg_multipart_reply_header *msg,
     }
 
   // All handlers must free the message when everything is ok
-  ofl_msg_free ((ofl_msg_header*)msg, NULL /*exp*/);
+  ofl_msg_free ((ofl_msg_header*)msg, 0 /*exp*/);
   return 0;
 }
 
 
-void
+bool
 RingController::ProcessGbrRequest (Ptr<RoutingInfo> rInfo)
 {
   m_gbrBearers++;
 
   EpsBearer bearer = rInfo->bearer.bearerLevelQos;
-  DataRate reserve (bearer.gbrQosInfo.gbrDl + bearer.gbrQosInfo.gbrUl);
-  NS_LOG_DEBUG ("Bearer " << rInfo->teid << " requesting " << reserve);
-  // This above reserve DataRate considers that the csma link is half-duplex
+  DataRate request (bearer.gbrQosInfo.gbrDl + bearer.gbrQosInfo.gbrUl);
+  NS_LOG_DEBUG ("Bearer " << rInfo->teid << " requesting " << request);
 
-  DataRate bandwidth = GetAvailableBandwidth (rInfo->sgwIdx, rInfo->enbIdx, 
-                                              rInfo->downPath);
-  NS_LOG_DEBUG ("Bandwidth from " << rInfo->sgwIdx <<  " to " << 
-                rInfo->enbIdx << " in shortest path: " << bandwidth);
+  DataRate available = 
+    GetAvailableBandwidth (rInfo->sgwIdx, rInfo->enbIdx, rInfo->downPath);
+  NS_LOG_DEBUG ("Bandwidth from "     << rInfo->sgwIdx <<  
+                " to "                << rInfo->enbIdx << 
+                " in shortest path: " << available);
 
-  if (m_strategy == RingController::HOPS)
+  switch (m_strategy)
     {
-      if (bandwidth < reserve)
+      case RingController::HOPS:
         {
-          NS_LOG_WARN ("No resources for bearer " << rInfo->teid <<
-                       " in shortest path. Proceed without reservation.");
-          m_gbrBlocks++;
-          return;
-        }
-    }
-  else if (m_strategy == RingController::BAND)
-    {
-      if (bandwidth < reserve)
-        {
-          NS_LOG_DEBUG ("No resources for bearer " << rInfo->teid <<
-                       " in shortest path. Checking the other path.");
-          bandwidth = GetAvailableBandwidth (rInfo->sgwIdx, rInfo->enbIdx, 
-                                             rInfo->upPath);
-          if (bandwidth < reserve)
+          if (available < request)
             {
               NS_LOG_WARN ("No resources for bearer " << rInfo->teid <<
-                           " in both paths. Proceed without reservation.");
+                           " in shortest path. Proceed without reservation.");
               m_gbrBlocks++;
-              return;
+              return false;
             }
-          else
-            {
-              NS_LOG_DEBUG ("Found resources in other path. Inverting paths.");
-              rInfo->upPath = InvertRoutingPath (rInfo->upPath);
-              rInfo->downPath = InvertRoutingPath (rInfo->downPath);
-            }
+          break;
+        }
+      case RingController::BAND:
+        {
+          if (available < request)
+          {
+            NS_LOG_DEBUG ("No resources for bearer " << rInfo->teid <<
+                         " in shortest path. Checking the other path.");
+            available = GetAvailableBandwidth (rInfo->sgwIdx, rInfo->enbIdx, 
+                                               rInfo->upPath);
+            if (available < request)
+              {
+                NS_LOG_WARN ("No resources for bearer " << rInfo->teid <<
+                             " in both paths. Proceed without reservation.");
+                m_gbrBlocks++;
+                return false;
+              }
+            else
+              {
+                NS_LOG_DEBUG ("Found resources in other path. Inverting paths.");
+                rInfo->upPath = InvertRoutingPath (rInfo->upPath);
+                rInfo->downPath = InvertRoutingPath (rInfo->downPath);
+              }
+          }
+          break;
+        }
+      default:
+        {
+          NS_ABORT_MSG ("Invalid Routing strategy.");
         }
     }
+
   rInfo->reserved = reserve;
   ReserveBandwidth (rInfo);
+  return true;
 }
 
 RingController::RoutingPath
@@ -615,10 +630,10 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
   char teidHexStr [9];
   sprintf (teidHexStr, "0x%x", rInfo->teid);
 
-  // flow-mod flags OFPFF_SEND_FLOW_REM, used to notify the controller when a
-  // flow entry timeout expires.
+  // flow-mod flags OFPFF_SEND_FLOW_REM and OFPFF_CHECK_OVERLAP, used to notify
+  // the controller when a flow entry expires and to avoid overlaping rules.
   char flagStr [7];
-  sprintf (flagStr, "0x0001");
+  sprintf (flagStr, "0x0003");
 
   char bufferStr [12];
   sprintf (bufferStr, "%u", buffer);

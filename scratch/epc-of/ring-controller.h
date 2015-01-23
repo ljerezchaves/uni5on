@@ -131,8 +131,9 @@ private:
   /**
    * Process the GBR resource allocation based on current strategy/
    * \param rInfo The routing information to process.
+   * \return True when the GBR request can be sastified.
    */
-  void ProcessGbrRequest (Ptr<RoutingInfo> rInfo);
+  bool ProcessGbrRequest (Ptr<RoutingInfo> rInfo);
 
   /**
    * Look for the routing path between srcSwitchIdx and dstSwitchIdx with
