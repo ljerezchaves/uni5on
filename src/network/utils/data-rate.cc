@@ -279,22 +279,22 @@ double operator* (const Time& lhs, const DataRate& rhs)
   return lhs.GetSeconds ()*rhs.GetBitRate ();
 }
 
-DataRate operator + (const DataRate& lhs, const DataRate& rhs)
+DataRate operator+ (const DataRate& lhs, const DataRate& rhs)
 {
   return DataRate (lhs.GetBitRate () + rhs.GetBitRate ());
 }
 
-DataRate operator - (const DataRate& lhs, const DataRate& rhs)
+DataRate operator- (const DataRate& lhs, const DataRate& rhs)
 {
-  return DataRate (lhs.GetBitRate () + rhs.GetBitRate ());
+  return DataRate (lhs.GetBitRate () - rhs.GetBitRate ());
 }
 
-DataRate operator * (const DataRate& lhs, const double& rhs)
+DataRate operator* (const DataRate& lhs, const double& rhs)
 {
   return DataRate (lhs.GetBitRate () * rhs);
 }
 
-DataRate operator * (const double& lhs, const DataRate& rhs)
+DataRate operator* (const double& lhs, const DataRate& rhs)
 {
   return DataRate (rhs.GetBitRate () * lhs);
 }

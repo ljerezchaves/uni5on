@@ -208,10 +208,10 @@ double operator* (const DataRate& lhs, const Time& rhs);
  */
 double operator* (const Time& lhs, const DataRate& rhs);
 
-DataRate operator + (const DataRate& lhs, const DataRate& rhs);
-DataRate operator - (const DataRate& lhs, const DataRate& rhs);
-DataRate operator * (const DataRate& lhs, const double& rhs);
-DataRate operator * (const double& lhs, const DataRate& rhs);
+DataRate operator+ (const DataRate& lhs, const DataRate& rhs);
+DataRate operator- (const DataRate& lhs, const DataRate& rhs);
+DataRate operator* (const DataRate& lhs, const double& rhs);
+DataRate operator* (const double& lhs, const DataRate& rhs);
 
 
 
