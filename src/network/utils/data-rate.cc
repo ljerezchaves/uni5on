@@ -226,16 +226,6 @@ bool DataRate::operator != (const DataRate& rhs) const
   return m_bps!=rhs.m_bps;
 }
 
-DataRate DataRate::operator + (const DataRate& rhs) const
-{
-  return DataRate (m_bps+rhs.m_bps);
-}
-
-DataRate DataRate::operator - (const DataRate& rhs) const
-{
-  return DataRate (m_bps-rhs.m_bps);
-}
-
 double DataRate::CalculateTxTime (uint32_t bytes) const
 {
   NS_LOG_FUNCTION (this << bytes);
@@ -288,5 +278,26 @@ double operator* (const Time& lhs, const DataRate& rhs)
 {
   return lhs.GetSeconds ()*rhs.GetBitRate ();
 }
+
+DataRate operator + (const DataRate& lhs, const DataRate& rhs)
+{
+  return DataRate (lhs.GetBitRate () + rhs.GetBitRate ());
+}
+
+DataRate operator - (const DataRate& lhs, const DataRate& rhs)
+{
+  return DataRate (lhs.GetBitRate () + rhs.GetBitRate ());
+}
+
+DataRate operator * (const DataRate& lhs, const double& rhs)
+{
+  return DataRate (lhs.GetBitRate () * rhs);
+}
+
+DataRate operator * (const double& lhs, const DataRate& rhs)
+{
+  return DataRate (rhs.GetBitRate () * lhs);
+}
+
 
 } // namespace ns3

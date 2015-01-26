@@ -144,20 +144,6 @@ public:
   bool operator != (const DataRate& rhs) const;
 
   /**
-   * \return the result of the subtraction
-   *
-   * \param rhs the datarate to subtract from this datarate
-   */   
-  DataRate operator - (const DataRate& rhs) const;
-
-  /**
-   * \return the result of the sum
-   *
-   * \param rhs the datarate to sum to this datarate
-   */   
-  DataRate operator + (const DataRate& rhs) const;
-
-  /**
    * \brief Calculate transmission time
    *
    * Calculates the transmission time at this data rate
@@ -221,6 +207,12 @@ double operator* (const DataRate& lhs, const Time& rhs);
  * \return the number of bits over the period of time
  */
 double operator* (const Time& lhs, const DataRate& rhs);
+
+DataRate operator + (const DataRate& lhs, const DataRate& rhs);
+DataRate operator - (const DataRate& lhs, const DataRate& rhs);
+DataRate operator * (const DataRate& lhs, const double& rhs);
+DataRate operator * (const double& lhs, const DataRate& rhs);
+
 
 
 } // namespace ns3

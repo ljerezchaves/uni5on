@@ -480,7 +480,7 @@ RingController::ProcessGbrRequest (Ptr<RoutingInfo> rInfo)
         }
     }
 
-  rInfo->reserved = reserve;
+  rInfo->reserved = request;
   ReserveBandwidth (rInfo);
   return true;
 }
