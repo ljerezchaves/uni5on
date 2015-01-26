@@ -81,6 +81,7 @@ SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nUes,
   
   m_controller->SetAttribute ("OFNetwork", PointerValue (m_opfNetwork));
   m_controller->SetAttribute ("Strategy", EnumValue (RingController::BAND));
+  m_controller->SetAttribute ("BwFactor", DoubleValue (0.99));
   
   m_opfNetwork->SetAttribute ("Controller", PointerValue (m_controller));
   m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));

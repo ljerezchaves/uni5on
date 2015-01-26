@@ -90,7 +90,7 @@ RingController::GetTypeId (void)
                    "Bandwitdth saving factor.",
                    DoubleValue (0.1),
                    MakeDoubleAccessor (&RingController::m_bwFactor),
-                   MakeDoubleChecker<double> (0., 1.))
+                   MakeDoubleChecker<double> (0.0, 1.0))
   ;
   return tid;
 }
