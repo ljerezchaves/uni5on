@@ -33,6 +33,12 @@ ConnectionInfo::GetAvailableDataRate ()
   return maxDataRate - reservedDataRate;
 }
 
+DataRate
+ConnectionInfo::GetAvailableDataRate (double bwFactor)
+{
+  return (maxDataRate * (1. - bwFactor)) - reservedDataRate;
+}
+
 bool
 ConnectionInfo::ReserveDataRate (DataRate dr)
 {

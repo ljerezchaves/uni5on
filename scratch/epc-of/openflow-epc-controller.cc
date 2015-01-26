@@ -217,7 +217,7 @@ OpenFlowEpcController::GetSwitchIdxFromIp (Ipv4Address addr)
   if (ret != m_ipSwitchTable.end ())
     {
       uint16_t idx = ret->second;
-      NS_LOG_DEBUG ("Found sw index " << idx << " for IP " << addr);
+      // NS_LOG_DEBUG ("Found sw index " << idx << " for IP " << addr);
       return idx;
     }
   NS_FATAL_ERROR ("IP not registered in switch index table.");

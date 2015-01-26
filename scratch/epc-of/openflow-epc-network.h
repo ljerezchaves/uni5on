@@ -42,9 +42,10 @@ class ConnectionInfo : public SimpleRefCount<ConnectionInfo>
   friend class RingController;
 
 public:
-  DataRate GetAvailableDataRate ();     //!< Get available bandwitdth 
   bool ReserveDataRate (DataRate dr);   //!< Reserve bandwitdth
   bool ReleaseDataRate (DataRate dr);   //!< Release reserved bandwitdth
+  DataRate GetAvailableDataRate ();     //!< Get available bandwitdth 
+  DataRate GetAvailableDataRate (double bwFactor);  //!< BW with saving factor  
 
 protected:
   uint16_t switchIdx1;                  //!< Switch index 1

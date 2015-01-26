@@ -25,9 +25,6 @@
 #define DEDICATED_TIMEOUT   15
 #define DEDICATED_PRIO    1000
 
-#define RESERVED_BW        0.5
-
-
 NS_LOG_COMPONENT_DEFINE ("RingController");
 
 namespace ns3 {
@@ -89,6 +86,11 @@ RingController::GetTypeId (void)
                    TimeValue (Seconds (5)),
                    MakeTimeAccessor (&RingController::m_timeout),
                    MakeTimeChecker ())
+    .AddAttribute ("BwFactor",
+                   "Bandwitdth saving factor.",
+                   DoubleValue (0.1),
+                   MakeDoubleAccessor (&RingController::m_bwFactor),
+                   MakeDoubleChecker<double> (0., 1.))
   ;
   return tid;
 }
@@ -428,58 +430,62 @@ RingController::ProcessGbrRequest (Ptr<RoutingInfo> rInfo)
   m_gbrBearers++;
 
   EpsBearer bearer = rInfo->bearer.bearerLevelQos;
+  uint32_t teid = rInfo->teid;
   DataRate request (bearer.gbrQosInfo.gbrDl + bearer.gbrQosInfo.gbrUl);
-  NS_LOG_DEBUG ("Bearer " << rInfo->teid << " requesting " << request);
+  NS_LOG_DEBUG ("Bearer " << teid << " requesting " << request);
 
-  DataRate available = 
-    GetAvailableBandwidth (rInfo->sgwIdx, rInfo->enbIdx, rInfo->downPath);
-  NS_LOG_DEBUG ("Bandwidth from "     << rInfo->sgwIdx <<  
-                " to "                << rInfo->enbIdx << 
-                " in shortest path: " << available);
+  DataRate available = GetAvailableBandwidth (rInfo->sgwIdx, rInfo->enbIdx, 
+      rInfo->downPath);
+  NS_LOG_DEBUG ("Bandwidth from " << rInfo->sgwIdx << " to " << rInfo->enbIdx 
+      << " in current path: " << available);
 
-  switch (m_strategy)
+  if (available < request)
     {
-      case RingController::HOPS:
+      // We don't have available bandwitdh for this bearer in the default
+      // (shortest) path. Let's check the routing strategy and see if we can
+      // change the route.
+      switch (m_strategy)
         {
-          if (available < request)
+          case RingController::HOPS:
             {
-              NS_LOG_WARN ("No resources for bearer " << rInfo->teid <<
-                           " in shortest path. Proceed without reservation.");
+              NS_LOG_WARN ("No resources for bearer " << teid << ". Block!");
               m_gbrBlocks++;
               return false;
             }
-          break;
-        }
-      case RingController::BAND:
-        {
-          if (available < request)
-          {
-            NS_LOG_DEBUG ("No resources for bearer " << rInfo->teid <<
-                         " in shortest path. Checking the other path.");
-            available = GetAvailableBandwidth (rInfo->sgwIdx, rInfo->enbIdx, 
-                                               rInfo->upPath);
-            if (available < request)
-              {
-                NS_LOG_WARN ("No resources for bearer " << rInfo->teid <<
-                             " in both paths. Proceed without reservation.");
-                m_gbrBlocks++;
-                return false;
-              }
-            else
-              {
-                NS_LOG_DEBUG ("Found resources in other path. Inverting paths.");
-                rInfo->upPath = InvertRoutingPath (rInfo->upPath);
-                rInfo->downPath = InvertRoutingPath (rInfo->downPath);
-              }
-          }
-          break;
-        }
-      default:
-        {
-          NS_ABORT_MSG ("Invalid Routing strategy.");
+
+          case RingController::BAND:
+            {
+              NS_LOG_DEBUG ("No resources for bearer " << teid << ". " 
+                  "Checking the other path.");
+              available = GetAvailableBandwidth (rInfo->sgwIdx, rInfo->enbIdx, 
+                  rInfo->upPath);
+              NS_LOG_DEBUG ("Bandwidth from " << rInfo->sgwIdx << " to " << 
+                  rInfo->enbIdx << " in other path: " << available);
+
+              if (available < request)
+                {
+                   NS_LOG_WARN ("No resources for bearer " << teid << ". Block!");
+                  m_gbrBlocks++;
+                  return false;
+                }
+              else
+                {
+                  NS_LOG_DEBUG ("Inverting paths.");
+                  rInfo->upPath = InvertRoutingPath (rInfo->upPath);
+                  rInfo->downPath = InvertRoutingPath (rInfo->downPath);
+                }
+              break;
+            }
+            
+          default:
+            {
+              NS_ABORT_MSG ("Invalid Routing strategy.");
+            }
         }
     }
-
+  
+  // If we get here that because there is bandwitdh for this bearer request.
+  // Let's reserve it and return true to the application.
   rInfo->reserved = request;
   ReserveBandwidth (rInfo);
   return true;
@@ -522,7 +528,7 @@ RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx,
   uint16_t current = srcSwitchIdx;
   uint16_t next = NextSwitchIndex (current, routingPath);
   Ptr<ConnectionInfo> conn = GetConnectionInfo (current, next);
-  DataRate bandwidth = conn->GetAvailableDataRate ();
+  DataRate bandwidth = conn->GetAvailableDataRate (m_bwFactor);
 
   // Repeat the proccess for next hops
   while (next != dstSwitchIdx)
@@ -530,9 +536,9 @@ RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx,
       current = next;
       next = NextSwitchIndex (current, routingPath);
       conn = GetConnectionInfo (current, next);
-      if (conn->GetAvailableDataRate () < bandwidth)
+      if (conn->GetAvailableDataRate (m_bwFactor) < bandwidth)
         {
-          bandwidth = conn->GetAvailableDataRate ();
+          bandwidth = conn->GetAvailableDataRate (m_bwFactor);
         }
     }
   return bandwidth;

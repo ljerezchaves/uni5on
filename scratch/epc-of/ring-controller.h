@@ -77,9 +77,6 @@ public:
     RoutingPath upPath;               //!< Uplink routing path
     DataRate reserved;                //!< Reserved data rate
 
-//    DataRate downAvgRate;
-//    DataRate upAvgRate;
-
     Ptr<Application> app;             //!< Traffic application
 
     int  priority;                    //!< Flow priority
@@ -250,6 +247,7 @@ private:
   TeidRoutingMap_t  m_routes;     //!< TEID routes.
   RoutingStrategy   m_strategy;   //!< Routing strategy in use.
   Time              m_timeout;    //!< Switch stats query timeout.
+  double            m_bwFactor;   //!< Bandwidth reservation with saving factor
 
   //!< Performance metrics
   //\{
