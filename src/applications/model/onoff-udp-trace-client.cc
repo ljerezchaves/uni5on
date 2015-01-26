@@ -304,6 +304,7 @@ OnOffUdpTraceClient::StartSending ()
     {
       if (!m_startSendingCallback (this))
         {
+          NS_LOG_WARN ("Application " << this << " has been blocked.");
           CancelEvents ();
           ScheduleStartEvent ();
           return;
