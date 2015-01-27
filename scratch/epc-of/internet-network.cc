@@ -44,12 +44,12 @@ InternetNetwork::GetTypeId (void)
     .SetParent<Object> ()
     .AddAttribute ("LinkDataRate", 
                    "The data rate to be used for the Internet PointToPoint link",
-                   DataRateValue (DataRate ("1Gb/s")),
+                   DataRateValue (DataRate ("100Gb/s")),
                    MakeDataRateAccessor (&InternetNetwork::m_LinkDataRate),
                    MakeDataRateChecker ())
     .AddAttribute ("LinkDelay", 
                    "The delay to be used for the Internet PointToPoint link",
-                   TimeValue (Seconds (0.01)),
+                   TimeValue (Seconds (0)),
                    MakeTimeAccessor (&InternetNetwork::m_LinkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("LinkMtu", 
