@@ -94,6 +94,8 @@ OpenFlowEpcNetwork::SetController (Ptr<OpenFlowEpcController> controller)
 {
   // Installing the controller app into a new controller node
   m_ofCtrlNode = CreateObject<Node> ();
+  Names::Add ("ctrl", m_ofCtrlNode);
+
   m_ofHelper.InstallControllerApp (m_ofCtrlNode, controller);
   m_ofCtrlApp = controller;
 }
