@@ -40,10 +40,9 @@ public:
 
   void SetAttribute (std::string name, const AttributeValue &value);
 
-  ApplicationContainer Install (
-      Ptr<Node> firstNode, Ptr<Node> secondNode, 
-      Ipv4Address firstAddr, Ipv4Address secondAddr,
-      uint16_t firstPort, uint16_t secondPort);
+  ApplicationContainer Install (Ptr<Node> firstNode, Ptr<Node> secondNode, 
+                                Ipv4Address firstAddr, Ipv4Address secondAddr,
+                                uint16_t firstPort, uint16_t secondPort);
 
 private:
   ObjectFactory m_factory;
