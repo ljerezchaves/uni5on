@@ -5,7 +5,6 @@ def build(bld):
     module.source = [
         'model/http-client.cc',
         'model/http-server.cc',
-        'model/voip-client.cc',
         'model/voip-peer.cc',
         'model/bulk-send-application.cc',
         'model/onoff-application.cc',
@@ -25,7 +24,6 @@ def build(bld):
         'model/v4ping.cc',
         'model/application-packet-probe.cc',
         'helper/http-client-server-helper.cc',
-        'helper/voip-client-helper.cc',
         'helper/voip-helper.cc',
         'helper/bulk-send-helper.cc',
         'helper/on-off-helper.cc',
@@ -47,7 +45,6 @@ def build(bld):
     headers.source = [
         'model/http-client.h',
         'model/http-server.h',
-        'model/voip-client.h',
         'model/voip-peer.h',
         'model/bulk-send-application.h',
         'model/onoff-application.h',
@@ -67,7 +64,6 @@ def build(bld):
         'model/v4ping.h',
         'model/application-packet-probe.h',
         'helper/http-client-server-helper.h',
-        'helper/voip-client-helper.h',
         'helper/voip-helper.h',
         'helper/bulk-send-helper.h',
         'helper/on-off-helper.h',
