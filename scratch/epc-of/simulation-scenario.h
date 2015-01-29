@@ -89,8 +89,7 @@ public:
    * \internal This VoIP traffic simulates the G.729 codec (~8.5 kbps for
    * payload). Check http://goo.gl/iChPGQ for bandwidth calculation and
    * discussion. This code will install a bidirectional voip traffic between UE
-   * and WebServer (in fact, in install a VoipClient and an UdpServer
-   * application at each node). 
+   * and WebServer, using the VoipPeer application. 
    */
   void EnableVoipTraffic ();
   
@@ -119,6 +118,11 @@ public:
    * Print block ratio and application statistics.
    */
   void PrintStats ();
+
+  /**
+   * Print context and packet when CsmaNetDevice drops it.
+   */ 
+  void MacDropTrace (std::string context, Ptr<const Packet> p);
 
 private:
   Ptr<OpenFlowEpcNetwork> m_opfNetwork;       //!< LTE EPC network

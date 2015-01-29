@@ -85,17 +85,17 @@ SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nUes,
   
   m_opfNetwork->SetAttribute ("Controller", PointerValue (m_controller));
   m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
-  m_opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("1Gb/s")));
+  m_opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("10Mb/s")));
   m_opfNetwork->CreateTopology (eNbSwt);
   
   // LTE EPC core (with callbacks setup)
   m_epcHelper = CreateObject<OpenFlowEpcHelper> ();
   m_epcHelper->SetS1uConnectCallback (
       MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, m_opfNetwork));
-  // m_epcHelper->SetX2ConnectCallback (
-  //     MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
-  // m_epcHelper->SetAddBearerCallback (
-  //     MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, m_controller));
+//  m_epcHelper->SetX2ConnectCallback (
+//      MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
+//  m_epcHelper->SetAddBearerCallback (
+//      MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, m_controller));
   m_epcHelper->SetCreateSessionRequestCallback (
       MakeCallback (&OpenFlowEpcController::NotifyNewContextCreated, m_controller));
   
@@ -237,7 +237,14 @@ SimulationScenario::EnableVoipTraffic ()
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
   Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
 
-  ApplicationContainer senderApps;
+  ApplicationContainer voipApps;
+  VoipHelper voipHelper;
+  voipHelper.SetAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
+
+  // ON/OFF pattern for VoIP applications (Poisson process)
+  voipHelper.SetAttribute ("OnTime", StringValue ("ns3::NormalRandomVariable[Mean=5.0,Variance=2.0]"));
+  voipHelper.SetAttribute ("OffTime", StringValue ("ns3::ExponentialRandomVariable[Mean=15.0]"));
+ 
   for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, voipPort++)
     {
       Ptr<Node> client = m_ueNodes.Get (u);
@@ -251,18 +258,16 @@ SimulationScenario::EnableVoipTraffic ()
       // Traffic Flow Template
       Ptr<EpcTft> tft = CreateObject<EpcTft> ();
 
-      // Downlink VoIP traffic
-      UdpServerHelper voipSinkDown (voipPort);
-      m_voipServers.Add (voipSinkDown.Install (client));
-      VoipClientHelper voipSenderDown (clientAddr, voipPort);
-      voipSenderDown.SetAttribute ("Stream", IntegerValue (u));
-      Ptr<Application> voipSenderDownApp = voipSenderDown.Install (m_webHost);
-      senderApps.Add (voipSenderDownApp);
-      voipSenderDownApp->AggregateObject (tft);
-      voipSenderDownApp->SetAttribute ("Direction", 
-          EnumValue (Application::BIDIRECTIONAL));
+      // Bidirectional VoIP traffic
+      voipHelper.SetAttribute ("Stream", IntegerValue (u));
+      ApplicationContainer apps = voipHelper.Install (client, m_webHost, 
+          clientAddr, serverAddr, voipPort, voipPort);
+      apps.Get (0)->AggregateObject (tft);
+      apps.Get (1)->AggregateObject (tft);
+      apps.Start (Seconds (m_rngStart->GetValue ()));
+      voipApps.Add (apps);
 
-      // TFT Packet filter
+      // TFT download Packet filter
       EpcTft::PacketFilter filterDown;
       filterDown.direction = EpcTft::DOWNLINK;
       filterDown.remoteAddress = serverAddr;
@@ -273,18 +278,7 @@ SimulationScenario::EnableVoipTraffic ()
       filterDown.localPortEnd = voipPort;
       tft->Add (filterDown);
 
-      // Uplink VoIP traffic
-      UdpServerHelper voipSinkUp (voipPort);
-      m_voipServers.Add (voipSinkUp.Install (m_webHost));
-      VoipClientHelper voipSenderUp (serverAddr, voipPort);
-      voipSenderUp.SetAttribute ("Stream", IntegerValue (u));
-      Ptr<Application> voipSenderUpApp = voipSenderUp.Install (client);
-      senderApps.Add (voipSenderUpApp);
-      voipSenderUpApp->AggregateObject (tft);
-      voipSenderUpApp->SetAttribute ("Direction", 
-          EnumValue (Application::BIDIRECTIONAL));
-
-      // TFT Packet filter
+      // TFT upload Packet filter
       EpcTft::PacketFilter filterUp;
       filterUp.direction = EpcTft::UPLINK;
       filterUp.remoteAddress = serverAddr;
@@ -302,12 +296,10 @@ SimulationScenario::EnableVoipTraffic ()
       EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
-  senderApps.Start (Seconds (1));
-  m_voipServers.Start (Seconds (0));
 
   // Setting up app start callback to controller
-  for (ApplicationContainer::Iterator i = senderApps.Begin (); 
-       i != senderApps.End (); ++i)
+  ApplicationContainer::Iterator i;
+  for (i = voipApps.Begin (); i != voipApps.End (); ++i)
     {
       Ptr<Application> app = *i;
       app->SetAppStartStopCallback (
@@ -427,8 +419,31 @@ SimulationScenario::EnableTraces ()
   m_opfNetwork->EnableOpenFlowPcap ("openflow-channel");
   m_opfNetwork->EnableDataPcap ("ofn", true);
   m_epcHelper->EnablePcapS1u ("epc");
-  // m_epcHelper->EnablePcapX2 ("epc");
-  // m_lteNetwork->EnableTraces ();
+//  m_epcHelper->EnablePcapX2 ("epc");
+//  m_lteNetwork->EnableTraces ();
+
+//  Config::Connect ("/NodeList/*/DeviceList/*/$ns3::CsmaNetDevice/MacTxDrop", 
+//                    MakeCallback (&SimulationScenario::MacDropTrace, this));
+//  Config::Connect ("/NodeList/*/DeviceList/*/$ns3::CsmaNetDevice/MacTxBackoff", 
+//                    MakeCallback (&SimulationScenario::MacDropTrace, this));
+}
+
+void
+SimulationScenario::MacDropTrace (std::string context, Ptr<const Packet> p)
+{
+  // Parsing context string to get node ID
+  std::vector <std::string> elements;
+  size_t pos1 = 0, pos2;
+  while (pos1 != context.npos)
+  {
+    pos1 = context.find ("/", pos1);
+    pos2 = context.find ("/", pos1 + 1);
+    elements.push_back (context.substr (pos1 + 1, pos2 - (pos1 + 1)));
+    pos1 = pos2;
+    pos2 = context.npos;
+  }
+  Ptr<Node> node = NodeList::GetNode (atoi (elements.at (1).c_str ()));
+  NS_LOG_DEBUG (context << " " << p << " " << Names::FindName (node));
 }
 
 };  // namespace ns3

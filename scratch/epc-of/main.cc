@@ -158,7 +158,7 @@ EnableVerbose ()
   LogComponentEnable ("RingNetwork", LOG_LEVEL_ALL);
   LogComponentEnable ("RingController", LOG_LEVEL_ALL);
 
-  LogComponentEnable ("VoipClient", LOG_LOGIC);
+  LogComponentEnable ("VoipPeer", LOG_LEVEL_WARN);
   LogComponentEnable ("OnOffUdpTraceClient", LOG_LOGIC);
 }
 

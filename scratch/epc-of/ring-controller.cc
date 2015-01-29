@@ -265,6 +265,21 @@ RingController::NotifyAppStop (Ptr<Application> app)
         }
       // No need to remove the rules... wait for idle timeout
     }
+
+  Ptr<VoipPeer> voipApp = app->GetObject<VoipPeer> ();
+  if (voipApp)
+    {
+      std::cout << 
+        "VoIP (TEID " << teid << ") [" << rInfo->sgwIdx << " -- " << rInfo->enbIdx << "]" << 
+        " Duration " << voipApp->GetActiveTime ().ToInteger (Time::S) << " s -" << 
+        " Loss " << voipApp->GetLoss () << " -" <<
+        " Delay " << voipApp->GetDelay ().ToInteger (Time::MS) << " ms -" <<
+        " Jitter " << voipApp->GetJitter ().ToInteger (Time::MS) << " ms" << 
+      std::endl; 
+      
+      voipApp->ResetCounters ();
+    }
+
   return true;
 }
 
