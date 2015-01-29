@@ -145,6 +145,12 @@ VoipPeer::GetPacketWindowSize () const
   return m_lossCounter.GetBitMapSize ();
 }
 
+Ptr<VoipPeer> 
+VoipPeer::GetPeerApp ()
+{
+  return m_peerApp;
+}
+
 void
 VoipPeer::ResetCounters ()
 {

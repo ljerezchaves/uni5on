@@ -85,6 +85,12 @@ public:
    * \return The size of the window used for checking loss.
    */
   uint16_t GetPacketWindowSize () const;
+
+  /**
+   * \brief Get the VoIP peer application. 
+   * \return The pointer to peer application. 
+   */
+  Ptr<VoipPeer> GetPeerApp ();
   
   /** 
    * \brief Reset counter and statistics 
