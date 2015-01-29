@@ -99,6 +99,7 @@ VoipPeer::VoipPeer ()
   NS_LOG_FUNCTION (this);
   m_sendEvent = EventId ();
   m_startStopEvent = EventId ();
+  m_lastStartTime = Time ();
   ResetCounters ();
 }
 
@@ -155,7 +156,6 @@ VoipPeer::ResetCounters ()
   m_previousRxTx = Simulator::Now ();
   m_jitter = 0;
   m_delaySum = Time ();
-  m_lastStartTime = Time ();
   m_lossCounter.Reset ();
 }
 
