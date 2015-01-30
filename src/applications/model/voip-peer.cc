@@ -160,6 +160,7 @@ VoipPeer::ResetCounters ()
   m_rxBytes = 0;
   m_previousRx = Simulator::Now ();
   m_previousRxTx = Simulator::Now ();
+  m_lastStartTime = Simulator::Now ();
   m_jitter = 0;
   m_delaySum = Time ();
   m_lossCounter.Reset ();
@@ -189,24 +190,13 @@ VoipPeer::GetRxBytes (void) const
   return m_rxBytes;
 }
 
-double    
-VoipPeer::GetTxLoss (void) const
-{
-  return m_peerApp->GetRxLoss ();
-}
-
-double    
-VoipPeer::GetRxLoss (void) const
-{
-  uint32_t loss = m_lossCounter.GetLost ();
-  return ((double)loss) / m_peerApp->GetTxPackets ();
-}
-
 double
 VoipPeer::GetLoss (void) const
 {
+  NS_ASSERT_MSG (m_peerApp, "No peer application.");
+  
   uint32_t total = GetTxPackets () + m_peerApp->GetTxPackets ();
-  uint32_t loss = m_peerApp->GetRxLoss () + m_lossCounter.GetLost ();
+  uint32_t loss = m_peerApp->m_lossCounter.GetLost () + m_lossCounter.GetLost ();
   return ((double)loss) / total;
 }
 
@@ -217,39 +207,15 @@ VoipPeer::GetActiveTime (void) const
 }
 
 Time      
-VoipPeer::GetTxDelay (void) const
-{
-  return m_peerApp->GetRxDelay ();
-}
-
-Time      
-VoipPeer::GetRxDelay (void) const
+VoipPeer::GetDelay (void) const
 {
   return m_pktReceived ? (m_delaySum / (int64_t)m_pktReceived) : m_delaySum;
 }
 
-Time
-VoipPeer::GetDelay (void) const
-{
-  return (GetTxDelay () + GetRxDelay ()) / 2;
-}
-
 Time      
-VoipPeer::GetTxJitter (void) const
-{
-  return m_peerApp->GetRxJitter ();
-}
-
-Time      
-VoipPeer::GetRxJitter (void) const
-{
-  return Time (m_jitter);
-}
-
-Time
 VoipPeer::GetJitter (void) const
 {
-  return (GetTxJitter () + GetRxJitter ()) / 2;
+  return Time (m_jitter);
 }
 
 void
@@ -444,7 +410,6 @@ VoipPeer::ReadPacket (Ptr<Socket> socket)
 
           // Updating counter and statistics
           // The jitter is calculated using the RFC 1889 (RTP) jitter definition.
-
           Time delay = Simulator::Now () - seqTs.GetTs ();
           Time delta = (Simulator::Now () - m_previousRx) - (seqTs.GetTs () - m_previousRxTx);
           m_jitter += ((Abs (delta)).GetTimeStep () - m_jitter) >> 4;
@@ -454,6 +419,7 @@ VoipPeer::ReadPacket (Ptr<Socket> socket)
 
           m_lossCounter.NotifyReceived (seqNum);
           m_pktReceived++;
+          m_rxBytes += packet->GetSize ();
         }
     }
 }
