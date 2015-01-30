@@ -34,8 +34,6 @@
 #include "seq-ts-header.h"
 #include "udp-server.h"
 
-#include <math.h>
-
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("UdpServer");
@@ -64,14 +62,10 @@ UdpServer::GetTypeId (void)
 }
 
 UdpServer::UdpServer ()
-  : m_previousRx (Simulator::Now ()),
-    m_previousRxTx (Simulator::Now ()),
-    m_jitter (0),
-    m_lossCounter (0)
+  : m_lossCounter (0)
 {
   NS_LOG_FUNCTION (this);
   m_received=0;
-  m_delaySum = Time ();
 }
 
 UdpServer::~UdpServer ()
@@ -107,19 +101,56 @@ UdpServer::GetReceived (void) const
   return m_received;
 }
 
-Time
+void
+UdpServer::ResetCounters ()
+{
+  m_received = 0;
+  m_rxBytes = 0;
+  m_previousRx = Simulator::Now ();
+  m_previousRxTx = Simulator::Now ();
+  m_lastStartTime = Simulator::Now ();
+  m_jitter = 0;
+  m_delaySum = Time ();
+  m_lossCounter.Reset ();
+}
+
+uint32_t  
+UdpServer::GetRxPackets (void) const
+{
+  return GetReceived ();
+}
+
+uint32_t  
+UdpServer::GetRxBytes (void) const
+{
+  return m_rxBytes;
+}
+
+double
+UdpServer::GetLoss (void) const
+{
+  uint32_t total = GetLost () + GetRxPackets ();
+  return ((double)GetLost ()) / total;
+}
+
+Time      
+UdpServer::GetActiveTime (void) const
+{
+  return Simulator::Now () - m_lastStartTime;
+}
+
+Time      
 UdpServer::GetDelay (void) const
 {
-  NS_LOG_FUNCTION (this);
   return m_received ? (m_delaySum / (int64_t)m_received) : m_delaySum;
 }
 
-Time
+Time      
 UdpServer::GetJitter (void) const
 {
-  NS_LOG_FUNCTION (this);
   return Time (m_jitter);
 }
+
 
 void
 UdpServer::DoDispose (void)
@@ -202,6 +233,8 @@ UdpServer::HandleRead (Ptr<Socket> socket)
                            " Delay: " << Simulator::Now () - seqTs.GetTs ());
             }
 
+          // Updating counter and statistics
+          // The jitter is calculated using the RFC 1889 (RTP) jitter definition.
           Time delay = Simulator::Now () - seqTs.GetTs ();
           Time delta = (Simulator::Now () - m_previousRx) - (seqTs.GetTs () - m_previousRxTx);
           m_jitter += ((Abs (delta)).GetTimeStep () - m_jitter) >> 4;
@@ -211,7 +244,7 @@ UdpServer::HandleRead (Ptr<Socket> socket)
 
           m_lossCounter.NotifyReceived (currentSequenceNumber);
           m_received++;
-        }
+          m_rxBytes += packet->GetSize ();        }
     }
 }
 

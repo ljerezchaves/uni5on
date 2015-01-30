@@ -67,19 +67,6 @@ public:
   uint32_t GetReceived (void) const;
 
   /**
-   * \brief Returns the average packet delay
-   * \return the average packet delay
-   */
-  Time GetDelay (void) const;
-
-  /**
-   * \brief Returns the packet jitter estimation. The jitter is calculated
-   * using the RFC 1889 (RTP) jitter definition.
-   * \return the packet jitter
-   */
-  Time GetJitter (void) const;
-
-  /**
    * \brief Returns the size of the window used for checking loss.
    * \return the size of the window used for checking loss.
    */
@@ -92,6 +79,25 @@ public:
    *  be a multiple of 8
    */
   void SetPacketWindowSize (uint16_t size);
+
+  /** 
+   * \brief Reset counter and statistics 
+   */
+  void ResetCounters ();
+  
+  /**
+   * \brief Get application statistics.
+   * \return The statistic value.
+   */
+  //\{
+  uint32_t  GetRxPackets  (void)  const;
+  uint32_t  GetRxBytes    (void)  const;
+  double    GetLoss       (void)  const;
+  Time      GetActiveTime (void)  const;
+  Time      GetDelay      (void)  const;
+  Time      GetJitter     (void)  const;
+  //\}
+
 protected:
   virtual void DoDispose (void);
 
@@ -109,15 +115,17 @@ private:
    */
   void HandleRead (Ptr<Socket> socket);
 
-  uint16_t m_port; //!< Port on which we listen for incoming packets.
-  Ptr<Socket> m_socket; //!< IPv4 Socket
-  Ptr<Socket> m_socket6; //!< IPv6 Socket
-  uint32_t m_received; //!< Number of received packets
-  Time m_previousRx;   //!< Previous Rx time
-  Time m_previousRxTx; //!< Previous Rx or Tx time
-  int64_t m_jitter; //!< Jitter estimation
-  Time m_delaySum; //!< Sum of packet delays
-  PacketLossCounter m_lossCounter; //!< Lost packet counter
+  uint16_t          m_port;             //!< Port on which we listen for incoming packets.
+  Ptr<Socket>       m_socket;           //!< IPv4 Socket
+  Ptr<Socket>       m_socket6;          //!< IPv6 Socket
+  uint32_t          m_received;         //!< Number of received packets
+  PacketLossCounter m_lossCounter;      //!< Lost packet counter
+  uint32_t          m_rxBytes;          //!< Number of RX bytes
+  Time              m_previousRx;       //!< Previous Rx time
+  Time              m_previousRxTx;     //!< Previous Rx or Tx time
+  int64_t           m_jitter;           //!< Jitter estimation
+  Time              m_delaySum;         //!< Sum of packet delays
+  Time              m_lastStartTime;    //!< Last start time
 };
 
 } // namespace ns3
