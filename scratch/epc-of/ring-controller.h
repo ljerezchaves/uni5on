@@ -101,9 +101,16 @@ public:
   void DoDispose ();
 
   /**
+   * Print the block radio statistics.
    * \return The GBR bearer block ratio
    */
   double PrintBlockRatioStatistics ();
+
+  /**
+   * Print application statistcs (duration, loss ratio, delay and jitter).
+   * \param app The application pointer.
+   */
+  void PrintAppStatistics (Ptr<Application> app);
 
   // Inherited from OpenFlowEpcController
   void NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo);

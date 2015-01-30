@@ -19,6 +19,7 @@
  */
 
 #include "ring-controller.h"
+#include "internet-network.h"
 
 #define DEFAULT_TIMEOUT      0
 #define DEFAULT_PRIO       100
@@ -68,6 +69,34 @@ RingController::PrintBlockRatioStatistics ()
             << "Number of GBR bearers blocked: " << m_gbrBlocks   << std::endl
             << "Block ratio: "                   << ratio         << std::endl;
   return ratio;
+}
+
+void
+RingController::PrintAppStatistics (Ptr<Application> app)
+{
+  if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
+    {
+      Ptr<EpcTft> tft = app->GetObject<EpcTft> ();
+      uint32_t teid = GetBearerFromTft (tft).sgwFteid.teid;
+      Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+      Ptr<VoipPeer> voipApp = DynamicCast<VoipPeer> (app);
+
+      // Identifying Voip traffic direction
+      std::string nodeName = Names::FindName (voipApp->GetNode ());
+      bool downlink = InternetNetwork::GetServerName () == nodeName;
+      uint16_t srcIdx = downlink ? rInfo->sgwIdx : rInfo->enbIdx;
+      uint16_t dstIdx = downlink ? rInfo->enbIdx : rInfo->sgwIdx; 
+      
+      std::cout << 
+        "VoIP (TEID " << teid << ") [" << srcIdx << " -> " << dstIdx << "]" << 
+        " Duration " << voipApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
+        " Loss " << voipApp->GetLoss () << " -" <<
+        " Delay " << voipApp->GetDelay ().ToInteger (Time::MS) << " ms -" <<
+        " Jitter " << voipApp->GetJitter ().ToInteger (Time::MS) << " ms" << 
+      std::endl; 
+      
+      voipApp->ResetCounters ();
+    }
 }
 
 TypeId 
@@ -266,20 +295,7 @@ RingController::NotifyAppStop (Ptr<Application> app)
       // No need to remove the rules... wait for idle timeout
     }
 
-  Ptr<VoipPeer> voipApp = app->GetObject<VoipPeer> ();
-  if (voipApp)
-    {
-      std::cout << 
-        "VoIP (TEID " << teid << ") [" << rInfo->sgwIdx << " -- " << rInfo->enbIdx << "]" << 
-        " Duration " << voipApp->GetActiveTime ().ToInteger (Time::S) << " s -" << 
-        " Loss " << voipApp->GetLoss () << " -" <<
-        " Delay " << voipApp->GetDelay ().ToInteger (Time::MS) << " ms -" <<
-        " Jitter " << voipApp->GetJitter ().ToInteger (Time::MS) << " ms" << 
-      std::endl; 
-      
-      voipApp->ResetCounters ();
-    }
-
+  PrintAppStatistics (app);
   return true;
 }
 
