@@ -115,7 +115,7 @@ RingController::GetTypeId (void)
                    TimeValue (Seconds (5)),
                    MakeTimeAccessor (&RingController::m_timeout),
                    MakeTimeChecker ())
-    .AddAttribute ("BwFactor",
+    .AddAttribute ("BwReserve",
                    "Bandwitdth saving factor.",
                    DoubleValue (0.1),
                    MakeDoubleAccessor (&RingController::m_bwFactor),
