@@ -159,7 +159,7 @@ EnableVerbose ()
   LogComponentEnable ("RingController", LOG_LEVEL_ALL);
 
   LogComponentEnable ("VoipPeer", LOG_LEVEL_WARN);
-  LogComponentEnable ("OnOffUdpTraceClient", LOG_LOGIC);
+  LogComponentEnable ("VideoClient", LOG_LOGIC);
 }
 
 bool

@@ -1,6 +1,6 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
- *  Copyright (c) 2007,2008, 2009 INRIA, UDcast
+ * Copyright (c) 2015 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -15,9 +15,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Author: Mohamed Amine Ismail <amine.ismail@sophia.inria.fr>
- *                              <amine.ismail@udcast.com>
+ * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
+
 #include "ns3/log.h"
 #include "ns3/ipv4-address.h"
 #include "ns3/nstime.h"
@@ -30,20 +30,20 @@
 #include "ns3/uinteger.h"
 #include "ns3/string.h"
 #include "seq-ts-header.h"
-#include "onoff-udp-trace-client.h"
+#include "video-client.h"
 #include <cstdlib>
 #include <cstdio>
 #include <fstream>
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("OnOffUdpTraceClient");
-NS_OBJECT_ENSURE_REGISTERED (OnOffUdpTraceClient);
+NS_LOG_COMPONENT_DEFINE ("VideoClient");
+NS_OBJECT_ENSURE_REGISTERED (VideoClient);
 
 /**
  * \brief Default trace to send
  */
-struct OnOffUdpTraceClient::TraceEntry OnOffUdpTraceClient::g_defaultEntries[] = {
+struct VideoClient::TraceEntry VideoClient::g_defaultEntries[] = {
   { 0, 534, 'I'},
   { 40, 1542, 'P'},
   { 120, 134, 'B'},
@@ -57,44 +57,44 @@ struct OnOffUdpTraceClient::TraceEntry OnOffUdpTraceClient::g_defaultEntries[] =
 };
 
 TypeId
-OnOffUdpTraceClient::GetTypeId (void)
+VideoClient::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::OnOffUdpTraceClient")
+  static TypeId tid = TypeId ("ns3::VideoClient")
     .SetParent<Application> ()
-    .AddConstructor<OnOffUdpTraceClient> ()
+    .AddConstructor<VideoClient> ()
     .AddAttribute ("RemoteAddress",
                    "The destination Address of the outbound packets",
                    AddressValue (),
-                   MakeAddressAccessor (&OnOffUdpTraceClient::m_peerAddress),
+                   MakeAddressAccessor (&VideoClient::m_peerAddress),
                    MakeAddressChecker ())
     .AddAttribute ("RemotePort",
                    "The destination port of the outbound packets",
                    UintegerValue (100),
-                   MakeUintegerAccessor (&OnOffUdpTraceClient::m_peerPort),
+                   MakeUintegerAccessor (&VideoClient::m_peerPort),
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("MaxPacketSize",
                    "The maximum size of a packet (including the SeqTsHeader, 12 bytes).",
                    UintegerValue (1024),
-                   MakeUintegerAccessor (&OnOffUdpTraceClient::m_maxPacketSize),
+                   MakeUintegerAccessor (&VideoClient::m_maxPacketSize),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("TraceFilename",
                    "Name of file to load a trace from. By default, uses a hardcoded trace.",
                    StringValue (""),
-                   MakeStringAccessor (&OnOffUdpTraceClient::SetTraceFile),
+                   MakeStringAccessor (&VideoClient::SetTraceFile),
                    MakeStringChecker ())
     .AddAttribute ("OnTime", "A RandomVariableStream used to pick the duration of the 'On' state.",
                    StringValue ("ns3::NormalRandomVariable[Mean=30.0,Variance=5.0]"),
-                   MakePointerAccessor (&OnOffUdpTraceClient::m_onTime),
+                   MakePointerAccessor (&VideoClient::m_onTime),
                    MakePointerChecker <RandomVariableStream>())
     .AddAttribute ("OffTime", "A RandomVariableStream used to pick the duration of the 'Off' state.",
                    StringValue ("ns3::ExponentialRandomVariable[Mean=50.0]"),
-                   MakePointerAccessor (&OnOffUdpTraceClient::m_offTime),
+                   MakePointerAccessor (&VideoClient::m_offTime),
                    MakePointerChecker <RandomVariableStream>())
   ;
   return tid;
 }
 
-OnOffUdpTraceClient::OnOffUdpTraceClient ()
+VideoClient::VideoClient ()
 {
   NS_LOG_FUNCTION (this);
   m_sent = 0;
@@ -104,7 +104,7 @@ OnOffUdpTraceClient::OnOffUdpTraceClient ()
   m_connected = false;
 }
 
-OnOffUdpTraceClient::OnOffUdpTraceClient (Ipv4Address ip, uint16_t port,
+VideoClient::VideoClient (Ipv4Address ip, uint16_t port,
                                 char *traceFile)
 {
   NS_LOG_FUNCTION (this);
@@ -122,14 +122,14 @@ OnOffUdpTraceClient::OnOffUdpTraceClient (Ipv4Address ip, uint16_t port,
     }
 }
 
-OnOffUdpTraceClient::~OnOffUdpTraceClient ()
+VideoClient::~VideoClient ()
 {
   NS_LOG_FUNCTION (this);
   m_entries.clear ();
 }
 
 void
-OnOffUdpTraceClient::SetRemote (Address ip, uint16_t port)
+VideoClient::SetRemote (Address ip, uint16_t port)
 {
   NS_LOG_FUNCTION (this << ip << port);
   m_entries.clear ();
@@ -138,7 +138,7 @@ OnOffUdpTraceClient::SetRemote (Address ip, uint16_t port)
 }
 
 void
-OnOffUdpTraceClient::SetRemote (Ipv4Address ip, uint16_t port)
+VideoClient::SetRemote (Ipv4Address ip, uint16_t port)
 {
   NS_LOG_FUNCTION (this << ip << port);
   m_entries.clear ();
@@ -147,7 +147,7 @@ OnOffUdpTraceClient::SetRemote (Ipv4Address ip, uint16_t port)
 }
 
 void
-OnOffUdpTraceClient::SetRemote (Ipv6Address ip, uint16_t port)
+VideoClient::SetRemote (Ipv6Address ip, uint16_t port)
 {
   NS_LOG_FUNCTION (this << ip << port);
   m_entries.clear ();
@@ -156,7 +156,7 @@ OnOffUdpTraceClient::SetRemote (Ipv6Address ip, uint16_t port)
 }
 
 void
-OnOffUdpTraceClient::SetTraceFile (std::string traceFile)
+VideoClient::SetTraceFile (std::string traceFile)
 {
   NS_LOG_FUNCTION (this << traceFile);
   if (traceFile == "")
@@ -170,14 +170,14 @@ OnOffUdpTraceClient::SetTraceFile (std::string traceFile)
 }
 
 void
-OnOffUdpTraceClient::SetMaxPacketSize (uint16_t maxPacketSize)
+VideoClient::SetMaxPacketSize (uint16_t maxPacketSize)
 {
   NS_LOG_FUNCTION (this << maxPacketSize);
   m_maxPacketSize = maxPacketSize;
 }
 
 
-uint16_t OnOffUdpTraceClient::GetMaxPacketSize (void)
+uint16_t VideoClient::GetMaxPacketSize (void)
 {
   NS_LOG_FUNCTION (this);
   return m_maxPacketSize;
@@ -185,14 +185,14 @@ uint16_t OnOffUdpTraceClient::GetMaxPacketSize (void)
 
 
 void
-OnOffUdpTraceClient::DoDispose (void)
+VideoClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   Application::DoDispose ();
 }
 
 void
-OnOffUdpTraceClient::LoadTrace (std::string filename)
+VideoClient::LoadTrace (std::string filename)
 {
   NS_LOG_FUNCTION (this << filename);
   uint32_t time, index, size, prevTime = 0;
@@ -226,7 +226,7 @@ OnOffUdpTraceClient::LoadTrace (std::string filename)
 }
 
 void
-OnOffUdpTraceClient::LoadDefaultTrace (void)
+VideoClient::LoadDefaultTrace (void)
 {
   NS_LOG_FUNCTION (this);
   uint32_t prevTime = 0;
@@ -249,7 +249,7 @@ OnOffUdpTraceClient::LoadDefaultTrace (void)
 }
 
 void
-OnOffUdpTraceClient::StartApplication (void)
+VideoClient::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -269,8 +269,8 @@ OnOffUdpTraceClient::StartApplication (void)
         }
       m_socket->ShutdownRecv ();
       m_socket->SetConnectCallback (
-        MakeCallback (&OnOffUdpTraceClient::ConnectionSucceeded, this),
-        MakeCallback (&OnOffUdpTraceClient::ConnectionFailed, this));
+        MakeCallback (&VideoClient::ConnectionSucceeded, this),
+        MakeCallback (&VideoClient::ConnectionFailed, this));
       m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
     }
   CancelEvents ();
@@ -278,7 +278,7 @@ OnOffUdpTraceClient::StartApplication (void)
 }
 
 void
-OnOffUdpTraceClient::StopApplication ()
+VideoClient::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
   CancelEvents ();
@@ -289,7 +289,7 @@ OnOffUdpTraceClient::StopApplication ()
 }
 
 void 
-OnOffUdpTraceClient::CancelEvents ()
+VideoClient::CancelEvents ()
 {
   NS_LOG_FUNCTION (this);
   Simulator::Cancel (m_sendEvent);
@@ -297,7 +297,7 @@ OnOffUdpTraceClient::CancelEvents ()
 }
 
 void 
-OnOffUdpTraceClient::StartSending ()
+VideoClient::StartSending ()
 {
   NS_LOG_FUNCTION (this);
   if (!m_startSendingCallback.IsNull ())
@@ -315,7 +315,7 @@ OnOffUdpTraceClient::StartSending ()
 }
 
 void 
-OnOffUdpTraceClient::StopSending ()
+VideoClient::StopSending ()
 {
   NS_LOG_FUNCTION (this);
   if (!m_stopSendingCallback.IsNull ())
@@ -327,29 +327,29 @@ OnOffUdpTraceClient::StopSending ()
 }
 
 void 
-OnOffUdpTraceClient::ScheduleStartEvent ()
+VideoClient::ScheduleStartEvent ()
 {  
   // Schedules the event to start sending data (switch to the "On" state)
   NS_LOG_FUNCTION (this);
 
   Time offInterval = Seconds (m_offTime->GetValue ());
   NS_LOG_LOGIC ("Video " << this << " will start in +" << offInterval.GetSeconds ());
-  m_startStopEvent = Simulator::Schedule (offInterval, &OnOffUdpTraceClient::StartSending, this);
+  m_startStopEvent = Simulator::Schedule (offInterval, &VideoClient::StartSending, this);
 }
 
 void 
-OnOffUdpTraceClient::ScheduleStopEvent ()
+VideoClient::ScheduleStopEvent ()
 {  
   // Schedules the event to stop sending data (switch to "Off" state)
   NS_LOG_FUNCTION (this);
 
   Time onInterval = Seconds (m_onTime->GetValue ());
   NS_LOG_LOGIC ("Video " << this << " will stop in +" << onInterval.GetSeconds ());
-  m_startStopEvent = Simulator::Schedule (onInterval, &OnOffUdpTraceClient::StopSending, this);
+  m_startStopEvent = Simulator::Schedule (onInterval, &VideoClient::StopSending, this);
 }
 
 void
-OnOffUdpTraceClient::SendPacket (uint32_t size)
+VideoClient::SendPacket (uint32_t size)
 {
   NS_LOG_FUNCTION (this << size);
   Ptr<Packet> p;
@@ -395,7 +395,7 @@ OnOffUdpTraceClient::SendPacket (uint32_t size)
 }
 
 void
-OnOffUdpTraceClient::Send (void)
+VideoClient::Send (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -417,18 +417,18 @@ OnOffUdpTraceClient::Send (void)
       entry = &m_entries[m_currentEntry];
     }
   while (entry->timeToSend == 0);
-  m_sendEvent = Simulator::Schedule (MilliSeconds (entry->timeToSend), &OnOffUdpTraceClient::Send, this);
+  m_sendEvent = Simulator::Schedule (MilliSeconds (entry->timeToSend), &VideoClient::Send, this);
 }
 
 void 
-OnOffUdpTraceClient::ConnectionSucceeded (Ptr<Socket> socket)
+VideoClient::ConnectionSucceeded (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
   m_connected = true;
 }
 
 void 
-OnOffUdpTraceClient::ConnectionFailed (Ptr<Socket> socket)
+VideoClient::ConnectionFailed (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 }

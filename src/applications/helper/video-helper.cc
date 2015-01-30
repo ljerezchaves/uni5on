@@ -1,0 +1,87 @@
+/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
+/*
+ * Copyright (c) 2015 University of Campinas (Unicamp)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation;
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
+ */
+
+#include "video-helper.h"
+#include "ns3/udp-server.h"
+#include "ns3/udp-client.h"
+#include "ns3/udp-trace-client.h"
+#include "ns3/video-client.h"
+#include "ns3/uinteger.h"
+#include "ns3/string.h"
+
+namespace ns3 {
+
+VideoClientHelper::VideoClientHelper ()
+{
+}
+
+VideoClientHelper::VideoClientHelper (Address address, uint16_t port, std::string filename)
+{
+  m_factory.SetTypeId (VideoClient::GetTypeId ());
+  SetAttribute ("RemoteAddress", AddressValue (address));
+  SetAttribute ("RemotePort", UintegerValue (port));
+  SetAttribute ("TraceFilename", StringValue (filename));
+}
+
+VideoClientHelper::VideoClientHelper (Ipv4Address address, uint16_t port, std::string filename)
+{
+  m_factory.SetTypeId (VideoClient::GetTypeId ());
+  SetAttribute ("RemoteAddress", AddressValue (Address (address)));
+  SetAttribute ("RemotePort", UintegerValue (port));
+  SetAttribute ("TraceFilename", StringValue (filename));
+}
+
+VideoClientHelper::VideoClientHelper (Ipv6Address address, uint16_t port, std::string filename)
+{
+  m_factory.SetTypeId (VideoClient::GetTypeId ());
+  SetAttribute ("RemoteAddress", AddressValue (Address (address)));
+  SetAttribute ("RemotePort", UintegerValue (port));
+  SetAttribute ("TraceFilename", StringValue (filename));
+}
+
+void
+VideoClientHelper::SetAttribute (std::string name, const AttributeValue &value)
+{
+  m_factory.Set (name, value);
+}
+
+ApplicationContainer
+VideoClientHelper::Install (NodeContainer c)
+{
+  ApplicationContainer apps;
+  for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
+    {
+      Ptr<Node> node = *i;
+      Ptr<VideoClient> client = m_factory.Create<VideoClient> ();
+      node->AddApplication (client);
+      apps.Add (client);
+    }
+  return apps;
+}
+
+Ptr<Application>
+VideoClientHelper::Install (Ptr<Node> n)
+{
+  Ptr<VideoClient> client = m_factory.Create<VideoClient> ();
+  n->AddApplication (client);
+  return client;
+}
+
+} // namespace ns3

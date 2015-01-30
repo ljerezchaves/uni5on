@@ -242,8 +242,10 @@ SimulationScenario::EnableVoipTraffic ()
   voipHelper.SetAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
 
   // ON/OFF pattern for VoIP applications (Poisson process)
-  voipHelper.SetAttribute ("OnTime", StringValue ("ns3::NormalRandomVariable[Mean=5.0,Variance=2.0]"));
-  voipHelper.SetAttribute ("OffTime", StringValue ("ns3::ExponentialRandomVariable[Mean=15.0]"));
+  voipHelper.SetAttribute ("OnTime", 
+      StringValue ("ns3::NormalRandomVariable[Mean=5.0,Variance=2.0]"));
+  voipHelper.SetAttribute ("OffTime", 
+      StringValue ("ns3::ExponentialRandomVariable[Mean=15.0]"));
  
   for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, voipPort++)
     {
@@ -335,8 +337,8 @@ SimulationScenario::EnableVideoTraffic ()
       // Video server (send UDP datagrams to client)
       // Back off 20 (IP) + 8 (UDP) bytes from MTU
       int videoIdx = rngVideo->GetInteger (0, 12);
-      OnOffUdpTraceClientHelper videoSender (clientAddr, videoPort, 
-                                             m_videoTrace [videoIdx]);
+      VideoClientHelper videoSender (clientAddr, videoPort, 
+                                     m_videoTrace [videoIdx]);
       Ptr<Application> videoSenderApp = videoSender.Install (m_webHost);
       senderApps.Add (videoSenderApp);
       videoSenderApp->AggregateObject (tft);
