@@ -71,8 +71,8 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   InternetStackHelper internet;
   internet.Install (webHost);
   
-  Names::Add ("pgw", pgw);
-  Names::Add ("srv", webHost);
+  Names::Add (InternetNetwork::GetSgwPgwName (), pgw);
+  Names::Add (InternetNetwork::GetServerName (), webHost);
 
   m_webNodes.Add (pgw);
   m_webNodes.Add (webHost);
@@ -110,6 +110,18 @@ InternetNetwork::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   Object::DoDispose ();
+}
+
+const std::string 
+InternetNetwork::GetServerName ()
+{
+  return "srv";
+}
+
+const std::string 
+InternetNetwork::GetSgwPgwName ()
+{
+  return "pgw";
 }
 
 };  // namespace ns3

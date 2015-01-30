@@ -51,6 +51,17 @@ public:
    */
   void EnablePcap (std::string prefix);
 
+  /**
+   * Get the name used by the server node
+   */
+  static const std::string GetServerName ();
+
+  /**
+   * Get the name used by the gateway node
+   */
+  static const std::string GetSgwPgwName ();
+
+
 private:
   NodeContainer m_webNodes;
   NetDeviceContainer m_webDevices;
