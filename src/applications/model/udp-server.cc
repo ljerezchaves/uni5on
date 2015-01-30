@@ -129,8 +129,7 @@ UdpServer::GetRxBytes (void) const
 double
 UdpServer::GetLoss (void) const
 {
-  uint32_t total = GetLost () + GetRxPackets ();
-  return ((double)GetLost ()) / total;
+  return ((double)GetLost ()) / (GetLost () + GetRxPackets ());
 }
 
 Time      

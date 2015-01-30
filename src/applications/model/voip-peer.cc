@@ -193,11 +193,8 @@ VoipPeer::GetRxBytes (void) const
 double
 VoipPeer::GetLoss (void) const
 {
-  NS_ASSERT_MSG (m_peerApp, "No peer application.");
-  
-  uint32_t total = GetTxPackets () + m_peerApp->GetTxPackets ();
-  uint32_t loss = m_peerApp->m_lossCounter.GetLost () + m_lossCounter.GetLost ();
-  return ((double)loss) / total;
+  uint32_t lost = m_lossCounter.GetLost ();
+  return ((double)lost) / (lost + GetRxPackets ());
 }
 
 Time      
