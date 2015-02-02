@@ -32,68 +32,48 @@
 
 namespace ns3 {
 
-class VideoClientHelper
+class VideoHelper
 {
 public:
   /**
-   * Create VideoClientHelper which will make life easier for people
-   * trying to set up simulations with onoff-udp-client-server.
+   * Create a VideoHelper which will make life easier for people
+   * trying to set up simulations with video-client.
    */
-  VideoClientHelper ();
+  VideoHelper ();
 
   /**
-   * Create VideoClientHelper which will make life easier for people
-   * trying to set up simulations with onoff-udp-client-server.
-   * \param ip The IP address of the remote UDP server
-   * \param port The port number of the remote UDP server
-   * \param filename the file from which packet traces will be loaded
-   */
-  VideoClientHelper (Address ip, uint16_t port, std::string filename);
-  /**
-   * Create VideoClientHelper which will make life easier for people
-   * trying to set up simulations with onoff-udp-client-server.
+   * Create a VideoHelper which will make life easier for people
+   * trying to set up simulations with video-client
    * \param ip The IPv4 address of the remote UDP server
    * \param port The port number of the remote UDP server
    * \param filename the file from which packet traces will be loaded
    */
-  VideoClientHelper (Ipv4Address ip, uint16_t port, std::string filename);
-  /**
-   * Create VideoClientHelper which will make life easier for people
-   * trying to set up simulations with onoff-udp-client-server.
-   * \param ip The IPv6 address of the remote UDP server
-   * \param port The port number of the remote UDP server
-   * \param filename the file from which packet traces will be loaded
-   */
-  VideoClientHelper (Ipv6Address ip, uint16_t port, std::string filename);
+  VideoHelper (Ipv4Address ip, uint16_t port, std::string filename);
 
   /**
    * Record an attribute to be set in each Application after it is is created.
-   * \param name the name of the attribute to set
-   * \param value the value of the attribute to set
+   * \param name the name of the attribute to set.
+   * \param value the value of the attribute to set.
    */
   void SetAttribute (std::string name, const AttributeValue &value);
 
   /**
-   * Create one OnOff UDP trace client application on each of the input
-   * nodes.
-   * \param c the nodes
-   * \returns the applications created, one application per input node.
+   * Create one video client application on each of the input nodes.
+   * \param c The nodes.
+   * \returns The applications created, one application per input node.
    */
   ApplicationContainer Install (NodeContainer c);
 
   /**
-   * Create one OnOff UDP trace client application on node n.
-   * \param n the node
-   * \returns the applications created.
+   * Create one video client application on node n.
+   * \param n The node.
+   * \returns The applications created.
    */
-  Ptr<Application>     Install (Ptr<Node> n);
-
+  Ptr<Application> Install (Ptr<Node> n);
 
 private:
   ObjectFactory m_factory; //!< Object factory.
 };
 
-
 } // namespace ns3
-
 #endif /* VIDEO_HELPER_H */

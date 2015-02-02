@@ -28,42 +28,26 @@
 
 namespace ns3 {
 
-VideoClientHelper::VideoClientHelper ()
+VideoHelper::VideoHelper ()
 {
 }
 
-VideoClientHelper::VideoClientHelper (Address address, uint16_t port, std::string filename)
+VideoHelper::VideoHelper (Ipv4Address address, uint16_t port, std::string filename)
 {
   m_factory.SetTypeId (VideoClient::GetTypeId ());
-  SetAttribute ("RemoteAddress", AddressValue (address));
-  SetAttribute ("RemotePort", UintegerValue (port));
-  SetAttribute ("TraceFilename", StringValue (filename));
-}
-
-VideoClientHelper::VideoClientHelper (Ipv4Address address, uint16_t port, std::string filename)
-{
-  m_factory.SetTypeId (VideoClient::GetTypeId ());
-  SetAttribute ("RemoteAddress", AddressValue (Address (address)));
-  SetAttribute ("RemotePort", UintegerValue (port));
-  SetAttribute ("TraceFilename", StringValue (filename));
-}
-
-VideoClientHelper::VideoClientHelper (Ipv6Address address, uint16_t port, std::string filename)
-{
-  m_factory.SetTypeId (VideoClient::GetTypeId ());
-  SetAttribute ("RemoteAddress", AddressValue (Address (address)));
+  SetAttribute ("RemoteAddress", Ipv4AddressValue (address));
   SetAttribute ("RemotePort", UintegerValue (port));
   SetAttribute ("TraceFilename", StringValue (filename));
 }
 
 void
-VideoClientHelper::SetAttribute (std::string name, const AttributeValue &value)
+VideoHelper::SetAttribute (std::string name, const AttributeValue &value)
 {
   m_factory.Set (name, value);
 }
 
 ApplicationContainer
-VideoClientHelper::Install (NodeContainer c)
+VideoHelper::Install (NodeContainer c)
 {
   ApplicationContainer apps;
   for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
@@ -77,7 +61,7 @@ VideoClientHelper::Install (NodeContainer c)
 }
 
 Ptr<Application>
-VideoClientHelper::Install (Ptr<Node> n)
+VideoHelper::Install (Ptr<Node> n)
 {
   Ptr<VideoClient> client = m_factory.Create<VideoClient> ();
   n->AddApplication (client);
