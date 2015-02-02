@@ -90,7 +90,7 @@ RingController::PrintAppStatistics (Ptr<Application> app)
       std::cout << 
         "VoIP (TEID " << teid << ") [" << srcIdx << " -> " << dstIdx << "]" << 
         " Duration " << voipApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
-        " Loss " << voipApp->GetLoss () << " -" <<
+        " Loss " << voipApp->GetLossRatio () << " -" <<
         " Delay " << voipApp->GetDelay ().ToInteger (Time::MS) << " ms -" <<
         " Jitter " << voipApp->GetJitter ().ToInteger (Time::MS) << " ms" << 
       std::endl; 

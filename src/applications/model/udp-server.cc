@@ -127,7 +127,7 @@ UdpServer::GetRxBytes (void) const
 }
 
 double
-UdpServer::GetLoss (void) const
+UdpServer::GetLossRatio (void) const
 {
   return ((double)GetLost ()) / (GetLost () + GetRxPackets ());
 }

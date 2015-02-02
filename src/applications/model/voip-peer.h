@@ -106,7 +106,7 @@ public:
   uint32_t  GetRxPackets  (void)  const;
   uint32_t  GetTxBytes    (void)  const;
   uint32_t  GetRxBytes    (void)  const;
-  double    GetLoss       (void)  const;
+  double    GetLossRatio  (void)  const;
   Time      GetActiveTime (void)  const;
   Time      GetDelay      (void)  const;
   Time      GetJitter     (void)  const;
