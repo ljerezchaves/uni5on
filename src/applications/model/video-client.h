@@ -102,7 +102,12 @@ private:
    * \param filename The trace file path.
    */
   void LoadTrace (std::string filename);
-
+  
+  /**
+   * \brief Load the default trace
+   */
+  void LoadDefaultTrace (void);
+  
   /**
    * \brief Cancel all pending events.
    */
@@ -170,12 +175,13 @@ private:
   EventId     m_startStopEvent;             //!< Event id for next start or stop event
   EventId     m_sendEvent;                  //!< Event id of pending 'send packet' event
   uint16_t    m_maxPacketSize;              //!< Maximum packet size to send (including the SeqTsHeader)
-  bool        m_connected;                  //!< True if connected
-  Time        m_lastStartTime;              //!< Last start time
-  Ptr<RandomVariableStream>      m_onTime;  //!< rng for On Time
-  Ptr<RandomVariableStream>      m_offTime; //!< rng for Off Time
-  std::vector<struct TraceEntry> m_entries; //!< Entries in the trace to send
-  uint32_t    m_currentEntry;               //!< Current entry index
+  bool        m_connected;                    //!< True if connected
+  Time        m_lastStartTime;                //!< Last start time
+  uint32_t    m_currentEntry;                 //!< Current entry index
+  Ptr<RandomVariableStream>       m_onTime;   //!< rng for On Time
+  Ptr<RandomVariableStream>       m_offTime;  //!< rng for Off Time
+  std::vector<struct TraceEntry>  m_entries;  //!< Entries in the trace to send
+  static struct TraceEntry        g_defaultEntries[]; //!< Default trace to send
 };
 
 } // namespace ns3
