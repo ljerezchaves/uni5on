@@ -354,7 +354,7 @@ VideoClient::SendPacket (uint32_t size)
   SeqTsHeader seqTs;
   seqTs.SetSeq (m_sent);
 
-  Ptr<Packet> p = Create<Packet> (packetSize - 12);
+  Ptr<Packet> p = Create<Packet> (packetSize);
   p->AddHeader (seqTs);
   m_txBytes += p->GetSize ();
 
