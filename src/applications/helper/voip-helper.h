@@ -36,16 +36,35 @@ namespace ns3 {
 class VoipHelper
 {
 public:
+  /**
+   * Create a VoipHelper which will make life easier for people
+   * trying to set up simulations with voip applications.
+   */
   VoipHelper ();
 
+  /**
+   * Record an attribute to be set in each Application after it is is created.
+   * \param name the name of the attribute to set.
+   * \param value the value of the attribute to set.
+   */
   void SetAttribute (std::string name, const AttributeValue &value);
 
-  ApplicationContainer Install (Ptr<Node> firstNode, Ptr<Node> secondNode, 
+  /**
+   * Create a pair of voip applications on input nodes.
+   * \param firstNode The first node in pair.
+   * \param secondNode The second node in pair.
+   * \param firstAddr The IPv4 address of first node.
+   * \param secondAddr The IPv4 address of second node.
+   * \param firstPort The input port number in first node.
+   * \param secondPort The input port number in second node.
+   * \returns The pair of applications created.
+   */
+  ApplicationContainer Install (Ptr<Node> firstNode,   Ptr<Node> secondNode, 
                                 Ipv4Address firstAddr, Ipv4Address secondAddr,
-                                uint16_t firstPort, uint16_t secondPort);
+                                uint16_t firstPort,    uint16_t secondPort);
 
 private:
-  ObjectFactory m_factory;
+  ObjectFactory m_factory; //!< Object factory.
 };
 
 } // namespace ns3
