@@ -53,7 +53,7 @@ VideoHelper::Install (NodeContainer c)
   return apps;
 }
 
-Ptr<Application>
+Ptr<VideoClient>
 VideoHelper::Install (Ptr<Node> node, Ipv4Address address, uint16_t port)
 {
   Ptr<VideoClient> client = m_factory.Create<VideoClient> ();

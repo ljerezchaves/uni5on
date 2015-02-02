@@ -62,7 +62,7 @@ public:
    * \param port The port number of the remote UDP server
    * \returns The applications created.
    */
-  Ptr<Application> Install (Ptr<Node> node, Ipv4Address address, uint16_t port);
+  Ptr<VideoClient> Install (Ptr<Node> node, Ipv4Address address, uint16_t port);
 
 private:
   ObjectFactory m_factory; //!< Object factory.

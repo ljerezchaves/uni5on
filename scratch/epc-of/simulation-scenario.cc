@@ -187,6 +187,7 @@ SimulationScenario::EnableHttpTraffic ()
       Ptr<Application> httpClientApp = httpClient.Install (client);
       clientApps.Add (httpClientApp);
       httpClientApp->AggregateObject (tft);
+      httpClientApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
       httpServerApp->SetAttribute ("Direction", 
           EnumValue (Application::BIDIRECTIONAL));
 
@@ -210,16 +211,13 @@ SimulationScenario::EnableHttpTraffic ()
   serverApps.Start (Seconds (0));
 
   // Setting up app start callback to controller
-  for (ApplicationContainer::Iterator i = clientApps.Begin (); 
-       i != clientApps.End (); ++i)
+  ApplicationContainer::Iterator i;
+  for (i = clientApps.Begin (); i != clientApps.End (); ++i)
     {
       Ptr<Application> app = *i;
       app->SetAppStartStopCallback (
           MakeCallback (&OpenFlowEpcController::NotifyAppStart, m_controller),
           MakeCallback (&OpenFlowEpcController::NotifyAppStop, m_controller));
-
-      // Random start time for each application
-      app->SetStartTime (Seconds (m_rngStart->GetValue ()));
     }
 }
 
@@ -346,19 +344,21 @@ SimulationScenario::EnableVideoTraffic ()
  
       // Video server (send UDP datagrams to client)
       // Back off 20 (IP) + 8 (UDP) bytes from MTU
-      Ptr<Application> videoSenderApp;
       int videoIdx = rngVideo->GetInteger ();
-      videoHelper.SetAttribute ("TraceFilename", 
-          StringValue (GetVideoFilename (videoIdx)));
+      Ptr<VideoClient> videoSenderApp;
       videoSenderApp = videoHelper.Install (m_webHost, clientAddr, videoPort);
       videoSenderApp->AggregateObject (tft);
+      videoSenderApp->SetTraceFile (GetVideoFilename (videoIdx));
       videoSenderApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
       videoApps.Add (videoSenderApp);
       
       // Video sink (receive UDP datagramas from server)
       UdpServerHelper videoSink (videoPort);
-      sinkApps.Add (videoSink.Install (client));
-     
+      videoSink.Install (client);
+      Ptr<UdpServer> sinkApp = videoSink.GetServer ();
+      sinkApp->AggregateObject (tft);
+      sinkApps.Add (sinkApp);
+
       // TFT Packet filter
       EpcTft::PacketFilter filter;
       filter.direction = EpcTft::DOWNLINK;
