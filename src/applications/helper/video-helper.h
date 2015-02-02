@@ -42,15 +42,6 @@ public:
   VideoHelper ();
 
   /**
-   * Create a VideoHelper which will make life easier for people
-   * trying to set up simulations with video-client
-   * \param ip The IPv4 address of the remote UDP server
-   * \param port The port number of the remote UDP server
-   * \param filename the file from which packet traces will be loaded
-   */
-  VideoHelper (Ipv4Address ip, uint16_t port, std::string filename);
-
-  /**
    * Record an attribute to be set in each Application after it is is created.
    * \param name the name of the attribute to set.
    * \param value the value of the attribute to set.
@@ -66,10 +57,12 @@ public:
 
   /**
    * Create one video client application on node n.
-   * \param n The node.
+   * \param node The node.
+   * \param address The IPv4 address of the remote UDP server
+   * \param port The port number of the remote UDP server
    * \returns The applications created.
    */
-  Ptr<Application> Install (Ptr<Node> n);
+  Ptr<Application> Install (Ptr<Node> node, Ipv4Address address, uint16_t port);
 
 private:
   ObjectFactory m_factory; //!< Object factory.

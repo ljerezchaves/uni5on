@@ -30,14 +30,7 @@ namespace ns3 {
 
 VideoHelper::VideoHelper ()
 {
-}
-
-VideoHelper::VideoHelper (Ipv4Address address, uint16_t port, std::string filename)
-{
   m_factory.SetTypeId (VideoClient::GetTypeId ());
-  SetAttribute ("RemoteAddress", Ipv4AddressValue (address));
-  SetAttribute ("RemotePort", UintegerValue (port));
-  SetAttribute ("TraceFilename", StringValue (filename));
 }
 
 void
@@ -61,10 +54,12 @@ VideoHelper::Install (NodeContainer c)
 }
 
 Ptr<Application>
-VideoHelper::Install (Ptr<Node> n)
+VideoHelper::Install (Ptr<Node> node, Ipv4Address address, uint16_t port)
 {
   Ptr<VideoClient> client = m_factory.Create<VideoClient> ();
-  n->AddApplication (client);
+  client->SetAttribute ("RemoteAddress", Ipv4AddressValue (address));
+  client->SetAttribute ("RemotePort", UintegerValue (port));
+  node->AddApplication (client);
   return client;
 }
 
