@@ -26,14 +26,13 @@ namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (SimulationScenario);
 
+const std::string SimulationScenario::m_videoDir = "../ns3/movies/";
+
 const std::string SimulationScenario::m_videoTrace [] = {
-  "ns3/movies/jurassic.data", "ns3/movies/silence.data",
-  "ns3/movies/star-wars.data", "ns3/movies/mr-bean.data",
-  "ns3/movies/first-contact.data", "ns3/movies/from-dusk.data",
-  "ns3/movies/the-firm.data", "ns3/movies/formula1.data",
-  "ns3/movies/soccer.data", "ns3/movies/ard-news.data",
-  "ns3/movies/ard-talk.data", "ns3/movies/ns3-talk.data",
-  "ns3/movies/office-cam.data"};
+  "jurassic.data", "silence.data", "star-wars.data", "mr-bean.data",
+  "first-contact.data", "from-dusk.data", "the-firm.data", "formula1.data",
+  "soccer.data", "ard-news.data", "ard-talk.data", "ns3-talk.data",
+  "office-cam.data"};
 
 const uint64_t SimulationScenario::m_avgBitRate [] = {770000, 580000, 280000,
   580000, 330000, 680000, 310000, 840000, 1100000, 720000, 540000, 550000,
@@ -42,7 +41,6 @@ const uint64_t SimulationScenario::m_avgBitRate [] = {770000, 580000, 280000,
 const uint64_t SimulationScenario::m_maxBitRate [] = {3300000, 4400000,
   1900000, 3100000, 2500000, 3100000, 2100000, 2900000, 3600000, 3400000,
   3100000, 3400000, 2000000};
-
 
 SimulationScenario::SimulationScenario ()
   : m_opfNetwork (0),
@@ -61,7 +59,7 @@ SimulationScenario::SimulationScenario ()
   std::vector<uint16_t> eNbSwt (1);
   eNbUes.at (0) = 1;
   eNbSwt.at (0) = 1;
-  SimulationScenario (1, 1, 3, eNbUes, eNbSwt);
+  SimulationScenario (1, 3, eNbUes, eNbSwt);
 }
 
 SimulationScenario::~SimulationScenario ()
@@ -69,9 +67,8 @@ SimulationScenario::~SimulationScenario ()
   NS_LOG_FUNCTION (this);
 }
 
-SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nUes, 
-    uint32_t nRing, std::vector<uint32_t> eNbUes, 
-    std::vector<uint16_t> eNbSwt)
+SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nRing, 
+    std::vector<uint32_t> eNbUes, std::vector<uint16_t> eNbSwt)
 {
   NS_LOG_FUNCTION (this);
 
@@ -315,12 +312,25 @@ SimulationScenario::EnableVideoTraffic ()
 {
   static uint16_t videoPort = 20000;
 
-  Ptr<UniformRandomVariable> rngVideo = CreateObject<UniformRandomVariable> ();
   Ptr<Ipv4> serverIpv4 = m_webHost->GetObject<Ipv4> ();
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
   Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
 
-  ApplicationContainer senderApps;
+  ApplicationContainer videoApps, sinkApps;
+  VideoHelper videoHelper;
+  videoHelper.SetAttribute ("Direction", EnumValue (Application::DOWNLINK));
+
+  // ON/OFF pattern for VoIP applications (Poisson process)
+  videoHelper.SetAttribute ("OnTime", 
+      StringValue ("ns3::NormalRandomVariable[Mean=5.0,Variance=2.0]"));
+  videoHelper.SetAttribute ("OffTime", 
+      StringValue ("ns3::ExponentialRandomVariable[Mean=15.0]"));
+
+  // Video random selection
+  Ptr<UniformRandomVariable> rngVideo = CreateObject<UniformRandomVariable> ();
+  rngVideo->SetAttribute ("Min", DoubleValue (0.));
+  rngVideo->SetAttribute ("Max", DoubleValue (12.));
+  
   for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, videoPort++)
     {
       Ptr<Node> client = m_ueNodes.Get (u);
@@ -336,17 +346,18 @@ SimulationScenario::EnableVideoTraffic ()
  
       // Video server (send UDP datagrams to client)
       // Back off 20 (IP) + 8 (UDP) bytes from MTU
-      int videoIdx = rngVideo->GetInteger (0, 12);
-      VideoHelper videoSender (clientAddr, videoPort, m_videoTrace [videoIdx]);
-      Ptr<Application> videoSenderApp = videoSender.Install (m_webHost);
-      senderApps.Add (videoSenderApp);
+      Ptr<Application> videoSenderApp;
+      int videoIdx = rngVideo->GetInteger ();
+      videoHelper.SetAttribute ("TraceFilename", 
+          StringValue (GetVideoFilename (videoIdx)));
+      videoSenderApp = videoHelper.Install (m_webHost, clientAddr, videoPort);
       videoSenderApp->AggregateObject (tft);
-      videoSenderApp->SetAttribute ("Direction", 
-          EnumValue (Application::DOWNLINK));
+      videoSenderApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
+      videoApps.Add (videoSenderApp);
       
       // Video sink (receive UDP datagramas from server)
       UdpServerHelper videoSink (videoPort);
-      m_videoServers.Add (videoSink.Install (client)); 
+      sinkApps.Add (videoSink.Install (client));
      
       // TFT Packet filter
       EpcTft::PacketFilter filter;
@@ -366,12 +377,11 @@ SimulationScenario::EnableVideoTraffic ()
       EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
-  senderApps.Start (Seconds (1));
-  m_videoServers.Start (Seconds (0));
+  sinkApps.Start (Seconds (0));
 
   // Setting up app start callback to controller
-  for (ApplicationContainer::Iterator i = senderApps.Begin (); 
-       i != senderApps.End (); ++i)
+  ApplicationContainer::Iterator i;
+  for (i = videoApps.Begin (); i != videoApps.End (); ++i)
     {
       Ptr<Application> app = *i;
       app->SetAppStartStopCallback (
@@ -445,6 +455,12 @@ SimulationScenario::MacDropTrace (std::string context, Ptr<const Packet> p)
   }
   Ptr<Node> node = NodeList::GetNode (atoi (elements.at (1).c_str ()));
   NS_LOG_DEBUG (context << " " << p << " " << Names::FindName (node));
+}
+
+const std::string 
+SimulationScenario::GetVideoFilename (uint8_t idx)
+{
+  return m_videoDir + m_videoTrace [idx];
 }
 
 };  // namespace ns3

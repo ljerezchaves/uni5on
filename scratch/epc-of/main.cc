@@ -43,7 +43,7 @@ main (int argc, char *argv[])
   ConfigureDefaults ();
   
   // Command Line parameters
-  double      simTime   = 30;
+  double      duration  = 30;
   uint32_t    nEnbs     = 4;
   uint32_t    nUes      = 1;
   uint16_t    nRing     = 5;
@@ -57,7 +57,7 @@ main (int argc, char *argv[])
   std::string topoFile  = "../scratch/epc-of/default-topo.txt";
   
   CommandLine cmd;
-  cmd.AddValue ("simTime",  "Simulation time (s)", simTime);
+  cmd.AddValue ("duration", "Simulation time (s)", duration);
   cmd.AddValue ("nEnbs",    "Number of eNBs", nEnbs);
   cmd.AddValue ("nUes",     "Number of UEs per eNB", nUes);
   cmd.AddValue ("nRing",    "Number of switches in the ring", nRing);
@@ -79,7 +79,7 @@ main (int argc, char *argv[])
   ParseTopology (topoFile, nEnbs, nUes, nRing, eNbUes, eNbSwt);
   
   Ptr<SimulationScenario> scenario = 
-    CreateObject<SimulationScenario> (nEnbs, nUes, nRing, eNbUes, eNbSwt);
+    CreateObject<SimulationScenario> (nEnbs, nRing, eNbUes, eNbSwt);
   
   
   // Application traffic
@@ -92,7 +92,7 @@ main (int argc, char *argv[])
   if (verbose)  scenario->EnableTraces ();
 
   NS_LOG_INFO ("Simulating...");
-  Simulator::Stop (Seconds (simTime));
+  Simulator::Stop (Seconds (duration));
   Simulator::Run ();
 
   scenario->PrintStats ();
@@ -151,15 +151,15 @@ EnableVerbose ()
   
   LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_WARN);
   LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
-  LogComponentEnable ("OpenFlowEpcController", LOG_LEVEL_ALL);
+  LogComponentEnable ("OpenFlowEpcController", LOG_LEVEL_WARN);
  
-  LogComponentEnable ("LteSquaredGridNetwork", LOG_INFO);
+  LogComponentEnable ("LteSquaredGridNetwork", LOG_LEVEL_WARN);
 
-  LogComponentEnable ("RingNetwork", LOG_LEVEL_ALL);
-  LogComponentEnable ("RingController", LOG_LEVEL_ALL);
+  LogComponentEnable ("RingNetwork", LOG_LEVEL_WARN);
+  LogComponentEnable ("RingController", LOG_LEVEL_WARN);
 
   LogComponentEnable ("VoipPeer", LOG_LEVEL_WARN);
-  LogComponentEnable ("VideoClient", LOG_LOGIC);
+  LogComponentEnable ("VideoClient", LOG_LEVEL_WARN);
 }
 
 bool

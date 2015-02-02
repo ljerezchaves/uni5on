@@ -43,13 +43,12 @@ public:
   /**
    * Creates a simulation scenario based on user preferences from command line.
    * \param nEnbs The number of eNBs in the LTE network.
-   * \param nUes The number of UEs per eNB.
    * \param nRing The number of OpenFlow switches in the EPC ring network.
    * \param eNbUes Indicates, for each eNB, the number of UEs to create.
    * \param eNbSwt Indicates, for each eNB, the OpenFlow switch index to use.
    */
-  SimulationScenario (uint32_t nEnbs, uint32_t nUes, uint32_t nRing, 
-       std::vector<uint32_t> eNbUes, std::vector<uint16_t> eNbSwt);
+  SimulationScenario (uint32_t nEnbs, uint32_t nRing, 
+      std::vector<uint32_t> eNbUes, std::vector<uint16_t> eNbSwt);
 
   /**
    * Register this type.
@@ -125,6 +124,13 @@ public:
   void MacDropTrace (std::string context, Ptr<const Packet> p);
 
 private:
+  /**
+   * Get complete filename for video trace files;
+   * \param idx The trace index.
+   * \return Complete path.
+   */
+  static const std::string GetVideoFilename (uint8_t idx);
+
   Ptr<OpenFlowEpcNetwork> m_opfNetwork;       //!< LTE EPC network
   Ptr<OpenFlowEpcController> m_controller;    //!< OpenFLow controller
   Ptr<OpenFlowEpcHelper> m_epcHelper;         //!< LTE EPC helper
@@ -140,6 +146,7 @@ private:
   ApplicationContainer m_voipServers;         //!< Voip applications
   ApplicationContainer m_videoServers;        //!< Video applications
 
+  static const std::string m_videoDir;        //!< Video trace directory
   static const std::string m_videoTrace [];   //!< Video trace filenames
   static const uint64_t m_avgBitRate [];      //!< Video trace avg bitrate
   static const uint64_t m_maxBitRate [];      //!< Video trace max bitrate
