@@ -337,8 +337,7 @@ SimulationScenario::EnableVideoTraffic ()
       // Video server (send UDP datagrams to client)
       // Back off 20 (IP) + 8 (UDP) bytes from MTU
       int videoIdx = rngVideo->GetInteger (0, 12);
-      VideoClientHelper videoSender (clientAddr, videoPort, 
-                                     m_videoTrace [videoIdx]);
+      VideoHelper videoSender (clientAddr, videoPort, m_videoTrace [videoIdx]);
       Ptr<Application> videoSenderApp = videoSender.Install (m_webHost);
       senderApps.Add (videoSenderApp);
       videoSenderApp->AggregateObject (tft);

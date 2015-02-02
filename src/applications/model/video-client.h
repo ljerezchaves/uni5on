@@ -48,40 +48,15 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  VideoClient ();
+  VideoClient ();       //!< Default constructor
+  ~VideoClient ();      //!< Dummy destructor, see DoDipose
 
   /**
-   * \brief Creates a traceBasedStreamer application
-   * \param ip the destination ip address to which the stream will be sent
-   * \param port the destination udp port to which the stream will be sent
-   * \param traceFile a path to an MPEG4 trace file formatted as follows:
-   *  FrameNo Frametype   Time[ms]    Length [byte]
-   *  FrameNo Frametype   Time[ms]    Length [byte]
-   *  ...
-   *
-   *
-   */
-  VideoClient (Ipv4Address ip, uint16_t port, char *traceFile);
-  ~VideoClient ();
-
-  /**
-   * \brief set the remote address and port
-   * \param ip remote IPv4 address
-   * \param port remote port
+   * \brief Set the IPv4 destination address and port of the outbound packets.
+   * \param ip The IPv4 address to use.
+   * \return port The port number to use.
    */
   void SetRemote (Ipv4Address ip, uint16_t port);
-  /**
-   * \brief set the remote address and port
-   * \param ip remote IPv6 address
-   * \param port remote port
-   */
-  void SetRemote (Ipv6Address ip, uint16_t port);
-  /**
-   * \brief set the remote address and port
-   * \param ip remote IP address
-   * \param port remote port
-   */
-  void SetRemote (Address ip, uint16_t port);
 
   /**
    * \brief Set the trace file to be used by the application
@@ -91,6 +66,12 @@ public:
    *  ...
    */
   void SetTraceFile (std::string filename);
+ 
+  /**
+   * \brief Set the maximum packet size
+   * \param maxPacketSize The maximum packet size
+   */
+  void SetMaxPacketSize (uint16_t maxPacketSize);
 
   /**
    * \brief Return the maximum packet size
@@ -99,26 +80,28 @@ public:
   uint16_t GetMaxPacketSize (void);
 
   /**
-   * \brief Set the maximum packet size
-   * \param maxPacketSize The maximum packet size
+   * \brief Get application statistics.
+   * \return The statistic value.
    */
-  void SetMaxPacketSize (uint16_t maxPacketSize);
+  //\{
+  uint32_t  GetTxPackets  (void)  const;
+  uint32_t  GetTxBytes    (void)  const;
+  Time      GetActiveTime (void)  const;
+  //\}
 
 protected:
   virtual void DoDispose (void);
 
 private:
+  // inherited from Application base class.
+  virtual void StartApplication (void);    // Called at time specified by Start
+  virtual void StopApplication (void);     // Called at time specified by Stop
+
   /**
-   * \brief Load a trace file
-   * \param filename the trace file path
+   * \brief Load a trace file.
+   * \param filename The trace file path.
    */
   void LoadTrace (std::string filename);
-  /**
-   * \brief Load the default trace
-   */
-  void LoadDefaultTrace (void);
-  virtual void StartApplication (void);
-  virtual void StopApplication (void);
 
   /**
    * \brief Cancel all pending events.
@@ -126,49 +109,50 @@ private:
   void CancelEvents ();
 
   /**
-   * \brief Start an On period
+   * \brief Start an "ON" period
    */
   void StartSending ();
   
   /**
-   * \brief Start an Off period
+   * \brief Start an "OFF" period
    */
   void StopSending ();
 
   /**
-   * \brief Schedule the next On period start
+   * \brief Schedules the event to start sending data (switch to "ON" state).
    */
   void ScheduleStartEvent ();
   
   /**
-   * \brief Schedule the next Off period start
+   * \brief Schedules the event to stop sending data (switch to "OFF" state).
    */
   void ScheduleStopEvent ();
 
   /**
-   * \brief Handle a Connection Succeed event
+   * \brief Handle a connection succeed event.
    * \param socket the connected socket
    */
   void ConnectionSucceeded (Ptr<Socket> socket);
   
   /**
-   * \brief Handle a Connection Failed event
+   * \brief Handle a connection failed event.
    * \param socket the not connected socket
    */
   void ConnectionFailed (Ptr<Socket> socket);
+  
   /**
-   * \brief Send a packet
+   * \brief Start sending the video stream.
    */
-  void Send (void);
+  void SendStream (void);
+
   /**
-   * \brief Send a packet of a given size
-   * \param size the packet size
+   * \brief Handle a packet transmission.
+   * \param size The packet size
    */
   void SendPacket (uint32_t size);
 
   /**
    * \brief Entry to send.
-   *
    * Each entry represents an MPEG frame
    */
   struct TraceEntry
@@ -178,21 +162,20 @@ private:
     char frameType; //!< Frame type (I, P or B)
   };
 
-  uint32_t    m_sent;                   //!< Counter for sent packets
-  Ptr<Socket> m_socket;                 //!< Socket
-  Address     m_peerAddress;            //!< Remote peer address
-  uint16_t    m_peerPort;               //!< Remote peer port
-  EventId     m_startStopEvent;         //!< Event id for next start or stop event
-  EventId     m_sendEvent;              //!< Event id of pending 'send packet' event
-  uint16_t    m_maxPacketSize;          //!< Maximum packet size to send (including the SeqTsHeader)
-  bool        m_connected;              //!< True if connected
- 
-  Ptr<RandomVariableStream>  m_onTime;  //!< rng for On Time
-  Ptr<RandomVariableStream>  m_offTime; //!< rng for Off Time
-
-  static struct TraceEntry g_defaultEntries[];  //!< Default trace to send
-  std::vector<struct TraceEntry> m_entries;     //!< Entries in the trace to send
-  uint32_t m_currentEntry;                      //!< Current entry index
+  uint32_t    m_sent;                       //!< Counter for sent packets
+  uint32_t    m_txBytes;                    //!< Number of TX bytes
+  Ptr<Socket> m_socket;                     //!< Socket
+  Ipv4Address m_peerAddress;                //!< Remote peer address
+  uint16_t    m_peerPort;                   //!< Remote peer port
+  EventId     m_startStopEvent;             //!< Event id for next start or stop event
+  EventId     m_sendEvent;                  //!< Event id of pending 'send packet' event
+  uint16_t    m_maxPacketSize;              //!< Maximum packet size to send (including the SeqTsHeader)
+  bool        m_connected;                  //!< True if connected
+  Time        m_lastStartTime;              //!< Last start time
+  Ptr<RandomVariableStream>      m_onTime;  //!< rng for On Time
+  Ptr<RandomVariableStream>      m_offTime; //!< rng for Off Time
+  std::vector<struct TraceEntry> m_entries; //!< Entries in the trace to send
+  uint32_t    m_currentEntry;               //!< Current entry index
 };
 
 } // namespace ns3
