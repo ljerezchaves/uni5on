@@ -161,6 +161,13 @@ SimulationScenario::EnableHttpTraffic ()
   Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
 
   ApplicationContainer serverApps, clientApps;
+  ApplicationContainer httpApps;
+
+  HttpHelper httpHelper;
+  httpHelper.SetClientAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
+  httpHelper.SetServerAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
+  httpHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
+
   for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, httpPort++)
     {
       Ptr<Node> client = m_ueNodes.Get (u);
@@ -174,22 +181,13 @@ SimulationScenario::EnableHttpTraffic ()
       // Traffic Flow Template
       Ptr<EpcTft> tft = CreateObject<EpcTft> ();
 
-      // HTTP server
-      HttpServerHelper httpServer (httpPort);
-      Ptr<Application> httpServerApp = httpServer.Install (m_webHost);
-      serverApps.Add (httpServerApp);
-      httpServerApp->AggregateObject (tft);
-      httpServerApp->SetAttribute ("Direction", 
-          EnumValue (Application::BIDIRECTIONAL));
-
-      // HTTP client
-      HttpClientHelper httpClient (serverAddr, httpPort);
-      Ptr<Application> httpClientApp = httpClient.Install (client);
-      clientApps.Add (httpClientApp);
-      httpClientApp->AggregateObject (tft);
-      httpClientApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
-      httpServerApp->SetAttribute ("Direction", 
-          EnumValue (Application::BIDIRECTIONAL));
+      // HTTP client / server
+      ApplicationContainer apps = httpHelper.Install (client, m_webHost, 
+           serverAddr, httpPort);
+      Ptr<HttpClient> clientApp = DynamicCast<HttpClient> (apps.Get (0));
+      clientApp->AggregateObject (tft);
+      clientApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
+      httpApps.Add (clientApp);
 
       // TFT Packet filter
       EpcTft::PacketFilter filter;
@@ -208,11 +206,10 @@ SimulationScenario::EnableHttpTraffic ()
       EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
-  serverApps.Start (Seconds (0));
 
   // Setting up app start callback to controller
   ApplicationContainer::Iterator i;
-  for (i = clientApps.Begin (); i != clientApps.End (); ++i)
+  for (i = httpApps.Begin (); i != httpApps.End (); ++i)
     {
       Ptr<Application> app = *i;
       app->SetAppStartStopCallback (
@@ -264,7 +261,7 @@ SimulationScenario::EnableVoipTraffic ()
       apps.Start (Seconds (m_rngStart->GetValue ()));
       voipApps.Add (apps);
   
-      // TFT download Packet filter
+      // TFT downlink packet filter
       EpcTft::PacketFilter filterDown;
       filterDown.direction = EpcTft::DOWNLINK;
       filterDown.remoteAddress = serverAddr;
@@ -275,7 +272,7 @@ SimulationScenario::EnableVoipTraffic ()
       filterDown.localPortEnd = voipPort;
       tft->Add (filterDown);
 
-      // TFT upload Packet filter
+      // TFT uplink packet filter
       EpcTft::PacketFilter filterUp;
       filterUp.direction = EpcTft::UPLINK;
       filterUp.remoteAddress = serverAddr;
@@ -314,15 +311,17 @@ SimulationScenario::EnableVideoTraffic ()
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
   Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
 
-  ApplicationContainer videoApps, sinkApps;
+  ApplicationContainer videoApps;
   VideoHelper videoHelper;
-  videoHelper.SetAttribute ("Direction", EnumValue (Application::DOWNLINK));
-  videoHelper.SetAttribute ("MaxPacketSize", UintegerValue (1400));
+  videoHelper.SetClientAttribute ("Direction", EnumValue (Application::DOWNLINK));
+  videoHelper.SetClientAttribute ("MaxPacketSize", UintegerValue (1400));
+  videoHelper.SetServerAttribute ("Direction", EnumValue (Application::DOWNLINK));
+  videoHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
 
   // ON/OFF pattern for VoIP applications (Poisson process)
-  videoHelper.SetAttribute ("OnTime", 
+  videoHelper.SetClientAttribute ("OnTime", 
       StringValue ("ns3::NormalRandomVariable[Mean=5.0,Variance=2.0]"));
-  videoHelper.SetAttribute ("OffTime", 
+  videoHelper.SetClientAttribute ("OffTime", 
       StringValue ("ns3::ExponentialRandomVariable[Mean=15.0]"));
 
   // Video random selection
@@ -343,24 +342,18 @@ SimulationScenario::EnableVideoTraffic ()
       // Traffic Flow Template
       Ptr<EpcTft> tft = CreateObject<EpcTft> ();
  
-      // Video server (send UDP datagrams to client)
-      // Back off 20 (IP) + 8 (UDP) bytes from MTU
+      // Downlink video traffic 
       int videoIdx = rngVideo->GetInteger ();
-      Ptr<VideoClient> videoSenderApp;
-      videoSenderApp = videoHelper.Install (m_webHost, clientAddr, videoPort);
-      videoSenderApp->AggregateObject (tft);
-      videoSenderApp->SetTraceFile (GetVideoFilename (videoIdx));
-      videoSenderApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
-      videoApps.Add (videoSenderApp);
-      
-      // Video sink (receive UDP datagramas from server)
-      UdpServerHelper videoSink (videoPort);
-      videoSink.Install (client);
-      Ptr<UdpServer> sinkApp = videoSink.GetServer ();
-      sinkApp->AggregateObject (tft);
-      sinkApps.Add (sinkApp);
+      videoHelper.SetClientAttribute ("TraceFilename",
+          StringValue (GetVideoFilename (videoIdx)));
+      ApplicationContainer apps = videoHelper.Install (m_webHost, client,
+          clientAddr, videoPort);
+      Ptr<VideoClient> clientApp = DynamicCast<VideoClient> (apps.Get (0));
+      clientApp->AggregateObject (tft);
+      clientApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
+      videoApps.Add (clientApp);
 
-      // TFT Packet filter
+      // TFT downlink packet filter
       EpcTft::PacketFilter filter;
       filter.direction = EpcTft::DOWNLINK;
       filter.remoteAddress = serverAddr;
@@ -378,7 +371,6 @@ SimulationScenario::EnableVideoTraffic ()
       EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
-  sinkApps.Start (Seconds (0));
 
   // Setting up app start callback to controller
   ApplicationContainer::Iterator i;
