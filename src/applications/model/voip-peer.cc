@@ -190,6 +190,12 @@ VoipPeer::GetRxBytes (void) const
   return m_rxBytes;
 }
 
+uint32_t
+VoipPeer::GetLost (void) const
+{
+  return m_lossCounter.GetLost ();
+}
+
 double
 VoipPeer::GetLossRatio (void) const
 {
