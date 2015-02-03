@@ -50,3 +50,4 @@ waf
 .DS_Store
 *.swp
 scratch/teste.cc
+default.txt

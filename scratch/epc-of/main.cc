@@ -54,7 +54,7 @@ main (int argc, char *argv[])
   bool        voip      = false;
   bool        http      = false;
   bool        video     = false;
-  std::string topoFile  = "../scratch/epc-of/default-topo.txt";
+  std::string topoFile  = "../scratch/epc-of/default.txt";
   
   CommandLine cmd;
   cmd.AddValue ("duration", "Simulation time (s)", duration);
