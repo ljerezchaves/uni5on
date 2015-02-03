@@ -57,11 +57,11 @@ public:
    * \param secondAddr The IPv4 address of second node.
    * \param firstPort The input port number in first node.
    * \param secondPort The input port number in second node.
-   * \returns The pair of applications created.
+   * \return The pair of applications created.
    */
-  ApplicationContainer Install (Ptr<Node> firstNode,   Ptr<Node> secondNode, 
+  ApplicationContainer Install (Ptr<Node>   firstNode, Ptr<Node> secondNode, 
                                 Ipv4Address firstAddr, Ipv4Address secondAddr,
-                                uint16_t firstPort,    uint16_t secondPort);
+                                uint16_t    firstPort, uint16_t secondPort);
 
 private:
   ObjectFactory m_factory; //!< Object factory.
