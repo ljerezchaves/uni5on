@@ -25,10 +25,13 @@
 #include "ns3/socket.h"
 #include "ns3/http-header.h"
 #include "ns3/double.h"
+#include "http-client.h"
 
 using namespace std;
 
 namespace ns3 {
+
+class HttpClient;
 
 /**
  * \ingroup applications
@@ -54,32 +57,28 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * \brief Constructor.
-   */
-  HttpServer ();
+  HttpServer ();          //!< Default constructor
+  virtual ~HttpServer (); //!< Dummy destructor, see DoDipose
 
   /**
-   * \brief Destructor.
+   * \brief Set the HttpClient application. 
+   * \param server The pointer to client application. 
    */
-  virtual ~HttpServer ();
+  void SetClientApp (Ptr<HttpClient> client);
+  
+  /**
+   * \brief Get the HttpClient application. 
+   * \return The pointer to client application. 
+   */
+  Ptr<HttpClient> GetClientApp ();
 
 protected:
-  /**
-   * \brief Dispose this object;
-   */
   virtual void DoDispose (void);
 
 private:
-  /**
-   * \brief Start the application.
-   */
-  virtual void StartApplication (void);
-
-  /**
-   * \brief Stop the application.
-   */
-  virtual void StopApplication (void);            // Called at time specified by Stop
+  // inherited from Application base class.
+  virtual void StartApplication (void);    // Called at time specified by Start
+  virtual void StopApplication (void);     // Called at time specified by Stop
 
   /**
    * \brief Processes the request of client to establish a TCP connection.
@@ -100,17 +99,10 @@ private:
    */
   void HandleReceive (Ptr<Socket> s);
 
-  /**
-   * \brief Local socket.
-   */
-  Ptr<Socket> m_socket;
-
-  /**
-   * \brief Local port.
-   */
-  uint16_t m_port;
+  Ptr<Socket> m_socket;         //!< Local socket
+  Ptr<HttpClient> m_clientApp;  //!< HttpClient application 
+  uint16_t m_port;              //!< Local port
 };
-
 
 }
 #endif /* HTTP_SERVER_H_ */

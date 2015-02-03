@@ -26,9 +26,12 @@
 #include "ns3/random-variable-stream.h"
 #include "ns3/double.h"
 #include "ns3/http-header.h"
+#include "http-server.h"
 
 using namespace std;
 namespace ns3 {
+
+class HttpServer;
 
 /**
  * \ingroup applications
@@ -58,35 +61,39 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * \brief Constructor.
-   */
-  HttpClient ();
+  HttpClient ();          //!< Default constructor
+  virtual ~HttpClient (); //!< Dummy destructor, see DoDipose
 
   /**
-   * \brief Destructor.
+   * \brief Set the HttpServer application. 
+   * \param server The pointer to server application. 
    */
-  virtual ~HttpClient ();
+  void SetServerApp (Ptr<HttpServer> server);
+  
+  /**
+   * \brief Get the HttpServer application. 
+   * \return The pointer to server application. 
+   */
+  Ptr<HttpServer> GetServerApp ();
 
 protected:
-  /**
-   * \brief Dispose this object;
-   */
   virtual void DoDispose (void);
 
 private:
-  /**
-   * \brief Start the application.
-   */
-  virtual void StartApplication (void);
+  // inherited from Application base class.
+  virtual void StartApplication (void);    // Called at time specified by Start
+  virtual void StopApplication (void);     // Called at time specified by Stop
 
   /**
-   * \brief Stop the application.
+   * \brief Handle a connection succeed event.
+   * \param socket the connected socket
    */
-  virtual void StopApplication (void);
-
-
   void ConnectionSucceeded (Ptr<Socket> socket);
+  
+  /**
+   * \brief Handle a connection failed event.
+   * \param socket the not connected socket
+   */
   void ConnectionFailed (Ptr<Socket> socket);
 
   /**
@@ -102,60 +109,18 @@ private:
    */
   void HandleReceive (Ptr<Socket> socket);
 
-  /**
-   * \brief Local socket.
-   */
-  Ptr<Socket> m_socket;
-
-  /**
-   * \brief Address of the server.
-   */
-  Address m_peerAddress;
-
-  /**
-   * \brief Remote port in the server.
-   */
-  uint16_t m_peerPort;
-
-  /**
-   * \brief HTTP Header.
-   */
-  HttpHeader m_httpHeader;
-
-  /**
-   * \brief Content-Length header line.
-   */
-  uint32_t m_contentLength;
-
-  /**
-   * \brief Content-Type header line.
-   */
-  string m_contentType;
-
-  /**
-   * \brief Number-of-Inline-Objects header line.
-   */
-  uint32_t m_numOfInlineObjects;
-
-  /**
-   * \brief Number of bytes received from server.
-   */
-  uint32_t m_bytesReceived;
-
-  /**
-   * \brief Number of inline objects already loaded.
-   */
-  uint32_t m_inlineObjLoaded;
-
-  /**
-   * \brief Random Variable Stream for reading time.
-   */
-  Ptr<LogNormalRandomVariable> m_readingTimeStream;
-
-  /**
-   * \brief client Address.
-   */
-  Ipv4Address m_clientAddress;
+  Ptr<Socket>     m_socket;             //!< Local socket.
+  Address         m_peerAddress;        //!< Address of the server.
+  uint16_t        m_peerPort;           //!< Remote port in the server.
+  HttpHeader      m_httpHeader;         //!< HTTP Header.
+  uint32_t        m_contentLength;      //!< Content-Length header line.
+  string          m_contentType;        //!< Content-Type header line.
+  uint32_t        m_numOfInlineObjects; //!< Number-of-Inline-Objects header line.
+  uint32_t        m_bytesReceived;      //!< Number of bytes received from server.
+  uint32_t        m_inlineObjLoaded;    //!< Number of inline objects already loaded.
+  Ipv4Address     m_clientAddress;      //!< Client Address.
+  Ptr<HttpServer> m_serverApp;          //!< HttpServer application
+  Ptr<LogNormalRandomVariable> m_readingTimeStream; //!< Random Variable Stream for reading time.
 };
 
 }

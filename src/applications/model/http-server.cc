@@ -27,9 +27,11 @@
 #include "ns3/drop-tail-queue.h"
 #include "http-server.h"
 
+NS_LOG_COMPONENT_DEFINE ("HttpServer");
+
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("HttpServerApplication");
+NS_OBJECT_ENSURE_REGISTERED (HttpServer);
 
 TypeId
 HttpServer::GetTypeId (void)
@@ -58,10 +60,23 @@ HttpServer::~HttpServer ()
   NS_LOG_FUNCTION (this);
 }
 
+void 
+HttpServer::SetClientApp (Ptr<HttpClient> client)
+{
+  m_clientApp = client;
+}
+
+Ptr<HttpClient> 
+HttpServer::GetClientApp ()
+{
+  return m_clientApp;
+}
+
 void
 HttpServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
+  m_socket = 0;
   Application::DoDispose ();
 }
 
@@ -103,7 +118,7 @@ void HttpServer::StopApplication (void)
     }
   else
     {
-      NS_LOG_WARN ("HttpServerApplication found null socket to close in StopApplication");
+      NS_LOG_WARN ("HttpServerApplication found null socket to close");
     }
 }
 
@@ -112,7 +127,8 @@ bool
 HttpServer::HandleRequest (Ptr<Socket> s, const Address& address)
 {
   NS_LOG_FUNCTION (this << s << address);
-  NS_LOG_DEBUG ("HttpServer >> Request for connection from " << InetSocketAddress::ConvertFrom (address).GetIpv4 () << " received.");
+  NS_LOG_DEBUG ("HttpServer >> Request for connection from " << 
+      InetSocketAddress::ConvertFrom (address).GetIpv4 () << " received.");
   return true;
 }
 
@@ -122,7 +138,9 @@ HttpServer::HandleAccept (Ptr<Socket> s, const Address& address)
 {
   NS_LOG_FUNCTION (this << s << address);
 
-  NS_LOG_DEBUG ("HttpServer >> Connection with Client (" <<  InetSocketAddress::ConvertFrom (address).GetIpv4 () << ") successfully established!");
+  NS_LOG_DEBUG ("HttpServer >> Connection with Client (" <<  
+      InetSocketAddress::ConvertFrom (address).GetIpv4 () << 
+      ") successfully established!");
   s->SetRecvCallback (MakeCallback (&HttpServer::HandleReceive, this));
 }
 

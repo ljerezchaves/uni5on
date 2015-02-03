@@ -17,7 +17,6 @@
  * Author: Saulo da Mata <damata.saulo@gmail.com>
  */
 
-
 #include "ns3/log.h"
 #include "ns3/simulator.h"
 #include "ns3/uinteger.h"
@@ -25,12 +24,13 @@
 #include "ns3/simulator.h"
 #include "ns3/ptr.h"
 #include "ns3/ipv4.h"
-
 #include "http-client.h"
+
+NS_LOG_COMPONENT_DEFINE ("HttpClient");
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("HttpClientApplication");
+NS_OBJECT_ENSURE_REGISTERED (HttpClient);
 
 TypeId
 HttpClient::GetTypeId (void)
@@ -54,6 +54,7 @@ HttpClient::HttpClient ()
 {
   NS_LOG_FUNCTION (this);
   m_socket = 0;
+  m_serverApp = 0;
   m_contentLength = 0;
   m_bytesReceived = 0;
   m_numOfInlineObjects = 0;
@@ -71,11 +72,26 @@ HttpClient::~HttpClient ()
   NS_LOG_FUNCTION (this);
 }
 
+void 
+HttpClient::SetServerApp (Ptr<HttpServer> server)
+{
+  m_serverApp = server;
+}
+
+Ptr<HttpServer> 
+HttpClient::GetServerApp ()
+{
+  return m_serverApp;
+}
+
 void
 HttpClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   Application::DoDispose ();
+  m_serverApp = 0;
+  m_socket = 0;
+  m_readingTimeStream = 0;
 }
 
 void
@@ -144,13 +160,11 @@ HttpClient::StopApplication ()
     }
 }
 
-
 void
 HttpClient::ConnectionSucceeded (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-  Ipv4Address temp = socket->GetNode()->GetObject<Ipv4>()->GetAddress(1,0).GetLocal();
-  m_clientAddress = temp;
+  m_clientAddress = socket->GetNode()->GetObject<Ipv4>()->GetAddress(1,0).GetLocal();
   NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> Server accepted connection request!");
   socket->SetRecvCallback (MakeCallback (&HttpClient::HandleReceive, this));
   SendRequest(socket, "main/object");
