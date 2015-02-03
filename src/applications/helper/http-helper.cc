@@ -1,6 +1,6 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2013 Federal University of Uberlandia
+ * Copyright (c) 2015 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -12,9 +12,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Author: Saulo da Mata <damata.saulo@gmail.com>
+ * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
 
@@ -23,94 +24,45 @@
 
 namespace ns3 {
 
-HttpServerHelper::HttpServerHelper (uint16_t port)
+HttpHelper::HttpHelper ()
 {
-  m_factory.SetTypeId (HttpServer::GetTypeId ());
-  SetAttribute ("Port", UintegerValue (port));
+  m_clientFactory.SetTypeId (HttpClient::GetTypeId ());
+  m_serverFactory.SetTypeId (HttpServer::GetTypeId ());
 }
 
 void
-HttpServerHelper::SetAttribute (std::string name, const AttributeValue &value)
+HttpHelper::SetClientAttribute (std::string name, const AttributeValue &value)
 {
-  m_factory.Set (name, value);
+  m_clientFactory.Set (name, value);
 }
-
-Ptr<Application>
-HttpServerHelper::Install (Ptr<Node> node)
-{
-  Ptr<HttpServer> server = m_factory.Create<HttpServer> ();
-  node->AddApplication (server);
-  return server;
-}
-
-ApplicationContainer
-HttpServerHelper::Install (NodeContainer c)
-{
-  ApplicationContainer apps;
-  for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
-    {
-      Ptr<Node> node = *i;
-
-      Ptr<HttpServer> server = m_factory.Create<HttpServer> ();
-      node->AddApplication (server);
-      apps.Add (server);
-    }
-  return apps;
-}
-
-
-
-HttpClientHelper::HttpClientHelper (Address address, uint16_t port)
-{
-  m_factory.SetTypeId (HttpClient::GetTypeId ());
-  SetAttribute ("RemoteAddress", AddressValue (address));
-  SetAttribute ("RemotePort", UintegerValue (port));
-}
-
-HttpClientHelper::HttpClientHelper (Ipv4Address address, uint16_t port)
-{
-  m_factory.SetTypeId (HttpClient::GetTypeId ());
-  SetAttribute ("RemoteAddress", AddressValue (Address(address)));
-  SetAttribute ("RemotePort", UintegerValue (port));
-}
-
-HttpClientHelper::HttpClientHelper (Ipv6Address address, uint16_t port)
-{
-  m_factory.SetTypeId (HttpClient::GetTypeId ());
-  SetAttribute ("RemoteAddress", AddressValue (Address(address)));
-  SetAttribute ("RemotePort", UintegerValue (port));
-}
-
 
 void
-HttpClientHelper::SetAttribute (std::string name, const AttributeValue &value)
+HttpHelper::SetServerAttribute (std::string name, const AttributeValue &value)
 {
-  m_factory.Set (name, value);
-}
-
-Ptr<Application>
-HttpClientHelper::Install (Ptr<Node> node)
-{
-  Ptr<HttpClient> client = m_factory.Create<HttpClient> ();
-  node->AddApplication (client);
-  return client;
+  m_serverFactory.Set (name, value);
 }
 
 ApplicationContainer
-HttpClientHelper::Install (NodeContainer c)
+HttpHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode, 
+                      Ipv4Address serverAddress, uint16_t serverPort)
 {
   ApplicationContainer apps;
-  for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
-    {
-      Ptr<Node> node = *i;
 
-      Ptr<HttpClient> client = m_factory.Create<HttpClient> ();
-      node->AddApplication (client);
-      apps.Add (client);
-    }
+  Ptr<HttpClient> clientApp = m_clientFactory.Create<HttpClient> ();
+  Ptr<HttpServer> serverApp = m_serverFactory.Create<HttpServer> ();
+  
+  clientApp->SetAttribute ("RemoteAddress", AddressValue (Address (serverAddress)));
+  clientApp->SetAttribute ("RemotePort", UintegerValue (serverPort));
+  clientApp->SetServerApp (serverApp);
+  clientNode->AddApplication (clientApp);
+  apps.Add (clientApp);
+  
+  serverApp->SetAttribute ("Port", UintegerValue (serverPort));
+  serverApp->SetClientApp (clientApp);
+  serverNode->AddApplication (serverApp);
+  apps.Add (serverApp);
+  
   return apps;
 }
 
 } // namespace ns3
-
-

@@ -1,6 +1,6 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2013 Federal University of Uberlandia
+ * Copyright (c) 2015 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -12,9 +12,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Author: Saulo da Mata <damata.saulo@gmail.com>
+ * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
 #ifndef HTTP_HELPER_H_
@@ -30,81 +31,46 @@
 
 namespace ns3 {
 
-class HttpServerHelper
+class HttpHelper
 {
 public:
-  HttpServerHelper (uint16_t port);
+    
+  /**
+   * Create a HttpHelper which will make life easier for people
+   * trying to set up simulations with http client-server.
+   */
+  HttpHelper ();
+
+ /**
+   * Record an attribute to be set in each HttpClient Application after it is
+   * is created.
+   * \param name the name of the attribute to set.
+   * \param value the value of the attribute to set.
+   */
+  void SetClientAttribute (std::string name, const AttributeValue &value);
 
   /**
-   * Record an attribute to be set in each Application after it is is created.
-   *
-   * \param name the name of the attribute to set
-   * \param value the value of the attribute to set
+   * Record an attribute to be set in each HttpServer Application after it is
+   * is created.
+   * \param name the name of the attribute to set.
+   * \param value the value of the attribute to set.
    */
-  void SetAttribute (std::string name, const AttributeValue &value);
-
-
-  /**
-   * Install an ns3::HttpServerApplication on each node of the input container
-   * configured with all the attributes set with SetAttribute.
-   *
-   * \param c NodeContainer of the set of nodes on which a HttpServerApplication
-   * will be installed.
-   */
-  ApplicationContainer Install (NodeContainer c);
+  void SetServerAttribute (std::string name, const AttributeValue &value);
 
   /**
-   * Install an ns3::HttpServerApplication on each node of the input container
-   * configured with all the attributes set with SetAttribute.
-   *
-   * \param node The node on which a HttpServerApplication will be installed.
+   * Create a pair of HttpClient + HttpServer applications on input nodes
+   * \param clientNode The node to install the HttpClient app.
+   * \param serverNode The node to install the HttpServer app.
+   * \param serverAddress The IPv4 address of the Http server.
+   * \param serverPort The port number of the Http server
+   * \return The pair of applications created.
    */
-  Ptr<Application> Install (Ptr<Node> node);
+  ApplicationContainer Install (Ptr<Node> clientNode, Ptr<Node> serverNode, 
+                               Ipv4Address serverAddress, uint16_t serverPort);
 
 private:
-  ObjectFactory m_factory;
-
-};
-
-
-class HttpClientHelper
-{
-
-public:
-  HttpClientHelper (Ipv4Address ip, uint16_t port);
-  HttpClientHelper (Ipv6Address ip, uint16_t port);
-  HttpClientHelper (Address ip, uint16_t port);
-
-  /**
-   * Record an attribute to be set in each Application after it is is created.
-   *
-   * \param name the name of the attribute to set
-   * \param value the value of the attribute to set
-   */
-  void SetAttribute (std::string name, const AttributeValue &value);
-
-
-  /**
-   * Install an ns3::HttpClientApplication on each node of the input container
-   * configured with all the attributes set with SetAttribute.
-   *
-   * \param c NodeContainer of the set of nodes on which a HttpClientApplication
-   * will be installed.
-   */
-  ApplicationContainer Install (NodeContainer c);
-
-  /**
-   * Install an ns3::HttpClientApplication on each node of the input container
-   * configured with all the attributes set with SetAttribute.
-   *
-   * \param node The node on which a HttpClientApplication will be installed.
-   */
-  Ptr<Application> Install (Ptr<Node> node);
-
-//  Ptr<http::HttpClient> GetClient (void);
-//
-private:
-  ObjectFactory m_factory;
+  ObjectFactory m_clientFactory; //!< Object client factory.
+  ObjectFactory m_serverFactory; //!< Object server factory.
 };
 
 } // namespace ns3
