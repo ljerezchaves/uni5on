@@ -17,8 +17,8 @@
  * Author: Saulo da Mata <damata.saulo@gmail.com>
  */
 
-#ifndef HTTP_CLIENT_SERVER_HELPER_H_
-#define HTTP_CLIENT_SERVER_HELPER_H_
+#ifndef HTTP_HELPER_H_
+#define HTTP_HELPER_H_
 
 #include <stdint.h>
 #include "ns3/application-container.h"
@@ -108,6 +108,4 @@ private:
 };
 
 } // namespace ns3
-
-
-#endif /* HTTP_CLIENT_SERVER_HELPER_H_ */
+#endif /* HTTP_HELPER_H_ */

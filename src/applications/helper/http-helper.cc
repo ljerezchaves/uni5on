@@ -19,7 +19,7 @@
 
 
 #include "ns3/uinteger.h"
-#include "http-client-server-helper.h"
+#include "http-helper.h"
 
 namespace ns3 {
 
