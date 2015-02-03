@@ -74,11 +74,11 @@ RingController::PrintBlockRatioStatistics ()
 void
 RingController::PrintAppStatistics (Ptr<Application> app)
 {
+  uint32_t teid = GetTeidFromApplication (app);
+  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+
   if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
     {
-      Ptr<EpcTft> tft = app->GetObject<EpcTft> ();
-      uint32_t teid = GetBearerFromTft (tft).sgwFteid.teid;
-      Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
       Ptr<VoipPeer> voipApp = DynamicCast<VoipPeer> (app);
 
       // Identifying Voip traffic direction
@@ -96,6 +96,16 @@ RingController::PrintAppStatistics (Ptr<Application> app)
       std::endl; 
       
       voipApp->ResetCounters ();
+    }
+  else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
+    {
+      // Get the relative UDP server for this client
+
+    }
+  else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
+    {
+      // Get the relative HTTP server for this client
+      
     }
 }
 
@@ -276,8 +286,7 @@ RingController::NotifyAppStop (Ptr<Application> app)
 {
   NS_LOG_FUNCTION (this << app);
 
-  Ptr<EpcTft> tft = app->GetObject<EpcTft> ();
-  uint32_t teid = GetBearerFromTft (tft).sgwFteid.teid;
+  uint32_t teid = GetTeidFromApplication (app);
   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
   if (rInfo == 0)
     {
@@ -655,6 +664,13 @@ RingController::GetTeidRoutingInfo (uint32_t teid)
       rInfo = ret->second;
     }
   return rInfo;
+}
+
+uint32_t 
+RingController::GetTeidFromApplication (Ptr<Application> app)
+{
+  Ptr<EpcTft> tft = app->GetObject<EpcTft> ();
+  return GetBearerFromTft (tft).sgwFteid.teid;
 }
 
 bool 
