@@ -42,30 +42,35 @@ public:
   VideoHelper ();
 
   /**
-   * Record an attribute to be set in each Application after it is is created.
+   * Record an attribute to be set in each VideoClient Application after it is
+   * is created.
    * \param name the name of the attribute to set.
    * \param value the value of the attribute to set.
    */
-  void SetAttribute (std::string name, const AttributeValue &value);
+  void SetClientAttribute (std::string name, const AttributeValue &value);
 
   /**
-   * Create one video client application on each of the input nodes.
-   * \param c The nodes.
-   * \returns The applications created, one application per input node.
+   * Record an attribute to be set in each UdpServer Application after it is
+   * is created.
+   * \param name the name of the attribute to set.
+   * \param value the value of the attribute to set.
    */
-  ApplicationContainer Install (NodeContainer c);
+  void SetServerAttribute (std::string name, const AttributeValue &value);
 
   /**
-   * Create one video client application on node n.
-   * \param node The node.
-   * \param address The IPv4 address of the remote UDP server
-   * \param port The port number of the remote UDP server
-   * \returns The applications created.
+   * Create a pair of VideoClient + UdpServer applications on input nodes
+   * \param clientNode The node to install the VideoClient app.
+   * \param serverNode The node to install the UdpServer app.
+   * \param serverAddress The IPv4 address of the UDP server.
+   * \param serverPort The port number of the UDP server
+   * \return The pair of applications created.
    */
-  Ptr<VideoClient> Install (Ptr<Node> node, Ipv4Address address, uint16_t port);
+  ApplicationContainer Install (Ptr<Node> clientNode, Ptr<Node> serverNode, 
+                               Ipv4Address serverAddress, uint16_t serverPort);
 
 private:
-  ObjectFactory m_factory; //!< Object factory.
+  ObjectFactory m_clientFactory; //!< Object client factory.
+  ObjectFactory m_serverFactory; //!< Object server factory.
 };
 
 } // namespace ns3

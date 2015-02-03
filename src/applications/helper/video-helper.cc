@@ -20,7 +20,6 @@
 
 #include "video-helper.h"
 #include "ns3/udp-server.h"
-#include "ns3/udp-client.h"
 #include "ns3/udp-trace-client.h"
 #include "ns3/video-client.h"
 #include "ns3/uinteger.h"
@@ -30,37 +29,42 @@ namespace ns3 {
 
 VideoHelper::VideoHelper ()
 {
-  m_factory.SetTypeId (VideoClient::GetTypeId ());
+  m_clientFactory.SetTypeId (VideoClient::GetTypeId ());
+  m_serverFactory.SetTypeId (UdpServer::GetTypeId ());
 }
 
 void
-VideoHelper::SetAttribute (std::string name, const AttributeValue &value)
+VideoHelper::SetClientAttribute (std::string name, const AttributeValue &value)
 {
-  m_factory.Set (name, value);
+  m_clientFactory.Set (name, value);
+}
+
+void
+VideoHelper::SetServerAttribute (std::string name, const AttributeValue &value)
+{
+  m_serverFactory.Set (name, value);
 }
 
 ApplicationContainer
-VideoHelper::Install (NodeContainer c)
+VideoHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode, 
+                      Ipv4Address serverAddress, uint16_t serverPort)
 {
   ApplicationContainer apps;
-  for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
-    {
-      Ptr<Node> node = *i;
-      Ptr<VideoClient> client = m_factory.Create<VideoClient> ();
-      node->AddApplication (client);
-      apps.Add (client);
-    }
-  return apps;
-}
 
-Ptr<VideoClient>
-VideoHelper::Install (Ptr<Node> node, Ipv4Address address, uint16_t port)
-{
-  Ptr<VideoClient> client = m_factory.Create<VideoClient> ();
-  client->SetAttribute ("RemoteAddress", Ipv4AddressValue (address));
-  client->SetAttribute ("RemotePort", UintegerValue (port));
-  node->AddApplication (client);
-  return client;
+  Ptr<VideoClient> clientApp = m_clientFactory.Create<VideoClient> ();
+  Ptr<UdpServer> serverApp = m_serverFactory.Create<UdpServer> ();
+  
+  clientApp->SetAttribute ("RemoteAddress", Ipv4AddressValue (serverAddress));
+  clientApp->SetAttribute ("RemotePort", UintegerValue (serverPort));
+  clientApp->SetServerApp (serverApp);
+  clientNode->AddApplication (clientApp);
+  apps.Add (clientApp);
+  
+  serverApp->SetAttribute ("Port", UintegerValue (serverPort));
+  serverNode->AddApplication (serverApp);
+  apps.Add (serverApp);
+  
+  return apps;
 }
 
 } // namespace ns3
