@@ -102,6 +102,7 @@ VideoClient::VideoClient ()
   m_sent = 0;
   m_txBytes = 0;
   m_socket = 0;
+  m_serverApp = 0;
   m_sendEvent = EventId ();
   m_maxPacketSize = 1480;
   m_connected = false;
@@ -142,11 +143,31 @@ VideoClient::SetMaxPacketSize (uint16_t maxPacketSize)
   m_maxPacketSize = maxPacketSize;
 }
 
+void 
+VideoClient::SetServerApp (Ptr<UdpServer> server)
+{
+  m_serverApp = server;
+}
+
+Ptr<UdpServer> 
+VideoClient::GetServerApp ()
+{
+  return m_serverApp;
+}
+
 uint16_t 
 VideoClient::GetMaxPacketSize (void)
 {
   NS_LOG_FUNCTION (this);
   return m_maxPacketSize;
+}
+
+void
+VideoClient::ResetCounters ()
+{
+  m_sent = 0;
+  m_txBytes = 0;
+  m_lastStartTime = Simulator::Now ();
 }
 
 uint32_t  
@@ -172,6 +193,7 @@ VideoClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   m_socket = 0;
+  m_serverApp = 0;
   m_onTime = 0;
   m_offTime = 0;
   Application::DoDispose ();

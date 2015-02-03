@@ -66,6 +66,7 @@ UdpServer::UdpServer ()
 {
   NS_LOG_FUNCTION (this);
   m_received=0;
+  m_lastResetTime = Time ();
 }
 
 UdpServer::~UdpServer ()
@@ -108,7 +109,7 @@ UdpServer::ResetCounters ()
   m_rxBytes = 0;
   m_previousRx = Simulator::Now ();
   m_previousRxTx = Simulator::Now ();
-  m_lastStartTime = Simulator::Now ();
+  m_lastResetTime = Simulator::Now ();
   m_jitter = 0;
   m_delaySum = Time ();
   m_lossCounter.Reset ();
@@ -135,7 +136,7 @@ UdpServer::GetLossRatio (void) const
 Time      
 UdpServer::GetActiveTime (void) const
 {
-  return Simulator::Now () - m_lastStartTime;
+  return Simulator::Now () - m_lastResetTime;
 }
 
 Time      

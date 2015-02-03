@@ -125,7 +125,7 @@ private:
   Time              m_previousRxTx;     //!< Previous Rx or Tx time
   int64_t           m_jitter;           //!< Jitter estimation
   Time              m_delaySum;         //!< Sum of packet delays
-  Time              m_lastStartTime;    //!< Last start time
+  Time              m_lastResetTime;    //!< Last reset time
 };
 
 } // namespace ns3

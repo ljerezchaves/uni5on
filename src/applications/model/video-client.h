@@ -27,6 +27,7 @@
 #include "ns3/ptr.h"
 #include "ns3/ipv4-address.h"
 #include "ns3/core-module.h"
+#include "udp-server.h"
 #include <vector>
 
 namespace ns3 {
@@ -74,11 +75,28 @@ public:
   void SetMaxPacketSize (uint16_t maxPacketSize);
 
   /**
+   * \brief Set the UdpServer application. 
+   * \param server The pointer to server application. 
+   */
+  void SetServerApp (Ptr<UdpServer> server);
+  
+  /**
+   * \brief Get the UdpServer application. 
+   * \return The pointer to server application. 
+   */
+  Ptr<UdpServer> GetServerApp ();
+
+  /**
    * \brief Return the maximum packet size
    * \return the maximum packet size
    */
   uint16_t GetMaxPacketSize (void);
-
+  
+  /** 
+   * \brief Reset counter and statistics 
+   */
+  void ResetCounters ();
+  
   /**
    * \brief Get application statistics.
    * \return The statistic value.
@@ -167,20 +185,21 @@ private:
     char frameType; //!< Frame type (I, P or B)
   };
 
-  uint32_t    m_sent;                       //!< Counter for sent packets
-  uint32_t    m_txBytes;                    //!< Number of TX bytes
-  Ptr<Socket> m_socket;                     //!< Socket
-  Ipv4Address m_peerAddress;                //!< Remote peer address
-  uint16_t    m_peerPort;                   //!< Remote peer port
-  EventId     m_startStopEvent;             //!< Event id for next start or stop event
-  EventId     m_sendEvent;                  //!< Event id of pending 'send packet' event
-  uint16_t    m_maxPacketSize;              //!< Maximum packet size to send (including the SeqTsHeader)
-  bool        m_connected;                    //!< True if connected
-  Time        m_lastStartTime;                //!< Last start time
-  uint32_t    m_currentEntry;                 //!< Current entry index
-  Ptr<RandomVariableStream>       m_onTime;   //!< rng for On Time
-  Ptr<RandomVariableStream>       m_offTime;  //!< rng for Off Time
-  std::vector<struct TraceEntry>  m_entries;  //!< Entries in the trace to send
+  uint32_t          m_sent;             //!< Counter for sent packets
+  uint32_t          m_txBytes;          //!< Number of TX bytes
+  Ptr<Socket>       m_socket;           //!< Socket
+  Ipv4Address       m_peerAddress;      //!< Remote peer address
+  uint16_t          m_peerPort;         //!< Remote peer port
+  EventId           m_startStopEvent;   //!< Event id for next start or stop event
+  EventId           m_sendEvent;        //!< Event id of pending 'send packet' event
+  uint16_t          m_maxPacketSize;    //!< Maximum packet size to send (including the SeqTsHeader)
+  bool              m_connected;        //!< True if connected
+  Time              m_lastStartTime;    //!< Last start time
+  uint32_t          m_currentEntry;     //!< Current entry index
+  Ptr<UdpServer>    m_serverApp;        //!< UdpServer application
+  Ptr<RandomVariableStream>       m_onTime;           //!< rng for On Time
+  Ptr<RandomVariableStream>       m_offTime;          //!< rng for Off Time
+  std::vector<struct TraceEntry>  m_entries;          //!< Entries in the trace to send
   static struct TraceEntry        g_defaultEntries[]; //!< Default trace to send
 };
 
