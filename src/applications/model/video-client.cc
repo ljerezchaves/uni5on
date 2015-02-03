@@ -74,7 +74,7 @@ VideoClient::GetTypeId (void)
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("MaxPacketSize",
                    "The maximum size of a packet (including the SeqTsHeader, 12 bytes).",
-                   UintegerValue (1480),
+                   UintegerValue (1400),
                    MakeUintegerAccessor (&VideoClient::m_maxPacketSize),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("TraceFilename",

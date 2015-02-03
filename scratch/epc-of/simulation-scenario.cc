@@ -317,6 +317,7 @@ SimulationScenario::EnableVideoTraffic ()
   ApplicationContainer videoApps, sinkApps;
   VideoHelper videoHelper;
   videoHelper.SetAttribute ("Direction", EnumValue (Application::DOWNLINK));
+  videoHelper.SetAttribute ("MaxPacketSize", UintegerValue (1400));
 
   // ON/OFF pattern for VoIP applications (Poisson process)
   videoHelper.SetAttribute ("OnTime", 
