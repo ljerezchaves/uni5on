@@ -106,13 +106,14 @@ void HttpServer::StopApplication (void)
       m_socket->Close ();
       m_socket = 0;
     }
+  m_clientApp = 0;
 }
 
 bool
 HttpServer::HandleRequest (Ptr<Socket> s, const Address& address)
 {
   NS_LOG_FUNCTION (this << s << address);
-  NS_LOG_DEBUG ("HttpServer >> Request for connection from " <<
+  NS_LOG_INFO ("HttpServer >> Request for connection from " <<
                 InetSocketAddress::ConvertFrom (address).GetIpv4 () << " received.");
   return true;
 }
@@ -121,7 +122,7 @@ void
 HttpServer::HandleAccept (Ptr<Socket> s, const Address& address)
 {
   NS_LOG_FUNCTION (this << s << address);
-  NS_LOG_DEBUG ("HttpServer >> Connection with Client (" <<
+  NS_LOG_INFO ("HttpServer >> Connection with Client (" <<
                 InetSocketAddress::ConvertFrom (address).GetIpv4 () <<
                 ") successfully established!");
   s->SetRecvCallback (MakeCallback (&HttpServer::HandleReceive, this));
