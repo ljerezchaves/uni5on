@@ -354,14 +354,14 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
                randomSeconds << " seconds.");
   
   Time readingTime = Seconds (randomSeconds);
-  if (readingTime <= m_tcpTimeout)
-    {
-      Simulator::Schedule (readingTime, &HttpClient::SendRequest, this, socket, "main/object");
-    }
-  else
+  if (readingTime > (m_tcpTimeout + Seconds (1)))
     {
       Simulator::Schedule (m_tcpTimeout, &HttpClient::CloseSocket, this);
       Simulator::Schedule (readingTime, &HttpClient::OpenSocket, this);
+    }
+  else
+    {
+      Simulator::Schedule (readingTime, &HttpClient::SendRequest, this, socket, "main/object");
     }
 }
 

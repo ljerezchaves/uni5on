@@ -164,8 +164,12 @@ SimulationScenario::EnableHttpTraffic ()
   ApplicationContainer httpApps;
 
   HttpHelper httpHelper;
-  httpHelper.SetClientAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
-  httpHelper.SetServerAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
+  httpHelper.SetClientAttribute ("Direction", 
+      EnumValue (Application::BIDIRECTIONAL));
+  httpHelper.SetClientAttribute ("TcpTimeout", 
+      TimeValue (RingController::GetDedicatedTimeout ()));
+  httpHelper.SetServerAttribute ("Direction", 
+      EnumValue (Application::BIDIRECTIONAL));
   httpHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
 
   for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, httpPort++)
