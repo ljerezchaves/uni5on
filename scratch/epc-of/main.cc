@@ -150,14 +150,19 @@ EnableVerbose ()
   LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_WARN);
   LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
   LogComponentEnable ("OpenFlowEpcController", LOG_LEVEL_WARN);
+  LogComponentEnable ("OpenFlowEpcController", LOG_INFO);
  
   LogComponentEnable ("LteSquaredGridNetwork", LOG_LEVEL_WARN);
 
   LogComponentEnable ("RingNetwork", LOG_LEVEL_WARN);
-  LogComponentEnable ("RingController", LOG_LEVEL_WARN);
+  LogComponentEnable ("RingController", LOG_LEVEL_INFO);
+  LogComponentEnable ("RingController", LOG_PREFIX_TIME);
 
-  LogComponentEnable ("VoipPeer", LOG_LEVEL_WARN);
+  LogComponentEnable ("HttpClient", LOG_LEVEL_WARN);
+  LogComponentEnable ("HttpServer", LOG_LEVEL_WARN);
+  LogComponentEnable ("UdpServer", LOG_LEVEL_WARN);
   LogComponentEnable ("VideoClient", LOG_LEVEL_WARN);
+  LogComponentEnable ("VoipPeer", LOG_LEVEL_WARN);
 }
 
 bool
