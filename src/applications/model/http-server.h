@@ -35,7 +35,6 @@ class HttpClient;
 
 /**
  * \ingroup applications
- * \defgroup http HttpServerApplication
  *
  * This is the server side of a HTTP Traffic Generator. The server
  * establishes a TCP connection with the client and waits for the
