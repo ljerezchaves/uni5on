@@ -154,6 +154,17 @@ HttpClient::OpenSocket ()
 {
   NS_LOG_FUNCTION (this);
   
+  if (!m_startSendingCallback.IsNull ())
+    {
+      if (!m_startSendingCallback (this))
+        {
+          NS_LOG_WARN ("Http application (" << this << ") has been blocked." <<
+                       "Retrying connection in 10 seconds.");
+          Simulator::Schedule (Seconds (10), &HttpClient::OpenSocket, this);
+          return;
+        }
+    }
+
   if (!m_socket)
     {
       NS_LOG_LOGIC ("Opening the TCP connection.");
@@ -171,6 +182,11 @@ void
 HttpClient::CloseSocket ()
 {
   NS_LOG_FUNCTION (this);
+  
+  if (!m_stopSendingCallback.IsNull ())
+    {
+      m_stopSendingCallback (this);
+    }
 
   if (m_socket != 0)
     {
