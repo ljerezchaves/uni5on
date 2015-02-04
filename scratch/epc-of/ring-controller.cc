@@ -21,16 +21,16 @@
 #include "ring-controller.h"
 #include "internet-network.h"
 
-#define DEFAULT_TIMEOUT      0
-#define DEFAULT_PRIO       100
-#define DEDICATED_TIMEOUT   15
-#define DEDICATED_PRIO    1000
-
 NS_LOG_COMPONENT_DEFINE ("RingController");
 
 namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (RingController);
+
+const int RingController::m_defaultTimeout = 0; 
+const int RingController::m_dedicatedTimeout = 15;
+const int RingController::m_defaultPriority = 100;  
+const int RingController::m_dedicatedPriority = 1000;
 
 bool
 RingController::RoutingInfo::IsGbr ()
@@ -59,6 +59,12 @@ RingController::DoDispose ()
   NS_LOG_FUNCTION (this);
   OpenFlowEpcController::DoDispose ();
   m_routes.clear ();
+}
+
+const Time
+RingController::GetDedicatedTimeout ()
+{
+  return Seconds (m_dedicatedTimeout);
 }
 
 double
@@ -187,12 +193,12 @@ RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   rInfo->enbAddr = enbAddr;
   rInfo->downPath = FindShortestPath (rInfo->sgwIdx, rInfo->enbIdx);
   rInfo->upPath = InvertRoutingPath (rInfo->downPath);
-  rInfo->app = 0;                   // No app for default bearer
-  rInfo->priority = DEFAULT_PRIO;   // Priority for default bearer
-  rInfo->timeout = DEFAULT_TIMEOUT; // No timeout for default bearer entries
-  rInfo->isInstalled = false;       // Bearer rules not installed yet
-  rInfo->isActive = true;           // Default bearer is always active
-  rInfo->isDefault = true;          // This is a default bearer
+  rInfo->app = 0;                       // No app for default bearer
+  rInfo->priority = m_defaultPriority;  // Priority for default bearer
+  rInfo->timeout = m_defaultTimeout;    // No timeout for default bearer
+  rInfo->isInstalled = false;           // Bearer rules not installed yet
+  rInfo->isActive = true;               // Default bearer is always active
+  rInfo->isDefault = true;              // This is a default bearer
 
   SaveTeidRoutingInfo (rInfo);
   InstallTeidRouting (rInfo);
@@ -224,12 +230,12 @@ RingController::NotifyAppStart (Ptr<Application> app)
       rInfo->enbAddr = cInfo->enbAddr;
       rInfo->downPath = FindShortestPath (rInfo->sgwIdx, rInfo->enbIdx);
       rInfo->upPath = InvertRoutingPath (rInfo->downPath);
-      rInfo->app = app;                   // App for this dedicated bearer
-      rInfo->priority = DEDICATED_PRIO;   // Priority for dedicated bearer
-      rInfo->timeout = DEDICATED_TIMEOUT; // Timeout for dedicated bearer
-      rInfo->isInstalled = false;         // Switch rules not installed yet
-      rInfo->isActive = false;            // Dedicated bearer not active yet
-      rInfo->isDefault = false;           // This is a dedicated bearer
+      rInfo->app = app;                      // App for this dedicated bearer
+      rInfo->priority = m_dedicatedPriority; // Priority for dedicated bearer
+      rInfo->timeout = m_dedicatedTimeout;   // Timeout for dedicated bearer
+      rInfo->isInstalled = false;            // Switch rules not installed yet
+      rInfo->isActive = false;               // Dedicated bearer not active yet
+      rInfo->isDefault = false;              // This is a dedicated bearer
 
       SaveTeidRoutingInfo (rInfo);
     }

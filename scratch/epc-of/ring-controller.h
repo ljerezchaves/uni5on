@@ -101,6 +101,12 @@ public:
   void DoDispose ();
 
   /**
+   * Get the default timeout for dedicated bearers
+   * \return The default idle timeout.
+   */
+  static const Time GetDedicatedTimeout ();
+  
+  /**
    * Print the block radio statistics.
    * \return The GBR bearer block ratio
    */
@@ -259,10 +265,14 @@ private:
   /** Map saving pair <TEID / RoutingInfo> */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
   
-  TeidRoutingMap_t  m_routes;     //!< TEID routes.
-  RoutingStrategy   m_strategy;   //!< Routing strategy in use.
-  Time              m_timeout;    //!< Switch stats query timeout.
-  double            m_bwFactor;   //!< Bandwidth reservation with saving factor
+  TeidRoutingMap_t  m_routes;            //!< TEID routes.
+  RoutingStrategy   m_strategy;          //!< Routing strategy in use.
+  Time              m_timeout;           //!< Switch stats query timeout.
+  double            m_bwFactor;          //!< Bandwidth saving factor
+  static const int  m_defaultTimeout;    //!< Timeout for default bearers
+  static const int  m_dedicatedTimeout;  //!< Timeout for dedicated bearers
+  static const int  m_defaultPriority;   //!< Priority for default bearers 
+  static const int  m_dedicatedPriority; //!< Priority for dedicated bearers 
 
   //!< Performance metrics
   //\{
