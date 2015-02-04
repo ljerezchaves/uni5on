@@ -27,6 +27,7 @@
 #include "ns3/double.h"
 #include "ns3/http-header.h"
 #include "http-server.h"
+#include "ns3/data-rate.h"
 
 using namespace std;
 namespace ns3 {
@@ -35,7 +36,6 @@ class HttpServer;
 
 /**
  * \ingroup applications
- * \defgroup http HttpClientApplication
  *
  * This is the client side of a HTTP Traffic Generator. The client
  * establishes a TCP connection with the server and sends a request
@@ -76,6 +76,22 @@ public:
    */
   Ptr<HttpServer> GetServerApp ();
 
+  /** 
+   * \brief Reset counter and statistics 
+   */
+  void ResetCounters ();
+  
+  /**
+   * \brief Get application statistics.
+   * \return The statistic value.
+   */
+  //\{
+  uint32_t  GetTxBytes    (void)  const;
+  uint32_t  GetRxBytes    (void)  const;
+  Time      GetActiveTime (void)  const;
+  DataRate  GetThroughput (void)  const;
+  //\}
+
 protected:
   virtual void DoDispose (void);
 
@@ -110,14 +126,16 @@ private:
   void HandleReceive (Ptr<Socket> socket);
 
   Ptr<Socket>     m_socket;             //!< Local socket.
-  Address         m_peerAddress;        //!< Address of the server.
+  Ipv4Address     m_peerAddress;        //!< Address of the server.
   uint16_t        m_peerPort;           //!< Remote port in the server.
   HttpHeader      m_httpHeader;         //!< HTTP Header.
   uint32_t        m_contentLength;      //!< Content-Length header line.
   string          m_contentType;        //!< Content-Type header line.
   uint32_t        m_numOfInlineObjects; //!< Number-of-Inline-Objects header line.
+  uint32_t        m_bytesSent;          //!< Number of bytes sent to server.
   uint32_t        m_bytesReceived;      //!< Number of bytes received from server.
   uint32_t        m_inlineObjLoaded;    //!< Number of inline objects already loaded.
+  Time            m_lastResetTime;      //!< Last reset time
   Ipv4Address     m_clientAddress;      //!< Client Address.
   Ptr<HttpServer> m_serverApp;          //!< HttpServer application
   Ptr<LogNormalRandomVariable> m_readingTimeStream; //!< Random Variable Stream for reading time.
