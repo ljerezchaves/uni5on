@@ -27,6 +27,7 @@
 #include <ns3/ptr.h>
 #include <ns3/ipv4-address.h>
 #include <ns3/seq-ts-header.h>
+#include "ns3/data-rate.h"
 #include "packet-loss-counter.h"
 
 using namespace std;
@@ -92,25 +93,22 @@ public:
    */
   Ptr<VoipPeer> GetPeerApp ();
   
-  /** 
-   * \brief Reset counter and statistics 
-   */
-  void ResetCounters ();
-
   /**
    * \brief Get application statistics.
    * \return The statistic value.
    */
   //\{
-  uint32_t  GetTxPackets  (void)  const;
-  uint32_t  GetRxPackets  (void)  const;
-  uint32_t  GetTxBytes    (void)  const;
-  uint32_t  GetRxBytes    (void)  const;
-  uint32_t  GetLost       (void)  const;
-  double    GetLossRatio  (void)  const;
-  Time      GetActiveTime (void)  const;
-  Time      GetDelay      (void)  const;
-  Time      GetJitter     (void)  const;
+  void      ResetCounters  ();
+  uint32_t  GetTxPackets   () const;
+  uint32_t  GetRxPackets   () const;
+  uint32_t  GetTxBytes     () const;
+  uint32_t  GetRxBytes     () const;
+  uint32_t  GetLost        () const;
+  double    GetRxLossRatio () const;
+  Time      GetActiveTime  () const;
+  Time      GetRxDelay     () const;
+  Time      GetRxJitter    () const;
+  DataRate  GetRxGoodput   () const;
   //\}
 
 protected:
@@ -187,7 +185,7 @@ private:
   Time              m_previousRxTx;     //!< Previous Rx or Tx time
   int64_t           m_jitter;           //!< Jitter estimation
   Time              m_delaySum;         //!< Sum of packet delays
-  Time              m_lastStartTime;    //!< Last start time
+  Time              m_lastResetTime;    //!< Last reset time
   PacketLossCounter m_lossCounter;      //!< Lost packet counter
   EventId           m_startStopEvent;   //!< Event id for next start or stop event
   EventId           m_sendEvent;        //!< Event id of pending 'send packet' event

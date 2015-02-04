@@ -25,6 +25,7 @@
 #include "ns3/socket.h"
 #include "ns3/http-header.h"
 #include "ns3/double.h"
+#include "ns3/data-rate.h"
 #include "http-client.h"
 
 using namespace std;
@@ -71,6 +72,18 @@ public:
    */
   Ptr<HttpClient> GetClientApp ();
 
+  /**
+   * \brief Get application statistics.
+   * \return The statistic value.
+   */
+  //\{
+  void      ResetCounters ();
+  uint32_t  GetTxBytes    () const;
+  uint32_t  GetRxBytes    () const;
+  Time      GetActiveTime () const;
+  DataRate  GetRxGoodput  () const;
+  //\}
+
 protected:
   virtual void DoDispose (void);
 
@@ -83,24 +96,27 @@ private:
    * \brief Processes the request of client to establish a TCP connection.
    * \param socket socket that receives the TCP request for connection.
    */
-  bool HandleRequest (Ptr<Socket> s, const Address& address);
+  bool HandleRequest (Ptr<Socket> socket, const Address& address);
 
   /**
    * \brief Handle the acceptance or denial of the TCP connection.
    * \param socket socket for the TCP connection.
    * \param address address of the client
    */
-  void HandleAccept (Ptr<Socket> s, const Address& address);
+  void HandleAccept (Ptr<Socket> socket, const Address& address);
 
   /**
    * \brief Receive method.
    * \param socket socket that receives packets from client.
    */
-  void HandleReceive (Ptr<Socket> s);
+  void HandleReceive (Ptr<Socket> socket);
 
-  Ptr<Socket> m_socket;         //!< Local socket
-  Ptr<HttpClient> m_clientApp;  //!< HttpClient application 
-  uint16_t m_port;              //!< Local port
+  Ptr<Socket>     m_socket;             //!< Local socket
+  Ptr<HttpClient> m_clientApp;          //!< HttpClient application 
+  uint16_t        m_port;               //!< Local port
+  uint32_t        m_txBytes;            //!< Number of TX bytes
+  uint32_t        m_rxBytes;            //!< Number of RX bytes
+  Time            m_lastResetTime;      //!< Last reset time
 };
 
 }

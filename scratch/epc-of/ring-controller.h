@@ -112,12 +112,6 @@ public:
    */
   double PrintBlockRatioStatistics ();
 
-  /**
-   * Print application statistcs (duration, loss ratio, delay and jitter).
-   * \param app The application pointer.
-   */
-  void PrintAppStatistics (Ptr<Application> app);
-
   // Inherited from OpenFlowEpcController
   void NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo);
   void NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
@@ -139,6 +133,18 @@ protected:
                                 SwitchInfo swtch, uint32_t xid);
 
 private:
+  /**
+   * Print application statistcs.
+   * \param app The application pointer.
+   */
+  void PrintAppStatistics (Ptr<Application> app);
+
+  /**
+   * Reset application statistcs.
+   * \param app The application pointer.
+   */
+  void ResetAppStatistics (Ptr<Application> app);
+
   /**
    * Process the GBR resource allocation based on current strategy/
    * \param rInfo The routing information to process.

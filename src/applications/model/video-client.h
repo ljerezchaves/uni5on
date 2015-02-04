@@ -27,6 +27,7 @@
 #include "ns3/ptr.h"
 #include "ns3/ipv4-address.h"
 #include "ns3/core-module.h"
+#include "ns3/data-rate.h"
 #include "udp-server.h"
 #include <vector>
 
@@ -92,19 +93,16 @@ public:
    */
   uint16_t GetMaxPacketSize (void);
   
-  /** 
-   * \brief Reset counter and statistics 
-   */
-  void ResetCounters ();
-  
   /**
    * \brief Get application statistics.
    * \return The statistic value.
    */
   //\{
-  uint32_t  GetTxPackets  (void)  const;
-  uint32_t  GetTxBytes    (void)  const;
-  Time      GetActiveTime (void)  const;
+  void      ResetCounters ();
+  uint32_t  GetTxPackets  () const;
+  uint32_t  GetTxBytes    () const;
+  Time      GetActiveTime () const;
+  DataRate  GetTxGoodput  () const;
   //\}
 
 protected:
@@ -194,7 +192,7 @@ private:
   EventId           m_sendEvent;        //!< Event id of pending 'send packet' event
   uint16_t          m_maxPacketSize;    //!< Maximum packet size to send (including the SeqTsHeader)
   bool              m_connected;        //!< True if connected
-  Time              m_lastStartTime;    //!< Last start time
+  Time              m_lastResetTime;    //!< Last reset time
   uint32_t          m_currentEntry;     //!< Current entry index
   Ptr<UdpServer>    m_serverApp;        //!< UdpServer application
   Ptr<RandomVariableStream>       m_onTime;           //!< rng for On Time

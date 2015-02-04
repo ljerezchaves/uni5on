@@ -63,9 +63,7 @@ HttpClient::HttpClient ()
   m_bytesReceived = 0;
   m_numOfInlineObjects = 0;
   m_inlineObjLoaded = 0;
-  
   m_lastResetTime = Time ();
-  ResetCounters ();
 
   // Mu and Sigma data was taken from paper "An HTTP Web Traffic Model Based on
   // the Top One Million Visited Web Pages" by Rastin Pries et. al (Table II).
@@ -100,25 +98,25 @@ HttpClient::ResetCounters ()
 }
 
 uint32_t 
-HttpClient::GetTxBytes (void) const
+HttpClient::GetTxBytes () const
 {
   return m_txBytes;
 }
 
 uint32_t 
-HttpClient::GetRxBytes (void) const
+HttpClient::GetRxBytes () const
 {
   return m_rxBytes;
 }
 
 Time 
-HttpClient::GetActiveTime (void) const
+HttpClient::GetActiveTime () const
 {
   return Simulator::Now () - m_lastResetTime;
 }
 
 DataRate 
-HttpClient::GetThroughput (void) const
+HttpClient::GetRxGoodput () const
 {
   return DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ());
 }
@@ -137,6 +135,7 @@ void
 HttpClient::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
+  ResetCounters ();
   OpenSocket ();
 }
 
@@ -144,8 +143,6 @@ void
 HttpClient::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
-  m_serverApp = 0;
-  m_readingTimeStream = 0;
   CloseSocket ();
 }
 

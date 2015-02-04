@@ -106,7 +106,7 @@ VideoClient::VideoClient ()
   m_sendEvent = EventId ();
   m_maxPacketSize = 1480;
   m_connected = false;
-  m_lastStartTime = Time ();
+  m_lastResetTime = Time ();
 }
 
 VideoClient::~VideoClient ()
@@ -167,25 +167,31 @@ VideoClient::ResetCounters ()
 {
   m_sent = 0;
   m_txBytes = 0;
-  m_lastStartTime = Simulator::Now ();
+  m_lastResetTime = Simulator::Now ();
 }
 
 uint32_t  
-VideoClient::GetTxPackets (void) const
+VideoClient::GetTxPackets () const
 {
   return m_sent;
 }
 
 uint32_t  
-VideoClient::GetTxBytes (void) const
+VideoClient::GetTxBytes () const
 {
   return m_txBytes;
 }
 
 Time      
-VideoClient::GetActiveTime (void) const
+VideoClient::GetActiveTime () const
 {
-  return Simulator::Now () - m_lastStartTime;
+  return Simulator::Now () - m_lastResetTime;
+}
+
+DataRate 
+VideoClient::GetTxGoodput () const
+{
+  return DataRate (GetTxBytes () * 8 / GetActiveTime ().GetSeconds ());
 }
 
 void
@@ -196,6 +202,7 @@ VideoClient::DoDispose (void)
   m_serverApp = 0;
   m_onTime = 0;
   m_offTime = 0;
+  m_entries.clear ();
   Application::DoDispose ();
 }
 
@@ -204,10 +211,10 @@ VideoClient::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 
-  TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
-
+  ResetCounters ();
   if (m_socket == 0)
     {
+      TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), udpFactory);
       m_socket->Bind ();
       m_socket->Connect (InetSocketAddress (m_peerAddress, m_peerPort));
@@ -314,7 +321,6 @@ VideoClient::StartSending ()
           return;
         }
     }
-  m_lastStartTime = Simulator::Now ();
   SendStream ();
   ScheduleStopEvent ();
 }

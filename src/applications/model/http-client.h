@@ -76,20 +76,16 @@ public:
    */
   Ptr<HttpServer> GetServerApp ();
 
-  /** 
-   * \brief Reset counter and statistics 
-   */
-  void ResetCounters ();
-  
   /**
-   * \brief Get application statistics.
+   * \brief Application statistics.
    * \return The statistic value.
    */
   //\{
-  uint32_t  GetTxBytes    (void)  const;
-  uint32_t  GetRxBytes    (void)  const;
-  Time      GetActiveTime (void)  const;
-  DataRate  GetThroughput (void)  const;
+  void      ResetCounters ();
+  uint32_t  GetTxBytes    () const;
+  uint32_t  GetRxBytes    () const;
+  Time      GetActiveTime () const;
+  DataRate  GetRxGoodput  () const;
   //\}
 
 protected:

@@ -99,8 +99,7 @@ VoipPeer::VoipPeer ()
   NS_LOG_FUNCTION (this);
   m_sendEvent = EventId ();
   m_startStopEvent = EventId ();
-  m_lastStartTime = Time ();
-  ResetCounters ();
+  m_lastResetTime = Time ();
 }
 
 VoipPeer::~VoipPeer ()
@@ -160,65 +159,71 @@ VoipPeer::ResetCounters ()
   m_rxBytes = 0;
   m_previousRx = Simulator::Now ();
   m_previousRxTx = Simulator::Now ();
-  m_lastStartTime = Simulator::Now ();
+  m_lastResetTime = Simulator::Now ();
   m_jitter = 0;
   m_delaySum = Time ();
   m_lossCounter.Reset ();
 }
 
 uint32_t  
-VoipPeer::GetTxPackets (void) const
+VoipPeer::GetTxPackets () const
 {
   return m_pktSent;
 }
 
 uint32_t  
-VoipPeer::GetRxPackets (void) const
+VoipPeer::GetRxPackets () const
 {
   return m_pktReceived;
 }
 
 uint32_t  
-VoipPeer::GetTxBytes (void) const
+VoipPeer::GetTxBytes () const
 {
   return m_txBytes;
 }
 
 uint32_t  
-VoipPeer::GetRxBytes (void) const
+VoipPeer::GetRxBytes () const
 {
   return m_rxBytes;
 }
 
 uint32_t
-VoipPeer::GetLost (void) const
+VoipPeer::GetLost () const
 {
   return m_lossCounter.GetLost ();
 }
 
 double
-VoipPeer::GetLossRatio (void) const
+VoipPeer::GetRxLossRatio () const
 {
   uint32_t lost = m_lossCounter.GetLost ();
   return ((double)lost) / (lost + GetRxPackets ());
 }
 
 Time      
-VoipPeer::GetActiveTime (void) const
+VoipPeer::GetActiveTime () const
 {
-  return Simulator::Now () - m_lastStartTime;
+  return Simulator::Now () - m_lastResetTime;
 }
 
 Time      
-VoipPeer::GetDelay (void) const
+VoipPeer::GetRxDelay () const
 {
   return m_pktReceived ? (m_delaySum / (int64_t)m_pktReceived) : m_delaySum;
 }
 
 Time      
-VoipPeer::GetJitter (void) const
+VoipPeer::GetRxJitter () const
 {
   return Time (m_jitter);
+}
+
+DataRate 
+VoipPeer::GetRxGoodput () const
+{
+  return DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ());
 }
 
 void
@@ -242,11 +247,12 @@ VoipPeer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
   
-  TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
-
+  ResetCounters ();
+  
   // Inbound side
   if (m_rxSocket == 0)
     {
+      TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_rxSocket = Socket::CreateSocket (GetNode (), udpFactory);
       m_rxSocket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
       m_rxSocket->SetRecvCallback (MakeCallback (&VoipPeer::ReadPacket, this));
@@ -255,6 +261,7 @@ VoipPeer::StartApplication (void)
   // Outbound side
   if (m_txSocket == 0)
     {
+      TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_txSocket = Socket::CreateSocket (GetNode (), udpFactory);
       m_txSocket->Bind ();
       m_txSocket->Connect (InetSocketAddress (m_peerAddress, m_peerPort));
@@ -307,7 +314,6 @@ VoipPeer::StartSending ()
           return;
         }
     }
-  m_lastStartTime = Simulator::Now ();
   m_sendEvent = Simulator::Schedule (m_interval, &VoipPeer::SendPacket, this);
   ScheduleStopEvent ();
 }
@@ -397,6 +403,7 @@ VoipPeer::ReadPacket (Ptr<Socket> socket)
     {
       if (packet->GetSize () > 0)
         {
+          m_rxBytes += packet->GetSize ();
           SeqTsHeader seqTs;
           packet->RemoveHeader (seqTs);
           uint32_t seqNum = seqTs.GetSeq ();
@@ -422,7 +429,6 @@ VoipPeer::ReadPacket (Ptr<Socket> socket)
 
           m_lossCounter.NotifyReceived (seqNum);
           m_pktReceived++;
-          m_rxBytes += packet->GetSize ();
         }
     }
 }

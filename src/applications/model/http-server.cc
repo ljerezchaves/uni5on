@@ -51,8 +51,9 @@ HttpServer::GetTypeId (void)
 HttpServer::HttpServer ()
 {
   NS_LOG_FUNCTION (this);
-
   m_socket = 0;
+  m_clientApp = 0;
+  m_lastResetTime = Time ();
 }
 
 HttpServer::~HttpServer ()
@@ -72,18 +73,52 @@ HttpServer::GetClientApp ()
   return m_clientApp;
 }
 
+void 
+HttpServer::ResetCounters ()
+{
+  m_rxBytes = 0;
+  m_txBytes = 0;
+  m_lastResetTime = Simulator::Now ();
+}
+
+uint32_t 
+HttpServer::GetTxBytes () const
+{
+  return m_txBytes;
+}
+
+uint32_t 
+HttpServer::GetRxBytes () const
+{
+  return m_rxBytes;
+}
+
+Time 
+HttpServer::GetActiveTime () const
+{
+  return Simulator::Now () - m_lastResetTime;
+}
+
+DataRate 
+HttpServer::GetRxGoodput () const
+{
+  return DataRate (GetTxBytes () * 8 / GetActiveTime ().GetSeconds ());
+}
+
 void
 HttpServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   m_socket = 0;
+  m_clientApp = 0;
   Application::DoDispose ();
 }
 
 void HttpServer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
-
+  
+  ResetCounters ();
   if (!m_socket)
     {
       TypeId tid = TypeId::LookupByName ("ns3::TcpSocketFactory");
@@ -100,41 +135,39 @@ void HttpServer::StartApplication (void)
 void HttpServer::StopApplication (void)
 {
   NS_LOG_FUNCTION (this);
-
   if (m_socket != 0)
     {
       m_socket->Close ();
-      m_socket = 0;
     }
-  m_clientApp = 0;
 }
 
 bool
-HttpServer::HandleRequest (Ptr<Socket> s, const Address& address)
+HttpServer::HandleRequest (Ptr<Socket> socket, const Address& address)
 {
-  NS_LOG_FUNCTION (this << s << address);
+  NS_LOG_FUNCTION (this << socket << address);
   NS_LOG_INFO ("HttpServer >> Request for connection from " <<
                 InetSocketAddress::ConvertFrom (address).GetIpv4 () << " received.");
   return true;
 }
 
 void
-HttpServer::HandleAccept (Ptr<Socket> s, const Address& address)
+HttpServer::HandleAccept (Ptr<Socket> socket, const Address& address)
 {
-  NS_LOG_FUNCTION (this << s << address);
+  NS_LOG_FUNCTION (this << socket << address);
   NS_LOG_INFO ("HttpServer >> Connection with Client (" <<
                 InetSocketAddress::ConvertFrom (address).GetIpv4 () <<
                 ") successfully established!");
-  s->SetRecvCallback (MakeCallback (&HttpServer::HandleReceive, this));
+  socket->SetRecvCallback (MakeCallback (&HttpServer::HandleReceive, this));
 }
 
 void
-HttpServer::HandleReceive (Ptr<Socket> s)
+HttpServer::HandleReceive (Ptr<Socket> socket)
 {
-  NS_LOG_FUNCTION (this << s);
+  NS_LOG_FUNCTION (this << socket);
 
   HttpHeader httpHeaderIn;
-  Ptr<Packet> packet = s->Recv ();
+  Ptr<Packet> packet = socket->Recv ();
+  m_rxBytes += packet->GetSize ();
 
   // Getting TCP Sending Buffer Size.
   Ptr<TcpNewReno> tcp = CreateObject<TcpNewReno> ();
@@ -185,7 +218,7 @@ HttpServer::HandleReceive (Ptr<Socket> s)
       NS_LOG_INFO ("HttpServer >> Sending response to client. Main Object Size ("
                    << mainObjectSize << " bytes). NumOfInlineObjects ("
                    << numOfInlineObj << ").");
-      s->Send (p);
+      m_txBytes += socket->Send (p);
     }
   else
     {
@@ -219,7 +252,7 @@ HttpServer::HandleReceive (Ptr<Socket> s)
 
       NS_LOG_INFO ("HttpServer >> Sending response to client. Inline Objectsize ("
                    << inlineObjectSize << " bytes).");
-      s->Send (p);
+      m_txBytes += socket->Send (p);
     }
 }
 

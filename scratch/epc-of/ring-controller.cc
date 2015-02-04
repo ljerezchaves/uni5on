@@ -77,44 +77,6 @@ RingController::PrintBlockRatioStatistics ()
   return ratio;
 }
 
-void
-RingController::PrintAppStatistics (Ptr<Application> app)
-{
-  uint32_t teid = GetTeidFromApplication (app);
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-
-  if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
-    {
-      Ptr<VoipPeer> voipApp = DynamicCast<VoipPeer> (app);
-
-      // Identifying Voip traffic direction
-      std::string nodeName = Names::FindName (voipApp->GetNode ());
-      bool downlink = InternetNetwork::GetServerName () == nodeName;
-      uint16_t srcIdx = downlink ? rInfo->sgwIdx : rInfo->enbIdx;
-      uint16_t dstIdx = downlink ? rInfo->enbIdx : rInfo->sgwIdx; 
-      
-      std::cout << 
-        "VoIP (TEID " << teid << ") [" << srcIdx << " -> " << dstIdx << "]" << 
-        " Duration " << voipApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
-        " Loss " << voipApp->GetLossRatio () << " -" <<
-        " Delay " << voipApp->GetDelay ().ToInteger (Time::MS) << " ms -" <<
-        " Jitter " << voipApp->GetJitter ().ToInteger (Time::MS) << " ms" << 
-      std::endl; 
-      
-      voipApp->ResetCounters ();
-    }
-  else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
-    {
-      // Get the relative UDP server for this client
-
-    }
-  else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
-    {
-      // Get the relative HTTP server for this client
-      
-    }
-}
-
 TypeId 
 RingController::GetTypeId (void)
 {
@@ -210,6 +172,7 @@ RingController::NotifyAppStart (Ptr<Application> app)
   NS_LOG_FUNCTION (this << app);
 
   // Get GTP TEID for this application
+  ResetAppStatistics (app);
   Ptr<EpcTft> tft = app->GetObject<EpcTft> ();
   EpcS11SapMme::BearerContextCreated dedicatedBearer = GetBearerFromTft (tft);
   uint32_t teid = dedicatedBearer.sgwFteid.teid;
@@ -284,6 +247,7 @@ RingController::NotifyAppStart (Ptr<Application> app)
     {
       NS_LOG_DEBUG ("Routing path for " << teid << " already installed.");
     }
+
   return true;
 }
 
@@ -473,6 +437,78 @@ RingController::HandleMultipartReply (ofl_msg_multipart_reply_header *msg,
   return 0;
 }
 
+void
+RingController::PrintAppStatistics (Ptr<Application> app)
+{
+  uint32_t teid = GetTeidFromApplication (app);
+  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+
+  if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
+    {
+      Ptr<VoipPeer> voipApp = DynamicCast<VoipPeer> (app);
+
+      // Identifying Voip traffic direction
+      std::string nodeName = Names::FindName (voipApp->GetNode ());
+      bool downlink = InternetNetwork::GetServerName () == nodeName;
+      uint16_t srcIdx = downlink ? rInfo->sgwIdx : rInfo->enbIdx;
+      uint16_t dstIdx = downlink ? rInfo->enbIdx : rInfo->sgwIdx; 
+      
+      std::cout << 
+        "VoIP (TEID " << teid << ") [" << srcIdx << " -> " << dstIdx << "]" << 
+        " Duration " << voipApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
+        " Loss " << voipApp->GetRxLossRatio () << " -" <<
+        " Delay " << voipApp->GetRxDelay ().ToInteger (Time::MS) << " ms -" <<
+        " Jitter " << voipApp->GetRxJitter ().ToInteger (Time::MS) << " ms -" << 
+        " Goodput " << voipApp->GetRxGoodput () << 
+      std::endl; 
+    }
+  else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
+    {
+      // Get the relative UDP server for this client
+      Ptr<VideoClient> videoApp = DynamicCast<VideoClient> (app);
+      Ptr<UdpServer> serverApp = videoApp->GetServerApp ();
+      std::cout << 
+        "Video (TEID " << teid << ") [" <<  rInfo->sgwIdx << " -> " << rInfo->enbIdx << "]" << 
+        " Duration " << serverApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
+        " Loss " << serverApp->GetRxLossRatio () << " -" <<
+        " Delay " << serverApp->GetRxDelay ().ToInteger (Time::MS) << " ms -" <<
+        " Jitter " << serverApp->GetRxJitter ().ToInteger (Time::MS) << " ms -" << 
+        " Goodput " << serverApp->GetRxGoodput () << 
+      std::endl; 
+    }
+  else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
+    {
+      Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
+      std::cout << 
+        "Background HTTP traffic (TEID " << teid << 
+        ") [" <<  rInfo->sgwIdx << " <-> " << rInfo->enbIdx << "]" << 
+        " Duration " << httpApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
+        " Transfered " << httpApp->GetRxBytes () << " bytes -" <<
+        " Goodput " << httpApp->GetRxGoodput () << 
+      std::endl; 
+    }
+}
+
+void
+RingController::ResetAppStatistics (Ptr<Application> app)
+{
+  if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
+    {
+      DynamicCast<VoipPeer> (app)->ResetCounters ();
+    }
+  else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
+    {
+      Ptr<VideoClient> videoApp = DynamicCast<VideoClient> (app);
+      videoApp->ResetCounters ();
+      videoApp->GetServerApp ()->ResetCounters ();
+    }
+  else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
+    {
+      Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
+      httpApp->ResetCounters ();
+      httpApp->GetServerApp ()->ResetCounters ();
+    }
+}
 
 bool
 RingController::ProcessGbrRequest (Ptr<RoutingInfo> rInfo)

@@ -116,47 +116,54 @@ UdpServer::ResetCounters ()
 }
 
 uint32_t  
-UdpServer::GetRxPackets (void) const
+UdpServer::GetRxPackets () const
 {
   return GetReceived ();
 }
 
 uint32_t  
-UdpServer::GetRxBytes (void) const
+UdpServer::GetRxBytes () const
 {
   return m_rxBytes;
 }
 
 double
-UdpServer::GetLossRatio (void) const
+UdpServer::GetRxLossRatio () const
 {
   return ((double)GetLost ()) / (GetLost () + GetRxPackets ());
 }
 
 Time      
-UdpServer::GetActiveTime (void) const
+UdpServer::GetActiveTime () const
 {
   return Simulator::Now () - m_lastResetTime;
 }
 
 Time      
-UdpServer::GetDelay (void) const
+UdpServer::GetRxDelay () const
 {
   return m_received ? (m_delaySum / (int64_t)m_received) : m_delaySum;
 }
 
 Time      
-UdpServer::GetJitter (void) const
+UdpServer::GetRxJitter () const
 {
   return Time (m_jitter);
 }
 
+DataRate 
+UdpServer::GetRxGoodput () const
+{
+  return DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ());
+}
 
 void
 UdpServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   Application::DoDispose ();
+  m_socket = 0;
+  m_socket6 = 0;
 }
 
 void
@@ -164,28 +171,24 @@ UdpServer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 
+  ResetCounters ();
   if (m_socket == 0)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tid);
-      InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (),
-                                                   m_port);
+      InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), m_port);
       m_socket->Bind (local);
+      m_socket->SetRecvCallback (MakeCallback (&UdpServer::HandleRead, this));
     }
-
-  m_socket->SetRecvCallback (MakeCallback (&UdpServer::HandleRead, this));
 
   if (m_socket6 == 0)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socket6 = Socket::CreateSocket (GetNode (), tid);
-      Inet6SocketAddress local = Inet6SocketAddress (Ipv6Address::GetAny (),
-                                                   m_port);
+      Inet6SocketAddress local = Inet6SocketAddress (Ipv6Address::GetAny (), m_port);
       m_socket6->Bind (local);
+      m_socket6->SetRecvCallback (MakeCallback (&UdpServer::HandleRead, this));
     }
-
-  m_socket6->SetRecvCallback (MakeCallback (&UdpServer::HandleRead, this));
-
 }
 
 void

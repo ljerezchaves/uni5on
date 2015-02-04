@@ -28,7 +28,9 @@
 #include "ns3/ptr.h"
 #include "ns3/address.h"
 #include "ns3/nstime.h"
+#include "ns3/data-rate.h"
 #include "packet-loss-counter.h"
+
 namespace ns3 {
 /**
  * \ingroup applications
@@ -80,22 +82,19 @@ public:
    */
   void SetPacketWindowSize (uint16_t size);
 
-  /** 
-   * \brief Reset counter and statistics 
-   */
-  void ResetCounters ();
-  
   /**
    * \brief Get application statistics.
    * \return The statistic value.
    */
   //\{
-  uint32_t  GetRxPackets  (void)  const;
-  uint32_t  GetRxBytes    (void)  const;
-  double    GetLossRatio  (void)  const;
-  Time      GetActiveTime (void)  const;
-  Time      GetDelay      (void)  const;
-  Time      GetJitter     (void)  const;
+  void      ResetCounters  ();
+  uint32_t  GetRxPackets   () const;
+  uint32_t  GetRxBytes     () const;
+  double    GetRxLossRatio () const;
+  Time      GetActiveTime  () const;
+  Time      GetRxDelay     () const;
+  Time      GetRxJitter    () const;
+  DataRate  GetRxGoodput   () const;
   //\}
 
 protected:
