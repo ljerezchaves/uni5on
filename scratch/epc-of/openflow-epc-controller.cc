@@ -297,7 +297,7 @@ OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg,
   if (reason == OFPR_NO_MATCH)
     {
       char *m = ofl_structs_match_to_string (msg->match, 0);
-      NS_LOG_DEBUG ("Packet in match: " << m);
+      NS_LOG_INFO ("Packet in match: " << m);
       free (m);
 
       // (Table #1 is used only for GTP TEID routing)
@@ -308,7 +308,7 @@ OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg,
           tlv = oxm_match_lookup (OXM_OF_GTPU_TEID, (ofl_match*)msg->match);
           memcpy (&teid, tlv->value, OXM_LENGTH (OXM_OF_GTPU_TEID));
 
-          NS_LOG_DEBUG ("TEID routing miss packet: " << teid);
+          NS_LOG_LOGIC ("TEID routing miss packet: " << teid);
           return HandleGtpuTeidPacketIn (msg, swtch, xid, teid);
         }
     }

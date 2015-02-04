@@ -370,6 +370,10 @@ RingController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   uint16_t prio = msg->stats->priority;
   
   NS_LOG_FUNCTION (swtch.ipv4 << teid);
+      
+  char *m = ofl_msg_to_string ((ofl_msg_header*)msg, 0);
+  NS_LOG_INFO ("Flow removed: " << m);
+  free (m);
 
   // Since handlers must free the message when everything is ok, let's remove
   // it now as we can handle it anyway.
