@@ -46,6 +46,10 @@ HttpClient::GetTypeId (void)
                    UintegerValue (80),
                    MakeUintegerAccessor (&HttpClient::m_peerPort),
                    MakeUintegerChecker<uint16_t> ())
+    .AddAttribute ("TcpTimeout", "The TCP connection timeout",
+                   TimeValue (Seconds (60)),
+                   MakeTimeAccessor (&HttpClient::m_tcpTimeout),
+                   MakeTimeChecker ())
   ;
   return tid;
 }
@@ -56,13 +60,15 @@ HttpClient::HttpClient ()
   m_socket = 0;
   m_serverApp = 0;
   m_contentLength = 0;
+  m_bytesReceived = 0;
   m_numOfInlineObjects = 0;
   m_inlineObjLoaded = 0;
+  
   m_lastResetTime = Time ();
   ResetCounters ();
 
-  //Mu and Sigma data was taken from paper "An HTTP Web Traffic Model Based on the
-  //Top One Million Visited Web Pages" by Rastin Pries et. al (Table II).
+  // Mu and Sigma data was taken from paper "An HTTP Web Traffic Model Based on
+  // the Top One Million Visited Web Pages" by Rastin Pries et. al (Table II).
   m_readingTimeStream = CreateObject<LogNormalRandomVariable> ();
   m_readingTimeStream->SetAttribute ("Mu", DoubleValue (-0.495204));
   m_readingTimeStream->SetAttribute ("Sigma", DoubleValue (2.7731));
@@ -88,21 +94,21 @@ HttpClient::GetServerApp ()
 void 
 HttpClient::ResetCounters ()
 {
-  m_bytesReceived = 0;
-  m_bytesSent = 0;
+  m_rxBytes = 0;
+  m_txBytes = 0;
   m_lastResetTime = Simulator::Now ();
 }
 
 uint32_t 
 HttpClient::GetTxBytes (void) const
 {
-  return m_bytesSent;
+  return m_txBytes;
 }
 
 uint32_t 
 HttpClient::GetRxBytes (void) const
 {
-  return m_bytesReceived;
+  return m_rxBytes;
 }
 
 Time 
@@ -131,10 +137,27 @@ void
 HttpClient::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
+  OpenSocket ();
+}
 
-  TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
+void
+HttpClient::StopApplication ()
+{
+  NS_LOG_FUNCTION (this);
+  m_serverApp = 0;
+  m_readingTimeStream = 0;
+  CloseSocket ();
+}
+
+void
+HttpClient::OpenSocket ()
+{
+  NS_LOG_FUNCTION (this);
+  
   if (!m_socket)
     {
+      NS_LOG_LOGIC ("Opening the TCP connection.");
+      TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tcpFactory);
       m_socket->Bind ();
       m_socket->Connect (InetSocketAddress (m_peerAddress, m_peerPort));
@@ -145,12 +168,13 @@ HttpClient::StartApplication ()
 }
 
 void
-HttpClient::StopApplication ()
+HttpClient::CloseSocket ()
 {
   NS_LOG_FUNCTION (this);
 
   if (m_socket != 0)
     {
+      NS_LOG_LOGIC ("Closing the TCP connection.");
       m_socket->Close ();
       m_socket = 0;
     }
@@ -163,8 +187,8 @@ HttpClient::ConnectionSucceeded (Ptr<Socket> socket)
   
   m_clientAddress = socket->GetNode ()->GetObject<Ipv4> ()->GetAddress (1,0).GetLocal ();
   NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> Server accepted connection request!");
-  
   socket->SetRecvCallback (MakeCallback (&HttpClient::HandleReceive, this));
+  
   SendRequest (socket, "main/object");
 }
 
@@ -190,7 +214,7 @@ HttpClient::SendRequest (Ptr<Socket> socket, string url)
   packet->AddHeader (m_httpHeader);
   NS_LOG_INFO ("HttpClient (" << m_clientAddress << ") >> Sending request for "
               << url << " to server (" << m_peerAddress << ").");
-  m_bytesSent += socket->Send (packet);
+  m_txBytes += socket->Send (packet);
 }
 
 void
@@ -198,15 +222,14 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  double readingTime;
   Ptr<Packet> packet = socket->Recv ();
+  uint32_t bytesReceived = packet->GetSize ();
+  m_rxBytes += bytesReceived;
 
   HttpHeader httpHeaderIn;
   packet->PeekHeader (httpHeaderIn);
   string statusCode = httpHeaderIn.GetStatusCode ();
-
-  uint32_t bytesReceived = packet->GetSize ();
-
+  
   if (statusCode == "200")
     {
       m_contentType = httpHeaderIn.GetHeaderField ("ContentType");
@@ -244,16 +267,7 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
                 }
               else
                 {
-                  readingTime = m_readingTimeStream->GetValue ();
-                  //Limiting reading time to 10000 seconds according to paper "An HTTP Web Traffic
-                  //Model Based on the Top One Million Visited Web Pages" by Rastin Pries et. al (Table II).
-                  if (readingTime > 10000)
-                    {
-                      readingTime = 10000;
-                    }
-
-                  NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> Reading time: " << readingTime << " seconds.");
-                  Simulator::Schedule (Seconds (readingTime), &HttpClient::SendRequest, this, socket, "main/object");
+                  SetReadingTime (socket);
                 }
             }
         }
@@ -295,16 +309,7 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
                 {
                   NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> " << m_contentType <<
                                 " " << m_inlineObjLoaded << " of " << m_numOfInlineObjects << " successfully received.");
-                  readingTime = m_readingTimeStream->GetValue ();
-                  //Limiting reading time to 10000 seconds according to paper "An HTTP Web Traffic
-                  //Model Based on the Top One Million Visited Web Pages" by Rastin Pries et. al (Table II).
-                  if (readingTime > 10000)
-                    {
-                      readingTime = 10000;
-                    }
-
-                  NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> Reading time: " << readingTime << " seconds.");
-                  Simulator::Schedule (Seconds (readingTime), &HttpClient::SendRequest, this, socket, "main/object");
+                  SetReadingTime (socket);
                 }
             }
         }
@@ -313,6 +318,34 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
           NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> " << m_contentType << ": " <<
                         m_bytesReceived << " bytes of " << m_contentLength << " received.");
         }
+    }
+}
+
+void
+HttpClient::SetReadingTime (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+  
+  double randomSeconds = m_readingTimeStream->GetValue ();
+  if (randomSeconds > 10000)
+    {
+      //Limiting reading time to 10000 seconds according to paper "An HTTP Web
+      //Traffic Model Based on the Top One Million Visited Web Pages" by Rastin
+      //Pries et. al (Table II).
+      randomSeconds = 10000;
+    }
+  NS_LOG_INFO ("HttpClient (" << m_clientAddress << ") >> Reading time: " << 
+               randomSeconds << " seconds.");
+  
+  Time readingTime = Seconds (randomSeconds);
+  if (readingTime <= m_tcpTimeout)
+    {
+      Simulator::Schedule (readingTime, &HttpClient::SendRequest, this, socket, "main/object");
+    }
+  else
+    {
+      Simulator::Schedule (m_tcpTimeout, &HttpClient::CloseSocket, this);
+      Simulator::Schedule (readingTime, &HttpClient::OpenSocket, this);
     }
 }
 

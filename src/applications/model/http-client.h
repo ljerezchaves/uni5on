@@ -101,6 +101,16 @@ private:
   virtual void StopApplication (void);     // Called at time specified by Stop
 
   /**
+   * \brief Open the TCP connection between this client and the server.
+   */
+  void OpenSocket ();
+
+  /**
+   * \brief Close the TCP connection between this client and the server.
+   */
+  void CloseSocket ();
+
+  /**
    * \brief Handle a connection succeed event.
    * \param socket the connected socket
    */
@@ -125,6 +135,12 @@ private:
    */
   void HandleReceive (Ptr<Socket> socket);
 
+  /**
+   * \brief Set a reading time before requesting a new main object.
+   * \param socket socket that sends requests.
+   */
+  void SetReadingTime (Ptr<Socket> socket);
+
   Ptr<Socket>     m_socket;             //!< Local socket.
   Ipv4Address     m_peerAddress;        //!< Address of the server.
   uint16_t        m_peerPort;           //!< Remote port in the server.
@@ -132,10 +148,12 @@ private:
   uint32_t        m_contentLength;      //!< Content-Length header line.
   string          m_contentType;        //!< Content-Type header line.
   uint32_t        m_numOfInlineObjects; //!< Number-of-Inline-Objects header line.
-  uint32_t        m_bytesSent;          //!< Number of bytes sent to server.
+  uint32_t        m_txBytes;            //!< Number of TX bytes
+  uint32_t        m_rxBytes;            //!< Number of RX bytes
   uint32_t        m_bytesReceived;      //!< Number of bytes received from server.
   uint32_t        m_inlineObjLoaded;    //!< Number of inline objects already loaded.
   Time            m_lastResetTime;      //!< Last reset time
+  Time            m_tcpTimeout;         //!< TCP connection timeout.
   Ipv4Address     m_clientAddress;      //!< Client Address.
   Ptr<HttpServer> m_serverApp;          //!< HttpServer application
   Ptr<LogNormalRandomVariable> m_readingTimeStream; //!< Random Variable Stream for reading time.
