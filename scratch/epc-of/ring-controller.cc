@@ -224,7 +224,7 @@ RingController::NotifyAppStart (Ptr<Application> app)
       return true;
     }
 
-  // Is it an active berarer?
+  // Is it an active bearer?
   if (rrInfo->isActive)
     {
       // This happens with VoIP application, which are installed in pairs and,
@@ -242,10 +242,8 @@ RingController::NotifyAppStart (Ptr<Application> app)
   // use new routing paths when necessary.
   NS_ASSERT_MSG (!rrInfo->isActive, "Bearer should be inactive.");
   rrInfo->priority++;
-  rrInfo->isInstalled = false;
 
-  // For dedicated GBR bearers, let's check (and reserver) 
-  // for available resources.
+  // For dedicated GBR bearers, let's check for available resources. 
   if (rrInfo->IsGbr ())
     {
       if (!ProcessGbrRequest (rrInfo))
@@ -276,11 +274,13 @@ RingController::NotifyAppStop (Ptr<Application> app)
   if (rrInfo->isActive == true)
     {
       rrInfo->isActive = false;
+      rrInfo->isInstalled = false;
       if (rrInfo->IsGbr ())
         {
           ReleaseBandwidth (rrInfo); 
         }
-      // No need to remove the rules... wait for idle timeout
+      // There is no need to remove mannyaly remove the 
+      // rules from switch. Just wait for idle timeout.
     }
 
   PrintAppStatistics (app);
@@ -354,18 +354,18 @@ RingController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   NS_LOG_DEBUG ("Flow removed: " << m);
   free (m);
 
-  // Since handlers must free the message when everything is ok, let's remove
-  // it now as we can handle it anyway.
+  // Since handlers must free the message when everything is ok, 
+  // let's remove it now, as we already got the necessary information.
   ofl_msg_free_flow_removed (msg, true, 0);
 
-  // Ignoring flows removed from tables other than teid table #1
+  // Ignoring flows removed from tables other than TEID table #1
   if (table != 1)
     {
       NS_LOG_WARN ("Ignoring flow removed from table " << table);
       return 0;
     }
 
-  // Check for existing routing information
+  // Check for existing routing information for this bearer
   Ptr<RingRoutingInfo> rrInfo = GetTeidRingRoutingInfo (teid);
   if (rrInfo == 0)
     {
@@ -373,28 +373,41 @@ RingController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
       return 0;
     }
 
-  // Ignoring older rules with lower priority
+  // When a rule expires due to idle timeout, we may consider the following
+  // situations:
+
+  // 1) The application is stopped and the bearer must be inactive.
+  if (!rrInfo->isActive)
+    {
+      NS_LOG_DEBUG ("Flow " << teid << " removed for stopped application.");
+      return 0;
+    }
+  
+  // 2) The application is running and the bearer is active, but the
+  // application has already been stopped since last rule installation. In this
+  // case, the bearer priority should have been increased to avoid conflicts.
   if (rrInfo->priority > prio)
     {
-      NS_LOG_DEBUG ("Ignoring old rule for TEID " << teid << ".");
+      NS_LOG_DEBUG ("Flow " << teid << " removed for old rule.");
       return 0;
     }
 
-  NS_ASSERT_MSG (rrInfo->priority == prio, "Invalid rInfo priority.");
-  // Check for active application
-  if (rrInfo->isActive == true)
+  // 3) The application is running and the bearer is active. This is the
+  // critical situation. For some reason, the traffic absence lead to flow
+  // expiration, and we need to reinstall the rules to avoid problems. Let's
+  // increase the priority to avoid conflicts (so, any other flow expired
+  // message from other switches for this same path will be handle by case #2
+  // (lower priority).
+  NS_ASSERT_MSG (rrInfo->priority == prio, "Invalid flow priority.");
+  if (rrInfo->isActive)
     {
-      NS_LOG_DEBUG ("Routing info for TEID " << teid << " is active.");
-      // In this case, the switch removed the flow entry of an active route.
-      // Let's reinstall the entry.
+      NS_LOG_DEBUG ("Flow " << teid << " is still active. Reinstall rules...");
+      rrInfo->priority++;         
       InstallTeidRouting (rrInfo);
+      return 0;
     }
-  else
-    {
-      // Set this rule as uninstalled
-      rrInfo->isInstalled = false;
-    }
-  return 0;
+
+  NS_ABORT_MSG ("Should not get here :/");
 }
 
 // ofl_err
@@ -464,65 +477,64 @@ RingController::ProcessGbrRequest (Ptr<RingRoutingInfo> rrInfo)
 {
   IncreaseGbrRequest ();
 
-  EpsBearer bearer = rrInfo->bearer.bearerLevelQos;
   uint32_t teid = rrInfo->teid;
-  DataRate request (bearer.gbrQosInfo.gbrDl + bearer.gbrQosInfo.gbrUl);
+  EpsBearer bearer = rrInfo->bearer.bearerLevelQos;
+  DataRate request, available;
+
+  request = DataRate (bearer.gbrQosInfo.gbrDl + bearer.gbrQosInfo.gbrUl);
   NS_LOG_DEBUG ("Bearer " << teid << " requesting " << request);
 
-  DataRate available = GetAvailableBandwidth (rrInfo->sgwIdx, rrInfo->enbIdx, 
-      rrInfo->downPath);
-  NS_LOG_DEBUG ("Bandwidth from " << rrInfo->sgwIdx << " to " << rrInfo->enbIdx 
-      << " in current path: " << available);
+  available = GetAvailableBandwidth (rrInfo->sgwIdx, rrInfo->enbIdx, 
+                                     rrInfo->downPath);
+  NS_LOG_DEBUG ("Available bandwidth in current path: " << available);
 
-  if (available < request)
+  if (available >= request)
     {
-      // We don't have available bandwitdh for this bearer in the default
-      // (shortest) path. Let's check the routing strategy and see if we can
-      // change the route.
-      switch (m_strategy)
+      // Let's reserve it and return true to the application.
+      rrInfo->reserved = request;
+      return (ReserveBandwidth (rrInfo));
+    }
+
+  // We don't have the available bandwitdh for this bearer in current path. 
+  // Let's check the routing strategy and see if we can change the route.
+  switch (m_strategy)
+    {
+      case RingController::HOPS:
         {
-          case RingController::HOPS:
+          NS_LOG_WARN ("No resources for bearer " << teid << ". Block!");
+          IncreaseGbrBlocks ();
+          return false;
+        }
+
+      case RingController::BAND:
+        {
+          NS_LOG_DEBUG ("No resources for bearer " << teid << "." 
+                        " Checking the other path.");
+          
+          available = GetAvailableBandwidth (rrInfo->sgwIdx, rrInfo->enbIdx, 
+                                             rrInfo->upPath);
+          NS_LOG_DEBUG ("Available bandwidth in other path: " << available);
+
+          if (available < request)
             {
               NS_LOG_WARN ("No resources for bearer " << teid << ". Block!");
               IncreaseGbrBlocks ();
               return false;
             }
-
-          case RingController::BAND:
-            {
-              NS_LOG_DEBUG ("No resources for bearer " << teid << ". " 
-                  "Checking the other path.");
-              available = GetAvailableBandwidth (rrInfo->sgwIdx, rrInfo->enbIdx, 
-                  rrInfo->upPath);
-              NS_LOG_DEBUG ("Bandwidth from " << rrInfo->sgwIdx << " to " << 
-                  rrInfo->enbIdx << " in other path: " << available);
-
-              if (available < request)
-                {
-                   NS_LOG_WARN ("No resources for bearer " << teid << ". Block!");
-                  IncreaseGbrBlocks ();
-                  return false;
-                }
-              else
-                {
-                  NS_LOG_DEBUG ("Inverting paths.");
-                  rrInfo->InvertRoutingPath ();
-                }
-              break;
-            }
-            
-          default:
-            {
-              NS_ABORT_MSG ("Invalid Routing strategy.");
-            }
+          
+          // Let's invert the path, reserve the bandwidth and return true to
+          // the application.
+          NS_LOG_DEBUG ("Inverting paths.");
+          rrInfo->InvertRoutingPath ();
+          rrInfo->reserved = request;
+          return (ReserveBandwidth (rrInfo));
+        }
+        
+      default:
+        {
+          NS_ABORT_MSG ("Invalid Routing strategy.");
         }
     }
-  
-  // If we get here that because there is bandwitdh for this bearer request.
-  // Let's reserve it and return true to the application.
-  rrInfo->reserved = request;
-  ReserveBandwidth (rrInfo);
-  return true;
 }
 
 RingRoutingInfo::RoutingPath
