@@ -391,27 +391,6 @@ void
 SimulationScenario::PrintStats ()
 {
   DynamicCast<RingController> (m_controller)->PrintBlockRatioStatistics ();
-  
-  ApplicationContainer::Iterator it;
-  for (it = m_voipServers.Begin (); it != m_voipServers.End (); it++)
-    {
-      Ptr<UdpServer> server = DynamicCast<UdpServer> (*it);
-      std::cout << "For voip application " << server << ": " <<
-                   server->GetReceived () << " pkts received, " <<
-                   server->GetLost () << " pkts lost, " << 
-                   server->GetDelay ().ToInteger (Time::MS) << " ms avg delay, " << 
-                   server->GetJitter ().ToInteger (Time::MS) << " ms avg jitter." << std::endl;
-    }
-  
-   for (it = m_videoServers.Begin (); it != m_videoServers.End (); it++)
-    {
-      Ptr<UdpServer> server = DynamicCast<UdpServer> (*it);
-      std::cout << "For video application " << server << ": " <<
-                   server->GetReceived () << " pkts received, " <<
-                   server->GetLost () << " pkts lost, " << 
-                   server->GetDelay ().ToInteger (Time::MS) << " ms avg delay, " << 
-                   server->GetJitter ().ToInteger (Time::MS) << " ms avg jitter." << std::endl;
-    }
 }
 
 void

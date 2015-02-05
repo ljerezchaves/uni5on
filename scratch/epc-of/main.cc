@@ -159,6 +159,7 @@ EnableVerbose ()
   LogComponentEnable ("RingController", LOG_PREFIX_TIME);
 
   LogComponentEnable ("HttpClient", LOG_LEVEL_WARN);
+  LogComponentEnable ("HttpClient", LOG_INFO);
   LogComponentEnable ("HttpServer", LOG_LEVEL_WARN);
   LogComponentEnable ("UdpServer", LOG_LEVEL_WARN);
   LogComponentEnable ("VideoClient", LOG_LEVEL_WARN);
