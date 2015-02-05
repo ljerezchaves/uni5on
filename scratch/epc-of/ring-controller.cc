@@ -181,19 +181,19 @@ RingController::NotifyAppStart (Ptr<Application> app)
 {
   NS_LOG_FUNCTION (this << app);
 
-  // Get GTP TEID for this application
-  ResetAppStatistics (app);
+  // Get TEID, bearer and tft from application, and reset statistics.
   Ptr<EpcTft> tft = app->GetObject<EpcTft> ();
+  uint32_t teid = GetTeidFromApplication (app);
   EpcS11SapMme::BearerContextCreated dedicatedBearer = GetBearerFromTft (tft);
-  uint32_t teid = dedicatedBearer.sgwFteid.teid;
+  ResetAppStatistics (app);
   
   Ptr<RingRoutingInfo> rrInfo = GetTeidRingRoutingInfo (teid);
   if (rrInfo == 0)
     {
+      // This is the first time in simulation we are using this dedicated
+      // bearer. Let's create and save it's routing metadata.
       NS_LOG_DEBUG ("First use of bearer TEID " << teid);
       Ptr<ContextInfo> cInfo = GetContextFromTft (tft);
-
-      // Create and save routing information for dedicated bearer
       rrInfo = CreateObject<RingRoutingInfo> ();
       rrInfo->teid = teid;
       rrInfo->sgwIdx = cInfo->sgwIdx;
@@ -211,52 +211,52 @@ RingController::NotifyAppStart (Ptr<Application> app)
 
       SaveTeidRoutingInfo (rrInfo);
     }
-  else
+
+  // Is it a default bearer?
+  if (rrInfo->isDefault)
     {
-      if (rrInfo->isDefault)
-        {
-          // If the application traffic is sent over default bearer, there is
-          // no need for resource reservation nor reinstall the switch rules.
-          // (Rules were supposed to remain installed during entire simulation)
-          NS_ASSERT_MSG (rrInfo->isActive && rrInfo->isInstalled, 
-                         "Default bearer with wrong parameters.");
-          return true;
-        }
-      else
-        {
-          if (!rrInfo->isActive)
-            {
-              // Every time the application starts using an (old) existing
-              // bearer, let's inscrease the bearer priority and reinstall the
-              // rules on the switches. With this we avoid problems with old
-              // expired rules, and also, enable new routing paths.
-              rrInfo->priority++;
-              rrInfo->isInstalled = false;
-            }
-        }
+      // If the application traffic is sent over default bearer, there is no
+      // need for resource reservation nor reinstall the switch rules, as
+      // default rules were supposed to remain installed during entire
+      // simulation.
+      NS_ASSERT_MSG (rrInfo->isActive && rrInfo->isInstalled, 
+                     "Default bearer should be intalled and activated.");
+      return true;
     }
 
-  // Check for dedicated GBR bearer not active yet, with no reserved resources
-  if (!rrInfo->isActive && rrInfo->IsGbr ())
+  // Is it an active berarer?
+  if (rrInfo->isActive)
     {
-      bool ok = ProcessGbrRequest (rrInfo);
-      if (!ok)
+      // This happens with VoIP application, which are installed in pairs and,
+      // when the second application starts, the first one has already
+      // configured the routing for this bearer and set the active flag.
+      NS_ASSERT_MSG (rrInfo->isInstalled, "Bearer should be installed.");
+      NS_LOG_DEBUG ("Routing path for " << teid << " is already installed.");
+      return true;
+    }
+
+  // So, this bearer must be inactive and we are goind to reuse it's metadata.
+  // Every time the application starts using an (old) existing bearer, let's
+  // inscrease the bearer priority and reinstall the rules on the switches.
+  // Doing this, we avoid problems with old 'expiring' rules, and we can even
+  // use new routing paths when necessary.
+  NS_ASSERT_MSG (!rrInfo->isActive, "Bearer should be inactive.");
+  rrInfo->priority++;
+  rrInfo->isInstalled = false;
+
+  // For dedicated GBR bearers, let's check (and reserver) 
+  // for available resources.
+  if (rrInfo->IsGbr ())
+    {
+      if (!ProcessGbrRequest (rrInfo))
         {
           return false;
         }
     }
 
-  // As the application is about to use this bearer, let's activate it.
+  // Everything is ok! Let's activate and install this bearer.
   rrInfo->isActive = true;
-  if (!rrInfo->isInstalled)
-    {
-      InstallTeidRouting (rrInfo);
-    }
-  else
-    {
-      NS_LOG_DEBUG ("Routing path for " << teid << " already installed.");
-    }
-
+  InstallTeidRouting (rrInfo);
   return true;
 }
 
@@ -351,7 +351,7 @@ RingController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   NS_LOG_FUNCTION (swtch.ipv4 << teid);
       
   char *m = ofl_msg_to_string ((ofl_msg_header*)msg, 0);
-  NS_LOG_INFO ("Flow removed: " << m);
+  NS_LOG_DEBUG ("Flow removed: " << m);
   free (m);
 
   // Since handlers must free the message when everything is ok, let's remove
@@ -462,7 +462,7 @@ RingController::GetTeidRingRoutingInfo (uint32_t teid)
 bool
 RingController::ProcessGbrRequest (Ptr<RingRoutingInfo> rrInfo)
 {
-  m_gbrBearers++;
+  IncreaseGbrRequest ();
 
   EpsBearer bearer = rrInfo->bearer.bearerLevelQos;
   uint32_t teid = rrInfo->teid;
@@ -484,7 +484,7 @@ RingController::ProcessGbrRequest (Ptr<RingRoutingInfo> rrInfo)
           case RingController::HOPS:
             {
               NS_LOG_WARN ("No resources for bearer " << teid << ". Block!");
-              m_gbrBlocks++;
+              IncreaseGbrBlocks ();
               return false;
             }
 
@@ -500,7 +500,7 @@ RingController::ProcessGbrRequest (Ptr<RingRoutingInfo> rrInfo)
               if (available < request)
                 {
                    NS_LOG_WARN ("No resources for bearer " << teid << ". Block!");
-                  m_gbrBlocks++;
+                  IncreaseGbrBlocks ();
                   return false;
                 }
               else
