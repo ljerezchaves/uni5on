@@ -31,8 +31,8 @@ namespace ns3 {
 class OpenFlowEpcController;
 
 /**
- * Metadata associated to a connection between two any switches in the OpenFlow
- * network.
+ * Metadata associated to a connection between 
+ * two any switches in the OpenFlow network.
  */
 class ConnectionInfo : public SimpleRefCount<ConnectionInfo>
 {

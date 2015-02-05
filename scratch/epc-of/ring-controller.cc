@@ -19,33 +19,63 @@
  */
 
 #include "ring-controller.h"
-#include "internet-network.h"
 
 NS_LOG_COMPONENT_DEFINE ("RingController");
 
 namespace ns3 {
 
+NS_OBJECT_ENSURE_REGISTERED (RingRoutingInfo);
 NS_OBJECT_ENSURE_REGISTERED (RingController);
 
-const int RingController::m_defaultTimeout = 0; 
-const int RingController::m_dedicatedTimeout = 15;
-const int RingController::m_defaultPriority = 100;  
-const int RingController::m_dedicatedPriority = 1000;
-
-bool
-RingController::RoutingInfo::IsGbr ()
-{
-  return (!isDefault && bearer.bearerLevelQos.IsGbr ());
-}
-
-RingController::RingController ()
-  : m_gbrBearers (0),
-    m_gbrBlocks (0)
+// ------------------------------------------------------------------------ //
+RingRoutingInfo::RingRoutingInfo ()
 {
   NS_LOG_FUNCTION (this);
+}
 
-  // Schedulle continuous stats update
-  // Simulator::Schedule (m_timeout, &RingController::QuerySwitchStats, this);
+RingRoutingInfo::~RingRoutingInfo ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+TypeId 
+RingRoutingInfo::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::RingRoutingInfo")
+    .SetParent (RoutingInfo::GetTypeId ())
+    .AddConstructor<RingRoutingInfo> ()
+  ;
+  return tid;
+}
+
+void
+RingRoutingInfo::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+void 
+RingRoutingInfo::InvertRoutingPath ()
+{
+  RoutingPath aux = downPath;
+  downPath = upPath;
+  upPath = aux;
+}
+
+void
+RingRoutingInfo::SetDownAndUpPath (RoutingPath down)
+{
+  downPath  = down;
+  upPath    = downPath == RingRoutingInfo::CLOCK ? 
+                RingRoutingInfo::COUNTER :
+                RingRoutingInfo::CLOCK;
+}
+
+
+// ------------------------------------------------------------------------ //
+RingController::RingController ()
+{
+  NS_LOG_FUNCTION (this);
 }
 
 RingController::~RingController ()
@@ -53,53 +83,34 @@ RingController::~RingController ()
   NS_LOG_FUNCTION (this);
 }
 
-void
-RingController::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-  OpenFlowEpcController::DoDispose ();
-  m_routes.clear ();
-}
-
-const Time
-RingController::GetDedicatedTimeout ()
-{
-  return Seconds (m_dedicatedTimeout);
-}
-
-double
-RingController::PrintBlockRatioStatistics ()
-{
-  double ratio = (double)m_gbrBlocks / (double)m_gbrBearers;
-  std::cout << "Number of GBR bearers request: " << m_gbrBearers  << std::endl
-            << "Number of GBR bearers blocked: " << m_gbrBlocks   << std::endl
-            << "Block ratio: "                   << ratio         << std::endl;
-  return ratio;
-}
-
 TypeId 
 RingController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RingController")
     .SetParent (OpenFlowEpcController::GetTypeId ())
-    .AddAttribute ("Strategy", 
-                   "The ring routing strategy.",
+    .AddAttribute ("Strategy", "The ring routing strategy.",
                    EnumValue (RingController::HOPS),
                    MakeEnumAccessor (&RingController::m_strategy),
                    MakeEnumChecker (RingController::HOPS, "Hops",
                                     RingController::BAND, "Bandwidth"))
-    .AddAttribute ("StatsTimeout",
-                   "The interval between query stats from switches.",
-                   TimeValue (Seconds (5)),
-                   MakeTimeAccessor (&RingController::m_timeout),
-                   MakeTimeChecker ())
-    .AddAttribute ("BwReserve",
-                   "Bandwitdth saving factor.",
+    .AddAttribute ("BwReserve", "Bandwitdth saving factor.",
                    DoubleValue (0.1),
                    MakeDoubleAccessor (&RingController::m_bwFactor),
                    MakeDoubleChecker<double> (0.0, 1.0))
+//    .AddAttribute ("StatsTimeout",
+//                   "The interval between query stats from switches.",
+//                   TimeValue (Seconds (5)),
+//                   MakeTimeAccessor (&RingController::m_timeout),
+//                   MakeTimeChecker ())
   ;
   return tid;
+}
+
+void
+RingController::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+  OpenFlowEpcController::DoDispose ();
 }
 
 void
@@ -111,17 +122,17 @@ RingController::NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo)
   OpenFlowEpcController::NotifyNewSwitchConnection (connInfo);
   
   // Installing default groups for RingController ring routing. Group
-  // RingController::CLOCK is used to send packets from current switch to the
+  // RingRoutingInfo::CLOCK is used to send packets from current switch to the
   // next one in clockwise direction.
   std::ostringstream cmd1;
-  cmd1 << "group-mod cmd=add,type=ind,group=" << RingController::CLOCK <<
+  cmd1 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::CLOCK <<
           " weight=0,port=any,group=any output=" << connInfo->portNum1;
   DpctlCommand (connInfo->switchDev1, cmd1.str ());
                                    
-  // Group RingController::COUNTER is used to send packets from the next
+  // Group RingRoutingInfo::COUNTER is used to send packets from the next
   // switch to the current one in counterclockwise direction. 
   std::ostringstream cmd2;
-  cmd2 << "group-mod cmd=add,type=ind,group=" << RingController::COUNTER <<
+  cmd2 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::COUNTER <<
           " weight=0,port=any,group=any output=" << connInfo->portNum2;
   DpctlCommand (connInfo->switchDev2, cmd2.str ());
 }
@@ -136,34 +147,33 @@ RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   
   // Call base method which will save context information
   OpenFlowEpcController::NotifyNewContextCreated (imsi, cellId, enbAddr, 
-      sgwAddr, bearerList);
+                                                  sgwAddr, bearerList);
   
   // Create and save routing information for default bearer
   EpcS11SapMme::BearerContextCreated defaultBearer = bearerList.front ();
   NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
   
   uint32_t teid = defaultBearer.sgwFteid.teid;
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-  NS_ASSERT_MSG (rInfo == 0, "Existing routing for default bearer " << teid);
+  Ptr<RingRoutingInfo> rrInfo = GetTeidRingRoutingInfo (teid);
+  NS_ASSERT_MSG (rrInfo == 0, "Existing routing for default bearer " << teid);
 
-  rInfo = Create<RoutingInfo> ();
-  rInfo->teid = teid;
-  rInfo->bearer = defaultBearer;
-  rInfo->sgwIdx = GetSwitchIdxFromIp (sgwAddr);
-  rInfo->enbIdx = GetSwitchIdxFromIp (enbAddr);
-  rInfo->sgwAddr = sgwAddr;
-  rInfo->enbAddr = enbAddr;
-  rInfo->downPath = FindShortestPath (rInfo->sgwIdx, rInfo->enbIdx);
-  rInfo->upPath = InvertRoutingPath (rInfo->downPath);
-  rInfo->app = 0;                       // No app for default bearer
-  rInfo->priority = m_defaultPriority;  // Priority for default bearer
-  rInfo->timeout = m_defaultTimeout;    // No timeout for default bearer
-  rInfo->isInstalled = false;           // Bearer rules not installed yet
-  rInfo->isActive = true;               // Default bearer is always active
-  rInfo->isDefault = true;              // This is a default bearer
+  rrInfo = CreateObject<RingRoutingInfo> ();
+  rrInfo->teid = teid;
+  rrInfo->sgwIdx = GetSwitchIdxFromIp (sgwAddr);
+  rrInfo->enbIdx = GetSwitchIdxFromIp (enbAddr);
+  rrInfo->sgwAddr = sgwAddr;
+  rrInfo->enbAddr = enbAddr;
+  rrInfo->app = 0;                       // No app for default bearer
+  rrInfo->priority = m_defaultPriority;  // Priority for default bearer
+  rrInfo->timeout = m_defaultTimeout;    // No timeout for default bearer
+  rrInfo->isInstalled = false;           // Bearer rules not installed yet
+  rrInfo->isActive = true;               // Default bearer is always active
+  rrInfo->isDefault = true;              // This is a default bearer
+  rrInfo->bearer = defaultBearer;
+  rrInfo->SetDownAndUpPath (FindShortestPath (rrInfo->sgwIdx, rrInfo->enbIdx));
 
-  SaveTeidRoutingInfo (rInfo);
-  InstallTeidRouting (rInfo);
+  SaveTeidRoutingInfo (rrInfo);
+  InstallTeidRouting (rrInfo);
 }
 
 bool
@@ -177,60 +187,59 @@ RingController::NotifyAppStart (Ptr<Application> app)
   EpcS11SapMme::BearerContextCreated dedicatedBearer = GetBearerFromTft (tft);
   uint32_t teid = dedicatedBearer.sgwFteid.teid;
   
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-  if (rInfo == 0)
+  Ptr<RingRoutingInfo> rrInfo = GetTeidRingRoutingInfo (teid);
+  if (rrInfo == 0)
     {
       NS_LOG_DEBUG ("First use of bearer TEID " << teid);
       Ptr<ContextInfo> cInfo = GetContextFromTft (tft);
 
       // Create and save routing information for dedicated bearer
-      rInfo = Create<RoutingInfo> ();
-      rInfo->teid = teid;
-      rInfo->bearer = dedicatedBearer;
-      rInfo->sgwIdx = cInfo->sgwIdx;
-      rInfo->enbIdx = cInfo->enbIdx;
-      rInfo->sgwAddr = cInfo->sgwAddr;
-      rInfo->enbAddr = cInfo->enbAddr;
-      rInfo->downPath = FindShortestPath (rInfo->sgwIdx, rInfo->enbIdx);
-      rInfo->upPath = InvertRoutingPath (rInfo->downPath);
-      rInfo->app = app;                      // App for this dedicated bearer
-      rInfo->priority = m_dedicatedPriority; // Priority for dedicated bearer
-      rInfo->timeout = m_dedicatedTimeout;   // Timeout for dedicated bearer
-      rInfo->isInstalled = false;            // Switch rules not installed yet
-      rInfo->isActive = false;               // Dedicated bearer not active yet
-      rInfo->isDefault = false;              // This is a dedicated bearer
+      rrInfo = CreateObject<RingRoutingInfo> ();
+      rrInfo->teid = teid;
+      rrInfo->sgwIdx = cInfo->sgwIdx;
+      rrInfo->enbIdx = cInfo->enbIdx;
+      rrInfo->sgwAddr = cInfo->sgwAddr;
+      rrInfo->enbAddr = cInfo->enbAddr;
+      rrInfo->app = app;                      // App for this dedicated bearer
+      rrInfo->priority = m_dedicatedPriority; // Priority for dedicated bearer
+      rrInfo->timeout = m_dedicatedTimeout;   // Timeout for dedicated bearer
+      rrInfo->isInstalled = false;            // Switch rules not installed yet
+      rrInfo->isActive = false;               // Dedicated bearer not active yet
+      rrInfo->isDefault = false;              // This is a dedicated bearer
+      rrInfo->bearer = dedicatedBearer;
+      rrInfo->SetDownAndUpPath (FindShortestPath (rrInfo->sgwIdx, rrInfo->enbIdx));
 
-      SaveTeidRoutingInfo (rInfo);
+      SaveTeidRoutingInfo (rrInfo);
     }
   else
     {
-      if (rInfo->isDefault)
+      if (rrInfo->isDefault)
         {
           // If the application traffic is sent over default bearer, there is
           // no need for resource reservation nor reinstall the switch rules.
           // (Rules were supposed to remain installed during entire simulation)
-          NS_ASSERT_MSG (rInfo->isActive && rInfo->isInstalled, 
+          NS_ASSERT_MSG (rrInfo->isActive && rrInfo->isInstalled, 
                          "Default bearer with wrong parameters.");
           return true;
         }
       else
         {
-          if (!rInfo->isActive)
+          if (!rrInfo->isActive)
             {
               // Every time the application starts using an (old) existing
               // bearer, let's inscrease the bearer priority and reinstall the
               // rules on the switches. With this we avoid problems with old
               // expired rules, and also, enable new routing paths.
-              rInfo->priority++;
-              rInfo->isInstalled = false;
+              rrInfo->priority++;
+              rrInfo->isInstalled = false;
             }
         }
     }
 
   // Check for dedicated GBR bearer not active yet, with no reserved resources
-  if (!rInfo->isActive && rInfo->IsGbr ())
+  if (!rrInfo->isActive && rrInfo->IsGbr ())
     {
-      bool ok = ProcessGbrRequest (rInfo);
+      bool ok = ProcessGbrRequest (rrInfo);
       if (!ok)
         {
           return false;
@@ -238,10 +247,10 @@ RingController::NotifyAppStart (Ptr<Application> app)
     }
 
   // As the application is about to use this bearer, let's activate it.
-  rInfo->isActive = true;
-  if (!rInfo->isInstalled)
+  rrInfo->isActive = true;
+  if (!rrInfo->isInstalled)
     {
-      InstallTeidRouting (rInfo);
+      InstallTeidRouting (rrInfo);
     }
   else
     {
@@ -257,19 +266,19 @@ RingController::NotifyAppStop (Ptr<Application> app)
   NS_LOG_FUNCTION (this << app);
 
   uint32_t teid = GetTeidFromApplication (app);
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-  if (rInfo == 0)
+  Ptr<RingRoutingInfo> rrInfo = GetTeidRingRoutingInfo (teid);
+  if (rrInfo == 0)
     {
       NS_FATAL_ERROR ("No routing information for teid " << teid);
     }
   
   // Check for active application
-  if (rInfo->isActive == true)
+  if (rrInfo->isActive == true)
     {
-      rInfo->isActive = false;
-      if (rInfo->IsGbr ())
+      rrInfo->isActive = false;
+      if (rrInfo->IsGbr ())
         {
-          ReleaseBandwidth (rInfo); 
+          ReleaseBandwidth (rrInfo); 
         }
       // No need to remove the rules... wait for idle timeout
     }
@@ -313,13 +322,13 @@ RingController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
   NS_LOG_FUNCTION (this << swtch.ipv4 << teid);
 
   // Let's check for existing routing path
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-  if (rInfo && rInfo->isActive)
+  Ptr<RingRoutingInfo> rrInfo = GetTeidRingRoutingInfo (teid);
+  if (rrInfo && rrInfo->isActive)
     {
       NS_LOG_WARN ("Not supposed to happen, but we can handle this.");
 
       // Reinstalling the rules, setting the buffer in flow-mod message;
-      InstallTeidRouting (rInfo, msg->buffer_id);
+      InstallTeidRouting (rrInfo, msg->buffer_id);
     }
   else
     {
@@ -357,172 +366,112 @@ RingController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
     }
 
   // Check for existing routing information
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-  if (rInfo == 0)
+  Ptr<RingRoutingInfo> rrInfo = GetTeidRingRoutingInfo (teid);
+  if (rrInfo == 0)
     {
       NS_FATAL_ERROR ("Routing info for TEID " << teid << " not found.");
       return 0;
     }
 
   // Ignoring older rules with lower priority
-  if (rInfo->priority > prio)
+  if (rrInfo->priority > prio)
     {
       NS_LOG_DEBUG ("Ignoring old rule for TEID " << teid << ".");
       return 0;
     }
 
-  NS_ASSERT_MSG (rInfo->priority == prio, "Invalid rInfo priority.");
+  NS_ASSERT_MSG (rrInfo->priority == prio, "Invalid rInfo priority.");
   // Check for active application
-  if (rInfo->isActive == true)
+  if (rrInfo->isActive == true)
     {
       NS_LOG_DEBUG ("Routing info for TEID " << teid << " is active.");
       // In this case, the switch removed the flow entry of an active route.
       // Let's reinstall the entry.
-      InstallTeidRouting (rInfo);
+      InstallTeidRouting (rrInfo);
     }
   else
     {
       // Set this rule as uninstalled
-      rInfo->isInstalled = false;
+      rrInfo->isInstalled = false;
     }
   return 0;
 }
 
-ofl_err
-RingController::HandleMultipartReply (ofl_msg_multipart_reply_header *msg, 
-                                      SwitchInfo swtch, uint32_t xid)
+// ofl_err
+// RingController::HandleMultipartReply (ofl_msg_multipart_reply_header *msg, 
+//                                       SwitchInfo swtch, uint32_t xid)
+// {
+//   NS_LOG_FUNCTION (swtch.ipv4 << xid);
+// 
+//   char *msg_str = ofl_msg_to_string ((ofl_msg_header*)msg, 0);
+//   NS_LOG_DEBUG ("Multipart reply: " << msg_str);
+//   free (msg_str);
+// 
+//   // Check for multipart reply type
+//   switch (msg->type) 
+//     {
+//       case (OFPMP_FLOW): 
+//         {
+//           // Handle multipart reply flow messages, requested by this contrller
+//           // and used here to update average traffic usage for each GTP tunnel
+//           uint32_t teid;
+//           Ptr<RoutingInfo> rInfo;
+//           ofl_flow_stats *flowStats;
+//           ofl_msg_multipart_reply_flow *replyFlow;
+//           
+//           replyFlow = (ofl_msg_multipart_reply_flow*)msg;
+//           for (size_t f = 0; f < replyFlow->stats_num; f++)
+//             {
+//               flowStats = replyFlow->stats[f];
+//               teid = flowStats->cookie;
+//               if (teid == 0) continue; // Skipping table miss entry.
+//              
+//               rInfo = GetTeidRoutingInfo (teid);
+// //              uint16_t switchIdx = GetSwitchIdxFromDevice (swtch.netdev);
+// //              if (IsInputSwitch (rInfo, switchIdx))
+// //                {
+// //                  UpdateAverageTraffic (rInfo, switchIdx, flowStats);
+// //                }
+//             }
+//           break;
+//         }
+//       default:
+//         {
+//           NS_LOG_WARN ("Unexpected multipart message.");
+//         }
+//     }
+// 
+//   // All handlers must free the message when everything is ok
+//   ofl_msg_free ((ofl_msg_header*)msg, 0 /*exp*/);
+//   return 0;
+// }
+
+Ptr<RingRoutingInfo> 
+RingController::GetTeidRingRoutingInfo (uint32_t teid)
 {
-  NS_LOG_FUNCTION (swtch.ipv4 << xid);
-
-  char *msg_str = ofl_msg_to_string ((ofl_msg_header*)msg, 0);
-  NS_LOG_DEBUG ("Multipart reply: " << msg_str);
-  free (msg_str);
-
-  // Check for multipart reply type
-  uint16_t switchIdx = GetSwitchIdxForDevice (swtch.netdev);
-  switch (msg->type) 
-    {
-      case (OFPMP_FLOW): 
-        {
-          // Handle multipart reply flow messages, requested by this contrller
-          // and used here to update average traffic usage for each GTP tunnel
-          uint32_t teid;
-          Ptr<RoutingInfo> rInfo;
-          ofl_flow_stats *flowStats;
-          ofl_msg_multipart_reply_flow *replyFlow;
-          
-          replyFlow = (ofl_msg_multipart_reply_flow*)msg;
-          for (size_t f = 0; f < replyFlow->stats_num; f++)
-            {
-              flowStats = replyFlow->stats[f];
-              teid = flowStats->cookie;
-              if (teid == 0) continue; // Skipping table miss entry.
-             
-              rInfo = GetTeidRoutingInfo (teid);
-              if (IsInputSwitch (rInfo, switchIdx))
-                {
-                  UpdateAverageTraffic (rInfo, switchIdx, flowStats);
-                }
-            }
-          break;
-        }
-      default:
-        {
-          NS_LOG_WARN ("Unexpected multipart message.");
-        }
-    }
-
-  // All handlers must free the message when everything is ok
-  ofl_msg_free ((ofl_msg_header*)msg, 0 /*exp*/);
-  return 0;
-}
-
-void
-RingController::PrintAppStatistics (Ptr<Application> app)
-{
-  uint32_t teid = GetTeidFromApplication (app);
+  Ptr<RingRoutingInfo> ptr;
   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-
-  if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
+  if (rInfo)
     {
-      Ptr<VoipPeer> voipApp = DynamicCast<VoipPeer> (app);
-
-      // Identifying Voip traffic direction
-      std::string nodeName = Names::FindName (voipApp->GetNode ());
-      bool downlink = InternetNetwork::GetServerName () == nodeName;
-      uint16_t srcIdx = downlink ? rInfo->sgwIdx : rInfo->enbIdx;
-      uint16_t dstIdx = downlink ? rInfo->enbIdx : rInfo->sgwIdx; 
-      
-      std::cout << 
-        "VoIP (TEID " << teid << ") [" << srcIdx << " -> " << dstIdx << "]" << 
-        " Duration " << voipApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
-        " Loss " << voipApp->GetRxLossRatio () << " -" <<
-        " Delay " << voipApp->GetRxDelay ().ToInteger (Time::MS) << " ms -" <<
-        " Jitter " << voipApp->GetRxJitter ().ToInteger (Time::MS) << " ms -" << 
-        " Goodput " << voipApp->GetRxGoodput () << 
-      std::endl; 
+      ptr = rInfo->GetObject<RingRoutingInfo> ();
+      NS_ASSERT_MSG (ptr, "Invalid pointer type.");
     }
-  else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
-    {
-      // Get the relative UDP server for this client
-      Ptr<VideoClient> videoApp = DynamicCast<VideoClient> (app);
-      Ptr<UdpServer> serverApp = videoApp->GetServerApp ();
-      std::cout << 
-        "Video (TEID " << teid << ") [" <<  rInfo->sgwIdx << " -> " << rInfo->enbIdx << "]" << 
-        " Duration " << serverApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
-        " Loss " << serverApp->GetRxLossRatio () << " -" <<
-        " Delay " << serverApp->GetRxDelay ().ToInteger (Time::MS) << " ms -" <<
-        " Jitter " << serverApp->GetRxJitter ().ToInteger (Time::MS) << " ms -" << 
-        " Goodput " << serverApp->GetRxGoodput () << 
-      std::endl; 
-    }
-  else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
-    {
-      Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
-      std::cout << 
-        "Background HTTP traffic (TEID " << teid << 
-        ") [" <<  rInfo->sgwIdx << " <-> " << rInfo->enbIdx << "]" << 
-        " Duration " << httpApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
-        " Transfered " << httpApp->GetRxBytes () << " bytes -" <<
-        " Goodput " << httpApp->GetRxGoodput () << 
-      std::endl; 
-    }
-}
-
-void
-RingController::ResetAppStatistics (Ptr<Application> app)
-{
-  if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
-    {
-      DynamicCast<VoipPeer> (app)->ResetCounters ();
-    }
-  else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
-    {
-      Ptr<VideoClient> videoApp = DynamicCast<VideoClient> (app);
-      videoApp->ResetCounters ();
-      videoApp->GetServerApp ()->ResetCounters ();
-    }
-  else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
-    {
-      Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
-      httpApp->ResetCounters ();
-      httpApp->GetServerApp ()->ResetCounters ();
-    }
+  return ptr;
 }
 
 bool
-RingController::ProcessGbrRequest (Ptr<RoutingInfo> rInfo)
+RingController::ProcessGbrRequest (Ptr<RingRoutingInfo> rrInfo)
 {
   m_gbrBearers++;
 
-  EpsBearer bearer = rInfo->bearer.bearerLevelQos;
-  uint32_t teid = rInfo->teid;
+  EpsBearer bearer = rrInfo->bearer.bearerLevelQos;
+  uint32_t teid = rrInfo->teid;
   DataRate request (bearer.gbrQosInfo.gbrDl + bearer.gbrQosInfo.gbrUl);
   NS_LOG_DEBUG ("Bearer " << teid << " requesting " << request);
 
-  DataRate available = GetAvailableBandwidth (rInfo->sgwIdx, rInfo->enbIdx, 
-      rInfo->downPath);
-  NS_LOG_DEBUG ("Bandwidth from " << rInfo->sgwIdx << " to " << rInfo->enbIdx 
+  DataRate available = GetAvailableBandwidth (rrInfo->sgwIdx, rrInfo->enbIdx, 
+      rrInfo->downPath);
+  NS_LOG_DEBUG ("Bandwidth from " << rrInfo->sgwIdx << " to " << rrInfo->enbIdx 
       << " in current path: " << available);
 
   if (available < request)
@@ -543,10 +492,10 @@ RingController::ProcessGbrRequest (Ptr<RoutingInfo> rInfo)
             {
               NS_LOG_DEBUG ("No resources for bearer " << teid << ". " 
                   "Checking the other path.");
-              available = GetAvailableBandwidth (rInfo->sgwIdx, rInfo->enbIdx, 
-                  rInfo->upPath);
-              NS_LOG_DEBUG ("Bandwidth from " << rInfo->sgwIdx << " to " << 
-                  rInfo->enbIdx << " in other path: " << available);
+              available = GetAvailableBandwidth (rrInfo->sgwIdx, rrInfo->enbIdx, 
+                  rrInfo->upPath);
+              NS_LOG_DEBUG ("Bandwidth from " << rrInfo->sgwIdx << " to " << 
+                  rrInfo->enbIdx << " in other path: " << available);
 
               if (available < request)
                 {
@@ -557,8 +506,7 @@ RingController::ProcessGbrRequest (Ptr<RoutingInfo> rInfo)
               else
                 {
                   NS_LOG_DEBUG ("Inverting paths.");
-                  rInfo->upPath = InvertRoutingPath (rInfo->upPath);
-                  rInfo->downPath = InvertRoutingPath (rInfo->downPath);
+                  rrInfo->InvertRoutingPath ();
                 }
               break;
             }
@@ -572,12 +520,12 @@ RingController::ProcessGbrRequest (Ptr<RoutingInfo> rInfo)
   
   // If we get here that because there is bandwitdh for this bearer request.
   // Let's reserve it and return true to the application.
-  rInfo->reserved = request;
-  ReserveBandwidth (rInfo);
+  rrInfo->reserved = request;
+  ReserveBandwidth (rrInfo);
   return true;
 }
 
-RingController::RoutingPath
+RingRoutingInfo::RoutingPath
 RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)
 {
   NS_ASSERT (srcSwitchIdx != dstSwitchIdx);
@@ -591,22 +539,14 @@ RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)
     }
   
   return (clockwiseDistance <= maxHops) ? 
-      RingController::CLOCK : 
-      RingController::COUNTER;
-}
-
-RingController::RoutingPath 
-RingController::InvertRoutingPath (RoutingPath original)
-{
-  return original == RingController::CLOCK ? 
-         RingController::COUNTER : 
-         RingController::CLOCK; 
+      RingRoutingInfo::CLOCK : 
+      RingRoutingInfo::COUNTER;
 }
 
 DataRate 
 RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx, 
                                        uint16_t dstSwitchIdx,
-                                       RoutingPath routingPath)
+                                       RingRoutingInfo::RoutingPath routingPath)
 {
   NS_ASSERT (srcSwitchIdx != dstSwitchIdx);
   
@@ -631,15 +571,15 @@ RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx,
 }
 
 bool 
-RingController::ReserveBandwidth (const Ptr<RoutingInfo> rInfo)
+RingController::ReserveBandwidth (const Ptr<RingRoutingInfo> rrInfo)
 {
   // Iterating over connections in downlink direction
-  uint16_t current = rInfo->sgwIdx;
-  while (current != rInfo->enbIdx)
+  uint16_t current = rrInfo->sgwIdx;
+  while (current != rrInfo->enbIdx)
     {
-      uint16_t next = NextSwitchIndex (current, rInfo->downPath);
+      uint16_t next = NextSwitchIndex (current, rrInfo->downPath);
       Ptr<ConnectionInfo> conn = GetConnectionInfo (current, next);
-      conn->ReserveDataRate (rInfo->reserved);
+      conn->ReserveDataRate (rrInfo->reserved);
       NS_ABORT_IF (conn->GetAvailableDataRate () < 0);
       current = next;
     }
@@ -647,87 +587,39 @@ RingController::ReserveBandwidth (const Ptr<RoutingInfo> rInfo)
 }
 
 bool
-RingController::ReleaseBandwidth (const Ptr<RoutingInfo> rInfo)
+RingController::ReleaseBandwidth (const Ptr<RingRoutingInfo> rrInfo)
 {
   // Iterating over connections in downlink direction
-  uint16_t current = rInfo->sgwIdx;
-  while (current != rInfo->enbIdx)
+  uint16_t current = rrInfo->sgwIdx;
+  while (current != rrInfo->enbIdx)
     {
-      uint16_t next = NextSwitchIndex (current, rInfo->downPath);
+      uint16_t next = NextSwitchIndex (current, rrInfo->downPath);
       Ptr<ConnectionInfo> conn = GetConnectionInfo (current, next);
-      conn->ReleaseDataRate (rInfo->reserved);
+      conn->ReleaseDataRate (rrInfo->reserved);
       current = next;
     }
   return true;
 }
 
 uint16_t 
-RingController::NextSwitchIndex (uint16_t current, RoutingPath path)
+RingController::NextSwitchIndex (uint16_t current, 
+                                 RingRoutingInfo::RoutingPath path)
 {
-  return path == RingController::CLOCK ?
+  return path == RingRoutingInfo::CLOCK ?
       (current + 1) % GetNSwitches () : 
       (current == 0 ? GetNSwitches () - 1 : (current - 1));
 }
 
-DataRate 
-RingController::GetTunnelAverageTraffic (uint32_t teid)
-{
-//  std::ostringstream cmd;
-//  cmd << "stats-flow table=1";
-//
-//  RoutingInfo rInfo = GetTeidRoutingInfo (teid);
-//  char teidHexStr [9];
-//  sprintf (teidHexStr, "0x%x", teid);
-//
-//  uint16_t current = rInfo.sgwIdx;
-//  Ptr<OFSwitch13NetDevice> currentDevice = GetSwitchDevice (current);       
-//  DpctlCommand (currentDevice, cmd.str ());
-//
-//  
-  return DataRate ();
-}
-
-void 
-RingController::SaveTeidRoutingInfo (Ptr<RoutingInfo> rInfo)
-{
-  std::pair <uint32_t, Ptr<RoutingInfo> > entry (rInfo->teid, rInfo);
-  std::pair <TeidRoutingMap_t::iterator, bool> ret;
-  ret = m_routes.insert (entry);
-  if (ret.second == false)
-    {
-      NS_FATAL_ERROR ("Existing routing information for teid " << rInfo->teid);
-    }
-}
-
-Ptr<RingController::RoutingInfo>
-RingController::GetTeidRoutingInfo (uint32_t teid)
-{
-  Ptr<RoutingInfo> rInfo = 0;
-  TeidRoutingMap_t::iterator ret;
-  ret = m_routes.find (teid);
-  if (ret != m_routes.end ())
-    {
-      rInfo = ret->second;
-    }
-  return rInfo;
-}
-
-uint32_t 
-RingController::GetTeidFromApplication (Ptr<Application> app)
-{
-  Ptr<EpcTft> tft = app->GetObject<EpcTft> ();
-  return GetBearerFromTft (tft).sgwFteid.teid;
-}
-
 bool 
-RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
+RingController::InstallTeidRouting (Ptr<RingRoutingInfo> rrInfo, 
+                                    uint32_t buffer)
 {
-  NS_LOG_FUNCTION (this << rInfo->teid << rInfo->priority << buffer);
-  NS_ASSERT_MSG (rInfo->isActive, "Rule not active.");
-  NS_ASSERT_MSG (!rInfo->isInstalled, "Rule already installed.");
+  NS_LOG_FUNCTION (this << rrInfo->teid << rrInfo->priority << buffer);
+  NS_ASSERT_MSG (rrInfo->isActive, "Rule not active.");
+  NS_ASSERT_MSG (!rrInfo->isInstalled, "Rule already installed.");
 
   char teidHexStr [9];
-  sprintf (teidHexStr, "0x%x", rInfo->teid);
+  sprintf (teidHexStr, "0x%x", rrInfo->teid);
 
   // flow-mod flags OFPFF_SEND_FLOW_REM and OFPFF_CHECK_OVERLAP, used to notify
   // the controller when a flow entry expires and to avoid overlaping rules.
@@ -738,114 +630,132 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
   sprintf (bufferStr, "%u", buffer);
   
   // Configuring downlink routing
-  if (!rInfo->app || rInfo->app->GetDirection () != Application::UPLINK)
+  if (!rrInfo->app || rrInfo->app->GetDirection () != Application::UPLINK)
     {
       std::ostringstream cmd;
       cmd << "flow-mod cmd=add,table=1" << 
              ",buffer=" << bufferStr <<
              ",flags=" << flagStr <<
              ",cookie=" << teidHexStr <<
-             ",prio=" << rInfo->priority <<
-             ",idle=" << rInfo->timeout <<
+             ",prio=" << rrInfo->priority <<
+             ",idle=" << rrInfo->timeout <<
              " eth_type=0x800,ip_proto=17" << 
-             ",ip_src=" << rInfo->sgwAddr <<
-             ",ip_dst=" << rInfo->enbAddr <<
-             ",gtp_teid=" << rInfo->teid <<
-             " apply:group=" << rInfo->downPath;
+             ",ip_src=" << rrInfo->sgwAddr <<
+             ",ip_dst=" << rrInfo->enbAddr <<
+             ",gtp_teid=" << rrInfo->teid <<
+             " apply:group=" << rrInfo->downPath;
       
-      uint16_t current = rInfo->sgwIdx;
-      while (current != rInfo->enbIdx)
+      uint16_t current = rrInfo->sgwIdx;
+      while (current != rrInfo->enbIdx)
         {
           DpctlCommand (GetSwitchDevice (current), cmd.str ());
-          current = NextSwitchIndex (current, rInfo->downPath);
+          current = NextSwitchIndex (current, rrInfo->downPath);
         }
     }
     
   // Configuring uplink routing
-  if (!rInfo->app || rInfo->app->GetDirection () != Application::DOWNLINK)
+  if (!rrInfo->app || rrInfo->app->GetDirection () != Application::DOWNLINK)
     { 
       std::ostringstream cmd;
       cmd << "flow-mod cmd=add,table=1" << 
              ",buffer=" << bufferStr <<
              ",flags=" << flagStr <<
              ",cookie=" << teidHexStr <<
-             ",prio=" << rInfo->priority <<
-             ",idle=" << rInfo->timeout <<
+             ",prio=" << rrInfo->priority <<
+             ",idle=" << rrInfo->timeout <<
              " eth_type=0x800,ip_proto=17" << 
-             ",ip_src=" << rInfo->enbAddr <<
-             ",ip_dst=" << rInfo->sgwAddr <<
-             ",gtp_teid=" << rInfo->teid <<
-             " apply:group=" << rInfo->upPath;
+             ",ip_src=" << rrInfo->enbAddr <<
+             ",ip_dst=" << rrInfo->sgwAddr <<
+             ",gtp_teid=" << rrInfo->teid <<
+             " apply:group=" << rrInfo->upPath;
 
-      uint16_t current = rInfo->enbIdx;
-      while (current != rInfo->sgwIdx)
+      uint16_t current = rrInfo->enbIdx;
+      while (current != rrInfo->sgwIdx)
         {
           DpctlCommand (GetSwitchDevice (current), cmd.str ());
-          current = NextSwitchIndex (current, rInfo->upPath);
+          current = NextSwitchIndex (current, rrInfo->upPath);
         }
     }
   
-  rInfo->isInstalled = true;
+  rrInfo->isInstalled = true;
   return true;
 }
 
-void
-RingController::QuerySwitchStats ()
-{
-  // Getting statistics from all switches
-  for (int i = 0; i < GetNSwitches (); i++)
-    {
-      DpctlCommand (GetSwitchDevice (i), "stats-flow table=1");
-    }
-  Simulator::Schedule (m_timeout, &RingController::QuerySwitchStats, this);
-}
-
-bool
-RingController::IsInputSwitch (const Ptr<RoutingInfo> rInfo, 
-                               uint16_t switchIdx)
-{
-  // For default bearer (no app associated), consider a bidirectional traffic. 
-  Application::Direction direction = Application::BIDIRECTIONAL;
-  if (rInfo->app)
-    {
-      direction = rInfo->app->GetDirection ();
-    }
- 
-  switch (direction)
-    {
-      case Application::BIDIRECTIONAL:
-        return (switchIdx == rInfo->sgwIdx || switchIdx == rInfo->enbIdx);
-      
-      case Application::UPLINK:
-        return (switchIdx == rInfo->enbIdx);
-
-      case Application::DOWNLINK:
-        return (switchIdx == rInfo->sgwIdx);
-
-      default:
-        return false;
-    }
-}
-
-void
-RingController::UpdateAverageTraffic (Ptr<RoutingInfo> rInfo, 
-                                      uint16_t switchIdx,
-                                      ofl_flow_stats* flowStats)
-{
-  uint64_t bytes = flowStats->byte_count;
-  double secs = (flowStats->duration_sec + flowStats->duration_nsec / 1000000000);
-  DataRate dr (bytes*8/secs);
-
-
-  if (switchIdx == GetSwitchIdxForGateway ())
-    {
-      NS_LOG_DEBUG ("Average down traffic for tunnel " << rInfo->teid << ": " << dr);
-    }
-  else
-    {
-      NS_LOG_DEBUG ("Average up traffic for tunnel " << rInfo->teid << ": " << dr);
-    }
-}
+// DataRate 
+// RingController::GetTunnelAverageTraffic (uint32_t teid)
+// {
+// //  std::ostringstream cmd;
+// //  cmd << "stats-flow table=1";
+// //
+// //  RoutingInfo rInfo = GetTeidRoutingInfo (teid);
+// //  char teidHexStr [9];
+// //  sprintf (teidHexStr, "0x%x", teid);
+// //
+// //  uint16_t current = rInfo.sgwIdx;
+// //  Ptr<OFSwitch13NetDevice> currentDevice = GetSwitchDevice (current);       
+// //  DpctlCommand (currentDevice, cmd.str ());
+// //
+// //  
+//   return DataRate ();
+// }
+//
+// void
+// RingController::QuerySwitchStats ()
+// {
+//   // Getting statistics from all switches
+//   for (int i = 0; i < GetNSwitches (); i++)
+//     {
+//       DpctlCommand (GetSwitchDevice (i), "stats-flow table=1");
+//     }
+//   Simulator::Schedule (m_timeout, &RingController::QuerySwitchStats, this);
+// }
+//
+// bool
+// RingController::IsInputSwitch (const Ptr<RingRoutingInfo> rrInfo, 
+//                                uint16_t switchIdx)
+// {
+//   // For default bearer (no app associated), consider a bidirectional traffic. 
+//   Application::Direction direction = Application::BIDIRECTIONAL;
+//   if (rrInfo->app)
+//     {
+//       direction = rrInfo->app->GetDirection ();
+//     }
+//  
+//   switch (direction)
+//     {
+//       case Application::BIDIRECTIONAL:
+//         return (switchIdx == rrInfo->sgwIdx || switchIdx == rrInfo->enbIdx);
+//       
+//       case Application::UPLINK:
+//         return (switchIdx == rrInfo->enbIdx);
+// 
+//       case Application::DOWNLINK:
+//         return (switchIdx == rrInfo->sgwIdx);
+// 
+//       default:
+//         return false;
+//     }
+// }
+//
+// void
+// RingController::UpdateAverageTraffic (Ptr<RoutingInfo> rInfo, 
+//                                       uint16_t switchIdx,
+//                                       ofl_flow_stats* flowStats)
+// {
+//   uint64_t bytes = flowStats->byte_count;
+//   double secs = (flowStats->duration_sec + flowStats->duration_nsec / 1000000000);
+//   DataRate dr (bytes*8/secs);
+// 
+// 
+//   if (switchIdx == GetSwitchIdxForGateway ())
+//     {
+//       NS_LOG_DEBUG ("Average down traffic for tunnel " << rInfo->teid << ": " << dr);
+//     }
+//   else
+//     {
+//       NS_LOG_DEBUG ("Average up traffic for tunnel " << rInfo->teid << ": " << dr);
+//     }
+// }
 
 };  // namespace ns3
 

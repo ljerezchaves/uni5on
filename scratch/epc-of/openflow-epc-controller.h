@@ -26,37 +26,101 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
+#include <ns3/applications-module.h>
 #include "openflow-epc-network.h"
 
 namespace ns3 {
 
 class OpenFlowEpcController;
+class RingController;
 
+/** List of created context bearers */
+typedef std::list<EpcS11SapMme::BearerContextCreated> ContextBearers_t;
+
+// ------------------------------------------------------------------------ //
+/** 
+ * Metadata associated to LTE context information for controller usage. 
+ */
+class ContextInfo : public Object
+{
+  friend class OpenFlowEpcController;
+  friend class RingController;
+
+public:
+  ContextInfo ();          //!< Default constructor
+  virtual ~ContextInfo (); //!< Dummy destructor, see DoDipose
+
+  /**
+   * Register this type.
+   * \return The object TypeId.
+   */
+  static TypeId GetTypeId (void);
+
+  /** Destructor implementation */
+  virtual void DoDispose ();
+
+protected:
+  uint64_t          imsi;         //!< UE IMSI
+  uint16_t          cellId;       //!< eNB Cell ID
+  uint16_t          enbIdx;       //!< eNB switch index
+  uint16_t          sgwIdx;       //!< Gateway switch index
+  Ipv4Address       enbAddr;      //!< eNB IPv4 addr
+  Ipv4Address       sgwAddr;      //!< Gateway IPv4 addr
+  ContextBearers_t  bearerList;   //!< List of bearers
+};
+
+
+// ------------------------------------------------------------------------ //
 /**
- * OpenFlow EPC controller.
+ * Metadata associated to a routing path between
+ * two any switches in the OpenFlow network.
+ */
+class RoutingInfo : public Object
+{
+  friend class OpenFlowEpcController;
+  friend class RingController;
+
+public:
+  RoutingInfo ();          //!< Default constructor
+  virtual ~RoutingInfo (); //!< Dummy destructor, see DoDipose
+
+  /**
+   * Register this type.
+   * \return The object TypeId.
+   */
+  static TypeId GetTypeId (void);
+
+  /** Destructor implementation */
+  virtual void DoDispose ();
+
+  /** \return True if the associated EPS bearer is of GBR type. */
+  bool IsGbr ();
+  
+protected:
+  uint32_t          teid;         //!< GTP TEID
+  uint16_t          sgwIdx;       //!< Sgw switch index
+  uint16_t          enbIdx;       //!< eNB switch index
+  Ipv4Address       sgwAddr;      //!< Sgw IPv4 address
+  Ipv4Address       enbAddr;      //!< eNB IPv4 address
+  DataRate          reserved;     //!< Reserved data rate
+  Ptr<Application>  app;          //!< Traffic application
+  int               priority;     //!< Flow priority
+  int               timeout;      //!< Flow idle timeout
+  bool              isDefault;    //!< This info is for default bearer
+  bool              isInstalled;  //!< Rule installed into switches
+  bool              isActive;     //!< Active traffic for this rule
+  EpcS11SapMme::BearerContextCreated bearer;  //!< EPS bearer
+};
+
+
+// ------------------------------------------------------------------------ //
+/**
+ * The generic OpenFlow EPC controller, which should 
+ * be extend in accordance to network topology.
  */
 class OpenFlowEpcController : public OFSwitch13Controller
 {
 public:
-  /** List of created context bearers */
-  typedef std::list<EpcS11SapMme::BearerContextCreated> ContextBearers_t;
-
-  /** Metadata associated to LTE context information for controller usage */
-  class ContextInfo : public SimpleRefCount<ContextInfo>
-  {
-    friend class OpenFlowEpcController;
-    friend class RingController;
-  
-  protected:
-    uint64_t imsi;                //!< UE IMSI
-    uint16_t cellId;              //!< eNB Cell ID
-    uint16_t enbIdx;              //!< eNB switch index
-    uint16_t sgwIdx;              //!< Gateway switch index
-    Ipv4Address enbAddr;          //!< eNB IPv4 addr
-    Ipv4Address sgwAddr;          //!< Gateway IPv4 addr
-    ContextBearers_t bearerList;  //!< List of bearers
-  };
-
   OpenFlowEpcController ();          //!< Default constructor
   virtual ~OpenFlowEpcController (); //!< Dummy destructor, see DoDipose
 
@@ -70,7 +134,19 @@ public:
   virtual void DoDispose ();
 
   /**
-   * Notify this controller of a new IP device connected to the OpenFlow
+   * Get the default timeout for dedicated bearers
+   * \return The default idle timeout.
+   */
+  static const Time GetDedicatedTimeout ();
+
+  /**
+   * Print and return the block radio statistics.
+   * \return The GBR bearer block ratio
+   */
+  double GetBlockRatioStatistics ();
+
+  /**
+   * Notify this controller of a new eNB IP device connected to the OpenFlow
    * network over some switch port. This function will save the IP address /
    * MAC address from this IP device for further ARP resolution. 
    * \attention This dev is not the one added as port to switch. Instead, this
@@ -136,8 +212,7 @@ public:
    * \param app The application pointer.
    * \return true to allow the app to start the traffic, false otherwise.
    */ 
-  virtual bool 
-  NotifyAppStart (Ptr<Application> app);
+  virtual bool NotifyAppStart (Ptr<Application> app);
 
   /**
    * Notify this controller of an application stops sending traffic over EPC
@@ -147,8 +222,7 @@ public:
    * \param app The application pointer.
    * \return true.
    */ 
-  virtual bool 
-  NotifyAppStop (Ptr<Application> app);
+  virtual bool NotifyAppStop (Ptr<Application> app);
 
   /**
    * Install flow table entry for local delivery when a new IP device is
@@ -165,6 +239,7 @@ public:
   virtual void 
   ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch, Ptr<NetDevice> device, 
                          Ipv4Address deviceIp, uint32_t devicePort);   
+
   /**
    * To avoid flooding problems when broadcasting packets (like in ARP
    * protocol), let's find a Spanning Tree and drop packets at selected ports
@@ -174,14 +249,6 @@ public:
   virtual void CreateSpanningTree ();
 
 protected:
-  /**
-   * Search for connection information between two switches.
-   * \param sw1 First switch index.
-   * \param sw2 Second switch index.
-   * \return Pointer to connection info saved.
-   */
-  Ptr<ConnectionInfo> GetConnectionInfo (uint16_t sw1, uint16_t sw2);
-  
   /**
    * \return Number of switches in the network.
    */
@@ -205,7 +272,7 @@ protected:
    * \param dev The OpenFlow device pointer.
    * \return The switch index in m_ofSwitches.
    */
-  uint16_t GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev);
+  uint16_t GetSwitchIdxFromDevice (Ptr<OFSwitch13NetDevice> dev);
 
   /**
    * Retrieve the switch index for EPC entity attached to OpenFlow network.
@@ -237,6 +304,46 @@ protected:
    */ 
   EpcS11SapMme::BearerContextCreated GetBearerFromTft (Ptr<EpcTft> tft);
 
+  /**
+   * Retrieve the TEID identifier for traffic generated by application app.
+   * \param app The application.
+   * \return The TEID identifier.
+   */
+  uint32_t GetTeidFromApplication (Ptr<Application> app);
+
+  /**
+   * Search for connection information between two switches.
+   * \param sw1 First switch index.
+   * \param sw2 Second switch index.
+   * \return Pointer to connection info saved.
+   */
+  Ptr<ConnectionInfo> GetConnectionInfo (uint16_t sw1, uint16_t sw2);
+ 
+  /**
+   * Retrieve stored information for a specific GTP tunnel
+   * \param teid The GTP tunnel ID.
+   * \return The routing information for this tunnel.
+   */
+  Ptr<RoutingInfo> GetTeidRoutingInfo (uint32_t teid);
+ 
+  /**
+   * Save the RoutingInfo metadata for further usage and reserve the bandwith.
+   * \param rInfo The routing information to save.
+   */
+  void SaveTeidRoutingInfo (Ptr<RoutingInfo> rInfo);
+
+  /**
+   * Print application statistcs.
+   * \param app The application pointer.
+   */
+  void PrintAppStatistics (Ptr<Application> app);
+
+  /**
+   * Reset application statistcs.
+   * \param app The application pointer.
+   */
+  void ResetAppStatistics (Ptr<Application> app);
+  
   /**
    * Handle packet-in messages sent from switch to this controller. Look for L2
    * switching information, update the structures and send a packet-out back.
@@ -271,8 +378,15 @@ protected:
   // Inherited from OFSwitch13Controller
   void ConnectionStarted (SwitchInfo swtch);
 
-private:
+  // Protected members 
+  static const int  m_defaultTimeout;    //!< Timeout for default bearers
+  static const int  m_dedicatedTimeout;  //!< Timeout for dedicated bearers
+  static const int  m_defaultPriority;   //!< Priority for default bearers 
+  static const int  m_dedicatedPriority; //!< Priority for dedicated bearers 
+  uint32_t          m_gbrBearers;        //!< Requests for GBR bearers
+  uint32_t          m_gbrBlocks;         //!< Blocked GBR requests
 
+private:
   /**
    * Handle packet-in messages sent from switch with arp message.
    * \param msg The packet-in message.
@@ -280,8 +394,8 @@ private:
    * \param xid Transaction id.
    * \return 0 if everything's ok, otherwise an error number.
    */
-  ofl_err 
-  HandleArpPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, uint32_t xid);
+  ofl_err HandleArpPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, 
+                             uint32_t xid);
 
   /**
    * Perform an ARP resolution
@@ -302,26 +416,29 @@ private:
   Ptr<Packet> CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp, 
                               Mac48Address dstMac, Ipv4Address dstIp);
 
-
-  /** Map saving pair <IPv4 address / MAC address> */
-  typedef std::map<Ipv4Address, Mac48Address> IpMacMap_t;
-
-  /** Map saving pair <IPv4 address / Switch index > */
-  typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;
-
   /** A pair of switches index */
   typedef std::pair<uint16_t, uint16_t> SwitchPair_t; 
-  
-  /** Map saving pair of switch indexes / connection information */
+
+  /** A list of context information */
+  typedef std::vector<Ptr<ContextInfo> > ContextInfoList_t;
+
+  /** Map saving <IPv4 address / MAC address> */
+  typedef std::map<Ipv4Address, Mac48Address> IpMacMap_t;
+
+  /** Map saving <IPv4 address / Switch index > */
+  typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;
+   
+  /** Map saving <Pair of switch indexes / Connection information */
   typedef std::map<SwitchPair_t, Ptr<ConnectionInfo> > ConnInfoMap_t; 
 
-  /** List of context info */
-  typedef std::vector<Ptr<ContextInfo> > ContextInfoList_t;
-  
-  IpMacMap_t        m_arpTable;         //!< ARP resolution table
-  IpSwitchMap_t     m_ipSwitchTable;    //!< IP / switch table
+  /** Map saving <TEID / Routing information > */
+  typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
+
+  IpMacMap_t        m_arpTable;         //!< ARP resolution table.
+  IpSwitchMap_t     m_ipSwitchTable;    //!< eNB IP / Switch Index table.
   ConnInfoMap_t     m_connections;      //!< Connections between switches.
-  ContextInfoList_t m_contexts;         //!< List of contexts
+  ContextInfoList_t m_contexts;         //!< List of created contexts.
+  TeidRoutingMap_t  m_routes;           //!< TEID routing informations.
 
   Ptr<OpenFlowEpcNetwork> m_ofNetwork;  //!< Pointer to OpenFlow network
 };

@@ -390,7 +390,7 @@ SimulationScenario::EnableVideoTraffic ()
 void
 SimulationScenario::PrintStats ()
 {
-  DynamicCast<RingController> (m_controller)->PrintBlockRatioStatistics ();
+  m_controller->GetBlockRatioStatistics ();
 }
 
 void

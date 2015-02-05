@@ -19,14 +19,106 @@
  */
 
 #include "openflow-epc-controller.h"
+#include "internet-network.h"
 
 NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcController");
 
 namespace ns3 {
 
+NS_OBJECT_ENSURE_REGISTERED (ContextInfo);
+NS_OBJECT_ENSURE_REGISTERED (RoutingInfo);
 NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcController);
 
+// ------------------------------------------------------------------------ //
+ContextInfo::ContextInfo ()
+  : imsi (0),
+    cellId (0),
+    enbIdx (0),
+    sgwIdx (0)
+{
+  NS_LOG_FUNCTION (this);
+  enbAddr = Ipv4Address ();
+  sgwAddr = Ipv4Address ();
+  bearerList.clear ();
+}
+
+ContextInfo::~ContextInfo ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+TypeId 
+ContextInfo::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::ContextInfo")
+    .SetParent<Object> ()
+    .AddConstructor<ContextInfo> ()
+  ;
+  return tid;
+}
+
+void
+ContextInfo::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+  bearerList.clear ();
+}
+
+// ------------------------------------------------------------------------ //
+RoutingInfo::RoutingInfo ()
+  : teid (0),
+    sgwIdx (0),
+    enbIdx (0),
+    app (0),
+    priority (0),
+    timeout (0),
+    isDefault (0),
+    isInstalled (0),
+    isActive (0)
+{
+  NS_LOG_FUNCTION (this);
+  enbAddr = Ipv4Address ();
+  sgwAddr = Ipv4Address ();
+  reserved = DataRate ();
+}
+
+RoutingInfo::~RoutingInfo ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+TypeId 
+RoutingInfo::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::RoutingInfo")
+    .SetParent<Object> ()
+    .AddConstructor<RoutingInfo> ()
+  ;
+  return tid;
+}
+
+void
+RoutingInfo::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+  app = 0;
+}
+
+bool
+RoutingInfo::IsGbr ()
+{
+  return (!isDefault && bearer.bearerLevelQos.IsGbr ());
+}
+
+// ------------------------------------------------------------------------ //
+const int OpenFlowEpcController::m_defaultTimeout = 0; 
+const int OpenFlowEpcController::m_dedicatedTimeout = 15;
+const int OpenFlowEpcController::m_defaultPriority = 100;  
+const int OpenFlowEpcController::m_dedicatedPriority = 1000;
+
 OpenFlowEpcController::OpenFlowEpcController ()
+  : m_gbrBearers (0),
+    m_gbrBlocks (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -34,18 +126,6 @@ OpenFlowEpcController::OpenFlowEpcController ()
 OpenFlowEpcController::~OpenFlowEpcController ()
 {
   NS_LOG_FUNCTION (this);
-}
-
-void
-OpenFlowEpcController::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-
-  m_ipSwitchTable.clear ();
-  m_arpTable.clear ();
-  m_connections.clear ();
-  m_contexts.clear ();
-  m_ofNetwork = 0;
 }
 
 TypeId 
@@ -60,6 +140,35 @@ OpenFlowEpcController::GetTypeId (void)
                    MakePointerChecker<OpenFlowEpcNetwork> ())
   ;
   return tid;
+}
+
+void
+OpenFlowEpcController::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+
+  m_arpTable.clear ();
+  m_ipSwitchTable.clear ();
+  m_connections.clear ();
+  m_contexts.clear ();
+  m_routes.clear ();
+  m_ofNetwork = 0;
+}
+
+const Time
+OpenFlowEpcController::GetDedicatedTimeout ()
+{
+  return Seconds (m_dedicatedTimeout);
+}
+
+double
+OpenFlowEpcController::GetBlockRatioStatistics ()
+{
+  double ratio = (double)m_gbrBlocks / (double)m_gbrBearers;
+  std::cout << "Number of GBR bearers request: " << m_gbrBearers  << std::endl
+            << "Number of GBR bearers blocked: " << m_gbrBlocks   << std::endl
+            << "Block ratio: "                   << ratio         << std::endl;
+  return ratio;
 }
 
 void 
@@ -125,7 +234,7 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr);
 
   // Create context info and save in context list.
-  Ptr<ContextInfo> info = Create<ContextInfo> ();
+  Ptr<ContextInfo> info = CreateObject<ContextInfo> ();
   info->imsi = imsi;
   info->cellId = cellId;
   info->enbIdx = GetSwitchIdxFromIp (enbAddr);
@@ -171,20 +280,6 @@ OpenFlowEpcController::CreateSpanningTree ()
   NS_LOG_WARN ("No Spanning Tree Protocol implemented here.");
 }
 
-Ptr<ConnectionInfo>
-OpenFlowEpcController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
-{
-  SwitchPair_t key;
-  key.first = std::min (sw1, sw2);
-  key.second = std::max (sw1, sw2);
-  ConnInfoMap_t::iterator it = m_connections.find (key);
-  if (it != m_connections.end ())
-    {
-      return it->second;
-    }
-  NS_FATAL_ERROR ("No connection information available.");
-}
-
 uint16_t 
 OpenFlowEpcController::GetNSwitches ()
 {
@@ -204,7 +299,7 @@ OpenFlowEpcController::GetSwitchIdxForGateway ()
 }
 
 uint16_t
-OpenFlowEpcController::GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev)
+OpenFlowEpcController::GetSwitchIdxFromDevice (Ptr<OFSwitch13NetDevice> dev)
 {
   return m_ofNetwork->GetSwitchIdxForDevice (dev);
 }
@@ -223,7 +318,7 @@ OpenFlowEpcController::GetSwitchIdxFromIp (Ipv4Address addr)
   NS_FATAL_ERROR ("IP not registered in switch index table.");
 }
 
-Ptr<OpenFlowEpcController::ContextInfo>
+Ptr<ContextInfo>
 OpenFlowEpcController::GetContextFromTft (Ptr<EpcTft> tft)
 {
   Ptr<ContextInfo> cInfo = 0;
@@ -244,7 +339,7 @@ OpenFlowEpcController::GetContextFromTft (Ptr<EpcTft> tft)
   NS_FATAL_ERROR ("Invalid tft.");
 }
 
-Ptr<OpenFlowEpcController::ContextInfo>
+Ptr<ContextInfo>
 OpenFlowEpcController::GetContextFromTeid (uint32_t teid)
 {
   Ptr<ContextInfo> cInfo = 0;
@@ -284,6 +379,125 @@ OpenFlowEpcController::GetBearerFromTft (Ptr<EpcTft> tft)
         }
     }
   NS_FATAL_ERROR ("Invalid tft.");
+}
+
+uint32_t 
+OpenFlowEpcController::GetTeidFromApplication (Ptr<Application> app)
+{
+  Ptr<EpcTft> tft = app->GetObject<EpcTft> ();
+  return GetBearerFromTft (tft).sgwFteid.teid;
+}
+
+Ptr<ConnectionInfo>
+OpenFlowEpcController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
+{
+  SwitchPair_t key;
+  key.first = std::min (sw1, sw2);
+  key.second = std::max (sw1, sw2);
+  ConnInfoMap_t::iterator it = m_connections.find (key);
+  if (it != m_connections.end ())
+    {
+      return it->second;
+    }
+  NS_FATAL_ERROR ("No connection information available.");
+}
+
+Ptr<RoutingInfo>
+OpenFlowEpcController::GetTeidRoutingInfo (uint32_t teid)
+{
+  Ptr<RoutingInfo> rInfo = 0;
+  TeidRoutingMap_t::iterator ret;
+  ret = m_routes.find (teid);
+  if (ret != m_routes.end ())
+    {
+      rInfo = ret->second;
+    }
+  return rInfo;
+}
+
+void 
+OpenFlowEpcController::SaveTeidRoutingInfo (Ptr<RoutingInfo> rInfo)
+{
+  std::pair <uint32_t, Ptr<RoutingInfo> > entry (rInfo->teid, rInfo);
+  std::pair <TeidRoutingMap_t::iterator, bool> ret;
+  ret = m_routes.insert (entry);
+  if (ret.second == false)
+    {
+      NS_FATAL_ERROR ("Existing routing information for teid " << rInfo->teid);
+    }
+}
+
+void
+OpenFlowEpcController::PrintAppStatistics (Ptr<Application> app)
+{
+  uint32_t teid = GetTeidFromApplication (app);
+  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+
+  if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
+    {
+      Ptr<VoipPeer> voipApp = DynamicCast<VoipPeer> (app);
+
+      // Identifying Voip traffic direction
+      std::string nodeName = Names::FindName (voipApp->GetNode ());
+      bool downlink = InternetNetwork::GetServerName () == nodeName;
+      uint16_t srcIdx = downlink ? rInfo->sgwIdx : rInfo->enbIdx;
+      uint16_t dstIdx = downlink ? rInfo->enbIdx : rInfo->sgwIdx; 
+      
+      std::cout << 
+        "VoIP (TEID " << teid << ") [" << srcIdx << " -> " << dstIdx << "]" << 
+        " Duration " << voipApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
+        " Loss " << voipApp->GetRxLossRatio () << " -" <<
+        " Delay " << voipApp->GetRxDelay ().ToInteger (Time::MS) << " ms -" <<
+        " Jitter " << voipApp->GetRxJitter ().ToInteger (Time::MS) << " ms -" << 
+        " Goodput " << voipApp->GetRxGoodput () << 
+      std::endl; 
+    }
+  else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
+    {
+      // Get the relative UDP server for this client
+      Ptr<VideoClient> videoApp = DynamicCast<VideoClient> (app);
+      Ptr<UdpServer> serverApp = videoApp->GetServerApp ();
+      std::cout << 
+        "Video (TEID " << teid << ") [" <<  rInfo->sgwIdx << " -> " << rInfo->enbIdx << "]" << 
+        " Duration " << serverApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
+        " Loss " << serverApp->GetRxLossRatio () << " -" <<
+        " Delay " << serverApp->GetRxDelay ().ToInteger (Time::MS) << " ms -" <<
+        " Jitter " << serverApp->GetRxJitter ().ToInteger (Time::MS) << " ms -" << 
+        " Goodput " << serverApp->GetRxGoodput () << 
+      std::endl; 
+    }
+  else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
+    {
+      Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
+      std::cout << 
+        "Background HTTP traffic (TEID " << teid << 
+        ") [" <<  rInfo->sgwIdx << " <-> " << rInfo->enbIdx << "]" << 
+        " Duration " << httpApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
+        " Transfered " << httpApp->GetRxBytes () << " bytes -" <<
+        " Goodput " << httpApp->GetRxGoodput () << 
+      std::endl; 
+    }
+}
+
+void
+OpenFlowEpcController::ResetAppStatistics (Ptr<Application> app)
+{
+  if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
+    {
+      DynamicCast<VoipPeer> (app)->ResetCounters ();
+    }
+  else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
+    {
+      Ptr<VideoClient> videoApp = DynamicCast<VideoClient> (app);
+      videoApp->ResetCounters ();
+      videoApp->GetServerApp ()->ResetCounters ();
+    }
+  else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
+    {
+      Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
+      httpApp->ResetCounters ();
+      httpApp->GetServerApp ()->ResetCounters ();
+    }
 }
 
 ofl_err
@@ -514,4 +728,3 @@ OpenFlowEpcController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
 }
 
 };  // namespace ns3
-
