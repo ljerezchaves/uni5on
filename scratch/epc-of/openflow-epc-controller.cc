@@ -500,6 +500,18 @@ OpenFlowEpcController::ResetAppStatistics (Ptr<Application> app)
     }
 }
 
+void
+OpenFlowEpcController::IncreaseGbrRequest ()
+{
+  m_gbrBearers++;
+}
+
+void
+OpenFlowEpcController::IncreaseGbrBlocks ()
+{
+  m_gbrBlocks++;
+}
+
 ofl_err
 OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg, 
     SwitchInfo swtch, uint32_t xid)

@@ -343,6 +343,17 @@ protected:
    * \param app The application pointer.
    */
   void ResetAppStatistics (Ptr<Application> app);
+ 
+  /**
+   * Inscrease by on the number of GBR bearer requests in network.
+   */
+  void IncreaseGbrRequest ();
+
+  /**
+   * Inscrease by on the number of GBR bearer requests that were blocked by
+   * network.
+   */
+  void IncreaseGbrBlocks ();
   
   /**
    * Handle packet-in messages sent from switch to this controller. Look for L2
@@ -383,8 +394,6 @@ protected:
   static const int  m_dedicatedTimeout;  //!< Timeout for dedicated bearers
   static const int  m_defaultPriority;   //!< Priority for default bearers 
   static const int  m_dedicatedPriority; //!< Priority for dedicated bearers 
-  uint32_t          m_gbrBearers;        //!< Requests for GBR bearers
-  uint32_t          m_gbrBlocks;         //!< Blocked GBR requests
 
 private:
   /**
@@ -439,7 +448,10 @@ private:
   ConnInfoMap_t     m_connections;      //!< Connections between switches.
   ContextInfoList_t m_contexts;         //!< List of created contexts.
   TeidRoutingMap_t  m_routes;           //!< TEID routing informations.
-
+    
+  uint32_t          m_gbrBearers;       //!< Requests for GBR bearers
+  uint32_t          m_gbrBlocks;        //!< Blocked GBR requests
+  
   Ptr<OpenFlowEpcNetwork> m_ofNetwork;  //!< Pointer to OpenFlow network
 };
 
