@@ -106,7 +106,7 @@ public:
   void NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo);
   void NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
                                 Ipv4Address enbAddr, Ipv4Address sgwAddr, 
-                                ContextBearers_t bearerList);
+                                BearerList_t bearerList);
   bool NotifyAppStart (Ptr<Application> app);
   bool NotifyAppStop (Ptr<Application> app);
   void CreateSpanningTree ();

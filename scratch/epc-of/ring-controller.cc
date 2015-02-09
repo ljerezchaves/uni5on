@@ -141,7 +141,7 @@ void
 RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
                                          Ipv4Address enbAddr, 
                                          Ipv4Address sgwAddr,
-                                         ContextBearers_t bearerList)
+                                         BearerList_t bearerList)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr);
   
@@ -150,7 +150,7 @@ RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
                                                   sgwAddr, bearerList);
   
   // Create and save routing information for default bearer
-  EpcS11SapMme::BearerContextCreated defaultBearer = bearerList.front ();
+  ContextBearer_t defaultBearer = bearerList.front ();
   NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
   
   uint32_t teid = defaultBearer.sgwFteid.teid;
@@ -184,7 +184,7 @@ RingController::NotifyAppStart (Ptr<Application> app)
   // Get TEID, bearer and tft from application, and reset statistics.
   Ptr<EpcTft> tft = app->GetObject<EpcTft> ();
   uint32_t teid = GetTeidFromApplication (app);
-  EpcS11SapMme::BearerContextCreated dedicatedBearer = GetBearerFromTft (tft);
+  ContextBearer_t dedicatedBearer = GetBearerFromTft (tft);
   ResetAppStatistics (app);
   
   Ptr<RingRoutingInfo> rrInfo = GetTeidRingRoutingInfo (teid);

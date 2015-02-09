@@ -229,7 +229,7 @@ OpenFlowEpcController::RequestNewDedicatedBearer (uint64_t imsi,
 
 void 
 OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
-    Ipv4Address enbAddr, Ipv4Address sgwAddr, ContextBearers_t bearerList)
+    Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr);
 
@@ -326,7 +326,7 @@ OpenFlowEpcController::GetContextFromTft (Ptr<EpcTft> tft)
   for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
     {
       cInfo = *ctxIt;
-      ContextBearers_t::iterator blsIt = cInfo->bearerList.begin (); 
+      BearerList_t::iterator blsIt = cInfo->bearerList.begin (); 
       for ( ; blsIt != cInfo->bearerList.end (); blsIt++)
         {
           if (blsIt->tft == tft)
@@ -347,7 +347,7 @@ OpenFlowEpcController::GetContextFromTeid (uint32_t teid)
   for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
     {
       cInfo = *ctxIt;
-      ContextBearers_t::iterator blsIt = cInfo->bearerList.begin (); 
+      BearerList_t::iterator blsIt = cInfo->bearerList.begin (); 
       for ( ; blsIt != cInfo->bearerList.end (); blsIt++)
         {
           if (blsIt->sgwFteid.teid == teid)
@@ -360,7 +360,7 @@ OpenFlowEpcController::GetContextFromTeid (uint32_t teid)
   NS_FATAL_ERROR ("Invalid teid.");
 }
 
-EpcS11SapMme::BearerContextCreated 
+ContextBearer_t 
 OpenFlowEpcController::GetBearerFromTft (Ptr<EpcTft> tft)
 {
   Ptr<ContextInfo> cInfo = 0;
@@ -368,7 +368,7 @@ OpenFlowEpcController::GetBearerFromTft (Ptr<EpcTft> tft)
   for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
     {
       cInfo = *ctxIt;
-      ContextBearers_t::iterator blsIt = cInfo->bearerList.begin (); 
+      BearerList_t::iterator blsIt = cInfo->bearerList.begin (); 
       for ( ; blsIt != cInfo->bearerList.end (); blsIt++)
         {
           if (blsIt->tft == tft)
