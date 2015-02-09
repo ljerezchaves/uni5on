@@ -153,6 +153,7 @@ private:
   Ipv4Address     m_clientAddress;      //!< Client Address.
   Ptr<HttpServer> m_serverApp;          //!< HttpServer application
   Ptr<LogNormalRandomVariable> m_readingTimeStream; //!< Random Variable Stream for reading time.
+  Ptr<UniformRandomVariable> m_readingTimeAdjust;  //!< Reading time adjustment for lower values.
 };
 
 }

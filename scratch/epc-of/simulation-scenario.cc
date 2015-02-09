@@ -164,14 +164,17 @@ SimulationScenario::EnableHttpTraffic ()
   ApplicationContainer httpApps;
 
   HttpHelper httpHelper;
-  httpHelper.SetClientAttribute ("Direction", 
-      EnumValue (Application::BIDIRECTIONAL));
-  httpHelper.SetClientAttribute ("TcpTimeout", 
-      TimeValue (RingController::GetDedicatedTimeout ()));
   httpHelper.SetServerAttribute ("Direction", 
       EnumValue (Application::BIDIRECTIONAL));
+  httpHelper.SetClientAttribute ("Direction", 
+      EnumValue (Application::BIDIRECTIONAL));
   httpHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
-
+  httpHelper.SetClientAttribute ("TcpTimeout",TimeValue (Seconds (5))); 
+  // The HTTP client/server TCP timeout was selected based on HTTP traffic
+  // model and dedicated bearer idle timeout.  Every time the TCP socket is
+  // closed, HTTP client application notify the controller, and traffic
+  // statistics are printed.
+  
   for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, httpPort++)
     {
       Ptr<Node> client = m_ueNodes.Get (u);

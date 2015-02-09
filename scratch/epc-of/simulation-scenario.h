@@ -82,7 +82,7 @@ public:
   void EnableHttpTraffic ();
   
   /** 
-   * Enable VoIP/UDP bidiretional traffic over dedicated GBR EPS bearer (QCI 1). 
+   * Enable VoIP/UDP bidirectional traffic over dedicated GBR EPS bearer (QCI 1). 
    * This QCI is typically associated with an operator controlled service.
    *
    * \internal This VoIP traffic simulates the G.729 codec (~8.5 kbps for

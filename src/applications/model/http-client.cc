@@ -70,6 +70,13 @@ HttpClient::HttpClient ()
   m_readingTimeStream = CreateObject<LogNormalRandomVariable> ();
   m_readingTimeStream->SetAttribute ("Mu", DoubleValue (-0.495204));
   m_readingTimeStream->SetAttribute ("Sigma", DoubleValue (2.7731));
+
+  // The above model provides a lot of reading times < 1sec, which is not soo
+  // good for simulations in LTE EPC + SDN scenarios. So, for values lower than
+  // 10sec, let's add some uniform random value.
+  m_readingTimeAdjust = CreateObject<UniformRandomVariable> ();
+  m_readingTimeAdjust->SetAttribute ("Min", DoubleValue (0.));
+  m_readingTimeAdjust->SetAttribute ("Max", DoubleValue (10.));
 }
 
 HttpClient::~HttpClient ()
@@ -340,7 +347,11 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);
   
   double randomSeconds = m_readingTimeStream->GetValue ();
-  if (randomSeconds > 10000)
+  if (randomSeconds < 10)
+    {
+      randomSeconds += m_readingTimeAdjust->GetValue ();
+    }
+  else if (randomSeconds > 10000)
     {
       //Limiting reading time to 10000 seconds according to paper "An HTTP Web
       //Traffic Model Based on the Top One Million Visited Web Pages" by Rastin

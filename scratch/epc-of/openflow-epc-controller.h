@@ -393,10 +393,10 @@ protected:
   void ConnectionStarted (SwitchInfo swtch);
 
   // Protected members 
-  static const int  m_defaultTimeout;    //!< Timeout for default bearers
-  static const int  m_dedicatedTimeout;  //!< Timeout for dedicated bearers
-  static const int  m_defaultPriority;   //!< Priority for default bearers 
-  static const int  m_dedicatedPriority; //!< Priority for dedicated bearers 
+  static const int m_defaultTimeout;    //!< Timeout for default bearers
+  static const int m_dedicatedTimeout;  //!< Timeout for dedicated bearers
+  static const int m_defaultPriority;   //!< Priority for default bearers 
+  static const int m_dedicatedPriority; //!< Priority for dedicated bearers 
 
 private:
   /**
