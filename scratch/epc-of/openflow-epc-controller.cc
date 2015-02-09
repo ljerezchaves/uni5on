@@ -600,8 +600,8 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
   // Set the switch to buffer packets and send only the first 128 bytes
   DpctlCommand (swtch, "set-config miss=128");
 
-  // After a successfull handshake, let's install some default entries: table
-  // miss entry and arp handling entry.
+  // After a successfull handshake, let's install some default entries: 
+  // Table miss entry and ARP handling entry.
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=1 eth_type=0x0806 "
                        "apply:output=ctrl");

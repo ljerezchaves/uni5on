@@ -125,9 +125,9 @@ public:
 
   /** 
    * Enable internal ofsoftswitch13 logging.
-   * \param level tring representing library logging level.
+   * \param level string representing library logging level.
    */
-  void EnableDatapathLogs (std::string level = "all");
+  void EnableDatapathLogs (std::string level);
 
   /**
    * Set an attribute for ns3::OFSwitch13NetDevice

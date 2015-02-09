@@ -397,9 +397,9 @@ SimulationScenario::PrintStats ()
 }
 
 void
-SimulationScenario::EnableDatapathLogs ()
+SimulationScenario::EnableDatapathLogs (std::string level)
 {
-  m_opfNetwork->EnableDatapathLogs ();
+  m_opfNetwork->EnableDatapathLogs (level);
 }
 
 void

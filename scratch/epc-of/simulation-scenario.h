@@ -105,8 +105,9 @@ public:
 
   /**
    * Enable ofsoftswitch13 library log.
+   * \param level string representing library logging level.
    */
-  void EnableDatapathLogs ();
+  void EnableDatapathLogs (std::string level = "all");
 
   /**
    * Enable LTE and PCAP traces.
