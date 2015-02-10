@@ -22,7 +22,6 @@
 
 #include "ns3/application.h"
 #include "ns3/socket.h"
-#include "ns3/random-variable.h"
 #include "ns3/random-variable-stream.h"
 #include "ns3/double.h"
 #include "ns3/http-header.h"

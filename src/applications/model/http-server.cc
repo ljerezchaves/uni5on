@@ -22,7 +22,6 @@
 #include "ns3/uinteger.h"
 #include "ns3/pointer.h"
 #include "ns3/packet.h"
-#include "ns3/random-variable.h"
 #include "ns3/tcp-newreno.h"
 #include "ns3/drop-tail-queue.h"
 #include "http-server.h"
