@@ -108,6 +108,11 @@ CsmaNetDevice::GetTypeId (void)
                      "This is a promiscuous trace,",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_macPromiscRxTrace),
                      "ns3::Packet::TracedCallback")
+    .AddTraceSource ("OpenFlowRx", 
+                     "Similar to MacPromiscRx, but it is also fired even when "
+                     "there is no promiscuous protocol handler register to device. "
+                     "It was desiged to integration with openflow module.",
+                     MakeTraceSourceAccessor (&CsmaNetDevice::m_openflowRxTrace))
     .AddTraceSource ("MacRx", 
                      "A packet has been received by this device, "
                      "has been passed up from the physical layer "
@@ -797,6 +802,7 @@ CsmaNetDevice::Receive (Ptr<Packet> packet, Ptr<CsmaNetDevice> senderDevice)
   // make sure that nobody messes with our packet.
   //
   m_promiscSnifferTrace (originalPacket);
+  m_openflowRxTrace (this, originalPacket);
   if (!m_promiscRxCallback.IsNull ())
     {
       m_macPromiscRxTrace (originalPacket);

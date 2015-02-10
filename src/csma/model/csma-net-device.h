@@ -559,6 +559,19 @@ private:
 
   /**
    * The trace source fired for packets successfully received by the device
+   * immediately before being forwarded up to higher layers (at the L2/L3
+   * transition). In constrast to m_macPromiscRxTrace, this trace source is
+   * also fired even when no promiscuous protocol handler is registered to
+   * this device. It also includes a pointer to NetDevice to provide more
+   * context information. This was mainly created to be used by ofswitch13
+   * OpenFlow module.  
+   *
+   * \see class CallBackTraceSource
+   */
+  TracedCallback<Ptr<NetDevice>, Ptr<const Packet> > m_openflowRxTrace;
+
+  /**
+   * The trace source fired for packets successfully received by the device
    * immediately before being forwarded up to higher layers (at the L2/L3 
    * transition).  This is a non-promiscuous trace.
    *
