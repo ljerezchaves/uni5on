@@ -112,7 +112,8 @@ CsmaNetDevice::GetTypeId (void)
                      "Similar to MacPromiscRx, but it is also fired even when "
                      "there is no promiscuous protocol handler register to device. "
                      "It was desiged to integration with openflow module.",
-                     MakeTraceSourceAccessor (&CsmaNetDevice::m_openflowRxTrace))
+                     MakeTraceSourceAccessor (&CsmaNetDevice::m_openflowRxTrace),
+                     "ns3::OFSwitch13NetDevice::TracedCallback")
     .AddTraceSource ("MacRx", 
                      "A packet has been received by this device, "
                      "has been passed up from the physical layer "
