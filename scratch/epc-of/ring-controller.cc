@@ -351,7 +351,7 @@ RingController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   NS_LOG_FUNCTION (swtch.ipv4 << teid);
       
   char *m = ofl_msg_to_string ((ofl_msg_header*)msg, 0);
-  NS_LOG_DEBUG ("Flow removed: " << m);
+  // NS_LOG_DEBUG ("Flow removed: " << m);
   free (m);
 
   // Since handlers must free the message when everything is ok, 
@@ -626,7 +626,7 @@ RingController::InstallTeidRouting (Ptr<RingRoutingInfo> rrInfo,
   NS_LOG_FUNCTION (this << rrInfo->teid << rrInfo->priority << buffer);
   NS_ASSERT_MSG (rrInfo->isActive, "Rule not active.");
   
-  // Increasing the priority every time we (re)install the TEID rules.
+  // Increasing the priority every time we (re)install TEID rules.
   rrInfo->priority++;    
 
   char cookieStr [9];
@@ -655,7 +655,39 @@ RingController::InstallTeidRouting (Ptr<RingRoutingInfo> rrInfo,
              ",gtp_teid=" << rrInfo->teid <<
              " apply:group=" << rrInfo->downPath;
       
+      // In downlink we start at gateway switch;
       uint16_t current = rrInfo->sgwIdx;
+  
+      // Installing the meter rule just in gateway switch
+      GbrQosInformation gbrQoS = rrInfo->GetQosInfo ();
+      if (gbrQoS.mbrDl)
+        {
+          std::ostringstream meter;
+          meter << "meter-mod cmd=add,flags=1" << 
+                   ",meter=" << rrInfo->teid <<
+                   " drop:rate=" << gbrQoS.mbrDl / 1024;
+          DpctlCommand (GetSwitchDevice (current), meter.str ());
+            
+          // For gateway, we use a custom output instruction string
+          std::ostringstream cmd2;
+          cmd2 << "flow-mod cmd=add,table=1" << 
+                 ",buffer=" << bufferStr <<
+                 ",flags=" << flagsStr <<
+                 ",cookie=" << cookieStr <<
+                 ",prio=" << rrInfo->priority <<
+                 ",idle=" << rrInfo->timeout <<
+                 " eth_type=0x800,ip_proto=17" << 
+                 ",ip_src=" << rrInfo->sgwAddr <<
+                 ",ip_dst=" << rrInfo->enbAddr <<
+                 ",gtp_teid=" << rrInfo->teid <<
+                 " meter:" << rrInfo->teid <<
+                 " apply:group=" << rrInfo->downPath;
+          
+          // Installing the rules for gateway
+          DpctlCommand (GetSwitchDevice (current), cmd2.str ());
+          current = NextSwitchIndex (current, rrInfo->downPath);
+        }
+
       while (current != rrInfo->enbIdx)
         {
           DpctlCommand (GetSwitchDevice (current), cmd.str ());
