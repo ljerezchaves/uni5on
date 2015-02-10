@@ -28,9 +28,9 @@
 #include "ns3/abort.h"
 #include "ns3/node.h"
 
-NS_LOG_COMPONENT_DEFINE ("TcpNewReno");
-
 namespace ns3 {
+
+NS_LOG_COMPONENT_DEFINE ("TcpNewReno");
 
 NS_OBJECT_ENSURE_REGISTERED (TcpNewReno);
 
@@ -50,10 +50,12 @@ TcpNewReno::GetTypeId (void)
                    MakeBooleanChecker ())
     .AddTraceSource ("CongestionWindow",
                      "The TCP connection's congestion window",
-                     MakeTraceSourceAccessor (&TcpNewReno::m_cWnd))
+                     MakeTraceSourceAccessor (&TcpNewReno::m_cWnd),
+                     "ns3::TracedValue::Uint32Callback")
     .AddTraceSource ("SlowStartThreshold",
                      "TCP slow start threshold (bytes)",
-                     MakeTraceSourceAccessor (&TcpNewReno::m_ssThresh))
+                     MakeTraceSourceAccessor (&TcpNewReno::m_ssThresh),
+                     "ns3::TracedValue::Uint32Callback")
  ;
   return tid;
 }
@@ -121,16 +123,16 @@ void
 TcpNewReno::NewAck (const SequenceNumber32& seq)
 {
   NS_LOG_FUNCTION (this << seq);
-  NS_LOG_LOGIC ("TcpNewReno receieved ACK for seq " << seq <<
+  NS_LOG_LOGIC ("TcpNewReno received ACK for seq " << seq <<
                 " cwnd " << m_cWnd <<
                 " ssthresh " << m_ssThresh);
 
   // Check for exit condition of fast recovery
   if (m_inFastRec && seq < m_recover)
     { // Partial ACK, partial window deflation (RFC2582 sec.3 bullet #5 paragraph 3)
-      m_cWnd += m_segmentSize - (seq - m_txBuffer.HeadSequence ());
-      NS_LOG_INFO ("Partial ACK in fast recovery: cwnd set to " << m_cWnd);
-      m_txBuffer.DiscardUpTo(seq);  //Bug 1850:  retransmit before newack
+      m_cWnd += m_segmentSize - (seq - m_txBuffer->HeadSequence ());
+      NS_LOG_INFO ("Partial ACK for seq " << seq << " in fast recovery: cwnd set to " << m_cWnd);
+      m_txBuffer->DiscardUpTo(seq);  //Bug 1850:  retransmit before newack
       DoRetransmit (); // Assume the next seq is lost. Retransmit lost packet
       TcpSocketBase::NewAck (seq); // update m_nextTxSequence and send new data if allowed by window
       return;
@@ -139,14 +141,14 @@ TcpNewReno::NewAck (const SequenceNumber32& seq)
     { // Full ACK (RFC2582 sec.3 bullet #5 paragraph 2, option 1)
       m_cWnd = std::min (m_ssThresh.Get (), BytesInFlight () + m_segmentSize);
       m_inFastRec = false;
-      NS_LOG_INFO ("Received full ACK. Leaving fast recovery with cwnd set to " << m_cWnd);
+      NS_LOG_INFO ("Received full ACK for seq " << seq <<". Leaving fast recovery with cwnd set to " << m_cWnd);
     }
 
   // Increase of cwnd based on current phase (slow start or congestion avoidance)
   if (m_cWnd < m_ssThresh)
     { // Slow start mode, add one segSize to cWnd. Default m_ssThresh is 65535. (RFC2001, sec.1)
       m_cWnd += m_segmentSize;
-      NS_LOG_INFO ("In SlowStart, updated to cwnd " << m_cWnd << " ssthresh " << m_ssThresh);
+      NS_LOG_INFO ("In SlowStart, ACK of seq " << seq << "; update cwnd to " << m_cWnd << "; ssthresh " << m_ssThresh);
     }
   else
     { // Congestion avoidance mode, increase by (segSize*segSize)/cwnd. (RFC2581, sec.3.1)
@@ -182,7 +184,7 @@ TcpNewReno::DupAck (const TcpHeader& t, uint32_t count)
       NS_LOG_INFO ("Dupack in fast recovery mode. Increase cwnd to " << m_cWnd);
       SendPendingData (m_connected);
     }
-  else if (!m_inFastRec && m_limitedTx && m_txBuffer.SizeFromSequence (m_nextTxSequence) > 0)
+  else if (!m_inFastRec && m_limitedTx && m_txBuffer->SizeFromSequence (m_nextTxSequence) > 0)
     { // RFC3042 Limited transmit: Send a new packet for each duplicated ACK before fast retransmit
       NS_LOG_INFO ("Limited transmit");
       uint32_t sz = SendDataPacket (m_nextTxSequence, m_segmentSize, true);
@@ -201,17 +203,16 @@ TcpNewReno::Retransmit (void)
   // If erroneous timeout in closed/timed-wait state, just return
   if (m_state == CLOSED || m_state == TIME_WAIT) return;
   // If all data are received (non-closing socket and nothing to send), just return
-  if (m_state <= ESTABLISHED && m_txBuffer.HeadSequence () >= m_highTxMark) return;
+  if (m_state <= ESTABLISHED && m_txBuffer->HeadSequence () >= m_highTxMark) return;
 
   // According to RFC2581 sec.3.1, upon RTO, ssthresh is set to half of flight
   // size and cwnd is set to 1*MSS, then the lost packet is retransmitted and
   // TCP back to slow start
   m_ssThresh = std::max (2 * m_segmentSize, BytesInFlight () / 2);
   m_cWnd = m_segmentSize;
-  m_nextTxSequence = m_txBuffer.HeadSequence (); // Restart from highest Ack
+  m_nextTxSequence = m_txBuffer->HeadSequence (); // Restart from highest Ack
   NS_LOG_INFO ("RTO. Reset cwnd to " << m_cWnd <<
                ", ssthresh to " << m_ssThresh << ", restart from seqnum " << m_nextTxSequence);
-  m_rtt->IncreaseMultiplier ();             // Double the next RTO
   DoRetransmit ();                          // Retransmit the packet
 }
 

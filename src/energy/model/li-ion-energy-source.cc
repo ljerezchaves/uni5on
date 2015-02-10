@@ -27,9 +27,9 @@
 
 #include <cmath>
 
-NS_LOG_COMPONENT_DEFINE ("LiIonEnergySource");
-
 namespace ns3 {
+
+NS_LOG_COMPONENT_DEFINE ("LiIonEnergySource");
 
 NS_OBJECT_ENSURE_REGISTERED (LiIonEnergySource);
 
@@ -104,7 +104,8 @@ LiIonEnergySource::GetTypeId (void)
                    MakeTimeChecker ())
     .AddTraceSource ("RemainingEnergy",
                      "Remaining energy at BasicEnergySource.",
-                     MakeTraceSourceAccessor (&LiIonEnergySource::m_remainingEnergyJ))
+                     MakeTraceSourceAccessor (&LiIonEnergySource::m_remainingEnergyJ),
+                     "ns3::TracedValue::DoubleCallback")
   ;
   return tid;
 }

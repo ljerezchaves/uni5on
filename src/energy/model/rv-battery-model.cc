@@ -26,9 +26,9 @@
 #include "ns3/simulator.h"
 #include <cmath>
 
-NS_LOG_COMPONENT_DEFINE ("RvBatteryModel");
-
 namespace ns3 {
+
+NS_LOG_COMPONENT_DEFINE ("RvBatteryModel");
 
 NS_OBJECT_ENSURE_REGISTERED (RvBatteryModel);
 
@@ -81,10 +81,12 @@ RvBatteryModel::GetTypeId (void)
                    MakeIntegerChecker<int> ())
     .AddTraceSource ("RvBatteryModelBatteryLevel",
                      "RV battery model battery level.",
-                     MakeTraceSourceAccessor (&RvBatteryModel::m_batteryLevel))
+                     MakeTraceSourceAccessor (&RvBatteryModel::m_batteryLevel),
+                     "ns3::TracedValue::DoubleCallback")
     .AddTraceSource ("RvBatteryModelBatteryLifetime",
                      "RV battery model battery lifetime.",
-                     MakeTraceSourceAccessor (&RvBatteryModel::m_lifetime))
+                     MakeTraceSourceAccessor (&RvBatteryModel::m_lifetime),
+                     "ns3::Time::TracedValueCallback")
   ;
   return tid;
 }

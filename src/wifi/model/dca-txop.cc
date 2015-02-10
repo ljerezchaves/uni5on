@@ -35,12 +35,12 @@
 #include "wifi-mac.h"
 #include "random-stream.h"
 
-NS_LOG_COMPONENT_DEFINE ("DcaTxop");
-
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT if (m_low != 0) { std::clog << "[mac=" << m_low->GetAddress () << "] "; }
 
 namespace ns3 {
+
+NS_LOG_COMPONENT_DEFINE ("DcaTxop");
 
 class DcaTxop::Dcf : public DcfState
 {
@@ -65,6 +65,14 @@ private:
   virtual void DoNotifyChannelSwitching (void)
   {
     m_txop->NotifyChannelSwitching ();
+  }
+  virtual void DoNotifySleep (void)
+  {
+    m_txop->NotifySleep ();
+  }
+  virtual void DoNotifyWakeUp (void)
+  {
+    m_txop->NotifyWakeUp ();
   }
   DcaTxop *m_txop;
 };
@@ -511,6 +519,22 @@ DcaTxop::NotifyChannelSwitching (void)
   NS_LOG_FUNCTION (this);
   m_queue->Flush ();
   m_currentPacket = 0;
+}
+void
+DcaTxop::NotifySleep (void)
+{
+  NS_LOG_FUNCTION (this);
+  if (m_currentPacket != 0)
+    {
+      m_queue->PushFront (m_currentPacket, m_currentHdr);
+      m_currentPacket = 0;
+    }
+}
+void
+DcaTxop::NotifyWakeUp (void)
+{
+  NS_LOG_FUNCTION (this);
+  RestartAccessIfNeeded ();
 }
 
 void

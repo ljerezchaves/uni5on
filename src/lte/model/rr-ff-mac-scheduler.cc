@@ -32,9 +32,9 @@
 #include <ns3/lte-vendor-specific-parameters.h>
 #include <ns3/boolean.h>
 
-NS_LOG_COMPONENT_DEFINE ("RrFfMacScheduler");
-
 namespace ns3 {
+
+NS_LOG_COMPONENT_DEFINE ("RrFfMacScheduler");
 
 static const int Type0AllocationRbg[4] = {
   10,       // RGB size 1
@@ -1251,7 +1251,7 @@ RrFfMacScheduler::DoSchedDlCqiInfoReq (const struct FfMacSchedSapProvider::Sched
     {
       if ( params.m_cqiList.at (i).m_cqiType == CqiListElement_s::P10 )
         {
-          // wideband CQI reporting
+          NS_LOG_LOGIC ("wideband CQI " <<  (uint32_t) params.m_cqiList.at (i).m_wbCqi.at (0) << " reported");
           std::map <uint16_t,uint8_t>::iterator it;
           uint16_t rnti = params.m_cqiList.at (i).m_rnti;
           it = m_p10CqiRxed.find (rnti);

@@ -36,11 +36,12 @@
 #include "ns3/net-device.h"
 #include "ns3/trace-source-accessor.h"
 #include "ns3/boolean.h"
+#include "ampdu-tag.h"
 #include <cmath>
 
-NS_LOG_COMPONENT_DEFINE ("YansWifiPhy");
-
 namespace ns3 {
+
+NS_LOG_COMPONENT_DEFINE ("YansWifiPhy");
 
 NS_OBJECT_ENSURE_REGISTERED (YansWifiPhy);
 
@@ -131,7 +132,7 @@ YansWifiPhy::GetTypeId (void)
                    MakeUintegerAccessor (&YansWifiPhy::GetNumberOfTransmitAntennas,
                                         &YansWifiPhy::SetNumberOfTransmitAntennas),
                    MakeUintegerChecker<uint32_t> ())
-    .AddAttribute ("Recievers", "The number of recievers.",
+    .AddAttribute ("Receivers", "The number of receivers.",
                    UintegerValue (1),
                    MakeUintegerAccessor (&YansWifiPhy::GetNumberOfReceiveAntennas,
                                         &YansWifiPhy::SetNumberOfReceiveAntennas),
@@ -168,9 +169,11 @@ YansWifiPhy::GetTypeId (void)
 }
 
 YansWifiPhy::YansWifiPhy ()
-  :  m_channelNumber (1),
+  :  m_initialized (false),
+    m_channelNumber (1),
     m_endRxEvent (),
-    m_channelStartingFrequency (0)
+    m_channelStartingFrequency (0),
+    m_mpdusNum(0)
 {
   NS_LOG_FUNCTION (this);
   m_random = CreateObject<UniformRandomVariable> ();
@@ -192,6 +195,13 @@ YansWifiPhy::DoDispose (void)
   m_device = 0;
   m_mobility = 0;
   m_state = 0;
+}
+
+void
+YansWifiPhy::DoInitialize ()
+{
+  NS_LOG_FUNCTION (this);
+  m_initialized = true;
 }
 
 void
@@ -373,7 +383,7 @@ YansWifiPhy::SetChannel (Ptr<YansWifiChannel> channel)
 void
 YansWifiPhy::SetChannelNumber (uint16_t nch)
 {
-  if (Simulator::Now () == Seconds (0))
+  if (!m_initialized)
     {
       // this is not channel switch, this is initialization
       NS_LOG_DEBUG ("start at channel " << nch);
@@ -423,9 +433,15 @@ switchChannel:
 }
 
 uint16_t
-YansWifiPhy::GetChannelNumber () const
+YansWifiPhy::GetChannelNumber (void) const
 {
   return m_channelNumber;
+}
+
+Time
+YansWifiPhy::GetChannelSwitchDelay (void) const
+{
+  return m_channelSwitchDelay;
 }
 
 double
@@ -501,12 +517,13 @@ void
 YansWifiPhy::StartReceivePacket (Ptr<Packet> packet,
                                  double rxPowerDbm,
                                  WifiTxVector txVector,
-                                 enum WifiPreamble preamble)
+                                 enum WifiPreamble preamble, 
+                                 uint8_t packetType, Time rxDuration)
 {
-  NS_LOG_FUNCTION (this << packet << rxPowerDbm << txVector.GetMode()<< preamble);
+  NS_LOG_FUNCTION (this << packet << rxPowerDbm << txVector.GetMode()<< preamble << (uint32_t)packetType);
+  AmpduTag ampduTag;
   rxPowerDbm += m_rxGainDb;
   double rxPowerW = DbmToW (rxPowerDbm);
-  Time rxDuration = CalculateTxDuration (packet->GetSize (), txVector, preamble);
   WifiMode txMode = txVector.GetMode();
   Time endRx = Simulator::Now () + rxDuration;
 
@@ -566,6 +583,33 @@ YansWifiPhy::StartReceivePacket (Ptr<Packet> packet,
         {
           if (IsModeSupported (txMode) || IsMcsSupported(txMode))
             {
+              if (preamble != WIFI_PREAMBLE_NONE && packet->PeekPacketTag (ampduTag) && m_mpdusNum == 0)
+                {
+                  //received the first MPDU in an MPDU
+                  m_mpdusNum = ampduTag.GetNoOfMpdus()-1;
+                }
+              else if (preamble == WIFI_PREAMBLE_NONE && packet->PeekPacketTag (ampduTag) && m_mpdusNum > 0)
+                {
+                  //received the other MPDUs that are part of the A-MPDU
+                  if (ampduTag.GetNoOfMpdus() < m_mpdusNum)
+                    {
+                      NS_LOG_DEBUG ("Missing MPDU from the A-MPDU " << m_mpdusNum - ampduTag.GetNoOfMpdus());
+                      m_mpdusNum = ampduTag.GetNoOfMpdus();
+                    }
+                  else
+                      m_mpdusNum--;
+                }
+              else if (preamble != WIFI_PREAMBLE_NONE && m_mpdusNum > 0 )
+                {
+                  NS_LOG_DEBUG ("Didn't receive the last MPDUs from an A-MPDU " << m_mpdusNum);
+                  m_mpdusNum = 0;
+                }
+              else if (preamble == WIFI_PREAMBLE_NONE && m_mpdusNum == 0)
+                {
+                  NS_LOG_DEBUG ("drop packet because no preamble has been received");
+                  NotifyRxDrop (packet);
+                  goto maybeCcaBusy;
+                }
               NS_LOG_DEBUG ("sync to signal (power=" << rxPowerW << "W)");
               // sync to signal
               m_state->SwitchToRx (rxDuration);
@@ -613,9 +657,9 @@ maybeCcaBusy:
 }
 
 void
-YansWifiPhy::SendPacket (Ptr<const Packet> packet, WifiTxVector txVector, WifiPreamble preamble)
+YansWifiPhy::SendPacket (Ptr<const Packet> packet, WifiTxVector txVector, WifiPreamble preamble, uint8_t packetType)
 {
-  NS_LOG_FUNCTION (this << packet << txVector.GetMode() << preamble << (uint32_t)txVector.GetTxPowerLevel());
+  NS_LOG_FUNCTION (this << packet << txVector.GetMode() << preamble << (uint32_t)txVector.GetTxPowerLevel() << (uint32_t)packetType);
   /* Transmission can happen if:
    *  - we are syncing on a packet. It is the responsability of the
    *    MAC layer to avoid doing this but the PHY does nothing to
@@ -631,18 +675,26 @@ YansWifiPhy::SendPacket (Ptr<const Packet> packet, WifiTxVector txVector, WifiPr
       return;
     }
 
-  Time txDuration = CalculateTxDuration (packet->GetSize (), txVector, preamble);
+  Time txDuration = CalculateTxDuration (packet->GetSize (), txVector, preamble, GetFrequency(), packetType, 1);
   if (m_state->IsStateRx ())
     {
       m_endRxEvent.Cancel ();
       m_interference.NotifyRxEnd ();
     }
   NotifyTxBegin (packet);
-  uint32_t dataRate500KbpsUnits = txVector.GetMode().GetDataRate () * txVector.GetNss() / 500000;
+  uint32_t dataRate500KbpsUnits;
+  if (txVector.GetMode().GetModulationClass () == WIFI_MOD_CLASS_HT)
+    {
+      dataRate500KbpsUnits = 128 + WifiModeToMcs (txVector.GetMode());
+    }
+  else
+    {
+      dataRate500KbpsUnits = txVector.GetMode().GetDataRate () * txVector.GetNss() / 500000;
+    }
   bool isShortPreamble = (WIFI_PREAMBLE_SHORT == preamble);
   NotifyMonitorSniffTx (packet, (uint16_t)GetChannelFrequencyMhz (), GetChannelNumber (), dataRate500KbpsUnits, isShortPreamble, txVector.GetTxPowerLevel());
   m_state->SwitchToTx (txDuration, packet, GetPowerDbm (txVector.GetTxPowerLevel()), txVector, preamble);
-  m_channel->Send (this, packet, GetPowerDbm ( txVector.GetTxPowerLevel()) + m_txGainDb, txVector, preamble);
+  m_channel->Send (this, packet, GetPowerDbm (txVector.GetTxPowerLevel()) + m_txGainDb, txVector, preamble, packetType, txDuration);
 }
 
 uint32_t
@@ -784,6 +836,12 @@ YansWifiPhy::RegisterListener (WifiPhyListener *listener)
   m_state->RegisterListener (listener);
 }
 
+void
+YansWifiPhy::UnregisterListener (WifiPhyListener *listener)
+{
+  m_state->UnregisterListener (listener);
+}
+
 bool
 YansWifiPhy::IsStateCcaBusy (void)
 {
@@ -904,7 +962,15 @@ YansWifiPhy::EndReceive (Ptr<Packet> packet, Ptr<InterferenceHelper::Event> even
   if (m_random->GetValue () > snrPer.per)
     {
       NotifyRxEnd (packet);
-      uint32_t dataRate500KbpsUnits = event->GetPayloadMode ().GetDataRate () * event->GetTxVector().GetNss()/ 500000;
+      uint32_t dataRate500KbpsUnits;
+      if ((event->GetPayloadMode ().GetModulationClass () == WIFI_MOD_CLASS_HT))
+        {
+          dataRate500KbpsUnits = 128 + WifiModeToMcs (event->GetPayloadMode ());
+        }
+      else
+        {
+          dataRate500KbpsUnits = event->GetPayloadMode ().GetDataRate () * event->GetTxVector().GetNss()/ 500000;
+        }
       bool isShortPreamble = (WIFI_PREAMBLE_SHORT == event->GetPreambleType ());
       double signalDbm = RatioToDb (event->GetRxPowerW ()) + 30;
       double noiseDbm = RatioToDb (event->GetRxPowerW () / snrPer.snr) - GetRxNoiseFigure () + 30;
@@ -1022,13 +1088,22 @@ void
 YansWifiPhy::Configure80211n (void)
 {
   NS_LOG_FUNCTION (this);
-  m_deviceRateSet.push_back (WifiPhy::GetDsssRate1Mbps ());
-  m_deviceRateSet.push_back (WifiPhy::GetDsssRate2Mbps ());
-  m_deviceRateSet.push_back (WifiPhy::GetDsssRate5_5Mbps ());
-  m_deviceRateSet.push_back (WifiPhy::GetErpOfdmRate6Mbps ());
-  m_deviceRateSet.push_back (WifiPhy::GetDsssRate11Mbps ());
-  m_deviceRateSet.push_back (WifiPhy::GetErpOfdmRate12Mbps ());
-  m_deviceRateSet.push_back (WifiPhy::GetErpOfdmRate24Mbps ());
+  if (m_channelStartingFrequency>=2400 && m_channelStartingFrequency<=2500) //@ 2.4 GHz
+    {
+      m_deviceRateSet.push_back (WifiPhy::GetDsssRate1Mbps ());
+      m_deviceRateSet.push_back (WifiPhy::GetDsssRate2Mbps ());
+      m_deviceRateSet.push_back (WifiPhy::GetDsssRate5_5Mbps ());
+      m_deviceRateSet.push_back (WifiPhy::GetErpOfdmRate6Mbps ());
+      m_deviceRateSet.push_back (WifiPhy::GetDsssRate11Mbps ());
+      m_deviceRateSet.push_back (WifiPhy::GetErpOfdmRate12Mbps ());
+      m_deviceRateSet.push_back (WifiPhy::GetErpOfdmRate24Mbps ());
+    }
+  if (m_channelStartingFrequency>=5000 && m_channelStartingFrequency<=6000) //@ 5 GHz
+    {
+      m_deviceRateSet.push_back (WifiPhy::GetOfdmRate6Mbps ());
+      m_deviceRateSet.push_back (WifiPhy::GetOfdmRate12Mbps ());
+      m_deviceRateSet.push_back (WifiPhy::GetOfdmRate24Mbps ());
+    }
   m_bssMembershipSelectorSet.push_back(HT_PHY);
   for (uint8_t i=0; i <8; i++)
     {

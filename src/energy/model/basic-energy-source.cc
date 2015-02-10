@@ -25,9 +25,9 @@
 #include "ns3/trace-source-accessor.h"
 #include "ns3/simulator.h"
 
-NS_LOG_COMPONENT_DEFINE ("BasicEnergySource");
-
 namespace ns3 {
+
+NS_LOG_COMPONENT_DEFINE ("BasicEnergySource");
 
 NS_OBJECT_ENSURE_REGISTERED (BasicEnergySource);
 
@@ -67,7 +67,8 @@ BasicEnergySource::GetTypeId (void)
                    MakeTimeChecker ())
     .AddTraceSource ("RemainingEnergy",
                      "Remaining energy at BasicEnergySource.",
-                     MakeTraceSourceAccessor (&BasicEnergySource::m_remainingEnergyJ))
+                     MakeTraceSourceAccessor (&BasicEnergySource::m_remainingEnergyJ),
+                     "ns3::TracedValue::DoubleCallback")
   ;
   return tid;
 }

@@ -25,9 +25,9 @@
 #include <ns3/lte-common.h>
 #include <list>
 
-NS_LOG_COMPONENT_DEFINE ("A3RsrpHandoverAlgorithm");
-
 namespace ns3 {
+
+NS_LOG_COMPONENT_DEFINE ("A3RsrpHandoverAlgorithm");
 
 NS_OBJECT_ENSURE_REGISTERED (A3RsrpHandoverAlgorithm);
 
@@ -134,7 +134,7 @@ A3RsrpHandoverAlgorithm::DoReportUeMeas (uint16_t rnti,
           && !measResults.measResultListEutra.empty ())
         {
           uint16_t bestNeighbourCellId = 0;
-          uint8_t bestNeighbourRsrp = -std::numeric_limits<double>::infinity ();
+          uint8_t bestNeighbourRsrp = 0;
 
           for (std::list <LteRrcSap::MeasResultEutra>::iterator it = measResults.measResultListEutra.begin ();
                it != measResults.measResultListEutra.end ();

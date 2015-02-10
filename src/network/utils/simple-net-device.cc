@@ -26,19 +26,24 @@
 #include "ns3/error-model.h"
 #include "ns3/trace-source-accessor.h"
 #include "ns3/boolean.h"
+#include "ns3/string.h"
 #include "ns3/tag.h"
 #include "ns3/simulator.h"
 #include "ns3/drop-tail-queue.h"
 
-NS_LOG_COMPONENT_DEFINE ("SimpleNetDevice");
-
 namespace ns3 {
 
+NS_LOG_COMPONENT_DEFINE ("SimpleNetDevice");
+
 /**
- * \brief Internal tag to store source, destination and protocol of each packet.
+ * \brief SimpleNetDevice tag to store source, destination and protocol of each packet.
  */
 class SimpleTag : public Tag {
 public:
+  /**
+   * \brief Get the type ID.
+   * \return the object TypeId
+   */
   static TypeId GetTypeId (void);
   virtual TypeId GetInstanceTypeId (void) const;
 
@@ -46,21 +51,45 @@ public:
   virtual void Serialize (TagBuffer i) const;
   virtual void Deserialize (TagBuffer i);
 
+  /**
+   * Set the source address
+   * \param src source address
+   */
   void SetSrc (Mac48Address src);
+  /**
+   * Get the source address
+   * \return the source address
+   */
   Mac48Address GetSrc (void) const;
 
+  /**
+   * Set the destination address
+   * \param dst destination address
+   */
   void SetDst (Mac48Address dst);
+  /**
+   * Get the destination address
+   * \return the destination address
+   */
   Mac48Address GetDst (void) const;
 
+  /**
+   * Set the protocol number
+   * \param proto protocol number
+   */
   void SetProto (uint16_t proto);
+  /**
+   * Get the protocol number
+   * \return the protocol number
+   */
   uint16_t GetProto (void) const;
 
   void Print (std::ostream &os) const;
 
 private:
-  Mac48Address m_src;
-  Mac48Address m_dst;
-  uint16_t m_protocolNumber;
+  Mac48Address m_src; //!< source address
+  Mac48Address m_dst; //!< destination address
+  uint16_t m_protocolNumber; //!< protocol number
 };
 
 
@@ -171,7 +200,7 @@ SimpleNetDevice::GetTypeId (void)
                    MakeBooleanChecker ())
     .AddAttribute ("TxQueue",
                    "A queue to use as the transmit queue in the device.",
-                   PointerValue (CreateObject<DropTailQueue> ()),
+                   StringValue ("ns3::DropTailQueue"),
                    MakePointerAccessor (&SimpleNetDevice::m_queue),
                    MakePointerChecker<Queue> ())
     .AddAttribute ("DataRate",
@@ -180,8 +209,10 @@ SimpleNetDevice::GetTypeId (void)
                    MakeDataRateAccessor (&SimpleNetDevice::m_bps),
                    MakeDataRateChecker ())
     .AddTraceSource ("PhyRxDrop",
-                     "Trace source indicating a packet has been dropped by the device during reception",
-                     MakeTraceSourceAccessor (&SimpleNetDevice::m_phyRxDropTrace))
+                     "Trace source indicating a packet has been dropped "
+                     "by the device during reception",
+                     MakeTraceSourceAccessor (&SimpleNetDevice::m_phyRxDropTrace),
+                     "ns3::Packet::TracedCallback")
   ;
   return tid;
 }

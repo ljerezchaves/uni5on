@@ -43,9 +43,9 @@
 #include "sim_errno.h"
 
 
-NS_LOG_COMPONENT_DEFINE ("NscTcpSocketImpl");
-
 namespace ns3 {
+
+NS_LOG_COMPONENT_DEFINE ("NscTcpSocketImpl");
 
 NS_OBJECT_ENSURE_REGISTERED (NscTcpSocketImpl);
 
@@ -56,10 +56,16 @@ NscTcpSocketImpl::GetTypeId ()
     .SetParent<TcpSocket> ()
     .AddTraceSource ("CongestionWindow",
                      "The TCP connection's congestion window",
-                     MakeTraceSourceAccessor (&NscTcpSocketImpl::m_cWnd))
+                     MakeTraceSourceAccessor (&NscTcpSocketImpl::m_cWnd),
+                     "ns3::TracedValue::Uint32Callback")
     .AddTraceSource ("SlowStartThreshold",
                      "TCP slow start threshold (bytes)",
-                     MakeTraceSourceAccessor (&NscTcpSocketImpl::m_ssThresh))
+                     MakeTraceSourceAccessor (&NscTcpSocketImpl::m_ssThresh),
+                     "ns3::TracedValue::Uint32Callback")
+    .AddTraceSource ("State",
+                     "TCP state",
+                     MakeTraceSourceAccessor (&NscTcpSocketImpl::m_state),
+                     "ns3::TcpStatesTracedValueCallback")
   ;
   return tid;
 }

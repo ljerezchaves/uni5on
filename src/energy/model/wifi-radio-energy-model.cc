@@ -27,9 +27,9 @@
 #include "wifi-radio-energy-model.h"
 #include "wifi-tx-current-model.h"
 
-NS_LOG_COMPONENT_DEFINE ("WifiRadioEnergyModel");
-
 namespace ns3 {
+
+NS_LOG_COMPONENT_DEFINE ("WifiRadioEnergyModel");
 
 NS_OBJECT_ENSURE_REGISTERED (WifiRadioEnergyModel);
 
@@ -81,7 +81,8 @@ WifiRadioEnergyModel::GetTypeId (void)
                    MakePointerChecker<WifiTxCurrentModel> ())
     .AddTraceSource ("TotalEnergyConsumption",
                      "Total energy consumption of the radio device.",
-                     MakeTraceSourceAccessor (&WifiRadioEnergyModel::m_totalEnergyConsumption))
+                     MakeTraceSourceAccessor (&WifiRadioEnergyModel::m_totalEnergyConsumption),
+                     "ns3::TracedValue::DoubleCallback")
   ; 
   return tid;
 }

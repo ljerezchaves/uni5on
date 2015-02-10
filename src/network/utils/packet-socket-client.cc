@@ -36,6 +36,7 @@
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("PacketSocketClient");
+
 NS_OBJECT_ENSURE_REGISTERED (PacketSocketClient);
 
 TypeId
@@ -59,7 +60,8 @@ PacketSocketClient::GetTypeId (void)
                    MakeUintegerAccessor (&PacketSocketClient::m_size),
                    MakeUintegerChecker<uint32_t> ())
     .AddTraceSource ("Tx", "A packet has been sent",
-                     MakeTraceSourceAccessor (&PacketSocketClient::m_txTrace))
+                     MakeTraceSourceAccessor (&PacketSocketClient::m_txTrace),
+                     "ns3::Packet::PacketAddressTracedCallback")
   ;
   return tid;
 }

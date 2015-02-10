@@ -42,9 +42,9 @@
 #include "ns3/sequence-number.h"
 #include "rtt-estimator.h"
 
-NS_LOG_COMPONENT_DEFINE("TcpWestwood");
-
 namespace ns3 {
+
+NS_LOG_COMPONENT_DEFINE("TcpWestwood");
 
 NS_OBJECT_ENSURE_REGISTERED(TcpWestwood);
 
@@ -55,10 +55,12 @@ TcpWestwood::GetTypeId (void)
       .SetParent<TcpSocketBase>()
       .AddConstructor<TcpWestwood>()
       .AddTraceSource("CongestionWindow", "The TCP connection's congestion window",
-                      MakeTraceSourceAccessor(&TcpWestwood::m_cWnd))
+                      MakeTraceSourceAccessor(&TcpWestwood::m_cWnd),
+                      "ns3::TracedValue::Uint32Callback")
       .AddTraceSource ("SlowStartThreshold",
                        "TCP slow start threshold (bytes)",
-                       MakeTraceSourceAccessor (&TcpWestwood::m_ssThresh))
+                       MakeTraceSourceAccessor (&TcpWestwood::m_ssThresh),
+                       "ns3::TracedValue::Uint32Callback")
       .AddAttribute("FilterType", "Use this to choose no filter or Tustin's approximation filter",
                     EnumValue(TcpWestwood::TUSTIN), MakeEnumAccessor(&TcpWestwood::m_fType),
                     MakeEnumChecker(TcpWestwood::NONE, "None", TcpWestwood::TUSTIN, "Tustin"))
@@ -67,7 +69,8 @@ TcpWestwood::GetTypeId (void)
                     MakeEnumAccessor(&TcpWestwood::m_pType),
                     MakeEnumChecker(TcpWestwood::WESTWOOD, "Westwood",TcpWestwood::WESTWOODPLUS, "WestwoodPlus"))
       .AddTraceSource("EstimatedBW", "The estimated bandwidth",
-                    MakeTraceSourceAccessor(&TcpWestwood::m_currentBW));
+                    MakeTraceSourceAccessor(&TcpWestwood::m_currentBW),
+                      "ns3::TracedValue::DoubleCallback");
   return tid;
 }
 
@@ -304,23 +307,20 @@ TcpWestwood::Retransmit (void)
   if (m_state == CLOSED || m_state == TIME_WAIT)
     return;
   // If all data are received, just return
-  if (m_txBuffer.HeadSequence() >= m_nextTxSequence)
+  if (m_txBuffer->HeadSequence () >= m_nextTxSequence)
     return;
 
   // Upon an RTO, adjust cwnd and ssthresh based on the estimated BW
-  m_ssThresh = std::max (static_cast<double> (2 * m_segmentSize), m_currentBW.Get() * static_cast<double> (m_minRtt.GetSeconds()));
+  m_ssThresh = std::max (static_cast<double> (2 * m_segmentSize), m_currentBW.Get () * static_cast<double> (m_minRtt.GetSeconds ()));
   m_cWnd = m_segmentSize;
 
   // Restart from highest ACK
-  m_nextTxSequence = m_txBuffer.HeadSequence();
+  m_nextTxSequence = m_txBuffer->HeadSequence ();
   NS_LOG_INFO ("RTO. Reset cwnd to " << m_cWnd <<
       ", ssthresh to " << m_ssThresh << ", restart from seqnum " << m_nextTxSequence);
 
-  // Double the next RTO
-  m_rtt->IncreaseMultiplier();
-
   // Retransmit the packet
-  DoRetransmit();
+  DoRetransmit ();
 }
 
 void

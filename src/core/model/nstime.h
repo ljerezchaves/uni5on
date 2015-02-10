@@ -146,8 +146,12 @@ public:
       }
   }
   /**
+   * \name Numeric constructors.
    *  Construct from a numeric value.
-   *
+   * @{
+   */
+  /**
+   *  Construct from a numeric value.
    *  The current time resolution will be assumed as the unit.
    *  \param [in] v The value.
    *  @{
@@ -216,6 +220,7 @@ public:
 	Mark (this);
       }
   }
+  /**@}*/
   /**@}*/
   
   /**
@@ -496,6 +501,15 @@ public:
    */
   TimeWithUnit As (const enum Unit unit) const;
 
+  /**
+   * TracedValue callback signature for Time
+   *
+   * \param [in] oldValue original value of the traced variable
+   * \param [in] newValue new value of the traced variable
+   */
+  typedef void (* TracedValueCallback)(const Time oldValue,
+                                       const Time newValue);
+  
 private:
   /** How to convert between other units and the current unit. */
   struct Information
@@ -794,7 +808,7 @@ std::istream & operator >> (std::istream & is, Time & time);
 
 /**
  * \ingroup time
- * \defgroup timecivil Standard time units.
+ * \defgroup timecivil Standard Time Units.
  * \brief Convenience constructors in standard units.
  *
  * For example:
@@ -904,19 +918,8 @@ inline Time TimeStep (uint64_t ts)
   return Time (ts);
 }
 
-/**
- * \ingroup time
- * \class ns3::TimeValue
- * \brief Attribute for objects of type ns3::Time
- */
 ATTRIBUTE_VALUE_DEFINE (Time);
-
-/**
- *  Attribute accessor function for Time
- *  @{
- */
 ATTRIBUTE_ACCESSOR_DEFINE (Time);
-/**@}*/
 
 /**
  *  \ingroup time

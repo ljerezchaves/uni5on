@@ -102,11 +102,16 @@ namespace ns3 {
  *
  * Trait class to convert a pointer into a reference,
  * used by MemPtrCallBackImpl
- * @{
  */
 template <typename T>
 struct CallbackTraits;
 
+/**
+ * \ingroup makecallbackmemptr
+ *
+ * Trait class to convert a pointer into a reference,
+ * used by MemPtrCallBackImpl
+ */
 template <typename T>
 struct CallbackTraits<T *>
 {
@@ -119,7 +124,6 @@ struct CallbackTraits<T *>
     return *p;
   }
 };
-/**@}*/
 
 /**
  * \ingroup callbackimpl
@@ -962,6 +966,8 @@ protected:
  * Of course, it also does not use copy-destruction semantics
  * and relies on a reference list rather than autoPtr to hold
  * the pointer.
+ *
+ * \see attribute_Callback
  */
 template<typename R, 
          typename T1 = empty, typename T2 = empty, 
@@ -1240,9 +1246,10 @@ private:
   void DoAssign (Ptr<const CallbackImplBase> other) {
     if (!DoCheckType (other))
       {
+        Ptr<CallbackImpl<R,T1,T2,T3,T4,T5,T6,T7,T8,T9> > expected;
         NS_FATAL_ERROR ("Incompatible types. (feed to \"c++filt -t\" if needed)" << std::endl <<
                         "got=" << Demangle ( typeid (*other).name () ) << std::endl <<
-                        "expected=" << Demangle ( typeid (CallbackImpl<R,T1,T2,T3,T4,T5,T6,T7,T8,T9> *).name () ));
+                        "expected=" << Demangle ( typeid (*expected).name () ));
       }
     m_impl = const_cast<CallbackImplBase *> (PeekPointer (other));
   }
@@ -1671,10 +1678,6 @@ Callback<R,T1,T2,T3,T4,T5,T6> MakeBoundCallback (R (*fnPtr)(TX1,TX2,TX3,T1,T2,T3
 
 namespace ns3 {
 
-/**
- * \ingroup callback
- * AttributeValue form of a Callback
- */
 class CallbackValue : public AttributeValue
 {
 public:
@@ -1687,7 +1690,7 @@ public:
   CallbackValue (const CallbackBase &base);
   /** Destructor */
   virtual ~CallbackValue ();
-  /** \param base the Callbackbase to use */
+  /** \param base The CallbackBase to use */
   void Set (CallbackBase base);
   /**
    * Give value my callback, if type compatible
