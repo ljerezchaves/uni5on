@@ -101,10 +101,6 @@ CsmaNetDevice::GetTypeId (void)
                      "A packet has been received by this device, has been passed up from the physical layer "
                      "and is being forwarded up the local protocol stack.  This is a promiscuous trace,",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_macPromiscRxTrace))
-    .AddTraceSource ("OpenFlowRx", 
-                     "Similar to MacPromiscRx, but it is also fired even when there is no promiscuous protocol "
-                     "handler register to device. It was desiged to integration with openflow module.",
-                     MakeTraceSourceAccessor (&CsmaNetDevice::m_openflowRxTrace))
     .AddTraceSource ("MacRx", 
                      "A packet has been received by this device, has been passed up from the physical layer "
                      "and is being forwarded up the local protocol stack.  This is a non-promiscuous trace,",
@@ -771,7 +767,6 @@ CsmaNetDevice::Receive (Ptr<Packet> packet, Ptr<CsmaNetDevice> senderDevice)
   // make sure that nobody messes with our packet.
   //
   m_promiscSnifferTrace (originalPacket);
-  m_openflowRxTrace (this, originalPacket);
   if (!m_promiscRxCallback.IsNull ())
     {
       m_macPromiscRxTrace (originalPacket);
