@@ -169,7 +169,7 @@ SimulationScenario::EnableHttpTraffic ()
   httpHelper.SetClientAttribute ("Direction", 
       EnumValue (Application::BIDIRECTIONAL));
   httpHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
-  httpHelper.SetClientAttribute ("TcpTimeout",TimeValue (Seconds (5))); 
+  httpHelper.SetClientAttribute ("TcpTimeout", TimeValue (Seconds (5))); 
   // The HTTP client/server TCP timeout was selected based on HTTP traffic
   // model and dedicated bearer idle timeout.  Every time the TCP socket is
   // closed, HTTP client application notify the controller, and traffic
@@ -209,7 +209,7 @@ SimulationScenario::EnableHttpTraffic ()
 
       // Dedicated Non-GBR EPS bearer (QCI 8)
       GbrQosInformation qos;
-      qos.mbrDl = qos.mbrUl = 250000;
+      qos.mbrDl = qos.mbrUl = 256000;
       EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
