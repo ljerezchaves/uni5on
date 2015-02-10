@@ -35,6 +35,7 @@
 #include "ns3/tcp-header.h"
 #include "ns3/udp-l4-protocol.h"
 #include "ns3/tcp-l4-protocol.h"
+#include "ns3/icmpv4-l4-protocol.h"
 
 namespace ns3 {
 
@@ -128,10 +129,10 @@ EpcTftClassifier::Classify (Ptr<Packet> p, EpcTft::Direction direction)
 	  localPort = tcpHeader.GetDestinationPort ();
 	}
     }
-  else
+  else if (protocol != Icmpv4L4Protocol::PROT_NUMBER)
     {
       NS_LOG_INFO ("Unknown protocol: " << protocol);
-      // return 0;  // no match
+      return 0;  // no match
     }
 
   NS_LOG_INFO ("Classifing packet:"
