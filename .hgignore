@@ -17,7 +17,6 @@
 ^\.waf
 ^doc/introspected-doxygen\.h$
 .*\.py[co]$
-\.pcap$
 \.mob$
 \.routes$
 ^seventh-packet-byte-count.png
@@ -49,5 +48,4 @@ TAGS
 waf
 .DS_Store
 *.swp
-scratch/teste.cc
-default.txt
+scratch/epc-of/default.txt

@@ -26,7 +26,7 @@ namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED (SimulationScenario);
 
-const std::string SimulationScenario::m_videoDir = "../ns3/movies/";
+const std::string SimulationScenario::m_videoDir = "../movies/";
 
 const std::string SimulationScenario::m_videoTrace [] = {
   "jurassic.data", "silence.data", "star-wars.data", "mr-bean.data",

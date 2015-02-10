@@ -172,6 +172,8 @@ ParseTopology (std::string filename, uint32_t nEnbs, uint32_t nUes,
 {
   NS_LOG_INFO ("Parsing topology...");
  
+  // Topology file columns:
+  // eNB index | # of UEs at this eNB | OpenFlow switch index
   std::ifstream file;
   file.open (filename.c_str ());
   if (!file.is_open () )
