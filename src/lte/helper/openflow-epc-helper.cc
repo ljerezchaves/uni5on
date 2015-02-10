@@ -226,7 +226,7 @@ OpenFlowEpcHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
   m_sgwPgwApp->AddUe (imsi);
 }
 
-void
+uint8_t
 OpenFlowEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer)
 {
   NS_LOG_FUNCTION (this << ueDevice << imsi);
@@ -247,6 +247,7 @@ OpenFlowEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Pt
   Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
   Ptr<LteUeRrc> ueRrc = ueLteDevice->GetRrc ();
 
+  uint8_t bearerId = 0;
   bool createBearer = true;
   if (!m_addBearerCallback.IsNull ())
     {
@@ -266,7 +267,7 @@ OpenFlowEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Pt
   
   if (createBearer)
     {
-      m_mme->AddBearer (imsi, tft, bearer);
+      bearerId = m_mme->AddBearer (imsi, tft, bearer);
       if (ueLteDevice)
         {
           ueLteDevice->GetNas ()->ActivateEpsBearer (bearer, tft);
@@ -276,6 +277,7 @@ OpenFlowEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Pt
     {
       NS_LOG_WARN ("Bearer could not be created. Traffic will be sent over default bearer.");
     }
+  return bearerId;
 }
 
 Ptr<Node>
