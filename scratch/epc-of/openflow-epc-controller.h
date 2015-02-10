@@ -98,6 +98,12 @@ public:
 
   /** \return True if the associated EPS bearer is of GBR type. */
   bool IsGbr ();
+
+  /** \return The EPS Bearer. */
+  EpsBearer GetEpsBearer ();
+
+  /** \return The Bearer QoS information. */
+  GbrQosInformation GetQosInfo ();
   
 protected:
   uint32_t          teid;         //!< GTP TEID

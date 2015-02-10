@@ -110,6 +110,18 @@ RoutingInfo::IsGbr ()
   return (!isDefault && bearer.bearerLevelQos.IsGbr ());
 }
 
+EpsBearer
+RoutingInfo::GetEpsBearer ()
+{
+  return bearer.bearerLevelQos;
+}
+
+GbrQosInformation
+RoutingInfo::GetQosInfo ()
+{
+  return bearer.bearerLevelQos.gbrQosInfo;
+}
+
 // ------------------------------------------------------------------------ //
 const int OpenFlowEpcController::m_defaultTimeout = 0; 
 const int OpenFlowEpcController::m_dedicatedTimeout = 15;
