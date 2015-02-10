@@ -19,6 +19,7 @@
  */
 
 #include "ring-controller.h"
+#include <string>
 
 NS_LOG_COMPONENT_DEFINE ("RingController");
 
@@ -235,13 +236,12 @@ RingController::NotifyAppStart (Ptr<Application> app)
       return true;
     }
 
+  NS_ASSERT_MSG (!rrInfo->isActive, "Bearer should be inactive.");
   // So, this bearer must be inactive and we are goind to reuse it's metadata.
   // Every time the application starts using an (old) existing bearer, let's
-  // inscrease the bearer priority and reinstall the rules on the switches.
-  // Doing this, we avoid problems with old 'expiring' rules, and we can even
-  // use new routing paths when necessary.
-  NS_ASSERT_MSG (!rrInfo->isActive, "Bearer should be inactive.");
-  rrInfo->priority++;
+  // reinstall the rules on the switches, which will inscrease the bearer
+  // priority.  Doing this, we avoid problems with old 'expiring' rules, and we
+  // can even use new routing paths when necessary.
 
   // For dedicated GBR bearers, let's check for available resources. 
   if (rrInfo->IsGbr ())
@@ -254,7 +254,7 @@ RingController::NotifyAppStart (Ptr<Application> app)
 
   // Everything is ok! Let's activate and install this bearer.
   rrInfo->isActive = true;
-  InstallTeidRouting (rrInfo);
+  InstallTeidRouting (rrInfo);  
   return true;
 }
 
@@ -373,9 +373,7 @@ RingController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
       return 0;
     }
 
-  // When a rule expires due to idle timeout, we may consider the following
-  // situations:
-
+  // When a rule expires due to idle timeout, check the following situations:
   // 1) The application is stopped and the bearer must be inactive.
   if (!rrInfo->isActive)
     {
@@ -402,7 +400,6 @@ RingController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   if (rrInfo->isActive)
     {
       NS_LOG_DEBUG ("Flow " << teid << " is still active. Reinstall rules...");
-      rrInfo->priority++;         
       InstallTeidRouting (rrInfo);
       return 0;
     }
@@ -478,10 +475,10 @@ RingController::ProcessGbrRequest (Ptr<RingRoutingInfo> rrInfo)
   IncreaseGbrRequest ();
 
   uint32_t teid = rrInfo->teid;
-  EpsBearer bearer = rrInfo->bearer.bearerLevelQos;
+  GbrQosInformation gbrQoS = rrInfo->GetQosInfo ();
   DataRate request, available;
 
-  request = DataRate (bearer.gbrQosInfo.gbrDl + bearer.gbrQosInfo.gbrUl);
+  request = DataRate (gbrQoS.gbrDl + gbrQoS.gbrUl);
   NS_LOG_DEBUG ("Bearer " << teid << " requesting " << request);
 
   available = GetAvailableBandwidth (rrInfo->sgwIdx, rrInfo->enbIdx, 
@@ -628,27 +625,28 @@ RingController::InstallTeidRouting (Ptr<RingRoutingInfo> rrInfo,
 {
   NS_LOG_FUNCTION (this << rrInfo->teid << rrInfo->priority << buffer);
   NS_ASSERT_MSG (rrInfo->isActive, "Rule not active.");
-  NS_ASSERT_MSG (!rrInfo->isInstalled, "Rule already installed.");
+  
+  // Increasing the priority every time we (re)install the TEID rules.
+  rrInfo->priority++;    
 
-  char teidHexStr [9];
-  sprintf (teidHexStr, "0x%x", rrInfo->teid);
-
-  // flow-mod flags OFPFF_SEND_FLOW_REM and OFPFF_CHECK_OVERLAP, used to notify
-  // the controller when a flow entry expires and to avoid overlaping rules.
-  char flagStr [7];
-  sprintf (flagStr, "0x0003");
+  char cookieStr [9];
+  sprintf (cookieStr, "0x%x", rrInfo->teid);
 
   char bufferStr [12];
   sprintf (bufferStr, "%u", buffer);
-  
+
+  // flow-mod flags OFPFF_SEND_FLOW_REM and OFPFF_CHECK_OVERLAP, used to notify
+  // the controller when a flow entry expires and to avoid overlaping rules.
+  std::string flagsStr ("0x0003");
+
   // Configuring downlink routing
   if (!rrInfo->app || rrInfo->app->GetDirection () != Application::UPLINK)
     {
       std::ostringstream cmd;
       cmd << "flow-mod cmd=add,table=1" << 
              ",buffer=" << bufferStr <<
-             ",flags=" << flagStr <<
-             ",cookie=" << teidHexStr <<
+             ",flags=" << flagsStr <<
+             ",cookie=" << cookieStr <<
              ",prio=" << rrInfo->priority <<
              ",idle=" << rrInfo->timeout <<
              " eth_type=0x800,ip_proto=17" << 
@@ -671,8 +669,8 @@ RingController::InstallTeidRouting (Ptr<RingRoutingInfo> rrInfo,
       std::ostringstream cmd;
       cmd << "flow-mod cmd=add,table=1" << 
              ",buffer=" << bufferStr <<
-             ",flags=" << flagStr <<
-             ",cookie=" << teidHexStr <<
+             ",flags=" << flagsStr <<
+             ",cookie=" << cookieStr <<
              ",prio=" << rrInfo->priority <<
              ",idle=" << rrInfo->timeout <<
              " eth_type=0x800,ip_proto=17" << 
@@ -700,8 +698,8 @@ RingController::InstallTeidRouting (Ptr<RingRoutingInfo> rrInfo,
 // //  cmd << "stats-flow table=1";
 // //
 // //  RoutingInfo rInfo = GetTeidRoutingInfo (teid);
-// //  char teidHexStr [9];
-// //  sprintf (teidHexStr, "0x%x", teid);
+// //  char cookieStr [9];
+// //  sprintf (cookieStr, "0x%x", teid);
 // //
 // //  uint16_t current = rInfo.sgwIdx;
 // //  Ptr<OFSwitch13NetDevice> currentDevice = GetSwitchDevice (current);       
