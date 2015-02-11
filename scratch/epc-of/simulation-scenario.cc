@@ -209,7 +209,8 @@ SimulationScenario::EnableHttpTraffic ()
 
       // Dedicated Non-GBR EPS bearer (QCI 8)
       GbrQosInformation qos;
-      qos.mbrDl = qos.mbrUl = 256000;
+      qos.mbrDl = 262144;     // 256 Kbps downlink
+      qos.mbrUl = 65536;      //  64 Kbps uplink
       EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
@@ -292,8 +293,10 @@ SimulationScenario::EnableVoipTraffic ()
  
       // Dedicated GBR EPS bearer (QCI 1)
       GbrQosInformation qos;
-      qos.gbrDl = qos.gbrUl = (voipPacketSize + 4) * 8 / voipPacketInterval;
-      qos.mbrDl = qos.mbrUl = (voipPacketSize + 4) * 8 / voipPacketInterval;
+      qos.gbrDl = (voipPacketSize + 4) * 8 / voipPacketInterval; // 8.3 Kbps
+      qos.mbrDl = 1.2 * qos.gbrDl;                               //  10 Kbps
+      qos.gbrUl = qos.gbrDl;
+      qos.mbrUl = qos.mbrDl;
       EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
@@ -374,7 +377,7 @@ SimulationScenario::EnableVideoTraffic ()
       // Dedicated GBR EPS bearer (QCI 4).
       GbrQosInformation qos;
       qos.gbrDl = m_avgBitRate [videoIdx];
-      qos.mbrDl = m_maxBitRate [videoIdx];
+      qos.mbrDl = 1.3 * qos.gbrDl;
       EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
