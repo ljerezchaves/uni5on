@@ -47,7 +47,6 @@ typedef std::list<ContextBearer_t> BearerList_t;
 class ContextInfo : public Object
 {
   friend class OpenFlowEpcController;
-  friend class RingController;
 
 public:
   ContextInfo ();          //!< Default constructor
@@ -62,14 +61,22 @@ public:
   /** Destructor implementation */
   virtual void DoDispose ();
 
-protected:
-  uint64_t          imsi;         //!< UE IMSI
-  uint16_t          cellId;       //!< eNB Cell ID
-  uint16_t          enbIdx;       //!< eNB switch index
-  uint16_t          sgwIdx;       //!< Gateway switch index
-  Ipv4Address       enbAddr;      //!< eNB IPv4 addr
-  Ipv4Address       sgwAddr;      //!< Gateway IPv4 addr
-  BearerList_t      bearerList;   //!< List of bearers
+  /** Const private member access methods. */
+  //\{
+  uint16_t GetEnbIdx () const;
+  uint16_t GetSgwIdx () const;
+  Ipv4Address GetEnbAddr () const;
+  Ipv4Address GetSgwAddr () const;
+  //\}
+
+private:
+  uint64_t      m_imsi;         //!< UE IMSI
+  uint16_t      m_cellId;       //!< eNB Cell ID
+  uint16_t      m_enbIdx;       //!< eNB switch index
+  uint16_t      m_sgwIdx;       //!< Gateway switch index
+  Ipv4Address   m_enbAddr;      //!< eNB IPv4 addr
+  Ipv4Address   m_sgwAddr;      //!< Gateway IPv4 addr
+  BearerList_t  m_bearerList;   //!< List of bearers
 };
 
 
@@ -296,14 +303,14 @@ protected:
    * \param tft The Traffic Flow Template.
    * \return The context info for this tft.
    */
-  Ptr<ContextInfo> GetContextFromTft (Ptr<EpcTft> tft);
+  Ptr<const ContextInfo> GetContextFromTft (Ptr<EpcTft> tft);
 
   /**
    * Retrieve the LTE context information from the GTP tunnel id
    * \param teid The GTP tunnel id.
    * \return The context info for this teid.
    */
-  Ptr<ContextInfo> GetContextFromTeid (uint32_t teid);
+  Ptr<const ContextInfo> GetContextFromTeid (uint32_t teid);
 
   /** 
    * Iterate over the context bearers map looking for the bearer information

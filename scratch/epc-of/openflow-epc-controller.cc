@@ -31,15 +31,15 @@ NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcController);
 
 // ------------------------------------------------------------------------ //
 ContextInfo::ContextInfo ()
-  : imsi (0),
-    cellId (0),
-    enbIdx (0),
-    sgwIdx (0)
+  : m_imsi (0),
+    m_cellId (0),
+    m_enbIdx (0),
+    m_sgwIdx (0)
 {
   NS_LOG_FUNCTION (this);
-  enbAddr = Ipv4Address ();
-  sgwAddr = Ipv4Address ();
-  bearerList.clear ();
+  m_enbAddr = Ipv4Address ();
+  m_sgwAddr = Ipv4Address ();
+  m_bearerList.clear ();
 }
 
 ContextInfo::~ContextInfo ()
@@ -61,7 +61,31 @@ void
 ContextInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  bearerList.clear ();
+  m_bearerList.clear ();
+}
+
+uint16_t    
+ContextInfo::GetEnbIdx () const
+{
+  return m_enbIdx;
+}
+
+uint16_t    
+ContextInfo::GetSgwIdx () const
+{
+  return m_sgwIdx;
+}
+
+Ipv4Address 
+ContextInfo::GetEnbAddr () const
+{
+  return m_enbAddr;
+}
+
+Ipv4Address 
+ContextInfo::GetSgwAddr () const
+{
+  return m_sgwAddr;
 }
 
 // ------------------------------------------------------------------------ //
@@ -247,13 +271,13 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
 
   // Create context info and save in context list.
   Ptr<ContextInfo> info = CreateObject<ContextInfo> ();
-  info->imsi = imsi;
-  info->cellId = cellId;
-  info->enbIdx = GetSwitchIdxFromIp (enbAddr);
-  info->sgwIdx = GetSwitchIdxFromIp (sgwAddr);
-  info->enbAddr = enbAddr;
-  info->sgwAddr = sgwAddr;
-  info->bearerList = bearerList;
+  info->m_imsi = imsi;
+  info->m_cellId = cellId;
+  info->m_enbIdx = GetSwitchIdxFromIp (enbAddr);
+  info->m_sgwIdx = GetSwitchIdxFromIp (sgwAddr);
+  info->m_enbAddr = enbAddr;
+  info->m_sgwAddr = sgwAddr;
+  info->m_bearerList = bearerList;
 
   m_contexts.push_back (info);
 }
@@ -330,7 +354,7 @@ OpenFlowEpcController::GetSwitchIdxFromIp (Ipv4Address addr)
   NS_FATAL_ERROR ("IP not registered in switch index table.");
 }
 
-Ptr<ContextInfo>
+Ptr<const ContextInfo>
 OpenFlowEpcController::GetContextFromTft (Ptr<EpcTft> tft)
 {
   Ptr<ContextInfo> cInfo = 0;
@@ -338,8 +362,8 @@ OpenFlowEpcController::GetContextFromTft (Ptr<EpcTft> tft)
   for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
     {
       cInfo = *ctxIt;
-      BearerList_t::iterator blsIt = cInfo->bearerList.begin (); 
-      for ( ; blsIt != cInfo->bearerList.end (); blsIt++)
+      BearerList_t::iterator blsIt = cInfo->m_bearerList.begin (); 
+      for ( ; blsIt != cInfo->m_bearerList.end (); blsIt++)
         {
           if (blsIt->tft == tft)
             {
@@ -351,7 +375,7 @@ OpenFlowEpcController::GetContextFromTft (Ptr<EpcTft> tft)
   NS_FATAL_ERROR ("Invalid tft.");
 }
 
-Ptr<ContextInfo>
+Ptr<const ContextInfo>
 OpenFlowEpcController::GetContextFromTeid (uint32_t teid)
 {
   Ptr<ContextInfo> cInfo = 0;
@@ -359,8 +383,8 @@ OpenFlowEpcController::GetContextFromTeid (uint32_t teid)
   for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
     {
       cInfo = *ctxIt;
-      BearerList_t::iterator blsIt = cInfo->bearerList.begin (); 
-      for ( ; blsIt != cInfo->bearerList.end (); blsIt++)
+      BearerList_t::iterator blsIt = cInfo->m_bearerList.begin (); 
+      for ( ; blsIt != cInfo->m_bearerList.end (); blsIt++)
         {
           if (blsIt->sgwFteid.teid == teid)
             {
@@ -380,8 +404,8 @@ OpenFlowEpcController::GetBearerFromTft (Ptr<EpcTft> tft)
   for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
     {
       cInfo = *ctxIt;
-      BearerList_t::iterator blsIt = cInfo->bearerList.begin (); 
-      for ( ; blsIt != cInfo->bearerList.end (); blsIt++)
+      BearerList_t::iterator blsIt = cInfo->m_bearerList.begin (); 
+      for ( ; blsIt != cInfo->m_bearerList.end (); blsIt++)
         {
           if (blsIt->tft == tft)
             {
