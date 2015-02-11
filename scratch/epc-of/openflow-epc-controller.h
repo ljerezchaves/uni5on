@@ -123,9 +123,9 @@ protected:
   int               priority;     //!< Flow priority
   int               timeout;      //!< Flow idle timeout
   bool              isDefault;    //!< This info is for default bearer
-  bool              isInstalled;  //!< Rule installed into switches
-  bool              isActive;     //!< Active traffic for this rule
-  ContextBearer_t   bearer;       //!< EPS bearer
+  bool              isInstalled;  //!< Rule is installed into switches
+  bool              isActive;     //!< Application traffic is active
+  ContextBearer_t   bearer;       //!< EPS bearer information
 };
 
 

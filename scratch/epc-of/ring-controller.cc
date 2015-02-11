@@ -146,35 +146,44 @@ RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
 {
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr);
   
-  // Call base method which will save context information
+  // Call base method which will save context information and create routing
+  // info for default bearer.
   OpenFlowEpcController::NotifyNewContextCreated (imsi, cellId, enbAddr, 
                                                   sgwAddr, bearerList);
   
-  // Create and save routing information for default bearer
+//  // Create and save routing information for default bearer
+//  ContextBearer_t defaultBearer = bearerList.front ();
+//  NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
+//  
+//  uint32_t teid = defaultBearer.sgwFteid.teid;
+//  Ptr<RingRoutingInfo> rrInfo = GetTeidRingRoutingInfo (teid);
+//  NS_ASSERT_MSG (rrInfo == 0, "Existing routing for default bearer " << teid);
+//
+//  rrInfo = CreateObject<RingRoutingInfo> ();
+//  rrInfo->teid = teid;
+//  rrInfo->sgwIdx = GetSwitchIdxFromIp (sgwAddr);
+//  rrInfo->enbIdx = GetSwitchIdxFromIp (enbAddr);
+//  rrInfo->sgwAddr = sgwAddr;
+//  rrInfo->enbAddr = enbAddr;
+//  rrInfo->app = 0;                       // No app for default bearer
+//  rrInfo->priority = m_defaultPriority;  // Priority for default bearer
+//  rrInfo->timeout = m_defaultTimeout;    // No timeout for default bearer
+//  rrInfo->isInstalled = false;           // Bearer rules not installed yet
+//  rrInfo->isActive = true;               // Default bearer is always active
+//  rrInfo->isDefault = true;              // This is a default bearer
+//  rrInfo->bearer = defaultBearer;
+//  rrInfo->SetDownAndUpPath (FindShortestPath (rrInfo->sgwIdx, rrInfo->enbIdx));
+//
+//  SaveTeidRoutingInfo (rrInfo);
+
   ContextBearer_t defaultBearer = bearerList.front ();
-  NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
-  
   uint32_t teid = defaultBearer.sgwFteid.teid;
-  Ptr<RingRoutingInfo> rrInfo = GetTeidRingRoutingInfo (teid);
-  NS_ASSERT_MSG (rrInfo == 0, "Existing routing for default bearer " << teid);
+  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  Ptr<RingRoutingInfo> ringInfo = CreateObject<RingRoutingInfo> ();
+  ringInfo->SetDownAndUpPath (FindShortestPath (rInfo->sgwIdx, rInfo->enbIdx));
+  rInfo->AggregateObject (ringInfo);
 
-  rrInfo = CreateObject<RingRoutingInfo> ();
-  rrInfo->teid = teid;
-  rrInfo->sgwIdx = GetSwitchIdxFromIp (sgwAddr);
-  rrInfo->enbIdx = GetSwitchIdxFromIp (enbAddr);
-  rrInfo->sgwAddr = sgwAddr;
-  rrInfo->enbAddr = enbAddr;
-  rrInfo->app = 0;                       // No app for default bearer
-  rrInfo->priority = m_defaultPriority;  // Priority for default bearer
-  rrInfo->timeout = m_defaultTimeout;    // No timeout for default bearer
-  rrInfo->isInstalled = false;           // Bearer rules not installed yet
-  rrInfo->isActive = true;               // Default bearer is always active
-  rrInfo->isDefault = true;              // This is a default bearer
-  rrInfo->bearer = defaultBearer;
-  rrInfo->SetDownAndUpPath (FindShortestPath (rrInfo->sgwIdx, rrInfo->enbIdx));
-
-  SaveTeidRoutingInfo (rrInfo);
-  InstallTeidRouting (rrInfo);
+//  InstallTeidRouting (rrInfo);
 }
 
 bool
@@ -182,61 +191,48 @@ RingController::NotifyAppStart (Ptr<Application> app)
 {
   NS_LOG_FUNCTION (this << app);
 
-  // Get TEID, bearer and tft from application, and reset statistics.
-  Ptr<EpcTft> tft = app->GetObject<EpcTft> ();
+  // Call base method which will create routing info for the 
+  // bearer associated with this app, if necessary.
+  OpenFlowEpcController::NotifyAppStart (app);
+
   uint32_t teid = GetTeidFromApplication (app);
-  ContextBearer_t dedicatedBearer = GetBearerFromTft (tft);
-  ResetAppStatistics (app);
-  
-  Ptr<RingRoutingInfo> rrInfo = GetTeidRingRoutingInfo (teid);
-  if (rrInfo == 0)
+  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  NS_ASSERT_MSG (rInfo, "rInfo should have been created by base class.");
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  if (ringInfo == 0)
     {
       // This is the first time in simulation we are using this dedicated
-      // bearer. Let's create and save it's routing metadata.
-      NS_LOG_DEBUG ("First use of bearer TEID " << teid);
-      Ptr<const ContextInfo> cInfo = GetContextFromTft (tft);
-      rrInfo = CreateObject<RingRoutingInfo> ();
-      rrInfo->teid = teid;
-      rrInfo->sgwIdx = cInfo->GetSgwIdx ();
-      rrInfo->enbIdx = cInfo->GetEnbIdx ();
-      rrInfo->sgwAddr = cInfo->GetSgwAddr ();
-      rrInfo->enbAddr = cInfo->GetEnbAddr ();
-      rrInfo->app = app;                      // App for this dedicated bearer
-      rrInfo->priority = m_dedicatedPriority; // Priority for dedicated bearer
-      rrInfo->timeout = m_dedicatedTimeout;   // Timeout for dedicated bearer
-      rrInfo->isInstalled = false;            // Switch rules not installed yet
-      rrInfo->isActive = false;               // Dedicated bearer not active yet
-      rrInfo->isDefault = false;              // This is a dedicated bearer
-      rrInfo->bearer = dedicatedBearer;
-      rrInfo->SetDownAndUpPath (FindShortestPath (rrInfo->sgwIdx, rrInfo->enbIdx));
-
-      SaveTeidRoutingInfo (rrInfo);
+      // bearer in the ring. Let's create and save it's ring routing
+      // metadata.
+      ringInfo = CreateObject<RingRoutingInfo> ();
+      ringInfo->SetDownAndUpPath (FindShortestPath (rInfo->sgwIdx, rInfo->enbIdx));
+      rInfo->AggregateObject (ringInfo);
     }
 
   // Is it a default bearer?
-  if (rrInfo->isDefault)
+  if (rInfo->isDefault)
     {
       // If the application traffic is sent over default bearer, there is no
       // need for resource reservation nor reinstall the switch rules, as
       // default rules were supposed to remain installed during entire
       // simulation.
-      NS_ASSERT_MSG (rrInfo->isActive && rrInfo->isInstalled, 
+      NS_ASSERT_MSG (rInfo->isActive && rInfo->isInstalled, 
                      "Default bearer should be intalled and activated.");
       return true;
     }
 
   // Is it an active bearer?
-  if (rrInfo->isActive)
+  if (rInfo->isActive)
     {
       // This happens with VoIP application, which are installed in pairs and,
       // when the second application starts, the first one has already
       // configured the routing for this bearer and set the active flag.
-      NS_ASSERT_MSG (rrInfo->isInstalled, "Bearer should be installed.");
+      NS_ASSERT_MSG (rInfo->isInstalled, "Bearer should be installed.");
       NS_LOG_DEBUG ("Routing path for " << teid << " is already installed.");
       return true;
     }
 
-  NS_ASSERT_MSG (!rrInfo->isActive, "Bearer should be inactive.");
+  NS_ASSERT_MSG (!rInfo->isActive, "Bearer should be inactive.");
   // So, this bearer must be inactive and we are goind to reuse it's metadata.
   // Every time the application starts using an (old) existing bearer, let's
   // reinstall the rules on the switches, which will inscrease the bearer
@@ -244,17 +240,17 @@ RingController::NotifyAppStart (Ptr<Application> app)
   // can even use new routing paths when necessary.
 
   // For dedicated GBR bearers, let's check for available resources. 
-  if (rrInfo->IsGbr ())
+  if (rInfo->IsGbr ())
     {
-      if (!ProcessGbrRequest (rrInfo))
+      if (!ProcessGbrRequest (rInfo))
         {
           return false;
         }
     }
 
   // Everything is ok! Let's activate and install this bearer.
-  rrInfo->isActive = true;
-  InstallTeidRouting (rrInfo);  
+  rInfo->isActive = true;
+//  InstallTeidRouting (rrInfo);  
   return true;
 }
 
@@ -264,20 +260,20 @@ RingController::NotifyAppStop (Ptr<Application> app)
   NS_LOG_FUNCTION (this << app);
 
   uint32_t teid = GetTeidFromApplication (app);
-  Ptr<RingRoutingInfo> rrInfo = GetTeidRingRoutingInfo (teid);
-  if (rrInfo == 0)
+  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  if (rInfo == 0)
     {
       NS_FATAL_ERROR ("No routing information for teid " << teid);
     }
   
   // Check for active application
-  if (rrInfo->isActive == true)
+  if (rInfo->isActive == true)
     {
-      rrInfo->isActive = false;
-      rrInfo->isInstalled = false;
-      if (rrInfo->IsGbr ())
+      rInfo->isActive = false;
+      rInfo->isInstalled = false;
+      if (rInfo->IsGbr ())
         {
-          ReleaseBandwidth (rrInfo); 
+          ReleaseBandwidth (rInfo); 
         }
       // There is no need to remove mannyaly remove the 
       // rules from switch. Just wait for idle timeout.

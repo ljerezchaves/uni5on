@@ -32,11 +32,10 @@ namespace ns3 {
 
 // ------------------------------------------------------------------------ //
 /**
- * Extending the RoutingInfo class (metadata associated to a routing path
- * between two any switches in the OpenFlow network) to include the
- * information about downlink and uplink routing path in the ring network.
+ * Metadata associated to a ring routing path between 
+ * two any switches in the OpenFlow ring network.
  */
-class RingRoutingInfo : public RoutingInfo
+class RingRoutingInfo : public Object
 {
   friend class RingController;
 

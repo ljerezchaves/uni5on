@@ -278,14 +278,66 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   info->m_enbAddr = enbAddr;
   info->m_sgwAddr = sgwAddr;
   info->m_bearerList = bearerList;
-
   m_contexts.push_back (info);
+
+  // Create and save routing information for default bearer
+  ContextBearer_t defaultBearer = bearerList.front ();
+  NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
+  
+  uint32_t teid = defaultBearer.sgwFteid.teid;
+  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  NS_ASSERT_MSG (rInfo == 0, "Existing routing for default bearer " << teid);
+
+  rInfo = CreateObject<RoutingInfo> ();
+  rInfo->teid = teid;
+  rInfo->sgwIdx = GetSwitchIdxFromIp (sgwAddr);
+  rInfo->enbIdx = GetSwitchIdxFromIp (enbAddr);
+  rInfo->sgwAddr = sgwAddr;
+  rInfo->enbAddr = enbAddr;
+  rInfo->app = 0;                       // No app for default bearer
+  rInfo->priority = m_defaultPriority;  // Priority for default bearer
+  rInfo->timeout = m_defaultTimeout;    // No timeout for default bearer
+  rInfo->isInstalled = false;           // Bearer rules not installed yet
+  rInfo->isActive = true;               // Default bearer is always active
+  rInfo->isDefault = true;              // This is a default bearer
+  rInfo->bearer = defaultBearer;
+  SaveTeidRoutingInfo (rInfo);
 }
 
 bool 
 OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
 {
   NS_LOG_FUNCTION (this << app);
+
+  ResetAppStatistics (app);
+  uint32_t teid = GetTeidFromApplication (app);
+  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  if (rInfo == 0)
+    {
+      // This is the first time in simulation we are using this dedicated
+      // bearer. Let's create and save it's routing metadata.
+      NS_LOG_DEBUG ("First use of bearer TEID " << teid);
+     
+      Ptr<EpcTft> tft = app->GetObject<EpcTft> ();
+      ContextBearer_t dedicatedBearer = GetBearerFromTft (tft);
+      Ptr<const ContextInfo> cInfo = GetContextFromTft (tft);
+      rInfo = CreateObject<RoutingInfo> ();
+      rInfo->teid = teid;
+      rInfo->sgwIdx = cInfo->GetSgwIdx ();
+      rInfo->enbIdx = cInfo->GetEnbIdx ();
+      rInfo->sgwAddr = cInfo->GetSgwAddr ();
+      rInfo->enbAddr = cInfo->GetEnbAddr ();
+      rInfo->app = app;                      // App for this dedicated bearer
+      rInfo->priority = m_dedicatedPriority; // Priority for dedicated bearer
+      rInfo->timeout = m_dedicatedTimeout;   // Timeout for dedicated bearer
+      rInfo->isInstalled = false;            // Switch rules not installed yet
+      rInfo->isActive = false;               // Dedicated bearer not active yet
+      rInfo->isDefault = false;              // This is a dedicated bearer
+      rInfo->bearer = dedicatedBearer;
+      rInfo->SetDownAndUpPath (FindShortestPath (rInfo->sgwIdx, rInfo->enbIdx));
+
+      SaveTeidRoutingInfo (rInfo);
+    }
   return true;
 }
 
