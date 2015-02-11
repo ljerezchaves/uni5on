@@ -629,92 +629,119 @@ RingController::InstallTeidRouting (Ptr<RingRoutingInfo> rrInfo,
   // Increasing the priority every time we (re)install TEID rules.
   rrInfo->priority++;    
 
-  char cookieStr [9];
-  sprintf (cookieStr, "0x%x", rrInfo->teid);
-
-  char bufferStr [12];
-  sprintf (bufferStr, "%u", buffer);
-
   // flow-mod flags OFPFF_SEND_FLOW_REM and OFPFF_CHECK_OVERLAP, used to notify
   // the controller when a flow entry expires and to avoid overlaping rules.
   std::string flagsStr ("0x0003");
 
+  // Printing the cookie and buffer values in dpctl string format
+  char cookieStr [9], bufferStr [12];
+  sprintf (cookieStr, "0x%x", rrInfo->teid);
+  sprintf (bufferStr, "%u",   buffer);
+
+  // Building the dpctl command + arguments string
+  std::ostringstream args;
+  args << "flow-mod cmd=add,table=1"
+          ",buffer=" << bufferStr <<
+          ",flags=" << flagsStr <<
+          ",cookie=" << cookieStr <<
+          ",prio=" << rrInfo->priority <<
+          ",idle=" << rrInfo->timeout;
+          
+
   // Configuring downlink routing
   if (!rrInfo->app || rrInfo->app->GetDirection () != Application::UPLINK)
     {
-      std::ostringstream cmd;
-      cmd << "flow-mod cmd=add,table=1" << 
-             ",buffer=" << bufferStr <<
-             ",flags=" << flagsStr <<
-             ",cookie=" << cookieStr <<
-             ",prio=" << rrInfo->priority <<
-             ",idle=" << rrInfo->timeout <<
-             " eth_type=0x800,ip_proto=17" << 
-             ",ip_src=" << rrInfo->sgwAddr <<
-             ",ip_dst=" << rrInfo->enbAddr <<
-             ",gtp_teid=" << rrInfo->teid <<
-             " apply:group=" << rrInfo->downPath;
-      
-      // In downlink we start at gateway switch;
+      // Building the match string
+      std::ostringstream match;
+      match << " eth_type=0x800,ip_proto=17" << 
+               ",ip_src=" << rrInfo->sgwAddr <<
+               ",ip_dst=" << rrInfo->enbAddr <<
+               ",gtp_teid=" << rrInfo->teid;
+
+      // Building the output instruction string
+      std::ostringstream inst;
+      inst << " apply:group=" << rrInfo->downPath;
+
+      // In downlink we start at gateway switch
       uint16_t current = rrInfo->sgwIdx;
   
-      // Installing the meter rule just in gateway switch
+      // When necessary, install the meter rule just in gateway switch
       GbrQosInformation gbrQoS = rrInfo->GetQosInfo ();
       if (gbrQoS.mbrDl)
         {
+          // Install the meter entry
           std::ostringstream meter;
           meter << "meter-mod cmd=add,flags=1" << 
                    ",meter=" << rrInfo->teid <<
                    " drop:rate=" << gbrQoS.mbrDl / 1024;
           DpctlCommand (GetSwitchDevice (current), meter.str ());
             
-          // For gateway, we use a custom output instruction string
-          std::ostringstream cmd2;
-          cmd2 << "flow-mod cmd=add,table=1" << 
-                 ",buffer=" << bufferStr <<
-                 ",flags=" << flagsStr <<
-                 ",cookie=" << cookieStr <<
-                 ",prio=" << rrInfo->priority <<
-                 ",idle=" << rrInfo->timeout <<
-                 " eth_type=0x800,ip_proto=17" << 
-                 ",ip_src=" << rrInfo->sgwAddr <<
-                 ",ip_dst=" << rrInfo->enbAddr <<
-                 ",gtp_teid=" << rrInfo->teid <<
-                 " meter:" << rrInfo->teid <<
-                 " apply:group=" << rrInfo->downPath;
-          
+          // Building the meter apply instruction string
+          std::ostringstream meterInst;
+          meterInst << " meter:" << rrInfo->teid;
+
+          std::string commandStr = args.str () + match.str () + 
+                                   meterInst.str () + inst.str ();
+
           // Installing the rules for gateway
-          DpctlCommand (GetSwitchDevice (current), cmd2.str ());
+          DpctlCommand (GetSwitchDevice (current), commandStr);
           current = NextSwitchIndex (current, rrInfo->downPath);
         }
 
+      // Keep installing the rule at every switch in path
+      std::string commandStr = args.str () + match.str () + inst.str ();
       while (current != rrInfo->enbIdx)
         {
-          DpctlCommand (GetSwitchDevice (current), cmd.str ());
+          DpctlCommand (GetSwitchDevice (current), commandStr);
           current = NextSwitchIndex (current, rrInfo->downPath);
         }
     }
     
   // Configuring uplink routing
   if (!rrInfo->app || rrInfo->app->GetDirection () != Application::DOWNLINK)
-    { 
-      std::ostringstream cmd;
-      cmd << "flow-mod cmd=add,table=1" << 
-             ",buffer=" << bufferStr <<
-             ",flags=" << flagsStr <<
-             ",cookie=" << cookieStr <<
-             ",prio=" << rrInfo->priority <<
-             ",idle=" << rrInfo->timeout <<
-             " eth_type=0x800,ip_proto=17" << 
-             ",ip_src=" << rrInfo->enbAddr <<
-             ",ip_dst=" << rrInfo->sgwAddr <<
-             ",gtp_teid=" << rrInfo->teid <<
-             " apply:group=" << rrInfo->upPath;
+    {
+      // Building the match string
+      std::ostringstream match;
+      match << " eth_type=0x800,ip_proto=17" << 
+               ",ip_src=" << rrInfo->enbAddr <<
+               ",ip_dst=" << rrInfo->sgwAddr <<
+               ",gtp_teid=" << rrInfo->teid;
 
+      // Building the output instruction string
+      std::ostringstream inst;
+      inst << " apply:group=" << rrInfo->upPath;
+
+      // In uplink we start at eNB switch
       uint16_t current = rrInfo->enbIdx;
+
+      // When necessary, install the meter rule just in eNB switch
+      GbrQosInformation gbrQoS = rrInfo->GetQosInfo ();
+      if (gbrQoS.mbrUl)
+        {
+          // Install the meter entry
+          std::ostringstream meter;
+          meter << "meter-mod cmd=add,flags=1" << 
+                   ",meter=" << rrInfo->teid <<
+                   " drop:rate=" << gbrQoS.mbrDl / 1024;
+          DpctlCommand (GetSwitchDevice (current), meter.str ());
+            
+          // Building the meter apply instruction string
+          std::ostringstream meterInst;
+          meterInst << " meter:" << rrInfo->teid;
+
+          std::string commandStr = args.str () + match.str () + 
+                                   meterInst.str () + inst.str ();
+
+          // Installing the rules for gateway
+          DpctlCommand (GetSwitchDevice (current), commandStr);
+          current = NextSwitchIndex (current, rrInfo->upPath);
+        }
+
+      // Keep installing the rule at every switch in path
+      std::string commandStr = args.str () + match.str () + inst.str ();
       while (current != rrInfo->sgwIdx)
         {
-          DpctlCommand (GetSwitchDevice (current), cmd.str ());
+          DpctlCommand (GetSwitchDevice (current), commandStr);
           current = NextSwitchIndex (current, rrInfo->upPath);
         }
     }
