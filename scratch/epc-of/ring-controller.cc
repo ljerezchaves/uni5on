@@ -151,31 +151,6 @@ RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   OpenFlowEpcController::NotifyNewContextCreated (imsi, cellId, enbAddr, 
                                                   sgwAddr, bearerList);
   
-//  // Create and save routing information for default bearer
-//  ContextBearer_t defaultBearer = bearerList.front ();
-//  NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
-//  
-//  uint32_t teid = defaultBearer.sgwFteid.teid;
-//  Ptr<RingRoutingInfo> rrInfo = GetTeidRingRoutingInfo (teid);
-//  NS_ASSERT_MSG (rrInfo == 0, "Existing routing for default bearer " << teid);
-//
-//  rrInfo = CreateObject<RingRoutingInfo> ();
-//  rrInfo->teid = teid;
-//  rrInfo->sgwIdx = GetSwitchIdxFromIp (sgwAddr);
-//  rrInfo->enbIdx = GetSwitchIdxFromIp (enbAddr);
-//  rrInfo->sgwAddr = sgwAddr;
-//  rrInfo->enbAddr = enbAddr;
-//  rrInfo->app = 0;                       // No app for default bearer
-//  rrInfo->priority = m_defaultPriority;  // Priority for default bearer
-//  rrInfo->timeout = m_defaultTimeout;    // No timeout for default bearer
-//  rrInfo->isInstalled = false;           // Bearer rules not installed yet
-//  rrInfo->isActive = true;               // Default bearer is always active
-//  rrInfo->isDefault = true;              // This is a default bearer
-//  rrInfo->bearer = defaultBearer;
-//  rrInfo->SetDownAndUpPath (FindShortestPath (rrInfo->sgwIdx, rrInfo->enbIdx));
-//
-//  SaveTeidRoutingInfo (rrInfo);
-
   ContextBearer_t defaultBearer = bearerList.front ();
   uint32_t teid = defaultBearer.sgwFteid.teid;
   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
@@ -183,7 +158,7 @@ RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   ringInfo->SetDownAndUpPath (FindShortestPath (rInfo->sgwIdx, rInfo->enbIdx));
   rInfo->AggregateObject (ringInfo);
 
-//  InstallTeidRouting (rrInfo);
+  InstallTeidRouting (rInfo);
 }
 
 bool
@@ -250,7 +225,7 @@ RingController::NotifyAppStart (Ptr<Application> app)
 
   // Everything is ok! Let's activate and install this bearer.
   rInfo->isActive = true;
-//  InstallTeidRouting (rrInfo);  
+  InstallTeidRouting (rInfo);  
   return true;
 }
 
@@ -259,27 +234,8 @@ RingController::NotifyAppStop (Ptr<Application> app)
 {
   NS_LOG_FUNCTION (this << app);
 
-  uint32_t teid = GetTeidFromApplication (app);
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-  if (rInfo == 0)
-    {
-      NS_FATAL_ERROR ("No routing information for teid " << teid);
-    }
-  
-  // Check for active application
-  if (rInfo->isActive == true)
-    {
-      rInfo->isActive = false;
-      rInfo->isInstalled = false;
-      if (rInfo->IsGbr ())
-        {
-          ReleaseBandwidth (rInfo); 
-        }
-      // There is no need to remove mannyaly remove the 
-      // rules from switch. Just wait for idle timeout.
-    }
-
-  PrintAppStatistics (app);
+  // Call base method to print app stats and update routing info.
+  OpenFlowEpcController::NotifyAppStop (app);
   return true;
 }
 
@@ -318,13 +274,13 @@ RingController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
   NS_LOG_FUNCTION (this << swtch.ipv4 << teid);
 
   // Let's check for existing routing path
-  Ptr<RingRoutingInfo> rrInfo = GetTeidRingRoutingInfo (teid);
-  if (rrInfo && rrInfo->isActive)
+  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  if (rInfo && rInfo->isActive)
     {
       NS_LOG_WARN ("Not supposed to happen, but we can handle this.");
 
       // Reinstalling the rules, setting the buffer in flow-mod message;
-      InstallTeidRouting (rrInfo, msg->buffer_id);
+      InstallTeidRouting (rInfo, msg->buffer_id);
     }
   else
     {
@@ -362,8 +318,8 @@ RingController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
     }
 
   // Check for existing routing information for this bearer
-  Ptr<RingRoutingInfo> rrInfo = GetTeidRingRoutingInfo (teid);
-  if (rrInfo == 0)
+  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  if (rInfo == 0)
     {
       NS_FATAL_ERROR ("Routing info for TEID " << teid << " not found.");
       return 0;
@@ -371,7 +327,7 @@ RingController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
 
   // When a rule expires due to idle timeout, check the following situations:
   // 1) The application is stopped and the bearer must be inactive.
-  if (!rrInfo->isActive)
+  if (!rInfo->isActive)
     {
       NS_LOG_DEBUG ("Flow " << teid << " removed for stopped application.");
       return 0;
@@ -380,7 +336,7 @@ RingController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   // 2) The application is running and the bearer is active, but the
   // application has already been stopped since last rule installation. In this
   // case, the bearer priority should have been increased to avoid conflicts.
-  if (rrInfo->priority > prio)
+  if (rInfo->priority > prio)
     {
       NS_LOG_DEBUG ("Flow " << teid << " removed for old rule.");
       return 0;
@@ -392,11 +348,11 @@ RingController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   // increase the priority to avoid conflicts (so, any other flow expired
   // message from other switches for this same path will be handle by case #2
   // (lower priority).
-  NS_ASSERT_MSG (rrInfo->priority == prio, "Invalid flow priority.");
-  if (rrInfo->isActive)
+  NS_ASSERT_MSG (rInfo->priority == prio, "Invalid flow priority.");
+  if (rInfo->isActive)
     {
       NS_LOG_DEBUG ("Flow " << teid << " is still active. Reinstall rules...");
-      InstallTeidRouting (rrInfo);
+      InstallTeidRouting (rInfo);
       return 0;
     }
 
@@ -466,26 +422,27 @@ RingController::GetTeidRingRoutingInfo (uint32_t teid)
 }
 
 bool
-RingController::ProcessGbrRequest (Ptr<RingRoutingInfo> rrInfo)
+RingController::ProcessGbrRequest (Ptr<RoutingInfo> rInfo)
 {
   IncreaseGbrRequest ();
 
-  uint32_t teid = rrInfo->teid;
-  GbrQosInformation gbrQoS = rrInfo->GetQosInfo ();
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  uint32_t teid = rInfo->teid;
+  GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
   DataRate request, available;
 
   request = DataRate (gbrQoS.gbrDl + gbrQoS.gbrUl);
   NS_LOG_DEBUG ("Bearer " << teid << " requesting " << request);
 
-  available = GetAvailableBandwidth (rrInfo->sgwIdx, rrInfo->enbIdx, 
-                                     rrInfo->downPath);
+  available = GetAvailableBandwidth (rInfo->sgwIdx, rInfo->enbIdx, 
+                                     ringInfo->downPath);
   NS_LOG_DEBUG ("Available bandwidth in current path: " << available);
 
   if (available >= request)
     {
       // Let's reserve it and return true to the application.
-      rrInfo->reserved = request;
-      return (ReserveBandwidth (rrInfo));
+      rInfo->reserved = request;
+      return (ReserveBandwidth (rInfo));
     }
 
   // We don't have the available bandwitdh for this bearer in current path. 
@@ -504,8 +461,8 @@ RingController::ProcessGbrRequest (Ptr<RingRoutingInfo> rrInfo)
           NS_LOG_DEBUG ("No resources for bearer " << teid << "." 
                         " Checking the other path.");
           
-          available = GetAvailableBandwidth (rrInfo->sgwIdx, rrInfo->enbIdx, 
-                                             rrInfo->upPath);
+          available = GetAvailableBandwidth (rInfo->sgwIdx, rInfo->enbIdx, 
+                                             ringInfo->upPath);
           NS_LOG_DEBUG ("Available bandwidth in other path: " << available);
 
           if (available < request)
@@ -518,9 +475,9 @@ RingController::ProcessGbrRequest (Ptr<RingRoutingInfo> rrInfo)
           // Let's invert the path, reserve the bandwidth and return true to
           // the application.
           NS_LOG_DEBUG ("Inverting paths.");
-          rrInfo->InvertRoutingPath ();
-          rrInfo->reserved = request;
-          return (ReserveBandwidth (rrInfo));
+          ringInfo->InvertRoutingPath ();
+          rInfo->reserved = request;
+          return (ReserveBandwidth (rInfo));
         }
         
       default:
@@ -576,15 +533,16 @@ RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx,
 }
 
 bool 
-RingController::ReserveBandwidth (const Ptr<RingRoutingInfo> rrInfo)
+RingController::ReserveBandwidth (const Ptr<RoutingInfo> rInfo)
 {
   // Iterating over connections in downlink direction
-  uint16_t current = rrInfo->sgwIdx;
-  while (current != rrInfo->enbIdx)
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  uint16_t current = rInfo->sgwIdx;
+  while (current != rInfo->enbIdx)
     {
-      uint16_t next = NextSwitchIndex (current, rrInfo->downPath);
+      uint16_t next = NextSwitchIndex (current, ringInfo->downPath);
       Ptr<ConnectionInfo> conn = GetConnectionInfo (current, next);
-      conn->ReserveDataRate (rrInfo->reserved);
+      conn->ReserveDataRate (rInfo->reserved);
       NS_ABORT_IF (conn->GetAvailableDataRate () < 0);
       current = next;
     }
@@ -592,15 +550,16 @@ RingController::ReserveBandwidth (const Ptr<RingRoutingInfo> rrInfo)
 }
 
 bool
-RingController::ReleaseBandwidth (const Ptr<RingRoutingInfo> rrInfo)
+RingController::ReleaseBandwidth (const Ptr<RoutingInfo> rInfo)
 {
   // Iterating over connections in downlink direction
-  uint16_t current = rrInfo->sgwIdx;
-  while (current != rrInfo->enbIdx)
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  uint16_t current = rInfo->sgwIdx;
+  while (current != rInfo->enbIdx)
     {
-      uint16_t next = NextSwitchIndex (current, rrInfo->downPath);
+      uint16_t next = NextSwitchIndex (current, ringInfo->downPath);
       Ptr<ConnectionInfo> conn = GetConnectionInfo (current, next);
-      conn->ReleaseDataRate (rrInfo->reserved);
+      conn->ReleaseDataRate (rInfo->reserved);
       current = next;
     }
   return true;
@@ -616,14 +575,16 @@ RingController::NextSwitchIndex (uint16_t current,
 }
 
 bool 
-RingController::InstallTeidRouting (Ptr<RingRoutingInfo> rrInfo, 
+RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, 
                                     uint32_t buffer)
 {
-  NS_LOG_FUNCTION (this << rrInfo->teid << rrInfo->priority << buffer);
-  NS_ASSERT_MSG (rrInfo->isActive, "Rule not active.");
-  
+  NS_LOG_FUNCTION (this << rInfo->teid << rInfo->priority << buffer);
+  NS_ASSERT_MSG (rInfo->isActive, "Rule not active.");
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  NS_ASSERT_MSG (ringInfo, "Invalid ringInfo.");
+
   // Increasing the priority every time we (re)install TEID rules.
-  rrInfo->priority++;    
+  rInfo->priority++;
 
   // flow-mod flags OFPFF_SEND_FLOW_REM and OFPFF_CHECK_OVERLAP, used to notify
   // the controller when a flow entry expires and to avoid overlaping rules.
@@ -631,7 +592,7 @@ RingController::InstallTeidRouting (Ptr<RingRoutingInfo> rrInfo,
 
   // Printing the cookie and buffer values in dpctl string format
   char cookieStr [9], bufferStr [12];
-  sprintf (cookieStr, "0x%x", rrInfo->teid);
+  sprintf (cookieStr, "0x%x", rInfo->teid);
   sprintf (bufferStr, "%u",   buffer);
 
   // Building the dpctl command + arguments string
@@ -640,109 +601,108 @@ RingController::InstallTeidRouting (Ptr<RingRoutingInfo> rrInfo,
           ",buffer=" << bufferStr <<
           ",flags=" << flagsStr <<
           ",cookie=" << cookieStr <<
-          ",prio=" << rrInfo->priority <<
-          ",idle=" << rrInfo->timeout;
+          ",prio=" << rInfo->priority <<
+          ",idle=" << rInfo->timeout;
           
-
   // Configuring downlink routing
-  if (!rrInfo->app || rrInfo->app->GetDirection () != Application::UPLINK)
+  if (!rInfo->app || rInfo->app->GetDirection () != Application::UPLINK)
     {
       // Building the match string
       std::ostringstream match;
       match << " eth_type=0x800,ip_proto=17" << 
-               ",ip_src=" << rrInfo->sgwAddr <<
-               ",ip_dst=" << rrInfo->enbAddr <<
-               ",gtp_teid=" << rrInfo->teid;
+               ",ip_src=" << rInfo->sgwAddr <<
+               ",ip_dst=" << rInfo->enbAddr <<
+               ",gtp_teid=" << rInfo->teid;
 
       // Building the output instruction string
       std::ostringstream inst;
-      inst << " apply:group=" << rrInfo->downPath;
+      inst << " apply:group=" << ringInfo->downPath;
 
       // In downlink we start at gateway switch
-      uint16_t current = rrInfo->sgwIdx;
+      uint16_t current = rInfo->sgwIdx;
   
       // When necessary, install the meter rule just in gateway switch
-      GbrQosInformation gbrQoS = rrInfo->GetQosInfo ();
+      GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
       if (gbrQoS.mbrDl)
         {
           // Install the meter entry
           std::ostringstream meter;
           meter << "meter-mod cmd=add,flags=1" << 
-                   ",meter=" << rrInfo->teid <<
+                   ",meter=" << rInfo->teid <<
                    " drop:rate=" << gbrQoS.mbrDl / 1024;
           DpctlCommand (GetSwitchDevice (current), meter.str ());
             
           // Building the meter apply instruction string
           std::ostringstream meterInst;
-          meterInst << " meter:" << rrInfo->teid;
+          meterInst << " meter:" << rInfo->teid;
 
           std::string commandStr = args.str () + match.str () + 
                                    meterInst.str () + inst.str ();
 
           // Installing the rules for gateway
           DpctlCommand (GetSwitchDevice (current), commandStr);
-          current = NextSwitchIndex (current, rrInfo->downPath);
+          current = NextSwitchIndex (current, ringInfo->downPath);
         }
 
       // Keep installing the rule at every switch in path
       std::string commandStr = args.str () + match.str () + inst.str ();
-      while (current != rrInfo->enbIdx)
+      while (current != rInfo->enbIdx)
         {
           DpctlCommand (GetSwitchDevice (current), commandStr);
-          current = NextSwitchIndex (current, rrInfo->downPath);
+          current = NextSwitchIndex (current, ringInfo->downPath);
         }
     }
     
   // Configuring uplink routing
-  if (!rrInfo->app || rrInfo->app->GetDirection () != Application::DOWNLINK)
+  if (!rInfo->app || rInfo->app->GetDirection () != Application::DOWNLINK)
     {
       // Building the match string
       std::ostringstream match;
       match << " eth_type=0x800,ip_proto=17" << 
-               ",ip_src=" << rrInfo->enbAddr <<
-               ",ip_dst=" << rrInfo->sgwAddr <<
-               ",gtp_teid=" << rrInfo->teid;
+               ",ip_src=" << rInfo->enbAddr <<
+               ",ip_dst=" << rInfo->sgwAddr <<
+               ",gtp_teid=" << rInfo->teid;
 
       // Building the output instruction string
       std::ostringstream inst;
-      inst << " apply:group=" << rrInfo->upPath;
+      inst << " apply:group=" << ringInfo->upPath;
 
       // In uplink we start at eNB switch
-      uint16_t current = rrInfo->enbIdx;
+      uint16_t current = rInfo->enbIdx;
 
       // When necessary, install the meter rule just in eNB switch
-      GbrQosInformation gbrQoS = rrInfo->GetQosInfo ();
+      GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
       if (gbrQoS.mbrUl)
         {
           // Install the meter entry
           std::ostringstream meter;
           meter << "meter-mod cmd=add,flags=1" << 
-                   ",meter=" << rrInfo->teid <<
+                   ",meter=" << rInfo->teid <<
                    " drop:rate=" << gbrQoS.mbrDl / 1024;
           DpctlCommand (GetSwitchDevice (current), meter.str ());
             
           // Building the meter apply instruction string
           std::ostringstream meterInst;
-          meterInst << " meter:" << rrInfo->teid;
+          meterInst << " meter:" << rInfo->teid;
 
           std::string commandStr = args.str () + match.str () + 
                                    meterInst.str () + inst.str ();
 
           // Installing the rules for gateway
           DpctlCommand (GetSwitchDevice (current), commandStr);
-          current = NextSwitchIndex (current, rrInfo->upPath);
+          current = NextSwitchIndex (current, ringInfo->upPath);
         }
 
       // Keep installing the rule at every switch in path
       std::string commandStr = args.str () + match.str () + inst.str ();
-      while (current != rrInfo->sgwIdx)
+      while (current != rInfo->sgwIdx)
         {
           DpctlCommand (GetSwitchDevice (current), commandStr);
-          current = NextSwitchIndex (current, rrInfo->upPath);
+          current = NextSwitchIndex (current, ringInfo->upPath);
         }
     }
   
-  rrInfo->isInstalled = true;
+  rInfo->isInstalled = true;
   return true;
 }
 
@@ -776,26 +736,26 @@ RingController::InstallTeidRouting (Ptr<RingRoutingInfo> rrInfo,
 // }
 //
 // bool
-// RingController::IsInputSwitch (const Ptr<RingRoutingInfo> rrInfo, 
+// RingController::IsInputSwitch (const Ptr<RoutingInfo> rInfo, 
 //                                uint16_t switchIdx)
 // {
 //   // For default bearer (no app associated), consider a bidirectional traffic. 
 //   Application::Direction direction = Application::BIDIRECTIONAL;
-//   if (rrInfo->app)
+//   if (rInfo->app)
 //     {
-//       direction = rrInfo->app->GetDirection ();
+//       direction = rInfo->app->GetDirection ();
 //     }
 //  
 //   switch (direction)
 //     {
 //       case Application::BIDIRECTIONAL:
-//         return (switchIdx == rrInfo->sgwIdx || switchIdx == rrInfo->enbIdx);
+//         return (switchIdx == rInfo->sgwIdx || switchIdx == rInfo->enbIdx);
 //       
 //       case Application::UPLINK:
-//         return (switchIdx == rrInfo->enbIdx);
+//         return (switchIdx == rInfo->enbIdx);
 // 
 //       case Application::DOWNLINK:
-//         return (switchIdx == rrInfo->sgwIdx);
+//         return (switchIdx == rInfo->sgwIdx);
 // 
 //       default:
 //         return false;

@@ -334,8 +334,6 @@ OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
       rInfo->isActive = false;               // Dedicated bearer not active yet
       rInfo->isDefault = false;              // This is a dedicated bearer
       rInfo->bearer = dedicatedBearer;
-      rInfo->SetDownAndUpPath (FindShortestPath (rInfo->sgwIdx, rInfo->enbIdx));
-
       SaveTeidRoutingInfo (rInfo);
     }
   return true;
@@ -345,6 +343,29 @@ bool
 OpenFlowEpcController::NotifyAppStop (Ptr<Application> app)
 {
   NS_LOG_FUNCTION (this << app);
+ 
+  uint32_t teid = GetTeidFromApplication (app);
+  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  if (rInfo == 0)
+    {
+      NS_FATAL_ERROR ("No routing information for teid " << teid);
+    }
+  
+  // Check for active application
+  if (rInfo->isActive == true)
+    {
+      rInfo->isActive = false;
+      rInfo->isInstalled = false;
+      if (rInfo->IsGbr ())
+        {
+          // FIXME Mover o release bdw para o ring, mas ver logica de isActive.
+          // ReleaseBandwidth (rInfo);   
+        }
+      // There is no need to remove manualy remove the 
+      // rules from switch. Just wait for idle timeout.
+    }
+
+  PrintAppStatistics (app);
   return true;
 }
 
@@ -419,12 +440,11 @@ OpenFlowEpcController::GetContextFromTft (Ptr<EpcTft> tft)
         {
           if (blsIt->tft == tft)
             {
-              NS_LOG_DEBUG ("Found context for tft " << tft);
               return cInfo;
             }
         }
     }
-  NS_FATAL_ERROR ("Invalid tft.");
+  NS_FATAL_ERROR ("Couldn't find context for invalid tft.");
 }
 
 Ptr<const ContextInfo>
@@ -440,12 +460,11 @@ OpenFlowEpcController::GetContextFromTeid (uint32_t teid)
         {
           if (blsIt->sgwFteid.teid == teid)
             {
-              NS_LOG_DEBUG ("Found bearer for teid " << teid);
               return cInfo;
             }
         }
     }
-  NS_FATAL_ERROR ("Invalid teid.");
+  NS_FATAL_ERROR ("Couldn't find bearer for invalid teid.");
 }
 
 ContextBearer_t 
@@ -461,12 +480,11 @@ OpenFlowEpcController::GetBearerFromTft (Ptr<EpcTft> tft)
         {
           if (blsIt->tft == tft)
             {
-              NS_LOG_DEBUG ("Found bearer for tft " << tft);
               return *blsIt;
             }
         }
     }
-  NS_FATAL_ERROR ("Invalid tft.");
+  NS_FATAL_ERROR ("Couldn't find bearer for invalid tft.");
 }
 
 uint32_t 

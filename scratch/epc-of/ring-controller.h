@@ -131,10 +131,10 @@ private:
 
   /**
    * Process the GBR resource allocation based on current ring strategy.
-   * \param rrInfo The ring routing information to process.
+   * \param rInfo The routing information to process.
    * \return True when the GBR request can be sastified.
    */
-  bool ProcessGbrRequest (Ptr<RingRoutingInfo> rrInfo);
+  bool ProcessGbrRequest (Ptr<RoutingInfo> rInfo);
 
   /**
    * Look for the routing path between srcSwitchIdx and dstSwitchIdx with
@@ -161,19 +161,19 @@ private:
    * Reserve the bandwidth for each link between source and destination
    * switches in routing path. It modifies the ConnectionInfo
    * structures saved by controller.
-   * \param rrInfo The ring routing information to reserve.
+   * \param rInfo The routing information.
    * \return True if success, false otherwise;
    */
-  bool ReserveBandwidth (const Ptr<RingRoutingInfo> rrInfo);
+  bool ReserveBandwidth (const Ptr<RoutingInfo> rInfo);
 
   /**
    * Release the bandwidth for each link between source and destination
    * switches in routing path. It modifies the ConnectionInfo
    * structures saved by controller.
-   * \param rrInfo The ring routing information to release.
+   * \param rInfo The routing information.
    * \return True if success, false otherwise;
    */
-  bool ReleaseBandwidth (const Ptr<RingRoutingInfo> rrInfo);
+  bool ReleaseBandwidth (const Ptr<RoutingInfo> rInfo);
 
   /**
    * Identify the next switch index based on routing path direction.
@@ -185,11 +185,11 @@ private:
                             RingRoutingInfo::RoutingPath path);
   /**
    * Configure the switches with OpenFlow commands for teid routing.
-   * \param rrInfo The ring routing information to configure.
+   * \param rInfo The ring routing information to configure.
    * \param buffer The buffered packet to apply this rule to.
    * \return True if configuration succeeded, false otherwise.
    */
-  bool InstallTeidRouting (Ptr<RingRoutingInfo> rrInfo, 
+  bool InstallTeidRouting (Ptr<RoutingInfo> rInfo, 
                            uint32_t buffer = OFP_NO_BUFFER);
 
 //  /**
@@ -210,11 +210,11 @@ private:
 //  /**
 //   * Based on app traffic direction, check if this switch is the input switch
 //   * for this traffic into the ring. 
-//   * \param rrInfo The ring routing information to check.
+//   * \param rInfo The routing information to check.
 //   * \param switchIdx The switch index.
 //   * \return True when this switch is the ring input switch for this traffic.
 //   */
-//  bool IsInputSwitch (const Ptr<RingRoutingInfo> rrInfo, uint16_t switchIdx);
+//  bool IsInputSwitch (const Ptr<RingRoutingInfo> rInfo, uint16_t switchIdx);
 //
 //  /**
 //   * Update the internal traffic average bitrate based on information received
