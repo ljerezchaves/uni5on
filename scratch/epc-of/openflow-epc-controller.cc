@@ -88,6 +88,64 @@ ContextInfo::GetSgwAddr () const
   return m_sgwAddr;
 }
 
+
+// ------------------------------------------------------------------------ //
+MeterInfo::MeterInfo ()
+  : m_hasDown (false),
+    m_hasUp (false),
+    m_isInstalled (false)
+{
+  NS_LOG_FUNCTION (this);
+}
+
+MeterInfo::~MeterInfo ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+TypeId 
+MeterInfo::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::MeterInfo")
+    .SetParent<Object> ()
+    .AddConstructor<MeterInfo> ()
+  ;
+  return tid;
+}
+
+void
+MeterInfo::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+std::string
+MeterInfo::GetDownAddCmd ()
+{
+  std::ostringstream meter;
+  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid <<
+           " drop:rate=" << m_downBitRate / 1024;
+  return meter.str ();
+}
+
+std::string
+MeterInfo::GetUpAddCmd ()
+{
+  std::ostringstream meter;
+  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid <<
+           " drop:rate=" << m_upBitRate / 1024;
+  return meter.str ();
+}
+
+std::string
+MeterInfo::GetDelCmd ()
+{
+  std::ostringstream meter;
+  meter << "meter-mod cmd=del,meter=" << m_teid;
+  return meter.str ();
+}
+
+
 // ------------------------------------------------------------------------ //
 RoutingInfo::RoutingInfo ()
   : m_teid (0),
@@ -341,7 +399,27 @@ OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
       rInfo->m_isDefault = false;              // This is a dedicated bearer
       rInfo->m_bearer = dedicatedBearer;
       SaveTeidRoutingInfo (rInfo);
-      return false;
+
+      // Check for meter rules
+      GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
+      if (gbrQoS.mbrDl || gbrQoS.mbrUl)
+        {
+          Ptr<MeterInfo> meterInfo = CreateObject<MeterInfo> ();
+          meterInfo->m_teid = teid;
+          if (gbrQoS.mbrDl)
+            {
+              meterInfo->m_hasDown = true;
+              meterInfo->m_downSwitch = rInfo->m_sgwIdx;
+              meterInfo->m_downBitRate = gbrQoS.mbrDl;
+            }
+          if (gbrQoS.mbrUl)
+            {
+              meterInfo->m_hasUp = true;
+              meterInfo->m_upSwitch = rInfo->m_enbIdx;
+              meterInfo->m_upBitRate = gbrQoS.mbrUl;
+            }
+          rInfo->AggregateObject (meterInfo);
+        }
     }
   return true;
 }

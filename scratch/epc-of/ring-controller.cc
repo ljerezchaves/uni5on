@@ -50,7 +50,7 @@ TypeId
 RingRoutingInfo::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RingRoutingInfo")
-    .SetParent (RoutingInfo::GetTypeId ())
+    .SetParent<Object> ()
     .AddConstructor<RingRoutingInfo> ()
   ;
   return tid;

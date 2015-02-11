@@ -82,6 +82,47 @@ private:
 
 // ------------------------------------------------------------------------ //
 /**
+ * Metadata associated to a meter rules on switches.
+ */
+class MeterInfo : public Object
+{
+  friend class OpenFlowEpcController;
+  friend class RingController;
+
+public:
+  MeterInfo ();          //!< Default constructor
+  virtual ~MeterInfo (); //!< Dummy destructor, see DoDipose
+
+  /**
+   * Register this type.
+   * \return The object TypeId.
+   */
+  static TypeId GetTypeId (void);
+
+  /** Destructor implementation */
+  virtual void DoDispose ();
+
+  /** Get Dpctl commands to add or delete meter rules */
+  //\{
+  std::string GetDownAddCmd ();
+  std::string GetUpAddCmd ();
+  std::string GetDelCmd ();
+  //\}
+
+private:
+  uint32_t m_teid;          //!< GTP TEID
+  bool     m_isInstalled;   //!< True when this meter is installed
+  bool     m_hasDown;       //!< True for downlink meter
+  bool     m_hasUp;         //!< Ture for uplink meter
+  uint16_t m_downSwitch;    //!< Downlink first switch index (gateway)
+  uint16_t m_upSwitch;      //!< Uplink first switxh index (eNB)
+  uint64_t m_downBitRate;   //!< Downlink meter drop rate (bps)
+  uint64_t m_upBitRate;     //!< Uplink meter drop rate (bps)
+};
+
+
+// ------------------------------------------------------------------------ //
+/**
  * Metadata associated to a routing path between
  * two any switches in the OpenFlow network.
  */
@@ -112,7 +153,7 @@ public:
   /** \return The Bearer QoS information. */
   GbrQosInformation GetQosInfo ();
   
-protected:
+private:
   uint32_t          m_teid;         //!< GTP TEID
   uint16_t          m_sgwIdx;       //!< Sgw switch index
   uint16_t          m_enbIdx;       //!< eNB switch index
