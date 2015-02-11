@@ -412,10 +412,19 @@ SimulationScenario::EnableTraces ()
 //  m_epcHelper->EnablePcapX2 ("epc");
 //  m_lteNetwork->EnableTraces ();
 
+//  Config::Connect ("/NodeList/*/$ns3::TcpL4Protocol/SocketList/*/RTO", 
+//                    MakeCallback (&SimulationScenario::TcpRtoTrace, this));
 //  Config::Connect ("/NodeList/*/DeviceList/*/$ns3::CsmaNetDevice/MacTxDrop", 
 //                    MakeCallback (&SimulationScenario::MacDropTrace, this));
-//  Config::Connect ("/NodeList/*/DeviceList/*/$ns3::CsmaNetDevice/MacTxBackoff", 
-//                    MakeCallback (&SimulationScenario::MacDropTrace, this));
+}
+
+void
+SimulationScenario::TcpRtoTrace (std::string context, const Time oldValue, 
+    const Time newValue)
+{
+  NS_LOG_UNCOND (context << 
+      " Old: " << oldValue.GetSeconds () << 
+      " New: " << newValue.GetSeconds ());
 }
 
 void
@@ -433,7 +442,7 @@ SimulationScenario::MacDropTrace (std::string context, Ptr<const Packet> p)
     pos2 = context.npos;
   }
   Ptr<Node> node = NodeList::GetNode (atoi (elements.at (1).c_str ()));
-  NS_LOG_DEBUG (context << " " << p << " " << Names::FindName (node));
+  NS_LOG_DEBUG (Names::FindName (node) << " " << p);
 }
 
 const std::string 
