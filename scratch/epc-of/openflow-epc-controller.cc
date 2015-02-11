@@ -90,63 +90,6 @@ ContextInfo::GetSgwAddr () const
 
 
 // ------------------------------------------------------------------------ //
-MeterInfo::MeterInfo ()
-  : m_isInstalled (false),
-    m_hasDown (false),
-    m_hasUp (false)
-{
-  NS_LOG_FUNCTION (this);
-}
-
-MeterInfo::~MeterInfo ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-TypeId 
-MeterInfo::GetTypeId (void)
-{
-  static TypeId tid = TypeId ("ns3::MeterInfo")
-    .SetParent<Object> ()
-    .AddConstructor<MeterInfo> ()
-  ;
-  return tid;
-}
-
-void
-MeterInfo::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-std::string
-MeterInfo::GetDownAddCmd ()
-{
-  std::ostringstream meter;
-  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid <<
-           " drop:rate=" << m_downBitRate / 1024;
-  return meter.str ();
-}
-
-std::string
-MeterInfo::GetUpAddCmd ()
-{
-  std::ostringstream meter;
-  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid <<
-           " drop:rate=" << m_upBitRate / 1024;
-  return meter.str ();
-}
-
-std::string
-MeterInfo::GetDelCmd ()
-{
-  std::ostringstream meter;
-  meter << "meter-mod cmd=del,meter=" << m_teid;
-  return meter.str ();
-}
-
-
-// ------------------------------------------------------------------------ //
 RoutingInfo::RoutingInfo ()
   : m_teid (0),
     m_sgwIdx (0),
@@ -203,6 +146,80 @@ RoutingInfo::GetQosInfo ()
 {
   return m_bearer.bearerLevelQos.gbrQosInfo;
 }
+
+
+// ------------------------------------------------------------------------ //
+MeterInfo::MeterInfo ()
+  : m_isInstalled (false),
+    m_hasDown (false),
+    m_hasUp (false)
+{
+  NS_LOG_FUNCTION (this);
+}
+
+MeterInfo::MeterInfo (Ptr<RoutingInfo> rInfo)
+  : m_isInstalled (false),
+    m_hasDown (false),
+    m_hasUp (false),
+    m_rInfo (rInfo)
+{
+  NS_LOG_FUNCTION (this);
+}
+
+MeterInfo::~MeterInfo ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+TypeId 
+MeterInfo::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::MeterInfo")
+    .SetParent<Object> ()
+    .AddConstructor<MeterInfo> ()
+  ;
+  return tid;
+}
+
+void
+MeterInfo::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+  m_rInfo = 0;
+}
+
+Ptr<RoutingInfo>
+MeterInfo::GetRoutingInfo ()
+{
+  return m_rInfo;
+}
+
+std::string
+MeterInfo::GetDownAddCmd ()
+{
+  std::ostringstream meter;
+  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid <<
+           " drop:rate=" << m_downBitRate / 1024;
+  return meter.str ();
+}
+
+std::string
+MeterInfo::GetUpAddCmd ()
+{
+  std::ostringstream meter;
+  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid <<
+           " drop:rate=" << m_upBitRate / 1024;
+  return meter.str ();
+}
+
+std::string
+MeterInfo::GetDelCmd ()
+{
+  std::ostringstream meter;
+  meter << "meter-mod cmd=del,meter=" << m_teid;
+  return meter.str ();
+}
+
 
 // ------------------------------------------------------------------------ //
 const int OpenFlowEpcController::m_defaultTimeout = 0; 
@@ -404,7 +421,7 @@ OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
       GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
       if (gbrQoS.mbrDl || gbrQoS.mbrUl)
         {
-          Ptr<MeterInfo> meterInfo = CreateObject<MeterInfo> ();
+          Ptr<MeterInfo> meterInfo = CreateObject<MeterInfo> (rInfo);
           meterInfo->m_teid = teid;
           if (gbrQoS.mbrDl)
             {
