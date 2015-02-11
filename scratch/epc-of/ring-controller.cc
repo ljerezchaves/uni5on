@@ -194,13 +194,13 @@ RingController::NotifyAppStart (Ptr<Application> app)
       // This is the first time in simulation we are using this dedicated
       // bearer. Let's create and save it's routing metadata.
       NS_LOG_DEBUG ("First use of bearer TEID " << teid);
-      Ptr<ContextInfo> cInfo = GetContextFromTft (tft);
+      Ptr<const ContextInfo> cInfo = GetContextFromTft (tft);
       rrInfo = CreateObject<RingRoutingInfo> ();
       rrInfo->teid = teid;
-      rrInfo->sgwIdx = cInfo->sgwIdx;
-      rrInfo->enbIdx = cInfo->enbIdx;
-      rrInfo->sgwAddr = cInfo->sgwAddr;
-      rrInfo->enbAddr = cInfo->enbAddr;
+      rrInfo->sgwIdx = cInfo->GetSgwIdx ();
+      rrInfo->enbIdx = cInfo->GetEnbIdx ();
+      rrInfo->sgwAddr = cInfo->GetSgwAddr ();
+      rrInfo->enbAddr = cInfo->GetEnbAddr ();
       rrInfo->app = app;                      // App for this dedicated bearer
       rrInfo->priority = m_dedicatedPriority; // Priority for dedicated bearer
       rrInfo->timeout = m_dedicatedTimeout;   // Timeout for dedicated bearer

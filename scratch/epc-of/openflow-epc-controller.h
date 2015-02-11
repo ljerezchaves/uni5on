@@ -63,10 +63,10 @@ public:
 
   /** Const private member access methods. */
   //\{
-  uint16_t GetEnbIdx () const;
-  uint16_t GetSgwIdx () const;
-  Ipv4Address GetEnbAddr () const;
-  Ipv4Address GetSgwAddr () const;
+  uint16_t GetEnbIdx () const;      //!< \return eNB switch index
+  uint16_t GetSgwIdx () const;      //!< \return Gateway switch index
+  Ipv4Address GetEnbAddr () const;  //!< \return eNB Ipv4 address
+  Ipv4Address GetSgwAddr () const;  //!< \return Gateway Ipv4 address
   //\}
 
 private:
