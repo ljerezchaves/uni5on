@@ -113,7 +113,7 @@ private:
   uint32_t m_teid;          //!< GTP TEID
   bool     m_isInstalled;   //!< True when this meter is installed
   bool     m_hasDown;       //!< True for downlink meter
-  bool     m_hasUp;         //!< Ture for uplink meter
+  bool     m_hasUp;         //!< True for uplink meter
   uint16_t m_downSwitch;    //!< Downlink first switch index (gateway)
   uint16_t m_upSwitch;      //!< Uplink first switxh index (eNB)
   uint64_t m_downBitRate;   //!< Downlink meter drop rate (bps)

@@ -91,9 +91,9 @@ ContextInfo::GetSgwAddr () const
 
 // ------------------------------------------------------------------------ //
 MeterInfo::MeterInfo ()
-  : m_hasDown (false),
-    m_hasUp (false),
-    m_isInstalled (false)
+  : m_isInstalled (false),
+    m_hasDown (false),
+    m_hasUp (false)
 {
   NS_LOG_FUNCTION (this);
 }

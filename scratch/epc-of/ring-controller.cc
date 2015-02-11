@@ -422,6 +422,9 @@ RingController::InstallTeidRouting (Ptr<RingRoutingInfo> ringInfo,
   NS_LOG_FUNCTION (this << rInfo->m_teid << rInfo->m_priority << buffer);
   NS_ASSERT_MSG (rInfo->m_isActive, "Rule not active.");
 
+  Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
+  bool meterInstalled = false;
+  
   // Increasing the priority every time we (re)install TEID rules.
   rInfo->m_priority++;
 
@@ -461,22 +464,19 @@ RingController::InstallTeidRouting (Ptr<RingRoutingInfo> ringInfo,
       uint16_t current = rInfo->m_sgwIdx;
   
       // When necessary, install the meter rule just in gateway switch
-      GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
-      if (gbrQoS.mbrDl)
+      if (meterInfo && !meterInfo->m_isInstalled && meterInfo->m_hasDown)
         {
           // Install the meter entry
-          std::ostringstream meter;
-          meter << "meter-mod cmd=add,flags=1" << 
-                   ",meter=" << rInfo->m_teid <<
-                   " drop:rate=" << gbrQoS.mbrDl / 1024;
-          DpctlCommand (GetSwitchDevice (current), meter.str ());
+          NS_ASSERT_MSG (meterInfo->m_downSwitch == current, "Wrong switch.");
+          DpctlCommand (GetSwitchDevice (current), meterInfo->GetDownAddCmd ());
+          meterInstalled = true;
             
           // Building the meter apply instruction string
           std::ostringstream meterInst;
           meterInst << " meter:" << rInfo->m_teid;
 
           std::string commandStr = args.str () + match.str () + 
-                                   meterInst.str () + inst.str ();
+              meterInst.str () + inst.str ();
 
           // Installing the rules for gateway
           DpctlCommand (GetSwitchDevice (current), commandStr);
@@ -510,22 +510,19 @@ RingController::InstallTeidRouting (Ptr<RingRoutingInfo> ringInfo,
       uint16_t current = rInfo->m_enbIdx;
 
       // When necessary, install the meter rule just in eNB switch
-      GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
-      if (gbrQoS.mbrUl)
+      if (meterInfo && !meterInfo->m_isInstalled && meterInfo->m_hasUp)
         {
           // Install the meter entry
-          std::ostringstream meter;
-          meter << "meter-mod cmd=add,flags=1" << 
-                   ",meter=" << rInfo->m_teid <<
-                   " drop:rate=" << gbrQoS.mbrDl / 1024;
-          DpctlCommand (GetSwitchDevice (current), meter.str ());
+          NS_ASSERT_MSG (meterInfo->m_upSwitch == current, "Wrong switch.");
+          DpctlCommand (GetSwitchDevice (current), meterInfo->GetUpAddCmd ());
+          meterInstalled = true;
             
           // Building the meter apply instruction string
           std::ostringstream meterInst;
           meterInst << " meter:" << rInfo->m_teid;
 
           std::string commandStr = args.str () + match.str () + 
-                                   meterInst.str () + inst.str ();
+              meterInst.str () + inst.str ();
 
           // Installing the rules for gateway
           DpctlCommand (GetSwitchDevice (current), commandStr);
@@ -540,7 +537,13 @@ RingController::InstallTeidRouting (Ptr<RingRoutingInfo> ringInfo,
           current = NextSwitchIndex (current, ringInfo->m_upPath);
         }
     }
-  
+
+  // Updating meter installation flag
+  if (meterInstalled)
+    {
+      meterInfo->m_isInstalled = true;
+    }
+
   rInfo->m_isInstalled = true;
   return true;
 }

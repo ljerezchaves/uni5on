@@ -79,7 +79,7 @@ protected:
    */
   void SetDownAndUpPath (RoutingPath down);
 
-  Ptr<RoutingInfo> m_rInfo;     //!< Routing informatio
+  Ptr<RoutingInfo> m_rInfo;     //!< Routing information
   RoutingPath      m_downPath;  //!< Downlink routing path
   RoutingPath      m_upPath;    //!< Uplink routing path
 };
