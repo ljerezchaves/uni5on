@@ -49,6 +49,13 @@ public:
   RingRoutingInfo ();          //!< Default constructor
   virtual ~RingRoutingInfo (); //!< Dummy destructor, see DoDipose
 
+  /** 
+   * Complete constructor.
+   * \param rInfo RoutingInfo pointer. 
+   * \attention This RingRoutingInfo object must be aggregated to rInfo.
+   */
+  RingRoutingInfo (Ptr<RoutingInfo> rInfo);
+  
   /**
    * Register this type.
    * \return The object TypeId.
@@ -58,10 +65,11 @@ public:
   /** Destructor implementation */
   virtual void DoDispose ();
 
+  /** \return RoutingInfo pointer. */
+  Ptr<RoutingInfo> GetRoutingInfo ();
+
 protected:
-  /** 
-   * Invert down/up routing direction.
-   */
+  /** Invert down/up routing direction. */
   void InvertRoutingPath ();
 
   /** 
@@ -71,8 +79,9 @@ protected:
    */
   void SetDownAndUpPath (RoutingPath down);
 
-  RoutingPath downPath;        //!< Downlink routing path
-  RoutingPath upPath;          //!< Uplink routing path
+  Ptr<RoutingInfo> m_rInfo;     //!< Routing informatio
+  RoutingPath      m_downPath;  //!< Downlink routing path
+  RoutingPath      m_upPath;    //!< Uplink routing path
 };
 
 
@@ -103,38 +112,39 @@ public:
 
   // Inherited from OpenFlowEpcController
   void NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo);
+ 
   void NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
-                                Ipv4Address enbAddr, Ipv4Address sgwAddr, 
-                                BearerList_t bearerList);
+      Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList);
+  
   bool NotifyAppStart (Ptr<Application> app);
+  
   bool NotifyAppStop (Ptr<Application> app);
+  
   void CreateSpanningTree ();
 
 protected:
   // Inherited from OpenFlowEpcController
-  ofl_err HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, 
-                                  uint32_t xid, uint32_t teid);
+  bool InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer = OFP_NO_BUFFER);
 
-  // Inherited from OFSwitch13Controller
-  ofl_err HandleFlowRemoved (ofl_msg_flow_removed *msg, SwitchInfo swtch, 
-                             uint32_t xid);
-//  ofl_err HandleMultipartReply (ofl_msg_multipart_reply_header *msg, 
-//                                SwitchInfo swtch, uint32_t xid);
+//  ofl_err HandleMultipartReply (ofl_msg_multipart_reply_header *msg, SwitchInfo
+//      swtch, uint32_t xid);
 
 private:
   /**
-   * Retrieve stored information for a specific GTP tunnel.
-   * \param teid The GTP tunnel ID.
-   * \return The ring routing information for this tunnel.
+   * Configure the switches with OpenFlow commands for teid routing.
+   * \param ringInfo The ring routing information to configure.
+   * \param buffer The buffered packet to apply this rule to.
+   * \return True if configuration succeeded, false otherwise.
    */
-  Ptr<RingRoutingInfo> GetTeidRingRoutingInfo (uint32_t teid);
-
+  bool InstallTeidRouting (Ptr<RingRoutingInfo> ringInfo, 
+      uint32_t buffer = OFP_NO_BUFFER);
+  
   /**
    * Process the GBR resource allocation based on current ring strategy.
-   * \param rInfo The routing information to process.
+   * \param ringInfo The ring routing information to process.
    * \return True when the GBR request can be sastified.
    */
-  bool ProcessGbrRequest (Ptr<RoutingInfo> rInfo);
+  bool ProcessGbrRequest (Ptr<RingRoutingInfo> ringInfo);
 
   /**
    * Look for the routing path between srcSwitchIdx and dstSwitchIdx with
@@ -143,8 +153,8 @@ private:
    * \param dstSwitchIdx Destination switch index.
    * \return The routing path.
    */
-  RingRoutingInfo::RoutingPath FindShortestPath (uint16_t srcSwitchIdx, 
-                                                 uint16_t dstSwitchIdx);
+  RingRoutingInfo::RoutingPath FindShortestPath (uint16_t srcSwitchIdx,
+      uint16_t dstSwitchIdx);
 
   /**
    * Look for available bandwidth in routingPath from source to destination
@@ -154,26 +164,26 @@ private:
    * \param routingPath The routing path.
    * \return The bandwidth for this datapath.
    */
-  DataRate GetAvailableBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx, 
-                                  RingRoutingInfo::RoutingPath routingPath);
+  DataRate GetAvailableBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+      RingRoutingInfo::RoutingPath routingPath);
 
   /**
    * Reserve the bandwidth for each link between source and destination
    * switches in routing path. It modifies the ConnectionInfo
    * structures saved by controller.
-   * \param rInfo The routing information.
+   * \param ringInfo The ring routing information.
    * \return True if success, false otherwise;
    */
-  bool ReserveBandwidth (const Ptr<RoutingInfo> rInfo);
+  bool ReserveBandwidth (const Ptr<RingRoutingInfo> ringInfo);
 
   /**
    * Release the bandwidth for each link between source and destination
    * switches in routing path. It modifies the ConnectionInfo
    * structures saved by controller.
-   * \param rInfo The routing information.
+   * \param ringInfo The ring routing information.
    * \return True if success, false otherwise;
    */
-  bool ReleaseBandwidth (const Ptr<RoutingInfo> rInfo);
+  bool ReleaseBandwidth (const Ptr<RingRoutingInfo> ringInfo);
 
   /**
    * Identify the next switch index based on routing path direction.
@@ -182,15 +192,7 @@ private:
    * \return The next switch index.
    */ 
   uint16_t NextSwitchIndex (uint16_t current, 
-                            RingRoutingInfo::RoutingPath path);
-  /**
-   * Configure the switches with OpenFlow commands for teid routing.
-   * \param rInfo The ring routing information to configure.
-   * \param buffer The buffered packet to apply this rule to.
-   * \return True if configuration succeeded, false otherwise.
-   */
-  bool InstallTeidRouting (Ptr<RoutingInfo> rInfo, 
-                           uint32_t buffer = OFP_NO_BUFFER);
+      RingRoutingInfo::RoutingPath path);
 
 //  /**
 //   * Using an OpenFlow Multipart OFPMP_FLOW message, query the switches for
@@ -227,8 +229,8 @@ private:
 //                             ofl_flow_stats* flowStats);
 
   RoutingStrategy   m_strategy;          //!< Routing strategy in use.
-//  Time              m_timeout;           //!< Switch stats query timeout.
   double            m_bwFactor;          //!< Bandwidth saving factor
+//  Time              m_timeout;           //!< Switch stats query timeout.
 };
 
 };  // namespace ns3

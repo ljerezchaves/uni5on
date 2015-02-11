@@ -113,32 +113,32 @@ public:
   GbrQosInformation GetQosInfo ();
   
 protected:
-  uint32_t          teid;         //!< GTP TEID
-  uint16_t          sgwIdx;       //!< Sgw switch index
-  uint16_t          enbIdx;       //!< eNB switch index
-  Ipv4Address       sgwAddr;      //!< Sgw IPv4 address
-  Ipv4Address       enbAddr;      //!< eNB IPv4 address
-  DataRate          reserved;     //!< Reserved data rate
-  Ptr<Application>  app;          //!< Traffic application
-  int               priority;     //!< Flow priority
-  int               timeout;      //!< Flow idle timeout
-  bool              isDefault;    //!< This info is for default bearer
-  bool              isInstalled;  //!< Rule is installed into switches
-  bool              isActive;     //!< Application traffic is active
-  ContextBearer_t   bearer;       //!< EPS bearer information
+  uint32_t          m_teid;         //!< GTP TEID
+  uint16_t          m_sgwIdx;       //!< Sgw switch index
+  uint16_t          m_enbIdx;       //!< eNB switch index
+  Ipv4Address       m_sgwAddr;      //!< Sgw IPv4 address
+  Ipv4Address       m_enbAddr;      //!< eNB IPv4 address
+  DataRate          m_reserved;     //!< Reserved data rate
+  Ptr<Application>  m_app;          //!< Traffic application
+  int               m_priority;     //!< Flow priority
+  int               m_timeout;      //!< Flow idle timeout
+  bool              m_isDefault;    //!< This info is for default bearer
+  bool              m_isInstalled;  //!< Rule is installed into switches
+  bool              m_isActive;     //!< Application traffic is active
+  ContextBearer_t   m_bearer;       //!< EPS bearer information
 };
 
 
 // ------------------------------------------------------------------------ //
 /**
- * The generic OpenFlow EPC controller, which should 
+ * The abstract base OpenFlow EPC controller, which should 
  * be extend in accordance to network topology.
  */
 class OpenFlowEpcController : public OFSwitch13Controller
 {
 public:
-  OpenFlowEpcController ();          //!< Default constructor
-  virtual ~OpenFlowEpcController (); //!< Dummy destructor, see DoDipose
+  OpenFlowEpcController ();               //!< Default constructor
+  virtual ~OpenFlowEpcController () = 0;  //!< Dummy destructor, see DoDipose
 
   /**
    * Register this type.
@@ -172,16 +172,15 @@ public:
    * \param ip The IPv4 address assigned to this device.
    * \param switchIdx The switch index this device is attached to.
    */
-  virtual void 
-  NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip, uint16_t switchIdx);
+  virtual void NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip, 
+      uint16_t switchIdx);
 
   /**
    * Notify this controller of a new connection between two switches in the
    * OpenFlow network. 
    * \param conInfo The connection information and metadata.
    */ 
-  virtual void 
-  NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo);
+  virtual void NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo);
   
   /** 
    * Callback fired before creating new dedicated EPC bearers. This is used to
@@ -196,9 +195,8 @@ public:
    * \returns true if successful (the bearer creation process will proceed),
    * false otherwise (the bearer creation process will abort).
    */
-  virtual bool 
-  RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId, Ptr<EpcTft> tft, 
-                             EpsBearer bearer);
+  virtual bool RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId,
+      Ptr<EpcTft> tft, EpsBearer bearer);
 
   /** 
    * Callback fired when the SgwPgw gateway is handling a CreateSessionRequest
@@ -213,12 +211,11 @@ public:
    * \param sgwAddr The SgwPgw IPv4 address.
    * \param bearerList The list of context bearers created.
    */
-  virtual void 
-  NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
-                           Ipv4Address enbAddr, Ipv4Address sgwAddr,
-                           BearerList_t bearerList);
+  virtual void NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
+      Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList);
   
   // virtual void NotifyContextModified ();
+  // virtual void NotifyBearerDeactivated ();
 
   /**
    * Notify this controller of an application starts sending traffic over EPC
@@ -252,19 +249,31 @@ public:
    * \param deviceIp The IPv4 address assigned to this device.
    * \param devicePort The number of switch port this device is attached to.
    */
-  virtual void 
-  ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch, Ptr<NetDevice> device, 
-                         Ipv4Address deviceIp, uint32_t devicePort);   
+  virtual void ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch,
+      Ptr<NetDevice> device, Ipv4Address deviceIp, uint32_t devicePort);   
 
   /**
    * To avoid flooding problems when broadcasting packets (like in ARP
    * protocol), let's find a Spanning Tree and drop packets at selected ports
    * when flooding (OFPP_FLOOD). This is accomplished by configuring the port
    * with OFPPC_NO_FWD flag (0x20).
+   * \attention This function must be implemented by each specialized
+   * controller.
    */
-  virtual void CreateSpanningTree ();
+  virtual void CreateSpanningTree () = 0;
 
 protected:
+  /**
+   * Configure the switches with OpenFlow commands for teid routing.
+   * \attention This function must be implemented by each specialized
+   * controller.
+   * \param rInfo The routing information to configure.
+   * \param buffer The buffered packet to apply this rule to.
+   * \return True if configuration succeeded, false otherwise.
+   */
+  virtual bool InstallTeidRouting (Ptr<RoutingInfo> rInfo, 
+      uint32_t buffer = OFP_NO_BUFFER) = 0;
+
   /**
    * \return Number of switches in the network.
    */
@@ -277,18 +286,18 @@ protected:
    */
   Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
 
-  /**
-   * Retrieve the switch index for the SgwPgw gateway
-   * \return The switch index in m_ofSwitches.
-   */
-  uint16_t GetSwitchIdxForGateway ();
+//  /**
+//   * Retrieve the switch index for the SgwPgw gateway
+//   * \return The switch index in m_ofSwitches.
+//   */
+//  uint16_t GetSwitchIdxForGateway ();
 
-  /**
-   * Retrieve the switch index for the switch device
-   * \param dev The OpenFlow device pointer.
-   * \return The switch index in m_ofSwitches.
-   */
-  uint16_t GetSwitchIdxFromDevice (Ptr<OFSwitch13NetDevice> dev);
+//  /**
+//   * Retrieve the switch index for the switch device
+//   * \param dev The OpenFlow device pointer.
+//   * \return The switch index in m_ofSwitches.
+//   */
+//  uint16_t GetSwitchIdxFromDevice (Ptr<OFSwitch13NetDevice> dev);
 
   /**
    * Retrieve the switch index for EPC entity attached to OpenFlow network.
@@ -297,28 +306,12 @@ protected:
    */
   uint16_t GetSwitchIdxFromIp (Ipv4Address addr);
 
-  /**
-   * Retrieve the LTE context information from the traffic flow templated
-   * associated with an application.
-   * \param tft The Traffic Flow Template.
-   * \return The context info for this tft.
-   */
-  Ptr<const ContextInfo> GetContextFromTft (Ptr<EpcTft> tft);
-
-  /**
-   * Retrieve the LTE context information from the GTP tunnel id
-   * \param teid The GTP tunnel id.
-   * \return The context info for this teid.
-   */
-  Ptr<const ContextInfo> GetContextFromTeid (uint32_t teid);
-
-  /** 
-   * Iterate over the context bearers map looking for the bearer information
-   * for a specific traffic flow template.
-   * \param tft The traffic flow template.
-   * \return The bearer info for this tft.
-   */ 
-  ContextBearer_t GetBearerFromTft (Ptr<EpcTft> tft);
+//  /**
+//   * Retrieve the LTE context information from the GTP tunnel id
+//   * \param teid The GTP tunnel id.
+//   * \return The context info for this teid.
+//   */
+//  Ptr<const ContextInfo> GetContextFromTeid (uint32_t teid);
 
   /**
    * Retrieve the TEID identifier for traffic generated by application app.
@@ -341,24 +334,18 @@ protected:
    * \return The routing information for this tunnel.
    */
   Ptr<RoutingInfo> GetTeidRoutingInfo (uint32_t teid);
- 
-  /**
-   * Save the RoutingInfo metadata for further usage and reserve the bandwith.
-   * \param rInfo The routing information to save.
-   */
-  void SaveTeidRoutingInfo (Ptr<RoutingInfo> rInfo);
 
   /**
    * Print application statistcs.
    * \param app The application pointer.
    */
-  void PrintAppStatistics (Ptr<Application> app);
+  virtual void PrintAppStatistics (Ptr<Application> app);
 
   /**
    * Reset application statistcs.
    * \param app The application pointer.
    */
-  void ResetAppStatistics (Ptr<Application> app);
+  virtual void ResetAppStatistics (Ptr<Application> app);
  
   /**
    * Inscrease by on the number of GBR bearer requests in network.
@@ -370,29 +357,6 @@ protected:
    * network.
    */
   void IncreaseGbrBlocks ();
-  
-  /**
-   * Handle packet-in messages sent from switch to this controller. Look for L2
-   * switching information, update the structures and send a packet-out back.
-   * \param msg The packet-in message.
-   * \param swtch The switch information.
-   * \param xid Transaction id.
-   * \return 0 if everything's ok, otherwise an error number.
-   */
-  ofl_err 
-  HandlePacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, uint32_t xid);
-
-  /**
-   * Handle packet-in messages sent from switch with unknown TEID routing.
-   * \param msg The packet-in message.
-   * \param swtch The switch information.
-   * \param xid Transaction id.
-   * \param teid The GTPU TEID identifier.
-   * \return 0 if everything's ok, otherwise an error number.
-   */
-  virtual ofl_err 
-  HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, 
-                          uint32_t xid, uint32_t teid);
 
   /**
    * Extract an IPv4 address from packet match.
@@ -403,7 +367,11 @@ protected:
   Ipv4Address ExtractIpv4Address (uint32_t oxm_of, ofl_match* match);
 
   // Inherited from OFSwitch13Controller
-  void ConnectionStarted (SwitchInfo swtch);
+  virtual void ConnectionStarted (SwitchInfo swtch);
+  virtual ofl_err HandlePacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, 
+      uint32_t xid);
+  virtual ofl_err HandleFlowRemoved (ofl_msg_flow_removed *msg, 
+      SwitchInfo swtch, uint32_t xid);
 
   // Protected members 
   static const int m_defaultTimeout;    //!< Timeout for default bearers
@@ -413,6 +381,39 @@ protected:
 
 private:
   /**
+   * Retrieve the LTE context information from the traffic flow templated
+   * associated with an application.
+   * \param tft The Traffic Flow Template.
+   * \return The context info for this tft.
+   */
+  Ptr<const ContextInfo> GetContextFromTft (Ptr<EpcTft> tft);
+
+  /** 
+   * Iterate over the context bearers map looking for the bearer information
+   * for a specific traffic flow template.
+   * \param tft The traffic flow template.
+   * \return The bearer info for this tft.
+   */ 
+  ContextBearer_t GetBearerFromTft (Ptr<EpcTft> tft);
+
+  /**
+   * Save the RoutingInfo metadata for further usage and reserve the bandwith.
+   * \param rInfo The routing information to save.
+   */
+  void SaveTeidRoutingInfo (Ptr<RoutingInfo> rInfo);
+
+  /**
+   * Handle packet-in messages sent from switch with unknown TEID routing.
+   * \param msg The packet-in message.
+   * \param swtch The switch information.
+   * \param xid Transaction id.
+   * \param teid The GTPU TEID identifier.
+   * \return 0 if everything's ok, otherwise an error number.
+   */
+  ofl_err HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch,
+      uint32_t xid, uint32_t teid);
+
+  /**
    * Handle packet-in messages sent from switch with arp message.
    * \param msg The packet-in message.
    * \param swtch The switch information.
@@ -420,7 +421,7 @@ private:
    * \return 0 if everything's ok, otherwise an error number.
    */
   ofl_err HandleArpPacketIn (ofl_msg_packet_in *msg, SwitchInfo swtch, 
-                             uint32_t xid);
+      uint32_t xid);
 
   /**
    * Perform an ARP resolution
@@ -438,8 +439,9 @@ private:
    * \param dstMac Destination IP address.
    * \return The ns3 Ptr<Packet> with the ARP reply.
    */
-  Ptr<Packet> CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp, 
-                              Mac48Address dstMac, Ipv4Address dstIp);
+  Ptr<Packet> CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
+      Mac48Address dstMac, Ipv4Address dstIp);
+
 
   /** A pair of switches index */
   typedef std::pair<uint16_t, uint16_t> SwitchPair_t; 

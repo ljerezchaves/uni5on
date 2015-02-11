@@ -90,20 +90,20 @@ ContextInfo::GetSgwAddr () const
 
 // ------------------------------------------------------------------------ //
 RoutingInfo::RoutingInfo ()
-  : teid (0),
-    sgwIdx (0),
-    enbIdx (0),
-    app (0),
-    priority (0),
-    timeout (0),
-    isDefault (0),
-    isInstalled (0),
-    isActive (0)
+  : m_teid (0),
+    m_sgwIdx (0),
+    m_enbIdx (0),
+    m_app (0),
+    m_priority (0),
+    m_timeout (0),
+    m_isDefault (0),
+    m_isInstalled (0),
+    m_isActive (0)
 {
   NS_LOG_FUNCTION (this);
-  enbAddr = Ipv4Address ();
-  sgwAddr = Ipv4Address ();
-  reserved = DataRate ();
+  m_enbAddr = Ipv4Address ();
+  m_sgwAddr = Ipv4Address ();
+  m_reserved = DataRate ();
 }
 
 RoutingInfo::~RoutingInfo ()
@@ -125,25 +125,25 @@ void
 RoutingInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  app = 0;
+  m_app = 0;
 }
 
 bool
 RoutingInfo::IsGbr ()
 {
-  return (!isDefault && bearer.bearerLevelQos.IsGbr ());
+  return (!m_isDefault && m_bearer.bearerLevelQos.IsGbr ());
 }
 
 EpsBearer
 RoutingInfo::GetEpsBearer ()
 {
-  return bearer.bearerLevelQos;
+  return m_bearer.bearerLevelQos;
 }
 
 GbrQosInformation
 RoutingInfo::GetQosInfo ()
 {
-  return bearer.bearerLevelQos.gbrQosInfo;
+  return m_bearer.bearerLevelQos.gbrQosInfo;
 }
 
 // ------------------------------------------------------------------------ //
@@ -211,6 +211,8 @@ void
 OpenFlowEpcController::NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip, 
     uint16_t switchIdx)
 {
+  NS_LOG_FUNCTION (this << dev << ip << switchIdx);
+
   { // Save the pair IP/MAC address in ARP table
     Mac48Address macAddr = Mac48Address::ConvertFrom (dev->GetAddress ());
     std::pair<Ipv4Address, Mac48Address> entry (ip, macAddr);
@@ -239,6 +241,8 @@ void
 OpenFlowEpcController::NotifyNewSwitchConnection (
     const Ptr<ConnectionInfo> connInfo)
 {
+  NS_LOG_FUNCTION (this << connInfo);
+  
   // Save this connection info
   SwitchPair_t key;
   key.first  = std::min (connInfo->switchIdx1, connInfo->switchIdx2);
@@ -259,6 +263,8 @@ bool
 OpenFlowEpcController::RequestNewDedicatedBearer (uint64_t imsi, 
     uint16_t cellId, Ptr<EpcTft> tft, EpsBearer bearer)
 {
+  NS_LOG_FUNCTION (this << imsi << cellId << tft);
+  
   // Allowing any bearer creation
   return true;
 }
@@ -267,7 +273,7 @@ void
 OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
     Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList)
 {
-  NS_LOG_FUNCTION (this << imsi << cellId << enbAddr);
+  NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << sgwAddr);
 
   // Create context info and save in context list.
   Ptr<ContextInfo> info = CreateObject<ContextInfo> ();
@@ -289,18 +295,18 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   NS_ASSERT_MSG (rInfo == 0, "Existing routing for default bearer " << teid);
 
   rInfo = CreateObject<RoutingInfo> ();
-  rInfo->teid = teid;
-  rInfo->sgwIdx = GetSwitchIdxFromIp (sgwAddr);
-  rInfo->enbIdx = GetSwitchIdxFromIp (enbAddr);
-  rInfo->sgwAddr = sgwAddr;
-  rInfo->enbAddr = enbAddr;
-  rInfo->app = 0;                       // No app for default bearer
-  rInfo->priority = m_defaultPriority;  // Priority for default bearer
-  rInfo->timeout = m_defaultTimeout;    // No timeout for default bearer
-  rInfo->isInstalled = false;           // Bearer rules not installed yet
-  rInfo->isActive = true;               // Default bearer is always active
-  rInfo->isDefault = true;              // This is a default bearer
-  rInfo->bearer = defaultBearer;
+  rInfo->m_teid = teid;
+  rInfo->m_sgwIdx = GetSwitchIdxFromIp (sgwAddr);
+  rInfo->m_enbIdx = GetSwitchIdxFromIp (enbAddr);
+  rInfo->m_sgwAddr = sgwAddr;
+  rInfo->m_enbAddr = enbAddr;
+  rInfo->m_app = 0;                       // No app for default bearer
+  rInfo->m_priority = m_defaultPriority;  // Priority for default bearer
+  rInfo->m_timeout = m_defaultTimeout;    // No timeout for default bearer
+  rInfo->m_isInstalled = false;           // Bearer rules not installed yet
+  rInfo->m_isActive = true;               // Default bearer is always active
+  rInfo->m_isDefault = true;              // This is a default bearer
+  rInfo->m_bearer = defaultBearer;
   SaveTeidRoutingInfo (rInfo);
 }
 
@@ -322,19 +328,20 @@ OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
       ContextBearer_t dedicatedBearer = GetBearerFromTft (tft);
       Ptr<const ContextInfo> cInfo = GetContextFromTft (tft);
       rInfo = CreateObject<RoutingInfo> ();
-      rInfo->teid = teid;
-      rInfo->sgwIdx = cInfo->GetSgwIdx ();
-      rInfo->enbIdx = cInfo->GetEnbIdx ();
-      rInfo->sgwAddr = cInfo->GetSgwAddr ();
-      rInfo->enbAddr = cInfo->GetEnbAddr ();
-      rInfo->app = app;                      // App for this dedicated bearer
-      rInfo->priority = m_dedicatedPriority; // Priority for dedicated bearer
-      rInfo->timeout = m_dedicatedTimeout;   // Timeout for dedicated bearer
-      rInfo->isInstalled = false;            // Switch rules not installed yet
-      rInfo->isActive = false;               // Dedicated bearer not active yet
-      rInfo->isDefault = false;              // This is a dedicated bearer
-      rInfo->bearer = dedicatedBearer;
+      rInfo->m_teid = teid;
+      rInfo->m_sgwIdx = cInfo->GetSgwIdx ();
+      rInfo->m_enbIdx = cInfo->GetEnbIdx ();
+      rInfo->m_sgwAddr = cInfo->GetSgwAddr ();
+      rInfo->m_enbAddr = cInfo->GetEnbAddr ();
+      rInfo->m_app = app;                      // App for this dedicated bearer
+      rInfo->m_priority = m_dedicatedPriority; // Priority for dedicated bearer
+      rInfo->m_timeout = m_dedicatedTimeout;   // Timeout for dedicated bearer
+      rInfo->m_isInstalled = false;            // Switch rules not installed yet
+      rInfo->m_isActive = false;               // Dedicated bearer not active yet
+      rInfo->m_isDefault = false;              // This is a dedicated bearer
+      rInfo->m_bearer = dedicatedBearer;
       SaveTeidRoutingInfo (rInfo);
+      return false;
     }
   return true;
 }
@@ -352,17 +359,12 @@ OpenFlowEpcController::NotifyAppStop (Ptr<Application> app)
     }
   
   // Check for active application
-  if (rInfo->isActive == true)
+  if (rInfo->m_isActive == true)
     {
-      rInfo->isActive = false;
-      rInfo->isInstalled = false;
-      if (rInfo->IsGbr ())
-        {
-          // FIXME Mover o release bdw para o ring, mas ver logica de isActive.
-          // ReleaseBandwidth (rInfo);   
-        }
-      // There is no need to remove manualy remove the 
-      // rules from switch. Just wait for idle timeout.
+      rInfo->m_isActive = false;
+      rInfo->m_isInstalled = false;
+      // There is no need to remove manualy remove the rules from switch. 
+      // Just wait for idle timeout.
     }
 
   PrintAppStatistics (app);
@@ -373,7 +375,7 @@ void
 OpenFlowEpcController::ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch, 
     Ptr<NetDevice> device, Ipv4Address deviceIp, uint32_t devicePort)
 {
-  NS_LOG_FUNCTION (this << swtch << deviceIp << (int)devicePort);
+  NS_LOG_FUNCTION (this << swtch << device << deviceIp << (int)devicePort);
 
   Mac48Address devMacAddr = Mac48Address::ConvertFrom (device->GetAddress ());
   std::ostringstream cmd;
@@ -381,12 +383,6 @@ OpenFlowEpcController::ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch,
          " eth_type=0x800,eth_dst=" << devMacAddr <<
          ",ip_dst=" << deviceIp << " apply:output=" << devicePort;
   DpctlCommand (swtch, cmd.str ());
-}
-
-void
-OpenFlowEpcController::CreateSpanningTree ()
-{
-  NS_LOG_WARN ("No Spanning Tree Protocol implemented here.");
 }
 
 uint16_t 
@@ -401,17 +397,17 @@ OpenFlowEpcController::GetSwitchDevice (uint16_t index)
   return m_ofNetwork->GetSwitchDevice (index);
 }
 
-uint16_t 
-OpenFlowEpcController::GetSwitchIdxForGateway ()
-{
-  return m_ofNetwork->GetSwitchIdxForGateway ();
-}
+// uint16_t 
+// OpenFlowEpcController::GetSwitchIdxForGateway ()
+// {
+//   return m_ofNetwork->GetSwitchIdxForGateway ();
+// }
 
-uint16_t
-OpenFlowEpcController::GetSwitchIdxFromDevice (Ptr<OFSwitch13NetDevice> dev)
-{
-  return m_ofNetwork->GetSwitchIdxForDevice (dev);
-}
+// uint16_t
+// OpenFlowEpcController::GetSwitchIdxFromDevice (Ptr<OFSwitch13NetDevice> dev)
+// {
+//   return m_ofNetwork->GetSwitchIdxForDevice (dev);
+// }
 
 uint16_t 
 OpenFlowEpcController::GetSwitchIdxFromIp (Ipv4Address addr)
@@ -427,65 +423,25 @@ OpenFlowEpcController::GetSwitchIdxFromIp (Ipv4Address addr)
   NS_FATAL_ERROR ("IP not registered in switch index table.");
 }
 
-Ptr<const ContextInfo>
-OpenFlowEpcController::GetContextFromTft (Ptr<EpcTft> tft)
-{
-  Ptr<ContextInfo> cInfo = 0;
-  ContextInfoList_t::iterator ctxIt;
-  for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
-    {
-      cInfo = *ctxIt;
-      BearerList_t::iterator blsIt = cInfo->m_bearerList.begin (); 
-      for ( ; blsIt != cInfo->m_bearerList.end (); blsIt++)
-        {
-          if (blsIt->tft == tft)
-            {
-              return cInfo;
-            }
-        }
-    }
-  NS_FATAL_ERROR ("Couldn't find context for invalid tft.");
-}
-
-Ptr<const ContextInfo>
-OpenFlowEpcController::GetContextFromTeid (uint32_t teid)
-{
-  Ptr<ContextInfo> cInfo = 0;
-  ContextInfoList_t::iterator ctxIt;
-  for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
-    {
-      cInfo = *ctxIt;
-      BearerList_t::iterator blsIt = cInfo->m_bearerList.begin (); 
-      for ( ; blsIt != cInfo->m_bearerList.end (); blsIt++)
-        {
-          if (blsIt->sgwFteid.teid == teid)
-            {
-              return cInfo;
-            }
-        }
-    }
-  NS_FATAL_ERROR ("Couldn't find bearer for invalid teid.");
-}
-
-ContextBearer_t 
-OpenFlowEpcController::GetBearerFromTft (Ptr<EpcTft> tft)
-{
-  Ptr<ContextInfo> cInfo = 0;
-  ContextInfoList_t::iterator ctxIt;
-  for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
-    {
-      cInfo = *ctxIt;
-      BearerList_t::iterator blsIt = cInfo->m_bearerList.begin (); 
-      for ( ; blsIt != cInfo->m_bearerList.end (); blsIt++)
-        {
-          if (blsIt->tft == tft)
-            {
-              return *blsIt;
-            }
-        }
-    }
-  NS_FATAL_ERROR ("Couldn't find bearer for invalid tft.");
-}
+// Ptr<const ContextInfo>
+// OpenFlowEpcController::GetContextFromTeid (uint32_t teid)
+// {
+//   Ptr<ContextInfo> cInfo = 0;
+//   ContextInfoList_t::iterator ctxIt;
+//   for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
+//     {
+//       cInfo = *ctxIt;
+//       BearerList_t::iterator blsIt = cInfo->m_bearerList.begin (); 
+//       for ( ; blsIt != cInfo->m_bearerList.end (); blsIt++)
+//         {
+//           if (blsIt->sgwFteid.teid == teid)
+//             {
+//               return cInfo;
+//             }
+//         }
+//     }
+//   NS_FATAL_ERROR ("Couldn't find bearer for invalid teid.");
+// }
 
 uint32_t 
 OpenFlowEpcController::GetTeidFromApplication (Ptr<Application> app)
@@ -521,18 +477,6 @@ OpenFlowEpcController::GetTeidRoutingInfo (uint32_t teid)
   return rInfo;
 }
 
-void 
-OpenFlowEpcController::SaveTeidRoutingInfo (Ptr<RoutingInfo> rInfo)
-{
-  std::pair <uint32_t, Ptr<RoutingInfo> > entry (rInfo->teid, rInfo);
-  std::pair <TeidRoutingMap_t::iterator, bool> ret;
-  ret = m_routes.insert (entry);
-  if (ret.second == false)
-    {
-      NS_FATAL_ERROR ("Existing routing information for teid " << rInfo->teid);
-    }
-}
-
 void
 OpenFlowEpcController::PrintAppStatistics (Ptr<Application> app)
 {
@@ -546,8 +490,8 @@ OpenFlowEpcController::PrintAppStatistics (Ptr<Application> app)
       // Identifying Voip traffic direction
       std::string nodeName = Names::FindName (voipApp->GetNode ());
       bool downlink = InternetNetwork::GetServerName () == nodeName;
-      uint16_t srcIdx = downlink ? rInfo->sgwIdx : rInfo->enbIdx;
-      uint16_t dstIdx = downlink ? rInfo->enbIdx : rInfo->sgwIdx; 
+      uint16_t srcIdx = downlink ? rInfo->m_sgwIdx : rInfo->m_enbIdx;
+      uint16_t dstIdx = downlink ? rInfo->m_enbIdx : rInfo->m_sgwIdx; 
       
       std::cout << 
         "VoIP (TEID " << teid << ") [" << srcIdx << " -> " << dstIdx << "]" << 
@@ -564,7 +508,7 @@ OpenFlowEpcController::PrintAppStatistics (Ptr<Application> app)
       Ptr<VideoClient> videoApp = DynamicCast<VideoClient> (app);
       Ptr<UdpServer> serverApp = videoApp->GetServerApp ();
       std::cout << 
-        "Video (TEID " << teid << ") [" <<  rInfo->sgwIdx << " -> " << rInfo->enbIdx << "]" << 
+        "Video (TEID " << teid << ") [" <<  rInfo->m_sgwIdx << " -> " << rInfo->m_enbIdx << "]" << 
         " Duration " << serverApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
         " Loss " << serverApp->GetRxLossRatio () << " -" <<
         " Delay " << serverApp->GetRxDelay ().ToInteger (Time::MS) << " ms -" <<
@@ -577,7 +521,7 @@ OpenFlowEpcController::PrintAppStatistics (Ptr<Application> app)
       Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
       std::cout << 
         "Background HTTP traffic (TEID " << teid << 
-        ") [" <<  rInfo->sgwIdx << " <-> " << rInfo->enbIdx << "]" << 
+        ") [" <<  rInfo->m_sgwIdx << " <-> " << rInfo->m_enbIdx << "]" << 
         " Duration " << httpApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
         " Transfered " << httpApp->GetRxBytes () << " bytes -" <<
         " Goodput " << httpApp->GetRxGoodput () << 
@@ -588,6 +532,8 @@ OpenFlowEpcController::PrintAppStatistics (Ptr<Application> app)
 void
 OpenFlowEpcController::ResetAppStatistics (Ptr<Application> app)
 {
+  NS_LOG_FUNCTION (this << app);
+  
   if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
     {
       DynamicCast<VoipPeer> (app)->ResetCounters ();
@@ -616,65 +562,6 @@ void
 OpenFlowEpcController::IncreaseGbrBlocks ()
 {
   m_gbrBlocks++;
-}
-
-ofl_err
-OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg, 
-    SwitchInfo swtch, uint32_t xid)
-{
-  NS_LOG_FUNCTION (swtch.ipv4 << xid);
-  ofl_match_tlv *tlv;
-
-  enum ofp_packet_in_reason reason = msg->reason;
-  if (reason == OFPR_NO_MATCH)
-    {
-      char *m = ofl_structs_match_to_string (msg->match, 0);
-      NS_LOG_INFO ("Packet in match: " << m);
-      free (m);
-
-      // (Table #1 is used only for GTP TEID routing)
-      uint8_t tableId = msg->table_id;
-      if (tableId == 1)
-        {
-          uint32_t teid;
-          tlv = oxm_match_lookup (OXM_OF_GTPU_TEID, (ofl_match*)msg->match);
-          memcpy (&teid, tlv->value, OXM_LENGTH (OXM_OF_GTPU_TEID));
-
-          NS_LOG_LOGIC ("TEID routing miss packet: " << teid);
-          return HandleGtpuTeidPacketIn (msg, swtch, xid, teid);
-        }
-    }
-  else if (reason == OFPR_ACTION)
-    {
-      // Get Ethernet frame type 
-      uint16_t ethType;
-      tlv = oxm_match_lookup (OXM_OF_ETH_TYPE, (ofl_match*)msg->match);
-      memcpy (&ethType, tlv->value, OXM_LENGTH (OXM_OF_ETH_TYPE));
-
-      // Check for ARP packet
-      if (ethType == ArpL3Protocol::PROT_NUMBER)
-        {
-          return HandleArpPacketIn (msg, swtch, xid);
-        }
-    }
-
-  NS_LOG_WARN ("Ignoring packet sent to controller.");
-  
-  // All handlers must free the message when everything is ok
-  ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
-  return 0;
-}
-
-ofl_err
-OpenFlowEpcController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, 
-    SwitchInfo swtch, uint32_t xid, uint32_t teid)
-{
-  NS_LOG_FUNCTION (this << swtch.ipv4 << teid);
-  NS_LOG_WARN ("No handling implemented here.");
-
-  // All handlers must free the message when everything is ok
-  ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
-  return 0;
 }
 
 Ipv4Address 
@@ -719,9 +606,203 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
 }
 
 ofl_err
+OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg, 
+    SwitchInfo swtch, uint32_t xid)
+{
+  NS_LOG_FUNCTION (this << swtch.ipv4 << xid);
+  ofl_match_tlv *tlv;
+
+  enum ofp_packet_in_reason reason = msg->reason;
+  if (reason == OFPR_NO_MATCH)
+    {
+      char *m = ofl_structs_match_to_string (msg->match, 0);
+      NS_LOG_INFO ("Packet in match: " << m);
+      free (m);
+
+      // (Table #1 is used only for GTP TEID routing)
+      uint8_t tableId = msg->table_id;
+      if (tableId == 1)
+        {
+          uint32_t teid;
+          tlv = oxm_match_lookup (OXM_OF_GTPU_TEID, (ofl_match*)msg->match);
+          memcpy (&teid, tlv->value, OXM_LENGTH (OXM_OF_GTPU_TEID));
+
+          NS_LOG_LOGIC ("TEID routing miss packet: " << teid);
+          return HandleGtpuTeidPacketIn (msg, swtch, xid, teid);
+        }
+    }
+  else if (reason == OFPR_ACTION)
+    {
+      // Get Ethernet frame type 
+      uint16_t ethType;
+      tlv = oxm_match_lookup (OXM_OF_ETH_TYPE, (ofl_match*)msg->match);
+      memcpy (&ethType, tlv->value, OXM_LENGTH (OXM_OF_ETH_TYPE));
+
+      // Check for ARP packet
+      if (ethType == ArpL3Protocol::PROT_NUMBER)
+        {
+          return HandleArpPacketIn (msg, swtch, xid);
+        }
+    }
+
+  NS_LOG_WARN ("Ignoring packet sent to controller.");
+  
+  // All handlers must free the message when everything is ok
+  ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
+  return 0;
+}
+
+ofl_err
+OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg, 
+    SwitchInfo swtch, uint32_t xid)
+{
+  NS_LOG_FUNCTION (this << swtch.ipv4 << xid);
+
+  uint8_t table = msg->stats->table_id;
+  uint32_t teid = msg->stats->cookie;
+  uint16_t prio = msg->stats->priority;
+  
+  NS_LOG_FUNCTION (swtch.ipv4 << teid);
+      
+  char *m = ofl_msg_to_string ((ofl_msg_header*)msg, 0);
+  // NS_LOG_DEBUG ("Flow removed: " << m);
+  free (m);
+
+  // Since handlers must free the message when everything is ok, 
+  // let's remove it now, as we already got the necessary information.
+  ofl_msg_free_flow_removed (msg, true, 0);
+
+  // Ignoring flows removed from tables other than TEID table #1
+  if (table != 1)
+    {
+      NS_LOG_WARN ("Ignoring flow removed from table " << table);
+      return 0;
+    }
+
+  // Check for existing routing information for this bearer
+  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  if (rInfo == 0)
+    {
+      NS_FATAL_ERROR ("Routing info for TEID " << teid << " not found.");
+      return 0;
+    }
+
+  // When a rule expires due to idle timeout, check the following situations:
+  // 1) The application is stopped and the bearer must be inactive.
+  if (!rInfo->m_isActive)
+    {
+      NS_LOG_DEBUG ("Flow " << teid << " removed for stopped application.");
+      return 0;
+    }
+  
+  // 2) The application is running and the bearer is active, but the
+  // application has already been stopped since last rule installation. In this
+  // case, the bearer priority should have been increased to avoid conflicts.
+  if (rInfo->m_priority > prio)
+    {
+      NS_LOG_DEBUG ("Flow " << teid << " removed for old rule.");
+      return 0;
+    }
+
+  // 3) The application is running and the bearer is active. This is the
+  // critical situation. For some reason, the traffic absence lead to flow
+  // expiration, and we need to reinstall the rules with higher priority to
+  // avoid problems. 
+  NS_ASSERT_MSG (rInfo->m_priority == prio, "Invalid flow priority.");
+  if (rInfo->m_isActive)
+    {
+      NS_LOG_DEBUG ("Flow " << teid << " is still active. Reinstall rules...");
+      InstallTeidRouting (rInfo);
+      return 0;
+    }
+
+  NS_ABORT_MSG ("Should not get here :/");
+}
+
+
+Ptr<const ContextInfo>
+OpenFlowEpcController::GetContextFromTft (Ptr<EpcTft> tft)
+{
+  Ptr<ContextInfo> cInfo = 0;
+  ContextInfoList_t::iterator ctxIt;
+  for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
+    {
+      cInfo = *ctxIt;
+      BearerList_t::iterator blsIt = cInfo->m_bearerList.begin (); 
+      for ( ; blsIt != cInfo->m_bearerList.end (); blsIt++)
+        {
+          if (blsIt->tft == tft)
+            {
+              return cInfo;
+            }
+        }
+    }
+  NS_FATAL_ERROR ("Couldn't find context for invalid tft.");
+}
+
+ContextBearer_t 
+OpenFlowEpcController::GetBearerFromTft (Ptr<EpcTft> tft)
+{
+  Ptr<ContextInfo> cInfo = 0;
+  ContextInfoList_t::iterator ctxIt;
+  for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
+    {
+      cInfo = *ctxIt;
+      BearerList_t::iterator blsIt = cInfo->m_bearerList.begin (); 
+      for ( ; blsIt != cInfo->m_bearerList.end (); blsIt++)
+        {
+          if (blsIt->tft == tft)
+            {
+              return *blsIt;
+            }
+        }
+    }
+  NS_FATAL_ERROR ("Couldn't find bearer for invalid tft.");
+}
+
+void 
+OpenFlowEpcController::SaveTeidRoutingInfo (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo);
+  
+  std::pair <uint32_t, Ptr<RoutingInfo> > entry (rInfo->m_teid, rInfo);
+  std::pair <TeidRoutingMap_t::iterator, bool> ret;
+  ret = m_routes.insert (entry);
+  if (ret.second == false)
+    {
+      NS_FATAL_ERROR ("Existing routing information for teid " << rInfo->m_teid);
+    }
+}
+
+ofl_err
+OpenFlowEpcController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, 
+    SwitchInfo swtch, uint32_t xid, uint32_t teid)
+{
+  NS_LOG_FUNCTION (this << swtch.ipv4 << xid << teid);
+
+  // Let's check for active routing path
+  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  if (rInfo && rInfo->m_isActive)
+    {
+      NS_LOG_WARN ("Not supposed to happen, but we can handle this.");
+      InstallTeidRouting (rInfo, msg->buffer_id);
+    }
+  else
+    {
+      NS_LOG_WARN ("Ignoring TEID packet sent to controller.");
+    }
+  
+  // All handlers must free the message when everything is ok
+  ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
+  return 0;
+}
+
+ofl_err
 OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg, 
     SwitchInfo swtch, uint32_t xid)
 {
+  NS_LOG_FUNCTION (this << swtch.ipv4 << xid);
+
   ofl_match_tlv *tlv;
 
   // Get ARP operation
@@ -812,6 +893,8 @@ Ptr<Packet>
 OpenFlowEpcController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp, 
     Mac48Address dstMac, Ipv4Address dstIp)
 {
+  NS_LOG_FUNCTION (this << srcMac << srcIp << dstMac << dstIp);
+
   Ptr<Packet> packet = Create<Packet> ();
   
   // ARP header
