@@ -164,12 +164,15 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
       uint16_t current = rInfo->m_sgwIdx;
   
       // When necessary, install the meter rule just in gateway switch
-      if (meterInfo && !meterInfo->m_isInstalled && meterInfo->m_hasDown)
+      if (meterInfo && meterInfo->m_hasDown)
         {
-          // Install the meter entry
-          DpctlCommand (GetSwitchDevice (current), meterInfo->GetDownAddCmd ());
-          meterInstalled = true;
-            
+          if (!meterInfo->m_isInstalled)
+            {
+              // Install the meter entry
+              DpctlCommand (GetSwitchDevice (current), meterInfo->GetDownAddCmd ());
+              meterInstalled = true;
+            }
+
           // Building the meter apply instruction string
           std::ostringstream meterInst;
           meterInst << " meter:" << rInfo->m_teid;
@@ -209,12 +212,15 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
       uint16_t current = rInfo->m_enbIdx;
 
       // When necessary, install the meter rule just in eNB switch
-      if (meterInfo && !meterInfo->m_isInstalled && meterInfo->m_hasUp)
+      if (meterInfo && meterInfo->m_hasUp)
         {
-          // Install the meter entry
-          DpctlCommand (GetSwitchDevice (current), meterInfo->GetUpAddCmd ());
-          meterInstalled = true;
-            
+           if (!meterInfo->m_isInstalled)
+            {
+              // Install the meter entry
+              DpctlCommand (GetSwitchDevice (current), meterInfo->GetUpAddCmd ());
+              meterInstalled = true;
+            }
+
           // Building the meter apply instruction string
           std::ostringstream meterInst;
           meterInst << " meter:" << rInfo->m_teid;
