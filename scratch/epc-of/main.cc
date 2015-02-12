@@ -50,6 +50,7 @@ main (int argc, char *argv[])
   bool        verbose   = false;
   bool        liblog    = false;
   bool        progress  = false;
+  bool        traces    = false;
   bool        ping      = false;
   bool        voip      = false;
   bool        http      = false;
@@ -65,6 +66,7 @@ main (int argc, char *argv[])
   cmd.AddValue ("verbose",  "Enable verbose output", verbose);
   cmd.AddValue ("liblog",   "Enable ofsoftswitch log component", liblog);
   cmd.AddValue ("progress", "Enable simulation time progress", progress);
+  cmd.AddValue ("traces",   "Enable simulation pacp traces", traces);
   cmd.AddValue ("ping",     "Enable ping traffic", ping);
   cmd.AddValue ("voip",     "Enable VoIP traffic", voip);
   cmd.AddValue ("http",     "Enable HTTP traffic", http);
@@ -88,7 +90,7 @@ main (int argc, char *argv[])
   if (video)    scenario->EnableVideoTraffic ();
 
   if (liblog)   scenario->EnableDatapathLogs ();
-  if (verbose)  scenario->EnableTraces ();
+  if (traces)   scenario->EnableTraces ();
 
   NS_LOG_INFO ("Simulating...");
   Simulator::Stop (Seconds (duration));
