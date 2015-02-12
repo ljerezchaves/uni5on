@@ -62,13 +62,15 @@ public:
   
   bool NotifyAppStart (Ptr<Application> app);
   
-  bool NotifyAppStop (Ptr<Application> app);
+//  bool NotifyAppStop (Ptr<Application> app);
   
   void CreateSpanningTree ();
 
 protected:
   // Inherited from OpenFlowEpcController
   bool InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer = OFP_NO_BUFFER);
+  bool GbrBearerRequest (Ptr<RoutingInfo> rInfo);
+  bool GbrBearerRelease (Ptr<RoutingInfo> rInfo);
 
 //  ofl_err HandleMultipartReply (ofl_msg_multipart_reply_header *msg, SwitchInfo
 //      swtch, uint32_t xid);
@@ -83,13 +85,6 @@ private:
   bool InstallTeidRouting (Ptr<RingRoutingInfo> ringInfo, 
       uint32_t buffer = OFP_NO_BUFFER);
   
-  /**
-   * Process the GBR resource allocation based on current ring strategy.
-   * \param ringInfo The ring routing information to process.
-   * \return True when the GBR request can be sastified.
-   */
-  bool ProcessGbrRequest (Ptr<RingRoutingInfo> ringInfo);
-
   /**
    * Look for the routing path between srcSwitchIdx and dstSwitchIdx with
    * lowest number of hops.

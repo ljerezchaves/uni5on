@@ -263,6 +263,9 @@ OpenFlowEpcController::NotifyAppStop (Ptr<Application> app)
     {
       rInfo->m_isActive = false;
       rInfo->m_isInstalled = false;
+
+      GbrBearerRelease (rInfo);
+      
       // There is no need to remove manualy remove the rules from switch. 
       // Just wait for idle timeout.
     }

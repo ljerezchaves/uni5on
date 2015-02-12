@@ -168,7 +168,7 @@ RingController::NotifyAppStart (Ptr<Application> app)
   // For dedicated GBR bearers, let's check for available resources. 
   if (rInfo->IsGbr ())
     {
-      if (!ProcessGbrRequest (ringInfo))
+      if (!GbrBearerRequest (rInfo))
         {
           return false;
         }
@@ -180,24 +180,24 @@ RingController::NotifyAppStart (Ptr<Application> app)
   return true;
 }
 
-bool
-RingController::NotifyAppStop (Ptr<Application> app)
-{
-  NS_LOG_FUNCTION (this << app);
-
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (GetTeidFromApplication (app));
-  NS_ASSERT_MSG (rInfo, "No routing information for AppStop.");
-  
-  // Release resources for active application
-  if (rInfo->m_isActive && rInfo->IsGbr ())
-    {
-      ReleaseBandwidth (rInfo->GetObject<RingRoutingInfo> ());   
-    }
-
-  // Call base method to print app stats and update routing info.
-  OpenFlowEpcController::NotifyAppStop (app);
-  return true;
-}
+// bool
+// RingController::NotifyAppStop (Ptr<Application> app)
+// {
+//   NS_LOG_FUNCTION (this << app);
+// 
+//   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (GetTeidFromApplication (app));
+//   NS_ASSERT_MSG (rInfo, "No routing information for AppStop.");
+//   
+//   // Release resources for active application
+//   if (rInfo->m_isActive && rInfo->IsGbr ())
+//     {
+//       ReleaseBandwidth (rInfo->GetObject<RingRoutingInfo> ());   
+//     }
+// 
+//   // Call base method to print app stats and update routing info.
+//   OpenFlowEpcController::NotifyAppStop (app);
+//   return true;
+// }
 
 void
 RingController::CreateSpanningTree ()
@@ -287,12 +287,12 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
 }
 
 bool
-RingController::ProcessGbrRequest (Ptr<RingRoutingInfo> ringInfo)
+RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << ringInfo);
+  NS_LOG_FUNCTION (this << rInfo);
   
   IncreaseGbrRequest ();
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
   DataRate request, available;
   uint32_t teid = rInfo->m_teid;
@@ -351,6 +351,19 @@ RingController::ProcessGbrRequest (Ptr<RingRoutingInfo> ringInfo)
           NS_ABORT_MSG ("Invalid Routing strategy.");
         }
     }
+}
+
+bool
+RingController::GbrBearerRelease (Ptr<RoutingInfo> rInfo)
+{
+  // FIXME Verificar melhor se ja nao liberou. (gbrInfo)
+  if (rInfo->IsGbr ())      
+    {
+      Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+      NS_ASSERT_MSG (ringInfo, "No ringInfo for bearer release.");
+      return ReleaseBandwidth (ringInfo);
+    }
+  return false;
 }
 
 bool 
