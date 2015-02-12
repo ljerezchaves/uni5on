@@ -25,69 +25,8 @@ NS_LOG_COMPONENT_DEFINE ("RingController");
 
 namespace ns3 {
 
-NS_OBJECT_ENSURE_REGISTERED (RingRoutingInfo);
 NS_OBJECT_ENSURE_REGISTERED (RingController);
 
-// ------------------------------------------------------------------------ //
-RingRoutingInfo::RingRoutingInfo ()
-  : m_rInfo (0)
-{
-  NS_LOG_FUNCTION (this);
-}
-
-RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo)
-  : m_rInfo (rInfo)
-{
-  NS_LOG_FUNCTION (this);
-}
-
-RingRoutingInfo::~RingRoutingInfo ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-TypeId 
-RingRoutingInfo::GetTypeId (void)
-{
-  static TypeId tid = TypeId ("ns3::RingRoutingInfo")
-    .SetParent<Object> ()
-    .AddConstructor<RingRoutingInfo> ()
-  ;
-  return tid;
-}
-
-void
-RingRoutingInfo::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-  m_rInfo = 0;
-}
-
-Ptr<RoutingInfo>
-RingRoutingInfo::GetRoutingInfo ()
-{
-  return m_rInfo;
-}
-
-void 
-RingRoutingInfo::InvertRoutingPath ()
-{
-  RoutingPath aux = m_downPath;
-  m_downPath = m_upPath;
-  m_upPath = aux;
-}
-
-void
-RingRoutingInfo::SetDownAndUpPath (RoutingPath down)
-{
-  m_downPath  = down;
-  m_upPath    = m_downPath == RingRoutingInfo::CLOCK ? 
-                RingRoutingInfo::COUNTER :
-                RingRoutingInfo::CLOCK;
-}
-
-
-// ------------------------------------------------------------------------ //
 RingController::RingController ()
 {
   NS_LOG_FUNCTION (this);

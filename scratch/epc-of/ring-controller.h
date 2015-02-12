@@ -30,62 +30,6 @@
 
 namespace ns3 {
 
-// ------------------------------------------------------------------------ //
-/**
- * Metadata associated to a ring routing path between 
- * two any switches in the OpenFlow ring network.
- */
-class RingRoutingInfo : public Object
-{
-  friend class RingController;
-
-public:
-  /** Routing direction in the ring. */
-  enum RoutingPath {
-    CLOCK = 1,
-    COUNTER = 2
-  };
-
-  RingRoutingInfo ();          //!< Default constructor
-  virtual ~RingRoutingInfo (); //!< Dummy destructor, see DoDipose
-
-  /** 
-   * Complete constructor.
-   * \param rInfo RoutingInfo pointer. 
-   * \attention This RingRoutingInfo object must be aggregated to rInfo.
-   */
-  RingRoutingInfo (Ptr<RoutingInfo> rInfo);
-  
-  /**
-   * Register this type.
-   * \return The object TypeId.
-   */
-  static TypeId GetTypeId (void);
-
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  /** \return RoutingInfo pointer. */
-  Ptr<RoutingInfo> GetRoutingInfo ();
-
-protected:
-  /** Invert down/up routing direction. */
-  void InvertRoutingPath ();
-
-  /** 
-   * Set both down and up paths, based on down path direction. 
-   * Up path will get the inverse direction. 
-   * \param down The down path direction. 
-   */
-  void SetDownAndUpPath (RoutingPath down);
-
-  Ptr<RoutingInfo> m_rInfo;     //!< Routing information
-  RoutingPath      m_downPath;  //!< Downlink routing path
-  RoutingPath      m_upPath;    //!< Uplink routing path
-};
-
-
-// ------------------------------------------------------------------------ //
 /**
  * OpenFlow EPC controller for ring network.
  */

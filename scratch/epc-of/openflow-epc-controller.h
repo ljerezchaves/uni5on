@@ -28,163 +28,16 @@
 #include <ns3/ofswitch13-module.h>
 #include <ns3/applications-module.h>
 #include "openflow-epc-network.h"
+#include "routing-info.h"
 
 namespace ns3 {
 
 class OpenFlowEpcController;
 class RingController;
 
-/** EPS context bearer */
-typedef EpcS11SapMme::BearerContextCreated ContextBearer_t;
-
-/** List of created context bearers */
-typedef std::list<ContextBearer_t> BearerList_t;
-
-// ------------------------------------------------------------------------ //
-/** 
- * Metadata associated to LTE context information for controller usage. 
- */
-class ContextInfo : public Object
-{
-  friend class OpenFlowEpcController;
-
-public:
-  ContextInfo ();          //!< Default constructor
-  virtual ~ContextInfo (); //!< Dummy destructor, see DoDipose
-
-  /**
-   * Register this type.
-   * \return The object TypeId.
-   */
-  static TypeId GetTypeId (void);
-
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  /** Const private member access methods. */
-  //\{
-  uint16_t GetEnbIdx () const;      //!< \return eNB switch index
-  uint16_t GetSgwIdx () const;      //!< \return Gateway switch index
-  Ipv4Address GetEnbAddr () const;  //!< \return eNB Ipv4 address
-  Ipv4Address GetSgwAddr () const;  //!< \return Gateway Ipv4 address
-  //\}
-
-private:
-  uint64_t      m_imsi;         //!< UE IMSI
-  uint16_t      m_cellId;       //!< eNB Cell ID
-  uint16_t      m_enbIdx;       //!< eNB switch index
-  uint16_t      m_sgwIdx;       //!< Gateway switch index
-  Ipv4Address   m_enbAddr;      //!< eNB IPv4 addr
-  Ipv4Address   m_sgwAddr;      //!< Gateway IPv4 addr
-  BearerList_t  m_bearerList;   //!< List of bearers
-};
-
-
-// ------------------------------------------------------------------------ //
 /**
- * Metadata associated to a routing path between
- * two any switches in the OpenFlow network.
- */
-class RoutingInfo : public Object
-{
-  friend class OpenFlowEpcController;
-  friend class RingController;
-
-public:
-  RoutingInfo ();          //!< Default constructor
-  virtual ~RoutingInfo (); //!< Dummy destructor, see DoDipose
-
-  /**
-   * Register this type.
-   * \return The object TypeId.
-   */
-  static TypeId GetTypeId (void);
-
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  /** \return True if the associated EPS bearer is of GBR type. */
-  bool IsGbr ();
-
-  /** \return The EPS Bearer. */
-  EpsBearer GetEpsBearer ();
-
-  /** \return The Bearer QoS information. */
-  GbrQosInformation GetQosInfo ();
-  
-private:
-  uint32_t          m_teid;         //!< GTP TEID
-  uint16_t          m_sgwIdx;       //!< Sgw switch index
-  uint16_t          m_enbIdx;       //!< eNB switch index
-  Ipv4Address       m_sgwAddr;      //!< Sgw IPv4 address
-  Ipv4Address       m_enbAddr;      //!< eNB IPv4 address
-  DataRate          m_reserved;     //!< Reserved data rate
-  Ptr<Application>  m_app;          //!< Traffic application
-  int               m_priority;     //!< Flow priority
-  int               m_timeout;      //!< Flow idle timeout
-  bool              m_isDefault;    //!< This info is for default bearer
-  bool              m_isInstalled;  //!< Rule is installed into switches
-  bool              m_isActive;     //!< Application traffic is active
-  ContextBearer_t   m_bearer;       //!< EPS bearer information
-};
-
-
-// ------------------------------------------------------------------------ //
-/**
- * Metadata associated to a meter rules on switches.
- */
-class MeterInfo : public Object
-{
-  friend class OpenFlowEpcController;
-  friend class RingController;
-
-public:
-  MeterInfo ();          //!< Default constructor
-  virtual ~MeterInfo (); //!< Dummy destructor, see DoDipose
- 
-  /** 
-   * Complete constructor.
-   * \param rInfo RoutingInfo pointer. 
-   * \attention This MeterInfo object must be aggregated to rInfo.
-   */
-  MeterInfo (Ptr<RoutingInfo> rInfo);
-  
-  /**
-   * Register this type.
-   * \return The object TypeId.
-   */
-  static TypeId GetTypeId (void);
-
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  /** \return RoutingInfo pointer. */
-  Ptr<RoutingInfo> GetRoutingInfo ();
-
-  /** Get Dpctl commands to add or delete meter rules */
-  //\{
-  std::string GetDownAddCmd ();
-  std::string GetUpAddCmd ();
-  std::string GetDelCmd ();
-  //\}
-
-private:
-  uint32_t m_teid;          //!< GTP TEID
-  bool     m_isInstalled;   //!< True when this meter is installed
-  bool     m_hasDown;       //!< True for downlink meter
-  bool     m_hasUp;         //!< True for uplink meter
-  uint16_t m_downSwitch;    //!< Downlink first switch index (gateway)
-  uint16_t m_upSwitch;      //!< Uplink first switxh index (eNB)
-  uint64_t m_downBitRate;   //!< Downlink meter drop rate (bps)
-  uint64_t m_upBitRate;     //!< Uplink meter drop rate (bps)
-  Ptr<RoutingInfo> m_rInfo;     //!< Routing information
-};
-
-
-// ------------------------------------------------------------------------ //
-/**
- * The abstract base OpenFlow EPC controller, which should 
- * be extend in accordance to network topology.
+ * The abstract base OpenFlow EPC controller, which should be extend in
+ * accordance to network topology.
  */
 class OpenFlowEpcController : public OFSwitch13Controller
 {
