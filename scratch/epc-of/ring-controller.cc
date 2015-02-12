@@ -91,69 +91,6 @@ RingController::NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo)
   DpctlCommand (connInfo->switchDev2, cmd2.str ());
 }
 
-// void 
-// RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
-//     Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList)
-// {
-//   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr);
-//   
-//   // Call base method which will save context information and create routing
-//   // info for default bearer.
-//   OpenFlowEpcController::NotifyNewContextCreated (imsi, cellId, enbAddr, 
-//       sgwAddr, bearerList);
-//   
-//   // Create ringInfo for default bearer and aggregate it to rInfo.
-//   uint32_t teid = bearerList.front ().sgwFteid.teid;
-//   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-//   Ptr<RingRoutingInfo> ringInfo = CreateObject<RingRoutingInfo> (rInfo);
-//   ringInfo->SetDownAndUpPath (FindShortestPath (rInfo->m_sgwIdx, rInfo->m_enbIdx));
-//   rInfo->AggregateObject (ringInfo);
-//   
-// }
-// 
-// bool
-// RingController::NotifyAppStart (Ptr<Application> app)
-// {
-//   NS_LOG_FUNCTION (this << app);
-// 
-//   // Call base method which will create routing info for the bearer associated
-//   // with this app, if necessary.
-//   OpenFlowEpcController::NotifyAppStart (app);
-// 
-//   // At first usage, create ringInfo for dedicated bearer and aggregate it to rInfo.
-//   uint32_t teid = GetTeidFromApplication (app);
-//   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-//   Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-//   if (ringInfo == 0)
-//     {
-//       // This is the first time in simulation we are using this dedicated
-//       // bearer in the ring. Let's create and aggregate it's ring routing metadata.
-//       ringInfo = CreateObject<RingRoutingInfo> (rInfo);
-//       ringInfo->SetDownAndUpPath (FindShortestPath (rInfo->m_sgwIdx, rInfo->m_enbIdx));
-//       rInfo->AggregateObject (ringInfo);
-//     }
-// 
-// }
-
-// bool
-// RingController::NotifyAppStop (Ptr<Application> app)
-// {
-//   NS_LOG_FUNCTION (this << app);
-// 
-//   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (GetTeidFromApplication (app));
-//   NS_ASSERT_MSG (rInfo, "No routing information for AppStop.");
-//   
-//   // Release resources for active application
-//   if (rInfo->m_isActive && rInfo->IsGbr ())
-//     {
-//       ReleaseBandwidth (rInfo->GetObject<RingRoutingInfo> ());   
-//     }
-// 
-//   // Call base method to print app stats and update routing info.
-//   OpenFlowEpcController::NotifyAppStop (app);
-//   return true;
-// }
-
 void
 RingController::CreateSpanningTree ()
 {
