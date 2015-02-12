@@ -21,10 +21,9 @@
 #include "ring-controller.h"
 #include <string>
 
-NS_LOG_COMPONENT_DEFINE ("RingController");
-
 namespace ns3 {
 
+NS_LOG_COMPONENT_DEFINE ("RingController");
 NS_OBJECT_ENSURE_REGISTERED (RingController);
 
 RingController::RingController ()
@@ -121,6 +120,7 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
   NS_LOG_FUNCTION (this << rInfo->m_teid << rInfo->m_priority << buffer);
   NS_ASSERT_MSG (rInfo->m_isActive, "Rule not active.");
 
+  // Getting rInfo associated metadata
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
   bool meterInstalled = false;
@@ -246,7 +246,6 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
 
   rInfo->m_isInstalled = true;
   return true;
-
 }
 
 bool
@@ -339,8 +338,9 @@ RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
       // This is the first time in simulation we are querying ring information
       // for this bearer. Let's create and aggregate it's ring routing
       // metadata.
-      ringInfo = CreateObject<RingRoutingInfo> (rInfo);
-      ringInfo->SetDownAndUpPath (FindShortestPath (rInfo->m_sgwIdx, rInfo->m_enbIdx));
+      RingRoutingInfo::RoutingPath downPath = 
+          FindShortestPath (rInfo->m_sgwIdx, rInfo->m_enbIdx);
+      ringInfo = CreateObject<RingRoutingInfo> (rInfo, downPath);
       rInfo->AggregateObject (ringInfo);
     }
   return ringInfo;

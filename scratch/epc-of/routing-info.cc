@@ -228,10 +228,14 @@ RingRoutingInfo::RingRoutingInfo ()
   NS_LOG_FUNCTION (this);
 }
 
-RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo)
+RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo, RoutingPath downPath)
   : m_rInfo (rInfo)
 {
   NS_LOG_FUNCTION (this);
+  m_downPath  = downPath;
+  m_upPath    = m_downPath == RingRoutingInfo::CLOCK ? 
+                RingRoutingInfo::COUNTER :
+                RingRoutingInfo::CLOCK;
 }
 
 RingRoutingInfo::~RingRoutingInfo ()
@@ -270,14 +274,4 @@ RingRoutingInfo::InvertRoutingPath ()
   m_upPath = aux;
 }
 
-void
-RingRoutingInfo::SetDownAndUpPath (RoutingPath down)
-{
-  m_downPath  = down;
-  m_upPath    = m_downPath == RingRoutingInfo::CLOCK ? 
-                RingRoutingInfo::COUNTER :
-                RingRoutingInfo::CLOCK;
-}
-
-  
 };  // namespace ns3

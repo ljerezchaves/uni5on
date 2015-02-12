@@ -60,7 +60,7 @@ public:
 
 protected:
   // Inherited from OpenFlowEpcController
-  bool InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer = OFP_NO_BUFFER);
+  bool InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer);
   bool GbrBearerRequest (Ptr<RoutingInfo> rInfo);
   bool GbrBearerRelease (Ptr<RoutingInfo> rInfo);
 

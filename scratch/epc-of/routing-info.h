@@ -201,9 +201,10 @@ public:
   /** 
    * Complete constructor.
    * \param rInfo RoutingInfo pointer. 
+   * \param downPath The path for downlink (uplink will get the inverse path).
    * \attention This RingRoutingInfo object must be aggregated to rInfo.
    */
-  RingRoutingInfo (Ptr<RoutingInfo> rInfo);
+  RingRoutingInfo (Ptr<RoutingInfo> rInfo, RoutingPath downPath);
   
   /**
    * Register this type.
@@ -220,13 +221,6 @@ public:
 protected:
   /** Invert down/up routing direction. */
   void InvertRoutingPath ();
-
-  /** 
-   * Set both down and up paths, based on down path direction. 
-   * Up path will get the inverse direction. 
-   * \param down The down path direction. 
-   */
-  void SetDownAndUpPath (RoutingPath down);
 
   Ptr<RoutingInfo> m_rInfo;     //!< Routing information
   RoutingPath      m_downPath;  //!< Downlink routing path

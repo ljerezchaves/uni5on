@@ -91,8 +91,8 @@ SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nRing,
       MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, m_opfNetwork));
 //  m_epcHelper->SetX2ConnectCallback (
 //      MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
-//  m_epcHelper->SetAddBearerCallback (
-//      MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, m_controller));
+  m_epcHelper->SetAddBearerCallback (
+      MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, m_controller));
   m_epcHelper->SetCreateSessionRequestCallback (
       MakeCallback (&OpenFlowEpcController::NotifyNewContextCreated, m_controller));
   

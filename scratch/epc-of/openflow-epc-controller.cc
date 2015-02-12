@@ -21,10 +21,9 @@
 #include "openflow-epc-controller.h"
 #include "internet-network.h"
 
-NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcController");
-
 namespace ns3 {
 
+NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcController");
 NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcController);
 
 const int OpenFlowEpcController::m_defaultTimeout = 0; 
@@ -291,7 +290,7 @@ OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
 
   // Everything is ok! Let's activate and install this bearer.
   rInfo->m_isActive = true;
-  return InstallTeidRouting (rInfo);  
+  return InstallTeidRouting (rInfo);
 }
 
 bool
@@ -301,21 +300,15 @@ OpenFlowEpcController::NotifyAppStop (Ptr<Application> app)
  
   uint32_t teid = GetTeidFromApplication (app);
   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-  if (rInfo == 0)
-    {
-      NS_FATAL_ERROR ("No routing information for teid " << teid);
-    }
+  NS_ASSERT_MSG (rInfo, "No routing information for teid.");
   
-  // Check for active application
+  // Check for active bearer
   if (rInfo->m_isActive == true)
     {
       rInfo->m_isActive = false;
       rInfo->m_isInstalled = false;
-
       GbrBearerRelease (rInfo);
-      
-      // There is no need to remove manualy remove the rules from switch. 
-      // Just wait for idle timeout.
+      // No need to remove the rules from switch. Wait for idle timeout.
     }
 
   PrintAppStatistics (app);
@@ -348,17 +341,17 @@ OpenFlowEpcController::GetSwitchDevice (uint16_t index)
   return m_ofNetwork->GetSwitchDevice (index);
 }
 
-// uint16_t 
-// OpenFlowEpcController::GetSwitchIdxForGateway ()
-// {
-//   return m_ofNetwork->GetSwitchIdxForGateway ();
-// }
+uint16_t 
+OpenFlowEpcController::GetSwitchIdxForGateway ()
+{
+  return m_ofNetwork->GetSwitchIdxForGateway ();
+}
 
-// uint16_t
-// OpenFlowEpcController::GetSwitchIdxFromDevice (Ptr<OFSwitch13NetDevice> dev)
-// {
-//   return m_ofNetwork->GetSwitchIdxForDevice (dev);
-// }
+uint16_t
+OpenFlowEpcController::GetSwitchIdxFromDevice (Ptr<OFSwitch13NetDevice> dev)
+{
+  return m_ofNetwork->GetSwitchIdxForDevice (dev);
+}
 
 uint16_t 
 OpenFlowEpcController::GetSwitchIdxFromIp (Ipv4Address addr)
@@ -367,32 +360,30 @@ OpenFlowEpcController::GetSwitchIdxFromIp (Ipv4Address addr)
   ret = m_ipSwitchTable.find (addr);
   if (ret != m_ipSwitchTable.end ())
     {
-      uint16_t idx = ret->second;
-      // NS_LOG_DEBUG ("Found sw index " << idx << " for IP " << addr);
-      return idx;
+      return (uint16_t)ret->second;
     }
   NS_FATAL_ERROR ("IP not registered in switch index table.");
 }
 
-// Ptr<const ContextInfo>
-// OpenFlowEpcController::GetContextFromTeid (uint32_t teid)
-// {
-//   Ptr<ContextInfo> cInfo = 0;
-//   ContextInfoList_t::iterator ctxIt;
-//   for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
-//     {
-//       cInfo = *ctxIt;
-//       BearerList_t::iterator blsIt = cInfo->m_bearerList.begin (); 
-//       for ( ; blsIt != cInfo->m_bearerList.end (); blsIt++)
-//         {
-//           if (blsIt->sgwFteid.teid == teid)
-//             {
-//               return cInfo;
-//             }
-//         }
-//     }
-//   NS_FATAL_ERROR ("Couldn't find bearer for invalid teid.");
-// }
+Ptr<const ContextInfo>
+OpenFlowEpcController::GetContextFromTeid (uint32_t teid)
+{
+  Ptr<ContextInfo> cInfo = 0;
+  ContextInfoList_t::iterator ctxIt;
+  for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
+    {
+      cInfo = *ctxIt;
+      BearerList_t::iterator blsIt = cInfo->m_bearerList.begin (); 
+      for ( ; blsIt != cInfo->m_bearerList.end (); blsIt++)
+        {
+          if (blsIt->sgwFteid.teid == teid)
+            {
+              return cInfo;
+            }
+        }
+    }
+  NS_FATAL_ERROR ("Couldn't find bearer for invalid teid.");
+}
 
 uint32_t 
 OpenFlowEpcController::GetTeidFromApplication (Ptr<Application> app)
@@ -471,8 +462,7 @@ OpenFlowEpcController::PrintAppStatistics (Ptr<Application> app)
     {
       Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
       std::cout << 
-        "Background HTTP traffic (TEID " << teid << 
-        ") [" <<  rInfo->m_sgwIdx << " <-> " << rInfo->m_enbIdx << "]" << 
+        "HTTP (TEID " << teid << ") [" <<  rInfo->m_sgwIdx << " <-> " << rInfo->m_enbIdx << "]" << 
         " Duration " << httpApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
         " Transfered " << httpApp->GetRxBytes () << " bytes -" <<
         " Goodput " << httpApp->GetRxGoodput () << 
@@ -663,7 +653,10 @@ OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   if (rInfo->m_isActive)
     {
       NS_LOG_DEBUG ("Flow " << teid << " is still active. Reinstall rules...");
-      InstallTeidRouting (rInfo);
+      if (!InstallTeidRouting (rInfo))
+        {
+          NS_LOG_ERROR ("TEID rule installation failed!");
+        }
       return 0;
     }
 
@@ -736,7 +729,10 @@ OpenFlowEpcController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
   if (rInfo && rInfo->m_isActive)
     {
       NS_LOG_WARN ("Not supposed to happen, but we can handle this.");
-      InstallTeidRouting (rInfo, msg->buffer_id);
+      if (!InstallTeidRouting (rInfo, msg->buffer_id))
+        {
+          NS_LOG_ERROR ("TEID rule installation failed!");
+        }
     }
   else
     {
