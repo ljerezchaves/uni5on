@@ -116,7 +116,6 @@ private:
   uint16_t          m_enbIdx;       //!< eNB switch index
   Ipv4Address       m_sgwAddr;      //!< Sgw IPv4 address
   Ipv4Address       m_enbAddr;      //!< eNB IPv4 address
-  DataRate          m_reserved;     //!< Reserved data rate
   Ptr<Application>  m_app;          //!< Traffic application
   int               m_priority;     //!< Flow priority
   int               m_timeout;      //!< Flow idle timeout
@@ -129,7 +128,7 @@ private:
 
 // ------------------------------------------------------------------------ //
 /**
- * Metadata associated to a meter rules on switches.
+ * Metadata associated to meter rules.
  */
 class MeterInfo : public Object
 {
@@ -171,10 +170,51 @@ private:
   bool     m_isInstalled;   //!< True when this meter is installed
   bool     m_hasDown;       //!< True for downlink meter
   bool     m_hasUp;         //!< True for uplink meter
-  uint16_t m_downSwitch;    //!< Downlink first switch index (gateway)
-  uint16_t m_upSwitch;      //!< Uplink first switxh index (eNB)
-  uint64_t m_downBitRate;   //!< Downlink meter drop rate (bps)
-  uint64_t m_upBitRate;     //!< Uplink meter drop rate (bps)
+  DataRate m_downDataRate;  //!< Downlink meter drop rate (bps)
+  DataRate m_upDataRate;    //!< Uplink meter drop rate (bps)
+  Ptr<RoutingInfo> m_rInfo; //!< Routing information
+};
+
+
+// ------------------------------------------------------------------------ //
+/**
+ * Metadata associated to GBR beares.
+ */
+class GbrInfo : public Object
+{
+  friend class OpenFlowEpcController;
+  friend class RingController;
+
+public:
+  GbrInfo ();          //!< Default constructor
+  virtual ~GbrInfo (); //!< Dummy destructor, see DoDipose
+ 
+  /** 
+   * Complete constructor.
+   * \param rInfo RoutingInfo pointer. 
+   * \attention This GbrInfo object must be aggregated to rInfo.
+   */
+  GbrInfo (Ptr<RoutingInfo> rInfo);
+  
+  /**
+   * Register this type.
+   * \return The object TypeId.
+   */
+  static TypeId GetTypeId (void);
+
+  /** Destructor implementation */
+  virtual void DoDispose ();
+
+  /** \return RoutingInfo pointer. */
+  Ptr<RoutingInfo> GetRoutingInfo ();
+
+private:
+  uint32_t m_teid;          //!< GTP TEID
+  bool     m_isReserved;    //!< True when the resources are reserved
+  bool     m_hasDown;       //!< True for downlink gbr
+  bool     m_hasUp;         //!< True for uplink gbr
+  DataRate m_downDataRate;  //!< Downlink guaranteed data rate
+  DataRate m_upDataRate;    //!< Uplink guaranteed data rate
   Ptr<RoutingInfo> m_rInfo; //!< Routing information
 };
 
@@ -212,6 +252,13 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  /**
+   * Invert the routing path
+   * \param path The original routing path.
+   * \return The inverse routing path.
+   */
+  static RoutingPath InvertPath (RoutingPath path);
+
   /** Destructor implementation */
   virtual void DoDispose ();
 
@@ -220,11 +267,15 @@ public:
 
 protected:
   /** Invert down/up routing direction. */
-  void InvertRoutingPath ();
+  void InvertDownPath ();
+  void InvertUpPath ();
+  void ResetPaths ();
 
   Ptr<RoutingInfo> m_rInfo;     //!< Routing information
   RoutingPath      m_downPath;  //!< Downlink routing path
   RoutingPath      m_upPath;    //!< Uplink routing path
+  bool             m_isDownInv; //!< True when down path is inverted
+  bool             m_isUpInv;   //!< True when up path is inverted
 };
 
 };  // namespace ns3

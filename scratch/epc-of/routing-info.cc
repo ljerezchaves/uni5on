@@ -104,7 +104,6 @@ RoutingInfo::RoutingInfo ()
   NS_LOG_FUNCTION (this);
   m_enbAddr = Ipv4Address ();
   m_sgwAddr = Ipv4Address ();
-  m_reserved = DataRate ();
 }
 
 RoutingInfo::~RoutingInfo ()
@@ -152,7 +151,8 @@ RoutingInfo::GetQosInfo ()
 MeterInfo::MeterInfo ()
   : m_isInstalled (false),
     m_hasDown (false),
-    m_hasUp (false)
+    m_hasUp (false),
+    m_rInfo (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -199,7 +199,7 @@ MeterInfo::GetDownAddCmd ()
 {
   std::ostringstream meter;
   meter << "meter-mod cmd=add,flags=1,meter=" << m_teid <<
-           " drop:rate=" << m_downBitRate / 1024;
+           " drop:rate=" << m_downDataRate.GetBitRate () / 1024;
   return meter.str ();
 }
 
@@ -208,7 +208,7 @@ MeterInfo::GetUpAddCmd ()
 {
   std::ostringstream meter;
   meter << "meter-mod cmd=add,flags=1,meter=" << m_teid <<
-           " drop:rate=" << m_upBitRate / 1024;
+           " drop:rate=" << m_upDataRate.GetBitRate () / 1024;
   return meter.str ();
 }
 
@@ -218,6 +218,54 @@ MeterInfo::GetDelCmd ()
   std::ostringstream meter;
   meter << "meter-mod cmd=del,meter=" << m_teid;
   return meter.str ();
+}
+
+
+// ------------------------------------------------------------------------ //
+GbrInfo::GbrInfo ()
+  : m_isReserved (false),
+    m_hasDown (false),
+    m_hasUp (false),
+    m_rInfo (0)
+{
+  NS_LOG_FUNCTION (this);
+}
+
+GbrInfo::GbrInfo (Ptr<RoutingInfo> rInfo)
+  : m_isReserved (false),
+    m_hasDown (false),
+    m_hasUp (false),
+    m_rInfo (rInfo)
+{
+  NS_LOG_FUNCTION (this);
+}
+
+GbrInfo::~GbrInfo ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+TypeId 
+GbrInfo::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::GbrInfo")
+    .SetParent<Object> ()
+    .AddConstructor<GbrInfo> ()
+  ;
+  return tid;
+}
+
+void
+GbrInfo::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+  m_rInfo = 0;
+}
+
+Ptr<RoutingInfo>
+GbrInfo::GetRoutingInfo ()
+{
+  return m_rInfo;
 }
 
 
@@ -233,9 +281,9 @@ RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo, RoutingPath downPath)
 {
   NS_LOG_FUNCTION (this);
   m_downPath  = downPath;
-  m_upPath    = m_downPath == RingRoutingInfo::CLOCK ? 
-                RingRoutingInfo::COUNTER :
-                RingRoutingInfo::CLOCK;
+  m_upPath    = RingRoutingInfo::InvertPath (m_downPath);
+  m_isDownInv = false;
+  m_isUpInv   = false;
 }
 
 RingRoutingInfo::~RingRoutingInfo ()
@@ -253,6 +301,14 @@ RingRoutingInfo::GetTypeId (void)
   return tid;
 }
 
+RingRoutingInfo::RoutingPath
+RingRoutingInfo::InvertPath (RoutingPath path)
+{
+  return path == RingRoutingInfo::CLOCK ? 
+    RingRoutingInfo::COUNTER :
+    RingRoutingInfo::CLOCK;
+}
+
 void
 RingRoutingInfo::DoDispose ()
 {
@@ -267,11 +323,34 @@ RingRoutingInfo::GetRoutingInfo ()
 }
 
 void 
-RingRoutingInfo::InvertRoutingPath ()
+RingRoutingInfo::InvertDownPath ()
 {
-  RoutingPath aux = m_downPath;
-  m_downPath = m_upPath;
-  m_upPath = aux;
+  m_downPath = RingRoutingInfo::InvertPath (m_downPath);
+  m_isDownInv = !m_isDownInv;
 }
+
+void 
+RingRoutingInfo::InvertUpPath ()
+{
+  m_upPath = RingRoutingInfo::InvertPath (m_upPath);
+  m_isUpInv = !m_isUpInv;
+}
+
+void 
+RingRoutingInfo::ResetPaths ()
+{
+  if (m_isDownInv)
+    {
+      m_isDownInv = false;
+      m_downPath = RingRoutingInfo::InvertPath (m_downPath);
+    }
+
+  if (m_isUpInv)
+    {
+      m_isUpInv = false;
+      m_upPath = RingRoutingInfo::InvertPath (m_upPath);
+    }
+}
+
 
 };  // namespace ns3

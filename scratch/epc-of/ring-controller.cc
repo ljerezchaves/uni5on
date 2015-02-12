@@ -167,7 +167,6 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
       if (meterInfo && !meterInfo->m_isInstalled && meterInfo->m_hasDown)
         {
           // Install the meter entry
-          NS_ASSERT_MSG (meterInfo->m_downSwitch == current, "Wrong switch.");
           DpctlCommand (GetSwitchDevice (current), meterInfo->GetDownAddCmd ());
           meterInstalled = true;
             
@@ -213,7 +212,6 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
       if (meterInfo && !meterInfo->m_isInstalled && meterInfo->m_hasUp)
         {
           // Install the meter entry
-          NS_ASSERT_MSG (meterInfo->m_upSwitch == current, "Wrong switch.");
           DpctlCommand (GetSwitchDevice (current), meterInfo->GetUpAddCmd ());
           meterInstalled = true;
             
@@ -254,79 +252,175 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo);
   
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
+  Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
+  uint32_t teid = rInfo->m_teid;
+  DataRate available, request;
+  bool downOk = true;
+  bool upOk = true;
   
   IncreaseGbrRequest ();
-  GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
-  DataRate request, available;
-  uint32_t teid = rInfo->m_teid;
-
-  request = DataRate (gbrQoS.gbrDl + gbrQoS.gbrUl);
-  NS_LOG_DEBUG ("Bearer " << teid << " requesting " << request);
-
-  available = GetAvailableBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
-      ringInfo->m_downPath);
-  NS_LOG_DEBUG ("Available bandwidth in current path: " << available);
-
-  if (available >= request)
+  
+  // Reserving downlink resources
+  if (gbrInfo->m_hasDown)
     {
-      // Let's reserve it and return true to the application.
-      rInfo->m_reserved = request;
-      return (ReserveBandwidth (ringInfo));
-    }
+      downOk = false;
+      
+      request = gbrInfo->m_downDataRate;
+      NS_LOG_DEBUG (teid << ": downlink request: " << request);
+      available = GetAvailableBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
+          ringInfo->m_downPath);
+      NS_LOG_DEBUG (teid << ": available in current path: " << available);
 
-  // We don't have the available bandwitdh for this bearer in current path. 
-  // Let's check the routing strategy and see if we can change the route.
-  switch (m_strategy)
-    {
-      case RingController::HOPS:
+      if (available >= request)
         {
-          NS_LOG_WARN ("No resources for bearer " << teid << ". Block!");
-          IncreaseGbrBlocks ();
+          // Let's reserve it
+          downOk = ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
+              ringInfo->m_downPath, request);
+        }
+      else
+        {
+          // We don't have the available bandwitdh for this bearer in current
+          // path.  Let's check the routing strategy and see if we can change
+          // the route.
+          switch (m_strategy)
+            {
+              case RingController::HOPS:
+                {
+                  NS_LOG_WARN (teid << ": no resources. Block!");
+                  IncreaseGbrBlocks ();
+                  break;
+                }
+        
+              case RingController::BAND:
+                {
+                  NS_LOG_DEBUG (teid << ": checking the other path.");
+                  available = GetAvailableBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
+                      RingRoutingInfo::InvertPath (ringInfo->m_downPath));
+                  NS_LOG_DEBUG (teid << ": available in other path: " << available);
+        
+                  if (available >= request)
+                    {
+                      // Let's invert the path and reserve it 
+                      NS_LOG_DEBUG (teid << ": inverting down path.");
+                      ringInfo->InvertDownPath ();
+                      downOk = ReserveBandwidth (rInfo->m_sgwIdx, 
+                          rInfo->m_enbIdx, ringInfo->m_downPath, request);
+                    }
+                  else
+                    {
+                      NS_LOG_WARN (teid << ": no resources. Block!");
+                      IncreaseGbrBlocks ();
+                    }
+                  break;
+                }
+
+              default:
+                {
+                  NS_ABORT_MSG ("Invalid Routing strategy.");
+                }
+            }
+        }
+  
+      // Check for success in downlink reserve
+      if (!downOk)
+        {
           return false;
         }
+    }
 
-      case RingController::BAND:
+  // Reserving uplink resources
+  if (gbrInfo->m_hasUp)
+    {
+      upOk = false;
+      
+      request = gbrInfo->m_upDataRate;
+      NS_LOG_DEBUG (teid << ": uplink request: " << request);
+      available = GetAvailableBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
+          ringInfo->m_upPath);
+      NS_LOG_DEBUG (teid << ": available in current path: " << available);
+
+      if (available >= request)
         {
-          NS_LOG_DEBUG ("No resources for bearer " << teid << "." 
-                        " Checking the other path.");
-          
-          available = GetAvailableBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
-              ringInfo->m_upPath);
-          NS_LOG_DEBUG ("Available bandwidth in other path: " << available);
-
-          if (available < request)
-            {
-              NS_LOG_WARN ("No resources for bearer " << teid << ". Block!");
-              IncreaseGbrBlocks ();
-              return false;
-            }
-          
-          // Let's invert the path, reserve the bandwidth and return true to
-          // the application.
-          NS_LOG_DEBUG ("Inverting paths.");
-          ringInfo->InvertRoutingPath ();
-          rInfo->m_reserved = request;
-          return (ReserveBandwidth (ringInfo));
+          // Let's reserve it
+          upOk = ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
+              ringInfo->m_upPath, request);
         }
-        
-      default:
+      else
         {
-          NS_ABORT_MSG ("Invalid Routing strategy.");
+          // We don't have the available bandwitdh for this bearer in current
+          // path.  Let's check the routing strategy and see if we can change
+          // the route.
+          switch (m_strategy)
+            {
+              case RingController::HOPS:
+                {
+                  NS_LOG_WARN (teid << ": no resources. Block!");
+                  IncreaseGbrBlocks ();
+                  break;
+                }
+        
+              case RingController::BAND:
+                {
+                  NS_LOG_DEBUG (teid << ": checking the other path.");
+                  available = GetAvailableBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx,
+                      RingRoutingInfo::InvertPath (ringInfo->m_upPath));
+                  NS_LOG_DEBUG (teid << ": available in other path: " << available);
+        
+                  if (available >= request)
+                    {
+                      // Let's invert the path and reserve it 
+                      NS_LOG_DEBUG (teid << ": inverting up path.");
+                      ringInfo->InvertUpPath ();
+                      upOk = ReserveBandwidth (rInfo->m_enbIdx, 
+                          rInfo->m_sgwIdx, ringInfo->m_upPath, request);
+                    }
+                  else
+                    {
+                      NS_LOG_WARN (teid << ": no resources. Block!");
+                      IncreaseGbrBlocks ();
+                    }
+                  break;
+                }
+
+              default:
+                {
+                  NS_ABORT_MSG ("Invalid Routing strategy.");
+                }
+            }
+        }
+
+      // Check for success in uplink reserve.
+      if (!upOk)
+        {
+          if (gbrInfo->m_hasDown && downOk)
+            {
+              ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
+                  ringInfo->m_downPath, request);
+            }
+          return false;
         }
     }
+  NS_ASSERT_MSG (downOk && upOk, "Error during GBR reserve.");
+  gbrInfo->m_isReserved = true;
+  return true;
 }
 
 bool
 RingController::GbrBearerRelease (Ptr<RoutingInfo> rInfo)
 {
-  // FIXME Verificar melhor se ja nao liberou. (gbrInfo)
-  if (rInfo->IsGbr ())      
+  Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
+  if (gbrInfo && gbrInfo->m_isReserved)
     {
-      Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+      Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
       NS_ASSERT_MSG (ringInfo, "No ringInfo for bearer release.");
-      return ReleaseBandwidth (ringInfo);
+
+      gbrInfo->m_isReserved = false;
+      ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, ringInfo->m_downPath,
+          gbrInfo->m_downDataRate);
+      ReleaseBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, ringInfo->m_upPath,
+          gbrInfo->m_upDataRate);
     }
-  return false;
+  return true;
 }
 
 Ptr<RingRoutingInfo> 
@@ -345,7 +439,6 @@ RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
     }
   return ringInfo;
 }
-
 
 RingRoutingInfo::RoutingPath
 RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)
@@ -394,18 +487,17 @@ RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx,
 }
 
 bool 
-RingController::ReserveBandwidth (const Ptr<RingRoutingInfo> ringInfo)
+RingController::ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+    RingRoutingInfo::RoutingPath routingPath, DataRate reserve)
 {
-  NS_LOG_FUNCTION (this << ringInfo);
+  NS_LOG_FUNCTION (this << srcSwitchIdx << dstSwitchIdx << routingPath << reserve);
 
-  // Iterating over connections in downlink direction
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  uint16_t current = rInfo->m_sgwIdx;
-  while (current != rInfo->m_enbIdx)
+  uint16_t current = srcSwitchIdx;
+  while (current != dstSwitchIdx)
     {
-      uint16_t next = NextSwitchIndex (current, ringInfo->m_downPath);
+      uint16_t next = NextSwitchIndex (current, routingPath);
       Ptr<ConnectionInfo> conn = GetConnectionInfo (current, next);
-      conn->ReserveDataRate (rInfo->m_reserved);
+      conn->ReserveDataRate (reserve);
       NS_ABORT_IF (conn->GetAvailableDataRate () < 0);
       current = next;
     }
@@ -413,18 +505,17 @@ RingController::ReserveBandwidth (const Ptr<RingRoutingInfo> ringInfo)
 }
 
 bool
-RingController::ReleaseBandwidth (const Ptr<RingRoutingInfo> ringInfo)
+RingController::ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+    RingRoutingInfo::RoutingPath routingPath, DataRate release)
 {
-  NS_LOG_FUNCTION (this << ringInfo);
+  NS_LOG_FUNCTION (this << srcSwitchIdx << dstSwitchIdx << routingPath << release);
 
-  // Iterating over connections in downlink direction
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-  uint16_t current = rInfo->m_sgwIdx;
-  while (current != rInfo->m_enbIdx)
+  uint16_t current = srcSwitchIdx;
+  while (current != dstSwitchIdx)
     {
-      uint16_t next = NextSwitchIndex (current, ringInfo->m_downPath);
+      uint16_t next = NextSwitchIndex (current, routingPath);
       Ptr<ConnectionInfo> conn = GetConnectionInfo (current, next);
-      conn->ReleaseDataRate (rInfo->m_reserved);
+      conn->ReleaseDataRate (release);
       current = next;
     }
   return true;
@@ -432,9 +523,9 @@ RingController::ReleaseBandwidth (const Ptr<RingRoutingInfo> ringInfo)
 
 uint16_t 
 RingController::NextSwitchIndex (uint16_t current, 
-    RingRoutingInfo::RoutingPath path)
+    RingRoutingInfo::RoutingPath routingPath)
 {
-  return path == RingRoutingInfo::CLOCK ?
+  return routingPath == RingRoutingInfo::CLOCK ?
       (current + 1) % GetNSwitches () : 
       (current == 0 ? GetNSwitches () - 1 : (current - 1));
 }

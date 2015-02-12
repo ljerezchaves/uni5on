@@ -98,19 +98,27 @@ private:
    * Reserve the bandwidth for each link between source and destination
    * switches in routing path. It modifies the ConnectionInfo
    * structures saved by controller.
-   * \param ringInfo The ring routing information.
+   * \param srcSwitchIdx Sourche switch index.
+   * \param dstSwitchIdx Destination switch index.
+   * \param routingPath The routing path.
+   * \param reserve The DataRate to reserve.
    * \return True if success, false otherwise;
    */
-  bool ReserveBandwidth (const Ptr<RingRoutingInfo> ringInfo);
+  bool ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+    RingRoutingInfo::RoutingPath routingPath, DataRate reserve);
 
   /**
    * Release the bandwidth for each link between source and destination
    * switches in routing path. It modifies the ConnectionInfo
    * structures saved by controller.
-   * \param ringInfo The ring routing information.
+   * \param srcSwitchIdx Sourche switch index.
+   * \param dstSwitchIdx Destination switch index.
+   * \param routingPath The routing path.
+   * \param release The DataRate to release.
    * \return True if success, false otherwise;
    */
-  bool ReleaseBandwidth (const Ptr<RingRoutingInfo> ringInfo);
+  bool ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+    RingRoutingInfo::RoutingPath routingPath, DataRate release);
 
   /**
    * Identify the next switch index based on routing path direction.
@@ -119,7 +127,7 @@ private:
    * \return The next switch index.
    */ 
   uint16_t NextSwitchIndex (uint16_t current, 
-      RingRoutingInfo::RoutingPath path);
+      RingRoutingInfo::RoutingPath routingPath);
 
 
   RoutingStrategy   m_strategy;          //!< Routing strategy in use.

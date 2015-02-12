@@ -227,8 +227,9 @@ OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
       rInfo->m_bearer = dedicatedBearer;
       SaveTeidRoutingInfo (rInfo);
 
-      // Check for meter rules
       GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
+      
+      // Create (if necessary) the meter metadata
       if (gbrQoS.mbrDl || gbrQoS.mbrUl)
         {
           Ptr<MeterInfo> meterInfo = CreateObject<MeterInfo> (rInfo);
@@ -236,16 +237,32 @@ OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
           if (gbrQoS.mbrDl)
             {
               meterInfo->m_hasDown = true;
-              meterInfo->m_downSwitch = rInfo->m_sgwIdx;
-              meterInfo->m_downBitRate = gbrQoS.mbrDl;
+              meterInfo->m_downDataRate = DataRate (gbrQoS.mbrDl);
             }
           if (gbrQoS.mbrUl)
             {
               meterInfo->m_hasUp = true;
-              meterInfo->m_upSwitch = rInfo->m_enbIdx;
-              meterInfo->m_upBitRate = gbrQoS.mbrUl;
+              meterInfo->m_upDataRate = DataRate (gbrQoS.mbrUl);
             }
           rInfo->AggregateObject (meterInfo);
+        }
+  
+      // Create (if necessary) the GBR metadata
+      if (rInfo->IsGbr ())
+        {
+          Ptr<GbrInfo> gbrInfo = CreateObject<GbrInfo> (rInfo);
+          gbrInfo->m_teid = teid;
+          if (gbrQoS.gbrDl)
+            {
+              gbrInfo->m_hasDown = true;
+              gbrInfo->m_downDataRate = DataRate (gbrQoS.gbrDl);
+            }
+          if (gbrQoS.gbrUl)
+            {
+              gbrInfo->m_hasUp = true;
+              gbrInfo->m_upDataRate = DataRate (gbrQoS.gbrUl);
+            }
+          rInfo->AggregateObject (gbrInfo);
         }
     }
 
