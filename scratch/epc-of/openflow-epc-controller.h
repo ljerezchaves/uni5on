@@ -189,8 +189,8 @@ protected:
 
   /**
    * Configure the switches with OpenFlow commands for TEID routing.
-   * \attention This function must be implemented by each specialized
-   * controller.
+   * \attention This function must increase the priority before installing the
+   * rules, to avoid conflicts with old entries.
    * \param rInfo The routing information to configure.
    * \param buffer The buffered packet to apply this rule to.
    * \return True if configuration succeeded, false otherwise.

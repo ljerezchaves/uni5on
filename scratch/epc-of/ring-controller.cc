@@ -91,94 +91,49 @@ RingController::NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo)
   DpctlCommand (connInfo->switchDev2, cmd2.str ());
 }
 
-void 
-RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
-    Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList)
-{
-  NS_LOG_FUNCTION (this << imsi << cellId << enbAddr);
-  
-  // Call base method which will save context information and create routing
-  // info for default bearer.
-  OpenFlowEpcController::NotifyNewContextCreated (imsi, cellId, enbAddr, 
-      sgwAddr, bearerList);
-  
-  // Create ringInfo for default bearer and aggregate it to rInfo.
-  uint32_t teid = bearerList.front ().sgwFteid.teid;
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-  Ptr<RingRoutingInfo> ringInfo = CreateObject<RingRoutingInfo> (rInfo);
-  ringInfo->SetDownAndUpPath (FindShortestPath (rInfo->m_sgwIdx, rInfo->m_enbIdx));
-  rInfo->AggregateObject (ringInfo);
-  
-  // Install rules for default bearer
-  InstallTeidRouting (ringInfo);
-}
-
-bool
-RingController::NotifyAppStart (Ptr<Application> app)
-{
-  NS_LOG_FUNCTION (this << app);
-
-  // Call base method which will create routing info for the bearer associated
-  // with this app, if necessary.
-  OpenFlowEpcController::NotifyAppStart (app);
-
-  // At first usage, create ringInfo for dedicated bearer and aggregate it to rInfo.
-  uint32_t teid = GetTeidFromApplication (app);
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  if (ringInfo == 0)
-    {
-      // This is the first time in simulation we are using this dedicated
-      // bearer in the ring. Let's create and aggregate it's ring routing metadata.
-      ringInfo = CreateObject<RingRoutingInfo> (rInfo);
-      ringInfo->SetDownAndUpPath (FindShortestPath (rInfo->m_sgwIdx, rInfo->m_enbIdx));
-      rInfo->AggregateObject (ringInfo);
-    }
-
-  // Is it a default bearer?
-  if (rInfo->m_isDefault)
-    {
-      // If the application traffic is sent over default bearer, there is no
-      // need for resource reservation nor reinstall the switch rules, as
-      // default rules were supposed to remain installed during entire
-      // simulation.
-      NS_ASSERT_MSG (rInfo->m_isActive && rInfo->m_isInstalled, 
-                     "Default bearer should be intalled and activated.");
-      return true;
-    }
-
-  // Is it an active bearer?
-  if (rInfo->m_isActive)
-    {
-      // This happens with VoIP application, which are installed in pairs and,
-      // when the second application starts, the first one has already
-      // configured the routing for this bearer and set the active flag.
-      NS_ASSERT_MSG (rInfo->m_isInstalled, "Bearer should be installed.");
-      NS_LOG_DEBUG ("Routing path for " << teid << " is already installed.");
-      return true;
-    }
-
-  NS_ASSERT_MSG (!rInfo->m_isActive, "Bearer should be inactive.");
-  // So, this bearer must be inactive and we are goind to reuse it's metadata.
-  // Every time the application starts using an (old) existing bearer, let's
-  // reinstall the rules on the switches, which will inscrease the bearer
-  // priority.  Doing this, we avoid problems with old 'expiring' rules, and we
-  // can even use new routing paths when necessary.
-
-  // For dedicated GBR bearers, let's check for available resources. 
-  if (rInfo->IsGbr ())
-    {
-      if (!GbrBearerRequest (rInfo))
-        {
-          return false;
-        }
-    }
-
-  // Everything is ok! Let's activate and install this bearer.
-  rInfo->m_isActive = true;
-  InstallTeidRouting (ringInfo);  
-  return true;
-}
+// void 
+// RingController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
+//     Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList)
+// {
+//   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr);
+//   
+//   // Call base method which will save context information and create routing
+//   // info for default bearer.
+//   OpenFlowEpcController::NotifyNewContextCreated (imsi, cellId, enbAddr, 
+//       sgwAddr, bearerList);
+//   
+//   // Create ringInfo for default bearer and aggregate it to rInfo.
+//   uint32_t teid = bearerList.front ().sgwFteid.teid;
+//   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+//   Ptr<RingRoutingInfo> ringInfo = CreateObject<RingRoutingInfo> (rInfo);
+//   ringInfo->SetDownAndUpPath (FindShortestPath (rInfo->m_sgwIdx, rInfo->m_enbIdx));
+//   rInfo->AggregateObject (ringInfo);
+//   
+// }
+// 
+// bool
+// RingController::NotifyAppStart (Ptr<Application> app)
+// {
+//   NS_LOG_FUNCTION (this << app);
+// 
+//   // Call base method which will create routing info for the bearer associated
+//   // with this app, if necessary.
+//   OpenFlowEpcController::NotifyAppStart (app);
+// 
+//   // At first usage, create ringInfo for dedicated bearer and aggregate it to rInfo.
+//   uint32_t teid = GetTeidFromApplication (app);
+//   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+//   Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+//   if (ringInfo == 0)
+//     {
+//       // This is the first time in simulation we are using this dedicated
+//       // bearer in the ring. Let's create and aggregate it's ring routing metadata.
+//       ringInfo = CreateObject<RingRoutingInfo> (rInfo);
+//       ringInfo->SetDownAndUpPath (FindShortestPath (rInfo->m_sgwIdx, rInfo->m_enbIdx));
+//       rInfo->AggregateObject (ringInfo);
+//     }
+// 
+// }
 
 // bool
 // RingController::NotifyAppStop (Ptr<Application> app)
@@ -280,100 +235,10 @@ RingController::CreateSpanningTree ()
 bool 
 RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
 {
-  NS_LOG_FUNCTION (this << rInfo << buffer);
-
-  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  return InstallTeidRouting (ringInfo, buffer);
-}
-
-bool
-RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo);
-  
-  IncreaseGbrRequest ();
-  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
-  DataRate request, available;
-  uint32_t teid = rInfo->m_teid;
-
-  request = DataRate (gbrQoS.gbrDl + gbrQoS.gbrUl);
-  NS_LOG_DEBUG ("Bearer " << teid << " requesting " << request);
-
-  available = GetAvailableBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
-      ringInfo->m_downPath);
-  NS_LOG_DEBUG ("Available bandwidth in current path: " << available);
-
-  if (available >= request)
-    {
-      // Let's reserve it and return true to the application.
-      rInfo->m_reserved = request;
-      return (ReserveBandwidth (ringInfo));
-    }
-
-  // We don't have the available bandwitdh for this bearer in current path. 
-  // Let's check the routing strategy and see if we can change the route.
-  switch (m_strategy)
-    {
-      case RingController::HOPS:
-        {
-          NS_LOG_WARN ("No resources for bearer " << teid << ". Block!");
-          IncreaseGbrBlocks ();
-          return false;
-        }
-
-      case RingController::BAND:
-        {
-          NS_LOG_DEBUG ("No resources for bearer " << teid << "." 
-                        " Checking the other path.");
-          
-          available = GetAvailableBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
-              ringInfo->m_upPath);
-          NS_LOG_DEBUG ("Available bandwidth in other path: " << available);
-
-          if (available < request)
-            {
-              NS_LOG_WARN ("No resources for bearer " << teid << ". Block!");
-              IncreaseGbrBlocks ();
-              return false;
-            }
-          
-          // Let's invert the path, reserve the bandwidth and return true to
-          // the application.
-          NS_LOG_DEBUG ("Inverting paths.");
-          ringInfo->InvertRoutingPath ();
-          rInfo->m_reserved = request;
-          return (ReserveBandwidth (ringInfo));
-        }
-        
-      default:
-        {
-          NS_ABORT_MSG ("Invalid Routing strategy.");
-        }
-    }
-}
-
-bool
-RingController::GbrBearerRelease (Ptr<RoutingInfo> rInfo)
-{
-  // FIXME Verificar melhor se ja nao liberou. (gbrInfo)
-  if (rInfo->IsGbr ())      
-    {
-      Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-      NS_ASSERT_MSG (ringInfo, "No ringInfo for bearer release.");
-      return ReleaseBandwidth (ringInfo);
-    }
-  return false;
-}
-
-bool 
-RingController::InstallTeidRouting (Ptr<RingRoutingInfo> ringInfo,
-    uint32_t buffer)
-{
-  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
   NS_LOG_FUNCTION (this << rInfo->m_teid << rInfo->m_priority << buffer);
   NS_ASSERT_MSG (rInfo->m_isActive, "Rule not active.");
 
+  Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
   bool meterInstalled = false;
   
@@ -498,7 +363,106 @@ RingController::InstallTeidRouting (Ptr<RingRoutingInfo> ringInfo,
 
   rInfo->m_isInstalled = true;
   return true;
+
 }
+
+bool
+RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo);
+  
+  Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
+  
+  IncreaseGbrRequest ();
+  GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
+  DataRate request, available;
+  uint32_t teid = rInfo->m_teid;
+
+  request = DataRate (gbrQoS.gbrDl + gbrQoS.gbrUl);
+  NS_LOG_DEBUG ("Bearer " << teid << " requesting " << request);
+
+  available = GetAvailableBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
+      ringInfo->m_downPath);
+  NS_LOG_DEBUG ("Available bandwidth in current path: " << available);
+
+  if (available >= request)
+    {
+      // Let's reserve it and return true to the application.
+      rInfo->m_reserved = request;
+      return (ReserveBandwidth (ringInfo));
+    }
+
+  // We don't have the available bandwitdh for this bearer in current path. 
+  // Let's check the routing strategy and see if we can change the route.
+  switch (m_strategy)
+    {
+      case RingController::HOPS:
+        {
+          NS_LOG_WARN ("No resources for bearer " << teid << ". Block!");
+          IncreaseGbrBlocks ();
+          return false;
+        }
+
+      case RingController::BAND:
+        {
+          NS_LOG_DEBUG ("No resources for bearer " << teid << "." 
+                        " Checking the other path.");
+          
+          available = GetAvailableBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
+              ringInfo->m_upPath);
+          NS_LOG_DEBUG ("Available bandwidth in other path: " << available);
+
+          if (available < request)
+            {
+              NS_LOG_WARN ("No resources for bearer " << teid << ". Block!");
+              IncreaseGbrBlocks ();
+              return false;
+            }
+          
+          // Let's invert the path, reserve the bandwidth and return true to
+          // the application.
+          NS_LOG_DEBUG ("Inverting paths.");
+          ringInfo->InvertRoutingPath ();
+          rInfo->m_reserved = request;
+          return (ReserveBandwidth (ringInfo));
+        }
+        
+      default:
+        {
+          NS_ABORT_MSG ("Invalid Routing strategy.");
+        }
+    }
+}
+
+bool
+RingController::GbrBearerRelease (Ptr<RoutingInfo> rInfo)
+{
+  // FIXME Verificar melhor se ja nao liberou. (gbrInfo)
+  if (rInfo->IsGbr ())      
+    {
+      Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+      NS_ASSERT_MSG (ringInfo, "No ringInfo for bearer release.");
+      return ReleaseBandwidth (ringInfo);
+    }
+  return false;
+}
+
+Ptr<RingRoutingInfo> 
+RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
+{
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  if (ringInfo == 0)
+    {
+      // This is the first time in simulation we are querying ring information
+      // for this bearer. Let's create and aggregate it's ring routing
+      // metadata.
+      ringInfo = CreateObject<RingRoutingInfo> (rInfo);
+      ringInfo->SetDownAndUpPath (FindShortestPath (rInfo->m_sgwIdx, rInfo->m_enbIdx));
+      rInfo->AggregateObject (ringInfo);
+    }
+  return ringInfo;
+}
+
 
 RingRoutingInfo::RoutingPath
 RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)

@@ -57,10 +57,10 @@ public:
   // Inherited from OpenFlowEpcController
   void NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo);
  
-  void NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
-      Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList);
+//  void NotifyNewContextCreated (uint64_t imsi, uint16_t cellId, 
+//      Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList);
   
-  bool NotifyAppStart (Ptr<Application> app);
+//  bool NotifyAppStart (Ptr<Application> app);
   
 //  bool NotifyAppStop (Ptr<Application> app);
   
@@ -76,15 +76,14 @@ protected:
 //      swtch, uint32_t xid);
 
 private:
-  /**
-   * Configure the switches with OpenFlow commands for teid routing.
-   * \param ringInfo The ring routing information to configure.
-   * \param buffer The buffered packet to apply this rule to.
-   * \return True if configuration succeeded, false otherwise.
+  /** 
+   * Get the RingRoutingInfo associated to this rInfo metadata. When no ring
+   * information is available, this function creates it.
+   * \param rInfo The routing information to process.
+   * \return The ring routing information for this bearer.
    */
-  bool InstallTeidRouting (Ptr<RingRoutingInfo> ringInfo, 
-      uint32_t buffer = OFP_NO_BUFFER);
-  
+  Ptr<RingRoutingInfo> GetRingRoutingInfo (Ptr<RoutingInfo> rInfo);
+
   /**
    * Look for the routing path between srcSwitchIdx and dstSwitchIdx with
    * lowest number of hops.

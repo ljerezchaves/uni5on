@@ -188,6 +188,12 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   rInfo->m_isDefault = true;              // This is a default bearer
   rInfo->m_bearer = defaultBearer;
   SaveTeidRoutingInfo (rInfo);
+
+  // Install rules for default bearer
+  if (!InstallTeidRouting (rInfo))
+    {
+      NS_LOG_ERROR ("TEID rule installation failed!");
+    }
 }
 
 bool 
@@ -243,7 +249,49 @@ OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
           rInfo->AggregateObject (meterInfo);
         }
     }
-  return true;
+
+  // Is it a default bearer?
+  if (rInfo->m_isDefault)
+    {
+      // If the application traffic is sent over default bearer, there is no
+      // need for resource reservation nor reinstall the switch rules, as
+      // default rules were supposed to remain installed during entire
+      // simulation and must be Non-GBR.
+      NS_ASSERT_MSG (rInfo->m_isActive && rInfo->m_isInstalled, 
+                     "Default bearer should be intalled and activated.");
+      return true;
+    }
+
+  // Is it an active (aready configured) bearer?
+  if (rInfo->m_isActive)
+    {
+      // This happens with VoIP application, which are installed in pairs and,
+      // when the second application starts, the first one has already
+      // configured the routing for this bearer and set the active flag.
+      NS_ASSERT_MSG (rInfo->m_isInstalled, "Bearer should be installed.");
+      NS_LOG_DEBUG ("Routing path for " << teid << " is already installed.");
+      return true;
+    }
+
+  NS_ASSERT_MSG (!rInfo->m_isActive, "Bearer should be inactive.");
+  // So, this bearer must be inactive and we are goind to reuse it's metadata.
+  // Every time the application starts using an (old) existing bearer, let's
+  // reinstall the rules on the switches, which will inscrease the bearer
+  // priority. Doing this, we avoid problems with old 'expiring' rules, and we
+  // can even use new routing paths when necessary.
+
+  // For dedicated GBR bearers, let's first check for available resources. 
+  if (rInfo->IsGbr ())
+    {
+      if (!GbrBearerRequest (rInfo))
+        {
+          return false;
+        }
+    }
+
+  // Everything is ok! Let's activate and install this bearer.
+  rInfo->m_isActive = true;
+  return InstallTeidRouting (rInfo);  
 }
 
 bool
