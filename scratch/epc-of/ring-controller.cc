@@ -51,11 +51,6 @@ RingController::GetTypeId (void)
                    DoubleValue (0.1),
                    MakeDoubleAccessor (&RingController::m_bwFactor),
                    MakeDoubleChecker<double> (0.0, 1.0))
-//    .AddAttribute ("StatsTimeout",
-//                   "The interval between query stats from switches.",
-//                   TimeValue (Seconds (5)),
-//                   MakeTimeAccessor (&RingController::m_timeout),
-//                   MakeTimeChecker ())
   ;
   return tid;
 }
@@ -119,55 +114,6 @@ RingController::CreateSpanningTree ()
            macAddr2 << ",conf=0x00000020,mask=0x00000020";
   DpctlCommand (connInfo->switchDev2, cmd2.str ());
 }
-
-// ofl_err
-// RingController::HandleMultipartReply (ofl_msg_multipart_reply_header *msg, 
-//     SwitchInfo swtch, uint32_t xid)
-// {
-//   NS_LOG_FUNCTION (swtch.ipv4 << xid);
-// 
-//   char *msg_str = ofl_msg_to_string ((ofl_msg_header*)msg, 0);
-//   NS_LOG_DEBUG ("Multipart reply: " << msg_str);
-//   free (msg_str);
-// 
-//   // Check for multipart reply type
-//   switch (msg->type) 
-//     {
-//       case (OFPMP_FLOW): 
-//         {
-//           // Handle multipart reply flow messages, requested by this contrller
-//           // and used here to update average traffic usage for each GTP tunnel
-//           uint32_t teid;
-//           Ptr<RoutingInfo> rInfo;
-//           ofl_flow_stats *flowStats;
-//           ofl_msg_multipart_reply_flow *replyFlow;
-//           
-//           replyFlow = (ofl_msg_multipart_reply_flow*)msg;
-//           for (size_t f = 0; f < replyFlow->stats_num; f++)
-//             {
-//               flowStats = replyFlow->stats[f];
-//               teid = flowStats->cookie;
-//               if (teid == 0) continue; // Skipping table miss entry.
-//              
-//               rInfo = GetTeidRoutingInfo (teid);
-// //              uint16_t switchIdx = GetSwitchIdxFromDevice (swtch.netdev);
-// //              if (IsInputSwitch (rInfo, switchIdx))
-// //                {
-// //                  UpdateAverageTraffic (rInfo, switchIdx, flowStats);
-// //                }
-//             }
-//           break;
-//         }
-//       default:
-//         {
-//           NS_LOG_WARN ("Unexpected multipart message.");
-//         }
-//     }
-// 
-//   // All handlers must free the message when everything is ok
-//   ofl_msg_free ((ofl_msg_header*)msg, 0 /*exp*/);
-//   return 0;
-// }
 
 bool 
 RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
@@ -492,82 +438,6 @@ RingController::NextSwitchIndex (uint16_t current,
       (current + 1) % GetNSwitches () : 
       (current == 0 ? GetNSwitches () - 1 : (current - 1));
 }
-
-// DataRate 
-// RingController::GetTunnelAverageTraffic (uint32_t teid)
-// {
-// //  std::ostringstream cmd;
-// //  cmd << "stats-flow table=1";
-// //
-// //  RoutingInfo rInfo = GetTeidRoutingInfo (teid);
-// //  char cookieStr [9];
-// //  sprintf (cookieStr, "0x%x", teid);
-// //
-// //  uint16_t current = rInfo.sgwIdx;
-// //  Ptr<OFSwitch13NetDevice> currentDevice = GetSwitchDevice (current);       
-// //  DpctlCommand (currentDevice, cmd.str ());
-// //
-// //  
-//   return DataRate ();
-// }
-//
-// void
-// RingController::QuerySwitchStats ()
-// {
-//   // Getting statistics from all switches
-//   for (int i = 0; i < GetNSwitches (); i++)
-//     {
-//       DpctlCommand (GetSwitchDevice (i), "stats-flow table=1");
-//     }
-//   Simulator::Schedule (m_timeout, &RingController::QuerySwitchStats, this);
-// }
-//
-// bool
-// RingController::IsInputSwitch (const Ptr<RoutingInfo> rInfo, 
-//                                uint16_t switchIdx)
-// {
-//   // For default bearer (no app associated), consider a bidirectional traffic. 
-//   Application::Direction direction = Application::BIDIRECTIONAL;
-//   if (rInfo->m_app)
-//     {
-//       direction = rInfo->m_app->GetDirection ();
-//     }
-//  
-//   switch (direction)
-//     {
-//       case Application::BIDIRECTIONAL:
-//         return (switchIdx == rInfo->m_sgwIdx || switchIdx == rInfo->m_enbIdx);
-//       
-//       case Application::UPLINK:
-//         return (switchIdx == rInfo->m_enbIdx);
-// 
-//       case Application::DOWNLINK:
-//         return (switchIdx == rInfo->m_sgwIdx);
-// 
-//       default:
-//         return false;
-//     }
-// }
-//
-// void
-// RingController::UpdateAverageTraffic (Ptr<RoutingInfo> rInfo, 
-//                                       uint16_t switchIdx,
-//                                       ofl_flow_stats* flowStats)
-// {
-//   uint64_t bytes = flowStats->byte_count;
-//   double secs = (flowStats->duration_sec + flowStats->duration_nsec / 1000000000);
-//   DataRate dr (bytes*8/secs);
-// 
-// 
-//   if (switchIdx == GetSwitchIdxForGateway ())
-//     {
-//       NS_LOG_DEBUG ("Average down traffic for tunnel " << rInfo->m_teid << ": " << dr);
-//     }
-//   else
-//     {
-//       NS_LOG_DEBUG ("Average up traffic for tunnel " << rInfo->m_teid << ": " << dr);
-//     }
-// }
 
 };  // namespace ns3
 

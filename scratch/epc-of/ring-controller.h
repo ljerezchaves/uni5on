@@ -64,9 +64,6 @@ protected:
   bool GbrBearerRequest (Ptr<RoutingInfo> rInfo);
   bool GbrBearerRelease (Ptr<RoutingInfo> rInfo);
 
-//  ofl_err HandleMultipartReply (ofl_msg_multipart_reply_header *msg, SwitchInfo
-//      swtch, uint32_t xid);
-
 private:
   /** 
    * Get the RingRoutingInfo associated to this rInfo metadata. When no ring
@@ -124,43 +121,9 @@ private:
   uint16_t NextSwitchIndex (uint16_t current, 
       RingRoutingInfo::RoutingPath path);
 
-//  /**
-//   * Using an OpenFlow Multipart OFPMP_FLOW message, query the switches for
-//   * individual flow statistics and estimates an average traffic for a specific
-//   * GTP tunnel. 
-//   * \param teid The GTP tunnel identifier.
-//   * \return Average traffic for specific tunnel.
-//   */
-//  DataRate GetTunnelAverageTraffic (uint32_t teid);
-//
-//  /**
-//   * Query OpenFlow switch for Information about individual flow entries using
-//   * the OFPMP_FLOW multipart request message
-//   */
-//  void QuerySwitchStats ();
-//
-//  /**
-//   * Based on app traffic direction, check if this switch is the input switch
-//   * for this traffic into the ring. 
-//   * \param rInfo The routing information to check.
-//   * \param switchIdx The switch index.
-//   * \return True when this switch is the ring input switch for this traffic.
-//   */
-//  bool IsInputSwitch (const Ptr<RingRoutingInfo> rInfo, uint16_t switchIdx);
-//
-//  /**
-//   * Update the internal traffic average bitrate based on information received
-//   * from switches.
-//   * \param rInfo The routing information to check.
-//   * \param switchIdx The switch index.
-//   * \param flowStats The multipart flow stats from switch.
-//   */ 
-//  void UpdateAverageTraffic (Ptr<RoutingInfo> rInfo, uint16_t switchIdx, 
-//                             ofl_flow_stats* flowStats);
 
   RoutingStrategy   m_strategy;          //!< Routing strategy in use.
   double            m_bwFactor;          //!< Bandwidth saving factor
-//  Time              m_timeout;           //!< Switch stats query timeout.
 };
 
 };  // namespace ns3
