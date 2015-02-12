@@ -259,6 +259,7 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
   bool upOk = true;
   
   IncreaseGbrRequest ();
+  ringInfo->ResetPaths ();
   
   // Reserving downlink resources
   if (gbrInfo->m_hasDown)

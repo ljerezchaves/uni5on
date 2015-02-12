@@ -325,6 +325,8 @@ RingRoutingInfo::GetRoutingInfo ()
 void 
 RingRoutingInfo::InvertDownPath ()
 {
+  NS_LOG_FUNCTION (this);
+
   m_downPath = RingRoutingInfo::InvertPath (m_downPath);
   m_isDownInv = !m_isDownInv;
 }
@@ -332,6 +334,8 @@ RingRoutingInfo::InvertDownPath ()
 void 
 RingRoutingInfo::InvertUpPath ()
 {
+  NS_LOG_FUNCTION (this);
+
   m_upPath = RingRoutingInfo::InvertPath (m_upPath);
   m_isUpInv = !m_isUpInv;
 }
@@ -339,18 +343,17 @@ RingRoutingInfo::InvertUpPath ()
 void 
 RingRoutingInfo::ResetPaths ()
 {
-  if (m_isDownInv)
+  NS_LOG_FUNCTION (this);
+
+  if (m_isDownInv) 
     {
-      m_isDownInv = false;
-      m_downPath = RingRoutingInfo::InvertPath (m_downPath);
+      InvertDownPath ();
     }
 
   if (m_isUpInv)
     {
-      m_isUpInv = false;
-      m_upPath = RingRoutingInfo::InvertPath (m_upPath);
+      InvertUpPath ();
     }
 }
-
 
 };  // namespace ns3
