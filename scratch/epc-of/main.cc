@@ -56,6 +56,7 @@ main (int argc, char *argv[])
   bool        http      = false;
   bool        video     = false;
   std::string topoFile  = "../scratch/epc-of/default.txt";
+  std::string outFile = "AppStats.txt";
   
   CommandLine cmd;
   cmd.AddValue ("duration", "Simulation time (s)", duration);
@@ -71,6 +72,7 @@ main (int argc, char *argv[])
   cmd.AddValue ("voip",     "Enable VoIP traffic", voip);
   cmd.AddValue ("http",     "Enable HTTP traffic", http);
   cmd.AddValue ("video",    "Enable video traffic", video);
+  cmd.AddValue ("outFile",  "Output file name", outFile); 
   cmd.Parse (argc, argv);
   
   if (progress) EnableProgress ();
@@ -82,6 +84,7 @@ main (int argc, char *argv[])
   
   Ptr<SimulationScenario> scenario = 
     CreateObject<SimulationScenario> (nEnbs, nRing, eNbUes, eNbSwt);
+  scenario->SetAttribute ("AppStatsFilename", StringValue (outFile));
   
   // Application traffic
   if (ping)     scenario->EnablePingTraffic ();
@@ -95,9 +98,6 @@ main (int argc, char *argv[])
   NS_LOG_INFO ("Simulating...");
   Simulator::Stop (Seconds (duration));
   Simulator::Run ();
-
-  scenario->PrintStats ();
-
   Simulator::Destroy ();
   NS_LOG_INFO ("End!");
 }

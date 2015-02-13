@@ -19,7 +19,7 @@
  */
 
 #include "simulation-scenario.h"
-
+#include <iomanip>
 
 namespace ns3 {
 
@@ -418,13 +418,6 @@ SimulationScenario::EnableVideoTraffic ()
 }
 
 void
-SimulationScenario::PrintStats ()
-{
-  NS_LOG_FUNCTION (this);
-  m_controller->GetBlockRatioStatistics ();
-}
-
-void
 SimulationScenario::EnableDatapathLogs (std::string level)
 {
   NS_LOG_FUNCTION (this);
@@ -461,7 +454,12 @@ SimulationScenario::ReportAppStats (std::string description, uint32_t teid,
           return;
         }
       m_appStatsFirstWrite = false;
-      outFile << "% Time\tDescription\tTEID\tActive\tLoss (%)\tDelay\tJitter\tRX bytes\tGoodput";
+      outFile << left
+              << setw (12) << "Time (s)"     << setw (17) << "Description" 
+              << setw (6)  << "TEID"         << setw (12) << "Active (s)"
+              << setw (12) << "Loss ratio"   << setw (12) << "Delay (ms)"
+              << setw (12) << "Jitter (ms)"  << setw (10) << "RX bytes"
+              << setw (8)  << "Goodput";
       outFile << std::endl;
     }
   else
@@ -474,26 +472,57 @@ SimulationScenario::ReportAppStats (std::string description, uint32_t teid,
         }
     }
 
-  outFile << Simulator::Now ().GetNanoSeconds () / (double) 1e9 << "\t";
-  outFile << description << "\t";
-  outFile << teid << "\t";
-  outFile << duration.GetNanoSeconds () / (double) 1e9  << "\t";
-  outFile << lossRatio << "\t";
-  outFile << delay.GetNanoSeconds () / (double) 1e9 << "\t";
-  outFile << jitter.GetNanoSeconds () / (double) 1e9 << "\t";
-  outFile << bytes << "\t";
-  outFile << goodput << std::endl;
+  outFile << left;
+  outFile << setw (12) << Simulator::Now ().GetSeconds ();
+  outFile << setw (17) << description;
+  outFile << setw (6)  << teid;
+  outFile << setw (12) << duration.GetSeconds ();
+  outFile << setw (12) << lossRatio;
+  outFile << setw (12) << delay.GetSeconds () * 1000;
+  outFile << setw (12) << jitter.GetSeconds () * 1000;
+  outFile << setw (10) << bytes;
+  outFile << setw (8)  << goodput << std::endl;
   outFile.close ();
 }
 
 void
 SimulationScenario::ReportBlockRatio (uint32_t requests, uint32_t blocks, double ratio)
 {
- std::cout << "Number of GBR bearers request: " << requests << std::endl
-           << "Number of GBR bearers blocked: " << blocks   << std::endl
-           << "Block ratio: "                   << ratio    << std::endl;
-}
+  std::ofstream outFile;
+  if ( m_appStatsFirstWrite == true )
+    {
+      outFile.open (m_appStatsFilename.c_str ());
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_appStatsFilename);
+          return;
+        }
+      m_appStatsFirstWrite = false;
+      outFile << left
+              << setw (12) << "Time (s)"     << setw (17) << "Description" 
+              << setw (6)  << "TEID"         << setw (12) << "Active (s)"
+              << setw (12) << "Loss ratio"   << setw (12) << "Delay (ms)"
+              << setw (12) << "Jitter (ms)"  << setw (10) << "RX bytes"
+              << setw (8)  << "Goodput";
+      outFile << std::endl;
+    }
+  else
+    {
+      outFile.open (m_appStatsFilename.c_str (), std::ios_base::app);
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_appStatsFilename);
+          return;
+        }
+    }
 
+ outFile << "------------------------------------"        << std::endl
+         << "Number of GBR bearers request: " << requests << std::endl
+         << "Number of GBR bearers blocked: " << blocks   << std::endl
+         << "Block ratio: "                   << ratio    << std::endl;
+
+ outFile.close ();
+}
 
 const std::string 
 SimulationScenario::GetVideoFilename (uint8_t idx)

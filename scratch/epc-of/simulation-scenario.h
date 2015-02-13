@@ -115,11 +115,6 @@ public:
   void EnableTraces ();
 
   /**
-   * Print block ratio and application statistics.
-   */
-  void PrintStats ();
-
-  /**
    * Save application statistics in file. 
    * \see ns3::OpenFlowEpcController::AppQosTracedCallback for parameters.
    */
