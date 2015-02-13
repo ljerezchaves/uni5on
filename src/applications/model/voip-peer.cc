@@ -56,7 +56,7 @@ VoipPeer::GetTypeId (void)
                    "Choose between 40, 50 and 60 bytes.",
                    UintegerValue (60),
                    MakeUintegerAccessor (&VoipPeer::m_pktSize),
-                   MakeUintegerChecker<uint32_t> (40, 60))
+                   MakeUintegerChecker<uint32_t> (40, 120))
     .AddAttribute ("Interval",
                    "The time to wait between consecutive packets.",
                    TimeValue (Seconds (0.06)),
