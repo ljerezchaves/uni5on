@@ -53,6 +53,10 @@ OpenFlowEpcController::GetTypeId (void)
                    PointerValue (),
                    MakePointerAccessor (&OpenFlowEpcController::m_ofNetwork),
                    MakePointerChecker<OpenFlowEpcNetwork> ())
+    .AddTraceSource ("AppStats",
+                     "Application QoS trace source fired when applicatio stops.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_appQosTrace),
+                     "ns3::OpenFlowEpcController::AppQosTracedCallback")
   ;
   return tid;
 }
@@ -328,7 +332,7 @@ OpenFlowEpcController::NotifyAppStop (Ptr<Application> app)
       // No need to remove the rules from switch. Wait for idle timeout.
     }
 
-  PrintAppStatistics (app);
+  DumpAppStatistics (app);
   return true;
 }
 
@@ -437,8 +441,10 @@ OpenFlowEpcController::GetTeidRoutingInfo (uint32_t teid)
 }
 
 void
-OpenFlowEpcController::PrintAppStatistics (Ptr<Application> app)
+OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
 {
+  NS_LOG_FUNCTION (this << app);
+
   uint32_t teid = GetTeidFromApplication (app);
   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
 
@@ -452,38 +458,38 @@ OpenFlowEpcController::PrintAppStatistics (Ptr<Application> app)
       uint16_t srcIdx = downlink ? rInfo->m_sgwIdx : rInfo->m_enbIdx;
       uint16_t dstIdx = downlink ? rInfo->m_enbIdx : rInfo->m_sgwIdx; 
       
-      std::cout << 
-        "VoIP (TEID " << teid << ") [" << srcIdx << " -> " << dstIdx << "]" << 
-        " Duration " << voipApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
-        " Loss " << voipApp->GetRxLossRatio () << " -" <<
-        " Delay " << voipApp->GetRxDelay ().ToInteger (Time::MS) << " ms -" <<
-        " Jitter " << voipApp->GetRxJitter ().ToInteger (Time::MS) << " ms -" << 
-        " Goodput " << voipApp->GetRxGoodput () << 
-      std::endl; 
+      // Tracing application statistics
+      std::ostringstream desc;
+      desc << "VoIP  [" << srcIdx << " --> " << dstIdx << "]";
+      m_appQosTrace (desc.str (), teid, voipApp->GetActiveTime (),
+          voipApp->GetRxLossRatio (), voipApp->GetRxDelay (),
+          voipApp->GetRxJitter (), voipApp->GetRxBytes (),
+          voipApp->GetRxGoodput ());
     }
   else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
     {
       // Get the relative UDP server for this client
       Ptr<VideoClient> videoApp = DynamicCast<VideoClient> (app);
       Ptr<UdpServer> serverApp = videoApp->GetServerApp ();
-      std::cout << 
-        "Video (TEID " << teid << ") [" <<  rInfo->m_sgwIdx << " -> " << rInfo->m_enbIdx << "]" << 
-        " Duration " << serverApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
-        " Loss " << serverApp->GetRxLossRatio () << " -" <<
-        " Delay " << serverApp->GetRxDelay ().ToInteger (Time::MS) << " ms -" <<
-        " Jitter " << serverApp->GetRxJitter ().ToInteger (Time::MS) << " ms -" << 
-        " Goodput " << serverApp->GetRxGoodput () << 
-      std::endl; 
+
+      // Tracing application statistics
+      std::ostringstream desc;
+      desc << "Video [" << rInfo->m_sgwIdx << " --> " << rInfo->m_enbIdx << "]";
+      m_appQosTrace (desc.str (), teid, serverApp->GetActiveTime (),
+          serverApp->GetRxLossRatio (), serverApp->GetRxDelay (),
+          serverApp->GetRxJitter (), serverApp->GetRxBytes (),
+          serverApp->GetRxGoodput ());
+
     }
   else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
     {
       Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
-      std::cout << 
-        "HTTP (TEID " << teid << ") [" <<  rInfo->m_sgwIdx << " <-> " << rInfo->m_enbIdx << "]" << 
-        " Duration " << httpApp->GetActiveTime ().ToInteger (Time::MS) << " ms -" << 
-        " Transfered " << httpApp->GetRxBytes () << " bytes -" <<
-        " Goodput " << httpApp->GetRxGoodput () << 
-      std::endl; 
+
+      // Tracing application statistics
+      std::ostringstream desc;
+      desc << "HTTP  [" << rInfo->m_sgwIdx << " <-> " << rInfo->m_enbIdx << "]";
+      m_appQosTrace (desc.str (), teid, httpApp->GetActiveTime (), 0, Time (),
+          Time (), httpApp->GetRxBytes (), httpApp->GetRxGoodput ());
     }
 }
 

@@ -162,7 +162,22 @@ public:
    * when flooding (OFPP_FLOOD). This is accomplished by configuring the port
    * with OFPPC_NO_FWD flag (0x20).
    */
-  virtual void CreateSpanningTree () = 0;
+  virtual void CreateSpanningTree () = 0;   
+
+  /** 
+   * TracedCallback signature for Application QoS dump. 
+   * \param description String describing this traffic.
+   * \param teid Bearer TEID.
+   * \param duration Duration of this traffic.
+   * \param lossRatio Loss packet ratio at application level.
+   * \param delay Packet average delay at application level.
+   * \param jitter Packet average jitter at application level.
+   * \param bytes The total of bytes received at application level.
+   * \param goodput Traffic throguhput at application level.
+   */
+  typedef void (* AppQosTracedCallback)
+    (std::string description, uint32_t teid, Time duration, double lossRatio,
+     Time delay, Time jitter, uint32_t bytes, DataRate goodput);
 
 protected:
   /** 
@@ -258,10 +273,10 @@ protected:
   Ptr<RoutingInfo> GetTeidRoutingInfo (uint32_t teid);
 
   /**
-   * Print application statistics.
+   * Dump application statistics.
    * \param app The application pointer.
    */
-  void PrintAppStatistics (Ptr<Application> app);
+  void DumpAppStatistics (Ptr<Application> app);
 
   /**
    * Reset application statistics.
@@ -362,6 +377,11 @@ private:
   Ptr<Packet> CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
       Mac48Address dstMac, Ipv4Address dstIp);
 
+  /**
+   * The Application QoS trace source, fired at DumpAppStatistics.
+   */
+  TracedCallback<std::string, uint32_t, Time, double, Time, 
+      Time, uint32_t, DataRate> m_appQosTrace;
 
   /** A pair of switches index */
   typedef std::pair<uint16_t, uint16_t> SwitchPair_t; 
