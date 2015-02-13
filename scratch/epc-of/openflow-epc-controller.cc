@@ -69,6 +69,8 @@ void
 OpenFlowEpcController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+  
+  DumpGbrBlockStatistics ();
 
   m_arpTable.clear ();
   m_ipSwitchTable.clear ();
