@@ -130,6 +130,21 @@ public:
    */ 
   void MacDropTrace (std::string context, Ptr<const Packet> p);
 
+  /**
+   * Save application statistics in file. 
+   * \see ns3::OpenFlowEpcController::AppQosTracedCallback for parameters.
+   */
+  void ReportAppStats (std::string description, uint32_t teid,
+      Time duration, double lossRatio, Time delay, 
+      Time jitter, uint32_t bytes, DataRate goodput);
+
+  /**
+   * Save block ratio statistics in file. 
+   * \see ns3::OpenFlowEpcController::GbrBlockTracedCallback for parameters.
+   */
+  void ReportBlockRatio (uint32_t requests, uint32_t blocks, double ratio);
+
+
 private:
   /**
    * Get complete filename for video trace files;
@@ -137,6 +152,9 @@ private:
    * \return Complete path.
    */
   static const std::string GetVideoFilename (uint8_t idx);
+
+  bool m_appStatsFirstWrite;                  //!< First write to appStatsFile
+  std::string m_appStatsFilename;             //!< appStats filename
 
   Ptr<OpenFlowEpcNetwork> m_opfNetwork;       //!< LTE EPC network
   Ptr<OpenFlowEpcController> m_controller;    //!< OpenFLow controller

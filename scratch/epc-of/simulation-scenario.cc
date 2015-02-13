@@ -20,10 +20,10 @@
 
 #include "simulation-scenario.h"
 
-NS_LOG_COMPONENT_DEFINE ("SimulationScenario");
 
 namespace ns3 {
 
+NS_LOG_COMPONENT_DEFINE ("SimulationScenario");
 NS_OBJECT_ENSURE_REGISTERED (SimulationScenario);
 
 const std::string SimulationScenario::m_videoDir = "../movies/";
@@ -43,7 +43,8 @@ const uint64_t SimulationScenario::m_maxBitRate [] = {3300000, 4400000,
   3100000, 3400000, 2000000};
 
 SimulationScenario::SimulationScenario ()
-  : m_opfNetwork (0),
+  : m_appStatsFirstWrite (true),
+    m_opfNetwork (0),
     m_controller (0),
     m_epcHelper (0),
     m_lteNetwork (0),
@@ -69,12 +70,14 @@ SimulationScenario::~SimulationScenario ()
 
 SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nRing, 
     std::vector<uint32_t> eNbUes, std::vector<uint16_t> eNbSwt)
+  : m_appStatsFirstWrite (true)
 {
   NS_LOG_FUNCTION (this);
 
   // OpenFlow ring network (for EPC)
   m_opfNetwork = CreateObject<RingNetwork> ();
   m_controller = CreateObject<RingController> ();
+  Names::Add ("ctrlApp", m_controller);
   
   m_controller->SetAttribute ("OFNetwork", PointerValue (m_opfNetwork));
   m_controller->SetAttribute ("Strategy", EnumValue (RingController::BAND));
@@ -112,9 +115,16 @@ SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nRing,
   m_ueNodes = m_lteNetwork->GetUeNodes ();
   m_ueDevices = m_lteNetwork->GetUeDevices ();
 
+  // Application random start time
   m_rngStart = CreateObject<UniformRandomVariable> ();
   m_rngStart->SetAttribute ("Min", DoubleValue (0.));
   m_rngStart->SetAttribute ("Max", DoubleValue (5.));
+
+  // Saving controller and application statistics 
+  Config::ConnectWithoutContext ("/Names/ctrlApp/AppStats", 
+      MakeCallback (&SimulationScenario::ReportAppStats, this));
+  Config::ConnectWithoutContext ("/Names/ctrlApp/GbrBlock", 
+      MakeCallback (&SimulationScenario::ReportBlockRatio, this));
 }
 
 void
@@ -137,6 +147,11 @@ SimulationScenario::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SimulationScenario")
     .SetParent<Object> ()
+    .AddAttribute ("AppStatsFilename",
+                   "Name of the file where the app statistics will be saved.",
+                   StringValue ("AppStats.txt"),
+                   MakeStringAccessor (&SimulationScenario::m_appStatsFilename),
+                   MakeStringChecker ())
   ;
   return tid;
 }
@@ -154,6 +169,8 @@ SimulationScenario::EnablePingTraffic ()
 void
 SimulationScenario::EnableHttpTraffic ()
 {
+  NS_LOG_FUNCTION (this);
+  
   static uint16_t httpPort = 80;
 
   Ptr<Ipv4> serverIpv4 = m_webHost->GetObject<Ipv4> ();
@@ -169,9 +186,9 @@ SimulationScenario::EnableHttpTraffic ()
   httpHelper.SetClientAttribute ("Direction", 
       EnumValue (Application::BIDIRECTIONAL));
   httpHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
-  httpHelper.SetClientAttribute ("TcpTimeout", TimeValue (Seconds (5))); 
+  httpHelper.SetClientAttribute ("TcpTimeout", TimeValue (Seconds (4))); 
   // The HTTP client/server TCP timeout was selected based on HTTP traffic
-  // model and dedicated bearer idle timeout.  Every time the TCP socket is
+  // model and dedicated bearer idle timeout. Every time the TCP socket is
   // closed, HTTP client application notify the controller, and traffic
   // statistics are printed.
   
@@ -229,9 +246,11 @@ SimulationScenario::EnableHttpTraffic ()
 void
 SimulationScenario::EnableVoipTraffic ()
 {
+  NS_LOG_FUNCTION (this);
+ 
   static uint16_t voipPort = 16000;
-  uint16_t voipPacketSize = 60;
-  double   voipPacketInterval = 0.06;
+  uint16_t pktSize = 68;            // Lower values don't trigger meter band
+  double pktInterval = 0.06;
  
   Ptr<Ipv4> serverIpv4 = m_webHost->GetObject<Ipv4> ();
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
@@ -246,6 +265,8 @@ SimulationScenario::EnableVoipTraffic ()
       StringValue ("ns3::NormalRandomVariable[Mean=5.0,Variance=2.0]"));
   voipHelper.SetAttribute ("OffTime", 
       StringValue ("ns3::ExponentialRandomVariable[Mean=15.0]"));
+  voipHelper.SetAttribute ("PacketSize", UintegerValue (pktSize));
+  voipHelper.SetAttribute ("Interval", TimeValue (Seconds (pktInterval)));
  
   for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, voipPort++)
     {
@@ -293,8 +314,9 @@ SimulationScenario::EnableVoipTraffic ()
  
       // Dedicated GBR EPS bearer (QCI 1)
       GbrQosInformation qos;
-      qos.gbrDl = (voipPacketSize + 4) * 8 / voipPacketInterval; // 8.3 Kbps
-      qos.mbrDl = 1.2 * qos.gbrDl;                               //  10 Kbps
+      // 2 bytes from compressed UDP/IP/RTP + 58 bytes from GTPU/UDP/IP/ETH
+      qos.gbrDl = 8 * (pktSize + 2 + 58) / pktInterval; // ~ 17.0 Kbps
+      qos.mbrDl = 1.1 * qos.gbrDl;                      // ~ 18.7 Kbps (10 % more)
       qos.gbrUl = qos.gbrDl;
       qos.mbrUl = qos.mbrDl;
       EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
@@ -315,6 +337,8 @@ SimulationScenario::EnableVoipTraffic ()
 void
 SimulationScenario::EnableVideoTraffic ()
 {
+  NS_LOG_FUNCTION (this);
+ 
   static uint16_t videoPort = 20000;
 
   Ptr<Ipv4> serverIpv4 = m_webHost->GetObject<Ipv4> ();
@@ -376,8 +400,8 @@ SimulationScenario::EnableVideoTraffic ()
  
       // Dedicated GBR EPS bearer (QCI 4).
       GbrQosInformation qos;
-      qos.gbrDl = m_avgBitRate [videoIdx];
-      qos.mbrDl = 1.3 * qos.gbrDl;
+      qos.gbrDl = 1.4 * m_avgBitRate [videoIdx];  // Avg + stdev (~806 Kbps)
+      qos.mbrDl = 1.1 * qos.gbrDl;                // 10 % more
       EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
@@ -396,18 +420,22 @@ SimulationScenario::EnableVideoTraffic ()
 void
 SimulationScenario::PrintStats ()
 {
+  NS_LOG_FUNCTION (this);
   m_controller->GetBlockRatioStatistics ();
 }
 
 void
 SimulationScenario::EnableDatapathLogs (std::string level)
 {
+  NS_LOG_FUNCTION (this);
   m_opfNetwork->EnableDatapathLogs (level);
 }
 
 void
 SimulationScenario::EnableTraces ()
 {
+  NS_LOG_FUNCTION (this);
+ 
   m_webNetwork->EnablePcap ("web");
   m_opfNetwork->EnableOpenFlowPcap ("openflow-channel");
   m_opfNetwork->EnableDataPcap ("ofn", true);
@@ -447,6 +475,57 @@ SimulationScenario::MacDropTrace (std::string context, Ptr<const Packet> p)
   Ptr<Node> node = NodeList::GetNode (atoi (elements.at (1).c_str ()));
   NS_LOG_DEBUG (Names::FindName (node) << " " << p);
 }
+
+void 
+SimulationScenario::ReportAppStats (std::string description, uint32_t teid,
+      Time duration, double lossRatio, Time delay, 
+      Time jitter, uint32_t bytes, DataRate goodput)
+{
+  NS_LOG_FUNCTION (this << teid);
+ 
+  std::ofstream outFile;
+  if ( m_appStatsFirstWrite == true )
+    {
+      outFile.open (m_appStatsFilename.c_str ());
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_appStatsFilename);
+          return;
+        }
+      m_appStatsFirstWrite = false;
+      outFile << "% Time\tDescription\tTEID\tActive\tLoss (%)\tDelay\tJitter\tRX bytes\tGoodput";
+      outFile << std::endl;
+    }
+  else
+    {
+      outFile.open (m_appStatsFilename.c_str (), std::ios_base::app);
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_appStatsFilename);
+          return;
+        }
+    }
+
+  outFile << Simulator::Now ().GetNanoSeconds () / (double) 1e9 << "\t";
+  outFile << description << "\t";
+  outFile << teid << "\t";
+  outFile << duration.GetNanoSeconds () / (double) 1e9  << "\t";
+  outFile << lossRatio << "\t";
+  outFile << delay.GetNanoSeconds () / (double) 1e9 << "\t";
+  outFile << jitter.GetNanoSeconds () / (double) 1e9 << "\t";
+  outFile << bytes << "\t";
+  outFile << goodput << std::endl;
+  outFile.close ();
+}
+
+void
+SimulationScenario::ReportBlockRatio (uint32_t requests, uint32_t blocks, double ratio)
+{
+ std::cout << "Number of GBR bearers request: " << requests << std::endl
+           << "Number of GBR bearers blocked: " << blocks   << std::endl
+           << "Block ratio: "                   << ratio    << std::endl;
+}
+
 
 const std::string 
 SimulationScenario::GetVideoFilename (uint8_t idx)
