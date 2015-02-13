@@ -54,9 +54,13 @@ OpenFlowEpcController::GetTypeId (void)
                    MakePointerAccessor (&OpenFlowEpcController::m_ofNetwork),
                    MakePointerChecker<OpenFlowEpcNetwork> ())
     .AddTraceSource ("AppStats",
-                     "Application QoS trace source fired when applicatio stops.",
+                     "Application QoS trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_appQosTrace),
                      "ns3::OpenFlowEpcController::AppQosTracedCallback")
+    .AddTraceSource ("GbrBlock",
+                     "The GBR block ratio trace source.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_gbrBlockTrace),
+                     "ns3::OpenFlowEpcController::GbrBlockTracedCallback")
   ;
   return tid;
 }
@@ -84,9 +88,7 @@ double
 OpenFlowEpcController::GetBlockRatioStatistics ()
 {
   double ratio = (double)m_gbrBlocks / (double)m_gbrBearers;
-  std::cout << "Number of GBR bearers request: " << m_gbrBearers  << std::endl
-            << "Number of GBR bearers blocked: " << m_gbrBlocks   << std::endl
-            << "Block ratio: "                   << ratio         << std::endl;
+  m_gbrBlockTrace (m_gbrBearers, m_gbrBlocks, ratio);
   return ratio;
 }
 

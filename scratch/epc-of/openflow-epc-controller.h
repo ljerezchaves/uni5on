@@ -179,6 +179,15 @@ public:
     (std::string description, uint32_t teid, Time duration, double lossRatio,
      Time delay, Time jitter, uint32_t bytes, DataRate goodput);
 
+  /** 
+   * TracedCallback signature for GBR block ratio statistics.
+   * \param requests The number of GBR requests.
+   * \param blocks The number of GBR requests blockd.
+   * \param ratio The block ratio.
+   */
+  typedef void (* GbrBlockTracedCallback)
+    (uint32_t requests, uint32_t blocks, double ratio);
+
 protected:
   /** 
    * Pure virtual functions used to reserve and release GBR bearers resources,
@@ -377,12 +386,15 @@ private:
   Ptr<Packet> CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
       Mac48Address dstMac, Ipv4Address dstIp);
 
-  /**
-   * The Application QoS trace source, fired at DumpAppStatistics.
-   */
+
+  /** The Application QoS trace source, fired at DumpAppStatistics. */
   TracedCallback<std::string, uint32_t, Time, double, Time, 
       Time, uint32_t, DataRate> m_appQosTrace;
 
+  /** The GBR block ratio trace source, fired at GetBlockRatioStatistics. */
+  TracedCallback<uint32_t, uint32_t, double> m_gbrBlockTrace;
+
+  
   /** A pair of switches index */
   typedef std::pair<uint16_t, uint16_t> SwitchPair_t; 
 
