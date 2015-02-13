@@ -120,17 +120,6 @@ public:
   void PrintStats ();
 
   /**
-   * Print TCP retransmission timeout adjustment.
-   */ 
-  void TcpRtoTrace (std::string context, const Time oldValue, 
-      const Time newValue);
-
-  /**
-   * Print context and packet when CsmaNetDevice drops it.
-   */ 
-  void MacDropTrace (std::string context, Ptr<const Packet> p);
-
-  /**
    * Save application statistics in file. 
    * \see ns3::OpenFlowEpcController::AppQosTracedCallback for parameters.
    */
