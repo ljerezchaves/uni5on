@@ -85,7 +85,7 @@ OpenFlowEpcController::GetDedicatedTimeout ()
 }
 
 double
-OpenFlowEpcController::GetBlockRatioStatistics ()
+OpenFlowEpcController::DumpGbrBlockStatistics ()
 {
   double ratio = (double)m_gbrBlocks / (double)m_gbrBearers;
   m_gbrBlockTrace (m_gbrBearers, m_gbrBlocks, ratio);

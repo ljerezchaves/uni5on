@@ -61,10 +61,10 @@ public:
   static const Time GetDedicatedTimeout ();
 
   /**
-   * Print and return the block radio statistics.
+   * Return the block radio statistics.
    * \return The GBR bearer block ratio
    */
-  double GetBlockRatioStatistics ();
+  double DumpGbrBlockStatistics ();
 
   /**
    * Notify this controller of a new eNB IP device connected to the OpenFlow
