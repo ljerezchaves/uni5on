@@ -141,11 +141,62 @@ SimulationScenario::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SimulationScenario")
     .SetParent<Object> ()
-    .AddAttribute ("AppStatsFilename",
+    .AddConstructor<SimulationScenario> ()
+    .AddAttribute ("StatsFilename",
                    "Name of the file where the app statistics will be saved.",
-                   StringValue ("AppStats.txt"),
+                   StringValue ("app_stats.txt"),
                    MakeStringAccessor (&SimulationScenario::m_statsFilename),
                    MakeStringChecker ())
+    .AddAttribute ("TopoFilename",
+                   "Name of the file with topology description.",
+                   StringValue ("topology.txt"),
+                   MakeStringAccessor (&SimulationScenario::m_topoFilename),
+                   MakeStringChecker ())
+    .AddAttribute ("neNBs",
+                   "Number of eNBs in the topology.",
+                   UintegerValue (4),
+                   MakeUintegerAccessor (&SimulationScenario::m_nEnbs),
+                   MakeUintegerChecker<uint32_t> ())
+    .AddAttribute ("nUEs",
+                   "Number of UEs per eNB (used only when no topology file present.",
+                   UintegerValue (1),
+                   MakeUintegerAccessor (&SimulationScenario::m_nUes),
+                   MakeUintegerChecker<uint32_t> ())
+    .AddAttribute ("nSwitches",
+                   "Number of OpenFlow switches in the toplogy.",
+                   UintegerValue (5),
+                   MakeUintegerAccessor (&SimulationScenario::m_nRing),
+                   MakeUintegerChecker<uint16_t> ())
+    .AddAttribute ("PcapTraces",
+                   "Enable/Disable simulation pcap traces.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&SimulationScenario::m_traces),
+                   MakeBooleanChecker ())
+    .AddAttribute ("SwitchLogs",
+                   "Enable/Disable ofsoftswitch logs.",
+                   StringValue ("none"),
+                   MakeStringAccessor (&SimulationScenario::m_liblog),
+                   MakeStringChecker ())
+    .AddAttribute ("PingTraffic",
+                   "Enable/Disable ping traffic during simulation.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&SimulationScenario::m_ping),
+                   MakeBooleanChecker ())
+    .AddAttribute ("HttpTraffic",
+                   "Enable/Disable http traffic during simulation.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&SimulationScenario::m_http),
+                   MakeBooleanChecker ())
+    .AddAttribute ("VoipTraffic",
+                   "Enable/Disable voip traffic during simulation.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&SimulationScenario::m_voip),
+                   MakeBooleanChecker ())
+    .AddAttribute ("VideoTraffic",
+                   "Enable/Disable video traffic during simulation.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&SimulationScenario::m_video),
+                   MakeBooleanChecker ())
   ;
   return tid;
 }

@@ -49,8 +49,6 @@ public:
    */
   SimulationScenario (std::string filename, uint32_t nEnbs, uint32_t nUes, uint32_t nRing);
 
-  bool ParseTopology (std::string filename, uint32_t nEnbs, uint32_t nUes, uint16_t nRing);
-
   /**
    * Register this type.
    * \return The object TypeId.
@@ -59,6 +57,13 @@ public:
 
   /** Destructor implementation */
   virtual void DoDispose ();
+
+  /**
+   * Parse topology description file.  
+   * Topology file columns (indexes starts at 0):
+   * eNB index | # of UEs at this eNB | OpenFlow switch index
+   */
+  bool ParseTopology (std::string filename, uint32_t nEnbs, uint32_t nUes, uint16_t nRing);
 
   /**
    * Enable IPv4 ICMP ping application over default EPS bearer (QCI 9).
