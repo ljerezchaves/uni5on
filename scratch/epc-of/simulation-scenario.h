@@ -47,8 +47,9 @@ public:
    * \param eNbUes Indicates, for each eNB, the number of UEs to create.
    * \param eNbSwt Indicates, for each eNB, the OpenFlow switch index to use.
    */
-  SimulationScenario (uint32_t nEnbs, uint32_t nRing, 
-      std::vector<uint32_t> eNbUes, std::vector<uint16_t> eNbSwt);
+  SimulationScenario (std::string filename, uint32_t nEnbs, uint32_t nUes, uint32_t nRing);
+
+  bool ParseTopology (std::string filename, uint32_t nEnbs, uint32_t nUes, uint16_t nRing);
 
   /**
    * Register this type.

@@ -54,13 +54,6 @@ SimulationScenario::SimulationScenario ()
     m_statsFirstWrite (true)
 {
   NS_LOG_FUNCTION (this);
-  
-  // Create the experiment with minimal configuration
-  std::vector<uint32_t> eNbUes (1);
-  std::vector<uint16_t> eNbSwt (1);
-  eNbUes.at (0) = 1;
-  eNbSwt.at (0) = 1;
-  SimulationScenario (1, 3, eNbUes, eNbSwt);
 }
 
 SimulationScenario::~SimulationScenario ()
@@ -68,11 +61,12 @@ SimulationScenario::~SimulationScenario ()
   NS_LOG_FUNCTION (this);
 }
 
-SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nRing, 
-    std::vector<uint32_t> eNbUes, std::vector<uint16_t> eNbSwt)
+SimulationScenario::SimulationScenario (std::string filename, uint32_t nEnbs, 
+    uint32_t nUes, uint32_t nRing)
   : m_statsFirstWrite (true)
 {
   NS_LOG_FUNCTION (this);
+  ParseTopology (filename, nEnbs, nUes, nRing);
 
   // OpenFlow ring network (for EPC)
   m_opfNetwork = CreateObject<RingNetwork> ();
@@ -86,7 +80,7 @@ SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nRing,
   m_opfNetwork->SetAttribute ("Controller", PointerValue (m_controller));
   m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
   m_opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("10Mb/s")));
-  m_opfNetwork->CreateTopology (eNbSwt);
+  m_opfNetwork->CreateTopology (m_eNbSwt);
   
   // LTE EPC core (with callbacks setup)
   m_epcHelper = CreateObject<OpenFlowEpcHelper> ();
@@ -103,7 +97,7 @@ SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nRing,
   m_lteNetwork = CreateObject<LteSquaredGridNetwork> ();
   m_lteNetwork->SetAttribute ("RoomLength", DoubleValue (100.0));
   m_lteNetwork->SetAttribute ("Enbs", UintegerValue (nEnbs));
-  m_lteNetwork->CreateTopology (m_epcHelper, eNbUes);
+  m_lteNetwork->CreateTopology (m_epcHelper, m_eNbUes);
   m_lteHelper = m_lteNetwork->GetLteHelper ();
 
   // Internet network
@@ -522,6 +516,53 @@ SimulationScenario::ReportBlockRatio (uint32_t requests, uint32_t blocks, double
          << "Block ratio: "                   << ratio    << std::endl;
 
  outFile.close ();
+}
+
+bool
+SimulationScenario::ParseTopology (std::string filename, uint32_t nEnbs, uint32_t nUes, 
+    uint16_t nRing)
+{
+  NS_LOG_INFO ("Parsing topology...");
+ 
+  // Topology file columns (indexes starts at 0):
+  // eNB index | # of UEs at this eNB | OpenFlow switch index
+  std::ifstream file;
+  file.open (filename.c_str ());
+  if (!file.is_open () )
+    {
+      NS_LOG_ERROR ("Topology file not open. Manually populating values.");
+      
+      // Set the same nUEs for all eNBs and attach each eNBs
+      // to switchs indexes 1 through nRing - 1, in turns.
+      for (uint32_t idx = 0; idx < nEnbs; idx++)
+        {
+          m_eNbUes.push_back (nUes);
+          m_eNbSwt.push_back (1 + (idx % (nRing - 1)));
+        }
+      return true;
+    }
+
+  std::istringstream lineBuffer;
+  std::string line;
+  uint32_t enb, ues, swtch, idx;
+  
+  for (idx = 0; !file.eof () && idx < nEnbs; idx++)
+    {
+      getline (file, line);
+      lineBuffer.clear ();
+      lineBuffer.str (line);
+      lineBuffer >> enb;
+      lineBuffer >> ues;
+      lineBuffer >> swtch;
+
+      NS_ASSERT_MSG (idx == enb, "Invalid eNB idx order in topology file.");
+      NS_ASSERT_MSG (swtch < nRing, "Invalid switch idx in topology file.");
+      
+      m_eNbUes.push_back (ues);
+      m_eNbSwt.push_back (swtch);
+    }
+  NS_ASSERT_MSG (idx == nEnbs, "Missing topology information in file...");
+  return true;  
 }
 
 const std::string 

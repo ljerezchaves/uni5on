@@ -78,12 +78,7 @@ main (int argc, char *argv[])
   if (progress) EnableProgress ();
   if (verbose)  EnableVerbose ();
  
-  std::vector<uint32_t> eNbUes;     // Number of UEs per eNb
-  std::vector<uint16_t> eNbSwt;     // Switch index per eNb
-  ParseTopology (topoFile, nEnbs, nUes, nRing, eNbUes, eNbSwt);
-  
-  Ptr<SimulationScenario> scenario = 
-    CreateObject<SimulationScenario> (nEnbs, nRing, eNbUes, eNbSwt);
+  Ptr<SimulationScenario> scenario =  CreateObject<SimulationScenario> (topoFile, nEnbs, nUes, nRing);
   scenario->SetAttribute ("AppStatsFilename", StringValue (outFile));
   
   // Application traffic
@@ -168,51 +163,5 @@ EnableVerbose ()
   LogComponentEnable ("VoipPeer", LOG_LEVEL_WARN);
 }
 
-bool
-ParseTopology (std::string filename, uint32_t nEnbs, uint32_t nUes, 
-    uint16_t nRing, std::vector<uint32_t> &eNbUes, 
-    std::vector<uint16_t> &eNbSwitches)
-{
-  NS_LOG_INFO ("Parsing topology...");
- 
-  // Topology file columns (indexes starts at 0):
-  // eNB index | # of UEs at this eNB | OpenFlow switch index
-  std::ifstream file;
-  file.open (filename.c_str ());
-  if (!file.is_open () )
-    {
-      NS_LOG_ERROR ("Topology file not open. Manually populating values.");
-      
-      // Set the same nUEs for all eNBs and attach each eNBs
-      // to switchs indexes 1 through nRing - 1, in turns.
-      for (uint32_t idx = 0; idx < nEnbs; idx++)
-        {
-          eNbUes.push_back (nUes);
-          eNbSwitches.push_back (1 + (idx % (nRing - 1)));
-        }
-      return true;
-    }
 
-  std::istringstream lineBuffer;
-  std::string line;
-  uint32_t enb, ues, swtch, idx;
-  
-  for (idx = 0; !file.eof () && idx < nEnbs; idx++)
-    {
-      getline (file, line);
-      lineBuffer.clear ();
-      lineBuffer.str (line);
-      lineBuffer >> enb;
-      lineBuffer >> ues;
-      lineBuffer >> swtch;
-
-      NS_ASSERT_MSG (idx == enb, "Invalid eNB idx order in topology file.");
-      NS_ASSERT_MSG (swtch < nRing, "Invalid switch idx in topology file.");
-      
-      eNbUes.push_back (ues);
-      eNbSwitches.push_back (swtch);
-    }
-  NS_ASSERT_MSG (idx == nEnbs, "Missing topology information in file...");
-  return true;  
-}
 
