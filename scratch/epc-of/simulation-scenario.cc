@@ -20,6 +20,7 @@
 
 #include "simulation-scenario.h"
 #include <iomanip>
+#include <iostream>
 
 namespace ns3 {
 
@@ -201,11 +202,22 @@ SimulationScenario::NotifyConstructionCompleted ()
   Config::ConnectWithoutContext ("/Names/ctrlApp/GbrBlock", 
       MakeCallback (&SimulationScenario::ReportBlockRatio, this));
 
+  // Application traffic
+  if (m_ping)   EnablePingTraffic ();
+  if (m_http)   EnableHttpTraffic ();
+  if (m_voip)   EnableVoipTraffic ();
+  if (m_video)  EnableVideoTraffic ();
+
+  // Logs and traces
+  DatapathLogs ();
+  PcapTraces ();
 }
 
 void 
 SimulationScenario::EnablePingTraffic ()
 {
+  NS_LOG_FUNCTION (this);
+
   Ptr<Ipv4> dstIpv4 = m_webHost->GetObject<Ipv4> ();
   Ipv4Address dstAddr = dstIpv4->GetAddress (1,0).GetLocal ();
   V4PingHelper ping = V4PingHelper (dstAddr);
@@ -465,15 +477,16 @@ SimulationScenario::EnableVideoTraffic ()
 }
 
 void
-SimulationScenario::EnableDatapathLogs (std::string level)
+SimulationScenario::DatapathLogs ()
 {
   NS_LOG_FUNCTION (this);
-  m_opfNetwork->EnableDatapathLogs (level);
+  m_opfNetwork->EnableDatapathLogs (m_liblog);
 }
 
 void
-SimulationScenario::EnableTraces ()
+SimulationScenario::PcapTraces ()
 {
+  if (!m_traces) return;
   NS_LOG_FUNCTION (this);
  
   m_webNetwork->EnablePcap ("web");
@@ -576,8 +589,6 @@ SimulationScenario::ParseTopology ()
 {
   NS_LOG_INFO ("Parsing topology...");
  
-  // Topology file columns (indexes starts at 0):
-  // eNB index | # of UEs at this eNB | OpenFlow switch index
   std::ifstream file;
   file.open (m_topoFilename.c_str ());
   if (!file.is_open () )

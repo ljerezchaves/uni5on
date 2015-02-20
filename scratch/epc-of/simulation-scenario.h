@@ -49,17 +49,11 @@ public:
   /** Destructor implementation */
   virtual void DoDispose ();
 
-//protected:
+protected:
   // Inherited from Object
   void NotifyConstructionCompleted ();
 
-  /**
-   * Parse topology description file.  
-   * Topology file columns (indexes starts at 0):
-   * eNB index | # of UEs at this eNB | OpenFlow switch index
-   */
-  bool ParseTopology ();
-
+private:
   /**
    * Enable IPv4 ICMP ping application over default EPS bearer (QCI 9).
    * This QCI is typically used for the default bearer of a UE/PDN for non
@@ -105,15 +99,14 @@ public:
   void EnableVideoTraffic ();
 
   /**
-   * Enable ofsoftswitch13 library log.
-   * \param level string representing library logging level.
+   * Enable/Disable ofsoftswitch13 library log.
    */
-  void EnableDatapathLogs (std::string level = "all");
+  void DatapathLogs ();
 
   /**
-   * Enable LTE and PCAP traces.
+   * Enable/Disable LTE and PCAP traces.
    */
-  void EnableTraces ();
+  void PcapTraces ();
 
   /**
    * Save application statistics in file. 
@@ -129,8 +122,13 @@ public:
    */
   void ReportBlockRatio (uint32_t requests, uint32_t blocks, double ratio);
 
+  /**
+   * Parse topology description file.  
+   * Topology file columns (indexes starts at 0):
+   * eNB index | # of UEs at this eNB | OpenFlow switch index
+   */
+  bool ParseTopology ();
 
-private:
   /**
    * Get complete filename for video trace files;
    * \param idx The trace index.

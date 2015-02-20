@@ -78,18 +78,13 @@ main (int argc, char *argv[])
   if (progress) EnableProgress ();
   if (verbose)  EnableVerbose ();
  
-  Ptr<SimulationScenario> scenario =  CreateObject<SimulationScenario> ();
-  //scenario->SetAttribute ("StatsFilename", StringValue (outFile));
-  //scenario->SetAttribute ("TopoFilename", StringValue (topoFile));
-  
-  // Application traffic
-  if (ping)     scenario->EnablePingTraffic ();
-  if (http)     scenario->EnableHttpTraffic ();
-  if (voip)     scenario->EnableVoipTraffic ();
-  if (video)    scenario->EnableVideoTraffic ();
-
-  if (liblog)   scenario->EnableDatapathLogs ();
-  if (traces)   scenario->EnableTraces ();
+  Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
+  scenario->SetAttribute ("StatsFilename", StringValue (outFile));
+  scenario->SetAttribute ("TopoFilename", StringValue (topoFile));
+  scenario->SetAttribute ("PingTraffic", BooleanValue (ping));
+  scenario->SetAttribute ("HttpTraffic", BooleanValue (http));
+  scenario->SetAttribute ("VoipTraffic", BooleanValue (voip));
+  scenario->SetAttribute ("VideoTraffic", BooleanValue (video));
 
   NS_LOG_INFO ("Simulating...");
   Simulator::Stop (Seconds (duration));
