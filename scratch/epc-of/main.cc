@@ -78,8 +78,8 @@ main (int argc, char *argv[])
   if (progress) EnableProgress ();
   if (verbose)  EnableVerbose ();
  
-  std::vector<uint32_t> eNbUes (nEnbs);     // Number of UEs per eNb
-  std::vector<uint16_t> eNbSwt (nEnbs);     // Switch index per eNb
+  std::vector<uint32_t> eNbUes;     // Number of UEs per eNb
+  std::vector<uint16_t> eNbSwt;     // Switch index per eNb
   ParseTopology (topoFile, nEnbs, nUes, nRing, eNbUes, eNbSwt);
   
   Ptr<SimulationScenario> scenario = 
@@ -187,8 +187,8 @@ ParseTopology (std::string filename, uint32_t nEnbs, uint32_t nUes,
       // to switchs indexes 1 through nRing - 1, in turns.
       for (uint32_t idx = 0; idx < nEnbs; idx++)
         {
-          eNbUes.at (idx) = nUes;
-          eNbSwitches.at (idx) = 1 + (idx % (nRing - 1));
+          eNbUes.push_back (nUes);
+          eNbSwitches.push_back (1 + (idx % (nRing - 1)));
         }
       return true;
     }
@@ -209,8 +209,8 @@ ParseTopology (std::string filename, uint32_t nEnbs, uint32_t nUes,
       NS_ASSERT_MSG (idx == enb, "Invalid eNB idx order in topology file.");
       NS_ASSERT_MSG (swtch < nRing, "Invalid switch idx in topology file.");
       
-      eNbUes.at (idx) = ues;
-      eNbSwitches.at (idx) = swtch;
+      eNbUes.push_back (ues);
+      eNbSwitches.push_back (swtch);
     }
   NS_ASSERT_MSG (idx == nEnbs, "Missing topology information in file...");
   return true;  
