@@ -90,33 +90,28 @@ SimulationScenario::GetTypeId (void)
                    MakeStringChecker ())
     .AddAttribute ("TopoFilename",
                    "Name of the file with topology description.",
-                   StringValue ("../scratch/epc-of/default.txt"),
+                   StringValue ("topology.txt"),
                    MakeStringAccessor (&SimulationScenario::m_topoFilename),
                    MakeStringChecker ())
-    .AddAttribute ("neNBs",
-                   "Number of eNBs in the topology.",
-                   UintegerValue (4),
+    .AddAttribute ("Enbs",
+                   "Number of eNBs in network topology.",
+                   UintegerValue (0),
                    MakeUintegerAccessor (&SimulationScenario::m_nEnbs),
                    MakeUintegerChecker<uint32_t> ())
-    .AddAttribute ("nUEs",
-                   "Number of UEs per eNB (used only when no topology file present.",
-                   UintegerValue (1),
-                   MakeUintegerAccessor (&SimulationScenario::m_nUes),
-                   MakeUintegerChecker<uint32_t> ())
-    .AddAttribute ("nSwitches",
-                   "Number of OpenFlow switches in the toplogy.",
-                   UintegerValue (5),
-                   MakeUintegerAccessor (&SimulationScenario::m_nRing),
+    .AddAttribute ("Switches",
+                   "Number of OpenFlow switches in network toplogy.",
+                   UintegerValue (0),
+                   MakeUintegerAccessor (&SimulationScenario::m_nSwitches),
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("PcapTraces",
                    "Enable/Disable simulation pcap traces.",
                    BooleanValue (false),
-                   MakeBooleanAccessor (&SimulationScenario::m_traces),
+                   MakeBooleanAccessor (&SimulationScenario::m_pcapTraces),
                    MakeBooleanChecker ())
     .AddAttribute ("SwitchLogs",
-                   "Enable/Disable ofsoftswitch logs.",
+                   "Set the ofsoftswitch log level.",
                    StringValue ("none"),
-                   MakeStringAccessor (&SimulationScenario::m_liblog),
+                   MakeStringAccessor (&SimulationScenario::m_switchLog),
                    MakeStringChecker ())
     .AddAttribute ("PingTraffic",
                    "Enable/Disable ping traffic during simulation.",
@@ -143,10 +138,9 @@ SimulationScenario::GetTypeId (void)
 }
 
 void
-SimulationScenario::NotifyConstructionCompleted ()
+SimulationScenario::BuildTopology ()
 {
   NS_LOG_FUNCTION (this);
-  Object::NotifyConstructionCompleted ();
 
   ParseTopology ();
 
@@ -157,12 +151,12 @@ SimulationScenario::NotifyConstructionCompleted ()
   
   m_controller->SetAttribute ("OFNetwork", PointerValue (m_opfNetwork));
   m_controller->SetAttribute ("Strategy", EnumValue (RingController::BAND));
-  m_controller->SetAttribute ("BwReserve", DoubleValue (0.9));
+  m_controller->SetAttribute ("BwReserve", DoubleValue (0.2));
   
   m_opfNetwork->SetAttribute ("Controller", PointerValue (m_controller));
-  m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (m_nRing));
-  m_opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("10Mb/s")));
-  m_opfNetwork->CreateTopology (m_eNbSwt);
+  m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (m_nSwitches));
+  m_opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("1Gb/s")));
+  m_opfNetwork->CreateTopology (m_SwitchIdxPerEnb);
   
   // LTE EPC core (with callbacks setup)
   m_epcHelper = CreateObject<OpenFlowEpcHelper> ();
@@ -179,7 +173,7 @@ SimulationScenario::NotifyConstructionCompleted ()
   m_lteNetwork = CreateObject<LteSquaredGridNetwork> ();
   m_lteNetwork->SetAttribute ("RoomLength", DoubleValue (100.0));
   m_lteNetwork->SetAttribute ("Enbs", UintegerValue (m_nEnbs));
-  m_lteNetwork->CreateTopology (m_epcHelper, m_eNbUes);
+  m_lteNetwork->CreateTopology (m_epcHelper, m_UesPerEnb);
   m_lteHelper = m_lteNetwork->GetLteHelper ();
 
   // Internet network
@@ -476,27 +470,6 @@ SimulationScenario::EnableVideoTraffic ()
     }
 }
 
-void
-SimulationScenario::DatapathLogs ()
-{
-  NS_LOG_FUNCTION (this);
-  m_opfNetwork->EnableDatapathLogs (m_liblog);
-}
-
-void
-SimulationScenario::PcapTraces ()
-{
-  if (!m_traces) return;
-  NS_LOG_FUNCTION (this);
- 
-  m_webNetwork->EnablePcap ("web");
-  m_opfNetwork->EnableOpenFlowPcap ("openflow-channel");
-  m_opfNetwork->EnableDataPcap ("ofn", true);
-  m_epcHelper->EnablePcapS1u ("epc");
-//  m_epcHelper->EnablePcapX2 ("epc");
-//  m_lteNetwork->EnableTraces ();
-}
-
 void 
 SimulationScenario::ReportAppStats (std::string description, uint32_t teid,
       Time duration, double lossRatio, Time delay, 
@@ -591,40 +564,59 @@ SimulationScenario::ParseTopology ()
  
   std::ifstream file;
   file.open (m_topoFilename.c_str ());
-  if (!file.is_open () )
+  if (!file.is_open ())
     {
-      NS_LOG_ERROR ("Topology file not open. Manually populating values.");
-      
-      // Set the same m_nUes for all eNBs and attach each eNBs
-      // to switchs indexes 1 through m_nRing - 1, in turns.
-      for (uint32_t idx = 0; idx < m_nEnbs; idx++)
-        {
-          m_eNbUes.push_back (m_nUes);
-          m_eNbSwt.push_back (1 + (idx % (m_nRing - 1)));
-        }
-      return true;
+      NS_FATAL_ERROR ("Topology file not found.");
     }
 
   std::istringstream lineBuffer;
   std::string line;
-  uint32_t enb, ues, swtch, idx;
-  
-  for (idx = 0; !file.eof () && idx < m_nEnbs; idx++)
+  uint32_t enb, ues, swtch;
+  uint32_t idx = 0;
+
+  // At first we expect the number of eNBs and switches in network
+  std::string attr;
+  uint32_t value;
+  uint8_t attrOk = 0;
+  while (getline (file, line))
     {
-      getline (file, line);
+      if (line.empty () || line.at (0) == '#') continue;
+      
+      lineBuffer.clear ();
+      lineBuffer.str (line);
+      lineBuffer >> attr;
+      lineBuffer >> value;
+      if (attr == "Enbs" || attr == "Switches")
+        {
+          NS_LOG_DEBUG (attr << " " << value);
+          SetAttribute (attr, UintegerValue (value));
+          attrOk++;
+          if (attrOk == 2) break;
+        }
+    }
+  NS_ASSERT_MSG (attrOk == 2, "Missing attributes in topology file.");
+
+  // Then we expect the distribuiton of UEs per eNBs and switch indexes
+  while (getline (file, line))
+    {
+      if (line.empty () || line.at (0) == '#') continue;
+
       lineBuffer.clear ();
       lineBuffer.str (line);
       lineBuffer >> enb;
       lineBuffer >> ues;
       lineBuffer >> swtch;
 
+      NS_LOG_DEBUG (enb << " " << ues << " " << swtch);
       NS_ASSERT_MSG (idx == enb, "Invalid eNB idx order in topology file.");
-      NS_ASSERT_MSG (swtch < m_nRing, "Invalid switch idx in topology file.");
+      NS_ASSERT_MSG (swtch < m_nSwitches, "Invalid switch idx in topology file.");
       
-      m_eNbUes.push_back (ues);
-      m_eNbSwt.push_back (swtch);
+      m_UesPerEnb.push_back (ues);
+      m_SwitchIdxPerEnb.push_back (swtch);
+      idx++;
     }
-  NS_ASSERT_MSG (idx == m_nEnbs, "Missing topology information in file...");
+  NS_ASSERT_MSG (idx == m_nEnbs, "Missing information in topology file.");
+  
   return true;  
 }
 
@@ -632,6 +624,27 @@ const std::string
 SimulationScenario::GetVideoFilename (uint8_t idx)
 {
   return m_videoDir + m_videoTrace [idx];
+}
+
+void
+SimulationScenario::DatapathLogs ()
+{
+  NS_LOG_FUNCTION (this);
+  m_opfNetwork->EnableDatapathLogs (m_switchLog);
+}
+
+void
+SimulationScenario::PcapTraces ()
+{
+  if (!m_pcapTraces) return;
+  NS_LOG_FUNCTION (this);
+ 
+  m_webNetwork->EnablePcap ("web");
+  m_opfNetwork->EnableOpenFlowPcap ("openflow-channel");
+  m_opfNetwork->EnableDataPcap ("ofn", true);
+  m_epcHelper->EnablePcapS1u ("epc");
+//  m_epcHelper->EnablePcapX2 ("epc");
+//  m_lteNetwork->EnableTraces ();
 }
 
 };  // namespace ns3

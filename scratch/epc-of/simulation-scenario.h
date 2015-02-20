@@ -49,9 +49,8 @@ public:
   /** Destructor implementation */
   virtual void DoDispose ();
 
-protected:
-  // Inherited from Object
-  void NotifyConstructionCompleted ();
+  /** Build the simulation topology. */ 
+  void BuildTopology ();
 
 private:
   /**
@@ -99,16 +98,6 @@ private:
   void EnableVideoTraffic ();
 
   /**
-   * Enable/Disable ofsoftswitch13 library log.
-   */
-  void DatapathLogs ();
-
-  /**
-   * Enable/Disable LTE and PCAP traces.
-   */
-  void PcapTraces ();
-
-  /**
    * Save application statistics in file. 
    * \see ns3::OpenFlowEpcController::AppQosTracedCallback for parameters.
    */
@@ -136,6 +125,12 @@ private:
    */
   static const std::string GetVideoFilename (uint8_t idx);
 
+  /** Enable/Disable ofsoftswitch13 library log. */
+  void DatapathLogs ();
+
+  /** Enable/Disable LTE and PCAP traces. */
+  void PcapTraces ();
+
   Ptr<OpenFlowEpcNetwork> m_opfNetwork;       //!< LTE EPC network
   Ptr<OpenFlowEpcController> m_controller;    //!< OpenFLow controller
   Ptr<OpenFlowEpcHelper> m_epcHelper;         //!< LTE EPC helper
@@ -153,17 +148,16 @@ private:
   bool                  m_statsFirstWrite;    //!< First write to appStatsFile
   std::string           m_statsFilename;      //!< AppStats filename
   std::string           m_topoFilename;       //!< Topology filename
-  std::string           m_liblog;             //!< Switches log level
+  std::string           m_switchLog;          //!< Switches log level
   uint32_t              m_nEnbs;              //!< Number of eNBs
-  uint32_t              m_nUes;               //!< Number of UEs per eNB
-  uint16_t              m_nRing;              //!< Number of OpenFlow switches
-  bool                  m_traces;             //!< Enable pcap traces
+  uint16_t              m_nSwitches;          //!< Number of OpenFlow switches
+  bool                  m_pcapTraces;         //!< Enable pcap traces
   bool                  m_ping;               //!< Enable ping traffic
   bool                  m_voip;               //!< Enable voip traffic
   bool                  m_http;               //!< Enable http traffic
   bool                  m_video;              //!< Enable video traffic
-  std::vector<uint32_t> m_eNbUes;             // Number of UEs per eNb
-  std::vector<uint16_t> m_eNbSwt;             // Switch index per eNb
+  std::vector<uint32_t> m_UesPerEnb;          //!< Number of UEs per eNb
+  std::vector<uint16_t> m_SwitchIdxPerEnb;    //!< Switch index per eNb
 
   static const std::string m_videoDir;        //!< Video trace directory
   static const std::string m_videoTrace [];   //!< Video trace filenames

@@ -22,7 +22,6 @@
 #include <ns3/config-store-module.h>
 #include "simulation-scenario.h"
 #include <iostream>
-#include <iomanip>
 #include <string>
 
 NS_LOG_COMPONENT_DEFINE ("Main");
@@ -31,63 +30,39 @@ using namespace ns3;
 
 void ConfigureDefaults ();
 void PrintCurrentTime ();
-void EnableProgress ();
 void EnableVerbose ();
-bool ParseTopology (std::string filename, uint32_t nEnbs, uint32_t nUes,
-    uint16_t nRing, std::vector<uint32_t> &eNbUes, std::vector<uint16_t>
-    &eNbSwitches);
 
 int 
 main (int argc, char *argv[])
 {
   ConfigureDefaults ();
-  
-  // Command Line parameters
-  double      duration  = 30;
-  uint32_t    nEnbs     = 4;
-  uint32_t    nUes      = 1;
-  uint16_t    nRing     = 5;
-  bool        verbose   = false;
-  bool        liblog    = false;
-  bool        progress  = false;
-  bool        traces    = false;
-  bool        ping      = false;
-  bool        voip      = false;
-  bool        http      = false;
-  bool        video     = false;
-  std::string topoFile  = "../scratch/epc-of/default.txt";
-  std::string outFile = "AppStats.txt";
-  
+
   CommandLine cmd;
-  cmd.AddValue ("duration", "Simulation time (s)", duration);
-  cmd.AddValue ("nEnbs",    "Number of eNBs", nEnbs);
-  cmd.AddValue ("nUes",     "Number of UEs per eNB", nUes);
-  cmd.AddValue ("nRing",    "Number of switches in the ring", nRing);
-  cmd.AddValue ("topology", "Topology description file", topoFile);
-  cmd.AddValue ("verbose",  "Enable verbose output", verbose);
-  cmd.AddValue ("liblog",   "Enable ofsoftswitch log component", liblog);
-  cmd.AddValue ("progress", "Enable simulation time progress", progress);
-  cmd.AddValue ("traces",   "Enable simulation pacp traces", traces);
-  cmd.AddValue ("ping",     "Enable ping traffic", ping);
-  cmd.AddValue ("voip",     "Enable VoIP traffic", voip);
-  cmd.AddValue ("http",     "Enable HTTP traffic", http);
-  cmd.AddValue ("video",    "Enable video traffic", video);
-  cmd.AddValue ("outFile",  "Output file name", outFile); 
+  bool verbose = false;
+  bool progress = false;
+  uint32_t simTime = 60;
+  cmd.AddValue ("verbose",    "Enable verbose output.", verbose);
+  cmd.AddValue ("progress",   "Enable simulation time progress.", progress);
+  cmd.AddValue ("simtime",    "Simulation time (seconds).", simTime);
+  cmd.AddValue ("statsfile",  "ns3::SimulationScenario::StatsFilename"); 
+  cmd.AddValue ("topofile",   "ns3::SimulationScenario::TopoFilename");
+  cmd.AddValue ("trace",      "ns3::SimulationScenario::PcapTraces");
+  cmd.AddValue ("liblog",     "ns3::SimulationScenario::SwitchLogs");
+  cmd.AddValue ("ping",       "ns3::SimulationScenario::PingTraffic");
+  cmd.AddValue ("http",       "ns3::SimulationScenario::HttpTraffic");
+  cmd.AddValue ("voip",       "ns3::SimulationScenario::VoipTraffic");
+  cmd.AddValue ("video",      "ns3::SimulationScenario::VideoTraffic");
   cmd.Parse (argc, argv);
   
-  if (progress) EnableProgress ();
-  if (verbose)  EnableVerbose ();
+  if (progress) Simulator::Schedule (Seconds (0), &PrintCurrentTime);
+  if (verbose) EnableVerbose ();
  
   Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
-  scenario->SetAttribute ("StatsFilename", StringValue (outFile));
-  scenario->SetAttribute ("TopoFilename", StringValue (topoFile));
-  scenario->SetAttribute ("PingTraffic", BooleanValue (ping));
-  scenario->SetAttribute ("HttpTraffic", BooleanValue (http));
-  scenario->SetAttribute ("VoipTraffic", BooleanValue (voip));
-  scenario->SetAttribute ("VideoTraffic", BooleanValue (video));
-
+  scenario->BuildTopology ();
+  
+  // Run the simulation
   NS_LOG_INFO ("Simulating...");
-  Simulator::Stop (Seconds (duration));
+  Simulator::Stop (Seconds (simTime));
   Simulator::Run ();
   Simulator::Destroy ();
   NS_LOG_INFO ("End!");
@@ -121,12 +96,6 @@ PrintCurrentTime ()
             << Simulator::Now ().As (Time::S)
             << std::endl;
   Simulator::Schedule (Seconds (1) , &PrintCurrentTime);
-}
-
-void
-EnableProgress ()
-{
-  Simulator::Schedule (Seconds (0), &PrintCurrentTime);
 }
 
 void
