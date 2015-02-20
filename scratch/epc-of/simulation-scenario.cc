@@ -138,7 +138,7 @@ SimulationScenario::GetTypeId (void)
 }
 
 void
-SimulationScenario::BuildTopology ()
+SimulationScenario::BuildRingTopology ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -150,7 +150,7 @@ SimulationScenario::BuildTopology ()
   Names::Add ("ctrlApp", m_controller);
   
   m_controller->SetAttribute ("OFNetwork", PointerValue (m_opfNetwork));
-  m_controller->SetAttribute ("Strategy", EnumValue (RingController::BAND));
+  m_controller->SetAttribute ("Strategy", EnumValue (RingController::HOPS));
   m_controller->SetAttribute ("BwReserve", DoubleValue (0.2));
   
   m_opfNetwork->SetAttribute ("Controller", PointerValue (m_controller));
@@ -197,10 +197,10 @@ SimulationScenario::BuildTopology ()
       MakeCallback (&SimulationScenario::ReportBlockRatio, this));
 
   // Application traffic
-  if (m_ping)   EnablePingTraffic ();
-  if (m_http)   EnableHttpTraffic ();
-  if (m_voip)   EnableVoipTraffic ();
-  if (m_video)  EnableVideoTraffic ();
+  if (m_ping) EnablePingTraffic ();
+  if (m_http) EnableHttpTraffic ();
+  if (m_voip) EnableVoipTraffic ();
+  if (m_video) EnableVideoTraffic ();
 
   // Logs and traces
   DatapathLogs ();

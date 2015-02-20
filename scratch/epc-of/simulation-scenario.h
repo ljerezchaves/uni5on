@@ -49,8 +49,8 @@ public:
   /** Destructor implementation */
   virtual void DoDispose ();
 
-  /** Build the simulation topology. */ 
-  void BuildTopology ();
+  /** Build the ring simulation topology. */ 
+  void BuildRingTopology ();
 
 private:
   /**

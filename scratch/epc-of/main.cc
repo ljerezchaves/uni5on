@@ -58,7 +58,7 @@ main (int argc, char *argv[])
   if (verbose) EnableVerbose ();
  
   Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
-  scenario->BuildTopology ();
+  scenario->BuildRingTopology ();
   
   // Run the simulation
   NS_LOG_INFO ("Simulating...");
