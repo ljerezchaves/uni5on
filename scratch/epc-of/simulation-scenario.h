@@ -41,15 +41,6 @@ public:
   virtual ~SimulationScenario ();  //!< Dummy destructor, see DoDipose
 
   /**
-   * Creates a simulation scenario based on user preferences from command line.
-   * \param nEnbs The number of eNBs in the LTE network.
-   * \param nRing The number of OpenFlow switches in the EPC ring network.
-   * \param eNbUes Indicates, for each eNB, the number of UEs to create.
-   * \param eNbSwt Indicates, for each eNB, the OpenFlow switch index to use.
-   */
-  SimulationScenario (std::string filename, uint32_t nEnbs, uint32_t nUes, uint32_t nRing);
-
-  /**
    * Register this type.
    * \return The object TypeId.
    */
@@ -67,7 +58,7 @@ public:
    * Topology file columns (indexes starts at 0):
    * eNB index | # of UEs at this eNB | OpenFlow switch index
    */
-  bool ParseTopology (std::string filename, uint32_t nEnbs, uint32_t nUes, uint16_t nRing);
+  bool ParseTopology ();
 
   /**
    * Enable IPv4 ICMP ping application over default EPS bearer (QCI 9).

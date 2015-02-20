@@ -78,7 +78,7 @@ main (int argc, char *argv[])
   if (progress) EnableProgress ();
   if (verbose)  EnableVerbose ();
  
-  Ptr<SimulationScenario> scenario =  CreateObject<SimulationScenario> (topoFile, nEnbs, nUes, nRing);
+  Ptr<SimulationScenario> scenario =  CreateObject<SimulationScenario> ();
   //scenario->SetAttribute ("StatsFilename", StringValue (outFile));
   //scenario->SetAttribute ("TopoFilename", StringValue (topoFile));
   
