@@ -43,15 +43,15 @@ const uint64_t SimulationScenario::m_maxBitRate [] = {3300000, 4400000,
   3100000, 3400000, 2000000};
 
 SimulationScenario::SimulationScenario ()
-  : m_appStatsFirstWrite (true),
-    m_opfNetwork (0),
+  : m_opfNetwork (0),
     m_controller (0),
     m_epcHelper (0),
     m_lteNetwork (0),
     m_webNetwork (0),
     m_lteHelper (0),
     m_webHost (0),
-    m_rngStart (0)
+    m_rngStart (0),
+    m_statsFirstWrite (true)
 {
   NS_LOG_FUNCTION (this);
   
@@ -70,7 +70,7 @@ SimulationScenario::~SimulationScenario ()
 
 SimulationScenario::SimulationScenario (uint32_t nEnbs, uint32_t nRing, 
     std::vector<uint32_t> eNbUes, std::vector<uint16_t> eNbSwt)
-  : m_appStatsFirstWrite (true)
+  : m_statsFirstWrite (true)
 {
   NS_LOG_FUNCTION (this);
 
@@ -150,7 +150,7 @@ SimulationScenario::GetTypeId (void)
     .AddAttribute ("AppStatsFilename",
                    "Name of the file where the app statistics will be saved.",
                    StringValue ("AppStats.txt"),
-                   MakeStringAccessor (&SimulationScenario::m_appStatsFilename),
+                   MakeStringAccessor (&SimulationScenario::m_statsFilename),
                    MakeStringChecker ())
   ;
   return tid;
@@ -445,15 +445,15 @@ SimulationScenario::ReportAppStats (std::string description, uint32_t teid,
   NS_LOG_FUNCTION (this << teid);
  
   std::ofstream outFile;
-  if ( m_appStatsFirstWrite == true )
+  if ( m_statsFirstWrite == true )
     {
-      outFile.open (m_appStatsFilename.c_str ());
+      outFile.open (m_statsFilename.c_str ());
       if (!outFile.is_open ())
         {
-          NS_LOG_ERROR ("Can't open file " << m_appStatsFilename);
+          NS_LOG_ERROR ("Can't open file " << m_statsFilename);
           return;
         }
-      m_appStatsFirstWrite = false;
+      m_statsFirstWrite = false;
       outFile << left
               << setw (12) << "Time (s)"     << setw (17) << "Description" 
               << setw (6)  << "TEID"         << setw (12) << "Active (s)"
@@ -464,10 +464,10 @@ SimulationScenario::ReportAppStats (std::string description, uint32_t teid,
     }
   else
     {
-      outFile.open (m_appStatsFilename.c_str (), std::ios_base::app);
+      outFile.open (m_statsFilename.c_str (), std::ios_base::app);
       if (!outFile.is_open ())
         {
-          NS_LOG_ERROR ("Can't open file " << m_appStatsFilename);
+          NS_LOG_ERROR ("Can't open file " << m_statsFilename);
           return;
         }
     }
@@ -489,15 +489,15 @@ void
 SimulationScenario::ReportBlockRatio (uint32_t requests, uint32_t blocks, double ratio)
 {
   std::ofstream outFile;
-  if ( m_appStatsFirstWrite == true )
+  if ( m_statsFirstWrite == true )
     {
-      outFile.open (m_appStatsFilename.c_str ());
+      outFile.open (m_statsFilename.c_str ());
       if (!outFile.is_open ())
         {
-          NS_LOG_ERROR ("Can't open file " << m_appStatsFilename);
+          NS_LOG_ERROR ("Can't open file " << m_statsFilename);
           return;
         }
-      m_appStatsFirstWrite = false;
+      m_statsFirstWrite = false;
       outFile << left
               << setw (12) << "Time (s)"     << setw (17) << "Description" 
               << setw (6)  << "TEID"         << setw (12) << "Active (s)"
@@ -508,10 +508,10 @@ SimulationScenario::ReportBlockRatio (uint32_t requests, uint32_t blocks, double
     }
   else
     {
-      outFile.open (m_appStatsFilename.c_str (), std::ios_base::app);
+      outFile.open (m_statsFilename.c_str (), std::ios_base::app);
       if (!outFile.is_open ())
         {
-          NS_LOG_ERROR ("Can't open file " << m_appStatsFilename);
+          NS_LOG_ERROR ("Can't open file " << m_statsFilename);
           return;
         }
     }

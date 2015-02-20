@@ -137,9 +137,6 @@ private:
    */
   static const std::string GetVideoFilename (uint8_t idx);
 
-  bool m_appStatsFirstWrite;                  //!< First write to appStatsFile
-  std::string m_appStatsFilename;             //!< appStats filename
-
   Ptr<OpenFlowEpcNetwork> m_opfNetwork;       //!< LTE EPC network
   Ptr<OpenFlowEpcController> m_controller;    //!< OpenFLow controller
   Ptr<OpenFlowEpcHelper> m_epcHelper;         //!< LTE EPC helper
@@ -149,11 +146,25 @@ private:
   Ptr<Node> m_webHost;                        //!< Internet server node
   Ptr<UniformRandomVariable> m_rngStart;      //!< Random app start time
   
-  NodeContainer m_ueNodes;                    //!< LTE UE nodes
-  NetDeviceContainer m_ueDevices;             //!< LTE UE devices
+  NodeContainer         m_ueNodes;            //!< LTE UE nodes
+  NetDeviceContainer    m_ueDevices;          //!< LTE UE devices
+  ApplicationContainer  m_voipServers;        //!< Voip applications
+  ApplicationContainer  m_videoServers;       //!< Video applications
 
-  ApplicationContainer m_voipServers;         //!< Voip applications
-  ApplicationContainer m_videoServers;        //!< Video applications
+  bool                  m_statsFirstWrite;    //!< First write to appStatsFile
+  std::string           m_statsFilename;      //!< AppStats filename
+  std::string           m_topoFilename;       //!< Topology filename
+  std::string           m_liblog;             //!< Switches log level
+  uint32_t              m_nEnbs;              //!< Number of eNBs
+  uint32_t              m_nUes;               //!< Number of UEs per eNB
+  uint16_t              m_nRing;              //!< Number of OpenFlow switches
+  bool                  m_traces;             //!< Enable pcap traces
+  bool                  m_ping;               //!< Enable ping traffic
+  bool                  m_voip;               //!< Enable voip traffic
+  bool                  m_http;               //!< Enable http traffic
+  bool                  m_video;              //!< Enable video traffic
+  std::vector<uint32_t> m_eNbUes;             // Number of UEs per eNb
+  std::vector<uint16_t> m_eNbSwt;             // Switch index per eNb
 
   static const std::string m_videoDir;        //!< Video trace directory
   static const std::string m_videoTrace [];   //!< Video trace filenames
