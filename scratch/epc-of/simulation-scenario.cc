@@ -66,60 +66,7 @@ SimulationScenario::SimulationScenario (std::string filename, uint32_t nEnbs,
   : m_statsFirstWrite (true)
 {
   NS_LOG_FUNCTION (this);
-  ParseTopology (filename, nEnbs, nUes, nRing);
-
-  // OpenFlow ring network (for EPC)
-  m_opfNetwork = CreateObject<RingNetwork> ();
-  m_controller = CreateObject<RingController> ();
-  Names::Add ("ctrlApp", m_controller);
-  
-  m_controller->SetAttribute ("OFNetwork", PointerValue (m_opfNetwork));
-  m_controller->SetAttribute ("Strategy", EnumValue (RingController::BAND));
-  m_controller->SetAttribute ("BwReserve", DoubleValue (0.9));
-  
-  m_opfNetwork->SetAttribute ("Controller", PointerValue (m_controller));
-  m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (nRing));
-  m_opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("10Mb/s")));
-  m_opfNetwork->CreateTopology (m_eNbSwt);
-  
-  // LTE EPC core (with callbacks setup)
-  m_epcHelper = CreateObject<OpenFlowEpcHelper> ();
-  m_epcHelper->SetS1uConnectCallback (
-      MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, m_opfNetwork));
-//  m_epcHelper->SetX2ConnectCallback (
-//      MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
-  m_epcHelper->SetAddBearerCallback (
-      MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, m_controller));
-  m_epcHelper->SetCreateSessionRequestCallback (
-      MakeCallback (&OpenFlowEpcController::NotifyNewContextCreated, m_controller));
-  
-  // LTE radio access network
-  m_lteNetwork = CreateObject<LteSquaredGridNetwork> ();
-  m_lteNetwork->SetAttribute ("RoomLength", DoubleValue (100.0));
-  m_lteNetwork->SetAttribute ("Enbs", UintegerValue (nEnbs));
-  m_lteNetwork->CreateTopology (m_epcHelper, m_eNbUes);
-  m_lteHelper = m_lteNetwork->GetLteHelper ();
-
-  // Internet network
-  m_webNetwork = CreateObject<InternetNetwork> ();
-  Ptr<Node> pgw = m_epcHelper->GetPgwNode ();
-  m_webHost = m_webNetwork->CreateTopology (pgw);
-
-  // UE Nodes and UE devices
-  m_ueNodes = m_lteNetwork->GetUeNodes ();
-  m_ueDevices = m_lteNetwork->GetUeDevices ();
-
-  // Application random start time
-  m_rngStart = CreateObject<UniformRandomVariable> ();
-  m_rngStart->SetAttribute ("Min", DoubleValue (0.));
-  m_rngStart->SetAttribute ("Max", DoubleValue (5.));
-
-  // Saving controller and application statistics 
-  Config::ConnectWithoutContext ("/Names/ctrlApp/AppStats", 
-      MakeCallback (&SimulationScenario::ReportAppStats, this));
-  Config::ConnectWithoutContext ("/Names/ctrlApp/GbrBlock", 
-      MakeCallback (&SimulationScenario::ReportBlockRatio, this));
-}
+ }
 
 void
 SimulationScenario::DoDispose ()
@@ -149,7 +96,7 @@ SimulationScenario::GetTypeId (void)
                    MakeStringChecker ())
     .AddAttribute ("TopoFilename",
                    "Name of the file with topology description.",
-                   StringValue ("topology.txt"),
+                   StringValue ("../scratch/epc-of/default.txt"),
                    MakeStringAccessor (&SimulationScenario::m_topoFilename),
                    MakeStringChecker ())
     .AddAttribute ("neNBs",
@@ -199,6 +146,68 @@ SimulationScenario::GetTypeId (void)
                    MakeBooleanChecker ())
   ;
   return tid;
+}
+
+void
+SimulationScenario::NotifyConstructionCompleted ()
+{
+  NS_LOG_FUNCTION (this);
+  Object::NotifyConstructionCompleted ();
+
+   ParseTopology (m_topoFilename, m_nEnbs, m_nUes, m_nRing);
+
+  // OpenFlow ring network (for EPC)
+  m_opfNetwork = CreateObject<RingNetwork> ();
+  m_controller = CreateObject<RingController> ();
+  Names::Add ("ctrlApp", m_controller);
+  
+  m_controller->SetAttribute ("OFNetwork", PointerValue (m_opfNetwork));
+  m_controller->SetAttribute ("Strategy", EnumValue (RingController::BAND));
+  m_controller->SetAttribute ("BwReserve", DoubleValue (0.9));
+  
+  m_opfNetwork->SetAttribute ("Controller", PointerValue (m_controller));
+  m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (m_nRing));
+  m_opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("10Mb/s")));
+  m_opfNetwork->CreateTopology (m_eNbSwt);
+  
+  // LTE EPC core (with callbacks setup)
+  m_epcHelper = CreateObject<OpenFlowEpcHelper> ();
+  m_epcHelper->SetS1uConnectCallback (
+      MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, m_opfNetwork));
+//  m_epcHelper->SetX2ConnectCallback (
+//      MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
+  m_epcHelper->SetAddBearerCallback (
+      MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, m_controller));
+  m_epcHelper->SetCreateSessionRequestCallback (
+      MakeCallback (&OpenFlowEpcController::NotifyNewContextCreated, m_controller));
+  
+  // LTE radio access network
+  m_lteNetwork = CreateObject<LteSquaredGridNetwork> ();
+  m_lteNetwork->SetAttribute ("RoomLength", DoubleValue (100.0));
+  m_lteNetwork->SetAttribute ("Enbs", UintegerValue (m_nEnbs));
+  m_lteNetwork->CreateTopology (m_epcHelper, m_eNbUes);
+  m_lteHelper = m_lteNetwork->GetLteHelper ();
+
+  // Internet network
+  m_webNetwork = CreateObject<InternetNetwork> ();
+  Ptr<Node> pgw = m_epcHelper->GetPgwNode ();
+  m_webHost = m_webNetwork->CreateTopology (pgw);
+
+  // UE Nodes and UE devices
+  m_ueNodes = m_lteNetwork->GetUeNodes ();
+  m_ueDevices = m_lteNetwork->GetUeDevices ();
+
+  // Application random start time
+  m_rngStart = CreateObject<UniformRandomVariable> ();
+  m_rngStart->SetAttribute ("Min", DoubleValue (0.));
+  m_rngStart->SetAttribute ("Max", DoubleValue (5.));
+
+  // Saving controller and application statistics 
+  Config::ConnectWithoutContext ("/Names/ctrlApp/AppStats", 
+      MakeCallback (&SimulationScenario::ReportAppStats, this));
+  Config::ConnectWithoutContext ("/Names/ctrlApp/GbrBlock", 
+      MakeCallback (&SimulationScenario::ReportBlockRatio, this));
+
 }
 
 void 

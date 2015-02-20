@@ -58,6 +58,10 @@ public:
   /** Destructor implementation */
   virtual void DoDispose ();
 
+//protected:
+  // Inherited from Object
+  void NotifyConstructionCompleted ();
+
   /**
    * Parse topology description file.  
    * Topology file columns (indexes starts at 0):

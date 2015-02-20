@@ -79,7 +79,8 @@ main (int argc, char *argv[])
   if (verbose)  EnableVerbose ();
  
   Ptr<SimulationScenario> scenario =  CreateObject<SimulationScenario> (topoFile, nEnbs, nUes, nRing);
-  scenario->SetAttribute ("StatsFilename", StringValue (outFile));
+  //scenario->SetAttribute ("StatsFilename", StringValue (outFile));
+  //scenario->SetAttribute ("TopoFilename", StringValue (topoFile));
   
   // Application traffic
   if (ping)     scenario->EnablePingTraffic ();
