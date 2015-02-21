@@ -70,7 +70,7 @@ OpenFlowEpcNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::OpenFlowEpcNetwork") 
     .SetParent<Object> ()
-    .AddAttribute ("Controller", 
+    .AddAttribute ("ControllerApp", 
                    "The OpenFlow controller for this EPC OpenFlow network.",
                    PointerValue (),
                    MakePointerAccessor (&OpenFlowEpcNetwork::SetController),
