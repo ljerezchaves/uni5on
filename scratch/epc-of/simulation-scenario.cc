@@ -187,7 +187,7 @@ SimulationScenario::BuildRingTopology ()
 
   // Application random start time
   m_rngStart = CreateObject<UniformRandomVariable> ();
-  m_rngStart->SetAttribute ("Min", DoubleValue (0.));
+  m_rngStart->SetAttribute ("Min", DoubleValue (2.));
   m_rngStart->SetAttribute ("Max", DoubleValue (5.));
 
   // Saving controller and application statistics 
