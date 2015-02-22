@@ -128,6 +128,11 @@ RingNetwork::CreateTopology (std::vector<uint16_t> eNbSwitches)
       pair.Add (m_ofSwitches.Get (nextIndex));
       NetDeviceContainer devs = m_ofCsmaHelper.Install (pair);
     
+      Names::Add (Names::FindName (m_ofSwitches.Get (currIndex)) + "+" + 
+                  Names::FindName (m_ofSwitches.Get (nextIndex)), devs.Get (0));
+      Names::Add (Names::FindName (m_ofSwitches.Get (nextIndex)) + "+" + 
+                  Names::FindName (m_ofSwitches.Get (currIndex)), devs.Get (1));
+
       // Adding newly created csma devices as openflow switch ports.
       Ptr<OFSwitch13NetDevice> currDevice, nextDevice;
       Ptr<CsmaNetDevice> currPortDevice, nextPortDevice;
@@ -194,6 +199,11 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   pair.Add (swtchNode);
   pair.Add (node);
   NetDeviceContainer devices = m_ofCsmaHelper.Install (pair);
+  
+  Names::Add (Names::FindName (swtchNode) + "+" + 
+              Names::FindName (node), devices.Get (0));
+  Names::Add (Names::FindName (node) + "+" + 
+              Names::FindName (swtchNode), devices.Get (1));
   
   // Set S1U IPv4 address for the new device at node
   Ptr<NetDevice> nodeDev = devices.Get (1);

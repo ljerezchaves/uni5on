@@ -71,7 +71,6 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   InternetStackHelper internet;
   internet.Install (webHost);
   
-  Names::Add (InternetNetwork::GetSgwPgwName (), pgw);
   Names::Add (InternetNetwork::GetServerName (), webHost);
 
   m_webNodes.Add (pgw);
@@ -82,6 +81,11 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   m_p2pHeler.SetChannelAttribute ("Delay", TimeValue (m_LinkDelay));
   
   m_webDevices = m_p2pHeler.Install (m_webNodes);
+ 
+  Names::Add (Names::FindName (pgw) + "+" + 
+              Names::FindName (webHost), m_webDevices.Get (0));
+  Names::Add (Names::FindName (webHost) + "+" + 
+              Names::FindName (pgw), m_webDevices.Get (1));
   
   Ipv4AddressHelper ipv4h;
   ipv4h.SetBase ("192.168.0.0", "255.255.255.0");

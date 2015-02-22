@@ -639,11 +639,11 @@ SimulationScenario::PcapTraces ()
   if (!m_pcapTraces) return;
   NS_LOG_FUNCTION (this);
  
-  m_webNetwork->EnablePcap ("web");
-  m_opfNetwork->EnableOpenFlowPcap ("openflow-channel");
-  m_opfNetwork->EnableDataPcap ("ofn", true);
-  m_epcHelper->EnablePcapS1u ("epc");
-//  m_epcHelper->EnablePcapX2 ("epc");
+  m_webNetwork->EnablePcap ("internet");
+  m_opfNetwork->EnableOpenFlowPcap ("ofchannel");
+  m_opfNetwork->EnableDataPcap ("ofnetwork", true);
+  m_epcHelper->EnablePcapS1u ("lte-epc");
+//  m_epcHelper->EnablePcapX2 ("lte-epc");
 //  m_lteNetwork->EnableTraces ();
 }
 

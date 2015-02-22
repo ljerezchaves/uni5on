@@ -58,6 +58,7 @@ OpenFlowEpcHelper::OpenFlowEpcHelper ()
   
   // create SgwPgwNode
   m_sgwPgw = CreateObject<Node> ();
+  Names::Add ("pgw", m_sgwPgw);
   InternetStackHelper internet;
   internet.Install (m_sgwPgw);
   

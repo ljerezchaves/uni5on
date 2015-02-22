@@ -117,6 +117,9 @@ LteSquaredGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper,
   m_enbNodes.Create (m_nEnbs);
   for (uint32_t i = 0; i < m_nEnbs; i++)
     {
+      std::ostringstream enbName;
+      enbName << "enb" << i;
+      Names::Add (enbName.str(), m_enbNodes.Get (i));
       NS_LOG_INFO (" eNB #" << i << " with " << m_nUesPerEnb.at (i) << " UEs");
       NodeContainer ueNc;
       ueNc.Create (m_nUesPerEnb.at (i));
@@ -211,9 +214,6 @@ LteSquaredGridNetwork::InstallProtocolStack ()
   InternetStackHelper internet;
   for (uint32_t i = 0; i < m_nEnbs; i++)
     {
-      std::ostringstream enbName;
-      enbName << "enb#" << i;
-      Names::Add (enbName.str(), m_enbNodes.Get (i));
       NodeContainer ueNc = m_ueNodesPerEnb.at (i);
       NetDeviceContainer ueDev = m_lteHelper->InstallUeDevice (ueNc);
       m_ueDevices.Add (ueDev);
@@ -226,7 +226,7 @@ LteSquaredGridNetwork::InstallProtocolStack ()
         {
           Ptr<Node> n = ueNc.Get (j);
           std::ostringstream ueName;
-          ueName << "ue#" << j << "@enb#" << i;
+          ueName << "ue" << j << "@enb" << i;
           Names::Add (ueName.str(), n);
           Ptr<Ipv4StaticRouting> ueStaticRouting =
               ipv4RoutingHelper.GetStaticRouting (n->GetObject<Ipv4> ()); 
