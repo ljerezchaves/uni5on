@@ -33,7 +33,8 @@ const int OpenFlowEpcController::m_dedicatedPriority = 1000;
 
 OpenFlowEpcController::OpenFlowEpcController ()
   : m_gbrBearers (0),
-    m_gbrBlocks (0)
+    m_gbrBlocks (0),
+    m_ofNetwork (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -48,11 +49,6 @@ OpenFlowEpcController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::OpenFlowEpcController")
     .SetParent (OFSwitch13Controller::GetTypeId ())
-    .AddAttribute ("OFNetwork",
-                   "The OpenFlow network controlled by this app.",
-                   PointerValue (),
-                   MakePointerAccessor (&OpenFlowEpcController::m_ofNetwork),
-                   MakePointerChecker<OpenFlowEpcNetwork> ())
     .AddTraceSource ("AppStats",
                      "Application QoS trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_appQosTrace),
@@ -84,6 +80,13 @@ const Time
 OpenFlowEpcController::GetDedicatedTimeout ()
 {
   return Seconds (m_dedicatedTimeout);
+}
+
+void
+OpenFlowEpcController::SetOfNetwork (Ptr<OpenFlowEpcNetwork> network)
+{
+  NS_ASSERT_MSG (!m_ofNetwork, "Network already set.");
+  m_ofNetwork = network;
 }
 
 double

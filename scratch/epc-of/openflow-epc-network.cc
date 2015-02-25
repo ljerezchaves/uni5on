@@ -70,11 +70,6 @@ OpenFlowEpcNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::OpenFlowEpcNetwork") 
     .SetParent<Object> ()
-    .AddAttribute ("ControllerApp", 
-                   "The OpenFlow controller for this EPC OpenFlow network.",
-                   PointerValue (),
-                   MakePointerAccessor (&OpenFlowEpcNetwork::SetController),
-                   MakePointerChecker<OpenFlowEpcController> ())
   ;
   return tid; 
 }
@@ -92,12 +87,16 @@ OpenFlowEpcNetwork::DoDispose ()
 void
 OpenFlowEpcNetwork::SetController (Ptr<OpenFlowEpcController> controller)
 {
+  NS_LOG_FUNCTION (this << controller);
+  NS_ASSERT_MSG (!m_ofCtrlApp, "Controller application already set.");
+  
   // Installing the controller app into a new controller node
+  m_ofCtrlApp = controller;
   m_ofCtrlNode = CreateObject<Node> ();
   Names::Add ("ctrl", m_ofCtrlNode);
 
-  m_ofHelper.InstallControllerApp (m_ofCtrlNode, controller);
-  m_ofCtrlApp = controller;
+  m_ofHelper.InstallControllerApp (m_ofCtrlNode, m_ofCtrlApp);
+  m_ofCtrlApp->SetOfNetwork (this);
 }
 
 void

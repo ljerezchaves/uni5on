@@ -91,10 +91,11 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
   
   static bool created = false;
   NS_ASSERT_MSG (!created, "Topology already created.");
-  NS_ASSERT_MSG (!m_ofCtrlApp, "Controller application already set.");
   NS_ASSERT_MSG (m_nodes >= 3, "Invalid number of nodes for the ring");
-
+  
   SetController (controller);
+  m_eNbSwitchIdx = eNbSwitches;
+  
   m_ringCtrlApp = DynamicCast<RingController> (m_ofCtrlApp);
   NS_ASSERT_MSG (m_ringCtrlApp, "Expecting a RingController.");
 
@@ -118,7 +119,6 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
   m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_LinkDelay));
 
   // Connecting switches in ring topology (clockwise order)
-  m_eNbSwitchIdx = eNbSwitches;
   for (uint16_t i = 0; i < m_nodes; i++)
     {
       uint16_t currIndex = i;

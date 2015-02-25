@@ -61,6 +61,12 @@ public:
   static const Time GetDedicatedTimeout ();
 
   /**
+   * Set the pointer to OpenFlow network controlled by this app.
+   * \param network The OpenFlowEpcNetwork pointer.
+   */
+  void SetOfNetwork (Ptr<OpenFlowEpcNetwork> network);
+
+  /**
    * Return the block radio statistics.
    * \return The GBR bearer block ratio
    */

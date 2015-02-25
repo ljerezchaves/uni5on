@@ -144,15 +144,14 @@ SimulationScenario::BuildRingTopology ()
 
   ParseTopology ();
 
-  // OpenFlow ring network (for EPC)
-  m_opfNetwork = CreateObject<RingNetwork> ();
+  // OpenFlow EPC ring controller
   m_controller = CreateObject<RingController> ();
-  Names::Add ("ctrlApp", m_controller);
-  
-  m_controller->SetAttribute ("OFNetwork", PointerValue (m_opfNetwork));
   m_controller->SetAttribute ("Strategy", EnumValue (RingController::HOPS));
   m_controller->SetAttribute ("BwReserve", DoubleValue (0.2));
+  Names::Add ("ctrlApp", m_controller);
   
+  // OpenFlow EPC ring network
+  m_opfNetwork = CreateObject<RingNetwork> ();
   m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (m_nSwitches));
   m_opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("1Gb/s")));
   m_opfNetwork->CreateTopology (m_controller, m_SwitchIdxPerEnb);
@@ -161,8 +160,8 @@ SimulationScenario::BuildRingTopology ()
   m_epcHelper = CreateObject<OpenFlowEpcHelper> ();
   m_epcHelper->SetS1uConnectCallback (
       MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, m_opfNetwork));
-//  m_epcHelper->SetX2ConnectCallback (
-//      MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
+  m_epcHelper->SetX2ConnectCallback (
+      MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
   m_epcHelper->SetAddBearerCallback (
       MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, m_controller));
   m_epcHelper->SetCreateSessionRequestCallback (
@@ -172,13 +171,11 @@ SimulationScenario::BuildRingTopology ()
   m_lteNetwork = CreateObject<LteSquaredGridNetwork> ();
   m_lteNetwork->SetAttribute ("RoomLength", DoubleValue (100.0));
   m_lteNetwork->SetAttribute ("Enbs", UintegerValue (m_nEnbs));
-  m_lteNetwork->CreateTopology (m_epcHelper, m_UesPerEnb);
-  m_lteHelper = m_lteNetwork->GetLteHelper ();
+  m_lteHelper = m_lteNetwork->CreateTopology (m_epcHelper, m_UesPerEnb);
 
   // Internet network
   m_webNetwork = CreateObject<InternetNetwork> ();
-  Ptr<Node> pgw = m_epcHelper->GetPgwNode ();
-  m_webHost = m_webNetwork->CreateTopology (pgw);
+  m_webHost = m_webNetwork->CreateTopology (m_epcHelper->GetPgwNode ());
 
   // UE Nodes and UE devices
   m_ueNodes = m_lteNetwork->GetUeNodes ();
@@ -643,7 +640,7 @@ SimulationScenario::PcapAsciiTraces ()
   m_opfNetwork->EnableOpenFlowAscii ("ofchannel");
   m_opfNetwork->EnableDataPcap ("ofnetwork", true);
   m_epcHelper->EnablePcapS1u ("lte-epc");
-//  m_epcHelper->EnablePcapX2 ("lte-epc");
+  m_epcHelper->EnablePcapX2 ("lte-epc");
   m_lteNetwork->EnableTraces ();
 }
 

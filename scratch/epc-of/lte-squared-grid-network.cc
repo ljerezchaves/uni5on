@@ -101,7 +101,7 @@ LteSquaredGridNetwork::EnableTraces ()
 }
 
 
-void
+Ptr<LteHelper>
 LteSquaredGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper, 
     std::vector<uint32_t> nUes)
 {
@@ -129,8 +129,8 @@ LteSquaredGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper,
 
   SetLteNodePositions ();
   InstallProtocolStack ();
+  return m_lteHelper;
 }
-
 
 Ptr<LteHelper>
 LteSquaredGridNetwork::GetLteHelper ()
