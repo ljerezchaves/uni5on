@@ -85,8 +85,9 @@ ConfigureDefaults ()
   // Ethernet payload and 80 bytes of headers (including GTP/UDP/IP tunnel).
   Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1420));
 
-  // Enabling Checksum computations
+  // Enabling checksum computations and packet metadata
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
+  PacketMetadata::Enable ();
 }
 
 void

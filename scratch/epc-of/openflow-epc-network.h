@@ -124,6 +124,12 @@ public:
   void EnableOpenFlowPcap (std::string prefix);
 
   /** 
+   * Enable ascii trace on OpenFlow channel. 
+   * \param prefix The file prefix.
+   */
+  void EnableOpenFlowAscii (std::string prefix);
+
+  /** 
    * Enable internal ofsoftswitch13 logging.
    * \param level string representing library logging level.
    */

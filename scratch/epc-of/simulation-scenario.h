@@ -128,8 +128,8 @@ private:
   /** Enable/Disable ofsoftswitch13 library log. */
   void DatapathLogs ();
 
-  /** Enable/Disable LTE and PCAP traces. */
-  void PcapTraces ();
+  /** Enable/Disable PCAP and ASCII traces. */
+  void PcapAsciiTraces ();
 
   Ptr<OpenFlowEpcNetwork> m_opfNetwork;       //!< LTE EPC network
   Ptr<OpenFlowEpcController> m_controller;    //!< OpenFLow controller

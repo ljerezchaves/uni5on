@@ -204,7 +204,7 @@ SimulationScenario::BuildRingTopology ()
 
   // Logs and traces
   DatapathLogs ();
-  PcapTraces ();
+  PcapAsciiTraces ();
 }
 
 void 
@@ -634,17 +634,18 @@ SimulationScenario::DatapathLogs ()
 }
 
 void
-SimulationScenario::PcapTraces ()
+SimulationScenario::PcapAsciiTraces ()
 {
   if (!m_pcapTraces) return;
   NS_LOG_FUNCTION (this);
  
   m_webNetwork->EnablePcap ("internet");
   m_opfNetwork->EnableOpenFlowPcap ("ofchannel");
+  m_opfNetwork->EnableOpenFlowAscii ("ofchannel");
   m_opfNetwork->EnableDataPcap ("ofnetwork", true);
   m_epcHelper->EnablePcapS1u ("lte-epc");
 //  m_epcHelper->EnablePcapX2 ("lte-epc");
-//  m_lteNetwork->EnableTraces ();
+  m_lteNetwork->EnableTraces ();
 }
 
 };  // namespace ns3

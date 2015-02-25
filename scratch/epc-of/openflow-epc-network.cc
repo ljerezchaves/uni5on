@@ -113,6 +113,12 @@ OpenFlowEpcNetwork::EnableOpenFlowPcap (std::string prefix)
 }
 
 void 
+OpenFlowEpcNetwork::EnableOpenFlowAscii (std::string prefix)
+{
+  m_ofHelper.EnableOpenFlowAscii (prefix);
+}
+
+void 
 OpenFlowEpcNetwork::EnableDatapathLogs (std::string level)
 {
   m_ofHelper.EnableDatapathLogs (level);
