@@ -57,7 +57,7 @@ RingNetwork::GetTypeId (void)
                    MakeUintegerChecker<uint16_t> (3))
     .AddAttribute ("LinkDataRate", 
                    "The data rate to be used for the CSMA OpenFlow links.",
-                   DataRateValue (DataRate ("1Gb/s")),
+                   DataRateValue (DataRate ("100Mb/s")),
                    MakeDataRateAccessor (&RingNetwork::m_LinkDataRate),
                    MakeDataRateChecker ())
     .AddAttribute ("LinkDelay", 
