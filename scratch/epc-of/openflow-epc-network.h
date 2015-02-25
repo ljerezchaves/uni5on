@@ -106,9 +106,11 @@ public:
   /** 
    * Creates the OpenFlow network infrastructure with existing OpenFlow
    * Controller application.
+   * \param controller The OpenFlow controller for this EPC OpenFlow network.
    * \param eNbSwitches The switch index for each eNB.
    */
-  virtual void CreateTopology (std::vector<uint16_t> eNbSwitches) = 0;
+  virtual void CreateTopology (Ptr<OpenFlowEpcController> controller, 
+      std::vector<uint16_t> eNbSwitches) = 0;
 
   /** 
    * Enable pcap on switch data ports.

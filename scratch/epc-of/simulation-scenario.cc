@@ -153,10 +153,9 @@ SimulationScenario::BuildRingTopology ()
   m_controller->SetAttribute ("Strategy", EnumValue (RingController::HOPS));
   m_controller->SetAttribute ("BwReserve", DoubleValue (0.2));
   
-  m_opfNetwork->SetAttribute ("ControllerApp", PointerValue (m_controller));
   m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (m_nSwitches));
   m_opfNetwork->SetAttribute ("LinkDataRate", DataRateValue (DataRate ("1Gb/s")));
-  m_opfNetwork->CreateTopology (m_SwitchIdxPerEnb);
+  m_opfNetwork->CreateTopology (m_controller, m_SwitchIdxPerEnb);
   
   // LTE EPC core (with callbacks setup)
   m_epcHelper = CreateObject<OpenFlowEpcHelper> ();

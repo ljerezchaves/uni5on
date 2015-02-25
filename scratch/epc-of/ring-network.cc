@@ -84,15 +84,17 @@ RingNetwork::DoDispose ()
 }
 
 void
-RingNetwork::CreateTopology (std::vector<uint16_t> eNbSwitches)
+RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller, 
+    std::vector<uint16_t> eNbSwitches)
 {
   NS_LOG_FUNCTION (this);
   
   static bool created = false;
   NS_ASSERT_MSG (!created, "Topology already created.");
-  NS_ASSERT_MSG (m_ofCtrlApp, "Controller Application not set.");
+  NS_ASSERT_MSG (!m_ofCtrlApp, "Controller application already set.");
   NS_ASSERT_MSG (m_nodes >= 3, "Invalid number of nodes for the ring");
 
+  SetController (controller);
   m_ringCtrlApp = DynamicCast<RingController> (m_ofCtrlApp);
   NS_ASSERT_MSG (m_ringCtrlApp, "Expecting a RingController.");
 

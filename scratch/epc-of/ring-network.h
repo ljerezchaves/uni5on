@@ -54,7 +54,8 @@ public:
   // Inherited from OpenFlowEpcNetowork
   Ptr<NetDevice> AttachToS1u (Ptr<Node> node, uint16_t cellId);
   Ptr<NetDevice> AttachToX2  (Ptr<Node> node);
-  void CreateTopology (std::vector<uint16_t> eNbSwitches);
+  void CreateTopology (Ptr<OpenFlowEpcController> controller, 
+      std::vector<uint16_t> eNbSwitches);
   
 private:
   Ptr<RingController>   m_ringCtrlApp;  //!< Casted controller app pointer
