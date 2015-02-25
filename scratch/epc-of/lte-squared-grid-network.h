@@ -62,6 +62,7 @@ private:
   double m_enbHeight;
   double m_ueHeight;
   double m_roomLength;
+  bool m_fixedUes;
 
   // Containers
   NodeContainer m_enbNodes;

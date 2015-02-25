@@ -20,25 +20,20 @@
 
 #include "lte-squared-grid-network.h"
 
-NS_LOG_COMPONENT_DEFINE ("LteSquaredGridNetwork");
-
 namespace ns3 {
 
-NS_OBJECT_ENSURE_REGISTERED (LteSquaredGridNetwork)
-  ;
-
+NS_OBJECT_ENSURE_REGISTERED (LteSquaredGridNetwork);
+NS_LOG_COMPONENT_DEFINE ("LteSquaredGridNetwork");
 
 LteSquaredGridNetwork::LteSquaredGridNetwork ()
 {
   NS_LOG_FUNCTION (this);
 }
 
-
 LteSquaredGridNetwork::~LteSquaredGridNetwork ()
 {
   NS_LOG_FUNCTION (this);
 }
-
 
 TypeId 
 LteSquaredGridNetwork::GetTypeId (void) 
@@ -65,10 +60,14 @@ LteSquaredGridNetwork::GetTypeId (void)
                    DoubleValue (10.0),
                    MakeDoubleAccessor (&LteSquaredGridNetwork::m_roomLength),
                    MakeDoubleChecker<double> ())
+    .AddAttribute ("UeFixedPos", 
+                   "Fix all UEs close to its eNB, avoiding random positions.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&LteSquaredGridNetwork::m_fixedUes),
+                   MakeBooleanChecker ())
     ;
   return tid; 
 }
-
 
 void
 LteSquaredGridNetwork::DoDispose ()
@@ -79,13 +78,11 @@ LteSquaredGridNetwork::DoDispose ()
   Object::DoDispose ();
 }
 
-
 NodeContainer
 LteSquaredGridNetwork::GetEnbNodes ()
 {
   return m_enbNodes;
 }
-
 
 NodeContainer
 LteSquaredGridNetwork::GetUeNodes ()
@@ -93,13 +90,11 @@ LteSquaredGridNetwork::GetUeNodes ()
   return m_ueNodes;
 }
 
-
 void
 LteSquaredGridNetwork::EnableTraces ()
 {
   m_lteHelper->EnableTraces ();
 }
-
 
 Ptr<LteHelper>
 LteSquaredGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper, 
@@ -144,62 +139,65 @@ LteSquaredGridNetwork::GetUeDevices ()
   return m_ueDevices;
 }
 
-
 void
 LteSquaredGridNetwork::SetLteNodePositions ()
 {
   NS_LOG_FUNCTION (this);
 
-  uint32_t nRooms;
-  uint32_t plantedEnb = 0;
-
-  MobilityHelper mobility;
   std::vector<Vector> enbPosition;
-  Ptr<ListPositionAllocator> positionAlloc;
-  Ptr<Building> building;
-  
-  positionAlloc = CreateObject<ListPositionAllocator> ();
-  mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+
+  MobilityHelper mobilityHelper;
+  mobilityHelper.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 
   // eNBs positions
-  nRooms = std::ceil (std::sqrt (m_nEnbs));
+  uint32_t plantedEnb = 0;
+  uint32_t nRooms = std::ceil (std::sqrt (m_nEnbs));
+  Ptr<ListPositionAllocator> enbPosAllocator = CreateObject<ListPositionAllocator> ();
   for (uint32_t row = 0; row < nRooms; row++)
     {
       for (uint32_t column = 0; column < nRooms && plantedEnb < m_nEnbs; column++, plantedEnb++)
         {
-          Vector v (m_roomLength * (column + 0.5), m_roomLength * (row + 0.5), m_enbHeight);
-          positionAlloc->Add (v);
-          enbPosition.push_back (v);
-          mobility.Install (m_ueNodesPerEnb.at (plantedEnb));
+          Vector pos (m_roomLength * (column + 0.5), m_roomLength * (row + 0.5), m_enbHeight);
+          enbPosAllocator->Add (pos);
+          enbPosition.push_back (pos);
         }
     }
-  mobility.SetPositionAllocator (positionAlloc);
-  mobility.Install (m_enbNodes);
-  BuildingsHelper::Install (m_enbNodes);
+  mobilityHelper.SetPositionAllocator (enbPosAllocator);
+  mobilityHelper.Install (m_enbNodes);
 
   // UEs positions for each eNB
+  Ptr<RandomBoxPositionAllocator> uePosAllocator;
+  Ptr<RandomVariableStream> posX, posY, posZ;
   for (uint32_t i = 0; i < m_nEnbs; i++)
     {
-      Ptr<UniformRandomVariable> posX = CreateObject<UniformRandomVariable> ();
-      posX->SetAttribute ("Min", DoubleValue (enbPosition.at(i).x - m_roomLength * 0.5));
-      posX->SetAttribute ("Max", DoubleValue (enbPosition.at(i).x + m_roomLength * 0.5));
-      
-      Ptr<UniformRandomVariable> posY = CreateObject<UniformRandomVariable> ();
-      posY->SetAttribute ("Min", DoubleValue (enbPosition.at(i).y - m_roomLength * 0.5));
-      posY->SetAttribute ("Max", DoubleValue (enbPosition.at(i).y + m_roomLength * 0.5));
-      
-      positionAlloc = CreateObject<ListPositionAllocator> ();
-      for (uint32_t j = 0; j < m_nUesPerEnb.at (i); j++)
+      if (m_fixedUes)
         {
-          positionAlloc->Add (Vector (posX->GetValue (), posY->GetValue (), m_ueHeight));
+          posX = CreateObjectWithAttributes<ConstantRandomVariable> (
+              "Constant", DoubleValue (enbPosition.at (i).x)); 
+          posY = CreateObjectWithAttributes<ConstantRandomVariable> (
+              "Constant", DoubleValue (enbPosition.at (i).y)); 
+          posZ = CreateObjectWithAttributes<ConstantRandomVariable> (
+              "Constant", DoubleValue (m_ueHeight)); 
         }
-      mobility.SetPositionAllocator (positionAlloc);
-      mobility.Install (m_ueNodesPerEnb.at (i));
-      BuildingsHelper::Install (m_ueNodesPerEnb.at (i));
+      else
+        {
+          posX = CreateObjectWithAttributes<UniformRandomVariable> (
+              "Min", DoubleValue (enbPosition.at (i).x - m_roomLength * 0.5),
+              "Max", DoubleValue (enbPosition.at (i).x + m_roomLength * 0.5));
+          posY = CreateObjectWithAttributes<UniformRandomVariable> (
+              "Min", DoubleValue (enbPosition.at (i).y - m_roomLength * 0.5),
+              "Max", DoubleValue (enbPosition.at (i).y + m_roomLength * 0.5));
+          posZ = CreateObjectWithAttributes<ConstantRandomVariable> (
+              "Constant", DoubleValue (m_ueHeight));
+        }
+      uePosAllocator = CreateObjectWithAttributes<RandomBoxPositionAllocator> (
+          "X", PointerValue (posX),
+          "Y", PointerValue (posY),
+          "Z", PointerValue (posZ));
+      mobilityHelper.SetPositionAllocator (uePosAllocator);
+      mobilityHelper.Install (m_ueNodesPerEnb.at (i));
     }
-  BuildingsHelper::MakeMobilityModelConsistent ();
 }
-
 
 void
 LteSquaredGridNetwork::InstallProtocolStack ()
