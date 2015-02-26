@@ -21,10 +21,9 @@
 #include "openflow-epc-network.h"
 #include "openflow-epc-controller.h"
 
-NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcNetwork");
-
 namespace ns3 {
 
+NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcNetwork");
 NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcNetwork);
 
 DataRate

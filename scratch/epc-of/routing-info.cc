@@ -20,10 +20,9 @@
 
 #include "routing-info.h"
 
-NS_LOG_COMPONENT_DEFINE ("RoutingInfo");
-
 namespace ns3 {
 
+NS_LOG_COMPONENT_DEFINE ("RoutingInfo");
 NS_OBJECT_ENSURE_REGISTERED (ContextInfo);
 NS_OBJECT_ENSURE_REGISTERED (RoutingInfo);
 NS_OBJECT_ENSURE_REGISTERED (MeterInfo);

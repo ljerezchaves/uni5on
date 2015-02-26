@@ -31,8 +31,7 @@
 namespace ns3 {
 
 /**
- * \brief Squared grid LTE network (without EPC that should be created apart)
- * 
+ * Squared grid LTE network (without EPC that should be created apart).
  * This class generates a squared grid topology, placing a eNodeB at the
  * centre of each square. UEs attached to this node are scattered randomly
  * across the square (using a random uniform distribution along X and Y
@@ -41,43 +40,64 @@ namespace ns3 {
 class LteSquaredGridNetwork : public Object
 {
 public:
-  LteSquaredGridNetwork ();
-  virtual ~LteSquaredGridNetwork ();
+  LteSquaredGridNetwork ();           //!< Default constructor
+  virtual ~LteSquaredGridNetwork ();  //!< Dummy destructor, see DoDipose
 
-  // inherited from Object
+  /**
+   * Register this type.
+   * \return The object TypeId.
+   */
   static TypeId GetTypeId (void);
+  
+  /** Destructor implementation */
   virtual void DoDispose ();
 
+  /** \return the eNBs node container */
   NodeContainer GetEnbNodes ();
-  NodeContainer GetUeNodes ();
 
-  void EnableTraces ();
-  Ptr<LteHelper> CreateTopology (Ptr<EpcHelper> epcHelper, std::vector<uint32_t> nUes); 
-  Ptr<LteHelper> GetLteHelper ();
+  /** \return the UEs node container */
+  NodeContainer GetUeNodes ();
+  
+  /** \return the UEs NetDevice container */
   NetDeviceContainer GetUeDevices ();
 
+  /** \return the LteHelper used to create this LTE network */
+  Ptr<LteHelper> GetLteHelper ();
+
+  /** Enable LTE ascii traces */
+  void EnableTraces ();
+   
+  /**
+   * Creates the LTE radio tolopoly.
+   * \param epcHelper The EpcHelper used to create the LTE EPC core
+   * \param nUes A vector containing the number of UEs for each eNB.
+   * \return Ptr<LteHelper> The LteHelper used to create this LTE network.
+   */
+  Ptr<LteHelper> CreateTopology (Ptr<EpcHelper> epcHelper, 
+      std::vector<uint32_t> nUes); 
+
 private:
-  // Attributes
-  uint32_t m_nEnbs;
-  double m_enbHeight;
-  double m_ueHeight;
-  double m_roomLength;
-  bool m_fixedUes;
-
-  // Containers
-  NodeContainer m_enbNodes;
-  NodeContainer m_ueNodes;
-  NetDeviceContainer m_enbDevices;
-  NetDeviceContainer m_ueDevices;
-  std::vector<NodeContainer> m_ueNodesPerEnb;
-  std::vector<uint32_t> m_nUesPerEnb;
-
-  // Helpers
-  Ptr<LteHelper> m_lteHelper;
-  Ptr<EpcHelper> m_epcHelper;
-
+  /** Set eNBs and UEs positions */
   void SetLteNodePositions ();
+
+  /** Install the LTE protocol stack into each eNB and UE */
   void InstallProtocolStack ();
+
+  uint32_t  m_nEnbs;      //!< The number of eNBs
+  double    m_enbHeight;  //!< The eNB height
+  double    m_ueHeight;   //!< The UE height
+  double    m_roomLength; //!< The x,y distances between eNBs
+  bool      m_fixedUes;   //!< True to place all UEs at same eNB position
+
+  NodeContainer               m_enbNodes;       //!< eNB nodes
+  NodeContainer               m_ueNodes;        //!< UE nodes
+  NetDeviceContainer          m_enbDevices;     //!< eNB devices
+  NetDeviceContainer          m_ueDevices;      //!< UE devices
+  std::vector<NodeContainer>  m_ueNodesPerEnb;  //!< UE nodes for each eNB
+  std::vector<uint32_t>       m_nUesPerEnb;     //!< Number of UEs for each eNB 
+
+  Ptr<LteHelper> m_lteHelper; //!< LteHelper used to create the radio network
+  Ptr<EpcHelper> m_epcHelper; //!< EpcHelper used to create the EPC network
 };
 
 };  // namespace ns3

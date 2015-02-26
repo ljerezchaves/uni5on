@@ -129,7 +129,6 @@ private:
   uint16_t NextSwitchIndex (uint16_t current, 
       RingRoutingInfo::RoutingPath routingPath);
 
-
   RoutingStrategy   m_strategy;          //!< Routing strategy in use.
   double            m_bwFactor;          //!< Bandwidth saving factor
 };

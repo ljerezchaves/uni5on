@@ -22,8 +22,8 @@
 
 namespace ns3 {
 
-NS_OBJECT_ENSURE_REGISTERED (LteSquaredGridNetwork);
 NS_LOG_COMPONENT_DEFINE ("LteSquaredGridNetwork");
+NS_OBJECT_ENSURE_REGISTERED (LteSquaredGridNetwork);
 
 LteSquaredGridNetwork::LteSquaredGridNetwork ()
 {
@@ -90,10 +90,10 @@ LteSquaredGridNetwork::GetUeNodes ()
   return m_ueNodes;
 }
 
-void
-LteSquaredGridNetwork::EnableTraces ()
+NetDeviceContainer
+LteSquaredGridNetwork::GetUeDevices ()
 {
-  m_lteHelper->EnableTraces ();
+  return m_ueDevices;
 }
 
 Ptr<LteHelper>
@@ -133,10 +133,10 @@ LteSquaredGridNetwork::GetLteHelper ()
   return m_lteHelper;
 }
 
-NetDeviceContainer
-LteSquaredGridNetwork::GetUeDevices ()
+void
+LteSquaredGridNetwork::EnableTraces ()
 {
-  return m_ueDevices;
+  m_lteHelper->EnableTraces ();
 }
 
 void
@@ -152,12 +152,15 @@ LteSquaredGridNetwork::SetLteNodePositions ()
   // eNBs positions
   uint32_t plantedEnb = 0;
   uint32_t nRooms = std::ceil (std::sqrt (m_nEnbs));
-  Ptr<ListPositionAllocator> enbPosAllocator = CreateObject<ListPositionAllocator> ();
+  Ptr<ListPositionAllocator> enbPosAllocator = 
+      CreateObject<ListPositionAllocator> ();
   for (uint32_t row = 0; row < nRooms; row++)
     {
-      for (uint32_t column = 0; column < nRooms && plantedEnb < m_nEnbs; column++, plantedEnb++)
+      for (uint32_t column = 0; column < nRooms && plantedEnb < m_nEnbs; 
+          column++, plantedEnb++)
         {
-          Vector pos (m_roomLength * (column + 0.5), m_roomLength * (row + 0.5), m_enbHeight);
+          Vector pos (m_roomLength * (column + 0.5), 
+              m_roomLength * (row + 0.5), m_enbHeight);
           enbPosAllocator->Add (pos);
           enbPosition.push_back (pos);
         }
@@ -205,8 +208,8 @@ LteSquaredGridNetwork::InstallProtocolStack ()
   NS_ASSERT (m_epcHelper != 0);
   NS_ASSERT (m_lteHelper != 0);
 
-  // Installing LTE protocol stack on the eNBs
-  m_enbDevices = m_lteHelper->InstallEnbDevice (m_enbNodes);    // eNB <--> EPC connection
+  // Installing LTE protocol stack on the eNBs | eNB <-> EPC connection
+  m_enbDevices = m_lteHelper->InstallEnbDevice (m_enbNodes);   
   
   // For each eNB, installing LTE protocol stack on the UEs
   InternetStackHelper internet;
@@ -228,7 +231,8 @@ LteSquaredGridNetwork::InstallProtocolStack ()
           Names::Add (ueName.str(), n);
           Ptr<Ipv4StaticRouting> ueStaticRouting =
               ipv4RoutingHelper.GetStaticRouting (n->GetObject<Ipv4> ()); 
-          ueStaticRouting->SetDefaultRoute (m_epcHelper->GetUeDefaultGatewayAddress (), 1); 
+          ueStaticRouting->SetDefaultRoute (
+              m_epcHelper->GetUeDefaultGatewayAddress (), 1); 
         }
  
       // Attaching UEs to the respective eNB (this activates the default EPS bearer)

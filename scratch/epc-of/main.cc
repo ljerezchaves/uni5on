@@ -24,9 +24,9 @@
 #include <iostream>
 #include <string>
 
-NS_LOG_COMPONENT_DEFINE ("Main");
-
 using namespace ns3;
+
+NS_LOG_COMPONENT_DEFINE ("Main");
 
 void ConfigureDefaults ();
 void PrintCurrentTime ();
@@ -128,6 +128,4 @@ EnableVerbose ()
   LogComponentEnable ("VideoClient", LOG_LEVEL_WARN);
   LogComponentEnable ("VoipPeer", LOG_LEVEL_WARN);
 }
-
-
 

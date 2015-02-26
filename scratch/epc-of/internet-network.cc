@@ -20,12 +20,10 @@
 
 #include "internet-network.h"
 
-NS_LOG_COMPONENT_DEFINE ("InternetNetwork");
-
 namespace ns3 {
 
-NS_OBJECT_ENSURE_REGISTERED (InternetNetwork)
-  ;
+NS_LOG_COMPONENT_DEFINE ("InternetNetwork");
+NS_OBJECT_ENSURE_REGISTERED (InternetNetwork);
 
 InternetNetwork::InternetNetwork ()
 {
@@ -66,7 +64,8 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
 {
   NS_LOG_FUNCTION (this << pgw);
   
-  // Creating a single web node and connecting it to the EPC pgw over a PointToPoint link.
+  // Creating a single web node and connecting it to the EPC pgw over a
+  // PointToPoint link.
   Ptr<Node> webHost = CreateObject<Node> ();
   InternetStackHelper internet;
   internet.Install (webHost);
@@ -96,9 +95,7 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   Ptr<Ipv4StaticRouting> webHostStaticRouting =
       ipv4RoutingHelper.GetStaticRouting (webHost->GetObject<Ipv4> ());
   webHostStaticRouting->AddNetworkRouteTo (Ipv4Address ("7.0.0.0"), 
-                                           Ipv4Mask ("255.0.0.0"), 
-                                           Ipv4Address("192.168.0.1"), 1);
-  
+      Ipv4Mask ("255.0.0.0"), Ipv4Address("192.168.0.1"), 1);
   return webHost;
 }
 

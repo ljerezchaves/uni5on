@@ -28,15 +28,23 @@
 
 namespace ns3 {
 
-/** Create an Internet network. */
+/** 
+ * Create an Internet network, connecting a Web server 
+ * to the LTE EPC Packet Gateway. 
+ */
 class InternetNetwork : public Object
 {
 public:
-  InternetNetwork ();
-  virtual ~InternetNetwork ();
+  InternetNetwork ();           //!< Default constructor
+  virtual ~InternetNetwork ();  //!< Dummy destructor, see DoDipose
 
-  // inherited from Object
+  /**
+   * Register this type.
+   * \return The object TypeId.
+   */
   static TypeId GetTypeId (void);
+
+  /** Destructor implementation */
   virtual void DoDispose ();
 
   /**
@@ -48,29 +56,23 @@ public:
 
   /** 
    * Enable pcap on Internet links. 
+   * \param prefix Filename prefix to use for pcap files.
    */
   void EnablePcap (std::string prefix);
 
-  /**
-   * Get the name used by the server node
-   */
+  /** \return the name used by the server node */
   static const std::string GetServerName ();
 
-  /**
-   * Get the name used by the gateway node
-   */
+  /** \return the name used by the gateway node */
   static const std::string GetSgwPgwName ();
 
-
 private:
-  NodeContainer m_webNodes;
-  NetDeviceContainer m_webDevices;
-
-  PointToPointHelper m_p2pHeler;
-
-  DataRate m_LinkDataRate;
-  Time     m_LinkDelay;
-  uint16_t m_LinkMtu;
+  NodeContainer      m_webNodes;      //!< Internet nodes (server and gateway)
+  NetDeviceContainer m_webDevices;    //!< Internet devices
+  PointToPointHelper m_p2pHeler;      //!< Internet link helper
+  DataRate           m_LinkDataRate;  //!< Internet link data rate
+  Time               m_LinkDelay;     //!< Internet link delay
+  uint16_t           m_LinkMtu;       //!< Internet link MTU
 };
 
 };  // namespace ns3

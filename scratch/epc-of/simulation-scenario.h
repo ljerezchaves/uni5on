@@ -101,9 +101,8 @@ private:
    * Save application statistics in file. 
    * \see ns3::OpenFlowEpcController::AppQosTracedCallback for parameters.
    */
-  void ReportAppStats (std::string description, uint32_t teid,
-      Time duration, double lossRatio, Time delay, 
-      Time jitter, uint32_t bytes, DataRate goodput);
+  void ReportAppStats (std::string description, uint32_t teid, Time duration, 
+      double lossRatio, Time delay, Time jitter, uint32_t bytes, DataRate goodput);
 
   /**
    * Save block ratio statistics in file. 
@@ -131,13 +130,13 @@ private:
   /** Enable/Disable PCAP and ASCII traces. */
   void PcapAsciiTraces ();
 
-  Ptr<OpenFlowEpcNetwork> m_opfNetwork;       //!< LTE EPC network
+  Ptr<OpenFlowEpcNetwork>    m_opfNetwork;    //!< LTE EPC network
   Ptr<OpenFlowEpcController> m_controller;    //!< OpenFLow controller
-  Ptr<OpenFlowEpcHelper> m_epcHelper;         //!< LTE EPC helper
+  Ptr<OpenFlowEpcHelper>     m_epcHelper;     //!< LTE EPC helper
   Ptr<LteSquaredGridNetwork> m_lteNetwork;    //!< LTE radio network
-  Ptr<InternetNetwork> m_webNetwork;          //!< Internet network
-  Ptr<LteHelper> m_lteHelper;                 //!< LTE radio helper
-  Ptr<Node> m_webHost;                        //!< Internet server node
+  Ptr<InternetNetwork>       m_webNetwork;    //!< Internet network
+  Ptr<LteHelper>             m_lteHelper;     //!< LTE radio helper
+  Ptr<Node>                  m_webHost;       //!< Internet server node
   Ptr<UniformRandomVariable> m_rngStart;      //!< Random app start time
   
   NodeContainer         m_ueNodes;            //!< LTE UE nodes
@@ -161,8 +160,8 @@ private:
 
   static const std::string m_videoDir;        //!< Video trace directory
   static const std::string m_videoTrace [];   //!< Video trace filenames
-  static const uint64_t m_avgBitRate [];      //!< Video trace avg bitrate
-  static const uint64_t m_maxBitRate [];      //!< Video trace max bitrate
+  static const uint64_t    m_avgBitRate [];   //!< Video trace avg bitrate
+  static const uint64_t    m_maxBitRate [];   //!< Video trace max bitrate
 };
 
 };  // namespace ns3
