@@ -150,7 +150,7 @@ private:
   std::string           m_switchLog;          //!< Switches log level
   uint32_t              m_nEnbs;              //!< Number of eNBs
   uint16_t              m_nSwitches;          //!< Number of OpenFlow switches
-  bool                  m_pcapTraces;         //!< Enable pcap traces
+  bool                  m_traces;             //!< Enable pcap and ascii traces
   bool                  m_ping;               //!< Enable ping traffic
   bool                  m_voip;               //!< Enable voip traffic
   bool                  m_http;               //!< Enable http traffic

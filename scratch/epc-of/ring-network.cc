@@ -65,8 +65,9 @@ RingNetwork::GetTypeId (void)
                    MakeTimeAccessor (&RingNetwork::m_LinkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("LinkMtu", 
-                   "The MTU for CSMA OpenFlow links. Use at least 1500 bytes.",
-                   UintegerValue (2000),
+                   "The MTU for CSMA OpenFlow links. "
+                   "Consider + 40 byter of GTP/UDP/IP tunnel overhead.",
+                   UintegerValue (1540), // Ethernet II + GTP/UDP/IP tunnel
                    MakeUintegerAccessor (&RingNetwork::m_LinkMtu),
                    MakeUintegerChecker<uint16_t> ())
   ;
@@ -109,7 +110,7 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
     }
 
   // Installing the Openflow switch devices for each switch node
-  m_ofDevices = m_ofHelper.InstallSwitchesWithoutPorts (m_ofSwitches);
+  m_ofDevices = m_ofHelper->InstallSwitchesWithoutPorts (m_ofSwitches);
 
   // Configuring csma links to connect the switches
   m_ofCsmaHelper.SetChannelAttribute ("DataRate", 

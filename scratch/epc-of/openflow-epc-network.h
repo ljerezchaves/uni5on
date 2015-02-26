@@ -213,7 +213,7 @@ protected:
   Ptr<Node>                   m_ofCtrlNode;     //!< Controller node.
   NodeContainer               m_ofSwitches;     //!< Switch nodes.
   NetDeviceContainer          m_ofDevices;      //!< Switch devices.
-  OFSwitch13P2pHelper         m_ofHelper;       //!< OpenFlow helper.
+  Ptr<OFSwitch13Helper>       m_ofHelper;       //!< OpenFlow helper.
   CsmaHelper                  m_ofCsmaHelper;   //!< Csma helper.
   std::vector<uint16_t>       m_eNbSwitchIdx;   //!< Switch index for each eNB.
 

@@ -57,6 +57,8 @@ OpenFlowEpcNetwork::OpenFlowEpcNetwork ()
     m_ofCtrlNode (0)
 {
   NS_LOG_FUNCTION (this);
+  m_ofHelper = CreateObjectWithAttributes<OFSwitch13Helper> (
+      "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 }
 
 OpenFlowEpcNetwork::~OpenFlowEpcNetwork ()
@@ -79,6 +81,7 @@ OpenFlowEpcNetwork::DoDispose ()
   NS_LOG_FUNCTION (this);
   m_ofCtrlApp = 0;
   m_ofCtrlNode = 0;
+  m_ofHelper = 0;
   m_nodeSwitchMap.clear ();
   Object::DoDispose ();
 }
@@ -94,7 +97,7 @@ OpenFlowEpcNetwork::SetController (Ptr<OpenFlowEpcController> controller)
   m_ofCtrlNode = CreateObject<Node> ();
   Names::Add ("ctrl", m_ofCtrlNode);
 
-  m_ofHelper.InstallControllerApp (m_ofCtrlNode, m_ofCtrlApp);
+  m_ofHelper->InstallControllerApp (m_ofCtrlNode, m_ofCtrlApp);
   m_ofCtrlApp->SetOfNetwork (this);
 }
 
@@ -107,19 +110,19 @@ OpenFlowEpcNetwork::EnableDataPcap (std::string prefix, bool promiscuous)
 void 
 OpenFlowEpcNetwork::EnableOpenFlowPcap (std::string prefix)
 {
-  m_ofHelper.EnableOpenFlowPcap (prefix);
+  m_ofHelper->EnableOpenFlowPcap (prefix);
 }
 
 void 
 OpenFlowEpcNetwork::EnableOpenFlowAscii (std::string prefix)
 {
-  m_ofHelper.EnableOpenFlowAscii (prefix);
+  m_ofHelper->EnableOpenFlowAscii (prefix);
 }
 
 void 
 OpenFlowEpcNetwork::EnableDatapathLogs (std::string level)
 {
-  m_ofHelper.EnableDatapathLogs (level);
+  m_ofHelper->EnableDatapathLogs (level);
 }
 
 CsmaHelper
@@ -162,7 +165,7 @@ void
 OpenFlowEpcNetwork::SetSwitchDeviceAttribute (std::string n1, 
                                               const AttributeValue &v1)
 {
-  m_ofHelper.SetDeviceAttribute (n1, v1);
+  m_ofHelper->SetDeviceAttribute (n1, v1);
 } 
 
 Ptr<OFSwitch13NetDevice> 

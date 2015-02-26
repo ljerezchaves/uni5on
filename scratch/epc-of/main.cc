@@ -35,18 +35,19 @@ void EnableVerbose ();
 int 
 main (int argc, char *argv[])
 {
-  ConfigureDefaults ();
-
-  CommandLine cmd;
   bool verbose = false;
   bool progress = false;
   uint32_t simTime = 60;
+  
+  ConfigureDefaults ();
+  
+  CommandLine cmd;
   cmd.AddValue ("verbose",    "Enable verbose output.", verbose);
   cmd.AddValue ("progress",   "Enable simulation time progress.", progress);
   cmd.AddValue ("simtime",    "Simulation time (seconds).", simTime);
   cmd.AddValue ("statsfile",  "ns3::SimulationScenario::StatsFilename"); 
   cmd.AddValue ("topofile",   "ns3::SimulationScenario::TopoFilename");
-  cmd.AddValue ("trace",      "ns3::SimulationScenario::PcapTraces");
+  cmd.AddValue ("trace",      "ns3::SimulationScenario::Traces");
   cmd.AddValue ("liblog",     "ns3::SimulationScenario::SwitchLogs");
   cmd.AddValue ("ping",       "ns3::SimulationScenario::PingTraffic");
   cmd.AddValue ("http",       "ns3::SimulationScenario::HttpTraffic");
@@ -55,7 +56,7 @@ main (int argc, char *argv[])
   cmd.Parse (argc, argv);
   
   if (progress) Simulator::Schedule (Seconds (0), &PrintCurrentTime);
-  if (verbose) EnableVerbose ();
+  if (verbose)  EnableVerbose ();
  
   Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
   scenario->BuildRingTopology ();
@@ -80,10 +81,11 @@ ConfigureDefaults ()
   Config::SetDefault ("ns3::LteEnbNetDevice::DlEarfcn", UintegerValue (2750));
   Config::SetDefault ("ns3::LteEnbNetDevice::UlEarfcn", UintegerValue (20750));
 
-  // The defaul value for TCP MSS is 536, and there's no dynamic MTU discovery
-  // implemented yet. We defined this value to 1420, considering 1500 bytes for
-  // Ethernet payload and 80 bytes of headers (including GTP/UDP/IP tunnel).
-  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1420));
+  // The minimum (default) value for TCP MSS is 536, and there's no dynamic MTU
+  // discovery implemented yet in ns3. We defined this value to 1400,
+  // considering 1500 bytes for Ethernet v2 MTU, 8 bytes for PPPoE, 40 bytes
+  // for GTP/UDP/IP tunnel, and 52 byter for default TCP/IP headers. 
+  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1400));
 
   // Enabling checksum computations and packet metadata
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));

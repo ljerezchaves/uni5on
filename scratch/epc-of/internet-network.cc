@@ -42,7 +42,7 @@ InternetNetwork::GetTypeId (void)
     .SetParent<Object> ()
     .AddAttribute ("LinkDataRate", 
                    "The data rate to be used for the Internet PointToPoint link",
-                   DataRateValue (DataRate ("100Gb/s")),
+                   DataRateValue (DataRate ("10Gb/s")),
                    MakeDataRateAccessor (&InternetNetwork::m_LinkDataRate),
                    MakeDataRateChecker ())
     .AddAttribute ("LinkDelay", 
@@ -52,7 +52,7 @@ InternetNetwork::GetTypeId (void)
                    MakeTimeChecker ())
     .AddAttribute ("LinkMtu", 
                    "The MTU of the Internet PointToPoint link",
-                   UintegerValue (1500),
+                   UintegerValue (1492),  // PPPoE MTU 
                    MakeUintegerAccessor (&InternetNetwork::m_LinkMtu),
                    MakeUintegerChecker<uint16_t> ())
     ;

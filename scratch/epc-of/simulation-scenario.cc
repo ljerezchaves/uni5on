@@ -103,10 +103,10 @@ SimulationScenario::GetTypeId (void)
                    UintegerValue (0),
                    MakeUintegerAccessor (&SimulationScenario::m_nSwitches),
                    MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("PcapTraces",
-                   "Enable/Disable simulation pcap traces.",
+    .AddAttribute ("Traces",
+                   "Enable/Disable simulation pcap and ascii traces.",
                    BooleanValue (false),
-                   MakeBooleanAccessor (&SimulationScenario::m_pcapTraces),
+                   MakeBooleanAccessor (&SimulationScenario::m_traces),
                    MakeBooleanChecker ())
     .AddAttribute ("SwitchLogs",
                    "Set the ofsoftswitch log level.",
@@ -633,7 +633,7 @@ SimulationScenario::DatapathLogs ()
 void
 SimulationScenario::PcapAsciiTraces ()
 {
-  if (!m_pcapTraces) return;
+  if (!m_traces) return;
   NS_LOG_FUNCTION (this);
  
   m_webNetwork->EnablePcap ("internet");

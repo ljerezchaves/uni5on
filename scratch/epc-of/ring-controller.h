@@ -36,11 +36,14 @@ namespace ns3 {
 class RingController : public OpenFlowEpcController
 {
 public:
-  /** Routing strategy to find the paths in the ring. */
-  enum RoutingStrategy {
-    HOPS = 0,
-    BAND = 1
-  };
+  /** 
+   * Routing strategy to find the paths in the ring. 
+   */
+  enum RoutingStrategy 
+    {
+      HOPS = 0,   //!< Select the path based on number of hops
+      BAND = 1    //!< Select the path based on number of hops and bandwidth
+    };
     
   RingController ();        //!< Default constructor
   ~RingController ();       //!< Dummy destructor, see DoDipose
