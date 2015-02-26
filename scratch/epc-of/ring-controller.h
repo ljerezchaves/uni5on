@@ -58,7 +58,9 @@ public:
   void DoDispose ();
 
   // Inherited from OpenFlowEpcController
-  void NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo);
+  void NotifyNewAttachToSwitch (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, 
+      Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, uint32_t swtchPort);
+  void NotifyNewConnBtwnSwitches (const Ptr<ConnectionInfo> connInfo);
   void CreateSpanningTree ();
 
 protected:

@@ -61,13 +61,25 @@ RingController::DoDispose ()
   OpenFlowEpcController::DoDispose ();
 }
 
+void 
+RingController::NotifyNewAttachToSwitch (Ptr<NetDevice> nodeDev, 
+    Ipv4Address nodeIp, Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, 
+    uint32_t swtchPort)
+{
+  NS_LOG_FUNCTION (this << nodeIp << swtchIdx << swtchPort);
+
+  // Call base method which will save IP and configure local delivery
+  OpenFlowEpcController::NotifyNewAttachToSwitch (nodeDev, nodeIp, swtchDev, 
+          swtchIdx, swtchPort);
+}
+
 void
-RingController::NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo)
+RingController::NotifyNewConnBtwnSwitches (const Ptr<ConnectionInfo> connInfo)
 {
   NS_LOG_FUNCTION (this);
   
   // Call base method which will save connection information
-  OpenFlowEpcController::NotifyNewSwitchConnection (connInfo);
+  OpenFlowEpcController::NotifyNewConnBtwnSwitches (connInfo);
   
   // Installing default groups for RingController ring routing. Group
   // RingRoutingInfo::CLOCK is used to send packets from current switch to the

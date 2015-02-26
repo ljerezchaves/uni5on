@@ -73,25 +73,29 @@ public:
   double DumpGbrBlockStatistics ();
 
   /**
-   * Notify this controller of a new eNB IP device connected to the OpenFlow
-   * network over some switch port. This function will save the IP address /
-   * MAC address from this IP device for further ARP resolution. 
-   * \attention This dev is not the one added as port to switch. Instead, this
-   * is the 'other' end of this connection, associated with a eNB or SgwPgw
-   * node.
-   * \param dev The device connected to the OpenFlow network.
-   * \param ip The IPv4 address assigned to this device.
-   * \param switchIdx The switch index this device is attached to.
+   * Notify this controller of a new eNB or SgwPgw device connected to the
+   * OpenFlow network over some switch port. This function will save the IP
+   * address / MAC address from this new device for further ARP resolution, and
+   * will configure local port delivery. 
+   * \attention This nodeDev is not the one added as port to switch. Instead,
+   * this is the 'other' end of this connection, associated with a eNB or
+   * SgwPgw node.
+   * \param nodeDev The device connected to the OpenFlow switch.
+   * \param nodeIp The IPv4 address assigned to this device.
+   * \param swtchDev The OpenFlow switch device.
+   * \param swtchIdx The OpenFlow switch index.
+   * \param swtchPort The port number for nodeDev at OpenFlow switch.
    */
-  virtual void NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip, 
-      uint16_t switchIdx);
+  virtual void NotifyNewAttachToSwitch (Ptr<NetDevice> nodeDev, 
+      Ipv4Address nodeIp, Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, 
+      uint32_t swtchPort);
 
   /**
    * Notify this controller of a new connection between two switches in the
    * OpenFlow network. 
    * \param conInfo The connection information and metadata.
    */ 
-  virtual void NotifyNewSwitchConnection (const Ptr<ConnectionInfo> connInfo);
+  virtual void NotifyNewConnBtwnSwitches (const Ptr<ConnectionInfo> connInfo);
   
   /** 
    * Callback fired before creating new dedicated EPC bearers. This is used to
@@ -146,21 +150,6 @@ public:
    * \return true.
    */ 
   virtual bool NotifyAppStop (Ptr<Application> app);
-
-  /**
-   * Install flow table entry for local delivery when a new IP device is
-   * connected to the OpenFlow network.  This entry will match both MAC address
-   * and IP address for the device in order to output packets on device port.
-   * \attention This device is not the one added as port to switch. Instead,
-   * this is the 'other' end of this connection, associated with a eNB or
-   * SgwPgw node.
-   * \param swtch The Switch OFSwitch13NetDevice pointer.
-   * \param device The device connected to the OpenFlow network.
-   * \param deviceIp The IPv4 address assigned to this device.
-   * \param devicePort The number of switch port this device is attached to.
-   */
-  virtual void ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch,
-      Ptr<NetDevice> device, Ipv4Address deviceIp, uint32_t devicePort);   
 
   /**
    * To avoid flooding problems when broadcasting packets (like in ARP
@@ -351,6 +340,20 @@ private:
    * \param rInfo The routing information to save.
    */
   void SaveTeidRoutingInfo (Ptr<RoutingInfo> rInfo);
+
+  /**
+   * Install flow table entry for local delivery when a new IP device is
+   * connected to the OpenFlow network. This entry will match both MAC address
+   * and IP address for the device in order to output packets on device port.
+   * \param swtchDev The Switch OFSwitch13NetDevice pointer.
+   * \param nodeDev The device connected to the OpenFlow network.
+   * \param nodeIp The IPv4 address assigned to this device.
+   * \param swtchPort The number of switch port this device is attached to.
+   * \param priority The priority used to install local deliver rules.
+   */
+  void ConfigureLocalPortDelivery (Ptr<OFSwitch13NetDevice> swtchDev, 
+    Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, uint32_t swtchPort, 
+    uint16_t priority = 0xffff);   
 
   /**
    * Handle packet-in messages sent from switch with unknown TEID routing.

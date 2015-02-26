@@ -159,7 +159,7 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
       info->portNum1 = currPortNum;
       info->portNum2 = nextPortNum;
       info->maxDataRate = m_LinkDataRate;
-      m_ringCtrlApp->NotifyNewSwitchConnection (info);
+      m_ringCtrlApp->NotifyNewConnBtwnSwitches (info);
     }
   m_ringCtrlApp->CreateSpanningTree ();
 
@@ -216,10 +216,9 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   // Adding newly created csma device as openflow switch port.
   uint32_t portNum = swtchDev->AddSwitchPort (devices.Get (0));
 
-  // Notify controller of a new IP device and configure local traffic delivery.
-  m_ringCtrlApp->NotifyNewIpDevice (nodeDev, nodeIpAddress, switchIdx);
-  m_ringCtrlApp->ConfigurePortDelivery (swtchDev, nodeDev, nodeIpAddress, 
-                                        portNum);
+  // Notify controller of a new device
+  m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeIpAddress, swtchDev, 
+      switchIdx, portNum);
   return nodeDev;
 }
 
@@ -252,11 +251,9 @@ RingNetwork::AttachToX2 (Ptr<Node> node)
   // Adding newly created csma device as openflow switch port.
   uint32_t portNum = swtchDev->AddSwitchPort (devices.Get (0));
 
-  // Notify controller of a new IP device and configure flow table entry for
-  // local traffic delivery.
-  m_ringCtrlApp->NotifyNewIpDevice (nodeDev, nodeIpAddress, switchIdx);
-  m_ringCtrlApp->ConfigurePortDelivery (swtchDev, nodeDev, nodeIpAddress, 
-                                        portNum);
+  // Notify controller of a new device
+  m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeIpAddress, swtchDev, 
+      switchIdx, portNum);
   return nodeDev;
 }
 

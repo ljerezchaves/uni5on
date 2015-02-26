@@ -98,37 +98,40 @@ OpenFlowEpcController::DumpGbrBlockStatistics ()
 }
 
 void 
-OpenFlowEpcController::NotifyNewIpDevice (Ptr<NetDevice> dev, Ipv4Address ip, 
-    uint16_t switchIdx)
+OpenFlowEpcController::NotifyNewAttachToSwitch (Ptr<NetDevice> nodeDev, 
+    Ipv4Address nodeIp, Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, 
+    uint32_t swtchPort)
 {
-  NS_LOG_FUNCTION (this << dev << ip << switchIdx);
+  NS_LOG_FUNCTION (this << nodeIp << swtchIdx << swtchPort);
 
   { // Save the pair IP/MAC address in ARP table
-    Mac48Address macAddr = Mac48Address::ConvertFrom (dev->GetAddress ());
-    std::pair<Ipv4Address, Mac48Address> entry (ip, macAddr);
+    Mac48Address macAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ());
+    std::pair<Ipv4Address, Mac48Address> entry (nodeIp, macAddr);
     std::pair <IpMacMap_t::iterator, bool> ret;
     ret = m_arpTable.insert (entry);
     if (ret.second == false)
       {
         NS_FATAL_ERROR ("This IP already exists in ARP table.");
       }
-    NS_LOG_DEBUG ("New ARP entry: " << ip << " - " << macAddr);
+    NS_LOG_DEBUG ("New ARP entry: " << nodeIp << " - " << macAddr);
   }
 
   { // Save the pair IP/Switch index in switch table
-    std::pair<Ipv4Address, uint16_t> entry (ip, switchIdx);
+    std::pair<Ipv4Address, uint16_t> entry (nodeIp, swtchIdx);
     std::pair <IpSwitchMap_t::iterator, bool> ret;
     ret = m_ipSwitchTable.insert (entry);
     if (ret.second == false)
       {
         NS_FATAL_ERROR ("This IP already existis in switch index table.");
       }
-    NS_LOG_DEBUG ("New IP/Switch entry: " << ip << " - " << switchIdx);
+    NS_LOG_DEBUG ("New IP/Switch entry: " << nodeIp << " - " << swtchIdx);
   }
+
+  ConfigureLocalPortDelivery (swtchDev, nodeDev, nodeIp, swtchPort);
 }
 
 void
-OpenFlowEpcController::NotifyNewSwitchConnection (
+OpenFlowEpcController::NotifyNewConnBtwnSwitches (
     const Ptr<ConnectionInfo> connInfo)
 {
   NS_LOG_FUNCTION (this << connInfo);
@@ -341,20 +344,6 @@ OpenFlowEpcController::NotifyAppStop (Ptr<Application> app)
 
   DumpAppStatistics (app);
   return true;
-}
-
-void 
-OpenFlowEpcController::ConfigurePortDelivery (Ptr<OFSwitch13NetDevice> swtch, 
-    Ptr<NetDevice> device, Ipv4Address deviceIp, uint32_t devicePort)
-{
-  NS_LOG_FUNCTION (this << swtch << device << deviceIp << (int)devicePort);
-
-  Mac48Address devMacAddr = Mac48Address::ConvertFrom (device->GetAddress ());
-  std::ostringstream cmd;
-  cmd << "flow-mod cmd=add,table=0,prio=40000" <<
-         " eth_type=0x800,eth_dst=" << devMacAddr <<
-         ",ip_dst=" << deviceIp << " apply:output=" << devicePort;
-  DpctlCommand (swtch, cmd.str ());
 }
 
 uint16_t 
@@ -746,6 +735,21 @@ OpenFlowEpcController::SaveTeidRoutingInfo (Ptr<RoutingInfo> rInfo)
     {
       NS_FATAL_ERROR ("Existing routing information for teid " << rInfo->m_teid);
     }
+}
+
+void 
+OpenFlowEpcController::ConfigureLocalPortDelivery (
+    Ptr<OFSwitch13NetDevice> swtchDev, Ptr<NetDevice> nodeDev, 
+    Ipv4Address nodeIp, uint32_t swtchPort, uint16_t priority)
+{
+  NS_LOG_FUNCTION (this << swtchDev << nodeDev << nodeIp << swtchPort);
+
+  Mac48Address devMacAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ());
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=add,table=0,prio=" << priority <<
+         " eth_type=0x800,eth_dst=" << devMacAddr <<
+         ",ip_dst=" << nodeIp << " apply:output=" << swtchPort;
+  DpctlCommand (swtchDev, cmd.str ());
 }
 
 ofl_err
