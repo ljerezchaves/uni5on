@@ -34,7 +34,7 @@ class OpenFlowEpcController;
  * Metadata associated to a connection between 
  * two any switches in the OpenFlow network.
  */
-class ConnectionInfo : public SimpleRefCount<ConnectionInfo>
+class ConnectionInfo : public Object
 {
   friend class OpenFlowEpcNetwork;
   friend class RingNetwork;
@@ -42,24 +42,72 @@ class ConnectionInfo : public SimpleRefCount<ConnectionInfo>
   friend class RingController;
 
 public:
+ ConnectionInfo ();          //!< Default constructor
+  virtual ~ConnectionInfo (); //!< Dummy destructor, see DoDipose
+
+  /**
+   * Register this type.
+   * \return The object TypeId.
+   */
+  static TypeId GetTypeId (void);
+
+  /** Destructor implementation */
+  virtual void DoDispose ();
+
+  /**
+   * Reserve some bandwith between these two switches.
+   * \param dr The DataRate to reserve.
+   * \return True if everything is ok, false otherwise.
+   */
   bool ReserveDataRate (DataRate dr);   //!< Reserve bandwitdth
-  bool ReleaseDataRate (DataRate dr);   //!< Release reserved bandwitdth
+
+  /**
+   * Release some bandwith between these two switches.
+   * \param dr The DataRate to release.
+   * \return True if everything is ok, false otherwise.
+   */
+  bool ReleaseDataRate (DataRate dr);
+
+  /**
+   * Get the availabe bandwitdh between these two switches.
+   * \return True available DataRate.
+   */
   DataRate GetAvailableDataRate ();     //!< Get available bandwitdth 
-  DataRate GetAvailableDataRate (double bwFactor);  //!< BW with saving factor  
+
+  /**
+   * Get the availabe bandwitdh between these two switches, considering a
+   * saving reserve factor.
+   * \param bwFactor The bandwidth saving factor.
+   * \return True available DataRate.
+   */
+  DataRate GetAvailableDataRate (double bwFactor);
 
 protected:
-  uint16_t switchIdx1;                  //!< Switch index 1
-  uint16_t switchIdx2;                  //!< Switch index 2
-  Ptr<OFSwitch13NetDevice> switchDev1;  //!< Switch OpenFlow device 1
-  Ptr<OFSwitch13NetDevice> switchDev2;  //!< Switch OpenFlow device 2
-  Ptr<CsmaNetDevice> portDev1;          //!< OpenFlow port csma device 1
-  Ptr<CsmaNetDevice> portDev2;          //!< OpenFlow port csma device 1
-  uint32_t portNum1;                    //!< OpenFlow port number 1
-  uint32_t portNum2;                    //!< OpenFlow port number 2
-  DataRate maxDataRate;                 //!< Maximum nominal bandwidth (half-duplex)
-  DataRate reservedDataRate;            //!< Reserved bandwitdth (half-duplex)
+  /** Information associated to the first switch */
+  //\{
+  uint16_t switchIdx1;                  //!< Switch index
+  Ptr<OFSwitch13NetDevice> switchDev1;  //!< OpenFlow device
+  Ptr<CsmaNetDevice> portDev1;          //!< OpenFlow csma port device
+  uint32_t portNum1;                    //!< OpenFlow port number
+  //\}
+
+  /** Information associated to the second switch */
+  //\{
+  uint16_t switchIdx2;                  //!< Switch index
+  Ptr<OFSwitch13NetDevice> switchDev2;  //!< OpenFlow device
+  Ptr<CsmaNetDevice> portDev2;          //!< OpenFlow csma port device
+  uint32_t portNum2;                    //!< OpenFlow port number
+  //\}
+
+  /** Information associated to the connection between these two switches */
+  //\{
+  DataRate maxDataRate;         //!< Maximum nominal bandwidth (half-duplex)
+  DataRate reservedDataRate;    //!< Reserved bandwitdth (half-duplex)
+  //\}
 };
 
+
+// ------------------------------------------------------------------------ //
 /**
  * Create an OpenFlow network infrastrutcure to be used by
  * OpenFlowEpcHelper on LTE networks.

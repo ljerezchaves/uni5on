@@ -24,7 +24,34 @@
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcNetwork");
+NS_OBJECT_ENSURE_REGISTERED (ConnectionInfo);
 NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcNetwork);
+
+ConnectionInfo::ConnectionInfo ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+ConnectionInfo::~ConnectionInfo ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+TypeId 
+ConnectionInfo::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::ConnectionInfo")
+    .SetParent<Object> ()
+    .AddConstructor<ConnectionInfo> ()
+  ;
+  return tid;
+}
+
+void
+ConnectionInfo::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+}
 
 DataRate
 ConnectionInfo::GetAvailableDataRate ()
@@ -52,6 +79,8 @@ ConnectionInfo::ReleaseDataRate (DataRate dr)
   return (reservedDataRate >= 0);
 }
 
+
+// ------------------------------------------------------------------------ //
 OpenFlowEpcNetwork::OpenFlowEpcNetwork ()
   : m_ofCtrlApp (0),
     m_ofCtrlNode (0)

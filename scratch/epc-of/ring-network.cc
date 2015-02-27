@@ -149,7 +149,7 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
       nextPortNum = nextDevice->AddSwitchPort (nextPortDevice);
 
       // Notify the ring controller of this new connection.
-      Ptr<ConnectionInfo> info = Create<ConnectionInfo> ();
+      Ptr<ConnectionInfo> info = CreateObject<ConnectionInfo> ();
       info->switchIdx1 = currIndex;
       info->switchIdx2 = nextIndex;
       info->switchDev1 = currDevice;
