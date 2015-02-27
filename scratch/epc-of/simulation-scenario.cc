@@ -366,9 +366,10 @@ SimulationScenario::EnableVoipTraffic ()
       GbrQosInformation qos;
       // 2 bytes from compressed UDP/IP/RTP + 58 bytes from GTPU/UDP/IP/ETH
       qos.gbrDl = 8 * (pktSize + 2 + 58) / pktInterval; // ~ 17.0 Kbps
-      qos.mbrDl = 1.1 * qos.gbrDl;                      // ~ 18.7 Kbps (10 % more)
       qos.gbrUl = qos.gbrDl;
-      qos.mbrUl = qos.mbrDl;
+      // For now, no meter rules for VoIP traffic
+      // qos.mbrDl = 1.1 * qos.gbrDl; // ~ 18.7 Kbps (10 % more)
+      // qos.mbrUl = qos.mbrDl;
       EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
