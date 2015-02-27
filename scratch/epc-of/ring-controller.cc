@@ -44,9 +44,9 @@ RingController::GetTypeId (void)
     .AddAttribute ("Strategy", "The ring routing strategy.",
                    EnumValue (RingController::HOPS),
                    MakeEnumAccessor (&RingController::m_strategy),
-                   MakeEnumChecker (RingController::HOPS, "Hops",
-                                    RingController::BAND, "Bandwidth",
-                                    RingController::BOTH, "Both"))
+                   MakeEnumChecker (RingController::HOPS, "hops",
+                                    RingController::BAND, "bandwidth",
+                                    RingController::BOTH, "both"))
     .AddAttribute ("BwReserve", "Bandwitdth saving factor.",
                    DoubleValue (0.1),
                    MakeDoubleAccessor (&RingController::m_bwFactor),

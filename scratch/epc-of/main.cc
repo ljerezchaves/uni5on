@@ -53,6 +53,8 @@ main (int argc, char *argv[])
   cmd.AddValue ("http",       "ns3::SimulationScenario::HttpTraffic");
   cmd.AddValue ("voip",       "ns3::SimulationScenario::VoipTraffic");
   cmd.AddValue ("video",      "ns3::SimulationScenario::VideoTraffic");
+  cmd.AddValue ("strategy",   "ns3::RingController::Strategy");
+  cmd.AddValue ("bandwidth",  "ns3::RingNetwork::LinkDataRate");
   cmd.Parse (argc, argv);
   
   if (progress) Simulator::Schedule (Seconds (0), &PrintCurrentTime);
