@@ -26,10 +26,15 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcController");
 NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcController);
 
-const int OpenFlowEpcController::m_defaultTimeout = 0; 
-const int OpenFlowEpcController::m_dedicatedTimeout = 15;
-const int OpenFlowEpcController::m_defaultPriority = 100;  
-const int OpenFlowEpcController::m_dedicatedPriority = 1000;
+const int OpenFlowEpcController::m_defaultTmo = 0; 
+const int OpenFlowEpcController::m_dedicatedTmo = 15;
+
+const int OpenFlowEpcController::m_t0ArpPrio = 1;     // Check ConnectionStarted
+const int OpenFlowEpcController::m_t0GotoT1Prio = 2;  // Check ConnectionStarted
+const int OpenFlowEpcController::m_t1LocalDeliverPrio = 65520;
+const int OpenFlowEpcController::m_t1DedicatedStartPrio = 16384;
+const int OpenFlowEpcController::m_t1DefaultPrio = 128;
+const int OpenFlowEpcController::m_t1RingPrio = 32;
 
 OpenFlowEpcController::OpenFlowEpcController ()
   : m_gbrBearers (0),
@@ -79,7 +84,7 @@ OpenFlowEpcController::DoDispose ()
 const Time
 OpenFlowEpcController::GetDedicatedTimeout ()
 {
-  return Seconds (m_dedicatedTimeout);
+  return Seconds (m_dedicatedTmo);
 }
 
 void
@@ -202,8 +207,8 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   rInfo->m_sgwAddr = sgwAddr;
   rInfo->m_enbAddr = enbAddr;
   rInfo->m_app = 0;                       // No app for default bearer
-  rInfo->m_priority = m_defaultPriority;  // Priority for default bearer
-  rInfo->m_timeout = m_defaultTimeout;    // No timeout for default bearer
+  rInfo->m_priority = m_t1DefaultPrio;    // Priority for default bearer
+  rInfo->m_timeout = m_defaultTmo;        // No timeout for default bearer
   rInfo->m_isInstalled = false;           // Bearer rules not installed yet
   rInfo->m_isActive = true;               // Default bearer is always active
   rInfo->m_isDefault = true;              // This is a default bearer
@@ -241,8 +246,8 @@ OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
       rInfo->m_sgwAddr = cInfo->GetSgwAddr ();
       rInfo->m_enbAddr = cInfo->GetEnbAddr ();
       rInfo->m_app = app;                      // App for this dedicated bearer
-      rInfo->m_priority = m_dedicatedPriority; // Priority for dedicated bearer
-      rInfo->m_timeout = m_dedicatedTimeout;   // Timeout for dedicated bearer
+      rInfo->m_priority = m_t1DedicatedStartPrio; // Priority for dedicated bearer
+      rInfo->m_timeout = m_dedicatedTmo;       // Timeout for dedicated bearer
       rInfo->m_isInstalled = false;            // Switch rules not installed yet
       rInfo->m_isActive = false;               // Dedicated bearer not active yet
       rInfo->m_isDefault = false;              // This is a dedicated bearer
@@ -748,13 +753,13 @@ OpenFlowEpcController::SaveTeidRoutingInfo (Ptr<RoutingInfo> rInfo)
 void 
 OpenFlowEpcController::ConfigureLocalPortDelivery (
     Ptr<OFSwitch13NetDevice> swtchDev, Ptr<NetDevice> nodeDev, 
-    Ipv4Address nodeIp, uint32_t swtchPort, uint16_t priority)
+    Ipv4Address nodeIp, uint32_t swtchPort)
 {
   NS_LOG_FUNCTION (this << swtchDev << nodeDev << nodeIp << swtchPort);
 
   Mac48Address devMacAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ());
   std::ostringstream cmd;
-  cmd << "flow-mod cmd=add,table=0,prio=" << priority <<
+  cmd << "flow-mod cmd=add,table=0,prio=" << m_t1LocalDeliverPrio <<
          " eth_type=0x800,eth_dst=" << devMacAddr <<
          ",ip_dst=" << nodeIp << " apply:output=" << swtchPort;
   DpctlCommand (swtchDev, cmd.str ());

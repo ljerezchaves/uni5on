@@ -100,14 +100,14 @@ RingController::NotifyConnBtwnSwitchesOk ()
       Ptr<ConnectionInfo> connInfo = GetConnectionInfo (sw1, sw2);
 
       std::ostringstream cmd1;
-      cmd1 << "flow-mod cmd=add,table=1,flags=0x0002,prio=10" <<
-              " eth_type=0x800,ip_proto=17,in_port=" << connInfo->portNum1 <<
+      cmd1 << "flow-mod cmd=add,table=1,flags=0x0002,prio=" << m_t1RingPrio <<
+              " in_port=" << connInfo->portNum1 <<
               " apply:group=" << RingRoutingInfo::COUNTER;
       DpctlCommand (connInfo->switchDev1, cmd1.str ());
 
       std::ostringstream cmd2;
-      cmd2 << "flow-mod cmd=add,table=1,flags=0x0002,prio=10" <<
-              " eth_type=0x800,ip_proto=17,in_port=" << connInfo->portNum2 <<
+      cmd2 << "flow-mod cmd=add,table=1,flags=0x0002,prio=" << m_t1RingPrio <<
+              " in_port=" << connInfo->portNum2 <<
               " apply:group=" << RingRoutingInfo::CLOCK;
       DpctlCommand (connInfo->switchDev2, cmd2.str ());
     }

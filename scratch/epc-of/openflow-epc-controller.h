@@ -318,11 +318,24 @@ protected:
   virtual ofl_err HandlePacketIn (ofl_msg_packet_in*, SwitchInfo, uint32_t);
   virtual ofl_err HandleFlowRemoved (ofl_msg_flow_removed*, SwitchInfo, uint32_t);
 
-  // Protected members 
-  static const int m_defaultTimeout;    //!< Timeout for default bearers
-  static const int m_dedicatedTimeout;  //!< Timeout for dedicated bearers
-  static const int m_defaultPriority;   //!< Priority for default bearers 
-  static const int m_dedicatedPriority; //!< Priority for dedicated bearers 
+  /** Timeout values */
+  //\{ 
+  static const int m_defaultTmo;    //!< Timeout for default bearers
+  static const int m_dedicatedTmo;  //!< Timeout for dedicated bearers
+  //\}
+
+  /** Priority values */
+  //\{
+  // Table 0
+  static const int m_t0ArpPrio;           //!< ARP handling
+  static const int m_t0GotoT1Prio;        //!< GTP TEID handling (goto table 1)
+
+  // Table 1
+  static const int m_t1LocalDeliverPrio;  //!< Local delivery (to eNB/SgwPgw)
+  static const int m_t1DedicatedStartPrio;//!< Dedicated bearer (start value) 
+  static const int m_t1DefaultPrio;       //!< Default bearer
+  static const int m_t1RingPrio;          //!< Ring forward
+  //\}
 
 private:
   /**
@@ -355,11 +368,9 @@ private:
    * \param nodeDev The device connected to the OpenFlow network.
    * \param nodeIp The IPv4 address assigned to this device.
    * \param swtchPort The number of switch port this device is attached to.
-   * \param priority The priority used to install local deliver rules.
    */
   void ConfigureLocalPortDelivery (Ptr<OFSwitch13NetDevice> swtchDev, 
-    Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, uint32_t swtchPort, 
-    uint16_t priority = 0xfff0);  
+    Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, uint32_t swtchPort);  
 
   /**
    * Handle packet-in messages sent from switch with unknown TEID routing.
