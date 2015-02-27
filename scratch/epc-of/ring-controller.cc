@@ -258,9 +258,9 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
             NS_LOG_DEBUG (teid << ": available in short path: " << shortPathBw);
             if (shortPathBw >= request)
               {
+                shortPathBw = shortPathBw - request;
                 ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
                                   ringInfo->m_downPath, request);
-                shortPathBw = shortPathBw - request;
               }
             else
               {
@@ -272,7 +272,29 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
           }
         case RingController::BAND:
           {
-            NS_ABORT_MSG ("Not implemented yet.");
+            NS_LOG_DEBUG (teid << ": available in short path: " << shortPathBw);
+            NS_LOG_DEBUG (teid << ": available in long path: " << longPathBw);
+            if (shortPathBw >= longPathBw && shortPathBw >= request)
+              {
+                shortPathBw = shortPathBw - request;
+                ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
+                                  ringInfo->m_downPath, request);
+              }
+            else if (shortPathBw < longPathBw && longPathBw >= request)
+              {
+                // Let's invert the path and reserve the bandwidth
+                NS_LOG_DEBUG (teid << ": inverting from short to long path.");
+                ringInfo->InvertDownPath ();
+                longPathBw = longPathBw - request;
+                ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
+                                  ringInfo->m_downPath, request);
+              }
+            else
+              {
+                NS_LOG_WARN (teid << ": no resources. Block!");
+                IncreaseGbrBlocks ();
+                return false;
+              }
             break;
           }
         case RingController::BOTH:
@@ -281,9 +303,9 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
             NS_LOG_DEBUG (teid << ": available in long path: " << longPathBw);
             if (shortPathBw >= request)
               {
+                shortPathBw = shortPathBw - request;
                 ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
                                   ringInfo->m_downPath, request);
-                shortPathBw = shortPathBw - request;
               }
             // No available bandwitdh in short path. Let's check the long path.
             else if (longPathBw >= request)
@@ -291,9 +313,9 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
                 // Let's invert the path and reserve the bandwidth
                 NS_LOG_DEBUG (teid << ": inverting from short to long path.");
                 ringInfo->InvertDownPath ();
+                longPathBw = longPathBw - request;
                 ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
                                   ringInfo->m_downPath, request);
-                longPathBw = longPathBw - request;
               }
             else
               {
@@ -306,7 +328,6 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
         default:
           {
             NS_ABORT_MSG ("Invalid Routing strategy.");
-            break;
           }
       }
     }
@@ -341,7 +362,32 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
           }
         case RingController::BAND:
           {
-            NS_ABORT_MSG ("Not implemented yet.");
+            NS_LOG_DEBUG (teid << ": available in short path: " << shortPathBw);
+            NS_LOG_DEBUG (teid << ": available in long path: " << longPathBw);
+            if (shortPathBw >= longPathBw && shortPathBw >= request)
+              {
+                ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
+                                  ringInfo->m_upPath, request);
+              }
+            else if (shortPathBw < longPathBw && longPathBw >= request)
+              {
+                // Let's invert the path and reserve it 
+                NS_LOG_DEBUG (teid << ": inverting from short to long path.");
+                ringInfo->InvertUpPath ();
+                ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
+                                  ringInfo->m_upPath, request);
+              }
+            else
+              {
+                NS_LOG_WARN (teid << ": no resources. Block!");
+                if (gbrInfo->m_hasDown)
+                  {
+                    ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
+                        ringInfo->m_downPath, gbrInfo->m_downDataRate);
+                  }
+                IncreaseGbrBlocks ();
+                return false;
+              }
             break;
           }
         case RingController::BOTH:
@@ -378,7 +424,6 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
         default: 
           {
             NS_ABORT_MSG ("Invalid Routing strategy.");
-            break;
           }
       }
     }
