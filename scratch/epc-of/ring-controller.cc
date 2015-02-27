@@ -148,97 +148,73 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
   // Configuring downlink routing
   if (!rInfo->m_app || rInfo->m_app->GetDirection () != Application::UPLINK)
     {
+      std::ostringstream match, inst;
+
+      // In downlink the input switch is the gateway
+      uint16_t swIdx = rInfo->m_sgwIdx;
+   
       // Building the match string
-      std::ostringstream match;
       match << " eth_type=0x800,ip_proto=17" << 
                ",ip_src=" << rInfo->m_sgwAddr <<
                ",ip_dst=" << rInfo->m_enbAddr <<
                ",gtp_teid=" << rInfo->m_teid;
 
-      // Building the output instruction string
-      std::ostringstream inst;
-      inst << " apply:group=" << ringInfo->m_downPath;
-
-      // In downlink we start at gateway switch
-      uint16_t current = rInfo->m_sgwIdx;
-  
-      // When necessary, install the meter rule just in gateway switch
+      // Check for meter entry
       if (meterInfo && meterInfo->m_hasDown)
         {
           if (!meterInfo->m_isInstalled)
             {
               // Install the meter entry
-              DpctlCommand (GetSwitchDevice (current), meterInfo->GetDownAddCmd ());
+              DpctlCommand (GetSwitchDevice (swIdx), meterInfo->GetDownAddCmd ());
               meterInstalled = true;
             }
 
-          // Building the meter apply instruction string
-          std::ostringstream meterInst;
-          meterInst << " meter:" << rInfo->m_teid;
-
-          std::string commandStr = args.str () + match.str () + 
-              meterInst.str () + inst.str ();
-
-          // Installing the rules for gateway
-          DpctlCommand (GetSwitchDevice (current), commandStr);
-          current = NextSwitchIndex (current, ringInfo->m_downPath);
+          // Building the meter instruction string
+          inst << " meter:" << rInfo->m_teid;
         }
 
-      // // Keep installing the rule at every switch in path
-      // std::string commandStr = args.str () + match.str () + inst.str ();
-      // while (current != rInfo->m_enbIdx)
-      //   {
-      //     DpctlCommand (GetSwitchDevice (current), commandStr);
-      //     current = NextSwitchIndex (current, ringInfo->m_downPath);
-      //   }
+      // Building the output instruction string
+      inst << " apply:group=" << ringInfo->m_downPath;
+     
+      // Installing the rule into input switch
+      std::string commandStr = args.str () + match.str () + inst.str ();
+      DpctlCommand (GetSwitchDevice (swIdx), commandStr);
     }
     
   // Configuring uplink routing
   if (!rInfo->m_app || rInfo->m_app->GetDirection () != Application::DOWNLINK)
     {
+      std::ostringstream match, inst;
+
+      // In uplink the input switch is the eNB
+      uint16_t swIdx = rInfo->m_enbIdx;
+
       // Building the match string
-      std::ostringstream match;
       match << " eth_type=0x800,ip_proto=17" << 
                ",ip_src=" << rInfo->m_enbAddr <<
                ",ip_dst=" << rInfo->m_sgwAddr <<
                ",gtp_teid=" << rInfo->m_teid;
 
-      // Building the output instruction string
-      std::ostringstream inst;
-      inst << " apply:group=" << ringInfo->m_upPath;
-
-      // In uplink we start at eNB switch
-      uint16_t current = rInfo->m_enbIdx;
-
-      // When necessary, install the meter rule just in eNB switch
+      // Check for meter entry
       if (meterInfo && meterInfo->m_hasUp)
         {
            if (!meterInfo->m_isInstalled)
             {
               // Install the meter entry
-              DpctlCommand (GetSwitchDevice (current), meterInfo->GetUpAddCmd ());
+              DpctlCommand (GetSwitchDevice (swIdx), meterInfo->GetUpAddCmd ());
               meterInstalled = true;
             }
 
-          // Building the meter apply instruction string
-          std::ostringstream meterInst;
-          meterInst << " meter:" << rInfo->m_teid;
-
-          std::string commandStr = args.str () + match.str () + 
-              meterInst.str () + inst.str ();
-
-          // Installing the rules for gateway
-          DpctlCommand (GetSwitchDevice (current), commandStr);
-          current = NextSwitchIndex (current, ringInfo->m_upPath);
+          // Building the meter instruction string
+          inst << " meter:" << rInfo->m_teid;
         }
+            
+      // Building the output instruction string
+      inst << " apply:group=" << ringInfo->m_upPath;
 
-      // // Keep installing the rule at every switch in path
-      // std::string commandStr = args.str () + match.str () + inst.str ();
-      // while (current != rInfo->m_sgwIdx)
-      //   {
-      //     DpctlCommand (GetSwitchDevice (current), commandStr);
-      //     current = NextSwitchIndex (current, ringInfo->m_upPath);
-      //   }
+      // Installing the rule into input switch
+      std::string commandStr = args.str () + match.str () + inst.str ();
+      DpctlCommand (GetSwitchDevice (swIdx), commandStr);
     }
 
   // Updating meter installation flag
