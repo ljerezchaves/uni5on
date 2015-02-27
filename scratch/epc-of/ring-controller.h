@@ -42,7 +42,8 @@ public:
   enum RoutingStrategy 
     {
       HOPS = 0,   //!< Select the path based on number of hops
-      BAND = 1    //!< Select the path based on number of hops and bandwidth
+      BAND = 1,   //!< Select the path based on available bandwidth
+      BOTH = 2    //!< Select the path based on hops and bandwidth
     };
     
   RingController ();        //!< Default constructor

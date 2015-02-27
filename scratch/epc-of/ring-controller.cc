@@ -45,7 +45,8 @@ RingController::GetTypeId (void)
                    EnumValue (RingController::HOPS),
                    MakeEnumAccessor (&RingController::m_strategy),
                    MakeEnumChecker (RingController::HOPS, "Hops",
-                                    RingController::BAND, "Bandwidth"))
+                                    RingController::BAND, "Bandwidth",
+                                    RingController::BOTH, "Both"))
     .AddAttribute ("BwReserve", "Bandwitdth saving factor.",
                    DoubleValue (0.1),
                    MakeDoubleAccessor (&RingController::m_bwFactor),
@@ -235,154 +236,152 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
   Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
   uint32_t teid = rInfo->m_teid;
-  DataRate available, request;
-  bool downOk = true;
-  bool upOk = true;
   
   IncreaseGbrRequest ();
-  ringInfo->ResetPaths ();
-  
+  ringInfo->ResetPaths ();    // Reset to short paths
+ 
+  // Getting available bandwidth in both paths
+  DataRate shortPathBw = GetAvailableBandwidth (rInfo->m_sgwIdx, 
+      rInfo->m_enbIdx, ringInfo->m_downPath);
+  DataRate longPathBw = GetAvailableBandwidth (rInfo->m_sgwIdx, 
+      rInfo->m_enbIdx, RingRoutingInfo::InvertPath (ringInfo->m_downPath));
+
   // Reserving downlink resources
   if (gbrInfo->m_hasDown)
     {
-      downOk = false;
-      
-      request = gbrInfo->m_downDataRate;
+      DataRate request = gbrInfo->m_downDataRate;
       NS_LOG_DEBUG (teid << ": downlink request: " << request);
-      available = GetAvailableBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
-          ringInfo->m_downPath);
-      NS_LOG_DEBUG (teid << ": available in current path: " << available);
 
-      if (available >= request)
-        {
-          // Let's reserve it
-          downOk = ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
-              ringInfo->m_downPath, request);
-        }
-      else
-        {
-          // We don't have the available bandwitdh for this bearer in current
-          // path.  Let's check the routing strategy and see if we can change
-          // the route.
-          switch (m_strategy)
-            {
-              case RingController::HOPS:
-                {
-                  NS_LOG_WARN (teid << ": no resources. Block!");
-                  IncreaseGbrBlocks ();
-                  break;
-                }
-        
-              case RingController::BAND:
-                {
-                  NS_LOG_DEBUG (teid << ": checking the other path.");
-                  available = GetAvailableBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
-                      RingRoutingInfo::InvertPath (ringInfo->m_downPath));
-                  NS_LOG_DEBUG (teid << ": available in other path: " << available);
-        
-                  if (available >= request)
-                    {
-                      // Let's invert the path and reserve it 
-                      NS_LOG_DEBUG (teid << ": inverting down path.");
-                      ringInfo->InvertDownPath ();
-                      downOk = ReserveBandwidth (rInfo->m_sgwIdx, 
-                          rInfo->m_enbIdx, ringInfo->m_downPath, request);
-                    }
-                  else
-                    {
-                      NS_LOG_WARN (teid << ": no resources. Block!");
-                      IncreaseGbrBlocks ();
-                    }
-                  break;
-                }
-
-              default:
-                {
-                  NS_ABORT_MSG ("Invalid Routing strategy.");
-                }
-            }
-        }
-  
-      // Check for success in downlink reserve
-      if (!downOk)
-        {
-          return false;
-        }
+      switch (m_strategy) {
+        case RingController::HOPS: 
+          {
+            NS_LOG_DEBUG (teid << ": available in short path: " << shortPathBw);
+            if (shortPathBw >= request)
+              {
+                ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
+                                  ringInfo->m_downPath, request);
+                shortPathBw = shortPathBw - request;
+              }
+            else
+              {
+                NS_LOG_WARN (teid << ": no resources. Block!");
+                IncreaseGbrBlocks ();
+                return false;
+              }
+            break;
+          }
+        case RingController::BAND:
+          {
+            NS_ABORT_MSG ("Not implemented yet.");
+            break;
+          }
+        case RingController::BOTH:
+          {
+            NS_LOG_DEBUG (teid << ": available in short path: " << shortPathBw);
+            NS_LOG_DEBUG (teid << ": available in long path: " << longPathBw);
+            if (shortPathBw >= request)
+              {
+                ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
+                                  ringInfo->m_downPath, request);
+                shortPathBw = shortPathBw - request;
+              }
+            // No available bandwitdh in short path. Let's check the long path.
+            else if (longPathBw >= request)
+              {
+                // Let's invert the path and reserve the bandwidth
+                NS_LOG_DEBUG (teid << ": inverting from short to long path.");
+                ringInfo->InvertDownPath ();
+                ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
+                                  ringInfo->m_downPath, request);
+                longPathBw = longPathBw - request;
+              }
+            else
+              {
+                NS_LOG_WARN (teid << ": no resources. Block!");
+                IncreaseGbrBlocks ();
+                return false;
+              }
+            break;
+          }
+        default:
+          {
+            NS_ABORT_MSG ("Invalid Routing strategy.");
+            break;
+          }
+      }
     }
 
   // Reserving uplink resources
   if (gbrInfo->m_hasUp)
     {
-      upOk = false;
-      
-      request = gbrInfo->m_upDataRate;
+      DataRate request = gbrInfo->m_upDataRate;
       NS_LOG_DEBUG (teid << ": uplink request: " << request);
-      available = GetAvailableBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
-          ringInfo->m_upPath);
-      NS_LOG_DEBUG (teid << ": available in current path: " << available);
-
-      if (available >= request)
-        {
-          // Let's reserve it
-          upOk = ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
-              ringInfo->m_upPath, request);
-        }
-      else
-        {
-          // We don't have the available bandwitdh for this bearer in current
-          // path.  Let's check the routing strategy and see if we can change
-          // the route.
-          switch (m_strategy)
-            {
-              case RingController::HOPS:
-                {
-                  NS_LOG_WARN (teid << ": no resources. Block!");
-                  IncreaseGbrBlocks ();
-                  break;
-                }
-        
-              case RingController::BAND:
-                {
-                  NS_LOG_DEBUG (teid << ": checking the other path.");
-                  available = GetAvailableBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx,
-                      RingRoutingInfo::InvertPath (ringInfo->m_upPath));
-                  NS_LOG_DEBUG (teid << ": available in other path: " << available);
-        
-                  if (available >= request)
-                    {
-                      // Let's invert the path and reserve it 
-                      NS_LOG_DEBUG (teid << ": inverting up path.");
-                      ringInfo->InvertUpPath ();
-                      upOk = ReserveBandwidth (rInfo->m_enbIdx, 
-                          rInfo->m_sgwIdx, ringInfo->m_upPath, request);
-                    }
-                  else
-                    {
-                      NS_LOG_WARN (teid << ": no resources. Block!");
-                      IncreaseGbrBlocks ();
-                    }
-                  break;
-                }
-
-              default:
-                {
-                  NS_ABORT_MSG ("Invalid Routing strategy.");
-                }
-            }
-        }
-
-      // Check for success in uplink reserve.
-      if (!upOk)
-        {
-          if (gbrInfo->m_hasDown && downOk)
-            {
-              ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
-                  ringInfo->m_downPath, request);
-            }
-          return false;
-        }
+ 
+      switch (m_strategy) {
+        case RingController::HOPS: 
+          {
+            NS_LOG_DEBUG (teid << ": available in short path: " << shortPathBw);
+            if (shortPathBw >= request)
+              {
+                ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
+                                  ringInfo->m_upPath, request);
+              }
+            else
+              {
+                NS_LOG_WARN (teid << ": no resources. Block!");
+                if (gbrInfo->m_hasDown)
+                  {
+                    ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
+                        ringInfo->m_downPath, gbrInfo->m_downDataRate);
+                  }
+                IncreaseGbrBlocks ();
+                return false;
+              }
+            break;
+          }
+        case RingController::BAND:
+          {
+            NS_ABORT_MSG ("Not implemented yet.");
+            break;
+          }
+        case RingController::BOTH:
+          {
+            NS_LOG_DEBUG (teid << ": available in short path: " << shortPathBw);
+            NS_LOG_DEBUG (teid << ": available in long path: " << longPathBw);
+            if (shortPathBw >= request)
+              {
+                ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
+                                  ringInfo->m_upPath, request);
+              }
+            // No available bandwitdh in short path. Let's check the long path.
+            else if (longPathBw >= request)
+              {
+                // Let's invert the path and reserve it 
+                NS_LOG_DEBUG (teid << ": inverting from short to long path.");
+                ringInfo->InvertUpPath ();
+                ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
+                                  ringInfo->m_upPath, request);
+              }
+            else
+              {
+                NS_LOG_WARN (teid << ": no resources. Block!");
+                if (gbrInfo->m_hasDown)
+                  {
+                    ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
+                        ringInfo->m_downPath, gbrInfo->m_downDataRate);
+                  }
+                IncreaseGbrBlocks ();
+                return false;
+              }
+            break;
+          }
+        default: 
+          {
+            NS_ABORT_MSG ("Invalid Routing strategy.");
+            break;
+          }
+      }
     }
-  NS_ASSERT_MSG (downOk && upOk, "Error during GBR reserve.");
   gbrInfo->m_isReserved = true;
   return true;
 }
@@ -413,7 +412,7 @@ RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
     {
       // This is the first time in simulation we are querying ring information
       // for this bearer. Let's create and aggregate it's ring routing
-      // metadata.
+      // metadata. Considering the default down path the one with lower hops.
       RingRoutingInfo::RoutingPath downPath = 
           FindShortestPath (rInfo->m_sgwIdx, rInfo->m_enbIdx);
       ringInfo = CreateObject<RingRoutingInfo> (rInfo, downPath);
