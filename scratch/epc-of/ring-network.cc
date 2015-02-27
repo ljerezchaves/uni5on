@@ -161,8 +161,8 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
       info->maxDataRate = m_LinkDataRate;
       m_ringCtrlApp->NotifyNewConnBtwnSwitches (info);
     }
-  m_ringCtrlApp->CreateSpanningTree ();
 
+  m_ringCtrlApp->NotifyConnBtwnSwitchesOk ();
   created = true;
 }
 

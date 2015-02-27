@@ -58,16 +58,15 @@ public:
   void DoDispose ();
 
   // Inherited from OpenFlowEpcController
-  void NotifyNewAttachToSwitch (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, 
-      Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, uint32_t swtchPort);
   void NotifyNewConnBtwnSwitches (const Ptr<ConnectionInfo> connInfo);
-  void CreateSpanningTree ();
+  void NotifyConnBtwnSwitchesOk ();
 
 protected:
   // Inherited from OpenFlowEpcController
   bool InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer);
   bool GbrBearerRequest (Ptr<RoutingInfo> rInfo);
   bool GbrBearerRelease (Ptr<RoutingInfo> rInfo);
+  void CreateSpanningTree ();
 
 private:
   /** 

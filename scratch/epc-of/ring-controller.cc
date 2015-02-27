@@ -61,18 +61,6 @@ RingController::DoDispose ()
   OpenFlowEpcController::DoDispose ();
 }
 
-void 
-RingController::NotifyNewAttachToSwitch (Ptr<NetDevice> nodeDev, 
-    Ipv4Address nodeIp, Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, 
-    uint32_t swtchPort)
-{
-  NS_LOG_FUNCTION (this << nodeIp << swtchIdx << swtchPort);
-
-  // Call base method which will save IP and configure local delivery
-  OpenFlowEpcController::NotifyNewAttachToSwitch (nodeDev, nodeIp, swtchDev, 
-          swtchIdx, swtchPort);
-}
-
 void
 RingController::NotifyNewConnBtwnSwitches (const Ptr<ConnectionInfo> connInfo)
 {
@@ -97,33 +85,32 @@ RingController::NotifyNewConnBtwnSwitches (const Ptr<ConnectionInfo> connInfo)
   DpctlCommand (connInfo->switchDev2, cmd2.str ());
 }
 
-void
-RingController::CreateSpanningTree ()
+void 
+RingController::NotifyConnBtwnSwitchesOk ()
 {
   NS_LOG_FUNCTION (this);
-
-  // Let's configure one single link to drop packets when flooding over ports
-  // (OFPP_FLOOD). Here we are disabling the farthest gateway link,
-  // configuring its ports to OFPPC_NO_FWD flag (0x20).
   
-  uint16_t half = (GetNSwitches () / 2);
-  Ptr<ConnectionInfo> connInfo = GetConnectionInfo (half, half+1);
-  NS_LOG_DEBUG ("Disabling link from " << half << " to " << 
-                 half+1 << " for broadcast messages.");
-  
-  Mac48Address macAddr1;
-  macAddr1 = Mac48Address::ConvertFrom (connInfo->portDev1->GetAddress ());
-  std::ostringstream cmd1;
-  cmd1 << "port-mod port=" << connInfo->portNum1 << ",addr=" << 
-           macAddr1 << ",conf=0x00000020,mask=0x00000020";
-  DpctlCommand (connInfo->switchDev1, cmd1.str ());
+  CreateSpanningTree ();
 
-  Mac48Address macAddr2;
-  macAddr2 = Mac48Address::ConvertFrom (connInfo->portDev2->GetAddress ());
-  std::ostringstream cmd2;
-  cmd2 << "port-mod port=" << connInfo->portNum2 << ",addr=" << 
-           macAddr2 << ",conf=0x00000020,mask=0x00000020";
-  DpctlCommand (connInfo->switchDev2, cmd2.str ());
+  // Configure routes to keep forwarding packets already in the ring until they
+  // reach the destination switch.
+  for (uint16_t sw1 = 0; sw1 < GetNSwitches (); sw1++)
+    {
+      uint16_t sw2 = (sw1 + 1) % GetNSwitches ();  // Next clockwise node
+      Ptr<ConnectionInfo> connInfo = GetConnectionInfo (sw1, sw2);
+
+      std::ostringstream cmd1;
+      cmd1 << "flow-mod cmd=add,table=1,flags=0x0002,prio=10" <<
+              " eth_type=0x800,ip_proto=17,in_port=" << connInfo->portNum1 <<
+              " apply:group=" << RingRoutingInfo::COUNTER;
+      DpctlCommand (connInfo->switchDev1, cmd1.str ());
+
+      std::ostringstream cmd2;
+      cmd2 << "flow-mod cmd=add,table=1,flags=0x0002,prio=10" <<
+              " eth_type=0x800,ip_proto=17,in_port=" << connInfo->portNum2 <<
+              " apply:group=" << RingRoutingInfo::CLOCK;
+      DpctlCommand (connInfo->switchDev2, cmd2.str ());
+    }
 }
 
 bool 
@@ -197,13 +184,13 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
           current = NextSwitchIndex (current, ringInfo->m_downPath);
         }
 
-      // Keep installing the rule at every switch in path
-      std::string commandStr = args.str () + match.str () + inst.str ();
-      while (current != rInfo->m_enbIdx)
-        {
-          DpctlCommand (GetSwitchDevice (current), commandStr);
-          current = NextSwitchIndex (current, ringInfo->m_downPath);
-        }
+      // // Keep installing the rule at every switch in path
+      // std::string commandStr = args.str () + match.str () + inst.str ();
+      // while (current != rInfo->m_enbIdx)
+      //   {
+      //     DpctlCommand (GetSwitchDevice (current), commandStr);
+      //     current = NextSwitchIndex (current, ringInfo->m_downPath);
+      //   }
     }
     
   // Configuring uplink routing
@@ -245,13 +232,13 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
           current = NextSwitchIndex (current, ringInfo->m_upPath);
         }
 
-      // Keep installing the rule at every switch in path
-      std::string commandStr = args.str () + match.str () + inst.str ();
-      while (current != rInfo->m_sgwIdx)
-        {
-          DpctlCommand (GetSwitchDevice (current), commandStr);
-          current = NextSwitchIndex (current, ringInfo->m_upPath);
-        }
+      // // Keep installing the rule at every switch in path
+      // std::string commandStr = args.str () + match.str () + inst.str ();
+      // while (current != rInfo->m_sgwIdx)
+      //   {
+      //     DpctlCommand (GetSwitchDevice (current), commandStr);
+      //     current = NextSwitchIndex (current, ringInfo->m_upPath);
+      //   }
     }
 
   // Updating meter installation flag
@@ -457,6 +444,35 @@ RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
       rInfo->AggregateObject (ringInfo);
     }
   return ringInfo;
+}
+
+void
+RingController::CreateSpanningTree ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // Let's configure one single link to drop packets when flooding over ports
+  // (OFPP_FLOOD). Here we are disabling the farthest gateway link,
+  // configuring its ports to OFPPC_NO_FWD flag (0x20).
+  
+  uint16_t half = (GetNSwitches () / 2);
+  Ptr<ConnectionInfo> connInfo = GetConnectionInfo (half, half+1);
+  NS_LOG_DEBUG ("Disabling link from " << half << " to " << 
+                 half+1 << " for broadcast messages.");
+  
+  Mac48Address macAddr1;
+  macAddr1 = Mac48Address::ConvertFrom (connInfo->portDev1->GetAddress ());
+  std::ostringstream cmd1;
+  cmd1 << "port-mod port=" << connInfo->portNum1 << ",addr=" << 
+           macAddr1 << ",conf=0x00000020,mask=0x00000020";
+  DpctlCommand (connInfo->switchDev1, cmd1.str ());
+
+  Mac48Address macAddr2;
+  macAddr2 = Mac48Address::ConvertFrom (connInfo->portDev2->GetAddress ());
+  std::ostringstream cmd2;
+  cmd2 << "port-mod port=" << connInfo->portNum2 << ",addr=" << 
+           macAddr2 << ",conf=0x00000020,mask=0x00000020";
+  DpctlCommand (connInfo->switchDev2, cmd2.str ());
 }
 
 RingRoutingInfo::RoutingPath

@@ -96,6 +96,12 @@ public:
    * \param conInfo The connection information and metadata.
    */ 
   virtual void NotifyNewConnBtwnSwitches (const Ptr<ConnectionInfo> connInfo);
+
+  /**
+   * Notify this controller that all connection between switches have already
+   * been configure and the topology is finished.
+   */ 
+  virtual void NotifyConnBtwnSwitchesOk ();
   
   /** 
    * Callback fired before creating new dedicated EPC bearers. This is used to
@@ -151,14 +157,6 @@ public:
    */ 
   virtual bool NotifyAppStop (Ptr<Application> app);
 
-  /**
-   * To avoid flooding problems when broadcasting packets (like in ARP
-   * protocol), let's find a Spanning Tree and drop packets at selected ports
-   * when flooding (OFPP_FLOOD). This is accomplished by configuring the port
-   * with OFPPC_NO_FWD flag (0x20).
-   */
-  virtual void CreateSpanningTree () = 0;   
-
   /** 
    * TracedCallback signature for Application QoS dump. 
    * \param description String describing this traffic.
@@ -213,6 +211,14 @@ protected:
    */
   virtual bool InstallTeidRouting (Ptr<RoutingInfo> rInfo, 
       uint32_t buffer = OFP_NO_BUFFER) = 0;
+
+  /**
+   * To avoid flooding problems when broadcasting packets (like in ARP
+   * protocol), let's find a Spanning Tree and drop packets at selected ports
+   * when flooding (OFPP_FLOOD). This is accomplished by configuring the port
+   * with OFPPC_NO_FWD flag (0x20).
+   */
+  virtual void CreateSpanningTree () = 0;   
   //\}
 
   /**
@@ -353,7 +359,7 @@ private:
    */
   void ConfigureLocalPortDelivery (Ptr<OFSwitch13NetDevice> swtchDev, 
     Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, uint32_t swtchPort, 
-    uint16_t priority = 0xffff);   
+    uint16_t priority = 0xfff0);  
 
   /**
    * Handle packet-in messages sent from switch with unknown TEID routing.

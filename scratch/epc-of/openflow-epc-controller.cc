@@ -152,6 +152,14 @@ OpenFlowEpcController::NotifyNewConnBtwnSwitches (
                 " (" << connInfo->portNum2 << ")");
 }
 
+void 
+OpenFlowEpcController::NotifyConnBtwnSwitchesOk ()
+{
+  NS_LOG_FUNCTION (this);
+  
+  CreateSpanningTree ();
+}
+
 bool
 OpenFlowEpcController::RequestNewDedicatedBearer (uint64_t imsi, 
     uint16_t cellId, Ptr<EpcTft> tft, EpsBearer bearer)
