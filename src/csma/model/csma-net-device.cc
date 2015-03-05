@@ -109,9 +109,9 @@ CsmaNetDevice::GetTypeId (void)
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_macPromiscRxTrace),
                      "ns3::Packet::TracedCallback")
     .AddTraceSource ("OpenFlowRx", 
-                     "Similar to MacPromiscRx, but it is also fired even when "
-                     "there is no promiscuous protocol handler register to device. "
-                     "It was desiged to integration with openflow module.",
+                     "Similar to a promiscuous protocol handler, but using the "
+                     "original packet (with all headers). "
+                     "It was desiged to integration with ofswitch13 module.",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_openflowRxTrace),
                      "ns3::OFSwitch13NetDevice::TracedCallback")
     .AddTraceSource ("MacRx", 
@@ -803,12 +803,18 @@ CsmaNetDevice::Receive (Ptr<Packet> packet, Ptr<CsmaNetDevice> senderDevice)
   // make sure that nobody messes with our packet.
   //
   m_promiscSnifferTrace (originalPacket);
-  m_openflowRxTrace (this, originalPacket);
   if (!m_promiscRxCallback.IsNull ())
     {
       m_macPromiscRxTrace (originalPacket);
       m_promiscRxCallback (this, packet, protocol, header.GetSource (), header.GetDestination (), packetType);
     }
+
+  //
+  // When this device is set as an OpenFlow switch port, let's hit the OpenFlow
+  // RX trace source with a copy of the original packet, so it can be freely
+  // modified.
+  //
+  m_openflowRxTrace (this, originalPacket->Copy ());
 
   //
   // If this packet is not destined for some other host, it must be for us
