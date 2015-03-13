@@ -234,7 +234,7 @@ SimulationScenario::EnableHttpTraffic ()
   httpHelper.SetClientAttribute ("Direction", 
       EnumValue (Application::BIDIRECTIONAL));
   httpHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
-  httpHelper.SetClientAttribute ("TcpTimeout", TimeValue (Seconds (4))); 
+  httpHelper.SetClientAttribute ("TcpTimeout", TimeValue (Seconds (10))); 
   // The HTTP client/server TCP timeout was selected based on HTTP traffic
   // model and dedicated bearer idle timeout. Every time the TCP socket is
   // closed, HTTP client application notify the controller, and traffic
@@ -310,7 +310,7 @@ SimulationScenario::EnableVoipTraffic ()
 
   // ON/OFF pattern for VoIP applications (Poisson process)
   voipHelper.SetAttribute ("OnTime", 
-      StringValue ("ns3::NormalRandomVariable[Mean=5.0,Variance=2.0]"));
+      StringValue ("ns3::NormalRandomVariable[Mean=5.0|Variance=4.0]"));
   voipHelper.SetAttribute ("OffTime", 
       StringValue ("ns3::ExponentialRandomVariable[Mean=15.0]"));
   voipHelper.SetAttribute ("PacketSize", UintegerValue (pktSize));
@@ -365,7 +365,7 @@ SimulationScenario::EnableVoipTraffic ()
       // 2 bytes from compressed UDP/IP/RTP + 58 bytes from GTPU/UDP/IP/ETH
       qos.gbrDl = 8 * (pktSize + 2 + 58) / pktInterval; // ~ 17.0 Kbps
       qos.gbrUl = qos.gbrDl;
-      // For now, no meter rules for VoIP traffic
+      // No meter rules for VoIP traffic
       // qos.mbrDl = 1.1 * qos.gbrDl; // ~ 18.7 Kbps (10 % more)
       // qos.mbrUl = qos.mbrDl;
       EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
@@ -403,7 +403,7 @@ SimulationScenario::EnableVideoTraffic ()
 
   // ON/OFF pattern for VoIP applications (Poisson process)
   videoHelper.SetClientAttribute ("OnTime", 
-      StringValue ("ns3::NormalRandomVariable[Mean=5.0,Variance=2.0]"));
+      StringValue ("ns3::NormalRandomVariable[Mean=5.0|Variance=4.0]"));
   videoHelper.SetClientAttribute ("OffTime", 
       StringValue ("ns3::ExponentialRandomVariable[Mean=15.0]"));
 
@@ -450,7 +450,8 @@ SimulationScenario::EnableVideoTraffic ()
       // Dedicated GBR EPS bearer (QCI 4).
       GbrQosInformation qos;
       qos.gbrDl = 1.4 * m_avgBitRate [videoIdx];  // Avg + stdev (~806 Kbps)
-      qos.mbrDl = 1.1 * qos.gbrDl;                // 10 % more
+      // Set the meter in average between gbr and maxBitRate
+      qos.mbrDl = (qos.gbrDl + m_maxBitRate [videoIdx]) / 2;
       EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
