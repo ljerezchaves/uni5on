@@ -103,13 +103,13 @@ RingController::NotifyConnBtwnSwitchesOk ()
       std::ostringstream cmd1;
       cmd1 << "flow-mod cmd=add,table=1,flags=0x0002,prio=" << m_t1RingPrio <<
               " in_port=" << connInfo->portNum1 <<
-              " apply:group=" << RingRoutingInfo::COUNTER;
+              " write:group=" << RingRoutingInfo::COUNTER;
       DpctlCommand (connInfo->switchDev1, cmd1.str ());
 
       std::ostringstream cmd2;
       cmd2 << "flow-mod cmd=add,table=1,flags=0x0002,prio=" << m_t1RingPrio <<
               " in_port=" << connInfo->portNum2 <<
-              " apply:group=" << RingRoutingInfo::CLOCK;
+              " write:group=" << RingRoutingInfo::CLOCK;
       DpctlCommand (connInfo->switchDev2, cmd2.str ());
     }
 }
@@ -175,7 +175,7 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
         }
 
       // Building the output instruction string
-      inst << " apply:group=" << ringInfo->m_downPath;
+      inst << " write:group=" << ringInfo->m_downPath;
      
       // Installing the rule into input switch
       std::string commandStr = args.str () + match.str () + inst.str ();
@@ -211,7 +211,7 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
         }
             
       // Building the output instruction string
-      inst << " apply:group=" << ringInfo->m_upPath;
+      inst << " write:group=" << ringInfo->m_upPath;
 
       // Installing the rule into input switch
       std::string commandStr = args.str () + match.str () + inst.str ();
