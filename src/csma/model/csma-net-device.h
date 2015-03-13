@@ -561,13 +561,13 @@ private:
    * This trace source is intended to be used by ofswitch13 OpenFlow module.
    * The trace source fired for packets successfully received by the device
    * immediately before being forwarded up to higher layers (at the L2/L3
-   * transition). This is a promiscuous trace, but in constrast a promiscuous
+   * transition). This is a promiscuous trace, but in contrast to a promiscuous
    * protocol handler, the packet sent to this trace source also includes the
    * Ethernet header, which is necessary by OpenFlow pipeline processing. 
    *
    * \see class CallBackTraceSource
    */
-  TracedCallback<Ptr<NetDevice>, Ptr<Packet> > m_openflowRxTrace;
+  TracedCallback<Ptr<const NetDevice>, Ptr<Packet> > m_openflowRxTrace;
 
   /**
    * The trace source fired for packets successfully received by the device

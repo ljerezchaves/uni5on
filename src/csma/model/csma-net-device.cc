@@ -111,9 +111,9 @@ CsmaNetDevice::GetTypeId (void)
     .AddTraceSource ("OpenFlowRx", 
                      "Similar to a promiscuous protocol handler, but using the "
                      "original packet (with all headers). "
-                     "It was desiged to integration with ofswitch13 module.",
+                     "It was designed to integration with ofswitch13 module.",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_openflowRxTrace),
-                     "ns3::OFSwitch13NetDevice::TracedCallback")
+                     "ns3::OFSwitch13NetDevice::OpenFlowCallback")
     .AddTraceSource ("MacRx", 
                      "A packet has been received by this device, "
                      "has been passed up from the physical layer "
