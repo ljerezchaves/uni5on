@@ -567,7 +567,7 @@ private:
    *
    * \see class CallBackTraceSource
    */
-  TracedCallback<Ptr<const NetDevice>, Ptr<Packet> > m_openflowRxTrace;
+  TracedCallback<Ptr<Packet> > m_openflowRxTrace;
 
   /**
    * The trace source fired for packets successfully received by the device

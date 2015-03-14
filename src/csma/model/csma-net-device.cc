@@ -113,7 +113,7 @@ CsmaNetDevice::GetTypeId (void)
                      "original packet (with all headers). "
                      "It was designed to integration with ofswitch13 module.",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_openflowRxTrace),
-                     "ns3::OFSwitch13NetDevice::OpenFlowCallback")
+                     "ns3::ofs::OpenFlowCallback")
     .AddTraceSource ("MacRx", 
                      "A packet has been received by this device, "
                      "has been passed up from the physical layer "
@@ -811,10 +811,10 @@ CsmaNetDevice::Receive (Ptr<Packet> packet, Ptr<CsmaNetDevice> senderDevice)
 
   //
   // When this device is set as an OpenFlow switch port, let's hit the OpenFlow
-  // RX trace source with a copy of the original packet, so it can be freely
+  // RX trace source with the original packet (copy), so it can be freely
   // modified.
   //
-  m_openflowRxTrace (this, originalPacket->Copy ());
+  m_openflowRxTrace (originalPacket);
 
   //
   // If this packet is not destined for some other host, it must be for us
