@@ -186,9 +186,9 @@ SimulationScenario::BuildRingTopology ()
   m_rngStart->SetAttribute ("Max", DoubleValue (5.));
 
   // Saving controller and application statistics 
-  Config::ConnectWithoutContext ("/Names/ctrlApp/AppStats", 
+  m_controller->TraceConnectWithoutContext ("AppStats", 
       MakeCallback (&SimulationScenario::ReportAppStats, this));
-  Config::ConnectWithoutContext ("/Names/ctrlApp/GbrBlock", 
+  m_controller->TraceConnectWithoutContext ("GbrBlock", 
       MakeCallback (&SimulationScenario::ReportBlockRatio, this));
 
   // Application traffic
