@@ -109,7 +109,7 @@ protected:
 
 // ------------------------------------------------------------------------ //
 /**
- * Create an OpenFlow network infrastrutcure to be used by
+ * Create an OpenFlow network infrastructure to be used by
  * OpenFlowEpcHelper on LTE networks.
  */
 class OpenFlowEpcNetwork : public Object
@@ -132,7 +132,7 @@ public:
 
   /**
    * Called by OpenFlowEpcHelper to proper connect the SgwPgw and eNBs to the
-   * S1-U OpenFlow network insfrastructure.
+   * S1-U OpenFlow network infrastructure.
    * \internal This method must create the NetDevice at node and assign an IPv4
    * address to it.
    * \param node The SgwPgw or eNB node pointer.
@@ -143,7 +143,7 @@ public:
   
   /**
    * Called by OpenFlowEpcHelper to proper connect the eNBs nodes to the X2
-   * OpenFlow network insfrastructure.
+   * OpenFlow network infrastructure.
    * \internal This method must create the NetDevice at node and assign an IPv4
    * address to it.
    * \param node The eNB node pointer.
