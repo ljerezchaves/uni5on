@@ -28,7 +28,7 @@
 #include <ns3/ipv4-address.h>
 #include <ns3/seq-ts-header.h>
 #include "ns3/data-rate.h"
-#include "packet-loss-counter.h"
+#include "qos-stats-calculator.h"
 
 using namespace std;
 
@@ -93,23 +93,11 @@ public:
    */
   Ptr<VoipPeer> GetPeerApp ();
   
-  /**
-   * \brief Get application statistics.
-   * \return The statistic value.
-   */
-  //\{
-  void      ResetCounters  ();
-  uint32_t  GetTxPackets   () const;
-  uint32_t  GetRxPackets   () const;
-  uint32_t  GetTxBytes     () const;
-  uint32_t  GetRxBytes     () const;
-  uint32_t  GetLost        () const;
-  double    GetRxLossRatio () const;
-  Time      GetActiveTime  () const;
-  Time      GetRxDelay     () const;
-  Time      GetRxJitter    () const;
-  DataRate  GetRxGoodput   () const;
-  //\}
+  /** Reset the QosStatsCalculator */
+  void ResetQosStats ();
+
+  /** \return Get the QosStatsCalculator */
+  QosStatsCalculator GetQosStats (void) const;
 
 protected:
   /** Destructor implementation */
@@ -171,9 +159,6 @@ private:
   Time              m_interval;         //!< Interval between packets
   uint32_t          m_pktSize;          //!< Packet size
   uint32_t          m_pktSent;          //!< Number of TX packets
-  uint32_t          m_pktReceived;      //!< Number of RX packets
-  uint32_t          m_txBytes;          //!< Number of TX bytes
-  uint32_t          m_rxBytes;          //!< Number of RX bytes
   Ipv4Address       m_peerAddress;      //!< Outbound peer IPv4 address
   uint16_t          m_peerPort;         //!< Outbound peer port
   uint16_t          m_localPort;        //!< Inbound local port
@@ -181,12 +166,7 @@ private:
   Ptr<Socket>       m_txSocket;         //!< Outbound TX socket
   Ptr<Socket>       m_rxSocket;         //!< Inbound RX socket
   bool              m_connected;        //!< True if outbound connected
-  Time              m_previousRx;       //!< Previous Rx time
-  Time              m_previousRxTx;     //!< Previous Rx or Tx time
-  int64_t           m_jitter;           //!< Jitter estimation
-  Time              m_delaySum;         //!< Sum of packet delays
-  Time              m_lastResetTime;    //!< Last reset time
-  PacketLossCounter m_lossCounter;      //!< Lost packet counter
+  QosStatsCalculator m_qosStats;        //!< QoS statistics
   EventId           m_startStopEvent;   //!< Event id for next start or stop event
   EventId           m_sendEvent;        //!< Event id of pending 'send packet' event
   Ptr<RandomVariableStream>  m_onTime;  //!< Random variable for ON Time

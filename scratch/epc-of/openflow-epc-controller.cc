@@ -460,6 +460,7 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
   if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
     {
       Ptr<VoipPeer> voipApp = DynamicCast<VoipPeer> (app);
+      QosStatsCalculator qosStats = voipApp->GetQosStats ();
 
       // Identifying Voip traffic direction
       std::string nodeName = Names::FindName (voipApp->GetNode ());
@@ -470,10 +471,10 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
       // Tracing application statistics
       std::ostringstream desc;
       desc << "VoIP  [" << srcIdx << " --> " << dstIdx << "]";
-      m_appQosTrace (desc.str (), teid, voipApp->GetActiveTime (),
-          voipApp->GetRxLossRatio (), voipApp->GetRxDelay (),
-          voipApp->GetRxJitter (), voipApp->GetRxBytes (),
-          voipApp->GetRxGoodput ());
+      m_appQosTrace (desc.str (), teid, qosStats.GetActiveTime (),
+          qosStats.GetLossRatio (), qosStats.GetRxDelay (),
+          qosStats.GetRxJitter (), qosStats.GetRxBytes (),
+          qosStats.GetRxThroughput ());
     }
   else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
     {
@@ -509,7 +510,7 @@ OpenFlowEpcController::ResetAppStatistics (Ptr<Application> app)
   
   if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
     {
-      DynamicCast<VoipPeer> (app)->ResetCounters ();
+      DynamicCast<VoipPeer> (app)->ResetQosStats ();
     }
   else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
     {

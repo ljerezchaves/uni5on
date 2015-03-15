@@ -62,13 +62,6 @@ VoipPeer::GetTypeId (void)
                    TimeValue (Seconds (0.06)),
                    MakeTimeAccessor (&VoipPeer::m_interval),
                    MakeTimeChecker ())
-    .AddAttribute ("LossWindowSize",
-                   "The size of the window used to compute the packet loss. " 
-                   "This value should be a multiple of 8.",
-                   UintegerValue (32),
-                   MakeUintegerAccessor (&VoipPeer::GetPacketWindowSize,
-                                         &VoipPeer::SetPacketWindowSize),
-                   MakeUintegerChecker<uint16_t> (8,256))
     .AddAttribute ("OnTime", 
                   "A RandomVariableStream used to pick the 'ON' state duration.",
                    StringValue ("ns3::ConstantRandomVariable[Constant=5.0]"),
@@ -93,13 +86,12 @@ VoipPeer::VoipPeer ()
   : m_peerApp (0),
     m_txSocket (0),
     m_rxSocket (0),
-    m_connected (false),
-    m_lossCounter (0)
+    m_connected (false)
 {
   NS_LOG_FUNCTION (this);
   m_sendEvent = EventId ();
   m_startStopEvent = EventId ();
-  m_lastResetTime = Time ();
+  m_qosStats.ResetCounters ();
 }
 
 VoipPeer::~VoipPeer ()
@@ -126,7 +118,7 @@ void
 VoipPeer::SetPacketWindowSize (uint16_t size)
 {
   NS_LOG_FUNCTION (this << size);
-  m_lossCounter.SetBitMapSize (size);
+  m_qosStats.SetPacketWindowSize (size);
 }
 
 void
@@ -141,7 +133,7 @@ uint16_t
 VoipPeer::GetPacketWindowSize () const
 {
   NS_LOG_FUNCTION (this);
-  return m_lossCounter.GetBitMapSize ();
+  return m_qosStats.GetPacketWindowSize ();
 }
 
 Ptr<VoipPeer> 
@@ -150,80 +142,16 @@ VoipPeer::GetPeerApp ()
   return m_peerApp;
 }
 
-void
-VoipPeer::ResetCounters ()
+void 
+VoipPeer::ResetQosStats ()
 {
-  m_pktSent = 0;
-  m_pktReceived = 0;
-  m_txBytes = 0;
-  m_rxBytes = 0;
-  m_previousRx = Simulator::Now ();
-  m_previousRxTx = Simulator::Now ();
-  m_lastResetTime = Simulator::Now ();
-  m_jitter = 0;
-  m_delaySum = Time ();
-  m_lossCounter.Reset ();
+  m_qosStats.ResetCounters ();
 }
 
-uint32_t  
-VoipPeer::GetTxPackets () const
+QosStatsCalculator
+VoipPeer::GetQosStats (void) const
 {
-  return m_pktSent;
-}
-
-uint32_t  
-VoipPeer::GetRxPackets () const
-{
-  return m_pktReceived;
-}
-
-uint32_t  
-VoipPeer::GetTxBytes () const
-{
-  return m_txBytes;
-}
-
-uint32_t  
-VoipPeer::GetRxBytes () const
-{
-  return m_rxBytes;
-}
-
-uint32_t
-VoipPeer::GetLost () const
-{
-  return m_lossCounter.GetLost ();
-}
-
-double
-VoipPeer::GetRxLossRatio () const
-{
-  uint32_t lost = m_lossCounter.GetLost ();
-  return ((double)lost) / (lost + GetRxPackets ());
-}
-
-Time      
-VoipPeer::GetActiveTime () const
-{
-  return Simulator::Now () - m_lastResetTime;
-}
-
-Time      
-VoipPeer::GetRxDelay () const
-{
-  return m_pktReceived ? (m_delaySum / (int64_t)m_pktReceived) : m_delaySum;
-}
-
-Time      
-VoipPeer::GetRxJitter () const
-{
-  return Time (m_jitter);
-}
-
-DataRate 
-VoipPeer::GetRxGoodput () const
-{
-  return DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ());
+  return m_qosStats;
 }
 
 void
@@ -247,7 +175,7 @@ VoipPeer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
   
-  ResetCounters ();
+  m_qosStats.ResetCounters ();
   
   // Inbound side
   if (m_rxSocket == 0)
@@ -374,7 +302,6 @@ VoipPeer::SendPacket ()
   // 38 bytes must be removed from payload.
   Ptr<Packet> p = Create<Packet> (m_pktSize - (38));
   p->AddHeader (seqTs);
-  m_txBytes += p->GetSize ();
  
   if (m_txSocket->Send (p))
     {
@@ -403,7 +330,6 @@ VoipPeer::ReadPacket (Ptr<Socket> socket)
     {
       if (packet->GetSize () > 0)
         {
-          m_rxBytes += packet->GetSize ();
           SeqTsHeader seqTs;
           packet->RemoveHeader (seqTs);
           uint32_t seqNum = seqTs.GetSeq ();
@@ -419,16 +345,7 @@ VoipPeer::ReadPacket (Ptr<Socket> socket)
             }
 
           // Updating counter and statistics
-          // The jitter is calculated using the RFC 1889 (RTP) jitter definition.
-          Time delay = Simulator::Now () - seqTs.GetTs ();
-          Time delta = (Simulator::Now () - m_previousRx) - (seqTs.GetTs () - m_previousRxTx);
-          m_jitter += ((Abs (delta)).GetTimeStep () - m_jitter) >> 4;
-          m_previousRx = Simulator::Now ();
-          m_previousRxTx = seqTs.GetTs ();
-          m_delaySum += delay;
-
-          m_lossCounter.NotifyReceived (seqNum);
-          m_pktReceived++;
+          m_qosStats.NotifyReceived (seqTs.GetSeq (), seqTs.GetTs (), packet->GetSize ());
         }
     }
 }
