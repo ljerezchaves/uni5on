@@ -28,6 +28,7 @@ NS_LOG_COMPONENT_DEFINE ("QosStatsCalculator");
 
 QosStatsCalculator::QosStatsCalculator ()
   : m_lossCounter (0),
+    m_windowSize (32),
     m_rxPackets (0),
     m_rxBytes (0),
     m_previousRx (Simulator::Now ()),
@@ -37,7 +38,7 @@ QosStatsCalculator::QosStatsCalculator ()
     m_lastResetTime (Simulator::Now ())
 {
   NS_LOG_FUNCTION (this);
-  m_lossCounter = new PacketLossCounter (32);
+  m_lossCounter = new PacketLossCounter (m_windowSize);
 }
 
 QosStatsCalculator::~QosStatsCalculator ()
@@ -50,14 +51,15 @@ uint16_t
 QosStatsCalculator::GetPacketWindowSize () const
 {
   NS_LOG_FUNCTION (this);
-  return m_lossCounter->GetBitMapSize ();
+  return m_windowSize;
 }
 
 void
 QosStatsCalculator::SetPacketWindowSize (uint16_t size)
 {
   NS_LOG_FUNCTION (this << size);
-  m_lossCounter->SetBitMapSize (size);
+  m_windowSize = size;
+  m_lossCounter->SetBitMapSize (m_windowSize);
 }
 
 void
@@ -73,7 +75,7 @@ QosStatsCalculator::ResetCounters ()
   m_previousRxTx = Simulator::Now ();
   m_lastResetTime = Simulator::Now ();
     
-  m_lossCounter = new PacketLossCounter (32);
+  m_lossCounter = new PacketLossCounter (m_windowSize);
 }
 
 void

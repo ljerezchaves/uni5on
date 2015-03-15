@@ -83,6 +83,7 @@ public:
 
 private:
   PacketLossCounter *m_lossCounter;      //!< Lost packet counter
+  uint16_t           m_windowSize;       //!< Packet loss window size
   uint32_t           m_rxPackets;        //!< Number of received packets
   uint32_t           m_rxBytes;          //!< Number of RX bytes
   Time               m_previousRx;       //!< Previous Rx time
