@@ -83,7 +83,8 @@ VoipPeer::GetTypeId (void)
 }
 
 VoipPeer::VoipPeer ()
-  : m_peerApp (0),
+  : m_pktSent (0),
+    m_peerApp (0),
     m_txSocket (0),
     m_rxSocket (0),
     m_connected (false)
@@ -91,7 +92,7 @@ VoipPeer::VoipPeer ()
   NS_LOG_FUNCTION (this);
   m_sendEvent = EventId ();
   m_startStopEvent = EventId ();
-  m_qosStats.ResetCounters ();
+  m_qosStats = Create<QosStatsCalculator> ();
 }
 
 VoipPeer::~VoipPeer ()
@@ -115,25 +116,11 @@ VoipPeer::SetPeerApp (Ptr<VoipPeer> peer)
 }
 
 void
-VoipPeer::SetPacketWindowSize (uint16_t size)
-{
-  NS_LOG_FUNCTION (this << size);
-  m_qosStats.SetPacketWindowSize (size);
-}
-
-void
 VoipPeer::SetStreams (int64_t stream)
 {
   NS_LOG_FUNCTION (this << stream);
   m_onTime->SetStream (stream);
   m_offTime->SetStream (stream + 1);
-}
-
-uint16_t
-VoipPeer::GetPacketWindowSize () const
-{
-  NS_LOG_FUNCTION (this);
-  return m_qosStats.GetPacketWindowSize ();
 }
 
 Ptr<VoipPeer> 
@@ -145,10 +132,11 @@ VoipPeer::GetPeerApp ()
 void 
 VoipPeer::ResetQosStats ()
 {
-  m_qosStats.ResetCounters ();
+  m_pktSent = 0;
+  m_qosStats->ResetCounters ();
 }
 
-QosStatsCalculator
+Ptr<const QosStatsCalculator>
 VoipPeer::GetQosStats (void) const
 {
   return m_qosStats;
@@ -165,6 +153,7 @@ VoipPeer::DoDispose (void)
   m_peerApp = 0;
   m_txSocket = 0;
   m_rxSocket = 0;
+  m_qosStats = 0;
   m_onTime = 0;
   m_offTime = 0;
   Application::DoDispose ();
@@ -174,8 +163,6 @@ void
 VoipPeer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
-  
-  m_qosStats.ResetCounters ();
   
   // Inbound side
   if (m_rxSocket == 0)
@@ -201,6 +188,7 @@ VoipPeer::StartApplication (void)
     }
 
   CancelEvents ();
+  ResetQosStats ();
   ScheduleStartEvent ();
 }
 
@@ -344,8 +332,7 @@ VoipPeer::ReadPacket (Ptr<Socket> socket)
                            " Delay: " << Simulator::Now () - seqTs.GetTs ());
             }
 
-          // Updating counter and statistics
-          m_qosStats.NotifyReceived (seqTs.GetSeq (), seqTs.GetTs (), packet->GetSize ());
+          m_qosStats->NotifyReceived (seqTs.GetSeq (), seqTs.GetTs (), packet->GetSize ());
         }
     }
 }

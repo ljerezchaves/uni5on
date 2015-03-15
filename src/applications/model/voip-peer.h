@@ -67,13 +67,6 @@ public:
   void SetPeerApp (Ptr<VoipPeer> peer);
 
   /**
-   * \brief Set the size of the window used for checking loss. 
-   * \attention This value should be a multiple of 8.
-   * \param size The size of the window to use. 
-   */
-  void SetPacketWindowSize (uint16_t size);
-
-  /**
    * \brief Assign a fixed random variable stream number to the random
    * variables used by this model.
    * \param stream first stream index to use.
@@ -82,22 +75,21 @@ public:
   void SetStreams (int64_t stream);
 
   /**
-   * \brief Get the size of the window used for checking loss.
-   * \return The size of the window used for checking loss.
-   */
-  uint16_t GetPacketWindowSize () const;
-
-  /**
    * \brief Get the VoIP peer application. 
    * \return The pointer to peer application. 
    */
   Ptr<VoipPeer> GetPeerApp ();
   
-  /** Reset the QosStatsCalculator */
+  /** 
+   * Reset the QoS statistics
+   */
   void ResetQosStats ();
 
-  /** \return Get the QosStatsCalculator */
-  QosStatsCalculator GetQosStats (void) const;
+  /**
+   * Get QoS statistics
+   * \return Get the const pointer to QosStatsCalculator 
+   */
+  Ptr<const QosStatsCalculator> GetQosStats (void) const;
 
 protected:
   /** Destructor implementation */
@@ -166,11 +158,11 @@ private:
   Ptr<Socket>       m_txSocket;         //!< Outbound TX socket
   Ptr<Socket>       m_rxSocket;         //!< Inbound RX socket
   bool              m_connected;        //!< True if outbound connected
-  QosStatsCalculator m_qosStats;        //!< QoS statistics
   EventId           m_startStopEvent;   //!< Event id for next start or stop event
   EventId           m_sendEvent;        //!< Event id of pending 'send packet' event
-  Ptr<RandomVariableStream>  m_onTime;  //!< Random variable for ON Time
-  Ptr<RandomVariableStream>  m_offTime; //!< Random variable for OFF Time
+  Ptr<QosStatsCalculator>   m_qosStats; //!< QoS statistics
+  Ptr<RandomVariableStream> m_onTime;   //!< Random variable for ON Time
+  Ptr<RandomVariableStream> m_offTime;  //!< Random variable for OFF Time
 };
 
 } // namespace ns3
