@@ -18,18 +18,6 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-// #include "ns3/ipv4-address.h"
-// #include "ns3/nstime.h"
-// #include "ns3/inet-socket-address.h"
-// #include "ns3/inet6-socket-address.h"
-// #include "ns3/socket.h"
-// #include "ns3/socket-factory.h"
-// #include "ns3/packet.h"
-// #include "ns3/uinteger.h"
-// #include "packet-loss-counter.h"
-// 
-// #include "seq-ts-header.h"
-// #include "udp-server.h"
 #include "qos-stats-calculator.h"
 #include "ns3/simulator.h"
 #include "ns3/log.h"
