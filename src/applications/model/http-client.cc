@@ -63,7 +63,8 @@ HttpClient::HttpClient ()
   m_bytesReceived = 0;
   m_numOfInlineObjects = 0;
   m_inlineObjLoaded = 0;
-  m_lastResetTime = Time ();
+  m_qosStats = Create<QosStatsCalculator> ();
+
 
   // Mu and Sigma data was taken from paper "An HTTP Web Traffic Model Based on
   // the Top One Million Visited Web Pages" by Rastin Pries et. al (Table II).
@@ -97,35 +98,15 @@ HttpClient::GetServerApp ()
 }
 
 void 
-HttpClient::ResetCounters ()
+HttpClient::ResetQosStats ()
 {
-  m_rxBytes = 0;
-  m_txBytes = 0;
-  m_lastResetTime = Simulator::Now ();
+  m_qosStats->ResetCounters ();
 }
 
-uint32_t 
-HttpClient::GetTxBytes () const
+Ptr<const QosStatsCalculator>
+HttpClient::GetQosStats (void) const
 {
-  return m_txBytes;
-}
-
-uint32_t 
-HttpClient::GetRxBytes () const
-{
-  return m_rxBytes;
-}
-
-Time 
-HttpClient::GetActiveTime () const
-{
-  return Simulator::Now () - m_lastResetTime;
-}
-
-DataRate 
-HttpClient::GetRxGoodput () const
-{
-  return DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ());
+  return m_qosStats;
 }
 
 void
@@ -135,6 +116,7 @@ HttpClient::DoDispose (void)
   Application::DoDispose ();
   m_serverApp = 0;
   m_socket = 0;
+  m_qosStats = 0;
   m_readingTimeStream = 0;
 }
 
@@ -142,7 +124,7 @@ void
 HttpClient::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
-  ResetCounters ();
+  ResetQosStats ();
   OpenSocket ();
 }
 
@@ -234,7 +216,6 @@ HttpClient::SendRequest (Ptr<Socket> socket, string url)
   packet->AddHeader (m_httpHeader);
   NS_LOG_INFO ("HttpClient (" << m_clientAddress << ") >> Sending request for "
               << url << " to server (" << m_peerAddress << ").");
-  m_txBytes += socket->Send (packet);
 }
 
 void
@@ -244,7 +225,9 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
 
   Ptr<Packet> packet = socket->Recv ();
   uint32_t bytesReceived = packet->GetSize ();
-  m_rxBytes += bytesReceived;
+ 
+  // Update QoS statistics
+  m_qosStats->NotifyReceived (0, Simulator::Now (), bytesReceived);
 
   HttpHeader httpHeaderIn;
   packet->PeekHeader (httpHeaderIn);

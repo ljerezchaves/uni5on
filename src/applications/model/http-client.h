@@ -27,6 +27,7 @@
 #include "ns3/http-header.h"
 #include "http-server.h"
 #include "ns3/data-rate.h"
+#include "qos-stats-calculator.h"
 
 using namespace std;
 namespace ns3 {
@@ -75,17 +76,16 @@ public:
    */
   Ptr<HttpServer> GetServerApp ();
 
-  /**
-   * \brief Application statistics.
-   * \return The statistic value.
+  /** 
+   * Reset the QoS statistics
    */
-  //\{
-  void      ResetCounters ();
-  uint32_t  GetTxBytes    () const;
-  uint32_t  GetRxBytes    () const;
-  Time      GetActiveTime () const;
-  DataRate  GetRxGoodput  () const;
-  //\}
+  void ResetQosStats ();
+
+  /**
+   * Get QoS statistics
+   * \return Get the const pointer to QosStatsCalculator 
+   */
+  Ptr<const QosStatsCalculator> GetQosStats (void) const;
 
 protected:
   virtual void DoDispose (void);
@@ -143,14 +143,12 @@ private:
   uint32_t        m_contentLength;      //!< Content-Length header line.
   string          m_contentType;        //!< Content-Type header line.
   uint32_t        m_numOfInlineObjects; //!< Number-of-Inline-Objects header line.
-  uint32_t        m_txBytes;            //!< Number of TX bytes
-  uint32_t        m_rxBytes;            //!< Number of RX bytes
   uint32_t        m_bytesReceived;      //!< Number of bytes received from server.
   uint32_t        m_inlineObjLoaded;    //!< Number of inline objects already loaded.
-  Time            m_lastResetTime;      //!< Last reset time
   Time            m_tcpTimeout;         //!< TCP connection timeout.
   Ipv4Address     m_clientAddress;      //!< Client Address.
   Ptr<HttpServer> m_serverApp;          //!< HttpServer application
+  Ptr<QosStatsCalculator> m_qosStats;   //!< QoS statistics
   Ptr<LogNormalRandomVariable> m_readingTimeStream; //!< Random Variable Stream for reading time.
   Ptr<UniformRandomVariable> m_readingTimeAdjust;  //!< Reading time adjustment for lower values.
 };
