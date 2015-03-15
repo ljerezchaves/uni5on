@@ -52,7 +52,6 @@ HttpServer::HttpServer ()
   NS_LOG_FUNCTION (this);
   m_socket = 0;
   m_clientApp = 0;
-  m_lastResetTime = Time ();
 }
 
 HttpServer::~HttpServer ()
@@ -72,38 +71,6 @@ HttpServer::GetClientApp ()
   return m_clientApp;
 }
 
-void 
-HttpServer::ResetCounters ()
-{
-  m_rxBytes = 0;
-  m_txBytes = 0;
-  m_lastResetTime = Simulator::Now ();
-}
-
-uint32_t 
-HttpServer::GetTxBytes () const
-{
-  return m_txBytes;
-}
-
-uint32_t 
-HttpServer::GetRxBytes () const
-{
-  return m_rxBytes;
-}
-
-Time 
-HttpServer::GetActiveTime () const
-{
-  return Simulator::Now () - m_lastResetTime;
-}
-
-DataRate 
-HttpServer::GetRxGoodput () const
-{
-  return DataRate (GetTxBytes () * 8 / GetActiveTime ().GetSeconds ());
-}
-
 void
 HttpServer::DoDispose (void)
 {
@@ -117,7 +84,6 @@ void HttpServer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
   
-  ResetCounters ();
   if (!m_socket)
     {
       TypeId tid = TypeId::LookupByName ("ns3::TcpSocketFactory");
@@ -166,7 +132,6 @@ HttpServer::HandleReceive (Ptr<Socket> socket)
 
   HttpHeader httpHeaderIn;
   Ptr<Packet> packet = socket->Recv ();
-  m_rxBytes += packet->GetSize ();
 
   // Getting TCP Sending Buffer Size.
   Ptr<TcpNewReno> tcp = CreateObject<TcpNewReno> ();
@@ -217,7 +182,6 @@ HttpServer::HandleReceive (Ptr<Socket> socket)
       NS_LOG_INFO ("HttpServer >> Sending response to client. Main Object Size ("
                    << mainObjectSize << " bytes). NumOfInlineObjects ("
                    << numOfInlineObj << ").");
-      m_txBytes += socket->Send (p);
     }
   else
     {
@@ -251,7 +215,6 @@ HttpServer::HandleReceive (Ptr<Socket> socket)
 
       NS_LOG_INFO ("HttpServer >> Sending response to client. Inline Objectsize ("
                    << inlineObjectSize << " bytes).");
-      m_txBytes += socket->Send (p);
     }
 }
 

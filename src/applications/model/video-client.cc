@@ -100,13 +100,11 @@ VideoClient::VideoClient ()
 {
   NS_LOG_FUNCTION (this);
   m_sent = 0;
-  m_txBytes = 0;
   m_socket = 0;
   m_serverApp = 0;
   m_sendEvent = EventId ();
   m_maxPacketSize = 1480;
   m_connected = false;
-  m_lastResetTime = Time ();
 }
 
 VideoClient::~VideoClient ()
@@ -166,32 +164,6 @@ void
 VideoClient::ResetCounters ()
 {
   m_sent = 0;
-  m_txBytes = 0;
-  m_lastResetTime = Simulator::Now ();
-}
-
-uint32_t  
-VideoClient::GetTxPackets () const
-{
-  return m_sent;
-}
-
-uint32_t  
-VideoClient::GetTxBytes () const
-{
-  return m_txBytes;
-}
-
-Time      
-VideoClient::GetActiveTime () const
-{
-  return Simulator::Now () - m_lastResetTime;
-}
-
-DataRate 
-VideoClient::GetTxGoodput () const
-{
-  return DataRate (GetTxBytes () * 8 / GetActiveTime ().GetSeconds ());
 }
 
 void
@@ -384,7 +356,6 @@ VideoClient::SendPacket (uint32_t size)
 
   Ptr<Packet> p = Create<Packet> (packetSize);
   p->AddHeader (seqTs);
-  m_txBytes += p->GetSize ();
 
   if (m_socket->Send (p))
     {

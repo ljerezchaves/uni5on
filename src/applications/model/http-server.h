@@ -72,18 +72,6 @@ public:
    */
   Ptr<HttpClient> GetClientApp ();
 
-  /**
-   * \brief Get application statistics.
-   * \return The statistic value.
-   */
-  //\{
-  void      ResetCounters ();
-  uint32_t  GetTxBytes    () const;
-  uint32_t  GetRxBytes    () const;
-  Time      GetActiveTime () const;
-  DataRate  GetRxGoodput  () const;
-  //\}
-
 protected:
   virtual void DoDispose (void);
 
@@ -114,9 +102,6 @@ private:
   Ptr<Socket>     m_socket;             //!< Local socket
   Ptr<HttpClient> m_clientApp;          //!< HttpClient application 
   uint16_t        m_port;               //!< Local port
-  uint32_t        m_txBytes;            //!< Number of TX bytes
-  uint32_t        m_rxBytes;            //!< Number of RX bytes
-  Time            m_lastResetTime;      //!< Last reset time
 };
 
 }

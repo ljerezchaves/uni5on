@@ -93,17 +93,10 @@ public:
    */
   uint16_t GetMaxPacketSize (void);
   
-  /**
-   * \brief Get application statistics.
-   * \return The statistic value.
+  /** 
+   * Reset internal QoS statistics counter
    */
-  //\{
-  void      ResetCounters ();
-  uint32_t  GetTxPackets  () const;
-  uint32_t  GetTxBytes    () const;
-  Time      GetActiveTime () const;
-  DataRate  GetTxGoodput  () const;
-  //\}
+  void ResetCounters ();
 
 protected:
   virtual void DoDispose (void);
@@ -184,7 +177,6 @@ private:
   };
 
   uint32_t          m_sent;             //!< Counter for sent packets
-  uint32_t          m_txBytes;          //!< Number of TX bytes
   Ptr<Socket>       m_socket;           //!< Socket
   Ipv4Address       m_peerAddress;      //!< Remote peer address
   uint16_t          m_peerPort;         //!< Remote peer port
@@ -192,7 +184,6 @@ private:
   EventId           m_sendEvent;        //!< Event id of pending 'send packet' event
   uint16_t          m_maxPacketSize;    //!< Maximum packet size to send (including the SeqTsHeader)
   bool              m_connected;        //!< True if connected
-  Time              m_lastResetTime;    //!< Last reset time
   uint32_t          m_currentEntry;     //!< Current entry index
   Ptr<UdpServer>    m_serverApp;        //!< UdpServer application
   Ptr<RandomVariableStream>       m_onTime;           //!< rng for On Time
