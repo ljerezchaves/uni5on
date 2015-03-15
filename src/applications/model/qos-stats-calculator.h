@@ -35,11 +35,11 @@ namespace ns3 {
  * packets using a window-base approach, and computes the average delay and
  * jitter.
  */
-class QosStatsCalculator
+class QosStatsCalculator : public SimpleRefCount<QosStatsCalculator>
 {
 public:
   QosStatsCalculator ();  //!< Default constructor
-  ~QosStatsCalculator (); //!< Default destructor
+  virtual ~QosStatsCalculator (); //!< Default destructor
   
   /**
    * Returns the size of the window used for checking loss.
@@ -82,14 +82,14 @@ public:
   //\}
 
 private:
-  PacketLossCounter m_lossCounter;      //!< Lost packet counter
-  uint32_t          m_rxPackets;        //!< Number of received packets
-  uint32_t          m_rxBytes;          //!< Number of RX bytes
-  Time              m_previousRx;       //!< Previous Rx time
-  Time              m_previousRxTx;     //!< Previous Rx or Tx time
-  int64_t           m_jitter;           //!< Jitter estimation
-  Time              m_delaySum;         //!< Sum of packet delays
-  Time              m_lastResetTime;    //!< Last reset time
+  PacketLossCounter *m_lossCounter;      //!< Lost packet counter
+  uint32_t           m_rxPackets;        //!< Number of received packets
+  uint32_t           m_rxBytes;          //!< Number of RX bytes
+  Time               m_previousRx;       //!< Previous Rx time
+  Time               m_previousRxTx;     //!< Previous Rx or Tx time
+  int64_t            m_jitter;           //!< Jitter estimation
+  Time               m_delaySum;         //!< Sum of packet delays
+  Time               m_lastResetTime;    //!< Last reset time
 };
 
 } // namespace ns3

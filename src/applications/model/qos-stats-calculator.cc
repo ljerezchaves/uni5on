@@ -27,36 +27,44 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("QosStatsCalculator");
 
 QosStatsCalculator::QosStatsCalculator ()
-  : m_lossCounter (0)
+  : m_lossCounter (0),
+    m_rxPackets (0),
+    m_rxBytes (0),
+    m_previousRx (Simulator::Now ()),
+    m_previousRxTx (Simulator::Now ()),
+    m_jitter (0),
+    m_delaySum (Time ()),
+    m_lastResetTime (Simulator::Now ())
 {
   NS_LOG_FUNCTION (this);
-
-  SetPacketWindowSize (32);
-  ResetCounters ();
+  m_lossCounter = new PacketLossCounter (32);
 }
 
 QosStatsCalculator::~QosStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
+  delete m_lossCounter;
 }
 
 uint16_t
 QosStatsCalculator::GetPacketWindowSize () const
 {
   NS_LOG_FUNCTION (this);
-  return m_lossCounter.GetBitMapSize ();
+  return m_lossCounter->GetBitMapSize ();
 }
 
 void
 QosStatsCalculator::SetPacketWindowSize (uint16_t size)
 {
   NS_LOG_FUNCTION (this << size);
-  m_lossCounter.SetBitMapSize (size);
+  m_lossCounter->SetBitMapSize (size);
 }
 
 void
 QosStatsCalculator::ResetCounters ()
 {
+  delete m_lossCounter;
+  
   m_rxPackets = 0;
   m_rxBytes = 0;
   m_jitter = 0;
@@ -64,7 +72,8 @@ QosStatsCalculator::ResetCounters ()
   m_previousRx = Simulator::Now ();
   m_previousRxTx = Simulator::Now ();
   m_lastResetTime = Simulator::Now ();
-  m_lossCounter.Reset ();
+    
+  m_lossCounter = new PacketLossCounter (32);
 }
 
 void
@@ -84,7 +93,7 @@ QosStatsCalculator::NotifyReceived (uint32_t seqNum, Time timestamp,
   m_rxBytes += rxBytes;  
   
   // Notify packet loss counter
-  m_lossCounter.NotifyReceived (seqNum);
+  m_lossCounter->NotifyReceived (seqNum);
 }
 
 Time      
@@ -96,7 +105,7 @@ QosStatsCalculator::GetActiveTime (void) const
 uint32_t
 QosStatsCalculator::GetLostPackets (void) const
 {
-  return m_lossCounter.GetLost ();
+  return m_lossCounter->GetLost ();
 }
 
 double
