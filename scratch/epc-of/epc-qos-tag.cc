@@ -81,4 +81,22 @@ EpcQosTag::Print (std::ostream &os) const
   os << " EpcQosTag teid=" << m_teid << " seq=" << m_seq << " ts=" << m_ts;
 }
 
+uint32_t 
+EpcQosTag::GetTeid () const
+{
+  return m_teid;
+}
+
+uint32_t 
+EpcQosTag::GetSeqNum () const
+{
+  return m_seq;
+}
+
+Time 
+EpcQosTag::GetTimestamp () const
+{
+  return Time (m_ts);
+}
+
 };  // namespace ns3

@@ -46,6 +46,15 @@ public:
   virtual void Deserialize (TagBuffer i);
   virtual uint32_t GetSerializedSize () const;
   virtual void Print (std::ostream &os) const;
+ 
+  /** \return the teid field */
+  uint32_t GetTeid () const;
+  
+  /** \return the sequence number field */
+  uint32_t GetSeqNum () const;
+
+  /** \return the timestamp field */
+  Time GetTimestamp () const;
 
 private:
   uint64_t m_ts;    //!< Creating timestamp
