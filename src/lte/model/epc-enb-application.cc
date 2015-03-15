@@ -28,6 +28,7 @@
 #include "ns3/uinteger.h"
 
 #include "epc-gtpu-header.h"
+#include "epc-gtpu-tag.h"
 #include "eps-bearer-tag.h"
 
 
@@ -283,7 +284,9 @@ EpcEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
   /// Workaround for \bugid{231}
   SocketAddressTag tag;
   packet->RemovePacketTag (tag);
-  
+
+  EpcGtpuTag teidTag;
+  packet->RemovePacketTag (teidTag);
   SendToLteSocket (packet, it->second.m_rnti, it->second.m_bid);
 }
 
@@ -309,6 +312,9 @@ EpcEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
   gtpu.SetLength (packet->GetSize () + gtpu.GetSerializedSize () - 8);  
   packet->AddHeader (gtpu);
   uint32_t flags = 0;
+
+  EpcGtpuTag teidTag (teid);
+  packet->AddPacketTag (teidTag);
   m_s1uSocket->SendTo (packet, flags, InetSocketAddress (m_sgwS1uAddress, m_gtpuUdpPort));
 }
 

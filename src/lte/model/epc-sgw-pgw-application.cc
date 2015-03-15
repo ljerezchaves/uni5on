@@ -26,6 +26,7 @@
 #include "ns3/ipv4.h"
 #include "ns3/inet-socket-address.h"
 #include "ns3/epc-gtpu-header.h"
+#include "ns3/epc-gtpu-tag.h"
 #include "ns3/abort.h"
 
 namespace ns3 {
@@ -188,6 +189,8 @@ EpcSgwPgwApplication::RecvFromS1uSocket (Ptr<Socket> socket)
   SocketAddressTag tag;
   packet->RemovePacketTag (tag);
 
+  EpcGtpuTag teidTag;
+  packet->RemovePacketTag (teidTag);
   SendToTunDevice (packet, teid);
 }
 
@@ -211,6 +214,9 @@ EpcSgwPgwApplication::SendToS1uSocket (Ptr<Packet> packet, Ipv4Address enbAddr, 
   gtpu.SetLength (packet->GetSize () + gtpu.GetSerializedSize () - 8);  
   packet->AddHeader (gtpu);
   uint32_t flags = 0;
+
+  EpcGtpuTag teidTag (teid);
+  packet->AddPacketTag (teidTag);
   m_s1uSocket->SendTo (packet, flags, InetSocketAddress (enbAddr, m_gtpuUdpPort));
 }
 
