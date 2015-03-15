@@ -38,12 +38,12 @@ namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("QosStatsCalculator");
 
-QosStatsCalculator::QosStatsCalculator (uint16_t bitmapSize)
+QosStatsCalculator::QosStatsCalculator ()
   : m_lossCounter (0)
 {
-  NS_LOG_FUNCTION (this << bitmapSize);
+  NS_LOG_FUNCTION (this);
 
-  SetPacketWindowSize (bitmapSize);
+  SetPacketWindowSize (32);
   ResetCounters ();
 }
 

@@ -38,11 +38,7 @@ namespace ns3 {
 class QosStatsCalculator
 {
 public:
-  /**
-   * Default constructor
-   * \param bitmapSize The window size used for checking loss.
-   */
-  QosStatsCalculator (uint16_t bitmapSize);
+  QosStatsCalculator ();  //!< Default constructor
   ~QosStatsCalculator (); //!< Default destructor
   
   /**
