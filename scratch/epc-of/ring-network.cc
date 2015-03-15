@@ -217,13 +217,13 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   Ptr<OFSwitch13Port> switchPort = swtchDev->AddSwitchPort (devices.Get (0));
   uint32_t portNum = switchPort->GetPortNo ();
   
-  // Setting trace sinks
+  // Registering trace sinks for QoS monitoring
   std::ostringstream context;
   context << "Switch/" << switchIdx << "/Port/" << portNum;
   switchPort->TraceConnect ("SwitchPortRx", context.str (),
-    MakeCallback (&OpenFlowEpcNetwork::InputPacket, this));
+    MakeCallback (&OpenFlowEpcController::InputPacket, m_ofCtrlApp));
   switchPort->TraceConnect ("SwitchPortTx", context.str (), 
-    MakeCallback (&OpenFlowEpcNetwork::OutputPacket, this));
+    MakeCallback (&OpenFlowEpcController::OutputPacket, m_ofCtrlApp));
 
   // Notify controller of a new device
   m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeIpAddress, swtchDev, 

@@ -20,6 +20,7 @@
 
 #include "openflow-epc-controller.h"
 #include "internet-network.h"
+#include "epc-qos-tag.h"
 
 namespace ns3 {
 
@@ -357,6 +358,36 @@ OpenFlowEpcController::NotifyAppStop (Ptr<Application> app)
 
   DumpAppStatistics (app);
   return true;
+}
+
+void 
+OpenFlowEpcController::InputPacket (std::string context, 
+                                    Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << packet);
+  
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      Ptr<QosStatsCalculator> qosStats = GetQosStatsFromTeid (gtpuTag.GetTeid ());
+      EpcQosTag qosTag (qosStats->GetNextSeqNum (), gtpuTag.GetTeid ());
+      packet->AddPacketTag (qosTag);
+    }
+}
+
+void
+OpenFlowEpcController::OutputPacket (std::string context, 
+                                     Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << packet);
+
+  EpcQosTag tag;
+  if (packet->PeekPacketTag (tag))
+    {
+      Ptr<QosStatsCalculator> qosStats = GetQosStatsFromTeid (tag.GetTeid ());
+      qosStats->NotifyReceived (tag.GetSeqNum (), tag.GetTimestamp (), 
+                                packet->GetSize ());
+    }
 }
 
 uint16_t 
@@ -723,6 +754,32 @@ OpenFlowEpcController::GetBearerFromTft (Ptr<EpcTft> tft)
         }
     }
   NS_FATAL_ERROR ("Couldn't find bearer for invalid tft.");
+}
+
+Ptr<QosStatsCalculator>
+OpenFlowEpcController::GetQosStatsFromTeid (uint32_t teid)
+{
+  Ptr<QosStatsCalculator> qosStats = 0;
+  TeidQosMap_t::iterator it;
+  it = m_qosStats.find (teid);
+  if (it != m_qosStats.end ())
+    {
+      NS_LOG_DEBUG ("Found QoS entry: " << teid);
+      return it->second;
+    }
+  else
+    {
+      // Create and insert the structure
+      qosStats = Create<QosStatsCalculator> ();
+      std::pair <uint32_t, Ptr<QosStatsCalculator> > entry (teid, qosStats);
+      std::pair <TeidQosMap_t::iterator, bool> ret;
+      ret = m_qosStats.insert (entry);
+      if (ret.second == false)
+        {
+          NS_FATAL_ERROR ("Existing QoS entry for teid " << teid);
+        }
+      return qosStats;
+    }
 }
 
 void 

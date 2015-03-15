@@ -210,22 +210,6 @@ public:
   /** \return Number of switches in the network. */
   uint16_t GetNSwitches ();
 
-  /**
-   * Trace sink for packet entering the OpenFlow network. It will get tagged
-   * for QoS monitoring.
-   * \param context Input switch index and port number.
-   * \param packet The packet.
-   */
-  void InputPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink for packet leaving the OpenFlow network. The tag will be read
-   * and removed, and QoS stats updated.
-   * \param context Output switch index and port number.
-   * \param packet The packet.
-   */
-  void OutputPacket (std::string context, Ptr<const Packet> packet);
-
 protected:
   /**
    * Get the OFSwitch13NetDevice of a specific switch.

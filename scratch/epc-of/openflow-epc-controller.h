@@ -157,6 +157,22 @@ public:
    */ 
   virtual bool NotifyAppStop (Ptr<Application> app);
 
+  /**
+   * Trace sink for packets entering the OpenFlow network. The packet will get
+   * tagged for QoS monitoring.
+   * \param context Input switch index and port number.
+   * \param packet The packet.
+   */
+  void InputPacket (std::string context, Ptr<const Packet> packet);
+
+  /**
+   * Trace sink for packets leaving the OpenFlow network. The tag will be read
+   * and removed from packet, and QoS stats updated.
+   * \param context Output switch index and port number.
+   * \param packet The packet.
+   */
+  void OutputPacket (std::string context, Ptr<const Packet> packet);
+
   /** 
    * TracedCallback signature for Application QoS dump. 
    * \param description String describing this traffic.
@@ -355,6 +371,14 @@ private:
   ContextBearer_t GetBearerFromTft (Ptr<EpcTft> tft);
 
   /**
+   * Retrieve the LTE EPC QoS statistics information for the GTP tunnel id.
+   * When no information structure available, create it.
+   * \param teid The GTP tunnel id.
+   * \return The QoS information.
+   */
+  Ptr<QosStatsCalculator> GetQosStatsFromTeid (uint32_t teid);
+
+  /**
    * Save the RoutingInfo metadata for further usage and reserve the bandwidth.
    * \param rInfo The routing information to save.
    */
@@ -439,12 +463,16 @@ private:
   /** Map saving <TEID / Routing information > */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
 
+  /** Map saving <TEID / QoS stats > */
+  typedef std::map<uint32_t, Ptr<QosStatsCalculator> > TeidQosMap_t;
+
   IpMacMap_t        m_arpTable;         //!< ARP resolution table.
   IpSwitchMap_t     m_ipSwitchTable;    //!< eNB IP / Switch Index table.
   ConnInfoMap_t     m_connections;      //!< Connections between switches.
   ContextInfoList_t m_contexts;         //!< List of created contexts.
   TeidRoutingMap_t  m_routes;           //!< TEID routing informations.
-    
+  TeidQosMap_t      m_qosStats;         //!< TEID QoS statistics
+
   uint32_t          m_gbrBearers;       //!< Requests for GBR bearers
   uint32_t          m_gbrBlocks;        //!< Blocked GBR requests
   
