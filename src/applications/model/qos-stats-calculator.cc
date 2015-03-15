@@ -35,7 +35,8 @@ QosStatsCalculator::QosStatsCalculator ()
     m_previousRxTx (Simulator::Now ()),
     m_jitter (0),
     m_delaySum (Time ()),
-    m_lastResetTime (Simulator::Now ())
+    m_lastResetTime (Simulator::Now ()),
+    m_seqNum (0)
 {
   NS_LOG_FUNCTION (this);
   m_lossCounter = new PacketLossCounter (m_windowSize);
@@ -74,8 +75,15 @@ QosStatsCalculator::ResetCounters ()
   m_previousRx = Simulator::Now ();
   m_previousRxTx = Simulator::Now ();
   m_lastResetTime = Simulator::Now ();
+  m_seqNum = 0;
     
   m_lossCounter = new PacketLossCounter (m_windowSize);
+}
+
+uint32_t
+QosStatsCalculator::GetNextSeqNum ()
+{
+  return m_seqNum++;
 }
 
 void

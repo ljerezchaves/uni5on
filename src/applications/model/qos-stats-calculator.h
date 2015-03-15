@@ -67,6 +67,13 @@ public:
   void NotifyReceived (uint32_t seqNum, Time timestamp, uint32_t rxBytes);
 
   /**
+   * Get the next sequence number, which can be freely used by
+   * applications with no changes in other QoS metrics.
+   * \return The next sequence number to use.
+   */
+  uint32_t GetNextSeqNum ();
+  
+  /**
    * Get QoS statistics.
    * \return The statistic value.
    */
@@ -91,6 +98,7 @@ private:
   int64_t            m_jitter;           //!< Jitter estimation
   Time               m_delaySum;         //!< Sum of packet delays
   Time               m_lastResetTime;    //!< Last reset time
+  uint32_t           m_seqNum;           //!< Sequence number counter (not used)
 };
 
 } // namespace ns3
