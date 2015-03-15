@@ -27,10 +27,8 @@
 #include "ns3/event-id.h"
 #include "ns3/ptr.h"
 #include "ns3/address.h"
-#include "ns3/nstime.h"
-#include "ns3/data-rate.h"
 #include "packet-loss-counter.h"
-
+#include "qos-stats-calculator.h"
 namespace ns3 {
 /**
  * \ingroup applications
@@ -82,21 +80,11 @@ public:
    */
   void SetPacketWindowSize (uint16_t size);
 
-  /**
-   * \brief Get application statistics.
-   * \return The statistic value.
-   */
-  //\{
-  void      ResetCounters  ();
-  uint32_t  GetRxPackets   () const;
-  uint32_t  GetRxBytes     () const;
-  double    GetRxLossRatio () const;
-  Time      GetActiveTime  () const;
-  Time      GetRxDelay     () const;
-  Time      GetRxJitter    () const;
-  DataRate  GetRxGoodput   () const;
-  //\}
+  /** Reset the QosStatsCalculator */
+  void ResetQosStats ();
 
+  /** \return Get the QosStatsCalculator */
+  QosStatsCalculator GetQosStats (void) const;
 protected:
   virtual void DoDispose (void);
 
@@ -114,17 +102,12 @@ private:
    */
   void HandleRead (Ptr<Socket> socket);
 
-  uint16_t          m_port;             //!< Port on which we listen for incoming packets.
-  Ptr<Socket>       m_socket;           //!< IPv4 Socket
-  Ptr<Socket>       m_socket6;          //!< IPv6 Socket
-  uint32_t          m_received;         //!< Number of received packets
-  PacketLossCounter m_lossCounter;      //!< Lost packet counter
-  uint32_t          m_rxBytes;          //!< Number of RX bytes
-  Time              m_previousRx;       //!< Previous Rx time
-  Time              m_previousRxTx;     //!< Previous Rx or Tx time
-  int64_t           m_jitter;           //!< Jitter estimation
-  Time              m_delaySum;         //!< Sum of packet delays
-  Time              m_lastResetTime;    //!< Last reset time
+  uint16_t m_port; //!< Port on which we listen for incoming packets.
+  Ptr<Socket> m_socket; //!< IPv4 Socket
+  Ptr<Socket> m_socket6; //!< IPv6 Socket
+  uint32_t m_received; //!< Number of received packets
+  PacketLossCounter m_lossCounter; //!< Lost packet counter
+  QosStatsCalculator m_qosStats;  //!< QoS statistics
 };
 
 } // namespace ns3

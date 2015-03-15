@@ -479,15 +479,15 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
     {
       // Get the relative UDP server for this client
       Ptr<VideoClient> videoApp = DynamicCast<VideoClient> (app);
-      Ptr<UdpServer> serverApp = videoApp->GetServerApp ();
+      QosStatsCalculator qosStats = videoApp->GetServerApp ()->GetQosStats ();
 
       // Tracing application statistics
       std::ostringstream desc;
       desc << "Video [" << rInfo->m_sgwIdx << " --> " << rInfo->m_enbIdx << "]";
-      m_appQosTrace (desc.str (), teid, serverApp->GetActiveTime (),
-          serverApp->GetRxLossRatio (), serverApp->GetRxDelay (),
-          serverApp->GetRxJitter (), serverApp->GetRxBytes (),
-          serverApp->GetRxGoodput ());
+      m_appQosTrace (desc.str (), teid, qosStats.GetActiveTime (),
+          qosStats.GetLossRatio (), qosStats.GetRxDelay (),
+          qosStats.GetRxJitter (), qosStats.GetRxBytes (),
+          qosStats.GetRxThroughput ());
 
     }
   else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
@@ -515,7 +515,7 @@ OpenFlowEpcController::ResetAppStatistics (Ptr<Application> app)
     {
       Ptr<VideoClient> videoApp = DynamicCast<VideoClient> (app);
       videoApp->ResetCounters ();
-      videoApp->GetServerApp ()->ResetCounters ();
+      videoApp->GetServerApp ()->ResetQosStats ();
     }
   else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
     {

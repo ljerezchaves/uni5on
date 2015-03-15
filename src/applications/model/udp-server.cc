@@ -67,7 +67,7 @@ UdpServer::UdpServer ()
 {
   NS_LOG_FUNCTION (this);
   m_received=0;
-  m_lastResetTime = Time ();
+  m_qosStats.ResetCounters ();
 }
 
 UdpServer::~UdpServer ()
@@ -87,6 +87,19 @@ UdpServer::SetPacketWindowSize (uint16_t size)
 {
   NS_LOG_FUNCTION (this << size);
   m_lossCounter.SetBitMapSize (size);
+  m_qosStats.SetPacketWindowSize (size);
+}
+  
+void 
+UdpServer::ResetQosStats ()
+{
+  m_qosStats.ResetCounters ();
+}
+
+QosStatsCalculator
+UdpServer::GetQosStats (void) const
+{
+  return m_qosStats;
 }
 
 uint32_t
@@ -104,67 +117,10 @@ UdpServer::GetReceived (void) const
 }
 
 void
-UdpServer::ResetCounters ()
-{
-  m_received = 0;
-  m_rxBytes = 0;
-  m_previousRx = Simulator::Now ();
-  m_previousRxTx = Simulator::Now ();
-  m_lastResetTime = Simulator::Now ();
-  m_jitter = 0;
-  m_delaySum = Time ();
-  m_lossCounter.Reset ();
-}
-
-uint32_t  
-UdpServer::GetRxPackets () const
-{
-  return GetReceived ();
-}
-
-uint32_t  
-UdpServer::GetRxBytes () const
-{
-  return m_rxBytes;
-}
-
-double
-UdpServer::GetRxLossRatio () const
-{
-  return ((double)GetLost ()) / (GetLost () + GetRxPackets ());
-}
-
-Time      
-UdpServer::GetActiveTime () const
-{
-  return Simulator::Now () - m_lastResetTime;
-}
-
-Time      
-UdpServer::GetRxDelay () const
-{
-  return m_received ? (m_delaySum / (int64_t)m_received) : m_delaySum;
-}
-
-Time      
-UdpServer::GetRxJitter () const
-{
-  return Time (m_jitter);
-}
-
-DataRate 
-UdpServer::GetRxGoodput () const
-{
-  return DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ());
-}
-
-void
 UdpServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   Application::DoDispose ();
-  m_socket = 0;
-  m_socket6 = 0;
 }
 
 void
@@ -172,24 +128,28 @@ UdpServer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 
-  ResetCounters ();
   if (m_socket == 0)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tid);
-      InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), m_port);
+      InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (),
+                                                   m_port);
       m_socket->Bind (local);
-      m_socket->SetRecvCallback (MakeCallback (&UdpServer::HandleRead, this));
     }
+
+  m_socket->SetRecvCallback (MakeCallback (&UdpServer::HandleRead, this));
 
   if (m_socket6 == 0)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socket6 = Socket::CreateSocket (GetNode (), tid);
-      Inet6SocketAddress local = Inet6SocketAddress (Ipv6Address::GetAny (), m_port);
+      Inet6SocketAddress local = Inet6SocketAddress (Ipv6Address::GetAny (),
+                                                   m_port);
       m_socket6->Bind (local);
-      m_socket6->SetRecvCallback (MakeCallback (&UdpServer::HandleRead, this));
     }
+
+  m_socket6->SetRecvCallback (MakeCallback (&UdpServer::HandleRead, this));
+
 }
 
 void
@@ -237,18 +197,10 @@ UdpServer::HandleRead (Ptr<Socket> socket)
                            " Delay: " << Simulator::Now () - seqTs.GetTs ());
             }
 
-          // Updating counter and statistics
-          // The jitter is calculated using the RFC 1889 (RTP) jitter definition.
-          Time delay = Simulator::Now () - seqTs.GetTs ();
-          Time delta = (Simulator::Now () - m_previousRx) - (seqTs.GetTs () - m_previousRxTx);
-          m_jitter += ((Abs (delta)).GetTimeStep () - m_jitter) >> 4;
-          m_previousRx = Simulator::Now ();
-          m_previousRxTx = seqTs.GetTs ();
-          m_delaySum += delay;
-
+          m_qosStats.NotifyReceived (seqTs.GetSeq (), seqTs.GetTs (), packet->GetSize ());
           m_lossCounter.NotifyReceived (currentSequenceNumber);
           m_received++;
-          m_rxBytes += packet->GetSize ();        }
+        }
     }
 }
 
