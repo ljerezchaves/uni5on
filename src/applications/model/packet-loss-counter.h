@@ -72,10 +72,6 @@ public:
    * \param size The window size. Must be a multiple of 8.
    */
   void SetBitMapSize (uint16_t size);
-   /**
-   * \brief Reset this packet loss counter.
-   */
-  void Reset ();
 private:
   /**
    * \brief Check if a sequence number in the window has been received.

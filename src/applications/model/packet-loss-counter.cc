@@ -66,20 +66,6 @@ PacketLossCounter::SetBitMapSize (uint16_t winSize)
   memset (m_receiveBitMap,0xFF,m_bitMapSize);
 }
 
-void
-PacketLossCounter::Reset ()
-{
-  NS_LOG_FUNCTION (this);
-  m_lost = 0;
-  m_lastMaxSeqNum = 0;
-  if (m_receiveBitMap != 0)
-    {
-      delete [] m_receiveBitMap;
-    }
-  m_receiveBitMap = new uint8_t [m_bitMapSize] ();
-  memset (m_receiveBitMap,0xFF,m_bitMapSize);
-}
-
 uint32_t
 PacketLossCounter::GetLost () const
 {
