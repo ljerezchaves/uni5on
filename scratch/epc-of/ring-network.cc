@@ -142,11 +142,11 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
 
       currDevice = GetSwitchDevice (currIndex);
       currPortDevice = DynamicCast<CsmaNetDevice> (devs.Get (0));
-      currPortNum = currDevice->AddSwitchPort (currPortDevice);
+      currPortNum = currDevice->AddSwitchPort (currPortDevice)->GetPortNo ();
 
       nextDevice = GetSwitchDevice (nextIndex);
       nextPortDevice = DynamicCast<CsmaNetDevice> (devs.Get (1));
-      nextPortNum = nextDevice->AddSwitchPort (nextPortDevice);
+      nextPortNum = nextDevice->AddSwitchPort (nextPortDevice)->GetPortNo ();
 
       // Notify the ring controller of this new connection.
       Ptr<ConnectionInfo> info = CreateObject<ConnectionInfo> ();
@@ -214,7 +214,16 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   Ipv4Address nodeIpAddress = nodeIpIfaces.GetAddress (0);
 
   // Adding newly created csma device as openflow switch port.
-  uint32_t portNum = swtchDev->AddSwitchPort (devices.Get (0));
+  Ptr<OFSwitch13Port> switchPort = swtchDev->AddSwitchPort (devices.Get (0));
+  uint32_t portNum = switchPort->GetPortNo ();
+  
+  // Setting trace sinks
+  std::ostringstream context;
+  context << "Switch/" << switchIdx << "/Port/" << portNum;
+  switchPort->TraceConnect ("SwitchPortRx", context.str (),
+    MakeCallback (&OpenFlowEpcNetwork::InputPacket, this));
+  switchPort->TraceConnect ("SwitchPortTx", context.str (), 
+    MakeCallback (&OpenFlowEpcNetwork::OutputPacket, this));
 
   // Notify controller of a new device
   m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeIpAddress, swtchDev, 
@@ -249,7 +258,8 @@ RingNetwork::AttachToX2 (Ptr<Node> node)
   m_x2Ipv4AddressHelper.NewNetwork ();
   
   // Adding newly created csma device as openflow switch port.
-  uint32_t portNum = swtchDev->AddSwitchPort (devices.Get (0));
+  Ptr<OFSwitch13Port> switchPort = swtchDev->AddSwitchPort (devices.Get (0));
+  uint32_t portNum = switchPort->GetPortNo ();
 
   // Notify controller of a new device
   m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeIpAddress, swtchDev, 

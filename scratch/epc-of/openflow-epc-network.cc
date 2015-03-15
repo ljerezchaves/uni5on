@@ -20,6 +20,7 @@
 
 #include "openflow-epc-network.h"
 #include "openflow-epc-controller.h"
+#include "epc-qos-tag.h"
 
 namespace ns3 {
 
@@ -116,21 +117,6 @@ OpenFlowEpcNetwork::DoDispose ()
 }
 
 void
-OpenFlowEpcNetwork::SetController (Ptr<OpenFlowEpcController> controller)
-{
-  NS_LOG_FUNCTION (this << controller);
-  NS_ASSERT_MSG (!m_ofCtrlApp, "Controller application already set.");
-  
-  // Installing the controller app into a new controller node
-  m_ofCtrlApp = controller;
-  m_ofCtrlNode = CreateObject<Node> ();
-  Names::Add ("ctrl", m_ofCtrlNode);
-
-  m_ofHelper->InstallControllerApp (m_ofCtrlNode, m_ofCtrlApp);
-  m_ofCtrlApp->SetOfNetwork (this);
-}
-
-void
 OpenFlowEpcNetwork::EnableDataPcap (std::string prefix, bool promiscuous)
 {
   m_ofCsmaHelper.EnablePcap (prefix, m_ofSwitches, promiscuous);
@@ -188,6 +174,29 @@ uint16_t
 OpenFlowEpcNetwork::GetNSwitches ()
 {
   return m_ofSwitches.GetN ();
+}
+
+  void 
+OpenFlowEpcNetwork::InputPacket (std::string context, Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << packet);
+  static uint32_t counter = 0;
+  counter++;
+  
+  EpcQosTag tag (counter, counter);
+  packet->AddPacketTag (tag);
+  std::cout << context << " -- ";
+  tag.Print (std::cout);
+  std::cout << std::endl;
+}
+
+void
+OpenFlowEpcNetwork::OutputPacket (std::string context, Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << packet);
+  std::cout << context << " -- ";
+  packet->PrintPacketTags (std::cout);
+  std::cout << std::endl;
 }
 
 void
@@ -256,6 +265,22 @@ OpenFlowEpcNetwork::GetSwitchIdxForGateway ()
 {
   return m_gatewaySwitch;
 }
+
+void
+OpenFlowEpcNetwork::SetController (Ptr<OpenFlowEpcController> controller)
+{
+  NS_LOG_FUNCTION (this << controller);
+  NS_ASSERT_MSG (!m_ofCtrlApp, "Controller application already set.");
+  
+  // Installing the controller app into a new controller node
+  m_ofCtrlApp = controller;
+  m_ofCtrlNode = CreateObject<Node> ();
+  Names::Add ("ctrl", m_ofCtrlNode);
+
+  m_ofHelper->InstallControllerApp (m_ofCtrlNode, m_ofCtrlApp);
+  m_ofCtrlApp->SetOfNetwork (this);
+}
+
 
 };  // namespace ns3
 
