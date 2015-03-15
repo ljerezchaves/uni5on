@@ -80,11 +80,16 @@ public:
    */
   void SetPacketWindowSize (uint16_t size);
 
-  /** Reset the QosStatsCalculator */
+  /** 
+   * Reset the QoS statistics
+   */
   void ResetQosStats ();
 
-  /** \return Get the QosStatsCalculator */
-  QosStatsCalculator GetQosStats (void) const;
+  /**
+   * Get QoS statistics
+   * \return Get the const pointer to QosStatsCalculator 
+   */
+  Ptr<const QosStatsCalculator> GetQosStats (void) const;
 protected:
   virtual void DoDispose (void);
 
@@ -107,7 +112,7 @@ private:
   Ptr<Socket> m_socket6; //!< IPv6 Socket
   uint32_t m_received; //!< Number of received packets
   PacketLossCounter m_lossCounter; //!< Lost packet counter
-  QosStatsCalculator m_qosStats;  //!< QoS statistics
+  Ptr<QosStatsCalculator> m_qosStats;  //!< QoS statistics
 };
 
 } // namespace ns3
