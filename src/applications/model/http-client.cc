@@ -216,6 +216,7 @@ HttpClient::SendRequest (Ptr<Socket> socket, string url)
   packet->AddHeader (m_httpHeader);
   NS_LOG_INFO ("HttpClient (" << m_clientAddress << ") >> Sending request for "
               << url << " to server (" << m_peerAddress << ").");
+  socket->Send (packet);
 }
 
 void

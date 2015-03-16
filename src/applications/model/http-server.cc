@@ -182,6 +182,7 @@ HttpServer::HandleReceive (Ptr<Socket> socket)
       NS_LOG_INFO ("HttpServer >> Sending response to client. Main Object Size ("
                    << mainObjectSize << " bytes). NumOfInlineObjects ("
                    << numOfInlineObj << ").");
+      socket->Send (p);
     }
   else
     {
@@ -215,6 +216,7 @@ HttpServer::HandleReceive (Ptr<Socket> socket)
 
       NS_LOG_INFO ("HttpServer >> Sending response to client. Inline Objectsize ("
                    << inlineObjectSize << " bytes).");
+      socket->Send (p);
     }
 }
 
