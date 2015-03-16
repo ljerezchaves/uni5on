@@ -533,7 +533,6 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
     {
       Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
       appStats = httpApp->GetQosStats ();
-      std::ostringstream desc;
       desc << "HTTP  [" << rInfo->m_sgwIdx << " <-> " << rInfo->m_enbIdx << "]";
     }
 
