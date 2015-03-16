@@ -160,9 +160,10 @@ SimulationScenario::BuildRingTopology ()
   m_controller->SetAttribute ("BwReserve", DoubleValue (0.2));
   Names::Add ("ctrlApp", m_controller);
   
-  // OpenFlow EPC ring network
+  // OpenFlow EPC ring network (considering 10km fiber cable latency)
   m_opfNetwork = CreateObject<RingNetwork> ();
   m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (m_nSwitches));
+  m_opfNetwork->SetAttribute ("LinkDelay", TimeValue (MicroSeconds (50));
   m_opfNetwork->CreateTopology (m_controller, m_SwitchIdxPerEnb);
   
   // LTE EPC core (with callbacks setup)
@@ -183,9 +184,9 @@ SimulationScenario::BuildRingTopology ()
   m_lteNetwork->SetAttribute ("Enbs", UintegerValue (m_nEnbs));
   m_lteHelper = m_lteNetwork->CreateTopology (m_epcHelper, m_UesPerEnb);
 
-  // Internet network
+  // Internet network (with a small internet latency of 20 ms)
   m_webNetwork = CreateObject<InternetNetwork> ();
-  m_webNetwork->SetAttribute ("LinkDelay", TimeValue (MilliSeconds (10)));  // TODO check this value
+  m_webNetwork->SetAttribute ("LinkDelay", TimeValue (MilliSeconds (20)));
   m_webHost = m_webNetwork->CreateTopology (m_epcHelper->GetPgwNode ());
 
   // UE Nodes and UE devices
