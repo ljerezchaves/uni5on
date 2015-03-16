@@ -36,7 +36,8 @@ QosStatsCalculator::QosStatsCalculator ()
     m_jitter (0),
     m_delaySum (Time ()),
     m_lastResetTime (Simulator::Now ()),
-    m_seqNum (0)
+    m_seqNum (0),
+    m_dropCounter (0)
 {
   NS_LOG_FUNCTION (this);
   m_lossCounter = new PacketLossCounter (m_windowSize);
@@ -76,6 +77,7 @@ QosStatsCalculator::ResetCounters ()
   m_previousRxTx = Simulator::Now ();
   m_lastResetTime = Simulator::Now ();
   m_seqNum = 0;
+  m_dropCounter = 0;
     
   m_lossCounter = new PacketLossCounter (m_windowSize);
 }
@@ -104,6 +106,12 @@ QosStatsCalculator::NotifyReceived (uint32_t seqNum, Time timestamp,
   
   // Notify packet loss counter
   m_lossCounter->NotifyReceived (seqNum);
+}
+
+void
+QosStatsCalculator::NotifyDropped ()
+{
+  m_dropCounter++;
 }
 
 Time      
@@ -153,6 +161,12 @@ DataRate
 QosStatsCalculator::GetRxThroughput (void) const
 {
   return DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ());
+}
+
+uint32_t
+QosStatsCalculator::GetDropPackets (void) const
+{
+  return m_dropCounter;
 }
 
 } // Namespace ns3

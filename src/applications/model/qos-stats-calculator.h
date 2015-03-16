@@ -67,6 +67,11 @@ public:
   void NotifyReceived (uint32_t seqNum, Time timestamp, uint32_t rxBytes);
 
   /**
+   * Increase the dropped packet counter by one
+   */
+  void NotifyDropped ();
+
+  /**
    * Get the next sequence number, which can be freely used by
    * applications with no changes in other QoS metrics.
    * \return The next sequence number to use.
@@ -86,7 +91,14 @@ public:
   Time      GetRxDelay      (void) const;
   Time      GetRxJitter     (void) const;
   DataRate  GetRxThroughput (void) const;
+  uint32_t  GetDropPackets  (void) const;
   //\}
+
+  /** 
+   * TracedCallback signature for QosStatsCalculator.
+   * \param stats The statistics.
+   */
+  typedef void (* QosStatsCallback)(Ptr<const QosStatsCalculator> stats);
 
 private:
   PacketLossCounter *m_lossCounter;      //!< Lost packet counter
@@ -98,7 +110,10 @@ private:
   int64_t            m_jitter;           //!< Jitter estimation
   Time               m_delaySum;         //!< Sum of packet delays
   Time               m_lastResetTime;    //!< Last reset time
-  uint32_t           m_seqNum;           //!< Sequence number counter (not used)
+
+  // Fields used by OpenFlowEpcNetwork monitoring
+  uint32_t           m_seqNum;           //!< Sequence number counter
+  uint32_t           m_dropCounter;      //!< Counter for dropped packets
 };
 
 } // namespace ns3
