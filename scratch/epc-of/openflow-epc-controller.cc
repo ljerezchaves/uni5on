@@ -58,7 +58,11 @@ OpenFlowEpcController::GetTypeId (void)
     .AddTraceSource ("AppStats",
                      "Application QoS trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_appQosTrace),
-                     "ns3::OpenFlowEpcController::AppQosTracedCallback")
+                     "ns3::OpenFlowEpcController::QosTracedCallback")
+    .AddTraceSource ("EpcStats",
+                     "LTE EPC GTPU QoS trace source.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_epcQosTrace),
+                     "ns3::OpenFlowEpcController::QosTracedCallback")
     .AddTraceSource ("GbrBlock",
                      "The GBR block ratio trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_gbrBlockTrace),
@@ -487,13 +491,15 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
 
   uint32_t teid = GetTeidFromApplication (app);
   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-  Ptr<const QosStatsCalculator> qosStats;
+  Ptr<const QosStatsCalculator> appStats;
+  Ptr<const QosStatsCalculator> epcStats;
   std::ostringstream desc;
 
+  epcStats = GetQosStatsFromTeid (teid);
   if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
     {
       Ptr<VoipPeer> voipApp = DynamicCast<VoipPeer> (app);
-      qosStats = voipApp->GetQosStats ();
+      appStats = voipApp->GetQosStats ();
 
       // Identifying Voip traffic direction
       std::string nodeName = Names::FindName (voipApp->GetNode ());
@@ -506,22 +512,28 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
     {
       // Get the relative UDP server for this client
       Ptr<VideoClient> videoApp = DynamicCast<VideoClient> (app);
-      qosStats = videoApp->GetServerApp ()->GetQosStats ();
+      appStats = videoApp->GetServerApp ()->GetQosStats ();
       desc << "Video [" << rInfo->m_sgwIdx << " --> " << rInfo->m_enbIdx << "]";
     }
   else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
     {
       Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
-      qosStats = httpApp->GetQosStats ();
+      appStats = httpApp->GetQosStats ();
       std::ostringstream desc;
       desc << "HTTP  [" << rInfo->m_sgwIdx << " <-> " << rInfo->m_enbIdx << "]";
     }
 
-  // Tracing application statistics
-  m_appQosTrace (desc.str (), teid, qosStats->GetActiveTime (),
-                 qosStats->GetLossRatio (), qosStats->GetRxDelay (),
-                 qosStats->GetRxJitter (), qosStats->GetRxBytes (),
-                 qosStats->GetRxThroughput ());
+  // Tracing application statistics (Application layer)
+  m_appQosTrace (desc.str (), teid, appStats->GetActiveTime (),
+                 appStats->GetLossRatio (), appStats->GetRxDelay (),
+                 appStats->GetRxJitter (), appStats->GetRxBytes (),
+                 appStats->GetRxThroughput ());
+
+  // Tracing LTE EPC GTPU statistics (IP layer)
+  m_epcQosTrace (desc.str (), teid, epcStats->GetActiveTime (),
+                 epcStats->GetLossRatio (), epcStats->GetRxDelay (),
+                 epcStats->GetRxJitter (), epcStats->GetRxBytes (),
+                 epcStats->GetRxThroughput ());
 }
 
 void
@@ -529,6 +541,8 @@ OpenFlowEpcController::ResetAppStatistics (Ptr<Application> app)
 {
   NS_LOG_FUNCTION (this << app);
   
+  uint32_t teid = GetTeidFromApplication (app);
+  GetQosStatsFromTeid (teid)->ResetCounters ();
   if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
     {
       DynamicCast<VoipPeer> (app)->ResetQosStats ();

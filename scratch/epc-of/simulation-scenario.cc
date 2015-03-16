@@ -52,7 +52,8 @@ SimulationScenario::SimulationScenario ()
     m_lteHelper (0),
     m_webHost (0),
     m_rngStart (0),
-    m_statsFirstWrite (true)
+    m_appStatsFirstWrite (true),
+    m_epcStatsFirstWrite (true)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -83,10 +84,20 @@ SimulationScenario::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::SimulationScenario")
     .SetParent<Object> ()
     .AddConstructor<SimulationScenario> ()
-    .AddAttribute ("StatsFilename",
+    .AddAttribute ("AppStatsFilename",
                    "Name of the file where the app statistics will be saved.",
                    StringValue ("app_stats.txt"),
-                   MakeStringAccessor (&SimulationScenario::m_statsFilename),
+                   MakeStringAccessor (&SimulationScenario::m_appStatsFilename),
+                   MakeStringChecker ())
+    .AddAttribute ("EpcStatsFilename",
+                   "Name of the file where the app statistics will be saved.",
+                   StringValue ("epc_stats.txt"),
+                   MakeStringAccessor (&SimulationScenario::m_epcStatsFilename),
+                   MakeStringChecker ())
+    .AddAttribute ("GbrStatsFilename",
+                   "Name of the file where the app statistics will be saved.",
+                   StringValue ("gbr_stats.txt"),
+                   MakeStringAccessor (&SimulationScenario::m_gbrStatsFilename),
                    MakeStringChecker ())
     .AddAttribute ("TopoFilename",
                    "Name of the file with topology description.",
@@ -174,6 +185,7 @@ SimulationScenario::BuildRingTopology ()
 
   // Internet network
   m_webNetwork = CreateObject<InternetNetwork> ();
+  m_webNetwork->SetAttribute ("LinkDelay", TimeValue (MilliSeconds (10)));  // TODO check this value
   m_webHost = m_webNetwork->CreateTopology (m_epcHelper->GetPgwNode ());
 
   // UE Nodes and UE devices
@@ -188,6 +200,8 @@ SimulationScenario::BuildRingTopology ()
   // Saving controller and application statistics 
   m_controller->TraceConnectWithoutContext ("AppStats", 
       MakeCallback (&SimulationScenario::ReportAppStats, this));
+  m_controller->TraceConnectWithoutContext ("EpcStats", 
+      MakeCallback (&SimulationScenario::ReportEpcStats, this));
   m_controller->TraceConnectWithoutContext ("GbrBlock", 
       MakeCallback (&SimulationScenario::ReportBlockRatio, this));
 
@@ -475,15 +489,15 @@ SimulationScenario::ReportAppStats (std::string description, uint32_t teid,
   NS_LOG_FUNCTION (this << teid);
  
   std::ofstream outFile;
-  if ( m_statsFirstWrite == true )
+  if (m_appStatsFirstWrite == true )
     {
-      outFile.open (m_statsFilename.c_str ());
+      outFile.open (m_appStatsFilename.c_str ());
       if (!outFile.is_open ())
         {
-          NS_LOG_ERROR ("Can't open file " << m_statsFilename);
+          NS_LOG_ERROR ("Can't open file " << m_appStatsFilename);
           return;
         }
-      m_statsFirstWrite = false;
+      m_appStatsFirstWrite = false;
       outFile << left
               << setw (12) << "Time (s)"     << setw (17) << "Description" 
               << setw (6)  << "TEID"         << setw (12) << "Active (s)"
@@ -494,10 +508,58 @@ SimulationScenario::ReportAppStats (std::string description, uint32_t teid,
     }
   else
     {
-      outFile.open (m_statsFilename.c_str (), std::ios_base::app);
+      outFile.open (m_appStatsFilename.c_str (), std::ios_base::app);
       if (!outFile.is_open ())
         {
-          NS_LOG_ERROR ("Can't open file " << m_statsFilename);
+          NS_LOG_ERROR ("Can't open file " << m_appStatsFilename);
+          return;
+        }
+    }
+
+  outFile << left;
+  outFile << setw (12) << Simulator::Now ().GetSeconds ();
+  outFile << setw (17) << description;
+  outFile << setw (6)  << teid;
+  outFile << setw (12) << duration.GetSeconds ();
+  outFile << setw (12) << lossRatio;
+  outFile << setw (12) << delay.GetSeconds () * 1000;
+  outFile << setw (12) << jitter.GetSeconds () * 1000;
+  outFile << setw (10) << bytes;
+  outFile << setw (8)  << goodput << std::endl;
+  outFile.close ();
+}
+
+void 
+SimulationScenario::ReportEpcStats (std::string description, uint32_t teid,
+      Time duration, double lossRatio, Time delay, 
+      Time jitter, uint32_t bytes, DataRate goodput)
+{
+  NS_LOG_FUNCTION (this << teid);
+ 
+  std::ofstream outFile;
+  if (m_epcStatsFirstWrite == true )
+    {
+      outFile.open (m_epcStatsFilename.c_str ());
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_epcStatsFilename);
+          return;
+        }
+      m_epcStatsFirstWrite = false;
+      outFile << left
+              << setw (12) << "Time (s)"     << setw (17) << "Description" 
+              << setw (6)  << "TEID"         << setw (12) << "Active (s)"
+              << setw (12) << "Loss ratio"   << setw (12) << "Delay (ms)"
+              << setw (12) << "Jitter (ms)"  << setw (10) << "RX bytes"
+              << setw (8)  << "Throughput";
+      outFile << std::endl;
+    }
+  else
+    {
+      outFile.open (m_epcStatsFilename.c_str (), std::ios_base::app);
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_epcStatsFilename);
           return;
         }
     }
@@ -519,39 +581,19 @@ void
 SimulationScenario::ReportBlockRatio (uint32_t requests, uint32_t blocks, double ratio)
 {
   std::ofstream outFile;
-  if ( m_statsFirstWrite == true )
+  
+  outFile.open (m_gbrStatsFilename.c_str ());
+  if (!outFile.is_open ())
     {
-      outFile.open (m_statsFilename.c_str ());
-      if (!outFile.is_open ())
-        {
-          NS_LOG_ERROR ("Can't open file " << m_statsFilename);
-          return;
-        }
-      m_statsFirstWrite = false;
-      outFile << left
-              << setw (12) << "Time (s)"     << setw (17) << "Description" 
-              << setw (6)  << "TEID"         << setw (12) << "Active (s)"
-              << setw (12) << "Loss ratio"   << setw (12) << "Delay (ms)"
-              << setw (12) << "Jitter (ms)"  << setw (10) << "RX bytes"
-              << setw (8)  << "Goodput";
-      outFile << std::endl;
+      NS_LOG_ERROR ("Can't open file " << m_gbrStatsFilename);
+      return;
     }
-  else
-    {
-      outFile.open (m_statsFilename.c_str (), std::ios_base::app);
-      if (!outFile.is_open ())
-        {
-          NS_LOG_ERROR ("Can't open file " << m_statsFilename);
-          return;
-        }
-    }
+  
+  outFile << "Number of GBR bearers request: " << requests << std::endl
+          << "Number of GBR bearers blocked: " << blocks   << std::endl
+          << "Block ratio: "                   << ratio    << std::endl;
 
- outFile << "------------------------------------"        << std::endl
-         << "Number of GBR bearers request: " << requests << std::endl
-         << "Number of GBR bearers blocked: " << blocks   << std::endl
-         << "Block ratio: "                   << ratio    << std::endl;
-
- outFile.close ();
+  outFile.close ();
 }
 
 bool

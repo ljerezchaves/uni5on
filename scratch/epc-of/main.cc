@@ -45,7 +45,9 @@ main (int argc, char *argv[])
   cmd.AddValue ("verbose",    "Enable verbose output.", verbose);
   cmd.AddValue ("progress",   "Enable simulation time progress.", progress);
   cmd.AddValue ("simtime",    "Simulation time (seconds).", simTime);
-  cmd.AddValue ("statsfile",  "ns3::SimulationScenario::StatsFilename"); 
+  cmd.AddValue ("appStats",   "ns3::SimulationScenario::AppStatsFilename"); 
+  cmd.AddValue ("epcStats",   "ns3::SimulationScenario::EpcStatsFilename"); 
+  cmd.AddValue ("gbrStats",   "ns3::SimulationScenario::GbrStatsFilename"); 
   cmd.AddValue ("topofile",   "ns3::SimulationScenario::TopoFilename");
   cmd.AddValue ("trace",      "ns3::SimulationScenario::Traces");
   cmd.AddValue ("liblog",     "ns3::SimulationScenario::SwitchLogs");

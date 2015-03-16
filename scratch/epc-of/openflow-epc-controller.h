@@ -174,17 +174,17 @@ public:
   void OutputPacket (std::string context, Ptr<const Packet> packet);
 
   /** 
-   * TracedCallback signature for Application QoS dump. 
+   * TracedCallback signature for QoS dump. 
    * \param description String describing this traffic.
    * \param teid Bearer TEID.
    * \param duration Duration of this traffic.
-   * \param lossRatio Loss packet ratio at application level.
-   * \param delay Packet average delay at application level.
-   * \param jitter Packet average jitter at application level.
-   * \param bytes The total of bytes received at application level.
-   * \param goodput Traffic throguhput at application level.
+   * \param lossRatio Loss packet ratio.
+   * \param delay Packet average delay.
+   * \param jitter Packet average jitter.
+   * \param bytes The total of bytes received.
+   * \param goodput Traffic throguhput.
    */
-  typedef void (* AppQosTracedCallback)
+  typedef void (* QosTracedCallback)
     (std::string description, uint32_t teid, Time duration, double lossRatio,
      Time delay, Time jitter, uint32_t bytes, DataRate goodput);
 
@@ -440,6 +440,10 @@ private:
   /** The Application QoS trace source, fired at DumpAppStatistics. */
   TracedCallback<std::string, uint32_t, Time, double, Time, 
       Time, uint32_t, DataRate> m_appQosTrace;
+
+    /** The LTE EPC QoS trace source, fired at DumpAppStatistics. */
+  TracedCallback<std::string, uint32_t, Time, double, Time, 
+      Time, uint32_t, DataRate> m_epcQosTrace;
 
   /** The GBR block ratio trace source, fired at GetBlockRatioStatistics. */
   TracedCallback<uint32_t, uint32_t, double> m_gbrBlockTrace;

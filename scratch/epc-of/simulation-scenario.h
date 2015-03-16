@@ -99,9 +99,16 @@ private:
 
   /**
    * Save application statistics in file. 
-   * \see ns3::OpenFlowEpcController::AppQosTracedCallback for parameters.
+   * \see ns3::OpenFlowEpcController::QosTracedCallback for parameters.
    */
   void ReportAppStats (std::string description, uint32_t teid, Time duration, 
+      double lossRatio, Time delay, Time jitter, uint32_t bytes, DataRate goodput);
+
+  /**
+   * Save LTE EPC GTPU statistics in file. 
+   * \see ns3::OpenFlowEpcController::QosTracedCallback for parameters.
+   */
+  void ReportEpcStats (std::string description, uint32_t teid, Time duration, 
       double lossRatio, Time delay, Time jitter, uint32_t bytes, DataRate goodput);
 
   /**
@@ -144,8 +151,11 @@ private:
   ApplicationContainer  m_voipServers;        //!< Voip applications
   ApplicationContainer  m_videoServers;       //!< Video applications
 
-  bool                  m_statsFirstWrite;    //!< First write to appStatsFile
-  std::string           m_statsFilename;      //!< AppStats filename
+  bool                  m_appStatsFirstWrite; //!< First write to appStatsFile
+  bool                  m_epcStatsFirstWrite; //!< First write to appStatsFile
+  std::string           m_appStatsFilename;   //!< AppStats filename
+  std::string           m_epcStatsFilename;   //!< AppStats filename
+  std::string           m_gbrStatsFilename;   //!< GBR block filename
   std::string           m_topoFilename;       //!< Topology filename
   std::string           m_switchLog;          //!< Switches log level
   uint32_t              m_nEnbs;              //!< Number of eNBs
