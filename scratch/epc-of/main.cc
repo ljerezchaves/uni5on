@@ -44,11 +44,11 @@ main (int argc, char *argv[])
   CommandLine cmd;
   cmd.AddValue ("verbose",    "Enable verbose output.", verbose);
   cmd.AddValue ("progress",   "Enable simulation time progress.", progress);
-  cmd.AddValue ("simtime",    "Simulation time (seconds).", simTime);
+  cmd.AddValue ("simTime",    "Simulation time (seconds).", simTime);
   cmd.AddValue ("appStats",   "ns3::SimulationScenario::AppStatsFilename"); 
   cmd.AddValue ("epcStats",   "ns3::SimulationScenario::EpcStatsFilename"); 
   cmd.AddValue ("gbrStats",   "ns3::SimulationScenario::GbrStatsFilename"); 
-  cmd.AddValue ("topofile",   "ns3::SimulationScenario::TopoFilename");
+  cmd.AddValue ("topoFile",   "ns3::SimulationScenario::TopoFilename");
   cmd.AddValue ("trace",      "ns3::SimulationScenario::Traces");
   cmd.AddValue ("liblog",     "ns3::SimulationScenario::SwitchLogs");
   cmd.AddValue ("ping",       "ns3::SimulationScenario::PingTraffic");
@@ -56,6 +56,7 @@ main (int argc, char *argv[])
   cmd.AddValue ("voip",       "ns3::SimulationScenario::VoipTraffic");
   cmd.AddValue ("video",      "ns3::SimulationScenario::VideoTraffic");
   cmd.AddValue ("strategy",   "ns3::RingController::Strategy");
+  cmd.AddValue ("ueFixed",    "ns3::LteSquaredGridNetwork::UeFixedPos");
   cmd.AddValue ("bandwidth",  "ns3::RingNetwork::LinkDataRate");
   cmd.Parse (argc, argv);
   

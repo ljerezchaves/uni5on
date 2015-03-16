@@ -62,7 +62,7 @@ LteSquaredGridNetwork::GetTypeId (void)
                    MakeDoubleChecker<double> ())
     .AddAttribute ("UeFixedPos", 
                    "Fix all UEs close to its eNB, avoiding random positions.",
-                   BooleanValue (false),
+                   BooleanValue (true),
                    MakeBooleanAccessor (&LteSquaredGridNetwork::m_fixedUes),
                    MakeBooleanChecker ())
     ;
