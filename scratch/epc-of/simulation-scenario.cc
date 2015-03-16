@@ -163,7 +163,7 @@ SimulationScenario::BuildRingTopology ()
   // OpenFlow EPC ring network (considering 10km fiber cable latency)
   m_opfNetwork = CreateObject<RingNetwork> ();
   m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (m_nSwitches));
-  m_opfNetwork->SetAttribute ("LinkDelay", TimeValue (MicroSeconds (50));
+  m_opfNetwork->SetAttribute ("LinkDelay", TimeValue (MicroSeconds (50)));
   m_opfNetwork->CreateTopology (m_controller, m_SwitchIdxPerEnb);
   
   // LTE EPC core (with callbacks setup)
