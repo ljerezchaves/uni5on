@@ -793,6 +793,7 @@ OpenFlowEpcController::GetQosStatsFromTeid (uint32_t teid)
     {
       // Create and insert the structure
       qosStats = Create<QosStatsCalculator> ();
+      qosStats->SetPacketWindowSize (8);
       std::pair <uint32_t, Ptr<QosStatsCalculator> > entry (teid, qosStats);
       std::pair <TeidQosMap_t::iterator, bool> ret;
       ret = m_qosStats.insert (entry);
