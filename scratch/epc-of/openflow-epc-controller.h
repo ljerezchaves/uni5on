@@ -167,26 +167,28 @@ public:
 
   /**
    * Trace sink for packets leaving the OpenFlow network. The tag will be read
-   * and removed from packet, and QoS stats updated.
+   * from packet, and QoS stats updated.
    * \param context Output switch index and port number.
    * \param packet The packet.
    */
   void OutputPacket (std::string context, Ptr<const Packet> packet);
 
+  /**
+   * Trace sink for packets dropped by meter bands. The tag will be read
+   * from packet, and QoS stats updated.
+   * \param context Output switch index.
+   * \param packet The dropped packet.
+   */
+  void MeterDropPacket (std::string context, Ptr<const Packet> packet);
+
   /** 
    * TracedCallback signature for QoS dump. 
    * \param description String describing this traffic.
    * \param teid Bearer TEID.
-   * \param duration Duration of this traffic.
-   * \param lossRatio Loss packet ratio.
-   * \param delay Packet average delay.
-   * \param jitter Packet average jitter.
-   * \param bytes The total of bytes received.
-   * \param goodput Traffic throguhput.
+   * \param stats The QoS statistics.
    */
-  typedef void (* QosTracedCallback)
-    (std::string description, uint32_t teid, Time duration, double lossRatio,
-     Time delay, Time jitter, uint32_t bytes, DataRate goodput);
+  typedef void (* QosTracedCallback)(std::string description, uint32_t teid, 
+                                     Ptr<const QosStatsCalculator> stats);
 
   /** 
    * TracedCallback signature for GBR block ratio statistics.
@@ -438,12 +440,12 @@ private:
 
 
   /** The Application QoS trace source, fired at DumpAppStatistics. */
-  TracedCallback<std::string, uint32_t, Time, double, Time, 
-      Time, uint32_t, DataRate> m_appQosTrace;
+  TracedCallback<std::string, uint32_t, 
+    Ptr<const QosStatsCalculator> > m_appQosTrace;
 
     /** The LTE EPC QoS trace source, fired at DumpAppStatistics. */
-  TracedCallback<std::string, uint32_t, Time, double, Time, 
-      Time, uint32_t, DataRate> m_epcQosTrace;
+  TracedCallback<std::string, uint32_t, 
+    Ptr<const QosStatsCalculator> > m_epcQosTrace;
 
   /** The GBR block ratio trace source, fired at GetBlockRatioStatistics. */
   TracedCallback<uint32_t, uint32_t, double> m_gbrBlockTrace;

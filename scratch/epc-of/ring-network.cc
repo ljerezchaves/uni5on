@@ -160,6 +160,12 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
       info->portNum2 = nextPortNum;
       info->maxDataRate = m_LinkDataRate;
       m_ringCtrlApp->NotifyNewConnBtwnSwitches (info);
+
+      // Registering trace sink for meter dropped packets
+      std::ostringstream context;
+      context << "Switch/" << currIndex;
+      currDevice->TraceConnect ("MeterDrop", context.str (),
+        MakeCallback (&OpenFlowEpcController::MeterDropPacket, m_ofCtrlApp));
     }
 
   m_ringCtrlApp->NotifyConnBtwnSwitchesOk ();

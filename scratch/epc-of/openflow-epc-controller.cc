@@ -394,6 +394,20 @@ OpenFlowEpcController::OutputPacket (std::string context,
     }
 }
 
+void
+OpenFlowEpcController::MeterDropPacket (std::string context, 
+                                           Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << packet);
+
+  EpcQosTag tag;
+  if (packet->PeekPacketTag (tag))
+    {
+      Ptr<QosStatsCalculator> qosStats = GetQosStatsFromTeid (tag.GetTeid ());
+      qosStats->NotifyDropped ();
+    }
+}
+
 uint16_t 
 OpenFlowEpcController::GetNSwitches ()
 {
@@ -524,16 +538,10 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
     }
 
   // Tracing application statistics (Application layer)
-  m_appQosTrace (desc.str (), teid, appStats->GetActiveTime (),
-                 appStats->GetLossRatio (), appStats->GetRxDelay (),
-                 appStats->GetRxJitter (), appStats->GetRxBytes (),
-                 appStats->GetRxThroughput ());
-
+  m_appQosTrace (desc.str (), teid, appStats);
+  
   // Tracing LTE EPC GTPU statistics (IP layer)
-  m_epcQosTrace (desc.str (), teid, epcStats->GetActiveTime (),
-                 epcStats->GetLossRatio (), epcStats->GetRxDelay (),
-                 epcStats->GetRxJitter (), epcStats->GetRxBytes (),
-                 epcStats->GetRxThroughput ());
+  m_epcQosTrace (desc.str (), teid, epcStats);
 }
 
 void

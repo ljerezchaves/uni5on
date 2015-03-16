@@ -101,15 +101,15 @@ private:
    * Save application statistics in file. 
    * \see ns3::OpenFlowEpcController::QosTracedCallback for parameters.
    */
-  void ReportAppStats (std::string description, uint32_t teid, Time duration, 
-      double lossRatio, Time delay, Time jitter, uint32_t bytes, DataRate goodput);
+  void ReportAppStats (std::string description, uint32_t teid, 
+                       Ptr<const QosStatsCalculator> stats);
 
   /**
    * Save LTE EPC GTPU statistics in file. 
    * \see ns3::OpenFlowEpcController::QosTracedCallback for parameters.
    */
-  void ReportEpcStats (std::string description, uint32_t teid, Time duration, 
-      double lossRatio, Time delay, Time jitter, uint32_t bytes, DataRate goodput);
+  void ReportEpcStats (std::string description, uint32_t teid, 
+                       Ptr<const QosStatsCalculator> stats);
 
   /**
    * Save block ratio statistics in file. 

@@ -160,10 +160,10 @@ SimulationScenario::BuildRingTopology ()
   m_controller->SetAttribute ("BwReserve", DoubleValue (0.2));
   Names::Add ("ctrlApp", m_controller);
   
-  // OpenFlow EPC ring network (considering 10km fiber cable latency)
+  // OpenFlow EPC ring network (considering 20km fiber cable latency)
   m_opfNetwork = CreateObject<RingNetwork> ();
   m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (m_nSwitches));
-  m_opfNetwork->SetAttribute ("LinkDelay", TimeValue (MicroSeconds (50)));
+  m_opfNetwork->SetAttribute ("LinkDelay", TimeValue (MicroSeconds (100)));
   m_opfNetwork->CreateTopology (m_controller, m_SwitchIdxPerEnb);
   
   // LTE EPC core (with callbacks setup)
@@ -484,8 +484,7 @@ SimulationScenario::EnableVideoTraffic ()
 
 void 
 SimulationScenario::ReportAppStats (std::string description, uint32_t teid,
-      Time duration, double lossRatio, Time delay, 
-      Time jitter, uint32_t bytes, DataRate goodput)
+                                    Ptr<const QosStatsCalculator> stats)
 {
   NS_LOG_FUNCTION (this << teid);
  
@@ -500,11 +499,17 @@ SimulationScenario::ReportAppStats (std::string description, uint32_t teid,
         }
       m_appStatsFirstWrite = false;
       outFile << left
-              << setw (12) << "Time (s)"     << setw (17) << "Description" 
-              << setw (6)  << "TEID"         << setw (12) << "Active (s)"
-              << setw (12) << "Loss ratio"   << setw (12) << "Delay (ms)"
-              << setw (12) << "Jitter (ms)"  << setw (10) << "RX bytes"
-              << setw (8)  << "Goodput";
+              << setw (12) << "Time (s)"
+              << setw (17) << "Description"
+              << setw (6)  << "TEID"
+              << setw (12) << "Active (s)"
+              << setw (12) << "Delay (ms)"
+              << setw (12) << "Jitter (ms)"
+              << setw (9)  << "Rx Pkts"
+              << setw (12) << "Loss ratio"
+              << setw (6)  << "Losts"
+              << setw (10) << "Rx Bytes"
+              << setw (8)  << "Throughput";
       outFile << std::endl;
     }
   else
@@ -521,19 +526,20 @@ SimulationScenario::ReportAppStats (std::string description, uint32_t teid,
   outFile << setw (12) << Simulator::Now ().GetSeconds ();
   outFile << setw (17) << description;
   outFile << setw (6)  << teid;
-  outFile << setw (12) << duration.GetSeconds ();
-  outFile << setw (12) << lossRatio;
-  outFile << setw (12) << delay.GetSeconds () * 1000;
-  outFile << setw (12) << jitter.GetSeconds () * 1000;
-  outFile << setw (10) << bytes;
-  outFile << setw (8)  << goodput << std::endl;
+  outFile << setw (12) << stats->GetActiveTime ().GetSeconds ();
+  outFile << setw (12) << fixed << stats->GetRxDelay ().GetSeconds () * 1000;
+  outFile << setw (12) << fixed << stats->GetRxJitter ().GetSeconds () * 1000;
+  outFile << setw (9)  << fixed << stats->GetRxPackets ();
+  outFile << setw (12) << fixed << stats->GetLossRatio ();
+  outFile << setw (6)  << fixed << stats->GetLostPackets ();
+  outFile << setw (10) << fixed << stats->GetRxBytes ();
+  outFile << setw (8)  << fixed << stats->GetRxThroughput () << std::endl;
   outFile.close ();
 }
 
 void 
 SimulationScenario::ReportEpcStats (std::string description, uint32_t teid,
-      Time duration, double lossRatio, Time delay, 
-      Time jitter, uint32_t bytes, DataRate goodput)
+                                    Ptr<const QosStatsCalculator> stats)
 {
   NS_LOG_FUNCTION (this << teid);
  
@@ -548,10 +554,16 @@ SimulationScenario::ReportEpcStats (std::string description, uint32_t teid,
         }
       m_epcStatsFirstWrite = false;
       outFile << left
-              << setw (12) << "Time (s)"     << setw (17) << "Description" 
-              << setw (6)  << "TEID"         << setw (12) << "Active (s)"
-              << setw (12) << "Loss ratio"   << setw (12) << "Delay (ms)"
-              << setw (12) << "Jitter (ms)"  << setw (10) << "RX bytes"
+              << setw (12) << "Time (s)"
+              << setw (17) << "Description"
+              << setw (6)  << "TEID"
+              << setw (12) << "Active (s)"
+              << setw (12) << "Delay (ms)"
+              << setw (12) << "Jitter (ms)"
+              << setw (9)  << "Rx Pkts"
+              << setw (12) << "Loss ratio"
+              << setw (14) << "Losts / Drops"
+              << setw (10) << "Rx Bytes"
               << setw (8)  << "Throughput";
       outFile << std::endl;
     }
@@ -569,12 +581,15 @@ SimulationScenario::ReportEpcStats (std::string description, uint32_t teid,
   outFile << setw (12) << Simulator::Now ().GetSeconds ();
   outFile << setw (17) << description;
   outFile << setw (6)  << teid;
-  outFile << setw (12) << duration.GetSeconds ();
-  outFile << setw (12) << lossRatio;
-  outFile << setw (12) << delay.GetSeconds () * 1000;
-  outFile << setw (12) << jitter.GetSeconds () * 1000;
-  outFile << setw (10) << bytes;
-  outFile << setw (8)  << goodput << std::endl;
+  outFile << setw (12) << stats->GetActiveTime ().GetSeconds ();
+  outFile << setw (12) << fixed << stats->GetRxDelay ().GetSeconds () * 1000;
+  outFile << setw (12) << fixed << stats->GetRxJitter ().GetSeconds () * 1000;
+  outFile << setw (9)  << fixed << stats->GetRxPackets ();
+  outFile << setw (12) << fixed << stats->GetLossRatio ();
+  outFile << setw (5)  << fixed << stats->GetLostPackets () << " / ";
+  outFile << setw (6)  << fixed << stats->GetDropPackets ();
+  outFile << setw (10) << fixed << stats->GetRxBytes ();
+  outFile << setw (8)  << fixed << stats->GetRxThroughput () << std::endl;
   outFile.close ();
 }
 
