@@ -249,7 +249,7 @@ SimulationScenario::EnableHttpTraffic ()
   httpHelper.SetClientAttribute ("Direction", 
       EnumValue (Application::BIDIRECTIONAL));
   httpHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
-  httpHelper.SetClientAttribute ("TcpTimeout", TimeValue (Seconds (10))); 
+  httpHelper.SetClientAttribute ("TcpTimeout", TimeValue (Seconds (5))); 
   // The HTTP client/server TCP timeout was selected based on HTTP traffic
   // model and dedicated bearer idle timeout. Every time the TCP socket is
   // closed, HTTP client application notify the controller, and traffic
