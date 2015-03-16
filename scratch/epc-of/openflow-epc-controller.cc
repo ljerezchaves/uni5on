@@ -615,7 +615,7 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
 
   // Handling GTP tunnels at table #1
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=2 eth_type=0x800,"
-                       "ip_proto=17,udp_src=2152,udp_dst=2152 apply:nw_dec goto:1");
+                       "ip_proto=17,udp_src=2152,udp_dst=2152 goto:1");
   DpctlCommand (swtch, "flow-mod cmd=add,table=1,prio=0 write:output=ctrl");
 }
 
