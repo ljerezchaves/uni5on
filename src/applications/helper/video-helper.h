@@ -63,10 +63,10 @@ public:
    * \param serverNode The node to install the UdpServer app.
    * \param serverAddress The IPv4 address of the UDP server.
    * \param serverPort The port number of the UDP server
-   * \return The pair of applications created.
+   * \return The VideoClient application created.
    */
-  ApplicationContainer Install (Ptr<Node> clientNode, Ptr<Node> serverNode, 
-                               Ipv4Address serverAddress, uint16_t serverPort);
+  Ptr<VideoClient> Install (Ptr<Node> clientNode, Ptr<Node> serverNode, 
+                           Ipv4Address serverAddress, uint16_t serverPort);
 
 private:
   ObjectFactory m_clientFactory; //!< Object client factory.
