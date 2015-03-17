@@ -215,7 +215,7 @@ EpcSgwPgwApplication::SendToS1uSocket (Ptr<Packet> packet, Ipv4Address enbAddr, 
   packet->AddHeader (gtpu);
   uint32_t flags = 0;
 
-  EpcGtpuTag teidTag (teid);
+  EpcGtpuTag teidTag (teid, true);  // Downlink traffic
   packet->AddPacketTag (teidTag);
   m_s1uSocket->SendTo (packet, flags, InetSocketAddress (enbAddr, m_gtpuUdpPort));
 }

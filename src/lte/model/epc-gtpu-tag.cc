@@ -29,8 +29,9 @@ EpcGtpuTag::EpcGtpuTag ()
 {
 }
 
-EpcGtpuTag::EpcGtpuTag (uint32_t teid)
-  : m_teid (teid)
+EpcGtpuTag::EpcGtpuTag (uint32_t teid, bool isDown)
+  : m_teid (teid),
+    m_isDown (isDown)
 {
 }
 
@@ -53,25 +54,27 @@ EpcGtpuTag::GetInstanceTypeId (void) const
 uint32_t 
 EpcGtpuTag::GetSerializedSize (void) const
 {
-  return 4;
+  return 5;
 }
 
 void 
 EpcGtpuTag::Serialize (TagBuffer i) const
 {
   i.WriteU32 (m_teid);
+  i.WriteU8 (m_isDown);
 }
 
 void 
 EpcGtpuTag::Deserialize (TagBuffer i)
 {
   m_teid = i.ReadU32 ();
+  m_isDown = i.ReadU8 ();
 }
 
 void 
 EpcGtpuTag::Print (std::ostream &os) const
 {
-  os << " TEID=" << m_teid;
+  os << " TEID=" << m_teid << " IsDownlink?=" << m_isDown;
 }
 
 uint32_t 
@@ -80,10 +83,22 @@ EpcGtpuTag::GetTeid () const
   return m_teid;
 }
 
+bool
+EpcGtpuTag::IsDownlink () const
+{
+  return (bool)m_isDown;
+}
+
 void 
 EpcGtpuTag::SetTeid (uint32_t teid)
 {
   m_teid = teid;
+}
+
+void 
+EpcGtpuTag::SetIsDownlink (bool isDown)
+{
+  m_isDown = (uint8_t)isDown;
 }
 
 };  // namespace ns3

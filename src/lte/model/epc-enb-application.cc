@@ -313,7 +313,7 @@ EpcEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
   packet->AddHeader (gtpu);
   uint32_t flags = 0;
 
-  EpcGtpuTag teidTag (teid);
+  EpcGtpuTag teidTag (teid, false); // Uplink traffic
   packet->AddPacketTag (teidTag);
   m_s1uSocket->SendTo (packet, flags, InetSocketAddress (m_sgwS1uAddress, m_gtpuUdpPort));
 }

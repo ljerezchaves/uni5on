@@ -38,7 +38,7 @@ public:
 
   /** Constructors */
   EpcGtpuTag ();
-  EpcGtpuTag (uint32_t teid);
+  EpcGtpuTag (uint32_t teid, bool isDown);
 
   // Inherited from Tag
   virtual void Serialize (TagBuffer i) const;
@@ -48,12 +48,19 @@ public:
  
   /** \return the teid field */
   uint32_t GetTeid () const;
+
+  /** \return true when downlink traffic, false otherwise */
+  bool IsDownlink () const;
   
-  /** \return the sequence number field */
+  /** Set the teid field */
   void SetTeid (uint32_t teid);
+
+  /** Set the isDownlink field */
+  void SetIsDownlink (bool isDown);
 
 private:
   uint32_t m_teid;  //!< GTP teid
+  uint8_t m_isDown; //!< True when downlink traffic
 };
 
 };  // namespace ns3
