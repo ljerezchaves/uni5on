@@ -80,11 +80,23 @@ ConfigureDefaults ()
   // Increasing SrsPeriodicity to allow more UEs per eNB.
   Config::SetDefault ("ns3::LteEnbRrc::SrsPeriodicity", UintegerValue (320));
 
-  // Configuring dl and up channel and bandwidth (channel #7 bandwidth: 20Mhz)
+  // Downlink and uplink bandwidth: 100 RBs = 20Mhz
   Config::SetDefault ("ns3::LteEnbNetDevice::UlBandwidth", UintegerValue (100));
   Config::SetDefault ("ns3::LteEnbNetDevice::DlBandwidth", UintegerValue (100));
-  Config::SetDefault ("ns3::LteEnbNetDevice::DlEarfcn", UintegerValue (2750));
-  Config::SetDefault ("ns3::LteEnbNetDevice::UlEarfcn", UintegerValue (20750));
+
+  // Considering Band #7 @2600 MHz, used in Brazil
+  // http://www.teleco.com.br/en/en_4g_freq.asp 
+  // http://niviuk.free.fr/lte_band.php
+  Config::SetDefault ("ns3::LteEnbNetDevice::DlEarfcn", UintegerValue (3100));
+  Config::SetDefault ("ns3::LteEnbNetDevice::UlEarfcn", UintegerValue (21100));
+
+  // FIXME Ops... o manual diz pra usar
+  // lteHelper->SetEnbDeviceAttribute ("DlEarfcn", UintegerValue (100));
+  // lteHelper->SetEnbDeviceAttribute ("UlEarfcn", UintegerValue (1810
+
+  // Setting a MacroCell ? 46 dBm
+  // TX power?
+  // Distance between eNBs? 1KM????
 
   // The minimum (default) value for TCP MSS is 536, and there's no dynamic MTU
   // discovery implemented yet in ns3. We defined this value to 1400,
