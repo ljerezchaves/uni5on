@@ -373,8 +373,9 @@ OpenFlowEpcController::InputPacket (std::string context,
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      Ptr<QosStatsCalculator> qosStats = GetQosStatsFromTeid (gtpuTag.GetTeid ());
-      EpcQosTag qosTag (qosStats->GetNextSeqNum (), gtpuTag.GetTeid ());
+      Ptr<QosStatsCalculator> qosStats = 
+        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      EpcQosTag qosTag (qosStats->GetNextSeqNum ());
       packet->AddPacketTag (qosTag);
     }
 }
@@ -385,12 +386,17 @@ OpenFlowEpcController::OutputPacket (std::string context,
 {
   NS_LOG_FUNCTION (this << packet);
 
-  EpcQosTag tag;
-  if (packet->PeekPacketTag (tag))
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
     {
-      Ptr<QosStatsCalculator> qosStats = GetQosStatsFromTeid (tag.GetTeid ());
-      qosStats->NotifyReceived (tag.GetSeqNum (), tag.GetTimestamp (), 
-                                packet->GetSize ());
+      EpcQosTag qosTag;
+      if (packet->PeekPacketTag (qosTag))
+        {
+          Ptr<QosStatsCalculator> qosStats = 
+            GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+          qosStats->NotifyReceived (qosTag.GetSeqNum (), qosTag.GetTimestamp (), 
+                                    packet->GetSize ());
+        }
     }
 }
 
@@ -400,10 +406,11 @@ OpenFlowEpcController::MeterDropPacket (std::string context,
 {
   NS_LOG_FUNCTION (this << packet);
 
-  EpcQosTag tag;
-  if (packet->PeekPacketTag (tag))
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
     {
-      Ptr<QosStatsCalculator> qosStats = GetQosStatsFromTeid (tag.GetTeid ());
+      Ptr<QosStatsCalculator> qosStats = 
+        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
       qosStats->NotifyDropped ();
     }
 }
@@ -509,7 +516,6 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
   Ptr<const QosStatsCalculator> epcStats;
   std::ostringstream desc;
 
-  epcStats = GetQosStatsFromTeid (teid);
   if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
     {
       Ptr<VoipPeer> voipApp = DynamicCast<VoipPeer> (app);
@@ -521,6 +527,7 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
       uint16_t srcIdx = downlink ? rInfo->m_sgwIdx : rInfo->m_enbIdx;
       uint16_t dstIdx = downlink ? rInfo->m_enbIdx : rInfo->m_sgwIdx; 
       desc << "VoIP  [" << srcIdx << " --> " << dstIdx << "]";
+      epcStats = GetQosStatsFromTeid (teid, downlink);
     }
   else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
     {
@@ -528,12 +535,14 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
       Ptr<VideoClient> videoApp = DynamicCast<VideoClient> (app);
       appStats = videoApp->GetServerApp ()->GetQosStats ();
       desc << "Video [" << rInfo->m_sgwIdx << " --> " << rInfo->m_enbIdx << "]";
+      epcStats = GetQosStatsFromTeid (teid, true);
     }
   else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
     {
       Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
       appStats = httpApp->GetQosStats ();
       desc << "HTTP  [" << rInfo->m_sgwIdx << " <-> " << rInfo->m_enbIdx << "]";
+      epcStats = GetQosStatsFromTeid (teid, true);
     }
 
   // Tracing application statistics (Application layer)
@@ -548,8 +557,11 @@ OpenFlowEpcController::ResetAppStatistics (Ptr<Application> app)
 {
   NS_LOG_FUNCTION (this << app);
   
+  // Reset both dowlink and uplink stats
   uint32_t teid = GetTeidFromApplication (app);
-  GetQosStatsFromTeid (teid)->ResetCounters ();
+  GetQosStatsFromTeid (teid, true)->ResetCounters ();
+  GetQosStatsFromTeid (teid, false)->ResetCounters ();
+  
   if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
     {
       DynamicCast<VoipPeer> (app)->ResetQosStats ();
@@ -778,7 +790,7 @@ OpenFlowEpcController::GetBearerFromTft (Ptr<EpcTft> tft)
 }
 
 Ptr<QosStatsCalculator>
-OpenFlowEpcController::GetQosStatsFromTeid (uint32_t teid)
+OpenFlowEpcController::GetQosStatsFromTeid (uint32_t teid, bool isDown)
 {
   Ptr<QosStatsCalculator> qosStats = 0;
   TeidQosMap_t::iterator it;
@@ -786,22 +798,26 @@ OpenFlowEpcController::GetQosStatsFromTeid (uint32_t teid)
   if (it != m_qosStats.end ())
     {
       NS_LOG_DEBUG ("Found QoS entry: " << teid);
-      return it->second;
+      QosStatsPair_t value = it->second;
+      qosStats = isDown ? value.first : value.second;
     }
   else
     {
       // Create and insert the structure
-      qosStats = Create<QosStatsCalculator> ();
-      qosStats->SetPacketWindowSize (8);
-      std::pair <uint32_t, Ptr<QosStatsCalculator> > entry (teid, qosStats);
+      QosStatsPair_t pair (Create<QosStatsCalculator> (), 
+                           Create<QosStatsCalculator> ());
+      pair.first->SetPacketWindowSize (8);
+      pair.second->SetPacketWindowSize (8);
+      std::pair <uint32_t, QosStatsPair_t> entry (teid, pair);
       std::pair <TeidQosMap_t::iterator, bool> ret;
       ret = m_qosStats.insert (entry);
       if (ret.second == false)
         {
           NS_FATAL_ERROR ("Existing QoS entry for teid " << teid);
         }
-      return qosStats;
+      qosStats = isDown ? pair.first : pair.second;
     }
+  return qosStats;
 }
 
 void 

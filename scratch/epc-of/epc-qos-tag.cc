@@ -30,10 +30,9 @@ EpcQosTag::EpcQosTag ()
 {
 }
 
-EpcQosTag::EpcQosTag (uint32_t seq, uint32_t teid)
+EpcQosTag::EpcQosTag (uint32_t seq)
   : m_ts (Simulator::Now ().GetTimeStep ()),
-    m_seq (seq),
-    m_teid (teid)
+    m_seq (seq)
 {
 }
 
@@ -56,7 +55,7 @@ EpcQosTag::GetInstanceTypeId (void) const
 uint32_t 
 EpcQosTag::GetSerializedSize (void) const
 {
-  return 16;
+  return 12;
 }
 
 void 
@@ -64,7 +63,6 @@ EpcQosTag::Serialize (TagBuffer i) const
 {
   i.WriteU64 (m_ts);
   i.WriteU32 (m_seq);
-  i.WriteU32 (m_teid);
 }
 
 void 
@@ -72,19 +70,12 @@ EpcQosTag::Deserialize (TagBuffer i)
 {
   m_ts = i.ReadU64 ();
   m_seq = i.ReadU32 ();
-  m_teid = i.ReadU32 ();
 }
 
 void 
 EpcQosTag::Print (std::ostream &os) const
 {
-  os << " EpcQosTag teid=" << m_teid << " seq=" << m_seq << " ts=" << m_ts;
-}
-
-uint32_t 
-EpcQosTag::GetTeid () const
-{
-  return m_teid;
+  os << " EpcQosTag seq=" << m_seq << " ts=" << m_ts;
 }
 
 uint32_t 

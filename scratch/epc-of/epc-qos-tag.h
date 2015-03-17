@@ -39,7 +39,7 @@ public:
 
   /** Constructors */
   EpcQosTag ();
-  EpcQosTag (uint32_t seq, uint32_t teid);
+  EpcQosTag (uint32_t seq);
 
   // Inherited from Tag
   virtual void Serialize (TagBuffer i) const;
@@ -47,9 +47,6 @@ public:
   virtual uint32_t GetSerializedSize () const;
   virtual void Print (std::ostream &os) const;
  
-  /** \return the teid field */
-  uint32_t GetTeid () const;
-  
   /** \return the sequence number field */
   uint32_t GetSeqNum () const;
 
@@ -59,7 +56,6 @@ public:
 private:
   uint64_t m_ts;    //!< Creating timestamp
   uint32_t m_seq;   //!< Packet sequence number
-  uint32_t m_teid;  //!< GTP teid
 };
 
 };  // namespace ns3

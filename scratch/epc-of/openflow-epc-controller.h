@@ -376,9 +376,10 @@ private:
    * Retrieve the LTE EPC QoS statistics information for the GTP tunnel id.
    * When no information structure available, create it.
    * \param teid The GTP tunnel id.
+   * \param isDown True for downlink stats, false for uplink.
    * \return The QoS information.
    */
-  Ptr<QosStatsCalculator> GetQosStatsFromTeid (uint32_t teid);
+  Ptr<QosStatsCalculator> GetQosStatsFromTeid (uint32_t teid, bool isDown);
 
   /**
    * Save the RoutingInfo metadata for further usage and reserve the bandwidth.
@@ -452,7 +453,11 @@ private:
 
   
   /** A pair of switches index */
-  typedef std::pair<uint16_t, uint16_t> SwitchPair_t; 
+  typedef std::pair<uint16_t, uint16_t> SwitchPair_t;
+
+  /** A pair of QosStatsCalculator, for downlink and uplink statistics */
+  typedef std::pair<Ptr<QosStatsCalculator>, 
+    Ptr<QosStatsCalculator> > QosStatsPair_t;
 
   /** A list of context information */
   typedef std::vector<Ptr<ContextInfo> > ContextInfoList_t;
@@ -470,7 +475,7 @@ private:
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
 
   /** Map saving <TEID / QoS stats > */
-  typedef std::map<uint32_t, Ptr<QosStatsCalculator> > TeidQosMap_t;
+  typedef std::map<uint32_t, QosStatsPair_t> TeidQosMap_t;
 
   IpMacMap_t        m_arpTable;         //!< ARP resolution table.
   IpSwitchMap_t     m_ipSwitchTable;    //!< eNB IP / Switch Index table.
