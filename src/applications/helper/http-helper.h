@@ -63,10 +63,10 @@ public:
    * \param serverNode The node to install the HttpServer app.
    * \param serverAddress The IPv4 address of the Http server.
    * \param serverPort The port number of the Http server
-   * \return The pair of applications created.
+   * \return The HttpClient applicatio created.
    */
-  ApplicationContainer Install (Ptr<Node> clientNode, Ptr<Node> serverNode, 
-                               Ipv4Address serverAddress, uint16_t serverPort);
+  Ptr<HttpClient> Install (Ptr<Node> clientNode, Ptr<Node> serverNode, 
+                           Ipv4Address serverAddress, uint16_t serverPort);
 
 private:
   ObjectFactory m_clientFactory; //!< Object client factory.

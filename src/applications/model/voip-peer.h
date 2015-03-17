@@ -27,6 +27,7 @@
 #include <ns3/ptr.h>
 #include <ns3/ipv4-address.h>
 #include <ns3/seq-ts-header.h>
+#include <ns3/random-variable-stream.h>
 #include "ns3/data-rate.h"
 #include "qos-stats-calculator.h"
 

@@ -21,7 +21,6 @@
 #include "video-helper.h"
 #include "ns3/udp-server.h"
 #include "ns3/udp-trace-client.h"
-#include "ns3/video-client.h"
 #include "ns3/uinteger.h"
 #include "ns3/string.h"
 
@@ -45,12 +44,10 @@ VideoHelper::SetServerAttribute (std::string name, const AttributeValue &value)
   m_serverFactory.Set (name, value);
 }
 
-ApplicationContainer
+Ptr<VideoClient>
 VideoHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode, 
                       Ipv4Address serverAddress, uint16_t serverPort)
 {
-  ApplicationContainer apps;
-
   Ptr<VideoClient> clientApp = m_clientFactory.Create<VideoClient> ();
   Ptr<UdpServer> serverApp = m_serverFactory.Create<UdpServer> ();
   
@@ -58,13 +55,11 @@ VideoHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
   clientApp->SetAttribute ("RemotePort", UintegerValue (serverPort));
   clientApp->SetServerApp (serverApp);
   clientNode->AddApplication (clientApp);
-  apps.Add (clientApp);
   
   serverApp->SetAttribute ("Port", UintegerValue (serverPort));
   serverNode->AddApplication (serverApp);
-  apps.Add (serverApp);
   
-  return apps;
+  return clientApp;
 }
 
 } // namespace ns3

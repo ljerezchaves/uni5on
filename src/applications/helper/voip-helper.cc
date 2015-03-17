@@ -42,13 +42,11 @@ VoipHelper::SetAttribute (std::string name, const AttributeValue &value)
   m_factory.Set (name, value);
 }
 
-ApplicationContainer
+Ptr<VoipPeer>
 VoipHelper::Install (Ptr<Node> firstNode,   Ptr<Node> secondNode, 
                      Ipv4Address firstAddr, Ipv4Address secondAddr, 
                      uint16_t firstPort,    uint16_t secondPort)
 {
-  ApplicationContainer apps;
-
   Ptr<VoipPeer> firstApp  = m_factory.Create<VoipPeer> ();
   Ptr<VoipPeer> secondApp = m_factory.Create<VoipPeer> ();
   
@@ -57,16 +55,14 @@ VoipHelper::Install (Ptr<Node> firstNode,   Ptr<Node> secondNode,
   firstApp->SetAttribute ("LocalPort", UintegerValue (firstPort));
   firstApp->SetPeerApp (secondApp);
   firstNode->AddApplication (firstApp);
-  apps.Add (firstApp);
   
   secondApp->SetAttribute ("PeerAddress", Ipv4AddressValue (firstAddr));
   secondApp->SetAttribute ("PeerPort", UintegerValue (firstPort));
   secondApp->SetAttribute ("LocalPort", UintegerValue (secondPort));
   secondApp->SetPeerApp (firstApp);
   secondNode->AddApplication (secondApp);
-  apps.Add (secondApp);
   
-  return apps;
+  return firstApp;
 }
 
 } // namespace ns3

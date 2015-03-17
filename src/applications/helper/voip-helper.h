@@ -30,6 +30,7 @@
 #include "ns3/net-device.h"
 #include "ns3/node-container.h"
 #include "ns3/application-container.h"
+#include "ns3/voip-peer.h"
 
 namespace ns3 {
 
@@ -57,11 +58,11 @@ public:
    * \param secondAddr The IPv4 address of second node.
    * \param firstPort The input port number in first node.
    * \param secondPort The input port number in second node.
-   * \return The pair of applications created.
+   * \return One of the VoipPeer application pair created.
    */
-  ApplicationContainer Install (Ptr<Node>   firstNode, Ptr<Node> secondNode, 
-                                Ipv4Address firstAddr, Ipv4Address secondAddr,
-                                uint16_t    firstPort, uint16_t secondPort);
+  Ptr<VoipPeer> Install (Ptr<Node>   firstNode, Ptr<Node> secondNode, 
+                         Ipv4Address firstAddr, Ipv4Address secondAddr,
+                         uint16_t    firstPort, uint16_t secondPort);
 
 private:
   ObjectFactory m_factory; //!< Object factory.

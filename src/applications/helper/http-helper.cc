@@ -42,12 +42,10 @@ HttpHelper::SetServerAttribute (std::string name, const AttributeValue &value)
   m_serverFactory.Set (name, value);
 }
 
-ApplicationContainer
+Ptr<HttpClient>
 HttpHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode, 
                       Ipv4Address serverAddress, uint16_t serverPort)
 {
-  ApplicationContainer apps;
-
   Ptr<HttpClient> clientApp = m_clientFactory.Create<HttpClient> ();
   Ptr<HttpServer> serverApp = m_serverFactory.Create<HttpServer> ();
   
@@ -55,14 +53,12 @@ HttpHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
   clientApp->SetAttribute ("RemotePort", UintegerValue (serverPort));
   clientApp->SetServerApp (serverApp);
   clientNode->AddApplication (clientApp);
-  apps.Add (clientApp);
   
   serverApp->SetAttribute ("Port", UintegerValue (serverPort));
   serverApp->SetClientApp (clientApp);
   serverNode->AddApplication (serverApp);
-  apps.Add (serverApp);
   
-  return apps;
+  return clientApp;
 }
 
 } // namespace ns3

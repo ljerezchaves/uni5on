@@ -239,7 +239,6 @@ SimulationScenario::EnableHttpTraffic ()
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
   Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
 
-  ApplicationContainer serverApps, clientApps;
   ApplicationContainer httpApps;
 
   HttpHelper httpHelper;
@@ -268,9 +267,8 @@ SimulationScenario::EnableHttpTraffic ()
       Ptr<EpcTft> tft = CreateObject<EpcTft> ();
 
       // HTTP client / server
-      ApplicationContainer apps = httpHelper.Install (client, m_webHost, 
-           serverAddr, httpPort);
-      Ptr<HttpClient> clientApp = DynamicCast<HttpClient> (apps.Get (0));
+      Ptr<HttpClient> clientApp = httpHelper.Install (client, m_webHost, 
+                                                      serverAddr, httpPort);
       clientApp->AggregateObject (tft);
       clientApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
       httpApps.Add (clientApp);
@@ -290,6 +288,8 @@ SimulationScenario::EnableHttpTraffic ()
       GbrQosInformation qos;
       qos.mbrDl = 1048576;    // Up to 1024 Kbps downlink
       qos.mbrUl = 131072;     // Up to  128 Kbps uplink 
+      qos.mbrDl = 262400;     // Up to 256 Kbps downlink
+      qos.mbrUl = 65536;      // Up to  64 Kbps uplink 
       EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
@@ -343,14 +343,16 @@ SimulationScenario::EnableVoipTraffic ()
       // Traffic Flow Template
       Ptr<EpcTft> tft = CreateObject<EpcTft> ();
 
-      // Bidirectional VoIP traffic
+      // Bidirectional VoIP traffic // FIXME Preciso mesmo dos dois ponteiros???
       voipHelper.SetAttribute ("Stream", IntegerValue (u));
-      ApplicationContainer apps = voipHelper.Install (client, m_webHost, 
+      Ptr<VoipPeer> peerApp = voipHelper.Install (client, m_webHost, 
           clientAddr, serverAddr, voipPort, voipPort);
-      apps.Get (0)->AggregateObject (tft);
-      apps.Get (1)->AggregateObject (tft);
-      apps.Start (Seconds (m_rngStart->GetValue ()));
-      voipApps.Add (apps);
+      peerApp->AggregateObject (tft);
+      peerApp->GetPeerApp ()->AggregateObject (tft);
+      peerApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
+      peerApp->GetPeerApp ()->SetStartTime (Seconds (m_rngStart->GetValue ()));
+      voipApps.Add (peerApp);
+      voipApps.Add (peerApp->GetPeerApp ());
   
       // TFT downlink packet filter
       EpcTft::PacketFilter filterDown;
@@ -443,9 +445,8 @@ SimulationScenario::EnableVideoTraffic ()
       int videoIdx = rngVideo->GetInteger ();
       videoHelper.SetClientAttribute ("TraceFilename",
           StringValue (GetVideoFilename (videoIdx)));
-      ApplicationContainer apps = videoHelper.Install (m_webHost, client,
+      Ptr<VideoClient> clientApp  = videoHelper.Install (m_webHost, client,
           clientAddr, videoPort);
-      Ptr<VideoClient> clientApp = DynamicCast<VideoClient> (apps.Get (0));
       clientApp->AggregateObject (tft);
       clientApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
       videoApps.Add (clientApp);
