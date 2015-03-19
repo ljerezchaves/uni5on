@@ -183,9 +183,8 @@ SimulationScenario::BuildRingTopology ()
   m_lteNetwork->SetAttribute ("Enbs", UintegerValue (m_nEnbs));
   m_lteHelper = m_lteNetwork->CreateTopology (m_epcHelper, m_UesPerEnb);
 
-  // Internet network (with a small internet latency of 20 ms)
+  // Internet network
   m_webNetwork = CreateObject<InternetNetwork> ();
-  m_webNetwork->SetAttribute ("LinkDelay", TimeValue (MilliSeconds (20)));
   m_webHost = m_webNetwork->CreateTopology (m_epcHelper->GetPgwNode ());
 
   // UE Nodes and UE devices
