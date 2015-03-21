@@ -178,8 +178,7 @@ SimulationScenario::BuildRingTopology ()
       MakeCallback (&OpenFlowEpcController::NotifyNewContextCreated, m_controller));
   
   // LTE radio access network
-  m_lteNetwork = CreateObject<LteSquaredGridNetwork> ();
-  m_lteNetwork->SetAttribute ("RoomLength", DoubleValue (100.0));
+  m_lteNetwork = CreateObject<LteHexGridNetwork> ();
   m_lteNetwork->SetAttribute ("Enbs", UintegerValue (m_nEnbs));
   m_lteHelper = m_lteNetwork->CreateTopology (m_epcHelper, m_UesPerEnb);
 

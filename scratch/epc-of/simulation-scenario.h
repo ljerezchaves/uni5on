@@ -25,7 +25,7 @@
 #include <ns3/network-module.h>
 #include <ns3/applications-module.h>
 #include "internet-network.h"
-#include "lte-squared-grid-network.h"
+#include "lte-hex-grid-network.h"
 #include "ring-network.h"
 #include <vector>
 
@@ -140,7 +140,7 @@ private:
   Ptr<OpenFlowEpcNetwork>    m_opfNetwork;    //!< LTE EPC network
   Ptr<OpenFlowEpcController> m_controller;    //!< OpenFLow controller
   Ptr<OpenFlowEpcHelper>     m_epcHelper;     //!< LTE EPC helper
-  Ptr<LteSquaredGridNetwork> m_lteNetwork;    //!< LTE radio network
+  Ptr<LteHexGridNetwork>     m_lteNetwork;    //!< LTE radio network
   Ptr<InternetNetwork>       m_webNetwork;    //!< Internet network
   Ptr<LteHelper>             m_lteHelper;     //!< LTE radio helper
   Ptr<Node>                  m_webHost;       //!< Internet server node
