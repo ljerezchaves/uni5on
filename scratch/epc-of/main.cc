@@ -28,18 +28,26 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("Main");
 
-void ConfigureDefaults ();
 void PrintCurrentTime ();
 void EnableVerbose ();
 
 int 
 main (int argc, char *argv[])
 {
+  // The minimum (default) value for TCP MSS is 536, and there's no dynamic MTU
+  // discovery implemented yet in ns3. We defined this value to 1400,
+  // considering 1500 bytes for Ethernet v2 MTU, 8 bytes for PPPoE, 40 bytes
+  // for GTP/UDP/IP tunnel, and 52 byter for default TCP/IP headers. 
+  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1400));
+
+  // Enabling checksum computations and packet metadata
+  GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
+  PacketMetadata::Enable (); // FIXME Can be removed
+  
   bool verbose = false;
   bool progress = false;
+  bool lteRem = false;
   uint32_t simTime = 60;
-  
-  ConfigureDefaults ();
   
   CommandLine cmd;
   cmd.AddValue ("verbose",    "Enable verbose output.", verbose);
@@ -56,8 +64,9 @@ main (int argc, char *argv[])
   cmd.AddValue ("voip",       "ns3::SimulationScenario::VoipTraffic");
   cmd.AddValue ("video",      "ns3::SimulationScenario::VideoTraffic");
   cmd.AddValue ("strategy",   "ns3::RingController::Strategy");
-  cmd.AddValue ("ueFixed",    "ns3::LteSquaredGridNetwork::UeFixedPos");
+  cmd.AddValue ("ueFixed",    "ns3::LteHexGridNetwork::UeFixedPos");
   cmd.AddValue ("bandwidth",  "ns3::RingNetwork::LinkDataRate");
+  cmd.AddValue ("radioMap",   "Generate LTE radio map", lteRem);
   cmd.Parse (argc, argv);
   
   if (progress) Simulator::Schedule (Seconds (0), &PrintCurrentTime);
@@ -65,48 +74,29 @@ main (int argc, char *argv[])
  
   Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
   scenario->BuildRingTopology ();
-  
+ 
+  if (lteRem)
+    {
+      // The channel number was mannualy set :/
+      Ptr<RadioEnvironmentMapHelper> remHelper = CreateObject<RadioEnvironmentMapHelper> ();
+      remHelper->SetAttribute ("ChannelPath", StringValue ("/ChannelList/11"));
+      remHelper->SetAttribute ("OutputFile", StringValue ("lte-rem.out"));
+      remHelper->SetAttribute ("XMin", DoubleValue (0));
+      remHelper->SetAttribute ("XMax", DoubleValue (1500.0));
+      remHelper->SetAttribute ("XRes", UintegerValue (500));
+      remHelper->SetAttribute ("YMin", DoubleValue (0));
+      remHelper->SetAttribute ("YMax", DoubleValue (1400.0));
+      remHelper->SetAttribute ("YRes", UintegerValue (500));
+      remHelper->SetAttribute ("Z", DoubleValue (1.5));
+      remHelper->Install ();
+    }
+
   // Run the simulation
   NS_LOG_INFO ("Simulating...");
   Simulator::Stop (Seconds (simTime));
   Simulator::Run ();
   Simulator::Destroy ();
   NS_LOG_INFO ("End!");
-}
-
-void
-ConfigureDefaults ()
-{
-  // Increasing SrsPeriodicity to allow more UEs per eNB.
-  Config::SetDefault ("ns3::LteEnbRrc::SrsPeriodicity", UintegerValue (320));
-
-  // Downlink and uplink bandwidth: 100 RBs = 20Mhz
-  Config::SetDefault ("ns3::LteEnbNetDevice::UlBandwidth", UintegerValue (100));
-  Config::SetDefault ("ns3::LteEnbNetDevice::DlBandwidth", UintegerValue (100));
-
-  // Considering Band #7 @2600 MHz, used in Brazil
-  // http://www.teleco.com.br/en/en_4g_freq.asp 
-  // http://niviuk.free.fr/lte_band.php
-  Config::SetDefault ("ns3::LteEnbNetDevice::DlEarfcn", UintegerValue (3100));
-  Config::SetDefault ("ns3::LteEnbNetDevice::UlEarfcn", UintegerValue (21100));
-
-  // FIXME Ops... o manual diz pra usar
-  // lteHelper->SetEnbDeviceAttribute ("DlEarfcn", UintegerValue (100));
-  // lteHelper->SetEnbDeviceAttribute ("UlEarfcn", UintegerValue (1810
-
-  // Setting a MacroCell ? 46 dBm
-  // TX power?
-  // Distance between eNBs? 1KM????
-
-  // The minimum (default) value for TCP MSS is 536, and there's no dynamic MTU
-  // discovery implemented yet in ns3. We defined this value to 1400,
-  // considering 1500 bytes for Ethernet v2 MTU, 8 bytes for PPPoE, 40 bytes
-  // for GTP/UDP/IP tunnel, and 52 byter for default TCP/IP headers. 
-  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1400));
-
-  // Enabling checksum computations and packet metadata
-  GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
-  PacketMetadata::Enable ();
 }
 
 void
