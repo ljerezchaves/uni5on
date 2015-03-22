@@ -22,6 +22,8 @@
 #define EPC_GTPU_TAG_H
 
 #include "ns3/tag.h"
+#include "ns3/nstime.h"
+#include "ns3/simulator.h"
 
 namespace ns3 {
 
@@ -58,6 +60,9 @@ public:
 
   /** \return the input node field */
   EpcInputNode GetInputNode () const;
+
+  /** \return the timestamp field */
+  Time GetTimestamp () const;
   
   /** Set the teid field */
   void SetTeid (uint32_t teid);
@@ -72,8 +77,9 @@ public:
   bool IsUplink () const;
 
 private:
-  uint32_t  m_teid;      //!< GTP teid
-  uint8_t   m_inputNode; //!< Input node
+  uint32_t  m_teid;       //!< GTP teid
+  uint8_t   m_inputNode;  //!< Input node
+  uint64_t  m_ts;         //!< Input timestamp
 };
 
 };  // namespace ns3
