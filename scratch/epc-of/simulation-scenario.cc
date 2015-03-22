@@ -246,16 +246,14 @@ SimulationScenario::EnableHttpTraffic ()
   ApplicationContainer httpApps;
 
   HttpHelper httpHelper;
-  httpHelper.SetServerAttribute ("Direction", 
-      EnumValue (Application::BIDIRECTIONAL));
-  httpHelper.SetClientAttribute ("Direction", 
-      EnumValue (Application::BIDIRECTIONAL));
+  httpHelper.SetClientAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
+  httpHelper.SetServerAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
+  httpHelper.SetClientAttribute ("TcpTimeout", TimeValue (Seconds (4))); 
   httpHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
-  httpHelper.SetClientAttribute ("TcpTimeout", TimeValue (Seconds (5))); 
-  // The HTTP client/server TCP timeout was selected based on HTTP traffic
-  // model and dedicated bearer idle timeout. Every time the TCP socket is
-  // closed, HTTP client application notify the controller, and traffic
-  // statistics are printed.
+  // The HttpClient TcpTimeout was selected based on HTTP traffic model and
+  // dedicated bearer idle timeout. Every time the TCP socket is closed, HTTP
+  // client application notify the controller, and traffic statistics are
+  // printed.
   
   for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, httpPort++)
     {
@@ -270,14 +268,14 @@ SimulationScenario::EnableHttpTraffic ()
       // Traffic Flow Template
       Ptr<EpcTft> tft = CreateObject<EpcTft> ();
 
-      // HTTP client / server
+      //  Bidirectional HTTP traffic.
+      // NOTE: The HttpClient is the one that requests pages to HttpServer. 
+      // The client is installed into UE, and the server into m_webHost.
       Ptr<HttpClient> clientApp = httpHelper.Install (client, m_webHost, 
-                                                      serverAddr, httpPort);
+          serverAddr, httpPort);
       clientApp->AggregateObject (tft);
       clientApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
       httpApps.Add (clientApp);
-      // NOTE: The clientApp is the one that requests pages to serverApp. The
-      // client is installed in UE, and the server into m_webHost.
 
       // TFT Packet filter
       EpcTft::PacketFilter filter;
@@ -294,8 +292,8 @@ SimulationScenario::EnableHttpTraffic ()
       GbrQosInformation qos;
       qos.mbrDl = 1048576;    // Up to 1024 Kbps downlink
       qos.mbrUl = 131072;     // Up to  128 Kbps uplink 
-      qos.mbrDl = 262400;     // Up to 256 Kbps downlink
-      qos.mbrUl = 65536;      // Up to  64 Kbps uplink 
+      qos.mbrDl = 262400;     // Up to  256 Kbps downlink
+      qos.mbrUl = 65536;      // Up to   64 Kbps uplink 
       EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
@@ -332,6 +330,7 @@ SimulationScenario::EnableVoipTraffic ()
   voipHelper.SetServerAttribute ("PacketSize", UintegerValue (pktSize));
   voipHelper.SetClientAttribute ("Interval", TimeValue (Seconds (pktInterval)));
   voipHelper.SetServerAttribute ("Interval", TimeValue (Seconds (pktInterval)));
+  voipHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
 
   // ON/OFF pattern for VoIP applications (Poisson process)
   voipHelper.SetClientAttribute ("OnTime", 
@@ -352,18 +351,15 @@ SimulationScenario::EnableVoipTraffic ()
       // Traffic Flow Template
       Ptr<EpcTft> tft = CreateObject<EpcTft> ();
 
-      // Bidirectional VoIP traffic
+      // Bidirectional VoIP traffic.
+      // NOTE: clientApp is the one at UE, providing the uplink traffic. 
+      // Linking only this app to the callbacks for start/stop notifications.
       voipHelper.SetClientAttribute ("Stream", IntegerValue (u));
       Ptr<VoipClient> clientApp = voipHelper.Install (client, m_webHost, 
           clientAddr, serverAddr, voipPort, voipPort);
       clientApp->AggregateObject (tft);
-      clientApp->GetServerApp ()->AggregateObject (tft);
-      Time startTime = Seconds (m_rngStart->GetValue ());
-      clientApp->SetStartTime (startTime);
-      clientApp->GetServerApp ()->SetStartTime (startTime);
+      clientApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
       voipApps.Add (clientApp);
-      // NOTE: clientApp is the one at UE, providing the uplink traffic. 
-      // Linking only this app to the callbacks for start/stop notifications.
   
       // TFT downlink packet filter
       EpcTft::PacketFilter filterDown;
@@ -390,10 +386,10 @@ SimulationScenario::EnableVoipTraffic ()
       // Dedicated GBR EPS bearer (QCI 1)
       GbrQosInformation qos;
       // 2 bytes from compressed UDP/IP/RTP + 58 bytes from GTPU/UDP/IP/ETH
-      qos.gbrDl = 8 * (pktSize + 2 + 58) / pktInterval; // ~ 17.0 Kbps
+      qos.gbrDl = 8 * (pktSize + 2 + 58) / pktInterval;
       qos.gbrUl = qos.gbrDl;
       // No meter rules for VoIP traffic
-      // qos.mbrDl = 1.1 * qos.gbrDl; // ~ 18.7 Kbps (10 % more)
+      // qos.mbrDl = 1.1 * qos.gbrDl; // (10 % more)
       // qos.mbrUl = qos.mbrDl;
       EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
@@ -424,8 +420,8 @@ SimulationScenario::EnableVideoTraffic ()
   ApplicationContainer videoApps;
   VideoHelper videoHelper;
   videoHelper.SetClientAttribute ("Direction", EnumValue (Application::DOWNLINK));
-  videoHelper.SetClientAttribute ("MaxPacketSize", UintegerValue (1400));
   videoHelper.SetServerAttribute ("Direction", EnumValue (Application::DOWNLINK));
+  videoHelper.SetClientAttribute ("MaxPacketSize", UintegerValue (1400));
   videoHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
 
   // ON/OFF pattern for VoIP applications (Poisson process)
@@ -452,7 +448,10 @@ SimulationScenario::EnableVideoTraffic ()
       // Traffic Flow Template
       Ptr<EpcTft> tft = CreateObject<EpcTft> ();
  
-      // Downlink video traffic 
+      // Downlink video traffic.
+      // NOTE: The clientApp is the one that sends traffic to the UdpServer.
+      // The clientApp is installed into m_webHost and the server into UE, 
+      // providing a downlink video traffic.
       int videoIdx = rngVideo->GetInteger ();
       videoHelper.SetClientAttribute ("TraceFilename",
           StringValue (GetVideoFilename (videoIdx)));
@@ -461,9 +460,6 @@ SimulationScenario::EnableVideoTraffic ()
       clientApp->AggregateObject (tft);
       clientApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
       videoApps.Add (clientApp);
-      // NOTE: The clientApp is the one that sends traffic to the server
-      // (UdpServer). The clientApp is installed into m_webHost and the server
-      // into UE, providing a downlink video traffic.
 
       // TFT downlink packet filter
       EpcTft::PacketFilter filter;

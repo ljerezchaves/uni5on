@@ -38,16 +38,16 @@ HttpClient::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::HttpClient")
     .SetParent<Application> ()
     .AddConstructor<HttpClient> ()
-    .AddAttribute ("RemoteAddress", "The destination Address of the outbound packets",
+    .AddAttribute ("RemoteAddress", "The destination Address of the outbound packets.",
                    Ipv4AddressValue (),
                    MakeIpv4AddressAccessor (&HttpClient::m_peerAddress),
                    MakeIpv4AddressChecker ())
-    .AddAttribute ("RemotePort", "The destination port of the outbound packets",
+    .AddAttribute ("RemotePort", "The destination port of the outbound packets.",
                    UintegerValue (80),
                    MakeUintegerAccessor (&HttpClient::m_peerPort),
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("TcpTimeout", "The TCP connection timeout",
-                   TimeValue (Seconds (60)),
+                   TimeValue (Seconds (4)),
                    MakeTimeAccessor (&HttpClient::m_tcpTimeout),
                    MakeTimeChecker ())
   ;
@@ -65,7 +65,6 @@ HttpClient::HttpClient ()
   m_inlineObjLoaded = 0;
   m_qosStats = Create<QosStatsCalculator> ();
 
-
   // Mu and Sigma data was taken from paper "An HTTP Web Traffic Model Based on
   // the Top One Million Visited Web Pages" by Rastin Pries et. al (Table II).
   m_readingTimeStream = CreateObject<LogNormalRandomVariable> ();
@@ -73,8 +72,8 @@ HttpClient::HttpClient ()
   m_readingTimeStream->SetAttribute ("Sigma", DoubleValue (2.7731));
 
   // The above model provides a lot of reading times < 1sec, which is not soo
-  // good for simulations in LTE EPC + SDN scenarios. So, for values lower than
-  // 10sec, let's add some uniform random value.
+  // good for simulations in LTE EPC + SDN scenarios. So, we are incresing the
+  // reading time by a some uniform random value in [0,10] secs.
   m_readingTimeAdjust = CreateObject<UniformRandomVariable> ();
   m_readingTimeAdjust->SetAttribute ("Min", DoubleValue (0.));
   m_readingTimeAdjust->SetAttribute ("Max", DoubleValue (10.));
@@ -214,8 +213,7 @@ HttpClient::SendRequest (Ptr<Socket> socket, string url)
 
   Ptr<Packet> packet = Create<Packet> ();
   packet->AddHeader (m_httpHeader);
-  NS_LOG_INFO ("HttpClient (" << m_clientAddress << ") >> Sending request for "
-              << url << " to server (" << m_peerAddress << ").");
+  NS_LOG_INFO ("HttpClient (" << m_clientAddress << ") >> Sending request for " << url << " to server (" << m_peerAddress << ").");
   socket->Send (packet);
 }
 
@@ -248,14 +246,12 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
 
       if (m_bytesReceived == m_contentLength)
         {
-          NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> " << m_contentType << ": "
-                                       << m_bytesReceived << " bytes of " << m_contentLength << " received.");
+          NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> " << m_contentType << ": " << m_bytesReceived << " bytes of " << m_contentLength << " received.");
           m_contentLength = 0;
 
           if (m_contentType == "main/object")
             {
-              NS_LOG_INFO ("HttpClient (" << m_clientAddress << ") >> " << m_contentType <<
-                           " successfully received. There are " << m_numOfInlineObjects << " inline objects to request.");
+              NS_LOG_INFO ("HttpClient (" << m_clientAddress << ") >> " << m_contentType << " successfully received. There are " << m_numOfInlineObjects << " inline objects to request.");
               NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> Requesting inline/object 1...");
               m_inlineObjLoaded = 0;
               SendRequest (socket, "inline/object");
@@ -265,8 +261,7 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
               m_inlineObjLoaded++;
               if (m_inlineObjLoaded < m_numOfInlineObjects)
                 {
-                  NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> Requesting inline/object "
-                                               << m_inlineObjLoaded + 1 << "...");
+                  NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> Requesting inline/object " << m_inlineObjLoaded + 1 << "...");
                   SendRequest (socket, "inline/object");
                 }
               else
@@ -277,8 +272,7 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
         }
       else
         {
-          NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> " << m_contentType << ": "
-                                       << m_bytesReceived << " bytes of " << m_contentLength << " received.");
+          NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> " << m_contentType << ": " << m_bytesReceived << " bytes of " << m_contentLength << " received.");
         }
     }
   else
@@ -287,14 +281,12 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
 
       if (m_bytesReceived == m_contentLength)
         {
-          NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> " << m_contentType << ": "
-                                       << m_bytesReceived << " bytes of " << m_contentLength << " received.");
+          NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> " << m_contentType << ": " << m_bytesReceived << " bytes of " << m_contentLength << " received.");
           m_contentLength = 0;
 
           if (m_contentType == "main/object")
             {
-              NS_LOG_INFO ("HttpClient (" << m_clientAddress << ") >> " << m_contentType <<
-                           " successfully received. There are " << m_numOfInlineObjects << " inline objects to request.");
+              NS_LOG_INFO ("HttpClient (" << m_clientAddress << ") >> " << m_contentType << " successfully received. There are " << m_numOfInlineObjects << " inline objects to request.");
               NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> Requesting inline/object 1...");
               m_inlineObjLoaded = 0;
               SendRequest (socket, "inline/object");
@@ -304,23 +296,19 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
               m_inlineObjLoaded++;
               if (m_inlineObjLoaded < m_numOfInlineObjects)
                 {
-                  NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> " << m_contentType << " " << m_inlineObjLoaded <<
-                                " of " << m_numOfInlineObjects << " successfully received."
-                                "\nHttpClient >> Requesting inline/object " << m_inlineObjLoaded + 1);
+                  NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> " << m_contentType << " " << m_inlineObjLoaded << " of " << m_numOfInlineObjects << " successfully received.\nHttpClient >> Requesting inline/object " << m_inlineObjLoaded + 1);
                   SendRequest (socket, "inline/object");
                 }
               else
                 {
-                  NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> " << m_contentType <<
-                                " " << m_inlineObjLoaded << " of " << m_numOfInlineObjects << " successfully received.");
+                  NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> " << m_contentType << " " << m_inlineObjLoaded << " of " << m_numOfInlineObjects << " successfully received.");
                   SetReadingTime (socket);
                 }
             }
         }
       else
         {
-          NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> " << m_contentType << ": " <<
-                        m_bytesReceived << " bytes of " << m_contentLength << " received.");
+          NS_LOG_DEBUG ("HttpClient (" << m_clientAddress << ") >> " << m_contentType << ": " << m_bytesReceived << " bytes of " << m_contentLength << " received.");
         }
     }
 }
@@ -331,21 +319,14 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);
   
   double randomSeconds = m_readingTimeStream->GetValue ();
-  if (randomSeconds < 10)
+  double adjustSeconds = m_readingTimeAdjust->GetValue ();
+  Time readingTime = Seconds (randomSeconds + adjustSeconds);
+  if (readingTime > Seconds (10000))
     {
-      randomSeconds += m_readingTimeAdjust->GetValue ();
+      //Limiting reading time to 10000 seconds according to reference paper.
+      readingTime = Seconds (10000);
     }
-  else if (randomSeconds > 10000)
-    {
-      //Limiting reading time to 10000 seconds according to paper "An HTTP Web
-      //Traffic Model Based on the Top One Million Visited Web Pages" by Rastin
-      //Pries et. al (Table II).
-      randomSeconds = 10000;
-    }
-  NS_LOG_INFO ("HttpClient (" << m_clientAddress << ") >> Reading time: " << 
-               randomSeconds << " seconds.");
-  
-  Time readingTime = Seconds (randomSeconds);
+
   if (readingTime > (m_tcpTimeout + Seconds (1)))
     {
       Simulator::Schedule (m_tcpTimeout, &HttpClient::CloseSocket, this);
@@ -355,6 +336,8 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
     {
       Simulator::Schedule (readingTime, &HttpClient::SendRequest, this, socket, "main/object");
     }
+  
+  NS_LOG_INFO ("HttpClient (" << m_clientAddress << ") >> Reading time: " << readingTime.As (Time::S));
 }
 
 }
