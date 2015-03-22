@@ -73,22 +73,22 @@ VideoClient::GetTypeId (void)
                    MakeUintegerAccessor (&VideoClient::m_peerPort),
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("MaxPacketSize",
-                   "The maximum size of a packet (including the SeqTsHeader, 12 bytes).",
+                   "The maximum size [bytes] of a packet.",
                    UintegerValue (1400),
                    MakeUintegerAccessor (&VideoClient::m_maxPacketSize),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("TraceFilename",
-                   "Name of file to load a trace from. By default, uses a hardcoded trace.",
+                   "Name of file to load a trace from.",
                    StringValue (""),
                    MakeStringAccessor (&VideoClient::SetTraceFile),
                    MakeStringChecker ())
     .AddAttribute ("OnTime", 
-                  "A RandomVariableStream used to pick the 'ON' state duration.",
+                  "A random variable used to pick the 'ON' state duration [s].",
                    StringValue ("ns3::ConstantRandomVariable[Constant=5.0]"),
                    MakePointerAccessor (&VideoClient::m_onTime),
                    MakePointerChecker <RandomVariableStream>())
     .AddAttribute ("OffTime", 
-                  "A RandomVariableStream used to pick the 'Off' state duration.",
+                  "A random variable used to pick the 'OFF' state duration [s].",
                    StringValue ("ns3::ConstantRandomVariable[Constant=5.0]"),
                    MakePointerAccessor (&VideoClient::m_offTime),
                    MakePointerChecker <RandomVariableStream>())
@@ -183,7 +183,6 @@ VideoClient::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 
-  ResetCounters ();
   if (m_socket == 0)
     {
       TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
@@ -197,6 +196,7 @@ VideoClient::StartApplication (void)
       m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
     }
 
+  ResetCounters ();
   CancelEvents ();
   ScheduleStartEvent ();
 }
@@ -293,8 +293,8 @@ VideoClient::StartSending ()
           return;
         }
     }
-  SendStream ();
   ScheduleStopEvent ();
+  SendStream ();
 }
 
 void 
@@ -313,18 +313,22 @@ void
 VideoClient::ScheduleStartEvent ()
 {  
   NS_LOG_FUNCTION (this);
+  
   Time offInterval = Seconds (m_offTime->GetValue ());
-  NS_LOG_LOGIC ("Video " << this << " will start in +" << offInterval.GetSeconds ());
   m_startStopEvent = Simulator::Schedule (offInterval, &VideoClient::StartSending, this);
+  
+  NS_LOG_LOGIC ("Video " << this << " will start in +" << offInterval.GetSeconds ());
 }
 
 void 
 VideoClient::ScheduleStopEvent ()
 {  
   NS_LOG_FUNCTION (this);
+  
   Time onInterval = Seconds (m_onTime->GetValue ());
-  NS_LOG_LOGIC ("Video " << this << " will stop in +" << onInterval.GetSeconds ());
   m_startStopEvent = Simulator::Schedule (onInterval, &VideoClient::StopSending, this);
+  
+  NS_LOG_LOGIC ("Video " << this << " will stop in +" << onInterval.GetSeconds ());
 }
 
 void 
