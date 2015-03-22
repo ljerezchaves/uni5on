@@ -278,7 +278,7 @@ LteHexGridNetwork::InstallProtocolStack ()
   // Installing LTE protocol stack on the eNBs | eNB <-> EPC connection
   m_enbDevices = m_lteHelper->InstallEnbDevice (m_enbNodes);   
   
-  // For each eNB, installing LTE protocol stack on the UEs
+  // For each eNB, installing LTE protocol stack on its UEs
   InternetStackHelper internet;
   for (uint32_t i = 0; i < m_nEnbs; i++)
     {
