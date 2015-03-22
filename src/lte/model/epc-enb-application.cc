@@ -285,7 +285,9 @@ EpcEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
   Ptr<Packet> packet = socket->Recv ();
 
   m_rxS1uTrace (packet);
-
+  EpcGtpuTag teidTag;
+  packet->RemovePacketTag (teidTag);
+  
   GtpuHeader gtpu;
   packet->RemoveHeader (gtpu);
   uint32_t teid = gtpu.GetTeid ();
@@ -297,8 +299,6 @@ EpcEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
   SocketAddressTag tag;
   packet->RemovePacketTag (tag);
 
-  EpcGtpuTag teidTag;
-  packet->RemovePacketTag (teidTag);
   SendToLteSocket (packet, it->second.m_rnti, it->second.m_bid);
 }
 
@@ -325,9 +325,8 @@ EpcEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
   packet->AddHeader (gtpu);
   uint32_t flags = 0;
 
-  EpcGtpuTag teidTag (teid, false); // Uplink traffic
+  EpcGtpuTag teidTag (teid, EpcGtpuTag::ENB);
   packet->AddPacketTag (teidTag);
-
   m_txS1uTrace (packet);
 
   m_s1uSocket->SendTo (packet, flags, InetSocketAddress (m_sgwS1uAddress, m_gtpuUdpPort));

@@ -29,10 +29,10 @@ EpcGtpuTag::EpcGtpuTag ()
 {
 }
 
-EpcGtpuTag::EpcGtpuTag (uint32_t teid, bool isDown)
-  : m_teid (teid),
-    m_isDown (isDown)
+EpcGtpuTag::EpcGtpuTag (uint32_t teid, EpcInputNode inputNode)
+  : m_teid (teid)
 {
+  m_inputNode = (uint8_t)inputNode;
 }
 
 TypeId 
@@ -61,20 +61,21 @@ void
 EpcGtpuTag::Serialize (TagBuffer i) const
 {
   i.WriteU32 (m_teid);
-  i.WriteU8 (m_isDown);
+  i.WriteU8 (m_inputNode);
 }
 
 void 
 EpcGtpuTag::Deserialize (TagBuffer i)
 {
   m_teid = i.ReadU32 ();
-  m_isDown = i.ReadU8 ();
+  m_inputNode = i.ReadU8 ();
 }
 
 void 
 EpcGtpuTag::Print (std::ostream &os) const
 {
-  os << " TEID=" << m_teid << " IsDownlink?=" << m_isDown;
+  os << " TEID=" << m_teid 
+     << " input=" << (m_inputNode == (uint8_t)EpcGtpuTag::ENB ? "eNb" : "Pgw");
 }
 
 uint32_t 
@@ -83,10 +84,10 @@ EpcGtpuTag::GetTeid () const
   return m_teid;
 }
 
-bool
-EpcGtpuTag::IsDownlink () const
+EpcGtpuTag::EpcInputNode 
+EpcGtpuTag::GetInputNode () const
 {
-  return (bool)m_isDown;
+  return m_inputNode == 0 ? EpcGtpuTag::ENB : EpcGtpuTag::PGW;
 }
 
 void 
@@ -96,9 +97,21 @@ EpcGtpuTag::SetTeid (uint32_t teid)
 }
 
 void 
-EpcGtpuTag::SetIsDownlink (bool isDown)
+EpcGtpuTag::SetInputNode (EpcInputNode inputNode)
 {
-  m_isDown = (uint8_t)isDown;
+  m_inputNode = (uint8_t)inputNode;
+}
+
+bool
+EpcGtpuTag::IsDownlink () const
+{
+  return (bool)m_inputNode;
+}
+
+bool
+EpcGtpuTag::IsUplink () const
+{
+  return (bool)!m_inputNode;
 }
 
 };  // namespace ns3

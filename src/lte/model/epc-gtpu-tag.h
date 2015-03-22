@@ -33,34 +33,47 @@ class Tag;
 class EpcGtpuTag : public Tag
 {
 public:
+  /** LTE EPC element where this tagged was inserted into the packet */
+  enum EpcInputNode
+    {
+      ENB = 0,  //!< At the eNB node
+      PGW = 1   //!< At the SgwPgw node
+    };
+
   static TypeId GetTypeId (void);
   virtual TypeId GetInstanceTypeId (void) const;
 
   /** Constructors */
   EpcGtpuTag ();
-  EpcGtpuTag (uint32_t teid, bool isDown);
+  EpcGtpuTag (uint32_t teid, EpcInputNode inputNode);
 
   // Inherited from Tag
   virtual void Serialize (TagBuffer i) const;
   virtual void Deserialize (TagBuffer i);
   virtual uint32_t GetSerializedSize () const;
   virtual void Print (std::ostream &os) const;
- 
+
   /** \return the teid field */
   uint32_t GetTeid () const;
 
-  /** \return true when downlink traffic, false otherwise */
-  bool IsDownlink () const;
+  /** \return the input node field */
+  EpcInputNode GetInputNode () const;
   
   /** Set the teid field */
   void SetTeid (uint32_t teid);
 
-  /** Set the isDownlink field */
-  void SetIsDownlink (bool isDown);
+  /** Set the input node field */
+  void SetInputNode (EpcInputNode inputNode);
+
+  /** \return true when downlink traffic */
+  bool IsDownlink () const;
+
+  /** \return true when uplink traffic */
+  bool IsUplink () const;
 
 private:
-  uint32_t m_teid;  //!< GTP teid
-  uint8_t m_isDown; //!< True when downlink traffic
+  uint32_t  m_teid;      //!< GTP teid
+  uint8_t   m_inputNode; //!< Input node
 };
 
 };  // namespace ns3

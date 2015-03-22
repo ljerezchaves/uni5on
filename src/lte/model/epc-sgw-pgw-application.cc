@@ -191,6 +191,8 @@ EpcSgwPgwApplication::RecvFromS1uSocket (Ptr<Socket> socket)
   Ptr<Packet> packet = socket->Recv ();
   
   m_rxS1uTrace (packet);
+  EpcGtpuTag teidTag;
+  packet->RemovePacketTag (teidTag);
 
   GtpuHeader gtpu;
   packet->RemoveHeader (gtpu);
@@ -201,8 +203,6 @@ EpcSgwPgwApplication::RecvFromS1uSocket (Ptr<Socket> socket)
   SocketAddressTag tag;
   packet->RemovePacketTag (tag);
 
-  EpcGtpuTag teidTag;
-  packet->RemovePacketTag (teidTag);
   SendToTunDevice (packet, teid);
 }
 
@@ -227,9 +227,8 @@ EpcSgwPgwApplication::SendToS1uSocket (Ptr<Packet> packet, Ipv4Address enbAddr, 
   packet->AddHeader (gtpu);
   uint32_t flags = 0;
 
-  EpcGtpuTag teidTag (teid, true);  // Downlink traffic
+  EpcGtpuTag teidTag (teid, EpcGtpuTag::PGW);
   packet->AddPacketTag (teidTag);
-
   m_txS1uTrace (packet);
 
   m_s1uSocket->SendTo (packet, flags, InetSocketAddress (enbAddr, m_gtpuUdpPort));
