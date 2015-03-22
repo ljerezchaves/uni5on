@@ -195,6 +195,12 @@ SimulationScenario::BuildRingTopology ()
   m_rngStart->SetAttribute ("Min", DoubleValue (2.));
   m_rngStart->SetAttribute ("Max", DoubleValue (5.));
 
+  // Registering EPC trace sinks for QoS monitoring
+  m_opfNetwork->ConnectEpcTraceSinks ("S1uRx", 
+      MakeCallback (&OpenFlowEpcController::OutputPacket, m_controller));
+  m_opfNetwork->ConnectEpcTraceSinks ("S1uTx", 
+      MakeCallback (&OpenFlowEpcController::InputPacket, m_controller));
+  
   // Saving controller and application statistics 
   m_controller->TraceConnectWithoutContext ("AppStats", 
       MakeCallback (&SimulationScenario::ReportAppStats, this));

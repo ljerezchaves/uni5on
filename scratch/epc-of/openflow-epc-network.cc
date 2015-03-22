@@ -115,6 +115,21 @@ OpenFlowEpcNetwork::DoDispose ()
   Object::DoDispose ();
 }
 
+void 
+OpenFlowEpcNetwork::ConnectEpcTraceSinks (std::string name, 
+                                          const CallbackBase &cb)
+{
+  NS_LOG_FUNCTION (this << name);
+
+  NodeSwitchMap_t::iterator it;
+  for (it = m_nodeSwitchMap.begin (); it != m_nodeSwitchMap.end (); ++it)
+    {
+      Ptr<Node> epcNode = it->first;
+      Ptr<Application> epcApp = epcNode->GetApplication (0);
+      epcApp->TraceConnect (name, Names::FindName (epcNode), cb);
+    }
+}
+
 void
 OpenFlowEpcNetwork::EnableDataPcap (std::string prefix, bool promiscuous)
 {

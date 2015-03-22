@@ -161,6 +161,13 @@ public:
       std::vector<uint16_t> eNbSwitches) = 0;
 
   /** 
+   * Connect trace sinks to OpenFlow EPC SgwPgw and eNBs nodes.
+   * \param name The name of the target trace source.
+   * \param cb The callback to connect to the trace source.
+   */
+  void ConnectEpcTraceSinks (std::string name, const CallbackBase &cb);
+
+  /** 
    * Enable pcap on switch data ports.
    * \param prefix The file prefix.
    * \param promiscuous If true, enable promisc trace.

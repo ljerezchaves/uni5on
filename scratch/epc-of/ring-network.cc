@@ -208,6 +208,7 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   pair.Add (node);
   NetDeviceContainer devices = m_ofCsmaHelper.Install (pair);
   
+  // Setting interface names for pacp filename
   Names::Add (Names::FindName (swtchNode) + "+" + 
               Names::FindName (node), devices.Get (0));
   Names::Add (Names::FindName (node) + "+" + 
@@ -223,14 +224,6 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   Ptr<OFSwitch13Port> switchPort = swtchDev->AddSwitchPort (devices.Get (0));
   uint32_t portNum = switchPort->GetPortNo ();
   
-  // Registering trace sinks for QoS monitoring
-  std::ostringstream context;
-  context << "Switch/" << switchIdx << "/Port/" << portNum;
-  switchPort->TraceConnect ("SwitchPortRx", context.str (),
-    MakeCallback (&OpenFlowEpcController::InputPacket, m_ofCtrlApp));
-  switchPort->TraceConnect ("SwitchPortTx", context.str (), 
-    MakeCallback (&OpenFlowEpcController::OutputPacket, m_ofCtrlApp));
-
   // Notify controller of a new device
   m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeIpAddress, swtchDev, 
       switchIdx, portNum);
