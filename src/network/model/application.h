@@ -113,7 +113,7 @@ public:
   void SetNode (Ptr<Node> node);
 
   /**
-   * Callback signature for application start sending.
+   * Start/Stop callback signature for applications.
    * \param Ptr<Application> Application.
    */
   typedef Callback<bool, Ptr<Application> > AppSendingCallback_t;
