@@ -257,11 +257,16 @@ LteHexGridNetwork::SetLteNodePositions ()
   BuildingsHelper::MakeMobilityModelConsistent ();
 
   for (size_t i = 0; i < m_enbNodes.GetN (); i++)
-    NS_LOG_UNCOND ("Enb " << i << " at " << m_enbNodes.Get (i)->GetObject<MobilityModel> ()->GetPosition ());
+    {
+      NS_LOG_DEBUG ("Enb " << i << " at " 
+        << m_enbNodes.Get (i)->GetObject<MobilityModel> ()->GetPosition ());
+    }
 
   for (size_t i = 0; i < m_ueNodes.GetN (); i++)
-    NS_LOG_UNCOND ("UE " << i << " at " << m_ueNodes.Get (i)->GetObject<MobilityModel> ()->GetPosition ());
-
+    {
+      NS_LOG_DEBUG ("UE " << i << " at " 
+        << m_ueNodes.Get (i)->GetObject<MobilityModel> ()->GetPosition ());
+    }
 }
 
 void
