@@ -63,7 +63,16 @@ TypeId
 EpcEnbApplication::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::EpcEnbApplication")
-    .SetParent<Object> ();
+    .SetParent<Object> ()
+    .AddTraceSource ("S1uRx",
+                     "Trace source indicating a packet received from S1-U interface.",
+                     MakeTraceSourceAccessor (&EpcEnbApplication::m_rxS1uTrace),
+                     "ns3::Packet::TracedCallback")
+    .AddTraceSource ("S1uTx",
+                     "Trace source indicating a packet transmitted over the S1-U interface.",
+                     MakeTraceSourceAccessor (&EpcEnbApplication::m_txS1uTrace),
+                     "ns3::Packet::TracedCallback")
+    ;
   return tid;
 }
 
@@ -274,6 +283,9 @@ EpcEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);  
   NS_ASSERT (socket == m_s1uSocket);
   Ptr<Packet> packet = socket->Recv ();
+
+  m_rxS1uTrace (packet);
+
   GtpuHeader gtpu;
   packet->RemoveHeader (gtpu);
   uint32_t teid = gtpu.GetTeid ();
@@ -315,6 +327,9 @@ EpcEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
 
   EpcGtpuTag teidTag (teid, false); // Uplink traffic
   packet->AddPacketTag (teidTag);
+
+  m_txS1uTrace (packet);
+
   m_s1uSocket->SendTo (packet, flags, InetSocketAddress (m_sgwS1uAddress, m_gtpuUdpPort));
 }
 

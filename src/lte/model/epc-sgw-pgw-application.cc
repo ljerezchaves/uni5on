@@ -101,7 +101,16 @@ TypeId
 EpcSgwPgwApplication::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::EpcSgwPgwApplication")
-    .SetParent<Object> ();
+    .SetParent<Object> ()
+    .AddTraceSource ("S1uRx",
+                     "Trace source indicating a packet received from S1-U interface.",
+                     MakeTraceSourceAccessor (&EpcSgwPgwApplication::m_rxS1uTrace),
+                     "ns3::Packet::TracedCallback")
+    .AddTraceSource ("S1uTx",
+                     "Trace source indicating a packet transmitted over the S1-U interface.",
+                     MakeTraceSourceAccessor (&EpcSgwPgwApplication::m_txS1uTrace),
+                     "ns3::Packet::TracedCallback")
+    ;
   return tid;
 }
 
@@ -180,6 +189,9 @@ EpcSgwPgwApplication::RecvFromS1uSocket (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);  
   NS_ASSERT (socket == m_s1uSocket);
   Ptr<Packet> packet = socket->Recv ();
+  
+  m_rxS1uTrace (packet);
+
   GtpuHeader gtpu;
   packet->RemoveHeader (gtpu);
   uint32_t teid = gtpu.GetTeid ();
@@ -217,6 +229,9 @@ EpcSgwPgwApplication::SendToS1uSocket (Ptr<Packet> packet, Ipv4Address enbAddr, 
 
   EpcGtpuTag teidTag (teid, true);  // Downlink traffic
   packet->AddPacketTag (teidTag);
+
+  m_txS1uTrace (packet);
+
   m_s1uSocket->SendTo (packet, flags, InetSocketAddress (enbAddr, m_gtpuUdpPort));
 }
 

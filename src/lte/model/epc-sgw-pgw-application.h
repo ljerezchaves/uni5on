@@ -296,6 +296,17 @@ public:
   };
 
   std::map<uint16_t, EnbInfo> m_enbInfoByCellId;
+
+  /** 
+   * Trace source fired when a packet arrives this eNB from S1-U interface. 
+   */
+  TracedCallback<Ptr<const Packet> > m_rxS1uTrace;
+
+  /** 
+   * Trace source fired when a packet leaves this eNB over the S1-U interface.
+   */
+  TracedCallback<Ptr<const Packet> > m_txS1uTrace;
+
 };
 
 } //namespace ns3

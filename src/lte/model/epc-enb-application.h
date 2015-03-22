@@ -252,6 +252,16 @@ private:
   std::map<uint64_t, uint16_t> m_imsiRntiMap;
 
   uint16_t m_cellId;
+  
+  /** 
+   * Trace source fired when a packet arrives at this eNB from S1-U interface. 
+   */
+  TracedCallback<Ptr<const Packet> > m_rxS1uTrace;
+
+  /** 
+   * Trace source fired when a packet leaves this eNB over the S1-U interface.
+   */
+  TracedCallback<Ptr<const Packet> > m_txS1uTrace;
 
 };
 
