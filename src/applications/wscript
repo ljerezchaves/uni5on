@@ -5,7 +5,8 @@ def build(bld):
     module.source = [
         'model/http-client.cc',
         'model/http-server.cc',
-        'model/voip-peer.cc',
+        'model/voip-client.cc',
+        'model/voip-server.cc',
         'model/bulk-send-application.cc',
         'model/onoff-application.cc',
         'model/packet-sink.cc',
@@ -47,7 +48,8 @@ def build(bld):
     headers.source = [
         'model/http-client.h',
         'model/http-server.h',
-        'model/voip-peer.h',
+        'model/voip-client.h',
+        'model/voip-server.h',
         'model/bulk-send-application.h',
         'model/onoff-application.h',
         'model/packet-sink.h',

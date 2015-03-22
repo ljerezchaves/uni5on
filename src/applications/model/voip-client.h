@@ -19,8 +19,8 @@
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef VOIP_PEER_H_
-#define VOIP_PEER_H_
+#ifndef VOIP_CLIENT_H_
+#define VOIP_CLIENT_H_
 
 #include <ns3/application.h>
 #include <ns3/event-id.h>
@@ -37,12 +37,15 @@ namespace ns3 {
 
 class Socket;
 class Packet;
+class VoipServer;
 
 /**
- * This class implements both the VoIP client and server sides, sending UDP
- * datagrams following VoIP traffic pattern to another VoipPeer application.
+ * This class implements the VoIP client side, sending and receiving UDP
+ * datagrams following VoIP traffic pattern to a VoipServer application.  This
+ * VoIP client is bounded to start/stop callbacks, and control start/stop
+ * events on the server application. 
  */
-class VoipPeer : public Application
+class VoipClient : public Application
 {
 public:
   /**
@@ -51,21 +54,21 @@ public:
    */ 
   static TypeId GetTypeId (void);
   
-  VoipPeer ();             //!< Default constructor
-  virtual ~VoipPeer ();    //!< Dummy destructor, see DoDipose
+  VoipClient ();             //!< Default constructor
+  virtual ~VoipClient ();    //!< Dummy destructor, see DoDipose
 
   /**
    * \brief Set the IPv4 destination address and port of the outbound packets.
    * \param ip The IPv4 address to use.
    * \return port The port number to use.
    */
-  void SetPeerAddress (Ipv4Address ip, uint16_t port);
+  void SetServerAddress (Ipv4Address ip, uint16_t port);
 
   /**
-   * \brief Set the VoIP peer application. 
-   * \param peer The pointer to peer application. 
+   * \brief Set the VoIP server application. 
+   * \param server The pointer to server application. 
    */
-  void SetPeerApp (Ptr<VoipPeer> peer);
+  void SetServerApp (Ptr<VoipServer> server);
 
   /**
    * \brief Assign a fixed random variable stream number to the random
@@ -76,10 +79,10 @@ public:
   void SetStreams (int64_t stream);
 
   /**
-   * \brief Get the VoIP peer application. 
-   * \return The pointer to peer application. 
+   * \brief Get the VoIP server application. 
+   * \return The pointer to server application. 
    */
-  Ptr<VoipPeer> GetPeerApp ();
+  Ptr<VoipServer> GetServerApp ();
   
   /** 
    * Reset the QoS statistics
@@ -152,10 +155,10 @@ private:
   Time              m_interval;         //!< Interval between packets
   uint32_t          m_pktSize;          //!< Packet size
   uint32_t          m_pktSent;          //!< Number of TX packets
-  Ipv4Address       m_peerAddress;      //!< Outbound peer IPv4 address
-  uint16_t          m_peerPort;         //!< Outbound peer port
+  Ipv4Address       m_serverAddress;    //!< Outbound server IPv4 address
+  uint16_t          m_serverPort;       //!< Outbound server port
   uint16_t          m_localPort;        //!< Inbound local port
-  Ptr<VoipPeer>     m_peerApp;          //!< Peer VoIP application
+  Ptr<VoipServer>   m_serverApp;        //!< VoIP server application
   Ptr<Socket>       m_txSocket;         //!< Outbound TX socket
   Ptr<Socket>       m_rxSocket;         //!< Inbound RX socket
   bool              m_connected;        //!< True if outbound connected
@@ -167,4 +170,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* VOIP_PEER_H_ */
+#endif /* VOIP_CLIENT_H_ */

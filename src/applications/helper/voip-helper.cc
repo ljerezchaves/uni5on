@@ -27,42 +27,48 @@
 #include "ns3/uinteger.h"
 #include "ns3/names.h"
 #include "ns3/random-variable-stream.h"
-#include "ns3/voip-peer.h"
 
 namespace ns3 {
 
 VoipHelper::VoipHelper ()
 {
-  m_factory.SetTypeId (VoipPeer::GetTypeId ());
+  m_clientFactory.SetTypeId (VoipClient::GetTypeId ());
+  m_serverFactory.SetTypeId (VoipServer::GetTypeId ());
 }
 
 void
-VoipHelper::SetAttribute (std::string name, const AttributeValue &value)
+VoipHelper::SetClientAttribute (std::string name, const AttributeValue &value)
 {
-  m_factory.Set (name, value);
+  m_clientFactory.Set (name, value);
 }
 
-Ptr<VoipPeer>
-VoipHelper::Install (Ptr<Node> firstNode,   Ptr<Node> secondNode, 
-                     Ipv4Address firstAddr, Ipv4Address secondAddr, 
-                     uint16_t firstPort,    uint16_t secondPort)
+void
+VoipHelper::SetServerAttribute (std::string name, const AttributeValue &value)
 {
-  Ptr<VoipPeer> firstApp  = m_factory.Create<VoipPeer> ();
-  Ptr<VoipPeer> secondApp = m_factory.Create<VoipPeer> ();
+  m_serverFactory.Set (name, value);
+}
+
+Ptr<VoipClient> 
+VoipHelper::Install (Ptr<Node>   clientNode, Ptr<Node>   serverNode, 
+                     Ipv4Address clientAddr, Ipv4Address serverAddr,
+                     uint16_t    clientPort, uint16_t    serverPort)
+{
+  Ptr<VoipClient> clientApp = m_clientFactory.Create<VoipClient> ();
+  Ptr<VoipServer> serverApp = m_serverFactory.Create<VoipServer> ();
   
-  firstApp->SetAttribute ("PeerAddress", Ipv4AddressValue (secondAddr));
-  firstApp->SetAttribute ("PeerPort", UintegerValue (secondPort));
-  firstApp->SetAttribute ("LocalPort", UintegerValue (firstPort));
-  firstApp->SetPeerApp (secondApp);
-  firstNode->AddApplication (firstApp);
+  clientApp->SetAttribute ("ServerAddress", Ipv4AddressValue (serverAddr));
+  clientApp->SetAttribute ("ServerPort", UintegerValue (serverPort));
+  clientApp->SetAttribute ("LocalPort", UintegerValue (clientPort));
+  clientApp->SetServerApp (serverApp);
+  clientNode->AddApplication (clientApp);
   
-  secondApp->SetAttribute ("PeerAddress", Ipv4AddressValue (firstAddr));
-  secondApp->SetAttribute ("PeerPort", UintegerValue (firstPort));
-  secondApp->SetAttribute ("LocalPort", UintegerValue (secondPort));
-  secondApp->SetPeerApp (firstApp);
-  secondNode->AddApplication (secondApp);
+  serverApp->SetAttribute ("ClientAddress", Ipv4AddressValue (clientAddr));
+  serverApp->SetAttribute ("ClientPort", UintegerValue (clientPort));
+  serverApp->SetAttribute ("LocalPort", UintegerValue (serverPort));
+  serverApp->SetClientApp (clientApp);
+  serverNode->AddApplication (serverApp);
   
-  return firstApp;
+  return clientApp;
 }
 
 } // namespace ns3

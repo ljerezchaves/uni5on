@@ -368,8 +368,6 @@ void
 OpenFlowEpcController::InputPacket (std::string context, 
                                     Ptr<const Packet> packet)
 {
-  NS_LOG_FUNCTION (this << packet);
-  
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
@@ -384,8 +382,6 @@ void
 OpenFlowEpcController::OutputPacket (std::string context, 
                                      Ptr<const Packet> packet)
 {
-  NS_LOG_FUNCTION (this << packet);
-
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
@@ -514,42 +510,57 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
   Ptr<const QosStatsCalculator> appStats;
   Ptr<const QosStatsCalculator> epcStats;
-  std::ostringstream desc;
 
-  if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
+  if (app->GetInstanceTypeId () == VoipClient::GetTypeId ())
     {
-      Ptr<VoipPeer> voipApp = DynamicCast<VoipPeer> (app);
+      Ptr<VoipClient> voipApp = DynamicCast<VoipClient> (app);
       appStats = voipApp->GetQosStats ();
+      epcStats = GetQosStatsFromTeid (teid, false); // uplink
 
-      // Identifying Voip traffic direction
-      std::string nodeName = Names::FindName (voipApp->GetNode ());
-      bool downlink = InternetNetwork::GetServerName () == nodeName;
-      uint16_t srcIdx = downlink ? rInfo->m_sgwIdx : rInfo->m_enbIdx;
-      uint16_t dstIdx = downlink ? rInfo->m_enbIdx : rInfo->m_sgwIdx; 
-      desc << "VoIP  [" << srcIdx << " --> " << dstIdx << "]";
-      epcStats = GetQosStatsFromTeid (teid, downlink);
+      // The VoipClient app is at UE.
+      std::ostringstream descUp;
+      descUp << "VoIP  [" << rInfo->m_enbIdx << " --> " << rInfo->m_sgwIdx << "]";
+        
+      // Tracing application and EPC statistics
+      m_appQosTrace (descUp.str (), teid, appStats);
+      m_epcQosTrace (descUp.str (), teid, epcStats);
+
+      appStats = voipApp->GetServerApp ()->GetQosStats ();
+      epcStats = GetQosStatsFromTeid (teid, true);
+      
+      // The VoipServer app is at the Internet
+      std::ostringstream descDown;
+      descDown << "VoIP  [" << rInfo->m_sgwIdx << " --> " << rInfo->m_enbIdx << "]";
+        
+      // Tracing application and EPC statistics
+      m_appQosTrace (descDown.str (), teid, appStats);
+      m_epcQosTrace (descDown.str (), teid, epcStats);
     }
   else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
     {
       // Get the relative UDP server for this client
       Ptr<VideoClient> videoApp = DynamicCast<VideoClient> (app);
       appStats = videoApp->GetServerApp ()->GetQosStats ();
+      std::ostringstream desc;
       desc << "Video [" << rInfo->m_sgwIdx << " --> " << rInfo->m_enbIdx << "]";
       epcStats = GetQosStatsFromTeid (teid, true);
+
+      // Tracing application and EPC statistics
+      m_appQosTrace (desc.str (), teid, appStats);
+      m_epcQosTrace (desc.str (), teid, epcStats);
     }
   else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
     {
       Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
       appStats = httpApp->GetQosStats ();
+      std::ostringstream desc;
       desc << "HTTP  [" << rInfo->m_sgwIdx << " <-> " << rInfo->m_enbIdx << "]";
       epcStats = GetQosStatsFromTeid (teid, true);
-    }
 
-  // Tracing application statistics (Application layer)
-  m_appQosTrace (desc.str (), teid, appStats);
-  
-  // Tracing LTE EPC GTPU statistics (IP layer)
-  m_epcQosTrace (desc.str (), teid, epcStats);
+      // Tracing application and EPC statistics
+      m_appQosTrace (desc.str (), teid, appStats);
+      m_epcQosTrace (desc.str (), teid, epcStats);
+    }
 }
 
 void
@@ -562,9 +573,10 @@ OpenFlowEpcController::ResetAppStatistics (Ptr<Application> app)
   GetQosStatsFromTeid (teid, true)->ResetCounters ();
   GetQosStatsFromTeid (teid, false)->ResetCounters ();
   
-  if (app->GetInstanceTypeId () == VoipPeer::GetTypeId ())
+  if (app->GetInstanceTypeId () == VoipClient::GetTypeId ())
     {
-      DynamicCast<VoipPeer> (app)->ResetQosStats ();
+      DynamicCast<VoipClient> (app)->ResetQosStats ();
+      DynamicCast<VoipClient> (app)->GetServerApp ()->ResetQosStats ();
     }
   else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
     {
@@ -797,7 +809,6 @@ OpenFlowEpcController::GetQosStatsFromTeid (uint32_t teid, bool isDown)
   it = m_qosStats.find (teid);
   if (it != m_qosStats.end ())
     {
-      NS_LOG_DEBUG ("Found QoS entry: " << teid);
       QosStatsPair_t value = it->second;
       qosStats = isDown ? value.first : value.second;
     }

@@ -30,7 +30,8 @@
 #include "ns3/net-device.h"
 #include "ns3/node-container.h"
 #include "ns3/application-container.h"
-#include "ns3/voip-peer.h"
+#include "ns3/voip-client.h"
+#include "ns3/voip-server.h"
 
 namespace ns3 {
 
@@ -44,28 +45,36 @@ public:
   VoipHelper ();
 
   /**
-   * Record an attribute to be set in each Application after it is is created.
+   * Record an attribute to be set in each client application after it is is created.
    * \param name the name of the attribute to set.
    * \param value the value of the attribute to set.
    */
-  void SetAttribute (std::string name, const AttributeValue &value);
+  void SetClientAttribute (std::string name, const AttributeValue &value);
+
+  /**
+   * Record an attribute to be set in each server application after it is is created.
+   * \param name the name of the attribute to set.
+   * \param value the value of the attribute to set.
+   */
+  void SetServerAttribute (std::string name, const AttributeValue &value);
 
   /**
    * Create a pair of voip applications on input nodes.
-   * \param firstNode The first node in pair.
-   * \param secondNode The second node in pair.
-   * \param firstAddr The IPv4 address of first node.
-   * \param secondAddr The IPv4 address of second node.
-   * \param firstPort The input port number in first node.
-   * \param secondPort The input port number in second node.
-   * \return One of the VoipPeer application pair created.
+   * \param clientNode The client node in pair.
+   * \param serverNode The server node in pair.
+   * \param clientAddr The IPv4 address of client node.
+   * \param serverAddr The IPv4 address of server node.
+   * \param clientPort The input port number in client node.
+   * \param serverPort The input port number in server node.
+   * \return The VoipClient application created.
    */
-  Ptr<VoipPeer> Install (Ptr<Node>   firstNode, Ptr<Node> secondNode, 
-                         Ipv4Address firstAddr, Ipv4Address secondAddr,
-                         uint16_t    firstPort, uint16_t secondPort);
+  Ptr<VoipClient> Install (Ptr<Node>   clientNode, Ptr<Node>   serverNode, 
+                           Ipv4Address clientAddr, Ipv4Address serverAddr,
+                           uint16_t    clientPort, uint16_t    serverPort);
 
 private:
-  ObjectFactory m_factory; //!< Object factory.
+  ObjectFactory m_clientFactory; //!< Object client factory.
+  ObjectFactory m_serverFactory; //!< Object server factory.
 };
 
 } // namespace ns3

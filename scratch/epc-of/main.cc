@@ -135,6 +135,7 @@ EnableVerbose ()
   LogComponentEnable ("HttpServer", LOG_LEVEL_WARN);
   LogComponentEnable ("UdpServer", LOG_LEVEL_WARN);
   LogComponentEnable ("VideoClient", LOG_LEVEL_WARN);
-  LogComponentEnable ("VoipPeer", LOG_LEVEL_WARN);
+  LogComponentEnable ("VoipClient", LOG_LEVEL_WARN);
+  LogComponentEnable ("VoipServer", LOG_LEVEL_WARN);
 }
 

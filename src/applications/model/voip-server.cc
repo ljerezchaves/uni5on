@@ -22,145 +22,133 @@
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
-#include "voip-peer.h"
+#include "voip-server.h"
+#include "voip-client.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("VoipPeer");
+NS_LOG_COMPONENT_DEFINE ("VoipServer");
 
-NS_OBJECT_ENSURE_REGISTERED (VoipPeer);
+NS_OBJECT_ENSURE_REGISTERED (VoipServer);
 
 TypeId
-VoipPeer::GetTypeId (void)
+VoipServer::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::VoipPeer")
+  static TypeId tid = TypeId ("ns3::VoipServer")
     .SetParent<Application> ()
-    .AddConstructor<VoipPeer> ()
-    .AddAttribute ("PeerAddress",
+    .AddConstructor<VoipServer> ()
+    .AddAttribute ("ClientAddress",
                    "The IPv4 destination address of the outbound packets",
                    Ipv4AddressValue (),
-                   MakeIpv4AddressAccessor (&VoipPeer::m_peerAddress),
+                   MakeIpv4AddressAccessor (&VoipServer::m_clientAddress),
                    MakeIpv4AddressChecker ())
-    .AddAttribute ("PeerPort", 
+    .AddAttribute ("ClientPort", 
                    "The destination port of the outbound packets",
                    UintegerValue (100),
-                   MakeUintegerAccessor (&VoipPeer::m_peerPort),
+                   MakeUintegerAccessor (&VoipServer::m_clientPort),
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("LocalPort",
                    "Port on which we listen for incoming packets.",
                    UintegerValue (100),
-                   MakeUintegerAccessor (&VoipPeer::m_localPort),
+                   MakeUintegerAccessor (&VoipServer::m_localPort),
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("PacketSize",
                    "The size of packets (in bytes). "
                    "Choose between 40, 50 and 60 bytes.",
                    UintegerValue (60),
-                   MakeUintegerAccessor (&VoipPeer::m_pktSize),
+                   MakeUintegerAccessor (&VoipServer::m_pktSize),
                    MakeUintegerChecker<uint32_t> (40, 120))
     .AddAttribute ("Interval",
                    "The time to wait between consecutive packets.",
                    TimeValue (Seconds (0.06)),
-                   MakeTimeAccessor (&VoipPeer::m_interval),
+                   MakeTimeAccessor (&VoipServer::m_interval),
                    MakeTimeChecker ())
-    .AddAttribute ("OnTime", 
-                  "A RandomVariableStream used to pick the 'ON' state duration.",
-                   StringValue ("ns3::ConstantRandomVariable[Constant=5.0]"),
-                   MakePointerAccessor (&VoipPeer::m_onTime),
-                   MakePointerChecker <RandomVariableStream>())
-    .AddAttribute ("OffTime", 
-                  "A RandomVariableStream used to pick the 'Off' state duration.",
-                   StringValue ("ns3::ConstantRandomVariable[Constant=5.0]"),
-                   MakePointerAccessor (&VoipPeer::m_offTime),
-                   MakePointerChecker <RandomVariableStream>())
-    .AddAttribute ("Stream",
-                   "The stream number for RNG streams. "
-                   "-1 means \"allocate a stream automatically\".",
-                   IntegerValue(-1),
-                   MakeIntegerAccessor(&VoipPeer::SetStreams),
-                   MakeIntegerChecker<int64_t>())
     ;
   return tid;
 }
 
-VoipPeer::VoipPeer ()
+VoipServer::VoipServer ()
   : m_pktSent (0),
-    m_peerApp (0),
+    m_clientApp (0),
     m_txSocket (0),
     m_rxSocket (0),
     m_connected (false)
 {
   NS_LOG_FUNCTION (this);
   m_sendEvent = EventId ();
-  m_startStopEvent = EventId ();
   m_qosStats = Create<QosStatsCalculator> ();
 }
 
-VoipPeer::~VoipPeer ()
+VoipServer::~VoipServer ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 void
-VoipPeer::SetPeerAddress (Ipv4Address ip, uint16_t port)
+VoipServer::SetClientAddress (Ipv4Address ip, uint16_t port)
 {
   NS_LOG_FUNCTION (this << ip << port);
-  m_peerAddress = ip;
-  m_peerPort = port;
+  m_clientAddress = ip;
+  m_clientPort = port;
 }
 
 void
-VoipPeer::SetPeerApp (Ptr<VoipPeer> peer)
+VoipServer::SetClientApp (Ptr<VoipClient> client)
 {
-  NS_LOG_FUNCTION (this << peer);
-  m_peerApp = peer;
+  NS_LOG_FUNCTION (this << client);
+  m_clientApp = client;
 }
 
-void
-VoipPeer::SetStreams (int64_t stream)
+Ptr<VoipClient> 
+VoipServer::GetClientApp ()
 {
-  NS_LOG_FUNCTION (this << stream);
-  m_onTime->SetStream (stream);
-  m_offTime->SetStream (stream + 1);
-}
-
-Ptr<VoipPeer> 
-VoipPeer::GetPeerApp ()
-{
-  return m_peerApp;
+  return m_clientApp;
 }
 
 void 
-VoipPeer::ResetQosStats ()
+VoipServer::ResetQosStats ()
 {
   m_pktSent = 0;
   m_qosStats->ResetCounters ();
 }
 
+void 
+VoipServer::StartSending ()
+{
+  NS_LOG_FUNCTION (this);
+  m_sendEvent = Simulator::Schedule (m_interval, &VoipServer::SendPacket, this);
+}
+
+void 
+VoipServer::StopSending ()
+{
+  NS_LOG_FUNCTION (this);
+  CancelEvents ();
+}
+
 Ptr<const QosStatsCalculator>
-VoipPeer::GetQosStats (void) const
+VoipServer::GetQosStats (void) const
 {
   return m_qosStats;
 }
 
 void
-VoipPeer::DoDispose (void)
+VoipServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   if (m_rxSocket != 0)
     {
       m_rxSocket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
     }
-  m_peerApp = 0;
+  m_clientApp = 0;
   m_txSocket = 0;
   m_rxSocket = 0;
   m_qosStats = 0;
-  m_onTime = 0;
-  m_offTime = 0;
   Application::DoDispose ();
 }
 
 void
-VoipPeer::StartApplication (void)
+VoipServer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
   
@@ -170,7 +158,7 @@ VoipPeer::StartApplication (void)
       TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_rxSocket = Socket::CreateSocket (GetNode (), udpFactory);
       m_rxSocket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
-      m_rxSocket->SetRecvCallback (MakeCallback (&VoipPeer::ReadPacket, this));
+      m_rxSocket->SetRecvCallback (MakeCallback (&VoipServer::ReadPacket, this));
     }
 
   // Outbound side
@@ -179,21 +167,20 @@ VoipPeer::StartApplication (void)
       TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_txSocket = Socket::CreateSocket (GetNode (), udpFactory);
       m_txSocket->Bind ();
-      m_txSocket->Connect (InetSocketAddress (m_peerAddress, m_peerPort));
+      m_txSocket->Connect (InetSocketAddress (m_clientAddress, m_clientPort));
       m_txSocket->ShutdownRecv ();
       m_txSocket->SetConnectCallback (
-          MakeCallback (&VoipPeer::ConnectionSucceeded, this),
-          MakeCallback (&VoipPeer::ConnectionFailed, this));
+          MakeCallback (&VoipServer::ConnectionSucceeded, this),
+          MakeCallback (&VoipServer::ConnectionFailed, this));
       m_txSocket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
     }
 
-  CancelEvents ();
   ResetQosStats ();
-  ScheduleStartEvent ();
+  CancelEvents ();
 }
 
 void
-VoipPeer::StopApplication ()
+VoipServer::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
   CancelEvents ();
@@ -204,81 +191,35 @@ VoipPeer::StopApplication ()
       m_txSocket = 0;
     }
 
-  // We won't stop de inbounding server side, so 
-  // transient packets can get here even after stop.
+  if (m_rxSocket == 0)
+    {
+      m_rxSocket->Close ();
+      m_rxSocket = 0;
+    }
 }
 
 void 
-VoipPeer::CancelEvents ()
+VoipServer::CancelEvents ()
 {
   NS_LOG_FUNCTION (this);
   Simulator::Cancel (m_sendEvent);
-  Simulator::Cancel (m_startStopEvent);
 }
 
 void 
-VoipPeer::StartSending ()
-{
-  NS_LOG_FUNCTION (this);
-  if (!m_startSendingCallback.IsNull ())
-    {
-      if (!m_startSendingCallback (this))
-        {
-          NS_LOG_WARN ("Application " << this << " has been blocked.");
-          CancelEvents ();
-          ScheduleStartEvent ();
-          return;
-        }
-    }
-  m_sendEvent = Simulator::Schedule (m_interval, &VoipPeer::SendPacket, this);
-  ScheduleStopEvent ();
-}
-
-void 
-VoipPeer::StopSending ()
-{
-  NS_LOG_FUNCTION (this);
-  if (!m_stopSendingCallback.IsNull ())
-    {
-      m_stopSendingCallback (this);
-    }
-  CancelEvents ();
-  ScheduleStartEvent ();
-}
-
-void 
-VoipPeer::ScheduleStartEvent ()
-{  
-  NS_LOG_FUNCTION (this);
-  Time offInterval = Seconds (m_offTime->GetValue ());
-  NS_LOG_LOGIC ("VoIP " << this << " will start in +" << offInterval.GetSeconds ());
-  m_startStopEvent = Simulator::Schedule (offInterval, &VoipPeer::StartSending, this);
-}
-
-void 
-VoipPeer::ScheduleStopEvent ()
-{  
-  NS_LOG_FUNCTION (this);
-  Time onInterval = Seconds (m_onTime->GetValue ());
-  NS_LOG_LOGIC ("VoIP " << this << " will stop in +" << onInterval.GetSeconds ());
-  m_startStopEvent = Simulator::Schedule (onInterval, &VoipPeer::StopSending, this);
-}
-
-void 
-VoipPeer::ConnectionSucceeded (Ptr<Socket> socket)
+VoipServer::ConnectionSucceeded (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
   m_connected = true;
 }
 
 void 
-VoipPeer::ConnectionFailed (Ptr<Socket> socket)
+VoipServer::ConnectionFailed (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 }
 
 void
-VoipPeer::SendPacket ()
+VoipServer::SendPacket ()
 {
   NS_LOG_FUNCTION (this);
   NS_ASSERT (m_sendEvent.IsExpired ());
@@ -295,21 +236,21 @@ VoipPeer::SendPacket ()
     {
       m_pktSent++;
       NS_LOG_INFO ("VoIP TX " << m_pktSize <<
-                   " bytes to " << m_peerAddress << 
-                   ":" << m_peerPort << 
+                   " bytes to " << m_clientAddress << 
+                   ":" << m_clientPort << 
                    " Uid " << p->GetUid () << 
                    " Time " << (Simulator::Now ()).GetSeconds ());
     }
   else
     {
       NS_LOG_INFO ("Error sending VoIP " << m_pktSize << 
-                   " bytes to " << m_peerAddress);
+                   " bytes to " << m_clientAddress);
     }
-  m_sendEvent = Simulator::Schedule (m_interval, &VoipPeer::SendPacket, this);
+  m_sendEvent = Simulator::Schedule (m_interval, &VoipServer::SendPacket, this);
 }
 
 void
-VoipPeer::ReadPacket (Ptr<Socket> socket)
+VoipServer::ReadPacket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
   Ptr<Packet> packet;

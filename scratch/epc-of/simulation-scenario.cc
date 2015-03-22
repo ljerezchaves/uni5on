@@ -276,6 +276,8 @@ SimulationScenario::EnableHttpTraffic ()
       clientApp->AggregateObject (tft);
       clientApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
       httpApps.Add (clientApp);
+      // NOTE: The clientApp is the one that requests pages to serverApp. The
+      // client is installed in UE, and the server into m_webHost.
 
       // TFT Packet filter
       EpcTft::PacketFilter filter;
@@ -324,15 +326,18 @@ SimulationScenario::EnableVoipTraffic ()
 
   ApplicationContainer voipApps;
   VoipHelper voipHelper;
-  voipHelper.SetAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
+  voipHelper.SetClientAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
+  voipHelper.SetServerAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
+  voipHelper.SetClientAttribute ("PacketSize", UintegerValue (pktSize));
+  voipHelper.SetServerAttribute ("PacketSize", UintegerValue (pktSize));
+  voipHelper.SetClientAttribute ("Interval", TimeValue (Seconds (pktInterval)));
+  voipHelper.SetServerAttribute ("Interval", TimeValue (Seconds (pktInterval)));
 
   // ON/OFF pattern for VoIP applications (Poisson process)
-  voipHelper.SetAttribute ("OnTime", 
+  voipHelper.SetClientAttribute ("OnTime", 
       StringValue ("ns3::NormalRandomVariable[Mean=5.0|Variance=4.0]"));
-  voipHelper.SetAttribute ("OffTime", 
+  voipHelper.SetClientAttribute ("OffTime", 
       StringValue ("ns3::ExponentialRandomVariable[Mean=15.0]"));
-  voipHelper.SetAttribute ("PacketSize", UintegerValue (pktSize));
-  voipHelper.SetAttribute ("Interval", TimeValue (Seconds (pktInterval)));
  
   for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, voipPort++)
     {
@@ -347,16 +352,18 @@ SimulationScenario::EnableVoipTraffic ()
       // Traffic Flow Template
       Ptr<EpcTft> tft = CreateObject<EpcTft> ();
 
-      // Bidirectional VoIP traffic // FIXME Preciso mesmo dos dois ponteiros???
-      voipHelper.SetAttribute ("Stream", IntegerValue (u));
-      Ptr<VoipPeer> peerApp = voipHelper.Install (client, m_webHost, 
+      // Bidirectional VoIP traffic
+      voipHelper.SetClientAttribute ("Stream", IntegerValue (u));
+      Ptr<VoipClient> clientApp = voipHelper.Install (client, m_webHost, 
           clientAddr, serverAddr, voipPort, voipPort);
-      peerApp->AggregateObject (tft);
-      peerApp->GetPeerApp ()->AggregateObject (tft);
-      peerApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
-      peerApp->GetPeerApp ()->SetStartTime (Seconds (m_rngStart->GetValue ()));
-      voipApps.Add (peerApp);
-      voipApps.Add (peerApp->GetPeerApp ());
+      clientApp->AggregateObject (tft);
+      clientApp->GetServerApp ()->AggregateObject (tft);
+      Time startTime = Seconds (m_rngStart->GetValue ());
+      clientApp->SetStartTime (startTime);
+      clientApp->GetServerApp ()->SetStartTime (startTime);
+      voipApps.Add (clientApp);
+      // NOTE: clientApp is the one at UE, providing the uplink traffic. 
+      // Linking only this app to the callbacks for start/stop notifications.
   
       // TFT downlink packet filter
       EpcTft::PacketFilter filterDown;
@@ -454,6 +461,9 @@ SimulationScenario::EnableVideoTraffic ()
       clientApp->AggregateObject (tft);
       clientApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
       videoApps.Add (clientApp);
+      // NOTE: The clientApp is the one that sends traffic to the server
+      // (UdpServer). The clientApp is installed into m_webHost and the server
+      // into UE, providing a downlink video traffic.
 
       // TFT downlink packet filter
       EpcTft::PacketFilter filter;
