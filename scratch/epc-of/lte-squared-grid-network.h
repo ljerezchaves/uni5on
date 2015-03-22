@@ -31,11 +31,10 @@
 namespace ns3 {
 
 /**
- * Squared grid LTE network (without EPC that should be created apart).
- * This class generates a squared grid topology, placing a eNodeB at the
- * centre of each square. UEs attached to this node are scattered randomly
- * across the square (using a random uniform distribution along X and Y
- * axis). See figure 18.63 of ns-3-model-library v3.19). 
+ * LTE radio network layed out on a squared grid. This class generates a
+ * squared grid topology, placing a eNodeB at the centre of each square. UEs
+ * attached to this node may be fixed at same position of eNB or scattered
+ * randomly around the eNB. See figure 18.63 of ns-3-model-library v3.19). 
  */
 class LteSquaredGridNetwork : public Object
 {
@@ -77,15 +76,18 @@ public:
       std::vector<uint32_t> nUes); 
 
 private:
+  /** Configure default values for LTE radio network. */
+  void ConfigureLteParameters ();
+
   /** Set eNBs and UEs positions */
   void SetLteNodePositions ();
 
   /** Install the LTE protocol stack into each eNB and UE */
   void InstallProtocolStack ();
 
-  uint32_t  m_nEnbs;      //!< The number of eNBs
-  double    m_enbHeight;  //!< The eNB height
-  double    m_ueHeight;   //!< The UE height
+  uint32_t  m_nEnbs;      //!< Number of eNBs
+  double    m_enbHeight;  //!< eNB height
+  double    m_ueHeight;   //!< UE height
   double    m_roomLength; //!< The x,y distances between eNBs
   bool      m_fixedUes;   //!< True to place all UEs at same eNB position
 
