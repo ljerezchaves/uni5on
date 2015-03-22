@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef EPC_QOS_TAG_H
-#define EPC_QOS_TAG_H
+#ifndef SEQ_NUM_TAG_H
+#define SEQ_NUM_TAG_H
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
@@ -29,17 +29,17 @@ namespace ns3 {
 class Tag;
 
 /** 
- * Tag used to measure traffic QoS over the OpenFlow LTE EPC network. 
+ * Tag used to save packet sequence number. 
  */
-class EpcQosTag : public Tag
+class SeqNumTag : public Tag
 {
 public:
   static TypeId GetTypeId (void);
   virtual TypeId GetInstanceTypeId (void) const;
 
   /** Constructors */
-  EpcQosTag ();
-  EpcQosTag (uint32_t seq);
+  SeqNumTag ();
+  SeqNumTag (uint32_t seq);
 
   // Inherited from Tag
   virtual void Serialize (TagBuffer i) const;
@@ -50,14 +50,10 @@ public:
   /** \return the sequence number field */
   uint32_t GetSeqNum () const;
 
-  /** \return the timestamp field */
-  Time GetTimestamp () const;
-
 private:
-  uint64_t m_ts;    //!< Creating timestamp
   uint32_t m_seq;   //!< Packet sequence number
 };
 
 };  // namespace ns3
-#endif // EPC_QOS_TAG_H
+#endif // SEQ_NUM_TAG_H
 

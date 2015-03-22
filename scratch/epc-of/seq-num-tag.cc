@@ -18,76 +18,67 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "epc-qos-tag.h"
+#include "seq-num-tag.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("EpcQosTag");
-NS_OBJECT_ENSURE_REGISTERED (EpcQosTag);
+NS_LOG_COMPONENT_DEFINE ("SeqNumTag");
+NS_OBJECT_ENSURE_REGISTERED (SeqNumTag);
 
-EpcQosTag::EpcQosTag ()
-  : m_ts (Simulator::Now ().GetTimeStep ())
+SeqNumTag::SeqNumTag ()
+  : m_seq (0)
 {
 }
 
-EpcQosTag::EpcQosTag (uint32_t seq)
-  : m_ts (Simulator::Now ().GetTimeStep ()),
-    m_seq (seq)
+SeqNumTag::SeqNumTag (uint32_t seq)
+  : m_seq (seq)
 {
 }
 
 TypeId 
-EpcQosTag::GetTypeId (void)
+SeqNumTag::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::EpcQosTag")
+  static TypeId tid = TypeId ("ns3::SeqNumTag")
     .SetParent<Tag> ()
-    .AddConstructor<EpcQosTag> ()
+    .AddConstructor<SeqNumTag> ()
   ;
   return tid;
 }
 
 TypeId 
-EpcQosTag::GetInstanceTypeId (void) const
+SeqNumTag::GetInstanceTypeId (void) const
 {
   return GetTypeId ();
 }
 
 uint32_t 
-EpcQosTag::GetSerializedSize (void) const
+SeqNumTag::GetSerializedSize (void) const
 {
-  return 12;
+  return 4;
 }
 
 void 
-EpcQosTag::Serialize (TagBuffer i) const
+SeqNumTag::Serialize (TagBuffer i) const
 {
-  i.WriteU64 (m_ts);
   i.WriteU32 (m_seq);
 }
 
 void 
-EpcQosTag::Deserialize (TagBuffer i)
+SeqNumTag::Deserialize (TagBuffer i)
 {
-  m_ts = i.ReadU64 ();
   m_seq = i.ReadU32 ();
 }
 
 void 
-EpcQosTag::Print (std::ostream &os) const
+SeqNumTag::Print (std::ostream &os) const
 {
-  os << " EpcQosTag seq=" << m_seq << " ts=" << m_ts;
+  os << " SeqNumTag seq=" << m_seq;
 }
 
 uint32_t 
-EpcQosTag::GetSeqNum () const
+SeqNumTag::GetSeqNum () const
 {
   return m_seq;
-}
-
-Time 
-EpcQosTag::GetTimestamp () const
-{
-  return Time (m_ts);
 }
 
 };  // namespace ns3

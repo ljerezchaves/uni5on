@@ -20,7 +20,7 @@
 
 #include "openflow-epc-controller.h"
 #include "internet-network.h"
-#include "epc-qos-tag.h"
+#include "seq-num-tag.h"
 
 namespace ns3 {
 
@@ -375,8 +375,8 @@ OpenFlowEpcController::InputPacket (std::string context,
     {
       Ptr<QosStatsCalculator> qosStats = 
         GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      EpcQosTag qosTag (qosStats->GetNextSeqNum ());
-      packet->AddPacketTag (qosTag);
+      SeqNumTag seqTag (qosStats->GetNextSeqNum ());
+      packet->AddPacketTag (seqTag);
     }
 }
 
@@ -389,12 +389,12 @@ OpenFlowEpcController::OutputPacket (std::string context,
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      EpcQosTag qosTag;
-      if (packet->PeekPacketTag (qosTag))
+      SeqNumTag seqTag;
+      if (packet->PeekPacketTag (seqTag))
         {
           Ptr<QosStatsCalculator> qosStats = 
             GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-          qosStats->NotifyReceived (qosTag.GetSeqNum (), qosTag.GetTimestamp (), 
+          qosStats->NotifyReceived (seqTag.GetSeqNum (), gtpuTag.GetTimestamp (), 
                                     packet->GetSize ());
         }
     }
