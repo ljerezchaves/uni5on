@@ -112,6 +112,11 @@ SimulationScenario::GetTypeId (void)
                    StringValue ("topology.txt"),
                    MakeStringAccessor (&SimulationScenario::m_topoFilename),
                    MakeStringChecker ())
+    .AddAttribute ("CommonPrefix",
+                   "Common prefix for input and output filenames.",
+                   StringValue (""),
+                   MakeStringAccessor (&SimulationScenario::SetCommonPrefix),
+                   MakeStringChecker ())
     .AddAttribute ("Enbs",
                    "Number of eNBs in network topology.",
                    UintegerValue (0),
@@ -236,6 +241,27 @@ SimulationScenario::BuildRingTopology ()
   // Logs and traces
   DatapathLogs ();
   PcapAsciiTraces ();
+}
+
+void 
+SimulationScenario::SetCommonPrefix (std::string prefix)
+{
+  static bool prefixSet = false;
+
+  if (prefixSet || prefix == "") return;
+  
+  prefixSet = true;
+  m_commonPrefix = prefix;
+  char lastChar = *prefix.rbegin (); 
+  if (lastChar != '-')
+    {
+      m_commonPrefix += "-";
+    }
+  m_appStatsFilename = m_commonPrefix + m_appStatsFilename;
+  m_epcStatsFilename = m_commonPrefix + m_epcStatsFilename;
+  m_pgwStatsFilename = m_commonPrefix + m_pgwStatsFilename;
+  m_gbrStatsFilename = m_commonPrefix + m_gbrStatsFilename;
+  m_topoFilename     = m_commonPrefix + m_topoFilename;
 }
 
 void 
@@ -767,13 +793,12 @@ SimulationScenario::PcapAsciiTraces ()
   if (!m_traces) return;
   NS_LOG_FUNCTION (this);
  
-  m_webNetwork->EnablePcap ("internet");
-  m_opfNetwork->EnableOpenFlowPcap ("ofchannel");
-  m_opfNetwork->EnableOpenFlowAscii ("ofchannel");
-  m_opfNetwork->EnableDataPcap ("ofnetwork", true);
-  m_epcHelper->EnablePcapS1u ("lte-epc");
-  m_epcHelper->EnablePcapX2 ("lte-epc");
-  m_lteNetwork->EnableTraces ();
+  m_webNetwork->EnablePcap (m_commonPrefix + "internet");
+  m_opfNetwork->EnableOpenFlowPcap (m_commonPrefix + "ofchannel");
+  m_opfNetwork->EnableDataPcap (m_commonPrefix + "ofnetwork", true);
+  m_epcHelper->EnablePcapS1u (m_commonPrefix + "lte-epc");
+  m_epcHelper->EnablePcapX2 (m_commonPrefix + "lte-epc");
+  // m_lteNetwork->EnableTraces ();
 }
 
 };  // namespace ns3

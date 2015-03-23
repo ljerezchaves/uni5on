@@ -52,6 +52,9 @@ public:
   /** Build the ring simulation topology. */ 
   void BuildRingTopology ();
 
+  /** Set the common prefix for input/output files. */ 
+  void SetCommonPrefix (std::string prefix);
+
 private:
   /**
    * Enable IPv4 ICMP ping application over default EPS bearer (QCI 9).
@@ -140,7 +143,10 @@ private:
   /** Enable/Disable ofsoftswitch13 library log. */
   void DatapathLogs ();
 
-  /** Enable/Disable PCAP and ASCII traces. */
+  /** 
+   * Enable/Disable PCAP and ASCII traces. 
+   * \param prefix Common prefix for files.
+   */
   void PcapAsciiTraces ();
 
   Ptr<OpenFlowEpcNetwork>    m_opfNetwork;    //!< LTE EPC network
@@ -167,6 +173,7 @@ private:
   std::string           m_gbrStatsFilename;   //!< GbrStats filename
   std::string           m_topoFilename;       //!< Topology filename
   std::string           m_switchLog;          //!< Switches log level
+  std::string           m_commonPrefix;       //!< Common prefix for filenames
   uint32_t              m_nEnbs;              //!< Number of eNBs
   uint16_t              m_nSwitches;          //!< Number of OpenFlow switches
   bool                  m_traces;             //!< Enable pcap and ascii traces
