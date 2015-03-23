@@ -118,6 +118,12 @@ private:
   void ReportBlockRatio (uint32_t requests, uint32_t blocks, double ratio);
 
   /**
+   * Save packet gateway traffic statistics in file.
+   * \see ns3::OpenFlowEpcController::PgwTrafficTracedCallback for parameters.
+   */
+  void ReportPgwTraffic (DataRate downTraffic, DataRate upTraffic);
+
+  /**
    * Parse topology description file.  
    * Topology file columns (indexes starts at 0):
    * eNB index | # of UEs at this eNB | OpenFlow switch index
@@ -144,6 +150,7 @@ private:
   Ptr<InternetNetwork>       m_webNetwork;    //!< Internet network
   Ptr<LteHelper>             m_lteHelper;     //!< LTE radio helper
   Ptr<Node>                  m_webHost;       //!< Internet server node
+  Ptr<Node>                  m_pgwHost;       //!< EPC Pgw gateway node
   Ptr<UniformRandomVariable> m_rngStart;      //!< Random app start time
   
   NodeContainer         m_ueNodes;            //!< LTE UE nodes
@@ -152,10 +159,12 @@ private:
   ApplicationContainer  m_videoServers;       //!< Video applications
 
   bool                  m_appStatsFirstWrite; //!< First write to appStatsFile
-  bool                  m_epcStatsFirstWrite; //!< First write to appStatsFile
+  bool                  m_epcStatsFirstWrite; //!< First write to epcStatsFile
+  bool                  m_pgwStatsFirstWrite; //!< First write to pgwStatsFile
   std::string           m_appStatsFilename;   //!< AppStats filename
-  std::string           m_epcStatsFilename;   //!< AppStats filename
-  std::string           m_gbrStatsFilename;   //!< GBR block filename
+  std::string           m_epcStatsFilename;   //!< EpcStats filename
+  std::string           m_pgwStatsFilename;   //!< PgwStats filename
+  std::string           m_gbrStatsFilename;   //!< GbrStats filename
   std::string           m_topoFilename;       //!< Topology filename
   std::string           m_switchLog;          //!< Switches log level
   uint32_t              m_nEnbs;              //!< Number of eNBs

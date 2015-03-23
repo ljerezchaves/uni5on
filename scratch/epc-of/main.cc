@@ -42,7 +42,6 @@ main (int argc, char *argv[])
 
   // Enabling checksum computations and packet metadata
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
-  PacketMetadata::Enable (); // FIXME Can be removed
   
   bool verbose = false;
   bool progress = false;
@@ -55,6 +54,7 @@ main (int argc, char *argv[])
   cmd.AddValue ("simTime",    "Simulation time (seconds).", simTime);
   cmd.AddValue ("appStats",   "ns3::SimulationScenario::AppStatsFilename"); 
   cmd.AddValue ("epcStats",   "ns3::SimulationScenario::EpcStatsFilename"); 
+  cmd.AddValue ("pgwStats",   "ns3::SimulationScenario::PgwStatsFilename"); 
   cmd.AddValue ("gbrStats",   "ns3::SimulationScenario::GbrStatsFilename"); 
   cmd.AddValue ("topoFile",   "ns3::SimulationScenario::TopoFilename");
   cmd.AddValue ("trace",      "ns3::SimulationScenario::Traces");

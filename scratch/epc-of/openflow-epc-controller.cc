@@ -40,6 +40,8 @@ const int OpenFlowEpcController::m_t1RingPrio = 32;
 OpenFlowEpcController::OpenFlowEpcController ()
   : m_gbrBearers (0),
     m_gbrBlocks (0),
+    m_pgwDownBytes (0),
+    m_pgwUpBytes (0),
     m_ofNetwork (0)
 {
   NS_LOG_FUNCTION (this);
@@ -55,6 +57,11 @@ OpenFlowEpcController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::OpenFlowEpcController")
     .SetParent (OFSwitch13Controller::GetTypeId ())
+    .AddAttribute ("PgwStatsTimeout",
+                   "EPC Pgw dump statistics interval.",
+                   TimeValue (Seconds (10)),
+                   MakeTimeAccessor (&OpenFlowEpcController::SetPgwDumpTimeout),
+                   MakeTimeChecker ())
     .AddTraceSource ("AppStats",
                      "Application QoS trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_appQosTrace),
@@ -63,6 +70,10 @@ OpenFlowEpcController::GetTypeId (void)
                      "LTE EPC GTPU QoS trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_epcQosTrace),
                      "ns3::OpenFlowEpcController::QosTracedCallback")
+    .AddTraceSource ("PgwStats",
+                     "EPC Pgw traffic trace source.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_pgwTrafficTrace),
+                     "ns3::OpenFlowEpcController::PgwTrafficTracedCallback")
     .AddTraceSource ("GbrBlock",
                      "The GBR block ratio trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_gbrBlockTrace),
@@ -99,12 +110,12 @@ OpenFlowEpcController::SetOfNetwork (Ptr<OpenFlowEpcNetwork> network)
   m_ofNetwork = network;
 }
 
-double
-OpenFlowEpcController::DumpGbrBlockStatistics ()
+void
+OpenFlowEpcController::SetPgwDumpTimeout (Time timeout)
 {
-  double ratio = (double)m_gbrBlocks / (double)m_gbrBearers;
-  m_gbrBlockTrace (m_gbrBearers, m_gbrBlocks, ratio);
-  return ratio;
+  m_pgwTimeout = timeout;
+  Simulator::Schedule (m_pgwTimeout, 
+    &OpenFlowEpcController::DumpPgwTrafficStatistics, this);
 }
 
 void 
@@ -365,7 +376,7 @@ OpenFlowEpcController::NotifyAppStop (Ptr<Application> app)
 }
 
 void 
-OpenFlowEpcController::InputPacket (std::string context, 
+OpenFlowEpcController::EpcInputPacket (std::string context, 
                                     Ptr<const Packet> packet)
 {
   EpcGtpuTag gtpuTag;
@@ -379,7 +390,7 @@ OpenFlowEpcController::InputPacket (std::string context,
 }
 
 void
-OpenFlowEpcController::OutputPacket (std::string context, 
+OpenFlowEpcController::EpcOutputPacket (std::string context, 
                                      Ptr<const Packet> packet)
 {
   EpcGtpuTag gtpuTag;
@@ -393,6 +404,19 @@ OpenFlowEpcController::OutputPacket (std::string context,
           qosStats->NotifyReceived (seqTag.GetSeqNum (), gtpuTag.GetTimestamp (), 
                                     packet->GetSize ());
         }
+    }
+}
+
+void 
+OpenFlowEpcController::PgwTraffic (std::string direction, Ptr<const Packet> packet)
+{
+  if (direction == "downlink")
+    {
+      m_pgwDownBytes += packet->GetSize ();
+    }
+  else if (direction == "uplink")
+    {
+      m_pgwUpBytes += packet->GetSize ();
     }
 }
 
@@ -501,6 +525,26 @@ OpenFlowEpcController::GetTeidRoutingInfo (uint32_t teid)
   return rInfo;
 }
 
+double
+OpenFlowEpcController::DumpGbrBlockStatistics ()
+{
+  double ratio = (double)m_gbrBlocks / (double)m_gbrBearers;
+  m_gbrBlockTrace (m_gbrBearers, m_gbrBlocks, ratio);
+  return ratio;
+}
+
+void
+OpenFlowEpcController::DumpPgwTrafficStatistics ()
+{
+  DataRate downRate (8 * m_pgwDownBytes / 10);
+  DataRate upRate (8 * m_pgwUpBytes / 10);
+  m_pgwTrafficTrace (downRate, upRate);
+
+  m_pgwUpBytes = m_pgwDownBytes = 0;
+  Simulator::Schedule (m_pgwTimeout, 
+    &OpenFlowEpcController::DumpPgwTrafficStatistics, this);
+}
+
 void
 OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
 {
@@ -526,7 +570,7 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
       m_epcQosTrace (descUp.str (), teid, epcStats);
 
       appStats = voipApp->GetServerApp ()->GetQosStats ();
-      epcStats = GetQosStatsFromTeid (teid, true);
+      epcStats = GetQosStatsFromTeid (teid, true);  // downlink
       
       // The VoipServer app is at the Internet
       std::ostringstream descDown;
@@ -543,7 +587,7 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
       appStats = videoApp->GetServerApp ()->GetQosStats ();
       std::ostringstream desc;
       desc << "Video [" << rInfo->m_sgwIdx << " --> " << rInfo->m_enbIdx << "]";
-      epcStats = GetQosStatsFromTeid (teid, true);
+      epcStats = GetQosStatsFromTeid (teid, true);  // downlink
 
       // Tracing application and EPC statistics
       m_appQosTrace (desc.str (), teid, appStats);
@@ -555,7 +599,7 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
       appStats = httpApp->GetQosStats ();
       std::ostringstream desc;
       desc << "HTTP  [" << rInfo->m_sgwIdx << " <-> " << rInfo->m_enbIdx << "]";
-      epcStats = GetQosStatsFromTeid (teid, true);
+      epcStats = GetQosStatsFromTeid (teid, true);  // downlink
 
       // Tracing application and EPC statistics
       m_appQosTrace (desc.str (), teid, appStats);

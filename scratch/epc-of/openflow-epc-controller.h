@@ -67,10 +67,10 @@ public:
   void SetOfNetwork (Ptr<OpenFlowEpcNetwork> network);
 
   /**
-   * Return the block radio statistics.
-   * \return The GBR bearer block ratio
+   * Set the default Pgw dump traffic statistics interval.
+   * \param timeout The timeout value.
    */
-  double DumpGbrBlockStatistics ();
+  void SetPgwDumpTimeout (Time timeout);
 
   /**
    * Notify this controller of a new eNB or SgwPgw device connected to the
@@ -158,20 +158,28 @@ public:
   virtual bool NotifyAppStop (Ptr<Application> app);
 
   /**
-   * Trace sink for packets entering the OpenFlow network. The packet will get
-   * tagged for QoS monitoring.
-   * \param context Input switch index and port number.
+   * Trace sink for packets entering the EPC. The packet will get tagged for
+   * QoS monitoring.
+   * \param context Node name.
    * \param packet The packet.
    */
-  void InputPacket (std::string context, Ptr<const Packet> packet);
+  void EpcInputPacket (std::string context, Ptr<const Packet> packet);
 
   /**
-   * Trace sink for packets leaving the OpenFlow network. The tag will be read
-   * from packet, and QoS stats updated.
-   * \param context Output switch index and port number.
+   * Trace sink for packets leaving the EPC. The tag will be read from packet,
+   * and QoS stats updated.
+   * \param context Node name.
    * \param packet The packet.
    */
-  void OutputPacket (std::string context, Ptr<const Packet> packet);
+  void EpcOutputPacket (std::string context, Ptr<const Packet> packet);
+
+  /**
+   * Trace sink for packets traversing the EPC packet gateway from the
+   * Internet to the EPC.
+   * \param direction The traffic direction.
+   * \param packet The packet.
+   */
+  void PgwTraffic (std::string direction, Ptr<const Packet> packet);
 
   /**
    * Trace sink for packets dropped by meter bands. The tag will be read
@@ -196,8 +204,16 @@ public:
    * \param blocks The number of GBR requests blockd.
    * \param ratio The block ratio.
    */
-  typedef void (* GbrBlockTracedCallback)
-    (uint32_t requests, uint32_t blocks, double ratio);
+  typedef void (* GbrBlockTracedCallback)(uint32_t requests, uint32_t blocks, 
+                                          double ratio);
+
+  /** 
+   * TracedCallback signature for Pgw traffic statistics.
+   * \param downTraffic The average downlink traffic for last interval.
+   * \param upTraffic The average uplink traffic for last interval.
+   */
+  typedef void (* PgwTrafficTracedCallback)(DataRate downTraffic, 
+                                            DataRate upTraffic);
 
 protected:
   /** 
@@ -299,6 +315,17 @@ protected:
    * \return The routing information for this tunnel.
    */
   Ptr<RoutingInfo> GetTeidRoutingInfo (uint32_t teid);
+
+  /**
+   * Return the block radio statistics.
+   * \return The GBR bearer block ratio
+   */
+  double DumpGbrBlockStatistics ();
+
+  /**
+   * Dump EPC Pgw downlink/uplink traffic statistics.
+   */
+  void DumpPgwTrafficStatistics ();
 
   /**
    * Dump application statistics.
@@ -444,11 +471,14 @@ private:
   TracedCallback<std::string, uint32_t, 
     Ptr<const QosStatsCalculator> > m_appQosTrace;
 
-    /** The LTE EPC QoS trace source, fired at DumpAppStatistics. */
+  /** The LTE EPC QoS trace source, fired at DumpAppStatistics. */
   TracedCallback<std::string, uint32_t, 
     Ptr<const QosStatsCalculator> > m_epcQosTrace;
 
-  /** The GBR block ratio trace source, fired at GetBlockRatioStatistics. */
+  /** The EPC Pgw traffic trace source, fired at DumpPgwTrafficStatistics. */
+  TracedCallback<DataRate, DataRate> m_pgwTrafficTrace;
+
+  /** The GBR block ratio trace source, fired at DumpGbrBlockStatistics. */
   TracedCallback<uint32_t, uint32_t, double> m_gbrBlockTrace;
 
   
@@ -486,7 +516,10 @@ private:
 
   uint32_t          m_gbrBearers;       //!< Requests for GBR bearers
   uint32_t          m_gbrBlocks;        //!< Blocked GBR requests
-  
+  uint32_t          m_pgwDownBytes;     //!< Pgw traffic downlink bytes
+  uint32_t          m_pgwUpBytes;       //!< Pgw traffic uplink bytes
+  Time              m_pgwTimeout;       //!< Pgw traffic stats timeout
+
   Ptr<OpenFlowEpcNetwork> m_ofNetwork;  //!< Pointer to OpenFlow network
 };
 

@@ -51,9 +51,11 @@ SimulationScenario::SimulationScenario ()
     m_webNetwork (0),
     m_lteHelper (0),
     m_webHost (0),
+    m_pgwHost (0),
     m_rngStart (0),
     m_appStatsFirstWrite (true),
-    m_epcStatsFirstWrite (true)
+    m_epcStatsFirstWrite (true),
+    m_pgwStatsFirstWrite (true)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -74,6 +76,7 @@ SimulationScenario::DoDispose ()
   m_webNetwork = 0;
   m_lteHelper = 0;
   m_webHost = 0;
+  m_pgwHost = 0;
   m_opfNetwork = 0;
   m_rngStart = 0;
 }
@@ -93,6 +96,11 @@ SimulationScenario::GetTypeId (void)
                    "Name of the file where the app statistics will be saved.",
                    StringValue ("epc_stats.txt"),
                    MakeStringAccessor (&SimulationScenario::m_epcStatsFilename),
+                   MakeStringChecker ())
+    .AddAttribute ("PgwStatsFilename",
+                   "Name of the file where the pgw traffic statistics will be saved.",
+                   StringValue ("pgw_stats.txt"),
+                   MakeStringAccessor (&SimulationScenario::m_pgwStatsFilename),
                    MakeStringChecker ())
     .AddAttribute ("GbrStatsFilename",
                    "Name of the file where the app statistics will be saved.",
@@ -176,6 +184,7 @@ SimulationScenario::BuildRingTopology ()
       MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, m_controller));
   m_epcHelper->SetCreateSessionRequestCallback (
       MakeCallback (&OpenFlowEpcController::NotifyNewContextCreated, m_controller));
+  m_pgwHost = m_epcHelper->GetPgwNode ();
   
   // LTE radio access network
   m_lteNetwork = CreateObject<LteHexGridNetwork> ();
@@ -184,7 +193,7 @@ SimulationScenario::BuildRingTopology ()
 
   // Internet network
   m_webNetwork = CreateObject<InternetNetwork> ();
-  m_webHost = m_webNetwork->CreateTopology (m_epcHelper->GetPgwNode ());
+  m_webHost = m_webNetwork->CreateTopology (m_pgwHost);
 
   // UE Nodes and UE devices
   m_ueNodes = m_lteNetwork->GetUeNodes ();
@@ -197,17 +206,26 @@ SimulationScenario::BuildRingTopology ()
 
   // Registering EPC trace sinks for QoS monitoring
   m_opfNetwork->ConnectEpcTraceSinks ("S1uRx", 
-      MakeCallback (&OpenFlowEpcController::OutputPacket, m_controller));
+      MakeCallback (&OpenFlowEpcController::EpcOutputPacket, m_controller));
   m_opfNetwork->ConnectEpcTraceSinks ("S1uTx", 
-      MakeCallback (&OpenFlowEpcController::InputPacket, m_controller));
+      MakeCallback (&OpenFlowEpcController::EpcInputPacket, m_controller));
   
   // Saving controller and application statistics 
   m_controller->TraceConnectWithoutContext ("AppStats", 
       MakeCallback (&SimulationScenario::ReportAppStats, this));
   m_controller->TraceConnectWithoutContext ("EpcStats", 
       MakeCallback (&SimulationScenario::ReportEpcStats, this));
+  m_controller->TraceConnectWithoutContext ("PgwStats", 
+      MakeCallback (&SimulationScenario::ReportPgwTraffic, this));
   m_controller->TraceConnectWithoutContext ("GbrBlock", 
       MakeCallback (&SimulationScenario::ReportBlockRatio, this));
+
+  // Connecting Pgw traffic trace sinks
+  Ptr<Application> pgwApp = m_pgwHost->GetApplication (0);
+  pgwApp->TraceConnect ("S1uTx", "downlink", 
+      MakeCallback (&OpenFlowEpcController::PgwTraffic, m_controller));
+  pgwApp->TraceConnect ("S1uRx", "uplink", 
+      MakeCallback (&OpenFlowEpcController::PgwTraffic, m_controller));
 
   // Application traffic
   if (m_ping) EnablePingTraffic ();
@@ -248,7 +266,7 @@ SimulationScenario::EnableHttpTraffic ()
   HttpHelper httpHelper;
   httpHelper.SetClientAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
   httpHelper.SetServerAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
-  httpHelper.SetClientAttribute ("TcpTimeout", TimeValue (Seconds (4))); 
+  httpHelper.SetClientAttribute ("TcpTimeout", TimeValue (Seconds (9))); 
   httpHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
   // The HttpClient TcpTimeout was selected based on HTTP traffic model and
   // dedicated bearer idle timeout. Every time the T4P socket is closed, HTTP
@@ -333,10 +351,10 @@ SimulationScenario::EnableVoipTraffic ()
   voipHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
 
   // ON/OFF pattern for VoIP applications (Poisson process)
-  // Random average time between calls (5 to 60 minutes) [Exponential mean]
+  // Random average time between calls (1 to 5 minutes) [Exponential mean]
   Ptr<UniformRandomVariable> meanTime = CreateObject<UniformRandomVariable> ();
-  meanTime->SetAttribute ("Min", DoubleValue (300));
-  meanTime->SetAttribute ("Max", DoubleValue (3600));
+  meanTime->SetAttribute ("Min", DoubleValue (60));
+  meanTime->SetAttribute ("Max", DoubleValue (300));
   Ptr<ExponentialRandomVariable> offTime = CreateObject<ExponentialRandomVariable> ();
   offTime->SetAttribute ("Mean", DoubleValue (meanTime->GetValue ()));
   
@@ -431,11 +449,11 @@ SimulationScenario::EnableVideoTraffic ()
   videoHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
 
   // ON/OFF pattern for VoIP applications (Poisson process)
-  // Average time between videos (5 minutes) [Exponential mean]
+  // Average time between videos (1 minute) [Exponential mean]
   videoHelper.SetClientAttribute ("OnTime", 
       StringValue ("ns3::NormalRandomVariable[Mean=75.0|Variance=2025.0]"));
   videoHelper.SetClientAttribute ("OffTime", 
-      StringValue ("ns3::ExponentialRandomVariable[Mean=300.0]"));
+      StringValue ("ns3::ExponentialRandomVariable[Mean=60.0]"));
 
   // Video random selection
   Ptr<UniformRandomVariable> rngVideo = CreateObject<UniformRandomVariable> ();
@@ -626,6 +644,44 @@ SimulationScenario::ReportBlockRatio (uint32_t requests, uint32_t blocks, double
           << "Number of GBR bearers blocked: " << blocks   << std::endl
           << "Block ratio: "                   << ratio    << std::endl;
 
+  outFile.close ();
+}
+
+void 
+SimulationScenario::ReportPgwTraffic (DataRate downTraffic, DataRate upTraffic)
+{
+  NS_LOG_FUNCTION (this);
+ 
+  std::ofstream outFile;
+  if (m_pgwStatsFirstWrite == true )
+    {
+      outFile.open (m_pgwStatsFilename.c_str ());
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_pgwStatsFilename);
+          return;
+        }
+      m_pgwStatsFirstWrite = false;
+      outFile << left 
+              << setw (12) << "Time (s)" 
+              << setw (15) << "Downlink (bps)"
+              << setw (12) << "Uplink (bps)"
+              << std::endl;
+    }
+  else
+    {
+      outFile.open (m_pgwStatsFilename.c_str (), std::ios_base::app);
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_pgwStatsFilename);
+          return;
+        }
+    }
+
+  outFile << left;
+  outFile << setw (12) << Simulator::Now ().GetSeconds ();
+  outFile << setw (15) << downTraffic.GetBitRate ();
+  outFile << setw (12) << upTraffic.GetBitRate () << std::endl;
   outFile.close ();
 }
 
