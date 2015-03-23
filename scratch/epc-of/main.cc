@@ -44,9 +44,9 @@ main (int argc, char *argv[])
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
   
   bool verbose = false;
-  bool progress = false;
+  bool progress = true;
   bool lteRem = false;
-  uint32_t simTime = 60;
+  uint32_t simTime = 1800;
   
   CommandLine cmd;
   cmd.AddValue ("verbose",    "Enable verbose output.", verbose);

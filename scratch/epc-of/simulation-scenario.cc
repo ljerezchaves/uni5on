@@ -144,17 +144,17 @@ SimulationScenario::GetTypeId (void)
                    MakeBooleanChecker ())
     .AddAttribute ("HttpTraffic",
                    "Enable/Disable http traffic during simulation.",
-                   BooleanValue (false),
+                   BooleanValue (true),
                    MakeBooleanAccessor (&SimulationScenario::m_http),
                    MakeBooleanChecker ())
     .AddAttribute ("VoipTraffic",
                    "Enable/Disable voip traffic during simulation.",
-                   BooleanValue (false),
+                   BooleanValue (true),
                    MakeBooleanAccessor (&SimulationScenario::m_voip),
                    MakeBooleanChecker ())
     .AddAttribute ("VideoTraffic",
                    "Enable/Disable video traffic during simulation.",
-                   BooleanValue (false),
+                   BooleanValue (true),
                    MakeBooleanAccessor (&SimulationScenario::m_video),
                    MakeBooleanChecker ())
   ;
