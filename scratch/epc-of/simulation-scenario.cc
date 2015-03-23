@@ -251,7 +251,7 @@ SimulationScenario::EnableHttpTraffic ()
   httpHelper.SetClientAttribute ("TcpTimeout", TimeValue (Seconds (4))); 
   httpHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
   // The HttpClient TcpTimeout was selected based on HTTP traffic model and
-  // dedicated bearer idle timeout. Every time the TCP socket is closed, HTTP
+  // dedicated bearer idle timeout. Every time the T4P socket is closed, HTTP
   // client application notify the controller, and traffic statistics are
   // printed.
   
@@ -333,10 +333,16 @@ SimulationScenario::EnableVoipTraffic ()
   voipHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
 
   // ON/OFF pattern for VoIP applications (Poisson process)
+  // Random average time between calls (5 to 60 minutes) [Exponential mean]
+  Ptr<UniformRandomVariable> meanTime = CreateObject<UniformRandomVariable> ();
+  meanTime->SetAttribute ("Min", DoubleValue (300));
+  meanTime->SetAttribute ("Max", DoubleValue (3600));
+  Ptr<ExponentialRandomVariable> offTime = CreateObject<ExponentialRandomVariable> ();
+  offTime->SetAttribute ("Mean", DoubleValue (meanTime->GetValue ()));
+  
   voipHelper.SetClientAttribute ("OnTime", 
-      StringValue ("ns3::NormalRandomVariable[Mean=5.0|Variance=4.0]"));
-  voipHelper.SetClientAttribute ("OffTime", 
-      StringValue ("ns3::ExponentialRandomVariable[Mean=15.0]"));
+      StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=900.0]"));
+  voipHelper.SetClientAttribute ("OffTime", PointerValue (offTime));
  
   for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, voipPort++)
     {
@@ -426,14 +432,14 @@ SimulationScenario::EnableVideoTraffic ()
 
   // ON/OFF pattern for VoIP applications (Poisson process)
   videoHelper.SetClientAttribute ("OnTime", 
-      StringValue ("ns3::NormalRandomVariable[Mean=5.0|Variance=4.0]"));
+      StringValue ("ns3::NormalRandomVariable[Mean=75.0|Variance=2025.0]"));
   videoHelper.SetClientAttribute ("OffTime", 
-      StringValue ("ns3::ExponentialRandomVariable[Mean=15.0]"));
+      StringValue ("ns3::ExponentialRandomVariable[Mean=300.0]"));
 
   // Video random selection
   Ptr<UniformRandomVariable> rngVideo = CreateObject<UniformRandomVariable> ();
-  rngVideo->SetAttribute ("Min", DoubleValue (0.));
-  rngVideo->SetAttribute ("Max", DoubleValue (12.));
+  rngVideo->SetAttribute ("Min", DoubleValue (0));
+  rngVideo->SetAttribute ("Max", DoubleValue (12));
   
   for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, videoPort++)
     {
