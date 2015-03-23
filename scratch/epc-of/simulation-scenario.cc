@@ -431,6 +431,7 @@ SimulationScenario::EnableVideoTraffic ()
   videoHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
 
   // ON/OFF pattern for VoIP applications (Poisson process)
+  // Average time between videos (5 minutes) [Exponential mean]
   videoHelper.SetClientAttribute ("OnTime", 
       StringValue ("ns3::NormalRandomVariable[Mean=75.0|Variance=2025.0]"));
   videoHelper.SetClientAttribute ("OffTime", 
