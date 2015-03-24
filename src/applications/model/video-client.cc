@@ -315,6 +315,10 @@ VideoClient::ScheduleStartEvent ()
   NS_LOG_FUNCTION (this);
   
   Time offInterval = Seconds (m_offTime->GetValue ());
+  while (offInterval.IsNegative ())
+    {
+      offInterval = Seconds (m_offTime->GetValue ());
+    }
   m_startStopEvent = Simulator::Schedule (offInterval, &VideoClient::StartSending, this);
   
   NS_LOG_LOGIC ("Video " << this << " will start in +" << offInterval.GetSeconds ());
@@ -326,6 +330,10 @@ VideoClient::ScheduleStopEvent ()
   NS_LOG_FUNCTION (this);
   
   Time onInterval = Seconds (m_onTime->GetValue ());
+  while (onInterval.IsNegative ())
+    {
+      onInterval = Seconds (m_offTime->GetValue ());
+    }
   m_startStopEvent = Simulator::Schedule (onInterval, &VideoClient::StopSending, this);
   
   NS_LOG_LOGIC ("Video " << this << " will stop in +" << onInterval.GetSeconds ());
