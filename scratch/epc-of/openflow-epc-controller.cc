@@ -563,7 +563,7 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
 
       // The VoipClient app is at UE.
       std::ostringstream descUp;
-      descUp << "VoIP  [" << rInfo->m_enbIdx << " --> " << rInfo->m_sgwIdx << "]";
+      descUp << "VoIP  [" << rInfo->m_enbIdx << "-->" << rInfo->m_sgwIdx << "]";
         
       // Tracing application and EPC statistics
       m_appQosTrace (descUp.str (), teid, appStats);
@@ -574,7 +574,7 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
       
       // The VoipServer app is at the Internet
       std::ostringstream descDown;
-      descDown << "VoIP  [" << rInfo->m_sgwIdx << " --> " << rInfo->m_enbIdx << "]";
+      descDown << "VoIP  [" << rInfo->m_sgwIdx << "-->" << rInfo->m_enbIdx << "]";
         
       // Tracing application and EPC statistics
       m_appQosTrace (descDown.str (), teid, appStats);
@@ -586,7 +586,7 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
       Ptr<VideoClient> videoApp = DynamicCast<VideoClient> (app);
       appStats = videoApp->GetServerApp ()->GetQosStats ();
       std::ostringstream desc;
-      desc << "Video [" << rInfo->m_sgwIdx << " --> " << rInfo->m_enbIdx << "]";
+      desc << "Video [" << rInfo->m_sgwIdx << "-->" << rInfo->m_enbIdx << "]";
       epcStats = GetQosStatsFromTeid (teid, true);  // downlink
 
       // Tracing application and EPC statistics
@@ -598,7 +598,7 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
       Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
       appStats = httpApp->GetQosStats ();
       std::ostringstream desc;
-      desc << "HTTP  [" << rInfo->m_sgwIdx << " <-> " << rInfo->m_enbIdx << "]";
+      desc << "HTTP  [" << rInfo->m_sgwIdx << "<->" << rInfo->m_enbIdx << "]";
       epcStats = GetQosStatsFromTeid (teid, true);  // downlink
 
       // Tracing application and EPC statistics
