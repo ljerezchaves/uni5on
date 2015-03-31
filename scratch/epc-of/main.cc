@@ -30,6 +30,8 @@ NS_LOG_COMPONENT_DEFINE ("Main");
 
 void PrintCurrentTime ();
 void EnableVerbose ();
+  
+static uint32_t g_progress = 10;
 
 int 
 main (int argc, char *argv[])
@@ -44,14 +46,13 @@ main (int argc, char *argv[])
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
   
   bool verbose = false;
-  bool progress = true;
   bool lteRem = false;
   uint32_t simTime = 1800;
   
   CommandLine cmd;
   cmd.AddValue ("verbose",    "Enable verbose output.", verbose);
-  cmd.AddValue ("progress",   "Enable simulation time progress.", progress);
-  cmd.AddValue ("simTime",    "Simulation time (seconds).", simTime);
+  cmd.AddValue ("progress",   "Simulation progress interval [s].", g_progress);
+  cmd.AddValue ("simTime",    "Simulation time [s].", simTime);
   cmd.AddValue ("appStats",   "ns3::SimulationScenario::AppStatsFilename"); 
   cmd.AddValue ("epcStats",   "ns3::SimulationScenario::EpcStatsFilename"); 
   cmd.AddValue ("pgwStats",   "ns3::SimulationScenario::PgwStatsFilename"); 
@@ -70,7 +71,7 @@ main (int argc, char *argv[])
   cmd.AddValue ("radioMap",   "Generate LTE radio map", lteRem);
   cmd.Parse (argc, argv);
   
-  if (progress) Simulator::Schedule (Seconds (0), &PrintCurrentTime);
+  if (g_progress) Simulator::Schedule (Seconds (g_progress), &PrintCurrentTime);
   if (verbose)  EnableVerbose ();
  
   Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
@@ -100,13 +101,15 @@ main (int argc, char *argv[])
   NS_LOG_INFO ("End!");
 }
 
-void
+void __attribute__((optimize("O0"))) 
 PrintCurrentTime ()
 {
+  uint32_t now = (uint32_t)Simulator::Now ().GetSeconds ();
+  NS_UNUSED (now);
   std::cout << "Current simulation time: " 
             << Simulator::Now ().As (Time::S)
             << std::endl;
-  Simulator::Schedule (Seconds (1) , &PrintCurrentTime);
+  Simulator::Schedule (Seconds (g_progress) , &PrintCurrentTime);
 }
 
 void
