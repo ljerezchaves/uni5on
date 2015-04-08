@@ -558,9 +558,11 @@ LteUePhy::GenerateCqiRsrpRsrq (const SpectrumValue& sinr)
               // store measurements
               std::map <uint16_t, UeMeasurementsElement>::iterator itMeasMap;
               itMeasMap = m_ueMeasurementsMap.find ((*itPss).cellId);
-              NS_ASSERT (itMeasMap != m_ueMeasurementsMap.end ());
-              (*itMeasMap).second.rsrqSum += rsrq_dB;
-              (*itMeasMap).second.rsrqNum++;
+              if (itMeasMap != m_ueMeasurementsMap.end ())
+                {
+                  (*itMeasMap).second.rsrqSum += rsrq_dB;
+                  (*itMeasMap).second.rsrqNum++;
+                }
             }
 
           itPss++;
