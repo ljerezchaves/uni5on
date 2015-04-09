@@ -57,27 +57,31 @@ OpenFlowEpcController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::OpenFlowEpcController")
     .SetParent (OFSwitch13Controller::GetTypeId ())
-    .AddAttribute ("PgwStatsTimeout",
-                   "EPC Pgw dump statistics interval.",
+    .AddAttribute ("DumpStatsTimeout",
+                   "Periodic statistics dump interval.",
                    TimeValue (Seconds (10)),
-                   MakeTimeAccessor (&OpenFlowEpcController::SetPgwDumpTimeout),
+                   MakeTimeAccessor (&OpenFlowEpcController::SetDumpTimeout),
                    MakeTimeChecker ())
     .AddTraceSource ("AppStats",
                      "Application QoS trace source.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_appQosTrace),
+                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_appTrace),
                      "ns3::OpenFlowEpcController::QosTracedCallback")
     .AddTraceSource ("EpcStats",
                      "LTE EPC GTPU QoS trace source.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_epcQosTrace),
+                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_epcTrace),
                      "ns3::OpenFlowEpcController::QosTracedCallback")
     .AddTraceSource ("PgwStats",
                      "EPC Pgw traffic trace source.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_pgwTrafficTrace),
-                     "ns3::OpenFlowEpcController::PgwTrafficTracedCallback")
-    .AddTraceSource ("GbrBlock",
+                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_pgwTrace),
+                     "ns3::OpenFlowEpcController::PgwTracedCallback")
+    .AddTraceSource ("GbrStats",
                      "The GBR block ratio trace source.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_gbrBlockTrace),
-                     "ns3::OpenFlowEpcController::GbrBlockTracedCallback")
+                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_gbrTrace),
+                     "ns3::OpenFlowEpcController::GbrTracedCallback")
+    .AddTraceSource ("SwtStats",
+                     "The switch flow table entries trace source.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_swtTrace),
+                     "ns3::OpenFlowEpcController::SwtTracedCallback")
   ;
   return tid;
 }
@@ -87,7 +91,7 @@ OpenFlowEpcController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   
-  DumpGbrBlockStatistics ();
+  DumpGbrStatistics ();
 
   m_arpTable.clear ();
   m_ipSwitchTable.clear ();
@@ -111,11 +115,13 @@ OpenFlowEpcController::SetOfNetwork (Ptr<OpenFlowEpcNetwork> network)
 }
 
 void
-OpenFlowEpcController::SetPgwDumpTimeout (Time timeout)
+OpenFlowEpcController::SetDumpTimeout (Time timeout)
 {
-  m_pgwTimeout = timeout;
-  Simulator::Schedule (m_pgwTimeout, 
-    &OpenFlowEpcController::DumpPgwTrafficStatistics, this);
+  m_dumpTimeout = timeout;
+  Simulator::Schedule (m_dumpTimeout, 
+    &OpenFlowEpcController::DumpPgwStatistics, this);
+  Simulator::Schedule (m_dumpTimeout, 
+    &OpenFlowEpcController::DumpSwtStatistics, this);
 }
 
 void 
@@ -526,23 +532,34 @@ OpenFlowEpcController::GetTeidRoutingInfo (uint32_t teid)
 }
 
 double
-OpenFlowEpcController::DumpGbrBlockStatistics ()
+OpenFlowEpcController::DumpGbrStatistics ()
 {
   double ratio = (double)m_gbrBlocks / (double)m_gbrBearers;
-  m_gbrBlockTrace (m_gbrBearers, m_gbrBlocks, ratio);
+  m_gbrTrace (m_gbrBearers, m_gbrBlocks, ratio);
   return ratio;
 }
 
 void
-OpenFlowEpcController::DumpPgwTrafficStatistics ()
+OpenFlowEpcController::DumpPgwStatistics ()
 {
   DataRate downRate (8 * m_pgwDownBytes / 10);
   DataRate upRate (8 * m_pgwUpBytes / 10);
-  m_pgwTrafficTrace (downRate, upRate);
+  m_pgwTrace (downRate, upRate);
 
   m_pgwUpBytes = m_pgwDownBytes = 0;
-  Simulator::Schedule (m_pgwTimeout, 
-    &OpenFlowEpcController::DumpPgwTrafficStatistics, this);
+  Simulator::Schedule (m_dumpTimeout, 
+    &OpenFlowEpcController::DumpPgwStatistics, this);
+}
+
+void
+OpenFlowEpcController::DumpSwtStatistics ()
+{
+  uint32_t total = 0;
+  uint32_t teid = 0;
+  m_swtTrace (total, teid);
+
+  Simulator::Schedule (m_dumpTimeout, 
+    &OpenFlowEpcController::DumpSwtStatistics, this);
 }
 
 void
@@ -566,8 +583,8 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
       descUp << "VoIP  [" << rInfo->m_enbIdx << "-->" << rInfo->m_sgwIdx << "]";
         
       // Tracing application and EPC statistics
-      m_appQosTrace (descUp.str (), teid, appStats);
-      m_epcQosTrace (descUp.str (), teid, epcStats);
+      m_appTrace (descUp.str (), teid, appStats);
+      m_epcTrace (descUp.str (), teid, epcStats);
 
       appStats = voipApp->GetServerApp ()->GetQosStats ();
       epcStats = GetQosStatsFromTeid (teid, true);  // downlink
@@ -577,8 +594,8 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
       descDown << "VoIP  [" << rInfo->m_sgwIdx << "-->" << rInfo->m_enbIdx << "]";
         
       // Tracing application and EPC statistics
-      m_appQosTrace (descDown.str (), teid, appStats);
-      m_epcQosTrace (descDown.str (), teid, epcStats);
+      m_appTrace (descDown.str (), teid, appStats);
+      m_epcTrace (descDown.str (), teid, epcStats);
     }
   else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
     {
@@ -590,8 +607,8 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
       epcStats = GetQosStatsFromTeid (teid, true);  // downlink
 
       // Tracing application and EPC statistics
-      m_appQosTrace (desc.str (), teid, appStats);
-      m_epcQosTrace (desc.str (), teid, epcStats);
+      m_appTrace (desc.str (), teid, appStats);
+      m_epcTrace (desc.str (), teid, epcStats);
     }
   else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
     {
@@ -602,8 +619,8 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
       epcStats = GetQosStatsFromTeid (teid, true);  // downlink
 
       // Tracing application and EPC statistics
-      m_appQosTrace (desc.str (), teid, appStats);
-      m_epcQosTrace (desc.str (), teid, epcStats);
+      m_appTrace (desc.str (), teid, appStats);
+      m_epcTrace (desc.str (), teid, epcStats);
     }
 }
 

@@ -56,6 +56,7 @@ main (int argc, char *argv[])
   cmd.AddValue ("epcStats",   "ns3::SimulationScenario::EpcStatsFilename"); 
   cmd.AddValue ("pgwStats",   "ns3::SimulationScenario::PgwStatsFilename"); 
   cmd.AddValue ("gbrStats",   "ns3::SimulationScenario::GbrStatsFilename"); 
+  cmd.AddValue ("swtStats",   "ns3::SimulationScenario::SwtStatsFilename"); 
   cmd.AddValue ("topoFile",   "ns3::SimulationScenario::TopoFilename");
   cmd.AddValue ("prefix",     "ns3::SimulationScenario::CommonPrefix");
   cmd.AddValue ("trace",      "ns3::SimulationScenario::Traces");

@@ -67,10 +67,10 @@ public:
   void SetOfNetwork (Ptr<OpenFlowEpcNetwork> network);
 
   /**
-   * Set the default Pgw dump traffic statistics interval.
+   * Set the default statistics dump interval.
    * \param timeout The timeout value.
    */
-  void SetPgwDumpTimeout (Time timeout);
+  void SetDumpTimeout (Time timeout);
 
   /**
    * Notify this controller of a new eNB or SgwPgw device connected to the
@@ -204,16 +204,23 @@ public:
    * \param blocks The number of GBR requests blockd.
    * \param ratio The block ratio.
    */
-  typedef void (* GbrBlockTracedCallback)(uint32_t requests, uint32_t blocks, 
-                                          double ratio);
+  typedef void (* GbrTracedCallback)(uint32_t requests, uint32_t blocks, 
+                                     double ratio);
 
   /** 
    * TracedCallback signature for Pgw traffic statistics.
    * \param downTraffic The average downlink traffic for last interval.
    * \param upTraffic The average uplink traffic for last interval.
    */
-  typedef void (* PgwTrafficTracedCallback)(DataRate downTraffic, 
-                                            DataRate upTraffic);
+  typedef void (* PgwTracedCallback)(DataRate downTraffic, DataRate upTraffic);
+
+  /** 
+   * TracedCallback signature for switch Flow table rules statistics.
+   * \param total The total number of flow rules installed into pipeline tables.
+   * \param teid The number of TEID routing flow rules into switch.
+   */
+  typedef void (* SwtTracedCallback)(uint32_t total, uint32_t teid);
+
 
 protected:
   /** 
@@ -320,12 +327,17 @@ protected:
    * Return the block radio statistics.
    * \return The GBR bearer block ratio
    */
-  double DumpGbrBlockStatistics ();
+  double DumpGbrStatistics ();
 
   /**
    * Dump EPC Pgw downlink/uplink traffic statistics.
    */
-  void DumpPgwTrafficStatistics ();
+  void DumpPgwStatistics ();
+  
+  /**
+   * Dump Opwnflow switch table statistics.
+   */
+  void DumpSwtStatistics ();
 
   /**
    * Dump application statistics.
@@ -469,17 +481,20 @@ private:
 
   /** The Application QoS trace source, fired at DumpAppStatistics. */
   TracedCallback<std::string, uint32_t, 
-    Ptr<const QosStatsCalculator> > m_appQosTrace;
+    Ptr<const QosStatsCalculator> > m_appTrace;
 
   /** The LTE EPC QoS trace source, fired at DumpAppStatistics. */
   TracedCallback<std::string, uint32_t, 
-    Ptr<const QosStatsCalculator> > m_epcQosTrace;
+    Ptr<const QosStatsCalculator> > m_epcTrace;
 
-  /** The EPC Pgw traffic trace source, fired at DumpPgwTrafficStatistics. */
-  TracedCallback<DataRate, DataRate> m_pgwTrafficTrace;
+  /** The EPC Pgw traffic trace source, fired at DumpPgwStatistics. */
+  TracedCallback<DataRate, DataRate> m_pgwTrace;
 
-  /** The GBR block ratio trace source, fired at DumpGbrBlockStatistics. */
-  TracedCallback<uint32_t, uint32_t, double> m_gbrBlockTrace;
+  /** The GBR block ratio trace source, fired at DumpGbrStatistics. */
+  TracedCallback<uint32_t, uint32_t, double> m_gbrTrace;
+
+  /** The switch flow table rules trace source, fired at DumpSwtStatistics. */
+  TracedCallback<uint32_t, uint32_t> m_swtTrace;
 
   
   /** A pair of switches index */
@@ -513,12 +528,12 @@ private:
   ContextInfoList_t m_contexts;         //!< List of created contexts.
   TeidRoutingMap_t  m_routes;           //!< TEID routing informations.
   TeidQosMap_t      m_qosStats;         //!< TEID QoS statistics
-
+  
+  Time              m_dumpTimeout;      //!< Dump stats timeout
   uint32_t          m_gbrBearers;       //!< Requests for GBR bearers
   uint32_t          m_gbrBlocks;        //!< Blocked GBR requests
   uint32_t          m_pgwDownBytes;     //!< Pgw traffic downlink bytes
   uint32_t          m_pgwUpBytes;       //!< Pgw traffic uplink bytes
-  Time              m_pgwTimeout;       //!< Pgw traffic stats timeout
 
   Ptr<OpenFlowEpcNetwork> m_ofNetwork;  //!< Pointer to OpenFlow network
 };

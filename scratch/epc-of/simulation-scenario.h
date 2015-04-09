@@ -116,15 +116,21 @@ private:
 
   /**
    * Save block ratio statistics in file. 
-   * \see ns3::OpenFlowEpcController::GbrBlockTracedCallback for parameters.
+   * \see ns3::OpenFlowEpcController::GbrTracedCallback for parameters.
    */
-  void ReportBlockRatio (uint32_t requests, uint32_t blocks, double ratio);
+  void ReportGbrStats (uint32_t requests, uint32_t blocks, double ratio);
 
   /**
    * Save packet gateway traffic statistics in file.
-   * \see ns3::OpenFlowEpcController::PgwTrafficTracedCallback for parameters.
+   * \see ns3::OpenFlowEpcController::PgwTracedCallback for parameters.
    */
-  void ReportPgwTraffic (DataRate downTraffic, DataRate upTraffic);
+  void ReportPgwStats (DataRate downTraffic, DataRate upTraffic);
+
+  /**
+   * Save flow table usage statistics in file.
+   * \see ns3::OpenFlowEpcController::SwtTracedCallback for parameters.
+   */
+  void ReportSwtStats (uint32_t total, uint32_t teid);
 
   /**
    * Parse topology description file.  
@@ -164,12 +170,10 @@ private:
   ApplicationContainer  m_voipServers;        //!< Voip applications
   ApplicationContainer  m_videoServers;       //!< Video applications
 
-  bool                  m_appStatsFirstWrite; //!< First write to appStatsFile
-  bool                  m_epcStatsFirstWrite; //!< First write to epcStatsFile
-  bool                  m_pgwStatsFirstWrite; //!< First write to pgwStatsFile
   std::string           m_appStatsFilename;   //!< AppStats filename
   std::string           m_epcStatsFilename;   //!< EpcStats filename
   std::string           m_pgwStatsFilename;   //!< PgwStats filename
+  std::string           m_swtStatsFilename;   //!< SwtStats filename
   std::string           m_gbrStatsFilename;   //!< GbrStats filename
   std::string           m_topoFilename;       //!< Topology filename
   std::string           m_switchLog;          //!< Switches log level
