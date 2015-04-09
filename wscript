@@ -314,6 +314,9 @@ def configure(conf):
         env.append_value('DEFINES', 'NS3_ASSERT_ENABLE')
         env.append_value('DEFINES', 'NS3_LOG_ENABLE')
 
+    if Options.options.build_profile == 'optimized':
+        env.append_value('DEFINES', 'NS3_ASSERT_ENABLE')
+
     env['PLATFORM'] = sys.platform
     env['BUILD_PROFILE'] = Options.options.build_profile
     if Options.options.build_profile == "release":
