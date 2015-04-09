@@ -664,19 +664,39 @@ SimulationScenario::ReportEpcStats (std::string description, uint32_t teid,
 void
 SimulationScenario::ReportGbrStats (uint32_t requests, uint32_t blocks, double ratio)
 {
-  std::ofstream outFile;
-  
-  outFile.open (m_gbrStatsFilename.c_str ());
-  if (!outFile.is_open ())
-    {
-      NS_LOG_ERROR ("Can't open file " << m_gbrStatsFilename);
-      return;
-    }
-  
-  outFile << "Number of GBR bearers request: " << requests << std::endl
-          << "Number of GBR bearers blocked: " << blocks   << std::endl
-          << "Block ratio: "                   << ratio    << std::endl;
+  NS_LOG_FUNCTION (this);
+  static bool firstWrite = true;
 
+  std::ofstream outFile;
+  if (firstWrite == true)
+    {
+      outFile.open (m_gbrStatsFilename.c_str ());
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_gbrStatsFilename);
+          return;
+        }
+      firstWrite = false;
+      outFile << left 
+              << setw (9) << "Requests" 
+              << setw (9) << "Blocked"
+              << setw (9) << "Ratio"
+              << std::endl;
+    }
+  else
+    {
+      outFile.open (m_gbrStatsFilename.c_str (), std::ios_base::app);
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_gbrStatsFilename);
+          return;
+        }
+    }
+
+  outFile << left;
+  outFile << setw (9) << requests;
+  outFile << setw (9) << blocks;
+  outFile << setw (9) << ratio << std::endl;
   outFile.close ();
 }
 
