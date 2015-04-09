@@ -130,7 +130,7 @@ private:
    * Save flow table usage statistics in file.
    * \see ns3::OpenFlowEpcController::SwtTracedCallback for parameters.
    */
-  void ReportSwtStats (uint32_t total, uint32_t teid);
+  void ReportSwtStats (std::vector<uint32_t> teid);
 
   /**
    * Parse topology description file.  

@@ -216,10 +216,9 @@ public:
 
   /** 
    * TracedCallback signature for switch Flow table rules statistics.
-   * \param total The total number of flow rules installed into pipeline tables.
-   * \param teid The number of TEID routing flow rules into switch.
+   * \param teid The number of TEID routing flow rules at each switch.
    */
-  typedef void (* SwtTracedCallback)(uint32_t total, uint32_t teid);
+  typedef void (* SwtTracedCallback)(std::vector<uint32_t> teid);
 
 
 protected:
@@ -494,7 +493,7 @@ private:
   TracedCallback<uint32_t, uint32_t, double> m_gbrTrace;
 
   /** The switch flow table rules trace source, fired at DumpSwtStatistics. */
-  TracedCallback<uint32_t, uint32_t> m_swtTrace;
+  TracedCallback<std::vector<uint32_t> > m_swtTrace;
 
   
   /** A pair of switches index */

@@ -720,10 +720,11 @@ SimulationScenario::ReportPgwStats (DataRate downTraffic, DataRate upTraffic)
 }
 
 void 
-SimulationScenario::ReportSwtStats (uint32_t total, uint32_t teid)
+SimulationScenario::ReportSwtStats (std::vector<uint32_t> teid)
 {
   NS_LOG_FUNCTION (this);
   static bool firstWrite = true;
+  size_t switches = teid.size ();
 
   std::ofstream outFile;
   if (firstWrite == true)
@@ -736,10 +737,13 @@ SimulationScenario::ReportSwtStats (uint32_t total, uint32_t teid)
         }
       firstWrite = false;
       outFile << left 
-              << setw (12) << "Time (s)" 
-              << setw (8) << "Total"
-              << setw (8) << "TEID"
-              << std::endl;
+              << setw (21) << "Time (s)  Switches->";
+      for (size_t i = 0; i < switches; i++)
+        {
+          outFile << setw (5) << i;
+        }
+      outFile << setw (12) << "eNB average";
+      outFile << std::endl;
     }
   else
     {
@@ -751,10 +755,20 @@ SimulationScenario::ReportSwtStats (uint32_t total, uint32_t teid)
         }
     }
 
+  double enbSum = 0;
   outFile << left;
-  outFile << setw (12) << Simulator::Now ().GetSeconds ();
-  outFile << setw (8) << total;
-  outFile << setw (8) << teid << std::endl;
+  outFile << setw (21) << Simulator::Now ().GetSeconds ();
+  
+  std::vector<uint32_t>::iterator it = teid.begin ();
+  outFile << setw (5) << *it;
+  for (it++; it != teid.end (); it++)
+    {
+      outFile << setw (5) << *it;
+      enbSum += *it;
+    }
+  
+  outFile << setw (12) << (enbSum / (switches - 1));
+  outFile << std::endl;
   outFile.close ();
 }
 

@@ -554,9 +554,15 @@ OpenFlowEpcController::DumpPgwStatistics ()
 void
 OpenFlowEpcController::DumpSwtStatistics ()
 {
-  uint32_t total = 0;
-  uint32_t teid = 0;
-  m_swtTrace (total, teid);
+  std::vector<uint32_t> teid;
+
+  Ptr<OFSwitch13NetDevice> swDev;
+  for (uint16_t i = 0; i < GetNSwitches (); i++)
+    {
+      swDev = GetSwitchDevice (i);
+      teid.push_back (swDev->GetNumberFlowEntries (1)); // TEID table is 1
+    }
+  m_swtTrace (teid);
 
   Simulator::Schedule (m_dumpTimeout, 
     &OpenFlowEpcController::DumpSwtStatistics, this);
