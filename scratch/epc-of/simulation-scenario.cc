@@ -52,10 +52,7 @@ SimulationScenario::SimulationScenario ()
     m_lteHelper (0),
     m_webHost (0),
     m_pgwHost (0),
-    m_rngStart (0),
-    m_appStatsFirstWrite (true),
-    m_epcStatsFirstWrite (true),
-    m_pgwStatsFirstWrite (true)
+    m_rngStart (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -88,27 +85,32 @@ SimulationScenario::GetTypeId (void)
     .SetParent<Object> ()
     .AddConstructor<SimulationScenario> ()
     .AddAttribute ("AppStatsFilename",
-                   "Name of the file where the app statistics will be saved.",
+                   "Filename for application QoS statistcis.",
                    StringValue ("app_stats.txt"),
                    MakeStringAccessor (&SimulationScenario::m_appStatsFilename),
                    MakeStringChecker ())
     .AddAttribute ("EpcStatsFilename",
-                   "Name of the file where the app statistics will be saved.",
+                   "Filename for EPC QoS statistics.",
                    StringValue ("epc_stats.txt"),
                    MakeStringAccessor (&SimulationScenario::m_epcStatsFilename),
                    MakeStringChecker ())
     .AddAttribute ("PgwStatsFilename",
-                   "Name of the file where the pgw traffic statistics will be saved.",
+                   "Filename for packet gateway traffic statistcs.",
                    StringValue ("pgw_stats.txt"),
                    MakeStringAccessor (&SimulationScenario::m_pgwStatsFilename),
                    MakeStringChecker ())
+    .AddAttribute ("SwtStatsFilename",
+                   "FilName for flow table entries statistics.",
+                   StringValue ("swt_stats.txt"),
+                   MakeStringAccessor (&SimulationScenario::m_swtStatsFilename),
+                   MakeStringChecker ())
     .AddAttribute ("GbrStatsFilename",
-                   "Name of the file where the app statistics will be saved.",
+                   "Filename for Bearers resquest/block statistics.",
                    StringValue ("gbr_stats.txt"),
                    MakeStringAccessor (&SimulationScenario::m_gbrStatsFilename),
                    MakeStringChecker ())
     .AddAttribute ("TopoFilename",
-                   "Name of the file with topology description.",
+                   "Filename for scenario topology description.",
                    StringValue ("topology.txt"),
                    MakeStringAccessor (&SimulationScenario::m_topoFilename),
                    MakeStringChecker ())
@@ -221,9 +223,11 @@ SimulationScenario::BuildRingTopology ()
   m_controller->TraceConnectWithoutContext ("EpcStats", 
       MakeCallback (&SimulationScenario::ReportEpcStats, this));
   m_controller->TraceConnectWithoutContext ("PgwStats", 
-      MakeCallback (&SimulationScenario::ReportPgwTraffic, this));
-  m_controller->TraceConnectWithoutContext ("GbrBlock", 
-      MakeCallback (&SimulationScenario::ReportBlockRatio, this));
+      MakeCallback (&SimulationScenario::ReportPgwStats, this));
+  m_controller->TraceConnectWithoutContext ("GbrStats", 
+      MakeCallback (&SimulationScenario::ReportGbrStats, this));
+  m_controller->TraceConnectWithoutContext ("SwtStats", 
+      MakeCallback (&SimulationScenario::ReportSwtStats, this));
 
   // Connecting Pgw traffic trace sinks
   Ptr<Application> pgwApp = m_pgwHost->GetApplication (0);
@@ -261,6 +265,7 @@ SimulationScenario::SetCommonPrefix (std::string prefix)
   m_epcStatsFilename = m_commonPrefix + m_epcStatsFilename;
   m_pgwStatsFilename = m_commonPrefix + m_pgwStatsFilename;
   m_gbrStatsFilename = m_commonPrefix + m_gbrStatsFilename;
+  m_swtStatsFilename = m_commonPrefix + m_swtStatsFilename;
   m_topoFilename     = m_commonPrefix + m_topoFilename;
 }
 
@@ -295,7 +300,7 @@ SimulationScenario::EnableHttpTraffic ()
   httpHelper.SetClientAttribute ("TcpTimeout", TimeValue (Seconds (9))); 
   httpHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
   // The HttpClient TcpTimeout was selected based on HTTP traffic model and
-  // dedicated bearer idle timeout. Every time the T4P socket is closed, HTTP
+  // dedicated bearer idle timeout. Every time the TCP socket is closed, HTTP
   // client application notify the controller, and traffic statistics are
   // printed.
   
@@ -312,7 +317,7 @@ SimulationScenario::EnableHttpTraffic ()
       // Traffic Flow Template
       Ptr<EpcTft> tft = CreateObject<EpcTft> ();
 
-      //  Bidirectional HTTP traffic.
+      // Bidirectional HTTP traffic.
       // NOTE: The HttpClient is the one that requests pages to HttpServer. 
       // The client is installed into UE, and the server into m_webHost.
       Ptr<HttpClient> clientApp = httpHelper.Install (client, m_webHost, 
@@ -548,9 +553,10 @@ SimulationScenario::ReportAppStats (std::string description, uint32_t teid,
                                     Ptr<const QosStatsCalculator> stats)
 {
   NS_LOG_FUNCTION (this << teid);
- 
+  static bool firstWrite = true;
+
   std::ofstream outFile;
-  if (m_appStatsFirstWrite == true )
+  if (firstWrite == true)
     {
       outFile.open (m_appStatsFilename.c_str ());
       if (!outFile.is_open ())
@@ -558,7 +564,7 @@ SimulationScenario::ReportAppStats (std::string description, uint32_t teid,
           NS_LOG_ERROR ("Can't open file " << m_appStatsFilename);
           return;
         }
-      m_appStatsFirstWrite = false;
+      firstWrite = false;
       outFile << left
               << setw (12) << "Time (s)"
               << setw (17) << "Description"
@@ -603,9 +609,10 @@ SimulationScenario::ReportEpcStats (std::string description, uint32_t teid,
                                     Ptr<const QosStatsCalculator> stats)
 {
   NS_LOG_FUNCTION (this << teid);
- 
+  static bool firstWrite = true;
+
   std::ofstream outFile;
-  if (m_epcStatsFirstWrite == true )
+  if (firstWrite == true)
     {
       outFile.open (m_epcStatsFilename.c_str ());
       if (!outFile.is_open ())
@@ -613,7 +620,7 @@ SimulationScenario::ReportEpcStats (std::string description, uint32_t teid,
           NS_LOG_ERROR ("Can't open file " << m_epcStatsFilename);
           return;
         }
-      m_epcStatsFirstWrite = false;
+      firstWrite = false;
       outFile << left
               << setw (12) << "Time (s)"
               << setw (17) << "Description"
@@ -655,31 +662,52 @@ SimulationScenario::ReportEpcStats (std::string description, uint32_t teid,
 }
 
 void
-SimulationScenario::ReportBlockRatio (uint32_t requests, uint32_t blocks, double ratio)
+SimulationScenario::ReportGbrStats (uint32_t requests, uint32_t blocks, double ratio)
 {
-  std::ofstream outFile;
-  
-  outFile.open (m_gbrStatsFilename.c_str ());
-  if (!outFile.is_open ())
-    {
-      NS_LOG_ERROR ("Can't open file " << m_gbrStatsFilename);
-      return;
-    }
-  
-  outFile << "Number of GBR bearers request: " << requests << std::endl
-          << "Number of GBR bearers blocked: " << blocks   << std::endl
-          << "Block ratio: "                   << ratio    << std::endl;
+  NS_LOG_FUNCTION (this);
+  static bool firstWrite = true;
 
+  std::ofstream outFile;
+  if (firstWrite == true)
+    {
+      outFile.open (m_gbrStatsFilename.c_str ());
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_gbrStatsFilename);
+          return;
+        }
+      firstWrite = false;
+      outFile << left 
+              << setw (9) << "Requests" 
+              << setw (9) << "Blocked"
+              << setw (9) << "Ratio"
+              << std::endl;
+    }
+  else
+    {
+      outFile.open (m_gbrStatsFilename.c_str (), std::ios_base::app);
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_gbrStatsFilename);
+          return;
+        }
+    }
+
+  outFile << left;
+  outFile << setw (9) << requests;
+  outFile << setw (9) << blocks;
+  outFile << setw (9) << ratio << std::endl;
   outFile.close ();
 }
 
 void 
-SimulationScenario::ReportPgwTraffic (DataRate downTraffic, DataRate upTraffic)
+SimulationScenario::ReportPgwStats (DataRate downTraffic, DataRate upTraffic)
 {
   NS_LOG_FUNCTION (this);
- 
+  static bool firstWrite = true;
+
   std::ofstream outFile;
-  if (m_pgwStatsFirstWrite == true )
+  if (firstWrite == true)
     {
       outFile.open (m_pgwStatsFilename.c_str ());
       if (!outFile.is_open ())
@@ -687,7 +715,7 @@ SimulationScenario::ReportPgwTraffic (DataRate downTraffic, DataRate upTraffic)
           NS_LOG_ERROR ("Can't open file " << m_pgwStatsFilename);
           return;
         }
-      m_pgwStatsFirstWrite = false;
+      firstWrite = false;
       outFile << left 
               << setw (12) << "Time (s)" 
               << setw (15) << "Downlink (bps)"
@@ -708,6 +736,59 @@ SimulationScenario::ReportPgwTraffic (DataRate downTraffic, DataRate upTraffic)
   outFile << setw (12) << Simulator::Now ().GetSeconds ();
   outFile << setw (15) << downTraffic.GetBitRate ();
   outFile << setw (12) << upTraffic.GetBitRate () << std::endl;
+  outFile.close ();
+}
+
+void 
+SimulationScenario::ReportSwtStats (std::vector<uint32_t> teid)
+{
+  NS_LOG_FUNCTION (this);
+  static bool firstWrite = true;
+  size_t switches = teid.size ();
+
+  std::ofstream outFile;
+  if (firstWrite == true)
+    {
+      outFile.open (m_swtStatsFilename.c_str ());
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_swtStatsFilename);
+          return;
+        }
+      firstWrite = false;
+      outFile << left 
+              << setw (21) << "Time (s)  Switches->";
+      for (size_t i = 0; i < switches; i++)
+        {
+          outFile << setw (5) << i;
+        }
+      outFile << setw (12) << "eNB average";
+      outFile << std::endl;
+    }
+  else
+    {
+      outFile.open (m_swtStatsFilename.c_str (), std::ios_base::app);
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_swtStatsFilename);
+          return;
+        }
+    }
+
+  double enbSum = 0;
+  outFile << left;
+  outFile << setw (21) << Simulator::Now ().GetSeconds ();
+  
+  std::vector<uint32_t>::iterator it = teid.begin ();
+  outFile << setw (5) << *it;
+  for (it++; it != teid.end (); it++)
+    {
+      outFile << setw (5) << *it;
+      enbSum += *it;
+    }
+  
+  outFile << setw (12) << (enbSum / (switches - 1));
+  outFile << std::endl;
   outFile.close ();
 }
 
