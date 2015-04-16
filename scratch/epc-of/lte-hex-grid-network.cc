@@ -166,11 +166,24 @@ LteHexGridNetwork::ConfigureLteParameters ()
   // Transmission power (eNB as macro cell)
   Config::SetDefault ("ns3::LteEnbPhy::TxPower", DoubleValue (46));
   Config::SetDefault ("ns3::LteUePhy::TxPower", DoubleValue (18));
+  
+  //Disable Uplink Power Control
+  Config::SetDefault ("ns3::LteUePhy::EnableUplinkPowerControl", 
+                      BooleanValue (false));
 
+  // Propagation model
   Config::SetDefault ("ns3::LteHelper::PathlossModel", 
                       StringValue ("ns3::OhBuildingsPropagationLossModel"));
+  
+  // Downlink scheduler
   Config::SetDefault ("ns3::LteHelper::Scheduler", 
                       StringValue ("ns3::CqaFfMacScheduler"));
+  
+  // Disabling error models
+  Config::SetDefault ("ns3::LteSpectrumPhy::CtrlErrorModelEnabled", 
+                      BooleanValue (false));
+  Config::SetDefault ("ns3::LteSpectrumPhy::DataErrorModelEnabled", 
+                      BooleanValue (false));
 }
 
 void
