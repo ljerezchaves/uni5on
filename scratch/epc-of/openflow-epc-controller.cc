@@ -382,6 +382,23 @@ OpenFlowEpcController::NotifyAppStop (Ptr<Application> app)
 }
 
 void 
+OpenFlowEpcController::ConnectTraceSinks ()
+{
+  // EPC trace sinks for QoS monitoring
+  m_ofNetwork->ConnectEpcTraceSinks ("S1uRx", 
+      MakeCallback (&OpenFlowEpcController::EpcOutputPacket, this));
+  m_ofNetwork->ConnectEpcTraceSinks ("S1uTx", 
+      MakeCallback (&OpenFlowEpcController::EpcInputPacket, this));
+
+  // Pgw traffic trace sinks
+  Ptr<Application> pgwApp = m_ofNetwork->GetGatewayNode ()->GetApplication (0);
+  pgwApp->TraceConnect ("S1uTx", "downlink", 
+      MakeCallback (&OpenFlowEpcController::PgwTraffic, this));
+  pgwApp->TraceConnect ("S1uRx", "uplink", 
+      MakeCallback (&OpenFlowEpcController::PgwTraffic, this));
+}
+
+void 
 OpenFlowEpcController::EpcInputPacket (std::string context, 
                                     Ptr<const Packet> packet)
 {
@@ -451,18 +468,6 @@ Ptr<OFSwitch13NetDevice>
 OpenFlowEpcController::GetSwitchDevice (uint16_t index)
 {
   return m_ofNetwork->GetSwitchDevice (index);
-}
-
-uint16_t 
-OpenFlowEpcController::GetSwitchIdxForGateway ()
-{
-  return m_ofNetwork->GetSwitchIdxForGateway ();
-}
-
-uint16_t
-OpenFlowEpcController::GetSwitchIdxFromDevice (Ptr<OFSwitch13NetDevice> dev)
-{
-  return m_ofNetwork->GetSwitchIdxForDevice (dev);
 }
 
 uint16_t 

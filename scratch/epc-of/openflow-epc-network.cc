@@ -219,9 +219,10 @@ OpenFlowEpcNetwork::RegisterNodeAtSwitch (uint16_t switchIdx, Ptr<Node> node)
 }
 
 void
-OpenFlowEpcNetwork::RegisterGatewayAtSwitch (uint16_t switchIdx)
+OpenFlowEpcNetwork::RegisterGatewayAtSwitch (uint16_t switchIdx, Ptr<Node> node)
 {
   m_gatewaySwitch = switchIdx;
+  m_gatewayNode = node;
 }
 
 uint16_t
@@ -252,9 +253,15 @@ OpenFlowEpcNetwork::GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev)
 }
 
 uint16_t
-OpenFlowEpcNetwork::GetSwitchIdxForGateway ()
+OpenFlowEpcNetwork::GetGatewaySwitchIdx ()
 {
   return m_gatewaySwitch;
+}
+
+Ptr<Node>
+OpenFlowEpcNetwork::GetGatewayNode ()
+{
+  return m_gatewayNode;
 }
 
 void

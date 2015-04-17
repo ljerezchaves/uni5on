@@ -191,7 +191,6 @@ SimulationScenario::BuildRingTopology ()
       MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, m_controller));
   m_epcHelper->SetCreateSessionRequestCallback (
       MakeCallback (&OpenFlowEpcController::NotifyNewContextCreated, m_controller));
-  m_pgwHost = m_epcHelper->GetPgwNode ();
   
   // LTE radio access network
   m_lteNetwork = CreateObject<LteHexGridNetwork> ();
@@ -200,7 +199,7 @@ SimulationScenario::BuildRingTopology ()
 
   // Internet network
   m_webNetwork = CreateObject<InternetNetwork> ();
-  m_webHost = m_webNetwork->CreateTopology (m_pgwHost);
+  m_webHost = m_webNetwork->CreateTopology (m_epcHelper->GetPgwNode ());
 
   // UE Nodes and UE devices
   m_ueNodes = m_lteNetwork->GetUeNodes ();
@@ -211,11 +210,8 @@ SimulationScenario::BuildRingTopology ()
   m_rngStart->SetAttribute ("Min", DoubleValue (2.));
   m_rngStart->SetAttribute ("Max", DoubleValue (5.));
 
-  // Registering EPC trace sinks for QoS monitoring
-  m_opfNetwork->ConnectEpcTraceSinks ("S1uRx", 
-      MakeCallback (&OpenFlowEpcController::EpcOutputPacket, m_controller));
-  m_opfNetwork->ConnectEpcTraceSinks ("S1uTx", 
-      MakeCallback (&OpenFlowEpcController::EpcInputPacket, m_controller));
+  // Registering controller trace sinks
+  m_controller->ConnectTraceSinks ();
   
   // Saving controller and application statistics 
   m_controller->TraceConnectWithoutContext ("AppStats", 
@@ -228,13 +224,6 @@ SimulationScenario::BuildRingTopology ()
       MakeCallback (&SimulationScenario::ReportGbrStats, this));
   m_controller->TraceConnectWithoutContext ("SwtStats", 
       MakeCallback (&SimulationScenario::ReportSwtStats, this));
-
-  // Connecting Pgw traffic trace sinks
-  Ptr<Application> pgwApp = m_pgwHost->GetApplication (0);
-  pgwApp->TraceConnect ("S1uTx", "downlink", 
-      MakeCallback (&OpenFlowEpcController::PgwTraffic, m_controller));
-  pgwApp->TraceConnect ("S1uRx", "uplink", 
-      MakeCallback (&OpenFlowEpcController::PgwTraffic, m_controller));
 
   // Application traffic
   if (m_ping) EnablePingTraffic ();

@@ -158,6 +158,11 @@ public:
   virtual bool NotifyAppStop (Ptr<Application> app);
 
   /**
+   * Connect all trace sinks used by this controller to monitor the network.
+   */
+  void ConnectTraceSinks ();
+
+  /**
    * Trace sink for packets entering the EPC. The packet will get tagged for
    * QoS monitoring.
    * \param context Node name.
@@ -272,19 +277,6 @@ protected:
    * \return The pointer to the switch OFSwitch13NetDevice.
    */
   Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
-
-  /**
-   * Retrieve the switch index for the SgwPgw gateway
-   * \return The switch index in m_ofSwitches.
-   */
-  uint16_t GetSwitchIdxForGateway ();
-
-  /**
-   * Retrieve the switch index for the switch device
-   * \param dev The OpenFlow device pointer.
-   * \return The switch index in m_ofSwitches.
-   */
-  uint16_t GetSwitchIdxFromDevice (Ptr<OFSwitch13NetDevice> dev);
 
   /**
    * Retrieve the switch index for EPC entity attached to OpenFlow network.

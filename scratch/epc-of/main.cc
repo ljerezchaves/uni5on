@@ -73,7 +73,7 @@ main (int argc, char *argv[])
   cmd.Parse (argc, argv);
   
   if (g_progress) Simulator::Schedule (Seconds (g_progress), &PrintCurrentTime);
-  if (verbose)  EnableVerbose ();
+  if (verbose) EnableVerbose ();
  
   Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
   scenario->BuildRingTopology ();

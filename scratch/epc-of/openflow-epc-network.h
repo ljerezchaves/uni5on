@@ -235,8 +235,9 @@ protected:
   /**
    * Store the switch index at which the gateway is connected.
    * \param switchIdx The switch index in m_ofSwitches.
+   * \param Ptr<Node> The node pointer.
    */
-  void RegisterGatewayAtSwitch (uint16_t switchIdx);
+  void RegisterGatewayAtSwitch (uint16_t switchIdx, Ptr<Node> node);
 
   /**
    * Retrieve the switch index for node pointer.
@@ -256,7 +257,13 @@ protected:
    * Retrieve the switch index at which the gateway is connected.
    * \return The switch index in m_ofSwitches.
    */
-  uint16_t GetSwitchIdxForGateway ();
+  uint16_t GetGatewaySwitchIdx ();
+
+  /**
+   * Retrieve the gateway node pointer.
+   * \return The gateway node pointer.
+   */
+  Ptr<Node> GetGatewayNode ();
 
   /**
    * Set the OpenFlow controller for this network.
@@ -274,7 +281,8 @@ protected:
 
 private:
   uint16_t                    m_gatewaySwitch;  //!< Gateway switch index.
-
+  Ptr<Node>                   m_gatewayNode;    //!< Gateway node pointer.
+  
   /** Map saving Node / Switch indexes. */
   typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;  
   NodeSwitchMap_t     m_nodeSwitchMap;    //!< Registered nodes per switch idx.

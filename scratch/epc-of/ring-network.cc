@@ -189,7 +189,7 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
     {
       // This is the SgwPgw node
       switchIdx = 0;
-      RegisterGatewayAtSwitch (switchIdx);
+      RegisterGatewayAtSwitch (switchIdx, node);
     }
   else  
     {
