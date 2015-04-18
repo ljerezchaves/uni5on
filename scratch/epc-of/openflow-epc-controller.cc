@@ -400,7 +400,7 @@ OpenFlowEpcController::ConnectTraceSinks ()
 
 void 
 OpenFlowEpcController::EpcInputPacket (std::string context, 
-                                    Ptr<const Packet> packet)
+                                       Ptr<const Packet> packet)
 {
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
@@ -414,7 +414,7 @@ OpenFlowEpcController::EpcInputPacket (std::string context,
 
 void
 OpenFlowEpcController::EpcOutputPacket (std::string context, 
-                                     Ptr<const Packet> packet)
+                                        Ptr<const Packet> packet)
 {
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
@@ -431,7 +431,8 @@ OpenFlowEpcController::EpcOutputPacket (std::string context,
 }
 
 void 
-OpenFlowEpcController::PgwTraffic (std::string direction, Ptr<const Packet> packet)
+OpenFlowEpcController::PgwTraffic (std::string direction, 
+                                   Ptr<const Packet> packet)
 {
   if (direction == "downlink")
     {
@@ -445,9 +446,9 @@ OpenFlowEpcController::PgwTraffic (std::string direction, Ptr<const Packet> pack
 
 void
 OpenFlowEpcController::MeterDropPacket (std::string context, 
-                                           Ptr<const Packet> packet)
+                                        Ptr<const Packet> packet)
 {
-  NS_LOG_FUNCTION (this << packet);
+  NS_LOG_FUNCTION (this << context << packet->GetUid ());
 
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
@@ -455,6 +456,21 @@ OpenFlowEpcController::MeterDropPacket (std::string context,
       Ptr<QosStatsCalculator> qosStats = 
         GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
       qosStats->NotifyDropped ();
+    }
+}
+
+void
+OpenFlowEpcController::QueueDropPacket (std::string context,
+                                        Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << context << packet->GetUid ());
+
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      Ptr<QosStatsCalculator> qosStats = 
+        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      // TODO Report dropped packets.
     }
 }
 

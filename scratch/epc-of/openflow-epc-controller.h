@@ -194,6 +194,13 @@ public:
    */
   void MeterDropPacket (std::string context, Ptr<const Packet> packet);
 
+  /**
+   * Trace sink for packets dropped by queues. 
+   * \param context The queue context location.
+   * \param packet The dropped packet.
+   */
+  void QueueDropPacket (std::string context, Ptr<const Packet> packet);
+
   /** 
    * TracedCallback signature for QoS dump. 
    * \param description String describing this traffic.

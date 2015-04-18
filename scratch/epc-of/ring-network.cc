@@ -117,6 +117,7 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
                                       DataRateValue (m_LinkDataRate));
   m_ofCsmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_LinkMtu));
   m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_LinkDelay));
+  m_ofCsmaHelper.SetQueue ("ns3::CoDelQueue");
 
   // Connecting switches in ring topology (clockwise order)
   for (uint16_t i = 0; i < m_nodes; i++)
@@ -125,15 +126,18 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
       uint16_t nextIndex = (i + 1) % m_nodes;  // Next clockwise node
 
       // Creating a link between current and next node
+      Ptr<Node> currNode = m_ofSwitches.Get (currIndex);
+      Ptr<Node> nextNode = m_ofSwitches.Get (nextIndex);
+
       NodeContainer pair;
-      pair.Add (m_ofSwitches.Get (currIndex));
-      pair.Add (m_ofSwitches.Get (nextIndex));
+      pair.Add (currNode);
+      pair.Add (nextNode);
       NetDeviceContainer devs = m_ofCsmaHelper.Install (pair);
     
-      Names::Add (Names::FindName (m_ofSwitches.Get (currIndex)) + "+" + 
-                  Names::FindName (m_ofSwitches.Get (nextIndex)), devs.Get (0));
-      Names::Add (Names::FindName (m_ofSwitches.Get (nextIndex)) + "+" + 
-                  Names::FindName (m_ofSwitches.Get (currIndex)), devs.Get (1));
+      Names::Add (Names::FindName (currNode) + "+" + 
+                  Names::FindName (nextNode), devs.Get (0));
+      Names::Add (Names::FindName (nextNode) + "+" + 
+                  Names::FindName (currNode), devs.Get (1));
 
       // Adding newly created csma devices as openflow switch ports.
       Ptr<OFSwitch13NetDevice> currDevice, nextDevice;
@@ -162,10 +166,19 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
       m_ringCtrlApp->NotifyNewConnBtwnSwitches (info);
 
       // Registering trace sink for meter dropped packets
-      std::ostringstream context;
-      context << "Switch/" << currIndex;
-      currDevice->TraceConnect ("MeterDrop", context.str (),
+      currDevice->TraceConnect ("MeterDrop", Names::FindName (currNode),
         MakeCallback (&OpenFlowEpcController::MeterDropPacket, m_ofCtrlApp));
+
+      // Registering trace sink for queue drop packets
+      std::ostringstream currQueue;
+      currQueue << Names::FindName (currNode) << "/" << currPortNum;
+      currPortDevice->GetQueue ()->TraceConnect ("Drop", currQueue.str (),
+        MakeCallback (&OpenFlowEpcController::QueueDropPacket, m_ofCtrlApp));
+      
+      std::ostringstream nextQueue;
+      nextQueue << Names::FindName (nextNode) << "/" << nextPortNum;
+      nextPortDevice->GetQueue ()->TraceConnect ("Drop", nextQueue.str (),
+        MakeCallback (&OpenFlowEpcController::QueueDropPacket, m_ofCtrlApp));
     }
 
   m_ringCtrlApp->NotifyConnBtwnSwitchesOk ();
@@ -183,50 +196,59 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   // here first for SgwPgw node, we use the static counter to identify this
   // node.
   static uint32_t counter = 0;
-  uint16_t switchIdx;
+  uint16_t swIdx;
   
   if (counter == 0)
     {
       // This is the SgwPgw node
-      switchIdx = 0;
-      RegisterGatewayAtSwitch (switchIdx, node);
+      swIdx = 0;
+      RegisterGatewayAtSwitch (swIdx, node);
     }
   else  
     {
-      // switchIdx = 1 + ((counter - 1) % (m_nodes - 1));
-      switchIdx = m_eNbSwitchIdx.at (counter - 1);
+      swIdx = m_eNbSwitchIdx.at (counter - 1);
     }
   counter++;
-  RegisterNodeAtSwitch (switchIdx, node);
+  RegisterNodeAtSwitch (swIdx, node);
 
-  Ptr<Node> swtchNode = m_ofSwitches.Get (switchIdx);
-  Ptr<OFSwitch13NetDevice> swtchDev = GetSwitchDevice (switchIdx); 
+  Ptr<Node> swNode = m_ofSwitches.Get (swIdx);
+  Ptr<OFSwitch13NetDevice> swDev = GetSwitchDevice (swIdx); 
  
   // Creating a link between switch and node
   NodeContainer pair;
-  pair.Add (swtchNode);
+  pair.Add (swNode);
   pair.Add (node);
   NetDeviceContainer devices = m_ofCsmaHelper.Install (pair);
-  
+ 
+  Ptr<CsmaNetDevice> portDev, nodeDev;
+  portDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
+  nodeDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
+ 
   // Setting interface names for pacp filename
-  Names::Add (Names::FindName (swtchNode) + "+" + 
-              Names::FindName (node), devices.Get (0));
-  Names::Add (Names::FindName (node) + "+" + 
-              Names::FindName (swtchNode), devices.Get (1));
+  Names::Add (Names::FindName (swNode) + "+" + Names::FindName (node), portDev);
+  Names::Add (Names::FindName (node) + "+" + Names::FindName (swNode), nodeDev);
   
   // Set S1U IPv4 address for the new device at node
-  Ptr<NetDevice> nodeDev = devices.Get (1);
   Ipv4InterfaceContainer nodeIpIfaces = 
       m_s1uIpv4AddressHelper.Assign (NetDeviceContainer (nodeDev));
-  Ipv4Address nodeIpAddress = nodeIpIfaces.GetAddress (0);
+  Ipv4Address nodeAddr = nodeIpIfaces.GetAddress (0);
 
   // Adding newly created csma device as openflow switch port.
-  Ptr<OFSwitch13Port> switchPort = swtchDev->AddSwitchPort (devices.Get (0));
-  uint32_t portNum = switchPort->GetPortNo ();
+  Ptr<OFSwitch13Port> swPort = swDev->AddSwitchPort (portDev);
+  uint32_t portNum = swPort->GetPortNo ();
   
   // Notify controller of a new device
-  m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeIpAddress, swtchDev, 
-      switchIdx, portNum);
+  m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeAddr, swDev, swIdx, portNum);
+
+  // Registering trace sink for queue drop packets
+  std::ostringstream context;
+  context << Names::FindName (swNode) << "/" << portNum;
+  portDev->GetQueue ()->TraceConnect ("Drop", context.str (),
+    MakeCallback (&OpenFlowEpcController::QueueDropPacket, m_ofCtrlApp));
+ 
+  nodeDev->GetQueue ()->TraceConnect ("Drop", Names::FindName (node),
+    MakeCallback (&OpenFlowEpcController::QueueDropPacket, m_ofCtrlApp));
+
   return nodeDev;
 }
 
@@ -237,32 +259,44 @@ RingNetwork::AttachToX2 (Ptr<Node> node)
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
 
   // Retrieve the registered pair node/switch
-  uint16_t switchIdx = GetSwitchIdxForNode (node);
-  NS_ASSERT (switchIdx < m_ofDevices.GetN ());
+  uint16_t swIdx = GetSwitchIdxForNode (node);
+  NS_ASSERT (swIdx < m_ofDevices.GetN ());
 
-  Ptr<Node> swtchNode = m_ofSwitches.Get (switchIdx);
-  Ptr<OFSwitch13NetDevice> swtchDev = GetSwitchDevice (switchIdx); 
+  Ptr<Node> swNode = m_ofSwitches.Get (swIdx);
+  Ptr<OFSwitch13NetDevice> swDev = GetSwitchDevice (swIdx); 
 
   // Creating a link between switch and node
   NodeContainer pair;
-  pair.Add (swtchNode);
+  pair.Add (swNode);
   pair.Add (node);
   NetDeviceContainer devices = m_ofCsmaHelper.Install (pair);
 
+  Ptr<CsmaNetDevice> portDev, nodeDev;
+  portDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
+  nodeDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
+
   // Set X2 IPv4 address for the new device at node
-  Ptr<NetDevice> nodeDev = devices.Get (1);
   Ipv4InterfaceContainer nodeIpIfaces = 
       m_x2Ipv4AddressHelper.Assign (NetDeviceContainer (nodeDev));
-  Ipv4Address nodeIpAddress = nodeIpIfaces.GetAddress (0);
+  Ipv4Address nodeAddr = nodeIpIfaces.GetAddress (0);
   m_x2Ipv4AddressHelper.NewNetwork ();
   
   // Adding newly created csma device as openflow switch port.
-  Ptr<OFSwitch13Port> switchPort = swtchDev->AddSwitchPort (devices.Get (0));
-  uint32_t portNum = switchPort->GetPortNo ();
+  Ptr<OFSwitch13Port> swPort = swDev->AddSwitchPort (portDev);
+  uint32_t portNum = swPort->GetPortNo ();
 
   // Notify controller of a new device
-  m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeIpAddress, swtchDev, 
-      switchIdx, portNum);
+  m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeAddr, swDev, swIdx, portNum);
+
+  // Registering trace sink for queue drop packets
+  std::ostringstream context;
+  context << Names::FindName (swNode) << "/" << portNum;
+  portDev->GetQueue ()->TraceConnect ("Drop", context.str (),
+    MakeCallback (&OpenFlowEpcController::QueueDropPacket, m_ofCtrlApp));
+ 
+  nodeDev->GetQueue ()->TraceConnect ("Drop", Names::FindName (node),
+    MakeCallback (&OpenFlowEpcController::QueueDropPacket, m_ofCtrlApp));
+
   return nodeDev;
 }
 
