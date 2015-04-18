@@ -60,6 +60,13 @@ public:
    */
   void EnablePcap (std::string prefix);
 
+  /**
+   * Trace sink for packets dropped by queues. 
+   * \param context The queue context location.
+   * \param packet The dropped packet.
+   */
+  void QueueDropPacket (std::string context, Ptr<const Packet> packet);
+
   /** \return the name used by the server node */
   static const std::string GetServerName ();
 

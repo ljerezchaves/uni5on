@@ -66,25 +66,27 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   
   // Creating a single web node and connecting it to the EPC pgw over a
   // PointToPoint link.
-  Ptr<Node> webHost = CreateObject<Node> ();
+  Ptr<Node> web = CreateObject<Node> ();
   InternetStackHelper internet;
-  internet.Install (webHost);
+  internet.Install (web);
   
-  Names::Add (InternetNetwork::GetServerName (), webHost);
+  Names::Add (InternetNetwork::GetServerName (), web);
 
   m_webNodes.Add (pgw);
-  m_webNodes.Add (webHost);
+  m_webNodes.Add (web);
 
   m_p2pHeler.SetDeviceAttribute ("DataRate", DataRateValue (m_LinkDataRate));
   m_p2pHeler.SetDeviceAttribute ("Mtu", UintegerValue (m_LinkMtu));
   m_p2pHeler.SetChannelAttribute ("Delay", TimeValue (m_LinkDelay));
+  m_p2pHeler.SetQueue ("ns3::CoDelQueue");
   
   m_webDevices = m_p2pHeler.Install (m_webNodes);
+  Ptr<PointToPointNetDevice> webDev, pgwDev;
+  pgwDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (0));
+  webDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (1));
  
-  Names::Add (Names::FindName (pgw) + "+" + 
-              Names::FindName (webHost), m_webDevices.Get (0));
-  Names::Add (Names::FindName (webHost) + "+" + 
-              Names::FindName (pgw), m_webDevices.Get (1));
+  Names::Add (Names::FindName (pgw) + "+" + Names::FindName (web), pgwDev);
+  Names::Add (Names::FindName (web) + "+" + Names::FindName (pgw), webDev);
   
   Ipv4AddressHelper ipv4h;
   ipv4h.SetBase ("192.168.0.0", "255.255.255.0");
@@ -93,10 +95,17 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   // Defining static routes to the web node
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
   Ptr<Ipv4StaticRouting> webHostStaticRouting =
-      ipv4RoutingHelper.GetStaticRouting (webHost->GetObject<Ipv4> ());
+      ipv4RoutingHelper.GetStaticRouting (web->GetObject<Ipv4> ());
   webHostStaticRouting->AddNetworkRouteTo (Ipv4Address ("7.0.0.0"), 
       Ipv4Mask ("255.0.0.0"), Ipv4Address("192.168.0.1"), 1);
-  return webHost;
+
+  // Registering trace sink for queue drop packets
+  pgwDev->GetQueue ()->TraceConnect ("Drop", Names::FindName (pgw),
+    MakeCallback (&InternetNetwork::QueueDropPacket, this));
+  webDev->GetQueue ()->TraceConnect ("Drop", Names::FindName (web),
+    MakeCallback (&InternetNetwork::QueueDropPacket, this));
+
+  return web;
 }
 
 void
@@ -104,6 +113,14 @@ InternetNetwork::EnablePcap (std::string prefix)
 {
   NS_LOG_FUNCTION (this);
   m_p2pHeler.EnablePcap (prefix, m_webDevices);
+}
+
+void
+InternetNetwork::QueueDropPacket (std::string context, 
+                                  Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << context << packet->GetUid ());
+  // TODO Report dropped packets.
 }
 
 void
