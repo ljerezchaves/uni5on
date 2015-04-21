@@ -43,17 +43,17 @@ InternetNetwork::GetTypeId (void)
     .AddAttribute ("LinkDataRate", 
                    "The data rate to be used for the Internet PointToPoint link",
                    DataRateValue (DataRate ("10Gb/s")),
-                   MakeDataRateAccessor (&InternetNetwork::m_LinkDataRate),
+                   MakeDataRateAccessor (&InternetNetwork::m_linkDataRate),
                    MakeDataRateChecker ())
     .AddAttribute ("LinkDelay", 
                    "The delay to be used for the Internet PointToPoint link",
                    TimeValue (Seconds (0)),
-                   MakeTimeAccessor (&InternetNetwork::m_LinkDelay),
+                   MakeTimeAccessor (&InternetNetwork::m_linkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("LinkMtu", 
                    "The MTU of the Internet PointToPoint link",
                    UintegerValue (1492),  // PPPoE MTU 
-                   MakeUintegerAccessor (&InternetNetwork::m_LinkMtu),
+                   MakeUintegerAccessor (&InternetNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
     ;
   return tid; 
@@ -75,9 +75,9 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   m_webNodes.Add (pgw);
   m_webNodes.Add (web);
 
-  m_p2pHeler.SetDeviceAttribute ("DataRate", DataRateValue (m_LinkDataRate));
-  m_p2pHeler.SetDeviceAttribute ("Mtu", UintegerValue (m_LinkMtu));
-  m_p2pHeler.SetChannelAttribute ("Delay", TimeValue (m_LinkDelay));
+  m_p2pHeler.SetDeviceAttribute ("DataRate", DataRateValue (m_linkDataRate));
+  m_p2pHeler.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
+  m_p2pHeler.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
   m_p2pHeler.SetQueue ("ns3::CoDelQueue");
   
   m_webDevices = m_p2pHeler.Install (m_webNodes);

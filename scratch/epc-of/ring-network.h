@@ -60,9 +60,9 @@ private:
   Ptr<RingController>   m_ringCtrlApp;  //!< Casted controller app pointer
   uint16_t              m_nodes;        //!< Number of switches in the ring
   
-  DataRate              m_LinkDataRate; //!< Link data rate
-  Time                  m_LinkDelay;    //!< Link delay
-  uint16_t              m_LinkMtu;      //!< Link mtu
+  DataRate              m_linkDataRate; //!< Link data rate
+  Time                  m_linkDelay;    //!< Link delay
+  uint16_t              m_linkMtu;      //!< Link mtu
 
   /** Helper to assign addresses to S1-U NetDevices */
   Ipv4AddressHelper m_s1uIpv4AddressHelper;

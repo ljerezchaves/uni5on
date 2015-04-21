@@ -57,18 +57,18 @@ RingNetwork::GetTypeId (void)
     .AddAttribute ("LinkDataRate", 
                    "The data rate to be used for the CSMA OpenFlow links.",
                    DataRateValue (DataRate ("100Mb/s")),
-                   MakeDataRateAccessor (&RingNetwork::m_LinkDataRate),
+                   MakeDataRateAccessor (&RingNetwork::m_linkDataRate),
                    MakeDataRateChecker ())
     .AddAttribute ("LinkDelay", 
                    "The delay to be used for the CSMA OpenFlow links.",
                    TimeValue (Seconds (0)),
-                   MakeTimeAccessor (&RingNetwork::m_LinkDelay),
+                   MakeTimeAccessor (&RingNetwork::m_linkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("LinkMtu", 
                    "The MTU for CSMA OpenFlow links. "
                    "Consider + 40 byter of GTP/UDP/IP tunnel overhead.",
                    UintegerValue (1540), // Ethernet II + GTP/UDP/IP tunnel
-                   MakeUintegerAccessor (&RingNetwork::m_LinkMtu),
+                   MakeUintegerAccessor (&RingNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
   ;
   return tid; 
@@ -114,9 +114,9 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
 
   // Configuring csma links to connect the switches
   m_ofCsmaHelper.SetChannelAttribute ("DataRate", 
-                                      DataRateValue (m_LinkDataRate));
-  m_ofCsmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_LinkMtu));
-  m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_LinkDelay));
+                                      DataRateValue (m_linkDataRate));
+  m_ofCsmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
+  m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
   m_ofCsmaHelper.SetQueue ("ns3::CoDelQueue");
 
   // Connecting switches in ring topology (clockwise order)
@@ -162,7 +162,7 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
       info->portDev2 = nextPortDevice;
       info->portNum1 = currPortNum;
       info->portNum2 = nextPortNum;
-      info->maxDataRate = m_LinkDataRate;
+      info->maxDataRate = m_linkDataRate;
       m_ringCtrlApp->NotifyNewConnBtwnSwitches (info);
 
       // Registering trace sink for meter dropped packets
