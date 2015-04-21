@@ -75,7 +75,7 @@ public:
 private:
   NodeContainer      m_webNodes;      //!< Internet nodes (server and gateway)
   NetDeviceContainer m_webDevices;    //!< Internet devices
-  PointToPointHelper m_p2pHeler;      //!< Internet link helper
+  PointToPointHelper m_p2pHelper;     //!< Internet link helper
   DataRate           m_linkDataRate;  //!< Internet link data rate
   Time               m_linkDelay;     //!< Internet link delay
   uint16_t           m_linkMtu;       //!< Internet link MTU

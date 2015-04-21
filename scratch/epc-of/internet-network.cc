@@ -75,12 +75,12 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   m_webNodes.Add (pgw);
   m_webNodes.Add (web);
 
-  m_p2pHeler.SetDeviceAttribute ("DataRate", DataRateValue (m_linkDataRate));
-  m_p2pHeler.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
-  m_p2pHeler.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
-  m_p2pHeler.SetQueue ("ns3::CoDelQueue");
+  m_p2pHelper.SetDeviceAttribute ("DataRate", DataRateValue (m_linkDataRate));
+  m_p2pHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
+  m_p2pHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
+  m_p2pHelper.SetQueue ("ns3::CoDelQueue");
   
-  m_webDevices = m_p2pHeler.Install (m_webNodes);
+  m_webDevices = m_p2pHelper.Install (m_webNodes);
   Ptr<PointToPointNetDevice> webDev, pgwDev;
   pgwDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (0));
   webDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (1));
@@ -106,7 +106,7 @@ void
 InternetNetwork::EnablePcap (std::string prefix)
 {
   NS_LOG_FUNCTION (this);
-  m_p2pHeler.EnablePcap (prefix, m_webDevices);
+  m_p2pHelper.EnablePcap (prefix, m_webDevices);
 }
 
 Ptr<Queue> 
