@@ -37,7 +37,8 @@ QosStatsCalculator::QosStatsCalculator ()
     m_delaySum (Time ()),
     m_lastResetTime (Simulator::Now ()),
     m_seqNum (0),
-    m_dropCounter (0)
+    m_meterDrop (0),
+    m_queueDrop (0)
 {
   NS_LOG_FUNCTION (this);
   m_lossCounter = new PacketLossCounter (m_windowSize);
@@ -77,8 +78,9 @@ QosStatsCalculator::ResetCounters ()
   m_previousRxTx = Simulator::Now ();
   m_lastResetTime = Simulator::Now ();
   m_seqNum = 0;
-  m_dropCounter = 0;
-    
+  m_meterDrop = 0;
+  m_queueDrop = 0;
+
   m_lossCounter = new PacketLossCounter (m_windowSize);
 }
 
@@ -109,15 +111,21 @@ QosStatsCalculator::NotifyReceived (uint32_t seqNum, Time timestamp,
 }
 
 void
-QosStatsCalculator::NotifyDropped ()
+QosStatsCalculator::NotifyMeterDrop ()
 {
-  m_dropCounter++;
+  m_meterDrop++;
+}
+
+void
+QosStatsCalculator::NotifyQueueDrop ()
+{
+  m_queueDrop++;
 }
 
 Time      
 QosStatsCalculator::GetActiveTime (void) const
 {
-  return Simulator::Now () - m_lastResetTime;
+  return m_previousRx - m_lastResetTime;
 }
 
 uint32_t
@@ -164,9 +172,15 @@ QosStatsCalculator::GetRxThroughput (void) const
 }
 
 uint32_t
-QosStatsCalculator::GetDropPackets (void) const
+QosStatsCalculator::GetMeterDrops (void) const
 {
-  return m_dropCounter;
+  return m_meterDrop;
+}
+
+uint32_t
+QosStatsCalculator::GetQueueDrops (void) const
+{
+  return m_queueDrop;
 }
 
 } // Namespace ns3

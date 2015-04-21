@@ -67,9 +67,14 @@ public:
   void NotifyReceived (uint32_t seqNum, Time timestamp, uint32_t rxBytes);
 
   /**
-   * Increase the dropped packet counter by one
+   * Increase the meter dropped packet counter by one
    */
-  void NotifyDropped ();
+  void NotifyMeterDrop ();
+
+  /**
+   * Increase the queue dropped packet counter by one
+   */
+  void NotifyQueueDrop ();
 
   /**
    * Get the next sequence number, which can be freely used by
@@ -91,7 +96,8 @@ public:
   Time      GetRxDelay      (void) const;
   Time      GetRxJitter     (void) const;
   DataRate  GetRxThroughput (void) const;
-  uint32_t  GetDropPackets  (void) const;
+  uint32_t  GetMeterDrops   (void) const;
+  uint32_t  GetQueueDrops   (void) const;
   //\}
 
   /** 
@@ -113,7 +119,8 @@ private:
 
   // Fields used by OpenFlowEpcNetwork monitoring
   uint32_t           m_seqNum;           //!< Sequence number counter
-  uint32_t           m_dropCounter;      //!< Counter for dropped packets
+  uint32_t           m_meterDrop;        //!< Counter for drops by meter rules
+  uint32_t           m_queueDrop;        //!< Counter for drops by queues
 };
 
 } // namespace ns3
