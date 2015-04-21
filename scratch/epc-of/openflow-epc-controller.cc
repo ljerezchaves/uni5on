@@ -377,7 +377,9 @@ OpenFlowEpcController::NotifyAppStop (Ptr<Application> app)
       // No need to remove the rules from switch. Wait for idle timeout.
     }
 
-  DumpAppStatistics (app);
+  // Wait for delayed packets before dumping QoS statistcs.
+  Simulator::Schedule (Seconds (1), 
+    &OpenFlowEpcController::DumpAppStatistics, this, app);
   return true;
 }
 
@@ -448,14 +450,14 @@ void
 OpenFlowEpcController::MeterDropPacket (std::string context, 
                                         Ptr<const Packet> packet)
 {
-  NS_LOG_FUNCTION (this << context << packet->GetUid ());
+  NS_LOG_FUNCTION (this << context << packet);
 
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
       Ptr<QosStatsCalculator> qosStats = 
         GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      qosStats->NotifyDropped ();
+      qosStats->NotifyMeterDrop ();
     }
 }
 
@@ -463,14 +465,14 @@ void
 OpenFlowEpcController::QueueDropPacket (std::string context,
                                         Ptr<const Packet> packet)
 {
-  NS_LOG_FUNCTION (this << context << packet->GetUid ());
+  NS_LOG_FUNCTION (this << context << packet);
 
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
       Ptr<QosStatsCalculator> qosStats = 
         GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      // TODO Report dropped packets.
+      qosStats->NotifyQueueDrop ();
     }
 }
 
