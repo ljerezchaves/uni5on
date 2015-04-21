@@ -99,12 +99,6 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   webHostStaticRouting->AddNetworkRouteTo (Ipv4Address ("7.0.0.0"), 
       Ipv4Mask ("255.0.0.0"), Ipv4Address("192.168.0.1"), 1);
 
-  // Registering trace sink for queue drop packets
-  pgwDev->GetQueue ()->TraceConnect ("Drop", Names::FindName (pgw),
-    MakeCallback (&InternetNetwork::QueueDropPacket, this));
-  webDev->GetQueue ()->TraceConnect ("Drop", Names::FindName (web),
-    MakeCallback (&InternetNetwork::QueueDropPacket, this));
-
   return web;
 }
 
@@ -115,12 +109,24 @@ InternetNetwork::EnablePcap (std::string prefix)
   m_p2pHeler.EnablePcap (prefix, m_webDevices);
 }
 
-void
-InternetNetwork::QueueDropPacket (std::string context, 
-                                  Ptr<const Packet> packet)
+Ptr<Queue> 
+InternetNetwork::GetDownlinkQueue (void) const
 {
-  NS_LOG_FUNCTION (this << context << packet->GetUid ());
-  // TODO Report dropped packets.
+  NS_LOG_FUNCTION (this);
+  
+  Ptr<PointToPointNetDevice> netDev;
+  netDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (1));
+  return netDev->GetQueue ();
+}
+
+Ptr<Queue> 
+InternetNetwork::GetUplinkQueue (void) const
+{
+  NS_LOG_FUNCTION (this);
+  
+  Ptr<PointToPointNetDevice> netDev;
+  netDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (0));
+  return netDev->GetQueue ();
 }
 
 void
