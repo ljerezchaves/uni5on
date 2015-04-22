@@ -565,8 +565,8 @@ SimulationScenario::ReportAppStats (std::string description, uint32_t teid,
               << setw (12) << "Loss ratio"
               << setw (6)  << "Losts"
               << setw (10) << "Rx Bytes"
-              << setw (8)  << "Throughput";
-      outFile << std::endl;
+              << setw (8)  << "Throughput (kbps)"
+              << std::endl;
     }
   else
     {
@@ -578,18 +578,19 @@ SimulationScenario::ReportAppStats (std::string description, uint32_t teid,
         }
     }
 
-  outFile << left;
-  outFile << setw (12) << Simulator::Now ().GetSeconds ();
-  outFile << setw (17) << description;
-  outFile << setw (6)  << teid;
-  outFile << setw (12) << stats->GetActiveTime ().GetSeconds ();
-  outFile << setw (12) << fixed << stats->GetRxDelay ().GetSeconds () * 1000;
-  outFile << setw (12) << fixed << stats->GetRxJitter ().GetSeconds () * 1000;
-  outFile << setw (9)  << fixed << stats->GetRxPackets ();
-  outFile << setw (12) << fixed << stats->GetLossRatio ();
-  outFile << setw (6)  << fixed << stats->GetLostPackets ();
-  outFile << setw (10) << fixed << stats->GetRxBytes ();
-  outFile << setw (8)  << fixed << stats->GetRxThroughput () << std::endl;
+  outFile << left
+          << setw (12) << Simulator::Now ().GetSeconds ()
+          << setw (17) << description
+          << setw (6)  << teid
+          << setw (12) << stats->GetActiveTime ().GetSeconds ()
+          << setw (12) << fixed << stats->GetRxDelay ().GetSeconds () * 1000
+          << setw (12) << fixed << stats->GetRxJitter ().GetSeconds () * 1000
+          << setw (9)  << fixed << stats->GetRxPackets ()
+          << setw (12) << fixed << stats->GetLossRatio ()
+          << setw (6)  << fixed << stats->GetLostPackets ()
+          << setw (10) << fixed << stats->GetRxBytes ()
+          << setw (8)  << fixed << (double)(stats->GetRxThroughput ().GetBitRate ()) / 1024
+          << std::endl;
   outFile.close ();
 }
 
@@ -623,8 +624,8 @@ SimulationScenario::ReportEpcStats (std::string description, uint32_t teid,
               << setw (7)  << "Meter"
               << setw (7)  << "Queue"
               << setw (10) << "Rx Bytes"
-              << setw (8)  << "Throughput";
-      outFile << std::endl;
+              << setw (8)  << "Throughput (kbps)"
+              << std::endl;
     }
   else
     {
@@ -636,20 +637,21 @@ SimulationScenario::ReportEpcStats (std::string description, uint32_t teid,
         }
     }
 
-  outFile << left;
-  outFile << setw (12) << Simulator::Now ().GetSeconds ();
-  outFile << setw (17) << description;
-  outFile << setw (6)  << teid;
-  outFile << setw (12) << stats->GetActiveTime ().GetSeconds ();
-  outFile << setw (12) << fixed << stats->GetRxDelay ().GetSeconds () * 1000;
-  outFile << setw (12) << fixed << stats->GetRxJitter ().GetSeconds () * 1000;
-  outFile << setw (9)  << fixed << stats->GetRxPackets ();
-  outFile << setw (12) << fixed << stats->GetLossRatio ();
-  outFile << setw (7)  << fixed << stats->GetLostPackets ();
-  outFile << setw (7)  << fixed << stats->GetMeterDrops ();
-  outFile << setw (7)  << fixed << stats->GetQueueDrops ();
-  outFile << setw (10) << fixed << stats->GetRxBytes ();
-  outFile << setw (8)  << fixed << stats->GetRxThroughput () << std::endl;
+  outFile << left
+          << setw (12) << Simulator::Now ().GetSeconds ()
+          << setw (17) << description
+          << setw (6)  << teid
+          << setw (12) << stats->GetActiveTime ().GetSeconds ()
+          << setw (12) << fixed << stats->GetRxDelay ().GetSeconds () * 1000
+          << setw (12) << fixed << stats->GetRxJitter ().GetSeconds () * 1000
+          << setw (9)  << fixed << stats->GetRxPackets ()
+          << setw (12) << fixed << stats->GetLossRatio ()
+          << setw (7)  << fixed << stats->GetLostPackets ()
+          << setw (7)  << fixed << stats->GetMeterDrops ()
+          << setw (7)  << fixed << stats->GetQueueDrops ()
+          << setw (10) << fixed << stats->GetRxBytes ()
+          << setw (8)  << fixed << (double)(stats->GetRxThroughput ().GetBitRate ()) / 1024
+          << std::endl;
   outFile.close ();
 }
 
@@ -685,10 +687,11 @@ SimulationScenario::ReportGbrStats (uint32_t requests, uint32_t blocks, double r
         }
     }
 
-  outFile << left;
-  outFile << setw (9) << requests;
-  outFile << setw (9) << blocks;
-  outFile << setw (9) << ratio << std::endl;
+  outFile << left
+          << setw (9) << requests
+          << setw (9) << blocks
+          << setw (9) << ratio 
+          << std::endl;
   outFile.close ();
 }
 
@@ -710,8 +713,8 @@ SimulationScenario::ReportPgwStats (DataRate downTraffic, DataRate upTraffic)
       firstWrite = false;
       outFile << left 
               << setw (12) << "Time (s)" 
-              << setw (15) << "Downlink (bps)"
-              << setw (12) << "Uplink (bps)"
+              << setw (17) << "Downlink (kbps)"
+              << setw (14) << "Uplink (kbps)"
               << std::endl;
     }
   else
@@ -724,10 +727,11 @@ SimulationScenario::ReportPgwStats (DataRate downTraffic, DataRate upTraffic)
         }
     }
 
-  outFile << left;
-  outFile << setw (12) << Simulator::Now ().GetSeconds ();
-  outFile << setw (15) << downTraffic.GetBitRate ();
-  outFile << setw (12) << upTraffic.GetBitRate () << std::endl;
+  outFile << left
+          << setw (12) << Simulator::Now ().GetSeconds ()
+          << setw (17) << (double)downTraffic.GetBitRate () / 1024
+          << setw (14) << (double)upTraffic.GetBitRate () / 1024
+          << std::endl;
   outFile.close ();
 }
 
@@ -754,8 +758,7 @@ SimulationScenario::ReportSwtStats (std::vector<uint32_t> teid)
         {
           outFile << setw (5) << i;
         }
-      outFile << setw (12) << "eNB average";
-      outFile << std::endl;
+      outFile << setw (12) << "eNB average" << std::endl;
     }
   else
     {
@@ -768,8 +771,8 @@ SimulationScenario::ReportSwtStats (std::vector<uint32_t> teid)
     }
 
   double enbSum = 0;
-  outFile << left;
-  outFile << setw (21) << Simulator::Now ().GetSeconds ();
+  outFile << left
+          << setw (21) << Simulator::Now ().GetSeconds ();
   
   std::vector<uint32_t>::iterator it = teid.begin ();
   outFile << setw (5) << *it;
@@ -779,8 +782,7 @@ SimulationScenario::ReportSwtStats (std::vector<uint32_t> teid)
       enbSum += *it;
     }
   
-  outFile << setw (12) << (enbSum / (switches - 1));
-  outFile << std::endl;
+  outFile << setw (12) << (enbSum / (switches - 1)) << std::endl;
   outFile.close ();
 }
 
