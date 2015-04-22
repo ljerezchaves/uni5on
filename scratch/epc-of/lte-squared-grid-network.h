@@ -31,6 +31,7 @@
 namespace ns3 {
 
 /**
+ * \ingroup epcof
  * LTE radio network layed out on a squared grid. This class generates a
  * squared grid topology, placing a eNodeB at the centre of each square. UEs
  * attached to this node may be fixed at same position of eNB or scattered

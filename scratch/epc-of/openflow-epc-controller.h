@@ -36,6 +36,7 @@ class OpenFlowEpcController;
 class RingController;
 
 /**
+ * \ingroup epcof
  * The abstract base OpenFlow EPC controller, which should be extend in
  * accordance to network topology.
  */

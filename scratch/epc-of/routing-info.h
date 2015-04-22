@@ -40,6 +40,7 @@ typedef std::list<ContextBearer_t> BearerList_t;
 
 // ------------------------------------------------------------------------ //
 /** 
+ * \ingroup epcof
  * Metadata associated to LTE context information for controller usage. 
  */
 class ContextInfo : public Object
@@ -80,6 +81,7 @@ private:
 
 // ------------------------------------------------------------------------ //
 /**
+ * \ingroup epcof
  * Metadata associated to a routing path between
  * two any switches in the OpenFlow network.
  */
@@ -128,6 +130,7 @@ private:
 
 // ------------------------------------------------------------------------ //
 /**
+ * \ingroup epcof
  * Metadata associated to meter rules.
  */
 class MeterInfo : public Object
@@ -178,6 +181,7 @@ private:
 
 // ------------------------------------------------------------------------ //
 /**
+ * \ingroup epcof
  * Metadata associated to GBR beares.
  */
 class GbrInfo : public Object
@@ -221,6 +225,7 @@ private:
 
 // ------------------------------------------------------------------------ //
 /**
+ * \ingroup epcof
  * Metadata associated to a ring routing path between 
  * two any switches in the OpenFlow ring network.
  */

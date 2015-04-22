@@ -31,6 +31,7 @@ class OpenFlowEpcController;
 class RingController;
 
 /** 
+ * \ingroup epcof
  * This class generates and simple n-switch OpenFlow ring topology
  * controlled by RingController, which will be used by S1-U and
  * X2 EPC interfaces.

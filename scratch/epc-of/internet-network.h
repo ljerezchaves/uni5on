@@ -29,6 +29,7 @@
 namespace ns3 {
 
 /** 
+ * \ingroup epcof
  * Create an Internet network, connecting a Web server 
  * to the LTE EPC Packet Gateway. 
  */

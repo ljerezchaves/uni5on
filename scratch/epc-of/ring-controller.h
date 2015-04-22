@@ -31,6 +31,7 @@
 namespace ns3 {
 
 /**
+ * \ingroup epcof
  * OpenFlow EPC controller for ring network.
  */
 class RingController : public OpenFlowEpcController

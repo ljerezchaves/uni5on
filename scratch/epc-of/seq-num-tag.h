@@ -29,6 +29,7 @@ namespace ns3 {
 class Tag;
 
 /** 
+ * \ingroup epcof
  * Tag used to save packet sequence number. 
  */
 class SeqNumTag : public Tag

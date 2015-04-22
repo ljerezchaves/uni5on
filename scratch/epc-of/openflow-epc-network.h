@@ -31,6 +31,7 @@ namespace ns3 {
 class OpenFlowEpcController;
 
 /**
+ * \ingroup epcof
  * Metadata associated to a connection between 
  * two any switches in the OpenFlow network.
  */
@@ -109,6 +110,7 @@ protected:
 
 // ------------------------------------------------------------------------ //
 /**
+ * \ingroup epcof
  * Create an OpenFlow network infrastructure to be used by
  * OpenFlowEpcHelper on LTE networks.
  */

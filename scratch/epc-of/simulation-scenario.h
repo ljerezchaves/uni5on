@@ -32,6 +32,7 @@
 namespace ns3 {
 
 /**
+ * \defgroup epcof LTE EPC + OpenFlow
  * Network simulation scenario for LTE EPC + OpenFlow 1.3
  */
 class SimulationScenario : public Object

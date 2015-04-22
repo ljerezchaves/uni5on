@@ -31,6 +31,7 @@
 namespace ns3 {
 
 /**
+ * \ingroup epcof
  * LTE radio network layed out on an hexagonal grid. This class generates a
  * hexagonal grid topology. UEs attached to this node may be fixed at same
  * position of eNB or scattered randomly around the eNB.
