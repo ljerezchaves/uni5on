@@ -78,7 +78,6 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   m_p2pHelper.SetDeviceAttribute ("DataRate", DataRateValue (m_linkDataRate));
   m_p2pHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
   m_p2pHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
-  m_p2pHelper.SetQueue ("ns3::CoDelQueue");
   
   m_webDevices = m_p2pHelper.Install (m_webNodes);
   Ptr<PointToPointNetDevice> webDev, pgwDev;
