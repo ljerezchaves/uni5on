@@ -619,7 +619,9 @@ SimulationScenario::ReportEpcStats (std::string description, uint32_t teid,
               << setw (12) << "Jitter (ms)"
               << setw (9)  << "Rx Pkts"
               << setw (12) << "Loss ratio"
-              << setw (22) << "Losts / Meter / Queue"
+              << setw (7)  << "Losts"
+              << setw (7)  << "Meter"
+              << setw (7)  << "Queue"
               << setw (10) << "Rx Bytes"
               << setw (8)  << "Throughput";
       outFile << std::endl;
@@ -643,9 +645,9 @@ SimulationScenario::ReportEpcStats (std::string description, uint32_t teid,
   outFile << setw (12) << fixed << stats->GetRxJitter ().GetSeconds () * 1000;
   outFile << setw (9)  << fixed << stats->GetRxPackets ();
   outFile << setw (12) << fixed << stats->GetLossRatio ();
-  outFile << setw (5)  << fixed << stats->GetLostPackets () << " / ";
-  outFile << setw (5)  << fixed << stats->GetMeterDrops () << " / ";
-  outFile << setw (6)  << fixed << stats->GetQueueDrops ();
+  outFile << setw (7)  << fixed << stats->GetLostPackets ();
+  outFile << setw (7)  << fixed << stats->GetMeterDrops ();
+  outFile << setw (7)  << fixed << stats->GetQueueDrops ();
   outFile << setw (10) << fixed << stats->GetRxBytes ();
   outFile << setw (8)  << fixed << stats->GetRxThroughput () << std::endl;
   outFile.close ();
