@@ -117,7 +117,6 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
                                       DataRateValue (m_linkDataRate));
   m_ofCsmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
   m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
-  m_ofCsmaHelper.SetQueue ("ns3::CoDelQueue");
 
   // Connecting switches in ring topology (clockwise order)
   for (uint16_t i = 0; i < m_nodes; i++)

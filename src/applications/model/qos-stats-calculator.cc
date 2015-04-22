@@ -131,7 +131,12 @@ QosStatsCalculator::GetActiveTime (void) const
 uint32_t
 QosStatsCalculator::GetLostPackets (void) const
 {
-  return m_lossCounter->GetLost ();
+  uint32_t lost = m_lossCounter->GetLost ();
+  
+  // Workaround for lost packets not yet identified 
+  // by the PacketLossCounter packet window.
+  uint32_t drops = m_meterDrop + m_queueDrop;
+  return lost < drops ? drops : lost;
 }
 
 double

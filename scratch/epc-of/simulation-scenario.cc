@@ -330,8 +330,6 @@ SimulationScenario::EnableHttpTraffic ()
       GbrQosInformation qos;
       qos.mbrDl = 1048576;    // Up to 1024 Kbps downlink
       qos.mbrUl = 131072;     // Up to  128 Kbps uplink 
-      qos.mbrDl = 262400;     // Up to  256 Kbps downlink
-      qos.mbrUl = 65536;      // Up to   64 Kbps uplink 
       EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }

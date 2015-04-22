@@ -42,6 +42,9 @@ main (int argc, char *argv[])
   // for GTP/UDP/IP tunnel, and 52 byter for default TCP/IP headers. 
   Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1400));
 
+  // When possible, use the Full Duplex CSMA channel to improve throughput.
+  Config::SetDefault ("ns3::CsmaChannel::FullDuplex", BooleanValue (true));
+
   // Enabling checksum computations and packet metadata
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
   
