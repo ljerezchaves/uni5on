@@ -134,6 +134,12 @@ private:
   void ReportSwtStats (std::vector<uint32_t> teid);
 
   /**
+   * Save internet queue statistics in file.
+   * \see ns3::InternetNetwork::WebTracedCallback for parameters.
+   */
+  void ReportWebStats (Ptr<const Queue> downlink, Ptr<const Queue> uplink);
+
+  /**
    * Parse topology description file.  
    * Topology file columns (indexes starts at 0):
    * eNB index | # of UEs at this eNB | OpenFlow switch index
@@ -176,6 +182,7 @@ private:
   std::string           m_pgwStatsFilename;   //!< PgwStats filename
   std::string           m_swtStatsFilename;   //!< SwtStats filename
   std::string           m_gbrStatsFilename;   //!< GbrStats filename
+  std::string           m_webStatsFilename;   //!< WebStats filename
   std::string           m_topoFilename;       //!< Topology filename
   std::string           m_switchLog;          //!< Switches log level
   std::string           m_commonPrefix;       //!< Common prefix for filenames

@@ -40,6 +40,11 @@ InternetNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::InternetNetwork") 
     .SetParent<Object> ()
+    .AddAttribute ("DumpStatsTimeout",
+                   "Periodic statistics dump interval.",
+                   TimeValue (Seconds (10)),
+                   MakeTimeAccessor (&InternetNetwork::SetDumpTimeout),
+                   MakeTimeChecker ())
     .AddAttribute ("LinkDataRate", 
                    "The data rate to be used for the Internet PointToPoint link",
                    DataRateValue (DataRate ("10Gb/s")),
@@ -55,6 +60,10 @@ InternetNetwork::GetTypeId (void)
                    UintegerValue (1492),  // PPPoE MTU 
                    MakeUintegerAccessor (&InternetNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
+    .AddTraceSource ("WebStats",
+                     "The internet queues statistics trace source.",
+                     MakeTraceSourceAccessor (&InternetNetwork::m_webTrace),
+                     "ns3::InternetNetwork::WebTracedCallback")
     ;
   return tid; 
 }
@@ -126,6 +135,45 @@ InternetNetwork::GetUplinkQueue (void) const
   Ptr<PointToPointNetDevice> netDev;
   netDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (0));
   return netDev->GetQueue ();
+}
+
+void 
+InternetNetwork::ResetDownlinkQueue (void)
+{
+  NS_LOG_FUNCTION (this);
+  
+  Ptr<PointToPointNetDevice> netDev;
+  netDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (1));
+  netDev->GetQueue ()->ResetStatistics ();
+}
+
+void
+InternetNetwork::ResetUplinkQueue (void)
+{
+  NS_LOG_FUNCTION (this);
+  
+  Ptr<PointToPointNetDevice> netDev;
+  netDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (0));
+  netDev->GetQueue ()->ResetStatistics ();
+}
+
+void
+InternetNetwork::SetDumpTimeout (Time timeout)
+{
+  m_dumpTimeout = timeout;
+  Simulator::Schedule (m_dumpTimeout, 
+    &InternetNetwork::DumpWebStatistics, this);
+}
+
+void 
+InternetNetwork::DumpWebStatistics ()
+{
+  m_webTrace (GetDownlinkQueue (), GetUplinkQueue ());
+  ResetDownlinkQueue ();
+  ResetUplinkQueue ();
+  
+  Simulator::Schedule (m_dumpTimeout, 
+    &InternetNetwork::DumpWebStatistics, this);
 }
 
 void

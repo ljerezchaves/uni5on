@@ -67,11 +67,34 @@ public:
   /** \return The uplink queue. */
   Ptr<Queue> GetUplinkQueue (void) const;
 
+  /** Reset downlink queue statistics. */
+  void ResetDownlinkQueue (void);
+
+  /** Reset uplink queue statistics. */
+  void ResetUplinkQueue (void);
+
   /** \return the name used by the server node */
   static const std::string GetServerName ();
 
   /** \return the name used by the gateway node */
   static const std::string GetSgwPgwName ();
+
+  /**
+   * Set the default statistics dump interval.
+   * \param timeout The timeout value.
+   */
+  void SetDumpTimeout (Time timeout);
+
+  /** Dump web queues statistics. */
+  void DumpWebStatistics ();
+
+  /** 
+   * TracedCallback signature for internet queues statistics.
+   * \param downlink The downlink tx queue, at web server node.
+   * \param uplink The uplink tx queue, at pgw node.
+   */
+  typedef void (* WebTracedCallback)(Ptr<const Queue> downlink, 
+                                     Ptr<const Queue> uplink);
 
 private:
   NodeContainer      m_webNodes;      //!< Internet nodes (server and gateway)
@@ -80,6 +103,10 @@ private:
   DataRate           m_linkDataRate;  //!< Internet link data rate
   Time               m_linkDelay;     //!< Internet link delay
   uint16_t           m_linkMtu;       //!< Internet link MTU
+  Time               m_dumpTimeout;   //!< Dump stats timeout
+
+  /** The web queue trace source, fired at DumpWebStatistics. */
+  TracedCallback <Ptr<const Queue>, Ptr<const Queue> > m_webTrace;
 };
 
 };  // namespace ns3

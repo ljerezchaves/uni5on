@@ -105,9 +105,14 @@ SimulationScenario::GetTypeId (void)
                    MakeStringAccessor (&SimulationScenario::m_swtStatsFilename),
                    MakeStringChecker ())
     .AddAttribute ("GbrStatsFilename",
-                   "Filename for Bearers resquest/block statistics.",
+                   "Filename for bearers resquest/block statistics.",
                    StringValue ("gbr_stats.txt"),
                    MakeStringAccessor (&SimulationScenario::m_gbrStatsFilename),
+                   MakeStringChecker ())
+    .AddAttribute ("WebStatsFilename",
+                   "Filename for internet queue statistics.",
+                   StringValue ("web_stats.txt"),
+                   MakeStringAccessor (&SimulationScenario::m_webStatsFilename),
                    MakeStringChecker ())
     .AddAttribute ("TopoFilename",
                    "Filename for scenario topology description.",
@@ -218,7 +223,7 @@ SimulationScenario::BuildRingTopology ()
   // Registering controller trace sinks
   m_controller->ConnectTraceSinks ();
   
-  // Saving controller and application statistics 
+  // Saving simulation statistics 
   m_controller->TraceConnectWithoutContext ("AppStats", 
       MakeCallback (&SimulationScenario::ReportAppStats, this));
   m_controller->TraceConnectWithoutContext ("EpcStats", 
@@ -229,6 +234,8 @@ SimulationScenario::BuildRingTopology ()
       MakeCallback (&SimulationScenario::ReportGbrStats, this));
   m_controller->TraceConnectWithoutContext ("SwtStats", 
       MakeCallback (&SimulationScenario::ReportSwtStats, this));
+  m_webNetwork->TraceConnectWithoutContext ("WebStats",
+      MakeCallback (&SimulationScenario::ReportWebStats, this));
 
   // Application traffic
   if (m_ping) EnablePingTraffic ();
@@ -259,6 +266,7 @@ SimulationScenario::SetCommonPrefix (std::string prefix)
   m_epcStatsFilename = m_commonPrefix + m_epcStatsFilename;
   m_pgwStatsFilename = m_commonPrefix + m_pgwStatsFilename;
   m_gbrStatsFilename = m_commonPrefix + m_gbrStatsFilename;
+  m_webStatsFilename = m_commonPrefix + m_webStatsFilename;
   m_swtStatsFilename = m_commonPrefix + m_swtStatsFilename;
   m_topoFilename     = m_commonPrefix + m_topoFilename;
 }
@@ -786,6 +794,63 @@ SimulationScenario::ReportSwtStats (std::vector<uint32_t> teid)
     }
   
   outFile << setw (12) << (enbSum / (switches - 1)) << std::endl;
+  outFile.close ();
+}
+
+void
+SimulationScenario::ReportWebStats (Ptr<const Queue> downlink, 
+                                    Ptr<const Queue> uplink)
+{
+  NS_LOG_FUNCTION (this);
+  static bool firstWrite = true;
+
+  std::ofstream outFile;
+  if (firstWrite == true)
+    {
+      outFile.open (m_webStatsFilename.c_str ());
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_webStatsFilename);
+          return;
+        }
+      firstWrite = false;
+      outFile << left 
+              << setw (12) << " " 
+              << setw (48) << "Downlink"
+              << setw (48) << "Uplink"
+              << std::endl
+              << setw (12) << "Time (s)" 
+              << setw (12) << "Pkts"
+              << setw (12) << "Bytes"
+              << setw (12) << "Pkts drop"
+              << setw (12) << "Bytes drop"
+              << setw (12) << "Pkts"
+              << setw (12) << "Bytes"
+              << setw (12) << "Pkts drop"
+              << setw (12) << "Bytes drop"
+              << std::endl;
+    }
+  else
+    {
+      outFile.open (m_webStatsFilename.c_str (), std::ios_base::app);
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_webStatsFilename);
+          return;
+        }
+    }
+
+  outFile << left
+          << setw (12) << Simulator::Now ().GetSeconds ()
+          << setw (12) << downlink->GetTotalReceivedPackets ()
+          << setw (12) << downlink->GetTotalReceivedBytes ()
+          << setw (12) << downlink->GetTotalDroppedPackets ()
+          << setw (12) << downlink->GetTotalDroppedBytes ()
+          << setw (12) << uplink->GetTotalReceivedPackets ()
+          << setw (12) << uplink->GetTotalReceivedBytes ()
+          << setw (12) << uplink->GetTotalDroppedPackets ()
+          << setw (12) << uplink->GetTotalDroppedBytes ()
+          << std::endl;
   outFile.close ();
 }
 
