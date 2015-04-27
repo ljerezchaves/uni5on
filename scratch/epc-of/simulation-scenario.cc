@@ -777,15 +777,16 @@ SimulationScenario::ReportSwtStats (std::vector<uint32_t> teid)
       firstWrite = false;
       outFile << left 
               << setw (12) << "Time (s)" 
-              << setw (5)  << "Pgw"
+              << setw (10)  << "Pgw"
               << setw (48) << "eNB switches"
               << std::endl
-              << setw (12) << " ";
-      for (size_t i = 0; i < switches; i++)
+              << setw (12) << " "
+              << setw (10) << " ";
+      for (size_t i = 1; i < switches; i++)
         {
           outFile << setw (5) << i;
         }
-      outFile << setw (12) << "Avg (eNBs)" << std::endl;
+      outFile << setw (12) << "Average" << std::endl;
     }
   else
     {
@@ -802,7 +803,7 @@ SimulationScenario::ReportSwtStats (std::vector<uint32_t> teid)
           << setw (12) << Simulator::Now ().GetSeconds ();
   
   std::vector<uint32_t>::iterator it = teid.begin ();
-  outFile << setw (5) << *it;
+  outFile << setw (10) << *it;
   for (it++; it != teid.end (); it++)
     {
       outFile << setw (5) << *it;
