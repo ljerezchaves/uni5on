@@ -50,7 +50,7 @@ main (int argc, char *argv[])
   
   bool verbose = false;
   bool lteRem = false;
-  uint32_t simTime = 1000;
+  uint32_t simTime = 1001;
   
   CommandLine cmd;
   cmd.AddValue ("verbose",    "Enable verbose output.", verbose);
