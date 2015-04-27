@@ -129,10 +129,15 @@ SimulationScenario::GetTypeId (void)
                    UintegerValue (0),
                    MakeUintegerAccessor (&SimulationScenario::m_nSwitches),
                    MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("Traces",
-                   "Enable/Disable simulation pcap and ascii traces.",
+    .AddAttribute ("PcapTrace",
+                   "Enable/Disable simulation pcap traces.",
                    BooleanValue (false),
-                   MakeBooleanAccessor (&SimulationScenario::m_traces),
+                   MakeBooleanAccessor (&SimulationScenario::m_pcapTrace),
+                   MakeBooleanChecker ())
+    .AddAttribute ("LteTrace",
+                   "Enable/Disable simulation LTE ascii traces.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&SimulationScenario::m_lteTrace),
                    MakeBooleanChecker ())
     .AddAttribute ("SwitchLogs",
                    "Set the ofsoftswitch log level.",
@@ -863,15 +868,20 @@ SimulationScenario::DatapathLogs ()
 void
 SimulationScenario::PcapAsciiTraces ()
 {
-  if (!m_traces) return;
   NS_LOG_FUNCTION (this);
  
-  m_webNetwork->EnablePcap (m_commonPrefix + "internet");
-  m_opfNetwork->EnableOpenFlowPcap (m_commonPrefix + "ofchannel");
-  m_opfNetwork->EnableDataPcap (m_commonPrefix + "ofnetwork", true);
-  m_epcHelper->EnablePcapS1u (m_commonPrefix + "lte-epc");
-  m_epcHelper->EnablePcapX2 (m_commonPrefix + "lte-epc");
-  // m_lteNetwork->EnableTraces ();
+  if (m_pcapTrace)
+    {
+      m_webNetwork->EnablePcap (m_commonPrefix + "internet");
+      m_opfNetwork->EnableOpenFlowPcap (m_commonPrefix + "ofchannel");
+      m_opfNetwork->EnableDataPcap (m_commonPrefix + "ofnetwork", true);
+      m_epcHelper->EnablePcapS1u (m_commonPrefix + "lte-epc");
+      m_epcHelper->EnablePcapX2 (m_commonPrefix + "lte-epc");
+    }
+  if (m_lteTrace)
+    {
+      m_lteNetwork->EnableTraces ();
+    }
 }
 
 };  // namespace ns3

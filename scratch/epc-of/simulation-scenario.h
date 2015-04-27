@@ -181,7 +181,8 @@ private:
   std::string           m_commonPrefix;       //!< Common prefix for filenames
   uint32_t              m_nEnbs;              //!< Number of eNBs
   uint16_t              m_nSwitches;          //!< Number of OpenFlow switches
-  bool                  m_traces;             //!< Enable pcap and ascii traces
+  bool                  m_pcapTrace;          //!< Enable pcap traces
+  bool                  m_lteTrace;           //!< Enable LTE ascii traces
   bool                  m_ping;               //!< Enable ping traffic
   bool                  m_voip;               //!< Enable voip traffic
   bool                  m_http;               //!< Enable http traffic
