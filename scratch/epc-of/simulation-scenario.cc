@@ -141,7 +141,7 @@ SimulationScenario::GetTypeId (void)
                    MakeBooleanChecker ())
     .AddAttribute ("LteTrace",
                    "Enable/Disable simulation LTE ascii traces.",
-                   BooleanValue (false),
+                   BooleanValue (true),
                    MakeBooleanAccessor (&SimulationScenario::m_lteTrace),
                    MakeBooleanChecker ())
     .AddAttribute ("SwitchLogs",
@@ -961,7 +961,7 @@ SimulationScenario::PcapAsciiTraces ()
     }
   if (m_lteTrace)
     {
-      m_lteNetwork->EnableTraces ();
+      m_lteNetwork->EnableTraces (m_commonPrefix);
     }
 }
 

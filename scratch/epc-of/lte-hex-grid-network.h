@@ -63,8 +63,11 @@ public:
   /** \return the LteHelper used to create this LTE network */
   Ptr<LteHelper> GetLteHelper ();
 
-  /** Enable LTE ascii traces */
-  void EnableTraces ();
+  /** 
+   * Enable LTE ascii traces. 
+   * \param prefix Filename prefix to use for files.
+   */  
+  void EnableTraces (std::string prefix = "");
    
   /**
    * Creates the LTE radio tolopoly.
