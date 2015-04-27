@@ -117,9 +117,9 @@ private:
 
   /**
    * Save block ratio statistics in file. 
-   * \see ns3::OpenFlowEpcController::GbrTracedCallback for parameters.
+   * \see ns3::BearerStatsCalculator::GbrTracedCallback for parameters.
    */
-  void ReportGbrStats (uint32_t requests, uint32_t blocks, double ratio);
+  void ReportGbrStats (Ptr<const BearerStatsCalculator> stats);
 
   /**
    * Save packet gateway traffic statistics in file.

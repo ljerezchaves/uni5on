@@ -128,19 +128,19 @@ RoutingInfo::DoDispose ()
 }
 
 bool
-RoutingInfo::IsGbr ()
+RoutingInfo::IsGbr (void) const
 {
   return (!m_isDefault && m_bearer.bearerLevelQos.IsGbr ());
 }
 
 EpsBearer
-RoutingInfo::GetEpsBearer ()
+RoutingInfo::GetEpsBearer (void) const
 {
   return m_bearer.bearerLevelQos;
 }
 
 GbrQosInformation
-RoutingInfo::GetQosInfo ()
+RoutingInfo::GetQosInfo (void) const
 {
   return m_bearer.bearerLevelQos.gbrQosInfo;
 }

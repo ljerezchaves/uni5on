@@ -104,13 +104,13 @@ public:
   virtual void DoDispose ();
 
   /** \return True if the associated EPS bearer is of GBR type. */
-  bool IsGbr ();
+  bool IsGbr (void) const;
 
   /** \return The EPS Bearer. */
-  EpsBearer GetEpsBearer ();
+  EpsBearer GetEpsBearer (void) const;
 
   /** \return The Bearer QoS information. */
-  GbrQosInformation GetQosInfo ();
+  GbrQosInformation GetQosInfo (void) const;
   
 private:
   uint32_t          m_teid;         //!< GTP TEID

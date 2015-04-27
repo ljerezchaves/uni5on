@@ -237,7 +237,6 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
   Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
   uint32_t teid = rInfo->m_teid;
   
-  IncreaseGbrRequest ();
   ringInfo->ResetPaths ();    // Reset to short paths
  
   // Getting available bandwidth in both paths
@@ -265,7 +264,6 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
             else
               {
                 NS_LOG_WARN (teid << ": no resources. Block!");
-                IncreaseGbrBlocks ();
                 return false;
               }
             break;
@@ -292,7 +290,6 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
             else
               {
                 NS_LOG_WARN (teid << ": no resources. Block!");
-                IncreaseGbrBlocks ();
                 return false;
               }
             break;
@@ -320,7 +317,6 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
             else
               {
                 NS_LOG_WARN (teid << ": no resources. Block!");
-                IncreaseGbrBlocks ();
                 return false;
               }
             break;
@@ -355,7 +351,6 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
                     ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
                         ringInfo->m_downPath, gbrInfo->m_downDataRate);
                   }
-                IncreaseGbrBlocks ();
                 return false;
               }
             break;
@@ -385,7 +380,6 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
                     ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
                         ringInfo->m_downPath, gbrInfo->m_downDataRate);
                   }
-                IncreaseGbrBlocks ();
                 return false;
               }
             break;
@@ -416,7 +410,6 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
                     ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
                         ringInfo->m_downPath, gbrInfo->m_downDataRate);
                   }
-                IncreaseGbrBlocks ();
                 return false;
               }
             break;

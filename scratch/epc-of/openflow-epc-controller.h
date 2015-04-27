@@ -29,6 +29,7 @@
 #include <ns3/applications-module.h>
 #include "openflow-epc-network.h"
 #include "routing-info.h"
+#include "stats-calculator.h"
 
 namespace ns3 {
 
@@ -212,15 +213,6 @@ public:
                                      Ptr<const QosStatsCalculator> stats);
 
   /** 
-   * TracedCallback signature for GBR block ratio statistics.
-   * \param requests The number of GBR requests.
-   * \param blocks The number of GBR requests blockd.
-   * \param ratio The block ratio.
-   */
-  typedef void (* GbrTracedCallback)(uint32_t requests, uint32_t blocks, 
-                                     double ratio);
-
-  /** 
    * TracedCallback signature for Pgw traffic statistics.
    * \param downTraffic The average downlink traffic for last interval.
    * \param upTraffic The average uplink traffic for last interval.
@@ -323,10 +315,9 @@ protected:
   Ptr<RoutingInfo> GetTeidRoutingInfo (uint32_t teid);
 
   /**
-   * Return the block radio statistics.
-   * \return The GBR bearer block ratio
+   * Dump bearer request statistics.
    */
-  double DumpGbrStatistics ();
+  void DumpGbrStatistics ();
 
   /**
    * Dump EPC Pgw downlink/uplink traffic statistics.
@@ -350,17 +341,6 @@ protected:
    */
   void ResetAppStatistics (Ptr<Application> app);
  
-  /**
-   * Increase by on the number of GBR bearer requests in network.
-   */
-  void IncreaseGbrRequest ();
-
-  /**
-   * Increase by on the number of GBR bearer requests that were blocked by
-   * network.
-   */
-  void IncreaseGbrBlocks ();
-
   /**
    * Extract an IPv4 address from packet match.
    * \param oxm_of The OXM_IF_* IPv4 field.
@@ -490,7 +470,7 @@ private:
   TracedCallback<DataRate, DataRate> m_pgwTrace;
 
   /** The GBR block ratio trace source, fired at DumpGbrStatistics. */
-  TracedCallback<uint32_t, uint32_t, double> m_gbrTrace;
+  TracedCallback<Ptr<const BearerStatsCalculator> > m_gbrTrace;
 
   /** The switch flow table rules trace source, fired at DumpSwtStatistics. */
   TracedCallback<std::vector<uint32_t> > m_swtTrace;
@@ -528,13 +508,12 @@ private:
   TeidRoutingMap_t  m_routes;           //!< TEID routing informations.
   TeidQosMap_t      m_qosStats;         //!< TEID QoS statistics
   
-  Time              m_dumpTimeout;      //!< Dump stats timeout
-  uint32_t          m_gbrBearers;       //!< Requests for GBR bearers
-  uint32_t          m_gbrBlocks;        //!< Blocked GBR requests
-  uint32_t          m_pgwDownBytes;     //!< Pgw traffic downlink bytes
-  uint32_t          m_pgwUpBytes;       //!< Pgw traffic uplink bytes
-
-  Ptr<OpenFlowEpcNetwork> m_ofNetwork;  //!< Pointer to OpenFlow network
+  Time              m_dumpTimeout;      //!< Dump stats timeout.
+  uint32_t          m_pgwDownBytes;     //!< Pgw traffic downlink bytes.
+  uint32_t          m_pgwUpBytes;       //!< Pgw traffic uplink bytes.
+  
+  Ptr<BearerStatsCalculator> m_bearerStats;  //!< Bearer statistics. 
+  Ptr<OpenFlowEpcNetwork> m_ofNetwork;  //!< Pointer to OpenFlow network.
 };
 
 };  // namespace ns3

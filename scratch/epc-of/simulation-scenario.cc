@@ -667,7 +667,7 @@ SimulationScenario::ReportEpcStats (std::string description, uint32_t teid,
 }
 
 void
-SimulationScenario::ReportGbrStats (uint32_t requests, uint32_t blocks, double ratio)
+SimulationScenario::ReportGbrStats (Ptr<const BearerStatsCalculator> stats)
 {
   NS_LOG_FUNCTION (this);
   static bool firstWrite = true;
@@ -683,9 +683,17 @@ SimulationScenario::ReportGbrStats (uint32_t requests, uint32_t blocks, double r
         }
       firstWrite = false;
       outFile << left 
-              << setw (9) << "Requests" 
-              << setw (9) << "Blocked"
-              << setw (9) << "Ratio"
+              << setw (12) << "Time (s)" 
+              << setw (27) << "GBR"
+              << setw (27) << "Non-GBR"
+              << std::endl
+              << setw (12) << " "
+              << setw (9) << "Requests"
+              << setw (9)  << "Blocks"
+              << setw (9)  << "Ratio"
+              << setw (9)  << "Requests"
+              << setw (9)  << "Blocks"
+              << setw (9)  << "Ratio"
               << std::endl;
     }
   else
@@ -699,9 +707,13 @@ SimulationScenario::ReportGbrStats (uint32_t requests, uint32_t blocks, double r
     }
 
   outFile << left
-          << setw (9) << requests
-          << setw (9) << blocks
-          << setw (9) << ratio 
+          << setw (12) << Simulator::Now ().GetSeconds ()
+          << setw (9)  << stats->GetGbrRequests ()
+          << setw (9)  << stats->GetGbrBlocked ()
+          << setw (9)  << stats->GetGbrBlockRatio ()
+          << setw (9)  << stats->GetNonGbrRequests ()
+          << setw (9)  << stats->GetNonGbrBlocked ()
+          << setw (9)  << stats->GetNonGbrBlockRatio ()
           << std::endl;
   outFile.close ();
 }

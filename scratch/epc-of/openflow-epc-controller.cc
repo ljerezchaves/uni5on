@@ -38,13 +38,12 @@ const int OpenFlowEpcController::m_t1DefaultPrio = 128;
 const int OpenFlowEpcController::m_t1RingPrio = 32;
 
 OpenFlowEpcController::OpenFlowEpcController ()
-  : m_gbrBearers (0),
-    m_gbrBlocks (0),
-    m_pgwDownBytes (0),
+  : m_pgwDownBytes (0),
     m_pgwUpBytes (0),
     m_ofNetwork (0)
 {
   NS_LOG_FUNCTION (this);
+  m_bearerStats = Create<BearerStatsCalculator> ();
 }
 
 OpenFlowEpcController::~OpenFlowEpcController ()
@@ -91,14 +90,13 @@ OpenFlowEpcController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   
-  DumpGbrStatistics ();
-
   m_arpTable.clear ();
   m_ipSwitchTable.clear ();
   m_connections.clear ();
   m_contexts.clear ();
   m_routes.clear ();
   m_ofNetwork = 0;
+  m_bearerStats = 0;
 }
 
 const Time
@@ -122,6 +120,8 @@ OpenFlowEpcController::SetDumpTimeout (Time timeout)
     &OpenFlowEpcController::DumpPgwStatistics, this);
   Simulator::Schedule (m_dumpTimeout, 
     &OpenFlowEpcController::DumpSwtStatistics, this);
+  Simulator::Schedule (m_dumpTimeout, 
+    &OpenFlowEpcController::DumpGbrStatistics, this);
 }
 
 void 
@@ -345,15 +345,26 @@ OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
   // priority. Doing this, we avoid problems with old 'expiring' rules, and we
   // can even use new routing paths when necessary.
 
-  // For dedicated GBR bearers, let's first check for available resources. 
+  // For dedicated GBR bearers, let's first check for available resources.
   if (rInfo->IsGbr ())
     {
-      if (!GbrBearerRequest (rInfo))
+      bool accepted = GbrBearerRequest (rInfo);
+      if (!accepted)
         {
+          m_bearerStats->NotifyBlockedRequest (rInfo);
           return false;
         }
+      else
+        {
+          m_bearerStats->NotifyAcceptedRequest (rInfo);
+        }
     }
-
+  else
+    {
+      // Non-GBR bearers are always accepted by network.
+      m_bearerStats->NotifyAcceptedRequest (rInfo);
+    }
+    
   // Everything is ok! Let's activate and install this bearer.
   rInfo->m_isActive = true;
   return InstallTeidRouting (rInfo);
@@ -556,12 +567,14 @@ OpenFlowEpcController::GetTeidRoutingInfo (uint32_t teid)
   return rInfo;
 }
 
-double
+void
 OpenFlowEpcController::DumpGbrStatistics ()
 {
-  double ratio = (double)m_gbrBlocks / (double)m_gbrBearers;
-  m_gbrTrace (m_gbrBearers, m_gbrBlocks, ratio);
-  return ratio;
+  m_gbrTrace (m_bearerStats);
+  m_bearerStats->ResetCounters ();
+
+  Simulator::Schedule (m_dumpTimeout, 
+    &OpenFlowEpcController::DumpGbrStatistics, this);
 }
 
 void
@@ -680,18 +693,6 @@ OpenFlowEpcController::ResetAppStatistics (Ptr<Application> app)
     {
       DynamicCast<HttpClient> (app)->ResetQosStats ();
     }
-}
-
-void
-OpenFlowEpcController::IncreaseGbrRequest ()
-{
-  m_gbrBearers++;
-}
-
-void
-OpenFlowEpcController::IncreaseGbrBlocks ()
-{
-  m_gbrBlocks++;
 }
 
 Ipv4Address 
