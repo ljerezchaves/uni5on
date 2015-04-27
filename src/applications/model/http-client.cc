@@ -73,9 +73,10 @@ HttpClient::HttpClient ()
 
   // The above model provides a lot of reading times < 1sec, which is not soo
   // good for simulations in LTE EPC + SDN scenarios. So, we are incresing the
-  // reading time by a some uniform random value in [1,10] secs.
+  // reading time by a some uniform random value in [2,10] secs.
+  // Note: this forces the app to wait at least 2 seconds before (re)starting
   m_readingTimeAdjust = CreateObject<UniformRandomVariable> ();
-  m_readingTimeAdjust->SetAttribute ("Min", DoubleValue (1.));
+  m_readingTimeAdjust->SetAttribute ("Min", DoubleValue (2.));
   m_readingTimeAdjust->SetAttribute ("Max", DoubleValue (10.));
 }
 
@@ -321,6 +322,7 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   double randomSeconds = m_readingTimeStream->GetValue ();
   double adjustSeconds = m_readingTimeAdjust->GetValue ();
   Time readingTime = Seconds (randomSeconds + adjustSeconds);
+  NS_ASSERT_MSG (readingTime > Seconds (0), "Invalid negative time value.");
   if (readingTime > Seconds (10000))
     {
       //Limiting reading time to 10000 seconds according to reference paper.

@@ -374,10 +374,14 @@ OpenFlowEpcController::NotifyAppStop (Ptr<Application> app)
       rInfo->m_isActive = false;
       rInfo->m_isInstalled = false;
       GbrBearerRelease (rInfo);
-      // No need to remove the rules from switch. Wait for idle timeout.
+      // We won't remove the rules from switch, as they will expired due idle
+      // timeout. Doing this we avoid some control overhead and allow 'in
+      // transit' packets to reach the destination.
     }
 
-  DumpAppStatistics (app);
+  // Wait for delayed packets before dumping QoS statistcs.
+  Simulator::Schedule (Seconds (1), 
+    &OpenFlowEpcController::DumpAppStatistics, this, app);
   return true;
 }
 
