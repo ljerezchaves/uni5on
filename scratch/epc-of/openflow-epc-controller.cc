@@ -377,9 +377,7 @@ OpenFlowEpcController::NotifyAppStop (Ptr<Application> app)
       // No need to remove the rules from switch. Wait for idle timeout.
     }
 
-  // Wait for delayed packets before dumping QoS statistcs.
-  Simulator::Schedule (Seconds (1), 
-    &OpenFlowEpcController::DumpAppStatistics, this, app);
+  DumpAppStatistics (app);
   return true;
 }
 
@@ -907,8 +905,6 @@ OpenFlowEpcController::GetQosStatsFromTeid (uint32_t teid, bool isDown)
       // Create and insert the structure
       QosStatsPair_t pair (Create<QosStatsCalculator> (), 
                            Create<QosStatsCalculator> ());
-      pair.first->SetPacketWindowSize (8);
-      pair.second->SetPacketWindowSize (8);
       std::pair <uint32_t, QosStatsPair_t> entry (teid, pair);
       std::pair <TeidQosMap_t::iterator, bool> ret;
       ret = m_qosStats.insert (entry);
