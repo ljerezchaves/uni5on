@@ -234,7 +234,7 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo);
   
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
-  Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
+  Ptr<ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
   uint32_t teid = rInfo->m_teid;
   
   ringInfo->ResetPaths ();    // Reset to short paths
@@ -246,9 +246,9 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
       rInfo->m_enbIdx, RingRoutingInfo::InvertPath (ringInfo->m_downPath));
 
   // Reserving downlink resources
-  if (gbrInfo->m_hasDown)
+  if (reserveInfo->m_hasDown)
     {
-      DataRate request = gbrInfo->m_downDataRate;
+      DataRate request = reserveInfo->m_downDataRate;
       NS_LOG_DEBUG (teid << ": downlink request: " << request);
 
       switch (m_strategy) {
@@ -329,9 +329,9 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
     }
 
   // Reserving uplink resources
-  if (gbrInfo->m_hasUp)
+  if (reserveInfo->m_hasUp)
     {
-      DataRate request = gbrInfo->m_upDataRate;
+      DataRate request = reserveInfo->m_upDataRate;
       NS_LOG_DEBUG (teid << ": uplink request: " << request);
  
       switch (m_strategy) {
@@ -346,10 +346,10 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
             else
               {
                 NS_LOG_WARN (teid << ": no resources. Block!");
-                if (gbrInfo->m_hasDown)
+                if (reserveInfo->m_hasDown)
                   {
                     ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
-                        ringInfo->m_downPath, gbrInfo->m_downDataRate);
+                        ringInfo->m_downPath, reserveInfo->m_downDataRate);
                   }
                 return false;
               }
@@ -375,10 +375,10 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
             else
               {
                 NS_LOG_WARN (teid << ": no resources. Block!");
-                if (gbrInfo->m_hasDown)
+                if (reserveInfo->m_hasDown)
                   {
                     ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
-                        ringInfo->m_downPath, gbrInfo->m_downDataRate);
+                        ringInfo->m_downPath, reserveInfo->m_downDataRate);
                   }
                 return false;
               }
@@ -405,10 +405,10 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
             else
               {
                 NS_LOG_WARN (teid << ": no resources. Block!");
-                if (gbrInfo->m_hasDown)
+                if (reserveInfo->m_hasDown)
                   {
                     ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
-                        ringInfo->m_downPath, gbrInfo->m_downDataRate);
+                        ringInfo->m_downPath, reserveInfo->m_downDataRate);
                   }
                 return false;
               }
@@ -420,24 +420,24 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
           }
       }
     }
-  gbrInfo->m_isReserved = true;
+  reserveInfo->m_isReserved = true;
   return true;
 }
 
 bool
 RingController::GbrBearerRelease (Ptr<RoutingInfo> rInfo)
 {
-  Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
-  if (gbrInfo && gbrInfo->m_isReserved)
+  Ptr<ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
+  if (reserveInfo && reserveInfo->m_isReserved)
     {
       Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
       NS_ASSERT_MSG (ringInfo, "No ringInfo for bearer release.");
 
-      gbrInfo->m_isReserved = false;
+      reserveInfo->m_isReserved = false;
       ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, ringInfo->m_downPath,
-          gbrInfo->m_downDataRate);
+          reserveInfo->m_downDataRate);
       ReleaseBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, ringInfo->m_upPath,
-          gbrInfo->m_upDataRate);
+          reserveInfo->m_upDataRate);
     }
   return true;
 }

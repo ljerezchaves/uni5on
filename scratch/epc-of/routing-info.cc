@@ -221,7 +221,7 @@ MeterInfo::GetDelCmd ()
 
 
 // ------------------------------------------------------------------------ //
-GbrInfo::GbrInfo ()
+ReserveInfo::ReserveInfo ()
   : m_isReserved (false),
     m_hasDown (false),
     m_hasUp (false),
@@ -230,7 +230,7 @@ GbrInfo::GbrInfo ()
   NS_LOG_FUNCTION (this);
 }
 
-GbrInfo::GbrInfo (Ptr<RoutingInfo> rInfo)
+ReserveInfo::ReserveInfo (Ptr<RoutingInfo> rInfo)
   : m_isReserved (false),
     m_hasDown (false),
     m_hasUp (false),
@@ -239,30 +239,30 @@ GbrInfo::GbrInfo (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this);
 }
 
-GbrInfo::~GbrInfo ()
+ReserveInfo::~ReserveInfo ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId 
-GbrInfo::GetTypeId (void)
+ReserveInfo::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::GbrInfo")
+  static TypeId tid = TypeId ("ns3::ReserveInfo")
     .SetParent<Object> ()
-    .AddConstructor<GbrInfo> ()
+    .AddConstructor<ReserveInfo> ()
   ;
   return tid;
 }
 
 void
-GbrInfo::DoDispose ()
+ReserveInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_rInfo = 0;
 }
 
 Ptr<RoutingInfo>
-GbrInfo::GetRoutingInfo ()
+ReserveInfo::GetRoutingInfo ()
 {
   return m_rInfo;
 }

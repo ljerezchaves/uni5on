@@ -184,21 +184,21 @@ private:
  * \ingroup epcof
  * Metadata associated to GBR beares.
  */
-class GbrInfo : public Object
+class ReserveInfo : public Object
 {
   friend class OpenFlowEpcController;
   friend class RingController;
 
 public:
-  GbrInfo ();          //!< Default constructor
-  virtual ~GbrInfo (); //!< Dummy destructor, see DoDipose
+  ReserveInfo ();          //!< Default constructor
+  virtual ~ReserveInfo (); //!< Dummy destructor, see DoDipose
  
   /** 
    * Complete constructor.
    * \param rInfo RoutingInfo pointer. 
-   * \attention This GbrInfo object must be aggregated to rInfo.
+   * \attention This ReserveInfo object must be aggregated to rInfo.
    */
-  GbrInfo (Ptr<RoutingInfo> rInfo);
+  ReserveInfo (Ptr<RoutingInfo> rInfo);
   
   /**
    * Register this type.
@@ -214,11 +214,11 @@ public:
 
 private:
   uint32_t m_teid;          //!< GTP TEID
-  bool     m_isReserved;    //!< True when the resources are reserved
-  bool     m_hasDown;       //!< True for downlink gbr
-  bool     m_hasUp;         //!< True for uplink gbr
-  DataRate m_downDataRate;  //!< Downlink guaranteed data rate
-  DataRate m_upDataRate;    //!< Uplink guaranteed data rate
+  bool     m_isReserved;    //!< True when resources are reserved
+  bool     m_hasDown;       //!< True for downlink reserve
+  bool     m_hasUp;         //!< True for uplink reserve
+  DataRate m_downDataRate;  //!< Downlink reserved data rate
+  DataRate m_upDataRate;    //!< Uplink reserved data rate
   Ptr<RoutingInfo> m_rInfo; //!< Routing information
 };
 

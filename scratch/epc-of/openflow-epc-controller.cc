@@ -296,22 +296,22 @@ OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
           rInfo->AggregateObject (meterInfo);
         }
   
-      // Create (if necessary) the GBR metadata
-      if (rInfo->IsGbr ())
+      // Create (if necessary) the reserve metadata
+      if (gbrQoS.gbrDl || gbrQoS.gbrUl)  
         {
-          Ptr<GbrInfo> gbrInfo = CreateObject<GbrInfo> (rInfo);
-          gbrInfo->m_teid = teid;
+          Ptr<ReserveInfo> reserveInfo = CreateObject<ReserveInfo> (rInfo);
+          reserveInfo->m_teid = teid;
           if (gbrQoS.gbrDl)
             {
-              gbrInfo->m_hasDown = true;
-              gbrInfo->m_downDataRate = DataRate (gbrQoS.gbrDl);
+              reserveInfo->m_hasDown = true;
+              reserveInfo->m_downDataRate = DataRate (gbrQoS.gbrDl);
             }
           if (gbrQoS.gbrUl)
             {
-              gbrInfo->m_hasUp = true;
-              gbrInfo->m_upDataRate = DataRate (gbrQoS.gbrUl);
+              reserveInfo->m_hasUp = true;
+              reserveInfo->m_upDataRate = DataRate (gbrQoS.gbrUl);
             }
-          rInfo->AggregateObject (gbrInfo);
+          rInfo->AggregateObject (reserveInfo);
         }
     }
 
@@ -333,6 +333,7 @@ OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
       // This happens with VoIP application, which are installed in pairs and,
       // when the second application starts, the first one has already
       // configured the routing for this bearer and set the active flag.
+      // FIXME: After refactoring Voip app, I'm not sure if this case is valid.
       NS_ASSERT_MSG (rInfo->m_isInstalled, "Bearer should be installed.");
       NS_LOG_DEBUG ("Routing path for " << teid << " is already installed.");
       return true;
