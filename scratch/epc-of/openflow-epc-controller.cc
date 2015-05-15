@@ -354,16 +354,10 @@ OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
           m_bearerStats->NotifyBlockedRequest (rInfo);
           return false;
         }
-      else
-        {
-          m_bearerStats->NotifyAcceptedRequest (rInfo);
-        }
     }
-  else
-    {
-      // Non-GBR bearers are always accepted by network.
-      m_bearerStats->NotifyAcceptedRequest (rInfo);
-    }
+  // Non-GBR or GBR bearers with available resources are always accepted by
+  // network in current implementation.
+  m_bearerStats->NotifyAcceptedRequest (rInfo);
     
   // Everything is ok! Let's activate and install this bearer.
   rInfo->m_isActive = true;
