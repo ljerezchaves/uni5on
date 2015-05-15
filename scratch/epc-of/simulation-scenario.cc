@@ -283,6 +283,16 @@ SimulationScenario::EnablePingTraffic ()
   clientApps.Start (Seconds (m_rngStart->GetValue ()));
 }
 
+
+/* NOTE about GbrQosInformation:
+ * 1) The Maximum Bit Rate field is used by controller to install meter rules.
+ *    When this value is left to 0, no meter rules will be installed.
+ * 2) The Guaranteed Bit Rate field is used by the controller to reserve the
+ *    requested bandwidth in OpenFlow network. This can be used even for
+ *    Non-GBR bearers (as done in HTTP traffic), allowing resource reservation
+ *    but without guarantee.  When left to 0, no resources are reserved. 
+ */
+
 void
 SimulationScenario::EnableHttpTraffic ()
 {
@@ -341,8 +351,10 @@ SimulationScenario::EnableHttpTraffic ()
 
       // Dedicated Non-GBR EPS bearer (QCI 8)
       GbrQosInformation qos;
-      qos.mbrDl = 524288;     // Up to 512 Kbps downlink
-      qos.mbrUl = 131072;     // Up to 128 Kbps uplink 
+      qos.gbrDl = 131072;     // Reserving 128 Kbps in downlink
+      qos.gbrUl = 65536;      // Reserving 64 Kbps in uplink
+      qos.mbrDl = 524288;     // Max of 512 Kbps in downlink
+      qos.mbrUl = 131072;     // Max of 128 Kbps in uplink 
       EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
@@ -440,12 +452,11 @@ SimulationScenario::EnableVoipTraffic ()
  
       // Dedicated GBR EPS bearer (QCI 1)
       GbrQosInformation qos;
-      // 2 bytes from compressed UDP/IP/RTP + 58 bytes from GTPU/UDP/IP/ETH
+      // Reserving bandwidth
+      // (2 bytes from compressed UDP/IP/RTP + 58 bytes from GTPU/UDP/IP/ETH)
       qos.gbrDl = 8 * (pktSize + 2 + 58) / pktInterval;
       qos.gbrUl = qos.gbrDl;
-      // No meter rules for VoIP traffic
-      // qos.mbrDl = 1.1 * qos.gbrDl; // (10 % more)
-      // qos.mbrUl = qos.mbrDl;
+      // No maximum bandwidth (nor meter rules) for VoIP traffic
       EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
@@ -530,8 +541,9 @@ SimulationScenario::EnableVideoTraffic ()
  
       // Dedicated GBR EPS bearer (QCI 4).
       GbrQosInformation qos;
+      // Reserving bandwidth for downlink video
       qos.gbrDl = 1.5 * m_avgBitRate [videoIdx];  // Avg + 50%
-      // Set the meter in average between gbr and maxBitRate
+      // Set the maximun (meter) in average between gbr and maxBitRate
       qos.mbrDl = (qos.gbrDl + m_maxBitRate [videoIdx]) / 2;
       EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
