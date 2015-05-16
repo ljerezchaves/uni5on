@@ -129,7 +129,7 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
   rInfo->m_priority++;
 
   // flow-mod flags OFPFF_SEND_FLOW_REM and OFPFF_CHECK_OVERLAP, used to notify
-  // the controller when a flow entry expires and to avoid overlaping rules.
+  // the controller when a flow entry expires and to avoid overlapping rules.
   std::string flagsStr ("0x0003");
 
   // Printing the cookie and buffer values in dpctl string format
@@ -234,18 +234,24 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo);
   
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
-  Ptr<ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
-  uint32_t teid = rInfo->m_teid;
+  ringInfo->ResetPaths ();    // Reseting to short paths
   
-  if (!rInfo->IsGbr ())
+  if (rInfo->m_isDefault)
     {
-      return true; 
-      // TODO: implementar logica para reservar recursos (GBR e Non-GBR)
+      // We always accept default bearers.
+      return true;
     }
 
-  ringInfo->ResetPaths ();    // Reset to short paths
+  Ptr<ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
+  if (!reserveInfo)
+    {
+      // For bearers without resource reservation requests (probably a 
+      // Non-GBR one), let's accept it, without guarantees.
+      return true;
+    }
  
   // Getting available bandwidth in both paths
+  uint32_t teid = rInfo->m_teid;
   DataRate shortPathBw = GetAvailableBandwidth (rInfo->m_sgwIdx, 
       rInfo->m_enbIdx, ringInfo->m_downPath);
   DataRate longPathBw = GetAvailableBandwidth (rInfo->m_sgwIdx, 
@@ -310,7 +316,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
                 ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
                                   ringInfo->m_downPath, request);
               }
-            // No available bandwitdh in short path. Let's check the long path.
+            // No available bandwidth in short path. Let's check the long path.
             else if (longPathBw >= request)
               {
                 // Let's invert the path and reserve the bandwidth
@@ -399,7 +405,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
                 ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
                                   ringInfo->m_upPath, request);
               }
-            // No available bandwitdh in short path. Let's check the long path.
+            // No available bandwidth in short path. Let's check the long path.
             else if (longPathBw >= request)
               {
                 // Let's invert the path and reserve it 
@@ -455,7 +461,7 @@ RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
   if (ringInfo == 0)
     {
       // This is the first time in simulation we are querying ring information
-      // for this bearer. Let's create and aggregate it's ring routing
+      // for this bearer. Let's create and aggregate its ring routing
       // metadata. Considering the default down path the one with lower hops.
       RingRoutingInfo::RoutingPath downPath = 
           FindShortestPath (rInfo->m_sgwIdx, rInfo->m_enbIdx);
@@ -520,13 +526,13 @@ RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx,
   NS_LOG_FUNCTION (this << srcSwitchIdx << dstSwitchIdx << routingPath);
   NS_ASSERT (srcSwitchIdx != dstSwitchIdx);
   
-  // Get bandwitdh for first hop
+  // Get bandwidth for first hop
   uint16_t current = srcSwitchIdx;
   uint16_t next = NextSwitchIndex (current, routingPath);
   Ptr<ConnectionInfo> conn = GetConnectionInfo (current, next);
   DataRate bandwidth = conn->GetAvailableDataRate (m_bwFactor);
 
-  // Repeat the proccess for next hops
+  // Repeat the process for next hops
   while (next != dstSwitchIdx)
     {
       current = next;
