@@ -113,5 +113,27 @@ private:
 };
 
 
+// ------------------------------------------------------------------------ //
+/**
+ * \ingroup epcof
+ * 
+ * This class stores bearer request information. 
+ */
+class BearerRequestStats : public SimpleRefCount<BearerRequestStats>
+{
+public:
+  BearerRequestStats ();  //!< Default constructor
+  virtual ~BearerRequestStats (); //!< Default destructor
+  
+  /** 
+   * TracedCallback signature for BearerRequestStats.
+   * \param stats The statistics.
+   */
+  typedef void (* BrqStatsCallback)(Ptr<const BearerRequestStats> stats);
+
+private:
+};
+
+
 } // namespace ns3
 #endif /* EPCOF_STATS_CALCULATOR_H */

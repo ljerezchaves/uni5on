@@ -82,9 +82,13 @@ OpenFlowEpcController::GetTypeId (void)
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_swtTrace),
                      "ns3::OpenFlowEpcController::SwtTracedCallback")
     .AddTraceSource ("BwdStats",
-                     "The network bandwidth usage.",
+                     "The network bandwidth usage trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_bwdTrace),
                      "ns3::BandwidthStats::BwdTracedCallback")
+    .AddTraceSource ("BrqStats",
+                     "The bearer request trace source.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_brqTrace),
+                     "ns3::BearerRequestStats::BrqTracedCallback")
   ;
   return tid;
 }

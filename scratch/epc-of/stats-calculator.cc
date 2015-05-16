@@ -171,4 +171,15 @@ BandwidthStats::~BandwidthStats ()
   NS_LOG_FUNCTION (this);
 }
 
+
+// ------------------------------------------------------------------------ //
+BearerRequestStats::BearerRequestStats ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+BearerRequestStats::~BearerRequestStats ()
+{
+  NS_LOG_FUNCTION (this);
+}
 } // Namespace ns3

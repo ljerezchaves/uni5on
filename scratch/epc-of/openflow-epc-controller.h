@@ -474,8 +474,11 @@ private:
   /** The switch flow table rules trace source, fired at DumpSwtStatistics. */
   TracedCallback<std::vector<uint32_t> > m_swtTrace;
 
-  /** The network bandwidth usage, fired at DumpBwdStatistics. */
+  /** The network bandwidth usage trace source, fired at DumpBwdStatistics. */
   TracedCallback<Ptr<const BandwidthStats> > m_bwdTrace;
+  
+  /** The bearer request statistics trace source, fired at TODO ??. */
+  TracedCallback<Ptr<const BearerRequestStats> > m_brqTrace;
 
   
   /** A pair of switches index */

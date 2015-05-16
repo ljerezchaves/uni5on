@@ -146,6 +146,12 @@ private:
   void ReportBwdStats (Ptr<const BandwidthStats> stats);
 
   /**
+   * Save bearer request statistics in file.
+   * \see ns3::BearerRequestStats::BrqTracedCallback for parameters.
+   */
+  void ReportBrqStats (Ptr<const BearerRequestStats> stats);
+
+  /**
    * Parse topology description file.  
    * Topology file columns (indexes starts at 0):
    * eNB index | # of UEs at this eNB | OpenFlow switch index
@@ -190,6 +196,7 @@ private:
   std::string           m_gbrStatsFilename;   //!< GbrStats filename
   std::string           m_webStatsFilename;   //!< WebStats filename
   std::string           m_bwdStatsFilename;   //!< BwdStats filename
+  std::string           m_brqStatsFilename;   //!< BrqStats filename
   std::string           m_topoFilename;       //!< Topology filename
   std::string           m_switchLog;          //!< Switches log level
   std::string           m_commonPrefix;       //!< Common prefix for filenames
