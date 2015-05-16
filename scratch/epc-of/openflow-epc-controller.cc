@@ -247,7 +247,13 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   rInfo->m_bearer = defaultBearer;
   SaveTeidRoutingInfo (rInfo);
 
+  // For default bearer, no Meter nor Reserver metadata.
+  // For logic consistence, let's check for available resources.
+  bool accepted = BearerRequest (rInfo);
+  NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
+  
   // Install rules for default bearer
+  m_bearerStats->NotifyAcceptedRequest (rInfo);
   if (!InstallTeidRouting (rInfo))
     {
       NS_LOG_ERROR ("TEID rule installation failed!");
