@@ -180,7 +180,7 @@ BearerRequestStats::BearerRequestStats ()
 
 BearerRequestStats::BearerRequestStats (uint32_t teid, bool accepted, 
                                         uint16_t sgwIdx, uint16_t enbIdx, 
-                                        DataRate downRate, DataRate upRate);
+                                        DataRate downRate, DataRate upRate)
   : m_teid (teid),
     m_accepted (accepted),
     m_sgwIdx (sgwIdx),
