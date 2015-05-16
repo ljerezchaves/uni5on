@@ -661,25 +661,23 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
       // Get the relative UDP server for this client
       Ptr<VideoClient> videoApp = DynamicCast<VideoClient> (app);
       appStats = videoApp->GetServerApp ()->GetQosStats ();
-      std::ostringstream desc;
-      desc << "Video [" << rInfo->m_sgwIdx << "-->" << rInfo->m_enbIdx << "]";
       epcStats = GetQosStatsFromTeid (teid, true);  // downlink
 
       // Tracing application and EPC statistics
-      m_appTrace (desc.str (), teid, appStats);
-      m_epcTrace (desc.str (), teid, epcStats);
+      std::string desc = GetAppDescription (app, rInfo); 
+      m_appTrace (desc, teid, appStats);
+      m_epcTrace (desc, teid, epcStats);
     }
   else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
     {
       Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
       appStats = httpApp->GetQosStats ();
-      std::ostringstream desc;
-      desc << "HTTP  [" << rInfo->m_sgwIdx << "<->" << rInfo->m_enbIdx << "]";
       epcStats = GetQosStatsFromTeid (teid, true);  // downlink
 
       // Tracing application and EPC statistics
-      m_appTrace (desc.str (), teid, appStats);
-      m_epcTrace (desc.str (), teid, epcStats);
+      std::string desc = GetAppDescription (app, rInfo); 
+      m_appTrace (desc, teid, appStats);
+      m_epcTrace (desc, teid, epcStats);
     }
 }
 
@@ -708,6 +706,34 @@ OpenFlowEpcController::ResetAppStatistics (Ptr<Application> app)
     {
       DynamicCast<HttpClient> (app)->ResetQosStats ();
     }
+}
+
+std::string 
+OpenFlowEpcController::GetAppDescription (Ptr<const Application> app, 
+                                          Ptr<const RoutingInfo> rInfo)
+{
+  std::ostringstream desc;
+  if (rInfo->m_isDefault)
+    {
+      desc << "Deft [" << rInfo->m_sgwIdx << "<->" << rInfo->m_enbIdx << "]";
+    }
+  else if (!app)
+    {
+      desc << "No app";
+    }
+  else if (app->GetInstanceTypeId () == VoipClient::GetTypeId ())
+    {
+      desc << "VoIP  [" << rInfo->m_sgwIdx << "<->" << rInfo->m_enbIdx << "]";
+    }
+  else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
+    {
+      desc << "Video [" << rInfo->m_sgwIdx << "-->" << rInfo->m_enbIdx << "]";
+    }
+  else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
+    {
+      desc << "HTTP  [" << rInfo->m_sgwIdx << "<->" << rInfo->m_enbIdx << "]";
+    }
+  return desc.str ();
 }
 
 Ipv4Address 

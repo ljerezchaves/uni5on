@@ -231,6 +231,7 @@ protected:
    * Process the bearer resource and bandwidth allocation.
    * \param rInfo The routing information to process.
    * \return True when the request is satisfied.
+   * \internal Don't forget to fire m_brqTrace trace source before returning;
    */
   virtual bool BearerRequest (Ptr<RoutingInfo> rInfo) = 0;
 
@@ -339,7 +340,16 @@ protected:
    * \param app The application pointer.
    */
   void ResetAppStatistics (Ptr<Application> app);
- 
+
+  /**
+   * Create the description string for this application.
+   * \param app The application pointer.
+   * \param rInfo RoutingInfo for this bearer.
+   * \return The description string.
+   */
+  std::string GetAppDescription (Ptr<const Application> app, 
+                                 Ptr<const RoutingInfo> rInfo);
+
   /**
    * Extract an IPv4 address from packet match.
    * \param oxm_of The OXM_IF_* IPv4 field.
@@ -347,11 +357,14 @@ protected:
    * \return The IPv4 address.
    */
   Ipv4Address ExtractIpv4Address (uint32_t oxm_of, ofl_match* match);
-
+  
   // Inherited from OFSwitch13Controller
   virtual void ConnectionStarted (SwitchInfo);
   virtual ofl_err HandlePacketIn (ofl_msg_packet_in*, SwitchInfo, uint32_t);
   virtual ofl_err HandleFlowRemoved (ofl_msg_flow_removed*, SwitchInfo, uint32_t);
+
+  /** The bearer request statistics trace source, fired at BearerRequest. */
+  TracedCallback<Ptr<const BearerRequestStats> > m_brqTrace;
 
   /** Timeout values */
   //\{ 
@@ -476,9 +489,6 @@ private:
 
   /** The network bandwidth usage trace source, fired at DumpBwdStatistics. */
   TracedCallback<Ptr<const BandwidthStats> > m_bwdTrace;
-  
-  /** The bearer request statistics trace source, fired at TODO ??. */
-  TracedCallback<Ptr<const BearerRequestStats> > m_brqTrace;
 
   
   /** A pair of switches index */

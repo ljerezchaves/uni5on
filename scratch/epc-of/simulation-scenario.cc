@@ -952,7 +952,13 @@ SimulationScenario::ReportBrqStats (Ptr<const BearerRequestStats> stats)
         }
       firstWrite = false;
       outFile << left 
-              << setw (12) << "Time (s)" 
+              << setw (12) << "Time (s)"
+              << setw (17) << "Description"
+              << setw (6)  << "TEID"
+              << setw (10) << "Accepted?"
+              << setw (12) << "Down (kbps)"
+              << setw (10) << "Up (kbps)"
+              << setw (40) << "Routing pahts"
               << std::endl;
     }
   else
@@ -967,6 +973,12 @@ SimulationScenario::ReportBrqStats (Ptr<const BearerRequestStats> stats)
 
   outFile << left
           << setw (12) << Simulator::Now ().GetSeconds ()
+          << setw (17) << stats->GetDescription ()
+          << setw (6)  << stats->GetTeid ()
+          << setw (10) << (stats->IsAccepted () ? "yes" : "no")
+          << setw (12) << (double)(stats->GetDownDataRate ().GetBitRate ()) / 1024
+          << setw (10) << (double)(stats->GetUpDataRate ().GetBitRate ()) / 1024
+          << setw (40) << stats->GetRoutingPaths ()
           << std::endl;
   outFile.close ();
 }
