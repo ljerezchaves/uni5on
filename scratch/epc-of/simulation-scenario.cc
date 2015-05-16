@@ -114,6 +114,11 @@ SimulationScenario::GetTypeId (void)
                    StringValue ("web_stats.txt"),
                    MakeStringAccessor (&SimulationScenario::m_webStatsFilename),
                    MakeStringChecker ())
+    .AddAttribute ("BwdStatsFilename",
+                   "Filename for network bandwidth statistics.",
+                   StringValue ("bwd_stats.txt"),
+                   MakeStringAccessor (&SimulationScenario::m_bwdStatsFilename),
+                   MakeStringChecker ())
     .AddAttribute ("TopoFilename",
                    "Filename for scenario topology description.",
                    StringValue ("topology.txt"),
@@ -234,6 +239,8 @@ SimulationScenario::BuildRingTopology ()
       MakeCallback (&SimulationScenario::ReportGbrStats, this));
   m_controller->TraceConnectWithoutContext ("SwtStats", 
       MakeCallback (&SimulationScenario::ReportSwtStats, this));
+  m_controller->TraceConnectWithoutContext ("BwdStats", 
+      MakeCallback (&SimulationScenario::ReportBwdStats, this));
   m_webNetwork->TraceConnectWithoutContext ("WebStats",
       MakeCallback (&SimulationScenario::ReportWebStats, this));
 
@@ -268,6 +275,7 @@ SimulationScenario::SetCommonPrefix (std::string prefix)
   m_gbrStatsFilename = m_commonPrefix + m_gbrStatsFilename;
   m_webStatsFilename = m_commonPrefix + m_webStatsFilename;
   m_swtStatsFilename = m_commonPrefix + m_swtStatsFilename;
+  m_bwdStatsFilename = m_commonPrefix + m_bwdStatsFilename;
   m_topoFilename     = m_commonPrefix + m_topoFilename;
 }
 
@@ -882,6 +890,43 @@ SimulationScenario::ReportWebStats (Ptr<const Queue> downlink,
           << std::endl;
   outFile.close ();
 }
+
+void
+SimulationScenario::ReportBwdStats (Ptr<const BandwidthStatsCalculator> stats)
+{
+  NS_LOG_FUNCTION (this);
+  static bool firstWrite = true;
+
+  std::ofstream outFile;
+  if (firstWrite == true)
+    {
+      outFile.open (m_bwdStatsFilename.c_str ());
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_bwdStatsFilename);
+          return;
+        }
+      firstWrite = false;
+      outFile << left 
+              << setw (12) << "Time (s)" 
+              << std::endl;
+    }
+  else
+    {
+      outFile.open (m_bwdStatsFilename.c_str (), std::ios_base::app);
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << m_bwdStatsFilename);
+          return;
+        }
+    }
+
+  outFile << left
+          << setw (12) << Simulator::Now ().GetSeconds ()
+          << std::endl;
+  outFile.close ();
+}
+
 
 bool
 SimulationScenario::ParseTopology ()

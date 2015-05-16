@@ -159,4 +159,23 @@ BearerStatsCalculator::GetTotalBlocked (void) const
   return GetNonGbrBlocked () + GetGbrBlocked ();
 }
 
+
+// ------------------------------------------------------------------------ //
+BandwidthStatsCalculator::BandwidthStatsCalculator ()
+  : m_lastResetTime (Simulator::Now ())
+{
+  NS_LOG_FUNCTION (this);
+}
+
+BandwidthStatsCalculator::~BandwidthStatsCalculator ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+void
+BandwidthStatsCalculator::ResetCounters ()
+{
+  m_lastResetTime = Simulator::Now ();
+}
+
 } // Namespace ns3

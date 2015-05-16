@@ -90,5 +90,34 @@ private:
   Time              m_lastResetTime;    //!< Last reset time
 };
 
+
+// ------------------------------------------------------------------------ //
+/**
+ * \ingroup epcof
+ * 
+ * This class monitors current bandwidth usage in OpenFlow network. 
+ */
+class BandwidthStatsCalculator : public SimpleRefCount<BandwidthStatsCalculator>
+{
+public:
+  BandwidthStatsCalculator ();  //!< Default constructor
+  virtual ~BandwidthStatsCalculator (); //!< Default destructor
+  
+  /** 
+   * Reset all internal counters. 
+   */
+  void ResetCounters ();
+  
+  /** 
+   * TracedCallback signature for BandwidthStatsCalculator.
+   * \param stats The statistics.
+   */
+  typedef void (* BwdStatsCallback)(Ptr<const BandwidthStatsCalculator> stats);
+
+private:
+  Time              m_lastResetTime;    //!< Last reset time
+};
+
+
 } // namespace ns3
 #endif /* EPCOF_STATS_CALCULATOR_H */

@@ -324,6 +324,11 @@ protected:
   void DumpSwtStatistics ();
 
   /**
+   * Dump network bandwidth usage.
+   */
+  void DumpBwdStatistics ();
+
+  /**
    * Dump application statistics.
    * \param app The application pointer.
    */
@@ -468,6 +473,9 @@ private:
 
   /** The switch flow table rules trace source, fired at DumpSwtStatistics. */
   TracedCallback<std::vector<uint32_t> > m_swtTrace;
+
+  /** The network bandwidth usage, fired at DumpBwdStatistics. */
+  TracedCallback<Ptr<const BandwidthStatsCalculator> > m_bwdTrace;
 
   
   /** A pair of switches index */

@@ -81,6 +81,10 @@ OpenFlowEpcController::GetTypeId (void)
                      "The switch flow table entries trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_swtTrace),
                      "ns3::OpenFlowEpcController::SwtTracedCallback")
+    .AddTraceSource ("BwdStats",
+                     "The network bandwidth usage.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_bwdTrace),
+                     "ns3::BandwidthStatsCalculator::BwdTracedCallback")
   ;
   return tid;
 }
@@ -122,6 +126,8 @@ OpenFlowEpcController::SetDumpTimeout (Time timeout)
     &OpenFlowEpcController::DumpSwtStatistics, this);
   Simulator::Schedule (m_dumpTimeout, 
     &OpenFlowEpcController::DumpGbrStatistics, this);
+  Simulator::Schedule (m_dumpTimeout, 
+    &OpenFlowEpcController::DumpBwdStatistics, this);
 }
 
 void 
@@ -593,6 +599,16 @@ OpenFlowEpcController::DumpSwtStatistics ()
 
   Simulator::Schedule (m_dumpTimeout, 
     &OpenFlowEpcController::DumpSwtStatistics, this);
+}
+
+void
+OpenFlowEpcController::DumpBwdStatistics ()
+{
+  // TODO
+  m_bwdTrace (Create<BandwidthStatsCalculator> ());
+
+  Simulator::Schedule (m_dumpTimeout, 
+    &OpenFlowEpcController::DumpBwdStatistics, this);
 }
 
 void
