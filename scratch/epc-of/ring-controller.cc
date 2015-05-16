@@ -242,7 +242,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   reqStats->m_teid = teid;
   reqStats->m_accepted = false;
   reqStats->m_trafficDesc = GetAppDescription (rInfo->m_app, rInfo);
-  // TODO Set routing path description
+  reqStats->m_routingPaths = "Shortest paths";
     
   if (rInfo->m_isDefault)
     {
@@ -454,9 +454,20 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
       }
     }
 
-  reserveInfo->m_isReserved = true;
+  // Routing path description
   reqStats->m_accepted = true;
+  if (ringInfo->m_isDownInv && ringInfo->m_isUpInv)
+    {
+      reqStats->m_routingPaths = "Inverted paths";
+    }
+  else if (ringInfo->m_isDownInv || ringInfo->m_isUpInv)
+    {
+      reqStats->m_routingPaths = 
+        ringInfo->m_isDownInv ? "Inverted down path" : "Inverted up path";
+    }
   m_brqTrace (reqStats);
+  
+  reserveInfo->m_isReserved = true;
   return true;
 }
 
