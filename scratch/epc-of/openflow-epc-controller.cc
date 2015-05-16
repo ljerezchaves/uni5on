@@ -712,14 +712,16 @@ std::string
 OpenFlowEpcController::GetAppDescription (Ptr<const Application> app, 
                                           Ptr<const RoutingInfo> rInfo)
 {
+  NS_ASSERT_MSG (rInfo, "Invalid rInfo pointer");
+  
   std::ostringstream desc;
   if (rInfo->m_isDefault)
     {
-      desc << "Deft [" << rInfo->m_sgwIdx << "<->" << rInfo->m_enbIdx << "]";
+      desc << "Dflt  [" << rInfo->m_sgwIdx << "---" << rInfo->m_enbIdx << "]";
     }
   else if (!app)
     {
-      desc << "No app";
+      desc << "NoApp [" << rInfo->m_sgwIdx << "---" << rInfo->m_enbIdx << "]";
     }
   else if (app->GetInstanceTypeId () == VoipClient::GetTypeId ())
     {
