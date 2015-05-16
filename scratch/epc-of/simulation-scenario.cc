@@ -352,7 +352,7 @@ SimulationScenario::EnableHttpTraffic ()
       // Dedicated Non-GBR EPS bearer (QCI 8)
       GbrQosInformation qos;
       qos.gbrDl = 131072;     // Reserving 128 Kbps in downlink
-      qos.gbrUl = 65536;      // Reserving 64 Kbps in uplink
+      qos.gbrUl = 32768;      // Reserving 32 Kbps in uplink
       qos.mbrDl = 524288;     // Max of 512 Kbps in downlink
       qos.mbrUl = 131072;     // Max of 128 Kbps in uplink 
       EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
