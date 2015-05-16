@@ -84,7 +84,7 @@ OpenFlowEpcController::GetTypeId (void)
     .AddTraceSource ("BwdStats",
                      "The network bandwidth usage.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_bwdTrace),
-                     "ns3::BandwidthStatsCalculator::BwdTracedCallback")
+                     "ns3::BandwidthStats::BwdTracedCallback")
   ;
   return tid;
 }
@@ -605,7 +605,7 @@ void
 OpenFlowEpcController::DumpBwdStatistics ()
 {
   // TODO
-  m_bwdTrace (Create<BandwidthStatsCalculator> ());
+  m_bwdTrace (Create<BandwidthStats> ());
 
   Simulator::Schedule (m_dumpTimeout, 
     &OpenFlowEpcController::DumpBwdStatistics, this);

@@ -141,9 +141,9 @@ private:
 
   /**
    * Save bandwidth usage in file.
-   * \see ns3::BandwidthStatsCalculator::BwdTracedCallback for parameters.
+   * \see ns3::BandwidthStats::BwdTracedCallback for parameters.
    */
-  void ReportBwdStats (Ptr<const BandwidthStatsCalculator> stats);
+  void ReportBwdStats (Ptr<const BandwidthStats> stats);
 
   /**
    * Parse topology description file.  

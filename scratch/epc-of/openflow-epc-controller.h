@@ -475,7 +475,7 @@ private:
   TracedCallback<std::vector<uint32_t> > m_swtTrace;
 
   /** The network bandwidth usage, fired at DumpBwdStatistics. */
-  TracedCallback<Ptr<const BandwidthStatsCalculator> > m_bwdTrace;
+  TracedCallback<Ptr<const BandwidthStats> > m_bwdTrace;
 
   
   /** A pair of switches index */

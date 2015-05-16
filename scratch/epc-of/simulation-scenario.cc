@@ -892,7 +892,7 @@ SimulationScenario::ReportWebStats (Ptr<const Queue> downlink,
 }
 
 void
-SimulationScenario::ReportBwdStats (Ptr<const BandwidthStatsCalculator> stats)
+SimulationScenario::ReportBwdStats (Ptr<const BandwidthStats> stats)
 {
   NS_LOG_FUNCTION (this);
   static bool firstWrite = true;
