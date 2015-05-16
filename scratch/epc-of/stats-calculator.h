@@ -32,11 +32,11 @@ namespace ns3 {
  * This class monitors bearer management statistics. It counts the number of
  * bearer requests, including those accepted or blocked by network. 
  */
-class BearerStatsCalculator : public SimpleRefCount<BearerStatsCalculator>
+class AdmissionStatsCalculator : public SimpleRefCount<AdmissionStatsCalculator>
 {
 public:
-  BearerStatsCalculator ();  //!< Default constructor
-  virtual ~BearerStatsCalculator (); //!< Default destructor
+  AdmissionStatsCalculator ();  //!< Default constructor
+  virtual ~AdmissionStatsCalculator (); //!< Default destructor
   
   /** 
    * Reset all internal counters. 
@@ -75,10 +75,10 @@ public:
   //\}
 
   /** 
-   * TracedCallback signature for BearerStatsCalculator.
+   * TracedCallback signature for AdmissionStatsCalculator.
    * \param stats The statistics.
    */
-  typedef void (* GbrStatsCallback)(Ptr<const BearerStatsCalculator> stats);
+  typedef void (* AdmTracedCallback)(Ptr<const AdmissionStatsCalculator> stats);
 
 private:
   uint32_t          m_nonRequests;      //!< number of non-GBR requests

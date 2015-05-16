@@ -329,9 +329,9 @@ protected:
   Ptr<RoutingInfo> GetTeidRoutingInfo (uint32_t teid);
 
   /**
-   * Dump bearer request statistics.
+   * Dump bearer admission control statistics.
    */
-  void DumpGbrStatistics ();
+  void DumpAdmStatistics ();
 
   /**
    * Dump EPC Pgw downlink/uplink traffic statistics.
@@ -500,8 +500,8 @@ private:
   /** The EPC Pgw traffic trace source, fired at DumpPgwStatistics. */
   TracedCallback<DataRate, DataRate> m_pgwTrace;
 
-  /** The GBR block ratio trace source, fired at DumpGbrStatistics. */
-  TracedCallback<Ptr<const BearerStatsCalculator> > m_gbrTrace;
+  /** The GBR block ratio trace source, fired at DumpAdmStatistics. */
+  TracedCallback<Ptr<const AdmissionStatsCalculator> > m_admTrace;
 
   /** The switch flow table rules trace source, fired at DumpSwtStatistics. */
   TracedCallback<std::vector<uint32_t> > m_swtTrace;
@@ -543,7 +543,7 @@ private:
   uint32_t          m_pgwDownBytes;     //!< Pgw traffic downlink bytes.
   uint32_t          m_pgwUpBytes;       //!< Pgw traffic uplink bytes.
   
-  Ptr<BearerStatsCalculator> m_bearerStats;  //!< Bearer statistics. 
+  Ptr<AdmissionStatsCalculator> m_admStats;  //!< Admission control statistics. 
   Ptr<OpenFlowEpcNetwork> m_ofNetwork;  //!< Pointer to OpenFlow network.
 };
 

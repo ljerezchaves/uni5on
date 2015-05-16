@@ -43,7 +43,7 @@ OpenFlowEpcController::OpenFlowEpcController ()
     m_ofNetwork (0)
 {
   NS_LOG_FUNCTION (this);
-  m_bearerStats = Create<BearerStatsCalculator> ();
+  m_admStats = Create<AdmissionStatsCalculator> ();
 }
 
 OpenFlowEpcController::~OpenFlowEpcController ()
@@ -73,10 +73,10 @@ OpenFlowEpcController::GetTypeId (void)
                      "EPC Pgw traffic trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_pgwTrace),
                      "ns3::OpenFlowEpcController::PgwTracedCallback")
-    .AddTraceSource ("GbrStats",
-                     "The GBR block ratio trace source.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_gbrTrace),
-                     "ns3::OpenFlowEpcController::GbrTracedCallback")
+    .AddTraceSource ("AdmStats",
+                     "The bearer admission control trace source.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_admTrace),
+                     "ns3::AdmissionStatsCalculator::AdmTracedCallback")
     .AddTraceSource ("SwtStats",
                      "The switch flow table entries trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_swtTrace),
@@ -104,7 +104,7 @@ OpenFlowEpcController::DoDispose ()
   m_contexts.clear ();
   m_routes.clear ();
   m_ofNetwork = 0;
-  m_bearerStats = 0;
+  m_admStats = 0;
 }
 
 const Time
@@ -129,7 +129,7 @@ OpenFlowEpcController::SetDumpTimeout (Time timeout)
   Simulator::Schedule (m_dumpTimeout, 
     &OpenFlowEpcController::DumpSwtStatistics, this);
   Simulator::Schedule (m_dumpTimeout, 
-    &OpenFlowEpcController::DumpGbrStatistics, this);
+    &OpenFlowEpcController::DumpAdmStatistics, this);
   Simulator::Schedule (m_dumpTimeout, 
     &OpenFlowEpcController::DumpBwdStatistics, this);
 }
@@ -253,7 +253,7 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
   
   // Install rules for default bearer
-  m_bearerStats->NotifyAcceptedRequest (rInfo);
+  m_admStats->NotifyAcceptedRequest (rInfo);
   if (!InstallTeidRouting (rInfo))
     {
       NS_LOG_ERROR ("TEID rule installation failed!");
@@ -366,12 +366,12 @@ OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
   bool accepted = BearerRequest (rInfo);
   if (!accepted)
     {
-      m_bearerStats->NotifyBlockedRequest (rInfo);
+      m_admStats->NotifyBlockedRequest (rInfo);
       return false;
     }
   // Everything is ok! Let's activate and install this bearer.
   rInfo->m_isActive = true;
-  m_bearerStats->NotifyAcceptedRequest (rInfo);
+  m_admStats->NotifyAcceptedRequest (rInfo);
   return InstallTeidRouting (rInfo);
 }
 
@@ -573,13 +573,13 @@ OpenFlowEpcController::GetTeidRoutingInfo (uint32_t teid)
 }
 
 void
-OpenFlowEpcController::DumpGbrStatistics ()
+OpenFlowEpcController::DumpAdmStatistics ()
 {
-  m_gbrTrace (m_bearerStats);
-  m_bearerStats->ResetCounters ();
+  m_admTrace (m_admStats);
+  m_admStats->ResetCounters ();
 
   Simulator::Schedule (m_dumpTimeout, 
-    &OpenFlowEpcController::DumpGbrStatistics, this);
+    &OpenFlowEpcController::DumpAdmStatistics, this);
 }
 
 void

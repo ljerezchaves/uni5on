@@ -117,10 +117,10 @@ private:
                        Ptr<const QosStatsCalculator> stats);
 
   /**
-   * Save block ratio statistics in file. 
-   * \see ns3::BearerStatsCalculator::GbrTracedCallback for parameters.
+   * Save bearer admission control statistics in file. 
+   * \see ns3::AdmissionStatsCalculator::AdmTracedCallback for parameters.
    */
-  void ReportGbrStats (Ptr<const BearerStatsCalculator> stats);
+  void ReportAdmStats (Ptr<const AdmissionStatsCalculator> stats);
 
   /**
    * Save packet gateway traffic statistics in file.
@@ -194,7 +194,7 @@ private:
   std::string           m_epcStatsFilename;   //!< EpcStats filename
   std::string           m_pgwStatsFilename;   //!< PgwStats filename
   std::string           m_swtStatsFilename;   //!< SwtStats filename
-  std::string           m_gbrStatsFilename;   //!< GbrStats filename
+  std::string           m_admStatsFilename;   //!< AdmStats filename
   std::string           m_webStatsFilename;   //!< WebStats filename
   std::string           m_bwdStatsFilename;   //!< BwdStats filename
   std::string           m_brqStatsFilename;   //!< BrqStats filename

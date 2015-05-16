@@ -104,10 +104,10 @@ SimulationScenario::GetTypeId (void)
                    StringValue ("swt_stats.txt"),
                    MakeStringAccessor (&SimulationScenario::m_swtStatsFilename),
                    MakeStringChecker ())
-    .AddAttribute ("GbrStatsFilename",
-                   "Filename for bearers resquest/block statistics.",
-                   StringValue ("gbr_stats.txt"),
-                   MakeStringAccessor (&SimulationScenario::m_gbrStatsFilename),
+    .AddAttribute ("AdmStatsFilename",
+                   "Filename for bearer admission control statistics.",
+                   StringValue ("adm_stats.txt"),
+                   MakeStringAccessor (&SimulationScenario::m_admStatsFilename),
                    MakeStringChecker ())
     .AddAttribute ("WebStatsFilename",
                    "Filename for internet queue statistics.",
@@ -240,8 +240,8 @@ SimulationScenario::BuildRingTopology ()
       MakeCallback (&SimulationScenario::ReportEpcStats, this));
   m_controller->TraceConnectWithoutContext ("PgwStats", 
       MakeCallback (&SimulationScenario::ReportPgwStats, this));
-  m_controller->TraceConnectWithoutContext ("GbrStats", 
-      MakeCallback (&SimulationScenario::ReportGbrStats, this));
+  m_controller->TraceConnectWithoutContext ("AdmStats", 
+      MakeCallback (&SimulationScenario::ReportAdmStats, this));
   m_controller->TraceConnectWithoutContext ("SwtStats", 
       MakeCallback (&SimulationScenario::ReportSwtStats, this));
   m_controller->TraceConnectWithoutContext ("BwdStats", 
@@ -279,7 +279,7 @@ SimulationScenario::SetCommonPrefix (std::string prefix)
   m_appStatsFilename = m_commonPrefix + m_appStatsFilename;
   m_epcStatsFilename = m_commonPrefix + m_epcStatsFilename;
   m_pgwStatsFilename = m_commonPrefix + m_pgwStatsFilename;
-  m_gbrStatsFilename = m_commonPrefix + m_gbrStatsFilename;
+  m_admStatsFilename = m_commonPrefix + m_admStatsFilename;
   m_webStatsFilename = m_commonPrefix + m_webStatsFilename;
   m_swtStatsFilename = m_commonPrefix + m_swtStatsFilename;
   m_bwdStatsFilename = m_commonPrefix + m_bwdStatsFilename;
@@ -695,7 +695,7 @@ SimulationScenario::ReportEpcStats (std::string description, uint32_t teid,
 }
 
 void
-SimulationScenario::ReportGbrStats (Ptr<const BearerStatsCalculator> stats)
+SimulationScenario::ReportAdmStats (Ptr<const AdmissionStatsCalculator> stats)
 {
   NS_LOG_FUNCTION (this);
   static bool firstWrite = true;
@@ -703,10 +703,10 @@ SimulationScenario::ReportGbrStats (Ptr<const BearerStatsCalculator> stats)
   std::ofstream outFile;
   if (firstWrite == true)
     {
-      outFile.open (m_gbrStatsFilename.c_str ());
+      outFile.open (m_admStatsFilename.c_str ());
       if (!outFile.is_open ())
         {
-          NS_LOG_ERROR ("Can't open file " << m_gbrStatsFilename);
+          NS_LOG_ERROR ("Can't open file " << m_admStatsFilename);
           return;
         }
       firstWrite = false;
@@ -726,10 +726,10 @@ SimulationScenario::ReportGbrStats (Ptr<const BearerStatsCalculator> stats)
     }
   else
     {
-      outFile.open (m_gbrStatsFilename.c_str (), std::ios_base::app);
+      outFile.open (m_admStatsFilename.c_str (), std::ios_base::app);
       if (!outFile.is_open ())
         {
-          NS_LOG_ERROR ("Can't open file " << m_gbrStatsFilename);
+          NS_LOG_ERROR ("Can't open file " << m_admStatsFilename);
           return;
         }
     }

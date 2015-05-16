@@ -474,6 +474,8 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
 bool
 RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
 {
+  NS_LOG_FUNCTION (this << rInfo);
+
   Ptr<ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
   if (reserveInfo && reserveInfo->m_isReserved)
     {
@@ -486,6 +488,7 @@ RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
       ReleaseBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, ringInfo->m_upPath,
           reserveInfo->m_upDataRate);
     }
+  // TODO Remover meters, quando possível.
   return true;
 }
 
@@ -538,6 +541,8 @@ RingController::CreateSpanningTree ()
 std::vector<BandwidthStats_t>
 RingController::GetBandwidthStats ()
 {
+  NS_LOG_FUNCTION (this);
+  
   std::vector<BandwidthStats_t> list;
   for (uint16_t curr = 0; curr < GetNSwitches (); curr++)
     {

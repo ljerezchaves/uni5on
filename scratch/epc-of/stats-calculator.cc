@@ -26,7 +26,7 @@ namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("StatsCalculator");
 
-BearerStatsCalculator::BearerStatsCalculator ()
+AdmissionStatsCalculator::AdmissionStatsCalculator ()
   : m_nonRequests (0),
     m_nonAccepted (0),
     m_nonBlocked (0),
@@ -38,13 +38,13 @@ BearerStatsCalculator::BearerStatsCalculator ()
   NS_LOG_FUNCTION (this);
 }
 
-BearerStatsCalculator::~BearerStatsCalculator ()
+AdmissionStatsCalculator::~AdmissionStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 void
-BearerStatsCalculator::ResetCounters ()
+AdmissionStatsCalculator::ResetCounters ()
 {
   m_nonRequests = 0;
   m_nonAccepted = 0;
@@ -56,7 +56,7 @@ BearerStatsCalculator::ResetCounters ()
 }
 
 void
-BearerStatsCalculator::NotifyAcceptedRequest (Ptr<const RoutingInfo> rInfo)
+AdmissionStatsCalculator::NotifyAcceptedRequest (Ptr<const RoutingInfo> rInfo)
 {
   if (rInfo->IsGbr ())
     {
@@ -71,7 +71,7 @@ BearerStatsCalculator::NotifyAcceptedRequest (Ptr<const RoutingInfo> rInfo)
 }
 
 void
-BearerStatsCalculator::NotifyBlockedRequest (Ptr<const RoutingInfo> rInfo)
+AdmissionStatsCalculator::NotifyBlockedRequest (Ptr<const RoutingInfo> rInfo)
 {
   if (rInfo->IsGbr ())
     {
@@ -86,75 +86,75 @@ BearerStatsCalculator::NotifyBlockedRequest (Ptr<const RoutingInfo> rInfo)
 }
 
 Time      
-BearerStatsCalculator::GetActiveTime (void) const
+AdmissionStatsCalculator::GetActiveTime (void) const
 {
   return Simulator::Now () - m_lastResetTime;
 }
 
 uint32_t
-BearerStatsCalculator::GetNonGbrRequests (void) const
+AdmissionStatsCalculator::GetNonGbrRequests (void) const
 {
   return m_nonRequests;
 }
 
 uint32_t
-BearerStatsCalculator::GetNonGbrAccepted (void) const
+AdmissionStatsCalculator::GetNonGbrAccepted (void) const
 {
   return m_nonAccepted;
 }
 
 uint32_t
-BearerStatsCalculator::GetNonGbrBlocked (void) const
+AdmissionStatsCalculator::GetNonGbrBlocked (void) const
 {
   return m_nonBlocked;
 }
 
 double
-BearerStatsCalculator::GetNonGbrBlockRatio (void) const
+AdmissionStatsCalculator::GetNonGbrBlockRatio (void) const
 {
   uint32_t req = GetNonGbrRequests ();
   return req ? (double)GetNonGbrBlocked () / req : 0; 
 }
 
 uint32_t
-BearerStatsCalculator::GetGbrRequests (void) const
+AdmissionStatsCalculator::GetGbrRequests (void) const
 {
   return m_gbrRequests;
 }
 
 uint32_t
-BearerStatsCalculator::GetGbrAccepted (void) const
+AdmissionStatsCalculator::GetGbrAccepted (void) const
 {
   return m_gbrAccepted;
 }
 
 uint32_t
-BearerStatsCalculator::GetGbrBlocked (void) const
+AdmissionStatsCalculator::GetGbrBlocked (void) const
 {
   return m_gbrBlocked;
 }
 
 double
-BearerStatsCalculator::GetGbrBlockRatio (void) const
+AdmissionStatsCalculator::GetGbrBlockRatio (void) const
 {
   uint32_t req = GetGbrRequests ();
   return req ? (double)GetGbrBlocked () / req : 0; 
 }
 
 uint32_t
-BearerStatsCalculator::GetTotalRequests (void) const
+AdmissionStatsCalculator::GetTotalRequests (void) const
 {
   return GetNonGbrRequests () + GetGbrRequests ();
 }
 
 uint32_t
-BearerStatsCalculator::GetTotalAccepted (void) const
+AdmissionStatsCalculator::GetTotalAccepted (void) const
 {
   return GetNonGbrAccepted () + GetGbrAccepted ();
 }
 
 uint32_t
-BearerStatsCalculator::GetTotalBlocked (void) const
+AdmissionStatsCalculator::GetTotalBlocked (void) const
 {
   return GetNonGbrBlocked () + GetGbrBlocked ();
 }
