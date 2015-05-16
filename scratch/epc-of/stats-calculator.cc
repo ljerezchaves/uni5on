@@ -161,18 +161,6 @@ BearerStatsCalculator::GetTotalBlocked (void) const
 
 
 // ------------------------------------------------------------------------ //
-BandwidthStats::BandwidthStats ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-BandwidthStats::~BandwidthStats ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-
-// ------------------------------------------------------------------------ //
 BearerRequestStats::BearerRequestStats ()
   : m_accepted (false)
 {

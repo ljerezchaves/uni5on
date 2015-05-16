@@ -95,28 +95,6 @@ private:
 /**
  * \ingroup epcof
  * 
- * This class stores current bandwidth usage in OpenFlow network. 
- */
-class BandwidthStats : public SimpleRefCount<BandwidthStats>
-{
-public:
-  BandwidthStats ();  //!< Default constructor
-  virtual ~BandwidthStats (); //!< Default destructor
-  
-  /** 
-   * TracedCallback signature for BandwidthStats.
-   * \param stats The statistics.
-   */
-  typedef void (* BwdStatsCallback)(Ptr<const BandwidthStats> stats);
-
-private:
-};
-
-
-// ------------------------------------------------------------------------ //
-/**
- * \ingroup epcof
- * 
  * This class stores bearer request information. 
  */
 class BearerRequestStats : public SimpleRefCount<BearerRequestStats>
@@ -145,7 +123,7 @@ public:
    * TracedCallback signature for BearerRequestStats.
    * \param stats The statistics.
    */
-  typedef void (* BrqStatsCallback)(Ptr<const BearerRequestStats> stats);
+  typedef void (* BrqTracedCallback)(Ptr<const BearerRequestStats> stats);
 
 private:
   uint32_t    m_teid;           //!< GTP TEID

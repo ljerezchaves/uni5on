@@ -65,6 +65,12 @@ ConnectionInfo::GetAvailableDataRate (double bwFactor)
   return (maxDataRate * (1. - bwFactor)) - reservedDataRate;
 }
 
+double
+ConnectionInfo::GetUsageRatio (void) const
+{
+  return (double)reservedDataRate.GetBitRate () / maxDataRate.GetBitRate ();
+}
+
 bool
 ConnectionInfo::ReserveDataRate (DataRate dr)
 {

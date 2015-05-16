@@ -69,6 +69,7 @@ protected:
   bool BearerRequest (Ptr<RoutingInfo> rInfo);
   bool BearerRelease (Ptr<RoutingInfo> rInfo);
   void CreateSpanningTree ();
+  std::vector<BandwidthStats_t> GetBandwidthStats ();
 
 private:
   /** 

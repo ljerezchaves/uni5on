@@ -27,6 +27,7 @@
 #include "internet-network.h"
 #include "lte-hex-grid-network.h"
 #include "ring-network.h"
+#include "openflow-epc-controller.h"
 #include <vector>
 
 namespace ns3 {
@@ -141,9 +142,9 @@ private:
 
   /**
    * Save bandwidth usage in file.
-   * \see ns3::BandwidthStats::BwdTracedCallback for parameters.
+   * \see ns3::OpenFlowEpcController::BwdTracedCallback for parameters.
    */
-  void ReportBwdStats (Ptr<const BandwidthStats> stats);
+  void ReportBwdStats (std::vector<BandwidthStats_t> stats);
 
   /**
    * Save bearer request statistics in file.

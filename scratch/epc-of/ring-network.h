@@ -51,7 +51,7 @@ public:
   /** Destructor implementation */
   void DoDispose ();
 
-  // Inherited from OpenFlowEpcNetowork
+  // Inherited from OpenFlowEpcNetwork
   Ptr<NetDevice> AttachToS1u (Ptr<Node> node, uint16_t cellId);
   Ptr<NetDevice> AttachToX2  (Ptr<Node> node);
   void CreateTopology (Ptr<OpenFlowEpcController> controller, 

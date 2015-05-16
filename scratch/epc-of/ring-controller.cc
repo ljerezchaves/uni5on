@@ -535,6 +535,22 @@ RingController::CreateSpanningTree ()
   DpctlCommand (connInfo->switchDev2, cmd2.str ());
 }
 
+std::vector<BandwidthStats_t>
+RingController::GetBandwidthStats ()
+{
+  std::vector<BandwidthStats_t> list;
+  for (uint16_t curr = 0; curr < GetNSwitches (); curr++)
+    {
+      uint16_t next = NextSwitchIndex (curr, RingRoutingInfo::CLOCK);
+      Ptr<ConnectionInfo> connInfo = GetConnectionInfo (curr, next);
+
+      SwitchPair_t pair (curr, next);
+      BandwidthStats_t entry (pair, connInfo->GetUsageRatio ());
+      list.push_back (entry);
+    }
+  return list;
+}
+
 RingRoutingInfo::RoutingPath
 RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)
 {

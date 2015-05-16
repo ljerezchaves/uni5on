@@ -83,6 +83,12 @@ public:
    */
   DataRate GetAvailableDataRate (double bwFactor);
 
+  /**
+   * Return the bandwidth usage ratio, ignoring the saving reserve factor.
+   * \return The usage ratio.
+   */
+  double GetUsageRatio (void) const;
+
 protected:
   /** Information associated to the first switch */
   //\{

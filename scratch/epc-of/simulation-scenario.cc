@@ -900,7 +900,7 @@ SimulationScenario::ReportWebStats (Ptr<const Queue> downlink,
 }
 
 void
-SimulationScenario::ReportBwdStats (Ptr<const BandwidthStats> stats)
+SimulationScenario::ReportBwdStats (std::vector<BandwidthStats_t> stats)
 {
   NS_LOG_FUNCTION (this);
   static bool firstWrite = true;
@@ -916,8 +916,17 @@ SimulationScenario::ReportBwdStats (Ptr<const BandwidthStats> stats)
         }
       firstWrite = false;
       outFile << left 
-              << setw (12) << "Time (s)" 
-              << std::endl;
+              << setw (12) << "Time (s)";
+      std::vector<BandwidthStats_t>::iterator it;
+      for (it = stats.begin (); it != stats.end (); it++)        
+        {
+          BandwidthStats_t entry = *it;
+          SwitchPair_t pair = entry.first;
+          outFile << setw (1) << pair.first
+                  << "-" 
+                  << setw (7) << pair.second;
+        }
+      outFile << std::endl;
     }
   else
     {
@@ -930,8 +939,14 @@ SimulationScenario::ReportBwdStats (Ptr<const BandwidthStats> stats)
     }
 
   outFile << left
-          << setw (12) << Simulator::Now ().GetSeconds ()
-          << std::endl;
+          << setw (12) << Simulator::Now ().GetSeconds ();
+  std::vector<BandwidthStats_t>::iterator it;
+  for (it = stats.begin (); it != stats.end (); it++)        
+    {
+      BandwidthStats_t entry = *it;
+      outFile << setw (5) << fixed << entry.second << " ";
+    }
+  outFile << std::endl;
   outFile.close ();
 }
 

@@ -33,6 +33,13 @@
 
 namespace ns3 {
 
+/** A pair of switches index */
+typedef std::pair<uint16_t, uint16_t> SwitchPair_t;
+
+/** Bandwitdh stats between two switches */
+typedef std::pair<SwitchPair_t, double> BandwidthStats_t;
+
+
 class OpenFlowEpcController;
 class RingController;
 
@@ -225,6 +232,12 @@ public:
    */
   typedef void (* SwtTracedCallback)(std::vector<uint32_t> teid);
 
+  /** 
+   * TracedCallback signature for bandwidth usage statistics.
+   * \param stats List of links and usage ratio.
+   */
+  typedef void (* BwdTracedCallback)(std::vector<BandwidthStats_t> stats);
+
 
 protected:
   /**
@@ -260,6 +273,12 @@ protected:
    * with OFPPC_NO_FWD flag (0x20).
    */
   virtual void CreateSpanningTree () = 0;   
+  
+  /**
+   * Get bandwidth statistcs for (relevant) network links.
+   * \return The list with stats.
+   */
+  virtual std::vector<BandwidthStats_t> GetBandwidthStats () = 0;
 
   /**
    * \return Number of switches in the network.
@@ -488,12 +507,9 @@ private:
   TracedCallback<std::vector<uint32_t> > m_swtTrace;
 
   /** The network bandwidth usage trace source, fired at DumpBwdStatistics. */
-  TracedCallback<Ptr<const BandwidthStats> > m_bwdTrace;
+  TracedCallback<std::vector<BandwidthStats_t> > m_bwdTrace;
 
   
-  /** A pair of switches index */
-  typedef std::pair<uint16_t, uint16_t> SwitchPair_t;
-
   /** A pair of QosStatsCalculator, for downlink and uplink statistics */
   typedef std::pair<Ptr<QosStatsCalculator>, 
     Ptr<QosStatsCalculator> > QosStatsPair_t;
