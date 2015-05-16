@@ -227,24 +227,19 @@ public:
 
 
 protected:
-  /** 
-   * Pure virtual functions used to reserve and release GBR bearers resources,
-   * and to install OpenFlow flow rules into switches. 
-   */
-  //\{
   /**
-   * Process the GBR bearer resource allocation.
+   * Process the bearer resource and bandwidth allocation.
    * \param rInfo The routing information to process.
-   * \return True when the GBR resources request are satisfied.
+   * \return True when the request is satisfied.
    */
-  virtual bool GbrBearerRequest (Ptr<RoutingInfo> rInfo) = 0;
+  virtual bool BearerRequest (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
-   * Process the GBR bearer resource release.
+   * Process the bearer and bandwidth release.
    * \param rInfo The routing information to process.
-   * \return True when the GBR resources are successfully released.
+   * \return True when the resources are successfully released.
    */
-  virtual bool GbrBearerRelease (Ptr<RoutingInfo> rInfo) = 0;
+  virtual bool BearerRelease (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
    * Configure the switches with OpenFlow commands for TEID routing.
@@ -264,7 +259,6 @@ protected:
    * with OFPPC_NO_FWD flag (0x20).
    */
   virtual void CreateSpanningTree () = 0;   
-  //\}
 
   /**
    * \return Number of switches in the network.

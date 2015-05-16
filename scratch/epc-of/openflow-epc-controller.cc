@@ -346,22 +346,16 @@ OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
   // priority. Doing this, we avoid problems with old 'expiring' rules, and we
   // can even use new routing paths when necessary.
 
-  // For dedicated GBR bearers, let's first check for available resources.
-  if (rInfo->IsGbr ())
+  // Let's first check for available resources.
+  bool accepted = BearerRequest (rInfo);
+  if (!accepted)
     {
-      bool accepted = GbrBearerRequest (rInfo);
-      if (!accepted)
-        {
-          m_bearerStats->NotifyBlockedRequest (rInfo);
-          return false;
-        }
+      m_bearerStats->NotifyBlockedRequest (rInfo);
+      return false;
     }
-  // Non-GBR or GBR bearers with available resources are always accepted by
-  // network in current implementation.
-  m_bearerStats->NotifyAcceptedRequest (rInfo);
-    
   // Everything is ok! Let's activate and install this bearer.
   rInfo->m_isActive = true;
+  m_bearerStats->NotifyAcceptedRequest (rInfo);
   return InstallTeidRouting (rInfo);
 }
 
@@ -379,7 +373,7 @@ OpenFlowEpcController::NotifyAppStop (Ptr<Application> app)
     {
       rInfo->m_isActive = false;
       rInfo->m_isInstalled = false;
-      GbrBearerRelease (rInfo);
+      BearerRelease (rInfo);
       // We won't remove the rules from switch, as they will expired due idle
       // timeout. Doing this we avoid some control overhead and allow 'in
       // transit' packets to reach the destination.

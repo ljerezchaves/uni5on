@@ -229,7 +229,7 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
 }
 
 bool
-RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
+RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
   
@@ -237,6 +237,12 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
   Ptr<ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
   uint32_t teid = rInfo->m_teid;
   
+  if (!rInfo->IsGbr ())
+    {
+      return true; 
+      // TODO: implementar logica para reservar recursos (GBR e Non-GBR)
+    }
+
   ringInfo->ResetPaths ();    // Reset to short paths
  
   // Getting available bandwidth in both paths
@@ -425,7 +431,7 @@ RingController::GbrBearerRequest (Ptr<RoutingInfo> rInfo)
 }
 
 bool
-RingController::GbrBearerRelease (Ptr<RoutingInfo> rInfo)
+RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
 {
   Ptr<ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
   if (reserveInfo && reserveInfo->m_isReserved)
