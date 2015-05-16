@@ -178,8 +178,59 @@ BearerRequestStats::BearerRequestStats ()
   NS_LOG_FUNCTION (this);
 }
 
+BearerRequestStats::BearerRequestStats (uint32_t teid, bool accepted, 
+                                        uint16_t sgwIdx, uint16_t enbIdx, 
+                                        DataRate downRate, DataRate upRate);
+  : m_teid (teid),
+    m_accepted (accepted),
+    m_sgwIdx (sgwIdx),
+    m_enbIdx (enbIdx),
+    m_downDataRate (downRate),
+    m_upDataRate (upRate)
+{
+  NS_LOG_FUNCTION (this);
+}
+
 BearerRequestStats::~BearerRequestStats ()
 {
   NS_LOG_FUNCTION (this);
 }
+
+uint32_t  
+BearerRequestStats::GetTeid (void) const
+{
+  return m_teid;
+}
+
+bool      
+BearerRequestStats::IsAccepted (void) const
+{
+  return m_accepted;
+}
+
+uint16_t  
+BearerRequestStats::GetSgwIdx (void) const
+{
+  return m_sgwIdx;
+}
+
+uint16_t  
+BearerRequestStats::GetEnbIdx (void) const
+{
+  return m_enbIdx;
+}
+
+DataRate  
+BearerRequestStats::GetDownDataRate (void) const
+{
+  return m_downDataRate;
+}
+
+DataRate  
+BearerRequestStats::GetUpDataRate (void) const
+{
+  return m_upDataRate;
+}
+
+
 } // Namespace ns3

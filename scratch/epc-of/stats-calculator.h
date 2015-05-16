@@ -126,12 +126,42 @@ public:
   virtual ~BearerRequestStats (); //!< Default destructor
   
   /** 
+   * Complete constructor.
+   * \param teid GTP TEID
+   * \param accepted True for accepted bearer
+   * \param sgwIdx Gateway switch index
+   * \param enbIdx eNB switch index
+   * \param downRate Downlink reserved data rate
+   * \param upRate Uplink reserved data rate
+   */
+  BearerRequestStats (uint32_t teid, bool accepted, uint16_t sgwIdx, 
+                      uint16_t enbIdx, DataRate downRate, DataRate upRate);
+  /**
+   * Get statistics.
+   * \return The statistic value.
+   */
+  //\{
+  uint32_t  GetTeid         (void) const;
+  bool      IsAccepted      (void) const;
+  uint16_t  GetSgwIdx       (void) const;
+  uint16_t  GetEnbIdx       (void) const;
+  DataRate  GetDownDataRate (void) const;
+  DataRate  GetUpDataRate   (void) const;
+  //\}
+
+  /** 
    * TracedCallback signature for BearerRequestStats.
    * \param stats The statistics.
    */
   typedef void (* BrqStatsCallback)(Ptr<const BearerRequestStats> stats);
 
 private:
+  uint32_t  m_teid;           //!< GTP TEID
+  bool      m_accepted;       //!< True for accepted bearer
+  uint16_t  m_sgwIdx;         //!< Sgw switch index
+  uint16_t  m_enbIdx;         //!< eNB switch index
+  DataRate  m_downDataRate;   //!< Downlink reserved data rate
+  DataRate  m_upDataRate;     //!< Uplink reserved data rate
 };
 
 
