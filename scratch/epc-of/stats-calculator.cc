@@ -76,12 +76,12 @@ AdmissionStatsCalculator::NotifyBlockedRequest (Ptr<const RoutingInfo> rInfo)
   if (rInfo->IsGbr ())
     {
       m_gbrRequests++;
-      m_gbrAccepted++;
+      m_gbrBlocked++;
     }
   else
     {
       m_nonRequests++;
-      m_nonAccepted++;
+      m_nonBlocked++;
     }
 }
 
