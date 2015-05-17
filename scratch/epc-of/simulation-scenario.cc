@@ -967,7 +967,7 @@ SimulationScenario::ReportBrqStats (Ptr<const BearerRequestStats> stats)
               << setw (10) << "Accepted?"
               << setw (12) << "Down (kbps)"
               << setw (10) << "Up (kbps)"
-              << setw (40) << "Routing pahts"
+              << setw (40) << "Routing paths"
               << std::endl;
     }
   else
