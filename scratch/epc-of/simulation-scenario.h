@@ -183,7 +183,6 @@ private:
   Ptr<LteHelper>             m_lteHelper;     //!< LTE radio helper
   Ptr<Node>                  m_webHost;       //!< Internet server node
   Ptr<Node>                  m_pgwHost;       //!< EPC Pgw gateway node
-  Ptr<UniformRandomVariable> m_rngStart;      //!< Random app start time
   
   NodeContainer         m_ueNodes;            //!< LTE UE nodes
   NetDeviceContainer    m_ueDevices;          //!< LTE UE devices

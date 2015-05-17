@@ -51,8 +51,7 @@ SimulationScenario::SimulationScenario ()
     m_webNetwork (0),
     m_lteHelper (0),
     m_webHost (0),
-    m_pgwHost (0),
-    m_rngStart (0)
+    m_pgwHost (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -75,7 +74,6 @@ SimulationScenario::DoDispose ()
   m_webHost = 0;
   m_pgwHost = 0;
   m_opfNetwork = 0;
-  m_rngStart = 0;
 }
 
 TypeId 
@@ -225,11 +223,6 @@ SimulationScenario::BuildRingTopology ()
   m_ueNodes = m_lteNetwork->GetUeNodes ();
   m_ueDevices = m_lteNetwork->GetUeDevices ();
 
-  // Application random start time
-  m_rngStart = CreateObject<UniformRandomVariable> ();
-  m_rngStart->SetAttribute ("Min", DoubleValue (2.));
-  m_rngStart->SetAttribute ("Max", DoubleValue (5.));
-
   // Registering controller trace sinks
   m_controller->ConnectTraceSinks ();
   
@@ -296,7 +289,7 @@ SimulationScenario::EnablePingTraffic ()
   Ipv4Address dstAddr = dstIpv4->GetAddress (1,0).GetLocal ();
   V4PingHelper ping = V4PingHelper (dstAddr);
   ApplicationContainer clientApps = ping.Install (m_ueNodes);
-  clientApps.Start (Seconds (m_rngStart->GetValue ()));
+  clientApps.Start (Seconds (1));
 }
 
 
@@ -352,7 +345,7 @@ SimulationScenario::EnableHttpTraffic ()
       Ptr<HttpClient> clientApp = httpHelper.Install (client, m_webHost, 
           serverAddr, httpPort);
       clientApp->AggregateObject (tft);
-      clientApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
+      clientApp->SetStartTime (Seconds (1));
       httpApps.Add (clientApp);
 
       // TFT Packet filter
@@ -442,7 +435,7 @@ SimulationScenario::EnableVoipTraffic ()
       Ptr<VoipClient> clientApp = voipHelper.Install (client, m_webHost, 
           clientAddr, serverAddr, voipPort, voipPort);
       clientApp->AggregateObject (tft);
-      clientApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
+      clientApp->SetStartTime (Seconds (1));
       voipApps.Add (clientApp);
   
       // TFT downlink packet filter
@@ -542,7 +535,7 @@ SimulationScenario::EnableVideoTraffic ()
       Ptr<VideoClient> clientApp  = videoHelper.Install (m_webHost, client,
           clientAddr, videoPort);
       clientApp->AggregateObject (tft);
-      clientApp->SetStartTime (Seconds (m_rngStart->GetValue ()));
+      clientApp->SetStartTime (Seconds (1));
       videoApps.Add (clientApp);
 
       // TFT downlink packet filter
