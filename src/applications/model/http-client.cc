@@ -48,9 +48,9 @@ HttpClient::GetTypeId (void)
                    MakeUintegerAccessor (&HttpClient::m_peerPort),
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("TcpTimeout", "The TCP connection timeout",
-                   TimeValue (Seconds (4)),
+                   TimeValue (Seconds (5)),
                    MakeTimeAccessor (&HttpClient::m_tcpTimeout),
-                   MakeTimeChecker ())
+                   MakeTimeChecker (Seconds (5))) // At least 5 secs.
     .AddAttribute ("DelayTime", 
                    "A random variable used to pick the delay state duration [s].",
                    StringValue ("ns3::ConstantRandomVariable[Constant=5.0]"),
@@ -79,10 +79,9 @@ HttpClient::HttpClient ()
 
   // The above model provides a lot of reading times < 1sec, which is not soo
   // good for simulations in LTE EPC + SDN scenarios. So, we are incresing the
-  // reading time by a some uniform random value in [2,10] secs.
-  // Note: this forces the app to wait at least 2 seconds before (re)starting
+  // reading time by a some uniform random value in [0,10] secs.
   m_readingTimeAdjust = CreateObject<UniformRandomVariable> ();
-  m_readingTimeAdjust->SetAttribute ("Min", DoubleValue (2.));
+  m_readingTimeAdjust->SetAttribute ("Min", DoubleValue (0.));
   m_readingTimeAdjust->SetAttribute ("Max", DoubleValue (10.));
 }
 
@@ -345,6 +344,7 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   if (readingTime > m_tcpTimeout)
     {
       // Pause application now (dump stats) and schedule further restart.
+      // Note that m_tcpTimeout is >= 5 secs.
       CloseSocket ();
       Simulator::Schedule (readingTime, &HttpClient::OpenSocket, this);
     }

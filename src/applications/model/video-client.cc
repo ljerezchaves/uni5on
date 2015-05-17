@@ -314,10 +314,14 @@ VideoClient::ScheduleStartEvent ()
 {  
   NS_LOG_FUNCTION (this);
   
-  // Wait at least 2 seconds before (re)starting the application
-  Time offInterval = Seconds (2 + std::abs (m_offTime->GetValue ()));
-  m_startStopEvent = Simulator::Schedule (offInterval, &VideoClient::StartSending, this);
+  Time offInterval = Seconds (std::abs (m_offTime->GetValue ()));
+  // Wait at least 5 seconds before (re)starting the application
+  if (offInterval < Seconds (5))
+    {
+      offInterval = Seconds (5);
+    }
   
+  m_startStopEvent = Simulator::Schedule (offInterval, &VideoClient::StartSending, this);
   NS_LOG_LOGIC ("Video " << this << " will start in +" << offInterval.GetSeconds ());
 }
 
