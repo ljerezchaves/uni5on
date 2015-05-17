@@ -48,7 +48,7 @@ RingController::GetTypeId (void)
                                     RingController::BAND, "bandwidth",
                                     RingController::BOTH, "both"))
     .AddAttribute ("BwReserve", "Bandwitdth saving factor.",
-                   DoubleValue (0.1),
+                   DoubleValue (0.2),
                    MakeDoubleAccessor (&RingController::m_bwFactor),
                    MakeDoubleChecker<double> (0.0, 1.0))
   ;
