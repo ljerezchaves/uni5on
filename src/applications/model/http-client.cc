@@ -24,6 +24,7 @@
 #include "ns3/simulator.h"
 #include "ns3/ptr.h"
 #include "ns3/ipv4.h"
+#include "ns3/string.h"
 #include "http-client.h"
 
 NS_LOG_COMPONENT_DEFINE ("HttpClient");
@@ -50,6 +51,11 @@ HttpClient::GetTypeId (void)
                    TimeValue (Seconds (4)),
                    MakeTimeAccessor (&HttpClient::m_tcpTimeout),
                    MakeTimeChecker ())
+    .AddAttribute ("DelayTime", 
+                   "A random variable used to pick the delay state duration [s].",
+                   StringValue ("ns3::ConstantRandomVariable[Constant=5.0]"),
+                   MakePointerAccessor (&HttpClient::m_delayTime),
+                   MakePointerChecker <RandomVariableStream>())
   ;
   return tid;
 }
@@ -117,6 +123,7 @@ HttpClient::DoDispose (void)
   m_serverApp = 0;
   m_socket = 0;
   m_qosStats = 0;
+  m_delayTime = 0;
   m_readingTimeStream = 0;
 }
 
@@ -125,7 +132,10 @@ HttpClient::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
   ResetQosStats ();
-  OpenSocket ();
+
+  // Initial delay before sending the first request
+  Time delay = Seconds (std::abs (m_delayTime->GetValue ()));
+  Simulator::Schedule (delay, &HttpClient::OpenSocket, this);
 }
 
 void
@@ -144,9 +154,12 @@ HttpClient::OpenSocket ()
     {
       if (!m_startSendingCallback (this))
         {
-          NS_LOG_WARN ("Http application (" << this << ") has been blocked." <<
-                       "Retrying connection in 10 seconds.");
-          Simulator::Schedule (Seconds (10), &HttpClient::OpenSocket, this);
+          // Random delay before new attempt
+          Time delay = Seconds (std::abs (m_delayTime->GetValue ()));
+          Simulator::Schedule (delay, &HttpClient::OpenSocket, this);
+          
+          NS_LOG_WARN ("Http application (" << this << ") has been blocked." 
+                       << "Retrying in " << delay.GetSeconds () << "s.");
           return;
         }
     }
@@ -329,9 +342,10 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
       readingTime = Seconds (10000);
     }
 
-  if (readingTime > (m_tcpTimeout + Seconds (1)))
+  if (readingTime > m_tcpTimeout)
     {
-      Simulator::Schedule (m_tcpTimeout, &HttpClient::CloseSocket, this);
+      // Pause application now (dump stats) and schedule further restart.
+      CloseSocket ();
       Simulator::Schedule (readingTime, &HttpClient::OpenSocket, this);
     }
   else

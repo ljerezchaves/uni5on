@@ -27,6 +27,7 @@
 #include "ns3/http-header.h"
 #include "http-server.h"
 #include "ns3/data-rate.h"
+#include "ns3/core-module.h"
 #include "qos-stats-calculator.h"
 
 using namespace std;
@@ -150,7 +151,8 @@ private:
   Ptr<HttpServer> m_serverApp;          //!< HttpServer application
   Ptr<QosStatsCalculator> m_qosStats;   //!< QoS statistics
   Ptr<LogNormalRandomVariable> m_readingTimeStream; //!< Random Variable Stream for reading time.
-  Ptr<UniformRandomVariable> m_readingTimeAdjust;   //!< Reading time adjustment for lower values.
+  Ptr<UniformRandomVariable> m_readingTimeAdjust; //!< Reading time adjustment for lower values.
+  Ptr<RandomVariableStream> m_delayTime; //!< Delay time for first request and blocked attempts.
 };
 
 }

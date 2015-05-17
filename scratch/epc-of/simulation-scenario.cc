@@ -325,12 +325,13 @@ SimulationScenario::EnableHttpTraffic ()
   HttpHelper httpHelper;
   httpHelper.SetClientAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
   httpHelper.SetServerAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
-  httpHelper.SetClientAttribute ("TcpTimeout", TimeValue (Seconds (9))); 
   httpHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
+  httpHelper.SetClientAttribute ("DelayTime", 
+      StringValue ("ns3::ExponentialRandomVariable[Mean=60.0]"));
+  httpHelper.SetClientAttribute ("TcpTimeout", TimeValue (Seconds (10))); 
   // The HttpClient TcpTimeout was selected based on HTTP traffic model and
-  // dedicated bearer idle timeout. Every time the TCP socket is closed, HTTP
-  // client application notify the controller, and traffic statistics are
-  // printed.
+  // dedicated bearer idle timeout. When the TCP socket is closed, HTTP client
+  // application notifies the controller, and traffic statistics are printed.
   
   for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, httpPort++)
     {
