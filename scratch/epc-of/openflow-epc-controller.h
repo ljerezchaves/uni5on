@@ -267,6 +267,13 @@ protected:
       uint32_t buffer = OFP_NO_BUFFER) = 0;
 
   /**
+   * Remove TEID routing rules from switches.
+   * \param rInfo The routing information to remove.
+   * \return True if remove succeeded, false otherwise.
+   */
+  virtual bool RemoveTeidRouting (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
    * To avoid flooding problems when broadcasting packets (like in ARP
    * protocol), let's find a Spanning Tree and drop packets at selected ports
    * when flooding (OFPP_FLOOD). This is accomplished by configuring the port

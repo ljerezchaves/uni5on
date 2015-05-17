@@ -229,6 +229,22 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
 }
 
 bool
+RingController::RemoveTeidRouting (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo);
+
+  // We will only remove meter entries from switch. This will automatically
+  // will remove referring flow rules. The other rules will expired due idle
+  // timeout. Doing this we avoid race conditions and allow 'in transit'
+  // packets reach its destination. So, let's wait 3 seconds before removing
+  // these rules.
+  Simulator::Schedule (Seconds (3), 
+    &RingController::RemoveMeterRules, this, rInfo);
+  
+  return true;
+}
+
+bool
 RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
@@ -488,7 +504,6 @@ RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
       ReleaseBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, ringInfo->m_upPath,
           reserveInfo->m_upDataRate);
     }
-  // TODO Remover meters, quando possível.
   return true;
 }
 
@@ -644,6 +659,33 @@ RingController::NextSwitchIndex (uint16_t current,
   return routingPath == RingRoutingInfo::CLOCK ?
       (current + 1) % GetNSwitches () : 
       (current == 0 ? GetNSwitches () - 1 : (current - 1));
+}
+
+bool
+RingController::RemoveMeterRules (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo);
+  
+  NS_ASSERT_MSG (!rInfo->m_isActive && !rInfo->m_isInstalled, 
+                 "Can't delete meter for valid traffic.");
+
+  Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
+  if (meterInfo && meterInfo->m_isInstalled)
+    {
+      NS_LOG_DEBUG ("Removing meter entries.");
+      if (meterInfo->m_hasDown)
+        {
+          DpctlCommand (GetSwitchDevice (rInfo->m_sgwIdx), 
+                        meterInfo->GetDelCmd ());
+        }
+      if (meterInfo->m_hasUp)
+        {
+          DpctlCommand (GetSwitchDevice (rInfo->m_enbIdx), 
+                        meterInfo->GetDelCmd ());
+        } 
+      meterInfo->m_isInstalled = false;
+    }
+  return true;
 }
 
 };  // namespace ns3

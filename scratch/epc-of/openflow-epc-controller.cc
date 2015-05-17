@@ -390,12 +390,13 @@ OpenFlowEpcController::NotifyAppStop (Ptr<Application> app)
       rInfo->m_isActive = false;
       rInfo->m_isInstalled = false;
       BearerRelease (rInfo);
-      // We won't remove the rules from switch, as they will expired due idle
-      // timeout. Doing this we avoid some control overhead and allow 'in
-      // transit' packets to reach the destination.
+      RemoveTeidRouting (rInfo);
     }
-
-  // Wait for delayed packets before dumping QoS statistcs.
+  
+  // NOTE: Current RemoveTeidRouting implementation wait 3 seconds before
+  // sending removing rules from switches. This allow 'in transit' packets to
+  // reach the destination. So, let's wait 1 sec for delayed packets before
+  // dumping QoS statistcs.
   Simulator::Schedule (Seconds (1), 
     &OpenFlowEpcController::DumpAppStatistics, this, app);
   return true;

@@ -66,6 +66,7 @@ public:
 protected:
   // Inherited from OpenFlowEpcController
   bool InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer);
+  bool RemoveTeidRouting (Ptr<RoutingInfo> rInfo);
   bool BearerRequest (Ptr<RoutingInfo> rInfo);
   bool BearerRelease (Ptr<RoutingInfo> rInfo);
   void CreateSpanningTree ();
@@ -135,6 +136,13 @@ private:
    */ 
   uint16_t NextSwitchIndex (uint16_t current, 
       RingRoutingInfo::RoutingPath routingPath);
+
+  /**
+   * Remove meter rules from switches.
+   * \param rInfo The routing information.
+   * \return True if remove succeeded, false otherwise.
+   */
+  bool RemoveMeterRules (Ptr<RoutingInfo> rInfo);
 
   RoutingStrategy   m_strategy;          //!< Routing strategy in use.
   double            m_bwFactor;          //!< Bandwidth saving factor
