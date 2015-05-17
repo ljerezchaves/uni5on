@@ -260,15 +260,22 @@ SimulationScenario::SetCommonPrefix (std::string prefix)
 {
   static bool prefixSet = false;
 
-  if (prefixSet || prefix == "") return;
-  
+  if (prefixSet) return;
+
   prefixSet = true;
-  m_commonPrefix = prefix;
   char lastChar = *prefix.rbegin (); 
   if (lastChar != '-')
     {
-      m_commonPrefix += "-";
+      prefix += "-";
     }
+  ostringstream ss;
+  ss << prefix << RngSeedManager::GetRun () << "-";
+  m_commonPrefix = ss.str ();
+
+  // Updating input filename with input prefix (without run number)
+  m_topoFilename = prefix + m_topoFilename;
+
+  // Updating output filenames with common prefix (with run number)
   m_appStatsFilename = m_commonPrefix + m_appStatsFilename;
   m_epcStatsFilename = m_commonPrefix + m_epcStatsFilename;
   m_pgwStatsFilename = m_commonPrefix + m_pgwStatsFilename;
@@ -277,7 +284,6 @@ SimulationScenario::SetCommonPrefix (std::string prefix)
   m_swtStatsFilename = m_commonPrefix + m_swtStatsFilename;
   m_bwdStatsFilename = m_commonPrefix + m_bwdStatsFilename;
   m_brqStatsFilename = m_commonPrefix + m_brqStatsFilename;
-  m_topoFilename     = m_commonPrefix + m_topoFilename;
 }
 
 void 

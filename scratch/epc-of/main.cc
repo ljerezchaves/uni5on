@@ -31,7 +31,7 @@ NS_LOG_COMPONENT_DEFINE ("Main");
 void PrintCurrentTime ();
 void EnableVerbose ();
   
-static uint32_t g_progress = 50;
+static uint32_t g_progress = 25;
 
 int 
 main (int argc, char *argv[])
@@ -50,7 +50,7 @@ main (int argc, char *argv[])
   
   bool verbose = false;
   bool lteRem = false;
-  uint32_t simTime = 1001;
+  uint32_t simTime = 201;
   
   CommandLine cmd;
   cmd.AddValue ("verbose",    "Enable verbose output.", verbose);

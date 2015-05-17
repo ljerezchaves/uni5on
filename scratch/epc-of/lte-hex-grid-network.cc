@@ -146,13 +146,13 @@ void
 LteHexGridNetwork::EnableTraces (std::string prefix)
 {
   Config::SetDefault ("ns3::RadioBearerStatsCalculator::DlRlcOutputFilename", 
-    StringValue (prefix + "lte_dl_rlc_stats.txt"));
+    StringValue (prefix + "lte_dl_rlc.txt"));
   Config::SetDefault ("ns3::RadioBearerStatsCalculator::UlRlcOutputFilename", 
-    StringValue (prefix + "lte_ul_rlc_stats.txt"));
+    StringValue (prefix + "lte_ul_rlc.txt"));
   Config::SetDefault ("ns3::RadioBearerStatsCalculator::DlPdcpOutputFilename", 
-    StringValue (prefix + "lte_dl_pdcp_stats.txt"));
+    StringValue (prefix + "lte_dl_pdcp.txt"));
   Config::SetDefault ("ns3::RadioBearerStatsCalculator::UlPdcpOutputFilename", 
-    StringValue (prefix + "lte_ul_pdcp_stats.txt"));
+    StringValue (prefix + "lte_ul_pdcp.txt"));
 
   m_lteHelper->EnablePdcpTraces ();
   m_lteHelper->EnableRlcTraces ();
