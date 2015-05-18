@@ -142,7 +142,8 @@ double
 QosStatsCalculator::GetLossRatio (void) const
 {
   uint32_t lost = GetLostPackets ();
-  return ((double)lost) / (lost + GetRxPackets ());
+  uint32_t txPkts = lost + GetRxPackets ();
+  return txPkts ? (double)lost / txPkts : 0.;
 }
 
 uint32_t  
