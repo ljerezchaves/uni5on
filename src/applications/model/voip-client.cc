@@ -261,7 +261,7 @@ VoipClient::ScheduleStartEvent ()
   // Wait at least 5 seconds before (re)starting the application
   if (offInterval < Seconds (5))
     {
-      offInterval = Seconds (5);
+      offInterval += Seconds (5);
     }
 
   m_startStopEvent = Simulator::Schedule (offInterval, &VoipClient::StartSending, this);
