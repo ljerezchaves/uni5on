@@ -79,7 +79,7 @@ main (int argc, char *argv[])
  
   if (lteRem)
     {
-      // The channel number was mannualy set :/
+      // The channel number was manually set :/
       Ptr<RadioEnvironmentMapHelper> remHelper = CreateObject<RadioEnvironmentMapHelper> ();
       remHelper->SetAttribute ("ChannelPath", StringValue ("/ChannelList/11"));
       remHelper->SetAttribute ("OutputFile", StringValue ("lte-rem.out"));

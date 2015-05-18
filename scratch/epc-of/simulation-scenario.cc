@@ -83,7 +83,7 @@ SimulationScenario::GetTypeId (void)
     .SetParent<Object> ()
     .AddConstructor<SimulationScenario> ()
     .AddAttribute ("AppStatsFilename",
-                   "Filename for application QoS statistcis.",
+                   "Filename for application QoS statistics.",
                    StringValue ("app_stats.txt"),
                    MakeStringAccessor (&SimulationScenario::m_appStatsFilename),
                    MakeStringChecker ())
@@ -93,7 +93,7 @@ SimulationScenario::GetTypeId (void)
                    MakeStringAccessor (&SimulationScenario::m_epcStatsFilename),
                    MakeStringChecker ())
     .AddAttribute ("PgwStatsFilename",
-                   "Filename for packet gateway traffic statistcs.",
+                   "Filename for packet gateway traffic statistics.",
                    StringValue ("pgw_stats.txt"),
                    MakeStringAccessor (&SimulationScenario::m_pgwStatsFilename),
                    MakeStringChecker ())
@@ -143,12 +143,12 @@ SimulationScenario::GetTypeId (void)
                    MakeUintegerAccessor (&SimulationScenario::m_nSwitches),
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("PcapTrace",
-                   "Enable/Disable simulation pcap traces.",
+                   "Enable/Disable simulation PCAP traces.",
                    BooleanValue (false),
                    MakeBooleanAccessor (&SimulationScenario::m_pcapTrace),
                    MakeBooleanChecker ())
     .AddAttribute ("LteTrace",
-                   "Enable/Disable simulation LTE ascii traces.",
+                   "Enable/Disable simulation LTE ASCII traces.",
                    BooleanValue (true),
                    MakeBooleanAccessor (&SimulationScenario::m_lteTrace),
                    MakeBooleanChecker ())
@@ -168,7 +168,7 @@ SimulationScenario::GetTypeId (void)
                    MakeBooleanAccessor (&SimulationScenario::m_http),
                    MakeBooleanChecker ())
     .AddAttribute ("VoipTraffic",
-                   "Enable/Disable voip traffic during simulation.",
+                   "Enable/Disable VoIP traffic during simulation.",
                    BooleanValue (true),
                    MakeBooleanAccessor (&SimulationScenario::m_voip),
                    MakeBooleanChecker ())
@@ -559,7 +559,7 @@ SimulationScenario::EnableVideoTraffic ()
       GbrQosInformation qos;
       // Reserving bandwidth for downlink video
       qos.gbrDl = 1.5 * m_avgBitRate [videoIdx];  // Avg + 50%
-      // Set the maximun (meter) in average between gbr and maxBitRate
+      // Set the maximum (meter) in average between gbr and maxBitRate
       qos.mbrDl = (qos.gbrDl + m_maxBitRate [videoIdx]) / 2;
       EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
@@ -1037,7 +1037,7 @@ SimulationScenario::ParseTopology ()
     }
   NS_ASSERT_MSG (attrOk == 2, "Missing attributes in topology file.");
 
-  // Then we expect the distribuiton of UEs per eNBs and switch indexes
+  // Then we expect the distribution of UEs per eNBs and switch indexes
   while (getline (file, line))
     {
       if (line.empty () || line.at (0) == '#') continue;
