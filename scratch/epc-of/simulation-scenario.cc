@@ -138,7 +138,7 @@ SimulationScenario::GetTypeId (void)
                    MakeUintegerAccessor (&SimulationScenario::m_nEnbs),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("Switches",
-                   "Number of OpenFlow switches in network toplogy.",
+                   "Number of OpenFlow switches in network topology.",
                    UintegerValue (0),
                    MakeUintegerAccessor (&SimulationScenario::m_nSwitches),
                    MakeUintegerChecker<uint16_t> ())
