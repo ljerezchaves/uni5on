@@ -31,6 +31,12 @@
 #include <cmath>
 
 
+/**
+ * \file
+ * \ingroup simulator
+ * Implementation of class ns3::DefaultSimulatorImpl.
+ */
+
 namespace ns3 {
 
 // Note:  Logging in this file is largely avoided due to the
@@ -45,6 +51,7 @@ DefaultSimulatorImpl::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::DefaultSimulatorImpl")
     .SetParent<SimulatorImpl> ()
+    .SetGroupName ("Core")
     .AddConstructor<DefaultSimulatorImpl> ()
   ;
   return tid;

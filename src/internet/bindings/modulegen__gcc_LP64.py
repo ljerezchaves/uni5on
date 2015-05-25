@@ -8893,6 +8893,11 @@ def register_Ns3TcpHeader_methods(root_module, cls):
     cls.add_method('EnableChecksums', 
                    'void', 
                    [])
+    ## tcp-header.h (module 'internet'): static std::string ns3::TcpHeader::FlagsToString(uint8_t flags, std::string const & delimiter="|") [member function]
+    cls.add_method('FlagsToString', 
+                   'std::string', 
+                   [param('uint8_t', 'flags'), param('std::string const &', 'delimiter', default_value='"|"')], 
+                   is_static=True)
     ## tcp-header.h (module 'internet'): ns3::SequenceNumber32 ns3::TcpHeader::GetAckNumber() const [member function]
     cls.add_method('GetAckNumber', 
                    'ns3::SequenceNumber32', 
@@ -9755,6 +9760,11 @@ def register_Ns3TcpSocketBase_methods(root_module, cls):
                    'void', 
                    [], 
                    visibility='protected', is_virtual=True)
+    ## tcp-socket-base.h (module 'internet'): void ns3::TcpSocketBase::ScaleSsThresh(uint8_t scaleFactor) [member function]
+    cls.add_method('ScaleSsThresh', 
+                   'void', 
+                   [param('uint8_t', 'scaleFactor')], 
+                   is_pure_virtual=True, visibility='protected', is_virtual=True)
     ## tcp-socket-base.h (module 'internet'): uint32_t ns3::TcpSocketBase::SendDataPacket(ns3::SequenceNumber32 seq, uint32_t maxSize, bool withAck) [member function]
     cls.add_method('SendDataPacket', 
                    'uint32_t', 
@@ -9860,11 +9870,16 @@ def register_Ns3TcpSocketBase_methods(root_module, cls):
                    'uint32_t', 
                    [], 
                    visibility='protected', is_virtual=True)
+    ## tcp-socket-base.h (module 'internet'): void ns3::TcpSocketBase::UpdateWindowSize(ns3::TcpHeader const & header) [member function]
+    cls.add_method('UpdateWindowSize', 
+                   'void', 
+                   [param('ns3::TcpHeader const &', 'header')], 
+                   visibility='protected')
     ## tcp-socket-base.h (module 'internet'): uint32_t ns3::TcpSocketBase::Window() [member function]
     cls.add_method('Window', 
                    'uint32_t', 
                    [], 
-                   visibility='protected', is_virtual=True)
+                   is_pure_virtual=True, visibility='protected', is_virtual=True)
     return
 
 def register_Ns3TcpSocketFactory_methods(root_module, cls):
@@ -9928,6 +9943,11 @@ def register_Ns3TcpTahoe_methods(root_module, cls):
     cls.add_method('Retransmit', 
                    'void', 
                    [], 
+                   visibility='protected', is_virtual=True)
+    ## tcp-tahoe.h (module 'internet'): void ns3::TcpTahoe::ScaleSsThresh(uint8_t scaleFactor) [member function]
+    cls.add_method('ScaleSsThresh', 
+                   'void', 
+                   [param('uint8_t', 'scaleFactor')], 
                    visibility='protected', is_virtual=True)
     ## tcp-tahoe.h (module 'internet'): void ns3::TcpTahoe::SetInitialCwnd(uint32_t cwnd) [member function]
     cls.add_method('SetInitialCwnd', 
@@ -10072,6 +10092,11 @@ def register_Ns3TcpWestwood_methods(root_module, cls):
     cls.add_method('Retransmit', 
                    'void', 
                    [], 
+                   visibility='protected', is_virtual=True)
+    ## tcp-westwood.h (module 'internet'): void ns3::TcpWestwood::ScaleSsThresh(uint8_t scaleFactor) [member function]
+    cls.add_method('ScaleSsThresh', 
+                   'void', 
+                   [param('uint8_t', 'scaleFactor')], 
                    visibility='protected', is_virtual=True)
     ## tcp-westwood.h (module 'internet'): void ns3::TcpWestwood::SetInitialCwnd(uint32_t cwnd) [member function]
     cls.add_method('SetInitialCwnd', 
@@ -14584,15 +14609,6 @@ def register_Ns3NdiscCacheEntry_methods(root_module, cls):
                    'ns3::Address', 
                    [], 
                    is_const=True)
-    ## ndisc-cache.h (module 'internet'): uint8_t ns3::NdiscCache::Entry::GetNSRetransmit() const [member function]
-    cls.add_method('GetNSRetransmit', 
-                   'uint8_t', 
-                   [], 
-                   is_const=True)
-    ## ndisc-cache.h (module 'internet'): void ns3::NdiscCache::Entry::IncNSRetransmit() [member function]
-    cls.add_method('IncNSRetransmit', 
-                   'void', 
-                   [])
     ## ndisc-cache.h (module 'internet'): bool ns3::NdiscCache::Entry::IsDelay() const [member function]
     cls.add_method('IsDelay', 
                    'bool', 
@@ -14651,10 +14667,6 @@ def register_Ns3NdiscCacheEntry_methods(root_module, cls):
     cls.add_method('MarkStale', 
                    'void', 
                    [])
-    ## ndisc-cache.h (module 'internet'): void ns3::NdiscCache::Entry::ResetNSRetransmit() [member function]
-    cls.add_method('ResetNSRetransmit', 
-                   'void', 
-                   [])
     ## ndisc-cache.h (module 'internet'): void ns3::NdiscCache::Entry::SetIpv6Address(ns3::Ipv6Address ipv6Address) [member function]
     cls.add_method('SetIpv6Address', 
                    'void', 
@@ -14683,20 +14695,8 @@ def register_Ns3NdiscCacheEntry_methods(root_module, cls):
     cls.add_method('StartRetransmitTimer', 
                    'void', 
                    [])
-    ## ndisc-cache.h (module 'internet'): void ns3::NdiscCache::Entry::StopDelayTimer() [member function]
-    cls.add_method('StopDelayTimer', 
-                   'void', 
-                   [])
-    ## ndisc-cache.h (module 'internet'): void ns3::NdiscCache::Entry::StopProbeTimer() [member function]
-    cls.add_method('StopProbeTimer', 
-                   'void', 
-                   [])
-    ## ndisc-cache.h (module 'internet'): void ns3::NdiscCache::Entry::StopReachableTimer() [member function]
-    cls.add_method('StopReachableTimer', 
-                   'void', 
-                   [])
-    ## ndisc-cache.h (module 'internet'): void ns3::NdiscCache::Entry::StopRetransmitTimer() [member function]
-    cls.add_method('StopRetransmitTimer', 
+    ## ndisc-cache.h (module 'internet'): void ns3::NdiscCache::Entry::StopNudTimer() [member function]
+    cls.add_method('StopNudTimer', 
                    'void', 
                    [])
     ## ndisc-cache.h (module 'internet'): void ns3::NdiscCache::Entry::UpdateLastReachabilityconfirmation() [member function]
@@ -15640,6 +15640,11 @@ def register_Ns3TcpNewReno_methods(root_module, cls):
                    'void', 
                    [], 
                    visibility='protected', is_virtual=True)
+    ## tcp-newreno.h (module 'internet'): void ns3::TcpNewReno::ScaleSsThresh(uint8_t scaleFactor) [member function]
+    cls.add_method('ScaleSsThresh', 
+                   'void', 
+                   [param('uint8_t', 'scaleFactor')], 
+                   visibility='protected', is_virtual=True)
     ## tcp-newreno.h (module 'internet'): void ns3::TcpNewReno::SetInitialCwnd(uint32_t cwnd) [member function]
     cls.add_method('SetInitialCwnd', 
                    'void', 
@@ -15712,6 +15717,11 @@ def register_Ns3TcpReno_methods(root_module, cls):
                    'void', 
                    [], 
                    visibility='protected', is_virtual=True)
+    ## tcp-reno.h (module 'internet'): void ns3::TcpReno::ScaleSsThresh(uint8_t scaleFactor) [member function]
+    cls.add_method('ScaleSsThresh', 
+                   'void', 
+                   [param('uint8_t', 'scaleFactor')], 
+                   visibility='protected', is_virtual=True)
     ## tcp-reno.h (module 'internet'): void ns3::TcpReno::SetInitialCwnd(uint32_t cwnd) [member function]
     cls.add_method('SetInitialCwnd', 
                    'void', 
@@ -15764,6 +15774,11 @@ def register_Ns3TcpRfc793_methods(root_module, cls):
                    'uint32_t', 
                    [], 
                    is_const=True, visibility='protected', is_virtual=True)
+    ## tcp-rfc793.h (module 'internet'): void ns3::TcpRfc793::ScaleSsThresh(uint8_t scaleFactor) [member function]
+    cls.add_method('ScaleSsThresh', 
+                   'void', 
+                   [param('uint8_t', 'scaleFactor')], 
+                   visibility='protected', is_virtual=True)
     ## tcp-rfc793.h (module 'internet'): void ns3::TcpRfc793::SetInitialCwnd(uint32_t cwnd) [member function]
     cls.add_method('SetInitialCwnd', 
                    'void', 
@@ -15773,6 +15788,11 @@ def register_Ns3TcpRfc793_methods(root_module, cls):
     cls.add_method('SetInitialSSThresh', 
                    'void', 
                    [param('uint32_t', 'threshold')], 
+                   visibility='protected', is_virtual=True)
+    ## tcp-rfc793.h (module 'internet'): uint32_t ns3::TcpRfc793::Window() [member function]
+    cls.add_method('Window', 
+                   'uint32_t', 
+                   [], 
                    visibility='protected', is_virtual=True)
     return
 

@@ -53,6 +53,7 @@ TcpWestwood::GetTypeId (void)
 {
   static TypeId tid = TypeId("ns3::TcpWestwood")
       .SetParent<TcpSocketBase>()
+      .SetGroupName ("Internet")
       .AddConstructor<TcpWestwood>()
       .AddTraceSource("CongestionWindow", "The TCP connection's congestion window",
                       MakeTraceSourceAccessor(&TcpWestwood::m_cWnd),
@@ -292,7 +293,10 @@ TcpWestwood::DupAck (const TcpHeader& header, uint32_t count)
     {// Increase cwnd for every additional DUPACK as in Reno
       m_cWnd += m_segmentSize;
       NS_LOG_INFO ("Dupack in fast recovery mode. Increase cwnd to " << m_cWnd);
-      SendPendingData (m_connected);
+      if (!m_sendPendingDataEvent.IsRunning ())
+        {
+          SendPendingData (m_connected);
+        }
     }
 }
 
@@ -424,5 +428,12 @@ TcpWestwood::InitializeCwnd(void)
   m_cWnd = m_initialCWnd * m_segmentSize;
   m_ssThresh = m_initialSsThresh;
 }
+
+void
+TcpWestwood::ScaleSsThresh (uint8_t scaleFactor)
+{
+  m_ssThresh <<= scaleFactor;
+}
+
 
 } // namespace ns3

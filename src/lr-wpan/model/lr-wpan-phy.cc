@@ -75,6 +75,7 @@ LrWpanPhy::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::LrWpanPhy")
     .SetParent<Object> ()
+    .SetGroupName ("LrWpan")
     .AddConstructor<LrWpanPhy> ()
     .AddTraceSource ("TrxState",
                      "The state of the transceiver",
@@ -284,7 +285,7 @@ LrWpanPhy::StartRx (Ptr<SpectrumSignalParameters> spectrumRxParams)
 
   Ptr<LrWpanSpectrumSignalParameters> lrWpanRxParams = DynamicCast<LrWpanSpectrumSignalParameters> (spectrumRxParams);
 
-  if ( lrWpanRxParams == 0)
+  if (lrWpanRxParams == 0)
     {
       CheckInterference ();
       m_signal->AddSignal (spectrumRxParams->psd);
@@ -449,7 +450,11 @@ LrWpanPhy::EndRx (Ptr<SpectrumSignalParameters> par)
       m_edPower.lastUpdate = now;
     }
 
-  CheckInterference ();
+  Ptr<LrWpanSpectrumSignalParameters> currentRxParams = m_currentRxPacket.first;
+  if (currentRxParams == params)
+    {
+      CheckInterference ();
+    }
 
   // Update the interference.
   m_signal->RemoveSignal (par->psd);
@@ -461,7 +466,6 @@ LrWpanPhy::EndRx (Ptr<SpectrumSignalParameters> par)
     }
 
   // If this is the end of the currently received packet, check if reception was successful.
-  Ptr<LrWpanSpectrumSignalParameters> currentRxParams = m_currentRxPacket.first;
   if (currentRxParams == params)
     {
       Ptr<Packet> currentPacket = currentRxParams->packetBurst->GetPackets ().front ();
@@ -898,7 +902,7 @@ LrWpanPhy::PlmeSetAttributeRequest (LrWpanPibAttributeIdentifier id,
           }
         if (m_phyPIBAttributes.phyCurrentChannel != attribute->phyCurrentChannel)
           {
-            // Cancel a pending tranceiver state change.
+            // Cancel a pending transceiver state change.
             // Switch off the transceiver.
             // TODO: Is switching off the transceiver the right choice?
             m_trxState = IEEE_802_15_4_PHY_TRX_OFF;
@@ -928,6 +932,8 @@ LrWpanPhy::PlmeSetAttributeRequest (LrWpanPibAttributeIdentifier id,
                   }
               }
             m_phyPIBAttributes.phyCurrentChannel = attribute->phyCurrentChannel;
+            LrWpanSpectrumValueHelper psdHelper;
+            m_txPsd = psdHelper.CreateTxPowerSpectralDensity (m_phyPIBAttributes.phyTransmitPower, m_phyPIBAttributes.phyCurrentChannel);
           }
         break;
       }

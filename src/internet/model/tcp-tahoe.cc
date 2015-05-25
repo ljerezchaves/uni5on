@@ -39,6 +39,7 @@ TcpTahoe::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::TcpTahoe")
     .SetParent<TcpSocketBase> ()
+    .SetGroupName ("Internet")
     .AddConstructor<TcpTahoe> ()
     .AddAttribute ("ReTxThreshold", "Threshold for fast retransmit",
                     UintegerValue (3),
@@ -213,5 +214,12 @@ TcpTahoe::InitializeCwnd (void)
   m_cWnd = m_initialCWnd * m_segmentSize;
   m_ssThresh = m_initialSsThresh;
 }
+
+void
+TcpTahoe::ScaleSsThresh (uint8_t scaleFactor)
+{
+  m_ssThresh <<= scaleFactor;
+}
+
 
 } // namespace ns3

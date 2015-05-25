@@ -102,6 +102,7 @@ EpcSgwPgwApplication::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::EpcSgwPgwApplication")
     .SetParent<Object> ()
+    .SetGroupName ("Lte")
     .AddTraceSource ("S1uRx",
                      "Trace source indicating a packet received from S1-U interface.",
                      MakeTraceSourceAccessor (&EpcSgwPgwApplication::m_rxS1uTrace),

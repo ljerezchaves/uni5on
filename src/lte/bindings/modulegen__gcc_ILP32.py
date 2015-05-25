@@ -562,6 +562,8 @@ def register_types(module):
     module.add_class('ThresholdEutra', outer_class=root_module['ns3::LteRrcSap'])
     ## lte-rrc-sap.h (module 'lte'): ns3::LteRrcSap::ThresholdEutra [enumeration]
     module.add_enum('', ['THRESHOLD_RSRP', 'THRESHOLD_RSRQ'], outer_class=root_module['ns3::LteRrcSap::ThresholdEutra'])
+    ## lte-chunk-processor.h (module 'lte'): ns3::LteSpectrumValueCatcher [class]
+    module.add_class('LteSpectrumValueCatcher')
     ## lte-spectrum-value-helper.h (module 'lte'): ns3::LteSpectrumValueHelper [class]
     module.add_class('LteSpectrumValueHelper')
     ## lte-ue-cmac-sap.h (module 'lte'): ns3::LteUeCmacSapProvider [class]
@@ -1119,7 +1121,7 @@ def register_types(module):
     ## lte-spectrum-phy.h (module 'lte'): ns3::LteSpectrumPhy [class]
     module.add_class('LteSpectrumPhy', parent=root_module['ns3::SpectrumPhy'])
     ## lte-spectrum-phy.h (module 'lte'): ns3::LteSpectrumPhy::State [enumeration]
-    module.add_enum('State', ['IDLE', 'TX', 'RX_DATA', 'RX_CTRL'], outer_class=root_module['ns3::LteSpectrumPhy'])
+    module.add_enum('State', ['IDLE', 'TX_DL_CTRL', 'TX_DATA', 'TX_UL_SRS', 'RX_DL_CTRL', 'RX_DATA', 'RX_UL_SRS'], outer_class=root_module['ns3::LteSpectrumPhy'])
     ## lte-spectrum-signal-parameters.h (module 'lte'): ns3::LteSpectrumSignalParameters [struct]
     module.add_class('LteSpectrumSignalParameters', parent=root_module['ns3::SpectrumSignalParameters'])
     ## lte-spectrum-signal-parameters.h (module 'lte'): ns3::LteSpectrumSignalParametersDataFrame [struct]
@@ -1790,6 +1792,7 @@ def register_methods(root_module):
     register_Ns3LteRrcSapSystemInformationBlockType1_methods(root_module, root_module['ns3::LteRrcSap::SystemInformationBlockType1'])
     register_Ns3LteRrcSapSystemInformationBlockType2_methods(root_module, root_module['ns3::LteRrcSap::SystemInformationBlockType2'])
     register_Ns3LteRrcSapThresholdEutra_methods(root_module, root_module['ns3::LteRrcSap::ThresholdEutra'])
+    register_Ns3LteSpectrumValueCatcher_methods(root_module, root_module['ns3::LteSpectrumValueCatcher'])
     register_Ns3LteSpectrumValueHelper_methods(root_module, root_module['ns3::LteSpectrumValueHelper'])
     register_Ns3LteUeCmacSapProvider_methods(root_module, root_module['ns3::LteUeCmacSapProvider'])
     register_Ns3LteUeCmacSapProviderLogicalChannelConfig_methods(root_module, root_module['ns3::LteUeCmacSapProvider::LogicalChannelConfig'])
@@ -2822,11 +2825,21 @@ def register_Ns3DataRate_methods(root_module, cls):
     cls.add_constructor([param('uint64_t', 'bps')])
     ## data-rate.h (module 'network'): ns3::DataRate::DataRate(std::string rate) [constructor]
     cls.add_constructor([param('std::string', 'rate')])
+    ## data-rate.h (module 'network'): ns3::Time ns3::DataRate::CalculateBitsTxTime(uint32_t bits) const [member function]
+    cls.add_method('CalculateBitsTxTime', 
+                   'ns3::Time', 
+                   [param('uint32_t', 'bits')], 
+                   is_const=True)
+    ## data-rate.h (module 'network'): ns3::Time ns3::DataRate::CalculateBytesTxTime(uint32_t bytes) const [member function]
+    cls.add_method('CalculateBytesTxTime', 
+                   'ns3::Time', 
+                   [param('uint32_t', 'bytes')], 
+                   is_const=True)
     ## data-rate.h (module 'network'): double ns3::DataRate::CalculateTxTime(uint32_t bytes) const [member function]
     cls.add_method('CalculateTxTime', 
                    'double', 
                    [param('uint32_t', 'bytes')], 
-                   is_const=True)
+                   deprecated=True, is_const=True)
     ## data-rate.h (module 'network'): uint64_t ns3::DataRate::GetBitRate() const [member function]
     cls.add_method('GetBitRate', 
                    'uint64_t', 
@@ -6876,6 +6889,21 @@ def register_Ns3LteRrcSapThresholdEutra_methods(root_module, cls):
     cls.add_instance_attribute('range', 'uint8_t', is_const=False)
     return
 
+def register_Ns3LteSpectrumValueCatcher_methods(root_module, cls):
+    ## lte-chunk-processor.h (module 'lte'): ns3::LteSpectrumValueCatcher::LteSpectrumValueCatcher() [constructor]
+    cls.add_constructor([])
+    ## lte-chunk-processor.h (module 'lte'): ns3::LteSpectrumValueCatcher::LteSpectrumValueCatcher(ns3::LteSpectrumValueCatcher const & arg0) [copy constructor]
+    cls.add_constructor([param('ns3::LteSpectrumValueCatcher const &', 'arg0')])
+    ## lte-chunk-processor.h (module 'lte'): ns3::Ptr<ns3::SpectrumValue> ns3::LteSpectrumValueCatcher::GetValue() [member function]
+    cls.add_method('GetValue', 
+                   'ns3::Ptr< ns3::SpectrumValue >', 
+                   [])
+    ## lte-chunk-processor.h (module 'lte'): void ns3::LteSpectrumValueCatcher::ReportValue(ns3::SpectrumValue const & value) [member function]
+    cls.add_method('ReportValue', 
+                   'void', 
+                   [param('ns3::SpectrumValue const &', 'value')])
+    return
+
 def register_Ns3LteSpectrumValueHelper_methods(root_module, cls):
     ## lte-spectrum-value-helper.h (module 'lte'): ns3::LteSpectrumValueHelper::LteSpectrumValueHelper() [constructor]
     cls.add_constructor([])
@@ -9699,6 +9727,14 @@ def register_Ns3LteRlcAmHeader_methods(root_module, cls):
                    'bool', 
                    [], 
                    is_const=True)
+    ## lte-rlc-am-header.h (module 'lte'): bool ns3::LteRlcAmHeader::IsNackPresent(ns3::SequenceNumber10 nack) [member function]
+    cls.add_method('IsNackPresent', 
+                   'bool', 
+                   [param('ns3::SequenceNumber10', 'nack')])
+    ## lte-rlc-am-header.h (module 'lte'): bool ns3::LteRlcAmHeader::OneMoreNackWouldFitIn(uint16_t bytes) [member function]
+    cls.add_method('OneMoreNackWouldFitIn', 
+                   'bool', 
+                   [param('uint16_t', 'bytes')])
     ## lte-rlc-am-header.h (module 'lte'): uint8_t ns3::LteRlcAmHeader::PopExtensionBit() [member function]
     cls.add_method('PopExtensionBit', 
                    'uint8_t', 
@@ -9706,6 +9742,10 @@ def register_Ns3LteRlcAmHeader_methods(root_module, cls):
     ## lte-rlc-am-header.h (module 'lte'): uint16_t ns3::LteRlcAmHeader::PopLengthIndicator() [member function]
     cls.add_method('PopLengthIndicator', 
                    'uint16_t', 
+                   [])
+    ## lte-rlc-am-header.h (module 'lte'): int ns3::LteRlcAmHeader::PopNack() [member function]
+    cls.add_method('PopNack', 
+                   'int', 
                    [])
     ## lte-rlc-am-header.h (module 'lte'): void ns3::LteRlcAmHeader::Print(std::ostream & os) const [member function]
     cls.add_method('Print', 
@@ -9720,6 +9760,10 @@ def register_Ns3LteRlcAmHeader_methods(root_module, cls):
     cls.add_method('PushLengthIndicator', 
                    'void', 
                    [param('uint16_t', 'lengthIndicator')])
+    ## lte-rlc-am-header.h (module 'lte'): void ns3::LteRlcAmHeader::PushNack(int nack) [member function]
+    cls.add_method('PushNack', 
+                   'void', 
+                   [param('int', 'nack')])
     ## lte-rlc-am-header.h (module 'lte'): void ns3::LteRlcAmHeader::Serialize(ns3::Buffer::Iterator start) const [member function]
     cls.add_method('Serialize', 
                    'void', 
@@ -16875,10 +16919,14 @@ def register_Ns3LteSpectrumPhy_methods(root_module, cls):
     cls.add_method('StartRxData', 
                    'void', 
                    [param('ns3::Ptr< ns3::LteSpectrumSignalParametersDataFrame >', 'params')])
-    ## lte-spectrum-phy.h (module 'lte'): void ns3::LteSpectrumPhy::StartRxCtrl(ns3::Ptr<ns3::SpectrumSignalParameters> params) [member function]
-    cls.add_method('StartRxCtrl', 
+    ## lte-spectrum-phy.h (module 'lte'): void ns3::LteSpectrumPhy::StartRxDlCtrl(ns3::Ptr<ns3::LteSpectrumSignalParametersDlCtrlFrame> lteDlCtrlRxParams) [member function]
+    cls.add_method('StartRxDlCtrl', 
                    'void', 
-                   [param('ns3::Ptr< ns3::SpectrumSignalParameters >', 'params')])
+                   [param('ns3::Ptr< ns3::LteSpectrumSignalParametersDlCtrlFrame >', 'lteDlCtrlRxParams')])
+    ## lte-spectrum-phy.h (module 'lte'): void ns3::LteSpectrumPhy::StartRxUlSrs(ns3::Ptr<ns3::LteSpectrumSignalParametersUlSrsFrame> lteUlSrsRxParams) [member function]
+    cls.add_method('StartRxUlSrs', 
+                   'void', 
+                   [param('ns3::Ptr< ns3::LteSpectrumSignalParametersUlSrsFrame >', 'lteUlSrsRxParams')])
     ## lte-spectrum-phy.h (module 'lte'): void ns3::LteSpectrumPhy::SetHarqPhyModule(ns3::Ptr<ns3::LteHarqPhy> harq) [member function]
     cls.add_method('SetHarqPhyModule', 
                    'void', 
