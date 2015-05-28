@@ -49,9 +49,7 @@ HttpHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
   Ptr<HttpClient> clientApp = m_clientFactory.Create<HttpClient> ();
   Ptr<HttpServer> serverApp = m_serverFactory.Create<HttpServer> ();
   
-  clientApp->SetAttribute ("RemoteAddress", Ipv4AddressValue (serverAddress));
-  clientApp->SetAttribute ("RemotePort", UintegerValue (serverPort));
-  clientApp->SetServerApp (serverApp);
+  clientApp->SetServerApp (serverApp, serverAddress, serverPort);
   clientNode->AddApplication (clientApp);
   
   serverApp->SetAttribute ("Port", UintegerValue (serverPort));

@@ -110,7 +110,7 @@ bool
 HttpServer::HandleRequest (Ptr<Socket> socket, const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
-  NS_LOG_INFO ("HttpServer >> Request for connection from " <<
+  NS_LOG_INFO ("Request for connection from " <<
                 InetSocketAddress::ConvertFrom (address).GetIpv4 () << " received.");
   return true;
 }
@@ -119,7 +119,7 @@ void
 HttpServer::HandleAccept (Ptr<Socket> socket, const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
-  NS_LOG_INFO ("HttpServer >> Connection with Client (" <<
+  NS_LOG_INFO ("Connection with Client (" <<
                 InetSocketAddress::ConvertFrom (address).GetIpv4 () <<
                 ") successfully established!");
   socket->SetRecvCallback (MakeCallback (&HttpServer::HandleReceive, this));
@@ -144,7 +144,7 @@ HttpServer::HandleReceive (Ptr<Socket> socket)
 
   string url = httpHeaderIn.GetUrl ();
 
-  NS_LOG_INFO ("HttpServer >> Client requesting a " + url);
+  NS_LOG_INFO ("Client requesting a " + url);
 
   if (url == "main/object")
     {
@@ -179,7 +179,7 @@ HttpServer::HandleReceive (Ptr<Socket> socket)
       Ptr<Packet> p = Create<Packet> (mainObjectSize);
       p->AddHeader (httpHeaderOut);
 
-      NS_LOG_INFO ("HttpServer >> Sending response to client. Main Object Size ("
+      NS_LOG_INFO ("Sending response to client. Main Object Size ("
                    << mainObjectSize << " bytes). NumOfInlineObjects ("
                    << numOfInlineObj << ").");
       socket->Send (p);
@@ -214,7 +214,7 @@ HttpServer::HandleReceive (Ptr<Socket> socket)
       Ptr<Packet> p = Create<Packet> (inlineObjectSize);
       p->AddHeader (httpHeaderOut);
 
-      NS_LOG_INFO ("HttpServer >> Sending response to client. Inline Objectsize ("
+      NS_LOG_INFO ("Sending response to client. Inline Objectsize ("
                    << inlineObjectSize << " bytes).");
       socket->Send (p);
     }
