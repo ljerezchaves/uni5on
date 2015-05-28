@@ -49,11 +49,12 @@ StoredVideoHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
   Ptr<StoredVideoClient> clientApp = m_clientFactory.Create<StoredVideoClient> ();
   Ptr<StoredVideoServer> serverApp = m_serverFactory.Create<StoredVideoServer> ();
 
-  serverApp->SetAttribute ("LocalPort", UintegerValue (serverPort));
-  serverNode->AddApplication (serverApp);
-
   clientApp->SetServerApp (serverApp, serverAddress, serverPort);
   clientNode->AddApplication (clientApp);
+
+  serverApp->SetAttribute ("LocalPort", UintegerValue (serverPort));
+  serverApp->SetClientApp (clientApp);
+  serverNode->AddApplication (serverApp);
 
   return clientApp;
 }

@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef VIDEO_HELPER_H
-#define VIDEO_HELPER_H
+#ifndef STORED_VIDEO_HELPER_H
+#define STORED_VIDEO_HELPER_H
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
@@ -29,14 +29,15 @@
 
 namespace ns3 {
 
+/**
+ * \ingroup applications 
+ * Create a StoredVideoHelper which will make life easier for people trying to
+ * set up simulations with stored video client/server.
+ */
 class StoredVideoHelper
 {
 public:
-  /**
-   * Create a StoredVideoHelper which will make life easier for people
-   * trying to set up simulations with video-client / video-server.
-   */
-  StoredVideoHelper ();
+  StoredVideoHelper ();      //!< Default constructor
 
   /**
    * Record an attribute to be set in each client application.
@@ -57,11 +58,12 @@ public:
    * \param clientNode The node to install the client app.
    * \param serverNode The node to install the server app.
    * \param serverAddress The IPv4 address of the server.
-   * \param serverPort The port number of the server
+   * \param serverPort The port number on the server
    * \return The client application created.
    */
   Ptr<StoredVideoClient> Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
-                                  Ipv4Address serverAddress, uint16_t serverPort);
+                                  Ipv4Address serverAddress, 
+                                  uint16_t serverPort);
 
 private:
   ObjectFactory m_clientFactory; //!< Object client factory.
@@ -69,4 +71,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* VIDEO_HELPER_H */
+#endif /* STORED_VIDEO_HELPER_H */

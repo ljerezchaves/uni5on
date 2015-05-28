@@ -142,7 +142,7 @@ HttpServer::HandleReceive (Ptr<Socket> socket)
 
   packet->PeekHeader (httpHeaderIn);
 
-  string url = httpHeaderIn.GetUrl ();
+  std::string url = httpHeaderIn.GetUrl ();
 
   NS_LOG_INFO ("Client requesting a " + url);
 

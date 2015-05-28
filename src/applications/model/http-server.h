@@ -1,6 +1,7 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2013 Federal University of Uberlandia
+ *               2015 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -15,6 +16,7 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Saulo da Mata <damata.saulo@gmail.com>
+ *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
 #ifndef HTTP_SERVER_H_
@@ -25,8 +27,6 @@
 #include "ns3/internet-module.h"
 #include "ns3/http-header.h"
 #include "http-client.h"
-
-using namespace std;
 
 namespace ns3 {
 
@@ -58,7 +58,7 @@ public:
 
   /**
    * \brief Set the client application.
-   * \param server The pointer to client application.
+   * \param client The pointer to client application.
    */
   void SetClientApp (Ptr<HttpClient> client);
 
@@ -78,20 +78,20 @@ private:
 
   /**
    * \brief Processes the request of client to establish a TCP connection.
-   * \param socket socket that receives the TCP request for connection.
+   * \param socket Socket that receives the TCP request for connection.
    */
   bool HandleRequest (Ptr<Socket> socket, const Address& address);
 
   /**
    * \brief Handle the acceptance or denial of the TCP connection.
-   * \param socket socket for the TCP connection.
-   * \param address address of the client
+   * \param socket Socket for the TCP connection.
+   * \param address Address of the client
    */
   void HandleAccept (Ptr<Socket> socket, const Address& address);
 
   /**
    * \brief Receive method.
-   * \param socket socket that receives packets from client.
+   * \param socket Socket that receives packets from client.
    */
   void HandleReceive (Ptr<Socket> socket);
 

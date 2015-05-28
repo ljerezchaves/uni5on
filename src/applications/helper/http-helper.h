@@ -32,7 +32,7 @@ namespace ns3 {
 /**
  * \ingroup applications
  * Create a HttpHelper which will make life easier for people trying to set up
- * simulations with HTTP client server.
+ * simulations with HTTP client/server.
  */
 class HttpHelper
 {
@@ -58,7 +58,7 @@ public:
    * \param clientNode The node to install the client app.
    * \param serverNode The node to install the server app.
    * \param serverAddress The IPv4 address of the server.
-   * \param serverPort The port number of the server
+   * \param serverPort The port number on the server
    * \return The client application created.
    */
   Ptr<HttpClient> Install (Ptr<Node> clientNode, Ptr<Node> serverNode,

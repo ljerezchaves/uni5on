@@ -153,6 +153,80 @@ StoredVideoServer::StopApplication ()
     }
 }
 
+bool
+StoredVideoServer::HandleRequest (Ptr<Socket> socket, const Address& address)
+{
+  NS_LOG_FUNCTION (this << socket << address);
+  NS_LOG_INFO ("Request for connection from " <<
+               InetSocketAddress::ConvertFrom (address).GetIpv4 () << " received.");
+  return true;
+}
+
+void
+StoredVideoServer::HandleAccept (Ptr<Socket> socket, const Address& address)
+{
+  NS_LOG_FUNCTION (this << socket << address);
+  NS_LOG_INFO ("Connection with client (" <<
+               InetSocketAddress::ConvertFrom (address).GetIpv4 () <<
+               ") successfully established!");
+  socket->SetSendCallback (MakeCallback (&StoredVideoServer::SendStream, this));
+  socket->SetRecvCallback (MakeCallback (&StoredVideoServer::HandleReceive, this));
+  m_connected = true;
+}
+
+void
+StoredVideoServer::HandleReceive (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+
+  HttpHeader httpHeaderIn;
+  Ptr<Packet> packet = socket->Recv ();
+  packet->PeekHeader (httpHeaderIn);
+
+  std::string url = httpHeaderIn.GetUrl ();
+
+  NS_LOG_INFO ("Client requesting a " + url);
+  if (url == "main/video")
+    {
+      m_currentEntry = 0;
+      m_lengthTime = Seconds (std::abs (m_lengthRng->GetValue ()));
+      m_elapsed = MilliSeconds (0);
+      uint32_t size = GetVideoBytes (m_lengthTime);
+      NS_LOG_DEBUG ("Video lenght: " << m_lengthTime.As (Time::S) << " (" <<
+                    size << " bytes).");
+
+      // Setting response
+      HttpHeader httpHeaderOut;
+      httpHeaderOut.SetRequest (false);
+      httpHeaderOut.SetVersion ("HTTP/1.1");
+      httpHeaderOut.SetStatusCode ("200");
+      httpHeaderOut.SetPhrase ("OK");
+      httpHeaderOut.SetHeaderField ("ContentLength", size);
+      httpHeaderOut.SetHeaderField ("ContentType", "main/video");
+      httpHeaderOut.SetHeaderField ("NumOfInlineObjects", 0);
+
+      Ptr<Packet> p = Create<Packet> (0);
+      p->AddHeader (httpHeaderOut);
+      socket->Send (p);
+
+      // Start sending the stored video stream to the client.
+      SendStream (socket, 0);
+    }
+}
+
+void 
+StoredVideoServer::HandlePeerClose (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+  m_connected = false;
+}
+ 
+void 
+StoredVideoServer::HandlePeerError (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+}
+
 void
 StoredVideoServer::LoadTrace (std::string filename)
 {
@@ -208,89 +282,14 @@ StoredVideoServer::LoadDefaultTrace (void)
     }
 }
 
-bool
-StoredVideoServer::HandleRequest (Ptr<Socket> socket, const Address& address)
-{
-  NS_LOG_FUNCTION (this << socket << address);
-  NS_LOG_INFO ("Request for connection from " <<
-               InetSocketAddress::ConvertFrom (address).GetIpv4 () << " received.");
-  return true;
-}
-
-void
-StoredVideoServer::HandleAccept (Ptr<Socket> socket, const Address& address)
-{
-  NS_LOG_FUNCTION (this << socket << address);
-  NS_LOG_INFO ("Connection with client (" <<
-               InetSocketAddress::ConvertFrom (address).GetIpv4 () <<
-               ") successfully established!");
-  socket->SetSendCallback (MakeCallback (&StoredVideoServer::SendStream, this));
-  socket->SetRecvCallback (MakeCallback (&StoredVideoServer::HandleReceive, this));
-  m_connected = true;
-}
-
-void
-StoredVideoServer::HandleReceive (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
-
-  HttpHeader httpHeaderIn;
-  Ptr<Packet> packet = socket->Recv ();
-  packet->PeekHeader (httpHeaderIn);
-
-  std::string url = httpHeaderIn.GetUrl ();
-
-  NS_LOG_INFO ("Client requesting a " + url);
-  if (url == "main/video")
-    {
-      m_currentEntry = 0;
-      m_lengthTime = Seconds (std::abs (m_lengthRng->GetValue ()));
-      m_elapsed = MilliSeconds (0);
-      uint32_t size = GetVideoBytes ();
-      NS_LOG_DEBUG ("Video lenght: " << m_lengthTime.As (Time::S) << " (" <<
-                    size << " bytes).");
-
-      // Setting response
-      HttpHeader httpHeaderOut;
-      httpHeaderOut.SetRequest (false);
-      httpHeaderOut.SetVersion ("HTTP/1.1");
-      httpHeaderOut.SetStatusCode ("200");
-      httpHeaderOut.SetPhrase ("OK");
-      httpHeaderOut.SetHeaderField ("ContentLength", size);
-      httpHeaderOut.SetHeaderField ("ContentType", "main/video");
-      httpHeaderOut.SetHeaderField ("NumOfInlineObjects", 0);
-
-      Ptr<Packet> p = Create<Packet> (0);
-      p->AddHeader (httpHeaderOut);
-      socket->Send (p);
-
-      // Start sending the stored video stream to the client.
-      SendStream (socket, 0);
-    }
-}
-
-void 
-StoredVideoServer::HandlePeerClose (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
-  m_connected = false;
-}
- 
-void 
-StoredVideoServer::HandlePeerError (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
-}
-
 uint32_t
-StoredVideoServer::GetVideoBytes (void)
+StoredVideoServer::GetVideoBytes (Time length)
 {
   uint32_t currentEntry = 0;
   Time elapsed = Seconds (0);
-  Ptr<Packet> packet;
   struct TraceEntry *entry;
   uint32_t total = 0;
-  do
+  while (elapsed < length)
     {
       entry = &m_entries[currentEntry];
       total += entry->packetSize;
@@ -298,7 +297,6 @@ StoredVideoServer::GetVideoBytes (void)
       currentEntry++;
       currentEntry = currentEntry % m_entries.size ();
     }
-  while (elapsed < m_lengthTime);
   return total;
 }
 

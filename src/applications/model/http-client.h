@@ -119,14 +119,14 @@ private:
 
   /**
    * \brief Send the request to server side.
-   * \param socket socket that sends requests.
-   * \param url URL of the object requested.
+   * \param socket Socket that sends requests.
+   * \param url The URL of the object requested.
    */
   void SendRequest (Ptr<Socket> socket, string url);
 
   /**
    * \brief Receive method.
-   * \param socket socket that receives packets from server.
+   * \param socket The socket that receives packets from server.
    */
   void HandleReceive (Ptr<Socket> socket);
 

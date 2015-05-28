@@ -33,9 +33,10 @@ class StoredVideoServer;
 
 /**
  * \ingroup applications
- *
- * This class implements a stored video server application, sending stored
- * video stream pattern to client over TCP connection.
+ * This is the client side of a stored video traffic generator. The client
+ * establishes a TCP connection with the server and sends a HTTP request for
+ * the main video object. After receiving the entire video, the client closes
+ * the connection.
  */
 class StoredVideoClient : public Application
 {
@@ -46,11 +47,11 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  StoredVideoClient ();       //!< Default constructor
-  ~StoredVideoClient ();      //!< Dummy destructor, see DoDipose
+  StoredVideoClient ();   //!< Default constructor
+  ~StoredVideoClient ();  //!< Dummy destructor, see DoDipose
 
   /**
-   * \brief Set the StoredVideoServer application.
+   * \brief Set the server application.
    * \param server The pointer to server application.
    * \param serverAddress The IPv4 address of the server.
    * \param serverPort The port number on the server
@@ -59,7 +60,7 @@ public:
                      uint16_t serverPort);
 
   /**
-   * \brief Get the StoredVideoServer application.
+   * \brief Get the server application.
    * \return The pointer to server application.
    */
   Ptr<StoredVideoServer> GetServerApp ();
@@ -107,18 +108,18 @@ private:
 
   /**
    * \brief Send the request to server side.
-   * \param socket socket that sends requests.
-   * \param url URL of the object requested.
+   * \param socket Socket that sends requests.
+   * \param url The URL of the object requested.
    */
   void SendRequest (Ptr<Socket> socket, std::string url);
 
   /**
    * \brief Receive method.
-   * \param socket socket that receives packets from server.
+   * \param socket The socket that receives packets from server.
    */
   void HandleReceive (Ptr<Socket> socket);
 
-  uint32_t                m_bytesReceived;  //!< Number of bytes received from server.
+  uint32_t                m_bytesReceived;  //!< Number of bytes received.
   uint32_t                m_contentLength;  //!< Content-Length header line.
   std::string             m_contentType;    //!< Content-Type header line.
 
