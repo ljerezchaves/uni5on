@@ -38,8 +38,8 @@ HttpServer::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::HttpServer")
     .SetParent<Application> ()
     .AddConstructor<HttpServer> ()
-    .AddAttribute ("Port",
-                   "Port on which we listen for incoming packets.",
+    .AddAttribute ("LocalPort",
+                   "Local TCP port on which we listen for incoming connections.",
                    UintegerValue (80),
                    MakeUintegerAccessor (&HttpServer::m_port),
                    MakeUintegerChecker<uint16_t> ())
@@ -83,7 +83,7 @@ HttpServer::DoDispose (void)
 void HttpServer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
-  
+
   if (!m_socket)
     {
       TypeId tid = TypeId::LookupByName ("ns3::TcpSocketFactory");
@@ -92,8 +92,8 @@ void HttpServer::StartApplication (void)
       m_socket->Bind (local);
       m_socket->Listen ();
       m_socket->SetAcceptCallback (
-          MakeCallback (&HttpServer::HandleRequest, this),
-          MakeCallback (&HttpServer::HandleAccept, this));
+        MakeCallback (&HttpServer::HandleRequest, this),
+        MakeCallback (&HttpServer::HandleAccept, this));
     }
 }
 
@@ -111,7 +111,7 @@ HttpServer::HandleRequest (Ptr<Socket> socket, const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
   NS_LOG_INFO ("Request for connection from " <<
-                InetSocketAddress::ConvertFrom (address).GetIpv4 () << " received.");
+               InetSocketAddress::ConvertFrom (address).GetIpv4 () << " received.");
   return true;
 }
 
@@ -119,9 +119,9 @@ void
 HttpServer::HandleAccept (Ptr<Socket> socket, const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
-  NS_LOG_INFO ("Connection with Client (" <<
-                InetSocketAddress::ConvertFrom (address).GetIpv4 () <<
-                ") successfully established!");
+  NS_LOG_INFO ("Connection with client (" <<
+               InetSocketAddress::ConvertFrom (address).GetIpv4 () <<
+               ") successfully established!");
   socket->SetRecvCallback (MakeCallback (&HttpServer::HandleReceive, this));
 }
 

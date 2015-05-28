@@ -20,24 +20,21 @@
 #ifndef HTTP_CLIENT_H_
 #define HTTP_CLIENT_H_
 
-#include "ns3/application.h"
-#include "ns3/socket.h"
-#include "ns3/random-variable-stream.h"
-#include "ns3/double.h"
+#include "ns3/core-module.h"
+#include "ns3/network-module.h"
+#include "ns3/internet-module.h"
 #include "ns3/http-header.h"
 #include "http-server.h"
-#include "ns3/data-rate.h"
-#include "ns3/core-module.h"
 #include "qos-stats-calculator.h"
 
 using namespace std;
+
 namespace ns3 {
 
 class HttpServer;
 
 /**
  * \ingroup applications
- *
  * This is the client side of a HTTP Traffic Generator. The client establishes
  * a TCP connection with the server and sends a request for the main object of
  * a given web page. When client gets the main object, it process the message
@@ -47,9 +44,9 @@ class HttpServer;
  * of this application is simplistic and it does not support pipelining in this
  * current version. The model used is based on the distributions indicated in
  * the paper "An HTTP Web Traffic Model Based on the Top One Million Visited
- * Web Pages" by Rastin Pries et. al. This simplistic approach was taken since
+ * Web Pages" by Rastin Pries et.  al. This simplistic approach was taken since
  * this traffic generator was developed primarily to help users evaluate their
- * proposed algorithm in other modules of NS-3.  To allow deeper studies about
+ * proposed algorithm in other modules of ns-3. To allow deeper studies about
  * the HTTP Protocol it needs some improvements.
  */
 class HttpClient : public Application
@@ -65,28 +62,28 @@ public:
   virtual ~HttpClient (); //!< Dummy destructor, see DoDipose
 
   /**
-   * \brief Set the HttpServer application.
-   * \param server The pointer to server application. 
-   * \param serverAddress The IPv4 address of the Http server.
-   * \param serverPort The port number of the Http server
+   * \brief Set the server application.
+   * \param server The pointer to server application.
+   * \param serverAddress The IPv4 address of the server.
+   * \param serverPort The port number on the server
    */
-  void SetServerApp (Ptr<HttpServer> server, Ipv4Address serverAddress, 
+  void SetServerApp (Ptr<HttpServer> server, Ipv4Address serverAddress,
                      uint16_t serverPort);
 
   /**
-   * \brief Get the HttpServer application. 
-   * \return The pointer to server application. 
+   * \brief Get the server application.
+   * \return The pointer to server application.
    */
   Ptr<HttpServer> GetServerApp ();
 
-  /** 
+  /**
    * Reset the QoS statistics
    */
   void ResetQosStats ();
 
   /**
    * Get QoS statistics
-   * \return Get the const pointer to QosStatsCalculator 
+   * \return Get the const pointer to QosStatsCalculator
    */
   Ptr<const QosStatsCalculator> GetQosStats (void) const;
 
@@ -113,7 +110,7 @@ private:
    * \param socket the connected socket
    */
   void ConnectionSucceeded (Ptr<Socket> socket);
-  
+
   /**
    * \brief Handle a connection failed event.
    * \param socket the not connected socket
@@ -140,22 +137,21 @@ private:
   void SetReadingTime (Ptr<Socket> socket);
 
   Ptr<Socket>     m_socket;             //!< Local socket.
-  Ipv4Address     m_peerAddress;        //!< Address of the server.
-  uint16_t        m_peerPort;           //!< Remote port in the server.
-  Ipv4Address     m_clientAddress;      //!< Client Address.
+  Ipv4Address     m_serverAddress;      //!< Address of the server.
+  uint16_t        m_serverPort;         //!< Remote port in the server.
   Ptr<HttpServer> m_serverApp;          //!< HttpServer application
-  
+
   HttpHeader      m_httpHeader;         //!< HTTP Header.
   uint32_t        m_contentLength;      //!< Content-Length header line.
   string          m_contentType;        //!< Content-Type header line.
   uint32_t        m_numOfInlineObjects; //!< Number-of-Inline-Objects header line.
   uint32_t        m_bytesReceived;      //!< Number of bytes received from server.
   uint32_t        m_inlineObjLoaded;    //!< Number of inline objects already loaded.
-  uint16_t        m_pagesLoaded;        //!< Total number of pages loaded.   
+  uint16_t        m_pagesLoaded;        //!< Total number of pages loaded.
 
   Time            m_maxReadingTime;     //!< Reading time threshold
   uint16_t        m_maxPages;           //!< Number of pages threshold
-  
+
   Ptr<QosStatsCalculator> m_qosStats;   //!< QoS statistics
 
   Ptr<LogNormalRandomVariable> m_readingTimeStream; //!< Random Variable Stream for reading time.

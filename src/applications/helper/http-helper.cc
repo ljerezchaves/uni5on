@@ -18,8 +18,6 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-
-#include "ns3/uinteger.h"
 #include "http-helper.h"
 
 namespace ns3 {
@@ -43,19 +41,19 @@ HttpHelper::SetServerAttribute (std::string name, const AttributeValue &value)
 }
 
 Ptr<HttpClient>
-HttpHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode, 
-                      Ipv4Address serverAddress, uint16_t serverPort)
+HttpHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
+                     Ipv4Address serverAddress, uint16_t serverPort)
 {
   Ptr<HttpClient> clientApp = m_clientFactory.Create<HttpClient> ();
   Ptr<HttpServer> serverApp = m_serverFactory.Create<HttpServer> ();
-  
+
   clientApp->SetServerApp (serverApp, serverAddress, serverPort);
   clientNode->AddApplication (clientApp);
-  
-  serverApp->SetAttribute ("Port", UintegerValue (serverPort));
+
+  serverApp->SetAttribute ("LocalPort", UintegerValue (serverPort));
   serverApp->SetClientApp (clientApp);
   serverNode->AddApplication (serverApp);
-  
+
   return clientApp;
 }
 

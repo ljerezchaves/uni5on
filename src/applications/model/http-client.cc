@@ -39,19 +39,23 @@ HttpClient::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::HttpClient")
     .SetParent<Application> ()
     .AddConstructor<HttpClient> ()
-    .AddAttribute ("RemoteAddress", "The destination Address of the outbound packets.",
+    .AddAttribute ("ServerAddress",
+                   "The server IPv4 address.",
                    Ipv4AddressValue (),
-                   MakeIpv4AddressAccessor (&HttpClient::m_peerAddress),
+                   MakeIpv4AddressAccessor (&HttpClient::m_serverAddress),
                    MakeIpv4AddressChecker ())
-    .AddAttribute ("RemotePort", "The destination port of the outbound packets.",
+    .AddAttribute ("ServerPort",
+                   "The server TCP port.",
                    UintegerValue (80),
-                   MakeUintegerAccessor (&HttpClient::m_peerPort),
+                   MakeUintegerAccessor (&HttpClient::m_serverPort),
                    MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("MaxReadingTime", "The reading time threshold to stop application.",
+    .AddAttribute ("MaxReadingTime",
+                   "The reading time threshold to stop application.",
                    TimeValue (Time::Max ()),
                    MakeTimeAccessor (&HttpClient::m_maxReadingTime),
                    MakeTimeChecker ())
-    .AddAttribute ("MaxPages", "The number of pages threshold to stop application.",
+    .AddAttribute ("MaxPages",
+                   "The number of pages threshold to stop application.",
                    UintegerValue (std::numeric_limits<uint16_t>::max ()),
                    MakeUintegerAccessor (&HttpClient::m_maxPages),
                    MakeUintegerChecker<uint16_t> (1)) // At least 1 page
@@ -89,22 +93,22 @@ HttpClient::~HttpClient ()
   NS_LOG_FUNCTION (this);
 }
 
-void 
-HttpClient::SetServerApp (Ptr<HttpServer> server, Ipv4Address serverAddress, 
+void
+HttpClient::SetServerApp (Ptr<HttpServer> server, Ipv4Address serverAddress,
                           uint16_t serverPort)
 {
   m_serverApp = server;
-  m_peerAddress = serverAddress;
-  m_peerPort = serverPort;
+  m_serverAddress = serverAddress;
+  m_serverPort = serverPort;
 }
 
-Ptr<HttpServer> 
+Ptr<HttpServer>
 HttpClient::GetServerApp ()
 {
   return m_serverApp;
 }
 
-void 
+void
 HttpClient::ResetQosStats ()
 {
   m_qosStats->ResetCounters ();
@@ -120,11 +124,11 @@ void
 HttpClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
-  Application::DoDispose ();
   m_serverApp = 0;
   m_socket = 0;
   m_qosStats = 0;
   m_readingTimeStream = 0;
+  Application::DoDispose ();
 }
 
 void
@@ -146,17 +150,17 @@ void
 HttpClient::OpenSocket ()
 {
   NS_LOG_FUNCTION (this);
-  
+
   if (!m_socket)
     {
       NS_LOG_LOGIC ("Opening the TCP connection.");
       TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tcpFactory);
       m_socket->Bind ();
-      m_socket->Connect (InetSocketAddress (m_peerAddress, m_peerPort));
+      m_socket->Connect (InetSocketAddress (m_serverAddress, m_serverPort));
       m_socket->SetConnectCallback (
-          MakeCallback (&HttpClient::ConnectionSucceeded, this),
-          MakeCallback (&HttpClient::ConnectionFailed, this));
+        MakeCallback (&HttpClient::ConnectionSucceeded, this),
+        MakeCallback (&HttpClient::ConnectionFailed, this));
     }
 }
 
@@ -164,7 +168,7 @@ void
 HttpClient::CloseSocket ()
 {
   NS_LOG_FUNCTION (this);
-  
+
   if (m_socket != 0)
     {
       NS_LOG_LOGIC ("Closing the TCP connection.");
@@ -177,11 +181,10 @@ void
 HttpClient::ConnectionSucceeded (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-  
-  m_clientAddress = socket->GetNode ()->GetObject<Ipv4> ()->GetAddress (1,0).GetLocal ();
+
   NS_LOG_DEBUG ("Server accepted connection request!");
   socket->SetRecvCallback (MakeCallback (&HttpClient::HandleReceive, this));
-  
+
   // Request the first main object
   m_pagesLoaded = 0;
   SendRequest (socket, "main/object");
@@ -223,7 +226,7 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
   HttpHeader httpHeaderIn;
   packet->PeekHeader (httpHeaderIn);
   string statusCode = httpHeaderIn.GetStatusCode ();
-  
+
   if (statusCode == "200")
     {
       m_contentType = httpHeaderIn.GetHeaderField ("ContentType");
@@ -237,7 +240,7 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
     }
   else
     {
-       m_bytesReceived += bytesReceived;
+      m_bytesReceived += bytesReceived;
     }
 
   if (m_bytesReceived == m_contentLength)
@@ -246,10 +249,10 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
 
       if (m_contentType == "main/object")
         {
-          NS_LOG_INFO ("main/object successfully received. " << 
+          NS_LOG_INFO ("main/object successfully received. " <<
                        "There are " << m_numOfInlineObjects << " inline objects.");
           m_inlineObjLoaded = 0;
-          
+
           NS_LOG_DEBUG ("Requesting inline/object 1");
           SendRequest (socket, "inline/object");
         }
@@ -275,11 +278,11 @@ void
 HttpClient::SetReadingTime (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-  
+
   double randomSeconds = std::abs (m_readingTimeStream->GetValue ());
   double adjustSeconds = std::abs (m_readingTimeAdjust->GetValue ());
   Time readingTime = Seconds (randomSeconds + adjustSeconds);
-  
+
   if (readingTime > Seconds (10000))
     {
       // Limiting reading time to 10000 seconds according to reference paper.

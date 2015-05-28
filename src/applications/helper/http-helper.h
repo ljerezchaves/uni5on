@@ -21,51 +21,47 @@
 #ifndef HTTP_HELPER_H_
 #define HTTP_HELPER_H_
 
-#include <stdint.h>
-#include "ns3/application-container.h"
-#include "ns3/node-container.h"
-#include "ns3/object-factory.h"
-#include "ns3/ipv4-address.h"
+#include "ns3/core-module.h"
+#include "ns3/network-module.h"
+#include "ns3/internet-module.h"
 #include "ns3/http-client.h"
 #include "ns3/http-server.h"
 
 namespace ns3 {
 
+/**
+ * \ingroup applications
+ * Create a HttpHelper which will make life easier for people trying to set up
+ * simulations with HTTP client server.
+ */
 class HttpHelper
 {
 public:
-    
-  /**
-   * Create a HttpHelper which will make life easier for people
-   * trying to set up simulations with http client-server.
-   */
-  HttpHelper ();
+  HttpHelper ();      //!< Default constructor
 
- /**
-   * Record an attribute to be set in each HttpClient Application after it is
-   * is created.
+  /**
+   * Record an attribute to be set in each client application.
    * \param name the name of the attribute to set.
    * \param value the value of the attribute to set.
    */
   void SetClientAttribute (std::string name, const AttributeValue &value);
 
   /**
-   * Record an attribute to be set in each HttpServer Application after it is
-   * is created.
+   * Record an attribute to be set in each server application.
    * \param name the name of the attribute to set.
    * \param value the value of the attribute to set.
    */
   void SetServerAttribute (std::string name, const AttributeValue &value);
 
   /**
-   * Create a pair of HttpClient + HttpServer applications on input nodes
-   * \param clientNode The node to install the HttpClient app.
-   * \param serverNode The node to install the HttpServer app.
-   * \param serverAddress The IPv4 address of the Http server.
-   * \param serverPort The port number of the Http server
-   * \return The HttpClient applicatio created.
+   * Create a pair of client + server applications on input nodes.
+   * \param clientNode The node to install the client app.
+   * \param serverNode The node to install the server app.
+   * \param serverAddress The IPv4 address of the server.
+   * \param serverPort The port number of the server
+   * \return The client application created.
    */
-  Ptr<HttpClient> Install (Ptr<Node> clientNode, Ptr<Node> serverNode, 
+  Ptr<HttpClient> Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
                            Ipv4Address serverAddress, uint16_t serverPort);
 
 private:

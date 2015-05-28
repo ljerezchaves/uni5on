@@ -20,12 +20,10 @@
 #ifndef HTTP_SERVER_H_
 #define HTTP_SERVER_H_
 
-#include "ns3/application.h"
-#include "ns3/random-variable-stream.h"
-#include "ns3/socket.h"
+#include "ns3/core-module.h"
+#include "ns3/network-module.h"
+#include "ns3/internet-module.h"
 #include "ns3/http-header.h"
-#include "ns3/double.h"
-#include "ns3/data-rate.h"
 #include "http-client.h"
 
 using namespace std;
@@ -36,17 +34,15 @@ class HttpClient;
 
 /**
  * \ingroup applications
- *
- * This is the server side of a HTTP Traffic Generator. The server
- * establishes a TCP connection with the client and waits for the
- * object requests. The implementation of this application is simplistic
- * and it does not support pipelining in this current version. The
- * model used is based on the distributions indicated in the paper
- * "An HTTP Web Traffic Model Based on the Top One Million Visited
- * Web Pages" by Rastin Pries et. al. This simplistic approach was
- * taken since this traffic generator was developed primarily to help
- * users evaluate their proposed algorithm in other modules of NS-3.
- * To allow deeper studies about the HTTP Protocol it needs some improvements.
+ * This is the server side of a HTTP Traffic Generator. The server listen for
+ * client object requests. The implementation of this application is simplistic
+ * and it does not support pipelining in this current version. The model used
+ * is based on the distributions indicated in the paper "An HTTP Web Traffic
+ * Model Based on the Top One Million Visited Web Pages" by Rastin Pries et.
+ * al. This simplistic approach was taken since this traffic generator was
+ * developed primarily to help users evaluate their proposed algorithm in other
+ * modules of ns-3. To allow deeper studies about the HTTP Protocol it needs
+ * some improvements.
  */
 class HttpServer : public Application
 {
@@ -61,14 +57,14 @@ public:
   virtual ~HttpServer (); //!< Dummy destructor, see DoDipose
 
   /**
-   * \brief Set the HttpClient application. 
-   * \param server The pointer to client application. 
+   * \brief Set the client application.
+   * \param server The pointer to client application.
    */
   void SetClientApp (Ptr<HttpClient> client);
-  
+
   /**
-   * \brief Get the HttpClient application. 
-   * \return The pointer to client application. 
+   * \brief Get the client application.
+   * \return The pointer to client application.
    */
   Ptr<HttpClient> GetClientApp ();
 
@@ -100,8 +96,8 @@ private:
   void HandleReceive (Ptr<Socket> socket);
 
   Ptr<Socket>     m_socket;             //!< Local socket
-  Ptr<HttpClient> m_clientApp;          //!< HttpClient application 
   uint16_t        m_port;               //!< Local port
+  Ptr<HttpClient> m_clientApp;          //!< HttpClient application
 };
 
 }
