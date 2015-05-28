@@ -97,6 +97,18 @@ private:
   void HandleReceive (Ptr<Socket> socket);
 
   /**
+   * \brief Handle an connection close
+   * \param socket the connected socket
+   */
+  void HandlePeerClose (Ptr<Socket> socket);
+  
+  /**
+   * \brief Handle an connection error
+   * \param socket the connected socket
+   */
+  void HandlePeerError (Ptr<Socket> socket);
+
+  /**
    * \brief Load a trace file.
    * \param filename The trace file path.
    */
@@ -108,17 +120,17 @@ private:
   void LoadDefaultTrace (void);
 
   /**
-   * \brief Start sending the video stream.
+   * \return The size (in bytes) of the video
    */
-  void SendStream (void);
+  uint32_t GetVideoBytes (void);
 
   /**
-   * \brief Send more data as soon as some has been transmitted.
+   * \brief Start sending the video stream.
    * Callback for socket's SetSendCallback.
    * \param socket The pointer to the socket.
    * \param size The number of bytes available for writing into the buffer
    */
-  void StartSending (Ptr<Socket> socket, uint32_t size);
+  void SendStream (Ptr<Socket> socket, uint32_t size);
 
   /**
    * \brief Entry to send.

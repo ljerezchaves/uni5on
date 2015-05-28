@@ -149,6 +149,8 @@ StoredVideoClient::ConnectionSucceeded (Ptr<Socket> socket)
 
   NS_LOG_DEBUG ("Server accepted connection request!");
   socket->SetRecvCallback (MakeCallback (&StoredVideoClient::HandleReceive, this));
+
+  SendRequest (socket, "main/video");
 }
 
 void
@@ -156,6 +158,26 @@ StoredVideoClient::ConnectionFailed (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
   NS_LOG_ERROR ("Server did not accepted connection request!");
+}
+
+void
+StoredVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Setting request message
+  HttpHeader httpHeader;
+  httpHeader.SetRequest (true);
+  httpHeader.SetMethod ("GET");
+  httpHeader.SetUrl (url);
+  httpHeader.SetVersion ("HTTP/1.1");
+
+  Ptr<Packet> packet = Create<Packet> ();
+  packet->AddHeader (httpHeader);
+  NS_LOG_INFO ("Request for " << url);
+  socket->Send (packet);
+
+  m_bytesReceived = 0;
 }
 
 void
@@ -167,6 +189,29 @@ StoredVideoClient::HandleReceive (Ptr<Socket> socket)
   uint32_t bytesReceived = packet->GetSize ();
   m_qosStats->NotifyReceived (0, Simulator::Now (), bytesReceived);
   NS_LOG_DEBUG (bytesReceived << " bytes received from server.");
+
+  HttpHeader httpHeaderIn;
+  packet->PeekHeader (httpHeaderIn);
+  std::string statusCode = httpHeaderIn.GetStatusCode ();
+
+  if (statusCode == "200")
+    {
+      m_contentType = httpHeaderIn.GetHeaderField ("ContentType");
+      m_contentLength = atoi (httpHeaderIn.GetHeaderField ("ContentLength").c_str ());
+      m_bytesReceived = bytesReceived - httpHeaderIn.GetSerializedSize ();
+      NS_LOG_DEBUG ("Video size is " << m_contentLength << " bytes.");
+    }
+  else
+    {
+      m_bytesReceived += bytesReceived;
+    }
+
+  if (m_bytesReceived == m_contentLength)
+    {
+      NS_LOG_INFO ("main/video successfully received.");
+      NS_LOG_DEBUG (socket->GetRxAvailable () << "bytes available.");
+      CloseSocket ();
+    }
 }
 
 } // Namespace ns3

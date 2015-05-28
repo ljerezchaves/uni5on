@@ -18,7 +18,6 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-
 #ifndef STORED_VIDEO_CLIENT_H
 #define STORED_VIDEO_CLIENT_H
 
@@ -107,10 +106,21 @@ private:
   void ConnectionFailed (Ptr<Socket> socket);
 
   /**
+   * \brief Send the request to server side.
+   * \param socket socket that sends requests.
+   * \param url URL of the object requested.
+   */
+  void SendRequest (Ptr<Socket> socket, std::string url);
+
+  /**
    * \brief Receive method.
    * \param socket socket that receives packets from server.
    */
   void HandleReceive (Ptr<Socket> socket);
+
+  uint32_t                m_bytesReceived;  //!< Number of bytes received from server.
+  uint32_t                m_contentLength;  //!< Content-Length header line.
+  std::string             m_contentType;    //!< Content-Type header line.
 
   Ptr<Socket>             m_socket;         //!< Local socket.
   Ipv4Address             m_serverAddress;  //!< Address of the server.
