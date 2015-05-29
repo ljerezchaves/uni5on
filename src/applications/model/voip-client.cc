@@ -62,7 +62,7 @@ VoipClient::GetTypeId (void)
                    TimeValue (Seconds (0.02)),
                    MakeTimeAccessor (&VoipServer::m_interval),
                    MakeTimeChecker ())
-    ;
+  ;
   return tid;
 }
 

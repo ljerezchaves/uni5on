@@ -67,7 +67,7 @@ VoipServer::GetTypeId (void)
                    StringValue ("ns3::ConstantRandomVariable[Constant=30.0]"),
                    MakePointerAccessor (&VoipServer::m_lengthRng),
                    MakePointerChecker <RandomVariableStream> ())
-    ;
+  ;
   return tid;
 }
 

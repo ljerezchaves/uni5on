@@ -322,8 +322,6 @@ SimulationScenario::EnableHttpTraffic ()
   ApplicationContainer httpApps;
 
   HttpHelper httpHelper;
-  httpHelper.SetClientAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
-  httpHelper.SetServerAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
   httpHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
   httpHelper.SetClientAttribute ("MaxPages", UintegerValue (3)); 
   // The HttpClient TcpTimeout was selected based on HTTP traffic model and
@@ -373,15 +371,15 @@ SimulationScenario::EnableHttpTraffic ()
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
 
-  // Setting up app start callback to controller
-  ApplicationContainer::Iterator i;
-  for (i = httpApps.Begin (); i != httpApps.End (); ++i)
-    {
-      Ptr<Application> app = *i;
-      app->SetAppStartStopCallback (
-          MakeCallback (&OpenFlowEpcController::NotifyAppStart, m_controller),
-          MakeCallback (&OpenFlowEpcController::NotifyAppStop, m_controller));
-    }
+//  // Setting up app start callback to controller
+//  ApplicationContainer::Iterator i;
+//  for (i = httpApps.Begin (); i != httpApps.End (); ++i)
+//    {
+//      Ptr<Application> app = *i;
+//      app->SetAppStartStopCallback (
+//          MakeCallback (&OpenFlowEpcController::NotifyAppStart, m_controller),
+//          MakeCallback (&OpenFlowEpcController::NotifyAppStop, m_controller));
+//    }
 }
 
 void
@@ -399,8 +397,6 @@ SimulationScenario::EnableVoipTraffic ()
 
   ApplicationContainer voipApps;
   VoipHelper voipHelper;
-  voipHelper.SetClientAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
-  voipHelper.SetServerAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
   voipHelper.SetClientAttribute ("PayloadSize", UintegerValue (pktSize));
   voipHelper.SetServerAttribute ("PayloadSize", UintegerValue (pktSize));
   voipHelper.SetClientAttribute ("Interval", TimeValue (Seconds (pktInterval)));
@@ -475,15 +471,15 @@ SimulationScenario::EnableVoipTraffic ()
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
 
-  // Setting up app start callback to controller
-  ApplicationContainer::Iterator i;
-  for (i = voipApps.Begin (); i != voipApps.End (); ++i)
-    {
-      Ptr<Application> app = *i;
-      app->SetAppStartStopCallback (
-          MakeCallback (&OpenFlowEpcController::NotifyAppStart, m_controller),
-          MakeCallback (&OpenFlowEpcController::NotifyAppStop, m_controller));
-    }
+//  // Setting up app start callback to controller
+//  ApplicationContainer::Iterator i;
+//  for (i = voipApps.Begin (); i != voipApps.End (); ++i)
+//    {
+//      Ptr<Application> app = *i;
+//      app->SetAppStartStopCallback (
+//          MakeCallback (&OpenFlowEpcController::NotifyAppStart, m_controller),
+//          MakeCallback (&OpenFlowEpcController::NotifyAppStop, m_controller));
+//    }
 }
 
 void
@@ -499,8 +495,6 @@ SimulationScenario::EnableVideoTraffic ()
 
   ApplicationContainer videoApps;
   RealTimeVideoHelper videoHelper;
-  videoHelper.SetClientAttribute ("Direction", EnumValue (Application::DOWNLINK));
-  videoHelper.SetServerAttribute ("Direction", EnumValue (Application::DOWNLINK));
   videoHelper.SetServerAttribute ("MaxPacketSize", UintegerValue (1400));
   videoHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
 
@@ -563,15 +557,15 @@ SimulationScenario::EnableVideoTraffic ()
       m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
     }
 
-  // Setting up app start callback to controller
-  ApplicationContainer::Iterator i;
-  for (i = videoApps.Begin (); i != videoApps.End (); ++i)
-    {
-      Ptr<Application> app = *i;
-      app->SetAppStartStopCallback (
-          MakeCallback (&OpenFlowEpcController::NotifyAppStart, m_controller),
-          MakeCallback (&OpenFlowEpcController::NotifyAppStop, m_controller));
-    }
+//  // Setting up app start callback to controller
+//  ApplicationContainer::Iterator i;
+//  for (i = videoApps.Begin (); i != videoApps.End (); ++i)
+//    {
+//      Ptr<Application> app = *i;
+//      app->SetAppStartStopCallback (
+//          MakeCallback (&OpenFlowEpcController::NotifyAppStart, m_controller),
+//          MakeCallback (&OpenFlowEpcController::NotifyAppStop, m_controller));
+//    }
 }
 
 void 
