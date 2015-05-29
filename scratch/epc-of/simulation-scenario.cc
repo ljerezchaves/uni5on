@@ -390,8 +390,8 @@ SimulationScenario::EnableVoipTraffic ()
   NS_LOG_FUNCTION (this);
  
   static uint16_t voipPort = 16000;
-  uint16_t pktSize = 40;      // Lower values don't trigger meter band
-  double pktInterval = 0.04;
+  uint16_t pktSize = 60;      // Lower values don't trigger meter band
+  double pktInterval = 0.02;
  
   Ptr<Ipv4> serverIpv4 = m_webHost->GetObject<Ipv4> ();
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
@@ -401,8 +401,8 @@ SimulationScenario::EnableVoipTraffic ()
   VoipHelper voipHelper;
   voipHelper.SetClientAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
   voipHelper.SetServerAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
-  voipHelper.SetClientAttribute ("PacketSize", UintegerValue (pktSize));
-  voipHelper.SetServerAttribute ("PacketSize", UintegerValue (pktSize));
+  voipHelper.SetClientAttribute ("PayloadSize", UintegerValue (pktSize));
+  voipHelper.SetServerAttribute ("PayloadSize", UintegerValue (pktSize));
   voipHelper.SetClientAttribute ("Interval", TimeValue (Seconds (pktInterval)));
   voipHelper.SetServerAttribute ("Interval", TimeValue (Seconds (pktInterval)));
   voipHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));

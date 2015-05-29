@@ -52,7 +52,7 @@ VoipClient::GetTypeId (void)
                    UintegerValue (100),
                    MakeUintegerAccessor (&VoipClient::m_localPort),
                    MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("PacketPayloadSize",
+    .AddAttribute ("PayloadSize",
                    "The payload size of packets (in bytes).",
                    UintegerValue (20),
                    MakeUintegerAccessor (&VoipServer::m_pktSize),
