@@ -29,15 +29,13 @@ StoredVideoHelper::StoredVideoHelper ()
 }
 
 void
-StoredVideoHelper::SetClientAttribute (std::string name,
-                                       const AttributeValue &value)
+StoredVideoHelper::SetClientAttribute (std::string name, const AttributeValue &value)
 {
   m_clientFactory.Set (name, value);
 }
 
 void
-StoredVideoHelper::SetServerAttribute (std::string name,
-                                       const AttributeValue &value)
+StoredVideoHelper::SetServerAttribute (std::string name, const AttributeValue &value)
 {
   m_serverFactory.Set (name, value);
 }
@@ -49,11 +47,12 @@ StoredVideoHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
   Ptr<StoredVideoClient> clientApp = m_clientFactory.Create<StoredVideoClient> ();
   Ptr<StoredVideoServer> serverApp = m_serverFactory.Create<StoredVideoServer> ();
 
-  clientApp->SetServerApp (serverApp, serverAddress, serverPort);
+  clientApp->SetServer (serverApp, serverAddress, serverPort);
   clientNode->AddApplication (clientApp);
 
   serverApp->SetAttribute ("LocalPort", UintegerValue (serverPort));
-  serverApp->SetClientApp (clientApp);
+  serverApp->SetAttribute ("StartTime", TimeValue (Seconds (0)));
+  serverApp->SetClient (clientApp);
   serverNode->AddApplication (serverApp);
 
   return clientApp;

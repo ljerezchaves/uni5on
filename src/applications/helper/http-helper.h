@@ -32,12 +32,12 @@ namespace ns3 {
 /**
  * \ingroup applications
  * Create a HttpHelper which will make life easier for people trying to set up
- * simulations with HTTP client/server.
+ * simulations with http client/server.
  */
 class HttpHelper
 {
 public:
-  HttpHelper ();      //!< Default constructor
+  HttpHelper ();  //!< Default constructor
 
   /**
    * Record an attribute to be set in each client application.
@@ -61,8 +61,9 @@ public:
    * \param serverPort The port number on the server
    * \return The client application created.
    */
-  Ptr<HttpClient> Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
-                           Ipv4Address serverAddress, uint16_t serverPort);
+  Ptr<HttpClient>
+  Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
+           Ipv4Address serverAddress, uint16_t serverPort);
 
 private:
   ObjectFactory m_clientFactory; //!< Object client factory.

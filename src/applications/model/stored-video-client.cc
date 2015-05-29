@@ -59,9 +59,8 @@ StoredVideoClient::~StoredVideoClient ()
 }
 
 void
-StoredVideoClient::SetServerApp (Ptr<StoredVideoServer> server,
-                                 Ipv4Address serverAddress,
-                                 uint16_t serverPort)
+StoredVideoClient::SetServer (Ptr<StoredVideoServer> server,
+                              Ipv4Address serverAddress, uint16_t serverPort)
 {
   m_serverApp = server;
   m_serverAddress = serverAddress;

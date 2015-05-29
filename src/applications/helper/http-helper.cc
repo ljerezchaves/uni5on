@@ -47,11 +47,12 @@ HttpHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
   Ptr<HttpClient> clientApp = m_clientFactory.Create<HttpClient> ();
   Ptr<HttpServer> serverApp = m_serverFactory.Create<HttpServer> ();
 
-  clientApp->SetServerApp (serverApp, serverAddress, serverPort);
+  clientApp->SetServer (serverApp, serverAddress, serverPort);
   clientNode->AddApplication (clientApp);
 
   serverApp->SetAttribute ("LocalPort", UintegerValue (serverPort));
-  serverApp->SetClientApp (clientApp);
+  serverApp->SetAttribute ("StartTime", TimeValue (Seconds (0)));
+  serverApp->SetClient (clientApp);
   serverNode->AddApplication (serverApp);
 
   return clientApp;

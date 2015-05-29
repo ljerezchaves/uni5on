@@ -37,7 +37,7 @@ namespace ns3 {
 class StoredVideoHelper
 {
 public:
-  StoredVideoHelper ();      //!< Default constructor
+  StoredVideoHelper (); //!< Default constructor
 
   /**
    * Record an attribute to be set in each client application.
@@ -61,9 +61,9 @@ public:
    * \param serverPort The port number on the server
    * \return The client application created.
    */
-  Ptr<StoredVideoClient> Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
-                                  Ipv4Address serverAddress, 
-                                  uint16_t serverPort);
+  Ptr<StoredVideoClient>
+  Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
+           Ipv4Address serverAddress, uint16_t serverPort);
 
 private:
   ObjectFactory m_clientFactory; //!< Object client factory.

@@ -29,15 +29,13 @@ RealTimeVideoHelper::RealTimeVideoHelper ()
 }
 
 void
-RealTimeVideoHelper::SetClientAttribute (std::string name,
-                                       const AttributeValue &value)
+RealTimeVideoHelper::SetClientAttribute (std::string name, const AttributeValue &value)
 {
   m_clientFactory.Set (name, value);
 }
 
 void
-RealTimeVideoHelper::SetServerAttribute (std::string name,
-                                       const AttributeValue &value)
+RealTimeVideoHelper::SetServerAttribute (std::string name, const AttributeValue &value)
 {
   m_serverFactory.Set (name, value);
 }
@@ -50,10 +48,11 @@ RealTimeVideoHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
   Ptr<RealTimeVideoServer> serverApp = m_serverFactory.Create<RealTimeVideoServer> ();
 
   clientApp->SetAttribute ("LocalPort", UintegerValue (clientPort));
-  clientApp->SetServerApp (serverApp);
+  clientApp->SetServer (serverApp);
   clientNode->AddApplication (clientApp);
 
-  serverApp->SetClientApp (clientApp, clientAddress, clientPort);
+  serverApp->SetClient (clientApp, clientAddress, clientPort);
+  serverApp->SetAttribute ("StartTime", TimeValue (Seconds (0)));
   serverNode->AddApplication (serverApp);
 
   return clientApp;

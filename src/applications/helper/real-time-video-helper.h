@@ -31,13 +31,13 @@ namespace ns3 {
 
 /**
  * \ingroup applications 
- * Create a RealTimeVideoHelper which will make life easier for people trying to
- * set up simulations with real-time video client/server.
+ * Create a RealTimeVideoHelper which will make life easier for people trying
+ * to set up simulations with real-time video client/server.
  */
 class RealTimeVideoHelper
 {
 public:
-  RealTimeVideoHelper ();      //!< Default constructor
+  RealTimeVideoHelper (); //!< Default constructor
 
   /**
    * Record an attribute to be set in each client application.
@@ -61,9 +61,9 @@ public:
    * \param clientPort The port number on the client.
    * \return The client application created.
    */
-  Ptr<RealTimeVideoClient> Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
-                                    Ipv4Address clientAddress, 
-                                    uint16_t clientPort);
+  Ptr<RealTimeVideoClient>
+  Install (Ptr<Node> clientNode, Ptr<Node> serverNode, 
+           Ipv4Address clientAddress, uint16_t clientPort);
 
 private:
   ObjectFactory m_clientFactory; //!< Object client factory.

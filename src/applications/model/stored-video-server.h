@@ -61,7 +61,7 @@ public:
    * \brief Set the client application.
    * \param client The pointer to client application.
    */
-  void SetClientApp (Ptr<StoredVideoClient> client);
+  void SetClient (Ptr<StoredVideoClient> client);
 
   /**
    * \brief Get the client application.

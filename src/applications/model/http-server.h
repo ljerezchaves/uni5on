@@ -60,7 +60,7 @@ public:
    * \brief Set the client application.
    * \param client The pointer to client application.
    */
-  void SetClientApp (Ptr<HttpClient> client);
+  void SetClient (Ptr<HttpClient> client);
 
   /**
    * \brief Get the client application.

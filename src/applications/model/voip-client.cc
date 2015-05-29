@@ -102,18 +102,13 @@ VoipClient::~VoipClient ()
 }
 
 void
-VoipClient::SetServerAddress (Ipv4Address ip, uint16_t port)
-{
-  NS_LOG_FUNCTION (this << ip << port);
-  m_serverAddress = ip;
-  m_serverPort = port;
-}
-
-void
-VoipClient::SetServerApp (Ptr<VoipServer> server)
+VoipClient::SetServer (Ptr<VoipServer> server, Ipv4Address serverAddress,
+                       uint16_t serverPort)
 {
   NS_LOG_FUNCTION (this << server);
   m_serverApp = server;
+  m_serverAddress = serverAddress;
+  m_serverPort = serverPort;
 }
 
 void

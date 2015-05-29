@@ -75,8 +75,8 @@ public:
    * \param clientAddress The IPv4 address of the client.
    * \param clientPort The port number on the client.
    */
-  void SetClientApp (Ptr<RealTimeVideoClient> client, 
-                     Ipv4Address clientAddress, uint16_t clientPort);
+  void SetClient (Ptr<RealTimeVideoClient> client, 
+                  Ipv4Address clientAddress, uint16_t clientPort);
 
   /**
    * \brief Get the client application.

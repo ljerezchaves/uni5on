@@ -56,16 +56,13 @@ VoipHelper::Install (Ptr<Node>   clientNode, Ptr<Node>   serverNode,
   Ptr<VoipClient> clientApp = m_clientFactory.Create<VoipClient> ();
   Ptr<VoipServer> serverApp = m_serverFactory.Create<VoipServer> ();
   
-  clientApp->SetAttribute ("ServerAddress", Ipv4AddressValue (serverAddr));
-  clientApp->SetAttribute ("ServerPort", UintegerValue (serverPort));
   clientApp->SetAttribute ("LocalPort", UintegerValue (clientPort));
-  clientApp->SetServerApp (serverApp);
+  clientApp->SetServer (serverApp, serverAddr, serverPort);
   clientNode->AddApplication (clientApp);
   
-  serverApp->SetAttribute ("ClientAddress", Ipv4AddressValue (clientAddr));
-  serverApp->SetAttribute ("ClientPort", UintegerValue (clientPort));
   serverApp->SetAttribute ("LocalPort", UintegerValue (serverPort));
-  serverApp->SetClientApp (clientApp);
+  serverApp->SetClient (clientApp, clientAddr, clientPort);
+  serverApp->SetAttribute ("StartTime", TimeValue (Seconds (0)));
   serverNode->AddApplication (serverApp);
   
   return clientApp;

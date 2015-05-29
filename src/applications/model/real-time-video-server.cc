@@ -123,9 +123,8 @@ RealTimeVideoServer::GetMaxPacketSize (void) const
 }
 
 void
-RealTimeVideoServer::SetClientApp (Ptr<RealTimeVideoClient> client,
-                                   Ipv4Address clientAddress, 
-                                   uint16_t clientPort)
+RealTimeVideoServer::SetClient (Ptr<RealTimeVideoClient> client,
+                                Ipv4Address clientAddress, uint16_t clientPort)
 {
   m_clientApp = client;
   m_clientAddress = clientAddress;

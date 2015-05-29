@@ -53,7 +53,7 @@ public:
    * \brief Set the server application.
    * \param server The pointer to server application.
    */
-  void SetServerApp (Ptr<RealTimeVideoServer> server);
+  void SetServer (Ptr<RealTimeVideoServer> server);
 
   /**
    * \brief Get the server application.

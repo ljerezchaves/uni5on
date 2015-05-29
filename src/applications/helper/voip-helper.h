@@ -22,55 +22,51 @@
 #ifndef VOIP_HELPER_H_
 #define VOIP_HELPER_H_
 
-#include <stdint.h>
-#include <string>
-#include "ns3/object-factory.h"
-#include "ns3/address.h"
-#include "ns3/attribute.h"
-#include "ns3/net-device.h"
-#include "ns3/node-container.h"
-#include "ns3/application-container.h"
+#include "ns3/core-module.h"
+#include "ns3/network-module.h"
+#include "ns3/internet-module.h"
 #include "ns3/voip-client.h"
 #include "ns3/voip-server.h"
 
 namespace ns3 {
 
+/**
+ * \ingroup applications 
+ * Create a VoipHelper which will make life easier for people trying to set up
+ * simulations with voip client/server.
+ */
 class VoipHelper
 {
 public:
-  /**
-   * Create a VoipHelper which will make life easier for people
-   * trying to set up simulations with voip applications.
-   */
-  VoipHelper ();
+  VoipHelper ();  //!< Default constructor
 
   /**
-   * Record an attribute to be set in each client application after it is is created.
+   * Record an attribute to be set in each client application.
    * \param name the name of the attribute to set.
    * \param value the value of the attribute to set.
    */
   void SetClientAttribute (std::string name, const AttributeValue &value);
 
   /**
-   * Record an attribute to be set in each server application after it is is created.
+   * Record an attribute to be set in each server application.
    * \param name the name of the attribute to set.
    * \param value the value of the attribute to set.
    */
   void SetServerAttribute (std::string name, const AttributeValue &value);
 
   /**
-   * Create a pair of voip applications on input nodes.
-   * \param clientNode The client node in pair.
-   * \param serverNode The server node in pair.
-   * \param clientAddr The IPv4 address of client node.
-   * \param serverAddr The IPv4 address of server node.
-   * \param clientPort The input port number in client node.
-   * \param serverPort The input port number in server node.
-   * \return The VoipClient application created.
+   * Create a pair of client + server applications on input nodes.
+   * \param clientNode The node to install the client app.
+   * \param serverNode The node to install the server app.
+   * \param clientAddr The IPv4 address of the client.
+   * \param serverAddr The IPv4 address of the server.
+   * \param clientPort The port number on the client.
+   * \param serverPort The port number on the server.
+   * \return The client application created.
    */
-  Ptr<VoipClient> Install (Ptr<Node>   clientNode, Ptr<Node>   serverNode, 
-                           Ipv4Address clientAddr, Ipv4Address serverAddr,
-                           uint16_t    clientPort, uint16_t    serverPort);
+  Ptr<VoipClient>
+  Install (Ptr<Node> clientNode, Ptr<Node> serverNode, Ipv4Address clientAddr, 
+           Ipv4Address serverAddr, uint16_t clientPort, uint16_t serverPort);
 
 private:
   ObjectFactory m_clientFactory; //!< Object client factory.

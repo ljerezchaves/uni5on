@@ -56,8 +56,8 @@ public:
    * \param serverAddress The IPv4 address of the server.
    * \param serverPort The port number on the server
    */
-  void SetServerApp (Ptr<StoredVideoServer> server, Ipv4Address serverAddress,
-                     uint16_t serverPort);
+  void SetServer (Ptr<StoredVideoServer> server, Ipv4Address serverAddress,
+                  uint16_t serverPort);
 
   /**
    * \brief Get the server application.

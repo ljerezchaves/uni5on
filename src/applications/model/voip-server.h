@@ -58,17 +58,13 @@ public:
   virtual ~VoipServer ();    //!< Dummy destructor, see DoDipose
 
   /**
-   * \brief Set the IPv4 destination address and port of the outbound packets.
-   * \param ip The IPv4 address to use.
-   * \return port The port number to use.
+   * \brief Set the client application.
+   * \param client The pointer to client application.
+   * \param clientAddress The IPv4 address of the client.
+   * \param clientPort The port number on the client.
    */
-  void SetClientAddress (Ipv4Address ip, uint16_t port);
-
-  /**
-   * \brief Set the VoIP client application. 
-   * \param client The pointer to client application. 
-   */
-  void SetClientApp (Ptr<VoipClient> client);
+  void SetClient (Ptr<VoipClient> client, Ipv4Address clientAddress, 
+                  uint16_t clientPort);
 
   /**
    * \brief Get the VoIP client application. 

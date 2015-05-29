@@ -98,7 +98,7 @@ StoredVideoServer::SetTraceFile (std::string traceFile)
 }
 
 void
-StoredVideoServer::SetClientApp (Ptr<StoredVideoClient> client)
+StoredVideoServer::SetClient (Ptr<StoredVideoClient> client)
 {
   m_clientApp = client;
 }

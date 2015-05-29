@@ -60,7 +60,7 @@ HttpServer::~HttpServer ()
 }
 
 void
-HttpServer::SetClientApp (Ptr<HttpClient> client)
+HttpServer::SetClient (Ptr<HttpClient> client)
 {
   m_clientApp = client;
 }

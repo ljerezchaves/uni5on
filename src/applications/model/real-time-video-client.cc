@@ -56,7 +56,7 @@ RealTimeVideoClient::~RealTimeVideoClient ()
 }
 
 void
-RealTimeVideoClient::SetServerApp (Ptr<RealTimeVideoServer> server)
+RealTimeVideoClient::SetServer (Ptr<RealTimeVideoServer> server)
 {
   m_serverApp = server;
 }

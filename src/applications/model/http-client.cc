@@ -94,8 +94,8 @@ HttpClient::~HttpClient ()
 }
 
 void
-HttpClient::SetServerApp (Ptr<HttpServer> server, Ipv4Address serverAddress,
-                          uint16_t serverPort)
+HttpClient::SetServer (Ptr<HttpServer> server, Ipv4Address serverAddress,
+                       uint16_t serverPort)
 {
   m_serverApp = server;
   m_serverAddress = serverAddress;
