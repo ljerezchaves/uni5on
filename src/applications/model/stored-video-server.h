@@ -49,15 +49,6 @@ public:
   ~StoredVideoServer ();  //!< Dummy destructor, see DoDipose
 
   /**
-   * \brief Set the trace file to be used by the application
-   * \param filename a path to an MPEG4 trace file formatted as follows:
-   *  Frame No Frametype   Time[ms]    Length [byte]
-   *  Frame No Frametype   Time[ms]    Length [byte]
-   *  ...
-   */
-  void SetTraceFile (std::string filename);
-
-  /**
    * \brief Set the client application.
    * \param client The pointer to client application.
    */
@@ -68,6 +59,15 @@ public:
    * \return The pointer to client application.
    */
   Ptr<StoredVideoClient> GetClientApp ();
+
+  /**
+   * \brief Set the trace file to be used by the application
+   * \param filename a path to an MPEG4 trace file formatted as follows:
+   *  Frame No Frametype   Time[ms]    Length [byte]
+   *  Frame No Frametype   Time[ms]    Length [byte]
+   *  ...
+   */
+  void SetTraceFile (std::string filename);
 
 protected:
   virtual void DoDispose (void);
@@ -143,15 +143,13 @@ private:
     char frameType;       //!< Frame type (I, P or B)
   };
 
-  std::vector<struct TraceEntry>  m_entries;          //!< Entries in the trace to send
-  static struct TraceEntry        g_defaultEntries[]; //!< Default trace to send
+  static struct TraceEntry        g_defaultEntries[]; //!< Default trace
+  std::vector<struct TraceEntry>  m_entries;          //!< Entries in the trace
   uint32_t                        m_currentEntry;     //!< Current entry index
-
   Ptr<Socket>                     m_socket;           //!< Local socket
   uint16_t                        m_port;             //!< Local port
   bool                            m_connected;        //!< True if connected
   Ptr<StoredVideoClient>          m_clientApp;        //!< Client application
-
   Ptr<RandomVariableStream>       m_lengthRng;        //!< Random video length generator
   Time                            m_lengthTime;       //!< Current video length
   Time                            m_elapsed;          //!< Elapsed video length

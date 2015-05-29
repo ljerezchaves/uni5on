@@ -1,6 +1,7 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2013 Federal University of Uberlandia
+ *               2015 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -15,6 +16,7 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Saulo da Mata <damata.saulo@gmail.com>
+ *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
 #ifndef HTTP_CLIENT_H_
@@ -26,8 +28,8 @@
 #include "ns3/http-header.h"
 #include "http-server.h"
 #include "qos-stats-calculator.h"
-
-using namespace std;
+#include <string>
+#include <sstream>
 
 namespace ns3 {
 
@@ -87,6 +89,13 @@ public:
    */
   Ptr<const QosStatsCalculator> GetQosStats (void) const;
 
+  /**
+   * \brief Start the traffic for this application. 
+   * The server application will stop the traffic by itself, based on
+   * configured parameters.
+   */
+  void Start (void);
+
 protected:
   virtual void DoDispose (void);
 
@@ -122,7 +131,7 @@ private:
    * \param socket Socket that sends requests.
    * \param url The URL of the object requested.
    */
-  void SendRequest (Ptr<Socket> socket, string url);
+  void SendRequest (Ptr<Socket> socket, std::string url);
 
   /**
    * \brief Receive method.
@@ -136,26 +145,23 @@ private:
    */
   void SetReadingTime (Ptr<Socket> socket);
 
-  Ptr<Socket>     m_socket;             //!< Local socket.
-  Ipv4Address     m_serverAddress;      //!< Address of the server.
-  uint16_t        m_serverPort;         //!< Remote port in the server.
-  Ptr<HttpServer> m_serverApp;          //!< HttpServer application
-
-  HttpHeader      m_httpHeader;         //!< HTTP Header.
-  uint32_t        m_contentLength;      //!< Content-Length header line.
-  string          m_contentType;        //!< Content-Type header line.
-  uint32_t        m_numOfInlineObjects; //!< Number-of-Inline-Objects header line.
-  uint32_t        m_bytesReceived;      //!< Number of bytes received from server.
-  uint32_t        m_inlineObjLoaded;    //!< Number of inline objects already loaded.
-  uint16_t        m_pagesLoaded;        //!< Total number of pages loaded.
-
-  Time            m_maxReadingTime;     //!< Reading time threshold
-  uint16_t        m_maxPages;           //!< Number of pages threshold
-
-  Ptr<QosStatsCalculator> m_qosStats;   //!< QoS statistics
-
-  Ptr<LogNormalRandomVariable> m_readingTimeStream; //!< Random Variable Stream for reading time.
-  Ptr<UniformRandomVariable> m_readingTimeAdjust;   //!< Reading time adjustment for lower values.
+  Ptr<Socket>             m_socket;             //!< Local socket.
+  Ipv4Address             m_serverAddress;      //!< Server address.
+  uint16_t                m_serverPort;         //!< Server port.
+  Ptr<HttpServer>         m_serverApp;          //!< Server application.
+  HttpHeader              m_httpHeader;         //!< HTTP Header.
+  uint32_t                m_contentLength;      //!< Content length line.
+  std::string             m_contentType;        //!< Content type line.
+  uint32_t                m_numOfInlineObjects; //!< Inline objects line.
+  uint32_t                m_bytesReceived;      //!< Received bytes.
+  uint32_t                m_inlineObjLoaded;    //!< Received inline objects.
+  uint16_t                m_pagesLoaded;        //!< Pages loaded.
+  Time                    m_maxReadingTime;     //!< Reading time threshold.
+  uint16_t                m_maxPages;           //!< Max pages threshold.
+  Ptr<QosStatsCalculator> m_qosStats;           //!< QoS statistics
+  
+  Ptr<LogNormalRandomVariable>  m_readingTimeStream; //!< Reading time rng.
+  Ptr<UniformRandomVariable>    m_readingTimeAdjust; //!< Adjustment rng.
 };
 
 }

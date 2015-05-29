@@ -22,28 +22,21 @@
 #ifndef VOIP_CLIENT_H_
 #define VOIP_CLIENT_H_
 
-#include <ns3/application.h>
-#include <ns3/event-id.h>
-#include <ns3/ptr.h>
-#include <ns3/ipv4-address.h>
-#include <ns3/seq-ts-header.h>
-#include <ns3/random-variable-stream.h>
-#include "ns3/data-rate.h"
+#include "ns3/core-module.h"
+#include "ns3/network-module.h"
+#include "ns3/internet-module.h"
+#include "voip-server.h"
 #include "qos-stats-calculator.h"
-
-using namespace std;
 
 namespace ns3 {
 
-class Socket;
-class Packet;
 class VoipServer;
 
 /**
- * This class implements the VoIP client side, sending and receiving UDP
- * datagrams following VoIP traffic pattern to a VoipServer application.  This
- * VoIP client is bounded to start/stop callbacks, and control start/stop
- * events on the server application. 
+ * \ingroup applications
+ * This is the client side of a voip traffic generator. This client sends and
+ * receives UDP datagrams following voip traffic pattern. This client control
+ * start/stop events on the server application. 
  */
 class VoipClient : public Application
 {
@@ -67,14 +60,6 @@ public:
                   uint16_t serverPort);
 
   /**
-   * \brief Assign a fixed random variable stream number to the random
-   * variables used by this model.
-   * \param stream first stream index to use.
-   * \return the number of stream indices assigned by this model.
-   */
-  void SetStreams (int64_t stream);
-
-  /**
    * \brief Get the VoIP server application. 
    * \return The pointer to server application. 
    */
@@ -91,6 +76,19 @@ public:
    */
   Ptr<const QosStatsCalculator> GetQosStats (void) const;
 
+  /**
+   * \brief Start this application. 
+   * The application must stop the traffic by itself, based on configured
+   * parameters.
+   */
+  void Start (void);
+
+  /**
+   * \brief Callback invoked when server stops sending traffic.
+   * \param pkts The total number of packets transmitted by the server.
+   */
+  void NofifyTrafficEnd (uint32_t pkts);
+
 protected:
   /** Destructor implementation */
   virtual void DoDispose (void);
@@ -101,41 +99,14 @@ private:
   virtual void StopApplication (void);     // Called at time specified by Stop
 
   /**
-   * \brief Cancel all pending events.
-   */
-  void CancelEvents ();
-
-  /**
-   * \brief Start an "ON" period
+   * \brief Start the streaming.
    */
   void StartSending ();
   
   /**
-   * \brief Start an "OFF" period
+   * \brief Stop the streaming.
    */
   void StopSending ();
-
-  /**
-   * \brief Schedules the event to start sending data (switch to "ON" state).
-   */
-  void ScheduleStartEvent ();
-  
-  /**
-   * \brief Schedules the event to stop sending data (switch to "OFF" state).
-   */
-  void ScheduleStopEvent ();
-
-  /**
-   * \brief Handle a connection succeed event.
-   * \param socket the connected socket
-   */
-  void ConnectionSucceeded (Ptr<Socket> socket);
-  
-  /**
-   * \brief Handle a connection failed event.
-   * \param socket the not connected socket
-   */
-  void ConnectionFailed (Ptr<Socket> socket);
 
   /**
    * \brief Handle a packet transmission.
@@ -148,21 +119,17 @@ private:
    */
   void ReadPacket (Ptr<Socket> socket);
 
-  Time              m_interval;         //!< Interval between packets
-  uint32_t          m_pktSize;          //!< Packet size
-  uint32_t          m_pktSent;          //!< Number of TX packets
-  Ipv4Address       m_serverAddress;    //!< Outbound server IPv4 address
-  uint16_t          m_serverPort;       //!< Outbound server port
-  uint16_t          m_localPort;        //!< Inbound local port
-  Ptr<VoipServer>   m_serverApp;        //!< VoIP server application
-  Ptr<Socket>       m_txSocket;         //!< Outbound TX socket
-  Ptr<Socket>       m_rxSocket;         //!< Inbound RX socket
-  bool              m_connected;        //!< True if outbound connected
-  EventId           m_startStopEvent;   //!< Event id for next start or stop event
-  EventId           m_sendEvent;        //!< Event id of pending 'send packet' event
-  Ptr<QosStatsCalculator>   m_qosStats; //!< QoS statistics
-  Ptr<RandomVariableStream> m_onTime;   //!< Random variable for ON Time
-  Ptr<RandomVariableStream> m_offTime;  //!< Random variable for OFF Time
+  Time                      m_interval;       //!< Interval between packets
+  uint32_t                  m_pktSize;        //!< Packet size
+  uint32_t                  m_pktSent;        //!< Number of TX packets
+  Ipv4Address               m_serverAddress;  //!< Server address
+  uint16_t                  m_serverPort;     //!< Server port
+  Ptr<VoipServer>           m_serverApp;      //!< Server application
+  uint16_t                  m_localPort;      //!< Inbound local port
+  Ptr<Socket>               m_txSocket;       //!< Outbound TX socket
+  Ptr<Socket>               m_rxSocket;       //!< Inbound RX socket
+  EventId                   m_sendEvent;      //!< SendPacket event
+  Ptr<QosStatsCalculator>   m_qosStats;       //!< QoS statistics
 };
 
 } // namespace ns3

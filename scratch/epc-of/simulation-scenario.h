@@ -30,6 +30,8 @@
 #include "openflow-epc-controller.h"
 #include <vector>
 
+using namespace std;
+
 namespace ns3 {
 
 /**

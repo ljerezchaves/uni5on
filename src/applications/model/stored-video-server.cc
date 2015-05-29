@@ -84,6 +84,18 @@ StoredVideoServer::~StoredVideoServer ()
 }
 
 void
+StoredVideoServer::SetClient (Ptr<StoredVideoClient> client)
+{
+  m_clientApp = client;
+}
+
+Ptr<StoredVideoClient>
+StoredVideoServer::GetClientApp ()
+{
+  return m_clientApp;
+}
+
+void
 StoredVideoServer::SetTraceFile (std::string traceFile)
 {
   NS_LOG_FUNCTION (this << traceFile);
@@ -95,18 +107,6 @@ StoredVideoServer::SetTraceFile (std::string traceFile)
     {
       LoadTrace (traceFile);
     }
-}
-
-void
-StoredVideoServer::SetClient (Ptr<StoredVideoClient> client)
-{
-  m_clientApp = client;
-}
-
-Ptr<StoredVideoClient>
-StoredVideoServer::GetClientApp ()
-{
-  return m_clientApp;
 }
 
 void
@@ -157,8 +157,9 @@ bool
 StoredVideoServer::HandleRequest (Ptr<Socket> socket, const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
-  NS_LOG_INFO ("Request for connection from " <<
-               InetSocketAddress::ConvertFrom (address).GetIpv4 () << " received.");
+  NS_LOG_LOGIC ("Request for connection from " <<
+               InetSocketAddress::ConvertFrom (address).GetIpv4 () << 
+               " received.");
   return true;
 }
 
@@ -166,7 +167,7 @@ void
 StoredVideoServer::HandleAccept (Ptr<Socket> socket, const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
-  NS_LOG_INFO ("Connection with client (" <<
+  NS_LOG_LOGIC ("Connection with client (" <<
                InetSocketAddress::ConvertFrom (address).GetIpv4 () <<
                ") successfully established!");
   socket->SetSendCallback (MakeCallback (&StoredVideoServer::SendStream, this));
@@ -192,8 +193,8 @@ StoredVideoServer::HandleReceive (Ptr<Socket> socket)
       m_lengthTime = Seconds (std::abs (m_lengthRng->GetValue ()));
       m_elapsed = MilliSeconds (0);
       uint32_t size = GetVideoBytes (m_lengthTime);
-      NS_LOG_DEBUG ("Video lenght: " << m_lengthTime.As (Time::S) << " (" <<
-                    size << " bytes).");
+      NS_LOG_INFO ("Stored video lenght: " << m_lengthTime.As (Time::S) <<
+                   " (" << size << " bytes)");
 
       // Setting response
       HttpHeader httpHeaderOut;
@@ -212,12 +213,17 @@ StoredVideoServer::HandleReceive (Ptr<Socket> socket)
       // Start sending the stored video stream to the client.
       SendStream (socket, 0);
     }
+  else
+    {
+      NS_LOG_WARN ("Invalid request.");
+    }
 }
 
 void 
 StoredVideoServer::HandlePeerClose (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
+  NS_LOG_LOGIC ("Connection closed.");
   m_connected = false;
 }
  
@@ -265,7 +271,8 @@ StoredVideoServer::LoadDefaultTrace (void)
 {
   NS_LOG_FUNCTION (this);
   uint32_t prevTime = 0;
-  for (uint32_t i = 0; i < (sizeof (g_defaultEntries) / sizeof (struct TraceEntry)); i++)
+  for (uint32_t i = 0; i < (sizeof (g_defaultEntries) / 
+                            sizeof (struct TraceEntry)); i++)
     {
       struct TraceEntry entry = g_defaultEntries[i];
       if (entry.frameType == 'B')
@@ -321,9 +328,7 @@ StoredVideoServer::SendStream (Ptr<Socket> socket, uint32_t size)
         {
           packet = Create<Packet> (toSend);
           sent = socket->Send (packet);
-          NS_LOG_DEBUG ("Video time: " << m_elapsed.As (Time::S) << " - " << 
-                        sent << "/" << toSend << " bytes sent (" << 
-                        available - sent << " available in buffer).");
+          NS_LOG_DEBUG ("Stored video TX " << sent << " bytes");
 
           m_elapsed += MilliSeconds (entry->timeToSend);
           m_currentEntry++;
@@ -331,7 +336,7 @@ StoredVideoServer::SendStream (Ptr<Socket> socket, uint32_t size)
         }
       else
         {
-          NS_LOG_DEBUG ("Buffer full! Wait...");
+          NS_LOG_DEBUG ("Buffer full! Wait.");
           break;
         }
     }

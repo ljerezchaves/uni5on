@@ -76,6 +76,13 @@ public:
    */
   Ptr<const QosStatsCalculator> GetQosStats (void) const;
 
+  /**
+   * \brief Start this application. 
+   * The server application will stop the traffic by itself, based on
+   * configured parameters.
+   */
+  void Start (void);
+
 protected:
   virtual void DoDispose (void);
 
@@ -119,14 +126,13 @@ private:
    */
   void HandleReceive (Ptr<Socket> socket);
 
-  uint32_t                m_bytesReceived;  //!< Number of bytes received.
-  uint32_t                m_contentLength;  //!< Content-Length header line.
-  std::string             m_contentType;    //!< Content-Type header line.
-
   Ptr<Socket>             m_socket;         //!< Local socket.
-  Ipv4Address             m_serverAddress;  //!< Address of the server.
-  uint16_t                m_serverPort;     //!< Remote port in the server.
-  Ptr<StoredVideoServer>  m_serverApp;      //!< HttpServer application
+  Ipv4Address             m_serverAddress;  //!< Server address.
+  uint16_t                m_serverPort;     //!< Server port.
+  Ptr<StoredVideoServer>  m_serverApp;      //!< Server application.
+  uint32_t                m_bytesReceived;  //!< Received bytes.
+  uint32_t                m_contentLength;  //!< Content length line.
+  std::string             m_contentType;    //!< Content type line.
   Ptr<QosStatsCalculator> m_qosStats;       //!< QoS statistics
 };
 

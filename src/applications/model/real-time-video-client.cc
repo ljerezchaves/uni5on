@@ -35,9 +35,8 @@ RealTimeVideoClient::GetTypeId (void)
     .AddAttribute ("LocalPort",
                    "Local TCP port on which we listen for incoming connections.",
                    UintegerValue (80),
-                   MakeUintegerAccessor (&RealTimeVideoClient::m_port),
+                   MakeUintegerAccessor (&RealTimeVideoClient::m_localPort),
                    MakeUintegerChecker<uint16_t> ())
-
   ;
   return tid;
 }
@@ -59,6 +58,8 @@ void
 RealTimeVideoClient::SetServer (Ptr<RealTimeVideoServer> server)
 {
   m_serverApp = server;
+  server->SetEndCallback (
+    MakeCallback (&RealTimeVideoClient::NofifyTrafficEnd, this));
 }
 
 Ptr<RealTimeVideoServer>
@@ -79,6 +80,22 @@ RealTimeVideoClient::GetQosStats (void) const
   return m_qosStats;
 }
 
+void 
+RealTimeVideoClient::Start (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  ResetQosStats ();
+  m_serverApp->StartSending ();
+}
+
+void 
+RealTimeVideoClient::NofifyTrafficEnd (uint32_t pkts)
+{
+  NS_LOG_FUNCTION (this);
+  // TODO notify the controller.
+}
+
 void
 RealTimeVideoClient::DoDispose (void)
 {
@@ -97,14 +114,11 @@ RealTimeVideoClient::StartApplication ()
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tid);
-      InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (),
-                                                   m_port);
-      m_socket->Bind (local);
+      m_socket->Bind (
+        InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
+      m_socket->SetRecvCallback (
+        MakeCallback (&RealTimeVideoClient::ReadPacket, this));
     }
-  m_socket->SetRecvCallback (MakeCallback (&RealTimeVideoClient::HandleRead, this));
-  
-  ResetQosStats ();
-  m_serverApp->StartSending ();
 }
 
 void
@@ -119,7 +133,7 @@ RealTimeVideoClient::StopApplication ()
 }
 
 void
-RealTimeVideoClient::HandleRead (Ptr<Socket> socket)
+RealTimeVideoClient::ReadPacket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
   Ptr<Packet> packet;
@@ -130,27 +144,7 @@ RealTimeVideoClient::HandleRead (Ptr<Socket> socket)
         {
           SeqTsHeader seqTs;
           packet->RemoveHeader (seqTs);
-          uint32_t currentSequenceNumber = seqTs.GetSeq ();
-          if (InetSocketAddress::IsMatchingType (from))
-            {
-              NS_LOG_INFO ("TraceDelay: RX " << packet->GetSize () <<
-                           " bytes from "<< InetSocketAddress::ConvertFrom (from).GetIpv4 () <<
-                           " Sequence Number: " << currentSequenceNumber <<
-                           " Uid: " << packet->GetUid () <<
-                           " TXtime: " << seqTs.GetTs () <<
-                           " RXtime: " << Simulator::Now () <<
-                           " Delay: " << Simulator::Now () - seqTs.GetTs ());
-            }
-          else if (Inet6SocketAddress::IsMatchingType (from))
-            {
-              NS_LOG_INFO ("TraceDelay: RX " << packet->GetSize () <<
-                           " bytes from "<< Inet6SocketAddress::ConvertFrom (from).GetIpv6 () <<
-                           " Sequence Number: " << currentSequenceNumber <<
-                           " Uid: " << packet->GetUid () <<
-                           " TXtime: " << seqTs.GetTs () <<
-                           " RXtime: " << Simulator::Now () <<
-                           " Delay: " << Simulator::Now () - seqTs.GetTs ());
-            }
+          NS_LOG_DEBUG ("Real-time video RX " << packet->GetSize () << " bytes");
           m_qosStats->NotifyReceived (seqTs.GetSeq (), seqTs.GetTs (), packet->GetSize ());
         }
     }

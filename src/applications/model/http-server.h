@@ -27,6 +27,8 @@
 #include "ns3/internet-module.h"
 #include "ns3/http-header.h"
 #include "http-client.h"
+#include <string>
+#include <sstream>
 
 namespace ns3 {
 
@@ -95,9 +97,21 @@ private:
    */
   void HandleReceive (Ptr<Socket> socket);
 
-  Ptr<Socket>     m_socket;             //!< Local socket
-  uint16_t        m_port;               //!< Local port
-  Ptr<HttpClient> m_clientApp;          //!< HttpClient application
+  /**
+   * \brief Handle an connection close
+   * \param socket The connected socket
+   */
+  void HandlePeerClose (Ptr<Socket> socket);
+  
+  /**
+   * \brief Handle an connection error
+   * \param socket The connected socket
+   */
+  void HandlePeerError (Ptr<Socket> socket);
+
+  Ptr<Socket>     m_socket;             //!< Local socket.
+  uint16_t        m_port;               //!< Local port.
+  Ptr<HttpClient> m_clientApp;          //!< Client application.
 };
 
 }

@@ -83,6 +83,7 @@ RealTimeVideoServer::GetTypeId (void)
 RealTimeVideoServer::RealTimeVideoServer ()
 {
   NS_LOG_FUNCTION (this);
+
   m_socket = 0;
   m_clientApp = 0;
   m_sendEvent = EventId ();
@@ -92,34 +93,6 @@ RealTimeVideoServer::~RealTimeVideoServer ()
 {
   NS_LOG_FUNCTION (this);
   m_entries.clear ();
-}
-
-void
-RealTimeVideoServer::SetTraceFile (std::string traceFile)
-{
-  NS_LOG_FUNCTION (this << traceFile);
-  if (traceFile == "")
-    {
-      LoadDefaultTrace ();
-    }
-  else
-    {
-      LoadTrace (traceFile);
-    }
-}
-
-void
-RealTimeVideoServer::SetMaxPacketSize (uint16_t maxPacketSize)
-{
-  NS_LOG_FUNCTION (this << maxPacketSize);
-  m_maxPacketSize = maxPacketSize;
-}
-
-uint16_t 
-RealTimeVideoServer::GetMaxPacketSize (void) const
-{
-  NS_LOG_FUNCTION (this);
-  return m_maxPacketSize;
 }
 
 void
@@ -137,31 +110,32 @@ RealTimeVideoServer::GetClientApp ()
   return m_clientApp;
 }
 
-void 
-RealTimeVideoServer::StartSending ()
+void
+RealTimeVideoServer::SetTraceFile (std::string traceFile)
 {
-  NS_LOG_FUNCTION (this);
-  m_currentEntry = 0;
-  m_sent = 0;
-  m_lengthTime = Seconds (std::abs (m_lengthRng->GetValue ()));
-  m_elapsed = MilliSeconds (0);
-  NS_LOG_DEBUG ("Video lenght: " << m_lengthTime.As (Time::S));
+  NS_LOG_FUNCTION (this << traceFile);
 
-  Simulator::Cancel (m_sendEvent);
-  SendStream ();
+  if (traceFile == "")
+    {
+      LoadDefaultTrace ();
+    }
+  else
+    {
+      LoadTrace (traceFile);
+    }
 }
 
 void 
-RealTimeVideoServer::StopSending ()
+RealTimeVideoServer::SetEndCallback (Callback<void, uint32_t> cb)
 {
-  NS_LOG_FUNCTION (this);
-  Simulator::Cancel (m_sendEvent);
+  m_endCb = cb;
 }
 
 void
 RealTimeVideoServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
+
   m_socket = 0;
   m_clientApp = 0;
   m_lengthRng = 0;
@@ -197,10 +171,41 @@ RealTimeVideoServer::StopApplication ()
     }
 }
 
+void 
+RealTimeVideoServer::StartSending ()
+{
+  NS_LOG_FUNCTION (this);
+
+  Simulator::Cancel (m_sendEvent);
+  m_currentEntry = 0;
+  m_pktSent = 0;
+  SendStream ();
+
+  // Schedule traffic end
+  Time length = Seconds (std::abs (m_lengthRng->GetValue ()));
+  Simulator::Schedule (length, &RealTimeVideoServer::StopSending, this);
+  NS_LOG_INFO ("Real-time video lenght: " << length.As (Time::S));
+}
+
+void 
+RealTimeVideoServer::StopSending ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // Stop stream and notify the client of traffic end
+  NS_LOG_INFO ("Real-time video stopped.");
+  Simulator::Cancel (m_sendEvent);
+  if (!m_endCb.IsNull ())
+    {
+      m_endCb (m_pktSent);
+    }
+}
+
 void
 RealTimeVideoServer::LoadTrace (std::string filename)
 {
   NS_LOG_FUNCTION (this << filename);
+
   uint32_t time, index, size, prevTime = 0;
   char frameType;
   TraceEntry entry;
@@ -234,8 +239,10 @@ void
 RealTimeVideoServer::LoadDefaultTrace (void)
 {
   NS_LOG_FUNCTION (this);
+
   uint32_t prevTime = 0;
-  for (uint32_t i = 0; i < (sizeof (g_defaultEntries) / sizeof (struct TraceEntry)); i++)
+  for (uint32_t i = 0; i < (sizeof (g_defaultEntries) / 
+                            sizeof (struct TraceEntry)); i++)
     {
       struct TraceEntry entry = g_defaultEntries[i];
       if (entry.frameType == 'B')
@@ -266,57 +273,46 @@ RealTimeVideoServer::SendStream (void)
         {
           SendPacket (m_maxPacketSize);
         }
-
       uint16_t sizetosend = entry->packetSize % m_maxPacketSize;
       SendPacket (sizetosend);
       
-      m_elapsed += MilliSeconds (entry->timeToSend);
       m_currentEntry++;
       m_currentEntry %= m_entries.size ();
       entry = &m_entries[m_currentEntry];
     }
   while (entry->timeToSend == 0);
 
-  if (m_elapsed < m_lengthTime)
-    {
-      m_sendEvent = Simulator::Schedule (MilliSeconds (entry->timeToSend), 
-                                         &RealTimeVideoServer::SendStream, this);
-    }
-  else
-    {
-      Simulator::Cancel (m_sendEvent);
-    }
+  // Schedulle next transmission
+  m_sendEvent = Simulator::Schedule (MilliSeconds (entry->timeToSend), 
+                                     &RealTimeVideoServer::SendStream, this);
 }
 
 void
 RealTimeVideoServer::SendPacket (uint32_t size)
 {
   NS_LOG_FUNCTION (this << size);
+
+  // Removing the SeqTsHeader size (12 bytes)
   uint32_t packetSize = 0;
   if (size > 12)
     {
-      // Removing the SeqTsHeader size (12 bytes)
       packetSize = size - 12; 
     }
   
   SeqTsHeader seqTs;
-  seqTs.SetSeq (m_sent);
+  seqTs.SetSeq (m_pktSent);
 
-  Ptr<Packet> p = Create<Packet> (packetSize);
-  p->AddHeader (seqTs);
+  Ptr<Packet> packet = Create<Packet> (packetSize);
+  packet->AddHeader (seqTs);
 
-  if (m_socket->Send (p))
+  if (m_socket->Send (packet))
     {
-      ++m_sent;
-      NS_LOG_INFO ("Real-time video TX " << size << " bytes to " << 
-                   m_clientAddress << ":" << m_clientPort <<
-                   " Uid " << p->GetUid () << " Seq " << seqTs.GetSeq () <<
-                   " Time " << (Simulator::Now ()).GetSeconds ());
+      ++m_pktSent;
+      NS_LOG_DEBUG ("Real-time video TX " << size << " bytes");
     }
   else
     {
-      NS_LOG_INFO ("Error sending Video " << size << 
-                   " bytes to " << m_clientAddress);
+      NS_LOG_ERROR ("Real-time video TX error");
     }
 }
 

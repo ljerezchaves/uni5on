@@ -1,6 +1,7 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2013 Federal University of Uberlandia
+ *               2015 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -15,16 +16,9 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Saulo da Mata <damata.saulo@gmail.com>
+ *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "ns3/log.h"
-#include "ns3/simulator.h"
-#include "ns3/uinteger.h"
-#include "ns3/packet.h"
-#include "ns3/simulator.h"
-#include "ns3/ptr.h"
-#include "ns3/ipv4.h"
-#include "ns3/string.h"
 #include "http-client.h"
 
 NS_LOG_COMPONENT_DEFINE ("HttpClient");
@@ -121,6 +115,13 @@ HttpClient::GetQosStats (void) const
 }
 
 void
+HttpClient::Start (void)
+{
+  ResetQosStats ();
+  OpenSocket ();
+}
+
+void
 HttpClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
@@ -135,8 +136,6 @@ void
 HttpClient::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
-  ResetQosStats ();
-  OpenSocket ();
 }
 
 void
@@ -175,6 +174,7 @@ HttpClient::CloseSocket ()
       m_socket->Close ();
       m_socket = 0;
     }
+  // TODO Notify the controller.
 }
 
 void
@@ -182,7 +182,7 @@ HttpClient::ConnectionSucceeded (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  NS_LOG_DEBUG ("Server accepted connection request!");
+  NS_LOG_LOGIC ("Server accepted connection request!");
   socket->SetRecvCallback (MakeCallback (&HttpClient::HandleReceive, this));
 
   // Request the first main object
@@ -198,7 +198,7 @@ HttpClient::ConnectionFailed (Ptr<Socket> socket)
 }
 
 void
-HttpClient::SendRequest (Ptr<Socket> socket, string url)
+HttpClient::SendRequest (Ptr<Socket> socket, std::string url)
 {
   NS_LOG_FUNCTION (this);
 
@@ -210,7 +210,6 @@ HttpClient::SendRequest (Ptr<Socket> socket, string url)
 
   Ptr<Packet> packet = Create<Packet> ();
   packet->AddHeader (m_httpHeader);
-  NS_LOG_INFO ("Request for " << url);
   socket->Send (packet);
 }
 
@@ -225,14 +224,13 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
 
   HttpHeader httpHeaderIn;
   packet->PeekHeader (httpHeaderIn);
-  string statusCode = httpHeaderIn.GetStatusCode ();
+  std::string statusCode = httpHeaderIn.GetStatusCode ();
 
   if (statusCode == "200")
     {
       m_contentType = httpHeaderIn.GetHeaderField ("ContentType");
       m_contentLength = atoi (httpHeaderIn.GetHeaderField ("ContentLength").c_str ());
       m_bytesReceived = bytesReceived - httpHeaderIn.GetSerializedSize ();
-
       if (m_contentType == "main/object")
         {
           m_numOfInlineObjects = atoi (httpHeaderIn.GetHeaderField ("NumOfInlineObjects").c_str ());
@@ -246,14 +244,14 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
   if (m_bytesReceived == m_contentLength)
     {
       m_contentLength = 0;
+      NS_LOG_INFO ("HTTP " << m_contentType << " successfully received.");
 
       if (m_contentType == "main/object")
         {
-          NS_LOG_INFO ("main/object successfully received. " <<
-                       "There are " << m_numOfInlineObjects << " inline objects.");
+          NS_LOG_INFO ("There are " << m_numOfInlineObjects << " inline objects.");
           m_inlineObjLoaded = 0;
 
-          NS_LOG_DEBUG ("Requesting inline/object 1");
+          NS_LOG_DEBUG ("Request for inline/object 1");
           SendRequest (socket, "inline/object");
         }
       else
@@ -261,12 +259,12 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
           m_inlineObjLoaded++;
           if (m_inlineObjLoaded < m_numOfInlineObjects)
             {
-              NS_LOG_DEBUG ("Requesting inline/object " << m_inlineObjLoaded + 1);
+              NS_LOG_DEBUG ("Request for inline/object " << m_inlineObjLoaded + 1);
               SendRequest (socket, "inline/object");
             }
           else
             {
-              NS_LOG_INFO ("Page successfully received.");
+              NS_LOG_INFO ("HTTP page successfully received.");
               m_pagesLoaded++;
               SetReadingTime (socket);
             }
@@ -283,28 +281,29 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   double adjustSeconds = std::abs (m_readingTimeAdjust->GetValue ());
   Time readingTime = Seconds (randomSeconds + adjustSeconds);
 
+  // Limiting reading time to 10000 seconds according to reference paper.
   if (readingTime > Seconds (10000))
     {
-      // Limiting reading time to 10000 seconds according to reference paper.
       readingTime = Seconds (10000);
     }
 
+  // Stop application due to reading time threshold.
   if (readingTime > m_maxReadingTime)
     {
-      // Stop application due to reading time threshold.
-      StopApplication ();
+      CloseSocket ();
       return;
     }
 
+  // Stop application due to max page threshold.
   if (m_pagesLoaded >= m_maxPages)
     {
-      // Stop application due to max page threshold.
-      StopApplication ();
+      CloseSocket ();
       return;
     }
 
-  Simulator::Schedule (readingTime, &HttpClient::SendRequest, this, socket, "main/object");
   NS_LOG_INFO ("Reading time: " << readingTime.As (Time::S));
+  Simulator::Schedule (readingTime, &HttpClient::SendRequest, 
+                       this, socket, "main/object");
 }
 
 }

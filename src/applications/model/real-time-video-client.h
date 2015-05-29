@@ -72,6 +72,19 @@ public:
    */
   Ptr<const QosStatsCalculator> GetQosStats (void) const;
 
+  /**
+   * \brief Start this application.
+   * The server application will stop the traffic by itself, based on
+   * configured parameters.
+   */
+  void Start (void);
+
+  /**
+   * \brief Callback invoked when server stops sending traffic.
+   * \param pkts The total number of packets transmitted by the server.
+   */
+  void NofifyTrafficEnd (uint32_t pkts);
+
 protected:
   virtual void DoDispose (void);
 
@@ -81,18 +94,16 @@ private:
   virtual void StopApplication (void);     // Called at time specified by Stop
 
   /**
-   * \brief Receive method.
-   * \param socket Socket that receives packets from server.
+   * \brief Handle a packet reception.
+   * \param socket the socket the packet was received to.
    */
-  void HandleRead (Ptr<Socket> socket);
-
-  uint16_t                  m_port;       //!< Local port for incoming packets.
-  Ptr<Socket>               m_socket;     //!< IPv4 Socket
+  void ReadPacket (Ptr<Socket> socket);
+  
+  uint16_t                  m_localPort;  //!< Inbound local port
+  Ptr<Socket>               m_socket;     //!< Inbound RX socket
   Ptr<QosStatsCalculator>   m_qosStats;   //!< QoS statistics
   Ptr<RealTimeVideoServer>  m_serverApp;  //!< Server application
-
 };
 
 } // namespace ns3
-
 #endif /* REAL_TIME_VIDEO_CLIENT_H */

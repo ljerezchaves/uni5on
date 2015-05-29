@@ -38,6 +38,8 @@ class RealTimeVideoClient;
  */
 class RealTimeVideoServer : public Application
 {
+  friend class RealTimeVideoClient;
+
 public:
   /**
    * \brief Get the type ID.
@@ -47,27 +49,6 @@ public:
 
   RealTimeVideoServer ();   //!< Default constructor
   ~RealTimeVideoServer ();  //!< Dummy destructor, see DoDipose
-
-  /**
-   * \brief Set the trace file to be used by the application
-   * \param filename a path to an MPEG4 trace file formatted as follows:
-   *  Frame No Frametype   Time[ms]    Length [byte]
-   *  Frame No Frametype   Time[ms]    Length [byte]
-   *  ...
-   */
-  void SetTraceFile (std::string filename);
-
-  /**
-   * \brief Set the maximum packet size.
-   * \param maxPacketSize The maximum packet size.
-   */
-  void SetMaxPacketSize (uint16_t maxPacketSize);
-
-  /**
-   * \brief Return the maximum packet size.
-   * \return the maximum packet size.
-   */
-  uint16_t GetMaxPacketSize (void) const;
 
   /**
    * \brief Set the client application.
@@ -85,14 +66,19 @@ public:
   Ptr<RealTimeVideoClient> GetClientApp ();
 
   /**
-   * \brief Start the real-time streaming.
+   * \brief Set the trace file to be used by the application
+   * \param filename a path to an MPEG4 trace file formatted as follows:
+   *  Frame No Frametype   Time[ms]    Length [byte]
+   *  Frame No Frametype   Time[ms]    Length [byte]
+   *  ...
    */
-  void StartSending ();
-  
+  void SetTraceFile (std::string filename);
+
   /**
-   * \brief Stop the real-time streaming.
+   * Set end callback
+   * \param cb The callback to invoke
    */
-  void StopSending ();
+  void SetEndCallback (Callback<void, uint32_t> cb);
 
 protected:
   virtual void DoDispose (void);
@@ -102,6 +88,16 @@ private:
   virtual void StartApplication (void);    // Called at time specified by Start
   virtual void StopApplication (void);     // Called at time specified by Stop
 
+  /**
+   * \brief Start the streaming.
+   */
+  void StartSending ();
+
+  /**
+   * \brief Stop the streaming.
+   */
+  void StopSending ();
+ 
   /**
    * \brief Load a trace file.
    * \param filename The trace file path.
@@ -114,9 +110,7 @@ private:
   void LoadDefaultTrace (void);
 
   /**
-   * \brief Start sending the video. Callback for socket SetSendCallback.
-   * \param socket The pointer to the socket.
-   * \param size The number of bytes available for writing into the buffer
+   * \brief Start sending the video.
    */
   void SendStream (void);
 
@@ -127,28 +121,28 @@ private:
   void SendPacket (uint32_t size);
 
   /**
-   * Trac eentry to send, representing a MPEG frame.
+   * Trace entry, representing a MPEG frame.
    */
   struct TraceEntry
   {
-    uint32_t timeToSend;  //!< Time to send the frame
+    uint32_t timeToSend;  //!< Relative time to send the frame (ms)
     uint32_t packetSize;  //!< Size of the frame
     char frameType;       //!< Frame type (I, P or B)
   };
 
-  std::vector<struct TraceEntry>  m_entries;          //!< Entries in the trace to send
-  static struct TraceEntry        g_defaultEntries[]; //!< Default trace to send
+  static struct TraceEntry        g_defaultEntries[]; //!< Default trace
+  std::vector<struct TraceEntry>  m_entries;          //!< Entries in the trace
   uint32_t                        m_currentEntry;     //!< Current entry index
-  uint32_t                        m_sent;             //!< Counter for sent packets
-  EventId                         m_sendEvent;        //!< Event id of pending 'send packet' event
-  uint16_t                        m_maxPacketSize;    //!< Maximum packet size to send
-  Ptr<Socket>                     m_socket;           //!< Local socket
+  uint32_t                        m_pktSent;          //!< Number of TX packets
+  EventId                         m_sendEvent;        //!< SendPacket event
+  uint16_t                        m_maxPacketSize;    //!< Maximum packet size
+  Ptr<Socket>                     m_socket;           //!< Outbouding TX socket
   Ipv4Address                     m_clientAddress;    //!< Client address
   uint16_t                        m_clientPort;       //!< Client UDP port
   Ptr<RealTimeVideoClient>        m_clientApp;        //!< Client application
-  Ptr<RandomVariableStream>       m_lengthRng;        //!< Random video length generator
-  Time                            m_lengthTime;       //!< Current video length
-  Time                            m_elapsed;          //!< Elapsed video length
+  Ptr<RandomVariableStream>       m_lengthRng;        //!< Random video length
+  Time                            m_lengthTime;       //!< Video length
+  Callback<void, uint32_t>        m_endCb;            //!< End callback
 };
 
 } // namespace ns3

@@ -1,6 +1,7 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2013 Federal University of Uberlandia
+ *               2015 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -15,15 +16,9 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Saulo da Mata <damata.saulo@gmail.com>
+ *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "ns3/log.h"
-#include "ns3/simulator.h"
-#include "ns3/uinteger.h"
-#include "ns3/pointer.h"
-#include "ns3/packet.h"
-#include "ns3/tcp-newreno.h"
-#include "ns3/drop-tail-queue.h"
 #include "http-server.h"
 
 NS_LOG_COMPONENT_DEFINE ("HttpServer");
@@ -94,15 +89,20 @@ void HttpServer::StartApplication (void)
       m_socket->SetAcceptCallback (
         MakeCallback (&HttpServer::HandleRequest, this),
         MakeCallback (&HttpServer::HandleAccept, this));
+      m_socket->SetCloseCallbacks (
+        MakeCallback (&HttpServer::HandlePeerClose, this),
+        MakeCallback (&HttpServer::HandlePeerError, this));
     }
 }
 
 void HttpServer::StopApplication (void)
 {
   NS_LOG_FUNCTION (this);
+  
   if (m_socket != 0)
     {
       m_socket->Close ();
+      m_socket = 0;
     }
 }
 
@@ -110,8 +110,9 @@ bool
 HttpServer::HandleRequest (Ptr<Socket> socket, const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
-  NS_LOG_INFO ("Request for connection from " <<
-               InetSocketAddress::ConvertFrom (address).GetIpv4 () << " received.");
+  NS_LOG_LOGIC ("Request for connection from " <<
+               InetSocketAddress::ConvertFrom (address).GetIpv4 () << 
+               " received.");
   return true;
 }
 
@@ -119,7 +120,7 @@ void
 HttpServer::HandleAccept (Ptr<Socket> socket, const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
-  NS_LOG_INFO ("Connection with client (" <<
+  NS_LOG_LOGIC ("Connection with client (" <<
                InetSocketAddress::ConvertFrom (address).GetIpv4 () <<
                ") successfully established!");
   socket->SetRecvCallback (MakeCallback (&HttpServer::HandleReceive, this));
@@ -145,7 +146,6 @@ HttpServer::HandleReceive (Ptr<Socket> socket)
   std::string url = httpHeaderIn.GetUrl ();
 
   NS_LOG_INFO ("Client requesting a " + url);
-
   if (url == "main/object")
     {
       //Scale, Shape and Mean data was taken from paper "An HTTP Web Traffic Model Based on the
@@ -179,9 +179,8 @@ HttpServer::HandleReceive (Ptr<Socket> socket)
       Ptr<Packet> p = Create<Packet> (mainObjectSize);
       p->AddHeader (httpHeaderOut);
 
-      NS_LOG_INFO ("Sending response to client. Main Object Size ("
-                   << mainObjectSize << " bytes). NumOfInlineObjects ("
-                   << numOfInlineObj << ").");
+      NS_LOG_INFO ("HTTP main object size: " << mainObjectSize << " bytes. " <<
+                   "Inline objects: " << numOfInlineObj);
       socket->Send (p);
     }
   else
@@ -214,11 +213,23 @@ HttpServer::HandleReceive (Ptr<Socket> socket)
       Ptr<Packet> p = Create<Packet> (inlineObjectSize);
       p->AddHeader (httpHeaderOut);
 
-      NS_LOG_INFO ("Sending response to client. Inline Objectsize ("
-                   << inlineObjectSize << " bytes).");
+      NS_LOG_INFO ("HTTP inline object size: " << inlineObjectSize << " bytes.");
       socket->Send (p);
     }
 }
 
+void 
+HttpServer::HandlePeerClose (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+  NS_LOG_LOGIC ("Connection closed.");
+}
+ 
+void 
+HttpServer::HandlePeerError (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
 }
 
+
+} // Namespace ns3

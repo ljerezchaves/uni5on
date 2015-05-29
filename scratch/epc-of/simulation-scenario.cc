@@ -435,7 +435,7 @@ SimulationScenario::EnableVoipTraffic ()
       // Bidirectional VoIP traffic.
       // NOTE: clientApp is the one at UE, providing the uplink traffic. 
       // Linking only this app to the callbacks for start/stop notifications.
-      voipHelper.SetClientAttribute ("Stream", IntegerValue (u));
+      // voipHelper.SetClientAttribute ("Stream", IntegerValue (u));
       Ptr<VoipClient> clientApp = voipHelper.Install (client, m_webHost, 
           clientAddr, serverAddr, voipPort, voipPort);
       clientApp->AggregateObject (tft);

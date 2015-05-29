@@ -86,6 +86,13 @@ StoredVideoClient::GetQosStats (void) const
 }
 
 void
+StoredVideoClient::Start (void)
+{
+  ResetQosStats ();
+  OpenSocket ();
+}
+
+void
 StoredVideoClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
@@ -99,8 +106,6 @@ void
 StoredVideoClient::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
-  ResetQosStats ();
-  OpenSocket ();
 }
 
 void
@@ -139,6 +144,7 @@ StoredVideoClient::CloseSocket ()
       m_socket->Close ();
       m_socket = 0;
     }
+  // TODO Notify the controller.
 }
 
 void
@@ -146,9 +152,12 @@ StoredVideoClient::ConnectionSucceeded (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  NS_LOG_DEBUG ("Server accepted connection request!");
+  NS_LOG_LOGIC ("Server accepted connection request!");
   socket->SetRecvCallback (MakeCallback (&StoredVideoClient::HandleReceive, this));
 
+  // Request the video
+  m_bytesReceived = 0;
+  NS_LOG_INFO ("Request for main/video");
   SendRequest (socket, "main/video");
 }
 
@@ -173,10 +182,7 @@ StoredVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
 
   Ptr<Packet> packet = Create<Packet> ();
   packet->AddHeader (httpHeader);
-  NS_LOG_INFO ("Request for " << url);
   socket->Send (packet);
-
-  m_bytesReceived = 0;
 }
 
 void
@@ -187,8 +193,7 @@ StoredVideoClient::HandleReceive (Ptr<Socket> socket)
   Ptr<Packet> packet = socket->Recv ();
   uint32_t bytesReceived = packet->GetSize ();
   m_qosStats->NotifyReceived (0, Simulator::Now (), bytesReceived);
-  NS_LOG_DEBUG (bytesReceived << " bytes received from server.");
-
+  
   HttpHeader httpHeaderIn;
   packet->PeekHeader (httpHeaderIn);
   std::string statusCode = httpHeaderIn.GetStatusCode ();
@@ -198,7 +203,6 @@ StoredVideoClient::HandleReceive (Ptr<Socket> socket)
       m_contentType = httpHeaderIn.GetHeaderField ("ContentType");
       m_contentLength = atoi (httpHeaderIn.GetHeaderField ("ContentLength").c_str ());
       m_bytesReceived = bytesReceived - httpHeaderIn.GetSerializedSize ();
-      NS_LOG_DEBUG ("Video size is " << m_contentLength << " bytes.");
     }
   else
     {
@@ -207,8 +211,8 @@ StoredVideoClient::HandleReceive (Ptr<Socket> socket)
 
   if (m_bytesReceived == m_contentLength)
     {
-      NS_LOG_INFO ("main/video successfully received.");
-      NS_LOG_DEBUG (socket->GetRxAvailable () << "bytes available.");
+      m_contentLength = 0;
+      NS_LOG_INFO ("Stored video successfully received.");
       CloseSocket ();
     }
 }

@@ -24,11 +24,11 @@
 #include <ns3/internet-module.h>
 #include "voip-client.h"
 #include "voip-server.h"
+#include "seq-ts-header.h"
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("VoipClient");
-
 NS_OBJECT_ENSURE_REGISTERED (VoipClient);
 
 TypeId
@@ -63,22 +63,6 @@ VoipClient::GetTypeId (void)
                    TimeValue (Seconds (0.06)),
                    MakeTimeAccessor (&VoipClient::m_interval),
                    MakeTimeChecker ())
-    .AddAttribute ("OnTime",
-                  "A RandomVariableStream used to pick the 'ON' state duration.",
-                   StringValue ("ns3::ConstantRandomVariable[Constant=5.0]"),
-                   MakePointerAccessor (&VoipClient::m_onTime),
-                   MakePointerChecker <RandomVariableStream>())
-    .AddAttribute ("OffTime", 
-                  "A RandomVariableStream used to pick the 'Off' state duration.",
-                   StringValue ("ns3::ConstantRandomVariable[Constant=5.0]"),
-                   MakePointerAccessor (&VoipClient::m_offTime),
-                   MakePointerChecker <RandomVariableStream>())
-    .AddAttribute ("Stream",
-                   "The stream number for RNG streams. "
-                   "-1 means \"allocate a stream automatically\".",
-                   IntegerValue(-1),
-                   MakeIntegerAccessor(&VoipClient::SetStreams),
-                   MakeIntegerChecker<int64_t>())
     ;
   return tid;
 }
@@ -87,12 +71,10 @@ VoipClient::VoipClient ()
   : m_pktSent (0),
     m_serverApp (0),
     m_txSocket (0),
-    m_rxSocket (0),
-    m_connected (false)
+    m_rxSocket (0)
 {
   NS_LOG_FUNCTION (this);
   m_sendEvent = EventId ();
-  m_startStopEvent = EventId ();
   m_qosStats = Create<QosStatsCalculator> ();
 }
 
@@ -109,14 +91,9 @@ VoipClient::SetServer (Ptr<VoipServer> server, Ipv4Address serverAddress,
   m_serverApp = server;
   m_serverAddress = serverAddress;
   m_serverPort = serverPort;
-}
+  server->SetEndCallback (
+    MakeCallback (&VoipClient::NofifyTrafficEnd, this));
 
-void
-VoipClient::SetStreams (int64_t stream)
-{
-  NS_LOG_FUNCTION (this << stream);
-  m_onTime->SetStream (stream);
-  m_offTime->SetStream (stream + 1);
 }
 
 Ptr<VoipServer> 
@@ -128,8 +105,8 @@ VoipClient::GetServerApp ()
 void 
 VoipClient::ResetQosStats ()
 {
-  m_pktSent = 0;
   m_qosStats->ResetCounters ();
+  m_serverApp->ResetQosStats ();
 }
 
 Ptr<const QosStatsCalculator>
@@ -138,20 +115,33 @@ VoipClient::GetQosStats (void) const
   return m_qosStats;
 }
 
+void 
+VoipClient::Start (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  ResetQosStats ();
+  StartSending ();
+  m_serverApp->StartSending ();
+}
+
+void 
+VoipClient::NofifyTrafficEnd (uint32_t pkts)
+{
+  NS_LOG_FUNCTION (this);
+  
+  StopSending ();
+  // TODO notify the controller.
+}
+
 void
 VoipClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
-  if (m_rxSocket != 0)
-    {
-      m_rxSocket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
-    }
   m_serverApp = 0;
   m_txSocket = 0;
   m_rxSocket = 0;
   m_qosStats = 0;
-  m_onTime = 0;
-  m_offTime = 0;
   Application::DoDispose ();
 }
 
@@ -177,22 +167,16 @@ VoipClient::StartApplication (void)
       m_txSocket->Bind ();
       m_txSocket->Connect (InetSocketAddress (m_serverAddress, m_serverPort));
       m_txSocket->ShutdownRecv ();
-      m_txSocket->SetConnectCallback (
-          MakeCallback (&VoipClient::ConnectionSucceeded, this),
-          MakeCallback (&VoipClient::ConnectionFailed, this));
       m_txSocket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
     }
-
-  ResetQosStats ();
-  CancelEvents ();
-  ScheduleStartEvent ();
+  Simulator::Cancel (m_sendEvent);
 }
 
 void
 VoipClient::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
-  CancelEvents ();
+  Simulator::Cancel (m_sendEvent);
   
   if (m_txSocket != 0)
     {
@@ -208,83 +192,19 @@ VoipClient::StopApplication ()
 }
 
 void 
-VoipClient::CancelEvents ()
-{
-  NS_LOG_FUNCTION (this);
-  Simulator::Cancel (m_sendEvent);
-  Simulator::Cancel (m_startStopEvent);
-}
-
-void 
 VoipClient::StartSending ()
 {
   NS_LOG_FUNCTION (this);
-  if (!m_startSendingCallback.IsNull ())
-    {
-      if (!m_startSendingCallback (this))
-        {
-          NS_LOG_WARN ("Application " << this << " has been blocked.");
-          CancelEvents ();
-          ScheduleStartEvent ();
-          return;
-        }
-    }
-  m_serverApp->StartSending ();
+  
+  m_pktSent = 0;
   m_sendEvent = Simulator::Schedule (m_interval, &VoipClient::SendPacket, this);
-  ScheduleStopEvent ();
 }
 
 void 
 VoipClient::StopSending ()
 {
   NS_LOG_FUNCTION (this);
-  if (!m_stopSendingCallback.IsNull ())
-    {
-      m_stopSendingCallback (this);
-    }
-  m_serverApp->StopSending ();
-  CancelEvents ();
-  ScheduleStartEvent ();
-}
-
-void 
-VoipClient::ScheduleStartEvent ()
-{  
-  NS_LOG_FUNCTION (this);
-    
-  Time offInterval = Seconds (std::abs (m_offTime->GetValue ()));
-  // Wait at least 5 seconds before (re)starting the application
-  if (offInterval < Seconds (5))
-    {
-      offInterval += Seconds (5);
-    }
-
-  m_startStopEvent = Simulator::Schedule (offInterval, &VoipClient::StartSending, this);
-  NS_LOG_LOGIC ("VoIP " << this << " will start in +" << offInterval.GetSeconds ());
-}
-
-void 
-VoipClient::ScheduleStopEvent ()
-{  
-  NS_LOG_FUNCTION (this);
-  
-  Time onInterval = Seconds (std::abs (m_onTime->GetValue ()));
-  m_startStopEvent = Simulator::Schedule (onInterval, &VoipClient::StopSending, this);
-  
-  NS_LOG_LOGIC ("VoIP " << this << " will stop in +" << onInterval.GetSeconds ());
-}
-
-void 
-VoipClient::ConnectionSucceeded (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
-  m_connected = true;
-}
-
-void 
-VoipClient::ConnectionFailed (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
+  Simulator::Cancel (m_sendEvent);
 }
 
 void
@@ -304,16 +224,11 @@ VoipClient::SendPacket ()
   if (m_txSocket->Send (p))
     {
       m_pktSent++;
-      NS_LOG_INFO ("VoIP TX " << m_pktSize <<
-                   " bytes to " << m_serverAddress << 
-                   ":" << m_serverPort << 
-                   " Uid " << p->GetUid () << 
-                   " Time " << (Simulator::Now ()).GetSeconds ());
+      NS_LOG_DEBUG ("VoIP TX " << m_pktSize << " bytes");
     }
   else
     {
-      NS_LOG_INFO ("Error sending VoIP " << m_pktSize << 
-                   " bytes to " << m_serverAddress);
+      NS_LOG_ERROR ("VoIP TX error");
     }
   m_sendEvent = Simulator::Schedule (m_interval, &VoipClient::SendPacket, this);
 }
@@ -330,18 +245,7 @@ VoipClient::ReadPacket (Ptr<Socket> socket)
         {
           SeqTsHeader seqTs;
           packet->RemoveHeader (seqTs);
-          uint32_t seqNum = seqTs.GetSeq ();
-          if (InetSocketAddress::IsMatchingType (from))
-            {
-              NS_LOG_INFO ("TraceDelay: RX " << packet->GetSize () <<
-                           " bytes from "<< InetSocketAddress::ConvertFrom (from).GetIpv4 () <<
-                           " Sequence Number: " << seqNum <<
-                           " Uid: " << packet->GetUid () <<
-                           " TXtime: " << seqTs.GetTs () <<
-                           " RXtime: " << Simulator::Now () <<
-                           " Delay: " << Simulator::Now () - seqTs.GetTs ());
-            }
-
+          NS_LOG_INFO ("VoIP RX " << packet->GetSize () <<" bytes");
           m_qosStats->NotifyReceived (seqTs.GetSeq (), seqTs.GetTs (), packet->GetSize ());
         }
     }
