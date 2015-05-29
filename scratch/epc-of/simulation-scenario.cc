@@ -325,9 +325,7 @@ SimulationScenario::EnableHttpTraffic ()
   httpHelper.SetClientAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
   httpHelper.SetServerAttribute ("Direction", EnumValue (Application::BIDIRECTIONAL));
   httpHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
-  httpHelper.SetClientAttribute ("DelayTime", 
-      StringValue ("ns3::ExponentialRandomVariable[Mean=60.0]"));
-  httpHelper.SetClientAttribute ("TcpTimeout", TimeValue (Seconds (10))); 
+  httpHelper.SetClientAttribute ("MaxPages", UintegerValue (3)); 
   // The HttpClient TcpTimeout was selected based on HTTP traffic model and
   // dedicated bearer idle timeout. When the TCP socket is closed, HTTP client
   // application notifies the controller, and traffic statistics are printed.
@@ -500,18 +498,18 @@ SimulationScenario::EnableVideoTraffic ()
   Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
 
   ApplicationContainer videoApps;
-  VideoHelper videoHelper;
+  RealTimeVideoHelper videoHelper;
   videoHelper.SetClientAttribute ("Direction", EnumValue (Application::DOWNLINK));
   videoHelper.SetServerAttribute ("Direction", EnumValue (Application::DOWNLINK));
-  videoHelper.SetClientAttribute ("MaxPacketSize", UintegerValue (1400));
+  videoHelper.SetServerAttribute ("MaxPacketSize", UintegerValue (1400));
   videoHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
 
   // ON/OFF pattern for VoIP applications (Poisson process)
   // Average time between videos (1 minute) [Exponential mean]
-  videoHelper.SetClientAttribute ("OnTime", 
-      StringValue ("ns3::NormalRandomVariable[Mean=75.0|Variance=2025.0]"));
-  videoHelper.SetClientAttribute ("OffTime", 
-      StringValue ("ns3::ExponentialRandomVariable[Mean=60.0]"));
+  // videoHelper.SetClientAttribute ("OnTime", 
+  //     StringValue ("ns3::NormalRandomVariable[Mean=75.0|Variance=2025.0]"));
+  // videoHelper.SetClientAttribute ("OffTime", 
+  //     StringValue ("ns3::ExponentialRandomVariable[Mean=60.0]"));
 
   // Video random selection
   Ptr<UniformRandomVariable> rngVideo = CreateObject<UniformRandomVariable> ();
@@ -536,9 +534,9 @@ SimulationScenario::EnableVideoTraffic ()
       // The clientApp is installed into m_webHost and the server into UE, 
       // providing a downlink video traffic.
       int videoIdx = rngVideo->GetInteger ();
-      videoHelper.SetClientAttribute ("TraceFilename",
+      videoHelper.SetServerAttribute ("TraceFilename",
           StringValue (GetVideoFilename (videoIdx)));
-      Ptr<VideoClient> clientApp  = videoHelper.Install (m_webHost, client,
+      Ptr<RealTimeVideoClient> clientApp  = videoHelper.Install (m_webHost, client,
           clientAddr, videoPort);
       clientApp->AggregateObject (tft);
       clientApp->SetStartTime (Seconds (1));

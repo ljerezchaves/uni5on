@@ -656,11 +656,11 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
       m_appTrace (descDown.str (), teid, appStats);
       m_epcTrace (descDown.str (), teid, epcStats);
     }
-  else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
+  else if (app->GetInstanceTypeId () == RealTimeVideoClient::GetTypeId ())
     {
       // Get the relative UDP server for this client
-      Ptr<VideoClient> videoApp = DynamicCast<VideoClient> (app);
-      appStats = videoApp->GetServerApp ()->GetQosStats ();
+      Ptr<RealTimeVideoClient> videoApp = DynamicCast<RealTimeVideoClient> (app);
+      appStats = videoApp->GetQosStats ();
       epcStats = GetQosStatsFromTeid (teid, true);  // downlink
 
       // Tracing application and EPC statistics
@@ -696,11 +696,11 @@ OpenFlowEpcController::ResetAppStatistics (Ptr<Application> app)
       DynamicCast<VoipClient> (app)->ResetQosStats ();
       DynamicCast<VoipClient> (app)->GetServerApp ()->ResetQosStats ();
     }
-  else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
+  else if (app->GetInstanceTypeId () == RealTimeVideoClient::GetTypeId ())
     {
-      Ptr<VideoClient> videoApp = DynamicCast<VideoClient> (app);
-      videoApp->ResetCounters ();
-      videoApp->GetServerApp ()->ResetQosStats ();
+      Ptr<RealTimeVideoClient> videoApp = DynamicCast<RealTimeVideoClient> (app);
+      //videoApp->GetServerApp ()->ResetCounters ();
+      videoApp->ResetQosStats ();
     }
   else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
     {
@@ -727,7 +727,7 @@ OpenFlowEpcController::GetAppDescription (Ptr<const Application> app,
     {
       desc << "VoIP  [" << rInfo->m_sgwIdx << "<->" << rInfo->m_enbIdx << "]";
     }
-  else if (app->GetInstanceTypeId () == VideoClient::GetTypeId ())
+  else if (app->GetInstanceTypeId () == RealTimeVideoClient::GetTypeId ())
     {
       desc << "Video [" << rInfo->m_sgwIdx << "-->" << rInfo->m_enbIdx << "]";
     }
