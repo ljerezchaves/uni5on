@@ -52,16 +52,15 @@ VoipClient::GetTypeId (void)
                    UintegerValue (100),
                    MakeUintegerAccessor (&VoipClient::m_localPort),
                    MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("PacketSize",
-                   "The size of packets (in bytes). "
-                   "Choose between 40, 50 and 60 bytes.",
-                   UintegerValue (60),
-                   MakeUintegerAccessor (&VoipClient::m_pktSize),
-                   MakeUintegerChecker<uint32_t> (40, 120))
+    .AddAttribute ("PacketPayloadSize",
+                   "The payload size of packets (in bytes).",
+                   UintegerValue (20),
+                   MakeUintegerAccessor (&VoipServer::m_pktSize),
+                   MakeUintegerChecker<uint32_t> (10, 60))
     .AddAttribute ("Interval",
                    "The time to wait between consecutive packets.",
-                   TimeValue (Seconds (0.06)),
-                   MakeTimeAccessor (&VoipClient::m_interval),
+                   TimeValue (Seconds (0.02)),
+                   MakeTimeAccessor (&VoipServer::m_interval),
                    MakeTimeChecker ())
     ;
   return tid;
@@ -216,12 +215,10 @@ VoipClient::SendPacket ()
   SeqTsHeader seqTs;
   seqTs.SetSeq (m_pktSent);
 
-  // Using compressed IP/UDP/RTP header. 
-  // 38 bytes must be removed from payload.
-  Ptr<Packet> p = Create<Packet> (m_pktSize - (38));
-  p->AddHeader (seqTs);
+  Ptr<Packet> packet = Create<Packet> (m_pktSize);
+  packet->AddHeader (seqTs);
  
-  if (m_txSocket->Send (p))
+  if (m_txSocket->Send (packet))
     {
       m_pktSent++;
       NS_LOG_DEBUG ("VoIP TX " << m_pktSize << " bytes");

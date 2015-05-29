@@ -390,8 +390,8 @@ SimulationScenario::EnableVoipTraffic ()
   NS_LOG_FUNCTION (this);
  
   static uint16_t voipPort = 16000;
-  uint16_t pktSize = 68;            // Lower values don't trigger meter band
-  double pktInterval = 0.06;
+  uint16_t pktSize = 40;      // Lower values don't trigger meter band
+  double pktInterval = 0.04;
  
   Ptr<Ipv4> serverIpv4 = m_webHost->GetObject<Ipv4> ();
   Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
@@ -467,8 +467,8 @@ SimulationScenario::EnableVoipTraffic ()
       // Dedicated GBR EPS bearer (QCI 1)
       GbrQosInformation qos;
       // Reserving bandwidth
-      // (2 bytes from compressed UDP/IP/RTP + 58 bytes from GTPU/UDP/IP/ETH)
-      qos.gbrDl = 8 * (pktSize + 2 + 58) / pktInterval;
+      // (40 bytes from UDP/IP/RTP + 58 bytes from GTPU/UDP/IP/ETH)
+      qos.gbrDl = 8 * (pktSize + 98) / pktInterval;
       qos.gbrUl = qos.gbrDl;
       // No maximum bandwidth (nor meter rules) for VoIP traffic
       EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
