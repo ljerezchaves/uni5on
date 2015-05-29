@@ -84,7 +84,15 @@ public:
    */
   Ptr<RealTimeVideoClient> GetClientApp ();
 
-  void StartTransmission (void);
+  /**
+   * \brief Start the real-time streaming.
+   */
+  void StartSending ();
+  
+  /**
+   * \brief Stop the real-time streaming.
+   */
+  void StopSending ();
 
 protected:
   virtual void DoDispose (void);
@@ -93,18 +101,6 @@ private:
   // inherited from Application base class.
   virtual void StartApplication (void);    // Called at time specified by Start
   virtual void StopApplication (void);     // Called at time specified by Stop
-
-  /**
-   * \brief Handle a connection succeed event.
-   * \param socket the connected socket
-   */
-  void ConnectionSucceeded (Ptr<Socket> socket);
-  
-  /**
-   * \brief Handle a connection failed event.
-   * \param socket the not connected socket
-   */
-  void ConnectionFailed (Ptr<Socket> socket);
 
   /**
    * \brief Load a trace file.
@@ -149,7 +145,6 @@ private:
   Ptr<Socket>                     m_socket;           //!< Local socket
   Ipv4Address                     m_clientAddress;    //!< Client address
   uint16_t                        m_clientPort;       //!< Client UDP port
-  bool                            m_connected;        //!< True if connected
   Ptr<RealTimeVideoClient>        m_clientApp;        //!< Client application
   Ptr<RandomVariableStream>       m_lengthRng;        //!< Random video length generator
   Time                            m_lengthTime;       //!< Current video length

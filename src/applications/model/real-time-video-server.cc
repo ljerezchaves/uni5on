@@ -61,6 +61,11 @@ RealTimeVideoServer::GetTypeId (void)
                    UintegerValue (100),
                    MakeUintegerAccessor (&RealTimeVideoServer::m_clientPort),
                    MakeUintegerChecker<uint16_t> ())
+    .AddAttribute ("MaxPacketSize",
+                   "The maximum size [bytes] of a packet.",
+                   UintegerValue (1400),
+                   MakeUintegerAccessor (&RealTimeVideoServer::m_maxPacketSize),
+                   MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("TraceFilename",
                    "Name of file to load a trace from.",
                    StringValue (""),
@@ -80,7 +85,6 @@ RealTimeVideoServer::RealTimeVideoServer ()
   NS_LOG_FUNCTION (this);
   m_socket = 0;
   m_clientApp = 0;
-  m_connected = false;
   m_sendEvent = EventId ();
 }
 
@@ -135,17 +139,24 @@ RealTimeVideoServer::GetClientApp ()
 }
 
 void 
-RealTimeVideoServer::StartTransmission (void)
+RealTimeVideoServer::StartSending ()
 {
   NS_LOG_FUNCTION (this);
-  
   m_currentEntry = 0;
   m_sent = 0;
   m_lengthTime = Seconds (std::abs (m_lengthRng->GetValue ()));
   m_elapsed = MilliSeconds (0);
+  NS_LOG_DEBUG ("Video lenght: " << m_lengthTime.As (Time::S));
 
   Simulator::Cancel (m_sendEvent);
   SendStream ();
+}
+
+void 
+RealTimeVideoServer::StopSending ()
+{
+  NS_LOG_FUNCTION (this);
+  Simulator::Cancel (m_sendEvent);
 }
 
 void
@@ -171,9 +182,6 @@ RealTimeVideoServer::StartApplication (void)
       m_socket->Bind ();
       m_socket->Connect (InetSocketAddress (m_clientAddress, m_clientPort));
       m_socket->ShutdownRecv ();
-      m_socket->SetConnectCallback (
-          MakeCallback (&RealTimeVideoServer::ConnectionSucceeded, this),
-          MakeCallback (&RealTimeVideoServer::ConnectionFailed, this));
       m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
     }
 }
@@ -188,19 +196,6 @@ RealTimeVideoServer::StopApplication ()
       m_socket->Close ();
       m_socket = 0;
     }
-}
-
-void 
-RealTimeVideoServer::ConnectionSucceeded (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
-  m_connected = true;
-}
-
-void 
-RealTimeVideoServer::ConnectionFailed (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
 }
 
 void
@@ -264,9 +259,6 @@ RealTimeVideoServer::SendStream (void)
   NS_LOG_FUNCTION (this);
   NS_ASSERT (m_sendEvent.IsExpired ());
 
-  // Only send new data if the connection has completed
-  if (!m_connected) return;
-
   Ptr<Packet> packet;
   struct TraceEntry *entry = &m_entries[m_currentEntry];
   do
@@ -317,10 +309,9 @@ RealTimeVideoServer::SendPacket (uint32_t size)
   if (m_socket->Send (p))
     {
       ++m_sent;
-      NS_LOG_INFO ("Video TX "<< size << 
-                   " bytes to " << m_clientAddress <<
-                   ":" << m_clientPort <<
-                   " Uid " << p->GetUid () <<
+      NS_LOG_INFO ("Real-time video TX " << size << " bytes to " << 
+                   m_clientAddress << ":" << m_clientPort <<
+                   " Uid " << p->GetUid () << " Seq " << seqTs.GetSeq () <<
                    " Time " << (Simulator::Now ()).GetSeconds ());
     }
   else

@@ -49,8 +49,8 @@ RealTimeVideoHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
   Ptr<RealTimeVideoClient> clientApp = m_clientFactory.Create<RealTimeVideoClient> ();
   Ptr<RealTimeVideoServer> serverApp = m_serverFactory.Create<RealTimeVideoServer> ();
 
+  clientApp->SetAttribute ("LocalPort", UintegerValue (clientPort));
   clientApp->SetServerApp (serverApp);
-  // clientApp->Set???
   clientNode->AddApplication (clientApp);
 
   serverApp->SetClientApp (clientApp, clientAddress, clientPort);

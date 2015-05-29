@@ -101,8 +101,10 @@ RealTimeVideoClient::StartApplication ()
                                                    m_port);
       m_socket->Bind (local);
     }
+  m_socket->SetRecvCallback (MakeCallback (&RealTimeVideoClient::HandleRead, this));
   
   ResetQosStats ();
+  m_serverApp->StartSending ();
 }
 
 void
@@ -115,7 +117,6 @@ RealTimeVideoClient::StopApplication ()
       m_socket = 0;
     }
 }
-
 
 void
 RealTimeVideoClient::HandleRead (Ptr<Socket> socket)
