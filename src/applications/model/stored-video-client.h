@@ -82,6 +82,12 @@ public:
    * configured parameters.
    */
   void Start (void);
+  
+  /**
+   * Set the stop callback
+   * \param cb The callback to invoke when traffic stops.
+   */
+  void SetStopCallback (Callback<void, Ptr<Application> > cb);
 
 protected:
   virtual void DoDispose (void);
@@ -134,6 +140,8 @@ private:
   uint32_t                m_contentLength;  //!< Content length line.
   std::string             m_contentType;    //!< Content type line.
   Ptr<QosStatsCalculator> m_qosStats;       //!< QoS statistics
+  
+  Callback<void, Ptr<Application> > m_stopCb; //!< Stop callback
 };
 
 } // namespace ns3

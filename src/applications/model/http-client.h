@@ -95,6 +95,12 @@ public:
    * configured parameters.
    */
   void Start (void);
+  
+  /**
+   * Set the stop callback
+   * \param cb The callback to invoke when traffic stops.
+   */
+  void SetStopCallback (Callback<void, Ptr<Application> > cb);
 
 protected:
   virtual void DoDispose (void);
@@ -162,6 +168,8 @@ private:
   
   Ptr<LogNormalRandomVariable>  m_readingTimeStream; //!< Reading time rng.
   Ptr<UniformRandomVariable>    m_readingTimeAdjust; //!< Adjustment rng.
+
+  Callback<void, Ptr<Application> > m_stopCb; //!< Stop callback
 };
 
 }

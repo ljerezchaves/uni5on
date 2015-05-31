@@ -124,13 +124,23 @@ VoipClient::Start (void)
   m_serverApp->StartSending ();
 }
 
+void
+VoipClient::SetStopCallback (Callback<void, Ptr<Application> > cb)
+{
+  m_stopCb = cb;
+}
+
 void 
 VoipClient::NofifyTrafficEnd (uint32_t pkts)
 {
   NS_LOG_FUNCTION (this);
   
   StopSending ();
-  // TODO notify the controller.
+
+  if (!m_stopCb.IsNull ())
+    {
+      m_stopCb (this);
+    }
 }
 
 void

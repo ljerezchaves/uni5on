@@ -93,6 +93,12 @@ StoredVideoClient::Start (void)
 }
 
 void
+StoredVideoClient::SetStopCallback (Callback<void, Ptr<Application> > cb)
+{
+  m_stopCb = cb;
+}
+
+void
 StoredVideoClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
@@ -144,7 +150,11 @@ StoredVideoClient::CloseSocket ()
       m_socket->Close ();
       m_socket = 0;
     }
-  // TODO Notify the controller.
+
+  if (!m_stopCb.IsNull ())
+    {
+      m_stopCb (this);
+    }
 }
 
 void

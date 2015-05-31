@@ -89,11 +89,21 @@ RealTimeVideoClient::Start (void)
   m_serverApp->StartSending ();
 }
 
+void
+RealTimeVideoClient::SetStopCallback (Callback<void, Ptr<Application> > cb)
+{
+  m_stopCb = cb;
+}
+
 void 
 RealTimeVideoClient::NofifyTrafficEnd (uint32_t pkts)
 {
   NS_LOG_FUNCTION (this);
-  // TODO notify the controller.
+
+  if (!m_stopCb.IsNull ())
+    {
+      m_stopCb (this);
+    }
 }
 
 void

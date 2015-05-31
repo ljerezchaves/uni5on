@@ -122,6 +122,12 @@ HttpClient::Start (void)
 }
 
 void
+HttpClient::SetStopCallback (Callback<void, Ptr<Application> > cb)
+{
+  m_stopCb = cb;
+}
+
+void
 HttpClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
@@ -174,7 +180,11 @@ HttpClient::CloseSocket ()
       m_socket->Close ();
       m_socket = 0;
     }
-  // TODO Notify the controller.
+
+  if (!m_stopCb.IsNull ())
+    {
+      m_stopCb (this);
+    }
 }
 
 void

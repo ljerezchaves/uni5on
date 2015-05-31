@@ -80,6 +80,12 @@ public:
   void Start (void);
 
   /**
+   * Set the stop callback
+   * \param cb The callback to invoke when traffic stops.
+   */
+  void SetStopCallback (Callback<void, Ptr<Application> > cb);
+
+  /**
    * \brief Callback invoked when server stops sending traffic.
    * \param pkts The total number of packets transmitted by the server.
    */
@@ -103,6 +109,8 @@ private:
   Ptr<Socket>               m_socket;     //!< Inbound RX socket
   Ptr<QosStatsCalculator>   m_qosStats;   //!< QoS statistics
   Ptr<RealTimeVideoServer>  m_serverApp;  //!< Server application
+
+  Callback<void, Ptr<Application> > m_stopCb; //!< Stop callback
 };
 
 } // namespace ns3
