@@ -74,12 +74,6 @@ public:
    */
   void SetTraceFile (std::string filename);
 
-  /**
-   * Set end callback
-   * \param cb The callback to invoke
-   */
-  void SetEndCallback (Callback<void, uint32_t> cb);
-
 protected:
   virtual void DoDispose (void);
 
@@ -142,7 +136,6 @@ private:
   Ptr<RealTimeVideoClient>        m_clientApp;        //!< Client application
   Ptr<RandomVariableStream>       m_lengthRng;        //!< Random video length
   Time                            m_lengthTime;       //!< Video length
-  Callback<void, uint32_t>        m_endCb;            //!< End callback
 };
 
 } // namespace ns3

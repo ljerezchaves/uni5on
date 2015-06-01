@@ -29,7 +29,7 @@ TypeId
 StoredVideoClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::StoredVideoClient")
-    .SetParent<Application> ()
+    .SetParent<EpcApplication> ()
     .AddConstructor<StoredVideoClient> ()
     .AddAttribute ("ServerAddress",
                    "The server IPv4 address.",
@@ -50,7 +50,6 @@ StoredVideoClient::StoredVideoClient ()
   NS_LOG_FUNCTION (this);
   m_socket = 0;
   m_serverApp = 0;
-  m_qosStats = Create<QosStatsCalculator> ();
 }
 
 StoredVideoClient::~StoredVideoClient ()
@@ -74,28 +73,10 @@ StoredVideoClient::GetServerApp ()
 }
 
 void
-StoredVideoClient::ResetQosStats ()
-{
-  m_qosStats->ResetCounters ();
-}
-
-Ptr<const QosStatsCalculator>
-StoredVideoClient::GetQosStats (void) const
-{
-  return m_qosStats;
-}
-
-void
 StoredVideoClient::Start (void)
 {
   ResetQosStats ();
   OpenSocket ();
-}
-
-void
-StoredVideoClient::SetStopCallback (Callback<void, Ptr<Application> > cb)
-{
-  m_stopCb = cb;
 }
 
 void
@@ -104,8 +85,7 @@ StoredVideoClient::DoDispose (void)
   NS_LOG_FUNCTION (this);
   m_serverApp = 0;
   m_socket = 0;
-  m_qosStats = 0;
-  Application::DoDispose ();
+  EpcApplication::DoDispose ();
 }
 
 void

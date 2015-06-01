@@ -27,6 +27,7 @@
 #include "ns3/internet-module.h"
 #include "ns3/http-header.h"
 #include "http-server.h"
+#include "epc-application.h"
 #include "qos-stats-calculator.h"
 #include <string>
 #include <sstream>
@@ -51,7 +52,7 @@ class HttpServer;
  * proposed algorithm in other modules of ns-3. To allow deeper studies about
  * the HTTP Protocol it needs some improvements.
  */
-class HttpClient : public Application
+class HttpClient : public EpcApplication
 {
 public:
   /**
@@ -78,30 +79,9 @@ public:
    */
   Ptr<HttpServer> GetServerApp ();
 
-  /**
-   * Reset the QoS statistics
-   */
-  void ResetQosStats ();
-
-  /**
-   * Get QoS statistics
-   * \return Get the const pointer to QosStatsCalculator
-   */
-  Ptr<const QosStatsCalculator> GetQosStats (void) const;
-
-  /**
-   * \brief Start the traffic for this application. 
-   * The server application will stop the traffic by itself, based on
-   * configured parameters.
-   */
+  // Inherited from EpcApplication
   void Start (void);
   
-  /**
-   * Set the stop callback
-   * \param cb The callback to invoke when traffic stops.
-   */
-  void SetStopCallback (Callback<void, Ptr<Application> > cb);
-
 protected:
   virtual void DoDispose (void);
 
@@ -164,14 +144,10 @@ private:
   uint16_t                m_pagesLoaded;        //!< Pages loaded.
   Time                    m_maxReadingTime;     //!< Reading time threshold.
   uint16_t                m_maxPages;           //!< Max pages threshold.
-  Ptr<QosStatsCalculator> m_qosStats;           //!< QoS statistics
   
   Ptr<LogNormalRandomVariable>  m_readingTimeStream; //!< Reading time rng.
   Ptr<UniformRandomVariable>    m_readingTimeAdjust; //!< Adjustment rng.
-
-  Callback<void, Ptr<Application> > m_stopCb; //!< Stop callback
 };
 
-}
-
+} // namespace ns3
 #endif /* HTTP_CLIENT_H_ */

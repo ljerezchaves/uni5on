@@ -35,7 +35,7 @@ TypeId
 VoipClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::VoipClient")
-    .SetParent<Application> ()
+    .SetParent<EpcApplication> ()
     .AddConstructor<VoipClient> ()
     .AddAttribute ("ServerAddress",
                    "The IPv4 destination address of the outbound packets",
@@ -55,12 +55,12 @@ VoipClient::GetTypeId (void)
     .AddAttribute ("PayloadSize",
                    "The payload size of packets (in bytes).",
                    UintegerValue (20),
-                   MakeUintegerAccessor (&VoipServer::m_pktSize),
+                   MakeUintegerAccessor (&VoipClient::m_pktSize),
                    MakeUintegerChecker<uint32_t> (10, 60))
     .AddAttribute ("Interval",
                    "The time to wait between consecutive packets.",
                    TimeValue (Seconds (0.02)),
-                   MakeTimeAccessor (&VoipServer::m_interval),
+                   MakeTimeAccessor (&VoipClient::m_interval),
                    MakeTimeChecker ())
   ;
   return tid;
@@ -74,7 +74,6 @@ VoipClient::VoipClient ()
 {
   NS_LOG_FUNCTION (this);
   m_sendEvent = EventId ();
-  m_qosStats = Create<QosStatsCalculator> ();
 }
 
 VoipClient::~VoipClient ()
@@ -90,9 +89,6 @@ VoipClient::SetServer (Ptr<VoipServer> server, Ipv4Address serverAddress,
   m_serverApp = server;
   m_serverAddress = serverAddress;
   m_serverPort = serverPort;
-  server->SetEndCallback (
-    MakeCallback (&VoipClient::NofifyTrafficEnd, this));
-
 }
 
 Ptr<VoipServer> 
@@ -108,10 +104,18 @@ VoipClient::ResetQosStats ()
   m_serverApp->ResetQosStats ();
 }
 
-Ptr<const QosStatsCalculator>
-VoipClient::GetQosStats (void) const
+void 
+VoipClient::NofifyTrafficEnd (uint32_t pkts)
 {
-  return m_qosStats;
+  NS_LOG_FUNCTION (this);
+  
+  StopSending ();
+
+  if (!m_stopCb.IsNull ())
+    {
+      m_stopCb (this);
+    }
+  // TODO: Wait for late packets?
 }
 
 void 
@@ -125,33 +129,13 @@ VoipClient::Start (void)
 }
 
 void
-VoipClient::SetStopCallback (Callback<void, Ptr<Application> > cb)
-{
-  m_stopCb = cb;
-}
-
-void 
-VoipClient::NofifyTrafficEnd (uint32_t pkts)
-{
-  NS_LOG_FUNCTION (this);
-  
-  StopSending ();
-
-  if (!m_stopCb.IsNull ())
-    {
-      m_stopCb (this);
-    }
-}
-
-void
 VoipClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   m_serverApp = 0;
   m_txSocket = 0;
   m_rxSocket = 0;
-  m_qosStats = 0;
-  Application::DoDispose ();
+  EpcApplication::DoDispose ();
 }
 
 void

@@ -125,12 +125,6 @@ RealTimeVideoServer::SetTraceFile (std::string traceFile)
     }
 }
 
-void 
-RealTimeVideoServer::SetEndCallback (Callback<void, uint32_t> cb)
-{
-  m_endCb = cb;
-}
-
 void
 RealTimeVideoServer::DoDispose (void)
 {
@@ -195,9 +189,9 @@ RealTimeVideoServer::StopSending ()
   // Stop stream and notify the client of traffic end
   NS_LOG_INFO ("Real-time video stopped.");
   Simulator::Cancel (m_sendEvent);
-  if (!m_endCb.IsNull ())
+  if (m_clientApp)
     {
-      m_endCb (m_pktSent);
+      m_clientApp->NofifyTrafficEnd (m_pktSent);
     }
 }
 

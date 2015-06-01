@@ -114,12 +114,6 @@ VoipServer::GetQosStats (void) const
   return m_qosStats;
 }
 
-void 
-VoipServer::SetEndCallback (Callback<void, uint32_t> cb)
-{
-  m_endCb = cb;
-}
-
 void
 VoipServer::DoDispose (void)
 {
@@ -200,9 +194,9 @@ VoipServer::StopSending ()
   // Stop stream and notify the client of traffic end
   NS_LOG_INFO ("VoIP call stopped.");
   Simulator::Cancel (m_sendEvent);
-  if (!m_endCb.IsNull ())
+  if (m_clientApp)
     {
-      m_endCb (m_pktSent);
+      m_clientApp->NofifyTrafficEnd (m_pktSent);
     }
 }
 

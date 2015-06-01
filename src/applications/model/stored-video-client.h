@@ -25,6 +25,7 @@
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
 #include "stored-video-server.h"
+#include "epc-application.h"
 #include "qos-stats-calculator.h"
 
 namespace ns3 {
@@ -38,7 +39,7 @@ class StoredVideoServer;
  * the main video object. After receiving the entire video, the client closes
  * the connection.
  */
-class StoredVideoClient : public Application
+class StoredVideoClient : public EpcApplication
 {
 public:
   /**
@@ -65,29 +66,8 @@ public:
    */
   Ptr<StoredVideoServer> GetServerApp ();
 
-  /**
-   * Reset the QoS statistics
-   */
-  void ResetQosStats ();
-
-  /**
-   * Get QoS statistics
-   * \return Get the const pointer to QosStatsCalculator
-   */
-  Ptr<const QosStatsCalculator> GetQosStats (void) const;
-
-  /**
-   * \brief Start this application. 
-   * The server application will stop the traffic by itself, based on
-   * configured parameters.
-   */
+  // Inherited from EpcApplication
   void Start (void);
-  
-  /**
-   * Set the stop callback
-   * \param cb The callback to invoke when traffic stops.
-   */
-  void SetStopCallback (Callback<void, Ptr<Application> > cb);
 
 protected:
   virtual void DoDispose (void);
@@ -139,11 +119,7 @@ private:
   uint32_t                m_bytesReceived;  //!< Received bytes.
   uint32_t                m_contentLength;  //!< Content length line.
   std::string             m_contentType;    //!< Content type line.
-  Ptr<QosStatsCalculator> m_qosStats;       //!< QoS statistics
-  
-  Callback<void, Ptr<Application> > m_stopCb; //!< Stop callback
 };
 
 } // namespace ns3
-
 #endif /* STORED_VIDEO_CLIENT_H */

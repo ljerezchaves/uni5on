@@ -30,7 +30,7 @@ TypeId
 RealTimeVideoClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RealTimeVideoClient")
-    .SetParent<Application> ()
+    .SetParent<EpcApplication> ()
     .AddConstructor<RealTimeVideoClient> ()
     .AddAttribute ("LocalPort",
                    "Local TCP port on which we listen for incoming connections.",
@@ -46,7 +46,6 @@ RealTimeVideoClient::RealTimeVideoClient ()
   NS_LOG_FUNCTION (this);
   m_socket = 0;
   m_serverApp = 0;
-  m_qosStats = Create<QosStatsCalculator> ();
 }
 
 RealTimeVideoClient::~RealTimeVideoClient ()
@@ -58,8 +57,6 @@ void
 RealTimeVideoClient::SetServer (Ptr<RealTimeVideoServer> server)
 {
   m_serverApp = server;
-  server->SetEndCallback (
-    MakeCallback (&RealTimeVideoClient::NofifyTrafficEnd, this));
 }
 
 Ptr<RealTimeVideoServer>
@@ -68,16 +65,16 @@ RealTimeVideoClient::GetServerApp ()
   return m_serverApp;
 }
 
-void
-RealTimeVideoClient::ResetQosStats ()
+void 
+RealTimeVideoClient::NofifyTrafficEnd (uint32_t pkts)
 {
-  m_qosStats->ResetCounters ();
-}
+  NS_LOG_FUNCTION (this);
 
-Ptr<const QosStatsCalculator>
-RealTimeVideoClient::GetQosStats (void) const
-{
-  return m_qosStats;
+  if (!m_stopCb.IsNull ())
+    {
+      m_stopCb (this);
+    }
+  // TODO: Wait for late packets?
 }
 
 void 
@@ -90,30 +87,12 @@ RealTimeVideoClient::Start (void)
 }
 
 void
-RealTimeVideoClient::SetStopCallback (Callback<void, Ptr<Application> > cb)
-{
-  m_stopCb = cb;
-}
-
-void 
-RealTimeVideoClient::NofifyTrafficEnd (uint32_t pkts)
-{
-  NS_LOG_FUNCTION (this);
-
-  if (!m_stopCb.IsNull ())
-    {
-      m_stopCb (this);
-    }
-}
-
-void
 RealTimeVideoClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   m_serverApp = 0;
   m_socket = 0;
-  m_qosStats = 0;
-  Application::DoDispose ();
+  EpcApplication::DoDispose ();
 }
 
 void

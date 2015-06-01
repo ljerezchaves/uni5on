@@ -25,6 +25,7 @@
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
 #include "real-time-video-server.h"
+#include "epc-application.h"
 #include "qos-stats-calculator.h"
 
 namespace ns3 {
@@ -37,7 +38,7 @@ class RealTimeVideoServer;
  * start the transmission at the server (using a direct member function call),
  * and receives UDP datagrams from server to measures statistiscs.
  */
-class RealTimeVideoClient : public Application
+class RealTimeVideoClient : public EpcApplication
 {
 public:
   /**
@@ -62,34 +63,13 @@ public:
   Ptr<RealTimeVideoServer> GetServerApp ();
 
   /**
-   * Reset the QoS statistics
-   */
-  void ResetQosStats ();
-
-  /**
-   * Get QoS statistics
-   * \return Get the const pointer to QosStatsCalculator
-   */
-  Ptr<const QosStatsCalculator> GetQosStats (void) const;
-
-  /**
-   * \brief Start this application.
-   * The server application will stop the traffic by itself, based on
-   * configured parameters.
-   */
-  void Start (void);
-
-  /**
-   * Set the stop callback
-   * \param cb The callback to invoke when traffic stops.
-   */
-  void SetStopCallback (Callback<void, Ptr<Application> > cb);
-
-  /**
    * \brief Callback invoked when server stops sending traffic.
    * \param pkts The total number of packets transmitted by the server.
    */
   void NofifyTrafficEnd (uint32_t pkts);
+
+  // Inherited from EpcApplication
+  void Start (void);
 
 protected:
   virtual void DoDispose (void);
@@ -107,10 +87,7 @@ private:
   
   uint16_t                  m_localPort;  //!< Inbound local port
   Ptr<Socket>               m_socket;     //!< Inbound RX socket
-  Ptr<QosStatsCalculator>   m_qosStats;   //!< QoS statistics
   Ptr<RealTimeVideoServer>  m_serverApp;  //!< Server application
-
-  Callback<void, Ptr<Application> > m_stopCb; //!< Stop callback
 };
 
 } // namespace ns3

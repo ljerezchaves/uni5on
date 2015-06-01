@@ -78,12 +78,6 @@ public:
    */
   Ptr<const QosStatsCalculator> GetQosStats (void) const;
 
-  /**
-   * Set end callback
-   * \param cb The callback to invoke
-   */
-  void SetEndCallback (Callback<void, uint32_t> cb);
-
 protected:
   virtual void DoDispose (void);
 
@@ -125,7 +119,6 @@ private:
   EventId                   m_sendEvent;      //!< SendPacket event
   Ptr<QosStatsCalculator>   m_qosStats;       //!< QoS statistics
   Ptr<RandomVariableStream> m_lengthRng;      //!< Random call length
-  Callback<void, uint32_t>  m_endCb;          //!< End callback
 };
 
 } // namespace ns3

@@ -3,6 +3,7 @@
 def build(bld):
     module = bld.create_ns3_module('applications', ['internet', 'config-store','stats'])
     module.source = [
+        'model/epc-application.cc',
         'model/http-client.cc',
         'model/http-server.cc',
         'model/voip-client.cc',
@@ -50,6 +51,7 @@ def build(bld):
     headers = bld(features='ns3header')
     headers.module = 'applications'
     headers.source = [
+        'model/epc-application.h',
         'model/http-client.h',
         'model/http-server.h',
         'model/voip-client.h',

@@ -31,7 +31,7 @@ TypeId
 HttpClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::HttpClient")
-    .SetParent<Application> ()
+    .SetParent<EpcApplication> ()
     .AddConstructor<HttpClient> ()
     .AddAttribute ("ServerAddress",
                    "The server IPv4 address.",
@@ -66,7 +66,6 @@ HttpClient::HttpClient ()
   m_bytesReceived = 0;
   m_numOfInlineObjects = 0;
   m_inlineObjLoaded = 0;
-  m_qosStats = Create<QosStatsCalculator> ();
 
   // Mu and Sigma data was taken from paper "An HTTP Web Traffic Model Based on
   // the Top One Million Visited Web Pages" by Rastin Pries et. al (Table II).
@@ -103,28 +102,10 @@ HttpClient::GetServerApp ()
 }
 
 void
-HttpClient::ResetQosStats ()
-{
-  m_qosStats->ResetCounters ();
-}
-
-Ptr<const QosStatsCalculator>
-HttpClient::GetQosStats (void) const
-{
-  return m_qosStats;
-}
-
-void
 HttpClient::Start (void)
 {
   ResetQosStats ();
   OpenSocket ();
-}
-
-void
-HttpClient::SetStopCallback (Callback<void, Ptr<Application> > cb)
-{
-  m_stopCb = cb;
 }
 
 void
@@ -133,9 +114,8 @@ HttpClient::DoDispose (void)
   NS_LOG_FUNCTION (this);
   m_serverApp = 0;
   m_socket = 0;
-  m_qosStats = 0;
   m_readingTimeStream = 0;
-  Application::DoDispose ();
+  EpcApplication::DoDispose ();
 }
 
 void

@@ -26,6 +26,7 @@
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
 #include "voip-server.h"
+#include "epc-application.h"
 #include "qos-stats-calculator.h"
 
 namespace ns3 {
@@ -38,7 +39,7 @@ class VoipServer;
  * receives UDP datagrams following voip traffic pattern. This client control
  * start/stop events on the server application. 
  */
-class VoipClient : public Application
+class VoipClient : public EpcApplication
 {
 public:
   /**
@@ -71,29 +72,13 @@ public:
   void ResetQosStats ();
 
   /**
-   * Get QoS statistics
-   * \return Get the const pointer to QosStatsCalculator 
-   */
-  Ptr<const QosStatsCalculator> GetQosStats (void) const;
-
-  /**
-   * \brief Start this application. 
-   * The application must stop the traffic by itself, based on configured
-   * parameters.
-   */
-  void Start (void);
-
-  /**
-   * Set the stop callback
-   * \param cb The callback to invoke when traffic stops.
-   */
-  void SetStopCallback (Callback<void, Ptr<Application> > cb);
-
-  /**
    * \brief Callback invoked when server stops sending traffic.
    * \param pkts The total number of packets transmitted by the server.
    */
   void NofifyTrafficEnd (uint32_t pkts);
+
+  // Inherited from EpcApplication
+  void Start (void);
 
 protected:
   /** Destructor implementation */
@@ -135,9 +120,6 @@ private:
   Ptr<Socket>               m_txSocket;       //!< Outbound TX socket
   Ptr<Socket>               m_rxSocket;       //!< Inbound RX socket
   EventId                   m_sendEvent;      //!< SendPacket event
-  Ptr<QosStatsCalculator>   m_qosStats;       //!< QoS statistics
-
-  Callback<void, Ptr<Application> > m_stopCb; //!< Stop callback
 };
 
 } // namespace ns3
