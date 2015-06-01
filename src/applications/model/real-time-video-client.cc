@@ -86,6 +86,12 @@ RealTimeVideoClient::Start (void)
   m_serverApp->StartSending ();
 }
 
+std::string 
+RealTimeVideoClient::GetAppName (void) const
+{
+  return "RtVid";
+}
+
 void
 RealTimeVideoClient::DoDispose (void)
 {

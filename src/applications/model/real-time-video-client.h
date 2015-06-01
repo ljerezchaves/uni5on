@@ -70,6 +70,7 @@ public:
 
   // Inherited from EpcApplication
   void Start (void);
+  std::string GetAppName (void) const;
 
 protected:
   virtual void DoDispose (void);

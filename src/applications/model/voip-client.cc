@@ -128,6 +128,12 @@ VoipClient::Start (void)
   m_serverApp->StartSending ();
 }
 
+std::string 
+VoipClient::GetAppName (void) const
+{
+  return "Voip";
+}
+
 void
 VoipClient::DoDispose (void)
 {

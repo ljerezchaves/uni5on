@@ -108,6 +108,12 @@ HttpClient::Start (void)
   OpenSocket ();
 }
 
+std::string 
+HttpClient::GetAppName (void) const
+{
+  return "Http";
+}
+
 void
 HttpClient::DoDispose (void)
 {

@@ -71,6 +71,12 @@ EpcApplication::SetStopCallback (StopCb_t cb)
   m_stopCb = cb;
 }
 
+std::string 
+EpcApplication::GetAppName (void) const
+{
+  return "NoName";
+}
+
 void
 EpcApplication::DoDispose (void)
 {

@@ -79,6 +79,12 @@ StoredVideoClient::Start (void)
   OpenSocket ();
 }
 
+std::string 
+StoredVideoClient::GetAppName (void) const
+{
+  return "StVid";
+}
+
 void
 StoredVideoClient::DoDispose (void)
 {

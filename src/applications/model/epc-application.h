@@ -72,6 +72,12 @@ public:
    */
   void SetStopCallback (StopCb_t cb);
 
+  /**
+   * Get the application name;
+   * \return The application name;
+   */
+  virtual std::string GetAppName (void) const;
+
 protected:
   virtual void DoDispose (void);        //!< Destructor implementation
 
