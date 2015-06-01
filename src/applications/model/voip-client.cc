@@ -113,9 +113,9 @@ VoipClient::NofifyTrafficEnd (uint32_t pkts)
 
   if (!m_stopCb.IsNull ())
     {
-      m_stopCb (this);
+      // Let's wait 1 sec for delayed packets before notifying stopped app.
+      Simulator::Schedule (Seconds (1), &VoipClient::m_stopCb, this, this);
     }
-  // TODO: Wait for late packets?
 }
 
 void 
