@@ -28,6 +28,7 @@
 namespace ns3 {
 
 /**
+ * \ingroup applications
  * This class extends the Application with QosStatsCalculator and stop
  * callback. It was designed to be used by client applications for EPC +
  * OpenFlow simulations.

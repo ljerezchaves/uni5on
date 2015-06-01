@@ -154,7 +154,7 @@ public:
    * \param app The application pointer.
    * \return true to allow the app to start the traffic, false otherwise.
    */ 
-  virtual bool NotifyAppStart (Ptr<Application> app);
+  virtual bool NotifyAppStart (Ptr<EpcApplication> app);
 
   /**
    * Notify this controller of an application stops sending traffic over EPC
@@ -164,7 +164,7 @@ public:
    * \param app The application pointer.
    * \return true.
    */ 
-  virtual bool NotifyAppStop (Ptr<Application> app);
+  virtual bool NotifyAppStop (Ptr<EpcApplication> app);
 
   /**
    * Connect all trace sinks used by this controller to monitor the network.
@@ -359,13 +359,13 @@ protected:
    * Dump application statistics.
    * \param app The application pointer.
    */
-  void DumpAppStatistics (Ptr<Application> app);
+  void DumpAppStatistics (Ptr<EpcApplication> app);
 
   /**
    * Reset application statistics.
    * \param app The application pointer.
    */
-  void ResetAppStatistics (Ptr<Application> app);
+  void ResetAppStatistics (Ptr<EpcApplication> app);
 
   /**
    * Create the description string for this application.

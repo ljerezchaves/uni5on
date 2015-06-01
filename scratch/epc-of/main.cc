@@ -61,10 +61,10 @@ main (int argc, char *argv[])
   cmd.AddValue ("pcap",       "ns3::SimulationScenario::PcapTrace");
   cmd.AddValue ("trace",      "ns3::SimulationScenario::LteTrace");
   cmd.AddValue ("liblog",     "ns3::SimulationScenario::SwitchLogs");
-  cmd.AddValue ("ping",       "ns3::SimulationScenario::PingTraffic");
-  cmd.AddValue ("http",       "ns3::SimulationScenario::HttpTraffic");
-  cmd.AddValue ("voip",       "ns3::SimulationScenario::VoipTraffic");
-  cmd.AddValue ("video",      "ns3::SimulationScenario::VideoTraffic");
+  cmd.AddValue ("http",       "ns3::TrafficManager::HttpTraffic");
+  cmd.AddValue ("voip",       "ns3::TrafficManager::VoipTraffic");
+  cmd.AddValue ("stVideo",    "ns3::TrafficManager::StVideoTraffic");
+  cmd.AddValue ("rtVideo",    "ns3::TrafficManager::RtVideoTraffic");
   cmd.AddValue ("strategy",   "ns3::RingController::Strategy");
   cmd.AddValue ("ueFixed",    "ns3::LteHexGridNetwork::UeFixedPos");
   cmd.AddValue ("bandwidth",  "ns3::RingNetwork::LinkDataRate");
@@ -135,11 +135,17 @@ EnableVerbose ()
   LogComponentEnable ("RingController", LOG_LEVEL_ALL);
   LogComponentEnable ("RingController", LOG_PREFIX_TIME);
   
-  LogComponentEnable ("HttpClient", LOG_LEVEL_WARN);
-  LogComponentEnable ("HttpServer", LOG_LEVEL_WARN);
-  LogComponentEnable ("UdpServer", LOG_LEVEL_WARN);
-  LogComponentEnable ("VideoClient", LOG_LEVEL_WARN);
-  LogComponentEnable ("VoipClient", LOG_LEVEL_WARN);
-  LogComponentEnable ("VoipServer", LOG_LEVEL_WARN);
+  LogComponentEnable ("HttpClient", LOG_INFO);
+  LogComponentEnable ("HttpServer", LOG_INFO);
+  LogComponentEnable ("VoipClient", LOG_INFO);
+  LogComponentEnable ("VoipServer", LOG_INFO);
+  LogComponentEnable ("StoredVideoClient", LOG_INFO);
+  LogComponentEnable ("StoredVideoServer", LOG_INFO);
+  LogComponentEnable ("RealTimeVideoClient", LOG_INFO);
+  LogComponentEnable ("RealTimeVideoServer", LOG_INFO);
+  LogComponentEnable ("TrafficManager", LOG_LEVEL_ALL);
+  LogComponentEnable ("TrafficHelper", LOG_LEVEL_ALL);
+  LogComponentEnable ("EpcApplication", LOG_LEVEL_ALL);
+
 }
 

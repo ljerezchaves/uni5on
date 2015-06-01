@@ -28,6 +28,7 @@
 #include "lte-hex-grid-network.h"
 #include "ring-network.h"
 #include "openflow-epc-controller.h"
+#include "traffic-helper.h"
 #include <vector>
 
 using namespace std;
@@ -60,49 +61,7 @@ public:
   void SetCommonPrefix (std::string prefix);
 
 private:
-  /**
-   * Enable IPv4 ICMP ping application over default EPS bearer (QCI 9).
-   * This QCI is typically used for the default bearer of a UE/PDN for non
-   * privileged subscribers. 
-   */
-  void EnablePingTraffic ();
-  
-  /** 
-   * Enable HTTP/TCP download traffic over dedicated Non-GBR EPS bearer (QCI 8). 
-   * This QCI 8 could be used for a dedicated 'premium bearer' for any
-   * subscriber, or could be used for the default bearer of a for 'premium
-   * subscribers'.
-   *
-   * \internal This HTTP model is based on the distributions indicated in the
-   * paper 'An HTTP Web Traffic Model Based on the Top One Million Visited Web
-   * Pages' by Rastin Pries et. al. Each client will send a get request to the
-   * server at port 80 and will get the page content back including inline
-   * content. These requests repeats over time following appropriate
-   * distribution.
-   */
-  void EnableHttpTraffic ();
-  
-  /** 
-   * Enable VoIP/UDP bidirectional traffic over dedicated GBR EPS bearer (QCI 1). 
-   * This QCI is typically associated with an operator controlled service.
-   *
-   * \internal This VoIP traffic simulates the G.729 codec (~8.5 kbps for
-   * payload). Check http://goo.gl/iChPGQ for bandwidth calculation and
-   * discussion. This code will install a bidirectional voip traffic between UE
-   * and WebServer, using the VoipPeer application. 
-   */
-  void EnableVoipTraffic ();
-  
-  /**
-   * Enable UDP downlink video streaming over dedicated GBR EPS bearer (QCI 4).
-   * This QCI is typically associated with an operator controlled service.
-   *
-   * \internal This video traffic is based on MPEG-4 video traces from
-   * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf. This code
-   * install an UdpTraceClient at the web server and an UdpServer application
-   * at each client).
-   */
-  void EnableVideoTraffic ();
+
 
   /**
    * Save application statistics in file. 
@@ -161,13 +120,6 @@ private:
    */
   bool ParseTopology ();
 
-  /**
-   * Get complete filename for video trace files;
-   * \param idx The trace index.
-   * \return Complete path.
-   */
-  static const std::string GetVideoFilename (uint8_t idx);
-
   /** Enable/Disable ofsoftswitch13 library log. */
   void DatapathLogs ();
 
@@ -186,11 +138,6 @@ private:
   Ptr<Node>                  m_webHost;       //!< Internet server node
   Ptr<Node>                  m_pgwHost;       //!< EPC Pgw gateway node
   
-  NodeContainer         m_ueNodes;            //!< LTE UE nodes
-  NetDeviceContainer    m_ueDevices;          //!< LTE UE devices
-  ApplicationContainer  m_voipServers;        //!< Voip applications
-  ApplicationContainer  m_videoServers;       //!< Video applications
-
   std::string           m_appStatsFilename;   //!< AppStats filename
   std::string           m_epcStatsFilename;   //!< EpcStats filename
   std::string           m_pgwStatsFilename;   //!< PgwStats filename
@@ -212,11 +159,6 @@ private:
   bool                  m_video;              //!< Enable video traffic
   std::vector<uint32_t> m_UesPerEnb;          //!< Number of UEs per eNb
   std::vector<uint16_t> m_SwitchIdxPerEnb;    //!< Switch index per eNb
-
-  static const std::string m_videoDir;        //!< Video trace directory
-  static const std::string m_videoTrace [];   //!< Video trace filenames
-  static const uint64_t    m_avgBitRate [];   //!< Video trace avg bitrate
-  static const uint64_t    m_maxBitRate [];   //!< Video trace max bitrate
 };
 
 };  // namespace ns3

@@ -261,7 +261,7 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
 }
 
 bool 
-OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
+OpenFlowEpcController::NotifyAppStart (Ptr<EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -376,7 +376,7 @@ OpenFlowEpcController::NotifyAppStart (Ptr<Application> app)
 }
 
 bool
-OpenFlowEpcController::NotifyAppStop (Ptr<Application> app)
+OpenFlowEpcController::NotifyAppStop (Ptr<EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
  
@@ -622,7 +622,7 @@ OpenFlowEpcController::DumpBwdStatistics ()
 }
 
 void
-OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
+OpenFlowEpcController::DumpAppStatistics (Ptr<EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -682,7 +682,7 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<Application> app)
 }
 
 void
-OpenFlowEpcController::ResetAppStatistics (Ptr<Application> app)
+OpenFlowEpcController::ResetAppStatistics (Ptr<EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
   

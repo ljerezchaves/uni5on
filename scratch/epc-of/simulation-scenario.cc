@@ -27,22 +27,6 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("SimulationScenario");
 NS_OBJECT_ENSURE_REGISTERED (SimulationScenario);
 
-const std::string SimulationScenario::m_videoDir = "../movies/";
-
-const std::string SimulationScenario::m_videoTrace [] = {
-  "jurassic.data", "silence.data", "star-wars.data", "mr-bean.data",
-  "first-contact.data", "from-dusk.data", "the-firm.data", "formula1.data",
-  "soccer.data", "ard-news.data", "ard-talk.data", "ns3-talk.data",
-  "office-cam.data"};
-
-const uint64_t SimulationScenario::m_avgBitRate [] = {770000, 580000, 280000,
-  580000, 330000, 680000, 310000, 840000, 1100000, 720000, 540000, 550000,
-  400000};
-
-const uint64_t SimulationScenario::m_maxBitRate [] = {3300000, 4400000,
-  1900000, 3100000, 2500000, 3100000, 2100000, 2900000, 3600000, 3400000,
-  3100000, 3400000, 2000000};
-
 SimulationScenario::SimulationScenario ()
   : m_opfNetwork (0),
     m_controller (0),
@@ -219,10 +203,6 @@ SimulationScenario::BuildRingTopology ()
   m_webNetwork = CreateObject<InternetNetwork> ();
   m_webHost = m_webNetwork->CreateTopology (m_epcHelper->GetPgwNode ());
 
-  // UE Nodes and UE devices
-  m_ueNodes = m_lteNetwork->GetUeNodes ();
-  m_ueDevices = m_lteNetwork->GetUeDevices ();
-
   // Registering controller trace sinks
   m_controller->ConnectTraceSinks ();
   
@@ -245,10 +225,10 @@ SimulationScenario::BuildRingTopology ()
       MakeCallback (&SimulationScenario::ReportWebStats, this));
 
   // Application traffic
-  if (m_ping) EnablePingTraffic ();
-  if (m_http) EnableHttpTraffic ();
-  if (m_voip) EnableVoipTraffic ();
-  if (m_video) EnableVideoTraffic ();
+  TrafficHelper tfcHelper;
+  tfcHelper.Install (m_lteNetwork->GetUeNodes (), 
+                     m_lteNetwork->GetUeDevices (), 
+                     m_webHost, m_lteHelper, m_controller);
 
   // Logs and traces
   DatapathLogs ();
@@ -286,287 +266,6 @@ SimulationScenario::SetCommonPrefix (std::string prefix)
   m_brqStatsFilename = m_commonPrefix + m_brqStatsFilename;
 }
 
-void 
-SimulationScenario::EnablePingTraffic ()
-{
-  NS_LOG_FUNCTION (this);
-
-  Ptr<Ipv4> dstIpv4 = m_webHost->GetObject<Ipv4> ();
-  Ipv4Address dstAddr = dstIpv4->GetAddress (1,0).GetLocal ();
-  V4PingHelper ping = V4PingHelper (dstAddr);
-  ApplicationContainer clientApps = ping.Install (m_ueNodes);
-  clientApps.Start (Seconds (1));
-}
-
-
-/* NOTE about GbrQosInformation:
- * 1) The Maximum Bit Rate field is used by controller to install meter rules.
- *    When this value is left to 0, no meter rules will be installed.
- * 2) The Guaranteed Bit Rate field is used by the controller to reserve the
- *    requested bandwidth in OpenFlow network. This can be used even for
- *    Non-GBR bearers (as done in HTTP traffic), allowing resource reservation
- *    but without guarantee.  When left to 0, no resources are reserved. 
- */
-
-void
-SimulationScenario::EnableHttpTraffic ()
-{
-  NS_LOG_FUNCTION (this);
-  
-  static uint16_t httpPort = 80;
-
-  Ptr<Ipv4> serverIpv4 = m_webHost->GetObject<Ipv4> ();
-  Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
-  Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
-
-  ApplicationContainer httpApps;
-
-  HttpHelper httpHelper;
-  httpHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
-  httpHelper.SetClientAttribute ("MaxPages", UintegerValue (3)); 
-  // The HttpClient TcpTimeout was selected based on HTTP traffic model and
-  // dedicated bearer idle timeout. When the TCP socket is closed, HTTP client
-  // application notifies the controller, and traffic statistics are printed.
-  
-  for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, httpPort++)
-    {
-      Ptr<Node> client = m_ueNodes.Get (u);
-      Ptr<NetDevice> clientDev = m_ueDevices.Get (u);
-      NS_ASSERT (clientDev->GetNode () == client);
-
-      Ptr<Ipv4> clientIpv4 = client->GetObject<Ipv4> ();
-      Ipv4Address clientAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
-      Ipv4Mask clientMask = clientIpv4->GetAddress (1, 0).GetMask ();
-      
-      // Traffic Flow Template
-      Ptr<EpcTft> tft = CreateObject<EpcTft> ();
-
-      // Bidirectional HTTP traffic.
-      // NOTE: The HttpClient is the one that requests pages to HttpServer. 
-      // The client is installed into UE, and the server into m_webHost.
-      Ptr<HttpClient> clientApp = httpHelper.Install (client, m_webHost, 
-          serverAddr, httpPort);
-      clientApp->AggregateObject (tft);
-      clientApp->SetStartTime (Seconds (1));
-      httpApps.Add (clientApp);
-
-      // TFT Packet filter
-      EpcTft::PacketFilter filter;
-      filter.direction = EpcTft::BIDIRECTIONAL;
-      filter.remoteAddress = serverAddr;
-      filter.remoteMask = serverMask;
-      filter.localAddress = clientAddr;
-      filter.localMask = clientMask;
-      filter.remotePortStart = httpPort;
-      filter.remotePortEnd = httpPort;
-      tft->Add (filter);
-
-      // Dedicated Non-GBR EPS bearer (QCI 8)
-      GbrQosInformation qos;
-      qos.gbrDl = 131072;     // Reserving 128 Kbps in downlink
-      qos.gbrUl = 32768;      // Reserving 32 Kbps in uplink
-      qos.mbrDl = 524288;     // Max of 512 Kbps in downlink
-      qos.mbrUl = 131072;     // Max of 128 Kbps in uplink 
-      EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
-      m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
-    }
-
-//  // Setting up app start callback to controller
-//  ApplicationContainer::Iterator i;
-//  for (i = httpApps.Begin (); i != httpApps.End (); ++i)
-//    {
-//      Ptr<Application> app = *i;
-//      app->SetAppStartStopCallback (
-//          MakeCallback (&OpenFlowEpcController::NotifyAppStart, m_controller),
-//          MakeCallback (&OpenFlowEpcController::NotifyAppStop, m_controller));
-//    }
-}
-
-void
-SimulationScenario::EnableVoipTraffic ()
-{
-  NS_LOG_FUNCTION (this);
- 
-  static uint16_t voipPort = 16000;
-  uint16_t pktSize = 60;      // Lower values don't trigger meter band
-  double pktInterval = 0.02;
- 
-  Ptr<Ipv4> serverIpv4 = m_webHost->GetObject<Ipv4> ();
-  Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
-  Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
-
-  ApplicationContainer voipApps;
-  VoipHelper voipHelper;
-  voipHelper.SetClientAttribute ("PayloadSize", UintegerValue (pktSize));
-  voipHelper.SetServerAttribute ("PayloadSize", UintegerValue (pktSize));
-  voipHelper.SetClientAttribute ("Interval", TimeValue (Seconds (pktInterval)));
-  voipHelper.SetServerAttribute ("Interval", TimeValue (Seconds (pktInterval)));
-  voipHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
-
-  // ON/OFF pattern for VoIP applications (Poisson process)
-  // Random average time between calls (1 to 5 minutes) [Exponential mean]
-  Ptr<UniformRandomVariable> meanTime = CreateObject<UniformRandomVariable> ();
-  meanTime->SetAttribute ("Min", DoubleValue (60));
-  meanTime->SetAttribute ("Max", DoubleValue (300));
-  Ptr<ExponentialRandomVariable> offTime = CreateObject<ExponentialRandomVariable> ();
-  offTime->SetAttribute ("Mean", DoubleValue (meanTime->GetValue ()));
-  
-  voipHelper.SetClientAttribute ("OnTime", 
-      StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=900.0]"));
-  voipHelper.SetClientAttribute ("OffTime", PointerValue (offTime));
- 
-  for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, voipPort++)
-    {
-      Ptr<Node> client = m_ueNodes.Get (u);
-      Ptr<NetDevice> clientDev = m_ueDevices.Get (u);
-      NS_ASSERT (clientDev->GetNode () == client);
-
-      Ptr<Ipv4> clientIpv4 = client->GetObject<Ipv4> ();
-      Ipv4Address clientAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
-      Ipv4Mask clientMask = clientIpv4->GetAddress (1, 0).GetMask ();
-      
-      // Traffic Flow Template
-      Ptr<EpcTft> tft = CreateObject<EpcTft> ();
-
-      // Bidirectional VoIP traffic.
-      // NOTE: clientApp is the one at UE, providing the uplink traffic. 
-      // Linking only this app to the callbacks for start/stop notifications.
-      // voipHelper.SetClientAttribute ("Stream", IntegerValue (u));
-      Ptr<VoipClient> clientApp = voipHelper.Install (client, m_webHost, 
-          clientAddr, serverAddr, voipPort, voipPort);
-      clientApp->AggregateObject (tft);
-      clientApp->SetStartTime (Seconds (1));
-      voipApps.Add (clientApp);
-  
-      // TFT downlink packet filter
-      EpcTft::PacketFilter filterDown;
-      filterDown.direction = EpcTft::DOWNLINK;
-      filterDown.remoteAddress = serverAddr;
-      filterDown.remoteMask = serverMask;
-      filterDown.localAddress = clientAddr;
-      filterDown.localMask = clientMask;
-      filterDown.localPortStart = voipPort;
-      filterDown.localPortEnd = voipPort;
-      tft->Add (filterDown);
-
-      // TFT uplink packet filter
-      EpcTft::PacketFilter filterUp;
-      filterUp.direction = EpcTft::UPLINK;
-      filterUp.remoteAddress = serverAddr;
-      filterUp.remoteMask = serverMask;
-      filterUp.localAddress = clientAddr;
-      filterUp.localMask = clientMask;
-      filterUp.remotePortStart = voipPort;
-      filterUp.remotePortEnd = voipPort;
-      tft->Add (filterUp);
- 
-      // Dedicated GBR EPS bearer (QCI 1)
-      GbrQosInformation qos;
-      // Reserving bandwidth
-      // (40 bytes from UDP/IP/RTP + 58 bytes from GTPU/UDP/IP/ETH)
-      qos.gbrDl = 8 * (pktSize + 98) / pktInterval;
-      qos.gbrUl = qos.gbrDl;
-      // No maximum bandwidth (nor meter rules) for VoIP traffic
-      EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
-      m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
-    }
-
-//  // Setting up app start callback to controller
-//  ApplicationContainer::Iterator i;
-//  for (i = voipApps.Begin (); i != voipApps.End (); ++i)
-//    {
-//      Ptr<Application> app = *i;
-//      app->SetAppStartStopCallback (
-//          MakeCallback (&OpenFlowEpcController::NotifyAppStart, m_controller),
-//          MakeCallback (&OpenFlowEpcController::NotifyAppStop, m_controller));
-//    }
-}
-
-void
-SimulationScenario::EnableVideoTraffic ()
-{
-  NS_LOG_FUNCTION (this);
- 
-  static uint16_t videoPort = 20000;
-
-  Ptr<Ipv4> serverIpv4 = m_webHost->GetObject<Ipv4> ();
-  Ipv4Address serverAddr = serverIpv4->GetAddress (1,0).GetLocal ();
-  Ipv4Mask serverMask = serverIpv4->GetAddress (1,0).GetMask ();
-
-  ApplicationContainer videoApps;
-  RealTimeVideoHelper videoHelper;
-  videoHelper.SetServerAttribute ("MaxPacketSize", UintegerValue (1400));
-  videoHelper.SetServerAttribute ("StartTime", TimeValue (Seconds (0)));
-
-  // ON/OFF pattern for VoIP applications (Poisson process)
-  // Average time between videos (1 minute) [Exponential mean]
-  // videoHelper.SetClientAttribute ("OnTime", 
-  //     StringValue ("ns3::NormalRandomVariable[Mean=75.0|Variance=2025.0]"));
-  // videoHelper.SetClientAttribute ("OffTime", 
-  //     StringValue ("ns3::ExponentialRandomVariable[Mean=60.0]"));
-
-  // Video random selection
-  Ptr<UniformRandomVariable> rngVideo = CreateObject<UniformRandomVariable> ();
-  rngVideo->SetAttribute ("Min", DoubleValue (0));
-  rngVideo->SetAttribute ("Max", DoubleValue (12));
-  
-  for (uint32_t u = 0; u < m_ueNodes.GetN (); u++, videoPort++)
-    {
-      Ptr<Node> client = m_ueNodes.Get (u);
-      Ptr<NetDevice> clientDev = m_ueDevices.Get (u);
-      NS_ASSERT (clientDev->GetNode () == client);
-
-      Ptr<Ipv4> clientIpv4 = client->GetObject<Ipv4> ();
-      Ipv4Address clientAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
-      Ipv4Mask clientMask = clientIpv4->GetAddress (1, 0).GetMask ();
-      
-      // Traffic Flow Template
-      Ptr<EpcTft> tft = CreateObject<EpcTft> ();
- 
-      // Downlink video traffic.
-      // NOTE: The clientApp is the one that sends traffic to the UdpServer.
-      // The clientApp is installed into m_webHost and the server into UE, 
-      // providing a downlink video traffic.
-      int videoIdx = rngVideo->GetInteger ();
-      videoHelper.SetServerAttribute ("TraceFilename",
-          StringValue (GetVideoFilename (videoIdx)));
-      Ptr<RealTimeVideoClient> clientApp  = videoHelper.Install (m_webHost, client,
-          clientAddr, videoPort);
-      clientApp->AggregateObject (tft);
-      clientApp->SetStartTime (Seconds (1));
-      videoApps.Add (clientApp);
-
-      // TFT downlink packet filter
-      EpcTft::PacketFilter filter;
-      filter.direction = EpcTft::DOWNLINK;
-      filter.remoteAddress = serverAddr;
-      filter.remoteMask = serverMask;
-      filter.localAddress = clientAddr;
-      filter.localMask = clientMask;
-      filter.localPortStart = videoPort;
-      filter.localPortEnd = videoPort;
-      tft->Add (filter);
- 
-      // Dedicated GBR EPS bearer (QCI 4).
-      GbrQosInformation qos;
-      // Reserving bandwidth for downlink video
-      qos.gbrDl = 1.5 * m_avgBitRate [videoIdx];  // Avg + 50%
-      // Set the maximum (meter) in average between gbr and maxBitRate
-      qos.mbrDl = (qos.gbrDl + m_maxBitRate [videoIdx]) / 2;
-      EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
-      m_lteHelper->ActivateDedicatedEpsBearer (clientDev, bearer, tft);
-    }
-
-//  // Setting up app start callback to controller
-//  ApplicationContainer::Iterator i;
-//  for (i = videoApps.Begin (); i != videoApps.End (); ++i)
-//    {
-//      Ptr<Application> app = *i;
-//      app->SetAppStartStopCallback (
-//          MakeCallback (&OpenFlowEpcController::NotifyAppStart, m_controller),
-//          MakeCallback (&OpenFlowEpcController::NotifyAppStop, m_controller));
-//    }
-}
 
 void 
 SimulationScenario::ReportAppStats (std::string description, uint32_t teid,
@@ -1051,12 +750,6 @@ SimulationScenario::ParseTopology ()
   NS_ASSERT_MSG (idx == m_nEnbs, "Missing information in topology file.");
   
   return true;  
-}
-
-const std::string 
-SimulationScenario::GetVideoFilename (uint8_t idx)
-{
-  return m_videoDir + m_videoTrace [idx];
 }
 
 void
