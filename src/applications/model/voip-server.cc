@@ -236,7 +236,7 @@ VoipServer::ReadPacket (Ptr<Socket> socket)
         {
           SeqTsHeader seqTs;
           packet->RemoveHeader (seqTs);
-          NS_LOG_INFO ("VoIP RX " << packet->GetSize () <<" bytes");
+          NS_LOG_DEBUG ("VoIP RX " << packet->GetSize () <<" bytes");
           m_qosStats->NotifyReceived (seqTs.GetSeq (), seqTs.GetTs (), packet->GetSize ());
         }
     }
