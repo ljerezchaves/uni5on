@@ -123,6 +123,7 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
 {
   if (m_controller->NotifyAppStart (app))
     {
+      app->ResetQosStats ();
       app->Start ();
     }
   else

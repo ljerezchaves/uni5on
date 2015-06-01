@@ -362,12 +362,6 @@ protected:
   void DumpAppStatistics (Ptr<EpcApplication> app);
 
   /**
-   * Reset application statistics.
-   * \param app The application pointer.
-   */
-  void ResetAppStatistics (Ptr<EpcApplication> app);
-
-  /**
    * Create the description string for this application.
    * \param app The application pointer.
    * \param rInfo RoutingInfo for this bearer.

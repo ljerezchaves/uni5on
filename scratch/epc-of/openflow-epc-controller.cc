@@ -265,8 +265,11 @@ OpenFlowEpcController::NotifyAppStart (Ptr<EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
 
-  ResetAppStatistics (app);
   uint32_t teid = GetTeidFromApplication (app);
+  
+  GetQosStatsFromTeid (teid, true)->ResetCounters ();
+  GetQosStatsFromTeid (teid, false)->ResetCounters ();
+  
   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
   if (rInfo == 0)
     {
@@ -394,7 +397,7 @@ OpenFlowEpcController::NotifyAppStop (Ptr<EpcApplication> app)
     }
   
   // NOTE: Current RemoveTeidRouting implementation wait 3 seconds before
-  // sending removing rules from switches. This allow 'in transit' packets to
+  // sending removing rules to switches. This allow 'in transit' packets to
   // reach the destination. So, let's wait 1 sec for delayed packets before
   // dumping QoS statistcs.
   Simulator::Schedule (Seconds (1), 
@@ -678,33 +681,6 @@ OpenFlowEpcController::DumpAppStatistics (Ptr<EpcApplication> app)
       std::string desc = GetAppDescription (app, rInfo); 
       m_appTrace (desc, teid, appStats);
       m_epcTrace (desc, teid, epcStats);
-    }
-}
-
-void
-OpenFlowEpcController::ResetAppStatistics (Ptr<EpcApplication> app)
-{
-  NS_LOG_FUNCTION (this << app);
-  
-  // Reset both dowlink and uplink stats
-  uint32_t teid = GetTeidFromApplication (app);
-  GetQosStatsFromTeid (teid, true)->ResetCounters ();
-  GetQosStatsFromTeid (teid, false)->ResetCounters ();
-  
-  if (app->GetInstanceTypeId () == VoipClient::GetTypeId ())
-    {
-      DynamicCast<VoipClient> (app)->ResetQosStats ();
-      DynamicCast<VoipClient> (app)->GetServerApp ()->ResetQosStats ();
-    }
-  else if (app->GetInstanceTypeId () == RealTimeVideoClient::GetTypeId ())
-    {
-      Ptr<RealTimeVideoClient> videoApp = DynamicCast<RealTimeVideoClient> (app);
-      //videoApp->GetServerApp ()->ResetCounters ();
-      videoApp->ResetQosStats ();
-    }
-  else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
-    {
-      DynamicCast<HttpClient> (app)->ResetQosStats ();
     }
 }
 
