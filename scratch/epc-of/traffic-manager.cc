@@ -26,6 +26,7 @@ NS_LOG_COMPONENT_DEFINE ("TrafficManager");
 NS_OBJECT_ENSURE_REGISTERED (TrafficManager);
 
 TrafficManager::TrafficManager ()
+  : m_imsi (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -84,7 +85,6 @@ TrafficManager::GetTypeId (void)
   ;
   return tid;
 }
-
 
 void
 TrafficManager::AddEpcApplication (Ptr<EpcApplication> app)
@@ -149,6 +149,51 @@ TrafficManager::NotifyAppStop (Ptr<EpcApplication> app)
   // Schedule next start attempt for this application
   Time idleTime = Seconds (std::abs (m_idleRng->GetValue ()));
   Simulator::Schedule (idleTime, &TrafficManager::AppStartTry, this, app);
+}
+
+void
+TrafficManager::ContextCreatedCallback (uint64_t imsi, uint16_t cellId, 
+                                        BearerList_t bearerList)
+{
+  NS_LOG_FUNCTION (this);
+  
+  // Check the imsi match for current manager
+  if (imsi != m_imsi) return;
+
+  m_cellId = cellId;
+  m_defaultTeid = bearerList.front ().sgwFteid.teid;
+  
+  // For each application, set the corresponding teid
+  std::vector<Ptr<EpcApplication> >::iterator appIt;
+  for (appIt = m_apps.begin (); appIt != m_apps.end (); appIt++)
+    {
+      Ptr<EpcApplication> app = *appIt;
+      // Fill the application description string
+      std::ostringstream desc;
+      desc << imsi << "@" << cellId;
+      app->m_desc = desc.str ();
+      
+      // Using the tft to match bearers and apps
+      Ptr<EpcTft> tft = app->GetTft ();
+      if (tft)
+        {
+           BearerList_t::iterator it;
+            for (it = bearerList.begin (); it != bearerList.end (); it++)
+              {
+                if (it->tft == tft)
+                  {
+                    app->m_teid = it->sgwFteid.teid;
+                  }
+              }
+        }
+      else
+        {
+          // This application uses the default bearer
+          app->m_teid = m_defaultTeid;
+        }
+      NS_LOG_DEBUG ("Application " << app->GetDescription () << 
+                    " set with teid " << app->GetTeid ());
+    }
 }
 
 void

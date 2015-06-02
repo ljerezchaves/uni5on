@@ -144,6 +144,8 @@ private:
   static const std::string   m_videoTrace []; //!< Stored video trace filenames
   static const uint64_t      m_avgBitRate []; //!< Stored video trace avg bitrate
   static const uint64_t      m_maxBitRate []; //!< Stored video trace max bitrate
+  
+  Ptr<OpenFlowEpcController> m_controller;    //!< OpenFlow controller
 };
 
 };  // namespace ns3

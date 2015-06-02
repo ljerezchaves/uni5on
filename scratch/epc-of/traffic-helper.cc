@@ -42,7 +42,8 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
                               Ptr<OpenFlowEpcController> controller,
                               Ptr<OpenFlowEpcNetwork> network)
   : m_lteHelper (helper),
-    m_webNode (server)
+    m_webNode (server),
+    m_controller (controller)
 {
   NS_LOG_FUNCTION (this);
 
@@ -95,6 +96,7 @@ TrafficHelper::~TrafficHelper ()
   m_ueDev = 0;
   m_ueManager = 0;
   m_stVideoRng = 0;
+  m_controller = 0;
 }
 
 void
@@ -121,8 +123,12 @@ TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices)
       m_ueMask = clientIpv4->GetAddress (1, 0).GetMask ();
 
       m_ueManager = m_managerFactory.Create<TrafficManager> ();
-      //m_ueManager->SetLteUeDevice (DynamicCast<LteUeNetDevice> (m_ueDev));
+      m_ueManager->m_imsi = (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
       m_ueNode->AggregateObject (m_ueManager);
+      
+      // Connecting the manager to controller new context created trace source. 
+      m_controller->TraceConnectWithoutContext ("ContextCreated", 
+        MakeCallback (&TrafficManager::ContextCreatedCallback, m_ueManager));
 
       InstallVoip ();
       InstallRealTimeVideo ();
@@ -178,7 +184,7 @@ TrafficHelper::InstallHttp ()
   // Link EPC info to application
   cApp->m_tft = tft;
   cApp->m_bearer = bearer;
-  cApp->m_ueImsi = (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
+
   cApp->AggregateObject (tft); // FIXME Remove in the future
   m_ueManager->AddEpcApplication (cApp);
 
@@ -230,7 +236,6 @@ TrafficHelper::InstallVoip ()
   // Link EPC info to application
   cApp->m_tft = tft;
   cApp->m_bearer = bearer;
-  cApp->m_ueImsi = (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
   cApp->AggregateObject (tft); // FIXME Remove in the future
   m_ueManager->AddEpcApplication (cApp);
 
@@ -276,7 +281,6 @@ TrafficHelper::InstallStoredVideo ()
   // Link EPC info to application
   cApp->m_tft = tft;
   cApp->m_bearer = bearer;
-  cApp->m_ueImsi = (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
   cApp->AggregateObject (tft); // FIXME Remove in the future
   m_ueManager->AddEpcApplication (cApp);
 
@@ -317,7 +321,6 @@ TrafficHelper::InstallRealTimeVideo ()
   // Link EPC info to application
   cApp->m_tft = tft;
   cApp->m_bearer = bearer;
-  cApp->m_ueImsi = (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
   cApp->AggregateObject (tft); // FIXME Remove in the future
   m_ueManager->AddEpcApplication (cApp);
 

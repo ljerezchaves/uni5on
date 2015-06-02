@@ -39,6 +39,8 @@ namespace ns3 {
  */
 class TrafficManager : public Object
 {
+  friend class TrafficHelper;
+  
 public:
   TrafficManager ();          //!< Default constructor
   virtual ~TrafficManager (); //!< Dummy destructor, see DoDipose
@@ -72,6 +74,16 @@ public:
    */ 
   void NotifyAppStop (Ptr<EpcApplication> app);
 
+  /**
+   * TraceSink connected to controller and notified when new contexts are
+   * created. This will be used to get the teid for each bearer created.
+   * \param imsi The UE IMSI identifier.
+   * \param cellId The eNB cell ID.
+   * \param bearerList The list of context bearers created.
+   */
+  void ContextCreatedCallback (uint64_t imsi, uint16_t cellId, 
+                               BearerList_t bearerList);
+
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
@@ -88,6 +100,10 @@ private:
   Ptr<OpenFlowEpcController>        m_controller; //!< OpenFLow controller
   Ptr<OpenFlowEpcNetwork>           m_network;    //!< OpenFLow network
   std::vector<Ptr<EpcApplication> > m_apps;       //!< Application list
+
+  uint64_t    m_imsi;         //!< UE IMSI identifier
+  uint16_t    m_cellId;       //!< Current eNB cellId
+  uint32_t    m_defaultTeid;  //!< TEID for default UE tunnel
 };
 
 };  // namespace ns3
