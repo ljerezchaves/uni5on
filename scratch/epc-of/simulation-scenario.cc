@@ -207,7 +207,7 @@ SimulationScenario::BuildRingTopology ()
       MakeCallback (&SimulationScenario::ReportWebStats, this));
 
   // Installing applications and traffic manager
-  TrafficHelper tfcHelper (m_webHost, m_lteHelper, m_controller, m_opfNetwork);
+  TrafficHelper tfcHelper (m_webHost, m_lteHelper, m_controller, m_opfNetwork, this);
   tfcHelper.Install (m_lteNetwork->GetUeNodes (), m_lteNetwork->GetUeDevices ());
 
   // Logs and traces

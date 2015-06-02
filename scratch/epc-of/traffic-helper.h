@@ -31,6 +31,8 @@
 
 namespace ns3 {
 
+class SimulationScenario;
+
 /** 
  * \ingroup epcof
  * Traffic helper which installs client and server applications for all
@@ -46,10 +48,13 @@ public:
    * \param helper The helper pointer.
    * \param controller The Epc controller.
    * \param network The Epc network.
+   * \param log The log helper pointer.
    */
   TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper, 
                  Ptr<OpenFlowEpcController> controller,
-                 Ptr<OpenFlowEpcNetwork> network);
+                 Ptr<OpenFlowEpcNetwork> network,
+                 Ptr<SimulationScenario> log); 
+  // FIXME Replace SimulationScenario by any further log helper.
   
   ~TrafficHelper (); //!< Default destructor.
 
@@ -146,6 +151,7 @@ private:
   static const uint64_t      m_maxBitRate []; //!< Stored video trace max bitrate
   
   Ptr<OpenFlowEpcController> m_controller;    //!< OpenFlow controller
+  Ptr<SimulationScenario>    m_log;           //!< Simulation scenario for log
 };
 
 };  // namespace ns3

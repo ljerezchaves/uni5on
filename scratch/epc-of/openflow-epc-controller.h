@@ -43,10 +43,6 @@ class RingController;
  */
 class OpenFlowEpcController : public OFSwitch13Controller
 {
-  // FIXME Apenas para testar
-  friend class TrafficManager;
-
-
 public:
   OpenFlowEpcController ();           //!< Default constructor
   virtual ~OpenFlowEpcController ();  //!< Dummy destructor, see DoDipose

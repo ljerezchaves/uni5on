@@ -19,6 +19,7 @@
  */
 
 #include "traffic-helper.h"
+#include "simulation-scenario.h"
 
 namespace ns3 {
 
@@ -40,10 +41,12 @@ const uint64_t TrafficHelper::m_maxBitRate [] = {3300000, 4400000, 1900000,
 // ------------------------------------------------------------------------ //
 TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper, 
                               Ptr<OpenFlowEpcController> controller,
-                              Ptr<OpenFlowEpcNetwork> network)
+                              Ptr<OpenFlowEpcNetwork> network,
+                              Ptr<SimulationScenario> log)
   : m_lteHelper (helper),
     m_webNode (server),
-    m_controller (controller)
+    m_controller (controller),
+    m_log (log)
 {
   NS_LOG_FUNCTION (this);
 
@@ -184,7 +187,8 @@ TrafficHelper::InstallHttp ()
   // Link EPC info to application
   cApp->m_tft = tft;
   cApp->m_bearer = bearer;
-
+  cApp->TraceConnectWithoutContext ("AppStats", 
+    MakeCallback (&SimulationScenario::ReportAppStats, m_log));
   cApp->AggregateObject (tft); // FIXME Remove in the future
   m_ueManager->AddEpcApplication (cApp);
 
@@ -236,6 +240,8 @@ TrafficHelper::InstallVoip ()
   // Link EPC info to application
   cApp->m_tft = tft;
   cApp->m_bearer = bearer;
+  cApp->TraceConnectWithoutContext ("AppStats", 
+    MakeCallback (&SimulationScenario::ReportAppStats, m_log));
   cApp->AggregateObject (tft); // FIXME Remove in the future
   m_ueManager->AddEpcApplication (cApp);
 
@@ -281,6 +287,8 @@ TrafficHelper::InstallStoredVideo ()
   // Link EPC info to application
   cApp->m_tft = tft;
   cApp->m_bearer = bearer;
+  cApp->TraceConnectWithoutContext ("AppStats", 
+    MakeCallback (&SimulationScenario::ReportAppStats, m_log));
   cApp->AggregateObject (tft); // FIXME Remove in the future
   m_ueManager->AddEpcApplication (cApp);
 
@@ -321,6 +329,8 @@ TrafficHelper::InstallRealTimeVideo ()
   // Link EPC info to application
   cApp->m_tft = tft;
   cApp->m_bearer = bearer;
+  cApp->TraceConnectWithoutContext ("AppStats", 
+    MakeCallback (&SimulationScenario::ReportAppStats, m_log));
   cApp->AggregateObject (tft); // FIXME Remove in the future
   m_ueManager->AddEpcApplication (cApp);
 

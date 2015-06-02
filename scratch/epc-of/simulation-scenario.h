@@ -60,7 +60,6 @@ public:
   /** Set the common prefix for input/output files. */ 
   void SetCommonPrefix (std::string prefix);
 
-private:
 
 
   /**
@@ -69,6 +68,8 @@ private:
    */
   void ReportAppStats (std::string description, uint32_t teid, 
                        Ptr<const QosStatsCalculator> stats);
+
+private:
 
   /**
    * Save LTE EPC GTPU statistics in file. 
