@@ -23,41 +23,78 @@
 
 #include "ns3/object.h"
 #include "ns3/ptr.h"
+#include "ns3/epc-tft.h"
+#include "ns3/eps-bearer.h"
+#include "ns3/traced-callback.h"
 #include "qos-stats-calculator.h"
 
 namespace ns3 {
 
 /**
  * \ingroup applications
- * This class extends the Application with QosStatsCalculator and stop
- * callback. It was designed to be used by client applications for EPC +
- * OpenFlow simulations.
+ * This class extends the Application class to proper work ith OpenFlow + EPC
+ * simulations.  Only clients applications should use this EpcApplication as
+ * superclass. It includes a QosStatsCalculator for traffic statistics, and a
+ * stop callback to notify when the traffic stops. For LTE EPC, each
+ * application is associated with an EPS bearer, and traffic is sent over GTP
+ * tunnels. These info are also saved here for further usage.
  */
 class EpcApplication : public Application
 {
+  friend class TrafficHelper;
+  friend class TrafficManager;
+
 public:
+  EpcApplication ();            //!< Default constructor
+  virtual ~EpcApplication ();   //!< Dummy destructor, see DoDipose
+  
   /**
-   * \brief Get the type ID.
+   * Get the type ID.
    * \return the object TypeId
    */
   static TypeId GetTypeId (void);
-  
-  EpcApplication ();            //!< Default constructor
-  virtual ~EpcApplication ();   //!< Dummy destructor, see DoDipose
 
   /**
    * Get QoS statistics
    * \return Get the const pointer to QosStatsCalculator
    */
   Ptr<const QosStatsCalculator> GetQosStats (void) const;
-
+  
   /**
-   * Reset the QoS statistics
+   * \return The tft for this application.
    */
-  virtual void ResetQosStats ();
+  Ptr<EpcTft> GetTft (void) const;
 
   /**
-   * \brief Start this application at any time.
+   * \return The EpsBearer for this application.
+   */
+  EpsBearer GetEpsBearer (void) const;
+  
+  /**
+   * \return The teid for this application.
+   */
+  uint32_t GetTeid (void) const;
+  
+  /**
+   * \return The UE IMSI associated to this application.
+   */
+  uint32_t GetImsi (void) const;
+
+  /**
+   * Create the description string for this application, including name and UE
+   * ISMI identifier.
+   * \return The description string.
+   */
+  std::string GetDescription (void) const;
+
+  /**
+   * Get the application name.
+   * \return The application name.
+   */
+  virtual std::string GetAppName (void) const;
+
+  /**
+   * Start this application at any time.
    */
   virtual void Start (void);
   
@@ -66,6 +103,18 @@ public:
    */
   typedef Callback<void, Ptr<EpcApplication> > StopCb_t;
 
+  /** 
+   * TracedCallback signature for QoS dump.
+   * \param description String describing this application.
+   * \param teid GTP TEID.
+   * \param stats The QoS statistics.
+   */
+  typedef void (* QosTracedCallback)(std::string description, uint32_t teid, 
+                                     Ptr<const QosStatsCalculator> stats);
+
+protected:
+  virtual void DoDispose (void);        //!< Destructor implementation
+
   /**
    * Set the stop callback
    * \param cb The callback to invoke when traffic stops.
@@ -73,16 +122,30 @@ public:
   void SetStopCallback (StopCb_t cb);
 
   /**
-   * Get the application name;
-   * \return The application name;
+   * Reset the QoS statistics
    */
-  virtual std::string GetAppName (void) const;
+  virtual void ResetQosStats ();
 
-protected:
-  virtual void DoDispose (void);        //!< Destructor implementation
+  /**
+   * Dump application statistics. By default, only statistics for this app will
+   * be dumped to m_appTrace trace source. Specialized applications can
+   * override this method to dump additional information (like stats from
+   * server).
+   */
+  virtual void DumpAppStatistics (void) const;
 
   Ptr<QosStatsCalculator> m_qosStats;   //!< QoS statistics
   StopCb_t                m_stopCb;     //!< Stop callback
+
+  /** The Application QoS trace source, fired when application stops. */
+  TracedCallback<std::string, uint32_t, Ptr<const QosStatsCalculator> > m_appTrace;
+
+private:
+  // LTE EPC metadata 
+  Ptr<EpcTft>   m_tft;        //!< Traffic flow template for this app
+  EpsBearer     m_bearer;     //!< EPS bearer info
+  uint32_t      m_teid;       //!< GTP TEID associated with this app
+  uint64_t      m_ueImsi;     //!< UE IMSI
 };
 
 } // namespace ns3

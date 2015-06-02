@@ -72,7 +72,7 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   m_rtVideoHelper.SetServerAttribute ("TraceFilename", 
     StringValue (m_videoDir + "office-cam.data"));
 
-  // FIXME Estou colocando esses tempos curtos aqui apenas pra testes. remover tudo.
+  // FIXME Estou colocando esses tempos curtos aqui apenas pra testes.
   m_httpHelper.SetClientAttribute ("MaxPages", UintegerValue (1)); 
   m_voipHelper.SetServerAttribute ("CallDuration", 
     StringValue ("ns3::ConstantRandomVariable[Constant=10.0]"));
@@ -80,8 +80,10 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
     StringValue ("ns3::ConstantRandomVariable[Constant=10.0]"));
   m_rtVideoHelper.SetServerAttribute ("VideoDuration", 
     StringValue ("ns3::ConstantRandomVariable[Constant=10.0]"));
-  SetTfcManagerAttribute ("IdleRng", StringValue ("ns3::ExponentialRandomVariable[Mean=10.0]"));
-  SetTfcManagerAttribute ("StartRng", StringValue ("ns3::ExponentialRandomVariable[Mean=10.0]"));
+  SetTfcManagerAttribute ("IdleRng", 
+    StringValue ("ns3::ExponentialRandomVariable[Mean=10.0]"));
+  SetTfcManagerAttribute ("StartRng", 
+    StringValue ("ns3::ExponentialRandomVariable[Mean=10.0]"));
 }
 
 TrafficHelper::~TrafficHelper ()
@@ -119,13 +121,13 @@ TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices)
       m_ueMask = clientIpv4->GetAddress (1, 0).GetMask ();
 
       m_ueManager = m_managerFactory.Create<TrafficManager> ();
-      m_ueManager->SetLteUeDevice (DynamicCast<LteUeNetDevice> (m_ueDev));
+      //m_ueManager->SetLteUeDevice (DynamicCast<LteUeNetDevice> (m_ueDev));
       m_ueNode->AggregateObject (m_ueManager);
 
-      InstallHttp ();
       InstallVoip ();
-      InstallStoredVideo ();
       InstallRealTimeVideo ();
+      InstallStoredVideo ();
+      InstallHttp ();
     }
   m_ueNode = 0;
   m_ueDev = 0;
@@ -140,6 +142,7 @@ TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices)
  *    Non-GBR bearers (as done in HTTP traffic), allowing resource reservation
  *    but without guarantee. When left to 0, no resources are reserved. 
  */
+
 void
 TrafficHelper::InstallHttp ()
 {
@@ -152,11 +155,8 @@ TrafficHelper::InstallHttp ()
   Ptr<HttpClient> cApp = 
     m_httpHelper.Install (m_ueNode, m_webNode, m_webAddr, portNo);
  
-  m_ueManager->AddEpcApplication (cApp);
-  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
-  cApp->AggregateObject (tft);
-
   // TFT Packet filter
+  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
   filter.direction = EpcTft::BIDIRECTIONAL;
   filter.remoteAddress = m_webAddr;
@@ -174,6 +174,15 @@ TrafficHelper::InstallHttp ()
   qos.mbrDl = 524288;     // Max of 512 Kbps in downlink
   qos.mbrUl = 131072;     // Max of 128 Kbps in uplink 
   EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
+
+  // Link EPC info to application
+  cApp->m_tft = tft;
+  cApp->m_bearer = bearer;
+  cApp->m_ueImsi = (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
+  cApp->AggregateObject (tft); // FIXME Remove in the future
+  m_ueManager->AddEpcApplication (cApp);
+
+  // Activate dedicated bearer
   m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
@@ -186,14 +195,11 @@ TrafficHelper::InstallVoip ()
   portNo++;
  
   // Bidirectional VoIP traffic.
-  Ptr<VoipClient> cApp = 
-    m_voipHelper.Install (m_ueNode, m_webNode, m_ueAddr, m_webAddr, portNo, portNo);
-  
-  m_ueManager->AddEpcApplication (cApp);
-  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
-  cApp->AggregateObject (tft);
+  Ptr<VoipClient> cApp = m_voipHelper.Install (m_ueNode, m_webNode, m_ueAddr, 
+                                               m_webAddr, portNo, portNo);
   
   // TFT downlink packet filter
+  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filterDown;
   filterDown.direction = EpcTft::DOWNLINK;
   filterDown.remoteAddress = m_webAddr;
@@ -220,6 +226,15 @@ TrafficHelper::InstallVoip ()
   qos.gbrDl = 47200;  // ~46.09 Kbps
   qos.gbrUl = 47200;  // ~46.09 Kbps
   EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
+
+  // Link EPC info to application
+  cApp->m_tft = tft;
+  cApp->m_bearer = bearer;
+  cApp->m_ueImsi = (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
+  cApp->AggregateObject (tft); // FIXME Remove in the future
+  m_ueManager->AddEpcApplication (cApp);
+
+  // Activate dedicated bearer
   m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
@@ -240,11 +255,8 @@ TrafficHelper::InstallStoredVideo ()
   Ptr<StoredVideoClient> cApp = 
     m_stVideoHelper.Install (m_ueNode, m_webNode, m_webAddr, portNo);
   
-  m_ueManager->AddEpcApplication (cApp);
-  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
-  cApp->AggregateObject (tft);
-
   // TFT Packet filter
+  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
   filter.direction = EpcTft::BIDIRECTIONAL;
   filter.remoteAddress = m_webAddr;
@@ -260,6 +272,15 @@ TrafficHelper::InstallStoredVideo ()
   qos.gbrDl = 1.5 * m_avgBitRate [videoIdx];
   qos.mbrDl = (qos.gbrDl + m_maxBitRate [videoIdx]) / 2;
   EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR, qos);
+ 
+  // Link EPC info to application
+  cApp->m_tft = tft;
+  cApp->m_bearer = bearer;
+  cApp->m_ueImsi = (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
+  cApp->AggregateObject (tft); // FIXME Remove in the future
+  m_ueManager->AddEpcApplication (cApp);
+
+  // Activate dedicated bearer
   m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
@@ -274,12 +295,9 @@ TrafficHelper::InstallRealTimeVideo ()
   // Downlink real-time video traffic.
   Ptr<RealTimeVideoClient> cApp = 
     m_rtVideoHelper.Install (m_ueNode, m_webNode, m_ueAddr, portNo);
-  
-  m_ueManager->AddEpcApplication (cApp);
-  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
-  cApp->AggregateObject (tft);
 
   // TFT downlink packet filter
+  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
   filter.direction = EpcTft::DOWNLINK;
   filter.remoteAddress = m_webAddr;
@@ -295,6 +313,15 @@ TrafficHelper::InstallRealTimeVideo ()
   qos.gbrDl = 524288;   //  512 Kbps (average + 50 %)
   qos.mbrDl = 1048576;  // 1024 Kbps (maximum / 2)
   EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
+
+  // Link EPC info to application
+  cApp->m_tft = tft;
+  cApp->m_bearer = bearer;
+  cApp->m_ueImsi = (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
+  cApp->AggregateObject (tft); // FIXME Remove in the future
+  m_ueManager->AddEpcApplication (cApp);
+
+  // Activate dedicated bearer
   m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 

@@ -24,6 +24,21 @@
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("EpcApplication");
+NS_OBJECT_ENSURE_REGISTERED (EpcApplication);
+
+EpcApplication::EpcApplication()
+  : m_qosStats (Create<QosStatsCalculator> ()),
+    m_tft (0),
+    m_teid (0),
+    m_ueImsi (0)
+{
+  NS_LOG_FUNCTION (this);
+}
+
+EpcApplication::~EpcApplication()
+{
+  NS_LOG_FUNCTION (this);
+}
 
 TypeId
 EpcApplication::GetTypeId (void)
@@ -31,19 +46,12 @@ EpcApplication::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::EpcApplication")
     .SetParent<Application> ()
     .AddConstructor<EpcApplication> ()
+    .AddTraceSource ("AppStats",
+                     "Application QoS trace source.",
+                     MakeTraceSourceAccessor (&EpcApplication::m_appTrace),
+                     "ns3::EpcApplication::QosTracedCallback")
   ;
   return tid;
-}
-
-EpcApplication::EpcApplication()
-{
-  NS_LOG_FUNCTION (this);
-  m_qosStats = Create<QosStatsCalculator> ();
-}
-
-EpcApplication::~EpcApplication()
-{
-
 }
 
 Ptr<const QosStatsCalculator>
@@ -53,22 +61,41 @@ EpcApplication::GetQosStats (void) const
 }
 
 void
-EpcApplication::ResetQosStats ()
-{
-  NS_LOG_FUNCTION (this);
-  m_qosStats->ResetCounters ();
-}
-
-void
 EpcApplication::Start ()
 {
+  NS_LOG_FUNCTION (this);
 }
 
-void
-EpcApplication::SetStopCallback (StopCb_t cb)
+Ptr<EpcTft>
+EpcApplication::GetTft (void) const
 {
-  NS_LOG_FUNCTION (this);
-  m_stopCb = cb;
+  return m_tft;
+}
+
+EpsBearer
+EpcApplication::GetEpsBearer (void) const
+{
+  return m_bearer;
+}
+
+uint32_t
+EpcApplication::GetTeid (void) const
+{
+  return m_teid;
+}
+
+uint32_t
+EpcApplication::GetImsi (void) const
+{
+  return m_ueImsi;
+}
+
+std::string
+EpcApplication::GetDescription (void) const
+{
+  std::ostringstream desc;
+  desc << GetAppName () << " [" << m_ueImsi << "]";
+  return desc.str ();
 }
 
 std::string 
@@ -83,7 +110,29 @@ EpcApplication::DoDispose (void)
   NS_LOG_FUNCTION (this);
   m_qosStats = 0;
   m_stopCb = MakeNullCallback<void, Ptr<EpcApplication> > ();
+  m_tft = 0;
   Application::DoDispose ();
+}
+
+void
+EpcApplication::SetStopCallback (StopCb_t cb)
+{
+  NS_LOG_FUNCTION (this);
+  m_stopCb = cb;
+}
+
+void
+EpcApplication::ResetQosStats ()
+{
+  NS_LOG_FUNCTION (this);
+  m_qosStats->ResetCounters ();
+}
+
+void
+EpcApplication::DumpAppStatistics (void) const
+{
+  NS_LOG_FUNCTION (this);
+  m_appTrace (GetDescription () + "dl", m_teid, GetQosStats ());
 }
 
 } // namespace ns3

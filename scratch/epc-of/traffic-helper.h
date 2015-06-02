@@ -34,8 +34,8 @@ namespace ns3 {
 /** 
  * \ingroup epcof
  * Traffic helper which installs client and server applications for all
- * applications into UEs and WebServer. This helper also installs a traffic
- * manager into each UE.
+ * applications into UEs and WebServer. This helper creates and aggregates a
+ * traffic manager for each UE.
  */
 class TrafficHelper
 {
@@ -71,20 +71,6 @@ public:
 
 private:
   /** 
-   * HTTP/TCP traffic over dedicated Non-GBR EPS bearer (QCI 8).
-   * This QCI 8 could be used for a dedicated 'premium bearer' for any
-   * subscriber, or could be used for the default bearer of a for 'premium
-   * subscribers'.
-   *
-   * \internal This HTTP model is based on the distributions indicated in the
-   * paper 'An HTTP Web Traffic Model Based on the Top One Million Visited Web
-   * Pages' by Rastin Pries et. al. Each client will send a get request to the
-   * server and will get the page content back including inline content. These
-   * requests repeats after a reading time period, until MaxPages are loaded. 
-   */
-  void InstallHttp ();
- 
-  /** 
    * VoIP/UDP bidirectional traffic over dedicated GBR EPS bearer (QCI 1). 
    * This QCI is typically associated with conversational voice.
    *
@@ -93,6 +79,15 @@ private:
    * discussion. 
    */
   void InstallVoip ();
+
+  /**
+   * UDP real-time video streaming over dedicated GBR EPS bearer (QCI 4).
+   * This QCI is typically associated with non-conversational buffered video.
+   *
+   * \internal This video traffic is based on MPEG-4 video traces from
+   * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf. 
+   */
+  void InstallRealTimeVideo ();
   
   /**
    * TCP stored video streaming over dedicated Non-GBR EPS bearer (QCI 6).
@@ -105,14 +100,19 @@ private:
    */
   void InstallStoredVideo ();
 
-  /**
-   * UDP real-time video streaming over dedicated GBR EPS bearer (QCI 4).
-   * This QCI is typically associated with non-conversational buffered video.
+  /** 
+   * HTTP/TCP traffic over dedicated Non-GBR EPS bearer (QCI 8).
+   * This QCI 8 could be used for a dedicated 'premium bearer' for any
+   * subscriber, or could be used for the default bearer of a for 'premium
+   * subscribers'.
    *
-   * \internal This video traffic is based on MPEG-4 video traces from
-   * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf. 
+   * \internal This HTTP model is based on the distributions indicated in the
+   * paper 'An HTTP Web Traffic Model Based on the Top One Million Visited Web
+   * Pages' by Rastin Pries et. al. Each client will send a get request to the
+   * server and will get the page content back including inline content. These
+   * requests repeats after a reading time period, until MaxPages are loaded. 
    */
-  void InstallRealTimeVideo ();
+  void InstallHttp ();
 
   /**
    * Get complete filename for stored video trace files.
