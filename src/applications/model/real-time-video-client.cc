@@ -86,7 +86,7 @@ RealTimeVideoClient::Start (void)
 std::string 
 RealTimeVideoClient::GetAppName (void) const
 {
-  return "RtVid";
+  return "RtVd";
 }
 
 void

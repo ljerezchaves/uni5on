@@ -82,7 +82,7 @@ StoredVideoClient::Start (void)
 std::string 
 StoredVideoClient::GetAppName (void) const
 {
-  return "StVid";
+  return "StVd";
 }
 
 void
