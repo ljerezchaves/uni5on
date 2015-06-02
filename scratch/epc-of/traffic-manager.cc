@@ -81,112 +81,85 @@ TrafficManager::GetTypeId (void)
                    StringValue ("ns3::ExponentialRandomVariable[Mean=20.0]"),
                    MakePointerAccessor (&TrafficManager::m_startRng),
                    MakePointerChecker <RandomVariableStream> ())
-    .AddTraceSource ("AppStats",
-                     "Application QoS trace source.",
-                     MakeTraceSourceAccessor (&TrafficManager::m_appTrace),
-                     "ns3::TrafficManager::QosTracedCallback")
   ;
   return tid;
 }
 
-void
-TrafficManager::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-  m_apps.clear ();
-  m_ueDevice = 0;
-}
-
-void 
-TrafficManager::SetLteUeDevice (Ptr<LteUeNetDevice> ueDevice)
-{
-  m_ueDevice = ueDevice;
-}
 
 void
 TrafficManager::AddEpcApplication (Ptr<EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
-  m_apps.push_back (app);
 
-  // Configure stop callback
+  // Save application and configure stop callback
+  m_apps.push_back (app);
   app->SetStopCallback (MakeCallback (&TrafficManager::NotifyAppStop, this));
 
-  // Check for application type and traffic enabled/disabled
-  if (!m_httpEnable && app->GetInstanceTypeId () == HttpClient::GetTypeId ()) return;
-  if (!m_voipEnable && app->GetInstanceTypeId () == VoipClient::GetTypeId ()) return;
-  if (!m_stVideoEnable && app->GetInstanceTypeId () == StoredVideoClient::GetTypeId ()) return;
-  if (!m_rtVideoEnable && app->GetInstanceTypeId () == RealTimeVideoClient::GetTypeId ()) return;
-
-  // Schedule the first start for this app
-  Time startTime = Seconds (5) + Seconds (std::abs (m_startRng->GetValue ()));
-  Simulator::Schedule (startTime, &TrafficManager::AppStartTry, this, app);
-}
-
-void
-TrafficManager::NotifyAppStop (Ptr<EpcApplication> app)
-{
-  NS_LOG_FUNCTION (this << app);
-  m_controller->NotifyAppStop (app);
-
-  // Dump application and EPC statistics
-  bool bidirectional = false;
-  if (app->GetInstanceTypeId () == VoipClient::GetTypeId ())
+  // Check for disabled application type
+  if ( (!m_httpEnable    && app->GetInstanceTypeId () == HttpClient::GetTypeId ())
+    || (!m_voipEnable    && app->GetInstanceTypeId () == VoipClient::GetTypeId ())
+    || (!m_stVideoEnable && app->GetInstanceTypeId () == StoredVideoClient::GetTypeId ())
+    || (!m_rtVideoEnable && app->GetInstanceTypeId () == RealTimeVideoClient::GetTypeId ()))
     {
-      bidirectional = true;
+      // This application is disable.
+      return;
     }
-  uint32_t teid = m_controller->GetTeidFromApplication (app); //FIXME
-  DumpAppStatistics (app);
-  m_network->DumpEpcStatistics (teid, GetAppDescription (app), bidirectional);
 
-  Time idleTime = Seconds (std::abs (m_idleRng->GetValue ()));
-  Simulator::Schedule (idleTime, &TrafficManager::AppStartTry, this, app);
+  // Schedule the first start attemp for this app (wait at least 1 second)
+  Time startTime = Seconds (1) + Seconds (std::abs (m_startRng->GetValue ()));
+  Simulator::Schedule (startTime, &TrafficManager::AppStartTry, this, app);
 }
 
 void
 TrafficManager::AppStartTry (Ptr<EpcApplication> app)
 {
-  if (m_controller->NotifyAppStart (app))
+  NS_LOG_FUNCTION (this << app);
+
+  bool authorized = m_controller->NotifyAppStart (app); // FIXME
+  if (authorized)
     {
-      uint32_t teid = m_controller->GetTeidFromApplication (app);
-      m_network->ResetEpcStatistics (teid); // FIXME
-      app->ResetQosStats ();
+      // ResetEpcStatistics.
+      // NOTE: This teid approach only works because we currently have a single
+      // application at each bearer/tunnel. If we would like to aggregate
+      // traffic from several applications into same bearer we will need to
+      // revise this.
+      m_network->ResetEpcStatistics (app->GetTeid ());
       app->Start ();
     }
   else
     {
+      // Reschedule start attempt for this application
       Time retryTime = Seconds (std::abs (m_startRng->GetValue ()));
       Simulator::Schedule (retryTime, &TrafficManager::AppStartTry, this, app);
     }
 }
 
 void
-TrafficManager::DumpAppStatistics (Ptr<EpcApplication> app)
+TrafficManager::NotifyAppStop (Ptr<EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
+ 
+  m_controller->NotifyAppStop (app); // FIXME
 
+  // DumpEpcStatistcs
+  // NOTE: Currently, only Voip application needs uplink stats
+  bool uplink = (app->GetInstanceTypeId () == VoipClient::GetTypeId ());
+  m_network->DumpEpcStatistics (app->GetTeid (), app->GetDescription (), uplink);
 
-  uint32_t teid = m_controller->GetTeidFromApplication (app);
-  Ptr<RoutingInfo> rInfo = m_controller->GetTeidRoutingInfo (teid);
-  Ptr<const QosStatsCalculator> appStats;
-
-  if (app->GetInstanceTypeId () == VoipClient::GetTypeId ())
-    {
-      Ptr<VoipClient> voipApp = DynamicCast<VoipClient> (app);
-      appStats = voipApp->GetServerApp ()->GetQosStats ();
-      m_appTrace (GetAppDescription (app) + "ul", teid, appStats);
-    }
-  appStats = app->GetQosStats ();
-  m_appTrace (GetAppDescription (app) + "dl", teid, appStats);
+  // Schedule next start attempt for this application
+  Time idleTime = Seconds (std::abs (m_idleRng->GetValue ()));
+  Simulator::Schedule (idleTime, &TrafficManager::AppStartTry, this, app);
 }
 
-std::string 
-TrafficManager::GetAppDescription (Ptr<const EpcApplication> app)
+void
+TrafficManager::DoDispose ()
 {
-  std::ostringstream desc;
-  desc << app->GetAppName () << " [" << m_ueDevice->GetImsi () << "]";
-       //<< "@" << m_ueDevice->GetTargetEnb ()->GetCellId ();
-  return desc.str ();
+  NS_LOG_FUNCTION (this);
+  m_idleRng = 0;
+  m_startRng = 0;
+  m_controller = 0;
+  m_network = 0;
+  m_apps.clear ();
 }
 
 };  // namespace ns3

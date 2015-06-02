@@ -32,9 +32,10 @@ namespace ns3 {
 
 /** 
  * \ingroup epcof
- * Traffic manager which handles UE client applications start/stop events, and
- * interacts with the epc-openflow-controller to request/release EPS bearers.
- * Each UE has one TrafficManager object aggregated to it.
+ * Traffic manager which handles UE client applications start/stop events. It
+ * interacts with the OpenFlow network and controller to dump statistcis and
+ * request/release EPS bearers. Each LteUeNetDevice has one TrafficManager
+ * object aggregated to it.
  */
 class TrafficManager : public Object
 {
@@ -48,70 +49,45 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  void SetLteUeDevice (Ptr<LteUeNetDevice> ueDevice);
-
   /**
-   * Add a new application for this manager.
+   * Add a new application to this manager.
    * \param app The application pointer.
    */ 
   void AddEpcApplication (Ptr<EpcApplication> app);
 
   /**
-   * Notify this manager when an application stops sending traffic.
-   * \param app The application pointer.
-   */ 
-  void NotifyAppStop (Ptr<EpcApplication> app);
-
-  /**
-   * Attempt to start this application. This method will request for bearer
-   * resources to the controller before startgin the application. If the
-   * controller deny the request, this method reschedule the application start
-   * attempt.
+   * Attempt to (re)start this application. This method will request for bearer
+   * resources to the controller before starting the application. If the
+   * controller accept the request, this starts the application. Otherwise, it
+   * reschedule the (re)start attempt.
    * \param app The application pointer.
    */ 
   void AppStartTry (Ptr<EpcApplication> app);
 
-  /** 
-   * TracedCallback signature for QoS dump. 
-   * \param description String describing this traffic.
-   * \param teid Bearer TEID.
-   * \param stats The QoS statistics.
-   */
-  typedef void (* QosTracedCallback)(std::string description, uint32_t teid, 
-                                     Ptr<const QosStatsCalculator> stats);
+  /**
+   * Member function called by applications to notify this manager when traffic
+   * stops. This methodh will fire network statistcs (EPC) and schedule
+   * application restart attempt.
+   * \param app The application pointer.
+   */ 
+  void NotifyAppStop (Ptr<EpcApplication> app);
+
+protected:
+  /** Destructor implementation */
+  virtual void DoDispose ();
 
 private:
-  /**
-   * Dump application statistics.
-   * \param app The application pointer.
-   */
-  void DumpAppStatistics (Ptr<EpcApplication> app);
-
-  /**
-   * Create the description string for this application.
-   * \param app The application pointer.
-   * \return The description string.
-   */
-  std::string GetAppDescription (Ptr<const EpcApplication> app);
-
+  // Enable/disable applications by type
   bool m_httpEnable;     //!< HTTP traffic enable
   bool m_voipEnable;     //!< Voip traffic enable
   bool m_stVideoEnable;  //!< Stored video traffic enable
   bool m_rtVideoEnable;  //!< Real-time video traffic enable
 
-  Ptr<RandomVariableStream>         m_idleRng;    //!< Idle random time generator
-  Ptr<RandomVariableStream>         m_startRng;   //!< Start random time generator
+  Ptr<RandomVariableStream>         m_idleRng;    //!< Idle random time gen.
+  Ptr<RandomVariableStream>         m_startRng;   //!< Start random time gen.
   Ptr<OpenFlowEpcController>        m_controller; //!< OpenFLow controller
   Ptr<OpenFlowEpcNetwork>           m_network;    //!< OpenFLow network
   std::vector<Ptr<EpcApplication> > m_apps;       //!< Application list
-
-  Ptr<LteUeNetDevice>               m_ueDevice;   //!< UE LTE device
-
-  /** The Application QoS trace source, fired at DumpAppStatistics. */
-  TracedCallback<std::string, uint32_t, Ptr<const QosStatsCalculator> > m_appTrace;
 };
 
 };  // namespace ns3
