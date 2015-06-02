@@ -61,6 +61,16 @@ TrafficManager::GetTypeId (void)
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficManager::m_rtVideoEnable),
                    MakeBooleanChecker ())
+    .AddAttribute ("Controller",
+                   "The OpenFlow EPC controller.",
+                   PointerValue (),
+                   MakePointerAccessor (&TrafficManager::m_controller),
+                   MakePointerChecker<OpenFlowEpcController> ())
+    .AddAttribute ("Network",
+                   "The OpenFlow EPC network.",
+                   PointerValue (),
+                   MakePointerAccessor (&TrafficManager::m_network),
+                   MakePointerChecker<OpenFlowEpcNetwork> ())
     .AddAttribute ("IdleRng",
                    "A random variable used to set idle time.",
                    StringValue ("ns3::ExponentialRandomVariable[Mean=180.0]"),
@@ -71,6 +81,10 @@ TrafficManager::GetTypeId (void)
                    StringValue ("ns3::ExponentialRandomVariable[Mean=20.0]"),
                    MakePointerAccessor (&TrafficManager::m_startRng),
                    MakePointerChecker <RandomVariableStream> ())
+    .AddTraceSource ("AppStats",
+                     "Application QoS trace source.",
+                     MakeTraceSourceAccessor (&TrafficManager::m_appTrace),
+                     "ns3::TrafficManager::QosTracedCallback")
   ;
   return tid;
 }
@@ -80,12 +94,13 @@ TrafficManager::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_apps.clear ();
+  m_ueDevice = 0;
 }
 
-void
-TrafficManager::SetController (Ptr<OpenFlowEpcController> controller)
+void 
+TrafficManager::SetLteUeDevice (Ptr<LteUeNetDevice> ueDevice)
 {
-  m_controller = controller;
+  m_ueDevice = ueDevice;
 }
 
 void
@@ -104,7 +119,7 @@ TrafficManager::AddEpcApplication (Ptr<EpcApplication> app)
   if (!m_rtVideoEnable && app->GetInstanceTypeId () == RealTimeVideoClient::GetTypeId ()) return;
 
   // Schedule the first start for this app
-  Time startTime = Seconds (std::abs (m_startRng->GetValue ()));
+  Time startTime = Seconds (5) + Seconds (std::abs (m_startRng->GetValue ()));
   Simulator::Schedule (startTime, &TrafficManager::AppStartTry, this, app);
 }
 
@@ -113,6 +128,16 @@ TrafficManager::NotifyAppStop (Ptr<EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
   m_controller->NotifyAppStop (app);
+
+  // Dump application and EPC statistics
+  bool bidirectional = false;
+  if (app->GetInstanceTypeId () == VoipClient::GetTypeId ())
+    {
+      bidirectional = true;
+    }
+  uint32_t teid = m_controller->GetTeidFromApplication (app); //FIXME
+  DumpAppStatistics (app);
+  m_network->DumpEpcStatistics (teid, GetAppDescription (app), bidirectional);
 
   Time idleTime = Seconds (std::abs (m_idleRng->GetValue ()));
   Simulator::Schedule (idleTime, &TrafficManager::AppStartTry, this, app);
@@ -123,6 +148,8 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
 {
   if (m_controller->NotifyAppStart (app))
     {
+      uint32_t teid = m_controller->GetTeidFromApplication (app);
+      m_network->ResetEpcStatistics (teid); // FIXME
       app->ResetQosStats ();
       app->Start ();
     }
@@ -131,6 +158,35 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
       Time retryTime = Seconds (std::abs (m_startRng->GetValue ()));
       Simulator::Schedule (retryTime, &TrafficManager::AppStartTry, this, app);
     }
+}
+
+void
+TrafficManager::DumpAppStatistics (Ptr<EpcApplication> app)
+{
+  NS_LOG_FUNCTION (this << app);
+
+
+  uint32_t teid = m_controller->GetTeidFromApplication (app);
+  Ptr<RoutingInfo> rInfo = m_controller->GetTeidRoutingInfo (teid);
+  Ptr<const QosStatsCalculator> appStats;
+
+  if (app->GetInstanceTypeId () == VoipClient::GetTypeId ())
+    {
+      Ptr<VoipClient> voipApp = DynamicCast<VoipClient> (app);
+      appStats = voipApp->GetServerApp ()->GetQosStats ();
+      m_appTrace (GetAppDescription (app) + "ul", teid, appStats);
+    }
+  appStats = app->GetQosStats ();
+  m_appTrace (GetAppDescription (app) + "dl", teid, appStats);
+}
+
+std::string 
+TrafficManager::GetAppDescription (Ptr<const EpcApplication> app)
+{
+  std::ostringstream desc;
+  desc << app->GetAppName () << " [" << m_ueDevice->GetImsi () << "]";
+       //<< "@" << m_ueDevice->GetTargetEnb ()->GetCellId ();
+  return desc.str ();
 }
 
 };  // namespace ns3

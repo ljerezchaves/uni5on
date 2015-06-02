@@ -20,7 +20,7 @@
 
 #include "openflow-epc-controller.h"
 #include "internet-network.h"
-#include "seq-num-tag.h"
+#include "ns3/epc-application.h"
 
 namespace ns3 {
 
@@ -38,9 +38,7 @@ const int OpenFlowEpcController::m_t1DefaultPrio = 128;
 const int OpenFlowEpcController::m_t1RingPrio = 32;
 
 OpenFlowEpcController::OpenFlowEpcController ()
-  : m_pgwDownBytes (0),
-    m_pgwUpBytes (0),
-    m_ofNetwork (0)
+  : m_ofNetwork (0)
 {
   NS_LOG_FUNCTION (this);
   m_admStats = Create<AdmissionStatsCalculator> ();
@@ -61,30 +59,10 @@ OpenFlowEpcController::GetTypeId (void)
                    TimeValue (Seconds (10)),
                    MakeTimeAccessor (&OpenFlowEpcController::SetDumpTimeout),
                    MakeTimeChecker ())
-    .AddTraceSource ("AppStats",
-                     "Application QoS trace source.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_appTrace),
-                     "ns3::OpenFlowEpcController::QosTracedCallback")
-    .AddTraceSource ("EpcStats",
-                     "LTE EPC GTPU QoS trace source.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_epcTrace),
-                     "ns3::OpenFlowEpcController::QosTracedCallback")
-    .AddTraceSource ("PgwStats",
-                     "EPC Pgw traffic trace source.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_pgwTrace),
-                     "ns3::OpenFlowEpcController::PgwTracedCallback")
     .AddTraceSource ("AdmStats",
                      "The bearer admission control trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_admTrace),
                      "ns3::AdmissionStatsCalculator::AdmTracedCallback")
-    .AddTraceSource ("SwtStats",
-                     "The switch flow table entries trace source.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_swtTrace),
-                     "ns3::OpenFlowEpcController::SwtTracedCallback")
-    .AddTraceSource ("BwdStats",
-                     "The network bandwidth usage trace source.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_bwdTrace),
-                     "ns3::OpenFlowEpcController::BwdTracedCallback")
     .AddTraceSource ("BrqStats",
                      "The bearer request trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_brqTrace),
@@ -125,13 +103,7 @@ OpenFlowEpcController::SetDumpTimeout (Time timeout)
 {
   m_dumpTimeout = timeout;
   Simulator::Schedule (m_dumpTimeout, 
-    &OpenFlowEpcController::DumpPgwStatistics, this);
-  Simulator::Schedule (m_dumpTimeout, 
-    &OpenFlowEpcController::DumpSwtStatistics, this);
-  Simulator::Schedule (m_dumpTimeout, 
     &OpenFlowEpcController::DumpAdmStatistics, this);
-  Simulator::Schedule (m_dumpTimeout, 
-    &OpenFlowEpcController::DumpBwdStatistics, this);
 }
 
 void 
@@ -202,7 +174,8 @@ OpenFlowEpcController::RequestNewDedicatedBearer (uint64_t imsi,
     uint16_t cellId, Ptr<EpcTft> tft, EpsBearer bearer)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << tft);
-  
+
+  // FIXME: Pra cá que tem que vir a lógica que está no NotifyAppStart.
   // Allowing any bearer creation
   return true;
 }
@@ -223,6 +196,18 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   info->m_sgwAddr = sgwAddr;
   info->m_bearerList = bearerList;
   m_contexts.push_back (info);
+
+  // Iterate over bearer list and set app info (teid, imsi and current cellId)
+  BearerList_t::iterator it;
+  it = bearerList.begin (); 
+  for (it = bearerList.begin (); it != bearerList.end (); it++)
+    {
+      Ptr<EpcApplication> app = it->tft->GetObject<EpcApplication> ();
+      if (app)
+        {
+          NS_LOG_UNCOND (app);
+        }
+    }
 
   // Create and save routing information for default bearer
   ContextBearer_t defaultBearer = bearerList.front ();
@@ -267,8 +252,7 @@ OpenFlowEpcController::NotifyAppStart (Ptr<EpcApplication> app)
 
   uint32_t teid = GetTeidFromApplication (app);
   
-  GetQosStatsFromTeid (teid, true)->ResetCounters ();
-  GetQosStatsFromTeid (teid, false)->ResetCounters ();
+
   
   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
   if (rInfo == 0)
@@ -381,8 +365,9 @@ OpenFlowEpcController::NotifyAppStart (Ptr<EpcApplication> app)
 bool
 OpenFlowEpcController::NotifyAppStop (Ptr<EpcApplication> app)
 {
+  // FIXME: Essa lógica é relativa ao release de bearer. Excluir estruturas internas. 
   NS_LOG_FUNCTION (this << app);
- 
+  
   uint32_t teid = GetTeidFromApplication (app);
   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
   NS_ASSERT_MSG (rInfo, "No routing information for teid.");
@@ -395,101 +380,8 @@ OpenFlowEpcController::NotifyAppStop (Ptr<EpcApplication> app)
       BearerRelease (rInfo);
       RemoveTeidRouting (rInfo);
     }
-  DumpAppStatistics (app);
+  // DumpAppStatistics (app); FIXME
   return true;
-}
-
-void 
-OpenFlowEpcController::ConnectTraceSinks ()
-{
-  // EPC trace sinks for QoS monitoring
-  m_ofNetwork->ConnectEpcTraceSinks ("S1uRx", 
-      MakeCallback (&OpenFlowEpcController::EpcOutputPacket, this));
-  m_ofNetwork->ConnectEpcTraceSinks ("S1uTx", 
-      MakeCallback (&OpenFlowEpcController::EpcInputPacket, this));
-
-  // Pgw traffic trace sinks
-  Ptr<Application> pgwApp = m_ofNetwork->GetGatewayNode ()->GetApplication (0);
-  pgwApp->TraceConnect ("S1uTx", "downlink", 
-      MakeCallback (&OpenFlowEpcController::PgwTraffic, this));
-  pgwApp->TraceConnect ("S1uRx", "uplink", 
-      MakeCallback (&OpenFlowEpcController::PgwTraffic, this));
-}
-
-void 
-OpenFlowEpcController::EpcInputPacket (std::string context, 
-                                       Ptr<const Packet> packet)
-{
-  EpcGtpuTag gtpuTag;
-  if (packet->PeekPacketTag (gtpuTag))
-    {
-      Ptr<QosStatsCalculator> qosStats = 
-        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      SeqNumTag seqTag (qosStats->GetNextSeqNum ());
-      packet->AddPacketTag (seqTag);
-    }
-}
-
-void
-OpenFlowEpcController::EpcOutputPacket (std::string context, 
-                                        Ptr<const Packet> packet)
-{
-  EpcGtpuTag gtpuTag;
-  if (packet->PeekPacketTag (gtpuTag))
-    {
-      SeqNumTag seqTag;
-      if (packet->PeekPacketTag (seqTag))
-        {
-          Ptr<QosStatsCalculator> qosStats = 
-            GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-          qosStats->NotifyReceived (seqTag.GetSeqNum (), gtpuTag.GetTimestamp (), 
-                                    packet->GetSize ());
-        }
-    }
-}
-
-void 
-OpenFlowEpcController::PgwTraffic (std::string direction, 
-                                   Ptr<const Packet> packet)
-{
-  if (direction == "downlink")
-    {
-      m_pgwDownBytes += packet->GetSize ();
-    }
-  else if (direction == "uplink")
-    {
-      m_pgwUpBytes += packet->GetSize ();
-    }
-}
-
-void
-OpenFlowEpcController::MeterDropPacket (std::string context, 
-                                        Ptr<const Packet> packet)
-{
-  NS_LOG_FUNCTION (this << context << packet);
-
-  EpcGtpuTag gtpuTag;
-  if (packet->PeekPacketTag (gtpuTag))
-    {
-      Ptr<QosStatsCalculator> qosStats = 
-        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      qosStats->NotifyMeterDrop ();
-    }
-}
-
-void
-OpenFlowEpcController::QueueDropPacket (std::string context,
-                                        Ptr<const Packet> packet)
-{
-  NS_LOG_FUNCTION (this << context << packet);
-
-  EpcGtpuTag gtpuTag;
-  if (packet->PeekPacketTag (gtpuTag))
-    {
-      Ptr<QosStatsCalculator> qosStats = 
-        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      qosStats->NotifyQueueDrop ();
-    }
 }
 
 uint16_t 
@@ -580,133 +472,65 @@ OpenFlowEpcController::DumpAdmStatistics ()
     &OpenFlowEpcController::DumpAdmStatistics, this);
 }
 
-void
-OpenFlowEpcController::DumpPgwStatistics ()
-{
-  DataRate downRate (8 * m_pgwDownBytes / 10);
-  DataRate upRate (8 * m_pgwUpBytes / 10);
-  m_pgwTrace (downRate, upRate);
-
-  m_pgwUpBytes = m_pgwDownBytes = 0;
-  Simulator::Schedule (m_dumpTimeout, 
-    &OpenFlowEpcController::DumpPgwStatistics, this);
-}
-
-void
-OpenFlowEpcController::DumpSwtStatistics ()
-{
-  std::vector<uint32_t> teid;
-
-  Ptr<OFSwitch13NetDevice> swDev;
-  for (uint16_t i = 0; i < GetNSwitches (); i++)
-    {
-      swDev = GetSwitchDevice (i);
-      teid.push_back (swDev->GetNumberFlowEntries (1)); // TEID table is 1
-    }
-  m_swtTrace (teid);
-
-  Simulator::Schedule (m_dumpTimeout, 
-    &OpenFlowEpcController::DumpSwtStatistics, this);
-}
-
-void
-OpenFlowEpcController::DumpBwdStatistics ()
-{ 
-  m_bwdTrace (GetBandwidthStats ());
-
-  Simulator::Schedule (m_dumpTimeout, 
-    &OpenFlowEpcController::DumpBwdStatistics, this);
-}
-
-void
-OpenFlowEpcController::DumpAppStatistics (Ptr<EpcApplication> app)
-{
-  NS_LOG_FUNCTION (this << app);
-
-  uint32_t teid = GetTeidFromApplication (app);
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-  Ptr<const QosStatsCalculator> appStats;
-  Ptr<const QosStatsCalculator> epcStats;
-
-  if (app->GetInstanceTypeId () == VoipClient::GetTypeId ())
-    {
-      Ptr<VoipClient> voipApp = DynamicCast<VoipClient> (app);
-      appStats = voipApp->GetQosStats ();
-      epcStats = GetQosStatsFromTeid (teid, false); // uplink
-
-      // The VoipClient app is at UE.
-      std::ostringstream descUp;
-      descUp << "VoIP  [" << rInfo->m_enbIdx << "-->" << rInfo->m_sgwIdx << "]";
-        
-      // Tracing application and EPC statistics
-      m_appTrace (descUp.str (), teid, appStats);
-      m_epcTrace (descUp.str (), teid, epcStats);
-
-      appStats = voipApp->GetServerApp ()->GetQosStats ();
-      epcStats = GetQosStatsFromTeid (teid, true);  // downlink
-      
-      // The VoipServer app is at the Internet
-      std::ostringstream descDown;
-      descDown << "VoIP  [" << rInfo->m_sgwIdx << "-->" << rInfo->m_enbIdx << "]";
-        
-      // Tracing application and EPC statistics
-      m_appTrace (descDown.str (), teid, appStats);
-      m_epcTrace (descDown.str (), teid, epcStats);
-    }
-  else if (app->GetInstanceTypeId () == RealTimeVideoClient::GetTypeId ())
-    {
-      // Get the relative UDP server for this client
-      Ptr<RealTimeVideoClient> videoApp = DynamicCast<RealTimeVideoClient> (app);
-      appStats = videoApp->GetQosStats ();
-      epcStats = GetQosStatsFromTeid (teid, true);  // downlink
-
-      // Tracing application and EPC statistics
-      std::string desc = GetAppDescription (app, rInfo); 
-      m_appTrace (desc, teid, appStats);
-      m_epcTrace (desc, teid, epcStats);
-    }
-  else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
-    {
-      Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
-      appStats = httpApp->GetQosStats ();
-      epcStats = GetQosStatsFromTeid (teid, true);  // downlink
-
-      // Tracing application and EPC statistics
-      std::string desc = GetAppDescription (app, rInfo); 
-      m_appTrace (desc, teid, appStats);
-      m_epcTrace (desc, teid, epcStats);
-    }
-}
-
-std::string 
-OpenFlowEpcController::GetAppDescription (Ptr<const Application> app, 
-                                          Ptr<const RoutingInfo> rInfo)
-{
-  NS_ASSERT_MSG (rInfo, "Invalid rInfo pointer");
-  
-  std::ostringstream desc;
-  if (rInfo->m_isDefault)
-    {
-      desc << "Dflt  [" << rInfo->m_sgwIdx << "---" << rInfo->m_enbIdx << "]";
-    }
-  else if (!app)
-    {
-      desc << "NoApp [" << rInfo->m_sgwIdx << "---" << rInfo->m_enbIdx << "]";
-    }
-  else if (app->GetInstanceTypeId () == VoipClient::GetTypeId ())
-    {
-      desc << "VoIP  [" << rInfo->m_sgwIdx << "<->" << rInfo->m_enbIdx << "]";
-    }
-  else if (app->GetInstanceTypeId () == RealTimeVideoClient::GetTypeId ())
-    {
-      desc << "Video [" << rInfo->m_sgwIdx << "-->" << rInfo->m_enbIdx << "]";
-    }
-  else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
-    {
-      desc << "HTTP  [" << rInfo->m_sgwIdx << "<->" << rInfo->m_enbIdx << "]";
-    }
-  return desc.str ();
-}
+// void
+// OpenFlowEpcController::DumpAppStatistics (Ptr<EpcApplication> app)
+// {
+//   NS_LOG_FUNCTION (this << app);
+// 
+//   uint32_t teid = GetTeidFromApplication (app);
+//   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+//   Ptr<const QosStatsCalculator> appStats;
+//   Ptr<const QosStatsCalculator> epcStats;
+// 
+//   if (app->GetInstanceTypeId () == VoipClient::GetTypeId ())
+//     {
+//       Ptr<VoipClient> voipApp = DynamicCast<VoipClient> (app);
+//       appStats = voipApp->GetQosStats ();
+//       epcStats = GetQosStatsFromTeid (teid, false); // uplink
+// 
+//       // The VoipClient app is at UE.
+//       std::ostringstream descUp;
+//       descUp << "VoIP  [" << rInfo->m_enbIdx << "-->" << rInfo->m_sgwIdx << "]";
+//         
+//       // Tracing application and EPC statistics
+//       m_appTrace (descUp.str (), teid, appStats);
+//       m_epcTrace (descUp.str (), teid, epcStats);
+// 
+//       appStats = voipApp->GetServerApp ()->GetQosStats ();
+//       epcStats = GetQosStatsFromTeid (teid, true);  // downlink
+//       
+//       // The VoipServer app is at the Internet
+//       std::ostringstream descDown;
+//       descDown << "VoIP  [" << rInfo->m_sgwIdx << "-->" << rInfo->m_enbIdx << "]";
+//         
+//       // Tracing application and EPC statistics
+//       m_appTrace (descDown.str (), teid, appStats);
+//       m_epcTrace (descDown.str (), teid, epcStats);
+//     }
+//   else if (app->GetInstanceTypeId () == RealTimeVideoClient::GetTypeId ())
+//     {
+//       // Get the relative UDP server for this client
+//       Ptr<RealTimeVideoClient> videoApp = DynamicCast<RealTimeVideoClient> (app);
+//       appStats = videoApp->GetQosStats ();
+//       epcStats = GetQosStatsFromTeid (teid, true);  // downlink
+// 
+//       // Tracing application and EPC statistics
+//       std::string desc = GetAppDescription (app, rInfo); 
+//       m_appTrace (desc, teid, appStats);
+//       m_epcTrace (desc, teid, epcStats);
+//     }
+//   else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
+//     {
+//       Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
+//       appStats = httpApp->GetQosStats ();
+//       epcStats = GetQosStatsFromTeid (teid, true);  // downlink
+// 
+//       // Tracing application and EPC statistics
+//       std::string desc = GetAppDescription (app, rInfo); 
+//       m_appTrace (desc, teid, appStats);
+//       m_epcTrace (desc, teid, epcStats);
+//     }
+// }
 
 Ipv4Address 
 OpenFlowEpcController::ExtractIpv4Address (uint32_t oxm_of, ofl_match* match)
@@ -905,34 +729,6 @@ OpenFlowEpcController::GetBearerFromTft (Ptr<EpcTft> tft)
         }
     }
   NS_FATAL_ERROR ("Couldn't find bearer for invalid tft.");
-}
-
-Ptr<QosStatsCalculator>
-OpenFlowEpcController::GetQosStatsFromTeid (uint32_t teid, bool isDown)
-{
-  Ptr<QosStatsCalculator> qosStats = 0;
-  TeidQosMap_t::iterator it;
-  it = m_qosStats.find (teid);
-  if (it != m_qosStats.end ())
-    {
-      QosStatsPair_t value = it->second;
-      qosStats = isDown ? value.first : value.second;
-    }
-  else
-    {
-      // Create and insert the structure
-      QosStatsPair_t pair (Create<QosStatsCalculator> (), 
-                           Create<QosStatsCalculator> ());
-      std::pair <uint32_t, QosStatsPair_t> entry (teid, pair);
-      std::pair <TeidQosMap_t::iterator, bool> ret;
-      ret = m_qosStats.insert (entry);
-      if (ret.second == false)
-        {
-          NS_FATAL_ERROR ("Existing QoS entry for teid " << teid);
-        }
-      qosStats = isDown ? pair.first : pair.second;
-    }
-  return qosStats;
 }
 
 void 

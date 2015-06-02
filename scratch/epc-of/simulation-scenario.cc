@@ -141,26 +141,6 @@ SimulationScenario::GetTypeId (void)
                    StringValue ("none"),
                    MakeStringAccessor (&SimulationScenario::m_switchLog),
                    MakeStringChecker ())
-    .AddAttribute ("PingTraffic",
-                   "Enable/Disable ping traffic during simulation.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&SimulationScenario::m_ping),
-                   MakeBooleanChecker ())
-    .AddAttribute ("HttpTraffic",
-                   "Enable/Disable http traffic during simulation.",
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&SimulationScenario::m_http),
-                   MakeBooleanChecker ())
-    .AddAttribute ("VoipTraffic",
-                   "Enable/Disable VoIP traffic during simulation.",
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&SimulationScenario::m_voip),
-                   MakeBooleanChecker ())
-    .AddAttribute ("VideoTraffic",
-                   "Enable/Disable video traffic during simulation.",
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&SimulationScenario::m_video),
-                   MakeBooleanChecker ())
   ;
   return tid;
 }
@@ -189,8 +169,8 @@ SimulationScenario::BuildRingTopology ()
       MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, m_opfNetwork));
   m_epcHelper->SetX2ConnectCallback (
       MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
-  m_epcHelper->SetAddBearerCallback (
-      MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, m_controller));
+//  m_epcHelper->SetAddBearerCallback (
+//      MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, m_controller));
   m_epcHelper->SetCreateSessionRequestCallback (
       MakeCallback (&OpenFlowEpcController::NotifyNewContextCreated, m_controller));
   
@@ -204,31 +184,32 @@ SimulationScenario::BuildRingTopology ()
   m_webHost = m_webNetwork->CreateTopology (m_epcHelper->GetPgwNode ());
 
   // Registering controller trace sinks
-  m_controller->ConnectTraceSinks ();
-  
+  m_opfNetwork->ConnectTraceSinks ();
+ // TODO criar um objeto para gerenciar as saídas em texto, e passar como parametro pra que cada um se vire para ligar os sources nos sinks 
   // Saving simulation statistics 
   m_controller->TraceConnectWithoutContext ("AppStats", 
       MakeCallback (&SimulationScenario::ReportAppStats, this));
-  m_controller->TraceConnectWithoutContext ("EpcStats", 
+  
+  m_opfNetwork->TraceConnectWithoutContext ("EpcStats", 
       MakeCallback (&SimulationScenario::ReportEpcStats, this));
-  m_controller->TraceConnectWithoutContext ("PgwStats", 
+  m_opfNetwork->TraceConnectWithoutContext ("PgwStats", 
       MakeCallback (&SimulationScenario::ReportPgwStats, this));
+  m_opfNetwork->TraceConnectWithoutContext ("BwdStats", 
+      MakeCallback (&SimulationScenario::ReportBwdStats, this));
+  m_opfNetwork->TraceConnectWithoutContext ("SwtStats", 
+      MakeCallback (&SimulationScenario::ReportSwtStats, this));
+  
   m_controller->TraceConnectWithoutContext ("AdmStats", 
       MakeCallback (&SimulationScenario::ReportAdmStats, this));
-  m_controller->TraceConnectWithoutContext ("SwtStats", 
-      MakeCallback (&SimulationScenario::ReportSwtStats, this));
-  m_controller->TraceConnectWithoutContext ("BwdStats", 
-      MakeCallback (&SimulationScenario::ReportBwdStats, this));
   m_controller->TraceConnectWithoutContext ("BrqStats", 
       MakeCallback (&SimulationScenario::ReportBrqStats, this)); 
+  
   m_webNetwork->TraceConnectWithoutContext ("WebStats",
       MakeCallback (&SimulationScenario::ReportWebStats, this));
 
   // Application traffic
-  TrafficHelper tfcHelper;
-  tfcHelper.Install (m_lteNetwork->GetUeNodes (), 
-                     m_lteNetwork->GetUeDevices (), 
-                     m_webHost, m_lteHelper, m_controller);
+  TrafficHelper tfcHelper (m_webHost, m_lteHelper, m_controller, m_opfNetwork);
+  tfcHelper.Install (m_lteNetwork->GetUeNodes (), m_lteNetwork->GetUeDevices ());
 
   // Logs and traces
   DatapathLogs ();

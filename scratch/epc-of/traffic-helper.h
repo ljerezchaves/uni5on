@@ -40,8 +40,18 @@ namespace ns3 {
 class TrafficHelper
 {
 public:
-  TrafficHelper ();       //!< Default constructor
-  ~TrafficHelper ();      //!< Dummy destructor, see DoDipose
+  /** 
+   * Complete constructor.
+   * \param server The server node.
+   * \param helper The helper pointer.
+   * \param controller The Epc controller.
+   * \param network The Epc network.
+   */
+  TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper, 
+                 Ptr<OpenFlowEpcController> controller,
+                 Ptr<OpenFlowEpcNetwork> network);
+  
+  ~TrafficHelper (); //!< Default destructor.
 
   /**
    * Record an attribute to be set in each traffic manager.
@@ -56,19 +66,15 @@ public:
    * nodes. It also configure the TFT and EPS bearers.
    * \param ueNodes The UE Nodes container.
    * \param ueDevices The UE NetDevices container.
-   * \param server The server node.
-   * \param helper The helper pointer.
-   * \param controller The Epc controller.
    */
-  void Install (NodeContainer ueNodes, NetDeviceContainer ueDevices, 
-                Ptr<Node> server, Ptr<LteHelper> helper, 
-                Ptr<OpenFlowEpcController> controller);
+  void Install (NodeContainer ueNodes, NetDeviceContainer ueDevices);
 
 private:
   /** 
-   * HTTP/TCP traffic over default Non-GBR EPS bearer (QCI 9). 
-   * This QCI 9 is typically used for the default bearer of a UE/PDN for non
-   * privileged subscribers.
+   * HTTP/TCP traffic over dedicated Non-GBR EPS bearer (QCI 8).
+   * This QCI 8 could be used for a dedicated 'premium bearer' for any
+   * subscriber, or could be used for the default bearer of a for 'premium
+   * subscribers'.
    *
    * \internal This HTTP model is based on the distributions indicated in the
    * paper 'An HTTP Web Traffic Model Based on the Top One Million Visited Web
@@ -89,10 +95,9 @@ private:
   void InstallVoip ();
   
   /**
-   * TCP stored video streaming over dedicated Non-GBR EPS bearer (QCI 8).
-   * This QCI 8 could be used for a dedicated 'premium bearer' for any
-   * subscriber, or could be used for the default bearer of a for 'premium
-   * subscribers'.
+   * TCP stored video streaming over dedicated Non-GBR EPS bearer (QCI 6).
+   * This QCI 8 could be used for priorization of non real-time data of MPS
+   * subscribers.
    *
    * \internal This video traffic is based on MPEG-4 video traces from
    * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf. The video

@@ -62,6 +62,7 @@ public:
   // Inherited from OpenFlowEpcController
   void NotifyNewConnBtwnSwitches (const Ptr<ConnectionInfo> connInfo);
   void NotifyConnBtwnSwitchesOk ();
+  std::vector<BandwidthStats_t> GetBandwidthStats ();
 
 protected:
   // Inherited from OpenFlowEpcController
@@ -70,7 +71,6 @@ protected:
   bool BearerRequest (Ptr<RoutingInfo> rInfo);
   bool BearerRelease (Ptr<RoutingInfo> rInfo);
   void CreateSpanningTree ();
-  std::vector<BandwidthStats_t> GetBandwidthStats ();
 
 private:
   /** 

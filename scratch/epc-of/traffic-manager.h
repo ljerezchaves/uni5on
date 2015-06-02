@@ -51,12 +51,8 @@ public:
   /** Destructor implementation */
   virtual void DoDispose ();
 
-  /**
-   * Set the OpenFlow controller
-   * \param controller The controller pointer.
-   */ 
-  void SetController (Ptr<OpenFlowEpcController> controller);
-  
+  void SetLteUeDevice (Ptr<LteUeNetDevice> ueDevice);
+
   /**
    * Add a new application for this manager.
    * \param app The application pointer.
@@ -78,7 +74,29 @@ public:
    */ 
   void AppStartTry (Ptr<EpcApplication> app);
 
+  /** 
+   * TracedCallback signature for QoS dump. 
+   * \param description String describing this traffic.
+   * \param teid Bearer TEID.
+   * \param stats The QoS statistics.
+   */
+  typedef void (* QosTracedCallback)(std::string description, uint32_t teid, 
+                                     Ptr<const QosStatsCalculator> stats);
+
 private:
+  /**
+   * Dump application statistics.
+   * \param app The application pointer.
+   */
+  void DumpAppStatistics (Ptr<EpcApplication> app);
+
+  /**
+   * Create the description string for this application.
+   * \param app The application pointer.
+   * \return The description string.
+   */
+  std::string GetAppDescription (Ptr<const EpcApplication> app);
+
   bool m_httpEnable;     //!< HTTP traffic enable
   bool m_voipEnable;     //!< Voip traffic enable
   bool m_stVideoEnable;  //!< Stored video traffic enable
@@ -87,7 +105,13 @@ private:
   Ptr<RandomVariableStream>         m_idleRng;    //!< Idle random time generator
   Ptr<RandomVariableStream>         m_startRng;   //!< Start random time generator
   Ptr<OpenFlowEpcController>        m_controller; //!< OpenFLow controller
+  Ptr<OpenFlowEpcNetwork>           m_network;    //!< OpenFLow network
   std::vector<Ptr<EpcApplication> > m_apps;       //!< Application list
+
+  Ptr<LteUeNetDevice>               m_ueDevice;   //!< UE LTE device
+
+  /** The Application QoS trace source, fired at DumpAppStatistics. */
+  TracedCallback<std::string, uint32_t, Ptr<const QosStatsCalculator> > m_appTrace;
 };
 
 };  // namespace ns3

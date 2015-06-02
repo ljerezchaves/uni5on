@@ -153,10 +153,6 @@ private:
   uint16_t              m_nSwitches;          //!< Number of OpenFlow switches
   bool                  m_pcapTrace;          //!< Enable PCAP traces
   bool                  m_lteTrace;           //!< Enable LTE ASCII traces
-  bool                  m_ping;               //!< Enable ping traffic
-  bool                  m_voip;               //!< Enable VoIP traffic
-  bool                  m_http;               //!< Enable http traffic
-  bool                  m_video;              //!< Enable video traffic
   std::vector<uint32_t> m_UesPerEnb;          //!< Number of UEs per eNb
   std::vector<uint16_t> m_SwitchIdxPerEnb;    //!< Switch index per eNb
 };

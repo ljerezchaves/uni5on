@@ -255,7 +255,8 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   Ptr<BearerRequestStats> reqStats = Create<BearerRequestStats> ();
   reqStats->m_teid = teid;
   reqStats->m_accepted = false;
-  reqStats->m_trafficDesc = GetAppDescription (rInfo->m_app, rInfo);
+  // reqStats->m_trafficDesc = GetAppDescription (rInfo->m_app, rInfo);
+  reqStats->m_trafficDesc = "";
   reqStats->m_routingPaths = "Shortest paths";
     
   if (rInfo->m_isDefault)
@@ -551,6 +552,7 @@ RingController::CreateSpanningTree ()
   DpctlCommand (connInfo->switchDev2, cmd2.str ());
 }
 
+// FIXME: Mover isso aqui pro network
 std::vector<BandwidthStats_t>
 RingController::GetBandwidthStats ()
 {

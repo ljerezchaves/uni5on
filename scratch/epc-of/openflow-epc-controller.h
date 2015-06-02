@@ -33,13 +33,6 @@
 
 namespace ns3 {
 
-/** A pair of switches index */
-typedef std::pair<uint16_t, uint16_t> SwitchPair_t;
-
-/** Bandwitdh stats between two switches */
-typedef std::pair<SwitchPair_t, double> BandwidthStats_t;
-
-
 class OpenFlowEpcController;
 class RingController;
 
@@ -50,6 +43,10 @@ class RingController;
  */
 class OpenFlowEpcController : public OFSwitch13Controller
 {
+  // FIXME Apenas para testar
+  friend class TrafficManager;
+
+
 public:
   OpenFlowEpcController ();           //!< Default constructor
   virtual ~OpenFlowEpcController ();  //!< Dummy destructor, see DoDipose
@@ -165,79 +162,12 @@ public:
    * \return true.
    */ 
   virtual bool NotifyAppStop (Ptr<EpcApplication> app);
-
+  
   /**
-   * Connect all trace sinks used by this controller to monitor the network.
+   * Get bandwidth statistcs for (relevant) network links.
+   * \return The list with stats.
    */
-  void ConnectTraceSinks ();
-
-  /**
-   * Trace sink for packets entering the EPC. The packet will get tagged for
-   * QoS monitoring.
-   * \param context Node name.
-   * \param packet The packet.
-   */
-  void EpcInputPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink for packets leaving the EPC. The tag will be read from packet,
-   * and QoS stats updated.
-   * \param context Node name.
-   * \param packet The packet.
-   */
-  void EpcOutputPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink for packets traversing the EPC packet gateway from the
-   * Internet to the EPC.
-   * \param direction The traffic direction.
-   * \param packet The packet.
-   */
-  void PgwTraffic (std::string direction, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink for packets dropped by meter bands. The tag will be read
-   * from packet, and QoS stats updated.
-   * \param context Output switch index.
-   * \param packet The dropped packet.
-   */
-  void MeterDropPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink for packets dropped by queues. 
-   * \param context The queue context location.
-   * \param packet The dropped packet.
-   */
-  void QueueDropPacket (std::string context, Ptr<const Packet> packet);
-
-  /** 
-   * TracedCallback signature for QoS dump. 
-   * \param description String describing this traffic.
-   * \param teid Bearer TEID.
-   * \param stats The QoS statistics.
-   */
-  typedef void (* QosTracedCallback)(std::string description, uint32_t teid, 
-                                     Ptr<const QosStatsCalculator> stats);
-
-  /** 
-   * TracedCallback signature for Pgw traffic statistics.
-   * \param downTraffic The average downlink traffic for last interval.
-   * \param upTraffic The average uplink traffic for last interval.
-   */
-  typedef void (* PgwTracedCallback)(DataRate downTraffic, DataRate upTraffic);
-
-  /** 
-   * TracedCallback signature for switch Flow table rules statistics.
-   * \param teid The number of TEID routing flow rules at each switch.
-   */
-  typedef void (* SwtTracedCallback)(std::vector<uint32_t> teid);
-
-  /** 
-   * TracedCallback signature for bandwidth usage statistics.
-   * \param stats List of links and usage ratio.
-   */
-  typedef void (* BwdTracedCallback)(std::vector<BandwidthStats_t> stats);
-
+  virtual std::vector<BandwidthStats_t> GetBandwidthStats () = 0;
 
 protected:
   /**
@@ -280,12 +210,6 @@ protected:
    * with OFPPC_NO_FWD flag (0x20).
    */
   virtual void CreateSpanningTree () = 0;   
-  
-  /**
-   * Get bandwidth statistcs for (relevant) network links.
-   * \return The list with stats.
-   */
-  virtual std::vector<BandwidthStats_t> GetBandwidthStats () = 0;
 
   /**
    * \return Number of switches in the network.
@@ -341,36 +265,6 @@ protected:
   void DumpAdmStatistics ();
 
   /**
-   * Dump EPC Pgw downlink/uplink traffic statistics.
-   */
-  void DumpPgwStatistics ();
-  
-  /**
-   * Dump Opwnflow switch table statistics.
-   */
-  void DumpSwtStatistics ();
-
-  /**
-   * Dump network bandwidth usage.
-   */
-  void DumpBwdStatistics ();
-
-  /**
-   * Dump application statistics.
-   * \param app The application pointer.
-   */
-  void DumpAppStatistics (Ptr<EpcApplication> app);
-
-  /**
-   * Create the description string for this application.
-   * \param app The application pointer.
-   * \param rInfo RoutingInfo for this bearer.
-   * \return The description string.
-   */
-  std::string GetAppDescription (Ptr<const Application> app, 
-                                 Ptr<const RoutingInfo> rInfo);
-
-  /**
    * Extract an IPv4 address from packet match.
    * \param oxm_of The OXM_IF_* IPv4 field.
    * \param match The ofl_match structure pointer.
@@ -421,15 +315,6 @@ private:
    * \return The bearer info for this TFT.
    */ 
   ContextBearer_t GetBearerFromTft (Ptr<EpcTft> tft);
-
-  /**
-   * Retrieve the LTE EPC QoS statistics information for the GTP tunnel id.
-   * When no information structure available, create it.
-   * \param teid The GTP tunnel id.
-   * \param isDown True for downlink stats, false for uplink.
-   * \return The QoS information.
-   */
-  Ptr<QosStatsCalculator> GetQosStatsFromTeid (uint32_t teid, bool isDown);
 
   /**
    * Save the RoutingInfo metadata for further usage and reserve the bandwidth.
@@ -490,30 +375,9 @@ private:
       Mac48Address dstMac, Ipv4Address dstIp);
 
 
-  /** The Application QoS trace source, fired at DumpAppStatistics. */
-  TracedCallback<std::string, uint32_t, 
-    Ptr<const QosStatsCalculator> > m_appTrace;
-
-  /** The LTE EPC QoS trace source, fired at DumpAppStatistics. */
-  TracedCallback<std::string, uint32_t, 
-    Ptr<const QosStatsCalculator> > m_epcTrace;
-
-  /** The EPC Pgw traffic trace source, fired at DumpPgwStatistics. */
-  TracedCallback<DataRate, DataRate> m_pgwTrace;
-
   /** The GBR block ratio trace source, fired at DumpAdmStatistics. */
   TracedCallback<Ptr<const AdmissionStatsCalculator> > m_admTrace;
 
-  /** The switch flow table rules trace source, fired at DumpSwtStatistics. */
-  TracedCallback<std::vector<uint32_t> > m_swtTrace;
-
-  /** The network bandwidth usage trace source, fired at DumpBwdStatistics. */
-  TracedCallback<std::vector<BandwidthStats_t> > m_bwdTrace;
-
-  
-  /** A pair of QosStatsCalculator, for downlink and uplink statistics */
-  typedef std::pair<Ptr<QosStatsCalculator>, 
-    Ptr<QosStatsCalculator> > QosStatsPair_t;
 
   /** A list of context information */
   typedef std::vector<Ptr<ContextInfo> > ContextInfoList_t;
@@ -526,23 +390,17 @@ private:
    
   /** Map saving <Pair of switch indexes / Connection information */
   typedef std::map<SwitchPair_t, Ptr<ConnectionInfo> > ConnInfoMap_t; 
-
+  
   /** Map saving <TEID / Routing information > */
-  typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
+  typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t; 
 
-  /** Map saving <TEID / QoS stats > */
-  typedef std::map<uint32_t, QosStatsPair_t> TeidQosMap_t;
 
   IpMacMap_t        m_arpTable;         //!< ARP resolution table.
   IpSwitchMap_t     m_ipSwitchTable;    //!< eNB IP / Switch Index table.
   ConnInfoMap_t     m_connections;      //!< Connections between switches.
   ContextInfoList_t m_contexts;         //!< List of created contexts.
   TeidRoutingMap_t  m_routes;           //!< TEID routing informations.
-  TeidQosMap_t      m_qosStats;         //!< TEID QoS statistics
-  
   Time              m_dumpTimeout;      //!< Dump stats timeout.
-  uint32_t          m_pgwDownBytes;     //!< Pgw traffic downlink bytes.
-  uint32_t          m_pgwUpBytes;       //!< Pgw traffic uplink bytes.
   
   Ptr<AdmissionStatsCalculator> m_admStats;  //!< Admission control statistics. 
   Ptr<OpenFlowEpcNetwork> m_ofNetwork;  //!< Pointer to OpenFlow network.

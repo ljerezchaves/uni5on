@@ -20,6 +20,7 @@
 
 #include "openflow-epc-network.h"
 #include "openflow-epc-controller.h"
+#include "seq-num-tag.h"
 
 namespace ns3 {
 
@@ -89,7 +90,9 @@ ConnectionInfo::ReleaseDataRate (DataRate dr)
 // ------------------------------------------------------------------------ //
 OpenFlowEpcNetwork::OpenFlowEpcNetwork ()
   : m_ofCtrlApp (0),
-    m_ofCtrlNode (0)
+    m_ofCtrlNode (0),
+    m_pgwDownBytes (0),
+    m_pgwUpBytes (0)
 {
   NS_LOG_FUNCTION (this);
   m_ofHelper = CreateObjectWithAttributes<OFSwitch13Helper> (
@@ -106,6 +109,27 @@ OpenFlowEpcNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::OpenFlowEpcNetwork") 
     .SetParent<Object> ()
+    .AddAttribute ("DumpStatsTimeout",
+                   "Periodic statistics dump interval.",
+                   TimeValue (Seconds (10)),
+                   MakeTimeAccessor (&OpenFlowEpcNetwork::SetDumpTimeout),
+                   MakeTimeChecker ())
+    .AddTraceSource ("PgwStats",
+                     "EPC Pgw traffic trace source.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_pgwTrace),
+                     "ns3::OpenFlowEpcNetwork::PgwTracedCallback")
+    .AddTraceSource ("EpcStats",
+                     "LTE EPC GTPU QoS trace source.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_epcTrace),
+                     "ns3::OpenFlowEpcNetwork::QosTracedCallback")
+    .AddTraceSource ("SwtStats",
+                     "The switch flow table entries trace source.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_swtTrace),
+                     "ns3::OpenFlowEpcNetwork::SwtTracedCallback")
+    .AddTraceSource ("BwdStats",
+                     "The network bandwidth usage trace source.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_bwdTrace),
+                     "ns3::OpenFlowEpcNetwork::BwdTracedCallback")
   ;
   return tid; 
 }
@@ -197,6 +221,176 @@ OpenFlowEpcNetwork::GetNSwitches ()
 }
 
 void
+OpenFlowEpcNetwork::SetDumpTimeout (Time timeout)
+{
+  m_dumpTimeout = timeout;
+  Simulator::Schedule (m_dumpTimeout, 
+    &OpenFlowEpcNetwork::DumpPgwStatistics, this);
+  Simulator::Schedule (m_dumpTimeout, 
+    &OpenFlowEpcNetwork::DumpSwtStatistics, this);
+  Simulator::Schedule (m_dumpTimeout, 
+    &OpenFlowEpcNetwork::DumpBwdStatistics, this);
+}
+
+void 
+OpenFlowEpcNetwork::ConnectTraceSinks ()
+{
+  // EPC trace sinks for QoS monitoring
+  ConnectEpcTraceSinks ("S1uRx", 
+      MakeCallback (&OpenFlowEpcNetwork::EpcOutputPacket, this));
+  ConnectEpcTraceSinks ("S1uTx", 
+      MakeCallback (&OpenFlowEpcNetwork::EpcInputPacket, this));
+
+  // Pgw traffic trace sinks
+  Ptr<Application> pgwApp = GetGatewayNode ()->GetApplication (0);
+  pgwApp->TraceConnect ("S1uTx", "downlink", 
+      MakeCallback (&OpenFlowEpcNetwork::PgwTraffic, this));
+  pgwApp->TraceConnect ("S1uRx", "uplink", 
+      MakeCallback (&OpenFlowEpcNetwork::PgwTraffic, this));
+}
+
+void 
+OpenFlowEpcNetwork::EpcInputPacket (std::string context, 
+                                    Ptr<const Packet> packet)
+{
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      Ptr<QosStatsCalculator> qosStats = 
+        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      SeqNumTag seqTag (qosStats->GetNextSeqNum ());
+      packet->AddPacketTag (seqTag);
+    }
+}
+
+void
+OpenFlowEpcNetwork::EpcOutputPacket (std::string context, 
+                                     Ptr<const Packet> packet)
+{
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      SeqNumTag seqTag;
+      if (packet->PeekPacketTag (seqTag))
+        {
+          Ptr<QosStatsCalculator> qosStats = 
+            GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+          qosStats->NotifyReceived (seqTag.GetSeqNum (), gtpuTag.GetTimestamp (), 
+                                    packet->GetSize ());
+        }
+    }
+}
+
+void 
+OpenFlowEpcNetwork::PgwTraffic (std::string direction, 
+                                Ptr<const Packet> packet)
+{
+  if (direction == "downlink")
+    {
+      m_pgwDownBytes += packet->GetSize ();
+    }
+  else if (direction == "uplink")
+    {
+      m_pgwUpBytes += packet->GetSize ();
+    }
+}
+
+void
+OpenFlowEpcNetwork::MeterDropPacket (std::string context, 
+                                     Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << context << packet);
+
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      Ptr<QosStatsCalculator> qosStats = 
+        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      qosStats->NotifyMeterDrop ();
+    }
+}
+
+void
+OpenFlowEpcNetwork::QueueDropPacket (std::string context,
+                                     Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << context << packet);
+
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      Ptr<QosStatsCalculator> qosStats = 
+        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      qosStats->NotifyQueueDrop ();
+    }
+}
+
+void
+OpenFlowEpcNetwork::DumpPgwStatistics ()
+{
+  DataRate downRate (8 * m_pgwDownBytes / 10);
+  DataRate upRate (8 * m_pgwUpBytes / 10);
+  m_pgwTrace (downRate, upRate);
+
+  m_pgwUpBytes = m_pgwDownBytes = 0;
+  Simulator::Schedule (m_dumpTimeout, 
+    &OpenFlowEpcNetwork::DumpPgwStatistics, this);
+}
+
+void
+OpenFlowEpcNetwork::DumpSwtStatistics ()
+{
+  std::vector<uint32_t> teid;
+
+  Ptr<OFSwitch13NetDevice> swDev;
+  for (uint16_t i = 0; i < GetNSwitches (); i++)
+    {
+      swDev = GetSwitchDevice (i);
+      teid.push_back (swDev->GetNumberFlowEntries (1)); // TEID table is 1
+    }
+  m_swtTrace (teid);
+
+  Simulator::Schedule (m_dumpTimeout, 
+    &OpenFlowEpcNetwork::DumpSwtStatistics, this);
+}
+
+void
+OpenFlowEpcNetwork::DumpBwdStatistics ()
+{ 
+  m_bwdTrace (m_ofCtrlApp->GetBandwidthStats ());
+
+  Simulator::Schedule (m_dumpTimeout, 
+    &OpenFlowEpcNetwork::DumpBwdStatistics, this);
+}
+
+void
+OpenFlowEpcNetwork::DumpEpcStatistics (uint32_t teid, std::string desc, 
+                                       bool uplink)
+{
+  NS_LOG_FUNCTION (this << teid << desc);
+
+  Ptr<const QosStatsCalculator> epcStats;
+  if (uplink)
+    {
+      // Dump uplink statistics
+      epcStats = GetQosStatsFromTeid (teid, false);
+      m_epcTrace (desc + "ul", teid, epcStats);
+    }
+  // Dump downlink statistics
+  epcStats = GetQosStatsFromTeid (teid, true);
+  m_epcTrace (desc + "dl", teid, epcStats);
+}
+
+void
+OpenFlowEpcNetwork::ResetEpcStatistics (uint32_t teid)
+{
+  NS_LOG_FUNCTION (this << teid);
+  
+  GetQosStatsFromTeid (teid, true)->ResetCounters ();
+  GetQosStatsFromTeid (teid, false)->ResetCounters ();
+}
+
+void
 OpenFlowEpcNetwork::SetSwitchDeviceAttribute (std::string n1, 
                                               const AttributeValue &v1)
 {
@@ -285,6 +479,33 @@ OpenFlowEpcNetwork::SetController (Ptr<OpenFlowEpcController> controller)
   m_ofCtrlApp->SetOfNetwork (this);
 }
 
+Ptr<QosStatsCalculator>
+OpenFlowEpcNetwork::GetQosStatsFromTeid (uint32_t teid, bool isDown)
+{
+  Ptr<QosStatsCalculator> qosStats = 0;
+  TeidQosMap_t::iterator it;
+  it = m_qosStats.find (teid);
+  if (it != m_qosStats.end ())
+    {
+      QosStatsPair_t value = it->second;
+      qosStats = isDown ? value.first : value.second;
+    }
+  else
+    {
+      // Create and insert the structure
+      QosStatsPair_t pair (Create<QosStatsCalculator> (), 
+                           Create<QosStatsCalculator> ());
+      std::pair <uint32_t, QosStatsPair_t> entry (teid, pair);
+      std::pair <TeidQosMap_t::iterator, bool> ret;
+      ret = m_qosStats.insert (entry);
+      if (ret.second == false)
+        {
+          NS_FATAL_ERROR ("Existing QoS entry for teid " << teid);
+        }
+      qosStats = isDown ? pair.first : pair.second;
+    }
+  return qosStats;
+}
 
 };  // namespace ns3
 

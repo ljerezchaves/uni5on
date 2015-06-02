@@ -166,18 +166,18 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
 
       // Registering trace sink for meter dropped packets
       currDevice->TraceConnect ("MeterDrop", Names::FindName (currNode),
-        MakeCallback (&OpenFlowEpcController::MeterDropPacket, m_ofCtrlApp));
+        MakeCallback (&OpenFlowEpcNetwork::MeterDropPacket, this));
 
       // Registering trace sink for queue drop packets
       std::ostringstream currQueue;
       currQueue << Names::FindName (currNode) << "/" << currPortNum;
       currPortDevice->GetQueue ()->TraceConnect ("Drop", currQueue.str (),
-        MakeCallback (&OpenFlowEpcController::QueueDropPacket, m_ofCtrlApp));
+        MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
       
       std::ostringstream nextQueue;
       nextQueue << Names::FindName (nextNode) << "/" << nextPortNum;
       nextPortDevice->GetQueue ()->TraceConnect ("Drop", nextQueue.str (),
-        MakeCallback (&OpenFlowEpcController::QueueDropPacket, m_ofCtrlApp));
+        MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
     }
 
   m_ringCtrlApp->NotifyConnBtwnSwitchesOk ();
@@ -243,10 +243,10 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   std::ostringstream context;
   context << Names::FindName (swNode) << "/" << portNum;
   portDev->GetQueue ()->TraceConnect ("Drop", context.str (),
-    MakeCallback (&OpenFlowEpcController::QueueDropPacket, m_ofCtrlApp));
+    MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
  
   nodeDev->GetQueue ()->TraceConnect ("Drop", Names::FindName (node),
-    MakeCallback (&OpenFlowEpcController::QueueDropPacket, m_ofCtrlApp));
+    MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
 
   return nodeDev;
 }
@@ -291,10 +291,10 @@ RingNetwork::AttachToX2 (Ptr<Node> node)
   std::ostringstream context;
   context << Names::FindName (swNode) << "/" << portNum;
   portDev->GetQueue ()->TraceConnect ("Drop", context.str (),
-    MakeCallback (&OpenFlowEpcController::QueueDropPacket, m_ofCtrlApp));
+    MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
  
   nodeDev->GetQueue ()->TraceConnect ("Drop", Names::FindName (node),
-    MakeCallback (&OpenFlowEpcController::QueueDropPacket, m_ofCtrlApp));
+    MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
 
   return nodeDev;
 }

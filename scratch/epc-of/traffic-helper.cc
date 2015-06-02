@@ -38,14 +38,23 @@ const uint64_t TrafficHelper::m_maxBitRate [] = {3300000, 4400000, 1900000,
 
 
 // ------------------------------------------------------------------------ //
-TrafficHelper::TrafficHelper ()
-  : m_lteHelper (0),
-    m_webNode (0)
+TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper, 
+                              Ptr<OpenFlowEpcController> controller,
+                              Ptr<OpenFlowEpcNetwork> network)
+  : m_lteHelper (helper),
+    m_webNode (server)
 {
   NS_LOG_FUNCTION (this);
 
+  // Configuring server address and mask
+  Ptr<Ipv4> serverIpv4 = server->GetObject<Ipv4> ();
+  m_webAddr = serverIpv4->GetAddress (1,0).GetLocal ();
+  m_webMask = serverIpv4->GetAddress (1,0).GetMask ();
+
   // Configuring the traffic manager object factory
   m_managerFactory.SetTypeId (TrafficManager::GetTypeId ());
+  SetTfcManagerAttribute ("Controller", PointerValue (controller));
+  SetTfcManagerAttribute ("Network", PointerValue (network));
 
   // Random stored video selection.
   m_stVideoRng = CreateObject<UniformRandomVariable> ();
@@ -94,19 +103,10 @@ TrafficHelper::SetTfcManagerAttribute (std::string name,
 }
 
 void 
-TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices, 
-                        Ptr<Node> server, Ptr<LteHelper> helper, 
-                        Ptr<OpenFlowEpcController> controller)
+TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices)
 {
   NS_LOG_FUNCTION (this);
 
-  m_webNode = server;
-  Ptr<Ipv4> serverIpv4 = server->GetObject<Ipv4> ();
-  m_webAddr = serverIpv4->GetAddress (1,0).GetLocal ();
-  m_webMask = serverIpv4->GetAddress (1,0).GetMask ();
-  
-  m_lteHelper = helper;
-  
   // Installing manager and applications into nodes
   for (uint32_t u = 0; u < ueNodes.GetN (); u++)
     {
@@ -118,8 +118,8 @@ TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices,
       m_ueAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
       m_ueMask = clientIpv4->GetAddress (1, 0).GetMask ();
 
-      m_ueManager = CreateObject<TrafficManager> ();
-      m_ueManager->SetController (controller);
+      m_ueManager = m_managerFactory.Create<TrafficManager> ();
+      m_ueManager->SetLteUeDevice (DynamicCast<LteUeNetDevice> (m_ueDev));
       m_ueNode->AggregateObject (m_ueManager);
 
       InstallHttp ();
@@ -169,7 +169,7 @@ TrafficHelper::InstallHttp ()
 
   // Dedicated Non-GBR EPS bearer (QCI 8)
   GbrQosInformation qos;
-  qos.gbrDl = 131072;     // Reserving 128 Kbps in downlink
+  qos.gbrDl = 131072;     // Reserving 128 Kbps in downlink //FIXME?
   qos.gbrUl = 32768;      // Reserving 32 Kbps in uplink
   qos.mbrDl = 524288;     // Max of 512 Kbps in downlink
   qos.mbrUl = 131072;     // Max of 128 Kbps in uplink 
@@ -259,7 +259,7 @@ TrafficHelper::InstallStoredVideo ()
   GbrQosInformation qos;
   qos.gbrDl = 1.5 * m_avgBitRate [videoIdx];
   qos.mbrDl = (qos.gbrDl + m_maxBitRate [videoIdx]) / 2;
-  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
+  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR, qos);
   m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
