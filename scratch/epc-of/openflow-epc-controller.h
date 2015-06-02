@@ -169,6 +169,15 @@ public:
    */
   virtual std::vector<BandwidthStats_t> GetBandwidthStats () = 0;
 
+  /** 
+   * TracedCallback signature for new context created messagens.
+   * \param imsi The UE IMSI identifier.
+   * \param cellId The eNB cell ID.
+   * \param bearerList The list of context bearers created.
+   */
+  typedef void (* ContextTracedCallback)(uint64_t imsi, uint16_t cellId, 
+                                         BearerList_t bearerList);
+
 protected:
   /**
    * Process the bearer resource and bandwidth allocation.
@@ -279,6 +288,9 @@ protected:
 
   /** The bearer request statistics trace source, fired at BearerRequest. */
   TracedCallback<Ptr<const BearerRequestStats> > m_brqTrace;
+
+  /** The new context created trace source, fired at NotifyNewContextCreated. */
+  TracedCallback<uint64_t, uint16_t, BearerList_t> m_contextTrace;
 
   /** Timeout values */
   //\{ 

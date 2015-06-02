@@ -59,6 +59,10 @@ OpenFlowEpcController::GetTypeId (void)
                    TimeValue (Seconds (10)),
                    MakeTimeAccessor (&OpenFlowEpcController::SetDumpTimeout),
                    MakeTimeChecker ())
+    .AddTraceSource ("ContextCreated",
+                     "The new context created trace source.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_contextTrace),
+                     "ns3::OpenFlowEpcController::ContextTracedCallback")
     .AddTraceSource ("AdmStats",
                      "The bearer admission control trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_admTrace),
@@ -197,17 +201,9 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   info->m_bearerList = bearerList;
   m_contexts.push_back (info);
 
-  // Iterate over bearer list and set app info (teid, imsi and current cellId)
-  BearerList_t::iterator it;
-  it = bearerList.begin (); 
-  for (it = bearerList.begin (); it != bearerList.end (); it++)
-    {
-      Ptr<EpcApplication> app = it->tft->GetObject<EpcApplication> ();
-      if (app)
-        {
-          NS_LOG_UNCOND (app);
-        }
-    }
+  // Fire the new context created trace source, which can be used by traffic
+  // manager to set internal metadata (cellId and teid for applications). 
+  m_contextTrace (imsi, cellId, bearerList);
 
   // Create and save routing information for default bearer
   ContextBearer_t defaultBearer = bearerList.front ();
