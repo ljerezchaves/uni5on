@@ -49,7 +49,7 @@ void
 SimulationScenario::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  
+  m_opfNetwork = 0;
   m_controller = 0;
   m_epcHelper = 0;
   m_lteNetwork = 0;
@@ -57,7 +57,6 @@ SimulationScenario::DoDispose ()
   m_lteHelper = 0;
   m_webHost = 0;
   m_pgwHost = 0;
-  m_opfNetwork = 0;
 }
 
 TypeId 
@@ -207,7 +206,7 @@ SimulationScenario::BuildRingTopology ()
   m_webNetwork->TraceConnectWithoutContext ("WebStats",
       MakeCallback (&SimulationScenario::ReportWebStats, this));
 
-  // Application traffic
+  // Installing applications and traffic manager
   TrafficHelper tfcHelper (m_webHost, m_lteHelper, m_controller, m_opfNetwork);
   tfcHelper.Install (m_lteNetwork->GetUeNodes (), m_lteNetwork->GetUeDevices ());
 
