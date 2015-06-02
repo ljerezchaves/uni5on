@@ -29,8 +29,7 @@ NS_OBJECT_ENSURE_REGISTERED (EpcApplication);
 EpcApplication::EpcApplication()
   : m_qosStats (Create<QosStatsCalculator> ()),
     m_tft (0),
-    m_teid (0),
-    m_ueImsi (0)
+    m_teid (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -84,18 +83,10 @@ EpcApplication::GetTeid (void) const
   return m_teid;
 }
 
-uint32_t
-EpcApplication::GetImsi (void) const
-{
-  return m_ueImsi;
-}
-
 std::string
 EpcApplication::GetDescription (void) const
 {
-  std::ostringstream desc;
-  desc << GetAppName () << " [" << GetImsi () << "]";
-  return desc.str ();
+  return GetAppName () + " [" + m_desc + "]";
 }
 
 std::string 
