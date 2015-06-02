@@ -66,15 +66,12 @@ RealTimeVideoClient::GetServerApp ()
 }
 
 void 
-RealTimeVideoClient::NofifyTrafficEnd (uint32_t pkts)
+RealTimeVideoClient::ServerTrafficEnd (uint32_t pkts)
 {
   NS_LOG_FUNCTION (this);
 
-  if (!m_stopCb.IsNull ())
-    {
-      // Let's wait 1 sec for delayed packets before notifying stopped app.
-      Simulator::Schedule (Seconds (1), &RealTimeVideoClient::m_stopCb, this, this);
-    }
+  // Let's wait 1 sec for delayed packets before notifying stopped app.
+  Simulator::Schedule (Seconds (1), &RealTimeVideoClient::NotifyStop, this);
 }
 
 void 
@@ -99,6 +96,19 @@ RealTimeVideoClient::DoDispose (void)
   m_serverApp = 0;
   m_socket = 0;
   EpcApplication::DoDispose ();
+}
+
+void 
+RealTimeVideoClient::NotifyStop ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // Dump app statistcs
+  DumpAppStatistics ();
+  if (!m_stopCb.IsNull ())
+    {
+      m_stopCb (this);
+    }
 }
 
 void

@@ -63,10 +63,10 @@ public:
   Ptr<RealTimeVideoServer> GetServerApp ();
 
   /**
-   * \brief Callback invoked when server stops sending traffic.
+   * \brief Invoked when server stops sending traffic.
    * \param pkts The total number of packets transmitted by the server.
    */
-  void NofifyTrafficEnd (uint32_t pkts);
+  void ServerTrafficEnd (uint32_t pkts);
 
   // Inherited from EpcApplication
   void Start (void);
@@ -74,6 +74,11 @@ public:
 
 protected:
   virtual void DoDispose (void);
+
+  /**
+   * \brief Dump application statistcs and fire stop callback.
+   */
+  void NotifyStop ();
 
 private:
   // inherited from Application base class.

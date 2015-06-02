@@ -196,7 +196,7 @@ VoipServer::StopSending ()
   Simulator::Cancel (m_sendEvent);
   if (m_clientApp)
     {
-      m_clientApp->NofifyTrafficEnd (m_pktSent);
+      m_clientApp->ServerTrafficEnd (m_pktSent);
     }
 }
 

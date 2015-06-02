@@ -75,7 +75,7 @@ public:
    * \brief Callback invoked when server stops sending traffic.
    * \param pkts The total number of packets transmitted by the server.
    */
-  void NofifyTrafficEnd (uint32_t pkts);
+  void ServerTrafficEnd (uint32_t pkts);
 
   // Inherited from EpcApplication
   void Start (void);
@@ -84,6 +84,14 @@ public:
 protected:
   /** Destructor implementation */
   virtual void DoDispose (void);
+
+  /**
+   * \brief Dump application statistcs and fire stop callback.
+   */
+  void NotifyStop ();
+  
+  // Inherited from EpcApplication
+  void DumpAppStatistics (void) const;
 
 private:
   // inherited from Application base class.

@@ -137,6 +137,8 @@ StoredVideoClient::CloseSocket ()
       m_socket = 0;
     }
 
+  // Dump app statistcs
+  DumpAppStatistics ();
   if (!m_stopCb.IsNull ())
     {
       m_stopCb (this);

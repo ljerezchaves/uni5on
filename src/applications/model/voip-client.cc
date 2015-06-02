@@ -105,17 +105,14 @@ VoipClient::ResetQosStats ()
 }
 
 void 
-VoipClient::NofifyTrafficEnd (uint32_t pkts)
+VoipClient::ServerTrafficEnd (uint32_t pkts)
 {
   NS_LOG_FUNCTION (this);
   
   StopSending ();
 
-  if (!m_stopCb.IsNull ())
-    {
-      // Let's wait 1 sec for delayed packets before notifying stopped app.
-      Simulator::Schedule (Seconds (1), &VoipClient::m_stopCb, this, this);
-    }
+  // Let's wait 1 sec for delayed packets before notifying stopped app.
+  Simulator::Schedule (Seconds (1), &VoipClient::NotifyStop, this);
 }
 
 void 
@@ -142,6 +139,28 @@ VoipClient::DoDispose (void)
   m_txSocket = 0;
   m_rxSocket = 0;
   EpcApplication::DoDispose ();
+}
+
+void 
+VoipClient::NotifyStop ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // Dump app statistcs
+  DumpAppStatistics ();
+  if (!m_stopCb.IsNull ())
+    {
+      m_stopCb (this);
+    }
+}
+
+void
+VoipClient::DumpAppStatistics (void) const
+{
+  NS_LOG_FUNCTION (this);
+  
+  m_appTrace (GetDescription () + "dl", GetTeid (), GetQosStats ());
+  m_appTrace (GetDescription () + "ul", GetTeid (), m_serverApp->GetQosStats ());
 }
 
 void
