@@ -105,8 +105,8 @@ TrafficManager::AddEpcApplication (Ptr<EpcApplication> app)
       return;
     }
 
-  // Schedule the first start attemp for this app (wait at least 1 second)
-  Time startTime = Seconds (1) + Seconds (std::abs (m_startRng->GetValue ()));
+  // Schedule the first start attemp for this app (wait at least 5 seconds)
+  Time startTime = Seconds (5) + Seconds (std::abs (m_startRng->GetValue ()));
   Simulator::Schedule (startTime, &TrafficManager::AppStartTry, this, app);
 }
 
@@ -146,8 +146,8 @@ TrafficManager::NotifyAppStop (Ptr<EpcApplication> app)
   bool uplink = (app->GetInstanceTypeId () == VoipClient::GetTypeId ());
   m_network->DumpEpcStatistics (app->GetTeid (), app->GetDescription (), uplink);
 
-  // Schedule next start attempt for this application
-  Time idleTime = Seconds (std::abs (m_idleRng->GetValue ()));
+  // Schedule next start attempt for this app  (wait at least 5 seconds)
+  Time idleTime = Seconds (5) + Seconds (std::abs (m_idleRng->GetValue ()));
   Simulator::Schedule (idleTime, &TrafficManager::AppStartTry, this, app);
 }
 
