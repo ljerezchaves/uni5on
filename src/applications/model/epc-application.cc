@@ -94,7 +94,7 @@ std::string
 EpcApplication::GetDescription (void) const
 {
   std::ostringstream desc;
-  desc << GetAppName () << " [" << m_ueImsi << "]";
+  desc << GetAppName () << " [" << GetImsi () << "]";
   return desc.str ();
 }
 

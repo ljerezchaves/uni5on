@@ -113,7 +113,8 @@ public:
                                      Ptr<const QosStatsCalculator> stats);
 
 protected:
-  virtual void DoDispose (void);        //!< Destructor implementation
+  /** Destructor implementation */
+  virtual void DoDispose (void);
 
   /**
    * Set the stop callback
