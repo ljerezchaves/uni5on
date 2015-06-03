@@ -121,9 +121,9 @@ public:
 
   /** Get Dpctl commands to add or delete meter rules */
   //\{
-  std::string GetDownAddCmd ();
-  std::string GetUpAddCmd ();
-  std::string GetDelCmd ();
+  std::string GetDownAddCmd (void) const;
+  std::string GetUpAddCmd (void) const;
+  std::string GetDelCmd (void) const;
   //\}
 
 private:
@@ -228,7 +228,7 @@ public:
   /** \return RoutingInfo pointer. */
   Ptr<RoutingInfo> GetRoutingInfo ();
 
-protected:
+private:
   /** Invert down/up routing direction. */
   void InvertDownPath ();
   void InvertUpPath ();

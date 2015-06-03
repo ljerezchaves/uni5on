@@ -89,7 +89,6 @@ protected:
   virtual void DoDispose ();
 
 private:
-  // Enable/disable applications by type
   bool m_httpEnable;     //!< HTTP traffic enable
   bool m_voipEnable;     //!< Voip traffic enable
   bool m_stVideoEnable;  //!< Stored video traffic enable

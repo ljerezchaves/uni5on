@@ -65,7 +65,7 @@ private:
 
   /**
    * Save LTE EPC statistics in file. 
-   * \see ns3::OpenFlowEpcController::QosTracedCallback for parameters.
+   * \see ns3::OpenFlowEpcNetwork::QosTracedCallback for parameters.
    */
   void ReportEpcStats (std::string description, uint32_t teid, 
                        Ptr<const QosStatsCalculator> stats);
@@ -78,13 +78,13 @@ private:
 
   /**
    * Save packet gateway traffic statistics in file.
-   * \see ns3::OpenFlowEpcController::PgwTracedCallback for parameters.
+   * \see ns3::OpenFlowEpcNetwork::PgwTracedCallback for parameters.
    */
   void ReportPgwStats (DataRate downTraffic, DataRate upTraffic);
 
   /**
    * Save flow table usage statistics in file.
-   * \see ns3::OpenFlowEpcController::SwtTracedCallback for parameters.
+   * \see ns3::OpenFlowEpcNetwork::SwtTracedCallback for parameters.
    */
   void ReportSwtStats (std::vector<uint32_t> teid);
 

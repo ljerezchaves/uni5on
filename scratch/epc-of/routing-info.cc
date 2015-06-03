@@ -132,7 +132,7 @@ MeterInfo::GetRoutingInfo ()
 }
 
 std::string
-MeterInfo::GetDownAddCmd ()
+MeterInfo::GetDownAddCmd (void) const
 {
   std::ostringstream meter;
   meter << "meter-mod cmd=add,flags=1,meter=" << m_teid <<
@@ -141,7 +141,7 @@ MeterInfo::GetDownAddCmd ()
 }
 
 std::string
-MeterInfo::GetUpAddCmd ()
+MeterInfo::GetUpAddCmd (void) const
 {
   std::ostringstream meter;
   meter << "meter-mod cmd=add,flags=1,meter=" << m_teid <<
@@ -150,7 +150,7 @@ MeterInfo::GetUpAddCmd ()
 }
 
 std::string
-MeterInfo::GetDelCmd ()
+MeterInfo::GetDelCmd (void) const
 {
   std::ostringstream meter;
   meter << "meter-mod cmd=del,meter=" << m_teid;
