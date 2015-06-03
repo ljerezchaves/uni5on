@@ -25,6 +25,7 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("RoutingInfo");
 NS_OBJECT_ENSURE_REGISTERED (RoutingInfo);
 NS_OBJECT_ENSURE_REGISTERED (MeterInfo);
+NS_OBJECT_ENSURE_REGISTERED (ReserveInfo);
 NS_OBJECT_ENSURE_REGISTERED (RingRoutingInfo);
 
 // ------------------------------------------------------------------------ //

@@ -29,6 +29,7 @@
 #include "ring-network.h"
 #include "openflow-epc-controller.h"
 #include "traffic-helper.h"
+#include "output-logger.h"
 #include <vector>
 
 using namespace std;
@@ -51,69 +52,22 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  /** 
+   * Build the ring simulation topology. 
+   */ 
+  void BuildRingTopology ();
+
+  /** 
+   * Set the common prefix for input/output files.
+   * \param prefix The prefix.
+   */ 
+  void SetCommonPrefix (std::string prefix);
+
+protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
-  /** Build the ring simulation topology. */ 
-  void BuildRingTopology ();
-
-  /** Set the common prefix for input/output files. */ 
-  void SetCommonPrefix (std::string prefix);
-
-
-
-  /**
-   * Save application statistics in file. 
-   * \see ns3::OpenFlowEpcController::QosTracedCallback for parameters.
-   */
-  void ReportAppStats (std::string description, uint32_t teid, 
-                       Ptr<const QosStatsCalculator> stats);
-
 private:
-
-  /**
-   * Save LTE EPC GTPU statistics in file. 
-   * \see ns3::OpenFlowEpcController::QosTracedCallback for parameters.
-   */
-  void ReportEpcStats (std::string description, uint32_t teid, 
-                       Ptr<const QosStatsCalculator> stats);
-
-  /**
-   * Save bearer admission control statistics in file. 
-   * \see ns3::AdmissionStatsCalculator::AdmTracedCallback for parameters.
-   */
-  void ReportAdmStats (Ptr<const AdmissionStatsCalculator> stats);
-
-  /**
-   * Save packet gateway traffic statistics in file.
-   * \see ns3::OpenFlowEpcController::PgwTracedCallback for parameters.
-   */
-  void ReportPgwStats (DataRate downTraffic, DataRate upTraffic);
-
-  /**
-   * Save flow table usage statistics in file.
-   * \see ns3::OpenFlowEpcController::SwtTracedCallback for parameters.
-   */
-  void ReportSwtStats (std::vector<uint32_t> teid);
-
-  /**
-   * Save internet queue statistics in file.
-   * \see ns3::InternetNetwork::WebTracedCallback for parameters.
-   */
-  void ReportWebStats (Ptr<const Queue> downlink, Ptr<const Queue> uplink);
-
-  /**
-   * Save bandwidth usage in file.
-   * \see ns3::OpenFlowEpcController::BwdTracedCallback for parameters.
-   */
-  void ReportBwdStats (std::vector<BandwidthStats_t> stats);
-
-  /**
-   * Save bearer request statistics in file.
-   * \see ns3::BearerRequestStats::BrqTracedCallback for parameters.
-   */
-  void ReportBrqStats (Ptr<const BearerRequestStats> stats);
-
   /**
    * Parse topology description file.  
    * Topology file columns (indexes starts at 0):
@@ -121,7 +75,9 @@ private:
    */
   bool ParseTopology ();
 
-  /** Enable/Disable ofsoftswitch13 library log. */
+  /** 
+   * Enable/Disable ofsoftswitch13 library log. 
+   */
   void DatapathLogs ();
 
   /** 
@@ -138,18 +94,11 @@ private:
   Ptr<LteHelper>             m_lteHelper;     //!< LTE radio helper
   Ptr<Node>                  m_webHost;       //!< Internet server node
   Ptr<Node>                  m_pgwHost;       //!< EPC Pgw gateway node
+  Ptr<OutputLogger>          m_logger;        //!< Output looger
   
-  std::string           m_appStatsFilename;   //!< AppStats filename
-  std::string           m_epcStatsFilename;   //!< EpcStats filename
-  std::string           m_pgwStatsFilename;   //!< PgwStats filename
-  std::string           m_swtStatsFilename;   //!< SwtStats filename
-  std::string           m_admStatsFilename;   //!< AdmStats filename
-  std::string           m_webStatsFilename;   //!< WebStats filename
-  std::string           m_bwdStatsFilename;   //!< BwdStats filename
-  std::string           m_brqStatsFilename;   //!< BrqStats filename
+  std::string           m_commonPrefix;       //!< Common prefix filenames
   std::string           m_topoFilename;       //!< Topology filename
   std::string           m_switchLog;          //!< Switches log level
-  std::string           m_commonPrefix;       //!< Common prefix for filenames
   uint32_t              m_nEnbs;              //!< Number of eNBs
   uint16_t              m_nSwitches;          //!< Number of OpenFlow switches
   bool                  m_pcapTrace;          //!< Enable PCAP traces

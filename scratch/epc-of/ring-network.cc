@@ -61,7 +61,7 @@ RingNetwork::GetTypeId (void)
                    MakeDataRateChecker ())
     .AddAttribute ("LinkDelay", 
                    "The delay to be used for the CSMA OpenFlow links.",
-                   TimeValue (Seconds (0)),
+                   TimeValue (MicroSeconds (100)), // 20km fiber cable latency
                    MakeTimeAccessor (&RingNetwork::m_linkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("LinkMtu", 
