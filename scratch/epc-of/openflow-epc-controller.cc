@@ -191,15 +191,15 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << sgwAddr);
 
   // Create context info and save in context list.
-  Ptr<ContextInfo> info = CreateObject<ContextInfo> ();
-  info->m_imsi = imsi;
-  info->m_cellId = cellId;
-  info->m_enbIdx = GetSwitchIdxFromIp (enbAddr);
-  info->m_sgwIdx = GetSwitchIdxFromIp (sgwAddr);
-  info->m_enbAddr = enbAddr;
-  info->m_sgwAddr = sgwAddr;
-  info->m_bearerList = bearerList;
-  m_contexts.push_back (info);
+  Ptr<ContextInfo> cInfo = CreateObject<ContextInfo> ();
+  cInfo->m_imsi = imsi;
+  cInfo->m_cellId = cellId;
+  cInfo->m_enbIdx = GetSwitchIdxFromIp (enbAddr);
+  cInfo->m_sgwIdx = GetSwitchIdxFromIp (sgwAddr);
+  cInfo->m_enbAddr = enbAddr;
+  cInfo->m_sgwAddr = sgwAddr;
+  cInfo->m_bearerList = bearerList;
+  m_contexts.push_back (cInfo);
 
   // Fire the new context created trace source, which can be used by traffic
   // manager to set internal metadata (cellId and teid for applications). 
@@ -219,7 +219,6 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   rInfo->m_enbIdx = GetSwitchIdxFromIp (enbAddr);
   rInfo->m_sgwAddr = sgwAddr;
   rInfo->m_enbAddr = enbAddr;
-  rInfo->m_app = 0;                       // No app for default bearer
   rInfo->m_priority = m_t1DefaultPrio;    // Priority for default bearer
   rInfo->m_timeout = m_defaultTmo;        // No timeout for default bearer
   rInfo->m_isInstalled = false;           // Bearer rules not installed yet
@@ -239,34 +238,21 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
     {
       NS_LOG_ERROR ("TEID rule installation failed!");
     }
-}
 
-bool 
-OpenFlowEpcController::NotifyAppStart (Ptr<EpcApplication> app)
-{
-  NS_LOG_FUNCTION (this << app);
-
-  uint32_t teid = GetTeidFromApplication (app);
-  
-
-  
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-  if (rInfo == 0)
+  // For other dedicated bearers, let's create and save it's routing metadata
+  // NOTE: starting at the second element
+  BearerList_t::iterator it = bearerList.begin ();
+  for (it++; it != bearerList.end (); it++)
     {
-      // This is the first time in simulation we are using this dedicated
-      // bearer. Let's create and save it's routing metadata.
-      NS_LOG_DEBUG ("First use of bearer TEID " << teid);
-     
-      Ptr<EpcTft> tft = app->GetObject<EpcTft> ();
-      ContextBearer_t dedicatedBearer = GetBearerFromTft (tft);
-      Ptr<const ContextInfo> cInfo = GetContextFromTft (tft);
+      ContextBearer_t dedicatedBearer = *it;
+      teid = dedicatedBearer.sgwFteid.teid;
+      
       rInfo = CreateObject<RoutingInfo> ();
       rInfo->m_teid = teid;
-      rInfo->m_sgwIdx = cInfo->GetSgwIdx ();
-      rInfo->m_enbIdx = cInfo->GetEnbIdx ();
-      rInfo->m_sgwAddr = cInfo->GetSgwAddr ();
-      rInfo->m_enbAddr = cInfo->GetEnbAddr ();
-      rInfo->m_app = app;                      // App for this dedicated bearer
+      rInfo->m_sgwIdx = GetSwitchIdxFromIp (sgwAddr);
+      rInfo->m_enbIdx = GetSwitchIdxFromIp (enbAddr);
+      rInfo->m_sgwAddr = sgwAddr;
+      rInfo->m_enbAddr = enbAddr;
       rInfo->m_priority = m_t1DedicatedStartPrio; // Priority for dedicated bearer
       rInfo->m_timeout = m_dedicatedTmo;       // Timeout for dedicated bearer
       rInfo->m_isInstalled = false;            // Switch rules not installed yet
@@ -313,6 +299,15 @@ OpenFlowEpcController::NotifyAppStart (Ptr<EpcApplication> app)
           rInfo->AggregateObject (reserveInfo);
         }
     }
+}
+
+bool 
+OpenFlowEpcController::NotifyAppStart (uint32_t teid)
+{
+  NS_LOG_FUNCTION (this << teid);
+
+  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer " << teid);
 
   // Is it a default bearer?
   if (rInfo->m_isDefault)
@@ -359,12 +354,10 @@ OpenFlowEpcController::NotifyAppStart (Ptr<EpcApplication> app)
 }
 
 bool
-OpenFlowEpcController::NotifyAppStop (Ptr<EpcApplication> app)
+OpenFlowEpcController::NotifyAppStop (uint32_t teid)
 {
-  // FIXME: Essa lógica é relativa ao release de bearer. Excluir estruturas internas. 
-  NS_LOG_FUNCTION (this << app);
+  NS_LOG_FUNCTION (this << teid);
   
-  uint32_t teid = GetTeidFromApplication (app);
   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
   NS_ASSERT_MSG (rInfo, "No routing information for teid.");
   
@@ -376,7 +369,6 @@ OpenFlowEpcController::NotifyAppStop (Ptr<EpcApplication> app)
       BearerRelease (rInfo);
       RemoveTeidRouting (rInfo);
     }
-  // DumpAppStatistics (app); FIXME
   return true;
 }
 
@@ -424,13 +416,6 @@ OpenFlowEpcController::GetContextFromTeid (uint32_t teid)
   NS_FATAL_ERROR ("Couldn't find bearer for invalid teid.");
 }
 
-uint32_t 
-OpenFlowEpcController::GetTeidFromApplication (Ptr<Application> app)
-{
-  Ptr<EpcTft> tft = app->GetObject<EpcTft> ();
-  return GetBearerFromTft (tft).sgwFteid.teid;
-}
-
 Ptr<ConnectionInfo>
 OpenFlowEpcController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
 {
@@ -467,66 +452,6 @@ OpenFlowEpcController::DumpAdmStatistics ()
   Simulator::Schedule (m_dumpTimeout, 
     &OpenFlowEpcController::DumpAdmStatistics, this);
 }
-
-// void
-// OpenFlowEpcController::DumpAppStatistics (Ptr<EpcApplication> app)
-// {
-//   NS_LOG_FUNCTION (this << app);
-// 
-//   uint32_t teid = GetTeidFromApplication (app);
-//   Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-//   Ptr<const QosStatsCalculator> appStats;
-//   Ptr<const QosStatsCalculator> epcStats;
-// 
-//   if (app->GetInstanceTypeId () == VoipClient::GetTypeId ())
-//     {
-//       Ptr<VoipClient> voipApp = DynamicCast<VoipClient> (app);
-//       appStats = voipApp->GetQosStats ();
-//       epcStats = GetQosStatsFromTeid (teid, false); // uplink
-// 
-//       // The VoipClient app is at UE.
-//       std::ostringstream descUp;
-//       descUp << "VoIP  [" << rInfo->m_enbIdx << "-->" << rInfo->m_sgwIdx << "]";
-//         
-//       // Tracing application and EPC statistics
-//       m_appTrace (descUp.str (), teid, appStats);
-//       m_epcTrace (descUp.str (), teid, epcStats);
-// 
-//       appStats = voipApp->GetServerApp ()->GetQosStats ();
-//       epcStats = GetQosStatsFromTeid (teid, true);  // downlink
-//       
-//       // The VoipServer app is at the Internet
-//       std::ostringstream descDown;
-//       descDown << "VoIP  [" << rInfo->m_sgwIdx << "-->" << rInfo->m_enbIdx << "]";
-//         
-//       // Tracing application and EPC statistics
-//       m_appTrace (descDown.str (), teid, appStats);
-//       m_epcTrace (descDown.str (), teid, epcStats);
-//     }
-//   else if (app->GetInstanceTypeId () == RealTimeVideoClient::GetTypeId ())
-//     {
-//       // Get the relative UDP server for this client
-//       Ptr<RealTimeVideoClient> videoApp = DynamicCast<RealTimeVideoClient> (app);
-//       appStats = videoApp->GetQosStats ();
-//       epcStats = GetQosStatsFromTeid (teid, true);  // downlink
-// 
-//       // Tracing application and EPC statistics
-//       std::string desc = GetAppDescription (app, rInfo); 
-//       m_appTrace (desc, teid, appStats);
-//       m_epcTrace (desc, teid, epcStats);
-//     }
-//   else if (app->GetInstanceTypeId () == HttpClient::GetTypeId ())
-//     {
-//       Ptr<HttpClient> httpApp = DynamicCast<HttpClient> (app);
-//       appStats = httpApp->GetQosStats ();
-//       epcStats = GetQosStatsFromTeid (teid, true);  // downlink
-// 
-//       // Tracing application and EPC statistics
-//       std::string desc = GetAppDescription (app, rInfo); 
-//       m_appTrace (desc, teid, appStats);
-//       m_epcTrace (desc, teid, epcStats);
-//     }
-// }
 
 Ipv4Address 
 OpenFlowEpcController::ExtractIpv4Address (uint32_t oxm_of, ofl_match* match)

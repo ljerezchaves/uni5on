@@ -93,7 +93,6 @@ RoutingInfo::RoutingInfo ()
   : m_teid (0),
     m_sgwIdx (0),
     m_enbIdx (0),
-    m_app (0),
     m_priority (0),
     m_timeout (0),
     m_isDefault (0),
@@ -124,7 +123,6 @@ void
 RoutingInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_app = 0;
 }
 
 bool

@@ -115,7 +115,7 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
 
-  bool authorized = m_controller->NotifyAppStart (app); // FIXME
+  bool authorized = m_controller->NotifyAppStart (app->GetTeid ());
   if (authorized)
     {
       // ResetEpcStatistics.
@@ -139,7 +139,7 @@ TrafficManager::NotifyAppStop (Ptr<EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
  
-  m_controller->NotifyAppStop (app); // FIXME
+  m_controller->NotifyAppStop (app->GetTeid ());
 
   // DumpEpcStatistcs
   // NOTE: Currently, only Voip application needs uplink stats
@@ -178,13 +178,13 @@ TrafficManager::ContextCreatedCallback (uint64_t imsi, uint16_t cellId,
       if (tft)
         {
            BearerList_t::iterator it;
-            for (it = bearerList.begin (); it != bearerList.end (); it++)
-              {
-                if (it->tft == tft)
-                  {
-                    app->m_teid = it->sgwFteid.teid;
-                  }
-              }
+           for (it = bearerList.begin (); it != bearerList.end (); it++)
+             {
+               if (it->tft == tft)
+                 {
+                   app->m_teid = it->sgwFteid.teid;
+                 }
+             }
         }
       else
         {

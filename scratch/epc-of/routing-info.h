@@ -118,7 +118,6 @@ private:
   uint16_t          m_enbIdx;       //!< eNB switch index
   Ipv4Address       m_sgwAddr;      //!< Sgw IPv4 address
   Ipv4Address       m_enbAddr;      //!< eNB IPv4 address
-  Ptr<Application>  m_app;          //!< Traffic application
   int               m_priority;     //!< Flow priority
   int               m_timeout;      //!< Flow idle timeout
   bool              m_isDefault;    //!< This info is for default bearer
