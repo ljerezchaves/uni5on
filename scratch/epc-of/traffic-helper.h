@@ -27,7 +27,6 @@
 #include <ns3/applications-module.h>
 #include <ns3/internet-module.h>
 #include "traffic-manager.h"
-#include "openflow-epc-controller.h"
 
 namespace ns3 {
 
@@ -44,11 +43,9 @@ public:
    * Complete constructor.
    * \param server The server node.
    * \param helper The helper pointer.
-   * \param controller The Epc controller.
    * \param network The Epc network.
    */
   TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper, 
-                 Ptr<OpenFlowEpcController> controller,
                  Ptr<OpenFlowEpcNetwork> network);
   
   ~TrafficHelper (); //!< Default destructor.
@@ -144,8 +141,6 @@ private:
   static const std::string   m_videoTrace []; //!< Stored video trace filenames
   static const uint64_t      m_avgBitRate []; //!< Stored video trace avg bitrate
   static const uint64_t      m_maxBitRate []; //!< Stored video trace max bitrate
-  
-  Ptr<OpenFlowEpcController> m_controller;    //!< OpenFlow controller
 };
 
 };  // namespace ns3

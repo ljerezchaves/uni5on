@@ -40,11 +40,9 @@ const uint64_t TrafficHelper::m_maxBitRate [] = {3300000, 4400000, 1900000,
 
 // ------------------------------------------------------------------------ //
 TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper, 
-                              Ptr<OpenFlowEpcController> controller,
                               Ptr<OpenFlowEpcNetwork> network)
   : m_lteHelper (helper),
-    m_webNode (server),
-    m_controller (controller)
+    m_webNode (server)
 {
   NS_LOG_FUNCTION (this);
 
@@ -55,7 +53,6 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
 
   // Configuring the traffic manager object factory
   m_managerFactory.SetTypeId (TrafficManager::GetTypeId ());
-  SetTfcManagerAttribute ("Controller", PointerValue (controller));
   SetTfcManagerAttribute ("Network", PointerValue (network));
 
   // Random stored video selection.
@@ -97,7 +94,6 @@ TrafficHelper::~TrafficHelper ()
   m_ueDev = 0;
   m_ueManager = 0;
   m_stVideoRng = 0;
-  m_controller = 0;
 }
 
 void
@@ -127,8 +123,9 @@ TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices)
       m_ueManager->m_imsi = (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
       m_ueNode->AggregateObject (m_ueManager);
       
-      // Connecting the manager to controller new context created trace source. 
-      m_controller->TraceConnectWithoutContext ("ContextCreated", 
+      // Connecting the manager to controller new context created trace source.
+      Config::ConnectWithoutContext (
+        "/Names/MainController/ContextCreated",
         MakeCallback (&TrafficManager::ContextCreatedCallback, m_ueManager));
 
       InstallVoip ();

@@ -145,7 +145,7 @@ SimulationScenario::BuildRingTopology ()
   Names::Add ("InternetNetwork", m_webNetwork);
 
   // Applications and traffic manager
-  TrafficHelper tfcHelper (m_webHost, m_lteHelper, m_controller, m_opfNetwork);
+  TrafficHelper tfcHelper (m_webHost, m_lteHelper, m_opfNetwork);
   tfcHelper.Install (m_lteNetwork->GetUeNodes (), m_lteNetwork->GetUeDevices ());
 
   // Output logger. Must be created after scenario configuration, so it can
