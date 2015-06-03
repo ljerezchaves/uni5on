@@ -43,9 +43,11 @@ public:
    * Complete constructor.
    * \param server The server node.
    * \param helper The helper pointer.
+   * \param controller The Epc controller.
    * \param network The Epc network.
    */
   TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper, 
+                 Ptr<OpenFlowEpcController> controller,
                  Ptr<OpenFlowEpcNetwork> network);
   
   ~TrafficHelper (); //!< Default destructor.
