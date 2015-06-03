@@ -176,13 +176,6 @@ public:
       std::vector<uint16_t> eNbSwitches) = 0;
 
   /** 
-   * Connect trace sinks to OpenFlow EPC SgwPgw and eNBs nodes.
-   * \param name The name of the target trace source.
-   * \param cb The callback to connect to the trace source.
-   */
-  void ConnectEpcTraceSinks (std::string name, const CallbackBase &cb);
-
-  /** 
    * Enable pcap on switch data ports.
    * \param prefix The file prefix.
    * \param promiscuous If true, enable promisc trace.
@@ -252,32 +245,12 @@ public:
 
   /**
    * Connect all trace sinks used to monitor the network.
+   * \attention This member function register a trace sink for each EPC
+   * application (eNB and SgwPgw). Then, it must be called after scenario
+   * topology creation.
    */
   void ConnectTraceSinks ();
 
-  /**
-   * Trace sink for packets entering the EPC. The packet will get tagged for
-   * QoS monitoring.
-   * \param context Node name.
-   * \param packet The packet.
-   */
-  void EpcInputPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink for packets leaving the EPC. The tag will be read from packet,
-   * and QoS stats updated.
-   * \param context Node name.
-   * \param packet The packet.
-   */
-  void EpcOutputPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink for packets traversing the EPC packet gateway from the
-   * Internet to the EPC.
-   * \param direction The traffic direction.
-   * \param packet The packet.
-   */
-  void PgwTraffic (std::string direction, Ptr<const Packet> packet);
 
   /**
    * Trace sink for packets dropped by meter bands. The tag will be read
@@ -415,6 +388,30 @@ protected:
   std::vector<uint16_t>       m_eNbSwitchIdx;   //!< Switch index for each eNB.
 
 private:
+  /**
+   * Trace sink for packets entering the EPC. The packet will get tagged for
+   * QoS monitoring.
+   * \param context Context information.
+   * \param packet The packet.
+   */
+  void EpcInputPacket (std::string context, Ptr<const Packet> packet);
+
+  /**
+   * Trace sink for packets leaving the EPC. The tag will be read from packet,
+   * and QoS stats updated.
+   * \param context Context information.
+   * \param packet The packet.
+   */
+  void EpcOutputPacket (std::string context, Ptr<const Packet> packet);
+
+  /**
+   * Trace sink for packets traversing the EPC packet gateway from/to the
+   * Internet to/from the EPC.
+   * \param context Context information.
+   * \param packet The packet.
+   */
+  void PgwTraffic (std::string context, Ptr<const Packet> packet);
+  
   /**
    * Retrieve the LTE EPC QoS statistics information for the GTP tunnel id.
    * When no information structure available, create it.

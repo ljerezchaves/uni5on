@@ -145,21 +145,6 @@ OpenFlowEpcNetwork::DoDispose ()
   Object::DoDispose ();
 }
 
-void 
-OpenFlowEpcNetwork::ConnectEpcTraceSinks (std::string name, 
-                                          const CallbackBase &cb)
-{
-  NS_LOG_FUNCTION (this << name);
-
-  NodeSwitchMap_t::iterator it;
-  for (it = m_nodeSwitchMap.begin (); it != m_nodeSwitchMap.end (); ++it)
-    {
-      Ptr<Node> epcNode = it->first;
-      Ptr<Application> epcApp = epcNode->GetApplication (0);
-      epcApp->TraceConnect (name, Names::FindName (epcNode), cb);
-    }
-}
-
 void
 OpenFlowEpcNetwork::EnableDataPcap (std::string prefix, bool promiscuous)
 {
@@ -236,17 +221,26 @@ void
 OpenFlowEpcNetwork::ConnectTraceSinks ()
 {
   // EPC trace sinks for QoS monitoring
-  ConnectEpcTraceSinks ("S1uRx", 
-      MakeCallback (&OpenFlowEpcNetwork::EpcOutputPacket, this));
-  ConnectEpcTraceSinks ("S1uTx", 
-      MakeCallback (&OpenFlowEpcNetwork::EpcInputPacket, this));
+  Config::Connect (
+    "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uRx",
+    MakeCallback (&OpenFlowEpcNetwork::EpcOutputPacket, this));
+  Config::Connect (
+    "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uTx",
+    MakeCallback (&OpenFlowEpcNetwork::EpcInputPacket, this));
+  Config::Connect (
+    "/NodeList/*/ApplicationList/*/$ns3::EpcSgwPgwApplication/S1uRx",
+    MakeCallback (&OpenFlowEpcNetwork::EpcOutputPacket, this));
+  Config::Connect (
+    "/NodeList/*/ApplicationList/*/$ns3::EpcSgwPgwApplication/S1uTx",
+    MakeCallback (&OpenFlowEpcNetwork::EpcInputPacket, this));
 
   // Pgw traffic trace sinks
-  Ptr<Application> pgwApp = GetGatewayNode ()->GetApplication (0);
-  pgwApp->TraceConnect ("S1uTx", "downlink", 
-      MakeCallback (&OpenFlowEpcNetwork::PgwTraffic, this));
-  pgwApp->TraceConnect ("S1uRx", "uplink", 
-      MakeCallback (&OpenFlowEpcNetwork::PgwTraffic, this));
+  Config::Connect (
+    "/NodeList/*/ApplicationList/*/$ns3::EpcSgwPgwApplication/S1uRx",
+    MakeCallback (&OpenFlowEpcNetwork::PgwTraffic, this));
+  Config::Connect (
+    "/NodeList/*/ApplicationList/*/$ns3::EpcSgwPgwApplication/S1uTx",
+    MakeCallback (&OpenFlowEpcNetwork::PgwTraffic, this));
 }
 
 void 
@@ -282,14 +276,15 @@ OpenFlowEpcNetwork::EpcOutputPacket (std::string context,
 }
 
 void 
-OpenFlowEpcNetwork::PgwTraffic (std::string direction, 
+OpenFlowEpcNetwork::PgwTraffic (std::string context, 
                                 Ptr<const Packet> packet)
 {
-  if (direction == "downlink")
+  std::string direction = context.substr (context.rfind ("/") + 1);
+  if (direction == "S1uTx")
     {
       m_pgwDownBytes += packet->GetSize ();
     }
-  else if (direction == "uplink")
+  else if (direction == "S1uRx")
     {
       m_pgwUpBytes += packet->GetSize ();
     }
