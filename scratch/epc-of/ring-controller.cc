@@ -251,19 +251,9 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   ringInfo->ResetPaths ();    // Reseting to short paths
   uint32_t teid = rInfo->m_teid;
   
-  // Preparing bearer request stats for trace source
-  Ptr<BearerRequestStats> reqStats = Create<BearerRequestStats> ();
-  reqStats->m_teid = teid;
-  reqStats->m_accepted = false;
-  // reqStats->m_trafficDesc = GetAppDescription (rInfo->m_app, rInfo);
-  reqStats->m_trafficDesc = "";
-  reqStats->m_routingPaths = "Shortest paths";
-    
   if (rInfo->m_isDefault)
     {
       // We always accept default bearers.
-      reqStats->m_accepted = true;
-      m_brqTrace (reqStats);
       return true;
     }
 
@@ -272,8 +262,6 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
     {
       // For bearers without resource reservation requests (probably a 
       // Non-GBR one), let's accept it, without guarantees.
-      reqStats->m_accepted = true;
-      m_brqTrace (reqStats);
       return true;
     }
  
@@ -282,10 +270,6 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
       rInfo->m_enbIdx, ringInfo->m_downPath);
   DataRate longPathBw = GetAvailableBandwidth (rInfo->m_sgwIdx, 
       rInfo->m_enbIdx, RingRoutingInfo::InvertPath (ringInfo->m_downPath));
-
-  // Set data rate requests in bearer request stats
-  reqStats->m_downDataRate = reserveInfo->m_downDataRate;
-  reqStats->m_upDataRate = reserveInfo->m_upDataRate;
 
   // Reserving downlink resources
   if (reserveInfo->m_hasDown)
@@ -306,7 +290,6 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
             else
               {
                 NS_LOG_WARN (teid << ": no resources. Block!");
-                m_brqTrace (reqStats);
                 return false;
               }
             break;
@@ -333,7 +316,6 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
             else
               {
                 NS_LOG_WARN (teid << ": no resources. Block!");
-                m_brqTrace (reqStats);
                 return false;
               }
             break;
@@ -361,7 +343,6 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
             else
               {
                 NS_LOG_WARN (teid << ": no resources. Block!");
-                m_brqTrace (reqStats);
                 return false;
               }
             break;
@@ -396,7 +377,6 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
                     ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
                         ringInfo->m_downPath, reserveInfo->m_downDataRate);
                   }
-                m_brqTrace (reqStats);
                 return false;
               }
             break;
@@ -426,7 +406,6 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
                     ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
                         ringInfo->m_downPath, reserveInfo->m_downDataRate);
                   }
-                m_brqTrace (reqStats);
                 return false;
               }
             break;
@@ -457,7 +436,6 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
                     ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
                         ringInfo->m_downPath, reserveInfo->m_downDataRate);
                   }
-                m_brqTrace (reqStats);
                 return false;
               }
             break;
@@ -468,19 +446,6 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
           }
       }
     }
-
-  // Routing path description
-  reqStats->m_accepted = true;
-  if (ringInfo->m_isDownInv && ringInfo->m_isUpInv)
-    {
-      reqStats->m_routingPaths = "Inverted paths";
-    }
-  else if (ringInfo->m_isDownInv || ringInfo->m_isUpInv)
-    {
-      reqStats->m_routingPaths = 
-        ringInfo->m_isDownInv ? "Inverted down path" : "Inverted up path";
-    }
-  m_brqTrace (reqStats);
   
   reserveInfo->m_isReserved = true;
   return true;

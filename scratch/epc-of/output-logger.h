@@ -122,6 +122,8 @@ private:
   std::string m_webStatsFilename;   //!< WebStats filename
   std::string m_bwdStatsFilename;   //!< BwdStats filename
   std::string m_brqStatsFilename;   //!< BrqStats filename
+
+  Ptr<AdmissionStatsCalculator> m_admissionStats;
 };
 
 };  // namespace ns3

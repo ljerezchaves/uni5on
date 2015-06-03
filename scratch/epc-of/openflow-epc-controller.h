@@ -68,12 +68,6 @@ public:
   void SetOfNetwork (Ptr<OpenFlowEpcNetwork> network);
 
   /**
-   * Set the default statistics dump interval.
-   * \param timeout The timeout value.
-   */
-  void SetDumpTimeout (Time timeout);
-
-  /**
    * Notify this controller of a new eNB or SgwPgw device connected to the
    * OpenFlow network over some switch port. This function will save the IP
    * address / MAC address from this new device for further ARP resolution, and
@@ -173,12 +167,19 @@ public:
   typedef void (* ContextTracedCallback)(uint64_t imsi, uint16_t cellId, 
                                          BearerList_t bearerList);
 
+  /** 
+   * TracedCallback signature for new bearer request.
+   * \param accepted True when the request is accepted.
+   * \param rInfo The routing information.
+   */
+  typedef void (* BearerTracedCallback)(bool accepted, 
+                                        Ptr<const RoutingInfo> rInfo);
+
 protected:
   /**
    * Process the bearer resource and bandwidth allocation.
    * \param rInfo The routing information to process.
    * \return True when the request is satisfied.
-   * \internal Don't forget to fire m_brqTrace trace source before returning;
    */
   virtual bool BearerRequest (Ptr<RoutingInfo> rInfo) = 0;
 
@@ -250,11 +251,6 @@ protected:
   Ptr<RoutingInfo> GetTeidRoutingInfo (uint32_t teid);
 
   /**
-   * Dump bearer admission control statistics.
-   */
-  void DumpAdmStatistics ();
-
-  /**
    * Extract an IPv4 address from packet match.
    * \param oxm_of The OXM_IF_* IPv4 field.
    * \param match The ofl_match structure pointer.
@@ -267,11 +263,13 @@ protected:
   virtual ofl_err HandlePacketIn (ofl_msg_packet_in*, SwitchInfo, uint32_t);
   virtual ofl_err HandleFlowRemoved (ofl_msg_flow_removed*, SwitchInfo, uint32_t);
 
-  /** The bearer request statistics trace source, fired at BearerRequest. */
-  TracedCallback<Ptr<const BearerRequestStats> > m_brqTrace;
+
 
   /** The new context created trace source, fired at NotifyNewContextCreated. */
   TracedCallback<uint64_t, uint16_t, BearerList_t> m_contextTrace;
+
+  /** The bearer request trace source, fired at ??? FIXME. */
+  TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerRequestTrace;
 
   /** Timeout values */
   //\{ 
@@ -351,11 +349,7 @@ private:
   Ptr<Packet> CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
       Mac48Address dstMac, Ipv4Address dstIp);
 
-
-  /** The GBR block ratio trace source, fired at DumpAdmStatistics. */
-  TracedCallback<Ptr<const AdmissionStatsCalculator> > m_admTrace;
-
-
+  
   /** Map saving <IPv4 address / MAC address> */
   typedef std::map<Ipv4Address, Mac48Address> IpMacMap_t;
 
@@ -372,9 +366,7 @@ private:
   IpSwitchMap_t     m_ipSwitchTable;    //!< eNB IP / Switch Index table.
   ConnInfoMap_t     m_connections;      //!< Connections between switches.
   TeidRoutingMap_t  m_routes;           //!< TEID routing informations.
-  Time              m_dumpTimeout;      //!< Dump stats timeout.
   
-  Ptr<AdmissionStatsCalculator> m_admStats;  //!< Admission control statistics. 
   Ptr<OpenFlowEpcNetwork> m_ofNetwork;  //!< Pointer to OpenFlow network.
 };
 

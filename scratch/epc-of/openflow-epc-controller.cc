@@ -41,7 +41,6 @@ OpenFlowEpcController::OpenFlowEpcController ()
   : m_ofNetwork (0)
 {
   NS_LOG_FUNCTION (this);
-  m_admStats = Create<AdmissionStatsCalculator> ();
 }
 
 OpenFlowEpcController::~OpenFlowEpcController ()
@@ -54,23 +53,14 @@ OpenFlowEpcController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::OpenFlowEpcController")
     .SetParent (OFSwitch13Controller::GetTypeId ())
-    .AddAttribute ("DumpStatsTimeout",
-                   "Periodic statistics dump interval.",
-                   TimeValue (Seconds (10)),
-                   MakeTimeAccessor (&OpenFlowEpcController::SetDumpTimeout),
-                   MakeTimeChecker ())
     .AddTraceSource ("ContextCreated",
                      "The new context created trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_contextTrace),
                      "ns3::OpenFlowEpcController::ContextTracedCallback")
-    .AddTraceSource ("AdmStats",
-                     "The bearer admission control trace source.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_admTrace),
-                     "ns3::AdmissionStatsCalculator::AdmTracedCallback")
-    .AddTraceSource ("BrqStats",
+    .AddTraceSource ("BearerRequest",
                      "The bearer request trace source.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_brqTrace),
-                     "ns3::BearerRequestStats::BrqTracedCallback")
+                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_bearerRequestTrace),
+                     "ns3::OpenFlowEpcController::BearerTracedCallback")
   ;
   return tid;
 }
@@ -85,7 +75,6 @@ OpenFlowEpcController::DoDispose ()
   m_connections.clear ();
   m_routes.clear ();
   m_ofNetwork = 0;
-  m_admStats = 0;
 }
 
 const Time
@@ -99,14 +88,6 @@ OpenFlowEpcController::SetOfNetwork (Ptr<OpenFlowEpcNetwork> network)
 {
   NS_ASSERT_MSG (!m_ofNetwork, "Network already set.");
   m_ofNetwork = network;
-}
-
-void
-OpenFlowEpcController::SetDumpTimeout (Time timeout)
-{
-  m_dumpTimeout = timeout;
-  Simulator::Schedule (m_dumpTimeout, 
-    &OpenFlowEpcController::DumpAdmStatistics, this);
 }
 
 void 
@@ -218,10 +199,10 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
   // For default bearer, no Meter nor Reserver metadata.
   // For logic consistence, let's check for available resources.
   bool accepted = BearerRequest (rInfo);
+  m_bearerRequestTrace (true, rInfo);
   NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
   
   // Install rules for default bearer
-  m_admStats->NotifyAcceptedRequest (rInfo);
   if (!InstallTeidRouting (rInfo))
     {
       NS_LOG_ERROR ("TEID rule installation failed!");
@@ -328,16 +309,16 @@ OpenFlowEpcController::NotifyAppStart (uint32_t teid)
   // priority. Doing this, we avoid problems with old 'expiring' rules, and we
   // can even use new routing paths when necessary.
 
-  // Let's first check for available resources.
+  // Let's first check for available resources and fire trace source
   bool accepted = BearerRequest (rInfo);
+  m_bearerRequestTrace (accepted, rInfo);
   if (!accepted)
     {
-      m_admStats->NotifyBlockedRequest (rInfo);
       return false;
     }
+  
   // Everything is ok! Let's activate and install this bearer.
   rInfo->m_isActive = true;
-  m_admStats->NotifyAcceptedRequest (rInfo);
   return InstallTeidRouting (rInfo);
 }
 
@@ -409,16 +390,6 @@ OpenFlowEpcController::GetTeidRoutingInfo (uint32_t teid)
       rInfo = ret->second;
     }
   return rInfo;
-}
-
-void
-OpenFlowEpcController::DumpAdmStatistics ()
-{
-  m_admTrace (m_admStats);
-  m_admStats->ResetCounters ();
-
-  Simulator::Schedule (m_dumpTimeout, 
-    &OpenFlowEpcController::DumpAdmStatistics, this);
 }
 
 Ipv4Address 

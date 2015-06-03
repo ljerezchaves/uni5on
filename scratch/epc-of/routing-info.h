@@ -70,6 +70,9 @@ public:
 
   /** \return The Bearer QoS information. */
   GbrQosInformation GetQosInfo (void) const;
+
+  /** \return The GTP TEID. */
+  uint32_t GetTeid (void) const;
   
 private:
   uint32_t          m_teid;         //!< GTP TEID
@@ -170,6 +173,12 @@ public:
   /** \return RoutingInfo pointer. */
   Ptr<RoutingInfo> GetRoutingInfo ();
 
+  /** \return Downlink reserved data rate. */
+  DataRate GetDownDataRate (void) const;
+
+  /** \return Uplink reserved data rate. */
+  DataRate GetUpDataRate (void) const;
+
 private:
   uint32_t m_teid;          //!< GTP TEID
   bool     m_isReserved;    //!< True when resources are reserved
@@ -227,6 +236,12 @@ public:
 
   /** \return RoutingInfo pointer. */
   Ptr<RoutingInfo> GetRoutingInfo ();
+
+  /** \return True for downlink inverte path. */
+  bool IsDownInv (void) const;
+
+  /** \return True for uplink inverte path. */
+  bool IsUpInv (void) const;
 
 private:
   /** Invert down/up routing direction. */

@@ -36,17 +36,17 @@ OutputLogger::OutputLogger ()
 {
   NS_LOG_FUNCTION (this);
 
+  m_admissionStats = CreateObject<AdmissionStatsCalculator> ();
+
   // Connecting to the trace sources
   Config::ConnectWithoutContext (
     "/NodeList/*/ApplicationList/*/$ns3::EpcApplication/AppStats",
     MakeCallback (&OutputLogger::ReportAppStats, this));
 
-  Config::ConnectWithoutContext (
-    "/Names/MainController/AdmStats",
+  m_admissionStats->TraceConnectWithoutContext ("AdmStats",
     MakeCallback (&OutputLogger::ReportAdmStats, this));
   
-  Config::ConnectWithoutContext (
-    "/Names/MainController/BrqStats",
+  m_admissionStats->TraceConnectWithoutContext ("BrqStats",
     MakeCallback (&OutputLogger::ReportBrqStats, this));
 
   Config::ConnectWithoutContext (
@@ -137,6 +137,7 @@ void
 OutputLogger::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+  m_admissionStats = 0;
 }
 
 std::string

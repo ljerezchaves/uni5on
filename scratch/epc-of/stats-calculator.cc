@@ -36,11 +36,125 @@ AdmissionStatsCalculator::AdmissionStatsCalculator ()
     m_lastResetTime (Simulator::Now ())
 {
   NS_LOG_FUNCTION (this);
+
+  Config::ConnectWithoutContext (
+    "/Names/MainController/BearerRequest",
+    MakeCallback (&AdmissionStatsCalculator::BearerRequest, this));
 }
 
 AdmissionStatsCalculator::~AdmissionStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
+}
+
+TypeId 
+AdmissionStatsCalculator::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::AdmissionStatsCalculator")
+    .SetParent<Object> ()
+    .AddConstructor<AdmissionStatsCalculator> ()
+    .AddAttribute ("DumpStatsTimeout",
+                   "Periodic statistics dump interval.",
+                   TimeValue (Seconds (10)),
+                   MakeTimeAccessor (&AdmissionStatsCalculator::SetDumpTimeout),
+                   MakeTimeChecker ())
+    .AddTraceSource ("AdmStats",
+                     "The cummulative bearer request trace source fired regularlly.",
+                     MakeTraceSourceAccessor (&AdmissionStatsCalculator::m_admTrace),
+                     "ns3::AdmissionStatsCalculator::AdmTracedCallback")
+    .AddTraceSource ("BrqStats",
+                     "The bearer request trace source fired for every request.",
+                     MakeTraceSourceAccessor (&AdmissionStatsCalculator::m_brqTrace),
+                     "ns3::BearerRequestStats::BrqTracedCallback")
+  ;
+  return tid;
+}
+
+void
+AdmissionStatsCalculator::SetDumpTimeout (Time timeout)
+{
+  m_dumpTimeout = timeout;
+  Simulator::Schedule (m_dumpTimeout,
+    &AdmissionStatsCalculator::DumpStatistics, this);
+}
+
+void
+AdmissionStatsCalculator::DumpStatistics ()
+{
+  m_admTrace (this);
+  ResetCounters ();
+
+  Simulator::Schedule (m_dumpTimeout, 
+    &AdmissionStatsCalculator::DumpStatistics, this);
+}
+
+void
+AdmissionStatsCalculator::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+void 
+AdmissionStatsCalculator::BearerRequest (bool accepted, 
+                                         Ptr<const RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << accepted << rInfo);
+  
+  // Update internal counter
+  if (rInfo->IsGbr ())
+    {
+      m_gbrRequests++;
+      if (accepted)
+        {
+          m_gbrAccepted++;
+        }
+      else
+        { 
+          m_gbrBlocked++;
+        }
+    }
+  else
+    {
+      m_nonRequests++;
+      if (accepted)
+        {
+          m_nonAccepted++;
+        }
+      else
+        { 
+          m_nonBlocked++;
+        }
+    }
+
+  // Preparing bearer request stats for trace source
+  Ptr<BearerRequestStats> reqStats = Create<BearerRequestStats> ();
+  reqStats->m_teid = rInfo->GetTeid ();
+  reqStats->m_accepted = accepted;
+  reqStats->m_trafficDesc = "";
+  reqStats->m_routingPaths = "Shortest paths";
+  
+  Ptr<const ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
+  if (reserveInfo)
+    {
+      reqStats->m_downDataRate = reserveInfo->GetDownDataRate ();
+      reqStats->m_upDataRate = reserveInfo->GetUpDataRate ();
+    }
+
+  Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  if (ringInfo)
+    {
+      if (ringInfo->IsDownInv () && ringInfo->IsUpInv ())
+        {
+          reqStats->m_routingPaths = "Inverted paths";
+        }
+      else if (ringInfo->IsDownInv () || ringInfo->IsUpInv ())
+        {
+          reqStats->m_routingPaths = 
+            ringInfo->IsDownInv () ? "Inverted down path" : "Inverted up path";
+        }
+    }
+  // Fire trace source
+  m_brqTrace (reqStats);
 }
 
 void
@@ -53,36 +167,6 @@ AdmissionStatsCalculator::ResetCounters ()
   m_gbrAccepted = 0;
   m_gbrBlocked = 0;
   m_lastResetTime = Simulator::Now ();
-}
-
-void
-AdmissionStatsCalculator::NotifyAcceptedRequest (Ptr<const RoutingInfo> rInfo)
-{
-  if (rInfo->IsGbr ())
-    {
-      m_gbrRequests++;
-      m_gbrAccepted++;
-    }
-  else
-    {
-      m_nonRequests++;
-      m_nonAccepted++;
-    }
-}
-
-void
-AdmissionStatsCalculator::NotifyBlockedRequest (Ptr<const RoutingInfo> rInfo)
-{
-  if (rInfo->IsGbr ())
-    {
-      m_gbrRequests++;
-      m_gbrBlocked++;
-    }
-  else
-    {
-      m_nonRequests++;
-      m_nonBlocked++;
-    }
 }
 
 Time      

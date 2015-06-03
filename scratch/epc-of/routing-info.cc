@@ -83,6 +83,12 @@ RoutingInfo::GetQosInfo (void) const
   return m_bearer.bearerLevelQos.gbrQosInfo;
 }
 
+uint32_t
+RoutingInfo::GetTeid (void) const
+{
+  return m_teid;
+}
+
 
 // ------------------------------------------------------------------------ //
 MeterInfo::MeterInfo ()
@@ -205,6 +211,18 @@ ReserveInfo::GetRoutingInfo ()
   return m_rInfo;
 }
 
+DataRate
+ReserveInfo::GetDownDataRate (void) const
+{
+  return m_downDataRate;
+}
+
+DataRate
+ReserveInfo::GetUpDataRate (void) const
+{
+  return m_upDataRate;
+}
+
 
 // ------------------------------------------------------------------------ //
 RingRoutingInfo::RingRoutingInfo ()
@@ -257,6 +275,18 @@ Ptr<RoutingInfo>
 RingRoutingInfo::GetRoutingInfo ()
 {
   return m_rInfo;
+}
+
+bool
+RingRoutingInfo::IsDownInv (void) const
+{
+  return m_isDownInv;
+}
+
+bool
+RingRoutingInfo::IsUpInv (void) const
+{
+  return m_isUpInv;
 }
 
 void 
