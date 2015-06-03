@@ -39,47 +39,6 @@ typedef std::list<ContextBearer_t> BearerList_t;
 
 
 // ------------------------------------------------------------------------ //
-/** 
- * \ingroup epcof
- * Metadata associated to LTE context information for controller usage. 
- */
-class ContextInfo : public Object
-{
-  friend class OpenFlowEpcController;
-
-public:
-  ContextInfo ();          //!< Default constructor
-  virtual ~ContextInfo (); //!< Dummy destructor, see DoDipose
-
-  /**
-   * Register this type.
-   * \return The object TypeId.
-   */
-  static TypeId GetTypeId (void);
-
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  /** Const private member access methods. */
-  //\{
-  uint16_t GetEnbIdx () const;      //!< \return eNB switch index
-  uint16_t GetSgwIdx () const;      //!< \return Gateway switch index
-  Ipv4Address GetEnbAddr () const;  //!< \return eNB Ipv4 address
-  Ipv4Address GetSgwAddr () const;  //!< \return Gateway Ipv4 address
-  //\}
-
-private:
-  uint64_t      m_imsi;         //!< UE IMSI
-  uint16_t      m_cellId;       //!< eNB Cell ID
-  uint16_t      m_enbIdx;       //!< eNB switch index
-  uint16_t      m_sgwIdx;       //!< Gateway switch index
-  Ipv4Address   m_enbAddr;      //!< eNB IPv4 addr
-  Ipv4Address   m_sgwAddr;      //!< Gateway IPv4 addr
-  BearerList_t  m_bearerList;   //!< List of bearers
-};
-
-
-// ------------------------------------------------------------------------ //
 /**
  * \ingroup epcof
  * Metadata associated to a routing path between

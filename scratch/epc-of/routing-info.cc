@@ -23,70 +23,9 @@
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("RoutingInfo");
-NS_OBJECT_ENSURE_REGISTERED (ContextInfo);
 NS_OBJECT_ENSURE_REGISTERED (RoutingInfo);
 NS_OBJECT_ENSURE_REGISTERED (MeterInfo);
 NS_OBJECT_ENSURE_REGISTERED (RingRoutingInfo);
-
-// ------------------------------------------------------------------------ //
-ContextInfo::ContextInfo ()
-  : m_imsi (0),
-    m_cellId (0),
-    m_enbIdx (0),
-    m_sgwIdx (0)
-{
-  NS_LOG_FUNCTION (this);
-  m_enbAddr = Ipv4Address ();
-  m_sgwAddr = Ipv4Address ();
-  m_bearerList.clear ();
-}
-
-ContextInfo::~ContextInfo ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-TypeId 
-ContextInfo::GetTypeId (void)
-{
-  static TypeId tid = TypeId ("ns3::ContextInfo")
-    .SetParent<Object> ()
-    .AddConstructor<ContextInfo> ()
-  ;
-  return tid;
-}
-
-void
-ContextInfo::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-  m_bearerList.clear ();
-}
-
-uint16_t    
-ContextInfo::GetEnbIdx () const
-{
-  return m_enbIdx;
-}
-
-uint16_t    
-ContextInfo::GetSgwIdx () const
-{
-  return m_sgwIdx;
-}
-
-Ipv4Address 
-ContextInfo::GetEnbAddr () const
-{
-  return m_enbAddr;
-}
-
-Ipv4Address 
-ContextInfo::GetSgwAddr () const
-{
-  return m_sgwAddr;
-}
-
 
 // ------------------------------------------------------------------------ //
 RoutingInfo::RoutingInfo ()

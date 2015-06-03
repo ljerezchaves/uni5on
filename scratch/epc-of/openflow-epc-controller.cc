@@ -83,7 +83,6 @@ OpenFlowEpcController::DoDispose ()
   m_arpTable.clear ();
   m_ipSwitchTable.clear ();
   m_connections.clear ();
-  m_contexts.clear ();
   m_routes.clear ();
   m_ofNetwork = 0;
   m_admStats = 0;
@@ -189,17 +188,6 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
     Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << sgwAddr);
-
-  // Create context info and save in context list.
-  Ptr<ContextInfo> cInfo = CreateObject<ContextInfo> ();
-  cInfo->m_imsi = imsi;
-  cInfo->m_cellId = cellId;
-  cInfo->m_enbIdx = GetSwitchIdxFromIp (enbAddr);
-  cInfo->m_sgwIdx = GetSwitchIdxFromIp (sgwAddr);
-  cInfo->m_enbAddr = enbAddr;
-  cInfo->m_sgwAddr = sgwAddr;
-  cInfo->m_bearerList = bearerList;
-  m_contexts.push_back (cInfo);
 
   // Fire the new context created trace source, which can be used by traffic
   // manager to set internal metadata (cellId and teid for applications). 
@@ -396,26 +384,6 @@ OpenFlowEpcController::GetSwitchIdxFromIp (Ipv4Address addr)
   NS_FATAL_ERROR ("IP not registered in switch index table.");
 }
 
-Ptr<const ContextInfo>
-OpenFlowEpcController::GetContextFromTeid (uint32_t teid)
-{
-  Ptr<ContextInfo> cInfo = 0;
-  ContextInfoList_t::iterator ctxIt;
-  for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
-    {
-      cInfo = *ctxIt;
-      BearerList_t::iterator blsIt = cInfo->m_bearerList.begin (); 
-      for ( ; blsIt != cInfo->m_bearerList.end (); blsIt++)
-        {
-          if (blsIt->sgwFteid.teid == teid)
-            {
-              return cInfo;
-            }
-        }
-    }
-  NS_FATAL_ERROR ("Couldn't find bearer for invalid teid.");
-}
-
 Ptr<ConnectionInfo>
 OpenFlowEpcController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
 {
@@ -609,47 +577,6 @@ OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
     }
 
   NS_ABORT_MSG ("Should not get here :/");
-}
-
-
-Ptr<const ContextInfo>
-OpenFlowEpcController::GetContextFromTft (Ptr<EpcTft> tft)
-{
-  Ptr<ContextInfo> cInfo = 0;
-  ContextInfoList_t::iterator ctxIt;
-  for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
-    {
-      cInfo = *ctxIt;
-      BearerList_t::iterator blsIt = cInfo->m_bearerList.begin (); 
-      for ( ; blsIt != cInfo->m_bearerList.end (); blsIt++)
-        {
-          if (blsIt->tft == tft)
-            {
-              return cInfo;
-            }
-        }
-    }
-  NS_FATAL_ERROR ("Couldn't find context for invalid tft.");
-}
-
-ContextBearer_t 
-OpenFlowEpcController::GetBearerFromTft (Ptr<EpcTft> tft)
-{
-  Ptr<ContextInfo> cInfo = 0;
-  ContextInfoList_t::iterator ctxIt;
-  for (ctxIt = m_contexts.begin (); ctxIt != m_contexts.end (); ctxIt++)
-    {
-      cInfo = *ctxIt;
-      BearerList_t::iterator blsIt = cInfo->m_bearerList.begin (); 
-      for ( ; blsIt != cInfo->m_bearerList.end (); blsIt++)
-        {
-          if (blsIt->tft == tft)
-            {
-              return *blsIt;
-            }
-        }
-    }
-  NS_FATAL_ERROR ("Couldn't find bearer for invalid tft.");
 }
 
 void 

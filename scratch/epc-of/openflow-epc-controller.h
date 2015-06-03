@@ -235,13 +235,6 @@ protected:
   uint16_t GetSwitchIdxFromIp (Ipv4Address addr);
 
   /**
-   * Retrieve the LTE context information from the GTP tunnel id
-   * \param teid The GTP tunnel id.
-   * \return The context info for this TEID.
-   */
-  Ptr<const ContextInfo> GetContextFromTeid (uint32_t teid);
-
-  /**
    * Search for connection information between two switches.
    * \param sw1 First switch index.
    * \param sw2 Second switch index.
@@ -300,22 +293,6 @@ protected:
   //\}
 
 private:
-  /**
-   * Retrieve the LTE context information from the traffic flow template
-   * associated with an application.
-   * \param tft The Traffic Flow Template.
-   * \return The context info for this TFT.
-   */
-  Ptr<const ContextInfo> GetContextFromTft (Ptr<EpcTft> tft);
-
-  /** 
-   * Iterate over the context bearers map looking for the bearer information
-   * for a specific traffic flow template.
-   * \param tft The traffic flow template.
-   * \return The bearer info for this TFT.
-   */ 
-  ContextBearer_t GetBearerFromTft (Ptr<EpcTft> tft);
-
   /**
    * Save the RoutingInfo metadata for further usage and reserve the bandwidth.
    * \param rInfo The routing information to save.
@@ -379,9 +356,6 @@ private:
   TracedCallback<Ptr<const AdmissionStatsCalculator> > m_admTrace;
 
 
-  /** A list of context information */
-  typedef std::vector<Ptr<ContextInfo> > ContextInfoList_t;
-
   /** Map saving <IPv4 address / MAC address> */
   typedef std::map<Ipv4Address, Mac48Address> IpMacMap_t;
 
@@ -394,11 +368,9 @@ private:
   /** Map saving <TEID / Routing information > */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t; 
 
-
   IpMacMap_t        m_arpTable;         //!< ARP resolution table.
   IpSwitchMap_t     m_ipSwitchTable;    //!< eNB IP / Switch Index table.
   ConnInfoMap_t     m_connections;      //!< Connections between switches.
-  ContextInfoList_t m_contexts;         //!< List of created contexts.
   TeidRoutingMap_t  m_routes;           //!< TEID routing informations.
   Time              m_dumpTimeout;      //!< Dump stats timeout.
   
