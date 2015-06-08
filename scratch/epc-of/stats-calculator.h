@@ -66,15 +66,16 @@ public:
   //\}
 
   /**
-   * Set the default statistics dump interval.
-   * \param timeout The timeout value.
+   * Notify new bearer request.
+   * \param accepted True when the bearer is accepted into network.
+   * \param rInfo The bearer routing information.
    */
-  void SetDumpTimeout (Time timeout);
+  void NotifyRequest (bool accepted, Ptr<const RoutingInfo> rInfo);
 
-  /**
-   * Dump admission control statistics.
+  /** 
+   * Reset all internal counters. 
    */
-  void DumpStatistics ();
+  void ResetCounters ();
 
   /** 
    * TracedCallback signature for AdmissionStatsCalculator.
@@ -82,36 +83,11 @@ public:
    */
   typedef void (* AdmTracedCallback)(Ptr<const AdmissionStatsCalculator> stats);
 
-  /** 
-   * TracedCallback signature for BearerRequestStats.
-   * \param stats The statistics.
-   */
-  typedef void (* BrqTracedCallback)(Ptr<const BearerRequestStats> stats);
-
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
 private:
-  /**
-   * Trace sink fired at every new bearer request to OpenFlow controller.
-   * \param accepted True when the bearer is accepted into network.
-   * \param rInfo The bearer routing information.
-   */
-  void BearerRequest (bool accepted, Ptr<const RoutingInfo> rInfo);
-
-  /** 
-   * Reset all internal counters. 
-   */
-  void ResetCounters ();
- 
-  /** The cummulative bearer request trace source fired regularlly at DumpStatistics. */
-  TracedCallback<Ptr<const AdmissionStatsCalculator> > m_admTrace;
-
-  /** The bearer request trace source fired for every request at BearerRequest. */
-  TracedCallback<Ptr<const BearerRequestStats> > m_brqTrace;
-
-
   uint32_t          m_nonRequests;      //!< number of non-GBR requests
   uint32_t          m_nonAccepted;      //!< number of non-GBR accepted 
   uint32_t          m_nonBlocked;       //!< number of non-GBR blocked
@@ -119,46 +95,7 @@ private:
   uint32_t          m_gbrAccepted;      //!< Number of GBR accepted
   uint32_t          m_gbrBlocked;       //!< Number of GBR blocked
   Time              m_lastResetTime;    //!< Last reset time
-  Time              m_dumpTimeout;      //!< Dump stats timeout.
 };
-
-
-// ------------------------------------------------------------------------ //
-/**
- * \ingroup epcof
- * 
- * This class stores bearer request information. 
- */
-class BearerRequestStats : public SimpleRefCount<BearerRequestStats>
-{
-  friend class AdmissionStatsCalculator;
-
-public:
-  BearerRequestStats ();  //!< Default constructor
-  virtual ~BearerRequestStats (); //!< Default destructor
-  
-  /**
-   * Get statistics.
-   * \return The statistic value.
-   */
-  //\{
-  uint32_t    GetTeid         (void) const;
-  bool        IsAccepted      (void) const;
-  DataRate    GetDownDataRate (void) const;
-  DataRate    GetUpDataRate   (void) const;
-  std::string GetDescription  (void) const;
-  std::string GetRoutingPaths (void) const;
-  //\}
-
-private:
-  uint32_t    m_teid;           //!< GTP TEID
-  bool        m_accepted;       //!< True for accepted bearer
-  DataRate    m_downDataRate;   //!< Downlink reserved data rate
-  DataRate    m_upDataRate;     //!< Uplink reserved data rate
-  std::string m_trafficDesc;    //!< Traffic description
-  std::string m_routingPaths;   //!< Routing paths description
-};
-
 
 } // namespace ns3
 #endif /* EPCOF_STATS_CALCULATOR_H */

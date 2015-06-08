@@ -36,6 +36,7 @@ OutputLogger::OutputLogger ()
 {
   NS_LOG_FUNCTION (this);
 
+  // Creating stats calculators
   m_admissionStats = CreateObject<AdmissionStatsCalculator> ();
 
   // Connecting to the trace sources
@@ -43,11 +44,9 @@ OutputLogger::OutputLogger ()
     "/NodeList/*/ApplicationList/*/$ns3::EpcApplication/AppStats",
     MakeCallback (&OutputLogger::ReportAppStats, this));
 
-  m_admissionStats->TraceConnectWithoutContext ("AdmStats",
-    MakeCallback (&OutputLogger::ReportAdmStats, this));
-  
-  m_admissionStats->TraceConnectWithoutContext ("BrqStats",
-    MakeCallback (&OutputLogger::ReportBrqStats, this));
+  Config::Connect (
+    "/Names/MainController/BearerRequest",
+    MakeCallback (&OutputLogger::BearerRequest, this));
 
   Config::ConnectWithoutContext (
     "/Names/OpenFlowNetwork/EpcStats",
@@ -81,6 +80,11 @@ OutputLogger::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::OutputLogger")
     .SetParent<Object> ()
     .AddConstructor<OutputLogger> ()
+    .AddAttribute ("DumpStatsTimeout",
+                   "Periodic statistics dump interval.",
+                   TimeValue (Seconds (10)),
+                   MakeTimeAccessor (&OutputLogger::SetDumpTimeout),
+                   MakeTimeChecker ())
     .AddAttribute ("AppStatsFilename",
                    "Filename for application QoS statistics.",
                    StringValue ("app_stats.txt"),
@@ -134,10 +138,63 @@ OutputLogger::SetCommonPrefix (std::string prefix)
 }
 
 void
+OutputLogger::SetDumpTimeout (Time timeout)
+{
+  m_dumpTimeout = timeout;
+  Simulator::Schedule (m_dumpTimeout, &OutputLogger::DumpStatistics, this);
+}
+
+void
 OutputLogger::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_admissionStats = 0;
+}
+
+void
+OutputLogger::DumpStatistics ()
+{
+  ReportAdmStats (m_admissionStats);
+  m_admissionStats->ResetCounters ();
+
+  Simulator::Schedule (m_dumpTimeout, &OutputLogger::DumpStatistics, this);
+}
+
+void 
+OutputLogger::BearerRequest (std::string context, bool accepted, 
+                             Ptr<const RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << context << accepted << rInfo);
+  
+  m_admissionStats->NotifyRequest (accepted, rInfo); 
+
+  // Preparing bearer request stats for trace source
+  DataRate downRate, upRate;
+  string path = "Shortest paths";
+  
+  Ptr<const ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
+  if (reserveInfo)
+    {
+      downRate = reserveInfo->GetDownDataRate ();
+      upRate = reserveInfo->GetUpDataRate ();
+    }
+
+  // TODO: This should be generic, for any topology.
+  Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  if (ringInfo)
+    {
+      if (ringInfo->IsDownInv () && ringInfo->IsUpInv ())
+        {
+          path = "Inverted paths";
+        }
+      else if (ringInfo->IsDownInv () || ringInfo->IsUpInv ())
+        {
+          path = ringInfo->IsDownInv () ? "Inverted down path" : "Inverted up path";
+        }
+    }
+
+  // TODO: No traffic description by now.
+  ReportBrqStats ("", rInfo->GetTeid (), accepted, downRate, upRate, path);
 }
 
 std::string
@@ -528,7 +585,9 @@ OutputLogger::ReportBwdStats (std::vector<BandwidthStats_t> stats)
 }
 
 void
-OutputLogger::ReportBrqStats (Ptr<const BearerRequestStats> stats)
+OutputLogger::ReportBrqStats (std::string desc, uint32_t teid, bool accepted,
+                              DataRate downRate, DataRate upRate, 
+                              std::string path)
 {
   NS_LOG_FUNCTION (this);
   static bool firstWrite = true;
@@ -566,12 +625,12 @@ OutputLogger::ReportBrqStats (Ptr<const BearerRequestStats> stats)
 
   outFile << left
           << setw (12) << Simulator::Now ().GetSeconds ()
-          << setw (17) << stats->GetDescription ()
-          << setw (6)  << stats->GetTeid ()
-          << setw (10) << (stats->IsAccepted () ? "yes" : "no")
-          << setw (12) << (double)(stats->GetDownDataRate ().GetBitRate ()) / 1024
-          << setw (10) << (double)(stats->GetUpDataRate ().GetBitRate ()) / 1024
-          << setw (40) << stats->GetRoutingPaths ()
+          << setw (17) << desc
+          << setw (6)  << teid
+          << setw (10) << (accepted ? "yes" : "no")
+          << setw (12) << (double)(downRate.GetBitRate ()) / 1024
+          << setw (10) << (double)(upRate.GetBitRate ()) / 1024
+          << setw (40) << path
           << std::endl;
   outFile.close ();
 }

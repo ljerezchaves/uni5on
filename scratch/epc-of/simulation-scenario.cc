@@ -106,6 +106,8 @@ SimulationScenario::GetTypeId (void)
   return tid;
 }
 
+// NOTE: Don't change object names. The logger mechanism uses theses specific
+// names to connect to trace sources.
 void
 SimulationScenario::BuildRingTopology ()
 {

@@ -50,12 +50,32 @@ public:
    * \param prefix The prefix.
    */ 
   void SetCommonPrefix (std::string prefix);
+  
+  /**
+   * Set the default statistics dump interval.
+   * \param timeout The timeout value.
+   */
+  void SetDumpTimeout (Time timeout);
 
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
 private:
+  /**
+   * Dump regular statistics.
+   */
+  void DumpStatistics ();
+  
+  /**
+   * Trace sink fired at every new bearer request to OpenFlow controller.
+   * \param context Trace source context.
+   * \param accepted True when the bearer is accepted into network.
+   * \param rInfo The bearer routing information.
+   */
+  void BearerRequest (std::string context, bool accepted, 
+                      Ptr<const RoutingInfo> rInfo);
+
   /**
    * Save application statistics in file. 
    * \see ns3::EpcApplication::QosTracedCallback for parameters.
@@ -102,9 +122,15 @@ private:
 
   /**
    * Save bearer request statistics in file.
-   * \see ns3::BearerRequestStats::BrqTracedCallback for parameters.
+   * \param desc Traffic description.
+   * \param teid GTP TEID.
+   * \param accepted True for accepted bearer.
+   * \param downRate Downlink requested data rate.
+   * \param upRate Uplink requested data rate.
+   * \param path Routing paths description.
    */
-  void ReportBrqStats (Ptr<const BearerRequestStats> stats);
+  void ReportBrqStats (std::string desc, uint32_t teid, bool accepted,
+                       DataRate downRate, DataRate upRate, std::string path);
 
   /**
    * Concatenate the commom prefix and the filename.
@@ -113,6 +139,8 @@ private:
    */
   std::string GetCompleteName (std::string name);
     
+  Time        m_dumpTimeout;        //!< Dump stats timeout.
+  
   std::string m_commonPrefix;       //!< Common prefix for filenames
   std::string m_appStatsFilename;   //!< AppStats filename
   std::string m_epcStatsFilename;   //!< EpcStats filename
@@ -123,7 +151,7 @@ private:
   std::string m_bwdStatsFilename;   //!< BwdStats filename
   std::string m_brqStatsFilename;   //!< BrqStats filename
 
-  Ptr<AdmissionStatsCalculator> m_admissionStats;
+  Ptr<AdmissionStatsCalculator> m_admissionStats; // Admission statistics
 };
 
 };  // namespace ns3
