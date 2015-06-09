@@ -111,6 +111,10 @@ EpcSgwPgwApplication::GetTypeId (void)
                      "Trace source indicating a packet transmitted over the S1-U interface.",
                      MakeTraceSourceAccessor (&EpcSgwPgwApplication::m_txS1uTrace),
                      "ns3::Packet::TracedCallback")
+    .AddTraceSource ("ContextCreated",
+                     "The context created trace source.",
+                     MakeTraceSourceAccessor (&EpcSgwPgwApplication::m_contextCreatedTrace),
+                     "ns3::EpcSgwPgwApplication::ContextCreatedTracedCallback")
     ;
   return tid;
 }
@@ -121,7 +125,6 @@ EpcSgwPgwApplication::DoDispose ()
   NS_LOG_FUNCTION (this);
   m_s1uSocket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
   m_s1uSocket = 0;
-  m_createSessionCallback = MakeNullCallback<void, uint64_t, uint16_t, Ipv4Address, Ipv4Address, std::list<EpcS11SapMme::BearerContextCreated> > ();
   delete (m_s11SapSgw);
 }
 
@@ -277,12 +280,6 @@ EpcSgwPgwApplication::SetUeAddress (uint64_t imsi, Ipv4Address ueAddr)
 }
 
 void 
-EpcSgwPgwApplication::SetCreateSessionRequestCallback (CreateSessionRequestCallback_t cb)
-{
-  m_createSessionCallback = cb;
-}
-
-void 
 EpcSgwPgwApplication::DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage req)
 {
   NS_LOG_FUNCTION (this << req.imsi);
@@ -317,12 +314,10 @@ EpcSgwPgwApplication::DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequest
       bearerContext.tft = bit->tft;
       res.bearerContextsCreated.push_back (bearerContext);
     }
-  if (!m_createSessionCallback.IsNull ())
-    {
-      m_createSessionCallback (req.imsi, cellId, enbAddr, sgwAddr, res.bearerContextsCreated);
-    }
+
+  // Create session trace source (used by controller and traffic manager)
+  m_contextCreatedTrace (req.imsi, cellId, enbAddr, sgwAddr, res.bearerContextsCreated);
   m_s11SapMme->CreateSessionResponse (res);
-  
 }
 
 void 

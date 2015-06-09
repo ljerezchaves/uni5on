@@ -53,10 +53,6 @@ OpenFlowEpcController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::OpenFlowEpcController")
     .SetParent (OFSwitch13Controller::GetTypeId ())
-    .AddTraceSource ("ContextCreated",
-                     "The new context created trace source.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_contextTrace),
-                     "ns3::OpenFlowEpcController::ContextTracedCallback")
     .AddTraceSource ("BearerRequest",
                      "The bearer request trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_bearerRequestTrace),
@@ -169,10 +165,6 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
     Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << sgwAddr);
-
-  // Fire the new context created trace source, which can be used by traffic
-  // manager to set internal metadata (cellId and teid for applications). 
-  m_contextTrace (imsi, cellId, bearerList);
 
   // Create and save routing information for default bearer
   ContextBearer_t defaultBearer = bearerList.front ();

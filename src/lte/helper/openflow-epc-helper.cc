@@ -86,6 +86,7 @@ OpenFlowEpcHelper::OpenFlowEpcHelper ()
 
   // create EpcSgwPgwApplication
   m_sgwPgwApp = CreateObject<EpcSgwPgwApplication> (m_tunDevice, sgwPgwS1uSocket);
+  Names::Add ("SgwPgwApplication", m_sgwPgwApp);
   m_sgwPgw->AddApplication (m_sgwPgwApp);
   
   // connect SgwPgwApplication and virtual net device for tunneling
@@ -121,7 +122,6 @@ OpenFlowEpcHelper::DoDispose ()
   m_sgwPgwApp = 0;  
   m_s1uConnect = MakeNullCallback<Ptr<NetDevice>, Ptr<Node>, uint16_t> ();
   m_x2Connect = MakeNullCallback<Ptr<NetDevice>, Ptr<Node> > ();
-  m_addBearerCallback = MakeNullCallback<bool, uint64_t, uint16_t, Ptr<EpcTft>, EpsBearer> ();
   m_sgwPgw->Dispose ();
 }
 
@@ -245,38 +245,11 @@ OpenFlowEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Pt
   NS_LOG_LOGIC (" UE IP address: " << ueAddr);  
   m_sgwPgwApp->SetUeAddress (imsi, ueAddr);
   
+  uint8_t bearerId = m_mme->AddBearer (imsi, tft, bearer);
   Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
-  Ptr<LteUeRrc> ueRrc = ueLteDevice->GetRrc ();
-
-  uint8_t bearerId = 0;
-  bool createBearer = true;
-  if (!m_addBearerCallback.IsNull ())
+  if (ueLteDevice)
     {
-      // Check for default bearer
-      if ((bearer.qci == EpsBearer::NGBR_VIDEO_TCP_DEFAULT) && 
-          (tft->Matches (EpcTft::BIDIRECTIONAL, Ipv4Address ("0.0.0.0"), 
-                         Ipv4Address ("0.0.0.0"), 0, 0, 0)))
-        {
-          NS_LOG_DEBUG ("This is the default bearer for UE " << imsi);
-        }
-      else
-        {
-          NS_LOG_DEBUG ("Trying to create a dedicated bearer for UE " << imsi);
-          createBearer = m_addBearerCallback (imsi, ueRrc->GetCellId (), tft, bearer); 
-        }
-    }
-  
-  if (createBearer)
-    {
-      bearerId = m_mme->AddBearer (imsi, tft, bearer);
-      if (ueLteDevice)
-        {
-          ueLteDevice->GetNas ()->ActivateEpsBearer (bearer, tft);
-        }
-    }
-  else
-    {
-      NS_LOG_WARN ("Bearer could not be created. Traffic will be sent over default bearer.");
+      ueLteDevice->GetNas ()->ActivateEpsBearer (bearer, tft);
     }
   return bearerId;
 }
@@ -388,20 +361,6 @@ OpenFlowEpcHelper::SetX2ConnectCallback (X2ConnectCallback_t cb)
 {
   NS_LOG_FUNCTION (this << &cb);
   m_x2Connect = cb;
-}
-
-void
-OpenFlowEpcHelper::SetAddBearerCallback (AddBearerCallback_t cb)
-{
-  NS_LOG_FUNCTION (this << &cb);
-  m_addBearerCallback = cb;
-}
-
-void 
-OpenFlowEpcHelper::SetCreateSessionRequestCallback (
-      EpcSgwPgwApplication::CreateSessionRequestCallback_t cb)
-{
-  m_sgwPgwApp->SetCreateSessionRequestCallback (cb);
 }
 
 }; // namespace ns3

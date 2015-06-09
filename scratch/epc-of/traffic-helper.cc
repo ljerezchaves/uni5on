@@ -125,9 +125,9 @@ TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices)
       m_ueManager->m_imsi = (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
       m_ueNode->AggregateObject (m_ueManager);
       
-      // Connecting the manager to controller new context created trace source.
+      // Connecting the manager to new context created trace source.
       Config::ConnectWithoutContext (
-        "/Names/MainController/ContextCreated",
+        "/Names/SgwPgwApplication/ContextCreated",
         MakeCallback (&TrafficManager::ContextCreatedCallback, m_ueManager));
 
       InstallVoip ();

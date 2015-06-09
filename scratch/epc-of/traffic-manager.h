@@ -77,12 +77,14 @@ public:
   /**
    * TraceSink connected to controller and notified when new contexts are
    * created. This will be used to get the teid for each bearer created.
-   * \param imsi The UE IMSI identifier.
-   * \param cellId The eNB cell ID.
+   * \param imsi The IMSI UE identifier.
+   * \param cellId The eNB CellID to which the IMSI UE is attached to.
+   * \param enbAddr The eNB IPv4 address.
+   * \param sgwAddr The SgwPgw IPv4 address.
    * \param bearerList The list of context bearers created.
    */
   void ContextCreatedCallback (uint64_t imsi, uint16_t cellId, 
-                               BearerList_t bearerList);
+    Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList);
 
 protected:
   /** Destructor implementation */

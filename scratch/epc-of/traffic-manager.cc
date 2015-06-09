@@ -152,8 +152,8 @@ TrafficManager::NotifyAppStop (Ptr<EpcApplication> app)
 }
 
 void
-TrafficManager::ContextCreatedCallback (uint64_t imsi, uint16_t cellId, 
-                                        BearerList_t bearerList)
+TrafficManager::ContextCreatedCallback (uint64_t imsi, uint16_t cellId,
+  Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList)
 {
   NS_LOG_FUNCTION (this);
   

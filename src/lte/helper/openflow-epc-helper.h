@@ -111,18 +111,6 @@ public:
   typedef Callback <Ptr<NetDevice>, Ptr<Node> > X2ConnectCallback_t;
  
   /**
-   * Callback signature for adding a new EPS bearer.
-   * \param uint64_t IMSI UE identifier.
-   * \param uint16_t eNB CellID to which the IMSI UE is attached to.
-   * \param Ptr<EpcTft> tft traffic flow template of the bearer.
-   * \param EpsBearer bearer QoS characteristics of the bearer.
-   * \returns true if successful (proceed with bearer creation), false
-   * otherwise (abort).
-   */
-  typedef Callback<bool, uint64_t, uint16_t, Ptr<EpcTft>, EpsBearer> 
-      AddBearerCallback_t;
-
-  /**
     * \brief Specify callbacks to allow the caller to proper connect the EPC
     * nodes (SgwPgw and eNBs) to the S1-U OpenFlow network insfrastructure.
     * \param cb Callback invoked during AddEnb procedure to proper connect
@@ -140,25 +128,6 @@ public:
     */
   void SetX2ConnectCallback (X2ConnectCallback_t cb);
 
-  /**
-    * Callback used to query the OpenFlow controller for the necessary
-    * resources before creating a new dedicated EPS bearer. Depending on the
-    * return of this callback, the bearer creation will proceed or abort.
-    * \param cb Callback invoked by ActivateEpsBearer before creating a new
-    * dedicated bearer. The bearer will be created only if the callback returns
-    * true.
-    */
-  void SetAddBearerCallback (AddBearerCallback_t cb);
-
-  /**
-   * Callback used to notify the OpenFlow controller with the list of bearers
-   * context created. 
-   * \param cb Callback invoked by EpcSgwPgwApplication::DoCreateSessionRequest
-   * before sending back the CreateSessionResponse message. 
-   */
-  void SetCreateSessionRequestCallback (
-      EpcSgwPgwApplication::CreateSessionRequestCallback_t cb);
- 
 private:
   /**
    * \brief Enable pcap output on the indicated net device.
@@ -192,9 +161,6 @@ private:
 
   /** Callback to connect nodes to X2 OpenFlow network. */
   X2ConnectCallback_t m_x2Connect;
-
-  /** AddBearer callback */
-  AddBearerCallback_t m_addBearerCallback;
 
   /** A collection of S1-U NetDevice */
   NetDeviceContainer m_s1uDevices;

@@ -125,16 +125,15 @@ SimulationScenario::BuildRingTopology ()
   m_opfNetwork->CreateTopology (m_controller, m_SwitchIdxPerEnb);
   Names::Add ("OpenFlowNetwork", m_opfNetwork);
   
-  // LTE EPC core (with callbacks setup)
+  // LTE EPC core (with callbacks and trace sink setup)
   m_epcHelper = CreateObject<OpenFlowEpcHelper> ();
   m_epcHelper->SetS1uConnectCallback (
       MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, m_opfNetwork));
   m_epcHelper->SetX2ConnectCallback (
       MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
-  m_epcHelper->SetCreateSessionRequestCallback (
-      MakeCallback (&OpenFlowEpcController::NotifyNewContextCreated, m_controller));
-//  m_epcHelper->SetAddBearerCallback ( // FIXME isso não faz sentido aqui no simulador
-//      MakeCallback (&OpenFlowEpcController::RequestNewDedicatedBearer, m_controller));
+  Config::ConnectWithoutContext (
+    "/Names/SgwPgwApplication/ContextCreated",
+    MakeCallback (&OpenFlowEpcController::NotifyNewContextCreated, m_controller));
   
   // LTE radio access network
   m_lteNetwork = CreateObject<LteHexGridNetwork> ();

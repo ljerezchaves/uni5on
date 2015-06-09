@@ -228,18 +228,18 @@ OpenFlowEpcNetwork::ConnectTraceSinks ()
     "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uTx",
     MakeCallback (&OpenFlowEpcNetwork::EpcInputPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::EpcSgwPgwApplication/S1uRx",
+    "/Names/SgwPgwApplication/S1uRx",
     MakeCallback (&OpenFlowEpcNetwork::EpcOutputPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::EpcSgwPgwApplication/S1uTx",
+    "/Names/SgwPgwApplication/S1uTx",
     MakeCallback (&OpenFlowEpcNetwork::EpcInputPacket, this));
 
   // Pgw traffic trace sinks
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::EpcSgwPgwApplication/S1uRx",
+    "/Names/SgwPgwApplication/S1uRx",
     MakeCallback (&OpenFlowEpcNetwork::PgwTraffic, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::EpcSgwPgwApplication/S1uTx",
+    "/Names/SgwPgwApplication/S1uTx",
     MakeCallback (&OpenFlowEpcNetwork::PgwTraffic, this));
 }
 

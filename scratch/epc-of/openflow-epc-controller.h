@@ -114,11 +114,11 @@ public:
       Ptr<EpcTft> tft, EpsBearer bearer);
 
   /** 
-   * Callback fired when the SgwPgw gateway is handling a CreateSessionRequest
-   * message. This is used to notify this controller with the list of bearers
-   * context created (this list will be sent back to the MME over S11 interface
-   * in the CreateSessionResponde message). With this information, the
-   * controller can configure the switches for GTP routing.
+   * Notify this controller when the SgwPgw gateway is handling a
+   * CreateSessionRequest message. This is used to notify this controller with
+   * the list of bearers context created (this list will be sent back to the
+   * MME over S11 interface in the CreateSessionResponde message). With this
+   * information, the controller can configure the switches for GTP routing.
    * \see 3GPP TS 29.274 7.2.1 for CreateSessionRequest message format.
    * \param imsi The IMSI UE identifier.
    * \param cellId The eNB CellID to which the IMSI UE is attached to.
@@ -157,15 +157,6 @@ public:
    * \return The list with stats.
    */
   virtual std::vector<BandwidthStats_t> GetBandwidthStats () = 0;
-
-  /** 
-   * TracedCallback signature for new context created messagens.
-   * \param imsi The UE IMSI identifier.
-   * \param cellId The eNB cell ID.
-   * \param bearerList The list of context bearers created.
-   */
-  typedef void (* ContextTracedCallback)(uint64_t imsi, uint16_t cellId, 
-                                         BearerList_t bearerList);
 
   /** 
    * TracedCallback signature for new bearer request.
@@ -263,11 +254,7 @@ protected:
   virtual ofl_err HandlePacketIn (ofl_msg_packet_in*, SwitchInfo, uint32_t);
   virtual ofl_err HandleFlowRemoved (ofl_msg_flow_removed*, SwitchInfo, uint32_t);
 
-
-
-  /** The new context created trace source, fired at NotifyNewContextCreated. */
-  TracedCallback<uint64_t, uint16_t, BearerList_t> m_contextTrace;
-
+  
   /** The bearer request trace source, fired at ??? FIXME. */
   TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerRequestTrace;
 
