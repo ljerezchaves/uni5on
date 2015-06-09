@@ -133,7 +133,7 @@ SimulationScenario::BuildRingTopology ()
       MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
   Config::ConnectWithoutContext (
     "/Names/SgwPgwApplication/ContextCreated",
-    MakeCallback (&OpenFlowEpcController::NotifyNewContextCreated, m_controller));
+    MakeCallback (&OpenFlowEpcController::NotifyContextCreated, m_controller));
   
   // LTE radio access network
   m_lteNetwork = CreateObject<LteHexGridNetwork> ();

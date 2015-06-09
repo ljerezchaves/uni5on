@@ -115,14 +115,19 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
 
-  bool authorized = m_controller->NotifyAppStart (app->GetTeid ());
+  bool authorized = true;
+  
+  uint32_t appTeid = app->GetTeid ();
+  if (appTeid != m_defaultTeid)
+    {
+      // No resource request for traffic over default bearer.
+      authorized = m_controller->RequestDedicatedBearer (app->GetEpsBearer (),
+        m_imsi, m_cellId, appTeid);
+    }
+  
   if (authorized)
     {
       // ResetEpcStatistics.
-      // NOTE: This teid approach only works because we currently have a single
-      // application at each bearer/tunnel. If we would like to aggregate
-      // traffic from several applications into same bearer we will need to
-      // revise this.
       m_network->ResetEpcStatistics (app->GetTeid ());
       app->Start ();
     }
@@ -139,7 +144,13 @@ TrafficManager::NotifyAppStop (Ptr<EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
  
-  m_controller->NotifyAppStop (app->GetTeid ());
+  uint32_t appTeid = app->GetTeid ();
+  if (appTeid != m_defaultTeid)
+    {
+      // No resource release for traffic over default bearer.
+      m_controller->ReleaseDedicatedBearer (app->GetEpsBearer (),
+        m_imsi, m_cellId, appTeid);
+    }
 
   // DumpEpcStatistcs
   // NOTE: Currently, only Voip application needs uplink stats

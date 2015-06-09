@@ -52,15 +52,6 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  /**
-   * Get the default timeout for dedicated bearers
-   * \return The default idle timeout.
-   */
-  static const Time GetDedicatedTimeout ();
-
   /**
    * Set the pointer to OpenFlow network controlled by this app.
    * \param network The OpenFlowEpcNetwork pointer.
@@ -97,21 +88,6 @@ public:
    * been configure and the topology is finished.
    */ 
   virtual void NotifyConnBtwnSwitchesOk ();
-  
-  /** 
-   * Callback fired before creating new dedicated EPC bearers. This is used to
-   * check for necessary resources in the network (mainly available data rate
-   * for GBR bearers. When returning false, it aborts the bearer creation
-   * process, and all traffic will be routed over default bearer.
-   * \param imsi uint64_t IMSI UE identifier.
-   * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
-   * \param tft Ptr<EpcTft> TFT traffic flow template of the bearer.
-   * \param bearer EpsBearer bearer QoS characteristics of the bearer.
-   * \returns true if successful (the bearer creation process will proceed),
-   * false otherwise (the bearer creation process will abort).
-   */
-  virtual bool RequestNewDedicatedBearer (uint64_t imsi, uint16_t cellId,
-      Ptr<EpcTft> tft, EpsBearer bearer);
 
   /** 
    * Notify this controller when the SgwPgw gateway is handling a
@@ -126,32 +102,48 @@ public:
    * \param sgwAddr The SgwPgw IPv4 address.
    * \param bearerList The list of context bearers created.
    */
-  virtual void NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
+  virtual void NotifyContextCreated (uint64_t imsi, uint16_t cellId,
       Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList);
   
+  /** 
+   * Request a new dedicated EPC bearer. This is used to check for necessary
+   * resources in the network (mainly available data rate for GBR bearers).
+   * When returning false, it aborts the bearer creation process
+   * \internal Current implementation assumes that each application traffic
+   * flow is associated with a unique bearer/tunnel. Because of that, we can
+   * use only the teid for the tunnel to prepare and install route. If we would
+   * like to aggregate traffic from several applications into same bearer we
+   * will need to revise this.
+   * \param teid The teid for this bearer, if already defined.
+   * \param imsi uint64_t IMSI UE identifier.
+   * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
+   * \param bearer EpsBearer bearer QoS characteristics of the bearer.
+   * \returns true if successful (the bearer creation process will proceed),
+   * false otherwise (the bearer creation process will abort).
+   */
+  virtual bool RequestDedicatedBearer (EpsBearer bearer, uint64_t imsi, 
+      uint16_t cellId, uint32_t teid);
+
+  /** 
+   * Release a dedicated EPC bearer. 
+   * \internal Current implementation assumes that each application traffic
+   * flow is associated with a unique bearer/tunnel. Because of that, we can
+   * use only the teid for the tunnel to prepare and install route. If we would
+   * like to aggregate traffic from several applications into same bearer we
+   * will need to revise this.
+   * \param teid The teid for this bearer, if already defined.
+   * \param imsi uint64_t IMSI UE identifier.
+   * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
+   * \param bearer EpsBearer bearer QoS characteristics of the bearer.
+   * \returns true if successful, false otherwise.
+   */
+  virtual bool ReleaseDedicatedBearer (EpsBearer bearer, uint64_t imsi,
+      uint16_t cellId, uint32_t teid);
+ 
+  // TODO
   // virtual void NotifyContextModified ();
   // virtual void NotifyBearerDeactivated ();
 
-  /**
-   * Notify this controller of an application starts sending traffic over EPC
-   * OpenFlow network. This method expects that this application has a
-   * TrafficFlowTemplate aggregated to it, since it uses the TFT to search for
-   * bearer information.
-   * \param teid The teid for this bearer.
-   * \return true to allow the app to start the traffic, false otherwise.
-   */ 
-  virtual bool NotifyAppStart (uint32_t teid);
-
-  /**
-   * Notify this controller of an application stops sending traffic over EPC
-   * OpenFlow network. This method expects that this application has a
-   * TrafficFlowTemplate aggregated to it, since it uses the TFT to search for
-   * bearer information.
-   * \param teid The teid for this bearer.
-   * \return true.
-   */ 
-  virtual bool NotifyAppStop (uint32_t teid);
-  
   /**
    * Get bandwidth statistcs for (relevant) network links.
    * \return The list with stats.
@@ -160,13 +152,16 @@ public:
 
   /** 
    * TracedCallback signature for new bearer request.
-   * \param accepted True when the request is accepted.
-   * \param rInfo The routing information.
+   * \param accepted True when the bearer request is accepted.
+   * \param rInfo The routing information for this tunnel.
    */
-  typedef void (* BearerTracedCallback)(bool accepted, 
-                                        Ptr<const RoutingInfo> rInfo);
+  typedef void (* BearerTracedCallback)
+    (bool accepted, Ptr<const RoutingInfo> rInfo);
 
 protected:
+  /** Destructor implementation */
+  virtual void DoDispose ();
+  
   /**
    * Process the bearer resource and bandwidth allocation.
    * \param rInfo The routing information to process.

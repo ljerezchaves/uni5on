@@ -62,6 +62,10 @@ public:
    * resources to the controller before starting the application. If the
    * controller accept the request, this starts the application. Otherwise, it
    * reschedule the (re)start attempt.
+   * \internal The teid approach only works because we currently have a single
+   * application associated with each bearer/tunnel. If we would like to
+   * aggregate traffic from several applications into same bearer we will need
+   * to revise this.
    * \param app The application pointer.
    */ 
   void AppStartTry (Ptr<EpcApplication> app);

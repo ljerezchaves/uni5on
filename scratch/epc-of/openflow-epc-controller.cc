@@ -73,12 +73,6 @@ OpenFlowEpcController::DoDispose ()
   m_ofNetwork = 0;
 }
 
-const Time
-OpenFlowEpcController::GetDedicatedTimeout ()
-{
-  return Seconds (m_dedicatedTmo);
-}
-
 void
 OpenFlowEpcController::SetOfNetwork (Ptr<OpenFlowEpcNetwork> network)
 {
@@ -150,18 +144,87 @@ OpenFlowEpcController::NotifyConnBtwnSwitchesOk ()
 }
 
 bool
-OpenFlowEpcController::RequestNewDedicatedBearer (uint64_t imsi, 
-    uint16_t cellId, Ptr<EpcTft> tft, EpsBearer bearer)
+OpenFlowEpcController::RequestDedicatedBearer (EpsBearer bearer, 
+    uint64_t imsi, uint16_t cellId, uint32_t teid)
 {
-  NS_LOG_FUNCTION (this << imsi << cellId << tft);
+  NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
-  // FIXME: Pra cá que tem que vir a lógica que está no NotifyAppStart.
-  // Allowing any bearer creation
+  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer " << teid);
+
+  // Is it a default bearer?
+  if (rInfo->m_isDefault)
+    {
+      // If the application traffic is sent over default bearer, there is no
+      // need for resource reservation nor reinstall the switch rules, as
+      // default rules were supposed to remain installed during entire
+      // simulation and must be Non-GBR.
+      NS_ASSERT_MSG (rInfo->m_isActive && rInfo->m_isInstalled, 
+                     "Default bearer should be intalled and activated.");
+      return true;
+    }
+
+  // Is it an active (aready configured) bearer?
+  if (rInfo->m_isActive)
+    {
+      NS_ASSERT_MSG (rInfo->m_isInstalled, "Bearer should be installed.");
+      NS_LOG_DEBUG ("Routing path for " << teid << " is already installed.");
+      return true;
+    }
+
+  NS_ASSERT_MSG (!rInfo->m_isActive, "Bearer should be inactive.");
+  // So, this bearer must be inactive and we are goind to reuse it's metadata.
+  // Every time the application starts using an (old) existing bearer, let's
+  // reinstall the rules on the switches, which will inscrease the bearer
+  // priority. Doing this, we avoid problems with old 'expiring' rules, and we
+  // can even use new routing paths when necessary.
+
+  // Let's first check for available resources and fire trace source
+  bool accepted = BearerRequest (rInfo);
+  m_bearerRequestTrace (accepted, rInfo);
+  if (!accepted)
+    {
+      return false;
+    }
+  
+  // Everything is ok! Let's activate and install this bearer.
+  rInfo->m_isActive = true;
+  return InstallTeidRouting (rInfo);
+}
+
+bool
+OpenFlowEpcController::ReleaseDedicatedBearer (EpsBearer bearer, 
+    uint64_t imsi, uint16_t cellId, uint32_t teid)
+{
+  NS_LOG_FUNCTION (this << imsi << cellId << teid);
+
+  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  NS_ASSERT_MSG (rInfo, "No routing information for teid.");
+
+  // Is it a default bearer?
+  if (rInfo->m_isDefault)
+    {
+      // If the application traffic is sent over default bearer, there is no
+      // need for resource release, as default rules were supposed to remain
+      // installed during entire simulation and must be Non-GBR.
+      NS_ASSERT_MSG (rInfo->m_isActive && rInfo->m_isInstalled, 
+                     "Default bearer should be intalled and activated.");
+      return true;
+    }
+
+  // Check for active bearer
+  if (rInfo->m_isActive == true)
+    {
+      rInfo->m_isActive = false;
+      rInfo->m_isInstalled = false;
+      BearerRelease (rInfo);
+      RemoveTeidRouting (rInfo);
+    }
   return true;
 }
 
 void 
-OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
+OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
     Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << sgwAddr);
@@ -260,77 +323,6 @@ OpenFlowEpcController::NotifyNewContextCreated (uint64_t imsi, uint16_t cellId,
           rInfo->AggregateObject (reserveInfo);
         }
     }
-}
-
-bool 
-OpenFlowEpcController::NotifyAppStart (uint32_t teid)
-{
-  NS_LOG_FUNCTION (this << teid);
-
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer " << teid);
-
-  // Is it a default bearer?
-  if (rInfo->m_isDefault)
-    {
-      // If the application traffic is sent over default bearer, there is no
-      // need for resource reservation nor reinstall the switch rules, as
-      // default rules were supposed to remain installed during entire
-      // simulation and must be Non-GBR.
-      NS_ASSERT_MSG (rInfo->m_isActive && rInfo->m_isInstalled, 
-                     "Default bearer should be intalled and activated.");
-      return true;
-    }
-
-  // Is it an active (aready configured) bearer?
-  if (rInfo->m_isActive)
-    {
-      // This happens with VoIP application, which are installed in pairs and,
-      // when the second application starts, the first one has already
-      // configured the routing for this bearer and set the active flag.
-      // FIXME: After refactoring Voip app, I'm not sure if this case is valid.
-      NS_ASSERT_MSG (rInfo->m_isInstalled, "Bearer should be installed.");
-      NS_LOG_DEBUG ("Routing path for " << teid << " is already installed.");
-      return true;
-    }
-
-  NS_ASSERT_MSG (!rInfo->m_isActive, "Bearer should be inactive.");
-  // So, this bearer must be inactive and we are goind to reuse it's metadata.
-  // Every time the application starts using an (old) existing bearer, let's
-  // reinstall the rules on the switches, which will inscrease the bearer
-  // priority. Doing this, we avoid problems with old 'expiring' rules, and we
-  // can even use new routing paths when necessary.
-
-  // Let's first check for available resources and fire trace source
-  bool accepted = BearerRequest (rInfo);
-  m_bearerRequestTrace (accepted, rInfo);
-  if (!accepted)
-    {
-      return false;
-    }
-  
-  // Everything is ok! Let's activate and install this bearer.
-  rInfo->m_isActive = true;
-  return InstallTeidRouting (rInfo);
-}
-
-bool
-OpenFlowEpcController::NotifyAppStop (uint32_t teid)
-{
-  NS_LOG_FUNCTION (this << teid);
-  
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
-  NS_ASSERT_MSG (rInfo, "No routing information for teid.");
-  
-  // Check for active bearer
-  if (rInfo->m_isActive == true)
-    {
-      rInfo->m_isActive = false;
-      rInfo->m_isInstalled = false;
-      BearerRelease (rInfo);
-      RemoveTeidRouting (rInfo);
-    }
-  return true;
 }
 
 uint16_t 
