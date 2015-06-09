@@ -20,6 +20,7 @@
 
 #include "ns3/qos-stats-calculator.h"
 #include "stats-calculator.h"
+#include "seq-num-tag.h"
 #include "output-logger.h"
 #include <iomanip>
 #include <iostream>
@@ -37,32 +38,65 @@ OutputLogger::OutputLogger ()
   NS_LOG_FUNCTION (this);
 
   // Creating stats calculators
-  m_admissionStats = CreateObject<AdmissionStatsCalculator> ();
+  m_admissionStats  = CreateObject<AdmissionStatsCalculator> ();
+  m_gatewayStats    = CreateObject<GatewayStatsCalculator> ();
 
-  // Connecting to the trace sources
+  // Connecting to EpcApplication AppStats QoS trace source 
+  // (AppStats file)
   Config::ConnectWithoutContext (
     "/NodeList/*/ApplicationList/*/$ns3::EpcApplication/AppStats",
     MakeCallback (&OutputLogger::ReportAppStats, this));
 
+  // Connecting to OpenFlowEpcController BearerRequest trace source 
+  // (BrqStats and AdmStats files)
   Config::Connect (
     "/Names/MainController/BearerRequest",
     MakeCallback (&OutputLogger::BearerRequest, this));
 
-  Config::ConnectWithoutContext (
-    "/Names/OpenFlowNetwork/EpcStats",
-    MakeCallback (&OutputLogger::ReportEpcStats, this));
-  
-  Config::ConnectWithoutContext (
-    "/Names/OpenFlowNetwork/PgwStats",
-    MakeCallback (&OutputLogger::ReportPgwStats, this));
-  
-  Config::ConnectWithoutContext (
-    "/Names/OpenFlowNetwork/BwdStats",
-    MakeCallback (&OutputLogger::ReportBwdStats, this));
+  // Connecting all EPC trace sinks for QoS monitoring
+  // (EpcStats file)
+  Config::Connect (
+    "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uRx",
+    MakeCallback (&OutputLogger::EpcOutputPacket, this));
+  Config::Connect (
+    "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uTx",
+    MakeCallback (&OutputLogger::EpcInputPacket, this));
+  Config::Connect (
+    "/Names/SgwPgwApplication/S1uRx",
+    MakeCallback (&OutputLogger::EpcOutputPacket, this));
+  Config::Connect (
+    "/Names/SgwPgwApplication/S1uTx",
+    MakeCallback (&OutputLogger::EpcInputPacket, this));
+  Config::Connect (
+    "/Names/OpenFlowNetwork/MeterDrop",
+    MakeCallback (&OutputLogger::MeterDropPacket, this));
+  Config::Connect (
+   "/Names/OpenFlowNetwork/QueueDrop",
+    MakeCallback (&OutputLogger::QueueDropPacket, this));
+  Config::Connect (
+    "/NodeList/*/$ns3::TrafficManager/AppStart",
+    MakeCallback (&OutputLogger::ResetEpcStatistics, this));
+  Config::Connect (
+    "/NodeList/*/$ns3::TrafficManager/AppStop",
+    MakeCallback (&OutputLogger::DumpEpcStatistics, this));
 
-  Config::ConnectWithoutContext (
-    "/Names/OpenFlowNetwork/SwtStats",
-    MakeCallback (&OutputLogger::ReportSwtStats, this));
+  // Connecting all gateway trace sinks for traffic bandwidth monitoring
+  // (PgwStats file)
+  Config::Connect (
+    "/Names/SgwPgwApplication/S1uRx",
+    MakeCallback (&OutputLogger::PgwTraffic, this));
+  Config::Connect (
+    "/Names/SgwPgwApplication/S1uTx",
+    MakeCallback (&OutputLogger::PgwTraffic, this));
+
+  
+//  Config::ConnectWithoutContext (
+//    "/Names/OpenFlowNetwork/BwdStats",
+//    MakeCallback (&OutputLogger::ReportBwdStats, this));
+//
+//  Config::ConnectWithoutContext (
+//    "/Names/OpenFlowNetwork/SwtStats",
+//    MakeCallback (&OutputLogger::ReportSwtStats, this));
 
   Config::ConnectWithoutContext (
     "/Names/InternetNetwork/WebStats",
@@ -149,13 +183,26 @@ OutputLogger::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_admissionStats = 0;
+  m_gatewayStats = 0;
 }
 
 void
 OutputLogger::DumpStatistics ()
 {
+  // Dump AdmStats
   ReportAdmStats (m_admissionStats);
   m_admissionStats->ResetCounters ();
+
+  // Dump PgwStats
+  ReportPgwStats (m_gatewayStats);
+  m_gatewayStats->ResetCounters ();
+
+  // Dump SwtStats
+
+  // Dump BwdStats
+
+  // Dump WebStats
+
 
   Simulator::Schedule (m_dumpTimeout, &OutputLogger::DumpStatistics, this);
 }
@@ -197,10 +244,137 @@ OutputLogger::BearerRequest (std::string context, bool accepted,
   ReportBrqStats ("", rInfo->GetTeid (), accepted, downRate, upRate, path);
 }
 
+void
+OutputLogger::MeterDropPacket (std::string context, Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << context << packet);
+
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      Ptr<QosStatsCalculator> qosStats = 
+        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      qosStats->NotifyMeterDrop ();
+    }
+}
+
+void
+OutputLogger::QueueDropPacket (std::string context, Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << context << packet);
+
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      Ptr<QosStatsCalculator> qosStats = 
+        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      qosStats->NotifyQueueDrop ();
+    }
+}
+
+void 
+OutputLogger::EpcInputPacket (std::string context, Ptr<const Packet> packet)
+{
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      Ptr<QosStatsCalculator> qosStats = 
+        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      SeqNumTag seqTag (qosStats->GetNextSeqNum ());
+      packet->AddPacketTag (seqTag);
+    }
+}
+
+void
+OutputLogger::EpcOutputPacket (std::string context, Ptr<const Packet> packet)
+{
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      SeqNumTag seqTag;
+      if (packet->PeekPacketTag (seqTag))
+        {
+          Ptr<QosStatsCalculator> qosStats = 
+            GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+          qosStats->NotifyReceived (seqTag.GetSeqNum (), gtpuTag.GetTimestamp (), 
+                                    packet->GetSize ());
+        }
+    }
+}
+
+void 
+OutputLogger::PgwTraffic (std::string context, Ptr<const Packet> packet)
+{
+  std::string direction = context.substr (context.rfind ("/") + 1);
+  m_gatewayStats->NotifyTraffic (direction, packet); 
+}
+
+void
+OutputLogger::DumpEpcStatistics (std::string context, 
+                                 Ptr<const EpcApplication> app)
+{
+  NS_LOG_FUNCTION (this << context << app);
+
+  uint32_t teid = app->GetTeid ();
+  bool uplink = (app->GetInstanceTypeId () == VoipClient::GetTypeId ());
+  std::string desc = app->GetDescription ();
+
+  Ptr<const QosStatsCalculator> epcStats;
+  if (uplink)
+    {
+      // Dump uplink statistics
+      epcStats = GetQosStatsFromTeid (teid, false);
+      ReportEpcStats (desc + "ul", teid, epcStats);
+    }
+  // Dump downlink statistics
+  epcStats = GetQosStatsFromTeid (teid, true);
+  ReportEpcStats (desc + "dl", teid, epcStats);
+}
+
+void
+OutputLogger::ResetEpcStatistics (std::string context, 
+                                  Ptr<const EpcApplication> app)
+{
+  NS_LOG_FUNCTION (this << context << app);
+
+  uint32_t teid = app->GetTeid ();
+  
+  GetQosStatsFromTeid (teid, true)->ResetCounters ();
+  GetQosStatsFromTeid (teid, false)->ResetCounters ();
+}
+
 std::string
 OutputLogger::GetCompleteName (std::string name)
 {
   return m_commonPrefix + name;
+}
+
+Ptr<QosStatsCalculator>
+OutputLogger::GetQosStatsFromTeid (uint32_t teid, bool isDown)
+{
+  Ptr<QosStatsCalculator> qosStats = 0;
+  TeidQosMap_t::iterator it;
+  it = m_qosStats.find (teid);
+  if (it != m_qosStats.end ())
+    {
+      QosStatsPair_t value = it->second;
+      qosStats = isDown ? value.first : value.second;
+    }
+  else
+    {
+      // Create and insert the structure
+      QosStatsPair_t pair (Create<QosStatsCalculator> (), 
+                           Create<QosStatsCalculator> ());
+      std::pair <uint32_t, QosStatsPair_t> entry (teid, pair);
+      std::pair <TeidQosMap_t::iterator, bool> ret;
+      ret = m_qosStats.insert (entry);
+      if (ret.second == false)
+        {
+          NS_FATAL_ERROR ("Existing QoS entry for teid " << teid);
+        }
+      qosStats = isDown ? pair.first : pair.second;
+    }
+  return qosStats;
 }
 
 void 
@@ -377,7 +551,7 @@ OutputLogger::ReportAdmStats (Ptr<const AdmissionStatsCalculator> stats)
 }
 
 void 
-OutputLogger::ReportPgwStats (DataRate downTraffic, DataRate upTraffic)
+OutputLogger::ReportPgwStats (Ptr<const GatewayStatsCalculator> stats)
 {
   NS_LOG_FUNCTION (this);
   static bool firstWrite = true;
@@ -411,8 +585,8 @@ OutputLogger::ReportPgwStats (DataRate downTraffic, DataRate upTraffic)
 
   outFile << left
           << setw (12) << Simulator::Now ().GetSeconds ()
-          << setw (17) << (double)downTraffic.GetBitRate () / 1024
-          << setw (14) << (double)upTraffic.GetBitRate () / 1024
+          << setw (17) << (double)stats->GetDownDataRate ().GetBitRate () / 1024
+          << setw (14) << (double)stats->GetUpDataRate ().GetBitRate () / 1024
           << std::endl;
   outFile.close ();
 }

@@ -24,6 +24,7 @@
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
+#include <ns3/applications-module.h>
 #include "openflow-epc-network.h"
 
 namespace ns3 {
@@ -31,7 +32,8 @@ namespace ns3 {
 // ------------------------------------------------------------------------ //
 /**
  * \ingroup epcof
- * Output logger to save simulation statistics and results in files.
+ * Output logger to monitor, save and dump simulation statistics into text
+ * files.
  */
 class OutputLogger : public Object
 {
@@ -69,7 +71,7 @@ private:
   
   /**
    * Trace sink fired at every new bearer request to OpenFlow controller.
-   * \param context Trace source context.
+   * \param context Context information.
    * \param accepted True when the bearer is accepted into network.
    * \param rInfo The bearer routing information.
    */
@@ -77,46 +79,111 @@ private:
                       Ptr<const RoutingInfo> rInfo);
 
   /**
+   * Trace sink fired when packets are dropped by meter bands. The tag will be
+   * read from packet, and EPC QoS stats updated.
+   * \param context Context information.
+   * \param packet The dropped packet.
+   */
+  void MeterDropPacket (std::string context, Ptr<const Packet> packet);
+
+  /**
+   * Trace sink fired when packets are dropped by OpenFlow port queues. 
+   * \param context Context information.
+   * \param packet The dropped packet.
+   */
+  void QueueDropPacket (std::string context, Ptr<const Packet> packet);
+
+  /**
+   * Trace sink fired when packets enter the EPC. The packet will get tagged
+   * for EPC QoS monitoring.
+   * \param context Context information.
+   * \param packet The packet.
+   */
+  void EpcInputPacket (std::string context, Ptr<const Packet> packet);
+
+  /**
+   * Trace sink fired when packets leave the EPC. The tag will be read from
+   * packet, and EPC QoS stats updated.
+   * \param context Context information.
+   * \param packet The packet.
+   */
+  void EpcOutputPacket (std::string context, Ptr<const Packet> packet);
+
+  /**
+   * Trace sink fired when packets traverse the EPC packet gateway from/to the
+   * Internet to/from the EPC.
+   * \param context Context information.
+   * \param packet The packet.
+   */
+  void PgwTraffic (std::string context, Ptr<const Packet> packet);
+
+  /**
+   * Trace sink fired when application traffic stops. Used to dump EPC traffic
+   * statistics.
+   * \param context Context information.
+   * \param app The EpcApplication.
+   */
+  void DumpEpcStatistics (std::string context, Ptr<const EpcApplication> app);
+
+  /**
+   * Trace sink fired when application traffic starts. Used to reset EPC
+   * traffic statistics.
+   * \param context Context information.
+   * \param app The EpcApplication.
+   */ 
+  void ResetEpcStatistics (std::string context, Ptr<const EpcApplication> app);
+
+  /**
+   * Concatenate the commom prefix and the filename.
+   * \param name The filename.
+   * \return The complete filename.
+   */
+  std::string GetCompleteName (std::string name);
+   
+  /**
+   * Retrieve the LTE EPC QoS statistics information for the GTP tunnel id.
+   * \param teid The GTP tunnel id.
+   * \param isDown True for downlink stats, false for uplink.
+   * \return The QoS information.
+   */
+  Ptr<QosStatsCalculator> GetQosStatsFromTeid (uint32_t teid, bool isDown);
+
+
+// ------------------------------------------------------------------------ //
+  /**
    * Save application statistics in file. 
-   * \see ns3::EpcApplication::QosTracedCallback for parameters.
    */
   void ReportAppStats (std::string description, uint32_t teid, 
                        Ptr<const QosStatsCalculator> stats);
 
   /**
    * Save LTE EPC statistics in file. 
-   * \see ns3::OpenFlowEpcNetwork::QosTracedCallback for parameters.
    */
   void ReportEpcStats (std::string description, uint32_t teid, 
                        Ptr<const QosStatsCalculator> stats);
 
   /**
    * Save bearer admission control statistics in file. 
-   * \see ns3::AdmissionStatsCalculator::AdmTracedCallback for parameters.
    */
   void ReportAdmStats (Ptr<const AdmissionStatsCalculator> stats);
 
   /**
    * Save packet gateway traffic statistics in file.
-   * \see ns3::OpenFlowEpcNetwork::PgwTracedCallback for parameters.
    */
-  void ReportPgwStats (DataRate downTraffic, DataRate upTraffic);
+  void ReportPgwStats (Ptr<const GatewayStatsCalculator> stats);
 
   /**
    * Save flow table usage statistics in file.
-   * \see ns3::OpenFlowEpcNetwork::SwtTracedCallback for parameters.
    */
   void ReportSwtStats (std::vector<uint32_t> teid);
 
   /**
    * Save internet queue statistics in file.
-   * \see ns3::InternetNetwork::WebTracedCallback for parameters.
    */
   void ReportWebStats (Ptr<const Queue> downlink, Ptr<const Queue> uplink);
 
   /**
    * Save bandwidth usage in file.
-   * \see ns3::OpenFlowEpcController::BwdTracedCallback for parameters.
    */
   void ReportBwdStats (std::vector<BandwidthStats_t> stats);
 
@@ -131,16 +198,9 @@ private:
    */
   void ReportBrqStats (std::string desc, uint32_t teid, bool accepted,
                        DataRate downRate, DataRate upRate, std::string path);
+// ------------------------------------------------------------------------ //
 
-  /**
-   * Concatenate the commom prefix and the filename.
-   * \param name The filename.
-   * \return The complete filename.
-   */
-  std::string GetCompleteName (std::string name);
-    
   Time        m_dumpTimeout;        //!< Dump stats timeout.
-  
   std::string m_commonPrefix;       //!< Common prefix for filenames
   std::string m_appStatsFilename;   //!< AppStats filename
   std::string m_epcStatsFilename;   //!< EpcStats filename
@@ -152,6 +212,14 @@ private:
   std::string m_brqStatsFilename;   //!< BrqStats filename
 
   Ptr<AdmissionStatsCalculator> m_admissionStats; // Admission statistics
+  Ptr<GatewayStatsCalculator>   m_gatewayStats;   // Gateway statistics
+
+  /** A pair of QosStatsCalculator, for downlink and uplink EPC statistics */
+  typedef std::pair<Ptr<QosStatsCalculator>, Ptr<QosStatsCalculator> > QosStatsPair_t;
+  
+  /** A Map saving <GTP TEID / QoS stats pair > */
+  typedef std::map<uint32_t, QosStatsPair_t> TeidQosMap_t;
+  TeidQosMap_t m_qosStats; //!< TEID QoS statistics
 };
 
 };  // namespace ns3

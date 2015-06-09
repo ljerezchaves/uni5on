@@ -37,8 +37,8 @@ class RingController;
 
 /**
  * \ingroup epcof
- * The abstract base OpenFlow EPC controller, which should be extend in
- * accordance to network topology.
+ * Create an OpenFlow EPC controller. This is an abstract base class which
+ * should be extended in accordance to OpenFlow network topology.
  */
 class OpenFlowEpcController : public OFSwitch13Controller
 {

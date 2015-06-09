@@ -37,6 +37,8 @@ typedef std::pair<SwitchPair_t, double> BandwidthStats_t;
 
 class OpenFlowEpcController;
 
+
+// ------------------------------------------------------------------------ //
 /**
  * \ingroup epcof
  * Metadata associated to a connection between 
@@ -50,7 +52,7 @@ class ConnectionInfo : public Object
   friend class RingController;
 
 public:
- ConnectionInfo ();          //!< Default constructor
+ ConnectionInfo ();           //!< Default constructor
   virtual ~ConnectionInfo (); //!< Dummy destructor, see DoDipose
 
   /**
@@ -124,13 +126,14 @@ protected:
 // ------------------------------------------------------------------------ //
 /**
  * \ingroup epcof
- * Create an OpenFlow network infrastructure to be used by
- * OpenFlowEpcHelper on LTE networks.
+ * Create an OpenFlow EPC S1-U network infrastructure. This is an abstract base
+ * class which should be extended to create any desired network topology. For
+ * each subclass, a corresponding topology-aware controller must be
+ * implemented, extending the generig OpenFlowEpcController. 
  */
 class OpenFlowEpcNetwork : public Object
 {
-
-friend class OpenFlowEpcController;
+friend class OpenFlowEpcController; // FIXME Remover essa dependencia.
 
 public:
   OpenFlowEpcNetwork ();          //!< Default constructor
@@ -142,9 +145,6 @@ public:
    */
   static TypeId GetTypeId (void);
   
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
   /**
    * Called by OpenFlowEpcHelper to proper connect the SgwPgw and eNBs to the
    * S1-U OpenFlow network infrastructure.
@@ -167,14 +167,15 @@ public:
   virtual Ptr<NetDevice> AttachToX2 (Ptr<Node> node) = 0;
   
   /** 
-   * Creates the OpenFlow network infrastructure with existing OpenFlow
+   * Creates the OpenFlow network infrastructure with corresponding OpenFlow
    * Controller application.
-   * \param controller The OpenFlow controller for this EPC OpenFlow network.
+   * \param controller The corresponding OpenFlow controller for this EPC
+   * OpenFlow network (they both must be aware of network topology.
    * \param eNbSwitches The switch index for each eNB.
    */
   virtual void CreateTopology (Ptr<OpenFlowEpcController> controller, 
       std::vector<uint16_t> eNbSwitches) = 0;
-
+ 
   /** 
    * Enable pcap on switch data ports.
    * \param prefix The file prefix.
@@ -207,54 +208,38 @@ public:
    */
   void SetSwitchDeviceAttribute (std::string n1, const AttributeValue &v1);
 
-  /** 
-   * \return The CsmaHelper used to create the OpenFlow network. 
-   */
-  CsmaHelper GetCsmaHelper ();
-
-  /** 
-   * \return The NodeContainer with all OpenFlow switches nodes. 
-   */
-  NodeContainer GetSwitchNodes ();
-
-  /** 
-   * \return The NetDeviceContainer with all OFSwitch13NetDevice devices. 
-   */
-  NetDeviceContainer GetSwitchDevices ();
-
-  /** 
-   * \return The OpenFlow controller application. 
-   */
-  Ptr<OFSwitch13Controller> GetControllerApp ();
-
-  /** 
-   * \return The OpenFlow controller node. 
-   */
-  Ptr<Node> GetControllerNode ();
+//  /** 
+//   * \return The CsmaHelper used to create the OpenFlow network. 
+//   */
+//  CsmaHelper GetCsmaHelper ();
+//
+//  /** 
+//   * \return The NodeContainer with all OpenFlow switches nodes. 
+//   */
+//  NodeContainer GetSwitchNodes ();
+//
+//  /** 
+//   * \return The NetDeviceContainer with all OFSwitch13NetDevice devices. 
+//   */
+//  NetDeviceContainer GetSwitchDevices ();
+//
+//  /** 
+//   * \return The OpenFlow controller application. 
+//   */
+//  Ptr<OFSwitch13Controller> GetControllerApp ();
+//
+//  /** 
+//   * \return The OpenFlow controller node. 
+//   */
+//  Ptr<Node> GetControllerNode ();
   
   /** 
    * \return Number of switches in the network. 
    */
-  uint16_t GetNSwitches ();
+  uint16_t GetNSwitches (void) const;
 
   /**
-   * Set the default statistics dump interval.
-   * \param timeout The timeout value.
-   */
-  void SetDumpTimeout (Time timeout);
-
-  /**
-   * Connect all trace sinks used to monitor the network.
-   * \attention This member function register a trace sink for each EPC
-   * application (eNB and SgwPgw). Then, it must be called after scenario
-   * topology creation.
-   */
-  void ConnectTraceSinks ();
-
-
-  /**
-   * Trace sink for packets dropped by meter bands. The tag will be read
-   * from packet, and QoS stats updated.
+   * Trace sink for packets dropped by meter bands.
    * \param context Output switch index.
    * \param packet The dropped packet.
    */
@@ -266,66 +251,11 @@ public:
    * \param packet The dropped packet.
    */
   void QueueDropPacket (std::string context, Ptr<const Packet> packet);
-  
-  /**
-   * Dump EPC Pgw downlink/uplink traffic statistics.
-   */
-  void DumpPgwStatistics ();
-  
-  /**
-   * Dump Opwnflow switch table statistics.
-   */
-  void DumpSwtStatistics ();
 
-  /**
-   * Dump network bandwidth usage.
-   */
-  void DumpBwdStatistics ();
-
-  /**
-   * Dump epc traffic statistics.
-   * \param teid The application bearer teid.
-   * \param desc The application description string.
-   * \param uplink Dump statistics for uplink too.
-   */
-  void DumpEpcStatistics (uint32_t teid, std::string desc, 
-                          bool uplink = false);
-
-  /**
-   * Reset epc traffic statistics.
-   * \param teid The application bearer teid.
-   */ 
-  void ResetEpcStatistics (uint32_t teid);
-
-  /** 
-   * TracedCallback signature for QoS dump. 
-   * \param description String describing this traffic.
-   * \param teid Bearer TEID.
-   * \param stats The QoS statistics.
-   */
-  typedef void (* QosTracedCallback)(std::string description, uint32_t teid, 
-                                     Ptr<const QosStatsCalculator> stats);
-
-  /** 
-   * TracedCallback signature for Pgw traffic statistics.
-   * \param downTraffic The average downlink traffic for last interval.
-   * \param upTraffic The average uplink traffic for last interval.
-   */
-  typedef void (* PgwTracedCallback)(DataRate downTraffic, DataRate upTraffic);
-
-  /** 
-   * TracedCallback signature for switch Flow table rules statistics.
-   * \param teid The number of TEID routing flow rules at each switch.
-   */
-  typedef void (* SwtTracedCallback)(std::vector<uint32_t> teid);
-  
-  /** 
-   * TracedCallback signature for bandwidth usage statistics.
-   * \param stats List of links and usage ratio.
-   */
-  typedef void (* BwdTracedCallback)(std::vector<BandwidthStats_t> stats);
-  
 protected:
+  /** Destructor implementation */
+  virtual void DoDispose ();
+
   /**
    * Get the OFSwitch13NetDevice of a specific switch.
    * \param index The switch index.
@@ -378,7 +308,7 @@ protected:
    * \param controller The controller application.
    */ 
   void SetController (Ptr<OpenFlowEpcController> controller);
-  
+
   Ptr<OpenFlowEpcController>  m_ofCtrlApp;      //!< Controller application.
   Ptr<Node>                   m_ofCtrlNode;     //!< Controller node.
   NodeContainer               m_ofSwitches;     //!< Switch nodes.
@@ -388,64 +318,15 @@ protected:
   std::vector<uint16_t>       m_eNbSwitchIdx;   //!< Switch index for each eNB.
 
 private:
-  /**
-   * Trace sink for packets entering the EPC. The packet will get tagged for
-   * QoS monitoring.
-   * \param context Context information.
-   * \param packet The packet.
-   */
-  void EpcInputPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink for packets leaving the EPC. The tag will be read from packet,
-   * and QoS stats updated.
-   * \param context Context information.
-   * \param packet The packet.
-   */
-  void EpcOutputPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink for packets traversing the EPC packet gateway from/to the
-   * Internet to/from the EPC.
-   * \param context Context information.
-   * \param packet The packet.
-   */
-  void PgwTraffic (std::string context, Ptr<const Packet> packet);
-  
-  /**
-   * Retrieve the LTE EPC QoS statistics information for the GTP tunnel id.
-   * When no information structure available, create it.
-   * \param teid The GTP tunnel id.
-   * \param isDown True for downlink stats, false for uplink.
-   * \return The QoS information.
-   */
-  Ptr<QosStatsCalculator> GetQosStatsFromTeid (uint32_t teid, bool isDown);
-
   uint16_t                    m_gatewaySwitch;  //!< Gateway switch index.
   Ptr<Node>                   m_gatewayNode;    //!< Gateway node pointer.
-  Time                        m_dumpTimeout;    //!< Dump stats timeout. 
-  uint32_t                    m_pgwDownBytes;   //!< Pgw traffic downlink bytes.
-  uint32_t                    m_pgwUpBytes;     //!< Pgw traffic uplink bytes.
   
-  /** The EPC Pgw traffic trace source, fired at DumpPgwStatistics. */
-  TracedCallback<DataRate, DataRate> m_pgwTrace;
+  /** Packet queue drop trace source. */
+  TracedCallback<Ptr<const Packet> > m_queueDropTrace;
 
-  /** The LTE EPC QoS trace source, fired at DumpEpcStatistics. */
-  TracedCallback<std::string, uint32_t, Ptr<const QosStatsCalculator> > m_epcTrace;
-
-  /** The switch flow table rules trace source, fired at DumpSwtStatistics. */
-  TracedCallback<std::vector<uint32_t> > m_swtTrace;
-
-  /** The network bandwidth usage trace source, fired at DumpBwdStatistics. */
-  TracedCallback<std::vector<BandwidthStats_t> > m_bwdTrace;
+  /** Packet meter drop trace source. */
+  TracedCallback<Ptr<const Packet> > m_meterDropTrace;
   
-  /** A pair of QosStatsCalculator, for downlink and uplink statistics */
-  typedef std::pair<Ptr<QosStatsCalculator>, Ptr<QosStatsCalculator> > QosStatsPair_t;
-  
-  /** Map saving <TEID / QoS stats > */
-  typedef std::map<uint32_t, QosStatsPair_t> TeidQosMap_t;
-  TeidQosMap_t        m_qosStats;         //!< TEID QoS statistics
-
   /** Map saving Node / Switch indexes. */
   typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;  
   NodeSwitchMap_t     m_nodeSwitchMap;    //!< Registered nodes per switch idx.
