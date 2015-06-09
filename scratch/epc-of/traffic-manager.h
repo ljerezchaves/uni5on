@@ -103,12 +103,17 @@ private:
   Ptr<RandomVariableStream>         m_idleRng;    //!< Idle random time gen.
   Ptr<RandomVariableStream>         m_startRng;   //!< Start random time gen.
   Ptr<OpenFlowEpcController>        m_controller; //!< OpenFLow controller
-  Ptr<OpenFlowEpcNetwork>           m_network;    //!< OpenFLow network
   std::vector<Ptr<EpcApplication> > m_apps;       //!< Application list
 
   uint64_t    m_imsi;         //!< UE IMSI identifier
   uint16_t    m_cellId;       //!< Current eNB cellId
   uint32_t    m_defaultTeid;  //!< TEID for default UE tunnel
+
+  /** Application start trace source, fired when application start. */
+  TracedCallback<Ptr<const EpcApplication> > m_appStartTrace;
+
+  /** Application stop trace source, fired when application stopts. */
+  TracedCallback<Ptr<const EpcApplication> > m_appStopTrace;
 };
 
 };  // namespace ns3

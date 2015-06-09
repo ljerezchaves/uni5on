@@ -121,9 +121,9 @@ SimulationScenario::BuildRingTopology ()
   
   // OpenFlow EPC ring network (considering 20km fiber cable latency)
   m_opfNetwork = CreateObject<RingNetwork> ();
+  Names::Add ("OpenFlowNetwork", m_opfNetwork);
   m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (m_nSwitches));
   m_opfNetwork->CreateTopology (m_controller, m_SwitchIdxPerEnb);
-  Names::Add ("OpenFlowNetwork", m_opfNetwork);
   
   // LTE EPC core (with callbacks and trace sink setup)
   m_epcHelper = CreateObject<OpenFlowEpcHelper> ();
@@ -142,11 +142,11 @@ SimulationScenario::BuildRingTopology ()
 
   // Internet network
   m_webNetwork = CreateObject<InternetNetwork> ();
-  m_webHost = m_webNetwork->CreateTopology (m_epcHelper->GetPgwNode ());
   Names::Add ("InternetNetwork", m_webNetwork);
+  m_webHost = m_webNetwork->CreateTopology (m_epcHelper->GetPgwNode ());
 
   // Applications and traffic manager
-  TrafficHelper tfcHelper (m_webHost, m_lteHelper, m_controller, m_opfNetwork);
+  TrafficHelper tfcHelper (m_webHost, m_lteHelper, m_controller);
   tfcHelper.Install (m_lteNetwork->GetUeNodes (), m_lteNetwork->GetUeDevices ());
 
   // Output logger. Must be created after scenario configuration, so it can
@@ -156,7 +156,7 @@ SimulationScenario::BuildRingTopology ()
 
   // OpenFlow network trace sinks. Must be called after scenario configuration,
   // so it can connect to trace sources successfully.
-  m_opfNetwork->ConnectTraceSinks ();
+  // m_opfNetwork->ConnectTraceSinks ();
 
   // ofsoftswitch13 log and ns-3 traces
   DatapathLogs ();

@@ -40,8 +40,7 @@ const uint64_t TrafficHelper::m_maxBitRate [] = {3300000, 4400000, 1900000,
 
 // ------------------------------------------------------------------------ //
 TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper, 
-                              Ptr<OpenFlowEpcController> controller,
-                              Ptr<OpenFlowEpcNetwork> network)
+                              Ptr<OpenFlowEpcController> controller)
   : m_lteHelper (helper),
     m_webNode (server)
 {
@@ -55,7 +54,6 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   // Configuring the traffic manager object factory
   m_managerFactory.SetTypeId (TrafficManager::GetTypeId ());
   SetTfcManagerAttribute ("Controller", PointerValue (controller));
-  SetTfcManagerAttribute ("Network", PointerValue (network));
 
   // Random stored video selection.
   m_stVideoRng = CreateObject<UniformRandomVariable> ();

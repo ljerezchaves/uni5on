@@ -62,16 +62,13 @@ TrafficManager::GetTypeId (void)
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficManager::m_rtVideoEnable),
                    MakeBooleanChecker ())
+
     .AddAttribute ("Controller",
                    "The OpenFlow EPC controller.",
                    PointerValue (),
                    MakePointerAccessor (&TrafficManager::m_controller),
                    MakePointerChecker<OpenFlowEpcController> ())
-    .AddAttribute ("Network",
-                   "The OpenFlow EPC network.",
-                   PointerValue (),
-                   MakePointerAccessor (&TrafficManager::m_network),
-                   MakePointerChecker<OpenFlowEpcNetwork> ())
+    
     .AddAttribute ("IdleRng",
                    "A random variable used to set idle time.",
                    StringValue ("ns3::ExponentialRandomVariable[Mean=180.0]"),
@@ -82,7 +79,16 @@ TrafficManager::GetTypeId (void)
                    StringValue ("ns3::ExponentialRandomVariable[Mean=20.0]"),
                    MakePointerAccessor (&TrafficManager::m_startRng),
                    MakePointerChecker <RandomVariableStream> ())
-  ;
+    
+    .AddTraceSource ("AppStart",
+                     "EpcApplication start trace source.",
+                     MakeTraceSourceAccessor (&TrafficManager::m_appStartTrace),
+                     "ns3::EpcApplication::EpcAppTracedCallback")
+    .AddTraceSource ("AppStop",
+                     "EpcApplication stop trace source.",
+                     MakeTraceSourceAccessor (&TrafficManager::m_appStopTrace),
+                     "ns3::EpcApplication::EpcAppTracedCallback")  
+    ;
   return tid;
 }
 
@@ -127,8 +133,7 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
   
   if (authorized)
     {
-      // ResetEpcStatistics.
-      m_network->ResetEpcStatistics (app->GetTeid ());
+      m_appStartTrace (app);
       app->Start ();
     }
   else
@@ -144,6 +149,8 @@ TrafficManager::NotifyAppStop (Ptr<EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
  
+  m_appStopTrace (app);
+  
   uint32_t appTeid = app->GetTeid ();
   if (appTeid != m_defaultTeid)
     {
@@ -151,11 +158,6 @@ TrafficManager::NotifyAppStop (Ptr<EpcApplication> app)
       m_controller->ReleaseDedicatedBearer (app->GetEpsBearer (),
         m_imsi, m_cellId, appTeid);
     }
-
-  // DumpEpcStatistcs
-  // NOTE: Currently, only Voip application needs uplink stats
-  bool uplink = (app->GetInstanceTypeId () == VoipClient::GetTypeId ());
-  m_network->DumpEpcStatistics (app->GetTeid (), app->GetDescription (), uplink);
 
   // Schedule next start attempt for this app  (wait at least 5 seconds)
   Time idleTime = Seconds (5) + Seconds (std::abs (m_idleRng->GetValue ()));
@@ -214,7 +216,6 @@ TrafficManager::DoDispose ()
   m_idleRng = 0;
   m_startRng = 0;
   m_controller = 0;
-  m_network = 0;
   m_apps.clear ();
 }
 
