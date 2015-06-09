@@ -69,7 +69,7 @@ public:
    * \param dr The DataRate to reserve.
    * \return True if everything is ok, false otherwise.
    */
-  bool ReserveDataRate (DataRate dr);   //!< Reserve bandwitdth
+  bool ReserveDataRate (DataRate dr);
 
   /**
    * Release some bandwith between these two switches.
@@ -82,7 +82,7 @@ public:
    * Get the availabe bandwitdh between these two switches.
    * \return True available DataRate.
    */
-  DataRate GetAvailableDataRate ();     //!< Get available bandwitdth 
+  DataRate GetAvailableDataRate ();
 
   /**
    * Get the availabe bandwitdh between these two switches, considering a
@@ -97,6 +97,15 @@ public:
    * \return The usage ratio.
    */
   double GetUsageRatio (void) const;
+  
+  /** 
+   * TracedCallback signature for bandwidth usage ratio.
+   * \param swIdx1 The first switch index.
+   * \param swIdx2 The second switch index.
+   * \param ratio The bandwidth usage ratio.
+   */
+  typedef void (* UsageTracedCallback)
+    (uint16_t swIdx1, uint16_t swIdx2, double ratio);
 
 protected:
   /** Information associated to the first switch */
@@ -120,6 +129,10 @@ protected:
   DataRate maxDataRate;         //!< Maximum nominal bandwidth (half-duplex)
   DataRate reservedDataRate;    //!< Reserved bandwitdth (half-duplex)
   //\}
+
+private:
+  /** The usage ratio trace source, fired at ReserveDataRate/ReleaseDataRate. */
+  TracedCallback<uint16_t, uint16_t, double> m_usageTrace;
 };
 
 

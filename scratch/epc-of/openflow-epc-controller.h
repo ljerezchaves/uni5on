@@ -250,7 +250,7 @@ protected:
   virtual ofl_err HandleFlowRemoved (ofl_msg_flow_removed*, SwitchInfo, uint32_t);
 
   
-  /** The bearer request trace source, fired at ??? FIXME. */
+  /** The bearer request trace source, fired at RequestDedicatedBearer. */
   TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerRequestTrace;
 
   /** Timeout values */

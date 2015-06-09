@@ -44,6 +44,10 @@ ConnectionInfo::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::ConnectionInfo")
     .SetParent<Object> ()
     .AddConstructor<ConnectionInfo> ()
+    .AddTraceSource ("UsageRatio",
+                     "Bandwidth usage ratio trace source.",
+                     MakeTraceSourceAccessor (&ConnectionInfo::m_usageTrace),
+                     "ns3::ConnectionInfo::UsageTracedCallback")
   ;
   return tid;
 }
@@ -76,6 +80,7 @@ bool
 ConnectionInfo::ReserveDataRate (DataRate dr)
 {
   reservedDataRate = reservedDataRate + dr;
+  m_usageTrace (switchIdx1, switchIdx2, GetUsageRatio ());
   return (reservedDataRate <= maxDataRate);
 }
 
@@ -83,6 +88,7 @@ bool
 ConnectionInfo::ReleaseDataRate (DataRate dr)
 {
   reservedDataRate = reservedDataRate - dr;
+  m_usageTrace (switchIdx1, switchIdx2, GetUsageRatio ());
   return (reservedDataRate >= 0);
 }
 
