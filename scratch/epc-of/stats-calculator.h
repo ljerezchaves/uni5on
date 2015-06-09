@@ -26,8 +26,6 @@
 
 namespace ns3 {
   
-class BearerRequestStats;
-
 /**
  * \ingroup epcof
  *
@@ -81,7 +79,8 @@ public:
    * TracedCallback signature for AdmissionStatsCalculator.
    * \param stats The statistics.
    */
-  typedef void (* AdmTracedCallback)(Ptr<const AdmissionStatsCalculator> stats);
+  typedef void (* AdmTracedCallback)
+    (Ptr<const AdmissionStatsCalculator> stats);
 
 protected:
   /** Destructor implementation */
@@ -96,6 +95,65 @@ private:
   uint32_t          m_gbrBlocked;       //!< Number of GBR blocked
   Time              m_lastResetTime;    //!< Last reset time
 };
+
+
+// ------------------------------------------------------------------------ //
+/**
+ * \ingroup epcof
+ *
+ * This class monitors gateway bandwidth statistics. 
+ */
+class GatewayStatsCalculator : public Object
+{
+public:
+  GatewayStatsCalculator ();  //!< Default constructor
+  virtual ~GatewayStatsCalculator (); //!< Default destructor
+
+  /**
+   * Register this type.
+   * \return The object TypeId.
+   */
+  static TypeId GetTypeId (void);
+
+  /**
+   * Get statistics.
+   * \return The statistic value.
+   */
+  //\{
+  Time      GetActiveTime       (void) const;
+  DataRate  GetDownDataRate     (void) const;
+  DataRate  GetUpDataRate       (void) const;
+  //\}
+
+  /**
+   * Notify gateway traffic.
+   * \param direction Traffic direction.
+   * \param packet The packet.
+   */
+  void NotifyTraffic (std::string direction, Ptr<const Packet> packet);
+
+  /** 
+   * Reset all internal counters. 
+   */
+  void ResetCounters ();
+
+  /** 
+   * TracedCallback signature for GatewayStatsCalculator.
+   * \param stats The statistics.
+   */
+  typedef void (* PgwTracedCallback)
+    (Ptr<const GatewayStatsCalculator> stats);
+
+protected:
+  /** Destructor implementation */
+  virtual void DoDispose ();
+
+private:
+  uint32_t  m_pgwDownBytes;   //!< Pgw traffic downlink bytes.
+  uint32_t  m_pgwUpBytes;     //!< Pgw traffic uplink bytes.
+  Time      m_lastResetTime;  //!< Last reset time
+};
+
 
 } // namespace ns3
 #endif /* EPCOF_STATS_CALCULATOR_H */

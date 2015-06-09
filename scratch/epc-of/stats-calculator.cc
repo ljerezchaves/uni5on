@@ -25,6 +25,9 @@
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("StatsCalculator");
+NS_OBJECT_ENSURE_REGISTERED (AdmissionStatsCalculator);
+NS_OBJECT_ENSURE_REGISTERED (GatewayStatsCalculator);
+
 
 AdmissionStatsCalculator::AdmissionStatsCalculator ()
   : m_nonRequests (0),
@@ -176,6 +179,77 @@ uint32_t
 AdmissionStatsCalculator::GetTotalBlocked (void) const
 {
   return GetNonGbrBlocked () + GetGbrBlocked ();
+}
+
+
+// ------------------------------------------------------------------------ //
+GatewayStatsCalculator::GatewayStatsCalculator ()
+  : m_pgwDownBytes (0),
+    m_pgwUpBytes (0),
+    m_lastResetTime (Simulator::Now ())
+{
+  NS_LOG_FUNCTION (this);
+}
+
+GatewayStatsCalculator::~GatewayStatsCalculator ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+TypeId 
+GatewayStatsCalculator::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::GatewayStatsCalculator")
+    .SetParent<Object> ()
+    .AddConstructor<GatewayStatsCalculator> ()
+  ;
+  return tid;
+}
+
+Time      
+GatewayStatsCalculator::GetActiveTime (void) const
+{
+  return Simulator::Now () - m_lastResetTime;
+}
+
+DataRate      
+GatewayStatsCalculator::GetDownDataRate (void) const
+{
+  return DataRate (8 * m_pgwDownBytes / GetActiveTime ().GetSeconds ());
+}
+
+DataRate      
+GatewayStatsCalculator::GetUpDataRate (void) const
+{
+  return DataRate (8 * m_pgwUpBytes / GetActiveTime ().GetSeconds ());
+}
+
+void
+GatewayStatsCalculator::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+void
+GatewayStatsCalculator::NotifyTraffic (std::string direction, 
+  Ptr<const Packet> packet)
+{
+  if (direction == "S1uTx")
+    {
+      m_pgwDownBytes += packet->GetSize ();
+    }
+  else if (direction == "S1uRx")
+    {
+      m_pgwUpBytes += packet->GetSize ();
+    }
+}
+
+void
+GatewayStatsCalculator::ResetCounters ()
+{
+  m_pgwUpBytes = 0;
+  m_pgwDownBytes = 0;
+  m_lastResetTime = Simulator::Now ();
 }
 
 } // Namespace ns3
