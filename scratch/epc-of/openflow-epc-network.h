@@ -61,28 +61,11 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  /**
-   * Reserve some bandwith between these two switches.
-   * \param dr The DataRate to reserve.
-   * \return True if everything is ok, false otherwise.
-   */
-  bool ReserveDataRate (DataRate dr);
-
-  /**
-   * Release some bandwith between these two switches.
-   * \param dr The DataRate to release.
-   * \return True if everything is ok, false otherwise.
-   */
-  bool ReleaseDataRate (DataRate dr);
-
   /**
    * Get the availabe bandwitdh between these two switches.
    * \return True available DataRate.
    */
-  DataRate GetAvailableDataRate ();
+  DataRate GetAvailableDataRate (void) const;
 
   /**
    * Get the availabe bandwitdh between these two switches, considering a
@@ -90,7 +73,7 @@ public:
    * \param bwFactor The bandwidth saving factor.
    * \return True available DataRate.
    */
-  DataRate GetAvailableDataRate (double bwFactor);
+  DataRate GetAvailableDataRate (double bwFactor) const;
 
   /**
    * Return the bandwidth usage ratio, ignoring the saving reserve factor.
@@ -108,6 +91,23 @@ public:
     (uint16_t swIdx1, uint16_t swIdx2, double ratio);
 
 protected:
+  /** Destructor implementation */
+  virtual void DoDispose ();
+
+  /**
+   * Reserve some bandwith between these two switches.
+   * \param dr The DataRate to reserve.
+   * \return True if everything is ok, false otherwise.
+   */
+  bool ReserveDataRate (DataRate dr);
+
+  /**
+   * Release some bandwith between these two switches.
+   * \param dr The DataRate to release.
+   * \return True if everything is ok, false otherwise.
+   */
+  bool ReleaseDataRate (DataRate dr);
+
   /** Information associated to the first switch */
   //\{
   uint16_t switchIdx1;                  //!< Switch index
@@ -126,12 +126,12 @@ protected:
 
   /** Information associated to the connection between these two switches */
   //\{
-  DataRate maxDataRate;         //!< Maximum nominal bandwidth (half-duplex)
-  DataRate reservedDataRate;    //!< Reserved bandwitdth (half-duplex)
+  DataRate maxDataRate;         //!< Maximum nominal bandwidth
+  DataRate reservedDataRate;    //!< Reserved bandwitdth
   //\}
 
 private:
-  /** The usage ratio trace source, fired at ReserveDataRate/ReleaseDataRate. */
+  /** The usage ratio trace source, fired when reserving/releasing DataRate. */
   TracedCallback<uint16_t, uint16_t, double> m_usageTrace;
 };
 

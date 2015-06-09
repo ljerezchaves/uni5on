@@ -59,13 +59,13 @@ ConnectionInfo::DoDispose ()
 }
 
 DataRate
-ConnectionInfo::GetAvailableDataRate ()
+ConnectionInfo::GetAvailableDataRate (void) const
 {
   return maxDataRate - reservedDataRate;
 }
 
 DataRate
-ConnectionInfo::GetAvailableDataRate (double bwFactor)
+ConnectionInfo::GetAvailableDataRate (double bwFactor) const
 {
   return (maxDataRate * (1. - bwFactor)) - reservedDataRate;
 }
@@ -79,17 +79,25 @@ ConnectionInfo::GetUsageRatio (void) const
 bool
 ConnectionInfo::ReserveDataRate (DataRate dr)
 {
-  reservedDataRate = reservedDataRate + dr;
-  m_usageTrace (switchIdx1, switchIdx2, GetUsageRatio ());
-  return (reservedDataRate <= maxDataRate);
+  if (reservedDataRate + dr <= maxDataRate)
+    {
+      reservedDataRate = reservedDataRate + dr;
+      m_usageTrace (switchIdx1, switchIdx2, GetUsageRatio ());
+      return true;
+    }
+  return false;
 }
 
 bool
 ConnectionInfo::ReleaseDataRate (DataRate dr)
 {
-  reservedDataRate = reservedDataRate - dr;
-  m_usageTrace (switchIdx1, switchIdx2, GetUsageRatio ());
-  return (reservedDataRate >= 0);
+  if (reservedDataRate - dr >= DataRate (0))
+    {
+      reservedDataRate = reservedDataRate - dr;
+      m_usageTrace (switchIdx1, switchIdx2, GetUsageRatio ());
+      return true;
+    }
+  return false;
 }
 
 
