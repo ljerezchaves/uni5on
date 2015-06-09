@@ -99,13 +99,19 @@ public:
   typedef Callback<void, Ptr<EpcApplication> > StopCb_t;
 
   /** 
-   * TracedCallback signature for QoS dump.
+   * TracedCallback signature for EpcApplication QoS stats.
    * \param description String describing this application.
    * \param teid GTP TEID.
    * \param stats The QoS statistics.
    */
-  typedef void (* QosTracedCallback)(std::string description, uint32_t teid, 
-                                     Ptr<const QosStatsCalculator> stats);
+  typedef void (* AppStatsTracedCallback)(std::string description, uint32_t teid, 
+                                          Ptr<const QosStatsCalculator> stats);
+
+  /**
+   * TracedCallback signature for EpcApplication.
+   * \param app The EpcApplication.
+   */
+  typedef void (* EpcAppTracedCallback)(Ptr<const EpcApplication> app);
 
 protected:
   /** Destructor implementation */

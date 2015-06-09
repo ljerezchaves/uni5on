@@ -48,7 +48,7 @@ EpcApplication::GetTypeId (void)
     .AddTraceSource ("AppStats",
                      "Application QoS trace source.",
                      MakeTraceSourceAccessor (&EpcApplication::m_appTrace),
-                     "ns3::EpcApplication::QosTracedCallback")
+                     "ns3::EpcApplication::AppStatsTracedCallback")
   ;
   return tid;
 }
