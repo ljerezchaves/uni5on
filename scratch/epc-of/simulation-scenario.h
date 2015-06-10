@@ -57,12 +57,6 @@ public:
    */ 
   void BuildRingTopology ();
 
-  /** 
-   * Set the common prefix for input/output files.
-   * \param prefix The prefix.
-   */ 
-  void SetCommonPrefix (std::string prefix);
-
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();

@@ -75,7 +75,7 @@ SimulationScenario::GetTypeId (void)
     .AddAttribute ("CommonPrefix",
                    "Common prefix for input and output filenames.",
                    StringValue (""),
-                   MakeStringAccessor (&SimulationScenario::SetCommonPrefix),
+                   MakeStringAccessor (&SimulationScenario::m_commonPrefix),
                    MakeStringChecker ())
     .AddAttribute ("Enbs",
                    "Number of eNBs in network topology.",
@@ -149,30 +149,9 @@ SimulationScenario::BuildRingTopology ()
   TrafficHelper tfcHelper (m_webHost, m_lteHelper, m_controller);
   tfcHelper.Install (m_lteNetwork->GetUeNodes (), m_lteNetwork->GetUeDevices ());
 
-  // Output logger. Must be created after scenario configuration, so it can
-  // connect to traces sources successfully.
-  m_logger = CreateObject<OutputLogger> ();
-  m_logger->SetCommonPrefix (m_commonPrefix);
-
   // ofsoftswitch13 log and ns-3 traces
   DatapathLogs ();
   PcapAsciiTraces ();
-}
-
-void 
-SimulationScenario::SetCommonPrefix (std::string prefix)
-{
-  static bool prefixSet = false;
-
-  if (prefixSet) return;
-
-  prefixSet = true;
-  char lastChar = *prefix.rbegin (); 
-  if (lastChar != '-')
-    {
-      prefix += "-";
-    }
-  m_commonPrefix = prefix;
 }
 
 bool

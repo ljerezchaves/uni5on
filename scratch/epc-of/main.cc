@@ -51,13 +51,14 @@ main (int argc, char *argv[])
   bool verbose = false;
   bool lteRem = false;
   uint32_t simTime = 201;
+  std::string prefix = "";
   
   CommandLine cmd;
   cmd.AddValue ("verbose",    "Enable verbose output.", verbose);
   cmd.AddValue ("progress",   "Simulation progress interval [s].", g_progress);
   cmd.AddValue ("simTime",    "Simulation time [s].", simTime);
   cmd.AddValue ("topoFile",   "ns3::SimulationScenario::TopoFilename");
-  cmd.AddValue ("prefix",     "ns3::SimulationScenario::CommonPrefix");
+  cmd.AddValue ("prefix",     "Common prefixfor filenames.", prefix);
   cmd.AddValue ("pcap",       "ns3::SimulationScenario::PcapTrace");
   cmd.AddValue ("trace",      "ns3::SimulationScenario::LteTrace");
   cmd.AddValue ("liblog",     "ns3::SimulationScenario::SwitchLogs");
@@ -70,13 +71,30 @@ main (int argc, char *argv[])
   cmd.AddValue ("bandwidth",  "ns3::RingNetwork::LinkDataRate");
   cmd.AddValue ("radioMap",   "Generate LTE radio map", lteRem);
   cmd.Parse (argc, argv);
-  
+
   if (g_progress) Simulator::Schedule (Seconds (g_progress), &PrintCurrentTime);
   if (verbose) EnableVerbose ();
- 
+
+  // Parsing common prefix
+  if (prefix != "")
+    {
+      char lastChar = *prefix.rbegin (); 
+      if (lastChar != '-')
+        {
+          prefix += "-";
+        }
+    }
+  Config::SetDefault ("ns3::SimulationScenario::CommonPrefix", StringValue (prefix));
+
+  // Simulation scenario
   Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
   scenario->BuildRingTopology ();
- 
+
+  // Output logger. Must be created after scenario configuration, so it can
+  // connect to traces sources successfully.
+  Ptr<OutputLogger> logger = CreateObject<OutputLogger> ();
+  logger->SetCommonPrefix (prefix);
+  
   if (lteRem)
     {
       // The channel number was manually set :/
