@@ -154,10 +154,6 @@ SimulationScenario::BuildRingTopology ()
   m_logger = CreateObject<OutputLogger> ();
   m_logger->SetCommonPrefix (m_commonPrefix);
 
-  // OpenFlow network trace sinks. Must be called after scenario configuration,
-  // so it can connect to trace sources successfully.
-  // m_opfNetwork->ConnectTraceSinks ();
-
   // ofsoftswitch13 log and ns-3 traces
   DatapathLogs ();
   PcapAsciiTraces ();

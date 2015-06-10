@@ -117,6 +117,7 @@ EnableVerbose ()
 {
   LogComponentEnable ("Main", LOG_LEVEL_ALL);
   LogComponentEnable ("SimulationScenario", LOG_LEVEL_INFO);
+  LogComponentEnable ("OutputLogger", LOG_LEVEL_ALL);
   
   LogComponentEnable ("OFSwitch13NetDevice", LOG_LEVEL_WARN);
   LogComponentEnable ("OFSwitch13Interface", LOG_LEVEL_WARN);
@@ -146,6 +147,5 @@ EnableVerbose ()
   LogComponentEnable ("TrafficManager", LOG_LEVEL_ALL);
   LogComponentEnable ("TrafficHelper", LOG_LEVEL_ALL);
   LogComponentEnable ("EpcApplication", LOG_LEVEL_ALL);
-
 }
 
