@@ -55,20 +55,29 @@ RingController::GetTypeId (void)
   return tid;
 }
 
+
+void
+RingController::SetOfNetwork (Ptr<RingNetwork> network)
+{
+  NS_ASSERT_MSG (!m_ofNetwork, "Network already set.");
+  m_ofNetwork = network;
+}
+
 void
 RingController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+  m_ofNetwork = 0;
   OpenFlowEpcController::DoDispose ();
 }
 
 void
-RingController::NotifyNewConnBtwnSwitches (const Ptr<ConnectionInfo> connInfo)
+RingController::NotifyConnBtwnSwitches (Ptr<ConnectionInfo> connInfo)
 {
   NS_LOG_FUNCTION (this);
   
   // Call base method which will save connection information
-  OpenFlowEpcController::NotifyNewConnBtwnSwitches (connInfo);
+  OpenFlowEpcController::NotifyConnBtwnSwitches (connInfo);
   
   // Installing default groups for RingController ring routing. Group
   // RingRoutingInfo::CLOCK is used to send packets from current switch to the
@@ -87,7 +96,7 @@ RingController::NotifyNewConnBtwnSwitches (const Ptr<ConnectionInfo> connInfo)
 }
 
 void 
-RingController::NotifyConnBtwnSwitchesOk ()
+RingController::NotifyConnBtwnSwitchesOk (bool finished)
 {
   NS_LOG_FUNCTION (this);
   
@@ -515,6 +524,18 @@ RingController::CreateSpanningTree ()
   cmd2 << "port-mod port=" << connInfo->portNum2 << ",addr=" << 
            macAddr2 << ",conf=0x00000020,mask=0x00000020";
   DpctlCommand (connInfo->switchDev2, cmd2.str ());
+}
+
+uint16_t 
+RingController::GetNSwitches ()
+{
+  return m_ofNetwork->GetNSwitches ();
+}
+
+Ptr<OFSwitch13NetDevice> 
+RingController::GetSwitchDevice (uint16_t index)
+{
+  return m_ofNetwork->GetSwitchDevice (index);
 }
 
 // FIXME: Mover isso aqui pro network

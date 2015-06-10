@@ -53,16 +53,11 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Set the pointer to OpenFlow network controlled by this app.
-   * \param network The OpenFlowEpcNetwork pointer.
-   */
-  void SetOfNetwork (Ptr<OpenFlowEpcNetwork> network);
-
-  /**
    * Notify this controller of a new eNB or SgwPgw device connected to the
    * OpenFlow network over some switch port. This function will save the IP
    * address / MAC address from this new device for further ARP resolution, and
-   * will configure local port delivery. 
+   * will configure local port delivery. The user is supposed to connect this
+   * function as trace sink for OpenFlowEpcNetwork::NewAttach trace source.
    * \attention This nodeDev is not the one added as port to switch. Instead,
    * this is the 'other' end of this connection, associated with a eNB or
    * SgwPgw node.
@@ -78,16 +73,20 @@ public:
 
   /**
    * Notify this controller of a new connection between two switches in the
-   * OpenFlow network. 
+   * OpenFlow network. The user is supposed to connect this function as trace
+   * sink for OpenFlowEpcNetwork::NewConnection trace source.
    * \param conInfo The connection information and metadata.
    */ 
-  virtual void NotifyNewConnBtwnSwitches (const Ptr<ConnectionInfo> connInfo);
+  virtual void NotifyConnBtwnSwitches (Ptr<ConnectionInfo> connInfo);
 
   /**
    * Notify this controller that all connection between switches have already
-   * been configure and the topology is finished.
+   * been configure and the topology is finished. The user is supposed to
+   * connect this function as trace sink for OpenFlowEpcNetwork::ConnectionsOk
+   * trace source.
+   * \param finished True, indicating that all connections are completed.
    */ 
-  virtual void NotifyConnBtwnSwitchesOk ();
+  virtual void NotifyConnBtwnSwitchesOk (bool finished);
 
   /** 
    * Notify this controller when the SgwPgw gateway is handling a
@@ -95,6 +94,8 @@ public:
    * the list of bearers context created (this list will be sent back to the
    * MME over S11 interface in the CreateSessionResponde message). With this
    * information, the controller can configure the switches for GTP routing.
+   * The user is supposed to connect this function as trace sink for
+   * SgwPgwApplication::ContextCreated trace source.
    * \see 3GPP TS 29.274 7.2.1 for CreateSessionRequest message format.
    * \param imsi The IMSI UE identifier.
    * \param cellId The eNB CellID to which the IMSI UE is attached to.
@@ -105,6 +106,9 @@ public:
   virtual void NotifyContextCreated (uint64_t imsi, uint16_t cellId,
       Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList);
   
+  // TODO Further enhancement for mobility
+  // virtual void NotifyContextModified ();
+
   /** 
    * Request a new dedicated EPC bearer. This is used to check for necessary
    * resources in the network (mainly available data rate for GBR bearers).
@@ -140,11 +144,8 @@ public:
   virtual bool ReleaseDedicatedBearer (EpsBearer bearer, uint64_t imsi,
       uint16_t cellId, uint32_t teid);
  
-  // TODO
-  // virtual void NotifyContextModified ();
-  // virtual void NotifyBearerDeactivated ();
 
-  /**
+  /** FIXME remove
    * Get bandwidth statistcs for (relevant) network links.
    * \return The list with stats.
    */
@@ -163,7 +164,7 @@ protected:
   virtual void DoDispose ();
   
   /**
-   * Process the bearer resource and bandwidth allocation.
+   * Process the bearer resource request and bandwidth allocation.
    * \param rInfo The routing information to process.
    * \return True when the request is satisfied.
    */
@@ -203,18 +204,6 @@ protected:
   virtual void CreateSpanningTree () = 0;   
 
   /**
-   * \return Number of switches in the network.
-   */
-  uint16_t GetNSwitches ();
-
-  /**
-   * Get the OFSwitch13NetDevice of a specific switch.
-   * \param index The switch index.
-   * \return The pointer to the switch OFSwitch13NetDevice.
-   */
-  Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
-
-  /**
    * Retrieve the switch index for EPC entity attached to OpenFlow network.
    * \param addr The eNB or SgwPgw address.
    * \return The switch index in m_ofSwitches.
@@ -228,21 +217,6 @@ protected:
    * \return Pointer to connection info saved.
    */
   Ptr<ConnectionInfo> GetConnectionInfo (uint16_t sw1, uint16_t sw2);
- 
-  /**
-   * Retrieve stored information for a specific GTP tunnel
-   * \param teid The GTP tunnel ID.
-   * \return The routing information for this tunnel.
-   */
-  Ptr<RoutingInfo> GetTeidRoutingInfo (uint32_t teid);
-
-  /**
-   * Extract an IPv4 address from packet match.
-   * \param oxm_of The OXM_IF_* IPv4 field.
-   * \param match The ofl_match structure pointer.
-   * \return The IPv4 address.
-   */
-  Ipv4Address ExtractIpv4Address (uint32_t oxm_of, ofl_match* match);
   
   // Inherited from OFSwitch13Controller
   virtual void ConnectionStarted (SwitchInfo);
@@ -280,6 +254,13 @@ private:
   void SaveTeidRoutingInfo (Ptr<RoutingInfo> rInfo);
 
   /**
+   * Retrieve stored information for a specific GTP tunnel
+   * \param teid The GTP tunnel ID.
+   * \return The routing information for this tunnel.
+   */
+  Ptr<RoutingInfo> GetTeidRoutingInfo (uint32_t teid);
+
+  /**
    * Install flow table entry for local delivery when a new IP device is
    * connected to the OpenFlow network. This entry will match both MAC address
    * and IP address for the device in order to output packets on device port.
@@ -313,6 +294,14 @@ private:
       uint32_t xid);
 
   /**
+   * Extract an IPv4 address from packet match.
+   * \param oxm_of The OXM_IF_* IPv4 field.
+   * \param match The ofl_match structure pointer.
+   * \return The IPv4 address.
+   */
+  Ipv4Address ExtractIpv4Address (uint32_t oxm_of, ofl_match* match);
+
+  /**
    * Perform an ARP resolution
    * \param ip The Ipv4Address to search.
    * \return The MAC address for this ip.
@@ -337,7 +326,8 @@ private:
 
   /** Map saving <IPv4 address / Switch index > */
   typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;
-   
+  
+  // TODO: Connection info should be at OpenFlowEpcNetwork
   /** Map saving <Pair of switch indexes / Connection information */
   typedef std::map<SwitchPair_t, Ptr<ConnectionInfo> > ConnInfoMap_t; 
   
@@ -349,7 +339,6 @@ private:
   ConnInfoMap_t     m_connections;      //!< Connections between switches.
   TeidRoutingMap_t  m_routes;           //!< TEID routing informations.
   
-  Ptr<OpenFlowEpcNetwork> m_ofNetwork;  //!< Pointer to OpenFlow network.
 };
 
 };  // namespace ns3

@@ -38,7 +38,6 @@ const int OpenFlowEpcController::m_t1DefaultPrio = 128;
 const int OpenFlowEpcController::m_t1RingPrio = 32;
 
 OpenFlowEpcController::OpenFlowEpcController ()
-  : m_ofNetwork (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -70,14 +69,6 @@ OpenFlowEpcController::DoDispose ()
   m_ipSwitchTable.clear ();
   m_connections.clear ();
   m_routes.clear ();
-  m_ofNetwork = 0;
-}
-
-void
-OpenFlowEpcController::SetOfNetwork (Ptr<OpenFlowEpcNetwork> network)
-{
-  NS_ASSERT_MSG (!m_ofNetwork, "Network already set.");
-  m_ofNetwork = network;
 }
 
 void 
@@ -114,8 +105,7 @@ OpenFlowEpcController::NotifyNewAttachToSwitch (Ptr<NetDevice> nodeDev,
 }
 
 void
-OpenFlowEpcController::NotifyNewConnBtwnSwitches (
-    const Ptr<ConnectionInfo> connInfo)
+OpenFlowEpcController::NotifyConnBtwnSwitches (Ptr<ConnectionInfo> connInfo)
 {
   NS_LOG_FUNCTION (this << connInfo);
   
@@ -136,7 +126,7 @@ OpenFlowEpcController::NotifyNewConnBtwnSwitches (
 }
 
 void 
-OpenFlowEpcController::NotifyConnBtwnSwitchesOk ()
+OpenFlowEpcController::NotifyConnBtwnSwitchesOk (bool finished)
 {
   NS_LOG_FUNCTION (this);
   
@@ -323,18 +313,6 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
           rInfo->AggregateObject (reserveInfo);
         }
     }
-}
-
-uint16_t 
-OpenFlowEpcController::GetNSwitches ()
-{
-  return m_ofNetwork->GetNSwitches ();
-}
-
-Ptr<OFSwitch13NetDevice> 
-OpenFlowEpcController::GetSwitchDevice (uint16_t index)
-{
-  return m_ofNetwork->GetSwitchDevice (index);
 }
 
 uint16_t 

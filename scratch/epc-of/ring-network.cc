@@ -98,6 +98,7 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
   
   m_ringCtrlApp = DynamicCast<RingController> (m_ofCtrlApp);
   NS_ASSERT_MSG (m_ringCtrlApp, "Expecting a RingController.");
+  m_ringCtrlApp->SetOfNetwork (this);
 
   // Creating the switch nodes
   m_ofSwitches.Create (m_nodes);
@@ -162,7 +163,10 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
       info->portNum1 = currPortNum;
       info->portNum2 = nextPortNum;
       info->maxDataRate = m_linkDataRate;
-      m_ringCtrlApp->NotifyNewConnBtwnSwitches (info);
+      
+      // Trace source notifying new connection between switches
+      m_newConnTrace (info);
+      m_ringCtrlApp->NotifyConnBtwnSwitches (info);
 
       // Registering trace sink for meter dropped packets
       currDevice->TraceConnect ("MeterDrop", Names::FindName (currNode),
@@ -180,7 +184,9 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
         MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
     }
 
-  m_ringCtrlApp->NotifyConnBtwnSwitchesOk ();
+  // Trace source notifying that all connections between switches are ok.
+  m_connOkTrace (true);
+  m_ringCtrlApp->NotifyConnBtwnSwitchesOk (true);
   created = true;
 }
 
@@ -236,7 +242,8 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   Ptr<OFSwitch13Port> swPort = swDev->AddSwitchPort (portDev);
   uint32_t portNum = swPort->GetPortNo ();
   
-  // Notify controller of a new device
+  // Trace source notifying a new device attached to network
+  m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
   m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeAddr, swDev, swIdx, portNum);
 
   // Registering trace sink for queue drop packets
@@ -284,7 +291,8 @@ RingNetwork::AttachToX2 (Ptr<Node> node)
   Ptr<OFSwitch13Port> swPort = swDev->AddSwitchPort (portDev);
   uint32_t portNum = swPort->GetPortNo ();
 
-  // Notify controller of a new device
+  // Trace source notifying a new device attached to network
+  m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
   m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeAddr, swDev, swIdx, portNum);
 
   // Registering trace sink for queue drop packets

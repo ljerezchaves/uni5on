@@ -27,8 +27,11 @@
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
 #include "openflow-epc-controller.h"
+#include "ring-network.h"
 
 namespace ns3 {
+
+class RingNetwork;
 
 /**
  * \ingroup epcof
@@ -56,15 +59,21 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** Destructor implementation */
-  void DoDispose ();
+  /**
+   * Set the pointer to OpenFlow network controlled by this app.
+   * \param network The OpenFlowEpcNetwork pointer.
+   */
+  void SetOfNetwork (Ptr<RingNetwork> network);
 
   // Inherited from OpenFlowEpcController
-  void NotifyNewConnBtwnSwitches (const Ptr<ConnectionInfo> connInfo);
-  void NotifyConnBtwnSwitchesOk ();
+  void NotifyConnBtwnSwitches (Ptr<ConnectionInfo> connInfo);
+  void NotifyConnBtwnSwitchesOk (bool finished);
   std::vector<BandwidthStats_t> GetBandwidthStats ();
 
 protected:
+  /** Destructor implementation */
+  void DoDispose ();
+
   // Inherited from OpenFlowEpcController
   bool InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer);
   bool RemoveTeidRouting (Ptr<RoutingInfo> rInfo);
@@ -73,6 +82,18 @@ protected:
   void CreateSpanningTree ();
 
 private:
+  /**
+   * \return Number of switches in the network.
+   */
+  uint16_t GetNSwitches ();
+
+  /**
+   * Get the OFSwitch13NetDevice of a specific switch.
+   * \param index The switch index.
+   * \return The pointer to the switch OFSwitch13NetDevice.
+   */
+  Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
+  
   /** 
    * Get the RingRoutingInfo associated to this rInfo metadata. When no ring
    * information is available, this function creates it.
@@ -144,8 +165,10 @@ private:
    */
   bool RemoveMeterRules (Ptr<RoutingInfo> rInfo);
 
-  RoutingStrategy   m_strategy;          //!< Routing strategy in use.
-  double            m_bwFactor;          //!< Bandwidth saving factor
+    
+  Ptr<RingNetwork>  m_ofNetwork;        //!< Pointer to OpenFlow ring network.
+  RoutingStrategy   m_strategy;         //!< Routing strategy in use.
+  double            m_bwFactor;         //!< Bandwidth saving factor
 };
 
 };  // namespace ns3
