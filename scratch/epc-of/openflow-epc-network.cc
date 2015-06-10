@@ -121,6 +121,8 @@ OpenFlowEpcNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::OpenFlowEpcNetwork") 
     .SetParent<Object> ()
+
+    // Trace sources used to simplify queue monitoring by EpcS1uStatsCalculator
     .AddTraceSource ("QueueDrop",
                      "Packet dropped by OpenFlow port queue.",
                      MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_queueDropTrace),
@@ -129,6 +131,20 @@ OpenFlowEpcNetwork::GetTypeId (void)
                      "Packet dropped by OpenFlow meter band.",
                      MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_meterDropTrace),
                      "ns3::Packet::TracedCallback")
+    
+    // Trace sources used by controller to be aware of network topology
+    .AddTraceSource ("NewConnection",
+                     "New connection between two switches.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_newConnTrace),
+                     "ns3::OpenFlowEpcNetwork::ConnectionTracedCallback")
+    .AddTraceSource ("ConnectionsOk",
+                     "Connections between switches finished.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_connOkTrace),
+                     "ns3::OpenFlowEpcNetwork::BoolTracedCallback")
+    .AddTraceSource ("NewAttach",
+                     "New EPC entity connected to OpenFlow network.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_newAttachTrace),
+                     "ns3::OpenFlowEpcNetwork::AttachTracedCallback")
   ;
   return tid; 
 }
@@ -332,7 +348,7 @@ OpenFlowEpcNetwork::SetController (Ptr<OpenFlowEpcController> controller)
   Names::Add ("ctrl", m_ofCtrlNode);
 
   m_ofHelper->InstallControllerApp (m_ofCtrlNode, m_ofCtrlApp);
-  m_ofCtrlApp->SetOfNetwork (this);
+//  m_ofCtrlApp->SetOfNetwork (this);
 }
 
 };  // namespace ns3

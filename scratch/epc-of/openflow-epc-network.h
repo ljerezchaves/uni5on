@@ -146,8 +146,6 @@ private:
  */
 class OpenFlowEpcNetwork : public Object
 {
-friend class OpenFlowEpcController; // FIXME Remover essa dependencia.
-
 public:
   OpenFlowEpcNetwork ();          //!< Default constructor
   virtual ~OpenFlowEpcNetwork (); //!< Dummy destructor, see DoDipose
@@ -265,16 +263,42 @@ public:
    */
   void QueueDropPacket (std::string context, Ptr<const Packet> packet);
 
-protected:
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
   /**
    * Get the OFSwitch13NetDevice of a specific switch.
    * \param index The switch index.
    * \return The pointer to the switch OFSwitch13NetDevice.
    */
   Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
+
+  /** 
+   * ConnectionTracedCallback signature for new connection between two switches.
+   * \param cInfo The connection information and metadata.
+   */
+  typedef void (* ConnectionTracedCallback)(Ptr<const ConnectionInfo> cInfo);
+
+  /** 
+   * BoolTracedCallback signature for between switches finished.
+   * \param finished True, indicating that all connections are completed.
+   */
+  typedef void (* BoolTracedCallback)(bool finished);
+
+   /** 
+   * AttachTracedCallback signature for new  EPC entity connected to OpenFlow
+   * network.
+   * \param nodeDev The device connected to the OpenFlow switch.
+   * \param nodeIp The IPv4 address assigned to this device.
+   * \param swtchDev The OpenFlow switch device.
+   * \param swtchIdx The OpenFlow switch index.
+   * \param swtchPort The port number for nodeDev at OpenFlow switch.
+   */
+  typedef void (* AttachTracedCallback)(Ptr<NetDevice> nodeDev, 
+      Ipv4Address nodeIp, Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, 
+      uint32_t swtchPort);
+
+protected:
+  /** Destructor implementation */
+  virtual void DoDispose ();
+
 
   /**
    * Store the pair <node, switch index> for further use.
@@ -329,6 +353,16 @@ protected:
   Ptr<OFSwitch13Helper>       m_ofHelper;       //!< OpenFlow helper.
   CsmaHelper                  m_ofCsmaHelper;   //!< Csma helper.
   std::vector<uint16_t>       m_eNbSwitchIdx;   //!< Switch index for each eNB.
+  
+  /** New connection between two switches trace source. */
+  TracedCallback<Ptr<ConnectionInfo> > m_newConnTrace;
+
+  /** Connections between switches finished trace source. */
+  TracedCallback<bool> m_connOkTrace;
+  
+  /** New EPC entity connected to OpenFlow network trace source. */
+  TracedCallback<Ptr<NetDevice>, Ipv4Address, Ptr<OFSwitch13NetDevice>, 
+    uint16_t, uint32_t> m_newAttachTrace;
 
 private:
   uint16_t                    m_gatewaySwitch;  //!< Gateway switch index.
@@ -339,7 +373,7 @@ private:
 
   /** Packet meter drop trace source. */
   TracedCallback<Ptr<const Packet> > m_meterDropTrace;
-  
+
   /** Map saving Node / Switch indexes. */
   typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;  
   NodeSwitchMap_t     m_nodeSwitchMap;    //!< Registered nodes per switch idx.
