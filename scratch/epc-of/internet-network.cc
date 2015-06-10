@@ -40,11 +40,6 @@ InternetNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::InternetNetwork") 
     .SetParent<Object> ()
-    .AddAttribute ("DumpStatsTimeout",
-                   "Periodic statistics dump interval.",
-                   TimeValue (Seconds (10)),
-                   MakeTimeAccessor (&InternetNetwork::SetDumpTimeout),
-                   MakeTimeChecker ())
     .AddAttribute ("LinkDataRate", 
                    "The data rate to be used for the Internet PointToPoint link",
                    DataRateValue (DataRate ("10Gb/s")),
@@ -60,10 +55,6 @@ InternetNetwork::GetTypeId (void)
                    UintegerValue (1492),  // PPPoE MTU 
                    MakeUintegerAccessor (&InternetNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
-    .AddTraceSource ("WebStats",
-                     "The internet queues statistics trace source.",
-                     MakeTraceSourceAccessor (&InternetNetwork::m_webTrace),
-                     "ns3::InternetNetwork::WebTracedCallback")
     ;
   return tid; 
 }
@@ -95,6 +86,9 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
  
   Names::Add (Names::FindName (pgw) + "+" + Names::FindName (web), pgwDev);
   Names::Add (Names::FindName (web) + "+" + Names::FindName (pgw), webDev);
+
+  Names::Add ("InternetNetwork/DownQueue", webDev->GetQueue ());
+  Names::Add ("InternetNetwork/UpQueue", pgwDev->GetQueue ());
   
   Ipv4AddressHelper ipv4h;
   ipv4h.SetBase ("192.168.0.0", "255.255.255.0");
@@ -115,65 +109,6 @@ InternetNetwork::EnablePcap (std::string prefix)
 {
   NS_LOG_FUNCTION (this);
   m_p2pHelper.EnablePcap (prefix, m_webDevices);
-}
-
-Ptr<Queue> 
-InternetNetwork::GetDownlinkQueue (void) const
-{
-  NS_LOG_FUNCTION (this);
-  
-  Ptr<PointToPointNetDevice> netDev;
-  netDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (1));
-  return netDev->GetQueue ();
-}
-
-Ptr<Queue> 
-InternetNetwork::GetUplinkQueue (void) const
-{
-  NS_LOG_FUNCTION (this);
-  
-  Ptr<PointToPointNetDevice> netDev;
-  netDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (0));
-  return netDev->GetQueue ();
-}
-
-void 
-InternetNetwork::ResetDownlinkQueue (void)
-{
-  NS_LOG_FUNCTION (this);
-  
-  Ptr<PointToPointNetDevice> netDev;
-  netDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (1));
-  netDev->GetQueue ()->ResetStatistics ();
-}
-
-void
-InternetNetwork::ResetUplinkQueue (void)
-{
-  NS_LOG_FUNCTION (this);
-  
-  Ptr<PointToPointNetDevice> netDev;
-  netDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (0));
-  netDev->GetQueue ()->ResetStatistics ();
-}
-
-void
-InternetNetwork::SetDumpTimeout (Time timeout)
-{
-  m_dumpTimeout = timeout;
-  Simulator::Schedule (m_dumpTimeout, 
-    &InternetNetwork::DumpWebStatistics, this);
-}
-
-void 
-InternetNetwork::DumpWebStatistics ()
-{
-  m_webTrace (GetDownlinkQueue (), GetUplinkQueue ());
-  ResetDownlinkQueue ();
-  ResetUplinkQueue ();
-  
-  Simulator::Schedule (m_dumpTimeout, 
-    &InternetNetwork::DumpWebStatistics, this);
 }
 
 void

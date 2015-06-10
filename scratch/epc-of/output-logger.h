@@ -22,9 +22,7 @@
 #define OUTPUT_LOGGER_H
 
 #include <ns3/core-module.h>
-#include <ns3/network-module.h>
-#include <ns3/internet-module.h>
-#include <ns3/applications-module.h>
+#include "ns3/data-rate.h"
 #include "openflow-epc-network.h"
 
 namespace ns3 {
@@ -70,122 +68,29 @@ private:
   void DumpStatistics ();
   
   /**
-   * Trace sink fired at every new bearer request to OpenFlow controller.
-   * \param context Context information.
-   * \param accepted True when the bearer is accepted into network.
-   * \param rInfo The bearer routing information.
-   */
-  void BearerRequest (std::string context, bool accepted, 
-                      Ptr<const RoutingInfo> rInfo);
-
-  /**
-   * Trace sink fired when packets are dropped by meter bands. The tag will be
-   * read from packet, and EPC QoS stats updated.
-   * \param context Context information.
-   * \param packet The dropped packet.
-   */
-  void MeterDropPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink fired when packets are dropped by OpenFlow port queues. 
-   * \param context Context information.
-   * \param packet The dropped packet.
-   */
-  void QueueDropPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink fired when packets enter the EPC. The packet will get tagged
-   * for EPC QoS monitoring.
-   * \param context Context information.
-   * \param packet The packet.
-   */
-  void EpcInputPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink fired when packets leave the EPC. The tag will be read from
-   * packet, and EPC QoS stats updated.
-   * \param context Context information.
-   * \param packet The packet.
-   */
-  void EpcOutputPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink fired when packets traverse the EPC packet gateway from/to the
-   * Internet to/from the EPC.
-   * \param context Context information.
-   * \param packet The packet.
-   */
-  void PgwTraffic (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink fired when application traffic stops. Used to dump EPC traffic
-   * statistics.
-   * \param context Context information.
-   * \param app The EpcApplication.
-   */
-  void DumpEpcStatistics (std::string context, Ptr<const EpcApplication> app);
-
-  /**
-   * Trace sink fired when application traffic starts. Used to reset EPC
-   * traffic statistics.
-   * \param context Context information.
-   * \param app The EpcApplication.
-   */ 
-  void ResetEpcStatistics (std::string context, Ptr<const EpcApplication> app);
-
-  /**
    * Concatenate the commom prefix and the filename.
    * \param name The filename.
    * \return The complete filename.
    */
   std::string GetCompleteName (std::string name);
-   
-  /**
-   * Retrieve the LTE EPC QoS statistics information for the GTP tunnel id.
-   * \param teid The GTP tunnel id.
-   * \param isDown True for downlink stats, false for uplink.
-   * \return The QoS information.
-   */
-  Ptr<QosStatsCalculator> GetQosStatsFromTeid (uint32_t teid, bool isDown);
 
-
-// ------------------------------------------------------------------------ //
-  /**
+  /** 
    * Save application statistics in file. 
+   * \param desc Traffic description.
+   * \param teid GTP TEID.
+   * \param stats The QoS statistics.
    */
   void ReportAppStats (std::string description, uint32_t teid, 
                        Ptr<const QosStatsCalculator> stats);
 
-  /**
-   * Save LTE EPC statistics in file. 
-   */
-  void ReportEpcStats (std::string description, uint32_t teid, 
+  /** 
+   * Save LTE EPC statistics in file.
+   * \param desc Traffic description.
+   * \param teid GTP TEID.
+   * \param stats The QoS statistics.
+   */    
+  void ReportEpcStats (std::string description, uint32_t teid,
                        Ptr<const QosStatsCalculator> stats);
-
-  /**
-   * Save bearer admission control statistics in file. 
-   */
-  void ReportAdmStats (Ptr<const AdmissionStatsCalculator> stats);
-
-  /**
-   * Save packet gateway traffic statistics in file.
-   */
-  void ReportPgwStats (Ptr<const GatewayStatsCalculator> stats);
-
-  /**
-   * Save flow table usage statistics in file.
-   */
-  void ReportSwtStats (std::vector<uint32_t> teid);
-
-  /**
-   * Save internet queue statistics in file.
-   */
-  void ReportWebStats (Ptr<const Queue> downlink, Ptr<const Queue> uplink);
-
-  /**
-   * Save bandwidth usage in file.
-   */
-  void ReportBwdStats (std::vector<BandwidthStats_t> stats);
 
   /**
    * Save bearer request statistics in file.
@@ -198,8 +103,35 @@ private:
    */
   void ReportBrqStats (std::string desc, uint32_t teid, bool accepted,
                        DataRate downRate, DataRate upRate, std::string path);
-// ------------------------------------------------------------------------ //
 
+  /** 
+   * Save bearer admission control statistics in file. 
+   */
+  void ReportAdmStats (Ptr<const AdmissionStatsCalculator> stats);
+
+  /** 
+   * Save packet gateway traffic statistics in file. 
+   */
+  void ReportPgwStats (Ptr<const GatewayStatsCalculator> stats);
+
+  /** 
+   * Save flow table usage statistics in file. 
+   */
+  //void ReportSwtStats (Ptr<const SwitchRulesStatsCalculator> stats);
+  void ReportSwtStats (std::vector<uint32_t> teid);
+
+  /** 
+   * Save internet queue statistics in file. 
+   */
+  void ReportWebStats (Ptr<const WebQueueStatsCalculator> stats);
+
+  /** 
+   * Save bandwidth usage in file. 
+   */
+  //void ReportBwdStats (Ptr<const BandwidthStatsCalculator> stats);
+  void ReportBwdStats (std::vector<BandwidthStats_t> stats);
+
+// ------------------------------------------------------------------------ //
   Time        m_dumpTimeout;        //!< Dump stats timeout.
   std::string m_commonPrefix;       //!< Common prefix for filenames
   std::string m_appStatsFilename;   //!< AppStats filename
@@ -211,15 +143,12 @@ private:
   std::string m_bwdStatsFilename;   //!< BwdStats filename
   std::string m_brqStatsFilename;   //!< BrqStats filename
 
-  Ptr<AdmissionStatsCalculator> m_admissionStats; // Admission statistics
-  Ptr<GatewayStatsCalculator>   m_gatewayStats;   // Gateway statistics
-
-  /** A pair of QosStatsCalculator, for downlink and uplink EPC statistics */
-  typedef std::pair<Ptr<QosStatsCalculator>, Ptr<QosStatsCalculator> > QosStatsPair_t;
-  
-  /** A Map saving <GTP TEID / QoS stats pair > */
-  typedef std::map<uint32_t, QosStatsPair_t> TeidQosMap_t;
-  TeidQosMap_t m_qosStats; //!< TEID QoS statistics
+  Ptr<AdmissionStatsCalculator>   m_admissionStats; // Admission statistics
+  Ptr<GatewayStatsCalculator>     m_gatewayStats;   // Gateway statistics
+  Ptr<BandwidthStatsCalculator>   m_bandwidthStats; // Bandwidth statistics
+  Ptr<SwitchRulesStatsCalculator> m_switchStats;    // Switch rules statistics
+  Ptr<WebQueueStatsCalculator>    m_internetStats;  // Web queues statistics
+  Ptr<EpcS1uStatsCalculator>      m_epcS1uStats;    // EPC S1-U statistics
 };
 
 };  // namespace ns3

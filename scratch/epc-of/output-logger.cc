@@ -20,7 +20,6 @@
 
 #include "ns3/qos-stats-calculator.h"
 #include "stats-calculator.h"
-#include "seq-num-tag.h"
 #include "output-logger.h"
 #include <iomanip>
 #include <iostream>
@@ -40,6 +39,14 @@ OutputLogger::OutputLogger ()
   // Creating stats calculators
   m_admissionStats  = CreateObject<AdmissionStatsCalculator> ();
   m_gatewayStats    = CreateObject<GatewayStatsCalculator> ();
+  m_bandwidthStats  = CreateObject<BandwidthStatsCalculator> ();  
+  m_switchStats     = CreateObject<SwitchRulesStatsCalculator> ();
+  m_internetStats   = CreateObject<WebQueueStatsCalculator> ();
+  m_epcS1uStats     = CreateObject<EpcS1uStatsCalculator> ();
+  
+  // Setting names for trace source/sink connection
+  Names::Add ("AdmissionStats", m_admissionStats);
+  Names::Add ("EpcS1uStats", m_epcS1uStats);
 
   // Connecting to EpcApplication AppStats QoS trace source 
   // (AppStats file)
@@ -47,49 +54,18 @@ OutputLogger::OutputLogger ()
     "/NodeList/*/ApplicationList/*/$ns3::EpcApplication/AppStats",
     MakeCallback (&OutputLogger::ReportAppStats, this));
 
-  // Connecting to OpenFlowEpcController BearerRequest trace source 
-  // (BrqStats and AdmStats files)
-  Config::Connect (
-    "/Names/MainController/BearerRequest",
-    MakeCallback (&OutputLogger::BearerRequest, this));
-
-  // Connecting all EPC trace sinks for QoS monitoring
+  // Connecting to EpcS1uStatsCalculator EpcStats QoS trace source 
   // (EpcStats file)
-  Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uRx",
-    MakeCallback (&OutputLogger::EpcOutputPacket, this));
-  Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uTx",
-    MakeCallback (&OutputLogger::EpcInputPacket, this));
-  Config::Connect (
-    "/Names/SgwPgwApplication/S1uRx",
-    MakeCallback (&OutputLogger::EpcOutputPacket, this));
-  Config::Connect (
-    "/Names/SgwPgwApplication/S1uTx",
-    MakeCallback (&OutputLogger::EpcInputPacket, this));
-  Config::Connect (
-    "/Names/OpenFlowNetwork/MeterDrop",
-    MakeCallback (&OutputLogger::MeterDropPacket, this));
-  Config::Connect (
-   "/Names/OpenFlowNetwork/QueueDrop",
-    MakeCallback (&OutputLogger::QueueDropPacket, this));
-  Config::Connect (
-    "/NodeList/*/$ns3::TrafficManager/AppStart",
-    MakeCallback (&OutputLogger::ResetEpcStatistics, this));
-  Config::Connect (
-    "/NodeList/*/$ns3::TrafficManager/AppStop",
-    MakeCallback (&OutputLogger::DumpEpcStatistics, this));
+  Config::ConnectWithoutContext (
+    "/Names/EpcS1uStats/EpcStats",
+    MakeCallback (&OutputLogger::ReportEpcStats, this));
 
-  // Connecting all gateway trace sinks for traffic bandwidth monitoring
-  // (PgwStats file)
-  Config::Connect (
-    "/Names/SgwPgwApplication/S1uRx",
-    MakeCallback (&OutputLogger::PgwTraffic, this));
-  Config::Connect (
-    "/Names/SgwPgwApplication/S1uTx",
-    MakeCallback (&OutputLogger::PgwTraffic, this));
+  // Connecting to AdmissionStatsCalculator BearerRequest trace source 
+  // (BrqStats file)
+  Config::ConnectWithoutContext (
+    "/Names/AdmissionStats/BrqStats",
+    MakeCallback (&OutputLogger::ReportBrqStats, this));
 
-  
 //  Config::ConnectWithoutContext (
 //    "/Names/OpenFlowNetwork/BwdStats",
 //    MakeCallback (&OutputLogger::ReportBwdStats, this));
@@ -97,10 +73,6 @@ OutputLogger::OutputLogger ()
 //  Config::ConnectWithoutContext (
 //    "/Names/OpenFlowNetwork/SwtStats",
 //    MakeCallback (&OutputLogger::ReportSwtStats, this));
-
-  Config::ConnectWithoutContext (
-    "/Names/InternetNetwork/WebStats",
-    MakeCallback (&OutputLogger::ReportWebStats, this));
 }
 
 OutputLogger::~OutputLogger ()
@@ -119,6 +91,7 @@ OutputLogger::GetTypeId (void)
                    TimeValue (Seconds (10)),
                    MakeTimeAccessor (&OutputLogger::SetDumpTimeout),
                    MakeTimeChecker ())
+
     .AddAttribute ("AppStatsFilename",
                    "Filename for application QoS statistics.",
                    StringValue ("app_stats.txt"),
@@ -184,6 +157,10 @@ OutputLogger::DoDispose ()
   NS_LOG_FUNCTION (this);
   m_admissionStats = 0;
   m_gatewayStats = 0;
+  m_bandwidthStats = 0;
+  m_switchStats = 0;
+  m_internetStats = 0;
+  m_epcS1uStats = 0;
 }
 
 void
@@ -198,183 +175,24 @@ OutputLogger::DumpStatistics ()
   m_gatewayStats->ResetCounters ();
 
   // Dump SwtStats
+//  ReportSwtStats (m_switchStats);
+  m_switchStats->ResetCounters ();
 
   // Dump BwdStats
+//  ReportBwdStats (m_bandwidthStats);
+  m_bandwidthStats->ResetCounters ();
 
   // Dump WebStats
-
+  ReportWebStats (m_internetStats);
+  m_internetStats->ResetCounters ();
 
   Simulator::Schedule (m_dumpTimeout, &OutputLogger::DumpStatistics, this);
-}
-
-void 
-OutputLogger::BearerRequest (std::string context, bool accepted, 
-                             Ptr<const RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << context << accepted << rInfo);
-  
-  m_admissionStats->NotifyRequest (accepted, rInfo); 
-
-  // Preparing bearer request stats for trace source
-  DataRate downRate, upRate;
-  string path = "Shortest paths";
-  
-  Ptr<const ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
-  if (reserveInfo)
-    {
-      downRate = reserveInfo->GetDownDataRate ();
-      upRate = reserveInfo->GetUpDataRate ();
-    }
-
-  // TODO: This should be generic, for any topology.
-  Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  if (ringInfo)
-    {
-      if (ringInfo->IsDownInv () && ringInfo->IsUpInv ())
-        {
-          path = "Inverted paths";
-        }
-      else if (ringInfo->IsDownInv () || ringInfo->IsUpInv ())
-        {
-          path = ringInfo->IsDownInv () ? "Inverted down path" : "Inverted up path";
-        }
-    }
-
-  // TODO: No traffic description by now.
-  ReportBrqStats ("", rInfo->GetTeid (), accepted, downRate, upRate, path);
-}
-
-void
-OutputLogger::MeterDropPacket (std::string context, Ptr<const Packet> packet)
-{
-  NS_LOG_FUNCTION (this << context << packet);
-
-  EpcGtpuTag gtpuTag;
-  if (packet->PeekPacketTag (gtpuTag))
-    {
-      Ptr<QosStatsCalculator> qosStats = 
-        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      qosStats->NotifyMeterDrop ();
-    }
-}
-
-void
-OutputLogger::QueueDropPacket (std::string context, Ptr<const Packet> packet)
-{
-  NS_LOG_FUNCTION (this << context << packet);
-
-  EpcGtpuTag gtpuTag;
-  if (packet->PeekPacketTag (gtpuTag))
-    {
-      Ptr<QosStatsCalculator> qosStats = 
-        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      qosStats->NotifyQueueDrop ();
-    }
-}
-
-void 
-OutputLogger::EpcInputPacket (std::string context, Ptr<const Packet> packet)
-{
-  EpcGtpuTag gtpuTag;
-  if (packet->PeekPacketTag (gtpuTag))
-    {
-      Ptr<QosStatsCalculator> qosStats = 
-        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      SeqNumTag seqTag (qosStats->GetNextSeqNum ());
-      packet->AddPacketTag (seqTag);
-    }
-}
-
-void
-OutputLogger::EpcOutputPacket (std::string context, Ptr<const Packet> packet)
-{
-  EpcGtpuTag gtpuTag;
-  if (packet->PeekPacketTag (gtpuTag))
-    {
-      SeqNumTag seqTag;
-      if (packet->PeekPacketTag (seqTag))
-        {
-          Ptr<QosStatsCalculator> qosStats = 
-            GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-          qosStats->NotifyReceived (seqTag.GetSeqNum (), gtpuTag.GetTimestamp (), 
-                                    packet->GetSize ());
-        }
-    }
-}
-
-void 
-OutputLogger::PgwTraffic (std::string context, Ptr<const Packet> packet)
-{
-  std::string direction = context.substr (context.rfind ("/") + 1);
-  m_gatewayStats->NotifyTraffic (direction, packet); 
-}
-
-void
-OutputLogger::DumpEpcStatistics (std::string context, 
-                                 Ptr<const EpcApplication> app)
-{
-  NS_LOG_FUNCTION (this << context << app);
-
-  uint32_t teid = app->GetTeid ();
-  bool uplink = (app->GetInstanceTypeId () == VoipClient::GetTypeId ());
-  std::string desc = app->GetDescription ();
-
-  Ptr<const QosStatsCalculator> epcStats;
-  if (uplink)
-    {
-      // Dump uplink statistics
-      epcStats = GetQosStatsFromTeid (teid, false);
-      ReportEpcStats (desc + "ul", teid, epcStats);
-    }
-  // Dump downlink statistics
-  epcStats = GetQosStatsFromTeid (teid, true);
-  ReportEpcStats (desc + "dl", teid, epcStats);
-}
-
-void
-OutputLogger::ResetEpcStatistics (std::string context, 
-                                  Ptr<const EpcApplication> app)
-{
-  NS_LOG_FUNCTION (this << context << app);
-
-  uint32_t teid = app->GetTeid ();
-  
-  GetQosStatsFromTeid (teid, true)->ResetCounters ();
-  GetQosStatsFromTeid (teid, false)->ResetCounters ();
 }
 
 std::string
 OutputLogger::GetCompleteName (std::string name)
 {
   return m_commonPrefix + name;
-}
-
-Ptr<QosStatsCalculator>
-OutputLogger::GetQosStatsFromTeid (uint32_t teid, bool isDown)
-{
-  Ptr<QosStatsCalculator> qosStats = 0;
-  TeidQosMap_t::iterator it;
-  it = m_qosStats.find (teid);
-  if (it != m_qosStats.end ())
-    {
-      QosStatsPair_t value = it->second;
-      qosStats = isDown ? value.first : value.second;
-    }
-  else
-    {
-      // Create and insert the structure
-      QosStatsPair_t pair (Create<QosStatsCalculator> (), 
-                           Create<QosStatsCalculator> ());
-      std::pair <uint32_t, QosStatsPair_t> entry (teid, pair);
-      std::pair <TeidQosMap_t::iterator, bool> ret;
-      ret = m_qosStats.insert (entry);
-      if (ret.second == false)
-        {
-          NS_FATAL_ERROR ("Existing QoS entry for teid " << teid);
-        }
-      qosStats = isDown ? pair.first : pair.second;
-    }
-  return qosStats;
 }
 
 void 
@@ -493,6 +311,57 @@ OutputLogger::ReportEpcStats (std::string description, uint32_t teid,
           << setw (7)  << fixed << stats->GetQueueDrops ()
           << setw (10) << fixed << stats->GetRxBytes ()
           << setw (8)  << fixed << (double)(stats->GetRxThroughput ().GetBitRate ()) / 1024
+          << std::endl;
+  outFile.close ();
+}
+
+void
+OutputLogger::ReportBrqStats (std::string desc, uint32_t teid, bool accepted,
+                              DataRate downRate, DataRate upRate, 
+                              std::string path)
+{
+  NS_LOG_FUNCTION (this);
+  static bool firstWrite = true;
+
+  std::string name = GetCompleteName (m_brqStatsFilename);
+  std::ofstream outFile;
+  if (firstWrite == true)
+    {
+      outFile.open (name.c_str ());
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << name);
+          return;
+        }
+      firstWrite = false;
+      outFile << left 
+              << setw (12) << "Time (s)"
+              << setw (17) << "Description"
+              << setw (6)  << "TEID"
+              << setw (10) << "Accepted?"
+              << setw (12) << "Down (kbps)"
+              << setw (10) << "Up (kbps)"
+              << setw (40) << "Routing paths"
+              << std::endl;
+    }
+  else
+    {
+      outFile.open (name.c_str (), std::ios_base::app);
+      if (!outFile.is_open ())
+        {
+          NS_LOG_ERROR ("Can't open file " << name);
+          return;
+        }
+    }
+
+  outFile << left
+          << setw (12) << Simulator::Now ().GetSeconds ()
+          << setw (17) << desc
+          << setw (6)  << teid
+          << setw (10) << (accepted ? "yes" : "no")
+          << setw (12) << (double)(downRate.GetBitRate ()) / 1024
+          << setw (10) << (double)(upRate.GetBitRate ()) / 1024
+          << setw (40) << path
           << std::endl;
   outFile.close ();
 }
@@ -649,8 +518,7 @@ OutputLogger::ReportSwtStats (std::vector<uint32_t> teid)
 }
 
 void
-OutputLogger::ReportWebStats (Ptr<const Queue> downlink, 
-                              Ptr<const Queue> uplink)
+OutputLogger::ReportWebStats (Ptr<const WebQueueStatsCalculator> stats)
 {
   NS_LOG_FUNCTION (this);
   static bool firstWrite = true;
@@ -692,6 +560,9 @@ OutputLogger::ReportWebStats (Ptr<const Queue> downlink,
         }
     }
 
+  Ptr<const Queue> downlink = stats->GetDownlinkQueue ();
+  Ptr<const Queue> uplink = stats->GetUplinkQueue ();
+  
   outFile << left
           << setw (12) << Simulator::Now ().GetSeconds ()
           << setw (12) << downlink->GetTotalReceivedPackets ()
@@ -758,56 +629,6 @@ OutputLogger::ReportBwdStats (std::vector<BandwidthStats_t> stats)
   outFile.close ();
 }
 
-void
-OutputLogger::ReportBrqStats (std::string desc, uint32_t teid, bool accepted,
-                              DataRate downRate, DataRate upRate, 
-                              std::string path)
-{
-  NS_LOG_FUNCTION (this);
-  static bool firstWrite = true;
-
-  std::string name = GetCompleteName (m_brqStatsFilename);
-  std::ofstream outFile;
-  if (firstWrite == true)
-    {
-      outFile.open (name.c_str ());
-      if (!outFile.is_open ())
-        {
-          NS_LOG_ERROR ("Can't open file " << name);
-          return;
-        }
-      firstWrite = false;
-      outFile << left 
-              << setw (12) << "Time (s)"
-              << setw (17) << "Description"
-              << setw (6)  << "TEID"
-              << setw (10) << "Accepted?"
-              << setw (12) << "Down (kbps)"
-              << setw (10) << "Up (kbps)"
-              << setw (40) << "Routing paths"
-              << std::endl;
-    }
-  else
-    {
-      outFile.open (name.c_str (), std::ios_base::app);
-      if (!outFile.is_open ())
-        {
-          NS_LOG_ERROR ("Can't open file " << name);
-          return;
-        }
-    }
-
-  outFile << left
-          << setw (12) << Simulator::Now ().GetSeconds ()
-          << setw (17) << desc
-          << setw (6)  << teid
-          << setw (10) << (accepted ? "yes" : "no")
-          << setw (12) << (double)(downRate.GetBitRate ()) / 1024
-          << setw (10) << (double)(upRate.GetBitRate ()) / 1024
-          << setw (40) << path
-          << std::endl;
-  outFile.close ();
-}
 
 };  // namespace ns3
 
