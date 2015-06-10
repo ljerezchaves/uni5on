@@ -87,8 +87,6 @@ private:
   Ptr<InternetNetwork>       m_webNetwork;    //!< Internet network
   Ptr<LteHelper>             m_lteHelper;     //!< LTE radio helper
   Ptr<Node>                  m_webHost;       //!< Internet server node
-  Ptr<Node>                  m_pgwHost;       //!< EPC Pgw gateway node
-  Ptr<OutputLogger>          m_logger;        //!< Output looger
   
   std::string           m_commonPrefix;       //!< Common prefix filenames
   std::string           m_topoFilename;       //!< Topology filename

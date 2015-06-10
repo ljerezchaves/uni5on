@@ -34,9 +34,7 @@ SimulationScenario::SimulationScenario ()
     m_lteNetwork (0),
     m_webNetwork (0),
     m_lteHelper (0),
-    m_webHost (0),
-    m_pgwHost (0),
-    m_logger (0)
+    m_webHost (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -57,8 +55,6 @@ SimulationScenario::DoDispose ()
   m_webNetwork = 0;
   m_lteHelper = 0;
   m_webHost = 0;
-  m_pgwHost = 0;
-  m_logger = 0;
 }
 
 TypeId 

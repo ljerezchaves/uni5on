@@ -148,8 +148,6 @@ void
 TrafficManager::NotifyAppStop (Ptr<EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
- 
-  m_appStopTrace (app);
   
   uint32_t appTeid = app->GetTeid ();
   if (appTeid != m_defaultTeid)
@@ -158,6 +156,7 @@ TrafficManager::NotifyAppStop (Ptr<EpcApplication> app)
       m_controller->ReleaseDedicatedBearer (app->GetEpsBearer (),
         m_imsi, m_cellId, appTeid);
     }
+  m_appStopTrace (app);
 
   // Schedule next start attempt for this app  (wait at least 5 seconds)
   Time idleTime = Seconds (5) + Seconds (std::abs (m_idleRng->GetValue ()));
