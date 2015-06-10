@@ -68,7 +68,6 @@ UdpServer::UdpServer ()
 {
   NS_LOG_FUNCTION (this);
   m_received=0;
-  m_qosStats = Create<QosStatsCalculator> ();
 }
 
 UdpServer::~UdpServer ()
@@ -88,19 +87,6 @@ UdpServer::SetPacketWindowSize (uint16_t size)
 {
   NS_LOG_FUNCTION (this << size);
   m_lossCounter.SetBitMapSize (size);
-  m_qosStats->SetPacketWindowSize (size);
-}
-  
-void 
-UdpServer::ResetQosStats ()
-{
-  m_qosStats->ResetCounters ();
-}
-
-Ptr<const QosStatsCalculator>
-UdpServer::GetQosStats (void) const
-{
-  return m_qosStats;
 }
 
 uint32_t
@@ -122,7 +108,6 @@ UdpServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   Application::DoDispose ();
-  m_qosStats = 0;
 }
 
 void
@@ -152,7 +137,6 @@ UdpServer::StartApplication (void)
 
   m_socket6->SetRecvCallback (MakeCallback (&UdpServer::HandleRead, this));
 
-  ResetQosStats ();
 }
 
 void
@@ -200,7 +184,6 @@ UdpServer::HandleRead (Ptr<Socket> socket)
                            " Delay: " << Simulator::Now () - seqTs.GetTs ());
             }
 
-          m_qosStats->NotifyReceived (seqTs.GetSeq (), seqTs.GetTs (), packet->GetSize ());
           m_lossCounter.NotifyReceived (currentSequenceNumber);
           m_received++;
         }

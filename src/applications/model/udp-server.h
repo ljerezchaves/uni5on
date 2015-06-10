@@ -28,7 +28,6 @@
 #include "ns3/ptr.h"
 #include "ns3/address.h"
 #include "packet-loss-counter.h"
-#include "qos-stats-calculator.h"
 namespace ns3 {
 /**
  * \ingroup applications
@@ -79,17 +78,6 @@ public:
    *  be a multiple of 8
    */
   void SetPacketWindowSize (uint16_t size);
-
-  /** 
-   * Reset the QoS statistics
-   */
-  void ResetQosStats ();
-
-  /**
-   * Get QoS statistics
-   * \return Get the const pointer to QosStatsCalculator 
-   */
-  Ptr<const QosStatsCalculator> GetQosStats (void) const;
 protected:
   virtual void DoDispose (void);
 
@@ -112,7 +100,6 @@ private:
   Ptr<Socket> m_socket6; //!< IPv6 Socket
   uint32_t m_received; //!< Number of received packets
   PacketLossCounter m_lossCounter; //!< Lost packet counter
-  Ptr<QosStatsCalculator> m_qosStats;  //!< QoS statistics
 };
 
 } // namespace ns3
