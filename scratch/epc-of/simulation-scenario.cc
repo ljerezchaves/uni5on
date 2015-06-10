@@ -106,8 +106,7 @@ SimulationScenario::GetTypeId (void)
   return tid;
 }
 
-// NOTE: Don't change object names. The logger mechanism uses theses specific
-// names to connect to trace sources.
+// NOTE: Don't change object names or the logger mechanism won't work.
 void
 SimulationScenario::BuildRingTopology ()
 {
@@ -119,13 +118,13 @@ SimulationScenario::BuildRingTopology ()
   m_controller = CreateObject<RingController> ();
   Names::Add ("MainController", m_controller);
   
-  // OpenFlow EPC ring network (considering 20km fiber cable latency)
+  // OpenFlow EPC ring network
   m_opfNetwork = CreateObject<RingNetwork> ();
   Names::Add ("OpenFlowNetwork", m_opfNetwork);
   m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (m_nSwitches));
   m_opfNetwork->CreateTopology (m_controller, m_SwitchIdxPerEnb);
   
-  // LTE EPC core (with callbacks and trace sink setup)
+  // OpenFlow EPC S1-U backhaul (with callbacks and trace sink setup)
   m_epcHelper = CreateObject<OpenFlowEpcHelper> ();
   m_epcHelper->SetS1uConnectCallback (
       MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, m_opfNetwork));
@@ -145,11 +144,11 @@ SimulationScenario::BuildRingTopology ()
   Names::Add ("InternetNetwork", m_webNetwork);
   m_webHost = m_webNetwork->CreateTopology (m_epcHelper->GetPgwNode ());
 
-  // Applications and traffic manager
+  // Install applications and traffic manager
   TrafficHelper tfcHelper (m_webHost, m_lteHelper, m_controller);
   tfcHelper.Install (m_lteNetwork->GetUeNodes (), m_lteNetwork->GetUeDevices ());
 
-  // ofsoftswitch13 log and ns-3 traces
+  // Output ofsoftswitch13 logs and ns-3 traces
   DatapathLogs ();
   PcapAsciiTraces ();
 }
