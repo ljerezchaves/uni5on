@@ -19,6 +19,7 @@
  */
 
 #include "ring-network.h"
+#include "connection-info.h"
 
 namespace ns3 {
 
@@ -93,9 +94,10 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
   NS_ASSERT_MSG (!created, "Topology already created.");
   NS_ASSERT_MSG (m_nodes >= 3, "Invalid number of nodes for the ring");
   
-  SetController (controller);
+  InstallController (controller);
   m_eNbSwitchIdx = eNbSwitches;
-  
+ 
+  // FIXME Se os trace sources para notificação funcionarem, não será mais preciso isso aqui.
   m_ringCtrlApp = DynamicCast<RingController> (m_ofCtrlApp);
   NS_ASSERT_MSG (m_ringCtrlApp, "Expecting a RingController.");
   m_ringCtrlApp->SetOfNetwork (this);
@@ -139,7 +141,7 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
       Names::Add (Names::FindName (nextNode) + "+" + 
                   Names::FindName (currNode), devs.Get (1));
 
-      // Adding newly created csma devices as openflow switch ports.
+      // Adding newly created csma devices as Openflow switch ports.
       Ptr<OFSwitch13NetDevice> currDevice, nextDevice;
       Ptr<CsmaNetDevice> currPortDevice, nextPortDevice;
       uint32_t currPortNum, nextPortNum;
@@ -152,41 +154,38 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
       nextPortDevice = DynamicCast<CsmaNetDevice> (devs.Get (1));
       nextPortNum = nextDevice->AddSwitchPort (nextPortDevice)->GetPortNo ();
 
-      // Notify the ring controller of this new connection.
+      // Fire trace source notifying new connection between switches.
       Ptr<ConnectionInfo> info = CreateObject<ConnectionInfo> ();
-      info->switchIdx1 = currIndex;
-      info->switchIdx2 = nextIndex;
-      info->switchDev1 = currDevice;
-      info->switchDev2 = nextDevice;
-      info->portDev1 = currPortDevice;
-      info->portDev2 = nextPortDevice;
-      info->portNum1 = currPortNum;
-      info->portNum2 = nextPortNum;
-      info->maxDataRate = m_linkDataRate;
-      
-      // Trace source notifying new connection between switches
+      info->m_switchIdx1 = currIndex;
+      info->m_switchIdx2 = nextIndex;
+      info->m_switchDev1 = currDevice;
+      info->m_switchDev2 = nextDevice;
+      info->m_portDev1 = currPortDevice;
+      info->m_portDev2 = nextPortDevice;
+      info->m_portNum1 = currPortNum;
+      info->m_portNum2 = nextPortNum;
+      info->m_maxDataRate = m_linkDataRate;
       m_newConnTrace (info);
-      m_ringCtrlApp->NotifyConnBtwnSwitches (info);
+      m_ringCtrlApp->NotifyConnBtwnSwitches (info); // FIXME
 
-      // Registering trace sink for meter dropped packets
+      // Registering OpenFlowEpcNetwork trace sink for meter dropped packets
       currDevice->TraceConnect ("MeterDrop", Names::FindName (currNode),
         MakeCallback (&OpenFlowEpcNetwork::MeterDropPacket, this));
 
-      // Registering trace sink for queue drop packets
+      // Registering OpenFlowEpcNetwork trace sink for queue drop packets
       std::ostringstream currQueue;
       currQueue << Names::FindName (currNode) << "/" << currPortNum;
       currPortDevice->GetQueue ()->TraceConnect ("Drop", currQueue.str (),
         MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
-      
       std::ostringstream nextQueue;
       nextQueue << Names::FindName (nextNode) << "/" << nextPortNum;
       nextPortDevice->GetQueue ()->TraceConnect ("Drop", nextQueue.str (),
         MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
     }
 
-  // Trace source notifying that all connections between switches are ok.
+  // Fire trace source notifying that all connections between switches are ok.
   m_connOkTrace (true);
-  m_ringCtrlApp->NotifyConnBtwnSwitchesOk (true);
+  m_ringCtrlApp->NotifyConnBtwnSwitchesOk (true); // FIXME
   created = true;
 }
 
@@ -244,7 +243,7 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   
   // Trace source notifying a new device attached to network
   m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
-  m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeAddr, swDev, swIdx, portNum);
+  m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeAddr, swDev, swIdx, portNum); // FIXME
 
   // Registering trace sink for queue drop packets
   std::ostringstream context;
@@ -293,7 +292,7 @@ RingNetwork::AttachToX2 (Ptr<Node> node)
 
   // Trace source notifying a new device attached to network
   m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
-  m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeAddr, swDev, swIdx, portNum);
+  m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeAddr, swDev, swIdx, portNum); // FIXME
 
   // Registering trace sink for queue drop packets
   std::ostringstream context;

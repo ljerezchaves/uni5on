@@ -111,8 +111,8 @@ OpenFlowEpcController::NotifyConnBtwnSwitches (Ptr<ConnectionInfo> connInfo)
   
   // Save this connection info
   SwitchPair_t key;
-  key.first  = std::min (connInfo->switchIdx1, connInfo->switchIdx2);
-  key.second = std::max (connInfo->switchIdx1, connInfo->switchIdx2);
+  key.first  = std::min (connInfo->m_switchIdx1, connInfo->m_switchIdx2);
+  key.second = std::max (connInfo->m_switchIdx1, connInfo->m_switchIdx2);
   std::pair<SwitchPair_t, Ptr<ConnectionInfo> > entry (key, connInfo);
   std::pair<ConnInfoMap_t::iterator, bool> ret;
   ret = m_connections.insert (entry);
@@ -121,8 +121,8 @@ OpenFlowEpcController::NotifyConnBtwnSwitches (Ptr<ConnectionInfo> connInfo)
       NS_FATAL_ERROR ("Error saving connection info.");
     }
   NS_LOG_DEBUG ("New connection info saved: switch " << key.first << 
-                " (" << connInfo->portNum1 << ") -- switch " << key.second << 
-                " (" << connInfo->portNum2 << ")");
+                " (" << connInfo->m_portNum1 << ") -- switch " << key.second << 
+                " (" << connInfo->m_portNum2 << ")");
 }
 
 void 

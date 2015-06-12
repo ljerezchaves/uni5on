@@ -23,9 +23,11 @@
 
 #include "ns3/applications-module.h"
 #include "ns3/nstime.h"
+#include "ns3/queue.h"
 #include "routing-info.h"
 #include "internet-network.h"
-#include "ns3/queue.h"
+#include "openflow-epc-network.h"
+#include "connection-info.h"
 
 namespace ns3 {
   

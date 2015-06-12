@@ -29,6 +29,7 @@
 #include "openflow-epc-network.h"
 #include "routing-info.h"
 #include "stats-calculator.h"
+#include "connection-info.h"
 
 namespace ns3 {
 
@@ -145,11 +146,11 @@ public:
       uint16_t cellId, uint32_t teid);
  
 
-  /** FIXME remove
-   * Get bandwidth statistcs for (relevant) network links.
-   * \return The list with stats.
-   */
-  virtual std::vector<BandwidthStats_t> GetBandwidthStats () = 0;
+//  /** FIXME remove
+//   * Get bandwidth statistcs for (relevant) network links.
+//   * \return The list with stats.
+//   */
+//  virtual std::vector<BandwidthStats_t> GetBandwidthStats () = 0;
 
   /** 
    * TracedCallback signature for new bearer request.

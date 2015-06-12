@@ -21,87 +21,11 @@
 #include "openflow-epc-network.h"
 #include "openflow-epc-controller.h"
 
-
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcNetwork");
-NS_OBJECT_ENSURE_REGISTERED (ConnectionInfo);
 NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcNetwork);
 
-ConnectionInfo::ConnectionInfo ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-ConnectionInfo::~ConnectionInfo ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-TypeId 
-ConnectionInfo::GetTypeId (void)
-{
-  static TypeId tid = TypeId ("ns3::ConnectionInfo")
-    .SetParent<Object> ()
-    .AddConstructor<ConnectionInfo> ()
-    .AddTraceSource ("UsageRatio",
-                     "Bandwidth usage ratio trace source.",
-                     MakeTraceSourceAccessor (&ConnectionInfo::m_usageTrace),
-                     "ns3::ConnectionInfo::UsageTracedCallback")
-  ;
-  return tid;
-}
-
-void
-ConnectionInfo::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-DataRate
-ConnectionInfo::GetAvailableDataRate (void) const
-{
-  return maxDataRate - reservedDataRate;
-}
-
-DataRate
-ConnectionInfo::GetAvailableDataRate (double bwFactor) const
-{
-  return (maxDataRate * (1. - bwFactor)) - reservedDataRate;
-}
-
-double
-ConnectionInfo::GetUsageRatio (void) const
-{
-  return (double)reservedDataRate.GetBitRate () / maxDataRate.GetBitRate ();
-}
-
-bool
-ConnectionInfo::ReserveDataRate (DataRate dr)
-{
-  if (reservedDataRate + dr <= maxDataRate)
-    {
-      reservedDataRate = reservedDataRate + dr;
-      m_usageTrace (switchIdx1, switchIdx2, GetUsageRatio ());
-      return true;
-    }
-  return false;
-}
-
-bool
-ConnectionInfo::ReleaseDataRate (DataRate dr)
-{
-  if (reservedDataRate - dr >= DataRate (0))
-    {
-      reservedDataRate = reservedDataRate - dr;
-      m_usageTrace (switchIdx1, switchIdx2, GetUsageRatio ());
-      return true;
-    }
-  return false;
-}
-
-
-// ------------------------------------------------------------------------ //
 OpenFlowEpcNetwork::OpenFlowEpcNetwork ()
   : m_ofCtrlApp (0),
     m_ofCtrlNode (0)
@@ -122,7 +46,7 @@ OpenFlowEpcNetwork::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::OpenFlowEpcNetwork") 
     .SetParent<Object> ()
 
-    // Trace sources used to simplify queue monitoring by EpcS1uStatsCalculator
+    // Trace sources used to simplify OpenFlow queue and meter monitoring
     .AddTraceSource ("QueueDrop",
                      "Packet dropped by OpenFlow port queue.",
                      MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_queueDropTrace),
@@ -132,19 +56,19 @@ OpenFlowEpcNetwork::GetTypeId (void)
                      MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_meterDropTrace),
                      "ns3::Packet::TracedCallback")
     
-    // Trace sources used by controller to be aware of network topology
+    // Trace sources used by controller to be aware of network topology creation
+    .AddTraceSource ("NewAttach",
+                     "New LTE EPC entity connected to OpenFlow switch.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_newAttachTrace),
+                     "ns3::OpenFlowEpcNetwork::AttachTracedCallback")
     .AddTraceSource ("NewConnection",
-                     "New connection between two switches.",
+                     "New connection between two OpenFlow switches.",
                      MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_newConnTrace),
                      "ns3::OpenFlowEpcNetwork::ConnectionTracedCallback")
     .AddTraceSource ("ConnectionsOk",
-                     "Connections between switches finished.",
+                     "Connections between OpenFlow switches finished.",
                      MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_connOkTrace),
                      "ns3::OpenFlowEpcNetwork::BoolTracedCallback")
-    .AddTraceSource ("NewAttach",
-                     "New EPC entity connected to OpenFlow network.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_newAttachTrace),
-                     "ns3::OpenFlowEpcNetwork::AttachTracedCallback")
   ;
   return tid; 
 }
@@ -310,34 +234,34 @@ OpenFlowEpcNetwork::GetSwitchIdxForNode (Ptr<Node> node)
   NS_FATAL_ERROR ("Node not registered.");
 }
 
-uint16_t
-OpenFlowEpcNetwork::GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev)
-{
-  uint16_t i;
-  for (i = 0; i < GetNSwitches (); i++)
-    {
-      if (dev == GetSwitchDevice (i))
-        {
-          return i;
-        }
-    }
-  NS_FATAL_ERROR ("Device not registered.");
-}
-
-uint16_t
-OpenFlowEpcNetwork::GetGatewaySwitchIdx ()
-{
-  return m_gatewaySwitch;
-}
-
-Ptr<Node>
-OpenFlowEpcNetwork::GetGatewayNode ()
-{
-  return m_gatewayNode;
-}
+// uint16_t
+// OpenFlowEpcNetwork::GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev)
+// {
+//   uint16_t i;
+//   for (i = 0; i < GetNSwitches (); i++)
+//     {
+//       if (dev == GetSwitchDevice (i))
+//         {
+//           return i;
+//         }
+//     }
+//   NS_FATAL_ERROR ("Device not registered.");
+// }
+// 
+// uint16_t
+// OpenFlowEpcNetwork::GetGatewaySwitchIdx ()
+// {
+//   return m_gatewaySwitch;
+// }
+// 
+// Ptr<Node>
+// OpenFlowEpcNetwork::GetGatewayNode ()
+// {
+//   return m_gatewayNode;
+// }
 
 void
-OpenFlowEpcNetwork::SetController (Ptr<OpenFlowEpcController> controller)
+OpenFlowEpcNetwork::InstallController (Ptr<OpenFlowEpcController> controller)
 {
   NS_LOG_FUNCTION (this << controller);
   NS_ASSERT_MSG (!m_ofCtrlApp, "Controller application already set.");
@@ -348,7 +272,6 @@ OpenFlowEpcNetwork::SetController (Ptr<OpenFlowEpcController> controller)
   Names::Add ("ctrl", m_ofCtrlNode);
 
   m_ofHelper->InstallControllerApp (m_ofCtrlNode, m_ofCtrlApp);
-//  m_ofCtrlApp->SetOfNetwork (this);
 }
 
 };  // namespace ns3

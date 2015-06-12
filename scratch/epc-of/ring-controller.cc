@@ -19,6 +19,7 @@
  */
 
 #include "ring-controller.h"
+#include "connection-info.h"
 #include <string>
 
 namespace ns3 {
@@ -84,15 +85,15 @@ RingController::NotifyConnBtwnSwitches (Ptr<ConnectionInfo> connInfo)
   // next one in clockwise direction.
   std::ostringstream cmd1;
   cmd1 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::CLOCK <<
-          " weight=0,port=any,group=any output=" << connInfo->portNum1;
-  DpctlCommand (connInfo->switchDev1, cmd1.str ());
+          " weight=0,port=any,group=any output=" << connInfo->m_portNum1;
+  DpctlCommand (connInfo->m_switchDev1, cmd1.str ());
                                    
   // Group RingRoutingInfo::COUNTER is used to send packets from the next
   // switch to the current one in counterclockwise direction. 
   std::ostringstream cmd2;
   cmd2 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::COUNTER <<
-          " weight=0,port=any,group=any output=" << connInfo->portNum2;
-  DpctlCommand (connInfo->switchDev2, cmd2.str ());
+          " weight=0,port=any,group=any output=" << connInfo->m_portNum2;
+  DpctlCommand (connInfo->m_switchDev2, cmd2.str ());
 }
 
 void 
@@ -111,15 +112,15 @@ RingController::NotifyConnBtwnSwitchesOk (bool finished)
 
       std::ostringstream cmd1;
       cmd1 << "flow-mod cmd=add,table=1,flags=0x0002,prio=" << m_t1RingPrio <<
-              " in_port=" << connInfo->portNum1 <<
+              " in_port=" << connInfo->m_portNum1 <<
               " write:group=" << RingRoutingInfo::COUNTER;
-      DpctlCommand (connInfo->switchDev1, cmd1.str ());
+      DpctlCommand (connInfo->m_switchDev1, cmd1.str ());
 
       std::ostringstream cmd2;
       cmd2 << "flow-mod cmd=add,table=1,flags=0x0002,prio=" << m_t1RingPrio <<
-              " in_port=" << connInfo->portNum2 <<
+              " in_port=" << connInfo->m_portNum2 <<
               " write:group=" << RingRoutingInfo::CLOCK;
-      DpctlCommand (connInfo->switchDev2, cmd2.str ());
+      DpctlCommand (connInfo->m_switchDev2, cmd2.str ());
     }
 }
 
@@ -512,18 +513,18 @@ RingController::CreateSpanningTree ()
                  half+1 << " for broadcast messages.");
   
   Mac48Address macAddr1;
-  macAddr1 = Mac48Address::ConvertFrom (connInfo->portDev1->GetAddress ());
+  macAddr1 = Mac48Address::ConvertFrom (connInfo->m_portDev1->GetAddress ());
   std::ostringstream cmd1;
-  cmd1 << "port-mod port=" << connInfo->portNum1 << ",addr=" << 
+  cmd1 << "port-mod port=" << connInfo->m_portNum1 << ",addr=" << 
            macAddr1 << ",conf=0x00000020,mask=0x00000020";
-  DpctlCommand (connInfo->switchDev1, cmd1.str ());
+  DpctlCommand (connInfo->m_switchDev1, cmd1.str ());
 
   Mac48Address macAddr2;
-  macAddr2 = Mac48Address::ConvertFrom (connInfo->portDev2->GetAddress ());
+  macAddr2 = Mac48Address::ConvertFrom (connInfo->m_portDev2->GetAddress ());
   std::ostringstream cmd2;
-  cmd2 << "port-mod port=" << connInfo->portNum2 << ",addr=" << 
+  cmd2 << "port-mod port=" << connInfo->m_portNum2 << ",addr=" << 
            macAddr2 << ",conf=0x00000020,mask=0x00000020";
-  DpctlCommand (connInfo->switchDev2, cmd2.str ());
+  DpctlCommand (connInfo->m_switchDev2, cmd2.str ());
 }
 
 uint16_t 
@@ -538,24 +539,24 @@ RingController::GetSwitchDevice (uint16_t index)
   return m_ofNetwork->GetSwitchDevice (index);
 }
 
-// FIXME: Mover isso aqui pro network
-std::vector<BandwidthStats_t>
-RingController::GetBandwidthStats ()
-{
-  NS_LOG_FUNCTION (this);
-  
-  std::vector<BandwidthStats_t> list;
-  for (uint16_t curr = 0; curr < GetNSwitches (); curr++)
-    {
-      uint16_t next = NextSwitchIndex (curr, RingRoutingInfo::CLOCK);
-      Ptr<ConnectionInfo> connInfo = GetConnectionInfo (curr, next);
-
-      SwitchPair_t pair (curr, next);
-      BandwidthStats_t entry (pair, connInfo->GetUsageRatio ());
-      list.push_back (entry);
-    }
-  return list;
-}
+// // FIXME: Mover isso aqui pro network
+// std::vector<BandwidthStats_t>
+// RingController::GetBandwidthStats ()
+// {
+//   NS_LOG_FUNCTION (this);
+//   
+//   std::vector<BandwidthStats_t> list;
+//   for (uint16_t curr = 0; curr < GetNSwitches (); curr++)
+//     {
+//       uint16_t next = NextSwitchIndex (curr, RingRoutingInfo::CLOCK);
+//       Ptr<ConnectionInfo> connInfo = GetConnectionInfo (curr, next);
+// 
+//       SwitchPair_t pair (curr, next);
+//       BandwidthStats_t entry (pair, connInfo->GetUsageRatio ());
+//       list.push_back (entry);
+//     }
+//   return list;
+// }
 
 RingRoutingInfo::RoutingPath
 RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)

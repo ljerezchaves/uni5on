@@ -68,7 +68,7 @@ public:
   // Inherited from OpenFlowEpcController
   void NotifyConnBtwnSwitches (Ptr<ConnectionInfo> connInfo);
   void NotifyConnBtwnSwitchesOk (bool finished);
-  std::vector<BandwidthStats_t> GetBandwidthStats ();
+//  std::vector<BandwidthStats_t> GetBandwidthStats ();
 
 protected:
   /** Destructor implementation */

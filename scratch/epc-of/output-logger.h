@@ -24,6 +24,7 @@
 #include <ns3/core-module.h>
 #include "ns3/data-rate.h"
 #include "openflow-epc-network.h"
+#include "connection-info.h"
 
 namespace ns3 {
 

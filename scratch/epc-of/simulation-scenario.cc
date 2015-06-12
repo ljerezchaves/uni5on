@@ -129,7 +129,40 @@ SimulationScenario::BuildRingTopology ()
   Config::ConnectWithoutContext (
     "/Names/SgwPgwApplication/ContextCreated",
     MakeCallback (&OpenFlowEpcController::NotifyContextCreated, m_controller));
+
+  // bool ok = m_opfNetwork->TraceConnectWithoutContext ("NewAttach", 
+  //   MakeCallback (&OpenFlowEpcController::NotifyNewAttachToSwitch, m_controller));
+  // NS_ASSERT_MSG (ok, "MERDAAAAAAAAA");
+
+  // Config::ConnectWithoutContext (
+  //   "/Names/OpenFlowNetwork/NewAttach",
+  //   MakeCallback (&OpenFlowEpcController::NotifyNewAttachToSwitch, m_controller));
+  // Config::ConnectWithoutContext (
+  //   "/Names/OpenFlowNetwork/NewConnection",
+  //   MakeCallback (&OpenFlowEpcController::NotifyNewAttachToSwitch, m_controller));
+
+  // FIXME Configurar corretamente esses trace source e sinks....
+  // m_opfNetwork->TraceConnectWithoutContext ("ConnectionsOk", 
+  //    MakeCallback (&OpenFlowEpcController::Pqp, m_controller));
+
+  // Config::ConnectWithoutContext (
+  //   "/Names/OpenFlowNetwork/NewConnection",
+  //   MakeCallback (&OpenFlowEpcController::NotifyConnBtwnSwitches, m_controller));
+  // 
   
+  // Config::ConnectWithoutContext (
+  //   "/Names/OpenFlowNetwork/ConnectionsOk",
+  //   MakeCallback (&RingController::Pqp, m_controller));
+  // 
+  
+  // Config::ConnectWithoutContext (
+  //   "/Names/OpenFlowNetwork/Teste",
+  //   MakeCallback (&OpenFlowEpcController::Pqp, m_controller));
+  
+ //  m_opfNetwork->TraceConnectWithoutContext ("Teste", 
+ //    MakeCallback (&OpenFlowEpcController::Pqp, m_controller));
+
+
   // LTE radio access network
   m_lteNetwork = CreateObject<LteHexGridNetwork> ();
   m_lteNetwork->SetAttribute ("Enbs", UintegerValue (m_nEnbs));
