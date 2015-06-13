@@ -18,9 +18,9 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "openflow-epc-controller.h"
-#include "internet-network.h"
 #include "ns3/epc-application.h"
+#include "openflow-epc-controller.h"
+#include "openflow-epc-network.h"
 
 namespace ns3 {
 

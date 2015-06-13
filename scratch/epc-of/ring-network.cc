@@ -55,15 +55,25 @@ RingNetwork::GetTypeId (void)
                    UintegerValue (3),
                    MakeUintegerAccessor (&RingNetwork::m_nodes),
                    MakeUintegerChecker<uint16_t> (3))
-    .AddAttribute ("LinkDataRate", 
-                   "The data rate to be used for the CSMA OpenFlow links.",
+    .AddAttribute ("SwitchLinkDataRate", 
+                   "The data rate to be used for the CSMA OpenFlow links between switches.",
                    DataRateValue (DataRate ("100Mb/s")),
-                   MakeDataRateAccessor (&RingNetwork::m_linkDataRate),
+                   MakeDataRateAccessor (&RingNetwork::m_switchLinkDataRate),
                    MakeDataRateChecker ())
-    .AddAttribute ("LinkDelay", 
-                   "The delay to be used for the CSMA OpenFlow links.",
+    .AddAttribute ("SwitchLinkDelay", 
+                   "The delay to be used for the CSMA OpenFlow links between switches.",
                    TimeValue (MicroSeconds (100)), // 20km fiber cable latency
-                   MakeTimeAccessor (&RingNetwork::m_linkDelay),
+                   MakeTimeAccessor (&RingNetwork::m_switchLinkDelay),
+                   MakeTimeChecker ())
+    .AddAttribute ("EpcLinkDataRate", 
+                   "The data rate to be used for the CSMA OpenFlow links connecting switches to EPC elements.",
+                   DataRateValue (DataRate ("10Gb/s")),
+                   MakeDataRateAccessor (&RingNetwork::m_epcLinkDataRate),
+                   MakeDataRateChecker ())
+    .AddAttribute ("EpcLinkDelay", 
+                   "The delay to be used for the CSMA OpenFlow links connecting switches to EPC elements.",
+                   TimeValue (MicroSeconds (0)), // Local connection
+                   MakeTimeAccessor (&RingNetwork::m_epcLinkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("LinkMtu", 
                    "The MTU for CSMA OpenFlow links. "
@@ -81,7 +91,6 @@ RingNetwork::DoDispose ()
   NS_LOG_FUNCTION (this);
   OpenFlowEpcNetwork::DoDispose ();
   Object::DoDispose ();
-  m_ringCtrlApp = 0;
 }
 
 void
@@ -90,18 +99,12 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
 {
   NS_LOG_FUNCTION (this);
   
-  static bool created = false;
-  NS_ASSERT_MSG (!created, "Topology already created.");
+  NS_ASSERT_MSG (!m_created, "Topology already created.");
   NS_ASSERT_MSG (m_nodes >= 3, "Invalid number of nodes for the ring");
   
   InstallController (controller);
   m_eNbSwitchIdx = eNbSwitches;
  
-  // FIXME Se os trace sources para notificação funcionarem, não será mais preciso isso aqui.
-  m_ringCtrlApp = DynamicCast<RingController> (m_ofCtrlApp);
-  NS_ASSERT_MSG (m_ringCtrlApp, "Expecting a RingController.");
-  m_ringCtrlApp->SetOfNetwork (this);
-
   // Creating the switch nodes
   m_ofSwitches.Create (m_nodes);
   for (uint16_t i = 0; i < m_nodes; i++)
@@ -115,11 +118,10 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
   // Installing the Openflow switch devices for each switch node
   m_ofDevices = m_ofHelper->InstallSwitchesWithoutPorts (m_ofSwitches);
 
-  // Configuring csma links to connect the switches
-  m_ofCsmaHelper.SetChannelAttribute ("DataRate", 
-                                      DataRateValue (m_linkDataRate));
+  // Configuring csma links for connection between switches
   m_ofCsmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
-  m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
+  m_ofCsmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_switchLinkDataRate));
+  m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_switchLinkDelay));
 
   // Connecting switches in ring topology (clockwise order)
   for (uint16_t i = 0; i < m_nodes; i++)
@@ -164,9 +166,8 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
       info->m_portDev2 = nextPortDevice;
       info->m_portNum1 = currPortNum;
       info->m_portNum2 = nextPortNum;
-      info->m_maxDataRate = m_linkDataRate;
+      info->m_maxDataRate = m_switchLinkDataRate;
       m_newConnTrace (info);
-      m_ringCtrlApp->NotifyConnBtwnSwitches (info); // FIXME
 
       // Registering OpenFlowEpcNetwork trace sink for meter dropped packets
       currDevice->TraceConnect ("MeterDrop", Names::FindName (currNode),
@@ -184,17 +185,22 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
     }
 
   // Fire trace source notifying that all connections between switches are ok.
-  m_connOkTrace (true);
-  m_ringCtrlApp->NotifyConnBtwnSwitchesOk (true); // FIXME
-  created = true;
+  m_topoBuiltTrace (m_ofDevices);
+  m_created = true;
+
+  // Configuring csma links for EPC attach procedures
+  m_ofCsmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_epcLinkDataRate));
+  m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_epcLinkDelay));
 }
 
 Ptr<NetDevice>
 RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << node);
+  NS_ASSERT_MSG (m_created, "Topology not created.");
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
-  
+
+
   // Connect SgwPgw node to switch index 0 and other eNBs to switchs indexes
   // indicated by the user. As we know that the OpenFlowEpcHelper will callback
   // here first for SgwPgw node, we use the static counter to identify this
@@ -243,7 +249,6 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   
   // Trace source notifying a new device attached to network
   m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
-  m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeAddr, swDev, swIdx, portNum); // FIXME
 
   // Registering trace sink for queue drop packets
   std::ostringstream context;
@@ -261,6 +266,7 @@ Ptr<NetDevice>
 RingNetwork::AttachToX2 (Ptr<Node> node)
 {
   NS_LOG_FUNCTION (this << node);
+  NS_ASSERT_MSG (m_created, "Topology not created.");
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
 
   // Retrieve the registered pair node/switch
@@ -292,7 +298,6 @@ RingNetwork::AttachToX2 (Ptr<Node> node)
 
   // Trace source notifying a new device attached to network
   m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
-  m_ringCtrlApp->NotifyNewAttachToSwitch (nodeDev, nodeAddr, swDev, swIdx, portNum); // FIXME
 
   // Registering trace sink for queue drop packets
   std::ostringstream context;

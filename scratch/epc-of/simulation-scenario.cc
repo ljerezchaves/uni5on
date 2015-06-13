@@ -76,12 +76,12 @@ SimulationScenario::GetTypeId (void)
     .AddAttribute ("Enbs",
                    "Number of eNBs in network topology.",
                    UintegerValue (0),
-                   MakeUintegerAccessor (&SimulationScenario::m_nEnbs),
+                   MakeUintegerAccessor (&SimulationScenario::SetEnbs),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("Switches",
                    "Number of OpenFlow switches in network topology.",
-                   UintegerValue (0),
-                   MakeUintegerAccessor (&SimulationScenario::m_nSwitches),
+                   UintegerValue (3),
+                   MakeUintegerAccessor (&SimulationScenario::SetSwitches),
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("PcapTrace",
                    "Enable/Disable simulation PCAP traces.",
@@ -110,8 +110,6 @@ SimulationScenario::BuildRingTopology ()
   NS_LOG_FUNCTION (this);
 
   ParseTopology ();
-  Config::SetDefault ("ns3::RingNetwork::NumSwitches", UintegerValue (m_nSwitches));
-  Config::SetDefault ("ns3::LteHexGridNetwork::Enbs", UintegerValue (m_nEnbs));
 
   // 1) Create OpenFlowEpcNetwork object and name it OpenFlowNetwork.
   m_opfNetwork = CreateObject<RingNetwork> ();
@@ -153,6 +151,20 @@ SimulationScenario::BuildRingTopology ()
   // 9) Set up output ofsoftswitch13 logs and ns-3 traces
   DatapathLogs ();
   PcapAsciiTraces ();
+}
+
+void
+SimulationScenario::SetSwitches (uint16_t value)
+{
+  m_nSwitches = value;
+  Config::SetDefault ("ns3::RingNetwork::NumSwitches", UintegerValue (m_nSwitches));
+}
+
+void
+SimulationScenario::SetEnbs (uint16_t value)
+{
+  m_nEnbs = value;
+  Config::SetDefault ("ns3::LteHexGridNetwork::Enbs", UintegerValue (m_nEnbs));
 }
 
 bool
@@ -215,7 +227,7 @@ SimulationScenario::ParseTopology ()
       idx++;
     }
   NS_ASSERT_MSG (idx == m_nEnbs, "Missing information in topology file.");
-  
+
   return true;  
 }
 

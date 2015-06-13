@@ -58,12 +58,12 @@ public:
       std::vector<uint16_t> eNbSwitches);
   
 private:
-  Ptr<RingController>   m_ringCtrlApp;  //!< Casted controller app pointer
-  uint16_t              m_nodes;        //!< Number of switches in the ring
-  
-  DataRate              m_linkDataRate; //!< Link data rate
-  Time                  m_linkDelay;    //!< Link delay
-  uint16_t              m_linkMtu;      //!< Link mtu
+  DataRate              m_switchLinkDataRate; //!< Switch link data rate
+  Time                  m_switchLinkDelay;    //!< Switch link delay
+  DataRate              m_epcLinkDataRate;    //!< EPC link data rate
+  Time                  m_epcLinkDelay;       //!< EPC link delay
+  uint16_t              m_linkMtu;            //!< Link mtu
+  uint16_t              m_nodes;              //!< Number of switches in the ring
 
   /** Helper to assign addresses to S1-U NetDevices */
   Ipv4AddressHelper m_s1uIpv4AddressHelper;

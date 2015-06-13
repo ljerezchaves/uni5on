@@ -27,8 +27,10 @@ NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcNetwork");
 NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcNetwork);
 
 OpenFlowEpcNetwork::OpenFlowEpcNetwork ()
-  : m_ofCtrlApp (0),
-    m_ofCtrlNode (0)
+  : m_ofCtrlNode (0),
+    m_ofHelper (0),
+    m_created (false),
+    m_gatewayNode (0)
 {
   NS_LOG_FUNCTION (this);
   m_ofHelper = CreateObjectWithAttributes<OFSwitch13Helper> (
@@ -46,7 +48,9 @@ OpenFlowEpcNetwork::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::OpenFlowEpcNetwork") 
     .SetParent<Object> ()
 
-    // Trace sources used to simplify OpenFlow queue and meter monitoring
+    // Trace sources used to simplify OpenFlow queue and meter monitoring. All
+    // packets drop by OpenFlow switch meters or switch ports queues will fire
+    // these trace sources.
     .AddTraceSource ("QueueDrop",
                      "Packet dropped by OpenFlow port queue.",
                      MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_queueDropTrace),
@@ -57,31 +61,20 @@ OpenFlowEpcNetwork::GetTypeId (void)
                      "ns3::Packet::TracedCallback")
     
     // Trace sources used by controller to be aware of network topology creation
-    .AddTraceSource ("NewAttach",
-                     "New LTE EPC entity connected to OpenFlow switch.",
+    .AddTraceSource ("NewEpcAttach",
+                     "New LTE EPC entity connected to OpenFlow switch for S1U or X1 interface.",
                      MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_newAttachTrace),
                      "ns3::OpenFlowEpcNetwork::AttachTracedCallback")
-    .AddTraceSource ("NewConnection",
-                     "New connection between two OpenFlow switches.",
+    .AddTraceSource ("NewSwitchConnection",
+                     "New connection between two OpenFlow switches when building topology.",
                      MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_newConnTrace),
                      "ns3::OpenFlowEpcNetwork::ConnectionTracedCallback")
-    .AddTraceSource ("ConnectionsOk",
-                     "Connections between OpenFlow switches finished.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_connOkTrace),
-                     "ns3::OpenFlowEpcNetwork::BoolTracedCallback")
+    .AddTraceSource ("TopologyBuilt",
+                     "Topology built and no more connections between OpenFlow switches.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_topoBuiltTrace),
+                     "ns3::OpenFlowEpcNetwork::TopologyTracedCallback")
   ;
   return tid; 
-}
-
-void
-OpenFlowEpcNetwork::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-  m_ofCtrlApp = 0;
-  m_ofCtrlNode = 0;
-  m_ofHelper = 0;
-  m_nodeSwitchMap.clear ();
-  Object::DoDispose ();
 }
 
 void
@@ -108,40 +101,30 @@ OpenFlowEpcNetwork::EnableDatapathLogs (std::string level)
   m_ofHelper->EnableDatapathLogs (level);
 }
 
-// CsmaHelper
-// OpenFlowEpcNetwork::GetCsmaHelper ()
-// {
-//   return m_ofCsmaHelper;
-// }
-// 
-// NodeContainer
-// OpenFlowEpcNetwork::GetSwitchNodes ()
-// {
-//   return m_ofSwitches;
-// }
-// 
-// NetDeviceContainer
-// OpenFlowEpcNetwork::GetSwitchDevices ()
-// {
-//   return m_ofDevices;
-// }
-// 
-// Ptr<OFSwitch13Controller>
-// OpenFlowEpcNetwork::GetControllerApp ()
-// {
-//   return m_ofCtrlApp;
-// }
-// 
-// Ptr<Node>
-// OpenFlowEpcNetwork::GetControllerNode ()
-// {
-//   return m_ofCtrlNode;
-// }
+void
+OpenFlowEpcNetwork::SetSwitchDeviceAttribute (std::string n1, 
+                                              const AttributeValue &v1)
+{
+  m_ofHelper->SetDeviceAttribute (n1, v1);
+} 
+
+bool
+OpenFlowEpcNetwork::IsTopologyCreated (void) const
+{
+  return m_created;
+}
 
 uint16_t 
 OpenFlowEpcNetwork::GetNSwitches (void) const
 {
   return m_ofSwitches.GetN ();
+}
+
+Ptr<OFSwitch13NetDevice> 
+OpenFlowEpcNetwork::GetSwitchDevice (uint16_t index)
+{
+  NS_ASSERT (index < m_ofDevices.GetN ());
+  return DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (index));
 }
 
 void
@@ -160,44 +143,15 @@ OpenFlowEpcNetwork::QueueDropPacket (std::string context,
   m_queueDropTrace (packet);
 }
 
-// void
-// OpenFlowEpcNetwork::DumpSwtStatistics ()
-// {
-//   std::vector<uint32_t> teid;
-// 
-//   Ptr<OFSwitch13NetDevice> swDev;
-//   for (uint16_t i = 0; i < GetNSwitches (); i++)
-//     {
-//       swDev = GetSwitchDevice (i);
-//       teid.push_back (swDev->GetNumberFlowEntries (1)); // TEID table is 1
-//     }
-//   m_swtTrace (teid);
-// 
-//   Simulator::Schedule (m_dumpTimeout, 
-//     &OpenFlowEpcNetwork::DumpSwtStatistics, this);
-// }
-// 
-// void
-// OpenFlowEpcNetwork::DumpBwdStatistics ()
-// { 
-//   m_bwdTrace (m_ofCtrlApp->GetBandwidthStats ());
-// 
-//   Simulator::Schedule (m_dumpTimeout, 
-//     &OpenFlowEpcNetwork::DumpBwdStatistics, this);
-// }
-// 
 void
-OpenFlowEpcNetwork::SetSwitchDeviceAttribute (std::string n1, 
-                                              const AttributeValue &v1)
+OpenFlowEpcNetwork::DoDispose ()
 {
-  m_ofHelper->SetDeviceAttribute (n1, v1);
-} 
-
-Ptr<OFSwitch13NetDevice> 
-OpenFlowEpcNetwork::GetSwitchDevice (uint16_t index)
-{
-  NS_ASSERT (index < m_ofDevices.GetN ());
-  return DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (index));
+  NS_LOG_FUNCTION (this);
+  m_ofCtrlNode = 0;
+  m_ofHelper = 0;
+  m_gatewayNode = 0;
+  m_nodeSwitchMap.clear ();
+  Object::DoDispose ();
 }
 
 void
@@ -234,44 +188,49 @@ OpenFlowEpcNetwork::GetSwitchIdxForNode (Ptr<Node> node)
   NS_FATAL_ERROR ("Node not registered.");
 }
 
-// uint16_t
-// OpenFlowEpcNetwork::GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev)
-// {
-//   uint16_t i;
-//   for (i = 0; i < GetNSwitches (); i++)
-//     {
-//       if (dev == GetSwitchDevice (i))
-//         {
-//           return i;
-//         }
-//     }
-//   NS_FATAL_ERROR ("Device not registered.");
-// }
-// 
-// uint16_t
-// OpenFlowEpcNetwork::GetGatewaySwitchIdx ()
-// {
-//   return m_gatewaySwitch;
-// }
-// 
-// Ptr<Node>
-// OpenFlowEpcNetwork::GetGatewayNode ()
-// {
-//   return m_gatewayNode;
-// }
+uint16_t
+OpenFlowEpcNetwork::GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev)
+{
+  uint16_t i;
+  for (i = 0; i < GetNSwitches (); i++)
+    {
+      if (dev == GetSwitchDevice (i))
+        {
+          return i;
+        }
+    }
+  NS_FATAL_ERROR ("Device not registered.");
+}
+
+uint16_t
+OpenFlowEpcNetwork::GetGatewaySwitchIdx ()
+{
+  return m_gatewaySwitch;
+}
+
+Ptr<Node>
+OpenFlowEpcNetwork::GetGatewayNode ()
+{
+  return m_gatewayNode;
+}
+
+Ptr<Node>
+OpenFlowEpcNetwork::GetControllerNode ()
+{
+  return m_ofCtrlNode;
+}
 
 void
 OpenFlowEpcNetwork::InstallController (Ptr<OpenFlowEpcController> controller)
 {
   NS_LOG_FUNCTION (this << controller);
-  NS_ASSERT_MSG (!m_ofCtrlApp, "Controller application already set.");
+  NS_ASSERT_MSG (!m_ofCtrlNode, "Controller application already set.");
   
   // Installing the controller app into a new controller node
-  m_ofCtrlApp = controller;
   m_ofCtrlNode = CreateObject<Node> ();
   Names::Add ("ctrl", m_ofCtrlNode);
 
-  m_ofHelper->InstallControllerApp (m_ofCtrlNode, m_ofCtrlApp);
+  m_ofHelper->InstallControllerApp (m_ofCtrlNode, controller);
 }
 
 };  // namespace ns3

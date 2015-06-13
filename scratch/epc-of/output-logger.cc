@@ -19,7 +19,6 @@
  */
 
 #include "ns3/qos-stats-calculator.h"
-#include "stats-calculator.h"
 #include "output-logger.h"
 #include <iomanip>
 #include <iostream>

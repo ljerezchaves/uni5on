@@ -114,31 +114,12 @@ public:
    */
   void SetSwitchDeviceAttribute (std::string n1, const AttributeValue &v1);
 
-//  /** 
-//   * \return The CsmaHelper used to create the OpenFlow network. 
-//   */
-//  CsmaHelper GetCsmaHelper ();
-//
-//  /** 
-//   * \return The NodeContainer with all OpenFlow switches nodes. 
-//   */
-//  NodeContainer GetSwitchNodes ();
-//
-//  /** 
-//   * \return The NetDeviceContainer with all OFSwitch13NetDevice devices. 
-//   */
-//  NetDeviceContainer GetSwitchDevices ();
-//
-//  /** 
-//   * \return The OpenFlow controller application. 
-//   */
-//  Ptr<OFSwitch13Controller> GetControllerApp ();
-//
-//  /** 
-//   * \return The OpenFlow controller node. 
-//   */
-//  Ptr<Node> GetControllerNode ();
-  
+  /**
+   * Check for network topology already created.
+   * \return true if topology is created.
+   */ 
+  bool IsTopologyCreated (void) const;
+
   /** 
    * \return Number of switches in the network. 
    */
@@ -174,14 +155,17 @@ public:
   typedef void (* ConnectionTracedCallback)(Ptr<ConnectionInfo> cInfo);
 
   /** 
-   * BoolTracedCallback signature for between switches finished.
-   * \param finished True, indicating that all connections are completed.
+   * BoolTracedCallback signature for topology creation completed.
+   * \param devices The NetDeviceContainer for OpenFlow switch devices.
    */
-  typedef void (* BoolTracedCallback)(bool finished);
+  typedef void (* TopologyTracedCallback)(NetDeviceContainer devices);
 
    /** 
    * AttachTracedCallback signature for new  EPC entity connected to OpenFlow
    * network.
+   * \attention This nodeDev is not the one added as port to switch. Instead,
+   * this is the 'other' end of this connection, associated with the EPC eNB or
+   * SgwPgw node.
    * \param nodeDev The device connected to the OpenFlow switch.
    * \param nodeIp The IPv4 address assigned to this device.
    * \param swtchDev The OpenFlow switch device.
@@ -217,44 +201,50 @@ protected:
    */
   uint16_t GetSwitchIdxForNode (Ptr<Node> node);
 
-//  /**
-//   * Retrieve the switch index for switch device.
-//   * \param dev The OpenFlow device pointer.
-//   * \return The switch index in m_ofSwitches.
-//   */
-//  uint16_t GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev);
-//
-//  /**
-//   * Retrieve the switch index at which the gateway is connected.
-//   * \return The switch index in m_ofSwitches.
-//   */
-//  uint16_t GetGatewaySwitchIdx ();
-//
-//  /**
-//   * Retrieve the gateway node pointer.
-//   * \return The gateway node pointer.
-//   */
-//  Ptr<Node> GetGatewayNode ();
+  /**
+   * Retrieve the switch index for switch device.
+   * \param dev The OpenFlow device pointer.
+   * \return The switch index in m_ofSwitches.
+   */
+  uint16_t GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev);
 
+  /**
+   * Retrieve the switch index at which the gateway is connected.
+   * \return The switch index in m_ofSwitches.
+   */
+  uint16_t GetGatewaySwitchIdx ();
+
+  /**
+   * Retrieve the gateway node pointer.
+   * \return The gateway node pointer.
+   */
+  Ptr<Node> GetGatewayNode ();
+
+  /** 
+   * Retrieve the controller node pointer.
+   * \return The OpenFlow controller node. 
+   */
+  Ptr<Node> GetControllerNode ();
+  
   /**
    * Install the OpenFlow controller for this network.
    * \param controller The controller application.
    */ 
   void InstallController (Ptr<OpenFlowEpcController> controller);
 
-  Ptr<OpenFlowEpcController>  m_ofCtrlApp;      //!< Controller application.
   Ptr<Node>                   m_ofCtrlNode;     //!< Controller node.
   NodeContainer               m_ofSwitches;     //!< Switch nodes.
   NetDeviceContainer          m_ofDevices;      //!< Switch devices.
   Ptr<OFSwitch13Helper>       m_ofHelper;       //!< OpenFlow helper.
   CsmaHelper                  m_ofCsmaHelper;   //!< Csma helper.
   std::vector<uint16_t>       m_eNbSwitchIdx;   //!< Switch index for each eNB.
+  bool                        m_created;        //!< Network topology created.
   
   /** New connection between two switches trace source. */
   TracedCallback<Ptr<ConnectionInfo> > m_newConnTrace;
 
   /** Connections between switches finished trace source. */
-  TracedCallback<bool> m_connOkTrace;
+  TracedCallback<NetDeviceContainer> m_topoBuiltTrace;
   
   /** New EPC entity connected to OpenFlow network trace source. */
   TracedCallback<Ptr<NetDevice>, Ipv4Address, Ptr<OFSwitch13NetDevice>, 
@@ -263,7 +253,7 @@ protected:
 private:
   uint16_t                    m_gatewaySwitch;  //!< Gateway switch index.
   Ptr<Node>                   m_gatewayNode;    //!< Gateway node pointer.
-  
+
   /** Packet queue drop trace source. */
   TracedCallback<Ptr<const Packet> > m_queueDropTrace;
 

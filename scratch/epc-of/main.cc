@@ -68,7 +68,7 @@ main (int argc, char *argv[])
   cmd.AddValue ("rtVideo",    "ns3::TrafficManager::RtVideoTraffic");
   cmd.AddValue ("strategy",   "ns3::RingController::Strategy");
   cmd.AddValue ("ueFixed",    "ns3::LteHexGridNetwork::UeFixedPos");
-  cmd.AddValue ("bandwidth",  "ns3::RingNetwork::LinkDataRate");
+  cmd.AddValue ("bandwidth",  "ns3::RingNetwork::SwitchLinkDataRate");
   cmd.AddValue ("radioMap",   "Generate LTE radio map", lteRem);
   cmd.Parse (argc, argv);
 

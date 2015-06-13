@@ -30,6 +30,7 @@
 #include "openflow-epc-controller.h"
 #include "traffic-helper.h"
 #include "output-logger.h"
+#include "stats-calculator.h"
 #include <vector>
 
 using namespace std;
@@ -60,6 +61,18 @@ public:
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
+
+  /** 
+   * Set the number of switches in network topology. 
+   * \param value The number of switches.
+   */
+  void SetSwitches (uint16_t value);
+  
+  /** 
+   * Set the number of eNBs in network topology. 
+   * \param value The number of eNBs.
+   */
+  void SetEnbs (uint16_t value);
 
 private:
   /**

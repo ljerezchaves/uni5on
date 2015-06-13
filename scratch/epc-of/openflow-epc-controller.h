@@ -26,9 +26,7 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "openflow-epc-network.h"
 #include "routing-info.h"
-#include "stats-calculator.h"
 #include "connection-info.h"
 
 namespace ns3 {
