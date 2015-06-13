@@ -53,41 +53,85 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  /** 
+   * Request a new dedicated EPC bearer. This is used to check for necessary
+   * resources in the network (mainly available data rate for GBR bearers).
+   * When returning false, it aborts the bearer creation process
+   * \internal Current implementation assumes that each application traffic
+   * flow is associated with a unique bearer/tunnel. Because of that, we can
+   * use only the teid for the tunnel to prepare and install route. If we would
+   * like to aggregate traffic from several applications into same bearer we
+   * will need to revise this.
+   * \param teid The teid for this bearer, if already defined.
+   * \param imsi uint64_t IMSI UE identifier.
+   * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
+   * \param bearer EpsBearer bearer QoS characteristics of the bearer.
+   * \returns true if successful (the bearer creation process will proceed),
+   * false otherwise (the bearer creation process will abort).
+   */
+  virtual bool RequestDedicatedBearer (EpsBearer bearer, uint64_t imsi, 
+                                       uint16_t cellId, uint32_t teid);
+
+  /** 
+   * Release a dedicated EPC bearer. 
+   * \internal Current implementation assumes that each application traffic
+   * flow is associated with a unique bearer/tunnel. Because of that, we can
+   * use only the teid for the tunnel to prepare and install route. If we would
+   * like to aggregate traffic from several applications into same bearer we
+   * will need to revise this.
+   * \param teid The teid for this bearer, if already defined.
+   * \param imsi uint64_t IMSI UE identifier.
+   * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
+   * \param bearer EpsBearer bearer QoS characteristics of the bearer.
+   * \returns true if successful, false otherwise.
+   */
+  virtual bool ReleaseDedicatedBearer (EpsBearer bearer, uint64_t imsi,
+                                       uint16_t cellId, uint32_t teid);
+ 
+  /** 
+   * TracedCallback signature for new bearer request.
+   * \param ok True when the bearer request/release processes succeeds.
+   * \param rInfo The routing information for this bearer tunnel.
+   */
+  typedef void (* BearerTracedCallback)(bool ok, Ptr<const RoutingInfo> rInfo);
+
+protected:
+  /** Destructor implementation */
+  virtual void DoDispose ();
+
+  /** Trace sinks for network topology and LTE EPC monitoring. */
+  //\{
   /**
    * Notify this controller of a new eNB or SgwPgw device connected to the
    * OpenFlow network over some switch port. This function will save the IP
    * address / MAC address from this new device for further ARP resolution, and
    * will configure local port delivery. The user is supposed to connect this
-   * function as trace sink for OpenFlowEpcNetwork::NewAttach trace source.
-   * \attention This nodeDev is not the one added as port to switch. Instead,
-   * this is the 'other' end of this connection, associated with a eNB or
-   * SgwPgw node.
+   * function as trace sink for OpenFlowEpcNetwork::NewEpcAttach trace source.
    * \param nodeDev The device connected to the OpenFlow switch.
    * \param nodeIp The IPv4 address assigned to this device.
    * \param swtchDev The OpenFlow switch device.
    * \param swtchIdx The OpenFlow switch index.
    * \param swtchPort The port number for nodeDev at OpenFlow switch.
    */
-  virtual void NotifyNewAttachToSwitch (Ptr<NetDevice> nodeDev, 
-      Ipv4Address nodeIp, Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, 
-      uint32_t swtchPort);
+  virtual void NotifyNewEpcAttach (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, 
+    Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, uint32_t swtchPort);
 
   /**
    * Notify this controller of a new connection between two switches in the
    * OpenFlow network. The user is supposed to connect this function as trace
-   * sink for OpenFlowEpcNetwork::NewConnection trace source.
-   * \param conInfo The connection information and metadata.
+   * sink for OpenFlowEpcNetwork::NewSwitchConnection trace source.
+   * \param cInfo The connection information and metadata.
    */ 
-  virtual void NotifyConnBtwnSwitches (Ptr<ConnectionInfo> connInfo);
+  virtual void NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo);
 
   /**
    * Notify this controller that all connection between switches have already
    * been configure and the topology is finished. The user is supposed to
-   * connect this function as trace sink for OpenFlowEpcNetwork::ConnectionsOk
+   * connect this function as trace sink for OpenFlowEpcNetwork::TopologyBuilt
    * trace source.
-   * \param finished True, indicating that all connections are completed.
+   * \param devices The NetDeviceContainer for OpenFlow switch devices.
    */ 
-  virtual void NotifyConnBtwnSwitchesOk (bool finished);
+  virtual void NotifyTopologyBuilt (NetDeviceContainer devices);
 
   /** 
    * Notify this controller when the SgwPgw gateway is handling a
@@ -106,87 +150,20 @@ public:
    */
   virtual void NotifyContextCreated (uint64_t imsi, uint16_t cellId,
       Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList);
+  //\}
   
-  // TODO Further enhancement for mobility
-  // virtual void NotifyContextModified ();
-
-  /** 
-   * Request a new dedicated EPC bearer. This is used to check for necessary
-   * resources in the network (mainly available data rate for GBR bearers).
-   * When returning false, it aborts the bearer creation process
-   * \internal Current implementation assumes that each application traffic
-   * flow is associated with a unique bearer/tunnel. Because of that, we can
-   * use only the teid for the tunnel to prepare and install route. If we would
-   * like to aggregate traffic from several applications into same bearer we
-   * will need to revise this.
-   * \param teid The teid for this bearer, if already defined.
-   * \param imsi uint64_t IMSI UE identifier.
-   * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
-   * \param bearer EpsBearer bearer QoS characteristics of the bearer.
-   * \returns true if successful (the bearer creation process will proceed),
-   * false otherwise (the bearer creation process will abort).
-   */
-  virtual bool RequestDedicatedBearer (EpsBearer bearer, uint64_t imsi, 
-      uint16_t cellId, uint32_t teid);
-
-  /** 
-   * Release a dedicated EPC bearer. 
-   * \internal Current implementation assumes that each application traffic
-   * flow is associated with a unique bearer/tunnel. Because of that, we can
-   * use only the teid for the tunnel to prepare and install route. If we would
-   * like to aggregate traffic from several applications into same bearer we
-   * will need to revise this.
-   * \param teid The teid for this bearer, if already defined.
-   * \param imsi uint64_t IMSI UE identifier.
-   * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
-   * \param bearer EpsBearer bearer QoS characteristics of the bearer.
-   * \returns true if successful, false otherwise.
-   */
-  virtual bool ReleaseDedicatedBearer (EpsBearer bearer, uint64_t imsi,
-      uint16_t cellId, uint32_t teid);
- 
-
-//  /** FIXME remove
-//   * Get bandwidth statistcs for (relevant) network links.
-//   * \return The list with stats.
-//   */
-//  virtual std::vector<BandwidthStats_t> GetBandwidthStats () = 0;
-
-  /** 
-   * TracedCallback signature for new bearer request.
-   * \param accepted True when the bearer request is accepted.
-   * \param rInfo The routing information for this tunnel.
-   */
-  typedef void (* BearerTracedCallback)
-    (bool accepted, Ptr<const RoutingInfo> rInfo);
-
-protected:
-  /** Destructor implementation */
-  virtual void DoDispose ();
-  
+  /** Topology-dependent functions which must be implemented by subclasses. */
+  //\{
   /**
-   * Process the bearer resource request and bandwidth allocation.
-   * \param rInfo The routing information to process.
-   * \return True when the request is satisfied.
-   */
-  virtual bool BearerRequest (Ptr<RoutingInfo> rInfo) = 0;
-
-  /**
-   * Process the bearer and bandwidth release.
-   * \param rInfo The routing information to process.
-   * \return True when the resources are successfully released.
-   */
-  virtual bool BearerRelease (Ptr<RoutingInfo> rInfo) = 0;
-
-  /**
-   * Configure the switches with OpenFlow commands for TEID routing.
+   * Configure the switches with OpenFlow commands for TEID routing, based on
+   * network topology information.
    * \attention This function must increase the priority before installing the
    * rules, to avoid conflicts with old entries.
    * \param rInfo The routing information to configure.
    * \param buffer The buffered packet to apply this rule to.
    * \return True if configuration succeeded, false otherwise.
    */
-  virtual bool InstallTeidRouting (Ptr<RoutingInfo> rInfo, 
+  virtual bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo, 
       uint32_t buffer = OFP_NO_BUFFER) = 0;
 
   /**
@@ -194,7 +171,23 @@ protected:
    * \param rInfo The routing information to remove.
    * \return True if remove succeeded, false otherwise.
    */
-  virtual bool RemoveTeidRouting (Ptr<RoutingInfo> rInfo) = 0;
+  virtual bool TopologyRemoveRouting (Ptr<RoutingInfo> rInfo) = 0;
+  
+  /**
+   * Process the bearer resource request and bandwidth allocation based on
+   * network topology information.
+   * \param rInfo The routing information to process.
+   * \return True when the request is satisfied.
+   */
+  virtual bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Process the bearer and bandwidth release based on network topology
+   * information.
+   * \param rInfo The routing information to process.
+   * \return True when the resources are successfully released.
+   */
+  virtual bool TopologyBearerRelease (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
    * To avoid flooding problems when broadcasting packets (like in ARP
@@ -202,64 +195,62 @@ protected:
    * when flooding (OFPP_FLOOD). This is accomplished by configuring the port
    * with OFPPC_NO_FWD flag (0x20).
    */
-  virtual void CreateSpanningTree () = 0;   
+  virtual void TopologyCreateSpanningTree () = 0;   
+  //\}
 
-  /**
-   * Retrieve the switch index for EPC entity attached to OpenFlow network.
-   * \param addr The eNB or SgwPgw address.
-   * \return The switch index in m_ofSwitches.
-   */
-  uint16_t GetSwitchIdxFromIp (Ipv4Address addr);
-
-  /**
-   * Search for connection information between two switches.
-   * \param sw1 First switch index.
-   * \param sw2 Second switch index.
-   * \return Pointer to connection info saved.
-   */
-  Ptr<ConnectionInfo> GetConnectionInfo (uint16_t sw1, uint16_t sw2);
-  
   // Inherited from OFSwitch13Controller
   virtual void ConnectionStarted (SwitchInfo);
   virtual ofl_err HandlePacketIn (ofl_msg_packet_in*, SwitchInfo, uint32_t);
   virtual ofl_err HandleFlowRemoved (ofl_msg_flow_removed*, SwitchInfo, uint32_t);
 
-  
-  /** The bearer request trace source, fired at RequestDedicatedBearer. */
-  TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerRequestTrace;
-
-  /** Timeout values */
-  //\{ 
-  static const int m_defaultTmo;    //!< Timeout for default bearers
-  static const int m_dedicatedTmo;  //!< Timeout for dedicated bearers
-  //\}
-
-  /** Priority values */
-  //\{
-  // Table 0
-  static const int m_t0ArpPrio;           //!< ARP handling
-  static const int m_t0GotoT1Prio;        //!< GTP TEID handling (goto table 1)
-
-  // Table 1
-  static const int m_t1LocalDeliverPrio;  //!< Local delivery (to eNB/SgwPgw)
-  static const int m_t1DedicatedStartPrio;//!< Dedicated bearer (start value) 
-  static const int m_t1DefaultPrio;       //!< Default bearer
-  static const int m_t1RingPrio;          //!< Ring forward
-  //\}
+  /**
+   * Get the OFSwitch13NetDevice for a specific switch index.
+   * \param index The switch index in device colection.
+   * \return The pointer to the switch OFSwitch13NetDevice.
+   */
+  Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
 
 private:
   /**
-   * Save the RoutingInfo metadata for further usage and reserve the bandwidth.
+   * Save the RoutingInfo metadata for further usage.
    * \param rInfo The routing information to save.
    */
-  void SaveTeidRoutingInfo (Ptr<RoutingInfo> rInfo);
+  void SaveRoutingInfo (Ptr<RoutingInfo> rInfo);
 
   /**
-   * Retrieve stored information for a specific GTP tunnel
+   * Retrieve stored information for a specific GTP teid.
    * \param teid The GTP tunnel ID.
    * \return The routing information for this tunnel.
    */
-  Ptr<RoutingInfo> GetTeidRoutingInfo (uint32_t teid);
+  Ptr<RoutingInfo> GetRoutingInfo (uint32_t teid);
+
+  /**
+   * Save the pair IP / Switch index in switch table.
+   * \param ipAddr The IPv4 address.
+   * \param index The switch index in devices collection..
+   */
+  void SaveSwitchIndex (Ipv4Address ipAddr, uint16_t index);
+
+  /**
+   * Retrieve the switch index for EPC entity attached to OpenFlow network.
+   * \param addr The eNB or SgwPgw IPv4 address.
+   * \return The switch index in devices collection.
+   */
+  uint16_t GetSwitchIndex (Ipv4Address addr);
+  
+  /**
+   * Save the pair IP / MAC address in ARP table.
+   * \param ipAddr The IPv4 address.
+   * \param macAddr The MAC address.
+   */
+  void SaveArpEntry (Ipv4Address ipAddr, Mac48Address macAddr);
+
+  /**
+   * Perform an ARP resolution
+   * \param ip The Ipv4Address to search.
+   * \return The MAC address for this ip.
+   */
+  Mac48Address GetArpEntry (Ipv4Address ip);
 
   /**
    * Install flow table entry for local delivery when a new IP device is
@@ -303,13 +294,6 @@ private:
   Ipv4Address ExtractIpv4Address (uint32_t oxm_of, ofl_match* match);
 
   /**
-   * Perform an ARP resolution
-   * \param ip The Ipv4Address to search.
-   * \return The MAC address for this ip.
-   */
-  Mac48Address ArpLookup (Ipv4Address ip);
-
-  /**
    * Create a Packet with an ARP reply, encapsulated inside of an Ethernet
    * frame (with header and trailer.
    * \param srcMac Source MAC address.
@@ -321,25 +305,47 @@ private:
   Ptr<Packet> CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
       Mac48Address dstMac, Ipv4Address dstIp);
 
-  
-  /** Map saving <IPv4 address / MAC address> */
-  typedef std::map<Ipv4Address, Mac48Address> IpMacMap_t;
+// Member variables
+protected:
+  /** The bearer request trace source, fired at RequestDedicatedBearer. */
+  TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerRequestTrace;
+    
+  /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
+  TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerReleaseTrace;
 
-  /** Map saving <IPv4 address / Switch index > */
-  typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;
-  
-  // TODO: Connection info should be at OpenFlowEpcNetwork
-  /** Map saving <Pair of switch indexes / Connection information */
-  typedef std::map<SwitchPair_t, Ptr<ConnectionInfo> > ConnInfoMap_t; 
+  /** Flow table entry timeout values */
+  //\{ 
+  static const int m_defaultTmo;          //!< Timeout for default bearers
+  static const int m_dedicatedTmo;        //!< Timeout for dedicated bearers
+  //\}
+
+  /** Flow table entry priority values */
+  //\{
+  // Table 0
+  static const int m_t0ArpPrio;           //!< ARP handling
+  static const int m_t0GotoT1Prio;        //!< GTP TEID handling (goto table 1)
+
+  // Table 1
+  static const int m_t1LocalDeliverPrio;  //!< Local delivery (to eNB/SgwPgw)
+  static const int m_t1DedicatedStartPrio;//!< Dedicated bearer (start value) 
+  static const int m_t1DefaultPrio;       //!< Default bearer
+  static const int m_t1RingPrio;          //!< Ring forward
+  //\}
+
+private:
+  NetDeviceContainer  m_ofDevices;        //!< OpenFlow switch devices.
   
   /** Map saving <TEID / Routing information > */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t; 
-
-  IpMacMap_t        m_arpTable;         //!< ARP resolution table.
-  IpSwitchMap_t     m_ipSwitchTable;    //!< eNB IP / Switch Index table.
-  ConnInfoMap_t     m_connections;      //!< Connections between switches.
-  TeidRoutingMap_t  m_routes;           //!< TEID routing informations.
+  TeidRoutingMap_t    m_routes;           //!< TEID routing informations.
   
+  /** Map saving <IPv4 address / Switch index > */
+  typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;
+  IpSwitchMap_t       m_ipSwitchTable;    //!< eNB IP / Switch Index table.
+
+  /** Map saving <IPv4 address / MAC address> */
+  typedef std::map<Ipv4Address, Mac48Address> IpMacMap_t;
+  IpMacMap_t          m_arpTable;         //!< ARP resolution table.
 };
 
 };  // namespace ns3

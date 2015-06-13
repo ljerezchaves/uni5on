@@ -40,6 +40,28 @@ const int OpenFlowEpcController::m_t1RingPrio = 32;
 OpenFlowEpcController::OpenFlowEpcController ()
 {
   NS_LOG_FUNCTION (this);
+
+  // Connecting this controller to OpenFlowNetwork trace sources
+  Ptr<OpenFlowEpcNetwork> network = 
+    Names::Find<OpenFlowEpcNetwork> ("/Names/OpenFlowNetwork");
+  NS_ASSERT_MSG (network, "Network object not found.");
+  NS_ASSERT_MSG (!network->IsTopologyCreated (), 
+                 "Network topology already created.");
+
+  network->TraceConnectWithoutContext ("NewEpcAttach",
+    MakeCallback (&OpenFlowEpcController::NotifyNewEpcAttach, this));
+  network->TraceConnectWithoutContext ("TopologyBuilt",
+    MakeCallback (&OpenFlowEpcController::NotifyTopologyBuilt, this));
+  network->TraceConnectWithoutContext ("NewSwitchConnection",
+    MakeCallback (&OpenFlowEpcController::NotifyNewSwitchConnection, this));
+
+  // Connecting this controller to SgwPgwApplication trace sources
+  Ptr<EpcSgwPgwApplication> gateway = 
+    Names::Find<EpcSgwPgwApplication> ("/Names/SgwPgwApplication");
+  NS_ASSERT_MSG (gateway, "SgwPgw application not found.");
+
+  gateway->TraceConnectWithoutContext ("ContextCreated",
+    MakeCallback (&OpenFlowEpcController::NotifyContextCreated, this));
 }
 
 OpenFlowEpcController::~OpenFlowEpcController ()
@@ -56,81 +78,12 @@ OpenFlowEpcController::GetTypeId (void)
                      "The bearer request trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_bearerRequestTrace),
                      "ns3::OpenFlowEpcController::BearerTracedCallback")
+    .AddTraceSource ("BearerRelease",
+                     "The bearer release trace source.",
+                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_bearerReleaseTrace),
+                     "ns3::OpenFlowEpcController::BearerTracedCallback")
   ;
   return tid;
-}
-
-void
-OpenFlowEpcController::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-  
-  m_arpTable.clear ();
-  m_ipSwitchTable.clear ();
-  m_connections.clear ();
-  m_routes.clear ();
-}
-
-void 
-OpenFlowEpcController::NotifyNewAttachToSwitch (Ptr<NetDevice> nodeDev, 
-    Ipv4Address nodeIp, Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, 
-    uint32_t swtchPort)
-{
-  NS_LOG_FUNCTION (this << nodeIp << swtchIdx << swtchPort);
-
-  { // Save the pair IP/MAC address in ARP table
-    Mac48Address macAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ());
-    std::pair<Ipv4Address, Mac48Address> entry (nodeIp, macAddr);
-    std::pair <IpMacMap_t::iterator, bool> ret;
-    ret = m_arpTable.insert (entry);
-    if (ret.second == false)
-      {
-        NS_FATAL_ERROR ("This IP already exists in ARP table.");
-      }
-    NS_LOG_DEBUG ("New ARP entry: " << nodeIp << " - " << macAddr);
-  }
-
-  { // Save the pair IP/Switch index in switch table
-    std::pair<Ipv4Address, uint16_t> entry (nodeIp, swtchIdx);
-    std::pair <IpSwitchMap_t::iterator, bool> ret;
-    ret = m_ipSwitchTable.insert (entry);
-    if (ret.second == false)
-      {
-        NS_FATAL_ERROR ("This IP already existis in switch index table.");
-      }
-    NS_LOG_DEBUG ("New IP/Switch entry: " << nodeIp << " - " << swtchIdx);
-  }
-
-  ConfigureLocalPortDelivery (swtchDev, nodeDev, nodeIp, swtchPort);
-}
-
-void
-OpenFlowEpcController::NotifyConnBtwnSwitches (Ptr<ConnectionInfo> connInfo)
-{
-  NS_LOG_FUNCTION (this << connInfo);
-  
-  // Save this connection info
-  SwitchPair_t key;
-  key.first  = std::min (connInfo->m_switchIdx1, connInfo->m_switchIdx2);
-  key.second = std::max (connInfo->m_switchIdx1, connInfo->m_switchIdx2);
-  std::pair<SwitchPair_t, Ptr<ConnectionInfo> > entry (key, connInfo);
-  std::pair<ConnInfoMap_t::iterator, bool> ret;
-  ret = m_connections.insert (entry);
-  if (ret.second == false)
-    {
-      NS_FATAL_ERROR ("Error saving connection info.");
-    }
-  NS_LOG_DEBUG ("New connection info saved: switch " << key.first << 
-                " (" << connInfo->m_portNum1 << ") -- switch " << key.second << 
-                " (" << connInfo->m_portNum2 << ")");
-}
-
-void 
-OpenFlowEpcController::NotifyConnBtwnSwitchesOk (bool finished)
-{
-  NS_LOG_FUNCTION (this);
-  
-  CreateSpanningTree ();
 }
 
 bool
@@ -139,7 +92,7 @@ OpenFlowEpcController::RequestDedicatedBearer (EpsBearer bearer,
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  Ptr<RoutingInfo> rInfo = GetRoutingInfo (teid);
   NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer " << teid);
 
   // Is it a default bearer?
@@ -170,7 +123,7 @@ OpenFlowEpcController::RequestDedicatedBearer (EpsBearer bearer,
   // can even use new routing paths when necessary.
 
   // Let's first check for available resources and fire trace source
-  bool accepted = BearerRequest (rInfo);
+  bool accepted = TopologyBearerRequest (rInfo);
   m_bearerRequestTrace (accepted, rInfo);
   if (!accepted)
     {
@@ -179,7 +132,7 @@ OpenFlowEpcController::RequestDedicatedBearer (EpsBearer bearer,
   
   // Everything is ok! Let's activate and install this bearer.
   rInfo->m_isActive = true;
-  return InstallTeidRouting (rInfo);
+  return TopologyInstallRouting (rInfo);
 }
 
 bool
@@ -188,7 +141,7 @@ OpenFlowEpcController::ReleaseDedicatedBearer (EpsBearer bearer,
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  Ptr<RoutingInfo> rInfo = GetRoutingInfo (teid);
   NS_ASSERT_MSG (rInfo, "No routing information for teid.");
 
   // Is it a default bearer?
@@ -203,14 +156,56 @@ OpenFlowEpcController::ReleaseDedicatedBearer (EpsBearer bearer,
     }
 
   // Check for active bearer
-  if (rInfo->m_isActive == true)
+  if (rInfo->m_isActive == false)
     {
-      rInfo->m_isActive = false;
-      rInfo->m_isInstalled = false;
-      BearerRelease (rInfo);
-      RemoveTeidRouting (rInfo);
+      return true;
     }
-  return true;
+  
+  rInfo->m_isActive = false;
+  rInfo->m_isInstalled = false;
+  bool success = TopologyBearerRelease (rInfo);
+  m_bearerReleaseTrace (success, rInfo);
+  return TopologyRemoveRouting (rInfo);
+}
+
+void
+OpenFlowEpcController::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+ 
+  m_arpTable.clear ();
+  m_ipSwitchTable.clear ();
+  m_routes.clear ();
+}
+
+void 
+OpenFlowEpcController::NotifyNewEpcAttach (Ptr<NetDevice> nodeDev, 
+    Ipv4Address nodeIp, Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, 
+    uint32_t swtchPort)
+{
+  NS_LOG_FUNCTION (this << nodeIp << swtchIdx << swtchPort);
+
+  // Save ARP and index information
+  Mac48Address macAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ());
+  SaveArpEntry (nodeIp, macAddr);
+  SaveSwitchIndex (nodeIp, swtchIdx);
+
+  ConfigureLocalPortDelivery (swtchDev, nodeDev, nodeIp, swtchPort);
+}
+
+void
+OpenFlowEpcController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
+{
+  NS_LOG_FUNCTION (this << cInfo);
+}
+
+void 
+OpenFlowEpcController::NotifyTopologyBuilt (NetDeviceContainer devices)
+{
+  NS_LOG_FUNCTION (this);
+  
+  m_ofDevices = devices;
+  TopologyCreateSpanningTree ();
 }
 
 void 
@@ -224,13 +219,13 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
   NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
   
   uint32_t teid = defaultBearer.sgwFteid.teid;
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  Ptr<RoutingInfo> rInfo = GetRoutingInfo (teid);
   NS_ASSERT_MSG (rInfo == 0, "Existing routing for default bearer " << teid);
 
   rInfo = CreateObject<RoutingInfo> ();
   rInfo->m_teid = teid;
-  rInfo->m_sgwIdx = GetSwitchIdxFromIp (sgwAddr);
-  rInfo->m_enbIdx = GetSwitchIdxFromIp (enbAddr);
+  rInfo->m_sgwIdx = GetSwitchIndex (sgwAddr);
+  rInfo->m_enbIdx = GetSwitchIndex (enbAddr);
   rInfo->m_sgwAddr = sgwAddr;
   rInfo->m_enbAddr = enbAddr;
   rInfo->m_priority = m_t1DefaultPrio;    // Priority for default bearer
@@ -239,16 +234,16 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
   rInfo->m_isActive = true;               // Default bearer is always active
   rInfo->m_isDefault = true;              // This is a default bearer
   rInfo->m_bearer = defaultBearer;
-  SaveTeidRoutingInfo (rInfo);
+  SaveRoutingInfo (rInfo);
 
   // For default bearer, no Meter nor Reserver metadata.
   // For logic consistence, let's check for available resources.
-  bool accepted = BearerRequest (rInfo);
+  bool accepted = TopologyBearerRequest (rInfo);
   m_bearerRequestTrace (true, rInfo);
   NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
   
   // Install rules for default bearer
-  if (!InstallTeidRouting (rInfo))
+  if (!TopologyInstallRouting (rInfo))
     {
       NS_LOG_ERROR ("TEID rule installation failed!");
     }
@@ -263,8 +258,8 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
       
       rInfo = CreateObject<RoutingInfo> ();
       rInfo->m_teid = teid;
-      rInfo->m_sgwIdx = GetSwitchIdxFromIp (sgwAddr);
-      rInfo->m_enbIdx = GetSwitchIdxFromIp (enbAddr);
+      rInfo->m_sgwIdx = GetSwitchIndex (sgwAddr);
+      rInfo->m_enbIdx = GetSwitchIndex (enbAddr);
       rInfo->m_sgwAddr = sgwAddr;
       rInfo->m_enbAddr = enbAddr;
       rInfo->m_priority = m_t1DedicatedStartPrio; // Priority for dedicated bearer
@@ -273,7 +268,7 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
       rInfo->m_isActive = false;               // Dedicated bearer not active yet
       rInfo->m_isDefault = false;              // This is a dedicated bearer
       rInfo->m_bearer = dedicatedBearer;
-      SaveTeidRoutingInfo (rInfo);
+      SaveRoutingInfo (rInfo);
 
       GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
       
@@ -315,65 +310,6 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
     }
 }
 
-uint16_t 
-OpenFlowEpcController::GetSwitchIdxFromIp (Ipv4Address addr)
-{
-  IpSwitchMap_t::iterator ret;
-  ret = m_ipSwitchTable.find (addr);
-  if (ret != m_ipSwitchTable.end ())
-    {
-      return (uint16_t)ret->second;
-    }
-  NS_FATAL_ERROR ("IP not registered in switch index table.");
-}
-
-Ptr<ConnectionInfo>
-OpenFlowEpcController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
-{
-  SwitchPair_t key;
-  key.first = std::min (sw1, sw2);
-  key.second = std::max (sw1, sw2);
-  ConnInfoMap_t::iterator it = m_connections.find (key);
-  if (it != m_connections.end ())
-    {
-      return it->second;
-    }
-  NS_FATAL_ERROR ("No connection information available.");
-}
-
-Ptr<RoutingInfo>
-OpenFlowEpcController::GetTeidRoutingInfo (uint32_t teid)
-{
-  Ptr<RoutingInfo> rInfo = 0;
-  TeidRoutingMap_t::iterator ret;
-  ret = m_routes.find (teid);
-  if (ret != m_routes.end ())
-    {
-      rInfo = ret->second;
-    }
-  return rInfo;
-}
-
-Ipv4Address 
-OpenFlowEpcController::ExtractIpv4Address (uint32_t oxm_of, ofl_match* match)
-{
-  switch (oxm_of)
-    {
-      case OXM_OF_ARP_SPA:
-      case OXM_OF_ARP_TPA:
-      case OXM_OF_IPV4_DST:
-      case OXM_OF_IPV4_SRC:
-        {
-          uint32_t ip;
-          int size = OXM_LENGTH (oxm_of);
-          ofl_match_tlv *tlv = oxm_match_lookup (oxm_of, match);
-          memcpy (&ip, tlv->value, size);
-          return Ipv4Address (ntohl (ip));
-        }
-      default:
-        NS_FATAL_ERROR ("Invalid IP field.");
-    }
-}
 
 void
 OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
@@ -397,7 +333,7 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
 
 ofl_err
 OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg, 
-    SwitchInfo swtch, uint32_t xid)
+                                       SwitchInfo swtch, uint32_t xid)
 {
   NS_LOG_FUNCTION (this << swtch.ipv4 << xid);
   ofl_match_tlv *tlv;
@@ -444,7 +380,7 @@ OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg,
 
 ofl_err
 OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg, 
-    SwitchInfo swtch, uint32_t xid)
+                                          SwitchInfo swtch, uint32_t xid)
 {
   NS_LOG_FUNCTION (this << swtch.ipv4 << xid);
 
@@ -470,7 +406,7 @@ OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
     }
 
   // Check for existing routing information for this bearer
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  Ptr<RoutingInfo> rInfo = GetRoutingInfo (teid);
   if (rInfo == 0)
     {
       NS_FATAL_ERROR ("Routing info for TEID " << teid << " not found.");
@@ -501,19 +437,25 @@ OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   NS_ASSERT_MSG (rInfo->m_priority == prio, "Invalid flow priority.");
   if (rInfo->m_isActive)
     {
-      NS_LOG_DEBUG ("Flow " << teid << " is still active. Reinstall rules...");
-      if (!InstallTeidRouting (rInfo))
+      NS_LOG_WARN ("Flow " << teid << " is still active. Reinstall rules...");
+      if (!TopologyInstallRouting (rInfo))
         {
           NS_LOG_ERROR ("TEID rule installation failed!");
         }
       return 0;
     }
-
   NS_ABORT_MSG ("Should not get here :/");
 }
 
+Ptr<OFSwitch13NetDevice> 
+OpenFlowEpcController::GetSwitchDevice (uint16_t index)
+{
+  NS_ASSERT (index < m_ofDevices.GetN ());
+  return DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (index));
+}
+
 void 
-OpenFlowEpcController::SaveTeidRoutingInfo (Ptr<RoutingInfo> rInfo)
+OpenFlowEpcController::SaveRoutingInfo (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
   
@@ -524,6 +466,72 @@ OpenFlowEpcController::SaveTeidRoutingInfo (Ptr<RoutingInfo> rInfo)
     {
       NS_FATAL_ERROR ("Existing routing information for teid " << rInfo->m_teid);
     }
+}
+
+Ptr<RoutingInfo>
+OpenFlowEpcController::GetRoutingInfo (uint32_t teid)
+{
+  Ptr<RoutingInfo> rInfo = 0;
+  TeidRoutingMap_t::iterator ret;
+  ret = m_routes.find (teid);
+  if (ret != m_routes.end ())
+    {
+      rInfo = ret->second;
+    }
+  return rInfo;
+}
+
+void
+OpenFlowEpcController::SaveSwitchIndex (Ipv4Address ipAddr, uint16_t index)
+{
+  std::pair<Ipv4Address, uint16_t> entry (ipAddr, index);
+  std::pair <IpSwitchMap_t::iterator, bool> ret;
+  ret = m_ipSwitchTable.insert (entry);
+  if (ret.second == true)
+    {
+      NS_LOG_DEBUG ("New IP/Switch entry: " << ipAddr << " - " << index);
+      return;
+    }
+  NS_FATAL_ERROR ("This IP already existis in switch index table.");
+}
+
+uint16_t 
+OpenFlowEpcController::GetSwitchIndex (Ipv4Address addr)
+{
+  IpSwitchMap_t::iterator ret;
+  ret = m_ipSwitchTable.find (addr);
+  if (ret != m_ipSwitchTable.end ())
+    {
+      return (uint16_t)ret->second;
+    }
+  NS_FATAL_ERROR ("IP not registered in switch index table.");
+}
+
+void
+OpenFlowEpcController::SaveArpEntry (Ipv4Address ipAddr, Mac48Address macAddr)
+{ 
+  std::pair<Ipv4Address, Mac48Address> entry (ipAddr, macAddr);
+  std::pair <IpMacMap_t::iterator, bool> ret;
+  ret = m_arpTable.insert (entry);
+  if (ret.second == true)
+    {
+      NS_LOG_DEBUG ("New ARP entry: " << ipAddr << " - " << macAddr);
+      return;
+    }
+  NS_FATAL_ERROR ("This IP already exists in ARP table.");
+}
+
+Mac48Address 
+OpenFlowEpcController::GetArpEntry (Ipv4Address ip)
+{
+  IpMacMap_t::iterator ret;
+  ret = m_arpTable.find (ip);
+  if (ret != m_arpTable.end ())
+    {
+      NS_LOG_DEBUG ("Found ARP entry: " << ip << " - " << ret->second);
+      return ret->second;
+    }
+  NS_FATAL_ERROR ("No ARP information for this IP.");
 }
 
 void 
@@ -548,11 +556,11 @@ OpenFlowEpcController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
   NS_LOG_FUNCTION (this << swtch.ipv4 << xid << teid);
 
   // Let's check for active routing path
-  Ptr<RoutingInfo> rInfo = GetTeidRoutingInfo (teid);
+  Ptr<RoutingInfo> rInfo = GetRoutingInfo (teid);
   if (rInfo && rInfo->m_isActive)
     {
       NS_LOG_WARN ("Not supposed to happen, but we can handle this.");
-      if (!InstallTeidRouting (rInfo, msg->buffer_id))
+      if (!TopologyInstallRouting (rInfo, msg->buffer_id))
         {
           NS_LOG_ERROR ("TEID rule installation failed!");
         }
@@ -593,7 +601,7 @@ OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg,
       dstIp = ExtractIpv4Address (OXM_OF_ARP_TPA, (ofl_match*)msg->match);
       
       // Get target MAC address from ARP table
-      Mac48Address dstMac = ArpLookup (dstIp);
+      Mac48Address dstMac = GetArpEntry (dstIp);
       NS_LOG_DEBUG ("Got ARP request for IP " << dstIp << 
                     ", resolved to " << dstMac);
 
@@ -646,17 +654,25 @@ OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg,
   return 0;
 }
 
-Mac48Address 
-OpenFlowEpcController::ArpLookup (Ipv4Address ip)
+Ipv4Address 
+OpenFlowEpcController::ExtractIpv4Address (uint32_t oxm_of, ofl_match* match)
 {
-  IpMacMap_t::iterator ret;
-  ret = m_arpTable.find (ip);
-  if (ret != m_arpTable.end ())
+  switch (oxm_of)
     {
-      NS_LOG_DEBUG ("Found ARP entry: " << ip << " - " << ret->second);
-      return ret->second;
+      case OXM_OF_ARP_SPA:
+      case OXM_OF_ARP_TPA:
+      case OXM_OF_IPV4_DST:
+      case OXM_OF_IPV4_SRC:
+        {
+          uint32_t ip;
+          int size = OXM_LENGTH (oxm_of);
+          ofl_match_tlv *tlv = oxm_match_lookup (oxm_of, match);
+          memcpy (&ip, tlv->value, size);
+          return Ipv4Address (ntohl (ip));
+        }
+      default:
+        NS_FATAL_ERROR ("Invalid IP field.");
     }
-  NS_FATAL_ERROR ("No ARP information for this IP.");
 }
 
 Ptr<Packet> 

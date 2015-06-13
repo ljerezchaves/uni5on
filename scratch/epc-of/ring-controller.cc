@@ -42,13 +42,15 @@ RingController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RingController")
     .SetParent (OpenFlowEpcController::GetTypeId ())
-    .AddAttribute ("Strategy", "The ring routing strategy.",
+    .AddAttribute ("Strategy", 
+                   "The ring path routing strategy.",
                    EnumValue (RingController::HOPS),
                    MakeEnumAccessor (&RingController::m_strategy),
                    MakeEnumChecker (RingController::HOPS, "hops",
                                     RingController::BAND, "bandwidth",
                                     RingController::BOTH, "both"))
-    .AddAttribute ("BwReserve", "Bandwitdth saving factor.",
+    .AddAttribute ("BwReserve", 
+                   "Bandwitdth saving factor to reserve.",
                    DoubleValue (0.2),
                    MakeDoubleAccessor (&RingController::m_bwFactor),
                    MakeDoubleChecker<double> (0.0, 1.0))
@@ -56,52 +58,48 @@ RingController::GetTypeId (void)
   return tid;
 }
 
-
-void
-RingController::SetOfNetwork (Ptr<RingNetwork> network)
-{
-  NS_ASSERT_MSG (!m_ofNetwork, "Network already set.");
-  m_ofNetwork = network;
-}
-
 void
 RingController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_ofNetwork = 0;
+  m_connections.clear ();
   OpenFlowEpcController::DoDispose ();
 }
 
 void
-RingController::NotifyConnBtwnSwitches (Ptr<ConnectionInfo> connInfo)
+RingController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this);
   
-  // Call base method which will save connection information
-  OpenFlowEpcController::NotifyConnBtwnSwitches (connInfo);
-  
+  // Save this connection info for further usage
+  SaveConnectionInfo (cInfo);
+
   // Installing default groups for RingController ring routing. Group
   // RingRoutingInfo::CLOCK is used to send packets from current switch to the
   // next one in clockwise direction.
   std::ostringstream cmd1;
   cmd1 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::CLOCK <<
-          " weight=0,port=any,group=any output=" << connInfo->m_portNum1;
-  DpctlCommand (connInfo->m_switchDev1, cmd1.str ());
+          " weight=0,port=any,group=any output=" << cInfo->m_portNum1;
+  DpctlCommand (cInfo->m_switchDev1, cmd1.str ());
                                    
   // Group RingRoutingInfo::COUNTER is used to send packets from the next
   // switch to the current one in counterclockwise direction. 
   std::ostringstream cmd2;
   cmd2 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::COUNTER <<
-          " weight=0,port=any,group=any output=" << connInfo->m_portNum2;
-  DpctlCommand (connInfo->m_switchDev2, cmd2.str ());
+          " weight=0,port=any,group=any output=" << cInfo->m_portNum2;
+  DpctlCommand (cInfo->m_switchDev2, cmd2.str ());
 }
 
 void 
-RingController::NotifyConnBtwnSwitchesOk (bool finished)
+RingController::NotifyTopologyBuilt (NetDeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
   
-  CreateSpanningTree ();
+  // Save the number of switches in network topology.
+  m_noSwitches = devices.GetN ();
+  
+  // Call base method which will save devices and create the spanning tree
+  OpenFlowEpcController::NotifyTopologyBuilt (devices);
 
   // Configure routes to keep forwarding packets already in the ring until they
   // reach the destination switch.
@@ -125,7 +123,7 @@ RingController::NotifyConnBtwnSwitchesOk (bool finished)
 }
 
 bool 
-RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
+RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
 {
   NS_LOG_FUNCTION (this << rInfo->m_teid << rInfo->m_priority << buffer);
   NS_ASSERT_MSG (rInfo->m_isActive, "Rule not active.");
@@ -237,7 +235,7 @@ RingController::InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
 }
 
 bool
-RingController::RemoveTeidRouting (Ptr<RoutingInfo> rInfo)
+RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
 
@@ -253,7 +251,7 @@ RingController::RemoveTeidRouting (Ptr<RoutingInfo> rInfo)
 }
 
 bool
-RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
+RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
   
@@ -462,7 +460,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
 }
 
 bool
-RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
+RingController::TopologyBearerRelease (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
 
@@ -481,25 +479,8 @@ RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
   return true;
 }
 
-Ptr<RingRoutingInfo> 
-RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
-{
-  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  if (ringInfo == 0)
-    {
-      // This is the first time in simulation we are querying ring information
-      // for this bearer. Let's create and aggregate its ring routing
-      // metadata. Considering the default down path the one with lower hops.
-      RingRoutingInfo::RoutingPath downPath = 
-          FindShortestPath (rInfo->m_sgwIdx, rInfo->m_enbIdx);
-      ringInfo = CreateObject<RingRoutingInfo> (rInfo, downPath);
-      rInfo->AggregateObject (ringInfo);
-    }
-  return ringInfo;
-}
-
 void
-RingController::CreateSpanningTree ()
+RingController::TopologyCreateSpanningTree ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -528,35 +509,60 @@ RingController::CreateSpanningTree ()
 }
 
 uint16_t 
-RingController::GetNSwitches ()
+RingController::GetNSwitches (void) const
 {
-  return m_ofNetwork->GetNSwitches ();
+  return m_noSwitches;
 }
 
-Ptr<OFSwitch13NetDevice> 
-RingController::GetSwitchDevice (uint16_t index)
+Ptr<RingRoutingInfo> 
+RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
 {
-  return m_ofNetwork->GetSwitchDevice (index);
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  if (ringInfo == 0)
+    {
+      // This is the first time in simulation we are querying ring information
+      // for this bearer. Let's create and aggregate its ring routing
+      // metadata. Considering the default down path the one with lower hops.
+      RingRoutingInfo::RoutingPath downPath = 
+          FindShortestPath (rInfo->m_sgwIdx, rInfo->m_enbIdx);
+      ringInfo = CreateObject<RingRoutingInfo> (rInfo, downPath);
+      rInfo->AggregateObject (ringInfo);
+    }
+  return ringInfo;
 }
 
-// // FIXME: Mover isso aqui pro network
-// std::vector<BandwidthStats_t>
-// RingController::GetBandwidthStats ()
-// {
-//   NS_LOG_FUNCTION (this);
-//   
-//   std::vector<BandwidthStats_t> list;
-//   for (uint16_t curr = 0; curr < GetNSwitches (); curr++)
-//     {
-//       uint16_t next = NextSwitchIndex (curr, RingRoutingInfo::CLOCK);
-//       Ptr<ConnectionInfo> connInfo = GetConnectionInfo (curr, next);
-// 
-//       SwitchPair_t pair (curr, next);
-//       BandwidthStats_t entry (pair, connInfo->GetUsageRatio ());
-//       list.push_back (entry);
-//     }
-//   return list;
-// }
+void 
+RingController::SaveConnectionInfo (Ptr<ConnectionInfo> cInfo)
+{
+  SwitchPair_t key;
+  key.first  = std::min (cInfo->m_switchIdx1, cInfo->m_switchIdx2);
+  key.second = std::max (cInfo->m_switchIdx1, cInfo->m_switchIdx2);
+  std::pair<SwitchPair_t, Ptr<ConnectionInfo> > entry (key, cInfo);
+  std::pair<ConnInfoMap_t::iterator, bool> ret;
+  ret = m_connections.insert (entry);
+  if (ret.second == true)
+    {
+      NS_LOG_DEBUG ("New connection info saved: switch " << key.first << 
+                    " (" << cInfo->m_portNum1 << ") - switch " << key.second << 
+                    " (" << cInfo->m_portNum2 << ")");
+      return;
+    }
+  NS_FATAL_ERROR ("Error saving connection info.");
+}
+
+Ptr<ConnectionInfo>
+RingController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
+{
+  SwitchPair_t key;
+  key.first = std::min (sw1, sw2);
+  key.second = std::max (sw1, sw2);
+  ConnInfoMap_t::iterator it = m_connections.find (key);
+  if (it != m_connections.end ())
+    {
+      return it->second;
+    }
+  NS_FATAL_ERROR ("No connection information available.");
+}
 
 RingRoutingInfo::RoutingPath
 RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)
@@ -676,4 +682,3 @@ RingController::RemoveMeterRules (Ptr<RoutingInfo> rInfo)
 }
 
 };  // namespace ns3
-

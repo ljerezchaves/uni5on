@@ -40,9 +40,7 @@ class RingNetwork;
 class RingController : public OpenFlowEpcController
 {
 public:
-  /** 
-   * Routing strategy to find the paths in the ring. 
-   */
+  /** Routing strategy to find the paths in the ring. */
   enum RoutingStrategy 
     {
       HOPS = 0,   //!< Select the path based on number of hops
@@ -50,8 +48,8 @@ public:
       BOTH = 2    //!< Select the path based on hops and bandwidth
     };
     
-  RingController ();        //!< Default constructor
-  ~RingController ();       //!< Dummy destructor, see DoDipose
+  RingController ();            //!< Default constructor
+  virtual ~RingController ();   //!< Dummy destructor, see DoDipose
 
   /**
    * Register this type.
@@ -59,41 +57,25 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * Set the pointer to OpenFlow network controlled by this app.
-   * \param network The OpenFlowEpcNetwork pointer.
-   */
-  void SetOfNetwork (Ptr<RingNetwork> network);
-
-  // Inherited from OpenFlowEpcController
-  void NotifyConnBtwnSwitches (Ptr<ConnectionInfo> connInfo);
-  void NotifyConnBtwnSwitchesOk (bool finished);
-//  std::vector<BandwidthStats_t> GetBandwidthStats ();
-
 protected:
   /** Destructor implementation */
-  void DoDispose ();
+  virtual void DoDispose ();
 
   // Inherited from OpenFlowEpcController
-  bool InstallTeidRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer);
-  bool RemoveTeidRouting (Ptr<RoutingInfo> rInfo);
-  bool BearerRequest (Ptr<RoutingInfo> rInfo);
-  bool BearerRelease (Ptr<RoutingInfo> rInfo);
-  void CreateSpanningTree ();
+  void NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo);
+  void NotifyTopologyBuilt (NetDeviceContainer devices);
+  bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer);
+  bool TopologyRemoveRouting (Ptr<RoutingInfo> rInfo);
+  bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo);
+  bool TopologyBearerRelease (Ptr<RoutingInfo> rInfo);
+  void TopologyCreateSpanningTree ();
 
-private:
   /**
    * \return Number of switches in the network.
    */
-  uint16_t GetNSwitches ();
+  uint16_t GetNSwitches (void) const;
 
-  /**
-   * Get the OFSwitch13NetDevice of a specific switch.
-   * \param index The switch index.
-   * \return The pointer to the switch OFSwitch13NetDevice.
-   */
-  Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
-  
+private:
   /** 
    * Get the RingRoutingInfo associated to this rInfo metadata. When no ring
    * information is available, this function creates it.
@@ -101,6 +83,20 @@ private:
    * \return The ring routing information for this bearer.
    */
   Ptr<RingRoutingInfo> GetRingRoutingInfo (Ptr<RoutingInfo> rInfo);
+
+  /**
+   * Save connection information between two switches for further usage.
+   * \param cInfo The connection information to save.
+   */
+  void SaveConnectionInfo (Ptr<ConnectionInfo> cInfo);
+
+  /**
+   * Search for connection information between two switches.
+   * \param sw1 First switch index.
+   * \param sw2 Second switch index.
+   * \return Pointer to connection info saved.
+   */
+  Ptr<ConnectionInfo> GetConnectionInfo (uint16_t sw1, uint16_t sw2);
 
   /**
    * Look for the routing path between srcSwitchIdx and dstSwitchIdx with
@@ -134,7 +130,7 @@ private:
    * \return True if success, false otherwise;
    */
   bool ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-    RingRoutingInfo::RoutingPath routingPath, DataRate reserve);
+      RingRoutingInfo::RoutingPath routingPath, DataRate reserve);
 
   /**
    * Release the bandwidth for each link between source and destination
@@ -147,7 +143,7 @@ private:
    * \return True if success, false otherwise;
    */
   bool ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-    RingRoutingInfo::RoutingPath routingPath, DataRate release);
+      RingRoutingInfo::RoutingPath routingPath, DataRate release);
 
   /**
    * Identify the next switch index based on routing path direction.
@@ -165,10 +161,13 @@ private:
    */
   bool RemoveMeterRules (Ptr<RoutingInfo> rInfo);
 
-    
-  Ptr<RingNetwork>  m_ofNetwork;        //!< Pointer to OpenFlow ring network.
-  RoutingStrategy   m_strategy;         //!< Routing strategy in use.
-  double            m_bwFactor;         //!< Bandwidth saving factor
+  RoutingStrategy     m_strategy;         //!< Routing strategy in use.
+  double              m_bwFactor;         //!< Bandwidth saving factor
+  uint16_t            m_noSwitches;       //!< Number of switches in topology.
+
+  /** Map saving <Pair of switch indexes / Connection information */
+  typedef std::map<SwitchPair_t, Ptr<ConnectionInfo> > ConnInfoMap_t; 
+  ConnInfoMap_t       m_connections;      //!< Connections between switches. 
 };
 
 };  // namespace ns3
