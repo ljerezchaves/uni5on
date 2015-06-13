@@ -102,82 +102,55 @@ SimulationScenario::GetTypeId (void)
   return tid;
 }
 
-// NOTE: Don't change object names or the logger mechanism won't work.
+// Observe the following order when creating the simulation scenario objects.
+// Don't change object names or the trace connections won't work.
 void
 SimulationScenario::BuildRingTopology ()
 {
   NS_LOG_FUNCTION (this);
 
   ParseTopology ();
+  Config::SetDefault ("ns3::RingNetwork::NumSwitches", UintegerValue (m_nSwitches));
+  Config::SetDefault ("ns3::LteHexGridNetwork::Enbs", UintegerValue (m_nEnbs));
 
-  // OpenFlow EPC ring controller
-  m_controller = CreateObject<RingController> ();
-  Names::Add ("MainController", m_controller);
-  
-  // OpenFlow EPC ring network
+  // 1) Create OpenFlowEpcNetwork object and name it OpenFlowNetwork.
   m_opfNetwork = CreateObject<RingNetwork> ();
   Names::Add ("OpenFlowNetwork", m_opfNetwork);
-  m_opfNetwork->SetAttribute ("NumSwitches", UintegerValue (m_nSwitches));
-  m_opfNetwork->CreateTopology (m_controller, m_SwitchIdxPerEnb);
   
-  // OpenFlow EPC S1-U backhaul (with callbacks and trace sink setup)
+  // 2) Create OpenFlowEpcHelper object and name it OpenFlowEpcHelper.
   m_epcHelper = CreateObject<OpenFlowEpcHelper> ();
+  Names::Add ("OpenFlowEpcHelper", m_epcHelper);
+  
+  // 3) Create the OpenFlowEpcController object and name it MainController (the
+  // controller constructor will connect to OpenFlowEpcNetwork and
+  // SgwPgwApplication trace sources).
+  m_controller = CreateObject<RingController> ();
+  Names::Add ("MainController", m_controller);
+ 
+  // 4) Build network topology calling OpenFlowEpcNetwork::CreateTopology ().
+  m_opfNetwork->CreateTopology (m_controller, m_SwitchIdxPerEnb);
+ 
+  // 5) Set up OpenFlowEpcHelper S1U and X2 connection callbacks (network
+  // topology must be already created).
   m_epcHelper->SetS1uConnectCallback (
       MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, m_opfNetwork));
   m_epcHelper->SetX2ConnectCallback (
       MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
-  Config::ConnectWithoutContext (
-    "/Names/SgwPgwApplication/ContextCreated",
-    MakeCallback (&OpenFlowEpcController::NotifyContextCreated, m_controller));
-
-  // bool ok = m_opfNetwork->TraceConnectWithoutContext ("NewAttach", 
-  //   MakeCallback (&OpenFlowEpcController::NotifyNewAttachToSwitch, m_controller));
-  // NS_ASSERT_MSG (ok, "MERDAAAAAAAAA");
-
-  // Config::ConnectWithoutContext (
-  //   "/Names/OpenFlowNetwork/NewAttach",
-  //   MakeCallback (&OpenFlowEpcController::NotifyNewAttachToSwitch, m_controller));
-  // Config::ConnectWithoutContext (
-  //   "/Names/OpenFlowNetwork/NewConnection",
-  //   MakeCallback (&OpenFlowEpcController::NotifyNewAttachToSwitch, m_controller));
-
-  // FIXME Configurar corretamente esses trace source e sinks....
-  // m_opfNetwork->TraceConnectWithoutContext ("ConnectionsOk", 
-  //    MakeCallback (&OpenFlowEpcController::Pqp, m_controller));
-
-  // Config::ConnectWithoutContext (
-  //   "/Names/OpenFlowNetwork/NewConnection",
-  //   MakeCallback (&OpenFlowEpcController::NotifyConnBtwnSwitches, m_controller));
-  // 
   
-  // Config::ConnectWithoutContext (
-  //   "/Names/OpenFlowNetwork/ConnectionsOk",
-  //   MakeCallback (&RingController::Pqp, m_controller));
-  // 
-  
-  // Config::ConnectWithoutContext (
-  //   "/Names/OpenFlowNetwork/Teste",
-  //   MakeCallback (&OpenFlowEpcController::Pqp, m_controller));
-  
- //  m_opfNetwork->TraceConnectWithoutContext ("Teste", 
- //    MakeCallback (&OpenFlowEpcController::Pqp, m_controller));
-
-
-  // LTE radio access network
+  // 6) Create LTE radio access network and build topology
   m_lteNetwork = CreateObject<LteHexGridNetwork> ();
-  m_lteNetwork->SetAttribute ("Enbs", UintegerValue (m_nEnbs));
   m_lteHelper = m_lteNetwork->CreateTopology (m_epcHelper, m_UesPerEnb);
 
-  // Internet network
+  // 7) Create Internet network and build topology
   m_webNetwork = CreateObject<InternetNetwork> ();
   Names::Add ("InternetNetwork", m_webNetwork);
   m_webHost = m_webNetwork->CreateTopology (m_epcHelper->GetPgwNode ());
 
-  // Install applications and traffic manager
+  // 8) Install applications and traffic manager
   TrafficHelper tfcHelper (m_webHost, m_lteHelper, m_controller);
   tfcHelper.Install (m_lteNetwork->GetUeNodes (), m_lteNetwork->GetUeDevices ());
 
-  // Output ofsoftswitch13 logs and ns-3 traces
+  // 9) Set up output ofsoftswitch13 logs and ns-3 traces
   DatapathLogs ();
   PcapAsciiTraces ();
 }
