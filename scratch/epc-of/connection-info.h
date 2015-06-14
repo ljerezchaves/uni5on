@@ -56,6 +56,12 @@ public:
   static TypeId GetTypeId (void);
 
   /**
+   * Get the pair of switch indices for this connection, in increasing order.
+   * \param The pair of switch indices.
+   */
+  SwitchPair_t GetSwitchIndexPair (void) const;
+
+  /**
    * Get the availabe bandwitdh between these two switches.
    * \return True available DataRate.
    */

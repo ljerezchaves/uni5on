@@ -29,7 +29,6 @@
 #include "ring-network.h"
 #include "openflow-epc-controller.h"
 #include "traffic-helper.h"
-#include "output-logger.h"
 #include "stats-calculator.h"
 #include <vector>
 
@@ -62,6 +61,7 @@ protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
+private:
   /** 
    * Set the number of switches in network topology. 
    * \param value The number of switches.
@@ -74,7 +74,23 @@ protected:
    */
   void SetEnbs (uint16_t value);
 
-private:
+  /** 
+   * Set the commom prefix for stats filenames. 
+   * \param prefix the prefix.
+   */
+  void SetCommonPrefix (std::string prefix);
+
+  /**
+   * Set the default statistics dump interval.
+   * \param timeout The timeout value.
+   */
+  void SetDumpTimeout (Time timeout);
+
+  /**
+   * Dump regular statistics.
+   */
+  void DumpStatistics ();
+
   /**
    * Parse topology description file.  
    * Topology file columns (indexes starts at 0):
@@ -101,7 +117,8 @@ private:
   Ptr<LteHelper>             m_lteHelper;     //!< LTE radio helper
   Ptr<Node>                  m_webHost;       //!< Internet server node
   
-  std::string           m_commonPrefix;       //!< Common prefix filenames
+  std::string           m_inputPrefix;        //!< Common input prefix filenames
+  std::string           m_outputPrefix;       //!< Common output prefix filenames
   std::string           m_topoFilename;       //!< Topology filename
   std::string           m_switchLog;          //!< Switches log level
   uint32_t              m_nEnbs;              //!< Number of eNBs
@@ -110,6 +127,14 @@ private:
   bool                  m_lteTrace;           //!< Enable LTE ASCII traces
   std::vector<uint32_t> m_UesPerEnb;          //!< Number of UEs per eNb
   std::vector<uint16_t> m_SwitchIdxPerEnb;    //!< Switch index per eNb
+
+  Time                            m_dumpTimeout;    //!< Dump stats timeout.
+  Ptr<AdmissionStatsCalculator>   m_admissionStats; // Admission statistics
+  Ptr<GatewayStatsCalculator>     m_gatewayStats;   // Gateway statistics
+  Ptr<BandwidthStatsCalculator>   m_bandwidthStats; // Bandwidth statistics
+  Ptr<SwitchRulesStatsCalculator> m_switchStats;    // Switch rules statistics
+  Ptr<WebQueueStatsCalculator>    m_internetStats;  // Web queues statistics
+  Ptr<EpcS1uStatsCalculator>      m_epcS1uStats;    // EPC S1-U statistics
 };
 
 };  // namespace ns3

@@ -34,12 +34,13 @@ namespace ns3 {
 /**
  * \ingroup epcof
  * This class monitors bearer request statistics. It counts the number of
- * bearer requests, including those accepted or blocked by network. 
+ * bearer requests, including those accepted or blocked by network, and save
+ * statistics into text files.
  */
 class AdmissionStatsCalculator : public Object
 {
 public:
-  AdmissionStatsCalculator ();  //!< Default constructor
+  AdmissionStatsCalculator ();          //!< Default constructor
   virtual ~AdmissionStatsCalculator (); //!< Default destructor
 
   /**
@@ -48,45 +49,17 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * Get statistics.
-   * \return The statistic value.
-   */
-  //\{
-  Time      GetActiveTime       (void) const;
-  uint32_t  GetNonGbrRequests   (void) const;
-  uint32_t  GetNonGbrAccepted   (void) const;
-  uint32_t  GetNonGbrBlocked    (void) const;
-  double    GetNonGbrBlockRatio (void) const;
-  uint32_t  GetGbrRequests      (void) const;
-  uint32_t  GetGbrAccepted      (void) const;
-  uint32_t  GetGbrBlocked       (void) const;
-  double    GetGbrBlockRatio    (void) const;
-  uint32_t  GetTotalRequests    (void) const;
-  uint32_t  GetTotalAccepted    (void) const;
-  uint32_t  GetTotalBlocked     (void) const;
-  //\}
-
   /** 
-   * Reset all internal counters. 
-   */
-  void ResetCounters ();
-
-  /** 
-   * TracedCallback signature for LTE EPC bearer request.
-   * \param desc Traffic description.
-   * \param teid GTP TEID.
-   * \param accepted True for accepted bearer.
-   * \param downRate Downlink requested data rate.
-   * \param upRate Uplink requested data rate.
-   * \param path Routing paths description.
-   */
-  typedef void (* BrqTracedCallback)(std::string desc, uint32_t teid, 
-    bool accepted, DataRate downRate, DataRate upRate, std::string path);
+   * Dump regular statistics into file.
+   */ 
+  void DumpStatistics (void);
 
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
+
+  // Inherited from ObjectBase
+  virtual void NotifyConstructionCompleted (void);
 
 private:
   /**
@@ -95,17 +68,37 @@ private:
    * \param rInfo The bearer routing information.
    */
   void NotifyRequest (bool accepted, Ptr<const RoutingInfo> rInfo);
-  
-  uint32_t  m_nonRequests;      //!< number of non-GBR requests
-  uint32_t  m_nonAccepted;      //!< number of non-GBR accepted 
-  uint32_t  m_nonBlocked;       //!< number of non-GBR blocked
-  uint32_t  m_gbrRequests;      //!< Number of GBR requests
-  uint32_t  m_gbrAccepted;      //!< Number of GBR accepted
-  uint32_t  m_gbrBlocked;       //!< Number of GBR blocked
-  Time      m_lastResetTime;    //!< Last reset time
 
-  /** The LTE EPC Bearer request trace source, fired at NotifyRequest. */
-  TracedCallback<std::string, uint32_t, bool, DataRate, DataRate, std::string> m_brqTrace;
+  /** 
+   * Reset all internal counters. 
+   */
+  void ResetCounters ();
+
+  /**
+   * Get the NonGBR block ratio.
+   * \return The ratio.
+   */
+  double GetNonGbrBlockRatio (void) const;
+
+  /**
+   * Get the GBR block ratio.
+   * \return The ratio.
+   */
+  double GetGbrBlockRatio (void) const;
+  
+  uint32_t    m_nonRequests;        //!< number of non-GBR requests
+  uint32_t    m_nonAccepted;        //!< number of non-GBR accepted 
+  uint32_t    m_nonBlocked;         //!< number of non-GBR blocked
+  uint32_t    m_gbrRequests;        //!< Number of GBR requests
+  uint32_t    m_gbrAccepted;        //!< Number of GBR accepted
+  uint32_t    m_gbrBlocked;         //!< Number of GBR blocked
+  Time        m_lastResetTime;      //!< Last reset time
+  
+  std::string m_admStatsFilename;       //!< AdmStats filename
+  std::string m_brqStatsFilename;       //!< BrqStats filename
+
+  Ptr<OutputStreamWrapper> admWrapper;  //!< AdmStats file wrapper
+  Ptr<OutputStreamWrapper> brqWrapper;  //!< BrqStats file wrapper
 };
 
 
@@ -126,24 +119,17 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * Get statistics.
-   * \return The statistic value.
-   */
-  //\{
-  Time      GetActiveTime       (void) const;
-  DataRate  GetDownDataRate     (void) const;
-  DataRate  GetUpDataRate       (void) const;
-  //\}
-
   /** 
-   * Reset all internal counters. 
-   */
-  void ResetCounters ();
+   * Dump regular statistics into file.
+   */ 
+  void DumpStatistics (void);
 
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
+
+  // Inherited from ObjectBase
+  virtual void NotifyConstructionCompleted (void);
 
 private:
   /**
@@ -152,10 +138,36 @@ private:
    * \param packet The packet.
    */
   void NotifyTraffic (std::string context, Ptr<const Packet> packet);
+  
+  /** 
+   * Reset all internal counters. 
+   */
+  void ResetCounters ();
+
+  /**
+   * Get the active time value since last reset.
+   * \return The time value.
+   */
+  Time GetActiveTime (void) const;
+
+  /**
+   * Get the gateway downlink data rate.
+   * \return The data rate.
+   */ 
+  DataRate GetDownDataRate (void) const;
+  
+  /**
+   * Get the gateway uplink data rate.
+   * \return The data rate.
+   */ 
+  DataRate GetUpDataRate (void) const;
 
   uint32_t  m_pgwDownBytes;   //!< Pgw traffic downlink bytes.
   uint32_t  m_pgwUpBytes;     //!< Pgw traffic uplink bytes.
   Time      m_lastResetTime;  //!< Last reset time
+
+  std::string m_pgwStatsFilename;       //!< PgwStats filename
+  Ptr<OutputStreamWrapper> pgwWrapper;  //!< PgwStats file wrapper
 };
 
 
@@ -176,25 +188,37 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * Get statistics.
-   * \return The statistic value.
-   */
-  //\{
-  Time  GetActiveTime       (void) const;
-  //\}
-
   /** 
-   * Reset all internal counters. 
-   */
-  void ResetCounters ();
+   * Dump regular statistics into file.
+   */ 
+  void DumpStatistics (void);
 
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
+  // Inherited from ObjectBase
+  virtual void NotifyConstructionCompleted (void);
+
 private:
-  Time  m_lastResetTime;  //!< Last reset time
+  /**
+   * Notify this stats calculator of a new connection between two switches in
+   * the OpenFlow network. 
+   * \param cInfo The connection information and metadata.
+   */ 
+  void NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo);
+
+  /**
+   * Notify this stats calculator that all connection between switches have
+   * already been configure and the topology is finished. 
+   * \param devices The NetDeviceContainer for OpenFlow switch devices.
+   */ 
+  void NotifyTopologyBuilt (NetDeviceContainer devices);
+
+  std::vector<Ptr<ConnectionInfo> > m_connections;  //!< Connections
+
+  std::string m_bwdStatsFilename;       //!< BwdStats filename
+  Ptr<OutputStreamWrapper> bwdWrapper;  //!< BwdStats file wrapper
 };
 
 
@@ -215,25 +239,30 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * Get statistics.
-   * \return The statistic value.
-   */
-  //\{
-  Time  GetActiveTime       (void) const;
-  //\}
-
   /** 
-   * Reset all internal counters. 
-   */
-  void ResetCounters ();
+   * Dump regular statistics into file.
+   */ 
+  void DumpStatistics (void);
 
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
+  // Inherited from ObjectBase
+  virtual void NotifyConstructionCompleted (void);
+
 private:
-  Time  m_lastResetTime;  //!< Last reset time
+  /**
+   * Notify this stats calculator that all connection between switches have
+   * already been configure and the topology is finished. 
+   * \param devices The NetDeviceContainer for OpenFlow switch devices.
+   */ 
+  void NotifyTopologyBuilt (NetDeviceContainer devices);
+
+  NetDeviceContainer m_devices; //!< OpenFlow switch devices
+
+  std::string m_swtStatsFilename;       //!< SwtStats filename
+  Ptr<OutputStreamWrapper> swtWrapper;  //!< SwtStats file wrapper
 };
 
 
@@ -254,27 +283,29 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * Get statistics.
-   * \return The statistic value.
-   */
-  //\{
-  Ptr<const Queue> GetDownlinkQueue (void) const;
-  Ptr<const Queue> GetUplinkQueue   (void) const;
-  //\}
-
   /** 
-   * Reset all internal counters. 
-   */
-  void ResetCounters ();
+   * Dump regular statistics into file.
+   */ 
+  void DumpStatistics (void);
 
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
+  // Inherited from ObjectBase
+  virtual void NotifyConstructionCompleted (void);
+
 private:
+  /** 
+   * Reset all internal counters. 
+   */
+  void ResetCounters ();
+
   Ptr<Queue>  m_downQueue; //!< Internet downlink queue
   Ptr<Queue>  m_upQueue;   //!< Internet uplink queue
+
+  std::string m_webStatsFilename;       //!< WebStats filename
+  Ptr<OutputStreamWrapper> webWrapper;  //!< WebStats file wrapper
 };
 
 
@@ -295,18 +326,12 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** 
-   * TracedCallback signature for Epc QoS stats.
-   * \param desc String describing this traffic.
-   * \param teid GTP TEID.
-   * \param stats The QoS statistics.
-   */
-  typedef void (* EpcTracedCallback)
-    (std::string desc, uint32_t teid, Ptr<const QosStatsCalculator> stats);
-
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
+
+  // Inherited from ObjectBase
+  virtual void NotifyConstructionCompleted (void);
 
 private:
   /**
@@ -341,13 +366,13 @@ private:
   void EpcOutputPacket (std::string context, Ptr<const Packet> packet);
 
   /**
-   * Trace sink fired when application traffic stops. Used to dump EPC traffic
-   * statistics.
+   * Trace sink fired when application traffic stops. Used to dump EPC and APP
+   * traffic statistics.
    * \param context Context information.
    * \param app The EpcApplication.
    */
-  void DumpEpcStatistics (std::string context, Ptr<const EpcApplication> app);
-
+  void DumpStatistics (std::string context, Ptr<const EpcApplication> app);
+  
   /**
    * Trace sink fired when application traffic starts. Used to reset EPC
    * traffic statistics.
@@ -371,10 +396,12 @@ private:
   typedef std::map<uint32_t, QosStatsPair_t> TeidQosMap_t;
   TeidQosMap_t m_qosStats; //!< TEID QoS statistics
 
-  /** The OpenFlow EPC QoS trace source, fired at DumpEpcStatistics. */
-  TracedCallback<std::string, uint32_t, Ptr<const QosStatsCalculator> > m_epcTrace;
-};
+  std::string m_appStatsFilename;       //!< AppStats filename
+  std::string m_epcStatsFilename;       //!< EpcStats filename
 
+  Ptr<OutputStreamWrapper> appWrapper;  //!< AppStats file wrapper
+  Ptr<OutputStreamWrapper> epcWrapper;  //!< EpcStats file wrapper
+};
 
 } // namespace ns3
 #endif /* EPCOF_STATS_CALCULATOR_H */

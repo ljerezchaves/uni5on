@@ -49,6 +49,15 @@ ConnectionInfo::GetTypeId (void)
   return tid;
 }
 
+SwitchPair_t
+ConnectionInfo::GetSwitchIndexPair (void) const
+{
+  SwitchPair_t key;
+  key.first  = std::min (m_switchIdx1, m_switchIdx2);
+  key.second = std::max (m_switchIdx1, m_switchIdx2);
+  return key;
+}
+
 void
 ConnectionInfo::DoDispose ()
 {

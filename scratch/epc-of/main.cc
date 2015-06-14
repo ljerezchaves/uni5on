@@ -58,7 +58,7 @@ main (int argc, char *argv[])
   cmd.AddValue ("progress",   "Simulation progress interval [s].", g_progress);
   cmd.AddValue ("simTime",    "Simulation time [s].", simTime);
   cmd.AddValue ("topoFile",   "ns3::SimulationScenario::TopoFilename");
-  cmd.AddValue ("prefix",     "Common prefixfor filenames.", prefix);
+  cmd.AddValue ("prefix",     "ns3::SimulationScenario::CommonPrefix");
   cmd.AddValue ("pcap",       "ns3::SimulationScenario::PcapTrace");
   cmd.AddValue ("trace",      "ns3::SimulationScenario::LteTrace");
   cmd.AddValue ("liblog",     "ns3::SimulationScenario::SwitchLogs");
@@ -75,25 +75,9 @@ main (int argc, char *argv[])
   if (g_progress) Simulator::Schedule (Seconds (g_progress), &PrintCurrentTime);
   if (verbose) EnableVerbose ();
 
-  // Parsing common prefix
-  if (prefix != "")
-    {
-      char lastChar = *prefix.rbegin (); 
-      if (lastChar != '-')
-        {
-          prefix += "-";
-        }
-    }
-  Config::SetDefault ("ns3::SimulationScenario::CommonPrefix", StringValue (prefix));
-
   // Simulation scenario
   Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
   scenario->BuildRingTopology ();
-
-  // Output logger. Must be created after scenario configuration, so it can
-  // connect to traces sources successfully.
-  Ptr<OutputLogger> logger = CreateObject<OutputLogger> ();
-  logger->SetCommonPrefix (prefix);
   
   if (lteRem)
     {
@@ -135,7 +119,7 @@ EnableVerbose ()
 {
   LogComponentEnable ("Main", LOG_LEVEL_ALL);
   LogComponentEnable ("SimulationScenario", LOG_LEVEL_INFO);
-  LogComponentEnable ("OutputLogger", LOG_LEVEL_ALL);
+  LogComponentEnable ("StatsCalculator", LOG_LEVEL_WARN);
   
   LogComponentEnable ("OFSwitch13NetDevice", LOG_LEVEL_WARN);
   LogComponentEnable ("OFSwitch13Interface", LOG_LEVEL_WARN);

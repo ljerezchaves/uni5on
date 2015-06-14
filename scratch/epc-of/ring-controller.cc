@@ -534,9 +534,9 @@ RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
 void 
 RingController::SaveConnectionInfo (Ptr<ConnectionInfo> cInfo)
 {
-  SwitchPair_t key;
-  key.first  = std::min (cInfo->m_switchIdx1, cInfo->m_switchIdx2);
-  key.second = std::max (cInfo->m_switchIdx1, cInfo->m_switchIdx2);
+  SwitchPair_t key = cInfo->GetSwitchIndexPair ();
+  //key.first  = std::min (cInfo->m_switchIdx1, cInfo->m_switchIdx2);
+  //key.second = std::max (cInfo->m_switchIdx1, cInfo->m_switchIdx2);
   std::pair<SwitchPair_t, Ptr<ConnectionInfo> > entry (key, cInfo);
   std::pair<ConnInfoMap_t::iterator, bool> ret;
   ret = m_connections.insert (entry);

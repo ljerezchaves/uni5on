@@ -55,6 +55,13 @@ SimulationScenario::DoDispose ()
   m_webNetwork = 0;
   m_lteHelper = 0;
   m_webHost = 0;
+
+  m_admissionStats = 0;
+  m_gatewayStats = 0;
+  m_bandwidthStats = 0;
+  m_switchStats = 0;
+  m_internetStats = 0;
+  m_epcS1uStats = 0;
 }
 
 TypeId 
@@ -71,8 +78,13 @@ SimulationScenario::GetTypeId (void)
     .AddAttribute ("CommonPrefix",
                    "Common prefix for input and output filenames.",
                    StringValue (""),
-                   MakeStringAccessor (&SimulationScenario::m_commonPrefix),
+                   MakeStringAccessor (&SimulationScenario::SetCommonPrefix),
                    MakeStringChecker ())
+    .AddAttribute ("DumpStatsTimeout",
+                   "Periodic statistics dump interval.",
+                   TimeValue (Seconds (10)),
+                   MakeTimeAccessor (&SimulationScenario::SetDumpTimeout),
+                   MakeTimeChecker ())
     .AddAttribute ("Enbs",
                    "Number of eNBs in network topology.",
                    UintegerValue (0),
@@ -90,7 +102,7 @@ SimulationScenario::GetTypeId (void)
                    MakeBooleanChecker ())
     .AddAttribute ("LteTrace",
                    "Enable/Disable simulation LTE ASCII traces.",
-                   BooleanValue (true),
+                   BooleanValue (false),
                    MakeBooleanAccessor (&SimulationScenario::m_lteTrace),
                    MakeBooleanChecker ())
     .AddAttribute ("SwitchLogs",
@@ -124,33 +136,46 @@ SimulationScenario::BuildRingTopology ()
   // SgwPgwApplication trace sources).
   m_controller = CreateObject<RingController> ();
   Names::Add ("MainController", m_controller);
+  
+  // 4) Create the BandwidthStatsCalculator and SwitchRulesStatsCalculator
+  // objects. They must be created after OpenFlowNetwork object but before
+  // topology creation, as they will connect to OpenFlowNetwork trace sources
+  // to monitor switches and connections.
+  m_bandwidthStats = CreateObject<BandwidthStatsCalculator> ();  
+  m_switchStats = CreateObject<SwitchRulesStatsCalculator> ();
  
-  // 4) Build network topology calling OpenFlowEpcNetwork::CreateTopology ().
+  // 5) Build network topology calling OpenFlowEpcNetwork::CreateTopology ().
   m_opfNetwork->CreateTopology (m_controller, m_SwitchIdxPerEnb);
  
-  // 5) Set up OpenFlowEpcHelper S1U and X2 connection callbacks (network
+  // 6) Set up OpenFlowEpcHelper S1U and X2 connection callbacks (network
   // topology must be already created).
   m_epcHelper->SetS1uConnectCallback (
       MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, m_opfNetwork));
   m_epcHelper->SetX2ConnectCallback (
       MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
   
-  // 6) Create LTE radio access network and build topology
+  // 7) Create LTE radio access network and build topology
   m_lteNetwork = CreateObject<LteHexGridNetwork> ();
   m_lteHelper = m_lteNetwork->CreateTopology (m_epcHelper, m_UesPerEnb);
 
-  // 7) Create Internet network and build topology
+  // 8) Create Internet network and build topology
   m_webNetwork = CreateObject<InternetNetwork> ();
   Names::Add ("InternetNetwork", m_webNetwork);
   m_webHost = m_webNetwork->CreateTopology (m_epcHelper->GetPgwNode ());
 
-  // 8) Install applications and traffic manager
+  // 9) Install applications and traffic manager
   TrafficHelper tfcHelper (m_webHost, m_lteHelper, m_controller);
   tfcHelper.Install (m_lteNetwork->GetUeNodes (), m_lteNetwork->GetUeDevices ());
 
-  // 9) Set up output ofsoftswitch13 logs and ns-3 traces
+  // 10) Set up output ofsoftswitch13 logs and ns-3 traces
   DatapathLogs ();
   PcapAsciiTraces ();
+
+  // 11) Creating remaining stats calculator for output dump
+  m_admissionStats  = CreateObject<AdmissionStatsCalculator> ();
+  m_gatewayStats    = CreateObject<GatewayStatsCalculator> ();
+  m_internetStats   = CreateObject<WebQueueStatsCalculator> ();
+  m_epcS1uStats     = CreateObject<EpcS1uStatsCalculator> ();
 }
 
 void
@@ -167,12 +192,67 @@ SimulationScenario::SetEnbs (uint16_t value)
   Config::SetDefault ("ns3::LteHexGridNetwork::Enbs", UintegerValue (m_nEnbs));
 }
 
+void 
+SimulationScenario::SetCommonPrefix (std::string prefix)
+{
+  // Parsing common prefix
+  if (prefix != "")
+    {
+      char lastChar = *prefix.rbegin (); 
+      if (lastChar != '-')
+        {
+          prefix += "-";
+        }
+    }
+  m_inputPrefix = prefix;
+  
+  ostringstream ss;
+  ss << prefix << RngSeedManager::GetRun () << "-";
+  m_outputPrefix = ss.str ();
+
+  Config::SetDefault ("ns3::AdmissionStatsCalculator::AdmStatsFilename", 
+                      StringValue (m_outputPrefix + "adm_stats.txt"));
+  Config::SetDefault ("ns3::AdmissionStatsCalculator::BrqStatsFilename", 
+                      StringValue (m_outputPrefix + "brq_stats.txt"));
+  Config::SetDefault ("ns3::EpcS1uStatsCalculator::AppStatsFilename", 
+                      StringValue (m_outputPrefix + "app_stats.txt"));
+  Config::SetDefault ("ns3::EpcS1uStatsCalculator::EpcStatsFilename", 
+                      StringValue (m_outputPrefix + "epc_stats.txt"));
+  Config::SetDefault ("ns3::WebQueueStatsCalculator::WebStatsFilename", 
+                      StringValue (m_outputPrefix + "web_stats.txt"));
+  Config::SetDefault ("ns3::GatewayStatsCalculator::PgwStatsFilename", 
+                      StringValue (m_outputPrefix + "pgw_stats.txt"));
+  Config::SetDefault ("ns3::SwitchRulesStatsCalculator::SwtStatsFilename", 
+                      StringValue (m_outputPrefix + "swt_stats.txt"));
+  Config::SetDefault ("ns3::BandwidthStatsCalculator::BwdStatsFilename", 
+                      StringValue (m_outputPrefix + "bwd_stats.txt"));
+}
+
+void
+SimulationScenario::SetDumpTimeout (Time timeout)
+{
+  m_dumpTimeout = timeout;
+  Simulator::Schedule (m_dumpTimeout, &SimulationScenario::DumpStatistics, this);
+}
+
+void
+SimulationScenario::DumpStatistics ()
+{
+  m_admissionStats->DumpStatistics ();
+  m_internetStats->DumpStatistics ();
+  m_gatewayStats->DumpStatistics ();
+  m_switchStats->DumpStatistics ();
+  m_bandwidthStats->DumpStatistics ();
+
+  Simulator::Schedule (m_dumpTimeout, &SimulationScenario::DumpStatistics, this);
+}
+
 bool
 SimulationScenario::ParseTopology ()
 {
   NS_LOG_INFO ("Parsing topology...");
  
-  std::string name = m_commonPrefix + m_topoFilename;
+  std::string name = m_inputPrefix + m_topoFilename;
   std::ifstream file;
   file.open (name.c_str ());
   if (!file.is_open ())
@@ -243,22 +323,17 @@ SimulationScenario::PcapAsciiTraces ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Including the simulation run number in commom prefix
-  ostringstream ss;
-  ss << m_commonPrefix << RngSeedManager::GetRun () << "-";
-  std::string completePrefix = ss.str ();
-
   if (m_pcapTrace)
     {
-      m_webNetwork->EnablePcap (completePrefix + "internet");
-      m_opfNetwork->EnableOpenFlowPcap (completePrefix + "ofchannel");
-      m_opfNetwork->EnableDataPcap (completePrefix + "ofnetwork", true);
-      m_epcHelper->EnablePcapS1u (completePrefix + "lte-epc");
-      m_epcHelper->EnablePcapX2 (completePrefix + "lte-epc");
+      m_webNetwork->EnablePcap (m_outputPrefix + "internet");
+      m_opfNetwork->EnableOpenFlowPcap (m_outputPrefix + "ofchannel");
+      m_opfNetwork->EnableDataPcap (m_outputPrefix + "ofnetwork", true);
+      m_epcHelper->EnablePcapS1u (m_outputPrefix + "lte-epc");
+      m_epcHelper->EnablePcapX2 (m_outputPrefix + "lte-epc");
     }
   if (m_lteTrace)
     {
-      m_lteNetwork->EnableTraces (completePrefix);
+      m_lteNetwork->EnableTraces (m_outputPrefix);
     }
 }
 
