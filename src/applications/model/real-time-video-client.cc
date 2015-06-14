@@ -80,6 +80,7 @@ RealTimeVideoClient::Start (void)
   NS_LOG_FUNCTION (this);
 
   ResetQosStats ();
+  m_appStartTrace (this);
   m_serverApp->StartSending ();
 }
 
@@ -103,12 +104,8 @@ RealTimeVideoClient::NotifyStop ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Dump app statistcs
-  DumpAppStatistics ();
-  if (!m_stopCb.IsNull ())
-    {
-      m_stopCb (this);
-    }
+  // Fire stop trace source
+  m_appStopTrace (this);
 }
 
 void

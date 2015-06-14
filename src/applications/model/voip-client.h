@@ -65,7 +65,13 @@ public:
    * \return The pointer to server application. 
    */
   Ptr<VoipServer> GetServerApp ();
-  
+ 
+  /**
+   * Get QoS statistics
+   * \return Get the const pointer to QosStatsCalculator
+   */
+  Ptr<const QosStatsCalculator> GetServerQosStats (void) const;
+
   /** 
    * Reset the QoS statistics
    */
@@ -90,9 +96,6 @@ protected:
    */
   void NotifyStop ();
   
-  // Inherited from EpcApplication
-  void DumpAppStatistics (void) const;
-
 private:
   // inherited from Application base class.
   virtual void StartApplication (void);    // Called at time specified by Start

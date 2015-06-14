@@ -76,6 +76,7 @@ void
 StoredVideoClient::Start (void)
 {
   ResetQosStats ();
+  m_appStartTrace (this);
   OpenSocket ();
 }
 
@@ -137,12 +138,8 @@ StoredVideoClient::CloseSocket ()
       m_socket = 0;
     }
 
-  // Dump app statistcs
-  DumpAppStatistics ();
-  if (!m_stopCb.IsNull ())
-    {
-      m_stopCb (this);
-    }
+  // Fire stop trace source
+  m_appStopTrace (this);
 }
 
 void

@@ -105,6 +105,7 @@ void
 HttpClient::Start (void)
 {
   ResetQosStats ();
+  m_appStartTrace (this);
   OpenSocket ();
 }
 
@@ -167,12 +168,8 @@ HttpClient::CloseSocket ()
       m_socket = 0;
     }
 
-  // Dump app statistcs
-  DumpAppStatistics ();
-  if (!m_stopCb.IsNull ())
-    {
-      m_stopCb (this);
-    }
+  // Fire stop trace source
+  m_appStopTrace (this);
 }
 
 void

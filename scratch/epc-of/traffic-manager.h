@@ -76,7 +76,7 @@ public:
    * application restart attempt.
    * \param app The application pointer.
    */ 
-  void NotifyAppStop (Ptr<EpcApplication> app);
+  void NotifyAppStop (Ptr<const EpcApplication> app);
 
   /**
    * TraceSink connected to controller and notified when new contexts are
@@ -108,12 +108,6 @@ private:
   uint64_t    m_imsi;         //!< UE IMSI identifier
   uint16_t    m_cellId;       //!< Current eNB cellId
   uint32_t    m_defaultTeid;  //!< TEID for default UE tunnel
-
-  /** Application start trace source, fired when application start. */
-  TracedCallback<Ptr<const EpcApplication> > m_appStartTrace;
-
-  /** Application stop trace source, fired when application stopts. */
-  TracedCallback<Ptr<const EpcApplication> > m_appStopTrace;
 };
 
 };  // namespace ns3

@@ -97,6 +97,12 @@ VoipClient::GetServerApp ()
   return m_serverApp;
 }
 
+Ptr<const QosStatsCalculator>
+VoipClient::GetServerQosStats (void) const
+{
+  return m_serverApp->GetQosStats ();
+}
+
 void 
 VoipClient::ResetQosStats ()
 {
@@ -121,6 +127,7 @@ VoipClient::Start (void)
   NS_LOG_FUNCTION (this);
 
   ResetQosStats ();
+  m_appStartTrace (this);
   StartSending ();
   m_serverApp->StartSending ();
 }
@@ -146,21 +153,8 @@ VoipClient::NotifyStop ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Dump app statistcs
-  DumpAppStatistics ();
-  if (!m_stopCb.IsNull ())
-    {
-      m_stopCb (this);
-    }
-}
-
-void
-VoipClient::DumpAppStatistics (void) const
-{
-  NS_LOG_FUNCTION (this);
-  
-  m_appTrace (GetDescription () + "dl", GetTeid (), GetQosStats ());
-  m_appTrace (GetDescription () + "ul", GetTeid (), m_serverApp->GetQosStats ());
+  // Fire stop trace source
+  m_appStopTrace (this);
 }
 
 void

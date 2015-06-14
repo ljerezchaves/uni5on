@@ -45,10 +45,15 @@ EpcApplication::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::EpcApplication")
     .SetParent<Application> ()
     .AddConstructor<EpcApplication> ()
-    .AddTraceSource ("AppStats",
-                     "Application QoS trace source.",
-                     MakeTraceSourceAccessor (&EpcApplication::m_appTrace),
-                     "ns3::EpcApplication::AppStatsTracedCallback")
+    
+    .AddTraceSource ("AppStart",
+                     "EpcApplication start trace source.",
+                     MakeTraceSourceAccessor (&EpcApplication::m_appStartTrace),
+                     "ns3::EpcApplication::EpcAppTracedCallback")
+    .AddTraceSource ("AppStop",
+                     "EpcApplication stop trace source.",
+                     MakeTraceSourceAccessor (&EpcApplication::m_appStopTrace),
+                     "ns3::EpcApplication::EpcAppTracedCallback")  
   ;
   return tid;
 }
@@ -100,16 +105,8 @@ EpcApplication::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   m_qosStats = 0;
-  m_stopCb = MakeNullCallback<void, Ptr<EpcApplication> > ();
   m_tft = 0;
   Application::DoDispose ();
-}
-
-void
-EpcApplication::SetStopCallback (StopCb_t cb)
-{
-  NS_LOG_FUNCTION (this);
-  m_stopCb = cb;
 }
 
 void
@@ -117,13 +114,6 @@ EpcApplication::ResetQosStats ()
 {
   NS_LOG_FUNCTION (this);
   m_qosStats->ResetCounters ();
-}
-
-void
-EpcApplication::DumpAppStatistics (void) const
-{
-  NS_LOG_FUNCTION (this);
-  m_appTrace (GetDescription () + "dl", m_teid, GetQosStats ());
 }
 
 } // namespace ns3

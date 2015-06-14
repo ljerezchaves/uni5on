@@ -98,15 +98,6 @@ public:
    */
   typedef Callback<void, Ptr<EpcApplication> > StopCb_t;
 
-  /** 
-   * TracedCallback signature for EpcApplication QoS stats.
-   * \param desc String describing this application.
-   * \param teid GTP TEID.
-   * \param stats The QoS statistics.
-   */
-  typedef void (* AppStatsTracedCallback)
-    (std::string desc, uint32_t teid, Ptr<const QosStatsCalculator> stats);
-
   /**
    * TracedCallback signature for EpcApplication.
    * \param app The EpcApplication.
@@ -118,29 +109,17 @@ protected:
   virtual void DoDispose (void);
 
   /**
-   * Set the stop callback
-   * \param cb The callback to invoke when traffic stops.
-   */
-  void SetStopCallback (StopCb_t cb);
-
-  /**
    * Reset the QoS statistics
    */
   virtual void ResetQosStats ();
 
-  /**
-   * Dump application statistics. By default, only statistics for this app will
-   * be dumped to m_appTrace trace source. Specialized applications can
-   * override this method to dump additional information (like stats from
-   * server).
-   */
-  virtual void DumpAppStatistics (void) const;
-
   Ptr<QosStatsCalculator> m_qosStats;   //!< QoS statistics
-  StopCb_t                m_stopCb;     //!< Stop callback
 
-  /** The Application QoS trace source, fired when application stops. */
-  TracedCallback<std::string, uint32_t, Ptr<const QosStatsCalculator> > m_appTrace;
+  /** Application start trace source, fired when application start. */
+  TracedCallback<Ptr<const EpcApplication> > m_appStartTrace;
+
+  /** Application stop trace source, fired when application stopts. */
+  TracedCallback<Ptr<const EpcApplication> > m_appStopTrace;
 
 private:
   // LTE EPC metadata 

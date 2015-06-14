@@ -79,15 +79,6 @@ TrafficManager::GetTypeId (void)
                    StringValue ("ns3::ExponentialRandomVariable[Mean=20.0]"),
                    MakePointerAccessor (&TrafficManager::m_startRng),
                    MakePointerChecker <RandomVariableStream> ())
-    
-    .AddTraceSource ("AppStart",
-                     "EpcApplication start trace source.",
-                     MakeTraceSourceAccessor (&TrafficManager::m_appStartTrace),
-                     "ns3::EpcApplication::EpcAppTracedCallback")
-    .AddTraceSource ("AppStop",
-                     "EpcApplication stop trace source.",
-                     MakeTraceSourceAccessor (&TrafficManager::m_appStopTrace),
-                     "ns3::EpcApplication::EpcAppTracedCallback")  
     ;
   return tid;
 }
@@ -99,7 +90,8 @@ TrafficManager::AddEpcApplication (Ptr<EpcApplication> app)
 
   // Save application and configure stop callback
   m_apps.push_back (app);
-  app->SetStopCallback (MakeCallback (&TrafficManager::NotifyAppStop, this));
+  app->TraceConnectWithoutContext ("AppStop", 
+      MakeCallback (&TrafficManager::NotifyAppStop, this));
 
   // Check for disabled application type
   if ( (!m_httpEnable    && app->GetInstanceTypeId () == HttpClient::GetTypeId ())
@@ -133,7 +125,6 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
   
   if (authorized)
     {
-      m_appStartTrace (app);
       app->Start ();
     }
   else
@@ -145,7 +136,7 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
 }
 
 void
-TrafficManager::NotifyAppStop (Ptr<EpcApplication> app)
+TrafficManager::NotifyAppStop (Ptr<const EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
   
@@ -156,11 +147,15 @@ TrafficManager::NotifyAppStop (Ptr<EpcApplication> app)
       m_controller->ReleaseDedicatedBearer (app->GetEpsBearer (),
         m_imsi, m_cellId, appTeid);
     }
-  m_appStopTrace (app);
 
-  // Schedule next start attempt for this app  (wait at least 5 seconds)
+  // Find our non-constant app pointer to schedule next start attempt for this
+  // app (waiting at least 5 seconds).
+  std::vector<Ptr<EpcApplication> >::iterator it;
+  for (it = m_apps.begin (); *it != app && it != m_apps.end (); it++)
+  NS_ASSERT_MSG (it != m_apps.end (), "App not found!");
+  
   Time idleTime = Seconds (5) + Seconds (std::abs (m_idleRng->GetValue ()));
-  Simulator::Schedule (idleTime, &TrafficManager::AppStartTry, this, app);
+  Simulator::Schedule (idleTime, &TrafficManager::AppStartTry, this, *it);
 }
 
 void
