@@ -67,22 +67,9 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   m_stVideoHelper.SetServerAttribute ("VideoDuration", 
     StringValue ("ns3::NormalRandomVariable[Mean=75.0|Variance=2025.0]"));
   m_rtVideoHelper.SetServerAttribute ("VideoDuration", 
-    StringValue ("ns3::NormalRandomVariable[Mean=600.0|Variance=90000.0]"));
+    StringValue ("ns3::NormalRandomVariable[Mean=300.0|Variance=90000.0]"));
   m_rtVideoHelper.SetServerAttribute ("TraceFilename", 
     StringValue (m_videoDir + "office-cam.data"));
-
-  // FIXME Estou colocando esses tempos curtos aqui apenas pra testes.
-  m_httpHelper.SetClientAttribute ("MaxPages", UintegerValue (1)); 
-  m_voipHelper.SetServerAttribute ("CallDuration", 
-    StringValue ("ns3::ConstantRandomVariable[Constant=10.0]"));
-  m_stVideoHelper.SetServerAttribute ("VideoDuration", 
-    StringValue ("ns3::ConstantRandomVariable[Constant=10.0]"));
-  m_rtVideoHelper.SetServerAttribute ("VideoDuration", 
-    StringValue ("ns3::ConstantRandomVariable[Constant=10.0]"));
-  SetTfcManagerAttribute ("IdleRng", 
-    StringValue ("ns3::ExponentialRandomVariable[Mean=10.0]"));
-  SetTfcManagerAttribute ("StartRng", 
-    StringValue ("ns3::ExponentialRandomVariable[Mean=10.0]"));
 }
 
 TrafficHelper::~TrafficHelper ()
