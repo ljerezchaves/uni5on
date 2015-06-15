@@ -35,7 +35,7 @@ ConnectionInfo::~ConnectionInfo ()
   NS_LOG_FUNCTION (this);
 }
 
-TypeId 
+TypeId
 ConnectionInfo::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::ConnectionInfo")

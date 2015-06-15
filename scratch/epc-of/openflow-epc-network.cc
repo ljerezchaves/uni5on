@@ -42,10 +42,10 @@ OpenFlowEpcNetwork::~OpenFlowEpcNetwork ()
   NS_LOG_FUNCTION (this);
 }
 
-TypeId 
-OpenFlowEpcNetwork::GetTypeId (void) 
+TypeId
+OpenFlowEpcNetwork::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::OpenFlowEpcNetwork") 
+  static TypeId tid = TypeId ("ns3::OpenFlowEpcNetwork")
     .SetParent<Object> ()
 
     // Trace sources used to simplify OpenFlow queue and meter monitoring. All
@@ -59,7 +59,7 @@ OpenFlowEpcNetwork::GetTypeId (void)
                      "Packet dropped by OpenFlow meter band.",
                      MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_meterDropTrace),
                      "ns3::Packet::TracedCallback")
-    
+
     // Trace sources used by controller to be aware of network topology creation
     .AddTraceSource ("NewEpcAttach",
                      "New LTE EPC entity connected to OpenFlow switch for S1U or X1 interface.",
@@ -74,7 +74,7 @@ OpenFlowEpcNetwork::GetTypeId (void)
                      MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_topoBuiltTrace),
                      "ns3::OpenFlowEpcNetwork::TopologyTracedCallback")
   ;
-  return tid; 
+  return tid;
 }
 
 void
@@ -83,30 +83,30 @@ OpenFlowEpcNetwork::EnableDataPcap (std::string prefix, bool promiscuous)
   m_ofCsmaHelper.EnablePcap (prefix, m_ofSwitches, promiscuous);
 }
 
-void 
+void
 OpenFlowEpcNetwork::EnableOpenFlowPcap (std::string prefix)
 {
   m_ofHelper->EnableOpenFlowPcap (prefix);
 }
 
-void 
+void
 OpenFlowEpcNetwork::EnableOpenFlowAscii (std::string prefix)
 {
   m_ofHelper->EnableOpenFlowAscii (prefix);
 }
 
-void 
+void
 OpenFlowEpcNetwork::EnableDatapathLogs (std::string level)
 {
   m_ofHelper->EnableDatapathLogs (level);
 }
 
 void
-OpenFlowEpcNetwork::SetSwitchDeviceAttribute (std::string n1, 
+OpenFlowEpcNetwork::SetSwitchDeviceAttribute (std::string n1,
                                               const AttributeValue &v1)
 {
   m_ofHelper->SetDeviceAttribute (n1, v1);
-} 
+}
 
 bool
 OpenFlowEpcNetwork::IsTopologyCreated (void) const
@@ -114,13 +114,13 @@ OpenFlowEpcNetwork::IsTopologyCreated (void) const
   return m_created;
 }
 
-uint16_t 
+uint16_t
 OpenFlowEpcNetwork::GetNSwitches (void) const
 {
   return m_ofSwitches.GetN ();
 }
 
-Ptr<OFSwitch13NetDevice> 
+Ptr<OFSwitch13NetDevice>
 OpenFlowEpcNetwork::GetSwitchDevice (uint16_t index)
 {
   NS_ASSERT (index < m_ofDevices.GetN ());
@@ -128,7 +128,7 @@ OpenFlowEpcNetwork::GetSwitchDevice (uint16_t index)
 }
 
 void
-OpenFlowEpcNetwork::MeterDropPacket (std::string context, 
+OpenFlowEpcNetwork::MeterDropPacket (std::string context,
                                      Ptr<const Packet> packet)
 {
   NS_LOG_FUNCTION (this << context << packet);
@@ -225,7 +225,7 @@ OpenFlowEpcNetwork::InstallController (Ptr<OpenFlowEpcController> controller)
 {
   NS_LOG_FUNCTION (this << controller);
   NS_ASSERT_MSG (!m_ofCtrlNode, "Controller application already set.");
-  
+
   // Installing the controller app into a new controller node
   m_ofCtrlNode = CreateObject<Node> ();
   Names::Add ("ctrl", m_ofCtrlNode);

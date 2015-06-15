@@ -28,7 +28,7 @@
 #include <ns3/qos-stats-calculator.h>
 
 namespace ns3 {
- 
+
 class OpenFlowEpcController;
 class ConnectionInfo;
 
@@ -37,7 +37,7 @@ class ConnectionInfo;
  * Create an OpenFlow EPC S1-U network infrastructure. This is an abstract base
  * class which should be extended to create any desired network topology. For
  * each subclass, a corresponding topology-aware controller must be
- * implemented, extending the generig OpenFlowEpcController. 
+ * implemented, extending the generig OpenFlowEpcController.
  */
 class OpenFlowEpcNetwork : public Object
 {
@@ -50,58 +50,60 @@ public:
    * \return The object TypeId.
    */
   static TypeId GetTypeId (void);
-  
+
   /**
    * Called by OpenFlowEpcHelper to proper connect the SgwPgw and eNBs to the
    * S1-U OpenFlow network infrastructure.
-   * \internal This method must create the NetDevice at node and assign an IPv4
-   * address to it.
+   * \internal 
+   * This method must create the NetDevice at node and assign an IPv4 address
+   * to it.
    * \param node The SgwPgw or eNB node pointer.
    * \param cellId The eNB cell ID.
    * \return A pointer to the NetDevice created at node.
    */
   virtual Ptr<NetDevice> AttachToS1u (Ptr<Node> node, uint16_t cellId) = 0;
-  
+
   /**
    * Called by OpenFlowEpcHelper to proper connect the eNBs nodes to the X2
    * OpenFlow network infrastructure.
-   * \internal This method must create the NetDevice at node and assign an IPv4
-   * address to it.
+   * \internal 
+   * This method must create the NetDevice at node and assign an IPv4 address
+   * to it.
    * \param node The eNB node pointer.
    * \return A pointer to the NetDevice created at node.
    */
   virtual Ptr<NetDevice> AttachToX2 (Ptr<Node> node) = 0;
-  
-  /** 
+
+  /**
    * Creates the OpenFlow network infrastructure with corresponding OpenFlow
    * Controller application.
    * \param controller The corresponding OpenFlow controller for this EPC
    * OpenFlow network (they both must be aware of network topology.
    * \param eNbSwitches The switch index for each eNB.
    */
-  virtual void CreateTopology (Ptr<OpenFlowEpcController> controller, 
-      std::vector<uint16_t> eNbSwitches) = 0;
- 
-  /** 
+  virtual void CreateTopology (Ptr<OpenFlowEpcController> controller,
+                               std::vector<uint16_t> eNbSwitches) = 0;
+
+  /**
    * Enable pcap on switch data ports.
    * \param prefix The file prefix.
    * \param promiscuous If true, enable promisc trace.
    */
   void EnableDataPcap (std::string prefix, bool promiscuous = false);
 
-  /** 
-   * Enable pcap on OpenFlow channel. 
+  /**
+   * Enable pcap on OpenFlow channel.
    * \param prefix The file prefix.
    */
   void EnableOpenFlowPcap (std::string prefix);
 
-  /** 
-   * Enable ascii trace on OpenFlow channel. 
+  /**
+   * Enable ascii trace on OpenFlow channel.
    * \param prefix The file prefix.
    */
   void EnableOpenFlowAscii (std::string prefix);
 
-  /** 
+  /**
    * Enable internal ofsoftswitch13 logging.
    * \param level string representing library logging level.
    */
@@ -117,11 +119,11 @@ public:
   /**
    * Check for network topology already created.
    * \return true if topology is created.
-   */ 
+   */
   bool IsTopologyCreated (void) const;
 
-  /** 
-   * \return Number of switches in the network. 
+  /**
+   * \return Number of switches in the network.
    */
   uint16_t GetNSwitches (void) const;
 
@@ -142,39 +144,39 @@ public:
 
   /**
    * Trace sink for packets dropped by queues in OpenFlow switches. This will
-   * fire the QueueDrop trace source. 
+   * fire the QueueDrop trace source.
    * \param context The queue context location.
    * \param packet The dropped packet.
    */
   void QueueDropPacket (std::string context, Ptr<const Packet> packet);
 
-  /** 
+  /**
    * ConnectionTracedCallback signature for new connection between two switches.
    * \param cInfo The connection information and metadata.
    */
-  typedef void (* ConnectionTracedCallback)(Ptr<ConnectionInfo> cInfo);
+  typedef void (*ConnectionTracedCallback)(Ptr<ConnectionInfo> cInfo);
 
-  /** 
+  /**
    * BoolTracedCallback signature for topology creation completed.
    * \param devices The NetDeviceContainer for OpenFlow switch devices.
    */
-  typedef void (* TopologyTracedCallback)(NetDeviceContainer devices);
+  typedef void (*TopologyTracedCallback)(NetDeviceContainer devices);
 
-   /** 
-   * AttachTracedCallback signature for new  EPC entity connected to OpenFlow
-   * network.
-   * \attention This nodeDev is not the one added as port to switch. Instead,
-   * this is the 'other' end of this connection, associated with the EPC eNB or
-   * SgwPgw node.
-   * \param nodeDev The device connected to the OpenFlow switch.
-   * \param nodeIp The IPv4 address assigned to this device.
-   * \param swtchDev The OpenFlow switch device.
-   * \param swtchIdx The OpenFlow switch index.
-   * \param swtchPort The port number for nodeDev at OpenFlow switch.
-   */
   typedef void (* AttachTracedCallback)(Ptr<NetDevice> nodeDev, 
       Ipv4Address nodeIp, Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, 
       uint32_t swtchPort);
+  /**
+  * AttachTracedCallback signature for new  EPC entity connected to OpenFlow
+  * network.
+  * \attention This nodeDev is not the one added as port to switch. Instead,
+  * this is the 'other' end of this connection, associated with the EPC eNB or
+  * SgwPgw node.
+  * \param nodeDev The device connected to the OpenFlow switch.
+  * \param nodeIp The IPv4 address assigned to this device.
+  * \param swtchDev The OpenFlow switch device.
+  * \param swtchIdx The OpenFlow switch index.
+  * \param swtchPort The port number for nodeDev at OpenFlow switch.
+  */
 
 protected:
   /** Destructor implementation */
@@ -220,16 +222,16 @@ protected:
    */
   Ptr<Node> GetGatewayNode ();
 
-  /** 
+  /**
    * Retrieve the controller node pointer.
-   * \return The OpenFlow controller node. 
+   * \return The OpenFlow controller node.
    */
   Ptr<Node> GetControllerNode ();
-  
+
   /**
    * Install the OpenFlow controller for this network.
    * \param controller The controller application.
-   */ 
+   */
   void InstallController (Ptr<OpenFlowEpcController> controller);
 
   Ptr<Node>                   m_ofCtrlNode;     //!< Controller node.
@@ -239,16 +241,16 @@ protected:
   CsmaHelper                  m_ofCsmaHelper;   //!< Csma helper.
   std::vector<uint16_t>       m_eNbSwitchIdx;   //!< Switch index for each eNB.
   bool                        m_created;        //!< Network topology created.
-  
+
   /** New connection between two switches trace source. */
   TracedCallback<Ptr<ConnectionInfo> > m_newConnTrace;
 
   /** Connections between switches finished trace source. */
   TracedCallback<NetDeviceContainer> m_topoBuiltTrace;
-  
+
   /** New EPC entity connected to OpenFlow network trace source. */
-  TracedCallback<Ptr<NetDevice>, Ipv4Address, Ptr<OFSwitch13NetDevice>, 
-    uint16_t, uint32_t> m_newAttachTrace;
+  TracedCallback<Ptr<NetDevice>, Ipv4Address, Ptr<OFSwitch13NetDevice>,
+                 uint16_t, uint32_t> m_newAttachTrace;
 
 private:
   uint16_t                    m_gatewaySwitch;  //!< Gateway switch index.
@@ -261,7 +263,7 @@ private:
   TracedCallback<Ptr<const Packet> > m_meterDropTrace;
 
   /** Map saving Node / Switch indexes. */
-  typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;  
+  typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;
   NodeSwitchMap_t     m_nodeSwitchMap;    //!< Registered nodes per switch idx.
 };
 

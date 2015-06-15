@@ -52,9 +52,9 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** 
-   * Build the ring simulation topology. 
-   */ 
+  /**
+   * Build the ring simulation topology.
+   */
   void BuildRingTopology ();
 
 protected:
@@ -62,20 +62,20 @@ protected:
   virtual void DoDispose ();
 
 private:
-  /** 
-   * Set the number of switches in network topology. 
+  /**
+   * Set the number of switches in network topology.
    * \param value The number of switches.
    */
   void SetSwitches (uint16_t value);
-  
-  /** 
-   * Set the number of eNBs in network topology. 
+
+  /**
+   * Set the number of eNBs in network topology.
    * \param value The number of eNBs.
    */
   void SetEnbs (uint16_t value);
 
-  /** 
-   * Set the commom prefix for stats filenames. 
+  /**
+   * Set the commom prefix for stats filenames.
    * \param prefix the prefix.
    */
   void SetCommonPrefix (std::string prefix);
@@ -92,19 +92,19 @@ private:
   void DumpStatistics ();
 
   /**
-   * Parse topology description file.  
+   * Parse topology description file.
    * Topology file columns (indexes starts at 0):
    * eNB index | # of UEs at this eNB | OpenFlow switch index
    */
   bool ParseTopology ();
 
-  /** 
-   * Enable/Disable ofsoftswitch13 library log. 
+  /**
+   * Enable/Disable ofsoftswitch13 library log.
    */
   void DatapathLogs ();
 
-  /** 
-   * Enable/Disable PCAP and ASCII traces. 
+  /**
+   * Enable/Disable PCAP and ASCII traces.
    * \param prefix Common prefix for files.
    */
   void PcapAsciiTraces ();
@@ -116,7 +116,7 @@ private:
   Ptr<InternetNetwork>       m_webNetwork;    //!< Internet network
   Ptr<LteHelper>             m_lteHelper;     //!< LTE radio helper
   Ptr<Node>                  m_webHost;       //!< Internet server node
-  
+
   std::string           m_inputPrefix;        //!< Common input prefix filenames
   std::string           m_outputPrefix;       //!< Common output prefix filenames
   std::string           m_topoFilename;       //!< Topology filename

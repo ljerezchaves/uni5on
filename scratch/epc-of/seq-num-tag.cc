@@ -35,7 +35,7 @@ SeqNumTag::SeqNumTag (uint32_t seq)
 {
 }
 
-TypeId 
+TypeId
 SeqNumTag::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SeqNumTag")
@@ -45,37 +45,37 @@ SeqNumTag::GetTypeId (void)
   return tid;
 }
 
-TypeId 
+TypeId
 SeqNumTag::GetInstanceTypeId (void) const
 {
   return GetTypeId ();
 }
 
-uint32_t 
+uint32_t
 SeqNumTag::GetSerializedSize (void) const
 {
   return 4;
 }
 
-void 
+void
 SeqNumTag::Serialize (TagBuffer i) const
 {
   i.WriteU32 (m_seq);
 }
 
-void 
+void
 SeqNumTag::Deserialize (TagBuffer i)
 {
   m_seq = i.ReadU32 ();
 }
 
-void 
+void
 SeqNumTag::Print (std::ostream &os) const
 {
   os << " SeqNumTag seq=" << m_seq;
 }
 
-uint32_t 
+uint32_t
 SeqNumTag::GetSeqNum () const
 {
   return m_seq;

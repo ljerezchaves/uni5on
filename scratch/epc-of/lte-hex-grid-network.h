@@ -47,7 +47,7 @@ public:
    * \return The object TypeId.
    */
   static TypeId GetTypeId (void);
-  
+
   /** Destructor implementation */
   virtual void DoDispose ();
 
@@ -56,27 +56,27 @@ public:
 
   /** \return the UEs node container */
   NodeContainer GetUeNodes ();
-  
+
   /** \return the UEs NetDevice container */
   NetDeviceContainer GetUeDevices ();
 
   /** \return the LteHelper used to create this LTE network */
   Ptr<LteHelper> GetLteHelper ();
 
-  /** 
-   * Enable LTE ascii traces. 
+  /**
+   * Enable LTE ascii traces.
    * \param prefix Filename prefix to use for files.
-   */  
+   */
   void EnableTraces (std::string prefix = "");
-   
+
   /**
    * Creates the LTE radio tolopoly.
    * \param epcHelper The EpcHelper used to create the LTE EPC core
    * \param nUes A vector containing the number of UEs for each eNB.
    * \return Ptr<LteHelper> The LteHelper used to create this LTE network.
    */
-  Ptr<LteHelper> CreateTopology (Ptr<EpcHelper> epcHelper, 
-      std::vector<uint32_t> nUes); 
+  Ptr<LteHelper> CreateTopology (Ptr<EpcHelper> epcHelper,
+                                 std::vector<uint32_t> nUes);
 
 private:
   /** Configure default values for LTE radio network. */
@@ -102,7 +102,7 @@ private:
   NetDeviceContainer          m_enbDevices;     //!< eNB devices
   NetDeviceContainer          m_ueDevices;      //!< UE devices
   std::vector<NodeContainer>  m_ueNodesPerEnb;  //!< UE nodes for each eNB
-  std::vector<uint32_t>       m_nUesPerEnb;     //!< Number of UEs for each eNB 
+  std::vector<uint32_t>       m_nUesPerEnb;     //!< Number of UEs for each eNB
 
   Ptr<LteHelper> m_lteHelper; //!< LteHelper used to create the radio network
   Ptr<EpcHelper> m_epcHelper; //!< EpcHelper used to create the EPC network

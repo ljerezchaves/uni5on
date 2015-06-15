@@ -64,7 +64,7 @@ SimulationScenario::DoDispose ()
   m_epcS1uStats = 0;
 }
 
-TypeId 
+TypeId
 SimulationScenario::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SimulationScenario")
@@ -126,34 +126,34 @@ SimulationScenario::BuildRingTopology ()
   // 1) Create OpenFlowEpcNetwork object and name it OpenFlowNetwork.
   m_opfNetwork = CreateObject<RingNetwork> ();
   Names::Add ("OpenFlowNetwork", m_opfNetwork);
-  
+
   // 2) Create OpenFlowEpcHelper object and name it OpenFlowEpcHelper.
   m_epcHelper = CreateObject<OpenFlowEpcHelper> ();
   Names::Add ("OpenFlowEpcHelper", m_epcHelper);
-  
+
   // 3) Create the OpenFlowEpcController object and name it MainController (the
   // controller constructor will connect to OpenFlowEpcNetwork and
   // SgwPgwApplication trace sources).
   m_controller = CreateObject<RingController> ();
   Names::Add ("MainController", m_controller);
-  
+
   // 4) Create the BandwidthStatsCalculator and SwitchRulesStatsCalculator
   // objects. They must be created after OpenFlowNetwork object but before
   // topology creation, as they will connect to OpenFlowNetwork trace sources
   // to monitor switches and connections.
-  m_bandwidthStats = CreateObject<BandwidthStatsCalculator> ();  
+  m_bandwidthStats = CreateObject<BandwidthStatsCalculator> ();
   m_switchStats = CreateObject<SwitchRulesStatsCalculator> ();
- 
+
   // 5) Build network topology calling OpenFlowEpcNetwork::CreateTopology ().
   m_opfNetwork->CreateTopology (m_controller, m_SwitchIdxPerEnb);
- 
+
   // 6) Set up OpenFlowEpcHelper S1U and X2 connection callbacks (network
   // topology must be already created).
   m_epcHelper->SetS1uConnectCallback (
-      MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, m_opfNetwork));
+    MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, m_opfNetwork));
   m_epcHelper->SetX2ConnectCallback (
-      MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
-  
+    MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
+
   // 7) Create LTE radio access network and build topology
   m_lteNetwork = CreateObject<LteHexGridNetwork> ();
   m_lteHelper = m_lteNetwork->CreateTopology (m_epcHelper, m_UesPerEnb);
@@ -172,10 +172,10 @@ SimulationScenario::BuildRingTopology ()
   PcapAsciiTraces ();
 
   // 11) Creating remaining stats calculator for output dump
-  m_admissionStats  = CreateObject<AdmissionStatsCalculator> ();
-  m_gatewayStats    = CreateObject<GatewayStatsCalculator> ();
-  m_internetStats   = CreateObject<WebQueueStatsCalculator> ();
-  m_epcS1uStats     = CreateObject<EpcS1uStatsCalculator> ();
+  m_admissionStats = CreateObject<AdmissionStatsCalculator> ();
+  m_gatewayStats = CreateObject<GatewayStatsCalculator> ();
+  m_internetStats = CreateObject<WebQueueStatsCalculator> ();
+  m_epcS1uStats = CreateObject<EpcS1uStatsCalculator> ();
 }
 
 void
@@ -192,39 +192,39 @@ SimulationScenario::SetEnbs (uint16_t value)
   Config::SetDefault ("ns3::LteHexGridNetwork::Enbs", UintegerValue (m_nEnbs));
 }
 
-void 
+void
 SimulationScenario::SetCommonPrefix (std::string prefix)
 {
   // Parsing common prefix
   if (prefix != "")
     {
-      char lastChar = *prefix.rbegin (); 
+      char lastChar = *prefix.rbegin ();
       if (lastChar != '-')
         {
           prefix += "-";
         }
     }
   m_inputPrefix = prefix;
-  
+
   ostringstream ss;
   ss << prefix << RngSeedManager::GetRun () << "-";
   m_outputPrefix = ss.str ();
 
-  Config::SetDefault ("ns3::AdmissionStatsCalculator::AdmStatsFilename", 
+  Config::SetDefault ("ns3::AdmissionStatsCalculator::AdmStatsFilename",
                       StringValue (m_outputPrefix + "adm_stats.txt"));
-  Config::SetDefault ("ns3::AdmissionStatsCalculator::BrqStatsFilename", 
+  Config::SetDefault ("ns3::AdmissionStatsCalculator::BrqStatsFilename",
                       StringValue (m_outputPrefix + "brq_stats.txt"));
-  Config::SetDefault ("ns3::EpcS1uStatsCalculator::AppStatsFilename", 
+  Config::SetDefault ("ns3::EpcS1uStatsCalculator::AppStatsFilename",
                       StringValue (m_outputPrefix + "app_stats.txt"));
-  Config::SetDefault ("ns3::EpcS1uStatsCalculator::EpcStatsFilename", 
+  Config::SetDefault ("ns3::EpcS1uStatsCalculator::EpcStatsFilename",
                       StringValue (m_outputPrefix + "epc_stats.txt"));
-  Config::SetDefault ("ns3::WebQueueStatsCalculator::WebStatsFilename", 
+  Config::SetDefault ("ns3::WebQueueStatsCalculator::WebStatsFilename",
                       StringValue (m_outputPrefix + "web_stats.txt"));
-  Config::SetDefault ("ns3::GatewayStatsCalculator::PgwStatsFilename", 
+  Config::SetDefault ("ns3::GatewayStatsCalculator::PgwStatsFilename",
                       StringValue (m_outputPrefix + "pgw_stats.txt"));
-  Config::SetDefault ("ns3::SwitchRulesStatsCalculator::SwtStatsFilename", 
+  Config::SetDefault ("ns3::SwitchRulesStatsCalculator::SwtStatsFilename",
                       StringValue (m_outputPrefix + "swt_stats.txt"));
-  Config::SetDefault ("ns3::BandwidthStatsCalculator::BwdStatsFilename", 
+  Config::SetDefault ("ns3::BandwidthStatsCalculator::BwdStatsFilename",
                       StringValue (m_outputPrefix + "bwd_stats.txt"));
 }
 
@@ -251,7 +251,7 @@ bool
 SimulationScenario::ParseTopology ()
 {
   NS_LOG_INFO ("Parsing topology...");
- 
+
   std::string name = m_inputPrefix + m_topoFilename;
   std::ifstream file;
   file.open (name.c_str ());
@@ -271,8 +271,11 @@ SimulationScenario::ParseTopology ()
   uint8_t attrOk = 0;
   while (getline (file, line))
     {
-      if (line.empty () || line.at (0) == '#') continue;
-      
+      if (line.empty () || line.at (0) == '#')
+        {
+          continue;
+        }
+
       lineBuffer.clear ();
       lineBuffer.str (line);
       lineBuffer >> attr;
@@ -282,7 +285,10 @@ SimulationScenario::ParseTopology ()
           NS_LOG_DEBUG (attr << " " << value);
           SetAttribute (attr, UintegerValue (value));
           attrOk++;
-          if (attrOk == 2) break;
+          if (attrOk == 2)
+            {
+              break;
+            }
         }
     }
   NS_ASSERT_MSG (attrOk == 2, "Missing attributes in topology file.");
@@ -290,7 +296,10 @@ SimulationScenario::ParseTopology ()
   // Then we expect the distribution of UEs per eNBs and switch indexes
   while (getline (file, line))
     {
-      if (line.empty () || line.at (0) == '#') continue;
+      if (line.empty () || line.at (0) == '#')
+        {
+          continue;
+        }
 
       lineBuffer.clear ();
       lineBuffer.str (line);
@@ -301,14 +310,14 @@ SimulationScenario::ParseTopology ()
       NS_LOG_DEBUG (enb << " " << ues << " " << swtch);
       NS_ASSERT_MSG (idx == enb, "Invalid eNB idx order in topology file.");
       NS_ASSERT_MSG (swtch < m_nSwitches, "Invalid switch idx in topology file.");
-      
+
       m_UesPerEnb.push_back (ues);
       m_SwitchIdxPerEnb.push_back (swtch);
       idx++;
     }
   NS_ASSERT_MSG (idx == m_nEnbs, "Missing information in topology file.");
 
-  return true;  
+  return true;
 }
 
 void

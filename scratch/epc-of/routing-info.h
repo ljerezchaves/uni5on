@@ -73,7 +73,7 @@ public:
 
   /** \return The GTP TEID. */
   uint32_t GetTeid (void) const;
-  
+
 private:
   uint32_t          m_teid;         //!< GTP TEID
   uint16_t          m_sgwIdx;       //!< Sgw switch index
@@ -102,14 +102,14 @@ class MeterInfo : public Object
 public:
   MeterInfo ();          //!< Default constructor
   virtual ~MeterInfo (); //!< Dummy destructor, see DoDipose
- 
-  /** 
+
+  /**
    * Complete constructor.
-   * \param rInfo RoutingInfo pointer. 
+   * \param rInfo RoutingInfo pointer.
    * \attention This MeterInfo object must be aggregated to rInfo.
    */
   MeterInfo (Ptr<RoutingInfo> rInfo);
-  
+
   /**
    * Register this type.
    * \return The object TypeId.
@@ -153,14 +153,14 @@ class ReserveInfo : public Object
 public:
   ReserveInfo ();          //!< Default constructor
   virtual ~ReserveInfo (); //!< Dummy destructor, see DoDipose
- 
-  /** 
+
+  /**
    * Complete constructor.
-   * \param rInfo RoutingInfo pointer. 
+   * \param rInfo RoutingInfo pointer.
    * \attention This ReserveInfo object must be aggregated to rInfo.
    */
   ReserveInfo (Ptr<RoutingInfo> rInfo);
-  
+
   /**
    * Register this type.
    * \return The object TypeId.
@@ -193,7 +193,7 @@ private:
 // ------------------------------------------------------------------------ //
 /**
  * \ingroup epcof
- * Metadata associated to a ring routing path between 
+ * Metadata associated to a ring routing path between
  * two any switches in the OpenFlow ring network.
  */
 class RingRoutingInfo : public Object
@@ -202,7 +202,8 @@ class RingRoutingInfo : public Object
 
 public:
   /** Routing direction in the ring. */
-  enum RoutingPath {
+  enum RoutingPath
+  {
     CLOCK = 1,
     COUNTER = 2
   };
@@ -210,14 +211,14 @@ public:
   RingRoutingInfo ();          //!< Default constructor
   virtual ~RingRoutingInfo (); //!< Dummy destructor, see DoDipose
 
-  /** 
+  /**
    * Complete constructor.
-   * \param rInfo RoutingInfo pointer. 
+   * \param rInfo RoutingInfo pointer.
    * \param downPath The path for downlink (uplink will get the inverse path).
    * \attention This RingRoutingInfo object must be aggregated to rInfo.
    */
   RingRoutingInfo (Ptr<RoutingInfo> rInfo, RoutingPath downPath);
-  
+
   /**
    * Register this type.
    * \return The object TypeId.

@@ -31,45 +31,45 @@ InternetNetwork::InternetNetwork ()
 }
 
 InternetNetwork::~InternetNetwork ()
-{ 
+{
   NS_LOG_FUNCTION (this);
 }
 
-TypeId 
-InternetNetwork::GetTypeId (void) 
+TypeId
+InternetNetwork::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::InternetNetwork") 
+  static TypeId tid = TypeId ("ns3::InternetNetwork")
     .SetParent<Object> ()
-    .AddAttribute ("LinkDataRate", 
+    .AddAttribute ("LinkDataRate",
                    "The data rate to be used for the Internet PointToPoint link",
                    DataRateValue (DataRate ("10Gb/s")),
                    MakeDataRateAccessor (&InternetNetwork::m_linkDataRate),
                    MakeDataRateChecker ())
-    .AddAttribute ("LinkDelay", 
+    .AddAttribute ("LinkDelay",
                    "The delay to be used for the Internet PointToPoint link",
                    TimeValue (Seconds (0)),
                    MakeTimeAccessor (&InternetNetwork::m_linkDelay),
                    MakeTimeChecker ())
-    .AddAttribute ("LinkMtu", 
+    .AddAttribute ("LinkMtu",
                    "The MTU of the Internet PointToPoint link",
-                   UintegerValue (1492),  // PPPoE MTU 
+                   UintegerValue (1492),  // PPPoE MTU
                    MakeUintegerAccessor (&InternetNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
-    ;
-  return tid; 
+  ;
+  return tid;
 }
 
 Ptr<Node>
 InternetNetwork::CreateTopology (Ptr<Node> pgw)
 {
   NS_LOG_FUNCTION (this << pgw);
-  
+
   // Creating a single web node and connecting it to the EPC pgw over a
   // PointToPoint link.
   Ptr<Node> web = CreateObject<Node> ();
   InternetStackHelper internet;
   internet.Install (web);
-  
+
   Names::Add (InternetNetwork::GetServerName (), web);
 
   m_webNodes.Add (pgw);
@@ -78,18 +78,18 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   m_p2pHelper.SetDeviceAttribute ("DataRate", DataRateValue (m_linkDataRate));
   m_p2pHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
   m_p2pHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
-  
+
   m_webDevices = m_p2pHelper.Install (m_webNodes);
   Ptr<PointToPointNetDevice> webDev, pgwDev;
   pgwDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (0));
   webDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (1));
- 
+
   Names::Add (Names::FindName (pgw) + "+" + Names::FindName (web), pgwDev);
   Names::Add (Names::FindName (web) + "+" + Names::FindName (pgw), webDev);
 
   Names::Add ("InternetNetwork/DownQueue", webDev->GetQueue ());
   Names::Add ("InternetNetwork/UpQueue", pgwDev->GetQueue ());
-  
+
   Ipv4AddressHelper ipv4h;
   ipv4h.SetBase ("192.168.0.0", "255.255.255.0");
   ipv4h.Assign (m_webDevices);
@@ -97,9 +97,9 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   // Defining static routes to the web node
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
   Ptr<Ipv4StaticRouting> webHostStaticRouting =
-      ipv4RoutingHelper.GetStaticRouting (web->GetObject<Ipv4> ());
-  webHostStaticRouting->AddNetworkRouteTo (Ipv4Address ("7.0.0.0"), 
-      Ipv4Mask ("255.0.0.0"), Ipv4Address("192.168.0.1"), 1);
+    ipv4RoutingHelper.GetStaticRouting (web->GetObject<Ipv4> ());
+  webHostStaticRouting->AddNetworkRouteTo (
+    Ipv4Address ("7.0.0.0"), Ipv4Mask ("255.0.0.0"), Ipv4Address ("192.168.0.1"), 1);
 
   return web;
 }
@@ -118,13 +118,13 @@ InternetNetwork::DoDispose ()
   Object::DoDispose ();
 }
 
-const std::string 
+const std::string
 InternetNetwork::GetServerName ()
 {
   return "srv";
 }
 
-const std::string 
+const std::string
 InternetNetwork::GetSgwPgwName ()
 {
   return "pgw";

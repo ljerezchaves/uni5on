@@ -30,7 +30,7 @@
 
 namespace ns3 {
 
-/** 
+/**
  * \ingroup epcof
  * Traffic helper which installs client and server applications for all
  * applications into UEs and WebServer. This helper creates and aggregates a
@@ -39,15 +39,15 @@ namespace ns3 {
 class TrafficHelper
 {
 public:
-  /** 
+  /**
    * Complete constructor.
    * \param server The server node.
    * \param helper The helper pointer.
    * \param controller The Epc controller.
    */
-  TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper, 
+  TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
                  Ptr<OpenFlowEpcController> controller);
-  
+
   ~TrafficHelper (); //!< Default destructor.
 
   /**
@@ -67,47 +67,40 @@ public:
   void Install (NodeContainer ueNodes, NetDeviceContainer ueDevices);
 
 private:
-  /** 
-   * VoIP/UDP bidirectional traffic over dedicated GBR EPS bearer (QCI 1). 
-   * This QCI is typically associated with conversational voice.
-   *
-   * \internal This VoIP traffic simulates the G.729 codec (~8.5 kbps for
-   * payload). Check http://goo.gl/iChPGQ for bandwidth calculation and
-   * discussion. 
+  /**
+   * VoIP/UDP bidirectional traffic over dedicated GBR EPS bearer (QCI 1).
+   * This QCI is typically associated with conversational voice.  This VoIP
+   * traffic simulates the G.729 codec (~8.5 kbps for payload). Check
+   * http://goo.gl/iChPGQ for bandwidth calculation and discussion.
    */
   void InstallVoip ();
 
   /**
-   * UDP real-time video streaming over dedicated GBR EPS bearer (QCI 4).
-   * This QCI is typically associated with non-conversational buffered video.
-   *
-   * \internal This video traffic is based on MPEG-4 video traces from
-   * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf. 
+   * UDP real-time video streaming over dedicated GBR EPS bearer (QCI 4).  This
+   * QCI is typically associated with non-conversational buffered video.  This
+   * video traffic is based on MPEG-4 video traces from
+   * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
    */
   void InstallRealTimeVideo ();
-  
+
   /**
    * TCP stored video streaming over dedicated Non-GBR EPS bearer (QCI 6).
    * This QCI 8 could be used for priorization of non real-time data of MPS
-   * subscribers.
-   *
-   * \internal This video traffic is based on MPEG-4 video traces from
+   * subscribers. This video traffic is based on MPEG-4 video traces from
    * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf. The video
    * is stored in server and is downloaded by the client.
    */
   void InstallStoredVideo ();
 
-  /** 
-   * HTTP/TCP traffic over dedicated Non-GBR EPS bearer (QCI 8).
-   * This QCI 8 could be used for a dedicated 'premium bearer' for any
-   * subscriber, or could be used for the default bearer of a for 'premium
-   * subscribers'.
-   *
-   * \internal This HTTP model is based on the distributions indicated in the
-   * paper 'An HTTP Web Traffic Model Based on the Top One Million Visited Web
-   * Pages' by Rastin Pries et. al. Each client will send a get request to the
-   * server and will get the page content back including inline content. These
-   * requests repeats after a reading time period, until MaxPages are loaded. 
+  /**
+   * HTTP/TCP traffic over dedicated Non-GBR EPS bearer (QCI 8).  This QCI 8
+   * could be used for a dedicated 'premium bearer' for any subscriber, or
+   * could be used for the default bearer of a for 'premium subscribers'.  This
+   * HTTP model is based on the distributions indicated in the paper 'An HTTP
+   * Web Traffic Model Based on the Top One Million Visited Web Pages' by
+   * Rastin Pries et. al. Each client will send a get request to the server and
+   * will get the page content back including inline content. These requests
+   * repeats after a reading time period, until MaxPages are loaded.
    */
   void InstallHttp ();
 
@@ -117,7 +110,7 @@ private:
    * \return Complete path.
    */
   static const std::string GetVideoFilename (uint8_t idx);
-  
+
   ObjectFactory       m_managerFactory; //!< Traffic manager factory
 
   Ptr<LteHelper>      m_lteHelper;      //!< LteHelper pointer
@@ -136,7 +129,7 @@ private:
   RealTimeVideoHelper m_rtVideoHelper;  //!< Real-time video application helper
   VoipHelper          m_voipHelper;     //!< Voip application helper
 
-  Ptr<UniformRandomVariable> m_stVideoRng;    //!< Random stored video 
+  Ptr<UniformRandomVariable> m_stVideoRng;    //!< Random stored video
   static const std::string   m_videoDir;      //!< Video trace directory
   static const std::string   m_videoTrace []; //!< Stored video trace filenames
   static const uint64_t      m_avgBitRate []; //!< Stored video trace avg bitrate

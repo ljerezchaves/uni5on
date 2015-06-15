@@ -36,10 +36,10 @@ LteHexGridNetwork::~LteHexGridNetwork ()
   NS_LOG_FUNCTION (this);
 }
 
-TypeId 
-LteHexGridNetwork::GetTypeId (void) 
+TypeId
+LteHexGridNetwork::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::LteHexGridNetwork") 
+  static TypeId tid = TypeId ("ns3::LteHexGridNetwork")
     .SetParent<Object> ()
     .AddAttribute ("Enbs", "The number of eNBs.",
                    UintegerValue (1),
@@ -74,8 +74,8 @@ LteHexGridNetwork::GetTypeId (void)
                    UintegerValue (2),
                    MakeUintegerAccessor (&LteHexGridNetwork::m_gridWidth),
                    MakeUintegerChecker<uint32_t> ())
-    ;
-  return tid; 
+  ;
+  return tid;
 }
 
 void
@@ -106,8 +106,8 @@ LteHexGridNetwork::GetUeDevices ()
 }
 
 Ptr<LteHelper>
-LteHexGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper, 
-    std::vector<uint32_t> nUes)
+LteHexGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper,
+                                   std::vector<uint32_t> nUes)
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Topology with " << m_nEnbs << " eNBs");
@@ -123,7 +123,7 @@ LteHexGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper,
     {
       std::ostringstream enbName;
       enbName << "enb" << i;
-      Names::Add (enbName.str(), m_enbNodes.Get (i));
+      Names::Add (enbName.str (), m_enbNodes.Get (i));
       NS_LOG_INFO (" eNB #" << i << " with " << m_nUesPerEnb.at (i) << " UEs");
       NodeContainer ueNc;
       ueNc.Create (m_nUesPerEnb.at (i));
@@ -145,14 +145,14 @@ LteHexGridNetwork::GetLteHelper ()
 void
 LteHexGridNetwork::EnableTraces (std::string prefix)
 {
-  Config::SetDefault ("ns3::RadioBearerStatsCalculator::DlRlcOutputFilename", 
-    StringValue (prefix + "lte_dl_rlc.txt"));
-  Config::SetDefault ("ns3::RadioBearerStatsCalculator::UlRlcOutputFilename", 
-    StringValue (prefix + "lte_ul_rlc.txt"));
-  Config::SetDefault ("ns3::RadioBearerStatsCalculator::DlPdcpOutputFilename", 
-    StringValue (prefix + "lte_dl_pdcp.txt"));
-  Config::SetDefault ("ns3::RadioBearerStatsCalculator::UlPdcpOutputFilename", 
-    StringValue (prefix + "lte_ul_pdcp.txt"));
+  Config::SetDefault ("ns3::RadioBearerStatsCalculator::DlRlcOutputFilename",
+                      StringValue (prefix + "lte_dl_rlc.txt"));
+  Config::SetDefault ("ns3::RadioBearerStatsCalculator::UlRlcOutputFilename",
+                      StringValue (prefix + "lte_ul_rlc.txt"));
+  Config::SetDefault ("ns3::RadioBearerStatsCalculator::DlPdcpOutputFilename",
+                      StringValue (prefix + "lte_dl_pdcp.txt"));
+  Config::SetDefault ("ns3::RadioBearerStatsCalculator::UlPdcpOutputFilename",
+                      StringValue (prefix + "lte_ul_pdcp.txt"));
 
   m_lteHelper->EnablePdcpTraces ();
   m_lteHelper->EnableRlcTraces ();
@@ -172,27 +172,27 @@ LteHexGridNetwork::ConfigureLteParameters ()
   // http://niviuk.free.fr/lte_band.php
   Config::SetDefault ("ns3::LteEnbNetDevice::DlEarfcn", UintegerValue (0));
   Config::SetDefault ("ns3::LteEnbNetDevice::UlEarfcn", UintegerValue (18000));
- 
+
   // Transmission power (eNB as macro cell)
   Config::SetDefault ("ns3::LteEnbPhy::TxPower", DoubleValue (46));
   Config::SetDefault ("ns3::LteUePhy::TxPower", DoubleValue (18));
-  
+
   //Disable Uplink Power Control
-  Config::SetDefault ("ns3::LteUePhy::EnableUplinkPowerControl", 
+  Config::SetDefault ("ns3::LteUePhy::EnableUplinkPowerControl",
                       BooleanValue (false));
 
   // Propagation model
-  Config::SetDefault ("ns3::LteHelper::PathlossModel", 
+  Config::SetDefault ("ns3::LteHelper::PathlossModel",
                       StringValue ("ns3::OhBuildingsPropagationLossModel"));
-  
+
   // Downlink scheduler
-  Config::SetDefault ("ns3::LteHelper::Scheduler", 
+  Config::SetDefault ("ns3::LteHelper::Scheduler",
                       StringValue ("ns3::CqaFfMacScheduler"));
-  
+
   // Disabling error models
-  Config::SetDefault ("ns3::LteSpectrumPhy::CtrlErrorModelEnabled", 
+  Config::SetDefault ("ns3::LteSpectrumPhy::CtrlErrorModelEnabled",
                       BooleanValue (false));
-  Config::SetDefault ("ns3::LteSpectrumPhy::DataErrorModelEnabled", 
+  Config::SetDefault ("ns3::LteSpectrumPhy::DataErrorModelEnabled",
                       BooleanValue (false));
 }
 
@@ -206,13 +206,13 @@ LteHexGridNetwork::SetLteNodePositions ()
   double yd = xydfactor * m_interSite;
   Ptr<ListPositionAllocator> listPosAllocator = CreateObject<ListPositionAllocator> ();
   std::vector<Vector> enbPosition;
-  
+
   for (uint32_t i = 0; i < m_nEnbs; i++)
     {
       uint32_t biRowIndex = (i / (m_gridWidth + m_gridWidth + 1));
       uint32_t biRowRemainder = i % (m_gridWidth + m_gridWidth + 1);
       uint32_t rowIndex = biRowIndex * 2;
-      uint32_t colIndex = biRowRemainder; 
+      uint32_t colIndex = biRowRemainder;
       if (biRowRemainder >= m_gridWidth)
         {
           ++rowIndex;
@@ -220,14 +220,14 @@ LteHexGridNetwork::SetLteNodePositions ()
         }
       double y = m_yMin + yd * rowIndex;
       double x;
-      if ((rowIndex % 2) == 0) 
-	{
-	  x = m_xMin + m_interSite * colIndex;
-	}
+      if ((rowIndex % 2) == 0)
+        {
+          x = m_xMin + m_interSite * colIndex;
+        }
       else
-	{
-	  x = m_xMin - (0.5 * m_interSite) + m_interSite * colIndex;
-	}
+        {
+          x = m_xMin - (0.5 * m_interSite) + m_interSite * colIndex;
+        }
       Vector pos (x, y, m_enbHeight);
       listPosAllocator->Add (pos);
       enbPosition.push_back (pos);
@@ -239,7 +239,7 @@ LteHexGridNetwork::SetLteNodePositions ()
   mobilityHelper.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobilityHelper.SetPositionAllocator (listPosAllocator);
   mobilityHelper.Install (m_enbNodes);
- 
+
   // Set UE initial positions (same as its eNBs)
   for (uint32_t i = 0; i < m_nEnbs; i++)
     {
@@ -264,7 +264,7 @@ LteHexGridNetwork::SetLteNodePositions ()
               "Max", DoubleValue (enbPosition.at (i).y + m_interSite * 0.5));
           posZ = CreateObjectWithAttributes<ConstantRandomVariable> (
               "Constant", DoubleValue (m_ueHeight));
-          
+
           boxPosAllocator = CreateObject<RandomBoxPositionAllocator> ();
           boxPosAllocator->SetAttribute ("X", PointerValue (posX));
           boxPosAllocator->SetAttribute ("Y", PointerValue (posY));
@@ -272,8 +272,8 @@ LteHexGridNetwork::SetLteNodePositions ()
           mobilityHelper.SetPositionAllocator (boxPosAllocator);
           mobilityHelper.Install (m_ueNodesPerEnb.at (i));
         }
-    } 
-  
+    }
+
   // Buildings module
   BuildingsHelper::Install (m_enbNodes);
   BuildingsHelper::Install (m_ueNodes);
@@ -281,14 +281,14 @@ LteHexGridNetwork::SetLteNodePositions ()
 
   for (size_t i = 0; i < m_enbNodes.GetN (); i++)
     {
-      NS_LOG_DEBUG ("Enb " << i << " at " 
-        << m_enbNodes.Get (i)->GetObject<MobilityModel> ()->GetPosition ());
+      NS_LOG_DEBUG ("Enb " << i << " at " <<
+        m_enbNodes.Get (i)->GetObject<MobilityModel> ()->GetPosition ());
     }
 
   for (size_t i = 0; i < m_ueNodes.GetN (); i++)
     {
-      NS_LOG_DEBUG ("UE " << i << " at " 
-        << m_ueNodes.Get (i)->GetObject<MobilityModel> ()->GetPosition ());
+      NS_LOG_DEBUG ("UE " << i << " at " <<
+       m_ueNodes.Get (i)->GetObject<MobilityModel> ()->GetPosition ());
     }
 }
 
@@ -299,8 +299,8 @@ LteHexGridNetwork::InstallProtocolStack ()
   NS_ASSERT (m_lteHelper != 0);
 
   // Installing LTE protocol stack on the eNBs | eNB <-> EPC connection
-  m_enbDevices = m_lteHelper->InstallEnbDevice (m_enbNodes);   
-  
+  m_enbDevices = m_lteHelper->InstallEnbDevice (m_enbNodes);
+
   // For each eNB, installing LTE protocol stack on its UEs
   InternetStackHelper internet;
   for (uint32_t i = 0; i < m_nEnbs; i++)
@@ -318,13 +318,13 @@ LteHexGridNetwork::InstallProtocolStack ()
           Ptr<Node> n = ueNc.Get (j);
           std::ostringstream ueName;
           ueName << "ue" << j << "@enb" << i;
-          Names::Add (ueName.str(), n);
+          Names::Add (ueName.str (), n);
           Ptr<Ipv4StaticRouting> ueStaticRouting =
-              ipv4RoutingHelper.GetStaticRouting (n->GetObject<Ipv4> ()); 
+            ipv4RoutingHelper.GetStaticRouting (n->GetObject<Ipv4> ());
           ueStaticRouting->SetDefaultRoute (
-              m_epcHelper->GetUeDefaultGatewayAddress (), 1); 
+            m_epcHelper->GetUeDefaultGatewayAddress (), 1);
         }
- 
+
       // Attaching UEs to the respective eNB (this activates the default EPS bearer)
       m_lteHelper->Attach (ueDev, m_enbDevices.Get (i));
     }

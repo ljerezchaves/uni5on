@@ -23,14 +23,14 @@
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
-   
+
 namespace ns3 {
 
 class Tag;
 
-/** 
+/**
  * \ingroup epcof
- * Tag used to save packet sequence number. 
+ * Tag used to save packet sequence number.
  */
 class SeqNumTag : public Tag
 {
@@ -47,7 +47,7 @@ public:
   virtual void Deserialize (TagBuffer i);
   virtual uint32_t GetSerializedSize () const;
   virtual void Print (std::ostream &os) const;
- 
+
   /** \return the sequence number field */
   uint32_t GetSeqNum () const;
 

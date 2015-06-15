@@ -30,7 +30,7 @@ namespace ns3 {
 class OpenFlowEpcController;
 class RingController;
 
-/** 
+/**
  * \ingroup epcof
  * This class generates and simple n-switch OpenFlow ring topology
  * controlled by RingController, which will be used by S1-U and
@@ -54,9 +54,9 @@ public:
   // Inherited from OpenFlowEpcNetwork
   Ptr<NetDevice> AttachToS1u (Ptr<Node> node, uint16_t cellId);
   Ptr<NetDevice> AttachToX2  (Ptr<Node> node);
-  void CreateTopology (Ptr<OpenFlowEpcController> controller, 
-      std::vector<uint16_t> eNbSwitches);
-  
+  void CreateTopology (Ptr<OpenFlowEpcController> controller,
+                       std::vector<uint16_t> eNbSwitches);
+
 private:
   DataRate              m_switchLinkDataRate; //!< Switch link data rate
   Time                  m_switchLinkDelay;    //!< Switch link delay
@@ -67,7 +67,7 @@ private:
 
   /** Helper to assign addresses to S1-U NetDevices */
   Ipv4AddressHelper m_s1uIpv4AddressHelper;
-  
+
   /** Helper to assign addresses to X2 NetDevices */
   Ipv4AddressHelper m_x2Ipv4AddressHelper;
 

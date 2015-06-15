@@ -27,7 +27,7 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcController");
 NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcController);
 
-const int OpenFlowEpcController::m_defaultTmo = 0; 
+const int OpenFlowEpcController::m_defaultTmo = 0;
 const int OpenFlowEpcController::m_dedicatedTmo = 15;
 
 const int OpenFlowEpcController::m_t0ArpPrio = 1;     // Check ConnectionStarted
@@ -42,10 +42,10 @@ OpenFlowEpcController::OpenFlowEpcController ()
   NS_LOG_FUNCTION (this);
 
   // Connecting this controller to OpenFlowNetwork trace sources
-  Ptr<OpenFlowEpcNetwork> network = 
+  Ptr<OpenFlowEpcNetwork> network =
     Names::Find<OpenFlowEpcNetwork> ("/Names/OpenFlowNetwork");
   NS_ASSERT_MSG (network, "Network object not found.");
-  NS_ASSERT_MSG (!network->IsTopologyCreated (), 
+  NS_ASSERT_MSG (!network->IsTopologyCreated (),
                  "Network topology already created.");
 
   network->TraceConnectWithoutContext ("NewEpcAttach",
@@ -56,7 +56,7 @@ OpenFlowEpcController::OpenFlowEpcController ()
     MakeCallback (&OpenFlowEpcController::NotifyNewSwitchConnection, this));
 
   // Connecting this controller to SgwPgwApplication trace sources
-  Ptr<EpcSgwPgwApplication> gateway = 
+  Ptr<EpcSgwPgwApplication> gateway =
     Names::Find<EpcSgwPgwApplication> ("/Names/SgwPgwApplication");
   NS_ASSERT_MSG (gateway, "SgwPgw application not found.");
 
@@ -69,7 +69,7 @@ OpenFlowEpcController::~OpenFlowEpcController ()
   NS_LOG_FUNCTION (this);
 }
 
-TypeId 
+TypeId
 OpenFlowEpcController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::OpenFlowEpcController")
@@ -102,7 +102,7 @@ OpenFlowEpcController::RequestDedicatedBearer (EpsBearer bearer,
       // need for resource reservation nor reinstall the switch rules, as
       // default rules were supposed to remain installed during entire
       // simulation and must be Non-GBR.
-      NS_ASSERT_MSG (rInfo->m_isActive && rInfo->m_isInstalled, 
+      NS_ASSERT_MSG (rInfo->m_isActive && rInfo->m_isInstalled,
                      "Default bearer should be intalled and activated.");
       return true;
     }
@@ -129,7 +129,7 @@ OpenFlowEpcController::RequestDedicatedBearer (EpsBearer bearer,
     {
       return false;
     }
-  
+
   // Everything is ok! Let's activate and install this bearer.
   rInfo->m_isActive = true;
   return TopologyInstallRouting (rInfo);
@@ -150,7 +150,7 @@ OpenFlowEpcController::ReleaseDedicatedBearer (EpsBearer bearer,
       // If the application traffic is sent over default bearer, there is no
       // need for resource release, as default rules were supposed to remain
       // installed during entire simulation and must be Non-GBR.
-      NS_ASSERT_MSG (rInfo->m_isActive && rInfo->m_isInstalled, 
+      NS_ASSERT_MSG (rInfo->m_isActive && rInfo->m_isInstalled,
                      "Default bearer should be intalled and activated.");
       return true;
     }
@@ -160,7 +160,7 @@ OpenFlowEpcController::ReleaseDedicatedBearer (EpsBearer bearer,
     {
       return true;
     }
-  
+
   rInfo->m_isActive = false;
   rInfo->m_isInstalled = false;
   bool success = TopologyBearerRelease (rInfo);
@@ -172,7 +172,7 @@ void
 OpenFlowEpcController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
- 
+
   m_arpTable.clear ();
   m_ipSwitchTable.clear ();
   m_routes.clear ();
@@ -199,16 +199,16 @@ OpenFlowEpcController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
   NS_LOG_FUNCTION (this << cInfo);
 }
 
-void 
+void
 OpenFlowEpcController::NotifyTopologyBuilt (NetDeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
-  
+
   m_ofDevices = devices;
   TopologyCreateSpanningTree ();
 }
 
-void 
+void
 OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
     Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList)
 {
@@ -217,7 +217,7 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
   // Create and save routing information for default bearer
   ContextBearer_t defaultBearer = bearerList.front ();
   NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
-  
+
   uint32_t teid = defaultBearer.sgwFteid.teid;
   Ptr<RoutingInfo> rInfo = GetRoutingInfo (teid);
   NS_ASSERT_MSG (rInfo == 0, "Existing routing for default bearer " << teid);
@@ -241,7 +241,7 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
   bool accepted = TopologyBearerRequest (rInfo);
   m_bearerRequestTrace (true, rInfo);
   NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
-  
+
   // Install rules for default bearer
   if (!TopologyInstallRouting (rInfo))
     {
@@ -255,7 +255,7 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
     {
       ContextBearer_t dedicatedBearer = *it;
       teid = dedicatedBearer.sgwFteid.teid;
-      
+
       rInfo = CreateObject<RoutingInfo> ();
       rInfo->m_teid = teid;
       rInfo->m_sgwIdx = GetSwitchIndex (sgwAddr);
@@ -271,7 +271,7 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
       SaveRoutingInfo (rInfo);
 
       GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
-      
+
       // Create (if necessary) the meter metadata
       if (gbrQoS.mbrDl || gbrQoS.mbrUl)
         {
@@ -289,9 +289,9 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
             }
           rInfo->AggregateObject (meterInfo);
         }
-  
+
       // Create (if necessary) the reserve metadata
-      if (gbrQoS.gbrDl || gbrQoS.gbrUl)  
+      if (gbrQoS.gbrDl || gbrQoS.gbrUl)
         {
           Ptr<ReserveInfo> reserveInfo = CreateObject<ReserveInfo> (rInfo);
           reserveInfo->m_teid = teid;
@@ -315,24 +315,24 @@ void
 OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
 {
   NS_LOG_FUNCTION (this << swtch.ipv4);
-  
+
   // Set the switch to buffer packets and send only the first 128 bytes
   DpctlCommand (swtch, "set-config miss=128");
 
-  // After a successfull handshake, let's install some default entries: 
+  // After a successfull handshake, let's install some default entries:
   // Table miss entry and ARP handling entry.
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=0 write:output=ctrl");
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=1 eth_type=0x0806 "
-                       "write:output=ctrl");
+                "write:output=ctrl");
 
   // Handling GTP tunnels at table #1
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=2 eth_type=0x800,"
-                       "ip_proto=17,udp_src=2152,udp_dst=2152 goto:1");
+                "ip_proto=17,udp_src=2152,udp_dst=2152 goto:1");
   DpctlCommand (swtch, "flow-mod cmd=add,table=1,prio=0 write:output=ctrl");
 }
 
 ofl_err
-OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg, 
+OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg,
                                        SwitchInfo swtch, uint32_t xid)
 {
   NS_LOG_FUNCTION (this << swtch.ipv4 << xid);
@@ -359,7 +359,7 @@ OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg,
     }
   else if (reason == OFPR_ACTION)
     {
-      // Get Ethernet frame type 
+      // Get Ethernet frame type
       uint16_t ethType;
       tlv = oxm_match_lookup (OXM_OF_ETH_TYPE, (ofl_match*)msg->match);
       memcpy (&ethType, tlv->value, OXM_LENGTH (OXM_OF_ETH_TYPE));
@@ -372,14 +372,14 @@ OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg,
     }
 
   NS_LOG_WARN ("Ignoring packet sent to controller.");
-  
+
   // All handlers must free the message when everything is ok
   ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
   return 0;
 }
 
 ofl_err
-OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg, 
+OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
                                           SwitchInfo swtch, uint32_t xid)
 {
   NS_LOG_FUNCTION (this << swtch.ipv4 << xid);
@@ -387,14 +387,14 @@ OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   uint8_t table = msg->stats->table_id;
   uint32_t teid = msg->stats->cookie;
   uint16_t prio = msg->stats->priority;
-  
+
   NS_LOG_FUNCTION (swtch.ipv4 << teid);
-      
+
   char *m = ofl_msg_to_string ((ofl_msg_header*)msg, 0);
   // NS_LOG_DEBUG ("Flow removed: " << m);
   free (m);
 
-  // Since handlers must free the message when everything is ok, 
+  // Since handlers must free the message when everything is ok,
   // let's remove it now, as we already got the necessary information.
   ofl_msg_free_flow_removed (msg, true, 0);
 
@@ -420,7 +420,7 @@ OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
       NS_LOG_DEBUG ("Flow " << teid << " removed for stopped application.");
       return 0;
     }
-  
+
   // 2) The application is running and the bearer is active, but the
   // application has already been stopped since last rule installation. In this
   // case, the bearer priority should have been increased to avoid conflicts.
@@ -433,7 +433,7 @@ OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   // 3) The application is running and the bearer is active. This is the
   // critical situation. For some reason, the traffic absence lead to flow
   // expiration, and we need to reinstall the rules with higher priority to
-  // avoid problems. 
+  // avoid problems.
   NS_ASSERT_MSG (rInfo->m_priority == prio, "Invalid flow priority.");
   if (rInfo->m_isActive)
     {
@@ -447,18 +447,18 @@ OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   NS_ABORT_MSG ("Should not get here :/");
 }
 
-Ptr<OFSwitch13NetDevice> 
+Ptr<OFSwitch13NetDevice>
 OpenFlowEpcController::GetSwitchDevice (uint16_t index)
 {
   NS_ASSERT (index < m_ofDevices.GetN ());
   return DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (index));
 }
 
-void 
+void
 OpenFlowEpcController::SaveRoutingInfo (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
-  
+
   std::pair <uint32_t, Ptr<RoutingInfo> > entry (rInfo->m_teid, rInfo);
   std::pair <TeidRoutingMap_t::iterator, bool> ret;
   ret = m_routes.insert (entry);
@@ -495,7 +495,7 @@ OpenFlowEpcController::SaveSwitchIndex (Ipv4Address ipAddr, uint16_t index)
   NS_FATAL_ERROR ("This IP already existis in switch index table.");
 }
 
-uint16_t 
+uint16_t
 OpenFlowEpcController::GetSwitchIndex (Ipv4Address addr)
 {
   IpSwitchMap_t::iterator ret;
@@ -509,7 +509,7 @@ OpenFlowEpcController::GetSwitchIndex (Ipv4Address addr)
 
 void
 OpenFlowEpcController::SaveArpEntry (Ipv4Address ipAddr, Mac48Address macAddr)
-{ 
+{
   std::pair<Ipv4Address, Mac48Address> entry (ipAddr, macAddr);
   std::pair <IpMacMap_t::iterator, bool> ret;
   ret = m_arpTable.insert (entry);
@@ -521,7 +521,7 @@ OpenFlowEpcController::SaveArpEntry (Ipv4Address ipAddr, Mac48Address macAddr)
   NS_FATAL_ERROR ("This IP already exists in ARP table.");
 }
 
-Mac48Address 
+Mac48Address
 OpenFlowEpcController::GetArpEntry (Ipv4Address ip)
 {
   IpMacMap_t::iterator ret;
@@ -534,18 +534,18 @@ OpenFlowEpcController::GetArpEntry (Ipv4Address ip)
   NS_FATAL_ERROR ("No ARP information for this IP.");
 }
 
-void 
+void
 OpenFlowEpcController::ConfigureLocalPortDelivery (
-    Ptr<OFSwitch13NetDevice> swtchDev, Ptr<NetDevice> nodeDev, 
-    Ipv4Address nodeIp, uint32_t swtchPort)
+  Ptr<OFSwitch13NetDevice> swtchDev, Ptr<NetDevice> nodeDev,
+  Ipv4Address nodeIp, uint32_t swtchPort)
 {
   NS_LOG_FUNCTION (this << swtchDev << nodeDev << nodeIp << swtchPort);
 
   Mac48Address devMacAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ());
   std::ostringstream cmd;
-  cmd << "flow-mod cmd=add,table=1,prio=" << m_t1LocalDeliverPrio <<
-         " eth_type=0x800,eth_dst=" << devMacAddr <<
-         ",ip_dst=" << nodeIp << " write:output=" << swtchPort;
+  cmd << "flow-mod cmd=add,table=1,prio=" << m_t1LocalDeliverPrio 
+      << " eth_type=0x800,eth_dst=" << devMacAddr 
+      << ",ip_dst=" << nodeIp << " write:output=" << swtchPort;
   DpctlCommand (swtchDev, cmd.str ());
 }
 
@@ -569,7 +569,7 @@ OpenFlowEpcController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
     {
       NS_LOG_WARN ("Ignoring TEID packet sent to controller.");
     }
-  
+
   // All handlers must free the message when everything is ok
   ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
   return 0;
@@ -587,7 +587,7 @@ OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg,
   uint16_t arpOp;
   tlv = oxm_match_lookup (OXM_OF_ARP_OP, (ofl_match*)msg->match);
   memcpy (&arpOp, tlv->value, OXM_LENGTH (OXM_OF_ARP_OP));
- 
+
   // Get input port
   uint32_t inPort;
   tlv = oxm_match_lookup (OXM_OF_IN_PORT, (ofl_match*)msg->match);
@@ -599,14 +599,14 @@ OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg,
       // Get target IP address
       Ipv4Address dstIp;
       dstIp = ExtractIpv4Address (OXM_OF_ARP_TPA, (ofl_match*)msg->match);
-      
+
       // Get target MAC address from ARP table
       Mac48Address dstMac = GetArpEntry (dstIp);
-      NS_LOG_DEBUG ("Got ARP request for IP " << dstIp << 
+      NS_LOG_DEBUG ("Got ARP request for IP " << dstIp <<
                     ", resolved to " << dstMac);
 
       // Get source IP address
-      Ipv4Address srcIp; 
+      Ipv4Address srcIp;
       srcIp = ExtractIpv4Address (OXM_OF_ARP_SPA, (ofl_match*)msg->match);
 
       // Get Source MAC address
@@ -625,7 +625,7 @@ OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg,
       reply.buffer_id = OFP_NO_BUFFER;
       reply.in_port = inPort;
       reply.data_length = pkt->GetSize ();
-      reply.data = &pktData[0]; 
+      reply.data = &pktData[0];
 
       // Send the ARP replay back to the input port
       ofl_action_output *action;
@@ -633,7 +633,7 @@ OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg,
       action->header.type = OFPAT_OUTPUT;
       action->port = OFPP_IN_PORT;
       action->max_len = 0;
-      
+
       reply.actions_num = 1;
       reply.actions = (ofl_action_header**)&action;
 
@@ -641,10 +641,10 @@ OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg,
       free (action);
       if (error)
         {
-          NS_LOG_ERROR ("Error sending packet out with arp request"); 
+          NS_LOG_ERROR ("Error sending packet out with arp request");
         }
     }
-  else 
+  else
     {
       NS_LOG_WARN ("Not supposed to get ARP reply. Ignoring...");
     }
@@ -654,40 +654,40 @@ OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg,
   return 0;
 }
 
-Ipv4Address 
+Ipv4Address
 OpenFlowEpcController::ExtractIpv4Address (uint32_t oxm_of, ofl_match* match)
 {
   switch (oxm_of)
     {
-      case OXM_OF_ARP_SPA:
-      case OXM_OF_ARP_TPA:
-      case OXM_OF_IPV4_DST:
-      case OXM_OF_IPV4_SRC:
-        {
-          uint32_t ip;
-          int size = OXM_LENGTH (oxm_of);
-          ofl_match_tlv *tlv = oxm_match_lookup (oxm_of, match);
-          memcpy (&ip, tlv->value, size);
-          return Ipv4Address (ntohl (ip));
-        }
-      default:
-        NS_FATAL_ERROR ("Invalid IP field.");
+    case OXM_OF_ARP_SPA:
+    case OXM_OF_ARP_TPA:
+    case OXM_OF_IPV4_DST:
+    case OXM_OF_IPV4_SRC:
+      {
+        uint32_t ip;
+        int size = OXM_LENGTH (oxm_of);
+        ofl_match_tlv *tlv = oxm_match_lookup (oxm_of, match);
+        memcpy (&ip, tlv->value, size);
+        return Ipv4Address (ntohl (ip));
+      }
+    default:
+      NS_FATAL_ERROR ("Invalid IP field.");
     }
 }
 
-Ptr<Packet> 
-OpenFlowEpcController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp, 
-    Mac48Address dstMac, Ipv4Address dstIp)
+Ptr<Packet>
+OpenFlowEpcController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
+                                       Mac48Address dstMac, Ipv4Address dstIp)
 {
   NS_LOG_FUNCTION (this << srcMac << srcIp << dstMac << dstIp);
 
   Ptr<Packet> packet = Create<Packet> ();
-  
+
   // ARP header
   ArpHeader arp;
   arp.SetReply (srcMac, srcIp, dstMac, dstIp);
   packet->AddHeader (arp);
-  
+
   // Ethernet header
   EthernetHeader eth (false);
   eth.SetSource (srcMac);
@@ -710,7 +710,7 @@ OpenFlowEpcController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
     }
   trailer.CalcFcs (packet);
   packet->AddTrailer (trailer);
-  
+
   return packet;
 }
 

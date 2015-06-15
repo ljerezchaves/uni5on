@@ -27,7 +27,7 @@
 #include <ns3/ofswitch13-module.h>
 
 namespace ns3 {
-  
+
 /** A pair of switches index */
 typedef std::pair<uint16_t, uint16_t> SwitchPair_t;
 
@@ -36,7 +36,7 @@ typedef std::pair<SwitchPair_t, double> BandwidthStats_t;
 
 /**
  * \ingroup epcof
- * Metadata associated to a connection between 
+ * Metadata associated to a connection between
  * two any switches in the OpenFlow network.
  */
 class ConnectionInfo : public Object
@@ -80,14 +80,14 @@ public:
    * \return The usage ratio.
    */
   double GetUsageRatio (void) const;
-  
-  /** 
+
+  /**
    * TracedCallback signature for bandwidth usage ratio.
    * \param swIdx1 The first switch index.
    * \param swIdx2 The second switch index.
    * \param ratio The bandwidth usage ratio.
    */
-  typedef void (* UsageTracedCallback)
+  typedef void (*UsageTracedCallback)
     (uint16_t swIdx1, uint16_t swIdx2, double ratio);
 
 protected:

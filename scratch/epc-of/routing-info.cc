@@ -49,7 +49,7 @@ RoutingInfo::~RoutingInfo ()
   NS_LOG_FUNCTION (this);
 }
 
-TypeId 
+TypeId
 RoutingInfo::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RoutingInfo")
@@ -114,7 +114,7 @@ MeterInfo::~MeterInfo ()
   NS_LOG_FUNCTION (this);
 }
 
-TypeId 
+TypeId
 MeterInfo::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::MeterInfo")
@@ -141,8 +141,8 @@ std::string
 MeterInfo::GetDownAddCmd (void) const
 {
   std::ostringstream meter;
-  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid <<
-           " drop:rate=" << m_downDataRate.GetBitRate () / 1024;
+  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid
+        << " drop:rate=" << m_downDataRate.GetBitRate () / 1024;
   return meter.str ();
 }
 
@@ -150,8 +150,8 @@ std::string
 MeterInfo::GetUpAddCmd (void) const
 {
   std::ostringstream meter;
-  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid <<
-           " drop:rate=" << m_upDataRate.GetBitRate () / 1024;
+  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid 
+        << " drop:rate=" << m_upDataRate.GetBitRate () / 1024;
   return meter.str ();
 }
 
@@ -188,7 +188,7 @@ ReserveInfo::~ReserveInfo ()
   NS_LOG_FUNCTION (this);
 }
 
-TypeId 
+TypeId
 ReserveInfo::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::ReserveInfo")
@@ -246,7 +246,7 @@ RingRoutingInfo::~RingRoutingInfo ()
   NS_LOG_FUNCTION (this);
 }
 
-TypeId 
+TypeId
 RingRoutingInfo::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RingRoutingInfo")
@@ -259,9 +259,9 @@ RingRoutingInfo::GetTypeId (void)
 RingRoutingInfo::RoutingPath
 RingRoutingInfo::InvertPath (RoutingPath path)
 {
-  return path == RingRoutingInfo::CLOCK ? 
-    RingRoutingInfo::COUNTER :
-    RingRoutingInfo::CLOCK;
+  return path == RingRoutingInfo::CLOCK ?
+         RingRoutingInfo::COUNTER :
+         RingRoutingInfo::CLOCK;
 }
 
 void
@@ -289,7 +289,7 @@ RingRoutingInfo::IsUpInv (void) const
   return m_isUpInv;
 }
 
-void 
+void
 RingRoutingInfo::InvertDownPath ()
 {
   NS_LOG_FUNCTION (this);
@@ -298,7 +298,7 @@ RingRoutingInfo::InvertDownPath ()
   m_isDownInv = !m_isDownInv;
 }
 
-void 
+void
 RingRoutingInfo::InvertUpPath ()
 {
   NS_LOG_FUNCTION (this);
@@ -307,12 +307,12 @@ RingRoutingInfo::InvertUpPath ()
   m_isUpInv = !m_isUpInv;
 }
 
-void 
+void
 RingRoutingInfo::ResetPaths ()
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_isDownInv) 
+  if (m_isDownInv)
     {
       InvertDownPath ();
     }

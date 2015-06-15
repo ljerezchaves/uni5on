@@ -30,7 +30,7 @@
 #include "connection-info.h"
 
 namespace ns3 {
-  
+
 /**
  * \ingroup epcof
  * This class monitors bearer request statistics. It counts the number of
@@ -49,9 +49,9 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** 
+  /**
    * Dump regular statistics into file.
-   */ 
+   */
   void DumpStatistics (void);
 
 protected:
@@ -69,8 +69,8 @@ private:
    */
   void NotifyRequest (bool accepted, Ptr<const RoutingInfo> rInfo);
 
-  /** 
-   * Reset all internal counters. 
+  /**
+   * Reset all internal counters.
    */
   void ResetCounters ();
 
@@ -85,15 +85,15 @@ private:
    * \return The ratio.
    */
   double GetGbrBlockRatio (void) const;
-  
+
   uint32_t    m_nonRequests;        //!< number of non-GBR requests
-  uint32_t    m_nonAccepted;        //!< number of non-GBR accepted 
+  uint32_t    m_nonAccepted;        //!< number of non-GBR accepted
   uint32_t    m_nonBlocked;         //!< number of non-GBR blocked
   uint32_t    m_gbrRequests;        //!< Number of GBR requests
   uint32_t    m_gbrAccepted;        //!< Number of GBR accepted
   uint32_t    m_gbrBlocked;         //!< Number of GBR blocked
   Time        m_lastResetTime;      //!< Last reset time
-  
+
   std::string m_admStatsFilename;       //!< AdmStats filename
   std::string m_brqStatsFilename;       //!< BrqStats filename
 
@@ -105,7 +105,7 @@ private:
 // ------------------------------------------------------------------------ //
 /**
  * \ingroup epcof
- * This class monitors gateway bandwidth statistics. 
+ * This class monitors gateway bandwidth statistics.
  */
 class GatewayStatsCalculator : public Object
 {
@@ -119,9 +119,9 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** 
+  /**
    * Dump regular statistics into file.
-   */ 
+   */
   void DumpStatistics (void);
 
 protected:
@@ -138,9 +138,9 @@ private:
    * \param packet The packet.
    */
   void NotifyTraffic (std::string context, Ptr<const Packet> packet);
-  
-  /** 
-   * Reset all internal counters. 
+
+  /**
+   * Reset all internal counters.
    */
   void ResetCounters ();
 
@@ -153,13 +153,13 @@ private:
   /**
    * Get the gateway downlink data rate.
    * \return The data rate.
-   */ 
+   */
   DataRate GetDownDataRate (void) const;
-  
+
   /**
    * Get the gateway uplink data rate.
    * \return The data rate.
-   */ 
+   */
   DataRate GetUpDataRate (void) const;
 
   uint32_t  m_pgwDownBytes;   //!< Pgw traffic downlink bytes.
@@ -174,7 +174,7 @@ private:
 // ------------------------------------------------------------------------ //
 /**
  * \ingroup epcof
- * This class monitors EPC link bandwidth usage statistics. 
+ * This class monitors EPC link bandwidth usage statistics.
  */
 class BandwidthStatsCalculator : public Object
 {
@@ -188,9 +188,9 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** 
+  /**
    * Dump regular statistics into file.
-   */ 
+   */
   void DumpStatistics (void);
 
 protected:
@@ -203,16 +203,16 @@ protected:
 private:
   /**
    * Notify this stats calculator of a new connection between two switches in
-   * the OpenFlow network. 
+   * the OpenFlow network.
    * \param cInfo The connection information and metadata.
-   */ 
+   */
   void NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo);
 
   /**
    * Notify this stats calculator that all connection between switches have
-   * already been configure and the topology is finished. 
+   * already been configure and the topology is finished.
    * \param devices The NetDeviceContainer for OpenFlow switch devices.
-   */ 
+   */
   void NotifyTopologyBuilt (NetDeviceContainer devices);
 
   std::vector<Ptr<ConnectionInfo> > m_connections;  //!< Connections
@@ -225,7 +225,7 @@ private:
 // ------------------------------------------------------------------------ //
 /**
  * \ingroup epcof
- * This class monitors OpenFlow switch flow table statistics. 
+ * This class monitors OpenFlow switch flow table statistics.
  */
 class SwitchRulesStatsCalculator : public Object
 {
@@ -239,9 +239,9 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** 
+  /**
    * Dump regular statistics into file.
-   */ 
+   */
   void DumpStatistics (void);
 
 protected:
@@ -254,9 +254,9 @@ protected:
 private:
   /**
    * Notify this stats calculator that all connection between switches have
-   * already been configure and the topology is finished. 
+   * already been configure and the topology is finished.
    * \param devices The NetDeviceContainer for OpenFlow switch devices.
-   */ 
+   */
   void NotifyTopologyBuilt (NetDeviceContainer devices);
 
   NetDeviceContainer m_devices; //!< OpenFlow switch devices
@@ -269,7 +269,7 @@ private:
 // ------------------------------------------------------------------------ //
 /**
  * \ingroup epcof
- * This class monitors Internet queues statistics. 
+ * This class monitors Internet queues statistics.
  */
 class WebQueueStatsCalculator : public Object
 {
@@ -283,9 +283,9 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** 
+  /**
    * Dump regular statistics into file.
-   */ 
+   */
   void DumpStatistics (void);
 
 protected:
@@ -296,8 +296,8 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
 private:
-  /** 
-   * Reset all internal counters. 
+  /**
+   * Reset all internal counters.
    */
   void ResetCounters ();
 
@@ -312,7 +312,7 @@ private:
 // ------------------------------------------------------------------------ //
 /**
  * \ingroup epcof
- * This class monitors OpenFlow EPC S1-U QoS statistics. 
+ * This class monitors OpenFlow EPC S1-U QoS statistics.
  */
 class EpcS1uStatsCalculator : public Object
 {
@@ -343,7 +343,7 @@ private:
   void MeterDropPacket (std::string context, Ptr<const Packet> packet);
 
   /**
-   * Trace sink fired when packets are dropped by OpenFlow port queues. 
+   * Trace sink fired when packets are dropped by OpenFlow port queues.
    * \param context Context information.
    * \param packet The dropped packet.
    */
@@ -372,15 +372,15 @@ private:
    * \param app The EpcApplication.
    */
   void DumpStatistics (std::string context, Ptr<const EpcApplication> app);
-  
+
   /**
    * Trace sink fired when application traffic starts. Used to reset EPC
    * traffic statistics.
    * \param context Context information.
    * \param app The EpcApplication.
-   */ 
+   */
   void ResetEpcStatistics (std::string context, Ptr<const EpcApplication> app);
-     
+
   /**
    * Retrieve the LTE EPC QoS statistics information for the GTP tunnel id.
    * \param teid The GTP tunnel id.
@@ -391,7 +391,7 @@ private:
 
   /** A pair of QosStatsCalculator, for downlink and uplink EPC statistics */
   typedef std::pair<Ptr<QosStatsCalculator>, Ptr<QosStatsCalculator> > QosStatsPair_t;
-  
+
   /** A Map saving <GTP TEID / QoS stats pair > */
   typedef std::map<uint32_t, QosStatsPair_t> TeidQosMap_t;
   TeidQosMap_t m_qosStats; //!< TEID QoS statistics

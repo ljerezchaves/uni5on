@@ -36,7 +36,7 @@ TrafficManager::~TrafficManager ()
   NS_LOG_FUNCTION (this);
 }
 
-TypeId 
+TypeId
 TrafficManager::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::TrafficManager")
@@ -68,7 +68,7 @@ TrafficManager::GetTypeId (void)
                    PointerValue (),
                    MakePointerAccessor (&TrafficManager::m_controller),
                    MakePointerChecker<OpenFlowEpcController> ())
-    
+
     .AddAttribute ("IdleRng",
                    "A random variable used to set idle time.",
                    StringValue ("ns3::ExponentialRandomVariable[Mean=180.0]"),
@@ -79,7 +79,7 @@ TrafficManager::GetTypeId (void)
                    StringValue ("ns3::ExponentialRandomVariable[Mean=20.0]"),
                    MakePointerAccessor (&TrafficManager::m_startRng),
                    MakePointerChecker <RandomVariableStream> ())
-    ;
+  ;
   return tid;
 }
 
@@ -95,9 +95,9 @@ TrafficManager::AddEpcApplication (Ptr<EpcApplication> app)
 
   // Check for disabled application type
   if ( (!m_httpEnable    && app->GetInstanceTypeId () == HttpClient::GetTypeId ())
-    || (!m_voipEnable    && app->GetInstanceTypeId () == VoipClient::GetTypeId ())
-    || (!m_stVideoEnable && app->GetInstanceTypeId () == StoredVideoClient::GetTypeId ())
-    || (!m_rtVideoEnable && app->GetInstanceTypeId () == RealTimeVideoClient::GetTypeId ()))
+       || (!m_voipEnable    && app->GetInstanceTypeId () == VoipClient::GetTypeId ())
+       || (!m_stVideoEnable && app->GetInstanceTypeId () == StoredVideoClient::GetTypeId ())
+       || (!m_rtVideoEnable && app->GetInstanceTypeId () == RealTimeVideoClient::GetTypeId ()))
     {
       // This application is disable.
       return;
@@ -114,15 +114,15 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
   NS_LOG_FUNCTION (this << app);
 
   bool authorized = true;
-  
+
   uint32_t appTeid = app->GetTeid ();
   if (appTeid != m_defaultTeid)
     {
       // No resource request for traffic over default bearer.
       authorized = m_controller->RequestDedicatedBearer (app->GetEpsBearer (),
-        m_imsi, m_cellId, appTeid);
+                                                         m_imsi, m_cellId, appTeid);
     }
-  
+
   if (authorized)
     {
       app->Start ();
@@ -139,21 +139,23 @@ void
 TrafficManager::NotifyAppStop (Ptr<const EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
-  
+
   uint32_t appTeid = app->GetTeid ();
   if (appTeid != m_defaultTeid)
     {
       // No resource release for traffic over default bearer.
       m_controller->ReleaseDedicatedBearer (app->GetEpsBearer (),
-        m_imsi, m_cellId, appTeid);
+                                            m_imsi, m_cellId, appTeid);
     }
 
   // Find our non-constant app pointer to schedule next start attempt for this
   // app (waiting at least 5 seconds).
   std::vector<Ptr<EpcApplication> >::iterator it;
   for (it = m_apps.begin (); *it != app && it != m_apps.end (); it++)
-  NS_ASSERT_MSG (it != m_apps.end (), "App not found!");
-  
+    {
+      NS_ASSERT_MSG (it != m_apps.end (), "App not found!");
+    }
+
   Time idleTime = Seconds (5) + Seconds (std::abs (m_idleRng->GetValue ()));
   Simulator::Schedule (idleTime, &TrafficManager::AppStartTry, this, *it);
 }
@@ -163,13 +165,16 @@ TrafficManager::ContextCreatedCallback (uint64_t imsi, uint16_t cellId,
   Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList)
 {
   NS_LOG_FUNCTION (this);
-  
+
   // Check the imsi match for current manager
-  if (imsi != m_imsi) return;
+  if (imsi != m_imsi)
+    {
+      return;
+    }
 
   m_cellId = cellId;
   m_defaultTeid = bearerList.front ().sgwFteid.teid;
-  
+
   // For each application, set the corresponding teid
   std::vector<Ptr<EpcApplication> >::iterator appIt;
   for (appIt = m_apps.begin (); appIt != m_apps.end (); appIt++)
@@ -179,26 +184,26 @@ TrafficManager::ContextCreatedCallback (uint64_t imsi, uint16_t cellId,
       std::ostringstream desc;
       desc << imsi << "@" << cellId;
       app->m_desc = desc.str ();
-      
+
       // Using the tft to match bearers and apps
       Ptr<EpcTft> tft = app->GetTft ();
       if (tft)
         {
-           BearerList_t::iterator it;
-           for (it = bearerList.begin (); it != bearerList.end (); it++)
-             {
-               if (it->tft == tft)
-                 {
-                   app->m_teid = it->sgwFteid.teid;
-                 }
-             }
+          BearerList_t::iterator it;
+          for (it = bearerList.begin (); it != bearerList.end (); it++)
+            {
+              if (it->tft == tft)
+                {
+                  app->m_teid = it->sgwFteid.teid;
+                }
+            }
         }
       else
         {
           // This application uses the default bearer
           app->m_teid = m_defaultTeid;
         }
-      NS_LOG_DEBUG ("Application " << app->GetDescription () << 
+      NS_LOG_DEBUG ("Application " << app->GetDescription () <<
                     " set with teid " << app->GetTeid ());
     }
 }

@@ -28,10 +28,10 @@
 
 namespace ns3 {
 
-/** 
+/**
  * \ingroup epcof
- * Create an Internet network, connecting a Web server 
- * to the LTE EPC Packet Gateway. 
+ * Create an Internet network, connecting a Web server
+ * to the LTE EPC Packet Gateway.
  */
 class InternetNetwork : public Object
 {
@@ -55,8 +55,8 @@ public:
    */
   Ptr<Node> CreateTopology (Ptr<Node> pgw);
 
-  /** 
-   * Enable pcap on Internet links. 
+  /**
+   * Enable pcap on Internet links.
    * \param prefix Filename prefix to use for pcap files.
    */
   void EnablePcap (std::string prefix);

@@ -36,38 +36,38 @@ LteSquaredGridNetwork::~LteSquaredGridNetwork ()
   NS_LOG_FUNCTION (this);
 }
 
-TypeId 
-LteSquaredGridNetwork::GetTypeId (void) 
+TypeId
+LteSquaredGridNetwork::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::LteSquaredGridNetwork") 
+  static TypeId tid = TypeId ("ns3::LteSquaredGridNetwork")
     .SetParent<Object> ()
-    .AddAttribute ("Enbs", 
+    .AddAttribute ("Enbs",
                    "The number of eNBs in LTE Squared Grid Network",
                    UintegerValue (1),
                    MakeUintegerAccessor (&LteSquaredGridNetwork::m_nEnbs),
                    MakeUintegerChecker<uint32_t> ())
-    .AddAttribute ("EnbHeight", 
+    .AddAttribute ("EnbHeight",
                    "The eNB antenna height in LTE Squared Grid Network",
                    DoubleValue (30.0),
                    MakeDoubleAccessor (&LteSquaredGridNetwork::m_enbHeight),
                    MakeDoubleChecker<double> ())
-    .AddAttribute ("UeHeight", 
+    .AddAttribute ("UeHeight",
                    "The UE antenna height in LTE Squared Grid Network",
                    DoubleValue (1.5),
                    MakeDoubleAccessor (&LteSquaredGridNetwork::m_ueHeight),
                    MakeDoubleChecker<double> ())
-    .AddAttribute ("RoomLength", 
+    .AddAttribute ("RoomLength",
                    "The room length of each grid in LTE Squared Grid Network",
                    DoubleValue (500.0),
                    MakeDoubleAccessor (&LteSquaredGridNetwork::m_roomLength),
                    MakeDoubleChecker<double> ())
-    .AddAttribute ("UeFixedPos", 
+    .AddAttribute ("UeFixedPos",
                    "Fix all UEs close to its eNB, avoiding random positions.",
                    BooleanValue (true),
                    MakeBooleanAccessor (&LteSquaredGridNetwork::m_fixedUes),
                    MakeBooleanChecker ())
-    ;
-  return tid; 
+  ;
+  return tid;
 }
 
 void
@@ -98,8 +98,8 @@ LteSquaredGridNetwork::GetUeDevices ()
 }
 
 Ptr<LteHelper>
-LteSquaredGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper, 
-    std::vector<uint32_t> nUes)
+LteSquaredGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper,
+                                       std::vector<uint32_t> nUes)
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Topology with " << m_nEnbs << " eNBs");
@@ -115,7 +115,7 @@ LteSquaredGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper,
     {
       std::ostringstream enbName;
       enbName << "enb" << i;
-      Names::Add (enbName.str(), m_enbNodes.Get (i));
+      Names::Add (enbName.str (), m_enbNodes.Get (i));
       NS_LOG_INFO (" eNB #" << i << " with " << m_nUesPerEnb.at (i) << " UEs");
       NodeContainer ueNc;
       ueNc.Create (m_nUesPerEnb.at (i));
@@ -154,14 +154,14 @@ LteSquaredGridNetwork::ConfigureLteParameters ()
   // http://niviuk.free.fr/lte_band.php
   Config::SetDefault ("ns3::LteEnbNetDevice::DlEarfcn", UintegerValue (0));
   Config::SetDefault ("ns3::LteEnbNetDevice::UlEarfcn", UintegerValue (18000));
- 
+
   // Transmission power (eNB as macro cell)
   Config::SetDefault ("ns3::LteEnbPhy::TxPower", DoubleValue (46));
   Config::SetDefault ("ns3::LteUePhy::TxPower", DoubleValue (18));
 
-  Config::SetDefault ("ns3::LteHelper::PathlossModel", 
+  Config::SetDefault ("ns3::LteHelper::PathlossModel",
                       StringValue ("ns3::OhBuildingsPropagationLossModel"));
-  Config::SetDefault ("ns3::LteHelper::Scheduler", 
+  Config::SetDefault ("ns3::LteHelper::Scheduler",
                       StringValue ("ns3::CqaFfMacScheduler"));
 }
 
@@ -178,15 +178,15 @@ LteSquaredGridNetwork::SetLteNodePositions ()
   // eNBs positions
   uint32_t plantedEnb = 0;
   uint32_t nRooms = std::ceil (std::sqrt (m_nEnbs));
-  Ptr<ListPositionAllocator> enbPosAllocator = 
-      CreateObject<ListPositionAllocator> ();
+  Ptr<ListPositionAllocator> enbPosAllocator =
+    CreateObject<ListPositionAllocator> ();
   for (uint32_t row = 0; row < nRooms; row++)
     {
-      for (uint32_t column = 0; column < nRooms && plantedEnb < m_nEnbs; 
-          column++, plantedEnb++)
+      for (uint32_t column = 0; column < nRooms && plantedEnb < m_nEnbs;
+           column++, plantedEnb++)
         {
-          Vector pos (m_roomLength * (column + 0.5), 
-              m_roomLength * (row + 0.5), m_enbHeight);
+          Vector pos (m_roomLength * (column + 0.5),
+                      m_roomLength * (row + 0.5), m_enbHeight);
           enbPosAllocator->Add (pos);
           enbPosition.push_back (pos);
         }
@@ -202,11 +202,11 @@ LteSquaredGridNetwork::SetLteNodePositions ()
       if (m_fixedUes)
         {
           posX = CreateObjectWithAttributes<ConstantRandomVariable> (
-              "Constant", DoubleValue (enbPosition.at (i).x)); 
+              "Constant", DoubleValue (enbPosition.at (i).x));
           posY = CreateObjectWithAttributes<ConstantRandomVariable> (
-              "Constant", DoubleValue (enbPosition.at (i).y)); 
+              "Constant", DoubleValue (enbPosition.at (i).y));
           posZ = CreateObjectWithAttributes<ConstantRandomVariable> (
-              "Constant", DoubleValue (m_ueHeight)); 
+              "Constant", DoubleValue (m_ueHeight));
         }
       else
         {
@@ -235,8 +235,8 @@ LteSquaredGridNetwork::InstallProtocolStack ()
   NS_ASSERT (m_lteHelper != 0);
 
   // Installing LTE protocol stack on the eNBs | eNB <-> EPC connection
-  m_enbDevices = m_lteHelper->InstallEnbDevice (m_enbNodes);   
-  
+  m_enbDevices = m_lteHelper->InstallEnbDevice (m_enbNodes);
+
   // For each eNB, installing LTE protocol stack on the UEs
   InternetStackHelper internet;
   for (uint32_t i = 0; i < m_nEnbs; i++)
@@ -254,13 +254,13 @@ LteSquaredGridNetwork::InstallProtocolStack ()
           Ptr<Node> n = ueNc.Get (j);
           std::ostringstream ueName;
           ueName << "ue" << j << "@enb" << i;
-          Names::Add (ueName.str(), n);
+          Names::Add (ueName.str (), n);
           Ptr<Ipv4StaticRouting> ueStaticRouting =
-              ipv4RoutingHelper.GetStaticRouting (n->GetObject<Ipv4> ()); 
+            ipv4RoutingHelper.GetStaticRouting (n->GetObject<Ipv4> ());
           ueStaticRouting->SetDefaultRoute (
-              m_epcHelper->GetUeDefaultGatewayAddress (), 1); 
+            m_epcHelper->GetUeDefaultGatewayAddress (), 1);
         }
- 
+
       // Attaching UEs to the respective eNB (this activates the default EPS bearer)
       m_lteHelper->Attach (ueDev, m_enbDevices.Get (i));
     }

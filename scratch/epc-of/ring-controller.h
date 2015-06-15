@@ -41,13 +41,13 @@ class RingController : public OpenFlowEpcController
 {
 public:
   /** Routing strategy to find the paths in the ring. */
-  enum RoutingStrategy 
-    {
-      HOPS = 0,   //!< Select the path based on number of hops
-      BAND = 1,   //!< Select the path based on available bandwidth
-      BOTH = 2    //!< Select the path based on hops and bandwidth
-    };
-    
+  enum RoutingStrategy
+  {
+    HOPS = 0,     //!< Select the path based on number of hops
+    BAND = 1,     //!< Select the path based on available bandwidth
+    BOTH = 2      //!< Select the path based on hops and bandwidth
+  };
+
   RingController ();            //!< Default constructor
   virtual ~RingController ();   //!< Dummy destructor, see DoDipose
 
@@ -76,7 +76,7 @@ protected:
   uint16_t GetNSwitches (void) const;
 
 private:
-  /** 
+  /**
    * Get the RingRoutingInfo associated to this rInfo metadata. When no ring
    * information is available, this function creates it.
    * \param rInfo The routing information to process.
@@ -106,18 +106,18 @@ private:
    * \return The routing path.
    */
   RingRoutingInfo::RoutingPath FindShortestPath (uint16_t srcSwitchIdx,
-      uint16_t dstSwitchIdx);
+                                                 uint16_t dstSwitchIdx);
 
   /**
    * Look for available bandwidth in routingPath from source to destination
-   * switch. It uses the information available at ConnectionInfo.  
+   * switch. It uses the information available at ConnectionInfo.
    * \param srcSwitchIdx Sourche switch index.
    * \param dstSwitchIdx Destination switch index.
    * \param routingPath The routing path.
    * \return The bandwidth for this datapath.
    */
   DataRate GetAvailableBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-      RingRoutingInfo::RoutingPath routingPath);
+                                  RingRoutingInfo::RoutingPath routingPath);
 
   /**
    * Reserve the bandwidth for each link between source and destination
@@ -130,7 +130,7 @@ private:
    * \return True if success, false otherwise;
    */
   bool ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-      RingRoutingInfo::RoutingPath routingPath, DataRate reserve);
+                         RingRoutingInfo::RoutingPath routingPath, DataRate reserve);
 
   /**
    * Release the bandwidth for each link between source and destination
@@ -143,16 +143,16 @@ private:
    * \return True if success, false otherwise;
    */
   bool ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-      RingRoutingInfo::RoutingPath routingPath, DataRate release);
+                         RingRoutingInfo::RoutingPath routingPath, DataRate release);
 
   /**
    * Identify the next switch index based on routing path direction.
    * \param current Current switch index.
    * \param path The routing path direction.
    * \return The next switch index.
-   */ 
-  uint16_t NextSwitchIndex (uint16_t current, 
-      RingRoutingInfo::RoutingPath routingPath);
+   */
+  uint16_t NextSwitchIndex (uint16_t current,
+                            RingRoutingInfo::RoutingPath routingPath);
 
   /**
    * Remove meter rules from switches.
@@ -166,8 +166,8 @@ private:
   uint16_t            m_noSwitches;       //!< Number of switches in topology.
 
   /** Map saving <Pair of switch indexes / Connection information */
-  typedef std::map<SwitchPair_t, Ptr<ConnectionInfo> > ConnInfoMap_t; 
-  ConnInfoMap_t       m_connections;      //!< Connections between switches. 
+  typedef std::map<SwitchPair_t, Ptr<ConnectionInfo> > ConnInfoMap_t;
+  ConnInfoMap_t       m_connections;      //!< Connections between switches.
 };
 
 };  // namespace ns3

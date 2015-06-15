@@ -30,16 +30,16 @@ NS_LOG_COMPONENT_DEFINE ("Main");
 
 void PrintCurrentTime ();
 void EnableVerbose ();
-  
+
 static uint32_t g_progress = 25;
 
-int 
+int
 main (int argc, char *argv[])
 {
   // The minimum (default) value for TCP MSS is 536, and there's no dynamic MTU
   // discovery implemented yet in ns3. We defined this value to 1400,
   // considering 1500 bytes for Ethernet v2 MTU, 8 bytes for PPPoE, 40 bytes
-  // for GTP/UDP/IP tunnel, and 52 byter for default TCP/IP headers. 
+  // for GTP/UDP/IP tunnel, and 52 byter for default TCP/IP headers.
   Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1400));
 
   // When possible, use the Full Duplex CSMA channel to improve throughput.
@@ -47,12 +47,12 @@ main (int argc, char *argv[])
 
   // Enabling checksum computations and packet metadata
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
-  
+
   bool verbose = false;
   bool lteRem = false;
   uint32_t simTime = 201;
   std::string prefix = "";
-  
+
   CommandLine cmd;
   cmd.AddValue ("verbose",    "Enable verbose output.", verbose);
   cmd.AddValue ("progress",   "Simulation progress interval [s].", g_progress);
@@ -72,13 +72,19 @@ main (int argc, char *argv[])
   cmd.AddValue ("radioMap",   "Generate LTE radio map", lteRem);
   cmd.Parse (argc, argv);
 
-  if (g_progress) Simulator::Schedule (Seconds (g_progress), &PrintCurrentTime);
-  if (verbose) EnableVerbose ();
+  if (g_progress)
+    {
+      Simulator::Schedule (Seconds (g_progress), &PrintCurrentTime);
+    }
+  if (verbose)
+    {
+      EnableVerbose ();
+    }
 
   // Simulation scenario
   Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
   scenario->BuildRingTopology ();
-  
+
   if (lteRem)
     {
       // The channel number was manually set :/
@@ -103,15 +109,15 @@ main (int argc, char *argv[])
   NS_LOG_INFO ("End!");
 }
 
-void __attribute__((optimize("O0"))) 
+void __attribute__((optimize ("O0")))
 PrintCurrentTime ()
 {
-  uint32_t now = (uint32_t)Simulator::Now ().GetSeconds ();
+  uint32_t now = (uint32_t) Simulator::Now ().GetSeconds ();
   NS_UNUSED (now);
-  std::cout << "Current simulation time: " 
+  std::cout << "Current simulation time: "
             << Simulator::Now ().As (Time::S)
             << std::endl;
-  Simulator::Schedule (Seconds (g_progress) , &PrintCurrentTime);
+  Simulator::Schedule (Seconds (g_progress), &PrintCurrentTime);
 }
 
 void
@@ -120,24 +126,24 @@ EnableVerbose ()
   LogComponentEnable ("Main", LOG_LEVEL_ALL);
   LogComponentEnable ("SimulationScenario", LOG_LEVEL_INFO);
   LogComponentEnable ("StatsCalculator", LOG_LEVEL_WARN);
-  
+
   LogComponentEnable ("OFSwitch13NetDevice", LOG_LEVEL_WARN);
   LogComponentEnable ("OFSwitch13Interface", LOG_LEVEL_WARN);
   LogComponentEnable ("OFSwitch13Helper", LOG_LEVEL_WARN);
   LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_WARN);
-  
+
   LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_WARN);
   LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
   LogComponentEnable ("RingNetwork", LOG_LEVEL_WARN);
   LogComponentEnable ("LteSquaredGridNetwork", LOG_LEVEL_WARN);
-  
+
   LogComponentEnable ("RoutingInfo", LOG_LEVEL_ALL);
   LogComponentEnable ("RoutingInfo", LOG_PREFIX_TIME);
   LogComponentEnable ("OpenFlowEpcController", LOG_LEVEL_ALL);
   LogComponentEnable ("OpenFlowEpcController", LOG_PREFIX_TIME);
   LogComponentEnable ("RingController", LOG_LEVEL_ALL);
   LogComponentEnable ("RingController", LOG_PREFIX_TIME);
-  
+
   LogComponentEnable ("HttpClient", LOG_LEVEL_WARN);
   LogComponentEnable ("HttpServer", LOG_LEVEL_WARN);
   LogComponentEnable ("VoipClient", LOG_LEVEL_WARN);
