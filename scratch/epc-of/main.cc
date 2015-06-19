@@ -131,6 +131,8 @@ EnableVerbose ()
   LogComponentEnable ("OFSwitch13Interface", LOG_LEVEL_WARN);
   LogComponentEnable ("OFSwitch13Helper", LOG_LEVEL_WARN);
   LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_WARN);
+  LogComponentEnable ("OFSwitch13Port", LOG_LEVEL_WARN);
+  LogComponentEnable ("OFSwitch13Queue", LOG_LEVEL_ALL);
 
   LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_WARN);
   LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
