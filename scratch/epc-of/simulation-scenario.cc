@@ -85,16 +85,6 @@ SimulationScenario::GetTypeId (void)
                    TimeValue (Seconds (10)),
                    MakeTimeAccessor (&SimulationScenario::SetDumpTimeout),
                    MakeTimeChecker ())
-    .AddAttribute ("Enbs",
-                   "Number of eNBs in network topology.",
-                   UintegerValue (0),
-                   MakeUintegerAccessor (&SimulationScenario::SetEnbs),
-                   MakeUintegerChecker<uint32_t> ())
-    .AddAttribute ("Switches",
-                   "Number of OpenFlow switches in network topology.",
-                   UintegerValue (3),
-                   MakeUintegerAccessor (&SimulationScenario::SetSwitches),
-                   MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("PcapTrace",
                    "Enable/Disable simulation PCAP traces.",
                    BooleanValue (false),
@@ -179,20 +169,6 @@ SimulationScenario::BuildRingTopology ()
 }
 
 void
-SimulationScenario::SetSwitches (uint16_t value)
-{
-  m_nSwitches = value;
-  Config::SetDefault ("ns3::RingNetwork::NumSwitches", UintegerValue (m_nSwitches));
-}
-
-void
-SimulationScenario::SetEnbs (uint16_t value)
-{
-  m_nEnbs = value;
-  Config::SetDefault ("ns3::LteHexGridNetwork::Enbs", UintegerValue (m_nEnbs));
-}
-
-void
 SimulationScenario::SetCommonPrefix (std::string prefix)
 {
   // Parsing common prefix
@@ -247,6 +223,16 @@ SimulationScenario::DumpStatistics ()
   Simulator::Schedule (m_dumpTimeout, &SimulationScenario::DumpStatistics, this);
 }
 
+std::string
+SimulationScenario::StripValue (std::string value)
+{
+  std::string::size_type start = value.find ("\"");
+  std::string::size_type end = value.find ("\"", 1);
+  NS_ASSERT (start == 0);
+  NS_ASSERT (end == value.size () - 1);
+  return value.substr (start+1, end-start-1);
+}
+
 bool
 SimulationScenario::ParseTopology ()
 {
@@ -254,21 +240,16 @@ SimulationScenario::ParseTopology ()
 
   std::string name = m_inputPrefix + m_topoFilename;
   std::ifstream file;
-  file.open (name.c_str ());
+  file.open (name.c_str (), std::ios::out);
   if (!file.is_open ())
     {
       NS_FATAL_ERROR ("Topology file not found.");
     }
 
   std::istringstream lineBuffer;
-  std::string line;
-  uint32_t enb, ues, swtch;
+  std::string line, command;
   uint32_t idx = 0;
 
-  // At first we expect the number of eNBs and switches in network
-  std::string attr;
-  uint32_t value;
-  uint8_t attrOk = 0;
   while (getline (file, line))
     {
       if (line.empty () || line.at (0) == '#')
@@ -278,45 +259,36 @@ SimulationScenario::ParseTopology ()
 
       lineBuffer.clear ();
       lineBuffer.str (line);
-      lineBuffer >> attr;
-      lineBuffer >> value;
-      if (attr == "Enbs" || attr == "Switches")
+      lineBuffer >> command;
+      if (command == "set")
         {
-          NS_LOG_DEBUG (attr << " " << value);
-          SetAttribute (attr, UintegerValue (value));
-          attrOk++;
-          if (attrOk == 2)
-            {
-              break;
-            }
+          std::string attrName, attrValue;
+          lineBuffer >> attrName;
+          lineBuffer >> attrValue;
+          NS_LOG_DEBUG ("Setting attribute " << attrName << " with " << attrValue);
+          Config::SetDefault (attrName, StringValue (StripValue (attrValue)));
+        }
+      else if (command == "topo")
+        {
+          uint32_t enb, ues, swtch;
+          lineBuffer >> enb;
+          lineBuffer >> ues;
+          lineBuffer >> swtch;
+
+          NS_LOG_DEBUG ("Topo description: " << enb << " " << ues << " " << swtch);
+          NS_ASSERT_MSG (idx == enb, "Invalid eNB idx order in topology file.");
+//          NS_ASSERT_MSG (swtch < m_nSwitches, "Invalid switch idx in topology file.");
+
+          m_UesPerEnb.push_back (ues);
+          m_SwitchIdxPerEnb.push_back (swtch);
+          idx++;
+        }
+      else 
+        {
+          NS_LOG_ERROR ("Invalid command.");
         }
     }
-  NS_ASSERT_MSG (attrOk == 2, "Missing attributes in topology file.");
-
-  // Then we expect the distribution of UEs per eNBs and switch indexes
-  while (getline (file, line))
-    {
-      if (line.empty () || line.at (0) == '#')
-        {
-          continue;
-        }
-
-      lineBuffer.clear ();
-      lineBuffer.str (line);
-      lineBuffer >> enb;
-      lineBuffer >> ues;
-      lineBuffer >> swtch;
-
-      NS_LOG_DEBUG (enb << " " << ues << " " << swtch);
-      NS_ASSERT_MSG (idx == enb, "Invalid eNB idx order in topology file.");
-      NS_ASSERT_MSG (swtch < m_nSwitches, "Invalid switch idx in topology file.");
-
-      m_UesPerEnb.push_back (ues);
-      m_SwitchIdxPerEnb.push_back (swtch);
-      idx++;
-    }
-  NS_ASSERT_MSG (idx == m_nEnbs, "Missing information in topology file.");
-
+//  NS_ASSERT_MSG (idx == m_nEnbs, "Missing information in topology file.");
   return true;
 }
 

@@ -63,18 +63,6 @@ protected:
 
 private:
   /**
-   * Set the number of switches in network topology.
-   * \param value The number of switches.
-   */
-  void SetSwitches (uint16_t value);
-
-  /**
-   * Set the number of eNBs in network topology.
-   * \param value The number of eNBs.
-   */
-  void SetEnbs (uint16_t value);
-
-  /**
    * Set the commom prefix for stats filenames.
    * \param prefix the prefix.
    */
@@ -90,6 +78,13 @@ private:
    * Dump regular statistics.
    */
   void DumpStatistics ();
+
+  /**
+   * Strip string value in topology description file.
+   * \param value The value string.
+   * \return The stripped value string.
+   */
+  std::string StripValue (std::string value);
 
   /**
    * Parse topology description file.
@@ -121,8 +116,6 @@ private:
   std::string           m_outputPrefix;       //!< Common output prefix filenames
   std::string           m_topoFilename;       //!< Topology filename
   std::string           m_switchLog;          //!< Switches log level
-  uint32_t              m_nEnbs;              //!< Number of eNBs
-  uint16_t              m_nSwitches;          //!< Number of OpenFlow switches
   bool                  m_pcapTrace;          //!< Enable PCAP traces
   bool                  m_lteTrace;           //!< Enable LTE ASCII traces
   std::vector<uint32_t> m_UesPerEnb;          //!< Number of UEs per eNb
