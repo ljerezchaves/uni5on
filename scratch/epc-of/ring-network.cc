@@ -56,24 +56,24 @@ RingNetwork::GetTypeId (void)
                    MakeUintegerAccessor (&RingNetwork::m_nodes),
                    MakeUintegerChecker<uint16_t> (3))
     .AddAttribute ("SwitchLinkDataRate",
-                   "The data rate to be used for the CSMA OpenFlow links between switches.",
+                   "The data rate for the links between OpenFlow switches.",
                    DataRateValue (DataRate ("100Mb/s")),
                    MakeDataRateAccessor (&RingNetwork::m_switchLinkDataRate),
                    MakeDataRateChecker ())
     .AddAttribute ("SwitchLinkDelay",
-                   "The delay to be used for the CSMA OpenFlow links between switches.",
+                   "The delay for the links between OpenFlow switches.",
                    TimeValue (MicroSeconds (100)), // 20km fiber cable latency
                    MakeTimeAccessor (&RingNetwork::m_switchLinkDelay),
                    MakeTimeChecker ())
-    .AddAttribute ("EpcLinkDataRate",
-                   "The data rate to be used for the CSMA OpenFlow links connecting switches to EPC elements.",
+    .AddAttribute ("GatewayLinkDataRate",
+                   "The data rate for the link connecting the gateway to the OpenFlow network.",
                    DataRateValue (DataRate ("10Gb/s")),
-                   MakeDataRateAccessor (&RingNetwork::m_epcLinkDataRate),
+                   MakeDataRateAccessor (&RingNetwork::m_gatewayLinkDataRate),
                    MakeDataRateChecker ())
-    .AddAttribute ("EpcLinkDelay",
-                   "The delay to be used for the CSMA OpenFlow links connecting switches to EPC elements.",
-                   TimeValue (MicroSeconds (0)), // Local connection
-                   MakeTimeAccessor (&RingNetwork::m_epcLinkDelay),
+    .AddAttribute ("GatewayLinkDelay",
+                   "The delay for the link connecting the gateway to the OpenFlow network.",
+                   TimeValue (MicroSeconds (0)),
+                   MakeTimeAccessor (&RingNetwork::m_gatewayLinkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("LinkMtu",
                    "The MTU for CSMA OpenFlow links. "
@@ -187,10 +187,6 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
   // Fire trace source notifying that all connections between switches are ok.
   m_topoBuiltTrace (m_ofDevices);
   m_created = true;
-
-  // Configuring csma links for EPC attach procedures
-  m_ofCsmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_epcLinkDataRate));
-  m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_epcLinkDelay));
 }
 
 Ptr<NetDevice>
@@ -200,15 +196,15 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   NS_ASSERT_MSG (m_created, "Topology not created.");
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
 
-
   // Connect SgwPgw node to switch index 0 and other eNBs to switchs indexes
   // indicated by the user. As we know that the OpenFlowEpcHelper will callback
   // here first for SgwPgw node, we use the static counter to identify this
   // node.
   static uint32_t counter = 0;
+  counter++;
+  
   uint16_t swIdx;
-
-  if (counter == 0)
+  if (counter == 1)
     {
       // This is the SgwPgw node
       swIdx = 0;
@@ -216,9 +212,8 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
     }
   else
     {
-      swIdx = m_eNbSwitchIdx.at (counter - 1);
+      swIdx = m_eNbSwitchIdx.at (counter - 2);
     }
-  counter++;
   RegisterNodeAtSwitch (swIdx, node);
 
   Ptr<Node> swNode = m_ofSwitches.Get (swIdx);
@@ -233,6 +228,13 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   Ptr<CsmaNetDevice> portDev, nodeDev;
   portDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
   nodeDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
+
+  // Only for the gateway link, set specific datarate and delay.
+  if (counter == 1)
+    {
+      nodeDev->GetChannel ()->SetAttribute ("DataRate", DataRateValue (m_gatewayLinkDataRate));
+      nodeDev->GetChannel ()->SetAttribute ("Delay", TimeValue (m_gatewayLinkDelay));
+    }
 
   // Setting interface names for pacp filename
   Names::Add (Names::FindName (swNode) + "+" + Names::FindName (node), portDev);

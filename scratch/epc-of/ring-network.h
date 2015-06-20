@@ -60,8 +60,8 @@ public:
 private:
   DataRate              m_switchLinkDataRate; //!< Switch link data rate
   Time                  m_switchLinkDelay;    //!< Switch link delay
-  DataRate              m_epcLinkDataRate;    //!< EPC link data rate
-  Time                  m_epcLinkDelay;       //!< EPC link delay
+  DataRate              m_gatewayLinkDataRate;//!< Gateway link data rate
+  Time                  m_gatewayLinkDelay;   //!< Gateway link delay
   uint16_t              m_linkMtu;            //!< Link mtu
   uint16_t              m_nodes;              //!< Number of switches in the ring
 
