@@ -48,7 +48,7 @@ RingController::GetTypeId (void)
                    MakeEnumAccessor (&RingController::m_strategy),
                    MakeEnumChecker (RingController::HOPS, "hops",
                                     RingController::BAND, "bandwidth",
-                                    RingController::BOTH, "both"))
+                                    RingController::SMART, "smart"))
     .AddAttribute ("BwReserve",
                    "Bandwitdth saving factor to reserve.",
                    DoubleValue (0.2),
@@ -329,7 +329,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
               }
             break;
           }
-        case RingController::BOTH:
+        case RingController::SMART:
           {
             NS_LOG_DEBUG (teid << ": available in short path: " << shortPathBw);
             NS_LOG_DEBUG (teid << ": available in long path: " << longPathBw);
@@ -420,7 +420,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
               }
             break;
           }
-        case RingController::BOTH:
+        case RingController::SMART:
           {
             NS_LOG_DEBUG (teid << ": available in short path: " << shortPathBw);
             NS_LOG_DEBUG (teid << ": available in long path: " << longPathBw);

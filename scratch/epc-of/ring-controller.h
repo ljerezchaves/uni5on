@@ -45,7 +45,7 @@ public:
   {
     HOPS = 0,     //!< Select the path based on number of hops
     BAND = 1,     //!< Select the path based on available bandwidth
-    BOTH = 2      //!< Select the path based on hops and bandwidth
+    SMART = 2     //!< Select the path based on hops and available bandwidth
   };
 
   RingController ();            //!< Default constructor
