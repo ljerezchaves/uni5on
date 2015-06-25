@@ -61,10 +61,8 @@ public:
    * \param sw1 First switch metadata.
    * \param sw2 Second switch metadata.
    * \param linkSpeed Channel data rate in connection between switches.
-   * \param fullDuples True for full duplex channel.
    */
-  ConnectionInfo (SwitchData sw1, SwitchData sw2, DataRate linkSpeed, 
-                  bool fullDuplex = false);
+  ConnectionInfo (SwitchData sw1, SwitchData sw2, DataRate linkSpeed);
 
   /**
    * Register this type.
@@ -80,10 +78,26 @@ public:
   SwitchPair_t GetSwitchIndexPair (void) const;
 
   /**
-   * Return the bandwidth usage ratio, ignoring the saving reserve factor.
+   * Return the bandwidth usage ratio, considering both forward and backward
+   * paths for full-duplex channel. This method ignores the saving reserve
+   * factor.
    * \return The usage ratio.
    */
   double GetUsageRatio (void) const;
+
+  /**
+   * Return the bandwidth usage ratio in forward direction, This method ignores
+   * the saving reserve factor.
+   * \return The usage ratio.
+   */
+  double GetFowardUsageRatio (void) const;
+
+  /**
+   * Return the bandwidth usage ratio in backward direction, This method
+   * ignores the saving reserve factor.
+   * \return The usage ratio.
+   */
+  double GetBackwardUsageRatio (void) const;
 
   /**
    * \name Switch metadata member accessors.

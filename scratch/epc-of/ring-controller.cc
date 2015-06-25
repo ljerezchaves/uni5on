@@ -275,15 +275,15 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       return true;
     }
 
-  // Getting available bandwidth in both paths
-  DataRate shortPathBw = GetAvailableBandwidth (rInfo->m_sgwIdx, 
-      rInfo->m_enbIdx, ringInfo->m_downPath);
-  DataRate longPathBw = GetAvailableBandwidth (rInfo->m_sgwIdx, 
-      rInfo->m_enbIdx, RingRoutingInfo::InvertPath (ringInfo->m_downPath));
-
-  // Reserving downlink resources
+  // First, try to reserve downlink resources (more likely to fail)
   if (reserveInfo->m_hasDown)
     {
+      // Getting available downlink bandwidth in both paths
+      DataRate shortPathBw = GetAvailableBandwidth (rInfo->m_sgwIdx, 
+          rInfo->m_enbIdx, ringInfo->m_downPath);
+      DataRate longPathBw = GetAvailableBandwidth (rInfo->m_sgwIdx, 
+          rInfo->m_enbIdx, RingRoutingInfo::InvertPath (ringInfo->m_downPath));
+
       DataRate request = reserveInfo->m_downDataRate;
       NS_LOG_DEBUG (teid << ": downlink request: " << request);
 
@@ -294,8 +294,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
             NS_LOG_DEBUG (teid << ": available in short path: " << shortPathBw);
             if (shortPathBw >= request)
               {
-                shortPathBw = shortPathBw - request;
-                ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
+                ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
                                   ringInfo->m_downPath, request);
               }
             else
@@ -311,7 +310,6 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
             NS_LOG_DEBUG (teid << ": available in long path: " << longPathBw);
             if (shortPathBw >= longPathBw && shortPathBw >= request)
               {
-                shortPathBw = shortPathBw - request;
                 ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
                                   ringInfo->m_downPath, request);
               }
@@ -320,7 +318,6 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
                 // Let's invert the path and reserve the bandwidth
                 NS_LOG_DEBUG (teid << ": inverting from short to long path.");
                 ringInfo->InvertDownPath ();
-                longPathBw = longPathBw - request;
                 ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
                                   ringInfo->m_downPath, request);
               }
@@ -337,7 +334,6 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
             NS_LOG_DEBUG (teid << ": available in long path: " << longPathBw);
             if (shortPathBw >= request)
               {
-                shortPathBw = shortPathBw - request;
                 ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
                                   ringInfo->m_downPath, request);
               }
@@ -347,7 +343,6 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
                 // Let's invert the path and reserve the bandwidth
                 NS_LOG_DEBUG (teid << ": inverting from short to long path.");
                 ringInfo->InvertDownPath ();
-                longPathBw = longPathBw - request;
                 ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
                                   ringInfo->m_downPath, request);
               }
@@ -365,9 +360,16 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
         }
     }
 
-  // Reserving uplink resources
+  // Then, try to reserve uplink resources (in case of failure, release the
+  // already reserved downlink resources).
   if (reserveInfo->m_hasUp)
     {
+       // Getting available uplink bandwidth in both paths
+      DataRate shortPathBw = GetAvailableBandwidth (rInfo->m_enbIdx, 
+          rInfo->m_sgwIdx, ringInfo->m_upPath);
+      DataRate longPathBw = GetAvailableBandwidth (rInfo->m_enbIdx, 
+          rInfo->m_sgwIdx, RingRoutingInfo::InvertPath (ringInfo->m_upPath));
+
       DataRate request = reserveInfo->m_upDataRate;
       NS_LOG_DEBUG (teid << ": uplink request: " << request);
 
@@ -416,7 +418,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
                 if (reserveInfo->m_hasDown)
                   {
                     ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
-                                      ringInfo->m_downPath, reserveInfo->m_downDataRate);
+                        ringInfo->m_downPath, reserveInfo->m_downDataRate);
                   }
                 return false;
               }
