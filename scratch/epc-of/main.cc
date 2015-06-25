@@ -50,7 +50,7 @@ main (int argc, char *argv[])
 
   bool verbose = false;
   bool lteRem = false;
-  uint32_t simTime = 201;
+  uint32_t simTime = 200;
   std::string prefix = "";
 
   CommandLine cmd;
@@ -103,13 +103,14 @@ main (int argc, char *argv[])
 
   // Run the simulation
   NS_LOG_INFO ("Simulating...");
-  Simulator::Stop (Seconds (simTime));
+  Simulator::Stop (Seconds (simTime + 1));
   Simulator::Run ();
   Simulator::Destroy ();
   NS_LOG_INFO ("End!");
 }
 
-void __attribute__((optimize ("O0")))
+//void __attribute__((optimize ("O0")))
+void
 PrintCurrentTime ()
 {
   uint32_t now = (uint32_t) Simulator::Now ().GetSeconds ();
