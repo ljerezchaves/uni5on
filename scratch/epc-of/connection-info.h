@@ -106,31 +106,40 @@ protected:
 
   /**
    * Get the available bandwidth between these two switches.
-   * \return True available DataRate.
+   * \param srcIdx The source switch index.
+   * \param dstIdx The destination switch index.
+   * \return The available data rate from srcIdx to dstIdx.
    */
-  DataRate GetAvailableDataRate (void) const;
+  DataRate GetAvailableDataRate (uint16_t srcIdx, uint16_t dstIdx) const;
 
   /**
    * Get the available bandwidth between these two switches, considering a
    * saving reserve factor.
+   * \param srcIdx The source switch index.
+   * \param dstIdx The destination switch index.
    * \param bwFactor The bandwidth saving factor.
-   * \return True available DataRate.
+   * \return The available data rate from srcIdx to dstIdx.
    */
-  DataRate GetAvailableDataRate (double bwFactor) const;
+  DataRate GetAvailableDataRate (uint16_t srcIdx, uint16_t dstIdx, 
+                                 double bwFactor) const;
 
   /**
    * Reserve some bandwidth between these two switches.
+   * \param srcIdx The source switch index.
+   * \param dstIdx The destination switch index.
    * \param dr The DataRate to reserve.
    * \return True if everything is ok, false otherwise.
    */
-  bool ReserveDataRate (DataRate dr);
+  bool ReserveDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate dr);
 
   /**
    * Release some bandwidth between these two switches.
+   * \param srcIdx The source switch index.
+   * \param dstIdx The destination switch index.
    * \param dr The DataRate to release.
    * \return True if everything is ok, false otherwise.
    */
-  bool ReleaseDataRate (DataRate dr);
+  bool ReleaseDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate dr);
 
 private:
   SwitchData m_sw1; //!< First switch (lowest index)

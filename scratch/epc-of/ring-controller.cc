@@ -597,25 +597,22 @@ RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx,
 {
   NS_LOG_FUNCTION (this << srcSwitchIdx << dstSwitchIdx << routingPath);
   NS_ASSERT (srcSwitchIdx != dstSwitchIdx);
-
-  // Get bandwidth for first hop
+  
+  DataRate availableBandwidth (std::numeric_limits<uint64_t>::max());
+  
   uint16_t current = srcSwitchIdx;
-  uint16_t next = NextSwitchIndex (current, routingPath);
-  Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-  DataRate bandwidth = cInfo->GetAvailableDataRate (m_bwFactor);
-
-  // Repeat the process for next hops
-  while (next != dstSwitchIdx)
+  while (current != dstSwitchIdx)
     {
-      current = next;
-      next = NextSwitchIndex (current, routingPath);
-      cInfo = GetConnectionInfo (current, next);
-      if (cInfo->GetAvailableDataRate (m_bwFactor) < bandwidth)
+      uint16_t next = NextSwitchIndex (current, routingPath);
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
+      DataRate linkBandwidth = cInfo->GetAvailableDataRate (current, next, m_bwFactor);
+      if (linkBandwidth < availableBandwidth)
         {
-          bandwidth = cInfo->GetAvailableDataRate (m_bwFactor);
+          availableBandwidth = linkBandwidth;
         }
+      current = next;
     }
-  return bandwidth;
+  return availableBandwidth;
 }
 
 bool
@@ -629,8 +626,8 @@ RingController::ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
     {
       uint16_t next = NextSwitchIndex (current, routingPath);
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-      cInfo->ReserveDataRate (reserve);
-      NS_ABORT_IF (cInfo->GetAvailableDataRate () < 0);
+      NS_ABORT_MSG_UNLESS (cInfo->ReserveDataRate (current, next, reserve), 
+                           "No bandwidth available to reserve.");
       current = next;
     }
   return true;
@@ -647,7 +644,8 @@ RingController::ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
     {
       uint16_t next = NextSwitchIndex (current, routingPath);
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-      cInfo->ReleaseDataRate (release);
+      NS_ABORT_MSG_UNLESS (cInfo->ReleaseDataRate (current, next, release), 
+                           "No bandwidth available to release.");
       current = next;
     }
   return true;

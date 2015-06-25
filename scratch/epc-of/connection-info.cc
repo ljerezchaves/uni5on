@@ -123,20 +123,24 @@ ConnectionInfo::DoDispose ()
 }
 
 DataRate
-ConnectionInfo::GetAvailableDataRate (void) const
+ConnectionInfo::GetAvailableDataRate (uint16_t srcIdx, uint16_t dstIdx) const
 {
+  // TODO implementar lógica full duplex
   return m_fwDataRate - m_fwReserved;
 }
 
 DataRate
-ConnectionInfo::GetAvailableDataRate (double bwFactor) const
+ConnectionInfo::GetAvailableDataRate (uint16_t srcIdx, uint16_t dstIdx, 
+                                      double bwFactor) const
 {
+  // TODO implementar lógica full duplex
   return (m_fwDataRate * (1. - bwFactor)) - m_fwReserved;
 }
 
 bool
-ConnectionInfo::ReserveDataRate (DataRate dr)
+ConnectionInfo::ReserveDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate dr)
 {
+  // TODO implementar lógica full duplex
   if (m_fwReserved + dr <= m_fwDataRate)
     {
       m_fwReserved = m_fwReserved + dr;
@@ -146,8 +150,9 @@ ConnectionInfo::ReserveDataRate (DataRate dr)
 }
 
 bool
-ConnectionInfo::ReleaseDataRate (DataRate dr)
+ConnectionInfo::ReleaseDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate dr)
 {
+  // TODO implementar lógica full duplex
   if (m_fwReserved - dr >= DataRate (0))
     {
       m_fwReserved = m_fwReserved - dr;
