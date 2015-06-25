@@ -156,18 +156,15 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
       nextPortDevice = DynamicCast<CsmaNetDevice> (devs.Get (1));
       nextPortNum = nextDevice->AddSwitchPort (nextPortDevice)->GetPortNo ();
 
-      // Fire trace source notifying new connection between switches.
-      Ptr<ConnectionInfo> info = CreateObject<ConnectionInfo> ();
-      info->m_switchIdx1 = currIndex;
-      info->m_switchIdx2 = nextIndex;
-      info->m_switchDev1 = currDevice;
-      info->m_switchDev2 = nextDevice;
-      info->m_portDev1 = currPortDevice;
-      info->m_portDev2 = nextPortDevice;
-      info->m_portNum1 = currPortNum;
-      info->m_portNum2 = nextPortNum;
-      info->m_maxDataRate = m_switchLinkDataRate;
-      m_newConnTrace (info);
+      // Fire trace source notifying new connection between switches. Switch
+      // order inside ConnectionInfo object must respect clockwise order.
+      SwitchData currSw = {currIndex, currDevice, currPortDevice, currPortNum};
+      SwitchData nextSw = {nextIndex, nextDevice, nextPortDevice, nextPortNum};
+      bool fullDuplex = DynamicCast<CsmaChannel> (
+        currPortDevice->GetChannel ())->IsFullDuplex ();
+      Ptr<ConnectionInfo> cInfo = CreateObject<ConnectionInfo> (currSw, nextSw, 
+        m_switchLinkDataRate, fullDuplex);
+      m_newConnTrace (cInfo);
 
       // Registering OpenFlowEpcNetwork trace sink for meter dropped packets
       currDevice->TraceConnect ("MeterDrop", Names::FindName (currNode),

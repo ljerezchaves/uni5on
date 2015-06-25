@@ -35,16 +35,23 @@ ConnectionInfo::~ConnectionInfo ()
   NS_LOG_FUNCTION (this);
 }
 
+ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2, 
+                                DataRate linkSpeed, bool fullDuplex)
+  : m_sw1 (sw1),
+    m_sw2 (sw2),
+    m_fwDataRate (linkSpeed),
+    m_bwDataRate (linkSpeed),
+    m_fullDuplex (fullDuplex) 
+{
+  NS_LOG_FUNCTION (this);
+}
+
 TypeId
 ConnectionInfo::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::ConnectionInfo")
     .SetParent<Object> ()
     .AddConstructor<ConnectionInfo> ()
-    .AddTraceSource ("UsageRatio",
-                     "Bandwidth usage ratio trace source.",
-                     MakeTraceSourceAccessor (&ConnectionInfo::m_usageTrace),
-                     "ns3::ConnectionInfo::UsageTracedCallback")
   ;
   return tid;
 }
@@ -52,10 +59,61 @@ ConnectionInfo::GetTypeId (void)
 SwitchPair_t
 ConnectionInfo::GetSwitchIndexPair (void) const
 {
-  SwitchPair_t key;
-  key.first  = std::min (m_switchIdx1, m_switchIdx2);
-  key.second = std::max (m_switchIdx1, m_switchIdx2);
-  return key;
+  return SwitchPair_t (m_sw1.swIdx, m_sw2.swIdx);
+}
+
+double
+ConnectionInfo::GetUsageRatio (void) const
+{
+  return (double)m_fwReserved.GetBitRate () / m_fwDataRate.GetBitRate ();
+}
+
+uint16_t
+ConnectionInfo::GetSwIdxFirst (void) const
+{
+  return m_sw1.swIdx;
+}
+
+uint16_t
+ConnectionInfo::GetSwIdxSecond (void) const
+{
+  return m_sw2.swIdx;
+}
+
+uint32_t
+ConnectionInfo::GetPortNoFirst (void) const
+{
+  return m_sw1.portNum;
+}
+
+uint32_t
+ConnectionInfo::GetPortNoSecond (void) const
+{
+  return m_sw2.portNum;
+}
+
+Ptr<const OFSwitch13NetDevice>
+ConnectionInfo::GetSwDevFirst (void) const
+{
+  return m_sw1.swDev;
+}
+
+Ptr<const OFSwitch13NetDevice>
+ConnectionInfo::GetSwDevSecond (void) const
+{
+  return m_sw2.swDev;
+}
+
+Ptr<const CsmaNetDevice>
+ConnectionInfo::GetPortDevFirst (void) const
+{
+  return m_sw1.portDev;
+}
+
+Ptr<const CsmaNetDevice>
+ConnectionInfo::GetPortDevSecond (void) const
+{
+  return m_sw2.portDev;
 }
 
 void
@@ -67,28 +125,21 @@ ConnectionInfo::DoDispose ()
 DataRate
 ConnectionInfo::GetAvailableDataRate (void) const
 {
-  return m_maxDataRate - m_reservedDataRate;
+  return m_fwDataRate - m_fwReserved;
 }
 
 DataRate
 ConnectionInfo::GetAvailableDataRate (double bwFactor) const
 {
-  return (m_maxDataRate * (1. - bwFactor)) - m_reservedDataRate;
-}
-
-double
-ConnectionInfo::GetUsageRatio (void) const
-{
-  return (double)m_reservedDataRate.GetBitRate () / m_maxDataRate.GetBitRate ();
+  return (m_fwDataRate * (1. - bwFactor)) - m_fwReserved;
 }
 
 bool
 ConnectionInfo::ReserveDataRate (DataRate dr)
 {
-  if (m_reservedDataRate + dr <= m_maxDataRate)
+  if (m_fwReserved + dr <= m_fwDataRate)
     {
-      m_reservedDataRate = m_reservedDataRate + dr;
-      m_usageTrace (m_switchIdx1, m_switchIdx2, GetUsageRatio ());
+      m_fwReserved = m_fwReserved + dr;
       return true;
     }
   return false;
@@ -97,10 +148,9 @@ ConnectionInfo::ReserveDataRate (DataRate dr)
 bool
 ConnectionInfo::ReleaseDataRate (DataRate dr)
 {
-  if (m_reservedDataRate - dr >= DataRate (0))
+  if (m_fwReserved - dr >= DataRate (0))
     {
-      m_reservedDataRate = m_reservedDataRate - dr;
-      m_usageTrace (m_switchIdx1, m_switchIdx2, GetUsageRatio ());
+      m_fwReserved = m_fwReserved - dr;
       return true;
     }
   return false;

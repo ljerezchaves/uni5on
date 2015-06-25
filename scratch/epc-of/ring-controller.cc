@@ -76,18 +76,20 @@ RingController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 
   // Installing default groups for RingController ring routing. Group
   // RingRoutingInfo::CLOCK is used to send packets from current switch to the
-  // next one in clockwise direction.
+  // next one in clockwise direction. Note that this method works as
+  // connections are created in clockwise direction, and switchs inside cInfo
+  // are saved in the same clockwise direction.
   std::ostringstream cmd1;
-  cmd1 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::CLOCK <<
-  " weight=0,port=any,group=any output=" << cInfo->m_portNum1;
-  DpctlCommand (cInfo->m_switchDev1, cmd1.str ());
+  cmd1 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::CLOCK 
+       << " weight=0,port=any,group=any output=" << cInfo->GetPortNoFirst ();
+  DpctlCommand (cInfo->GetSwDevFirst (), cmd1.str ());
 
   // Group RingRoutingInfo::COUNTER is used to send packets from the next
   // switch to the current one in counterclockwise direction.
   std::ostringstream cmd2;
-  cmd2 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::COUNTER <<
-  " weight=0,port=any,group=any output=" << cInfo->m_portNum2;
-  DpctlCommand (cInfo->m_switchDev2, cmd2.str ());
+  cmd2 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::COUNTER 
+       << " weight=0,port=any,group=any output=" << cInfo->GetPortNoSecond ();
+  DpctlCommand (cInfo->GetSwDevSecond (), cmd2.str ());
 }
 
 void
@@ -106,19 +108,19 @@ RingController::NotifyTopologyBuilt (NetDeviceContainer devices)
   for (uint16_t sw1 = 0; sw1 < GetNSwitches (); sw1++)
     {
       uint16_t sw2 = (sw1 + 1) % GetNSwitches ();  // Next clockwise node
-      Ptr<ConnectionInfo> connInfo = GetConnectionInfo (sw1, sw2);
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (sw1, sw2);
 
       std::ostringstream cmd1;
-      cmd1 << "flow-mod cmd=add,table=1,flags=0x0002,prio=" << m_t1RingPrio <<
-      " in_port=" << connInfo->m_portNum1 <<
-      " write:group=" << RingRoutingInfo::COUNTER;
-      DpctlCommand (connInfo->m_switchDev1, cmd1.str ());
+      cmd1 << "flow-mod cmd=add,table=1,flags=0x0002,prio=" 
+           << m_t1RingPrio << " in_port=" << cInfo->GetPortNoFirst () 
+           << " write:group=" << RingRoutingInfo::COUNTER;
+      DpctlCommand (cInfo->GetSwDevFirst (), cmd1.str ());
 
       std::ostringstream cmd2;
-      cmd2 << "flow-mod cmd=add,table=1,flags=0x0002,prio=" << m_t1RingPrio <<
-      " in_port=" << connInfo->m_portNum2 <<
-      " write:group=" << RingRoutingInfo::CLOCK;
-      DpctlCommand (connInfo->m_switchDev2, cmd2.str ());
+      cmd2 << "flow-mod cmd=add,table=1,flags=0x0002,prio=" 
+           << m_t1RingPrio << " in_port=" << cInfo->GetPortNoSecond () 
+           << " write:group=" << RingRoutingInfo::CLOCK;
+      DpctlCommand (cInfo->GetSwDevSecond (), cmd2.str ());
     }
 }
 
@@ -491,23 +493,23 @@ RingController::TopologyCreateSpanningTree ()
   // configuring its ports to OFPPC_NO_FWD flag (0x20).
 
   uint16_t half = (GetNSwitches () / 2);
-  Ptr<ConnectionInfo> connInfo = GetConnectionInfo (half, half + 1);
+  Ptr<ConnectionInfo> cInfo = GetConnectionInfo (half, half + 1);
   NS_LOG_DEBUG ("Disabling link from " << half << " to " <<
                 half + 1 << " for broadcast messages.");
 
-  Mac48Address macAddr1;
-  macAddr1 = Mac48Address::ConvertFrom (connInfo->m_portDev1->GetAddress ());
+  Mac48Address macAddr1 = Mac48Address::ConvertFrom (
+    cInfo->GetPortDevFirst ()->GetAddress ());
   std::ostringstream cmd1;
-  cmd1 << "port-mod port=" << connInfo->m_portNum1 << ",addr=" 
+  cmd1 << "port-mod port=" << cInfo->GetPortNoFirst () << ",addr=" 
        <<  macAddr1 << ",conf=0x00000020,mask=0x00000020";
-  DpctlCommand (connInfo->m_switchDev1, cmd1.str ());
+  DpctlCommand (cInfo->GetSwDevFirst (), cmd1.str ());
 
-  Mac48Address macAddr2;
-  macAddr2 = Mac48Address::ConvertFrom (connInfo->m_portDev2->GetAddress ());
+  Mac48Address macAddr2 = Mac48Address::ConvertFrom (
+    cInfo->GetPortDevSecond ()->GetAddress ());
   std::ostringstream cmd2;
-  cmd2 << "port-mod port=" << connInfo->m_portNum2 << ",addr=" 
+  cmd2 << "port-mod port=" << cInfo->GetPortNoSecond () << ",addr=" 
        << macAddr2 << ",conf=0x00000020,mask=0x00000020";
-  DpctlCommand (connInfo->m_switchDev2, cmd2.str ());
+  DpctlCommand (cInfo->GetSwDevSecond (), cmd2.str ());
 }
 
 uint16_t
@@ -536,17 +538,20 @@ RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
 void
 RingController::SaveConnectionInfo (Ptr<ConnectionInfo> cInfo)
 {
-  SwitchPair_t key = cInfo->GetSwitchIndexPair ();
-  //key.first  = std::min (cInfo->m_switchIdx1, cInfo->m_switchIdx2);
-  //key.second = std::max (cInfo->m_switchIdx1, cInfo->m_switchIdx2);
+  // Respecting the increasing switch index order when saving connection data.
+  SwitchPair_t key;
+  key.first  = std::min (cInfo->GetSwIdxFirst (), cInfo->GetSwIdxSecond ());
+  key.second = std::max (cInfo->GetSwIdxFirst (), cInfo->GetSwIdxSecond ());
   std::pair<SwitchPair_t, Ptr<ConnectionInfo> > entry (key, cInfo);
   std::pair<ConnInfoMap_t::iterator, bool> ret;
   ret = m_connections.insert (entry);
   if (ret.second == true)
     {
-      NS_LOG_DEBUG ("New connection info saved: switch " << key.first <<
-                    " (" << cInfo->m_portNum1 << ") - switch " << key.second <<
-                    " (" << cInfo->m_portNum2 << ")");
+      NS_LOG_DEBUG ("New connection info saved: switch " 
+                    << cInfo->GetSwIdxFirst () << " (" 
+                    << cInfo->GetPortNoFirst () << ") - switch " 
+                    << cInfo->GetSwIdxSecond () << " (" 
+                    << cInfo->GetPortNoSecond () << ")");
       return;
     }
   NS_FATAL_ERROR ("Error saving connection info.");
@@ -555,6 +560,7 @@ RingController::SaveConnectionInfo (Ptr<ConnectionInfo> cInfo)
 Ptr<ConnectionInfo>
 RingController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
 {
+  // Respecting the increasing switch index order when getting connection data.
   SwitchPair_t key;
   key.first = std::min (sw1, sw2);
   key.second = std::max (sw1, sw2);
@@ -595,18 +601,18 @@ RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx,
   // Get bandwidth for first hop
   uint16_t current = srcSwitchIdx;
   uint16_t next = NextSwitchIndex (current, routingPath);
-  Ptr<ConnectionInfo> conn = GetConnectionInfo (current, next);
-  DataRate bandwidth = conn->GetAvailableDataRate (m_bwFactor);
+  Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
+  DataRate bandwidth = cInfo->GetAvailableDataRate (m_bwFactor);
 
   // Repeat the process for next hops
   while (next != dstSwitchIdx)
     {
       current = next;
       next = NextSwitchIndex (current, routingPath);
-      conn = GetConnectionInfo (current, next);
-      if (conn->GetAvailableDataRate (m_bwFactor) < bandwidth)
+      cInfo = GetConnectionInfo (current, next);
+      if (cInfo->GetAvailableDataRate (m_bwFactor) < bandwidth)
         {
-          bandwidth = conn->GetAvailableDataRate (m_bwFactor);
+          bandwidth = cInfo->GetAvailableDataRate (m_bwFactor);
         }
     }
   return bandwidth;
@@ -622,9 +628,9 @@ RingController::ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
   while (current != dstSwitchIdx)
     {
       uint16_t next = NextSwitchIndex (current, routingPath);
-      Ptr<ConnectionInfo> conn = GetConnectionInfo (current, next);
-      conn->ReserveDataRate (reserve);
-      NS_ABORT_IF (conn->GetAvailableDataRate () < 0);
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
+      cInfo->ReserveDataRate (reserve);
+      NS_ABORT_IF (cInfo->GetAvailableDataRate () < 0);
       current = next;
     }
   return true;
@@ -640,8 +646,8 @@ RingController::ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
   while (current != dstSwitchIdx)
     {
       uint16_t next = NextSwitchIndex (current, routingPath);
-      Ptr<ConnectionInfo> conn = GetConnectionInfo (current, next);
-      conn->ReleaseDataRate (release);
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
+      cInfo->ReleaseDataRate (release);
       current = next;
     }
   return true;
