@@ -31,8 +31,17 @@ namespace ns3 {
 /** A pair of switches index */
 typedef std::pair<uint16_t, uint16_t> SwitchPair_t;
 
-/** Bandwitdh stats between two switches */
-typedef std::pair<SwitchPair_t, double> BandwidthStats_t;
+/**
+ * \ingroup epcof
+ * Metadata associated to a switch, which will be used by ConnectionInfo.
+ */
+struct SwitchData
+{
+  uint16_t                  swIdx;    //!< Switch index
+  Ptr<OFSwitch13NetDevice>  swDev;    //!< OpenFlow switch device
+  Ptr<CsmaNetDevice>        portDev;  //!< OpenFlow csma port device
+  uint32_t                  portNum;  //!< OpenFlow port number
+};
 
 /**
  * \ingroup epcof
@@ -41,13 +50,21 @@ typedef std::pair<SwitchPair_t, double> BandwidthStats_t;
  */
 class ConnectionInfo : public Object
 {
-  friend class OpenFlowEpcController;
   friend class RingController;
-  friend class RingNetwork;
 
 public:
-  ConnectionInfo ();           //!< Default constructor
-  virtual ~ConnectionInfo (); //!< Dummy destructor, see DoDipose
+  ConnectionInfo ();            //!< Default constructor
+  virtual ~ConnectionInfo ();   //!< Dummy destructor, see DoDipose
+
+  /**
+   * Complete constructor.
+   * \param sw1 First switch metadata.
+   * \param sw2 Second switch metadata.
+   * \param linkSpeed Channel data rate in connection between switches.
+   * \param fullDuples True for full duplex channel.
+   */
+  ConnectionInfo (SwitchData sw1, SwitchData sw2, DataRate linkSpeed, 
+                  bool fullDuplex = false);
 
   /**
    * Register this type.
@@ -56,24 +73,11 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Get the pair of switch indices for this connection, in increasing order.
-   * \param The pair of switch indices.
+   * Get the pair of switch indexes for this connection, respecting the
+   * internal order.
+   * \param The pair of switch indexes.
    */
   SwitchPair_t GetSwitchIndexPair (void) const;
-
-  /**
-   * Get the availabe bandwitdh between these two switches.
-   * \return True available DataRate.
-   */
-  DataRate GetAvailableDataRate (void) const;
-
-  /**
-   * Get the availabe bandwitdh between these two switches, considering a
-   * saving reserve factor.
-   * \param bwFactor The bandwidth saving factor.
-   * \return True available DataRate.
-   */
-  DataRate GetAvailableDataRate (double bwFactor) const;
 
   /**
    * Return the bandwidth usage ratio, ignoring the saving reserve factor.
@@ -82,57 +86,63 @@ public:
   double GetUsageRatio (void) const;
 
   /**
-   * TracedCallback signature for bandwidth usage ratio.
-   * \param swIdx1 The first switch index.
-   * \param swIdx2 The second switch index.
-   * \param ratio The bandwidth usage ratio.
+   * \name Switch metadata member accessors.
+   * \return The requested field.
    */
-  typedef void (*UsageTracedCallback)
-    (uint16_t swIdx1, uint16_t swIdx2, double ratio);
+  //\{
+  uint16_t GetSwIdxFirst (void) const;
+  uint16_t GetSwIdxSecond (void) const;
+  uint32_t GetPortNoFirst (void) const;
+  uint32_t GetPortNoSecond (void) const;
+  Ptr<const OFSwitch13NetDevice> GetSwDevFirst (void) const;
+  Ptr<const OFSwitch13NetDevice> GetSwDevSecond (void) const;
+  Ptr<const CsmaNetDevice> GetPortDevFirst (void) const;
+  Ptr<const CsmaNetDevice> GetPortDevSecond (void) const;
+  //\}
 
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
   /**
-   * Reserve some bandwith between these two switches.
+   * Get the available bandwidth between these two switches.
+   * \return True available DataRate.
+   */
+  DataRate GetAvailableDataRate (void) const;
+
+  /**
+   * Get the available bandwidth between these two switches, considering a
+   * saving reserve factor.
+   * \param bwFactor The bandwidth saving factor.
+   * \return True available DataRate.
+   */
+  DataRate GetAvailableDataRate (double bwFactor) const;
+
+  /**
+   * Reserve some bandwidth between these two switches.
    * \param dr The DataRate to reserve.
    * \return True if everything is ok, false otherwise.
    */
   bool ReserveDataRate (DataRate dr);
 
   /**
-   * Release some bandwith between these two switches.
+   * Release some bandwidth between these two switches.
    * \param dr The DataRate to release.
    * \return True if everything is ok, false otherwise.
    */
   bool ReleaseDataRate (DataRate dr);
 
-  /** Information associated to the first switch */
-  //\{
-  uint16_t m_switchIdx1;                  //!< Switch index
-  Ptr<OFSwitch13NetDevice> m_switchDev1;  //!< OpenFlow device
-  Ptr<CsmaNetDevice> m_portDev1;          //!< OpenFlow csma port device
-  uint32_t m_portNum1;                    //!< OpenFlow port number
-  //\}
-
-  /** Information associated to the second switch */
-  //\{
-  uint16_t m_switchIdx2;                  //!< Switch index
-  Ptr<OFSwitch13NetDevice> m_switchDev2;  //!< OpenFlow device
-  Ptr<CsmaNetDevice> m_portDev2;          //!< OpenFlow csma port device
-  uint32_t m_portNum2;                    //!< OpenFlow port number
-  //\}
-
-  /** Information associated to the connection between these two switches */
-  //\{
-  DataRate m_maxDataRate;         //!< Maximum nominal bandwidth
-  DataRate m_reservedDataRate;    //!< Reserved bandwitdth
-  //\}
-
 private:
-  /** The usage ratio trace source, fired when reserving/releasing DataRate. */
-  TracedCallback<uint16_t, uint16_t, double> m_usageTrace;
+  SwitchData m_sw1; //!< First switch (lowest index)
+  SwitchData m_sw2; //!< Second switch (highest index)
+
+  DataRate m_fwDataRate;  //!< Forward data rate (from sw1 to sw2)
+  DataRate m_bwDataRate;  //!< Backward data rate (from sw2 to sw1)
+  
+  bool m_fullDuplex;      //!< Full duplex connection
+
+  DataRate m_fwReserved;  //!< Forward reserved data rate
+  DataRate m_bwReserved;  //!< Backward reserved data rate
 };
 
 };  // namespace ns3

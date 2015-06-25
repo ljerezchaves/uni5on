@@ -165,7 +165,10 @@ private:
   double              m_bwFactor;         //!< Bandwidth saving factor
   uint16_t            m_noSwitches;       //!< Number of switches in topology.
 
-  /** Map saving <Pair of switch indexes / Connection information */
+  /** 
+   * Map saving <Pair of switch indexes / Connection information.
+   * The pair of switch indexes are saved in increasing order.
+   */
   typedef std::map<SwitchPair_t, Ptr<ConnectionInfo> > ConnInfoMap_t;
   ConnInfoMap_t       m_connections;      //!< Connections between switches.
 };
