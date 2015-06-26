@@ -171,8 +171,9 @@ TrafficHelper::InstallHttp ()
   tft->Add (filter);
 
   // Dedicated Non-GBR EPS bearer (QCI 8)
+  // FIXME: Non-GBR traffic should have no gbr request.
   GbrQosInformation qos;
-  qos.gbrDl = 131072;     // Reserving 128 Kbps in downlink //FIXME?
+  qos.gbrDl = 131072;     // Reserving 128 Kbps in downlink
   qos.gbrUl = 32768;      // Reserving 32 Kbps in uplink
   qos.mbrDl = 524288;     // Max of 512 Kbps in downlink
   qos.mbrUl = 131072;     // Max of 128 Kbps in uplink
@@ -267,6 +268,7 @@ TrafficHelper::InstallStoredVideo ()
   tft->Add (filter);
 
   // Dedicated Non-GBR EPS bearer (QCI 8)
+  // FIXME: Non-GBR traffic should have no gbr request.
   GbrQosInformation qos;
   qos.gbrDl = 1.5 * m_avgBitRate [videoIdx];
   qos.mbrDl = (qos.gbrDl + m_maxBitRate [videoIdx]) / 2;
@@ -307,8 +309,8 @@ TrafficHelper::InstallRealTimeVideo ()
 
   // Dedicated GBR EPS bearer (QCI 4).
   GbrQosInformation qos;
-  qos.gbrDl = 524288;   //  512 Kbps (average + 50 %)
-  qos.mbrDl = 1048576;  // 1024 Kbps (maximum / 2)
+  qos.gbrDl = 262114;   // 256 Kbps (considering average rate of 110 Kbps)
+  qos.mbrDl = 786432;   // 768 Kbps (considering peak rate of 1 Mbps)
   EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
 
   // Link EPC info to application
