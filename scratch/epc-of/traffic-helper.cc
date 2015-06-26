@@ -63,16 +63,25 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   m_stVideoRng->SetAttribute ("Min", DoubleValue (0));
   m_stVideoRng->SetAttribute ("Max", DoubleValue (6));
 
-  // Configuring application traffic attributes 
+  // For HTTP traffic, load 3 pages before idle time
   m_httpHelper.SetClientAttribute ("MaxPages", UintegerValue (3)); 
+  
+  // For VoIP call: average call lenght of 1min 40sec, with 30sec stdev
   m_voipHelper.SetServerAttribute ("CallDuration", 
     StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=900.0]"));
+  
+  // For stored video: average video lenght of 3min, with 1min stdev
   m_stVideoHelper.SetServerAttribute ("VideoDuration", 
-    StringValue ("ns3::NormalRandomVariable[Mean=75.0|Variance=2025.0]"));
+    StringValue ("ns3::NormalRandomVariable[Mean=180.0|Variance=3600.0]"));
+
+  // For real time video streaming: average 5min, with 1min stdev
   m_rtVideoHelper.SetServerAttribute ("VideoDuration", 
-    StringValue ("ns3::NormalRandomVariable[Mean=300.0|Variance=90000.0]"));
+    StringValue ("ns3::NormalRandomVariable[Mean=300.0|Variance=3600.0]"));
+  
+  // Setting defaul real time video to office cam with medium quality
+  // Average bit rate: 110Kbps | Peak bit rate: 1Mbps
   m_rtVideoHelper.SetServerAttribute ("TraceFilename", 
-    StringValue (m_videoDir + "office-cam.data"));
+    StringValue (m_videoDir + "office-cam-medium.data"));
 }
 
 TrafficHelper::~TrafficHelper ()
