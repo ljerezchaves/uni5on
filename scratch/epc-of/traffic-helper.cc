@@ -63,16 +63,25 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   m_stVideoRng->SetAttribute ("Min", DoubleValue (0));
   m_stVideoRng->SetAttribute ("Max", DoubleValue (6));
 
-  // Configuring application traffic attributes 
+  // For HTTP traffic, load 3 pages before idle time
   m_httpHelper.SetClientAttribute ("MaxPages", UintegerValue (3)); 
+  
+  // For VoIP call: average call lenght of 1min 40sec, with 30sec stdev
   m_voipHelper.SetServerAttribute ("CallDuration", 
     StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=900.0]"));
+  
+  // For stored video: average video lenght of 3min, with 1min stdev
   m_stVideoHelper.SetServerAttribute ("VideoDuration", 
-    StringValue ("ns3::NormalRandomVariable[Mean=75.0|Variance=2025.0]"));
+    StringValue ("ns3::NormalRandomVariable[Mean=180.0|Variance=3600.0]"));
+
+  // For real time video streaming: average 5min, with 1min stdev
   m_rtVideoHelper.SetServerAttribute ("VideoDuration", 
-    StringValue ("ns3::NormalRandomVariable[Mean=300.0|Variance=90000.0]"));
+    StringValue ("ns3::NormalRandomVariable[Mean=300.0|Variance=3600.0]"));
+  
+  // Setting defaul real time video to office cam with medium quality
+  // Average bit rate: 110Kbps | Peak bit rate: 1Mbps
   m_rtVideoHelper.SetServerAttribute ("TraceFilename", 
-    StringValue (m_videoDir + "office-cam.data"));
+    StringValue (m_videoDir + "office-cam-medium.data"));
 }
 
 TrafficHelper::~TrafficHelper ()
@@ -162,8 +171,9 @@ TrafficHelper::InstallHttp ()
   tft->Add (filter);
 
   // Dedicated Non-GBR EPS bearer (QCI 8)
+  // FIXME: Non-GBR traffic should have no gbr request.
   GbrQosInformation qos;
-  qos.gbrDl = 131072;     // Reserving 128 Kbps in downlink //FIXME?
+  qos.gbrDl = 131072;     // Reserving 128 Kbps in downlink
   qos.gbrUl = 32768;      // Reserving 32 Kbps in uplink
   qos.mbrDl = 524288;     // Max of 512 Kbps in downlink
   qos.mbrUl = 131072;     // Max of 128 Kbps in uplink
@@ -258,6 +268,7 @@ TrafficHelper::InstallStoredVideo ()
   tft->Add (filter);
 
   // Dedicated Non-GBR EPS bearer (QCI 8)
+  // FIXME: Non-GBR traffic should have no gbr request.
   GbrQosInformation qos;
   qos.gbrDl = 1.5 * m_avgBitRate [videoIdx];
   qos.mbrDl = (qos.gbrDl + m_maxBitRate [videoIdx]) / 2;
@@ -298,8 +309,8 @@ TrafficHelper::InstallRealTimeVideo ()
 
   // Dedicated GBR EPS bearer (QCI 4).
   GbrQosInformation qos;
-  qos.gbrDl = 524288;   //  512 Kbps (average + 50 %)
-  qos.mbrDl = 1048576;  // 1024 Kbps (maximum / 2)
+  qos.gbrDl = 262114;   // 256 Kbps (considering average rate of 110 Kbps)
+  qos.mbrDl = 786432;   // 768 Kbps (considering peak rate of 1 Mbps)
   EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
 
   // Link EPC info to application

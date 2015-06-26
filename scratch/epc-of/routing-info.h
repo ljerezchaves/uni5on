@@ -74,6 +74,12 @@ public:
   /** \return The GTP TEID. */
   uint32_t GetTeid (void) const;
 
+  /** \return True when there is downlink traffic in this bearer. */
+  bool HasDownlinkTraffic (void) const;
+  
+  /** \return True when there is uplink traffic in this bearer. */
+  bool HasUplinkTraffic (void) const;
+
 private:
   uint32_t          m_teid;         //!< GTP TEID
   uint16_t          m_sgwIdx;       //!< Sgw switch index

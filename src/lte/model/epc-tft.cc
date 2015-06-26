@@ -202,5 +202,35 @@ EpcTft::Matches (Direction direction,
   return false;
 }
 
+bool
+EpcTft::HasDownlinkFilter (void) const
+{
+  std::list<PacketFilter>::const_iterator it;
+  for (it = m_filters.begin (); it != m_filters.end (); ++it)
+    {
+      if (it->direction == EpcTft::DOWNLINK || 
+          it->direction == EpcTft::BIDIRECTIONAL)
+        {
+          return true;
+        }
+    }
+  return false;
+}
+
+bool
+EpcTft::HasUplinkFilter (void) const
+{
+  std::list<PacketFilter>::const_iterator it;
+  for (it = m_filters.begin (); it != m_filters.end (); ++it)
+    {
+      if (it->direction == EpcTft::UPLINK || 
+          it->direction == EpcTft::BIDIRECTIONAL)
+        {
+          return true;
+        }
+    }
+  return false;
+}
+
 
 } // namespace ns3
