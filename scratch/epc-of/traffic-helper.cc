@@ -310,7 +310,6 @@ TrafficHelper::InstallRealTimeVideo ()
   // Dedicated GBR EPS bearer (QCI 4).
   GbrQosInformation qos;
   qos.gbrDl = 262114;   // 256 Kbps (considering average rate of 110 Kbps)
-  qos.mbrDl = 786432;   // 768 Kbps (considering peak rate of 1 Mbps)
   EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
 
   // Link EPC info to application
