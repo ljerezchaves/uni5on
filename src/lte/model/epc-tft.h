@@ -157,6 +157,19 @@ public:
 		  uint16_t localPort,
 		  uint8_t typeOfService);
 
+  /**
+   * Iterate over current packet filters looking for any downlink or
+   * bidirectional filter.
+   * \return True if downlink filter found, false otherwise.
+   */
+  bool HasDownlinkFilter (void) const;
+
+  /**
+   * Iterate over current packet filters looking for any uplink or
+   * bidirectional filter.
+   * \return True if uplink filter found, false otherwise.
+   */
+  bool HasUplinkFilter (void) const;
 
 private:
 
