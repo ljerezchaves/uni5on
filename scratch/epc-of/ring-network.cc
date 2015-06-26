@@ -58,22 +58,22 @@ RingNetwork::GetTypeId (void)
     .AddAttribute ("SwitchLinkDataRate",
                    "The data rate for the links between OpenFlow switches.",
                    DataRateValue (DataRate ("100Mb/s")),
-                   MakeDataRateAccessor (&RingNetwork::m_switchLinkDataRate),
+                   MakeDataRateAccessor (&RingNetwork::m_swLinkDataRate),
                    MakeDataRateChecker ())
     .AddAttribute ("SwitchLinkDelay",
                    "The delay for the links between OpenFlow switches.",
                    TimeValue (MicroSeconds (100)), // 20km fiber cable latency
-                   MakeTimeAccessor (&RingNetwork::m_switchLinkDelay),
+                   MakeTimeAccessor (&RingNetwork::m_swLinkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("GatewayLinkDataRate",
                    "The data rate for the link connecting the gateway to the OpenFlow network.",
                    DataRateValue (DataRate ("10Gb/s")),
-                   MakeDataRateAccessor (&RingNetwork::m_gatewayLinkDataRate),
+                   MakeDataRateAccessor (&RingNetwork::m_gwLinkDataRate),
                    MakeDataRateChecker ())
     .AddAttribute ("GatewayLinkDelay",
                    "The delay for the link connecting the gateway to the OpenFlow network.",
                    TimeValue (MicroSeconds (0)),
-                   MakeTimeAccessor (&RingNetwork::m_gatewayLinkDelay),
+                   MakeTimeAccessor (&RingNetwork::m_gwLinkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("LinkMtu",
                    "The MTU for CSMA OpenFlow links. "
@@ -120,8 +120,8 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
 
   // Configuring csma links for connection between switches
   m_ofCsmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
-  m_ofCsmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_switchLinkDataRate));
-  m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_switchLinkDelay));
+  m_ofCsmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_swLinkDataRate));
+  m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_swLinkDelay));
 
   // Connecting switches in ring topology (clockwise order)
   for (uint16_t i = 0; i < m_nodes; i++)
@@ -156,15 +156,15 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
       nextPortDevice = DynamicCast<CsmaNetDevice> (devs.Get (1));
       nextPortNum = nextDevice->AddSwitchPort (nextPortDevice)->GetPortNo ();
 
-      // Switch order inside ConnectionInfo object must respect clockwise order.
-      SwitchData currSw = {currIndex, currDevice, currPortDevice, currPortNum};
-      SwitchData nextSw = {nextIndex, nextDevice, nextPortDevice, nextPortNum};
-      Ptr<ConnectionInfo> cInfo = 
-        CreateObject<ConnectionInfo> (currSw, nextSw, m_switchLinkDataRate);
+      // Switch order inside ConnectionInfo object must respect clockwise order
+      // (RingController assume this order when installing switch rules).
+      ConnectionInfo::SwitchData currSw = {currIndex, currDevice, currPortDevice, currPortNum};
+      ConnectionInfo::SwitchData nextSw = {nextIndex, nextDevice, nextPortDevice, nextPortNum};
+      Ptr<ConnectionInfo> cInfo = CreateObject<ConnectionInfo> (currSw, nextSw, m_swLinkDataRate);
       
       // Setting full duplex attribute
-      BooleanValue fullDuplex (DynamicCast<CsmaChannel> (
-        currPortDevice->GetChannel ())->IsFullDuplex ());
+      BooleanValue fullDuplex (
+        DynamicCast<CsmaChannel> (currPortDevice->GetChannel ())->IsFullDuplex ());
       cInfo->SetAttribute ("FullDuplex", fullDuplex);
       
       // Fire trace source notifying new connection between switches. 
@@ -233,8 +233,8 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   // Only for the gateway link, set specific datarate and delay.
   if (counter == 1)
     {
-      nodeDev->GetChannel ()->SetAttribute ("DataRate", DataRateValue (m_gatewayLinkDataRate));
-      nodeDev->GetChannel ()->SetAttribute ("Delay", TimeValue (m_gatewayLinkDelay));
+      nodeDev->GetChannel ()->SetAttribute ("DataRate", DataRateValue (m_gwLinkDataRate));
+      nodeDev->GetChannel ()->SetAttribute ("Delay", TimeValue (m_gwLinkDelay));
     }
 
   // Setting interface names for pacp filename

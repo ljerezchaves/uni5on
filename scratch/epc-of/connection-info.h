@@ -31,17 +31,7 @@ namespace ns3 {
 /** A pair of switches index */
 typedef std::pair<uint16_t, uint16_t> SwitchPair_t;
 
-/**
- * \ingroup epcof
- * Metadata associated to a switch, which will be used by ConnectionInfo.
- */
-struct SwitchData
-{
-  uint16_t                  swIdx;    //!< Switch index
-  Ptr<OFSwitch13NetDevice>  swDev;    //!< OpenFlow switch device
-  Ptr<CsmaNetDevice>        portDev;  //!< OpenFlow csma port device
-  uint32_t                  portNum;  //!< OpenFlow port number
-};
+
 
 /**
  * \ingroup epcof
@@ -53,6 +43,17 @@ class ConnectionInfo : public Object
   friend class RingController;
 
 public:
+  /**
+   * Metadata associated to a switch.
+   */
+  struct SwitchData
+  {
+    uint16_t                  swIdx;    //!< Switch index
+    Ptr<OFSwitch13NetDevice>  swDev;    //!< OpenFlow switch device
+    Ptr<CsmaNetDevice>        portDev;  //!< OpenFlow csma port device
+    uint32_t                  portNum;  //!< OpenFlow port number
+  };
+
   ConnectionInfo ();            //!< Default constructor
   virtual ~ConnectionInfo ();   //!< Dummy destructor, see DoDipose
 
