@@ -89,6 +89,18 @@ RoutingInfo::GetTeid (void) const
   return m_teid;
 }
 
+bool
+RoutingInfo::HasDownlinkTraffic (void) const
+{
+  return m_bearer.tft->HasDownlinkFilter ();
+}
+
+bool
+RoutingInfo::HasUplinkTraffic (void) const
+{
+  return m_bearer.tft->HasUplinkFilter ();
+}
+
 
 // ------------------------------------------------------------------------ //
 MeterInfo::MeterInfo ()
