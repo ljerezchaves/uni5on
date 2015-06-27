@@ -31,8 +31,6 @@ namespace ns3 {
 /** A pair of switches index */
 typedef std::pair<uint16_t, uint16_t> SwitchPair_t;
 
-
-
 /**
  * \ingroup epcof
  * Metadata associated to a connection between
@@ -54,6 +52,15 @@ public:
     uint32_t                  portNum;  //!< OpenFlow port number
   };
 
+  /**
+   * Link direction index.
+   */
+  enum Direction
+  {
+    FORWARD = 0,  //!< Forward direction
+    BACKWARD = 1  //!< Backwad direction
+  };
+
   ConnectionInfo ();            //!< Default constructor
   virtual ~ConnectionInfo ();   //!< Dummy destructor, see DoDipose
 
@@ -61,9 +68,13 @@ public:
    * Complete constructor.
    * \param sw1 First switch metadata.
    * \param sw2 Second switch metadata.
-   * \param linkSpeed Channel data rate in connection between switches.
+   * \param channel The CsmaChannel physical link connecting these switches.
+   * \attention The switch order must be the same as created by the CsmaHelper.
+   * Internal channel handling is based on this order to get corret full-duplex
+   * links.
    */
-  ConnectionInfo (SwitchData sw1, SwitchData sw2, DataRate linkSpeed);
+  ConnectionInfo (SwitchData sw1, SwitchData sw2, 
+                  Ptr<CsmaChannel> channel);
 
   /**
    * Register this type.
@@ -79,28 +90,6 @@ public:
   SwitchPair_t GetSwitchIndexPair (void) const;
 
   /**
-   * Return the bandwidth usage ratio, considering both forward and backward
-   * paths for full-duplex channel. This method ignores the saving reserve
-   * factor.
-   * \return The usage ratio.
-   */
-  double GetUsageRatio (void) const;
-
-  /**
-   * Return the bandwidth usage ratio in forward direction, This method ignores
-   * the saving reserve factor.
-   * \return The usage ratio.
-   */
-  double GetFowardUsageRatio (void) const;
-
-  /**
-   * Return the bandwidth usage ratio in backward direction, This method
-   * ignores the saving reserve factor.
-   * \return The usage ratio.
-   */
-  double GetBackwardUsageRatio (void) const;
-
-  /**
    * \name Switch metadata member accessors.
    * \return The requested field.
    */
@@ -114,6 +103,50 @@ public:
   Ptr<const CsmaNetDevice> GetPortDevFirst (void) const;
   Ptr<const CsmaNetDevice> GetPortDevSecond (void) const;
   //\}
+
+  /**
+   * Return the bandwidth reserved ratio, considering both forward and backward
+   * paths for full-duplex channel. This method ignores the saving reserve
+   * factor.
+   * \return The usage ratio.
+   */
+  double GetReservedRatio (void) const;
+
+  /**
+   * Return the bandwidth reserved ratio in forward direction, This method ignores
+   * the saving reserve factor.
+   * \return The usage ratio.
+   */
+  double GetFowardReservedRatio (void) const;
+
+  /**
+   * Return the bandwidth reserved ratio in backward direction, This method
+   * ignores the saving reserve factor.
+   * \return The usage ratio.
+   */
+  double GetBackwardReservedRatio (void) const;
+
+  /**
+   * Inspect physical channel for half-duplex or full-duplex operation mode.
+   * \return True when link in full-duplex mode, false otherwise.
+   */
+  bool IsFullDuplex (void) const;
+
+  /**
+   * Inspect physical channel for the assigned data rate.
+   * \return The channel maximum nominal data rate.
+   */
+  DataRate LinkDataRate (void) const;
+
+  /**
+   * For two switch indexes, this methods asserts that boths indexes are valid
+   * for this connection, and identifies the link direction based on source and
+   * destination indexes.
+   * \param src The source switch index.
+   * \param dst The destination switch index.
+   * \return The connection direction.
+   */
+  ConnectionInfo::Direction GetDirection (uint16_t src, uint16_t dst) const;
 
 protected:
   /** Destructor implementation */
@@ -142,31 +175,26 @@ protected:
    * Reserve some bandwidth between these two switches.
    * \param srcIdx The source switch index.
    * \param dstIdx The destination switch index.
-   * \param dr The DataRate to reserve.
+   * \param rate The DataRate to reserve.
    * \return True if everything is ok, false otherwise.
    */
-  bool ReserveDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate dr);
+  bool ReserveDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate);
 
   /**
    * Release some bandwidth between these two switches.
    * \param srcIdx The source switch index.
    * \param dstIdx The destination switch index.
-   * \param dr The DataRate to release.
+   * \param rate The DataRate to release.
    * \return True if everything is ok, false otherwise.
    */
-  bool ReleaseDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate dr);
+  bool ReleaseDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate);
 
 private:
-  SwitchData m_sw1; //!< First switch (lowest index)
-  SwitchData m_sw2; //!< Second switch (highest index)
+  SwitchData        m_sw1;          //!< First switch (lowest index)
+  SwitchData        m_sw2;          //!< Second switch (highest index)
+  Ptr<CsmaChannel>  m_channel;      //!< The link channel connecting switches
 
-  DataRate m_fwDataRate;  //!< Forward data rate (from sw1 to sw2)
-  DataRate m_bwDataRate;  //!< Backward data rate (from sw2 to sw1)
-  
-  bool m_fullDuplex;      //!< Full duplex connection
-
-  DataRate m_fwReserved;  //!< Forward reserved data rate
-  DataRate m_bwReserved;  //!< Backward reserved data rate
+  DataRate          m_reserved [2]; //!< Reserved data rate
 };
 
 };  // namespace ns3

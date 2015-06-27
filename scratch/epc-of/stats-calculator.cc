@@ -388,7 +388,9 @@ BandwidthStatsCalculator::DumpStatistics (void)
   std::vector<Ptr<ConnectionInfo> >::iterator it;
   for (it = m_connections.begin (); it != m_connections.end (); it++)
     {
-      *bwdWrapper->GetStream () << left << setw (5) << fixed << (*it)->GetUsageRatio () << " ";
+      *bwdWrapper->GetStream () << left 
+        << setw (5) << fixed << (*it)->GetFowardReservedRatio () << " "
+        << setw (5) << fixed << (*it)->GetBackwardReservedRatio () << "   ";
     }
   *bwdWrapper->GetStream () << std::endl;
 }
@@ -423,7 +425,7 @@ BandwidthStatsCalculator::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
   *bwdWrapper->GetStream () << left
     << setw (1) << key.first 
     << "-" 
-    << setw (7) << key.second;
+    << setw (18) << key.second;
 }
 
 void

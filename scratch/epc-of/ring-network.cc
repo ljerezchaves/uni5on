@@ -160,12 +160,8 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
       // (RingController assume this order when installing switch rules).
       ConnectionInfo::SwitchData currSw = {currIndex, currDevice, currPortDevice, currPortNum};
       ConnectionInfo::SwitchData nextSw = {nextIndex, nextDevice, nextPortDevice, nextPortNum};
-      Ptr<ConnectionInfo> cInfo = CreateObject<ConnectionInfo> (currSw, nextSw, m_swLinkDataRate);
-      
-      // Setting full duplex attribute
-      BooleanValue fullDuplex (
-        DynamicCast<CsmaChannel> (currPortDevice->GetChannel ())->IsFullDuplex ());
-      cInfo->SetAttribute ("FullDuplex", fullDuplex);
+      Ptr<ConnectionInfo> cInfo = CreateObject<ConnectionInfo> (currSw, nextSw,
+        DynamicCast<CsmaChannel> (currPortDevice->GetChannel ()));
       
       // Fire trace source notifying new connection between switches. 
       m_newConnTrace (cInfo);

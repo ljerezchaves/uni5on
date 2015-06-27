@@ -36,13 +36,18 @@ ConnectionInfo::~ConnectionInfo ()
 }
 
 ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2, 
-                                DataRate linkSpeed)
+                                Ptr<CsmaChannel> channel)
   : m_sw1 (sw1),
     m_sw2 (sw2),
-    m_fwDataRate (linkSpeed),
-    m_bwDataRate (linkSpeed)
+    m_channel (channel)
 {
   NS_LOG_FUNCTION (this);
+
+  // Asserting internal device order to ensure thar forward and backward
+  // indexes are correct.
+  NS_ASSERT_MSG ((channel->GetCsmaDevice (0) == GetPortDevFirst () &&
+                  channel->GetCsmaDevice (1) == GetPortDevSecond ()),
+                  "Invalid device order in csma channel.");
 }
 
 TypeId
@@ -51,11 +56,6 @@ ConnectionInfo::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::ConnectionInfo")
     .SetParent<Object> ()
     .AddConstructor<ConnectionInfo> ()
-    .AddAttribute ("FullDuplex",
-                   "Whether the channel is full duplex.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&ConnectionInfo::m_fullDuplex),
-                   MakeBooleanChecker ())
   ;
   return tid;
 }
@@ -64,33 +64,6 @@ SwitchPair_t
 ConnectionInfo::GetSwitchIndexPair (void) const
 {
   return SwitchPair_t (m_sw1.swIdx, m_sw2.swIdx);
-}
-
-double
-ConnectionInfo::GetUsageRatio (void) const
-{
-  if (m_fullDuplex)
-    {
-      // For full duplex links, considering usage ratio in both directions.
-      return (double)(m_fwReserved.GetBitRate () + m_bwReserved.GetBitRate ()) / 
-                     (m_fwDataRate.GetBitRate () + m_bwDataRate.GetBitRate ());
-    }
-  else
-    {
-      return GetFowardUsageRatio ();
-    }
-}
-
-double
-ConnectionInfo::GetFowardUsageRatio (void) const
-{
-  return (double)m_fwReserved.GetBitRate () / m_fwDataRate.GetBitRate ();
-}
-
-double
-ConnectionInfo::GetBackwardUsageRatio (void) const
-{
-  return (double)m_bwReserved.GetBitRate () / m_bwDataRate.GetBitRate ();
 }
 
 uint16_t
@@ -141,122 +114,114 @@ ConnectionInfo::GetPortDevSecond (void) const
   return m_sw2.portDev;
 }
 
+double
+ConnectionInfo::GetReservedRatio (void) const
+{
+  if (IsFullDuplex ())
+    {
+      // For full duplex links, considering usage ratio in both directions.
+      return (double)
+        ((m_reserved [0] + m_reserved [1]).GetBitRate ()) / 
+         (LinkDataRate ().GetBitRate () * 2);
+    }
+  else
+    {
+      return GetFowardReservedRatio ();
+    }
+}
+
+double
+ConnectionInfo::GetFowardReservedRatio (void) const
+{
+  return (double)
+    (m_reserved [ConnectionInfo::FORWARD]).GetBitRate () / 
+    (LinkDataRate ().GetBitRate ());
+}
+
+double
+ConnectionInfo::GetBackwardReservedRatio (void) const
+{
+  return (double)
+    (m_reserved [ConnectionInfo::BACKWARD]).GetBitRate () / 
+    (LinkDataRate ().GetBitRate ());
+}
+
+bool
+ConnectionInfo::IsFullDuplex (void) const
+{
+  return m_channel->IsFullDuplex ();
+}
+
+DataRate
+ConnectionInfo::LinkDataRate (void) const
+{
+  return m_channel->GetDataRate ();
+}
+
+ConnectionInfo::Direction
+ConnectionInfo::GetDirection (uint16_t src, uint16_t dst) const
+{
+  NS_ASSERT_MSG (((src == GetSwIdxFirst ()  && dst == GetSwIdxSecond ()) ||
+                  (src == GetSwIdxSecond () && dst == GetSwIdxFirst ())),
+                 "Invalid switch indexes for this connection.");
+  
+  if (IsFullDuplex () && src == GetSwIdxSecond ())
+    {
+      return ConnectionInfo::BACKWARD;
+    }
+      
+  // For half-duplex channel, always return true, as we will 
+  // only use the forwarding path for resource reservations.
+  return ConnectionInfo::FORWARD;
+}
+
 void
 ConnectionInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+  m_channel = 0;
 }
 
 DataRate
 ConnectionInfo::GetAvailableDataRate (uint16_t srcIdx, uint16_t dstIdx) const
 {
-  // At first, assuming forwarding direction
-  DataRate maximum = m_fwDataRate;
-  DataRate reserved = m_fwReserved;
-  if (m_fullDuplex)
-    {
-      if (srcIdx == GetSwIdxSecond () && dstIdx == GetSwIdxFirst ())
-        { 
-          // Backward direction.
-          maximum = m_bwDataRate;
-          reserved = m_bwReserved;
-        }
-    }
-  return maximum - reserved;
+  ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
+  return LinkDataRate () - m_reserved [dir];
 }
 
 DataRate
 ConnectionInfo::GetAvailableDataRate (uint16_t srcIdx, uint16_t dstIdx, 
                                       double bwFactor) const
 {
-  // At first, assuming forwarding direction
-  DataRate maximum = m_fwDataRate;
-  DataRate reserved = m_fwReserved;
-  if (m_fullDuplex)
-    {
-      if (srcIdx == GetSwIdxSecond () && dstIdx == GetSwIdxFirst ())
-        { 
-          // Backward direction.
-          maximum = m_bwDataRate;
-          reserved = m_bwReserved;
-        }
-    }
-  return (maximum * (1. - bwFactor)) - reserved;
+  ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
+  return (LinkDataRate () * (1. - bwFactor)) - m_reserved [dir];
 }
 
 bool
-ConnectionInfo::ReserveDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate dr)
+ConnectionInfo::ReserveDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate)
 {
-  if (m_fullDuplex)
+  ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
+
+  if (m_reserved [dir] + rate > LinkDataRate ())
     {
-      if (srcIdx == GetSwIdxFirst ())
-        { 
-          // Forward direction
-          if (m_fwReserved + dr > m_fwDataRate)
-            { 
-              // No available bandwidth
-              return false;
-            }
-          m_fwReserved = m_fwReserved + dr;
-        }
-      else
-        { 
-          // Backward direction
-          if (m_bwReserved + dr > m_bwDataRate)
-            { 
-              // No available bandwidth
-              return false;
-            }
-          m_bwReserved = m_bwReserved + dr;
-        }
+      return false;
     }
-  else
-    {
-      if (m_fwReserved + dr > m_fwDataRate)
-        { 
-          // No available bandwidth
-          return false;
-        }
-      m_fwReserved = m_fwReserved + dr;
-    }
+  
+  m_reserved [dir] = m_reserved [dir] + rate;
   return true;
 }
 
 bool
-ConnectionInfo::ReleaseDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate dr)
+ConnectionInfo::ReleaseDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate)
 {
-  if (m_fullDuplex)
+  ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
+
+  if (m_reserved [dir] - rate < DataRate (0))
     {
-      if (srcIdx == GetSwIdxFirst ())
-        { 
-          // Forward direction
-          if (m_fwReserved - dr < DataRate (0))
-            { 
-              // No available bandwidth
-              return false;
-            }
-          m_fwReserved = m_fwReserved - dr;
-        }
-      else
-        { 
-          // Backward direction
-          if (m_bwReserved - dr < DataRate (0))
-            { 
-              // No available bandwidth
-              return false;
-            }
-          m_bwReserved = m_bwReserved - dr;
-        }
+      return false;
     }
-  else
-    {
-      if (m_fwReserved - dr < DataRate (0))
-        { 
-          // No available bandwidth
-          return false;
-        }
-      m_fwReserved = m_fwReserved - dr;
-    }
+  
+  m_reserved [dir] = m_reserved [dir] - rate;
   return true;
 }
 
