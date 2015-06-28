@@ -191,10 +191,10 @@ ConnectionInfo::GetAvailableDataRate (uint16_t srcIdx, uint16_t dstIdx) const
 
 DataRate
 ConnectionInfo::GetAvailableDataRate (uint16_t srcIdx, uint16_t dstIdx, 
-                                      double bwFactor) const
+                                      double maxBwFactor) const
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
-  return (LinkDataRate () * (1. - bwFactor)) - m_reserved [dir];
+  return (LinkDataRate () * maxBwFactor) - m_reserved [dir];
 }
 
 bool

@@ -162,7 +162,7 @@ private:
   bool RemoveMeterRules (Ptr<RoutingInfo> rInfo);
 
   RoutingStrategy     m_strategy;         //!< Routing strategy in use.
-  double              m_bwFactor;         //!< Bandwidth saving factor
+  double              m_maxBwFactor;      //!< Bandwidth saving factor
   uint16_t            m_noSwitches;       //!< Number of switches in topology.
 
   /** 

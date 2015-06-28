@@ -49,10 +49,10 @@ RingController::GetTypeId (void)
                    MakeEnumChecker (RingController::HOPS, "hops",
                                     RingController::BAND, "bandwidth",
                                     RingController::SMART, "smart"))
-    .AddAttribute ("BwReserve",
-                   "Bandwitdth saving factor to reserve.",
-                   DoubleValue (0.2),
-                   MakeDoubleAccessor (&RingController::m_bwFactor),
+    .AddAttribute ("MaxBwFactor",
+                   "Maximum bandwitdth reserving factor, limiting link usage.",
+                   DoubleValue (0.8),
+                   MakeDoubleAccessor (&RingController::m_maxBwFactor),
                    MakeDoubleChecker<double> (0.0, 1.0))
   ;
   return tid;
@@ -609,7 +609,7 @@ RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx,
     {
       uint16_t next = NextSwitchIndex (current, routingPath);
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-      DataRate linkBandwidth = cInfo->GetAvailableDataRate (current, next, m_bwFactor);
+      DataRate linkBandwidth = cInfo->GetAvailableDataRate (current, next, m_maxBwFactor);
       if (linkBandwidth < availableBandwidth)
         {
           availableBandwidth = linkBandwidth;

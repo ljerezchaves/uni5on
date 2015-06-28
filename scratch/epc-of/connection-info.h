@@ -161,15 +161,15 @@ protected:
   DataRate GetAvailableDataRate (uint16_t srcIdx, uint16_t dstIdx) const;
 
   /**
-   * Get the available bandwidth between these two switches, considering a
-   * saving reserve factor.
+   * Get the available bandwidth between these two switches, considering the
+   * maximum bandwidth reservation factor.
    * \param srcIdx The source switch index.
    * \param dstIdx The destination switch index.
-   * \param bwFactor The bandwidth saving factor.
+   * \param maxBwFactor The maximum bandwidth reservation factor.
    * \return The available data rate from srcIdx to dstIdx.
    */
   DataRate GetAvailableDataRate (uint16_t srcIdx, uint16_t dstIdx, 
-                                 double bwFactor) const;
+                                 double maxBwFactor) const;
 
   /**
    * Reserve some bandwidth between these two switches.
