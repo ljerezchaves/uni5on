@@ -71,7 +71,7 @@ std::string
 RoutingInfo::GetDescription (void) const
 {
   std::ostringstream desc;
-  desc  << (IsGbr () ? "    GBR" : "Non-GBR")
+  desc  << (IsGbr () ? "GBR" : "Non-GBR")
         << " [" << m_imsi << "@" << m_cellId << "]";
   return desc.str ();
 }

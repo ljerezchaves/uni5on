@@ -84,14 +84,14 @@ AdmissionStatsCalculator::DumpStatistics (void)
 {
   NS_LOG_FUNCTION (this);
 
-  *admWrapper->GetStream () << left
-    << setw (20) << Simulator::Now ().GetSeconds ()
-    << setw (9)  << m_gbrRequests
-    << setw (9)  << m_gbrBlocked
-    << setw (17)  << GetGbrBlockRatio ()
-    << setw (9)  << m_nonRequests
-    << setw (9)  << m_nonBlocked
-    << setw (9)  << GetNonGbrBlockRatio ()
+  *admWrapper->GetStream ()
+    << setw (12) << Simulator::Now ().GetSeconds () << "     "
+    << setw (8)  << m_gbrRequests                   << " "
+    << setw (8)  << m_gbrBlocked                    << " "
+    << setw (8)  << GetGbrBlockRatio ()             << "          "
+    << setw (8)  << m_nonRequests                   << " "
+    << setw (8)  << m_nonBlocked                    << " "
+    << setw (8)  << GetNonGbrBlockRatio ()
     << std::endl;
 
   ResetCounters ();
@@ -112,27 +112,30 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
 
   // Opening output files and printing header lines
   admWrapper = Create<OutputStreamWrapper> (m_admStatsFilename, std::ios::out);
-  *admWrapper->GetStream () << left 
-    << setw (12) << "Time (s)" 
-    << setw (8)  << "GBR"
+  *admWrapper->GetStream () << left
+    << setw (12) << "Time(s)" 
+                 << " GBR "
     << setw (9)  << "Reqs"
     << setw (9)  << "Blocks"
     << setw (9)  << "Ratio"
-    << setw (8)  << "Non-GBR"
+                 << " Non-GBR "
     << setw (9)  << "Reqs"
     << setw (9)  << "Blocks"
     << setw (9)  << "Ratio"
     << std::endl;
 
   brqWrapper = Create<OutputStreamWrapper> (m_brqStatsFilename, std::ios::out);
-  *brqWrapper->GetStream () << left 
-    << setw (12) << "Time (s)"
+  *brqWrapper->GetStream () << boolalpha << fixed << setprecision (4)
+    << left
+    << setw (10) << "Time(s)"
+    << right
     << setw (17) << "Description"
-    << setw (6)  << "TEID"
-    << setw (10) << "Accepted?"
-    << setw (12) << "Down (kbps)"
-    << setw (10) << "Up (kbps)"
-    << setw (40) << "Routing paths"
+    << setw (7)  << "TEID"
+    << setw (10) << "Accepted"
+    << setw (12) << "Down(kbps)"
+    << setw (12) << "Up(kbps)"
+    << left << "  "
+    << setw (12) << "Routing path"
     << std::endl;
 }
 
@@ -176,29 +179,32 @@ AdmissionStatsCalculator::NotifyRequest (bool accepted, Ptr<const RoutingInfo> r
       upRate = reserveInfo->GetUpDataRate ();
     }
 
-  std::string path = "Shortest paths"; // FIXME: Path description should be generic.
+  std::string path = "Shortest"; // FIXME path description should be generic
   Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   if (ringInfo)
     {
       if (ringInfo->IsDownInv () && ringInfo->IsUpInv ())
         {
-          path = "Inverted paths";
+          path = "Inverted";
         }
       else if (ringInfo->IsDownInv () || ringInfo->IsUpInv ())
         {
-          path = ringInfo->IsDownInv () ? "Inverted down path" : "Inverted up path";
+          path = ringInfo->IsDownInv () ? "Inverted down" : "Inverted up";
         }
     }
 
   // Save request stats into output file
-  *brqWrapper->GetStream () << left
-    << setw (12) << Simulator::Now ().GetSeconds ()
-    << setw (17) << "" // FIXME No traffic description by now.
-    << setw (6)  << rInfo->GetTeid ()
-    << setw (10) << (accepted ? "yes" : "no")
-    << setw (12) << (double)(downRate.GetBitRate ()) / 1024
-    << setw (10) << (double)(upRate.GetBitRate ()) / 1024
-    << setw (40) << path
+  *brqWrapper->GetStream ()
+    << left
+    << setw (9) << Simulator::Now ().GetSeconds ()          << " "
+    << right
+    << setw (17) << rInfo->GetDescription ()                << " "
+    << setw (6)  << rInfo->GetTeid ()                       << " "
+    << setw (9)  << accepted                                << " "
+    << setw (11) << (double)(downRate.GetBitRate ()) / 1024 << " "
+    << setw (11) << (double)(upRate.GetBitRate ()) / 1024   << "  "
+    << left
+    << setw (15) << path
     << std::endl;
 }
 
@@ -268,10 +274,10 @@ GatewayStatsCalculator::DumpStatistics (void)
 {
   NS_LOG_FUNCTION (this);
 
-  *pgwWrapper->GetStream () << left
-    << setw (12) << Simulator::Now ().GetSeconds ()
-    << setw (17) << (double)GetDownDataRate ().GetBitRate () / 1024
-    << setw (14) << (double)GetUpDataRate ().GetBitRate () / 1024
+  *pgwWrapper->GetStream () << fixed << setprecision (2) << left
+    << setw (11) << Simulator::Now ().GetSeconds () << right        << " "
+    << setw (15) << (double)GetDownDataRate ().GetBitRate () / 1024 << " "
+    << setw (13) << (double)GetUpDataRate ().GetBitRate () / 1024
     << std::endl;
 
   ResetCounters ();
@@ -292,9 +298,9 @@ GatewayStatsCalculator::NotifyConstructionCompleted (void)
   // Opening output files and printing header lines
   pgwWrapper = Create<OutputStreamWrapper> (m_pgwStatsFilename, std::ios::out);
   *pgwWrapper->GetStream () << left 
-    << setw (12) << "Time (s)" 
-    << setw (17) << "Downlink (kbps)"
-    << setw (14) << "Uplink (kbps)"
+    << setw (12) << "Time(s)" 
+    << setw (16) << "Downlink(kbps)"
+    << setw (13) << "Uplink(kbps)"
     << std::endl;
 }
 
@@ -390,9 +396,9 @@ BandwidthStatsCalculator::DumpStatistics (void)
 {
   NS_LOG_FUNCTION (this);
 
-  *bwdWrapper->GetStream () << left << fixed << setprecision (2) 
+  *bwdWrapper->GetStream () << left
     << setw (12) << Simulator::Now ().GetSeconds ();
-  *resWrapper->GetStream () << left << fixed << setprecision (2) 
+  *resWrapper->GetStream () << left
     << setw (12) << Simulator::Now ().GetSeconds ();
       
   std::vector<Ptr<ConnectionInfo> >::iterator it;
@@ -405,9 +411,9 @@ BandwidthStatsCalculator::DumpStatistics (void)
         << setw (10) << fwKbits / GetActiveTime ().GetSeconds () << " "
         << setw (10) << bwKbits / GetActiveTime ().GetSeconds () << "   ";
 
-      *resWrapper->GetStream () << right << setprecision (6)
-        << setw (8) << (*it)->GetForwardReservedRatio ()  << " "
-        << setw (8) << (*it)->GetBackwardReservedRatio () << "   ";
+      *resWrapper->GetStream () << right
+        << setw (6) << (*it)->GetForwardReservedRatio ()  << " "
+        << setw (6) << (*it)->GetBackwardReservedRatio () << "   ";
 
       (*it)->ResetStatistics ();
     }
@@ -433,10 +439,12 @@ BandwidthStatsCalculator::NotifyConstructionCompleted (void)
 
   // Opening output files and printing header lines
   bwdWrapper = Create<OutputStreamWrapper> (m_bwdStatsFilename, std::ios::out);
-  *bwdWrapper->GetStream () << left << setw (12) << "Time (s)";
+  *bwdWrapper->GetStream () << left << fixed << setprecision (4)
+    << setw (12) << "Time(s)";
 
   resWrapper = Create<OutputStreamWrapper> (m_resStatsFilename, std::ios::out);
-  *resWrapper->GetStream () << left << setw (12) << "Time (s)";
+  *resWrapper->GetStream () << left << fixed << setprecision (4)
+    << setw (12) << "Time(s)";
 }
 
 void
@@ -453,8 +461,8 @@ BandwidthStatsCalculator::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
     << left  << setw (10) << key.second << "   ";
 
   *resWrapper->GetStream () << left
-    << right << setw (8) << key.first  << "-" 
-    << left  << setw (8) << key.second << "   ";
+    << right << setw (6) << key.first  << "-" 
+    << left  << setw (6) << key.second << "   ";
 }
 
 void
@@ -518,14 +526,14 @@ SwitchRulesStatsCalculator::DumpStatistics (void)
 {
   NS_LOG_FUNCTION (this);
 
-  *swtWrapper->GetStream () << left << setw (12) << Simulator::Now ().GetSeconds ();
+  *swtWrapper->GetStream () << setw (11) << Simulator::Now ().GetSeconds () << " ";
   Ptr<OFSwitch13NetDevice> dev;
   for (uint16_t i = 0; i < m_devices.GetN (); i++)
     {
       dev = DynamicCast<OFSwitch13NetDevice> (m_devices.Get (i));
-      *swtWrapper->GetStream () << left << setw (5) << dev->GetNumberFlowEntries (1);
+      *swtWrapper->GetStream () << setw (6) << dev->GetNumberFlowEntries (1) << " ";
     }
-  *swtWrapper->GetStream () << left << std::endl;
+  *swtWrapper->GetStream () << std::endl;
 }
 
 void
@@ -548,13 +556,13 @@ void
 SwitchRulesStatsCalculator::NotifyTopologyBuilt (NetDeviceContainer devices)
 {
   m_devices = devices;
-  *swtWrapper->GetStream () << left << setw (12) << "Time (s)";
+  *swtWrapper->GetStream () << left << setw (12) << "Time(s)";
 
   for (uint16_t i = 0; i < m_devices.GetN (); i++)
     {
-      *swtWrapper->GetStream () << left << setw (5) << i;
+      *swtWrapper->GetStream () << setw (7) << i;
     }
-  *swtWrapper->GetStream () << left << std::endl;
+  *swtWrapper->GetStream () << std::endl;
 }
 
 
@@ -594,15 +602,15 @@ WebQueueStatsCalculator::DumpStatistics (void)
   NS_LOG_FUNCTION (this);
 
   *webWrapper->GetStream () << left
-    << setw (12) << Simulator::Now ().GetSeconds ()
-    << setw (12) << m_downQueue->GetTotalReceivedPackets ()
-    << setw (12) << m_downQueue->GetTotalReceivedBytes ()
-    << setw (12) << m_downQueue->GetTotalDroppedPackets ()
-    << setw (12) << m_downQueue->GetTotalDroppedBytes ()
-    << setw (12) << m_upQueue->GetTotalReceivedPackets ()
-    << setw (12) << m_upQueue->GetTotalReceivedBytes ()
-    << setw (12) << m_upQueue->GetTotalDroppedPackets ()
-    << setw (12) << m_upQueue->GetTotalDroppedBytes ()
+    << setw (11) << Simulator::Now ().GetSeconds ()         << " " 
+    << setw (11) << m_downQueue->GetTotalReceivedPackets () << " " 
+    << setw (11) << m_downQueue->GetTotalReceivedBytes ()   << " " 
+    << setw (11) << m_downQueue->GetTotalDroppedPackets ()  << " " 
+    << setw (11) << m_downQueue->GetTotalDroppedBytes ()    << " " 
+    << setw (11) << m_upQueue->GetTotalReceivedPackets ()   << " " 
+    << setw (11) << m_upQueue->GetTotalReceivedBytes ()     << " " 
+    << setw (11) << m_upQueue->GetTotalDroppedPackets ()    << " " 
+    << setw (11) << m_upQueue->GetTotalDroppedBytes ()      
     << std::endl;
 
   ResetCounters ();
@@ -625,7 +633,7 @@ WebQueueStatsCalculator::NotifyConstructionCompleted (void)
   // Opening output files and printing header lines
   webWrapper = Create<OutputStreamWrapper> (m_webStatsFilename, std::ios::out);
   *webWrapper->GetStream () << left 
-    << setw (12) << "Time (s) " 
+    << setw (12) << "Time(s) " 
     << setw (12) << "DlPkts"
     << setw (12) << "DlBytes"
     << setw (12) << "DlPktsDrp"
@@ -717,36 +725,40 @@ EpcS1uStatsCalculator::NotifyConstructionCompleted (void)
 
   // Opening output files and printing header lines
   appWrapper = Create<OutputStreamWrapper> (m_appStatsFilename, std::ios::out);
-  *appWrapper->GetStream () << left 
-     << setw (12) << "Time (s)"
-     << setw (17) << "Description"
-     << setw (6)  << "TEID"
-     << setw (12) << "Active (s)"
-     << setw (12) << "Delay (ms)"
-     << setw (12) << "Jitter (ms)"
-     << setw (9)  << "Rx Pkts"
-     << setw (12) << "Loss ratio"
-     << setw (6)  << "Losts"
-     << setw (10) << "Rx Bytes"
-     << setw (8)  << "Throughput (kbps)"
-     << std::endl;
+  *appWrapper->GetStream () << fixed << setprecision (4)
+    << left
+    << setw (12) << "Time(s)"
+    << setw (17) << "Description"
+    << setw (6)  << "TEID"
+    << right
+    << setw (11) << "Active(s)"
+    << setw (12) << "Delay(ms)"
+    << setw (12) << "Jitter(ms)"
+    << setw (9)  << "Rx Pkts"
+    << setw (12) << "Loss ratio"
+    << setw (6)  << "Losts"
+    << setw (10) << "Rx Bytes"
+    << setw (17)  << "Throughput(kbps)"
+    << std::endl;
 
   epcWrapper = Create<OutputStreamWrapper> (m_epcStatsFilename, std::ios::out);
-  *epcWrapper->GetStream () << left
-     << setw (12) << "Time (s)"
-     << setw (17) << "Description"
-     << setw (6)  << "TEID"
-     << setw (12) << "Active (s)"
-     << setw (12) << "Delay (ms)"
-     << setw (12) << "Jitter (ms)"
-     << setw (9)  << "Rx Pkts"
-     << setw (12) << "Loss ratio"
-     << setw (7)  << "Losts"
-     << setw (7)  << "Meter"
-     << setw (7)  << "Queue"
-     << setw (10) << "Rx Bytes"
-     << setw (8)  << "Throughput (kbps)"
-     << std::endl;
+  *epcWrapper->GetStream () << fixed << setprecision (4)
+    << left
+    << setw (12) << "Time(s)"
+    << setw (17) << "Description"
+    << setw (6)  << "TEID"
+    << right
+    << setw (11) << "Active(s)"
+    << setw (12) << "Delay(ms)"
+    << setw (12) << "Jitter(ms)"
+    << setw (9)  << "Rx Pkts"
+    << setw (12) << "Loss ratio"
+    << setw (7)  << "Losts"
+    << setw (7)  << "Meter"
+    << setw (7)  << "Queue"
+    << setw (10) << "Rx Bytes"
+    << setw (17)  << "Throughput(kbps)"
+    << std::endl;
 }
 
 void
@@ -826,70 +838,78 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context, Ptr<const EpcApplica
     {
       // Dump uplink statistics
       epcStats = GetQosStatsFromTeid (teid, false);
-      *epcWrapper->GetStream () << left
-        << setw (12) << Simulator::Now ().GetSeconds ()
-        << setw (17) << desc + "ul"
-        << setw (6)  << teid
-        << setw (12) << epcStats->GetActiveTime ().GetSeconds ()
-        << setw (12) << fixed << epcStats->GetRxDelay ().GetSeconds () * 1000
-        << setw (12) << fixed << epcStats->GetRxJitter ().GetSeconds () * 1000
-        << setw (9)  << fixed << epcStats->GetRxPackets ()
-        << setw (12) << fixed << epcStats->GetLossRatio ()
-        << setw (7)  << fixed << epcStats->GetLostPackets ()
-        << setw (7)  << fixed << epcStats->GetMeterDrops ()
-        << setw (7)  << fixed << epcStats->GetQueueDrops ()
-        << setw (10) << fixed << epcStats->GetRxBytes ()
-        << setw (8)  << fixed << (double)(epcStats->GetRxThroughput ().GetBitRate ()) / 1024
+      *epcWrapper->GetStream () 
+        << left
+        << setw (11) << Simulator::Now ().GetSeconds ()                 << " " 
+        << setw (16) << desc + "ul"                                     << " " 
+        << setw (5)  << teid                                            << " " 
+        << right
+        << setw (11) << epcStats->GetActiveTime ().GetSeconds ()        << " " 
+        << setw (11) << epcStats->GetRxDelay ().GetSeconds () * 1000    << " " 
+        << setw (11) << epcStats->GetRxJitter ().GetSeconds () * 1000   << " " 
+        << setw (8)  << epcStats->GetRxPackets ()                       << " " 
+        << setw (11) << epcStats->GetLossRatio ()                       << " " 
+        << setw (6)  << epcStats->GetLostPackets ()                     << " " 
+        << setw (6)  << epcStats->GetMeterDrops ()                      << " " 
+        << setw (6)  << epcStats->GetQueueDrops ()                      << " " 
+        << setw (9)  << epcStats->GetRxBytes ()                         << " " 
+        << setw (16) << (double)(epcStats->GetRxThroughput ().GetBitRate ()) / 1024
         << std::endl;
 
       appStats = DynamicCast<const VoipClient> (app)->GetServerQosStats ();
-      *appWrapper->GetStream () << left
-         << setw (12) << Simulator::Now ().GetSeconds ()
-         << setw (17) << desc + "ul"
-         << setw (6)  << teid
-         << setw (12) << appStats->GetActiveTime ().GetSeconds ()
-         << setw (12) << fixed << appStats->GetRxDelay ().GetSeconds () * 1000
-         << setw (12) << fixed << appStats->GetRxJitter ().GetSeconds () * 1000
-         << setw (9)  << fixed << appStats->GetRxPackets ()
-         << setw (12) << fixed << appStats->GetLossRatio ()
-         << setw (6)  << fixed << appStats->GetLostPackets ()
-         << setw (10) << fixed << appStats->GetRxBytes ()
-         << setw (8)  << fixed << (double)(appStats->GetRxThroughput ().GetBitRate ()) / 1024
-         << std::endl;
+      *appWrapper->GetStream () 
+        << left
+        << setw (11) << Simulator::Now ().GetSeconds ()                 << " " 
+        << setw (16) << desc + "ul"                                     << " " 
+        << setw (5)  << teid                                            << " " 
+        << right
+        << setw (11) << appStats->GetActiveTime ().GetSeconds ()        << " " 
+        << setw (11) << appStats->GetRxDelay ().GetSeconds () * 1000    << " " 
+        << setw (11) << appStats->GetRxJitter ().GetSeconds () * 1000   << " " 
+        << setw (8)  << appStats->GetRxPackets ()                       << " " 
+        << setw (11) << appStats->GetLossRatio ()                       << " " 
+        << setw (5)  << appStats->GetLostPackets ()                     << " " 
+        << setw (9)  << appStats->GetRxBytes ()                         << " " 
+        << setw (16) << (double)(appStats->GetRxThroughput ().GetBitRate ()) / 1024
+        << std::endl;
     }
 
   // Dump downlink statistics
   epcStats = GetQosStatsFromTeid (teid, true);
-  *epcWrapper->GetStream () << left
-        << setw (12) << Simulator::Now ().GetSeconds ()
-        << setw (17) << desc + "dl"
-        << setw (6)  << teid
-        << setw (12) << epcStats->GetActiveTime ().GetSeconds ()
-        << setw (12) << fixed << epcStats->GetRxDelay ().GetSeconds () * 1000
-        << setw (12) << fixed << epcStats->GetRxJitter ().GetSeconds () * 1000
-        << setw (9)  << fixed << epcStats->GetRxPackets ()
-        << setw (12) << fixed << epcStats->GetLossRatio ()
-        << setw (7)  << fixed << epcStats->GetLostPackets ()
-        << setw (7)  << fixed << epcStats->GetMeterDrops ()
-        << setw (7)  << fixed << epcStats->GetQueueDrops ()
-        << setw (10) << fixed << epcStats->GetRxBytes ()
-        << setw (8)  << fixed << (double)(epcStats->GetRxThroughput ().GetBitRate ()) / 1024
-        << std::endl;
+  *epcWrapper->GetStream () 
+    << left
+    << setw (11) << Simulator::Now ().GetSeconds ()                     << " " 
+    << setw (16) << desc + "dl"                                         << " " 
+    << setw (5)  << teid                                                << " " 
+    << right
+    << setw (11) << epcStats->GetActiveTime ().GetSeconds ()            << " " 
+    << setw (11) << epcStats->GetRxDelay ().GetSeconds () * 1000        << " " 
+    << setw (11) << epcStats->GetRxJitter ().GetSeconds () * 1000       << " " 
+    << setw (8)  << epcStats->GetRxPackets ()                           << " " 
+    << setw (11) << epcStats->GetLossRatio ()                           << " " 
+    << setw (6)  << epcStats->GetLostPackets ()                         << " " 
+    << setw (6)  << epcStats->GetMeterDrops ()                          << " " 
+    << setw (6)  << epcStats->GetQueueDrops ()                          << " " 
+    << setw (9)  << epcStats->GetRxBytes ()                             << " " 
+    << setw (16) << (double)(epcStats->GetRxThroughput ().GetBitRate ()) / 1024
+    << std::endl;
 
   appStats = app->GetQosStats ();
-  *appWrapper->GetStream () << left
-     << setw (12) << Simulator::Now ().GetSeconds ()
-     << setw (17) << desc + "dl"
-     << setw (6)  << teid
-     << setw (12) << appStats->GetActiveTime ().GetSeconds ()
-     << setw (12) << fixed << appStats->GetRxDelay ().GetSeconds () * 1000
-     << setw (12) << fixed << appStats->GetRxJitter ().GetSeconds () * 1000
-     << setw (9)  << fixed << appStats->GetRxPackets ()
-     << setw (12) << fixed << appStats->GetLossRatio ()
-     << setw (6)  << fixed << appStats->GetLostPackets ()
-     << setw (10) << fixed << appStats->GetRxBytes ()
-     << setw (8)  << fixed << (double)(appStats->GetRxThroughput ().GetBitRate ()) / 1024
-     << std::endl;
+  *appWrapper->GetStream () 
+    << left
+    << setw (11) << Simulator::Now ().GetSeconds ()                     << " " 
+    << setw (16) << desc + "dl"                                         << " " 
+    << setw (5)  << teid                                                << " " 
+    << right
+    << setw (11) << appStats->GetActiveTime ().GetSeconds ()            << " " 
+    << setw (11) << appStats->GetRxDelay ().GetSeconds () * 1000        << " " 
+    << setw (11) << appStats->GetRxJitter ().GetSeconds () * 1000       << " " 
+    << setw (8)  << appStats->GetRxPackets ()                           << " " 
+    << setw (11) << appStats->GetLossRatio ()                           << " " 
+    << setw (5)  << appStats->GetLostPackets ()                         << " " 
+    << setw (9)  << appStats->GetRxBytes ()                             << " " 
+    << setw (16) << (double)(appStats->GetRxThroughput ().GetBitRate ()) / 1024
+    << std::endl;
 }
 
 void
