@@ -31,6 +31,8 @@ NS_OBJECT_ENSURE_REGISTERED (RingRoutingInfo);
 // ------------------------------------------------------------------------ //
 RoutingInfo::RoutingInfo ()
   : m_teid (0),
+    m_imsi (0),
+    m_cellId (0),
     m_sgwIdx (0),
     m_enbIdx (0),
     m_priority (0),
@@ -65,16 +67,19 @@ RoutingInfo::DoDispose ()
   NS_LOG_FUNCTION (this);
 }
 
+std::string
+RoutingInfo::GetDescription (void) const
+{
+  std::ostringstream desc;
+  desc  << (IsGbr () ? "    GBR" : "Non-GBR")
+        << " [" << m_imsi << "@" << m_cellId << "]";
+  return desc.str ();
+}
+
 bool
 RoutingInfo::IsGbr (void) const
 {
   return (!m_isDefault && m_bearer.bearerLevelQos.IsGbr ());
-}
-
-EpsBearer
-RoutingInfo::GetEpsBearer (void) const
-{
-  return m_bearer.bearerLevelQos;
 }
 
 GbrQosInformation

@@ -224,6 +224,8 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
 
   rInfo = CreateObject<RoutingInfo> ();
   rInfo->m_teid = teid;
+  rInfo->m_imsi = imsi;
+  rInfo->m_cellId = cellId;
   rInfo->m_sgwIdx = GetSwitchIndex (sgwAddr);
   rInfo->m_enbIdx = GetSwitchIndex (enbAddr);
   rInfo->m_sgwAddr = sgwAddr;
@@ -258,6 +260,8 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
 
       rInfo = CreateObject<RoutingInfo> ();
       rInfo->m_teid = teid;
+      rInfo->m_imsi = imsi;
+      rInfo->m_cellId = cellId;
       rInfo->m_sgwIdx = GetSwitchIndex (sgwAddr);
       rInfo->m_enbIdx = GetSwitchIndex (enbAddr);
       rInfo->m_sgwAddr = sgwAddr;
