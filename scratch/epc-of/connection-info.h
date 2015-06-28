@@ -105,19 +105,11 @@ public:
   //\}
 
   /**
-   * Return the bandwidth reserved ratio, considering both forward and backward
-   * paths for full-duplex channel. This method ignores the saving reserve
-   * factor.
-   * \return The usage ratio.
-   */
-  double GetReservedRatio (void) const;
-
-  /**
    * Return the bandwidth reserved ratio in forward direction, This method ignores
    * the saving reserve factor.
    * \return The usage ratio.
    */
-  double GetFowardReservedRatio (void) const;
+  double GetForwardReservedRatio (void) const;
 
   /**
    * Return the bandwidth reserved ratio in backward direction, This method
@@ -125,6 +117,27 @@ public:
    * \return The usage ratio.
    */
   double GetBackwardReservedRatio (void) const;
+
+  /**
+   * Return the total number of bytes successfully transmitted in forward
+   * direction since the simulation began, or since ResetStatistics was called,
+   * according to whichever happened more recently.
+   * \return The number of bytes.
+   */
+  uint32_t GetForwardBytes (void) const;
+
+  /**
+   * Return the total number of bytes successfully transmitted in backward
+   * direction since the simulation began, or since ResetStatistics was called,
+   * according to whichever happened more recently.
+   * \return The number of bytes.
+   */
+  uint32_t GetBackwardBytes (void) const;
+
+  /**
+   * Reset internal byte counters.
+   */
+  void ResetStatistics (void);
 
   /**
    * Inspect physical channel for half-duplex or full-duplex operation mode.
@@ -151,6 +164,13 @@ public:
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
+
+  /**
+   * Notify this connection of a successfully transmitted packet in link
+   * channel. This method will update internal byte counters.
+   * \param packet The transmitted packet.
+   */
+  void NotifyTxPacket (std::string context, Ptr<const Packet> packet);
 
   /**
    * Get the available bandwidth between these two switches.
@@ -195,6 +215,7 @@ private:
   Ptr<CsmaChannel>  m_channel;      //!< The link channel connecting switches
 
   DataRate          m_reserved [2]; //!< Reserved data rate
+  uint32_t          m_bytes [2];    //!< Transmitted bytes
 };
 
 };  // namespace ns3

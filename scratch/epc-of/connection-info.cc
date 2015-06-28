@@ -48,6 +48,14 @@ ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
   NS_ASSERT_MSG ((channel->GetCsmaDevice (0) == GetPortDevFirst () &&
                   channel->GetCsmaDevice (1) == GetPortDevSecond ()),
                   "Invalid device order in csma channel.");
+
+  // Connecting trace source to 
+  m_sw1.portDev->TraceConnect ("PhyTxEnd", "Forward",
+      MakeCallback (&ConnectionInfo::NotifyTxPacket, this));
+  m_sw2.portDev->TraceConnect ("PhyTxEnd", "Backward",
+      MakeCallback (&ConnectionInfo::NotifyTxPacket, this));
+
+  ResetStatistics ();
 }
 
 TypeId
@@ -115,23 +123,7 @@ ConnectionInfo::GetPortDevSecond (void) const
 }
 
 double
-ConnectionInfo::GetReservedRatio (void) const
-{
-  if (IsFullDuplex ())
-    {
-      // For full duplex links, considering usage ratio in both directions.
-      return (double)
-        ((m_reserved [0] + m_reserved [1]).GetBitRate ()) / 
-         (LinkDataRate ().GetBitRate () * 2);
-    }
-  else
-    {
-      return GetFowardReservedRatio ();
-    }
-}
-
-double
-ConnectionInfo::GetFowardReservedRatio (void) const
+ConnectionInfo::GetForwardReservedRatio (void) const
 {
   return (double)
     (m_reserved [ConnectionInfo::FORWARD]).GetBitRate () / 
@@ -144,6 +136,25 @@ ConnectionInfo::GetBackwardReservedRatio (void) const
   return (double)
     (m_reserved [ConnectionInfo::BACKWARD]).GetBitRate () / 
     (LinkDataRate ().GetBitRate ());
+}
+
+uint32_t 
+ConnectionInfo::GetForwardBytes (void) const
+{
+  return m_bytes [ConnectionInfo::FORWARD];
+}
+
+uint32_t 
+ConnectionInfo::GetBackwardBytes (void) const
+{
+  return m_bytes [ConnectionInfo::BACKWARD];
+}
+
+void 
+ConnectionInfo::ResetStatistics (void)
+{
+  m_bytes [0] = 0;
+  m_bytes [1] = 0;
 }
 
 bool
@@ -180,6 +191,16 @@ ConnectionInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_channel = 0;
+}
+
+void
+ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
+{
+  ConnectionInfo::Direction dir;
+  dir = (context == "Forward") ? ConnectionInfo::FORWARD : 
+                                 ConnectionInfo::BACKWARD;
+  
+  m_bytes [dir] += packet->GetSize ();          
 }
 
 DataRate

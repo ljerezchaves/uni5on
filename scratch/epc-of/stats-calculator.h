@@ -92,7 +92,6 @@ private:
   uint32_t    m_gbrRequests;        //!< Number of GBR requests
   uint32_t    m_gbrAccepted;        //!< Number of GBR accepted
   uint32_t    m_gbrBlocked;         //!< Number of GBR blocked
-  Time        m_lastResetTime;      //!< Last reset time
 
   std::string m_admStatsFilename;       //!< AdmStats filename
   std::string m_brqStatsFilename;       //!< BrqStats filename
@@ -215,10 +214,26 @@ private:
    */
   void NotifyTopologyBuilt (NetDeviceContainer devices);
 
+  /**
+   * Reset all internal counters.
+   */
+  void ResetCounters ();
+
+  /**
+   * Get the active time value since last reset.
+   * \return The time value.
+   */
+  Time GetActiveTime (void) const;
+
   std::vector<Ptr<ConnectionInfo> > m_connections;  //!< Connections
 
+  Time m_lastResetTime;                 //!< Last reset time
+
   std::string m_bwdStatsFilename;       //!< BwdStats filename
+  std::string m_resStatsFilename;       //!< ResStats filename
+
   Ptr<OutputStreamWrapper> bwdWrapper;  //!< BwdStats file wrapper
+  Ptr<OutputStreamWrapper> resWrapper;  //!< ResStats file wrapper
 };
 
 
