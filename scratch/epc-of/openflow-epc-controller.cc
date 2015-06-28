@@ -323,11 +323,11 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
   // Table miss entry and ARP handling entry.
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=0 write:output=ctrl");
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=1 eth_type=0x0806 "
-                "write:output=ctrl");
+                       "write:output=ctrl");
 
   // Handling GTP tunnels at table #1
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=2 eth_type=0x800,"
-                "ip_proto=17,udp_src=2152,udp_dst=2152 goto:1");
+                       "ip_proto=17,udp_src=2152,udp_dst=2152 goto:1");
   DpctlCommand (swtch, "flow-mod cmd=add,table=1,prio=0 write:output=ctrl");
 }
 

@@ -49,10 +49,10 @@ RingController::GetTypeId (void)
                    MakeEnumChecker (RingController::HOPS, "hops",
                                     RingController::BAND, "bandwidth",
                                     RingController::SMART, "smart"))
-    .AddAttribute ("BwReserve",
-                   "Bandwitdth saving factor to reserve.",
-                   DoubleValue (0.2),
-                   MakeDoubleAccessor (&RingController::m_bwFactor),
+    .AddAttribute ("MaxBwFactor",
+                   "Maximum bandwitdth reserving factor, limiting link usage.",
+                   DoubleValue (0.8),
+                   MakeDoubleAccessor (&RingController::m_maxBwFactor),
                    MakeDoubleChecker<double> (0.0, 1.0))
   ;
   return tid;
@@ -277,188 +277,108 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       return true;
     }
 
-  // Getting available bandwidth in both paths
-  DataRate shortPathBw = GetAvailableBandwidth (rInfo->m_sgwIdx, 
-      rInfo->m_enbIdx, ringInfo->m_downPath);
-  DataRate longPathBw = GetAvailableBandwidth (rInfo->m_sgwIdx, 
-      rInfo->m_enbIdx, RingRoutingInfo::InvertPath (ringInfo->m_downPath));
+  // Getting available downlink bandwidth in both paths
+  DataRate dlShortBw = GetAvailableBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
+      ringInfo->m_downPath);
+  DataRate dlLongBw = GetAvailableBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
+      RingRoutingInfo::InvertPath (ringInfo->m_downPath));
 
-  // Reserving downlink resources
-  if (reserveInfo->m_hasDown)
+  // Getting available uplink bandwidth in both paths
+  DataRate ulShortBw = GetAvailableBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
+      ringInfo->m_upPath);
+  DataRate ulLongBw = GetAvailableBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
+      RingRoutingInfo::InvertPath (ringInfo->m_upPath));
+
+  // Getting bandwidth requests
+  DataRate dlRequest = reserveInfo->m_downDataRate;
+  DataRate ulRequest = reserveInfo->m_upDataRate;
+
+  NS_LOG_DEBUG (teid << ": downlink bandwidth in short path: " << dlShortBw);
+  NS_LOG_DEBUG (teid << ": downlink bandwidth in long path: " << dlLongBw);
+  NS_LOG_DEBUG (teid << ": uplink bandwidth in short path: " << ulShortBw);
+  NS_LOG_DEBUG (teid << ": uplink bandwidth in long path: " << ulLongBw);
+  NS_LOG_DEBUG (teid << ": downlink request: " << dlRequest);
+  NS_LOG_DEBUG (teid << ": uplink request: " << ulRequest);
+
+  switch (m_strategy)
     {
-      DataRate request = reserveInfo->m_downDataRate;
-      NS_LOG_DEBUG (teid << ": downlink request: " << request);
-
-      switch (m_strategy)
-        {
-        case RingController::HOPS:
+    case RingController::HOPS:
+      {
+        if (dlShortBw >= dlRequest && ulShortBw >= ulRequest)
           {
-            NS_LOG_DEBUG (teid << ": available in short path: " << shortPathBw);
-            if (shortPathBw >= request)
-              {
-                shortPathBw = shortPathBw - request;
-                ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
-                                  ringInfo->m_downPath, request);
-              }
-            else
-              {
-                NS_LOG_WARN (teid << ": no resources. Block!");
-                return false;
-              }
-            break;
+            ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
+                              ringInfo->m_downPath, dlRequest);
+            ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
+                              ringInfo->m_upPath, ulRequest);
           }
-        case RingController::BAND:
+        else
           {
-            NS_LOG_DEBUG (teid << ": available in short path: " << shortPathBw);
-            NS_LOG_DEBUG (teid << ": available in long path: " << longPathBw);
-            if (shortPathBw >= longPathBw && shortPathBw >= request)
-              {
-                shortPathBw = shortPathBw - request;
-                ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
-                                  ringInfo->m_downPath, request);
-              }
-            else if (shortPathBw < longPathBw && longPathBw >= request)
-              {
-                // Let's invert the path and reserve the bandwidth
-                NS_LOG_DEBUG (teid << ": inverting from short to long path.");
-                ringInfo->InvertDownPath ();
-                longPathBw = longPathBw - request;
-                ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
-                                  ringInfo->m_downPath, request);
-              }
-            else
-              {
-                NS_LOG_WARN (teid << ": no resources. Block!");
-                return false;
-              }
-            break;
+            NS_LOG_WARN (teid << ": no resources. Block!");
+            return false;
           }
-        case RingController::SMART:
+        break;
+      }
+    case RingController::BAND:
+      {
+        if (dlShortBw >= dlLongBw && 
+            dlShortBw >= dlRequest && ulShortBw >= ulRequest)
           {
-            NS_LOG_DEBUG (teid << ": available in short path: " << shortPathBw);
-            NS_LOG_DEBUG (teid << ": available in long path: " << longPathBw);
-            if (shortPathBw >= request)
-              {
-                shortPathBw = shortPathBw - request;
-                ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
-                                  ringInfo->m_downPath, request);
-              }
-            // No available bandwidth in short path. Let's check the long path.
-            else if (longPathBw >= request)
-              {
-                // Let's invert the path and reserve the bandwidth
-                NS_LOG_DEBUG (teid << ": inverting from short to long path.");
-                ringInfo->InvertDownPath ();
-                longPathBw = longPathBw - request;
-                ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
-                                  ringInfo->m_downPath, request);
-              }
-            else
-              {
-                NS_LOG_WARN (teid << ": no resources. Block!");
-                return false;
-              }
-            break;
+            ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
+                              ringInfo->m_downPath, dlRequest);
+            ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
+                              ringInfo->m_upPath, ulRequest);
           }
-        default:
+        else if (dlShortBw < dlLongBw && 
+                 dlLongBw >= dlRequest && ulLongBw >= ulRequest)
           {
-            NS_ABORT_MSG ("Invalid Routing strategy.");
+            // Let's invert the path and reserve the bandwidth
+            NS_LOG_DEBUG (teid << ": inverting from short to long path.");
+            ringInfo->InvertDownPath ();
+            ringInfo->InvertUpPath ();
+            ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
+                              ringInfo->m_downPath, dlRequest);
+            ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
+                              ringInfo->m_upPath, ulRequest);
           }
-        }
-    }
-
-  // Reserving uplink resources
-  if (reserveInfo->m_hasUp)
-    {
-      DataRate request = reserveInfo->m_upDataRate;
-      NS_LOG_DEBUG (teid << ": uplink request: " << request);
-
-      switch (m_strategy)
-        {
-        case RingController::HOPS:
+        else
           {
-            NS_LOG_DEBUG (teid << ": available in short path: " << shortPathBw);
-            if (shortPathBw >= request)
-              {
-                ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx,
-                                  ringInfo->m_upPath, request);
-              }
-            else
-              {
-                NS_LOG_WARN (teid << ": no resources. Block!");
-                if (reserveInfo->m_hasDown)
-                  {
-                    ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
-                        ringInfo->m_downPath, reserveInfo->m_downDataRate);
-                  }
-                return false;
-              }
-            break;
+            NS_LOG_WARN (teid << ": no resources. Block!");
+            return false;
           }
-        case RingController::BAND:
+        break;
+      }
+    case RingController::SMART:
+      {
+        if (dlShortBw >= dlRequest && ulShortBw >= ulRequest)
           {
-            NS_LOG_DEBUG (teid << ": available in short path: " << shortPathBw);
-            NS_LOG_DEBUG (teid << ": available in long path: " << longPathBw);
-            if (shortPathBw >= longPathBw && shortPathBw >= request)
-              {
-                ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx,
-                                  ringInfo->m_upPath, request);
-              }
-            else if (shortPathBw < longPathBw && longPathBw >= request)
-              {
-                // Let's invert the path and reserve it
-                NS_LOG_DEBUG (teid << ": inverting from short to long path.");
-                ringInfo->InvertUpPath ();
-                ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx,
-                                  ringInfo->m_upPath, request);
-              }
-            else
-              {
-                NS_LOG_WARN (teid << ": no resources. Block!");
-                if (reserveInfo->m_hasDown)
-                  {
-                    ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
-                                      ringInfo->m_downPath, reserveInfo->m_downDataRate);
-                  }
-                return false;
-              }
-            break;
+            ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
+                              ringInfo->m_downPath, dlRequest);
+            ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
+                              ringInfo->m_upPath, ulRequest);
           }
-        case RingController::SMART:
+        // No available bandwidth in short path. Let's check the long path.
+        else if (dlLongBw >= dlRequest && ulLongBw >= ulRequest)
           {
-            NS_LOG_DEBUG (teid << ": available in short path: " << shortPathBw);
-            NS_LOG_DEBUG (teid << ": available in long path: " << longPathBw);
-            if (shortPathBw >= request)
-              {
-                ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx,
-                                  ringInfo->m_upPath, request);
-              }
-            // No available bandwidth in short path. Let's check the long path.
-            else if (longPathBw >= request)
-              {
-                // Let's invert the path and reserve it
-                NS_LOG_DEBUG (teid << ": inverting from short to long path.");
-                ringInfo->InvertUpPath ();
-                ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx,
-                                  ringInfo->m_upPath, request);
-              }
-            else
-              {
-                NS_LOG_WARN (teid << ": no resources. Block!");
-                if (reserveInfo->m_hasDown)
-                  {
-                    ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
-                        ringInfo->m_downPath, reserveInfo->m_downDataRate);
-                  }
-                return false;
-              }
-            break;
+            // Let's invert the path and reserve the bandwidth
+            NS_LOG_DEBUG (teid << ": inverting from short to long path.");
+            ringInfo->InvertDownPath ();
+            ringInfo->InvertUpPath ();
+            ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
+                              ringInfo->m_downPath, dlRequest);
+            ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
+                              ringInfo->m_upPath, ulRequest);
           }
-        default:
+        else
           {
-            NS_ABORT_MSG ("Invalid Routing strategy.");
+            NS_LOG_WARN (teid << ": no resources. Block!");
+            return false;
           }
-        }
+        break;
+      }
+    default:
+      {
+        NS_ABORT_MSG ("Invalid Routing strategy.");
+      }
     }
 
   reserveInfo->m_isReserved = true;
@@ -599,25 +519,22 @@ RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx,
 {
   NS_LOG_FUNCTION (this << srcSwitchIdx << dstSwitchIdx << routingPath);
   NS_ASSERT (srcSwitchIdx != dstSwitchIdx);
-
-  // Get bandwidth for first hop
+  
+  DataRate availableBandwidth (std::numeric_limits<uint64_t>::max());
+  
   uint16_t current = srcSwitchIdx;
-  uint16_t next = NextSwitchIndex (current, routingPath);
-  Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-  DataRate bandwidth = cInfo->GetAvailableDataRate (m_bwFactor);
-
-  // Repeat the process for next hops
-  while (next != dstSwitchIdx)
+  while (current != dstSwitchIdx)
     {
-      current = next;
-      next = NextSwitchIndex (current, routingPath);
-      cInfo = GetConnectionInfo (current, next);
-      if (cInfo->GetAvailableDataRate (m_bwFactor) < bandwidth)
+      uint16_t next = NextSwitchIndex (current, routingPath);
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
+      DataRate linkBandwidth = cInfo->GetAvailableDataRate (current, next, m_maxBwFactor);
+      if (linkBandwidth < availableBandwidth)
         {
-          bandwidth = cInfo->GetAvailableDataRate (m_bwFactor);
+          availableBandwidth = linkBandwidth;
         }
+      current = next;
     }
-  return bandwidth;
+  return availableBandwidth;
 }
 
 bool
@@ -631,8 +548,8 @@ RingController::ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
     {
       uint16_t next = NextSwitchIndex (current, routingPath);
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-      cInfo->ReserveDataRate (reserve);
-      NS_ABORT_IF (cInfo->GetAvailableDataRate () < 0);
+      NS_ABORT_MSG_UNLESS (cInfo->ReserveDataRate (current, next, reserve), 
+                           "No bandwidth available to reserve.");
       current = next;
     }
   return true;
@@ -649,7 +566,8 @@ RingController::ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
     {
       uint16_t next = NextSwitchIndex (current, routingPath);
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-      cInfo->ReleaseDataRate (release);
+      NS_ABORT_MSG_UNLESS (cInfo->ReleaseDataRate (current, next, release), 
+                           "No bandwidth available to release.");
       current = next;
     }
   return true;

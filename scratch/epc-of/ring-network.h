@@ -58,10 +58,10 @@ public:
                        std::vector<uint16_t> eNbSwitches);
 
 private:
-  DataRate              m_switchLinkDataRate; //!< Switch link data rate
-  Time                  m_switchLinkDelay;    //!< Switch link delay
-  DataRate              m_gatewayLinkDataRate;//!< Gateway link data rate
-  Time                  m_gatewayLinkDelay;   //!< Gateway link delay
+  DataRate              m_swLinkDataRate;     //!< Switch link data rate
+  Time                  m_swLinkDelay;        //!< Switch link delay
+  DataRate              m_gwLinkDataRate;     //!< Gateway link data rate
+  Time                  m_gwLinkDelay;        //!< Gateway link delay
   uint16_t              m_linkMtu;            //!< Link mtu
   uint16_t              m_nodes;              //!< Number of switches in the ring
 
