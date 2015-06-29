@@ -159,7 +159,7 @@ MeterInfo::GetDownAddCmd (void) const
 {
   std::ostringstream meter;
   meter << "meter-mod cmd=add,flags=1,meter=" << m_teid
-        << " drop:rate=" << m_downDataRate.GetBitRate () / 1024;
+        << " drop:rate=" << m_downDataRate.GetBitRate () / 1000;
   return meter.str ();
 }
 
@@ -168,7 +168,7 @@ MeterInfo::GetUpAddCmd (void) const
 {
   std::ostringstream meter;
   meter << "meter-mod cmd=add,flags=1,meter=" << m_teid 
-        << " drop:rate=" << m_upDataRate.GetBitRate () / 1024;
+        << " drop:rate=" << m_upDataRate.GetBitRate () / 1000;
   return meter.str ();
 }
 

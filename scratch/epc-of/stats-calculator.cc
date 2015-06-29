@@ -201,8 +201,8 @@ AdmissionStatsCalculator::NotifyRequest (bool accepted, Ptr<const RoutingInfo> r
     << setw (17) << rInfo->GetDescription ()                << " "
     << setw (6)  << rInfo->GetTeid ()                       << " "
     << setw (9)  << accepted                                << " "
-    << setw (11) << (double)(downRate.GetBitRate ()) / 1024 << " "
-    << setw (11) << (double)(upRate.GetBitRate ()) / 1024   << "  "
+    << setw (11) << (double)(downRate.GetBitRate ()) / 1000 << " "
+    << setw (11) << (double)(upRate.GetBitRate ()) / 1000   << "  "
     << left
     << setw (15) << path
     << std::endl;
@@ -276,8 +276,8 @@ GatewayStatsCalculator::DumpStatistics (void)
 
   *pgwWrapper->GetStream () << fixed << setprecision (2) << left
     << setw (11) << Simulator::Now ().GetSeconds () << right        << " "
-    << setw (15) << (double)GetDownDataRate ().GetBitRate () / 1024 << " "
-    << setw (13) << (double)GetUpDataRate ().GetBitRate () / 1024
+    << setw (15) << (double)GetDownDataRate ().GetBitRate () / 1000 << " "
+    << setw (13) << (double)GetUpDataRate ().GetBitRate () / 1000
     << std::endl;
 
   ResetCounters ();
@@ -404,8 +404,8 @@ BandwidthStatsCalculator::DumpStatistics (void)
   std::vector<Ptr<ConnectionInfo> >::iterator it;
   for (it = m_connections.begin (); it != m_connections.end (); it++)
     {
-      double fwKbits = ((double)(*it)->GetForwardBytes ()  * 8) / 1024;
-      double bwKbits = ((double)(*it)->GetBackwardBytes () * 8) / 1024;
+      double fwKbits = ((double)(*it)->GetForwardBytes ()  * 8) / 1000;
+      double bwKbits = ((double)(*it)->GetBackwardBytes () * 8) / 1000;
 
       *bwdWrapper->GetStream () << right 
         << setw (10) << fwKbits / GetActiveTime ().GetSeconds () << " "
@@ -853,7 +853,7 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context, Ptr<const EpcApplica
         << setw (6)  << epcStats->GetMeterDrops ()                      << " " 
         << setw (6)  << epcStats->GetQueueDrops ()                      << " " 
         << setw (9)  << epcStats->GetRxBytes ()                         << " " 
-        << setw (16) << (double)(epcStats->GetRxThroughput ().GetBitRate ()) / 1024
+        << setw (16) << (double)(epcStats->GetRxThroughput ().GetBitRate ()) / 1000
         << std::endl;
 
       appStats = DynamicCast<const VoipClient> (app)->GetServerQosStats ();
@@ -870,7 +870,7 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context, Ptr<const EpcApplica
         << setw (11) << appStats->GetLossRatio ()                       << " " 
         << setw (5)  << appStats->GetLostPackets ()                     << " " 
         << setw (9)  << appStats->GetRxBytes ()                         << " " 
-        << setw (16) << (double)(appStats->GetRxThroughput ().GetBitRate ()) / 1024
+        << setw (16) << (double)(appStats->GetRxThroughput ().GetBitRate ()) / 1000
         << std::endl;
     }
 
@@ -891,7 +891,7 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context, Ptr<const EpcApplica
     << setw (6)  << epcStats->GetMeterDrops ()                          << " " 
     << setw (6)  << epcStats->GetQueueDrops ()                          << " " 
     << setw (9)  << epcStats->GetRxBytes ()                             << " " 
-    << setw (16) << (double)(epcStats->GetRxThroughput ().GetBitRate ()) / 1024
+    << setw (16) << (double)(epcStats->GetRxThroughput ().GetBitRate ()) / 1000
     << std::endl;
 
   appStats = app->GetQosStats ();
@@ -908,7 +908,7 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context, Ptr<const EpcApplica
     << setw (11) << appStats->GetLossRatio ()                           << " " 
     << setw (5)  << appStats->GetLostPackets ()                         << " " 
     << setw (9)  << appStats->GetRxBytes ()                             << " " 
-    << setw (16) << (double)(appStats->GetRxThroughput ().GetBitRate ()) / 1024
+    << setw (16) << (double)(appStats->GetRxThroughput ().GetBitRate ()) / 1000
     << std::endl;
 }
 
