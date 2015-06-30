@@ -223,13 +223,12 @@ ConnectionInfo::ReserveDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
 
-  if (m_reserved [dir] + rate > GetLinkDataRate ())
+  if (m_reserved [dir] + rate <= GetLinkDataRate ())
     {
-      return false;
+      m_reserved [dir] = m_reserved [dir] + rate;
+      return true;
     }
-  
-  m_reserved [dir] = m_reserved [dir] + rate;
-  return true;
+  NS_FATAL_ERROR ("No bandwidth available to reserve.")
 }
 
 bool
@@ -237,13 +236,12 @@ ConnectionInfo::ReleaseDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
 
-  if (m_reserved [dir] - rate < DataRate (0))
+  if (m_reserved [dir] - rate >= DataRate (0))
     {
-      return false;
+      m_reserved [dir] = m_reserved [dir] - rate;
+      return true;
     }
-  
-  m_reserved [dir] = m_reserved [dir] - rate;
-  return true;
+  NS_FATAL_ERROR ("No bandwidth available to release.");
 }
 
 };  // namespace ns3

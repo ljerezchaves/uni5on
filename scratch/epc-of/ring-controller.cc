@@ -546,8 +546,7 @@ RingController::ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
     {
       uint16_t next = NextSwitchIndex (current, routingPath);
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-      NS_ABORT_MSG_UNLESS (cInfo->ReserveDataRate (current, next, reserve), 
-                           "No bandwidth available to reserve.");
+      cInfo->ReserveDataRate (current, next, reserve);
       current = next;
     }
   return true;
@@ -564,8 +563,7 @@ RingController::ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
     {
       uint16_t next = NextSwitchIndex (current, routingPath);
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-      NS_ABORT_MSG_UNLESS (cInfo->ReleaseDataRate (current, next, release), 
-                           "No bandwidth available to release.");
+      cInfo->ReleaseDataRate (current, next, release);
       current = next;
     }
   return true;
