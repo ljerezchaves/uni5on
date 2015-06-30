@@ -520,6 +520,14 @@ RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx,
   NS_LOG_FUNCTION (this << srcSwitchIdx << dstSwitchIdx << routingPath);
   NS_ASSERT (srcSwitchIdx != dstSwitchIdx);
   
+  // TODO: I need to implement the reservation strategy proposed by prof. Deep
+  // Medhi. The general ideal is a dynamic bwFactor that can be ajudsted based
+  // on the distance betweem the srcSwitchIdx and the dstSwitchIdx. The closer
+  // the destination we are, the more we can use from the available bandwidth.
+  // The goal is to prevent flows that are very close to the gateway run out of
+  // resources (since the last link is always the most congested onde), and
+  // have to take a full turn in the opposite direction of the ring.
+
   DataRate availableBandwidth (std::numeric_limits<uint64_t>::max());
   
   uint16_t current = srcSwitchIdx;
