@@ -59,35 +59,25 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  /**
+   * \name Private member accessors.
+   * \return The requested field.
+   */
+  //\{
+  GbrQosInformation GetQosInfo (void) const;
+  EpsBearer::Qci GetQciInfo (void) const;
+  uint32_t GetTeid (void) const;
+  uint64_t GetImsi (void) const;
+  uint16_t GetCellId (void) const;
+  uint16_t GetEnbSwIdx (void) const;
+  bool HasDownlinkTraffic (void) const;
+  bool HasUplinkTraffic (void) const;
+  bool IsGbr (void) const;
+  //\}
+  
+protected:
   /** Destructor implementation */
   virtual void DoDispose ();
-
-  /** \return True if the associated EPS bearer is of GBR type. */
-  bool IsGbr (void) const;
-
-  /** \return The Bearer QoS information. */
-  GbrQosInformation GetQosInfo (void) const;
-
-  /** \return The Bearer QCI information. */
-  EpsBearer::Qci GetQciInfo (void) const;
-
-  /** \return The GTP TEID. */
-  uint32_t GetTeid (void) const;
-
-  /** \return The UE IMSI. */
-  uint64_t GetImsi (void) const;
-
-  /** \return The eNB cell ID. */
-  uint16_t GetCellId (void) const;
-
-  /** \return The eNB switch index. */
-  uint16_t GetEnbSwIdx (void) const;
-
-  /** \return True when there is downlink traffic in this bearer. */
-  bool HasDownlinkTraffic (void) const;
-  
-  /** \return True when there is uplink traffic in this bearer. */
-  bool HasUplinkTraffic (void) const;
 
 private:
   uint32_t          m_teid;         //!< GTP TEID
@@ -133,18 +123,22 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  /** \return RoutingInfo pointer. */
-  Ptr<RoutingInfo> GetRoutingInfo ();
-
-  /** Get Dpctl commands to add or delete meter rules */
+  /** 
+   * \name Dpctl commands to add or delete meter rules 
+   * \return The requested command.
+   */
   //\{
   std::string GetDownAddCmd (void) const;
   std::string GetUpAddCmd (void) const;
   std::string GetDelCmd (void) const;
   //\}
+
+protected:
+  /** Destructor implementation */
+  virtual void DoDispose ();
+  
+  /** \return RoutingInfo pointer. */
+  Ptr<RoutingInfo> GetRoutingInfo ();
 
 private:
   uint32_t m_teid;          //!< GTP TEID
@@ -184,17 +178,21 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  /**
+   * \name Private member accessors.
+   * \return The requested field.
+   */
+  //\{
+  DataRate GetDownDataRate (void) const;
+  DataRate GetUpDataRate (void) const;
+  //\}
+
+protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
   /** \return RoutingInfo pointer. */
   Ptr<RoutingInfo> GetRoutingInfo ();
-
-  /** \return Downlink reserved data rate. */
-  DataRate GetDownDataRate (void) const;
-
-  /** \return Uplink reserved data rate. */
-  DataRate GetUpDataRate (void) const;
 
 private:
   uint32_t m_teid;          //!< GTP TEID
@@ -243,29 +241,39 @@ public:
   static TypeId GetTypeId (void);
 
   /**
+   * \name Private member accessors.
+   * \return The requested field.
+   */
+  //\{
+  bool IsDownInv (void) const;
+  bool IsUpInv (void) const;
+  bool IsInverted (void) const;
+  //\}
+
+  /**
    * Invert the routing path
    * \param path The original routing path.
    * \return The inverse routing path.
    */
   static RoutingPath InvertPath (RoutingPath path);
 
+protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
   /** \return RoutingInfo pointer. */
   Ptr<RoutingInfo> GetRoutingInfo ();
 
-  /** \return True for downlink inverte path. */
-  bool IsDownInv (void) const;
-
-  /** \return True for uplink inverte path. */
-  bool IsUpInv (void) const;
-
 private:
-  /** Invert down/up routing direction. */
+  /**
+   * \name Path invertion methods.
+   */
+  //\{
   void InvertDownPath ();
   void InvertUpPath ();
-  void ResetPaths ();
+  void InvertPaths ();
+  void ResetToShortestPaths ();
+  //\}
 
   Ptr<RoutingInfo> m_rInfo;     //!< Routing information
   RoutingPath      m_downPath;  //!< Downlink routing path

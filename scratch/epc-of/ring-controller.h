@@ -99,7 +99,7 @@ private:
   Ptr<ConnectionInfo> GetConnectionInfo (uint16_t sw1, uint16_t sw2);
 
   /**
-   * Look for the routing path between srcSwitchIdx and dstSwitchIdx with
+   * Look for the routing path from source to destination switch index with
    * lowest number of hops.
    * \param srcSwitchIdx Source switch index.
    * \param dstSwitchIdx Destination switch index.
@@ -109,44 +109,44 @@ private:
                                                  uint16_t dstSwitchIdx);
 
   /**
-   * Look for available bandwidth in routingPath from source to destination
-   * switch. It uses the information available at ConnectionInfo.
-   * \param srcSwitchIdx Sourche switch index.
+   * Look for the available bandwidth from source to destination switch index
+   * following the indicated routing path.
+   * \param srcSwitchIdx Source switch index.
    * \param dstSwitchIdx Destination switch index.
    * \param routingPath The routing path.
-   * \return The bandwidth for this datapath.
+   * \return The bandwidth for this routing path.
    */
   DataRate GetAvailableBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
                                   RingRoutingInfo::RoutingPath routingPath);
 
   /**
-   * Reserve the bandwidth for each link between source and destination
-   * switches in routing path. It modifies the ConnectionInfo
-   * structures saved by controller.
-   * \param srcSwitchIdx Sourche switch index.
+   * Reserve the indicated bandwidth at each link from source source to
+   * destination switch index following the indicated routing path. 
+   * \param srcSwitchIdx Source switch index.
    * \param dstSwitchIdx Destination switch index.
    * \param routingPath The routing path.
-   * \param reserve The DataRate to reserve.
+   * \param reserve The bandwidth to reserve.
    * \return True if success, false otherwise;
    */
   bool ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                         RingRoutingInfo::RoutingPath routingPath, DataRate reserve);
+                         RingRoutingInfo::RoutingPath routingPath, 
+                         DataRate reserve);
 
   /**
-   * Release the bandwidth for each link between source and destination
-   * switches in routing path. It modifies the ConnectionInfo
-   * structures saved by controller.
-   * \param srcSwitchIdx Sourche switch index.
+   * Release the indicated bandwidth at each link from source source to
+   * destination switch index following the indicated routing path. 
+   * \param srcSwitchIdx Source switch index.
    * \param dstSwitchIdx Destination switch index.
    * \param routingPath The routing path.
-   * \param release The DataRate to release.
+   * \param release The bandwidth to release.
    * \return True if success, false otherwise;
    */
   bool ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                         RingRoutingInfo::RoutingPath routingPath, DataRate release);
+                         RingRoutingInfo::RoutingPath routingPath, 
+                         DataRate release);
 
   /**
-   * Identify the next switch index based on routing path direction.
+   * Get the next switch index following the indicated routing path.
    * \param current Current switch index.
    * \param path The routing path direction.
    * \return The next switch index.

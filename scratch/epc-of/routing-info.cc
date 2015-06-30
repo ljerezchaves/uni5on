@@ -67,12 +67,6 @@ RoutingInfo::DoDispose ()
   NS_LOG_FUNCTION (this);
 }
 
-bool
-RoutingInfo::IsGbr (void) const
-{
-  return (!m_isDefault && m_bearer.bearerLevelQos.IsGbr ());
-}
-
 GbrQosInformation
 RoutingInfo::GetQosInfo (void) const
 {
@@ -121,6 +115,11 @@ RoutingInfo::HasUplinkTraffic (void) const
   return m_bearer.tft->HasUplinkFilter ();
 }
 
+bool
+RoutingInfo::IsGbr (void) const
+{
+  return (!m_isDefault && m_bearer.bearerLevelQos.IsGbr ());
+}
 
 // ------------------------------------------------------------------------ //
 MeterInfo::MeterInfo ()
@@ -321,6 +320,12 @@ RingRoutingInfo::IsUpInv (void) const
   return m_isUpInv;
 }
 
+bool
+RingRoutingInfo::IsInverted (void) const
+{
+  return (m_isDownInv && m_isUpInv);
+}
+
 void
 RingRoutingInfo::InvertDownPath ()
 {
@@ -340,7 +345,14 @@ RingRoutingInfo::InvertUpPath ()
 }
 
 void
-RingRoutingInfo::ResetPaths ()
+RingRoutingInfo::InvertPaths ()
+{
+  InvertDownPath ();
+  InvertUpPath ();
+}
+
+void
+RingRoutingInfo::ResetToShortestPaths ()
 {
   NS_LOG_FUNCTION (this);
 

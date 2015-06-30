@@ -106,7 +106,7 @@ protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
-  /** Trace sinks for network topology and LTE EPC monitoring. */
+  /** \name Trace sinks for network topology and LTE EPC monitoring. */
   //\{
   /**
    * Notify this controller of a new eNB or SgwPgw device connected to the
@@ -159,7 +159,10 @@ protected:
       Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList);
   //\}
 
-  /** Topology-dependent functions which must be implemented by subclasses. */
+  /** \name Topology-dependent functions 
+   * This virtual functions must be implemented by subclasses, as they are
+   * dependent on network topology.
+   */
   //\{
   /**
    * Configure the switches with OpenFlow commands for TEID routing, based on
@@ -320,13 +323,13 @@ protected:
   /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
   TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerReleaseTrace;
 
-  /** Flow table entry timeout values */
+  /** \name Flow table entry timeout values */
   //\{
   static const int m_defaultTmo;          //!< Timeout for default bearers
   static const int m_dedicatedTmo;        //!< Timeout for dedicated bearers
   //\}
 
-  /** Flow table entry priority values */
+  /** \name Flow table entry priority values */
   //\{
   // Table 0
   static const int m_t0ArpPrio;           //!< ARP handling

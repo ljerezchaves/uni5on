@@ -259,10 +259,6 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
 
-  Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
-  ringInfo->ResetPaths ();    // Reseting to short paths
-  uint32_t teid = rInfo->m_teid;
-
   if (rInfo->m_isDefault)
     {
       // We always accept default bearers.
@@ -277,6 +273,10 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       return true;
     }
 
+  Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
+  ringInfo->ResetToShortestPaths ();
+  uint32_t teid = rInfo->m_teid;
+  
   // Getting available downlink bandwidth in both paths
   DataRate dlShortBw = GetAvailableBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
       ringInfo->m_downPath);
@@ -333,8 +333,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
           {
             // Let's invert the path and reserve the bandwidth
             NS_LOG_DEBUG (teid << ": inverting from short to long path.");
-            ringInfo->InvertDownPath ();
-            ringInfo->InvertUpPath ();
+            ringInfo->InvertPaths ();
             ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
                               ringInfo->m_downPath, dlRequest);
             ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
@@ -361,8 +360,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
           {
             // Let's invert the path and reserve the bandwidth
             NS_LOG_DEBUG (teid << ": inverting from short to long path.");
-            ringInfo->InvertDownPath ();
-            ringInfo->InvertUpPath ();
+            ringInfo->InvertPaths ();
             ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
                               ringInfo->m_downPath, dlRequest);
             ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
