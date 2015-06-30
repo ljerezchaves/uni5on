@@ -248,6 +248,10 @@ GatewayStatsCalculator::GatewayStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 
+  m_downQueue = Names::Find<Queue> ("/Names/OpenFlowNetwork/PgwDownQueue");
+  m_upQueue   = Names::Find<Queue> ("/Names/OpenFlowNetwork/PgwUpQueue");
+  NS_ASSERT_MSG (m_downQueue && m_upQueue, "Pgw network queues not found.");
+
   // Connecting all gateway trace sinks for traffic bandwidth monitoring
   Config::Connect (
     "/Names/SgwPgwApplication/S1uRx",
@@ -255,6 +259,8 @@ GatewayStatsCalculator::GatewayStatsCalculator ()
   Config::Connect (
     "/Names/SgwPgwApplication/S1uTx",
     MakeCallback (&GatewayStatsCalculator::NotifyTraffic, this));
+
+  ResetCounters ();
 }
 
 GatewayStatsCalculator::~GatewayStatsCalculator ()
@@ -282,10 +288,20 @@ GatewayStatsCalculator::DumpStatistics (void)
 {
   NS_LOG_FUNCTION (this);
 
-  *pgwWrapper->GetStream () << fixed << setprecision (2) << left
-    << setw (11) << Simulator::Now ().GetSeconds () << right        << " "
+  *pgwWrapper->GetStream () 
+    << left
+    << setw (11) << Simulator::Now ().GetSeconds ()                 << " " 
+    << right
+    << setw (11) << m_downQueue->GetTotalReceivedPackets ()         << " " 
+    << setw (11) << m_downQueue->GetTotalReceivedBytes ()           << " " 
+    << setw (11) << m_downQueue->GetTotalDroppedPackets ()          << " " 
+    << setw (11) << m_downQueue->GetTotalDroppedBytes ()            << " " 
+    << setw (11) << m_upQueue->GetTotalReceivedPackets ()           << " " 
+    << setw (11) << m_upQueue->GetTotalReceivedBytes ()             << " " 
+    << setw (11) << m_upQueue->GetTotalDroppedPackets ()            << " " 
+    << setw (11) << m_upQueue->GetTotalDroppedBytes ()              << " "
     << setw (15) << (double)GetDownDataRate ().GetBitRate () / 1000 << " "
-    << setw (13) << (double)GetUpDataRate ().GetBitRate () / 1000
+    << setw (15) << (double)GetUpDataRate ().GetBitRate () / 1000
     << std::endl;
 
   ResetCounters ();
@@ -295,6 +311,8 @@ void
 GatewayStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+  m_downQueue = 0;
+  m_upQueue = 0;
   pgwWrapper = 0;
 }
 
@@ -305,10 +323,20 @@ GatewayStatsCalculator::NotifyConstructionCompleted (void)
 
   // Opening output files and printing header lines
   pgwWrapper = Create<OutputStreamWrapper> (m_pgwStatsFilename, std::ios::out);
-  *pgwWrapper->GetStream () << left 
-    << setw (12) << "Time(s)" 
+  *pgwWrapper->GetStream () << fixed << setprecision (4) << boolalpha
+    << left
+    << setw (11) << "Time(s)"
+    << right
+    << setw (12) << "DlPkts"
+    << setw (12) << "DlBytes"
+    << setw (12) << "DlPktsDrp"
+    << setw (12) << "DlBytesDrp"
+    << setw (12) << "UlPkts"
+    << setw (12) << "UlBytes"
+    << setw (12) << "UlPktsDrp"
+    << setw (12) << "UlBytesDrp"
     << setw (16) << "Downlink(kbps)"
-    << setw (13) << "Uplink(kbps)"
+    << setw (16) << "Uplink(kbps)"
     << std::endl;
 }
 
@@ -332,6 +360,8 @@ GatewayStatsCalculator::ResetCounters ()
 {
   m_pgwUpBytes = 0;
   m_pgwDownBytes = 0;
+  m_downQueue->ResetStatistics ();
+  m_upQueue->ResetStatistics ();
   m_lastResetTime = Simulator::Now ();
 }
 
@@ -576,12 +606,15 @@ SwitchRulesStatsCalculator::NotifyTopologyBuilt (NetDeviceContainer devices)
 
 // ------------------------------------------------------------------------ //
 WebQueueStatsCalculator::WebQueueStatsCalculator ()
+  : m_lastResetTime (Simulator::Now ())
 {
   NS_LOG_FUNCTION (this);
 
   m_downQueue = Names::Find<Queue> ("/Names/InternetNetwork/DownQueue");
   m_upQueue   = Names::Find<Queue> ("/Names/InternetNetwork/UpQueue");
   NS_ASSERT_MSG (m_downQueue && m_upQueue, "Web network queues not found.");
+
+  ResetCounters ();
 }
 
 WebQueueStatsCalculator::~WebQueueStatsCalculator ()
@@ -609,16 +642,20 @@ WebQueueStatsCalculator::DumpStatistics (void)
 {
   NS_LOG_FUNCTION (this);
 
-  *webWrapper->GetStream () << left
-    << setw (11) << Simulator::Now ().GetSeconds ()         << " " 
-    << setw (11) << m_downQueue->GetTotalReceivedPackets () << " " 
-    << setw (11) << m_downQueue->GetTotalReceivedBytes ()   << " " 
-    << setw (11) << m_downQueue->GetTotalDroppedPackets ()  << " " 
-    << setw (11) << m_downQueue->GetTotalDroppedBytes ()    << " " 
-    << setw (11) << m_upQueue->GetTotalReceivedPackets ()   << " " 
-    << setw (11) << m_upQueue->GetTotalReceivedBytes ()     << " " 
-    << setw (11) << m_upQueue->GetTotalDroppedPackets ()    << " " 
-    << setw (11) << m_upQueue->GetTotalDroppedBytes ()      
+  *webWrapper->GetStream () 
+    << left
+    << setw (11) << Simulator::Now ().GetSeconds ()                 << " " 
+    << right
+    << setw (11) << m_downQueue->GetTotalReceivedPackets ()         << " " 
+    << setw (11) << m_downQueue->GetTotalReceivedBytes ()           << " " 
+    << setw (11) << m_downQueue->GetTotalDroppedPackets ()          << " " 
+    << setw (11) << m_downQueue->GetTotalDroppedBytes ()            << " " 
+    << setw (11) << m_upQueue->GetTotalReceivedPackets ()           << " " 
+    << setw (11) << m_upQueue->GetTotalReceivedBytes ()             << " " 
+    << setw (11) << m_upQueue->GetTotalDroppedPackets ()            << " " 
+    << setw (11) << m_upQueue->GetTotalDroppedBytes ()              << " "
+    << setw (15) << (double)GetDownDataRate ().GetBitRate () / 1000 << " "
+    << setw (15) << (double)GetUpDataRate ().GetBitRate () / 1000
     << std::endl;
 
   ResetCounters ();
@@ -640,8 +677,10 @@ WebQueueStatsCalculator::NotifyConstructionCompleted (void)
 
   // Opening output files and printing header lines
   webWrapper = Create<OutputStreamWrapper> (m_webStatsFilename, std::ios::out);
-  *webWrapper->GetStream () << left 
-    << setw (12) << "Time(s) " 
+  *webWrapper->GetStream () << fixed << setprecision (4) << boolalpha
+    << left
+    << setw (11) << "Time(s)"
+    << right
     << setw (12) << "DlPkts"
     << setw (12) << "DlBytes"
     << setw (12) << "DlPktsDrp"
@@ -650,6 +689,8 @@ WebQueueStatsCalculator::NotifyConstructionCompleted (void)
     << setw (12) << "UlBytes"
     << setw (12) << "UlPktsDrp"
     << setw (12) << "UlBytesDrp"
+    << setw (16) << "Downlink(kbps)"
+    << setw (16) << "Uplink(kbps)"
     << std::endl;
 }
 
@@ -658,6 +699,27 @@ WebQueueStatsCalculator::ResetCounters ()
 {
   m_downQueue->ResetStatistics ();
   m_upQueue->ResetStatistics ();
+  m_lastResetTime = Simulator::Now ();
+}
+
+Time
+WebQueueStatsCalculator::GetActiveTime (void) const
+{
+  return Simulator::Now () - m_lastResetTime;
+}
+
+DataRate
+WebQueueStatsCalculator::GetDownDataRate (void) const
+{
+  return DataRate (8 * m_downQueue->GetTotalReceivedBytes () / 
+                   GetActiveTime ().GetSeconds ());
+}
+
+DataRate
+WebQueueStatsCalculator::GetUpDataRate (void) const
+{
+  return DataRate (8 * m_upQueue->GetTotalReceivedBytes () / 
+                   GetActiveTime ().GetSeconds ());
 }
 
 

@@ -151,20 +151,22 @@ private:
   Time GetActiveTime (void) const;
 
   /**
-   * Get the gateway downlink data rate.
+   * Get the downlink data rate.
    * \return The data rate.
    */
   DataRate GetDownDataRate (void) const;
 
   /**
-   * Get the gateway uplink data rate.
+   * Get the uplink data rate.
    * \return The data rate.
    */
   DataRate GetUpDataRate (void) const;
 
-  uint32_t  m_pgwDownBytes;   //!< Pgw traffic downlink bytes.
-  uint32_t  m_pgwUpBytes;     //!< Pgw traffic uplink bytes.
-  Time      m_lastResetTime;  //!< Last reset time
+  uint32_t    m_pgwDownBytes;   //!< Pgw traffic downlink bytes.
+  uint32_t    m_pgwUpBytes;     //!< Pgw traffic uplink bytes.
+  Ptr<Queue>  m_downQueue;      //!< Internet downlink queue
+  Ptr<Queue>  m_upQueue;        //!< Internet uplink queue
+  Time        m_lastResetTime;  //!< Last reset time
 
   std::string m_pgwStatsFilename;       //!< PgwStats filename
   Ptr<OutputStreamWrapper> pgwWrapper;  //!< PgwStats file wrapper
@@ -316,9 +318,28 @@ private:
    * Reset all internal counters.
    */
   void ResetCounters ();
+  
+  /**
+   * Get the active time value since last reset.
+   * \return The time value.
+   */
+  Time GetActiveTime (void) const;
 
-  Ptr<Queue>  m_downQueue; //!< Internet downlink queue
-  Ptr<Queue>  m_upQueue;   //!< Internet uplink queue
+  /**
+   * Get the downlink data rate.
+   * \return The data rate.
+   */
+  DataRate GetDownDataRate (void) const;
+
+  /**
+   * Get the uplink data rate.
+   * \return The data rate.
+   */
+  DataRate GetUpDataRate (void) const;
+
+  Ptr<Queue>  m_downQueue;      //!< Internet downlink queue
+  Ptr<Queue>  m_upQueue;        //!< Internet uplink queue
+  Time        m_lastResetTime;  //!< Last reset time
 
   std::string m_webStatsFilename;       //!< WebStats filename
   Ptr<OutputStreamWrapper> webWrapper;  //!< WebStats file wrapper

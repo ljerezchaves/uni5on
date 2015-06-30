@@ -231,6 +231,9 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
     {
       nodeDev->GetChannel ()->SetAttribute ("DataRate", DataRateValue (m_gwLinkDataRate));
       nodeDev->GetChannel ()->SetAttribute ("Delay", TimeValue (m_gwLinkDelay));
+
+      Names::Add ("OpenFlowNetwork/PgwDownQueue", nodeDev->GetQueue ());
+      Names::Add ("OpenFlowNetwork/PgwUpQueue", portDev->GetQueue ());
     }
 
   // Setting interface names for pacp filename
