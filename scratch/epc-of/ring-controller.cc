@@ -485,49 +485,70 @@ RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)
 
 std::pair<DataRate, DataRate> 
 RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo, 
-                                       bool invertPaths)
+                                       bool invertPath)
 {
-  NS_LOG_FUNCTION (this << ringInfo << invertPaths);
+  NS_LOG_FUNCTION (this << ringInfo << invertPath);
   
   RingRoutingInfo::RoutingPath downPath = ringInfo->GetDownPath (); 
-  RingRoutingInfo::RoutingPath upPath   = ringInfo->GetUpPath ();
-  if (invertPaths)
+  if (invertPath)
     {
       downPath = RingRoutingInfo::InvertPath (downPath);
-      upPath   = RingRoutingInfo::InvertPath (upPath);
     }
-
-  DataRate downRate = GetAvailableBandwidth (
-      ringInfo->GetSgwSwIdx (), ringInfo->GetEnbSwIdx (), downPath);
-  DataRate upRate = GetAvailableBandwidth (
-      ringInfo->GetEnbSwIdx (), ringInfo->GetSgwSwIdx (), upPath);
-
-  return std::pair<DataRate, DataRate> (downRate, upRate);
-}
-
-DataRate 
-RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx, 
-    uint16_t dstSwitchIdx, RingRoutingInfo::RoutingPath routingPath)
-{
-  NS_LOG_FUNCTION (this << srcSwitchIdx << dstSwitchIdx << routingPath);
-  NS_ASSERT (srcSwitchIdx != dstSwitchIdx);
   
-  DataRate availableBandwidth (std::numeric_limits<uint64_t>::max());
-  
-  uint16_t current = srcSwitchIdx;
-  while (current != dstSwitchIdx)
+  // From the gateway to the eNB switch index, get the bandwidth for each link
+  DataRate availableDownBand (std::numeric_limits<uint64_t>::max());
+  DataRate availableUpBand (std::numeric_limits<uint64_t>::max());
+  DataRate linkDownBand, linkUpBand;
+  Ptr<ConnectionInfo> cInfo;
+  uint16_t next, current = ringInfo->GetSgwSwIdx ();
+  while (current != ringInfo->GetEnbSwIdx ())
     {
-      uint16_t next = NextSwitchIndex (current, routingPath);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-      DataRate linkBandwidth = cInfo->GetAvailableDataRate (current, next, m_maxBwFactor);
-      if (linkBandwidth < availableBandwidth)
+      next = NextSwitchIndex (current, downPath);
+      cInfo = GetConnectionInfo (current, next);
+
+      // Check for available bandwidth in downlink direction
+      linkDownBand = cInfo->GetAvailableDataRate (current, next, m_maxBwFactor);
+      if (linkDownBand < availableDownBand)
         {
-          availableBandwidth = linkBandwidth;
+          availableDownBand = linkDownBand;
+        }
+
+      // Check for available bandwidth in uplink direction
+      linkUpBand = cInfo->GetAvailableDataRate (next, current, m_maxBwFactor);
+      if (linkUpBand < availableUpBand)
+        {
+          availableUpBand = linkUpBand;
         }
       current = next;
     }
-  return availableBandwidth;
+
+  // Return the pair of available bandwidth (downlink and uplink)
+  return std::pair<DataRate, DataRate> (availableDownBand, availableUpBand);
 }
+
+// DataRate 
+// RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx, 
+//     uint16_t dstSwitchIdx, RingRoutingInfo::RoutingPath routingPath)
+// {
+//   NS_LOG_FUNCTION (this << srcSwitchIdx << dstSwitchIdx << routingPath);
+//   NS_ASSERT (srcSwitchIdx != dstSwitchIdx);
+//   
+//   DataRate availableBandwidth (std::numeric_limits<uint64_t>::max());
+//   
+//   uint16_t current = srcSwitchIdx;
+//   while (current != dstSwitchIdx)
+//     {
+//       uint16_t next = NextSwitchIndex (current, routingPath);
+//       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
+//       DataRate linkBandwidth = cInfo->GetAvailableDataRate (current, next, m_maxBwFactor);
+//       if (linkBandwidth < availableBandwidth)
+//         {
+//           availableBandwidth = linkBandwidth;
+//         }
+//       current = next;
+//     }
+//   return availableBandwidth;
+// }
 
 bool
 RingController::ReserveBandwidth (Ptr<const RingRoutingInfo> ringInfo,

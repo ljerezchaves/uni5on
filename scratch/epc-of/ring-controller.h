@@ -112,25 +112,25 @@ private:
    * Get the available bandwidth for this ring routing information, considering
    * both downlink and uplink paths.
    * \param ringInfo The ring routing information.
-   * \param invertPaths When true, considers the inverted downlink/uplink paths
+   * \param invertPath When true, considers the inverted downlink/uplink paths
    * while looking for the available bandwidth.
    * \return A pair of available bandwidth data rates, for both downlink and
    * uplink paths, in this order.
    */
   std::pair<DataRate, DataRate> 
   GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo, 
-                         bool invertPaths = false);
+                         bool invertPath = false);
 
-  /**
-   * Look for the available bandwidth from source to destination switch index
-   * following the indicated routing path.
-   * \param srcSwitchIdx Source switch index.
-   * \param dstSwitchIdx Destination switch index.
-   * \param routingPath The routing path.
-   * \return The bandwidth for this routing path.
-   */
-  DataRate GetAvailableBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                                  RingRoutingInfo::RoutingPath routingPath);
+//  /**
+//   * Look for the available bandwidth from source to destination switch index
+//   * following the indicated routing path.
+//   * \param srcSwitchIdx Source switch index.
+//   * \param dstSwitchIdx Destination switch index.
+//   * \param routingPath The routing path.
+//   * \return The bandwidth for this routing path.
+//   */
+//  DataRate GetAvailableBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+//                                  RingRoutingInfo::RoutingPath routingPath);
 
   /**
    * Reserve the bandwidth for this bearer in network.
