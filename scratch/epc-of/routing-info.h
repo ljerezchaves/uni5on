@@ -70,14 +70,39 @@ public:
   uint64_t GetImsi (void) const;
   uint16_t GetCellId (void) const;
   uint16_t GetEnbSwIdx (void) const;
+  uint16_t GetSgwSwIdx (void) const;
+  Ipv4Address GetEnbAddr (void) const;
+  Ipv4Address GetSgwAddr (void) const;
+  int GetPriority (void) const;
+  int GetTimeout (void) const;
   bool HasDownlinkTraffic (void) const;
   bool HasUplinkTraffic (void) const;
   bool IsGbr (void) const;
+  bool IsDefault (void) const;
+  bool IsInstalled (void) const;
+  bool IsActive (void) const;
   //\}
   
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
+  
+  /**
+   * Set the internal installed flag.
+   * \param installed The value to set.
+   */
+  void SetInstalled (bool installed);
+
+  /**
+   * Set the internal active flag.
+   * \param active The value to set.
+   */
+  void SetActive (bool active);
+
+  /**
+   * Increase the priority value by one unit.
+   */
+  void IncreasePriority (void);
 
 private:
   uint32_t          m_teid;         //!< GTP TEID
@@ -123,6 +148,16 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  /**
+   * \name Private member accessors.
+   * \return The requested field.
+   */
+  //\{
+  bool IsInstalled (void) const;
+  bool HasDown (void) const;
+  bool HasUp (void) const;
+  //\}
+  
   /** 
    * \name Dpctl commands to add or delete meter rules 
    * \return The requested command.
@@ -139,6 +174,12 @@ protected:
   
   /** \return RoutingInfo pointer. */
   Ptr<RoutingInfo> GetRoutingInfo ();
+
+  /**
+   * Set the internal installed flag.
+   * \param installed The value to set.
+   */
+  void SetInstalled (bool installed);
 
 private:
   uint32_t m_teid;          //!< GTP TEID
@@ -185,6 +226,7 @@ public:
   //\{
   DataRate GetDownDataRate (void) const;
   DataRate GetUpDataRate (void) const;
+  bool IsReserved (void) const;
   //\}
 
 protected:
@@ -193,6 +235,12 @@ protected:
 
   /** \return RoutingInfo pointer. */
   Ptr<RoutingInfo> GetRoutingInfo ();
+
+  /**
+   * Set the internal reserved flag.
+   * \param reserved The value to set.
+   */
+  void SetReserved (bool reserved);
 
 private:
   uint32_t m_teid;          //!< GTP TEID
@@ -248,6 +296,10 @@ public:
   bool IsDownInv (void) const;
   bool IsUpInv (void) const;
   bool IsInverted (void) const;
+  uint16_t GetSgwSwIdx (void) const;
+  uint16_t GetEnbSwIdx (void) const;
+  RoutingPath GetDownPath (void) const;
+  RoutingPath GetUpPath (void) const;
   //\}
 
   /**

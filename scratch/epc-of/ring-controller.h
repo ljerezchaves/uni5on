@@ -119,8 +119,27 @@ private:
   DataRate GetAvailableBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
                                   RingRoutingInfo::RoutingPath routingPath);
 
+
   /**
-   * Reserve the indicated bandwidth at each link from source source to
+   * Reserve the bandwidth for this bearer in network.
+   * \param ringInfo The ring routing information.
+   * \param reserveInfo The reserve information.
+   * \return True if success, false otherwise;
+   */
+  bool ReserveBandwidth (Ptr<const RingRoutingInfo> ringInfo,
+                         Ptr<ReserveInfo> reserveInfo);
+  
+  /**
+   * Release the bandwidth for this bearer in network.
+   * \param ringInfo The ring routing information.
+   * \param reserveInfo The reserve information.
+   * \return True if success, false otherwise;
+   */
+  bool ReleaseBandwidth (Ptr<const RingRoutingInfo> ringInfo,
+                         Ptr<ReserveInfo> reserveInfo);
+
+  /**
+   * Reserve the indicated bandwidth at each link from source to
    * destination switch index following the indicated routing path. 
    * \param srcSwitchIdx Source switch index.
    * \param dstSwitchIdx Destination switch index.
@@ -128,12 +147,12 @@ private:
    * \param reserve The bandwidth to reserve.
    * \return True if success, false otherwise;
    */
-  bool ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                         RingRoutingInfo::RoutingPath routingPath, 
-                         DataRate reserve);
+  bool PerLinkReserve (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+                       RingRoutingInfo::RoutingPath routingPath, 
+                       DataRate reserve);
 
   /**
-   * Release the indicated bandwidth at each link from source source to
+   * Release the indicated bandwidth at each link from source to
    * destination switch index following the indicated routing path. 
    * \param srcSwitchIdx Source switch index.
    * \param dstSwitchIdx Destination switch index.
@@ -141,9 +160,9 @@ private:
    * \param release The bandwidth to release.
    * \return True if success, false otherwise;
    */
-  bool ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                         RingRoutingInfo::RoutingPath routingPath, 
-                         DataRate release);
+  bool PerLinkRelease (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+                       RingRoutingInfo::RoutingPath routingPath, 
+                       DataRate release);
 
   /**
    * Get the next switch index following the indicated routing path.

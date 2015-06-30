@@ -96,26 +96,26 @@ OpenFlowEpcController::RequestDedicatedBearer (EpsBearer bearer,
   NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer " << teid);
 
   // Is it a default bearer?
-  if (rInfo->m_isDefault)
+  if (rInfo->IsDefault ())
     {
       // If the application traffic is sent over default bearer, there is no
       // need for resource reservation nor reinstall the switch rules, as
       // default rules were supposed to remain installed during entire
       // simulation and must be Non-GBR.
-      NS_ASSERT_MSG (rInfo->m_isActive && rInfo->m_isInstalled,
+      NS_ASSERT_MSG (rInfo->IsActive () && rInfo->IsInstalled (),
                      "Default bearer should be intalled and activated.");
       return true;
     }
 
   // Is it an active (aready configured) bearer?
-  if (rInfo->m_isActive)
+  if (rInfo->IsActive ())
     {
-      NS_ASSERT_MSG (rInfo->m_isInstalled, "Bearer should be installed.");
+      NS_ASSERT_MSG (rInfo->IsInstalled (), "Bearer should be installed.");
       NS_LOG_DEBUG ("Routing path for " << teid << " is already installed.");
       return true;
     }
 
-  NS_ASSERT_MSG (!rInfo->m_isActive, "Bearer should be inactive.");
+  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
   // So, this bearer must be inactive and we are goind to reuse it's metadata.
   // Every time the application starts using an (old) existing bearer, let's
   // reinstall the rules on the switches, which will inscrease the bearer
@@ -131,7 +131,7 @@ OpenFlowEpcController::RequestDedicatedBearer (EpsBearer bearer,
     }
 
   // Everything is ok! Let's activate and install this bearer.
-  rInfo->m_isActive = true;
+  rInfo->SetActive (true);
   return TopologyInstallRouting (rInfo);
 }
 
@@ -145,24 +145,24 @@ OpenFlowEpcController::ReleaseDedicatedBearer (EpsBearer bearer,
   NS_ASSERT_MSG (rInfo, "No routing information for teid.");
 
   // Is it a default bearer?
-  if (rInfo->m_isDefault)
+  if (rInfo->IsDefault ())
     {
       // If the application traffic is sent over default bearer, there is no
       // need for resource release, as default rules were supposed to remain
       // installed during entire simulation and must be Non-GBR.
-      NS_ASSERT_MSG (rInfo->m_isActive && rInfo->m_isInstalled,
+      NS_ASSERT_MSG (rInfo->IsActive () && rInfo->IsInstalled (),
                      "Default bearer should be intalled and activated.");
       return true;
     }
 
   // Check for active bearer
-  if (rInfo->m_isActive == false)
+  if (rInfo->IsActive () == false)
     {
       return true;
     }
 
-  rInfo->m_isActive = false;
-  rInfo->m_isInstalled = false;
+  rInfo->SetActive (false);
+  rInfo->SetInstalled (false);
   bool success = TopologyBearerRelease (rInfo);
   m_bearerReleaseTrace (success, rInfo);
   return TopologyRemoveRouting (rInfo);
@@ -293,17 +293,6 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
       if (gbrQoS.mbrDl || gbrQoS.mbrUl)
         {
           Ptr<MeterInfo> meterInfo = CreateObject<MeterInfo> (rInfo);
-          meterInfo->m_teid = teid;
-          if (gbrQoS.mbrDl)
-            {
-              meterInfo->m_hasDown = true;
-              meterInfo->m_downDataRate = DataRate (gbrQoS.mbrDl);
-            }
-          if (gbrQoS.mbrUl)
-            {
-              meterInfo->m_hasUp = true;
-              meterInfo->m_upDataRate = DataRate (gbrQoS.mbrUl);
-            }
           rInfo->AggregateObject (meterInfo);
         }
 
@@ -311,22 +300,10 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
       if (gbrQoS.gbrDl || gbrQoS.gbrUl)
         {
           Ptr<ReserveInfo> reserveInfo = CreateObject<ReserveInfo> (rInfo);
-          reserveInfo->m_teid = teid;
-          if (gbrQoS.gbrDl)
-            {
-              reserveInfo->m_hasDown = true;
-              reserveInfo->m_downDataRate = DataRate (gbrQoS.gbrDl);
-            }
-          if (gbrQoS.gbrUl)
-            {
-              reserveInfo->m_hasUp = true;
-              reserveInfo->m_upDataRate = DataRate (gbrQoS.gbrUl);
-            }
           rInfo->AggregateObject (reserveInfo);
         }
     }
 }
-
 
 void
 OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
@@ -432,7 +409,7 @@ OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
 
   // When a rule expires due to idle timeout, check the following situations:
   // 1) The application is stopped and the bearer must be inactive.
-  if (!rInfo->m_isActive)
+  if (!rInfo->IsActive ())
     {
       NS_LOG_DEBUG ("Flow " << teid << " removed for stopped application.");
       return 0;
@@ -441,7 +418,7 @@ OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   // 2) The application is running and the bearer is active, but the
   // application has already been stopped since last rule installation. In this
   // case, the bearer priority should have been increased to avoid conflicts.
-  if (rInfo->m_priority > prio)
+  if (rInfo->GetPriority () > prio)
     {
       NS_LOG_DEBUG ("Flow " << teid << " removed for old rule.");
       return 0;
@@ -454,8 +431,8 @@ OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   // TODO: With HTTP traffic, when MaxPages > 1, the random reading time can be
   // larger than current rule idle timeout. This will trigger this rule
   // reinstallation process, but it could be avoided.
-  NS_ASSERT_MSG (rInfo->m_priority == prio, "Invalid flow priority.");
-  if (rInfo->m_isActive)
+  NS_ASSERT_MSG (rInfo->GetPriority () == prio, "Invalid flow priority.");
+  if (rInfo->IsActive ())
     {
       NS_LOG_WARN ("Flow " << teid << " is still active. Reinstall rules...");
       if (!TopologyInstallRouting (rInfo))
@@ -479,12 +456,12 @@ OpenFlowEpcController::SaveRoutingInfo (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
 
-  std::pair <uint32_t, Ptr<RoutingInfo> > entry (rInfo->m_teid, rInfo);
+  std::pair <uint32_t, Ptr<RoutingInfo> > entry (rInfo->GetTeid (), rInfo);
   std::pair <TeidRoutingMap_t::iterator, bool> ret;
   ret = m_routes.insert (entry);
   if (ret.second == false)
     {
-      NS_FATAL_ERROR ("Existing routing information for teid " << rInfo->m_teid);
+      NS_FATAL_ERROR ("Existing routing information for teid " << rInfo->GetTeid ());
     }
 }
 
@@ -577,7 +554,7 @@ OpenFlowEpcController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
 
   // Let's check for active routing path
   Ptr<RoutingInfo> rInfo = GetRoutingInfo (teid);
-  if (rInfo && rInfo->m_isActive)
+  if (rInfo && rInfo->IsActive ())
     {
       NS_LOG_WARN ("Not supposed to happen, but we can handle this.");
       if (!TopologyInstallRouting (rInfo, msg->buffer_id))
