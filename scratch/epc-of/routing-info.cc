@@ -477,6 +477,27 @@ RingRoutingInfo::GetUpPath (void) const
   return m_upPath;
 }
 
+std::string
+RingRoutingInfo::GetPathDesc (void) const
+{
+  if (IsInverted ())
+    {
+      return "Inverted";
+    }
+  else if (IsDownInv ())
+    {
+      return "Inverted down"; 
+    }
+  else if (IsUpInv ())
+    {
+      return "Inverted up";
+    }
+  else
+    {
+      return "Shortest";
+    }
+}
+
 void
 RingRoutingInfo::InvertDownPath ()
 {

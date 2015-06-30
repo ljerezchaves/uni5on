@@ -300,6 +300,7 @@ public:
   uint16_t GetEnbSwIdx (void) const;
   RoutingPath GetDownPath (void) const;
   RoutingPath GetUpPath (void) const;
+  std::string GetPathDesc (void) const;
   //\}
 
   /**
