@@ -228,7 +228,7 @@ ConnectionInfo::ReserveDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate
       m_reserved [dir] = m_reserved [dir] + rate;
       return true;
     }
-  NS_FATAL_ERROR ("No bandwidth available to reserve.")
+  NS_FATAL_ERROR ("No bandwidth available to reserve.");
 }
 
 bool
