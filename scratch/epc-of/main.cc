@@ -45,6 +45,10 @@ main (int argc, char *argv[])
   // When possible, use the Full Duplex CSMA channel to improve throughput.
   Config::SetDefault ("ns3::CsmaChannel::FullDuplex", BooleanValue (true));
 
+  // For network queues, set the size limit in bytes
+  Config::SetDefault ("ns3::DropTailQueue::Mode", EnumValue (Queue::QUEUE_MODE_BYTES));
+  Config::SetDefault ("ns3::DropTailQueue::MaxBytes", UintegerValue (262144)); // 256KB
+
   // Enabling checksum computations and packet metadata
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
 

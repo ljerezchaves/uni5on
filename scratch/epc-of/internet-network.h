@@ -25,6 +25,7 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/point-to-point-module.h>
+#include <ns3/csma-module.h>
 
 namespace ns3 {
 
@@ -70,10 +71,12 @@ public:
 private:
   NodeContainer      m_webNodes;      //!< Internet nodes (server and gateway)
   NetDeviceContainer m_webDevices;    //!< Internet devices
-  PointToPointHelper m_p2pHelper;     //!< Internet link helper
+  PointToPointHelper m_p2pHelper;     //!< Internet p2p link helper
+  CsmaHelper         m_csmaHelper;    //!< Internet csma link helper
   DataRate           m_linkDataRate;  //!< Internet link data rate
   Time               m_linkDelay;     //!< Internet link delay
   uint16_t           m_linkMtu;       //!< Internet link MTU
+  bool               m_csmaLink;      //!< If true, use csma instead of p2p link
 };
 
 };  // namespace ns3
