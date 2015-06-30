@@ -85,13 +85,15 @@ AdmissionStatsCalculator::DumpStatistics (void)
   NS_LOG_FUNCTION (this);
 
   *admWrapper->GetStream ()
-    << setw (12) << Simulator::Now ().GetSeconds () << "     "
-    << setw (8)  << m_gbrRequests                   << " "
-    << setw (8)  << m_gbrBlocked                    << " "
-    << setw (8)  << GetGbrBlockRatio ()             << "          "
-    << setw (8)  << m_nonRequests                   << " "
-    << setw (8)  << m_nonBlocked                    << " "
-    << setw (8)  << GetNonGbrBlockRatio ()
+    << left
+    << setw (11) << Simulator::Now ().GetSeconds () << " " 
+    << right
+    << setw (9)  << m_gbrRequests                   << " "
+    << setw (9)  << m_gbrBlocked                    << " "
+    << setw (9)  << GetGbrBlockRatio ()             << " "
+    << setw (9)  << m_nonRequests                   << " "
+    << setw (9)  << m_nonBlocked                    << " "
+    << setw (9)  << GetNonGbrBlockRatio ()
     << std::endl;
 
   ResetCounters ();
@@ -112,16 +114,16 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
 
   // Opening output files and printing header lines
   admWrapper = Create<OutputStreamWrapper> (m_admStatsFilename, std::ios::out);
-  *admWrapper->GetStream () << left
-    << setw (12) << "Time(s)" 
-                 << " GBR "
-    << setw (9)  << "Reqs"
-    << setw (9)  << "Blocks"
-    << setw (9)  << "Ratio"
-                 << " Non-GBR "
-    << setw (9)  << "Reqs"
-    << setw (9)  << "Blocks"
-    << setw (9)  << "Ratio"
+  *admWrapper->GetStream () << fixed << setprecision (4)
+    << left
+    << setw (11) << "Time(s)"
+    << right
+    << setw (10)  << "GBRReqs"
+    << setw (10)  << "GBRBlocks"
+    << setw (10)  << "GBRRatio"
+    << setw (10)  << "NonReqs"
+    << setw (10)  << "NonBlocks"
+    << setw (10)  << "NonRatio"
     << std::endl;
 
   brqWrapper = Create<OutputStreamWrapper> (m_brqStatsFilename, std::ios::out);
@@ -564,7 +566,11 @@ SwitchRulesStatsCalculator::DumpStatistics (void)
 {
   NS_LOG_FUNCTION (this);
 
-  *swtWrapper->GetStream () << setw (11) << Simulator::Now ().GetSeconds () << " ";
+  *swtWrapper->GetStream () 
+    << left
+    << setw (11) << Simulator::Now ().GetSeconds () << " " 
+    << right;
+  
   Ptr<OFSwitch13NetDevice> dev;
   for (uint16_t i = 0; i < m_devices.GetN (); i++)
     {
@@ -594,7 +600,10 @@ void
 SwitchRulesStatsCalculator::NotifyTopologyBuilt (NetDeviceContainer devices)
 {
   m_devices = devices;
-  *swtWrapper->GetStream () << left << setw (12) << "Time(s)";
+  *swtWrapper->GetStream () << fixed << setprecision (4)
+    << left 
+    << setw (11) << "Time(s)" 
+    << right;
 
   for (uint16_t i = 0; i < m_devices.GetN (); i++)
     {
