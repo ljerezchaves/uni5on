@@ -78,7 +78,7 @@ RingNetwork::GetTypeId (void)
     .AddAttribute ("LinkMtu",
                    "The MTU for CSMA OpenFlow links. "
                    "Consider + 40 byter of GTP/UDP/IP tunnel overhead.",
-                   UintegerValue (1540), // Ethernet II + GTP/UDP/IP tunnel
+                   UintegerValue (1500), // Ethernet II
                    MakeUintegerAccessor (&RingNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
   ;
@@ -193,6 +193,12 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   NS_ASSERT_MSG (m_created, "Topology not created.");
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
 
+  // Configuring csma links for connecting eNBs to switches 
+  // (using the same configuration for connection between switches)
+  m_ofCsmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
+  m_ofCsmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_swLinkDataRate));
+  m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_swLinkDelay));
+
   // Connect SgwPgw node to switch index 0 and other eNBs to switchs indexes
   // indicated by the user. As we know that the OpenFlowEpcHelper will callback
   // here first for SgwPgw node, we use the static counter to identify this
@@ -206,6 +212,10 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
       // This is the SgwPgw node
       swIdx = 0;
       RegisterGatewayAtSwitch (swIdx, node);
+      
+      // Only for the gateway link, let's set specific datarate and delay.
+      m_ofCsmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_gwLinkDataRate));
+      m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_gwLinkDelay));
     }
   else
     {
@@ -225,16 +235,6 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   Ptr<CsmaNetDevice> portDev, nodeDev;
   portDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
   nodeDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
-
-  // Only for the gateway link, set specific datarate and delay.
-  if (counter == 1)
-    {
-      nodeDev->GetChannel ()->SetAttribute ("DataRate", DataRateValue (m_gwLinkDataRate));
-      nodeDev->GetChannel ()->SetAttribute ("Delay", TimeValue (m_gwLinkDelay));
-
-      Names::Add ("OpenFlowNetwork/PgwDownQueue", nodeDev->GetQueue ());
-      Names::Add ("OpenFlowNetwork/PgwUpQueue", portDev->GetQueue ());
-    }
 
   // Setting interface names for pacp filename
   Names::Add (Names::FindName (swNode) + "+" + Names::FindName (node), portDev);
@@ -260,6 +260,13 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
  
   nodeDev->GetQueue ()->TraceConnect ("Drop", Names::FindName (node),
     MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
+
+  // Only for the gateway link, let's  set specific names for queues.
+  if (counter == 1)
+    {    
+      Names::Add ("OpenFlowNetwork/PgwDownQueue", nodeDev->GetQueue ());
+      Names::Add ("OpenFlowNetwork/PgwUpQueue", portDev->GetQueue ());
+    }
 
   return nodeDev;
 }
