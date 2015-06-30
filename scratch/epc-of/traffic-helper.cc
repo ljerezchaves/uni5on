@@ -74,9 +74,9 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   m_stVideoHelper.SetServerAttribute ("VideoDuration", 
     StringValue ("ns3::NormalRandomVariable[Mean=180.0|Variance=3600.0]"));
 
-  // For real time video streaming: average 5min, with 1min stdev
+  // For real time video streaming: average 3min, with 1min stdev
   m_rtVideoHelper.SetServerAttribute ("VideoDuration", 
-    StringValue ("ns3::NormalRandomVariable[Mean=300.0|Variance=3600.0]"));
+    StringValue ("ns3::NormalRandomVariable[Mean=180.0|Variance=3600.0]"));
   
   // Setting defaul real time video to office cam with medium quality
   // Average bit rate: 110Kbps | Peak bit rate: 1Mbps
