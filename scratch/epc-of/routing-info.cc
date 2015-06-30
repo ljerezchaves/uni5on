@@ -389,14 +389,14 @@ RingRoutingInfo::RingRoutingInfo ()
   NS_LOG_FUNCTION (this);
 }
 
-RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo, RoutingPath downPath)
+RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo, 
+                                  RoutingPath shortDownPath)
   : m_rInfo (rInfo)
 {
   NS_LOG_FUNCTION (this);
-  m_downPath  = downPath;
-  m_upPath    = RingRoutingInfo::InvertPath (m_downPath);
-  m_isDownInv = false;
-  m_isUpInv   = false;
+  m_downPath   = shortDownPath;
+  m_upPath     = RingRoutingInfo::InvertPath (shortDownPath);
+  m_isInverted = false;
 }
 
 RingRoutingInfo::~RingRoutingInfo ()
@@ -436,21 +436,9 @@ RingRoutingInfo::GetRoutingInfo ()
 }
 
 bool
-RingRoutingInfo::IsDownInv (void) const
-{
-  return m_isDownInv;
-}
-
-bool
-RingRoutingInfo::IsUpInv (void) const
-{
-  return m_isUpInv;
-}
-
-bool
 RingRoutingInfo::IsInverted (void) const
 {
-  return (m_isDownInv && m_isUpInv);
+  return m_isInverted;
 }
 
 uint16_t
@@ -484,14 +472,6 @@ RingRoutingInfo::GetPathDesc (void) const
     {
       return "Inverted";
     }
-  else if (IsDownInv ())
-    {
-      return "Inverted down"; 
-    }
-  else if (IsUpInv ())
-    {
-      return "Inverted up";
-    }
   else
     {
       return "Shortest";
@@ -499,28 +479,11 @@ RingRoutingInfo::GetPathDesc (void) const
 }
 
 void
-RingRoutingInfo::InvertDownPath ()
-{
-  NS_LOG_FUNCTION (this);
-
-  m_downPath = RingRoutingInfo::InvertPath (m_downPath);
-  m_isDownInv = !m_isDownInv;
-}
-
-void
-RingRoutingInfo::InvertUpPath ()
-{
-  NS_LOG_FUNCTION (this);
-
-  m_upPath = RingRoutingInfo::InvertPath (m_upPath);
-  m_isUpInv = !m_isUpInv;
-}
-
-void
 RingRoutingInfo::InvertPaths ()
 {
-  InvertDownPath ();
-  InvertUpPath ();
+  m_downPath = RingRoutingInfo::InvertPath (m_downPath);
+  m_upPath   = RingRoutingInfo::InvertPath (m_upPath);
+  m_isInverted = !m_isInverted;
 }
 
 void
@@ -528,14 +491,9 @@ RingRoutingInfo::ResetToShortestPaths ()
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_isDownInv)
+  if (IsInverted ())
     {
-      InvertDownPath ();
-    }
-
-  if (m_isUpInv)
-    {
-      InvertUpPath ();
+      InvertPaths ();
     }
 }
 

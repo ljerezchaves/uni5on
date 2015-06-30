@@ -274,20 +274,19 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
     }
 
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
-  ringInfo->ResetToShortestPaths ();
   uint32_t teid = rInfo->GetTeid ();
   
   // Getting available downlink and uplink bandwidth in both paths
-  DataRate dlShortBw, dlLongBw, ulShortBw, ulLongBw;
-  dlShortBw = GetAvailableBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
-                                     ringInfo->GetDownPath ());
-  dlLongBw = GetAvailableBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
-      RingRoutingInfo::InvertPath (ringInfo->GetDownPath ()));
-
-  ulShortBw = GetAvailableBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
-      ringInfo->GetUpPath ());
-  ulLongBw = GetAvailableBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
-     RingRoutingInfo::InvertPath (ringInfo->GetUpPath ()));
+  ringInfo->ResetToShortestPaths ();
+  
+  std::pair<DataRate, DataRate> shortPathBand, longPathBand;
+  shortPathBand = GetAvailableBandwidth (ringInfo, false);
+  longPathBand  = GetAvailableBandwidth (ringInfo, true);
+  
+  DataRate dlShortBw = shortPathBand.first; 
+  DataRate ulShortBw = shortPathBand.second;
+  DataRate dlLongBw  = longPathBand.first;
+  DataRate ulLongBw  = longPathBand.second;
 
   // Getting bandwidth requests
   DataRate dlRequest = reserveInfo->GetDownDataRate ();
@@ -482,6 +481,28 @@ RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)
   return (clockwiseDistance <= maxHops) ?
          RingRoutingInfo::CLOCK :
          RingRoutingInfo::COUNTER;
+}
+
+std::pair<DataRate, DataRate> 
+RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo, 
+                                       bool invertPaths)
+{
+  NS_LOG_FUNCTION (this << ringInfo << invertPaths);
+  
+  RingRoutingInfo::RoutingPath downPath = ringInfo->GetDownPath (); 
+  RingRoutingInfo::RoutingPath upPath   = ringInfo->GetUpPath ();
+  if (invertPaths)
+    {
+      downPath = RingRoutingInfo::InvertPath (downPath);
+      upPath   = RingRoutingInfo::InvertPath (upPath);
+    }
+
+  DataRate downRate = GetAvailableBandwidth (
+      ringInfo->GetSgwSwIdx (), ringInfo->GetEnbSwIdx (), downPath);
+  DataRate upRate = GetAvailableBandwidth (
+      ringInfo->GetEnbSwIdx (), ringInfo->GetSgwSwIdx (), upPath);
+
+  return std::pair<DataRate, DataRate> (downRate, upRate);
 }
 
 DataRate 

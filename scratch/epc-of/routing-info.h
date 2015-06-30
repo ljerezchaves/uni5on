@@ -277,10 +277,11 @@ public:
   /**
    * Complete constructor.
    * \param rInfo RoutingInfo pointer.
-   * \param downPath The path for downlink (uplink will get the inverse path).
+   * \param downPath The _shortest_ path for downlink (uplink will get the
+   * inverse path).
    * \attention This RingRoutingInfo object must be aggregated to rInfo.
    */
-  RingRoutingInfo (Ptr<RoutingInfo> rInfo, RoutingPath downPath);
+  RingRoutingInfo (Ptr<RoutingInfo> rInfo, RoutingPath shortDownPath);
 
   /**
    * Register this type.
@@ -293,8 +294,6 @@ public:
    * \return The requested field.
    */
   //\{
-  bool IsDownInv (void) const;
-  bool IsUpInv (void) const;
   bool IsInverted (void) const;
   uint16_t GetSgwSwIdx (void) const;
   uint16_t GetEnbSwIdx (void) const;
@@ -322,17 +321,14 @@ private:
    * \name Path invertion methods.
    */
   //\{
-  void InvertDownPath ();
-  void InvertUpPath ();
   void InvertPaths ();
   void ResetToShortestPaths ();
   //\}
 
-  Ptr<RoutingInfo> m_rInfo;     //!< Routing information
-  RoutingPath      m_downPath;  //!< Downlink routing path
-  RoutingPath      m_upPath;    //!< Uplink routing path
-  bool             m_isDownInv; //!< True when down path is inverted
-  bool             m_isUpInv;   //!< True when up path is inverted
+  Ptr<RoutingInfo> m_rInfo;       //!< Routing information
+  RoutingPath      m_downPath;    //!< Downlink routing path
+  RoutingPath      m_upPath;      //!< Uplink routing path
+  bool             m_isInverted;  //!< True when paths are inverted
 };
 
 };  // namespace ns3

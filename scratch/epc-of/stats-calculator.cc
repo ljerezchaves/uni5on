@@ -185,7 +185,7 @@ AdmissionStatsCalculator::NotifyRequest (bool accepted, Ptr<const RoutingInfo> r
       upRate = reserveInfo->GetUpDataRate ();
     }
 
-  std::string path;
+  std::string path = "Shortest (default)";
   Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   if (ringInfo)
     {
