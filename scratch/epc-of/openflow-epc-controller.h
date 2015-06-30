@@ -89,6 +89,13 @@ public:
                                        uint16_t cellId, uint32_t teid);
 
   /**
+   * Retrieve stored information for a specific GTP teid.
+   * \param teid The GTP tunnel ID.
+   * \return The routing information for this tunnel.
+   */
+  Ptr<const RoutingInfo> GetConstRoutingInfo (uint32_t teid) const;
+
+  /**
    * TracedCallback signature for new bearer request.
    * \param ok True when the bearer request/release processes succeeds.
    * \param rInfo The routing information for this bearer tunnel.

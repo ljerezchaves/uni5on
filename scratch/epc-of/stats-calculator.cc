@@ -129,13 +129,17 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
     << left
     << setw (10) << "Time(s)"
     << right
-    << setw (17) << "Description"
+    << setw (4)  << "QCI"
+    << setw (7)  << "IsGBR"
+    << setw (8)  << "UeImsi"
+    << setw (8)  << "CellId"
+    << setw (7)  << "SwIdx"
     << setw (7)  << "TEID"
     << setw (10) << "Accepted"
     << setw (12) << "Down(kbps)"
     << setw (12) << "Up(kbps)"
     << left << "  "
-    << setw (12) << "Routing path"
+    << setw (12) << "RoutingPath"
     << std::endl;
 }
 
@@ -198,7 +202,11 @@ AdmissionStatsCalculator::NotifyRequest (bool accepted, Ptr<const RoutingInfo> r
     << left
     << setw (9) << Simulator::Now ().GetSeconds ()          << " "
     << right
-    << setw (17) << rInfo->GetDescription ()                << " "
+    << setw (4)  << rInfo->GetQciInfo ()                    << " " 
+    << setw (6)  << rInfo->IsGbr ()                         << " " 
+    << setw (7)  << rInfo->GetImsi ()                       << " " 
+    << setw (7)  << rInfo->GetCellId ()                     << " " 
+    << setw (6)  << rInfo->GetEnbSwIdx ()                   << " " 
     << setw (6)  << rInfo->GetTeid ()                       << " "
     << setw (9)  << accepted                                << " "
     << setw (11) << (double)(downRate.GetBitRate ()) / 1000 << " "
@@ -658,6 +666,8 @@ EpcS1uStatsCalculator::EpcS1uStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 
+  m_controller = Names::Find<OpenFlowEpcController> ("MainController"); 
+
   // Connecting all EPC trace sinks for QoS monitoring
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uRx",
@@ -714,6 +724,7 @@ void
 EpcS1uStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+  m_controller = 0;
   appWrapper = 0;
   epcWrapper = 0;
 }
@@ -725,38 +736,50 @@ EpcS1uStatsCalculator::NotifyConstructionCompleted (void)
 
   // Opening output files and printing header lines
   appWrapper = Create<OutputStreamWrapper> (m_appStatsFilename, std::ios::out);
-  *appWrapper->GetStream () << fixed << setprecision (4)
+  *appWrapper->GetStream () << fixed << setprecision (4) << boolalpha
     << left
     << setw (12) << "Time(s)"
-    << setw (17) << "Description"
-    << setw (6)  << "TEID"
     << right
+    << setw (8)  << "AppName"
+    << setw (5)  << "QCI"
+    << setw (7)  << "IsGBR"
+    << setw (8)  << "UeImsi"
+    << setw (8)  << "CellId"
+    << setw (7)  << "SwIdx"
+    << setw (11) << "Direction"
+    << setw (6)  << "TEID"
     << setw (11) << "Active(s)"
     << setw (12) << "Delay(ms)"
     << setw (12) << "Jitter(ms)"
-    << setw (9)  << "Rx Pkts"
-    << setw (12) << "Loss ratio"
+    << setw (9)  << "RxPkts"
+    << setw (12) << "LossRatio"
     << setw (6)  << "Losts"
-    << setw (10) << "Rx Bytes"
+    << setw (10) << "RxBytes"
     << setw (17)  << "Throughput(kbps)"
     << std::endl;
 
   epcWrapper = Create<OutputStreamWrapper> (m_epcStatsFilename, std::ios::out);
-  *epcWrapper->GetStream () << fixed << setprecision (4)
+  *epcWrapper->GetStream () << fixed << setprecision (4) << boolalpha
     << left
     << setw (12) << "Time(s)"
-    << setw (17) << "Description"
-    << setw (6)  << "TEID"
     << right
+    << setw (8)  << "AppName"
+    << setw (5)  << "QCI"
+    << setw (7)  << "IsGBR"
+    << setw (8)  << "UeImsi"
+    << setw (8)  << "CellId"
+    << setw (7)  << "SwIdx"
+    << setw (11) << "Direction"
+    << setw (6)  << "TEID"
     << setw (11) << "Active(s)"
     << setw (12) << "Delay(ms)"
     << setw (12) << "Jitter(ms)"
-    << setw (9)  << "Rx Pkts"
-    << setw (12) << "Loss ratio"
+    << setw (9)  << "RxPkts"
+    << setw (12) << "LossRatio"
     << setw (7)  << "Losts"
     << setw (7)  << "Meter"
     << setw (7)  << "Queue"
-    << setw (10) << "Rx Bytes"
+    << setw (10) << "RxBytes"
     << setw (17)  << "Throughput(kbps)"
     << std::endl;
 }
@@ -829,11 +852,11 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context, Ptr<const EpcApplica
   NS_LOG_FUNCTION (this << context << app->GetTeid ());
 
   uint32_t teid = app->GetTeid ();
-  bool uplink = (app->GetInstanceTypeId () == VoipClient::GetTypeId ());
-  std::string desc = app->GetDescription ();
-
+  Ptr<const RoutingInfo> rInfo = m_controller->GetConstRoutingInfo (teid);
   Ptr<const QosStatsCalculator> epcStats;
   Ptr<const QosStatsCalculator> appStats;
+  
+  bool uplink = (app->GetInstanceTypeId () == VoipClient::GetTypeId ());
   if (uplink)
     {
       // Dump uplink statistics
@@ -841,10 +864,16 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context, Ptr<const EpcApplica
       *epcWrapper->GetStream () 
         << left
         << setw (11) << Simulator::Now ().GetSeconds ()                 << " " 
-        << setw (16) << desc + "ul"                                     << " " 
-        << setw (5)  << teid                                            << " " 
         << right
-        << setw (11) << epcStats->GetActiveTime ().GetSeconds ()        << " " 
+        << setw (8)  << app->GetAppName ()                              << " " 
+        << setw (4)  << rInfo->GetQciInfo ()                            << " " 
+        << setw (6)  << rInfo->IsGbr ()                                 << " " 
+        << setw (7)  << rInfo->GetImsi ()                               << " " 
+        << setw (7)  << rInfo->GetCellId ()                             << " " 
+        << setw (6)  << rInfo->GetEnbSwIdx ()                           << " " 
+        << setw (10) << "up"                                            << " " 
+        << setw (5)  << teid                                            << " " 
+        << setw (10) << epcStats->GetActiveTime ().GetSeconds ()        << " " 
         << setw (11) << epcStats->GetRxDelay ().GetSeconds () * 1000    << " " 
         << setw (11) << epcStats->GetRxJitter ().GetSeconds () * 1000   << " " 
         << setw (8)  << epcStats->GetRxPackets ()                       << " " 
@@ -860,10 +889,16 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context, Ptr<const EpcApplica
       *appWrapper->GetStream () 
         << left
         << setw (11) << Simulator::Now ().GetSeconds ()                 << " " 
-        << setw (16) << desc + "ul"                                     << " " 
-        << setw (5)  << teid                                            << " " 
         << right
-        << setw (11) << appStats->GetActiveTime ().GetSeconds ()        << " " 
+        << setw (8)  << app->GetAppName ()                              << " " 
+        << setw (4)  << rInfo->GetQciInfo ()                            << " " 
+        << setw (6)  << rInfo->IsGbr ()                                 << " " 
+        << setw (7)  << rInfo->GetImsi ()                               << " " 
+        << setw (7)  << rInfo->GetCellId ()                             << " " 
+        << setw (6)  << rInfo->GetEnbSwIdx ()                           << " " 
+        << setw (10) << "up"                                            << " " 
+        << setw (5)  << teid                                            << " " 
+        << setw (10) << appStats->GetActiveTime ().GetSeconds ()        << " " 
         << setw (11) << appStats->GetRxDelay ().GetSeconds () * 1000    << " " 
         << setw (11) << appStats->GetRxJitter ().GetSeconds () * 1000   << " " 
         << setw (8)  << appStats->GetRxPackets ()                       << " " 
@@ -879,10 +914,16 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context, Ptr<const EpcApplica
   *epcWrapper->GetStream () 
     << left
     << setw (11) << Simulator::Now ().GetSeconds ()                     << " " 
-    << setw (16) << desc + "dl"                                         << " " 
-    << setw (5)  << teid                                                << " " 
     << right
-    << setw (11) << epcStats->GetActiveTime ().GetSeconds ()            << " " 
+    << setw (8)  << app->GetAppName ()                                  << " " 
+    << setw (4)  << rInfo->GetQciInfo ()                                << " " 
+    << setw (6)  << rInfo->IsGbr ()                                     << " " 
+    << setw (7)  << rInfo->GetImsi ()                                   << " " 
+    << setw (7)  << rInfo->GetCellId ()                                 << " " 
+    << setw (6)  << rInfo->GetEnbSwIdx ()                               << " " 
+    << setw (10) << "down"                                              << " " 
+    << setw (5)  << teid                                                << " " 
+    << setw (10) << epcStats->GetActiveTime ().GetSeconds ()            << " " 
     << setw (11) << epcStats->GetRxDelay ().GetSeconds () * 1000        << " " 
     << setw (11) << epcStats->GetRxJitter ().GetSeconds () * 1000       << " " 
     << setw (8)  << epcStats->GetRxPackets ()                           << " " 
@@ -898,10 +939,16 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context, Ptr<const EpcApplica
   *appWrapper->GetStream () 
     << left
     << setw (11) << Simulator::Now ().GetSeconds ()                     << " " 
-    << setw (16) << desc + "dl"                                         << " " 
-    << setw (5)  << teid                                                << " " 
     << right
-    << setw (11) << appStats->GetActiveTime ().GetSeconds ()            << " " 
+    << setw (8)  << app->GetAppName ()                                  << " " 
+    << setw (4)  << rInfo->GetQciInfo ()                                << " " 
+    << setw (6)  << rInfo->IsGbr ()                                     << " " 
+    << setw (7)  << rInfo->GetImsi ()                                   << " " 
+    << setw (7)  << rInfo->GetCellId ()                                 << " " 
+    << setw (6)  << rInfo->GetEnbSwIdx ()                               << " " 
+    << setw (10) << "down"                                              << " " 
+    << setw (5)  << teid                                                << " " 
+    << setw (10) << appStats->GetActiveTime ().GetSeconds ()            << " " 
     << setw (11) << appStats->GetRxDelay ().GetSeconds () * 1000        << " " 
     << setw (11) << appStats->GetRxJitter ().GetSeconds () * 1000       << " " 
     << setw (8)  << appStats->GetRxPackets ()                           << " " 

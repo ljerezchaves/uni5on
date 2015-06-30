@@ -88,12 +88,6 @@ EpcApplication::GetTeid (void) const
   return m_teid;
 }
 
-std::string
-EpcApplication::GetDescription (void) const
-{
-  return GetAppName () + " [" + m_desc + "]";
-}
-
 std::string 
 EpcApplication::GetAppName (void) const
 {

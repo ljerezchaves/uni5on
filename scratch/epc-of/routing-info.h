@@ -62,17 +62,26 @@ public:
   /** Destructor implementation */
   virtual void DoDispose ();
 
-  /** \return A generic bearer description. */
-  std::string GetDescription (void) const;
-
   /** \return True if the associated EPS bearer is of GBR type. */
   bool IsGbr (void) const;
 
   /** \return The Bearer QoS information. */
   GbrQosInformation GetQosInfo (void) const;
 
+  /** \return The Bearer QCI information. */
+  EpsBearer::Qci GetQciInfo (void) const;
+
   /** \return The GTP TEID. */
   uint32_t GetTeid (void) const;
+
+  /** \return The UE IMSI. */
+  uint64_t GetImsi (void) const;
+
+  /** \return The eNB cell ID. */
+  uint16_t GetCellId (void) const;
+
+  /** \return The eNB switch index. */
+  uint16_t GetEnbSwIdx (void) const;
 
   /** \return True when there is downlink traffic in this bearer. */
   bool HasDownlinkTraffic (void) const;

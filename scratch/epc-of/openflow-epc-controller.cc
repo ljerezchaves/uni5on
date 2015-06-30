@@ -168,6 +168,19 @@ OpenFlowEpcController::ReleaseDedicatedBearer (EpsBearer bearer,
   return TopologyRemoveRouting (rInfo);
 }
 
+Ptr<const RoutingInfo>
+OpenFlowEpcController::GetConstRoutingInfo (uint32_t teid) const
+{
+  Ptr<const RoutingInfo> rInfo = 0;
+  TeidRoutingMap_t::const_iterator ret;
+  ret = m_routes.find (teid);
+  if (ret != m_routes.end ())
+    {
+      rInfo = ret->second;
+    }
+  return rInfo;
+}
+
 void
 OpenFlowEpcController::DoDispose ()
 {

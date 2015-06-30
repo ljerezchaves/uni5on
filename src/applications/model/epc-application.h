@@ -76,13 +76,6 @@ public:
   uint32_t GetTeid (void) const;
   
   /**
-   * Create the description string for this application, including name and UE
-   * ISMI identifier.
-   * \return The description string.
-   */
-  std::string GetDescription (void) const;
-
-  /**
    * Get the application name.
    * \return The application name.
    */
@@ -126,7 +119,6 @@ private:
   Ptr<EpcTft>   m_tft;        //!< Traffic flow template for this app
   EpsBearer     m_bearer;     //!< EPS bearer info
   uint32_t      m_teid;       //!< GTP TEID associated with this app
-  std::string   m_desc;       //!< UE@eNB description set by traffic manager
 };
 
 } // namespace ns3

@@ -180,10 +180,6 @@ TrafficManager::ContextCreatedCallback (uint64_t imsi, uint16_t cellId,
   for (appIt = m_apps.begin (); appIt != m_apps.end (); appIt++)
     {
       Ptr<EpcApplication> app = *appIt;
-      // Fill the application description string
-      std::ostringstream desc;
-      desc << imsi << "@" << cellId;
-      app->m_desc = desc.str ();
 
       // Using the tft to match bearers and apps
       Ptr<EpcTft> tft = app->GetTft ();
@@ -203,8 +199,8 @@ TrafficManager::ContextCreatedCallback (uint64_t imsi, uint16_t cellId,
           // This application uses the default bearer
           app->m_teid = m_defaultTeid;
         }
-      NS_LOG_DEBUG ("Application " << app->GetDescription () <<
-                    " set with teid " << app->GetTeid ());
+      NS_LOG_DEBUG ("Application " << app->GetAppName () << " [" << imsi 
+          << "@" << cellId << "] set with teid " << app->GetTeid ());
     }
 }
 

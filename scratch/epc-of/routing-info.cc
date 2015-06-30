@@ -67,15 +67,6 @@ RoutingInfo::DoDispose ()
   NS_LOG_FUNCTION (this);
 }
 
-std::string
-RoutingInfo::GetDescription (void) const
-{
-  std::ostringstream desc;
-  desc  << (IsGbr () ? "GBR" : "Non-GBR")
-        << " [" << m_imsi << "@" << m_cellId << "]";
-  return desc.str ();
-}
-
 bool
 RoutingInfo::IsGbr (void) const
 {
@@ -88,10 +79,34 @@ RoutingInfo::GetQosInfo (void) const
   return m_bearer.bearerLevelQos.gbrQosInfo;
 }
 
+EpsBearer::Qci
+RoutingInfo::GetQciInfo (void) const
+{
+  return m_bearer.bearerLevelQos.qci;
+}
+
 uint32_t
 RoutingInfo::GetTeid (void) const
 {
   return m_teid;
+}
+
+uint64_t
+RoutingInfo::GetImsi (void) const
+{
+  return m_imsi;
+}
+
+uint16_t
+RoutingInfo::GetCellId (void) const
+{
+  return m_cellId;
+}
+
+uint16_t
+RoutingInfo::GetEnbSwIdx (void) const
+{
+  return m_enbIdx;
 }
 
 bool

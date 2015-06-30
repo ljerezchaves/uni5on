@@ -27,6 +27,7 @@
 #include "routing-info.h"
 #include "internet-network.h"
 #include "openflow-epc-network.h"
+#include "openflow-epc-controller.h"
 #include "connection-info.h"
 
 namespace ns3 {
@@ -403,6 +404,8 @@ private:
    * \return The QoS information.
    */
   Ptr<QosStatsCalculator> GetQosStatsFromTeid (uint32_t teid, bool isDown);
+
+  Ptr<const OpenFlowEpcController> m_controller;  //!< Network controller
 
   /** A pair of QosStatsCalculator, for downlink and uplink EPC statistics */
   typedef std::pair<Ptr<QosStatsCalculator>, Ptr<QosStatsCalculator> > QosStatsPair_t;
