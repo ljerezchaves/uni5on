@@ -54,6 +54,11 @@ RingController::GetTypeId (void)
                    DoubleValue (0.8),
                    MakeDoubleAccessor (&RingController::m_maxBwFactor),
                    MakeDoubleChecker<double> (0.0, 1.0))
+    .AddAttribute ("DynamicBwFactor",
+                   "Dynamic bandwitdth reserving factor (prof. Deep Medhi).",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&RingController::m_dynBwFactor),
+                   MakeBooleanChecker ())
   ;
   return tid;
 }

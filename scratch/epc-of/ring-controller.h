@@ -164,6 +164,7 @@ private:
   RoutingStrategy     m_strategy;         //!< Routing strategy in use.
   double              m_maxBwFactor;      //!< Bandwidth saving factor
   uint16_t            m_noSwitches;       //!< Number of switches in topology.
+  bool                m_dynBwFactor;      //!< True for dynamic bandwidth usage.
 
   /** 
    * Map saving <Pair of switch indexes / Connection information.
