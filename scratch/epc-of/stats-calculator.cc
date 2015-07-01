@@ -185,18 +185,11 @@ AdmissionStatsCalculator::NotifyRequest (bool accepted, Ptr<const RoutingInfo> r
       upRate = reserveInfo->GetUpDataRate ();
     }
 
-  std::string path = "Shortest"; // FIXME path description should be generic
+  std::string path = "Shortest (default)";
   Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   if (ringInfo)
     {
-      if (ringInfo->IsDownInv () && ringInfo->IsUpInv ())
-        {
-          path = "Inverted";
-        }
-      else if (ringInfo->IsDownInv () || ringInfo->IsUpInv ())
-        {
-          path = ringInfo->IsDownInv () ? "Inverted down" : "Inverted up";
-        }
+      path = accepted ? ringInfo->GetPathDesc () : "None";
     }
 
   // Save request stats into output file

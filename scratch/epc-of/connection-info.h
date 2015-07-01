@@ -83,17 +83,16 @@ public:
   static TypeId GetTypeId (void);
 
   /**
+   * \name Private member accessors.
+   * \return The requested field.
+   */
+  //\{
+  /**
    * Get the pair of switch indexes for this connection, respecting the
    * internal order.
    * \param The pair of switch indexes.
    */
   SwitchPair_t GetSwitchIndexPair (void) const;
-
-  /**
-   * \name Switch metadata member accessors.
-   * \return The requested field.
-   */
-  //\{
   uint16_t GetSwIdxFirst (void) const;
   uint16_t GetSwIdxSecond (void) const;
   uint32_t GetPortNoFirst (void) const;
@@ -105,8 +104,8 @@ public:
   //\}
 
   /**
-   * Return the bandwidth reserved ratio in forward direction, This method ignores
-   * the saving reserve factor.
+   * Return the bandwidth reserved ratio in forward direction, This method
+   * ignores the saving reserve factor.
    * \return The usage ratio.
    */
   double GetForwardReservedRatio (void) const;
@@ -149,7 +148,7 @@ public:
    * Inspect physical channel for the assigned data rate.
    * \return The channel maximum nominal data rate.
    */
-  DataRate LinkDataRate (void) const;
+  DataRate GetLinkDataRate (void) const;
 
   /**
    * For two switch indexes, this methods asserts that boths indexes are valid

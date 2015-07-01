@@ -67,12 +67,6 @@ RoutingInfo::DoDispose ()
   NS_LOG_FUNCTION (this);
 }
 
-bool
-RoutingInfo::IsGbr (void) const
-{
-  return (!m_isDefault && m_bearer.bearerLevelQos.IsGbr ());
-}
-
 GbrQosInformation
 RoutingInfo::GetQosInfo (void) const
 {
@@ -109,6 +103,36 @@ RoutingInfo::GetEnbSwIdx (void) const
   return m_enbIdx;
 }
 
+uint16_t
+RoutingInfo::GetSgwSwIdx (void) const
+{
+  return m_sgwIdx;
+}
+
+Ipv4Address
+RoutingInfo::GetEnbAddr (void) const
+{
+  return m_enbAddr;
+}
+
+Ipv4Address
+RoutingInfo::GetSgwAddr (void) const
+{
+  return m_sgwAddr;
+}
+
+int
+RoutingInfo::GetPriority (void) const
+{
+  return m_priority;
+}
+
+int
+RoutingInfo::GetTimeout (void) const
+{
+  return m_timeout;
+}
+
 bool
 RoutingInfo::HasDownlinkTraffic (void) const
 {
@@ -121,6 +145,47 @@ RoutingInfo::HasUplinkTraffic (void) const
   return m_bearer.tft->HasUplinkFilter ();
 }
 
+bool
+RoutingInfo::IsGbr (void) const
+{
+  return (!m_isDefault && m_bearer.bearerLevelQos.IsGbr ());
+}
+
+bool
+RoutingInfo::IsDefault (void) const
+{
+  return m_isDefault;
+}
+
+bool
+RoutingInfo::IsInstalled (void) const
+{
+  return m_isInstalled;
+}
+
+bool
+RoutingInfo::IsActive (void) const
+{
+  return m_isActive;
+}
+
+void
+RoutingInfo::SetInstalled (bool installed)
+{
+  m_isInstalled = installed;
+}
+
+void
+RoutingInfo::SetActive (bool active)
+{
+  m_isActive = active;
+}
+
+void
+RoutingInfo::IncreasePriority (void)
+{
+  m_priority++;
+}
 
 // ------------------------------------------------------------------------ //
 MeterInfo::MeterInfo ()
@@ -139,6 +204,19 @@ MeterInfo::MeterInfo (Ptr<RoutingInfo> rInfo)
     m_rInfo (rInfo)
 {
   NS_LOG_FUNCTION (this);
+
+  m_teid = rInfo->GetTeid ();
+  GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
+  if (gbrQoS.mbrDl)
+    {
+      m_hasDown = true;
+      m_downDataRate = DataRate (gbrQoS.mbrDl);
+    }
+  if (gbrQoS.mbrUl)
+    {
+      m_hasUp = true;
+      m_upDataRate = DataRate (gbrQoS.mbrUl);
+    }
 }
 
 MeterInfo::~MeterInfo ()
@@ -169,6 +247,24 @@ MeterInfo::GetRoutingInfo ()
   return m_rInfo;
 }
 
+bool
+MeterInfo::IsInstalled (void) const
+{
+  return m_isInstalled;
+}
+
+bool
+MeterInfo::HasDown (void) const
+{
+  return m_hasDown;
+}
+
+bool
+MeterInfo::HasUp (void) const
+{
+  return m_hasUp;
+}
+
 std::string
 MeterInfo::GetDownAddCmd (void) const
 {
@@ -195,6 +291,11 @@ MeterInfo::GetDelCmd (void) const
   return meter.str ();
 }
 
+void
+MeterInfo::SetInstalled (bool installed)
+{
+  m_isInstalled = installed;
+}
 
 // ------------------------------------------------------------------------ //
 ReserveInfo::ReserveInfo ()
@@ -213,6 +314,19 @@ ReserveInfo::ReserveInfo (Ptr<RoutingInfo> rInfo)
     m_rInfo (rInfo)
 {
   NS_LOG_FUNCTION (this);
+
+  m_teid = rInfo->GetTeid ();
+  GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
+  if (gbrQoS.gbrDl)
+    {
+      m_hasDown = true;
+      m_downDataRate = DataRate (gbrQoS.gbrDl);
+    }
+  if (gbrQoS.gbrUl)
+    {
+      m_hasUp = true;
+      m_upDataRate = DataRate (gbrQoS.gbrUl);
+    }
 }
 
 ReserveInfo::~ReserveInfo ()
@@ -243,6 +357,12 @@ ReserveInfo::GetRoutingInfo ()
   return m_rInfo;
 }
 
+void
+ReserveInfo::SetReserved (bool reserved)
+{
+  m_isReserved = reserved;
+}
+
 DataRate
 ReserveInfo::GetDownDataRate (void) const
 {
@@ -255,6 +375,12 @@ ReserveInfo::GetUpDataRate (void) const
   return m_upDataRate;
 }
 
+bool
+ReserveInfo::IsReserved (void) const
+{
+  return m_isReserved;
+}
+
 
 // ------------------------------------------------------------------------ //
 RingRoutingInfo::RingRoutingInfo ()
@@ -263,14 +389,14 @@ RingRoutingInfo::RingRoutingInfo ()
   NS_LOG_FUNCTION (this);
 }
 
-RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo, RoutingPath downPath)
+RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo, 
+                                  RoutingPath shortDownPath)
   : m_rInfo (rInfo)
 {
   NS_LOG_FUNCTION (this);
-  m_downPath  = downPath;
-  m_upPath    = RingRoutingInfo::InvertPath (m_downPath);
-  m_isDownInv = false;
-  m_isUpInv   = false;
+  m_downPath   = shortDownPath;
+  m_upPath     = RingRoutingInfo::InvertPath (shortDownPath);
+  m_isInverted = false;
 }
 
 RingRoutingInfo::~RingRoutingInfo ()
@@ -310,48 +436,64 @@ RingRoutingInfo::GetRoutingInfo ()
 }
 
 bool
-RingRoutingInfo::IsDownInv (void) const
+RingRoutingInfo::IsInverted (void) const
 {
-  return m_isDownInv;
+  return m_isInverted;
 }
 
-bool
-RingRoutingInfo::IsUpInv (void) const
+uint16_t
+RingRoutingInfo::GetSgwSwIdx (void) const
 {
-  return m_isUpInv;
+  return m_rInfo->GetSgwSwIdx ();
 }
 
-void
-RingRoutingInfo::InvertDownPath ()
+uint16_t
+RingRoutingInfo::GetEnbSwIdx (void) const
 {
-  NS_LOG_FUNCTION (this);
-
-  m_downPath = RingRoutingInfo::InvertPath (m_downPath);
-  m_isDownInv = !m_isDownInv;
+  return m_rInfo->GetEnbSwIdx ();
 }
 
-void
-RingRoutingInfo::InvertUpPath ()
+RingRoutingInfo::RoutingPath
+RingRoutingInfo::GetDownPath (void) const
 {
-  NS_LOG_FUNCTION (this);
-
-  m_upPath = RingRoutingInfo::InvertPath (m_upPath);
-  m_isUpInv = !m_isUpInv;
+  return m_downPath;
 }
 
-void
-RingRoutingInfo::ResetPaths ()
+RingRoutingInfo::RoutingPath
+RingRoutingInfo::GetUpPath (void) const
 {
-  NS_LOG_FUNCTION (this);
+  return m_upPath;
+}
 
-  if (m_isDownInv)
+std::string
+RingRoutingInfo::GetPathDesc (void) const
+{
+  if (IsInverted ())
     {
-      InvertDownPath ();
+      return "Inverted";
     }
-
-  if (m_isUpInv)
+  else
     {
-      InvertUpPath ();
+      return "Shortest";
+    }
+}
+
+void
+RingRoutingInfo::InvertPaths ()
+{
+  m_downPath = RingRoutingInfo::InvertPath (m_downPath);
+  m_upPath   = RingRoutingInfo::InvertPath (m_upPath);
+  m_isInverted = !m_isInverted;
+}
+
+void
+RingRoutingInfo::ResetToShortestPaths ()
+{
+  NS_LOG_FUNCTION (this);
+
+  if (IsInverted ())
+    {
+      InvertPaths ();
     }
 }
 

@@ -99,54 +99,74 @@ private:
   Ptr<ConnectionInfo> GetConnectionInfo (uint16_t sw1, uint16_t sw2);
 
   /**
-   * Look for the routing path between srcSwitchIdx and dstSwitchIdx with
+   * Look for the routing path from source to destination switch index with
    * lowest number of hops.
    * \param srcSwitchIdx Source switch index.
    * \param dstSwitchIdx Destination switch index.
    * \return The routing path.
    */
-  RingRoutingInfo::RoutingPath FindShortestPath (uint16_t srcSwitchIdx,
+  RingRoutingInfo::RoutingPath FindShortestPath (uint16_t srcSwitchIdx, 
                                                  uint16_t dstSwitchIdx);
 
   /**
-   * Look for available bandwidth in routingPath from source to destination
-   * switch. It uses the information available at ConnectionInfo.
-   * \param srcSwitchIdx Sourche switch index.
-   * \param dstSwitchIdx Destination switch index.
-   * \param routingPath The routing path.
-   * \return The bandwidth for this datapath.
+   * Get the available bandwidth for this ring routing information, considering
+   * both downlink and uplink paths.
+   * \param ringInfo The ring routing information.
+   * \param invertPath When true, considers the inverted downlink/uplink paths
+   * while looking for the available bandwidth.
+   * \return A pair of available bandwidth data rates, for both downlink and
+   * uplink paths, in this order.
    */
-  DataRate GetAvailableBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                                  RingRoutingInfo::RoutingPath routingPath);
+  std::pair<DataRate, DataRate> 
+  GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo, 
+                         bool invertPath = false);
 
   /**
-   * Reserve the bandwidth for each link between source and destination
-   * switches in routing path. It modifies the ConnectionInfo
-   * structures saved by controller.
-   * \param srcSwitchIdx Sourche switch index.
-   * \param dstSwitchIdx Destination switch index.
-   * \param routingPath The routing path.
-   * \param reserve The DataRate to reserve.
+   * Reserve the bandwidth for this bearer in network.
+   * \param ringInfo The ring routing information.
+   * \param reserveInfo The reserve information.
    * \return True if success, false otherwise;
    */
-  bool ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                         RingRoutingInfo::RoutingPath routingPath, DataRate reserve);
-
+  bool ReserveBandwidth (Ptr<const RingRoutingInfo> ringInfo,
+                         Ptr<ReserveInfo> reserveInfo);
+  
   /**
-   * Release the bandwidth for each link between source and destination
-   * switches in routing path. It modifies the ConnectionInfo
-   * structures saved by controller.
-   * \param srcSwitchIdx Sourche switch index.
-   * \param dstSwitchIdx Destination switch index.
-   * \param routingPath The routing path.
-   * \param release The DataRate to release.
+   * Release the bandwidth for this bearer in network.
+   * \param ringInfo The ring routing information.
+   * \param reserveInfo The reserve information.
    * \return True if success, false otherwise;
    */
-  bool ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                         RingRoutingInfo::RoutingPath routingPath, DataRate release);
+  bool ReleaseBandwidth (Ptr<const RingRoutingInfo> ringInfo,
+                         Ptr<ReserveInfo> reserveInfo);
 
   /**
-   * Identify the next switch index based on routing path direction.
+   * Reserve the indicated bandwidth at each link from source to
+   * destination switch index following the indicated routing path. 
+   * \param srcSwitchIdx Source switch index.
+   * \param dstSwitchIdx Destination switch index.
+   * \param routingPath The routing path.
+   * \param reserve The bandwidth to reserve.
+   * \return True if success, false otherwise;
+   */
+  bool PerLinkReserve (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+                       RingRoutingInfo::RoutingPath routingPath, 
+                       DataRate reserve);
+
+  /**
+   * Release the indicated bandwidth at each link from source to
+   * destination switch index following the indicated routing path. 
+   * \param srcSwitchIdx Source switch index.
+   * \param dstSwitchIdx Destination switch index.
+   * \param routingPath The routing path.
+   * \param release The bandwidth to release.
+   * \return True if success, false otherwise;
+   */
+  bool PerLinkRelease (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+                       RingRoutingInfo::RoutingPath routingPath, 
+                       DataRate release);
+
+  /**
+   * Get the next switch index following the indicated routing path.
    * \param current Current switch index.
    * \param path The routing path direction.
    * \return The next switch index.

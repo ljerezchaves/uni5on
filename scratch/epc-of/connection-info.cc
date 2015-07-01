@@ -127,7 +127,7 @@ ConnectionInfo::GetForwardReservedRatio (void) const
 {
   return (double)
     (m_reserved [ConnectionInfo::FORWARD]).GetBitRate () / 
-    (LinkDataRate ().GetBitRate ());
+    (GetLinkDataRate ().GetBitRate ());
 }
 
 double
@@ -135,7 +135,7 @@ ConnectionInfo::GetBackwardReservedRatio (void) const
 {
   return (double)
     (m_reserved [ConnectionInfo::BACKWARD]).GetBitRate () / 
-    (LinkDataRate ().GetBitRate ());
+    (GetLinkDataRate ().GetBitRate ());
 }
 
 uint32_t 
@@ -164,7 +164,7 @@ ConnectionInfo::IsFullDuplex (void) const
 }
 
 DataRate
-ConnectionInfo::LinkDataRate (void) const
+ConnectionInfo::GetLinkDataRate (void) const
 {
   return m_channel->GetDataRate ();
 }
@@ -207,7 +207,7 @@ DataRate
 ConnectionInfo::GetAvailableDataRate (uint16_t srcIdx, uint16_t dstIdx) const
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
-  return LinkDataRate () - m_reserved [dir];
+  return GetLinkDataRate () - m_reserved [dir];
 }
 
 DataRate
@@ -215,7 +215,7 @@ ConnectionInfo::GetAvailableDataRate (uint16_t srcIdx, uint16_t dstIdx,
                                       double maxBwFactor) const
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
-  return (LinkDataRate () * maxBwFactor) - m_reserved [dir];
+  return (GetLinkDataRate () * maxBwFactor) - m_reserved [dir];
 }
 
 bool
@@ -223,13 +223,12 @@ ConnectionInfo::ReserveDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
 
-  if (m_reserved [dir] + rate > LinkDataRate ())
+  if (m_reserved [dir] + rate <= GetLinkDataRate ())
     {
-      return false;
+      m_reserved [dir] = m_reserved [dir] + rate;
+      return true;
     }
-  
-  m_reserved [dir] = m_reserved [dir] + rate;
-  return true;
+  NS_FATAL_ERROR ("No bandwidth available to reserve.");
 }
 
 bool
@@ -237,13 +236,12 @@ ConnectionInfo::ReleaseDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
 
-  if (m_reserved [dir] - rate < DataRate (0))
+  if (m_reserved [dir] - rate >= DataRate (0))
     {
-      return false;
+      m_reserved [dir] = m_reserved [dir] - rate;
+      return true;
     }
-  
-  m_reserved [dir] = m_reserved [dir] - rate;
-  return true;
+  NS_FATAL_ERROR ("No bandwidth available to release.");
 }
 
 };  // namespace ns3

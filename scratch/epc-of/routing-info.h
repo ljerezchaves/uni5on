@@ -59,35 +59,50 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  /**
+   * \name Private member accessors.
+   * \return The requested field.
+   */
+  //\{
+  GbrQosInformation GetQosInfo (void) const;
+  EpsBearer::Qci GetQciInfo (void) const;
+  uint32_t GetTeid (void) const;
+  uint64_t GetImsi (void) const;
+  uint16_t GetCellId (void) const;
+  uint16_t GetEnbSwIdx (void) const;
+  uint16_t GetSgwSwIdx (void) const;
+  Ipv4Address GetEnbAddr (void) const;
+  Ipv4Address GetSgwAddr (void) const;
+  int GetPriority (void) const;
+  int GetTimeout (void) const;
+  bool HasDownlinkTraffic (void) const;
+  bool HasUplinkTraffic (void) const;
+  bool IsGbr (void) const;
+  bool IsDefault (void) const;
+  bool IsInstalled (void) const;
+  bool IsActive (void) const;
+  //\}
+  
+protected:
   /** Destructor implementation */
   virtual void DoDispose ();
-
-  /** \return True if the associated EPS bearer is of GBR type. */
-  bool IsGbr (void) const;
-
-  /** \return The Bearer QoS information. */
-  GbrQosInformation GetQosInfo (void) const;
-
-  /** \return The Bearer QCI information. */
-  EpsBearer::Qci GetQciInfo (void) const;
-
-  /** \return The GTP TEID. */
-  uint32_t GetTeid (void) const;
-
-  /** \return The UE IMSI. */
-  uint64_t GetImsi (void) const;
-
-  /** \return The eNB cell ID. */
-  uint16_t GetCellId (void) const;
-
-  /** \return The eNB switch index. */
-  uint16_t GetEnbSwIdx (void) const;
-
-  /** \return True when there is downlink traffic in this bearer. */
-  bool HasDownlinkTraffic (void) const;
   
-  /** \return True when there is uplink traffic in this bearer. */
-  bool HasUplinkTraffic (void) const;
+  /**
+   * Set the internal installed flag.
+   * \param installed The value to set.
+   */
+  void SetInstalled (bool installed);
+
+  /**
+   * Set the internal active flag.
+   * \param active The value to set.
+   */
+  void SetActive (bool active);
+
+  /**
+   * Increase the priority value by one unit.
+   */
+  void IncreasePriority (void);
 
 private:
   uint32_t          m_teid;         //!< GTP TEID
@@ -133,18 +148,38 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  /** \return RoutingInfo pointer. */
-  Ptr<RoutingInfo> GetRoutingInfo ();
-
-  /** Get Dpctl commands to add or delete meter rules */
+  /**
+   * \name Private member accessors.
+   * \return The requested field.
+   */
+  //\{
+  bool IsInstalled (void) const;
+  bool HasDown (void) const;
+  bool HasUp (void) const;
+  //\}
+  
+  /** 
+   * \name Dpctl commands to add or delete meter rules 
+   * \return The requested command.
+   */
   //\{
   std::string GetDownAddCmd (void) const;
   std::string GetUpAddCmd (void) const;
   std::string GetDelCmd (void) const;
   //\}
+
+protected:
+  /** Destructor implementation */
+  virtual void DoDispose ();
+  
+  /** \return RoutingInfo pointer. */
+  Ptr<RoutingInfo> GetRoutingInfo ();
+
+  /**
+   * Set the internal installed flag.
+   * \param installed The value to set.
+   */
+  void SetInstalled (bool installed);
 
 private:
   uint32_t m_teid;          //!< GTP TEID
@@ -184,17 +219,28 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  /**
+   * \name Private member accessors.
+   * \return The requested field.
+   */
+  //\{
+  DataRate GetDownDataRate (void) const;
+  DataRate GetUpDataRate (void) const;
+  bool IsReserved (void) const;
+  //\}
+
+protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
   /** \return RoutingInfo pointer. */
   Ptr<RoutingInfo> GetRoutingInfo ();
 
-  /** \return Downlink reserved data rate. */
-  DataRate GetDownDataRate (void) const;
-
-  /** \return Uplink reserved data rate. */
-  DataRate GetUpDataRate (void) const;
+  /**
+   * Set the internal reserved flag.
+   * \param reserved The value to set.
+   */
+  void SetReserved (bool reserved);
 
 private:
   uint32_t m_teid;          //!< GTP TEID
@@ -231,10 +277,11 @@ public:
   /**
    * Complete constructor.
    * \param rInfo RoutingInfo pointer.
-   * \param downPath The path for downlink (uplink will get the inverse path).
+   * \param downPath The _shortest_ path for downlink (uplink will get the
+   * inverse path).
    * \attention This RingRoutingInfo object must be aggregated to rInfo.
    */
-  RingRoutingInfo (Ptr<RoutingInfo> rInfo, RoutingPath downPath);
+  RingRoutingInfo (Ptr<RoutingInfo> rInfo, RoutingPath shortDownPath);
 
   /**
    * Register this type.
@@ -243,35 +290,45 @@ public:
   static TypeId GetTypeId (void);
 
   /**
+   * \name Private member accessors.
+   * \return The requested field.
+   */
+  //\{
+  bool IsInverted (void) const;
+  uint16_t GetSgwSwIdx (void) const;
+  uint16_t GetEnbSwIdx (void) const;
+  RoutingPath GetDownPath (void) const;
+  RoutingPath GetUpPath (void) const;
+  std::string GetPathDesc (void) const;
+  //\}
+
+  /**
    * Invert the routing path
    * \param path The original routing path.
    * \return The inverse routing path.
    */
   static RoutingPath InvertPath (RoutingPath path);
 
+protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
   /** \return RoutingInfo pointer. */
   Ptr<RoutingInfo> GetRoutingInfo ();
 
-  /** \return True for downlink inverte path. */
-  bool IsDownInv (void) const;
-
-  /** \return True for uplink inverte path. */
-  bool IsUpInv (void) const;
-
 private:
-  /** Invert down/up routing direction. */
-  void InvertDownPath ();
-  void InvertUpPath ();
-  void ResetPaths ();
+  /**
+   * \name Path invertion methods.
+   */
+  //\{
+  void InvertPaths ();
+  void ResetToShortestPaths ();
+  //\}
 
-  Ptr<RoutingInfo> m_rInfo;     //!< Routing information
-  RoutingPath      m_downPath;  //!< Downlink routing path
-  RoutingPath      m_upPath;    //!< Uplink routing path
-  bool             m_isDownInv; //!< True when down path is inverted
-  bool             m_isUpInv;   //!< True when up path is inverted
+  Ptr<RoutingInfo> m_rInfo;       //!< Routing information
+  RoutingPath      m_downPath;    //!< Downlink routing path
+  RoutingPath      m_upPath;      //!< Uplink routing path
+  bool             m_isInverted;  //!< True when paths are inverted
 };
 
 };  // namespace ns3

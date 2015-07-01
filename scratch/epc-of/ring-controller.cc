@@ -132,8 +132,8 @@ RingController::NotifyTopologyBuilt (NetDeviceContainer devices)
 bool
 RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
 {
-  NS_LOG_FUNCTION (this << rInfo->m_teid << rInfo->m_priority << buffer);
-  NS_ASSERT_MSG (rInfo->m_isActive, "Rule not active.");
+  NS_LOG_FUNCTION (this << rInfo->GetTeid () << rInfo->GetPriority () << buffer);
+  NS_ASSERT_MSG (rInfo->IsActive (), "Rule not active.");
 
   // Getting rInfo associated metadata
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
@@ -141,7 +141,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
   bool meterInstalled = false;
 
   // Increasing the priority every time we (re)install TEID rules.
-  rInfo->m_priority++;
+  rInfo->IncreasePriority ();
 
   // flow-mod flags OFPFF_SEND_FLOW_REM and OFPFF_CHECK_OVERLAP, used to notify
   // the controller when a flow entry expires and to avoid overlapping rules.
@@ -149,7 +149,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
 
   // Printing the cookie and buffer values in dpctl string format
   char cookieStr [9], bufferStr [12];
-  sprintf (cookieStr, "0x%x", rInfo->m_teid);
+  sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
   sprintf (bufferStr, "%u",   buffer);
 
   // Building the dpctl command + arguments string
@@ -158,8 +158,8 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
        << ",buffer=" << bufferStr
        << ",flags=" << flagsStr
        << ",cookie=" << cookieStr
-       << ",prio=" << rInfo->m_priority
-       << ",idle=" << rInfo->m_timeout;
+       << ",prio=" << rInfo->GetPriority ()
+       << ",idle=" << rInfo->GetTimeout ();
 
   // Configuring downlink routing
   if (rInfo->HasDownlinkTraffic ())
@@ -167,18 +167,18 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
       std::ostringstream match, inst;
 
       // In downlink the input switch is the gateway
-      uint16_t swIdx = rInfo->m_sgwIdx;
+      uint16_t swIdx = rInfo->GetSgwSwIdx ();
 
       // Building the match string
       match << " eth_type=0x800,ip_proto=17" 
-            << ",ip_src=" << rInfo->m_sgwAddr
-            << ",ip_dst=" << rInfo->m_enbAddr 
-            << ",gtp_teid=" << rInfo->m_teid;
+            << ",ip_src=" << rInfo->GetSgwAddr ()
+            << ",ip_dst=" << rInfo->GetEnbAddr () 
+            << ",gtp_teid=" << rInfo->GetTeid ();
 
       // Check for meter entry
-      if (meterInfo && meterInfo->m_hasDown)
+      if (meterInfo && meterInfo->HasDown ())
         {
-          if (!meterInfo->m_isInstalled)
+          if (!meterInfo->IsInstalled ())
             {
               // Install the meter entry
               DpctlCommand (GetSwitchDevice (swIdx), meterInfo->GetDownAddCmd ());
@@ -186,11 +186,11 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
             }
 
           // Building the meter instruction string
-          inst << " meter:" << rInfo->m_teid;
+          inst << " meter:" << rInfo->GetTeid ();
         }
 
       // Building the output instruction string
-      inst << " write:group=" << ringInfo->m_downPath;
+      inst << " write:group=" << ringInfo->GetDownPath ();
 
       // Installing the rule into input switch
       std::string commandStr = args.str () + match.str () + inst.str ();
@@ -203,18 +203,18 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
       std::ostringstream match, inst;
 
       // In uplink the input switch is the eNB
-      uint16_t swIdx = rInfo->m_enbIdx;
+      uint16_t swIdx = rInfo->GetEnbSwIdx ();
 
       // Building the match string
       match << " eth_type=0x800,ip_proto=17"
-            << ",ip_src=" << rInfo->m_enbAddr
-            << ",ip_dst=" << rInfo->m_sgwAddr
-            << ",gtp_teid=" << rInfo->m_teid;
+            << ",ip_src=" << rInfo->GetEnbAddr ()
+            << ",ip_dst=" << rInfo->GetSgwAddr ()
+            << ",gtp_teid=" << rInfo->GetTeid ();
 
       // Check for meter entry
-      if (meterInfo && meterInfo->m_hasUp)
+      if (meterInfo && meterInfo->HasUp ())
         {
-          if (!meterInfo->m_isInstalled)
+          if (!meterInfo->IsInstalled ())
             {
               // Install the meter entry
               DpctlCommand (GetSwitchDevice (swIdx), meterInfo->GetUpAddCmd ());
@@ -222,11 +222,11 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
             }
 
           // Building the meter instruction string
-          inst << " meter:" << rInfo->m_teid;
+          inst << " meter:" << rInfo->GetTeid ();
         }
 
       // Building the output instruction string
-      inst << " write:group=" << ringInfo->m_upPath;
+      inst << " write:group=" << ringInfo->GetUpPath ();
 
       // Installing the rule into input switch
       std::string commandStr = args.str () + match.str () + inst.str ();
@@ -236,10 +236,10 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer)
   // Updating meter installation flag
   if (meterInstalled)
     {
-      meterInfo->m_isInstalled = true;
+      meterInfo->SetInstalled (true);
     }
 
-  rInfo->m_isInstalled = true;
+  rInfo->SetInstalled (true);
   return true;
 }
 
@@ -264,11 +264,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
 
-  Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
-  ringInfo->ResetPaths ();    // Reseting to short paths
-  uint32_t teid = rInfo->m_teid;
-
-  if (rInfo->m_isDefault)
+  if (rInfo->IsDefault ())
     {
       // We always accept default bearers.
       return true;
@@ -282,21 +278,24 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       return true;
     }
 
-  // Getting available downlink bandwidth in both paths
-  DataRate dlShortBw = GetAvailableBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
-      ringInfo->m_downPath);
-  DataRate dlLongBw = GetAvailableBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
-      RingRoutingInfo::InvertPath (ringInfo->m_downPath));
-
-  // Getting available uplink bandwidth in both paths
-  DataRate ulShortBw = GetAvailableBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
-      ringInfo->m_upPath);
-  DataRate ulLongBw = GetAvailableBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
-      RingRoutingInfo::InvertPath (ringInfo->m_upPath));
+  Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
+  uint32_t teid = rInfo->GetTeid ();
+  
+  // Getting available downlink and uplink bandwidth in both paths
+  ringInfo->ResetToShortestPaths ();
+  
+  std::pair<DataRate, DataRate> shortPathBand, longPathBand;
+  shortPathBand = GetAvailableBandwidth (ringInfo, false);
+  longPathBand  = GetAvailableBandwidth (ringInfo, true);
+  
+  DataRate dlShortBw = shortPathBand.first; 
+  DataRate ulShortBw = shortPathBand.second;
+  DataRate dlLongBw  = longPathBand.first;
+  DataRate ulLongBw  = longPathBand.second;
 
   // Getting bandwidth requests
-  DataRate dlRequest = reserveInfo->m_downDataRate;
-  DataRate ulRequest = reserveInfo->m_upDataRate;
+  DataRate dlRequest = reserveInfo->GetDownDataRate ();
+  DataRate ulRequest = reserveInfo->GetUpDataRate ();
 
   NS_LOG_DEBUG (teid << ": downlink bandwidth in short path: " << dlShortBw);
   NS_LOG_DEBUG (teid << ": downlink bandwidth in long path: " << dlLongBw);
@@ -311,14 +310,11 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       {
         if (dlShortBw >= dlRequest && ulShortBw >= ulRequest)
           {
-            ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
-                              ringInfo->m_downPath, dlRequest);
-            ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
-                              ringInfo->m_upPath, ulRequest);
+            return ReserveBandwidth (ringInfo, reserveInfo);
           }
         else
           {
-            NS_LOG_WARN (teid << ": no resources. Block!");
+            NS_LOG_WARN ("No resources. Block!");
             return false;
           }
         break;
@@ -328,26 +324,19 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
         if (dlShortBw >= dlLongBw && 
             dlShortBw >= dlRequest && ulShortBw >= ulRequest)
           {
-            ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
-                              ringInfo->m_downPath, dlRequest);
-            ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
-                              ringInfo->m_upPath, ulRequest);
+            return ReserveBandwidth (ringInfo, reserveInfo);
           }
-        else if (dlShortBw < dlLongBw && 
+        else if (dlLongBw > dlShortBw && 
                  dlLongBw >= dlRequest && ulLongBw >= ulRequest)
           {
             // Let's invert the path and reserve the bandwidth
-            NS_LOG_DEBUG (teid << ": inverting from short to long path.");
-            ringInfo->InvertDownPath ();
-            ringInfo->InvertUpPath ();
-            ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
-                              ringInfo->m_downPath, dlRequest);
-            ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
-                              ringInfo->m_upPath, ulRequest);
+            NS_LOG_DEBUG ("Inverting from short to long path.");
+            ringInfo->InvertPaths ();
+            return ReserveBandwidth (ringInfo, reserveInfo);
           }
         else
           {
-            NS_LOG_WARN (teid << ": no resources. Block!");
+            NS_LOG_WARN ("No resources. Block!");
             return false;
           }
         break;
@@ -356,38 +345,24 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       {
         if (dlShortBw >= dlRequest && ulShortBw >= ulRequest)
           {
-            ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, 
-                              ringInfo->m_downPath, dlRequest);
-            ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
-                              ringInfo->m_upPath, ulRequest);
+            return ReserveBandwidth (ringInfo, reserveInfo);
           }
-        // No available bandwidth in short path. Let's check the long path.
         else if (dlLongBw >= dlRequest && ulLongBw >= ulRequest)
           {
             // Let's invert the path and reserve the bandwidth
-            NS_LOG_DEBUG (teid << ": inverting from short to long path.");
-            ringInfo->InvertDownPath ();
-            ringInfo->InvertUpPath ();
-            ReserveBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx,
-                              ringInfo->m_downPath, dlRequest);
-            ReserveBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, 
-                              ringInfo->m_upPath, ulRequest);
+            NS_LOG_DEBUG ("Inverting from short to long path.");
+            ringInfo->InvertPaths ();
+            return ReserveBandwidth (ringInfo, reserveInfo);
           }
         else
           {
-            NS_LOG_WARN (teid << ": no resources. Block!");
+            NS_LOG_WARN ("No resources. Block!");
             return false;
           }
         break;
       }
-    default:
-      {
-        NS_ABORT_MSG ("Invalid Routing strategy.");
-      }
     }
-
-  reserveInfo->m_isReserved = true;
-  return true;
+  NS_ABORT_MSG ("Invalid Routing strategy.");
 }
 
 bool
@@ -396,16 +371,11 @@ RingController::TopologyBearerRelease (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo);
 
   Ptr<ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
-  if (reserveInfo && reserveInfo->m_isReserved)
+  if (reserveInfo && reserveInfo->IsReserved ())
     {
       Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
       NS_ASSERT_MSG (ringInfo, "No ringInfo for bearer release.");
-
-      reserveInfo->m_isReserved = false;
-      ReleaseBandwidth (rInfo->m_sgwIdx, rInfo->m_enbIdx, ringInfo->m_downPath,
-                        reserveInfo->m_downDataRate);
-      ReleaseBandwidth (rInfo->m_enbIdx, rInfo->m_sgwIdx, ringInfo->m_upPath,
-                        reserveInfo->m_upDataRate);
+      ReleaseBandwidth (ringInfo, reserveInfo);
     }
   return true;
 }
@@ -455,7 +425,7 @@ RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
       // for this bearer. Let's create and aggregate its ring routing
       // metadata. Considering the default down path the one with lower hops.
       RingRoutingInfo::RoutingPath downPath =
-        FindShortestPath (rInfo->m_sgwIdx, rInfo->m_enbIdx);
+        FindShortestPath (rInfo->GetSgwSwIdx (), rInfo->GetEnbSwIdx ());
       ringInfo = CreateObject<RingRoutingInfo> (rInfo, downPath);
       rInfo->AggregateObject (ringInfo);
     }
@@ -518,12 +488,11 @@ RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)
          RingRoutingInfo::COUNTER;
 }
 
-DataRate 
-RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx, 
-    uint16_t dstSwitchIdx, RingRoutingInfo::RoutingPath routingPath)
+std::pair<DataRate, DataRate> 
+RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo, 
+                                       bool invertPath)
 {
-  NS_LOG_FUNCTION (this << srcSwitchIdx << dstSwitchIdx << routingPath);
-  NS_ASSERT (srcSwitchIdx != dstSwitchIdx);
+  NS_LOG_FUNCTION (this << ringInfo << invertPath);
   
   // TODO: I need to implement the reservation strategy proposed by prof. Deep
   // Medhi. The general ideal is a dynamic bwFactor that can be ajudsted based
@@ -533,25 +502,75 @@ RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx,
   // resources (since the last link is always the most congested onde), and
   // have to take a full turn in the opposite direction of the ring.
 
-  DataRate availableBandwidth (std::numeric_limits<uint64_t>::max());
-  
-  uint16_t current = srcSwitchIdx;
-  while (current != dstSwitchIdx)
+  RingRoutingInfo::RoutingPath downPath = ringInfo->GetDownPath (); 
+  if (invertPath)
     {
-      uint16_t next = NextSwitchIndex (current, routingPath);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-      DataRate linkBandwidth = cInfo->GetAvailableDataRate (current, next, m_maxBwFactor);
-      if (linkBandwidth < availableBandwidth)
+      downPath = RingRoutingInfo::InvertPath (downPath);
+    }
+  
+  // From the gateway to the eNB switch index, get the bandwidth for each link
+  DataRate availableDownBand (std::numeric_limits<uint64_t>::max());
+  DataRate availableUpBand (std::numeric_limits<uint64_t>::max());
+  DataRate linkDownBand, linkUpBand;
+  Ptr<ConnectionInfo> cInfo;
+  uint16_t next, current = ringInfo->GetSgwSwIdx ();
+  while (current != ringInfo->GetEnbSwIdx ())
+    {
+      next = NextSwitchIndex (current, downPath);
+      cInfo = GetConnectionInfo (current, next);
+
+      // Check for available bandwidth in downlink direction
+      linkDownBand = cInfo->GetAvailableDataRate (current, next, m_maxBwFactor);
+      if (linkDownBand < availableDownBand)
         {
-          availableBandwidth = linkBandwidth;
+          availableDownBand = linkDownBand;
+        }
+
+      // Check for available bandwidth in uplink direction
+      linkUpBand = cInfo->GetAvailableDataRate (next, current, m_maxBwFactor);
+      if (linkUpBand < availableUpBand)
+        {
+          availableUpBand = linkUpBand;
         }
       current = next;
     }
-  return availableBandwidth;
+
+  // Return the pair of available bandwidth (downlink and uplink)
+  return std::pair<DataRate, DataRate> (availableDownBand, availableUpBand);
 }
 
 bool
-RingController::ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+RingController::ReserveBandwidth (Ptr<const RingRoutingInfo> ringInfo,
+                                  Ptr<ReserveInfo> reserveInfo)
+{
+  NS_LOG_FUNCTION (this << ringInfo << reserveInfo);
+
+  // Reserving resources in both directions
+  PerLinkReserve (ringInfo->GetSgwSwIdx (), ringInfo->GetEnbSwIdx (), 
+                  ringInfo->GetDownPath (), reserveInfo->GetDownDataRate ());
+  PerLinkReserve (ringInfo->GetEnbSwIdx (), ringInfo->GetSgwSwIdx (), 
+                  ringInfo->GetUpPath (), reserveInfo->GetUpDataRate ());
+  reserveInfo->SetReserved (true);
+  return true;
+}
+
+bool
+RingController::ReleaseBandwidth (Ptr<const RingRoutingInfo> ringInfo,
+                                  Ptr<ReserveInfo> reserveInfo)
+{
+  NS_LOG_FUNCTION (this << ringInfo << reserveInfo);
+
+  // Releasing resources in both directions
+  PerLinkRelease (ringInfo->GetSgwSwIdx (), ringInfo->GetEnbSwIdx (), 
+                  ringInfo->GetDownPath (), reserveInfo->GetDownDataRate ());
+  PerLinkRelease (ringInfo->GetEnbSwIdx (), ringInfo->GetSgwSwIdx (), 
+                  ringInfo->GetUpPath (), reserveInfo->GetUpDataRate ());
+  reserveInfo->SetReserved (false);
+  return true;
+}
+
+bool
+RingController::PerLinkReserve (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
     RingRoutingInfo::RoutingPath routingPath, DataRate reserve)
 {
   NS_LOG_FUNCTION (this << srcSwitchIdx << dstSwitchIdx << routingPath << reserve);
@@ -561,15 +580,14 @@ RingController::ReserveBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
     {
       uint16_t next = NextSwitchIndex (current, routingPath);
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-      NS_ABORT_MSG_UNLESS (cInfo->ReserveDataRate (current, next, reserve), 
-                           "No bandwidth available to reserve.");
+      cInfo->ReserveDataRate (current, next, reserve);
       current = next;
     }
   return true;
 }
 
 bool
-RingController::ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+RingController::PerLinkRelease (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
     RingRoutingInfo::RoutingPath routingPath, DataRate release)
 {
   NS_LOG_FUNCTION (this << srcSwitchIdx << dstSwitchIdx << routingPath << release);
@@ -579,8 +597,7 @@ RingController::ReleaseBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
     {
       uint16_t next = NextSwitchIndex (current, routingPath);
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-      NS_ABORT_MSG_UNLESS (cInfo->ReleaseDataRate (current, next, release), 
-                           "No bandwidth available to release.");
+      cInfo->ReleaseDataRate (current, next, release);
       current = next;
     }
   return true;
@@ -600,24 +617,24 @@ RingController::RemoveMeterRules (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
 
-  NS_ASSERT_MSG (!rInfo->m_isActive && !rInfo->m_isInstalled,
+  NS_ASSERT_MSG (!rInfo->IsActive () && !rInfo->IsInstalled (),
                  "Can't delete meter for valid traffic.");
 
   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
-  if (meterInfo && meterInfo->m_isInstalled)
+  if (meterInfo && meterInfo->IsInstalled ())
     {
       NS_LOG_DEBUG ("Removing meter entries.");
-      if (meterInfo->m_hasDown)
+      if (meterInfo->HasDown ())
         {
-          DpctlCommand (GetSwitchDevice (rInfo->m_sgwIdx),
+          DpctlCommand (GetSwitchDevice (rInfo->GetSgwSwIdx ()),
                         meterInfo->GetDelCmd ());
         }
-      if (meterInfo->m_hasUp)
+      if (meterInfo->HasUp ())
         {
-          DpctlCommand (GetSwitchDevice (rInfo->m_enbIdx),
+          DpctlCommand (GetSwitchDevice (rInfo->GetEnbSwIdx ()),
                         meterInfo->GetDelCmd ());
         }
-      meterInfo->m_isInstalled = false;
+      meterInfo->SetInstalled (false);
     }
   return true;
 }
