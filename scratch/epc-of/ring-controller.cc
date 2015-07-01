@@ -488,29 +488,58 @@ RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)
          RingRoutingInfo::COUNTER;
 }
 
+uint16_t
+RingController::HopCounter (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+                            RingRoutingInfo::RoutingPath routingPath)
+{
+  NS_LOG_FUNCTION (this << srcSwitchIdx << dstSwitchIdx);
+  NS_ASSERT (srcSwitchIdx != dstSwitchIdx);
+  NS_ASSERT (std::max (srcSwitchIdx, dstSwitchIdx) < GetNSwitches ());
+
+  int distance = dstSwitchIdx - srcSwitchIdx;
+  if (routingPath == RingRoutingInfo::COUNTER)
+    { 
+      distance = srcSwitchIdx - dstSwitchIdx;
+    }
+  if (distance < 0)
+    {
+      distance += GetNSwitches ();
+    }
+  return distance;
+}
+
 std::pair<DataRate, DataRate> 
 RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo, 
                                        bool invertPath)
 {
   NS_LOG_FUNCTION (this << ringInfo << invertPath);
-  
-  // TODO: I need to implement the reservation strategy proposed by prof. Deep
-  // Medhi. The general ideal is a dynamic bwFactor that can be ajudsted based
-  // on the distance betweem the srcSwitchIdx and the dstSwitchIdx. The closer
-  // the destination we are, the more we can use from the available bandwidth.
-  // The goal is to prevent flows that are very close to the gateway run out of
-  // resources (since the last link is always the most congested onde), and
-  // have to take a full turn in the opposite direction of the ring.
 
   RingRoutingInfo::RoutingPath downPath = ringInfo->GetDownPath (); 
   if (invertPath)
     {
       downPath = RingRoutingInfo::InvertPath (downPath);
     }
-  
+ 
+  double bwStep = 0;
+  double currentBwFactor = m_maxBwFactor;
+  // We only use the dynamic bandwidth factor when looking for the available
+  // bandwidth in the shortest routing path.
+  if (m_dynBwFactor && FindShortestPath (ringInfo->GetSgwSwIdx (), 
+      ringInfo->GetEnbSwIdx ()) == downPath)
+    {
+      // How far the eNB switch is from the gateway switch?
+      int hops = HopCounter (ringInfo->GetSgwSwIdx (), ringInfo->GetEnbSwIdx (),
+                             ringInfo->GetDownPath ());
+      
+      // Let's adjust the initial factor step
+      bwStep   = 0.1;       // FIXME Need proper adjustment.
+      currentBwFactor -= (hops - 1) * bwStep;
+    }
+
   // From the gateway to the eNB switch index, get the bandwidth for each link
   DataRate availableDownBand (std::numeric_limits<uint64_t>::max());
-  DataRate availableUpBand (std::numeric_limits<uint64_t>::max());
+  DataRate availableUpBand   (std::numeric_limits<uint64_t>::max());
+  
   DataRate linkDownBand, linkUpBand;
   Ptr<ConnectionInfo> cInfo;
   uint16_t next, current = ringInfo->GetSgwSwIdx ();
@@ -520,19 +549,22 @@ RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo,
       cInfo = GetConnectionInfo (current, next);
 
       // Check for available bandwidth in downlink direction
-      linkDownBand = cInfo->GetAvailableDataRate (current, next, m_maxBwFactor);
+      linkDownBand = cInfo->GetAvailableDataRate (current, next, currentBwFactor);
       if (linkDownBand < availableDownBand)
         {
           availableDownBand = linkDownBand;
         }
 
       // Check for available bandwidth in uplink direction
-      linkUpBand = cInfo->GetAvailableDataRate (next, current, m_maxBwFactor);
+      linkUpBand = cInfo->GetAvailableDataRate (next, current, currentBwFactor);
       if (linkUpBand < availableUpBand)
         {
           availableUpBand = linkUpBand;
         }
       current = next;
+
+      // Let's adjust the factors for next link.
+      currentBwFactor += bwStep;
     }
 
   // Return the pair of available bandwidth (downlink and uplink)
