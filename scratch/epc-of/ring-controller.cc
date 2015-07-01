@@ -297,12 +297,9 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
   DataRate dlRequest = reserveInfo->GetDownDataRate ();
   DataRate ulRequest = reserveInfo->GetUpDataRate ();
 
-  NS_LOG_DEBUG (teid << ": downlink bandwidth in short path: " << dlShortBw);
-  NS_LOG_DEBUG (teid << ": downlink bandwidth in long path: " << dlLongBw);
-  NS_LOG_DEBUG (teid << ": uplink bandwidth in short path: " << ulShortBw);
-  NS_LOG_DEBUG (teid << ": uplink bandwidth in long path: " << ulLongBw);
-  NS_LOG_DEBUG (teid << ": downlink request: " << dlRequest);
-  NS_LOG_DEBUG (teid << ": uplink request: " << ulRequest);
+  NS_LOG_DEBUG (teid << ":    request: downlink " << dlRequest << " - uplink " << ulRequest);
+  NS_LOG_DEBUG (teid << ": short path: downlink " << dlShortBw << " - uplink " << ulShortBw);
+  NS_LOG_DEBUG (teid << ":  long path: downlink " << dlLongBw  << " - uplink " << ulLongBw);
 
   switch (m_strategy)
     {
