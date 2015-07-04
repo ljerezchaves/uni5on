@@ -54,7 +54,7 @@ main (int argc, char *argv[])
 
   bool verbose = false;
   bool lteRem = false;
-  uint32_t simTime = 200;
+  uint32_t simTime = 500;
   std::string prefix = "";
 
   CommandLine cmd;
