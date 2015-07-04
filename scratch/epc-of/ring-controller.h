@@ -121,17 +121,6 @@ private:
   GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo, 
                          bool invertPath = false);
 
-//  /**
-//   * Look for the available bandwidth from source to destination switch index
-//   * following the indicated routing path.
-//   * \param srcSwitchIdx Source switch index.
-//   * \param dstSwitchIdx Destination switch index.
-//   * \param routingPath The routing path.
-//   * \return The bandwidth for this routing path.
-//   */
-//  DataRate GetAvailableBandwidth (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-//                                  RingRoutingInfo::RoutingPath routingPath);
-
   /**
    * Reserve the bandwidth for this bearer in network.
    * \param ringInfo The ring routing information.

@@ -523,30 +523,6 @@ RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo,
   return std::pair<DataRate, DataRate> (availableDownBand, availableUpBand);
 }
 
-// DataRate 
-// RingController::GetAvailableBandwidth (uint16_t srcSwitchIdx, 
-//     uint16_t dstSwitchIdx, RingRoutingInfo::RoutingPath routingPath)
-// {
-//   NS_LOG_FUNCTION (this << srcSwitchIdx << dstSwitchIdx << routingPath);
-//   NS_ASSERT (srcSwitchIdx != dstSwitchIdx);
-//   
-//   DataRate availableBandwidth (std::numeric_limits<uint64_t>::max());
-//   
-//   uint16_t current = srcSwitchIdx;
-//   while (current != dstSwitchIdx)
-//     {
-//       uint16_t next = NextSwitchIndex (current, routingPath);
-//       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-//       DataRate linkBandwidth = cInfo->GetAvailableDataRate (current, next, m_maxBwFactor);
-//       if (linkBandwidth < availableBandwidth)
-//         {
-//           availableBandwidth = linkBandwidth;
-//         }
-//       current = next;
-//     }
-//   return availableBandwidth;
-// }
-
 bool
 RingController::ReserveBandwidth (Ptr<const RingRoutingInfo> ringInfo,
                                   Ptr<ReserveInfo> reserveInfo)
