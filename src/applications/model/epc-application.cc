@@ -70,6 +70,12 @@ EpcApplication::Start ()
   NS_LOG_FUNCTION (this);
 }
 
+void 
+EpcApplication::StartWithMaxDuration (Time maxDuration)
+{
+  NS_LOG_FUNCTION (this);
+}
+
 Ptr<EpcTft>
 EpcApplication::GetTft (void) const
 {

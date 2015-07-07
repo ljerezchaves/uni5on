@@ -85,6 +85,12 @@ public:
    * Start this application at any time.
    */
   virtual void Start (void);
+
+  /**
+   * Start this application at any time, and set the maximum duration time.
+   * \param maxDuration The max duration for this traffic.
+   */
+  virtual void StartWithMaxDuration (Time maxDuration);
   
   /**
    * TracedCallback signature for EpcApplication.
