@@ -66,6 +66,28 @@ public:
    */
   void Install (NodeContainer ueNodes, NetDeviceContainer ueDevices);
 
+  /**
+   * Get complete filename for video trace files.
+   * \param idx The video index (see movies folder).
+   * \return The complete file path.
+   */
+  static const std::string GetVideoFilename (uint8_t idx);
+
+  /**
+   * Get the GBR data rate for video trace files.
+   * \param idx The video index (see movies folder).
+   * \return The gbr video data rate.
+   */
+  static const DataRate GetVideoGbr (uint8_t idx);
+
+  /**
+   * Get the MBR data rate for video trace files.
+   * \param idx The video index (see movies folder).
+   * \return The mbr video data rate.
+   */
+  static const DataRate GetVideoMbr (uint8_t idx);
+
+
 private:
   /**
    * VoIP/UDP bidirectional traffic over dedicated GBR EPS bearer (QCI 1).
@@ -104,12 +126,6 @@ private:
    */
   void InstallHttp ();
 
-  /**
-   * Get complete filename for stored video trace files.
-   * \param idx The trace index.
-   * \return Complete path.
-   */
-  static const std::string GetVideoFilename (uint8_t idx);
 
   ObjectFactory       m_managerFactory; //!< Traffic manager factory
 
@@ -132,8 +148,8 @@ private:
   Ptr<UniformRandomVariable> m_stVideoRng;    //!< Random stored video
   static const std::string   m_videoDir;      //!< Video trace directory
   static const std::string   m_videoTrace []; //!< Stored video trace filenames
-  static const uint64_t      m_avgBitRate []; //!< Stored video trace avg bitrate
-  static const uint64_t      m_maxBitRate []; //!< Stored video trace max bitrate
+  static const uint64_t      m_gbrBitRate []; //!< Stored video trace gbr bitrate
+  static const uint64_t      m_mbrBitRate []; //!< Stored video trace max bitrate
 };
 
 };  // namespace ns3

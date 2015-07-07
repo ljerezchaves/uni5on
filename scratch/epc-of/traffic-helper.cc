@@ -28,16 +28,23 @@ NS_LOG_COMPONENT_DEFINE ("TrafficHelper");
 const std::string TrafficHelper::m_videoDir = "../movies/";
 
 const std::string TrafficHelper::m_videoTrace [] = {
-  "jurassic.data", "silence.data", "star-wars.data", "mr-bean.data",
-  "first-contact.data", "from-dusk.data", "the-firm.data"
+  "0-office-cam-low.txt", "1-office-cam-medium.txt", "2-office-cam-high.txt",
+  "3-jurassic-park.txt", "4-silence-of-the-lambs.txt", "5-star-wars-iv.txt",
+  "6-mr-bean.txt", "7-first-contact.txt", "8-from-dusk-till-dawn.txt",
+  "9-the-firm.txt", "10-formula1.txt", "11-soccer.txt", "12-ard-news.txt",
+  "13-ard-talk.txt", "14-n3-talk.txt"
 };
 
-const uint64_t TrafficHelper::m_avgBitRate [] = {
-  770000, 580000, 280000, 580000, 330000, 680000, 310000
+// These values were obtained from the first 180sec of video
+const uint64_t TrafficHelper::m_gbrBitRate [] = {120000, 128000, 450000,
+  770000, 1500000, 500000, 600000, 400000, 800000, 700000, 1100000, 1300000,
+  750000, 500000, 650000
 };
 
-const uint64_t TrafficHelper::m_maxBitRate [] = {
-  3300000, 4400000, 1900000, 3100000, 2500000, 3100000, 2100000
+// These values were obtained from the first 180sec of video
+const uint64_t TrafficHelper::m_mbrBitRate [] = {128000, 600000, 500000,
+  1000000, 2000000, 600000, 800000, 650000, 1000000, 800000, 1200000, 1500000, 
+  1250000, 700000, 750000
 };
 
 
@@ -58,30 +65,28 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   m_managerFactory.SetTypeId (TrafficManager::GetTypeId ());
   SetTfcManagerAttribute ("Controller", PointerValue (controller));
 
-  // Random stored video selection.
+  // Random video selection
   m_stVideoRng = CreateObject<UniformRandomVariable> ();
   m_stVideoRng->SetAttribute ("Min", DoubleValue (0));
-  m_stVideoRng->SetAttribute ("Max", DoubleValue (6));
+  m_stVideoRng->SetAttribute ("Max", DoubleValue (15));
 
-  // For HTTP traffic, load 3 pages before idle time
+  // Setting average traffic duration for applications
+  // For Non-GBR traffic:
+  // HTTP traffic: load 3 pages before idle time
   m_httpHelper.SetClientAttribute ("MaxPages", UintegerValue (3)); 
-  
-  // For VoIP call: average call lenght of 1min 40sec, with 30sec stdev
-  m_voipHelper.SetServerAttribute ("CallDuration", 
-    StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=900.0]"));
-  
-  // For stored video: average video lenght of 3min, with 1min stdev
+   
+  // Stored video: average lenght of 3min, with 1min stdev
   m_stVideoHelper.SetServerAttribute ("VideoDuration", 
     StringValue ("ns3::NormalRandomVariable[Mean=180.0|Variance=3600.0]"));
 
-  // For real time video streaming: average 3min, with 1min stdev
+  // For GBR traffic:
+  // VoIP call: average lenght of 1min 40sec, with 10sec stdev
+  m_voipHelper.SetServerAttribute ("CallDuration", 
+    StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=100.0]"));
+
+  // Real time video streaming: average lenght 1min 40sec, with 10sec stdev
   m_rtVideoHelper.SetServerAttribute ("VideoDuration", 
-    StringValue ("ns3::NormalRandomVariable[Mean=180.0|Variance=3600.0]"));
-  
-  // Setting defaul real time video to office cam with medium quality
-  // Average bit rate: 110Kbps | Peak bit rate: 1Mbps
-  m_rtVideoHelper.SetServerAttribute ("TraceFilename", 
-    StringValue (m_videoDir + "office-cam-medium.data"));
+    StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=100.0]"));
 }
 
 TrafficHelper::~TrafficHelper ()
@@ -137,58 +142,34 @@ TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices)
   m_ueManager = 0;
 }
 
-/* NOTE about GbrQosInformation:
- * 1) The Maximum Bit Rate field is used by controller to install meter rules.
- *    When this value is left to 0, no meter rules will be installed.
- * 2) The Guaranteed Bit Rate field is used by the controller to reserve the
- *    requested bandwidth in OpenFlow network. This can be used even for
- *    Non-GBR bearers (as done in HTTP traffic), allowing resource reservation
- *    but without guarantee. When left to 0, no resources are reserved.
- */
-
-void
-TrafficHelper::InstallHttp ()
+const std::string
+TrafficHelper::GetVideoFilename (uint8_t idx)
 {
-  NS_LOG_FUNCTION (this);
-
-  static uint16_t portNo = 10000;
-  portNo++;
-
-  // Bidirectional HTTP traffic.
-  Ptr<HttpClient> cApp =
-    m_httpHelper.Install (m_ueNode, m_webNode, m_webAddr, portNo);
-
-  // TFT Packet filter
-  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
-  EpcTft::PacketFilter filter;
-  filter.direction = EpcTft::BIDIRECTIONAL;
-  filter.remoteAddress = m_webAddr;
-  filter.remoteMask = m_webMask;
-  filter.localAddress = m_ueAddr;
-  filter.localMask = m_ueMask;
-  filter.remotePortStart = portNo;
-  filter.remotePortEnd = portNo;
-  tft->Add (filter);
-
-  // Dedicated Non-GBR EPS bearer (QCI 8)
-  // FIXME: Non-GBR traffic should have no gbr request.
-  GbrQosInformation qos;
-  qos.gbrDl = 131072;     // Reserving 128 Kbps in downlink
-  qos.gbrUl = 32768;      // Reserving 32 Kbps in uplink
-  qos.mbrDl = 524288;     // Max of 512 Kbps in downlink
-  qos.mbrUl = 131072;     // Max of 128 Kbps in uplink
-  EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO, qos);
-  // EpsBearer bearer (EpsBearer::GBR_VIDEO_TCP_PREMIUM, qos);
-  // NOTE: Currently set as GBR only for blocking experiments
-
-  // Link EPC info to application
-  cApp->m_tft = tft;
-  cApp->m_bearer = bearer;
-  m_ueManager->AddEpcApplication (cApp);
-
-  // Activate dedicated bearer
-  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+  return m_videoDir + m_videoTrace [idx];
 }
+
+const DataRate
+TrafficHelper::GetVideoGbr (uint8_t idx)
+{
+  return DataRate (m_gbrBitRate [idx]);
+}
+
+const DataRate
+TrafficHelper::GetVideoMbr (uint8_t idx)
+{
+  return DataRate (m_mbrBitRate [idx]);
+}
+
+
+/* NOTE about GbrQosInformation:
+ * 1) The Maximum Bit Rate field is used by controller to install meter rules
+ *    for this traffic. When this value is left to 0, no meter rules will be
+ *    installed.
+ * 2) The Guaranteed Bit Rate field is used by the controller to reserve the
+ *    requested bandwidth in OpenFlow network. When used for Non-GBR bearers 
+ *    the network will consider bandwidth in resource reservation, but without 
+ *    guarantees. When left to 0, no resources are reserved.
+ */
 
 void
 TrafficHelper::InstallVoip ()
@@ -241,6 +222,49 @@ TrafficHelper::InstallVoip ()
 }
 
 void
+TrafficHelper::InstallRealTimeVideo ()
+{
+  NS_LOG_FUNCTION (this);
+
+  static uint16_t portNo = 40000;
+  portNo++;
+
+  // Downlink real-time video traffic.
+  int videoIdx = m_stVideoRng->GetInteger (0, 2);
+  m_rtVideoHelper.SetServerAttribute ("TraceFilename",
+    StringValue (GetVideoFilename (videoIdx)));
+
+  Ptr<RealTimeVideoClient> cApp =
+    m_rtVideoHelper.Install (m_ueNode, m_webNode, m_ueAddr, portNo);
+
+  // TFT downlink packet filter
+  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
+  EpcTft::PacketFilter filter;
+  filter.direction = EpcTft::DOWNLINK;
+  filter.remoteAddress = m_webAddr;
+  filter.remoteMask = m_webMask;
+  filter.localAddress = m_ueAddr;
+  filter.localMask = m_ueMask;
+  filter.localPortStart = portNo;
+  filter.localPortEnd = portNo;
+  tft->Add (filter);
+
+  // Dedicated GBR EPS bearer (QCI 4).
+  GbrQosInformation qos;
+  qos.gbrDl = GetVideoGbr (videoIdx).GetBitRate ();
+  qos.mbrDl = GetVideoMbr (videoIdx).GetBitRate ();
+  EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
+
+  // Link EPC info to application
+  cApp->m_tft = tft;
+  cApp->m_bearer = bearer;
+  m_ueManager->AddEpcApplication (cApp);
+
+  // Activate dedicated bearer
+  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+}
+
+void
 TrafficHelper::InstallStoredVideo ()
 {
   NS_LOG_FUNCTION (this);
@@ -250,7 +274,7 @@ TrafficHelper::InstallStoredVideo ()
 
   // Bidirectional stored video traffic.
   // The StoredVideoClient is the one that requests the video to the server.
-  int videoIdx = m_stVideoRng->GetInteger ();
+  int videoIdx = m_stVideoRng->GetInteger (3, 14);
   m_stVideoHelper.SetServerAttribute ("TraceFilename",
     StringValue (GetVideoFilename (videoIdx)));
   
@@ -270,13 +294,12 @@ TrafficHelper::InstallStoredVideo ()
   tft->Add (filter);
 
   // Dedicated Non-GBR EPS bearer (QCI 8)
-  // FIXME: Non-GBR traffic should have no gbr request.
+  // FIXME: Non-GBR traffic should have no gbr request. 
+  // The mbr can be set to same as http
   GbrQosInformation qos;
-  qos.gbrDl = 1.2 * m_avgBitRate [videoIdx];
-  qos.mbrDl = (qos.gbrDl + m_maxBitRate [videoIdx]) / 2;
-  EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
-  // EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR, qos);
-  // NOTE: Currently set as GBR only for blocking experiments
+  qos.gbrDl = 1.5 * m_gbrBitRate [videoIdx];
+  qos.mbrDl = (qos.gbrDl + m_mbrBitRate [videoIdx]) / 2;
+  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR, qos);
 
   // Link EPC info to application
   cApp->m_tft = tft;
@@ -288,33 +311,37 @@ TrafficHelper::InstallStoredVideo ()
 }
 
 void
-TrafficHelper::InstallRealTimeVideo ()
+TrafficHelper::InstallHttp ()
 {
   NS_LOG_FUNCTION (this);
 
-  static uint16_t portNo = 40000;
+  static uint16_t portNo = 10000;
   portNo++;
 
-  // Downlink real-time video traffic.
-  Ptr<RealTimeVideoClient> cApp =
-    m_rtVideoHelper.Install (m_ueNode, m_webNode, m_ueAddr, portNo);
+  // Bidirectional HTTP traffic.
+  Ptr<HttpClient> cApp =
+    m_httpHelper.Install (m_ueNode, m_webNode, m_webAddr, portNo);
 
-  // TFT downlink packet filter
+  // TFT Packet filter
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
-  filter.direction = EpcTft::DOWNLINK;
+  filter.direction = EpcTft::BIDIRECTIONAL;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;
   filter.localAddress = m_ueAddr;
   filter.localMask = m_ueMask;
-  filter.localPortStart = portNo;
-  filter.localPortEnd = portNo;
+  filter.remotePortStart = portNo;
+  filter.remotePortEnd = portNo;
   tft->Add (filter);
 
-  // Dedicated GBR EPS bearer (QCI 4).
+  // Dedicated Non-GBR EPS bearer (QCI 8)
+  // FIXME: Non-GBR traffic should have no gbr request.
   GbrQosInformation qos;
-  qos.gbrDl = 131072;   // 128 Kbps (considering average rate of 110 Kbps)
-  EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
+  qos.gbrDl = 131072;     // Reserving 128 Kbps in downlink
+  qos.gbrUl = 32768;      // Reserving 32 Kbps in uplink
+  qos.mbrDl = 524288;     // Max of 512 Kbps in downlink
+  qos.mbrUl = 131072;     // Max of 128 Kbps in uplink
+  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
 
   // Link EPC info to application
   cApp->m_tft = tft;
@@ -323,12 +350,6 @@ TrafficHelper::InstallRealTimeVideo ()
 
   // Activate dedicated bearer
   m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
-}
-
-const std::string
-TrafficHelper::GetVideoFilename (uint8_t idx)
-{
-  return m_videoDir + m_videoTrace [idx];
 }
 
 };  // namespace ns3
