@@ -108,6 +108,8 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
 
+  NS_ASSERT_MSG (!app->IsActive (), "Can't start an active application.");
+
   bool authorized = true;
 
   uint32_t appTeid = app->GetTeid ();
@@ -122,16 +124,18 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
   // same application. We will use this interval to limit the current traffic
   // duration, to avoid overlapping traffic which would not be possible. Doing
   // this, we can respect the inter-arrival times for the Poisson process.
-  Time startInterval = Seconds (std::abs (m_poissonRng->GetValue ())); 
+  Time startInterval = Seconds (std::max (2.5, m_poissonRng->GetValue ())); 
   Simulator::Schedule (startInterval, &TrafficManager::AppStartTry, this, app);
   NS_LOG_DEBUG ("App " << app->GetAppName () << " at user " << m_imsi 
-      << " is starting now (" << Simulator::Now ().GetSeconds () << ")"
-      << " Next start will occur in " << startInterval.GetSeconds ());
+      << " is starting now (" << Simulator::Now ().GetSeconds () << ")."
+      << " Next start will occur in +" << startInterval.GetSeconds ());
 
   if (authorized)
     {
-      // Set the maximum duration, including an interval of 2 seconds.
-      app->StartWithMaxDuration (startInterval - Seconds (2));
+      // Set the maximum traffic duration, considering an interval of 2 secs.
+      Time duration = startInterval - Seconds (2);
+      app->SetAttribute ("MaxDurationTime", TimeValue (duration));
+      app->Start ();
     }
   
   // NOTE: In current implementation, no retries are performed for for

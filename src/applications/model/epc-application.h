@@ -87,11 +87,11 @@ public:
   virtual void Start (void);
 
   /**
-   * Start this application at any time, and set the maximum duration time.
-   * \param maxDuration The max duration for this traffic.
+   * Get the active state for this application.
+   * \return true if the application is active, false otherwise.
    */
-  virtual void StartWithMaxDuration (Time maxDuration);
-  
+  bool IsActive (void) const;
+
   /**
    * TracedCallback signature for EpcApplication.
    * \param app The EpcApplication.
@@ -108,6 +108,9 @@ protected:
   virtual void ResetQosStats ();
 
   Ptr<QosStatsCalculator> m_qosStats;   //!< QoS statistics
+ 
+  Time m_maxDurationTime;   //!< Application max duration time
+  bool m_active;            //!< Active state for this application
 
   /** Application start trace source, fired when application start. */
   TracedCallback<Ptr<const EpcApplication> > m_appStartTrace;

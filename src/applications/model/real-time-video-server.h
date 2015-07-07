@@ -84,8 +84,9 @@ private:
 
   /**
    * \brief Start the streaming.
+   * \param maxDuration The maximum duration for this traffic.
    */
-  void StartSending ();
+  void StartSending (Time maxDuration = Time ());
 
   /**
    * \brief Stop the streaming.

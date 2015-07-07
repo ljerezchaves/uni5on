@@ -229,6 +229,7 @@ void
 HttpServer::HandlePeerError (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
+  NS_LOG_LOGIC ("Connection error.");
 }
 
 

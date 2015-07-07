@@ -28,6 +28,7 @@ NS_OBJECT_ENSURE_REGISTERED (EpcApplication);
 
 EpcApplication::EpcApplication()
   : m_qosStats (Create<QosStatsCalculator> ()),
+    m_active (false),
     m_tft (0),
     m_teid (0)
 {
@@ -45,7 +46,12 @@ EpcApplication::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::EpcApplication")
     .SetParent<Application> ()
     .AddConstructor<EpcApplication> ()
-    
+    .AddAttribute ("MaxDurationTime",
+                   "A hard duration time threshold.",
+                   TimeValue (Time ()),
+                   MakeTimeAccessor (&EpcApplication::m_maxDurationTime),
+                   MakeTimeChecker ())
+
     .AddTraceSource ("AppStart",
                      "EpcApplication start trace source.",
                      MakeTraceSourceAccessor (&EpcApplication::m_appStartTrace),
@@ -70,10 +76,10 @@ EpcApplication::Start ()
   NS_LOG_FUNCTION (this);
 }
 
-void 
-EpcApplication::StartWithMaxDuration (Time maxDuration)
+bool
+EpcApplication::IsActive (void) const
 {
-  NS_LOG_FUNCTION (this);
+  return m_active;
 }
 
 Ptr<EpcTft>

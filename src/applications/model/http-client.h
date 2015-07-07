@@ -145,6 +145,7 @@ private:
   uint16_t                m_pagesLoaded;        //!< Pages loaded.
   Time                    m_maxReadingTime;     //!< Reading time threshold.
   uint16_t                m_maxPages;           //!< Max pages threshold.
+  EventId                 m_forceStop;          //!< Maximum duration stop event. 
   
   Ptr<LogNormalRandomVariable>  m_readingTimeStream; //!< Reading time rng.
   Ptr<UniformRandomVariable>    m_readingTimeAdjust; //!< Adjustment rng.

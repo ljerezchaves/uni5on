@@ -89,8 +89,9 @@ RealTimeVideoClient::Start (void)
   NS_LOG_FUNCTION (this);
 
   ResetQosStats ();
+  m_active = true;
   m_appStartTrace (this);
-  m_serverApp->StartSending ();
+  m_serverApp->StartSending (m_maxDurationTime);
 }
 
 std::string 
@@ -114,6 +115,7 @@ RealTimeVideoClient::NotifyStop ()
   NS_LOG_FUNCTION (this);
 
   // Fire stop trace source
+  m_active = false;
   m_appStopTrace (this);
 }
 

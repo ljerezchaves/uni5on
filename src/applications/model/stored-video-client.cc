@@ -50,6 +50,7 @@ StoredVideoClient::StoredVideoClient ()
   NS_LOG_FUNCTION (this);
   m_socket = 0;
   m_serverApp = 0;
+  m_forceStop = EventId ();
 }
 
 StoredVideoClient::~StoredVideoClient ()
@@ -85,7 +86,14 @@ void
 StoredVideoClient::Start (void)
 {
   ResetQosStats ();
+  m_active = true;
   m_appStartTrace (this);
+
+  if (!m_maxDurationTime.IsZero ())
+    {
+      m_forceStop = Simulator::Schedule (m_maxDurationTime, 
+        &StoredVideoClient::CloseSocket, this);
+    }
   OpenSocket ();
 }
 
@@ -101,6 +109,7 @@ StoredVideoClient::DoDispose (void)
   NS_LOG_FUNCTION (this);
   m_serverApp = 0;
   m_socket = 0;
+  Simulator::Cancel (m_forceStop);
   EpcApplication::DoDispose ();
 }
 
@@ -140,6 +149,7 @@ StoredVideoClient::CloseSocket ()
 {
   NS_LOG_FUNCTION (this);
 
+  Simulator::Cancel (m_forceStop);
   if (m_socket != 0)
     {
       NS_LOG_LOGIC ("Closing the TCP connection.");
@@ -148,6 +158,7 @@ StoredVideoClient::CloseSocket ()
     }
 
   // Fire stop trace source
+  m_active = false;
   m_appStopTrace (this);
 }
 

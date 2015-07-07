@@ -166,19 +166,23 @@ RealTimeVideoServer::StopApplication ()
 }
 
 void 
-RealTimeVideoServer::StartSending ()
+RealTimeVideoServer::StartSending (Time maxDuration)
 {
   NS_LOG_FUNCTION (this);
+
+  // Schedule traffic end, respecting max hard traffic duration
+  Time stopTime = Seconds (std::abs (m_lengthRng->GetValue ()));
+  if (!maxDuration.IsZero () && stopTime > maxDuration)
+    {
+      stopTime = maxDuration;
+    }
+  Simulator::Schedule (stopTime, &RealTimeVideoServer::StopSending, this);
+  NS_LOG_INFO ("Real-time video lenght: " << stopTime.As (Time::S));
 
   Simulator::Cancel (m_sendEvent);
   m_currentEntry = 0;
   m_pktSent = 0;
   SendStream ();
-
-  // Schedule traffic end
-  Time length = Seconds (std::abs (m_lengthRng->GetValue ()));
-  Simulator::Schedule (length, &RealTimeVideoServer::StopSending, this);
-  NS_LOG_INFO ("Real-time video lenght: " << length.As (Time::S));
 }
 
 void 

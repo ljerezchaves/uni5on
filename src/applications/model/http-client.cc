@@ -62,6 +62,7 @@ HttpClient::HttpClient ()
   NS_LOG_FUNCTION (this);
   m_socket = 0;
   m_serverApp = 0;
+  m_forceStop = EventId ();
   m_contentLength = 0;
   m_bytesReceived = 0;
   m_numOfInlineObjects = 0;
@@ -105,7 +106,14 @@ void
 HttpClient::Start (void)
 {
   ResetQosStats ();
+  m_active = true;
   m_appStartTrace (this);
+    
+  if (!m_maxDurationTime.IsZero ())
+    {
+      m_forceStop = Simulator::Schedule (m_maxDurationTime, 
+        &StoredVideoClient::CloseSocket, this);
+    }
   OpenSocket ();
 }
 
@@ -122,6 +130,7 @@ HttpClient::DoDispose (void)
   m_serverApp = 0;
   m_socket = 0;
   m_readingTimeStream = 0;
+  Simulator::Cancel (m_forceStop);
   EpcApplication::DoDispose ();
 }
 
@@ -161,6 +170,7 @@ HttpClient::CloseSocket ()
 {
   NS_LOG_FUNCTION (this);
 
+  Simulator::Cancel (m_forceStop);
   if (m_socket != 0)
     {
       NS_LOG_LOGIC ("Closing the TCP connection.");
@@ -169,6 +179,7 @@ HttpClient::CloseSocket ()
     }
 
   // Fire stop trace source
+  m_active = false;
   m_appStopTrace (this);
 }
 
