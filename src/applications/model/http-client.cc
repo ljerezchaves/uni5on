@@ -112,7 +112,7 @@ HttpClient::Start (void)
   if (!m_maxDurationTime.IsZero ())
     {
       m_forceStop = Simulator::Schedule (m_maxDurationTime, 
-        &StoredVideoClient::CloseSocket, this);
+        &HttpClient::CloseSocket, this);
     }
   OpenSocket ();
 }
