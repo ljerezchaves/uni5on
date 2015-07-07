@@ -97,7 +97,7 @@ TrafficManager::AddEpcApplication (Ptr<EpcApplication> app)
       return;
     }
 
-  // Schedule the first start attemp for this app.
+  // Schedule the first start attempt for this app.
   // Wait at least 2 seconds for simulation initial setup.
   Time startTime = Seconds (std::max (2.0, m_poissonRng->GetValue ()));
   Simulator::Schedule (startTime, &TrafficManager::AppStartTry, this, app);
@@ -118,16 +118,24 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
                                                          m_imsi, m_cellId, appTeid);
     }
 
+  // Before starting the traffic, let's set the next start attempt for this
+  // same application. We will use this interval to limit the current traffic
+  // duration, to avoid overlapping traffic which would not be possible. Doing
+  // this, we can respect the inter-arrival times for the Poisson process.
+  Time startInterval = Seconds (std::abs (m_poissonRng->GetValue ())); 
+  Simulator::Schedule (startInterval, &TrafficManager::AppStartTry, this, app);
+  NS_LOG_DEBUG ("App " << app->GetAppName () << " at user " << m_imsi 
+      << " is starting now (" << Simulator::Now ().GetSeconds () << ")"
+      << " Next start will occur in " << startInterval.GetSeconds ());
+
   if (authorized)
     {
-      app->Start ();
+      // Set the maximum duration, including an interval of 2 seconds.
+      app->StartWithMaxDuration (startInterval - Seconds (2));
     }
-  else
-    {
-      // Reschedule start attempt for this application
-      Time retryTime = Seconds (std::abs (m_poissonRng->GetValue ()));
-      Simulator::Schedule (retryTime, &TrafficManager::AppStartTry, this, app);
-    }
+  
+  // NOTE: In current implementation, no retries are performed for for
+  //       non-authorized traffic.
 }
 
 void
@@ -143,17 +151,18 @@ TrafficManager::NotifyAppStop (Ptr<const EpcApplication> app)
                                             m_imsi, m_cellId, appTeid);
     }
 
-  // Find our non-constant app pointer to schedule next start attempt
-  std::vector<Ptr<EpcApplication> >::iterator it;
-  for (it = m_apps.begin (); *it != app && it != m_apps.end (); it++)
-    {
-      NS_ASSERT_MSG (it != m_apps.end (), "App not found!");
-    }
-
-  // Schedule next start attemp for this application.
-  // Wait at least 2 seconds for OpenFlow rule management.
-  Time idleTime = Seconds (std::max (2.0, m_poissonRng->GetValue ()));
-  Simulator::Schedule (idleTime, &TrafficManager::AppStartTry, this, *it);
+// TODO Remove.
+//  // Find our non-constant app pointer to schedule next start attempt
+//  std::vector<Ptr<EpcApplication> >::iterator it;
+//  for (it = m_apps.begin (); *it != app && it != m_apps.end (); it++)
+//    {
+//      NS_ASSERT_MSG (it != m_apps.end (), "App not found!");
+//    }
+//
+//  // Schedule next start attempt for this application.
+//  // Wait at least 2 seconds for OpenFlow rule management.
+//  Time idleTime = Seconds (std::max (2.0, m_poissonRng->GetValue ()));
+//  Simulator::Schedule (idleTime, &TrafficManager::AppStartTry, this, *it);
 }
 
 void

@@ -33,7 +33,7 @@ namespace ns3 {
 /**
  * \ingroup epcof
  * Traffic manager which handles UE client applications start/stop events. It
- * interacts with the OpenFlow network and controller to dump statistcis and
+ * interacts with the OpenFlow network and controller to dump statistics and
  * request/release EPS bearers. Each LteUeNetDevice has one TrafficManager
  * object aggregated to it.
  */
@@ -73,7 +73,7 @@ public:
 
   /**
    * Member function called by applications to notify this manager when traffic
-   * stops. This methodh will fire network statistcs (EPC) and schedule
+   * stops. This method will fire network statistics (EPC) and schedule
    * application restart attempt.
    * \param app The application pointer.
    */
@@ -97,12 +97,12 @@ protected:
 
 private:
   bool m_httpEnable;     //!< HTTP traffic enable
-  bool m_voipEnable;     //!< Voip traffic enable
+  bool m_voipEnable;     //!< VoIP traffic enable
   bool m_stVideoEnable;  //!< Stored video traffic enable
   bool m_rtVideoEnable;  //!< Real-time video traffic enable
 
   Ptr<ExponentialRandomVariable>    m_poissonRng; //!< Inter-arrival generator
-  Ptr<OpenFlowEpcController>        m_controller; //!< OpenFLow controller
+  Ptr<OpenFlowEpcController>        m_controller; //!< OpenFlow controller
   std::vector<Ptr<EpcApplication> > m_apps;       //!< Application list
 
   uint64_t    m_imsi;         //!< UE IMSI identifier
