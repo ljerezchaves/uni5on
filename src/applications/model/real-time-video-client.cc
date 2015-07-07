@@ -79,8 +79,8 @@ RealTimeVideoClient::ServerTrafficEnd (uint32_t pkts)
 {
   NS_LOG_FUNCTION (this);
 
-  // Let's wait 1 sec for delayed packets before notifying stopped app.
-  Simulator::Schedule (Seconds (1), &RealTimeVideoClient::NotifyStop, this);
+  // Let's wait some msec for delayed packets before notifying stopped app.
+  Simulator::Schedule (MilliSeconds (250), &RealTimeVideoClient::NotifyStop, this);
 }
 
 void 

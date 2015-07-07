@@ -87,11 +87,6 @@ public:
   virtual void Start (void);
   
   /**
-   * Stop callback signature. 
-   */
-  typedef Callback<void, Ptr<EpcApplication> > StopCb_t;
-
-  /**
    * TracedCallback signature for EpcApplication.
    * \param app The EpcApplication.
    */

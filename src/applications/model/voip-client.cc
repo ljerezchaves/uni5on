@@ -117,8 +117,8 @@ VoipClient::ServerTrafficEnd (uint32_t pkts)
   
   StopSending ();
 
-  // Let's wait 1 sec for delayed packets before notifying stopped app.
-  Simulator::Schedule (Seconds (1), &VoipClient::NotifyStop, this);
+  // Let's wait some msec for delayed packets before notifying stopped app.
+  Simulator::Schedule (MilliSeconds (250), &VoipClient::NotifyStop, this);
 }
 
 void 
