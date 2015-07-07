@@ -99,7 +99,7 @@ TrafficManager::AddEpcApplication (Ptr<EpcApplication> app)
 
   // Schedule the first start attempt for this app.
   // Wait at least 2 seconds for simulation initial setup.
-  Time startTime = Seconds (std::max (2.0, m_poissonRng->GetValue ()));
+  Time startTime = Seconds (2) + Seconds (std::abs (m_poissonRng->GetValue ()));
   Simulator::Schedule (startTime, &TrafficManager::AppStartTry, this, app);
 }
 
