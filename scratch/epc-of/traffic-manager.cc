@@ -42,43 +42,37 @@ TrafficManager::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::TrafficManager")
     .SetParent<Object> ()
     .AddConstructor<TrafficManager> ()
-    .AddAttribute ("HttpTraffic",
-                   "Enable/Disable http traffic during simulation.",
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficManager::m_httpEnable),
-                   MakeBooleanChecker ())
     .AddAttribute ("VoipTraffic",
                    "Enable/Disable VoIP traffic during simulation.",
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficManager::m_voipEnable),
-                   MakeBooleanChecker ())
-    .AddAttribute ("StVideoTraffic",
-                   "Enable/Disable stored video traffic during simulation.",
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficManager::m_stVideoEnable),
                    MakeBooleanChecker ())
     .AddAttribute ("RtVideoTraffic",
                    "Enable/Disable real-time video traffic during simulation.",
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficManager::m_rtVideoEnable),
                    MakeBooleanChecker ())
-
+    .AddAttribute ("HttpTraffic",
+                   "Enable/Disable http traffic during simulation.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&TrafficManager::m_httpEnable),
+                   MakeBooleanChecker ())
+    .AddAttribute ("StVideoTraffic",
+                   "Enable/Disable stored video traffic during simulation.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&TrafficManager::m_stVideoEnable),
+                   MakeBooleanChecker ())
     .AddAttribute ("Controller",
                    "The OpenFlow EPC controller.",
                    PointerValue (),
                    MakePointerAccessor (&TrafficManager::m_controller),
                    MakePointerChecker<OpenFlowEpcController> ())
-
-    .AddAttribute ("IdleRng",
-                   "A random variable used to set idle time.",
+    .AddAttribute ("PoissonInterArrival",
+                   "An exponential random variable used to get application "
+                   "inter-arrival start times.",
                    StringValue ("ns3::ExponentialRandomVariable[Mean=180.0]"),
-                   MakePointerAccessor (&TrafficManager::m_idleRng),
-                   MakePointerChecker <RandomVariableStream> ())
-    .AddAttribute ("StartRng",
-                   "A random variable used to set start time.",
-                   StringValue ("ns3::ExponentialRandomVariable[Mean=20.0]"),
-                   MakePointerAccessor (&TrafficManager::m_startRng),
-                   MakePointerChecker <RandomVariableStream> ())
+                   MakePointerAccessor (&TrafficManager::m_poissonRng),
+                   MakePointerChecker <ExponentialRandomVariable> ())
   ;
   return tid;
 }
@@ -94,17 +88,18 @@ TrafficManager::AddEpcApplication (Ptr<EpcApplication> app)
       MakeCallback (&TrafficManager::NotifyAppStop, this));
 
   // Check for disabled application type
-  if ( (!m_httpEnable    && app->GetInstanceTypeId () == HttpClient::GetTypeId ())
-       || (!m_voipEnable    && app->GetInstanceTypeId () == VoipClient::GetTypeId ())
-       || (!m_stVideoEnable && app->GetInstanceTypeId () == StoredVideoClient::GetTypeId ())
-       || (!m_rtVideoEnable && app->GetInstanceTypeId () == RealTimeVideoClient::GetTypeId ()))
+  if ((!m_httpEnable    && app->GetInstanceTypeId () == HttpClient::GetTypeId ())
+   || (!m_voipEnable    && app->GetInstanceTypeId () == VoipClient::GetTypeId ())
+   || (!m_stVideoEnable && app->GetInstanceTypeId () == StoredVideoClient::GetTypeId ())
+   || (!m_rtVideoEnable && app->GetInstanceTypeId () == RealTimeVideoClient::GetTypeId ()))
     {
-      // This application is disable.
+      // This application is disable, so we won't schedule first start.
       return;
     }
 
-  // Schedule the first start attemp for this app (wait at least 5 seconds)
-  Time startTime = Seconds (5) + Seconds (std::abs (m_startRng->GetValue ()));
+  // Schedule the first start attemp for this app.
+  // Wait at least 2 seconds for simulation initial setup.
+  Time startTime = Seconds (std::max (2.0, m_poissonRng->GetValue ()));
   Simulator::Schedule (startTime, &TrafficManager::AppStartTry, this, app);
 }
 
@@ -130,7 +125,7 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
   else
     {
       // Reschedule start attempt for this application
-      Time retryTime = Seconds (std::abs (m_startRng->GetValue ()));
+      Time retryTime = Seconds (std::abs (m_poissonRng->GetValue ()));
       Simulator::Schedule (retryTime, &TrafficManager::AppStartTry, this, app);
     }
 }
@@ -148,15 +143,16 @@ TrafficManager::NotifyAppStop (Ptr<const EpcApplication> app)
                                             m_imsi, m_cellId, appTeid);
     }
 
-  // Find our non-constant app pointer to schedule next start attempt for this
-  // app (waiting at least 5 seconds).
+  // Find our non-constant app pointer to schedule next start attempt
   std::vector<Ptr<EpcApplication> >::iterator it;
   for (it = m_apps.begin (); *it != app && it != m_apps.end (); it++)
     {
       NS_ASSERT_MSG (it != m_apps.end (), "App not found!");
     }
 
-  Time idleTime = Seconds (5) + Seconds (std::abs (m_idleRng->GetValue ()));
+  // Schedule next start attemp for this application.
+  // Wait at least 2 seconds for OpenFlow rule management.
+  Time idleTime = Seconds (std::max (2.0, m_poissonRng->GetValue ()));
   Simulator::Schedule (idleTime, &TrafficManager::AppStartTry, this, *it);
 }
 
@@ -208,8 +204,7 @@ void
 TrafficManager::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_idleRng = 0;
-  m_startRng = 0;
+  m_poissonRng = 0;
   m_controller = 0;
   m_apps.clear ();
 }

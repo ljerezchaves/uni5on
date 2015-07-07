@@ -101,8 +101,7 @@ private:
   bool m_stVideoEnable;  //!< Stored video traffic enable
   bool m_rtVideoEnable;  //!< Real-time video traffic enable
 
-  Ptr<RandomVariableStream>         m_idleRng;    //!< Idle random time gen.
-  Ptr<RandomVariableStream>         m_startRng;   //!< Start random time gen.
+  Ptr<ExponentialRandomVariable>    m_poissonRng; //!< Inter-arrival generator
   Ptr<OpenFlowEpcController>        m_controller; //!< OpenFLow controller
   std::vector<Ptr<EpcApplication> > m_apps;       //!< Application list
 

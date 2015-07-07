@@ -52,12 +52,14 @@ main (int argc, char *argv[])
   // Enabling checksum computations and packet metadata
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
 
+  bool fastTraffic = false;
   bool verbose = false;
   bool lteRem = false;
-  uint32_t simTime = 500;
+  uint32_t simTime = 200;
   std::string prefix = "";
 
   CommandLine cmd;
+  cmd.AddValue ("fast",       "Enable fast traffic start.", fastTraffic);
   cmd.AddValue ("verbose",    "Enable verbose output.", verbose);
   cmd.AddValue ("progress",   "Simulation progress interval [s].", g_progress);
   cmd.AddValue ("simTime",    "Simulation time [s].", simTime);
@@ -83,6 +85,12 @@ main (int argc, char *argv[])
   if (verbose)
     {
       EnableVerbose ();
+    }
+  if (fastTraffic)
+    {
+      // For debug purposes, set the short interval for traffic inter-arrival
+      Config::SetDefault ("ns3::TrafficManager::PoissonInterArrival", 
+        StringValue ("ns3::ExponentialRandomVariable[Mean=20.0]"));
     }
 
   // Simulation scenario

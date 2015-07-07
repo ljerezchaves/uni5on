@@ -70,21 +70,28 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   m_stVideoRng->SetAttribute ("Min", DoubleValue (0));
   m_stVideoRng->SetAttribute ("Max", DoubleValue (15));
 
-  // Setting average traffic duration for applications
-  // For Non-GBR traffic:
-  // HTTP traffic: load 3 pages before idle time
-  m_httpHelper.SetClientAttribute ("MaxPages", UintegerValue (3)); 
-   
-  // Stored video: average lenght of 3min, with 1min stdev
-  m_stVideoHelper.SetServerAttribute ("VideoDuration", 
-    StringValue ("ns3::NormalRandomVariable[Mean=180.0|Variance=3600.0]"));
+  //
+  // Setting average traffic duration for applications. For Non-GBR traffic,
+  // the attributes are related to the ammount of traffic which will be sent
+  // over the network (mainly over TCP). For GBR traffic, the traffic duration
+  // is the real active traffic time.
+  //
 
-  // For GBR traffic:
+  // HTTP traffic: load 3 pages and stop the traffic. Also, if the reading time
+  // between pages exceeds the default switch rule idle timeout (15s), stop the
+  // traffic too to avoid reinstalling rules.
+  m_httpHelper.SetClientAttribute ("MaxPages", UintegerValue (3)); 
+  m_httpHelper.SetClientAttribute ("MaxReadingTime", TimeValue (Seconds (14))); 
+   
+  // Stored video: load 3 minutes of the video and stop the traffic.
+  m_stVideoHelper.SetServerAttribute ("VideoDuration", 
+    StringValue ("ns3::ConstantRandomVariable[Constant=180.0]"));
+
   // VoIP call: average lenght of 1min 40sec, with 10sec stdev
   m_voipHelper.SetServerAttribute ("CallDuration", 
     StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=100.0]"));
 
-  // Real time video streaming: average lenght 1min 40sec, with 10sec stdev
+  // Real time video streaming: average lenght of 1min 40sec, with 10sec stdev
   m_rtVideoHelper.SetServerAttribute ("VideoDuration", 
     StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=100.0]"));
 }
@@ -297,8 +304,8 @@ TrafficHelper::InstallStoredVideo ()
   // FIXME: Non-GBR traffic should have no gbr request. 
   // The mbr can be set to same as http
   GbrQosInformation qos;
-  qos.gbrDl = 1.5 * m_gbrBitRate [videoIdx];
-  qos.mbrDl = (qos.gbrDl + m_mbrBitRate [videoIdx]) / 2;
+  // qos.gbrDl = 1.5 * m_gbrBitRate [videoIdx];
+  // qos.mbrDl = (qos.gbrDl + m_mbrBitRate [videoIdx]) / 2;
   EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR, qos);
 
   // Link EPC info to application
@@ -337,10 +344,10 @@ TrafficHelper::InstallHttp ()
   // Dedicated Non-GBR EPS bearer (QCI 8)
   // FIXME: Non-GBR traffic should have no gbr request.
   GbrQosInformation qos;
-  qos.gbrDl = 131072;     // Reserving 128 Kbps in downlink
-  qos.gbrUl = 32768;      // Reserving 32 Kbps in uplink
-  qos.mbrDl = 524288;     // Max of 512 Kbps in downlink
-  qos.mbrUl = 131072;     // Max of 128 Kbps in uplink
+  // qos.gbrDl = 131072;     // Reserving 128 Kbps in downlink
+  // qos.gbrUl = 32768;      // Reserving 32 Kbps in uplink
+  // qos.mbrDl = 524288;     // Max of 512 Kbps in downlink
+  // qos.mbrUl = 131072;     // Max of 128 Kbps in uplink
   EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
 
   // Link EPC info to application
