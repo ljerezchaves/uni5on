@@ -66,6 +66,12 @@ public:
    */
   Ptr<StoredVideoServer> GetServerApp ();
 
+  /**
+   * Set the server trace file attribute.
+   * \param filename Name of file to load a trace from.
+   */
+  void SetTraceFilename (std::string filename);
+
   // Inherited from EpcApplication
   void Start (void);
   std::string GetAppName (void) const;

@@ -65,6 +65,15 @@ RealTimeVideoClient::GetServerApp ()
   return m_serverApp;
 }
 
+void
+RealTimeVideoClient::SetTraceFilename (std::string filename)
+{
+  NS_LOG_FUNCTION (this << filename);
+
+  NS_ASSERT_MSG (m_serverApp, "No server application found.");
+  m_serverApp->SetAttribute ("TraceFilename", StringValue (filename));
+}
+
 void 
 RealTimeVideoClient::ServerTrafficEnd (uint32_t pkts)
 {

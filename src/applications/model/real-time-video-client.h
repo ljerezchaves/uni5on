@@ -63,6 +63,12 @@ public:
   Ptr<RealTimeVideoServer> GetServerApp ();
 
   /**
+   * Set the server trace file attribute.
+   * \param filename Name of file to load a trace from.
+   */
+  void SetTraceFilename (std::string filename);
+
+  /**
    * \brief Invoked when server stops sending traffic.
    * \param pkts The total number of packets transmitted by the server.
    */
