@@ -145,8 +145,7 @@ private:
   RealTimeVideoHelper m_rtVideoHelper;  //!< Real-time video application helper
   VoipHelper          m_voipHelper;     //!< Voip application helper
 
-  Ptr<UniformRandomVariable> m_stVideoRng;    //!< Random stored video
-  Ptr<UniformRandomVariable> m_rtVideoRng;    //!< Random real-time video
+  Ptr<UniformRandomVariable> m_videoRng;      //!< Random video selection
   static const std::string   m_videoDir;      //!< Video trace directory
   static const std::string   m_videoTrace []; //!< Stored video trace filenames
   static const uint64_t      m_gbrBitRate []; //!< Stored video trace gbr bitrate

@@ -67,14 +67,10 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   SetTfcManagerAttribute ("Controller", PointerValue (controller));
 
   // Random video selection
-  m_stVideoRng = CreateObject<UniformRandomVariable> ();
-  m_stVideoRng->SetAttribute ("Min", DoubleValue (0));
-  m_stVideoRng->SetAttribute ("Max", DoubleValue (14));
+  m_videoRng = CreateObject<UniformRandomVariable> ();
+  m_videoRng->SetAttribute ("Min", DoubleValue (0));
+  m_videoRng->SetAttribute ("Max", DoubleValue (14));
   
-  m_rtVideoRng = CreateObject<UniformRandomVariable> ();
-  m_rtVideoRng->SetAttribute ("Min", DoubleValue (0));
-  m_rtVideoRng->SetAttribute ("Max", DoubleValue (7));
-
   //
   // Setting average traffic duration for applications. For Non-GBR traffic,
   // the attributes are related to the amount of traffic which will be sent
@@ -129,7 +125,7 @@ TrafficHelper::~TrafficHelper ()
   m_ueNode = 0;
   m_ueDev = 0;
   m_ueManager = 0;
-  m_stVideoRng = 0;
+  m_videoRng = 0;
 }
 
 void
@@ -263,7 +259,7 @@ TrafficHelper::InstallRealTimeVideo ()
   portNo++;
 
   // Downlink real-time video traffic
-  int videoIdx = m_rtVideoRng->GetInteger ();
+  int videoIdx = m_videoRng->GetInteger ();
   std::string filename = GetVideoFilename (videoIdx);
   m_rtVideoHelper.SetServerAttribute ("TraceFilename", StringValue (filename));
 
@@ -306,7 +302,7 @@ TrafficHelper::InstallStoredVideo ()
   portNo++;
 
   // Downlink stored video traffic (with TCP bidirectional traffic filter).
-  int videoIdx = m_stVideoRng->GetInteger ();
+  int videoIdx = m_videoRng->GetInteger ();
   std::string filename = GetVideoFilename (videoIdx);
   m_stVideoHelper.SetServerAttribute ("TraceFilename", StringValue (filename));
   
