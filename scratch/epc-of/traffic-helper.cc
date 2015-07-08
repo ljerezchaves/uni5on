@@ -27,24 +27,25 @@ NS_LOG_COMPONENT_DEFINE ("TrafficHelper");
 
 const std::string TrafficHelper::m_videoDir = "../movies/";
 
+// Trace files are sorted in increasing gbr bit rate
 const std::string TrafficHelper::m_videoTrace [] = {
-  "0-office-cam-low.txt", "1-office-cam-medium.txt", "2-office-cam-high.txt",
-  "3-jurassic-park.txt", "4-silence-of-the-lambs.txt", "5-star-wars-iv.txt",
-  "6-mr-bean.txt", "7-first-contact.txt", "8-from-dusk-till-dawn.txt",
-  "9-the-firm.txt", "10-formula1.txt", "11-soccer.txt", "12-ard-news.txt",
-  "13-ard-talk.txt", "14-n3-talk.txt"
+  "office-cam-low.txt", "office-cam-medium.txt", "first-contact.txt",
+  "office-cam-high.txt", "star-wars-iv.txt", "ard-talk.txt", "mr-bean.txt",
+  "n3-talk.txt", "the-firm.txt", "ard-news.txt", "jurassic-park.txt",
+  "from-dusk-till-dawn.txt", "formula1.txt", "soccer.txt",
+  "silence-of-the-lambs.txt"
 };
 
 // These values were obtained from the first 180sec of video
-const uint64_t TrafficHelper::m_gbrBitRate [] = {120000, 128000, 450000,
-  770000, 1500000, 500000, 600000, 400000, 800000, 700000, 1100000, 1300000,
-  750000, 500000, 650000
+const uint64_t TrafficHelper::m_gbrBitRate [] = {
+  120000, 128000, 400000, 450000, 500000, 500000, 600000, 650000, 700000,
+  750000, 770000, 800000, 1100000, 1300000, 1500000
 };
 
 // These values were obtained from the first 180sec of video
-const uint64_t TrafficHelper::m_mbrBitRate [] = {128000, 600000, 500000,
-  1000000, 2000000, 600000, 800000, 650000, 1000000, 800000, 1200000, 1500000, 
-  1250000, 700000, 750000
+const uint64_t TrafficHelper::m_mbrBitRate [] = {
+  128000, 600000, 650000, 500000, 600000, 700000, 800000, 750000, 800000,
+  1250000, 1000000, 1000000, 1200000, 1500000, 2000000
 };
 
 
