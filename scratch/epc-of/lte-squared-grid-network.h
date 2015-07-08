@@ -77,9 +77,6 @@ public:
                                  std::vector<uint32_t> nUes);
 
 private:
-  /** Configure default values for LTE radio network. */
-  void ConfigureLteParameters ();
-
   /** Set eNBs and UEs positions */
   void SetLteNodePositions ();
 

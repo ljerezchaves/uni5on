@@ -28,7 +28,6 @@ NS_OBJECT_ENSURE_REGISTERED (LteSquaredGridNetwork);
 LteSquaredGridNetwork::LteSquaredGridNetwork ()
 {
   NS_LOG_FUNCTION (this);
-  ConfigureLteParameters ();
 }
 
 LteSquaredGridNetwork::~LteSquaredGridNetwork ()
@@ -138,31 +137,6 @@ void
 LteSquaredGridNetwork::EnableTraces ()
 {
   m_lteHelper->EnableTraces ();
-}
-
-void
-LteSquaredGridNetwork::ConfigureLteParameters ()
-{
-  // Increasing SrsPeriodicity to allow more UEs per eNB.
-  Config::SetDefault ("ns3::LteEnbRrc::SrsPeriodicity", UintegerValue (320));
-
-  // Downlink and uplink bandwidth: 100 RBs = 20Mhz
-  Config::SetDefault ("ns3::LteEnbNetDevice::UlBandwidth", UintegerValue (100));
-  Config::SetDefault ("ns3::LteEnbNetDevice::DlBandwidth", UintegerValue (100));
-
-  // Considering Band #1 @2110/1920 MHz (FDD)
-  // http://niviuk.free.fr/lte_band.php
-  Config::SetDefault ("ns3::LteEnbNetDevice::DlEarfcn", UintegerValue (0));
-  Config::SetDefault ("ns3::LteEnbNetDevice::UlEarfcn", UintegerValue (18000));
-
-  // Transmission power (eNB as macro cell)
-  Config::SetDefault ("ns3::LteEnbPhy::TxPower", DoubleValue (46));
-  Config::SetDefault ("ns3::LteUePhy::TxPower", DoubleValue (18));
-
-  Config::SetDefault ("ns3::LteHelper::PathlossModel",
-                      StringValue ("ns3::OhBuildingsPropagationLossModel"));
-  Config::SetDefault ("ns3::LteHelper::Scheduler",
-                      StringValue ("ns3::CqaFfMacScheduler"));
 }
 
 void
