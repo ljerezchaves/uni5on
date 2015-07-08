@@ -36,13 +36,13 @@ const std::string TrafficHelper::m_videoTrace [] = {
   "silence-of-the-lambs.txt"
 };
 
-// These values were obtained from the first 180sec of video
+// These values were obtained from observing the first 180 seconds of video
 const uint64_t TrafficHelper::m_gbrBitRate [] = {
   120000, 128000, 400000, 450000, 500000, 500000, 600000, 650000, 700000,
   750000, 770000, 800000, 1100000, 1300000, 1500000
 };
 
-// These values were obtained from the first 180sec of video
+// These values were obtained from observing the first 180 seconds of video
 const uint64_t TrafficHelper::m_mbrBitRate [] = {
   128000, 600000, 650000, 500000, 600000, 700000, 800000, 750000, 800000,
   1250000, 1000000, 1000000, 1200000, 1500000, 2000000
@@ -69,32 +69,56 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   // Random video selection
   m_stVideoRng = CreateObject<UniformRandomVariable> ();
   m_stVideoRng->SetAttribute ("Min", DoubleValue (0));
-  m_stVideoRng->SetAttribute ("Max", DoubleValue (15));
+  m_stVideoRng->SetAttribute ("Max", DoubleValue (14));
+  
+  m_rtVideoRng = CreateObject<UniformRandomVariable> ();
+  m_rtVideoRng->SetAttribute ("Min", DoubleValue (0));
+  m_rtVideoRng->SetAttribute ("Max", DoubleValue (7));
 
   //
   // Setting average traffic duration for applications. For Non-GBR traffic,
-  // the attributes are related to the ammount of traffic which will be sent
+  // the attributes are related to the amount of traffic which will be sent
   // over the network (mainly over TCP). For GBR traffic, the traffic duration
   // is the real active traffic time.
   //
-
-  // HTTP traffic: load 3 pages and stop the traffic. Also, if the reading time
-  // between pages exceeds the default switch rule idle timeout (15s), stop the
-  // traffic too to avoid reinstalling rules.
+  // For HTTP traffic, we are fixing the load of 3 web pages before stopping
+  // the application and reporting statistics. Note that between page loads
+  // there is the random reading time interval. If the reading time exceeds the
+  // default switch rule idle timeout (witch is currently set to 15 seconds),
+  // we also stop the application and repost statistics. This avoids the
+  // processes of reinstalling expired rules.
+  //
   m_httpHelper.SetClientAttribute ("MaxPages", UintegerValue (3)); 
   m_httpHelper.SetClientAttribute ("MaxReadingTime", TimeValue (Seconds (14))); 
    
-  // Stored video: load 3 minutes of the video and stop the traffic.
+  //
+  // For stored video, we are considering a statistic that the majority of
+  // YouTube brand videos are somewhere between 31 and 120 seconds long. So we
+  // are using the average length of 1min 30sec, with 15sec stdev.
+  // See http://tinyurl.com/q5xkwnn and http://tinyurl.com/klraxum for more
+  // information on this topic. Note that this length means the size of the
+  // video which will be sent to the client over a TCP connection.
+  //
   m_stVideoHelper.SetServerAttribute ("VideoDuration", 
-    StringValue ("ns3::ConstantRandomVariable[Constant=180.0]"));
+    StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"));
 
-  // VoIP call: average lenght of 1min 40sec, with 10sec stdev
+  //
+  // For VoIP call, we are considering an estimative from Vodafone that the
+  // average call length is 1 min and 40 sec. We are including a normal
+  // standard deviation of 10 sec. See http://tinyurl.com/pzmyys2 and
+  // http://www.theregister.co.uk/2013/01/30/mobile_phone_calls_shorter for
+  // more information on this topic.
+  //
   m_voipHelper.SetServerAttribute ("CallDuration", 
     StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=100.0]"));
 
-  // Real time video streaming: average lenght of 1min 40sec, with 10sec stdev
+  //
+  // For real time video streaming, we are considering the same statistics for
+  // the stored video (above). The difference here is that the traffic is sent
+  // in real time, following the trace description.
+  //
   m_rtVideoHelper.SetServerAttribute ("VideoDuration", 
-    StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=100.0]"));
+    StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"));
 }
 
 TrafficHelper::~TrafficHelper ()
@@ -131,15 +155,16 @@ TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices)
       m_ueAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
       m_ueMask = clientIpv4->GetAddress (1, 0).GetMask ();
 
+      // Each UE gets one traffic manager
       m_ueManager = m_managerFactory.Create<TrafficManager> ();
       m_ueManager->m_imsi = (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
       m_ueNode->AggregateObject (m_ueManager);
 
       // Connecting the manager to new context created trace source.
-      Config::ConnectWithoutContext (
-        "/Names/SgwPgwApplication/ContextCreated",
+      Config::ConnectWithoutContext ("/Names/SgwPgwApplication/ContextCreated",
         MakeCallback (&TrafficManager::ContextCreatedCallback, m_ueManager));
 
+      // Installing applications into UEs
       InstallVoip ();
       InstallRealTimeVideo ();
       InstallStoredVideo ();
@@ -168,16 +193,16 @@ TrafficHelper::GetVideoMbr (uint8_t idx)
   return DataRate (m_mbrBitRate [idx]);
 }
 
-
-/* NOTE about GbrQosInformation:
- * 1) The Maximum Bit Rate field is used by controller to install meter rules
- *    for this traffic. When this value is left to 0, no meter rules will be
- *    installed.
- * 2) The Guaranteed Bit Rate field is used by the controller to reserve the
- *    requested bandwidth in OpenFlow network. When used for Non-GBR bearers 
- *    the network will consider bandwidth in resource reservation, but without 
- *    guarantees. When left to 0, no resources are reserved.
- */
+//
+// NOTE about GbrQosInformation:
+// 1) The Maximum Bit Rate field is used by controller to install meter rules
+//    for this traffic. When this value is left to 0, no meter rules will be
+//    installed.
+// 2) The Guaranteed Bit Rate field is used by the controller to reserve the
+//    requested bandwidth in OpenFlow network. When used for Non-GBR bearers 
+//    the network will consider bandwidth in resource reservation, but without 
+//    guarantees. When left to 0, no resources are reserved.
+//
 
 void
 TrafficHelper::InstallVoip ()
@@ -187,9 +212,9 @@ TrafficHelper::InstallVoip ()
   static uint16_t portNo = 20000;
   portNo++;
 
-  // Bidirectional VoIP traffic.
-  Ptr<VoipClient> cApp = m_voipHelper.Install (m_ueNode, m_webNode, m_ueAddr,
-                                               m_webAddr, portNo, portNo);
+  // Bidirectional VoIP traffic
+  Ptr<VoipClient> cApp = 
+    m_voipHelper.Install (m_ueNode, m_webNode, m_ueAddr, m_webAddr, portNo, portNo);
 
   // TFT downlink packet filter
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
@@ -216,8 +241,8 @@ TrafficHelper::InstallVoip ()
 
   // Dedicated GBR EPS bearer (QCI 1)
   GbrQosInformation qos;
-  qos.gbrDl = 47200;  // ~46.09 Kbps
-  qos.gbrUl = 47200;  // ~46.09 Kbps
+  qos.gbrDl = 47200;  // ~46.09 Kbps (considering tunnel overhead)
+  qos.gbrUl = 47200;  // ~46.09 Kbps (considering tunnel overhead)
   EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
 
   // Link EPC info to application
@@ -237,10 +262,10 @@ TrafficHelper::InstallRealTimeVideo ()
   static uint16_t portNo = 40000;
   portNo++;
 
-  // Downlink real-time video traffic.
-  int videoIdx = m_stVideoRng->GetInteger (0, 7);
-  m_rtVideoHelper.SetServerAttribute ("TraceFilename",
-    StringValue (GetVideoFilename (videoIdx)));
+  // Downlink real-time video traffic
+  int videoIdx = m_rtVideoRng->GetInteger ();
+  std::string filename = GetVideoFilename (videoIdx);
+  m_rtVideoHelper.SetServerAttribute ("TraceFilename", StringValue (filename));
 
   Ptr<RealTimeVideoClient> cApp =
     m_rtVideoHelper.Install (m_ueNode, m_webNode, m_ueAddr, portNo);
@@ -280,11 +305,10 @@ TrafficHelper::InstallStoredVideo ()
   static uint16_t portNo = 30000;
   portNo++;
 
-  // Bidirectional stored video traffic.
-  // The StoredVideoClient is the one that requests the video to the server.
-  int videoIdx = m_stVideoRng->GetInteger (0, 14);
-  m_stVideoHelper.SetServerAttribute ("TraceFilename",
-    StringValue (GetVideoFilename (videoIdx)));
+  // Downlink stored video traffic (with TCP bidirectional traffic filter).
+  int videoIdx = m_stVideoRng->GetInteger ();
+  std::string filename = GetVideoFilename (videoIdx);
+  m_stVideoHelper.SetServerAttribute ("TraceFilename", StringValue (filename));
   
   Ptr<StoredVideoClient> cApp = 
     m_stVideoHelper.Install (m_ueNode, m_webNode, m_webAddr, portNo);
@@ -302,12 +326,12 @@ TrafficHelper::InstallStoredVideo ()
   tft->Add (filter);
 
   // Dedicated Non-GBR EPS bearer (QCI 8)
-  // FIXME: Non-GBR traffic should have no gbr request. 
-  // The mbr can be set to same as http
   GbrQosInformation qos;
+  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR, qos);
+
+  // NOTE: Non-GBR traffic should have no gbr request. 
   // qos.gbrDl = 1.5 * m_gbrBitRate [videoIdx];
   // qos.mbrDl = (qos.gbrDl + m_mbrBitRate [videoIdx]) / 2;
-  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR, qos);
 
   // Link EPC info to application
   cApp->m_tft = tft;
@@ -326,7 +350,7 @@ TrafficHelper::InstallHttp ()
   static uint16_t portNo = 10000;
   portNo++;
 
-  // Bidirectional HTTP traffic.
+  // Downlink HTTP web traffic (with TCP bidirectional traffic filter).
   Ptr<HttpClient> cApp =
     m_httpHelper.Install (m_ueNode, m_webNode, m_webAddr, portNo);
 
@@ -343,13 +367,14 @@ TrafficHelper::InstallHttp ()
   tft->Add (filter);
 
   // Dedicated Non-GBR EPS bearer (QCI 8)
-  // FIXME: Non-GBR traffic should have no gbr request.
   GbrQosInformation qos;
+  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
+
+  // NOTE: Non-GBR traffic should have no gbr request. 
   // qos.gbrDl = 131072;     // Reserving 128 Kbps in downlink
   // qos.gbrUl = 32768;      // Reserving 32 Kbps in uplink
   // qos.mbrDl = 524288;     // Max of 512 Kbps in downlink
   // qos.mbrUl = 131072;     // Max of 128 Kbps in uplink
-  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
 
   // Link EPC info to application
   cApp->m_tft = tft;
