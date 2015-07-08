@@ -59,6 +59,11 @@ RingController::GetTypeId (void)
                    BooleanValue (false),
                    MakeBooleanAccessor (&RingController::m_dynBwFactor),
                    MakeBooleanChecker ())
+    .AddAttribute ("StepBwFactor",
+                   "Bandwitdth reserving factor step, for dynamic factor adjustment.",
+                   DoubleValue (0.1),
+                   MakeDoubleAccessor (&RingController::m_stepBwFactor),
+                   MakeDoubleChecker<double> (0.0, 1.0))
   ;
   return tid;
 }
@@ -516,14 +521,13 @@ RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo,
       downPath = RingRoutingInfo::InvertPath (downPath);
     }
  
-  double bwStep = 0;
-  double currentBwFactor = m_maxBwFactor;
-  
   //
   // We only use the dynamic bandwidth factor when looking for the available
   // bandwidth in the shortest routing path. 
   // FIXME: Not sure about only in shortest path.
   //
+  double bwStep = 0;
+  double currentBwFactor = m_maxBwFactor;
   if (m_dynBwFactor &&
       FindShortestPath (ringInfo->GetSgwSwIdx (), ringInfo->GetEnbSwIdx ()) == downPath)
     {
@@ -532,7 +536,7 @@ RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo,
                              ringInfo->GetDownPath ());
       
       // Let's adjust the initial factor step
-      bwStep = 0.1; // FIXME Need proper adjustment.
+      bwStep = m_stepBwFactor;
       currentBwFactor -= (hops - 1) * bwStep;
     }
 
