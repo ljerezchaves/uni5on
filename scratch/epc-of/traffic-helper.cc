@@ -238,7 +238,7 @@ TrafficHelper::InstallRealTimeVideo ()
   portNo++;
 
   // Downlink real-time video traffic.
-  int videoIdx = m_stVideoRng->GetInteger (0, 2);
+  int videoIdx = m_stVideoRng->GetInteger (0, 7);
   m_rtVideoHelper.SetServerAttribute ("TraceFilename",
     StringValue (GetVideoFilename (videoIdx)));
 
@@ -282,7 +282,7 @@ TrafficHelper::InstallStoredVideo ()
 
   // Bidirectional stored video traffic.
   // The StoredVideoClient is the one that requests the video to the server.
-  int videoIdx = m_stVideoRng->GetInteger (3, 14);
+  int videoIdx = m_stVideoRng->GetInteger (0, 14);
   m_stVideoHelper.SetServerAttribute ("TraceFilename",
     StringValue (GetVideoFilename (videoIdx)));
   
