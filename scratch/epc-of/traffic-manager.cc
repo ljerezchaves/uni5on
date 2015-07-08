@@ -120,10 +120,14 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
                                                          m_imsi, m_cellId, appTeid);
     }
 
+  //
   // Before starting the traffic, let's set the next start attempt for this
   // same application. We will use this interval to limit the current traffic
   // duration, to avoid overlapping traffic which would not be possible. Doing
   // this, we can respect the inter-arrival times for the Poisson process.
+  // Note that in current implementation, no retries are performed for for
+  // non-authorized traffic.
+  //
   Time startInterval = Seconds (std::max (2.5, m_poissonRng->GetValue ())); 
   Simulator::Schedule (startInterval, &TrafficManager::AppStartTry, this, app);
   NS_LOG_DEBUG ("App " << app->GetAppName () << " at user " << m_imsi 
@@ -138,8 +142,6 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
       app->Start ();
     }
   
-  // NOTE: In current implementation, no retries are performed for for
-  //       non-authorized traffic.
 }
 
 void
@@ -154,19 +156,6 @@ TrafficManager::NotifyAppStop (Ptr<const EpcApplication> app)
       m_controller->ReleaseDedicatedBearer (app->GetEpsBearer (),
                                             m_imsi, m_cellId, appTeid);
     }
-
-// TODO Remove.
-//  // Find our non-constant app pointer to schedule next start attempt
-//  std::vector<Ptr<EpcApplication> >::iterator it;
-//  for (it = m_apps.begin (); *it != app && it != m_apps.end (); it++)
-//    {
-//      NS_ASSERT_MSG (it != m_apps.end (), "App not found!");
-//    }
-//
-//  // Schedule next start attempt for this application.
-//  // Wait at least 2 seconds for OpenFlow rule management.
-//  Time idleTime = Seconds (std::max (2.0, m_poissonRng->GetValue ()));
-//  Simulator::Schedule (idleTime, &TrafficManager::AppStartTry, this, *it);
 }
 
 void
