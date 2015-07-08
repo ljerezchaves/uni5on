@@ -31,7 +31,7 @@ NS_LOG_COMPONENT_DEFINE ("Main");
 void PrintCurrentTime ();
 void EnableVerbose ();
 
-static uint32_t g_progress = 25;
+static uint32_t g_progress = 0;
 
 int
 main (int argc, char *argv[])
@@ -55,7 +55,7 @@ main (int argc, char *argv[])
   bool fastTraffic = false;
   bool verbose = false;
   bool lteRem = false;
-  uint32_t simTime = 200;
+  uint32_t simTime = 250;
   std::string prefix = "";
 
   CommandLine cmd;
@@ -78,25 +78,30 @@ main (int argc, char *argv[])
   cmd.AddValue ("radioMap",   "Generate LTE radio map", lteRem);
   cmd.Parse (argc, argv);
 
+  // For progress report, schedule regular time print
   if (g_progress)
     {
       Simulator::Schedule (Seconds (g_progress), &PrintCurrentTime);
     }
+
+  // For debug purposes, enable verbose output log
   if (verbose)
     {
       EnableVerbose ();
     }
+
+  // For debug purposes, set the short interval for traffic inter-arrival
   if (fastTraffic)
     {
-      // For debug purposes, set the short interval for traffic inter-arrival
       Config::SetDefault ("ns3::TrafficManager::PoissonInterArrival", 
         StringValue ("ns3::ExponentialRandomVariable[Mean=20.0]"));
     }
 
-  // Simulation scenario
+  // Creating the simulation scenario
   Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
   scenario->BuildRingTopology ();
 
+  // For debug purposes, print the LTE ratio environment map
   if (lteRem)
     {
       // The channel number was manually set :/
