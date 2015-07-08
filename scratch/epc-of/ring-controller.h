@@ -109,8 +109,26 @@ private:
                                                  uint16_t dstSwitchIdx);
 
   /**
+   * Calculate the number of hops between source and destination for the
+   * indicated routing path.
+   * \param srcSwitchIdx Source switch index.
+   * \param dstSwitchIdx Destination switch index.
+   * \param routingPath The routing path.
+   * \return The number of hops in routing path.
+   */
+  uint16_t HopCounter (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+                       RingRoutingInfo::RoutingPath routingPath);
+
+  /**
    * Get the available bandwidth for this ring routing information, considering
    * both downlink and uplink paths.
+   * \internal This method implements the dynamic reservation strategy proposed
+   * by prof. Deep Medhi. The general ideal is a dynamic bandwidth usage factor
+   * that can be  ajudsted based on the distance betweem the eNB switch and the
+   * gateway switch.  The closer the gateway we are, the more we can use from
+   * the available  bandwidth.  The goal is to prevent flows that are very
+   * close to the gateway  from running out of resources early, since this last
+   * link is always the most  congested ond. 
    * \param ringInfo The ring routing information.
    * \param invertPath When true, considers the inverted downlink/uplink paths
    * while looking for the available bandwidth.
@@ -184,6 +202,7 @@ private:
   RoutingStrategy     m_strategy;         //!< Routing strategy in use.
   double              m_maxBwFactor;      //!< Bandwidth saving factor
   uint16_t            m_noSwitches;       //!< Number of switches in topology.
+  bool                m_dynBwFactor;      //!< True for dynamic bandwidth usage.
 
   /** 
    * Map saving <Pair of switch indexes / Connection information.
