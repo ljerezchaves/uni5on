@@ -515,61 +515,48 @@ RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo,
 {
   NS_LOG_FUNCTION (this << ringInfo << useShortPath);
 
-  uint16_t sgwIdx = ringInfo->GetSgwSwIdx ();
-  uint16_t enbIdx = ringInfo->GetEnbSwIdx ();
-
-  RingRoutingInfo::RoutingPath downPath = FindShortestPath (sgwIdx, enbIdx);
-  if (!useShortPath)
-    {
-      downPath = RingRoutingInfo::InvertPath (downPath);
-    }
-
-  //
-  // We only apply the dynamic bandwidth factor adjustment when looking for the
-  // available bandwidth in the shortest routing path. 
-  // FIXME: Not sure about this.
-  //
-  double bwStep = 0;
-  double currentBwFactor = m_maxBwFactor;
-  if (m_dynBwFactor && useShortPath)
-    {
-      // How far the eNB switch is from the gateway switch?
-      int hops = HopCounter (sgwIdx, enbIdx, downPath);
-      
-      // Let's adjust the initial factor step
-      bwStep = m_stepBwFactor;
-      currentBwFactor -= (hops - 1) * bwStep;
-    }
-
-  // From the gateway to the eNB switch index, get the bandwidth for each link
+  uint16_t sgwIdx      = ringInfo->GetSgwSwIdx ();
+  uint16_t enbIdx      = ringInfo->GetEnbSwIdx ();
   uint64_t downBitRate = std::numeric_limits<uint64_t>::max();
   uint64_t upBitRate   = std::numeric_limits<uint64_t>::max();
-  
-  uint64_t bitRate;
-  Ptr<ConnectionInfo> cInfo;
-  uint16_t next = 0, current = sgwIdx;
-  while (current != enbIdx)
-    {
-      next = NextSwitchIndex (current, downPath);
-      cInfo = GetConnectionInfo (current, next);
+  uint64_t bitRate     = 0;
+  uint16_t current     = enbIdx;
+  double   bwFactor    = m_maxBwFactor;
 
-      // Check for available bit rate in downlink direction
-      bitRate = cInfo->GetAvailableBitRate (current, next, currentBwFactor);
-      if (bitRate < downBitRate)
-        {
-          downBitRate = bitRate;
-        }
+  RingRoutingInfo::RoutingPath upPath = FindShortestPath (enbIdx, sgwIdx);
+  if (!useShortPath)
+    {
+      upPath = RingRoutingInfo::InvertPath (upPath);
+    }
+
+  // From the eNB to the gateway switch index, get the bandwidth for each link
+  while (current != sgwIdx)
+    {
+      uint16_t next = NextSwitchIndex (current, upPath);
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
 
       // Check for available bit rate in uplink direction
-      bitRate = cInfo->GetAvailableBitRate (next, current, currentBwFactor);
+      bitRate = cInfo->GetAvailableBitRate (current, next, bwFactor);
       if (bitRate < upBitRate)
         {
           upBitRate = bitRate;
         }
-      current = next;
 
-      // Let's adjust the factors for next link.
-      currentBwFactor += bwStep;
+      // Check for available bit rate in downlink direction
+      bitRate = cInfo->GetAvailableBitRate (next, current, bwFactor);
+      if (bitRate < downBitRate)
+        {
+          downBitRate = bitRate;
+        }
+      current = next;
+      
+      // We only apply the dynamic bandwidth factor adjustment when looking for
+      // the available bandwidth in the shortest routing path. 
+      // FIXME: Not sure about this.
+      if (m_dynBwFactor && useShortPath)
+        {
+          bwFactor -= m_stepBwFactor;
+        }
     }
 
   // Return the pair of available bandwidth (downlink and uplink)
