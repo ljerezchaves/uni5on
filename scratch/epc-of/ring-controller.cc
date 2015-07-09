@@ -289,8 +289,8 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
   ringInfo->ResetToShortestPaths ();
   
   std::pair<DataRate, DataRate> shortPathBand, longPathBand;
-  shortPathBand = GetAvailableBandwidth (ringInfo, false);
-  longPathBand  = GetAvailableBandwidth (ringInfo, true);
+  shortPathBand = GetAvailableBandwidth (ringInfo, true);
+  longPathBand  = GetAvailableBandwidth (ringInfo, false);
   
   DataRate dlShortBw = shortPathBand.first; 
   DataRate ulShortBw = shortPathBand.second;
@@ -511,29 +511,30 @@ RingController::HopCounter (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
 
 std::pair<DataRate, DataRate> 
 RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo, 
-                                       bool invertPath)
+                                       bool useShortPath)
 {
-  NS_LOG_FUNCTION (this << ringInfo << invertPath);
+  NS_LOG_FUNCTION (this << ringInfo << useShortPath);
 
-  RingRoutingInfo::RoutingPath downPath = ringInfo->GetDownPath (); 
-  if (invertPath)
+  uint16_t sgwIdx = ringInfo->GetSgwSwIdx ();
+  uint16_t enbIdx = ringInfo->GetEnbSwIdx ();
+
+  RingRoutingInfo::RoutingPath downPath = FindShortestPath (sgwIdx, enbIdx);
+  if (!useShortPath)
     {
       downPath = RingRoutingInfo::InvertPath (downPath);
     }
- 
+
   //
-  // We only use the dynamic bandwidth factor when looking for the available
-  // bandwidth in the shortest routing path. 
-  // FIXME: Not sure about only in shortest path.
+  // We only apply the dynamic bandwidth factor adjustment when looking for the
+  // available bandwidth in the shortest routing path. 
+  // FIXME: Not sure about this.
   //
   double bwStep = 0;
   double currentBwFactor = m_maxBwFactor;
-  if (m_dynBwFactor &&
-      FindShortestPath (ringInfo->GetSgwSwIdx (), ringInfo->GetEnbSwIdx ()) == downPath)
+  if (m_dynBwFactor && useShortPath)
     {
       // How far the eNB switch is from the gateway switch?
-      int hops = HopCounter (ringInfo->GetSgwSwIdx (), ringInfo->GetEnbSwIdx (),
-                             ringInfo->GetDownPath ());
+      int hops = HopCounter (sgwIdx, enbIdx, downPath);
       
       // Let's adjust the initial factor step
       bwStep = m_stepBwFactor;
@@ -546,8 +547,8 @@ RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo,
   
   uint64_t bitRate;
   Ptr<ConnectionInfo> cInfo;
-  uint16_t next, current = ringInfo->GetSgwSwIdx ();
-  while (current != ringInfo->GetEnbSwIdx ())
+  uint16_t next = 0, current = sgwIdx;
+  while (current != enbIdx)
     {
       next = NextSwitchIndex (current, downPath);
       cInfo = GetConnectionInfo (current, next);

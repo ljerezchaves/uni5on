@@ -122,22 +122,24 @@ private:
   /**
    * Get the available bandwidth for this ring routing information, considering
    * both downlink and uplink paths.
-   * \internal This method implements the dynamic reservation strategy proposed
-   * by prof. Deep Medhi. The general ideal is a dynamic bandwidth usage factor
-   * that can be  ajudsted based on the distance betweem the eNB switch and the
-   * gateway switch.  The closer the gateway we are, the more we can use from
-   * the available  bandwidth.  The goal is to prevent flows that are very
-   * close to the gateway  from running out of resources early, since this last
-   * link is always the most  congested ond. 
+   * \internal 
+   * This method implements the dynamic reservation strategy proposed by prof.
+   * Deep Medhi. The general ideal is a dynamic bandwidth usage factor that can
+   * be ajudsted based on the distance betweem the eNB switch and the gateway
+   * switch. The closer the gateway we are, the more we can use from the
+   * available bandwidth. The goal is to prevent flows that are very close to
+   * the gateway from running out of resources early, since this last link is
+   * always the most congested ond. 
    * \param ringInfo The ring routing information.
-   * \param invertPath When true, considers the inverted downlink/uplink paths
-   * while looking for the available bandwidth.
+   * \param useShortPath When true, get the available bandwidth in the shortest
+   * path between source and destination nodes; otherwise, considers the
+   * inverted path.
    * \return A pair of available bandwidth data rates, for both downlink and
    * uplink paths, in this order.
    */
   std::pair<DataRate, DataRate> 
   GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo, 
-                         bool invertPath = false);
+                         bool useShortPath = true);
 
   /**
    * Reserve the bandwidth for this bearer in network.
