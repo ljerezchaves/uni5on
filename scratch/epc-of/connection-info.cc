@@ -125,17 +125,15 @@ ConnectionInfo::GetPortDevSecond (void) const
 double
 ConnectionInfo::GetForwardReservedRatio (void) const
 {
-  return (double)
-    (m_reserved [ConnectionInfo::FORWARD]).GetBitRate () / 
-    (GetLinkDataRate ().GetBitRate ());
+  return static_cast<double>(m_reserved [ConnectionInfo::FORWARD]) / 
+                             GetLinkDataRate ().GetBitRate ();
 }
 
 double
 ConnectionInfo::GetBackwardReservedRatio (void) const
 {
-  return (double)
-    (m_reserved [ConnectionInfo::BACKWARD]).GetBitRate () / 
-    (GetLinkDataRate ().GetBitRate ());
+  return static_cast<double>(m_reserved [ConnectionInfo::BACKWARD]) / 
+                             GetLinkDataRate ().GetBitRate ();
 }
 
 uint32_t 
@@ -203,19 +201,38 @@ ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
   m_bytes [dir] += packet->GetSize ();          
 }
 
-DataRate
-ConnectionInfo::GetAvailableDataRate (uint16_t srcIdx, uint16_t dstIdx) const
+uint64_t
+ConnectionInfo::GetAvailableBitRate (uint16_t srcIdx, uint16_t dstIdx) const
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
-  return GetLinkDataRate () - m_reserved [dir];
+  uint64_t linkBitRate = GetLinkDataRate ().GetBitRate ();
+
+  if (linkBitRate >= m_reserved [dir])
+    {
+      return linkBitRate - m_reserved [dir];
+    }
+  else
+    {
+      NS_LOG_ERROR ("There are more bits reserved than the link bit rate.");
+      return 0;
+    }
 }
 
-DataRate
-ConnectionInfo::GetAvailableDataRate (uint16_t srcIdx, uint16_t dstIdx, 
-                                      double maxBwFactor) const
+uint64_t
+ConnectionInfo::GetAvailableBitRate (uint16_t srcIdx, uint16_t dstIdx, 
+                                      double factor) const
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
-  return (GetLinkDataRate () * maxBwFactor) - m_reserved [dir];
+  uint64_t linkBitRate = factor * GetLinkDataRate ().GetBitRate ();
+  
+  if (linkBitRate >= m_reserved [dir])
+    {
+      return linkBitRate - m_reserved [dir];
+    }
+  else
+    {
+      return 0;
+    }
 }
 
 bool
@@ -223,9 +240,9 @@ ConnectionInfo::ReserveDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
 
-  if (m_reserved [dir] + rate <= GetLinkDataRate ())
+  if (m_reserved [dir] + rate.GetBitRate () <= GetLinkDataRate ().GetBitRate ())
     {
-      m_reserved [dir] = m_reserved [dir] + rate;
+      m_reserved [dir] += rate.GetBitRate ();
       return true;
     }
   NS_FATAL_ERROR ("No bandwidth available to reserve.");
@@ -236,9 +253,9 @@ ConnectionInfo::ReleaseDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
 
-  if (m_reserved [dir] - rate >= DataRate (0))
+  if (m_reserved [dir] - rate.GetBitRate () >= 0)
     {
-      m_reserved [dir] = m_reserved [dir] - rate;
+      m_reserved [dir] -= rate.GetBitRate ();
       return true;
     }
   NS_FATAL_ERROR ("No bandwidth available to release.");

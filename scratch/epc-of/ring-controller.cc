@@ -541,10 +541,10 @@ RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo,
     }
 
   // From the gateway to the eNB switch index, get the bandwidth for each link
-  DataRate availableDownBand (std::numeric_limits<uint64_t>::max());
-  DataRate availableUpBand   (std::numeric_limits<uint64_t>::max());
+  uint64_t downBitRate = std::numeric_limits<uint64_t>::max();
+  uint64_t upBitRate   = std::numeric_limits<uint64_t>::max();
   
-  DataRate linkDownBand, linkUpBand;
+  uint64_t bitRate;
   Ptr<ConnectionInfo> cInfo;
   uint16_t next, current = ringInfo->GetSgwSwIdx ();
   while (current != ringInfo->GetEnbSwIdx ())
@@ -552,18 +552,18 @@ RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo,
       next = NextSwitchIndex (current, downPath);
       cInfo = GetConnectionInfo (current, next);
 
-      // Check for available bandwidth in downlink direction
-      linkDownBand = cInfo->GetAvailableDataRate (current, next, currentBwFactor);
-      if (linkDownBand < availableDownBand)
+      // Check for available bit rate in downlink direction
+      bitRate = cInfo->GetAvailableBitRate (current, next, currentBwFactor);
+      if (bitRate < downBitRate)
         {
-          availableDownBand = linkDownBand;
+          downBitRate = bitRate;
         }
 
-      // Check for available bandwidth in uplink direction
-      linkUpBand = cInfo->GetAvailableDataRate (next, current, currentBwFactor);
-      if (linkUpBand < availableUpBand)
+      // Check for available bit rate in uplink direction
+      bitRate = cInfo->GetAvailableBitRate (next, current, currentBwFactor);
+      if (bitRate < upBitRate)
         {
-          availableUpBand = linkUpBand;
+          upBitRate = bitRate;
         }
       current = next;
 
@@ -572,7 +572,8 @@ RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo,
     }
 
   // Return the pair of available bandwidth (downlink and uplink)
-  return std::pair<DataRate, DataRate> (availableDownBand, availableUpBand);
+  return std::pair<DataRate, DataRate> (DataRate (downBitRate), 
+                                        DataRate (upBitRate));
 }
 
 bool

@@ -172,23 +172,23 @@ protected:
   void NotifyTxPacket (std::string context, Ptr<const Packet> packet);
 
   /**
-   * Get the available bandwidth between these two switches.
+   * Get the available bit rate between these two switches.
    * \param srcIdx The source switch index.
    * \param dstIdx The destination switch index.
-   * \return The available data rate from srcIdx to dstIdx.
+   * \return The available bit rate from srcIdx to dstIdx.
    */
-  DataRate GetAvailableDataRate (uint16_t srcIdx, uint16_t dstIdx) const;
+  uint64_t GetAvailableBitRate (uint16_t srcIdx, uint16_t dstIdx) const;
 
   /**
-   * Get the available bandwidth between these two switches, considering the
+   * Get the available bit rate between these two switches, considering the
    * maximum bandwidth reservation factor.
    * \param srcIdx The source switch index.
    * \param dstIdx The destination switch index.
-   * \param maxBwFactor The maximum bandwidth reservation factor.
-   * \return The available data rate from srcIdx to dstIdx.
+   * \param factor The bandwidth reservation factor.
+   * \return The available bit rate from srcIdx to dstIdx.
    */
-  DataRate GetAvailableDataRate (uint16_t srcIdx, uint16_t dstIdx, 
-                                 double maxBwFactor) const;
+  uint64_t GetAvailableBitRate (uint16_t srcIdx, uint16_t dstIdx, 
+                                 double factor) const;
 
   /**
    * Reserve some bandwidth between these two switches.
@@ -213,7 +213,7 @@ private:
   SwitchData        m_sw2;          //!< Second switch (highest index)
   Ptr<CsmaChannel>  m_channel;      //!< The link channel connecting switches
 
-  DataRate          m_reserved [2]; //!< Reserved data rate
+  uint64_t          m_reserved [2]; //!< Reserved data rate
   uint32_t          m_bytes [2];    //!< Transmitted bytes
 };
 
