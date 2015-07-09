@@ -56,6 +56,8 @@ ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
       MakeCallback (&ConnectionInfo::NotifyTxPacket, this));
 
   ResetStatistics ();
+  m_reserved [0] = 0;
+  m_reserved [1] = 0;
 }
 
 TypeId
