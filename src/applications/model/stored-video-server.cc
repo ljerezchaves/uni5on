@@ -246,6 +246,7 @@ StoredVideoServer::LoadTrace (std::string filename)
   m_entries.clear ();
   if (!ifTraceFile.good ())
     {
+      NS_LOG_WARN ("Trace file not found. Loading default trace.");
       LoadDefaultTrace ();
     }
   while (ifTraceFile.good ())
