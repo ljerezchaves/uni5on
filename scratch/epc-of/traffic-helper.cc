@@ -25,7 +25,7 @@ namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("TrafficHelper");
 
-const std::string TrafficHelper::m_videoDir = "../movies/";
+const std::string TrafficHelper::m_videoDir = "./movies/";
 
 // Trace files are sorted in increasing gbr bit rate
 const std::string TrafficHelper::m_videoTrace [] = {
