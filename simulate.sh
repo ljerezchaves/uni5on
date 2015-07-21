@@ -10,15 +10,14 @@ fi;
 RUNS=$1
 ARGS=$2
 
-OUT=$(mktemp --suffix=-epcof)
-echo "$0 $1 $2" > $OUT
-echo "Check output at $OUT"
-
 for (( i=1; i<=$RUNS; i++))
 do
-  ./waf --run="epc-of --RngRun=$i $ARGS" &>> $OUT
+  OUT=$(mktemp --suffix=-epcof)
+  echo "$0 $1 $2" > $OUT
+  echo "Check output at $OUT"
+
+  ./waf --run="epc-of --RngRun=$i $ARGS" &>> $OUT &
 done
 
 exit 0;
-
 
