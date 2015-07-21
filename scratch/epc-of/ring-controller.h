@@ -75,6 +75,12 @@ protected:
    */
   uint16_t GetNSwitches (void) const;
 
+  /**
+   * Set the m_stepBwFactor parameter.
+   * \param value The value to set.
+   */
+  void SetStepBwFactor (double value);
+
 private:
   /**
    * Get the RingRoutingInfo associated to this rInfo metadata. When no ring

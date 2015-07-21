@@ -62,7 +62,7 @@ RingController::GetTypeId (void)
     .AddAttribute ("StepBwFactor",
                    "Bandwitdth reserving factor step, for dynamic factor adjustment.",
                    DoubleValue (0.1),
-                   MakeDoubleAccessor (&RingController::m_stepBwFactor),
+                   MakeDoubleAccessor (&RingController::SetStepBwFactor),
                    MakeDoubleChecker<double> (0.0, 1.0))
   ;
   return tid;
@@ -414,6 +414,12 @@ uint16_t
 RingController::GetNSwitches (void) const
 {
   return m_noSwitches;
+}
+
+void
+RingController::SetStepBwFactor (double value)
+{
+  m_stepBwFactor = value;
 }
 
 Ptr<RingRoutingInfo>
