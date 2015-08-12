@@ -1,19 +1,22 @@
 #!/bin/bash
 
-if [ $# -lt 1 ]; then
-    echo "Usage: ./simulate.sh runs \"args\""
-    echo "Where: runs is the number of times to execute the simulation."
+if [ $# -lt 2 ]; then
+    echo "Usage: ./simulate.sh seed runs \"args\""
+    echo "Where: seed is the first seed number to use."
+    echo "       runs is the number of times to execute the simulation."
     echo "      \"args\" can be any other epc-of command line argument."
     exit 0
 fi;
 
-RUNS=$1
-ARGS=$2
+MIN=$1
+RUNS=$2
+ARGS=$3
+let MAX=MIN+RUNS
 
-for (( i=1; i<=$RUNS; i++))
+for ((i=$MIN; i<$MAX; i++))
 do
   OUT=$(mktemp --suffix=-epcof)
-  echo "$0 $1 $2" > $OUT
+  echo "$0 $1 $2 $3" > $OUT
   echo "Check output at $OUT"
 
   ./waf --run="epc-of --RngRun=$i $ARGS" &>> $OUT &
