@@ -17,10 +17,9 @@ for ((i=$MIN; i<$MAX; i++))
 do
   OUT=$(mktemp --suffix=-epcof)
   echo "$0 $1 $2 $3" > $OUT
-  echo "Check output at $OUT"
-
   ./waf --run="epc-of --RngRun=$i $ARGS" &>> $OUT &
 done
+wait
 
 exit 0;
 
