@@ -212,6 +212,7 @@ private:
   double              m_stepBwFactor;     //!< Bandwidth saving factor step.
   uint16_t            m_noSwitches;       //!< Number of switches in topology.
   bool                m_dynBwFactor;      //!< True for dynamic bandwidth usage.
+  bool                m_dynInvBwFactor;   //!< True for dyn adj in long path.
 
   /** 
    * Map saving <Pair of switch indexes / Connection information.

@@ -50,17 +50,22 @@ RingController::GetTypeId (void)
                                     RingController::BAND, "bandwidth",
                                     RingController::SMART, "smart"))
     .AddAttribute ("MaxBwFactor",
-                   "Maximum bandwitdth reserving factor, limiting link usage.",
+                   "Maximum bandwitdth usage factor, limiting link usage.",
                    DoubleValue (0.8),
                    MakeDoubleAccessor (&RingController::m_maxBwFactor),
                    MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("DynamicBwFactor",
-                   "Dynamic bandwitdth reserving factor (prof. Deep Medhi).",
+                   "Enable Distance-Based Adaptive Reservation.",
                    BooleanValue (false),
                    MakeBooleanAccessor (&RingController::m_dynBwFactor),
                    MakeBooleanChecker ())
+    .AddAttribute ("InvertedBwFactor",
+                   "Enable both short and inverted Distance-Based Adaptive Reservation.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&RingController::m_dynInvBwFactor),
+                   MakeBooleanChecker ())
     .AddAttribute ("StepBwFactor",
-                   "Bandwitdth reserving factor step, for dynamic factor adjustment.",
+                   "Distance-Based Adaptive Reservation adjustment factor.",
                    DoubleValue (0.1),
                    MakeDoubleAccessor (&RingController::SetStepBwFactor),
                    MakeDoubleChecker<double> (0.0, 1.0))
@@ -556,10 +561,11 @@ RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo,
         }
       current = next;
       
-      // We only apply the dynamic bandwidth factor adjustment when looking for
-      // the available bandwidth in the shortest routing path. 
-      // FIXME: Not sure about this.
-      if (m_dynBwFactor && useShortPath)
+      // By default, we only apply the Distance-based adaptive reservation when
+      // looking for the available bandwidth in the shortest routing path.
+      // Users can override this with behaviour with 'InvertedBwFactor'
+      // attribute, allowind adaptive reservation in both directions.
+      if (m_dynBwFactor && (useShortPath || m_dynInvBwFactor))
         {
           bwFactor -= m_stepBwFactor;
         }
