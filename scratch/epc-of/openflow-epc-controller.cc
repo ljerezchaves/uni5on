@@ -37,6 +37,8 @@ const int OpenFlowEpcController::m_t1DedicatedStartPrio = 16384;
 const int OpenFlowEpcController::m_t1DefaultPrio = 128;
 const int OpenFlowEpcController::m_t1RingPrio = 32;
 
+OpenFlowEpcController::TeidBearerMap_t OpenFlowEpcController::m_bearersTable;
+
 OpenFlowEpcController::OpenFlowEpcController ()
 {
   NS_LOG_FUNCTION (this);
@@ -181,6 +183,21 @@ OpenFlowEpcController::GetConstRoutingInfo (uint32_t teid) const
   return rInfo;
 }
 
+EpsBearer
+OpenFlowEpcController::GetEpsBearer (uint32_t teid)
+{
+  TeidBearerMap_t::iterator it;
+  it = OpenFlowEpcController::m_bearersTable.find (teid);
+  if (it != OpenFlowEpcController::m_bearersTable.end ())
+    {
+      return it->second;
+    }
+  else
+    {
+      NS_FATAL_ERROR ("No bearer information for teid " << teid);
+    }
+}
+
 void
 OpenFlowEpcController::DoDispose ()
 {
@@ -250,6 +267,7 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
   rInfo->m_isDefault = true;              // This is a default bearer
   rInfo->m_bearer = defaultBearer;
   SaveRoutingInfo (rInfo);
+  OpenFlowEpcController::RegisterBearer (teid, rInfo->GetEpsBearer ());
 
   // For default bearer, no Meter nor Reserver metadata.
   // For logic consistence, let's check for available resources.
@@ -286,6 +304,7 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
       rInfo->m_isDefault = false;              // This is a dedicated bearer
       rInfo->m_bearer = dedicatedBearer;
       SaveRoutingInfo (rInfo);
+      OpenFlowEpcController::RegisterBearer (teid, rInfo->GetEpsBearer ());
 
       GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
 
@@ -709,6 +728,33 @@ OpenFlowEpcController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
   packet->AddTrailer (trailer);
 
   return packet;
+}
+
+void
+OpenFlowEpcController::RegisterBearer (uint32_t teid, EpsBearer bearer)
+{
+  std::pair <uint32_t, EpsBearer> entry (teid, bearer);
+  std::pair <TeidBearerMap_t::iterator, bool> ret;
+  ret = OpenFlowEpcController::m_bearersTable.insert (entry);
+  if (ret.second == false)
+    {
+      NS_FATAL_ERROR ("Existing bearer information for teid " << teid);
+    }
+}
+
+void
+OpenFlowEpcController::UnregisterBearer (uint32_t teid)
+{
+  TeidBearerMap_t::iterator it;
+  it = OpenFlowEpcController::m_bearersTable.find (teid);
+  if (it != OpenFlowEpcController::m_bearersTable.end ())
+    {
+      OpenFlowEpcController::m_bearersTable.erase (it);
+    }
+  else
+    {
+      NS_FATAL_ERROR ("Error removing bearer information for teid " << teid);
+    }
 }
 
 };  // namespace ns3
