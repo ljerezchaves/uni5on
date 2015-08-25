@@ -128,14 +128,14 @@ ConnectionInfo::GetPortDevSecond (void) const
 }
 
 double
-ConnectionInfo::GetForwardReservedRatio (void) const
+ConnectionInfo::GetForwardGbrReservedRatio (void) const
 {
   return static_cast<double>(m_gbrReserved [ConnectionInfo::FORWARD]) / 
                              GetLinkDataRate ().GetBitRate ();
 }
 
 double
-ConnectionInfo::GetBackwardReservedRatio (void) const
+ConnectionInfo::GetBackwardGbrReservedRatio (void) const
 {
   return static_cast<double>(m_gbrReserved [ConnectionInfo::BACKWARD]) / 
                              GetLinkDataRate ().GetBitRate ();

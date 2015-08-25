@@ -105,24 +105,23 @@ public:
   SwitchPair_t GetSwitchIndexPair (void) const;
 
   /**
-   * Return the bandwidth reserved ratio in forward direction, This method
-   * ignores the saving reserve factor.
+   * Get the bandwidth reserved ratio for GBR traffic in indicated direction,
+   * calculated with respect to the total link capacity.
    * \return The usage ratio.
    */
-  double GetForwardReservedRatio (void) const;
+  //\{
+  //!< The reserved ratio in forward direction
+  double GetForwardGbrReservedRatio (void) const;
+
+  //!< The reserved ratio in backward direction
+  double GetBackwardGbrReservedRatio (void) const;
+  //\}
 
   /**
-   * Return the bandwidth reserved ratio in backward direction, This method
-   * ignores the saving reserve factor.
-   * \return The usage ratio.
-   */
-  double GetBackwardReservedRatio (void) const;
-
-  /**
-   * Return the number of bytes successfully transmitted in indicated direction
+   * Get the number of bytes successfully transmitted in indicated direction
    * since the simulation began, or since ResetStatistics was called, according
    * to whichever happened more recently.
-   * \return The number of bytes.
+   * \return The number of transmitted bytes.
    */
   //\{
   //!< Total bytes in forward direction

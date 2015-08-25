@@ -445,8 +445,8 @@ BandwidthStatsCalculator::DumpStatistics (void)
         << setw (10) << bwKbits / GetActiveTime ().GetSeconds () << "   ";
 
       *resWrapper->GetStream () << right
-        << setw (6) << (*it)->GetForwardReservedRatio ()  << " "
-        << setw (6) << (*it)->GetBackwardReservedRatio () << "   ";
+        << setw (6) << (*it)->GetForwardGbrReservedRatio ()  << " "
+        << setw (6) << (*it)->GetBackwardGbrReservedRatio () << "   ";
 
       (*it)->ResetStatistics ();
     }
