@@ -79,6 +79,12 @@ RoutingInfo::GetQciInfo (void) const
   return m_bearer.bearerLevelQos.qci;
 }
 
+EpsBearer
+RoutingInfo::GetEpsBearer (void) const
+{
+  return m_bearer.bearerLevelQos;
+}
+
 uint32_t
 RoutingInfo::GetTeid (void) const
 {
