@@ -129,13 +129,13 @@ private:
    * Get the available bandwidth for this ring routing information, considering
    * both downlink and uplink paths.
    * \internal 
-   * This method implements the dynamic reservation strategy proposed by prof.
-   * Deep Medhi. The general ideal is a dynamic bandwidth usage factor that can
-   * be ajudsted based on the distance betweem the eNB switch and the gateway
-   * switch. The closer the gateway we are, the more we can use from the
-   * available bandwidth. The goal is to prevent flows that are very close to
-   * the gateway from running out of resources early, since this last link is
-   * always the most congested ond. 
+   * This method implements the Distance-Based Adaptive Reservation strategy
+   * proposed by prof. Deep Medhi. The general ideal is a dynamic bandwidth
+   * usage factor that can be ajudsted based on the distance betweem the eNB
+   * switch and the gateway switch. The closer the gateway the eNB is, the more
+   * it can use from the available bandwidth. The goal is to prevent flows that
+   * are very close to the gateway from running out of resources early, since
+   * this last link is always the most congested ond. 
    * \param ringInfo The ring routing information.
    * \param useShortPath When true, get the available bandwidth in the shortest
    * path between source and destination nodes; otherwise, considers the

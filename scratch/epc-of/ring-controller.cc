@@ -561,10 +561,10 @@ RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo,
         }
       current = next;
       
-      // By default, we only apply the Distance-based adaptive reservation when
+      // By default, we only apply the Distance-Based Adaptive Reservation when
       // looking for the available bandwidth in the shortest routing path.
-      // Users can override this with behaviour with 'InvertedBwFactor'
-      // attribute, allowind adaptive reservation in both directions.
+      // User can override this behaviour with 'InvertedBwFactor' attribute,
+      // allowing adaptive reservation in both directions.
       if (m_dynBwFactor && (useShortPath || m_dynInvBwFactor))
         {
           bwFactor -= m_stepBwFactor;
