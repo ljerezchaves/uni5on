@@ -119,20 +119,30 @@ public:
   double GetBackwardReservedRatio (void) const;
 
   /**
-   * Return the total number of bytes successfully transmitted in forward
-   * direction since the simulation began, or since ResetStatistics was called,
-   * according to whichever happened more recently.
+   * Return the number of bytes successfully transmitted in indicated direction
+   * since the simulation began, or since ResetStatistics was called, according
+   * to whichever happened more recently.
    * \return The number of bytes.
    */
+  //\{
+  //!< Total bytes in forward direction
   uint32_t GetForwardBytes (void) const;
 
-  /**
-   * Return the total number of bytes successfully transmitted in backward
-   * direction since the simulation began, or since ResetStatistics was called,
-   * according to whichever happened more recently.
-   * \return The number of bytes.
-   */
+  //!< Total bytes in backward direction
   uint32_t GetBackwardBytes (void) const;
+
+  //!< GBR bytes in forward direction
+  uint32_t GetForwardGbrBytes (void) const;
+
+  //!< GBR bytes in backward direction
+  uint32_t GetBackwardGbrBytes (void) const;
+
+  //!< Non-GBR bytes in forward direction
+  uint32_t GetForwardNonGbrBytes (void) const;
+
+  //!< Non-GBR bytes in backward direction
+  uint32_t GetBackwardNonGbrBytes (void) const;
+  //\}
 
   /**
    * Reset internal byte counters.
@@ -215,7 +225,9 @@ private:
   Ptr<CsmaChannel>  m_channel;      //!< The link channel connecting switches
 
   uint64_t          m_gbrReserved [2];  //!< GBR reserved data rate
-  uint32_t          m_txBytes [2];      //!< Transmitted bytes
+  
+  uint32_t          m_gbrTxBytes [2];   //!< GBR transmitted bytes
+  uint32_t          m_nonTxBytes [2];   //!< Non-GBR transmitted bytes
 };
 
 };  // namespace ns3

@@ -19,6 +19,8 @@
  */
 
 #include "connection-info.h"
+#include "openflow-epc-controller.h"
+#include "ns3/epc-gtpu-tag.h"
 
 namespace ns3 {
 
@@ -142,20 +144,48 @@ ConnectionInfo::GetBackwardReservedRatio (void) const
 uint32_t 
 ConnectionInfo::GetForwardBytes (void) const
 {
-  return m_txBytes [ConnectionInfo::FORWARD];
+  return m_gbrTxBytes [ConnectionInfo::FORWARD] +
+         m_nonTxBytes [ConnectionInfo::FORWARD];
 }
 
 uint32_t 
 ConnectionInfo::GetBackwardBytes (void) const
 {
-  return m_txBytes [ConnectionInfo::BACKWARD];
+  return m_gbrTxBytes [ConnectionInfo::BACKWARD] +
+         m_nonTxBytes [ConnectionInfo::BACKWARD];
+}
+
+uint32_t 
+ConnectionInfo::GetForwardGbrBytes (void) const
+{
+  return m_gbrTxBytes [ConnectionInfo::FORWARD];
+}
+
+uint32_t 
+ConnectionInfo::GetBackwardGbrBytes (void) const
+{
+  return m_gbrTxBytes [ConnectionInfo::BACKWARD];
+}
+
+uint32_t 
+ConnectionInfo::GetForwardNonGbrBytes (void) const
+{
+  return m_nonTxBytes [ConnectionInfo::FORWARD];
+}
+
+uint32_t 
+ConnectionInfo::GetBackwardNonGbrBytes (void) const
+{
+  return m_nonTxBytes [ConnectionInfo::BACKWARD];
 }
 
 void 
 ConnectionInfo::ResetStatistics (void)
 {
-  m_txBytes [0] = 0;
-  m_txBytes [1] = 0;
+  m_gbrTxBytes [0] = 0;
+  m_gbrTxBytes [1] = 0;
+  m_nonTxBytes [0] = 0;
+  m_nonTxBytes [1] = 0;
 }
 
 bool
@@ -201,7 +231,25 @@ ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
   dir = (context == "Forward") ? ConnectionInfo::FORWARD : 
                                  ConnectionInfo::BACKWARD;
   
-  m_txBytes [dir] += packet->GetSize ();          
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      EpsBearer bearer = OpenFlowEpcController::GetEpsBearer (gtpuTag.GetTeid ());
+      if (bearer.IsGbr ())
+        {
+          m_gbrTxBytes [dir] += packet->GetSize ();
+        }
+      else
+        {
+          m_nonTxBytes [dir] += packet->GetSize ();
+        }
+    }
+  else
+    {
+      // For the case of non-tagged packets, save bytes in Non-GBR variable.
+      NS_LOG_WARN ("No GTPU packet tag found.");
+      m_nonTxBytes [dir] += packet->GetSize ();
+    }
 }
 
 uint64_t
