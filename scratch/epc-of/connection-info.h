@@ -57,8 +57,8 @@ public:
    */
   enum Direction
   {
-    FORWARD = 0,  //!< Forward direction
-    BACKWARD = 1  //!< Backwad direction
+    FORWARD = 0,  //!< Forward direction (from m_sw1 to m_sw2)
+    BACKWARD = 1  //!< Backwad direction (from m_sw2 to m_sw1)
   };
 
   ConnectionInfo ();            //!< Default constructor
@@ -87,12 +87,6 @@ public:
    * \return The requested field.
    */
   //\{
-  /**
-   * Get the pair of switch indexes for this connection, respecting the
-   * internal order.
-   * \param The pair of switch indexes.
-   */
-  SwitchPair_t GetSwitchIndexPair (void) const;
   uint16_t GetSwIdxFirst (void) const;
   uint16_t GetSwIdxSecond (void) const;
   uint32_t GetPortNoFirst (void) const;
@@ -102,6 +96,13 @@ public:
   Ptr<const CsmaNetDevice> GetPortDevFirst (void) const;
   Ptr<const CsmaNetDevice> GetPortDevSecond (void) const;
   //\}
+  
+  /**
+   * Get the pair of switch indexes for this connection, respecting the
+   * internal order.
+   * \return The pair of switch indexes.
+   */
+  SwitchPair_t GetSwitchIndexPair (void) const;
 
   /**
    * Return the bandwidth reserved ratio in forward direction, This method
@@ -213,8 +214,8 @@ private:
   SwitchData        m_sw2;          //!< Second switch (highest index)
   Ptr<CsmaChannel>  m_channel;      //!< The link channel connecting switches
 
-  uint64_t          m_reserved [2]; //!< Reserved data rate
-  uint32_t          m_bytes [2];    //!< Transmitted bytes
+  uint64_t          m_gbrReserved [2];  //!< GBR reserved data rate
+  uint32_t          m_txBytes [2];      //!< Transmitted bytes
 };
 
 };  // namespace ns3

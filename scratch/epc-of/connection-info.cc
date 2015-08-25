@@ -49,15 +49,16 @@ ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
                   channel->GetCsmaDevice (1) == GetPortDevSecond ()),
                   "Invalid device order in csma channel.");
 
-  // Connecting trace source to 
+  // Connecting trace source to CsmaNetDevice PhyTxEnd trace source, used to
+  // monitor data transmitted over this connection. 
   m_sw1.portDev->TraceConnect ("PhyTxEnd", "Forward",
       MakeCallback (&ConnectionInfo::NotifyTxPacket, this));
   m_sw2.portDev->TraceConnect ("PhyTxEnd", "Backward",
       MakeCallback (&ConnectionInfo::NotifyTxPacket, this));
 
   ResetStatistics ();
-  m_reserved [0] = 0;
-  m_reserved [1] = 0;
+  m_gbrReserved [0] = 0;
+  m_gbrReserved [1] = 0;
 }
 
 TypeId
@@ -127,34 +128,34 @@ ConnectionInfo::GetPortDevSecond (void) const
 double
 ConnectionInfo::GetForwardReservedRatio (void) const
 {
-  return static_cast<double>(m_reserved [ConnectionInfo::FORWARD]) / 
+  return static_cast<double>(m_gbrReserved [ConnectionInfo::FORWARD]) / 
                              GetLinkDataRate ().GetBitRate ();
 }
 
 double
 ConnectionInfo::GetBackwardReservedRatio (void) const
 {
-  return static_cast<double>(m_reserved [ConnectionInfo::BACKWARD]) / 
+  return static_cast<double>(m_gbrReserved [ConnectionInfo::BACKWARD]) / 
                              GetLinkDataRate ().GetBitRate ();
 }
 
 uint32_t 
 ConnectionInfo::GetForwardBytes (void) const
 {
-  return m_bytes [ConnectionInfo::FORWARD];
+  return m_txBytes [ConnectionInfo::FORWARD];
 }
 
 uint32_t 
 ConnectionInfo::GetBackwardBytes (void) const
 {
-  return m_bytes [ConnectionInfo::BACKWARD];
+  return m_txBytes [ConnectionInfo::BACKWARD];
 }
 
 void 
 ConnectionInfo::ResetStatistics (void)
 {
-  m_bytes [0] = 0;
-  m_bytes [1] = 0;
+  m_txBytes [0] = 0;
+  m_txBytes [1] = 0;
 }
 
 bool
@@ -200,7 +201,7 @@ ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
   dir = (context == "Forward") ? ConnectionInfo::FORWARD : 
                                  ConnectionInfo::BACKWARD;
   
-  m_bytes [dir] += packet->GetSize ();          
+  m_txBytes [dir] += packet->GetSize ();          
 }
 
 uint64_t
@@ -209,9 +210,9 @@ ConnectionInfo::GetAvailableBitRate (uint16_t srcIdx, uint16_t dstIdx) const
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
   uint64_t linkBitRate = GetLinkDataRate ().GetBitRate ();
 
-  if (linkBitRate >= m_reserved [dir])
+  if (linkBitRate >= m_gbrReserved [dir])
     {
-      return linkBitRate - m_reserved [dir];
+      return linkBitRate - m_gbrReserved [dir];
     }
   else
     {
@@ -227,9 +228,9 @@ ConnectionInfo::GetAvailableBitRate (uint16_t srcIdx, uint16_t dstIdx,
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
   uint64_t linkBitRate = factor * GetLinkDataRate ().GetBitRate ();
   
-  if (linkBitRate >= m_reserved [dir])
+  if (linkBitRate >= m_gbrReserved [dir])
     {
-      return linkBitRate - m_reserved [dir];
+      return linkBitRate - m_gbrReserved [dir];
     }
   else
     {
@@ -242,9 +243,9 @@ ConnectionInfo::ReserveDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
 
-  if (m_reserved [dir] + rate.GetBitRate () <= GetLinkDataRate ().GetBitRate ())
+  if (m_gbrReserved [dir] + rate.GetBitRate () <= GetLinkDataRate ().GetBitRate ())
     {
-      m_reserved [dir] += rate.GetBitRate ();
+      m_gbrReserved [dir] += rate.GetBitRate ();
       return true;
     }
   NS_FATAL_ERROR ("No bandwidth available to reserve.");
@@ -255,9 +256,9 @@ ConnectionInfo::ReleaseDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
 
-  if (m_reserved [dir] - rate.GetBitRate () >= 0)
+  if (m_gbrReserved [dir] - rate.GetBitRate () >= 0)
     {
-      m_reserved [dir] -= rate.GetBitRate ();
+      m_gbrReserved [dir] -= rate.GetBitRate ();
       return true;
     }
   NS_FATAL_ERROR ("No bandwidth available to release.");
