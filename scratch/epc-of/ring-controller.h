@@ -43,9 +43,8 @@ public:
   /** Routing strategy to find the paths in the ring. */
   enum RoutingStrategy
   {
-    HOPS = 0,     //!< Select the path based on number of hops
-    BAND = 1,     //!< Select the path based on available bandwidth
-    SMART = 2     //!< Select the path based on hops and available bandwidth
+    SPO = 0,  //!< Shortest path only (path with lowest number of hops).
+    SPF = 1   //!< Shortest path first (preferably the shortest path).
   };
 
   RingController ();            //!< Default constructor
@@ -74,12 +73,6 @@ protected:
    * \return Number of switches in the network.
    */
   uint16_t GetNSwitches (void) const;
-
-  /**
-   * Set the m_stepBwFactor parameter.
-   * \param value The value to set.
-   */
-  void SetStepBwFactor (double value);
 
 private:
   /**
@@ -129,13 +122,13 @@ private:
    * Get the available bandwidth for this ring routing information, considering
    * both downlink and uplink paths.
    * \internal 
-   * This method implements the Distance-Based Adaptive Reservation strategy
-   * proposed by prof. Deep Medhi. The general ideal is a dynamic bandwidth
-   * usage factor that can be ajudsted based on the distance betweem the eNB
-   * switch and the gateway switch. The closer the gateway the eNB is, the more
-   * it can use from the available bandwidth. The goal is to prevent flows that
-   * are very close to the gateway from running out of resources early, since
-   * this last link is always the most congested ond. 
+   * This method implements the GBR Distance-Based Reservation algorithm
+   * (DeBaR) proposed by prof. Deep Medhi. The general ideal is a dynamic
+   * bandwidth usage factor that can be ajudsted based on the distance betweem
+   * the eNB switch and the gateway switch. The closer the gateway the eNB is,
+   * the more it can use from the available bandwidth. The goal is to prevent
+   * flows that are very close to the gateway from running out of resources
+   * early, since this last link is always the most congested ond. 
    * \param ringInfo The ring routing information.
    * \param useShortPath When true, get the available bandwidth in the shortest
    * path between source and destination nodes; otherwise, considers the
@@ -207,12 +200,12 @@ private:
    */
   bool RemoveMeterRules (Ptr<RoutingInfo> rInfo);
 
-  RoutingStrategy     m_strategy;         //!< Routing strategy in use.
-  double              m_maxBwFactor;      //!< Bandwidth saving factor.
-  double              m_stepBwFactor;     //!< Bandwidth saving factor step.
   uint16_t            m_noSwitches;       //!< Number of switches in topology.
-  bool                m_dynBwFactor;      //!< True for dynamic bandwidth usage.
-  bool                m_dynInvBwFactor;   //!< True for dyn adj in long path.
+  RoutingStrategy     m_strategy;         //!< Routing strategy in use.
+  double              m_gbrReserveQuota;  //!< GBR reserve quota.
+  double              m_debarStep;        //!< DeBaR increase step.
+  bool                m_debarShortPath;   //!< True for DeBaR in shortest path.
+  bool                m_debarLongPath;    //!< True for DeBaR in longest path.
 
   /** 
    * Map saving <Pair of switch indexes / Connection information.
