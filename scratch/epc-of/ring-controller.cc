@@ -43,32 +43,34 @@ RingController::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::RingController")
     .SetParent (OpenFlowEpcController::GetTypeId ())
     .AddAttribute ("Strategy",
-                   "The ring path routing strategy.",
-                   EnumValue (RingController::HOPS),
+                   "The ring routing strategy.",
+                   EnumValue (RingController::SPO),
                    MakeEnumAccessor (&RingController::m_strategy),
-                   MakeEnumChecker (RingController::HOPS, "hops",
-                                    RingController::BAND, "bandwidth",
-                                    RingController::SMART, "smart"))
-    .AddAttribute ("MaxBwFactor",
-                   "Maximum bandwitdth usage factor, limiting link usage.",
-                   DoubleValue (0.8),
-                   MakeDoubleAccessor (&RingController::m_maxBwFactor),
+                   MakeEnumChecker (RingController::SPO, "spo",
+                                    RingController::SPF, "spf"))
+    .AddAttribute ("GbrReserveQuota",
+                   "Maximum bandwitdth ratio that can be reserved to GBR "
+                   "traffic in any connection between switches.",
+                   DoubleValue (0.4),   // 40% of link capacity
+                   MakeDoubleAccessor (&RingController::m_gbrReserveQuota),
                    MakeDoubleChecker<double> (0.0, 1.0))
-    .AddAttribute ("DynamicBwFactor",
-                   "Enable Distance-Based Adaptive Reservation.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&RingController::m_dynBwFactor),
-                   MakeBooleanChecker ())
-    .AddAttribute ("InvertedBwFactor",
-                   "Enable both short and inverted Distance-Based Adaptive Reservation.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&RingController::m_dynInvBwFactor),
-                   MakeBooleanChecker ())
-    .AddAttribute ("StepBwFactor",
-                   "Distance-Based Adaptive Reservation adjustment factor.",
-                   DoubleValue (0.1),
-                   MakeDoubleAccessor (&RingController::SetStepBwFactor),
+    .AddAttribute ("DebarIncStep",
+                   "DeBaR increase adjustment step.",
+                   DoubleValue (0.025), // 2.5% of link capacity
+                   MakeDoubleAccessor (&RingController::m_debarStep),
                    MakeDoubleChecker<double> (0.0, 1.0))
+    .AddAttribute ("EnableShortDebar",
+                   "Enable GBR Distance-Based Reservation algorithm (DeBaR) "
+                   "in shortest path.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&RingController::m_debarShortPath),
+                   MakeBooleanChecker ())
+    .AddAttribute ("EnableLongDebar",
+                   "Enable GBR Distance-Based Reservation algorithm (DeBaR) "
+                   "in longest (inverted) paths.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&RingController::m_debarLongPath),
+                   MakeBooleanChecker ())
   ;
   return tid;
 }
@@ -312,7 +314,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 
   switch (m_strategy)
     {
-    case RingController::HOPS:
+    case RingController::SPO:
       {
         if (dlShortBw >= dlRequest && ulShortBw >= ulRequest)
           {
@@ -325,29 +327,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
           }
         break;
       }
-    case RingController::BAND:
-      {
-        if (dlShortBw >= dlLongBw && 
-            dlShortBw >= dlRequest && ulShortBw >= ulRequest)
-          {
-            return ReserveBandwidth (ringInfo, reserveInfo);
-          }
-        else if (dlLongBw > dlShortBw && 
-                 dlLongBw >= dlRequest && ulLongBw >= ulRequest)
-          {
-            // Let's invert the path and reserve the bandwidth
-            NS_LOG_DEBUG ("Inverting from short to long path.");
-            ringInfo->InvertPaths ();
-            return ReserveBandwidth (ringInfo, reserveInfo);
-          }
-        else
-          {
-            NS_LOG_WARN ("No resources. Block!");
-            return false;
-          }
-        break;
-      }
-    case RingController::SMART:
+    case RingController::SPF:
       {
         if (dlShortBw >= dlRequest && ulShortBw >= ulRequest)
           {
@@ -419,12 +399,6 @@ uint16_t
 RingController::GetNSwitches (void) const
 {
   return m_noSwitches;
-}
-
-void
-RingController::SetStepBwFactor (double value)
-{
-  m_stepBwFactor = value;
 }
 
 Ptr<RingRoutingInfo>
@@ -532,7 +506,7 @@ RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo,
   uint64_t upBitRate   = std::numeric_limits<uint64_t>::max();
   uint64_t bitRate     = 0;
   uint16_t current     = enbIdx;
-  double   bwFactor    = m_maxBwFactor;
+  double   gbrQuota    = m_gbrReserveQuota;
 
   RingRoutingInfo::RoutingPath upPath = FindShortestPath (enbIdx, sgwIdx);
   if (!useShortPath)
@@ -547,27 +521,25 @@ RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo,
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
 
       // Check for available bit rate in uplink direction
-      bitRate = cInfo->GetAvailableBitRate (current, next, bwFactor);
+      bitRate = cInfo->GetAvailableBitRate (current, next, gbrQuota);
       if (bitRate < upBitRate)
         {
           upBitRate = bitRate;
         }
 
       // Check for available bit rate in downlink direction
-      bitRate = cInfo->GetAvailableBitRate (next, current, bwFactor);
+      bitRate = cInfo->GetAvailableBitRate (next, current, gbrQuota);
       if (bitRate < downBitRate)
         {
           downBitRate = bitRate;
         }
       current = next;
       
-      // By default, we only apply the Distance-Based Adaptive Reservation when
-      // looking for the available bandwidth in the shortest routing path.
-      // User can override this behaviour with 'InvertedBwFactor' attribute,
-      // allowing adaptive reservation in both directions.
-      if (m_dynBwFactor && (useShortPath || m_dynInvBwFactor))
+      // If enable, apply the GBR Distance-Based Reservation algorithm (DeBaR)
+      // when looking for the available bandwidth in routing path.
+      if ((m_debarShortPath && useShortPath) || (m_debarLongPath && !useShortPath))
         {
-          bwFactor -= m_stepBwFactor;
+          gbrQuota -= m_debarStep;
         }
     }
 
