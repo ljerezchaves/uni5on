@@ -315,8 +315,9 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
           rInfo->AggregateObject (meterInfo);
         }
 
-      // Create (if necessary) the reserve metadata
-      if (gbrQoS.gbrDl || gbrQoS.gbrUl)
+      // Create (if necessary) the reserve metadata. Only GBR bearers are
+      // allowed to reserve network resources.
+      if (rInfo->IsGbr () && (gbrQoS.gbrDl || gbrQoS.gbrUl))
         {
           Ptr<ReserveInfo> reserveInfo = CreateObject<ReserveInfo> (rInfo);
           rInfo->AggregateObject (reserveInfo);
