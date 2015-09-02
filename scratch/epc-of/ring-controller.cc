@@ -289,24 +289,26 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       return true;
     }
 
+  NS_ASSERT_MSG (rInfo->IsGbr (), "Invalid configuration for bearer request.");
+
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
   uint32_t teid = rInfo->GetTeid ();
   
-  // Getting available downlink and uplink bandwidth in both paths
+  // Getting available downlink and uplink bit rates in both paths
   ringInfo->ResetToShortestPaths ();
   
-  std::pair<DataRate, DataRate> shortPathBand, longPathBand;
-  shortPathBand = GetAvailableBandwidth (ringInfo, true);
-  longPathBand  = GetAvailableBandwidth (ringInfo, false);
+  std::pair<uint64_t, uint64_t> shortPathBand, longPathBand;
+  shortPathBand = GetAvailableGbrBitRate (ringInfo, true);
+  longPathBand  = GetAvailableGbrBitRate (ringInfo, false);
   
-  DataRate dlShortBw = shortPathBand.first; 
-  DataRate ulShortBw = shortPathBand.second;
-  DataRate dlLongBw  = longPathBand.first;
-  DataRate ulLongBw  = longPathBand.second;
+  uint64_t dlShortBw = shortPathBand.first; 
+  uint64_t ulShortBw = shortPathBand.second;
+  uint64_t dlLongBw  = longPathBand.first;
+  uint64_t ulLongBw  = longPathBand.second;
 
-  // Getting bandwidth requests
-  DataRate dlRequest = reserveInfo->GetDownDataRate ();
-  DataRate ulRequest = reserveInfo->GetUpDataRate ();
+  // Getting bit rate requests
+  uint64_t dlRequest = reserveInfo->GetDownBitRate ();
+  uint64_t ulRequest = reserveInfo->GetUpBitRate ();
 
   NS_LOG_DEBUG (teid << ":    request: downlink " << dlRequest << " - uplink " << ulRequest);
   NS_LOG_DEBUG (teid << ": short path: downlink " << dlShortBw << " - uplink " << ulShortBw);
@@ -318,7 +320,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       {
         if (dlShortBw >= dlRequest && ulShortBw >= ulRequest)
           {
-            return ReserveBandwidth (ringInfo, reserveInfo);
+            return ReserveGbrBitRate (ringInfo, reserveInfo);
           }
         else
           {
@@ -331,14 +333,14 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       {
         if (dlShortBw >= dlRequest && ulShortBw >= ulRequest)
           {
-            return ReserveBandwidth (ringInfo, reserveInfo);
+            return ReserveGbrBitRate (ringInfo, reserveInfo);
           }
         else if (dlLongBw >= dlRequest && ulLongBw >= ulRequest)
           {
-            // Let's invert the path and reserve the bandwidth
+            // Let's invert the path and reserve the bit rate
             NS_LOG_DEBUG ("Inverting from short to long path.");
             ringInfo->InvertPaths ();
-            return ReserveBandwidth (ringInfo, reserveInfo);
+            return ReserveGbrBitRate (ringInfo, reserveInfo);
           }
         else
           {
@@ -361,7 +363,7 @@ RingController::TopologyBearerRelease (Ptr<RoutingInfo> rInfo)
     {
       Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
       NS_ASSERT_MSG (ringInfo, "No ringInfo for bearer release.");
-      ReleaseBandwidth (ringInfo, reserveInfo);
+      ReleaseGbrBitRate (ringInfo, reserveInfo);
     }
   return true;
 }
@@ -494,9 +496,9 @@ RingController::HopCounter (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
   return distance;
 }
 
-std::pair<DataRate, DataRate> 
-RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo, 
-                                       bool useShortPath)
+std::pair<uint64_t, uint64_t> 
+RingController::GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo, 
+                                        bool useShortPath)
 {
   NS_LOG_FUNCTION (this << ringInfo << useShortPath);
 
@@ -514,7 +516,7 @@ RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo,
       upPath = RingRoutingInfo::InvertPath (upPath);
     }
 
-  // From the eNB to the gateway switch index, get the bandwidth for each link
+  // From the eNB to the gateway switch index, get the bit rate for each link
   while (current != sgwIdx)
     {
       uint16_t next = NextSwitchIndex (current, upPath);
@@ -536,51 +538,50 @@ RingController::GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo,
       current = next;
       
       // If enable, apply the GBR Distance-Based Reservation algorithm (DeBaR)
-      // when looking for the available bandwidth in routing path.
+      // when looking for the available bit rate in routing path.
       if ((m_debarShortPath && useShortPath) || (m_debarLongPath && !useShortPath))
         {
           gbrQuota -= m_debarStep;
         }
     }
 
-  // Return the pair of available bandwidth (downlink and uplink)
-  return std::pair<DataRate, DataRate> (DataRate (downBitRate), 
-                                        DataRate (upBitRate));
+  // Return the pair of available GBR bit rate (downlink and uplink)
+  return std::pair<uint64_t, uint64_t> (downBitRate, upBitRate);
 }
 
 bool
-RingController::ReserveBandwidth (Ptr<const RingRoutingInfo> ringInfo,
+RingController::ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
                                   Ptr<ReserveInfo> reserveInfo)
 {
   NS_LOG_FUNCTION (this << ringInfo << reserveInfo);
 
   // Reserving resources in both directions
-  PerLinkReserve (ringInfo->GetSgwSwIdx (), ringInfo->GetEnbSwIdx (), 
-                  ringInfo->GetDownPath (), reserveInfo->GetDownDataRate ());
-  PerLinkReserve (ringInfo->GetEnbSwIdx (), ringInfo->GetSgwSwIdx (), 
-                  ringInfo->GetUpPath (), reserveInfo->GetUpDataRate ());
+  PerLinkGbrReserve (ringInfo->GetSgwSwIdx (), ringInfo->GetEnbSwIdx (), 
+                     ringInfo->GetDownPath (), reserveInfo->GetDownBitRate ());
+  PerLinkGbrReserve (ringInfo->GetEnbSwIdx (), ringInfo->GetSgwSwIdx (), 
+                     ringInfo->GetUpPath (), reserveInfo->GetUpBitRate ());
   reserveInfo->SetReserved (true);
   return true;
 }
 
 bool
-RingController::ReleaseBandwidth (Ptr<const RingRoutingInfo> ringInfo,
+RingController::ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
                                   Ptr<ReserveInfo> reserveInfo)
 {
   NS_LOG_FUNCTION (this << ringInfo << reserveInfo);
 
   // Releasing resources in both directions
-  PerLinkRelease (ringInfo->GetSgwSwIdx (), ringInfo->GetEnbSwIdx (), 
-                  ringInfo->GetDownPath (), reserveInfo->GetDownDataRate ());
-  PerLinkRelease (ringInfo->GetEnbSwIdx (), ringInfo->GetSgwSwIdx (), 
-                  ringInfo->GetUpPath (), reserveInfo->GetUpDataRate ());
+  PerLinkGbrRelease (ringInfo->GetSgwSwIdx (), ringInfo->GetEnbSwIdx (), 
+                     ringInfo->GetDownPath (), reserveInfo->GetDownBitRate ());
+  PerLinkGbrRelease (ringInfo->GetEnbSwIdx (), ringInfo->GetSgwSwIdx (), 
+                     ringInfo->GetUpPath (), reserveInfo->GetUpBitRate ());
   reserveInfo->SetReserved (false);
   return true;
 }
 
 bool
-RingController::PerLinkReserve (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-    RingRoutingInfo::RoutingPath routingPath, DataRate reserve)
+RingController::PerLinkGbrReserve (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+    RingRoutingInfo::RoutingPath routingPath, uint64_t reserve)
 {
   NS_LOG_FUNCTION (this << srcSwitchIdx << dstSwitchIdx << routingPath << reserve);
 
@@ -589,15 +590,15 @@ RingController::PerLinkReserve (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
     {
       uint16_t next = NextSwitchIndex (current, routingPath);
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-      cInfo->ReserveDataRate (current, next, reserve);
+      cInfo->ReserveGbrBitRate (current, next, reserve);
       current = next;
     }
   return true;
 }
 
 bool
-RingController::PerLinkRelease (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-    RingRoutingInfo::RoutingPath routingPath, DataRate release)
+RingController::PerLinkGbrRelease (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+    RingRoutingInfo::RoutingPath routingPath, uint64_t release)
 {
   NS_LOG_FUNCTION (this << srcSwitchIdx << dstSwitchIdx << routingPath << release);
 
@@ -606,7 +607,7 @@ RingController::PerLinkRelease (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
     {
       uint16_t next = NextSwitchIndex (current, routingPath);
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-      cInfo->ReleaseDataRate (current, next, release);
+      cInfo->ReleaseGbrBitRate (current, next, release);
       current = next;
     }
   return true;

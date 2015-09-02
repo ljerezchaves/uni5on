@@ -191,7 +191,7 @@ protected:
   virtual bool TopologyRemoveRouting (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
-   * Process the bearer resource request and bandwidth allocation based on
+   * Process the bearer resource request and bit rate allocation based on
    * network topology information.
    * \param rInfo The routing information to process.
    * \return True when the request is satisfied.
@@ -199,7 +199,7 @@ protected:
   virtual bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
-   * Process the bearer and bandwidth release based on network topology
+   * Process the bearer and bit rate release based on network topology
    * information.
    * \param rInfo The routing information to process.
    * \return True when the resources are successfully released.

@@ -177,12 +177,12 @@ AdmissionStatsCalculator::NotifyRequest (bool accepted, Ptr<const RoutingInfo> r
     }
 
   // Preparing bearer request stats for trace source
-  DataRate downRate, upRate;
+  uint64_t downBitRate, upBitRate;
   Ptr<const ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
   if (reserveInfo)
     {
-      downRate = reserveInfo->GetDownDataRate ();
-      upRate = reserveInfo->GetUpDataRate ();
+      downBitRate = reserveInfo->GetDownBitRate ();
+      upBitRate = reserveInfo->GetUpBitRate ();
     }
 
   std::string path = "Shortest (default)";
@@ -204,8 +204,8 @@ AdmissionStatsCalculator::NotifyRequest (bool accepted, Ptr<const RoutingInfo> r
     << setw (6)  << rInfo->GetEnbSwIdx ()                   << " " 
     << setw (6)  << rInfo->GetTeid ()                       << " "
     << setw (9)  << accepted                                << " "
-    << setw (11) << (double)(downRate.GetBitRate ()) / 1000 << " "
-    << setw (11) << (double)(upRate.GetBitRate ()) / 1000   << "  "
+    << setw (11) << (double)(downBitRate) / 1000            << " "
+    << setw (11) << (double)(upBitRate) / 1000              << "  "
     << left
     << setw (15) << path
     << std::endl;

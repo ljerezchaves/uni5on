@@ -130,15 +130,15 @@ ConnectionInfo::GetPortDevSecond (void) const
 double
 ConnectionInfo::GetForwardGbrReservedRatio (void) const
 {
-  return static_cast<double>(m_gbrReserved [ConnectionInfo::FORWARD]) / 
-                             GetLinkDataRate ().GetBitRate ();
+  return static_cast<double>
+    (m_gbrReserved [ConnectionInfo::FORWARD]) / GetLinkBitRate ();
 }
 
 double
 ConnectionInfo::GetBackwardGbrReservedRatio (void) const
 {
-  return static_cast<double>(m_gbrReserved [ConnectionInfo::BACKWARD]) / 
-                             GetLinkDataRate ().GetBitRate ();
+  return static_cast<double>
+    (m_gbrReserved [ConnectionInfo::BACKWARD]) / GetLinkBitRate ();
 }
 
 uint32_t 
@@ -194,10 +194,10 @@ ConnectionInfo::IsFullDuplex (void) const
   return m_channel->IsFullDuplex ();
 }
 
-DataRate
-ConnectionInfo::GetLinkDataRate (void) const
+uint64_t
+ConnectionInfo::GetLinkBitRate (void) const
 {
-  return m_channel->GetDataRate ();
+  return m_channel->GetDataRate ().GetBitRate ();
 }
 
 ConnectionInfo::Direction
@@ -256,7 +256,7 @@ uint64_t
 ConnectionInfo::GetAvailableBitRate (uint16_t srcIdx, uint16_t dstIdx) const
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
-  uint64_t linkBitRate = GetLinkDataRate ().GetBitRate ();
+  uint64_t linkBitRate = GetLinkBitRate ();
 
   if (linkBitRate >= m_gbrReserved [dir])
     {
@@ -274,7 +274,7 @@ ConnectionInfo::GetAvailableBitRate (uint16_t srcIdx, uint16_t dstIdx,
                                       double factor) const
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
-  uint64_t linkBitRate = factor * GetLinkDataRate ().GetBitRate ();
+  uint64_t linkBitRate = factor * GetLinkBitRate ();
   
   if (linkBitRate >= m_gbrReserved [dir])
     {
@@ -287,26 +287,26 @@ ConnectionInfo::GetAvailableBitRate (uint16_t srcIdx, uint16_t dstIdx,
 }
 
 bool
-ConnectionInfo::ReserveDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate)
+ConnectionInfo::ReserveGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, uint64_t rate)
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
 
-  if (m_gbrReserved [dir] + rate.GetBitRate () <= GetLinkDataRate ().GetBitRate ())
+  if (m_gbrReserved [dir] + rate <= GetLinkBitRate ())
     {
-      m_gbrReserved [dir] += rate.GetBitRate ();
+      m_gbrReserved [dir] += rate;
       return true;
     }
   NS_FATAL_ERROR ("No bandwidth available to reserve.");
 }
 
 bool
-ConnectionInfo::ReleaseDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate)
+ConnectionInfo::ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, uint64_t rate)
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
 
-  if (m_gbrReserved [dir] - rate.GetBitRate () >= 0)
+  if (m_gbrReserved [dir] - rate >= 0)
     {
-      m_gbrReserved [dir] -= rate.GetBitRate ();
+      m_gbrReserved [dir] -= rate;
       return true;
     }
   NS_FATAL_ERROR ("No bandwidth available to release.");

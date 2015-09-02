@@ -225,8 +225,8 @@ public:
    * \return The requested field.
    */
   //\{
-  DataRate GetDownDataRate (void) const;
-  DataRate GetUpDataRate (void) const;
+  uint64_t GetDownBitRate (void) const;
+  uint64_t GetUpBitRate (void) const;
   bool IsReserved (void) const;
   //\}
 
@@ -248,8 +248,8 @@ private:
   bool     m_isReserved;    //!< True when resources are reserved
   bool     m_hasDown;       //!< True for downlink reserve
   bool     m_hasUp;         //!< True for uplink reserve
-  DataRate m_downDataRate;  //!< Downlink reserved data rate
-  DataRate m_upDataRate;    //!< Uplink reserved data rate
+  uint64_t m_downBitRate;   //!< Downlink reserved bit rate
+  uint64_t m_upBitRate;     //!< Uplink reserved bit rate
   Ptr<RoutingInfo> m_rInfo; //!< Routing information
 };
 

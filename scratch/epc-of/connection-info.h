@@ -155,10 +155,10 @@ public:
   bool IsFullDuplex (void) const;
 
   /**
-   * Inspect physical channel for the assigned data rate.
-   * \return The channel maximum nominal data rate.
+   * Inspect physical channel for the assigned bit rate.
+   * \return The channel maximum nominal bit rate (bps).
    */
-  DataRate GetLinkDataRate (void) const;
+  uint64_t GetLinkBitRate (void) const;
 
   /**
    * For two switch indexes, this methods asserts that boths indexes are valid
@@ -204,26 +204,26 @@ protected:
    * Reserve some bandwidth between these two switches.
    * \param srcIdx The source switch index.
    * \param dstIdx The destination switch index.
-   * \param rate The DataRate to reserve.
+   * \param rate The bit rate to reserve.
    * \return True if everything is ok, false otherwise.
    */
-  bool ReserveDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate);
+  bool ReserveGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, uint64_t rate);
 
   /**
    * Release some bandwidth between these two switches.
    * \param srcIdx The source switch index.
    * \param dstIdx The destination switch index.
-   * \param rate The DataRate to release.
+   * \param rate The bit rate to release.
    * \return True if everything is ok, false otherwise.
    */
-  bool ReleaseDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate);
+  bool ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, uint64_t rate);
 
 private:
   SwitchData        m_sw1;          //!< First switch (lowest index)
   SwitchData        m_sw2;          //!< Second switch (highest index)
   Ptr<CsmaChannel>  m_channel;      //!< The link channel connecting switches
 
-  uint64_t          m_gbrReserved [2];  //!< GBR reserved data rate
+  uint64_t          m_gbrReserved [2];  //!< GBR reserved bit rate
   
   uint32_t          m_gbrTxBytes [2];   //!< GBR transmitted bytes
   uint32_t          m_nonTxBytes [2];   //!< Non-GBR transmitted bytes

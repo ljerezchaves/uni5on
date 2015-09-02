@@ -119,70 +119,67 @@ private:
                        RingRoutingInfo::RoutingPath routingPath);
 
   /**
-   * Get the available bandwidth for this ring routing information, considering
+   * Get the available bit rate for this ring routing information, considering
    * both downlink and uplink paths.
    * \internal 
    * This method implements the GBR Distance-Based Reservation algorithm
-   * (DeBaR) proposed by prof. Deep Medhi. The general ideal is a dynamic
-   * bandwidth usage factor that can be ajudsted based on the distance betweem
-   * the eNB switch and the gateway switch. The closer the gateway the eNB is,
-   * the more it can use from the available bandwidth. The goal is to prevent
-   * flows that are very close to the gateway from running out of resources
-   * early, since this last link is always the most congested ond. 
+   * (DeBaR) proposed by prof. Deep Medhi. The general idea is a dynamic bit
+   * rate usage factor that can be adjusted based on the distance between the
+   * eNB switch and the gateway switch. 
    * \param ringInfo The ring routing information.
-   * \param useShortPath When true, get the available bandwidth in the shortest
+   * \param useShortPath When true, get the available bit rate in the shortest
    * path between source and destination nodes; otherwise, considers the
    * inverted path.
-   * \return A pair of available bandwidth data rates, for both downlink and
-   * uplink paths, in this order.
+   * \return A pair of available GBR bit rates, for both downlink and uplink
+   * paths, in this order.
    */
-  std::pair<DataRate, DataRate> 
-  GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo, 
-                         bool useShortPath = true);
+  std::pair<uint64_t, uint64_t> 
+  GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo, 
+                          bool useShortPath = true);
 
   /**
-   * Reserve the bandwidth for this bearer in network.
+   * Reserve the bit rate for this bearer in network.
    * \param ringInfo The ring routing information.
    * \param reserveInfo The reserve information.
    * \return True if success, false otherwise;
    */
-  bool ReserveBandwidth (Ptr<const RingRoutingInfo> ringInfo,
-                         Ptr<ReserveInfo> reserveInfo);
+  bool ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
+                          Ptr<ReserveInfo> reserveInfo);
   
   /**
-   * Release the bandwidth for this bearer in network.
+   * Release the bit rate for this bearer in network.
    * \param ringInfo The ring routing information.
    * \param reserveInfo The reserve information.
    * \return True if success, false otherwise;
    */
-  bool ReleaseBandwidth (Ptr<const RingRoutingInfo> ringInfo,
-                         Ptr<ReserveInfo> reserveInfo);
+  bool ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
+                          Ptr<ReserveInfo> reserveInfo);
 
   /**
-   * Reserve the indicated bandwidth at each link from source to
+   * Reserve the indicated bit rate at each link from source to
    * destination switch index following the indicated routing path. 
    * \param srcSwitchIdx Source switch index.
    * \param dstSwitchIdx Destination switch index.
    * \param routingPath The routing path.
-   * \param reserve The bandwidth to reserve.
+   * \param reserve The bit rate to reserve.
    * \return True if success, false otherwise;
    */
-  bool PerLinkReserve (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                       RingRoutingInfo::RoutingPath routingPath, 
-                       DataRate reserve);
+  bool PerLinkGbrReserve (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+                          RingRoutingInfo::RoutingPath routingPath, 
+                          uint64_t reserve);
 
   /**
-   * Release the indicated bandwidth at each link from source to
+   * Release the indicated bit rate at each link from source to
    * destination switch index following the indicated routing path. 
    * \param srcSwitchIdx Source switch index.
    * \param dstSwitchIdx Destination switch index.
    * \param routingPath The routing path.
-   * \param release The bandwidth to release.
+   * \param release The bit rate to release.
    * \return True if success, false otherwise;
    */
-  bool PerLinkRelease (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                       RingRoutingInfo::RoutingPath routingPath, 
-                       DataRate release);
+  bool PerLinkGbrRelease (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+                          RingRoutingInfo::RoutingPath routingPath, 
+                          uint64_t release);
 
   /**
    * Get the next switch index following the indicated routing path.

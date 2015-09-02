@@ -326,12 +326,12 @@ ReserveInfo::ReserveInfo (Ptr<RoutingInfo> rInfo)
   if (gbrQoS.gbrDl)
     {
       m_hasDown = true;
-      m_downDataRate = DataRate (gbrQoS.gbrDl);
+      m_downBitRate = gbrQoS.gbrDl;
     }
   if (gbrQoS.gbrUl)
     {
       m_hasUp = true;
-      m_upDataRate = DataRate (gbrQoS.gbrUl);
+      m_upBitRate = gbrQoS.gbrUl;
     }
 }
 
@@ -369,16 +369,16 @@ ReserveInfo::SetReserved (bool reserved)
   m_isReserved = reserved;
 }
 
-DataRate
-ReserveInfo::GetDownDataRate (void) const
+uint64_t
+ReserveInfo::GetDownBitRate (void) const
 {
-  return m_downDataRate;
+  return m_downBitRate;
 }
 
-DataRate
-ReserveInfo::GetUpDataRate (void) const
+uint64_t
+ReserveInfo::GetUpBitRate (void) const
 {
-  return m_upDataRate;
+  return m_upBitRate;
 }
 
 bool
