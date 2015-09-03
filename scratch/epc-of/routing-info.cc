@@ -308,6 +308,8 @@ ReserveInfo::ReserveInfo ()
   : m_isReserved (false),
     m_hasDown (false),
     m_hasUp (false),
+    m_downBitRate (0),
+    m_upBitRate (0),
     m_rInfo (0)
 {
   NS_LOG_FUNCTION (this);
@@ -317,6 +319,8 @@ ReserveInfo::ReserveInfo (Ptr<RoutingInfo> rInfo)
   : m_isReserved (false),
     m_hasDown (false),
     m_hasUp (false),
+    m_downBitRate (0),
+    m_upBitRate (0),
     m_rInfo (rInfo)
 {
   NS_LOG_FUNCTION (this);
@@ -372,13 +376,13 @@ ReserveInfo::SetReserved (bool reserved)
 uint64_t
 ReserveInfo::GetDownBitRate (void) const
 {
-  return m_downBitRate;
+  return m_hasDown ? m_downBitRate : 0;
 }
 
 uint64_t
 ReserveInfo::GetUpBitRate (void) const
 {
-  return m_upBitRate;
+  return m_hasUp ? m_upBitRate : 0;
 }
 
 bool
