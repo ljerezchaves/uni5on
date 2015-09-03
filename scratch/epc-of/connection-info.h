@@ -187,18 +187,18 @@ protected:
    * \param dstIdx The destination switch index.
    * \return The available bit rate from srcIdx to dstIdx.
    */
-  uint64_t GetAvailableBitRate (uint16_t srcIdx, uint16_t dstIdx) const;
+  uint64_t GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx) const;
 
   /**
    * Get the available bit rate between these two switches, considering the
    * maximum bandwidth reservation factor.
    * \param srcIdx The source switch index.
    * \param dstIdx The destination switch index.
-   * \param factor The bandwidth reservation factor.
+   * \param factor DeBaR reservation factor.
    * \return The available bit rate from srcIdx to dstIdx.
    */
-  uint64_t GetAvailableBitRate (uint16_t srcIdx, uint16_t dstIdx, 
-                                 double factor) const;
+  uint64_t GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, 
+                                   double factor) const;
 
   /**
    * Reserve some bandwidth between these two switches.
@@ -219,12 +219,20 @@ protected:
   bool ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, uint64_t rate);
 
 private:
+  /**
+   * Update the GBR reserve quota and GBR maximum bit rate.
+   * \param value The value to set.
+   */
+  void SetGbrReserveQuota (double value);
+
   SwitchData        m_sw1;          //!< First switch (lowest index)
   SwitchData        m_sw2;          //!< Second switch (highest index)
   Ptr<CsmaChannel>  m_channel;      //!< The link channel connecting switches
 
   uint64_t          m_gbrReserved [2];  //!< GBR reserved bit rate
-  
+  uint64_t          m_gbrMaxBitRate;    //!< GBR max bit rate
+  double            m_gbrReserveQuota;  //!< GBR reserve quota
+
   uint32_t          m_gbrTxBytes [2];   //!< GBR transmitted bytes
   uint32_t          m_nonTxBytes [2];   //!< Non-GBR transmitted bytes
 };

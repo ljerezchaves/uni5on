@@ -69,6 +69,12 @@ ConnectionInfo::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::ConnectionInfo")
     .SetParent<Object> ()
     .AddConstructor<ConnectionInfo> ()
+    .AddAttribute ("GbrReserveQuota",
+                   "Maximum bandwitdth ratio that can be reserved to GBR "
+                   "traffic in this connection.",
+                   DoubleValue (0.4),   // 40% of link capacity
+                   MakeDoubleAccessor (&ConnectionInfo::SetGbrReserveQuota),
+                   MakeDoubleChecker<double> (0.0, 1.0))
   ;
   return tid;
 }
@@ -253,32 +259,32 @@ ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
 }
 
 uint64_t
-ConnectionInfo::GetAvailableBitRate (uint16_t srcIdx, uint16_t dstIdx) const
+ConnectionInfo::GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx) const
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
-  uint64_t linkBitRate = GetLinkBitRate ();
 
-  if (linkBitRate >= m_gbrReserved [dir])
+  if (m_gbrMaxBitRate >= m_gbrReserved [dir])
     {
-      return linkBitRate - m_gbrReserved [dir];
+      return m_gbrMaxBitRate - m_gbrReserved [dir];
     }
   else
     {
-      NS_LOG_ERROR ("There are more bits reserved than the link bit rate.");
       return 0;
     }
 }
 
 uint64_t
-ConnectionInfo::GetAvailableBitRate (uint16_t srcIdx, uint16_t dstIdx, 
-                                      double factor) const
+ConnectionInfo::GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, 
+                                        double factor) const
 {
-  ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
-  uint64_t linkBitRate = factor * GetLinkBitRate ();
+  NS_ASSERT_MSG (factor >= 0.0, "Invalid DeBaR factor.");
   
-  if (linkBitRate >= m_gbrReserved [dir])
+  ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
+  uint64_t maxBitRate = static_cast<uint64_t> (factor * m_gbrMaxBitRate);
+  
+  if (maxBitRate >= m_gbrReserved [dir])
     {
-      return linkBitRate - m_gbrReserved [dir];
+      return maxBitRate - m_gbrReserved [dir];
     }
   else
     {
@@ -310,6 +316,13 @@ ConnectionInfo::ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, uint64_t ra
       return true;
     }
   NS_FATAL_ERROR ("No bandwidth available to release.");
+}
+
+void 
+ConnectionInfo::SetGbrReserveQuota (double value)
+{
+  m_gbrReserveQuota = value;
+  m_gbrMaxBitRate = static_cast<uint64_t> (m_gbrReserveQuota * GetLinkBitRate ());
 }
 
 };  // namespace ns3

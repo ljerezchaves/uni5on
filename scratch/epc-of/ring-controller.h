@@ -199,7 +199,6 @@ private:
 
   uint16_t            m_noSwitches;       //!< Number of switches in topology.
   RoutingStrategy     m_strategy;         //!< Routing strategy in use.
-  double              m_gbrReserveQuota;  //!< GBR reserve quota.
   double              m_debarStep;        //!< DeBaR increase step.
   bool                m_debarShortPath;   //!< True for DeBaR in shortest path.
   bool                m_debarLongPath;    //!< True for DeBaR in longest path.

@@ -48,15 +48,9 @@ RingController::GetTypeId (void)
                    MakeEnumAccessor (&RingController::m_strategy),
                    MakeEnumChecker (RingController::SPO, "spo",
                                     RingController::SPF, "spf"))
-    .AddAttribute ("GbrReserveQuota",
-                   "Maximum bandwitdth ratio that can be reserved to GBR "
-                   "traffic in any connection between switches.",
-                   DoubleValue (0.4),   // 40% of link capacity
-                   MakeDoubleAccessor (&RingController::m_gbrReserveQuota),
-                   MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("DebarIncStep",
                    "DeBaR increase adjustment step.",
-                   DoubleValue (0.025), // 2.5% of link capacity
+                   DoubleValue (0.025), // 2.5% of GBR quota
                    MakeDoubleAccessor (&RingController::m_debarStep),
                    MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("EnableShortDebar",
@@ -504,11 +498,11 @@ RingController::GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
 
   uint16_t sgwIdx      = ringInfo->GetSgwSwIdx ();
   uint16_t enbIdx      = ringInfo->GetEnbSwIdx ();
-  uint64_t downBitRate = std::numeric_limits<uint64_t>::max();
-  uint64_t upBitRate   = std::numeric_limits<uint64_t>::max();
+  uint64_t downBitRate = std::numeric_limits<uint64_t>::max ();
+  uint64_t upBitRate   = std::numeric_limits<uint64_t>::max ();
   uint64_t bitRate     = 0;
   uint16_t current     = enbIdx;
-  double   gbrQuota    = m_gbrReserveQuota;
+  double   debarFactor = 1.0;
 
   RingRoutingInfo::RoutingPath upPath = FindShortestPath (enbIdx, sgwIdx);
   if (!useShortPath)
@@ -523,14 +517,14 @@ RingController::GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
 
       // Check for available bit rate in uplink direction
-      bitRate = cInfo->GetAvailableBitRate (current, next, gbrQuota);
+      bitRate = cInfo->GetAvailableGbrBitRate (current, next, debarFactor);
       if (bitRate < upBitRate)
         {
           upBitRate = bitRate;
         }
 
       // Check for available bit rate in downlink direction
-      bitRate = cInfo->GetAvailableBitRate (next, current, gbrQuota);
+      bitRate = cInfo->GetAvailableGbrBitRate (next, current, debarFactor);
       if (bitRate < downBitRate)
         {
           downBitRate = bitRate;
@@ -541,7 +535,8 @@ RingController::GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
       // when looking for the available bit rate in routing path.
       if ((m_debarShortPath && useShortPath) || (m_debarLongPath && !useShortPath))
         {
-          gbrQuota -= m_debarStep;
+          // Avoiding negative DeBaR factor
+          debarFactor = std::max (debarFactor - m_debarStep, 0.0); 
         }
     }
 
