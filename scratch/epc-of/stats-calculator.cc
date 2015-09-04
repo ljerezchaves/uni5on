@@ -177,7 +177,7 @@ AdmissionStatsCalculator::NotifyRequest (bool accepted, Ptr<const RoutingInfo> r
     }
 
   // Preparing bearer request stats for trace source
-  uint64_t downBitRate, upBitRate;
+  uint64_t downBitRate = 0, upBitRate = 0;
   Ptr<const ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
   if (reserveInfo)
     {
