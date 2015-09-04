@@ -419,10 +419,15 @@ BandwidthStatsCalculator::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::BandwidthStatsCalculator")
     .SetParent<Object> ()
     .AddConstructor<BandwidthStatsCalculator> ()
-    .AddAttribute ("ResStatsFilename",
-                   "Filename for network reservation statistics.",
-                   StringValue ("res_stats.txt"),
-                   MakeStringAccessor (&BandwidthStatsCalculator::m_resStatsFilename),
+    .AddAttribute ("RegStatsFilename",
+                   "Filename for GBR reservation statistics.",
+                   StringValue ("reg_stats.txt"),
+                   MakeStringAccessor (&BandwidthStatsCalculator::m_regStatsFilename),
+                   MakeStringChecker ())
+    .AddAttribute ("RenStatsFilename",
+                   "Filename for Non-GBR allowed bandwidth statistics.",
+                   StringValue ("ren_stats.txt"),
+                   MakeStringAccessor (&BandwidthStatsCalculator::m_renStatsFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwbStatsFilename",
                    "Filename for network bandwidth statistics.",
@@ -460,7 +465,11 @@ BandwidthStatsCalculator::DumpStatistics (void)
   << left << setw (12)
   << Simulator::Now ().GetSeconds ();
 
-  *m_resWrapper->GetStream ()
+  *m_regWrapper->GetStream ()
+  << left << setw (12)
+  << Simulator::Now ().GetSeconds ();
+
+  *m_renWrapper->GetStream ()
   << left << setw (12)
   << Simulator::Now ().GetSeconds ();
 
@@ -488,17 +497,23 @@ BandwidthStatsCalculator::DumpStatistics (void)
       << setw (10) << (gbrFwKbits + nonFwKbits) / interval << " "
       << setw (10) << (gbrBwKbits + nonBwKbits) / interval << "   ";
 
-      *m_resWrapper->GetStream ()
+      *m_regWrapper->GetStream ()
       << right
       << setw (6) << (*it)->GetForwardGbrReservedRatio ()  << " "
       << setw (6) << (*it)->GetBackwardGbrReservedRatio () << "   ";
+
+      *m_renWrapper->GetStream ()
+      << right
+      << setw (6) << (*it)->GetForwardNonGbrAllowedRatio ()  << " "
+      << setw (6) << (*it)->GetBackwardNonGbrAllowedRatio () << "   ";
 
       (*it)->ResetStatistics ();
     }
   *m_bwbWrapper->GetStream () << std::endl;
   *m_bwgWrapper->GetStream () << std::endl;
   *m_bwnWrapper->GetStream () << std::endl;
-  *m_resWrapper->GetStream () << std::endl;
+  *m_regWrapper->GetStream () << std::endl;
+  *m_renWrapper->GetStream () << std::endl;
 
   ResetCounters ();
 }
@@ -510,7 +525,8 @@ BandwidthStatsCalculator::DoDispose ()
   m_bwbWrapper = 0;
   m_bwgWrapper = 0;
   m_bwnWrapper = 0;
-  m_resWrapper = 0;
+  m_regWrapper = 0;
+  m_renWrapper = 0;
   m_connections.clear ();
 }
 
@@ -538,9 +554,15 @@ BandwidthStatsCalculator::NotifyConstructionCompleted (void)
   << left << fixed << setprecision (4)
   << setw (12) << "Time(s)";
 
-  m_resWrapper = Create<OutputStreamWrapper> (m_resStatsFilename,
+  m_regWrapper = Create<OutputStreamWrapper> (m_regStatsFilename,
                                               std::ios::out);
-  *m_resWrapper->GetStream ()
+  *m_regWrapper->GetStream ()
+  << left << fixed << setprecision (4)
+  << setw (12) << "Time(s)";
+
+  m_renWrapper = Create<OutputStreamWrapper> (m_renStatsFilename,
+                                              std::ios::out);
+  *m_renWrapper->GetStream ()
   << left << fixed << setprecision (4)
   << setw (12) << "Time(s)";
 }
@@ -566,7 +588,12 @@ BandwidthStatsCalculator::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
   << right << setw (10) << key.first  << "-"
   << left  << setw (10) << key.second << "   ";
 
-  *m_resWrapper->GetStream ()
+  *m_regWrapper->GetStream ()
+  << left
+  << right << setw (6) << key.first  << "-"
+  << left  << setw (6) << key.second << "   ";
+
+  *m_renWrapper->GetStream ()
   << left
   << right << setw (6) << key.first  << "-"
   << left  << setw (6) << key.second << "   ";
@@ -578,7 +605,8 @@ BandwidthStatsCalculator::NotifyTopologyBuilt (NetDeviceContainer devices)
   *m_bwbWrapper->GetStream () << left << std::endl;
   *m_bwgWrapper->GetStream () << left << std::endl;
   *m_bwnWrapper->GetStream () << left << std::endl;
-  *m_resWrapper->GetStream () << left << std::endl;
+  *m_regWrapper->GetStream () << left << std::endl;
+  *m_renWrapper->GetStream () << left << std::endl;
 }
 
 void

@@ -206,8 +206,10 @@ SimulationScenario::SetCommonPrefix (std::string prefix)
                       StringValue (m_outputPrefix + "bwg_stats.txt"));
   Config::SetDefault ("ns3::BandwidthStatsCalculator::BwnStatsFilename",
                       StringValue (m_outputPrefix + "bwn_stats.txt"));
-  Config::SetDefault ("ns3::BandwidthStatsCalculator::ResStatsFilename",
-                      StringValue (m_outputPrefix + "res_stats.txt"));
+  Config::SetDefault ("ns3::BandwidthStatsCalculator::RegStatsFilename",
+                      StringValue (m_outputPrefix + "reg_stats.txt"));
+  Config::SetDefault ("ns3::BandwidthStatsCalculator::RenStatsFilename",
+                      StringValue (m_outputPrefix + "ren_stats.txt"));
 }
 
 void

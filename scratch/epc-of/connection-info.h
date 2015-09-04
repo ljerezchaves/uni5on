@@ -110,12 +110,26 @@ public:
    * \return The usage ratio.
    */
   //\{
-  //!< The reserved ratio in forward direction
+  //!< The GBR reserved ratio in forward direction
   double GetForwardGbrReservedRatio (void) const;
 
-  //!< The reserved ratio in backward direction
+  //!< The GBR reserved ratio in backward direction
   double GetBackwardGbrReservedRatio (void) const;
   //\}
+
+  /**
+   * Get the bandwidth allowed ratio for Non-GBR traffic in indicated
+   * direction, calculated with respect to the total link capacity.
+   * \return The allowed ratio.
+   */
+  //\{
+  //!< The Non-GBR allowed ratio in forward direction
+  double GetForwardNonGbrAllowedRatio (void) const;
+
+  //!< The Non-GBR allowed ratio in backward direction
+  double GetBackwardNonGbrAllowedRatio (void) const;
+  //\}
+
 
   /**
    * Get the number of bytes successfully transmitted in indicated direction

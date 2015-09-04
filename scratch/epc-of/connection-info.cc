@@ -161,6 +161,20 @@ ConnectionInfo::GetBackwardGbrReservedRatio (void) const
          (m_gbrReserved [ConnectionInfo::BACKWARD]) / GetLinkBitRate ();
 }
 
+double
+ConnectionInfo::GetForwardNonGbrAllowedRatio (void) const
+{
+  return static_cast<double>
+         (m_nonAllowed [ConnectionInfo::FORWARD]) / GetLinkBitRate ();
+}
+
+double
+ConnectionInfo::GetBackwardNonGbrAllowedRatio (void) const
+{
+  return static_cast<double>
+         (m_nonAllowed [ConnectionInfo::BACKWARD]) / GetLinkBitRate ();
+}
+
 uint32_t
 ConnectionInfo::GetForwardBytes (void) const
 {
@@ -317,8 +331,11 @@ ConnectionInfo::ReserveGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
     {
       m_gbrReserved [dir] += bitRate;
       
-      // Check for the need to reduce the Non-GBR allowed bit rate
-      if (m_nonAllowed [dir] - m_gbrReserved [dir] < m_gbrSafeguard)
+      // When the distance between the GRB reserved bit rate and the Non-GBR
+      // maximum allowed bit rate gets lower than the safeguard value, we need
+      // to reduce the Non-GBR allowed bit rate by one adjustment step value.
+      if (GetLinkBitRate () - m_nonAllowed [dir] < 
+          m_gbrReserved [dir] + m_gbrSafeguard)
         {
           m_nonAllowed [dir] -= m_nonAdjustStep;
           // TODO Update meter
@@ -339,9 +356,12 @@ ConnectionInfo::ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
     {
       m_gbrReserved [dir] -= bitRate;
       
-      // Check for the need to increase the Non-GBR allowed bit rate
-      if (m_nonAllowed [dir] - m_gbrReserved [dir] > 
-          m_gbrSafeguard + m_nonAdjustStep)
+      // When the distance between the GRB reserved bit rate and the Non-GBR
+      // maximum allowed bit rate gets higher than the safeguard value + one
+      // adjustment step, we can increase the Non-GBR allowed bit rate by one
+      // adjustment step value, still respecting the safeguard value. 
+      if (GetLinkBitRate () - m_nonAllowed [dir] - m_gbrSafeguard > 
+          m_gbrReserved [dir] + m_nonAdjustStep)
         {
           m_nonAllowed [dir] += m_nonAdjustStep;
           // TODO Update meter
