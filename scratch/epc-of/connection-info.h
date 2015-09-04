@@ -229,13 +229,30 @@ private:
    */
   void SetGbrReserveQuota (double value);
 
+  /**
+   * Update the GBR safeguard bandwidth value.
+   * \param value The value to set.
+   */
+  void SetGbrSafeguard (DataRate value);
+
+  /**
+   * Update the Non-GBR adjustment step value.
+   * \param value The value to set.
+   */
+  void SetNonGbrAdjStep (DataRate value);
+
+
   SwitchData        m_sw1;          //!< First switch (lowest index)
   SwitchData        m_sw2;          //!< Second switch (highest index)
   Ptr<CsmaChannel>  m_channel;      //!< The link channel connecting switches
 
-  uint64_t          m_gbrReserved [2];  //!< GBR reserved bit rate
-  uint64_t          m_gbrMaxBitRate;    //!< GBR max bit rate
-  double            m_gbrReserveQuota;  //!< GBR reserve quota
+  double            m_gbrReserveQuota;  //!< GBR link-capacity reserved quota
+  uint64_t          m_gbrMaxBitRate;    //!< GBR maximum allowed bit rate
+  uint64_t          m_gbrSafeguard;     //!< GBR safeguard bit rate
+  uint64_t          m_gbrReserved [2];  //!< GBR current reserved bit rate
+
+  uint64_t          m_nonAllowed [2];   //!< Non-GBR allowed bit rate
+  uint64_t          m_nonAdjustStep;    //!< Non-GBR bit rate adjustment step
 
   uint32_t          m_gbrTxBytes [2];   //!< GBR transmitted bytes
   uint32_t          m_nonTxBytes [2];   //!< Non-GBR transmitted bytes

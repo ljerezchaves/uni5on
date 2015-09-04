@@ -72,9 +72,23 @@ ConnectionInfo::GetTypeId (void)
     .AddAttribute ("GbrReserveQuota",
                    "Maximum bandwitdth ratio that can be reserved to GBR "
                    "traffic in this connection.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DoubleValue (0.4),   // 40% of link capacity
                    MakeDoubleAccessor (&ConnectionInfo::SetGbrReserveQuota),
                    MakeDoubleChecker<double> (0.0, 1.0))
+    .AddAttribute ("GbrSafeguard",
+                   "Safeguard bandwidth to protect GBR from Non-GBR traffic.", 
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   DataRateValue (DataRate ("10Mb/s")),
+                   MakeDataRateAccessor (&ConnectionInfo::SetGbrSafeguard),
+                   MakeDataRateChecker ())
+    .AddAttribute ("NonGbrAdjustmentStep",
+                   "Step value used to adjust the bandwidth that " 
+                   "Non-GBR traffic is allowed to use.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   DataRateValue (DataRate ("5Mb/s")),
+                   MakeDataRateAccessor (&ConnectionInfo::SetNonGbrAdjStep),
+                   MakeDataRateChecker ())
   ;
   return tid;
 }
@@ -150,15 +164,13 @@ ConnectionInfo::GetBackwardGbrReservedRatio (void) const
 uint32_t
 ConnectionInfo::GetForwardBytes (void) const
 {
-  return m_gbrTxBytes [ConnectionInfo::FORWARD] +
-         m_nonTxBytes [ConnectionInfo::FORWARD];
+  return GetForwardGbrBytes () + GetForwardNonGbrBytes ();
 }
 
 uint32_t
 ConnectionInfo::GetBackwardBytes (void) const
 {
-  return m_gbrTxBytes [ConnectionInfo::BACKWARD] +
-         m_nonTxBytes [ConnectionInfo::BACKWARD];
+  return GetBackwardGbrBytes () + GetBackwardNonGbrBytes ();
 }
 
 uint32_t
@@ -304,6 +316,14 @@ ConnectionInfo::ReserveGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
   if (m_gbrReserved [dir] + bitRate <= m_gbrMaxBitRate)
     {
       m_gbrReserved [dir] += bitRate;
+      
+      // Check for the need to reduce the Non-GBR allowed bit rate
+      if (m_nonAllowed [dir] - m_gbrReserved [dir] < m_gbrSafeguard)
+        {
+          m_nonAllowed [dir] -= m_nonAdjustStep;
+          // TODO Update meter
+        }
+          
       return true;
     }
   NS_FATAL_ERROR ("No bandwidth available to reserve.");
@@ -318,6 +338,15 @@ ConnectionInfo::ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
   if (m_gbrReserved [dir] - bitRate >= 0)
     {
       m_gbrReserved [dir] -= bitRate;
+      
+      // Check for the need to increase the Non-GBR allowed bit rate
+      if (m_nonAllowed [dir] - m_gbrReserved [dir] > 
+          m_gbrSafeguard + m_nonAdjustStep)
+        {
+          m_nonAllowed [dir] += m_nonAdjustStep;
+          // TODO Update meter
+        }
+
       return true;
     }
   NS_FATAL_ERROR ("No bandwidth available to release.");
@@ -326,9 +355,30 @@ ConnectionInfo::ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
 void
 ConnectionInfo::SetGbrReserveQuota (double value)
 {
+  NS_LOG_FUNCTION (this << value);
+
   m_gbrReserveQuota = value;
   m_gbrMaxBitRate =
     static_cast<uint64_t> (m_gbrReserveQuota * GetLinkBitRate ());
+}
+
+void
+ConnectionInfo::SetGbrSafeguard (DataRate value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_gbrSafeguard = value.GetBitRate ();
+}
+
+void
+ConnectionInfo::SetNonGbrAdjStep (DataRate value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_nonAdjustStep = value.GetBitRate ();
+  m_nonAllowed [0] = GetLinkBitRate () - (m_gbrSafeguard + m_nonAdjustStep);
+  m_nonAllowed [1] = GetLinkBitRate () - (m_gbrSafeguard + m_nonAdjustStep);
+  // TODO Install initial meters
 }
 
 };  // namespace ns3
