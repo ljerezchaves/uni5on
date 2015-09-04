@@ -52,11 +52,13 @@ RingNetwork::GetTypeId (void)
     .AddConstructor<RingNetwork> ()
     .AddAttribute ("NumSwitches",
                    "The number of OpenFlow switches in the ring (at least 3).",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (3),
                    MakeUintegerAccessor (&RingNetwork::m_nodes),
                    MakeUintegerChecker<uint16_t> (3))
     .AddAttribute ("SwitchLinkDataRate",
                    "The data rate for the links between OpenFlow switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("100Mb/s")),
                    MakeDataRateAccessor (&RingNetwork::m_swLinkDataRate),
                    MakeDataRateChecker ())
@@ -66,12 +68,14 @@ RingNetwork::GetTypeId (void)
                    MakeTimeAccessor (&RingNetwork::m_swLinkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("GatewayLinkDataRate",
-                   "The data rate for the link connecting the gateway to the OpenFlow network.",
+                   "The data rate for the link connecting the gateway to the "
+                   "OpenFlow network.",
                    DataRateValue (DataRate ("10Gb/s")),
                    MakeDataRateAccessor (&RingNetwork::m_gwLinkDataRate),
                    MakeDataRateChecker ())
     .AddAttribute ("GatewayLinkDelay",
-                   "The delay for the link connecting the gateway to the OpenFlow network.",
+                   "The delay for the link connecting the gateway to the "
+                   "OpenFlow network.",
                    TimeValue (MicroSeconds (0)),
                    MakeTimeAccessor (&RingNetwork::m_gwLinkDelay),
                    MakeTimeChecker ())
