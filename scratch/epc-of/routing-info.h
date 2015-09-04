@@ -187,8 +187,8 @@ private:
   bool     m_isInstalled;   //!< True when this meter is installed
   bool     m_hasDown;       //!< True for downlink meter
   bool     m_hasUp;         //!< True for uplink meter
-  DataRate m_downDataRate;  //!< Downlink meter drop rate (bps)
-  DataRate m_upDataRate;    //!< Uplink meter drop rate (bps)
+  uint64_t m_downBitRate;   //!< Downlink meter drop bit rate (bps)
+  uint64_t m_upBitRate;     //!< Uplink meter drop bit rate (bps)
   Ptr<RoutingInfo> m_rInfo; //!< Routing information
 };
 

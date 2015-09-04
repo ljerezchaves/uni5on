@@ -198,6 +198,8 @@ MeterInfo::MeterInfo ()
   : m_isInstalled (false),
     m_hasDown (false),
     m_hasUp (false),
+    m_downBitRate (0),
+    m_upBitRate (0),
     m_rInfo (0)
 {
   NS_LOG_FUNCTION (this);
@@ -207,6 +209,8 @@ MeterInfo::MeterInfo (Ptr<RoutingInfo> rInfo)
   : m_isInstalled (false),
     m_hasDown (false),
     m_hasUp (false),
+    m_downBitRate (0),
+    m_upBitRate (0),
     m_rInfo (rInfo)
 {
   NS_LOG_FUNCTION (this);
@@ -216,12 +220,12 @@ MeterInfo::MeterInfo (Ptr<RoutingInfo> rInfo)
   if (gbrQoS.mbrDl)
     {
       m_hasDown = true;
-      m_downDataRate = DataRate (gbrQoS.mbrDl);
+      m_downBitRate = gbrQoS.mbrDl;
     }
   if (gbrQoS.mbrUl)
     {
       m_hasUp = true;
-      m_upDataRate = DataRate (gbrQoS.mbrUl);
+      m_upBitRate = gbrQoS.mbrUl;
     }
 }
 
@@ -276,7 +280,7 @@ MeterInfo::GetDownAddCmd (void) const
 {
   std::ostringstream meter;
   meter << "meter-mod cmd=add,flags=1,meter=" << m_teid
-        << " drop:rate=" << m_downDataRate.GetBitRate () / 1000;
+        << " drop:rate=" << m_downBitRate / 1000;
   return meter.str ();
 }
 
@@ -285,7 +289,7 @@ MeterInfo::GetUpAddCmd (void) const
 {
   std::ostringstream meter;
   meter << "meter-mod cmd=add,flags=1,meter=" << m_teid
-        << " drop:rate=" << m_upDataRate.GetBitRate () / 1000;
+        << " drop:rate=" << m_upBitRate / 1000;
   return meter.str ();
 }
 
