@@ -37,7 +37,7 @@ ConnectionInfo::~ConnectionInfo ()
   NS_LOG_FUNCTION (this);
 }
 
-ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2, 
+ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
                                 Ptr<CsmaChannel> channel)
   : m_sw1 (sw1),
     m_sw2 (sw2),
@@ -47,12 +47,12 @@ ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
 
   // Asserting internal device order to ensure thar forward and backward
   // indexes are correct.
-  NS_ASSERT_MSG ((channel->GetCsmaDevice (0) == GetPortDevFirst () &&
-                  channel->GetCsmaDevice (1) == GetPortDevSecond ()),
-                  "Invalid device order in csma channel.");
+  NS_ASSERT_MSG ((channel->GetCsmaDevice (0) == GetPortDevFirst ()
+                  && channel->GetCsmaDevice (1) == GetPortDevSecond ()),
+                 "Invalid device order in csma channel.");
 
   // Connecting trace source to CsmaNetDevice PhyTxEnd trace source, used to
-  // monitor data transmitted over this connection. 
+  // monitor data transmitted over this connection.
   m_sw1.portDev->TraceConnect ("PhyTxEnd", "Forward",
       MakeCallback (&ConnectionInfo::NotifyTxPacket, this));
   m_sw2.portDev->TraceConnect ("PhyTxEnd", "Backward",
@@ -137,57 +137,59 @@ double
 ConnectionInfo::GetForwardGbrReservedRatio (void) const
 {
   return static_cast<double>
-    (m_gbrReserved [ConnectionInfo::FORWARD]) / GetLinkBitRate ();
+         (m_gbrReserved [ConnectionInfo::FORWARD]) / GetLinkBitRate ();
 }
 
 double
 ConnectionInfo::GetBackwardGbrReservedRatio (void) const
 {
   return static_cast<double>
-    (m_gbrReserved [ConnectionInfo::BACKWARD]) / GetLinkBitRate ();
+         (m_gbrReserved [ConnectionInfo::BACKWARD]) / GetLinkBitRate ();
 }
 
-uint32_t 
+uint32_t
 ConnectionInfo::GetForwardBytes (void) const
 {
   return m_gbrTxBytes [ConnectionInfo::FORWARD] +
          m_nonTxBytes [ConnectionInfo::FORWARD];
 }
 
-uint32_t 
+uint32_t
 ConnectionInfo::GetBackwardBytes (void) const
 {
   return m_gbrTxBytes [ConnectionInfo::BACKWARD] +
          m_nonTxBytes [ConnectionInfo::BACKWARD];
 }
 
-uint32_t 
+uint32_t
 ConnectionInfo::GetForwardGbrBytes (void) const
 {
   return m_gbrTxBytes [ConnectionInfo::FORWARD];
 }
 
-uint32_t 
+uint32_t
 ConnectionInfo::GetBackwardGbrBytes (void) const
 {
   return m_gbrTxBytes [ConnectionInfo::BACKWARD];
 }
 
-uint32_t 
+uint32_t
 ConnectionInfo::GetForwardNonGbrBytes (void) const
 {
   return m_nonTxBytes [ConnectionInfo::FORWARD];
 }
 
-uint32_t 
+uint32_t
 ConnectionInfo::GetBackwardNonGbrBytes (void) const
 {
   return m_nonTxBytes [ConnectionInfo::BACKWARD];
 }
 
-void 
+void
 ConnectionInfo::ResetStatistics (void)
 {
+  NS_LOG_FUNCTION (this);
+
   m_gbrTxBytes [0] = 0;
   m_gbrTxBytes [1] = 0;
   m_nonTxBytes [0] = 0;
@@ -209,16 +211,16 @@ ConnectionInfo::GetLinkBitRate (void) const
 ConnectionInfo::Direction
 ConnectionInfo::GetDirection (uint16_t src, uint16_t dst) const
 {
-  NS_ASSERT_MSG (((src == GetSwIdxFirst ()  && dst == GetSwIdxSecond ()) ||
-                  (src == GetSwIdxSecond () && dst == GetSwIdxFirst ())),
+  NS_ASSERT_MSG (((src == GetSwIdxFirst ()  && dst == GetSwIdxSecond ())
+                  || (src == GetSwIdxSecond () && dst == GetSwIdxFirst ())),
                  "Invalid switch indexes for this connection.");
-  
+
   if (IsFullDuplex () && src == GetSwIdxSecond ())
     {
       return ConnectionInfo::BACKWARD;
     }
-      
-  // For half-duplex channel, always return true, as we will 
+
+  // For half-duplex channel, always return true, as we will
   // only use the forwarding path for resource reservations.
   return ConnectionInfo::FORWARD;
 }
@@ -234,13 +236,14 @@ void
 ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
 {
   ConnectionInfo::Direction dir;
-  dir = (context == "Forward") ? ConnectionInfo::FORWARD : 
+  dir = (context == "Forward") ? ConnectionInfo::FORWARD :
                                  ConnectionInfo::BACKWARD;
-  
+
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      EpsBearer bearer = OpenFlowEpcController::GetEpsBearer (gtpuTag.GetTeid ());
+      EpsBearer bearer =
+        OpenFlowEpcController::GetEpsBearer (gtpuTag.GetTeid ());
       if (bearer.IsGbr ())
         {
           m_gbrTxBytes [dir] += packet->GetSize ();
@@ -274,14 +277,14 @@ ConnectionInfo::GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx) const
 }
 
 uint64_t
-ConnectionInfo::GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, 
-                                        double factor) const
+ConnectionInfo::GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
+                                        double debarFactor) const
 {
-  NS_ASSERT_MSG (factor >= 0.0, "Invalid DeBaR factor.");
-  
+  NS_ASSERT_MSG (debarFactor >= 0.0, "Invalid DeBaR factor.");
+
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
-  uint64_t maxBitRate = static_cast<uint64_t> (factor * m_gbrMaxBitRate);
-  
+  uint64_t maxBitRate = static_cast<uint64_t> (debarFactor * m_gbrMaxBitRate);
+
   if (maxBitRate >= m_gbrReserved [dir])
     {
       return maxBitRate - m_gbrReserved [dir];
@@ -293,36 +296,39 @@ ConnectionInfo::GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
 }
 
 bool
-ConnectionInfo::ReserveGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, uint64_t rate)
+ConnectionInfo::ReserveGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
+                                   uint64_t bitRate)
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
 
-  if (m_gbrReserved [dir] + rate <= GetLinkBitRate ())
+  if (m_gbrReserved [dir] + bitRate <= m_gbrMaxBitRate)
     {
-      m_gbrReserved [dir] += rate;
+      m_gbrReserved [dir] += bitRate;
       return true;
     }
   NS_FATAL_ERROR ("No bandwidth available to reserve.");
 }
 
 bool
-ConnectionInfo::ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, uint64_t rate)
+ConnectionInfo::ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
+                                   uint64_t bitRate)
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
 
-  if (m_gbrReserved [dir] - rate >= 0)
+  if (m_gbrReserved [dir] - bitRate >= 0)
     {
-      m_gbrReserved [dir] -= rate;
+      m_gbrReserved [dir] -= bitRate;
       return true;
     }
   NS_FATAL_ERROR ("No bandwidth available to release.");
 }
 
-void 
+void
 ConnectionInfo::SetGbrReserveQuota (double value)
 {
   m_gbrReserveQuota = value;
-  m_gbrMaxBitRate = static_cast<uint64_t> (m_gbrReserveQuota * GetLinkBitRate ());
+  m_gbrMaxBitRate =
+    static_cast<uint64_t> (m_gbrReserveQuota * GetLinkBitRate ());
 }
 
 };  // namespace ns3

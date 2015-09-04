@@ -284,7 +284,7 @@ std::string
 MeterInfo::GetUpAddCmd (void) const
 {
   std::ostringstream meter;
-  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid 
+  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid
         << " drop:rate=" << m_upDataRate.GetBitRate () / 1000;
   return meter.str ();
 }
@@ -399,7 +399,7 @@ RingRoutingInfo::RingRoutingInfo ()
   NS_LOG_FUNCTION (this);
 }
 
-RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo, 
+RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo,
                                   RoutingPath shortDownPath)
   : m_rInfo (rInfo)
 {

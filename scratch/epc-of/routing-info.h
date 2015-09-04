@@ -83,11 +83,11 @@ public:
   bool IsInstalled (void) const;
   bool IsActive (void) const;
   //\}
-  
+
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
-  
+
   /**
    * Set the internal installed flag.
    * \param installed The value to set.
@@ -158,9 +158,9 @@ public:
   bool HasDown (void) const;
   bool HasUp (void) const;
   //\}
-  
-  /** 
-   * \name Dpctl commands to add or delete meter rules 
+
+  /**
+   * \name Dpctl commands to add or delete meter rules
    * \return The requested command.
    */
   //\{
@@ -172,7 +172,7 @@ public:
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
-  
+
   /** \return RoutingInfo pointer. */
   Ptr<RoutingInfo> GetRoutingInfo ();
 

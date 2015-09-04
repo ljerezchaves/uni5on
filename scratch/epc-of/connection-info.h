@@ -73,7 +73,7 @@ public:
    * Internal channel handling is based on this order to get corret full-duplex
    * links.
    */
-  ConnectionInfo (SwitchData sw1, SwitchData sw2, 
+  ConnectionInfo (SwitchData sw1, SwitchData sw2,
                   Ptr<CsmaChannel> channel);
 
   /**
@@ -96,7 +96,7 @@ public:
   Ptr<const CsmaNetDevice> GetPortDevFirst (void) const;
   Ptr<const CsmaNetDevice> GetPortDevSecond (void) const;
   //\}
-  
+
   /**
    * Get the pair of switch indexes for this connection, respecting the
    * internal order.
@@ -191,32 +191,36 @@ protected:
 
   /**
    * Get the available bit rate between these two switches, considering the
-   * maximum bandwidth reservation factor.
+   * DeBaR reservation factor.
    * \param srcIdx The source switch index.
    * \param dstIdx The destination switch index.
-   * \param factor DeBaR reservation factor.
+   * \param debarFactor DeBaR reservation factor.
    * \return The available bit rate from srcIdx to dstIdx.
    */
-  uint64_t GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, 
-                                   double factor) const;
+  uint64_t GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
+                                   double debarFactor) const;
 
   /**
    * Reserve some bandwidth between these two switches.
+   * \attention An attempt to reserve more resources than those available will
+   * result in fatal error.
    * \param srcIdx The source switch index.
    * \param dstIdx The destination switch index.
-   * \param rate The bit rate to reserve.
+   * \param bitRate The bit rate to reserve.
    * \return True if everything is ok, false otherwise.
    */
-  bool ReserveGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, uint64_t rate);
+  bool ReserveGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, uint64_t bitRate);
 
   /**
    * Release some bandwidth between these two switches.
+   * \attention An attempt to release more resources than those reserved will
+   * result in fatal error.
    * \param srcIdx The source switch index.
    * \param dstIdx The destination switch index.
-   * \param rate The bit rate to release.
+   * \param bitRate The bit rate to release.
    * \return True if everything is ok, false otherwise.
    */
-  bool ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, uint64_t rate);
+  bool ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, uint64_t bitRate);
 
 private:
   /**

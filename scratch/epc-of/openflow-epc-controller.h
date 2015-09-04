@@ -55,7 +55,7 @@ public:
    * Request a new dedicated EPC bearer. This is used to check for necessary
    * resources in the network (mainly available data rate for GBR bearers).
    * When returning false, it aborts the bearer creation process
-   * \internal 
+   * \internal
    * Current implementation assumes that each application traffic flow is
    * associated with a unique bearer/tunnel. Because of that, we can use only
    * the teid for the tunnel to prepare and install route. If we would like to
@@ -73,7 +73,7 @@ public:
 
   /**
    * Release a dedicated EPC bearer.
-   * \internal 
+   * \internal
    * Current implementation assumes that each application traffic flow is
    * associated with a unique bearer/tunnel. Because of that, we can use only
    * the teid for the tunnel to prepare and install route. If we would like to
@@ -127,8 +127,9 @@ protected:
    * \param swtchIdx The OpenFlow switch index.
    * \param swtchPort The port number for nodeDev at OpenFlow switch.
    */
-  virtual void NotifyNewEpcAttach (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, 
-    Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, uint32_t swtchPort);
+  virtual void NotifyNewEpcAttach (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
+                                   Ptr<OFSwitch13NetDevice> swtchDev, 
+                                   uint16_t swtchIdx, uint32_t swtchPort);
 
   /**
    * Notify this controller of a new connection between two switches in the
@@ -163,10 +164,11 @@ protected:
    * \param bearerList The list of context bearers created.
    */
   virtual void NotifyContextCreated (uint64_t imsi, uint16_t cellId,
-      Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList);
+                                     Ipv4Address enbAddr, Ipv4Address sgwAddr, 
+                                     BearerList_t bearerList);
   //\}
 
-  /** \name Topology-dependent functions 
+  /** \name Topology-dependent functions
    * This virtual functions must be implemented by subclasses, as they are
    * dependent on network topology.
    */
@@ -180,8 +182,8 @@ protected:
    * \param buffer The buffered packet to apply this rule to.
    * \return True if configuration succeeded, false otherwise.
    */
-  virtual bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo, 
-      uint32_t buffer = OFP_NO_BUFFER) = 0;
+  virtual bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
+                                       uint32_t buffer = OFP_NO_BUFFER) = 0;
 
   /**
    * Remove TEID routing rules from switches.
@@ -218,7 +220,8 @@ protected:
   // Inherited from OFSwitch13Controller
   virtual void ConnectionStarted (SwitchInfo);
   virtual ofl_err HandlePacketIn (ofl_msg_packet_in *, SwitchInfo, uint32_t);
-  virtual ofl_err HandleFlowRemoved (ofl_msg_flow_removed *, SwitchInfo, uint32_t);
+  virtual ofl_err HandleFlowRemoved (ofl_msg_flow_removed *,
+                                     SwitchInfo, uint32_t);
 
   /**
    * Get the OFSwitch13NetDevice for a specific switch index.
@@ -278,8 +281,9 @@ private:
    * \param nodeIp The IPv4 address assigned to this device.
    * \param swtchPort The number of switch port this device is attached to.
    */
-  void ConfigureLocalPortDelivery (Ptr<OFSwitch13NetDevice> swtchDev, 
-    Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, uint32_t swtchPort);  
+  void ConfigureLocalPortDelivery (Ptr<OFSwitch13NetDevice> swtchDev,
+                                   Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, 
+                                   uint32_t swtchPort);
 
   /**
    * Handle packet-in messages sent from switch with unknown TEID routing.

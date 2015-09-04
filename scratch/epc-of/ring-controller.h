@@ -104,7 +104,7 @@ private:
    * \param dstSwitchIdx Destination switch index.
    * \return The routing path.
    */
-  RingRoutingInfo::RoutingPath FindShortestPath (uint16_t srcSwitchIdx, 
+  RingRoutingInfo::RoutingPath FindShortestPath (uint16_t srcSwitchIdx,
                                                  uint16_t dstSwitchIdx);
 
   /**
@@ -119,22 +119,22 @@ private:
                        RingRoutingInfo::RoutingPath routingPath);
 
   /**
-   * Get the available bit rate for this ring routing information, considering
-   * both downlink and uplink paths.
-   * \internal 
+   * Get the available GBR bit rate for this ring routing information,
+   * considering both downlink and uplink paths.
+   * \internal
    * This method implements the GBR Distance-Based Reservation algorithm
    * (DeBaR) proposed by prof. Deep Medhi. The general idea is a dynamic bit
    * rate usage factor that can be adjusted based on the distance between the
-   * eNB switch and the gateway switch. 
+   * eNB switch and the gateway switch.
    * \param ringInfo The ring routing information.
    * \param useShortPath When true, get the available bit rate in the shortest
    * path between source and destination nodes; otherwise, considers the
-   * inverted path.
+   * inverted (long) path.
    * \return A pair of available GBR bit rates, for both downlink and uplink
-   * paths, in this order.
+   * paths, in this strict order.
    */
-  std::pair<uint64_t, uint64_t> 
-  GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo, 
+  std::pair<uint64_t, uint64_t>
+  GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
                           bool useShortPath = true);
 
   /**
@@ -145,7 +145,7 @@ private:
    */
   bool ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
                           Ptr<ReserveInfo> reserveInfo);
-  
+
   /**
    * Release the bit rate for this bearer in network.
    * \param ringInfo The ring routing information.
@@ -157,29 +157,33 @@ private:
 
   /**
    * Reserve the indicated bit rate at each link from source to
-   * destination switch index following the indicated routing path. 
+   * destination switch index following the indicated routing path.
+   * \attention To avoid fatal errors, be sure that there is enough available
+   * bit rate in this link before reserving it.
    * \param srcSwitchIdx Source switch index.
    * \param dstSwitchIdx Destination switch index.
    * \param routingPath The routing path.
-   * \param reserve The bit rate to reserve.
+   * \param bitRate The bit rate to reserve.
    * \return True if success, false otherwise;
    */
-  bool PerLinkGbrReserve (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                          RingRoutingInfo::RoutingPath routingPath, 
-                          uint64_t reserve);
+  bool PerLinkReserve (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+                       RingRoutingInfo::RoutingPath routingPath,
+                       uint64_t bitRate);
 
   /**
    * Release the indicated bit rate at each link from source to
-   * destination switch index following the indicated routing path. 
+   * destination switch index following the indicated routing path.
+   * \attention To avoid fatal errors, be sure that there is enough reserved
+   * bit rate in this link before releasing it.
    * \param srcSwitchIdx Source switch index.
    * \param dstSwitchIdx Destination switch index.
    * \param routingPath The routing path.
-   * \param release The bit rate to release.
+   * \param bitRate The bit rate to release.
    * \return True if success, false otherwise;
    */
-  bool PerLinkGbrRelease (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                          RingRoutingInfo::RoutingPath routingPath, 
-                          uint64_t release);
+  bool PerLinkRelease (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
+                       RingRoutingInfo::RoutingPath routingPath,
+                       uint64_t bitRate);
 
   /**
    * Get the next switch index following the indicated routing path.
@@ -203,7 +207,7 @@ private:
   bool                m_debarShortPath;   //!< True for DeBaR in shortest path.
   bool                m_debarLongPath;    //!< True for DeBaR in longest path.
 
-  /** 
+  /**
    * Map saving <Pair of switch indexes / Connection information.
    * The pair of switch indexes are saved in increasing order.
    */

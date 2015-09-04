@@ -560,8 +560,8 @@ OpenFlowEpcController::ConfigureLocalPortDelivery (
 
   Mac48Address devMacAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ());
   std::ostringstream cmd;
-  cmd << "flow-mod cmd=add,table=1,prio=" << m_t1LocalDeliverPrio 
-      << " eth_type=0x800,eth_dst=" << devMacAddr 
+  cmd << "flow-mod cmd=add,table=1,prio=" << m_t1LocalDeliverPrio
+      << " eth_type=0x800,eth_dst=" << devMacAddr
       << ",ip_dst=" << nodeIp << " write:output=" << swtchPort;
   DpctlCommand (swtchDev, cmd.str ());
 }
@@ -593,8 +593,8 @@ OpenFlowEpcController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
 }
 
 ofl_err
-OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg, 
-    SwitchInfo swtch, uint32_t xid)
+OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg,
+                                          SwitchInfo swtch, uint32_t xid)
 {
   NS_LOG_FUNCTION (this << swtch.ipv4 << xid);
 
