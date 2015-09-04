@@ -415,10 +415,20 @@ BandwidthStatsCalculator::GetTypeId (void)
                    StringValue ("res_stats.txt"),
                    MakeStringAccessor (&BandwidthStatsCalculator::m_resStatsFilename),
                    MakeStringChecker ())
-    .AddAttribute ("BwdStatsFilename",
+    .AddAttribute ("BwbStatsFilename",
                    "Filename for network bandwidth statistics.",
-                   StringValue ("bwd_stats.txt"),
-                   MakeStringAccessor (&BandwidthStatsCalculator::m_bwdStatsFilename),
+                   StringValue ("bwb_stats.txt"),
+                   MakeStringAccessor (&BandwidthStatsCalculator::m_bwbStatsFilename),
+                   MakeStringChecker ())
+    .AddAttribute ("BwgStatsFilename",
+                   "Filename for GBR bandwidth statistics.",
+                   StringValue ("bwg_stats.txt"),
+                   MakeStringAccessor (&BandwidthStatsCalculator::m_bwgStatsFilename),
+                   MakeStringChecker ())
+    .AddAttribute ("BwnStatsFilename",
+                   "Filename for Non-GBR bandwidth statistics.",
+                   StringValue ("bwn_stats.txt"),
+                   MakeStringAccessor (&BandwidthStatsCalculator::m_bwnStatsFilename),
                    MakeStringChecker ())
   ;
   return tid;
@@ -429,20 +439,35 @@ BandwidthStatsCalculator::DumpStatistics (void)
 {
   NS_LOG_FUNCTION (this);
 
-  *bwdWrapper->GetStream () << left
+  *bwbWrapper->GetStream () << left
+    << setw (12) << Simulator::Now ().GetSeconds ();
+  *bwgWrapper->GetStream () << left
+    << setw (12) << Simulator::Now ().GetSeconds ();
+  *bwnWrapper->GetStream () << left
     << setw (12) << Simulator::Now ().GetSeconds ();
   *resWrapper->GetStream () << left
     << setw (12) << Simulator::Now ().GetSeconds ();
-      
+    
+  double interval = GetActiveTime ().GetSeconds ();
   std::vector<Ptr<ConnectionInfo> >::iterator it;
   for (it = m_connections.begin (); it != m_connections.end (); it++)
     {
-      double fwKbits = ((double)(*it)->GetForwardBytes ()  * 8) / 1000;
-      double bwKbits = ((double)(*it)->GetBackwardBytes () * 8) / 1000;
+      double gbrFwKbits = ((double)(*it)->GetForwardGbrBytes ()  * 8) / 1000;
+      double gbrBwKbits = ((double)(*it)->GetBackwardGbrBytes () * 8) / 1000;
+      double nonFwKbits = ((double)(*it)->GetForwardNonGbrBytes ()  * 8) / 1000;
+      double nonBwKbits = ((double)(*it)->GetBackwardNonGbrBytes () * 8) / 1000;
+      
+      *bwgWrapper->GetStream () << right 
+        << setw (10) << gbrFwKbits / interval << " "
+        << setw (10) << gbrBwKbits / interval << "   ";
 
-      *bwdWrapper->GetStream () << right 
-        << setw (10) << fwKbits / GetActiveTime ().GetSeconds () << " "
-        << setw (10) << bwKbits / GetActiveTime ().GetSeconds () << "   ";
+      *bwnWrapper->GetStream () << right 
+        << setw (10) << nonFwKbits / interval << " "
+        << setw (10) << nonBwKbits / interval << "   ";
+
+      *bwbWrapper->GetStream () << right 
+        << setw (10) << (gbrFwKbits + nonFwKbits) / interval << " "
+        << setw (10) << (gbrBwKbits + nonBwKbits) / interval << "   ";
 
       *resWrapper->GetStream () << right
         << setw (6) << (*it)->GetForwardGbrReservedRatio ()  << " "
@@ -450,7 +475,9 @@ BandwidthStatsCalculator::DumpStatistics (void)
 
       (*it)->ResetStatistics ();
     }
-  *bwdWrapper->GetStream () << std::endl;
+  *bwbWrapper->GetStream () << std::endl;
+  *bwgWrapper->GetStream () << std::endl;
+  *bwnWrapper->GetStream () << std::endl;
   *resWrapper->GetStream () << std::endl;
 
   ResetCounters ();
@@ -460,7 +487,9 @@ void
 BandwidthStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  bwdWrapper = 0;
+  bwbWrapper = 0;
+  bwgWrapper = 0;
+  bwnWrapper = 0;
   resWrapper = 0;
   m_connections.clear ();
 }
@@ -471,8 +500,16 @@ BandwidthStatsCalculator::NotifyConstructionCompleted (void)
   Object::NotifyConstructionCompleted ();
 
   // Opening output files and printing header lines
-  bwdWrapper = Create<OutputStreamWrapper> (m_bwdStatsFilename, std::ios::out);
-  *bwdWrapper->GetStream () << left << fixed << setprecision (4)
+  bwbWrapper = Create<OutputStreamWrapper> (m_bwbStatsFilename, std::ios::out);
+  *bwbWrapper->GetStream () << left << fixed << setprecision (4)
+    << setw (12) << "Time(s)";
+
+  bwgWrapper = Create<OutputStreamWrapper> (m_bwgStatsFilename, std::ios::out);
+  *bwgWrapper->GetStream () << left << fixed << setprecision (4)
+    << setw (12) << "Time(s)";
+
+  bwnWrapper = Create<OutputStreamWrapper> (m_bwnStatsFilename, std::ios::out);
+  *bwnWrapper->GetStream () << left << fixed << setprecision (4)
     << setw (12) << "Time(s)";
 
   resWrapper = Create<OutputStreamWrapper> (m_resStatsFilename, std::ios::out);
@@ -489,7 +526,15 @@ BandwidthStatsCalculator::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
   m_connections.push_back (cInfo);
   SwitchPair_t key = cInfo->GetSwitchIndexPair ();
 
-  *bwdWrapper->GetStream ()
+  *bwbWrapper->GetStream ()
+    << right << setw (10) << key.first  << "-" 
+    << left  << setw (10) << key.second << "   ";
+
+  *bwgWrapper->GetStream ()
+    << right << setw (10) << key.first  << "-" 
+    << left  << setw (10) << key.second << "   ";
+
+  *bwnWrapper->GetStream ()
     << right << setw (10) << key.first  << "-" 
     << left  << setw (10) << key.second << "   ";
 
@@ -501,7 +546,9 @@ BandwidthStatsCalculator::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 void
 BandwidthStatsCalculator::NotifyTopologyBuilt (NetDeviceContainer devices)
 {
-  *bwdWrapper->GetStream () << left << std::endl;
+  *bwbWrapper->GetStream () << left << std::endl;
+  *bwgWrapper->GetStream () << left << std::endl;
+  *bwnWrapper->GetStream () << left << std::endl;
   *resWrapper->GetStream () << left << std::endl;
 }
 

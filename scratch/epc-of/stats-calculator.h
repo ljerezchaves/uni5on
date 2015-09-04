@@ -232,11 +232,15 @@ private:
 
   Time m_lastResetTime;                 //!< Last reset time
 
-  std::string m_bwdStatsFilename;       //!< BwdStats filename
   std::string m_resStatsFilename;       //!< ResStats filename
+  std::string m_bwbStatsFilename;       //!< BwbStats filename
+  std::string m_bwgStatsFilename;       //!< BwgStats filename
+  std::string m_bwnStatsFilename;       //!< BwnStats filename
 
-  Ptr<OutputStreamWrapper> bwdWrapper;  //!< BwdStats file wrapper
   Ptr<OutputStreamWrapper> resWrapper;  //!< ResStats file wrapper
+  Ptr<OutputStreamWrapper> bwbWrapper;  //!< BwbStats file wrapper
+  Ptr<OutputStreamWrapper> bwgWrapper;  //!< BwgStats file wrapper
+  Ptr<OutputStreamWrapper> bwnWrapper;  //!< BwnStats file wrapper
 };
 
 
