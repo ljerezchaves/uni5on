@@ -264,7 +264,8 @@ public:
    */
   uint16_t m_gtpuUdpPort;
 
-  uint32_t m_teidCount;
+  uint32_t m_gbrTeidCount;
+  uint32_t m_nonTeidCount;
 
   /**
    * MME side of the S11 SAP

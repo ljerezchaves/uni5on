@@ -134,7 +134,8 @@ EpcSgwPgwApplication::EpcSgwPgwApplication (const Ptr<VirtualNetDevice> tunDevic
   : m_s1uSocket (s1uSocket),
     m_tunDevice (tunDevice),
     m_gtpuUdpPort (2152), // fixed by the standard
-    m_teidCount (0),
+    m_gbrTeidCount (0x80000000),
+    m_nonTeidCount (0x00000000),
     m_s11SapMme (0)
 {
   NS_LOG_FUNCTION (this << tunDevice << s1uSocket);
@@ -299,11 +300,23 @@ EpcSgwPgwApplication::DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequest
        bit != req.bearerContextsToBeCreated.end ();
        ++bit)
     {
-      // simple sanity check. If you ever need more than 4M teids
-      // throughout your simulation, you'll need to implement a smarter teid
-      // management algorithm. 
-      NS_ABORT_IF (m_teidCount == 0xFFFFFFFF);
-      uint32_t teid = ++m_teidCount;  
+      //
+      // We are using a smart TEID assignment algorithm to simplify GTP routing
+      // over OpenFlow backhaul network. The 32th TEID bit (the MSB bit) is
+      // been used to differentiate between GBR bearers (MSB == 1) and Non-GBR
+      // bearers (MSB == 0).
+      //
+      uint32_t teid = 0;
+      if (bit->bearerLevelQos.IsGbr ())
+        {
+          NS_ABORT_IF (m_gbrTeidCount == 0xFFFFFFFF);
+          teid = ++m_gbrTeidCount;
+        }
+      else
+        {
+          NS_ABORT_IF (m_nonTeidCount == 0x7FFFFFFF);
+          teid = ++m_nonTeidCount;
+        }
       ueit->second->AddBearer (bit->tft, bit->epsBearerId, teid);
 
       EpcS11SapMme::BearerContextCreated bearerContext;
