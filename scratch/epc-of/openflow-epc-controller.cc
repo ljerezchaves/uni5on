@@ -30,12 +30,12 @@ NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcController);
 const int OpenFlowEpcController::m_defaultTmo = 0;
 const int OpenFlowEpcController::m_dedicatedTmo = 15;
 
-const int OpenFlowEpcController::m_t0ArpPrio = 1;     // Check ConnectionStarted
-const int OpenFlowEpcController::m_t0GotoT1Prio = 2;  // Check ConnectionStarted
-const int OpenFlowEpcController::m_t1LocalDeliverPrio = 65520;
-const int OpenFlowEpcController::m_t1DedicatedStartPrio = 16384;
-const int OpenFlowEpcController::m_t1DefaultPrio = 128;
-const int OpenFlowEpcController::m_t1RingPrio = 32;
+const int OpenFlowEpcController::m_t0ArpPrio = 1;     // See ConnectionStarted
+const int OpenFlowEpcController::m_t0GotoT1Prio = 2;  // See ConnectionStarted
+const int OpenFlowEpcController::m_t1LocalDeliverPrio = 65520;    // 0xFFF0
+const int OpenFlowEpcController::m_t1DedicatedStartPrio = 16384;  // 0x4000
+const int OpenFlowEpcController::m_t1DefaultPrio = 128;           // 0x0080
+const int OpenFlowEpcController::m_t1RingPrio = 32;               // 0x0020
 
 OpenFlowEpcController::TeidBearerMap_t OpenFlowEpcController::m_bearersTable;
 
@@ -297,10 +297,10 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
       rInfo->m_enbIdx = GetSwitchIndex (enbAddr);
       rInfo->m_sgwAddr = sgwAddr;
       rInfo->m_enbAddr = enbAddr;
-      rInfo->m_priority = m_t1DedicatedStartPrio; // Priority for dedicated bearer
+      rInfo->m_priority = m_t1DedicatedStartPrio; // Prio for dedicated bearer
       rInfo->m_timeout = m_dedicatedTmo;       // Timeout for dedicated bearer
-      rInfo->m_isInstalled = false;            // Switch rules not installed yet
-      rInfo->m_isActive = false;               // Dedicated bearer not active yet
+      rInfo->m_isInstalled = false;            // Switch rules not installed
+      rInfo->m_isActive = false;               // Dedicated bearer not active
       rInfo->m_isDefault = false;              // This is a dedicated bearer
       rInfo->m_bearer = dedicatedBearer;
       SaveRoutingInfo (rInfo);
@@ -481,7 +481,8 @@ OpenFlowEpcController::SaveRoutingInfo (Ptr<RoutingInfo> rInfo)
   ret = m_routes.insert (entry);
   if (ret.second == false)
     {
-      NS_FATAL_ERROR ("Existing routing information for teid " << rInfo->GetTeid ());
+      NS_FATAL_ERROR ("Existing routing information for teid " 
+          << rInfo->GetTeid ());
     }
 }
 
