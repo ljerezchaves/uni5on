@@ -134,7 +134,7 @@ EpcSgwPgwApplication::EpcSgwPgwApplication (const Ptr<VirtualNetDevice> tunDevic
   : m_s1uSocket (s1uSocket),
     m_tunDevice (tunDevice),
     m_gtpuUdpPort (2152), // fixed by the standard
-    m_teidCount (0),
+    m_teidCount (0x0000000F),
     m_s11SapMme (0)
 {
   NS_LOG_FUNCTION (this << tunDevice << s1uSocket);
