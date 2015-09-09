@@ -121,17 +121,34 @@ RingController::NotifyTopologyBuilt (NetDeviceContainer devices)
       uint16_t sw2 = (sw1 + 1) % GetNSwitches ();  // Next clockwise node
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (sw1, sw2);
 
+      // GBR forwarding rules
       std::ostringstream cmd1;
-      cmd1 << "flow-mod cmd=add,table=1,flags=0x0002,prio="
-           << m_t1RingPrio << " in_port=" << cInfo->GetPortNoFirst ()
+      cmd1 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
+           << " in_port=" << cInfo->GetPortNoFirst ()
            << " write:group=" << RingRoutingInfo::COUNTER;
       DpctlCommand (cInfo->GetSwDevFirst (), cmd1.str ());
 
       std::ostringstream cmd2;
-      cmd2 << "flow-mod cmd=add,table=1,flags=0x0002,prio="
-           << m_t1RingPrio << " in_port=" << cInfo->GetPortNoSecond ()
+      cmd2 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
+           << " in_port=" << cInfo->GetPortNoSecond ()
            << " write:group=" << RingRoutingInfo::CLOCK;
       DpctlCommand (cInfo->GetSwDevSecond (), cmd2.str ());
+
+      // Non-GBR forwarding rules
+      std::ostringstream cmd3;
+      cmd3 << "flow-mod cmd=add,table=3,flags=0x0002,prio=128"
+           << " in_port=" << cInfo->GetPortNoFirst ()
+           << " meter:" << RingRoutingInfo::COUNTER
+           << " write:group=" << RingRoutingInfo::COUNTER;
+      DpctlCommand (cInfo->GetSwDevFirst (), cmd3.str ());
+
+      std::ostringstream cmd4;
+      cmd4 << "flow-mod cmd=add,table=3,flags=0x0002,prio=128"
+           << " in_port=" << cInfo->GetPortNoSecond ()
+           << " meter:" << RingRoutingInfo::CLOCK 
+           << " write:group=" << RingRoutingInfo::CLOCK;
+      DpctlCommand (cInfo->GetSwDevSecond (), cmd4.str ());
+
     }
 }
 
@@ -156,7 +173,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
   std::string flagsStr ("0x0003");
 
   // Printing the cookie and buffer values in dpctl string format
-  char cookieStr [9], bufferStr [12];
+  char cookieStr [9], bufferStr [12], metadataStr [9];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
   sprintf (bufferStr, "%u",   buffer);
 
@@ -197,9 +214,22 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
           // Building the meter instruction string
           inst << " meter:" << rInfo->GetTeid ();
         }
+      
+      // Writing metatada with routing information
+      sprintf (metadataStr, "0x%x", ringInfo->GetDownPath ());
+      inst << " meta:" << metadataStr;
 
-      // Building the output instruction string
-      inst << " write:group=" << ringInfo->GetDownPath ();
+      // For GBR bearers, mark the IP DSCP field with AF31 value (26) and send
+      // to GBR routing table. Otherwise, send to Non-GBR routing table.
+      if (rInfo->IsGbr ())
+        {
+          inst << " write:set_field=ip_dscp:26";
+          inst << " goto:2";
+        }
+      else
+        {
+          inst << " goto:3";
+        }
 
       // Installing the rule into input switch
       std::string commandStr = args.str () + match.str () + inst.str ();
@@ -235,8 +265,21 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
           inst << " meter:" << rInfo->GetTeid ();
         }
 
-      // Building the output instruction string
-      inst << " write:group=" << ringInfo->GetUpPath ();
+      // Writing metatada with routing information
+      sprintf (metadataStr, "0x%x", ringInfo->GetUpPath ());
+      inst << " meta:" << metadataStr;
+
+      // For GBR bearers, mark the IP DSCP field with AF31 value (26) and send
+      // to GBR routing table. Otherwise, send to Non-GBR routing table.
+      if (rInfo->IsGbr ())
+        {
+          inst << " write:set_field=ip_dscp:26";
+          inst << " goto:2";
+        }
+      else
+        {
+          inst << " goto:3";
+        }
 
       // Installing the rule into input switch
       std::string commandStr = args.str () + match.str () + inst.str ();

@@ -273,17 +273,19 @@ private:
   Mac48Address GetArpEntry (Ipv4Address ip);
 
   /**
-   * Install flow table entry for local delivery when a new IP device is
-   * connected to the OpenFlow network. This entry will match both MAC address
-   * and IP address for the device in order to output packets on device port.
+   * Install flow table entry for local port when a new IP device is connected
+   * to the OpenFlow network. This entry will match both MAC address and IP
+   * address for the local device in order to output packets on respective
+   * device port. It will also match input port for packet classification and
+   * routing. 
    * \param swtchDev The Switch OFSwitch13NetDevice pointer.
    * \param nodeDev The device connected to the OpenFlow network.
    * \param nodeIp The IPv4 address assigned to this device.
    * \param swtchPort The number of switch port this device is attached to.
    */
-  void ConfigureLocalPortDelivery (Ptr<OFSwitch13NetDevice> swtchDev,
-                                   Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, 
-                                   uint32_t swtchPort);
+  void ConfigureLocalPortRules (Ptr<OFSwitch13NetDevice> swtchDev,
+                                Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, 
+                                uint32_t swtchPort);
 
   /**
    * Handle packet-in messages sent from switch with unknown TEID routing.
@@ -355,15 +357,8 @@ protected:
 
   /** \name Flow table entry priority values */
   //\{
-  // Table 0
-  static const int m_t0ArpPrio;           //!< ARP handling
-  static const int m_t0GotoT1Prio;        //!< GTP TEID handling (goto table 1)
-
-  // Table 1
-  static const int m_t1LocalDeliverPrio;  //!< Local delivery (to eNB/SgwPgw)
-  static const int m_t1DedicatedStartPrio; //!< Dedicated bearer (start value)
-  static const int m_t1DefaultPrio;       //!< Default bearer
-  static const int m_t1RingPrio;          //!< Ring forward
+  static const int m_dedicatedPrio;     //!< Dedicated bearer rule priority
+  static const int m_defaultPrio;       //!< Default bearer rule priority
   //\}
 
 private:

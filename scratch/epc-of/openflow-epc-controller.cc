@@ -30,12 +30,8 @@ NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcController);
 const int OpenFlowEpcController::m_defaultTmo = 0;
 const int OpenFlowEpcController::m_dedicatedTmo = 15;
 
-const int OpenFlowEpcController::m_t0ArpPrio = 1;     // See ConnectionStarted
-const int OpenFlowEpcController::m_t0GotoT1Prio = 2;  // See ConnectionStarted
-const int OpenFlowEpcController::m_t1LocalDeliverPrio = 65520;    // 0xFFF0
-const int OpenFlowEpcController::m_t1DedicatedStartPrio = 16384;  // 0x4000
-const int OpenFlowEpcController::m_t1DefaultPrio = 128;           // 0x0080
-const int OpenFlowEpcController::m_t1RingPrio = 32;               // 0x0020
+const int OpenFlowEpcController::m_dedicatedPrio = 512; // 0x0200
+const int OpenFlowEpcController::m_defaultPrio = 128;   // 0x0080
 
 OpenFlowEpcController::TeidBearerMap_t OpenFlowEpcController::m_bearersTable;
 
@@ -220,7 +216,7 @@ OpenFlowEpcController::NotifyNewEpcAttach (Ptr<NetDevice> nodeDev,
   SaveArpEntry (nodeIp, macAddr);
   SaveSwitchIndex (nodeIp, swtchIdx);
 
-  ConfigureLocalPortDelivery (swtchDev, nodeDev, nodeIp, swtchPort);
+  ConfigureLocalPortRules (swtchDev, nodeDev, nodeIp, swtchPort);
 }
 
 void
@@ -260,7 +256,7 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
   rInfo->m_enbIdx = GetSwitchIndex (enbAddr);
   rInfo->m_sgwAddr = sgwAddr;
   rInfo->m_enbAddr = enbAddr;
-  rInfo->m_priority = m_t1DefaultPrio;    // Priority for default bearer
+  rInfo->m_priority = m_defaultPrio;      // Priority for default bearer
   rInfo->m_timeout = m_defaultTmo;        // No timeout for default bearer
   rInfo->m_isInstalled = false;           // Bearer rules not installed yet
   rInfo->m_isActive = true;               // Default bearer is always active
@@ -297,11 +293,11 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
       rInfo->m_enbIdx = GetSwitchIndex (enbAddr);
       rInfo->m_sgwAddr = sgwAddr;
       rInfo->m_enbAddr = enbAddr;
-      rInfo->m_priority = m_t1DedicatedStartPrio; // Prio for dedicated bearer
-      rInfo->m_timeout = m_dedicatedTmo;       // Timeout for dedicated bearer
-      rInfo->m_isInstalled = false;            // Switch rules not installed
-      rInfo->m_isActive = false;               // Dedicated bearer not active
-      rInfo->m_isDefault = false;              // This is a dedicated bearer
+      rInfo->m_priority = m_dedicatedPrio;  // Priority for dedicated bearer
+      rInfo->m_timeout = m_dedicatedTmo;    // Timeout for dedicated bearer
+      rInfo->m_isInstalled = false;         // Switch rules not installed
+      rInfo->m_isActive = false;            // Dedicated bearer not active
+      rInfo->m_isDefault = false;           // This is a dedicated bearer
       rInfo->m_bearer = dedicatedBearer;
       SaveRoutingInfo (rInfo);
       OpenFlowEpcController::RegisterBearer (teid, rInfo->GetEpsBearer ());
@@ -334,15 +330,33 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
   DpctlCommand (swtch, "set-config miss=128");
 
   // After a successfull handshake, let's install some default entries:
-  // Table miss entry and ARP handling entry.
+  // Table miss entry in all used tables
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=0 write:output=ctrl");
-  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=1 eth_type=0x0806 "
-                       "write:output=ctrl");
-
-  // Handling GTP tunnels at table #1
-  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=2 eth_type=0x800,"
-                       "ip_proto=17,udp_src=2152,udp_dst=2152 goto:1");
   DpctlCommand (swtch, "flow-mod cmd=add,table=1,prio=0 write:output=ctrl");
+  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=0 write:output=ctrl");
+  DpctlCommand (swtch, "flow-mod cmd=add,table=3,prio=0 write:output=ctrl");
+  
+  // ARP handling entry at table #0
+  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=15 eth_type=0x0806"
+                       " write:output=ctrl");
+
+  // Send GTP packet forwarding at tables #2 (GBR) and #3 (Non-GBR) 
+  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=2047 eth_type=0x800,"
+                       "ip_proto=17,udp_src=2152,udp_dst=2152,ip_dscp=26"
+                       " goto:2");
+  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=2047 eth_type=0x800,"
+                       "ip_proto=17,udp_src=2152,udp_dst=2152,ip_dscp=0"
+                       " goto:3");
+
+  // For GBR/Non-GBR forwarding tables, handling entrance packets.
+  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256 meta=0x1"
+                       " write:group=1");
+  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256 meta=0x2"
+                       " write:group=2");
+  DpctlCommand (swtch, "flow-mod cmd=add,table=3,prio=256 meta=0x1"
+                       " meter:1 write:group=1");
+  DpctlCommand (swtch, "flow-mod cmd=add,table=3,prio=256 meta=0x2"
+                       " meter:2 write:group=2");
 }
 
 ofl_err
@@ -553,18 +567,26 @@ OpenFlowEpcController::GetArpEntry (Ipv4Address ip)
 }
 
 void
-OpenFlowEpcController::ConfigureLocalPortDelivery (
+OpenFlowEpcController::ConfigureLocalPortRules (
   Ptr<OFSwitch13NetDevice> swtchDev, Ptr<NetDevice> nodeDev,
   Ipv4Address nodeIp, uint32_t swtchPort)
 {
   NS_LOG_FUNCTION (this << swtchDev << nodeDev << nodeIp << swtchPort);
 
   Mac48Address devMacAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ());
-  std::ostringstream cmd;
-  cmd << "flow-mod cmd=add,table=1,prio=" << m_t1LocalDeliverPrio
-      << " eth_type=0x800,eth_dst=" << devMacAddr
-      << ",ip_dst=" << nodeIp << " write:output=" << swtchPort;
-  DpctlCommand (swtchDev, cmd.str ());
+  std::ostringstream cmdOut;
+  cmdOut << "flow-mod cmd=add,table=0,prio=45055"
+         << " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152" 
+         << ",eth_dst=" << devMacAddr << ",ip_dst=" << nodeIp 
+         << " write:output=" << swtchPort;
+  DpctlCommand (swtchDev, cmdOut.str ());
+
+  std::ostringstream cmdIn;
+  cmdIn << "flow-mod cmd=add,table=0,prio=4095"
+        << " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152" 
+        << ",in_port=" << swtchPort 
+        << " goto:1";
+  DpctlCommand (swtchDev, cmdIn.str ());
 }
 
 ofl_err
