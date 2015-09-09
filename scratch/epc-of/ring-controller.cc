@@ -274,27 +274,32 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
 
+  // Reseting ring routing info to the shortest path
+  Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
+  ringInfo->ResetToShortestPaths ();
+
   if (rInfo->IsDefault ())
     {
-      // We always accept default bearers.
+      // We always accept default bearers over the shortest path.
       return true;
     }
 
-  Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
   Ptr<ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
   if (!reserveInfo)
     {
       // For bearers without resource reservation requests (probably a
       // Non-GBR one), let's accept it, without guarantees.
       return true;
+
+      // TODO: In current implementation, Non-GBR bearers are always routed
+      // over the shortest path. However, nothing prevents the use of a more
+      // sofisticated routing approach.
     }
 
   NS_ASSERT_MSG (rInfo->IsGbr (), "Invalid configuration for bearer request.");
   uint32_t teid = rInfo->GetTeid ();
 
   // Getting available downlink and uplink bit rates in both paths
-  ringInfo->ResetToShortestPaths ();
-
   std::pair<uint64_t, uint64_t> shortPathBand, longPathBand;
   shortPathBand = GetAvailableGbrBitRate (ringInfo, true);
   longPathBand  = GetAvailableGbrBitRate (ringInfo, false);

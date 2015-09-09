@@ -190,11 +190,15 @@ AdmissionStatsCalculator::NotifyRequest (bool accepted,
       upBitRate = reserveInfo->GetUpBitRate ();
     }
 
-  std::string path = "Shortest (default)";
+  std::string path = "None";
   Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  if (ringInfo)
+  if (ringInfo && accepted)
     {
-      path = accepted ? ringInfo->GetPathDesc () : "None";
+      path = ringInfo->GetPathDesc ();
+      if (rInfo->IsDefault ())
+        {
+          path += " (default)";
+        }
     }
 
   // Save request stats into output file
