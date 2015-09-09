@@ -280,6 +280,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       return true;
     }
 
+  Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
   Ptr<ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
   if (!reserveInfo)
     {
@@ -289,8 +290,6 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
     }
 
   NS_ASSERT_MSG (rInfo->IsGbr (), "Invalid configuration for bearer request.");
-
-  Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
   uint32_t teid = rInfo->GetTeid ();
 
   // Getting available downlink and uplink bit rates in both paths
