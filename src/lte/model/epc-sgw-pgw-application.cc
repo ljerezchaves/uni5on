@@ -134,8 +134,8 @@ EpcSgwPgwApplication::EpcSgwPgwApplication (const Ptr<VirtualNetDevice> tunDevic
   : m_s1uSocket (s1uSocket),
     m_tunDevice (tunDevice),
     m_gtpuUdpPort (2152), // fixed by the standard
-    m_gbrTeidCount (0x8000000F),
-    m_nonTeidCount (0x0000000F),
+    m_gbrTeidCount (0x80000000),
+    m_nonTeidCount (0x00000000),
     m_s11SapMme (0)
 {
   NS_LOG_FUNCTION (this << tunDevice << s1uSocket);
@@ -304,9 +304,7 @@ EpcSgwPgwApplication::DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequest
       // We are using a smart TEID assignment algorithm to simplify GTP routing
       // over OpenFlow backhaul network. The 32th TEID bit (the MSB bit) is
       // been used to differentiate between GBR bearers (MSB == 1) and Non-GBR
-      // bearers (MSB == 0). The first 16 TEIDs in each group are not used,
-      // allowing smart OpenFlow controller strategies when handling meters
-      // and group IDs.
+      // bearers (MSB == 0).
       //
       uint32_t teid = 0;
       if (bit->bearerLevelQos.IsGbr ())
