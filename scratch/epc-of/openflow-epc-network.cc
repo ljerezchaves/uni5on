@@ -70,7 +70,7 @@ OpenFlowEpcNetwork::GetTypeId (void)
                      "New connection between two OpenFlow switches when "
                      "building topology.",
                      MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_newConnTrace),
-                     "ns3::ConnectionInfo::TracedCallback")
+                     "ns3::ConnectionInfo::ConnTracedCallback")
     .AddTraceSource ("TopologyBuilt",
                      "Topology built and no more connections between "
                      "OpenFlow switches.",

@@ -28,6 +28,8 @@
 
 namespace ns3 {
 
+class ConnectionInfo;
+
 /** A pair of switches index */
 typedef std::pair<uint16_t, uint16_t> SwitchPair_t;
 
@@ -188,7 +190,7 @@ public:
    * TracedCallback signature for Ptr<ConnectionInfo>.
    * \param cInfo The connection information and metadata.
    */
-  typedef void (* TracedCallback)(Ptr<ConnectionInfo> cInfo);
+  typedef void (* ConnTracedCallback)(Ptr<ConnectionInfo> cInfo);
 
 protected:
   /** Destructor implementation */
@@ -261,6 +263,8 @@ private:
    */
   void SetNonGbrAdjStep (DataRate value);
 
+  /** Non-GBR allowed bit rate adjusted trace source. */
+  TracedCallback<Ptr<ConnectionInfo> > m_nonAdjustedTrace;
 
   SwitchData        m_sw1;          //!< First switch (lowest index)
   SwitchData        m_sw2;          //!< Second switch (highest index)

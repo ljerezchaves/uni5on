@@ -89,6 +89,12 @@ ConnectionInfo::GetTypeId (void)
                    DataRateValue (DataRate ("5Mb/s")),
                    MakeDataRateAccessor (&ConnectionInfo::SetNonGbrAdjStep),
                    MakeDataRateChecker ())
+    
+    // Trace source used by controller to install/update Non-GBR meters
+    .AddTraceSource ("NonGbrAdjusted",
+                     "Non-GBR allowed bit rate adjusted.",
+                     MakeTraceSourceAccessor (&ConnectionInfo::m_nonAdjustedTrace),
+                     "ns3::ConnectionInfo::ConnTracedCallback")
   ;
   return tid;
 }
@@ -338,7 +344,9 @@ ConnectionInfo::ReserveGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
           m_gbrReserved [dir] + m_gbrSafeguard)
         {
           m_nonAllowed [dir] -= m_nonAdjustStep;
-          // TODO Update meter
+          
+          // Fire trace source to update meters
+          m_nonAdjustedTrace (this);
         }
           
       return true;
@@ -364,7 +372,9 @@ ConnectionInfo::ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
           m_gbrReserved [dir] + m_nonAdjustStep)
         {
           m_nonAllowed [dir] += m_nonAdjustStep;
-          // TODO Update meter
+        
+          // Fire trace source to update meters
+          m_nonAdjustedTrace (this);
         }
 
       return true;
@@ -398,7 +408,9 @@ ConnectionInfo::SetNonGbrAdjStep (DataRate value)
   m_nonAdjustStep = value.GetBitRate ();
   m_nonAllowed [0] = GetLinkBitRate () - (m_gbrSafeguard + m_nonAdjustStep);
   m_nonAllowed [1] = GetLinkBitRate () - (m_gbrSafeguard + m_nonAdjustStep);
-  // TODO Install initial meters
+  
+  // Fire trace source to install meters
+  m_nonAdjustedTrace (this);
 }
 
 };  // namespace ns3
