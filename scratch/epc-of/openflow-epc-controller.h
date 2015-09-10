@@ -349,17 +349,7 @@ protected:
   /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
   TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerReleaseTrace;
 
-  /** \name Flow table entry timeout values */
-  //\{
-  static const int m_defaultTmo;          //!< Timeout for default bearers
   static const int m_dedicatedTmo;        //!< Timeout for dedicated bearers
-  //\}
-
-  /** \name Flow table entry priority values */
-  //\{
-  static const int m_dedicatedPrio;     //!< Dedicated bearer rule priority
-  static const int m_defaultPrio;       //!< Default bearer rule priority
-  //\}
 
 private:
   NetDeviceContainer  m_ofDevices;        //!< OpenFlow switch devices.

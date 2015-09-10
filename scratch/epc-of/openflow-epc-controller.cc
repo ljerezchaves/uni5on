@@ -27,11 +27,7 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcController");
 NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcController);
 
-const int OpenFlowEpcController::m_defaultTmo = 0;
 const int OpenFlowEpcController::m_dedicatedTmo = 15;
-
-const int OpenFlowEpcController::m_dedicatedPrio = 512; // 0x0200
-const int OpenFlowEpcController::m_defaultPrio = 128;   // 0x0080
 
 OpenFlowEpcController::TeidBearerMap_t OpenFlowEpcController::m_bearersTable;
 
@@ -256,8 +252,8 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
   rInfo->m_enbIdx = GetSwitchIndex (enbAddr);
   rInfo->m_sgwAddr = sgwAddr;
   rInfo->m_enbAddr = enbAddr;
-  rInfo->m_priority = m_defaultPrio;      // Priority for default bearer
-  rInfo->m_timeout = m_defaultTmo;        // No timeout for default bearer
+  rInfo->m_priority = 127;                // Priority for default bearer
+  rInfo->m_timeout = 0;                   // No timeout for default bearer
   rInfo->m_isInstalled = false;           // Bearer rules not installed yet
   rInfo->m_isActive = true;               // Default bearer is always active
   rInfo->m_isDefault = true;              // This is a default bearer
@@ -293,7 +289,7 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
       rInfo->m_enbIdx = GetSwitchIndex (enbAddr);
       rInfo->m_sgwAddr = sgwAddr;
       rInfo->m_enbAddr = enbAddr;
-      rInfo->m_priority = m_dedicatedPrio;  // Priority for dedicated bearer
+      rInfo->m_priority = 127;              // Priority for dedicated bearer
       rInfo->m_timeout = m_dedicatedTmo;    // Timeout for dedicated bearer
       rInfo->m_isInstalled = false;         // Switch rules not installed
       rInfo->m_isActive = false;            // Dedicated bearer not active
@@ -326,37 +322,68 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
 {
   NS_LOG_FUNCTION (this << swtch.ipv4);
 
-  // Set the switch to buffer packets and send only the first 128 bytes
+  // This function is called after a successfully handshake between controller
+  // and switch. So, let's start configure the switch tables in accordance to
+  // our methodology.
+  
+  // Configure the switch to buffer packets and send only the first 128 bytes
+  // to the controller.
   DpctlCommand (swtch, "set-config miss=128");
 
-  // After a successfull handshake, let's install some default entries:
-  // Table miss entry in all used tables
-  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=0 write:output=ctrl");
-  DpctlCommand (swtch, "flow-mod cmd=add,table=1,prio=0 write:output=ctrl");
-  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=0 write:output=ctrl");
-  DpctlCommand (swtch, "flow-mod cmd=add,table=3,prio=0 write:output=ctrl");
   
-  // ARP handling entry at table #0
-  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=15 eth_type=0x0806"
-                       " write:output=ctrl");
-
-  // Send GTP packet forwarding at tables #2 (GBR) and #3 (Non-GBR) 
-  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=2047 eth_type=0x800,"
-                       "ip_proto=17,udp_src=2152,udp_dst=2152,ip_dscp=26"
+  // -------------------------------------------------------------------------
+  // Table 0 -- Starting table -- [from higher to lower priority]
+  
+  // ARP request packets are sent to the controller.
+  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=45055 eth_type=0x0806"
+                       " apply:output=ctrl");
+  
+  // More entries will be installed here by ConfigureLocalPortRules function.
+  
+  // GTP packets entering the switch from any port other then EPC ports are
+  // sent to the forwarding table (table 2).
+  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=32 eth_type=0x800,"
+                       "ip_proto=17,udp_src=2152,udp_dst=2152"
                        " goto:2");
-  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=2047 eth_type=0x800,"
-                       "ip_proto=17,udp_src=2152,udp_dst=2152,ip_dscp=0"
-                       " goto:3");
+  
+  // Table miss entry. Send unmatched packets to the controller.
+  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
 
-  // For GBR/Non-GBR forwarding tables, handling entrance packets.
-  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256 meta=0x1"
+
+  // -------------------------------------------------------------------------
+  // Table 1 -- Classification table -- [from higher to lower priority]
+  
+  // More entries will be installed here by TopologyInstallRouting function.
+  
+  // Table miss entry. Send unmatched packets to the controller.
+  DpctlCommand (swtch, "flow-mod cmd=add,table=1,prio=0 apply:output=ctrl");
+
+  
+  // -------------------------------------------------------------------------
+  // Table 2 -- Forwarding table -- [from higher to lower priority]
+  
+  // GBR packet classified at table 1. Forward the packet to the correct
+  // routing group.
+  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
+                       " eth_type=0x800,ip_dscp=46,meta=0x1"
                        " write:group=1");
-  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256 meta=0x2"
+  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
+                       " eth_type=0x800,ip_dscp=46,meta=0x2"
                        " write:group=2");
-  DpctlCommand (swtch, "flow-mod cmd=add,table=3,prio=256 meta=0x1"
+
+  // Non-GBR packet classified at table 1. Apply corresponding Non-GBR meter
+  // band and forward the packet to the the correct routing group.
+  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
+                       " eth_type=0x800,ip_dscp=0,meta=0x1"
                        " meter:1 write:group=1");
-  DpctlCommand (swtch, "flow-mod cmd=add,table=3,prio=256 meta=0x2"
+  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
+                       " eth_type=0x800,ip_dscp=0,meta=0x2"
                        " meter:2 write:group=2");
+  
+  // More entries will be installed here by NotifyTopologyBuilt function.
+
+  // Table miss entry. Send unmatched packets to the controller.
+  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=0 apply:output=ctrl");
 }
 
 ofl_err
@@ -573,16 +600,24 @@ OpenFlowEpcController::ConfigureLocalPortRules (
 {
   NS_LOG_FUNCTION (this << swtchDev << nodeDev << nodeIp << swtchPort);
 
+  // -------------------------------------------------------------------------
+  // Table 0 -- Starting table -- [from higher to lower priority]
+  //
+  // GTP packets addressed to the EPC entity connected to this switch over
+  // EPC switchPort are sent to this EPC switchPort to leave the ring
+  // network.
   Mac48Address devMacAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ());
   std::ostringstream cmdOut;
-  cmdOut << "flow-mod cmd=add,table=0,prio=45055"
+  cmdOut << "flow-mod cmd=add,table=0,prio=128"
          << " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152" 
          << ",eth_dst=" << devMacAddr << ",ip_dst=" << nodeIp 
-         << " write:output=" << swtchPort;
+         << " apply:output=" << swtchPort;
   DpctlCommand (swtchDev, cmdOut.str ());
 
+  // GTP packets entering the switch from EPC switchPort are sent to the
+  // classification table (table 1).
   std::ostringstream cmdIn;
-  cmdIn << "flow-mod cmd=add,table=0,prio=4095"
+  cmdIn << "flow-mod cmd=add,table=0,prio=64"
         << " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152" 
         << ",in_port=" << swtchPort 
         << " goto:1";

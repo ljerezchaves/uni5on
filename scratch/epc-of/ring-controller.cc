@@ -121,30 +121,36 @@ RingController::NotifyTopologyBuilt (NetDeviceContainer devices)
       uint16_t sw2 = (sw1 + 1) % GetNSwitches ();  // Next clockwise node
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (sw1, sw2);
 
-      // GBR forwarding rules
+      // ---------------------------------------------------------------------
+      // Table 2 -- Forwarding table -- [from higher to lower priority]
+
+      // GBR packets entering the switch from any port other then EPC ports.
+      // Forward the packet to the correct routing group based on input port.
       std::ostringstream cmd1;
       cmd1 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
-           << " in_port=" << cInfo->GetPortNoFirst ()
+           << " eth_type=0x800,ip_dscp=46,in_port=" << cInfo->GetPortNoFirst ()
            << " write:group=" << RingRoutingInfo::COUNTER;
       DpctlCommand (cInfo->GetSwDevFirst (), cmd1.str ());
 
       std::ostringstream cmd2;
       cmd2 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
-           << " in_port=" << cInfo->GetPortNoSecond ()
+           << " eth_type=0x800,ip_dscp=46,in_port=" << cInfo->GetPortNoSecond ()
            << " write:group=" << RingRoutingInfo::CLOCK;
       DpctlCommand (cInfo->GetSwDevSecond (), cmd2.str ());
 
-      // Non-GBR forwarding rules
+      // Non-GBR packets entering the switch from any port other then EPC
+      // ports. Apply corresponding Non-GBR meter band and forward the packet
+      // to the the correct routing group based on input port.
       std::ostringstream cmd3;
-      cmd3 << "flow-mod cmd=add,table=3,flags=0x0002,prio=128"
-           << " in_port=" << cInfo->GetPortNoFirst ()
+      cmd3 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
+           << " eth_type=0x800,ip_dscp=0,in_port=" << cInfo->GetPortNoFirst ()
            << " meter:" << RingRoutingInfo::COUNTER
            << " write:group=" << RingRoutingInfo::COUNTER;
       DpctlCommand (cInfo->GetSwDevFirst (), cmd3.str ());
 
       std::ostringstream cmd4;
-      cmd4 << "flow-mod cmd=add,table=3,flags=0x0002,prio=128"
-           << " in_port=" << cInfo->GetPortNoSecond ()
+      cmd4 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
+           << " eth_type=0x800,ip_dscp=0,in_port=" << cInfo->GetPortNoSecond ()
            << " meter:" << RingRoutingInfo::CLOCK 
            << " write:group=" << RingRoutingInfo::CLOCK;
       DpctlCommand (cInfo->GetSwDevSecond (), cmd4.str ());
@@ -205,31 +211,28 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
         {
           if (!meterInfo->IsInstalled ())
             {
-              // Install the meter entry
+              // Install the per-flow meter entry
               DpctlCommand (GetSwitchDevice (swIdx),
                             meterInfo->GetDownAddCmd ());
               meterInstalled = true;
             }
 
-          // Building the meter instruction string
+          // Building the per-flow meter instruction string
           inst << " meter:" << rInfo->GetTeid ();
         }
       
-      // Writing metatada with routing information
-      sprintf (metadataStr, "0x%x", ringInfo->GetDownPath ());
-      inst << " meta:" << metadataStr;
-
-      // For GBR bearers, mark the IP DSCP field with AF31 value (26) and send
-      // to GBR routing table. Otherwise, send to Non-GBR routing table.
+      // For GBR bearers, mark the IP DSCP field with value 46 (EF)
       if (rInfo->IsGbr ())
         {
-          inst << " write:set_field=ip_dscp:26";
-          inst << " goto:2";
+          // Build the apply set_field action instruction string
+          inst << " apply:set_field=ip_dscp:46";
         }
-      else
-        {
-          inst << " goto:3";
-        }
+     
+      // Build the metatada, write and goto instructions string
+      sprintf (metadataStr, "0x%x", ringInfo->GetDownPath ());
+      inst << " meta:" << metadataStr
+           << " write:group=" <<  ringInfo->GetDownPath () 
+           << " goto:2";
 
       // Installing the rule into input switch
       std::string commandStr = args.str () + match.str () + inst.str ();
@@ -255,31 +258,28 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
         {
           if (!meterInfo->IsInstalled ())
             {
-              // Install the meter entry
+              // Install the per-flow meter entry
               DpctlCommand (GetSwitchDevice (swIdx),
                             meterInfo->GetUpAddCmd ());
               meterInstalled = true;
             }
 
-          // Building the meter instruction string
+          // Building the per-flow meter instruction string
           inst << " meter:" << rInfo->GetTeid ();
         }
 
-      // Writing metatada with routing information
-      sprintf (metadataStr, "0x%x", ringInfo->GetUpPath ());
-      inst << " meta:" << metadataStr;
-
-      // For GBR bearers, mark the IP DSCP field with AF31 value (26) and send
-      // to GBR routing table. Otherwise, send to Non-GBR routing table.
+      // For GBR bearers, mark the IP DSCP field with value 46 (EF)
       if (rInfo->IsGbr ())
         {
-          inst << " write:set_field=ip_dscp:26";
-          inst << " goto:2";
+          // Build the apply set_field action instruction string
+          inst << " apply:set_field=ip_dscp:46";
         }
-      else
-        {
-          inst << " goto:3";
-        }
+
+      // Build the metatada, write and goto instructions string
+      sprintf (metadataStr, "0x%x", ringInfo->GetUpPath ());
+      inst << " meta:" << metadataStr
+           << " write:group=" <<  ringInfo->GetUpPath () 
+           << " goto:2";
 
       // Installing the rule into input switch
       std::string commandStr = args.str () + match.str () + inst.str ();
