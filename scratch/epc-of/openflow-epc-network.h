@@ -151,16 +151,10 @@ public:
   void QueueDropPacket (std::string context, Ptr<const Packet> packet);
 
   /**
-   * ConnectionTracedCallback signature for new connection between two switches.
-   * \param cInfo The connection information and metadata.
-   */
-  typedef void (*ConnectionTracedCallback)(Ptr<ConnectionInfo> cInfo);
-
-  /**
    * BoolTracedCallback signature for topology creation completed.
    * \param devices The NetDeviceContainer for OpenFlow switch devices.
    */
-  typedef void (*TopologyTracedCallback)(NetDeviceContainer devices);
+  typedef void (* TopologyTracedCallback)(NetDeviceContainer devices);
 
   typedef void (* AttachTracedCallback)(Ptr<NetDevice> nodeDev, 
       Ipv4Address nodeIp, Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, 

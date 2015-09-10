@@ -184,6 +184,12 @@ public:
    */
   ConnectionInfo::Direction GetDirection (uint16_t src, uint16_t dst) const;
 
+  /**
+   * TracedCallback signature for Ptr<ConnectionInfo>.
+   * \param cInfo The connection information and metadata.
+   */
+  typedef void (* TracedCallback)(Ptr<ConnectionInfo> cInfo);
+
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
