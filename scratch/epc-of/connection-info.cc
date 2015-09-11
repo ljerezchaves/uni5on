@@ -170,15 +170,25 @@ ConnectionInfo::GetBackwardGbrReservedRatio (void) const
 double
 ConnectionInfo::GetForwardNonGbrAllowedRatio (void) const
 {
-  return static_cast<double>
-         (m_nonAllowed [ConnectionInfo::FORWARD]) / GetLinkBitRate ();
+  return static_cast<double> (GetForwardNonGbrBitRate ()) / GetLinkBitRate ();
 }
 
 double
 ConnectionInfo::GetBackwardNonGbrAllowedRatio (void) const
 {
-  return static_cast<double>
-         (m_nonAllowed [ConnectionInfo::BACKWARD]) / GetLinkBitRate ();
+  return static_cast<double> (GetBackwardNonGbrBitRate ()) / GetLinkBitRate ();
+}
+
+uint64_t
+ConnectionInfo::GetForwardNonGbrBitRate (void) const
+{
+  return m_nonAllowed [ConnectionInfo::FORWARD];
+}
+
+uint64_t
+ConnectionInfo::GetBackwardNonGbrBitRate (void) const
+{
+  return m_nonAllowed [ConnectionInfo::BACKWARD];
 }
 
 uint32_t
@@ -408,8 +418,8 @@ ConnectionInfo::SetNonGbrAdjStep (DataRate value)
   m_nonAdjustStep = value.GetBitRate ();
   m_nonAllowed [0] = GetLinkBitRate () - (m_gbrSafeguard + m_nonAdjustStep);
   m_nonAllowed [1] = GetLinkBitRate () - (m_gbrSafeguard + m_nonAdjustStep);
-  
-  // Fire trace source to install meters
+
+  // Fire trace source to update meters
   m_nonAdjustedTrace (this);
 }
 

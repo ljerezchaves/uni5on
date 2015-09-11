@@ -132,6 +132,17 @@ public:
   double GetBackwardNonGbrAllowedRatio (void) const;
   //\}
 
+  /**
+   * Get the Non-GBR allowed bit rate in indicated direction.
+   * \return The bit rate.
+   */
+  //\{
+  //!< The Non-GBR allowed bit rate in forward direction
+  uint64_t GetForwardNonGbrBitRate (void) const;
+
+  //!< The Non-GBR allowed bit rate in backward direction
+  uint64_t GetBackwardNonGbrBitRate (void) const;
+  //\}
 
   /**
    * Get the number of bytes successfully transmitted in indicated direction
