@@ -219,6 +219,10 @@ void
 OpenFlowEpcController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
+
+  // Connecting this controller to ConnectionInfo trace source 
+  cInfo->TraceConnectWithoutContext ("NonGbrAdjusted",
+    MakeCallback (&OpenFlowEpcController::NotifyNonGbrAdjusted, this));
 }
 
 void
@@ -315,6 +319,12 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
           rInfo->AggregateObject (reserveInfo);
         }
     }
+}
+
+void 
+OpenFlowEpcController::NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
+{
+  NS_LOG_INFO (this << cInfo);
 }
 
 void

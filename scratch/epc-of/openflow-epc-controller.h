@@ -166,6 +166,14 @@ protected:
   virtual void NotifyContextCreated (uint64_t imsi, uint16_t cellId,
                                      Ipv4Address enbAddr, Ipv4Address sgwAddr, 
                                      BearerList_t bearerList);
+
+  /**
+   * Notify this controller when the Non-GBR allowed bit rate in any network
+   * connection is adjusted. This is used to update Non-GBR meters bands based
+   * on GBR resource reservation.
+   * \param cInfo The connection information
+   */
+  virtual void NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo);
   //\}
 
   /** \name Topology-dependent functions

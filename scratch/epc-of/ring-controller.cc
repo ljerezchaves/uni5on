@@ -81,26 +81,41 @@ void
 RingController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this);
+  //
+  // Installing groups and meters for ring network. Note that following
+  // commands works as connections are created in clockwise direction, and
+  // switchs inside cInfo are saved in the same direction.
+  //
 
+  // Call base method which will connect trace sources and sinks
+  OpenFlowEpcController::NotifyNewSwitchConnection (cInfo);
+  
   // Save this connection info for further usage
   SaveConnectionInfo (cInfo);
 
-  // Installing default groups for RingController ring routing. Group
-  // RingRoutingInfo::CLOCK is used to send packets from current switch to the
-  // next one in clockwise direction. Note that this method works as
-  // connections are created in clockwise direction, and switchs inside cInfo
-  // are saved in the same clockwise direction.
+  // Routing group for clockwise packet forwarding.
   std::ostringstream cmd1;
   cmd1 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::CLOCK
        << " weight=0,port=any,group=any output=" << cInfo->GetPortNoFirst ();
   DpctlCommand (cInfo->GetSwDevFirst (), cmd1.str ());
 
-  // Group RingRoutingInfo::COUNTER is used to send packets from the next
-  // switch to the current one in counterclockwise direction.
+  // Routing group for counterclockwise packet forwarding.
   std::ostringstream cmd2;
   cmd2 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::COUNTER
        << " weight=0,port=any,group=any output=" << cInfo->GetPortNoSecond ();
   DpctlCommand (cInfo->GetSwDevSecond (), cmd2.str ());
+
+  // Non-GBR meter for clockwise direction
+  std::ostringstream cmd3;
+  cmd3 << "meter-mod cmd=add,flags=1,meter=" << RingRoutingInfo::CLOCK
+       << " drop:rate=" << cInfo->GetForwardNonGbrBitRate () / 1000;
+  DpctlCommand (cInfo->GetSwDevFirst (), cmd3.str ());
+
+  // Non-GBR meter for counterclockwise direction
+  std::ostringstream cmd4;
+  cmd4 << "meter-mod cmd=add,flags=1,meter=" << RingRoutingInfo::COUNTER
+       << " drop:rate=" << cInfo->GetBackwardNonGbrBitRate () / 1000;
+  DpctlCommand (cInfo->GetSwDevSecond (), cmd4.str ());
 }
 
 void
