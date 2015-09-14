@@ -39,28 +39,29 @@ ConnectionInfo::~ConnectionInfo ()
 
 ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
                                 Ptr<CsmaChannel> channel)
-  : m_sw1 (sw1),
-    m_sw2 (sw2),
-    m_channel (channel)
+  : m_channel (channel)
 {
   NS_LOG_FUNCTION (this);
 
+  m_switches [0] = sw1;
+  m_switches [1] = sw2;
+
   // Asserting internal device order to ensure thar forward and backward
   // indexes are correct.
-  NS_ASSERT_MSG ((channel->GetCsmaDevice (0) == GetPortDevFirst ()
-                  && channel->GetCsmaDevice (1) == GetPortDevSecond ()),
+  NS_ASSERT_MSG (channel->GetCsmaDevice (0) == GetPortDev (0)
+                 && channel->GetCsmaDevice (1) == GetPortDev (1),
                  "Invalid device order in csma channel.");
 
   // Connecting trace source to CsmaNetDevice PhyTxEnd trace source, used to
   // monitor data transmitted over this connection.
-  m_sw1.portDev->TraceConnect ("PhyTxEnd", "Forward",
+  m_switches [0].portDev->TraceConnect ("PhyTxEnd", "Forward", 
       MakeCallback (&ConnectionInfo::NotifyTxPacket, this));
-  m_sw2.portDev->TraceConnect ("PhyTxEnd", "Backward",
+  m_switches [1].portDev->TraceConnect ("PhyTxEnd", "Backward", 
       MakeCallback (&ConnectionInfo::NotifyTxPacket, this));
 
-  ResetStatistics ();
-  m_gbrReserved [0] = 0;
-  m_gbrReserved [1] = 0;
+  m_gbrBitRate [0] = 0;
+  m_gbrBitRate [1] = 0;
+  ResetTxBytes ();
 }
 
 TypeId
@@ -69,12 +70,12 @@ ConnectionInfo::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::ConnectionInfo")
     .SetParent<Object> ()
     .AddConstructor<ConnectionInfo> ()
-    .AddAttribute ("GbrReserveQuota",
+    .AddAttribute ("GbrLinkQuota",
                    "Maximum bandwitdth ratio that can be reserved to GBR "
                    "traffic in this connection.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DoubleValue (0.4),   // 40% of link capacity
-                   MakeDoubleAccessor (&ConnectionInfo::SetGbrReserveQuota),
+                   MakeDoubleAccessor (&ConnectionInfo::SetGbrLinkQuota),
                    MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("GbrSafeguard",
                    "Safeguard bandwidth to protect GBR from Non-GBR traffic.", 
@@ -87,7 +88,7 @@ ConnectionInfo::GetTypeId (void)
                    "Non-GBR traffic is allowed to use.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("5Mb/s")),
-                   MakeDataRateAccessor (&ConnectionInfo::SetNonGbrAdjStep),
+                   MakeDataRateAccessor (&ConnectionInfo::SetNonGbrAdjustStep),
                    MakeDataRateChecker ())
     
     // Trace source used by controller to install/update Non-GBR meters
@@ -102,133 +103,79 @@ ConnectionInfo::GetTypeId (void)
 SwitchPair_t
 ConnectionInfo::GetSwitchIndexPair (void) const
 {
-  return SwitchPair_t (m_sw1.swIdx, m_sw2.swIdx);
+  return SwitchPair_t (GetSwIdx (0), GetSwIdx (1));
 }
 
 uint16_t
-ConnectionInfo::GetSwIdxFirst (void) const
+ConnectionInfo::GetSwIdx (uint8_t idx) const
 {
-  return m_sw1.swIdx;
-}
+  NS_ASSERT_MSG (idx == 0 || idx == 1, "Invalid switch index.");
 
-uint16_t
-ConnectionInfo::GetSwIdxSecond (void) const
-{
-  return m_sw2.swIdx;
+  return m_switches [idx].swIdx;
 }
 
 uint32_t
-ConnectionInfo::GetPortNoFirst (void) const
+ConnectionInfo::GetPortNo (uint8_t idx) const
 {
-  return m_sw1.portNum;
-}
+  NS_ASSERT_MSG (idx == 0 || idx == 1, "Invalid switch index.");
 
-uint32_t
-ConnectionInfo::GetPortNoSecond (void) const
-{
-  return m_sw2.portNum;
+  return m_switches [idx].portNum;
 }
 
 Ptr<const OFSwitch13NetDevice>
-ConnectionInfo::GetSwDevFirst (void) const
+ConnectionInfo::GetSwDev (uint8_t idx) const
 {
-  return m_sw1.swDev;
-}
+  NS_ASSERT_MSG (idx == 0 || idx == 1, "Invalid switch index.");
 
-Ptr<const OFSwitch13NetDevice>
-ConnectionInfo::GetSwDevSecond (void) const
-{
-  return m_sw2.swDev;
+  return m_switches [idx].swDev;
 }
 
 Ptr<const CsmaNetDevice>
-ConnectionInfo::GetPortDevFirst (void) const
+ConnectionInfo::GetPortDev (uint8_t idx) const
 {
-  return m_sw1.portDev;
+  NS_ASSERT_MSG (idx == 0 || idx == 1, "Invalid switch index.");
+
+  return m_switches [idx].portDev;
 }
 
-Ptr<const CsmaNetDevice>
-ConnectionInfo::GetPortDevSecond (void) const
+uint32_t
+ConnectionInfo::GetGbrBytes (Direction dir) const
 {
-  return m_sw2.portDev;
+  return m_gbrTxBytes [dir];
+}
+
+uint64_t 
+ConnectionInfo::GetGbrBitRate (Direction dir) const
+{
+  return m_gbrBitRate [dir];
 }
 
 double
-ConnectionInfo::GetForwardGbrReservedRatio (void) const
+ConnectionInfo::GetGbrLinkRatio (Direction dir) const
 {
-  return static_cast<double>
-         (m_gbrReserved [ConnectionInfo::FORWARD]) / GetLinkBitRate ();
+  return static_cast<double> (GetGbrBitRate (dir)) / GetLinkBitRate (); 
+}
+
+uint32_t 
+ConnectionInfo::GetNonGbrBytes (Direction dir) const
+{
+  return m_nonTxBytes [dir];
+}
+
+uint64_t 
+ConnectionInfo::GetNonGbrBitRate (Direction dir) const
+{
+  return m_nonBitRate [dir];
 }
 
 double
-ConnectionInfo::GetBackwardGbrReservedRatio (void) const
+ConnectionInfo::GetNonGbrLinkRatio (Direction dir) const
 {
-  return static_cast<double>
-         (m_gbrReserved [ConnectionInfo::BACKWARD]) / GetLinkBitRate ();
-}
-
-double
-ConnectionInfo::GetForwardNonGbrAllowedRatio (void) const
-{
-  return static_cast<double> (GetForwardNonGbrBitRate ()) / GetLinkBitRate ();
-}
-
-double
-ConnectionInfo::GetBackwardNonGbrAllowedRatio (void) const
-{
-  return static_cast<double> (GetBackwardNonGbrBitRate ()) / GetLinkBitRate ();
-}
-
-uint64_t
-ConnectionInfo::GetForwardNonGbrBitRate (void) const
-{
-  return m_nonAllowed [ConnectionInfo::FORWARD];
-}
-
-uint64_t
-ConnectionInfo::GetBackwardNonGbrBitRate (void) const
-{
-  return m_nonAllowed [ConnectionInfo::BACKWARD];
-}
-
-uint32_t
-ConnectionInfo::GetForwardBytes (void) const
-{
-  return GetForwardGbrBytes () + GetForwardNonGbrBytes ();
-}
-
-uint32_t
-ConnectionInfo::GetBackwardBytes (void) const
-{
-  return GetBackwardGbrBytes () + GetBackwardNonGbrBytes ();
-}
-
-uint32_t
-ConnectionInfo::GetForwardGbrBytes (void) const
-{
-  return m_gbrTxBytes [ConnectionInfo::FORWARD];
-}
-
-uint32_t
-ConnectionInfo::GetBackwardGbrBytes (void) const
-{
-  return m_gbrTxBytes [ConnectionInfo::BACKWARD];
-}
-
-uint32_t
-ConnectionInfo::GetForwardNonGbrBytes (void) const
-{
-  return m_nonTxBytes [ConnectionInfo::FORWARD];
-}
-
-uint32_t
-ConnectionInfo::GetBackwardNonGbrBytes (void) const
-{
-  return m_nonTxBytes [ConnectionInfo::BACKWARD];
+  return static_cast<double> (GetNonGbrBitRate (dir)) / GetLinkBitRate ();
 }
 
 void
-ConnectionInfo::ResetStatistics (void)
+ConnectionInfo::ResetTxBytes (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -239,7 +186,7 @@ ConnectionInfo::ResetStatistics (void)
 }
 
 bool
-ConnectionInfo::IsFullDuplex (void) const
+ConnectionInfo::IsFullDuplexLink (void) const
 {
   return m_channel->IsFullDuplex ();
 }
@@ -253,18 +200,18 @@ ConnectionInfo::GetLinkBitRate (void) const
 ConnectionInfo::Direction
 ConnectionInfo::GetDirection (uint16_t src, uint16_t dst) const
 {
-  NS_ASSERT_MSG (((src == GetSwIdxFirst ()  && dst == GetSwIdxSecond ())
-                  || (src == GetSwIdxSecond () && dst == GetSwIdxFirst ())),
+  NS_ASSERT_MSG ((src == GetSwIdx (0) && dst == GetSwIdx (1))
+                 || (src == GetSwIdx (1) && dst == GetSwIdx (0)),
                  "Invalid switch indexes for this connection.");
 
-  if (IsFullDuplex () && src == GetSwIdxSecond ())
+  if (IsFullDuplexLink () && src == GetSwIdx (1))
     {
-      return ConnectionInfo::BACKWARD;
+      return ConnectionInfo::BWD;
     }
 
-  // For half-duplex channel, always return true, as we will
+  // For half-duplex channel always return true, as we will
   // only use the forwarding path for resource reservations.
-  return ConnectionInfo::FORWARD;
+  return ConnectionInfo::FWD;
 }
 
 void
@@ -278,8 +225,7 @@ void
 ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
 {
   ConnectionInfo::Direction dir;
-  dir = (context == "Forward") ? ConnectionInfo::FORWARD :
-                                 ConnectionInfo::BACKWARD;
+  dir = (context == "Forward") ? ConnectionInfo::FWD : ConnectionInfo::BWD;
 
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
@@ -304,21 +250,6 @@ ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
 }
 
 uint64_t
-ConnectionInfo::GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx) const
-{
-  ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
-
-  if (m_gbrMaxBitRate >= m_gbrReserved [dir])
-    {
-      return m_gbrMaxBitRate - m_gbrReserved [dir];
-    }
-  else
-    {
-      return 0;
-    }
-}
-
-uint64_t
 ConnectionInfo::GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
                                         double debarFactor) const
 {
@@ -327,9 +258,9 @@ ConnectionInfo::GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
   uint64_t maxBitRate = static_cast<uint64_t> (debarFactor * m_gbrMaxBitRate);
 
-  if (maxBitRate >= m_gbrReserved [dir])
+  if (maxBitRate >= GetGbrBitRate (dir))
     {
-      return maxBitRate - m_gbrReserved [dir];
+      return maxBitRate - GetGbrBitRate (dir);
     }
   else
     {
@@ -343,25 +274,28 @@ ConnectionInfo::ReserveGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
 
-  if (m_gbrReserved [dir] + bitRate <= m_gbrMaxBitRate)
+  if (GetGbrBitRate (dir) + bitRate <= m_gbrMaxBitRate)
     {
-      m_gbrReserved [dir] += bitRate;
+      m_gbrBitRate [dir] += bitRate;
       
       // When the distance between the GRB reserved bit rate and the Non-GBR
       // maximum allowed bit rate gets lower than the safeguard value, we need
       // to reduce the Non-GBR allowed bit rate by one adjustment step value.
-      if (GetLinkBitRate () - m_nonAllowed [dir] < 
-          m_gbrReserved [dir] + m_gbrSafeguard)
+      if (GetLinkBitRate () - GetNonGbrBitRate (dir) < 
+          GetGbrBitRate (dir) + m_gbrSafeguard)
         {
-          m_nonAllowed [dir] -= m_nonAdjustStep;
-          
-          // Fire trace source to update meters
+          // Update Non-GBR allowed bit rate and fire adjusted trace source
+          m_nonBitRate [dir] -= m_nonAdjustStep;
           m_nonAdjustedTrace (this);
         }
           
       return true;
     }
-  NS_FATAL_ERROR ("No bandwidth available to reserve.");
+  else
+    {
+      NS_LOG_WARN ("No bandwidth available to reserve.");
+      return false;
+    }
 }
 
 bool
@@ -370,36 +304,38 @@ ConnectionInfo::ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
 {
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
 
-  if (m_gbrReserved [dir] - bitRate >= 0)
+  if (GetGbrBitRate (dir) - bitRate >= 0)
     {
-      m_gbrReserved [dir] -= bitRate;
+      m_gbrBitRate [dir] -= bitRate;
       
       // When the distance between the GRB reserved bit rate and the Non-GBR
       // maximum allowed bit rate gets higher than the safeguard value + one
       // adjustment step, we can increase the Non-GBR allowed bit rate by one
       // adjustment step value, still respecting the safeguard value. 
-      if (GetLinkBitRate () - m_nonAllowed [dir] - m_gbrSafeguard > 
-          m_gbrReserved [dir] + m_nonAdjustStep)
+      if (GetLinkBitRate () - GetNonGbrBitRate (dir) - m_gbrSafeguard > 
+          GetGbrBitRate (dir) + m_nonAdjustStep)
         {
-          m_nonAllowed [dir] += m_nonAdjustStep;
-        
-          // Fire trace source to update meters
+          // Update Non-GBR allowed bit rate and fire adjusted trace source
+          m_nonBitRate [dir] += m_nonAdjustStep;
           m_nonAdjustedTrace (this);
         }
 
       return true;
     }
-  NS_FATAL_ERROR ("No bandwidth available to release.");
+  else
+    {
+      NS_LOG_WARN ("No bandwidth available to release.");
+      return false;
+    }
 }
 
 void
-ConnectionInfo::SetGbrReserveQuota (double value)
+ConnectionInfo::SetGbrLinkQuota (double value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_gbrReserveQuota = value;
-  m_gbrMaxBitRate =
-    static_cast<uint64_t> (m_gbrReserveQuota * GetLinkBitRate ());
+  m_gbrLinkQuota = value;
+  m_gbrMaxBitRate = static_cast<uint64_t> (m_gbrLinkQuota * GetLinkBitRate ());
 }
 
 void
@@ -411,15 +347,15 @@ ConnectionInfo::SetGbrSafeguard (DataRate value)
 }
 
 void
-ConnectionInfo::SetNonGbrAdjStep (DataRate value)
+ConnectionInfo::SetNonGbrAdjustStep (DataRate value)
 {
   NS_LOG_FUNCTION (this << value);
 
   m_nonAdjustStep = value.GetBitRate ();
-  m_nonAllowed [0] = GetLinkBitRate () - (m_gbrSafeguard + m_nonAdjustStep);
-  m_nonAllowed [1] = GetLinkBitRate () - (m_gbrSafeguard + m_nonAdjustStep);
-
-  // Fire trace source to update meters
+  
+  // Update Non-GBR allowed bit rate and fire adjusted trace source
+  m_nonBitRate [0] = GetLinkBitRate () - (m_gbrSafeguard + m_nonAdjustStep);
+  m_nonBitRate [1] = GetLinkBitRate () - (m_gbrSafeguard + m_nonAdjustStep);
   m_nonAdjustedTrace (this);
 }
 

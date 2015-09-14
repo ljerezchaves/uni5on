@@ -481,10 +481,11 @@ BandwidthStatsCalculator::DumpStatistics (void)
   std::vector<Ptr<ConnectionInfo> >::iterator it;
   for (it = m_connections.begin (); it != m_connections.end (); it++)
     {
-      double gbrFwKbits = ((double)(*it)->GetForwardGbrBytes ()  * 8) / 1000;
-      double gbrBwKbits = ((double)(*it)->GetBackwardGbrBytes () * 8) / 1000;
-      double nonFwKbits = ((double)(*it)->GetForwardNonGbrBytes ()  * 8) / 1000;
-      double nonBwKbits = ((double)(*it)->GetBackwardNonGbrBytes () * 8) / 1000;
+      Ptr<ConnectionInfo> cInfo = *it;
+      double gbrFwKbits = ((double)cInfo->GetGbrBytes (ConnectionInfo::FWD) * 8) / 1000;
+      double gbrBwKbits = ((double)cInfo->GetGbrBytes (ConnectionInfo::BWD) * 8) / 1000;
+      double nonFwKbits = ((double)cInfo->GetNonGbrBytes (ConnectionInfo::FWD)  * 8) / 1000;
+      double nonBwKbits = ((double)cInfo->GetNonGbrBytes (ConnectionInfo::BWD) * 8) / 1000;
 
       *m_bwgWrapper->GetStream ()
       << right
@@ -503,15 +504,15 @@ BandwidthStatsCalculator::DumpStatistics (void)
 
       *m_regWrapper->GetStream ()
       << right
-      << setw (6) << (*it)->GetForwardGbrReservedRatio ()  << " "
-      << setw (6) << (*it)->GetBackwardGbrReservedRatio () << "   ";
+      << setw (6) << cInfo->GetGbrLinkRatio (ConnectionInfo::FWD)  << " "
+      << setw (6) << cInfo->GetGbrLinkRatio (ConnectionInfo::BWD) << "   ";
 
       *m_renWrapper->GetStream ()
       << right
-      << setw (6) << (*it)->GetForwardNonGbrAllowedRatio ()  << " "
-      << setw (6) << (*it)->GetBackwardNonGbrAllowedRatio () << "   ";
+      << setw (6) << cInfo->GetNonGbrLinkRatio (ConnectionInfo::FWD)  << " "
+      << setw (6) << cInfo->GetNonGbrLinkRatio (ConnectionInfo::BWD) << "   ";
 
-      (*it)->ResetStatistics ();
+      cInfo->ResetTxBytes ();
     }
   *m_bwbWrapper->GetStream () << std::endl;
   *m_bwgWrapper->GetStream () << std::endl;

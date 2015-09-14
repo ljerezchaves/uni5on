@@ -81,41 +81,40 @@ void
 RingController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this);
-  //
+
+  // Call base method which will connect trace sources and sinks, and save this
+  // connection info for further usage.
+  OpenFlowEpcController::NotifyNewSwitchConnection (cInfo);
+  SaveConnectionInfo (cInfo);
+
   // Installing groups and meters for ring network. Note that following
   // commands works as connections are created in clockwise direction, and
   // switchs inside cInfo are saved in the same direction.
-  //
-
-  // Call base method which will connect trace sources and sinks
-  OpenFlowEpcController::NotifyNewSwitchConnection (cInfo);
-  
-  // Save this connection info for further usage
-  SaveConnectionInfo (cInfo);
+  std::ostringstream cmd01, cmd11, cmd02, cmd12;
+  uint64_t kbps = 0;
 
   // Routing group for clockwise packet forwarding.
-  std::ostringstream cmd1;
-  cmd1 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::CLOCK
-       << " weight=0,port=any,group=any output=" << cInfo->GetPortNoFirst ();
-  DpctlCommand (cInfo->GetSwDevFirst (), cmd1.str ());
+  cmd01 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::CLOCK
+        << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (0);
+  
+  // Non-GBR meter for clockwise direction
+  kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::FWD) / 1000;
+  cmd02 << "meter-mod cmd=add,flags=1,meter=" << RingRoutingInfo::CLOCK
+        << " drop:rate=" << kbps;
 
   // Routing group for counterclockwise packet forwarding.
-  std::ostringstream cmd2;
-  cmd2 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::COUNTER
-       << " weight=0,port=any,group=any output=" << cInfo->GetPortNoSecond ();
-  DpctlCommand (cInfo->GetSwDevSecond (), cmd2.str ());
-
-  // Non-GBR meter for clockwise direction
-  std::ostringstream cmd3;
-  cmd3 << "meter-mod cmd=add,flags=1,meter=" << RingRoutingInfo::CLOCK
-       << " drop:rate=" << cInfo->GetForwardNonGbrBitRate () / 1000;
-  DpctlCommand (cInfo->GetSwDevFirst (), cmd3.str ());
+  cmd11 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::COUNTER
+        << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (1);
 
   // Non-GBR meter for counterclockwise direction
-  std::ostringstream cmd4;
-  cmd4 << "meter-mod cmd=add,flags=1,meter=" << RingRoutingInfo::COUNTER
-       << " drop:rate=" << cInfo->GetBackwardNonGbrBitRate () / 1000;
-  DpctlCommand (cInfo->GetSwDevSecond (), cmd4.str ());
+  kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::BWD) / 1000;
+  cmd12 << "meter-mod cmd=add,flags=1,meter=" << RingRoutingInfo::COUNTER
+        << " drop:rate=" << kbps;
+
+  DpctlCommand (cInfo->GetSwDev (0), cmd01.str ());
+  DpctlCommand (cInfo->GetSwDev (0), cmd02.str ());
+  DpctlCommand (cInfo->GetSwDev (1), cmd11.str ());
+  DpctlCommand (cInfo->GetSwDev (1), cmd12.str ());
 }
 
 void
@@ -141,35 +140,33 @@ RingController::NotifyTopologyBuilt (NetDeviceContainer devices)
 
       // GBR packets entering the switch from any port other then EPC ports.
       // Forward the packet to the correct routing group based on input port.
-      std::ostringstream cmd1;
-      cmd1 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
-           << " eth_type=0x800,ip_dscp=46,in_port=" << cInfo->GetPortNoFirst ()
-           << " write:group=" << RingRoutingInfo::COUNTER;
-      DpctlCommand (cInfo->GetSwDevFirst (), cmd1.str ());
+      std::ostringstream cmd01, cmd02, cmd11, cmd12;
 
-      std::ostringstream cmd2;
-      cmd2 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
-           << " eth_type=0x800,ip_dscp=46,in_port=" << cInfo->GetPortNoSecond ()
-           << " write:group=" << RingRoutingInfo::CLOCK;
-      DpctlCommand (cInfo->GetSwDevSecond (), cmd2.str ());
+      cmd01 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
+            << " eth_type=0x800,ip_dscp=46,in_port=" << cInfo->GetPortNo (0)
+            << " write:group=" << RingRoutingInfo::COUNTER;
+
+      cmd11 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
+            << " eth_type=0x800,ip_dscp=46,in_port=" << cInfo->GetPortNo (1)
+            << " write:group=" << RingRoutingInfo::CLOCK;
 
       // Non-GBR packets entering the switch from any port other then EPC
       // ports. Apply corresponding Non-GBR meter band and forward the packet
       // to the the correct routing group based on input port.
-      std::ostringstream cmd3;
-      cmd3 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
-           << " eth_type=0x800,ip_dscp=0,in_port=" << cInfo->GetPortNoFirst ()
-           << " meter:" << RingRoutingInfo::COUNTER
-           << " write:group=" << RingRoutingInfo::COUNTER;
-      DpctlCommand (cInfo->GetSwDevFirst (), cmd3.str ());
+      cmd02 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
+            << " eth_type=0x800,ip_dscp=0,in_port=" << cInfo->GetPortNo (0)
+            << " meter:" << RingRoutingInfo::COUNTER
+            << " write:group=" << RingRoutingInfo::COUNTER;
 
-      std::ostringstream cmd4;
-      cmd4 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
-           << " eth_type=0x800,ip_dscp=0,in_port=" << cInfo->GetPortNoSecond ()
-           << " meter:" << RingRoutingInfo::CLOCK 
-           << " write:group=" << RingRoutingInfo::CLOCK;
-      DpctlCommand (cInfo->GetSwDevSecond (), cmd4.str ());
-
+      cmd12 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
+            << " eth_type=0x800,ip_dscp=0,in_port=" << cInfo->GetPortNo (1)
+            << " meter:" << RingRoutingInfo::CLOCK 
+            << " write:group=" << RingRoutingInfo::CLOCK;
+      
+      DpctlCommand (cInfo->GetSwDev (0), cmd01.str ());
+      DpctlCommand (cInfo->GetSwDev (0), cmd02.str ());
+      DpctlCommand (cInfo->GetSwDev (1), cmd11.str ());
+      DpctlCommand (cInfo->GetSwDev (1), cmd12.str ());
     }
 }
 
@@ -443,19 +440,22 @@ RingController::TopologyCreateSpanningTree ()
   NS_LOG_DEBUG ("Disabling link from " << half << " to " <<
                 half + 1 << " for broadcast messages.");
 
-  Mac48Address macAddr1 = Mac48Address::ConvertFrom (
-      cInfo->GetPortDevFirst ()->GetAddress ());
-  std::ostringstream cmd1;
-  cmd1 << "port-mod port=" << cInfo->GetPortNoFirst () << ",addr="
-       <<  macAddr1 << ",conf=0x00000020,mask=0x00000020";
-  DpctlCommand (cInfo->GetSwDevFirst (), cmd1.str ());
+  Mac48Address macAddr1, macAddr2;
+  std::ostringstream cmd1, cmd2;
 
-  Mac48Address macAddr2 = Mac48Address::ConvertFrom (
-      cInfo->GetPortDevSecond ()->GetAddress ());
-  std::ostringstream cmd2;
-  cmd2 << "port-mod port=" << cInfo->GetPortNoSecond () << ",addr="
-       << macAddr2 << ",conf=0x00000020,mask=0x00000020";
-  DpctlCommand (cInfo->GetSwDevSecond (), cmd2.str ());
+  macAddr1 = Mac48Address::ConvertFrom (cInfo->GetPortDev (0)->GetAddress ());
+  macAddr2 = Mac48Address::ConvertFrom (cInfo->GetPortDev (1)->GetAddress ());
+  
+  cmd1 << "port-mod port=" << cInfo->GetPortNo (0) 
+       << ",addr=" <<  macAddr1 
+       << ",conf=0x00000020,mask=0x00000020";
+
+  cmd2 << "port-mod port=" << cInfo->GetPortNo (1) 
+       << ",addr=" << macAddr2 
+       << ",conf=0x00000020,mask=0x00000020";
+  
+  DpctlCommand (cInfo->GetSwDev (0), cmd1.str ());
+  DpctlCommand (cInfo->GetSwDev (1), cmd2.str ());
 }
 
 uint16_t
@@ -485,19 +485,20 @@ void
 RingController::SaveConnectionInfo (Ptr<ConnectionInfo> cInfo)
 {
   // Respecting the increasing switch index order when saving connection data.
+  uint16_t swIndex1 = cInfo->GetSwIdx (0);
+  uint16_t swIndex2 = cInfo->GetSwIdx (1);
+  
   SwitchPair_t key;
-  key.first  = std::min (cInfo->GetSwIdxFirst (), cInfo->GetSwIdxSecond ());
-  key.second = std::max (cInfo->GetSwIdxFirst (), cInfo->GetSwIdxSecond ());
+  key.first  = std::min (swIndex1, swIndex2);
+  key.second = std::max (swIndex1, swIndex2);
   std::pair<SwitchPair_t, Ptr<ConnectionInfo> > entry (key, cInfo);
   std::pair<ConnInfoMap_t::iterator, bool> ret;
   ret = m_connections.insert (entry);
   if (ret.second == true)
     {
-      NS_LOG_DEBUG ("New connection info saved: switch "
-                    << cInfo->GetSwIdxFirst () << " ("
-                    << cInfo->GetPortNoFirst () << ") - switch "
-                    << cInfo->GetSwIdxSecond () << " ("
-                    << cInfo->GetPortNoSecond () << ")");
+      NS_LOG_DEBUG ("New connection info saved:"
+        << " switch " << swIndex1 << " port " << cInfo->GetPortNo (0) 
+        << " switch " << swIndex2 << " port " << cInfo->GetPortNo (1));
       return;
     }
   NS_FATAL_ERROR ("Error saving connection info.");
