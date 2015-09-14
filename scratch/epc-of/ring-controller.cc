@@ -170,6 +170,28 @@ RingController::NotifyTopologyBuilt (NetDeviceContainer devices)
     }
 }
 
+void
+RingController::NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
+{
+  NS_LOG_INFO (this << cInfo);
+
+  std::ostringstream cmd1, cmd2;
+  uint64_t kbps = 0;
+
+  // Update Non-GBR meter for clockwise direction
+  kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::FWD) / 1000;
+  cmd1 << "meter-mod cmd=mod,flags=1,meter=" << RingRoutingInfo::CLOCK
+        << " drop:rate=" << kbps;
+
+  // Update Non-GBR meter for counterclockwise direction
+  kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::BWD) / 1000;
+  cmd2 << "meter-mod cmd=mod,flags=1,meter=" << RingRoutingInfo::COUNTER
+        << " drop:rate=" << kbps;
+
+  DpctlCommand (cInfo->GetSwDev (0), cmd1.str ());
+  DpctlCommand (cInfo->GetSwDev (1), cmd2.str ());
+}
+
 bool
 RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
                                         uint32_t buffer)

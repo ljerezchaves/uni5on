@@ -353,6 +353,9 @@ ConnectionInfo::SetNonGbrAdjustStep (DataRate value)
 
   m_nonAdjustStep = value.GetBitRate ();
 
+  NS_ASSERT_MSG (GetLinkBitRate () >= m_gbrSafeguard + m_nonAdjustStep, 
+                 "Invalid value for GBR safeguard or Non-GBD adjustment.");
+
   // Update Non-GBR allowed bit rate and fire adjusted trace source
   m_nonBitRate [0] = GetLinkBitRate () - (m_gbrSafeguard + m_nonAdjustStep);
   m_nonBitRate [1] = GetLinkBitRate () - (m_gbrSafeguard + m_nonAdjustStep);
