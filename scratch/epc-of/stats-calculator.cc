@@ -204,17 +204,17 @@ AdmissionStatsCalculator::NotifyRequest (bool accepted,
   // Save request stats into output file
   *m_brqWrapper->GetStream ()
   << left
-  << setw (9) << Simulator::Now ().GetSeconds ()          << " "
+  << setw (9) << Simulator::Now ().GetSeconds ()            << " "
   << right
-  << setw (4)  << rInfo->GetQciInfo ()                    << " "
-  << setw (6)  << rInfo->IsGbr ()                         << " "
-  << setw (7)  << rInfo->GetImsi ()                       << " "
-  << setw (7)  << rInfo->GetCellId ()                     << " "
-  << setw (6)  << rInfo->GetEnbSwIdx ()                   << " "
-  << setw (6)  << rInfo->GetTeid ()                       << " "
-  << setw (9)  << accepted                                << " "
-  << setw (11) << (double)(downBitRate) / 1000            << " "
-  << setw (11) << (double)(upBitRate) / 1000              << "  "
+  << setw (4)  << rInfo->GetQciInfo ()                      << " "
+  << setw (6)  << rInfo->IsGbr ()                           << " "
+  << setw (7)  << rInfo->GetImsi ()                         << " "
+  << setw (7)  << rInfo->GetCellId ()                       << " "
+  << setw (6)  << rInfo->GetEnbSwIdx ()                     << " "
+  << setw (6)  << rInfo->GetTeid ()                         << " "
+  << setw (9)  << accepted                                  << " "
+  << setw (11) << static_cast<double> (downBitRate) / 1000  << " "
+  << setw (11) << static_cast<double> (upBitRate) / 1000    << "  "
   << left
   << setw (15) << path
   << std::endl;
@@ -234,13 +234,17 @@ AdmissionStatsCalculator::ResetCounters ()
 double
 AdmissionStatsCalculator::GetNonGbrBlockRatio (void) const
 {
-  return m_nonRequests ? (double)m_nonBlocked / m_nonRequests : 0;
+  return m_nonRequests ? 
+         static_cast<double> (m_nonBlocked) / m_nonRequests 
+         : 0;
 }
 
 double
 AdmissionStatsCalculator::GetGbrBlockRatio (void) const
 {
-  return m_gbrRequests ? (double)m_gbrBlocked / m_gbrRequests : 0;
+  return m_gbrRequests ?
+         static_cast<double> (m_gbrBlocked) / m_gbrRequests
+         : 0;
 }
 
 
@@ -304,8 +308,8 @@ GatewayStatsCalculator::DumpStatistics (void)
   << setw (11) << m_upQueue->GetTotalReceivedBytes ()             << " "
   << setw (11) << m_upQueue->GetTotalDroppedPackets ()            << " "
   << setw (11) << m_upQueue->GetTotalDroppedBytes ()              << " "
-  << setw (15) << (double)GetDownDataRate ().GetBitRate () / 1000 << " "
-  << setw (15) << (double)GetUpDataRate ().GetBitRate () / 1000
+  << setw (15) << static_cast<double> (GetDownBitRate ()) / 1000  << " "
+  << setw (15) << static_cast<double> (GetUpBitRate ()) / 1000
   << std::endl;
 
   ResetCounters ();
@@ -377,16 +381,18 @@ GatewayStatsCalculator::GetActiveTime (void) const
   return Simulator::Now () - m_lastResetTime;
 }
 
-DataRate
-GatewayStatsCalculator::GetDownDataRate (void) const
+uint64_t
+GatewayStatsCalculator::GetDownBitRate (void) const
 {
-  return DataRate (8 * m_pgwDownBytes / GetActiveTime ().GetSeconds ());
+  return static_cast<uint64_t> (8 * m_pgwDownBytes / 
+                                GetActiveTime ().GetSeconds ());
 }
 
-DataRate
-GatewayStatsCalculator::GetUpDataRate (void) const
+uint64_t
+GatewayStatsCalculator::GetUpBitRate (void) const
 {
-  return DataRate (8 * m_pgwUpBytes / GetActiveTime ().GetSeconds ());
+  return static_cast<uint64_t> (8 * m_pgwUpBytes /
+                                GetActiveTime ().GetSeconds ());
 }
 
 
@@ -482,34 +488,39 @@ BandwidthStatsCalculator::DumpStatistics (void)
   for (it = m_connections.begin (); it != m_connections.end (); it++)
     {
       Ptr<ConnectionInfo> cInfo = *it;
-      double gbrFwKbits = ((double)cInfo->GetGbrBytes (ConnectionInfo::FWD) * 8) / 1000;
-      double gbrBwKbits = ((double)cInfo->GetGbrBytes (ConnectionInfo::BWD) * 8) / 1000;
-      double nonFwKbits = ((double)cInfo->GetNonGbrBytes (ConnectionInfo::FWD)  * 8) / 1000;
-      double nonBwKbits = ((double)cInfo->GetNonGbrBytes (ConnectionInfo::BWD) * 8) / 1000;
+      uint64_t gbrFwdBytes = cInfo->GetGbrBytes (ConnectionInfo::FWD);
+      uint64_t gbrBwdBytes = cInfo->GetGbrBytes (ConnectionInfo::BWD);
+      uint64_t nonFwdBytes = cInfo->GetNonGbrBytes (ConnectionInfo::FWD);
+      uint64_t nonBwdBytes = cInfo->GetNonGbrBytes (ConnectionInfo::BWD);
+
+      double gbrFwdKbits = static_cast<double> (gbrFwdBytes * 8) / 1000;
+      double gbrBwdKbits = static_cast<double> (gbrBwdBytes * 8) / 1000;
+      double nonFwdKbits = static_cast<double> (nonFwdBytes * 8) / 1000;
+      double nonBwdKbits = static_cast<double> (nonBwdBytes * 8) / 1000;
 
       *m_bwgWrapper->GetStream ()
       << right
-      << setw (10) << gbrFwKbits / interval << " "
-      << setw (10) << gbrBwKbits / interval << "   ";
+      << setw (10) << gbrFwdKbits / interval << " "
+      << setw (10) << gbrBwdKbits / interval << "   ";
 
       *m_bwnWrapper->GetStream ()
       << right
-      << setw (10) << nonFwKbits / interval << " "
-      << setw (10) << nonBwKbits / interval << "   ";
+      << setw (10) << nonFwdKbits / interval << " "
+      << setw (10) << nonBwdKbits / interval << "   ";
 
       *m_bwbWrapper->GetStream ()
       << right
-      << setw (10) << (gbrFwKbits + nonFwKbits) / interval << " "
-      << setw (10) << (gbrBwKbits + nonBwKbits) / interval << "   ";
+      << setw (10) << (gbrFwdKbits + nonFwdKbits) / interval << " "
+      << setw (10) << (gbrBwdKbits + nonBwdKbits) / interval << "   ";
 
       *m_regWrapper->GetStream ()
       << right
-      << setw (6) << cInfo->GetGbrLinkRatio (ConnectionInfo::FWD)  << " "
+      << setw (6) << cInfo->GetGbrLinkRatio (ConnectionInfo::FWD) << " "
       << setw (6) << cInfo->GetGbrLinkRatio (ConnectionInfo::BWD) << "   ";
 
       *m_renWrapper->GetStream ()
       << right
-      << setw (6) << cInfo->GetNonGbrLinkRatio (ConnectionInfo::FWD)  << " "
+      << setw (6) << cInfo->GetNonGbrLinkRatio (ConnectionInfo::FWD) << " "
       << setw (6) << cInfo->GetNonGbrLinkRatio (ConnectionInfo::BWD) << "   ";
 
       cInfo->ResetTxBytes ();
@@ -770,8 +781,8 @@ WebQueueStatsCalculator::DumpStatistics (void)
   << setw (11) << m_upQueue->GetTotalReceivedBytes ()             << " "
   << setw (11) << m_upQueue->GetTotalDroppedPackets ()            << " "
   << setw (11) << m_upQueue->GetTotalDroppedBytes ()              << " "
-  << setw (15) << (double)GetDownDataRate ().GetBitRate () / 1000 << " "
-  << setw (15) << (double)GetUpDataRate ().GetBitRate () / 1000
+  << setw (15) << static_cast<double> (GetDownBitRate ()) / 1000  << " "
+  << setw (15) << static_cast<double> (GetUpBitRate ()) / 1000
   << std::endl;
 
   ResetCounters ();
@@ -826,18 +837,18 @@ WebQueueStatsCalculator::GetActiveTime (void) const
   return Simulator::Now () - m_lastResetTime;
 }
 
-DataRate
-WebQueueStatsCalculator::GetDownDataRate (void) const
+uint64_t
+WebQueueStatsCalculator::GetDownBitRate (void) const
 {
-  return DataRate (8 * m_downQueue->GetTotalReceivedBytes () /
-                   GetActiveTime ().GetSeconds ());
+  return static_cast<uint64_t> (8 * m_downQueue->GetTotalReceivedBytes () / 
+                                GetActiveTime ().GetSeconds ());
 }
 
-DataRate
-WebQueueStatsCalculator::GetUpDataRate (void) const
+uint64_t
+WebQueueStatsCalculator::GetUpBitRate (void) const
 {
-  return DataRate (8 * m_upQueue->GetTotalReceivedBytes () /
-                   GetActiveTime ().GetSeconds ());
+  return static_cast<uint64_t> (8 * m_upQueue->GetTotalReceivedBytes () /
+                                GetActiveTime ().GetSeconds ());
 }
 
 
@@ -1047,6 +1058,7 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context,
     {
       // Dump uplink statistics
       epcStats = GetQosStatsFromTeid (teid, false);
+      DataRate epcThp = epcStats->GetRxThroughput ();
       *m_epcWrapper->GetStream ()
       << left
       << setw (11) << Simulator::Now ().GetSeconds ()                 << " "
@@ -1068,10 +1080,11 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context,
       << setw (6)  << epcStats->GetMeterDrops ()                      << " "
       << setw (6)  << epcStats->GetQueueDrops ()                      << " "
       << setw (9)  << epcStats->GetRxBytes ()                         << " "
-      << setw (16) << (double)(epcStats->GetRxThroughput ().GetBitRate ()) / 1000
+      << setw (16) << static_cast<double> (epcThp.GetBitRate ()) / 1000
       << std::endl;
 
       appStats = DynamicCast<const VoipClient> (app)->GetServerQosStats ();
+      DataRate appThp = appStats->GetRxThroughput ();
       *m_appWrapper->GetStream ()
       << left
       << setw (11) << Simulator::Now ().GetSeconds ()                 << " "
@@ -1091,12 +1104,13 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context,
       << setw (11) << appStats->GetLossRatio ()                       << " "
       << setw (5)  << appStats->GetLostPackets ()                     << " "
       << setw (9)  << appStats->GetRxBytes ()                         << " "
-      << setw (16) << (double)(appStats->GetRxThroughput ().GetBitRate ()) / 1000
+      << setw (16) << static_cast<double> (appThp.GetBitRate ()) / 1000
       << std::endl;
     }
 
   // Dump downlink statistics
   epcStats = GetQosStatsFromTeid (teid, true);
+  DataRate epcThp = epcStats->GetRxThroughput ();
   *m_epcWrapper->GetStream ()
   << left
   << setw (11) << Simulator::Now ().GetSeconds ()                     << " "
@@ -1118,10 +1132,11 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context,
   << setw (6)  << epcStats->GetMeterDrops ()                          << " "
   << setw (6)  << epcStats->GetQueueDrops ()                          << " "
   << setw (9)  << epcStats->GetRxBytes ()                             << " "
-  << setw (16) << (double)(epcStats->GetRxThroughput ().GetBitRate ()) / 1000
+  << setw (16) << static_cast<double> (epcThp.GetBitRate ()) / 1000
   << std::endl;
 
   appStats = app->GetQosStats ();
+  DataRate appThp = appStats->GetRxThroughput ();
   *m_appWrapper->GetStream ()
   << left
   << setw (11) << Simulator::Now ().GetSeconds ()                     << " "
@@ -1141,7 +1156,7 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context,
   << setw (11) << appStats->GetLossRatio ()                           << " "
   << setw (5)  << appStats->GetLostPackets ()                         << " "
   << setw (9)  << appStats->GetRxBytes ()                             << " "
-  << setw (16) << (double)(appStats->GetRxThroughput ().GetBitRate ()) / 1000
+  << setw (16) << static_cast<double> (appThp.GetBitRate ()) / 1000
   << std::endl;
 }
 

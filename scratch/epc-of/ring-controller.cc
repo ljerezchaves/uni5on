@@ -96,7 +96,7 @@ RingController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
   // Routing group for clockwise packet forwarding.
   cmd01 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::CLOCK
         << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (0);
-  
+
   // Non-GBR meter for clockwise direction
   kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::FWD) / 1000;
   cmd02 << "meter-mod cmd=add,flags=1,meter=" << RingRoutingInfo::CLOCK
@@ -160,9 +160,9 @@ RingController::NotifyTopologyBuilt (NetDeviceContainer devices)
 
       cmd12 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
             << " eth_type=0x800,ip_dscp=0,in_port=" << cInfo->GetPortNo (1)
-            << " meter:" << RingRoutingInfo::CLOCK 
+            << " meter:" << RingRoutingInfo::CLOCK
             << " write:group=" << RingRoutingInfo::CLOCK;
-      
+
       DpctlCommand (cInfo->GetSwDev (0), cmd01.str ());
       DpctlCommand (cInfo->GetSwDev (0), cmd02.str ());
       DpctlCommand (cInfo->GetSwDev (1), cmd11.str ());
@@ -232,18 +232,18 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
           // Building the per-flow meter instruction string
           inst << " meter:" << rInfo->GetTeid ();
         }
-      
+
       // For GBR bearers, mark the IP DSCP field with value 46 (EF)
       if (rInfo->IsGbr ())
         {
           // Build the apply set_field action instruction string
           inst << " apply:set_field=ip_dscp:46";
         }
-     
+
       // Build the metatada, write and goto instructions string
       sprintf (metadataStr, "0x%x", ringInfo->GetDownPath ());
       inst << " meta:" << metadataStr
-           << " write:group=" <<  ringInfo->GetDownPath () 
+           << " write:group=" <<  ringInfo->GetDownPath ()
            << " goto:2";
 
       // Installing the rule into input switch
@@ -290,7 +290,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
       // Build the metatada, write and goto instructions string
       sprintf (metadataStr, "0x%x", ringInfo->GetUpPath ());
       inst << " meta:" << metadataStr
-           << " write:group=" <<  ringInfo->GetUpPath () 
+           << " write:group=" <<  ringInfo->GetUpPath ()
            << " goto:2";
 
       // Installing the rule into input switch
@@ -445,15 +445,15 @@ RingController::TopologyCreateSpanningTree ()
 
   macAddr1 = Mac48Address::ConvertFrom (cInfo->GetPortDev (0)->GetAddress ());
   macAddr2 = Mac48Address::ConvertFrom (cInfo->GetPortDev (1)->GetAddress ());
-  
-  cmd1 << "port-mod port=" << cInfo->GetPortNo (0) 
-       << ",addr=" <<  macAddr1 
+
+  cmd1 << "port-mod port=" << cInfo->GetPortNo (0)
+       << ",addr=" <<  macAddr1
        << ",conf=0x00000020,mask=0x00000020";
 
-  cmd2 << "port-mod port=" << cInfo->GetPortNo (1) 
-       << ",addr=" << macAddr2 
+  cmd2 << "port-mod port=" << cInfo->GetPortNo (1)
+       << ",addr=" << macAddr2
        << ",conf=0x00000020,mask=0x00000020";
-  
+
   DpctlCommand (cInfo->GetSwDev (0), cmd1.str ());
   DpctlCommand (cInfo->GetSwDev (1), cmd2.str ());
 }
@@ -487,7 +487,9 @@ RingController::SaveConnectionInfo (Ptr<ConnectionInfo> cInfo)
   // Respecting the increasing switch index order when saving connection data.
   uint16_t swIndex1 = cInfo->GetSwIdx (0);
   uint16_t swIndex2 = cInfo->GetSwIdx (1);
-  
+  uint16_t port1 = cInfo->GetPortNo (0);
+  uint16_t port2 = cInfo->GetPortNo (1);
+
   SwitchPair_t key;
   key.first  = std::min (swIndex1, swIndex2);
   key.second = std::max (swIndex1, swIndex2);
@@ -497,8 +499,8 @@ RingController::SaveConnectionInfo (Ptr<ConnectionInfo> cInfo)
   if (ret.second == true)
     {
       NS_LOG_DEBUG ("New connection info saved:"
-        << " switch " << swIndex1 << " port " << cInfo->GetPortNo (0) 
-        << " switch " << swIndex2 << " port " << cInfo->GetPortNo (1));
+                    << " switch " << swIndex1 << " port " << port1
+                    << " switch " << swIndex2 << " port " << port2);
       return;
     }
   NS_FATAL_ERROR ("Error saving connection info.");

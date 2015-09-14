@@ -220,7 +220,7 @@ OpenFlowEpcController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
 
-  // Connecting this controller to ConnectionInfo trace source 
+  // Connecting this controller to ConnectionInfo trace source
   cInfo->TraceConnectWithoutContext ("NonGbrAdjusted",
     MakeCallback (&OpenFlowEpcController::NotifyNonGbrAdjusted, this));
 }
@@ -321,7 +321,7 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
     }
 }
 
-void 
+void
 OpenFlowEpcController::NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_INFO (this << cInfo);
@@ -335,43 +335,43 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
   // This function is called after a successfully handshake between controller
   // and switch. So, let's start configure the switch tables in accordance to
   // our methodology.
-  
+
   // Configure the switch to buffer packets and send only the first 128 bytes
   // to the controller.
   DpctlCommand (swtch, "set-config miss=128");
 
-  
+
   // -------------------------------------------------------------------------
   // Table 0 -- Starting table -- [from higher to lower priority]
-  
+
   // ARP request packets are sent to the controller.
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=45055 eth_type=0x0806"
                        " apply:output=ctrl");
-  
+
   // More entries will be installed here by ConfigureLocalPortRules function.
-  
+
   // GTP packets entering the switch from any port other then EPC ports are
   // sent to the forwarding table (table 2).
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=32 eth_type=0x800,"
                        "ip_proto=17,udp_src=2152,udp_dst=2152"
                        " goto:2");
-  
+
   // Table miss entry. Send unmatched packets to the controller.
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
 
 
   // -------------------------------------------------------------------------
   // Table 1 -- Classification table -- [from higher to lower priority]
-  
+
   // More entries will be installed here by TopologyInstallRouting function.
-  
+
   // Table miss entry. Send unmatched packets to the controller.
   DpctlCommand (swtch, "flow-mod cmd=add,table=1,prio=0 apply:output=ctrl");
 
-  
+
   // -------------------------------------------------------------------------
   // Table 2 -- Forwarding table -- [from higher to lower priority]
-  
+
   // GBR packet classified at table 1. Forward the packet to the correct
   // routing group.
   DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
@@ -389,7 +389,7 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
   DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
                        " eth_type=0x800,ip_dscp=0,meta=0x2"
                        " meter:2 write:group=2");
-  
+
   // More entries will be installed here by NotifyTopologyBuilt function.
 
   // Table miss entry. Send unmatched packets to the controller.
@@ -527,13 +527,13 @@ OpenFlowEpcController::SaveRoutingInfo (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
 
-  std::pair <uint32_t, Ptr<RoutingInfo> > entry (rInfo->GetTeid (), rInfo);
+  uint32_t teid = rInfo->GetTeid ();
+  std::pair <uint32_t, Ptr<RoutingInfo> > entry (teid, rInfo);
   std::pair <TeidRoutingMap_t::iterator, bool> ret;
   ret = m_routes.insert (entry);
   if (ret.second == false)
     {
-      NS_FATAL_ERROR ("Existing routing information for teid " 
-          << rInfo->GetTeid ());
+      NS_FATAL_ERROR ("Existing routing information for teid " << teid);
     }
 }
 
@@ -571,7 +571,7 @@ OpenFlowEpcController::GetSwitchIndex (Ipv4Address addr)
   ret = m_ipSwitchTable.find (addr);
   if (ret != m_ipSwitchTable.end ())
     {
-      return (uint16_t)ret->second;
+      return static_cast<uint16_t> (ret->second);
     }
   NS_FATAL_ERROR ("IP not registered in switch index table.");
 }
@@ -619,8 +619,8 @@ OpenFlowEpcController::ConfigureLocalPortRules (
   Mac48Address devMacAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ());
   std::ostringstream cmdOut;
   cmdOut << "flow-mod cmd=add,table=0,prio=128"
-         << " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152" 
-         << ",eth_dst=" << devMacAddr << ",ip_dst=" << nodeIp 
+         << " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152"
+         << ",eth_dst=" << devMacAddr << ",ip_dst=" << nodeIp
          << " apply:output=" << swtchPort;
   DpctlCommand (swtchDev, cmdOut.str ());
 
@@ -628,8 +628,8 @@ OpenFlowEpcController::ConfigureLocalPortRules (
   // classification table (table 1).
   std::ostringstream cmdIn;
   cmdIn << "flow-mod cmd=add,table=0,prio=64"
-        << " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152" 
-        << ",in_port=" << swtchPort 
+        << " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152"
+        << ",in_port=" << swtchPort
         << " goto:1";
   DpctlCommand (swtchDev, cmdIn.str ());
 }

@@ -151,16 +151,16 @@ private:
   Time GetActiveTime (void) const;
 
   /**
-   * Get the downlink data rate.
-   * \return The data rate.
+   * Get the downlink bit rate.
+   * \return The bit rate.
    */
-  DataRate GetDownDataRate (void) const;
+  uint64_t GetDownBitRate (void) const;
 
   /**
-   * Get the uplink data rate.
-   * \return The data rate.
+   * Get the uplink bit rate.
+   * \return The bit rate.
    */
-  DataRate GetUpDataRate (void) const;
+  uint64_t GetUpBitRate (void) const;
 
   uint32_t    m_pgwDownBytes;   //!< Pgw traffic downlink bytes.
   uint32_t    m_pgwUpBytes;     //!< Pgw traffic uplink bytes.
@@ -332,16 +332,16 @@ private:
   Time GetActiveTime (void) const;
 
   /**
-   * Get the downlink data rate.
-   * \return The data rate.
+   * Get the downlink bit rate.
+   * \return The bit rate.
    */
-  DataRate GetDownDataRate (void) const;
+  uint64_t GetDownBitRate (void) const;
 
   /**
-   * Get the uplink data rate.
-   * \return The data rate.
+   * Get the uplink bit rate.
+   * \return The bit rate.
    */
-  DataRate GetUpDataRate (void) const;
+  uint64_t GetUpBitRate (void) const;
 
   Ptr<Queue>  m_downQueue;      //!< Internet downlink queue
   Ptr<Queue>  m_upQueue;        //!< Internet uplink queue

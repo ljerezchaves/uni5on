@@ -128,7 +128,7 @@ protected:
    * \param swtchPort The port number for nodeDev at OpenFlow switch.
    */
   virtual void NotifyNewEpcAttach (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
-                                   Ptr<OFSwitch13NetDevice> swtchDev, 
+                                   Ptr<OFSwitch13NetDevice> swtchDev,
                                    uint16_t swtchIdx, uint32_t swtchPort);
 
   /**
@@ -164,7 +164,7 @@ protected:
    * \param bearerList The list of context bearers created.
    */
   virtual void NotifyContextCreated (uint64_t imsi, uint16_t cellId,
-                                     Ipv4Address enbAddr, Ipv4Address sgwAddr, 
+                                     Ipv4Address enbAddr, Ipv4Address sgwAddr,
                                      BearerList_t bearerList);
 
   /**
@@ -285,14 +285,14 @@ private:
    * to the OpenFlow network. This entry will match both MAC address and IP
    * address for the local device in order to output packets on respective
    * device port. It will also match input port for packet classification and
-   * routing. 
+   * routing.
    * \param swtchDev The Switch OFSwitch13NetDevice pointer.
    * \param nodeDev The device connected to the OpenFlow network.
    * \param nodeIp The IPv4 address assigned to this device.
    * \param swtchPort The number of switch port this device is attached to.
    */
   void ConfigureLocalPortRules (Ptr<OFSwitch13NetDevice> swtchDev,
-                                Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, 
+                                Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
                                 uint32_t swtchPort);
 
   /**

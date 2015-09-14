@@ -224,7 +224,7 @@ ConfigureDefaults ()
 void
 PrintCurrentTime ()
 {
-  uint32_t now = (uint32_t) Simulator::Now ().GetSeconds ();
+  uint32_t now = static_cast<uint32_t> (Simulator::Now ().GetSeconds ());
   NS_UNUSED (now);
   std::cout << "Current simulation time: "
             << Simulator::Now ().As (Time::S)

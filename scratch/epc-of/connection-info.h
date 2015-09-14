@@ -148,7 +148,7 @@ public:
    * TracedCallback signature for Ptr<ConnectionInfo>.
    * \param cInfo The connection information and metadata.
    */
-  typedef void (* ConnTracedCallback)(Ptr<ConnectionInfo> cInfo);
+  typedef void (*ConnTracedCallback)(Ptr<ConnectionInfo> cInfo);
 
 protected:
   /** Destructor implementation */

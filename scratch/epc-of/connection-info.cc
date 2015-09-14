@@ -78,19 +78,19 @@ ConnectionInfo::GetTypeId (void)
                    MakeDoubleAccessor (&ConnectionInfo::SetGbrLinkQuota),
                    MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("GbrSafeguard",
-                   "Safeguard bandwidth to protect GBR from Non-GBR traffic.", 
+                   "Safeguard bandwidth to protect GBR from Non-GBR traffic.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("10Mb/s")),
                    MakeDataRateAccessor (&ConnectionInfo::SetGbrSafeguard),
                    MakeDataRateChecker ())
     .AddAttribute ("NonGbrAdjustmentStep",
-                   "Step value used to adjust the bandwidth that " 
+                   "Step value used to adjust the bandwidth that "
                    "Non-GBR traffic is allowed to use.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("5Mb/s")),
                    MakeDataRateAccessor (&ConnectionInfo::SetNonGbrAdjustStep),
                    MakeDataRateChecker ())
-    
+
     // Trace source used by controller to install/update Non-GBR meters
     .AddTraceSource ("NonGbrAdjusted",
                      "Non-GBR allowed bit rate adjusted.",
@@ -144,7 +144,7 @@ ConnectionInfo::GetGbrBytes (Direction dir) const
   return m_gbrTxBytes [dir];
 }
 
-uint64_t 
+uint64_t
 ConnectionInfo::GetGbrBitRate (Direction dir) const
 {
   return m_gbrBitRate [dir];
@@ -153,16 +153,16 @@ ConnectionInfo::GetGbrBitRate (Direction dir) const
 double
 ConnectionInfo::GetGbrLinkRatio (Direction dir) const
 {
-  return static_cast<double> (GetGbrBitRate (dir)) / GetLinkBitRate (); 
+  return static_cast<double> (GetGbrBitRate (dir)) / GetLinkBitRate ();
 }
 
-uint32_t 
+uint32_t
 ConnectionInfo::GetNonGbrBytes (Direction dir) const
 {
   return m_nonTxBytes [dir];
 }
 
-uint64_t 
+uint64_t
 ConnectionInfo::GetNonGbrBitRate (Direction dir) const
 {
   return m_nonBitRate [dir];
@@ -277,18 +277,18 @@ ConnectionInfo::ReserveGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
   if (GetGbrBitRate (dir) + bitRate <= m_gbrMaxBitRate)
     {
       m_gbrBitRate [dir] += bitRate;
-      
+
       // When the distance between the GRB reserved bit rate and the Non-GBR
       // maximum allowed bit rate gets lower than the safeguard value, we need
       // to reduce the Non-GBR allowed bit rate by one adjustment step value.
-      if (GetLinkBitRate () - GetNonGbrBitRate (dir) < 
+      if (GetLinkBitRate () - GetNonGbrBitRate (dir) <
           GetGbrBitRate (dir) + m_gbrSafeguard)
         {
           // Update Non-GBR allowed bit rate and fire adjusted trace source
           m_nonBitRate [dir] -= m_nonAdjustStep;
           m_nonAdjustedTrace (this);
         }
-          
+
       return true;
     }
   else
@@ -307,12 +307,12 @@ ConnectionInfo::ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
   if (GetGbrBitRate (dir) - bitRate >= 0)
     {
       m_gbrBitRate [dir] -= bitRate;
-      
+
       // When the distance between the GRB reserved bit rate and the Non-GBR
       // maximum allowed bit rate gets higher than the safeguard value + one
       // adjustment step, we can increase the Non-GBR allowed bit rate by one
-      // adjustment step value, still respecting the safeguard value. 
-      if (GetLinkBitRate () - GetNonGbrBitRate (dir) - m_gbrSafeguard > 
+      // adjustment step value, still respecting the safeguard value.
+      if (GetLinkBitRate () - GetNonGbrBitRate (dir) - m_gbrSafeguard >
           GetGbrBitRate (dir) + m_nonAdjustStep)
         {
           // Update Non-GBR allowed bit rate and fire adjusted trace source
@@ -352,7 +352,7 @@ ConnectionInfo::SetNonGbrAdjustStep (DataRate value)
   NS_LOG_FUNCTION (this << value);
 
   m_nonAdjustStep = value.GetBitRate ();
-  
+
   // Update Non-GBR allowed bit rate and fire adjusted trace source
   m_nonBitRate [0] = GetLinkBitRate () - (m_gbrSafeguard + m_nonAdjustStep);
   m_nonBitRate [1] = GetLinkBitRate () - (m_gbrSafeguard + m_nonAdjustStep);
