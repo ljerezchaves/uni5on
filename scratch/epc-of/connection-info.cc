@@ -41,7 +41,7 @@ ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
                                 Ptr<CsmaChannel> channel)
   : m_channel (channel)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << sw1.swIdx << sw2.swIdx);
 
   m_switches [0] = sw1;
   m_switches [1] = sw2;
@@ -224,6 +224,8 @@ ConnectionInfo::DoDispose ()
 void
 ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
 {
+  NS_LOG_FUNCTION (this << packet);
+  
   ConnectionInfo::Direction dir;
   dir = (context == "Forward") ? ConnectionInfo::FWD : ConnectionInfo::BWD;
 
@@ -253,6 +255,8 @@ uint64_t
 ConnectionInfo::GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
                                         double debarFactor) const
 {
+  NS_LOG_FUNCTION (this << srcIdx << dstIdx << debarFactor);
+  
   NS_ASSERT_MSG (debarFactor >= 0.0, "Invalid DeBaR factor.");
 
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
@@ -264,6 +268,7 @@ ConnectionInfo::GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
     }
   else
     {
+      NS_LOG_DEBUG ("No bandwidth available.");
       return 0;
     }
 }
@@ -272,11 +277,14 @@ bool
 ConnectionInfo::ReserveGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
                                    uint64_t bitRate)
 {
+  NS_LOG_FUNCTION (this << srcIdx << dstIdx << bitRate);
+  
   ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
 
   if (GetGbrBitRate (dir) + bitRate <= m_gbrMaxBitRate)
     {
       m_gbrBitRate [dir] += bitRate;
+      NS_LOG_DEBUG (bitRate << " bps reserved.");
 
       // When the distance between the GRB reserved bit rate and the Non-GBR
       // maximum allowed bit rate gets lower than the safeguard value, we need
@@ -287,8 +295,9 @@ ConnectionInfo::ReserveGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
           // Update Non-GBR allowed bit rate and fire adjusted trace source
           m_nonBitRate [dir] -= m_nonAdjustStep;
           m_nonAdjustedTrace (this);
+          
+          NS_LOG_DEBUG ("Non-GBR bit rate adjusted to " << m_nonBitRate [dir]);
         }
-
       return true;
     }
   else
@@ -307,6 +316,7 @@ ConnectionInfo::ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
   if (GetGbrBitRate (dir) - bitRate >= 0)
     {
       m_gbrBitRate [dir] -= bitRate;
+      NS_LOG_DEBUG (bitRate << " bps released.");
 
       // When the distance between the GRB reserved bit rate and the Non-GBR
       // maximum allowed bit rate gets higher than the safeguard value + one
@@ -318,8 +328,9 @@ ConnectionInfo::ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
           // Update Non-GBR allowed bit rate and fire adjusted trace source
           m_nonBitRate [dir] += m_nonAdjustStep;
           m_nonAdjustedTrace (this);
-        }
 
+          NS_LOG_DEBUG ("Non-GBR bit rate adjusted to " << m_nonBitRate [dir]);
+        }
       return true;
     }
   else
@@ -336,6 +347,9 @@ ConnectionInfo::SetGbrLinkQuota (double value)
 
   m_gbrLinkQuota = value;
   m_gbrMaxBitRate = static_cast<uint64_t> (m_gbrLinkQuota * GetLinkBitRate ());
+  
+  NS_LOG_DEBUG ("GBR maximum bit rate: " << m_gbrMaxBitRate << 
+                " (" << m_gbrLinkQuota * 100 << "%).");
 }
 
 void
@@ -360,6 +374,8 @@ ConnectionInfo::SetNonGbrAdjustStep (DataRate value)
   m_nonBitRate [0] = GetLinkBitRate () - (m_gbrSafeguard + m_nonAdjustStep);
   m_nonBitRate [1] = GetLinkBitRate () - (m_gbrSafeguard + m_nonAdjustStep);
   m_nonAdjustedTrace (this);
+  
+  NS_LOG_DEBUG ("Initial Non-GBR bit rate: " << m_nonBitRate);
 }
 
 };  // namespace ns3

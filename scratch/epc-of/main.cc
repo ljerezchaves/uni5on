@@ -238,6 +238,7 @@ EnableVerbose ()
   LogComponentEnable ("Main", LOG_LEVEL_ALL);
   LogComponentEnable ("SimulationScenario", LOG_LEVEL_INFO);
   LogComponentEnable ("StatsCalculator", LOG_LEVEL_WARN);
+  LogComponentEnable ("ConnectionInfo", LOG_LEVEL_WARN);
 
   LogComponentEnable ("OFSwitch13NetDevice", LOG_LEVEL_WARN);
   LogComponentEnable ("OFSwitch13Interface", LOG_LEVEL_WARN);
