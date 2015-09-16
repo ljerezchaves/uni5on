@@ -173,7 +173,7 @@ RingController::NotifyTopologyBuilt (NetDeviceContainer devices)
 void
 RingController::NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
 {
-  NS_LOG_INFO (this << cInfo);
+  NS_LOG_FUNCTION (this << cInfo);
 
   std::ostringstream cmd1, cmd2;
   uint64_t kbps = 0;
