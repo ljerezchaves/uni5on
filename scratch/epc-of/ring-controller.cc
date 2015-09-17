@@ -137,32 +137,31 @@ RingController::NotifyTopologyBuilt (NetDeviceContainer devices)
 
       // ---------------------------------------------------------------------
       // Table 2 -- Forwarding table -- [from higher to lower priority]
-
-      // GBR packets entering the switch from any port other then EPC ports.
-      // Forward the packet to the correct routing group based on input port.
       std::ostringstream cmd01, cmd02, cmd11, cmd12;
-
-      cmd01 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
-            << " eth_type=0x800,ip_dscp=46,in_port=" << cInfo->GetPortNo (0)
-            << " write:group=" << RingRoutingInfo::COUNTER;
-
-      cmd11 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
-            << " eth_type=0x800,ip_dscp=46,in_port=" << cInfo->GetPortNo (1)
-            << " write:group=" << RingRoutingInfo::CLOCK;
 
       // Non-GBR packets entering the switch from any port other then EPC
       // ports. Apply corresponding Non-GBR meter band and forward the packet
       // to the the correct routing group based on input port.
-      cmd02 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
+      cmd01 << "flow-mod cmd=add,table=2,flags=0x0002,prio=256"
             << " eth_type=0x800,ip_dscp=0,in_port=" << cInfo->GetPortNo (0)
             << " meter:" << RingRoutingInfo::COUNTER
             << " write:group=" << RingRoutingInfo::COUNTER;
 
-      cmd12 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
+      cmd11 << "flow-mod cmd=add,table=2,flags=0x0002,prio=256"
             << " eth_type=0x800,ip_dscp=0,in_port=" << cInfo->GetPortNo (1)
             << " meter:" << RingRoutingInfo::CLOCK
             << " write:group=" << RingRoutingInfo::CLOCK;
 
+      // GBR packets entering the switch from any port other then EPC ports.
+      // Forward the packet to the correct routing group based on input port.
+      cmd02 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
+            << " eth_type=0x800,in_port=" << cInfo->GetPortNo (0)
+            << " write:group=" << RingRoutingInfo::COUNTER;
+
+      cmd12 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
+            << " eth_type=0x800,in_port=" << cInfo->GetPortNo (1)
+            << " write:group=" << RingRoutingInfo::CLOCK;
+      
       DpctlCommand (cInfo->GetSwDev (0), cmd01.str ());
       DpctlCommand (cInfo->GetSwDev (0), cmd02.str ());
       DpctlCommand (cInfo->GetSwDev (1), cmd11.str ());

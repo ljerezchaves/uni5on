@@ -317,8 +317,8 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
           Ptr<GbrInfo> gbrInfo = CreateObject<GbrInfo> (rInfo);
           rInfo->AggregateObject (gbrInfo);
 
-          // FIXME: Set the appropriated DiffServ DSCP value for this bearer.
-          gbrInfo->m_dscp = 46;
+          // Set the appropriated DiffServ DSCP value for this bearer.
+          gbrInfo->m_dscp = 46; // FIXME
         }
     }
 }
@@ -374,15 +374,6 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
   // -------------------------------------------------------------------------
   // Table 2 -- Forwarding table -- [from higher to lower priority]
 
-  // GBR packet classified at table 1. Forward the packet to the correct
-  // routing group.
-  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
-                       " eth_type=0x800,ip_dscp=46,meta=0x1"
-                       " write:group=1");
-  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
-                       " eth_type=0x800,ip_dscp=46,meta=0x2"
-                       " write:group=2");
-
   // Non-GBR packet classified at table 1. Apply corresponding Non-GBR meter
   // band and forward the packet to the the correct routing group.
   DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
@@ -391,6 +382,17 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
   DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
                        " eth_type=0x800,ip_dscp=0,meta=0x2"
                        " meter:2 write:group=2");
+  
+  // More entries will be installed here by NotifyTopologyBuilt function.
+  
+  // GBR packet classified at table 1. Forward the packet to the correct
+  // routing group.
+  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=128"
+                       " eth_type=0x800,meta=0x1"
+                       " write:group=1");
+  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=128"
+                       " eth_type=0x800,meta=0x2"
+                       " write:group=2");
 
   // More entries will be installed here by NotifyTopologyBuilt function.
 
