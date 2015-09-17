@@ -259,13 +259,14 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
       if (rInfo->IsGbr ())
         {
           // Build the apply set_field action instruction string
-          inst << " apply:set_field=ip_dscp:" << gbrInfo->GetDscp ();
+          inst << " apply:set_field=ip_dscp:" 
+               << rInfo->GetObject<GbrInfo> ()->GetDscp ();
         }
 
       // Build the metatada, write and goto instructions string
       sprintf (metadataStr, "0x%x", ringInfo->GetDownPath ());
       inst << " meta:" << metadataStr
-           << " write:group=" <<  ringInfo->GetDownPath ()
+           << " write:group=" << ringInfo->GetDownPath ()
            << " goto:2";
 
       // Installing the rule into input switch
@@ -306,13 +307,14 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
       if (rInfo->IsGbr ())
         {
           // Build the apply set_field action instruction string
-          inst << " apply:set_field=ip_dscp:" << gbrInfo->GetDscp ();
+          inst << " apply:set_field=ip_dscp:"
+               << rInfo->GetObject<GbrInfo> ()->GetDscp ();
         }
 
       // Build the metatada, write and goto instructions string
       sprintf (metadataStr, "0x%x", ringInfo->GetUpPath ());
       inst << " meta:" << metadataStr
-           << " write:group=" <<  ringInfo->GetUpPath ()
+           << " write:group=" << ringInfo->GetUpPath ()
            << " goto:2";
 
       // Installing the rule into input switch
