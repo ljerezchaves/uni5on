@@ -357,7 +357,7 @@ protected:
   /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
   TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerReleaseTrace;
 
-  static const int m_dedicatedTmo;        //!< Timeout for dedicated bearers
+  static const uint16_t m_dedicatedTmo;   //!< Timeout for dedicated bearers
 
 private:
   NetDeviceContainer  m_ofDevices;        //!< OpenFlow switch devices.

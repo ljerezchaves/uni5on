@@ -27,7 +27,7 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcController");
 NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcController);
 
-const int OpenFlowEpcController::m_dedicatedTmo = 15;
+const uint16_t OpenFlowEpcController::m_dedicatedTmo = 15;
 
 OpenFlowEpcController::TeidBearerMap_t OpenFlowEpcController::m_bearersTable;
 

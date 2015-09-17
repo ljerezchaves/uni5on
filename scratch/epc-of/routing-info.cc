@@ -127,13 +127,13 @@ RoutingInfo::GetSgwAddr (void) const
   return m_sgwAddr;
 }
 
-int
+uint16_t
 RoutingInfo::GetPriority (void) const
 {
   return m_priority;
 }
 
-int
+uint16_t
 RoutingInfo::GetTimeout (void) const
 {
   return m_timeout;

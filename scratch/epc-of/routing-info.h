@@ -74,8 +74,8 @@ public:
   uint16_t GetSgwSwIdx (void) const;
   Ipv4Address GetEnbAddr (void) const;
   Ipv4Address GetSgwAddr (void) const;
-  int GetPriority (void) const;
-  int GetTimeout (void) const;
+  uint16_t GetPriority (void) const;
+  uint16_t GetTimeout (void) const;
   bool HasDownlinkTraffic (void) const;
   bool HasUplinkTraffic (void) const;
   bool IsGbr (void) const;
@@ -113,8 +113,8 @@ private:
   uint16_t          m_enbIdx;       //!< eNB switch index
   Ipv4Address       m_sgwAddr;      //!< Sgw IPv4 address
   Ipv4Address       m_enbAddr;      //!< eNB IPv4 address
-  int               m_priority;     //!< Flow priority
-  int               m_timeout;      //!< Flow idle timeout
+  uint16_t          m_priority;     //!< Flow priority
+  uint16_t          m_timeout;      //!< Flow idle timeout
   bool              m_isDefault;    //!< This info is for default bearer
   bool              m_isInstalled;  //!< Rule is installed into switches
   bool              m_isActive;     //!< Application traffic is active
