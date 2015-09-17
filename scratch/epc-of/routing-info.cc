@@ -379,7 +379,7 @@ GbrInfo::SetReserved (bool reserved)
   m_isReserved = reserved;
 }
 
-uint8_t
+uint16_t
 GbrInfo::GetDscp (void) const
 {
   return m_dscp;

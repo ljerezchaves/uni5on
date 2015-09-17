@@ -225,7 +225,7 @@ public:
    * \return The requested field.
    */
   //\{
-  uint8_t GetDscp (void) const;
+  uint16_t GetDscp (void) const;
   uint64_t GetDownBitRate (void) const;
   uint64_t GetUpBitRate (void) const;
   bool IsReserved (void) const;
