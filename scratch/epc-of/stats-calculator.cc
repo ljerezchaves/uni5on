@@ -183,11 +183,11 @@ AdmissionStatsCalculator::NotifyRequest (bool accepted,
 
   // Preparing bearer request stats for trace source
   uint64_t downBitRate = 0, upBitRate = 0;
-  Ptr<const ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
-  if (reserveInfo)
+  Ptr<const GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
+  if (gbrInfo)
     {
-      downBitRate = reserveInfo->GetDownBitRate ();
-      upBitRate = reserveInfo->GetUpBitRate ();
+      downBitRate = gbrInfo->GetDownBitRate ();
+      upBitRate = gbrInfo->GetUpBitRate ();
     }
 
   std::string path = "None";
@@ -234,8 +234,8 @@ AdmissionStatsCalculator::ResetCounters ()
 double
 AdmissionStatsCalculator::GetNonGbrBlockRatio (void) const
 {
-  return m_nonRequests ? 
-         static_cast<double> (m_nonBlocked) / m_nonRequests 
+  return m_nonRequests ?
+         static_cast<double> (m_nonBlocked) / m_nonRequests
          : 0;
 }
 
@@ -384,7 +384,7 @@ GatewayStatsCalculator::GetActiveTime (void) const
 uint64_t
 GatewayStatsCalculator::GetDownBitRate (void) const
 {
-  return static_cast<uint64_t> (8 * m_pgwDownBytes / 
+  return static_cast<uint64_t> (8 * m_pgwDownBytes /
                                 GetActiveTime ().GetSeconds ());
 }
 
@@ -840,7 +840,7 @@ WebQueueStatsCalculator::GetActiveTime (void) const
 uint64_t
 WebQueueStatsCalculator::GetDownBitRate (void) const
 {
-  return static_cast<uint64_t> (8 * m_downQueue->GetTotalReceivedBytes () / 
+  return static_cast<uint64_t> (8 * m_downQueue->GetTotalReceivedBytes () /
                                 GetActiveTime ().GetSeconds ());
 }
 

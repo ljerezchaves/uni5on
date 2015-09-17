@@ -181,12 +181,12 @@ RingController::NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
   // Update Non-GBR meter for clockwise direction
   kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::FWD) / 1000;
   cmd1 << "meter-mod cmd=mod,flags=1,meter=" << RingRoutingInfo::CLOCK
-        << " drop:rate=" << kbps;
+       << " drop:rate=" << kbps;
 
   // Update Non-GBR meter for counterclockwise direction
   kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::BWD) / 1000;
   cmd2 << "meter-mod cmd=mod,flags=1,meter=" << RingRoutingInfo::COUNTER
-        << " drop:rate=" << kbps;
+       << " drop:rate=" << kbps;
 
   DpctlCommand (cInfo->GetSwDev (0), cmd1.str ());
   DpctlCommand (cInfo->GetSwDev (1), cmd2.str ());
@@ -302,7 +302,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
           inst << " meter:" << rInfo->GetTeid ();
         }
 
-      // For GBR bearers, mark the IP DSCP field with value 46 (EF)
+      // For GBR bearers, mark the IP DSCP field with appropriated value
       if (rInfo->IsGbr ())
         {
           // Build the apply set_field action instruction string
@@ -355,26 +355,18 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
   ringInfo->ResetToShortestPaths ();
 
-  if (rInfo->IsDefault ())
+  if (!rInfo->IsGbr ())
     {
-      // We always accept default bearers over the shortest path.
+      // For Non-GBR bearers (which includes the default bearer), let's accept
+      // it, without guarantees. Note that in current implementation, Non-GBR
+      // bearers are always routed over the shortest path. However, nothing
+      // prevents the use of a more sofisticated routing approach.
       return true;
     }
 
-  Ptr<ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
-  if (!reserveInfo)
-    {
-      // For bearers without resource reservation requests (probably a
-      // Non-GBR one), let's accept it, without guarantees.
-      return true;
-
-      // TODO: In current implementation, Non-GBR bearers are always routed
-      // over the shortest path. However, nothing prevents the use of a more
-      // sofisticated routing approach.
-    }
-
-  NS_ASSERT_MSG (rInfo->IsGbr (), "Invalid configuration for bearer request.");
   uint32_t teid = rInfo->GetTeid ();
+  Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
+  NS_ASSERT_MSG (gbrInfo, "Invalid configuration for bearer request.");
 
   // Getting available downlink and uplink bit rates in both paths
   std::pair<uint64_t, uint64_t> shortPathBand, longPathBand;
@@ -387,12 +379,12 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
   uint64_t ulLongBw  = longPathBand.second;
 
   // Getting bit rate requests
-  uint64_t dlRequest = reserveInfo->GetDownBitRate ();
-  uint64_t ulRequest = reserveInfo->GetUpBitRate ();
+  uint64_t dlRequest = gbrInfo->GetDownBitRate ();
+  uint64_t ulRequest = gbrInfo->GetUpBitRate ();
 
-  NS_LOG_DEBUG (teid << ":    request: downlink " << dlRequest << " - uplink " << ulRequest);
-  NS_LOG_DEBUG (teid << ": short path: downlink " << dlShortBw << " - uplink " << ulShortBw);
-  NS_LOG_DEBUG (teid << ":  long path: downlink " << dlLongBw  << " - uplink " << ulLongBw);
+  NS_LOG_DEBUG (teid << " req down "   << dlRequest << ", up " << ulRequest);
+  NS_LOG_DEBUG (teid << " short down " << dlShortBw << ", up " << ulShortBw);
+  NS_LOG_DEBUG (teid << " long down "  << dlLongBw  << ", up " << ulLongBw);
 
   switch (m_strategy)
     {
@@ -400,7 +392,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       {
         if (dlShortBw >= dlRequest && ulShortBw >= ulRequest)
           {
-            return ReserveGbrBitRate (ringInfo, reserveInfo);
+            return ReserveGbrBitRate (ringInfo, gbrInfo);
           }
         else
           {
@@ -413,14 +405,14 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       {
         if (dlShortBw >= dlRequest && ulShortBw >= ulRequest)
           {
-            return ReserveGbrBitRate (ringInfo, reserveInfo);
+            return ReserveGbrBitRate (ringInfo, gbrInfo);
           }
         else if (dlLongBw >= dlRequest && ulLongBw >= ulRequest)
           {
             // Let's invert the path and reserve the bit rate
             NS_LOG_DEBUG ("Inverting from short to long path.");
             ringInfo->InvertPaths ();
-            return ReserveGbrBitRate (ringInfo, reserveInfo);
+            return ReserveGbrBitRate (ringInfo, gbrInfo);
           }
         else
           {
@@ -438,12 +430,12 @@ RingController::TopologyBearerRelease (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
 
-  Ptr<ReserveInfo> reserveInfo = rInfo->GetObject<ReserveInfo> ();
-  if (reserveInfo && reserveInfo->IsReserved ())
+  Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
+  if (gbrInfo && gbrInfo->IsReserved ())
     {
       Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
       NS_ASSERT_MSG (ringInfo, "No ringInfo for bearer release.");
-      ReleaseGbrBitRate (ringInfo, reserveInfo);
+      ReleaseGbrBitRate (ringInfo, gbrInfo);
     }
   return true;
 }
@@ -639,31 +631,31 @@ RingController::GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
 
 bool
 RingController::ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                                   Ptr<ReserveInfo> reserveInfo)
+                                   Ptr<GbrInfo> gbrInfo)
 {
-  NS_LOG_FUNCTION (this << ringInfo << reserveInfo);
+  NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
   // Reserving resources in both directions
   PerLinkReserve (ringInfo->GetSgwSwIdx (), ringInfo->GetEnbSwIdx (),
-                  ringInfo->GetDownPath (), reserveInfo->GetDownBitRate ());
+                  ringInfo->GetDownPath (), gbrInfo->GetDownBitRate ());
   PerLinkReserve (ringInfo->GetEnbSwIdx (), ringInfo->GetSgwSwIdx (),
-                  ringInfo->GetUpPath (), reserveInfo->GetUpBitRate ());
-  reserveInfo->SetReserved (true);
+                  ringInfo->GetUpPath (), gbrInfo->GetUpBitRate ());
+  gbrInfo->SetReserved (true);
   return true;
 }
 
 bool
 RingController::ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                                   Ptr<ReserveInfo> reserveInfo)
+                                   Ptr<GbrInfo> gbrInfo)
 {
-  NS_LOG_FUNCTION (this << ringInfo << reserveInfo);
+  NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
   // Releasing resources in both directions
   PerLinkRelease (ringInfo->GetSgwSwIdx (), ringInfo->GetEnbSwIdx (),
-                  ringInfo->GetDownPath (), reserveInfo->GetDownBitRate ());
+                  ringInfo->GetDownPath (), gbrInfo->GetDownBitRate ());
   PerLinkRelease (ringInfo->GetEnbSwIdx (), ringInfo->GetSgwSwIdx (),
-                  ringInfo->GetUpPath (), reserveInfo->GetUpBitRate ());
-  reserveInfo->SetReserved (false);
+                  ringInfo->GetUpPath (), gbrInfo->GetUpBitRate ());
+  gbrInfo->SetReserved (false);
   return true;
 }
 

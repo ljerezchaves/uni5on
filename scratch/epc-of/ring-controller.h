@@ -141,20 +141,20 @@ private:
   /**
    * Reserve the bit rate for this bearer in network.
    * \param ringInfo The ring routing information.
-   * \param reserveInfo The reserve information.
+   * \param gbrInfo The GBR information.
    * \return True if success, false otherwise;
    */
   bool ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                          Ptr<ReserveInfo> reserveInfo);
+                          Ptr<GbrInfo> gbrInfo);
 
   /**
    * Release the bit rate for this bearer in network.
    * \param ringInfo The ring routing information.
-   * \param reserveInfo The reserve information.
+   * \param gbrInfo The GBR information.
    * \return True if success, false otherwise;
    */
   bool ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                          Ptr<ReserveInfo> reserveInfo);
+                          Ptr<GbrInfo> gbrInfo);
 
   /**
    * Reserve the indicated bit rate at each link from source to

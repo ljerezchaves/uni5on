@@ -125,7 +125,7 @@ private:
 // ------------------------------------------------------------------------ //
 /**
  * \ingroup epcof
- * Metadata associated to meter rules.
+ * Metadata associated to GTP tunnel meter rules.
  */
 class MeterInfo : public Object
 {
@@ -198,21 +198,21 @@ private:
  * \ingroup epcof
  * Metadata associated to GBR beares.
  */
-class ReserveInfo : public Object
+class GbrInfo : public Object
 {
   friend class OpenFlowEpcController;
   friend class RingController;
 
 public:
-  ReserveInfo ();          //!< Default constructor
-  virtual ~ReserveInfo (); //!< Dummy destructor, see DoDipose
+  GbrInfo ();          //!< Default constructor
+  virtual ~GbrInfo (); //!< Dummy destructor, see DoDipose
 
   /**
    * Complete constructor.
    * \param rInfo RoutingInfo pointer.
-   * \attention This ReserveInfo object must be aggregated to rInfo.
+   * \attention This GbrInfo object must be aggregated to rInfo.
    */
-  ReserveInfo (Ptr<RoutingInfo> rInfo);
+  GbrInfo (Ptr<RoutingInfo> rInfo);
 
   /**
    * Register this type.

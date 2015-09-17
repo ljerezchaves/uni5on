@@ -25,7 +25,7 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("RoutingInfo");
 NS_OBJECT_ENSURE_REGISTERED (RoutingInfo);
 NS_OBJECT_ENSURE_REGISTERED (MeterInfo);
-NS_OBJECT_ENSURE_REGISTERED (ReserveInfo);
+NS_OBJECT_ENSURE_REGISTERED (GbrInfo);
 NS_OBJECT_ENSURE_REGISTERED (RingRoutingInfo);
 
 // ------------------------------------------------------------------------ //
@@ -308,7 +308,7 @@ MeterInfo::SetInstalled (bool installed)
 }
 
 // ------------------------------------------------------------------------ //
-ReserveInfo::ReserveInfo ()
+GbrInfo::GbrInfo ()
   : m_isReserved (false),
     m_hasDown (false),
     m_hasUp (false),
@@ -319,7 +319,7 @@ ReserveInfo::ReserveInfo ()
   NS_LOG_FUNCTION (this);
 }
 
-ReserveInfo::ReserveInfo (Ptr<RoutingInfo> rInfo)
+GbrInfo::GbrInfo (Ptr<RoutingInfo> rInfo)
   : m_isReserved (false),
     m_hasDown (false),
     m_hasUp (false),
@@ -343,54 +343,54 @@ ReserveInfo::ReserveInfo (Ptr<RoutingInfo> rInfo)
     }
 }
 
-ReserveInfo::~ReserveInfo ()
+GbrInfo::~GbrInfo ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-ReserveInfo::GetTypeId (void)
+GbrInfo::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::ReserveInfo")
+  static TypeId tid = TypeId ("ns3::GbrInfo")
     .SetParent<Object> ()
-    .AddConstructor<ReserveInfo> ()
+    .AddConstructor<GbrInfo> ()
   ;
   return tid;
 }
 
 void
-ReserveInfo::DoDispose ()
+GbrInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_rInfo = 0;
 }
 
 Ptr<RoutingInfo>
-ReserveInfo::GetRoutingInfo ()
+GbrInfo::GetRoutingInfo ()
 {
   return m_rInfo;
 }
 
 void
-ReserveInfo::SetReserved (bool reserved)
+GbrInfo::SetReserved (bool reserved)
 {
   m_isReserved = reserved;
 }
 
 uint64_t
-ReserveInfo::GetDownBitRate (void) const
+GbrInfo::GetDownBitRate (void) const
 {
   return m_hasDown ? m_downBitRate : 0;
 }
 
 uint64_t
-ReserveInfo::GetUpBitRate (void) const
+GbrInfo::GetUpBitRate (void) const
 {
   return m_hasUp ? m_upBitRate : 0;
 }
 
 bool
-ReserveInfo::IsReserved (void) const
+GbrInfo::IsReserved (void) const
 {
   return m_isReserved;
 }
