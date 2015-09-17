@@ -44,12 +44,12 @@ TrafficManager::GetTypeId (void)
     .AddConstructor<TrafficManager> ()
     .AddAttribute ("VoipTraffic",
                    "Enable/Disable VoIP traffic during simulation.",
-                   BooleanValue (true),
+                   BooleanValue (false),
                    MakeBooleanAccessor (&TrafficManager::m_voipEnable),
                    MakeBooleanChecker ())
     .AddAttribute ("RtVideoTraffic",
                    "Enable/Disable real-time video traffic during simulation.",
-                   BooleanValue (true),
+                   BooleanValue (false),
                    MakeBooleanAccessor (&TrafficManager::m_rtVideoEnable),
                    MakeBooleanChecker ())
     .AddAttribute ("HttpTraffic",
