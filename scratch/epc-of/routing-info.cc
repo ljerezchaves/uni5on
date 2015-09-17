@@ -309,7 +309,8 @@ MeterInfo::SetInstalled (bool installed)
 
 // ------------------------------------------------------------------------ //
 GbrInfo::GbrInfo ()
-  : m_isReserved (false),
+  : m_dscp (0),
+    m_isReserved (false),
     m_hasDown (false),
     m_hasUp (false),
     m_downBitRate (0),
@@ -320,7 +321,8 @@ GbrInfo::GbrInfo ()
 }
 
 GbrInfo::GbrInfo (Ptr<RoutingInfo> rInfo)
-  : m_isReserved (false),
+  : m_dscp (0),
+    m_isReserved (false),
     m_hasDown (false),
     m_hasUp (false),
     m_downBitRate (0),
@@ -375,6 +377,12 @@ void
 GbrInfo::SetReserved (bool reserved)
 {
   m_isReserved = reserved;
+}
+
+uint8_t
+GbrInfo::GetDscp (void) const
+{
+  return m_dscp;
 }
 
 uint64_t

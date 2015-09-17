@@ -316,6 +316,9 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
         {
           Ptr<GbrInfo> gbrInfo = CreateObject<GbrInfo> (rInfo);
           rInfo->AggregateObject (gbrInfo);
+
+          // FIXME: Set the appropriated DiffServ DSCP value for this bearer.
+          gbrInfo->m_dscp = 46;
         }
     }
 }

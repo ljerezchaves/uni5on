@@ -255,11 +255,11 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
           inst << " meter:" << rInfo->GetTeid ();
         }
 
-      // For GBR bearers, mark the IP DSCP field with value 46 (EF)
+      // For GBR bearers, mark the IP DSCP field
       if (rInfo->IsGbr ())
         {
           // Build the apply set_field action instruction string
-          inst << " apply:set_field=ip_dscp:46";
+          inst << " apply:set_field=ip_dscp:" << gbrInfo->GetDscp ();
         }
 
       // Build the metatada, write and goto instructions string
@@ -302,11 +302,11 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
           inst << " meter:" << rInfo->GetTeid ();
         }
 
-      // For GBR bearers, mark the IP DSCP field with appropriated value
+      // For GBR bearers, mark the IP DSCP field
       if (rInfo->IsGbr ())
         {
           // Build the apply set_field action instruction string
-          inst << " apply:set_field=ip_dscp:46";
+          inst << " apply:set_field=ip_dscp:" << gbrInfo->GetDscp ();
         }
 
       // Build the metatada, write and goto instructions string
