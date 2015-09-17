@@ -98,7 +98,7 @@ private:
   void InstallVoip ();
 
   /**
-   * UDP real-time download video streaming over dedicated GBR EPS bearer 
+   * UDP real-time download video streaming over dedicated GBR EPS bearer
    * (QCI 4). This QCI is typically associated with non-conversational buffered
    * video. This video traffic is based on MPEG-4 video traces from
    * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
@@ -106,10 +106,10 @@ private:
   void InstallRealTimeVideo ();
 
   /**
-   * TCP stored download video streaming over dedicated Non-GBR EPS bearer 
+   * TCP stored download video streaming over dedicated Non-GBR EPS bearer
    * (QCI 6). This QCI could be used for priorization of non real-time data of
    * MPS subscribers. This video traffic is based on MPEG-4 video traces from
-   * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf. 
+   * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
    */
   void InstallStoredVideo ();
 

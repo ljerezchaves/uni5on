@@ -70,7 +70,7 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   m_videoRng = CreateObject<UniformRandomVariable> ();
   m_videoRng->SetAttribute ("Min", DoubleValue (0));
   m_videoRng->SetAttribute ("Max", DoubleValue (14));
-  
+
   //
   // Setting average traffic duration for applications. For Non-GBR traffic,
   // the attributes are related to the amount of traffic which will be sent
@@ -84,9 +84,9 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   // we also stop the application and repost statistics. This avoids the
   // processes of reinstalling expired rules.
   //
-  m_httpHelper.SetClientAttribute ("MaxPages", UintegerValue (3)); 
-  m_httpHelper.SetClientAttribute ("MaxReadingTime", TimeValue (Seconds (14))); 
-   
+  m_httpHelper.SetClientAttribute ("MaxPages", UintegerValue (3));
+  m_httpHelper.SetClientAttribute ("MaxReadingTime", TimeValue (Seconds (14)));
+
   //
   // For stored video, we are considering a statistic that the majority of
   // YouTube brand videos are somewhere between 31 and 120 seconds long. So we
@@ -95,7 +95,7 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   // information on this topic. Note that this length means the size of the
   // video which will be sent to the client over a TCP connection.
   //
-  m_stVideoHelper.SetServerAttribute ("VideoDuration", 
+  m_stVideoHelper.SetServerAttribute ("VideoDuration",
     StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"));
 
   //
@@ -105,7 +105,7 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   // http://www.theregister.co.uk/2013/01/30/mobile_phone_calls_shorter for
   // more information on this topic.
   //
-  m_voipHelper.SetServerAttribute ("CallDuration", 
+  m_voipHelper.SetServerAttribute ("CallDuration",
     StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=100.0]"));
 
   //
@@ -113,7 +113,7 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   // the stored video (above). The difference here is that the traffic is sent
   // in real time, following the trace description.
   //
-  m_rtVideoHelper.SetServerAttribute ("VideoDuration", 
+  m_rtVideoHelper.SetServerAttribute ("VideoDuration",
     StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"));
 }
 
@@ -153,7 +153,7 @@ TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices)
 
       // Each UE gets one traffic manager
       m_ueManager = m_managerFactory.Create<TrafficManager> ();
-      m_ueManager->m_imsi = (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
+      m_ueManager->m_imsi = DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ();
       m_ueNode->AggregateObject (m_ueManager);
 
       // Connecting the manager to new context created trace source.
@@ -195,9 +195,7 @@ TrafficHelper::GetVideoMbr (uint8_t idx)
 //    for this traffic. When this value is left to 0, no meter rules will be
 //    installed.
 // 2) The Guaranteed Bit Rate field is used by the controller to reserve the
-//    requested bandwidth in OpenFlow network. When used for Non-GBR bearers 
-//    the network will consider bandwidth in resource reservation, but without 
-//    guarantees. When left to 0, no resources are reserved.
+//    requested bandwidth in OpenFlow network. Valid only for GBR beares.
 //
 
 void
@@ -209,8 +207,8 @@ TrafficHelper::InstallVoip ()
   portNo++;
 
   // Bidirectional VoIP traffic
-  Ptr<VoipClient> cApp = 
-    m_voipHelper.Install (m_ueNode, m_webNode, m_ueAddr, m_webAddr, portNo, portNo);
+  Ptr<VoipClient> cApp = m_voipHelper.Install (m_ueNode, m_webNode, m_ueAddr,
+                                               m_webAddr, portNo, portNo);
 
   // TFT downlink packet filter
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
@@ -263,8 +261,8 @@ TrafficHelper::InstallRealTimeVideo ()
   std::string filename = GetVideoFilename (videoIdx);
   m_rtVideoHelper.SetServerAttribute ("TraceFilename", StringValue (filename));
 
-  Ptr<RealTimeVideoClient> cApp =
-    m_rtVideoHelper.Install (m_ueNode, m_webNode, m_ueAddr, portNo);
+  Ptr<RealTimeVideoClient> cApp = m_rtVideoHelper.Install (m_ueNode, m_webNode,
+                                                           m_ueAddr, portNo);
 
   // TFT downlink packet filter
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
@@ -305,9 +303,9 @@ TrafficHelper::InstallStoredVideo ()
   int videoIdx = m_videoRng->GetInteger ();
   std::string filename = GetVideoFilename (videoIdx);
   m_stVideoHelper.SetServerAttribute ("TraceFilename", StringValue (filename));
-  
-  Ptr<StoredVideoClient> cApp = 
-    m_stVideoHelper.Install (m_ueNode, m_webNode, m_webAddr, portNo);
+
+  Ptr<StoredVideoClient> cApp = m_stVideoHelper.Install (m_ueNode, m_webNode,
+                                                         m_webAddr, portNo);
 
   // TFT Packet filter
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
@@ -325,9 +323,10 @@ TrafficHelper::InstallStoredVideo ()
   GbrQosInformation qos;
   EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR, qos);
 
-  // NOTE: Non-GBR traffic should have no gbr request. 
-  // qos.gbrDl = 1.5 * m_gbrBitRate [videoIdx];
-  // qos.mbrDl = (qos.gbrDl + m_mbrBitRate [videoIdx]) / 2;
+  // Non-GBR traffic can only have the maximum bit rate (mbr) value. No
+  // guaranteed bit rate (gbr) value is allowed.
+  // FIXME: I'm not sure about these values.
+  // qos.mbrDl = GetVideoMbr (videoIdx).GetBitRate ();
 
   // Link EPC info to application
   cApp->m_tft = tft;
@@ -347,8 +346,8 @@ TrafficHelper::InstallHttp ()
   portNo++;
 
   // Downlink HTTP web traffic (with TCP bidirectional traffic filter).
-  Ptr<HttpClient> cApp =
-    m_httpHelper.Install (m_ueNode, m_webNode, m_webAddr, portNo);
+  Ptr<HttpClient> cApp = m_httpHelper.Install (m_ueNode, m_webNode,
+                                               m_webAddr, portNo);
 
   // TFT Packet filter
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
@@ -366,9 +365,9 @@ TrafficHelper::InstallHttp ()
   GbrQosInformation qos;
   EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
 
-  // NOTE: Non-GBR traffic should have no gbr request. 
-  // qos.gbrDl = 131072;     // Reserving 128 Kbps in downlink
-  // qos.gbrUl = 32768;      // Reserving 32 Kbps in uplink
+  // Non-GBR traffic can only have the maximum bit rate (mbr) value. No
+  // guaranteed bit rate (gbr) value is allowed.
+  // FIXME: I'm not sure about these values.
   // qos.mbrDl = 524288;     // Max of 512 Kbps in downlink
   // qos.mbrUl = 131072;     // Max of 128 Kbps in uplink
 
