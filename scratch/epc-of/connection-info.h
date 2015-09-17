@@ -154,6 +154,9 @@ protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
+  // Inherited from ObjectBase
+  void NotifyConstructionCompleted (void);
+
   /**
    * Notify this connection of a successfully transmitted packet in link
    * channel. This method will update internal byte counters.
@@ -192,6 +195,28 @@ protected:
 
 private:
   /**
+   * Get the guard bit rate, which is currently not been used neither by GBR
+   * nor Non-GBR traffic.
+   * \param dir The link direction.
+   * \return The current guard bit rate.
+   */
+  uint64_t GetGuardBitRate (Direction dir) const;
+
+  /**
+   * \name Bit rate adjustment.
+   * Increase or decrease the GBR reserved bit rate and Non-GBR allowed bit rate.
+   * \param dir The link direction.
+   * \param bitRate The bitRate amount.
+   * \return True if everything is ok, false otherwise.
+   */
+  //\{
+  bool IncreaseGbrBitRate (Direction dir, uint64_t bitRate);
+  bool DecreaseGbrBitRate (Direction dir, uint64_t bitRate);
+  bool IncreaseNonGbrBitRate (Direction dir, uint64_t bitRate);
+  bool DecreaseNonGbrBitRate (Direction dir, uint64_t bitRate);
+  //\}
+
+  /**
    * Update the GBR reserve quota and GBR maximum bit rate.
    * \param value The value to set.
    */
@@ -216,12 +241,16 @@ private:
   Ptr<CsmaChannel>  m_channel;          //!< The CSMA link channel
 
   double            m_gbrLinkQuota;     //!< GBR link-capacity reserved quota
-  uint64_t          m_gbrMaxBitRate;    //!< GBR maximum allowed bit rate
   uint64_t          m_gbrSafeguard;     //!< GBR safeguard bit rate
+  uint64_t          m_nonAdjustStep;    //!< Non-GBR bit rate adjustment step
+
+  uint64_t          m_gbrMaxBitRate;    //!< GBR maximum allowed bit rate
+  uint64_t          m_gbrMinBitRate;    //!< GBR maximum allowed bit rate
   uint64_t          m_gbrBitRate [2];   //!< GBR current reserved bit rate
   uint32_t          m_gbrTxBytes [2];   //!< GBR transmitted bytes
 
-  uint64_t          m_nonAdjustStep;    //!< Non-GBR bit rate adjustment step
+  uint64_t          m_nonMaxBitRate;    //!< Non-GBR maximum allowed bit rate
+  uint64_t          m_nonMinBitRate;    //!< Non-GBR maximum allowed bit rate
   uint64_t          m_nonBitRate [2];   //!< Non-GBR allowed bit rate
   uint32_t          m_nonTxBytes [2];   //!< Non-GBR transmitted bytes
 };
