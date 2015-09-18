@@ -133,10 +133,16 @@ ConfigureDefaults ()
   Config::SetDefault ("ns3::CsmaChannel::FullDuplex", BooleanValue (true));
 
   // 
-  // For network queues, use the byte mode and set default size to 256 KBytes.
+  // For network queues, use the byte mode and set default size to 128 KBytes.
   //
   Config::SetDefault ("ns3::DropTailQueue::Mode", EnumValue (Queue::QUEUE_MODE_BYTES));
-  Config::SetDefault ("ns3::DropTailQueue::MaxBytes", UintegerValue (262144));
+  Config::SetDefault ("ns3::DropTailQueue::MaxBytes", UintegerValue (131072));
+
+  //
+  // For the OpenFlow control channel, let's use point to point connections
+  // between controller and switches.
+  //
+  Config::SetDefault ("ns3::OFSwitch13Helper::ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
   // 
   // Since we are using an external OpenFlow library that expects complete

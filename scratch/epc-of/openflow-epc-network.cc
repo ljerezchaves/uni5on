@@ -33,8 +33,7 @@ OpenFlowEpcNetwork::OpenFlowEpcNetwork ()
     m_gatewayNode (0)
 {
   NS_LOG_FUNCTION (this);
-  m_ofHelper = CreateObjectWithAttributes<OFSwitch13Helper> (
-      "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
+  m_ofHelper = CreateObject<OFSwitch13Helper> ();
 }
 
 OpenFlowEpcNetwork::~OpenFlowEpcNetwork ()
