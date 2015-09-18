@@ -30,6 +30,8 @@ NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcController);
 const uint16_t OpenFlowEpcController::m_dedicatedTmo = 15;
 
 OpenFlowEpcController::TeidBearerMap_t OpenFlowEpcController::m_bearersTable;
+OpenFlowEpcController::QciDscpMap_t OpenFlowEpcController::m_qciDscpTable;
+OpenFlowEpcController::Initializer OpenFlowEpcController::initializer;
 
 OpenFlowEpcController::OpenFlowEpcController ()
 {
@@ -184,10 +186,20 @@ OpenFlowEpcController::GetEpsBearer (uint32_t teid)
     {
       return it->second;
     }
-  else
+  NS_FATAL_ERROR ("No bearer information for teid " << teid);
+}
+
+uint16_t
+OpenFlowEpcController::GetDscpMappedValue (EpsBearer::Qci qci)
+{
+  QciDscpMap_t::iterator it;
+  it = OpenFlowEpcController::m_qciDscpTable.find (qci);
+  if (it != OpenFlowEpcController::m_qciDscpTable.end ())
     {
-      NS_FATAL_ERROR ("No bearer information for teid " << teid);
+      NS_LOG_DEBUG ("Found DSCP value: " << qci << " - " << it->second);
+      return it->second;
     }
+  NS_FATAL_ERROR ("No DSCP mapped value for QCI " << qci);
 }
 
 void
@@ -318,7 +330,8 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
           rInfo->AggregateObject (gbrInfo);
 
           // Set the appropriated DiffServ DSCP value for this bearer.
-          gbrInfo->m_dscp = 46; // FIXME
+          gbrInfo->m_dscp =
+            OpenFlowEpcController::GetDscpMappedValue (rInfo->GetQciInfo ());
         }
     }
 }
@@ -827,6 +840,31 @@ OpenFlowEpcController::UnregisterBearer (uint32_t teid)
   else
     {
       NS_FATAL_ERROR ("Error removing bearer information for teid " << teid);
+    }
+}
+
+OpenFlowEpcController::Initializer::Initializer ()
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  std::pair <EpsBearer::Qci, uint16_t> entries [9];
+  entries [0] = std::make_pair (EpsBearer::GBR_CONV_VOICE, 46);      // EF
+  entries [1] = std::make_pair (EpsBearer::GBR_CONV_VIDEO, 12);      // AF 12
+  entries [2] = std::make_pair (EpsBearer::GBR_GAMING, 18);          // AF 21
+  entries [3] = std::make_pair (EpsBearer::GBR_NON_CONV_VIDEO, 18);  // AF 11
+
+  // Currently we are mapping all Non-GBR bearers to best effort DSCP traffic.
+  entries [4] = std::make_pair (EpsBearer::NGBR_IMS, 0);
+  entries [5] = std::make_pair (EpsBearer::NGBR_VIDEO_TCP_OPERATOR, 0);
+  entries [6] = std::make_pair (EpsBearer::NGBR_VOICE_VIDEO_GAMING, 0);
+  entries [7] = std::make_pair (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, 0);
+  entries [8] = std::make_pair (EpsBearer::NGBR_VIDEO_TCP_DEFAULT, 0);
+
+  std::pair <QciDscpMap_t::iterator, bool> ret;
+  for (int i = 0; i < 9; i++)
+    {
+      ret = OpenFlowEpcController::m_qciDscpTable.insert (entries [i]);
+      NS_ASSERT_MSG (ret.second, "Can't insert DSCP map value.");
     }
 }
 

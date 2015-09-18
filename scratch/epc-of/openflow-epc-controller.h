@@ -103,6 +103,13 @@ public:
   static EpsBearer GetEpsBearer (uint32_t teid);
 
   /**
+   * Retrieve stored mapped value for a specific EPS QCI.
+   * \param qci The EPS bearer QCI.
+   * \return The IP DSCP mapped value for this QCI.
+   */
+  static uint16_t GetDscpMappedValue (EpsBearer::Qci qci);
+
+  /**
    * TracedCallback signature for new bearer request.
    * \param ok True when the bearer request/release processes succeeds.
    * \param rInfo The routing information for this bearer tunnel.
@@ -349,6 +356,25 @@ private:
    */
   static void UnregisterBearer (uint32_t teid);
 
+  /**
+   * OpenFlowEpcController inner friend utility class
+   * used to initialize static DSCP map table.
+   */
+  class Initializer
+  {
+    public:
+
+      /** Initializer function. */
+      Initializer ();
+  };
+  friend class Initializer;
+
+  /**
+   * Static instance of Initializer. When this is created, its constructor
+   * initializes the OpenFlowEpcController s' static DSCP map table.
+   */
+  static Initializer initializer;
+
 // Member variables
 protected:
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
@@ -377,6 +403,10 @@ private:
   /** Map saving <TEID / EpsBearer > */
   typedef std::map<uint32_t, EpsBearer> TeidBearerMap_t;
   static TeidBearerMap_t m_bearersTable;  //!< TEID bearers table.
+
+  /** Map saving <EpsBearer::Qci / IP Dscp value> */
+  typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
+  static QciDscpMap_t m_qciDscpTable;     //!< DSCP mapped values.
 };
 
 };  // namespace ns3
