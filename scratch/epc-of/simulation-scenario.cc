@@ -154,9 +154,10 @@ SimulationScenario::BuildRingTopology ()
   m_webHost = m_webNetwork->CreateTopology (m_epcHelper->GetPgwNode ());
 
   // 9) Install applications and traffic manager
-  TrafficHelper tfcHelper (m_webHost, m_lteHelper, m_controller);
-  tfcHelper.Install (m_lteNetwork->GetUeNodes (),
-                     m_lteNetwork->GetUeDevices ());
+  Ptr<TrafficHelper> tfcHelper =
+    CreateObject<TrafficHelper> (m_webHost, m_lteHelper, m_controller);
+  tfcHelper->Install (m_lteNetwork->GetUeNodes (),
+                      m_lteNetwork->GetUeDevices ());
 
   // 10) Set up output ofsoftswitch13 logs and ns-3 traces
   DatapathLogs ();

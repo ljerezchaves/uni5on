@@ -97,11 +97,6 @@ protected:
   virtual void DoDispose ();
 
 private:
-  bool m_httpEnable;     //!< HTTP traffic enable
-  bool m_voipEnable;     //!< VoIP traffic enable
-  bool m_stVideoEnable;  //!< Stored video traffic enable
-  bool m_rtVideoEnable;  //!< Real-time video traffic enable
-
   Ptr<ExponentialRandomVariable>    m_poissonRng; //!< Inter-arrival generator
   Ptr<OpenFlowEpcController>        m_controller; //!< OpenFlow controller
   std::vector<Ptr<EpcApplication> > m_apps;       //!< Application list

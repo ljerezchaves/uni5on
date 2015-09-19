@@ -42,26 +42,6 @@ TrafficManager::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::TrafficManager")
     .SetParent<Object> ()
     .AddConstructor<TrafficManager> ()
-    .AddAttribute ("VoipTraffic",
-                   "Enable/Disable VoIP traffic during simulation.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficManager::m_voipEnable),
-                   MakeBooleanChecker ())
-    .AddAttribute ("RtVideoTraffic",
-                   "Enable/Disable real-time video traffic during simulation.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficManager::m_rtVideoEnable),
-                   MakeBooleanChecker ())
-    .AddAttribute ("HttpTraffic",
-                   "Enable/Disable http traffic during simulation.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficManager::m_httpEnable),
-                   MakeBooleanChecker ())
-    .AddAttribute ("StVideoTraffic",
-                   "Enable/Disable stored video traffic during simulation.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficManager::m_stVideoEnable),
-                   MakeBooleanChecker ())
     .AddAttribute ("Controller",
                    "The OpenFlow EPC controller.",
                    PointerValue (),
@@ -86,17 +66,6 @@ TrafficManager::AddEpcApplication (Ptr<EpcApplication> app)
   m_apps.push_back (app);
   app->TraceConnectWithoutContext (
     "AppStop", MakeCallback (&TrafficManager::NotifyAppStop, this));
-
-  // Check for disabled application type
-  TypeId appTid =  app->GetInstanceTypeId ();
-  if ((!m_httpEnable && appTid == HttpClient::GetTypeId ())
-      || (!m_voipEnable && appTid == VoipClient::GetTypeId ())
-      || (!m_stVideoEnable && appTid == StoredVideoClient::GetTypeId ())
-      || (!m_rtVideoEnable && appTid == RealTimeVideoClient::GetTypeId ()))
-    {
-      // This application is disable, so we won't schedule first start.
-      return;
-    }
 
   // Schedule the first start attempt for this app.
   // Wait at least 2 seconds for simulation initial setup.

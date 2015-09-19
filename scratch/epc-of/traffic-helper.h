@@ -36,7 +36,7 @@ namespace ns3 {
  * applications into UEs and WebServer. This helper creates and aggregates a
  * traffic manager for each UE.
  */
-class TrafficHelper
+class TrafficHelper : public Object
 {
 public:
   /**
@@ -48,7 +48,14 @@ public:
   TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
                  Ptr<OpenFlowEpcController> controller);
 
-  ~TrafficHelper (); //!< Default destructor.
+  TrafficHelper ();           //!< Default constructor
+  virtual ~TrafficHelper ();  //!< Dummy destructor, see DoDipose
+
+  /**
+   * Register this type.
+   * \return The object TypeId.
+   */
+  static TypeId GetTypeId (void);
 
   /**
    * Record an attribute to be set in each traffic manager.
@@ -63,6 +70,13 @@ public:
    * nodes. It also configure the TFT and EPS bearers.
    * \param ueNodes The UE Nodes container.
    * \param ueDevices The UE NetDevices container.
+   * \internal
+   * Some notes about internal GbrQosInformation usage
+   * \li The Maximum Bit Rate field is used by controller to install meter
+   *     rules for this traffic. When this value is left to 0, no meter rules
+   *     will be installed.
+   * \li The Guaranteed Bit Rate field is used by the controller to reserve the
+   *     requested bandwidth in OpenFlow network. Valid only for GBR beares.
    */
   void Install (NodeContainer ueNodes, NetDeviceContainer ueDevices);
 
@@ -87,6 +101,9 @@ public:
    */
   static const DataRate GetVideoMbr (uint8_t idx);
 
+protected:
+  /** Destructor implementation */
+  virtual void DoDispose ();
 
 private:
   /**
@@ -134,7 +151,6 @@ private:
    */
   void InstallNonGbrHttp ();
 
-
   ObjectFactory       m_managerFactory; //!< Traffic manager factory
 
   Ptr<LteHelper>      m_lteHelper;      //!< LteHelper pointer
@@ -148,10 +164,16 @@ private:
   Ipv4Mask            m_ueMask;         //!< Current client address mask
   Ptr<TrafficManager> m_ueManager;      //!< Current client traffic manager
 
-  HttpHelper          m_httpHelper;     //!< HTTP application helper
-  StoredVideoHelper   m_stVideoHelper;  //!< Stored video application helper
-  RealTimeVideoHelper m_rtVideoHelper;  //!< Real-time video application helper
+  bool                m_gbrVoip;        //!< VoIP enable
+  bool                m_gbrLiveVideo;   //!< GBR live streaming vide enable
+  bool                m_nonBufferVideo; //!< Buffered video enable
+  bool                m_nonLiveVideo;   //!< Non-GBR live straming video enable
+  bool                m_nonHttp;        //!< HTTP enable
+
   VoipHelper          m_voipHelper;     //!< Voip application helper
+  RealTimeVideoHelper m_rtVideoHelper;  //!< Real-time video application helper
+  StoredVideoHelper   m_stVideoHelper;  //!< Stored video application helper
+  HttpHelper          m_httpHelper;     //!< HTTP application helper
 
   Ptr<UniformRandomVariable> m_videoRng;      //!< Random video selection
   static const std::string   m_videoDir;      //!< Video trace directory

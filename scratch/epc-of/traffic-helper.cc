@@ -24,6 +24,7 @@
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("TrafficHelper");
+NS_OBJECT_ENSURE_REGISTERED (TrafficHelper);
 
 const std::string TrafficHelper::m_videoDir = "./movies/";
 
@@ -72,6 +73,41 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   m_videoRng->SetAttribute ("Max", DoubleValue (14));
 
   //
+  // For VoIP call, we are considering an estimative from Vodafone that the
+  // average call length is 1 min and 40 sec. We are including a normal
+  // standard deviation of 10 sec. See http://tinyurl.com/pzmyys2 and
+  // http://www.theregister.co.uk/2013/01/30/mobile_phone_calls_shorter for
+  // more information on this topic.
+  //
+  m_voipHelper.SetClientAttribute ("AppName", StringValue ("Voip"));
+  m_voipHelper.SetServerAttribute (
+    "CallDuration",
+    StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=100.0]"));
+
+  //
+  // For stored video, we are considering a statistic that the majority of
+  // YouTube brand videos are somewhere between 31 and 120 seconds long. So we
+  // are using the average length of 1min 30sec, with 15sec stdev.
+  // See http://tinyurl.com/q5xkwnn and http://tinyurl.com/klraxum for more
+  // information on this topic. Note that this length means the size of the
+  // video which will be sent to the client over a TCP connection.
+  //
+  m_stVideoHelper.SetClientAttribute ("AppName", StringValue ("BuffVid"));
+  m_stVideoHelper.SetServerAttribute (
+    "VideoDuration",
+    StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"));
+
+  //
+  // For real time video streaming, we are considering the same statistics for
+  // the stored video (above). The difference here is that the traffic is sent
+  // in real time, following the trace description.
+  //
+  m_rtVideoHelper.SetClientAttribute ("AppName", StringValue ("LiveVid"));
+  m_rtVideoHelper.SetServerAttribute (
+    "VideoDuration",
+    StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"));
+
+  //
   // Setting average traffic duration for applications. For Non-GBR traffic,
   // the attributes are related to the amount of traffic which will be sent
   // over the network (mainly over TCP). For GBR traffic, the traffic duration
@@ -87,52 +123,51 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   m_httpHelper.SetClientAttribute ("AppName", StringValue ("Http"));
   m_httpHelper.SetClientAttribute ("MaxPages", UintegerValue (3));
   m_httpHelper.SetClientAttribute ("MaxReadingTime", TimeValue (Seconds (14)));
+}
 
-  //
-  // For stored video, we are considering a statistic that the majority of
-  // YouTube brand videos are somewhere between 31 and 120 seconds long. So we
-  // are using the average length of 1min 30sec, with 15sec stdev.
-  // See http://tinyurl.com/q5xkwnn and http://tinyurl.com/klraxum for more
-  // information on this topic. Note that this length means the size of the
-  // video which will be sent to the client over a TCP connection.
-  //
-  m_stVideoHelper.SetClientAttribute ("AppName", StringValue ("StVd"));
-  m_stVideoHelper.SetServerAttribute (
-    "VideoDuration",
-    StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"));
-
-  //
-  // For VoIP call, we are considering an estimative from Vodafone that the
-  // average call length is 1 min and 40 sec. We are including a normal
-  // standard deviation of 10 sec. See http://tinyurl.com/pzmyys2 and
-  // http://www.theregister.co.uk/2013/01/30/mobile_phone_calls_shorter for
-  // more information on this topic.
-  //
-  m_voipHelper.SetClientAttribute ("AppName", StringValue ("Voip"));
-  m_voipHelper.SetServerAttribute (
-    "CallDuration",
-    StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=100.0]"));
-
-  //
-  // For real time video streaming, we are considering the same statistics for
-  // the stored video (above). The difference here is that the traffic is sent
-  // in real time, following the trace description.
-  //
-  m_rtVideoHelper.SetClientAttribute ("AppName", StringValue ("RtVd"));
-  m_rtVideoHelper.SetServerAttribute (
-    "VideoDuration",
-    StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"));
+TrafficHelper::TrafficHelper ()
+{
+  NS_LOG_FUNCTION (this);
 }
 
 TrafficHelper::~TrafficHelper ()
 {
   NS_LOG_FUNCTION (this);
-  m_webNode = 0;
-  m_lteHelper = 0;
-  m_ueNode = 0;
-  m_ueDev = 0;
-  m_ueManager = 0;
-  m_videoRng = 0;
+}
+
+TypeId
+TrafficHelper::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::TrafficHelper")
+    .SetParent<Object> ()
+    .AddConstructor<TrafficHelper> ()
+    .AddAttribute ("VoipTraffic",
+                   "Enable GBR VoIP traffic over UDP.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&TrafficHelper::m_gbrVoip),
+                   MakeBooleanChecker ())
+    .AddAttribute ("GbrLiveVideoTraffic",
+                   "Enable GBR live video streaming traffic over UDP.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&TrafficHelper::m_gbrLiveVideo),
+                   MakeBooleanChecker ())
+    .AddAttribute ("BufferedVideoTraffic",
+                   "Enable Non-GBR biffered video streaming traffic over TCP.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&TrafficHelper::m_nonBufferVideo),
+                   MakeBooleanChecker ())
+    .AddAttribute ("NonGbrLiveVideoTraffic",
+                   "Enable Non-GBR live video streaming traffic over UDP.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&TrafficHelper::m_nonLiveVideo),
+                   MakeBooleanChecker ())
+    .AddAttribute ("HttpTraffic",
+                   "Enable Non-GBR HTTP traffic over TCP.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&TrafficHelper::m_nonHttp),
+                   MakeBooleanChecker ())
+  ;
+  return tid;
 }
 
 void
@@ -198,19 +233,29 @@ TrafficHelper::GetVideoMbr (uint8_t idx)
   return DataRate (m_mbrBitRate [idx]);
 }
 
-//
-// NOTE about GbrQosInformation:
-// 1) The Maximum Bit Rate field is used by controller to install meter rules
-//    for this traffic. When this value is left to 0, no meter rules will be
-//    installed.
-// 2) The Guaranteed Bit Rate field is used by the controller to reserve the
-//    requested bandwidth in OpenFlow network. Valid only for GBR beares.
-//
+void
+TrafficHelper::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+
+  m_webNode = 0;
+  m_lteHelper = 0;
+  m_ueNode = 0;
+  m_ueDev = 0;
+  m_ueManager = 0;
+  m_videoRng = 0;
+}
 
 void
 TrafficHelper::InstallGbrVoip ()
 {
   NS_LOG_FUNCTION (this);
+
+  // Check for enabled traffic
+  if (!m_gbrVoip)
+    {
+      return;
+    }
 
   static uint16_t portNo = 10000;
   portNo++;
@@ -262,6 +307,12 @@ TrafficHelper::InstallGbrLiveVideoStreaming ()
 {
   NS_LOG_FUNCTION (this);
 
+  // Check for enabled traffic
+  if (!m_gbrLiveVideo)
+    {
+      return;
+    }
+
   static uint16_t portNo = 20000;
   portNo++;
 
@@ -305,6 +356,12 @@ TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
 {
   NS_LOG_FUNCTION (this);
 
+  // Check for enabled traffic
+  if (!m_nonBufferVideo)
+    {
+      return;
+    }
+
   static uint16_t portNo = 30000;
   portNo++;
 
@@ -345,12 +402,59 @@ void
 TrafficHelper::InstallNonGbrLiveVideoStreaming ()
 {
   NS_LOG_FUNCTION (this);
+
+  // Check for enabled traffic
+  if (!m_nonLiveVideo)
+    {
+      return;
+    }
+
+  static uint16_t portNo = 40000;
+  portNo++;
+
+  // Downlink real-time video traffic
+  int videoIdx = m_videoRng->GetInteger ();
+  std::string filename = GetVideoFilename (videoIdx);
+  m_rtVideoHelper.SetServerAttribute ("TraceFilename", StringValue (filename));
+
+  Ptr<RealTimeVideoClient> cApp = m_rtVideoHelper.Install (m_ueNode, m_webNode,
+                                                           m_ueAddr, portNo);
+
+  // TFT downlink packet filter
+  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
+  EpcTft::PacketFilter filter;
+  filter.direction = EpcTft::DOWNLINK;
+  filter.remoteAddress = m_webAddr;
+  filter.remoteMask = m_webMask;
+  filter.localAddress = m_ueAddr;
+  filter.localMask = m_ueMask;
+  filter.localPortStart = portNo;
+  filter.localPortEnd = portNo;
+  tft->Add (filter);
+
+  // Dedicated Non-GBR EPS bearer (QCI 7).
+  GbrQosInformation qos;
+  EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING, qos);
+
+  // Link EPC info to application
+  cApp->m_tft = tft;
+  cApp->m_bearer = bearer;
+  m_ueManager->AddEpcApplication (cApp);
+
+  // Activate dedicated bearer
+  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
 void
 TrafficHelper::InstallNonGbrHttp ()
 {
   NS_LOG_FUNCTION (this);
+
+  // Check for enabled traffic
+  if (!m_nonHttp)
+    {
+      return;
+    }
 
   static uint16_t portNo = 50000;
   portNo++;

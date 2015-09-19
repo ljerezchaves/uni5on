@@ -55,10 +55,11 @@ main (int argc, char *argv[])
   cmd.AddValue ("pcap",       "ns3::SimulationScenario::PcapTrace");
   cmd.AddValue ("trace",      "ns3::SimulationScenario::LteTrace");
   cmd.AddValue ("liblog",     "ns3::SimulationScenario::SwitchLogs");
-  cmd.AddValue ("http",       "ns3::TrafficManager::HttpTraffic");
-  cmd.AddValue ("voip",       "ns3::TrafficManager::VoipTraffic");
-  cmd.AddValue ("stVideo",    "ns3::TrafficManager::StVideoTraffic");
-  cmd.AddValue ("rtVideo",    "ns3::TrafficManager::RtVideoTraffic");
+  cmd.AddValue ("voip",       "ns3::TrafficHelper::VoipTraffic");
+  cmd.AddValue ("gbrLiveVid", "ns3::TrafficHelper::GbrLiveVideoTraffic");
+  cmd.AddValue ("buffVid",    "ns3::TrafficHelper::BufferedVideoTraffic");
+  cmd.AddValue ("nonLiveVid", "ns3::TrafficHelper::NonGbrLiveVideoTraffic");
+  cmd.AddValue ("http",       "ns3::TrafficHelper::HttpTraffic");
   cmd.AddValue ("strategy",   "ns3::RingController::Strategy");
   cmd.AddValue ("ueFixed",    "ns3::LteHexGridNetwork::UeFixedPos");
   cmd.AddValue ("bandwidth",  "ns3::RingNetwork::SwitchLinkDataRate");
