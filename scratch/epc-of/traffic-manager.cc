@@ -100,8 +100,8 @@ TrafficManager::AddEpcApplication (Ptr<EpcApplication> app)
 
   // Schedule the first start attempt for this app.
   // Wait at least 2 seconds for simulation initial setup.
-  Time startTime = Seconds (2) + Seconds (std::abs (m_poissonRng->GetValue ()));
-  Simulator::Schedule (startTime, &TrafficManager::AppStartTry, this, app);
+  Time start = Seconds (2) + Seconds (std::abs (m_poissonRng->GetValue ()));
+  Simulator::Schedule (start, &TrafficManager::AppStartTry, this, app);
 }
 
 void
@@ -116,8 +116,9 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
   if (appTeid != m_defaultTeid)
     {
       // No resource request for traffic over default bearer.
-      authorized = m_controller->RequestDedicatedBearer (app->GetEpsBearer (),
-                                                         m_imsi, m_cellId, appTeid);
+      authorized =
+        m_controller->RequestDedicatedBearer (app->GetEpsBearer (),
+                                              m_imsi, m_cellId, appTeid);
     }
 
   //
@@ -158,8 +159,9 @@ TrafficManager::NotifyAppStop (Ptr<const EpcApplication> app)
 }
 
 void
-TrafficManager::ContextCreatedCallback (uint64_t imsi, uint16_t cellId,
-  Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList)
+TrafficManager::ContextCreatedCallback (
+  uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr,
+  BearerList_t bearerList)
 {
   NS_LOG_FUNCTION (this);
 

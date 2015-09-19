@@ -165,7 +165,8 @@ LteHexGridNetwork::SetLteNodePositions ()
   // Compute eNBs positions
   const double xydfactor = std::sqrt (0.75);
   double yd = xydfactor * m_interSite;
-  Ptr<ListPositionAllocator> listPosAllocator = CreateObject<ListPositionAllocator> ();
+  Ptr<ListPositionAllocator> listPosAllocator =
+    CreateObject<ListPositionAllocator> ();
   std::vector<Vector> enbPosition;
 
   for (uint32_t i = 0; i < m_nEnbs; i++)
@@ -242,14 +243,16 @@ LteHexGridNetwork::SetLteNodePositions ()
 
   for (size_t i = 0; i < m_enbNodes.GetN (); i++)
     {
-      NS_LOG_DEBUG ("Enb " << i << " at " <<
+      NS_LOG_DEBUG (
+        "Enb " << i << " at " <<
         m_enbNodes.Get (i)->GetObject<MobilityModel> ()->GetPosition ());
     }
 
   for (size_t i = 0; i < m_ueNodes.GetN (); i++)
     {
-      NS_LOG_DEBUG ("UE " << i << " at " <<
-       m_ueNodes.Get (i)->GetObject<MobilityModel> ()->GetPosition ());
+      NS_LOG_DEBUG (
+        "UE " << i << " at " <<
+        m_ueNodes.Get (i)->GetObject<MobilityModel> ()->GetPosition ());
     }
 }
 
@@ -286,7 +289,8 @@ LteHexGridNetwork::InstallProtocolStack ()
             m_epcHelper->GetUeDefaultGatewayAddress (), 1);
         }
 
-      // Attaching UEs to the respective eNB (this activates the default EPS bearer)
+      // Attaching UEs to the respective eNB
+      // (this activates the default EPS bearer)
       m_lteHelper->Attach (ueDev, m_enbDevices.Get (i));
     }
 }

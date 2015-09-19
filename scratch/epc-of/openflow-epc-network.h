@@ -54,7 +54,7 @@ public:
   /**
    * Called by OpenFlowEpcHelper to proper connect the SgwPgw and eNBs to the
    * S1-U OpenFlow network infrastructure.
-   * \internal 
+   * \internal
    * This method must create the NetDevice at node and assign an IPv4 address
    * to it.
    * \param node The SgwPgw or eNB node pointer.
@@ -66,7 +66,7 @@ public:
   /**
    * Called by OpenFlowEpcHelper to proper connect the eNBs nodes to the X2
    * OpenFlow network infrastructure.
-   * \internal 
+   * \internal
    * This method must create the NetDevice at node and assign an IPv4 address
    * to it.
    * \param node The eNB node pointer.
@@ -154,11 +154,8 @@ public:
    * BoolTracedCallback signature for topology creation completed.
    * \param devices The NetDeviceContainer for OpenFlow switch devices.
    */
-  typedef void (* TopologyTracedCallback)(NetDeviceContainer devices);
+  typedef void (*TopologyTracedCallback)(NetDeviceContainer devices);
 
-  typedef void (* AttachTracedCallback)(Ptr<NetDevice> nodeDev, 
-      Ipv4Address nodeIp, Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, 
-      uint32_t swtchPort);
   /**
   * AttachTracedCallback signature for new  EPC entity connected to OpenFlow
   * network.
@@ -171,6 +168,9 @@ public:
   * \param swtchIdx The OpenFlow switch index.
   * \param swtchPort The port number for nodeDev at OpenFlow switch.
   */
+  typedef void (*AttachTracedCallback)(
+    Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
+    Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, uint32_t swtchPort);
 
 protected:
   /** Destructor implementation */

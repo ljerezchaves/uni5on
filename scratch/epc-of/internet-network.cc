@@ -57,7 +57,7 @@ InternetNetwork::GetTypeId (void)
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("UseCsmaLink",
                    "If true, use CSMA link instead of P2P",
-                   BooleanValue (true), 
+                   BooleanValue (true),
                    MakeBooleanAccessor (&InternetNetwork::m_csmaLink),
                    MakeBooleanChecker ())
   ;
@@ -73,16 +73,17 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   m_p2pHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
   m_p2pHelper.SetDeviceAttribute ("DataRate", DataRateValue (m_linkDataRate));
   m_p2pHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
-  
+
   m_csmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
-  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_linkDataRate));
+  m_csmaHelper.SetChannelAttribute ("DataRate",
+                                    DataRateValue (m_linkDataRate));
   m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
 
   // Creating a single web node and connecting it to the EPC pgw over a
   // PointToPoint link.
   Ptr<Node> web = CreateObject<Node> ();
   Names::Add (InternetNetwork::GetServerName (), web);
-  
+
   InternetStackHelper internet;
   internet.Install (web);
 
@@ -95,7 +96,7 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
       Ptr<CsmaNetDevice> webDev, pgwDev;
       pgwDev = DynamicCast<CsmaNetDevice> (m_webDevices.Get (0));
       webDev = DynamicCast<CsmaNetDevice> (m_webDevices.Get (1));
-      
+
       Names::Add (Names::FindName (pgw) + "+" + Names::FindName (web), pgwDev);
       Names::Add (Names::FindName (web) + "+" + Names::FindName (pgw), webDev);
 
@@ -108,14 +109,14 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
       Ptr<PointToPointNetDevice> webDev, pgwDev;
       pgwDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (0));
       webDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (1));
-      
+
       Names::Add (Names::FindName (pgw) + "+" + Names::FindName (web), pgwDev);
       Names::Add (Names::FindName (web) + "+" + Names::FindName (pgw), webDev);
 
       Names::Add ("InternetNetwork/DownQueue", webDev->GetQueue ());
       Names::Add ("InternetNetwork/UpQueue", pgwDev->GetQueue ());
     }
-  
+
   Ipv4AddressHelper ipv4h;
   ipv4h.SetBase ("192.168.0.0", "255.255.255.0");
   ipv4h.Assign (m_webDevices);
@@ -125,7 +126,8 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   Ptr<Ipv4StaticRouting> webHostStaticRouting =
     ipv4RoutingHelper.GetStaticRouting (web->GetObject<Ipv4> ());
   webHostStaticRouting->AddNetworkRouteTo (
-    Ipv4Address ("7.0.0.0"), Ipv4Mask ("255.0.0.0"), Ipv4Address ("192.168.0.1"), 1);
+    Ipv4Address ("7.0.0.0"), Ipv4Mask ("255.0.0.0"),
+    Ipv4Address ("192.168.0.1"), 1);
 
   return web;
 }

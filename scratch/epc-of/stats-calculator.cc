@@ -68,12 +68,14 @@ AdmissionStatsCalculator::GetTypeId (void)
     .AddAttribute ("AdmStatsFilename",
                    "Filename for bearer admission control statistics.",
                    StringValue ("adm_stats.txt"),
-                   MakeStringAccessor (&AdmissionStatsCalculator::m_admStatsFilename),
+                   MakeStringAccessor (
+                     &AdmissionStatsCalculator::m_admStatsFilename),
                    MakeStringChecker ())
     .AddAttribute ("BrqStatsFilename",
                    "Filename for bearer request statistics.",
                    StringValue ("brq_stats.txt"),
-                   MakeStringAccessor (&AdmissionStatsCalculator::m_brqStatsFilename),
+                   MakeStringAccessor (
+                     &AdmissionStatsCalculator::m_brqStatsFilename),
                    MakeStringChecker ())
   ;
   return tid;
@@ -285,7 +287,8 @@ GatewayStatsCalculator::GetTypeId (void)
     .AddAttribute ("PgwStatsFilename",
                    "Filename for packet gateway traffic statistics.",
                    StringValue ("pgw_stats.txt"),
-                   MakeStringAccessor (&GatewayStatsCalculator::m_pgwStatsFilename),
+                   MakeStringAccessor (
+                     &GatewayStatsCalculator::m_pgwStatsFilename),
                    MakeStringChecker ())
   ;
   return tid;
@@ -432,27 +435,32 @@ BandwidthStatsCalculator::GetTypeId (void)
     .AddAttribute ("RegStatsFilename",
                    "Filename for GBR reservation statistics.",
                    StringValue ("reg_stats.txt"),
-                   MakeStringAccessor (&BandwidthStatsCalculator::m_regStatsFilename),
+                   MakeStringAccessor (
+                     &BandwidthStatsCalculator::m_regStatsFilename),
                    MakeStringChecker ())
     .AddAttribute ("RenStatsFilename",
                    "Filename for Non-GBR allowed bandwidth statistics.",
                    StringValue ("ren_stats.txt"),
-                   MakeStringAccessor (&BandwidthStatsCalculator::m_renStatsFilename),
+                   MakeStringAccessor (
+                     &BandwidthStatsCalculator::m_renStatsFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwbStatsFilename",
                    "Filename for network bandwidth statistics.",
                    StringValue ("bwb_stats.txt"),
-                   MakeStringAccessor (&BandwidthStatsCalculator::m_bwbStatsFilename),
+                   MakeStringAccessor (
+                     &BandwidthStatsCalculator::m_bwbStatsFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwgStatsFilename",
                    "Filename for GBR bandwidth statistics.",
                    StringValue ("bwg_stats.txt"),
-                   MakeStringAccessor (&BandwidthStatsCalculator::m_bwgStatsFilename),
+                   MakeStringAccessor (
+                     &BandwidthStatsCalculator::m_bwgStatsFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwnStatsFilename",
                    "Filename for Non-GBR bandwidth statistics.",
                    StringValue ("bwn_stats.txt"),
-                   MakeStringAccessor (&BandwidthStatsCalculator::m_bwnStatsFilename),
+                   MakeStringAccessor (
+                     &BandwidthStatsCalculator::m_bwnStatsFilename),
                    MakeStringChecker ())
   ;
   return tid;
@@ -669,7 +677,8 @@ SwitchRulesStatsCalculator::GetTypeId (void)
     .AddAttribute ("SwtStatsFilename",
                    "FilName for flow table entries statistics.",
                    StringValue ("swt_stats.txt"),
-                   MakeStringAccessor (&SwitchRulesStatsCalculator::m_swtStatsFilename),
+                   MakeStringAccessor (
+                     &SwitchRulesStatsCalculator::m_swtStatsFilename),
                    MakeStringChecker ())
   ;
   return tid;
@@ -758,7 +767,8 @@ WebQueueStatsCalculator::GetTypeId (void)
     .AddAttribute ("WebStatsFilename",
                    "Filename for internet queue statistics.",
                    StringValue ("web_stats.txt"),
-                   MakeStringAccessor (&WebQueueStatsCalculator::m_webStatsFilename),
+                   MakeStringAccessor (
+                     &WebQueueStatsCalculator::m_webStatsFilename),
                    MakeStringChecker ())
   ;
   return tid;
@@ -900,12 +910,14 @@ EpcS1uStatsCalculator::GetTypeId (void)
     .AddAttribute ("AppStatsFilename",
                    "Filename for application QoS statistics.",
                    StringValue ("app_stats.txt"),
-                   MakeStringAccessor (&EpcS1uStatsCalculator::m_appStatsFilename),
+                   MakeStringAccessor (
+                     &EpcS1uStatsCalculator::m_appStatsFilename),
                    MakeStringChecker ())
     .AddAttribute ("EpcStatsFilename",
                    "Filename for EPC QoS S1U statistics.",
                    StringValue ("epc_stats.txt"),
-                   MakeStringAccessor (&EpcS1uStatsCalculator::m_epcStatsFilename),
+                   MakeStringAccessor (
+                     &EpcS1uStatsCalculator::m_epcStatsFilename),
                    MakeStringChecker ())
   ;
   return tid;

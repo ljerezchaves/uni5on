@@ -31,7 +31,7 @@ const uint16_t OpenFlowEpcController::m_dedicatedTmo = 15;
 
 OpenFlowEpcController::TeidBearerMap_t OpenFlowEpcController::m_bearersTable;
 OpenFlowEpcController::QciDscpMap_t OpenFlowEpcController::m_qciDscpTable;
-OpenFlowEpcController::Initializer OpenFlowEpcController::initializer;
+OpenFlowEpcController::QciDscpInitializer OpenFlowEpcController::initializer;
 
 OpenFlowEpcController::OpenFlowEpcController ()
 {
@@ -44,11 +44,14 @@ OpenFlowEpcController::OpenFlowEpcController ()
   NS_ASSERT_MSG (!network->IsTopologyCreated (),
                  "Network topology already created.");
 
-  network->TraceConnectWithoutContext ("NewEpcAttach",
+  network->TraceConnectWithoutContext (
+    "NewEpcAttach",
     MakeCallback (&OpenFlowEpcController::NotifyNewEpcAttach, this));
-  network->TraceConnectWithoutContext ("TopologyBuilt",
+  network->TraceConnectWithoutContext (
+    "TopologyBuilt",
     MakeCallback (&OpenFlowEpcController::NotifyTopologyBuilt, this));
-  network->TraceConnectWithoutContext ("NewSwitchConnection",
+  network->TraceConnectWithoutContext (
+    "NewSwitchConnection",
     MakeCallback (&OpenFlowEpcController::NotifyNewSwitchConnection, this));
 
   // Connecting this controller to SgwPgwApplication trace sources
@@ -56,7 +59,8 @@ OpenFlowEpcController::OpenFlowEpcController ()
     Names::Find<EpcSgwPgwApplication> ("/Names/SgwPgwApplication");
   NS_ASSERT_MSG (gateway, "SgwPgw application not found.");
 
-  gateway->TraceConnectWithoutContext ("ContextCreated",
+  gateway->TraceConnectWithoutContext (
+    "ContextCreated",
     MakeCallback (&OpenFlowEpcController::NotifyContextCreated, this));
 }
 
@@ -74,24 +78,27 @@ OpenFlowEpcController::GetTypeId (void)
                    "Enable the coexistence of GBR and Non-GBR traffic, "
                    "installing meters to limit Non-GBR traffic bit rate.",
                    BooleanValue (true),
-                   MakeBooleanAccessor (&OpenFlowEpcController::m_nonGbrCoexistence),
+                   MakeBooleanAccessor (
+                     &OpenFlowEpcController::m_nonGbrCoexistence),
                    MakeBooleanChecker ())
 
     .AddTraceSource ("BearerRequest",
                      "The bearer request trace source.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_bearerRequestTrace),
+                     MakeTraceSourceAccessor (
+                       &OpenFlowEpcController::m_bearerRequestTrace),
                      "ns3::OpenFlowEpcController::BearerTracedCallback")
     .AddTraceSource ("BearerRelease",
                      "The bearer release trace source.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_bearerReleaseTrace),
+                     MakeTraceSourceAccessor (
+                       &OpenFlowEpcController::m_bearerReleaseTrace),
                      "ns3::OpenFlowEpcController::BearerTracedCallback")
   ;
   return tid;
 }
 
 bool
-OpenFlowEpcController::RequestDedicatedBearer (EpsBearer bearer, 
-    uint64_t imsi, uint16_t cellId, uint32_t teid)
+OpenFlowEpcController::RequestDedicatedBearer (
+  EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
@@ -139,8 +146,8 @@ OpenFlowEpcController::RequestDedicatedBearer (EpsBearer bearer,
 }
 
 bool
-OpenFlowEpcController::ReleaseDedicatedBearer (EpsBearer bearer, 
-    uint64_t imsi, uint16_t cellId, uint32_t teid)
+OpenFlowEpcController::ReleaseDedicatedBearer (
+  EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
@@ -219,10 +226,10 @@ OpenFlowEpcController::DoDispose ()
   m_routes.clear ();
 }
 
-void 
-OpenFlowEpcController::NotifyNewEpcAttach (Ptr<NetDevice> nodeDev, 
-    Ipv4Address nodeIp, Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, 
-    uint32_t swtchPort)
+void
+OpenFlowEpcController::NotifyNewEpcAttach (
+  Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
+  Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, uint32_t swtchPort)
 {
   NS_LOG_FUNCTION (this << nodeIp << swtchIdx << swtchPort);
 
@@ -240,7 +247,8 @@ OpenFlowEpcController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
   NS_LOG_FUNCTION (this << cInfo);
 
   // Connecting this controller to ConnectionInfo trace source
-  cInfo->TraceConnectWithoutContext ("NonGbrAdjusted",
+  cInfo->TraceConnectWithoutContext (
+    "NonGbrAdjusted",
     MakeCallback (&OpenFlowEpcController::NotifyNonGbrAdjusted, this));
 }
 
@@ -254,8 +262,9 @@ OpenFlowEpcController::NotifyTopologyBuilt (NetDeviceContainer devices)
 }
 
 void
-OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
-    Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList)
+OpenFlowEpcController::NotifyContextCreated (
+  uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr,
+  BearerList_t bearerList)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << sgwAddr);
 
@@ -368,15 +377,15 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
 
   // ARP request packets are sent to the controller.
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=45055 eth_type=0x0806"
-                       " apply:output=ctrl");
+                " apply:output=ctrl");
 
   // More entries will be installed here by ConfigureLocalPortRules function.
 
   // GTP packets entering the switch from any port other then EPC ports are
   // sent to the forwarding table (table 2).
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=32 eth_type=0x800,"
-                       "ip_proto=17,udp_src=2152,udp_dst=2152"
-                       " goto:2");
+                "ip_proto=17,udp_src=2152,udp_dst=2152"
+                " goto:2");
 
   // Table miss entry. Send unmatched packets to the controller.
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
@@ -399,24 +408,24 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
       // Non-GBR packet classified at table 1. Apply corresponding Non-GBR
       // meter band and forward the packet to the the correct routing group.
       DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
-                           " eth_type=0x800,ip_dscp=0,meta=0x1"
-                           " meter:1 write:group=1");
+                    " eth_type=0x800,ip_dscp=0,meta=0x1"
+                    " meter:1 write:group=1");
       DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
-                           " eth_type=0x800,ip_dscp=0,meta=0x2"
-                           " meter:2 write:group=2");
-      
+                    " eth_type=0x800,ip_dscp=0,meta=0x2"
+                    " meter:2 write:group=2");
+
       // More entries will be installed here by NotifyTopologyBuilt function.
     }
-  
+
   // GBR packet classified at table 1. Forward the packet to the correct
   // routing group. When coexistence is disable, these following rules will
   // also match Non-GBR packets (any dscp value, including 0).
   DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=128"
-                       " eth_type=0x800,meta=0x1"
-                       " write:group=1");
+                " eth_type=0x800,meta=0x1"
+                " write:group=1");
   DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=128"
-                       " eth_type=0x800,meta=0x2"
-                       " write:group=2");
+                " eth_type=0x800,meta=0x2"
+                " write:group=2");
 
   // More entries will be installed here by NotifyTopologyBuilt function.
 
@@ -663,8 +672,8 @@ OpenFlowEpcController::ConfigureLocalPortRules (
 }
 
 ofl_err
-OpenFlowEpcController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, 
-    SwitchInfo swtch, uint32_t xid, uint32_t teid)
+OpenFlowEpcController::HandleGtpuTeidPacketIn (
+  ofl_msg_packet_in *msg, SwitchInfo swtch, uint32_t xid, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << swtch.ipv4 << xid << teid);
 
@@ -854,7 +863,7 @@ OpenFlowEpcController::UnregisterBearer (uint32_t teid)
     }
 }
 
-OpenFlowEpcController::Initializer::Initializer ()
+OpenFlowEpcController::QciDscpInitializer::QciDscpInitializer ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 

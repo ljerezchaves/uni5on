@@ -100,10 +100,10 @@ RingController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
   // Routing group for counterclockwise packet forwarding.
   cmd11 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::COUNTER
         << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (1);
-  
+
   DpctlCommand (cInfo->GetSwDev (0), cmd01.str ());
   DpctlCommand (cInfo->GetSwDev (1), cmd11.str ());
-  
+
   if (m_nonGbrCoexistence)
     {
       // Non-GBR meter for clockwise direction
@@ -157,7 +157,7 @@ RingController::NotifyTopologyBuilt (NetDeviceContainer devices)
                 << " eth_type=0x800,ip_dscp=0,in_port=" << cInfo->GetPortNo (1)
                 << " meter:" << RingRoutingInfo::CLOCK
                 << " write:group=" << RingRoutingInfo::CLOCK;
-      
+
           DpctlCommand (cInfo->GetSwDev (0), cmd01.str ());
           DpctlCommand (cInfo->GetSwDev (1), cmd11.str ());
         }
@@ -173,7 +173,7 @@ RingController::NotifyTopologyBuilt (NetDeviceContainer devices)
       cmd12 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
             << " eth_type=0x800,in_port=" << cInfo->GetPortNo (1)
             << " write:group=" << RingRoutingInfo::CLOCK;
-      
+
       DpctlCommand (cInfo->GetSwDev (0), cmd02.str ());
       DpctlCommand (cInfo->GetSwDev (1), cmd12.str ());
     }
@@ -271,7 +271,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
       if (rInfo->IsGbr ())
         {
           // Build the apply set_field action instruction string
-          inst << " apply:set_field=ip_dscp:" 
+          inst << " apply:set_field=ip_dscp:"
                << rInfo->GetObject<GbrInfo> ()->GetDscp ();
         }
 

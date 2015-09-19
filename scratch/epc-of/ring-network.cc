@@ -124,7 +124,8 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
 
   // Configuring csma links for connection between switches
   m_ofCsmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
-  m_ofCsmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_swLinkDataRate));
+  m_ofCsmaHelper.SetChannelAttribute ("DataRate",
+                                      DataRateValue (m_swLinkDataRate));
   m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_swLinkDelay));
 
   // Connecting switches in ring topology (clockwise order)
@@ -162,26 +163,36 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
 
       // Switch order inside ConnectionInfo object must respect clockwise order
       // (RingController assume this order when installing switch rules).
-      ConnectionInfo::SwitchData currSw = {currIndex, currDevice, currPortDevice, currPortNum};
-      ConnectionInfo::SwitchData nextSw = {nextIndex, nextDevice, nextPortDevice, nextPortNum};
-      Ptr<ConnectionInfo> cInfo = CreateObject<ConnectionInfo> (currSw, nextSw,
-        DynamicCast<CsmaChannel> (currPortDevice->GetChannel ()));
-      
-      // Fire trace source notifying new connection between switches. 
+      ConnectionInfo::SwitchData currSw = {
+        currIndex, currDevice,
+        currPortDevice, currPortNum
+      };
+      ConnectionInfo::SwitchData nextSw = {
+        nextIndex, nextDevice,
+        nextPortDevice, nextPortNum
+      };
+      Ptr<ConnectionInfo> cInfo = CreateObject<ConnectionInfo> (
+          currSw, nextSw, DynamicCast<CsmaChannel> (
+            currPortDevice->GetChannel ()));
+
+      // Fire trace source notifying new connection between switches.
       m_newConnTrace (cInfo);
 
       // Registering OpenFlowEpcNetwork trace sink for meter dropped packets
-      currDevice->TraceConnect ("MeterDrop", Names::FindName (currNode),
+      currDevice->TraceConnect (
+        "MeterDrop", Names::FindName (currNode),
         MakeCallback (&OpenFlowEpcNetwork::MeterDropPacket, this));
 
       // Registering OpenFlowEpcNetwork trace sink for queue drop packets
       std::ostringstream currQueue;
       currQueue << Names::FindName (currNode) << "/" << currPortNum;
-      currPortDevice->GetQueue ()->TraceConnect ("Drop", currQueue.str (),
+      currPortDevice->GetQueue ()->TraceConnect (
+        "Drop", currQueue.str (),
         MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
       std::ostringstream nextQueue;
       nextQueue << Names::FindName (nextNode) << "/" << nextPortNum;
-      nextPortDevice->GetQueue ()->TraceConnect ("Drop", nextQueue.str (),
+      nextPortDevice->GetQueue ()->TraceConnect (
+        "Drop", nextQueue.str (),
         MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
     }
 
@@ -197,10 +208,11 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   NS_ASSERT_MSG (m_created, "Topology not created.");
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
 
-  // Configuring csma links for connecting eNBs to switches 
+  // Configuring csma links for connecting eNBs to switches
   // (using the same configuration for connection between switches)
   m_ofCsmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
-  m_ofCsmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_swLinkDataRate));
+  m_ofCsmaHelper.SetChannelAttribute ("DataRate",
+                                      DataRateValue (m_swLinkDataRate));
   m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_swLinkDelay));
 
   // Connect SgwPgw node to switch index 0 and other eNBs to switchs indexes
@@ -209,16 +221,17 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   // node.
   static uint32_t counter = 0;
   counter++;
-  
+
   uint16_t swIdx;
   if (counter == 1)
     {
       // This is the SgwPgw node
       swIdx = 0;
       RegisterGatewayAtSwitch (swIdx, node);
-      
+
       // Only for the gateway link, let's set specific datarate and delay.
-      m_ofCsmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_gwLinkDataRate));
+      m_ofCsmaHelper.SetChannelAttribute ("DataRate",
+                                          DataRateValue (m_gwLinkDataRate));
       m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_gwLinkDelay));
     }
   else
@@ -241,8 +254,10 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   nodeDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
 
   // Setting interface names for pacp filename
-  Names::Add (Names::FindName (swNode) + "+" + Names::FindName (node), portDev);
-  Names::Add (Names::FindName (node) + "+" + Names::FindName (swNode), nodeDev);
+  Names::Add (Names::FindName (swNode) + "+" +
+              Names::FindName (node), portDev);
+  Names::Add (Names::FindName (node) + "+" +
+              Names::FindName (swNode), nodeDev);
 
   // Set S1U IPv4 address for the new device at node
   Ipv4InterfaceContainer nodeIpIfaces =
@@ -259,15 +274,17 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   // Registering trace sink for queue drop packets
   std::ostringstream context;
   context << Names::FindName (swNode) << "/" << portNum;
-  portDev->GetQueue ()->TraceConnect ("Drop", context.str (),
+  portDev->GetQueue ()->TraceConnect (
+    "Drop", context.str (),
     MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
- 
-  nodeDev->GetQueue ()->TraceConnect ("Drop", Names::FindName (node),
+
+  nodeDev->GetQueue ()->TraceConnect (
+    "Drop", Names::FindName (node),
     MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
 
   // Only for the gateway link, let's  set specific names for queues.
   if (counter == 1)
-    {    
+    {
       Names::Add ("OpenFlowNetwork/PgwDownQueue", nodeDev->GetQueue ());
       Names::Add ("OpenFlowNetwork/PgwUpQueue", portDev->GetQueue ());
     }
@@ -315,10 +332,12 @@ RingNetwork::AttachToX2 (Ptr<Node> node)
   // Registering trace sink for queue drop packets
   std::ostringstream context;
   context << Names::FindName (swNode) << "/" << portNum;
-  portDev->GetQueue ()->TraceConnect ("Drop", context.str (),
+  portDev->GetQueue ()->TraceConnect (
+    "Drop", context.str (),
     MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
- 
-  nodeDev->GetQueue ()->TraceConnect ("Drop", Names::FindName (node),
+
+  nodeDev->GetQueue ()->TraceConnect (
+    "Drop", Names::FindName (node),
     MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
 
   return nodeDev;

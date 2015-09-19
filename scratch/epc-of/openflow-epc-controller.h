@@ -360,20 +360,19 @@ private:
    * OpenFlowEpcController inner friend utility class
    * used to initialize static DSCP map table.
    */
-  class Initializer
+  class QciDscpInitializer
   {
-    public:
-
-      /** Initializer function. */
-      Initializer ();
+public:
+    /** Initializer function. */
+    QciDscpInitializer ();
   };
-  friend class Initializer;
+  friend class QciDscpInitializer;
 
   /**
    * Static instance of Initializer. When this is created, its constructor
    * initializes the OpenFlowEpcController s' static DSCP map table.
    */
-  static Initializer initializer;
+  static QciDscpInitializer initializer;
 
 // Member variables
 protected:

@@ -204,7 +204,7 @@ private:
 
   /**
    * \name Bit rate adjustment.
-   * Increase or decrease the GBR reserved bit rate and Non-GBR allowed bit rate.
+   * Increase/decrease the GBR reserved bit rate and Non-GBR allowed bit rate.
    * \param dir The link direction.
    * \param bitRate The bitRate amount.
    * \return True if everything is ok, false otherwise.

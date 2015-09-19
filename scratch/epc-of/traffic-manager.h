@@ -88,8 +88,9 @@ public:
    * \param sgwAddr The SgwPgw IPv4 address.
    * \param bearerList The list of context bearers created.
    */
-  void ContextCreatedCallback (uint64_t imsi, uint16_t cellId, 
-    Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList);
+  void ContextCreatedCallback (uint64_t imsi, uint16_t cellId,
+                               Ipv4Address enbAddr, Ipv4Address sgwAddr,
+                               BearerList_t bearerList);
 
 protected:
   /** Destructor implementation */

@@ -54,10 +54,12 @@ ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
 
   // Connecting trace source to CsmaNetDevice PhyTxEnd trace source, used to
   // monitor data transmitted over this connection.
-  m_switches [0].portDev->TraceConnect ("PhyTxEnd", "Forward",
-      MakeCallback (&ConnectionInfo::NotifyTxPacket, this));
-  m_switches [1].portDev->TraceConnect ("PhyTxEnd", "Backward",
-      MakeCallback (&ConnectionInfo::NotifyTxPacket, this));
+  m_switches [0].portDev->TraceConnect (
+    "PhyTxEnd", "Forward",
+    MakeCallback (&ConnectionInfo::NotifyTxPacket, this));
+  m_switches [1].portDev->TraceConnect (
+    "PhyTxEnd", "Backward",
+    MakeCallback (&ConnectionInfo::NotifyTxPacket, this));
 
   m_gbrBitRate [0] = 0;
   m_gbrBitRate [1] = 0;
@@ -96,7 +98,8 @@ ConnectionInfo::GetTypeId (void)
     // Trace source used by controller to install/update Non-GBR meters
     .AddTraceSource ("NonGbrAdjusted",
                      "Non-GBR allowed bit rate adjusted.",
-                     MakeTraceSourceAccessor (&ConnectionInfo::m_nonAdjustedTrace),
+                     MakeTraceSourceAccessor (
+                       &ConnectionInfo::m_nonAdjustedTrace),
                      "ns3::ConnectionInfo::ConnTracedCallback")
   ;
   return tid;

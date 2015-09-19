@@ -235,7 +235,8 @@ LteSquaredGridNetwork::InstallProtocolStack ()
             m_epcHelper->GetUeDefaultGatewayAddress (), 1);
         }
 
-      // Attaching UEs to the respective eNB (this activates the default EPS bearer)
+      // Attaching UEs to the respective eNB
+      // (this activates the default EPS bearer)
       m_lteHelper->Attach (ueDev, m_enbDevices.Get (i));
     }
 }

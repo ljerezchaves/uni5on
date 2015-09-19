@@ -80,7 +80,8 @@ main (int argc, char *argv[])
   // For debug purposes, set the short interval for traffic inter-arrival
   if (fastTraffic)
     {
-      Config::SetDefault ("ns3::TrafficManager::PoissonInterArrival", 
+      Config::SetDefault (
+        "ns3::TrafficManager::PoissonInterArrival",
         StringValue ("ns3::ExponentialRandomVariable[Mean=20.0]"));
     }
 
@@ -92,7 +93,8 @@ main (int argc, char *argv[])
   if (lteRem)
     {
       // The channel number was manually set :/
-      Ptr<RadioEnvironmentMapHelper> remHelper = CreateObject<RadioEnvironmentMapHelper> ();
+      Ptr<RadioEnvironmentMapHelper> remHelper =
+        CreateObject<RadioEnvironmentMapHelper> ();
       remHelper->SetAttribute ("ChannelPath", StringValue ("/ChannelList/11"));
       remHelper->SetAttribute ("OutputFile", StringValue ("lte-rem.out"));
       remHelper->SetAttribute ("XMin", DoubleValue (0));
@@ -132,19 +134,21 @@ ConfigureDefaults ()
   //
   Config::SetDefault ("ns3::CsmaChannel::FullDuplex", BooleanValue (true));
 
-  // 
+  //
   // For network queues, use the byte mode and set default size to 128 KBytes.
   //
-  Config::SetDefault ("ns3::DropTailQueue::Mode", EnumValue (Queue::QUEUE_MODE_BYTES));
+  Config::SetDefault ("ns3::DropTailQueue::Mode",
+                      EnumValue (Queue::QUEUE_MODE_BYTES));
   Config::SetDefault ("ns3::DropTailQueue::MaxBytes", UintegerValue (131072));
 
   //
   // For the OpenFlow control channel, let's use point to point connections
   // between controller and switches.
   //
-  Config::SetDefault ("ns3::OFSwitch13Helper::ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
+  Config::SetDefault ("ns3::OFSwitch13Helper::ChannelType",
+                      EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
-  // 
+  //
   // Since we are using an external OpenFlow library that expects complete
   // network packets, we need to enable checksum computations (which are
   // disabled by default in ns-3).
@@ -152,7 +156,7 @@ ConfigureDefaults ()
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
 
   // --------------------------- LTE PARAMETERS --------------------------- //
-  
+
   //
   // Increasing SrsPeriodicity to allow more UEs per eNB. Allowed values are:
   // {2, 5, 10, 20, 40, 80, 160, 320}. The default value (40) allows no more
@@ -175,11 +179,13 @@ ConfigureDefaults ()
   //    5.0 MHz —  25 PRBs
   //   10.0 MHz —  50 PRBs
   //   15.0 MHz —  75 PRBs
-  //   20.0 MHz — 100 PRBs. 
+  //   20.0 MHz — 100 PRBs.
   // ** Considering downlink and uplink bandwidth: 100 RBs = 20Mhz.
   //
-  Config::SetDefault ("ns3::LteEnbNetDevice::UlBandwidth", UintegerValue (100));
-  Config::SetDefault ("ns3::LteEnbNetDevice::DlBandwidth", UintegerValue (100));
+  Config::SetDefault ("ns3::LteEnbNetDevice::UlBandwidth",
+                      UintegerValue (100));
+  Config::SetDefault ("ns3::LteEnbNetDevice::DlBandwidth",
+                      UintegerValue (100));
 
   //
   // LTE supports a wide range of different frequency bands. In Brazil, current
@@ -200,30 +206,35 @@ ConfigureDefaults ()
   // the UE is allowed to use is set by the standard (23dBm). We are currently
   // using a lower value, with no power control.
   // See http://tinyurl.com/nlh6u3t and http://tinyurl.com/nlh6u3t
-  // 
+  //
   Config::SetDefault ("ns3::LteEnbPhy::TxPower", DoubleValue (46));
   Config::SetDefault ("ns3::LteUePhy::TxPower", DoubleValue (18));
-  Config::SetDefault ("ns3::LteUePhy::EnableUplinkPowerControl", BooleanValue (false));
+  Config::SetDefault ("ns3::LteUePhy::EnableUplinkPowerControl",
+                      BooleanValue (false));
 
-  // 
+  //
   // Using a simplified model working only with Okumura Hata, considering the
   // phenomenon of indoor/outdoor propagation in the presence of buildings.
-  // 
-  Config::SetDefault ("ns3::LteHelper::PathlossModel", StringValue ("ns3::OhBuildingsPropagationLossModel"));
+  //
+  Config::SetDefault ("ns3::LteHelper::PathlossModel",
+                      StringValue ("ns3::OhBuildingsPropagationLossModel"));
 
-  // 
+  //
   // Using the Channel and QoS Aware (CQA) Scheduler as the LTE MAC downlink
   // scheduling algorithm, which considers the head of line delay, the GBR
   // parameters and channel quality over different subbands.
   //
-  Config::SetDefault ("ns3::LteHelper::Scheduler", StringValue ("ns3::CqaFfMacScheduler"));
+  Config::SetDefault ("ns3::LteHelper::Scheduler",
+                      StringValue ("ns3::CqaFfMacScheduler"));
 
-  // 
+  //
   // Disabling error models for both control and data planes. This is necessary
   // for handover procedures.
   //
-  Config::SetDefault ("ns3::LteSpectrumPhy::CtrlErrorModelEnabled", BooleanValue (false));
-  Config::SetDefault ("ns3::LteSpectrumPhy::DataErrorModelEnabled", BooleanValue (false));
+  Config::SetDefault ("ns3::LteSpectrumPhy::CtrlErrorModelEnabled",
+                      BooleanValue (false));
+  Config::SetDefault ("ns3::LteSpectrumPhy::DataErrorModelEnabled",
+                      BooleanValue (false));
 }
 
 //void __attribute__((optimize ("O0")))
