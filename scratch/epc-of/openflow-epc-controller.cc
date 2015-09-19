@@ -316,14 +316,7 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
 
       GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
 
-      // Create (if necessary) the meter metadata
-      if (gbrQoS.mbrDl || gbrQoS.mbrUl)
-        {
-          Ptr<MeterInfo> meterInfo = CreateObject<MeterInfo> (rInfo);
-          rInfo->AggregateObject (meterInfo);
-        }
-
-      // For all GBR beares, create the GBR metadata.
+      // For all GBR beares, create the GBR metadata.
       if (rInfo->IsGbr ())
         {
           Ptr<GbrInfo> gbrInfo = CreateObject<GbrInfo> (rInfo);
@@ -332,6 +325,13 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
           // Set the appropriated DiffServ DSCP value for this bearer.
           gbrInfo->m_dscp =
             OpenFlowEpcController::GetDscpMappedValue (rInfo->GetQciInfo ());
+        }
+
+      // If necessary, create the meter metadata for maximum bit rate.
+      if (gbrQoS.mbrDl || gbrQoS.mbrUl)
+        {
+          Ptr<MeterInfo> meterInfo = CreateObject<MeterInfo> (rInfo);
+          rInfo->AggregateObject (meterInfo);
         }
     }
 }
