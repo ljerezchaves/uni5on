@@ -84,6 +84,7 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   // we also stop the application and repost statistics. This avoids the
   // processes of reinstalling expired rules.
   //
+  m_httpHelper.SetClientAttribute ("AppName", StringValue ("Http"));
   m_httpHelper.SetClientAttribute ("MaxPages", UintegerValue (3));
   m_httpHelper.SetClientAttribute ("MaxReadingTime", TimeValue (Seconds (14)));
 
@@ -95,6 +96,7 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   // information on this topic. Note that this length means the size of the
   // video which will be sent to the client over a TCP connection.
   //
+  m_stVideoHelper.SetClientAttribute ("AppName", StringValue ("StVd"));
   m_stVideoHelper.SetServerAttribute (
     "VideoDuration",
     StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"));
@@ -106,6 +108,7 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   // http://www.theregister.co.uk/2013/01/30/mobile_phone_calls_shorter for
   // more information on this topic.
   //
+  m_voipHelper.SetClientAttribute ("AppName", StringValue ("Voip"));
   m_voipHelper.SetServerAttribute (
     "CallDuration",
     StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=100.0]"));
@@ -115,6 +118,7 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   // the stored video (above). The difference here is that the traffic is sent
   // in real time, following the trace description.
   //
+  m_rtVideoHelper.SetClientAttribute ("AppName", StringValue ("RtVd"));
   m_rtVideoHelper.SetServerAttribute (
     "VideoDuration",
     StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"));

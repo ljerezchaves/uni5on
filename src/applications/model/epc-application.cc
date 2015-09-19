@@ -51,6 +51,11 @@ EpcApplication::GetTypeId (void)
                    TimeValue (Time ()),
                    MakeTimeAccessor (&EpcApplication::m_maxDurationTime),
                    MakeTimeChecker ())
+    .AddAttribute ("AppName",
+                   "The application name.",
+                   StringValue ("NoName"),
+                   MakeStringAccessor (&EpcApplication::m_name),
+                   MakeStringChecker ())
 
     .AddTraceSource ("AppStart",
                      "EpcApplication start trace source.",
@@ -103,7 +108,7 @@ EpcApplication::GetTeid (void) const
 std::string 
 EpcApplication::GetAppName (void) const
 {
-  return "NoName";
+  return m_name;
 }
 
 void
