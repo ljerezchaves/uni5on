@@ -169,10 +169,11 @@ TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices)
         MakeCallback (&TrafficManager::ContextCreatedCallback, m_ueManager));
 
       // Installing applications into UEs
-      InstallVoip ();
-      InstallRealTimeVideo ();
-      InstallStoredVideo ();
-      InstallHttp ();
+      InstallGbrVoip ();
+      InstallGbrLiveVideoStreaming ();
+      InstallNonGbrBufferedVideoStreaming ();
+      InstallNonGbrLiveVideoStreaming ();
+      InstallNonGbrHttp ();
     }
   m_ueNode = 0;
   m_ueDev = 0;
@@ -207,11 +208,11 @@ TrafficHelper::GetVideoMbr (uint8_t idx)
 //
 
 void
-TrafficHelper::InstallVoip ()
+TrafficHelper::InstallGbrVoip ()
 {
   NS_LOG_FUNCTION (this);
 
-  static uint16_t portNo = 20000;
+  static uint16_t portNo = 10000;
   portNo++;
 
   // Bidirectional VoIP traffic
@@ -257,11 +258,11 @@ TrafficHelper::InstallVoip ()
 }
 
 void
-TrafficHelper::InstallRealTimeVideo ()
+TrafficHelper::InstallGbrLiveVideoStreaming ()
 {
   NS_LOG_FUNCTION (this);
 
-  static uint16_t portNo = 40000;
+  static uint16_t portNo = 20000;
   portNo++;
 
   // Downlink real-time video traffic
@@ -284,11 +285,11 @@ TrafficHelper::InstallRealTimeVideo ()
   filter.localPortEnd = portNo;
   tft->Add (filter);
 
-  // Dedicated GBR EPS bearer (QCI 4).
+  // Dedicated GBR EPS bearer (QCI 2).
   GbrQosInformation qos;
   qos.gbrDl = GetVideoGbr (videoIdx).GetBitRate ();
   qos.mbrDl = GetVideoMbr (videoIdx).GetBitRate ();
-  EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
+  EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO, qos);
 
   // Link EPC info to application
   cApp->m_tft = tft;
@@ -300,7 +301,7 @@ TrafficHelper::InstallRealTimeVideo ()
 }
 
 void
-TrafficHelper::InstallStoredVideo ()
+TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -327,14 +328,9 @@ TrafficHelper::InstallStoredVideo ()
   filter.remotePortEnd = portNo;
   tft->Add (filter);
 
-  // Dedicated Non-GBR EPS bearer (QCI 8)
+  // Dedicated Non-GBR EPS bearer (QCI 6)
   GbrQosInformation qos;
   EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR, qos);
-
-  // Non-GBR traffic can only have the maximum bit rate (mbr) value. No
-  // guaranteed bit rate (gbr) value is allowed.
-  // FIXME: I'm not sure about these values.
-  // qos.mbrDl = GetVideoMbr (videoIdx).GetBitRate ();
 
   // Link EPC info to application
   cApp->m_tft = tft;
@@ -346,11 +342,17 @@ TrafficHelper::InstallStoredVideo ()
 }
 
 void
-TrafficHelper::InstallHttp ()
+TrafficHelper::InstallNonGbrLiveVideoStreaming ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+void
+TrafficHelper::InstallNonGbrHttp ()
 {
   NS_LOG_FUNCTION (this);
 
-  static uint16_t portNo = 10000;
+  static uint16_t portNo = 50000;
   portNo++;
 
   // Downlink HTTP web traffic (with TCP bidirectional traffic filter).
@@ -372,12 +374,6 @@ TrafficHelper::InstallHttp ()
   // Dedicated Non-GBR EPS bearer (QCI 8)
   GbrQosInformation qos;
   EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
-
-  // Non-GBR traffic can only have the maximum bit rate (mbr) value. No
-  // guaranteed bit rate (gbr) value is allowed.
-  // FIXME: I'm not sure about these values.
-  // qos.mbrDl = 524288;     // Max of 512 Kbps in downlink
-  // qos.mbrUl = 131072;     // Max of 128 Kbps in uplink
 
   // Link EPC info to application
   cApp->m_tft = tft;

@@ -90,32 +90,40 @@ public:
 
 private:
   /**
-   * VoIP/UDP bidirectional traffic over dedicated GBR EPS bearer (QCI 1).
+   * UDP bidirectional VoIP traffic over dedicated GBR EPS bearer (QCI 1).
    * This QCI is typically associated with conversational voice. This VoIP
-   * traffic simulates the G.729 codec (~8.5 kbps for payload). Check
+   * traffic simulates the G.729 codec (~8.0 kbps for payload). Check
    * http://goo.gl/iChPGQ for bandwidth calculation and discussion.
    */
-  void InstallVoip ();
+  void InstallGbrVoip ();
 
   /**
-   * UDP real-time download video streaming over dedicated GBR EPS bearer
-   * (QCI 4). This QCI is typically associated with non-conversational buffered
-   * video. This video traffic is based on MPEG-4 video traces from
+   * UDP downlink live video streaming over dedicated GBR EPS bearer (QCI 2).
+   * This QCI is typically associated with conversational video and live
+   * streaming. This video traffic is based on MPEG-4 video traces from
    * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
    */
-  void InstallRealTimeVideo ();
+  void InstallGbrLiveVideoStreaming ();
 
   /**
-   * TCP stored download video streaming over dedicated Non-GBR EPS bearer
+   * TCP downlink buffered video streaming over dedicated Non-GBR EPS bearer
    * (QCI 6). This QCI could be used for priorization of non real-time data of
    * MPS subscribers. This video traffic is based on MPEG-4 video traces from
    * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
    */
-  void InstallStoredVideo ();
+  void InstallNonGbrBufferedVideoStreaming ();
 
   /**
-   * HTTP/TCP traffic over dedicated Non-GBR EPS bearer (QCI 8). This QCI
-   * could be used for a dedicated 'premium bearer' for any subscriber, or
+   * UDP downlink live video streaming over dedicated Non-GBR EPS bearer (QCI
+   * 7). This QCI is typically associated with voice, live video streaming and
+   * interactive games. This video traffic is based on MPEG-4 video traces from
+   * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
+   */
+  void InstallNonGbrLiveVideoStreaming ();
+
+  /**
+   * TCP downlink HTTP traffic over dedicated Non-GBR EPS bearer (QCI 8). This
+   * QCI could be used for a dedicated 'premium bearer' for any subscriber, or
    * could be used for the default bearer of a for 'premium subscribers'. This
    * HTTP model is based on the distributions indicated in the paper 'An HTTP
    * Web Traffic Model Based on the Top One Million Visited Web Pages' by
@@ -124,7 +132,7 @@ private:
    * repeats after a reading time period, until MaxPages are loaded or
    * MaxReadingTime is reached.
    */
-  void InstallHttp ();
+  void InstallNonGbrHttp ();
 
 
   ObjectFactory       m_managerFactory; //!< Traffic manager factory
