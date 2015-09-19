@@ -383,6 +383,8 @@ protected:
   /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
   TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerReleaseTrace;
 
+  bool m_nonGbrCoexistence; //!< Enable Non-GBR coexistence.
+
   static const uint16_t m_dedicatedTmo;   //!< Timeout for dedicated bearers
 
 private:

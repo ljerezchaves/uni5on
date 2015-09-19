@@ -97,24 +97,28 @@ RingController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
   cmd01 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::CLOCK
         << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (0);
 
-  // Non-GBR meter for clockwise direction
-  kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::FWD) / 1000;
-  cmd02 << "meter-mod cmd=add,flags=1,meter=" << RingRoutingInfo::CLOCK
-        << " drop:rate=" << kbps;
-
   // Routing group for counterclockwise packet forwarding.
   cmd11 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::COUNTER
         << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (1);
-
-  // Non-GBR meter for counterclockwise direction
-  kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::BWD) / 1000;
-  cmd12 << "meter-mod cmd=add,flags=1,meter=" << RingRoutingInfo::COUNTER
-        << " drop:rate=" << kbps;
-
+  
   DpctlCommand (cInfo->GetSwDev (0), cmd01.str ());
-  DpctlCommand (cInfo->GetSwDev (0), cmd02.str ());
   DpctlCommand (cInfo->GetSwDev (1), cmd11.str ());
-  DpctlCommand (cInfo->GetSwDev (1), cmd12.str ());
+  
+  if (m_nonGbrCoexistence)
+    {
+      // Non-GBR meter for clockwise direction
+      kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::FWD) / 1000;
+      cmd02 << "meter-mod cmd=add,flags=1,meter=" << RingRoutingInfo::CLOCK
+            << " drop:rate=" << kbps;
+
+      // Non-GBR meter for counterclockwise direction
+      kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::BWD) / 1000;
+      cmd12 << "meter-mod cmd=add,flags=1,meter=" << RingRoutingInfo::COUNTER
+            << " drop:rate=" << kbps;
+
+      DpctlCommand (cInfo->GetSwDev (0), cmd02.str ());
+      DpctlCommand (cInfo->GetSwDev (1), cmd12.str ());
+    }
 }
 
 void
@@ -139,21 +143,29 @@ RingController::NotifyTopologyBuilt (NetDeviceContainer devices)
       // Table 2 -- Forwarding table -- [from higher to lower priority]
       std::ostringstream cmd01, cmd02, cmd11, cmd12;
 
-      // Non-GBR packets entering the switch from any port other then EPC
-      // ports. Apply corresponding Non-GBR meter band and forward the packet
-      // to the the correct routing group based on input port.
-      cmd01 << "flow-mod cmd=add,table=2,flags=0x0002,prio=256"
-            << " eth_type=0x800,ip_dscp=0,in_port=" << cInfo->GetPortNo (0)
-            << " meter:" << RingRoutingInfo::COUNTER
-            << " write:group=" << RingRoutingInfo::COUNTER;
+      if (m_nonGbrCoexistence)
+        {
+          // Non-GBR packets entering the switch from any port other then EPC
+          // ports. Apply corresponding Non-GBR meter band and forward the
+          // packet to the the correct routing group based on input port.
+          cmd01 << "flow-mod cmd=add,table=2,flags=0x0002,prio=256"
+                << " eth_type=0x800,ip_dscp=0,in_port=" << cInfo->GetPortNo (0)
+                << " meter:" << RingRoutingInfo::COUNTER
+                << " write:group=" << RingRoutingInfo::COUNTER;
 
-      cmd11 << "flow-mod cmd=add,table=2,flags=0x0002,prio=256"
-            << " eth_type=0x800,ip_dscp=0,in_port=" << cInfo->GetPortNo (1)
-            << " meter:" << RingRoutingInfo::CLOCK
-            << " write:group=" << RingRoutingInfo::CLOCK;
+          cmd11 << "flow-mod cmd=add,table=2,flags=0x0002,prio=256"
+                << " eth_type=0x800,ip_dscp=0,in_port=" << cInfo->GetPortNo (1)
+                << " meter:" << RingRoutingInfo::CLOCK
+                << " write:group=" << RingRoutingInfo::CLOCK;
+      
+          DpctlCommand (cInfo->GetSwDev (0), cmd01.str ());
+          DpctlCommand (cInfo->GetSwDev (1), cmd11.str ());
+        }
 
       // GBR packets entering the switch from any port other then EPC ports.
       // Forward the packet to the correct routing group based on input port.
+      // When coexistence is disable, these following rules will also match
+      // Non-GBR packets (any dscp value, including 0).
       cmd02 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
             << " eth_type=0x800,in_port=" << cInfo->GetPortNo (0)
             << " write:group=" << RingRoutingInfo::COUNTER;
@@ -162,9 +174,7 @@ RingController::NotifyTopologyBuilt (NetDeviceContainer devices)
             << " eth_type=0x800,in_port=" << cInfo->GetPortNo (1)
             << " write:group=" << RingRoutingInfo::CLOCK;
       
-      DpctlCommand (cInfo->GetSwDev (0), cmd01.str ());
       DpctlCommand (cInfo->GetSwDev (0), cmd02.str ());
-      DpctlCommand (cInfo->GetSwDev (1), cmd11.str ());
       DpctlCommand (cInfo->GetSwDev (1), cmd12.str ());
     }
 }
@@ -174,21 +184,24 @@ RingController::NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
 
-  std::ostringstream cmd1, cmd2;
-  uint64_t kbps = 0;
+  if (m_nonGbrCoexistence)
+    {
+      std::ostringstream cmd1, cmd2;
+      uint64_t kbps = 0;
 
-  // Update Non-GBR meter for clockwise direction
-  kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::FWD) / 1000;
-  cmd1 << "meter-mod cmd=mod,flags=1,meter=" << RingRoutingInfo::CLOCK
-       << " drop:rate=" << kbps;
+      // Update Non-GBR meter for clockwise direction
+      kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::FWD) / 1000;
+      cmd1 << "meter-mod cmd=mod,flags=1,meter=" << RingRoutingInfo::CLOCK
+           << " drop:rate=" << kbps;
 
-  // Update Non-GBR meter for counterclockwise direction
-  kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::BWD) / 1000;
-  cmd2 << "meter-mod cmd=mod,flags=1,meter=" << RingRoutingInfo::COUNTER
-       << " drop:rate=" << kbps;
+      // Update Non-GBR meter for counterclockwise direction
+      kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::BWD) / 1000;
+      cmd2 << "meter-mod cmd=mod,flags=1,meter=" << RingRoutingInfo::COUNTER
+           << " drop:rate=" << kbps;
 
-  DpctlCommand (cInfo->GetSwDev (0), cmd1.str ());
-  DpctlCommand (cInfo->GetSwDev (1), cmd2.str ());
+      DpctlCommand (cInfo->GetSwDev (0), cmd1.str ());
+      DpctlCommand (cInfo->GetSwDev (1), cmd2.str ());
+    }
 }
 
 bool

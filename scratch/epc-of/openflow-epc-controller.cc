@@ -70,6 +70,13 @@ OpenFlowEpcController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::OpenFlowEpcController")
     .SetParent (OFSwitch13Controller::GetTypeId ())
+    .AddAttribute ("NonGbrCoexistence",
+                   "Enable the coexistence of GBR and Non-GBR traffic, "
+                   "installing meters to limit Non-GBR traffic bit rate.",
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&OpenFlowEpcController::m_nonGbrCoexistence),
+                   MakeBooleanChecker ())
+
     .AddTraceSource ("BearerRequest",
                      "The bearer request trace source.",
                      MakeTraceSourceAccessor (&OpenFlowEpcController::m_bearerRequestTrace),
@@ -387,19 +394,23 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
   // -------------------------------------------------------------------------
   // Table 2 -- Forwarding table -- [from higher to lower priority]
 
-  // Non-GBR packet classified at table 1. Apply corresponding Non-GBR meter
-  // band and forward the packet to the the correct routing group.
-  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
-                       " eth_type=0x800,ip_dscp=0,meta=0x1"
-                       " meter:1 write:group=1");
-  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
-                       " eth_type=0x800,ip_dscp=0,meta=0x2"
-                       " meter:2 write:group=2");
-  
-  // More entries will be installed here by NotifyTopologyBuilt function.
+  if (m_nonGbrCoexistence)
+    {
+      // Non-GBR packet classified at table 1. Apply corresponding Non-GBR
+      // meter band and forward the packet to the the correct routing group.
+      DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
+                           " eth_type=0x800,ip_dscp=0,meta=0x1"
+                           " meter:1 write:group=1");
+      DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
+                           " eth_type=0x800,ip_dscp=0,meta=0x2"
+                           " meter:2 write:group=2");
+      
+      // More entries will be installed here by NotifyTopologyBuilt function.
+    }
   
   // GBR packet classified at table 1. Forward the packet to the correct
-  // routing group.
+  // routing group. When coexistence is disable, these following rules will
+  // also match Non-GBR packets (any dscp value, including 0).
   DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=128"
                        " eth_type=0x800,meta=0x1"
                        " write:group=1");
