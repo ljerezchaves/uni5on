@@ -244,6 +244,13 @@ OpenFlowEpcController::NotifyNewEpcAttach (
   SaveSwitchIndex (nodeIp, swtchIdx);
 
   ConfigureLocalPortRules (swtchDev, nodeDev, nodeIp, swtchPort);
+
+  // When enable, add a high-priority queue at this new OpenFlow output port.
+  if (m_voipQos)
+    {
+      Ptr<OFSwitch13Queue> ofQueue = swtchDev->GetOutputQueue (swtchPort);
+      ofQueue->AddQueue (1, CreateObject<DropTailQueue> ());
+    }
 }
 
 void
@@ -264,6 +271,23 @@ OpenFlowEpcController::NotifyTopologyBuilt (NetDeviceContainer devices)
 
   m_ofDevices = devices;
   TopologyCreateSpanningTree ();
+
+  // When enable, add a high-priority queue at each OpenFlow output port.
+  if (m_voipQos)
+    {
+      Ptr<OFSwitch13NetDevice> ofDevice;
+      Ptr<OFSwitch13Queue> ofQueue;
+      for (uint32_t devIdx = 0; devIdx < devices.GetN (); devIdx++)
+        {
+          ofDevice = DynamicCast<OFSwitch13NetDevice> (devices.Get (devIdx));
+          for (uint32_t portNo = 1; portNo <= ofDevice->GetNSwitchPorts ();
+               portNo++)
+            {
+              ofQueue = ofDevice->GetOutputQueue (portNo);
+              ofQueue->AddQueue (1, CreateObject<DropTailQueue> ());
+            }
+        }
+    }
 }
 
 void
