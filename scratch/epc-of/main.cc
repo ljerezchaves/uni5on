@@ -143,6 +143,12 @@ ConfigureDefaults ()
   Config::SetDefault ("ns3::DropTailQueue::MaxBytes", UintegerValue (131072));
 
   //
+  // For OpenFlow queues, use the priority queuing scheduling algorithm.
+  //
+  Config::SetDefault ("ns3::OFSwitch13Queue::Scheduling",
+                      EnumValue (OFSwitch13Queue::PRIO));
+
+  //
   // For the OpenFlow control channel, let's use point to point connections
   // between controller and switches.
   //
