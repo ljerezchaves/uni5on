@@ -868,7 +868,7 @@ OpenFlowEpcController::QciDscpInitializer::QciDscpInitializer ()
   NS_LOG_FUNCTION_NOARGS ();
 
   std::pair <EpsBearer::Qci, uint16_t> entries [9];
-  entries [0] = std::make_pair (EpsBearer::GBR_CONV_VOICE, 46);      // EF
+  entries [0] = std::make_pair (EpsBearer::GBR_CONV_VOICE, 44);      // Voice
   entries [1] = std::make_pair (EpsBearer::GBR_CONV_VIDEO, 12);      // AF 12
   entries [2] = std::make_pair (EpsBearer::GBR_GAMING, 18);          // AF 21
   entries [3] = std::make_pair (EpsBearer::GBR_NON_CONV_VIDEO, 18);  // AF 11
