@@ -74,6 +74,11 @@ OpenFlowEpcController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::OpenFlowEpcController")
     .SetParent (OFSwitch13Controller::GetTypeId ())
+    .AddAttribute ("VoipQueue",
+                   "Enable VoIP QoS through queuing traffic management.",
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&OpenFlowEpcController::m_voipQos),
+                   MakeBooleanChecker ())
     .AddAttribute ("NonGbrCoexistence",
                    "Enable the coexistence of GBR and Non-GBR traffic, "
                    "installing meters to limit Non-GBR traffic bit rate.",
