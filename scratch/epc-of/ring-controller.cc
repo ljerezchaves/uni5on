@@ -273,6 +273,12 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
           // Build the apply set_field action instruction string
           inst << " apply:set_field=ip_dscp:"
                << rInfo->GetObject<GbrInfo> ()->GetDscp ();
+
+          // When enable, filter VoIP traffic to high-priority queue.
+          if (m_voipQos && rInfo->GetQciInfo () == EpsBearer::GBR_CONV_VOICE)
+            {
+              inst << ",queue=1";
+            }
         }
 
       // Build the metatada, write and goto instructions string
@@ -321,6 +327,12 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
           // Build the apply set_field action instruction string
           inst << " apply:set_field=ip_dscp:"
                << rInfo->GetObject<GbrInfo> ()->GetDscp ();
+
+          // When enable, filter VoIP traffic to high-priority queue.
+          if (m_voipQos && rInfo->GetQciInfo () == EpsBearer::GBR_CONV_VOICE)
+            {
+              inst << ",queue=1";
+            }
         }
 
       // Build the metatada, write and goto instructions string
