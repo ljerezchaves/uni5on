@@ -17,6 +17,7 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
+
 #include "ideal-wifi-manager.h"
 #include "wifi-phy.h"
 #include "ns3/assert.h"
@@ -59,6 +60,7 @@ IdealWifiManager::GetTypeId (void)
 IdealWifiManager::IdealWifiManager ()
 {
 }
+
 IdealWifiManager::~IdealWifiManager ()
 {
 }
@@ -110,14 +112,17 @@ IdealWifiManager::DoReportRxOk (WifiRemoteStation *station,
                                 double rxSnr, WifiMode txMode)
 {
 }
+
 void
 IdealWifiManager::DoReportRtsFailed (WifiRemoteStation *station)
 {
 }
+
 void
 IdealWifiManager::DoReportDataFailed (WifiRemoteStation *station)
 {
 }
+
 void
 IdealWifiManager::DoReportRtsOk (WifiRemoteStation *st,
                                  double ctsSnr, WifiMode ctsMode, double rtsSnr)
@@ -125,6 +130,7 @@ IdealWifiManager::DoReportRtsOk (WifiRemoteStation *st,
   IdealWifiRemoteStation *station = (IdealWifiRemoteStation *)st;
   station->m_lastSnr = rtsSnr;
 }
+
 void
 IdealWifiManager::DoReportDataOk (WifiRemoteStation *st,
                                   double ackSnr, WifiMode ackMode, double dataSnr)
@@ -132,10 +138,12 @@ IdealWifiManager::DoReportDataOk (WifiRemoteStation *st,
   IdealWifiRemoteStation *station = (IdealWifiRemoteStation *)st;
   station->m_lastSnr = dataSnr;
 }
+
 void
 IdealWifiManager::DoReportFinalRtsFailed (WifiRemoteStation *station)
 {
 }
+
 void
 IdealWifiManager::DoReportFinalDataFailed (WifiRemoteStation *station)
 {
@@ -145,9 +153,9 @@ WifiTxVector
 IdealWifiManager::DoGetDataTxVector (WifiRemoteStation *st, uint32_t size)
 {
   IdealWifiRemoteStation *station = (IdealWifiRemoteStation *)st;
-  // We search within the Supported rate set the mode with the
-  // highest snr threshold possible which is smaller than m_lastSnr
-  // to ensure correct packet delivery.
+  //We search within the Supported rate set the mode with the
+  //highest snr threshold possible which is smaller than m_lastSnr
+  //to ensure correct packet delivery.
   double maxThreshold = 0.0;
   WifiMode maxMode = GetDefaultMode ();
   for (uint32_t i = 0; i < GetNSupported (station); i++)
@@ -161,15 +169,22 @@ IdealWifiManager::DoGetDataTxVector (WifiRemoteStation *st, uint32_t size)
           maxMode = mode;
         }
     }
-  return WifiTxVector (maxMode, GetDefaultTxPowerLevel (), GetLongRetryCount (station), GetShortGuardInterval (station), Min (GetNumberOfReceiveAntennas (station),GetNumberOfTransmitAntennas()), GetNess (station), GetStbc (station));
+  uint32_t channelWidth = GetChannelWidth (station);
+  if (channelWidth > 20 && channelWidth != 22)
+    {
+      //avoid to use legacy rate adaptation algorithms for IEEE 802.11n/ac
+      channelWidth = 20;
+    }
+  return WifiTxVector (maxMode, GetDefaultTxPowerLevel (), GetLongRetryCount (station), false, 1, 0, channelWidth, GetAggregation (station), false);
 }
+
 WifiTxVector
 IdealWifiManager::DoGetRtsTxVector (WifiRemoteStation *st)
 {
   IdealWifiRemoteStation *station = (IdealWifiRemoteStation *)st;
-  // We search within the Basic rate set the mode with the highest
-  // snr threshold possible which is smaller than m_lastSnr to
-  // ensure correct packet delivery.
+  //We search within the Basic rate set the mode with the highest
+  //snr threshold possible which is smaller than m_lastSnr to
+  //ensure correct packet delivery.
   double maxThreshold = 0.0;
   WifiMode maxMode = GetDefaultMode ();
   for (uint32_t i = 0; i < GetNBasicModes (); i++)
@@ -183,7 +198,13 @@ IdealWifiManager::DoGetRtsTxVector (WifiRemoteStation *st)
           maxMode = mode;
         }
     }
-  return WifiTxVector (maxMode, GetDefaultTxPowerLevel (), GetShortRetryCount (station), GetShortGuardInterval (station), Min (GetNumberOfReceiveAntennas (station),GetNumberOfTransmitAntennas()), GetNess (station), GetStbc (station));
+  uint32_t channelWidth = GetChannelWidth (station);
+  if (channelWidth > 20 && channelWidth != 22)
+    {
+      //avoid to use legacy rate adaptation algorithms for IEEE 802.11n/ac
+      channelWidth = 20;
+    }
+  return WifiTxVector (maxMode, GetDefaultTxPowerLevel (), GetShortRetryCount (station), false, 1, 0, channelWidth, GetAggregation (station), false);
 }
 
 bool
@@ -192,4 +213,4 @@ IdealWifiManager::IsLowLatency (void) const
   return true;
 }
 
-} // namespace ns3
+} //namespace ns3

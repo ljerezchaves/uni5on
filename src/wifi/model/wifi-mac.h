@@ -17,12 +17,12 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
+
 #ifndef WIFI_MAC_H
 #define WIFI_MAC_H
 
 #include "ns3/packet.h"
 #include "ns3/mac48-address.h"
-
 #include "wifi-phy.h"
 #include "wifi-remote-station-manager.h"
 #include "ssid.h"
@@ -84,12 +84,11 @@ public:
    * Unused for now.
    */
   void SetMaxPropagationDelay (Time delay);
-/**
+
+  /**
    * \return the current RIFS duration.
    */
-
   virtual Time GetRifs (void) const = 0;
-
   /**
    * \return the current PIFS duration.
    */
@@ -122,11 +121,10 @@ public:
   Time GetMsduLifetime (void) const;
   /**
    * \return the maximum propagation delay.
-   * 
+   *
    * Unused for now.
    */
   Time GetMaxPropagationDelay (void) const;
-
   /**
    * \return the MAC address associated to this MAC layer.
    */
@@ -163,7 +161,7 @@ public:
    *
    * The packet should be enqueued in a tx queue, and should be
    * dequeued as soon as the DCF function determines that
-   * access it granted to this MAC.  The extra parameter "from" allows
+   * access it granted to this MAC. The extra parameter "from" allows
    * this device to operate in a bridged mode, forwarding received
    * frames without altering the source address.
    */
@@ -246,50 +244,45 @@ public:
   /**
    * \param packet the packet being enqueued
    *
-   * Public method used to fire a MacTx trace.  Implemented for encapsulation
-   * purposes.  Note this trace indicates that the packet was accepted by the
-   * device only.  The packet may be dropped later (e.g. if the queue is full).
+   * Public method used to fire a MacTx trace. Implemented for encapsulation purposes.
+   * Note this trace indicates that the packet was accepted by the device only.
+   * The packet may be dropped later (e.g. if the queue is full).
    */
   void NotifyTx (Ptr<const Packet> packet);
-
   /**
    * \param packet the packet being dropped
-   * 
-   * Public method used to fire a MacTxDrop trace.  Implemented for encapsulation
-   * purposes.  This trace indicates that the packet was dropped before it was
-   * transmitted (e.g. when a STA is not associated with an AP).
+   *
+   * Public method used to fire a MacTxDrop trace. Implemented for encapsulation purposes.
+   * This trace indicates that the packet was dropped before it was transmitted
+   * (e.g. when a STA is not associated with an AP).
    */
   void NotifyTxDrop (Ptr<const Packet> packet);
-
   /**
    * \param packet the packet we received
-   * 
-   * Public method used to fire a MacRx trace.  Implemented for encapsulation
-   * purposes.
+   *
+   * Public method used to fire a MacRx trace. Implemented for encapsulation purposes.
    */
   void NotifyRx (Ptr<const Packet> packet);
-
   /**
    * \param packet the packet we received promiscuously
    *
-   * Public method used to fire a MacPromiscRx trace.  Implemented for encapsulation
-   * purposes.
+   * Public method used to fire a MacPromiscRx trace. Implemented for encapsulation purposes.
    */
   void NotifyPromiscRx (Ptr<const Packet> packet);
-
   /**
    * \param packet the packet we received but is not destined for us
-   * 
-   * Public method used to fire a MacRxDrop trace.  Implemented for encapsulation
-   * purposes.
+   *
+   * Public method used to fire a MacRxDrop trace. Implemented for encapsulation purposes.
    */
   void NotifyRxDrop (Ptr<const Packet> packet);
+
   /**
    * \param standard the wifi standard to be configured
    *
    * This method sets standards-compliant defaults for WifiMac
    * parameters such as sifs time, slot time, timeout values, etc.,
    * based on the standard selected.
+   *
    * \sa WifiMac::Configure80211a
    * \sa WifiMac::Configure80211b
    * \sa WifiMac::Configure80211g
@@ -297,8 +290,10 @@ public:
    * \sa WifiMac::Configure80211_5Mhz
    * \sa WifiMac::Configure80211n_2_4Ghz
    * \sa WifiMac::Configure80211n_5Ghz
+   * \sa WifiMac::Configure80211ac
    */
   void ConfigureStandard (enum WifiPhyStandard standard);
+
 
 protected:
   /**
@@ -310,6 +305,8 @@ protected:
    * Configure the DCF with appropriate values depending on the given access category.
    */
   void ConfigureDcf (Ptr<Dcf> dcf, uint32_t cwmin, uint32_t cwmax, enum AcIndex ac);
+
+
 private:
   /**
    * \return the default maximum propagation delay
@@ -320,38 +317,38 @@ private:
   static Time GetDefaultMaxPropagationDelay (void);
   /**
    * \return the default slot duration
-   * 
+   *
    * Return a default slot value for 802.11a (9 microseconds).
    */
   static Time GetDefaultSlot (void);
   /**
    * \return the default short interframe space (SIFS)
-   * 
+   *
    * Return a default SIFS value for 802.11a (16 microseconds).
    */
   static Time GetDefaultSifs (void);
   /**
    * \return the default reduced interframe space (RIFS)
-   * 
+   *
    * Return a default RIFS value for 802.11n (2 microseconds).
    */
   static Time GetDefaultRifs (void);
   /**
    * \return the default extended interframe space (EIFS) without
-   *          DCF interframe space (DIFS)
-   * 
+   *         DCF interframe space (DIFS)
+   *
    * Return default SIFS + default CTS-ACK delay
    */
   static Time GetDefaultEifsNoDifs (void);
   /**
    * \return the default CTS-ACK delay
-   * 
+   *
    * Return a default value for 802.11a at 6Mbps (44 microseconds)
    */
   static Time GetDefaultCtsAckDelay (void);
   /**
    * \return the default CTS and ACK timeout
-   * 
+   *
    * Return the default CTS and ACK timeout.
    * Cts_Timeout and Ack_Timeout are specified in the Annex C
    * (Formal description of MAC operation, see details on the
@@ -384,6 +381,7 @@ private:
    * \return the default compressed block ACK timeout
    */
   static Time GetDefaultCompressedBlockAckTimeout (void);
+
   /**
    * \param standard the phy standard to be used
    *
@@ -407,7 +405,7 @@ private:
    */
   void Configure80211b (void);
   /**
-   * This method sets 802.11g standards-compliant defaults for following attributes:  
+   * This method sets 802.11g standards-compliant defaults for following attributes:
    * Sifs, Slot, EifsNoDifs, Pifs, CtsTimeout, and AckTimeout.
    * There is no support for short slot time.
    */
@@ -424,15 +422,20 @@ private:
   void Configure80211_5Mhz ();
   /**
    * This method sets 802.11n 2.4 GHz standards-compliant defaults for following attributes:
-   * Sifs, Slot, EifsNoDifs, Pifs, CtsTimeout, and AckTimeout.
+   * Sifs, Rifs, Slot, EifsNoDifs, Pifs, CtsTimeout, and AckTimeout.
    * There is no support for short slot time.
    */
   void Configure80211n_2_4Ghz (void);
   /**
    * This method sets 802.11n 5 GHz standards-compliant defaults for following attributes:
-   * Sifs, Slot, EifsNoDifs, Pifs, CtsTimeout, and AckTimeout.
+   * Sifs, Rifs, Slot, EifsNoDifs, Pifs, CtsTimeout, and AckTimeout.
    */
   void Configure80211n_5Ghz (void);
+  /**
+  * This method sets 802.11ac standards-compliant defaults for following attributes:
+  * Sifs, Slot, EifsNoDifs, Pifs, CtsTimeout, and AckTimeout.
+  */
+  void Configure80211ac (void);
 
   /**
    * The trace source fired when packets come into the "top" of the device
@@ -441,7 +444,6 @@ private:
    * \see class CallBackTraceSource
    */
   TracedCallback<Ptr<const Packet> > m_macTxTrace;
-
   /**
    * The trace source fired when packets coming into the "top" of the device
    * are dropped at the MAC layer during transmission.
@@ -449,7 +451,6 @@ private:
    * \see class CallBackTraceSource
    */
   TracedCallback<Ptr<const Packet> > m_macTxDropTrace;
-
   /**
    * The trace source fired for packets successfully received by the device
    * immediately before being forwarded up to higher layers (at the L2/L3
@@ -458,7 +459,6 @@ private:
    * \see class CallBackTraceSource
    */
   TracedCallback<Ptr<const Packet> > m_macPromiscRxTrace;
-
   /**
    * The trace source fired for packets successfully received by the device
    * immediately before being forwarded up to higher layers (at the L2/L3
@@ -467,7 +467,6 @@ private:
    * \see class CallBackTraceSource
    */
   TracedCallback<Ptr<const Packet> > m_macRxTrace;
-
   /**
    * The trace source fired when packets coming into the "top" of the device
    * are dropped at the MAC layer during reception.
@@ -475,9 +474,9 @@ private:
    * \see class CallBackTraceSource
    */
   TracedCallback<Ptr<const Packet> > m_macRxDropTrace;
-
 };
 
-} // namespace ns3
+} //namespace ns3
 
 #endif /* WIFI_MAC_H */
+

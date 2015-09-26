@@ -24,6 +24,7 @@
 #include "ns3/config.h"
 #include "ns3/names.h"
 #include "ns3/abort.h"
+#include "ns3/ampdu-subframe-header.h"
 #include "ns3/wave-net-device.h"
 #include "ns3/minstrel-wifi-manager.h"
 #include "ns3/radiotap-header.h"
@@ -88,12 +89,13 @@ AsciiPhyReceiveSinkWithoutContext (
 static void
 PcapSniffTxEvent (
   Ptr<PcapFileWrapper> file,
-  Ptr<const Packet>   packet,
-  uint16_t            channelFreqMhz,
-  uint16_t            channelNumber,
-  uint32_t            rate,
-  bool                isShortPreamble,
-  uint8_t             txPower)
+  Ptr<const Packet>    packet,
+  uint16_t             channelFreqMhz,
+  uint16_t             channelNumber,
+  uint32_t             rate,
+  WifiPreamble         preamble,
+  WifiTxVector         txVector,
+  struct mpduInfo      aMpdu)
 {
   uint32_t dlt = file->GetDataLinkType ();
 
@@ -114,12 +116,17 @@ PcapSniffTxEvent (
         uint8_t frameFlags = RadiotapHeader::FRAME_FLAG_NONE;
         header.SetTsft (Simulator::Now ().GetMicroSeconds ());
 
-        // Our capture includes the FCS, so we set the flag to say so.
+        //Our capture includes the FCS, so we set the flag to say so.
         frameFlags |= RadiotapHeader::FRAME_FLAG_FCS_INCLUDED;
 
-        if (isShortPreamble)
+        if (preamble == WIFI_PREAMBLE_SHORT)
           {
             frameFlags |= RadiotapHeader::FRAME_FLAG_SHORT_PREAMBLE;
+          }
+
+        if (txVector.IsShortGuardInterval ())
+          {
+            frameFlags |= RadiotapHeader::FRAME_FLAG_SHORT_GUARD;
           }
 
         header.SetFrameFlags (frameFlags);
@@ -128,10 +135,10 @@ PcapSniffTxEvent (
         uint16_t channelFlags = 0;
         switch (rate)
           {
-          case 2:  // 1Mbps
-          case 4:  // 2Mbps
-          case 10: // 5Mbps
-          case 22: // 11Mbps
+          case 2:  //1Mbps
+          case 4:  //2Mbps
+          case 10: //5Mbps
+          case 22: //11Mbps
             channelFlags |= RadiotapHeader::CHANNEL_FLAG_CCK;
             break;
 
@@ -151,6 +158,117 @@ PcapSniffTxEvent (
 
         header.SetChannelFrequencyAndFlags (channelFreqMhz, channelFlags);
 
+        if (preamble == WIFI_PREAMBLE_HT_MF || preamble == WIFI_PREAMBLE_HT_GF || preamble == WIFI_PREAMBLE_NONE)
+          {
+            uint8_t mcsRate = 0;
+            uint8_t mcsKnown = RadiotapHeader::MCS_KNOWN_NONE;
+            uint8_t mcsFlags = RadiotapHeader::MCS_FLAGS_NONE;
+
+            mcsKnown |= RadiotapHeader::MCS_KNOWN_INDEX;
+            mcsRate = rate - 128;
+
+            mcsKnown |= RadiotapHeader::MCS_KNOWN_BANDWIDTH;
+            if (txVector.GetChannelWidth () == 40000000)
+              {
+                mcsFlags |= RadiotapHeader::MCS_FLAGS_BANDWIDTH_40;
+              }
+
+            mcsKnown |= RadiotapHeader::MCS_KNOWN_GUARD_INTERVAL;
+            if (txVector.IsShortGuardInterval ())
+              {
+                mcsFlags |= RadiotapHeader::MCS_FLAGS_GUARD_INTERVAL;
+              }
+
+            mcsKnown |= RadiotapHeader::MCS_KNOWN_HT_FORMAT;
+            if (preamble == WIFI_PREAMBLE_HT_GF)
+              {
+                mcsFlags |= RadiotapHeader::MCS_FLAGS_HT_GREENFIELD;
+              }
+
+            mcsKnown |= RadiotapHeader::MCS_KNOWN_NESS;
+            if (txVector.GetNess () & 0x01) //bit 1
+              {
+                mcsFlags |= RadiotapHeader::MCS_FLAGS_NESS_BIT_0;
+              }
+            if (txVector.GetNess () & 0x02) //bit 2
+              {
+                mcsKnown |= RadiotapHeader::MCS_KNOWN_NESS_BIT_1;
+              }
+
+            mcsKnown |= RadiotapHeader::MCS_KNOWN_FEC_TYPE; //only BCC is currently supported
+
+            mcsKnown |= RadiotapHeader::MCS_KNOWN_STBC;
+            if (txVector.IsStbc ())
+              {
+                mcsFlags |= RadiotapHeader::MCS_FLAGS_STBC_STREAMS;
+              }
+
+            header.SetMcsFields (mcsKnown, mcsFlags, mcsRate);
+          }
+
+        if (txVector.IsAggregation ())
+          {
+            uint16_t ampduStatusFlags = RadiotapHeader::A_MPDU_STATUS_NONE;
+            ampduStatusFlags |= RadiotapHeader::A_MPDU_STATUS_DELIMITER_CRC_KNOWN;
+            ampduStatusFlags |= RadiotapHeader::A_MPDU_STATUS_LAST_KNOWN;
+            /* For PCAP file, MPDU Delimiter and Padding should be removed by the MAC Driver */
+            AmpduSubframeHeader hdr;
+            uint32_t extractedLength;
+            p->RemoveHeader (hdr);
+            extractedLength = hdr.GetLength ();
+            p = p->CreateFragment (0, static_cast<uint32_t> (extractedLength));
+            if (aMpdu.packetType == 2 || (hdr.GetEof () == true && hdr.GetLength () > 0))
+              {
+                ampduStatusFlags |= RadiotapHeader::A_MPDU_STATUS_LAST;
+              }
+            header.SetAmpduStatus (aMpdu.referenceNumber, ampduStatusFlags, hdr.GetCrc ());
+          }
+
+        if (preamble == WIFI_PREAMBLE_VHT)
+          {
+            uint16_t vhtKnown = RadiotapHeader::VHT_KNOWN_NONE;
+            uint8_t vhtFlags = RadiotapHeader::VHT_FLAGS_NONE;
+            uint8_t vhtBandwidth = 0;
+            uint8_t vhtMcsNss[4] = {0,0,0,0};
+            uint8_t vhtCoding = 0;
+            uint8_t vhtGroupId = 0;
+            uint16_t vhtPartialAid = 0;
+
+            vhtKnown |= RadiotapHeader::VHT_KNOWN_STBC;
+            if (txVector.IsStbc ())
+              {
+                vhtFlags |= RadiotapHeader::VHT_FLAGS_STBC;
+              }
+
+            vhtKnown |= RadiotapHeader::VHT_KNOWN_GUARD_INTERVAL;
+            if (txVector.IsShortGuardInterval ())
+              {
+                vhtFlags |= RadiotapHeader::VHT_FLAGS_GUARD_INTERVAL;
+              }
+
+            vhtKnown |= RadiotapHeader::VHT_KNOWN_BEAMFORMED; //Beamforming is currently not supported
+
+            vhtKnown |= RadiotapHeader::VHT_KNOWN_BANDWIDTH;
+            //not all bandwidth values are currently supported
+            if (txVector.GetChannelWidth () == 40000000)
+              {
+                vhtBandwidth = 1;
+              }
+            else if (txVector.GetChannelWidth () == 80000000)
+              {
+                vhtBandwidth = 4;
+              }
+            else if (txVector.GetChannelWidth () == 160000000)
+              {
+                vhtBandwidth = 11;
+              }
+
+            //only SU PPDUs are currently supported
+            vhtMcsNss[0] |= (txVector.GetNss () & 0x0f);
+            vhtMcsNss[0] |= (((rate - 128) << 4) & 0xf0);
+
+            header.SetVhtFields (vhtKnown, vhtFlags, vhtBandwidth, vhtMcsNss, vhtCoding, vhtGroupId, vhtPartialAid);
+          }
 
         p->AddHeader (header);
         file->Write (Simulator::Now (), p);
@@ -163,14 +281,15 @@ PcapSniffTxEvent (
 
 static void
 PcapSniffRxEvent (
-  Ptr<PcapFileWrapper> file,
-  Ptr<const Packet> packet,
-  uint16_t channelFreqMhz,
-  uint16_t channelNumber,
-  uint32_t rate,
-  bool isShortPreamble,
-  double signalDbm,
-  double noiseDbm)
+  Ptr<PcapFileWrapper>  file,
+  Ptr<const Packet>     packet,
+  uint16_t              channelFreqMhz,
+  uint16_t              channelNumber,
+  uint32_t              rate,
+  WifiPreamble          preamble,
+  WifiTxVector          txVector,
+  struct mpduInfo       aMpdu,
+  struct signalNoiseDbm signalNoise)
 {
   uint32_t dlt = file->GetDataLinkType ();
 
@@ -191,12 +310,17 @@ PcapSniffRxEvent (
         uint8_t frameFlags = RadiotapHeader::FRAME_FLAG_NONE;
         header.SetTsft (Simulator::Now ().GetMicroSeconds ());
 
-        // Our capture includes the FCS, so we set the flag to say so.
+        //Our capture includes the FCS, so we set the flag to say so.
         frameFlags |= RadiotapHeader::FRAME_FLAG_FCS_INCLUDED;
 
-        if (isShortPreamble)
+        if (preamble == WIFI_PREAMBLE_SHORT)
           {
             frameFlags |= RadiotapHeader::FRAME_FLAG_SHORT_PREAMBLE;
+          }
+
+        if (txVector.IsShortGuardInterval ())
+          {
+            frameFlags |= RadiotapHeader::FRAME_FLAG_SHORT_GUARD;
           }
 
         header.SetFrameFlags (frameFlags);
@@ -205,10 +329,10 @@ PcapSniffRxEvent (
         uint16_t channelFlags = 0;
         switch (rate)
           {
-          case 2:  // 1Mbps
-          case 4:  // 2Mbps
-          case 10: // 5Mbps
-          case 22: // 11Mbps
+          case 2:  //1Mbps
+          case 4:  //2Mbps
+          case 10: //5Mbps
+          case 22: //11Mbps
             channelFlags |= RadiotapHeader::CHANNEL_FLAG_CCK;
             break;
 
@@ -228,8 +352,120 @@ PcapSniffRxEvent (
 
         header.SetChannelFrequencyAndFlags (channelFreqMhz, channelFlags);
 
-        header.SetAntennaSignalPower (signalDbm);
-        header.SetAntennaNoisePower (noiseDbm);
+        header.SetAntennaSignalPower (signalNoise.signal);
+        header.SetAntennaNoisePower (signalNoise.noise);
+
+        if (preamble == WIFI_PREAMBLE_HT_MF || preamble == WIFI_PREAMBLE_HT_GF || preamble == WIFI_PREAMBLE_NONE)
+          {
+            uint8_t mcsRate = 0;
+            uint8_t mcsKnown = RadiotapHeader::MCS_KNOWN_NONE;
+            uint8_t mcsFlags = RadiotapHeader::MCS_FLAGS_NONE;
+
+            mcsKnown |= RadiotapHeader::MCS_KNOWN_INDEX;
+            mcsRate = rate - 128;
+
+            mcsKnown |= RadiotapHeader::MCS_KNOWN_BANDWIDTH;
+            if (txVector.GetChannelWidth () == 40000000)
+              {
+                mcsFlags |= RadiotapHeader::MCS_FLAGS_BANDWIDTH_40;
+              }
+
+            mcsKnown |= RadiotapHeader::MCS_KNOWN_GUARD_INTERVAL;
+            if (txVector.IsShortGuardInterval ())
+              {
+                mcsFlags |= RadiotapHeader::MCS_FLAGS_GUARD_INTERVAL;
+              }
+
+            mcsKnown |= RadiotapHeader::MCS_KNOWN_HT_FORMAT;
+            if (preamble == WIFI_PREAMBLE_HT_GF)
+              {
+                mcsFlags |= RadiotapHeader::MCS_FLAGS_HT_GREENFIELD;
+              }
+
+            mcsKnown |= RadiotapHeader::MCS_KNOWN_NESS;
+            if (txVector.GetNess () & 0x01) //bit 1
+              {
+                mcsFlags |= RadiotapHeader::MCS_FLAGS_NESS_BIT_0;
+              }
+            if (txVector.GetNess () & 0x02) //bit 2
+              {
+                mcsKnown |= RadiotapHeader::MCS_KNOWN_NESS_BIT_1;
+              }
+
+            mcsKnown |= RadiotapHeader::MCS_KNOWN_FEC_TYPE; //only BCC is currently supported
+
+            mcsKnown |= RadiotapHeader::MCS_KNOWN_STBC;
+            if (txVector.IsStbc ())
+              {
+                mcsFlags |= RadiotapHeader::MCS_FLAGS_STBC_STREAMS;
+              }
+
+            header.SetMcsFields (mcsKnown, mcsFlags, mcsRate);
+          }
+
+        if (txVector.IsAggregation ())
+          {
+            uint16_t ampduStatusFlags = 0;
+            ampduStatusFlags |= RadiotapHeader::A_MPDU_STATUS_DELIMITER_CRC_KNOWN;
+            ampduStatusFlags |= RadiotapHeader::A_MPDU_STATUS_LAST_KNOWN;
+            /* For PCAP file, MPDU Delimiter and Padding should be removed by the MAC Driver */
+            AmpduSubframeHeader hdr;
+            uint32_t extractedLength;
+            p->RemoveHeader (hdr);
+            extractedLength = hdr.GetLength ();
+            p = p->CreateFragment (0, static_cast<uint32_t> (extractedLength));
+            if (aMpdu.packetType == 2 || (hdr.GetEof () == true && hdr.GetLength () > 0))
+              {
+                ampduStatusFlags |= RadiotapHeader::A_MPDU_STATUS_LAST;
+              }
+            header.SetAmpduStatus (aMpdu.referenceNumber, ampduStatusFlags, hdr.GetCrc ());
+          }
+
+        if (preamble == WIFI_PREAMBLE_VHT)
+          {
+            uint16_t vhtKnown = RadiotapHeader::VHT_KNOWN_NONE;
+            uint8_t vhtFlags = RadiotapHeader::VHT_FLAGS_NONE;
+            uint8_t vhtBandwidth = 0;
+            uint8_t vhtMcsNss[4] = {0,0,0,0};
+            uint8_t vhtCoding = 0;
+            uint8_t vhtGroupId = 0;
+            uint16_t vhtPartialAid = 0;
+
+            vhtKnown |= RadiotapHeader::VHT_KNOWN_STBC;
+            if (txVector.IsStbc ())
+              {
+                vhtFlags |= RadiotapHeader::VHT_FLAGS_STBC;
+              }
+
+            vhtKnown |= RadiotapHeader::VHT_KNOWN_GUARD_INTERVAL;
+            if (txVector.IsShortGuardInterval ())
+              {
+                vhtFlags |= RadiotapHeader::VHT_FLAGS_GUARD_INTERVAL;
+              }
+
+            vhtKnown |= RadiotapHeader::VHT_KNOWN_BEAMFORMED; //Beamforming is currently not supported
+
+            vhtKnown |= RadiotapHeader::VHT_KNOWN_BANDWIDTH;
+            //not all bandwidth values are currently supported
+            if (txVector.GetChannelWidth () == 40000000)
+              {
+                vhtBandwidth = 1;
+              }
+            else if (txVector.GetChannelWidth () == 80000000)
+              {
+                vhtBandwidth = 4;
+              }
+            else if (txVector.GetChannelWidth () == 160000000)
+              {
+                vhtBandwidth = 11;
+              }
+
+            //only SU PPDUs are currently supported
+            vhtMcsNss[0] |= (txVector.GetNss () & 0x0f);
+            vhtMcsNss[0] |= (((rate - 128) << 4) & 0xf0);
+
+            header.SetVhtFields (vhtKnown, vhtFlags, vhtBandwidth, vhtMcsNss, vhtCoding, vhtGroupId, vhtPartialAid);
+          }
 
         p->AddHeader (header);
         file->Write (Simulator::Now (), p);

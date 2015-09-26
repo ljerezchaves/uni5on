@@ -1,4 +1,6 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indeni * This program is free software; you can redistribute it and/or modify
+/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+/*
+ * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
  *
@@ -1986,8 +1988,9 @@ AnimationInterface::RecursiveIpv4RoutePathSearch (std::string from, std::string 
 
 // XML 
 
-AnimationInterface::AnimXmlElement::AnimXmlElement (std::string tagName):
-                                m_tagName (tagName)
+AnimationInterface::AnimXmlElement::AnimXmlElement (std::string tagName, bool emptyElement):
+                                m_tagName (tagName),
+                                m_emptyElement (emptyElement)
 {
   m_elementString = "<" + tagName + " ";
 }
@@ -2007,6 +2010,19 @@ void
 AnimationInterface::AnimXmlElement::Close ()
 {
   m_elementString += ">\n";
+}
+
+void
+AnimationInterface::AnimXmlElement::CloseElement ()
+{
+  if (m_emptyElement)
+    {
+      m_elementString += "/>\n";
+    }
+  else
+   {
+     m_elementString += "</" + m_tagName + ">\n";
+   }
 }
 
 void
@@ -2075,7 +2091,7 @@ AnimationInterface::WriteXmlNode (uint32_t id, uint32_t sysId, double locX, doub
   element.AddAttribute ("sysId", sysId);
   element.AddAttribute ("locX", locX);
   element.AddAttribute ("locY", locY);
-  element.Close ();
+  element.CloseElement ();
   WriteN (element.GetElementString (), m_f);
 }
 
@@ -2087,7 +2103,7 @@ AnimationInterface::WriteXmlUpdateLink (uint32_t fromId, uint32_t toId, std::str
   element.AddAttribute ("fromId", fromId);
   element.AddAttribute ("toId", toId);
   element.AddAttribute ("ld", linkDescription);
-  element.Close ();
+  element.CloseElement ();
   WriteN (element.GetElementString (), m_f);
 }
 
@@ -2117,7 +2133,7 @@ AnimationInterface::WriteXmlLink (uint32_t fromId, uint32_t toLp, uint32_t toId)
   element.AddAttribute ("fd", lprop.fromNodeDescription); 
   element.AddAttribute ("td", lprop.toNodeDescription); 
   element.AddAttribute ("ld", lprop.linkDescription); 
-  element.Close ();
+  element.CloseElement ();
   WriteN (element.GetElementString (), m_f);
 }
 
@@ -2128,14 +2144,15 @@ AnimationInterface::WriteXmlRouting (uint32_t nodeId, std::string routingInfo)
   element.AddAttribute ("t", Simulator::Now ().GetSeconds ());
   element.AddAttribute ("id", nodeId);
   element.AddAttribute ("info", routingInfo.c_str ());
-  element.Close ();
+  element.CloseElement ();
   WriteN (element.GetElementString (), m_routingF);
 }
 
 void 
 AnimationInterface::WriteXmlRp (uint32_t nodeId, std::string destination, Ipv4RoutePathElements rpElements)
 {
-  AnimXmlElement element ("rp");
+  std::string tagName = "rp";
+  AnimXmlElement element (tagName, false);
   element.AddAttribute ("t", Simulator::Now ().GetSeconds ());
   element.AddAttribute ("id", nodeId);
   element.AddAttribute ("d", destination.c_str ());
@@ -2150,9 +2167,10 @@ AnimationInterface::WriteXmlRp (uint32_t nodeId, std::string destination, Ipv4Ro
       AnimXmlElement rpeElement ("rpe");
       rpeElement.AddAttribute ("n", rpElement.nodeId);
       rpeElement.AddAttribute ("nH", rpElement.nextHop.c_str ());
-      rpeElement.Close ();
+      rpeElement.CloseElement ();
       element.Add (rpeElement);
     }
+  element.CloseElement ();
   WriteN (element.GetElementString (),  m_routingF);
 }
 
@@ -2168,7 +2186,7 @@ AnimationInterface::WriteXmlPRef (uint64_t animUid, uint32_t fId, double fbTx, s
     {
       element.AddAttribute ("meta-info", metaInfo.c_str ());
     }
-  element.Close ();
+  element.CloseElement ();
   WriteN (element.GetElementString (),  m_f);
 }
 
@@ -2180,7 +2198,7 @@ AnimationInterface::WriteXmlP (uint64_t animUid, std::string pktType, uint32_t t
   element.AddAttribute ("tId", tId);
   element.AddAttribute ("fbRx", fbRx);
   element.AddAttribute ("lbRx", lbRx);
-  element.Close ();
+  element.CloseElement ();
   WriteN (element.GetElementString (),  m_f);
 }
 
@@ -2199,7 +2217,7 @@ AnimationInterface::WriteXmlP (std::string pktType, uint32_t fId, double fbTx, d
   element.AddAttribute ("tId", tId);
   element.AddAttribute ("fbRx", fbRx);
   element.AddAttribute ("lbRx", lbRx);
-  element.Close ();
+  element.CloseElement ();
   WriteN (element.GetElementString (),  m_f);
 }
 
@@ -2210,7 +2228,7 @@ AnimationInterface::WriteXmlAddNodeCounter (uint32_t nodeCounterId, std::string 
   element.AddAttribute ("ncId", nodeCounterId);
   element.AddAttribute ("n", counterName);
   element.AddAttribute ("t", CounterTypeToString (counterType));
-  element.Close ();
+  element.CloseElement ();
   WriteN (element.GetElementString (), m_f);
 }
 
@@ -2220,7 +2238,7 @@ AnimationInterface::WriteXmlAddResource (uint32_t resourceId, std::string resour
   AnimXmlElement element ("res");
   element.AddAttribute ("rid", resourceId);
   element.AddAttribute ("p", resourcePath);
-  element.Close ();
+  element.CloseElement ();
   WriteN (element.GetElementString (), m_f);
 }
 
@@ -2232,7 +2250,7 @@ AnimationInterface::WriteXmlUpdateNodeImage (uint32_t nodeId, uint32_t resourceI
   element.AddAttribute ("t", Simulator::Now ().GetSeconds ());
   element.AddAttribute ("id", nodeId);
   element.AddAttribute ("rid", resourceId);
-  element.Close ();
+  element.CloseElement ();
   WriteN (element.GetElementString (), m_f);
 }
 
@@ -2245,7 +2263,7 @@ AnimationInterface::WriteXmlUpdateNodeSize (uint32_t nodeId, double width, doubl
   element.AddAttribute ("id", nodeId);
   element.AddAttribute ("w", width);
   element.AddAttribute ("h", height);
-  element.Close ();
+  element.CloseElement ();
   WriteN (element.GetElementString (),  m_f);
 }
 
@@ -2258,7 +2276,7 @@ AnimationInterface::WriteXmlUpdateNodePosition (uint32_t nodeId, double x, doubl
   element.AddAttribute ("id", nodeId);
   element.AddAttribute ("x", x);
   element.AddAttribute ("y", y);
-  element.Close ();
+  element.CloseElement ();
   WriteN (element.GetElementString (), m_f);
 }
 
@@ -2272,7 +2290,7 @@ AnimationInterface::WriteXmlUpdateNodeColor (uint32_t nodeId, uint8_t r, uint8_t
   element.AddAttribute ("r", (uint32_t) r);
   element.AddAttribute ("g", (uint32_t) g);
   element.AddAttribute ("b", (uint32_t) b);
-  element.Close ();
+  element.CloseElement ();
   WriteN (element.GetElementString (), m_f);
 }
 
@@ -2287,7 +2305,7 @@ AnimationInterface::WriteXmlUpdateNodeDescription (uint32_t nodeId)
     {
       element.AddAttribute ("descr", m_nodeDescriptions[nodeId]); 
     }
-  element.Close ();
+  element.CloseElement ();
   WriteN (element.GetElementString (), m_f);
 }
 
@@ -2300,7 +2318,7 @@ AnimationInterface::WriteXmlUpdateNodeCounter (uint32_t nodeCounterId, uint32_t 
   element.AddAttribute ("i", nodeId);
   element.AddAttribute ("t", Simulator::Now ().GetSeconds ());
   element.AddAttribute ("v", counterValue);
-  element.Close ();
+  element.CloseElement ();
   WriteN (element.GetElementString (), m_f);
 }
 
@@ -2314,7 +2332,7 @@ AnimationInterface::WriteXmlUpdateBackground (std::string fileName, double x, do
   element.AddAttribute ("sx", scaleX);
   element.AddAttribute ("sy", scaleY);
   element.AddAttribute ("o", opacity);
-  element.Close ();
+  element.CloseElement ();
   WriteN (element.GetElementString (), m_f);
 }
 
@@ -2325,7 +2343,7 @@ AnimationInterface::WriteXmlNonP2pLinkProperties (uint32_t id, std::string ipv4A
   element.AddAttribute ("id", id);
   element.AddAttribute ("ipv4Address", ipv4Address);
   element.AddAttribute ("channelType", channelType);
-  element.Close ();
+  element.CloseElement ();
   WriteN (element.GetElementString (), m_f);
 }
 

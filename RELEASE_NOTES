@@ -9,6 +9,84 @@ http://www.nsnam.org including tutorials: http://www.nsnam.org/tutorials.html
 Consult the file CHANGES.html for more detailed information about changed
 API and behavior across ns-3 releases.
 
+Release 3.24
+============
+
+Availability
+------------
+This release is available from:
+https://www.nsnam.org/release/ns-allinone-3.24.tar.bz2
+
+Supported platforms
+-------------------
+This release has been tested on the following platforms:
+- Ubuntu 15.04 (64 bit) with g++-4.9.2
+- Fedora Core 22 (32 bit) with g++-5.1.1
+- Fedora Core 21 (64 bit) with g++-4.9.2
+- Ubuntu 14.04 (64 bit) with g++-4.8.2
+- Ubuntu 12.04.4 (32/64 bit) with g++-4.6.3
+- CentOS/RHEL 6.7 (64-bit) with g++-4.4.7
+- OS X Yosemite 10.10.4 with Xcode 6.4 and Apple LLVM version 6.1.0
+- FreeBSD 10.1-RELEASE (64 bit) with clang-3.4.1
+
+New user-visible features
+-------------------------
+- (build system) Python 3 is now supported by waf and test runner programs
+- (wifi) 802.11ac Very High Throughput (VHT) physical layer modes are now 
+  supported.
+- (internet) permanent (static) ARP entries can be created for IPv4
+- (network) SimpleChannel allows per-NetDevice blacklists, in order to do hidden terminal testcases.
+- (documentation) TracedCallback function signatures now documented in Doxygen
+
+Bugs fixed
+----------
+- Bug 730 - Enabling fragmentation at run-time breaks simulation
+- Bug 1249 - doxygen comments on device-level SetMobility ()
+- Bug 1482 - mesh module was producing fatal error with ASCII and netanim traces
+- Bug 1557 - errors in function OpenFlowSwitchNetDevice::BufferFromPacket()
+- Bug 1681 - m_lastNavStart is assigned twice continuously
+- Bug 1736 - default dot11EDCATableMSDULifetime
+- Bug 1901 - mesh module producing malformed pcaps
+- Bug 1929 - TcpL4Protocol::Send must indicate the source address to routing (if known)
+- Bug 1982 - AODV and mesh modules use random variables before seeds can be set
+- Bug 2058 - TCP window update can shrink left edge of window
+- Bug 2063 - FdNetDevice::SendFrom assert does not account for headers correctly
+- Bug 2082 - Empirical RV fails if value provided in CDF function is negative
+- Bug 2093 - MultiModelSpectrumChannel::GetDevice only works for 0-th index
+- Bug 2096 - Wrong pcap information when MPDU aggregation is used
+- Bug 2104 - Sequence Number passed to QosUtilsMapSeqControlToUniqueInteger instead of Sequence Control
+- Bug 2108 - Erroneous implementation in InterferenceHelper
+- Bug 2119 - Fix memory leaks in FdNetDevice test due to non-executed events
+- Bug 2124 - UdpSocketImpl::ShutdownRecv doesn't stop the Ipv[4,6]EndPointDemux
+- Bug 2125 - subclasses must chain up to base class NotifyNewAggregate
+- Bug 2126 - LrWpanNetDevice silently accepts no mobility on the node
+- Bug 2127 - Scheduler benchmark utility works in first run only
+- Bug 2130 - Allow SimpleChannel to simulate hidden terminals
+- Bug 2132 - TcpL4Protocol sends a bad-formatted RST packet
+- Bug 2135 - TCP doesn't honor the socket's output interface
+- Bug 2136 - The usage of tid in wifi and wave module shall be "if (tid > 7)" rather than "if (tid >= 7)"
+- Bug 2138 - SimpleNetDevice could send overlapped packets
+- Bug 2143 - maybe-uninitialized warning
+- Bug 2146 - bug in WAVE channel coordination
+- Bug 2148 - Ipv6Interface::SetUp doesn't re-create the Link-Local addresses
+- Bug 2153 - Incorrect power limits in wifi power control algorithms
+- Bug 2154 - Incorrect power calculation in wifi power adaptation examples
+- Bug 2156 - Duplicate packets when using two level aggregation
+- Bug 2157 - OpenFlowSwitchNetDevice::BufferFromPacket setting eth_type incorrectly
+- Bug 2158 - OpenflowSwitchNetDevice flooding bug
+- Bug 2165 - server replies to SYN (with option TS) with a SYNACK (with option TS) also if the attribute Timestamp is false
+- Bug 2166 - SteadyStateRandomWaypointMobilityModel directs the node to the ground
+- Bug 2170 - AnimationInterface outputs improperly formed XML
+- Bug 2171 - power-adaptation-distance.cc:202:22: error: call to 'pow' is ambiguous
+- Bug 2173 - WifiInformationElement::DeserializeIfPresent attempts to read beyond the end of buffer
+- Bug 2174 - m_rWnd not updated when segments without ACK are received
+- Bug 2177 - Ipv6ExtensionFragmentHeader length is initialized to a wrong value.
+
+Known issues
+------------
+In general, known issues are tracked on the project tracker available
+at http://www.nsnam.org/bugzilla/
+
 Release 3.23
 ============
 
