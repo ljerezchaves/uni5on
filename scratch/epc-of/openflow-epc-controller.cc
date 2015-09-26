@@ -74,6 +74,11 @@ OpenFlowEpcController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::OpenFlowEpcController")
     .SetParent (OFSwitch13Controller::GetTypeId ())
+    .AddAttribute ("VoipQueue",
+                   "Enable VoIP QoS through queuing traffic management.",
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&OpenFlowEpcController::m_voipQos),
+                   MakeBooleanChecker ())
     .AddAttribute ("NonGbrCoexistence",
                    "Enable the coexistence of GBR and Non-GBR traffic, "
                    "installing meters to limit Non-GBR traffic bit rate.",
@@ -239,6 +244,13 @@ OpenFlowEpcController::NotifyNewEpcAttach (
   SaveSwitchIndex (nodeIp, swtchIdx);
 
   ConfigureLocalPortRules (swtchDev, nodeDev, nodeIp, swtchPort);
+
+  // When enable, add a high-priority queue at this new OpenFlow output port.
+  if (m_voipQos)
+    {
+      Ptr<OFSwitch13Queue> ofQueue = swtchDev->GetOutputQueue (swtchPort);
+      ofQueue->AddQueue (1, CreateObject<DropTailQueue> ());
+    }
 }
 
 void
@@ -259,6 +271,23 @@ OpenFlowEpcController::NotifyTopologyBuilt (NetDeviceContainer devices)
 
   m_ofDevices = devices;
   TopologyCreateSpanningTree ();
+
+  // When enable, add a high-priority queue at each OpenFlow output port.
+  if (m_voipQos)
+    {
+      Ptr<OFSwitch13NetDevice> ofDevice;
+      Ptr<OFSwitch13Queue> ofQueue;
+      for (uint32_t devIdx = 0; devIdx < devices.GetN (); devIdx++)
+        {
+          ofDevice = DynamicCast<OFSwitch13NetDevice> (devices.Get (devIdx));
+          for (uint32_t portNo = 1; portNo <= ofDevice->GetNSwitchPorts ();
+               portNo++)
+            {
+              ofQueue = ofDevice->GetOutputQueue (portNo);
+              ofQueue->AddQueue (1, CreateObject<DropTailQueue> ());
+            }
+        }
+    }
 }
 
 void
@@ -373,64 +402,84 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
 
 
   // -------------------------------------------------------------------------
-  // Table 0 -- Starting table -- [from higher to lower priority]
+  // Table 0 -- Input table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by ConfigureLocalPortRules function.
 
-  // ARP request packets are sent to the controller.
-  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=45055 eth_type=0x0806"
-                " apply:output=ctrl");
-
-  // More entries will be installed here by ConfigureLocalPortRules function.
-
-  // GTP packets entering the switch from any port other then EPC ports are
-  // sent to the forwarding table (table 2).
+  // GTP packets entering the switch from any port other then EPC ports.
+  // Send to Routing table.
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=32 eth_type=0x800,"
                 "ip_proto=17,udp_src=2152,udp_dst=2152"
                 " goto:2");
 
-  // Table miss entry. Send unmatched packets to the controller.
+  // ARP request packets. Send to controller.
+  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=16 eth_type=0x0806"
+                " apply:output=ctrl");
+
+  // Table miss entry. Send to controller.
   DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
 
 
   // -------------------------------------------------------------------------
   // Table 1 -- Classification table -- [from higher to lower priority]
-
-  // More entries will be installed here by TopologyInstallRouting function.
-
-  // Table miss entry. Send unmatched packets to the controller.
-  DpctlCommand (swtch, "flow-mod cmd=add,table=1,prio=0 apply:output=ctrl");
+  //
+  // Entries will be installed here by TopologyInstallRouting function.
 
 
   // -------------------------------------------------------------------------
-  // Table 2 -- Forwarding table -- [from higher to lower priority]
+  // Table 2 -- Routing table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by ConfigureLocalPortRules function.
+  // Entries will be installed here by NotifyTopologyBuilt function.
 
+  // GTP packets classified at previous table. Write the output group into
+  // action set based on metadata field. Send the packet to Coexistence QoS
+  // table.
+  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=64"
+                " meta=0x1"
+                " write:group=1 goto:3");
+  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=64"
+                " meta=0x2"
+                " write:group=2 goto:3");
+
+
+  // -------------------------------------------------------------------------
+  // Table 3 -- Coexistence QoS table -- [from higher to lower priority]
+  //
   if (m_nonGbrCoexistence)
     {
-      // Non-GBR packet classified at table 1. Apply corresponding Non-GBR
-      // meter band and forward the packet to the the correct routing group.
-      DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
+      // Non-GBR packets indicated by DSCP field. Apply corresponding Non-GBR
+      // meter band. Send the packet to Output table.
+      DpctlCommand (swtch, "flow-mod cmd=add,table=3,prio=16"
                     " eth_type=0x800,ip_dscp=0,meta=0x1"
-                    " meter:1 write:group=1");
-      DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=256"
+                    " meter:1 goto:4");
+      DpctlCommand (swtch, "flow-mod cmd=add,table=3,prio=16"
                     " eth_type=0x800,ip_dscp=0,meta=0x2"
-                    " meter:2 write:group=2");
-
-      // More entries will be installed here by NotifyTopologyBuilt function.
+                    " meter:2 goto:4");
     }
 
-  // GBR packet classified at table 1. Forward the packet to the correct
-  // routing group. When coexistence is disable, these following rules will
-  // also match Non-GBR packets (any dscp value, including 0).
-  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=128"
-                " eth_type=0x800,meta=0x1"
-                " write:group=1");
-  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=128"
-                " eth_type=0x800,meta=0x2"
-                " write:group=2");
+  // Table miss entry. Send the packet to Output table
+  DpctlCommand (swtch, "flow-mod cmd=add,table=3,prio=0 goto:4");
 
-  // More entries will be installed here by NotifyTopologyBuilt function.
 
-  // Table miss entry. Send unmatched packets to the controller.
-  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=0 apply:output=ctrl");
+  // -------------------------------------------------------------------------
+  // Table 4 -- Output table -- [from higher to lower priority]
+  //
+  if (m_voipQos)
+    {
+      int dscpVoip =
+        OpenFlowEpcController::GetDscpMappedValue (EpsBearer::GBR_CONV_VOICE);
+
+      // VoIP packets. Write the high-priority output queue #1.
+      std::ostringstream cmd;
+      cmd << "flow-mod cmd=add,table=4,prio=16"
+          << " eth_type=0x800,ip_dscp=" << dscpVoip
+          << " write:queue=1";
+      DpctlCommand (swtch, cmd.str ());
+    }
+
+  // Table miss entry. No instructions
+  DpctlCommand (swtch, "flow-mod cmd=add,table=4,prio=0");
 }
 
 ofl_err
@@ -648,27 +697,30 @@ OpenFlowEpcController::ConfigureLocalPortRules (
   NS_LOG_FUNCTION (this << swtchDev << nodeDev << nodeIp << swtchPort);
 
   // -------------------------------------------------------------------------
-  // Table 0 -- Starting table -- [from higher to lower priority]
+  // Table 0 -- Input table -- [from higher to lower priority]
   //
-  // GTP packets addressed to the EPC entity connected to this switch over
-  // EPC switchPort are sent to this EPC switchPort to leave the ring
-  // network.
-  Mac48Address devMacAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ());
-  std::ostringstream cmdOut;
-  cmdOut << "flow-mod cmd=add,table=0,prio=128"
-         << " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152"
-         << ",eth_dst=" << devMacAddr << ",ip_dst=" << nodeIp
-         << " apply:output=" << swtchPort;
-  DpctlCommand (swtchDev, cmdOut.str ());
-
-  // GTP packets entering the switch from EPC switchPort are sent to the
-  // classification table (table 1).
+  // GTP packets entering the ring network from any EPC port.
+  // Send to the Classification table.
   std::ostringstream cmdIn;
   cmdIn << "flow-mod cmd=add,table=0,prio=64"
         << " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152"
         << ",in_port=" << swtchPort
         << " goto:1";
   DpctlCommand (swtchDev, cmdIn.str ());
+
+  // -------------------------------------------------------------------------
+  // Table 2 -- Routing table -- [from higher to lower priority]
+  //
+  // GTP packets addressed to EPC elements connected to this switch over EPC
+  // ports. Write the output port epcPort into action set. Send the packet
+  // directly to Output table.
+  Mac48Address devMacAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ());
+  std::ostringstream cmdOut;
+  cmdOut << "flow-mod cmd=add,table=2,prio=256 eth_type=0x800"
+         << ",eth_dst=" << devMacAddr << ",ip_dst=" << nodeIp
+         << " write:output=" << swtchPort
+         << " goto:4";
+  DpctlCommand (swtchDev, cmdOut.str ());
 }
 
 ofl_err
@@ -868,7 +920,7 @@ OpenFlowEpcController::QciDscpInitializer::QciDscpInitializer ()
   NS_LOG_FUNCTION_NOARGS ();
 
   std::pair <EpsBearer::Qci, uint16_t> entries [9];
-  entries [0] = std::make_pair (EpsBearer::GBR_CONV_VOICE, 46);      // EF
+  entries [0] = std::make_pair (EpsBearer::GBR_CONV_VOICE, 44);      // Voice
   entries [1] = std::make_pair (EpsBearer::GBR_CONV_VIDEO, 12);      // AF 12
   entries [2] = std::make_pair (EpsBearer::GBR_GAMING, 18);          // AF 21
   entries [3] = std::make_pair (EpsBearer::GBR_NON_CONV_VIDEO, 18);  // AF 11

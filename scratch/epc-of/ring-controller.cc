@@ -140,42 +140,30 @@ RingController::NotifyTopologyBuilt (NetDeviceContainer devices)
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (sw1, sw2);
 
       // ---------------------------------------------------------------------
-      // Table 2 -- Forwarding table -- [from higher to lower priority]
-      std::ostringstream cmd01, cmd02, cmd11, cmd12;
+      // Table 2 -- Routing table -- [from higher to lower priority]
+      //
+      // GTP packets being forwarded by this switch. Write the output group
+      // into action set based on input port. Write the same group number into
+      // metadata field. Send the packet to Coexistence QoS table.
+      std::ostringstream cmd0, cmd1;
+      char metadataStr [9];
 
-      if (m_nonGbrCoexistence)
-        {
-          // Non-GBR packets entering the switch from any port other then EPC
-          // ports. Apply corresponding Non-GBR meter band and forward the
-          // packet to the the correct routing group based on input port.
-          cmd01 << "flow-mod cmd=add,table=2,flags=0x0002,prio=256"
-                << " eth_type=0x800,ip_dscp=0,in_port=" << cInfo->GetPortNo (0)
-                << " meter:" << RingRoutingInfo::COUNTER
-                << " write:group=" << RingRoutingInfo::COUNTER;
+      sprintf (metadataStr, "0x%x", RingRoutingInfo::COUNTER);
+      cmd0 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
+           << " meta=0x0,in_port=" << cInfo->GetPortNo (0)
+           << " write:group=" << RingRoutingInfo::COUNTER
+           << " meta:" << metadataStr
+           << " goto:3";
 
-          cmd11 << "flow-mod cmd=add,table=2,flags=0x0002,prio=256"
-                << " eth_type=0x800,ip_dscp=0,in_port=" << cInfo->GetPortNo (1)
-                << " meter:" << RingRoutingInfo::CLOCK
-                << " write:group=" << RingRoutingInfo::CLOCK;
+      sprintf (metadataStr, "0x%x", RingRoutingInfo::CLOCK);
+      cmd1 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
+           << " meta=0x0,in_port=" << cInfo->GetPortNo (1)
+           << " write:group=" << RingRoutingInfo::CLOCK
+           << " meta:" << metadataStr
+           << " goto:3";
 
-          DpctlCommand (cInfo->GetSwDev (0), cmd01.str ());
-          DpctlCommand (cInfo->GetSwDev (1), cmd11.str ());
-        }
-
-      // GBR packets entering the switch from any port other then EPC ports.
-      // Forward the packet to the correct routing group based on input port.
-      // When coexistence is disable, these following rules will also match
-      // Non-GBR packets (any dscp value, including 0).
-      cmd02 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
-            << " eth_type=0x800,in_port=" << cInfo->GetPortNo (0)
-            << " write:group=" << RingRoutingInfo::COUNTER;
-
-      cmd12 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
-            << " eth_type=0x800,in_port=" << cInfo->GetPortNo (1)
-            << " write:group=" << RingRoutingInfo::CLOCK;
-
-      DpctlCommand (cInfo->GetSwDev (0), cmd02.str ());
-      DpctlCommand (cInfo->GetSwDev (1), cmd12.str ());
+      DpctlCommand (cInfo->GetSwDev (0), cmd0.str ());
+      DpctlCommand (cInfo->GetSwDev (1), cmd1.str ());
     }
 }
 
@@ -278,7 +266,6 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
       // Build the metatada, write and goto instructions string
       sprintf (metadataStr, "0x%x", ringInfo->GetDownPath ());
       inst << " meta:" << metadataStr
-           << " write:group=" << ringInfo->GetDownPath ()
            << " goto:2";
 
       // Installing the rule into input switch
@@ -326,7 +313,6 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
       // Build the metatada, write and goto instructions string
       sprintf (metadataStr, "0x%x", ringInfo->GetUpPath ());
       inst << " meta:" << metadataStr
-           << " write:group=" << ringInfo->GetUpPath ()
            << " goto:2";
 
       // Installing the rule into input switch
