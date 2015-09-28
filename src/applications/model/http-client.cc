@@ -108,11 +108,11 @@ HttpClient::Start (void)
   ResetQosStats ();
   m_active = true;
   m_appStartTrace (this);
-    
+
   if (!m_maxDurationTime.IsZero ())
     {
-      m_forceStop = Simulator::Schedule (m_maxDurationTime, 
-        &HttpClient::CloseSocket, this);
+      m_forceStop = Simulator::Schedule (m_maxDurationTime,
+                                         &HttpClient::CloseSocket, this);
     }
   OpenSocket ();
 }
@@ -203,10 +203,10 @@ HttpClient::SendRequest (Ptr<Socket> socket, std::string url)
   NS_LOG_FUNCTION (this);
 
   // Setting request message
-  m_httpHeader.SetRequest (true);
-  m_httpHeader.SetMethod ("GET");
-  m_httpHeader.SetUrl (url);
+  m_httpHeader.SetRequest ();
   m_httpHeader.SetVersion ("HTTP/1.1");
+  m_httpHeader.SetRequestMethod ("GET");
+  m_httpHeader.SetRequestUrl (url);
 
   Ptr<Packet> packet = Create<Packet> ();
   packet->AddHeader (m_httpHeader);
@@ -224,7 +224,7 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
 
   HttpHeader httpHeaderIn;
   packet->PeekHeader (httpHeaderIn);
-  std::string statusCode = httpHeaderIn.GetStatusCode ();
+  std::string statusCode = httpHeaderIn.GetResponseStatusCode ();
 
   if (statusCode == "200")
     {
@@ -302,7 +302,7 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
     }
 
   NS_LOG_INFO ("Reading time: " << readingTime.As (Time::S));
-  Simulator::Schedule (readingTime, &HttpClient::SendRequest, 
+  Simulator::Schedule (readingTime, &HttpClient::SendRequest,
                        this, socket, "main/object");
 }
 

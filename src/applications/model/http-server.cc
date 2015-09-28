@@ -98,7 +98,7 @@ void HttpServer::StartApplication (void)
 void HttpServer::StopApplication (void)
 {
   NS_LOG_FUNCTION (this);
-  
+
   if (m_socket != 0)
     {
       m_socket->Close ();
@@ -111,8 +111,8 @@ HttpServer::HandleRequest (Ptr<Socket> socket, const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
   NS_LOG_LOGIC ("Request for connection from " <<
-               InetSocketAddress::ConvertFrom (address).GetIpv4 () << 
-               " received.");
+                InetSocketAddress::ConvertFrom (address).GetIpv4 () <<
+                " received.");
   return true;
 }
 
@@ -121,8 +121,8 @@ HttpServer::HandleAccept (Ptr<Socket> socket, const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
   NS_LOG_LOGIC ("Connection with client (" <<
-               InetSocketAddress::ConvertFrom (address).GetIpv4 () <<
-               ") successfully established!");
+                InetSocketAddress::ConvertFrom (address).GetIpv4 () <<
+                ") successfully established!");
   socket->SetRecvCallback (MakeCallback (&HttpServer::HandleReceive, this));
 }
 
@@ -135,15 +135,11 @@ HttpServer::HandleReceive (Ptr<Socket> socket)
   Ptr<Packet> packet = socket->Recv ();
 
   // Getting TCP Sending Buffer Size.
-  Ptr<TcpNewReno> tcp = CreateObject<TcpNewReno> ();
-  NS_ASSERT (tcp != 0);
-  UintegerValue bufSizeValue;
-  tcp->GetAttribute ("SndBufSize", bufSizeValue);
-  uint32_t tcpBufSize = bufSizeValue.Get ();
+  uint32_t tcpBufSize = socket->GetTxAvailable ();
 
   packet->PeekHeader (httpHeaderIn);
 
-  std::string url = httpHeaderIn.GetUrl ();
+  std::string url = httpHeaderIn.GetRequestUrl ();
 
   NS_LOG_INFO ("Client requesting a " + url);
   if (url == "main/object")
@@ -161,18 +157,19 @@ HttpServer::HandleReceive (Ptr<Socket> socket)
 
       //Setting response
       HttpHeader httpHeaderOut;
-      httpHeaderOut.SetRequest (false);
+      httpHeaderOut.SetResponse ();
       httpHeaderOut.SetVersion ("HTTP/1.1");
-      httpHeaderOut.SetStatusCode ("200");
-      httpHeaderOut.SetPhrase ("OK");
+      httpHeaderOut.SetResponseStatusCode ("200");
+      httpHeaderOut.SetResponsePhrase ("OK");
       httpHeaderOut.SetHeaderField ("ContentLength", mainObjectSize);
       httpHeaderOut.SetHeaderField ("ContentType", "main/object");
       httpHeaderOut.SetHeaderField ("NumOfInlineObjects", numOfInlineObj);
 
-      //Verifying if the buffer can store this packet size
-      if (mainObjectSize > tcpBufSize)
+      // Verifying if the buffer can store this packet size
+      uint32_t headerSize = httpHeaderOut.GetSerializedSize ();
+      if (mainObjectSize + headerSize > tcpBufSize)
         {
-          mainObjectSize = tcpBufSize - httpHeaderOut.GetSerializedSize ();
+          mainObjectSize = tcpBufSize - headerSize;
           httpHeaderOut.SetHeaderField ("ContentLength", mainObjectSize);
         }
 
@@ -185,28 +182,29 @@ HttpServer::HandleReceive (Ptr<Socket> socket)
     }
   else
     {
-      //Mu and Sigma data was taken from paper "An HTTP Web Traffic Model Based on the
-      //Top One Million Visited Web Pages" by Rastin Pries et. al (Table II).
+      // Mu and Sigma data was taken from paper "An HTTP Web Traffic Model Based on the
+      // Top One Million Visited Web Pages" by Rastin Pries et. al (Table II).
       Ptr<LogNormalRandomVariable> logNormal = CreateObject<LogNormalRandomVariable> ();
       logNormal->SetAttribute ("Mu", DoubleValue (8.91365));
       logNormal->SetAttribute ("Sigma", DoubleValue (1.24816));
 
       uint32_t inlineObjectSize = logNormal->GetInteger ();
 
-      //Setting response
+      // Setting response
       HttpHeader httpHeaderOut;
-      httpHeaderOut.SetRequest (false);
+      httpHeaderOut.SetResponse ();
       httpHeaderOut.SetVersion ("HTTP/1.1");
-      httpHeaderOut.SetStatusCode ("200");
-      httpHeaderOut.SetPhrase ("OK");
+      httpHeaderOut.SetResponseStatusCode ("200");
+      httpHeaderOut.SetResponsePhrase ("OK");
       httpHeaderOut.SetHeaderField ("ContentLength", inlineObjectSize);
       httpHeaderOut.SetHeaderField ("ContentType", "inline/object");
       httpHeaderOut.SetHeaderField ("NumOfInlineObjects", 0);
 
-      //Verifying if the buffer can store this packet size
-      if (inlineObjectSize > tcpBufSize)
+      // Verifying if the buffer can store this packet size
+      uint32_t headerSize = httpHeaderOut.GetSerializedSize ();
+      if (inlineObjectSize + headerSize > tcpBufSize)
         {
-          inlineObjectSize = tcpBufSize - httpHeaderOut.GetSerializedSize ();
+          inlineObjectSize = tcpBufSize - headerSize;
           httpHeaderOut.SetHeaderField ("ContentLength", inlineObjectSize);
         }
 
@@ -218,14 +216,14 @@ HttpServer::HandleReceive (Ptr<Socket> socket)
     }
 }
 
-void 
+void
 HttpServer::HandlePeerClose (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
   NS_LOG_LOGIC ("Connection closed.");
 }
- 
-void 
+
+void
 HttpServer::HandlePeerError (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);

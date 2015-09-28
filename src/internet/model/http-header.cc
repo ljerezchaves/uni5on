@@ -1,6 +1,7 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
  * Copyright (c) 2013 Federal University of Uberlandia
+ *               2015 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -15,71 +16,81 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Saulo da Mata <damata.saulo@gmail.com>
+ *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
 #include "ns3/log.h"
 #include "http-header.h"
 
-
-NS_LOG_COMPONENT_DEFINE ("HttpHeader");
-
-//using namespace std;
-
 namespace ns3 {
 
+NS_LOG_COMPONENT_DEFINE ("HttpHeader");
 NS_OBJECT_ENSURE_REGISTERED (HttpHeader);
 
 HttpHeader::HttpHeader ()
-  : m_request(true),
-    m_method(""),
-    m_url(""),
-    m_version(""),
-    m_statusCode(""),
-    m_phrase("")
+  : m_request (true),
+    m_method (""),
+    m_url (""),
+    m_version (""),
+    m_statusCode (""),
+    m_phrase ("")
 {
   NS_LOG_FUNCTION_NOARGS ();
 }
 
+void
+HttpHeader::SetRequest (void)
+{
+  NS_LOG_FUNCTION (this);
+  m_request = true;
+}
 
 void
-HttpHeader::SetRequest (bool request)
+HttpHeader::SetResponse (void)
 {
-  NS_LOG_FUNCTION (this << request);
-  m_request = request;
+  NS_LOG_FUNCTION (this);
+  m_request = false;
 }
 
 bool
-HttpHeader::GetRequest (void) const
+HttpHeader::IsRequest (void) const
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION (this);
   return m_request;
 }
 
+bool
+HttpHeader::IsResponse (void) const
+{
+  NS_LOG_FUNCTION (this);
+  return !m_request;
+}
+
 void
-HttpHeader::SetMethod (std::string method)
+HttpHeader::SetRequestMethod (std::string method)
 {
   NS_LOG_FUNCTION (this << method);
   m_method = method;
 }
 
 std::string
-HttpHeader::GetMethod (void) const
+HttpHeader::GetRequestMethod (void) const
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION (this);
   return m_method;
 }
 
 void
-HttpHeader::SetUrl (std::string url)
+HttpHeader::SetRequestUrl (std::string url)
 {
   NS_LOG_FUNCTION (this << url);
   m_url = url;
 }
 
 std::string
-HttpHeader::GetUrl (void) const
+HttpHeader::GetRequestUrl (void) const
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION (this);
   return m_url;
 }
 
@@ -93,275 +104,280 @@ HttpHeader::SetVersion (std::string version)
 std::string
 HttpHeader::GetVersion (void) const
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION (this);
   return m_version;
 }
 
 void
-HttpHeader::SetStatusCode (std::string statusCode)
+HttpHeader::SetResponseStatusCode (std::string statusCode)
 {
   NS_LOG_FUNCTION (this << statusCode);
   m_statusCode = statusCode;
 }
 
 std::string
-HttpHeader::GetStatusCode (void) const
+HttpHeader::GetResponseStatusCode (void) const
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION (this);
   return m_statusCode;
 }
 
 void
-HttpHeader::SetPhrase (std::string phrase)
+HttpHeader::SetResponsePhrase (std::string phrase)
 {
   NS_LOG_FUNCTION (this << phrase);
   m_phrase = phrase;
 }
 
 std::string
-HttpHeader::GetPhrase (void) const
+HttpHeader::GetResponsePhrase (void) const
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION (this);
   return m_phrase;
 }
 
 void
-HttpHeader::SetHeaderField (std::string headerFieldName, std::string headerFieldValue)
+HttpHeader::SetHeaderField (std::string fieldName, std::string fieldValue)
 {
-    NS_LOG_FUNCTION (this << headerFieldName << ": " << headerFieldValue);
-    m_headerFieldMap.insert (std::pair<std::string, std::string>(headerFieldName, headerFieldValue));
+  NS_LOG_FUNCTION (this << fieldName << ": " << fieldValue);
+
+  HeaderFieldMap_t::iterator it = m_headerFieldMap.find (fieldName);
+  if (it == m_headerFieldMap.end ())
+    {
+      std::pair <std::string, std::string> entry (fieldName, fieldValue);
+      m_headerFieldMap.insert (entry);
+    }
+  else
+    {
+      it->second = fieldValue;
+    }
 }
 
 void
-HttpHeader::SetHeaderField (std::string headerFieldName, uint32_t headerFieldValue)
+HttpHeader::SetHeaderField (std::string fieldName, uint32_t fieldValue)
 {
-    NS_LOG_FUNCTION (this << headerFieldName << ": " << headerFieldValue);
-    std::stringstream ss;
-    ss  << headerFieldValue;
-    m_headerFieldMapIt = m_headerFieldMap.find(headerFieldName);
-    if(m_headerFieldMapIt == m_headerFieldMap.end())
-      {
-        m_headerFieldMap.insert (std::pair<std::string, std::string>(headerFieldName, ss.str()));
-      }
-    else
-      {
-        m_headerFieldMapIt->second = ss.str();
-      }
+  std::stringstream fieldValueSs;
+  fieldValueSs << fieldValue;
+  SetHeaderField (fieldName, fieldValueSs.str ());
+}
+
+void
+HttpHeader::SetHeaderField (std::string fieldNameAndValue)
+{
+  NS_LOG_FUNCTION (this << fieldNameAndValue);
+
+  uint16_t middle = fieldNameAndValue.find_first_of (":");
+  uint16_t end = fieldNameAndValue.length () - 1;
+  std::string fieldName = fieldNameAndValue.substr (0, middle);
+  std::string fieldValue = fieldNameAndValue.substr (middle + 2, end);
+
+  SetHeaderField (fieldName, fieldValue);
 }
 
 std::string
-HttpHeader::GetHeaderField (std::string headerFieldName)
+HttpHeader::GetHeaderField (std::string fieldName)
 {
-    NS_LOG_FUNCTION (this << headerFieldName);
+  NS_LOG_FUNCTION (this << fieldName);
 
-    m_headerFieldMapIt = m_headerFieldMap.find(headerFieldName);
-    if(m_headerFieldMapIt != m_headerFieldMap.end())
-      {
-          return m_headerFieldMapIt->second;
-      }
-    else
-      {
-          NS_LOG_ERROR("Header Field: " << headerFieldName <<
-                                 " does not exist. It has not been set by the remote side.");
-          return "";
-      }
+  HeaderFieldMap_t::iterator it = m_headerFieldMap.find (fieldName);
+  if (it != m_headerFieldMap.end ())
+    {
+      return it->second;
+    }
+  else
+    {
+      NS_LOG_ERROR ("Header Field: " << fieldName << " does not exist. "
+                    "It has not been set by the remote side.");
+      return "";
+    }
 }
 
 TypeId
 HttpHeader::GetTypeId (void)
 {
-  NS_LOG_FUNCTION_NOARGS ();
   static TypeId tid = TypeId ("ns3::HttpHeader")
     .SetParent<Header> ()
     .AddConstructor<HttpHeader> ()
   ;
   return tid;
 }
+
 TypeId
 HttpHeader::GetInstanceTypeId (void) const
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION (this);
   return GetTypeId ();
 }
 
 void
 HttpHeader::Print (std::ostream &os) const
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION (this);
 
-  if (m_request)
+  if (IsRequest ())
     {
-      os << "\nmethod:" << m_method << " "
-         << "URL:" << m_url << " "
-         << "Version:" << m_version << "\n"
-       ;
+      os << m_method << " " << m_url << " " << m_version << "\n";
     }
   else
     {
-      os << "\nVersion:" << m_version << " "
-               << "Status Code:" << m_statusCode << " "
-               << "Phrase:" << m_phrase << "\n"
-               ;
-
-      std::map<std::string, std::string>::const_iterator it = m_headerFieldMap.begin();
-      for(it = m_headerFieldMap.begin(); it != m_headerFieldMap.end(); it++)
-        {
-          os << it->first.length() << ": " << it->second.length() << "\n";
-        }
+      os << m_version << " " << m_statusCode << " " << m_phrase << "\n";
     }
+
+  HeaderFieldMap_t::const_iterator it;
+  for (it = m_headerFieldMap.begin (); it != m_headerFieldMap.end (); it++)
+    {
+      os << it->first << ": " << it->second << "\n";
+    }
+
+  os << "\n";
 }
 
 uint32_t
 HttpHeader::GetSerializedSize (void) const
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION (this);
 
-  if(m_request)
+  uint32_t size = 0;
+  if (IsRequest ())
     {
-      //                                                                                         spaces + CR/LF + NULL
-      return m_method.length() + m_url.length() + m_version.length() +  2   +     4   +     1;
+      // Request line
+      size += m_method.length ();
+      size += m_url.length ();
+      size += m_version.length ();
+      size += 4; // spaces and CR LF
     }
   else
     {
-      //                                                                                                             spaces + CR/LF
-      uint32_t size = m_version.length() + m_statusCode.length() + m_phrase.length() + 2    +     2;
-      std::map<std::string, std::string>::const_iterator it = m_headerFieldMap.begin();
-      for(it = m_headerFieldMap.begin(); it != m_headerFieldMap.end(); it++)
-        {
-          //                                space/dots                              CR/LF
-          size += it->first.length()  +    2     + it->second.length() +  2;
-        }
-
-      //Counting last CR/LF + NULL
-      size += 2 + 1;
-
-      return size;
+      // Status line
+      size += m_version.length ();
+      size += m_statusCode.length ();
+      size += m_phrase.length ();
+      size += 4; // spaces and CR LF
     }
-}
 
+  // Header lines
+  HeaderFieldMap_t::const_iterator it;
+  for (it = m_headerFieldMap.begin (); it != m_headerFieldMap.end (); it++)
+    {
+      size += it->first.length () + it->second.length ();
+      size += 4; // spaces and CR LF
+    }
+
+  // Blank line
+  size += 2;
+
+  return size;
+}
 
 void
 HttpHeader::Serialize (Buffer::Iterator start) const
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION (this);
 
-  if(m_request)
+  std::string lines;
+  if (IsRequest ())
     {
-      std::string requestLine = m_method + " " + m_url + " " + m_version + "\r\n\r\n";
-      char tmpBuffer [requestLine.length() + 1];
-      strcpy (tmpBuffer, requestLine.c_str());
-      start.Write ((uint8_t *)tmpBuffer, strlen(tmpBuffer) + 1);
+      // Request line
+      lines = m_method + " " + m_url + " " + m_version + "\r\n";
     }
   else
     {
-      std::string statusLine = m_version + " " + m_statusCode + " " + m_phrase + "\r\n";
-
-      std::map<std::string, std::string>::const_iterator it = m_headerFieldMap.begin();
-      for(it = m_headerFieldMap.begin(); it != m_headerFieldMap.end(); it++)
-        {
-          statusLine += it->first + ": " + it->second + "\r\n";
-        }
-
-      statusLine += "\r\n";
-
-      char tmpBuffer [statusLine.length() + 1];
-      strcpy (tmpBuffer, statusLine.c_str());
-      start.Write ((uint8_t *)tmpBuffer, strlen(tmpBuffer) + 1);
+      // Status line
+      lines = m_version + " " + m_statusCode + " " + m_phrase + "\r\n";
     }
-}
 
+  // Header lines
+  HeaderFieldMap_t::const_iterator it;
+  for (it = m_headerFieldMap.begin (); it != m_headerFieldMap.end (); it++)
+    {
+      lines += it->first + ": " + it->second + "\r\n";
+    }
+
+  // Blank line
+  lines += "\r\n";
+
+  char tmpBuffer [lines.length () + 1];
+  strcpy (tmpBuffer, lines.c_str ());
+  start.Write ((uint8_t*)tmpBuffer, strlen (tmpBuffer));
+}
 
 uint32_t
 HttpHeader::Deserialize (Buffer::Iterator start)
 {
   NS_LOG_FUNCTION_NOARGS ();
-  Buffer::Iterator i = start;
+
+  // Checking the length of HTTP header (finishes with \r\n\r\n string).
   uint8_t c;
-  uint32_t len = 0;
-
-  do
+  uint32_t length = 4;
+  uint32_t checkEnd;
+  Buffer::Iterator startCopy = start;
+  checkEnd = startCopy.ReadU32 ();
+  while (checkEnd != 0x0d0a0d0a)  // equivalent to \r\n\r\n
     {
-      c  = i.ReadU8 ();
-      len++;
-    } while (c != 0);
+      c = startCopy.ReadU8 ();
+      checkEnd <<= 8;
+      checkEnd |= static_cast<uint32_t> (c);
+      length++;
+    }
+  char tmpBuffer [length + 1];
+  start.Read ((uint8_t*)tmpBuffer, length);
+  tmpBuffer [length] = '\0';
+  std::string httpString (tmpBuffer);
 
+  // Tokenizer...
+  uint16_t begin = 0, end = 0;
+  end = httpString.find_first_of (" ");
+  std::string firstField = httpString.substr (begin, end - begin);
 
-  char tmpBuffer [len];
-  start.Read ((uint8_t*)tmpBuffer, len);
-
-
-  std::string tmpString = tmpBuffer;
-  uint16_t begin = 0;
-  uint16_t end = tmpString.find_first_of (" ");
-  std::string firstField = tmpString.substr (begin, end - begin);
-
-  if(firstField == "GET")
-    m_request = true;
+  if (firstField == "GET")
+    {
+      SetRequest ();
+    }
   else
-    m_request = false;
+    {
+      SetResponse ();
+    }
 
-  if(m_request)
+  if (IsRequest ())
     {
       m_method = firstField;
-      begin = end + 1;
-      end = tmpString.find_first_of (" ", begin);
 
-      m_url = tmpString.substr (begin, end - begin);
       begin = end + 1;
-      end = tmpString.find_first_of (" ", begin);
+      end = httpString.find_first_of (" ", begin);
+      m_url = httpString.substr (begin, end - begin);
 
-      m_version = tmpString.substr (begin, end - begin);
+      begin = end + 1;
+      end = httpString.find_first_of ("\r\n", begin);
+      m_version = httpString.substr (begin, end - begin);
     }
   else
     {
       m_version = firstField;
 
       begin = end + 1;
-      end = tmpString.find_first_of (" ", begin);
-      m_statusCode = tmpString.substr (begin, end - begin);
+      end = httpString.find_first_of (" ", begin);
+      m_statusCode = httpString.substr (begin, end - begin);
 
       begin = end + 1;
-      end = tmpString.find_first_of ("\r", begin);
-      m_phrase = tmpString.substr (begin, end - begin);
-
-
-      size_t cr = tmpString.find_first_of("\r");
-      while (cr != std::string::npos)
-        {
-          begin = cr + 2;
-          end = tmpString.find_first_of("\r", begin);
-          if (begin != end)
-            {
-              std::string headerField = tmpString.substr(begin, end - begin);
-
-              end=  headerField.find_first_of(":");
-              begin = end + 2;
-              std::string headerFieldName = headerField.substr(0, end);
-              end = headerField.find_first_of(":", begin);
-              std::string headerFieldValue = headerField.substr(begin, end - begin);
-
-              m_headerFieldMapIt = m_headerFieldMap.find(headerFieldName);
-              if(m_headerFieldMapIt == m_headerFieldMap.end())
-                {
-                  m_headerFieldMap.insert (std::pair<std::string, std::string>(headerFieldName, headerFieldValue));
-                }
-              else
-                {
-                  m_headerFieldMapIt->second = headerFieldValue;
-                }
-
-              cr = tmpString.find_first_of("\r", tmpString.find_first_of("\r", cr + 2));
-            }
-          else
-            {
-              cr = std::string::npos;
-            }
-         }
+      end = httpString.find_first_of ("\r\n", begin);
+      m_phrase = httpString.substr (begin, end - begin);
     }
 
-  return GetSerializedSize ();
+  begin = end + 2;
+  end = httpString.find_first_of ("\r\n", begin);
+  while (begin != end && end != std::string::npos)
+    {
+      std::string headerField = httpString.substr (begin, end - begin);
+      SetHeaderField (headerField);
+
+      begin = end + 2;
+      end = httpString.find_first_of ("\r\n", begin);
+    }
+
+  uint32_t thisSize = GetSerializedSize ();
+  NS_ASSERT_MSG (length == thisSize, "Error deserializing HTTP header.");
+
+  return thisSize;
 }
 
-
-}
-
+} // namespace ns3

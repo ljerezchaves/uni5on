@@ -101,7 +101,7 @@ private:
    * \param socket The connected socket
    */
   void HandlePeerClose (Ptr<Socket> socket);
-  
+
   /**
    * \brief Handle an connection error
    * \param socket The connected socket

@@ -158,8 +158,8 @@ StoredVideoServer::HandleRequest (Ptr<Socket> socket, const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
   NS_LOG_LOGIC ("Request for connection from " <<
-               InetSocketAddress::ConvertFrom (address).GetIpv4 () << 
-               " received.");
+                InetSocketAddress::ConvertFrom (address).GetIpv4 () <<
+                " received.");
   return true;
 }
 
@@ -168,8 +168,8 @@ StoredVideoServer::HandleAccept (Ptr<Socket> socket, const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
   NS_LOG_LOGIC ("Connection with client (" <<
-               InetSocketAddress::ConvertFrom (address).GetIpv4 () <<
-               ") successfully established!");
+                InetSocketAddress::ConvertFrom (address).GetIpv4 () <<
+                ") successfully established!");
   socket->SetSendCallback (MakeCallback (&StoredVideoServer::SendStream, this));
   socket->SetRecvCallback (MakeCallback (&StoredVideoServer::HandleReceive, this));
   m_connected = true;
@@ -184,7 +184,7 @@ StoredVideoServer::HandleReceive (Ptr<Socket> socket)
   Ptr<Packet> packet = socket->Recv ();
   packet->PeekHeader (httpHeaderIn);
 
-  std::string url = httpHeaderIn.GetUrl ();
+  std::string url = httpHeaderIn.GetRequestUrl ();
 
   NS_LOG_INFO ("Client requesting a " + url);
   if (url == "main/video")
@@ -198,10 +198,10 @@ StoredVideoServer::HandleReceive (Ptr<Socket> socket)
 
       // Setting response
       HttpHeader httpHeaderOut;
-      httpHeaderOut.SetRequest (false);
+      httpHeaderOut.SetResponse ();
       httpHeaderOut.SetVersion ("HTTP/1.1");
-      httpHeaderOut.SetStatusCode ("200");
-      httpHeaderOut.SetPhrase ("OK");
+      httpHeaderOut.SetResponseStatusCode ("200");
+      httpHeaderOut.SetResponsePhrase ("OK");
       httpHeaderOut.SetHeaderField ("ContentLength", size);
       httpHeaderOut.SetHeaderField ("ContentType", "main/video");
       httpHeaderOut.SetHeaderField ("NumOfInlineObjects", 0);
@@ -219,15 +219,15 @@ StoredVideoServer::HandleReceive (Ptr<Socket> socket)
     }
 }
 
-void 
+void
 StoredVideoServer::HandlePeerClose (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
   NS_LOG_LOGIC ("Connection closed.");
   m_connected = false;
 }
- 
-void 
+
+void
 StoredVideoServer::HandlePeerError (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
@@ -273,7 +273,7 @@ StoredVideoServer::LoadDefaultTrace (void)
 {
   NS_LOG_FUNCTION (this);
   uint32_t prevTime = 0;
-  for (uint32_t i = 0; i < (sizeof (g_defaultEntries) / 
+  for (uint32_t i = 0; i < (sizeof (g_defaultEntries) /
                             sizeof (struct TraceEntry)); i++)
     {
       struct TraceEntry entry = g_defaultEntries[i];
@@ -315,7 +315,10 @@ StoredVideoServer::SendStream (Ptr<Socket> socket, uint32_t size)
   NS_LOG_FUNCTION (this);
 
   // Only send new data if the connection has completed
-  if (!m_connected) return;
+  if (!m_connected)
+    {
+      return;
+    }
 
   Ptr<Packet> packet;
   struct TraceEntry *entry;

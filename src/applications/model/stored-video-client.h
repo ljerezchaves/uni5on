@@ -125,7 +125,7 @@ private:
   uint32_t                m_bytesReceived;  //!< Received bytes.
   uint32_t                m_contentLength;  //!< Content length line.
   std::string             m_contentType;    //!< Content type line.
-  EventId                 m_forceStop;      //!< Maximum duration stop event. 
+  EventId                 m_forceStop;      //!< Maximum duration stop event.
 };
 
 } // namespace ns3

@@ -283,8 +283,8 @@ EnableVerbose ()
   LogComponentEnable ("RingController", LOG_LEVEL_ALL);
   LogComponentEnable ("RingController", LOG_PREFIX_TIME);
 
-  LogComponentEnable ("HttpClient", LOG_LEVEL_WARN);
-  LogComponentEnable ("HttpServer", LOG_LEVEL_WARN);
+  LogComponentEnable ("HttpClient", LOG_LEVEL_ALL);
+  LogComponentEnable ("HttpServer", LOG_LEVEL_ALL);
   LogComponentEnable ("VoipClient", LOG_LEVEL_WARN);
   LogComponentEnable ("VoipServer", LOG_LEVEL_WARN);
   LogComponentEnable ("StoredVideoClient", LOG_LEVEL_WARN);

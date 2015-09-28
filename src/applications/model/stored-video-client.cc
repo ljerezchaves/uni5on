@@ -91,8 +91,8 @@ StoredVideoClient::Start (void)
 
   if (!m_maxDurationTime.IsZero ())
     {
-      m_forceStop = Simulator::Schedule (m_maxDurationTime, 
-        &StoredVideoClient::CloseSocket, this);
+      m_forceStop = Simulator::Schedule (m_maxDurationTime,
+                                         &StoredVideoClient::CloseSocket, this);
     }
   OpenSocket ();
 }
@@ -184,10 +184,10 @@ StoredVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
 
   // Setting request message
   HttpHeader httpHeader;
-  httpHeader.SetRequest (true);
-  httpHeader.SetMethod ("GET");
-  httpHeader.SetUrl (url);
   httpHeader.SetVersion ("HTTP/1.1");
+  httpHeader.SetRequest ();
+  httpHeader.SetRequestMethod ("GET");
+  httpHeader.SetRequestUrl (url);
 
   Ptr<Packet> packet = Create<Packet> ();
   packet->AddHeader (httpHeader);
@@ -202,10 +202,10 @@ StoredVideoClient::HandleReceive (Ptr<Socket> socket)
   Ptr<Packet> packet = socket->Recv ();
   uint32_t bytesReceived = packet->GetSize ();
   m_qosStats->NotifyReceived (0, Simulator::Now (), bytesReceived);
-  
+
   HttpHeader httpHeaderIn;
   packet->PeekHeader (httpHeaderIn);
-  std::string statusCode = httpHeaderIn.GetStatusCode ();
+  std::string statusCode = httpHeaderIn.GetResponseStatusCode ();
 
   if (statusCode == "200")
     {
