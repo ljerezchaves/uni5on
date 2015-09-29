@@ -128,7 +128,7 @@ bool
 HttpServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
 {
   NS_LOG_FUNCTION (this << socket);
-  NS_ASSERT_MSG (header.GetRequestMethod () == "GET", "Invalid HTTP request.");
+  NS_ASSERT_MSG (header.IsRequest (), "Invalid HTTP request.");
 
   // Get the TCP sending buffer size.
   uint32_t tcpBufSize = socket->GetTxAvailable ();

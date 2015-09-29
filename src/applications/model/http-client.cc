@@ -257,16 +257,9 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
         }
 
       // Let's consume received data
-      if (packet->GetSize () >= pendingBytes)
-        {
-          packet->RemoveAtStart (pendingBytes);
-          pendingBytes = 0;
-        }
-      else
-        {
-          pendingBytes -= packet->GetSize ();
-          packet->RemoveAtStart (packet->GetSize ());
-        }
+      uint32_t consume = std::min (packet->GetSize (), pendingBytes);
+      packet->RemoveAtStart (consume);
+      pendingBytes -= consume;
 
       if (!pendingBytes)
         {

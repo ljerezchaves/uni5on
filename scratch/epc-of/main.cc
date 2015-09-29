@@ -287,8 +287,8 @@ EnableVerbose ()
   LogComponentEnable ("HttpServer", LOG_LEVEL_ALL);
   LogComponentEnable ("VoipClient", LOG_LEVEL_WARN);
   LogComponentEnable ("VoipServer", LOG_LEVEL_WARN);
-  LogComponentEnable ("StoredVideoClient", LOG_LEVEL_WARN);
-  LogComponentEnable ("StoredVideoServer", LOG_LEVEL_WARN);
+  LogComponentEnable ("StoredVideoClient", LOG_LEVEL_ALL);
+  LogComponentEnable ("StoredVideoServer", LOG_LEVEL_ALL);
   LogComponentEnable ("RealTimeVideoClient", LOG_LEVEL_WARN);
   LogComponentEnable ("RealTimeVideoServer", LOG_LEVEL_WARN);
   LogComponentEnable ("TrafficManager", LOG_LEVEL_ALL);
