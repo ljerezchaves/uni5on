@@ -50,3 +50,4 @@ waf
 *.swp
 scratch/epc-of/default.txt
 lte-rem.eps
+sim
