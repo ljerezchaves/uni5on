@@ -129,9 +129,9 @@ private:
   /**
    * \brief Start sending the video. Callback for socket SetSendCallback.
    * \param socket The pointer to the socket.
-   * \param size The number of bytes available for writing into the buffer
+   * \param available The number of bytes available for writing into the buffer   
    */
-  void SendStream (Ptr<Socket> socket, uint32_t size);
+  void SendStream (Ptr<Socket> socket, uint32_t available);
 
   /**
    * Trac eentry to send, representing a MPEG frame.
@@ -145,14 +145,12 @@ private:
 
   static struct TraceEntry        g_defaultEntries[]; //!< Default trace
   std::vector<struct TraceEntry>  m_entries;          //!< Entries in the trace
-  uint32_t                        m_currentEntry;     //!< Current entry index
   Ptr<Socket>                     m_socket;           //!< Local socket
   uint16_t                        m_port;             //!< Local port
   bool                            m_connected;        //!< True if connected
   Ptr<StoredVideoClient>          m_clientApp;        //!< Client application
   Ptr<RandomVariableStream>       m_lengthRng;        //!< Random video length generator
-  Time                            m_lengthTime;       //!< Current video length
-  Time                            m_elapsed;          //!< Elapsed video length
+  uint32_t                        m_pendingBytes;     //!< Pending bytes to send
 };
 
 } // namespace ns3
