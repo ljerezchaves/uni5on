@@ -36,7 +36,7 @@ namespace ns3 {
  * applications into UEs and WebServer. This helper creates and aggregates a
  * traffic manager for each UE.
  */
-class TrafficHelper
+class TrafficHelper : public Object
 {
 public:
   /**
@@ -48,7 +48,14 @@ public:
   TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
                  Ptr<OpenFlowEpcController> controller);
 
-  ~TrafficHelper (); //!< Default destructor.
+  TrafficHelper ();           //!< Default constructor
+  virtual ~TrafficHelper ();  //!< Dummy destructor, see DoDipose
+
+  /**
+   * Register this type.
+   * \return The object TypeId.
+   */
+  static TypeId GetTypeId (void);
 
   /**
    * Record an attribute to be set in each traffic manager.
@@ -63,6 +70,13 @@ public:
    * nodes. It also configure the TFT and EPS bearers.
    * \param ueNodes The UE Nodes container.
    * \param ueDevices The UE NetDevices container.
+   * \internal
+   * Some notes about internal GbrQosInformation usage
+   * \li The Maximum Bit Rate field is used by controller to install meter
+   *     rules for this traffic. When this value is left to 0, no meter rules
+   *     will be installed.
+   * \li The Guaranteed Bit Rate field is used by the controller to reserve the
+   *     requested bandwidth in OpenFlow network. Valid only for GBR beares.
    */
   void Install (NodeContainer ueNodes, NetDeviceContainer ueDevices);
 
@@ -87,35 +101,46 @@ public:
    */
   static const DataRate GetVideoMbr (uint8_t idx);
 
+protected:
+  /** Destructor implementation */
+  virtual void DoDispose ();
 
 private:
   /**
-   * VoIP/UDP bidirectional traffic over dedicated GBR EPS bearer (QCI 1).
+   * UDP bidirectional VoIP traffic over dedicated GBR EPS bearer (QCI 1).
    * This QCI is typically associated with conversational voice. This VoIP
-   * traffic simulates the G.729 codec (~8.5 kbps for payload). Check
+   * traffic simulates the G.729 codec (~8.0 kbps for payload). Check
    * http://goo.gl/iChPGQ for bandwidth calculation and discussion.
    */
-  void InstallVoip ();
+  void InstallGbrVoip ();
 
   /**
-   * UDP real-time download video streaming over dedicated GBR EPS bearer 
-   * (QCI 4). This QCI is typically associated with non-conversational buffered
-   * video. This video traffic is based on MPEG-4 video traces from
+   * UDP downlink live video streaming over dedicated GBR EPS bearer (QCI 2).
+   * This QCI is typically associated with conversational video and live
+   * streaming. This video traffic is based on MPEG-4 video traces from
    * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
    */
-  void InstallRealTimeVideo ();
+  void InstallGbrLiveVideoStreaming ();
 
   /**
-   * TCP stored download video streaming over dedicated Non-GBR EPS bearer 
+   * TCP downlink buffered video streaming over dedicated Non-GBR EPS bearer
    * (QCI 6). This QCI could be used for priorization of non real-time data of
    * MPS subscribers. This video traffic is based on MPEG-4 video traces from
-   * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf. 
+   * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
    */
-  void InstallStoredVideo ();
+  void InstallNonGbrBufferedVideoStreaming ();
 
   /**
-   * HTTP/TCP traffic over dedicated Non-GBR EPS bearer (QCI 8). This QCI
-   * could be used for a dedicated 'premium bearer' for any subscriber, or
+   * UDP downlink live video streaming over dedicated Non-GBR EPS bearer (QCI
+   * 7). This QCI is typically associated with voice, live video streaming and
+   * interactive games. This video traffic is based on MPEG-4 video traces from
+   * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
+   */
+  void InstallNonGbrLiveVideoStreaming ();
+
+  /**
+   * TCP downlink HTTP traffic over dedicated Non-GBR EPS bearer (QCI 8). This
+   * QCI could be used for a dedicated 'premium bearer' for any subscriber, or
    * could be used for the default bearer of a for 'premium subscribers'. This
    * HTTP model is based on the distributions indicated in the paper 'An HTTP
    * Web Traffic Model Based on the Top One Million Visited Web Pages' by
@@ -124,8 +149,7 @@ private:
    * repeats after a reading time period, until MaxPages are loaded or
    * MaxReadingTime is reached.
    */
-  void InstallHttp ();
-
+  void InstallNonGbrHttp ();
 
   ObjectFactory       m_managerFactory; //!< Traffic manager factory
 
@@ -140,16 +164,22 @@ private:
   Ipv4Mask            m_ueMask;         //!< Current client address mask
   Ptr<TrafficManager> m_ueManager;      //!< Current client traffic manager
 
-  HttpHelper          m_httpHelper;     //!< HTTP application helper
-  StoredVideoHelper   m_stVideoHelper;  //!< Stored video application helper
-  RealTimeVideoHelper m_rtVideoHelper;  //!< Real-time video application helper
+  bool                m_gbrVoip;        //!< VoIP enable
+  bool                m_gbrLiveVideo;   //!< GBR live streaming vide enable
+  bool                m_nonBufferVideo; //!< Buffered video enable
+  bool                m_nonLiveVideo;   //!< Non-GBR live straming video enable
+  bool                m_nonHttp;        //!< HTTP enable
+
   VoipHelper          m_voipHelper;     //!< Voip application helper
+  RealTimeVideoHelper m_rtVideoHelper;  //!< Real-time video application helper
+  StoredVideoHelper   m_stVideoHelper;  //!< Stored video application helper
+  HttpHelper          m_httpHelper;     //!< HTTP application helper
 
   Ptr<UniformRandomVariable> m_videoRng;      //!< Random video selection
   static const std::string   m_videoDir;      //!< Video trace directory
   static const std::string   m_videoTrace []; //!< Stored video trace filenames
-  static const uint64_t      m_gbrBitRate []; //!< Stored video trace gbr bitrate
-  static const uint64_t      m_mbrBitRate []; //!< Stored video trace max bitrate
+  static const uint64_t      m_gbrBitRate []; //!< Stored video gbr bitrate
+  static const uint64_t      m_mbrBitRate []; //!< Stored video max bitrate
 };
 
 };  // namespace ns3

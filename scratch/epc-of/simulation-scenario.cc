@@ -154,8 +154,10 @@ SimulationScenario::BuildRingTopology ()
   m_webHost = m_webNetwork->CreateTopology (m_epcHelper->GetPgwNode ());
 
   // 9) Install applications and traffic manager
-  TrafficHelper tfcHelper (m_webHost, m_lteHelper, m_controller);
-  tfcHelper.Install (m_lteNetwork->GetUeNodes (), m_lteNetwork->GetUeDevices ());
+  Ptr<TrafficHelper> tfcHelper =
+    CreateObject<TrafficHelper> (m_webHost, m_lteHelper, m_controller);
+  tfcHelper->Install (m_lteNetwork->GetUeNodes (),
+                      m_lteNetwork->GetUeDevices ());
 
   // 10) Set up output ofsoftswitch13 logs and ns-3 traces
   DatapathLogs ();
@@ -200,17 +202,24 @@ SimulationScenario::SetCommonPrefix (std::string prefix)
                       StringValue (m_outputPrefix + "pgw_stats.txt"));
   Config::SetDefault ("ns3::SwitchRulesStatsCalculator::SwtStatsFilename",
                       StringValue (m_outputPrefix + "swt_stats.txt"));
-  Config::SetDefault ("ns3::BandwidthStatsCalculator::BwdStatsFilename",
-                      StringValue (m_outputPrefix + "bwd_stats.txt"));
-  Config::SetDefault ("ns3::BandwidthStatsCalculator::ResStatsFilename",
-                      StringValue (m_outputPrefix + "res_stats.txt"));
+  Config::SetDefault ("ns3::BandwidthStatsCalculator::BwbStatsFilename",
+                      StringValue (m_outputPrefix + "bwb_stats.txt"));
+  Config::SetDefault ("ns3::BandwidthStatsCalculator::BwgStatsFilename",
+                      StringValue (m_outputPrefix + "bwg_stats.txt"));
+  Config::SetDefault ("ns3::BandwidthStatsCalculator::BwnStatsFilename",
+                      StringValue (m_outputPrefix + "bwn_stats.txt"));
+  Config::SetDefault ("ns3::BandwidthStatsCalculator::RegStatsFilename",
+                      StringValue (m_outputPrefix + "reg_stats.txt"));
+  Config::SetDefault ("ns3::BandwidthStatsCalculator::RenStatsFilename",
+                      StringValue (m_outputPrefix + "ren_stats.txt"));
 }
 
 void
 SimulationScenario::SetDumpTimeout (Time timeout)
 {
   m_dumpTimeout = timeout;
-  Simulator::Schedule (m_dumpTimeout, &SimulationScenario::DumpStatistics, this);
+  Simulator::Schedule (m_dumpTimeout,
+                       &SimulationScenario::DumpStatistics, this);
 }
 
 void
@@ -222,7 +231,8 @@ SimulationScenario::DumpStatistics ()
   m_switchStats->DumpStatistics ();
   m_bandwidthStats->DumpStatistics ();
 
-  Simulator::Schedule (m_dumpTimeout, &SimulationScenario::DumpStatistics, this);
+  Simulator::Schedule (m_dumpTimeout,
+                       &SimulationScenario::DumpStatistics, this);
 }
 
 std::string
@@ -232,7 +242,7 @@ SimulationScenario::StripValue (std::string value)
   std::string::size_type end = value.find ("\"", 1);
   NS_ASSERT (start == 0);
   NS_ASSERT (end == value.size () - 1);
-  return value.substr (start+1, end-start-1);
+  return value.substr (start + 1, end - start - 1);
 }
 
 bool
@@ -267,7 +277,8 @@ SimulationScenario::ParseTopology ()
           std::string attrName, attrValue;
           lineBuffer >> attrName;
           lineBuffer >> attrValue;
-          NS_LOG_DEBUG ("Setting attribute " << attrName << " with " << attrValue);
+          NS_LOG_DEBUG ("Setting attribute " << attrName <<
+                        " with " << attrValue);
           Config::SetDefault (attrName, StringValue (StripValue (attrValue)));
         }
       else if (command == "topo")
@@ -277,20 +288,19 @@ SimulationScenario::ParseTopology ()
           lineBuffer >> ues;
           lineBuffer >> swtch;
 
-          NS_LOG_DEBUG ("Topo description: " << enb << " " << ues << " " << swtch);
-          NS_ASSERT_MSG (idx == enb, "Invalid eNB idx order in topology file.");
-//          NS_ASSERT_MSG (swtch < m_nSwitches, "Invalid switch idx in topology file.");
+          NS_LOG_DEBUG ("Topo description: " << enb <<
+                        " " << ues << " " << swtch);
+          NS_ASSERT_MSG (idx == enb, "Invalid eNB idx order in topo file.");
 
           m_UesPerEnb.push_back (ues);
           m_SwitchIdxPerEnb.push_back (swtch);
           idx++;
         }
-      else 
+      else
         {
           NS_LOG_ERROR ("Invalid command.");
         }
     }
-//  NS_ASSERT_MSG (idx == m_nEnbs, "Missing information in topology file.");
   return true;
 }
 

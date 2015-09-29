@@ -62,7 +62,7 @@ public:
    * resources to the controller before starting the application. If the
    * controller accept the request, this starts the application. Otherwise, it
    * reschedule the (re)start attempt.
-   * \internal 
+   * \internal
    * The teid approach only works because we currently have a single
    * application associated with each bearer/tunnel. If we would like to
    * aggregate traffic from several applications into same bearer we will need
@@ -88,19 +88,15 @@ public:
    * \param sgwAddr The SgwPgw IPv4 address.
    * \param bearerList The list of context bearers created.
    */
-  void ContextCreatedCallback (uint64_t imsi, uint16_t cellId, 
-    Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList);
+  void ContextCreatedCallback (uint64_t imsi, uint16_t cellId,
+                               Ipv4Address enbAddr, Ipv4Address sgwAddr,
+                               BearerList_t bearerList);
 
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
 private:
-  bool m_httpEnable;     //!< HTTP traffic enable
-  bool m_voipEnable;     //!< VoIP traffic enable
-  bool m_stVideoEnable;  //!< Stored video traffic enable
-  bool m_rtVideoEnable;  //!< Real-time video traffic enable
-
   Ptr<ExponentialRandomVariable>    m_poissonRng; //!< Inter-arrival generator
   Ptr<OpenFlowEpcController>        m_controller; //!< OpenFlow controller
   std::vector<Ptr<EpcApplication> > m_apps;       //!< Application list

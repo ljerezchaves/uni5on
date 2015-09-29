@@ -81,8 +81,7 @@ public:
 
   // Inherited from EpcApplication
   void Start (void);
-  std::string GetAppName (void) const;
-  
+
 protected:
   virtual void DoDispose (void);
 
@@ -136,17 +135,11 @@ private:
   Ipv4Address             m_serverAddress;      //!< Server address.
   uint16_t                m_serverPort;         //!< Server port.
   Ptr<HttpServer>         m_serverApp;          //!< Server application.
-  HttpHeader              m_httpHeader;         //!< HTTP Header.
-  uint32_t                m_contentLength;      //!< Content length line.
-  std::string             m_contentType;        //!< Content type line.
-  uint32_t                m_numOfInlineObjects; //!< Inline objects line.
-  uint32_t                m_bytesReceived;      //!< Received bytes.
-  uint32_t                m_inlineObjLoaded;    //!< Received inline objects.
   uint16_t                m_pagesLoaded;        //!< Pages loaded.
   Time                    m_maxReadingTime;     //!< Reading time threshold.
   uint16_t                m_maxPages;           //!< Max pages threshold.
-  EventId                 m_forceStop;          //!< Maximum duration stop event. 
-  
+  EventId                 m_forceStop;          //!< Maximum duration stop event.
+
   Ptr<LogNormalRandomVariable>  m_readingTimeStream; //!< Reading time rng.
   Ptr<UniformRandomVariable>    m_readingTimeAdjust; //!< Adjustment rng.
 };

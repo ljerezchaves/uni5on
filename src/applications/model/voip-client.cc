@@ -133,12 +133,6 @@ VoipClient::Start (void)
   m_serverApp->StartSending (m_maxDurationTime);
 }
 
-std::string 
-VoipClient::GetAppName (void) const
-{
-  return "Voip";
-}
-
 void
 VoipClient::DoDispose (void)
 {

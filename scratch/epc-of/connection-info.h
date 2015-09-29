@@ -28,6 +28,8 @@
 
 namespace ns3 {
 
+class ConnectionInfo;
+
 /** A pair of switches index */
 typedef std::pair<uint16_t, uint16_t> SwitchPair_t;
 
@@ -57,8 +59,8 @@ public:
    */
   enum Direction
   {
-    FORWARD = 0,  //!< Forward direction
-    BACKWARD = 1  //!< Backwad direction
+    FWD = 0,  //!< Forward direction (from first to second switch)
+    BWD = 1   //!< Backwad direction (from second to firts switch)
   };
 
   ConnectionInfo ();            //!< Default constructor
@@ -73,8 +75,7 @@ public:
    * Internal channel handling is based on this order to get corret full-duplex
    * links.
    */
-  ConnectionInfo (SwitchData sw1, SwitchData sw2, 
-                  Ptr<CsmaChannel> channel);
+  ConnectionInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel);
 
   /**
    * Register this type.
@@ -83,72 +84,55 @@ public:
   static TypeId GetTypeId (void);
 
   /**
+   * Get the pair of switch indexes for this connection, respecting the
+   * internal order.
+   * \return The pair of switch indexes.
+   */
+  SwitchPair_t GetSwitchIndexPair (void) const;
+
+  /**
    * \name Private member accessors.
+   * \param idx The internal switch index.
    * \return The requested field.
    */
   //\{
-  /**
-   * Get the pair of switch indexes for this connection, respecting the
-   * internal order.
-   * \param The pair of switch indexes.
-   */
-  SwitchPair_t GetSwitchIndexPair (void) const;
-  uint16_t GetSwIdxFirst (void) const;
-  uint16_t GetSwIdxSecond (void) const;
-  uint32_t GetPortNoFirst (void) const;
-  uint32_t GetPortNoSecond (void) const;
-  Ptr<const OFSwitch13NetDevice> GetSwDevFirst (void) const;
-  Ptr<const OFSwitch13NetDevice> GetSwDevSecond (void) const;
-  Ptr<const CsmaNetDevice> GetPortDevFirst (void) const;
-  Ptr<const CsmaNetDevice> GetPortDevSecond (void) const;
+  uint16_t                        GetSwIdx    (uint8_t idx) const;
+  uint32_t                        GetPortNo   (uint8_t idx) const;
+  Ptr<const OFSwitch13NetDevice>  GetSwDev    (uint8_t idx) const;
+  Ptr<const CsmaNetDevice>        GetPortDev  (uint8_t idx) const;
   //\}
 
   /**
-   * Return the bandwidth reserved ratio in forward direction, This method
-   * ignores the saving reserve factor.
-   * \return The usage ratio.
+   * \name Link usage statistics.
+   * Get link usage statistics, for both GBR and Non-GBR traffic.
+   * \param dir The link direction.
+   * \return The requested information.
    */
-  double GetForwardReservedRatio (void) const;
+  //\{
+  uint32_t GetGbrBytes        (Direction dir) const;
+  uint64_t GetGbrBitRate      (Direction dir) const;
+  double   GetGbrLinkRatio    (Direction dir) const;
+  uint32_t GetNonGbrBytes     (Direction dir) const;
+  uint64_t GetNonGbrBitRate   (Direction dir) const;
+  double   GetNonGbrLinkRatio (Direction dir) const;
+  //\}
 
   /**
-   * Return the bandwidth reserved ratio in backward direction, This method
-   * ignores the saving reserve factor.
-   * \return The usage ratio.
+   * Reset internal transmitted byte counters.
    */
-  double GetBackwardReservedRatio (void) const;
-
-  /**
-   * Return the total number of bytes successfully transmitted in forward
-   * direction since the simulation began, or since ResetStatistics was called,
-   * according to whichever happened more recently.
-   * \return The number of bytes.
-   */
-  uint32_t GetForwardBytes (void) const;
-
-  /**
-   * Return the total number of bytes successfully transmitted in backward
-   * direction since the simulation began, or since ResetStatistics was called,
-   * according to whichever happened more recently.
-   * \return The number of bytes.
-   */
-  uint32_t GetBackwardBytes (void) const;
-
-  /**
-   * Reset internal byte counters.
-   */
-  void ResetStatistics (void);
+  void ResetTxBytes (void);
 
   /**
    * Inspect physical channel for half-duplex or full-duplex operation mode.
    * \return True when link in full-duplex mode, false otherwise.
    */
-  bool IsFullDuplex (void) const;
+  bool IsFullDuplexLink (void) const;
 
   /**
-   * Inspect physical channel for the assigned data rate.
-   * \return The channel maximum nominal data rate.
+   * Inspect physical channel for the assigned bit rate.
+   * \return The channel maximum nominal bit rate (bps).
    */
-  DataRate GetLinkDataRate (void) const;
+  uint64_t GetLinkBitRate (void) const;
 
   /**
    * For two switch indexes, this methods asserts that boths indexes are valid
@@ -160,9 +144,18 @@ public:
    */
   ConnectionInfo::Direction GetDirection (uint16_t src, uint16_t dst) const;
 
+  /**
+   * TracedCallback signature for Ptr<ConnectionInfo>.
+   * \param cInfo The connection information and metadata.
+   */
+  typedef void (*ConnTracedCallback)(Ptr<ConnectionInfo> cInfo);
+
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
+
+  // Inherited from ObjectBase
+  void NotifyConstructionCompleted (void);
 
   /**
    * Notify this connection of a successfully transmitted packet in link
@@ -172,49 +165,94 @@ protected:
   void NotifyTxPacket (std::string context, Ptr<const Packet> packet);
 
   /**
-   * Get the available bit rate between these two switches.
+   * Get the available bit rate between these two switches. Optionally, this
+   * function can considers the DeBaR reservation factor.
    * \param srcIdx The source switch index.
    * \param dstIdx The destination switch index.
+   * \param debarFactor DeBaR reservation factor.
    * \return The available bit rate from srcIdx to dstIdx.
    */
-  uint64_t GetAvailableBitRate (uint16_t srcIdx, uint16_t dstIdx) const;
-
-  /**
-   * Get the available bit rate between these two switches, considering the
-   * maximum bandwidth reservation factor.
-   * \param srcIdx The source switch index.
-   * \param dstIdx The destination switch index.
-   * \param factor The bandwidth reservation factor.
-   * \return The available bit rate from srcIdx to dstIdx.
-   */
-  uint64_t GetAvailableBitRate (uint16_t srcIdx, uint16_t dstIdx, 
-                                 double factor) const;
+  uint64_t GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
+                                   double debarFactor = 1.0) const;
 
   /**
    * Reserve some bandwidth between these two switches.
    * \param srcIdx The source switch index.
    * \param dstIdx The destination switch index.
-   * \param rate The DataRate to reserve.
+   * \param bitRate The bit rate to reserve.
    * \return True if everything is ok, false otherwise.
    */
-  bool ReserveDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate);
+  bool ReserveGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, uint64_t bitRate);
 
   /**
    * Release some bandwidth between these two switches.
    * \param srcIdx The source switch index.
    * \param dstIdx The destination switch index.
-   * \param rate The DataRate to release.
+   * \param bitRate The bit rate to release.
    * \return True if everything is ok, false otherwise.
    */
-  bool ReleaseDataRate (uint16_t srcIdx, uint16_t dstIdx, DataRate rate);
+  bool ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, uint64_t bitRate);
 
 private:
-  SwitchData        m_sw1;          //!< First switch (lowest index)
-  SwitchData        m_sw2;          //!< Second switch (highest index)
-  Ptr<CsmaChannel>  m_channel;      //!< The link channel connecting switches
+  /**
+   * Get the guard bit rate, which is currently not been used neither by GBR
+   * nor Non-GBR traffic.
+   * \param dir The link direction.
+   * \return The current guard bit rate.
+   */
+  uint64_t GetGuardBitRate (Direction dir) const;
 
-  uint64_t          m_reserved [2]; //!< Reserved data rate
-  uint32_t          m_bytes [2];    //!< Transmitted bytes
+  /**
+   * \name Bit rate adjustment.
+   * Increase/decrease the GBR reserved bit rate and Non-GBR allowed bit rate.
+   * \param dir The link direction.
+   * \param bitRate The bitRate amount.
+   * \return True if everything is ok, false otherwise.
+   */
+  //\{
+  bool IncreaseGbrBitRate (Direction dir, uint64_t bitRate);
+  bool DecreaseGbrBitRate (Direction dir, uint64_t bitRate);
+  bool IncreaseNonGbrBitRate (Direction dir, uint64_t bitRate);
+  bool DecreaseNonGbrBitRate (Direction dir, uint64_t bitRate);
+  //\}
+
+  /**
+   * Update the GBR reserve quota and GBR maximum bit rate.
+   * \param value The value to set.
+   */
+  void SetGbrLinkQuota (double value);
+
+  /**
+   * Update the GBR safeguard bandwidth value.
+   * \param value The value to set.
+   */
+  void SetGbrSafeguard (DataRate value);
+
+  /**
+   * Update the Non-GBR adjustment step value.
+   * \param value The value to set.
+   */
+  void SetNonGbrAdjustStep (DataRate value);
+
+  /** Non-GBR allowed bit rate adjusted trace source. */
+  TracedCallback<Ptr<ConnectionInfo> > m_nonAdjustedTrace;
+
+  SwitchData        m_switches [2];     //!< Switches metadata
+  Ptr<CsmaChannel>  m_channel;          //!< The CSMA link channel
+
+  double            m_gbrLinkQuota;     //!< GBR link-capacity reserved quota
+  uint64_t          m_gbrSafeguard;     //!< GBR safeguard bit rate
+  uint64_t          m_nonAdjustStep;    //!< Non-GBR bit rate adjustment step
+
+  uint64_t          m_gbrMaxBitRate;    //!< GBR maximum allowed bit rate
+  uint64_t          m_gbrMinBitRate;    //!< GBR maximum allowed bit rate
+  uint64_t          m_gbrBitRate [2];   //!< GBR current reserved bit rate
+  uint32_t          m_gbrTxBytes [2];   //!< GBR transmitted bytes
+
+  uint64_t          m_nonMaxBitRate;    //!< Non-GBR maximum allowed bit rate
+  uint64_t          m_nonMinBitRate;    //!< Non-GBR maximum allowed bit rate
+  uint64_t          m_nonBitRate [2];   //!< Non-GBR allowed bit rate
+  uint32_t          m_nonTxBytes [2];   //!< Non-GBR transmitted bytes
 };
 
 };  // namespace ns3

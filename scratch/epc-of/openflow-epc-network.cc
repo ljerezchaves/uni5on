@@ -33,8 +33,7 @@ OpenFlowEpcNetwork::OpenFlowEpcNetwork ()
     m_gatewayNode (0)
 {
   NS_LOG_FUNCTION (this);
-  m_ofHelper = CreateObjectWithAttributes<OFSwitch13Helper> (
-      "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
+  m_ofHelper = CreateObject<OFSwitch13Helper> ();
 }
 
 OpenFlowEpcNetwork::~OpenFlowEpcNetwork ()
@@ -53,25 +52,33 @@ OpenFlowEpcNetwork::GetTypeId (void)
     // these trace sources.
     .AddTraceSource ("QueueDrop",
                      "Packet dropped by OpenFlow port queue.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_queueDropTrace),
+                     MakeTraceSourceAccessor (
+                       &OpenFlowEpcNetwork::m_queueDropTrace),
                      "ns3::Packet::TracedCallback")
     .AddTraceSource ("MeterDrop",
                      "Packet dropped by OpenFlow meter band.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_meterDropTrace),
+                     MakeTraceSourceAccessor (
+                       &OpenFlowEpcNetwork::m_meterDropTrace),
                      "ns3::Packet::TracedCallback")
 
-    // Trace sources used by controller to be aware of network topology creation
+    // Trace sources used by controller to be aware of network topology
     .AddTraceSource ("NewEpcAttach",
-                     "New LTE EPC entity connected to OpenFlow switch for S1U or X1 interface.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_newAttachTrace),
+                     "New LTE EPC entity connected to OpenFlow switch for S1U "
+                     "or X1 interface.",
+                     MakeTraceSourceAccessor (
+                       &OpenFlowEpcNetwork::m_newAttachTrace),
                      "ns3::OpenFlowEpcNetwork::AttachTracedCallback")
     .AddTraceSource ("NewSwitchConnection",
-                     "New connection between two OpenFlow switches when building topology.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_newConnTrace),
-                     "ns3::OpenFlowEpcNetwork::ConnectionTracedCallback")
+                     "New connection between two OpenFlow switches when "
+                     "building topology.",
+                     MakeTraceSourceAccessor (
+                       &OpenFlowEpcNetwork::m_newConnTrace),
+                     "ns3::ConnectionInfo::ConnTracedCallback")
     .AddTraceSource ("TopologyBuilt",
-                     "Topology built and no more connections between OpenFlow switches.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcNetwork::m_topoBuiltTrace),
+                     "Topology built and no more connections between "
+                     "OpenFlow switches.",
+                     MakeTraceSourceAccessor (
+                       &OpenFlowEpcNetwork::m_topoBuiltTrace),
                      "ns3::OpenFlowEpcNetwork::TopologyTracedCallback")
   ;
   return tid;
@@ -169,7 +176,8 @@ OpenFlowEpcNetwork::RegisterNodeAtSwitch (uint16_t switchIdx, Ptr<Node> node)
 }
 
 void
-OpenFlowEpcNetwork::RegisterGatewayAtSwitch (uint16_t switchIdx, Ptr<Node> node)
+OpenFlowEpcNetwork::RegisterGatewayAtSwitch (uint16_t switchIdx,
+                                             Ptr<Node> node)
 {
   m_gatewaySwitch = switchIdx;
   m_gatewayNode = node;

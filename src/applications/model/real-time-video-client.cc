@@ -94,12 +94,6 @@ RealTimeVideoClient::Start (void)
   m_serverApp->StartSending (m_maxDurationTime);
 }
 
-std::string 
-RealTimeVideoClient::GetAppName (void) const
-{
-  return "RtVd";
-}
-
 void
 RealTimeVideoClient::DoDispose (void)
 {

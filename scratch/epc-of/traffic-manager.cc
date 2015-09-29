@@ -42,26 +42,6 @@ TrafficManager::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::TrafficManager")
     .SetParent<Object> ()
     .AddConstructor<TrafficManager> ()
-    .AddAttribute ("VoipTraffic",
-                   "Enable/Disable VoIP traffic during simulation.",
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficManager::m_voipEnable),
-                   MakeBooleanChecker ())
-    .AddAttribute ("RtVideoTraffic",
-                   "Enable/Disable real-time video traffic during simulation.",
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficManager::m_rtVideoEnable),
-                   MakeBooleanChecker ())
-    .AddAttribute ("HttpTraffic",
-                   "Enable/Disable http traffic during simulation.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficManager::m_httpEnable),
-                   MakeBooleanChecker ())
-    .AddAttribute ("StVideoTraffic",
-                   "Enable/Disable stored video traffic during simulation.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficManager::m_stVideoEnable),
-                   MakeBooleanChecker ())
     .AddAttribute ("Controller",
                    "The OpenFlow EPC controller.",
                    PointerValue (),
@@ -84,23 +64,13 @@ TrafficManager::AddEpcApplication (Ptr<EpcApplication> app)
 
   // Save application and configure stop callback
   m_apps.push_back (app);
-  app->TraceConnectWithoutContext ("AppStop", 
-      MakeCallback (&TrafficManager::NotifyAppStop, this));
-
-  // Check for disabled application type
-  if ((!m_httpEnable    && app->GetInstanceTypeId () == HttpClient::GetTypeId ())
-   || (!m_voipEnable    && app->GetInstanceTypeId () == VoipClient::GetTypeId ())
-   || (!m_stVideoEnable && app->GetInstanceTypeId () == StoredVideoClient::GetTypeId ())
-   || (!m_rtVideoEnable && app->GetInstanceTypeId () == RealTimeVideoClient::GetTypeId ()))
-    {
-      // This application is disable, so we won't schedule first start.
-      return;
-    }
+  app->TraceConnectWithoutContext (
+    "AppStop", MakeCallback (&TrafficManager::NotifyAppStop, this));
 
   // Schedule the first start attempt for this app.
   // Wait at least 2 seconds for simulation initial setup.
-  Time startTime = Seconds (2) + Seconds (std::abs (m_poissonRng->GetValue ()));
-  Simulator::Schedule (startTime, &TrafficManager::AppStartTry, this, app);
+  Time start = Seconds (2) + Seconds (std::abs (m_poissonRng->GetValue ()));
+  Simulator::Schedule (start, &TrafficManager::AppStartTry, this, app);
 }
 
 void
@@ -111,13 +81,13 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
   NS_ASSERT_MSG (!app->IsActive (), "Can't start an active application.");
 
   bool authorized = true;
-
   uint32_t appTeid = app->GetTeid ();
   if (appTeid != m_defaultTeid)
     {
       // No resource request for traffic over default bearer.
-      authorized = m_controller->RequestDedicatedBearer (app->GetEpsBearer (),
-                                                         m_imsi, m_cellId, appTeid);
+      authorized =
+        m_controller->RequestDedicatedBearer (app->GetEpsBearer (),
+                                              m_imsi, m_cellId, appTeid);
     }
 
   //
@@ -128,11 +98,11 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
   // Note that in current implementation, no retries are performed for for
   // non-authorized traffic.
   //
-  Time startInterval = Seconds (std::max (2.5, m_poissonRng->GetValue ())); 
+  Time startInterval = Seconds (std::max (2.5, m_poissonRng->GetValue ()));
   Simulator::Schedule (startInterval, &TrafficManager::AppStartTry, this, app);
-  NS_LOG_DEBUG ("App " << app->GetAppName () << " at user " << m_imsi 
-      << " is starting now (" << Simulator::Now ().GetSeconds () << ")."
-      << " Next start will occur in +" << startInterval.GetSeconds ());
+  NS_LOG_DEBUG ("App " << app->GetAppName () << " at user " << m_imsi <<
+                " is starting now " << Simulator::Now ().GetSeconds () <<
+                ". Next start will occur in +" << startInterval.GetSeconds ());
 
   if (authorized)
     {
@@ -141,7 +111,6 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
       app->SetAttribute ("MaxDurationTime", TimeValue (duration));
       app->Start ();
     }
-  
 }
 
 void
@@ -159,8 +128,9 @@ TrafficManager::NotifyAppStop (Ptr<const EpcApplication> app)
 }
 
 void
-TrafficManager::ContextCreatedCallback (uint64_t imsi, uint16_t cellId,
-  Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList)
+TrafficManager::ContextCreatedCallback (
+  uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr,
+  BearerList_t bearerList)
 {
   NS_LOG_FUNCTION (this);
 
@@ -197,8 +167,8 @@ TrafficManager::ContextCreatedCallback (uint64_t imsi, uint16_t cellId,
           // This application uses the default bearer
           app->m_teid = m_defaultTeid;
         }
-      NS_LOG_DEBUG ("Application " << app->GetAppName () << " [" << imsi 
-          << "@" << cellId << "] set with teid " << app->GetTeid ());
+      NS_LOG_DEBUG ("Application " << app->GetAppName () << " [" << imsi <<
+                    "@" << cellId << "] set with teid " << app->GetTeid ());
     }
 }
 

@@ -55,7 +55,7 @@ public:
    * Request a new dedicated EPC bearer. This is used to check for necessary
    * resources in the network (mainly available data rate for GBR bearers).
    * When returning false, it aborts the bearer creation process
-   * \internal 
+   * \internal
    * Current implementation assumes that each application traffic flow is
    * associated with a unique bearer/tunnel. Because of that, we can use only
    * the teid for the tunnel to prepare and install route. If we would like to
@@ -73,7 +73,7 @@ public:
 
   /**
    * Release a dedicated EPC bearer.
-   * \internal 
+   * \internal
    * Current implementation assumes that each application traffic flow is
    * associated with a unique bearer/tunnel. Because of that, we can use only
    * the teid for the tunnel to prepare and install route. If we would like to
@@ -94,6 +94,20 @@ public:
    * \return The routing information for this tunnel.
    */
   Ptr<const RoutingInfo> GetConstRoutingInfo (uint32_t teid) const;
+
+  /**
+   * Retrieve stored information for a specific bearer.
+   * \param teid The GTP tunnel ID.
+   * \return The EpsBearer information for this teid.
+   */
+  static EpsBearer GetEpsBearer (uint32_t teid);
+
+  /**
+   * Retrieve stored mapped value for a specific EPS QCI.
+   * \param qci The EPS bearer QCI.
+   * \return The IP DSCP mapped value for this QCI.
+   */
+  static uint16_t GetDscpMappedValue (EpsBearer::Qci qci);
 
   /**
    * TracedCallback signature for new bearer request.
@@ -120,8 +134,9 @@ protected:
    * \param swtchIdx The OpenFlow switch index.
    * \param swtchPort The port number for nodeDev at OpenFlow switch.
    */
-  virtual void NotifyNewEpcAttach (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, 
-    Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, uint32_t swtchPort);
+  virtual void NotifyNewEpcAttach (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
+                                   Ptr<OFSwitch13NetDevice> swtchDev,
+                                   uint16_t swtchIdx, uint32_t swtchPort);
 
   /**
    * Notify this controller of a new connection between two switches in the
@@ -156,10 +171,19 @@ protected:
    * \param bearerList The list of context bearers created.
    */
   virtual void NotifyContextCreated (uint64_t imsi, uint16_t cellId,
-      Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList);
+                                     Ipv4Address enbAddr, Ipv4Address sgwAddr,
+                                     BearerList_t bearerList);
+
+  /**
+   * Notify this controller when the Non-GBR allowed bit rate in any network
+   * connection is adjusted. This is used to update Non-GBR meters bands based
+   * on GBR resource reservation.
+   * \param cInfo The connection information
+   */
+  virtual void NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo);
   //\}
 
-  /** \name Topology-dependent functions 
+  /** \name Topology-dependent functions
    * This virtual functions must be implemented by subclasses, as they are
    * dependent on network topology.
    */
@@ -173,8 +197,8 @@ protected:
    * \param buffer The buffered packet to apply this rule to.
    * \return True if configuration succeeded, false otherwise.
    */
-  virtual bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo, 
-      uint32_t buffer = OFP_NO_BUFFER) = 0;
+  virtual bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
+                                       uint32_t buffer = OFP_NO_BUFFER) = 0;
 
   /**
    * Remove TEID routing rules from switches.
@@ -184,7 +208,7 @@ protected:
   virtual bool TopologyRemoveRouting (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
-   * Process the bearer resource request and bandwidth allocation based on
+   * Process the bearer resource request and bit rate allocation based on
    * network topology information.
    * \param rInfo The routing information to process.
    * \return True when the request is satisfied.
@@ -192,7 +216,7 @@ protected:
   virtual bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
-   * Process the bearer and bandwidth release based on network topology
+   * Process the bearer and bit rate release based on network topology
    * information.
    * \param rInfo The routing information to process.
    * \return True when the resources are successfully released.
@@ -211,7 +235,8 @@ protected:
   // Inherited from OFSwitch13Controller
   virtual void ConnectionStarted (SwitchInfo);
   virtual ofl_err HandlePacketIn (ofl_msg_packet_in *, SwitchInfo, uint32_t);
-  virtual ofl_err HandleFlowRemoved (ofl_msg_flow_removed *, SwitchInfo, uint32_t);
+  virtual ofl_err HandleFlowRemoved (ofl_msg_flow_removed *,
+                                     SwitchInfo, uint32_t);
 
   /**
    * Get the OFSwitch13NetDevice for a specific switch index.
@@ -263,16 +288,19 @@ private:
   Mac48Address GetArpEntry (Ipv4Address ip);
 
   /**
-   * Install flow table entry for local delivery when a new IP device is
-   * connected to the OpenFlow network. This entry will match both MAC address
-   * and IP address for the device in order to output packets on device port.
+   * Install flow table entry for local port when a new IP device is connected
+   * to the OpenFlow network. This entry will match both MAC address and IP
+   * address for the local device in order to output packets on respective
+   * device port. It will also match input port for packet classification and
+   * routing.
    * \param swtchDev The Switch OFSwitch13NetDevice pointer.
    * \param nodeDev The device connected to the OpenFlow network.
    * \param nodeIp The IPv4 address assigned to this device.
    * \param swtchPort The number of switch port this device is attached to.
    */
-  void ConfigureLocalPortDelivery (Ptr<OFSwitch13NetDevice> swtchDev, 
-    Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, uint32_t swtchPort);  
+  void ConfigureLocalPortRules (Ptr<OFSwitch13NetDevice> swtchDev,
+                                Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
+                                uint32_t swtchPort);
 
   /**
    * Handle packet-in messages sent from switch with unknown TEID routing.
@@ -315,6 +343,37 @@ private:
   Ptr<Packet> CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
                               Mac48Address dstMac, Ipv4Address dstIp);
 
+  /**
+   * Insert a new bearer entry in global bearer map.
+   * \param teid The GTP tunnel ID.
+   * \param bearer The bearer information.
+   */
+  static void RegisterBearer (uint32_t teid, EpsBearer bearer);
+
+  /**
+   * Remove a bearer entry from global bearer map.
+   * \param teid The GTP tunnel ID.
+   */
+  static void UnregisterBearer (uint32_t teid);
+
+  /**
+   * OpenFlowEpcController inner friend utility class
+   * used to initialize static DSCP map table.
+   */
+  class QciDscpInitializer
+  {
+public:
+    /** Initializer function. */
+    QciDscpInitializer ();
+  };
+  friend class QciDscpInitializer;
+
+  /**
+   * Static instance of Initializer. When this is created, its constructor
+   * initializes the OpenFlowEpcController s' static DSCP map table.
+   */
+  static QciDscpInitializer initializer;
+
 // Member variables
 protected:
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
@@ -323,24 +382,10 @@ protected:
   /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
   TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerReleaseTrace;
 
-  /** \name Flow table entry timeout values */
-  //\{
-  static const int m_defaultTmo;          //!< Timeout for default bearers
-  static const int m_dedicatedTmo;        //!< Timeout for dedicated bearers
-  //\}
+  bool m_voipQos;                         //!< Enable VoIP QoS with queues.
+  bool m_nonGbrCoexistence;               //!< Enable Non-GBR coexistence.
 
-  /** \name Flow table entry priority values */
-  //\{
-  // Table 0
-  static const int m_t0ArpPrio;           //!< ARP handling
-  static const int m_t0GotoT1Prio;        //!< GTP TEID handling (goto table 1)
-
-  // Table 1
-  static const int m_t1LocalDeliverPrio;  //!< Local delivery (to eNB/SgwPgw)
-  static const int m_t1DedicatedStartPrio; //!< Dedicated bearer (start value)
-  static const int m_t1DefaultPrio;       //!< Default bearer
-  static const int m_t1RingPrio;          //!< Ring forward
-  //\}
+  static const uint16_t m_dedicatedTmo;   //!< Timeout for dedicated bearers
 
 private:
   NetDeviceContainer  m_ofDevices;        //!< OpenFlow switch devices.
@@ -356,6 +401,14 @@ private:
   /** Map saving <IPv4 address / MAC address> */
   typedef std::map<Ipv4Address, Mac48Address> IpMacMap_t;
   IpMacMap_t          m_arpTable;         //!< ARP resolution table.
+
+  /** Map saving <TEID / EpsBearer > */
+  typedef std::map<uint32_t, EpsBearer> TeidBearerMap_t;
+  static TeidBearerMap_t m_bearersTable;  //!< TEID bearers table.
+
+  /** Map saving <EpsBearer::Qci / IP Dscp value> */
+  typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
+  static QciDscpMap_t m_qciDscpTable;     //!< DSCP mapped values.
 };
 
 };  // namespace ns3

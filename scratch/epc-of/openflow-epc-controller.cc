@@ -27,15 +27,11 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcController");
 NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcController);
 
-const int OpenFlowEpcController::m_defaultTmo = 0;
-const int OpenFlowEpcController::m_dedicatedTmo = 15;
+const uint16_t OpenFlowEpcController::m_dedicatedTmo = 15;
 
-const int OpenFlowEpcController::m_t0ArpPrio = 1;     // Check ConnectionStarted
-const int OpenFlowEpcController::m_t0GotoT1Prio = 2;  // Check ConnectionStarted
-const int OpenFlowEpcController::m_t1LocalDeliverPrio = 65520;
-const int OpenFlowEpcController::m_t1DedicatedStartPrio = 16384;
-const int OpenFlowEpcController::m_t1DefaultPrio = 128;
-const int OpenFlowEpcController::m_t1RingPrio = 32;
+OpenFlowEpcController::TeidBearerMap_t OpenFlowEpcController::m_bearersTable;
+OpenFlowEpcController::QciDscpMap_t OpenFlowEpcController::m_qciDscpTable;
+OpenFlowEpcController::QciDscpInitializer OpenFlowEpcController::initializer;
 
 OpenFlowEpcController::OpenFlowEpcController ()
 {
@@ -48,11 +44,14 @@ OpenFlowEpcController::OpenFlowEpcController ()
   NS_ASSERT_MSG (!network->IsTopologyCreated (),
                  "Network topology already created.");
 
-  network->TraceConnectWithoutContext ("NewEpcAttach",
+  network->TraceConnectWithoutContext (
+    "NewEpcAttach",
     MakeCallback (&OpenFlowEpcController::NotifyNewEpcAttach, this));
-  network->TraceConnectWithoutContext ("TopologyBuilt",
+  network->TraceConnectWithoutContext (
+    "TopologyBuilt",
     MakeCallback (&OpenFlowEpcController::NotifyTopologyBuilt, this));
-  network->TraceConnectWithoutContext ("NewSwitchConnection",
+  network->TraceConnectWithoutContext (
+    "NewSwitchConnection",
     MakeCallback (&OpenFlowEpcController::NotifyNewSwitchConnection, this));
 
   // Connecting this controller to SgwPgwApplication trace sources
@@ -60,7 +59,8 @@ OpenFlowEpcController::OpenFlowEpcController ()
     Names::Find<EpcSgwPgwApplication> ("/Names/SgwPgwApplication");
   NS_ASSERT_MSG (gateway, "SgwPgw application not found.");
 
-  gateway->TraceConnectWithoutContext ("ContextCreated",
+  gateway->TraceConnectWithoutContext (
+    "ContextCreated",
     MakeCallback (&OpenFlowEpcController::NotifyContextCreated, this));
 }
 
@@ -74,21 +74,36 @@ OpenFlowEpcController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::OpenFlowEpcController")
     .SetParent (OFSwitch13Controller::GetTypeId ())
+    .AddAttribute ("VoipQueue",
+                   "Enable VoIP QoS through queuing traffic management.",
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&OpenFlowEpcController::m_voipQos),
+                   MakeBooleanChecker ())
+    .AddAttribute ("NonGbrCoexistence",
+                   "Enable the coexistence of GBR and Non-GBR traffic, "
+                   "installing meters to limit Non-GBR traffic bit rate.",
+                   BooleanValue (true),
+                   MakeBooleanAccessor (
+                     &OpenFlowEpcController::m_nonGbrCoexistence),
+                   MakeBooleanChecker ())
+
     .AddTraceSource ("BearerRequest",
                      "The bearer request trace source.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_bearerRequestTrace),
+                     MakeTraceSourceAccessor (
+                       &OpenFlowEpcController::m_bearerRequestTrace),
                      "ns3::OpenFlowEpcController::BearerTracedCallback")
     .AddTraceSource ("BearerRelease",
                      "The bearer release trace source.",
-                     MakeTraceSourceAccessor (&OpenFlowEpcController::m_bearerReleaseTrace),
+                     MakeTraceSourceAccessor (
+                       &OpenFlowEpcController::m_bearerReleaseTrace),
                      "ns3::OpenFlowEpcController::BearerTracedCallback")
   ;
   return tid;
 }
 
 bool
-OpenFlowEpcController::RequestDedicatedBearer (EpsBearer bearer, 
-    uint64_t imsi, uint16_t cellId, uint32_t teid)
+OpenFlowEpcController::RequestDedicatedBearer (
+  EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
@@ -136,8 +151,8 @@ OpenFlowEpcController::RequestDedicatedBearer (EpsBearer bearer,
 }
 
 bool
-OpenFlowEpcController::ReleaseDedicatedBearer (EpsBearer bearer, 
-    uint64_t imsi, uint16_t cellId, uint32_t teid)
+OpenFlowEpcController::ReleaseDedicatedBearer (
+  EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
@@ -181,6 +196,31 @@ OpenFlowEpcController::GetConstRoutingInfo (uint32_t teid) const
   return rInfo;
 }
 
+EpsBearer
+OpenFlowEpcController::GetEpsBearer (uint32_t teid)
+{
+  TeidBearerMap_t::iterator it;
+  it = OpenFlowEpcController::m_bearersTable.find (teid);
+  if (it != OpenFlowEpcController::m_bearersTable.end ())
+    {
+      return it->second;
+    }
+  NS_FATAL_ERROR ("No bearer information for teid " << teid);
+}
+
+uint16_t
+OpenFlowEpcController::GetDscpMappedValue (EpsBearer::Qci qci)
+{
+  QciDscpMap_t::iterator it;
+  it = OpenFlowEpcController::m_qciDscpTable.find (qci);
+  if (it != OpenFlowEpcController::m_qciDscpTable.end ())
+    {
+      NS_LOG_DEBUG ("Found DSCP value: " << qci << " - " << it->second);
+      return it->second;
+    }
+  NS_FATAL_ERROR ("No DSCP mapped value for QCI " << qci);
+}
+
 void
 OpenFlowEpcController::DoDispose ()
 {
@@ -191,10 +231,10 @@ OpenFlowEpcController::DoDispose ()
   m_routes.clear ();
 }
 
-void 
-OpenFlowEpcController::NotifyNewEpcAttach (Ptr<NetDevice> nodeDev, 
-    Ipv4Address nodeIp, Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, 
-    uint32_t swtchPort)
+void
+OpenFlowEpcController::NotifyNewEpcAttach (
+  Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
+  Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, uint32_t swtchPort)
 {
   NS_LOG_FUNCTION (this << nodeIp << swtchIdx << swtchPort);
 
@@ -203,13 +243,25 @@ OpenFlowEpcController::NotifyNewEpcAttach (Ptr<NetDevice> nodeDev,
   SaveArpEntry (nodeIp, macAddr);
   SaveSwitchIndex (nodeIp, swtchIdx);
 
-  ConfigureLocalPortDelivery (swtchDev, nodeDev, nodeIp, swtchPort);
+  ConfigureLocalPortRules (swtchDev, nodeDev, nodeIp, swtchPort);
+
+  // When enable, add a high-priority queue at this new OpenFlow output port.
+  if (m_voipQos)
+    {
+      Ptr<OFSwitch13Queue> ofQueue = swtchDev->GetOutputQueue (swtchPort);
+      ofQueue->AddQueue (1, CreateObject<DropTailQueue> ());
+    }
 }
 
 void
 OpenFlowEpcController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
+
+  // Connecting this controller to ConnectionInfo trace source
+  cInfo->TraceConnectWithoutContext (
+    "NonGbrAdjusted",
+    MakeCallback (&OpenFlowEpcController::NotifyNonGbrAdjusted, this));
 }
 
 void
@@ -219,11 +271,29 @@ OpenFlowEpcController::NotifyTopologyBuilt (NetDeviceContainer devices)
 
   m_ofDevices = devices;
   TopologyCreateSpanningTree ();
+
+  // When enable, add a high-priority queue at each OpenFlow output port.
+  if (m_voipQos)
+    {
+      Ptr<OFSwitch13NetDevice> ofDevice;
+      Ptr<OFSwitch13Queue> ofQueue;
+      for (uint32_t devIdx = 0; devIdx < devices.GetN (); devIdx++)
+        {
+          ofDevice = DynamicCast<OFSwitch13NetDevice> (devices.Get (devIdx));
+          for (uint32_t portNo = 1; portNo <= ofDevice->GetNSwitchPorts ();
+               portNo++)
+            {
+              ofQueue = ofDevice->GetOutputQueue (portNo);
+              ofQueue->AddQueue (1, CreateObject<DropTailQueue> ());
+            }
+        }
+    }
 }
 
 void
-OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
-    Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList)
+OpenFlowEpcController::NotifyContextCreated (
+  uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr,
+  BearerList_t bearerList)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << sgwAddr);
 
@@ -243,13 +313,14 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
   rInfo->m_enbIdx = GetSwitchIndex (enbAddr);
   rInfo->m_sgwAddr = sgwAddr;
   rInfo->m_enbAddr = enbAddr;
-  rInfo->m_priority = m_t1DefaultPrio;    // Priority for default bearer
-  rInfo->m_timeout = m_defaultTmo;        // No timeout for default bearer
+  rInfo->m_priority = 127;                // Priority for default bearer
+  rInfo->m_timeout = 0;                   // No timeout for default bearer
   rInfo->m_isInstalled = false;           // Bearer rules not installed yet
   rInfo->m_isActive = true;               // Default bearer is always active
   rInfo->m_isDefault = true;              // This is a default bearer
   rInfo->m_bearer = defaultBearer;
   SaveRoutingInfo (rInfo);
+  OpenFlowEpcController::RegisterBearer (teid, rInfo->GetEpsBearer ());
 
   // For default bearer, no Meter nor Reserver metadata.
   // For logic consistence, let's check for available resources.
@@ -279,30 +350,41 @@ OpenFlowEpcController::NotifyContextCreated (uint64_t imsi, uint16_t cellId,
       rInfo->m_enbIdx = GetSwitchIndex (enbAddr);
       rInfo->m_sgwAddr = sgwAddr;
       rInfo->m_enbAddr = enbAddr;
-      rInfo->m_priority = m_t1DedicatedStartPrio; // Priority for dedicated bearer
-      rInfo->m_timeout = m_dedicatedTmo;       // Timeout for dedicated bearer
-      rInfo->m_isInstalled = false;            // Switch rules not installed yet
-      rInfo->m_isActive = false;               // Dedicated bearer not active yet
-      rInfo->m_isDefault = false;              // This is a dedicated bearer
+      rInfo->m_priority = 127;              // Priority for dedicated bearer
+      rInfo->m_timeout = m_dedicatedTmo;    // Timeout for dedicated bearer
+      rInfo->m_isInstalled = false;         // Switch rules not installed
+      rInfo->m_isActive = false;            // Dedicated bearer not active
+      rInfo->m_isDefault = false;           // This is a dedicated bearer
       rInfo->m_bearer = dedicatedBearer;
       SaveRoutingInfo (rInfo);
+      OpenFlowEpcController::RegisterBearer (teid, rInfo->GetEpsBearer ());
 
       GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
 
-      // Create (if necessary) the meter metadata
+      // For all GBR beares, create the GBR metadata.
+      if (rInfo->IsGbr ())
+        {
+          Ptr<GbrInfo> gbrInfo = CreateObject<GbrInfo> (rInfo);
+          rInfo->AggregateObject (gbrInfo);
+
+          // Set the appropriated DiffServ DSCP value for this bearer.
+          gbrInfo->m_dscp =
+            OpenFlowEpcController::GetDscpMappedValue (rInfo->GetQciInfo ());
+        }
+
+      // If necessary, create the meter metadata for maximum bit rate.
       if (gbrQoS.mbrDl || gbrQoS.mbrUl)
         {
           Ptr<MeterInfo> meterInfo = CreateObject<MeterInfo> (rInfo);
           rInfo->AggregateObject (meterInfo);
         }
-
-      // Create (if necessary) the reserve metadata
-      if (gbrQoS.gbrDl || gbrQoS.gbrUl)
-        {
-          Ptr<ReserveInfo> reserveInfo = CreateObject<ReserveInfo> (rInfo);
-          rInfo->AggregateObject (reserveInfo);
-        }
     }
+}
+
+void
+OpenFlowEpcController::NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
+{
+  NS_LOG_INFO (this << cInfo);
 }
 
 void
@@ -310,19 +392,94 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
 {
   NS_LOG_FUNCTION (this << swtch.ipv4);
 
-  // Set the switch to buffer packets and send only the first 128 bytes
+  // This function is called after a successfully handshake between controller
+  // and switch. So, let's start configure the switch tables in accordance to
+  // our methodology.
+
+  // Configure the switch to buffer packets and send only the first 128 bytes
+  // to the controller.
   DpctlCommand (swtch, "set-config miss=128");
 
-  // After a successfull handshake, let's install some default entries:
-  // Table miss entry and ARP handling entry.
-  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=0 write:output=ctrl");
-  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=1 eth_type=0x0806 "
-                       "write:output=ctrl");
 
-  // Handling GTP tunnels at table #1
-  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=2 eth_type=0x800,"
-                       "ip_proto=17,udp_src=2152,udp_dst=2152 goto:1");
-  DpctlCommand (swtch, "flow-mod cmd=add,table=1,prio=0 write:output=ctrl");
+  // -------------------------------------------------------------------------
+  // Table 0 -- Input table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by ConfigureLocalPortRules function.
+
+  // GTP packets entering the switch from any port other then EPC ports.
+  // Send to Routing table.
+  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=32 eth_type=0x800,"
+                "ip_proto=17,udp_src=2152,udp_dst=2152"
+                " goto:2");
+
+  // ARP request packets. Send to controller.
+  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=16 eth_type=0x0806"
+                " apply:output=ctrl");
+
+  // Table miss entry. Send to controller.
+  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
+
+
+  // -------------------------------------------------------------------------
+  // Table 1 -- Classification table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by TopologyInstallRouting function.
+
+
+  // -------------------------------------------------------------------------
+  // Table 2 -- Routing table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by ConfigureLocalPortRules function.
+  // Entries will be installed here by NotifyTopologyBuilt function.
+
+  // GTP packets classified at previous table. Write the output group into
+  // action set based on metadata field. Send the packet to Coexistence QoS
+  // table.
+  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=64"
+                " meta=0x1"
+                " write:group=1 goto:3");
+  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=64"
+                " meta=0x2"
+                " write:group=2 goto:3");
+
+
+  // -------------------------------------------------------------------------
+  // Table 3 -- Coexistence QoS table -- [from higher to lower priority]
+  //
+  if (m_nonGbrCoexistence)
+    {
+      // Non-GBR packets indicated by DSCP field. Apply corresponding Non-GBR
+      // meter band. Send the packet to Output table.
+      DpctlCommand (swtch, "flow-mod cmd=add,table=3,prio=16"
+                    " eth_type=0x800,ip_dscp=0,meta=0x1"
+                    " meter:1 goto:4");
+      DpctlCommand (swtch, "flow-mod cmd=add,table=3,prio=16"
+                    " eth_type=0x800,ip_dscp=0,meta=0x2"
+                    " meter:2 goto:4");
+    }
+
+  // Table miss entry. Send the packet to Output table
+  DpctlCommand (swtch, "flow-mod cmd=add,table=3,prio=0 goto:4");
+
+
+  // -------------------------------------------------------------------------
+  // Table 4 -- Output table -- [from higher to lower priority]
+  //
+  if (m_voipQos)
+    {
+      int dscpVoip =
+        OpenFlowEpcController::GetDscpMappedValue (EpsBearer::GBR_CONV_VOICE);
+
+      // VoIP packets. Write the high-priority output queue #1.
+      std::ostringstream cmd;
+      cmd << "flow-mod cmd=add,table=4,prio=16"
+          << " eth_type=0x800,ip_dscp=" << dscpVoip
+          << " write:queue=1";
+      DpctlCommand (swtch, cmd.str ());
+    }
+
+  // Table miss entry. No instructions
+  DpctlCommand (swtch, "flow-mod cmd=add,table=4,prio=0");
 }
 
 ofl_err
@@ -456,12 +613,13 @@ OpenFlowEpcController::SaveRoutingInfo (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
 
-  std::pair <uint32_t, Ptr<RoutingInfo> > entry (rInfo->GetTeid (), rInfo);
+  uint32_t teid = rInfo->GetTeid ();
+  std::pair <uint32_t, Ptr<RoutingInfo> > entry (teid, rInfo);
   std::pair <TeidRoutingMap_t::iterator, bool> ret;
   ret = m_routes.insert (entry);
   if (ret.second == false)
     {
-      NS_FATAL_ERROR ("Existing routing information for teid " << rInfo->GetTeid ());
+      NS_FATAL_ERROR ("Existing routing information for teid " << teid);
     }
 }
 
@@ -499,7 +657,7 @@ OpenFlowEpcController::GetSwitchIndex (Ipv4Address addr)
   ret = m_ipSwitchTable.find (addr);
   if (ret != m_ipSwitchTable.end ())
     {
-      return (uint16_t)ret->second;
+      return static_cast<uint16_t> (ret->second);
     }
   NS_FATAL_ERROR ("IP not registered in switch index table.");
 }
@@ -532,23 +690,42 @@ OpenFlowEpcController::GetArpEntry (Ipv4Address ip)
 }
 
 void
-OpenFlowEpcController::ConfigureLocalPortDelivery (
+OpenFlowEpcController::ConfigureLocalPortRules (
   Ptr<OFSwitch13NetDevice> swtchDev, Ptr<NetDevice> nodeDev,
   Ipv4Address nodeIp, uint32_t swtchPort)
 {
   NS_LOG_FUNCTION (this << swtchDev << nodeDev << nodeIp << swtchPort);
 
+  // -------------------------------------------------------------------------
+  // Table 0 -- Input table -- [from higher to lower priority]
+  //
+  // GTP packets entering the ring network from any EPC port.
+  // Send to the Classification table.
+  std::ostringstream cmdIn;
+  cmdIn << "flow-mod cmd=add,table=0,prio=64"
+        << " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152"
+        << ",in_port=" << swtchPort
+        << " goto:1";
+  DpctlCommand (swtchDev, cmdIn.str ());
+
+  // -------------------------------------------------------------------------
+  // Table 2 -- Routing table -- [from higher to lower priority]
+  //
+  // GTP packets addressed to EPC elements connected to this switch over EPC
+  // ports. Write the output port epcPort into action set. Send the packet
+  // directly to Output table.
   Mac48Address devMacAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ());
-  std::ostringstream cmd;
-  cmd << "flow-mod cmd=add,table=1,prio=" << m_t1LocalDeliverPrio 
-      << " eth_type=0x800,eth_dst=" << devMacAddr 
-      << ",ip_dst=" << nodeIp << " write:output=" << swtchPort;
-  DpctlCommand (swtchDev, cmd.str ());
+  std::ostringstream cmdOut;
+  cmdOut << "flow-mod cmd=add,table=2,prio=256 eth_type=0x800"
+         << ",eth_dst=" << devMacAddr << ",ip_dst=" << nodeIp
+         << " write:output=" << swtchPort
+         << " goto:4";
+  DpctlCommand (swtchDev, cmdOut.str ());
 }
 
 ofl_err
-OpenFlowEpcController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg, 
-    SwitchInfo swtch, uint32_t xid, uint32_t teid)
+OpenFlowEpcController::HandleGtpuTeidPacketIn (
+  ofl_msg_packet_in *msg, SwitchInfo swtch, uint32_t xid, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << swtch.ipv4 << xid << teid);
 
@@ -573,8 +750,8 @@ OpenFlowEpcController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
 }
 
 ofl_err
-OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg, 
-    SwitchInfo swtch, uint32_t xid)
+OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg,
+                                          SwitchInfo swtch, uint32_t xid)
 {
   NS_LOG_FUNCTION (this << swtch.ipv4 << xid);
 
@@ -709,6 +886,58 @@ OpenFlowEpcController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
   packet->AddTrailer (trailer);
 
   return packet;
+}
+
+void
+OpenFlowEpcController::RegisterBearer (uint32_t teid, EpsBearer bearer)
+{
+  std::pair <uint32_t, EpsBearer> entry (teid, bearer);
+  std::pair <TeidBearerMap_t::iterator, bool> ret;
+  ret = OpenFlowEpcController::m_bearersTable.insert (entry);
+  if (ret.second == false)
+    {
+      NS_FATAL_ERROR ("Existing bearer information for teid " << teid);
+    }
+}
+
+void
+OpenFlowEpcController::UnregisterBearer (uint32_t teid)
+{
+  TeidBearerMap_t::iterator it;
+  it = OpenFlowEpcController::m_bearersTable.find (teid);
+  if (it != OpenFlowEpcController::m_bearersTable.end ())
+    {
+      OpenFlowEpcController::m_bearersTable.erase (it);
+    }
+  else
+    {
+      NS_FATAL_ERROR ("Error removing bearer information for teid " << teid);
+    }
+}
+
+OpenFlowEpcController::QciDscpInitializer::QciDscpInitializer ()
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  std::pair <EpsBearer::Qci, uint16_t> entries [9];
+  entries [0] = std::make_pair (EpsBearer::GBR_CONV_VOICE, 44);      // Voice
+  entries [1] = std::make_pair (EpsBearer::GBR_CONV_VIDEO, 12);      // AF 12
+  entries [2] = std::make_pair (EpsBearer::GBR_GAMING, 18);          // AF 21
+  entries [3] = std::make_pair (EpsBearer::GBR_NON_CONV_VIDEO, 18);  // AF 11
+
+  // Currently we are mapping all Non-GBR bearers to best effort DSCP traffic.
+  entries [4] = std::make_pair (EpsBearer::NGBR_IMS, 0);
+  entries [5] = std::make_pair (EpsBearer::NGBR_VIDEO_TCP_OPERATOR, 0);
+  entries [6] = std::make_pair (EpsBearer::NGBR_VOICE_VIDEO_GAMING, 0);
+  entries [7] = std::make_pair (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, 0);
+  entries [8] = std::make_pair (EpsBearer::NGBR_VIDEO_TCP_DEFAULT, 0);
+
+  std::pair <QciDscpMap_t::iterator, bool> ret;
+  for (int i = 0; i < 9; i++)
+    {
+      ret = OpenFlowEpcController::m_qciDscpTable.insert (entries [i]);
+      NS_ASSERT_MSG (ret.second, "Can't insert DSCP map value.");
+    }
 }
 
 };  // namespace ns3

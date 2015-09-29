@@ -74,7 +74,6 @@ public:
 
   // Inherited from EpcApplication
   void Start (void);
-  std::string GetAppName (void) const;
 
 protected:
   virtual void DoDispose (void);
@@ -123,10 +122,7 @@ private:
   Ipv4Address             m_serverAddress;  //!< Server address.
   uint16_t                m_serverPort;     //!< Server port.
   Ptr<StoredVideoServer>  m_serverApp;      //!< Server application.
-  uint32_t                m_bytesReceived;  //!< Received bytes.
-  uint32_t                m_contentLength;  //!< Content length line.
-  std::string             m_contentType;    //!< Content type line.
-  EventId                 m_forceStop;      //!< Maximum duration stop event. 
+  EventId                 m_forceStop;      //!< Maximum duration stop event.
 };
 
 } // namespace ns3

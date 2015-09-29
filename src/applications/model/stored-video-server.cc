@@ -157,9 +157,8 @@ bool
 StoredVideoServer::HandleRequest (Ptr<Socket> socket, const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
-  NS_LOG_LOGIC ("Request for connection from " <<
-               InetSocketAddress::ConvertFrom (address).GetIpv4 () << 
-               " received.");
+  NS_LOG_LOGIC ("Received request for connection from " <<
+                InetSocketAddress::ConvertFrom (address).GetIpv4 ());
   return true;
 }
 
@@ -167,9 +166,8 @@ void
 StoredVideoServer::HandleAccept (Ptr<Socket> socket, const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
-  NS_LOG_LOGIC ("Connection with client (" <<
-               InetSocketAddress::ConvertFrom (address).GetIpv4 () <<
-               ") successfully established!");
+  NS_LOG_LOGIC ("Connection successfully established with client " <<
+                InetSocketAddress::ConvertFrom (address).GetIpv4 ());
   socket->SetSendCallback (MakeCallback (&StoredVideoServer::SendStream, this));
   socket->SetRecvCallback (MakeCallback (&StoredVideoServer::HandleReceive, this));
   m_connected = true;
@@ -180,54 +178,66 @@ StoredVideoServer::HandleReceive (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  HttpHeader httpHeaderIn;
-  Ptr<Packet> packet = socket->Recv ();
-  packet->PeekHeader (httpHeaderIn);
+  static Ptr<Packet> packet;
 
-  std::string url = httpHeaderIn.GetUrl ();
-
-  NS_LOG_INFO ("Client requesting a " + url);
-  if (url == "main/video")
+  do
     {
-      m_currentEntry = 0;
-      m_lengthTime = Seconds (std::abs (m_lengthRng->GetValue ()));
-      m_elapsed = MilliSeconds (0);
-      uint32_t size = GetVideoBytes (m_lengthTime);
-      NS_LOG_INFO ("Stored video lenght: " << m_lengthTime.As (Time::S) <<
-                   " (" << size << " bytes)");
+      // Get more data from socket, if available
+      if (!packet || packet->GetSize () == 0)
+        {
+          packet = socket->Recv ();
+        }
+      else if (socket->GetRxAvailable ())
+        {
+          packet->AddAtEnd (socket->Recv ());
+        }
 
-      // Setting response
-      HttpHeader httpHeaderOut;
-      httpHeaderOut.SetRequest (false);
-      httpHeaderOut.SetVersion ("HTTP/1.1");
-      httpHeaderOut.SetStatusCode ("200");
-      httpHeaderOut.SetPhrase ("OK");
-      httpHeaderOut.SetHeaderField ("ContentLength", size);
-      httpHeaderOut.SetHeaderField ("ContentType", "main/video");
-      httpHeaderOut.SetHeaderField ("NumOfInlineObjects", 0);
+      HttpHeader httpHeader;
+      packet->RemoveHeader (httpHeader);
+      NS_ASSERT_MSG (httpHeader.IsRequest (), "Invalid HTTP request.");
 
-      Ptr<Packet> p = Create<Packet> (0);
-      p->AddHeader (httpHeaderOut);
-      socket->Send (p);
+      std::string url = httpHeader.GetRequestUrl ();
+      NS_LOG_INFO ("Client requesting a " + url);
+      if (url == "main/video")
+        {
+          Time videoLength = Seconds (std::abs (m_lengthRng->GetValue ()));
+          m_pendingBytes = GetVideoBytes (videoLength);
+          NS_LOG_INFO ("Stored video lenght " << videoLength.As (Time::S) <<
+                       " with " << m_pendingBytes << " bytes");
 
-      // Start sending the stored video stream to the client.
-      SendStream (socket, 0);
-    }
-  else
-    {
-      NS_LOG_WARN ("Invalid request.");
-    }
+          // Setting response
+          HttpHeader httpHeaderOut;
+          httpHeaderOut.SetResponse ();
+          httpHeaderOut.SetVersion ("HTTP/1.1");
+          httpHeaderOut.SetResponseStatusCode ("200");
+          httpHeaderOut.SetResponsePhrase ("OK");
+          httpHeaderOut.SetHeaderField ("ContentLength", m_pendingBytes);
+          httpHeaderOut.SetHeaderField ("ContentType", "main/video");
+          Ptr<Packet> packet = Create<Packet> (0);
+          packet->AddHeader (httpHeaderOut);
+          socket->Send (packet);
+
+          // Start sending the stored video stream to the client.
+          SendStream (socket, socket->GetTxAvailable ());
+        }
+      else
+        {
+          NS_LOG_WARN ("Invalid request.");
+        }
+
+    } // Repeat until no more data available to process
+  while (socket->GetRxAvailable () || packet->GetSize ());
 }
 
-void 
+void
 StoredVideoServer::HandlePeerClose (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
   NS_LOG_LOGIC ("Connection closed.");
   m_connected = false;
 }
- 
-void 
+
+void
 StoredVideoServer::HandlePeerError (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
@@ -273,7 +283,7 @@ StoredVideoServer::LoadDefaultTrace (void)
 {
   NS_LOG_FUNCTION (this);
   uint32_t prevTime = 0;
-  for (uint32_t i = 0; i < (sizeof (g_defaultEntries) / 
+  for (uint32_t i = 0; i < (sizeof (g_defaultEntries) /
                             sizeof (struct TraceEntry)); i++)
     {
       struct TraceEntry entry = g_defaultEntries[i];
@@ -310,38 +320,22 @@ StoredVideoServer::GetVideoBytes (Time length)
 }
 
 void
-StoredVideoServer::SendStream (Ptr<Socket> socket, uint32_t size)
+StoredVideoServer::SendStream (Ptr<Socket> socket, uint32_t available)
 {
   NS_LOG_FUNCTION (this);
 
-  // Only send new data if the connection has completed
-  if (!m_connected) return;
-
-  Ptr<Packet> packet;
-  struct TraceEntry *entry;
-  uint32_t toSend, available;
-  int sent;
-  while (m_elapsed < m_lengthTime)
+  if (!available || !m_connected || !m_pendingBytes)
     {
-      entry = &m_entries[m_currentEntry];
-      toSend = entry->packetSize;
-      available = socket->GetTxAvailable ();
-      if (available >= toSend)
-        {
-          packet = Create<Packet> (toSend);
-          sent = socket->Send (packet);
-          NS_LOG_DEBUG ("Stored video TX " << sent << " bytes");
-
-          m_elapsed += MilliSeconds (entry->timeToSend);
-          m_currentEntry++;
-          m_currentEntry = m_currentEntry % m_entries.size ();
-        }
-      else
-        {
-          NS_LOG_DEBUG ("Buffer full! Wait.");
-          break;
-        }
+      // Server not connected or no more bytes to send.
+      return;
     }
+
+  uint32_t toSend = std::min (available, m_pendingBytes);
+  Ptr<Packet> packet = Create<Packet> (toSend);
+  m_pendingBytes -= toSend;
+
+  int sent = socket->Send (packet);
+  NS_LOG_DEBUG ("Stored video TX " << sent << " bytes");
 }
 
 } // Namespace ns3

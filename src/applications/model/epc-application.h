@@ -27,13 +27,14 @@
 #include "ns3/eps-bearer.h"
 #include "ns3/traced-callback.h"
 #include "qos-stats-calculator.h"
+#include "ns3/string.h"
 
 namespace ns3 {
 
 /**
  * \ingroup applications
  * This class extends the Application class to proper work ith OpenFlow + EPC
- * simulations.  Only clients applications should use this EpcApplication as
+ * simulations. Only clients applications should use this EpcApplication as
  * superclass. It includes a QosStatsCalculator for traffic statistics, and a
  * stop callback to notify when the traffic stops. For LTE EPC, each
  * application is associated with an EPS bearer, and traffic is sent over GTP
@@ -79,7 +80,7 @@ public:
    * Get the application name.
    * \return The application name.
    */
-  virtual std::string GetAppName (void) const;
+  std::string GetAppName (void) const;
 
   /**
    * Start this application at any time.
@@ -111,6 +112,7 @@ protected:
  
   Time m_maxDurationTime;   //!< Application max duration time
   bool m_active;            //!< Active state for this application
+  std::string m_name;       //!< Name for this application
 
   /** Application start trace source, fired when application start. */
   TracedCallback<Ptr<const EpcApplication> > m_appStartTrace;

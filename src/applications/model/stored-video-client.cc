@@ -91,16 +91,10 @@ StoredVideoClient::Start (void)
 
   if (!m_maxDurationTime.IsZero ())
     {
-      m_forceStop = Simulator::Schedule (m_maxDurationTime, 
-        &StoredVideoClient::CloseSocket, this);
+      m_forceStop = Simulator::Schedule (m_maxDurationTime,
+                                         &StoredVideoClient::CloseSocket, this);
     }
   OpenSocket ();
-}
-
-std::string 
-StoredVideoClient::GetAppName (void) const
-{
-  return "StVd";
 }
 
 void
@@ -171,7 +165,6 @@ StoredVideoClient::ConnectionSucceeded (Ptr<Socket> socket)
   socket->SetRecvCallback (MakeCallback (&StoredVideoClient::HandleReceive, this));
 
   // Request the video
-  m_bytesReceived = 0;
   NS_LOG_INFO ("Request for main/video");
   SendRequest (socket, "main/video");
 }
@@ -190,10 +183,10 @@ StoredVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
 
   // Setting request message
   HttpHeader httpHeader;
-  httpHeader.SetRequest (true);
-  httpHeader.SetMethod ("GET");
-  httpHeader.SetUrl (url);
   httpHeader.SetVersion ("HTTP/1.1");
+  httpHeader.SetRequest ();
+  httpHeader.SetRequestMethod ("GET");
+  httpHeader.SetRequestUrl (url);
 
   Ptr<Packet> packet = Create<Packet> ();
   packet->AddHeader (httpHeader);
@@ -205,31 +198,52 @@ StoredVideoClient::HandleReceive (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  Ptr<Packet> packet = socket->Recv ();
-  uint32_t bytesReceived = packet->GetSize ();
-  m_qosStats->NotifyReceived (0, Simulator::Now (), bytesReceived);
-  
-  HttpHeader httpHeaderIn;
-  packet->PeekHeader (httpHeaderIn);
-  std::string statusCode = httpHeaderIn.GetStatusCode ();
+  static uint32_t    pendingBytes = 0;
+  static Ptr<Packet> packet;
 
-  if (statusCode == "200")
+  do
     {
-      m_contentType = httpHeaderIn.GetHeaderField ("ContentType");
-      m_contentLength = atoi (httpHeaderIn.GetHeaderField ("ContentLength").c_str ());
-      m_bytesReceived = bytesReceived - httpHeaderIn.GetSerializedSize ();
-    }
-  else
-    {
-      m_bytesReceived += bytesReceived;
-    }
+      // Get more data from socket, if available
+      if (!packet || packet->GetSize () == 0)
+        {
+          packet = socket->Recv ();
+          m_qosStats->NotifyReceived (0, Simulator::Now (), packet->GetSize ());
+        }
+      else if (socket->GetRxAvailable ())
+        {
+          Ptr<Packet> pktTemp = socket->Recv ();
+          packet->AddAtEnd (pktTemp);
+          m_qosStats->NotifyReceived (0, Simulator::Now (), pktTemp->GetSize ());
+        }
 
-  if (m_bytesReceived == m_contentLength)
-    {
-      m_contentLength = 0;
-      NS_LOG_INFO ("Stored video successfully received.");
-      CloseSocket ();
-    }
+      if (!pendingBytes)
+        {
+          // No pending bytes. This is the start of a new HTTP message.
+          HttpHeader httpHeader;
+          packet->RemoveHeader (httpHeader);
+          NS_ASSERT_MSG (httpHeader.GetResponseStatusCode () == "200",
+                         "Invalid HTTP response message.");
+
+          // Get the content length for this message
+          pendingBytes =
+            atoi (httpHeader.GetHeaderField ("ContentLength").c_str ());
+        }
+
+      // Let's consume received data
+      uint32_t consume = std::min (packet->GetSize (), pendingBytes);
+      packet->RemoveAtStart (consume);
+      pendingBytes -= consume;
+      NS_LOG_DEBUG ("Stored video RX " << consume << " bytes");
+
+      if (!pendingBytes)
+        {
+          // This is the end of the HTTP message.
+          NS_LOG_INFO ("Stored video successfully received.");
+          CloseSocket ();
+        }
+
+    } // Repeat until no more data available to process
+  while (socket->GetRxAvailable () || packet->GetSize ());
 }
 
 } // Namespace ns3

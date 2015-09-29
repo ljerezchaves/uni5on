@@ -66,6 +66,7 @@ public:
   //\{
   GbrQosInformation GetQosInfo (void) const;
   EpsBearer::Qci GetQciInfo (void) const;
+  EpsBearer GetEpsBearer (void) const;
   uint32_t GetTeid (void) const;
   uint64_t GetImsi (void) const;
   uint16_t GetCellId (void) const;
@@ -73,8 +74,8 @@ public:
   uint16_t GetSgwSwIdx (void) const;
   Ipv4Address GetEnbAddr (void) const;
   Ipv4Address GetSgwAddr (void) const;
-  int GetPriority (void) const;
-  int GetTimeout (void) const;
+  uint16_t GetPriority (void) const;
+  uint16_t GetTimeout (void) const;
   bool HasDownlinkTraffic (void) const;
   bool HasUplinkTraffic (void) const;
   bool IsGbr (void) const;
@@ -82,11 +83,11 @@ public:
   bool IsInstalled (void) const;
   bool IsActive (void) const;
   //\}
-  
+
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
-  
+
   /**
    * Set the internal installed flag.
    * \param installed The value to set.
@@ -112,8 +113,8 @@ private:
   uint16_t          m_enbIdx;       //!< eNB switch index
   Ipv4Address       m_sgwAddr;      //!< Sgw IPv4 address
   Ipv4Address       m_enbAddr;      //!< eNB IPv4 address
-  int               m_priority;     //!< Flow priority
-  int               m_timeout;      //!< Flow idle timeout
+  uint16_t          m_priority;     //!< Flow priority
+  uint16_t          m_timeout;      //!< Flow idle timeout
   bool              m_isDefault;    //!< This info is for default bearer
   bool              m_isInstalled;  //!< Rule is installed into switches
   bool              m_isActive;     //!< Application traffic is active
@@ -124,7 +125,7 @@ private:
 // ------------------------------------------------------------------------ //
 /**
  * \ingroup epcof
- * Metadata associated to meter rules.
+ * Metadata associated to GTP tunnel meter rules.
  */
 class MeterInfo : public Object
 {
@@ -157,9 +158,9 @@ public:
   bool HasDown (void) const;
   bool HasUp (void) const;
   //\}
-  
-  /** 
-   * \name Dpctl commands to add or delete meter rules 
+
+  /**
+   * \name Dpctl commands to add or delete meter rules
    * \return The requested command.
    */
   //\{
@@ -171,7 +172,7 @@ public:
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
-  
+
   /** \return RoutingInfo pointer. */
   Ptr<RoutingInfo> GetRoutingInfo ();
 
@@ -186,8 +187,8 @@ private:
   bool     m_isInstalled;   //!< True when this meter is installed
   bool     m_hasDown;       //!< True for downlink meter
   bool     m_hasUp;         //!< True for uplink meter
-  DataRate m_downDataRate;  //!< Downlink meter drop rate (bps)
-  DataRate m_upDataRate;    //!< Uplink meter drop rate (bps)
+  uint64_t m_downBitRate;   //!< Downlink meter drop bit rate (bps)
+  uint64_t m_upBitRate;     //!< Uplink meter drop bit rate (bps)
   Ptr<RoutingInfo> m_rInfo; //!< Routing information
 };
 
@@ -197,21 +198,21 @@ private:
  * \ingroup epcof
  * Metadata associated to GBR beares.
  */
-class ReserveInfo : public Object
+class GbrInfo : public Object
 {
   friend class OpenFlowEpcController;
   friend class RingController;
 
 public:
-  ReserveInfo ();          //!< Default constructor
-  virtual ~ReserveInfo (); //!< Dummy destructor, see DoDipose
+  GbrInfo ();          //!< Default constructor
+  virtual ~GbrInfo (); //!< Dummy destructor, see DoDipose
 
   /**
    * Complete constructor.
    * \param rInfo RoutingInfo pointer.
-   * \attention This ReserveInfo object must be aggregated to rInfo.
+   * \attention This GbrInfo object must be aggregated to rInfo.
    */
-  ReserveInfo (Ptr<RoutingInfo> rInfo);
+  GbrInfo (Ptr<RoutingInfo> rInfo);
 
   /**
    * Register this type.
@@ -224,8 +225,9 @@ public:
    * \return The requested field.
    */
   //\{
-  DataRate GetDownDataRate (void) const;
-  DataRate GetUpDataRate (void) const;
+  uint16_t GetDscp (void) const;
+  uint64_t GetDownBitRate (void) const;
+  uint64_t GetUpBitRate (void) const;
   bool IsReserved (void) const;
   //\}
 
@@ -244,11 +246,12 @@ protected:
 
 private:
   uint32_t m_teid;          //!< GTP TEID
+  uint8_t  m_dscp;          //!< DiffServ DSCP value for this bearer
   bool     m_isReserved;    //!< True when resources are reserved
   bool     m_hasDown;       //!< True for downlink reserve
   bool     m_hasUp;         //!< True for uplink reserve
-  DataRate m_downDataRate;  //!< Downlink reserved data rate
-  DataRate m_upDataRate;    //!< Uplink reserved data rate
+  uint64_t m_downBitRate;   //!< Downlink reserved bit rate
+  uint64_t m_upBitRate;     //!< Uplink reserved bit rate
   Ptr<RoutingInfo> m_rInfo; //!< Routing information
 };
 

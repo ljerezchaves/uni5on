@@ -25,7 +25,7 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("RoutingInfo");
 NS_OBJECT_ENSURE_REGISTERED (RoutingInfo);
 NS_OBJECT_ENSURE_REGISTERED (MeterInfo);
-NS_OBJECT_ENSURE_REGISTERED (ReserveInfo);
+NS_OBJECT_ENSURE_REGISTERED (GbrInfo);
 NS_OBJECT_ENSURE_REGISTERED (RingRoutingInfo);
 
 // ------------------------------------------------------------------------ //
@@ -79,6 +79,12 @@ RoutingInfo::GetQciInfo (void) const
   return m_bearer.bearerLevelQos.qci;
 }
 
+EpsBearer
+RoutingInfo::GetEpsBearer (void) const
+{
+  return m_bearer.bearerLevelQos;
+}
+
 uint32_t
 RoutingInfo::GetTeid (void) const
 {
@@ -121,13 +127,13 @@ RoutingInfo::GetSgwAddr (void) const
   return m_sgwAddr;
 }
 
-int
+uint16_t
 RoutingInfo::GetPriority (void) const
 {
   return m_priority;
 }
 
-int
+uint16_t
 RoutingInfo::GetTimeout (void) const
 {
   return m_timeout;
@@ -192,6 +198,8 @@ MeterInfo::MeterInfo ()
   : m_isInstalled (false),
     m_hasDown (false),
     m_hasUp (false),
+    m_downBitRate (0),
+    m_upBitRate (0),
     m_rInfo (0)
 {
   NS_LOG_FUNCTION (this);
@@ -201,6 +209,8 @@ MeterInfo::MeterInfo (Ptr<RoutingInfo> rInfo)
   : m_isInstalled (false),
     m_hasDown (false),
     m_hasUp (false),
+    m_downBitRate (0),
+    m_upBitRate (0),
     m_rInfo (rInfo)
 {
   NS_LOG_FUNCTION (this);
@@ -210,12 +220,12 @@ MeterInfo::MeterInfo (Ptr<RoutingInfo> rInfo)
   if (gbrQoS.mbrDl)
     {
       m_hasDown = true;
-      m_downDataRate = DataRate (gbrQoS.mbrDl);
+      m_downBitRate = gbrQoS.mbrDl;
     }
   if (gbrQoS.mbrUl)
     {
       m_hasUp = true;
-      m_upDataRate = DataRate (gbrQoS.mbrUl);
+      m_upBitRate = gbrQoS.mbrUl;
     }
 }
 
@@ -270,7 +280,7 @@ MeterInfo::GetDownAddCmd (void) const
 {
   std::ostringstream meter;
   meter << "meter-mod cmd=add,flags=1,meter=" << m_teid
-        << " drop:rate=" << m_downDataRate.GetBitRate () / 1000;
+        << " drop:rate=" << m_downBitRate / 1000;
   return meter.str ();
 }
 
@@ -278,8 +288,8 @@ std::string
 MeterInfo::GetUpAddCmd (void) const
 {
   std::ostringstream meter;
-  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid 
-        << " drop:rate=" << m_upDataRate.GetBitRate () / 1000;
+  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid
+        << " drop:rate=" << m_upBitRate / 1000;
   return meter.str ();
 }
 
@@ -298,19 +308,25 @@ MeterInfo::SetInstalled (bool installed)
 }
 
 // ------------------------------------------------------------------------ //
-ReserveInfo::ReserveInfo ()
-  : m_isReserved (false),
+GbrInfo::GbrInfo ()
+  : m_dscp (0),
+    m_isReserved (false),
     m_hasDown (false),
     m_hasUp (false),
+    m_downBitRate (0),
+    m_upBitRate (0),
     m_rInfo (0)
 {
   NS_LOG_FUNCTION (this);
 }
 
-ReserveInfo::ReserveInfo (Ptr<RoutingInfo> rInfo)
-  : m_isReserved (false),
+GbrInfo::GbrInfo (Ptr<RoutingInfo> rInfo)
+  : m_dscp (0),
+    m_isReserved (false),
     m_hasDown (false),
     m_hasUp (false),
+    m_downBitRate (0),
+    m_upBitRate (0),
     m_rInfo (rInfo)
 {
   NS_LOG_FUNCTION (this);
@@ -320,63 +336,69 @@ ReserveInfo::ReserveInfo (Ptr<RoutingInfo> rInfo)
   if (gbrQoS.gbrDl)
     {
       m_hasDown = true;
-      m_downDataRate = DataRate (gbrQoS.gbrDl);
+      m_downBitRate = gbrQoS.gbrDl;
     }
   if (gbrQoS.gbrUl)
     {
       m_hasUp = true;
-      m_upDataRate = DataRate (gbrQoS.gbrUl);
+      m_upBitRate = gbrQoS.gbrUl;
     }
 }
 
-ReserveInfo::~ReserveInfo ()
+GbrInfo::~GbrInfo ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-ReserveInfo::GetTypeId (void)
+GbrInfo::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::ReserveInfo")
+  static TypeId tid = TypeId ("ns3::GbrInfo")
     .SetParent<Object> ()
-    .AddConstructor<ReserveInfo> ()
+    .AddConstructor<GbrInfo> ()
   ;
   return tid;
 }
 
 void
-ReserveInfo::DoDispose ()
+GbrInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_rInfo = 0;
 }
 
 Ptr<RoutingInfo>
-ReserveInfo::GetRoutingInfo ()
+GbrInfo::GetRoutingInfo ()
 {
   return m_rInfo;
 }
 
 void
-ReserveInfo::SetReserved (bool reserved)
+GbrInfo::SetReserved (bool reserved)
 {
   m_isReserved = reserved;
 }
 
-DataRate
-ReserveInfo::GetDownDataRate (void) const
+uint16_t
+GbrInfo::GetDscp (void) const
 {
-  return m_downDataRate;
+  return m_dscp;
 }
 
-DataRate
-ReserveInfo::GetUpDataRate (void) const
+uint64_t
+GbrInfo::GetDownBitRate (void) const
 {
-  return m_upDataRate;
+  return m_hasDown ? m_downBitRate : 0;
+}
+
+uint64_t
+GbrInfo::GetUpBitRate (void) const
+{
+  return m_hasUp ? m_upBitRate : 0;
 }
 
 bool
-ReserveInfo::IsReserved (void) const
+GbrInfo::IsReserved (void) const
 {
   return m_isReserved;
 }
@@ -389,7 +411,7 @@ RingRoutingInfo::RingRoutingInfo ()
   NS_LOG_FUNCTION (this);
 }
 
-RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo, 
+RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo,
                                   RoutingPath shortDownPath)
   : m_rInfo (rInfo)
 {

@@ -63,7 +63,7 @@ private:
   DataRate              m_gwLinkDataRate;     //!< Gateway link data rate
   Time                  m_gwLinkDelay;        //!< Gateway link delay
   uint16_t              m_linkMtu;            //!< Link mtu
-  uint16_t              m_nodes;              //!< Number of switches in the ring
+  uint16_t              m_nodes;              //!< Number of switches
 
   /** Helper to assign addresses to S1-U NetDevices */
   Ipv4AddressHelper m_s1uIpv4AddressHelper;

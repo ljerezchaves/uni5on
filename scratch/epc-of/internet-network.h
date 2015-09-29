@@ -76,7 +76,7 @@ private:
   DataRate           m_linkDataRate;  //!< Internet link data rate
   Time               m_linkDelay;     //!< Internet link delay
   uint16_t           m_linkMtu;       //!< Internet link MTU
-  bool               m_csmaLink;      //!< If true, use csma instead of p2p link
+  bool               m_csmaLink;      //!< Use csma instead of p2p link
 };
 
 };  // namespace ns3

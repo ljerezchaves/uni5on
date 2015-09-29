@@ -112,8 +112,8 @@ private:
   Ptr<LteHelper>             m_lteHelper;     //!< LTE radio helper
   Ptr<Node>                  m_webHost;       //!< Internet server node
 
-  std::string           m_inputPrefix;        //!< Common input prefix filenames
-  std::string           m_outputPrefix;       //!< Common output prefix filenames
+  std::string           m_inputPrefix;        //!< Common input prefix
+  std::string           m_outputPrefix;       //!< Common output prefix
   std::string           m_topoFilename;       //!< Topology filename
   std::string           m_switchLog;          //!< Switches log level
   bool                  m_pcapTrace;          //!< Enable PCAP traces
@@ -121,7 +121,7 @@ private:
   std::vector<uint32_t> m_UesPerEnb;          //!< Number of UEs per eNb
   std::vector<uint16_t> m_SwitchIdxPerEnb;    //!< Switch index per eNb
 
-  Time                            m_dumpTimeout;    //!< Dump stats timeout.
+  Time                            m_dumpTimeout;    //!< Dump stats timeout
   Ptr<AdmissionStatsCalculator>   m_admissionStats; // Admission statistics
   Ptr<GatewayStatsCalculator>     m_gatewayStats;   // Gateway statistics
   Ptr<BandwidthStatsCalculator>   m_bandwidthStats; // Bandwidth statistics

@@ -63,6 +63,7 @@ protected:
   // Inherited from OpenFlowEpcController
   void NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo);
   void NotifyTopologyBuilt (NetDeviceContainer devices);
+  void NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo);
   bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer);
   bool TopologyRemoveRouting (Ptr<RoutingInfo> rInfo);
   bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo);
@@ -104,7 +105,7 @@ private:
    * \param dstSwitchIdx Destination switch index.
    * \return The routing path.
    */
-  RingRoutingInfo::RoutingPath FindShortestPath (uint16_t srcSwitchIdx, 
+  RingRoutingInfo::RoutingPath FindShortestPath (uint16_t srcSwitchIdx,
                                                  uint16_t dstSwitchIdx);
 
   /**
@@ -119,70 +120,71 @@ private:
                        RingRoutingInfo::RoutingPath routingPath);
 
   /**
-   * Get the available bandwidth for this ring routing information, considering
-   * both downlink and uplink paths.
-   * \internal 
+   * Get the available GBR bit rate for this ring routing information,
+   * considering both downlink and uplink paths.
+   * \internal
    * This method implements the GBR Distance-Based Reservation algorithm
-   * (DeBaR) proposed by prof. Deep Medhi. The general ideal is a dynamic
-   * bandwidth usage factor that can be ajudsted based on the distance betweem
-   * the eNB switch and the gateway switch. The closer the gateway the eNB is,
-   * the more it can use from the available bandwidth. The goal is to prevent
-   * flows that are very close to the gateway from running out of resources
-   * early, since this last link is always the most congested ond. 
+   * (DeBaR) proposed by prof. Deep Medhi. The general idea is a dynamic bit
+   * rate usage factor that can be adjusted based on the distance between the
+   * eNB switch and the gateway switch.
    * \param ringInfo The ring routing information.
-   * \param useShortPath When true, get the available bandwidth in the shortest
+   * \param useShortPath When true, get the available bit rate in the shortest
    * path between source and destination nodes; otherwise, considers the
-   * inverted path.
-   * \return A pair of available bandwidth data rates, for both downlink and
-   * uplink paths, in this order.
+   * inverted (long) path.
+   * \return A pair of available GBR bit rates, for both downlink and uplink
+   * paths, in this strict order.
    */
-  std::pair<DataRate, DataRate> 
-  GetAvailableBandwidth (Ptr<const RingRoutingInfo> ringInfo, 
-                         bool useShortPath = true);
+  std::pair<uint64_t, uint64_t>
+  GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
+                          bool useShortPath = true);
 
   /**
-   * Reserve the bandwidth for this bearer in network.
+   * Reserve the bit rate for this bearer in network.
    * \param ringInfo The ring routing information.
-   * \param reserveInfo The reserve information.
+   * \param gbrInfo The GBR information.
    * \return True if success, false otherwise;
    */
-  bool ReserveBandwidth (Ptr<const RingRoutingInfo> ringInfo,
-                         Ptr<ReserveInfo> reserveInfo);
-  
-  /**
-   * Release the bandwidth for this bearer in network.
-   * \param ringInfo The ring routing information.
-   * \param reserveInfo The reserve information.
-   * \return True if success, false otherwise;
-   */
-  bool ReleaseBandwidth (Ptr<const RingRoutingInfo> ringInfo,
-                         Ptr<ReserveInfo> reserveInfo);
+  bool ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
+                          Ptr<GbrInfo> gbrInfo);
 
   /**
-   * Reserve the indicated bandwidth at each link from source to
-   * destination switch index following the indicated routing path. 
+   * Release the bit rate for this bearer in network.
+   * \param ringInfo The ring routing information.
+   * \param gbrInfo The GBR information.
+   * \return True if success, false otherwise;
+   */
+  bool ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
+                          Ptr<GbrInfo> gbrInfo);
+
+  /**
+   * Reserve the indicated bit rate at each link from source to
+   * destination switch index following the indicated routing path.
+   * \attention To avoid fatal errors, be sure that there is enough available
+   * bit rate in this link before reserving it.
    * \param srcSwitchIdx Source switch index.
    * \param dstSwitchIdx Destination switch index.
    * \param routingPath The routing path.
-   * \param reserve The bandwidth to reserve.
+   * \param bitRate The bit rate to reserve.
    * \return True if success, false otherwise;
    */
   bool PerLinkReserve (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                       RingRoutingInfo::RoutingPath routingPath, 
-                       DataRate reserve);
+                       RingRoutingInfo::RoutingPath routingPath,
+                       uint64_t bitRate);
 
   /**
-   * Release the indicated bandwidth at each link from source to
-   * destination switch index following the indicated routing path. 
+   * Release the indicated bit rate at each link from source to
+   * destination switch index following the indicated routing path.
+   * \attention To avoid fatal errors, be sure that there is enough reserved
+   * bit rate in this link before releasing it.
    * \param srcSwitchIdx Source switch index.
    * \param dstSwitchIdx Destination switch index.
    * \param routingPath The routing path.
-   * \param release The bandwidth to release.
+   * \param bitRate The bit rate to release.
    * \return True if success, false otherwise;
    */
   bool PerLinkRelease (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                       RingRoutingInfo::RoutingPath routingPath, 
-                       DataRate release);
+                       RingRoutingInfo::RoutingPath routingPath,
+                       uint64_t bitRate);
 
   /**
    * Get the next switch index following the indicated routing path.
@@ -202,12 +204,11 @@ private:
 
   uint16_t            m_noSwitches;       //!< Number of switches in topology.
   RoutingStrategy     m_strategy;         //!< Routing strategy in use.
-  double              m_gbrReserveQuota;  //!< GBR reserve quota.
   double              m_debarStep;        //!< DeBaR increase step.
   bool                m_debarShortPath;   //!< True for DeBaR in shortest path.
   bool                m_debarLongPath;    //!< True for DeBaR in longest path.
 
-  /** 
+  /**
    * Map saving <Pair of switch indexes / Connection information.
    * The pair of switch indexes are saved in increasing order.
    */

@@ -97,8 +97,8 @@ private:
   std::string m_admStatsFilename;       //!< AdmStats filename
   std::string m_brqStatsFilename;       //!< BrqStats filename
 
-  Ptr<OutputStreamWrapper> admWrapper;  //!< AdmStats file wrapper
-  Ptr<OutputStreamWrapper> brqWrapper;  //!< BrqStats file wrapper
+  Ptr<OutputStreamWrapper> m_admWrapper;  //!< AdmStats file wrapper
+  Ptr<OutputStreamWrapper> m_brqWrapper;  //!< BrqStats file wrapper
 };
 
 
@@ -151,16 +151,16 @@ private:
   Time GetActiveTime (void) const;
 
   /**
-   * Get the downlink data rate.
-   * \return The data rate.
+   * Get the downlink bit rate.
+   * \return The bit rate.
    */
-  DataRate GetDownDataRate (void) const;
+  uint64_t GetDownBitRate (void) const;
 
   /**
-   * Get the uplink data rate.
-   * \return The data rate.
+   * Get the uplink bit rate.
+   * \return The bit rate.
    */
-  DataRate GetUpDataRate (void) const;
+  uint64_t GetUpBitRate (void) const;
 
   uint32_t    m_pgwDownBytes;   //!< Pgw traffic downlink bytes.
   uint32_t    m_pgwUpBytes;     //!< Pgw traffic uplink bytes.
@@ -168,8 +168,8 @@ private:
   Ptr<Queue>  m_upQueue;        //!< Internet uplink queue
   Time        m_lastResetTime;  //!< Last reset time
 
-  std::string m_pgwStatsFilename;       //!< PgwStats filename
-  Ptr<OutputStreamWrapper> pgwWrapper;  //!< PgwStats file wrapper
+  std::string m_pgwStatsFilename;         //!< PgwStats filename
+  Ptr<OutputStreamWrapper> m_pgwWrapper;  //!< PgwStats file wrapper
 };
 
 
@@ -232,11 +232,17 @@ private:
 
   Time m_lastResetTime;                 //!< Last reset time
 
-  std::string m_bwdStatsFilename;       //!< BwdStats filename
-  std::string m_resStatsFilename;       //!< ResStats filename
+  std::string m_regStatsFilename;       //!< RegStats filename
+  std::string m_renStatsFilename;       //!< RenStats filename
+  std::string m_bwbStatsFilename;       //!< BwbStats filename
+  std::string m_bwgStatsFilename;       //!< BwgStats filename
+  std::string m_bwnStatsFilename;       //!< BwnStats filename
 
-  Ptr<OutputStreamWrapper> bwdWrapper;  //!< BwdStats file wrapper
-  Ptr<OutputStreamWrapper> resWrapper;  //!< ResStats file wrapper
+  Ptr<OutputStreamWrapper> m_regWrapper;  //!< RegStats file wrapper
+  Ptr<OutputStreamWrapper> m_renWrapper;  //!< RenStats file wrapper
+  Ptr<OutputStreamWrapper> m_bwbWrapper;  //!< BwbStats file wrapper
+  Ptr<OutputStreamWrapper> m_bwgWrapper;  //!< BwgStats file wrapper
+  Ptr<OutputStreamWrapper> m_bwnWrapper;  //!< BwnStats file wrapper
 };
 
 
@@ -279,8 +285,8 @@ private:
 
   NetDeviceContainer m_devices; //!< OpenFlow switch devices
 
-  std::string m_swtStatsFilename;       //!< SwtStats filename
-  Ptr<OutputStreamWrapper> swtWrapper;  //!< SwtStats file wrapper
+  std::string m_swtStatsFilename;         //!< SwtStats filename
+  Ptr<OutputStreamWrapper> m_swtWrapper;  //!< SwtStats file wrapper
 };
 
 
@@ -318,7 +324,7 @@ private:
    * Reset all internal counters.
    */
   void ResetCounters ();
-  
+
   /**
    * Get the active time value since last reset.
    * \return The time value.
@@ -326,23 +332,23 @@ private:
   Time GetActiveTime (void) const;
 
   /**
-   * Get the downlink data rate.
-   * \return The data rate.
+   * Get the downlink bit rate.
+   * \return The bit rate.
    */
-  DataRate GetDownDataRate (void) const;
+  uint64_t GetDownBitRate (void) const;
 
   /**
-   * Get the uplink data rate.
-   * \return The data rate.
+   * Get the uplink bit rate.
+   * \return The bit rate.
    */
-  DataRate GetUpDataRate (void) const;
+  uint64_t GetUpBitRate (void) const;
 
   Ptr<Queue>  m_downQueue;      //!< Internet downlink queue
   Ptr<Queue>  m_upQueue;        //!< Internet uplink queue
   Time        m_lastResetTime;  //!< Last reset time
 
-  std::string m_webStatsFilename;       //!< WebStats filename
-  Ptr<OutputStreamWrapper> webWrapper;  //!< WebStats file wrapper
+  std::string m_webStatsFilename;         //!< WebStats filename
+  Ptr<OutputStreamWrapper> m_webWrapper;  //!< WebStats file wrapper
 };
 
 
@@ -429,7 +435,8 @@ private:
   Ptr<const OpenFlowEpcController> m_controller;  //!< Network controller
 
   /** A pair of QosStatsCalculator, for downlink and uplink EPC statistics */
-  typedef std::pair<Ptr<QosStatsCalculator>, Ptr<QosStatsCalculator> > QosStatsPair_t;
+  typedef std::pair<Ptr<QosStatsCalculator>,
+                    Ptr<QosStatsCalculator> > QosStatsPair_t;
 
   /** A Map saving <GTP TEID / QoS stats pair > */
   typedef std::map<uint32_t, QosStatsPair_t> TeidQosMap_t;
@@ -438,8 +445,8 @@ private:
   std::string m_appStatsFilename;       //!< AppStats filename
   std::string m_epcStatsFilename;       //!< EpcStats filename
 
-  Ptr<OutputStreamWrapper> appWrapper;  //!< AppStats file wrapper
-  Ptr<OutputStreamWrapper> epcWrapper;  //!< EpcStats file wrapper
+  Ptr<OutputStreamWrapper> m_appWrapper;  //!< AppStats file wrapper
+  Ptr<OutputStreamWrapper> m_epcWrapper;  //!< EpcStats file wrapper
 };
 
 } // namespace ns3
