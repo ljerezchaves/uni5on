@@ -58,7 +58,7 @@ TypeId
 UanPhyCalcSinrDual::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::UanPhyCalcSinrDual")
-    .SetParent<Object> ()
+    .SetParent<UanPhyCalcSinr> ()
     .SetGroupName ("Uan")
     .AddConstructor<UanPhyCalcSinrDual> ()
   ;
@@ -498,7 +498,7 @@ UanPhyDual::GetChannel (void) const
   return m_phy1->GetChannel ();
 }
 Ptr<UanNetDevice>
-UanPhyDual::GetDevice (void)
+UanPhyDual::GetDevice (void) const
 {
   return m_phy1->GetDevice ();
 }

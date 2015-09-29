@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2010 IITP RAS
+ * Copyright (c) 2015, Lawrence Livermore National Laboratory
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -15,31 +15,24 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Pavel Boyko <boyko@iitp.ru>
+ * Author: Peter D. Barnes, Jr. <pdbarnes@llnl.gov>
  */
 
-#ifndef AODV_LOOPBACK_H
-#define AODV_LOOPBACK_H
-#include "ns3/test.h"
-#include <string>
+#include "ns3/mesh-stack-installer.h"
 
 namespace ns3
 {
-namespace aodv
+NS_OBJECT_ENSURE_REGISTERED (MeshStack);
+  
+TypeId
+MeshStack::GetTypeId ()
 {
-/**
- * \ingroup aodv
- * 
- * \brief AODV ping 127.0.0.1 test case
- */
-struct LoopbackTestCase : public TestCase
-{
-  LoopbackTestCase () : TestCase ("Ping 127.0.0.1 test") {}
-  /// Run test
-  void DoRun ();
-};
-
-}
+  static TypeId tid = TypeId ("ns3::MeshStack")
+    .SetParent<Object> ()
+    .SetGroupName ("Mesh")
+    // No AddConstructor because this is an abstract class.
+    ;
+  return tid;
 }
 
-#endif /* AODV_LOOPBACK_H */
+} // namespace ns3

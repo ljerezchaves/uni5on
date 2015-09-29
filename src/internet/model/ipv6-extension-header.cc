@@ -68,6 +68,10 @@ uint8_t Ipv6ExtensionHeader::GetNextHeader () const
 
 void Ipv6ExtensionHeader::SetLength (uint16_t length)
 {
+  NS_ASSERT_MSG (!(length & 0x7), "Invalid Ipv6ExtensionHeader Length, must be a multiple of 8 bytes.");
+  NS_ASSERT_MSG (length > 0, "Invalid Ipv6ExtensionHeader Length, must be greater than 0.");
+  NS_ASSERT_MSG (length < 2048, "Invalid Ipv6ExtensionHeader Length, must be a lower than 2048.");
+
   m_length = (length >> 3) - 1;
 }
 
@@ -333,7 +337,7 @@ Ipv6ExtensionFragmentHeader::Ipv6ExtensionFragmentHeader ()
   : m_offset (0),
     m_identification (0)
 {
-  SetLength (0);
+  SetLength (16);
 }
 
 Ipv6ExtensionFragmentHeader::~Ipv6ExtensionFragmentHeader ()
@@ -398,8 +402,7 @@ uint32_t Ipv6ExtensionFragmentHeader::Deserialize (Buffer::Iterator start)
   Buffer::Iterator i = start;
 
   SetNextHeader (i.ReadU8 ());
-  i.ReadU8();
-  SetLength (0);
+  SetLength ((i.ReadU8 () + 1) << 3);
   m_offset = i.ReadNtohU16 ();
   m_identification = i.ReadNtohU32 ();
 
