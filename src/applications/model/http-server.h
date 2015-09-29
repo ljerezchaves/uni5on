@@ -79,6 +79,13 @@ private:
   virtual void StopApplication (void);     // Called at time specified by Stop
 
   /**
+   * Process the Http request message, sending back the response.
+   * \param socket The TCP socket.
+   * \param header The HTTP request header.
+   */
+  bool ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header);
+
+  /**
    * \brief Processes the request of client to establish a TCP connection.
    * \param socket Socket that receives the TCP request for connection.
    */

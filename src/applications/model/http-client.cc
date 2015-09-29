@@ -63,10 +63,6 @@ HttpClient::HttpClient ()
   m_socket = 0;
   m_serverApp = 0;
   m_forceStop = EventId ();
-  m_contentLength = 0;
-  m_bytesReceived = 0;
-  m_numOfInlineObjects = 0;
-  m_inlineObjLoaded = 0;
 
   // Mu and Sigma data was taken from paper "An HTTP Web Traffic Model Based on
   // the Top One Million Visited Web Pages" by Rastin Pries et. al (Table II).
@@ -203,13 +199,14 @@ HttpClient::SendRequest (Ptr<Socket> socket, std::string url)
   NS_LOG_FUNCTION (this);
 
   // Setting request message
-  m_httpHeader.SetRequest ();
-  m_httpHeader.SetVersion ("HTTP/1.1");
-  m_httpHeader.SetRequestMethod ("GET");
-  m_httpHeader.SetRequestUrl (url);
+  HttpHeader httpHeader;
+  httpHeader.SetRequest ();
+  httpHeader.SetVersion ("HTTP/1.1");
+  httpHeader.SetRequestMethod ("GET");
+  httpHeader.SetRequestUrl (url);
 
   Ptr<Packet> packet = Create<Packet> ();
-  packet->AddHeader (m_httpHeader);
+  packet->AddHeader (httpHeader);
   socket->Send (packet);
 }
 
@@ -218,48 +215,76 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  Ptr<Packet> packet = socket->Recv ();
-  uint32_t bytesReceived = packet->GetSize ();
-  m_qosStats->NotifyReceived (0, Simulator::Now (), bytesReceived);
+  static uint32_t    pendingBytes = 0;
+  static uint32_t    pendingObjects = 0;
+  static std::string contentType = "";
+  static Ptr<Packet> packet;
 
-  HttpHeader httpHeaderIn;
-  packet->PeekHeader (httpHeaderIn);
-  std::string statusCode = httpHeaderIn.GetResponseStatusCode ();
-
-  if (statusCode == "200")
+  do
     {
-      m_contentType = httpHeaderIn.GetHeaderField ("ContentType");
-      m_contentLength = atoi (httpHeaderIn.GetHeaderField ("ContentLength").c_str ());
-      m_bytesReceived = bytesReceived - httpHeaderIn.GetSerializedSize ();
-      if (m_contentType == "main/object")
+      // Get more data from socket, if available
+      if (!packet || packet->GetSize () == 0)
         {
-          m_numOfInlineObjects = atoi (httpHeaderIn.GetHeaderField ("NumOfInlineObjects").c_str ());
+          packet = socket->Recv ();
+          m_qosStats->NotifyReceived (0, Simulator::Now (), packet->GetSize ());
         }
-    }
-  else
-    {
-      m_bytesReceived += bytesReceived;
-    }
-
-  if (m_bytesReceived == m_contentLength)
-    {
-      m_contentLength = 0;
-      NS_LOG_INFO ("HTTP " << m_contentType << " successfully received.");
-
-      if (m_contentType == "main/object")
+      else if (socket->GetRxAvailable ())
         {
-          NS_LOG_INFO ("There are " << m_numOfInlineObjects << " inline objects.");
-          m_inlineObjLoaded = 0;
+          Ptr<Packet> pktTemp = socket->Recv ();
+          packet->AddAtEnd (pktTemp);
+          m_qosStats->NotifyReceived (0, Simulator::Now (), pktTemp->GetSize ());
+        }
 
-          NS_LOG_DEBUG ("Request for inline/object 1");
-          SendRequest (socket, "inline/object");
+      if (!pendingBytes)
+        {
+          // No pending bytes. This is the start of a new HTTP message.
+          HttpHeader httpHeader;
+          packet->RemoveHeader (httpHeader);
+          NS_ASSERT_MSG (httpHeader.GetResponseStatusCode () == "200",
+                         "Invalid HTTP response message.");
+
+          // Get the content length for this message
+          pendingBytes =
+            atoi (httpHeader.GetHeaderField ("ContentLength").c_str ());
+
+          // For main/objects, get the number of inline objects to load
+          contentType = httpHeader.GetHeaderField ("ContentType");
+          if (contentType == "main/object")
+            {
+              pendingObjects =
+                atoi (httpHeader.GetHeaderField ("InlineObjects").c_str ());
+            }
+        }
+
+      // Let's consume received data
+      if (packet->GetSize () >= pendingBytes)
+        {
+          packet->RemoveAtStart (pendingBytes);
+          pendingBytes = 0;
         }
       else
         {
-          m_inlineObjLoaded++;
-          if (m_inlineObjLoaded < m_numOfInlineObjects)
+          pendingBytes -= packet->GetSize ();
+          packet->RemoveAtStart (packet->GetSize ());
+        }
+
+      if (!pendingBytes)
+        {
+          // This is the end of the HTTP message.
+          NS_LOG_INFO ("HTTP " << contentType << " successfully received.");
+          if (contentType == "main/object")
             {
-              NS_LOG_DEBUG ("Request for inline/object " << m_inlineObjLoaded + 1);
+              NS_LOG_INFO ("There are " << pendingObjects << " inline objects.");
+            }
+          else
+            {
+              pendingObjects--;
+            }
+
+          // When necessary, request inline objects
+          if (pendingObjects)
+            {
+              NS_LOG_DEBUG ("Request for inline/object " << pendingObjects);
               SendRequest (socket, "inline/object");
             }
           else
@@ -269,7 +294,9 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
               SetReadingTime (socket);
             }
         }
-    }
+
+    } // Repeat until no more data available to process
+  while (socket->GetRxAvailable () || packet->GetSize ());
 }
 
 void
