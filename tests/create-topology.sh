@@ -38,6 +38,7 @@ ARGS=$(getopt -o l:u:d: --long \
 Enbs:,\
 NumSwitches:,\
 SwitchLinkDataRate:,\
+AllTraffic:,\
 VoipTraffic:,\
 GbrLiveVideoTraffic:,\
 BufferedVideoTraffic:,\
@@ -79,6 +80,12 @@ while true ; do
       NumSwitches=$2 ; shift 2 ;;
     --SwitchLinkDataRate)
       SwitchLinkDataRate=$2 ; shift 2 ;;
+    --AllTraffic)
+      VoipTraffic=$2 ;
+      GbrLiveVideoTraffic=$2 ;
+      BufferedVideoTraffic=$2 ;
+      NonGbrLiveVideoTraffic=$2 ;
+      HttpTraffic=$2 ; shift 2 ;;
     --VoipTraffic)
       VoipTraffic=$2 ; shift 2 ;;
     --GbrLiveVideoTraffic)
@@ -111,9 +118,6 @@ while true ; do
     *) echo "Internal error!" ; exit 1 ;;
   esac
 done
-
-# This ensure thar each switch is connected only to one eNB.
-let NumSwitches=${Enbs}+1
 
 # Check for required arguments
 if [ ${required} -lt 2 ]; then
