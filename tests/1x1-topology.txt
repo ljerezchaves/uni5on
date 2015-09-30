@@ -1,0 +1,43 @@
+# This is a topology description file, used by SimulationScenario to set
+# default attributes, and proper attach each eNB to correct OpenFlow switch
+# index.
+
+# At first, we must set the number of eNBs, OpenFlow switches, and any other
+# desired attribute in the following format:
+# 1st column: keywork 'set'
+# 2nd column: the attribute path.
+# 3rd column: the attribute value inside "".
+
+set ns3::LteHexGridNetwork::Enbs "1"
+
+set ns3::RingNetwork::NumSwitches "5"
+set ns3::RingNetwork::SwitchLinkDataRate "10Mb/s"
+
+set ns3::TrafficHelper::VoipTraffic "true"
+set ns3::TrafficHelper::GbrLiveVideoTraffic "true"
+set ns3::TrafficHelper::BufferedVideoTraffic "true"
+set ns3::TrafficHelper::NonGbrLiveVideoTraffic "true"
+set ns3::TrafficHelper::HttpTraffic "true"
+
+set ns3::ConnectionInfo::GbrLinkQuota "0.4"
+set ns3::ConnectionInfo::GbrSafeguard "1Mb/s"
+set ns3::ConnectionInfo::NonGbrAdjustmentStep "1Mb/s"
+
+set ns3::OpenFlowEpcController::NonGbrCoexistence "true"
+set ns3::OpenFlowEpcController::VoipQueue "true"
+
+set ns3::RingController::Strategy "spf"
+set ns3::RingController::EnableShortDebar "false"
+set ns3::RingController::EnableLongDebar "false"
+set ns3::RingController::DebarIncStep "0.0"
+
+# Then, we can describe the topology in the following format (observe the
+# strict increasing eNB order):
+# 1st column: keywork 'topo'
+# 2nd column: the eNB index (starting at 0).
+# 3rd column: the number of UEs at this eNB.
+# 4th column: the switch index to attach this eNB to (starting at 1, as switch
+#             0 is the one attached to gateway).
+
+topo 0 1 2
+

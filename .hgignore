@@ -17,6 +17,7 @@
 ^\.waf
 ^doc/introspected-doxygen\.h$
 .*\.py[co]$
+\.pcap$
 \.mob$
 \.routes$
 ^seventh-packet-byte-count.png
@@ -42,12 +43,11 @@ massif.*
 \#[^\#/]+\#$
 ^coverity
 ^(D|U)l[A-Z][a-z]*Stats.txt$
-^output/
+\.swp$
+^.DS_Store$
+^scratch/epc-of/lte-rem.eps$
+^sim$
 syntax: glob
 TAGS
 waf
-.DS_Store
-*.swp
-scratch/epc-of/default.txt
-lte-rem.eps
-sim
+tests/*_stats.txt
