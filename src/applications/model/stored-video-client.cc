@@ -34,7 +34,8 @@ StoredVideoClient::GetTypeId (void)
     .AddAttribute ("ServerAddress",
                    "The server IPv4 address.",
                    Ipv4AddressValue (),
-                   MakeIpv4AddressAccessor (&StoredVideoClient::m_serverAddress),
+                   MakeIpv4AddressAccessor (
+                     &StoredVideoClient::m_serverAddress),
                    MakeIpv4AddressChecker ())
     .AddAttribute ("ServerPort",
                    "The server TCP port.",
@@ -91,8 +92,9 @@ StoredVideoClient::Start (void)
 
   if (!m_maxDurationTime.IsZero ())
     {
-      m_forceStop = Simulator::Schedule (m_maxDurationTime,
-                                         &StoredVideoClient::CloseSocket, this);
+      m_forceStop =
+        Simulator::Schedule (m_maxDurationTime,
+                             &StoredVideoClient::CloseSocket, this);
     }
   OpenSocket ();
 }
@@ -162,7 +164,8 @@ StoredVideoClient::ConnectionSucceeded (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);
 
   NS_LOG_LOGIC ("Server accepted connection request!");
-  socket->SetRecvCallback (MakeCallback (&StoredVideoClient::HandleReceive, this));
+  socket->SetRecvCallback (
+    MakeCallback (&StoredVideoClient::HandleReceive, this));
 
   // Request the video
   NS_LOG_INFO ("Request for main/video");
@@ -207,13 +210,15 @@ StoredVideoClient::HandleReceive (Ptr<Socket> socket)
       if (!packet || packet->GetSize () == 0)
         {
           packet = socket->Recv ();
-          m_qosStats->NotifyReceived (0, Simulator::Now (), packet->GetSize ());
+          m_qosStats->NotifyReceived (0, Simulator::Now (),
+                                      packet->GetSize ());
         }
       else if (socket->GetRxAvailable ())
         {
           Ptr<Packet> pktTemp = socket->Recv ();
           packet->AddAtEnd (pktTemp);
-          m_qosStats->NotifyReceived (0, Simulator::Now (), pktTemp->GetSize ());
+          m_qosStats->NotifyReceived (0, Simulator::Now (),
+                                      pktTemp->GetSize ());
         }
 
       if (!pendingBytes)

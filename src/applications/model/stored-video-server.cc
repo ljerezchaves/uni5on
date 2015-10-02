@@ -31,17 +31,11 @@ NS_OBJECT_ENSURE_REGISTERED (StoredVideoServer);
 /**
  * \brief Default trace to send
  */
-struct StoredVideoServer::TraceEntry StoredVideoServer::g_defaultEntries[] = {
-  {  0,  534, 'I'},
-  { 40, 1542, 'P'},
-  {120,  134, 'B'},
-  { 80,  390, 'B'},
-  {240,  765, 'P'},
-  {160,  407, 'B'},
-  {200,  504, 'B'},
-  {360,  903, 'P'},
-  {280,  421, 'B'},
-  {320,  587, 'B'}
+struct StoredVideoServer::TraceEntry StoredVideoServer::g_defaultEntries[] = 
+{
+  {  0,  534, 'I'}, { 40, 1542, 'P'}, {120,  134, 'B'}, { 80,  390, 'B'},
+  {240,  765, 'P'}, {160,  407, 'B'}, {200,  504, 'B'}, {360,  903, 'P'},
+  {280,  421, 'B'}, {320,  587, 'B'}
 };
 
 TypeId
@@ -51,7 +45,7 @@ StoredVideoServer::GetTypeId (void)
     .SetParent<Application> ()
     .AddConstructor<StoredVideoServer> ()
     .AddAttribute ("LocalPort",
-                   "Local TCP port on which we listen for incoming connections.",
+                   "Local TCP port listening for incoming connections.",
                    UintegerValue (2000),
                    MakeUintegerAccessor (&StoredVideoServer::m_port),
                    MakeUintegerChecker<uint16_t> ())
@@ -129,7 +123,8 @@ StoredVideoServer::StartApplication (void)
     {
       TypeId tid = TypeId::LookupByName ("ns3::TcpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tid);
-      InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), m_port);
+      InetSocketAddress local =
+        InetSocketAddress (Ipv4Address::GetAny (), m_port);
       m_socket->Bind (local);
       m_socket->Listen ();
       m_socket->SetAcceptCallback (
@@ -168,9 +163,12 @@ StoredVideoServer::HandleAccept (Ptr<Socket> socket, const Address& address)
   NS_LOG_FUNCTION (this << socket << address);
   NS_LOG_LOGIC ("Connection successfully established with client " <<
                 InetSocketAddress::ConvertFrom (address).GetIpv4 ());
-  socket->SetSendCallback (MakeCallback (&StoredVideoServer::SendStream, this));
-  socket->SetRecvCallback (MakeCallback (&StoredVideoServer::HandleReceive, this));
+  socket->SetSendCallback (
+    MakeCallback (&StoredVideoServer::SendStream, this));
+  socket->SetRecvCallback (
+    MakeCallback (&StoredVideoServer::HandleReceive, this));
   m_connected = true;
+  m_pendingBytes = 0;
 }
 
 void
@@ -235,6 +233,7 @@ StoredVideoServer::HandlePeerClose (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);
   NS_LOG_LOGIC ("Connection closed.");
   m_connected = false;
+  m_pendingBytes = 0;
 }
 
 void
@@ -242,6 +241,8 @@ StoredVideoServer::HandlePeerError (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
   NS_LOG_LOGIC ("Connection error.");
+  m_connected = false;
+  m_pendingBytes = 0;
 }
 
 void
@@ -326,7 +327,8 @@ StoredVideoServer::SendStream (Ptr<Socket> socket, uint32_t available)
 
   if (!available || !m_connected || !m_pendingBytes)
     {
-      // Server not connected or no more bytes to send.
+      // Server not connected, no space on tx buffer
+      // available or no more bytes to send.
       return;
     }
 

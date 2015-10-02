@@ -336,7 +336,7 @@ RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo);
 
   // We will only remove meter entries from switch. This will automatically
-  // will remove referring flow rules. The other rules will expired due idle
+  // remove referring flow rules. The other rules will expired due idle
   // timeout. Doing this we avoid race conditions and allow 'in transit'
   // packets reach its destination. So, let's wait 1 second before removing
   // these rules.
