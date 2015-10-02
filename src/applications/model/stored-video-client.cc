@@ -245,6 +245,7 @@ StoredVideoClient::HandleReceive (Ptr<Socket> socket)
           // This is the end of the HTTP message.
           NS_LOG_INFO ("Stored video successfully received.");
           CloseSocket ();
+          return;
         }
 
     } // Repeat until no more data available to process
