@@ -123,9 +123,8 @@ private:
   uint16_t                m_serverPort;     //!< Server port.
   Ptr<StoredVideoServer>  m_serverApp;      //!< Server application.
   EventId                 m_forceStop;      //!< Maximum duration stop event.
-  uint32_t                m_pendingBytes;   //!< Pending rx bytes.
+  uint32_t                m_pendingBytes;   //!< Pending RX bytes.
   Ptr<Packet>             m_rxPacket;       //!< RX packet.
-
 };
 
 } // namespace ns3

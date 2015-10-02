@@ -47,11 +47,14 @@ StoredVideoClient::GetTypeId (void)
 }
 
 StoredVideoClient::StoredVideoClient ()
+  : m_socket (0),
+    m_serverPort (0),
+    m_serverApp (0),
+    m_forceStop (EventId ()),
+    m_pendingBytes (0),
+    m_rxPacket (0)
 {
   NS_LOG_FUNCTION (this);
-  m_socket = 0;
-  m_serverApp = 0;
-  m_forceStop = EventId ();
 }
 
 StoredVideoClient::~StoredVideoClient ()
@@ -103,8 +106,9 @@ void
 StoredVideoClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
-  m_serverApp = 0;
   m_socket = 0;
+  m_serverApp = 0;
+  m_rxPacket = 0;
   Simulator::Cancel (m_forceStop);
   EpcApplication::DoDispose ();
 }
@@ -126,6 +130,10 @@ void
 StoredVideoClient::OpenSocket ()
 {
   NS_LOG_FUNCTION (this);
+
+  // Preparing internal variables for new traffic cycle
+  m_pendingBytes = 0;
+  m_rxPacket = 0;
 
   if (!m_socket)
     {
@@ -151,10 +159,9 @@ StoredVideoClient::CloseSocket ()
       NS_LOG_LOGIC ("Closing the TCP connection.");
       m_socket->ShutdownRecv ();
       m_socket->Close ();
+      m_socket->SetRecvCallback (MakeNullCallback<void, Ptr< Socket > > ());
       m_socket = 0;
     }
-  m_pendingBytes = 0;
-  m_rxPacket = 0;
 
   // Fire stop trace source
   m_active = false;
@@ -170,8 +177,7 @@ StoredVideoClient::ConnectionSucceeded (Ptr<Socket> socket)
   socket->SetRecvCallback (
     MakeCallback (&StoredVideoClient::HandleReceive, this));
 
-  // Request the video
-  NS_LOG_INFO ("Request for main/video");
+  // Request the video object
   SendRequest (socket, "main/video");
 }
 
@@ -179,7 +185,7 @@ void
 StoredVideoClient::ConnectionFailed (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-  NS_LOG_ERROR ("Server did not accepted connection request!");
+  NS_FATAL_ERROR ("Server did not accepted connection request!");
 }
 
 void
@@ -193,6 +199,7 @@ StoredVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
   httpHeader.SetRequest ();
   httpHeader.SetRequestMethod ("GET");
   httpHeader.SetRequestUrl (url);
+  NS_LOG_INFO ("Request for " << url);
 
   Ptr<Packet> packet = Create<Packet> ();
   packet->AddHeader (httpHeader);
@@ -203,10 +210,11 @@ void
 StoredVideoClient::HandleReceive (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
+  NS_ASSERT_MSG (m_active, "Invalid active state");
 
   do
     {
-      // Get more data from socket, if available
+      // Get (more) data from socket, if available
       if (!m_rxPacket || m_rxPacket->GetSize () == 0)
         {
           m_rxPacket = socket->Recv ();
@@ -231,7 +239,7 @@ StoredVideoClient::HandleReceive (Ptr<Socket> socket)
 
           // Get the content length for this message
           m_pendingBytes =
-            atoi (httpHeader.GetHeaderField ("ContentLength").c_str ());
+            std::atoi (httpHeader.GetHeaderField ("ContentLength").c_str ());
         }
 
       // Let's consume received data
@@ -244,8 +252,9 @@ StoredVideoClient::HandleReceive (Ptr<Socket> socket)
         {
           // This is the end of the HTTP message.
           NS_LOG_INFO ("Stored video successfully received.");
+          NS_ASSERT (m_rxPacket->GetSize () == 0);
           CloseSocket ();
-          return;
+          break;
         }
 
     } // Repeat until no more data available to process

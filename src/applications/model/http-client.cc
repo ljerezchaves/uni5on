@@ -58,14 +58,21 @@ HttpClient::GetTypeId (void)
 }
 
 HttpClient::HttpClient ()
+  : m_socket (0),
+    m_serverPort (0),
+    m_serverApp (0),
+    m_pagesLoaded (0),
+    m_forceStop (EventId ()),
+    m_nextRequest (EventId ()),
+    m_pendingBytes (0),
+    m_rxPacket (0),
+    m_pendingObjects (0)
 {
   NS_LOG_FUNCTION (this);
-  m_socket = 0;
-  m_serverApp = 0;
-  m_forceStop = EventId ();
 
-  // Mu and Sigma data was taken from paper "An HTTP Web Traffic Model Based on
-  // the Top One Million Visited Web Pages" by Rastin Pries et. al (Table II).
+  // Random variable parameters was taken from paper 'An HTTP Web Traffic Model
+  // Based on the Top One Million Visited Web Pages' by Rastin Pries et. al
+  // (Table II).
   m_readingTimeStream = CreateObject<LogNormalRandomVariable> ();
   m_readingTimeStream->SetAttribute ("Mu", DoubleValue (-0.495204));
   m_readingTimeStream->SetAttribute ("Sigma", DoubleValue (2.7731));
@@ -73,9 +80,9 @@ HttpClient::HttpClient ()
   // The above model provides a lot of reading times < 1sec, which is not soo
   // good for simulations in LTE EPC + SDN scenarios. So, we are incresing the
   // reading time by a some uniform random value in [0,10] secs.
-  m_readingTimeAdjust = CreateObject<UniformRandomVariable> ();
-  m_readingTimeAdjust->SetAttribute ("Min", DoubleValue (0.));
-  m_readingTimeAdjust->SetAttribute ("Max", DoubleValue (10.));
+  m_readingTimeAdjustStream = CreateObject<UniformRandomVariable> ();
+  m_readingTimeAdjustStream->SetAttribute ("Min", DoubleValue (0.));
+  m_readingTimeAdjustStream->SetAttribute ("Max", DoubleValue (10.));
 }
 
 HttpClient::~HttpClient ()
@@ -117,10 +124,13 @@ void
 HttpClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
-  m_serverApp = 0;
   m_socket = 0;
+  m_serverApp = 0;
+  m_rxPacket = 0;
   m_readingTimeStream = 0;
+  m_readingTimeAdjustStream = 0;
   Simulator::Cancel (m_forceStop);
+  Simulator::Cancel (m_nextRequest);
   EpcApplication::DoDispose ();
 }
 
@@ -142,6 +152,12 @@ HttpClient::OpenSocket ()
 {
   NS_LOG_FUNCTION (this);
 
+  // Preparing internal variables for new traffic cycle
+  m_pendingBytes = 0;
+  m_pendingObjects = 0;
+  m_pagesLoaded = 0;
+  m_rxPacket = 0;
+
   if (!m_socket)
     {
       NS_LOG_LOGIC ("Opening the TCP connection.");
@@ -161,10 +177,13 @@ HttpClient::CloseSocket ()
   NS_LOG_FUNCTION (this);
 
   Simulator::Cancel (m_forceStop);
+  Simulator::Cancel (m_nextRequest);
   if (m_socket != 0)
     {
       NS_LOG_LOGIC ("Closing the TCP connection.");
+      m_socket->ShutdownRecv ();
       m_socket->Close ();
+      m_socket->SetRecvCallback (MakeNullCallback<void, Ptr< Socket > > ());
       m_socket = 0;
     }
 
@@ -181,8 +200,7 @@ HttpClient::ConnectionSucceeded (Ptr<Socket> socket)
   NS_LOG_LOGIC ("Server accepted connection request!");
   socket->SetRecvCallback (MakeCallback (&HttpClient::HandleReceive, this));
 
-  // Request the first main object
-  m_pagesLoaded = 0;
+  // Request the first main/object
   SendRequest (socket, "main/object");
 }
 
@@ -190,7 +208,7 @@ void
 HttpClient::ConnectionFailed (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-  NS_LOG_ERROR ("Server did not accepted connection request!");
+  NS_FATAL_ERROR ("Server did not accepted connection request!");
 }
 
 void
@@ -204,6 +222,7 @@ HttpClient::SendRequest (Ptr<Socket> socket, std::string url)
   httpHeader.SetVersion ("HTTP/1.1");
   httpHeader.SetRequestMethod ("GET");
   httpHeader.SetRequestUrl (url);
+  NS_LOG_INFO ("Request for " << url);
 
   Ptr<Packet> packet = Create<Packet> ();
   packet->AddHeader (httpHeader);
@@ -214,70 +233,73 @@ void
 HttpClient::HandleReceive (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
+  NS_ASSERT_MSG (m_active, "Invalid active state");
 
-  static uint32_t    pendingBytes = 0;
-  static uint32_t    pendingObjects = 0;
   static std::string contentType = "";
-  static Ptr<Packet> packet;
 
   do
     {
       // Get more data from socket, if available
-      if (!packet || packet->GetSize () == 0)
+      if (!m_rxPacket || m_rxPacket->GetSize () == 0)
         {
-          packet = socket->Recv ();
-          m_qosStats->NotifyReceived (0, Simulator::Now (), packet->GetSize ());
+          m_rxPacket = socket->Recv ();
+          m_qosStats->NotifyReceived (0, Simulator::Now (),
+                                      m_rxPacket->GetSize ());
         }
       else if (socket->GetRxAvailable ())
         {
           Ptr<Packet> pktTemp = socket->Recv ();
-          packet->AddAtEnd (pktTemp);
-          m_qosStats->NotifyReceived (0, Simulator::Now (), pktTemp->GetSize ());
+          m_rxPacket->AddAtEnd (pktTemp);
+          m_qosStats->NotifyReceived (0, Simulator::Now (),
+                                      pktTemp->GetSize ());
         }
 
-      if (!pendingBytes)
+      if (!m_pendingBytes)
         {
           // No pending bytes. This is the start of a new HTTP message.
           HttpHeader httpHeader;
-          packet->RemoveHeader (httpHeader);
+          m_rxPacket->RemoveHeader (httpHeader);
           NS_ASSERT_MSG (httpHeader.GetResponseStatusCode () == "200",
                          "Invalid HTTP response message.");
 
           // Get the content length for this message
-          pendingBytes =
-            atoi (httpHeader.GetHeaderField ("ContentLength").c_str ());
+          m_pendingBytes =
+            std::atoi (httpHeader.GetHeaderField ("ContentLength").c_str ());
 
           // For main/objects, get the number of inline objects to load
           contentType = httpHeader.GetHeaderField ("ContentType");
           if (contentType == "main/object")
             {
-              pendingObjects =
+              m_pendingObjects =
                 atoi (httpHeader.GetHeaderField ("InlineObjects").c_str ());
             }
         }
 
       // Let's consume received data
-      uint32_t consume = std::min (packet->GetSize (), pendingBytes);
-      packet->RemoveAtStart (consume);
-      pendingBytes -= consume;
+      uint32_t consume = std::min (m_rxPacket->GetSize (), m_pendingBytes);
+      m_rxPacket->RemoveAtStart (consume);
+      m_pendingBytes -= consume;
+      NS_LOG_DEBUG ("HTTP RX " << consume << " bytes");
 
-      if (!pendingBytes)
+      if (!m_pendingBytes)
         {
           // This is the end of the HTTP message.
           NS_LOG_INFO ("HTTP " << contentType << " successfully received.");
+          NS_ASSERT (m_rxPacket->GetSize () == 0);
+
           if (contentType == "main/object")
             {
-              NS_LOG_INFO ("There are " << pendingObjects << " inline objects.");
+              NS_LOG_INFO ("There are inline objects: " << m_pendingObjects);
             }
           else
             {
-              pendingObjects--;
+              m_pendingObjects--;
             }
 
           // When necessary, request inline objects
-          if (pendingObjects)
+          if (m_pendingObjects)
             {
-              NS_LOG_DEBUG ("Request for inline/object " << pendingObjects);
+              NS_LOG_DEBUG ("Request for inline/object " << m_pendingObjects);
               SendRequest (socket, "inline/object");
             }
           else
@@ -285,11 +307,12 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
               NS_LOG_INFO ("HTTP page successfully received.");
               m_pagesLoaded++;
               SetReadingTime (socket);
+              break;
             }
         }
 
     } // Repeat until no more data available to process
-  while (socket->GetRxAvailable () || packet->GetSize ());
+  while (socket->GetRxAvailable () || m_rxPacket->GetSize ());
 }
 
 void
@@ -298,7 +321,7 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);
 
   double randomSeconds = std::abs (m_readingTimeStream->GetValue ());
-  double adjustSeconds = std::abs (m_readingTimeAdjust->GetValue ());
+  double adjustSeconds = std::abs (m_readingTimeAdjustStream->GetValue ());
   Time readingTime = Seconds (randomSeconds + adjustSeconds);
 
   // Limiting reading time to 10000 seconds according to reference paper.
@@ -310,6 +333,7 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   // Stop application due to reading time threshold.
   if (readingTime > m_maxReadingTime)
     {
+      NS_LOG_DEBUG ("Closing socket due to reading time threshold.");
       CloseSocket ();
       return;
     }
@@ -317,14 +341,14 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   // Stop application due to max page threshold.
   if (m_pagesLoaded >= m_maxPages)
     {
+      NS_LOG_DEBUG ("Closing socket due to max page threshold.");
       CloseSocket ();
       return;
     }
 
   NS_LOG_INFO ("Reading time: " << readingTime.As (Time::S));
-  Simulator::Schedule (readingTime, &HttpClient::SendRequest,
-                       this, socket, "main/object");
+  m_nextRequest = Simulator::Schedule (readingTime, &HttpClient::SendRequest,
+                                       this, socket, "main/object");
 }
 
-}
-
+} // Namespace ns3

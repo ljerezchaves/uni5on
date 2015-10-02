@@ -131,17 +131,24 @@ private:
    */
   void SetReadingTime (Ptr<Socket> socket);
 
-  Ptr<Socket>             m_socket;             //!< Local socket.
-  Ipv4Address             m_serverAddress;      //!< Server address.
-  uint16_t                m_serverPort;         //!< Server port.
-  Ptr<HttpServer>         m_serverApp;          //!< Server application.
-  uint16_t                m_pagesLoaded;        //!< Pages loaded.
-  Time                    m_maxReadingTime;     //!< Reading time threshold.
-  uint16_t                m_maxPages;           //!< Max pages threshold.
-  EventId                 m_forceStop;          //!< Maximum duration stop event.
+  Ptr<Socket>        m_socket;            //!< Local socket.
+  Ipv4Address        m_serverAddress;     //!< Server address.
+  uint16_t           m_serverPort;        //!< Server port.
+  Ptr<HttpServer>    m_serverApp;         //!< Server application.
+  uint16_t           m_pagesLoaded;       //!< Pages loaded.
+  Time               m_maxReadingTime;    //!< Reading time threshold.
+  uint16_t           m_maxPages;          //!< Max pages threshold.
+  EventId            m_forceStop;         //!< Maximum duration stop event.
+  EventId            m_nextRequest;       //!< Next request event.
+  uint32_t           m_pendingBytes;      //!< Pending RX bytes.
+  Ptr<Packet>        m_rxPacket;          //!< RX packet.
+  uint32_t           m_pendingObjects;    //!< Pending RX objects.
 
-  Ptr<LogNormalRandomVariable>  m_readingTimeStream; //!< Reading time rng.
-  Ptr<UniformRandomVariable>    m_readingTimeAdjust; //!< Adjustment rng.
+  /** Random variable for reading time. */
+  Ptr<LogNormalRandomVariable>  m_readingTimeStream;
+
+  /** Random variable for reading time adjust. */
+  Ptr<UniformRandomVariable>    m_readingTimeAdjustStream;
 };
 
 } // namespace ns3

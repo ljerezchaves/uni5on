@@ -83,7 +83,7 @@ private:
    * \param socket The TCP socket.
    * \param header The HTTP request header.
    */
-  bool ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header);
+  void ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header);
 
   /**
    * \brief Processes the request of client to establish a TCP connection.
@@ -116,9 +116,28 @@ private:
    */
   void HandlePeerError (Ptr<Socket> socket);
 
+  /**
+   * \brief Start sending the object. Callback for socket SetSendCallback.
+   * \param socket The pointer to the socket.
+   * \param available The number of bytes available for writing into the buffer
+   */
+  void SendObject (Ptr<Socket> socket, uint32_t available);
+
   Ptr<Socket>     m_socket;             //!< Local socket.
   uint16_t        m_port;               //!< Local port.
+  bool            m_connected;          //!< True if connected
   Ptr<HttpClient> m_clientApp;          //!< Client application.
+  uint32_t        m_pendingBytes;       //!< Pending TX bytes
+  Ptr<Packet>     m_rxPacket;           //!< RX packet.
+
+  /** Random variable for main object size. */
+  Ptr<WeibullRandomVariable>      m_mainObjectSizeStream;
+
+  /** Random variable for number of inline objects. */
+  Ptr<ExponentialRandomVariable>  m_numOfInlineObjStream;
+
+  /** Random variable for inline object size. */
+  Ptr<LogNormalRandomVariable>    m_inlineObjectSizeStream;
 };
 
 }

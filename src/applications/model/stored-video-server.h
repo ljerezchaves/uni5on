@@ -78,6 +78,13 @@ private:
   virtual void StopApplication (void);     // Called at time specified by Stop
 
   /**
+   * Process the Http request message, sending back the response.
+   * \param socket The TCP socket.
+   * \param header The HTTP request header.
+   */
+  void ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header);
+
+  /**
    * \brief Processes the request of client to establish a TCP connection.
    * \param socket Socket that receives the TCP request for connection.
    */
@@ -150,7 +157,8 @@ private:
   bool                            m_connected;        //!< True if connected
   Ptr<StoredVideoClient>          m_clientApp;        //!< Client application
   Ptr<RandomVariableStream>       m_lengthRng;        //!< Length generator
-  uint32_t                        m_pendingBytes;     //!< Pending bytes
+  uint32_t                        m_pendingBytes;     //!< Pending TX bytes
+  Ptr<Packet>                     m_rxPacket;         //!< RX packet.
 };
 
 } // namespace ns3
