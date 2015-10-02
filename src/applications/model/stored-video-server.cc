@@ -31,7 +31,7 @@ NS_OBJECT_ENSURE_REGISTERED (StoredVideoServer);
 /**
  * \brief Default trace to send
  */
-struct StoredVideoServer::TraceEntry StoredVideoServer::g_defaultEntries[] = 
+struct StoredVideoServer::TraceEntry StoredVideoServer::g_defaultEntries[] =
 {
   {  0,  534, 'I'}, { 40, 1542, 'P'}, {120,  134, 'B'}, { 80,  390, 'B'},
   {240,  765, 'P'}, {160,  407, 'B'}, {200,  504, 'B'}, {360,  903, 'P'},
@@ -232,6 +232,9 @@ StoredVideoServer::HandlePeerClose (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
   NS_LOG_LOGIC ("Connection closed.");
+
+  // Ok. No more data will be sent.
+  socket->ShutdownSend ();
   m_connected = false;
   m_pendingBytes = 0;
 }
@@ -241,6 +244,9 @@ StoredVideoServer::HandlePeerError (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
   NS_LOG_LOGIC ("Connection error.");
+
+  // Ok. No more data will be sent.
+  socket->ShutdownSend ();
   m_connected = false;
   m_pendingBytes = 0;
 }

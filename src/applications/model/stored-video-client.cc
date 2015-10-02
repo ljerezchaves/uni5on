@@ -149,9 +149,12 @@ StoredVideoClient::CloseSocket ()
   if (m_socket != 0)
     {
       NS_LOG_LOGIC ("Closing the TCP connection.");
+      m_socket->ShutdownRecv ();
       m_socket->Close ();
       m_socket = 0;
     }
+  m_pendingBytes = 0;
+  m_rxPacket = 0;
 
   // Fire stop trace source
   m_active = false;
@@ -201,46 +204,43 @@ StoredVideoClient::HandleReceive (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  static uint32_t    pendingBytes = 0;
-  static Ptr<Packet> packet;
-
   do
     {
       // Get more data from socket, if available
-      if (!packet || packet->GetSize () == 0)
+      if (!m_rxPacket || m_rxPacket->GetSize () == 0)
         {
-          packet = socket->Recv ();
+          m_rxPacket = socket->Recv ();
           m_qosStats->NotifyReceived (0, Simulator::Now (),
-                                      packet->GetSize ());
+                                      m_rxPacket->GetSize ());
         }
       else if (socket->GetRxAvailable ())
         {
           Ptr<Packet> pktTemp = socket->Recv ();
-          packet->AddAtEnd (pktTemp);
+          m_rxPacket->AddAtEnd (pktTemp);
           m_qosStats->NotifyReceived (0, Simulator::Now (),
                                       pktTemp->GetSize ());
         }
 
-      if (!pendingBytes)
+      if (!m_pendingBytes)
         {
           // No pending bytes. This is the start of a new HTTP message.
           HttpHeader httpHeader;
-          packet->RemoveHeader (httpHeader);
+          m_rxPacket->RemoveHeader (httpHeader);
           NS_ASSERT_MSG (httpHeader.GetResponseStatusCode () == "200",
                          "Invalid HTTP response message.");
 
           // Get the content length for this message
-          pendingBytes =
+          m_pendingBytes =
             atoi (httpHeader.GetHeaderField ("ContentLength").c_str ());
         }
 
       // Let's consume received data
-      uint32_t consume = std::min (packet->GetSize (), pendingBytes);
-      packet->RemoveAtStart (consume);
-      pendingBytes -= consume;
+      uint32_t consume = std::min (m_rxPacket->GetSize (), m_pendingBytes);
+      m_rxPacket->RemoveAtStart (consume);
+      m_pendingBytes -= consume;
       NS_LOG_DEBUG ("Stored video RX " << consume << " bytes");
 
-      if (!pendingBytes)
+      if (!m_pendingBytes)
         {
           // This is the end of the HTTP message.
           NS_LOG_INFO ("Stored video successfully received.");
@@ -248,7 +248,7 @@ StoredVideoClient::HandleReceive (Ptr<Socket> socket)
         }
 
     } // Repeat until no more data available to process
-  while (socket->GetRxAvailable () || packet->GetSize ());
+  while (socket->GetRxAvailable () || m_rxPacket->GetSize ());
 }
 
 } // Namespace ns3
