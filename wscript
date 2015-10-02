@@ -335,7 +335,7 @@ def configure(conf):
 
     if Options.options.build_profile == 'optimized':
         env.append_value('DEFINES', 'NS3_BUILD_PROFILE_OPTIMIZED')
-        env.append_value('DEFINES', 'NS3_LOG_ENABLE')
+        env.append_value('DEFINES', 'NS3_ASSERT_ENABLE')
 
     env['PLATFORM'] = sys.platform
     env['BUILD_PROFILE'] = Options.options.build_profile
