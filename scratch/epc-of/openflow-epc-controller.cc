@@ -542,17 +542,19 @@ OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   NS_LOG_FUNCTION (swtch.ipv4 << teid);
 
   char *m = ofl_msg_to_string ((ofl_msg_header*)msg, 0);
-  // NS_LOG_DEBUG ("Flow removed: " << m);
+  NS_LOG_DEBUG ("Flow removed: " << m);
   free (m);
 
   // Since handlers must free the message when everything is ok,
   // let's remove it now, as we already got the necessary information.
   ofl_msg_free_flow_removed (msg, true, 0);
 
-  // Ignoring flows removed from tables other than TEID table #1
+  // Only entries at Classification table (#1) can expire due idle timeout or
+  // can be removed by TopologyRemoveRouting (if they reference any per-flow
+  // meter entry). So, other flows cannot be removed.
   if (table != 1)
     {
-      NS_LOG_WARN ("Ignoring flow removed from table " << table);
+      NS_FATAL_ERROR ("Flow not supposed to be removed from table " << table);
       return 0;
     }
 
@@ -564,7 +566,7 @@ OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
       return 0;
     }
 
-  // When a rule expires due to idle timeout, check the following situations:
+  // When a flow is removed, check the following situations:
   // 1) The application is stopped and the bearer must be inactive.
   if (!rInfo->IsActive ())
     {
@@ -587,7 +589,7 @@ OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   // avoid problems.
   // TODO: With HTTP traffic, when MaxPages > 1, the random reading time can be
   // larger than current rule idle timeout. This will trigger this rule
-  // reinstallation process, but it could be avoided.
+  // reinstallation process, but it could/should be avoided.
   NS_ASSERT_MSG (rInfo->GetPriority () == prio, "Invalid flow priority.");
   if (rInfo->IsActive ())
     {
