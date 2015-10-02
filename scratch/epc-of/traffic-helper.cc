@@ -117,7 +117,7 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
   // the application and reporting statistics. Note that between page loads
   // there is the random reading time interval. If the reading time exceeds the
   // default switch rule idle timeout (witch is currently set to 15 seconds),
-  // we also stop the application and repost statistics. This avoids the
+  // we also stop the application and report statistics. This avoids the
   // processes of reinstalling expired rules.
   //
   m_httpHelper.SetClientAttribute ("AppName", StringValue ("Http"));

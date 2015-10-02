@@ -587,9 +587,6 @@ OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   // critical situation. For some reason, the traffic absence lead to flow
   // expiration, and we need to reinstall the rules with higher priority to
   // avoid problems.
-  // TODO: With HTTP traffic, when MaxPages > 1, the random reading time can be
-  // larger than current rule idle timeout. This will trigger this rule
-  // reinstallation process, but it could/should be avoided.
   NS_ASSERT_MSG (rInfo->GetPriority () == prio, "Invalid flow priority.");
   if (rInfo->IsActive ())
     {
