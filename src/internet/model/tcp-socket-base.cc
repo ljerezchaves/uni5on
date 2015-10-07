@@ -2171,7 +2171,7 @@ TcpSocketBase::ReceivedData (Ptr<Packet> p, const TcpHeader& tcpHeader)
         }
       // If we received FIN before and now completed all "holes" in rx buffer,
       // invoke peer close procedure
-      if (m_rxBuffer->Finished () && (tcpHeader.GetFlags () & TcpHeader::FIN) == 0)
+      if (m_state == ESTABLISHED && m_rxBuffer->Finished () && (tcpHeader.GetFlags () & TcpHeader::FIN) == 0)
         {
           DoPeerClose ();
         }
