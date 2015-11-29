@@ -883,10 +883,10 @@ EpcS1uStatsCalculator::EpcS1uStatsCalculator ()
     "/Names/SgwPgwApplication/S1uTx",
     MakeCallback (&EpcS1uStatsCalculator::EpcInputPacket, this));
   Config::Connect (
-    "/Names/OpenFlowNetwork/MeterDrop",
+    "/NodeList/*/DeviceList/*/$ns3::OFSwitch13NetDevice/MeterDrop",
     MakeCallback (&EpcS1uStatsCalculator::MeterDropPacket, this));
   Config::Connect (
-    "/Names/OpenFlowNetwork/QueueDrop",
+    "/NodeList/*/DeviceList/*/$ns3::OFSwitch13NetDevice/PortList/*/PortQueue/Drop",
     MakeCallback (&EpcS1uStatsCalculator::QueueDropPacket, this));
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::EpcApplication/AppStart",

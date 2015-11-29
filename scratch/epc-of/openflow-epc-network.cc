@@ -47,20 +47,6 @@ OpenFlowEpcNetwork::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::OpenFlowEpcNetwork")
     .SetParent<Object> ()
 
-    // Trace sources used to simplify OpenFlow queue and meter monitoring. All
-    // packets drop by OpenFlow switch meters or switch ports queues will fire
-    // these trace sources.
-    .AddTraceSource ("QueueDrop",
-                     "Packet dropped by OpenFlow port queue.",
-                     MakeTraceSourceAccessor (
-                       &OpenFlowEpcNetwork::m_queueDropTrace),
-                     "ns3::Packet::TracedCallback")
-    .AddTraceSource ("MeterDrop",
-                     "Packet dropped by OpenFlow meter band.",
-                     MakeTraceSourceAccessor (
-                       &OpenFlowEpcNetwork::m_meterDropTrace),
-                     "ns3::Packet::TracedCallback")
-
     // Trace sources used by controller to be aware of network topology
     .AddTraceSource ("NewEpcAttach",
                      "New LTE EPC entity connected to OpenFlow switch for S1U "
@@ -132,22 +118,6 @@ OpenFlowEpcNetwork::GetSwitchDevice (uint16_t index)
 {
   NS_ASSERT (index < m_ofDevices.GetN ());
   return DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (index));
-}
-
-void
-OpenFlowEpcNetwork::MeterDropPacket (std::string context,
-                                     Ptr<const Packet> packet)
-{
-  NS_LOG_FUNCTION (this << context << packet);
-  m_meterDropTrace (packet);
-}
-
-void
-OpenFlowEpcNetwork::QueueDropPacket (std::string context,
-                                     Ptr<const Packet> packet)
-{
-  NS_LOG_FUNCTION (this << context << packet);
-  m_queueDropTrace (packet);
 }
 
 void

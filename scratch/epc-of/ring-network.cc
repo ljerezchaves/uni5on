@@ -177,23 +177,6 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
 
       // Fire trace source notifying new connection between switches.
       m_newConnTrace (cInfo);
-
-      // Registering OpenFlowEpcNetwork trace sink for meter dropped packets
-      currDevice->TraceConnect (
-        "MeterDrop", Names::FindName (currNode),
-        MakeCallback (&OpenFlowEpcNetwork::MeterDropPacket, this));
-
-      // Registering OpenFlowEpcNetwork trace sink for queue drop packets
-      std::ostringstream currQueue;
-      currQueue << Names::FindName (currNode) << "/" << currPortNum;
-      currPortDevice->GetQueue ()->TraceConnect (
-        "Drop", currQueue.str (),
-        MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
-      std::ostringstream nextQueue;
-      nextQueue << Names::FindName (nextNode) << "/" << nextPortNum;
-      nextPortDevice->GetQueue ()->TraceConnect (
-        "Drop", nextQueue.str (),
-        MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
     }
 
   // Fire trace source notifying that all connections between switches are ok.
@@ -271,18 +254,7 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   // Trace source notifying a new device attached to network
   m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
 
-  // Registering trace sink for queue drop packets
-  std::ostringstream context;
-  context << Names::FindName (swNode) << "/" << portNum;
-  portDev->GetQueue ()->TraceConnect (
-    "Drop", context.str (),
-    MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
-
-  nodeDev->GetQueue ()->TraceConnect (
-    "Drop", Names::FindName (node),
-    MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
-
-  // Only for the gateway link, let's  set specific names for queues.
+  // Only for the gateway link, let's set specific names for queues.
   if (counter == 1)
     {
       Names::Add ("OpenFlowNetwork/PgwDownQueue", nodeDev->GetQueue ());
@@ -328,17 +300,6 @@ RingNetwork::AttachToX2 (Ptr<Node> node)
 
   // Trace source notifying a new device attached to network
   m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
-
-  // Registering trace sink for queue drop packets
-  std::ostringstream context;
-  context << Names::FindName (swNode) << "/" << portNum;
-  portDev->GetQueue ()->TraceConnect (
-    "Drop", context.str (),
-    MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
-
-  nodeDev->GetQueue ()->TraceConnect (
-    "Drop", Names::FindName (node),
-    MakeCallback (&OpenFlowEpcNetwork::QueueDropPacket, this));
 
   return nodeDev;
 }

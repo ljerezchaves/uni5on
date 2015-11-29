@@ -135,22 +135,6 @@ public:
   Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
 
   /**
-   * Trace sink for packets dropped by meter bands in OpenFlow switches. This
-   * will fire the MeterDrop trace source.
-   * \param context Output switch index.
-   * \param packet The dropped packet.
-   */
-  void MeterDropPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink for packets dropped by queues in OpenFlow switches. This will
-   * fire the QueueDrop trace source.
-   * \param context The queue context location.
-   * \param packet The dropped packet.
-   */
-  void QueueDropPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
    * BoolTracedCallback signature for topology creation completed.
    * \param devices The NetDeviceContainer for OpenFlow switch devices.
    */
@@ -249,12 +233,6 @@ protected:
 private:
   uint16_t                    m_gatewaySwitch;  //!< Gateway switch index.
   Ptr<Node>                   m_gatewayNode;    //!< Gateway node pointer.
-
-  /** Packet queue drop trace source. */
-  TracedCallback<Ptr<const Packet> > m_queueDropTrace;
-
-  /** Packet meter drop trace source. */
-  TracedCallback<Ptr<const Packet> > m_meterDropTrace;
 
   /** Map saving Node / Switch indexes. */
   typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;
