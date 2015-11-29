@@ -249,7 +249,8 @@ OpenFlowEpcController::NotifyNewEpcAttach (
   if (m_voipQos)
     {
       Ptr<OFSwitch13Queue> ofQueue = swtchDev->GetOutputQueue (swtchPort);
-      ofQueue->AddQueue (1, CreateObject<DropTailQueue> ());
+      uint32_t queueId = ofQueue->AddQueue (CreateObject<DropTailQueue> ());
+      NS_ASSERT_MSG (queueId == 1, "Invalid queue id.");
     }
 }
 
@@ -277,6 +278,7 @@ OpenFlowEpcController::NotifyTopologyBuilt (NetDeviceContainer devices)
     {
       Ptr<OFSwitch13NetDevice> ofDevice;
       Ptr<OFSwitch13Queue> ofQueue;
+      uint32_t queueId;
       for (uint32_t devIdx = 0; devIdx < devices.GetN (); devIdx++)
         {
           ofDevice = DynamicCast<OFSwitch13NetDevice> (devices.Get (devIdx));
@@ -284,7 +286,8 @@ OpenFlowEpcController::NotifyTopologyBuilt (NetDeviceContainer devices)
                portNo++)
             {
               ofQueue = ofDevice->GetOutputQueue (portNo);
-              ofQueue->AddQueue (1, CreateObject<DropTailQueue> ());
+              queueId = ofQueue->AddQueue (CreateObject<DropTailQueue> ());
+              NS_ASSERT_MSG (queueId == 1, "Invalid queue id.");
             }
         }
     }
