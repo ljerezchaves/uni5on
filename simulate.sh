@@ -1,8 +1,14 @@
 #!/bin/bash
 
+# Output text format
+red=$(tput setaf 1)
+green=$(tput setaf 2)
+yellow=$(tput setaf 3)
+reset=$(tput sgr0)
+bold=$(tput bold)
+normal=$(tput sgr0)
+
 function PrintHelp () {
-  bold=$(tput bold)
-  normal=$(tput sgr0)
   echo "Usage: $0 --action [ARGS]"
   echo
   echo "Available actions:"
@@ -64,9 +70,20 @@ case "${ACTION}" in
     SEED=$2
     PREFIX=$3
     ARGS=$4
+    
+    COMMAND="./waf --run=\"epc-of --RngRun=${SEED} --prefix=${PREFIX} ${ARGS}\""
     OUTFILE=$(mktemp --suffix=-epcof)
-    echo "${SEED} ${PREFIX} ${ARGS}" > ${OUTFILE}
-    ./waf --run="epc-of --RngRun=${SEED} --prefix=${PREFIX} ${ARGS}" &>> ${OUTFILE}
+    echo "${COMMAND}" > ${OUTFILE}
+    
+    echo "${green}[Start]${reset} ${COMMAND}"
+    eval ${COMMAND} &>> ${OUTFILE}
+    
+    # Check for success
+    while [ $? -ne 0 ];
+    do
+      echo "${red}[Error/${yellow}Retry]${reset} ${COMMAND}"
+      eval ${COMMAND} &>> ${OUTFILE}
+    done;
   ;;
 
   --parallelSeed)
@@ -83,6 +100,7 @@ case "${ACTION}" in
     for ((SEED=${FIRST}; ${SEED} <= ${LAST}; SEED++))
     do
       $0 --single ${SEED} ${PREFIX} "${ARGS}" &
+      sleep 0.5
     done
   ;;
 
@@ -116,6 +134,7 @@ case "${ACTION}" in
     for PREFIX in ${PREFIX_LIST};
     do
       $0 --single ${SEED} ${PREFIX} "${ARGS}" &
+      sleep 0.5
     done
   ;;
 
@@ -149,6 +168,7 @@ case "${ACTION}" in
     for ((SEED=${FIRST}; ${SEED} <= ${LAST}; SEED++))
     do
       $0 --sequentialPrefix ${SEED} "${PREFIX_LIST}" "${ARGS}" &
+      sleep 0.5
     done
   ;;
 
