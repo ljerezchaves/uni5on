@@ -39,8 +39,8 @@ This document is written in `reStructuredText <http://docutils.sourceforge.net/r
    distributed
    mobility
    network
-   ofswitch13
    olsr
+   ofswitch13
    openflow-switch
    point-to-point
    propagation

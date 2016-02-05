@@ -63,8 +63,8 @@ SOURCES = \
 	$(SRC)/internet/doc/tcp.rst \
 	$(SRC)/internet/doc/codel.rst \
 	$(SRC)/mobility/doc/mobility.rst \
-	$(SRC)/ofswitch13/doc/ofswitch13.rst \
 	$(SRC)/olsr/doc/olsr.rst \
+	$(SRC)/ofswitch13/doc/ofswitch13.rst \
 	$(SRC)/openflow/doc/openflow-switch.rst \
 	$(SRC)/point-to-point/doc/point-to-point.rst \
 	$(SRC)/wifi/doc/source/wifi.rst \
