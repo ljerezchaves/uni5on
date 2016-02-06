@@ -259,6 +259,8 @@ SOURCEFIGS = \
 	$(SRC)/netanim/doc/figures/RoutingTables.pdf \
 	$(SRC)/netanim/doc/figures/PacketTimeline.png \
 	$(SRC)/netanim/doc/figures/PacketTimeline.pdf \
+	$(SRC)/ofswitch13/doc/source/figures/ofswitch13-module.eps \
+	$(SRC)/ofswitch13/doc/source/figures/ofsoftswitch13-library.eps \
 	$(SRC)/spectrum/doc/spectrum-channel-phy-interface.png \
 	$(SRC)/spectrum/doc/spectrum-channel-phy-interface.pdf \
 	$(SRC)/spectrum/doc/spectrum-analyzer-example.eps \
@@ -354,9 +356,11 @@ IMAGES_EPS = \
 	$(FIGURES)/lr-wpan-primitives.eps \
 	$(FIGURES)/lr-wpan-data-example.eps \
 	$(FIGURES)/lr-wpan-arch.eps \
+	$(FIGURES)/ofswitch13-module.eps \
+	$(FIGURES)/ofsoftswitch13-library.eps \
 	$(FIGURES)/802-15-4-ber.eps \
 	$(FIGURES)/802-15-4-per-sens.eps \
-	$(FIGURES)/802-15-4-psr-distance.eps 
+	$(FIGURES)/802-15-4-psr-distance.eps
 
 # rescale pdf figures as necessary
 $(FIGURES)/testbed.pdf_width = 5in
@@ -409,6 +413,8 @@ $(FIGURES)/spectrum-analyzer-example.pdf_width = 15cm
 $(FIGURES)/spectrum-tv-rand-geo-points.pdf_width = 8cm
 $(FIGURES)/lr-wpan-primitives.pdf_width = 3in
 $(FIGURES)/lr-wpan-arch.pdf_width = 2in
+$(FIGURES)/ofswitch13-module.eps = 10cm
+$(FIGURES)/ofsoftswitch13-library.eps = 14cm
 
 IMAGES_PNG = ${IMAGES_EPS:.eps=.png}
 IMAGES_PDF = ${IMAGES_EPS:.eps=.pdf}
