@@ -260,6 +260,8 @@ SOURCEFIGS = \
 	$(SRC)/netanim/doc/figures/PacketTimeline.png \
 	$(SRC)/netanim/doc/figures/PacketTimeline.pdf \
 	$(SRC)/ofswitch13/doc/source/figures/ofswitch13-module.eps \
+	$(SRC)/ofswitch13/doc/source/figures/ofswitch13-netdevice.eps \
+	$(SRC)/ofswitch13/doc/source/figures/ofswitch13-queue.eps \
 	$(SRC)/ofswitch13/doc/source/figures/ofsoftswitch13-library.eps \
 	$(SRC)/spectrum/doc/spectrum-channel-phy-interface.png \
 	$(SRC)/spectrum/doc/spectrum-channel-phy-interface.pdf \
@@ -357,6 +359,8 @@ IMAGES_EPS = \
 	$(FIGURES)/lr-wpan-data-example.eps \
 	$(FIGURES)/lr-wpan-arch.eps \
 	$(FIGURES)/ofswitch13-module.eps \
+	$(FIGURES)/ofswitch13-netdevice.eps \
+	$(FIGURES)/ofswitch13-queue.eps \
 	$(FIGURES)/ofsoftswitch13-library.eps \
 	$(FIGURES)/802-15-4-ber.eps \
 	$(FIGURES)/802-15-4-per-sens.eps \
@@ -414,6 +418,8 @@ $(FIGURES)/spectrum-tv-rand-geo-points.pdf_width = 8cm
 $(FIGURES)/lr-wpan-primitives.pdf_width = 3in
 $(FIGURES)/lr-wpan-arch.pdf_width = 2in
 $(FIGURES)/ofswitch13-module.eps = 10cm
+$(FIGURES)/ofswitch13-netdevice.eps = 8cm
+$(FIGURES)/ofswitch13-queues.eps = 8cm
 $(FIGURES)/ofsoftswitch13-library.eps = 14cm
 
 IMAGES_PNG = ${IMAGES_EPS:.eps=.png}
