@@ -417,10 +417,10 @@ $(FIGURES)/spectrum-analyzer-example.pdf_width = 15cm
 $(FIGURES)/spectrum-tv-rand-geo-points.pdf_width = 8cm
 $(FIGURES)/lr-wpan-primitives.pdf_width = 3in
 $(FIGURES)/lr-wpan-arch.pdf_width = 2in
-$(FIGURES)/ofswitch13-module.eps = 10cm
-$(FIGURES)/ofswitch13-netdevice.eps = 8cm
-$(FIGURES)/ofswitch13-queues.eps = 8cm
-$(FIGURES)/ofsoftswitch13-library.eps = 14cm
+$(FIGURES)/ofswitch13-module.pdf_width = 10cm
+$(FIGURES)/ofswitch13-netdevice.pdf_width = 8cm
+$(FIGURES)/ofswitch13-queue.pdf_width = 8cm
+$(FIGURES)/ofsoftswitch13-library.pdf_width = 14cm
 
 IMAGES_PNG = ${IMAGES_EPS:.eps=.png}
 IMAGES_PDF = ${IMAGES_EPS:.eps=.pdf}
