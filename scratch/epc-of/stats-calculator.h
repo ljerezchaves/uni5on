@@ -21,7 +21,7 @@
 #ifndef EPCOF_STATS_CALCULATOR_H
 #define EPCOF_STATS_CALCULATOR_H
 
-#include "ns3/applications-module.h"
+#include "ns3/epc-apps-module.h"
 #include "ns3/nstime.h"
 #include "ns3/queue.h"
 #include "routing-info.h"

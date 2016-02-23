@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#include "ns3/seq-ts-header.h"
 #include "real-time-video-client.h"
-#include "seq-ts-header.h"
 
 namespace ns3 {
 

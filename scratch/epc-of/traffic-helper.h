@@ -24,7 +24,7 @@
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
-#include <ns3/applications-module.h>
+#include <ns3/epc-apps-module.h>
 #include <ns3/internet-module.h>
 #include "traffic-manager.h"
 

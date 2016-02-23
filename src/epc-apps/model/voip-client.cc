@@ -22,9 +22,9 @@
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
+#include <ns3/seq-ts-header.h>
 #include "voip-client.h"
 #include "voip-server.h"
-#include "seq-ts-header.h"
 
 namespace ns3 {
 

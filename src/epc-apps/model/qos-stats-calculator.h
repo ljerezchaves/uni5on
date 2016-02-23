@@ -21,7 +21,7 @@
 #ifndef QOS_STATS_CALCULATOR_H
 #define QOS_STATS_CALCULATOR_H
 
-#include "packet-loss-counter.h"
+#include "ns3/packet-loss-counter.h"
 #include "ns3/data-rate.h"
 #include "ns3/nstime.h"
 
