@@ -80,7 +80,7 @@ CsmaChannel::Attach (Ptr<CsmaNetDevice> device)
 
   // For full-duplex links we can only attach two devices to a channel
   // since there is no backoff
-  if (m_fullDuplex && m_deviceList.size () > 2)
+  if (m_fullDuplex && m_deviceList.size () > 1)
     {
       NS_LOG_DEBUG ("Falling back to half-duplex");
       m_fullDuplex = false;
