@@ -29,84 +29,47 @@ using namespace ns3;
 NS_LOG_COMPONENT_DEFINE ("Main");
 
 void ConfigureDefaults ();
-void PrintCurrentTime ();
-void EnableVerbose ();
-
-static uint32_t g_progress = 0;
+void PrintCurrentTime (uint32_t);
+void EnableVerbose (bool);
 
 int
 main (int argc, char *argv[])
 {
+  bool     verbose  = false;
+  uint32_t progress = 0;
+  uint32_t simTime  = 250;
+
   ConfigureDefaults ();
 
-  bool fastTraffic = false;
-  bool verbose = false;
-  bool lteRem = false;
-  uint32_t simTime = 250;
-  std::string prefix = "";
-
   CommandLine cmd;
-  cmd.AddValue ("fast",       "Enable fast traffic start.", fastTraffic);
   cmd.AddValue ("verbose",    "Enable verbose output.", verbose);
-  cmd.AddValue ("progress",   "Simulation progress interval [s].", g_progress);
+  cmd.AddValue ("progress",   "Simulation progress interval [s].", progress);
   cmd.AddValue ("simTime",    "Simulation time [s].", simTime);
   cmd.AddValue ("topoFile",   "ns3::SimulationScenario::TopoFilename");
   cmd.AddValue ("prefix",     "ns3::SimulationScenario::CommonPrefix");
   cmd.AddValue ("pcap",       "ns3::SimulationScenario::PcapTrace");
   cmd.AddValue ("trace",      "ns3::SimulationScenario::LteTrace");
+  cmd.AddValue ("radioMap",   "ns3::SimulationScenario::LteRem");
   cmd.AddValue ("liblog",     "ns3::SimulationScenario::SwitchLogs");
   cmd.AddValue ("voip",       "ns3::TrafficHelper::VoipTraffic");
   cmd.AddValue ("gbrLiveVid", "ns3::TrafficHelper::GbrLiveVideoTraffic");
   cmd.AddValue ("buffVid",    "ns3::TrafficHelper::BufferedVideoTraffic");
   cmd.AddValue ("nonLiveVid", "ns3::TrafficHelper::NonGbrLiveVideoTraffic");
   cmd.AddValue ("http",       "ns3::TrafficHelper::HttpTraffic");
+  cmd.AddValue ("fast",       "ns3::TrafficHelper::FastTraffic");
   cmd.AddValue ("strategy",   "ns3::RingController::Strategy");
   cmd.AddValue ("ueFixed",    "ns3::LteHexGridNetwork::UeFixedPos");
   cmd.AddValue ("bandwidth",  "ns3::RingNetwork::SwitchLinkDataRate");
-  cmd.AddValue ("radioMap",   "Generate LTE radio map", lteRem);
   cmd.Parse (argc, argv);
 
-  // For progress report, schedule regular time print
-  if (g_progress)
-    {
-      Simulator::Schedule (Seconds (g_progress), &PrintCurrentTime);
-    }
-
-  // For debug purposes, enable verbose output log
-  if (verbose)
-    {
-      EnableVerbose ();
-    }
-
-  // For debug purposes, set the short interval for traffic inter-arrival
-  if (fastTraffic)
-    {
-      Config::SetDefault (
-        "ns3::TrafficManager::PoissonInterArrival",
-        StringValue ("ns3::ExponentialRandomVariable[Mean=20.0]"));
-    }
+  // For debug purposes, enable verbose output and simulation progress report
+  PrintCurrentTime (progress);
+  EnableVerbose (verbose);
 
   // Creating the simulation scenario
+  NS_LOG_INFO ("Creating simulation scenario...");
   Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
   scenario->BuildRingTopology ();
-
-  // For debug purposes, print the LTE ratio environment map
-  if (lteRem)
-    {
-      // The channel number was manually set :/
-      Ptr<RadioEnvironmentMapHelper> remHelper =
-        CreateObject<RadioEnvironmentMapHelper> ();
-      remHelper->SetAttribute ("ChannelPath", StringValue ("/ChannelList/11"));
-      remHelper->SetAttribute ("OutputFile", StringValue ("lte-rem.out"));
-      remHelper->SetAttribute ("XMin", DoubleValue (0));
-      remHelper->SetAttribute ("XMax", DoubleValue (1500.0));
-      remHelper->SetAttribute ("XRes", UintegerValue (500));
-      remHelper->SetAttribute ("YMin", DoubleValue (0));
-      remHelper->SetAttribute ("YMax", DoubleValue (1400.0));
-      remHelper->SetAttribute ("YRes", UintegerValue (500));
-      remHelper->SetAttribute ("Z", DoubleValue (1.5));
-      remHelper->Install ();
-    }
 
   // Run the simulation
   NS_LOG_INFO ("Simulating...");
@@ -244,55 +207,58 @@ ConfigureDefaults ()
                       BooleanValue (false));
 }
 
-//void __attribute__((optimize ("O0")))
 void
-PrintCurrentTime ()
+PrintCurrentTime (uint32_t interval)
 {
-  uint32_t now = static_cast<uint32_t> (Simulator::Now ().GetSeconds ());
-  NS_UNUSED (now);
-  std::cout << "Current simulation time: "
-            << Simulator::Now ().As (Time::S)
-            << std::endl;
-  Simulator::Schedule (Seconds (g_progress), &PrintCurrentTime);
+  if (interval)
+    {
+      std::cout << "Current simulation time: "
+                << Simulator::Now ().As (Time::S)
+                << std::endl;
+      Simulator::Schedule (Seconds (interval), &PrintCurrentTime, interval);
+    }
 }
 
 void
-EnableVerbose ()
+EnableVerbose (bool enable)
 {
-  LogComponentEnable ("Main", LOG_LEVEL_ALL);
-  LogComponentEnable ("SimulationScenario", LOG_LEVEL_INFO);
-  LogComponentEnable ("StatsCalculator", LOG_LEVEL_WARN);
-  LogComponentEnable ("ConnectionInfo", LOG_LEVEL_WARN);
+  if (enable)
+    {
+      LogComponentEnable ("Main", LOG_LEVEL_ALL);
+      LogComponentEnable ("SimulationScenario", LOG_LEVEL_INFO);
+      LogComponentEnable ("StatsCalculator", LOG_LEVEL_WARN);
+      LogComponentEnable ("ConnectionInfo", LOG_LEVEL_WARN);
 
-  LogComponentEnable ("OFSwitch13NetDevice", LOG_LEVEL_WARN);
-  LogComponentEnable ("OFSwitch13Interface", LOG_LEVEL_WARN);
-  LogComponentEnable ("OFSwitch13Helper", LOG_LEVEL_WARN);
-  LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_WARN);
-  LogComponentEnable ("OFSwitch13Port", LOG_LEVEL_WARN);
-  LogComponentEnable ("OFSwitch13Queue", LOG_LEVEL_WARN);
+      LogComponentEnable ("OFSwitch13NetDevice", LOG_LEVEL_WARN);
+      LogComponentEnable ("OFSwitch13Interface", LOG_LEVEL_WARN);
+      LogComponentEnable ("OFSwitch13Helper", LOG_LEVEL_WARN);
+      LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_WARN);
+      LogComponentEnable ("OFSwitch13Port", LOG_LEVEL_WARN);
+      LogComponentEnable ("OFSwitch13Queue", LOG_LEVEL_WARN);
 
-  LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_WARN);
-  LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
-  LogComponentEnable ("RingNetwork", LOG_LEVEL_WARN);
-  LogComponentEnable ("LteSquaredGridNetwork", LOG_LEVEL_WARN);
+      LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_WARN);
+      LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
+      LogComponentEnable ("RingNetwork", LOG_LEVEL_WARN);
+      LogComponentEnable ("LteSquaredGridNetwork", LOG_LEVEL_WARN);
 
-  LogComponentEnable ("RoutingInfo", LOG_LEVEL_ALL);
-  LogComponentEnable ("RoutingInfo", LOG_PREFIX_TIME);
-  LogComponentEnable ("OpenFlowEpcController", LOG_LEVEL_ALL);
-  LogComponentEnable ("OpenFlowEpcController", LOG_PREFIX_TIME);
-  LogComponentEnable ("RingController", LOG_LEVEL_ALL);
-  LogComponentEnable ("RingController", LOG_PREFIX_TIME);
+      LogComponentEnable ("RoutingInfo", LOG_LEVEL_ALL);
+      LogComponentEnable ("RoutingInfo", LOG_PREFIX_TIME);
+      LogComponentEnable ("OpenFlowEpcController", LOG_LEVEL_ALL);
+      LogComponentEnable ("OpenFlowEpcController", LOG_PREFIX_TIME);
+      LogComponentEnable ("RingController", LOG_LEVEL_ALL);
+      LogComponentEnable ("RingController", LOG_PREFIX_TIME);
 
-  LogComponentEnable ("HttpClient", LOG_LEVEL_WARN);
-  LogComponentEnable ("HttpServer", LOG_LEVEL_WARN);
-  LogComponentEnable ("VoipClient", LOG_LEVEL_WARN);
-  LogComponentEnable ("VoipServer", LOG_LEVEL_WARN);
-  LogComponentEnable ("StoredVideoClient", LOG_LEVEL_WARN);
-  LogComponentEnable ("StoredVideoServer", LOG_LEVEL_WARN);
-  LogComponentEnable ("RealTimeVideoClient", LOG_LEVEL_WARN);
-  LogComponentEnable ("RealTimeVideoServer", LOG_LEVEL_WARN);
-  LogComponentEnable ("TrafficManager", LOG_LEVEL_ALL);
-  LogComponentEnable ("TrafficHelper", LOG_LEVEL_ALL);
-  LogComponentEnable ("EpcApplication", LOG_LEVEL_ALL);
+      LogComponentEnable ("HttpClient", LOG_LEVEL_WARN);
+      LogComponentEnable ("HttpServer", LOG_LEVEL_WARN);
+      LogComponentEnable ("VoipClient", LOG_LEVEL_WARN);
+      LogComponentEnable ("VoipServer", LOG_LEVEL_WARN);
+      LogComponentEnable ("StoredVideoClient", LOG_LEVEL_WARN);
+      LogComponentEnable ("StoredVideoServer", LOG_LEVEL_WARN);
+      LogComponentEnable ("RealTimeVideoClient", LOG_LEVEL_WARN);
+      LogComponentEnable ("RealTimeVideoServer", LOG_LEVEL_WARN);
+      LogComponentEnable ("TrafficManager", LOG_LEVEL_ALL);
+      LogComponentEnable ("TrafficHelper", LOG_LEVEL_ALL);
+      LogComponentEnable ("EpcApplication", LOG_LEVEL_ALL);
+    }
 }
 

@@ -99,10 +99,15 @@ private:
   void DatapathLogs ();
 
   /**
-   * Enable/Disable PCAP and ASCII traces.
+   * Enable/Disable traces.
    * \param prefix Common prefix for files.
    */
-  void PcapAsciiTraces ();
+  void EnableTraces ();
+
+  /**
+   * Print the LTE radio environment map.
+   */
+  void PrintLteRem ();
 
   Ptr<OpenFlowEpcNetwork>    m_opfNetwork;    //!< LTE EPC network
   Ptr<OpenFlowEpcController> m_controller;    //!< OpenFLow controller
@@ -118,6 +123,7 @@ private:
   std::string           m_switchLog;          //!< Switches log level
   bool                  m_pcapTrace;          //!< Enable PCAP traces
   bool                  m_lteTrace;           //!< Enable LTE ASCII traces
+  bool                  m_lteRem;             //!< Print the LTE radio map
   std::vector<uint32_t> m_UesPerEnb;          //!< Number of UEs per eNb
   std::vector<uint16_t> m_SwitchIdxPerEnb;    //!< Switch index per eNb
 

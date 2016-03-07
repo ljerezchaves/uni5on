@@ -81,6 +81,7 @@ void
 LteHexGridNetwork::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+  m_remHelper = 0;
   m_lteHelper = 0;
   m_epcHelper = 0;
   Object::DoDispose ();
@@ -112,6 +113,8 @@ LteHexGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper,
   NS_LOG_INFO ("Topology with " << m_nEnbs << " eNBs");
   NS_ASSERT (epcHelper != 0);
 
+  m_remHelper = CreateObject<RadioEnvironmentMapHelper> ();
+
   m_epcHelper = epcHelper;
   m_lteHelper = CreateObject<LteHelper> ();
   m_lteHelper->SetEpcHelper (m_epcHelper);
@@ -142,19 +145,43 @@ LteHexGridNetwork::GetLteHelper ()
 }
 
 void
-LteHexGridNetwork::EnableTraces (std::string prefix)
+LteHexGridNetwork::EnableTraces ()
 {
-  Config::SetDefault ("ns3::RadioBearerStatsCalculator::DlRlcOutputFilename",
-                      StringValue (prefix + "lte_dl_rlc.txt"));
-  Config::SetDefault ("ns3::RadioBearerStatsCalculator::UlRlcOutputFilename",
-                      StringValue (prefix + "lte_ul_rlc.txt"));
-  Config::SetDefault ("ns3::RadioBearerStatsCalculator::DlPdcpOutputFilename",
-                      StringValue (prefix + "lte_dl_pdcp.txt"));
-  Config::SetDefault ("ns3::RadioBearerStatsCalculator::UlPdcpOutputFilename",
-                      StringValue (prefix + "lte_ul_pdcp.txt"));
+  m_lteHelper->EnableTraces ();
+}
 
-  m_lteHelper->EnablePdcpTraces ();
-  m_lteHelper->EnableRlcTraces ();
+void
+LteHexGridNetwork::PrintRadioEnvironmentMap ()
+{
+  NS_LOG_FUNCTION (this);
+
+  Ptr<LteEnbNetDevice> enbDevice =
+    DynamicCast<LteEnbNetDevice> (m_enbDevices.Get (0));
+
+  int id = enbDevice->GetPhy ()->GetDlSpectrumPhy ()->GetChannel ()->GetId ();
+  std::ostringstream path;
+  path << "/ChannelList/" << id;
+  m_remHelper->SetAttribute ("ChannelPath", StringValue (path.str ()));
+
+  UintegerValue earfcnValue;
+  enbDevice->GetAttribute ("DlEarfcn", earfcnValue);
+  m_remHelper->SetAttribute ("Earfcn", earfcnValue);
+
+  UintegerValue dlBandwidthValue ;
+  enbDevice->GetAttribute ("DlBandwidth", dlBandwidthValue);
+  m_remHelper->SetAttribute ("Bandwidth", dlBandwidthValue);
+
+  m_remHelper->SetAttribute ("XMin", DoubleValue (0));
+  m_remHelper->SetAttribute ("XMax", DoubleValue (1500.0));
+  m_remHelper->SetAttribute ("XRes", UintegerValue (1000));
+
+  m_remHelper->SetAttribute ("YMin", DoubleValue (0));
+  m_remHelper->SetAttribute ("YMax", DoubleValue (1400.0));
+  m_remHelper->SetAttribute ("YRes", UintegerValue (1000));
+
+  m_remHelper->SetAttribute ("Z", DoubleValue (m_ueHeight));
+
+  m_remHelper->Install ();
 }
 
 void

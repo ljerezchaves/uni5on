@@ -65,9 +65,10 @@ public:
 
   /**
    * Enable LTE ascii traces.
-   * \param prefix Filename prefix to use for files.
    */
-  void EnableTraces (std::string prefix = "");
+  void EnableTraces ();
+
+  void PrintRadioEnvironmentMap ();
 
   /**
    * Creates the LTE radio tolopoly.
@@ -100,6 +101,8 @@ private:
   NetDeviceContainer          m_ueDevices;      //!< UE devices
   std::vector<NodeContainer>  m_ueNodesPerEnb;  //!< UE nodes for each eNB
   std::vector<uint32_t>       m_nUesPerEnb;     //!< Number of UEs for each eNB
+
+  Ptr<RadioEnvironmentMapHelper> m_remHelper;   //!< REM helper
 
   Ptr<LteHelper> m_lteHelper; //!< LteHelper used to create the radio network
   Ptr<EpcHelper> m_epcHelper; //!< EpcHelper used to create the EPC network

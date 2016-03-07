@@ -95,6 +95,11 @@ SimulationScenario::GetTypeId (void)
                    BooleanValue (false),
                    MakeBooleanAccessor (&SimulationScenario::m_lteTrace),
                    MakeBooleanChecker ())
+    .AddAttribute ("LteRem",
+                   "Print the radio environment map.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&SimulationScenario::m_lteRem),
+                   MakeBooleanChecker ())
     .AddAttribute ("SwitchLogs",
                    "Set the ofsoftswitch log level.",
                    StringValue ("none"),
@@ -159,9 +164,10 @@ SimulationScenario::BuildRingTopology ()
   tfcHelper->Install (m_lteNetwork->GetUeNodes (),
                       m_lteNetwork->GetUeDevices ());
 
-  // 10) Set up output ofsoftswitch13 logs and ns-3 traces
+  // 10) Set up output ofsoftswitch13 logs, ns-3 traces and LTE radio map
   DatapathLogs ();
-  PcapAsciiTraces ();
+  EnableTraces ();
+  PrintLteRem ();
 
   // 11) Creating remaining stats calculator for output dump
   m_admissionStats = CreateObject<AdmissionStatsCalculator> ();
@@ -212,6 +218,36 @@ SimulationScenario::SetCommonPrefix (std::string prefix)
                       StringValue (m_outputPrefix + "reg_stats.txt"));
   Config::SetDefault ("ns3::BandwidthStatsCalculator::RenStatsFilename",
                       StringValue (m_outputPrefix + "ren_stats.txt"));
+
+  Config::SetDefault ("ns3::RadioBearerStatsCalculator::DlRlcOutputFilename",
+                      StringValue (m_outputPrefix + "lte_dl_rlc.txt"));
+  Config::SetDefault ("ns3::RadioBearerStatsCalculator::UlRlcOutputFilename",
+                      StringValue (m_outputPrefix + "lte_ul_rlc.txt"));
+  Config::SetDefault ("ns3::RadioBearerStatsCalculator::DlPdcpOutputFilename",
+                      StringValue (m_outputPrefix + "lte_dl_pdcp.txt"));
+  Config::SetDefault ("ns3::RadioBearerStatsCalculator::UlPdcpOutputFilename",
+                      StringValue (m_outputPrefix + "lte_ul_pdcp.txt"));
+  Config::SetDefault ("ns3::MacStatsCalculator::DlOutputFilename",
+                      StringValue (m_outputPrefix + "lte_dl_mac.txt"));
+  Config::SetDefault ("ns3::MacStatsCalculator::UlOutputFilename",
+                      StringValue (m_outputPrefix + "lte_ul_mac.txt"));
+  Config::SetDefault ("ns3::PhyStatsCalculator::DlRsrpSinrFilename",
+                      StringValue (m_outputPrefix + "lte_dl_rsrp_sinr.txt"));
+  Config::SetDefault ("ns3::PhyStatsCalculator::UlSinrFilename",
+                      StringValue (m_outputPrefix + "lte_ul_sinr.txt"));
+  Config::SetDefault ("ns3::PhyStatsCalculator::UlInterferenceFilename",
+                      StringValue (m_outputPrefix + "lte_ul_interf.txt"));
+  Config::SetDefault ("ns3::PhyRxStatsCalculator::DlRxOutputFilename",
+                      StringValue (m_outputPrefix + "lte_dl_rx_phy.txt"));
+  Config::SetDefault ("ns3::PhyRxStatsCalculator::UlRxOutputFilename",
+                      StringValue (m_outputPrefix + "lte_ul_rx_phy.txt"));
+  Config::SetDefault ("ns3::PhyTxStatsCalculator::DlTxOutputFilename",
+                      StringValue (m_outputPrefix + "lte_dl_tx_phy.txt"));
+  Config::SetDefault ("ns3::PhyTxStatsCalculator::UlTxOutputFilename",
+                      StringValue (m_outputPrefix + "lte_ul_tx_phy.txt"));
+
+  Config::SetDefault ("ns3::RadioEnvironmentMapHelper::OutputFile",
+                      StringValue (m_outputPrefix + "lte-rem.out"));
 }
 
 void
@@ -312,7 +348,7 @@ SimulationScenario::DatapathLogs ()
 }
 
 void
-SimulationScenario::PcapAsciiTraces ()
+SimulationScenario::EnableTraces ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -326,7 +362,18 @@ SimulationScenario::PcapAsciiTraces ()
     }
   if (m_lteTrace)
     {
-      m_lteNetwork->EnableTraces (m_outputPrefix);
+      m_lteNetwork->EnableTraces ();
+    }
+}
+
+void
+SimulationScenario::PrintLteRem ()
+{
+  NS_LOG_FUNCTION (this);
+
+  if (m_lteRem)
+    {
+      m_lteNetwork->PrintRadioEnvironmentMap ();
     }
 }
 

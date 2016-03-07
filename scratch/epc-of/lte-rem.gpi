@@ -1,12 +1,12 @@
-set terminal postscript enhanced eps color dl 1.7 "Courier" 18
+set term pdfcairo enhanced color dashed rounded
 
-set output 'lte-rem.eps' 
+set output 'lte-rem.pdf' 
 set view map;
-set xlabel "X"
-set ylabel "Y"
+set xlabel "X (m)"
+set ylabel "Y (m)"
 set xrange [0:1500]
 set yrange [0:1400]
-set cbrange [-10:25]
+set cbrange [-5:30]
 set cblabel "SINR (dB)"
 unset key
-plot "lte-rem.out" using ($1):($2):(10*log10($4)) with image
+plot filename using ($1):($2):(10*log10($4)) with image
