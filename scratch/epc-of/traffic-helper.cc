@@ -65,7 +65,7 @@ TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
 
   // Configuring the traffic manager object factory
   m_managerFactory.SetTypeId (TrafficManager::GetTypeId ());
-  SetTfcManagerAttribute ("Controller", PointerValue (controller));
+  SetManagerAttribute ("Controller", PointerValue (controller));
 
   // Random video selection
   m_videoRng = CreateObject<UniformRandomVariable> ();
@@ -166,12 +166,17 @@ TrafficHelper::GetTypeId (void)
                    BooleanValue (false),
                    MakeBooleanAccessor (&TrafficHelper::m_nonHttp),
                    MakeBooleanChecker ())
+    .AddAttribute ("FastTraffic",
+                   "Enable short inter-arrival times.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&TrafficHelper::EnableFastTraffic),
+                   MakeBooleanChecker ())
   ;
   return tid;
 }
 
 void
-TrafficHelper::SetTfcManagerAttribute (std::string name,
+TrafficHelper::SetManagerAttribute (std::string name,
                                        const AttributeValue &value)
 {
   m_managerFactory.Set (name, value);
@@ -486,6 +491,18 @@ TrafficHelper::InstallNonGbrHttp ()
 
   // Activate dedicated bearer
   m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+}
+
+void
+TrafficHelper::EnableFastTraffic (bool fastTraffic)
+{
+  NS_LOG_FUNCTION (this << fastTraffic);
+
+  if (fastTraffic)
+    {
+      SetManagerAttribute ("PoissonInterArrival", 
+          StringValue ("ns3::ExponentialRandomVariable[Mean=20.0]"));
+    }
 }
 
 };  // namespace ns3

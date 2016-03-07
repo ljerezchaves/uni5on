@@ -62,7 +62,7 @@ public:
    * \param name the name of the attribute to set.
    * \param value the value of the attribute to set.
    */
-  void SetTfcManagerAttribute (std::string name, const AttributeValue &value);
+  void SetManagerAttribute (std::string name, const AttributeValue &value);
 
   /**
    * Install applications and traffic manager into each UE. It creates the
@@ -150,6 +150,12 @@ private:
    * MaxReadingTime is reached.
    */
   void InstallNonGbrHttp ();
+
+  /**
+   * Enable fast traffic with short inter-arrival times for debug purposes.
+   * \param fastTraffic If true, enable fast traffic.
+   */
+  void EnableFastTraffic (bool fastTraffic);
 
   ObjectFactory       m_managerFactory; //!< Traffic manager factory
 
