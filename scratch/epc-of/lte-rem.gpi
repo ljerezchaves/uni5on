@@ -1,6 +1,6 @@
 set term pdfcairo enhanced color dashed rounded
 
-set output 'lte-rem.pdf' 
+set output 'lte-rem.pdf'
 set view map;
 set xlabel "X (m)"
 set ylabel "Y (m)"
