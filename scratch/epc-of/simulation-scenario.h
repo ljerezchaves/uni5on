@@ -30,7 +30,6 @@
 #include "openflow-epc-controller.h"
 #include "traffic-helper.h"
 #include "stats-calculator.h"
-#include <vector>
 
 using namespace std;
 
@@ -52,9 +51,7 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * Build the ring simulation topology.
-   */
+  /** Build the ring simulation topology. */
   void BuildRingTopology ();
 
 protected:
@@ -62,44 +59,22 @@ protected:
   virtual void DoDispose ();
 
 private:
-  /**
-   * Strip string value in topology description file.
-   * \param value The value string.
-   * \return The stripped value string.
-   */
-  std::string StripValue (std::string value);
-
-  /**
-   * Parse topology description file.
-   * Topology file columns (indexes starts at 0):
-   * eNB index | # of UEs at this eNB | OpenFlow switch index
-   */
-  bool ParseTopology ();
-
-  /**
-   * Enable/Disable ofsoftswitch13 library log.
-   */
+  /** Enable/Disable ofsoftswitch13 library log. */
   void DatapathLogs ();
 
-  /**
-   * Enable/Disable traces.
-   * \param prefix Common prefix for files.
-   */
+  /** Enable/Disable traces. */
   void EnableTraces ();
 
-  Ptr<OpenFlowEpcNetwork>    m_opfNetwork;    //!< LTE EPC network
-  Ptr<OpenFlowEpcController> m_controller;    //!< OpenFLow controller
-  Ptr<OpenFlowEpcHelper>     m_epcHelper;     //!< LTE EPC helper
-  Ptr<LteHexGridNetwork>     m_lteNetwork;    //!< LTE radio network
-  Ptr<LteHelper>             m_lteHelper;     //!< LTE radio helper
-  Ptr<InternetNetwork>       m_webNetwork;    //!< Internet network
-  Ptr<Node>                  m_webHost;       //!< Internet server node
-
-  std::string                m_topoFilename;  //!< Topology filename
-  std::string                m_switchLog;     //!< Switches log level
-  bool                       m_pcapTrace;     //!< Enable PCAP traces
-  bool                       m_lteTrace;      //!< Enable LTE ASCII traces
-
+  Ptr<OpenFlowEpcNetwork>         m_opfNetwork;     //!< LTE EPC network
+  Ptr<OpenFlowEpcController>      m_controller;     //!< OpenFLow controller
+  Ptr<OpenFlowEpcHelper>          m_epcHelper;      //!< LTE EPC helper
+  Ptr<LteHexGridNetwork>          m_lteNetwork;     //!< LTE radio network
+  Ptr<LteHelper>                  m_lteHelper;      //!< LTE radio helper
+  Ptr<InternetNetwork>            m_webNetwork;     //!< Internet network
+  Ptr<Node>                       m_webHost;        //!< Internet server node
+  std::string                     m_switchLog;      //!< Switches log level
+  bool                            m_pcapTrace;      //!< Enable PCAP traces
+  bool                            m_lteTrace;       //!< Enable ASCII traces
   Ptr<AdmissionStatsCalculator>   m_admissionStats; //!< Admission statistics
   Ptr<GatewayStatsCalculator>     m_gatewayStats;   //!< Gateway statistics
   Ptr<BandwidthStatsCalculator>   m_bandwidthStats; //!< Bandwidth statistics

@@ -21,17 +21,19 @@
 #include <ns3/core-module.h>
 #include <ns3/config-store-module.h>
 #include "simulation-scenario.h"
+#include <iomanip>
+#include <iostream>
 
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("Main");
 
-void ForceDefaults ();
 void PrintCurrentTime (uint32_t);
-void ParseCommonPrefix (std::string);
 void EnableVerbose (bool);
 
+//
 // Prefixes used by input and output filenames.
+//
 static ns3::GlobalValue
 g_inputPrefix ("InputPrefix", "Common prefix for output filenames.",
                 ns3::StringValue (""),
@@ -49,17 +51,21 @@ main (int argc, char *argv[])
   uint32_t    progress = 0;
   uint32_t    simTime  = 250;
   std::string prefix   = "";
+  std::string cfgName  = "topology.txt";
 
-  // Parse arguments
+  //
+  // Parsing simulation arguments
+  //
   CommandLine cmd;
   cmd.AddValue ("verbose",    "Enable verbose output.", verbose);
   cmd.AddValue ("progress",   "Simulation progress interval [s].", progress);
-  cmd.AddValue ("simTime",    "Simulation time [s].", simTime);
+  cmd.AddValue ("simTime",    "Simulation stop time [s].", simTime);
   cmd.AddValue ("prefix",     "Common prefix for filenames.", prefix);
+  cmd.AddValue ("cfgName",    "Configuration filename.", cfgName);
   cmd.AddValue ("pcap",       "ns3::SimulationScenario::PcapTrace");
-  cmd.AddValue ("trace",      "ns3::SimulationScenario::LteTrace");
-  cmd.AddValue ("radioMap",   "ns3::LteHexGridNetwork::PrintRem");
+  cmd.AddValue ("ascii",      "ns3::SimulationScenario::LteTrace");
   cmd.AddValue ("liblog",     "ns3::SimulationScenario::SwitchLogs");
+  cmd.AddValue ("radioMap",   "ns3::LteHexGridNetwork::PrintRem");
   cmd.AddValue ("voip",       "ns3::TrafficHelper::VoipTraffic");
   cmd.AddValue ("gbrLiveVid", "ns3::TrafficHelper::GbrLiveVideoTraffic");
   cmd.AddValue ("buffVid",    "ns3::TrafficHelper::BufferedVideoTraffic");
@@ -69,42 +75,42 @@ main (int argc, char *argv[])
   cmd.AddValue ("strategy",   "ns3::RingController::Strategy");
   cmd.Parse (argc, argv);
 
-  ParseCommonPrefix (prefix);
+  //
+  // Updating input and output global prefixes
+  //
+  ostringstream inputPrefix, outputPrefix;
+  inputPrefix << prefix;
+  if (prefix != "")
+    {
+      char lastChar = *prefix.rbegin ();
+      if (lastChar != '-')
+        {
+          inputPrefix << "-";
+        }
+    }
+  outputPrefix << inputPrefix.str () << RngSeedManager::GetRun () << "-";
+  Config::SetGlobal ("InputPrefix", StringValue (inputPrefix.str ()));
+  Config::SetGlobal ("OutputPrefix", StringValue (outputPrefix.str ()));
+
+  //
+  // Reading the configuration file
+  //
+  std::string cfgFilename = inputPrefix.str () + cfgName;
+  std::ifstream testFile (cfgFilename.c_str (), std::ifstream::in);
+  NS_ASSERT_MSG (testFile.good (), "Invalid topology file.");
+  testFile.close ();
   
+  Config::SetDefault ("ns3::ConfigStore::Mode", StringValue ("Load"));
+  Config::SetDefault ("ns3::ConfigStore::FileFormat", StringValue ("RawText"));
+  Config::SetDefault ("ns3::ConfigStore::Filename", StringValue (cfgFilename));
   ConfigStore inputConfig;
-  inputConfig.SetAttribute ("Mode", StringValue ("Load"));
-  inputConfig.SetAttribute ("FileFormat", StringValue ("RawText"));
   inputConfig.ConfigureDefaults ();
 
-  // Force (override) some default attributes
-  ForceDefaults ();
-
-  // Enable verbose and progress report output for debug
-  PrintCurrentTime (progress);
-  EnableVerbose (verbose);
-
-  // Create the simulation scenario
-  NS_LOG_INFO ("Creating simulation scenario...");
-  Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
-  scenario->BuildRingTopology ();
-
-  // Run the simulation
-  NS_LOG_INFO ("Simulating...");
-  Simulator::Stop (Seconds (simTime + 1));
-  Simulator::Run ();
-  Simulator::Destroy ();
-  NS_LOG_INFO ("End!");
-}
-
-void
-ForceDefaults ()
-{
   //
   // Since we are using an external OpenFlow library that expects complete
-  // network packets, we need to enable checksum computations (which are
-  // disabled by default in ns-3).
+  // network packets, we must enable checksum computations. 
   //
-  GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
+  Config::SetGlobal ("ChecksumEnabled", BooleanValue (true));
 
   //
   // The minimum (default) value for TCP MSS is 536, and there's no dynamic MTU
@@ -121,6 +127,28 @@ ForceDefaults ()
   // from https://codereview.appspot.com/187880044/
   //
   Config::SetDefault ("ns3::CsmaChannel::FullDuplex", BooleanValue (true));
+
+  //
+  // Enable verbose output and progress report for debug purposes
+  //
+  PrintCurrentTime (progress);
+  EnableVerbose (verbose);
+
+  //
+  // Create the scenario
+  //
+  NS_LOG_INFO ("Creating simulation scenario...");
+  Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
+  scenario->BuildRingTopology ();
+
+  //
+  // Run the simulation
+  //
+  NS_LOG_INFO ("Simulating...");
+  Simulator::Stop (Seconds (simTime + 1));
+  Simulator::Run ();
+  Simulator::Destroy ();
+  NS_LOG_INFO ("End!");
 }
 
 void
@@ -136,24 +164,6 @@ PrintCurrentTime (uint32_t interval)
 }
 
 void
-ParseCommonPrefix (std::string prefix)
-{
-  if (prefix != "")
-    {
-      char lastChar = *prefix.rbegin ();
-      if (lastChar != '-')
-        {
-          prefix += "-";
-        }
-    }
-  ostringstream outPrefix;
-  outPrefix << prefix << RngSeedManager::GetRun () << "-";
-
-  GlobalValue::Bind ("InputPrefix", StringValue (prefix));
-  GlobalValue::Bind ("OutputPrefix", StringValue (outPrefix.str ()));
-}
-
-void
 EnableVerbose (bool enable)
 {
   if (enable)
@@ -161,7 +171,6 @@ EnableVerbose (bool enable)
       LogComponentEnable ("Main", LOG_INFO);
       LogComponentEnable ("SimulationScenario", LOG_LEVEL_INFO);
       LogComponentEnable ("StatsCalculator", LOG_LEVEL_WARN);
-      LogComponentEnable ("ConnectionInfo", LOG_LEVEL_WARN);
 
       LogComponentEnable ("OFSwitch13NetDevice", LOG_LEVEL_WARN);
       LogComponentEnable ("OFSwitch13Interface", LOG_LEVEL_WARN);
@@ -174,10 +183,10 @@ EnableVerbose (bool enable)
       LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_ALL);
       LogComponentEnable ("RingNetwork", LOG_LEVEL_WARN);
       LogComponentEnable ("LteHexGridNetwork", LOG_LEVEL_WARN);
-      LogComponentEnable ("LteHexGridEnbTopologyHelper", LOG_LOGIC);
-
-      LogComponentEnable ("RoutingInfo", LOG_LEVEL_ALL);
-      LogComponentEnable ("RoutingInfo", LOG_PREFIX_TIME);
+      LogComponentEnable ("LteHexGridEnbTopologyHelper", LOG_LEVEL_WARN);
+      LogComponentEnable ("ConnectionInfo", LOG_LEVEL_WARN);
+      LogComponentEnable ("RoutingInfo", LOG_LEVEL_WARN);
+      
       LogComponentEnable ("OpenFlowEpcController", LOG_LEVEL_ALL);
       LogComponentEnable ("OpenFlowEpcController", LOG_PREFIX_TIME);
       LogComponentEnable ("RingController", LOG_LEVEL_ALL);
@@ -191,8 +200,8 @@ EnableVerbose (bool enable)
       LogComponentEnable ("StoredVideoServer", LOG_LEVEL_WARN);
       LogComponentEnable ("RealTimeVideoClient", LOG_LEVEL_WARN);
       LogComponentEnable ("RealTimeVideoServer", LOG_LEVEL_WARN);
-      LogComponentEnable ("TrafficManager", LOG_LEVEL_ALL);
-      LogComponentEnable ("TrafficHelper", LOG_LEVEL_ALL);
-      LogComponentEnable ("EpcApplication", LOG_LEVEL_ALL);
+      LogComponentEnable ("TrafficManager", LOG_LEVEL_WARN);
+      LogComponentEnable ("TrafficHelper", LOG_LEVEL_WARN);
+      LogComponentEnable ("EpcApplication", LOG_LEVEL_WARN);
     }
 }

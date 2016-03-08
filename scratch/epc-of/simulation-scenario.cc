@@ -19,8 +19,6 @@
  */
 
 #include "simulation-scenario.h"
-#include <iomanip>
-#include <iostream>
 
 namespace ns3 {
 
@@ -70,11 +68,6 @@ SimulationScenario::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::SimulationScenario")
     .SetParent<Object> ()
     .AddConstructor<SimulationScenario> ()
-    .AddAttribute ("TopoFilename",
-                   "Filename for scenario topology description.",
-                   StringValue ("topology.txt"),
-                   MakeStringAccessor (&SimulationScenario::m_topoFilename),
-                   MakeStringChecker ())
     .AddAttribute ("PcapTrace",
                    "Enable/Disable simulation PCAP traces.",
                    BooleanValue (false),
@@ -94,15 +87,15 @@ SimulationScenario::GetTypeId (void)
   return tid;
 }
 
-// Observe the following order when creating the simulation scenario objects.
-// Don't change object names or the trace connections won't work.
 void
 SimulationScenario::BuildRingTopology ()
 {
   NS_LOG_FUNCTION (this);
 
-  ParseTopology ();
-
+  //
+  // Observe the following order when creating the simulation scenario objects.
+  // Don't change object names or the trace connections won't work.
+  //
   // 1) Create OpenFlowEpcNetwork object and name it OpenFlowNetwork.
   m_opfNetwork = CreateObject<RingNetwork> ();
   Names::Add ("OpenFlowNetwork", m_opfNetwork);
@@ -158,59 +151,6 @@ SimulationScenario::BuildRingTopology ()
   m_gatewayStats = CreateObject<GatewayStatsCalculator> ();
   m_internetStats = CreateObject<WebQueueStatsCalculator> ();
   m_epcS1uStats = CreateObject<EpcS1uStatsCalculator> ();
-}
-
-std::string
-SimulationScenario::StripValue (std::string value)
-{
-  std::string::size_type start = value.find ("\"");
-  std::string::size_type end = value.find ("\"", 1);
-  NS_ASSERT (start == 0);
-  NS_ASSERT (end == value.size () - 1);
-  return value.substr (start + 1, end - start - 1);
-}
-
-bool
-SimulationScenario::ParseTopology ()
-{
-  NS_LOG_INFO ("Parsing topology...");
-
-  StringValue stringValue;
-  GlobalValue::GetValueByName ("InputPrefix", stringValue);
-  std::string inputPrefix = stringValue.Get ();
-
-  std::string name = inputPrefix + m_topoFilename;
-  std::ifstream file;
-  file.open (name.c_str (), std::ios::out);
-  if (!file.is_open ())
-    {
-      NS_FATAL_ERROR ("Topology file not found.");
-    }
-
-  std::istringstream lineBuffer;
-  std::string line, command;
-
-  while (getline (file, line))
-    {
-      if (line.empty () || line.at (0) == '#')
-        {
-          continue;
-        }
-
-      lineBuffer.clear ();
-      lineBuffer.str (line);
-      lineBuffer >> command;
-      if (command == "set")
-        {
-          std::string attrName, attrValue;
-          lineBuffer >> attrName;
-          lineBuffer >> attrValue;
-          NS_LOG_DEBUG ("Setting attribute " << attrName <<
-                        " with " << attrValue);
-          Config::SetDefault (attrName, StringValue (StripValue (attrValue)));
-        }
-    }
-  return true;
 }
 
 void
