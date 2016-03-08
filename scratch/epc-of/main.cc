@@ -32,17 +32,12 @@ void ConfigureDefaults ();
 void PrintCurrentTime (uint32_t);
 void EnableVerbose (bool);
 
-static ns3::GlobalValue
-g_simTime ("SimulationTime", 
-           "Total duration of the simulation [s]",
-           ns3::UintegerValue (250),
-           ns3::MakeUintegerChecker<uint32_t> ());
-
 int
 main (int argc, char *argv[])
 {
   bool     verbose  = false;
   uint32_t progress = 0;
+  uint32_t simTime  = 250;
 
   ConfigureDefaults ();
   ConfigStore inputConfig;
@@ -51,6 +46,7 @@ main (int argc, char *argv[])
   CommandLine cmd;
   cmd.AddValue ("verbose",    "Enable verbose output.", verbose);
   cmd.AddValue ("progress",   "Simulation progress interval [s].", progress);
+  cmd.AddValue ("simTime",    "Simulation time [s].", simTime);
   cmd.AddValue ("topoFile",   "ns3::SimulationScenario::TopoFilename");
   cmd.AddValue ("prefix",     "ns3::SimulationScenario::CommonPrefix");
   cmd.AddValue ("pcap",       "ns3::SimulationScenario::PcapTrace");
@@ -77,14 +73,9 @@ main (int argc, char *argv[])
   Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
   scenario->BuildRingTopology ();
 
-  // Set up simulation time
-  UintegerValue uintegerValue;
-  GlobalValue::GetValueByName ("SimulationTime", uintegerValue);
-  uint32_t simTime = uintegerValue.Get ();
-  Simulator::Stop (Seconds (simTime + 1));
-
   // Run the simulation
   NS_LOG_INFO ("Simulating...");
+  Simulator::Stop (Seconds (simTime + 1));
   Simulator::Run ();
   Simulator::Destroy ();
   NS_LOG_INFO ("End!");
