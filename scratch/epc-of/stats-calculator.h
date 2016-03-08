@@ -32,6 +32,11 @@
 
 namespace ns3 {
 
+static ns3::GlobalValue
+g_dumpTimeout ("DumpStatsTimeout", "Periodic statistics dump interval.",
+               TimeValue (Seconds (10)),
+               ns3::MakeTimeChecker ());
+
 /**
  * \ingroup epcof
  * This class monitors bearer request statistics. It counts the number of

@@ -99,6 +99,11 @@ AdmissionStatsCalculator::DumpStatistics (void)
   << std::endl;
 
   ResetCounters ();
+
+  TimeValue timeValue;
+  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
+  Time next = timeValue.Get ();
+  Simulator::Schedule (next, &AdmissionStatsCalculator::DumpStatistics, this);
 }
 
 void
@@ -113,6 +118,12 @@ void
 AdmissionStatsCalculator::NotifyConstructionCompleted (void)
 {
   Object::NotifyConstructionCompleted ();
+
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+  SetAttribute ("AdmStatsFilename", StringValue (prefix + "adm_stats.txt"));
+  SetAttribute ("BrqStatsFilename", StringValue (prefix + "brq_stats.txt"));
 
   // Opening output files and printing header lines
   m_admWrapper = Create<OutputStreamWrapper> (m_admStatsFilename,
@@ -149,6 +160,11 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   << left << "  "
   << setw (12) << "RoutingPath"
   << std::endl;
+
+  TimeValue timeValue;
+  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
+  Time next = timeValue.Get ();
+  Simulator::Schedule (next, &AdmissionStatsCalculator::DumpStatistics, this);
 }
 
 void
@@ -316,6 +332,11 @@ GatewayStatsCalculator::DumpStatistics (void)
   << std::endl;
 
   ResetCounters ();
+
+  TimeValue timeValue;
+  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
+  Time next = timeValue.Get ();
+  Simulator::Schedule (next, &GatewayStatsCalculator::DumpStatistics, this);
 }
 
 void
@@ -331,6 +352,11 @@ void
 GatewayStatsCalculator::NotifyConstructionCompleted (void)
 {
   Object::NotifyConstructionCompleted ();
+  
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+  SetAttribute ("PgwStatsFilename", StringValue (prefix + "pgw_stats.txt"));
 
   // Opening output files and printing header lines
   m_pgwWrapper = Create<OutputStreamWrapper> (m_pgwStatsFilename,
@@ -351,6 +377,11 @@ GatewayStatsCalculator::NotifyConstructionCompleted (void)
   << setw (16) << "Downlink(kbps)"
   << setw (16) << "Uplink(kbps)"
   << std::endl;
+
+  TimeValue timeValue;
+  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
+  Time next = timeValue.Get ();
+  Simulator::Schedule (next, &GatewayStatsCalculator::DumpStatistics, this);
 }
 
 void
@@ -540,6 +571,11 @@ BandwidthStatsCalculator::DumpStatistics (void)
   *m_renWrapper->GetStream () << std::endl;
 
   ResetCounters ();
+
+  TimeValue timeValue;
+  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
+  Time next = timeValue.Get ();
+  Simulator::Schedule (next, &BandwidthStatsCalculator::DumpStatistics, this);
 }
 
 void
@@ -558,6 +594,15 @@ void
 BandwidthStatsCalculator::NotifyConstructionCompleted (void)
 {
   Object::NotifyConstructionCompleted ();
+  
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+  SetAttribute ("RegStatsFilename", StringValue (prefix + "reg_stats.txt"));
+  SetAttribute ("RenStatsFilename", StringValue (prefix + "ren_stats.txt"));
+  SetAttribute ("BwbStatsFilename", StringValue (prefix + "bwb_stats.txt"));
+  SetAttribute ("BwgStatsFilename", StringValue (prefix + "bwg_stats.txt"));
+  SetAttribute ("BwnStatsFilename", StringValue (prefix + "bwn_stats.txt"));
 
   // Opening output files and printing header lines
   m_bwbWrapper = Create<OutputStreamWrapper> (m_bwbStatsFilename,
@@ -589,6 +634,11 @@ BandwidthStatsCalculator::NotifyConstructionCompleted (void)
   *m_renWrapper->GetStream ()
   << left << fixed << setprecision (4)
   << setw (12) << "Time(s)";
+
+  TimeValue timeValue;
+  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
+  Time next = timeValue.Get ();
+  Simulator::Schedule (next, &BandwidthStatsCalculator::DumpStatistics, this);
 }
 
 void
@@ -703,6 +753,11 @@ SwitchRulesStatsCalculator::DumpStatistics (void)
       << dev->GetNumberFlowEntries (1) << " ";
     }
   *m_swtWrapper->GetStream () << std::endl;
+
+  TimeValue timeValue;
+  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
+  Time next = timeValue.Get ();
+  Simulator::Schedule (next, &SwitchRulesStatsCalculator::DumpStatistics, this);
 }
 
 void
@@ -717,9 +772,19 @@ SwitchRulesStatsCalculator::NotifyConstructionCompleted (void)
 {
   Object::NotifyConstructionCompleted ();
 
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+  SetAttribute ("SwtStatsFilename", StringValue (prefix + "swt_stats.txt"));
+
   // Opening output files and printing header lines
   m_swtWrapper = Create<OutputStreamWrapper> (m_swtStatsFilename,
                                               std::ios::out);
+
+  TimeValue timeValue;
+  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
+  Time next = timeValue.Get ();
+  Simulator::Schedule (next, &SwitchRulesStatsCalculator::DumpStatistics, this);
 }
 
 void
@@ -796,6 +861,11 @@ WebQueueStatsCalculator::DumpStatistics (void)
   << std::endl;
 
   ResetCounters ();
+
+  TimeValue timeValue;
+  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
+  Time next = timeValue.Get ();
+  Simulator::Schedule (next, &WebQueueStatsCalculator::DumpStatistics, this);
 }
 
 void
@@ -811,6 +881,11 @@ void
 WebQueueStatsCalculator::NotifyConstructionCompleted (void)
 {
   Object::NotifyConstructionCompleted ();
+
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+  SetAttribute ("WebStatsFilename", StringValue (prefix + "web_stats.txt"));
 
   // Opening output files and printing header lines
   m_webWrapper = Create<OutputStreamWrapper> (m_webStatsFilename,
@@ -831,6 +906,11 @@ WebQueueStatsCalculator::NotifyConstructionCompleted (void)
   << setw (16) << "Downlink(kbps)"
   << setw (16) << "Uplink(kbps)"
   << std::endl;
+
+  TimeValue timeValue;
+  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
+  Time next = timeValue.Get ();
+  Simulator::Schedule (next, &WebQueueStatsCalculator::DumpStatistics, this);
 }
 
 void
@@ -936,6 +1016,12 @@ void
 EpcS1uStatsCalculator::NotifyConstructionCompleted (void)
 {
   Object::NotifyConstructionCompleted ();
+
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+  SetAttribute ("AppStatsFilename", StringValue (prefix + "app_stats.txt"));
+  SetAttribute ("EpcStatsFilename", StringValue (prefix + "epc_stats.txt"));
 
   // Opening output files and printing header lines
   m_appWrapper = Create<OutputStreamWrapper> (m_appStatsFilename,

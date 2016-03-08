@@ -28,31 +28,37 @@ NS_LOG_COMPONENT_DEFINE ("Main");
 
 void ForceDefaults ();
 void PrintCurrentTime (uint32_t);
+void ParseCommonPrefix (std::string);
 void EnableVerbose (bool);
+
+// Prefixes used by input and output filenames.
+static ns3::GlobalValue
+g_inputPrefix ("InputPrefix", "Common prefix for output filenames.",
+                ns3::StringValue (""),
+                ns3::MakeStringChecker ());
+
+static ns3::GlobalValue
+g_outputPrefix ("OutputPrefix", "Common prefix for input filenames.",
+                ns3::StringValue (""),
+                ns3::MakeStringChecker ());
 
 int
 main (int argc, char *argv[])
 {
-  bool     verbose  = false;
-  uint32_t progress = 0;
-  uint32_t simTime  = 250;
+  bool        verbose  = false;
+  uint32_t    progress = 0;
+  uint32_t    simTime  = 250;
+  std::string prefix   = "";
 
-  // Parse input config arguments
-  // ConfigStore inputConfig;
-  // inputConfig->SetAttribute ("Mode", StringValue ("Load"));
-  // inputConfig->SetAttribute ("FileFormat", StringValue ("RawText"));
-  // inputConfig.ConfigureDefaults ();
-
-  // Parse command line arguments
+  // Parse arguments
   CommandLine cmd;
   cmd.AddValue ("verbose",    "Enable verbose output.", verbose);
   cmd.AddValue ("progress",   "Simulation progress interval [s].", progress);
   cmd.AddValue ("simTime",    "Simulation time [s].", simTime);
-  cmd.AddValue ("topoFile",   "ns3::SimulationScenario::TopoFilename");
-  cmd.AddValue ("prefix",     "ns3::SimulationScenario::CommonPrefix");
+  cmd.AddValue ("prefix",     "Common prefix for filenames.", prefix);
   cmd.AddValue ("pcap",       "ns3::SimulationScenario::PcapTrace");
   cmd.AddValue ("trace",      "ns3::SimulationScenario::LteTrace");
-  cmd.AddValue ("radioMap",   "ns3::SimulationScenario::LteRem");
+  cmd.AddValue ("radioMap",   "ns3::LteHexGridNetwork::PrintRem");
   cmd.AddValue ("liblog",     "ns3::SimulationScenario::SwitchLogs");
   cmd.AddValue ("voip",       "ns3::TrafficHelper::VoipTraffic");
   cmd.AddValue ("gbrLiveVid", "ns3::TrafficHelper::GbrLiveVideoTraffic");
@@ -61,9 +67,15 @@ main (int argc, char *argv[])
   cmd.AddValue ("http",       "ns3::TrafficHelper::HttpTraffic");
   cmd.AddValue ("fast",       "ns3::TrafficHelper::FastTraffic");
   cmd.AddValue ("strategy",   "ns3::RingController::Strategy");
-  cmd.AddValue ("bandwidth",  "ns3::RingNetwork::SwitchLinkDataRate");
   cmd.Parse (argc, argv);
+
+  ParseCommonPrefix (prefix);
   
+  ConfigStore inputConfig;
+  inputConfig.SetAttribute ("Mode", StringValue ("Load"));
+  inputConfig.SetAttribute ("FileFormat", StringValue ("RawText"));
+  inputConfig.ConfigureDefaults ();
+
   // Force (override) some default attributes
   ForceDefaults ();
 
@@ -121,6 +133,24 @@ PrintCurrentTime (uint32_t interval)
                 << std::endl;
       Simulator::Schedule (Seconds (interval), &PrintCurrentTime, interval);
     }
+}
+
+void
+ParseCommonPrefix (std::string prefix)
+{
+  if (prefix != "")
+    {
+      char lastChar = *prefix.rbegin ();
+      if (lastChar != '-')
+        {
+          prefix += "-";
+        }
+    }
+  ostringstream outPrefix;
+  outPrefix << prefix << RngSeedManager::GetRun () << "-";
+
+  GlobalValue::Bind ("InputPrefix", StringValue (prefix));
+  GlobalValue::Bind ("OutputPrefix", StringValue (outPrefix.str ()));
 }
 
 void

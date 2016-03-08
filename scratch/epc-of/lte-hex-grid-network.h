@@ -96,6 +96,7 @@ private:
   uint32_t            m_nEnbs;        //!< Number of eNBs (3 * m_nSites)
   uint32_t            m_nUes;         //!< Number of UEs
   double              m_ueHeight;     //!< UE height
+  bool                m_lteRem;       //!< Print the LTE radio map
   NodeContainer       m_enbNodes;     //!< eNB nodes
   NetDeviceContainer  m_enbDevices;   //!< eNB devices
   NodeContainer       m_ueNodes;      //!< UE nodes

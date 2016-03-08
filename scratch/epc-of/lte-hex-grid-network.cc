@@ -54,6 +54,11 @@ LteHexGridNetwork::GetTypeId (void)
                    DoubleValue (1.5),
                    MakeDoubleAccessor (&LteHexGridNetwork::m_ueHeight),
                    MakeDoubleChecker<double> ())
+    .AddAttribute ("PrintRem",
+                   "Print the radio environment map.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&LteHexGridNetwork::m_lteRem),
+                   MakeBooleanChecker ())
   ;
   return tid;
 }
@@ -174,6 +179,7 @@ LteHexGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper)
 
   BuildingsHelper::MakeMobilityModelConsistent ();
   
+  PrintRadioEnvironmentMap ();
   
   return m_lteHelper;
 }
@@ -187,6 +193,37 @@ LteHexGridNetwork::GetLteHelper ()
 void
 LteHexGridNetwork::EnableTraces ()
 {
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+
+  Config::SetDefault ("ns3::RadioBearerStatsCalculator::DlRlcOutputFilename",
+                      StringValue (prefix + "lte_dl_rlc.txt"));
+  Config::SetDefault ("ns3::RadioBearerStatsCalculator::UlRlcOutputFilename",
+                      StringValue (prefix + "lte_ul_rlc.txt"));
+  Config::SetDefault ("ns3::RadioBearerStatsCalculator::DlPdcpOutputFilename",
+                      StringValue (prefix + "lte_dl_pdcp.txt"));
+  Config::SetDefault ("ns3::RadioBearerStatsCalculator::UlPdcpOutputFilename",
+                      StringValue (prefix + "lte_ul_pdcp.txt"));
+  Config::SetDefault ("ns3::MacStatsCalculator::DlOutputFilename",
+                      StringValue (prefix + "lte_dl_mac.txt"));
+  Config::SetDefault ("ns3::MacStatsCalculator::UlOutputFilename",
+                      StringValue (prefix + "lte_ul_mac.txt"));
+  Config::SetDefault ("ns3::PhyStatsCalculator::DlRsrpSinrFilename",
+                      StringValue (prefix + "lte_dl_rsrp_sinr.txt"));
+  Config::SetDefault ("ns3::PhyStatsCalculator::UlSinrFilename",
+                      StringValue (prefix + "lte_ul_sinr.txt"));
+  Config::SetDefault ("ns3::PhyStatsCalculator::UlInterferenceFilename",
+                      StringValue (prefix + "lte_ul_interf.txt"));
+  Config::SetDefault ("ns3::PhyRxStatsCalculator::DlRxOutputFilename",
+                      StringValue (prefix + "lte_dl_rx_phy.txt"));
+  Config::SetDefault ("ns3::PhyRxStatsCalculator::UlRxOutputFilename",
+                      StringValue (prefix + "lte_ul_rx_phy.txt"));
+  Config::SetDefault ("ns3::PhyTxStatsCalculator::DlTxOutputFilename",
+                      StringValue (prefix + "lte_dl_tx_phy.txt"));
+  Config::SetDefault ("ns3::PhyTxStatsCalculator::UlTxOutputFilename",
+                      StringValue (prefix + "lte_ul_tx_phy.txt"));
+
   m_lteHelper->EnableTraces ();
 }
 
@@ -194,6 +231,13 @@ void
 LteHexGridNetwork::PrintRadioEnvironmentMap ()
 {
   NS_LOG_FUNCTION (this);
+
+  if (!m_lteRem) return;
+  
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+  m_remHelper->SetAttribute ("OutputFile", StringValue (prefix + "lte-rem.out"));
 
   Ptr<LteEnbNetDevice> enbDevice =
     DynamicCast<LteEnbNetDevice> (m_enbDevices.Get (0));

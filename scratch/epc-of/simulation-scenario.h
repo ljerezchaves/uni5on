@@ -63,23 +63,6 @@ protected:
 
 private:
   /**
-   * Set the commom prefix for stats filenames.
-   * \param prefix the prefix.
-   */
-  void SetCommonPrefix (std::string prefix);
-
-  /**
-   * Set the default statistics dump interval.
-   * \param timeout The timeout value.
-   */
-  void SetDumpTimeout (Time timeout);
-
-  /**
-   * Dump regular statistics.
-   */
-  void DumpStatistics ();
-
-  /**
    * Strip string value in topology description file.
    * \param value The value string.
    * \return The stripped value string.
@@ -104,11 +87,6 @@ private:
    */
   void EnableTraces ();
 
-  /**
-   * Print the LTE radio environment map.
-   */
-  void PrintLteRem ();
-
   Ptr<OpenFlowEpcNetwork>    m_opfNetwork;    //!< LTE EPC network
   Ptr<OpenFlowEpcController> m_controller;    //!< OpenFLow controller
   Ptr<OpenFlowEpcHelper>     m_epcHelper;     //!< LTE EPC helper
@@ -117,15 +95,11 @@ private:
   Ptr<InternetNetwork>       m_webNetwork;    //!< Internet network
   Ptr<Node>                  m_webHost;       //!< Internet server node
 
-  std::string                m_inputPrefix;   //!< Common input prefix
-  std::string                m_outputPrefix;  //!< Common output prefix
   std::string                m_topoFilename;  //!< Topology filename
   std::string                m_switchLog;     //!< Switches log level
   bool                       m_pcapTrace;     //!< Enable PCAP traces
   bool                       m_lteTrace;      //!< Enable LTE ASCII traces
-  bool                       m_lteRem;        //!< Print the LTE radio map
 
-  Time                            m_dumpTimeout;    //!< Dump stats timeout
   Ptr<AdmissionStatsCalculator>   m_admissionStats; //!< Admission statistics
   Ptr<GatewayStatsCalculator>     m_gatewayStats;   //!< Gateway statistics
   Ptr<BandwidthStatsCalculator>   m_bandwidthStats; //!< Bandwidth statistics
