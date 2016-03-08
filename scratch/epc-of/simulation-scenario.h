@@ -124,8 +124,6 @@ private:
   bool                       m_pcapTrace;     //!< Enable PCAP traces
   bool                       m_lteTrace;      //!< Enable LTE ASCII traces
   bool                       m_lteRem;        //!< Print the LTE radio map
-  std::vector<uint32_t> m_UesPerEnb;          //!< Number of UEs per eNb
-  std::vector<uint16_t> m_SwitchIdxPerEnb;    //!< Switch index per eNb
 
   Time                            m_dumpTimeout;    //!< Dump stats timeout
   Ptr<AdmissionStatsCalculator>   m_admissionStats; //!< Admission statistics

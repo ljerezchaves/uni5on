@@ -21,14 +21,12 @@
 #include <ns3/core-module.h>
 #include <ns3/config-store-module.h>
 #include "simulation-scenario.h"
-#include <iostream>
-#include <string>
 
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("Main");
 
-void ConfigureDefaults ();
+void ForceDefaults ();
 void PrintCurrentTime (uint32_t);
 void EnableVerbose (bool);
 
@@ -39,10 +37,13 @@ main (int argc, char *argv[])
   uint32_t progress = 0;
   uint32_t simTime  = 250;
 
-  ConfigureDefaults ();
-  ConfigStore inputConfig;
-  inputConfig.ConfigureDefaults ();
+  // Parse input config arguments
+  // ConfigStore inputConfig;
+  // inputConfig->SetAttribute ("Mode", StringValue ("Load"));
+  // inputConfig->SetAttribute ("FileFormat", StringValue ("RawText"));
+  // inputConfig.ConfigureDefaults ();
 
+  // Parse command line arguments
   CommandLine cmd;
   cmd.AddValue ("verbose",    "Enable verbose output.", verbose);
   cmd.AddValue ("progress",   "Simulation progress interval [s].", progress);
@@ -60,15 +61,17 @@ main (int argc, char *argv[])
   cmd.AddValue ("http",       "ns3::TrafficHelper::HttpTraffic");
   cmd.AddValue ("fast",       "ns3::TrafficHelper::FastTraffic");
   cmd.AddValue ("strategy",   "ns3::RingController::Strategy");
-  cmd.AddValue ("ueFixed",    "ns3::LteHexGridNetwork::UeFixedPos");
   cmd.AddValue ("bandwidth",  "ns3::RingNetwork::SwitchLinkDataRate");
   cmd.Parse (argc, argv);
+  
+  // Force (override) some default attributes
+  ForceDefaults ();
 
-  // For debug purposes, enable verbose output and simulation progress report
+  // Enable verbose and progress report output for debug
   PrintCurrentTime (progress);
   EnableVerbose (verbose);
 
-  // Creating the simulation scenario
+  // Create the simulation scenario
   NS_LOG_INFO ("Creating simulation scenario...");
   Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
   scenario->BuildRingTopology ();
@@ -82,8 +85,15 @@ main (int argc, char *argv[])
 }
 
 void
-ConfigureDefaults ()
+ForceDefaults ()
 {
+  //
+  // Since we are using an external OpenFlow library that expects complete
+  // network packets, we need to enable checksum computations (which are
+  // disabled by default in ns-3).
+  //
+  GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
+
   //
   // The minimum (default) value for TCP MSS is 536, and there's no dynamic MTU
   // discovery implemented yet in ns-3. To allow larger TCP packets, we defined
@@ -94,119 +104,11 @@ ConfigureDefaults ()
   Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1400));
 
   //
-  // When possible, use the Full Duplex CSMA channel to improve throughput.
+  // Whenever possible, use the Full Duplex CSMA channel to improve throughput.
   // This implementation is not available in default ns-3 code, and I got it
   // from https://codereview.appspot.com/187880044/
   //
   Config::SetDefault ("ns3::CsmaChannel::FullDuplex", BooleanValue (true));
-
-  //
-  // For network queues, use the byte mode and set default size to 128 KBytes.
-  //
-  Config::SetDefault ("ns3::DropTailQueue::Mode",
-                      EnumValue (Queue::QUEUE_MODE_BYTES));
-  Config::SetDefault ("ns3::DropTailQueue::MaxBytes", UintegerValue (131072));
-
-  //
-  // For OpenFlow queues, use the priority queuing scheduling algorithm.
-  //
-  Config::SetDefault ("ns3::OFSwitch13Queue::Scheduling",
-                      EnumValue (OFSwitch13Queue::PRIO));
-
-  //
-  // For the OpenFlow control channel, let's use point to point connections
-  // between controller and switches.
-  //
-  Config::SetDefault ("ns3::OFSwitch13Helper::ChannelType",
-                      EnumValue (OFSwitch13Helper::DEDICATEDP2P));
-
-  //
-  // Since we are using an external OpenFlow library that expects complete
-  // network packets, we need to enable checksum computations (which are
-  // disabled by default in ns-3).
-  //
-  GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
-
-  // --------------------------- LTE PARAMETERS --------------------------- //
-
-  //
-  // Increasing SrsPeriodicity to allow more UEs per eNB. Allowed values are:
-  // {2, 5, 10, 20, 40, 80, 160, 320}. The default value (40) allows no more
-  // than ~40 UEs for each eNB. Note that the value needs to be higher than the
-  // actual number of UEs in your simulation program.  This is due to the need
-  // of accommodating some temporary user context for random access purposes
-  // (the maximum number of UEs in a single eNB supported by ns-3 is ~320).
-  // Note that for a 20MHz bandwidth channel (the largest one), the practical
-  // number of active users supported is something like 200 UEs.
-  // See http://tinyurl.com/pg9nfre for discussion.
-  // ** Considering maximum value: 320
-  //
-  Config::SetDefault ("ns3::LteEnbRrc::SrsPeriodicity", UintegerValue (320));
-
-  //
-  // In the ns-3 LTE simulator, the channel bandwidth is set by the number of
-  // RBs. The correlation table is:
-  //    1.4 MHz —   6 PRBs
-  //    3.0 MHz —  15 PRBs
-  //    5.0 MHz —  25 PRBs
-  //   10.0 MHz —  50 PRBs
-  //   15.0 MHz —  75 PRBs
-  //   20.0 MHz — 100 PRBs.
-  // ** Considering downlink and uplink bandwidth: 100 RBs = 20Mhz.
-  //
-  Config::SetDefault ("ns3::LteEnbNetDevice::UlBandwidth",
-                      UintegerValue (100));
-  Config::SetDefault ("ns3::LteEnbNetDevice::DlBandwidth",
-                      UintegerValue (100));
-
-  //
-  // LTE supports a wide range of different frequency bands. In Brazil, current
-  // band in use is #7 (@2600MHz). This is a high-frequency band, with reduced
-  // coverage. This configuration is normally used only in urban areas, with a
-  // high number of cells with reduced radius, lower eNB TX power and small
-  // channel bandwidth. For simulations, we are using the reference band #1.
-  // See http://niviuk.free.fr/lte_band.php for LTE frequency bands and Earfcn
-  // calculation.
-  // ** Considering Band #1 @2110/1920 MHz (FDD)
-  //
-  Config::SetDefault ("ns3::LteEnbNetDevice::DlEarfcn", UintegerValue (0));
-  Config::SetDefault ("ns3::LteEnbNetDevice::UlEarfcn", UintegerValue (18000));
-
-  //
-  // We are configuring the eNB transmission power as a macro cell (46 dBm is
-  // the maximum used value for the eNB for 20MHz channel). The max power that
-  // the UE is allowed to use is set by the standard (23dBm). We are currently
-  // using a lower value, with no power control.
-  // See http://tinyurl.com/nlh6u3t and http://tinyurl.com/nlh6u3t
-  //
-  Config::SetDefault ("ns3::LteEnbPhy::TxPower", DoubleValue (46));
-  Config::SetDefault ("ns3::LteUePhy::TxPower", DoubleValue (18));
-  Config::SetDefault ("ns3::LteUePhy::EnableUplinkPowerControl",
-                      BooleanValue (false));
-
-  //
-  // Using a simplified model working only with Okumura Hata, considering the
-  // phenomenon of indoor/outdoor propagation in the presence of buildings.
-  //
-  Config::SetDefault ("ns3::LteHelper::PathlossModel",
-                      StringValue ("ns3::OhBuildingsPropagationLossModel"));
-
-  //
-  // Using the Channel and QoS Aware (CQA) Scheduler as the LTE MAC downlink
-  // scheduling algorithm, which considers the head of line delay, the GBR
-  // parameters and channel quality over different subbands.
-  //
-  Config::SetDefault ("ns3::LteHelper::Scheduler",
-                      StringValue ("ns3::CqaFfMacScheduler"));
-
-  //
-  // Disabling error models for both control and data planes. This is necessary
-  // for handover procedures.
-  //
-  Config::SetDefault ("ns3::LteSpectrumPhy::CtrlErrorModelEnabled",
-                      BooleanValue (false));
-  Config::SetDefault ("ns3::LteSpectrumPhy::DataErrorModelEnabled",
-                      BooleanValue (false));
 }
 
 void
@@ -226,7 +128,7 @@ EnableVerbose (bool enable)
 {
   if (enable)
     {
-      LogComponentEnable ("Main", LOG_LEVEL_ALL);
+      LogComponentEnable ("Main", LOG_INFO);
       LogComponentEnable ("SimulationScenario", LOG_LEVEL_INFO);
       LogComponentEnable ("StatsCalculator", LOG_LEVEL_WARN);
       LogComponentEnable ("ConnectionInfo", LOG_LEVEL_WARN);
@@ -239,9 +141,10 @@ EnableVerbose (bool enable)
       LogComponentEnable ("OFSwitch13Queue", LOG_LEVEL_WARN);
 
       LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_WARN);
-      LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
+      LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_ALL);
       LogComponentEnable ("RingNetwork", LOG_LEVEL_WARN);
-      LogComponentEnable ("LteSquaredGridNetwork", LOG_LEVEL_WARN);
+      LogComponentEnable ("LteHexGridNetwork", LOG_LEVEL_WARN);
+      LogComponentEnable ("LteHexGridEnbTopologyHelper", LOG_LOGIC);
 
       LogComponentEnable ("RoutingInfo", LOG_LEVEL_ALL);
       LogComponentEnable ("RoutingInfo", LOG_PREFIX_TIME);
@@ -263,4 +166,3 @@ EnableVerbose (bool enable)
       LogComponentEnable ("EpcApplication", LOG_LEVEL_ALL);
     }
 }
-

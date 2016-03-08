@@ -32,9 +32,9 @@ namespace ns3 {
 
 /**
  * \ingroup epcof
- * LTE radio network layed out on an hexagonal grid. This class generates a
- * hexagonal grid topology. UEs attached to this node may be fixed at same
- * position of eNB or scattered randomly around the eNB.
+ * LTE radio network topology with eNBs grouped in three-sector sites layed out
+ * on an hexagonal grid. UEs are randomly distributed around the sites and
+ * attach to the network automatically using Idle mode cell selection.
  */
 class LteHexGridNetwork : public Object
 {
@@ -63,49 +63,48 @@ public:
   /** \return the LteHelper used to create this LTE network */
   Ptr<LteHelper> GetLteHelper ();
 
-  /**
-   * Enable LTE ascii traces.
-   */
+  /** Enable LTE ascii traces. */
   void EnableTraces ();
 
+  /** Enable radio enviroment map print. */
   void PrintRadioEnvironmentMap ();
 
   /**
-   * Creates the LTE radio tolopoly.
+   * Creates the LTE radio topology.
    * \param epcHelper The EpcHelper used to create the LTE EPC core
-   * \param nUes A vector containing the number of UEs for each eNB.
    * \return Ptr<LteHelper> The LteHelper used to create this LTE network.
    */
-  Ptr<LteHelper> CreateTopology (Ptr<EpcHelper> epcHelper,
-                                 std::vector<uint32_t> nUes);
+  Ptr<LteHelper> CreateTopology (Ptr<EpcHelper> epcHelper);
 
 private:
+  /** 
+   * Set the number of macro eNB sites, and adjust the total eNBs accordingly.
+   * \param sites The number of sites.
+   */
+  void SetNumSites (uint32_t sites);
+
+  /** Configure LTE default attributes */
+  void ConfigureLteDefaults ();
+
   /** Set eNBs and UEs positions */
   void SetLteNodePositions ();
 
   /** Install the LTE protocol stack into each eNB and UE */
   void InstallProtocolStack ();
 
-  uint32_t  m_nEnbs;      //!< Number of eNBs
-  double    m_enbHeight;  //!< eNB height
-  double    m_ueHeight;   //!< UE height
-  bool      m_fixedUes;   //!< True to place all UEs at same eNB position
-  double    m_interSite;  //!< Distances between eNBs
-  uint32_t  m_gridWidth;  //!< Number of eNBs per row
-  double    m_xMin;       //!< First x position
-  double    m_yMin;       //!< Fist y position
+  uint32_t            m_nSites;       //!< Number of sites
+  uint32_t            m_nEnbs;        //!< Number of eNBs (3 * m_nSites)
+  uint32_t            m_nUes;         //!< Number of UEs
+  double              m_ueHeight;     //!< UE height
+  NodeContainer       m_enbNodes;     //!< eNB nodes
+  NetDeviceContainer  m_enbDevices;   //!< eNB devices
+  NodeContainer       m_ueNodes;      //!< UE nodes
+  NetDeviceContainer  m_ueDevices;    //!< UE devices
 
-  NodeContainer               m_enbNodes;       //!< eNB nodes
-  NodeContainer               m_ueNodes;        //!< UE nodes
-  NetDeviceContainer          m_enbDevices;     //!< eNB devices
-  NetDeviceContainer          m_ueDevices;      //!< UE devices
-  std::vector<NodeContainer>  m_ueNodesPerEnb;  //!< UE nodes for each eNB
-  std::vector<uint32_t>       m_nUesPerEnb;     //!< Number of UEs for each eNB
-
-  Ptr<RadioEnvironmentMapHelper> m_remHelper;   //!< REM helper
-
-  Ptr<LteHelper> m_lteHelper; //!< LteHelper used to create the radio network
-  Ptr<EpcHelper> m_epcHelper; //!< EpcHelper used to create the EPC network
+  Ptr<LteHexGridEnbTopologyHelper> m_topoHelper;  //!< Grid topology helper
+  Ptr<RadioEnvironmentMapHelper>   m_remHelper;   //!< Radio map helper
+  Ptr<LteHelper>                   m_lteHelper;   //!< Lte radio helper
+  Ptr<EpcHelper>                   m_epcHelper;   //!< Lte epc helper
 };
 
 };  // namespace ns3

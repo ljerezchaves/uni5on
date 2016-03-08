@@ -151,7 +151,7 @@ SimulationScenario::BuildRingTopology ()
 
   // 7) Create LTE radio access network and build topology
   m_lteNetwork = CreateObject<LteHexGridNetwork> ();
-  m_lteHelper = m_lteNetwork->CreateTopology (m_epcHelper, m_UesPerEnb);
+  m_lteHelper = m_lteNetwork->CreateTopology (m_epcHelper);
 
   // 8) Create Internet network and build topology
   m_webNetwork = CreateObject<InternetNetwork> ();
