@@ -32,8 +32,8 @@ SimulationScenario::SimulationScenario ()
     m_controller (0),
     m_epcHelper (0),
     m_lteNetwork (0),
-    m_webNetwork (0),
     m_lteHelper (0),
+    m_webNetwork (0),
     m_webHost (0)
 {
   NS_LOG_FUNCTION (this);
@@ -149,7 +149,7 @@ SimulationScenario::BuildRingTopology ()
   m_epcHelper->SetX2ConnectCallback (
     MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
 
-  // 7) Create LTE radio access network and build the topology
+  // 7) Create LTE radio access network and build topology
   m_lteNetwork = CreateObject<LteHexGridNetwork> ();
   m_lteHelper = m_lteNetwork->CreateTopology (m_epcHelper, m_UesPerEnb);
 
