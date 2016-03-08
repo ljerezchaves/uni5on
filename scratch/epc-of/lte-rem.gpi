@@ -1,12 +1,11 @@
 set term pdfcairo enhanced color dashed rounded
-
 set output 'lte-rem.pdf'
+unset key
 set view map;
-set xlabel "X (m)"
-set ylabel "Y (m)"
-set xrange [0:1500]
-set yrange [0:1400]
+set xlabel "x-coordinate (m)"
+set ylabel "y-coordinate (m)"
+# set xrange [0:100]
+# set yrange [0:100]
 set cbrange [-5:30]
 set cblabel "SINR (dB)"
-unset key
 plot filename using ($1):($2):(10*log10($4)) with image
