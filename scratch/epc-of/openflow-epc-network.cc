@@ -33,7 +33,12 @@ OpenFlowEpcNetwork::OpenFlowEpcNetwork ()
     m_gatewayNode (0)
 {
   NS_LOG_FUNCTION (this);
+
+  // For the OpenFlow control channel, let's use point to point connections
+  // between controller and switches.
   m_ofHelper = CreateObject<OFSwitch13Helper> ();
+  m_ofHelper->SetAttribute ("ChannelType", 
+                            EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 }
 
 OpenFlowEpcNetwork::~OpenFlowEpcNetwork ()
