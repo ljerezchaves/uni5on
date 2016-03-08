@@ -296,7 +296,6 @@ SimulationScenario::ParseTopology ()
 
   std::istringstream lineBuffer;
   std::string line, command;
-  uint32_t idx = 0;
 
   while (getline (file, line))
     {
@@ -316,25 +315,6 @@ SimulationScenario::ParseTopology ()
           NS_LOG_DEBUG ("Setting attribute " << attrName <<
                         " with " << attrValue);
           Config::SetDefault (attrName, StringValue (StripValue (attrValue)));
-        }
-      else if (command == "topo")
-        {
-          uint32_t enb, ues, swtch;
-          lineBuffer >> enb;
-          lineBuffer >> ues;
-          lineBuffer >> swtch;
-
-          NS_LOG_DEBUG ("Topo description: " << enb <<
-                        " " << ues << " " << swtch);
-          NS_ASSERT_MSG (idx == enb, "Invalid eNB idx order in topo file.");
-
-          m_UesPerEnb.push_back (ues);
-          m_SwitchIdxPerEnb.push_back (swtch);
-          idx++;
-        }
-      else
-        {
-          NS_LOG_ERROR ("Invalid command.");
         }
     }
   return true;
