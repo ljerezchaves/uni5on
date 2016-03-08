@@ -9,7 +9,7 @@
 # 3rd column: the attribute value inside "".
 
 set ns3::LteHexGridNetwork::MacroSites "3"
-set ns3::RingNetwork::NumSwitches "3"
+set ns3::RingNetwork::NumSwitches "4"
 set ns3::SimulationScenario::LteRem "true"
 
 # Then, we can describe the topology in the following format (observe the
