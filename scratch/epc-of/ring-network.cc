@@ -98,8 +98,7 @@ RingNetwork::DoDispose ()
 }
 
 void
-RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
-                             std::vector<uint16_t> eNbSwitches)
+RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller)
 {
   NS_LOG_FUNCTION (this);
 
@@ -107,7 +106,6 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller,
   NS_ASSERT_MSG (m_nodes >= 3, "Invalid number of nodes for the ring");
 
   InstallController (controller);
-  m_eNbSwitchIdx = eNbSwitches;
 
   // Creating the switch nodes
   m_ofSwitches.Create (m_nodes);
@@ -198,15 +196,14 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
                                       DataRateValue (m_swLinkDataRate));
   m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_swLinkDelay));
 
-  // Connect SgwPgw node to switch index 0 and other eNBs to switchs indexes
-  // indicated by the user. As we know that the OpenFlowEpcHelper will callback
-  // here first for SgwPgw node, we use the static counter to identify this
-  // node.
+  // Connect SgwPgw node to switch index 0 and other eNBs to switches indexes
+  // 1..N. The three eNBs from same cell site are connected to the same switch
+  // in the ring network. As we know that the OpenFlowEpcHelper will callback
+  // here first for SgwPgw node, followed by each eNB in increasin order, we
+  // use the static counter to identify the node.
   static uint32_t counter = 0;
-  counter++;
-
   uint16_t swIdx;
-  if (counter == 1)
+  if (counter == 0)
     {
       // This is the SgwPgw node
       swIdx = 0;
@@ -219,9 +216,10 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
     }
   else
     {
-      swIdx = m_eNbSwitchIdx.at (counter - 2);
+      swIdx = 1 + ((counter - 1) / 3);
     }
   RegisterNodeAtSwitch (swIdx, node);
+  counter++;
 
   Ptr<Node> swNode = m_ofSwitches.Get (swIdx);
   Ptr<OFSwitch13NetDevice> swDev = GetSwitchDevice (swIdx);

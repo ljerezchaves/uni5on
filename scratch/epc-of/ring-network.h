@@ -54,8 +54,7 @@ public:
   // Inherited from OpenFlowEpcNetwork
   Ptr<NetDevice> AttachToS1u (Ptr<Node> node, uint16_t cellId);
   Ptr<NetDevice> AttachToX2  (Ptr<Node> node);
-  void CreateTopology (Ptr<OpenFlowEpcController> controller,
-                       std::vector<uint16_t> eNbSwitches);
+  void CreateTopology (Ptr<OpenFlowEpcController> controller);
 
 private:
   DataRate              m_swLinkDataRate;     //!< Switch link data rate

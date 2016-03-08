@@ -78,11 +78,9 @@ public:
    * Creates the OpenFlow network infrastructure with corresponding OpenFlow
    * Controller application.
    * \param controller The corresponding OpenFlow controller for this EPC
-   * OpenFlow network (they both must be aware of network topology.
-   * \param eNbSwitches The switch index for each eNB.
+   * OpenFlow network (they both must be aware of network topology).
    */
-  virtual void CreateTopology (Ptr<OpenFlowEpcController> controller,
-                               std::vector<uint16_t> eNbSwitches) = 0;
+  virtual void CreateTopology (Ptr<OpenFlowEpcController> controller) = 0;
 
   /**
    * Enable pcap on switch data ports.
@@ -217,7 +215,6 @@ protected:
   NetDeviceContainer          m_ofDevices;      //!< Switch devices.
   Ptr<OFSwitch13Helper>       m_ofHelper;       //!< OpenFlow helper.
   CsmaHelper                  m_ofCsmaHelper;   //!< Csma helper.
-  std::vector<uint16_t>       m_eNbSwitchIdx;   //!< Switch index for each eNB.
   bool                        m_created;        //!< Network topology created.
 
   /** New connection between two switches trace source. */

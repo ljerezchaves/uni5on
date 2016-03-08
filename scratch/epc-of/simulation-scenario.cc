@@ -140,7 +140,7 @@ SimulationScenario::BuildRingTopology ()
   m_switchStats = CreateObject<SwitchRulesStatsCalculator> ();
 
   // 5) Build network topology calling OpenFlowEpcNetwork::CreateTopology ().
-  m_opfNetwork->CreateTopology (m_controller, m_SwitchIdxPerEnb);
+  m_opfNetwork->CreateTopology (m_controller);
 
   // 6) Set up OpenFlowEpcHelper S1U and X2 connection callbacks (network
   // topology must be already created).
