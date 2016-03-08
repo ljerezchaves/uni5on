@@ -113,27 +113,27 @@ private:
   Ptr<OpenFlowEpcController> m_controller;    //!< OpenFLow controller
   Ptr<OpenFlowEpcHelper>     m_epcHelper;     //!< LTE EPC helper
   Ptr<LteHexGridNetwork>     m_lteNetwork;    //!< LTE radio network
-  Ptr<InternetNetwork>       m_webNetwork;    //!< Internet network
   Ptr<LteHelper>             m_lteHelper;     //!< LTE radio helper
+  Ptr<InternetNetwork>       m_webNetwork;    //!< Internet network
   Ptr<Node>                  m_webHost;       //!< Internet server node
 
-  std::string           m_inputPrefix;        //!< Common input prefix
-  std::string           m_outputPrefix;       //!< Common output prefix
-  std::string           m_topoFilename;       //!< Topology filename
-  std::string           m_switchLog;          //!< Switches log level
-  bool                  m_pcapTrace;          //!< Enable PCAP traces
-  bool                  m_lteTrace;           //!< Enable LTE ASCII traces
-  bool                  m_lteRem;             //!< Print the LTE radio map
+  std::string                m_inputPrefix;   //!< Common input prefix
+  std::string                m_outputPrefix;  //!< Common output prefix
+  std::string                m_topoFilename;  //!< Topology filename
+  std::string                m_switchLog;     //!< Switches log level
+  bool                       m_pcapTrace;     //!< Enable PCAP traces
+  bool                       m_lteTrace;      //!< Enable LTE ASCII traces
+  bool                       m_lteRem;        //!< Print the LTE radio map
   std::vector<uint32_t> m_UesPerEnb;          //!< Number of UEs per eNb
   std::vector<uint16_t> m_SwitchIdxPerEnb;    //!< Switch index per eNb
 
   Time                            m_dumpTimeout;    //!< Dump stats timeout
-  Ptr<AdmissionStatsCalculator>   m_admissionStats; // Admission statistics
-  Ptr<GatewayStatsCalculator>     m_gatewayStats;   // Gateway statistics
-  Ptr<BandwidthStatsCalculator>   m_bandwidthStats; // Bandwidth statistics
-  Ptr<SwitchRulesStatsCalculator> m_switchStats;    // Switch rules statistics
-  Ptr<WebQueueStatsCalculator>    m_internetStats;  // Web queues statistics
-  Ptr<EpcS1uStatsCalculator>      m_epcS1uStats;    // EPC S1-U statistics
+  Ptr<AdmissionStatsCalculator>   m_admissionStats; //!< Admission statistics
+  Ptr<GatewayStatsCalculator>     m_gatewayStats;   //!< Gateway statistics
+  Ptr<BandwidthStatsCalculator>   m_bandwidthStats; //!< Bandwidth statistics
+  Ptr<SwitchRulesStatsCalculator> m_switchStats;    //!< Switch flow statistics
+  Ptr<WebQueueStatsCalculator>    m_internetStats;  //!< Web queues statistics
+  Ptr<EpcS1uStatsCalculator>      m_epcS1uStats;    //!< EPC S1-U statistics
 };
 
 };  // namespace ns3

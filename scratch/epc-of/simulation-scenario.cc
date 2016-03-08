@@ -149,7 +149,7 @@ SimulationScenario::BuildRingTopology ()
   m_epcHelper->SetX2ConnectCallback (
     MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
 
-  // 7) Create LTE radio access network and build topology
+  // 7) Create LTE radio access network and build the topology
   m_lteNetwork = CreateObject<LteHexGridNetwork> ();
   m_lteHelper = m_lteNetwork->CreateTopology (m_epcHelper, m_UesPerEnb);
 
