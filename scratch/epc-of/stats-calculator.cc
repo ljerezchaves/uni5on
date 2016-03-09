@@ -122,8 +122,8 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
-  SetAttribute ("AdmStatsFilename", StringValue (prefix + "adm_stats.txt"));
-  SetAttribute ("BrqStatsFilename", StringValue (prefix + "brq_stats.txt"));
+  SetAttribute ("AdmStatsFilename", StringValue (prefix + m_admStatsFilename));
+  SetAttribute ("BrqStatsFilename", StringValue (prefix + m_brqStatsFilename));
 
   // Opening output files and printing header lines
   m_admWrapper = Create<OutputStreamWrapper> (m_admStatsFilename,
@@ -356,7 +356,7 @@ GatewayStatsCalculator::NotifyConstructionCompleted (void)
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
-  SetAttribute ("PgwStatsFilename", StringValue (prefix + "pgw_stats.txt"));
+  SetAttribute ("PgwStatsFilename", StringValue (prefix + m_pgwStatsFilename));
 
   // Opening output files and printing header lines
   m_pgwWrapper = Create<OutputStreamWrapper> (m_pgwStatsFilename,
@@ -598,11 +598,11 @@ BandwidthStatsCalculator::NotifyConstructionCompleted (void)
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
-  SetAttribute ("RegStatsFilename", StringValue (prefix + "reg_stats.txt"));
-  SetAttribute ("RenStatsFilename", StringValue (prefix + "ren_stats.txt"));
-  SetAttribute ("BwbStatsFilename", StringValue (prefix + "bwb_stats.txt"));
-  SetAttribute ("BwgStatsFilename", StringValue (prefix + "bwg_stats.txt"));
-  SetAttribute ("BwnStatsFilename", StringValue (prefix + "bwn_stats.txt"));
+  SetAttribute ("RegStatsFilename", StringValue (prefix + m_regStatsFilename));
+  SetAttribute ("RenStatsFilename", StringValue (prefix + m_renStatsFilename));
+  SetAttribute ("BwbStatsFilename", StringValue (prefix + m_bwbStatsFilename));
+  SetAttribute ("BwgStatsFilename", StringValue (prefix + m_bwgStatsFilename));
+  SetAttribute ("BwnStatsFilename", StringValue (prefix + m_bwnStatsFilename));
 
   // Opening output files and printing header lines
   m_bwbWrapper = Create<OutputStreamWrapper> (m_bwbStatsFilename,
@@ -775,7 +775,7 @@ SwitchRulesStatsCalculator::NotifyConstructionCompleted (void)
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
-  SetAttribute ("SwtStatsFilename", StringValue (prefix + "swt_stats.txt"));
+  SetAttribute ("SwtStatsFilename", StringValue (prefix + m_swtStatsFilename));
 
   // Opening output files and printing header lines
   m_swtWrapper = Create<OutputStreamWrapper> (m_swtStatsFilename,
@@ -885,7 +885,7 @@ WebQueueStatsCalculator::NotifyConstructionCompleted (void)
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
-  SetAttribute ("WebStatsFilename", StringValue (prefix + "web_stats.txt"));
+  SetAttribute ("WebStatsFilename", StringValue (prefix + m_webStatsFilename));
 
   // Opening output files and printing header lines
   m_webWrapper = Create<OutputStreamWrapper> (m_webStatsFilename,
@@ -1020,8 +1020,8 @@ EpcS1uStatsCalculator::NotifyConstructionCompleted (void)
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
-  SetAttribute ("AppStatsFilename", StringValue (prefix + "app_stats.txt"));
-  SetAttribute ("EpcStatsFilename", StringValue (prefix + "epc_stats.txt"));
+  SetAttribute ("AppStatsFilename", StringValue (prefix + m_appStatsFilename));
+  SetAttribute ("EpcStatsFilename", StringValue (prefix + m_epcStatsFilename));
 
   // Opening output files and printing header lines
   m_appWrapper = Create<OutputStreamWrapper> (m_appStatsFilename,
