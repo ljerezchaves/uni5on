@@ -4,8 +4,8 @@ unset key
 set view map;
 set xlabel "x-coordinate (m)"
 set ylabel "y-coordinate (m)"
-# set xrange [0:100]
-# set yrange [0:100]
-set cbrange [-5:30]
+set xrange [0:1000]
+set yrange [0:933]
+set cbrange [-5:20]
 set cblabel "SINR (dB)"
 plot filename using ($1):($2):(10*log10($4)) with image

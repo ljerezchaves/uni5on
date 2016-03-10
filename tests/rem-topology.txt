@@ -1,4 +1,4 @@
-default ns3::LteHexGridNetwork::NumSites "2"
+default ns3::LteHexGridNetwork::NumSites "3"
 default ns3::LteHexGridNetwork::NumUes "100"
-default ns3::RingNetwork::NumSwitches "10"
 default ns3::LteHexGridNetwork::PrintRem "true"
+default ns3::RingNetwork::NumSwitches "10"
