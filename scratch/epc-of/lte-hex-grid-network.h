@@ -66,9 +66,6 @@ public:
   /** Enable LTE ascii traces. */
   void EnableTraces ();
 
-  /** Enable radio enviroment map print. */
-  void PrintRadioEnvironmentMap ();
-
   /**
    * Creates the LTE radio topology.
    * \param epcHelper The EpcHelper used to create the LTE EPC core
@@ -77,30 +74,58 @@ public:
   Ptr<LteHelper> CreateTopology (Ptr<EpcHelper> epcHelper);
 
 private:
-  /** 
+  /**
    * Set the number of macro eNB sites, and adjust the total eNBs accordingly.
    * \param sites The number of sites.
    */
   void SetNumSites (uint32_t sites);
 
-  /** Configure LTE default attributes */
-  void ConfigureLteDefaults ();
+  /**
+   * Identify the LTE radio coverage area considering the eNB positions.
+   * \return The retangle with the coverage area.
+   */
+  Rectangle IdentifyEnbsCoverageArea ();
 
-  /** Set eNBs and UEs positions */
-  void SetLteNodePositions ();
+  /**
+   * Print LTE radio environment map.
+   * \param filename The filename to use.
+   */
+  void PrintRadioEnvironmentMap (std::string filename);
 
-  /** Install the LTE protocol stack into each eNB and UE */
-  void InstallProtocolStack ();
+  /**
+   * Print buildings boundarites to gnuplot format.
+   * \param filename The filename to use.
+   */
+  void PrintBuildingListToFile (std::string filename);
+
+  /**
+   * Print UE positions to gnuplot format.
+   * \param filename The filename to use.
+   */
+  void PrintUeListToFile (std::string filename);
+
+  /**
+   * Print eNB positions to gnuplot format.
+   * \param filename The filename to use.
+   */
+  void PrintEnbListToFile (std::string filename);
 
   uint32_t            m_nSites;       //!< Number of sites
   uint32_t            m_nEnbs;        //!< Number of eNBs (3 * m_nSites)
   uint32_t            m_nUes;         //!< Number of UEs
+  uint32_t            m_enbMargin;    //!< eNB coverage margin
   double              m_ueHeight;     //!< UE height
-  bool                m_lteRem;       //!< Print the LTE radio map
+  bool                m_lteRem;       //!< Print the LTE REM
+  bool                m_ueMobility;   //!< Enable UE mobility
+  std::string         m_remFilename;  //!< LTE REM filename
+  std::string         m_bldsFilename; //!< Building position filename
+  std::string         m_uesFilename;  //!< UE position filename
+  std::string         m_enbsFilename; //!< eNB position filename
   NodeContainer       m_enbNodes;     //!< eNB nodes
   NetDeviceContainer  m_enbDevices;   //!< eNB devices
   NodeContainer       m_ueNodes;      //!< UE nodes
   NetDeviceContainer  m_ueDevices;    //!< UE devices
+  Rectangle           m_coverageArea; //!< LTE radio coverage area
 
   Ptr<LteHexGridEnbTopologyHelper> m_topoHelper;  //!< Grid topology helper
   Ptr<RadioEnvironmentMapHelper>   m_remHelper;   //!< Radio map helper
