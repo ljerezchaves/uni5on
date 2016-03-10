@@ -29,11 +29,11 @@ using namespace ns3;
 NS_LOG_COMPONENT_DEFINE ("Main");
 
 void PrintCurrentTime (uint32_t);
+void ConfigureDefaults ();
+void ForceDefaults ();
 void EnableVerbose (bool);
 
-//
 // Prefixes used by input and output filenames.
-//
 static ns3::GlobalValue
 g_inputPrefix ("InputPrefix", "Common prefix for output filenames.",
                 ns3::StringValue (""),
@@ -53,31 +53,20 @@ main (int argc, char *argv[])
   std::string prefix   = "";
   std::string cfgName  = "topology.txt";
 
-  //
-  // Parsing simulation arguments
-  //
+  // Configure some default attribute values. These values can be overridden by
+  // users on the command line or in the configuration file.
+  ConfigureDefaults ();
+
+  // Parse command line arguments
   CommandLine cmd;
-  cmd.AddValue ("verbose",    "Enable verbose output.", verbose);
-  cmd.AddValue ("progress",   "Simulation progress interval [s].", progress);
-  cmd.AddValue ("simTime",    "Simulation stop time [s].", simTime);
-  cmd.AddValue ("prefix",     "Common prefix for filenames.", prefix);
-  cmd.AddValue ("cfgName",    "Configuration filename.", cfgName);
-  cmd.AddValue ("pcap",       "ns3::SimulationScenario::PcapTrace");
-  cmd.AddValue ("ascii",      "ns3::SimulationScenario::LteTrace");
-  cmd.AddValue ("liblog",     "ns3::SimulationScenario::SwitchLogs");
-  cmd.AddValue ("radioMap",   "ns3::LteHexGridNetwork::PrintRem");
-  cmd.AddValue ("voip",       "ns3::TrafficHelper::VoipTraffic");
-  cmd.AddValue ("gbrLiveVid", "ns3::TrafficHelper::GbrLiveVideoTraffic");
-  cmd.AddValue ("buffVid",    "ns3::TrafficHelper::BufferedVideoTraffic");
-  cmd.AddValue ("nonLiveVid", "ns3::TrafficHelper::NonGbrLiveVideoTraffic");
-  cmd.AddValue ("http",       "ns3::TrafficHelper::HttpTraffic");
-  cmd.AddValue ("fast",       "ns3::TrafficHelper::FastTraffic");
-  cmd.AddValue ("strategy",   "ns3::RingController::Strategy");
+  cmd.AddValue ("verbose",  "Enable verbose output.", verbose);
+  cmd.AddValue ("progress", "Simulation progress interval [s].", progress);
+  cmd.AddValue ("simTime",  "Simulation stop time [s].", simTime);
+  cmd.AddValue ("prefix",   "Common prefix for filenames.", prefix);
+  cmd.AddValue ("cfgName",  "Configuration filename.", cfgName);
   cmd.Parse (argc, argv);
 
-  //
-  // Updating input and output global prefixes
-  //
+  // Update input and output prefixes from command line prefix parameter.
   ostringstream inputPrefix, outputPrefix;
   inputPrefix << prefix;
   if (prefix != "")
@@ -92,58 +81,31 @@ main (int argc, char *argv[])
   Config::SetGlobal ("InputPrefix", StringValue (inputPrefix.str ()));
   Config::SetGlobal ("OutputPrefix", StringValue (outputPrefix.str ()));
 
-  //
-  // Reading the configuration file
-  //
+  // Read the configuration file. The file existence is mandatory.
   std::string cfgFilename = inputPrefix.str () + cfgName;
   std::ifstream testFile (cfgFilename.c_str (), std::ifstream::in);
   NS_ASSERT_MSG (testFile.good (), "Invalid topology file.");
   testFile.close ();
-  
+
   Config::SetDefault ("ns3::ConfigStore::Mode", StringValue ("Load"));
   Config::SetDefault ("ns3::ConfigStore::FileFormat", StringValue ("RawText"));
   Config::SetDefault ("ns3::ConfigStore::Filename", StringValue (cfgFilename));
   ConfigStore inputConfig;
   inputConfig.ConfigureDefaults ();
 
-  //
-  // Since we are using an external OpenFlow library that expects complete
-  // network packets, we must enable checksum computations. 
-  //
-  Config::SetGlobal ("ChecksumEnabled", BooleanValue (true));
+  // Force some default attribute values that cannot be overridden by users.
+  ForceDefaults ();
 
-  //
-  // The minimum (default) value for TCP MSS is 536, and there's no dynamic MTU
-  // discovery implemented yet in ns-3. To allow larger TCP packets, we defined
-  // this value to 1400, based on 1500 bytes for Ethernet v2 MTU, and
-  // considering 8 bytes for PPPoE header, 40 bytes for GTP/UDP/IP tunnel
-  // headers, and 52 byter for default TCP/IP headers.
-  //
-  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1400));
-
-  //
-  // Whenever possible, use the Full Duplex CSMA channel to improve throughput.
-  // This implementation is not available in default ns-3 code, and I got it
-  // from https://codereview.appspot.com/187880044/
-  //
-  Config::SetDefault ("ns3::CsmaChannel::FullDuplex", BooleanValue (true));
-
-  //
-  // Enable verbose output and progress report for debug purposes
-  //
+  // Enable verbose output and progress report for debug purposes.
   PrintCurrentTime (progress);
   EnableVerbose (verbose);
 
-  //
-  // Create the scenario
-  //
+  // Create the scenario.
   NS_LOG_INFO ("Creating simulation scenario...");
   Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
   scenario->BuildRingTopology ();
 
-  //
-  // Run the simulation
-  //
+  // Run the simulation.
   NS_LOG_INFO ("Simulating...");
   Simulator::Stop (Seconds (simTime + 1));
   Simulator::Run ();
@@ -163,6 +125,144 @@ PrintCurrentTime (uint32_t interval)
     }
 }
 
+void ConfigureDefaults ()
+{
+  // Force some default attribute values
+  ForceDefaults ();
+
+  //
+  // For network queues, use the byte mode and set default size to 128 KBytes.
+  //
+  Config::SetDefault ("ns3::DropTailQueue::Mode",
+                      EnumValue (Queue::QUEUE_MODE_BYTES));
+  Config::SetDefault ("ns3::DropTailQueue::MaxBytes", UintegerValue (131072));
+
+  //
+  // Increasing SrsPeriodicity to allow more UEs per eNB. Allowed values are:
+  // {2, 5, 10, 20, 40, 80, 160, 320}. The default value (40) allows no more
+  // than ~40 UEs for each eNB. Note that the value needs to be higher than the
+  // actual number of UEs in your simulation program. This is due to the need
+  // of accommodating some temporary user context for random access purposes
+  // (the maximum number of UEs in a single eNB supported by ns-3 is ~320).
+  // Note that for a 20MHz bandwidth channel (the largest one), the practical
+  // number of active users supported is something like 200 UEs.
+  // See http://tinyurl.com/pg9nfre for discussion.
+  // ** Considering maximum value: 320
+  //
+  Config::SetDefault ("ns3::LteEnbRrc::SrsPeriodicity", UintegerValue (320));
+
+  //
+  // In the ns-3 LTE simulator, the channel bandwidth is set by the number of
+  // RBs. The correlation table is:
+  //    1.4 MHz —   6 PRBs
+  //    3.0 MHz —  15 PRBs
+  //    5.0 MHz —  25 PRBs
+  //   10.0 MHz —  50 PRBs
+  //   15.0 MHz —  75 PRBs
+  //   20.0 MHz — 100 PRBs.
+  // ** Considering downlink and uplink bandwidth: 100 RBs = 20Mhz.
+  //
+  Config::SetDefault ("ns3::LteEnbNetDevice::UlBandwidth",
+                      UintegerValue (100));
+  Config::SetDefault ("ns3::LteEnbNetDevice::DlBandwidth",
+                      UintegerValue (100));
+
+  //
+  // LTE supports a wide range of different frequency bands. In Brazil, current
+  // band in use is #7 (@2600MHz). This is a high-frequency band, with reduced
+  // coverage. This configuration is normally used only in urban areas, with a
+  // high number of cells with reduced radius, lower eNB TX power and small
+  // channel bandwidth. For simulations, we are using the reference band #1.
+  // See http://niviuk.free.fr/lte_band.php for LTE frequency bands and Earfcn
+  // calculation.
+  // ** Considering Band #1 @2110/1920 MHz (FDD)
+  //
+  Config::SetDefault ("ns3::LteEnbNetDevice::DlEarfcn", UintegerValue (0));
+  Config::SetDefault ("ns3::LteEnbNetDevice::UlEarfcn", UintegerValue (18000));
+
+  //
+  // We are configuring the eNB transmission power as a macro cell (46 dBm is
+  // the maximum used value for the eNB for 20MHz channel). The max power that
+  // the UE is allowed to use is set by the standard (23dBm). We are currently
+  // using no power control.
+  // See http://tinyurl.com/nlh6u3t and http://tinyurl.com/nlh6u3t
+  //
+  Config::SetDefault ("ns3::LteEnbPhy::TxPower", DoubleValue (46));
+  Config::SetDefault ("ns3::LteUePhy::TxPower", DoubleValue (23));
+
+  //
+  // Disabling UE uplink power control.
+  //
+  Config::SetDefault ("ns3::LteUePhy::EnableUplinkPowerControl",
+                      BooleanValue (false));
+
+  //
+  // Using the UE MIMO transmission diversity (Mode 2 with 4.2bB antenna gain).
+  //
+  Config::SetDefault ("ns3::LteEnbRrc::DefaultTransmissionMode",
+                      UintegerValue (1));
+
+  //
+  // Using the Channel and QoS Aware (CQA) Scheduler as the LTE MAC downlink
+  // scheduling algorithm, which considers the head of line delay, the GBR
+  // parameters and channel quality over different subbands.
+  //
+  Config::SetDefault ("ns3::LteHelper::Scheduler",
+                      StringValue ("ns3::CqaFfMacScheduler"));
+
+  //
+  // Disabling error models for both control and data planes.
+  //
+  Config::SetDefault ("ns3::LteSpectrumPhy::CtrlErrorModelEnabled",
+                      BooleanValue (false));
+  Config::SetDefault ("ns3::LteSpectrumPhy::DataErrorModelEnabled",
+                      BooleanValue (false));
+
+  //
+  // Set the LTE hexagonal grid layout topology to inter-site distance of 500m
+  // with a single site in even rows.
+  //
+  Config::SetDefault ("ns3::LteHexGridNetwork::EnbMargin", DoubleValue (250));
+  Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::InterSiteDistance",
+                      DoubleValue (500));
+  Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::SectorOffset",
+                      DoubleValue (0));
+  Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::MinX",
+                      DoubleValue (500));
+  Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::MinY",
+                      DoubleValue (250));
+  Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::GridWidth",
+                      UintegerValue (1));
+}
+
+void ForceDefaults ()
+{
+  //
+  // Since we are using an external OpenFlow library that expects complete
+  // network packets, we must enable checksum computations.
+  //
+  Config::SetGlobal ("ChecksumEnabled", BooleanValue (true));
+
+  //
+  // The minimum (default) value for TCP MSS is 536, and there's no dynamic MTU
+  // discovery implemented yet in ns-3. To allow larger TCP packets, we defined
+  // this value to 1400, based on 1500 bytes for Ethernet v2 MTU, and
+  // considering 8 bytes for PPPoE header, 40 bytes for GTP/UDP/IP tunnel
+  // headers, and 52 bytes for default TCP/IP headers. Don't use higher values
+  // to avoid packet fragmentation.
+  //
+  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1400));
+
+  //
+  // Whenever possible, use the full-duplex CSMA channel to improve throughput.
+  // The code will automatically fall back to half-duplex mode for more than
+  // two devices in the same channel.
+  // This implementation is not available in default ns-3 code, and I got it
+  // from https://codereview.appspot.com/187880044/
+  //
+  Config::SetDefault ("ns3::CsmaChannel::FullDuplex", BooleanValue (true));
+}
+
 void
 EnableVerbose (bool enable)
 {
@@ -180,13 +280,13 @@ EnableVerbose (bool enable)
       LogComponentEnable ("OFSwitch13Queue", LOG_LEVEL_WARN);
 
       LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_WARN);
-      LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_ALL);
+      LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
       LogComponentEnable ("RingNetwork", LOG_LEVEL_WARN);
       LogComponentEnable ("LteHexGridNetwork", LOG_LEVEL_WARN);
       LogComponentEnable ("LteHexGridEnbTopologyHelper", LOG_LEVEL_WARN);
       LogComponentEnable ("ConnectionInfo", LOG_LEVEL_WARN);
       LogComponentEnable ("RoutingInfo", LOG_LEVEL_WARN);
-      
+
       LogComponentEnable ("OpenFlowEpcController", LOG_LEVEL_ALL);
       LogComponentEnable ("OpenFlowEpcController", LOG_PREFIX_TIME);
       LogComponentEnable ("RingController", LOG_LEVEL_ALL);

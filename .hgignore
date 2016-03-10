@@ -51,5 +51,5 @@ syntax: glob
 TAGS
 waf
 tests/*_stats.txt
-tests/*rem.out
+tests/*_plot.txt
 scratch/epc-of/*rem.pdf
