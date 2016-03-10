@@ -1,0 +1,6 @@
+default ns3::LteHexGridNetwork::NumSites "1"
+default ns3::LteHexGridNetwork::NumUes "3"
+default ns3::LteHexGridNetwork::PrintRem "false"
+default ns3::RingNetwork::NumSwitches "3"
+default ns3::TrafficHelper::FastTraffic "true"
+default ns3::TrafficHelper::VoipTraffic "true"
