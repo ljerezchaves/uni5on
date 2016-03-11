@@ -277,7 +277,7 @@ LteHexGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper)
     }
 
   // Attaching UE to the eNBs using initial cell selection
-  m_lteHelper->Attach (m_ueDevices);
+  m_lteHelper->Attach (m_ueDevices, m_enbDevices.Get (0));  // FIXME
 
   // Install the MobilityBuildingInfo into LTE nodes
   BuildingsHelper::Install (m_enbNodes);
