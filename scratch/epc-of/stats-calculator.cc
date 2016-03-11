@@ -263,25 +263,9 @@ AdmissionStatsCalculator::GetGbrBlockRatio (void) const
 
 // ------------------------------------------------------------------------ //
 GatewayStatsCalculator::GatewayStatsCalculator ()
-  : m_pgwDownBytes (0),
-    m_pgwUpBytes (0),
-    m_lastResetTime (Simulator::Now ())
+  : m_lastResetTime (Simulator::Now ())
 {
   NS_LOG_FUNCTION (this);
-
-  m_downQueue = Names::Find<Queue> ("/Names/OpenFlowNetwork/PgwDownQueue");
-  m_upQueue   = Names::Find<Queue> ("/Names/OpenFlowNetwork/PgwUpQueue");
-  NS_ASSERT_MSG (m_downQueue && m_upQueue, "Pgw network queues not found.");
-
-  // Connecting all gateway trace sinks for traffic bandwidth monitoring
-  Config::Connect (
-    "/Names/SgwPgwApplication/S1uRx",
-    MakeCallback (&GatewayStatsCalculator::NotifyTraffic, this));
-  Config::Connect (
-    "/Names/SgwPgwApplication/S1uTx",
-    MakeCallback (&GatewayStatsCalculator::NotifyTraffic, this));
-
-  ResetCounters ();
 }
 
 GatewayStatsCalculator::~GatewayStatsCalculator ()
@@ -303,6 +287,16 @@ GatewayStatsCalculator::GetTypeId (void)
                    MakeStringChecker ())
   ;
   return tid;
+}
+
+void
+GatewayStatsCalculator::SetQueues (Ptr<Queue> downQueue, Ptr<Queue> upQueue)
+{
+  NS_LOG_FUNCTION (this << downQueue << upQueue);
+  
+  m_downQueue = downQueue;
+  m_upQueue = upQueue;
+  ResetCounters ();
 }
 
 void
@@ -380,25 +374,8 @@ GatewayStatsCalculator::NotifyConstructionCompleted (void)
 }
 
 void
-GatewayStatsCalculator::NotifyTraffic (std::string context,
-                                       Ptr<const Packet> packet)
-{
-  std::string direction = context.substr (context.rfind ("/") + 1);
-  if (direction == "S1uTx")
-    {
-      m_pgwDownBytes += packet->GetSize ();
-    }
-  else if (direction == "S1uRx")
-    {
-      m_pgwUpBytes += packet->GetSize ();
-    }
-}
-
-void
 GatewayStatsCalculator::ResetCounters ()
 {
-  m_pgwUpBytes = 0;
-  m_pgwDownBytes = 0;
   m_downQueue->ResetStatistics ();
   m_upQueue->ResetStatistics ();
   m_lastResetTime = Simulator::Now ();
@@ -413,14 +390,14 @@ GatewayStatsCalculator::GetActiveTime (void) const
 uint64_t
 GatewayStatsCalculator::GetDownBitRate (void) const
 {
-  return static_cast<uint64_t> (8 * m_pgwDownBytes /
+  return static_cast<uint64_t> (8 * m_downQueue->GetTotalReceivedBytes () /
                                 GetActiveTime ().GetSeconds ());
 }
 
 uint64_t
 GatewayStatsCalculator::GetUpBitRate (void) const
 {
-  return static_cast<uint64_t> (8 * m_pgwUpBytes /
+  return static_cast<uint64_t> (8 * m_upQueue->GetTotalReceivedBytes () /
                                 GetActiveTime ().GetSeconds ());
 }
 

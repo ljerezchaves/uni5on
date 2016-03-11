@@ -127,6 +127,13 @@ public:
    */
   void DumpStatistics (void);
 
+  /**
+   * Set queue pointers for statistics dump.
+   * \param downQueue The downlink tx queue at server node.
+   * \param upQueue The uplink tx queue at client node.
+   */
+  void SetQueues (Ptr<Queue> downQueue, Ptr<Queue> upQueue);
+
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
@@ -135,13 +142,6 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
 private:
-  /**
-   * Notify gateway traffic.
-   * \param context Context information.
-   * \param packet The packet.
-   */
-  void NotifyTraffic (std::string context, Ptr<const Packet> packet);
-
   /**
    * Reset all internal counters.
    */
@@ -318,7 +318,7 @@ public:
   /**
    * Set queue pointers for statistics dump.
    * \param downQueue The downlink tx queue at server node.
-   * \param upQueue The uplink tx queue at gateway node.
+   * \param upQueue The uplink tx queue at client node.
    */
   void SetQueues (Ptr<Queue> downQueue, Ptr<Queue> upQueue);
 

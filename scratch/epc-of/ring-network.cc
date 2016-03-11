@@ -255,8 +255,7 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   // Only for the gateway link, let's set specific names for queues.
   if (counter == 1)
     {
-      Names::Add ("OpenFlowNetwork/PgwDownQueue", nodeDev->GetQueue ());
-      Names::Add ("OpenFlowNetwork/PgwUpQueue", portDev->GetQueue ());
+      m_gatewayStats->SetQueues (nodeDev->GetQueue (), portDev->GetQueue ());
     }
 
   return nodeDev;

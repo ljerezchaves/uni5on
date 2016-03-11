@@ -30,6 +30,7 @@ OpenFlowEpcNetwork::OpenFlowEpcNetwork ()
   : m_ofCtrlNode (0),
     m_ofHelper (0),
     m_created (false),
+    m_gatewayStats (0),
     m_gatewayNode (0),
     m_bandwidthStats (0),
     m_switchStats (0)
@@ -127,6 +128,7 @@ OpenFlowEpcNetwork::DoDispose ()
   NS_LOG_FUNCTION (this);
   m_ofCtrlNode = 0;
   m_ofHelper = 0;
+  m_gatewayStats = 0;
   m_gatewayNode = 0;
   m_bandwidthStats = 0;
   m_switchStats = 0;
@@ -144,6 +146,9 @@ OpenFlowEpcNetwork::NotifyConstructionCompleted (void)
   m_ofHelper = CreateObject<OFSwitch13Helper> ();
   m_ofHelper->SetAttribute ("ChannelType", 
                             EnumValue (OFSwitch13Helper::DEDICATEDP2P));
+
+  // Creating the gateway stats calculator for this OpenFlow network
+  m_gatewayStats = CreateObject<GatewayStatsCalculator> ();
 
   // Creating the bandwidth stats calculator for this OpenFlow network
   m_bandwidthStats = CreateObject<BandwidthStatsCalculator> ();

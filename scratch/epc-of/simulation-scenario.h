@@ -74,7 +74,6 @@ private:
   Ptr<Node>                       m_webHost;        //!< Internet server node
   std::string                     m_switchLog;      //!< Switches log level
   bool                            m_pcapTrace;      //!< Enable PCAP traces
-  Ptr<GatewayStatsCalculator>     m_gatewayStats;   //!< Gateway statistics
   Ptr<EpcS1uStatsCalculator>      m_epcS1uStats;    //!< EPC S1-U statistics
 };
 
