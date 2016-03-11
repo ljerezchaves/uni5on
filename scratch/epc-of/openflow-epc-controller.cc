@@ -231,11 +231,11 @@ OpenFlowEpcController::NotifyConstructionCompleted ()
     MakeCallback (&OpenFlowEpcController::NotifyNewSwitchConnection, this));
 
   // Connecting this controller to SgwPgwApplication trace sources
-  Ptr<EpcSgwPgwApplication> gateway =
+  Ptr<EpcSgwPgwApplication> gatewayApp =
     Names::Find<EpcSgwPgwApplication> ("/Names/SgwPgwApplication");
-  NS_ASSERT_MSG (gateway, "SgwPgw application not found.");
+  NS_ASSERT_MSG (gatewayApp, "SgwPgw application not found.");
 
-  gateway->TraceConnectWithoutContext (
+  gatewayApp->TraceConnectWithoutContext (
     "ContextCreated",
     MakeCallback (&OpenFlowEpcController::NotifyContextCreated, this));
 
