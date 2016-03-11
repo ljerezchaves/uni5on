@@ -63,9 +63,6 @@ public:
   /** \return the LteHelper used to create this LTE network */
   Ptr<LteHelper> GetLteHelper ();
 
-  /** Enable LTE ascii traces. */
-  void EnableTraces ();
-
   /**
    * Creates the LTE radio topology.
    * \param epcHelper The EpcHelper used to create the LTE EPC core

@@ -52,4 +52,5 @@ TAGS
 waf
 tests/*_stats.txt
 tests/*_plot.txt
+tests/*_lte.txt
 scratch/epc-of/*rem.pdf
