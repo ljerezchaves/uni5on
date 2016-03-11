@@ -76,8 +76,6 @@ private:
   bool                            m_pcapTrace;      //!< Enable PCAP traces
   Ptr<AdmissionStatsCalculator>   m_admissionStats; //!< Admission statistics
   Ptr<GatewayStatsCalculator>     m_gatewayStats;   //!< Gateway statistics
-  Ptr<BandwidthStatsCalculator>   m_bandwidthStats; //!< Bandwidth statistics
-  Ptr<SwitchRulesStatsCalculator> m_switchStats;    //!< Switch flow statistics
   Ptr<WebQueueStatsCalculator>    m_internetStats;  //!< Web queues statistics
   Ptr<EpcS1uStatsCalculator>      m_epcS1uStats;    //!< EPC S1-U statistics
 };

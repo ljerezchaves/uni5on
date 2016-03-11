@@ -435,21 +435,6 @@ BandwidthStatsCalculator::BandwidthStatsCalculator ()
   : m_lastResetTime (Simulator::Now ())
 {
   NS_LOG_FUNCTION (this);
-
-  // Connecting this stats calculator to OpenFlowNetwork trace source, so it
-  // can be aware of all connections between switches.
-  Ptr<OpenFlowEpcNetwork> network =
-    Names::Find<OpenFlowEpcNetwork> ("/Names/OpenFlowNetwork");
-  NS_ASSERT_MSG (network, "Network object not found.");
-  NS_ASSERT_MSG (!network->IsTopologyCreated (),
-                 "Network topology already created.");
-
-  network->TraceConnectWithoutContext (
-    "TopologyBuilt",
-    MakeCallback (&BandwidthStatsCalculator::NotifyTopologyBuilt, this));
-  network->TraceConnectWithoutContext (
-    "NewSwitchConnection",
-    MakeCallback (&BandwidthStatsCalculator::NotifyNewSwitchConnection, this));
 }
 
 BandwidthStatsCalculator::~BandwidthStatsCalculator ()
@@ -699,18 +684,6 @@ BandwidthStatsCalculator::GetActiveTime (void) const
 SwitchRulesStatsCalculator::SwitchRulesStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
-
-  // Connecting this stats calculator to OpenFlowNetwork trace source, so it
-  // can be aware of all switches devices.
-  Ptr<OpenFlowEpcNetwork> network =
-    Names::Find<OpenFlowEpcNetwork> ("/Names/OpenFlowNetwork");
-  NS_ASSERT_MSG (network, "Network object not found.");
-  NS_ASSERT_MSG (!network->IsTopologyCreated (),
-                 "Network topology already created.");
-
-  network->TraceConnectWithoutContext (
-    "TopologyBuilt",
-    MakeCallback (&SwitchRulesStatsCalculator::NotifyTopologyBuilt, this));
 }
 
 SwitchRulesStatsCalculator::~SwitchRulesStatsCalculator ()

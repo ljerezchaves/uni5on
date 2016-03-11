@@ -56,8 +56,6 @@ SimulationScenario::DoDispose ()
 
   m_admissionStats = 0;
   m_gatewayStats = 0;
-  m_bandwidthStats = 0;
-  m_switchStats = 0;
   m_internetStats = 0;
   m_epcS1uStats = 0;
 }
@@ -104,13 +102,6 @@ SimulationScenario::BuildRingTopology ()
   // SgwPgwApplication trace sources).
   m_controller = CreateObject<RingController> ();
   Names::Add ("MainController", m_controller);
-
-  // 4) Create the BandwidthStatsCalculator and SwitchRulesStatsCalculator
-  // objects. They must be created after OpenFlowNetwork object but before
-  // topology creation, as they will connect to OpenFlowNetwork trace sources
-  // to monitor switches and connections.
-  m_bandwidthStats = CreateObject<BandwidthStatsCalculator> ();
-  m_switchStats = CreateObject<SwitchRulesStatsCalculator> ();
 
   // 5) Build network topology calling OpenFlowEpcNetwork::CreateTopology ().
   m_opfNetwork->CreateTopology (m_controller);

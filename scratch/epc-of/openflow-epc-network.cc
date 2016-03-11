@@ -30,15 +30,11 @@ OpenFlowEpcNetwork::OpenFlowEpcNetwork ()
   : m_ofCtrlNode (0),
     m_ofHelper (0),
     m_created (false),
-    m_gatewayNode (0)
+    m_gatewayNode (0),
+    m_bandwidthStats (0),
+    m_switchStats (0)
 {
   NS_LOG_FUNCTION (this);
-
-  // For the OpenFlow control channel, let's use point to point connections
-  // between controller and switches.
-  m_ofHelper = CreateObject<OFSwitch13Helper> ();
-  m_ofHelper->SetAttribute ("ChannelType", 
-                            EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 }
 
 OpenFlowEpcNetwork::~OpenFlowEpcNetwork ()
@@ -132,8 +128,36 @@ OpenFlowEpcNetwork::DoDispose ()
   m_ofCtrlNode = 0;
   m_ofHelper = 0;
   m_gatewayNode = 0;
+  m_bandwidthStats = 0;
+  m_switchStats = 0;
   m_nodeSwitchMap.clear ();
   Object::DoDispose ();
+}
+
+void 
+OpenFlowEpcNetwork::NotifyConstructionCompleted (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  // For the OpenFlow control channel, let's use point to point connections
+  // between controller and switches.
+  m_ofHelper = CreateObject<OFSwitch13Helper> ();
+  m_ofHelper->SetAttribute ("ChannelType", 
+                            EnumValue (OFSwitch13Helper::DEDICATEDP2P));
+
+  // Creating the bandwidth stats calculator for this OpenFlow network
+  m_bandwidthStats = CreateObject<BandwidthStatsCalculator> ();
+  TraceConnectWithoutContext ("TopologyBuilt", MakeCallback (
+    &BandwidthStatsCalculator::NotifyTopologyBuilt, m_bandwidthStats));
+  TraceConnectWithoutContext ("NewSwitchConnection", MakeCallback (
+    &BandwidthStatsCalculator::NotifyNewSwitchConnection, m_bandwidthStats));
+
+  // Creating the switch rules stats calculator for this OpenFlow network
+  m_switchStats = CreateObject<SwitchRulesStatsCalculator> ();
+  TraceConnectWithoutContext ("TopologyBuilt", MakeCallback (
+    &SwitchRulesStatsCalculator::NotifyTopologyBuilt, m_switchStats));
+
+  Object::NotifyConstructionCompleted ();
 }
 
 void

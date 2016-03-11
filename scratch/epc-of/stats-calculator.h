@@ -200,14 +200,6 @@ public:
    */
   void DumpStatistics (void);
 
-protected:
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  // Inherited from ObjectBase
-  virtual void NotifyConstructionCompleted (void);
-
-private:
   /**
    * Notify this stats calculator of a new connection between two switches in
    * the OpenFlow network.
@@ -222,6 +214,14 @@ private:
    */
   void NotifyTopologyBuilt (NetDeviceContainer devices);
 
+protected:
+  /** Destructor implementation */
+  virtual void DoDispose ();
+
+  // Inherited from ObjectBase
+  virtual void NotifyConstructionCompleted (void);
+
+private:
   /**
    * Reset all internal counters.
    */
@@ -273,6 +273,13 @@ public:
    */
   void DumpStatistics (void);
 
+  /**
+   * Notify this stats calculator that all connection between switches have
+   * already been configure and the topology is finished.
+   * \param devices The NetDeviceContainer for OpenFlow switch devices.
+   */
+  void NotifyTopologyBuilt (NetDeviceContainer devices);
+
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
@@ -281,13 +288,6 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
 private:
-  /**
-   * Notify this stats calculator that all connection between switches have
-   * already been configure and the topology is finished.
-   * \param devices The NetDeviceContainer for OpenFlow switch devices.
-   */
-  void NotifyTopologyBuilt (NetDeviceContainer devices);
-
   NetDeviceContainer m_devices; //!< OpenFlow switch devices
 
   std::string m_swtStatsFilename;         //!< SwtStats filename

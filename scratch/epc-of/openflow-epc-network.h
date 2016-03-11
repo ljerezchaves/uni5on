@@ -26,11 +26,14 @@
 #include <ns3/csma-module.h>
 #include <ns3/ofswitch13-module.h>
 #include <ns3/qos-stats-calculator.h>
+#include "stats-calculator.h"
 
 namespace ns3 {
 
 class OpenFlowEpcController;
 class ConnectionInfo;
+class BandwidthStatsCalculator;
+class SwitchRulesStatsCalculator;
 
 /**
  * \ingroup epcof
@@ -158,6 +161,9 @@ protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
+  // Inherited from ObjectBase
+  virtual void NotifyConstructionCompleted (void);
+  
   /**
    * Store the pair <node, switch index> for further use.
    * \param switchIdx The switch index in m_ofSwitches.
@@ -228,9 +234,11 @@ protected:
                  uint16_t, uint32_t> m_newAttachTrace;
 
 private:
-  uint16_t                    m_gatewaySwitch;  //!< Gateway switch index.
-  Ptr<Node>                   m_gatewayNode;    //!< Gateway node pointer.
-
+  uint16_t                        m_gatewaySwitch;  //!< Gateway switch index.
+  Ptr<Node>                       m_gatewayNode;    //!< Gateway node pointer.
+  Ptr<BandwidthStatsCalculator>   m_bandwidthStats; //!< Bandwidth statistics.
+  Ptr<SwitchRulesStatsCalculator> m_switchStats;    //!< Switch statistics.
+  
   /** Map saving Node / Switch indexes. */
   typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;
   NodeSwitchMap_t     m_nodeSwitchMap;    //!< Registered nodes per switch idx.
