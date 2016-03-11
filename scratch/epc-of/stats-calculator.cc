@@ -47,11 +47,6 @@ AdmissionStatsCalculator::AdmissionStatsCalculator ()
     m_gbrBlocked (0)
 {
   NS_LOG_FUNCTION (this);
-
-  // Connecting to OpenFlowEpcController BearerRequest trace source
-  Config::ConnectWithoutContext (
-    "/Names/MainController/BearerRequest",
-    MakeCallback (&AdmissionStatsCalculator::NotifyRequest, this));
 }
 
 AdmissionStatsCalculator::~AdmissionStatsCalculator ()

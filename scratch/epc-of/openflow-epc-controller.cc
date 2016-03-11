@@ -34,34 +34,9 @@ OpenFlowEpcController::QciDscpMap_t OpenFlowEpcController::m_qciDscpTable;
 OpenFlowEpcController::QciDscpInitializer OpenFlowEpcController::initializer;
 
 OpenFlowEpcController::OpenFlowEpcController ()
+  : m_admissionStats (0)
 {
   NS_LOG_FUNCTION (this);
-
-  // Connecting this controller to OpenFlowNetwork trace sources
-  Ptr<OpenFlowEpcNetwork> network =
-    Names::Find<OpenFlowEpcNetwork> ("/Names/OpenFlowNetwork");
-  NS_ASSERT_MSG (network, "Network object not found.");
-  NS_ASSERT_MSG (!network->IsTopologyCreated (),
-                 "Network topology already created.");
-
-  network->TraceConnectWithoutContext (
-    "NewEpcAttach",
-    MakeCallback (&OpenFlowEpcController::NotifyNewEpcAttach, this));
-  network->TraceConnectWithoutContext (
-    "TopologyBuilt",
-    MakeCallback (&OpenFlowEpcController::NotifyTopologyBuilt, this));
-  network->TraceConnectWithoutContext (
-    "NewSwitchConnection",
-    MakeCallback (&OpenFlowEpcController::NotifyNewSwitchConnection, this));
-
-  // Connecting this controller to SgwPgwApplication trace sources
-  Ptr<EpcSgwPgwApplication> gateway =
-    Names::Find<EpcSgwPgwApplication> ("/Names/SgwPgwApplication");
-  NS_ASSERT_MSG (gateway, "SgwPgw application not found.");
-
-  gateway->TraceConnectWithoutContext (
-    "ContextCreated",
-    MakeCallback (&OpenFlowEpcController::NotifyContextCreated, this));
 }
 
 OpenFlowEpcController::~OpenFlowEpcController ()
@@ -226,9 +201,50 @@ OpenFlowEpcController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
+  m_admissionStats = 0;
   m_arpTable.clear ();
   m_ipSwitchTable.clear ();
   m_routes.clear ();
+  Object::DoDispose ();
+}
+
+void
+OpenFlowEpcController::NotifyConstructionCompleted ()
+{
+  NS_LOG_FUNCTION (this);
+  
+  // Connecting this controller to OpenFlowNetwork trace sources
+  Ptr<OpenFlowEpcNetwork> network =
+    Names::Find<OpenFlowEpcNetwork> ("/Names/OpenFlowNetwork");
+  NS_ASSERT_MSG (network, "Network object not found.");
+  NS_ASSERT_MSG (!network->IsTopologyCreated (),
+                 "Network topology already created.");
+
+  network->TraceConnectWithoutContext (
+    "NewEpcAttach",
+    MakeCallback (&OpenFlowEpcController::NotifyNewEpcAttach, this));
+  network->TraceConnectWithoutContext (
+    "TopologyBuilt",
+    MakeCallback (&OpenFlowEpcController::NotifyTopologyBuilt, this));
+  network->TraceConnectWithoutContext (
+    "NewSwitchConnection",
+    MakeCallback (&OpenFlowEpcController::NotifyNewSwitchConnection, this));
+
+  // Connecting this controller to SgwPgwApplication trace sources
+  Ptr<EpcSgwPgwApplication> gateway =
+    Names::Find<EpcSgwPgwApplication> ("/Names/SgwPgwApplication");
+  NS_ASSERT_MSG (gateway, "SgwPgw application not found.");
+
+  gateway->TraceConnectWithoutContext (
+    "ContextCreated",
+    MakeCallback (&OpenFlowEpcController::NotifyContextCreated, this));
+
+  // Creating the admission stats calculator for this OpenFlow controller
+  m_admissionStats = CreateObject<AdmissionStatsCalculator> ();
+  TraceConnectWithoutContext ("BearerRequest", MakeCallback (
+        &AdmissionStatsCalculator::NotifyRequest, m_admissionStats));
+
+  ObjectBase::NotifyConstructionCompleted ();
 }
 
 void

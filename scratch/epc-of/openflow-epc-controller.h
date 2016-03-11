@@ -28,11 +28,13 @@
 #include <ns3/ofswitch13-module.h>
 #include "routing-info.h"
 #include "connection-info.h"
+#include "stats-calculator.h"
 
 namespace ns3 {
 
 class OpenFlowEpcController;
 class RingController;
+class AdmissionStatsCalculator;
 
 /**
  * \ingroup epcof
@@ -120,6 +122,9 @@ protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
+  // Inherited from ObjectBase
+  virtual void NotifyConstructionCompleted (void);
+  
   /** \name Trace sinks for network topology and LTE EPC monitoring. */
   //\{
   /**
@@ -362,7 +367,7 @@ private:
    */
   class QciDscpInitializer
   {
-public:
+  public:
     /** Initializer function. */
     QciDscpInitializer ();
   };
@@ -388,7 +393,8 @@ protected:
   static const uint16_t m_dedicatedTmo;   //!< Timeout for dedicated bearers
 
 private:
-  NetDeviceContainer  m_ofDevices;        //!< OpenFlow switch devices.
+  NetDeviceContainer            m_ofDevices;      //!< OpenFlow switch devices.
+  Ptr<AdmissionStatsCalculator> m_admissionStats; //!< Admission statistics.
 
   /** Map saving <TEID / Routing information > */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;

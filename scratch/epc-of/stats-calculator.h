@@ -58,6 +58,13 @@ public:
    */
   void DumpStatistics (void);
 
+  /**
+   * Notify new bearer request.
+   * \param accepted True when the bearer is accepted into network.
+   * \param rInfo The bearer routing information.
+   */
+  void NotifyRequest (bool accepted, Ptr<const RoutingInfo> rInfo);
+
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
@@ -66,13 +73,6 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
 private:
-  /**
-   * Notify new bearer request.
-   * \param accepted True when the bearer is accepted into network.
-   * \param rInfo The bearer routing information.
-   */
-  void NotifyRequest (bool accepted, Ptr<const RoutingInfo> rInfo);
-
   /**
    * Reset all internal counters.
    */
