@@ -74,7 +74,6 @@ private:
   Ptr<Node>                       m_webHost;        //!< Internet server node
   std::string                     m_switchLog;      //!< Switches log level
   bool                            m_pcapTrace;      //!< Enable PCAP traces
-  bool                            m_lteTrace;       //!< Enable ASCII traces
   Ptr<AdmissionStatsCalculator>   m_admissionStats; //!< Admission statistics
   Ptr<GatewayStatsCalculator>     m_gatewayStats;   //!< Gateway statistics
   Ptr<BandwidthStatsCalculator>   m_bandwidthStats; //!< Bandwidth statistics

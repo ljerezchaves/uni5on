@@ -115,6 +115,7 @@ private:
   uint32_t            m_nUes;         //!< Number of UEs
   uint32_t            m_enbMargin;    //!< eNB coverage margin
   double              m_ueHeight;     //!< UE height
+  bool                m_lteTrace;     //!< Enable LTE ASCII traces
   bool                m_lteRem;       //!< Print the LTE REM
   bool                m_ueMobility;   //!< Enable UE mobility
   std::string         m_remFilename;  //!< LTE REM filename

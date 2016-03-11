@@ -65,6 +65,11 @@ LteHexGridNetwork::GetTypeId (void)
                    BooleanValue (false),
                    MakeBooleanAccessor (&LteHexGridNetwork::m_lteRem),
                    MakeBooleanChecker ())
+    .AddAttribute ("LteTrace",
+                   "Enable/Disable simulation LTE ASCII traces.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&LteHexGridNetwork::m_lteTrace),
+                   MakeBooleanChecker ())
     .AddAttribute ("RemFilename",
                    "Filename for radio enviroment map.",
                    StringValue ("rem_plot.txt"),
@@ -134,31 +139,31 @@ LteHexGridNetwork::EnableTraces ()
 
   // Adjust the filenames for all LTE ASCII trace files
   Config::SetDefault ("ns3::RadioBearerStatsCalculator::DlRlcOutputFilename",
-                      StringValue (prefix + "lte_dl_rlc.txt"));
+                      StringValue (prefix + "dl_rlc_lte.txt"));
   Config::SetDefault ("ns3::RadioBearerStatsCalculator::UlRlcOutputFilename",
-                      StringValue (prefix + "lte_ul_rlc.txt"));
+                      StringValue (prefix + "ul_rlc_lte.txt"));
   Config::SetDefault ("ns3::RadioBearerStatsCalculator::DlPdcpOutputFilename",
-                      StringValue (prefix + "lte_dl_pdcp.txt"));
+                      StringValue (prefix + "dl_pdcp_lte.txt"));
   Config::SetDefault ("ns3::RadioBearerStatsCalculator::UlPdcpOutputFilename",
-                      StringValue (prefix + "lte_ul_pdcp.txt"));
+                      StringValue (prefix + "ul_pdcp_lte.txt"));
   Config::SetDefault ("ns3::MacStatsCalculator::DlOutputFilename",
-                      StringValue (prefix + "lte_dl_mac.txt"));
+                      StringValue (prefix + "dl_mac_lte.txt"));
   Config::SetDefault ("ns3::MacStatsCalculator::UlOutputFilename",
-                      StringValue (prefix + "lte_ul_mac.txt"));
+                      StringValue (prefix + "ul_mac_lte.txt"));
   Config::SetDefault ("ns3::PhyStatsCalculator::DlRsrpSinrFilename",
-                      StringValue (prefix + "lte_dl_rsrp_sinr.txt"));
+                      StringValue (prefix + "dl_rsrp_sinr_lte.txt"));
   Config::SetDefault ("ns3::PhyStatsCalculator::UlSinrFilename",
-                      StringValue (prefix + "lte_ul_sinr.txt"));
+                      StringValue (prefix + "ul_sinr_lte.txt"));
   Config::SetDefault ("ns3::PhyStatsCalculator::UlInterferenceFilename",
-                      StringValue (prefix + "lte_ul_interf.txt"));
+                      StringValue (prefix + "ul_interference_lte.txt"));
   Config::SetDefault ("ns3::PhyRxStatsCalculator::DlRxOutputFilename",
-                      StringValue (prefix + "lte_dl_rx_phy.txt"));
+                      StringValue (prefix + "dl_rx_phy_lte.txt"));
   Config::SetDefault ("ns3::PhyRxStatsCalculator::UlRxOutputFilename",
-                      StringValue (prefix + "lte_ul_rx_phy.txt"));
+                      StringValue (prefix + "ul_rx_phy_lte.txt"));
   Config::SetDefault ("ns3::PhyTxStatsCalculator::DlTxOutputFilename",
-                      StringValue (prefix + "lte_dl_tx_phy.txt"));
+                      StringValue (prefix + "dl_tx_phy_lte.txt"));
   Config::SetDefault ("ns3::PhyTxStatsCalculator::UlTxOutputFilename",
-                      StringValue (prefix + "lte_ul_tx_phy.txt"));
+                      StringValue (prefix + "ul_tx_phy_lte.txt"));
 
   m_lteHelper->EnableTraces ();
 }
@@ -301,6 +306,12 @@ LteHexGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper)
       PrintRadioEnvironmentMap (prefix + m_remFilename);
     }
 
+  // If enable, print LTE ASCII traces
+  if (m_lteTrace)
+    {
+      EnableTraces ();
+    }
+
   return m_lteHelper;
 }
 
@@ -386,8 +397,8 @@ LteHexGridNetwork::PrintRadioEnvironmentMap (std::string filename)
   m_remHelper->SetAttribute ("Z", DoubleValue (m_ueHeight));
 
   // Adjust plot resolution
-  uint32_t xResolution = m_coverageArea.xMax - m_coverageArea.xMin;
-  uint32_t yResolution = m_coverageArea.yMax - m_coverageArea.yMin;
+  uint32_t xResolution = m_coverageArea.xMax - m_coverageArea.xMin + 1;
+  uint32_t yResolution = m_coverageArea.yMax - m_coverageArea.yMin + 1;
   m_remHelper->SetAttribute ("XRes", UintegerValue (xResolution));
   m_remHelper->SetAttribute ("YRes", UintegerValue (yResolution));
 

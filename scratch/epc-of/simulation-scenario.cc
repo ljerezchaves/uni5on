@@ -73,11 +73,6 @@ SimulationScenario::GetTypeId (void)
                    BooleanValue (false),
                    MakeBooleanAccessor (&SimulationScenario::m_pcapTrace),
                    MakeBooleanChecker ())
-    .AddAttribute ("LteTrace",
-                   "Enable/Disable simulation LTE ASCII traces.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&SimulationScenario::m_lteTrace),
-                   MakeBooleanChecker ())
     .AddAttribute ("SwitchLogs",
                    "Set the ofsoftswitch log level.",
                    StringValue ("none"),
@@ -176,10 +171,6 @@ SimulationScenario::EnableTraces ()
       m_opfNetwork->EnableDataPcap (prefix + "ofnetwork", true);
       m_epcHelper->EnablePcapS1u (prefix + "lte-epc");
       m_epcHelper->EnablePcapX2 (prefix + "lte-epc");
-    }
-  if (m_lteTrace)
-    {
-      m_lteNetwork->EnableTraces ();
     }
 }
 
