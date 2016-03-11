@@ -26,6 +26,7 @@ NS_LOG_COMPONENT_DEFINE ("InternetNetwork");
 NS_OBJECT_ENSURE_REGISTERED (InternetNetwork);
 
 InternetNetwork::InternetNetwork ()
+  : m_internetStats (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -102,6 +103,7 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
 
       Names::Add ("InternetNetwork/DownQueue", webDev->GetQueue ());
       Names::Add ("InternetNetwork/UpQueue", pgwDev->GetQueue ());
+      m_internetStats->SetQueues (webDev->GetQueue (), pgwDev->GetQueue ());
     }
   else
     {
@@ -115,6 +117,7 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
 
       Names::Add ("InternetNetwork/DownQueue", webDev->GetQueue ());
       Names::Add ("InternetNetwork/UpQueue", pgwDev->GetQueue ());
+      m_internetStats->SetQueues (webDev->GetQueue (), pgwDev->GetQueue ());
     }
 
   Ipv4AddressHelper ipv4h;
@@ -146,13 +149,6 @@ InternetNetwork::EnablePcap (std::string prefix)
     }
 }
 
-void
-InternetNetwork::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-  Object::DoDispose ();
-}
-
 const std::string
 InternetNetwork::GetServerName ()
 {
@@ -163,6 +159,25 @@ const std::string
 InternetNetwork::GetSgwPgwName ()
 {
   return "pgw";
+}
+
+void
+InternetNetwork::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+  m_internetStats = 0;
+  Object::DoDispose ();
+}
+
+void
+InternetNetwork::NotifyConstructionCompleted ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // Creating the queue stats calculator for the Internet network
+  m_internetStats = CreateObject<WebQueueStatsCalculator> ();
+  
+  Object::NotifyConstructionCompleted ();
 }
 
 };  // namespace ns3

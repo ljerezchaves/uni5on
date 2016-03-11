@@ -21,14 +21,12 @@
 #ifndef EPCOF_STATS_CALCULATOR_H
 #define EPCOF_STATS_CALCULATOR_H
 
-#include "ns3/epc-apps-module.h"
-#include "ns3/nstime.h"
-#include "ns3/queue.h"
+#include <ns3/epc-apps-module.h>
+#include <ns3/nstime.h>
+#include <ns3/queue.h>
 #include "routing-info.h"
-#include "internet-network.h"
-#include "openflow-epc-network.h"
-#include "openflow-epc-controller.h"
 #include "connection-info.h"
+#include "openflow-epc-controller.h"
 
 namespace ns3 {
 
@@ -316,6 +314,13 @@ public:
    * Dump regular statistics into file.
    */
   void DumpStatistics (void);
+
+  /**
+   * Set queue pointers for statistics dump.
+   * \param downQueue The downlink tx queue at server node.
+   * \param upQueue The uplink tx queue at gateway node.
+   */
+  void SetQueues (Ptr<Queue> downQueue, Ptr<Queue> upQueue);
 
 protected:
   /** Destructor implementation */

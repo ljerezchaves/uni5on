@@ -56,7 +56,6 @@ SimulationScenario::DoDispose ()
 
   m_admissionStats = 0;
   m_gatewayStats = 0;
-  m_internetStats = 0;
   m_epcS1uStats = 0;
 }
 
@@ -135,7 +134,6 @@ SimulationScenario::BuildRingTopology ()
   // 11) Creating remaining stats calculator for output dump
   m_admissionStats = CreateObject<AdmissionStatsCalculator> ();
   m_gatewayStats = CreateObject<GatewayStatsCalculator> ();
-  m_internetStats = CreateObject<WebQueueStatsCalculator> ();
   m_epcS1uStats = CreateObject<EpcS1uStatsCalculator> ();
 }
 

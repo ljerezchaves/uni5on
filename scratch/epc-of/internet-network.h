@@ -26,8 +26,11 @@
 #include <ns3/internet-module.h>
 #include <ns3/point-to-point-module.h>
 #include <ns3/csma-module.h>
+#include "stats-calculator.h"
 
 namespace ns3 {
+
+class WebQueueStatsCalculator;
 
 /**
  * \ingroup epcof
@@ -46,8 +49,6 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** Destructor implementation */
-  virtual void DoDispose ();
 
   /**
    * Creates the internet infrastructure.
@@ -68,6 +69,13 @@ public:
   /** \return the name used by the gateway node */
   static const std::string GetSgwPgwName ();
 
+protected:
+  /** Destructor implementation */
+  virtual void DoDispose ();
+
+  // Inherited from ObjectBase
+  virtual void NotifyConstructionCompleted (void);
+  
 private:
   NodeContainer      m_webNodes;      //!< Internet nodes (server and gateway)
   NetDeviceContainer m_webDevices;    //!< Internet devices
@@ -77,6 +85,8 @@ private:
   Time               m_linkDelay;     //!< Internet link delay
   uint16_t           m_linkMtu;       //!< Internet link MTU
   bool               m_csmaLink;      //!< Use csma instead of p2p link
+
+  Ptr<WebQueueStatsCalculator>  m_internetStats;  //!< Web queues statistics
 };
 
 };  // namespace ns3

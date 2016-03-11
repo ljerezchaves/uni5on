@@ -783,12 +783,6 @@ WebQueueStatsCalculator::WebQueueStatsCalculator ()
   : m_lastResetTime (Simulator::Now ())
 {
   NS_LOG_FUNCTION (this);
-
-  m_downQueue = Names::Find<Queue> ("/Names/InternetNetwork/DownQueue");
-  m_upQueue   = Names::Find<Queue> ("/Names/InternetNetwork/UpQueue");
-  NS_ASSERT_MSG (m_downQueue && m_upQueue, "Web network queues not found.");
-
-  ResetCounters ();
 }
 
 WebQueueStatsCalculator::~WebQueueStatsCalculator ()
@@ -810,6 +804,16 @@ WebQueueStatsCalculator::GetTypeId (void)
                    MakeStringChecker ())
   ;
   return tid;
+}
+
+void
+WebQueueStatsCalculator::SetQueues (Ptr<Queue> downQueue, Ptr<Queue> upQueue)
+{
+  NS_LOG_FUNCTION (this << downQueue << upQueue);
+  
+  m_downQueue = downQueue;
+  m_upQueue = upQueue;
+  ResetCounters ();
 }
 
 void
