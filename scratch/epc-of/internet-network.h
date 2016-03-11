@@ -30,7 +30,7 @@
 
 namespace ns3 {
 
-class WebQueueStatsCalculator;
+class LinkQueuesStatsCalculator;
 
 /**
  * \ingroup epcof
@@ -86,7 +86,7 @@ private:
   uint16_t           m_linkMtu;       //!< Internet link MTU
   bool               m_csmaLink;      //!< Use csma instead of p2p link
 
-  Ptr<WebQueueStatsCalculator>  m_internetStats;  //!< Web queues statistics
+  Ptr<LinkQueuesStatsCalculator>  m_internetStats;  //!< Web queues statistics
 };
 
 };  // namespace ns3

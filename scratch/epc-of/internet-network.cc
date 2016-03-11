@@ -175,8 +175,11 @@ InternetNetwork::NotifyConstructionCompleted ()
   NS_LOG_FUNCTION (this);
 
   // Creating the queue stats calculator for the Internet network
-  m_internetStats = CreateObject<WebQueueStatsCalculator> ();
-  
+  ObjectFactory statsFactory;
+  statsFactory.SetTypeId (LinkQueuesStatsCalculator::GetTypeId ());
+  statsFactory.Set ("LnkStatsFilename", StringValue ("web_stats.txt"));
+  m_internetStats = statsFactory.Create<LinkQueuesStatsCalculator> ();
+
   Object::NotifyConstructionCompleted ();
 }
 

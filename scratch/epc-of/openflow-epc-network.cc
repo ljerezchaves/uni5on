@@ -148,8 +148,11 @@ OpenFlowEpcNetwork::NotifyConstructionCompleted (void)
                             EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
   // Creating the gateway stats calculator for this OpenFlow network
-  m_gatewayStats = CreateObject<GatewayStatsCalculator> ();
-
+  ObjectFactory statsFactory;
+  statsFactory.SetTypeId (LinkQueuesStatsCalculator::GetTypeId ());
+  statsFactory.Set ("LnkStatsFilename", StringValue ("pgw_stats.txt"));
+  m_gatewayStats = statsFactory.Create<LinkQueuesStatsCalculator> ();
+  
   // Creating the bandwidth stats calculator for this OpenFlow network
   m_bandwidthStats = CreateObject<BandwidthStatsCalculator> ();
   TraceConnectWithoutContext ("TopologyBuilt", MakeCallback (

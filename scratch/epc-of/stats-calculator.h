@@ -108,13 +108,13 @@ private:
 // ------------------------------------------------------------------------ //
 /**
  * \ingroup epcof
- * This class monitors gateway bandwidth statistics.
+ * This class monitors link bandwidth statistics.
  */
-class GatewayStatsCalculator : public Object
+class LinkQueuesStatsCalculator : public Object
 {
 public:
-  GatewayStatsCalculator ();  //!< Default constructor
-  virtual ~GatewayStatsCalculator (); //!< Default destructor
+  LinkQueuesStatsCalculator ();  //!< Default constructor
+  virtual ~LinkQueuesStatsCalculator (); //!< Default destructor
 
   /**
    * Register this type.
@@ -171,8 +171,8 @@ private:
   Ptr<Queue>  m_upQueue;        //!< Internet uplink queue
   Time        m_lastResetTime;  //!< Last reset time
 
-  std::string m_pgwStatsFilename;         //!< PgwStats filename
-  Ptr<OutputStreamWrapper> m_pgwWrapper;  //!< PgwStats file wrapper
+  std::string m_lnkStatsFilename;         //!< LinkStats filename
+  Ptr<OutputStreamWrapper> m_lnkWrapper;  //!< LinkStats file wrapper
 };
 
 
@@ -290,75 +290,6 @@ private:
 
   std::string m_swtStatsFilename;         //!< SwtStats filename
   Ptr<OutputStreamWrapper> m_swtWrapper;  //!< SwtStats file wrapper
-};
-
-
-// ------------------------------------------------------------------------ //
-/**
- * \ingroup epcof
- * This class monitors Internet queues statistics.
- */
-class WebQueueStatsCalculator : public Object
-{
-public:
-  WebQueueStatsCalculator ();  //!< Default constructor
-  virtual ~WebQueueStatsCalculator (); //!< Default destructor
-
-  /**
-   * Register this type.
-   * \return The object TypeId.
-   */
-  static TypeId GetTypeId (void);
-
-  /**
-   * Dump regular statistics into file.
-   */
-  void DumpStatistics (void);
-
-  /**
-   * Set queue pointers for statistics dump.
-   * \param downQueue The downlink tx queue at server node.
-   * \param upQueue The uplink tx queue at client node.
-   */
-  void SetQueues (Ptr<Queue> downQueue, Ptr<Queue> upQueue);
-
-protected:
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  // Inherited from ObjectBase
-  virtual void NotifyConstructionCompleted (void);
-
-private:
-  /**
-   * Reset all internal counters.
-   */
-  void ResetCounters ();
-
-  /**
-   * Get the active time value since last reset.
-   * \return The time value.
-   */
-  Time GetActiveTime (void) const;
-
-  /**
-   * Get the downlink bit rate.
-   * \return The bit rate.
-   */
-  uint64_t GetDownBitRate (void) const;
-
-  /**
-   * Get the uplink bit rate.
-   * \return The bit rate.
-   */
-  uint64_t GetUpBitRate (void) const;
-
-  Ptr<Queue>  m_downQueue;      //!< Internet downlink queue
-  Ptr<Queue>  m_upQueue;        //!< Internet uplink queue
-  Time        m_lastResetTime;  //!< Last reset time
-
-  std::string m_webStatsFilename;         //!< WebStats filename
-  Ptr<OutputStreamWrapper> m_webWrapper;  //!< WebStats file wrapper
 };
 
 

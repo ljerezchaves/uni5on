@@ -34,7 +34,7 @@ class OpenFlowEpcController;
 class ConnectionInfo;
 class BandwidthStatsCalculator;
 class SwitchRulesStatsCalculator;
-class GatewayStatsCalculator;
+class LinkQueuesStatsCalculator;
 
 /**
  * \ingroup epcof
@@ -223,7 +223,7 @@ protected:
   Ptr<OFSwitch13Helper>       m_ofHelper;       //!< OpenFlow helper.
   CsmaHelper                  m_ofCsmaHelper;   //!< Csma helper.
   bool                        m_created;        //!< Network topology created.
-  Ptr<GatewayStatsCalculator> m_gatewayStats;   //!< Gateway statistics.
+  Ptr<LinkQueuesStatsCalculator> m_gatewayStats;   //!< Gateway statistics.
 
   /** New connection between two switches trace source. */
   TracedCallback<Ptr<ConnectionInfo> > m_newConnTrace;

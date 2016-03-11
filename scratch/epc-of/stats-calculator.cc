@@ -32,10 +32,9 @@ namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("StatsCalculator");
 NS_OBJECT_ENSURE_REGISTERED (AdmissionStatsCalculator);
-NS_OBJECT_ENSURE_REGISTERED (GatewayStatsCalculator);
+NS_OBJECT_ENSURE_REGISTERED (LinkQueuesStatsCalculator);
 NS_OBJECT_ENSURE_REGISTERED (BandwidthStatsCalculator);
 NS_OBJECT_ENSURE_REGISTERED (SwitchRulesStatsCalculator);
-NS_OBJECT_ENSURE_REGISTERED (WebQueueStatsCalculator);
 NS_OBJECT_ENSURE_REGISTERED (EpcS1uStatsCalculator);
 
 AdmissionStatsCalculator::AdmissionStatsCalculator ()
@@ -262,35 +261,35 @@ AdmissionStatsCalculator::GetGbrBlockRatio (void) const
 
 
 // ------------------------------------------------------------------------ //
-GatewayStatsCalculator::GatewayStatsCalculator ()
+LinkQueuesStatsCalculator::LinkQueuesStatsCalculator ()
   : m_lastResetTime (Simulator::Now ())
 {
   NS_LOG_FUNCTION (this);
 }
 
-GatewayStatsCalculator::~GatewayStatsCalculator ()
+LinkQueuesStatsCalculator::~LinkQueuesStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-GatewayStatsCalculator::GetTypeId (void)
+LinkQueuesStatsCalculator::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::GatewayStatsCalculator")
+  static TypeId tid = TypeId ("ns3::LinkQueuesStatsCalculator")
     .SetParent<Object> ()
-    .AddConstructor<GatewayStatsCalculator> ()
-    .AddAttribute ("PgwStatsFilename",
-                   "Filename for packet gateway traffic statistics.",
-                   StringValue ("pgw_stats.txt"),
+    .AddConstructor<LinkQueuesStatsCalculator> ()
+    .AddAttribute ("LnkStatsFilename",
+                   "Filename for link queue traffic statistics.",
+                   StringValue ("lnk_stats.txt"),
                    MakeStringAccessor (
-                     &GatewayStatsCalculator::m_pgwStatsFilename),
+                     &LinkQueuesStatsCalculator::m_lnkStatsFilename),
                    MakeStringChecker ())
   ;
   return tid;
 }
 
 void
-GatewayStatsCalculator::SetQueues (Ptr<Queue> downQueue, Ptr<Queue> upQueue)
+LinkQueuesStatsCalculator::SetQueues (Ptr<Queue> downQueue, Ptr<Queue> upQueue)
 {
   NS_LOG_FUNCTION (this << downQueue << upQueue);
   
@@ -300,11 +299,11 @@ GatewayStatsCalculator::SetQueues (Ptr<Queue> downQueue, Ptr<Queue> upQueue)
 }
 
 void
-GatewayStatsCalculator::DumpStatistics (void)
+LinkQueuesStatsCalculator::DumpStatistics (void)
 {
   NS_LOG_FUNCTION (this);
 
-  *m_pgwWrapper->GetStream ()
+  *m_lnkWrapper->GetStream ()
   << left
   << setw (11) << Simulator::Now ().GetSeconds ()                 << " "
   << right
@@ -325,32 +324,32 @@ GatewayStatsCalculator::DumpStatistics (void)
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
   Time next = timeValue.Get ();
-  Simulator::Schedule (next, &GatewayStatsCalculator::DumpStatistics, this);
+  Simulator::Schedule (next, &LinkQueuesStatsCalculator::DumpStatistics, this);
 }
 
 void
-GatewayStatsCalculator::DoDispose ()
+LinkQueuesStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_downQueue = 0;
   m_upQueue = 0;
-  m_pgwWrapper = 0;
+  m_lnkWrapper = 0;
 }
 
 void
-GatewayStatsCalculator::NotifyConstructionCompleted (void)
+LinkQueuesStatsCalculator::NotifyConstructionCompleted (void)
 {
   Object::NotifyConstructionCompleted ();
   
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
-  SetAttribute ("PgwStatsFilename", StringValue (prefix + m_pgwStatsFilename));
+  SetAttribute ("LnkStatsFilename", StringValue (prefix + m_lnkStatsFilename));
 
   // Opening output files and printing header lines
-  m_pgwWrapper = Create<OutputStreamWrapper> (m_pgwStatsFilename,
+  m_lnkWrapper = Create<OutputStreamWrapper> (m_lnkStatsFilename,
                                               std::ios::out);
-  *m_pgwWrapper->GetStream ()
+  *m_lnkWrapper->GetStream ()
   << fixed << setprecision (4) << boolalpha
   << left
   << setw (11) << "Time(s)"
@@ -370,11 +369,11 @@ GatewayStatsCalculator::NotifyConstructionCompleted (void)
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
   Time next = timeValue.Get ();
-  Simulator::Schedule (next, &GatewayStatsCalculator::DumpStatistics, this);
+  Simulator::Schedule (next, &LinkQueuesStatsCalculator::DumpStatistics, this);
 }
 
 void
-GatewayStatsCalculator::ResetCounters ()
+LinkQueuesStatsCalculator::ResetCounters ()
 {
   m_downQueue->ResetStatistics ();
   m_upQueue->ResetStatistics ();
@@ -382,20 +381,20 @@ GatewayStatsCalculator::ResetCounters ()
 }
 
 Time
-GatewayStatsCalculator::GetActiveTime (void) const
+LinkQueuesStatsCalculator::GetActiveTime (void) const
 {
   return Simulator::Now () - m_lastResetTime;
 }
 
 uint64_t
-GatewayStatsCalculator::GetDownBitRate (void) const
+LinkQueuesStatsCalculator::GetDownBitRate (void) const
 {
   return static_cast<uint64_t> (8 * m_downQueue->GetTotalReceivedBytes () /
                                 GetActiveTime ().GetSeconds ());
 }
 
 uint64_t
-GatewayStatsCalculator::GetUpBitRate (void) const
+LinkQueuesStatsCalculator::GetUpBitRate (void) const
 {
   return static_cast<uint64_t> (8 * m_upQueue->GetTotalReceivedBytes () /
                                 GetActiveTime ().GetSeconds ());
@@ -747,147 +746,6 @@ SwitchRulesStatsCalculator::NotifyTopologyBuilt (NetDeviceContainer devices)
       *m_swtWrapper->GetStream () << setw (7) << i;
     }
   *m_swtWrapper->GetStream () << std::endl;
-}
-
-
-// ------------------------------------------------------------------------ //
-WebQueueStatsCalculator::WebQueueStatsCalculator ()
-  : m_lastResetTime (Simulator::Now ())
-{
-  NS_LOG_FUNCTION (this);
-}
-
-WebQueueStatsCalculator::~WebQueueStatsCalculator ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-TypeId
-WebQueueStatsCalculator::GetTypeId (void)
-{
-  static TypeId tid = TypeId ("ns3::WebQueueStatsCalculator")
-    .SetParent<Object> ()
-    .AddConstructor<WebQueueStatsCalculator> ()
-    .AddAttribute ("WebStatsFilename",
-                   "Filename for internet queue statistics.",
-                   StringValue ("web_stats.txt"),
-                   MakeStringAccessor (
-                     &WebQueueStatsCalculator::m_webStatsFilename),
-                   MakeStringChecker ())
-  ;
-  return tid;
-}
-
-void
-WebQueueStatsCalculator::SetQueues (Ptr<Queue> downQueue, Ptr<Queue> upQueue)
-{
-  NS_LOG_FUNCTION (this << downQueue << upQueue);
-  
-  m_downQueue = downQueue;
-  m_upQueue = upQueue;
-  ResetCounters ();
-}
-
-void
-WebQueueStatsCalculator::DumpStatistics (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  *m_webWrapper->GetStream ()
-  << left
-  << setw (11) << Simulator::Now ().GetSeconds ()                 << " "
-  << right
-  << setw (11) << m_downQueue->GetTotalReceivedPackets ()         << " "
-  << setw (11) << m_downQueue->GetTotalReceivedBytes ()           << " "
-  << setw (11) << m_downQueue->GetTotalDroppedPackets ()          << " "
-  << setw (11) << m_downQueue->GetTotalDroppedBytes ()            << " "
-  << setw (11) << m_upQueue->GetTotalReceivedPackets ()           << " "
-  << setw (11) << m_upQueue->GetTotalReceivedBytes ()             << " "
-  << setw (11) << m_upQueue->GetTotalDroppedPackets ()            << " "
-  << setw (11) << m_upQueue->GetTotalDroppedBytes ()              << " "
-  << setw (15) << static_cast<double> (GetDownBitRate ()) / 1000  << " "
-  << setw (15) << static_cast<double> (GetUpBitRate ()) / 1000
-  << std::endl;
-
-  ResetCounters ();
-
-  TimeValue timeValue;
-  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
-  Time next = timeValue.Get ();
-  Simulator::Schedule (next, &WebQueueStatsCalculator::DumpStatistics, this);
-}
-
-void
-WebQueueStatsCalculator::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-  m_downQueue = 0;
-  m_upQueue = 0;
-  m_webWrapper = 0;
-}
-
-void
-WebQueueStatsCalculator::NotifyConstructionCompleted (void)
-{
-  Object::NotifyConstructionCompleted ();
-
-  StringValue stringValue;
-  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
-  std::string prefix = stringValue.Get ();
-  SetAttribute ("WebStatsFilename", StringValue (prefix + m_webStatsFilename));
-
-  // Opening output files and printing header lines
-  m_webWrapper = Create<OutputStreamWrapper> (m_webStatsFilename,
-                                              std::ios::out);
-  *m_webWrapper->GetStream ()
-  << fixed << setprecision (4) << boolalpha
-  << left
-  << setw (11) << "Time(s)"
-  << right
-  << setw (12) << "DlPkts"
-  << setw (12) << "DlBytes"
-  << setw (12) << "DlPktsDrp"
-  << setw (12) << "DlBytesDrp"
-  << setw (12) << "UlPkts"
-  << setw (12) << "UlBytes"
-  << setw (12) << "UlPktsDrp"
-  << setw (12) << "UlBytesDrp"
-  << setw (16) << "Downlink(kbps)"
-  << setw (16) << "Uplink(kbps)"
-  << std::endl;
-
-  TimeValue timeValue;
-  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
-  Time next = timeValue.Get ();
-  Simulator::Schedule (next, &WebQueueStatsCalculator::DumpStatistics, this);
-}
-
-void
-WebQueueStatsCalculator::ResetCounters ()
-{
-  m_downQueue->ResetStatistics ();
-  m_upQueue->ResetStatistics ();
-  m_lastResetTime = Simulator::Now ();
-}
-
-Time
-WebQueueStatsCalculator::GetActiveTime (void) const
-{
-  return Simulator::Now () - m_lastResetTime;
-}
-
-uint64_t
-WebQueueStatsCalculator::GetDownBitRate (void) const
-{
-  return static_cast<uint64_t> (8 * m_downQueue->GetTotalReceivedBytes () /
-                                GetActiveTime ().GetSeconds ());
-}
-
-uint64_t
-WebQueueStatsCalculator::GetUpBitRate (void) const
-{
-  return static_cast<uint64_t> (8 * m_upQueue->GetTotalReceivedBytes () /
-                                GetActiveTime ().GetSeconds ());
 }
 
 
