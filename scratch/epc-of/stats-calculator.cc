@@ -445,7 +445,7 @@ NetworkStatsCalculator::NotifyTopologyBuilt (NetDeviceContainer devices)
   m_devices = devices;
   for (uint16_t i = 0; i < m_devices.GetN (); i++)
     {
-      *m_swtWrapper->GetStream () << setw (7) << i;
+      *m_swtWrapper->GetStream () << right << setw (7) << i;
     }
 
   *m_bwbWrapper->GetStream () << left << std::endl;
@@ -693,8 +693,6 @@ EpcS1uStatsCalculator::EpcS1uStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_controller = Names::Find<OpenFlowEpcController> ("MainController");
-
   // Connecting all EPC trace sinks for QoS monitoring
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uRx",
@@ -703,10 +701,10 @@ EpcS1uStatsCalculator::EpcS1uStatsCalculator ()
     "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uTx",
     MakeCallback (&EpcS1uStatsCalculator::EpcInputPacket, this));
   Config::Connect (
-    "/Names/SgwPgwApplication/S1uRx",
+    "/NodeList/*/ApplicationList/*/$ns3::EpcSgwPgwApplication/S1uRx",
     MakeCallback (&EpcS1uStatsCalculator::EpcOutputPacket, this));
   Config::Connect (
-    "/Names/SgwPgwApplication/S1uTx",
+    "/NodeList/*/ApplicationList/*/$ns3::EpcSgwPgwApplication/S1uTx",
     MakeCallback (&EpcS1uStatsCalculator::EpcInputPacket, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/$ns3::OFSwitch13NetDevice/MeterDrop",
@@ -747,6 +745,12 @@ EpcS1uStatsCalculator::GetTypeId (void)
                    MakeStringChecker ())
   ;
   return tid;
+}
+
+void
+EpcS1uStatsCalculator::SetController (Ptr<OpenFlowEpcController> controller)
+{
+  m_controller = controller;
 }
 
 void
@@ -893,6 +897,7 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context,
                                        Ptr<const EpcApplication> app)
 {
   NS_LOG_FUNCTION (this << context << app->GetTeid ());
+  NS_ASSERT_MSG (m_controller, "Invalid controller application.");
 
   uint32_t teid = app->GetTeid ();
   Ptr<const RoutingInfo> rInfo = m_controller->GetConstRoutingInfo (teid);

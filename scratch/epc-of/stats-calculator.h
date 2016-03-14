@@ -268,6 +268,12 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  /**
+   * Set the controller pointer used by this stats calculator.
+   * \param controller The controller pointer.
+   */
+  void SetController (Ptr<OpenFlowEpcController> controller);
+
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
