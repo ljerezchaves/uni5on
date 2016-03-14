@@ -34,7 +34,7 @@ namespace ns3 {
 
 class OpenFlowEpcController;
 class RingController;
-class AdmissionStatsCalculator;
+class ControllerStatsCalculator;
 
 /**
  * \ingroup epcof
@@ -393,8 +393,8 @@ protected:
   static const uint16_t m_dedicatedTmo;   //!< Timeout for dedicated bearers
 
 private:
-  NetDeviceContainer            m_ofDevices;      //!< OpenFlow switch devices.
-  Ptr<AdmissionStatsCalculator> m_admissionStats; //!< Admission statistics.
+  NetDeviceContainer  m_ofDevices;        //!< OpenFlow switch devices.
+  Ptr<ControllerStatsCalculator> m_controllerStats; //!< Admission statistics.
 
   /** Map saving <TEID / Routing information > */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;

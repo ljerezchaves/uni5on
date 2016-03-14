@@ -34,7 +34,7 @@ OpenFlowEpcController::QciDscpMap_t OpenFlowEpcController::m_qciDscpTable;
 OpenFlowEpcController::QciDscpInitializer OpenFlowEpcController::initializer;
 
 OpenFlowEpcController::OpenFlowEpcController ()
-  : m_admissionStats (0)
+  : m_controllerStats (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -201,7 +201,7 @@ OpenFlowEpcController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_admissionStats = 0;
+  m_controllerStats = 0;
   m_arpTable.clear ();
   m_ipSwitchTable.clear ();
   m_routes.clear ();
@@ -240,9 +240,9 @@ OpenFlowEpcController::NotifyConstructionCompleted ()
     MakeCallback (&OpenFlowEpcController::NotifyContextCreated, this));
 
   // Creating the admission stats calculator for this OpenFlow controller
-  m_admissionStats = CreateObject<AdmissionStatsCalculator> ();
+  m_controllerStats = CreateObject<ControllerStatsCalculator> ();
   TraceConnectWithoutContext ("BearerRequest", MakeCallback (
-        &AdmissionStatsCalculator::NotifyRequest, m_admissionStats));
+        &ControllerStatsCalculator::NotifyBearerRequest, m_controllerStats));
 
   ObjectBase::NotifyConstructionCompleted ();
 }

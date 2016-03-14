@@ -18,26 +18,28 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "ns3/qos-stats-calculator.h"
-#include "stats-calculator.h"
-#include "seq-num-tag.h"
-#include "ns3/simulator.h"
-#include "ns3/log.h"
+#include <ns3/simulator.h>
+#include <ns3/log.h>
 #include <iomanip>
 #include <iostream>
+#include "stats-calculator.h"
+#include "seq-num-tag.h"
+#include "routing-info.h"
+#include "connection-info.h"
+#include "openflow-epc-controller.h"
 
 using namespace std;
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("StatsCalculator");
-NS_OBJECT_ENSURE_REGISTERED (AdmissionStatsCalculator);
+NS_OBJECT_ENSURE_REGISTERED (ControllerStatsCalculator);
 NS_OBJECT_ENSURE_REGISTERED (LinkQueuesStatsCalculator);
 NS_OBJECT_ENSURE_REGISTERED (BandwidthStatsCalculator);
 NS_OBJECT_ENSURE_REGISTERED (SwitchRulesStatsCalculator);
 NS_OBJECT_ENSURE_REGISTERED (EpcS1uStatsCalculator);
 
-AdmissionStatsCalculator::AdmissionStatsCalculator ()
+ControllerStatsCalculator::ControllerStatsCalculator ()
   : m_nonRequests (0),
     m_nonAccepted (0),
     m_nonBlocked (0),
@@ -48,35 +50,35 @@ AdmissionStatsCalculator::AdmissionStatsCalculator ()
   NS_LOG_FUNCTION (this);
 }
 
-AdmissionStatsCalculator::~AdmissionStatsCalculator ()
+ControllerStatsCalculator::~ControllerStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-AdmissionStatsCalculator::GetTypeId (void)
+ControllerStatsCalculator::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::AdmissionStatsCalculator")
+  static TypeId tid = TypeId ("ns3::ControllerStatsCalculator")
     .SetParent<Object> ()
-    .AddConstructor<AdmissionStatsCalculator> ()
+    .AddConstructor<ControllerStatsCalculator> ()
     .AddAttribute ("AdmStatsFilename",
                    "Filename for bearer admission control statistics.",
                    StringValue ("adm_stats.txt"),
                    MakeStringAccessor (
-                     &AdmissionStatsCalculator::m_admStatsFilename),
+                     &ControllerStatsCalculator::m_admStatsFilename),
                    MakeStringChecker ())
     .AddAttribute ("BrqStatsFilename",
                    "Filename for bearer request statistics.",
                    StringValue ("brq_stats.txt"),
                    MakeStringAccessor (
-                     &AdmissionStatsCalculator::m_brqStatsFilename),
+                     &ControllerStatsCalculator::m_brqStatsFilename),
                    MakeStringChecker ())
   ;
   return tid;
 }
 
 void
-AdmissionStatsCalculator::DumpStatistics (void)
+ControllerStatsCalculator::DumpStatistics (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -97,11 +99,11 @@ AdmissionStatsCalculator::DumpStatistics (void)
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
   Time next = timeValue.Get ();
-  Simulator::Schedule (next, &AdmissionStatsCalculator::DumpStatistics, this);
+  Simulator::Schedule (next, &ControllerStatsCalculator::DumpStatistics, this);
 }
 
 void
-AdmissionStatsCalculator::DoDispose ()
+ControllerStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_admWrapper = 0;
@@ -109,7 +111,64 @@ AdmissionStatsCalculator::DoDispose ()
 }
 
 void
-AdmissionStatsCalculator::NotifyConstructionCompleted (void)
+ControllerStatsCalculator::NotifyBearerRequest (bool accepted,
+                                                Ptr<const RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << accepted << rInfo);
+
+  // Update internal counters
+  if (rInfo->IsGbr ())
+    {
+      m_gbrRequests++;
+      accepted ? m_gbrAccepted++ : m_gbrBlocked++;
+    }
+  else
+    {
+      m_nonRequests++;
+      accepted ? m_nonAccepted++ : m_nonBlocked++;
+    }
+
+  // Preparing bearer request stats for trace source
+  uint64_t downBitRate = 0, upBitRate = 0;
+  Ptr<const GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
+  if (gbrInfo)
+    {
+      downBitRate = gbrInfo->GetDownBitRate ();
+      upBitRate = gbrInfo->GetUpBitRate ();
+    }
+
+  std::string path = "None";
+  Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  if (ringInfo && accepted)
+    {
+      path = ringInfo->GetPathDesc ();
+      if (rInfo->IsDefault ())
+        {
+          path += " (default)";
+        }
+    }
+
+  // Save request stats into output file
+  *m_brqWrapper->GetStream ()
+  << left
+  << setw (9) << Simulator::Now ().GetSeconds ()            << " "
+  << right
+  << setw (4)  << rInfo->GetQciInfo ()                      << " "
+  << setw (6)  << rInfo->IsGbr ()                           << " "
+  << setw (7)  << rInfo->GetImsi ()                         << " "
+  << setw (7)  << rInfo->GetCellId ()                       << " "
+  << setw (6)  << rInfo->GetEnbSwIdx ()                     << " "
+  << setw (6)  << rInfo->GetTeid ()                         << " "
+  << setw (9)  << accepted                                  << " "
+  << setw (11) << static_cast<double> (downBitRate) / 1000  << " "
+  << setw (11) << static_cast<double> (upBitRate) / 1000    << "  "
+  << left
+  << setw (15) << path
+  << std::endl;
+}
+
+void
+ControllerStatsCalculator::NotifyConstructionCompleted (void)
 {
   Object::NotifyConstructionCompleted ();
 
@@ -158,82 +217,11 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
   Time next = timeValue.Get ();
-  Simulator::Schedule (next, &AdmissionStatsCalculator::DumpStatistics, this);
+  Simulator::Schedule (next, &ControllerStatsCalculator::DumpStatistics, this);
 }
 
 void
-AdmissionStatsCalculator::NotifyRequest (bool accepted,
-                                         Ptr<const RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << accepted << rInfo);
-
-  // Update internal counters
-  if (rInfo->IsGbr ())
-    {
-      m_gbrRequests++;
-      if (accepted)
-        {
-          m_gbrAccepted++;
-        }
-      else
-        {
-          m_gbrBlocked++;
-        }
-    }
-  else
-    {
-      m_nonRequests++;
-      if (accepted)
-        {
-          m_nonAccepted++;
-        }
-      else
-        {
-          m_nonBlocked++;
-        }
-    }
-
-  // Preparing bearer request stats for trace source
-  uint64_t downBitRate = 0, upBitRate = 0;
-  Ptr<const GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
-  if (gbrInfo)
-    {
-      downBitRate = gbrInfo->GetDownBitRate ();
-      upBitRate = gbrInfo->GetUpBitRate ();
-    }
-
-  std::string path = "None";
-  Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  if (ringInfo && accepted)
-    {
-      path = ringInfo->GetPathDesc ();
-      if (rInfo->IsDefault ())
-        {
-          path += " (default)";
-        }
-    }
-
-  // Save request stats into output file
-  *m_brqWrapper->GetStream ()
-  << left
-  << setw (9) << Simulator::Now ().GetSeconds ()            << " "
-  << right
-  << setw (4)  << rInfo->GetQciInfo ()                      << " "
-  << setw (6)  << rInfo->IsGbr ()                           << " "
-  << setw (7)  << rInfo->GetImsi ()                         << " "
-  << setw (7)  << rInfo->GetCellId ()                       << " "
-  << setw (6)  << rInfo->GetEnbSwIdx ()                     << " "
-  << setw (6)  << rInfo->GetTeid ()                         << " "
-  << setw (9)  << accepted                                  << " "
-  << setw (11) << static_cast<double> (downBitRate) / 1000  << " "
-  << setw (11) << static_cast<double> (upBitRate) / 1000    << "  "
-  << left
-  << setw (15) << path
-  << std::endl;
-}
-
-void
-AdmissionStatsCalculator::ResetCounters ()
+ControllerStatsCalculator::ResetCounters ()
 {
   m_nonRequests = 0;
   m_nonAccepted = 0;
@@ -244,7 +232,7 @@ AdmissionStatsCalculator::ResetCounters ()
 }
 
 double
-AdmissionStatsCalculator::GetNonGbrBlockRatio (void) const
+ControllerStatsCalculator::GetNonGbrBlockRatio (void) const
 {
   return m_nonRequests ?
          static_cast<double> (m_nonBlocked) / m_nonRequests
@@ -252,7 +240,7 @@ AdmissionStatsCalculator::GetNonGbrBlockRatio (void) const
 }
 
 double
-AdmissionStatsCalculator::GetGbrBlockRatio (void) const
+ControllerStatsCalculator::GetGbrBlockRatio (void) const
 {
   return m_gbrRequests ?
          static_cast<double> (m_gbrBlocked) / m_gbrRequests

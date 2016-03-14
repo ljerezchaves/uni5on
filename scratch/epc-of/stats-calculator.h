@@ -21,12 +21,9 @@
 #ifndef EPCOF_STATS_CALCULATOR_H
 #define EPCOF_STATS_CALCULATOR_H
 
-#include <ns3/epc-apps-module.h>
 #include <ns3/nstime.h>
 #include <ns3/queue.h>
-#include "routing-info.h"
-#include "connection-info.h"
-#include "openflow-epc-controller.h"
+#include <ns3/epc-apps-module.h>
 
 namespace ns3 {
 
@@ -35,17 +32,19 @@ g_dumpTimeout ("DumpStatsTimeout", "Periodic statistics dump interval.",
                TimeValue (Seconds (10)),
                ns3::MakeTimeChecker ());
 
+class RoutingInfo;
+class ConnectionInfo;
+class OpenFlowEpcController;
+
 /**
  * \ingroup epcof
- * This class monitors bearer request statistics. It counts the number of
- * bearer requests, including those accepted or blocked by network, and save
- * statistics into text files.
+ * This class monitors OpenFlow EPC controller statistics. 
  */
-class AdmissionStatsCalculator : public Object
+class ControllerStatsCalculator : public Object
 {
 public:
-  AdmissionStatsCalculator ();          //!< Default constructor
-  virtual ~AdmissionStatsCalculator (); //!< Default destructor
+  ControllerStatsCalculator ();          //!< Default constructor
+  virtual ~ControllerStatsCalculator (); //!< Default destructor
 
   /**
    * Register this type.
@@ -63,7 +62,7 @@ public:
    * \param accepted True when the bearer is accepted into network.
    * \param rInfo The bearer routing information.
    */
-  void NotifyRequest (bool accepted, Ptr<const RoutingInfo> rInfo);
+  void NotifyBearerRequest (bool accepted, Ptr<const RoutingInfo> rInfo);
 
 protected:
   /** Destructor implementation */
@@ -97,8 +96,8 @@ private:
   uint32_t    m_gbrAccepted;        //!< Number of GBR accepted
   uint32_t    m_gbrBlocked;         //!< Number of GBR blocked
 
-  std::string m_admStatsFilename;       //!< AdmStats filename
-  std::string m_brqStatsFilename;       //!< BrqStats filename
+  std::string m_admStatsFilename;   //!< AdmStats filename
+  std::string m_brqStatsFilename;   //!< BrqStats filename
 
   Ptr<OutputStreamWrapper> m_admWrapper;  //!< AdmStats file wrapper
   Ptr<OutputStreamWrapper> m_brqWrapper;  //!< BrqStats file wrapper
