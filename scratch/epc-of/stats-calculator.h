@@ -107,7 +107,83 @@ private:
 // ------------------------------------------------------------------------ //
 /**
  * \ingroup epcof
- * This class monitors link bandwidth statistics.
+ * This class monitors OpenFlow EPC network statistics.
+ */
+class NetworkStatsCalculator : public Object
+{
+public:
+  NetworkStatsCalculator ();  //!< Default constructor
+  virtual ~NetworkStatsCalculator (); //!< Default destructor
+
+  /**
+   * Register this type.
+   * \return The object TypeId.
+   */
+  static TypeId GetTypeId (void);
+
+  /**
+   * Dump regular statistics into file.
+   */
+  void DumpStatistics (void);
+
+  /**
+   * Notify this stats calculator of a new connection between two switches in
+   * the OpenFlow network.
+   * \param cInfo The connection information and metadata.
+   */
+  void NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo);
+
+  /**
+   * Notify this stats calculator that all connection between switches have
+   * already been configure and the topology is finished.
+   * \param devices The NetDeviceContainer for OpenFlow switch devices.
+   */
+  void NotifyTopologyBuilt (NetDeviceContainer devices);
+
+protected:
+  /** Destructor implementation */
+  virtual void DoDispose ();
+
+  // Inherited from ObjectBase
+  virtual void NotifyConstructionCompleted (void);
+
+private:
+  /**
+   * Reset all internal counters.
+   */
+  void ResetCounters ();
+
+  /**
+   * Get the active time value since last reset.
+   * \return The time value.
+   */
+  Time GetActiveTime (void) const;
+
+  NetDeviceContainer                m_devices;      //!< Switch devices
+  std::vector<Ptr<ConnectionInfo> > m_connections;  //!< Switch connections
+
+  Time m_lastResetTime;                 //!< Last reset time
+
+  std::string m_regStatsFilename;       //!< RegStats filename
+  std::string m_renStatsFilename;       //!< RenStats filename
+  std::string m_bwbStatsFilename;       //!< BwbStats filename
+  std::string m_bwgStatsFilename;       //!< BwgStats filename
+  std::string m_bwnStatsFilename;       //!< BwnStats filename
+  std::string m_swtStatsFilename;         //!< SwtStats filename
+
+  Ptr<OutputStreamWrapper> m_regWrapper;  //!< RegStats file wrapper
+  Ptr<OutputStreamWrapper> m_renWrapper;  //!< RenStats file wrapper
+  Ptr<OutputStreamWrapper> m_bwbWrapper;  //!< BwbStats file wrapper
+  Ptr<OutputStreamWrapper> m_bwgWrapper;  //!< BwgStats file wrapper
+  Ptr<OutputStreamWrapper> m_bwnWrapper;  //!< BwnStats file wrapper
+  Ptr<OutputStreamWrapper> m_swtWrapper;  //!< SwtStats file wrapper
+};
+
+
+// ------------------------------------------------------------------------ //
+/**
+ * \ingroup epcof
+ * This class monitors link queues' statistics.
  */
 class LinkQueuesStatsCalculator : public Object
 {
@@ -172,123 +248,6 @@ private:
 
   std::string m_lnkStatsFilename;         //!< LinkStats filename
   Ptr<OutputStreamWrapper> m_lnkWrapper;  //!< LinkStats file wrapper
-};
-
-
-// ------------------------------------------------------------------------ //
-/**
- * \ingroup epcof
- * This class monitors EPC link bandwidth usage statistics.
- */
-class BandwidthStatsCalculator : public Object
-{
-public:
-  BandwidthStatsCalculator ();  //!< Default constructor
-  virtual ~BandwidthStatsCalculator (); //!< Default destructor
-
-  /**
-   * Register this type.
-   * \return The object TypeId.
-   */
-  static TypeId GetTypeId (void);
-
-  /**
-   * Dump regular statistics into file.
-   */
-  void DumpStatistics (void);
-
-  /**
-   * Notify this stats calculator of a new connection between two switches in
-   * the OpenFlow network.
-   * \param cInfo The connection information and metadata.
-   */
-  void NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo);
-
-  /**
-   * Notify this stats calculator that all connection between switches have
-   * already been configure and the topology is finished.
-   * \param devices The NetDeviceContainer for OpenFlow switch devices.
-   */
-  void NotifyTopologyBuilt (NetDeviceContainer devices);
-
-protected:
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  // Inherited from ObjectBase
-  virtual void NotifyConstructionCompleted (void);
-
-private:
-  /**
-   * Reset all internal counters.
-   */
-  void ResetCounters ();
-
-  /**
-   * Get the active time value since last reset.
-   * \return The time value.
-   */
-  Time GetActiveTime (void) const;
-
-  std::vector<Ptr<ConnectionInfo> > m_connections;  //!< Connections
-
-  Time m_lastResetTime;                 //!< Last reset time
-
-  std::string m_regStatsFilename;       //!< RegStats filename
-  std::string m_renStatsFilename;       //!< RenStats filename
-  std::string m_bwbStatsFilename;       //!< BwbStats filename
-  std::string m_bwgStatsFilename;       //!< BwgStats filename
-  std::string m_bwnStatsFilename;       //!< BwnStats filename
-
-  Ptr<OutputStreamWrapper> m_regWrapper;  //!< RegStats file wrapper
-  Ptr<OutputStreamWrapper> m_renWrapper;  //!< RenStats file wrapper
-  Ptr<OutputStreamWrapper> m_bwbWrapper;  //!< BwbStats file wrapper
-  Ptr<OutputStreamWrapper> m_bwgWrapper;  //!< BwgStats file wrapper
-  Ptr<OutputStreamWrapper> m_bwnWrapper;  //!< BwnStats file wrapper
-};
-
-
-// ------------------------------------------------------------------------ //
-/**
- * \ingroup epcof
- * This class monitors OpenFlow switch flow table statistics.
- */
-class SwitchRulesStatsCalculator : public Object
-{
-public:
-  SwitchRulesStatsCalculator ();  //!< Default constructor
-  virtual ~SwitchRulesStatsCalculator (); //!< Default destructor
-
-  /**
-   * Register this type.
-   * \return The object TypeId.
-   */
-  static TypeId GetTypeId (void);
-
-  /**
-   * Dump regular statistics into file.
-   */
-  void DumpStatistics (void);
-
-  /**
-   * Notify this stats calculator that all connection between switches have
-   * already been configure and the topology is finished.
-   * \param devices The NetDeviceContainer for OpenFlow switch devices.
-   */
-  void NotifyTopologyBuilt (NetDeviceContainer devices);
-
-protected:
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  // Inherited from ObjectBase
-  virtual void NotifyConstructionCompleted (void);
-
-private:
-  NetDeviceContainer m_devices; //!< OpenFlow switch devices
-
-  std::string m_swtStatsFilename;         //!< SwtStats filename
-  Ptr<OutputStreamWrapper> m_swtWrapper;  //!< SwtStats file wrapper
 };
 
 

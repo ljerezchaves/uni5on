@@ -34,7 +34,6 @@ namespace ns3 {
 
 class OpenFlowEpcController;
 class RingController;
-class ControllerStatsCalculator;
 
 /**
  * \ingroup epcof

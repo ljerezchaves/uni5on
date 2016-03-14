@@ -35,8 +35,7 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("StatsCalculator");
 NS_OBJECT_ENSURE_REGISTERED (ControllerStatsCalculator);
 NS_OBJECT_ENSURE_REGISTERED (LinkQueuesStatsCalculator);
-NS_OBJECT_ENSURE_REGISTERED (BandwidthStatsCalculator);
-NS_OBJECT_ENSURE_REGISTERED (SwitchRulesStatsCalculator);
+NS_OBJECT_ENSURE_REGISTERED (NetworkStatsCalculator);
 NS_OBJECT_ENSURE_REGISTERED (EpcS1uStatsCalculator);
 
 ControllerStatsCalculator::ControllerStatsCalculator ()
@@ -170,6 +169,8 @@ ControllerStatsCalculator::NotifyBearerRequest (bool accepted,
 void
 ControllerStatsCalculator::NotifyConstructionCompleted (void)
 {
+  NS_LOG_FUNCTION (this);
+  
   Object::NotifyConstructionCompleted ();
 
   StringValue stringValue;
@@ -223,6 +224,7 @@ ControllerStatsCalculator::NotifyConstructionCompleted (void)
 void
 ControllerStatsCalculator::ResetCounters ()
 {
+  NS_LOG_FUNCTION (this);
   m_nonRequests = 0;
   m_nonAccepted = 0;
   m_nonBlocked = 0;
@@ -245,6 +247,300 @@ ControllerStatsCalculator::GetGbrBlockRatio (void) const
   return m_gbrRequests ?
          static_cast<double> (m_gbrBlocked) / m_gbrRequests
          : 0;
+}
+
+
+// ------------------------------------------------------------------------ //
+NetworkStatsCalculator::NetworkStatsCalculator ()
+  : m_lastResetTime (Simulator::Now ())
+{
+  NS_LOG_FUNCTION (this);
+}
+
+NetworkStatsCalculator::~NetworkStatsCalculator ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+TypeId
+NetworkStatsCalculator::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::NetworkStatsCalculator")
+    .SetParent<Object> ()
+    .AddConstructor<NetworkStatsCalculator> ()
+    .AddAttribute ("RegStatsFilename",
+                   "Filename for GBR reservation statistics.",
+                   StringValue ("reg_stats.txt"),
+                   MakeStringAccessor (
+                     &NetworkStatsCalculator::m_regStatsFilename),
+                   MakeStringChecker ())
+    .AddAttribute ("RenStatsFilename",
+                   "Filename for Non-GBR allowed bandwidth statistics.",
+                   StringValue ("ren_stats.txt"),
+                   MakeStringAccessor (
+                     &NetworkStatsCalculator::m_renStatsFilename),
+                   MakeStringChecker ())
+    .AddAttribute ("BwbStatsFilename",
+                   "Filename for network bandwidth statistics.",
+                   StringValue ("bwb_stats.txt"),
+                   MakeStringAccessor (
+                     &NetworkStatsCalculator::m_bwbStatsFilename),
+                   MakeStringChecker ())
+    .AddAttribute ("BwgStatsFilename",
+                   "Filename for GBR bandwidth statistics.",
+                   StringValue ("bwg_stats.txt"),
+                   MakeStringAccessor (
+                     &NetworkStatsCalculator::m_bwgStatsFilename),
+                   MakeStringChecker ())
+    .AddAttribute ("BwnStatsFilename",
+                   "Filename for Non-GBR bandwidth statistics.",
+                   StringValue ("bwn_stats.txt"),
+                   MakeStringAccessor (
+                     &NetworkStatsCalculator::m_bwnStatsFilename),
+                   MakeStringChecker ())
+    .AddAttribute ("SwtStatsFilename",
+                   "FilName for flow table entries statistics.",
+                   StringValue ("swt_stats.txt"),
+                   MakeStringAccessor (
+                     &NetworkStatsCalculator::m_swtStatsFilename),
+                   MakeStringChecker ())  ;
+  return tid;
+}
+
+void
+NetworkStatsCalculator::DumpStatistics (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  *m_bwbWrapper->GetStream ()
+  << left << setw (12)
+  << Simulator::Now ().GetSeconds ();
+
+  *m_bwgWrapper->GetStream ()
+  << left << setw (12)
+  << Simulator::Now ().GetSeconds ();
+
+  *m_bwnWrapper->GetStream ()
+  << left << setw (12)
+  << Simulator::Now ().GetSeconds ();
+
+  *m_regWrapper->GetStream ()
+  << left << setw (12)
+  << Simulator::Now ().GetSeconds ();
+
+  *m_renWrapper->GetStream ()
+  << left << setw (12)
+  << Simulator::Now ().GetSeconds ();
+
+  *m_swtWrapper->GetStream ()
+  << left << setw (11) 
+  << Simulator::Now ().GetSeconds ()
+  << " " << right;
+
+  double interval = GetActiveTime ().GetSeconds ();
+  std::vector<Ptr<ConnectionInfo> >::iterator it;
+  for (it = m_connections.begin (); it != m_connections.end (); it++)
+    {
+      Ptr<ConnectionInfo> cInfo = *it;
+      uint64_t gbrFwdBytes = cInfo->GetGbrBytes (ConnectionInfo::FWD);
+      uint64_t gbrBwdBytes = cInfo->GetGbrBytes (ConnectionInfo::BWD);
+      uint64_t nonFwdBytes = cInfo->GetNonGbrBytes (ConnectionInfo::FWD);
+      uint64_t nonBwdBytes = cInfo->GetNonGbrBytes (ConnectionInfo::BWD);
+
+      double gbrFwdKbits = static_cast<double> (gbrFwdBytes * 8) / 1000;
+      double gbrBwdKbits = static_cast<double> (gbrBwdBytes * 8) / 1000;
+      double nonFwdKbits = static_cast<double> (nonFwdBytes * 8) / 1000;
+      double nonBwdKbits = static_cast<double> (nonBwdBytes * 8) / 1000;
+
+      *m_bwgWrapper->GetStream ()
+      << right
+      << setw (10) << gbrFwdKbits / interval << " "
+      << setw (10) << gbrBwdKbits / interval << "   ";
+
+      *m_bwnWrapper->GetStream ()
+      << right
+      << setw (10) << nonFwdKbits / interval << " "
+      << setw (10) << nonBwdKbits / interval << "   ";
+
+      *m_bwbWrapper->GetStream ()
+      << right
+      << setw (10) << (gbrFwdKbits + nonFwdKbits) / interval << " "
+      << setw (10) << (gbrBwdKbits + nonBwdKbits) / interval << "   ";
+
+      *m_regWrapper->GetStream ()
+      << right
+      << setw (6) << cInfo->GetGbrLinkRatio (ConnectionInfo::FWD) << " "
+      << setw (6) << cInfo->GetGbrLinkRatio (ConnectionInfo::BWD) << "   ";
+
+      *m_renWrapper->GetStream ()
+      << right
+      << setw (6) << cInfo->GetNonGbrLinkRatio (ConnectionInfo::FWD) << " "
+      << setw (6) << cInfo->GetNonGbrLinkRatio (ConnectionInfo::BWD) << "   ";
+
+      cInfo->ResetTxBytes ();
+    }
+
+  Ptr<OFSwitch13NetDevice> dev;
+  NetDeviceContainer::Iterator itDev;
+  for (itDev = m_devices.Begin (); itDev < m_devices.End (); itDev++)
+    {
+      dev = DynamicCast<OFSwitch13NetDevice> (*itDev);
+      *m_swtWrapper->GetStream ()
+      << setw (6)
+      << dev->GetNumberFlowEntries (1) << " ";
+    }
+
+  *m_bwbWrapper->GetStream () << std::endl;
+  *m_bwgWrapper->GetStream () << std::endl;
+  *m_bwnWrapper->GetStream () << std::endl;
+  *m_regWrapper->GetStream () << std::endl;
+  *m_renWrapper->GetStream () << std::endl;
+  *m_swtWrapper->GetStream () << std::endl;
+
+  ResetCounters ();
+
+  TimeValue timeValue;
+  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
+  Time next = timeValue.Get ();
+  Simulator::Schedule (next, &NetworkStatsCalculator::DumpStatistics, this);
+}
+
+void
+NetworkStatsCalculator::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
+{
+  NS_LOG_FUNCTION (this << cInfo);
+
+  // Save this connection info for further usage
+  m_connections.push_back (cInfo);
+  SwitchPair_t key = cInfo->GetSwitchIndexPair ();
+
+  *m_bwbWrapper->GetStream ()
+  << right << setw (10) << key.first  << "-"
+  << left  << setw (10) << key.second << "   ";
+
+  *m_bwgWrapper->GetStream ()
+  << right << setw (10) << key.first  << "-"
+  << left  << setw (10) << key.second << "   ";
+
+  *m_bwnWrapper->GetStream ()
+  << right << setw (10) << key.first  << "-"
+  << left  << setw (10) << key.second << "   ";
+
+  *m_regWrapper->GetStream ()
+  << left
+  << right << setw (6) << key.first  << "-"
+  << left  << setw (6) << key.second << "   ";
+
+  *m_renWrapper->GetStream ()
+  << left
+  << right << setw (6) << key.first  << "-"
+  << left  << setw (6) << key.second << "   ";
+}
+
+void
+NetworkStatsCalculator::NotifyTopologyBuilt (NetDeviceContainer devices)
+{
+  NS_LOG_FUNCTION (this);
+
+  m_devices = devices;
+  for (uint16_t i = 0; i < m_devices.GetN (); i++)
+    {
+      *m_swtWrapper->GetStream () << setw (7) << i;
+    }
+
+  *m_bwbWrapper->GetStream () << left << std::endl;
+  *m_bwgWrapper->GetStream () << left << std::endl;
+  *m_bwnWrapper->GetStream () << left << std::endl;
+  *m_regWrapper->GetStream () << left << std::endl;
+  *m_renWrapper->GetStream () << left << std::endl;
+  *m_swtWrapper->GetStream () << right << std::endl;
+}
+
+void
+NetworkStatsCalculator::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+
+  m_bwbWrapper = 0;
+  m_bwgWrapper = 0;
+  m_bwnWrapper = 0;
+  m_regWrapper = 0;
+  m_renWrapper = 0;
+  m_swtWrapper = 0;
+  m_connections.clear ();
+}
+
+void
+NetworkStatsCalculator::NotifyConstructionCompleted (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  Object::NotifyConstructionCompleted ();
+  
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+  SetAttribute ("RegStatsFilename", StringValue (prefix + m_regStatsFilename));
+  SetAttribute ("RenStatsFilename", StringValue (prefix + m_renStatsFilename));
+  SetAttribute ("BwbStatsFilename", StringValue (prefix + m_bwbStatsFilename));
+  SetAttribute ("BwgStatsFilename", StringValue (prefix + m_bwgStatsFilename));
+  SetAttribute ("BwnStatsFilename", StringValue (prefix + m_bwnStatsFilename));
+  SetAttribute ("SwtStatsFilename", StringValue (prefix + m_swtStatsFilename));
+
+  // Opening output files and printing header lines
+  m_bwbWrapper = Create<OutputStreamWrapper> (m_bwbStatsFilename,
+                                              std::ios::out);
+  *m_bwbWrapper->GetStream ()
+  << left << fixed << setprecision (4)
+  << setw (12) << "Time(s)";
+
+  m_bwgWrapper = Create<OutputStreamWrapper> (m_bwgStatsFilename,
+                                              std::ios::out);
+  *m_bwgWrapper->GetStream ()
+  << left << fixed << setprecision (4)
+  << setw (12) << "Time(s)";
+
+  m_bwnWrapper = Create<OutputStreamWrapper> (m_bwnStatsFilename,
+                                              std::ios::out);
+  *m_bwnWrapper->GetStream ()
+  << left << fixed << setprecision (4)
+  << setw (12) << "Time(s)";
+
+  m_regWrapper = Create<OutputStreamWrapper> (m_regStatsFilename,
+                                              std::ios::out);
+  *m_regWrapper->GetStream ()
+  << left << fixed << setprecision (4)
+  << setw (12) << "Time(s)";
+
+  m_renWrapper = Create<OutputStreamWrapper> (m_renStatsFilename,
+                                              std::ios::out);
+  *m_renWrapper->GetStream ()
+  << left << fixed << setprecision (4)
+  << setw (12) << "Time(s)";
+
+  m_swtWrapper = Create<OutputStreamWrapper> (m_swtStatsFilename,
+                                              std::ios::out);
+  *m_swtWrapper->GetStream ()
+  << left << fixed << setprecision (4)
+  << setw (12) << "Time(s)";
+
+  TimeValue timeValue;
+  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
+  Time next = timeValue.Get ();
+  Simulator::Schedule (next, &NetworkStatsCalculator::DumpStatistics, this);
+}
+
+void
+NetworkStatsCalculator::ResetCounters ()
+{
+  NS_LOG_FUNCTION (this);
+  m_lastResetTime = Simulator::Now ();
+}
+
+Time
+NetworkStatsCalculator::GetActiveTime (void) const
+{
+  return Simulator::Now () - m_lastResetTime;
 }
 
 
@@ -327,6 +623,8 @@ LinkQueuesStatsCalculator::DoDispose ()
 void
 LinkQueuesStatsCalculator::NotifyConstructionCompleted (void)
 {
+  NS_LOG_FUNCTION (this);
+  
   Object::NotifyConstructionCompleted ();
   
   StringValue stringValue;
@@ -363,6 +661,7 @@ LinkQueuesStatsCalculator::NotifyConstructionCompleted (void)
 void
 LinkQueuesStatsCalculator::ResetCounters ()
 {
+  NS_LOG_FUNCTION (this);
   m_downQueue->ResetStatistics ();
   m_upQueue->ResetStatistics ();
   m_lastResetTime = Simulator::Now ();
@@ -386,354 +685,6 @@ LinkQueuesStatsCalculator::GetUpBitRate (void) const
 {
   return static_cast<uint64_t> (8 * m_upQueue->GetTotalReceivedBytes () /
                                 GetActiveTime ().GetSeconds ());
-}
-
-
-// ------------------------------------------------------------------------ //
-BandwidthStatsCalculator::BandwidthStatsCalculator ()
-  : m_lastResetTime (Simulator::Now ())
-{
-  NS_LOG_FUNCTION (this);
-}
-
-BandwidthStatsCalculator::~BandwidthStatsCalculator ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-TypeId
-BandwidthStatsCalculator::GetTypeId (void)
-{
-  static TypeId tid = TypeId ("ns3::BandwidthStatsCalculator")
-    .SetParent<Object> ()
-    .AddConstructor<BandwidthStatsCalculator> ()
-    .AddAttribute ("RegStatsFilename",
-                   "Filename for GBR reservation statistics.",
-                   StringValue ("reg_stats.txt"),
-                   MakeStringAccessor (
-                     &BandwidthStatsCalculator::m_regStatsFilename),
-                   MakeStringChecker ())
-    .AddAttribute ("RenStatsFilename",
-                   "Filename for Non-GBR allowed bandwidth statistics.",
-                   StringValue ("ren_stats.txt"),
-                   MakeStringAccessor (
-                     &BandwidthStatsCalculator::m_renStatsFilename),
-                   MakeStringChecker ())
-    .AddAttribute ("BwbStatsFilename",
-                   "Filename for network bandwidth statistics.",
-                   StringValue ("bwb_stats.txt"),
-                   MakeStringAccessor (
-                     &BandwidthStatsCalculator::m_bwbStatsFilename),
-                   MakeStringChecker ())
-    .AddAttribute ("BwgStatsFilename",
-                   "Filename for GBR bandwidth statistics.",
-                   StringValue ("bwg_stats.txt"),
-                   MakeStringAccessor (
-                     &BandwidthStatsCalculator::m_bwgStatsFilename),
-                   MakeStringChecker ())
-    .AddAttribute ("BwnStatsFilename",
-                   "Filename for Non-GBR bandwidth statistics.",
-                   StringValue ("bwn_stats.txt"),
-                   MakeStringAccessor (
-                     &BandwidthStatsCalculator::m_bwnStatsFilename),
-                   MakeStringChecker ())
-  ;
-  return tid;
-}
-
-void
-BandwidthStatsCalculator::DumpStatistics (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  *m_bwbWrapper->GetStream ()
-  << left << setw (12)
-  << Simulator::Now ().GetSeconds ();
-
-  *m_bwgWrapper->GetStream ()
-  << left << setw (12)
-  << Simulator::Now ().GetSeconds ();
-
-  *m_bwnWrapper->GetStream ()
-  << left << setw (12)
-  << Simulator::Now ().GetSeconds ();
-
-  *m_regWrapper->GetStream ()
-  << left << setw (12)
-  << Simulator::Now ().GetSeconds ();
-
-  *m_renWrapper->GetStream ()
-  << left << setw (12)
-  << Simulator::Now ().GetSeconds ();
-
-  double interval = GetActiveTime ().GetSeconds ();
-  std::vector<Ptr<ConnectionInfo> >::iterator it;
-  for (it = m_connections.begin (); it != m_connections.end (); it++)
-    {
-      Ptr<ConnectionInfo> cInfo = *it;
-      uint64_t gbrFwdBytes = cInfo->GetGbrBytes (ConnectionInfo::FWD);
-      uint64_t gbrBwdBytes = cInfo->GetGbrBytes (ConnectionInfo::BWD);
-      uint64_t nonFwdBytes = cInfo->GetNonGbrBytes (ConnectionInfo::FWD);
-      uint64_t nonBwdBytes = cInfo->GetNonGbrBytes (ConnectionInfo::BWD);
-
-      double gbrFwdKbits = static_cast<double> (gbrFwdBytes * 8) / 1000;
-      double gbrBwdKbits = static_cast<double> (gbrBwdBytes * 8) / 1000;
-      double nonFwdKbits = static_cast<double> (nonFwdBytes * 8) / 1000;
-      double nonBwdKbits = static_cast<double> (nonBwdBytes * 8) / 1000;
-
-      *m_bwgWrapper->GetStream ()
-      << right
-      << setw (10) << gbrFwdKbits / interval << " "
-      << setw (10) << gbrBwdKbits / interval << "   ";
-
-      *m_bwnWrapper->GetStream ()
-      << right
-      << setw (10) << nonFwdKbits / interval << " "
-      << setw (10) << nonBwdKbits / interval << "   ";
-
-      *m_bwbWrapper->GetStream ()
-      << right
-      << setw (10) << (gbrFwdKbits + nonFwdKbits) / interval << " "
-      << setw (10) << (gbrBwdKbits + nonBwdKbits) / interval << "   ";
-
-      *m_regWrapper->GetStream ()
-      << right
-      << setw (6) << cInfo->GetGbrLinkRatio (ConnectionInfo::FWD) << " "
-      << setw (6) << cInfo->GetGbrLinkRatio (ConnectionInfo::BWD) << "   ";
-
-      *m_renWrapper->GetStream ()
-      << right
-      << setw (6) << cInfo->GetNonGbrLinkRatio (ConnectionInfo::FWD) << " "
-      << setw (6) << cInfo->GetNonGbrLinkRatio (ConnectionInfo::BWD) << "   ";
-
-      cInfo->ResetTxBytes ();
-    }
-  *m_bwbWrapper->GetStream () << std::endl;
-  *m_bwgWrapper->GetStream () << std::endl;
-  *m_bwnWrapper->GetStream () << std::endl;
-  *m_regWrapper->GetStream () << std::endl;
-  *m_renWrapper->GetStream () << std::endl;
-
-  ResetCounters ();
-
-  TimeValue timeValue;
-  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
-  Time next = timeValue.Get ();
-  Simulator::Schedule (next, &BandwidthStatsCalculator::DumpStatistics, this);
-}
-
-void
-BandwidthStatsCalculator::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-  m_bwbWrapper = 0;
-  m_bwgWrapper = 0;
-  m_bwnWrapper = 0;
-  m_regWrapper = 0;
-  m_renWrapper = 0;
-  m_connections.clear ();
-}
-
-void
-BandwidthStatsCalculator::NotifyConstructionCompleted (void)
-{
-  Object::NotifyConstructionCompleted ();
-  
-  StringValue stringValue;
-  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
-  std::string prefix = stringValue.Get ();
-  SetAttribute ("RegStatsFilename", StringValue (prefix + m_regStatsFilename));
-  SetAttribute ("RenStatsFilename", StringValue (prefix + m_renStatsFilename));
-  SetAttribute ("BwbStatsFilename", StringValue (prefix + m_bwbStatsFilename));
-  SetAttribute ("BwgStatsFilename", StringValue (prefix + m_bwgStatsFilename));
-  SetAttribute ("BwnStatsFilename", StringValue (prefix + m_bwnStatsFilename));
-
-  // Opening output files and printing header lines
-  m_bwbWrapper = Create<OutputStreamWrapper> (m_bwbStatsFilename,
-                                              std::ios::out);
-  *m_bwbWrapper->GetStream ()
-  << left << fixed << setprecision (4)
-  << setw (12) << "Time(s)";
-
-  m_bwgWrapper = Create<OutputStreamWrapper> (m_bwgStatsFilename,
-                                              std::ios::out);
-  *m_bwgWrapper->GetStream ()
-  << left << fixed << setprecision (4)
-  << setw (12) << "Time(s)";
-
-  m_bwnWrapper = Create<OutputStreamWrapper> (m_bwnStatsFilename,
-                                              std::ios::out);
-  *m_bwnWrapper->GetStream ()
-  << left << fixed << setprecision (4)
-  << setw (12) << "Time(s)";
-
-  m_regWrapper = Create<OutputStreamWrapper> (m_regStatsFilename,
-                                              std::ios::out);
-  *m_regWrapper->GetStream ()
-  << left << fixed << setprecision (4)
-  << setw (12) << "Time(s)";
-
-  m_renWrapper = Create<OutputStreamWrapper> (m_renStatsFilename,
-                                              std::ios::out);
-  *m_renWrapper->GetStream ()
-  << left << fixed << setprecision (4)
-  << setw (12) << "Time(s)";
-
-  TimeValue timeValue;
-  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
-  Time next = timeValue.Get ();
-  Simulator::Schedule (next, &BandwidthStatsCalculator::DumpStatistics, this);
-}
-
-void
-BandwidthStatsCalculator::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
-{
-  NS_LOG_FUNCTION (this);
-
-  // Save this connection info for further usage
-  m_connections.push_back (cInfo);
-  SwitchPair_t key = cInfo->GetSwitchIndexPair ();
-
-  *m_bwbWrapper->GetStream ()
-  << right << setw (10) << key.first  << "-"
-  << left  << setw (10) << key.second << "   ";
-
-  *m_bwgWrapper->GetStream ()
-  << right << setw (10) << key.first  << "-"
-  << left  << setw (10) << key.second << "   ";
-
-  *m_bwnWrapper->GetStream ()
-  << right << setw (10) << key.first  << "-"
-  << left  << setw (10) << key.second << "   ";
-
-  *m_regWrapper->GetStream ()
-  << left
-  << right << setw (6) << key.first  << "-"
-  << left  << setw (6) << key.second << "   ";
-
-  *m_renWrapper->GetStream ()
-  << left
-  << right << setw (6) << key.first  << "-"
-  << left  << setw (6) << key.second << "   ";
-}
-
-void
-BandwidthStatsCalculator::NotifyTopologyBuilt (NetDeviceContainer devices)
-{
-  *m_bwbWrapper->GetStream () << left << std::endl;
-  *m_bwgWrapper->GetStream () << left << std::endl;
-  *m_bwnWrapper->GetStream () << left << std::endl;
-  *m_regWrapper->GetStream () << left << std::endl;
-  *m_renWrapper->GetStream () << left << std::endl;
-}
-
-void
-BandwidthStatsCalculator::ResetCounters ()
-{
-  m_lastResetTime = Simulator::Now ();
-}
-
-Time
-BandwidthStatsCalculator::GetActiveTime (void) const
-{
-  return Simulator::Now () - m_lastResetTime;
-}
-
-// ------------------------------------------------------------------------ //
-SwitchRulesStatsCalculator::SwitchRulesStatsCalculator ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-SwitchRulesStatsCalculator::~SwitchRulesStatsCalculator ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-TypeId
-SwitchRulesStatsCalculator::GetTypeId (void)
-{
-  static TypeId tid = TypeId ("ns3::SwitchRulesStatsCalculator")
-    .SetParent<Object> ()
-    .AddConstructor<SwitchRulesStatsCalculator> ()
-    .AddAttribute ("SwtStatsFilename",
-                   "FilName for flow table entries statistics.",
-                   StringValue ("swt_stats.txt"),
-                   MakeStringAccessor (
-                     &SwitchRulesStatsCalculator::m_swtStatsFilename),
-                   MakeStringChecker ())
-  ;
-  return tid;
-}
-
-void
-SwitchRulesStatsCalculator::DumpStatistics (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  *m_swtWrapper->GetStream ()
-  << left
-  << setw (11) << Simulator::Now ().GetSeconds () << " "
-  << right;
-
-  Ptr<OFSwitch13NetDevice> dev;
-  for (uint16_t i = 0; i < m_devices.GetN (); i++)
-    {
-      dev = DynamicCast<OFSwitch13NetDevice> (m_devices.Get (i));
-      *m_swtWrapper->GetStream ()
-      << setw (6)
-      << dev->GetNumberFlowEntries (1) << " ";
-    }
-  *m_swtWrapper->GetStream () << std::endl;
-
-  TimeValue timeValue;
-  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
-  Time next = timeValue.Get ();
-  Simulator::Schedule (next, &SwitchRulesStatsCalculator::DumpStatistics, this);
-}
-
-void
-SwitchRulesStatsCalculator::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-  m_swtWrapper = 0;
-}
-
-void
-SwitchRulesStatsCalculator::NotifyConstructionCompleted (void)
-{
-  Object::NotifyConstructionCompleted ();
-
-  StringValue stringValue;
-  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
-  std::string prefix = stringValue.Get ();
-  SetAttribute ("SwtStatsFilename", StringValue (prefix + m_swtStatsFilename));
-
-  // Opening output files and printing header lines
-  m_swtWrapper = Create<OutputStreamWrapper> (m_swtStatsFilename,
-                                              std::ios::out);
-
-  TimeValue timeValue;
-  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
-  Time next = timeValue.Get ();
-  Simulator::Schedule (next, &SwitchRulesStatsCalculator::DumpStatistics, this);
-}
-
-void
-SwitchRulesStatsCalculator::NotifyTopologyBuilt (NetDeviceContainer devices)
-{
-  m_devices = devices;
-  *m_swtWrapper->GetStream ()
-  << fixed << setprecision (4)
-  << left
-  << setw (11) << "Time(s)"
-  << right;
-
-  for (uint16_t i = 0; i < m_devices.GetN (); i++)
-    {
-      *m_swtWrapper->GetStream () << setw (7) << i;
-    }
-  *m_swtWrapper->GetStream () << std::endl;
 }
 
 
@@ -810,6 +761,8 @@ EpcS1uStatsCalculator::DoDispose ()
 void
 EpcS1uStatsCalculator::NotifyConstructionCompleted (void)
 {
+  NS_LOG_FUNCTION (this);
+  
   Object::NotifyConstructionCompleted ();
 
   StringValue stringValue;

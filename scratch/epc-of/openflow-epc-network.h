@@ -32,9 +32,6 @@ namespace ns3 {
 
 class OpenFlowEpcController;
 class ConnectionInfo;
-class BandwidthStatsCalculator;
-class SwitchRulesStatsCalculator;
-class LinkQueuesStatsCalculator;
 
 /**
  * \ingroup epcof
@@ -238,8 +235,7 @@ protected:
 private:
   uint16_t                        m_gatewaySwitch;  //!< Gateway switch index.
   Ptr<Node>                       m_gatewayNode;    //!< Gateway node pointer.
-  Ptr<BandwidthStatsCalculator>   m_bandwidthStats; //!< Bandwidth statistics.
-  Ptr<SwitchRulesStatsCalculator> m_switchStats;    //!< Switch statistics.
+  Ptr<NetworkStatsCalculator>     m_networkStats;   //!< Network statistics.
   
   /** Map saving Node / Switch indexes. */
   typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;
