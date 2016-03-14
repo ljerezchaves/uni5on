@@ -29,14 +29,6 @@ NS_OBJECT_ENSURE_REGISTERED (RingNetwork);
 RingNetwork::RingNetwork ()
 {
   NS_LOG_FUNCTION (this);
-
-  // since we are using the OpenFlow network for S1-U links,
-  // we use a /24 subnet which can hold up to 254 eNBs addresses on same subnet
-  m_s1uIpv4AddressHelper.SetBase ("10.0.0.0", "255.255.255.0");
-
-  // we are also using the OpenFlow network for all X2 links,
-  // but we still we use a /30 subnet which can hold exactly two addresses
-  m_x2Ipv4AddressHelper.SetBase ("12.0.0.0", "255.255.255.252");
 }
 
 RingNetwork::~RingNetwork ()
@@ -54,34 +46,38 @@ RingNetwork::GetTypeId (void)
                    "The number of OpenFlow switches in the ring (at least 3).",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (3),
-                   MakeUintegerAccessor (&RingNetwork::m_nodes),
+                   MakeUintegerAccessor (&RingNetwork::m_numNodes),
                    MakeUintegerChecker<uint16_t> (3))
     .AddAttribute ("SwitchLinkDataRate",
                    "The data rate for the links between OpenFlow switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("100Mb/s")),
-                   MakeDataRateAccessor (&RingNetwork::m_swLinkDataRate),
+                   MakeDataRateAccessor (&RingNetwork::m_swLinkRate),
                    MakeDataRateChecker ())
     .AddAttribute ("SwitchLinkDelay",
                    "The delay for the links between OpenFlow switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    TimeValue (MicroSeconds (100)), // 20km fiber cable latency
                    MakeTimeAccessor (&RingNetwork::m_swLinkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("GatewayLinkDataRate",
                    "The data rate for the link connecting the gateway to the "
                    "OpenFlow network.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("10Gb/s")),
-                   MakeDataRateAccessor (&RingNetwork::m_gwLinkDataRate),
+                   MakeDataRateAccessor (&RingNetwork::m_gwLinkRate),
                    MakeDataRateChecker ())
     .AddAttribute ("GatewayLinkDelay",
                    "The delay for the link connecting the gateway to the "
                    "OpenFlow network.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    TimeValue (MicroSeconds (0)),
                    MakeTimeAccessor (&RingNetwork::m_gwLinkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("LinkMtu",
                    "The MTU for CSMA OpenFlow links. "
                    "Consider + 40 byter of GTP/UDP/IP tunnel overhead.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (1500), // Ethernet II
                    MakeUintegerAccessor (&RingNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
@@ -94,22 +90,50 @@ RingNetwork::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   OpenFlowEpcNetwork::DoDispose ();
-  Object::DoDispose ();
 }
 
 void
-RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller)
+RingNetwork::NotifyConstructionCompleted ()
+{
+  NS_LOG_FUNCTION (this);
+  OpenFlowEpcNetwork::NotifyConstructionCompleted ();
+
+  // Configuring address helpers
+  // Since we are using the OpenFlow network for S1-U links,
+  // we use a /24 subnet which can hold up to 254 eNBs addresses on same subnet
+  m_s1uAddrHelper.SetBase ("10.0.0.0", "255.255.255.0");
+
+  // We are also using the OpenFlow network for all X2 links,
+  // but we still we use a /30 subnet which can hold exactly two addresses
+  m_x2AddrHelper.SetBase ("12.0.0.0", "255.255.255.252");
+
+  // Configuring csma link helper for connection between switches
+  m_swHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
+  m_swHelper.SetChannelAttribute ("DataRate", DataRateValue (m_swLinkRate));
+  m_swHelper.SetChannelAttribute ("Delay", TimeValue (m_swLinkDelay));
+
+  // Configuring csma links helper for connecting the gateway to the ring
+  m_gwHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
+  m_gwHelper.SetChannelAttribute ("DataRate", DataRateValue (m_gwLinkRate));
+  m_gwHelper.SetChannelAttribute ("Delay", TimeValue (m_gwLinkDelay));
+
+  // Create the ring topology
+  CreateTopology ();
+}
+
+void
+RingNetwork::CreateTopology ()
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG (!m_created, "Topology already created.");
-  NS_ASSERT_MSG (m_nodes >= 3, "Invalid number of nodes for the ring");
+  NS_ASSERT_MSG (m_numNodes >= 3, "Invalid number of nodes for the ring");
 
-  InstallController (controller);
+  // Creating the ring controller application
+  InstallController (CreateObject<RingController> ());
 
   // Creating the switch nodes
-  m_ofSwitches.Create (m_nodes);
-  for (uint16_t i = 0; i < m_nodes; i++)
+  m_ofSwitches.Create (m_numNodes);
+  for (uint16_t i = 0; i < m_numNodes; i++)
     {
       // Setting switch names
       std::ostringstream swName;
@@ -118,19 +142,13 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller)
     }
 
   // Installing the Openflow switch devices for each switch node
-  m_ofDevices = m_ofHelper->InstallSwitchesWithoutPorts (m_ofSwitches);
-
-  // Configuring csma links for connection between switches
-  m_ofCsmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
-  m_ofCsmaHelper.SetChannelAttribute ("DataRate",
-                                      DataRateValue (m_swLinkDataRate));
-  m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_swLinkDelay));
+  m_ofDevices = m_ofSwitchHelper->InstallSwitchesWithoutPorts (m_ofSwitches);
 
   // Connecting switches in ring topology (clockwise order)
-  for (uint16_t i = 0; i < m_nodes; i++)
+  for (uint16_t i = 0; i < m_numNodes; i++)
     {
       uint16_t currIndex = i;
-      uint16_t nextIndex = (i + 1) % m_nodes;  // Next clockwise node
+      uint16_t nextIndex = (i + 1) % m_numNodes;  // Next clockwise node
 
       // Creating a link between current and next node
       Ptr<Node> currNode = m_ofSwitches.Get (currIndex);
@@ -139,7 +157,7 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller)
       NodeContainer pair;
       pair.Add (currNode);
       pair.Add (nextNode);
-      NetDeviceContainer devs = m_ofCsmaHelper.Install (pair);
+      NetDeviceContainer devs = m_swHelper.Install (pair);
 
       Names::Add (Names::FindName (currNode) + "+" +
                   Names::FindName (nextNode), devs.Get (0));
@@ -179,22 +197,13 @@ RingNetwork::CreateTopology (Ptr<OpenFlowEpcController> controller)
 
   // Fire trace source notifying that all connections between switches are ok.
   m_topoBuiltTrace (m_ofDevices);
-  m_created = true;
 }
 
 Ptr<NetDevice>
 RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << node);
-  NS_ASSERT_MSG (m_created, "Topology not created.");
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
-
-  // Configuring csma links for connecting eNBs to switches
-  // (using the same configuration for connection between switches)
-  m_ofCsmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
-  m_ofCsmaHelper.SetChannelAttribute ("DataRate",
-                                      DataRateValue (m_swLinkDataRate));
-  m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_swLinkDelay));
 
   // Connect SgwPgw node to switch index 0 and other eNBs to switches indexes
   // 1..N. The three eNBs from same cell site are connected to the same switch
@@ -208,18 +217,12 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
       // This is the SgwPgw node
       swIdx = 0;
       RegisterGatewayAtSwitch (swIdx, node);
-
-      // Only for the gateway link, let's set specific datarate and delay.
-      m_ofCsmaHelper.SetChannelAttribute ("DataRate",
-                                          DataRateValue (m_gwLinkDataRate));
-      m_ofCsmaHelper.SetChannelAttribute ("Delay", TimeValue (m_gwLinkDelay));
     }
   else
     {
       swIdx = 1 + ((counter - 1) / 3);
     }
   RegisterNodeAtSwitch (swIdx, node);
-  counter++;
 
   Ptr<Node> swNode = m_ofSwitches.Get (swIdx);
   Ptr<OFSwitch13NetDevice> swDev = GetSwitchDevice (swIdx);
@@ -228,7 +231,15 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   NodeContainer pair;
   pair.Add (swNode);
   pair.Add (node);
-  NetDeviceContainer devices = m_ofCsmaHelper.Install (pair);
+  NetDeviceContainer devices;
+  if (counter == 0)
+    {
+      devices = m_gwHelper.Install (pair);
+    }
+  else
+    {
+      devices = m_swHelper.Install (pair);
+    }
 
   Ptr<CsmaNetDevice> portDev, nodeDev;
   portDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
@@ -242,7 +253,7 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
 
   // Set S1U IPv4 address for the new device at node
   Ipv4InterfaceContainer nodeIpIfaces =
-    m_s1uIpv4AddressHelper.Assign (NetDeviceContainer (nodeDev));
+    m_s1uAddrHelper.Assign (NetDeviceContainer (nodeDev));
   Ipv4Address nodeAddr = nodeIpIfaces.GetAddress (0);
 
   // Adding newly created csma device as openflow switch port.
@@ -253,11 +264,12 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
 
   // Only for the gateway link, let's set specific names for queues.
-  if (counter == 1)
+  if (counter == 0)
     {
       m_gatewayStats->SetQueues (nodeDev->GetQueue (), portDev->GetQueue ());
     }
 
+  counter++;
   return nodeDev;
 }
 
@@ -265,7 +277,6 @@ Ptr<NetDevice>
 RingNetwork::AttachToX2 (Ptr<Node> node)
 {
   NS_LOG_FUNCTION (this << node);
-  NS_ASSERT_MSG (m_created, "Topology not created.");
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
 
   // Retrieve the registered pair node/switch
@@ -279,7 +290,7 @@ RingNetwork::AttachToX2 (Ptr<Node> node)
   NodeContainer pair;
   pair.Add (swNode);
   pair.Add (node);
-  NetDeviceContainer devices = m_ofCsmaHelper.Install (pair);
+  NetDeviceContainer devices = m_swHelper.Install (pair);
 
   Ptr<CsmaNetDevice> portDev, nodeDev;
   portDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
@@ -287,9 +298,9 @@ RingNetwork::AttachToX2 (Ptr<Node> node)
 
   // Set X2 IPv4 address for the new device at node
   Ipv4InterfaceContainer nodeIpIfaces =
-    m_x2Ipv4AddressHelper.Assign (NetDeviceContainer (nodeDev));
+    m_x2AddrHelper.Assign (NetDeviceContainer (nodeDev));
   Ipv4Address nodeAddr = nodeIpIfaces.GetAddress (0);
-  m_x2Ipv4AddressHelper.NewNetwork ();
+  m_x2AddrHelper.NewNetwork ();
 
   // Adding newly created csma device as openflow switch port.
   Ptr<OFSwitch13Port> swPort = swDev->AddSwitchPort (portDev);
@@ -299,6 +310,12 @@ RingNetwork::AttachToX2 (Ptr<Node> node)
   m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
 
   return nodeDev;
+}
+
+void
+RingNetwork::EnableDatapathPcap (std::string prefix, bool promiscuous)
+{
+  m_swHelper.EnablePcap (prefix, m_ofSwitches, promiscuous);
 }
 
 };  // namespace ns3

@@ -21,17 +21,9 @@
 #ifndef RING_CONTROLLER_H
 #define RING_CONTROLLER_H
 
-#include <ns3/core-module.h>
-#include <ns3/lte-module.h>
-#include <ns3/network-module.h>
-#include <ns3/internet-module.h>
-#include <ns3/ofswitch13-module.h>
 #include "openflow-epc-controller.h"
-#include "ring-network.h"
 
 namespace ns3 {
-
-class RingNetwork;
 
 /**
  * \ingroup epcof

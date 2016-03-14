@@ -66,13 +66,11 @@ private:
   void EnableTraces ();
 
   Ptr<OpenFlowEpcNetwork>         m_opfNetwork;     //!< LTE EPC network
-  Ptr<OpenFlowEpcController>      m_controller;     //!< OpenFLow controller
   Ptr<OpenFlowEpcHelper>          m_epcHelper;      //!< LTE EPC helper
   Ptr<LteHexGridNetwork>          m_lteNetwork;     //!< LTE radio network
   Ptr<LteHelper>                  m_lteHelper;      //!< LTE radio helper
   Ptr<InternetNetwork>            m_webNetwork;     //!< Internet network
   Ptr<Node>                       m_webHost;        //!< Internet server node
-  std::string                     m_switchLog;      //!< Switches log level
   bool                            m_pcapTrace;      //!< Enable PCAP traces
   Ptr<EpcS1uStatsCalculator>      m_epcS1uStats;    //!< EPC S1-U statistics
 };

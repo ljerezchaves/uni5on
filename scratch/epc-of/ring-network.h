@@ -21,14 +21,10 @@
 #ifndef RING_NETWORK_H
 #define RING_NETWORK_H
 
-#include <ns3/core-module.h>
 #include "openflow-epc-network.h"
 #include "ring-controller.h"
 
 namespace ns3 {
-
-class OpenFlowEpcController;
-class RingController;
 
 /**
  * \ingroup epcof
@@ -48,27 +44,32 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** Destructor implementation */
-  void DoDispose ();
-
   // Inherited from OpenFlowEpcNetwork
   Ptr<NetDevice> AttachToS1u (Ptr<Node> node, uint16_t cellId);
   Ptr<NetDevice> AttachToX2  (Ptr<Node> node);
-  void CreateTopology (Ptr<OpenFlowEpcController> controller);
+  void EnableDatapathPcap (std::string prefix, bool promiscuous = false);
+
+protected:
+  /** Destructor implementation */
+  void DoDispose ();
+
+  // Inherited from ObjectBase
+  void NotifyConstructionCompleted (void);
+
+  // Inherited from OpenFlowEpcNetwork
+  void CreateTopology ();
 
 private:
-  DataRate              m_swLinkDataRate;     //!< Switch link data rate
-  Time                  m_swLinkDelay;        //!< Switch link delay
-  DataRate              m_gwLinkDataRate;     //!< Gateway link data rate
-  Time                  m_gwLinkDelay;        //!< Gateway link delay
-  uint16_t              m_linkMtu;            //!< Link mtu
-  uint16_t              m_nodes;              //!< Number of switches
-
-  /** Helper to assign addresses to S1-U NetDevices */
-  Ipv4AddressHelper m_s1uIpv4AddressHelper;
-
-  /** Helper to assign addresses to X2 NetDevices */
-  Ipv4AddressHelper m_x2Ipv4AddressHelper;
+  DataRate          m_swLinkRate;     //!< Switch link data rate
+  Time              m_swLinkDelay;    //!< Switch link delay
+  DataRate          m_gwLinkRate;     //!< Gateway link data rate
+  Time              m_gwLinkDelay;    //!< Gateway link delay
+  uint16_t          m_linkMtu;        //!< Link mtu
+  uint16_t          m_numNodes;       //!< Number of switches
+  Ipv4AddressHelper m_s1uAddrHelper;  //!< S1 address helper
+  Ipv4AddressHelper m_x2AddrHelper;   //!< X2 address helper
+  CsmaHelper        m_swHelper;       //!< Csma switch connection helper
+  CsmaHelper        m_gwHelper;       //!< Csma gateway connection helper
 
 }; // class RingNetwork
 

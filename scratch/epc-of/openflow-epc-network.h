@@ -25,7 +25,7 @@
 #include <ns3/network-module.h>
 #include <ns3/csma-module.h>
 #include <ns3/ofswitch13-module.h>
-#include <ns3/qos-stats-calculator.h>
+#include "openflow-epc-controller.h"
 #include "stats-calculator.h"
 
 namespace ns3 {
@@ -76,37 +76,18 @@ public:
   virtual Ptr<NetDevice> AttachToX2 (Ptr<Node> node) = 0;
 
   /**
-   * Creates the OpenFlow network infrastructure with corresponding OpenFlow
-   * Controller application.
-   * \param controller The corresponding OpenFlow controller for this EPC
-   * OpenFlow network (they both must be aware of network topology).
-   */
-  virtual void CreateTopology (Ptr<OpenFlowEpcController> controller) = 0;
-
-  /**
    * Enable pcap on switch data ports.
    * \param prefix The file prefix.
    * \param promiscuous If true, enable promisc trace.
    */
-  void EnableDataPcap (std::string prefix, bool promiscuous = false);
+  virtual void EnableDatapathPcap (std::string prefix,
+                                   bool promiscuous = false) = 0;
 
   /**
    * Enable pcap on OpenFlow channel.
    * \param prefix The file prefix.
    */
-  void EnableOpenFlowPcap (std::string prefix);
-
-  /**
-   * Enable ascii trace on OpenFlow channel.
-   * \param prefix The file prefix.
-   */
-  void EnableOpenFlowAscii (std::string prefix);
-
-  /**
-   * Enable internal ofsoftswitch13 logging.
-   * \param level string representing library logging level.
-   */
-  void EnableDatapathLogs (std::string level);
+  virtual void EnableOpenFlowPcap (std::string prefix);
 
   /**
    * Set an attribute for ns3::OFSwitch13NetDevice
@@ -116,22 +97,15 @@ public:
   void SetSwitchDeviceAttribute (std::string n1, const AttributeValue &v1);
 
   /**
-   * Check for network topology already created.
-   * \return true if topology is created.
-   */
-  bool IsTopologyCreated (void) const;
-
-  /**
    * \return Number of switches in the network.
    */
   uint16_t GetNSwitches (void) const;
 
   /**
-   * Get the OFSwitch13NetDevice of a specific switch.
-   * \param index The switch index.
-   * \return The pointer to the switch OFSwitch13NetDevice.
+   * Retrieve the controller application pointer.
+   * \return The OpenFlow controller application.
    */
-  Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
+  Ptr<OpenFlowEpcController> GetControllerApp ();
 
   /**
    * BoolTracedCallback signature for topology creation completed.
@@ -161,7 +135,10 @@ protected:
 
   // Inherited from ObjectBase
   virtual void NotifyConstructionCompleted (void);
-  
+
+  /** Creates the OpenFlow network infrastructure topology with controller. */
+  virtual void CreateTopology () = 0;
+
   /**
    * Store the pair <node, switch index> for further use.
    * \param switchIdx The switch index in m_ofSwitches.
@@ -175,6 +152,13 @@ protected:
    * \param Ptr<Node> The node pointer.
    */
   void RegisterGatewayAtSwitch (uint16_t switchIdx, Ptr<Node> node);
+
+  /**
+   * Get the OFSwitch13NetDevice of a specific switch.
+   * \param index The switch index.
+   * \return The pointer to the switch OFSwitch13NetDevice.
+   */
+  Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
 
   /**
    * Retrieve the switch index for node pointer.
@@ -214,12 +198,9 @@ protected:
    */
   void InstallController (Ptr<OpenFlowEpcController> controller);
 
-  Ptr<Node>                   m_ofCtrlNode;     //!< Controller node.
-  NodeContainer               m_ofSwitches;     //!< Switch nodes.
-  NetDeviceContainer          m_ofDevices;      //!< Switch devices.
-  Ptr<OFSwitch13Helper>       m_ofHelper;       //!< OpenFlow helper.
-  CsmaHelper                  m_ofCsmaHelper;   //!< Csma helper.
-  bool                        m_created;        //!< Network topology created.
+  NodeContainer                  m_ofSwitches;     //!< Switch nodes.
+  NetDeviceContainer             m_ofDevices;      //!< Switch devices.
+  Ptr<OFSwitch13Helper>          m_ofSwitchHelper; //!< OpenFlow switch helper.
   Ptr<LinkQueuesStatsCalculator> m_gatewayStats;   //!< Gateway statistics.
 
   /** New connection between two switches trace source. */
@@ -235,8 +216,10 @@ protected:
 private:
   uint16_t                        m_gatewaySwitch;  //!< Gateway switch index.
   Ptr<Node>                       m_gatewayNode;    //!< Gateway node pointer.
+  Ptr<Node>                       m_ofCtrlNode;     //!< Controller node.
+  Ptr<OpenFlowEpcController>      m_ofCtrlApp;      //!< Controller app.
   Ptr<NetworkStatsCalculator>     m_networkStats;   //!< Network statistics.
-  
+
   /** Map saving Node / Switch indexes. */
   typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;
   NodeSwitchMap_t     m_nodeSwitchMap;    //!< Registered nodes per switch idx.

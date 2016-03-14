@@ -18,7 +18,6 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "ns3/epc-application.h"
 #include "openflow-epc-controller.h"
 #include "openflow-epc-network.h"
 
@@ -197,57 +196,6 @@ OpenFlowEpcController::GetDscpMappedValue (EpsBearer::Qci qci)
 }
 
 void
-OpenFlowEpcController::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-
-  m_controllerStats = 0;
-  m_arpTable.clear ();
-  m_ipSwitchTable.clear ();
-  m_routes.clear ();
-  Object::DoDispose ();
-}
-
-void
-OpenFlowEpcController::NotifyConstructionCompleted ()
-{
-  NS_LOG_FUNCTION (this);
-  
-  // Connecting this controller to OpenFlowNetwork trace sources
-  Ptr<OpenFlowEpcNetwork> network =
-    Names::Find<OpenFlowEpcNetwork> ("/Names/OpenFlowNetwork");
-  NS_ASSERT_MSG (network, "Network object not found.");
-  NS_ASSERT_MSG (!network->IsTopologyCreated (),
-                 "Network topology already created.");
-
-  network->TraceConnectWithoutContext (
-    "NewEpcAttach",
-    MakeCallback (&OpenFlowEpcController::NotifyNewEpcAttach, this));
-  network->TraceConnectWithoutContext (
-    "TopologyBuilt",
-    MakeCallback (&OpenFlowEpcController::NotifyTopologyBuilt, this));
-  network->TraceConnectWithoutContext (
-    "NewSwitchConnection",
-    MakeCallback (&OpenFlowEpcController::NotifyNewSwitchConnection, this));
-
-  // Connecting this controller to SgwPgwApplication trace sources
-  Ptr<EpcSgwPgwApplication> gatewayApp =
-    Names::Find<EpcSgwPgwApplication> ("/Names/SgwPgwApplication");
-  NS_ASSERT_MSG (gatewayApp, "SgwPgw application not found.");
-
-  gatewayApp->TraceConnectWithoutContext (
-    "ContextCreated",
-    MakeCallback (&OpenFlowEpcController::NotifyContextCreated, this));
-
-  // Creating the admission stats calculator for this OpenFlow controller
-  m_controllerStats = CreateObject<ControllerStatsCalculator> ();
-  TraceConnectWithoutContext ("BearerRequest", MakeCallback (
-        &ControllerStatsCalculator::NotifyBearerRequest, m_controllerStats));
-
-  ObjectBase::NotifyConstructionCompleted ();
-}
-
-void
 OpenFlowEpcController::NotifyNewEpcAttach (
   Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
   Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, uint32_t swtchPort)
@@ -404,6 +352,41 @@ void
 OpenFlowEpcController::NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_INFO (this << cInfo);
+}
+
+void
+OpenFlowEpcController::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+
+  m_controllerStats = 0;
+  m_arpTable.clear ();
+  m_ipSwitchTable.clear ();
+  m_routes.clear ();
+  Object::DoDispose ();
+}
+
+void
+OpenFlowEpcController::NotifyConstructionCompleted ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // FIXME Fazer essa conexão depois, na hora de criar a rede lte...
+  // Connecting this controller to SgwPgwApplication trace sources
+  Ptr<EpcSgwPgwApplication> gatewayApp =
+    Names::Find<EpcSgwPgwApplication> ("/Names/SgwPgwApplication");
+  NS_ASSERT_MSG (gatewayApp, "SgwPgw application not found.");
+
+  gatewayApp->TraceConnectWithoutContext (
+    "ContextCreated",
+    MakeCallback (&OpenFlowEpcController::NotifyContextCreated, this));
+
+  // Creating the admission stats calculator for this OpenFlow controller
+  m_controllerStats = CreateObject<ControllerStatsCalculator> ();
+  TraceConnectWithoutContext ("BearerRequest", MakeCallback (
+        &ControllerStatsCalculator::NotifyBearerRequest, m_controllerStats));
+
+  ObjectBase::NotifyConstructionCompleted ();
 }
 
 void

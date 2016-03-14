@@ -27,7 +27,6 @@ NS_OBJECT_ENSURE_REGISTERED (SimulationScenario);
 
 SimulationScenario::SimulationScenario ()
   : m_opfNetwork (0),
-    m_controller (0),
     m_epcHelper (0),
     m_lteNetwork (0),
     m_lteHelper (0),
@@ -47,7 +46,6 @@ SimulationScenario::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_opfNetwork = 0;
-  m_controller = 0;
   m_epcHelper = 0;
   m_lteNetwork = 0;
   m_webNetwork = 0;
@@ -68,11 +66,6 @@ SimulationScenario::GetTypeId (void)
                    BooleanValue (false),
                    MakeBooleanAccessor (&SimulationScenario::m_pcapTrace),
                    MakeBooleanChecker ())
-    .AddAttribute ("SwitchLogs",
-                   "Set the ofsoftswitch log level.",
-                   StringValue ("none"),
-                   MakeStringAccessor (&SimulationScenario::m_switchLog),
-                   MakeStringChecker ())
   ;
   return tid;
 }
@@ -85,23 +78,11 @@ SimulationScenario::BuildRingTopology ()
   //
   // Observe the following order when creating the simulation scenario objects.
   // Don't change object names or the trace connections won't work.
-  //
-  // 1) Create OpenFlowEpcNetwork object and name it OpenFlowNetwork.
-  m_opfNetwork = CreateObject<RingNetwork> ();
-  Names::Add ("OpenFlowNetwork", m_opfNetwork);
-
-  // 2) Create OpenFlowEpcHelper object and name it OpenFlowEpcHelper.
+  // FIXME
   m_epcHelper = CreateObject<OpenFlowEpcHelper> ();
-  Names::Add ("OpenFlowEpcHelper", m_epcHelper);
 
-  // 3) Create the OpenFlowEpcController object and name it MainController (the
-  // controller constructor will connect to OpenFlowEpcNetwork and
-  // SgwPgwApplication trace sources).
-  m_controller = CreateObject<RingController> ();
-  Names::Add ("MainController", m_controller);
-
-  // 5) Build network topology calling OpenFlowEpcNetwork::CreateTopology ().
-  m_opfNetwork->CreateTopology (m_controller);
+  // Create OpenFlowEpcNetwork object.
+  m_opfNetwork = CreateObject<RingNetwork> ();
 
   // 6) Set up OpenFlowEpcHelper S1U and X2 connection callbacks (network
   // topology must be already created).
@@ -121,23 +102,16 @@ SimulationScenario::BuildRingTopology ()
 
   // 9) Install applications and traffic manager
   Ptr<TrafficHelper> tfcHelper =
-    CreateObject<TrafficHelper> (m_webHost, m_lteHelper, m_controller);
+    CreateObject<TrafficHelper> (m_webHost, m_lteHelper, m_opfNetwork->GetControllerApp ());
   tfcHelper->Install (m_lteNetwork->GetUeNodes (),
                       m_lteNetwork->GetUeDevices ());
 
   // 10) Set up output ofsoftswitch13 logs and ns-3 traces
-  DatapathLogs ();
   EnableTraces ();
 
   // 11) Creating remaining stats calculator for output dump
   m_epcS1uStats = CreateObject<EpcS1uStatsCalculator> ();
-}
-
-void
-SimulationScenario::DatapathLogs ()
-{
-  NS_LOG_FUNCTION (this);
-  m_opfNetwork->EnableDatapathLogs (m_switchLog);
+  m_epcS1uStats->SetController (m_opfNetwork->GetControllerApp ());
 }
 
 void
@@ -153,7 +127,7 @@ SimulationScenario::EnableTraces ()
 
       m_webNetwork->EnablePcap (prefix + "internet");
       m_opfNetwork->EnableOpenFlowPcap (prefix + "ofchannel");
-      m_opfNetwork->EnableDataPcap (prefix + "ofnetwork", true);
+      m_opfNetwork->EnableDatapathPcap (prefix + "ofnetwork", true);
       m_epcHelper->EnablePcapS1u (prefix + "lte-epc");
       m_epcHelper->EnablePcapX2 (prefix + "lte-epc");
     }

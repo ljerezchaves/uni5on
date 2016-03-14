@@ -32,9 +32,6 @@
 
 namespace ns3 {
 
-class OpenFlowEpcController;
-class RingController;
-
 /**
  * \ingroup epcof
  * Create an OpenFlow EPC controller. This is an abstract base class which
@@ -89,41 +86,6 @@ public:
   virtual bool ReleaseDedicatedBearer (EpsBearer bearer, uint64_t imsi,
                                        uint16_t cellId, uint32_t teid);
 
-  /**
-   * Retrieve stored information for a specific GTP teid.
-   * \param teid The GTP tunnel ID.
-   * \return The routing information for this tunnel.
-   */
-  Ptr<const RoutingInfo> GetConstRoutingInfo (uint32_t teid) const;
-
-  /**
-   * Retrieve stored information for a specific bearer.
-   * \param teid The GTP tunnel ID.
-   * \return The EpsBearer information for this teid.
-   */
-  static EpsBearer GetEpsBearer (uint32_t teid);
-
-  /**
-   * Retrieve stored mapped value for a specific EPS QCI.
-   * \param qci The EPS bearer QCI.
-   * \return The IP DSCP mapped value for this QCI.
-   */
-  static uint16_t GetDscpMappedValue (EpsBearer::Qci qci);
-
-  /**
-   * TracedCallback signature for new bearer request.
-   * \param ok True when the bearer request/release processes succeeds.
-   * \param rInfo The routing information for this bearer tunnel.
-   */
-  typedef void (*BearerTracedCallback)(bool ok, Ptr<const RoutingInfo> rInfo);
-
-protected:
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  // Inherited from ObjectBase
-  virtual void NotifyConstructionCompleted (void);
-  
   /** \name Trace sinks for network topology and LTE EPC monitoring. */
   //\{
   /**
@@ -186,6 +148,41 @@ protected:
    */
   virtual void NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo);
   //\}
+
+  /**
+   * Retrieve stored information for a specific GTP teid.
+   * \param teid The GTP tunnel ID.
+   * \return The routing information for this tunnel.
+   */
+  Ptr<const RoutingInfo> GetConstRoutingInfo (uint32_t teid) const;
+
+  /**
+   * Retrieve stored information for a specific bearer.
+   * \param teid The GTP tunnel ID.
+   * \return The EpsBearer information for this teid.
+   */
+  static EpsBearer GetEpsBearer (uint32_t teid);
+
+  /**
+   * Retrieve stored mapped value for a specific EPS QCI.
+   * \param qci The EPS bearer QCI.
+   * \return The IP DSCP mapped value for this QCI.
+   */
+  static uint16_t GetDscpMappedValue (EpsBearer::Qci qci);
+
+  /**
+   * TracedCallback signature for new bearer request.
+   * \param ok True when the bearer request/release processes succeeds.
+   * \param rInfo The routing information for this bearer tunnel.
+   */
+  typedef void (*BearerTracedCallback)(bool ok, Ptr<const RoutingInfo> rInfo);
+
+protected:
+  /** Destructor implementation */
+  virtual void DoDispose ();
+
+  // Inherited from ObjectBase
+  virtual void NotifyConstructionCompleted (void);
 
   /** \name Topology-dependent functions
    * This virtual functions must be implemented by subclasses, as they are
