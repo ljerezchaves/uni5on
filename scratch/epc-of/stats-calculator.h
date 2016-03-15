@@ -54,8 +54,9 @@ public:
 
   /**
    * Dump regular statistics into file.
+   * \param next The inverval before next dump.
    */
-  void DumpStatistics (void);
+  void DumpStatistics (Time next);
 
   /**
    * Notify new bearer request.
@@ -123,8 +124,9 @@ public:
 
   /**
    * Dump regular statistics into file.
+   * \param next The inverval before next dump.
    */
-  void DumpStatistics (void);
+  void DumpStatistics (Time next);
 
   /**
    * Notify this stats calculator of a new connection between two switches in
@@ -199,8 +201,9 @@ public:
 
   /**
    * Dump regular statistics into file.
+   * \param next The inverval before next dump.
    */
-  void DumpStatistics (void);
+  void DumpStatistics (Time next);
 
   /**
    * Set queue pointers for statistics dump.

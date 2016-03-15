@@ -77,7 +77,7 @@ ControllerStatsCalculator::GetTypeId (void)
 }
 
 void
-ControllerStatsCalculator::DumpStatistics (void)
+ControllerStatsCalculator::DumpStatistics (Time next)
 {
   NS_LOG_FUNCTION (this);
 
@@ -94,11 +94,8 @@ ControllerStatsCalculator::DumpStatistics (void)
   << std::endl;
 
   ResetCounters ();
-
-  TimeValue timeValue;
-  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
-  Time next = timeValue.Get ();
-  Simulator::Schedule (next, &ControllerStatsCalculator::DumpStatistics, this);
+  Simulator::Schedule (next, 
+    &ControllerStatsCalculator::DumpStatistics, this, next);
 }
 
 void
@@ -170,8 +167,6 @@ void
 ControllerStatsCalculator::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
-  
-  Object::NotifyConstructionCompleted ();
 
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
@@ -218,7 +213,11 @@ ControllerStatsCalculator::NotifyConstructionCompleted (void)
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
   Time next = timeValue.Get ();
-  Simulator::Schedule (next, &ControllerStatsCalculator::DumpStatistics, this);
+  Simulator::Schedule (next, 
+    &ControllerStatsCalculator::DumpStatistics, this, next);
+
+  // Chain up
+  Object::NotifyConstructionCompleted ();
 }
 
 void
@@ -308,7 +307,7 @@ NetworkStatsCalculator::GetTypeId (void)
 }
 
 void
-NetworkStatsCalculator::DumpStatistics (void)
+NetworkStatsCalculator::DumpStatistics (Time next)
 {
   NS_LOG_FUNCTION (this);
 
@@ -398,11 +397,8 @@ NetworkStatsCalculator::DumpStatistics (void)
   *m_swtWrapper->GetStream () << std::endl;
 
   ResetCounters ();
-
-  TimeValue timeValue;
-  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
-  Time next = timeValue.Get ();
-  Simulator::Schedule (next, &NetworkStatsCalculator::DumpStatistics, this);
+  Simulator::Schedule (next, 
+    &NetworkStatsCalculator::DumpStatistics, this, next);
 }
 
 void
@@ -475,8 +471,6 @@ NetworkStatsCalculator::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  Object::NotifyConstructionCompleted ();
-  
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
@@ -527,7 +521,11 @@ NetworkStatsCalculator::NotifyConstructionCompleted (void)
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
   Time next = timeValue.Get ();
-  Simulator::Schedule (next, &NetworkStatsCalculator::DumpStatistics, this);
+  Simulator::Schedule (next,
+    &NetworkStatsCalculator::DumpStatistics, this, next);
+
+  // Chain up
+  Object::NotifyConstructionCompleted ();
 }
 
 void
@@ -583,7 +581,7 @@ LinkQueuesStatsCalculator::SetQueues (Ptr<Queue> downQueue, Ptr<Queue> upQueue)
 }
 
 void
-LinkQueuesStatsCalculator::DumpStatistics (void)
+LinkQueuesStatsCalculator::DumpStatistics (Time next)
 {
   NS_LOG_FUNCTION (this);
 
@@ -604,11 +602,8 @@ LinkQueuesStatsCalculator::DumpStatistics (void)
   << std::endl;
 
   ResetCounters ();
-
-  TimeValue timeValue;
-  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
-  Time next = timeValue.Get ();
-  Simulator::Schedule (next, &LinkQueuesStatsCalculator::DumpStatistics, this);
+  Simulator::Schedule (next, 
+    &LinkQueuesStatsCalculator::DumpStatistics, this, next);
 }
 
 void
@@ -624,8 +619,6 @@ void
 LinkQueuesStatsCalculator::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
-  
-  Object::NotifyConstructionCompleted ();
   
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
@@ -655,7 +648,11 @@ LinkQueuesStatsCalculator::NotifyConstructionCompleted (void)
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
   Time next = timeValue.Get ();
-  Simulator::Schedule (next, &LinkQueuesStatsCalculator::DumpStatistics, this);
+  Simulator::Schedule (next, 
+    &LinkQueuesStatsCalculator::DumpStatistics, this, next);
+
+  // Chain up
+  Object::NotifyConstructionCompleted ();
 }
 
 void
@@ -767,8 +764,6 @@ EpcS1uStatsCalculator::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
   
-  Object::NotifyConstructionCompleted ();
-
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
@@ -827,6 +822,9 @@ EpcS1uStatsCalculator::NotifyConstructionCompleted (void)
   << setw (10) << "RxBytes"
   << setw (17)  << "Throughput(kbps)"
   << std::endl;
+
+  // Chain up
+  Object::NotifyConstructionCompleted ();
 }
 
 void
