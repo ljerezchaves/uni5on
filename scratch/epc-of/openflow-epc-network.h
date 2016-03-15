@@ -23,15 +23,16 @@
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
-#include <ns3/csma-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "openflow-epc-controller.h"
-#include "stats-calculator.h"
 
 namespace ns3 {
 
-class OpenFlowEpcController;
 class ConnectionInfo;
+class InternetNetwork;
+class LinkQueuesStatsCalculator;
+class NetworkStatsCalculator;
+class OpenFlowEpcController;
+class OpenFlowEpcHelper;
 
 /**
  * \ingroup epcof
@@ -99,6 +100,12 @@ public:
    * \return The gateway node pointer.
    */
   Ptr<Node> GetGatewayNode ();
+
+  /**
+   * Get the pointer to the Internet server node created by the topology.
+   * \return The pointer to the server node.
+   */
+  Ptr<Node> GetServerNode ();
 
   /**
    * Retrieve the controller node pointer.
@@ -214,10 +221,10 @@ protected:
 
 private:
   uint16_t                        m_gatewaySwitch;  //!< Gateway switch index.
-  Ptr<Node>                       m_gatewayNode;    //!< Gateway node pointer.
   Ptr<Node>                       m_ofCtrlNode;     //!< Controller node.
   Ptr<OpenFlowEpcController>      m_ofCtrlApp;      //!< Controller app.
   Ptr<OpenFlowEpcHelper>          m_ofEpcHelper;    //!< Helper for LTE EPC.
+  Ptr<InternetNetwork>            m_webNetwork;     //!< Internet network.
   Ptr<NetworkStatsCalculator>     m_networkStats;   //!< Network statistics.
 
   /** Map saving Node / Switch indexes. */

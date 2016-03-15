@@ -20,6 +20,8 @@
 
 #include "openflow-epc-network.h"
 #include "openflow-epc-controller.h"
+#include "stats-calculator.h"
+#include "internet-network.h"
 
 namespace ns3 {
 
@@ -29,10 +31,10 @@ NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcNetwork);
 OpenFlowEpcNetwork::OpenFlowEpcNetwork ()
   : m_ofSwitchHelper (0),
     m_gatewayStats (0),
-    m_gatewayNode (0),
     m_ofCtrlNode (0),
     m_ofCtrlApp (0),
     m_ofEpcHelper (0),
+    m_webNetwork (0),
     m_networkStats (0)
 {
   NS_LOG_FUNCTION (this);
@@ -44,6 +46,9 @@ OpenFlowEpcNetwork::OpenFlowEpcNetwork ()
 
   // Creating the OpenFlow EPC helper (will create the SgwPgw node and app).
   m_ofEpcHelper = CreateObject<OpenFlowEpcHelper> ();
+
+  // Creating the Internet network object
+  m_webNetwork = CreateObject<InternetNetwork> ();
 
   // Creating stats calculators
   ObjectFactory statsFactory;
@@ -99,6 +104,9 @@ OpenFlowEpcNetwork::EnablePcap (std::string prefix, bool promiscuous)
   // Enable pcap on LTE EPC interfaces
   m_ofEpcHelper->EnablePcapS1u (prefix + "lte-epc");
   m_ofEpcHelper->EnablePcapX2 (prefix + "lte-epc");
+
+  // Enable pcap on Internet network
+  m_webNetwork->EnablePcap (prefix + "internet");
 }
 
 void
@@ -119,6 +127,12 @@ OpenFlowEpcNetwork::GetGatewayNode ()
 {
   NS_ASSERT_MSG (m_ofEpcHelper, "Invalid EPC helper.");
   return m_ofEpcHelper->GetPgwNode ();
+}
+
+Ptr<Node>
+OpenFlowEpcNetwork::GetServerNode ()
+{
+  return m_webNetwork->GetServerNode ();
 }
 
 Ptr<Node>
@@ -147,8 +161,8 @@ OpenFlowEpcNetwork::DoDispose ()
   m_ofCtrlApp = 0;
   m_ofSwitchHelper = 0;
   m_gatewayStats = 0;
-  m_gatewayNode = 0;
   m_ofEpcHelper = 0;
+  m_webNetwork = 0;
   m_networkStats = 0;
   m_nodeSwitchMap.clear ();
   Object::DoDispose ();
@@ -165,8 +179,9 @@ OpenFlowEpcNetwork::NotifyConstructionCompleted (void)
   TraceConnectWithoutContext ("NewSwitchConnection", MakeCallback (
     &NetworkStatsCalculator::NotifyNewSwitchConnection, m_networkStats));
 
-  // Create the ring network topology
+  // Create the ring network topology and Internet topology
   CreateTopology ();
+  m_webNetwork->CreateTopology (GetGatewayNode ());
 
   // Connect S1U and X2 connection callbacks *after* topology creation.
   m_ofEpcHelper->SetS1uConnectCallback (
@@ -204,7 +219,6 @@ OpenFlowEpcNetwork::RegisterGatewayAtSwitch (uint16_t switchIdx,
                                              Ptr<Node> node)
 {
   m_gatewaySwitch = switchIdx;
-  m_gatewayNode = node;
 }
 
 Ptr<OFSwitch13NetDevice>

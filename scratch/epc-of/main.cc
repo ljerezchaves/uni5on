@@ -20,9 +20,12 @@
 
 #include <ns3/core-module.h>
 #include <ns3/config-store-module.h>
-#include "simulation-scenario.h"
 #include <iomanip>
 #include <iostream>
+#include "lte-hex-grid-network.h"
+#include "ring-network.h"
+#include "traffic-helper.h"
+#include "stats-calculator.h"
 
 using namespace ns3;
 
@@ -48,6 +51,7 @@ int
 main (int argc, char *argv[])
 {
   bool        verbose  = false;
+  bool        pcap     = false;
   uint32_t    progress = 0;
   uint32_t    simTime  = 250;
   std::string prefix   = "";
@@ -60,6 +64,7 @@ main (int argc, char *argv[])
   // Parse command line arguments
   CommandLine cmd;
   cmd.AddValue ("verbose",  "Enable verbose output.", verbose);
+  cmd.AddValue ("pcap",     "Enable pcap output.", pcap);
   cmd.AddValue ("progress", "Simulation progress interval [s].", progress);
   cmd.AddValue ("simTime",  "Simulation stop time [s].", simTime);
   cmd.AddValue ("prefix",   "Common prefix for filenames.", prefix);
@@ -67,7 +72,7 @@ main (int argc, char *argv[])
   cmd.Parse (argc, argv);
 
   // Update input and output prefixes from command line prefix parameter.
-  ostringstream inputPrefix, outputPrefix;
+  std::ostringstream inputPrefix, outputPrefix;
   inputPrefix << prefix;
   if (prefix != "")
     {
@@ -100,10 +105,30 @@ main (int argc, char *argv[])
   PrintCurrentTime (progress);
   EnableVerbose (verbose);
 
-  // Create the scenario.
+  // Create the simulation scenario.
+  // The following objects must be created in this order:
+  // * The Internet and the OpenFlow EPC network
+  // * The LTE radio access network
+  // * Applications and traffic managers
+  // * EPC stats calculator
   NS_LOG_INFO ("Creating simulation scenario...");
-  Ptr<SimulationScenario> scenario = CreateObject<SimulationScenario> ();
-  scenario->BuildRingTopology ();
+  
+  Ptr<RingNetwork> ofNetwork = CreateObject<RingNetwork> ();
+
+  Ptr<LteHexGridNetwork> lteNetwork = CreateObject<LteHexGridNetwork> ();
+  Ptr<LteHelper> lteHelper = lteNetwork->CreateTopology (ofNetwork->GetEpcHelper ());
+
+  Ptr<TrafficHelper> tfcHelper = CreateObject<TrafficHelper> (ofNetwork->GetServerNode (), lteHelper, ofNetwork->GetControllerApp ());
+  tfcHelper->Install (lteNetwork->GetUeNodes (), lteNetwork->GetUeDevices ());
+
+  Ptr<EpcS1uStatsCalculator> epcS1uStats = CreateObject<EpcS1uStatsCalculator> ();
+  epcS1uStats->SetController (ofNetwork->GetControllerApp ());
+
+  // If necessary, enable pcap output
+  if (pcap)
+    {
+      ofNetwork->EnablePcap (outputPrefix.str ());
+    }
 
   // Run the simulation.
   NS_LOG_INFO ("Simulating...");

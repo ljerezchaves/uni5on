@@ -21,8 +21,8 @@
 #ifndef RING_NETWORK_H
 #define RING_NETWORK_H
 
+#include <ns3/csma-module.h>
 #include "openflow-epc-network.h"
-#include "ring-controller.h"
 
 namespace ns3 {
 

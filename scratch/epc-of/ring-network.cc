@@ -19,6 +19,7 @@
  */
 
 #include "ring-network.h"
+#include "ring-controller.h"
 #include "connection-info.h"
 
 namespace ns3 {

@@ -31,7 +31,7 @@ InternetNetwork::InternetNetwork ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Creating the queue stats calculator for the Internet network
+  // Creating the queue stats calculator
   ObjectFactory statsFactory;
   statsFactory.SetTypeId (LinkQueuesStatsCalculator::GetTypeId ());
   statsFactory.Set ("LnkStatsFilename", StringValue ("web_stats.txt"));
@@ -50,16 +50,19 @@ InternetNetwork::GetTypeId (void)
     .SetParent<Object> ()
     .AddAttribute ("LinkDataRate",
                    "The data rate to be used for the Internet link",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("10Gb/s")),
                    MakeDataRateAccessor (&InternetNetwork::m_linkDataRate),
                    MakeDataRateChecker ())
     .AddAttribute ("LinkDelay",
                    "The delay to be used for the Internet link",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    TimeValue (Seconds (0)),
                    MakeTimeAccessor (&InternetNetwork::m_linkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("LinkMtu",
                    "The MTU of the Internet link",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (1492),  // PPPoE MTU
                    MakeUintegerAccessor (&InternetNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
@@ -124,7 +127,7 @@ void
 InternetNetwork::EnablePcap (std::string prefix)
 {
   NS_LOG_FUNCTION (this);
-  m_csmaHelper.EnablePcap (prefix + "internet", m_webDevices);
+  m_csmaHelper.EnablePcap (prefix, m_webDevices);
 }
 
 void
