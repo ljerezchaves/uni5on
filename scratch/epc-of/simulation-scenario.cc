@@ -75,30 +75,17 @@ SimulationScenario::BuildRingTopology ()
 {
   NS_LOG_FUNCTION (this);
 
-  //
-  // Observe the following order when creating the simulation scenario objects.
-  // Don't change object names or the trace connections won't work.
-  // FIXME
-  m_epcHelper = CreateObject<OpenFlowEpcHelper> ();
-
-  // Create OpenFlowEpcNetwork object.
+  // Create the OpenFlow network
   m_opfNetwork = CreateObject<RingNetwork> ();
-
-  // 6) Set up OpenFlowEpcHelper S1U and X2 connection callbacks (network
-  // topology must be already created).
-  m_epcHelper->SetS1uConnectCallback (
-    MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, m_opfNetwork));
-  m_epcHelper->SetX2ConnectCallback (
-    MakeCallback (&OpenFlowEpcNetwork::AttachToX2, m_opfNetwork));
 
   // 7) Create LTE radio access network and build topology
   m_lteNetwork = CreateObject<LteHexGridNetwork> ();
-  m_lteHelper = m_lteNetwork->CreateTopology (m_epcHelper);
+  m_lteHelper = m_lteNetwork->CreateTopology (m_opfNetwork->GetEpcHelper ());
 
   // 8) Create Internet network and build topology
   m_webNetwork = CreateObject<InternetNetwork> ();
   Names::Add ("InternetNetwork", m_webNetwork);
-  m_webHost = m_webNetwork->CreateTopology (m_epcHelper->GetPgwNode ());
+  m_webHost = m_webNetwork->CreateTopology (m_opfNetwork->GetGatewayNode ());
 
   // 9) Install applications and traffic manager
   Ptr<TrafficHelper> tfcHelper =
@@ -125,11 +112,8 @@ SimulationScenario::EnableTraces ()
       GlobalValue::GetValueByName ("OutputPrefix", stringValue);
       std::string prefix = stringValue.Get ();
 
-      m_webNetwork->EnablePcap (prefix + "internet");
-      m_opfNetwork->EnableOpenFlowPcap (prefix + "ofchannel");
-      m_opfNetwork->EnableDatapathPcap (prefix + "ofnetwork", true);
-      m_epcHelper->EnablePcapS1u (prefix + "lte-epc");
-      m_epcHelper->EnablePcapX2 (prefix + "lte-epc");
+      m_webNetwork->EnablePcap (prefix);
+      m_opfNetwork->EnablePcap (prefix);
     }
 }
 

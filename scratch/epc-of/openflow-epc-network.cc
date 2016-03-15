@@ -32,9 +32,26 @@ OpenFlowEpcNetwork::OpenFlowEpcNetwork ()
     m_gatewayNode (0),
     m_ofCtrlNode (0),
     m_ofCtrlApp (0),
+    m_ofEpcHelper (0),
     m_networkStats (0)
 {
   NS_LOG_FUNCTION (this);
+
+  // Let's use point to point connections for OpenFlow channel
+  m_ofSwitchHelper = CreateObject<OFSwitch13Helper> ();
+  m_ofSwitchHelper->SetAttribute ("ChannelType",
+                                  EnumValue (OFSwitch13Helper::DEDICATEDP2P));
+
+  // Creating the OpenFlow EPC helper (will create the SgwPgw node and app).
+  m_ofEpcHelper = CreateObject<OpenFlowEpcHelper> ();
+
+  // Creating stats calculators
+  ObjectFactory statsFactory;
+  statsFactory.SetTypeId (LinkQueuesStatsCalculator::GetTypeId ());
+  statsFactory.Set ("LnkStatsFilename", StringValue ("pgw_stats.txt"));
+  m_gatewayStats = statsFactory.Create<LinkQueuesStatsCalculator> ();
+  
+  m_networkStats = CreateObject<NetworkStatsCalculator> ();
 }
 
 OpenFlowEpcNetwork::~OpenFlowEpcNetwork ()
@@ -72,9 +89,16 @@ OpenFlowEpcNetwork::GetTypeId (void)
 }
 
 void
-OpenFlowEpcNetwork::EnableOpenFlowPcap (std::string prefix)
+OpenFlowEpcNetwork::EnablePcap (std::string prefix, bool promiscuous)
 {
-  m_ofSwitchHelper->EnableOpenFlowPcap (prefix);
+  NS_LOG_FUNCTION (this << prefix << promiscuous);
+
+  // Enable pcap on OpenFlow channel
+  m_ofSwitchHelper->EnableOpenFlowPcap (prefix + "ofchannel");
+
+  // Enable pcap on LTE EPC interfaces
+  m_ofEpcHelper->EnablePcapS1u (prefix + "lte-epc");
+  m_ofEpcHelper->EnablePcapX2 (prefix + "lte-epc");
 }
 
 void
@@ -90,10 +114,29 @@ OpenFlowEpcNetwork::GetNSwitches (void) const
   return m_ofSwitches.GetN ();
 }
 
+Ptr<Node>
+OpenFlowEpcNetwork::GetGatewayNode ()
+{
+  NS_ASSERT_MSG (m_ofEpcHelper, "Invalid EPC helper.");
+  return m_ofEpcHelper->GetPgwNode ();
+}
+
+Ptr<Node>
+OpenFlowEpcNetwork::GetControllerNode ()
+{
+  return m_ofCtrlNode;
+}
+
 Ptr<OpenFlowEpcController>
 OpenFlowEpcNetwork::GetControllerApp ()
 {
   return m_ofCtrlApp;
+}
+
+Ptr<OpenFlowEpcHelper>
+OpenFlowEpcNetwork::GetEpcHelper ()
+{
+  return m_ofEpcHelper;
 }
 
 void
@@ -105,6 +148,7 @@ OpenFlowEpcNetwork::DoDispose ()
   m_ofSwitchHelper = 0;
   m_gatewayStats = 0;
   m_gatewayNode = 0;
+  m_ofEpcHelper = 0;
   m_networkStats = 0;
   m_nodeSwitchMap.clear ();
   Object::DoDispose ();
@@ -115,25 +159,29 @@ OpenFlowEpcNetwork::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // For the OpenFlow control channel, let's use point to point connections
-  // between controller and switches.
-  m_ofSwitchHelper = CreateObject<OFSwitch13Helper> ();
-  m_ofSwitchHelper->SetAttribute ("ChannelType",
-                                  EnumValue (OFSwitch13Helper::DEDICATEDP2P));
-
-  // Creating the link queue stats calculator for gateway connection
-  ObjectFactory statsFactory;
-  statsFactory.SetTypeId (LinkQueuesStatsCalculator::GetTypeId ());
-  statsFactory.Set ("LnkStatsFilename", StringValue ("pgw_stats.txt"));
-  m_gatewayStats = statsFactory.Create<LinkQueuesStatsCalculator> ();
-
-  // Creating the network stats calculator for this OpenFlow network
-  m_networkStats = CreateObject<NetworkStatsCalculator> ();
+  // Connect the network stats calculator *before* topology creation.
   TraceConnectWithoutContext ("TopologyBuilt", MakeCallback (
     &NetworkStatsCalculator::NotifyTopologyBuilt, m_networkStats));
   TraceConnectWithoutContext ("NewSwitchConnection", MakeCallback (
     &NetworkStatsCalculator::NotifyNewSwitchConnection, m_networkStats));
 
+  // Create the ring network topology
+  CreateTopology ();
+
+  // Connect S1U and X2 connection callbacks *after* topology creation.
+  m_ofEpcHelper->SetS1uConnectCallback (
+    MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, this));
+  m_ofEpcHelper->SetX2ConnectCallback (
+    MakeCallback (&OpenFlowEpcNetwork::AttachToX2, this));
+
+  // Connect the controller to the EpcSgwPgwApplication trace source *after* topology creation.
+  Ptr<EpcSgwPgwApplication> gatewayApp =
+    DynamicCast<EpcSgwPgwApplication> (GetGatewayNode ()->GetApplication (0));
+  NS_ASSERT_MSG (gatewayApp, "SgwPgw application not found.");
+  gatewayApp->TraceConnectWithoutContext ("ContextCreated", MakeCallback (
+    &OpenFlowEpcController::NotifyContextCreated, m_ofCtrlApp));
+
+  // Chain up
   Object::NotifyConstructionCompleted ();
 }
 
@@ -197,18 +245,6 @@ uint16_t
 OpenFlowEpcNetwork::GetGatewaySwitchIdx ()
 {
   return m_gatewaySwitch;
-}
-
-Ptr<Node>
-OpenFlowEpcNetwork::GetGatewayNode ()
-{
-  return m_gatewayNode;
-}
-
-Ptr<Node>
-OpenFlowEpcNetwork::GetControllerNode ()
-{
-  return m_ofCtrlNode;
 }
 
 void

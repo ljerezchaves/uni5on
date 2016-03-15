@@ -47,7 +47,7 @@ public:
   // Inherited from OpenFlowEpcNetwork
   Ptr<NetDevice> AttachToS1u (Ptr<Node> node, uint16_t cellId);
   Ptr<NetDevice> AttachToX2  (Ptr<Node> node);
-  void EnableDatapathPcap (std::string prefix, bool promiscuous = false);
+  void EnablePcap (std::string prefix, bool promiscuous = false);
 
 protected:
   /** Destructor implementation */

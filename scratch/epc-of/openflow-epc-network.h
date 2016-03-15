@@ -76,18 +76,11 @@ public:
   virtual Ptr<NetDevice> AttachToX2 (Ptr<Node> node) = 0;
 
   /**
-   * Enable pcap on switch data ports.
+   * Enable pcap on LTE EPC network, and OpenFlow control and user planes.
    * \param prefix The file prefix.
    * \param promiscuous If true, enable promisc trace.
    */
-  virtual void EnableDatapathPcap (std::string prefix,
-                                   bool promiscuous = false) = 0;
-
-  /**
-   * Enable pcap on OpenFlow channel.
-   * \param prefix The file prefix.
-   */
-  virtual void EnableOpenFlowPcap (std::string prefix);
+  virtual void EnablePcap (std::string prefix, bool promiscuous = false);
 
   /**
    * Set an attribute for ns3::OFSwitch13NetDevice
@@ -102,10 +95,28 @@ public:
   uint16_t GetNSwitches (void) const;
 
   /**
+   * Retrieve the gateway node pointer.
+   * \return The gateway node pointer.
+   */
+  Ptr<Node> GetGatewayNode ();
+
+  /**
+   * Retrieve the controller node pointer.
+   * \return The OpenFlow controller node.
+   */
+  Ptr<Node> GetControllerNode ();
+
+  /**
    * Retrieve the controller application pointer.
    * \return The OpenFlow controller application.
    */
   Ptr<OpenFlowEpcController> GetControllerApp ();
+
+  /**
+   * Retrieve the OpenFlow EPC helper used for LTE configuration.
+   * \return The OpenFlow EPC helper.
+   */
+  Ptr<OpenFlowEpcHelper> GetEpcHelper ();
 
   /**
    * BoolTracedCallback signature for topology creation completed.
@@ -181,18 +192,6 @@ protected:
   uint16_t GetGatewaySwitchIdx ();
 
   /**
-   * Retrieve the gateway node pointer.
-   * \return The gateway node pointer.
-   */
-  Ptr<Node> GetGatewayNode ();
-
-  /**
-   * Retrieve the controller node pointer.
-   * \return The OpenFlow controller node.
-   */
-  Ptr<Node> GetControllerNode ();
-
-  /**
    * Install the OpenFlow controller for this network.
    * \param controller The controller application.
    */
@@ -218,6 +217,7 @@ private:
   Ptr<Node>                       m_gatewayNode;    //!< Gateway node pointer.
   Ptr<Node>                       m_ofCtrlNode;     //!< Controller node.
   Ptr<OpenFlowEpcController>      m_ofCtrlApp;      //!< Controller app.
+  Ptr<OpenFlowEpcHelper>          m_ofEpcHelper;    //!< Helper for LTE EPC.
   Ptr<NetworkStatsCalculator>     m_networkStats;   //!< Network statistics.
 
   /** Map saving Node / Switch indexes. */

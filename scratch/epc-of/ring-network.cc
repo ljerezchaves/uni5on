@@ -29,6 +29,15 @@ NS_OBJECT_ENSURE_REGISTERED (RingNetwork);
 RingNetwork::RingNetwork ()
 {
   NS_LOG_FUNCTION (this);
+
+  // Configuring address helpers
+  // Since we are using the OpenFlow network for S1-U links,
+  // we use a /24 subnet which can hold up to 254 eNBs addresses on same subnet
+  m_s1uAddrHelper.SetBase ("10.0.0.0", "255.255.255.0");
+
+  // We are also using the OpenFlow network for all X2 links,
+  // but we still we use a /30 subnet which can hold exactly two addresses
+  m_x2AddrHelper.SetBase ("12.0.0.0", "255.255.255.252");
 }
 
 RingNetwork::~RingNetwork ()
@@ -96,16 +105,6 @@ void
 RingNetwork::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
-  OpenFlowEpcNetwork::NotifyConstructionCompleted ();
-
-  // Configuring address helpers
-  // Since we are using the OpenFlow network for S1-U links,
-  // we use a /24 subnet which can hold up to 254 eNBs addresses on same subnet
-  m_s1uAddrHelper.SetBase ("10.0.0.0", "255.255.255.0");
-
-  // We are also using the OpenFlow network for all X2 links,
-  // but we still we use a /30 subnet which can hold exactly two addresses
-  m_x2AddrHelper.SetBase ("12.0.0.0", "255.255.255.252");
 
   // Configuring csma link helper for connection between switches
   m_swHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
@@ -116,9 +115,9 @@ RingNetwork::NotifyConstructionCompleted ()
   m_gwHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
   m_gwHelper.SetChannelAttribute ("DataRate", DataRateValue (m_gwLinkRate));
   m_gwHelper.SetChannelAttribute ("Delay", TimeValue (m_gwLinkDelay));
-
-  // Create the ring topology
-  CreateTopology ();
+  
+  // Chain up (the topology creation will be triggered by base class)
+  OpenFlowEpcNetwork::NotifyConstructionCompleted ();
 }
 
 void
@@ -264,7 +263,7 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   // Trace source notifying a new device attached to network
   m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
 
-  // Only for the gateway, let's set queues for link statistics.
+  // Only for the gateway link, let's set queues for link statistics.
   if (counter == 0)
     {
       m_gatewayStats->SetQueues (nodeDev->GetQueue (), portDev->GetQueue ());
@@ -314,9 +313,15 @@ RingNetwork::AttachToX2 (Ptr<Node> node)
 }
 
 void
-RingNetwork::EnableDatapathPcap (std::string prefix, bool promiscuous)
+RingNetwork::EnablePcap (std::string prefix, bool promiscuous)
 {
-  m_swHelper.EnablePcap (prefix, m_ofSwitches, promiscuous);
+  NS_LOG_FUNCTION (this << prefix << promiscuous);
+  
+  // Enable pcap on switch datapath
+  m_swHelper.EnablePcap (prefix + "ofnetwork", m_ofSwitches, true);
+  
+  // Chain up
+  OpenFlowEpcNetwork::EnablePcap (prefix, promiscuous);
 }
 
 };  // namespace ns3
