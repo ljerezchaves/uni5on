@@ -55,12 +55,11 @@ public:
   Ptr<Node> CreateTopology (Ptr<Node> pgw);
 
   /**
-   * Get the pointer to the Internet server node created during topology
-   * construction.
+   * Get the pointer to the Internet server node created by the topology.
    * \return The pointer to the server node.
    */
   Ptr<Node> GetServerNode ();
-  
+
   /**
    * Enable pcap on Internet links.
    * \param prefix Filename prefix to use for pcap files.

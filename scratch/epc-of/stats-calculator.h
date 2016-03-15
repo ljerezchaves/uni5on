@@ -38,7 +38,7 @@ class OpenFlowEpcController;
 
 /**
  * \ingroup epcof
- * This class monitors OpenFlow EPC controller statistics. 
+ * This class monitors OpenFlow EPC controller statistics.
  */
 class ControllerStatsCalculator : public Object
 {

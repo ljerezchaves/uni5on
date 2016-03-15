@@ -179,7 +179,7 @@ LteHexGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper)
       enbName << "enb" << i;
       Names::Add (enbName.str (), m_enbNodes.Get (i));
     }
-  
+
   m_ueNodes.Create (m_nUes);
   for (uint32_t i = 0; i < m_nUes; i++)
     {
@@ -352,7 +352,7 @@ LteHexGridNetwork::IdentifyEnbsCoverageArea ()
         }
     }
 
-  // Return the coverage rectangle area 
+  // Return the coverage rectangle area
   return Rectangle (round (xMin - m_enbMargin), round (xMax + m_enbMargin),
                     round (yMin - m_enbMargin), round (yMax + m_enbMargin));
 }
@@ -411,7 +411,7 @@ LteHexGridNetwork::PrintBuildingListToFile (std::string filename)
     {
       index++;
       Box box = (*it)->GetBoundaries ();
-      
+
       *fileWrapper->GetStream ()
       << "set object " << index
       << " rect from " << box.xMin  << "," << box.yMin
@@ -434,7 +434,7 @@ LteHexGridNetwork::PrintUeListToFile (std::string filename)
       Ptr<LteUeNetDevice> ueDev = DynamicCast<LteUeNetDevice> (*it);
       Ptr<Node> node = ueDev->GetNode ();
       Vector pos = node->GetObject<MobilityModel> ()->GetPosition ();
-      
+
       *fileWrapper->GetStream ()
       << "set label \"" << ueDev->GetImsi ()
       << "\" at "<< pos.x << "," << pos.y
@@ -457,7 +457,7 @@ LteHexGridNetwork::PrintEnbListToFile (std::string filename)
       Ptr<LteEnbNetDevice> enbDev = DynamicCast<LteEnbNetDevice> (*it);
       Ptr<Node> node = enbDev->GetNode ();
       Vector pos = node->GetObject<MobilityModel> ()->GetPosition ();
-      
+
       *fileWrapper->GetStream ()
       << "set label \"" << enbDev->GetCellId ()
       << "\" at "<< pos.x << "," << pos.y

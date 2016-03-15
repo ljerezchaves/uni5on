@@ -94,7 +94,7 @@ ControllerStatsCalculator::DumpStatistics (Time next)
   << std::endl;
 
   ResetCounters ();
-  Simulator::Schedule (next, 
+  Simulator::Schedule (next,
     &ControllerStatsCalculator::DumpStatistics, this, next);
 }
 
@@ -213,7 +213,7 @@ ControllerStatsCalculator::NotifyConstructionCompleted (void)
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
   Time next = timeValue.Get ();
-  Simulator::Schedule (next, 
+  Simulator::Schedule (next,
     &ControllerStatsCalculator::DumpStatistics, this, next);
 
   // Chain up
@@ -332,7 +332,7 @@ NetworkStatsCalculator::DumpStatistics (Time next)
   << Simulator::Now ().GetSeconds ();
 
   *m_swtWrapper->GetStream ()
-  << left << setw (11) 
+  << left << setw (11)
   << Simulator::Now ().GetSeconds ()
   << " " << right;
 
@@ -397,7 +397,7 @@ NetworkStatsCalculator::DumpStatistics (Time next)
   *m_swtWrapper->GetStream () << std::endl;
 
   ResetCounters ();
-  Simulator::Schedule (next, 
+  Simulator::Schedule (next,
     &NetworkStatsCalculator::DumpStatistics, this, next);
 }
 
@@ -574,7 +574,7 @@ void
 LinkQueuesStatsCalculator::SetQueues (Ptr<Queue> downQueue, Ptr<Queue> upQueue)
 {
   NS_LOG_FUNCTION (this << downQueue << upQueue);
-  
+
   m_downQueue = downQueue;
   m_upQueue = upQueue;
   ResetCounters ();
@@ -602,7 +602,7 @@ LinkQueuesStatsCalculator::DumpStatistics (Time next)
   << std::endl;
 
   ResetCounters ();
-  Simulator::Schedule (next, 
+  Simulator::Schedule (next,
     &LinkQueuesStatsCalculator::DumpStatistics, this, next);
 }
 
@@ -619,7 +619,7 @@ void
 LinkQueuesStatsCalculator::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
-  
+
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
@@ -648,7 +648,7 @@ LinkQueuesStatsCalculator::NotifyConstructionCompleted (void)
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
   Time next = timeValue.Get ();
-  Simulator::Schedule (next, 
+  Simulator::Schedule (next,
     &LinkQueuesStatsCalculator::DumpStatistics, this, next);
 
   // Chain up
@@ -763,7 +763,7 @@ void
 EpcS1uStatsCalculator::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
-  
+
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();

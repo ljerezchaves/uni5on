@@ -55,7 +55,7 @@ OpenFlowEpcNetwork::OpenFlowEpcNetwork ()
   statsFactory.SetTypeId (LinkQueuesStatsCalculator::GetTypeId ());
   statsFactory.Set ("LnkStatsFilename", StringValue ("pgw_stats.txt"));
   m_gatewayStats = statsFactory.Create<LinkQueuesStatsCalculator> ();
-  
+
   m_networkStats = CreateObject<NetworkStatsCalculator> ();
 }
 

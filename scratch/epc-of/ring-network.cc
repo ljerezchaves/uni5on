@@ -116,7 +116,7 @@ RingNetwork::NotifyConstructionCompleted ()
   m_gwHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
   m_gwHelper.SetChannelAttribute ("DataRate", DataRateValue (m_gwLinkRate));
   m_gwHelper.SetChannelAttribute ("Delay", TimeValue (m_gwLinkDelay));
-  
+
   // Chain up (the topology creation will be triggered by base class)
   OpenFlowEpcNetwork::NotifyConstructionCompleted ();
 }
@@ -317,10 +317,10 @@ void
 RingNetwork::EnablePcap (std::string prefix, bool promiscuous)
 {
   NS_LOG_FUNCTION (this << prefix << promiscuous);
-  
+
   // Enable pcap on switch datapath
   m_swHelper.EnablePcap (prefix + "ofnetwork", m_ofSwitches, true);
-  
+
   // Chain up
   OpenFlowEpcNetwork::EnablePcap (prefix, promiscuous);
 }

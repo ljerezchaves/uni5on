@@ -112,7 +112,7 @@ main (int argc, char *argv[])
   // * Applications and traffic managers
   // * EPC stats calculator
   NS_LOG_INFO ("Creating simulation scenario...");
-  
+
   Ptr<RingNetwork> ofNetwork = CreateObject<RingNetwork> ();
 
   Ptr<LteHexGridNetwork> lteNetwork = CreateObject<LteHexGridNetwork> ();

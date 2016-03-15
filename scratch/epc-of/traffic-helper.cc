@@ -504,7 +504,7 @@ TrafficHelper::EnableFastTraffic (bool fastTraffic)
 
   if (fastTraffic)
     {
-      SetManagerAttribute ("PoissonInterArrival", 
+      SetManagerAttribute ("PoissonInterArrival",
           StringValue ("ns3::ExponentialRandomVariable[Mean=20.0]"));
     }
 }
