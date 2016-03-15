@@ -26,9 +26,11 @@
 #include <ns3/network-module.h>
 #include <ns3/epc-apps-module.h>
 #include <ns3/internet-module.h>
-#include "openflow-epc-controller.h"
+#include "routing-info.h"
 
 namespace ns3 {
+
+class OpenFlowEpcController;
 
 /**
  * \ingroup epcof

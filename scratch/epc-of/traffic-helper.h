@@ -26,9 +26,13 @@
 #include <ns3/network-module.h>
 #include <ns3/epc-apps-module.h>
 #include <ns3/internet-module.h>
-#include "traffic-manager.h"
 
 namespace ns3 {
+
+class TrafficManager;
+class OpenFlowEpcController;
+class LteHexGridNetwork;
+class OpenFlowEpcNetwork;
 
 /**
  * \ingroup epcof
@@ -41,12 +45,11 @@ class TrafficHelper : public Object
 public:
   /**
    * Complete constructor.
-   * \param server The server node.
-   * \param helper The helper pointer.
-   * \param controller The Epc controller.
+   * \param ofNetwork The OpenFlow network.
+   * \param lteNetwork The LTE network.
    */
-  TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
-                 Ptr<OpenFlowEpcController> controller);
+  TrafficHelper (Ptr<OpenFlowEpcNetwork> ofNetwork,
+                 Ptr<LteHexGridNetwork> lteNetwork);
 
   TrafficHelper ();           //!< Default constructor
   virtual ~TrafficHelper ();  //!< Dummy destructor, see DoDipose
@@ -105,7 +108,16 @@ protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
+  // Inherited from ObjectBase
+  void NotifyConstructionCompleted (void);
+  
 private:
+  /**
+   * Retrieve the LTE helper used by create the LTE network.
+   * \return The LTE helper pointer.
+   */
+  Ptr<LteHelper> GetLteHelper ();
+
   /**
    * UDP bidirectional VoIP traffic over dedicated GBR EPS bearer (QCI 1).
    * This QCI is typically associated with conversational voice. This VoIP
@@ -159,7 +171,9 @@ private:
 
   ObjectFactory       m_managerFactory; //!< Traffic manager factory
 
-  Ptr<LteHelper>      m_lteHelper;      //!< LteHelper pointer
+  Ptr<OpenFlowEpcNetwork> m_ofNetwork;  //!< The EPC + Internet network
+  Ptr<LteHexGridNetwork>  m_lteNetwork; //!< The LTE network
+  
   Ptr<Node>           m_webNode;        //!< Server node
   Ipv4Address         m_webAddr;        //!< Server address
   Ipv4Mask            m_webMask;        //!< Server address mask

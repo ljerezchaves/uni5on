@@ -23,9 +23,10 @@
 #include <iomanip>
 #include <iostream>
 #include "lte-hex-grid-network.h"
+#include "openflow-epc-controller.h"
 #include "ring-network.h"
-#include "traffic-helper.h"
 #include "stats-calculator.h"
+#include "traffic-helper.h"
 
 using namespace ns3;
 
@@ -114,12 +115,11 @@ main (int argc, char *argv[])
   NS_LOG_INFO ("Creating simulation scenario...");
 
   Ptr<RingNetwork> ofNetwork = CreateObject<RingNetwork> ();
-
+  
   Ptr<LteHexGridNetwork> lteNetwork = CreateObject<LteHexGridNetwork> ();
   Ptr<LteHelper> lteHelper = lteNetwork->CreateTopology (ofNetwork->GetEpcHelper ());
 
-  Ptr<TrafficHelper> tfcHelper = CreateObject<TrafficHelper> (ofNetwork->GetServerNode (), lteHelper, ofNetwork->GetControllerApp ());
-  tfcHelper->Install (lteNetwork->GetUeNodes (), lteNetwork->GetUeDevices ());
+  CreateObject<TrafficHelper> (ofNetwork, lteNetwork);
 
   Ptr<EpcS1uStatsCalculator> epcS1uStats = CreateObject<EpcS1uStatsCalculator> ();
   epcS1uStats->SetController (ofNetwork->GetControllerApp ());
@@ -294,7 +294,6 @@ EnableVerbose (bool enable)
   if (enable)
     {
       LogComponentEnable ("Main", LOG_INFO);
-      LogComponentEnable ("SimulationScenario", LOG_LEVEL_INFO);
       LogComponentEnable ("StatsCalculator", LOG_LEVEL_WARN);
 
       LogComponentEnable ("OFSwitch13NetDevice", LOG_LEVEL_WARN);

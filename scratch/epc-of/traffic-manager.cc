@@ -19,6 +19,7 @@
  */
 
 #include "traffic-manager.h"
+#include "openflow-epc-controller.h"
 
 namespace ns3 {
 
@@ -44,6 +45,7 @@ TrafficManager::GetTypeId (void)
     .AddConstructor<TrafficManager> ()
     .AddAttribute ("Controller",
                    "The OpenFlow EPC controller.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&TrafficManager::m_controller),
                    MakePointerChecker<OpenFlowEpcController> ())

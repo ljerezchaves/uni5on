@@ -19,7 +19,10 @@
  */
 
 #include "traffic-helper.h"
-#include "simulation-scenario.h"
+#include "traffic-manager.h"
+#include "lte-hex-grid-network.h"
+#include "openflow-epc-network.h"
+#include "openflow-epc-controller.h"
 
 namespace ns3 {
 
@@ -51,21 +54,23 @@ const uint64_t TrafficHelper::m_mbrBitRate [] = {
 
 
 // ------------------------------------------------------------------------ //
-TrafficHelper::TrafficHelper (Ptr<Node> server, Ptr<LteHelper> helper,
-                              Ptr<OpenFlowEpcController> controller)
-  : m_lteHelper (helper),
-    m_webNode (server)
+TrafficHelper::TrafficHelper (Ptr<OpenFlowEpcNetwork> ofNetwork,
+                              Ptr<LteHexGridNetwork> lteNetwork)
+  : m_ofNetwork (ofNetwork),
+    m_lteNetwork (lteNetwork),
+    m_webNode (ofNetwork->GetServerNode ())
 {
   NS_LOG_FUNCTION (this);
 
   // Configuring server address and mask
-  Ptr<Ipv4> serverIpv4 = server->GetObject<Ipv4> ();
+  Ptr<Ipv4> serverIpv4 = m_webNode->GetObject<Ipv4> ();
   m_webAddr = serverIpv4->GetAddress (1,0).GetLocal ();
   m_webMask = serverIpv4->GetAddress (1,0).GetMask ();
 
   // Configuring the traffic manager object factory
   m_managerFactory.SetTypeId (TrafficManager::GetTypeId ());
-  SetManagerAttribute ("Controller", PointerValue (controller));
+  SetManagerAttribute ("Controller",
+                       PointerValue (ofNetwork->GetControllerApp ()));
 
   // Random video selection
   m_videoRng = CreateObject<UniformRandomVariable> ();
@@ -247,12 +252,31 @@ TrafficHelper::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
+  m_ofNetwork = 0;
+  m_lteNetwork = 0;
   m_webNode = 0;
-  m_lteHelper = 0;
   m_ueNode = 0;
   m_ueDev = 0;
   m_ueManager = 0;
   m_videoRng = 0;
+}
+
+void
+TrafficHelper::NotifyConstructionCompleted ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // Install the applications
+  Install (m_lteNetwork->GetUeNodes (), m_lteNetwork->GetUeDevices ());
+
+  // Chain up
+  Object::NotifyConstructionCompleted ();
+}
+
+Ptr<LteHelper>
+TrafficHelper::GetLteHelper ()
+{
+  return m_lteNetwork->GetLteHelper ();
 }
 
 void
@@ -308,7 +332,7 @@ TrafficHelper::InstallGbrVoip ()
   m_ueManager->AddEpcApplication (cApp);
 
   // Activate dedicated bearer
-  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+  GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
 void
@@ -357,7 +381,7 @@ TrafficHelper::InstallGbrLiveVideoStreaming ()
   m_ueManager->AddEpcApplication (cApp);
 
   // Activate dedicated bearer
-  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+  GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
 void
@@ -404,7 +428,7 @@ TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
   m_ueManager->AddEpcApplication (cApp);
 
   // Activate dedicated bearer
-  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+  GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
 void
@@ -451,7 +475,7 @@ TrafficHelper::InstallNonGbrLiveVideoStreaming ()
   m_ueManager->AddEpcApplication (cApp);
 
   // Activate dedicated bearer
-  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+  GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
 void
@@ -494,7 +518,7 @@ TrafficHelper::InstallNonGbrHttp ()
   m_ueManager->AddEpcApplication (cApp);
 
   // Activate dedicated bearer
-  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+  GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
 void
