@@ -159,6 +159,7 @@ RingNetwork::CreateTopology ()
       pair.Add (nextNode);
       NetDeviceContainer devs = m_swHelper.Install (pair);
 
+      // Setting interface names for pacp filename
       Names::Add (Names::FindName (currNode) + "+" +
                   Names::FindName (nextNode), devs.Get (0));
       Names::Add (Names::FindName (nextNode) + "+" +
@@ -263,7 +264,7 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   // Trace source notifying a new device attached to network
   m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
 
-  // Only for the gateway link, let's set specific names for queues.
+  // Only for the gateway, let's set queues for link statistics.
   if (counter == 0)
     {
       m_gatewayStats->SetQueues (nodeDev->GetQueue (), portDev->GetQueue ());
