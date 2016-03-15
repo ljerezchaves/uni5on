@@ -19,6 +19,7 @@
  */
 
 #include "internet-network.h"
+#include "stats-calculator.h"
 
 namespace ns3 {
 
@@ -29,6 +30,12 @@ InternetNetwork::InternetNetwork ()
   : m_internetStats (0)
 {
   NS_LOG_FUNCTION (this);
+
+  // Creating the queue stats calculator for the Internet network
+  ObjectFactory statsFactory;
+  statsFactory.SetTypeId (LinkQueuesStatsCalculator::GetTypeId ());
+  statsFactory.Set ("LnkStatsFilename", StringValue ("web_stats.txt"));
+  m_internetStats = statsFactory.Create<LinkQueuesStatsCalculator> ();
 }
 
 InternetNetwork::~InternetNetwork ()
@@ -56,11 +63,6 @@ InternetNetwork::GetTypeId (void)
                    UintegerValue (1492),  // PPPoE MTU
                    MakeUintegerAccessor (&InternetNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("UseCsmaLink",
-                   "If true, use CSMA link instead of P2P",
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&InternetNetwork::m_csmaLink),
-                   MakeBooleanChecker ())
   ;
   return tid;
 }
@@ -71,10 +73,6 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   NS_LOG_FUNCTION (this << pgw);
 
   // Configuring helpers
-  m_p2pHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
-  m_p2pHelper.SetDeviceAttribute ("DataRate", DataRateValue (m_linkDataRate));
-  m_p2pHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
-
   m_csmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
   m_csmaHelper.SetChannelAttribute ("DataRate",
                                     DataRateValue (m_linkDataRate));
@@ -83,7 +81,7 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   // Creating a single web node and connecting it to the EPC pgw over a
   // PointToPoint link.
   Ptr<Node> web = CreateObject<Node> ();
-  Names::Add (InternetNetwork::GetServerName (), web);
+  Names::Add ("srv", web);
 
   InternetStackHelper internet;
   internet.Install (web);
@@ -91,40 +89,21 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   m_webNodes.Add (pgw);
   m_webNodes.Add (web);
 
-  if (m_csmaLink)
-    {
-      m_webDevices = m_csmaHelper.Install (m_webNodes);
-      Ptr<CsmaNetDevice> webDev, pgwDev;
-      pgwDev = DynamicCast<CsmaNetDevice> (m_webDevices.Get (0));
-      webDev = DynamicCast<CsmaNetDevice> (m_webDevices.Get (1));
+  m_webDevices = m_csmaHelper.Install (m_webNodes);
+  Ptr<CsmaNetDevice> webDev, pgwDev;
+  pgwDev = DynamicCast<CsmaNetDevice> (m_webDevices.Get (0));
+  webDev = DynamicCast<CsmaNetDevice> (m_webDevices.Get (1));
 
-      Names::Add (Names::FindName (pgw) + "+" + Names::FindName (web), pgwDev);
-      Names::Add (Names::FindName (web) + "+" + Names::FindName (pgw), webDev);
+  Names::Add (Names::FindName (pgw) + "+" + Names::FindName (web), pgwDev);
+  Names::Add (Names::FindName (web) + "+" + Names::FindName (pgw), webDev);
 
-      Names::Add ("InternetNetwork/DownQueue", webDev->GetQueue ());
-      Names::Add ("InternetNetwork/UpQueue", pgwDev->GetQueue ());
-      m_internetStats->SetQueues (webDev->GetQueue (), pgwDev->GetQueue ());
-    }
-  else
-    {
-      m_webDevices = m_p2pHelper.Install (m_webNodes);
-      Ptr<PointToPointNetDevice> webDev, pgwDev;
-      pgwDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (0));
-      webDev = DynamicCast<PointToPointNetDevice> (m_webDevices.Get (1));
-
-      Names::Add (Names::FindName (pgw) + "+" + Names::FindName (web), pgwDev);
-      Names::Add (Names::FindName (web) + "+" + Names::FindName (pgw), webDev);
-
-      Names::Add ("InternetNetwork/DownQueue", webDev->GetQueue ());
-      Names::Add ("InternetNetwork/UpQueue", pgwDev->GetQueue ());
-      m_internetStats->SetQueues (webDev->GetQueue (), pgwDev->GetQueue ());
-    }
+  m_internetStats->SetQueues (webDev->GetQueue (), pgwDev->GetQueue ());
 
   Ipv4AddressHelper ipv4h;
   ipv4h.SetBase ("192.168.0.0", "255.255.255.0");
   ipv4h.Assign (m_webDevices);
 
-  // Defining static routes to the web node
+  // Defining static routes at the web node to the LTE network
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
   Ptr<Ipv4StaticRouting> webHostStaticRouting =
     ipv4RoutingHelper.GetStaticRouting (web->GetObject<Ipv4> ());
@@ -135,30 +114,17 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
   return web;
 }
 
+Ptr<Node>
+InternetNetwork::GetServerNode ()
+{
+  return m_webNodes.Get (1);
+}
+
 void
 InternetNetwork::EnablePcap (std::string prefix)
 {
   NS_LOG_FUNCTION (this);
-  if (m_csmaLink)
-    {
-      m_csmaHelper.EnablePcap (prefix, m_webDevices);
-    }
-  else
-    {
-      m_p2pHelper.EnablePcap (prefix, m_webDevices);
-    }
-}
-
-const std::string
-InternetNetwork::GetServerName ()
-{
-  return "srv";
-}
-
-const std::string
-InternetNetwork::GetSgwPgwName ()
-{
-  return "pgw";
+  m_csmaHelper.EnablePcap (prefix + "internet", m_webDevices);
 }
 
 void
@@ -169,19 +135,4 @@ InternetNetwork::DoDispose ()
   Object::DoDispose ();
 }
 
-void
-InternetNetwork::NotifyConstructionCompleted ()
-{
-  NS_LOG_FUNCTION (this);
-
-  // Creating the queue stats calculator for the Internet network
-  ObjectFactory statsFactory;
-  statsFactory.SetTypeId (LinkQueuesStatsCalculator::GetTypeId ());
-  statsFactory.Set ("LnkStatsFilename", StringValue ("web_stats.txt"));
-  m_internetStats = statsFactory.Create<LinkQueuesStatsCalculator> ();
-
-  Object::NotifyConstructionCompleted ();
-}
-
 };  // namespace ns3
-
