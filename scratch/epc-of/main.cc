@@ -121,8 +121,8 @@ main (int argc, char *argv[])
 
   CreateObject<TrafficHelper> (ofNetwork, lteNetwork);
 
-  Ptr<EpcS1uStatsCalculator> epcS1uStats = CreateObject<EpcS1uStatsCalculator> ();
-  epcS1uStats->SetController (ofNetwork->GetControllerApp ());
+  Ptr<EpcS1uStatsCalculator> epcS1uStats = 
+    CreateObject<EpcS1uStatsCalculator> (ofNetwork->GetControllerApp ());
 
   // If necessary, enable pcap output
   if (pcap)

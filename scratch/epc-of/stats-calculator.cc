@@ -686,7 +686,9 @@ LinkQueuesStatsCalculator::GetUpBitRate (void) const
 
 
 // ------------------------------------------------------------------------ //
-EpcS1uStatsCalculator::EpcS1uStatsCalculator ()
+EpcS1uStatsCalculator::EpcS1uStatsCalculator (
+    Ptr<OpenFlowEpcController> controller)
+  : m_controller (controller)
 {
   NS_LOG_FUNCTION (this);
 
@@ -715,6 +717,11 @@ EpcS1uStatsCalculator::EpcS1uStatsCalculator ()
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::EpcApplication/AppStop",
     MakeCallback (&EpcS1uStatsCalculator::DumpStatistics, this));
+}
+
+EpcS1uStatsCalculator::EpcS1uStatsCalculator ()
+{
+  NS_LOG_FUNCTION (this);
 }
 
 EpcS1uStatsCalculator::~EpcS1uStatsCalculator ()

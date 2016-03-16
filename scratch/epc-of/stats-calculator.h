@@ -262,6 +262,12 @@ private:
 class EpcS1uStatsCalculator : public Object
 {
 public:
+  /**
+   * Complete constructor.
+   * \param controller The OpenFlow EPC controller application.
+   */
+  EpcS1uStatsCalculator (Ptr<OpenFlowEpcController> controller);
+
   EpcS1uStatsCalculator ();  //!< Default constructor
   virtual ~EpcS1uStatsCalculator (); //!< Default destructor
 
