@@ -108,7 +108,7 @@ main (int argc, char *argv[])
 
   // Create the simulation scenario.
   // The following objects must be created in this order:
-  // * The Internet and the OpenFlow EPC network
+  // * The Internet / OpenFlow EPC network
   // * The LTE radio access network
   // * Applications and traffic managers
   // * EPC stats calculator
