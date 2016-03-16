@@ -25,7 +25,8 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("LteHexGridNetwork");
 NS_OBJECT_ENSURE_REGISTERED (LteHexGridNetwork);
 
-LteHexGridNetwork::LteHexGridNetwork ()
+LteHexGridNetwork::LteHexGridNetwork (Ptr<EpcHelper> epcHelper)
+  : m_epcHelper (epcHelper)
 {
   NS_LOG_FUNCTION (this);
 
@@ -60,6 +61,11 @@ LteHexGridNetwork::LteHexGridNetwork ()
                       StringValue (prefix + "dl_tx_phy_lte.txt"));
   Config::SetDefault ("ns3::PhyTxStatsCalculator::UlTxOutputFilename",
                       StringValue (prefix + "ul_tx_phy_lte.txt"));
+}
+
+LteHexGridNetwork::LteHexGridNetwork ()
+{
+  NS_LOG_FUNCTION (this);
 }
 
 LteHexGridNetwork::~LteHexGridNetwork ()
@@ -126,18 +132,6 @@ LteHexGridNetwork::GetTypeId (void)
   return tid;
 }
 
-void
-LteHexGridNetwork::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-
-  m_topoHelper = 0;
-  m_remHelper = 0;
-  m_lteHelper = 0;
-  m_epcHelper = 0;
-  Object::DoDispose ();
-}
-
 NodeContainer
 LteHexGridNetwork::GetEnbNodes ()
 {
@@ -162,14 +156,11 @@ LteHexGridNetwork::GetLteHelper ()
   return m_lteHelper;
 }
 
-Ptr<LteHelper>
-LteHexGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper)
+void
+LteHexGridNetwork::CreateTopology ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Topology with " << m_nSites << " macro eNBs sites.");
-
-  NS_ASSERT (epcHelper != 0);
-  m_epcHelper = epcHelper;
 
   // Creating the nodes for eNBs and UEs and set their names
   m_enbNodes.Create (m_nEnbs);
@@ -305,8 +296,30 @@ LteHexGridNetwork::CreateTopology (Ptr<EpcHelper> epcHelper)
     {
       m_lteHelper->EnableTraces ();
     }
+}
 
-  return m_lteHelper;
+void
+LteHexGridNetwork::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+
+  m_topoHelper = 0;
+  m_remHelper = 0;
+  m_lteHelper = 0;
+  m_epcHelper = 0;
+  Object::DoDispose ();
+}
+
+void
+LteHexGridNetwork::NotifyConstructionCompleted ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // Create LTE topology
+  CreateTopology ();
+  
+  // Chain up
+  Object::NotifyConstructionCompleted ();
 }
 
 void

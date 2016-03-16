@@ -114,14 +114,16 @@ main (int argc, char *argv[])
   // * EPC stats calculator
   NS_LOG_INFO ("Creating simulation scenario...");
 
-  Ptr<RingNetwork> ofNetwork = CreateObject<RingNetwork> ();
-  
-  Ptr<LteHexGridNetwork> lteNetwork = CreateObject<LteHexGridNetwork> ();
-  Ptr<LteHelper> lteHelper = lteNetwork->CreateTopology (ofNetwork->GetEpcHelper ());
+  Ptr<RingNetwork> ofNetwork =
+    CreateObject<RingNetwork> ();
 
-  CreateObject<TrafficHelper> (ofNetwork, lteNetwork);
+  Ptr<LteHexGridNetwork> lteNetwork =
+    CreateObject<LteHexGridNetwork> (ofNetwork->GetEpcHelper ());
 
-  Ptr<EpcS1uStatsCalculator> epcS1uStats = 
+  Ptr<TrafficHelper> trafficHelper =
+    CreateObject<TrafficHelper> (ofNetwork, lteNetwork);
+
+  Ptr<EpcS1uStatsCalculator> epcS1uStats =
     CreateObject<EpcS1uStatsCalculator> (ofNetwork->GetControllerApp ());
 
   // If necessary, enable pcap output

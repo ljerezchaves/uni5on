@@ -39,6 +39,12 @@ namespace ns3 {
 class LteHexGridNetwork : public Object
 {
 public:
+  /**
+   * Complete constructor.
+   * \param epcHelper The OpenFlow EPC helper.
+   */
+  LteHexGridNetwork (Ptr<EpcHelper> epcHelper);
+  
   LteHexGridNetwork ();           //!< Default constructor
   virtual ~LteHexGridNetwork ();  //!< Dummy destructor, see DoDipose
 
@@ -47,9 +53,6 @@ public:
    * \return The object TypeId.
    */
   static TypeId GetTypeId (void);
-
-  /** Destructor implementation */
-  virtual void DoDispose ();
 
   /** \return the eNBs node container */
   NodeContainer GetEnbNodes ();
@@ -63,12 +66,15 @@ public:
   /** \return the LteHelper used to create this LTE network */
   Ptr<LteHelper> GetLteHelper ();
 
-  /**
-   * Creates the LTE radio topology.
-   * \param epcHelper The EpcHelper used to create the LTE EPC core
-   * \return Ptr<LteHelper> The LteHelper used to create this LTE network.
-   */
-  Ptr<LteHelper> CreateTopology (Ptr<EpcHelper> epcHelper);
+  /** Create the LTE radio topology. */
+  void CreateTopology ();
+
+protected:
+  /** Destructor implementation */
+  void DoDispose ();
+
+  // Inherited from ObjectBase
+  void NotifyConstructionCompleted (void);
 
 private:
   /**
