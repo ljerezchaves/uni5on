@@ -67,6 +67,14 @@ public:
    */
   void SetManagerAttribute (std::string name, const AttributeValue &value);
 
+protected:
+  /** Destructor implementation */
+  virtual void DoDispose ();
+
+  // Inherited from ObjectBase
+  void NotifyConstructionCompleted (void);
+  
+private:
   /**
    * Install applications and traffic manager into each UE. It creates the
    * client/server application pair, and install them in the respective
@@ -104,14 +112,6 @@ public:
    */
   static const DataRate GetVideoMbr (uint8_t idx);
 
-protected:
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  // Inherited from ObjectBase
-  void NotifyConstructionCompleted (void);
-  
-private:
   /**
    * Retrieve the LTE helper used by create the LTE network.
    * \return The LTE helper pointer.

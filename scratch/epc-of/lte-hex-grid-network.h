@@ -66,9 +66,6 @@ public:
   /** \return the LteHelper used to create this LTE network */
   Ptr<LteHelper> GetLteHelper ();
 
-  /** Create the LTE radio topology. */
-  void CreateTopology ();
-
 protected:
   /** Destructor implementation */
   void DoDispose ();
@@ -77,6 +74,9 @@ protected:
   void NotifyConstructionCompleted (void);
 
 private:
+  /** Create the LTE radio topology. */
+  void CreateTopology ();
+
   /**
    * Set the number of macro eNB sites, and adjust the total eNBs accordingly.
    * \param sites The number of sites.

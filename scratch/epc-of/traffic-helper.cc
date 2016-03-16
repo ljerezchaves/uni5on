@@ -188,6 +188,32 @@ TrafficHelper::SetManagerAttribute (std::string name,
 }
 
 void
+TrafficHelper::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+
+  m_ofNetwork = 0;
+  m_lteNetwork = 0;
+  m_webNode = 0;
+  m_ueNode = 0;
+  m_ueDev = 0;
+  m_ueManager = 0;
+  m_videoRng = 0;
+}
+
+void
+TrafficHelper::NotifyConstructionCompleted ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // Install the applications
+  Install (m_lteNetwork->GetUeNodes (), m_lteNetwork->GetUeDevices ());
+
+  // Chain up
+  Object::NotifyConstructionCompleted ();
+}
+
+void
 TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices)
 {
   NS_LOG_FUNCTION (this);
@@ -245,32 +271,6 @@ const DataRate
 TrafficHelper::GetVideoMbr (uint8_t idx)
 {
   return DataRate (m_mbrBitRate [idx]);
-}
-
-void
-TrafficHelper::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-
-  m_ofNetwork = 0;
-  m_lteNetwork = 0;
-  m_webNode = 0;
-  m_ueNode = 0;
-  m_ueDev = 0;
-  m_ueManager = 0;
-  m_videoRng = 0;
-}
-
-void
-TrafficHelper::NotifyConstructionCompleted ()
-{
-  NS_LOG_FUNCTION (this);
-
-  // Install the applications
-  Install (m_lteNetwork->GetUeNodes (), m_lteNetwork->GetUeDevices ());
-
-  // Chain up
-  Object::NotifyConstructionCompleted ();
 }
 
 Ptr<LteHelper>

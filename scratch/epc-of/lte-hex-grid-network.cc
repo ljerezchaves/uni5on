@@ -157,6 +157,30 @@ LteHexGridNetwork::GetLteHelper ()
 }
 
 void
+LteHexGridNetwork::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+
+  m_topoHelper = 0;
+  m_remHelper = 0;
+  m_lteHelper = 0;
+  m_epcHelper = 0;
+  Object::DoDispose ();
+}
+
+void
+LteHexGridNetwork::NotifyConstructionCompleted ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // Create LTE topology
+  CreateTopology ();
+  
+  // Chain up
+  Object::NotifyConstructionCompleted ();
+}
+
+void
 LteHexGridNetwork::CreateTopology ()
 {
   NS_LOG_FUNCTION (this);
@@ -296,30 +320,6 @@ LteHexGridNetwork::CreateTopology ()
     {
       m_lteHelper->EnableTraces ();
     }
-}
-
-void
-LteHexGridNetwork::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-
-  m_topoHelper = 0;
-  m_remHelper = 0;
-  m_lteHelper = 0;
-  m_epcHelper = 0;
-  Object::DoDispose ();
-}
-
-void
-LteHexGridNetwork::NotifyConstructionCompleted ()
-{
-  NS_LOG_FUNCTION (this);
-
-  // Create LTE topology
-  CreateTopology ();
-  
-  // Chain up
-  Object::NotifyConstructionCompleted ();
 }
 
 void
