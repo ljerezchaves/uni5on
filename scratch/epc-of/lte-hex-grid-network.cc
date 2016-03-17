@@ -90,8 +90,9 @@ LteHexGridNetwork::GetTypeId (void)
                    DoubleValue (1.5),
                    MakeDoubleAccessor (&LteHexGridNetwork::m_ueHeight),
                    MakeDoubleChecker<double> ())
-    .AddAttribute ("EnbMargin", "The eNB coverage margin [m].",
-                   DoubleValue (250),
+    .AddAttribute ("EnbMargin", "How much the eNB coverate area extends, "
+                   "expressed as fraction of the inter-site distance.",
+                   DoubleValue (0.5),
                    MakeDoubleAccessor (&LteHexGridNetwork::m_enbMargin),
                    MakeDoubleChecker<double> ())
     .AddAttribute ("UeMobility", "Enable UE random mobility.",
@@ -109,7 +110,7 @@ LteHexGridNetwork::GetTypeId (void)
                    MakeBooleanAccessor (&LteHexGridNetwork::m_lteTrace),
                    MakeBooleanChecker ())
     .AddAttribute ("RemFilename",
-                   "Filename for radio enviroment map.",
+                   "Filename for the radio enviroment map.",
                    StringValue ("rem_plot.txt"),
                    MakeStringAccessor (&LteHexGridNetwork::m_remFilename),
                    MakeStringChecker ())
@@ -365,9 +366,14 @@ LteHexGridNetwork::IdentifyEnbsCoverageArea ()
         }
     }
 
-  // Return the coverage rectangle area
-  return Rectangle (round (xMin - m_enbMargin), round (xMax + m_enbMargin),
-                    round (yMin - m_enbMargin), round (yMax + m_enbMargin));
+  DoubleValue doubleValue;
+  m_topoHelper->GetAttribute ("InterSiteDistance", doubleValue);
+  uint32_t adjust = m_enbMargin * doubleValue.Get ();
+  Rectangle coverageArea (round (xMin - adjust), round (xMax + adjust),
+                          round (yMin - adjust), round (yMax + adjust));
+  
+  NS_LOG_INFO ("Coverage area: " << coverageArea);
+  return coverageArea;
 }
 
 void

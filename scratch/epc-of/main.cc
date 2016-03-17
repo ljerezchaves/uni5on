@@ -250,7 +250,7 @@ void ConfigureDefaults ()
   // Set the LTE hexagonal grid layout topology to inter-site distance of 500m
   // with a single site in even rows.
   //
-  Config::SetDefault ("ns3::LteHexGridNetwork::EnbMargin", DoubleValue (250));
+  Config::SetDefault ("ns3::LteHexGridNetwork::EnbMargin", DoubleValue (0.5));
   Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::InterSiteDistance",
                       DoubleValue (500));
   Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::SectorOffset",
@@ -309,7 +309,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_WARN);
       LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
       LogComponentEnable ("RingNetwork", LOG_LEVEL_WARN);
-      LogComponentEnable ("LteHexGridNetwork", LOG_LEVEL_WARN);
+      LogComponentEnable ("LteHexGridNetwork", LOG_LEVEL_ALL);
       LogComponentEnable ("LteHexGridEnbTopologyHelper", LOG_LEVEL_WARN);
       LogComponentEnable ("ConnectionInfo", LOG_LEVEL_WARN);
       LogComponentEnable ("RoutingInfo", LOG_LEVEL_WARN);

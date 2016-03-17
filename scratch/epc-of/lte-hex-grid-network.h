@@ -116,7 +116,7 @@ private:
   uint32_t            m_nSites;       //!< Number of sites
   uint32_t            m_nEnbs;        //!< Number of eNBs (3 * m_nSites)
   uint32_t            m_nUes;         //!< Number of UEs
-  uint32_t            m_enbMargin;    //!< eNB coverage margin
+  double              m_enbMargin;    //!< eNB coverage margin
   double              m_ueHeight;     //!< UE height
   bool                m_lteTrace;     //!< Enable LTE ASCII traces
   bool                m_lteRem;       //!< Print the LTE REM
