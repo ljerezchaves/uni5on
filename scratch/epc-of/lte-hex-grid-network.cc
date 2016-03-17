@@ -90,7 +90,7 @@ LteHexGridNetwork::GetTypeId (void)
                    DoubleValue (1.5),
                    MakeDoubleAccessor (&LteHexGridNetwork::m_ueHeight),
                    MakeDoubleChecker<double> ())
-    .AddAttribute ("EnbMargin", "How much the eNB coverate area extends, "
+    .AddAttribute ("EnbMargin", "How much the eNB coverage area extends, "
                    "expressed as fraction of the inter-site distance.",
                    DoubleValue (0.5),
                    MakeDoubleAccessor (&LteHexGridNetwork::m_enbMargin),
