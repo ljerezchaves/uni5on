@@ -202,10 +202,11 @@ void ConfigureDefaults ()
   // channel bandwidth. For simulations, we are using the reference band #1.
   // See http://niviuk.free.fr/lte_band.php for LTE frequency bands and Earfcn
   // calculation.
-  // ** Considering Band #1 @2110/1920 MHz (FDD)
+  // ** Considering Band #1 @2100 MHz (FDD)
   //
-  Config::SetDefault ("ns3::LteEnbNetDevice::DlEarfcn", UintegerValue (0));
-  Config::SetDefault ("ns3::LteEnbNetDevice::UlEarfcn", UintegerValue (18000));
+  Config::SetDefault ("ns3::LteEnbNetDevice::DlEarfcn", UintegerValue (100));
+  Config::SetDefault ("ns3::LteUeNetDevice::DlEarfcn",  UintegerValue (100));
+  Config::SetDefault ("ns3::LteEnbNetDevice::UlEarfcn", UintegerValue (18100));
 
   //
   // We are configuring the eNB transmission power as a macro cell (46 dBm is
@@ -215,7 +216,7 @@ void ConfigureDefaults ()
   // See http://tinyurl.com/nlh6u3t and http://tinyurl.com/nlh6u3t
   //
   Config::SetDefault ("ns3::LteEnbPhy::TxPower", DoubleValue (46));
-  Config::SetDefault ("ns3::LteUePhy::TxPower", DoubleValue (23));
+  Config::SetDefault ("ns3::LteUePhy::TxPower",  DoubleValue (23));
 
   //
   // Disabling UE uplink power control.
