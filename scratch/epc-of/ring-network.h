@@ -45,8 +45,8 @@ public:
   static TypeId GetTypeId (void);
 
   // Inherited from OpenFlowEpcNetwork
-  Ptr<NetDevice> AttachToS1u (Ptr<Node> node, uint16_t cellId);
-  Ptr<NetDevice> AttachToX2  (Ptr<Node> node);
+  Ptr<NetDevice> S1Attach (Ptr<Node> node, uint16_t cellId);
+  NetDeviceContainer X2Attach (Ptr<Node> enb1, Ptr<Node> enb2);
   void EnablePcap (std::string prefix, bool promiscuous = false);
 
 protected:

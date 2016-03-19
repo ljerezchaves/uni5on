@@ -55,26 +55,21 @@ public:
 
   /**
    * Called by OpenFlowEpcHelper to proper connect the SgwPgw and eNBs to the
-   * S1-U OpenFlow network infrastructure.
-   * \internal
-   * This method must create the NetDevice at node and assign an IPv4 address
-   * to it.
-   * \param node The SgwPgw or eNB node pointer.
-   * \param cellId The eNB cell ID.
-   * \return A pointer to the NetDevice created at node.
+   * S1-U interface over the OpenFlow network infrastructure.
+   * \param node The SgwPgw/eNB node pointer.
+   * \param cellId The eNB cell ID (0 for SgwPgw node).
+   * \return A pointer to the device created at node.
    */
-  virtual Ptr<NetDevice> AttachToS1u (Ptr<Node> node, uint16_t cellId) = 0;
+  virtual Ptr<NetDevice> S1Attach (Ptr<Node> node, uint16_t cellId) = 0;
 
   /**
    * Called by OpenFlowEpcHelper to proper connect the eNBs nodes to the X2
-   * OpenFlow network infrastructure.
-   * \internal
-   * This method must create the NetDevice at node and assign an IPv4 address
-   * to it.
-   * \param node The eNB node pointer.
-   * \return A pointer to the NetDevice created at node.
+   * interface over the OpenFlow network infrastructure.
+   * \param node The 1st eNB node pointer.
+   * \param node The 2nd eNB node pointer.
+   * \return The container with devices created at each eNB.
    */
-  virtual Ptr<NetDevice> AttachToX2 (Ptr<Node> node) = 0;
+  virtual NetDeviceContainer X2Attach (Ptr<Node> enb1, Ptr<Node> enb2) = 0;
 
   /**
    * Enable pcap on LTE EPC network, and OpenFlow control and user planes.

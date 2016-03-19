@@ -201,44 +201,42 @@ RingNetwork::CreateTopology ()
 }
 
 Ptr<NetDevice>
-RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
+RingNetwork::S1Attach (Ptr<Node> node, uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << node);
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
 
-  // Connect SgwPgw node to switch index 0 and other eNBs to switches indexes
-  // 1..N. The three eNBs from same cell site are connected to the same switch
-  // in the ring network. As we know that the OpenFlowEpcHelper will callback
-  // here first for SgwPgw node, followed by each eNB in increasin order, we
-  // use the static counter to identify the node.
-  static uint32_t counter = 0;
-  uint16_t swIdx;
-  if (counter == 0)
+  // Connect the SgwPgw node to switch index 0 and other eNBs nodes to switches
+  // indexes 1..N. The three eNBs from same cell site are connected to the same
+  // switch in the ring network. The cellId == 0 is used by the SgwPgw node.
+
+  uint16_t swIdx = 0;
+  if (cellId == 0)
     {
       // This is the SgwPgw node
-      swIdx = 0;
       RegisterGatewayAtSwitch (swIdx, node);
     }
   else
     {
-      swIdx = 1 + ((counter - 1) / 3);
+      // This is an eNB
+      swIdx = 1 + ((cellId - 1) / 3);
     }
   RegisterNodeAtSwitch (swIdx, node);
-
   Ptr<Node> swNode = m_ofSwitches.Get (swIdx);
-  Ptr<OFSwitch13NetDevice> swDev = GetSwitchDevice (swIdx);
 
-  // Creating a link between switch and node
+  // Creating a link between the switch and the node
+  NetDeviceContainer devices;
   NodeContainer pair;
   pair.Add (swNode);
   pair.Add (node);
-  NetDeviceContainer devices;
-  if (counter == 0)
+  if (cellId == 0)
     {
+      // For the SgwPgw node, use the gateway helper with higher data rate
       devices = m_gwHelper.Install (pair);
     }
   else
     {
+      // For an eNB node, use the default switch helper with default data rate
       devices = m_swHelper.Install (pair);
     }
 
@@ -258,6 +256,7 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   Ipv4Address nodeAddr = nodeIpIfaces.GetAddress (0);
 
   // Adding newly created csma device as openflow switch port.
+  Ptr<OFSwitch13NetDevice> swDev = GetSwitchDevice (swIdx);
   Ptr<OFSwitch13Port> swPort = swDev->AddSwitchPort (portDev);
   uint32_t portNum = swPort->GetPortNo ();
 
@@ -265,52 +264,70 @@ RingNetwork::AttachToS1u (Ptr<Node> node, uint16_t cellId)
   m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
 
   // Only for the gateway link, let's set queues for link statistics.
-  if (counter == 0)
+  if (cellId == 0)
     {
       m_gatewayStats->SetQueues (nodeDev->GetQueue (), portDev->GetQueue ());
     }
 
-  counter++;
   return nodeDev;
 }
 
-Ptr<NetDevice>
-RingNetwork::AttachToX2 (Ptr<Node> node)
+NetDeviceContainer
+RingNetwork::X2Attach (Ptr<Node> enb1, Ptr<Node> enb2)
 {
-  NS_LOG_FUNCTION (this << node);
+  NS_LOG_FUNCTION (this << enb1 << enb2);
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
 
-  // Retrieve the registered pair node/switch
-  uint16_t swIdx = GetSwitchIdxForNode (node);
-  NS_ASSERT (swIdx < m_ofDevices.GetN ());
+  // Creating a link between the firts eNB and its switch
+  uint16_t swIdx1 = GetSwitchIdxForNode (enb1);
+  Ptr<Node> swNode1 = m_ofSwitches.Get (swIdx1);
+  Ptr<OFSwitch13NetDevice> swDev1 = GetSwitchDevice (swIdx1);
 
-  Ptr<Node> swNode = m_ofSwitches.Get (swIdx);
-  Ptr<OFSwitch13NetDevice> swDev = GetSwitchDevice (swIdx);
+  NodeContainer pair1;
+  pair1.Add (swNode1);
+  pair1.Add (enb1);
+  NetDeviceContainer devices1 = m_swHelper.Install (pair1);
 
-  // Creating a link between switch and node
-  NodeContainer pair;
-  pair.Add (swNode);
-  pair.Add (node);
-  NetDeviceContainer devices = m_swHelper.Install (pair);
+  Ptr<CsmaNetDevice> portDev1, enbDev1;
+  portDev1 = DynamicCast<CsmaNetDevice> (devices1.Get (0));
+  enbDev1 = DynamicCast<CsmaNetDevice> (devices1.Get (1));
 
-  Ptr<CsmaNetDevice> portDev, nodeDev;
-  portDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
-  nodeDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
+  // Creating a link between the second eNB and its switch
+  uint16_t swIdx2 = GetSwitchIdxForNode (enb2);
+  Ptr<Node> swNode2 = m_ofSwitches.Get (swIdx2);
+  Ptr<OFSwitch13NetDevice> swDev2 = GetSwitchDevice (swIdx2);
 
-  // Set X2 IPv4 address for the new device at node
-  Ipv4InterfaceContainer nodeIpIfaces =
-    m_x2AddrHelper.Assign (NetDeviceContainer (nodeDev));
-  Ipv4Address nodeAddr = nodeIpIfaces.GetAddress (0);
+  NodeContainer pair2;
+  pair2.Add (swNode2);
+  pair2.Add (enb2);
+  NetDeviceContainer devices2 = m_swHelper.Install (pair2);
+
+  Ptr<CsmaNetDevice> portDev2, enbDev2;
+  portDev2 = DynamicCast<CsmaNetDevice> (devices2.Get (0));
+  enbDev2 = DynamicCast<CsmaNetDevice> (devices2.Get (1));
+
+  // Set X2 IPv4 address for the new devices
+  NetDeviceContainer enbDevices;
+  enbDevices.Add (enbDev1);
+  enbDevices.Add (enbDev2);
+
+  Ipv4InterfaceContainer nodeIpIfaces = m_x2AddrHelper.Assign (enbDevices);
+  Ipv4Address nodeAddr1 = nodeIpIfaces.GetAddress (0);
+  Ipv4Address nodeAddr2 = nodeIpIfaces.GetAddress (1);
   m_x2AddrHelper.NewNetwork ();
 
-  // Adding newly created csma device as openflow switch port.
-  Ptr<OFSwitch13Port> swPort = swDev->AddSwitchPort (portDev);
-  uint32_t portNum = swPort->GetPortNo ();
+  // Adding newly created csma devices as openflow switch ports.
+  Ptr<OFSwitch13Port> swPort1 = swDev1->AddSwitchPort (portDev1);
+  uint32_t portNum1 = swPort1->GetPortNo ();
 
-  // Trace source notifying a new device attached to network
-  m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
+  Ptr<OFSwitch13Port> swPort2 = swDev2->AddSwitchPort (portDev2);
+  uint32_t portNum2 = swPort2->GetPortNo ();
 
-  return nodeDev;
+  // Trace source notifying new devices attached to the network
+  m_newAttachTrace (enbDev1, nodeAddr1, swDev1, swIdx1, portNum1);
+  m_newAttachTrace (enbDev2, nodeAddr2, swDev2, swIdx2, portNum2);
+
+  return enbDevices;
 }
 
 void

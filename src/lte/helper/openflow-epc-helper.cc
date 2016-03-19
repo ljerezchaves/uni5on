@@ -48,47 +48,47 @@ NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcHelper");
 NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcHelper);
 
 
-OpenFlowEpcHelper::OpenFlowEpcHelper () 
+OpenFlowEpcHelper::OpenFlowEpcHelper ()
   : m_gtpuUdpPort (2152)  // fixed by the standard
 {
   NS_LOG_FUNCTION (this);
 
   // we use a /8 net for all UEs
   m_ueAddressHelper.SetBase ("7.0.0.0", "255.0.0.0");
-  
+
   // create SgwPgwNode
   m_sgwPgw = CreateObject<Node> ();
   Names::Add ("pgw", m_sgwPgw);
   InternetStackHelper internet;
   internet.Install (m_sgwPgw);
-  
+
   // create S1-U socket
   Ptr<Socket> sgwPgwS1uSocket = Socket::CreateSocket (m_sgwPgw, TypeId::LookupByName ("ns3::UdpSocketFactory"));
   int retval = sgwPgwS1uSocket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_gtpuUdpPort));
   NS_ASSERT (retval == 0);
 
-  // create TUN device implementing tunneling of user data over GTP-U/UDP/IP 
+  // create TUN device implementing tunneling of user data over GTP-U/UDP/IP
   m_tunDevice = CreateObject<VirtualNetDevice> ();
   // allow jumbo packets
   m_tunDevice->SetAttribute ("Mtu", UintegerValue (30000));
 
   // yes we need this
-  m_tunDevice->SetAddress (Mac48Address::Allocate ()); 
+  m_tunDevice->SetAddress (Mac48Address::Allocate ());
 
   m_sgwPgw->AddDevice (m_tunDevice);
   NetDeviceContainer tunDeviceContainer;
   tunDeviceContainer.Add (m_tunDevice);
-  
+
   // the TUN device is on the same subnet as the UEs, so when a packet
   // addressed to an UE arrives at the intenet to the WAN interface of
-  // the PGW it will be forwarded to the TUN device. 
-  Ipv4InterfaceContainer tunDeviceIpv4IfContainer = m_ueAddressHelper.Assign (tunDeviceContainer);  
+  // the PGW it will be forwarded to the TUN device.
+  Ipv4InterfaceContainer tunDeviceIpv4IfContainer = m_ueAddressHelper.Assign (tunDeviceContainer);
 
   // create EpcSgwPgwApplication
   m_sgwPgwApp = CreateObject<EpcSgwPgwApplication> (m_tunDevice, sgwPgwS1uSocket);
   Names::Add ("SgwPgwApplication", m_sgwPgwApp);
   m_sgwPgw->AddApplication (m_sgwPgwApp);
-  
+
   // connect SgwPgwApplication and virtual net device for tunneling
   m_tunDevice->SetSendCallback (MakeCallback (&EpcSgwPgwApplication::RecvFromTunDevice, m_sgwPgwApp));
 
@@ -119,9 +119,9 @@ OpenFlowEpcHelper::DoDispose ()
   NS_LOG_FUNCTION (this);
   m_tunDevice->SetSendCallback (MakeNullCallback<bool, Ptr<Packet>, const Address&, const Address&, uint16_t> ());
   m_tunDevice = 0;
-  m_sgwPgwApp = 0;  
+  m_sgwPgwApp = 0;
   m_s1uConnect = MakeNullCallback<Ptr<NetDevice>, Ptr<Node>, uint16_t> ();
-  m_x2Connect = MakeNullCallback<Ptr<NetDevice>, Ptr<Node> > ();
+  m_x2Connect = MakeNullCallback<NetDeviceContainer, Ptr<Node>, Ptr<Node> > ();
   m_sgwPgw->Dispose ();
 }
 
@@ -136,15 +136,15 @@ OpenFlowEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16
   // add an IPv4 stack to the previously created eNB
   InternetStackHelper internet;
   internet.Install (enb);
-  NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB after node creation: " << 
+  NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB after node creation: " <<
                 enb->GetObject<Ipv4> ()->GetNInterfaces ());
 
- // Callback the OpenFlow network to connect each eNB to the network.
+  // Callback the OpenFlow network to connect this eNB to the network.
   Ptr<NetDevice> enbDevice = m_s1uConnect (enb, cellId);
   m_s1uDevices.Add (enbDevice);
 
-  NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB after OpenFlow dev + Ipv4 addr: " << 
-                enb->GetObject<Ipv4> ()->GetNInterfaces ());  
+  NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB after OpenFlow dev + Ipv4 addr: " <<
+                enb->GetObject<Ipv4> ()->GetNInterfaces ());
 
   Ipv4Address enbAddress = GetAddressForDevice (enbDevice);
   Ipv4Address sgwAddress = GetSgwS1uAddress ();
@@ -153,20 +153,20 @@ OpenFlowEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16
   Ptr<Socket> enbS1uSocket = Socket::CreateSocket (enb, TypeId::LookupByName ("ns3::UdpSocketFactory"));
   int retval = enbS1uSocket->Bind (InetSocketAddress (enbAddress, m_gtpuUdpPort));
   NS_ASSERT (retval == 0);
-  
-  // create LTE socket for the ENB 
+
+  // create LTE socket for the ENB
   Ptr<Socket> enbLteSocket = Socket::CreateSocket (enb, TypeId::LookupByName ("ns3::PacketSocketFactory"));
   PacketSocketAddress enbLteSocketBindAddress;
   enbLteSocketBindAddress.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
   enbLteSocketBindAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
   retval = enbLteSocket->Bind (enbLteSocketBindAddress);
-  NS_ASSERT (retval == 0);  
+  NS_ASSERT (retval == 0);
   PacketSocketAddress enbLteSocketConnectAddress;
   enbLteSocketConnectAddress.SetPhysicalAddress (Mac48Address::GetBroadcast ());
   enbLteSocketConnectAddress.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
   enbLteSocketConnectAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
   retval = enbLteSocket->Connect (enbLteSocketConnectAddress);
-  NS_ASSERT (retval == 0);  
+  NS_ASSERT (retval == 0);
 
   NS_LOG_INFO ("create EpcEnbApplication");
   Ptr<EpcEnbApplication> enbApp = CreateObject<EpcEnbApplication> (enbLteSocket, enbS1uSocket, enbAddress, sgwAddress, cellId);
@@ -193,13 +193,12 @@ OpenFlowEpcHelper::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
 
   // Callback the OpenFlow network to connect each eNB to the network.
   NetDeviceContainer enbDevices;
-  enbDevices.Add (m_x2Connect (enb1));
-  enbDevices.Add (m_x2Connect (enb2));
+  enbDevices = m_x2Connect (enb1, enb2);
   m_x2Devices.Add (enbDevices);
 
   Ipv4Address enb1X2Address = GetAddressForDevice (enbDevices.Get (0));
   Ipv4Address enb2X2Address = GetAddressForDevice (enbDevices.Get (1));
-  
+
   // Add X2 interface to both eNBs' X2 entities
   Ptr<EpcX2> enb1X2 = enb1->GetObject<EpcX2> ();
   Ptr<LteEnbNetDevice> enb1LteDev = enb1->GetDevice (0)->GetObject<LteEnbNetDevice> ();
@@ -218,11 +217,11 @@ OpenFlowEpcHelper::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
   enb2LteDev->GetRrc ()->AddX2Neighbour (enb1LteDev->GetCellId ());
 }
 
-void 
+void
 OpenFlowEpcHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 {
   NS_LOG_FUNCTION (this << imsi << ueDevice );
-  
+
   m_mme->AddUe (imsi);
   m_sgwPgwApp->AddUe (imsi);
 }
@@ -234,17 +233,17 @@ OpenFlowEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Pt
 
   // we now retrieve the IPv4 address of the UE and notify it to the SGW;
   // we couldn't do it before since address assignment is triggered by
-  // the user simulation program, rather than done by the EPC   
-  Ptr<Node> ueNode = ueDevice->GetNode (); 
+  // the user simulation program, rather than done by the EPC
+  Ptr<Node> ueNode = ueDevice->GetNode ();
   Ptr<Ipv4> ueIpv4 = ueNode->GetObject<Ipv4> ();
   NS_ASSERT_MSG (ueIpv4 != 0, "UEs need to have IPv4 installed before EPS bearers can be activated");
   int32_t interface =  ueIpv4->GetInterfaceForDevice (ueDevice);
   NS_ASSERT (interface >= 0);
   NS_ASSERT (ueIpv4->GetNAddresses (interface) == 1);
   Ipv4Address ueAddr = ueIpv4->GetAddress (interface, 0).GetLocal ();
-  NS_LOG_LOGIC (" UE IP address: " << ueAddr);  
+  NS_LOG_LOGIC (" UE IP address: " << ueAddr);
   m_sgwPgwApp->SetUeAddress (imsi, ueAddr);
-  
+
   uint8_t bearerId = m_mme->AddBearer (imsi, tft, bearer);
   Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
   if (ueLteDevice)
@@ -260,7 +259,7 @@ OpenFlowEpcHelper::GetPgwNode ()
   return m_sgwPgw;
 }
 
-Ipv4InterfaceContainer 
+Ipv4InterfaceContainer
 OpenFlowEpcHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
 {
   return m_ueAddressHelper.Assign (ueDevices);
@@ -290,7 +289,7 @@ OpenFlowEpcHelper::EnablePcapX2 (std::string prefix, bool promiscuous, bool expl
   EnablePcap (prefix, m_x2Devices, promiscuous);
 }
 
-void 
+void
 OpenFlowEpcHelper::EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bool promiscuous, bool explicitFilename)
 {
   //
@@ -351,7 +350,7 @@ OpenFlowEpcHelper::SetS1uConnectCallback (S1uConnectCallback_t cb)
   NS_LOG_FUNCTION (this << &cb);
   m_s1uConnect = cb;
 
-  // Connecting the SgwPgw to the OpenFlow network. 
+  // Connecting the SgwPgw to the OpenFlow network.
   m_sgwS1uDev = m_s1uConnect (m_sgwPgw, 0 /*SgwPgw with no cellId */);
   NS_LOG_LOGIC ("Sgw S1 interface address: " << GetSgwS1uAddress ());
 }

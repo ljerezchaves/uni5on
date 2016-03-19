@@ -185,9 +185,9 @@ OpenFlowEpcNetwork::NotifyConstructionCompleted (void)
 
   // Connect S1U and X2 connection callbacks *after* topology creation.
   m_ofEpcHelper->SetS1uConnectCallback (
-    MakeCallback (&OpenFlowEpcNetwork::AttachToS1u, this));
+    MakeCallback (&OpenFlowEpcNetwork::S1Attach, this));
   m_ofEpcHelper->SetX2ConnectCallback (
-    MakeCallback (&OpenFlowEpcNetwork::AttachToX2, this));
+    MakeCallback (&OpenFlowEpcNetwork::X2Attach, this));
 
   // Connect the controller to the EpcSgwPgwApplication trace source *after* topology creation.
   Ptr<EpcSgwPgwApplication> gatewayApp =
