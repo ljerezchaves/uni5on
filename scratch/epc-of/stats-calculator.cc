@@ -25,6 +25,8 @@
 #include "stats-calculator.h"
 #include "seq-num-tag.h"
 #include "routing-info.h"
+#include "ring-routing-info.h"
+#include "gbr-info.h"
 #include "connection-info.h"
 #include "openflow-epc-controller.h"
 

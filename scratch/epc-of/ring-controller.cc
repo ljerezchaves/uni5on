@@ -19,6 +19,7 @@
  */
 
 #include "ring-controller.h"
+#include "meter-info.h"
 #include <string>
 
 namespace ns3 {

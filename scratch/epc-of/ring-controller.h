@@ -22,6 +22,8 @@
 #define RING_CONTROLLER_H
 
 #include "openflow-epc-controller.h"
+#include "ring-routing-info.h"
+#include "gbr-info.h"
 
 namespace ns3 {
 

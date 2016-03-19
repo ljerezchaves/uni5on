@@ -19,6 +19,8 @@
  */
 
 #include "openflow-epc-controller.h"
+#include "meter-info.h"
+#include "gbr-info.h"
 
 namespace ns3 {
 
