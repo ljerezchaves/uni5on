@@ -1,7 +1,19 @@
 default ns3::LteHexGridNetwork::NumSites "1"
 default ns3::LteHexGridNetwork::NumUes "1"
+default ns3::LteHexGridNetwork::UeMobility "false"
 default ns3::LteHexGridNetwork::PrintRem "false"
 default ns3::LteHexGridNetwork::LteTrace "false"
+
 default ns3::RingNetwork::NumSwitches "3"
+
+default ns3::RingController::Strategy "spo"
+
+default ns3::OpenFlowEpcController::NonGbrCoexistence "true"
+default ns3::OpenFlowEpcController::VoipQueue "true"
+
 default ns3::TrafficHelper::FastTraffic "true"
 default ns3::TrafficHelper::VoipTraffic "true"
+default ns3::TrafficHelper::GbrLiveVideoTraffic "true"
+default ns3::TrafficHelper::BufferedVideoTraffic "true"
+default ns3::TrafficHelper::NonGbrLiveVideoTraffic "true"
+default ns3::TrafficHelper::HttpTraffic "true"
