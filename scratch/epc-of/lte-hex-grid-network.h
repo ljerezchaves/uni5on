@@ -89,29 +89,8 @@ private:
    */
   Rectangle IdentifyEnbsCoverageArea ();
 
-  /**
-   * Print LTE radio environment map.
-   * \param filename The filename to use.
-   */
-  void PrintRadioEnvironmentMap (std::string filename);
-
-  /**
-   * Print buildings boundarites to gnuplot format.
-   * \param filename The filename to use.
-   */
-  void PrintBuildingListToFile (std::string filename);
-
-  /**
-   * Print UE positions to gnuplot format.
-   * \param filename The filename to use.
-   */
-  void PrintUeListToFile (std::string filename);
-
-  /**
-   * Print eNB positions to gnuplot format.
-   * \param filename The filename to use.
-   */
-  void PrintEnbListToFile (std::string filename);
+  /** Print LTE radio environment map. */
+  void PrintRadioEnvironmentMap ();
 
   uint32_t            m_nSites;       //!< Number of sites
   uint32_t            m_nEnbs;        //!< Number of eNBs (3 * m_nSites)
@@ -122,9 +101,6 @@ private:
   bool                m_lteRem;       //!< Print the LTE REM
   bool                m_ueMobility;   //!< Enable UE mobility
   std::string         m_remFilename;  //!< LTE REM filename
-  std::string         m_bldsFilename; //!< Building position filename
-  std::string         m_uesFilename;  //!< UE position filename
-  std::string         m_enbsFilename; //!< eNB position filename
   NodeContainer       m_enbNodes;     //!< eNB nodes
   NetDeviceContainer  m_enbDevices;   //!< eNB devices
   NodeContainer       m_ueNodes;      //!< UE nodes

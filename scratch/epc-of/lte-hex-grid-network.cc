@@ -110,24 +110,9 @@ LteHexGridNetwork::GetTypeId (void)
                    MakeBooleanAccessor (&LteHexGridNetwork::m_lteTrace),
                    MakeBooleanChecker ())
     .AddAttribute ("RemFilename",
-                   "Filename for the radio enviroment map.",
-                   StringValue ("rem_plot.txt"),
+                   "Filename for radio enviroment map (without extension).",
+                   StringValue ("radio-map"),
                    MakeStringAccessor (&LteHexGridNetwork::m_remFilename),
-                   MakeStringChecker ())
-    .AddAttribute ("BuildingsFilename",
-                   "Filename for buildings positions.",
-                   StringValue ("bld_plot.txt"),
-                   MakeStringAccessor (&LteHexGridNetwork::m_bldsFilename),
-                   MakeStringChecker ())
-    .AddAttribute ("UesFilename",
-                   "Filename for UE positions.",
-                   StringValue ("ues_plot.txt"),
-                   MakeStringAccessor (&LteHexGridNetwork::m_uesFilename),
-                   MakeStringChecker ())
-    .AddAttribute ("EnbsFilename",
-                   "Filename for eNB positions.",
-                   StringValue ("enb_plot.txt"),
-                   MakeStringAccessor (&LteHexGridNetwork::m_enbsFilename),
                    MakeStringChecker ())
   ;
   return tid;
@@ -176,7 +161,7 @@ LteHexGridNetwork::NotifyConstructionCompleted ()
 
   // Create LTE topology
   CreateTopology ();
-  
+
   // Chain up
   Object::NotifyConstructionCompleted ();
 }
@@ -294,29 +279,13 @@ LteHexGridNetwork::CreateTopology ()
   BuildingsHelper::Install (m_ueNodes);
   BuildingsHelper::MakeMobilityModelConsistent ();
 
-  // If enable, print LTE radio environment map with node positions.
+  // If enable, print the LTE radio environment map.
   if (m_lteRem)
     {
-      StringValue stringValue;
-      GlobalValue::GetValueByName ("OutputPrefix", stringValue);
-      std::string prefix = stringValue.Get ();
-
-      // Forcing initialization so we don't have to wait for Nodes to start
-      // before positions are assigned (which is needed to output node
-      // positions to file)
-      NodeContainer::Iterator it;
-      for (it = m_ueNodes.Begin (); it != m_ueNodes.End (); it++)
-        {
-          (*it)->Initialize ();
-        }
-
-      PrintBuildingListToFile (prefix + m_bldsFilename);
-      PrintUeListToFile (prefix + m_uesFilename);
-      PrintEnbListToFile (prefix + m_enbsFilename);
-      PrintRadioEnvironmentMap (prefix + m_remFilename);
+      PrintRadioEnvironmentMap ();
     }
 
-  // If enable, print LTE ASCII traces
+  // If enable, print LTE ASCII trace files.
   if (m_lteTrace)
     {
       m_lteHelper->EnableTraces ();
@@ -371,19 +340,32 @@ LteHexGridNetwork::IdentifyEnbsCoverageArea ()
   uint32_t adjust = m_enbMargin * doubleValue.Get ();
   Rectangle coverageArea (round (xMin - adjust), round (xMax + adjust),
                           round (yMin - adjust), round (yMax + adjust));
-  
+
   NS_LOG_INFO ("Coverage area: " << coverageArea);
   return coverageArea;
 }
 
 void
-LteHexGridNetwork::PrintRadioEnvironmentMap (std::string filename)
+LteHexGridNetwork::PrintRadioEnvironmentMap ()
 {
   NS_LOG_FUNCTION (this);
 
+  // Forcing UE initialization so we don't have to wait for Nodes to start
+  // before positions are assigned (which is needed to output node positions to
+  // plot file)
+  NodeContainer::Iterator it;
+  for (it = m_ueNodes.Begin (); it != m_ueNodes.End (); it++)
+    {
+      (*it)->Initialize ();
+    }
+
+  StringValue prefixValue;
+  GlobalValue::GetValueByName ("OutputPrefix", prefixValue);
+  std::string filename = prefixValue.Get () + m_remFilename;
+
   // Create the radio environment map helper and set output filename
   m_remHelper = CreateObject<RadioEnvironmentMapHelper> ();
-  m_remHelper->SetAttribute ("OutputFile", StringValue (filename));
+  m_remHelper->SetAttribute ("OutputFile", StringValue (filename + ".dat"));
 
   // Adjust LTE radio channel ID
   Ptr<LteEnbNetDevice> enbDevice =
@@ -403,88 +385,96 @@ LteHexGridNetwork::PrintRadioEnvironmentMap (std::string filename)
   m_remHelper->SetAttribute ("Bandwidth", dlBandwidthValue);
 
   // Adjust the LTE radio coverage area
-  m_remHelper->SetAttribute ("XMin", DoubleValue (m_coverageArea.xMin));
-  m_remHelper->SetAttribute ("XMax", DoubleValue (m_coverageArea.xMax));
-  m_remHelper->SetAttribute ("YMin", DoubleValue (m_coverageArea.yMin));
-  m_remHelper->SetAttribute ("YMax", DoubleValue (m_coverageArea.yMax));
+  Rectangle area = m_coverageArea;
+  m_remHelper->SetAttribute ("XMin", DoubleValue (area.xMin));
+  m_remHelper->SetAttribute ("XMax", DoubleValue (area.xMax));
+  m_remHelper->SetAttribute ("YMin", DoubleValue (area.yMin));
+  m_remHelper->SetAttribute ("YMax", DoubleValue (area.yMax));
   m_remHelper->SetAttribute ("Z", DoubleValue (m_ueHeight));
 
   // Adjust plot resolution
-  uint32_t xResolution = m_coverageArea.xMax - m_coverageArea.xMin + 1;
-  uint32_t yResolution = m_coverageArea.yMax - m_coverageArea.yMin + 1;
+  uint32_t xResolution = area.xMax - area.xMin + 1;
+  uint32_t yResolution = area.yMax - area.yMin + 1;
   m_remHelper->SetAttribute ("XRes", UintegerValue (xResolution));
   m_remHelper->SetAttribute ("YRes", UintegerValue (yResolution));
 
-  m_remHelper->Install ();
-}
-
-void
-LteHexGridNetwork::PrintBuildingListToFile (std::string filename)
-{
+  // Prepare the gnuplot script file
   Ptr<OutputStreamWrapper> fileWrapper;
-  fileWrapper = Create<OutputStreamWrapper> (filename, std::ios::out);
+  fileWrapper = Create<OutputStreamWrapper> (filename + ".gpi", std::ios::out);
 
+  size_t begin = filename.rfind ("/");
+  size_t end = filename.length ();
+  std::string localname = filename.substr (begin + 1, end - 1);
+
+  *fileWrapper->GetStream ()
+  << "set term pdfcairo enhanced color dashed rounded" << std::endl
+  << "set output '" << localname << ".pdf'" << std::endl
+  << "unset key" << std::endl
+  << "set view map;" << std::endl
+  << "set xlabel 'x-coordinate (m)'" << std::endl
+  << "set ylabel 'y-coordinate (m)'" << std::endl
+  << "set cbrange [-5:20]" << std::endl
+  << "set cblabel 'SINR (dB)'" << std::endl
+  << "set xrange [" << area.xMin << ":" << area.xMax << "]" << std::endl
+  << "set yrange [" << area.yMin << ":" << area.yMax << "]" << std::endl;
+
+  // Buildings
   uint32_t index = 0;
-  BuildingList::Iterator it;
-  for (it = BuildingList::Begin (); it != BuildingList::End (); it++)
+  for (BuildingList::Iterator it = BuildingList::Begin ();
+       it != BuildingList::End (); it++)
     {
       index++;
       Box box = (*it)->GetBoundaries ();
 
       *fileWrapper->GetStream ()
-      << "set object " << index
-      << " rect from " << box.xMin  << "," << box.yMin
+      << "set object " << index << " rect"
+      << " from " << box.xMin  << "," << box.yMin
       << " to "   << box.xMax  << "," << box.yMax
       << " front fs empty "
       << std::endl;
     }
-  fileWrapper = 0;
-}
 
-void
-LteHexGridNetwork::PrintUeListToFile (std::string filename)
-{
-  Ptr<OutputStreamWrapper> fileWrapper;
-  fileWrapper = Create<OutputStreamWrapper> (filename, std::ios::out);
-
-  NetDeviceContainer::Iterator it;
-  for (it = m_ueDevices.Begin (); it != m_ueDevices.End (); it++)
+  // UEs positions
+  for (NetDeviceContainer::Iterator it = m_ueDevices.Begin ();
+       it != m_ueDevices.End (); it++)
     {
       Ptr<LteUeNetDevice> ueDev = DynamicCast<LteUeNetDevice> (*it);
       Ptr<Node> node = ueDev->GetNode ();
       Vector pos = node->GetObject<MobilityModel> ()->GetPosition ();
 
       *fileWrapper->GetStream ()
-      << "set label \"" << ueDev->GetImsi ()
-      << "\" at "<< pos.x << "," << pos.y
-      << " left font \"Helvetica,4\" textcolor rgb \"grey\" "
-      << "front point pt 1 ps 0.3 lc rgb \"grey\" offset 0,0"
+      << "set label '" << ueDev->GetImsi () << "' "
+      << "at "<< pos.x << "," << pos.y << " "
+      << "left font ',5' textcolor rgb 'grey' "
+      << "front point pt 1 lw 2 ps 0.3 lc rgb 'grey'"
       << std::endl;
     }
-  fileWrapper = 0;
-}
 
-void
-LteHexGridNetwork::PrintEnbListToFile (std::string filename)
-{
-  Ptr<OutputStreamWrapper> fileWrapper;
-  fileWrapper = Create<OutputStreamWrapper> (filename, std::ios::out);
-
-  NetDeviceContainer::Iterator it;
-  for (it = m_enbDevices.Begin (); it != m_enbDevices.End (); it++)
+  // Cell site positions
+  for (NetDeviceContainer::Iterator it = m_enbDevices.Begin ();
+       it != m_enbDevices.End (); it++, it++, it++)
     {
       Ptr<LteEnbNetDevice> enbDev = DynamicCast<LteEnbNetDevice> (*it);
       Ptr<Node> node = enbDev->GetNode ();
       Vector pos = node->GetObject<MobilityModel> ()->GetPosition ();
+      uint32_t site = enbDev->GetCellId ();
 
       *fileWrapper->GetStream ()
-      << "set label \"" << enbDev->GetCellId ()
-      << "\" at "<< pos.x << "," << pos.y
-      << " left font \"Helvetica,4\" textcolor rgb \"white\" "
-      << "front point pt 2 ps 0.3 lc rgb \"white\" offset 0,0"
+      << "set label '" << site << "," << site + 1 << "," << site + 2 << "' "
+      << "at "<< pos.x << "," << pos.y << " "
+      << "left font ',5' textcolor rgb 'white' "
+      << "front point pt 7 ps 0.4 lc rgb 'white'"
       << std::endl;
     }
+
+  // Radio map
+  *fileWrapper->GetStream ()
+  << "plot '" << localname << ".dat' using 1:2:(10*log10($4)) with image"
+  << std::endl;
   fileWrapper = 0;
+
+  // Finally, install the REM generator
+  m_remHelper->Install ();
 }
 
 };  // namespace ns3
