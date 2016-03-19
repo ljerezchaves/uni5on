@@ -99,7 +99,9 @@ main (int argc, char *argv[])
   ConfigStore inputConfig;
   inputConfig.ConfigureDefaults ();
 
-  // Force some default attribute values that cannot be overridden by users.
+  // Parse command line again so users can override values from configuration
+  // file, and force some default attribute values that cannot be overridden.
+  cmd.Parse (argc, argv);
   ForceDefaults ();
 
   // Enable verbose output and progress report for debug purposes.
