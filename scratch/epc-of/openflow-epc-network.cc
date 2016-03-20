@@ -72,20 +72,20 @@ OpenFlowEpcNetwork::GetTypeId (void)
 
     // Trace sources used by controller to be aware of network topology
     .AddTraceSource ("NewEpcAttach",
-                     "New LTE EPC entity connected to OpenFlow switch for S1U "
-                     "or X1 interface.",
+                     "New LTE EPC entity connected to the OpenFlow switch for "
+                     "S1-U or X2 interface.",
                      MakeTraceSourceAccessor (
                        &OpenFlowEpcNetwork::m_newAttachTrace),
                      "ns3::OpenFlowEpcNetwork::AttachTracedCallback")
     .AddTraceSource ("NewSwitchConnection",
-                     "New connection between two OpenFlow switches when "
-                     "building topology.",
+                     "New connection between two OpenFlow switches during "
+                     "topology creation.",
                      MakeTraceSourceAccessor (
                        &OpenFlowEpcNetwork::m_newConnTrace),
                      "ns3::ConnectionInfo::ConnTracedCallback")
     .AddTraceSource ("TopologyBuilt",
-                     "Topology built and no more connections between "
-                     "OpenFlow switches.",
+                     "OpenFlow networp topology built, with no more "
+                     "connections between OpenFlow switches.",
                      MakeTraceSourceAccessor (
                        &OpenFlowEpcNetwork::m_topoBuiltTrace),
                      "ns3::OpenFlowEpcNetwork::TopologyTracedCallback")
