@@ -229,7 +229,7 @@ LteHexGridNetwork::CreateTopology ()
   m_enbDevices = m_topoHelper->SetPositionAndInstallEnbDevice (m_enbNodes);
 
   // Create an X2 interface between all the eNBs in a given set.
-  // FIXME m_lteHelper->AddX2Interface (macroEnbs);
+  m_lteHelper->AddX2Interface (m_enbNodes);
 
   // After eNB positioning, identify the LTE radio coverage and spread the UEs
   // over the coverage area.

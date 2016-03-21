@@ -52,7 +52,7 @@ public:
   /**
    * Request a new dedicated EPS bearer. This is used to check for necessary
    * resources in the network (mainly available data rate for GBR bearers).
-   * When returning false, it aborts the bearer creation process
+   * When returning false, it aborts the bearer creation process.
    * \internal
    * Current implementation assumes that each application traffic flow is
    * associated with a unique bearer/tunnel. Because of that, we can use only

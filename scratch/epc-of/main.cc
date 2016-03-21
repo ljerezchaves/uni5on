@@ -30,6 +30,10 @@
 
 using namespace ns3;
 
+/**
+ * \defgroup epcof LTE EPC + OpenFlow
+ * Network simulation scenario for LTE EPC + OpenFlow 1.3
+ */
 NS_LOG_COMPONENT_DEFINE ("Main");
 
 void PrintCurrentTime (uint32_t);
