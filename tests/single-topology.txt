@@ -1,8 +1,8 @@
-default ns3::LteHexGridNetwork::NumSites "1"
-default ns3::LteHexGridNetwork::NumUes "1"
-default ns3::LteHexGridNetwork::UeMobility "false"
-default ns3::LteHexGridNetwork::PrintRem "false"
-default ns3::LteHexGridNetwork::LteTrace "false"
+default ns3::LteNetwork::NumSites "1"
+default ns3::LteNetwork::NumUes "1"
+default ns3::LteNetwork::UeMobility "false"
+default ns3::LteNetwork::PrintRem "false"
+default ns3::LteNetwork::LteTrace "false"
 
 default ns3::RingNetwork::NumSwitches "3"
 
