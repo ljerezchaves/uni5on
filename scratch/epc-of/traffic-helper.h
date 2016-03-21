@@ -31,7 +31,7 @@ namespace ns3 {
 
 class TrafficManager;
 class OpenFlowEpcController;
-class LteHexGridNetwork;
+class LteNetwork;
 class OpenFlowEpcNetwork;
 
 /**
@@ -49,7 +49,7 @@ public:
    * \param lteNetwork The LTE network.
    */
   TrafficHelper (Ptr<OpenFlowEpcNetwork> ofNetwork,
-                 Ptr<LteHexGridNetwork> lteNetwork);
+                 Ptr<LteNetwork> lteNetwork);
 
   TrafficHelper ();           //!< Default constructor
   virtual ~TrafficHelper ();  //!< Dummy destructor, see DoDipose
@@ -172,7 +172,7 @@ private:
   ObjectFactory       m_managerFactory; //!< Traffic manager factory
 
   Ptr<OpenFlowEpcNetwork> m_ofNetwork;  //!< The EPC + Internet network
-  Ptr<LteHexGridNetwork>  m_lteNetwork; //!< The LTE network
+  Ptr<LteNetwork>         m_lteNetwork; //!< The LTE network
   
   Ptr<Node>           m_webNode;        //!< Server node
   Ipv4Address         m_webAddr;        //!< Server address

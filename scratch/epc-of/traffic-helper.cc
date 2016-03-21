@@ -20,7 +20,7 @@
 
 #include "traffic-helper.h"
 #include "traffic-manager.h"
-#include "lte-hex-grid-network.h"
+#include "lte-network.h"
 #include "openflow-epc-network.h"
 #include "openflow-epc-controller.h"
 
@@ -55,7 +55,7 @@ const uint64_t TrafficHelper::m_mbrBitRate [] = {
 
 // ------------------------------------------------------------------------ //
 TrafficHelper::TrafficHelper (Ptr<OpenFlowEpcNetwork> ofNetwork,
-                              Ptr<LteHexGridNetwork> lteNetwork)
+                              Ptr<LteNetwork> lteNetwork)
   : m_ofNetwork (ofNetwork),
     m_lteNetwork (lteNetwork),
     m_webNode (ofNetwork->GetServerNode ())

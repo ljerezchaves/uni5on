@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef LTE_HEX_GRID_NETWORK_H
-#define LTE_HEX_GRID_NETWORK_H
+#ifndef LTE_NETWORK_H
+#define LTE_NETWORK_H
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -36,17 +36,17 @@ namespace ns3 {
  * on an hexagonal grid. UEs are randomly distributed around the sites and
  * attach to the network automatically using Idle mode cell selection.
  */
-class LteHexGridNetwork : public Object
+class LteNetwork : public Object
 {
 public:
   /**
    * Complete constructor.
    * \param epcHelper The OpenFlow EPC helper.
    */
-  LteHexGridNetwork (Ptr<EpcHelper> epcHelper);
+  LteNetwork (Ptr<EpcHelper> epcHelper);
   
-  LteHexGridNetwork ();           //!< Default constructor
-  virtual ~LteHexGridNetwork ();  //!< Dummy destructor, see DoDipose
+  LteNetwork ();           //!< Default constructor
+  virtual ~LteNetwork ();  //!< Dummy destructor, see DoDipose
 
   /**
    * Register this type.
@@ -114,5 +114,5 @@ private:
 };
 
 };  // namespace ns3
-#endif  // LTE_HEX_GRID_NETWORK_H
+#endif  // LTE_NETWORK_H
 

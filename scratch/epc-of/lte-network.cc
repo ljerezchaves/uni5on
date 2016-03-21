@@ -18,14 +18,14 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "lte-hex-grid-network.h"
+#include "lte-network.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("LteHexGridNetwork");
-NS_OBJECT_ENSURE_REGISTERED (LteHexGridNetwork);
+NS_LOG_COMPONENT_DEFINE ("LteNetwork");
+NS_OBJECT_ENSURE_REGISTERED (LteNetwork);
 
-LteHexGridNetwork::LteHexGridNetwork (Ptr<EpcHelper> epcHelper)
+LteNetwork::LteNetwork (Ptr<EpcHelper> epcHelper)
   : m_epcHelper (epcHelper)
 {
   NS_LOG_FUNCTION (this);
@@ -63,87 +63,87 @@ LteHexGridNetwork::LteHexGridNetwork (Ptr<EpcHelper> epcHelper)
                       StringValue (prefix + "ul_tx_phy_lte.txt"));
 }
 
-LteHexGridNetwork::LteHexGridNetwork ()
+LteNetwork::LteNetwork ()
 {
   NS_LOG_FUNCTION (this);
 }
 
-LteHexGridNetwork::~LteHexGridNetwork ()
+LteNetwork::~LteNetwork ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-LteHexGridNetwork::GetTypeId (void)
+LteNetwork::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::LteHexGridNetwork")
+  static TypeId tid = TypeId ("ns3::LteNetwork")
     .SetParent<Object> ()
     .AddAttribute ("NumSites", "The total number of macro eNBs sites.",
                    UintegerValue (1),
-                   MakeUintegerAccessor (&LteHexGridNetwork::SetNumSites),
+                   MakeUintegerAccessor (&LteNetwork::SetNumSites),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("NumUes", "The total number of UEs.",
                    UintegerValue (1),
-                   MakeUintegerAccessor (&LteHexGridNetwork::m_nUes),
+                   MakeUintegerAccessor (&LteNetwork::m_nUes),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("UeHeight", "The UE antenna height [m].",
                    DoubleValue (1.5),
-                   MakeDoubleAccessor (&LteHexGridNetwork::m_ueHeight),
+                   MakeDoubleAccessor (&LteNetwork::m_ueHeight),
                    MakeDoubleChecker<double> ())
     .AddAttribute ("EnbMargin", "How much the eNB coverage area extends, "
                    "expressed as fraction of the inter-site distance.",
                    DoubleValue (0.5),
-                   MakeDoubleAccessor (&LteHexGridNetwork::m_enbMargin),
+                   MakeDoubleAccessor (&LteNetwork::m_enbMargin),
                    MakeDoubleChecker<double> ())
     .AddAttribute ("UeMobility", "Enable UE random mobility.",
                    BooleanValue (false),
-                   MakeBooleanAccessor (&LteHexGridNetwork::m_ueMobility),
+                   MakeBooleanAccessor (&LteNetwork::m_ueMobility),
                    MakeBooleanChecker ())
     .AddAttribute ("PrintRem",
                    "Print the radio environment map.",
                    BooleanValue (false),
-                   MakeBooleanAccessor (&LteHexGridNetwork::m_lteRem),
+                   MakeBooleanAccessor (&LteNetwork::m_lteRem),
                    MakeBooleanChecker ())
     .AddAttribute ("LteTrace",
                    "Enable/Disable simulation LTE ASCII traces.",
                    BooleanValue (false),
-                   MakeBooleanAccessor (&LteHexGridNetwork::m_lteTrace),
+                   MakeBooleanAccessor (&LteNetwork::m_lteTrace),
                    MakeBooleanChecker ())
     .AddAttribute ("RemFilename",
                    "Filename for radio enviroment map (without extension).",
                    StringValue ("radio-map"),
-                   MakeStringAccessor (&LteHexGridNetwork::m_remFilename),
+                   MakeStringAccessor (&LteNetwork::m_remFilename),
                    MakeStringChecker ())
   ;
   return tid;
 }
 
 NodeContainer
-LteHexGridNetwork::GetEnbNodes ()
+LteNetwork::GetEnbNodes ()
 {
   return m_enbNodes;
 }
 
 NodeContainer
-LteHexGridNetwork::GetUeNodes ()
+LteNetwork::GetUeNodes ()
 {
   return m_ueNodes;
 }
 
 NetDeviceContainer
-LteHexGridNetwork::GetUeDevices ()
+LteNetwork::GetUeDevices ()
 {
   return m_ueDevices;
 }
 
 Ptr<LteHelper>
-LteHexGridNetwork::GetLteHelper ()
+LteNetwork::GetLteHelper ()
 {
   return m_lteHelper;
 }
 
 void
-LteHexGridNetwork::DoDispose ()
+LteNetwork::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -155,7 +155,7 @@ LteHexGridNetwork::DoDispose ()
 }
 
 void
-LteHexGridNetwork::NotifyConstructionCompleted ()
+LteNetwork::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -167,7 +167,7 @@ LteHexGridNetwork::NotifyConstructionCompleted ()
 }
 
 void
-LteHexGridNetwork::CreateTopology ()
+LteNetwork::CreateTopology ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Topology with " << m_nSites << " macro eNBs sites.");
@@ -308,7 +308,7 @@ LteHexGridNetwork::CreateTopology ()
 }
 
 void
-LteHexGridNetwork::SetNumSites (uint32_t sites)
+LteNetwork::SetNumSites (uint32_t sites)
 {
   NS_LOG_FUNCTION (this << sites);
 
@@ -317,7 +317,7 @@ LteHexGridNetwork::SetNumSites (uint32_t sites)
 }
 
 Rectangle
-LteHexGridNetwork::IdentifyEnbsCoverageArea ()
+LteNetwork::IdentifyEnbsCoverageArea ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -361,7 +361,7 @@ LteHexGridNetwork::IdentifyEnbsCoverageArea ()
 }
 
 void
-LteHexGridNetwork::PrintRadioEnvironmentMap ()
+LteNetwork::PrintRadioEnvironmentMap ()
 {
   NS_LOG_FUNCTION (this);
 
