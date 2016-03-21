@@ -234,24 +234,39 @@ LteHexGridNetwork::CreateTopology ()
   // After eNB positioning, identify the LTE radio coverage and spread the UEs
   // over the coverage area.
   m_coverageArea = IdentifyEnbsCoverageArea ();
-  Ptr<RandomVariableStream> posX, posY, posZ;
-  posX = CreateObjectWithAttributes<UniformRandomVariable> (
-      "Min", DoubleValue (m_coverageArea.xMin),
-      "Max", DoubleValue (m_coverageArea.xMax));
-  posY = CreateObjectWithAttributes<UniformRandomVariable> (
-      "Min", DoubleValue (m_coverageArea.yMin),
-      "Max", DoubleValue (m_coverageArea.yMax));
-  posZ = CreateObjectWithAttributes<ConstantRandomVariable> (
-      "Constant", DoubleValue (m_ueHeight));
+  if (m_ueMobility)
+    {
+      mobilityHelper.SetMobilityModel (
+        "ns3::SteadyStateRandomWaypointMobilityModel",
+        "MinX",     DoubleValue (m_coverageArea.xMin),
+        "MaxX",     DoubleValue (m_coverageArea.xMax),
+        "MinY",     DoubleValue (m_coverageArea.yMin),
+        "MaxY",     DoubleValue (m_coverageArea.yMax),
+        "Z",        DoubleValue (m_ueHeight),
+        "MaxSpeed", DoubleValue (10),
+        "MinSpeed", DoubleValue (10));
+      mobilityHelper.Install (m_ueNodes);
+    }
+  else
+    {
+      Ptr<RandomVariableStream> posX, posY, posZ;
+      posX = CreateObjectWithAttributes<UniformRandomVariable> (
+          "Min", DoubleValue (m_coverageArea.xMin),
+          "Max", DoubleValue (m_coverageArea.xMax));
+      posY = CreateObjectWithAttributes<UniformRandomVariable> (
+          "Min", DoubleValue (m_coverageArea.yMin),
+          "Max", DoubleValue (m_coverageArea.yMax));
+      posZ = CreateObjectWithAttributes<ConstantRandomVariable> (
+          "Constant", DoubleValue (m_ueHeight));
 
-  Ptr<RandomBoxPositionAllocator> boxPosAllocator;
-  boxPosAllocator = CreateObject<RandomBoxPositionAllocator> ();
-  boxPosAllocator->SetAttribute ("X", PointerValue (posX));
-  boxPosAllocator->SetAttribute ("Y", PointerValue (posY));
-  boxPosAllocator->SetAttribute ("Z", PointerValue (posZ));
-  mobilityHelper.SetPositionAllocator (boxPosAllocator);
-  mobilityHelper.Install (m_ueNodes);
-
+      Ptr<RandomBoxPositionAllocator> boxPosAllocator;
+      boxPosAllocator = CreateObject<RandomBoxPositionAllocator> ();
+      boxPosAllocator->SetAttribute ("X", PointerValue (posX));
+      boxPosAllocator->SetAttribute ("Y", PointerValue (posY));
+      boxPosAllocator->SetAttribute ("Z", PointerValue (posZ));
+      mobilityHelper.SetPositionAllocator (boxPosAllocator);
+      mobilityHelper.Install (m_ueNodes);
+    }
   // Install protocol stack into UE nodes
   m_ueDevices = m_lteHelper->InstallUeDevice (m_ueNodes);
 
