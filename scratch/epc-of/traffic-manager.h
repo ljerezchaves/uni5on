@@ -82,15 +82,15 @@ public:
   void NotifyAppStop (Ptr<const EpcApplication> app);
 
   /**
-   * TraceSink connected to controller and notified when new contexts are
-   * created. This will be used to get the teid for each bearer created.
+   * Trace sink notified when new session is created. This will be used to get
+   * the teid for each bearer created.
    * \param imsi The IMSI UE identifier.
    * \param cellId The eNB CellID to which the IMSI UE is attached to.
    * \param enbAddr The eNB IPv4 address.
    * \param sgwAddr The SgwPgw IPv4 address.
    * \param bearerList The list of context bearers created.
    */
-  void ContextCreatedCallback (uint64_t imsi, uint16_t cellId,
+  void SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
                                Ipv4Address enbAddr, Ipv4Address sgwAddr,
                                BearerList_t bearerList);
 

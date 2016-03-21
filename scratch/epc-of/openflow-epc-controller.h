@@ -122,13 +122,11 @@ public:
   virtual void NotifyTopologyBuilt (NetDeviceContainer devices);
 
   /**
-   * Notify this controller when the SgwPgw gateway is handling a
-   * CreateSessionRequest message. This is used to notify this controller with
-   * the list of bearers context created (this list will be sent back to the
-   * MME over S11 interface in the CreateSessionResponde message). With this
-   * information, the controller can configure the switches for GTP routing.
-   * The user is supposed to connect this function as trace sink for
-   * SgwPgwApplication::ContextCreated trace source.
+   * Notify this controller when the MME receives a context created response
+   * message. This is used to notify this controller with the list of bearers
+   * context created. With this information, the controller can configure the
+   * switches for GTP routing. The user is supposed to connect this function as
+   * trace sink for EpcMme::SessionCreated trace source.
    * \see 3GPP TS 29.274 7.2.1 for CreateSessionRequest message format.
    * \param imsi The IMSI UE identifier.
    * \param cellId The eNB CellID to which the IMSI UE is attached to.
@@ -136,7 +134,7 @@ public:
    * \param sgwAddr The SgwPgw IPv4 address.
    * \param bearerList The list of context bearers created.
    */
-  virtual void NotifyContextCreated (uint64_t imsi, uint16_t cellId,
+  virtual void NotifySessionCreated (uint64_t imsi, uint16_t cellId,
                                      Ipv4Address enbAddr, Ipv4Address sgwAddr,
                                      BearerList_t bearerList);
 

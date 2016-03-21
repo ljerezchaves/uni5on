@@ -61,6 +61,10 @@ EpcMme::GetTypeId (void)
     .SetParent<Object> ()
     .SetGroupName("Lte")
     .AddConstructor<EpcMme> ()
+    .AddTraceSource ("SessionCreated",
+                     "The session created trace source.",
+                     MakeTraceSourceAccessor (&EpcMme::m_sessionCreatedTrace),
+                     "ns3::EpcMme::SessionCreatedTracedCallback")
     ;
   return tid;
 }
@@ -199,6 +203,7 @@ EpcMme::DoCreateSessionResponse (EpcS11SapMme::CreateSessionResponseMessage msg)
   uint64_t mmeUeS1Id = it->second->mmeUeS1Id;
   std::map<uint16_t, Ptr<EnbInfo> >::iterator jt = m_enbInfoMap.find (cellId);
   NS_ASSERT_MSG (jt != m_enbInfoMap.end (), "could not find any eNB with CellId " << cellId);
+  m_sessionCreatedTrace (imsi, cellId, jt->second->s1uAddr, msg.bearerContextsCreated.begin ()->sgwFteid.address, msg.bearerContextsCreated);
   jt->second->s1apSapEnb->InitialContextSetupRequest (mmeUeS1Id, enbUeS1Id, erabToBeSetupList);
 }
 

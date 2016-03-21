@@ -272,6 +272,12 @@ OpenFlowEpcHelper::GetUeDefaultGatewayAddress ()
   return m_sgwPgw->GetObject<Ipv4> ()->GetAddress (1, 0).GetLocal ();
 }
 
+Ptr<EpcMme>
+OpenFlowEpcHelper::GetMmeElement ()
+{
+  return m_mme;
+}
+
 void
 OpenFlowEpcHelper::EnablePcapS1u (std::string prefix, bool promiscuous, bool explicitFilename)
 {

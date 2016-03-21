@@ -111,10 +111,6 @@ EpcSgwPgwApplication::GetTypeId (void)
                      "Trace source indicating a packet transmitted over the S1-U interface.",
                      MakeTraceSourceAccessor (&EpcSgwPgwApplication::m_txS1uTrace),
                      "ns3::Packet::TracedCallback")
-    .AddTraceSource ("ContextCreated",
-                     "The context created trace source.",
-                     MakeTraceSourceAccessor (&EpcSgwPgwApplication::m_contextCreatedTrace),
-                     "ns3::EpcSgwPgwApplication::ContextCreatedTracedCallback")
     ;
   return tid;
 }
@@ -289,7 +285,6 @@ EpcSgwPgwApplication::DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequest
   std::map<uint16_t, EnbInfo>::iterator enbit = m_enbInfoByCellId.find (cellId);
   NS_ASSERT_MSG (enbit != m_enbInfoByCellId.end (), "unknown CellId " << cellId); 
   Ipv4Address enbAddr = enbit->second.enbAddr;
-  Ipv4Address sgwAddr = enbit->second.sgwAddr;
   ueit->second->SetEnbAddr (enbAddr);
 
   EpcS11SapMme::CreateSessionResponseMessage res;
@@ -308,15 +303,12 @@ EpcSgwPgwApplication::DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequest
 
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.teid = teid;
-      bearerContext.sgwFteid.address = sgwAddr;
+      bearerContext.sgwFteid.address = enbit->second.sgwAddr;
       bearerContext.epsBearerId =  bit->epsBearerId; 
       bearerContext.bearerLevelQos = bit->bearerLevelQos; 
       bearerContext.tft = bit->tft;
       res.bearerContextsCreated.push_back (bearerContext);
     }
-
-  // Create session trace source (used by controller and traffic manager)
-  m_contextCreatedTrace (req.imsi, cellId, enbAddr, sgwAddr, res.bearerContextsCreated);
   m_s11SapMme->CreateSessionResponse (res);
 }
 

@@ -189,12 +189,11 @@ OpenFlowEpcNetwork::NotifyConstructionCompleted (void)
   m_ofEpcHelper->SetX2ConnectCallback (
     MakeCallback (&OpenFlowEpcNetwork::X2Attach, this));
 
-  // Connect the controller to the EpcSgwPgwApplication trace source *after* topology creation.
-  Ptr<EpcSgwPgwApplication> gatewayApp =
-    DynamicCast<EpcSgwPgwApplication> (GetGatewayNode ()->GetApplication (0));
-  NS_ASSERT_MSG (gatewayApp, "SgwPgw application not found.");
-  gatewayApp->TraceConnectWithoutContext ("ContextCreated", MakeCallback (
-    &OpenFlowEpcController::NotifyContextCreated, m_ofCtrlApp));
+  // Connect the controller to the MME SessionCreated trace source *after*
+  // topology creation.
+  m_ofEpcHelper->GetMmeElement ()->TraceConnectWithoutContext (
+    "SessionCreated",
+    MakeCallback (&OpenFlowEpcController::NotifySessionCreated, m_ofCtrlApp));
 
   // Chain up
   Object::NotifyConstructionCompleted ();

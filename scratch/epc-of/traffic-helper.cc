@@ -235,13 +235,10 @@ TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices)
       m_ueNode->AggregateObject (m_ueManager);
 
       // Connecting the manager to new context created trace source.
-      Ptr<EpcSgwPgwApplication> gateway =
-        Names::Find<EpcSgwPgwApplication> ("/Names/SgwPgwApplication");
-      NS_ASSERT_MSG (gateway, "SgwPgw application not found.");
-
-      gateway->TraceConnectWithoutContext (
-        "ContextCreated",
-        MakeCallback (&TrafficManager::ContextCreatedCallback, m_ueManager));
+      Ptr<OpenFlowEpcHelper> ofHelper = m_ofNetwork->GetEpcHelper ();
+      ofHelper->GetMmeElement ()->TraceConnectWithoutContext (
+        "SessionCreated",
+        MakeCallback (&TrafficManager::SessionCreatedCallback, m_ueManager));
 
       // Installing applications into UEs
       InstallGbrVoip ();

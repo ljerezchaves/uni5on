@@ -76,6 +76,11 @@ public:
   virtual Ipv4InterfaceContainer AssignUeIpv4Address (NetDeviceContainer ueDevices);
   virtual Ipv4Address GetUeDefaultGatewayAddress ();
 
+  /**
+   * Get a pointer to the MME element.
+   * \return The MME element.
+   */
+  Ptr<EpcMme> GetMmeElement ();
 
   /**
     * Enable Pcap output on all S1-U devices connected to OpenFlow network.

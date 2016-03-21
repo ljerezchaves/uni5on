@@ -261,7 +261,7 @@ OpenFlowEpcController::NotifyTopologyBuilt (NetDeviceContainer devices)
 }
 
 void
-OpenFlowEpcController::NotifyContextCreated (
+OpenFlowEpcController::NotifySessionCreated (
   uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr,
   BearerList_t bearerList)
 {

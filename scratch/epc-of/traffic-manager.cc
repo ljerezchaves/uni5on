@@ -130,7 +130,7 @@ TrafficManager::NotifyAppStop (Ptr<const EpcApplication> app)
 }
 
 void
-TrafficManager::ContextCreatedCallback (
+TrafficManager::SessionCreatedCallback (
   uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr,
   BearerList_t bearerList)
 {

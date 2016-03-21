@@ -150,18 +150,6 @@ public:
    */
   void SetUeAddress (uint64_t imsi, Ipv4Address ueAddr);
 
-  /** 
-   * TracedCallback signature for context created trace source.
-   * \param imsi The IMSI UE identifier.
-   * \param cellId The eNB CellID to which the IMSI UE is attached to.
-   * \param enbAddr The eNB IPv4 address.
-   * \param sgwAddr The SgwPgw IPv4 address.
-   * \param bearerList The list of context bearers created.
-   */
-  typedef void (* ContextCreatedTracedCallback)
-    (uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr, 
-    std::list<EpcS11SapMme::BearerContextCreated> bearerList);
-
 private:
 
   // S11 SAP SGW methods
@@ -300,12 +288,6 @@ public:
    * Trace source fired when a packet leaves this eNB over the S1-U interface.
    */
   TracedCallback<Ptr<const Packet> > m_txS1uTrace;
-
-  /** 
-   * Trace source fired during the create session request. 
-   */
-  TracedCallback<uint64_t, uint16_t, Ipv4Address, Ipv4Address, 
-    std::list<EpcS11SapMme::BearerContextCreated> > m_contextCreatedTrace;
 };
 
 } //namespace ns3
