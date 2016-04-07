@@ -166,7 +166,7 @@ RingNetwork::CreateTopology ()
                   Names::FindName (currNode), devs.Get (1));
 
       // Adding newly created csma devices as Openflow switch ports.
-      Ptr<OFSwitch13NetDevice> currDevice, nextDevice;
+      Ptr<OFSwitch13Device> currDevice, nextDevice;
       Ptr<CsmaNetDevice> currPortDevice, nextPortDevice;
       uint32_t currPortNum, nextPortNum;
 
@@ -256,7 +256,7 @@ RingNetwork::S1Attach (Ptr<Node> node, uint16_t cellId)
   Ipv4Address nodeAddr = nodeIpIfaces.GetAddress (0);
 
   // Adding newly created csma device as openflow switch port.
-  Ptr<OFSwitch13NetDevice> swDev = GetSwitchDevice (swIdx);
+  Ptr<OFSwitch13Device> swDev = GetSwitchDevice (swIdx);
   Ptr<OFSwitch13Port> swPort = swDev->AddSwitchPort (portDev);
   uint32_t portNum = swPort->GetPortNo ();
 
@@ -288,7 +288,7 @@ RingNetwork::X2Attach (Ptr<Node> enb1, Ptr<Node> enb2)
   // // Creating a link between the firts eNB and its switch
   // uint16_t swIdx1 = GetSwitchIdxForNode (enb1);
   // Ptr<Node> swNode1 = m_ofSwitches.Get (swIdx1);
-  // Ptr<OFSwitch13NetDevice> swDev1 = GetSwitchDevice (swIdx1);
+  // Ptr<OFSwitch13Device> swDev1 = GetSwitchDevice (swIdx1);
 
   // NodeContainer pair1;
   // pair1.Add (swNode1);
@@ -302,7 +302,7 @@ RingNetwork::X2Attach (Ptr<Node> enb1, Ptr<Node> enb2)
   // // Creating a link between the second eNB and its switch
   // uint16_t swIdx2 = GetSwitchIdxForNode (enb2);
   // Ptr<Node> swNode2 = m_ofSwitches.Get (swIdx2);
-  // Ptr<OFSwitch13NetDevice> swDev2 = GetSwitchDevice (swIdx2);
+  // Ptr<OFSwitch13Device> swDev2 = GetSwitchDevice (swIdx2);
 
   // NodeContainer pair2;
   // pair2.Add (swNode2);

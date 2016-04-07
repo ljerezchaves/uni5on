@@ -24,6 +24,7 @@
 #include <ns3/nstime.h>
 #include <ns3/queue.h>
 #include <ns3/epc-apps-module.h>
+#include <ns3/ofswitch13-device-container.h>
 
 namespace ns3 {
 
@@ -138,9 +139,9 @@ public:
   /**
    * Notify this stats calculator that all connection between switches have
    * already been configure and the topology is finished.
-   * \param devices The NetDeviceContainer for OpenFlow switch devices.
+   * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
    */
-  void NotifyTopologyBuilt (NetDeviceContainer devices);
+  void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
 
 protected:
   /** Destructor implementation */
@@ -161,7 +162,7 @@ private:
    */
   Time GetActiveTime (void) const;
 
-  NetDeviceContainer                m_devices;      //!< Switch devices
+  OFSwitch13DeviceContainer         m_devices;      //!< Switch devices
   std::vector<Ptr<ConnectionInfo> > m_connections;  //!< Switch connections
 
   Time m_lastResetTime;                 //!< Last reset time

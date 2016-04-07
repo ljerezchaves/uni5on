@@ -381,14 +381,12 @@ NetworkStatsCalculator::DumpStatistics (Time next)
       cInfo->ResetTxBytes ();
     }
 
-  Ptr<OFSwitch13NetDevice> dev;
-  NetDeviceContainer::Iterator itDev;
+  OFSwitch13DeviceContainer::Iterator itDev;
   for (itDev = m_devices.Begin (); itDev < m_devices.End (); itDev++)
     {
-      dev = DynamicCast<OFSwitch13NetDevice> (*itDev);
       *m_swtWrapper->GetStream ()
       << setw (6)
-      << dev->GetNumberFlowEntries (1) << " ";
+      << (*itDev)->GetNumberFlowEntries (1) << " ";
     }
 
   *m_bwbWrapper->GetStream () << std::endl;
@@ -436,7 +434,7 @@ NetworkStatsCalculator::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 }
 
 void
-NetworkStatsCalculator::NotifyTopologyBuilt (NetDeviceContainer devices)
+NetworkStatsCalculator::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -708,10 +706,10 @@ EpcS1uStatsCalculator::EpcS1uStatsCalculator (
     "/NodeList/*/ApplicationList/*/$ns3::EpcSgwPgwApplication/S1uTx",
     MakeCallback (&EpcS1uStatsCalculator::EpcInputPacket, this));
   Config::Connect (
-    "/NodeList/*/DeviceList/*/$ns3::OFSwitch13NetDevice/MeterDrop",
+    "/NodeList/*/$ns3::OFSwitch13Device/MeterDrop",
     MakeCallback (&EpcS1uStatsCalculator::MeterDropPacket, this));
   Config::Connect (
-    "/NodeList/*/DeviceList/*/$ns3::OFSwitch13NetDevice/PortList/*/PortQueue/Drop",
+    "/NodeList/*/$ns3::OFSwitch13Device/PortList/*/PortQueue/Drop",
     MakeCallback (&EpcS1uStatsCalculator::QueueDropPacket, this));
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::EpcApplication/AppStart",

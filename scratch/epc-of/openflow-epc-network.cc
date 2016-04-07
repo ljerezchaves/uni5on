@@ -220,11 +220,11 @@ OpenFlowEpcNetwork::RegisterGatewayAtSwitch (uint16_t switchIdx,
   m_gatewaySwitch = switchIdx;
 }
 
-Ptr<OFSwitch13NetDevice>
+Ptr<OFSwitch13Device>
 OpenFlowEpcNetwork::GetSwitchDevice (uint16_t index)
 {
   NS_ASSERT (index < m_ofDevices.GetN ());
-  return DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (index));
+  return m_ofDevices.Get (index);
 }
 
 uint16_t
@@ -241,7 +241,7 @@ OpenFlowEpcNetwork::GetSwitchIdxForNode (Ptr<Node> node)
 }
 
 uint16_t
-OpenFlowEpcNetwork::GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev)
+OpenFlowEpcNetwork::GetSwitchIdxForDevice (Ptr<OFSwitch13Device> dev)
 {
   uint16_t i;
   for (i = 0; i < GetNSwitches (); i++)

@@ -101,7 +101,7 @@ public:
    * \param swtchPort The port number for nodeDev at OpenFlow switch.
    */
   virtual void NotifyNewEpcAttach (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
-                                   Ptr<OFSwitch13NetDevice> swtchDev,
+                                   Ptr<OFSwitch13Device> swtchDev,
                                    uint16_t swtchIdx, uint32_t swtchPort);
 
   /**
@@ -117,9 +117,9 @@ public:
    * been configure and the topology is finished. The user is supposed to
    * connect this function as trace sink for OpenFlowEpcNetwork::TopologyBuilt
    * trace source.
-   * \param devices The NetDeviceContainer for OpenFlow switch devices.
+   * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
    */
-  virtual void NotifyTopologyBuilt (NetDeviceContainer devices);
+  virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
 
   /**
    * Notify this controller when the MME receives a context created response
@@ -238,11 +238,11 @@ protected:
                                      SwitchInfo, uint32_t);
 
   /**
-   * Get the OFSwitch13NetDevice for a specific switch index.
+   * Get the OFSwitch13Device for a specific switch index.
    * \param index The switch index in device colection.
-   * \return The pointer to the switch OFSwitch13NetDevice.
+   * \return The pointer to the switch OFSwitch13Device.
    */
-  Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
+  Ptr<OFSwitch13Device> GetSwitchDevice (uint16_t index);
 
 private:
   /**
@@ -292,12 +292,12 @@ private:
    * address for the local device in order to output packets on respective
    * device port. It will also match input port for packet classification and
    * routing.
-   * \param swtchDev The Switch OFSwitch13NetDevice pointer.
+   * \param swtchDev The Switch OFSwitch13Device pointer.
    * \param nodeDev The device connected to the OpenFlow network.
    * \param nodeIp The IPv4 address assigned to this device.
    * \param swtchPort The number of switch port this device is attached to.
    */
-  void ConfigureLocalPortRules (Ptr<OFSwitch13NetDevice> swtchDev,
+  void ConfigureLocalPortRules (Ptr<OFSwitch13Device> swtchDev,
                                 Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
                                 uint32_t swtchPort);
 
@@ -387,7 +387,7 @@ protected:
   static const uint16_t m_dedicatedTmo;   //!< Timeout for dedicated bearers
 
 private:
-  NetDeviceContainer  m_ofDevices;        //!< OpenFlow switch devices.
+  OFSwitch13DeviceContainer      m_ofDevices;       //!< OpenFlow devices.
   Ptr<ControllerStatsCalculator> m_controllerStats; //!< Admission statistics.
 
   /** Map saving <TEID / Routing information > */

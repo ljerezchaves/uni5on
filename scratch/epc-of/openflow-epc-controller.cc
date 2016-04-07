@@ -202,7 +202,7 @@ OpenFlowEpcController::GetDscpMappedValue (EpsBearer::Qci qci)
 void
 OpenFlowEpcController::NotifyNewEpcAttach (
   Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
-  Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, uint32_t swtchPort)
+  Ptr<OFSwitch13Device> swtchDev, uint16_t swtchIdx, uint32_t swtchPort)
 {
   NS_LOG_FUNCTION (this << nodeIp << swtchIdx << swtchPort);
 
@@ -233,7 +233,7 @@ OpenFlowEpcController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 }
 
 void
-OpenFlowEpcController::NotifyTopologyBuilt (NetDeviceContainer devices)
+OpenFlowEpcController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -243,12 +243,12 @@ OpenFlowEpcController::NotifyTopologyBuilt (NetDeviceContainer devices)
   // When enable, add a high-priority queue at each OpenFlow output port.
   if (m_voipQos)
     {
-      Ptr<OFSwitch13NetDevice> ofDevice;
+      Ptr<OFSwitch13Device> ofDevice;
       Ptr<OFSwitch13Queue> ofQueue;
       uint32_t queueId;
       for (uint32_t devIdx = 0; devIdx < devices.GetN (); devIdx++)
         {
-          ofDevice = DynamicCast<OFSwitch13NetDevice> (devices.Get (devIdx));
+          ofDevice = devices.Get (devIdx);
           for (uint32_t portNo = 1; portNo <= ofDevice->GetNSwitchPorts ();
                portNo++)
             {
@@ -595,11 +595,11 @@ OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   NS_ABORT_MSG ("Should not get here :/");
 }
 
-Ptr<OFSwitch13NetDevice>
+Ptr<OFSwitch13Device>
 OpenFlowEpcController::GetSwitchDevice (uint16_t index)
 {
   NS_ASSERT (index < m_ofDevices.GetN ());
-  return DynamicCast<OFSwitch13NetDevice> (m_ofDevices.Get (index));
+  return m_ofDevices.Get (index);
 }
 
 void
@@ -685,7 +685,7 @@ OpenFlowEpcController::GetArpEntry (Ipv4Address ip)
 
 void
 OpenFlowEpcController::ConfigureLocalPortRules (
-  Ptr<OFSwitch13NetDevice> swtchDev, Ptr<NetDevice> nodeDev,
+  Ptr<OFSwitch13Device> swtchDev, Ptr<NetDevice> nodeDev,
   Ipv4Address nodeIp, uint32_t swtchPort)
 {
   NS_LOG_FUNCTION (this << swtchDev << nodeDev << nodeIp << swtchPort);

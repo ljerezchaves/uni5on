@@ -127,7 +127,7 @@ ConnectionInfo::GetPortNo (uint8_t idx) const
   return m_switches [idx].portNum;
 }
 
-Ptr<const OFSwitch13NetDevice>
+Ptr<const OFSwitch13Device>
 ConnectionInfo::GetSwDev (uint8_t idx) const
 {
   NS_ASSERT_MSG (idx == 0 || idx == 1, "Invalid switch index.");

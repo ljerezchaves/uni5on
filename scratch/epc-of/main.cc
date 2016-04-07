@@ -305,7 +305,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("Main", LOG_INFO);
       LogComponentEnable ("StatsCalculator", LOG_LEVEL_WARN);
 
-      LogComponentEnable ("OFSwitch13NetDevice", LOG_LEVEL_WARN);
+      LogComponentEnable ("OFSwitch13Device", LOG_LEVEL_WARN);
       LogComponentEnable ("OFSwitch13Interface", LOG_LEVEL_WARN);
       LogComponentEnable ("OFSwitch13Helper", LOG_LEVEL_WARN);
       LogComponentEnable ("OFSwitch13Controller", LOG_LEVEL_WARN);

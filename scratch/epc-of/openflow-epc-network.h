@@ -79,7 +79,7 @@ public:
   virtual void EnablePcap (std::string prefix, bool promiscuous = false);
 
   /**
-   * Set an attribute for ns3::OFSwitch13NetDevice
+   * Set an attribute for ns3::OFSwitch13Device
    * \param n1 the name of the attribute to set.
    * \param v1 the value of the attribute to set.
    */
@@ -139,8 +139,8 @@ public:
   * \param swtchPort The port number for nodeDev at OpenFlow switch.
   */
   typedef void (*AttachTracedCallback)(
-    Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
-    Ptr<OFSwitch13NetDevice> swtchDev, uint16_t swtchIdx, uint32_t swtchPort);
+    Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, Ptr<OFSwitch13Device> swtchDev,
+    uint16_t swtchIdx, uint32_t swtchPort);
 
 protected:
   /** Destructor implementation */
@@ -167,11 +167,11 @@ protected:
   void RegisterGatewayAtSwitch (uint16_t switchIdx, Ptr<Node> node);
 
   /**
-   * Get the OFSwitch13NetDevice of a specific switch.
+   * Get the OFSwitch13Device of a specific switch.
    * \param index The switch index.
-   * \return The pointer to the switch OFSwitch13NetDevice.
+   * \return The pointer to the switch OFSwitch13Device.
    */
-  Ptr<OFSwitch13NetDevice> GetSwitchDevice (uint16_t index);
+  Ptr<OFSwitch13Device> GetSwitchDevice (uint16_t index);
 
   /**
    * Retrieve the switch index for node pointer.
@@ -185,7 +185,7 @@ protected:
    * \param dev The OpenFlow device pointer.
    * \return The switch index in m_ofSwitches.
    */
-  uint16_t GetSwitchIdxForDevice (Ptr<OFSwitch13NetDevice> dev);
+  uint16_t GetSwitchIdxForDevice (Ptr<OFSwitch13Device> dev);
 
   /**
    * Retrieve the switch index at which the gateway is connected.
@@ -200,7 +200,7 @@ protected:
   void InstallController (Ptr<OpenFlowEpcController> controller);
 
   NodeContainer                  m_ofSwitches;     //!< Switch nodes.
-  NetDeviceContainer             m_ofDevices;      //!< Switch devices.
+  OFSwitch13DeviceContainer      m_ofDevices;      //!< Switch devices.
   Ptr<OFSwitch13Helper>          m_ofSwitchHelper; //!< OpenFlow switch helper.
   Ptr<LinkQueuesStatsCalculator> m_gatewayStats;   //!< Gateway statistics.
 
@@ -208,10 +208,10 @@ protected:
   TracedCallback<Ptr<ConnectionInfo> > m_newConnTrace;
 
   /** Connections between switches finished trace source. */
-  TracedCallback<NetDeviceContainer> m_topoBuiltTrace;
+  TracedCallback<OFSwitch13DeviceContainer> m_topoBuiltTrace;
 
   /** New EPC entity connected to OpenFlow network trace source. */
-  TracedCallback<Ptr<NetDevice>, Ipv4Address, Ptr<OFSwitch13NetDevice>,
+  TracedCallback<Ptr<NetDevice>, Ipv4Address, Ptr<OFSwitch13Device>,
                  uint16_t, uint32_t> m_newAttachTrace;
 
 private:

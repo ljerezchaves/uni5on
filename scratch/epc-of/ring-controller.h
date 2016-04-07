@@ -56,7 +56,7 @@ protected:
 
   // Inherited from OpenFlowEpcController
   void NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo);
-  void NotifyTopologyBuilt (NetDeviceContainer devices);
+  void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
   void NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo);
   bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer);
   bool TopologyRemoveRouting (Ptr<RoutingInfo> rInfo);

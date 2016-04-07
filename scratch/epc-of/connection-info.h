@@ -49,7 +49,7 @@ public:
   struct SwitchData
   {
     uint16_t                  swIdx;    //!< Switch index
-    Ptr<OFSwitch13NetDevice>  swDev;    //!< OpenFlow switch device
+    Ptr<OFSwitch13Device>     swDev;    //!< OpenFlow switch device
     Ptr<CsmaNetDevice>        portDev;  //!< OpenFlow csma port device
     uint32_t                  portNum;  //!< OpenFlow port number
   };
@@ -98,7 +98,7 @@ public:
   //\{
   uint16_t                        GetSwIdx    (uint8_t idx) const;
   uint32_t                        GetPortNo   (uint8_t idx) const;
-  Ptr<const OFSwitch13NetDevice>  GetSwDev    (uint8_t idx) const;
+  Ptr<const OFSwitch13Device>     GetSwDev    (uint8_t idx) const;
   Ptr<const CsmaNetDevice>        GetPortDev  (uint8_t idx) const;
   //\}
 
