@@ -81,8 +81,7 @@ InternetNetwork::CreateTopology (Ptr<Node> pgw)
                                     DataRateValue (m_linkDataRate));
   m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
 
-  // Creating a single web node and connecting it to the EPC pgw over a
-  // PointToPoint link.
+  // Creating a single web node and connecting it to the EPC PGW node
   Ptr<Node> web = CreateObject<Node> ();
   Names::Add ("srv", web);
 
