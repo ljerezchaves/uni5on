@@ -113,12 +113,6 @@ CsmaNetDevice::GetTypeId (void)
                      "This is a promiscuous trace,",
                      MakeTraceSourceAccessor (&CsmaNetDevice::m_macPromiscRxTrace),
                      "ns3::Packet::TracedCallback")
-    .AddTraceSource ("OpenFlowRx",
-                     "Similar to a promiscuous protocol handler, but using the "
-                     "original packet (with all headers). "
-                     "It was designed to integration with ofswitch13 module.",
-                     MakeTraceSourceAccessor (&CsmaNetDevice::m_openflowRxTrace),
-                     "ns3::ofs::OpenFlowCallback")
     .AddTraceSource ("MacRx",
                      "A packet has been received by this device, "
                      "has been passed up from the physical layer "
@@ -811,6 +805,17 @@ CsmaNetDevice::Receive (Ptr<Packet> packet, Ptr<CsmaNetDevice> senderDevice)
     }
 
   //
+  // For all kinds of packetType we receive, we pass the original copy of the
+  // packet to the OpenFlow receive callback. Nothing more is supposed to
+  // happen when this device is configure as OpenFlow port, so we end here.
+  //
+  if (!m_openFlowRxCallback.IsNull ())
+    {
+      m_openFlowRxCallback (this, originalPacket, protocol, header.GetSource (), header.GetDestination (), packetType);
+      return;
+    }
+
+  // 
   // For all kinds of packetType we receive, we hit the promiscuous sniffer
   // hook and pass a copy up to the promiscuous callback.  Pass a copy to
   // make sure that nobody messes with our packet.
@@ -821,13 +826,6 @@ CsmaNetDevice::Receive (Ptr<Packet> packet, Ptr<CsmaNetDevice> senderDevice)
       m_macPromiscRxTrace (originalPacket);
       m_promiscRxCallback (this, packet, protocol, header.GetSource (), header.GetDestination (), packetType);
     }
-
-  //
-  // When this device is set as an OpenFlow switch port, let's hit the OpenFlow
-  // RX trace source with the original packet (copy), so it can be freely
-  // modified.
-  //
-  m_openflowRxTrace (originalPacket);
 
   //
   // If this packet is not destined for some other host, it must be for us
@@ -1039,6 +1037,13 @@ CsmaNetDevice::NeedsArp (void) const
 {
   NS_LOG_FUNCTION_NOARGS ();
   return true;
+}
+
+void
+CsmaNetDevice::SetOpenFlowReceiveCallback (NetDevice::PromiscReceiveCallback cb)
+{
+  NS_LOG_FUNCTION (&cb);
+  m_openFlowRxCallback = cb;
 }
 
 void

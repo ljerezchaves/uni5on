@@ -307,6 +307,14 @@ public:
   virtual bool NeedsArp (void) const;
 
   /**
+   * Set the callback to be used to notify the OpenFlow device when a packet
+   * has been received.
+   *
+   * \param cb The callback.
+   */
+  virtual void SetOpenFlowReceiveCallback (NetDevice::PromiscReceiveCallback cb);
+  
+  /**
    * Set the callback to be used to notify higher layers when a packet has been
    * received.
    *
@@ -565,18 +573,6 @@ private:
   TracedCallback<Ptr<const Packet> > m_macPromiscRxTrace;
 
   /**
-   * This trace source is intended to be used by ofswitch13 OpenFlow module.
-   * The trace source fired for packets successfully received by the device
-   * immediately before being forwarded up to higher layers (at the L2/L3
-   * transition). This is a promiscuous trace, but in contrast to a promiscuous
-   * protocol handler, the packet sent to this trace source also includes the
-   * Ethernet header, which is necessary by OpenFlow pipeline processing. 
-   *
-   * \see class CallBackTraceSource
-   */
-  TracedCallback<Ptr<Packet> > m_openflowRxTrace;
-
-  /**
    * The trace source fired for packets successfully received by the device
    * immediately before being forwarded up to higher layers (at the L2/L3 
    * transition).  This is a non-promiscuous trace.
@@ -700,6 +696,11 @@ private:
    */
   Mac48Address m_address;
 
+  /**
+   * The callback used to notify OpenFlow device that a packet has been received.
+   */
+  NetDevice::PromiscReceiveCallback m_openFlowRxCallback;
+  
   /**
    * The callback used to notify higher layers that a packet has been received.
    */
