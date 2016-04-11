@@ -164,13 +164,6 @@ void ConfigureDefaults ()
   ForceDefaults ();
 
   //
-  // For network queues, use the byte mode and set default size to 128 KBytes.
-  //
-  Config::SetDefault ("ns3::DropTailQueue::Mode",
-                      EnumValue (Queue::QUEUE_MODE_BYTES));
-  Config::SetDefault ("ns3::DropTailQueue::MaxBytes", UintegerValue (131072));
-
-  //
   // Increasing SrsPeriodicity to allow more UEs per eNB. Allowed values are:
   // {2, 5, 10, 20, 40, 80, 160, 320}. The default value (40) allows no more
   // than ~40 UEs for each eNB. Note that the value needs to be higher than the
