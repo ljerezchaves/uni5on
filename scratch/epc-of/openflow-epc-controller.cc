@@ -212,14 +212,6 @@ OpenFlowEpcController::NotifyNewEpcAttach (
   SaveSwitchIndex (nodeIp, swtchIdx);
 
   ConfigureLocalPortRules (swtchDev, nodeDev, nodeIp, swtchPort);
-
-  // When enable, add a high-priority queue at this new OpenFlow output port.
-  if (m_voipQos)
-    {
-      Ptr<OFSwitch13Queue> ofQueue = swtchDev->GetOutputQueue (swtchPort);
-      uint32_t queueId = ofQueue->AddQueue (CreateObject<DropTailQueue> ());
-      NS_ASSERT_MSG (queueId == 1, "Invalid queue id.");
-    }
 }
 
 void
@@ -239,25 +231,6 @@ OpenFlowEpcController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
 
   m_ofDevices = devices;
   TopologyCreateSpanningTree ();
-
-  // When enable, add a high-priority queue at each OpenFlow output port.
-  if (m_voipQos)
-    {
-      Ptr<OFSwitch13Device> ofDevice;
-      Ptr<OFSwitch13Queue> ofQueue;
-      uint32_t queueId;
-      for (uint32_t devIdx = 0; devIdx < devices.GetN (); devIdx++)
-        {
-          ofDevice = devices.Get (devIdx);
-          for (uint32_t portNo = 1; portNo <= ofDevice->GetNSwitchPorts ();
-               portNo++)
-            {
-              ofQueue = ofDevice->GetOutputQueue (portNo);
-              queueId = ofQueue->AddQueue (CreateObject<DropTailQueue> ());
-              NS_ASSERT_MSG (queueId == 1, "Invalid queue id.");
-            }
-        }
-    }
 }
 
 void
