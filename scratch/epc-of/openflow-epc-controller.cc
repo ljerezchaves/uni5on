@@ -220,8 +220,9 @@ OpenFlowEpcController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
   NS_LOG_FUNCTION (this << cInfo);
 
   // Connecting this controller to ConnectionInfo trace source
-  cInfo->TraceConnectWithoutContext ("NonGbrAdjusted", MakeCallback (
-    &OpenFlowEpcController::NotifyNonGbrAdjusted, this));
+  cInfo->TraceConnectWithoutContext (
+    "NonGbrAdjusted", MakeCallback (
+      &OpenFlowEpcController::NotifyNonGbrAdjusted, this));
 }
 
 void
@@ -348,8 +349,9 @@ OpenFlowEpcController::NotifyConstructionCompleted ()
   NS_LOG_FUNCTION (this);
 
   // Connect the admission stats calculator
-  TraceConnectWithoutContext ("BearerRequest", MakeCallback (
-        &ControllerStatsCalculator::NotifyBearerRequest, m_controllerStats));
+  TraceConnectWithoutContext (
+    "BearerRequest", MakeCallback (
+      &ControllerStatsCalculator::NotifyBearerRequest, m_controllerStats));
 
   // Chain up
   ObjectBase::NotifyConstructionCompleted ();

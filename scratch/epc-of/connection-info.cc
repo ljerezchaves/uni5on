@@ -238,7 +238,7 @@ void
 ConnectionInfo::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
-  
+
   m_gbrMinBitRate = 0;
   m_gbrMaxBitRate = static_cast<uint64_t> (m_gbrLinkQuota * GetLinkBitRate ());
   NS_LOG_DEBUG ("GBR maximum bit rate: " << m_gbrMaxBitRate << " " <<
@@ -254,7 +254,7 @@ ConnectionInfo::NotifyConstructionCompleted (void)
 
   // Fire adjusted trace source to update meters.
   m_nonAdjustedTrace (this);
-  
+
   // Chain up
   Object::NotifyConstructionCompleted ();
 }

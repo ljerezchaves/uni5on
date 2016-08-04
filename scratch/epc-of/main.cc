@@ -44,8 +44,8 @@ void EnableVerbose (bool);
 // Prefixes used by input and output filenames.
 static ns3::GlobalValue
 g_inputPrefix ("InputPrefix", "Common prefix for output filenames.",
-                ns3::StringValue (""),
-                ns3::MakeStringChecker ());
+               ns3::StringValue (""),
+               ns3::MakeStringChecker ());
 
 static ns3::GlobalValue
 g_outputPrefix ("OutputPrefix", "Common prefix for input filenames.",

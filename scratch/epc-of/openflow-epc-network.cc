@@ -174,10 +174,12 @@ OpenFlowEpcNetwork::NotifyConstructionCompleted (void)
   NS_LOG_FUNCTION (this);
 
   // Connect the network stats calculator *before* topology creation.
-  TraceConnectWithoutContext ("TopologyBuilt", MakeCallback (
-    &NetworkStatsCalculator::NotifyTopologyBuilt, m_networkStats));
-  TraceConnectWithoutContext ("NewSwitchConnection", MakeCallback (
-    &NetworkStatsCalculator::NotifyNewSwitchConnection, m_networkStats));
+  TraceConnectWithoutContext (
+    "TopologyBuilt", MakeCallback (
+      &NetworkStatsCalculator::NotifyTopologyBuilt, m_networkStats));
+  TraceConnectWithoutContext (
+    "NewSwitchConnection", MakeCallback (
+      &NetworkStatsCalculator::NotifyNewSwitchConnection, m_networkStats));
 
   // Create the ring network topology and Internet topology
   CreateTopology ();
@@ -192,8 +194,8 @@ OpenFlowEpcNetwork::NotifyConstructionCompleted (void)
   // Connect the controller to the MME SessionCreated trace source *after*
   // topology creation.
   m_ofEpcHelper->GetMmeElement ()->TraceConnectWithoutContext (
-    "SessionCreated",
-    MakeCallback (&OpenFlowEpcController::NotifySessionCreated, m_ofCtrlApp));
+    "SessionCreated", MakeCallback (
+      &OpenFlowEpcController::NotifySessionCreated, m_ofCtrlApp));
 
   // Chain up
   Object::NotifyConstructionCompleted ();
@@ -274,12 +276,15 @@ OpenFlowEpcNetwork::InstallController (Ptr<OpenFlowEpcController> controller)
   m_ofSwitchHelper->InstallControllerApp (m_ofCtrlNode, m_ofCtrlApp);
 
   // Connecting controller trace sinks to sources in this network
-  TraceConnectWithoutContext ("NewEpcAttach", MakeCallback (
-    &OpenFlowEpcController::NotifyNewEpcAttach, m_ofCtrlApp));
-  TraceConnectWithoutContext ("TopologyBuilt", MakeCallback (
-    &OpenFlowEpcController::NotifyTopologyBuilt, m_ofCtrlApp));
-  TraceConnectWithoutContext ("NewSwitchConnection", MakeCallback (
-    &OpenFlowEpcController::NotifyNewSwitchConnection, m_ofCtrlApp));
+  TraceConnectWithoutContext (
+    "NewEpcAttach", MakeCallback (
+      &OpenFlowEpcController::NotifyNewEpcAttach, m_ofCtrlApp));
+  TraceConnectWithoutContext (
+    "TopologyBuilt", MakeCallback (
+      &OpenFlowEpcController::NotifyTopologyBuilt, m_ofCtrlApp));
+  TraceConnectWithoutContext (
+    "NewSwitchConnection", MakeCallback (
+      &OpenFlowEpcController::NotifyNewSwitchConnection, m_ofCtrlApp));
 }
 
 };  // namespace ns3

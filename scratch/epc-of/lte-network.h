@@ -44,7 +44,7 @@ public:
    * \param epcHelper The OpenFlow EPC helper.
    */
   LteNetwork (Ptr<EpcHelper> epcHelper);
-  
+
   LteNetwork ();           //!< Default constructor
   virtual ~LteNetwork ();  //!< Dummy destructor, see DoDipose
 

@@ -395,7 +395,7 @@ LteNetwork::PrintRadioEnvironmentMap ()
   enbDevice->GetAttribute ("DlEarfcn", earfcnValue);
   m_remHelper->SetAttribute ("Earfcn", earfcnValue);
 
-  UintegerValue dlBandwidthValue ;
+  UintegerValue dlBandwidthValue;
   enbDevice->GetAttribute ("DlBandwidth", dlBandwidthValue);
   m_remHelper->SetAttribute ("Bandwidth", dlBandwidthValue);
 
@@ -459,7 +459,7 @@ LteNetwork::PrintRadioEnvironmentMap ()
 
       *fileWrapper->GetStream ()
       << "set label '" << ueDev->GetImsi () << "' "
-      << "at "<< pos.x << "," << pos.y << " "
+      << "at " << pos.x << "," << pos.y << " "
       << "left font ',5' textcolor rgb 'grey' "
       << "front point pt 1 lw 2 ps 0.3 lc rgb 'grey'"
       << std::endl;
@@ -476,7 +476,7 @@ LteNetwork::PrintRadioEnvironmentMap ()
 
       *fileWrapper->GetStream ()
       << "set label '" << site << "," << site + 1 << "," << site + 2 << "' "
-      << "at "<< pos.x << "," << pos.y << " "
+      << "at " << pos.x << "," << pos.y << " "
       << "left font ',5' textcolor rgb 'white' "
       << "front point pt 7 ps 0.4 lc rgb 'white'"
       << std::endl;

@@ -73,7 +73,7 @@ protected:
 
   // Inherited from ObjectBase
   void NotifyConstructionCompleted (void);
-  
+
 private:
   /**
    * Install applications and traffic manager into each UE. It creates the
@@ -173,7 +173,7 @@ private:
 
   Ptr<OpenFlowEpcNetwork> m_ofNetwork;  //!< The EPC + Internet network
   Ptr<LteNetwork>         m_lteNetwork; //!< The LTE network
-  
+
   Ptr<Node>           m_webNode;        //!< Server node
   Ipv4Address         m_webAddr;        //!< Server address
   Ipv4Mask            m_webMask;        //!< Server address mask

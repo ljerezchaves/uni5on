@@ -182,7 +182,7 @@ TrafficHelper::GetTypeId (void)
 
 void
 TrafficHelper::SetManagerAttribute (std::string name,
-                                       const AttributeValue &value)
+                                    const AttributeValue &value)
 {
   m_managerFactory.Set (name, value);
 }
@@ -525,8 +525,9 @@ TrafficHelper::EnableFastTraffic (bool fastTraffic)
 
   if (fastTraffic)
     {
-      SetManagerAttribute ("PoissonInterArrival",
-          StringValue ("ns3::ExponentialRandomVariable[Mean=20.0]"));
+      SetManagerAttribute (
+        "PoissonInterArrival",
+        StringValue ("ns3::ExponentialRandomVariable[Mean=20.0]"));
     }
 }
 

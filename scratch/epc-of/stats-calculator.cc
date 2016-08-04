@@ -96,8 +96,8 @@ ControllerStatsCalculator::DumpStatistics (Time next)
   << std::endl;
 
   ResetCounters ();
-  Simulator::Schedule (next,
-    &ControllerStatsCalculator::DumpStatistics, this, next);
+  Simulator::Schedule (
+    next, &ControllerStatsCalculator::DumpStatistics, this, next);
 }
 
 void
@@ -215,8 +215,8 @@ ControllerStatsCalculator::NotifyConstructionCompleted (void)
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
   Time next = timeValue.Get ();
-  Simulator::Schedule (next,
-    &ControllerStatsCalculator::DumpStatistics, this, next);
+  Simulator::Schedule (
+    next, &ControllerStatsCalculator::DumpStatistics, this, next);
 
   // Chain up
   Object::NotifyConstructionCompleted ();
@@ -304,7 +304,7 @@ NetworkStatsCalculator::GetTypeId (void)
                    StringValue ("swt_stats.txt"),
                    MakeStringAccessor (
                      &NetworkStatsCalculator::m_swtStatsFilename),
-                   MakeStringChecker ())  ;
+                   MakeStringChecker ());
   return tid;
 }
 
@@ -397,8 +397,8 @@ NetworkStatsCalculator::DumpStatistics (Time next)
   *m_swtWrapper->GetStream () << std::endl;
 
   ResetCounters ();
-  Simulator::Schedule (next,
-    &NetworkStatsCalculator::DumpStatistics, this, next);
+  Simulator::Schedule (
+    next, &NetworkStatsCalculator::DumpStatistics, this, next);
 }
 
 void
@@ -521,8 +521,8 @@ NetworkStatsCalculator::NotifyConstructionCompleted (void)
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
   Time next = timeValue.Get ();
-  Simulator::Schedule (next,
-    &NetworkStatsCalculator::DumpStatistics, this, next);
+  Simulator::Schedule (
+    next, &NetworkStatsCalculator::DumpStatistics, this, next);
 
   // Chain up
   Object::NotifyConstructionCompleted ();
@@ -602,8 +602,8 @@ LinkQueuesStatsCalculator::DumpStatistics (Time next)
   << std::endl;
 
   ResetCounters ();
-  Simulator::Schedule (next,
-    &LinkQueuesStatsCalculator::DumpStatistics, this, next);
+  Simulator::Schedule (
+    next, &LinkQueuesStatsCalculator::DumpStatistics, this, next);
 }
 
 void
@@ -648,8 +648,8 @@ LinkQueuesStatsCalculator::NotifyConstructionCompleted (void)
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
   Time next = timeValue.Get ();
-  Simulator::Schedule (next,
-    &LinkQueuesStatsCalculator::DumpStatistics, this, next);
+  Simulator::Schedule (
+    next, &LinkQueuesStatsCalculator::DumpStatistics, this, next);
 
   // Chain up
   Object::NotifyConstructionCompleted ();
@@ -687,7 +687,7 @@ LinkQueuesStatsCalculator::GetUpBitRate (void) const
 
 // ------------------------------------------------------------------------ //
 EpcS1uStatsCalculator::EpcS1uStatsCalculator (
-    Ptr<OpenFlowEpcController> controller)
+  Ptr<OpenFlowEpcController> controller)
   : m_controller (controller)
 {
   NS_LOG_FUNCTION (this);
