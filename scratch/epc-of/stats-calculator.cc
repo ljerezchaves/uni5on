@@ -334,7 +334,7 @@ NetworkStatsCalculator::DumpStatistics (Time next)
   << Simulator::Now ().GetSeconds ();
 
   *m_swtWrapper->GetStream ()
-  << left << setw (11)
+  << left << setw (12)
   << Simulator::Now ().GetSeconds ()
   << " " << right;
 

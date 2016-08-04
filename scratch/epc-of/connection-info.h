@@ -98,6 +98,7 @@ public:
   //\{
   uint16_t                        GetSwIdx    (uint8_t idx) const;
   uint32_t                        GetPortNo   (uint8_t idx) const;
+  uint64_t                        GetSwDpId   (uint8_t idx) const;
   Ptr<const OFSwitch13Device>     GetSwDev    (uint8_t idx) const;
   Ptr<const CsmaNetDevice>        GetPortDev  (uint8_t idx) const;
   //\}

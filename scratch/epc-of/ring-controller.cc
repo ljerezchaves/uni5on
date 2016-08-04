@@ -101,8 +101,8 @@ RingController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
   cmd11 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::COUNTER
         << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (1);
 
-  DpctlCommand (cInfo->GetSwDev (0), cmd01.str ());
-  DpctlCommand (cInfo->GetSwDev (1), cmd11.str ());
+  DpctlSchedule (cInfo->GetSwDpId (0), cmd01.str ());
+  DpctlSchedule (cInfo->GetSwDpId (1), cmd11.str ());
 
   if (m_nonGbrCoexistence)
     {
@@ -116,8 +116,8 @@ RingController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
       cmd12 << "meter-mod cmd=add,flags=1,meter=" << RingRoutingInfo::COUNTER
             << " drop:rate=" << kbps;
 
-      DpctlCommand (cInfo->GetSwDev (0), cmd02.str ());
-      DpctlCommand (cInfo->GetSwDev (1), cmd12.str ());
+      DpctlSchedule (cInfo->GetSwDpId (0), cmd02.str ());
+      DpctlSchedule (cInfo->GetSwDpId (1), cmd12.str ());
     }
 }
 
@@ -162,8 +162,8 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
            << " meta:" << metadataStr
            << " goto:3";
 
-      DpctlCommand (cInfo->GetSwDev (0), cmd0.str ());
-      DpctlCommand (cInfo->GetSwDev (1), cmd1.str ());
+      DpctlSchedule (cInfo->GetSwDpId (0), cmd0.str ());
+      DpctlSchedule (cInfo->GetSwDpId (1), cmd1.str ());
     }
 }
 
@@ -187,8 +187,8 @@ RingController::NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
       cmd2 << "meter-mod cmd=mod,flags=1,meter=" << RingRoutingInfo::COUNTER
            << " drop:rate=" << kbps;
 
-      DpctlCommand (cInfo->GetSwDev (0), cmd1.str ());
-      DpctlCommand (cInfo->GetSwDev (1), cmd2.str ());
+      DpctlExecute (cInfo->GetSwDpId (0), cmd1.str ());
+      DpctlExecute (cInfo->GetSwDpId (1), cmd2.str ());
     }
 }
 
@@ -246,7 +246,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
           if (!meterInfo->IsInstalled ())
             {
               // Install the per-flow meter entry
-              DpctlCommand (GetSwitchDevice (swIdx),
+              DpctlExecute (GetDatapathId (swIdx),
                             meterInfo->GetDownAddCmd ());
               meterInstalled = true;
             }
@@ -270,7 +270,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
 
       // Installing the rule into input switch
       std::string commandStr = args.str () + match.str () + inst.str ();
-      DpctlCommand (GetSwitchDevice (swIdx), commandStr);
+      DpctlExecute (GetDatapathId (swIdx), commandStr);
     }
 
   // Configuring uplink routing
@@ -293,8 +293,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
           if (!meterInfo->IsInstalled ())
             {
               // Install the per-flow meter entry
-              DpctlCommand (GetSwitchDevice (swIdx),
-                            meterInfo->GetUpAddCmd ());
+              DpctlExecute (GetDatapathId (swIdx), meterInfo->GetUpAddCmd ());
               meterInstalled = true;
             }
 
@@ -317,7 +316,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
 
       // Installing the rule into input switch
       std::string commandStr = args.str () + match.str () + inst.str ();
-      DpctlCommand (GetSwitchDevice (swIdx), commandStr);
+      DpctlExecute (GetDatapathId (swIdx), commandStr);
     }
 
   // Updating meter installation flag
@@ -468,8 +467,8 @@ RingController::TopologyCreateSpanningTree ()
        << ",addr=" << macAddr2
        << ",conf=0x00000020,mask=0x00000020";
 
-  DpctlCommand (cInfo->GetSwDev (0), cmd1.str ());
-  DpctlCommand (cInfo->GetSwDev (1), cmd2.str ());
+  DpctlSchedule (cInfo->GetSwDpId (0), cmd1.str ());
+  DpctlSchedule (cInfo->GetSwDpId (1), cmd2.str ());
 }
 
 uint16_t
@@ -720,12 +719,12 @@ RingController::RemoveMeterRules (Ptr<RoutingInfo> rInfo)
       NS_LOG_DEBUG ("Removing meter entries.");
       if (meterInfo->HasDown ())
         {
-          DpctlCommand (GetSwitchDevice (rInfo->GetSgwSwIdx ()),
+          DpctlExecute (GetDatapathId (rInfo->GetSgwSwIdx ()),
                         meterInfo->GetDelCmd ());
         }
       if (meterInfo->HasUp ())
         {
-          DpctlCommand (GetSwitchDevice (rInfo->GetEnbSwIdx ()),
+          DpctlExecute (GetDatapathId (rInfo->GetEnbSwIdx ()),
                         meterInfo->GetDelCmd ());
         }
       meterInfo->SetInstalled (false);

@@ -356,9 +356,9 @@ OpenFlowEpcController::NotifyConstructionCompleted ()
 }
 
 void
-OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
+OpenFlowEpcController::HandshakeSuccessful (Ptr<RemoteSwitch> swtch)
 {
-  NS_LOG_FUNCTION (this << swtch.ipv4);
+  NS_LOG_FUNCTION (this << swtch);
 
   // This function is called after a successfully handshake between controller
   // and switch. So, let's start configure the switch tables in accordance to
@@ -366,7 +366,7 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
 
   // Configure the switch to buffer packets and send only the first 128 bytes
   // to the controller.
-  DpctlCommand (swtch, "set-config miss=128");
+  DpctlExecute (swtch, "set-config miss=128");
 
 
   // -------------------------------------------------------------------------
@@ -376,16 +376,16 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
 
   // GTP packets entering the switch from any port other then EPC ports.
   // Send to Routing table.
-  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=32 eth_type=0x800,"
+  DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=32 eth_type=0x800,"
                 "ip_proto=17,udp_src=2152,udp_dst=2152"
                 " goto:2");
 
   // ARP request packets. Send to controller.
-  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=16 eth_type=0x0806"
+  DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=16 eth_type=0x0806"
                 " apply:output=ctrl");
 
   // Table miss entry. Send to controller.
-  DpctlCommand (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
+  DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
 
 
   // -------------------------------------------------------------------------
@@ -403,10 +403,10 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
   // GTP packets classified at previous table. Write the output group into
   // action set based on metadata field. Send the packet to Coexistence QoS
   // table.
-  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=64"
+  DpctlExecute (swtch, "flow-mod cmd=add,table=2,prio=64"
                 " meta=0x1"
                 " write:group=1 goto:3");
-  DpctlCommand (swtch, "flow-mod cmd=add,table=2,prio=64"
+  DpctlExecute (swtch, "flow-mod cmd=add,table=2,prio=64"
                 " meta=0x2"
                 " write:group=2 goto:3");
 
@@ -418,16 +418,16 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
     {
       // Non-GBR packets indicated by DSCP field. Apply corresponding Non-GBR
       // meter band. Send the packet to Output table.
-      DpctlCommand (swtch, "flow-mod cmd=add,table=3,prio=16"
+      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
                     " eth_type=0x800,ip_dscp=0,meta=0x1"
                     " meter:1 goto:4");
-      DpctlCommand (swtch, "flow-mod cmd=add,table=3,prio=16"
+      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
                     " eth_type=0x800,ip_dscp=0,meta=0x2"
                     " meter:2 goto:4");
     }
 
   // Table miss entry. Send the packet to Output table
-  DpctlCommand (swtch, "flow-mod cmd=add,table=3,prio=0 goto:4");
+  DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=0 goto:4");
 
 
   // -------------------------------------------------------------------------
@@ -443,18 +443,18 @@ OpenFlowEpcController::ConnectionStarted (SwitchInfo swtch)
       cmd << "flow-mod cmd=add,table=4,prio=16"
           << " eth_type=0x800,ip_dscp=" << dscpVoip
           << " write:queue=1";
-      DpctlCommand (swtch, cmd.str ());
+      DpctlExecute (swtch, cmd.str ());
     }
 
   // Table miss entry. No instructions
-  DpctlCommand (swtch, "flow-mod cmd=add,table=4,prio=0");
+  DpctlExecute (swtch, "flow-mod cmd=add,table=4,prio=0");
 }
 
 ofl_err
 OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg,
-                                       SwitchInfo swtch, uint32_t xid)
+                                       Ptr<RemoteSwitch> swtch, uint32_t xid)
 {
-  NS_LOG_FUNCTION (this << swtch.ipv4 << xid);
+  NS_LOG_FUNCTION (this << swtch << xid);
   ofl_match_tlv *tlv;
 
   enum ofp_packet_in_reason reason = msg->reason;
@@ -499,15 +499,14 @@ OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg,
 
 ofl_err
 OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
-                                          SwitchInfo swtch, uint32_t xid)
+                                          Ptr<RemoteSwitch> swtch,
+                                          uint32_t xid)
 {
-  NS_LOG_FUNCTION (this << swtch.ipv4 << xid);
+  NS_LOG_FUNCTION (this << swtch << xid << msg->stats->cookie);
 
   uint8_t table = msg->stats->table_id;
   uint32_t teid = msg->stats->cookie;
   uint16_t prio = msg->stats->priority;
-
-  NS_LOG_FUNCTION (swtch.ipv4 << teid);
 
   char *m = ofl_msg_to_string ((ofl_msg_header*)msg, 0);
   NS_LOG_DEBUG ("Flow removed: " << m);
@@ -568,11 +567,11 @@ OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
   NS_ABORT_MSG ("Should not get here :/");
 }
 
-Ptr<OFSwitch13Device>
-OpenFlowEpcController::GetSwitchDevice (uint16_t index)
+uint64_t
+OpenFlowEpcController::GetDatapathId (uint16_t index) const
 {
   NS_ASSERT (index < m_ofDevices.GetN ());
-  return m_ofDevices.Get (index);
+  return m_ofDevices.Get (index)->GetDatapathId ();
 }
 
 void
@@ -673,7 +672,7 @@ OpenFlowEpcController::ConfigureLocalPortRules (
         << " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152"
         << ",in_port=" << swtchPort
         << " goto:1";
-  DpctlCommand (swtchDev, cmdIn.str ());
+  DpctlSchedule (swtchDev->GetDatapathId (), cmdIn.str ());
 
   // -------------------------------------------------------------------------
   // Table 2 -- Routing table -- [from higher to lower priority]
@@ -687,14 +686,15 @@ OpenFlowEpcController::ConfigureLocalPortRules (
          << ",eth_dst=" << devMacAddr << ",ip_dst=" << nodeIp
          << " write:output=" << swtchPort
          << " goto:4";
-  DpctlCommand (swtchDev, cmdOut.str ());
+  DpctlSchedule (swtchDev->GetDatapathId (), cmdOut.str ());
 }
 
 ofl_err
-OpenFlowEpcController::HandleGtpuTeidPacketIn (
-  ofl_msg_packet_in *msg, SwitchInfo swtch, uint32_t xid, uint32_t teid)
+OpenFlowEpcController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
+                                               Ptr<RemoteSwitch> swtch,
+                                               uint32_t xid, uint32_t teid)
 {
-  NS_LOG_FUNCTION (this << swtch.ipv4 << xid << teid);
+  NS_LOG_FUNCTION (this << swtch << xid << teid);
 
   // Let's check for active routing path
   Ptr<RoutingInfo> rInfo = GetRoutingInfo (teid);
@@ -718,9 +718,10 @@ OpenFlowEpcController::HandleGtpuTeidPacketIn (
 
 ofl_err
 OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg,
-                                          SwitchInfo swtch, uint32_t xid)
+                                          Ptr<RemoteSwitch> swtch,
+                                          uint32_t xid)
 {
-  NS_LOG_FUNCTION (this << swtch.ipv4 << xid);
+  NS_LOG_FUNCTION (this << swtch << xid);
 
   ofl_match_tlv *tlv;
 
@@ -778,7 +779,7 @@ OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg,
       reply.actions_num = 1;
       reply.actions = (ofl_action_header**)&action;
 
-      int error = SendToSwitch (&swtch, (ofl_msg_header*)&reply, xid);
+      int error = SendToSwitch (swtch, (ofl_msg_header*)&reply, xid);
       free (action);
       if (error)
         {

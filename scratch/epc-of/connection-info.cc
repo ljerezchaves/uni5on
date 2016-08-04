@@ -127,6 +127,14 @@ ConnectionInfo::GetPortNo (uint8_t idx) const
   return m_switches [idx].portNum;
 }
 
+uint64_t
+ConnectionInfo::GetSwDpId (uint8_t idx) const
+{
+  NS_ASSERT_MSG (idx == 0 || idx == 1, "Invalid switch index.");
+
+  return GetSwDev (idx)->GetDatapathId ();
+}
+
 Ptr<const OFSwitch13Device>
 ConnectionInfo::GetSwDev (uint8_t idx) const
 {
