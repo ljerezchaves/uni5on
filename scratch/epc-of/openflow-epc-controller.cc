@@ -358,7 +358,7 @@ OpenFlowEpcController::NotifyConstructionCompleted ()
 }
 
 void
-OpenFlowEpcController::HandshakeSuccessful (Ptr<RemoteSwitch> swtch)
+OpenFlowEpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
   NS_LOG_FUNCTION (this << swtch);
 
@@ -453,8 +453,8 @@ OpenFlowEpcController::HandshakeSuccessful (Ptr<RemoteSwitch> swtch)
 }
 
 ofl_err
-OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg,
-                                       Ptr<RemoteSwitch> swtch, uint32_t xid)
+OpenFlowEpcController::HandlePacketIn (
+  ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid)
 {
   NS_LOG_FUNCTION (this << swtch << xid);
   ofl_match_tlv *tlv;
@@ -500,9 +500,8 @@ OpenFlowEpcController::HandlePacketIn (ofl_msg_packet_in *msg,
 }
 
 ofl_err
-OpenFlowEpcController::HandleFlowRemoved (ofl_msg_flow_removed *msg,
-                                          Ptr<RemoteSwitch> swtch,
-                                          uint32_t xid)
+OpenFlowEpcController::HandleFlowRemoved (
+  ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid)
 {
   NS_LOG_FUNCTION (this << swtch << xid << msg->stats->cookie);
 
@@ -692,9 +691,9 @@ OpenFlowEpcController::ConfigureLocalPortRules (
 }
 
 ofl_err
-OpenFlowEpcController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
-                                               Ptr<RemoteSwitch> swtch,
-                                               uint32_t xid, uint32_t teid)
+OpenFlowEpcController::HandleGtpuTeidPacketIn (
+  ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid,
+  uint32_t teid)
 {
   NS_LOG_FUNCTION (this << swtch << xid << teid);
 
@@ -719,9 +718,8 @@ OpenFlowEpcController::HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
 }
 
 ofl_err
-OpenFlowEpcController::HandleArpPacketIn (ofl_msg_packet_in *msg,
-                                          Ptr<RemoteSwitch> swtch,
-                                          uint32_t xid)
+OpenFlowEpcController::HandleArpPacketIn (
+  ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid)
 {
   NS_LOG_FUNCTION (this << swtch << xid);
 

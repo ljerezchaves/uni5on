@@ -232,11 +232,11 @@ protected:
   //\}
 
   // Inherited from OFSwitch13Controller
-  virtual void HandshakeSuccessful (Ptr<RemoteSwitch> swtch);
-  virtual ofl_err HandlePacketIn (ofl_msg_packet_in *msg,
-                                  Ptr<RemoteSwitch> swtch, uint32_t xid);
-  virtual ofl_err HandleFlowRemoved (ofl_msg_flow_removed *msg,
-                                     Ptr<RemoteSwitch> swtch, uint32_t xid);
+  virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
+  virtual ofl_err HandlePacketIn (
+    ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
+  virtual ofl_err HandleFlowRemoved (
+    ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
 
   /**
    * Get the OpenFlow datapath ID for a specific switch index.
@@ -310,9 +310,9 @@ private:
    * \param teid The GTPU TEID identifier.
    * \return 0 if everything's ok, otherwise an error number.
    */
-  ofl_err HandleGtpuTeidPacketIn (ofl_msg_packet_in *msg,
-                                  Ptr<RemoteSwitch> swtch, uint32_t xid,
-                                  uint32_t teid);
+  ofl_err HandleGtpuTeidPacketIn (
+    ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid,
+    uint32_t teid);
 
   /**
    * Handle packet-in messages sent from switch with ARP message.
@@ -321,8 +321,8 @@ private:
    * \param xid Transaction id.
    * \return 0 if everything's ok, otherwise an error number.
    */
-  ofl_err HandleArpPacketIn (ofl_msg_packet_in *msg, Ptr<RemoteSwitch> swtch,
-                             uint32_t xid);
+  ofl_err HandleArpPacketIn (
+    ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
 
   /**
    * Extract an IPv4 address from packet match.
