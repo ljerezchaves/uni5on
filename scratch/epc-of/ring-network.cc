@@ -196,6 +196,9 @@ RingNetwork::CreateTopology ()
       m_newConnTrace (cInfo);
     }
 
+  // Connect the switches to the controller
+  m_ofSwitchHelper->CreateOpenFlowChannels ();
+
   // Fire trace source notifying that all connections between switches are ok.
   m_topoBuiltTrace (m_ofDevices);
 }
