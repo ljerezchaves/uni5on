@@ -43,10 +43,8 @@ massif.*
 \#[^\#/]+\#$
 ^coverity
 ^(D|U)l[A-Z][a-z]*Stats.txt$
-\.swp$
 ^.DS_Store$
 ^scratch/epc-of/lte-rem.eps$
-^sim$
 syntax: glob
 TAGS
 waf
