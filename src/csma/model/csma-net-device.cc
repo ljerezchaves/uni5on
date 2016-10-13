@@ -572,8 +572,9 @@ CsmaNetDevice::TransmitAbort (void)
     }
   else
     {
-      m_currentPkt = m_queue->Dequeue ();
-      NS_ASSERT_MSG (m_currentPkt != 0, "CsmaNetDevice::TransmitAbort(): IsEmpty false but no Packet on queue?");
+      Ptr<QueueItem> item = m_queue->Dequeue ();
+      NS_ASSERT_MSG (item != 0, "CsmaNetDevice::TransmitAbort(): IsEmpty false but no Packet on queue?");
+      m_currentPkt = item->GetPacket ();
       m_snifferTrace (m_currentPkt);
       m_promiscSnifferTrace (m_currentPkt);
       TransmitStart ();
@@ -641,8 +642,9 @@ CsmaNetDevice::TransmitReadyEvent (void)
     }
   else
     {
-      m_currentPkt = m_queue->Dequeue ();
-      NS_ASSERT_MSG (m_currentPkt != 0, "CsmaNetDevice::TransmitReadyEvent(): IsEmpty false but no Packet on queue?");
+      Ptr<QueueItem> item = m_queue->Dequeue ();
+      NS_ASSERT_MSG (item != 0, "CsmaNetDevice::TransmitReadyEvent(): IsEmpty false but no Packet on queue?");
+      m_currentPkt = item->GetPacket ();
       m_snifferTrace (m_currentPkt);
       m_promiscSnifferTrace (m_currentPkt);
       TransmitStart ();
@@ -992,7 +994,7 @@ CsmaNetDevice::SendFrom (Ptr<Packet> packet, const Address& src, const Address& 
   // Place the packet to be sent on the send queue.  Note that the
   // queue may fire a drop trace, but we will too.
   //
-  if (m_queue->Enqueue (packet) == false)
+  if (m_queue->Enqueue (Create<QueueItem> (packet)) == false)
     {
       m_macTxDropTrace (packet);
       return false;
@@ -1007,8 +1009,9 @@ CsmaNetDevice::SendFrom (Ptr<Packet> packet, const Address& src, const Address& 
     {
       if (m_queue->IsEmpty () == false)
         {
-          m_currentPkt = m_queue->Dequeue ();
-          NS_ASSERT_MSG (m_currentPkt != 0, "CsmaNetDevice::SendFrom(): IsEmpty false but no Packet on queue?");
+          Ptr<QueueItem> item = m_queue->Dequeue ();
+          NS_ASSERT_MSG (item != 0, "CsmaNetDevice::SendFrom(): IsEmpty false but no Packet on queue?");
+          m_currentPkt = item->GetPacket ();
           m_promiscSnifferTrace (m_currentPkt);
           m_snifferTrace (m_currentPkt);
           TransmitStart ();

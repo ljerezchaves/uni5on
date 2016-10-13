@@ -56,6 +56,7 @@
  *     - spectrum
  *     - stats
  *     - tap-bridge
+ *     - traffic-control
  *     - test
  *     - topology-read
  *     - uan
