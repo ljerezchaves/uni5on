@@ -8,6 +8,8 @@ reset=$(tput sgr0)
 bold=$(tput bold)
 normal=$(tput sgr0)
 
+PROGNAME="epc-of"
+
 function PrintHelp () {
   echo "Usage: $0 --action [ARGS]"
   echo
@@ -16,7 +18,7 @@ function PrintHelp () {
   echo "    Starts a single simulation with specific prefix and seed number."
   echo "    Arguments: seed     is the seed number to use."
   echo "               prefix   is the topology simulation prefix."
-  echo "               [\"args\"] can be any epc-of command line argument (optional)."
+  echo "               [\"args\"] can be any command line argument (optional)."
   echo
   echo "  ${bold}--sequentialSeed firstSeed lastSeed prefix [\"args\"]${normal}:"
   echo "    Starts sequential simulations with specific prefix, one for each seed in"
@@ -27,7 +29,7 @@ function PrintHelp () {
   echo "    Arguments: firstSeed is the first seed number to use."
   echo "               lastSeed  is the last seed number to use."
   echo "               prefix    is the topology simulation prefix."
-  echo "               [\"args\"]  can be any epc-of command line argument (optional)."
+  echo "               [\"args\"]  can be any command line argument (optional)."
   echo
   echo "  ${bold}--sequentialPrefix seed \"prefixes\" [\"args\"]${normal}"
   echo "    Starts sequential simulations with specific seed number, one for each prefix"
@@ -37,7 +39,7 @@ function PrintHelp () {
   echo "    each prefix in given list."
   echo "    Arguments: seed       is the seed number to use."
   echo "               \"prefixes\" is the list of topology simulation prefixes."
-  echo "               [\"args\"]   can be any epc-of command line argument (optional)."
+  echo "               [\"args\"]   can be any command line argument (optional)."
   echo
   echo "  ${bold}--parallelSeedPrefix firstSeed lastSeed \"prefixes\" [\"args\"]${normal}"
   echo "    For each seed in given closed interval, starts parallel background"
@@ -45,7 +47,7 @@ function PrintHelp () {
   echo "    Arguments: firstSeed  is the first seed number to use."
   echo "               lastSeed   is the last seed number to use."
   echo "               \"prefixes\" is the list of topology simulation prefixes."
-  echo "               [\"args\"]   can be any epc-of command line argument (optional)."
+  echo "               [\"args\"]   can be any command line argument (optional)."
   echo
   echo "  ${bold}--abort${normal}"
   echo "    Abort all running simulations."
@@ -71,7 +73,7 @@ case "${ACTION}" in
     PREFIX=$3
     ARGS=$4
     
-    COMMAND="./waf --run=\"epc-of --RngRun=${SEED} --prefix=${PREFIX} ${ARGS}\""
+    COMMAND="./waf --run=\"${PROGNAME} --RngRun=${SEED} --prefix=${PREFIX} ${ARGS}\""
     OUTFILE=$(mktemp --suffix=-epcof)
     echo "${COMMAND}" > ${OUTFILE}
     
@@ -79,11 +81,13 @@ case "${ACTION}" in
     eval ${COMMAND} &>> ${OUTFILE}
     
     # Check for success
-    while [ $? -ne 0 ];
-    do
-      echo "${red}[Error/${yellow}Retry]${reset} ${COMMAND}"
-      eval ${COMMAND} &>> ${OUTFILE}
-    done;
+    if [ $? -ne 0 ];
+    then
+      echo "${red}[Error]${reset} ${COMMAND}"
+      echo "${yellow}===== Output file content ===== (${OUTFILE})${reset}"
+      cat ${OUTFILE}
+      echo "${yellow}===== Output file content =====${reset}"
+    fi
   ;;
 
   --parallelSeed)
@@ -184,7 +188,7 @@ case "${ACTION}" in
     read ANSWER
     if [ "${ANSWER}" == "y" ];
     then
-      killall simulate.sh epc-of
+      killall $0 ${PROGNAME}
     else
       echo "Invalid answer."
     fi
