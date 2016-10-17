@@ -91,27 +91,35 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
         m_controller->RequestDedicatedBearer (app->GetEpsBearer (),
                                               m_imsi, m_cellId, appTeid);
     }
-
+  
   //
   // Before starting the traffic, let's set the next start attempt for this
   // same application. We will use this interval to limit the current traffic
   // duration, to avoid overlapping traffic which would not be possible. Doing
   // this, we can respect the inter-arrival times for the Poisson process.
   // Note that in current implementation, no retries are performed for for
-  // non-authorized traffic.
-  //
-  Time startInterval = Seconds (std::max (2.5, m_poissonRng->GetValue ()));
-  Simulator::Schedule (startInterval, &TrafficManager::AppStartTry, this, app);
+  // non-authorized traffic. Considering the timeline below, a minimum of 1s
+  // between AppStart and AppStor is guaranteed.
+  //  
+  //    Now        +1s       ...         -2s        -1s    nextStartTry
+  //     |----------|------- ... ---------|----------|----------|---> time
+  //    This        |                     |          |         Next
+  //    AppStartTry |<--- traffic dur --->|          |         AppStartTry
+  //               AppStart              AppStop     |    
+  //                                               MeterRemove
+  //              
+  Time nextStartTry = Seconds (std::max (4.0, m_poissonRng->GetValue ()));
+  Simulator::Schedule (nextStartTry, &TrafficManager::AppStartTry, this, app);
   NS_LOG_DEBUG ("App " << app->GetAppName () << " at user " << m_imsi <<
                 " is starting now " << Simulator::Now ().GetSeconds () <<
-                ". Next start will occur in +" << startInterval.GetSeconds ());
+                ". Next start will occur in +" << nextStartTry.GetSeconds ());
 
   if (authorized)
     {
-      // Set the maximum traffic duration, considering an interval of 2 secs.
-      Time duration = startInterval - Seconds (2);
+      // Set the maximum traffic duration.
+      Time duration = nextStartTry - Seconds (3);
       app->SetAttribute ("MaxDurationTime", TimeValue (duration));
-      app->Start ();
+      Simulator::Schedule (Seconds (1), &EpcApplication::Start, app);
     }
 }
 
@@ -123,9 +131,11 @@ TrafficManager::NotifyAppStop (Ptr<const EpcApplication> app)
   uint32_t appTeid = app->GetTeid ();
   if (appTeid != m_defaultTeid)
     {
-      // No resource release for traffic over default bearer.
-      m_controller->ReleaseDedicatedBearer (app->GetEpsBearer (),
-                                            m_imsi, m_cellId, appTeid);
+      // No resource release for traffic over default bearer. Schedule the
+      // release for 1 second after application stop.
+      Simulator::Schedule (
+        Seconds (1), &OpenFlowEpcController::ReleaseDedicatedBearer,
+        m_controller, app->GetEpsBearer (), m_imsi, m_cellId, appTeid);
     }
 }
 
