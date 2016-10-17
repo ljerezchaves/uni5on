@@ -91,7 +91,7 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
         m_controller->RequestDedicatedBearer (app->GetEpsBearer (),
                                               m_imsi, m_cellId, appTeid);
     }
-  
+
   //
   // Before starting the traffic, let's set the next start attempt for this
   // same application. We will use this interval to limit the current traffic
@@ -100,14 +100,14 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
   // Note that in current implementation, no retries are performed for for
   // non-authorized traffic. Considering the timeline below, a minimum of 1s
   // between AppStart and AppStor is guaranteed.
-  //  
+  //
   //    Now        +1s       ...         -2s        -1s    nextStartTry
   //     |----------|------- ... ---------|----------|----------|---> time
   //    This        |                     |          |         Next
   //    AppStartTry |<--- traffic dur --->|          |         AppStartTry
-  //               AppStart              AppStop     |    
+  //               AppStart              AppStop     |
   //                                               MeterRemove
-  //              
+  //
   Time nextStartTry = Seconds (std::max (4.0, m_poissonRng->GetValue ()));
   Simulator::Schedule (nextStartTry, &TrafficManager::AppStartTry, this, app);
   NS_LOG_DEBUG ("App " << app->GetAppName () << " at user " << m_imsi <<
