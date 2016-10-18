@@ -452,8 +452,8 @@ OpenFlowEpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
       DpctlExecute (swtch, cmd.str ());
     }
 
-  // Table miss entry. Send to controller.
-  DpctlExecute (swtch, "flow-mod cmd=add,table=4,prio=0 apply:output=ctrl");
+  // Table miss entry. No instructions. This will trigger action set execute.
+  DpctlExecute (swtch, "flow-mod cmd=add,table=4,prio=0");
 }
 
 ofl_err
