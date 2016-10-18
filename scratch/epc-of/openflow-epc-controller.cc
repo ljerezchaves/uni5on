@@ -395,6 +395,8 @@ OpenFlowEpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   //
   // Entries will be installed here by TopologyInstallRouting function.
 
+  // Table miss entry. Send to controller.
+  DpctlExecute (swtch, "flow-mod cmd=add,table=1,prio=0 apply:output=ctrl");
 
   // -------------------------------------------------------------------------
   // Table 2 -- Routing table -- [from higher to lower priority]
@@ -412,6 +414,8 @@ OpenFlowEpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
                 " meta=0x2"
                 " write:group=2 goto:3");
 
+  // Table miss entry. Send to controller.
+  DpctlExecute (swtch, "flow-mod cmd=add,table=2,prio=0 apply:output=ctrl");
 
   // -------------------------------------------------------------------------
   // Table 3 -- Coexistence QoS table -- [from higher to lower priority]
@@ -448,8 +452,8 @@ OpenFlowEpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
       DpctlExecute (swtch, cmd.str ());
     }
 
-  // Table miss entry. No instructions
-  DpctlExecute (swtch, "flow-mod cmd=add,table=4,prio=0");
+  // Table miss entry. Send to controller.
+  DpctlExecute (swtch, "flow-mod cmd=add,table=4,prio=0 apply:output=ctrl");
 }
 
 ofl_err
@@ -465,6 +469,8 @@ OpenFlowEpcController::HandlePacketIn (
       char *m = ofl_structs_match_to_string (msg->match, 0);
       NS_LOG_INFO ("Packet in match: " << m);
       free (m);
+
+      NS_ABORT_MSG ("Error. This packet was not suppesed to be here.");
 
       // (Table #1 is used only for GTP TEID routing)
       uint8_t tableId = msg->table_id;
