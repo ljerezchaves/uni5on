@@ -87,32 +87,37 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
   if (appTeid != m_defaultTeid)
     {
       // No resource request for traffic over default bearer.
-      authorized =
-        m_controller->RequestDedicatedBearer (app->GetEpsBearer (),
-                                              m_imsi, m_cellId, appTeid);
+      authorized = m_controller->RequestDedicatedBearer (
+        app->GetEpsBearer (), m_imsi, m_cellId, appTeid);
     }
 
   //
   // Before starting the traffic, let's set the next start attempt for this
   // same application. We will use this interval to limit the current traffic
   // duration, to avoid overlapping traffic which would not be possible. Doing
-  // this, we can respect the inter-arrival times for the Poisson process.
-  // Note that in current implementation, no retries are performed for for
-  // non-authorized traffic. Considering the timeline below, a minimum of 1s
-  // between AppStart and AppStor is guaranteed.
+  // this, we can respect almost all inter-arrival times for the Poisson
+  // process. However, we must ensure a minimum interval between start attempts
+  // so the network can prepare for application traffic and release resources
+  // after that.In this implementation, we are using 3 seconds for traffic
+  // duration + 3 seconds for other procedures. See the timeline bellow for
+  // better understanding. Note that in current implementation, no retries are
+  // performed for for non-authorized traffic.
   //
-  //    Now        +1s       ...         -2s        -1s    nextStartTry
-  //     |----------|------- ... ---------|----------|----------|---> time
-  //    This        |                     |          |         Next
-  //    AppStartTry |<--- traffic dur --->|          |         AppStartTry
-  //               AppStart              AppStop     |
-  //                                               MeterRemove
+  //     Now       Now+1s                    t-2s       t-1s        t
+  //      |----------|---------- ... ---------|----------|----------|---> time
+  //      |          |                        |          |          |
+  //  AppStartTry AppStart                 AppStop  MeterRemove AppStartTry
+  //    (this)                                                    (next)
+  //                 |<-- traffic duration -->|
+  //                      (at least 3 sec)
   //
-  Time nextStartTry = Seconds (std::max (4.0, m_poissonRng->GetValue ()));
+  Time nextStartTry = Seconds (std::max (6.0, m_poissonRng->GetValue ()));
   Simulator::Schedule (nextStartTry, &TrafficManager::AppStartTry, this, app);
-  NS_LOG_DEBUG ("App " << app->GetAppName () << " at user " << m_imsi <<
-                " is starting now " << Simulator::Now ().GetSeconds () <<
-                ". Next start will occur in +" << nextStartTry.GetSeconds ());
+  NS_LOG_DEBUG ("App " << app->GetAppName () << " at user " << m_imsi
+                << " will start at "
+                << (Simulator::Now () + Seconds (1)).GetSeconds () << ". "
+                << " Next start try will occur at "
+                << (Simulator::Now () + nextStartTry).GetSeconds ());
 
   if (authorized)
     {
