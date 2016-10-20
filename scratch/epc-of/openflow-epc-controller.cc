@@ -470,19 +470,8 @@ OpenFlowEpcController::HandlePacketIn (
       NS_LOG_INFO ("Packet in match: " << m);
       free (m);
 
-      NS_ABORT_MSG ("Error. This packet was not suppesed to be here.");
-
-      // (Table #1 is used only for GTP TEID routing)
-      uint8_t tableId = msg->table_id;
-      if (tableId == 1)
-        {
-          uint32_t teid;
-          tlv = oxm_match_lookup (OXM_OF_GTPU_TEID, (ofl_match*)msg->match);
-          memcpy (&teid, tlv->value, OXM_LENGTH (OXM_OF_GTPU_TEID));
-
-          NS_LOG_LOGIC ("TEID routing miss packet: " << teid);
-          return HandleGtpuTeidPacketIn (msg, swtch, xid, teid);
-        }
+      NS_ABORT_MSG ("This packet in was not supposed to be sent to this "
+                    "controller. Aborting...");
     }
   else if (reason == OFPR_ACTION)
     {
@@ -694,33 +683,6 @@ OpenFlowEpcController::ConfigureLocalPortRules (
          << " write:output=" << swtchPort
          << " goto:4";
   DpctlSchedule (swtchDev->GetDatapathId (), cmdOut.str ());
-}
-
-ofl_err
-OpenFlowEpcController::HandleGtpuTeidPacketIn (
-  ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid,
-  uint32_t teid)
-{
-  NS_LOG_FUNCTION (this << swtch << xid << teid);
-
-  // Let's check for active routing path
-  Ptr<RoutingInfo> rInfo = GetRoutingInfo (teid);
-  if (rInfo && rInfo->IsActive ())
-    {
-      NS_LOG_WARN ("Not supposed to happen, but we can handle this.");
-      if (!TopologyInstallRouting (rInfo, msg->buffer_id))
-        {
-          NS_LOG_ERROR ("TEID rule installation failed!");
-        }
-    }
-  else
-    {
-      NS_LOG_WARN ("Ignoring TEID packet sent to controller.");
-    }
-
-  // All handlers must free the message when everything is ok
-  ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
-  return 0;
 }
 
 ofl_err

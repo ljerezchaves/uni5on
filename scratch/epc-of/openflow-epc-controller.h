@@ -303,18 +303,6 @@ private:
                                 uint32_t swtchPort);
 
   /**
-   * Handle packet-in messages sent from switch with unknown TEID routing.
-   * \param msg The packet-in message.
-   * \param swtch The switch information.
-   * \param xid Transaction id.
-   * \param teid The GTPU TEID identifier.
-   * \return 0 if everything's ok, otherwise an error number.
-   */
-  ofl_err HandleGtpuTeidPacketIn (
-    ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid,
-    uint32_t teid);
-
-  /**
    * Handle packet-in messages sent from switch with ARP message.
    * \param msg The packet-in message.
    * \param swtch The switch information.
