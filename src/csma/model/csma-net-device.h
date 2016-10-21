@@ -364,6 +364,9 @@ protected:
    */
   void AddHeader (Ptr<Packet> p, Mac48Address source, Mac48Address dest, uint16_t protocolNumber);
 
+  // Inherited from Object base class
+  virtual void NotifyNewAggregate (void);
+
 private:
 
   /**
@@ -539,6 +542,11 @@ private:
    * \see class DropTailQueue
    */
   Ptr<Queue> m_queue;
+
+  /**
+   * The network device transmission queue interface.
+   */
+  Ptr<NetDeviceQueueInterface> m_queueInterface;
 
   /**
    * Error model for receive packet events.  When active this model will be
