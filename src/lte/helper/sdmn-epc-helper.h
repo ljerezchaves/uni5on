@@ -48,7 +48,7 @@ class EpcMme;
  * MME node. The S1 and X2 interfaces are realized over CSMA devices
  * connected to an user-defined backhaul network.
  */
-class SdmnEpcHelper : public EpcHelper, public PcapHelperForDevice
+class SdmnEpcHelper : public EpcHelper
 {
 public:
   SdmnEpcHelper ();           //!< Default constructor
@@ -131,18 +131,6 @@ public:
   void SetX2ConnectCallback (X2ConnectCallback_t cb);
 
 private:
-  /**
-   * \brief Enable pcap output on the indicated CSMA net device.
-   * \internal This is the same implementation from CsmaNetDevice class, as the
-   * OpenFlow uses Csma devices.
-   * \param prefix Filename prefix to use for pcap files.
-   * \param nd Net device for which you want to enable tracing.
-   * \param promiscuous If true capture all packets available at the device.
-   * \param explicitFilename Treat the prefix as an explicit filename if true.
-   */
-  virtual void EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd,
-                                   bool promiscuous, bool explicitFilename);
-
   /**
    * Retrieve the SgwPgw IP address, set by the OpenFlow network.
    * \return The SgwPgw Ipv4Addrress of the S1-U interface connected to the

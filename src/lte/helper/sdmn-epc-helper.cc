@@ -283,8 +283,10 @@ SdmnEpcHelper::EnablePcapS1u (std::string prefix, bool promiscuous, bool explici
 {
   NS_LOG_FUNCTION (this << prefix);
   prefix.append ("-s1u");
-  EnablePcap (prefix, m_s1uDevices, promiscuous);
-  EnablePcap (prefix, m_sgwS1uDev, promiscuous);
+
+  CsmaHelper helper;
+  helper.EnablePcap (prefix, m_s1uDevices, promiscuous);
+  helper.EnablePcap (prefix, m_sgwS1uDev, promiscuous);
 }
 
 void
@@ -292,45 +294,9 @@ SdmnEpcHelper::EnablePcapX2 (std::string prefix, bool promiscuous, bool explicit
 {
   NS_LOG_FUNCTION (this << prefix);
   prefix.append ("-x2");
-  EnablePcap (prefix, m_x2Devices, promiscuous);
-}
-
-void
-SdmnEpcHelper::EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bool promiscuous, bool explicitFilename)
-{
-  //
-  // All of the Pcap enable functions vector through here including the ones
-  // that are wandering through all of devices on perhaps all of the nodes in
-  // the system.  We can only deal with devices of type CsmaNetDevice.
-  //
-  Ptr<CsmaNetDevice> device = nd->GetObject<CsmaNetDevice> ();
-  if (device == 0)
-    {
-      NS_LOG_INFO ("CsmaHelper::EnablePcapInternal(): Device " << device << " not of type ns3::CsmaNetDevice");
-      return;
-    }
-
-  PcapHelper pcapHelper;
-
-  std::string filename;
-  if (explicitFilename)
-    {
-      filename = prefix;
-    }
-  else
-    {
-      filename = pcapHelper.GetFilenameFromDevice (prefix, device);
-    }
-
-  Ptr<PcapFileWrapper> file = pcapHelper.CreateFile (filename, std::ios::out, PcapHelper::DLT_EN10MB);
-  if (promiscuous)
-    {
-      pcapHelper.HookDefaultSink<CsmaNetDevice> (device, "PromiscSniffer", file);
-    }
-  else
-    {
-      pcapHelper.HookDefaultSink<CsmaNetDevice> (device, "Sniffer", file);
-    }
+  
+  CsmaHelper helper;
+  helper.EnablePcap (prefix, m_x2Devices, promiscuous);
 }
 
 Ipv4Address
