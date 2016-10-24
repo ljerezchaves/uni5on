@@ -68,12 +68,12 @@ main (int argc, char *argv[])
 
   // Parse command line arguments
   CommandLine cmd;
-  cmd.AddValue ("verbose",  "Enable verbose output.", verbose);
-  cmd.AddValue ("pcap",     "Enable pcap output.", pcap);
-  cmd.AddValue ("progress", "Simulation progress interval [s].", progress);
-  cmd.AddValue ("simTime",  "Simulation stop time [s].", simTime);
-  cmd.AddValue ("prefix",   "Common prefix for filenames.", prefix);
-  cmd.AddValue ("cfgName",  "Configuration filename.", cfgName);
+  cmd.AddValue ("Verbose",  "Enable verbose output.", verbose);
+  cmd.AddValue ("Pcap",     "Enable pcap output.", pcap);
+  cmd.AddValue ("Progress", "Simulation progress interval [s].", progress);
+  cmd.AddValue ("SimTime",  "Simulation stop time [s].", simTime);
+  cmd.AddValue ("Prefix",   "Common prefix for filenames.", prefix);
+  cmd.AddValue ("CfgName",  "Configuration filename.", cfgName);
   cmd.Parse (argc, argv);
 
   // Update input and output prefixes from command line prefix parameter.
