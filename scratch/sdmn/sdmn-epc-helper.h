@@ -21,16 +21,10 @@
 #ifndef SDMN_EPC_HELPER_H
 #define SDMN_EPC_HELPER_H
 
-#include <ns3/object.h>
-#include <ns3/ipv4-address-helper.h>
-#include <ns3/data-rate.h>
-#include <ns3/epc-tft.h>
-#include <ns3/eps-bearer.h>
-#include <ns3/epc-helper.h>
-#include <ns3/trace-helper.h>
-#include <ns3/net-device-container.h>
-#include <ns3/epc-mme.h>
-#include <ns3/epc-sgw-pgw-application.h>
+#include <ns3/core-module.h>
+#include <ns3/lte-module.h>
+#include <ns3/network-module.h>
+#include <ns3/internet-module.h>
 
 namespace ns3 {
 

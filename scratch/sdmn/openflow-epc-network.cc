@@ -22,6 +22,7 @@
 #include "openflow-epc-controller.h"
 #include "stats-calculator.h"
 #include "internet-network.h"
+#include "sdmn-epc-helper.h"
 
 namespace ns3 {
 

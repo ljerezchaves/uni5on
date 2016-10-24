@@ -18,28 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include <ns3/core-module.h>
-#include <ns3/sdmn-epc-helper.h>
-#include <ns3/log.h>
-#include <ns3/inet-socket-address.h>
-#include <ns3/mac48-address.h>
-#include <ns3/eps-bearer.h>
-#include <ns3/ipv4-address.h>
-#include <ns3/internet-stack-helper.h>
-#include <ns3/csma-helper.h>
-#include <ns3/packet-socket-helper.h>
-#include <ns3/packet-socket-address.h>
-#include <ns3/epc-enb-application.h>
-#include <ns3/epc-sgw-pgw-application.h>
-#include <ns3/csma-net-device.h>
-#include <ns3/trace-helper.h>
-#include <ns3/lte-enb-rrc.h>
-#include <ns3/epc-x2.h>
-#include <ns3/lte-enb-net-device.h>
-#include <ns3/lte-ue-net-device.h>
-#include <ns3/epc-mme.h>
-#include <ns3/epc-ue-nas.h>
-#include <ns3/lte-ue-rrc.h>
+#include <ns3/csma-module.h>
+#include "sdmn-epc-helper.h"
 
 namespace ns3 {
 
