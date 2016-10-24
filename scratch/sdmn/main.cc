@@ -336,6 +336,6 @@ EnableVerbose (bool enable)
       LogComponentEnable ("RealTimeVideoServer", LOG_LEVEL_WARN);
       LogComponentEnable ("TrafficManager", LOG_LEVEL_WARN);
       LogComponentEnable ("TrafficHelper", LOG_LEVEL_WARN);
-      LogComponentEnable ("EpcApplication", LOG_LEVEL_WARN);
+      LogComponentEnable ("SdmnApplication", LOG_LEVEL_WARN);
     }
 }

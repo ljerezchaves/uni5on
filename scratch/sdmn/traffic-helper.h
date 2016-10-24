@@ -25,7 +25,7 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
-#include "apps/epc-application.h"
+#include "apps/sdmn-application.h"
 #include "apps/http-helper.h"
 #include "apps/real-time-video-helper.h"
 #include "apps/voip-helper.h"

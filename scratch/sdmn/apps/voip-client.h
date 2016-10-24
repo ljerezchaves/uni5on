@@ -26,7 +26,7 @@
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
 #include "voip-server.h"
-#include "epc-application.h"
+#include "sdmn-application.h"
 #include "qos-stats-calculator.h"
 
 namespace ns3 {
@@ -39,7 +39,7 @@ class VoipServer;
  * receives UDP datagrams following voip traffic pattern. This client control
  * start/stop events on the server application. 
  */
-class VoipClient : public EpcApplication
+class VoipClient : public SdmnApplication
 {
 public:
   /**
@@ -83,7 +83,7 @@ public:
    */
   void ServerTrafficEnd (uint32_t pkts);
 
-  // Inherited from EpcApplication
+  // Inherited from SdmnApplication
   void Start (void);
 
 protected:

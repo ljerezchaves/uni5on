@@ -713,10 +713,10 @@ EpcS1uStatsCalculator::EpcS1uStatsCalculator (
     "/NodeList/*/$ns3::OFSwitch13Device/PortList/*/PortQueue/Drop",
     MakeCallback (&EpcS1uStatsCalculator::QueueDropPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::EpcApplication/AppStart",
+    "/NodeList/*/ApplicationList/*/$ns3::SdmnApplication/AppStart",
     MakeCallback (&EpcS1uStatsCalculator::ResetEpcStatistics, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::EpcApplication/AppStop",
+    "/NodeList/*/ApplicationList/*/$ns3::SdmnApplication/AppStop",
     MakeCallback (&EpcS1uStatsCalculator::DumpStatistics, this));
 }
 
@@ -900,7 +900,7 @@ EpcS1uStatsCalculator::EpcOutputPacket (std::string context,
 
 void
 EpcS1uStatsCalculator::DumpStatistics (std::string context,
-                                       Ptr<const EpcApplication> app)
+                                       Ptr<const SdmnApplication> app)
 {
   NS_LOG_FUNCTION (this << context << app->GetTeid ());
   NS_ASSERT_MSG (m_controller, "Invalid controller application.");
@@ -1019,7 +1019,7 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context,
 
 void
 EpcS1uStatsCalculator::ResetEpcStatistics (std::string context,
-                                           Ptr<const EpcApplication> app)
+                                           Ptr<const SdmnApplication> app)
 {
   NS_LOG_FUNCTION (this << context << app);
 

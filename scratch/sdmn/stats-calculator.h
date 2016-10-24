@@ -25,7 +25,7 @@
 #include <ns3/queue.h>
 #include <ns3/ofswitch13-device-container.h>
 #include <ns3/global-value.h> 
-#include "apps/epc-application.h"
+#include "apps/sdmn-application.h"
 
 namespace ns3 {
 
@@ -328,17 +328,17 @@ private:
    * Trace sink fired when application traffic stops. Used to dump EPC and APP
    * traffic statistics.
    * \param context Context information.
-   * \param app The EpcApplication.
+   * \param app The SdmnApplication.
    */
-  void DumpStatistics (std::string context, Ptr<const EpcApplication> app);
+  void DumpStatistics (std::string context, Ptr<const SdmnApplication> app);
 
   /**
    * Trace sink fired when application traffic starts. Used to reset EPC
    * traffic statistics.
    * \param context Context information.
-   * \param app The EpcApplication.
+   * \param app The SdmnApplication.
    */
-  void ResetEpcStatistics (std::string context, Ptr<const EpcApplication> app);
+  void ResetEpcStatistics (std::string context, Ptr<const SdmnApplication> app);
 
   /**
    * Retrieve the LTE EPC QoS statistics information for the GTP tunnel id.

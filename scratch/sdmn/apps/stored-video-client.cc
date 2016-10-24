@@ -29,7 +29,7 @@ TypeId
 StoredVideoClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::StoredVideoClient")
-    .SetParent<EpcApplication> ()
+    .SetParent<SdmnApplication> ()
     .AddConstructor<StoredVideoClient> ()
     .AddAttribute ("ServerAddress",
                    "The server IPv4 address.",
@@ -110,7 +110,7 @@ StoredVideoClient::DoDispose (void)
   m_serverApp = 0;
   m_rxPacket = 0;
   Simulator::Cancel (m_forceStop);
-  EpcApplication::DoDispose ();
+  SdmnApplication::DoDispose ();
 }
 
 void

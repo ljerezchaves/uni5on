@@ -25,7 +25,7 @@
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
 #include "stored-video-server.h"
-#include "epc-application.h"
+#include "sdmn-application.h"
 #include "qos-stats-calculator.h"
 
 namespace ns3 {
@@ -39,7 +39,7 @@ class StoredVideoServer;
  * the main video object. After receiving the entire video, the client closes
  * the connection.
  */
-class StoredVideoClient : public EpcApplication
+class StoredVideoClient : public SdmnApplication
 {
 public:
   /**
@@ -72,7 +72,7 @@ public:
    */
   void SetTraceFilename (std::string filename);
 
-  // Inherited from EpcApplication
+  // Inherited from SdmnApplication
   void Start (void);
 
 protected:

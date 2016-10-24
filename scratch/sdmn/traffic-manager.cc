@@ -60,7 +60,7 @@ TrafficManager::GetTypeId (void)
 }
 
 void
-TrafficManager::AddEpcApplication (Ptr<EpcApplication> app)
+TrafficManager::AddSdmnApplication (Ptr<SdmnApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -76,7 +76,7 @@ TrafficManager::AddEpcApplication (Ptr<EpcApplication> app)
 }
 
 void
-TrafficManager::AppStartTry (Ptr<EpcApplication> app)
+TrafficManager::AppStartTry (Ptr<SdmnApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -124,12 +124,12 @@ TrafficManager::AppStartTry (Ptr<EpcApplication> app)
       // Set the maximum traffic duration.
       Time duration = nextStartTry - Seconds (3);
       app->SetAttribute ("MaxDurationTime", TimeValue (duration));
-      Simulator::Schedule (Seconds (1), &EpcApplication::Start, app);
+      Simulator::Schedule (Seconds (1), &SdmnApplication::Start, app);
     }
 }
 
 void
-TrafficManager::NotifyAppStop (Ptr<const EpcApplication> app)
+TrafficManager::NotifyAppStop (Ptr<const SdmnApplication> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -161,10 +161,10 @@ TrafficManager::SessionCreatedCallback (
   m_defaultTeid = bearerList.front ().sgwFteid.teid;
 
   // For each application, set the corresponding teid
-  std::vector<Ptr<EpcApplication> >::iterator appIt;
+  std::vector<Ptr<SdmnApplication> >::iterator appIt;
   for (appIt = m_apps.begin (); appIt != m_apps.end (); appIt++)
     {
-      Ptr<EpcApplication> app = *appIt;
+      Ptr<SdmnApplication> app = *appIt;
 
       // Using the tft to match bearers and apps
       Ptr<EpcTft> tft = app->GetTft ();

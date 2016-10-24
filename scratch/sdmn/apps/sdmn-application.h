@@ -34,20 +34,20 @@ namespace ns3 {
 /**
  * \ingroup applications
  * This class extends the Application class to proper work ith OpenFlow + EPC
- * simulations. Only clients applications should use this EpcApplication as
+ * simulations. Only clients applications should use this SdmnApplication as
  * superclass. It includes a QosStatsCalculator for traffic statistics, and a
  * stop callback to notify when the traffic stops. For LTE EPC, each
  * application is associated with an EPS bearer, and traffic is sent over GTP
  * tunnels. These info are also saved here for further usage.
  */
-class EpcApplication : public Application
+class SdmnApplication : public Application
 {
   friend class TrafficHelper;
   friend class TrafficManager;
 
 public:
-  EpcApplication ();            //!< Default constructor
-  virtual ~EpcApplication ();   //!< Dummy destructor, see DoDipose
+  SdmnApplication ();            //!< Default constructor
+  virtual ~SdmnApplication ();   //!< Dummy destructor, see DoDipose
   
   /**
    * Get the type ID.
@@ -94,10 +94,10 @@ public:
   bool IsActive (void) const;
 
   /**
-   * TracedCallback signature for EpcApplication.
-   * \param app The EpcApplication.
+   * TracedCallback signature for SdmnApplication.
+   * \param app The SdmnApplication.
    */
-  typedef void (* EpcAppTracedCallback)(Ptr<const EpcApplication> app);
+  typedef void (* EpcAppTracedCallback)(Ptr<const SdmnApplication> app);
 
 protected:
   /** Destructor implementation */
@@ -115,10 +115,10 @@ protected:
   std::string m_name;       //!< Name for this application
 
   /** Application start trace source, fired when application start. */
-  TracedCallback<Ptr<const EpcApplication> > m_appStartTrace;
+  TracedCallback<Ptr<const SdmnApplication> > m_appStartTrace;
 
   /** Application stop trace source, fired when application stopts. */
-  TracedCallback<Ptr<const EpcApplication> > m_appStopTrace;
+  TracedCallback<Ptr<const SdmnApplication> > m_appStopTrace;
 
 private:
   // LTE EPC metadata 

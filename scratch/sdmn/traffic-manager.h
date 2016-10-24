@@ -25,7 +25,7 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
-#include "apps/epc-application.h"
+#include "apps/sdmn-application.h"
 #include "routing-info.h"
 
 namespace ns3 {
@@ -57,7 +57,7 @@ public:
    * Add a new application to this manager.
    * \param app The application pointer.
    */
-  void AddEpcApplication (Ptr<EpcApplication> app);
+  void AddSdmnApplication (Ptr<SdmnApplication> app);
 
   /**
    * Attempt to (re)start this application. This method will request for bearer
@@ -71,7 +71,7 @@ public:
    * to revise this.
    * \param app The application pointer.
    */
-  void AppStartTry (Ptr<EpcApplication> app);
+  void AppStartTry (Ptr<SdmnApplication> app);
 
   /**
    * Member function called by applications to notify this manager when traffic
@@ -79,7 +79,7 @@ public:
    * application restart attempt.
    * \param app The application pointer.
    */
-  void NotifyAppStop (Ptr<const EpcApplication> app);
+  void NotifyAppStop (Ptr<const SdmnApplication> app);
 
   /**
    * Trace sink notified when new session is created. This will be used to get
@@ -99,9 +99,9 @@ protected:
   virtual void DoDispose ();
 
 private:
-  Ptr<ExponentialRandomVariable>    m_poissonRng; //!< Inter-arrival generator
-  Ptr<OpenFlowEpcController>        m_controller; //!< OpenFlow controller
-  std::vector<Ptr<EpcApplication> > m_apps;       //!< Application list
+  Ptr<ExponentialRandomVariable>      m_poissonRng; //!< Inter-arrival traffic
+  Ptr<OpenFlowEpcController>          m_controller; //!< OpenFlow controller
+  std::vector<Ptr<SdmnApplication> >  m_apps;       //!< Application list
 
   uint64_t    m_imsi;         //!< UE IMSI identifier
   uint16_t    m_cellId;       //!< Current eNB cellId

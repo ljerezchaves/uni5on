@@ -18,15 +18,15 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "epc-application.h"
+#include "sdmn-application.h"
 #include "ns3/log.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("EpcApplication");
-NS_OBJECT_ENSURE_REGISTERED (EpcApplication);
+NS_LOG_COMPONENT_DEFINE ("SdmnApplication");
+NS_OBJECT_ENSURE_REGISTERED (SdmnApplication);
 
-EpcApplication::EpcApplication()
+SdmnApplication::SdmnApplication()
   : m_qosStats (Create<QosStatsCalculator> ()),
     m_active (false),
     m_tft (0),
@@ -35,84 +35,84 @@ EpcApplication::EpcApplication()
   NS_LOG_FUNCTION (this);
 }
 
-EpcApplication::~EpcApplication()
+SdmnApplication::~SdmnApplication()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-EpcApplication::GetTypeId (void)
+SdmnApplication::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::EpcApplication")
+  static TypeId tid = TypeId ("ns3::SdmnApplication")
     .SetParent<Application> ()
-    .AddConstructor<EpcApplication> ()
+    .AddConstructor<SdmnApplication> ()
     .AddAttribute ("MaxDurationTime",
                    "A hard duration time threshold.",
                    TimeValue (Time ()),
-                   MakeTimeAccessor (&EpcApplication::m_maxDurationTime),
+                   MakeTimeAccessor (&SdmnApplication::m_maxDurationTime),
                    MakeTimeChecker ())
     .AddAttribute ("AppName",
                    "The application name.",
                    StringValue ("NoName"),
-                   MakeStringAccessor (&EpcApplication::m_name),
+                   MakeStringAccessor (&SdmnApplication::m_name),
                    MakeStringChecker ())
 
     .AddTraceSource ("AppStart",
-                     "EpcApplication start trace source.",
-                     MakeTraceSourceAccessor (&EpcApplication::m_appStartTrace),
-                     "ns3::EpcApplication::EpcAppTracedCallback")
+                     "SdmnApplication start trace source.",
+                     MakeTraceSourceAccessor (&SdmnApplication::m_appStartTrace),
+                     "ns3::SdmnApplication::EpcAppTracedCallback")
     .AddTraceSource ("AppStop",
-                     "EpcApplication stop trace source.",
-                     MakeTraceSourceAccessor (&EpcApplication::m_appStopTrace),
-                     "ns3::EpcApplication::EpcAppTracedCallback")  
+                     "SdmnApplication stop trace source.",
+                     MakeTraceSourceAccessor (&SdmnApplication::m_appStopTrace),
+                     "ns3::SdmnApplication::EpcAppTracedCallback")  
   ;
   return tid;
 }
 
 Ptr<const QosStatsCalculator>
-EpcApplication::GetQosStats (void) const
+SdmnApplication::GetQosStats (void) const
 {
   return m_qosStats;
 }
 
 void
-EpcApplication::Start ()
+SdmnApplication::Start ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 bool
-EpcApplication::IsActive (void) const
+SdmnApplication::IsActive (void) const
 {
   return m_active;
 }
 
 Ptr<EpcTft>
-EpcApplication::GetTft (void) const
+SdmnApplication::GetTft (void) const
 {
   return m_tft;
 }
 
 EpsBearer
-EpcApplication::GetEpsBearer (void) const
+SdmnApplication::GetEpsBearer (void) const
 {
   return m_bearer;
 }
 
 uint32_t
-EpcApplication::GetTeid (void) const
+SdmnApplication::GetTeid (void) const
 {
   return m_teid;
 }
 
 std::string 
-EpcApplication::GetAppName (void) const
+SdmnApplication::GetAppName (void) const
 {
   return m_name;
 }
 
 void
-EpcApplication::DoDispose (void)
+SdmnApplication::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   m_qosStats = 0;
@@ -121,7 +121,7 @@ EpcApplication::DoDispose (void)
 }
 
 void
-EpcApplication::ResetQosStats ()
+SdmnApplication::ResetQosStats ()
 {
   NS_LOG_FUNCTION (this);
   m_qosStats->ResetCounters ();

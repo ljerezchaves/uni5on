@@ -335,7 +335,7 @@ TrafficHelper::InstallGbrVoip ()
   // Link EPC info to application
   cApp->m_tft = tft;
   cApp->m_bearer = bearer;
-  m_ueManager->AddEpcApplication (cApp);
+  m_ueManager->AddSdmnApplication (cApp);
 
   // Activate dedicated bearer
   GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
@@ -384,7 +384,7 @@ TrafficHelper::InstallGbrLiveVideoStreaming ()
   // Link EPC info to application
   cApp->m_tft = tft;
   cApp->m_bearer = bearer;
-  m_ueManager->AddEpcApplication (cApp);
+  m_ueManager->AddSdmnApplication (cApp);
 
   // Activate dedicated bearer
   GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
@@ -431,7 +431,7 @@ TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
   // Link EPC info to application
   cApp->m_tft = tft;
   cApp->m_bearer = bearer;
-  m_ueManager->AddEpcApplication (cApp);
+  m_ueManager->AddSdmnApplication (cApp);
 
   // Activate dedicated bearer
   GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
@@ -478,7 +478,7 @@ TrafficHelper::InstallNonGbrLiveVideoStreaming ()
   // Link EPC info to application
   cApp->m_tft = tft;
   cApp->m_bearer = bearer;
-  m_ueManager->AddEpcApplication (cApp);
+  m_ueManager->AddSdmnApplication (cApp);
 
   // Activate dedicated bearer
   GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
@@ -521,7 +521,7 @@ TrafficHelper::InstallNonGbrHttp ()
   // Link EPC info to application
   cApp->m_tft = tft;
   cApp->m_bearer = bearer;
-  m_ueManager->AddEpcApplication (cApp);
+  m_ueManager->AddSdmnApplication (cApp);
 
   // Activate dedicated bearer
   GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
