@@ -27,7 +27,6 @@ NS_LOG_COMPONENT_DEFINE ("SdmnEpcHelper");
 
 NS_OBJECT_ENSURE_REGISTERED (SdmnEpcHelper);
 
-
 SdmnEpcHelper::SdmnEpcHelper ()
   : m_gtpuUdpPort (2152)  // fixed by the standard
 {
@@ -65,17 +64,19 @@ SdmnEpcHelper::SdmnEpcHelper ()
   Ipv4InterfaceContainer tunDeviceIpv4IfContainer = m_ueAddressHelper.Assign (tunDeviceContainer);
 
   // create EpcSgwPgwApplication
-  m_sgwPgwApp = CreateObject<EpcSgwPgwApplication> (m_tunDevice, sgwPgwS1uSocket);
-  Names::Add ("SgwPgwApplication", m_sgwPgwApp);
-  m_sgwPgw->AddApplication (m_sgwPgwApp);
+  m_sgwPgwCtrlApp = CreateObject<EpcSgwPgwCtrlApplication> ();
+  m_sgwPgwUserApp = CreateObject<EpcSgwPgwUserApplication> (m_tunDevice, sgwPgwS1uSocket, m_sgwPgwCtrlApp);
+  Names::Add ("SgwPgwApplication", m_sgwPgwCtrlApp);
+  m_sgwPgw->AddApplication (m_sgwPgwCtrlApp);
+  m_sgwPgw->AddApplication (m_sgwPgwUserApp);
 
   // connect SgwPgwApplication and virtual net device for tunneling
-  m_tunDevice->SetSendCallback (MakeCallback (&EpcSgwPgwApplication::RecvFromTunDevice, m_sgwPgwApp));
+  m_tunDevice->SetSendCallback (MakeCallback (&EpcSgwPgwUserApplication::RecvFromTunDevice, m_sgwPgwUserApp));
 
   // Create MME and connect with SGW via S11 interface
   m_mme = CreateObject<EpcMme> ();
-  m_mme->SetS11SapSgw (m_sgwPgwApp->GetS11SapSgw ());
-  m_sgwPgwApp->SetS11SapMme (m_mme->GetS11SapMme ());
+  m_mme->SetS11SapSgw (m_sgwPgwCtrlApp->GetS11SapSgw ());
+  m_sgwPgwCtrlApp->SetS11SapMme (m_mme->GetS11SapMme ());
 }
 
 SdmnEpcHelper::~SdmnEpcHelper ()
@@ -99,7 +100,8 @@ SdmnEpcHelper::DoDispose ()
   NS_LOG_FUNCTION (this);
   m_tunDevice->SetSendCallback (MakeNullCallback<bool, Ptr<Packet>, const Address&, const Address&, uint16_t> ());
   m_tunDevice = 0;
-  m_sgwPgwApp = 0;
+  m_sgwPgwCtrlApp = 0;
+  m_sgwPgwUserApp = 0;
   m_s1uConnect = MakeNullCallback<Ptr<NetDevice>, Ptr<Node>, uint16_t> ();
   m_x2Connect = MakeNullCallback<NetDeviceContainer, Ptr<Node>, Ptr<Node> > ();
   m_sgwPgw->Dispose ();
@@ -161,7 +163,7 @@ SdmnEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t c
 
   NS_LOG_INFO ("connect S1-AP interface");
   m_mme->AddEnb (cellId, enbAddress, enbApp->GetS1apSapEnb ());
-  m_sgwPgwApp->AddEnb (cellId, enbAddress, sgwAddress);
+  m_sgwPgwCtrlApp->AddEnb (cellId, enbAddress, sgwAddress);
   enbApp->SetS1apSapMme (m_mme->GetS1apSapMme ());
 }
 
@@ -203,7 +205,7 @@ SdmnEpcHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
   NS_LOG_FUNCTION (this << imsi << ueDevice );
 
   m_mme->AddUe (imsi);
-  m_sgwPgwApp->AddUe (imsi);
+  m_sgwPgwCtrlApp->AddUe (imsi);
 }
 
 uint8_t
@@ -222,7 +224,7 @@ SdmnEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Ptr<Ep
   NS_ASSERT (ueIpv4->GetNAddresses (interface) == 1);
   Ipv4Address ueAddr = ueIpv4->GetAddress (interface, 0).GetLocal ();
   NS_LOG_LOGIC (" UE IP address: " << ueAddr);
-  m_sgwPgwApp->SetUeAddress (imsi, ueAddr);
+  m_sgwPgwCtrlApp->SetUeAddress (imsi, ueAddr);
 
   uint8_t bearerId = m_mme->AddBearer (imsi, tft, bearer);
   Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
