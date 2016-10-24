@@ -73,7 +73,7 @@ case "${ACTION}" in
     PREFIX=$3
     ARGS=$4
     
-    COMMAND="./waf --run=\"${PROGNAME} --RngRun=${SEED} --prefix=${PREFIX} ${ARGS}\""
+    COMMAND="./waf --run=\"${PROGNAME} --RngRun=${SEED} --Prefix=${PREFIX} ${ARGS}\""
     OUTFILE=$(mktemp --suffix=-${PROGNAME})
     echo "${COMMAND}" > ${OUTFILE}
     
