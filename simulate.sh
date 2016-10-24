@@ -8,7 +8,7 @@ reset=$(tput sgr0)
 bold=$(tput bold)
 normal=$(tput sgr0)
 
-PROGNAME="epc-of"
+PROGNAME="sdmn"
 
 function PrintHelp () {
   echo "Usage: $0 --action [ARGS]"
@@ -74,7 +74,7 @@ case "${ACTION}" in
     ARGS=$4
     
     COMMAND="./waf --run=\"${PROGNAME} --RngRun=${SEED} --prefix=${PREFIX} ${ARGS}\""
-    OUTFILE=$(mktemp --suffix=-epcof)
+    OUTFILE=$(mktemp --suffix=-${PROGNAME})
     echo "${COMMAND}" > ${OUTFILE}
     
     echo "${green}[Start]${reset} ${COMMAND}"
