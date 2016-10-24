@@ -58,7 +58,6 @@ class ErrorModel;
 class CsmaNetDevice : public NetDevice
 {
 public:
-
   /**
    * \brief Get the type ID.
    * \return the object TypeId
@@ -68,7 +67,8 @@ public:
   /**
    * Enumeration of the types of packets supported in the class.
    */
-  enum EncapsulationMode {
+  enum EncapsulationMode
+  {
     ILLEGAL,     /**< Encapsulation mode not set */
     DIX,         /**< DIX II / Ethernet II packet */
     LLC,         /**< 802.2 LLC/SNAP Packet*/
@@ -313,7 +313,7 @@ public:
    * \param cb The callback.
    */
   virtual void SetOpenFlowReceiveCallback (NetDevice::PromiscReceiveCallback cb);
-  
+
   /**
    * Set the callback to be used to notify higher layers when a packet has been
    * received.
@@ -335,14 +335,14 @@ public:
   virtual void SetPromiscReceiveCallback (PromiscReceiveCallback cb);
   virtual bool SupportsSendFrom (void) const;
 
- /**
-  * Assign a fixed random variable stream number to the random variables
-  * used by this model.  Return the number of streams (possibly zero) that
-  * have been assigned.
-  *
-  * \param stream first stream index to use
-  * \return the number of stream indices assigned by this model
-  */
+  /**
+   * Assign a fixed random variable stream number to the random variables
+   * used by this model.  Return the number of streams (possibly zero) that
+   * have been assigned.
+   *
+   * \param stream first stream index to use
+   * \return the number of stream indices assigned by this model
+   */
   int64_t AssignStreams (int64_t stream);
 
 protected:
@@ -368,7 +368,6 @@ protected:
   virtual void NotifyNewAggregate (void);
 
 private:
-
   /**
    * Operator = is declared but not implemented.  This disables the assignment
    * operator for CsmaNetDevice objects.
@@ -582,7 +581,7 @@ private:
 
   /**
    * The trace source fired for packets successfully received by the device
-   * immediately before being forwarded up to higher layers (at the L2/L3 
+   * immediately before being forwarded up to higher layers (at the L2/L3
    * transition).  This is a non-promiscuous trace.
    *
    * \see class CallBackTraceSource
@@ -708,7 +707,7 @@ private:
    * The callback used to notify OpenFlow device that a packet has been received.
    */
   NetDevice::PromiscReceiveCallback m_openFlowRxCallback;
-  
+
   /**
    * The callback used to notify higher layers that a packet has been received.
    */

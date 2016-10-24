@@ -50,7 +50,7 @@ public:
   Ptr< CsmaNetDevice > devicePtr; //!< Pointer to the net device
   bool                 active;    //!< Is net device enabled to TX/RX
 
-  CsmaDeviceRec();
+  CsmaDeviceRec ();
 
   /**
    * \brief Constructor
@@ -58,7 +58,7 @@ public:
    *
    * \param device the device to record
    */
-  CsmaDeviceRec(Ptr< CsmaNetDevice > device);
+  CsmaDeviceRec (Ptr< CsmaNetDevice > device);
 
   /**
    * Copy constructor
@@ -100,7 +100,6 @@ enum WireState
 class CsmaChannel : public Channel
 {
 public:
-
   /**
    * \brief Get the type ID.
    * \return the object TypeId

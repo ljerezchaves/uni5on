@@ -614,10 +614,10 @@ CsmaNetDevice::TransmitAbort (void)
       // busy, thus causing the assert in TransmitStart to fail.
       if (txq && txq->IsStopped ())
         {
-          if ((m_queue->GetMode () == Queue::QUEUE_MODE_PACKETS &&
-               m_queue->GetNPackets () < m_queue->GetMaxPackets ()) ||
-              (m_queue->GetMode () == Queue::QUEUE_MODE_BYTES &&
-               m_queue->GetNBytes () + m_mtu <= m_queue->GetMaxBytes ()))
+          if ((m_queue->GetMode () == Queue::QUEUE_MODE_PACKETS
+               && m_queue->GetNPackets () < m_queue->GetMaxPackets ())
+              || (m_queue->GetMode () == Queue::QUEUE_MODE_BYTES
+                  && m_queue->GetNBytes () + m_mtu <= m_queue->GetMaxBytes ()))
             {
               NS_LOG_DEBUG ("The device queue is being started.");
               txq->Start ();
@@ -723,10 +723,10 @@ CsmaNetDevice::TransmitReadyEvent (void)
       // busy, thus causing the assert in TransmitStart to fail.
       if (txq && txq->IsStopped ())
         {
-          if ((m_queue->GetMode () == Queue::QUEUE_MODE_PACKETS &&
-               m_queue->GetNPackets () < m_queue->GetMaxPackets ()) ||
-              (m_queue->GetMode () == Queue::QUEUE_MODE_BYTES &&
-               m_queue->GetNBytes () + m_mtu <= m_queue->GetMaxBytes ()))
+          if ((m_queue->GetMode () == Queue::QUEUE_MODE_PACKETS
+               && m_queue->GetNPackets () < m_queue->GetMaxPackets ())
+              || (m_queue->GetMode () == Queue::QUEUE_MODE_BYTES
+                  && m_queue->GetNBytes () + m_mtu <= m_queue->GetMaxBytes ()))
             {
               NS_LOG_DEBUG ("The device queue is being started.");
               txq->Start ();
@@ -765,7 +765,7 @@ CsmaNetDevice::Attach (Ptr<CsmaChannel> ch)
   //
   // We use the Ethernet interframe gap of 96 bit times.
   //
-  m_tInterframeGap = m_bps.CalculateBytesTxTime (96/8);
+  m_tInterframeGap = m_bps.CalculateBytesTxTime (96 / 8);
 
   //
   // This device is up whenever a channel is attached to it.
@@ -1141,8 +1141,8 @@ CsmaNetDevice::SendFrom (Ptr<Packet> packet, const Address& src, const Address& 
           // packet).
           if (txq)
             {
-              if (m_queue->GetMode () == Queue::QUEUE_MODE_BYTES &&
-                  m_queue->GetNBytes () + m_mtu > m_queue->GetMaxBytes ())
+              if (m_queue->GetMode () == Queue::QUEUE_MODE_BYTES
+                  && m_queue->GetNBytes () + m_mtu > m_queue->GetMaxBytes ())
                 {
                   NS_LOG_DEBUG ("The device queue is being stopped.");
                   txq->Stop ();
@@ -1167,10 +1167,10 @@ CsmaNetDevice::SendFrom (Ptr<Packet> packet, const Address& src, const Address& 
       // not, we stop the queue.
       if (txq)
         {
-          if ((m_queue->GetMode () == Queue::QUEUE_MODE_PACKETS &&
-               m_queue->GetNPackets () >= m_queue->GetMaxPackets ()) ||
-              (m_queue->GetMode () == Queue::QUEUE_MODE_BYTES &&
-               m_queue->GetNBytes () + m_mtu > m_queue->GetMaxBytes ()))
+          if ((m_queue->GetMode () == Queue::QUEUE_MODE_PACKETS
+               && m_queue->GetNPackets () >= m_queue->GetMaxPackets ())
+              || (m_queue->GetMode () == Queue::QUEUE_MODE_BYTES
+                  && m_queue->GetNBytes () + m_mtu > m_queue->GetMaxBytes ()))
             {
               NS_LOG_DEBUG ("The device queue is being stopped.");
               txq->Stop ();
