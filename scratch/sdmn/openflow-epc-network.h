@@ -32,7 +32,7 @@ class InternetNetwork;
 class LinkQueuesStatsCalculator;
 class NetworkStatsCalculator;
 class OpenFlowEpcController;
-class OpenFlowEpcHelper;
+class SdmnEpcHelper;
 
 /**
  * \ingroup epcof
@@ -54,7 +54,7 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Called by OpenFlowEpcHelper to proper connect the SgwPgw and eNBs to the
+   * Called by SdmnEpcHelper to proper connect the SgwPgw and eNBs to the
    * S1-U interface over the OpenFlow network infrastructure.
    * \param node The SgwPgw/eNB node pointer.
    * \param cellId The eNB cell ID (0 for SgwPgw node).
@@ -63,7 +63,7 @@ public:
   virtual Ptr<NetDevice> S1Attach (Ptr<Node> node, uint16_t cellId) = 0;
 
   /**
-   * Called by OpenFlowEpcHelper to proper connect the eNBs nodes to the X2
+   * Called by SdmnEpcHelper to proper connect the eNBs nodes to the X2
    * interface over the OpenFlow network infrastructure.
    * \param node The 1st eNB node pointer.
    * \param node The 2nd eNB node pointer.
@@ -118,7 +118,7 @@ public:
    * Retrieve the OpenFlow EPC helper used for LTE configuration.
    * \return The OpenFlow EPC helper.
    */
-  Ptr<OpenFlowEpcHelper> GetEpcHelper ();
+  Ptr<SdmnEpcHelper> GetEpcHelper ();
 
   /**
    * BoolTracedCallback signature for topology creation completed.
@@ -218,7 +218,7 @@ private:
   uint16_t                        m_gatewaySwitch;  //!< Gateway switch index.
   Ptr<Node>                       m_ofCtrlNode;     //!< Controller node.
   Ptr<OpenFlowEpcController>      m_ofCtrlApp;      //!< Controller app.
-  Ptr<OpenFlowEpcHelper>          m_ofEpcHelper;    //!< Helper for LTE EPC.
+  Ptr<SdmnEpcHelper>              m_ofEpcHelper;    //!< Helper for LTE EPC.
   Ptr<InternetNetwork>            m_webNetwork;     //!< Internet network.
   Ptr<NetworkStatsCalculator>     m_networkStats;   //!< Network statistics.
 

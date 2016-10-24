@@ -19,7 +19,7 @@
  */
 
 #include <ns3/core-module.h>
-#include <ns3/openflow-epc-helper.h>
+#include <ns3/sdmn-epc-helper.h>
 #include <ns3/log.h>
 #include <ns3/inet-socket-address.h>
 #include <ns3/mac48-address.h>
@@ -43,12 +43,12 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcHelper");
+NS_LOG_COMPONENT_DEFINE ("SdmnEpcHelper");
 
-NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcHelper);
+NS_OBJECT_ENSURE_REGISTERED (SdmnEpcHelper);
 
 
-OpenFlowEpcHelper::OpenFlowEpcHelper ()
+SdmnEpcHelper::SdmnEpcHelper ()
   : m_gtpuUdpPort (2152)  // fixed by the standard
 {
   NS_LOG_FUNCTION (this);
@@ -98,23 +98,23 @@ OpenFlowEpcHelper::OpenFlowEpcHelper ()
   m_sgwPgwApp->SetS11SapMme (m_mme->GetS11SapMme ());
 }
 
-OpenFlowEpcHelper::~OpenFlowEpcHelper ()
+SdmnEpcHelper::~SdmnEpcHelper ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-OpenFlowEpcHelper::GetTypeId (void)
+SdmnEpcHelper::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::OpenFlowEpcHelper")
+  static TypeId tid = TypeId ("ns3::SdmnEpcHelper")
     .SetParent<EpcHelper> ()
-    .AddConstructor<OpenFlowEpcHelper> ()
+    .AddConstructor<SdmnEpcHelper> ()
   ;
   return tid;
 }
 
 void
-OpenFlowEpcHelper::DoDispose ()
+SdmnEpcHelper::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_tunDevice->SetSendCallback (MakeNullCallback<bool, Ptr<Packet>, const Address&, const Address&, uint16_t> ());
@@ -126,7 +126,7 @@ OpenFlowEpcHelper::DoDispose ()
 }
 
 void
-OpenFlowEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t cellId)
+SdmnEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << enb << lteEnbNetDevice << cellId);
 
@@ -186,7 +186,7 @@ OpenFlowEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16
 }
 
 void
-OpenFlowEpcHelper::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
+SdmnEpcHelper::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
 {
   NS_LOG_FUNCTION (this << enb1 << enb2);
   NS_ASSERT (!m_x2Connect.IsNull ());
@@ -218,7 +218,7 @@ OpenFlowEpcHelper::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
 }
 
 void
-OpenFlowEpcHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
+SdmnEpcHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 {
   NS_LOG_FUNCTION (this << imsi << ueDevice );
 
@@ -227,7 +227,7 @@ OpenFlowEpcHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 }
 
 uint8_t
-OpenFlowEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer)
+SdmnEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer)
 {
   NS_LOG_FUNCTION (this << ueDevice << imsi);
 
@@ -254,32 +254,32 @@ OpenFlowEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Pt
 }
 
 Ptr<Node>
-OpenFlowEpcHelper::GetPgwNode ()
+SdmnEpcHelper::GetPgwNode ()
 {
   return m_sgwPgw;
 }
 
 Ipv4InterfaceContainer
-OpenFlowEpcHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
+SdmnEpcHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
 {
   return m_ueAddressHelper.Assign (ueDevices);
 }
 
 Ipv4Address
-OpenFlowEpcHelper::GetUeDefaultGatewayAddress ()
+SdmnEpcHelper::GetUeDefaultGatewayAddress ()
 {
   // return the address of the tun device
   return m_sgwPgw->GetObject<Ipv4> ()->GetAddress (1, 0).GetLocal ();
 }
 
 Ptr<EpcMme>
-OpenFlowEpcHelper::GetMmeElement ()
+SdmnEpcHelper::GetMmeElement ()
 {
   return m_mme;
 }
 
 void
-OpenFlowEpcHelper::EnablePcapS1u (std::string prefix, bool promiscuous, bool explicitFilename)
+SdmnEpcHelper::EnablePcapS1u (std::string prefix, bool promiscuous, bool explicitFilename)
 {
   NS_LOG_FUNCTION (this << prefix);
   prefix.append ("-s1u");
@@ -288,7 +288,7 @@ OpenFlowEpcHelper::EnablePcapS1u (std::string prefix, bool promiscuous, bool exp
 }
 
 void
-OpenFlowEpcHelper::EnablePcapX2 (std::string prefix, bool promiscuous, bool explicitFilename)
+SdmnEpcHelper::EnablePcapX2 (std::string prefix, bool promiscuous, bool explicitFilename)
 {
   NS_LOG_FUNCTION (this << prefix);
   prefix.append ("-x2");
@@ -296,7 +296,7 @@ OpenFlowEpcHelper::EnablePcapX2 (std::string prefix, bool promiscuous, bool expl
 }
 
 void
-OpenFlowEpcHelper::EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bool promiscuous, bool explicitFilename)
+SdmnEpcHelper::EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bool promiscuous, bool explicitFilename)
 {
   //
   // All of the Pcap enable functions vector through here including the ones
@@ -334,7 +334,7 @@ OpenFlowEpcHelper::EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bo
 }
 
 Ipv4Address
-OpenFlowEpcHelper::GetSgwS1uAddress ()
+SdmnEpcHelper::GetSgwS1uAddress ()
 {
   Ptr<Ipv4> ipv4 = m_sgwPgw->GetObject<Ipv4> ();
   int32_t idx = ipv4->GetInterfaceForDevice(m_sgwS1uDev);
@@ -342,7 +342,7 @@ OpenFlowEpcHelper::GetSgwS1uAddress ()
 }
 
 Ipv4Address
-OpenFlowEpcHelper::GetAddressForDevice (Ptr<NetDevice> device)
+SdmnEpcHelper::GetAddressForDevice (Ptr<NetDevice> device)
 {
   Ptr<Node> node = device->GetNode ();
   Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
@@ -351,7 +351,7 @@ OpenFlowEpcHelper::GetAddressForDevice (Ptr<NetDevice> device)
 }
 
 void
-OpenFlowEpcHelper::SetS1uConnectCallback (S1uConnectCallback_t cb)
+SdmnEpcHelper::SetS1uConnectCallback (S1uConnectCallback_t cb)
 {
   NS_LOG_FUNCTION (this << &cb);
   m_s1uConnect = cb;
@@ -362,7 +362,7 @@ OpenFlowEpcHelper::SetS1uConnectCallback (S1uConnectCallback_t cb)
 }
 
 void
-OpenFlowEpcHelper::SetX2ConnectCallback (X2ConnectCallback_t cb)
+SdmnEpcHelper::SetX2ConnectCallback (X2ConnectCallback_t cb)
 {
   NS_LOG_FUNCTION (this << &cb);
   m_x2Connect = cb;

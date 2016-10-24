@@ -313,7 +313,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("OFSwitch13Port", LOG_LEVEL_WARN);
       LogComponentEnable ("OFSwitch13Queue", LOG_LEVEL_WARN);
 
-      LogComponentEnable ("OpenFlowEpcHelper", LOG_LEVEL_WARN);
+      LogComponentEnable ("SdmnEpcHelper", LOG_LEVEL_WARN);
       LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
       LogComponentEnable ("RingNetwork", LOG_LEVEL_WARN);
       LogComponentEnable ("LteNetwork", LOG_LEVEL_ALL);

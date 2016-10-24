@@ -45,7 +45,7 @@ OpenFlowEpcNetwork::OpenFlowEpcNetwork ()
                                   EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
   // Creating the OpenFlow EPC helper (will create the SgwPgw node and app).
-  m_ofEpcHelper = CreateObject<OpenFlowEpcHelper> ();
+  m_ofEpcHelper = CreateObject<SdmnEpcHelper> ();
 
   // Creating the Internet network object
   m_webNetwork = CreateObject<InternetNetwork> ();
@@ -147,7 +147,7 @@ OpenFlowEpcNetwork::GetControllerApp ()
   return m_ofCtrlApp;
 }
 
-Ptr<OpenFlowEpcHelper>
+Ptr<SdmnEpcHelper>
 OpenFlowEpcNetwork::GetEpcHelper ()
 {
   return m_ofEpcHelper;

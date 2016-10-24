@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef OPENFLOW_EPC_HELPER_H
-#define OPENFLOW_EPC_HELPER_H
+#ifndef SDMN_EPC_HELPER_H
+#define SDMN_EPC_HELPER_H
 
 #include <ns3/object.h>
 #include <ns3/ipv4-address-helper.h>
@@ -42,21 +42,17 @@ class EpcX2;
 class EpcMme;
 
 /**
- * \brief Create an EPC network connected to an OpenFlow network.
- *
- * This Helper will create an EPC network topology comprising of a single node
- * that implements both the SGW and PGW functionality, and an MME node. The S1
- * and X2 interfaces are realized over an OpenFlow network.
+ * Create an EPC network connected through CSMA devices to an user-defined
+ * backhaul network. This Helper will create an EPC network topology comprising
+ * of a single node that implements both the SGW and PGW functionality, and an
+ * MME node. The S1 and X2 interfaces are realized over CSMA devices
+ * connected to an user-defined backhaul network.
  */
-class OpenFlowEpcHelper : public EpcHelper, public PcapHelperForDevice
+class SdmnEpcHelper : public EpcHelper, public PcapHelperForDevice
 {
 public:
-
-  /** Default constructor. Initialize EPC structure. */
-  OpenFlowEpcHelper ();
-
-  /** Dummy destructor, see DoDispose. */
-  virtual ~OpenFlowEpcHelper ();
+  SdmnEpcHelper ();           //!< Default constructor
+  virtual ~SdmnEpcHelper ();  //!< Default destructor
 
   /**
    * Register this type.
@@ -67,7 +63,7 @@ public:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
-  // inherited from EpcHelper
+  // Inherited from EpcHelper
   virtual void AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice, uint16_t cellId);
   virtual void AddUe (Ptr<NetDevice> ueLteDevice, uint64_t imsi);
   virtual void AddX2Interface (Ptr<Node> enbNode1, Ptr<Node> enbNode2);
@@ -83,7 +79,7 @@ public:
   Ptr<EpcMme> GetMmeElement ();
 
   /**
-    * Enable Pcap output on all S1-U devices connected to OpenFlow network.
+    * Enable Pcap output on all S1-U devices connected to the backhaul network.
     * \param prefix Filename prefix to use for pcap files.
     * \param promiscuous If true capture all packets available at the devices.
     * \param explicitFilename Treat the prefix as an explicit filename if true.
@@ -92,7 +88,7 @@ public:
                       bool explicitFilename = false);
 
   /**
-    * Enable Pcap output on all X2 devices connected to OpenFlow network.
+    * Enable Pcap output on all X2 devices connected to the backhaul network.
     * \param prefix Filename prefix to use for pcap files.
     * \param promiscuous If true capture all packets available at the devices.
     * \param explicitFilename Treat the prefix as an explicit filename if true.
@@ -102,9 +98,9 @@ public:
 
   /**
    * S1-U attach callback signature.
-   * \param Ptr<Node> The SgwPgw/eNB node to attach.
+   * \param Ptr<Node> The EPC node to attach to the S1-U backhaul network.
    * \param uint16_t The eNB cell ID (0 for SgwPgw node).
-   * \returns Ptr<NetDevice> the device created at the SgwPgw/eNB node.
+   * \returns Ptr<NetDevice> the device created at the node.
    */
   typedef Callback <Ptr<NetDevice>, Ptr<Node>, uint16_t > S1uConnectCallback_t;
 
@@ -117,27 +113,26 @@ public:
   typedef Callback <NetDeviceContainer, Ptr<Node>, Ptr<Node> > X2ConnectCallback_t;
 
   /**
-    * \brief Specify callbacks to allow the caller to proper connect the EPC
-    * nodes (SgwPgw and eNBs) to the S1-U interface over the OpenFlow network
-    * infrastructure.
+    * Specify the callback to allow the user to proper connect the EPC nodes
+    * (SgwPgw and eNBs) to the S1-U interface over the backhaul network.
     * \param cb Callback invoked during AddEnb procedure to proper connect the
-    * eNB node to the OpenFlow network. This is also called by
-    * SetS1uConnectCallback to proper connect the SgwPgw node to the OpenFlow
+    * eNB node to the backhaul network. This is also called by
+    * SetS1uConnectCallback to proper connect the SgwPgw node to the backhaul
     * network.
     */
   void SetS1uConnectCallback (S1uConnectCallback_t cb);
 
   /**
-    * Specify callbacks to allow the caller to proper connect two eNB nodes to
-    * the X2 interface over the OpenFlow network infrastructure.
+    * Specify the callback to allow the user to proper connect two eNB nodes to
+    * the X2 interface over the backhaul network.
     * \param cb Callback invoked during AddX2Interface procedure to proper
-    * connect the pair of eNB nodes to the OpenFlow network.
+    * connect the pair of eNB nodes to the backhaul network.
     */
   void SetX2ConnectCallback (X2ConnectCallback_t cb);
 
 private:
   /**
-   * \brief Enable pcap output on the indicated net device.
+   * \brief Enable pcap output on the indicated CSMA net device.
    * \internal This is the same implementation from CsmaNetDevice class, as the
    * OpenFlow uses Csma devices.
    * \param prefix Filename prefix to use for pcap files.
@@ -201,6 +196,5 @@ private:
 };
 
 } // namespace ns3
-
-#endif // OPENFLOW_EPC_HELPER_H
+#endif // SDMN_EPC_HELPER_H
 
