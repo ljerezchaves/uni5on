@@ -23,6 +23,15 @@
 #include "lte-network.h"
 #include "openflow-epc-network.h"
 #include "openflow-epc-controller.h"
+#include "apps/http-client.h"
+#include "apps/http-server.h"
+#include "apps/qos-stats-calculator.h"
+#include "apps/real-time-video-client.h"
+#include "apps/real-time-video-server.h"
+#include "apps/stored-video-client.h"
+#include "apps/stored-video-server.h"
+#include "apps/voip-client.h"
+#include "apps/voip-server.h"
 
 namespace ns3 {
 

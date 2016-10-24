@@ -24,8 +24,8 @@
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
-#include <ns3/epc-apps-module.h>
 #include <ns3/internet-module.h>
+#include "apps/epc-application.h"
 #include "routing-info.h"
 
 namespace ns3 {

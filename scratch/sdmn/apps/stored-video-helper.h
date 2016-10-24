@@ -18,26 +18,26 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef REAL_TIME_VIDEO_HELPER_H
-#define REAL_TIME_VIDEO_HELPER_H
+#ifndef STORED_VIDEO_HELPER_H
+#define STORED_VIDEO_HELPER_H
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
-#include "ns3/real-time-video-client.h"
-#include "ns3/real-time-video-server.h"
+#include "stored-video-client.h"
+#include "stored-video-server.h"
 
 namespace ns3 {
 
 /**
  * \ingroup applications 
- * Create a RealTimeVideoHelper which will make life easier for people trying
- * to set up simulations with real-time video client/server.
+ * Create a StoredVideoHelper which will make life easier for people trying to
+ * set up simulations with stored video client/server.
  */
-class RealTimeVideoHelper
+class StoredVideoHelper
 {
 public:
-  RealTimeVideoHelper (); //!< Default constructor
+  StoredVideoHelper (); //!< Default constructor
 
   /**
    * Record an attribute to be set in each client application.
@@ -57,13 +57,13 @@ public:
    * Create a pair of client + server applications on input nodes.
    * \param clientNode The node to install the client app.
    * \param serverNode The node to install the server app.
-   * \param clientAddress The IPv4 address of the client.
-   * \param clientPort The port number on the client.
+   * \param serverAddress The IPv4 address of the server.
+   * \param serverPort The port number on the server
    * \return The client application created.
    */
-  Ptr<RealTimeVideoClient>
-  Install (Ptr<Node> clientNode, Ptr<Node> serverNode, 
-           Ipv4Address clientAddress, uint16_t clientPort);
+  Ptr<StoredVideoClient>
+  Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
+           Ipv4Address serverAddress, uint16_t serverPort);
 
 private:
   ObjectFactory m_clientFactory; //!< Object client factory.
@@ -71,4 +71,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* REAL_TIME_VIDEO_HELPER_H */
+#endif /* STORED_VIDEO_HELPER_H */

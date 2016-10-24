@@ -1,6 +1,7 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2015 University of Campinas (Unicamp)
+ * Copyright (c) 2013 Federal University of Uberlandia
+ *               2014 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -12,32 +13,32 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
  *
- * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
+ * Author: Saulo da Mata <damata.saulo@gmail.com>
+ *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef STORED_VIDEO_HELPER_H
-#define STORED_VIDEO_HELPER_H
+#ifndef VOIP_HELPER_H_
+#define VOIP_HELPER_H_
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
-#include "ns3/stored-video-client.h"
-#include "ns3/stored-video-server.h"
+#include "voip-client.h"
+#include "voip-server.h"
 
 namespace ns3 {
 
 /**
  * \ingroup applications 
- * Create a StoredVideoHelper which will make life easier for people trying to
- * set up simulations with stored video client/server.
+ * Create a VoipHelper which will make life easier for people trying to set up
+ * simulations with voip client/server.
  */
-class StoredVideoHelper
+class VoipHelper
 {
 public:
-  StoredVideoHelper (); //!< Default constructor
+  VoipHelper ();  //!< Default constructor
 
   /**
    * Record an attribute to be set in each client application.
@@ -57,13 +58,15 @@ public:
    * Create a pair of client + server applications on input nodes.
    * \param clientNode The node to install the client app.
    * \param serverNode The node to install the server app.
-   * \param serverAddress The IPv4 address of the server.
-   * \param serverPort The port number on the server
+   * \param clientAddr The IPv4 address of the client.
+   * \param serverAddr The IPv4 address of the server.
+   * \param clientPort The port number on the client.
+   * \param serverPort The port number on the server.
    * \return The client application created.
    */
-  Ptr<StoredVideoClient>
-  Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
-           Ipv4Address serverAddress, uint16_t serverPort);
+  Ptr<VoipClient>
+  Install (Ptr<Node> clientNode, Ptr<Node> serverNode, Ipv4Address clientAddr, 
+           Ipv4Address serverAddr, uint16_t clientPort, uint16_t serverPort);
 
 private:
   ObjectFactory m_clientFactory; //!< Object client factory.
@@ -71,4 +74,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* STORED_VIDEO_HELPER_H */
+#endif /* VOIP_HELPER_H_ */

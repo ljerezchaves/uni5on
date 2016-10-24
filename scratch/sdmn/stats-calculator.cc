@@ -29,6 +29,7 @@
 #include "gbr-info.h"
 #include "connection-info.h"
 #include "openflow-epc-controller.h"
+#include "apps/voip-client.h"
 
 using namespace std;
 

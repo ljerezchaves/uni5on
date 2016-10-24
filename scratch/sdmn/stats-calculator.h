@@ -23,13 +23,14 @@
 
 #include <ns3/nstime.h>
 #include <ns3/queue.h>
-#include <ns3/epc-apps-module.h>
 #include <ns3/ofswitch13-device-container.h>
+#include <ns3/global-value.h> 
+#include "apps/epc-application.h"
 
 namespace ns3 {
 
-static ns3::GlobalValue
-g_dumpTimeout ("DumpStatsTimeout", "Periodic statistics dump interval.",
+static GlobalValue g_dumpTimeout = 
+  GlobalValue ("DumpStatsTimeout", "Periodic statistics dump interval.",
                TimeValue (Seconds (10)),
                ns3::MakeTimeChecker ());
 

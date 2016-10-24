@@ -24,8 +24,8 @@
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
-#include "ns3/http-client.h"
-#include "ns3/http-server.h"
+#include "http-client.h"
+#include "http-server.h"
 
 namespace ns3 {
 
