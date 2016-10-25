@@ -543,7 +543,7 @@ private:
   Ptr<Queue> m_queue;
 
   /**
-   * The network device transmission queue interface.
+   * The NetDevice queue interface aggregated to this device.
    */
   Ptr<NetDeviceQueueInterface> m_queueInterface;
 
