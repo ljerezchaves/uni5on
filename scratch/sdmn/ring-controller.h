@@ -21,7 +21,7 @@
 #ifndef RING_CONTROLLER_H
 #define RING_CONTROLLER_H
 
-#include "openflow-epc-controller.h"
+#include "epc-controller.h"
 #include "ring-routing-info.h"
 #include "gbr-info.h"
 
@@ -31,7 +31,7 @@ namespace ns3 {
  * \ingroup epcof
  * OpenFlow EPC controller for ring network.
  */
-class RingController : public OpenFlowEpcController
+class RingController : public EpcController
 {
 public:
   /** Routing strategy to find the paths in the ring. */
@@ -54,7 +54,7 @@ protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
-  // Inherited from OpenFlowEpcController
+  // Inherited from EpcController
   void NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo);
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
   void NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo);

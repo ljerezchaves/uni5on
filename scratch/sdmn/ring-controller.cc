@@ -41,7 +41,7 @@ TypeId
 RingController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RingController")
-    .SetParent (OpenFlowEpcController::GetTypeId ())
+    .SetParent (EpcController::GetTypeId ())
     .AddAttribute ("Strategy",
                    "The ring routing strategy.",
                    EnumValue (RingController::SPO),
@@ -74,7 +74,7 @@ RingController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_connections.clear ();
-  OpenFlowEpcController::DoDispose ();
+  EpcController::DoDispose ();
 }
 
 void
@@ -84,7 +84,7 @@ RingController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 
   // Call base method which will connect trace sources and sinks, and save this
   // connection info for further usage.
-  OpenFlowEpcController::NotifyNewSwitchConnection (cInfo);
+  EpcController::NotifyNewSwitchConnection (cInfo);
   SaveConnectionInfo (cInfo);
 
   // Installing groups and meters for ring network. Note that following
@@ -130,7 +130,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
   m_noSwitches = devices.GetN ();
 
   // Call base method which will save devices and create the spanning tree
-  OpenFlowEpcController::NotifyTopologyBuilt (devices);
+  EpcController::NotifyTopologyBuilt (devices);
 
   // Configure routes to keep forwarding packets already in the ring until they
   // reach the destination switch.

@@ -23,7 +23,7 @@
 #include <iomanip>
 #include <iostream>
 #include "lte-network.h"
-#include "openflow-epc-controller.h"
+#include "epc-controller.h"
 #include "ring-network.h"
 #include "stats-calculator.h"
 #include "traffic-helper.h"
@@ -314,15 +314,15 @@ EnableVerbose (bool enable)
       LogComponentEnable ("OFSwitch13Queue", LOG_LEVEL_WARN);
 
       LogComponentEnable ("SdmnEpcHelper", LOG_LEVEL_WARN);
-      LogComponentEnable ("OpenFlowEpcNetwork", LOG_LEVEL_WARN);
+      LogComponentEnable ("EpcNetwork", LOG_LEVEL_WARN);
       LogComponentEnable ("RingNetwork", LOG_LEVEL_WARN);
       LogComponentEnable ("LteNetwork", LOG_LEVEL_ALL);
       LogComponentEnable ("LteHexGridEnbTopologyHelper", LOG_LEVEL_WARN);
       LogComponentEnable ("ConnectionInfo", LOG_LEVEL_WARN);
       LogComponentEnable ("RoutingInfo", LOG_LEVEL_WARN);
 
-      LogComponentEnable ("OpenFlowEpcController", LOG_LEVEL_ALL);
-      LogComponentEnable ("OpenFlowEpcController", LOG_PREFIX_TIME);
+      LogComponentEnable ("EpcController", LOG_LEVEL_ALL);
+      LogComponentEnable ("EpcController", LOG_PREFIX_TIME);
       LogComponentEnable ("RingController", LOG_LEVEL_ALL);
       LogComponentEnable ("RingController", LOG_PREFIX_TIME);
 

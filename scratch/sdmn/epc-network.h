@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef OPENFLOW_EPC_NETWORK_H
-#define OPENFLOW_EPC_NETWORK_H
+#ifndef EPC_NETWORK_H
+#define EPC_NETWORK_H
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -31,7 +31,7 @@ class ConnectionInfo;
 class InternetNetwork;
 class LinkQueuesStatsCalculator;
 class NetworkStatsCalculator;
-class OpenFlowEpcController;
+class EpcController;
 class SdmnEpcHelper;
 
 /**
@@ -39,13 +39,13 @@ class SdmnEpcHelper;
  * Create an OpenFlow EPC S1-U network infrastructure. This is an abstract base
  * class which should be extended to create any desired network topology. For
  * each subclass, a corresponding topology-aware controller must be
- * implemented, extending the generig OpenFlowEpcController.
+ * implemented, extending the generig EpcController.
  */
-class OpenFlowEpcNetwork : public Object
+class EpcNetwork : public Object
 {
 public:
-  OpenFlowEpcNetwork ();          //!< Default constructor
-  virtual ~OpenFlowEpcNetwork (); //!< Dummy destructor, see DoDipose
+  EpcNetwork ();          //!< Default constructor
+  virtual ~EpcNetwork (); //!< Dummy destructor, see DoDipose
 
   /**
    * Register this type.
@@ -112,7 +112,7 @@ public:
    * Retrieve the controller application pointer.
    * \return The OpenFlow controller application.
    */
-  Ptr<OpenFlowEpcController> GetControllerApp ();
+  Ptr<EpcController> GetControllerApp ();
 
   /**
    * Retrieve the OpenFlow EPC helper used for LTE configuration.
@@ -197,7 +197,7 @@ protected:
    * Install the OpenFlow controller for this network.
    * \param controller The controller application.
    */
-  void InstallController (Ptr<OpenFlowEpcController> controller);
+  void InstallController (Ptr<EpcController> controller);
 
   NodeContainer                  m_ofSwitches;     //!< Switch nodes.
   OFSwitch13DeviceContainer      m_ofDevices;      //!< Switch devices.
@@ -216,9 +216,9 @@ protected:
 
 private:
   uint16_t                        m_gatewaySwitch;  //!< Gateway switch index.
-  Ptr<Node>                       m_ofCtrlNode;     //!< Controller node.
-  Ptr<OpenFlowEpcController>      m_ofCtrlApp;      //!< Controller app.
-  Ptr<SdmnEpcHelper>              m_ofEpcHelper;    //!< Helper for LTE EPC.
+  Ptr<Node>                       m_controllerNode; //!< Controller node.
+  Ptr<EpcController>              m_controllerApp;  //!< Controller app.
+  Ptr<SdmnEpcHelper>              m_epcHelper;      //!< Helper for LTE EPC.
   Ptr<InternetNetwork>            m_webNetwork;     //!< Internet network.
   Ptr<NetworkStatsCalculator>     m_networkStats;   //!< Network statistics.
 
@@ -228,4 +228,4 @@ private:
 };
 
 };  // namespace ns3
-#endif  // OPENFLOW_EPC_NETWORK_H
+#endif  // EPC_NETWORK_H

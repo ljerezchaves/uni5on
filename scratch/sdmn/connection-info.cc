@@ -19,7 +19,7 @@
  */
 
 #include "connection-info.h"
-#include "openflow-epc-controller.h"
+#include "epc-controller.h"
 #include "ns3/epc-gtpu-tag.h"
 
 namespace ns3 {
@@ -270,8 +270,7 @@ ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      EpsBearer bearer =
-        OpenFlowEpcController::GetEpsBearer (gtpuTag.GetTeid ());
+      EpsBearer bearer = EpcController::GetEpsBearer (gtpuTag.GetTeid ());
       if (bearer.IsGbr ())
         {
           m_gbrTxBytes [dir] += packet->GetSize ();

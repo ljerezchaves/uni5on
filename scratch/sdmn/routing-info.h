@@ -28,7 +28,7 @@
 
 namespace ns3 {
 
-class OpenFlowEpcController;
+class EpcController;
 class RingController;
 
 /** EPS context bearer */
@@ -46,7 +46,7 @@ typedef std::list<ContextBearer_t> BearerList_t;
  */
 class RoutingInfo : public Object
 {
-  friend class OpenFlowEpcController;
+  friend class EpcController;
   friend class RingController;
 
 public:

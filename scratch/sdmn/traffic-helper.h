@@ -35,9 +35,9 @@
 namespace ns3 {
 
 class TrafficManager;
-class OpenFlowEpcController;
+class EpcController;
 class LteNetwork;
-class OpenFlowEpcNetwork;
+class EpcNetwork;
 
 /**
  * \ingroup epcof
@@ -50,11 +50,10 @@ class TrafficHelper : public Object
 public:
   /**
    * Complete constructor.
-   * \param ofNetwork The OpenFlow network.
+   * \param epcNetwork The OpenFlow EPC network.
    * \param lteNetwork The LTE network.
    */
-  TrafficHelper (Ptr<OpenFlowEpcNetwork> ofNetwork,
-                 Ptr<LteNetwork> lteNetwork);
+  TrafficHelper (Ptr<EpcNetwork> epcNetwork, Ptr<LteNetwork> lteNetwork);
 
   TrafficHelper ();           //!< Default constructor
   virtual ~TrafficHelper ();  //!< Dummy destructor, see DoDipose
@@ -92,7 +91,7 @@ private:
    *     rules for this traffic. When this value is left to 0, no meter rules
    *     will be installed.
    * \li The Guaranteed Bit Rate field is used by the controller to reserve the
-   *     requested bandwidth in OpenFlow network. Valid only for GBR beares.
+   *     requested bandwidth in OpenFlow EPC network (only for GBR beares).
    */
   void Install (NodeContainer ueNodes, NetDeviceContainer ueDevices);
 
@@ -176,8 +175,8 @@ private:
 
   ObjectFactory       m_managerFactory; //!< Traffic manager factory
 
-  Ptr<OpenFlowEpcNetwork> m_ofNetwork;  //!< The EPC + Internet network
-  Ptr<LteNetwork>         m_lteNetwork; //!< The LTE network
+  Ptr<EpcNetwork>     m_epcNetwork;     //!< The EPC + Internet network
+  Ptr<LteNetwork>     m_lteNetwork;     //!< The LTE network
 
   Ptr<Node>           m_webNode;        //!< Server node
   Ipv4Address         m_webAddr;        //!< Server address

@@ -30,13 +30,13 @@
 
 namespace ns3 {
 
-class OpenFlowEpcController;
+class EpcController;
 
 /**
  * \ingroup epcof
- * Traffic manager which handles UE client applications start/stop events. It
- * interacts with the OpenFlow network and controller to dump statistics and
- * request/release EPS bearers. Each LteUeNetDevice has one TrafficManager
+ * Traffic manager which handles SDMN client applications start/stop events. It
+ * interacts with the OpenFlow EPC network and controller to dump statistics
+ * and request/release EPS bearers. Each LteUeNetDevice has one TrafficManager
  * object aggregated to it.
  */
 class TrafficManager : public Object
@@ -100,7 +100,7 @@ protected:
 
 private:
   Ptr<ExponentialRandomVariable>      m_poissonRng; //!< Inter-arrival traffic
-  Ptr<OpenFlowEpcController>          m_controller; //!< OpenFlow controller
+  Ptr<EpcController>                  m_controller; //!< OpenFlow controller
   std::vector<Ptr<SdmnApplication> >  m_apps;       //!< Application list
 
   uint64_t    m_imsi;         //!< UE IMSI identifier

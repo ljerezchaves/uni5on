@@ -36,7 +36,7 @@ static GlobalValue g_dumpTimeout =
 
 class RoutingInfo;
 class ConnectionInfo;
-class OpenFlowEpcController;
+class EpcController;
 
 /**
  * \ingroup epcof
@@ -268,7 +268,7 @@ public:
    * Complete constructor.
    * \param controller The OpenFlow EPC controller application.
    */
-  EpcS1uStatsCalculator (Ptr<OpenFlowEpcController> controller);
+  EpcS1uStatsCalculator (Ptr<EpcController> controller);
 
   EpcS1uStatsCalculator ();  //!< Default constructor
   virtual ~EpcS1uStatsCalculator (); //!< Default destructor
@@ -283,7 +283,7 @@ public:
    * Set the controller pointer used by this stats calculator.
    * \param controller The controller pointer.
    */
-  void SetController (Ptr<OpenFlowEpcController> controller);
+  void SetController (Ptr<EpcController> controller);
 
 protected:
   /** Destructor implementation */
@@ -348,7 +348,7 @@ private:
    */
   Ptr<QosStatsCalculator> GetQosStatsFromTeid (uint32_t teid, bool isDown);
 
-  Ptr<const OpenFlowEpcController> m_controller;  //!< Network controller
+  Ptr<const EpcController> m_controller;  //!< Network controller
 
   /** A pair of QosStatsCalculator, for downlink and uplink EPC statistics */
   typedef std::pair<Ptr<QosStatsCalculator>,

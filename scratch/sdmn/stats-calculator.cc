@@ -28,7 +28,7 @@
 #include "ring-routing-info.h"
 #include "gbr-info.h"
 #include "connection-info.h"
-#include "openflow-epc-controller.h"
+#include "epc-controller.h"
 #include "apps/voip-client.h"
 
 using namespace std;
@@ -687,8 +687,7 @@ LinkQueuesStatsCalculator::GetUpBitRate (void) const
 
 
 // ------------------------------------------------------------------------ //
-EpcS1uStatsCalculator::EpcS1uStatsCalculator (
-  Ptr<OpenFlowEpcController> controller)
+EpcS1uStatsCalculator::EpcS1uStatsCalculator (Ptr<EpcController> controller)
   : m_controller (controller)
 {
   NS_LOG_FUNCTION (this);
@@ -753,7 +752,7 @@ EpcS1uStatsCalculator::GetTypeId (void)
 }
 
 void
-EpcS1uStatsCalculator::SetController (Ptr<OpenFlowEpcController> controller)
+EpcS1uStatsCalculator::SetController (Ptr<EpcController> controller)
 {
   m_controller = controller;
 }

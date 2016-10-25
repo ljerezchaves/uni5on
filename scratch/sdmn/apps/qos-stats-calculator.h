@@ -117,7 +117,7 @@ private:
   Time               m_delaySum;         //!< Sum of packet delays
   Time               m_lastResetTime;    //!< Last reset time
 
-  // Fields used by OpenFlowEpcNetwork monitoring
+  // Fields used by EPC network monitoring
   uint32_t           m_seqNum;           //!< Sequence number counter
   uint32_t           m_meterDrop;        //!< Counter for drops by meter rules
   uint32_t           m_queueDrop;        //!< Counter for drops by queues

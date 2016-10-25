@@ -22,7 +22,7 @@
 #define RING_NETWORK_H
 
 #include <ns3/csma-module.h>
-#include "openflow-epc-network.h"
+#include "epc-network.h"
 
 namespace ns3 {
 
@@ -32,7 +32,7 @@ namespace ns3 {
  * controlled by RingController, which will be used by S1-U and
  * X2 EPC interfaces.
  */
-class RingNetwork : public OpenFlowEpcNetwork
+class RingNetwork : public EpcNetwork
 {
 public:
   RingNetwork ();   //!< Default constructor
@@ -44,7 +44,7 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  // Inherited from OpenFlowEpcNetwork
+  // Inherited from EpcNetwork
   Ptr<NetDevice> S1Attach (Ptr<Node> node, uint16_t cellId);
   NetDeviceContainer X2Attach (Ptr<Node> enb1, Ptr<Node> enb2);
   void EnablePcap (std::string prefix, bool promiscuous = false);
@@ -56,7 +56,7 @@ protected:
   // Inherited from ObjectBase
   void NotifyConstructionCompleted (void);
 
-  // Inherited from OpenFlowEpcNetwork
+  // Inherited from EpcNetwork
   void CreateTopology ();
 
 private:

@@ -19,7 +19,7 @@
  */
 
 #include "traffic-manager.h"
-#include "openflow-epc-controller.h"
+#include "epc-controller.h"
 
 namespace ns3 {
 
@@ -48,7 +48,7 @@ TrafficManager::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&TrafficManager::m_controller),
-                   MakePointerChecker<OpenFlowEpcController> ())
+                   MakePointerChecker<EpcController> ())
     .AddAttribute ("PoissonInterArrival",
                    "An exponential random variable used to get application "
                    "inter-arrival start times.",
@@ -138,8 +138,7 @@ TrafficManager::NotifyAppStop (Ptr<const SdmnApplication> app)
     {
       // No resource release for traffic over default bearer. Schedule the
       // release for 1 second after application stop.
-      Simulator::Schedule (
-        Seconds (1), &OpenFlowEpcController::ReleaseDedicatedBearer,
+      Simulator::Schedule (Seconds (1), &EpcController::ReleaseDedicatedBearer,
         m_controller, app->GetEpsBearer (), m_imsi, m_cellId, appTeid);
     }
 }

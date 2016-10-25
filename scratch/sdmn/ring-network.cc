@@ -50,7 +50,7 @@ TypeId
 RingNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RingNetwork")
-    .SetParent<OpenFlowEpcNetwork> ()
+    .SetParent<EpcNetwork> ()
     .AddConstructor<RingNetwork> ()
     .AddAttribute ("NumSwitches",
                    "The number of OpenFlow switches in the ring (at least 3).",
@@ -99,7 +99,7 @@ void
 RingNetwork::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  OpenFlowEpcNetwork::DoDispose ();
+  EpcNetwork::DoDispose ();
 }
 
 void
@@ -118,7 +118,7 @@ RingNetwork::NotifyConstructionCompleted ()
   m_gwHelper.SetChannelAttribute ("Delay", TimeValue (m_gwLinkDelay));
 
   // Chain up (the topology creation will be triggered by base class)
-  OpenFlowEpcNetwork::NotifyConstructionCompleted ();
+  EpcNetwork::NotifyConstructionCompleted ();
 }
 
 void
@@ -349,7 +349,7 @@ RingNetwork::EnablePcap (std::string prefix, bool promiscuous)
   m_swHelper.EnablePcap (prefix + "ofnetwork", m_ofSwitches, true);
 
   // Chain up
-  OpenFlowEpcNetwork::EnablePcap (prefix, promiscuous);
+  EpcNetwork::EnablePcap (prefix, promiscuous);
 }
 
 };  // namespace ns3

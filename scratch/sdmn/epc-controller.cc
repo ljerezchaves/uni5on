@@ -18,22 +18,22 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "openflow-epc-controller.h"
+#include "epc-controller.h"
 #include "meter-info.h"
 #include "gbr-info.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("OpenFlowEpcController");
-NS_OBJECT_ENSURE_REGISTERED (OpenFlowEpcController);
+NS_LOG_COMPONENT_DEFINE ("EpcController");
+NS_OBJECT_ENSURE_REGISTERED (EpcController);
 
-const uint16_t OpenFlowEpcController::m_dedicatedTmo = 15;
+const uint16_t EpcController::m_dedicatedTmo = 15;
 
-OpenFlowEpcController::TeidBearerMap_t OpenFlowEpcController::m_bearersTable;
-OpenFlowEpcController::QciDscpMap_t OpenFlowEpcController::m_qciDscpTable;
-OpenFlowEpcController::QciDscpInitializer OpenFlowEpcController::initializer;
+EpcController::TeidBearerMap_t EpcController::m_bearersTable;
+EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
+EpcController::QciDscpInitializer EpcController::initializer;
 
-OpenFlowEpcController::OpenFlowEpcController ()
+EpcController::EpcController ()
   : m_controllerStats (0)
 {
   NS_LOG_FUNCTION (this);
@@ -42,45 +42,44 @@ OpenFlowEpcController::OpenFlowEpcController ()
   m_controllerStats = CreateObject<ControllerStatsCalculator> ();
 }
 
-OpenFlowEpcController::~OpenFlowEpcController ()
+EpcController::~EpcController ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-OpenFlowEpcController::GetTypeId (void)
+EpcController::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::OpenFlowEpcController")
+  static TypeId tid = TypeId ("ns3::EpcController")
     .SetParent (OFSwitch13Controller::GetTypeId ())
     .AddAttribute ("VoipQueue",
                    "Enable VoIP QoS through queuing traffic management.",
                    BooleanValue (true),
-                   MakeBooleanAccessor (&OpenFlowEpcController::m_voipQos),
+                   MakeBooleanAccessor (&EpcController::m_voipQos),
                    MakeBooleanChecker ())
     .AddAttribute ("NonGbrCoexistence",
                    "Enable the coexistence of GBR and Non-GBR traffic, "
                    "installing meters to limit Non-GBR traffic bit rate.",
                    BooleanValue (true),
-                   MakeBooleanAccessor (
-                     &OpenFlowEpcController::m_nonGbrCoexistence),
+                   MakeBooleanAccessor (&EpcController::m_nonGbrCoexistence),
                    MakeBooleanChecker ())
 
     .AddTraceSource ("BearerRequest",
                      "The bearer request trace source.",
                      MakeTraceSourceAccessor (
-                       &OpenFlowEpcController::m_bearerRequestTrace),
-                     "ns3::OpenFlowEpcController::BearerTracedCallback")
+                       &EpcController::m_bearerRequestTrace),
+                     "ns3::EpcController::BearerTracedCallback")
     .AddTraceSource ("BearerRelease",
                      "The bearer release trace source.",
                      MakeTraceSourceAccessor (
-                       &OpenFlowEpcController::m_bearerReleaseTrace),
-                     "ns3::OpenFlowEpcController::BearerTracedCallback")
+                       &EpcController::m_bearerReleaseTrace),
+                     "ns3::EpcController::BearerTracedCallback")
   ;
   return tid;
 }
 
 bool
-OpenFlowEpcController::RequestDedicatedBearer (
+EpcController::RequestDedicatedBearer (
   EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
@@ -129,7 +128,7 @@ OpenFlowEpcController::RequestDedicatedBearer (
 }
 
 bool
-OpenFlowEpcController::ReleaseDedicatedBearer (
+EpcController::ReleaseDedicatedBearer (
   EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
@@ -162,7 +161,7 @@ OpenFlowEpcController::ReleaseDedicatedBearer (
 }
 
 Ptr<const RoutingInfo>
-OpenFlowEpcController::GetConstRoutingInfo (uint32_t teid) const
+EpcController::GetConstRoutingInfo (uint32_t teid) const
 {
   Ptr<const RoutingInfo> rInfo = 0;
   TeidRoutingMap_t::const_iterator ret;
@@ -175,11 +174,11 @@ OpenFlowEpcController::GetConstRoutingInfo (uint32_t teid) const
 }
 
 EpsBearer
-OpenFlowEpcController::GetEpsBearer (uint32_t teid)
+EpcController::GetEpsBearer (uint32_t teid)
 {
   TeidBearerMap_t::iterator it;
-  it = OpenFlowEpcController::m_bearersTable.find (teid);
-  if (it != OpenFlowEpcController::m_bearersTable.end ())
+  it = EpcController::m_bearersTable.find (teid);
+  if (it != EpcController::m_bearersTable.end ())
     {
       return it->second;
     }
@@ -187,11 +186,11 @@ OpenFlowEpcController::GetEpsBearer (uint32_t teid)
 }
 
 uint16_t
-OpenFlowEpcController::GetDscpMappedValue (EpsBearer::Qci qci)
+EpcController::GetDscpMappedValue (EpsBearer::Qci qci)
 {
   QciDscpMap_t::iterator it;
-  it = OpenFlowEpcController::m_qciDscpTable.find (qci);
-  if (it != OpenFlowEpcController::m_qciDscpTable.end ())
+  it = EpcController::m_qciDscpTable.find (qci);
+  if (it != EpcController::m_qciDscpTable.end ())
     {
       NS_LOG_DEBUG ("Found DSCP value: " << qci << " - " << it->second);
       return it->second;
@@ -200,8 +199,7 @@ OpenFlowEpcController::GetDscpMappedValue (EpsBearer::Qci qci)
 }
 
 void
-OpenFlowEpcController::NotifyNewEpcAttach (
-  Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
+EpcController::NotifyNewEpcAttach (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
   Ptr<OFSwitch13Device> swtchDev, uint16_t swtchIdx, uint32_t swtchPort)
 {
   NS_LOG_FUNCTION (this << nodeIp << swtchIdx << swtchPort);
@@ -215,18 +213,18 @@ OpenFlowEpcController::NotifyNewEpcAttach (
 }
 
 void
-OpenFlowEpcController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
+EpcController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
 
   // Connecting this controller to ConnectionInfo trace source
   cInfo->TraceConnectWithoutContext (
     "NonGbrAdjusted", MakeCallback (
-      &OpenFlowEpcController::NotifyNonGbrAdjusted, this));
+      &EpcController::NotifyNonGbrAdjusted, this));
 }
 
 void
-OpenFlowEpcController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
+EpcController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -235,9 +233,8 @@ OpenFlowEpcController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
 }
 
 void
-OpenFlowEpcController::NotifySessionCreated (
-  uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr,
-  BearerList_t bearerList)
+EpcController::NotifySessionCreated (uint64_t imsi, uint16_t cellId,
+  Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << sgwAddr);
 
@@ -264,7 +261,7 @@ OpenFlowEpcController::NotifySessionCreated (
   rInfo->m_isDefault = true;              // This is a default bearer
   rInfo->m_bearer = defaultBearer;
   SaveRoutingInfo (rInfo);
-  OpenFlowEpcController::RegisterBearer (teid, rInfo->GetEpsBearer ());
+  EpcController::RegisterBearer (teid, rInfo->GetEpsBearer ());
 
   // For default bearer, no Meter nor Reserver metadata.
   // For logic consistence, let's check for available resources.
@@ -301,7 +298,7 @@ OpenFlowEpcController::NotifySessionCreated (
       rInfo->m_isDefault = false;           // This is a dedicated bearer
       rInfo->m_bearer = dedicatedBearer;
       SaveRoutingInfo (rInfo);
-      OpenFlowEpcController::RegisterBearer (teid, rInfo->GetEpsBearer ());
+      EpcController::RegisterBearer (teid, rInfo->GetEpsBearer ());
 
       GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
 
@@ -313,7 +310,7 @@ OpenFlowEpcController::NotifySessionCreated (
 
           // Set the appropriated DiffServ DSCP value for this bearer.
           gbrInfo->m_dscp =
-            OpenFlowEpcController::GetDscpMappedValue (rInfo->GetQciInfo ());
+            EpcController::GetDscpMappedValue (rInfo->GetQciInfo ());
         }
 
       // If necessary, create the meter metadata for maximum bit rate.
@@ -326,13 +323,13 @@ OpenFlowEpcController::NotifySessionCreated (
 }
 
 void
-OpenFlowEpcController::NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
+EpcController::NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_INFO (this << cInfo);
 }
 
 void
-OpenFlowEpcController::DoDispose ()
+EpcController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -344,7 +341,7 @@ OpenFlowEpcController::DoDispose ()
 }
 
 void
-OpenFlowEpcController::NotifyConstructionCompleted ()
+EpcController::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -358,7 +355,7 @@ OpenFlowEpcController::NotifyConstructionCompleted ()
 }
 
 void
-OpenFlowEpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
+EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
   NS_LOG_FUNCTION (this << swtch);
 
@@ -442,7 +439,7 @@ OpenFlowEpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   if (m_voipQos)
     {
       int dscpVoip =
-        OpenFlowEpcController::GetDscpMappedValue (EpsBearer::GBR_CONV_VOICE);
+        EpcController::GetDscpMappedValue (EpsBearer::GBR_CONV_VOICE);
 
       // VoIP packets. Write the high-priority output queue #1.
       std::ostringstream cmd;
@@ -457,7 +454,7 @@ OpenFlowEpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 }
 
 ofl_err
-OpenFlowEpcController::HandlePacketIn (
+EpcController::HandlePacketIn (
   ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid)
 {
   NS_LOG_FUNCTION (this << swtch << xid);
@@ -495,7 +492,7 @@ OpenFlowEpcController::HandlePacketIn (
 }
 
 ofl_err
-OpenFlowEpcController::HandleFlowRemoved (
+EpcController::HandleFlowRemoved (
   ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid)
 {
   NS_LOG_FUNCTION (this << swtch << xid << msg->stats->cookie);
@@ -564,14 +561,14 @@ OpenFlowEpcController::HandleFlowRemoved (
 }
 
 uint64_t
-OpenFlowEpcController::GetDatapathId (uint16_t index) const
+EpcController::GetDatapathId (uint16_t index) const
 {
   NS_ASSERT (index < m_ofDevices.GetN ());
   return m_ofDevices.Get (index)->GetDatapathId ();
 }
 
 void
-OpenFlowEpcController::SaveRoutingInfo (Ptr<RoutingInfo> rInfo)
+EpcController::SaveRoutingInfo (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
 
@@ -586,7 +583,7 @@ OpenFlowEpcController::SaveRoutingInfo (Ptr<RoutingInfo> rInfo)
 }
 
 Ptr<RoutingInfo>
-OpenFlowEpcController::GetRoutingInfo (uint32_t teid)
+EpcController::GetRoutingInfo (uint32_t teid)
 {
   Ptr<RoutingInfo> rInfo = 0;
   TeidRoutingMap_t::iterator ret;
@@ -599,7 +596,7 @@ OpenFlowEpcController::GetRoutingInfo (uint32_t teid)
 }
 
 void
-OpenFlowEpcController::SaveSwitchIndex (Ipv4Address ipAddr, uint16_t index)
+EpcController::SaveSwitchIndex (Ipv4Address ipAddr, uint16_t index)
 {
   std::pair<Ipv4Address, uint16_t> entry (ipAddr, index);
   std::pair <IpSwitchMap_t::iterator, bool> ret;
@@ -613,7 +610,7 @@ OpenFlowEpcController::SaveSwitchIndex (Ipv4Address ipAddr, uint16_t index)
 }
 
 uint16_t
-OpenFlowEpcController::GetSwitchIndex (Ipv4Address addr)
+EpcController::GetSwitchIndex (Ipv4Address addr)
 {
   IpSwitchMap_t::iterator ret;
   ret = m_ipSwitchTable.find (addr);
@@ -625,7 +622,7 @@ OpenFlowEpcController::GetSwitchIndex (Ipv4Address addr)
 }
 
 void
-OpenFlowEpcController::SaveArpEntry (Ipv4Address ipAddr, Mac48Address macAddr)
+EpcController::SaveArpEntry (Ipv4Address ipAddr, Mac48Address macAddr)
 {
   std::pair<Ipv4Address, Mac48Address> entry (ipAddr, macAddr);
   std::pair <IpMacMap_t::iterator, bool> ret;
@@ -639,7 +636,7 @@ OpenFlowEpcController::SaveArpEntry (Ipv4Address ipAddr, Mac48Address macAddr)
 }
 
 Mac48Address
-OpenFlowEpcController::GetArpEntry (Ipv4Address ip)
+EpcController::GetArpEntry (Ipv4Address ip)
 {
   IpMacMap_t::iterator ret;
   ret = m_arpTable.find (ip);
@@ -652,9 +649,8 @@ OpenFlowEpcController::GetArpEntry (Ipv4Address ip)
 }
 
 void
-OpenFlowEpcController::ConfigureLocalPortRules (
-  Ptr<OFSwitch13Device> swtchDev, Ptr<NetDevice> nodeDev,
-  Ipv4Address nodeIp, uint32_t swtchPort)
+EpcController::ConfigureLocalPortRules (Ptr<OFSwitch13Device> swtchDev,
+  Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, uint32_t swtchPort)
 {
   NS_LOG_FUNCTION (this << swtchDev << nodeDev << nodeIp << swtchPort);
 
@@ -686,7 +682,7 @@ OpenFlowEpcController::ConfigureLocalPortRules (
 }
 
 ofl_err
-OpenFlowEpcController::HandleArpPacketIn (
+EpcController::HandleArpPacketIn (
   ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid)
 {
   NS_LOG_FUNCTION (this << swtch << xid);
@@ -765,7 +761,7 @@ OpenFlowEpcController::HandleArpPacketIn (
 }
 
 Ipv4Address
-OpenFlowEpcController::ExtractIpv4Address (uint32_t oxm_of, ofl_match* match)
+EpcController::ExtractIpv4Address (uint32_t oxm_of, ofl_match* match)
 {
   switch (oxm_of)
     {
@@ -786,8 +782,8 @@ OpenFlowEpcController::ExtractIpv4Address (uint32_t oxm_of, ofl_match* match)
 }
 
 Ptr<Packet>
-OpenFlowEpcController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
-                                       Mac48Address dstMac, Ipv4Address dstIp)
+EpcController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
+  Mac48Address dstMac, Ipv4Address dstIp)
 {
   NS_LOG_FUNCTION (this << srcMac << srcIp << dstMac << dstIp);
 
@@ -825,11 +821,11 @@ OpenFlowEpcController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
 }
 
 void
-OpenFlowEpcController::RegisterBearer (uint32_t teid, EpsBearer bearer)
+EpcController::RegisterBearer (uint32_t teid, EpsBearer bearer)
 {
   std::pair <uint32_t, EpsBearer> entry (teid, bearer);
   std::pair <TeidBearerMap_t::iterator, bool> ret;
-  ret = OpenFlowEpcController::m_bearersTable.insert (entry);
+  ret = EpcController::m_bearersTable.insert (entry);
   if (ret.second == false)
     {
       NS_FATAL_ERROR ("Existing bearer information for teid " << teid);
@@ -837,13 +833,13 @@ OpenFlowEpcController::RegisterBearer (uint32_t teid, EpsBearer bearer)
 }
 
 void
-OpenFlowEpcController::UnregisterBearer (uint32_t teid)
+EpcController::UnregisterBearer (uint32_t teid)
 {
   TeidBearerMap_t::iterator it;
-  it = OpenFlowEpcController::m_bearersTable.find (teid);
-  if (it != OpenFlowEpcController::m_bearersTable.end ())
+  it = EpcController::m_bearersTable.find (teid);
+  if (it != EpcController::m_bearersTable.end ())
     {
-      OpenFlowEpcController::m_bearersTable.erase (it);
+      EpcController::m_bearersTable.erase (it);
     }
   else
     {
@@ -851,7 +847,7 @@ OpenFlowEpcController::UnregisterBearer (uint32_t teid)
     }
 }
 
-OpenFlowEpcController::QciDscpInitializer::QciDscpInitializer ()
+EpcController::QciDscpInitializer::QciDscpInitializer ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -871,7 +867,7 @@ OpenFlowEpcController::QciDscpInitializer::QciDscpInitializer ()
   std::pair <QciDscpMap_t::iterator, bool> ret;
   for (int i = 0; i < 9; i++)
     {
-      ret = OpenFlowEpcController::m_qciDscpTable.insert (entries [i]);
+      ret = EpcController::m_qciDscpTable.insert (entries [i]);
       NS_ASSERT_MSG (ret.second, "Can't insert DSCP map value.");
     }
 }

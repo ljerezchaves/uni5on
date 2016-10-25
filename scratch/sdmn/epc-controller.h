@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef OPENFLOW_EPC_CONTROLLER_H
-#define OPENFLOW_EPC_CONTROLLER_H
+#ifndef EPC_CONTROLLER_H
+#define EPC_CONTROLLER_H
 
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
@@ -37,11 +37,11 @@ namespace ns3 {
  * Create an OpenFlow EPC controller. This is an abstract base class which
  * should be extended in accordance to OpenFlow network topology.
  */
-class OpenFlowEpcController : public OFSwitch13Controller
+class EpcController : public OFSwitch13Controller
 {
 public:
-  OpenFlowEpcController ();           //!< Default constructor
-  virtual ~OpenFlowEpcController ();  //!< Dummy destructor, see DoDipose
+  EpcController ();           //!< Default constructor
+  virtual ~EpcController ();  //!< Dummy destructor, see DoDipose
 
   /**
    * Register this type.
@@ -67,7 +67,7 @@ public:
    * false otherwise (the bearer creation process will abort).
    */
   virtual bool RequestDedicatedBearer (EpsBearer bearer, uint64_t imsi,
-                                       uint16_t cellId, uint32_t teid);
+    uint16_t cellId, uint32_t teid);
 
   /**
    * Release a dedicated EPS bearer.
@@ -84,7 +84,7 @@ public:
    * \returns true if successful, false otherwise.
    */
   virtual bool ReleaseDedicatedBearer (EpsBearer bearer, uint64_t imsi,
-                                       uint16_t cellId, uint32_t teid);
+    uint16_t cellId, uint32_t teid);
 
   /** \name Trace sinks for network topology and LTE EPC monitoring. */
   //\{
@@ -93,7 +93,7 @@ public:
    * OpenFlow network over some switch port. This function will save the IP
    * address / MAC address from this new device for further ARP resolution, and
    * will configure local port delivery. The user is supposed to connect this
-   * function as trace sink for OpenFlowEpcNetwork::NewEpcAttach trace source.
+   * function as trace sink for EpcNetwork::NewEpcAttach trace source.
    * \param nodeDev The device connected to the OpenFlow switch.
    * \param nodeIp The IPv4 address assigned to this device.
    * \param swtchDev The OpenFlow switch device.
@@ -101,13 +101,12 @@ public:
    * \param swtchPort The port number for nodeDev at OpenFlow switch.
    */
   virtual void NotifyNewEpcAttach (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
-                                   Ptr<OFSwitch13Device> swtchDev,
-                                   uint16_t swtchIdx, uint32_t swtchPort);
+    Ptr<OFSwitch13Device> swtchDev, uint16_t swtchIdx, uint32_t swtchPort);
 
   /**
    * Notify this controller of a new connection between two switches in the
    * OpenFlow network. The user is supposed to connect this function as trace
-   * sink for OpenFlowEpcNetwork::NewSwitchConnection trace source.
+   * sink for EpcNetwork::NewSwitchConnection trace source.
    * \param cInfo The connection information and metadata.
    */
   virtual void NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo);
@@ -115,8 +114,8 @@ public:
   /**
    * Notify this controller that all connection between switches have already
    * been configure and the topology is finished. The user is supposed to
-   * connect this function as trace sink for OpenFlowEpcNetwork::TopologyBuilt
-   * trace source.
+   * connect this function as trace sink for EpcNetwork::TopologyBuilt trace
+   * source.
    * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
    */
   virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
@@ -135,8 +134,7 @@ public:
    * \param bearerList The list of context bearers created.
    */
   virtual void NotifySessionCreated (uint64_t imsi, uint16_t cellId,
-                                     Ipv4Address enbAddr, Ipv4Address sgwAddr,
-                                     BearerList_t bearerList);
+    Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList);
 
   /**
    * Notify this controller when the Non-GBR allowed bit rate in any network
@@ -197,7 +195,7 @@ protected:
    * \return True if configuration succeeded, false otherwise.
    */
   virtual bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
-                                       uint32_t buffer = OFP_NO_BUFFER) = 0;
+    uint32_t buffer = OFP_NO_BUFFER) = 0;
 
   /**
    * Remove TEID routing rules from switches.
@@ -299,8 +297,7 @@ private:
    * \param swtchPort The number of switch port this device is attached to.
    */
   void ConfigureLocalPortRules (Ptr<OFSwitch13Device> swtchDev,
-                                Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
-                                uint32_t swtchPort);
+    Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, uint32_t swtchPort);
 
   /**
    * Handle packet-in messages sent from switch with ARP message.
@@ -309,8 +306,8 @@ private:
    * \param xid Transaction id.
    * \return 0 if everything's ok, otherwise an error number.
    */
-  ofl_err HandleArpPacketIn (
-    ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
+  ofl_err HandleArpPacketIn (ofl_msg_packet_in *msg,
+    Ptr<const RemoteSwitch> swtch, uint32_t xid);
 
   /**
    * Extract an IPv4 address from packet match.
@@ -330,7 +327,7 @@ private:
    * \return The ns3 Ptr<Packet> with the ARP reply.
    */
   Ptr<Packet> CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
-                              Mac48Address dstMac, Ipv4Address dstIp);
+    Mac48Address dstMac, Ipv4Address dstIp);
 
   /**
    * Insert a new bearer entry in global bearer map.
@@ -346,7 +343,7 @@ private:
   static void UnregisterBearer (uint32_t teid);
 
   /**
-   * OpenFlowEpcController inner friend utility class
+   * EpcController inner friend utility class
    * used to initialize static DSCP map table.
    */
   class QciDscpInitializer
@@ -359,7 +356,7 @@ private:
 
   /**
    * Static instance of Initializer. When this is created, its constructor
-   * initializes the OpenFlowEpcController s' static DSCP map table.
+   * initializes the EpcController s' static DSCP map table.
    */
   static QciDscpInitializer initializer;
 
@@ -402,5 +399,5 @@ private:
 };
 
 };  // namespace ns3
-#endif // OPENFLOW_EPC_CONTROLLER_H
+#endif // EPC_CONTROLLER_H
 

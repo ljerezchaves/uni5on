@@ -36,7 +36,7 @@ class RoutingInfo;
  */
 class GbrInfo : public Object
 {
-  friend class OpenFlowEpcController;
+  friend class EpcController;
   friend class RingController;
 
 public:

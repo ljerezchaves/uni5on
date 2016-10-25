@@ -21,8 +21,8 @@
 #include "traffic-helper.h"
 #include "traffic-manager.h"
 #include "lte-network.h"
-#include "openflow-epc-network.h"
-#include "openflow-epc-controller.h"
+#include "epc-network.h"
+#include "epc-controller.h"
 #include "apps/http-client.h"
 #include "apps/http-server.h"
 #include "apps/qos-stats-calculator.h"
@@ -63,11 +63,11 @@ const uint64_t TrafficHelper::m_mbrBitRate [] = {
 
 
 // ------------------------------------------------------------------------ //
-TrafficHelper::TrafficHelper (Ptr<OpenFlowEpcNetwork> ofNetwork,
+TrafficHelper::TrafficHelper (Ptr<EpcNetwork> epcNetwork,
                               Ptr<LteNetwork> lteNetwork)
-  : m_ofNetwork (ofNetwork),
+  : m_epcNetwork (epcNetwork),
     m_lteNetwork (lteNetwork),
-    m_webNode (ofNetwork->GetServerNode ())
+    m_webNode (epcNetwork->GetServerNode ())
 {
   NS_LOG_FUNCTION (this);
 
@@ -79,7 +79,7 @@ TrafficHelper::TrafficHelper (Ptr<OpenFlowEpcNetwork> ofNetwork,
   // Configuring the traffic manager object factory
   m_managerFactory.SetTypeId (TrafficManager::GetTypeId ());
   SetManagerAttribute ("Controller",
-                       PointerValue (ofNetwork->GetControllerApp ()));
+                       PointerValue (epcNetwork->GetControllerApp ()));
 
   // Random video selection
   m_videoRng = CreateObject<UniformRandomVariable> ();
@@ -201,7 +201,7 @@ TrafficHelper::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_ofNetwork = 0;
+  m_epcNetwork = 0;
   m_lteNetwork = 0;
   m_webNode = 0;
   m_ueNode = 0;
@@ -244,8 +244,8 @@ TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices)
       m_ueNode->AggregateObject (m_ueManager);
 
       // Connecting the manager to new context created trace source.
-      Ptr<SdmnEpcHelper> ofHelper = m_ofNetwork->GetEpcHelper ();
-      ofHelper->GetMmeElement ()->TraceConnectWithoutContext (
+      Ptr<SdmnEpcHelper> epcHelper = m_epcNetwork->GetEpcHelper ();
+      epcHelper->GetMmeElement ()->TraceConnectWithoutContext (
         "SessionCreated",
         MakeCallback (&TrafficManager::SessionCreatedCallback, m_ueManager));
 
