@@ -142,7 +142,7 @@ RingNetwork::CreateTopology ()
     }
 
   // Installing the Openflow switch devices for each switch node
-  m_ofDevices = m_ofSwitchHelper->InstallSwitchesWithoutPorts (m_ofSwitches);
+  m_ofDevices = m_ofSwitchHelper->InstallSwitch (m_ofSwitches);
 
   // Connecting switches in ring topology (clockwise order)
   for (uint16_t i = 0; i < m_numNodes; i++)

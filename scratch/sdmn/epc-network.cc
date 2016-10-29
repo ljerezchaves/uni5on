@@ -269,7 +269,7 @@ EpcNetwork::InstallController (Ptr<EpcController> controller)
   m_controllerNode = CreateObject<Node> ();
   Names::Add ("ctrl", m_controllerNode);
 
-  m_ofSwitchHelper->InstallControllerApp (m_controllerNode, m_controllerApp);
+  m_ofSwitchHelper->InstallController (m_controllerNode, m_controllerApp);
 
   // Connecting controller trace sinks to sources in this network
   TraceConnectWithoutContext (
