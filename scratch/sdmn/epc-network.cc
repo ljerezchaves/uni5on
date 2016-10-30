@@ -51,10 +51,12 @@ EpcNetwork::EpcNetwork ()
   m_webNetwork = CreateObject<InternetNetwork> ();
 
   // Creating stats calculators
-  ObjectFactory statsFactory;
-  statsFactory.SetTypeId (LinkQueuesStatsCalculator::GetTypeId ());
-  statsFactory.Set ("LnkStatsFilename", StringValue ("pgw_stats.txt"));
-  m_gatewayStats = statsFactory.Create<LinkQueuesStatsCalculator> ();
+  // ObjectFactory statsFactory;
+  // statsFactory.SetTypeId (LinkQueuesStatsCalculator::GetTypeId ());
+  // statsFactory.Set ("LnkStatsFilename", StringValue ("pgw_stats.txt"));
+  // m_gatewayStats = statsFactory.Create<LinkQueuesStatsCalculator> ();
+  m_gatewayStats = CreateObjectWithAttributes<LinkQueuesStatsCalculator> (
+    "LnkStatsFilename", StringValue ("pgw_stats.txt"));
 
   m_networkStats = CreateObject<NetworkStatsCalculator> ();
 }
@@ -95,15 +97,17 @@ EpcNetwork::EnablePcap (std::string prefix, bool promiscuous)
 {
   NS_LOG_FUNCTION (this << prefix << promiscuous);
 
+  // Enable pcap on Internet network
+  m_webNetwork->EnablePcap (prefix + "internet");
+
   // Enable pcap on OpenFlow channel
   m_ofSwitchHelper->EnableOpenFlowPcap (prefix + "ofchannel");
 
   // Enable pcap on LTE EPC interfaces
-  EnablePcapS1u (prefix + "lte-epc");
-  EnablePcapX2 (prefix + "lte-epc");
-
-  // Enable pcap on Internet network
-  m_webNetwork->EnablePcap (prefix + "internet");
+  CsmaHelper helper;
+  helper.EnablePcap (prefix + "lte-epc-s1u", m_s1uDevices, promiscuous);
+  helper.EnablePcap (prefix + "lte-epc-s1u", m_sgwS1uDev,  promiscuous);
+  helper.EnablePcap (prefix + "lte-epc-x2",  m_x2Devices,  promiscuous);
 }
 
 void
@@ -476,41 +480,21 @@ EpcNetwork::AssignUeIpv4Address (NetDeviceContainer ueDevices)
 
 Ipv4Address
 EpcNetwork::GetUeDefaultGatewayAddress ()
-{
+{ // FIXME Tirar a dependencia em ser o primeiro device... talvez usar o GetAddressForDevice
   // return the address of the tun device
   return m_sgwPgw->GetObject<Ipv4> ()->GetAddress (1, 0).GetLocal ();
 }
 
 Ptr<EpcMme>
 EpcNetwork::GetMmeElement ()
-{
+{ // FIXME Vai pro controlador
   return m_mme;
-}
-
-void
-EpcNetwork::EnablePcapS1u (std::string prefix, bool promiscuous, bool explicitFilename)
-{
-  NS_LOG_FUNCTION (this << prefix);
-  prefix.append ("-s1u");
-
-  CsmaHelper helper;
-  helper.EnablePcap (prefix, m_s1uDevices, promiscuous);
-  helper.EnablePcap (prefix, m_sgwS1uDev, promiscuous);
-}
-
-void
-EpcNetwork::EnablePcapX2 (std::string prefix, bool promiscuous, bool explicitFilename)
-{
-  NS_LOG_FUNCTION (this << prefix);
-  prefix.append ("-x2");
-  
-  CsmaHelper helper;
-  helper.EnablePcap (prefix, m_x2Devices, promiscuous);
 }
 
 Ipv4Address
 EpcNetwork::GetSgwS1uAddress ()
 {
+  // FIXME poderia usar a GetAddressForDevice (m_sgwS1uDev), certo?
   Ptr<Ipv4> ipv4 = m_sgwPgw->GetObject<Ipv4> ();
   int32_t idx = ipv4->GetInterfaceForDevice(m_sgwS1uDev);
   return ipv4->GetAddress (idx, 0).GetLocal ();

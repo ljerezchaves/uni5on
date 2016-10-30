@@ -40,7 +40,7 @@ class EpcController;
  * class which should be extended to create any desired network topology. For
  * each subclass, a corresponding topology-aware controller must be
  * implemented, extending the generig EpcController.
- */
+ */ // FIXME Ajustar a documentação da classe
 /**
  * Create an EPC network connected through CSMA devices to an user-defined
  * backhaul network. This Helper will create an EPC network topology comprising
@@ -73,17 +73,17 @@ public:
   virtual Ipv4Address GetUeDefaultGatewayAddress ();
 
   /**
-   * Called by SdmnEpcHelper to proper connect the SgwPgw and eNBs to the
-   * S1-U interface over the OpenFlow network infrastructure.
+   * Connect the SgwPgw and eNBs to the S1-U interface over the backhaul
+   * network infrastructure.
    * \param node The SgwPgw/eNB node pointer.
    * \param cellId The eNB cell ID (0 for SgwPgw node).
    * \return A pointer to the device created at node.
-   */
+   */ // FIXME Criar duas variações deste método, uma específica pra o gateway?
   virtual Ptr<NetDevice> S1Attach (Ptr<Node> node, uint16_t cellId) = 0;
 
   /**
-   * Called by SdmnEpcHelper to proper connect the eNBs nodes to the X2
-   * interface over the OpenFlow network infrastructure.
+   * Connect the eNBs nodes to the X2 interface over the backhaul network
+   * infrastructure.
    * \param node The 1st eNB node pointer.
    * \param node The 2nd eNB node pointer.
    * \return The container with devices created at each eNB.
@@ -91,7 +91,8 @@ public:
   virtual NetDeviceContainer X2Attach (Ptr<Node> enb1, Ptr<Node> enb2) = 0;
 
   /**
-   * Enable pcap on LTE EPC network, and OpenFlow control and user planes.
+   * Enable pcap on LTE EPC network devices (S1-U and X2), and OpenFlow control
+   * and user planes.
    * \param prefix The file prefix.
    * \param promiscuous If true, enable promisc trace.
    */
@@ -222,12 +223,18 @@ protected:
                  uint16_t, uint32_t> m_newAttachTrace;
 
 private:
-  uint16_t                        m_gatewaySwitch;  //!< Gateway switch index.
-  Ptr<Node>                       m_controllerNode; //!< Controller node.
-  Ptr<EpcController>              m_controllerApp;  //!< Controller app.
-  Ptr<InternetNetwork>            m_webNetwork;     //!< Internet network.
-  Ptr<NetworkStatsCalculator>     m_networkStats;   //!< Network statistics.
-  
+  uint16_t                      m_gatewaySwitch;  //!< Gateway switch index.
+  Ptr<Node>                     m_controllerNode; //!< Controller node.
+  Ptr<EpcController>            m_controllerApp;  //!< Controller app.
+  Ptr<InternetNetwork>          m_webNetwork;     //!< Internet network.
+  Ptr<NetworkStatsCalculator>   m_networkStats;   //!< Network statistics.
+  Ptr<NetDevice>                m_sgwS1uDev;      //!< Pgw device.
+  Ptr<Node>                     m_sgwPgw;         //!< Pgw node.  
+  NetDeviceContainer            m_x2Devices;      //!< X2 devices.
+  NetDeviceContainer            m_s1uDevices;     //!< S1-U devices.
+  Ipv4AddressHelper             m_ueAddressHelper;//!< UE address helper.
+  uint16_t                      m_gtpuUdpPort;    //!< Default GTP port (2152).
+
   /** Map saving Node / Switch indexes. */
   typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;
   NodeSwitchMap_t     m_nodeSwitchMap;    //!< Registered nodes per switch idx.
@@ -241,29 +248,11 @@ public:
     /**
    * Get a pointer to the MME element.
    * \return The MME element.
-   */
+   */ // FIXME Isso aqui vai pro controlador!
   Ptr<EpcMme> GetMmeElement ();
 
-
+  // FIXME Colocar isso no create topology?
   void ConfigurePgw ();
-
-  /**
-    * Enable Pcap output on all S1-U devices connected to the backhaul network.
-    * \param prefix Filename prefix to use for pcap files.
-    * \param promiscuous If true capture all packets available at the devices.
-    * \param explicitFilename Treat the prefix as an explicit filename if true.
-    */
-  void EnablePcapS1u (std::string prefix, bool promiscuous = false,
-                      bool explicitFilename = false);
-
-  /**
-    * Enable Pcap output on all X2 devices connected to the backhaul network.
-    * \param prefix Filename prefix to use for pcap files.
-    * \param promiscuous If true capture all packets available at the devices.
-    * \param explicitFilename Treat the prefix as an explicit filename if true.
-    */
-  void EnablePcapX2 (std::string prefix, bool promiscuous = false,
-                     bool explicitFilename = false);
 
 private:
   /**
@@ -274,45 +263,24 @@ private:
   virtual Ipv4Address GetSgwS1uAddress ();
 
   /**
-   * Retrieve the eNB IP address for device, set by the OpenFlow network.
+   * Retrieve the IP address for device, set by the OpenFlow network.
    * \param device NetDevice connected to the OpenFlow network.
-   * \return The Ipv4Addrress of the S1-U or X2 interface for the specific
-   * NetDevice connected to the OpenFlow network.
+   * \return The Ipv4Addrress of the EPC interface for the specific NetDevice
+   * connected to the OpenFlow network.
    */
   virtual Ipv4Address GetAddressForDevice (Ptr<NetDevice> device);
 
-  /** A collection of S1-U NetDevice */
-  NetDeviceContainer m_s1uDevices;
-
-  /** A collection of X2 NetDevice */
-  NetDeviceContainer m_x2Devices;
-
-  /** The SgwPgw NetDevice connected to the S1-U OpenFlow network switch */
-  Ptr<NetDevice> m_sgwS1uDev;
-
-  /** SgwPgw network element */
-  Ptr<Node> m_sgwPgw;
-
   /** SgwPgw application */
-  Ptr<EpcSgwPgwCtrlApplication> m_sgwPgwCtrlApp;
-  Ptr<EpcSgwPgwUserApplication> m_sgwPgwUserApp;
+  Ptr<EpcSgwPgwCtrlApplication> m_sgwPgwCtrlApp;  // FIXME: esse aqui vai pro controlador
+  Ptr<EpcSgwPgwUserApplication> m_sgwPgwUserApp;  // FIXME: esse aqui vai ser substituído pelo switch
 
   /** MME element */
   Ptr<EpcMme> m_mme;
+  // FIXME o mme vai pra dentro do controlador.
 
   /** VirtualNetDevice for GTP tunneling implementation */
   Ptr<VirtualNetDevice> m_tunDevice;
-
-  /** Helper to assign addresses to UE devices as well as to the TUN device of the SGW/PGW */
-  Ipv4AddressHelper m_ueAddressHelper;
-
-  /** UDP port where the GTP-U Socket is bound, fixed by the standard as 2152 */
-  uint16_t m_gtpuUdpPort;
-
-  /** Map storing for each IMSI the corresponding eNB NetDevice */
-  std::map<uint64_t, Ptr<NetDevice> > m_imsiEnbDeviceMap;
-
-
+  // FIXME no gateway com switch openflow isso nao vai existir mais
 };
 
 };  // namespace ns3
