@@ -30,7 +30,6 @@
 #include "apps/real-time-video-helper.h"
 #include "apps/voip-helper.h"
 #include "apps/stored-video-helper.h"
-#include "sdmn-epc-helper.h"
 
 namespace ns3 {
 

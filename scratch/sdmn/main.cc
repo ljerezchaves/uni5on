@@ -120,11 +120,8 @@ main (int argc, char *argv[])
   // * EPC stats calculator
   NS_LOG_INFO ("Creating simulation scenario...");
 
-  Ptr<RingNetwork> ofNetwork =
-    CreateObject<RingNetwork> ();
-
-  Ptr<LteNetwork> lteNetwork =
-    CreateObject<LteNetwork> (ofNetwork->GetEpcHelper ());
+  Ptr<RingNetwork> ofNetwork = CreateObject<RingNetwork> ();
+  Ptr<LteNetwork> lteNetwork = CreateObject<LteNetwork> (ofNetwork);
 
   Ptr<TrafficHelper> trafficHelper =
     CreateObject<TrafficHelper> (ofNetwork, lteNetwork);
