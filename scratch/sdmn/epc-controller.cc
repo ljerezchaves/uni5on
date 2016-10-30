@@ -337,6 +337,8 @@ EpcController::DoDispose ()
   m_arpTable.clear ();
   m_ipSwitchTable.clear ();
   m_routes.clear ();
+  m_pgwCtrlApp = 0;
+  m_mme = 0;
   Object::DoDispose ();
 }
 

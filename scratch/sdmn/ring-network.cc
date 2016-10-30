@@ -112,7 +112,7 @@ RingNetwork::NotifyConstructionCompleted ()
   m_swHelper.SetChannelAttribute ("DataRate", DataRateValue (m_swLinkRate));
   m_swHelper.SetChannelAttribute ("Delay", TimeValue (m_swLinkDelay));
 
-  // Configuring csma links helper for connecting the gateway to the ring
+  // Configuring csma links helper for connecting the P-GW to the ring
   m_gwHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
   m_gwHelper.SetChannelAttribute ("DataRate", DataRateValue (m_gwLinkRate));
   m_gwHelper.SetChannelAttribute ("Delay", TimeValue (m_gwLinkDelay));
@@ -130,7 +130,10 @@ RingNetwork::CreateTopology ()
 
   // Creating the ring controller application
   InstallController (CreateObject<RingController> ());
-
+  
+  // Configuring the P-GW 
+  InstallPgw ();
+  
   // Creating the switch nodes
   m_ofSwitches.Create (m_numNodes);
   for (uint16_t i = 0; i < m_numNodes; i++)
@@ -204,26 +207,16 @@ RingNetwork::CreateTopology ()
 }
 
 Ptr<NetDevice>
-RingNetwork::S1Attach (Ptr<Node> node, uint16_t cellId)
+RingNetwork::S5PgwAttach (Ptr<Node> node)
 {
   NS_LOG_FUNCTION (this << node);
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
 
-  // Connect the SgwPgw node to switch index 0 and other eNBs nodes to switches
-  // indexes 1..N. The three eNBs from same cell site are connected to the same
-  // switch in the ring network. The cellId == 0 is used by the SgwPgw node.
-
+  // Connect the P-GW node to switch index 0
   uint16_t swIdx = 0;
-  if (cellId == 0)
-    {
-      // This is the SgwPgw node
-      RegisterGatewayAtSwitch (swIdx, node);
-    }
-  else
-    {
-      // This is an eNB
-      swIdx = 1 + ((cellId - 1) / 3);
-    }
+      
+  // This is the SgwPgw node
+  RegisterGatewayAtSwitch (swIdx, node);
   RegisterNodeAtSwitch (swIdx, node);
   Ptr<Node> swNode = m_ofSwitches.Get (swIdx);
 
@@ -232,16 +225,7 @@ RingNetwork::S1Attach (Ptr<Node> node, uint16_t cellId)
   NodeContainer pair;
   pair.Add (swNode);
   pair.Add (node);
-  if (cellId == 0)
-    {
-      // For the SgwPgw node, use the gateway helper with higher data rate
-      devices = m_gwHelper.Install (pair);
-    }
-  else
-    {
-      // For an eNB node, use the default switch helper with default data rate
-      devices = m_swHelper.Install (pair);
-    }
+  devices = m_gwHelper.Install (pair);
 
   Ptr<CsmaNetDevice> portDev, nodeDev;
   portDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
@@ -266,11 +250,53 @@ RingNetwork::S1Attach (Ptr<Node> node, uint16_t cellId)
   // Trace source notifying a new device attached to network
   m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
 
-  // Only for the gateway link, let's set queues for link statistics.
-  if (cellId == 0)
-    {
-      m_gatewayStats->SetQueues (nodeDev->GetQueue (), portDev->GetQueue ());
-    }
+  // Let's set queues for link statistics.
+  m_gatewayStats->SetQueues (nodeDev->GetQueue (), portDev->GetQueue ());
+
+  return nodeDev;
+}
+
+Ptr<NetDevice>
+RingNetwork::S1EnbAttach (Ptr<Node> node, uint16_t cellId)
+{
+  NS_LOG_FUNCTION (this << node);
+  NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
+
+  // Connect the eNBs nodes to switches indexes 1..N. The three eNBs from same
+  // cell site are connected to the same switch in the ring network.
+  uint16_t swIdx = 1 + ((cellId - 1) / 3);
+  RegisterNodeAtSwitch (swIdx, node);
+  Ptr<Node> swNode = m_ofSwitches.Get (swIdx);
+
+  // Creating a link between the switch and the node
+  NetDeviceContainer devices;
+  NodeContainer pair;
+  pair.Add (swNode);
+  pair.Add (node);
+  devices = m_swHelper.Install (pair);
+
+  Ptr<CsmaNetDevice> portDev, nodeDev;
+  portDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
+  nodeDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
+
+  // Setting interface names for pacp filename
+  Names::Add (Names::FindName (swNode) + "+" +
+              Names::FindName (node), portDev);
+  Names::Add (Names::FindName (node) + "+" +
+              Names::FindName (swNode), nodeDev);
+
+  // Set S1U IPv4 address for the new device at node
+  Ipv4InterfaceContainer nodeIpIfaces =
+    m_s1uAddrHelper.Assign (NetDeviceContainer (nodeDev));
+  Ipv4Address nodeAddr = nodeIpIfaces.GetAddress (0);
+
+  // Adding newly created csma device as openflow switch port.
+  Ptr<OFSwitch13Device> swDev = GetSwitchDevice (swIdx);
+  Ptr<OFSwitch13Port> swPort = swDev->AddSwitchPort (portDev);
+  uint32_t portNum = swPort->GetPortNo ();
+
+  // Trace source notifying a new device attached to network
+  m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
 
   return nodeDev;
 }

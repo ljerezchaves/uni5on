@@ -32,11 +32,10 @@ NS_OBJECT_ENSURE_REGISTERED (EpcNetwork);
 EpcNetwork::EpcNetwork ()
   : m_ofSwitchHelper (0),
     m_gatewayStats (0),
-    m_controllerNode (0),
-    m_controllerApp (0),
+    m_epcCtrlNode (0),
+    m_epcCtrlApp (0),
     m_webNetwork (0),
-    m_networkStats (0),
-    m_gtpuUdpPort (2152)
+    m_networkStats (0)
 {
   NS_LOG_FUNCTION (this);
 
@@ -45,7 +44,15 @@ EpcNetwork::EpcNetwork ()
   m_ofSwitchHelper->SetAttribute ("ChannelType",
                                   EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
-  ConfigurePgw ();
+  // We use a /8 subnet for all UEs and the P-GW gateway address
+  m_ueAddressHelper.SetBase ("7.0.0.0", "255.0.0.0");
+
+  // Creating some EPC nodes
+  m_epcCtrlNode = CreateObject<Node> ();
+  Names::Add ("ctrl", m_epcCtrlNode);
+
+  m_pgwNode = CreateObject<Node> ();
+  Names::Add ("pgw", m_pgwNode);
 
   // Creating the Internet network object
   m_webNetwork = CreateObject<InternetNetwork> ();
@@ -105,9 +112,9 @@ EpcNetwork::EnablePcap (std::string prefix, bool promiscuous)
 
   // Enable pcap on LTE EPC interfaces
   CsmaHelper helper;
-  helper.EnablePcap (prefix + "lte-epc-s1u", m_s1uDevices, promiscuous);
-  helper.EnablePcap (prefix + "lte-epc-s1u", m_sgwS1uDev,  promiscuous);
-  helper.EnablePcap (prefix + "lte-epc-x2",  m_x2Devices,  promiscuous);
+  helper.EnablePcap (prefix + "lte-epc-s5", m_pgwS5Dev,  promiscuous);
+  helper.EnablePcap (prefix + "lte-epc-s5", m_s5Devices, promiscuous);
+  helper.EnablePcap (prefix + "lte-epc-x2", m_x2Devices, promiscuous);
 }
 
 void
@@ -131,21 +138,21 @@ EpcNetwork::GetServerNode ()
 Ptr<Node>
 EpcNetwork::GetControllerNode ()
 {
-  return m_controllerNode;
+  return m_epcCtrlNode;
 }
 
 Ptr<EpcController>
 EpcNetwork::GetControllerApp ()
 {
-  return m_controllerApp;
+  return m_epcCtrlApp;
 }
 
 void
 EpcNetwork::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-  m_controllerNode = 0;
-  m_controllerApp = 0;
+  m_epcCtrlNode = 0;
+  m_epcCtrlApp = 0;
   m_ofSwitchHelper = 0;
   m_gatewayStats = 0;
   m_webNetwork = 0;
@@ -155,9 +162,8 @@ EpcNetwork::DoDispose ()
   // FIXME to sdmn-epc-helper
   m_tunDevice->SetSendCallback (MakeNullCallback<bool, Ptr<Packet>, const Address&, const Address&, uint16_t> ());
   m_tunDevice = 0;
-  m_sgwPgwCtrlApp = 0;
   m_sgwPgwUserApp = 0;
-  m_sgwPgw->Dispose ();
+  m_pgwNode->Dispose ();
 
 
   Object::DoDispose ();
@@ -178,19 +184,21 @@ EpcNetwork::NotifyConstructionCompleted (void)
 
   // Create the ring network topology and Internet topology
   CreateTopology ();
+
+
+
   m_webNetwork->CreateTopology (GetPgwNode ());
 
   // Connect S1U and X2 connection callbacks *after* topology creation.
-  // FIXME nao é preciso usar callbacks... basta chamar direto
-   // Connecting the SgwPgw to the OpenFlow network.
-  m_sgwS1uDev = S1Attach (m_sgwPgw, 0 /*SgwPgw with no cellId */);
-  NS_LOG_LOGIC ("Sgw S1 interface address: " << GetSgwS1uAddress ());
+  // Connecting the P-GW to the OpenFlow network.
+  m_pgwS5Dev = S5PgwAttach (m_pgwNode);
+  NS_LOG_LOGIC ("Sgw S5 interface address: " << GetSgwS1uAddress ());
 
   // Connect the controller to the MME SessionCreated trace source *after*
   // topology creation.
   GetMmeElement ()->TraceConnectWithoutContext (
     "SessionCreated", MakeCallback (
-      &EpcController::NotifySessionCreated, m_controllerApp));
+      &EpcController::NotifySessionCreated, m_epcCtrlApp));
 
   // Chain up
   Object::NotifyConstructionCompleted ();
@@ -213,7 +221,7 @@ EpcNetwork::RegisterNodeAtSwitch (uint16_t switchIdx, Ptr<Node> node)
 void
 EpcNetwork::RegisterGatewayAtSwitch (uint16_t switchIdx, Ptr<Node> node)
 {
-  m_gatewaySwitch = switchIdx;
+  m_pgwSwitchIdx = switchIdx;
 }
 
 Ptr<OFSwitch13Device>
@@ -253,32 +261,29 @@ EpcNetwork::GetSwitchIdxForDevice (Ptr<OFSwitch13Device> dev)
 uint16_t
 EpcNetwork::GetGatewaySwitchIdx ()
 {
-  return m_gatewaySwitch;
+  return m_pgwSwitchIdx;
 }
 
 void
 EpcNetwork::InstallController (Ptr<EpcController> controller)
 {
   NS_LOG_FUNCTION (this << controller);
-  NS_ASSERT_MSG (!m_controllerNode, "Controller application already set.");
+  NS_ASSERT_MSG (!m_epcCtrlApp, "Controller application already set.");
 
-  // Installing the controller app into a new controller node
-  m_controllerApp = controller;
-  m_controllerNode = CreateObject<Node> ();
-  Names::Add ("ctrl", m_controllerNode);
-
-  m_ofSwitchHelper->InstallController (m_controllerNode, m_controllerApp);
+  // Installing the controller app into a the controller node
+  m_epcCtrlApp = controller;
+  m_ofSwitchHelper->InstallController (m_epcCtrlNode, m_epcCtrlApp);
 
   // Connecting controller trace sinks to sources in this network
   TraceConnectWithoutContext (
     "NewEpcAttach", MakeCallback (
-      &EpcController::NotifyNewEpcAttach, m_controllerApp));
+      &EpcController::NotifyNewEpcAttach, m_epcCtrlApp));
   TraceConnectWithoutContext (
     "TopologyBuilt", MakeCallback (
-      &EpcController::NotifyTopologyBuilt, m_controllerApp));
+      &EpcController::NotifyTopologyBuilt, m_epcCtrlApp));
   TraceConnectWithoutContext (
     "NewSwitchConnection", MakeCallback (
-      &EpcController::NotifyNewSwitchConnection, m_controllerApp));
+      &EpcController::NotifyNewSwitchConnection, m_epcCtrlApp));
 }
 
 
@@ -287,21 +292,16 @@ EpcNetwork::InstallController (Ptr<EpcController> controller)
 
 
 void
-EpcNetwork::ConfigurePgw ()
+EpcNetwork::InstallPgw ()
 {
   NS_LOG_FUNCTION (this);
 
-  // we use a /8 net for all UEs
-  m_ueAddressHelper.SetBase ("7.0.0.0", "255.0.0.0");
-
-  // create SgwPgwNode
-  m_sgwPgw = CreateObject<Node> ();
-  Names::Add ("pgw", m_sgwPgw);
+  // FIXME Isso aqui vai sumir no futuro, porque o switch já vai ter o stack instalado pelo helper do ofswitch13
   InternetStackHelper internet;
-  internet.Install (m_sgwPgw);
+  internet.Install (m_pgwNode);
 
   // create S1-U socket
-  Ptr<Socket> sgwPgwS1uSocket = Socket::CreateSocket (m_sgwPgw, TypeId::LookupByName ("ns3::UdpSocketFactory"));
+  Ptr<Socket> sgwPgwS1uSocket = Socket::CreateSocket (m_pgwNode, TypeId::LookupByName ("ns3::UdpSocketFactory"));
   int retval = sgwPgwS1uSocket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_gtpuUdpPort));
   NS_ASSERT (retval == 0);
 
@@ -313,7 +313,7 @@ EpcNetwork::ConfigurePgw ()
   // yes we need this
   m_tunDevice->SetAddress (Mac48Address::Allocate ());
 
-  m_sgwPgw->AddDevice (m_tunDevice);
+  m_pgwNode->AddDevice (m_tunDevice);
   NetDeviceContainer tunDeviceContainer;
   tunDeviceContainer.Add (m_tunDevice);
 
@@ -323,19 +323,20 @@ EpcNetwork::ConfigurePgw ()
   Ipv4InterfaceContainer tunDeviceIpv4IfContainer = m_ueAddressHelper.Assign (tunDeviceContainer);
 
   // create EpcSgwPgwApplication
-  m_sgwPgwCtrlApp = CreateObject<EpcSgwPgwCtrlApplication> ();
-  m_sgwPgwUserApp = CreateObject<EpcSgwPgwUserApplication> (m_tunDevice, sgwPgwS1uSocket, m_sgwPgwCtrlApp);
-  Names::Add ("SgwPgwApplication", m_sgwPgwCtrlApp);
-  m_sgwPgw->AddApplication (m_sgwPgwCtrlApp);
-  m_sgwPgw->AddApplication (m_sgwPgwUserApp);
+  NS_ASSERT (m_epcCtrlApp);
+  m_epcCtrlApp->m_pgwCtrlApp = CreateObject<EpcSgwPgwCtrlApplication> ();
+  m_sgwPgwUserApp = CreateObject<EpcSgwPgwUserApplication> (m_tunDevice, sgwPgwS1uSocket, m_epcCtrlApp->m_pgwCtrlApp);
+  Names::Add ("SgwPgwApplication", m_epcCtrlApp->m_pgwCtrlApp);
+  m_pgwNode->AddApplication (m_epcCtrlApp->m_pgwCtrlApp);
+  m_pgwNode->AddApplication (m_sgwPgwUserApp);
 
   // connect SgwPgwApplication and virtual net device for tunneling
   m_tunDevice->SetSendCallback (MakeCallback (&EpcSgwPgwUserApplication::RecvFromTunDevice, m_sgwPgwUserApp));
 
   // Create MME and connect with SGW via S11 interface
-  m_mme = CreateObject<EpcMme> ();
-  m_mme->SetS11SapSgw (m_sgwPgwCtrlApp->GetS11SapSgw ());
-  m_sgwPgwCtrlApp->SetS11SapMme (m_mme->GetS11SapMme ());
+  GetMmeElement () = CreateObject<EpcMme> ();
+  GetMmeElement ()->SetS11SapSgw (m_epcCtrlApp->m_pgwCtrlApp->GetS11SapSgw ());
+  m_epcCtrlApp->m_pgwCtrlApp->SetS11SapMme (GetMmeElement ()->GetS11SapMme ());
 
 
 }
@@ -354,8 +355,8 @@ EpcNetwork::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t cell
                 enb->GetObject<Ipv4> ()->GetNInterfaces ());
 
   // Callback the OpenFlow network to connect this eNB to the network.
-  Ptr<NetDevice> enbDevice = S1Attach (enb, cellId);
-  m_s1uDevices.Add (enbDevice);
+  Ptr<NetDevice> enbDevice = S1EnbAttach (enb, cellId);
+  m_s5Devices.Add (enbDevice);
 
   NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB after OpenFlow dev + Ipv4 addr: " <<
                 enb->GetObject<Ipv4> ()->GetNInterfaces ());
@@ -394,9 +395,9 @@ EpcNetwork::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t cell
   enb->AggregateObject (x2);
 
   NS_LOG_INFO ("connect S1-AP interface");
-  m_mme->AddEnb (cellId, enbAddress, enbApp->GetS1apSapEnb ());
-  m_sgwPgwCtrlApp->AddEnb (cellId, enbAddress, sgwAddress);
-  enbApp->SetS1apSapMme (m_mme->GetS1apSapMme ());
+  GetMmeElement ()->AddEnb (cellId, enbAddress, enbApp->GetS1apSapEnb ());
+  m_epcCtrlApp->m_pgwCtrlApp->AddEnb (cellId, enbAddress, sgwAddress);
+  enbApp->SetS1apSapMme (GetMmeElement ()->GetS1apSapMme ());
 }
 
 void
@@ -435,8 +436,8 @@ EpcNetwork::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 {
   NS_LOG_FUNCTION (this << imsi << ueDevice );
 
-  m_mme->AddUe (imsi);
-  m_sgwPgwCtrlApp->AddUe (imsi);
+  GetMmeElement ()->AddUe (imsi);
+  m_epcCtrlApp->m_pgwCtrlApp->AddUe (imsi);
 }
 
 uint8_t
@@ -455,9 +456,9 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Ptr<EpcTf
   NS_ASSERT (ueIpv4->GetNAddresses (interface) == 1);
   Ipv4Address ueAddr = ueIpv4->GetAddress (interface, 0).GetLocal ();
   NS_LOG_LOGIC (" UE IP address: " << ueAddr);
-  m_sgwPgwCtrlApp->SetUeAddress (imsi, ueAddr);
+  m_epcCtrlApp->m_pgwCtrlApp->SetUeAddress (imsi, ueAddr);
 
-  uint8_t bearerId = m_mme->AddBearer (imsi, tft, bearer);
+  uint8_t bearerId = GetMmeElement ()->AddBearer (imsi, tft, bearer);
   Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
   if (ueLteDevice)
     {
@@ -469,7 +470,7 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Ptr<EpcTf
 Ptr<Node>
 EpcNetwork::GetPgwNode ()
 {
-  return m_sgwPgw;
+  return m_pgwNode;
 }
 
 Ipv4InterfaceContainer
@@ -482,22 +483,27 @@ Ipv4Address
 EpcNetwork::GetUeDefaultGatewayAddress ()
 { // FIXME Tirar a dependencia em ser o primeiro device... talvez usar o GetAddressForDevice
   // return the address of the tun device
-  return m_sgwPgw->GetObject<Ipv4> ()->GetAddress (1, 0).GetLocal ();
+  return m_pgwNode->GetObject<Ipv4> ()->GetAddress (1, 0).GetLocal ();
 }
 
 Ptr<EpcMme>
 EpcNetwork::GetMmeElement ()
 { // FIXME Vai pro controlador
-  return m_mme;
+  return m_epcCtrlApp->m_mme;
 }
 
 Ipv4Address
 EpcNetwork::GetSgwS1uAddress ()
 {
-  // FIXME poderia usar a GetAddressForDevice (m_sgwS1uDev), certo?
-  Ptr<Ipv4> ipv4 = m_sgwPgw->GetObject<Ipv4> ();
-  int32_t idx = ipv4->GetInterfaceForDevice(m_sgwS1uDev);
-  return ipv4->GetAddress (idx, 0).GetLocal ();
+  // FIXME: quando mudar as interface e separar s5 e s1 vai ter que mudar aqui
+  return GetAddressForDevice (m_pgwS5Dev);
+}
+
+Ipv4Address
+EpcNetwork::GetSgwS5Address ()
+{
+  // TODO Ainda nao temos o sgw e as interfaces diferentes
+  return Ipv4Address ("1.1.1.1");
 }
 
 Ipv4Address

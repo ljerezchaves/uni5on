@@ -173,6 +173,11 @@ public:
    */
   typedef void (*BearerTracedCallback)(bool ok, Ptr<const RoutingInfo> rInfo);
 
+  Ptr<EpcSgwPgwCtrlApplication> m_pgwCtrlApp;  // FIXME: mover para privado
+  /** MME element */
+  Ptr<EpcMme> m_mme;
+  // FIXME o mme vai pra dentro do controlador.
+
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();

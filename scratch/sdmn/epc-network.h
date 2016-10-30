@@ -73,13 +73,23 @@ public:
   virtual Ipv4Address GetUeDefaultGatewayAddress ();
 
   /**
-   * Connect the SgwPgw and eNBs to the S1-U interface over the backhaul
-   * network infrastructure.
-   * \param node The SgwPgw/eNB node pointer.
-   * \param cellId The eNB cell ID (0 for SgwPgw node).
-   * \return A pointer to the device created at node.
-   */ // FIXME Criar duas variações deste método, uma específica pra o gateway?
-  virtual Ptr<NetDevice> S1Attach (Ptr<Node> node, uint16_t cellId) = 0;
+   * Connect the P-GW to the S5 interface over the backhaul network
+   * infrastructure.
+   * \param node The P-GW node pointer.
+   * \return A pointer to the device created at the P-GW.
+   */
+  virtual Ptr<NetDevice> S5PgwAttach (Ptr<Node> node) = 0;
+  
+  /**
+   * Connect the eNBs to the S1-U interface over the backhaul network
+   * infrastructure.
+   * \param node The eNB node pointer.
+   * \param cellId The eNB cell ID.
+   * \return A pointer to the device created at the eNB.
+   */ 
+  virtual Ptr<NetDevice> S1EnbAttach (Ptr<Node> node, uint16_t cellId) = 0;
+
+  // FIXME Criar variações do attach pra conectar o S-GW ao S1-U e S5
 
   /**
    * Connect the eNBs nodes to the X2 interface over the backhaul network
@@ -168,7 +178,7 @@ protected:
   void RegisterNodeAtSwitch (uint16_t switchIdx, Ptr<Node> node);
 
   /**
-   * Store the switch index at which the gateway is connected.
+   * Store the switch index at which the P-GW is connected.
    * \param switchIdx The switch index in m_ofSwitches.
    * \param Ptr<Node> The node pointer.
    */
@@ -196,7 +206,7 @@ protected:
   uint16_t GetSwitchIdxForDevice (Ptr<OFSwitch13Device> dev);
 
   /**
-   * Retrieve the switch index at which the gateway is connected.
+   * Retrieve the switch index at which the P-GW is connected.
    * \return The switch index in m_ofSwitches.
    */
   uint16_t GetGatewaySwitchIdx ();
@@ -223,23 +233,30 @@ protected:
                  uint16_t, uint32_t> m_newAttachTrace;
 
 private:
-  uint16_t                      m_gatewaySwitch;  //!< Gateway switch index.
-  Ptr<Node>                     m_controllerNode; //!< Controller node.
-  Ptr<EpcController>            m_controllerApp;  //!< Controller app.
-  Ptr<InternetNetwork>          m_webNetwork;     //!< Internet network.
-  Ptr<NetworkStatsCalculator>   m_networkStats;   //!< Network statistics.
-  Ptr<NetDevice>                m_sgwS1uDev;      //!< Pgw device.
-  Ptr<Node>                     m_sgwPgw;         //!< Pgw node.  
-  NetDeviceContainer            m_x2Devices;      //!< X2 devices.
-  NetDeviceContainer            m_s1uDevices;     //!< S1-U devices.
-  Ipv4AddressHelper             m_ueAddressHelper;//!< UE address helper.
-  uint16_t                      m_gtpuUdpPort;    //!< Default GTP port (2152).
-
+  uint16_t                    m_pgwSwitchIdx;     //!< Switch index for P-GW.
+  Ptr<NetDevice>              m_pgwS5Dev;         //!< P-GW S5 device.
+  Ptr<Node>                   m_pgwNode;          //!< P-GW node. 
+  Ptr<Node>                   m_epcCtrlNode;      //!< EPC controller node.
+  Ptr<EpcController>          m_epcCtrlApp;       //!< EPC controller app.
+  Ptr<InternetNetwork>        m_webNetwork;       //!< Internet network.
+  Ptr<NetworkStatsCalculator> m_networkStats;     //!< Network statistics.
+  NetDeviceContainer          m_x2Devices;        //!< X2 devices.
+  NetDeviceContainer          m_s5Devices;        //!< S5 devices.
+  Ipv4AddressHelper           m_ueAddressHelper;  //!< UE address helper.
+  
   /** Map saving Node / Switch indexes. */
   typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;
   NodeSwitchMap_t     m_nodeSwitchMap;    //!< Registered nodes per switch idx.
 
+  const uint16_t m_gtpuUdpPort = 2152;    //!< Default GTP port.
 
+
+
+
+
+
+
+  
   //
   // Colocando aqui todas as coisas do sdmn-epc-heper... organizar depois.
   //
@@ -252,15 +269,20 @@ public:
   Ptr<EpcMme> GetMmeElement ();
 
   // FIXME Colocar isso no create topology?
-  void ConfigurePgw ();
+  void InstallPgw ();
 
 private:
   /**
-   * Retrieve the SgwPgw IP address, set by the OpenFlow network.
-   * \return The SgwPgw Ipv4Addrress of the S1-U interface connected to the
-   * OpenFlow network.
+   * Retrieve the S-GW IP address at the S1-U interface.
+   * \return The Ipv4Addrress of the S-GW S1-U interface.
    */
   virtual Ipv4Address GetSgwS1uAddress ();
+
+  /**
+   * Retrieve the S-GW IP address at the S5 interface.
+   * \return The Ipv4Addrress of the S-GW S5 interface.
+   */
+  virtual Ipv4Address GetSgwS5Address ();
 
   /**
    * Retrieve the IP address for device, set by the OpenFlow network.
@@ -271,12 +293,7 @@ private:
   virtual Ipv4Address GetAddressForDevice (Ptr<NetDevice> device);
 
   /** SgwPgw application */
-  Ptr<EpcSgwPgwCtrlApplication> m_sgwPgwCtrlApp;  // FIXME: esse aqui vai pro controlador
   Ptr<EpcSgwPgwUserApplication> m_sgwPgwUserApp;  // FIXME: esse aqui vai ser substituído pelo switch
-
-  /** MME element */
-  Ptr<EpcMme> m_mme;
-  // FIXME o mme vai pra dentro do controlador.
 
   /** VirtualNetDevice for GTP tunneling implementation */
   Ptr<VirtualNetDevice> m_tunDevice;
