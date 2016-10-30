@@ -153,8 +153,6 @@ EpcNetwork::DoDispose ()
   m_tunDevice = 0;
   m_sgwPgwCtrlApp = 0;
   m_sgwPgwUserApp = 0;
-  m_s1uConnect = MakeNullCallback<Ptr<NetDevice>, Ptr<Node>, uint16_t> ();
-  m_x2Connect = MakeNullCallback<NetDeviceContainer, Ptr<Node>, Ptr<Node> > ();
   m_sgwPgw->Dispose ();
 
 
@@ -180,10 +178,9 @@ EpcNetwork::NotifyConstructionCompleted (void)
 
   // Connect S1U and X2 connection callbacks *after* topology creation.
   // FIXME nao é preciso usar callbacks... basta chamar direto
-  SetS1uConnectCallback (
-    MakeCallback (&EpcNetwork::S1Attach, this));
-  SetX2ConnectCallback (
-    MakeCallback (&EpcNetwork::X2Attach, this));
+   // Connecting the SgwPgw to the OpenFlow network.
+  m_sgwS1uDev = S1Attach (m_sgwPgw, 0 /*SgwPgw with no cellId */);
+  NS_LOG_LOGIC ("Sgw S1 interface address: " << GetSgwS1uAddress ());
 
   // Connect the controller to the MME SessionCreated trace source *after*
   // topology creation.
@@ -345,7 +342,6 @@ EpcNetwork::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t cell
   NS_LOG_FUNCTION (this << enb << lteEnbNetDevice << cellId);
 
   NS_ASSERT (enb == lteEnbNetDevice->GetNode ());
-  NS_ASSERT (!m_s1uConnect.IsNull ());
 
   // add an IPv4 stack to the previously created eNB
   InternetStackHelper internet;
@@ -354,7 +350,7 @@ EpcNetwork::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t cell
                 enb->GetObject<Ipv4> ()->GetNInterfaces ());
 
   // Callback the OpenFlow network to connect this eNB to the network.
-  Ptr<NetDevice> enbDevice = m_s1uConnect (enb, cellId);
+  Ptr<NetDevice> enbDevice = S1Attach (enb, cellId);
   m_s1uDevices.Add (enbDevice);
 
   NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB after OpenFlow dev + Ipv4 addr: " <<
@@ -403,11 +399,10 @@ void
 EpcNetwork::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
 {
   NS_LOG_FUNCTION (this << enb1 << enb2);
-  NS_ASSERT (!m_x2Connect.IsNull ());
 
   // Callback the OpenFlow network to connect each eNB to the network.
   NetDeviceContainer enbDevices;
-  enbDevices = m_x2Connect (enb1, enb2);
+  enbDevices = X2Attach (enb1, enb2);
   m_x2Devices.Add (enbDevices);
 
   Ipv4Address enb1X2Address = GetAddressForDevice (enbDevices.Get (0));
@@ -530,23 +525,7 @@ EpcNetwork::GetAddressForDevice (Ptr<NetDevice> device)
   return ipv4->GetAddress (idx, 0).GetLocal ();
 }
 
-void
-EpcNetwork::SetS1uConnectCallback (S1uConnectCallback_t cb)
-{
-  NS_LOG_FUNCTION (this << &cb);
-  m_s1uConnect = cb;
 
-  // Connecting the SgwPgw to the OpenFlow network.
-  m_sgwS1uDev = m_s1uConnect (m_sgwPgw, 0 /*SgwPgw with no cellId */);
-  NS_LOG_LOGIC ("Sgw S1 interface address: " << GetSgwS1uAddress ());
-}
-
-void
-EpcNetwork::SetX2ConnectCallback (X2ConnectCallback_t cb)
-{
-  NS_LOG_FUNCTION (this << &cb);
-  m_x2Connect = cb;
-}
 
 
 

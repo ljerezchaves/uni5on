@@ -265,40 +265,6 @@ public:
   void EnablePcapX2 (std::string prefix, bool promiscuous = false,
                      bool explicitFilename = false);
 
-  /**
-   * S1-U attach callback signature.
-   * \param Ptr<Node> The EPC node to attach to the S1-U backhaul network.
-   * \param uint16_t The eNB cell ID (0 for SgwPgw node).
-   * \returns Ptr<NetDevice> the device created at the node.
-   */
-  typedef Callback <Ptr<NetDevice>, Ptr<Node>, uint16_t > S1uConnectCallback_t;
-
-  /**
-   * X2 attach callback signature.
-   * \param Ptr<Node> The 1st eNB node.
-   * \param Ptr<Node> The 2nd eNB node.
-   * \returns NetDeviceContainer The devices created at each eNB.
-   */
-  typedef Callback <NetDeviceContainer, Ptr<Node>, Ptr<Node> > X2ConnectCallback_t;
-
-  /**
-    * Specify the callback to allow the user to proper connect the EPC nodes
-    * (SgwPgw and eNBs) to the S1-U interface over the backhaul network.
-    * \param cb Callback invoked during AddEnb procedure to proper connect the
-    * eNB node to the backhaul network. This is also called by
-    * SetS1uConnectCallback to proper connect the SgwPgw node to the backhaul
-    * network.
-    */
-  void SetS1uConnectCallback (S1uConnectCallback_t cb);
-
-  /**
-    * Specify the callback to allow the user to proper connect two eNB nodes to
-    * the X2 interface over the backhaul network.
-    * \param cb Callback invoked during AddX2Interface procedure to proper
-    * connect the pair of eNB nodes to the backhaul network.
-    */
-  void SetX2ConnectCallback (X2ConnectCallback_t cb);
-
 private:
   /**
    * Retrieve the SgwPgw IP address, set by the OpenFlow network.
@@ -314,12 +280,6 @@ private:
    * NetDevice connected to the OpenFlow network.
    */
   virtual Ipv4Address GetAddressForDevice (Ptr<NetDevice> device);
-
-  /** Callback to connect nodes to S1-U OpenFlow network. */
-  S1uConnectCallback_t m_s1uConnect;
-
-  /** Callback to connect nodes to X2 OpenFlow network. */
-  X2ConnectCallback_t m_x2Connect;
 
   /** A collection of S1-U NetDevice */
   NetDeviceContainer m_s1uDevices;
