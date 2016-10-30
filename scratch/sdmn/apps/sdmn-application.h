@@ -33,12 +33,13 @@ namespace ns3 {
 
 /**
  * \ingroup applications
- * This class extends the Application class to proper work ith OpenFlow + EPC
- * simulations. Only clients applications should use this SdmnApplication as
- * superclass. It includes a QosStatsCalculator for traffic statistics, and a
- * stop callback to notify when the traffic stops. For LTE EPC, each
- * application is associated with an EPS bearer, and traffic is sent over GTP
- * tunnels. These info are also saved here for further usage.
+ * This class extends the Application class to proper work with SDMN
+ * architecture. Only clients applications (those which will be installed into
+ * UEs) should use this SdmnApplication as superclass. It includes a
+ * QosStatsCalculator for traffic statistics, and a stop callback to notify the
+ * SDN controller when the traffic stops. Each application is associated with
+ * an EPS bearer, and application traffic is sent within GTP tunnels over EPC
+ * interfaces. These informations are also saved here for further usage.
  */
 class SdmnApplication : public Application
 {
@@ -62,7 +63,7 @@ public:
   Ptr<const QosStatsCalculator> GetQosStats (void) const;
   
   /**
-   * \return The tft for this application.
+   * \return The pgw tft for this application.
    */
   Ptr<EpcTft> GetTft (void) const;
 
