@@ -45,7 +45,7 @@ EpcNetwork::EpcNetwork ()
                                   EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
   // We use a /8 subnet for all UEs and the P-GW gateway address
-  m_ueAddressHelper.SetBase ("7.0.0.0", "255.0.0.0");
+  m_ueAddressHelper.SetBase ("7.0.0.0", "255.0.0.0", "0.0.0.2");
 
   // Creating some EPC nodes
   m_epcCtrlNode = CreateObject<Node> ();
@@ -274,6 +274,9 @@ EpcNetwork::InstallController (Ptr<EpcController> controller)
   m_epcCtrlApp = controller;
   m_ofSwitchHelper->InstallController (m_epcCtrlNode, m_epcCtrlApp);
 
+  m_epcCtrlNode->AddApplication (m_epcCtrlApp->m_pgwCtrlApp);
+
+
   // Connecting controller trace sinks to sources in this network
   TraceConnectWithoutContext (
     "NewEpcAttach", MakeCallback (
@@ -296,7 +299,15 @@ EpcNetwork::InstallPgw ()
 {
   NS_LOG_FUNCTION (this);
 
-  // FIXME Isso aqui vai sumir no futuro, porque o switch já vai ter o stack instalado pelo helper do ofswitch13
+//  // Configure the P-GW node as an OpenFlow switch
+//  m_ofSwitchHelper->InstallSwitch (m_pgwNode);
+//
+//
+//
+//  return;
+
+  // FIXME Isso aqui vai sumir no futuro, porque o switch já vai ter o stack
+  // instalado pelo helper do ofswitch13
   InternetStackHelper internet;
   internet.Install (m_pgwNode);
 
@@ -324,19 +335,19 @@ EpcNetwork::InstallPgw ()
 
   // create EpcSgwPgwApplication
   NS_ASSERT (m_epcCtrlApp);
-  m_epcCtrlApp->m_pgwCtrlApp = CreateObject<EpcSgwPgwCtrlApplication> ();
+//  m_epcCtrlApp->m_pgwCtrlApp = CreateObject<EpcSgwPgwCtrlApplication> ();
   m_sgwPgwUserApp = CreateObject<EpcSgwPgwUserApplication> (m_tunDevice, sgwPgwS1uSocket, m_epcCtrlApp->m_pgwCtrlApp);
-  Names::Add ("SgwPgwApplication", m_epcCtrlApp->m_pgwCtrlApp);
-  m_pgwNode->AddApplication (m_epcCtrlApp->m_pgwCtrlApp);
+//  Names::Add ("SgwPgwApplication", m_epcCtrlApp->m_pgwCtrlApp);
+//  m_pgwNode->AddApplication (m_epcCtrlApp->m_pgwCtrlApp);
   m_pgwNode->AddApplication (m_sgwPgwUserApp);
 
   // connect SgwPgwApplication and virtual net device for tunneling
   m_tunDevice->SetSendCallback (MakeCallback (&EpcSgwPgwUserApplication::RecvFromTunDevice, m_sgwPgwUserApp));
 
   // Create MME and connect with SGW via S11 interface
-  m_epcCtrlApp->m_mme = CreateObject<EpcMme> ();
-  GetMmeElement ()->SetS11SapSgw (m_epcCtrlApp->m_pgwCtrlApp->GetS11SapSgw ());
-  m_epcCtrlApp->m_pgwCtrlApp->SetS11SapMme (GetMmeElement ()->GetS11SapMme ());
+//  m_epcCtrlApp->m_mme = CreateObject<EpcMme> ();
+//  GetMmeElement ()->SetS11SapSgw (m_epcCtrlApp->m_pgwCtrlApp->GetS11SapSgw ());
+//  m_epcCtrlApp->m_pgwCtrlApp->SetS11SapMme (GetMmeElement ()->GetS11SapMme ());
 
 
 }

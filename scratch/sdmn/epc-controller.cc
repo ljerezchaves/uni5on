@@ -347,6 +347,18 @@ EpcController::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
+  // TODO In the future, this will be moved to the RAN controller
+  
+  // Create the MME object for this controller
+  m_mme = CreateObject<EpcMme> ();
+  m_pgwCtrlApp = CreateObject<EpcSgwPgwCtrlApplication> ();
+  Names::Add ("SgwPgwApplication", m_pgwCtrlApp);
+
+  // Connect the MME to the S-GW via S11 interface
+  m_mme->SetS11SapSgw (m_pgwCtrlApp->GetS11SapSgw ());
+  m_pgwCtrlApp->SetS11SapMme (m_mme->GetS11SapMme ());
+
+
   // Connect the admission stats calculator
   TraceConnectWithoutContext (
     "BearerRequest", MakeCallback (

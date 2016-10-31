@@ -70,16 +70,18 @@ RingNetwork::GetTypeId (void)
                    TimeValue (MicroSeconds (100)), // 20km fiber cable latency
                    MakeTimeAccessor (&RingNetwork::m_swLinkDelay),
                    MakeTimeChecker ())
+
+    // TODO: Mover estes parâmetros pro EpcNetwork
     .AddAttribute ("GatewayLinkDataRate",
-                   "The data rate for the link connecting the gateway to the "
-                   "OpenFlow network.",
+                   "The data rate for the link connecting a gateway to the "
+                   "OpenFlow backhaul network.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("10Gb/s")),
                    MakeDataRateAccessor (&RingNetwork::m_gwLinkRate),
                    MakeDataRateChecker ())
     .AddAttribute ("GatewayLinkDelay",
-                   "The delay for the link connecting the gateway to the "
-                   "OpenFlow network.",
+                   "The delay for the link connecting a gateway to the "
+                   "OpenFlow backhaul network.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    TimeValue (MicroSeconds (0)),
                    MakeTimeAccessor (&RingNetwork::m_gwLinkDelay),
@@ -131,7 +133,7 @@ RingNetwork::CreateTopology ()
   // Creating the ring controller application
   InstallController (CreateObject<RingController> ());
   
-  // Configuring the P-GW 
+  // Configuring the P-GW (after controller)
   InstallPgw ();
   
   // Creating the switch nodes
