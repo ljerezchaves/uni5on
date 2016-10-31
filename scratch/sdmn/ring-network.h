@@ -44,12 +44,6 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  // Inherited from EpcNetwork
-  Ptr<NetDevice> S5PgwAttach (Ptr<Node> node);
-  Ptr<NetDevice> S1EnbAttach (Ptr<Node> node, uint16_t cellId);
-  NetDeviceContainer X2Attach (Ptr<Node> enb1, Ptr<Node> enb2);
-  void EnablePcap (std::string prefix, bool promiscuous = false);
-
 protected:
   /** Destructor implementation */
   void DoDispose ();
@@ -61,16 +55,10 @@ protected:
   void CreateTopology ();
 
 private:
-  DataRate          m_swLinkRate;     //!< Switch link data rate
-  Time              m_swLinkDelay;    //!< Switch link delay
-  DataRate          m_gwLinkRate;     //!< Gateway link data rate
-  Time              m_gwLinkDelay;    //!< Gateway link delay
-  uint16_t          m_linkMtu;        //!< Link mtu
-  uint16_t          m_numNodes;       //!< Number of switches
-  Ipv4AddressHelper m_s1uAddrHelper;  //!< S1 address helper
-  Ipv4AddressHelper m_x2AddrHelper;   //!< X2 address helper
-  CsmaHelper        m_swHelper;       //!< Csma switch connection helper
-  CsmaHelper        m_gwHelper;       //!< Csma gateway connection helper
+  uint16_t          m_numNodes;     //!< Number of switches in this topology.
+  DataRate          m_linkRate;     //!< Link data rate for this topology.
+  Time              m_linkDelay;    //!< Link delay for this topology.
+  CsmaHelper        m_csmaHelper;   //!< Csma connection helper.
 
 }; // class RingNetwork
 

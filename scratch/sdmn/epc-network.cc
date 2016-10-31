@@ -44,6 +44,15 @@ EpcNetwork::EpcNetwork ()
   m_ofSwitchHelper->SetAttribute ("ChannelType",
                                   EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
+  // Configuring address helpers
+  // Since we are using the OpenFlow network for S1-U links,
+  // we use a /24 subnet which can hold up to 254 eNBs addresses on same subnet
+  m_s1uAddrHelper.SetBase ("10.0.0.0", "255.255.255.0");
+
+  // We are also using the OpenFlow network for all X2 links,
+  // but we still we use a /30 subnet which can hold exactly two addresses
+  m_x2AddrHelper.SetBase ("12.0.0.0", "255.255.255.252");
+
   // We use a /8 subnet for all UEs and the P-GW gateway address
   m_ueAddressHelper.SetBase ("7.0.0.0", "255.0.0.0", "0.0.0.2");
 
@@ -79,7 +88,30 @@ EpcNetwork::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::EpcNetwork")
     .SetParent<EpcHelper> ()
 
-    // Trace sources used by controller to be aware of network topology
+    // Attributes for connecting the EPC entities to the backhaul network
+    .AddAttribute ("GatewayLinkDataRate",
+                   "The data rate for the link connecting a gateway to the "
+                   "OpenFlow backhaul network.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   DataRateValue (DataRate ("10Gb/s")),
+                   MakeDataRateAccessor (&EpcNetwork::m_gwLinkRate),
+                   MakeDataRateChecker ())
+    .AddAttribute ("GatewayLinkDelay",
+                   "The delay for the link connecting a gateway to the "
+                   "OpenFlow backhaul network.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   TimeValue (MicroSeconds (0)),
+                   MakeTimeAccessor (&EpcNetwork::m_gwLinkDelay),
+                   MakeTimeChecker ())
+    .AddAttribute ("LinkMtu",
+                   "The MTU for CSMA OpenFlow links. "
+                   "Consider + 40 byter of GTP/UDP/IP tunnel overhead.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (1500), // Ethernet II
+                   MakeUintegerAccessor (&EpcNetwork::m_linkMtu),
+                   MakeUintegerChecker<uint16_t> ())
+
+    // Trace sources used by controller to be aware of backhaul network
     .AddTraceSource ("NewEpcAttach",
                      "New LTE EPC entity connected to the OpenFlow switch for "
                      "S1-U or X2 interface.",
@@ -112,9 +144,11 @@ EpcNetwork::EnablePcap (std::string prefix, bool promiscuous)
 
   // Enable pcap on LTE EPC interfaces
   CsmaHelper helper;
-  helper.EnablePcap (prefix + "lte-epc-s5", m_pgwS5Dev,  promiscuous);
-  helper.EnablePcap (prefix + "lte-epc-s5", m_s5Devices, promiscuous);
-  helper.EnablePcap (prefix + "lte-epc-x2", m_x2Devices, promiscuous);
+  helper.EnablePcap (prefix + "lte-epc-s5", m_pgwS5Dev,   promiscuous);
+  helper.EnablePcap (prefix + "lte-epc-s5", m_s5Devices,  promiscuous);
+  helper.EnablePcap (prefix + "lte-epc-x2", m_x2Devices,  promiscuous);
+  helper.EnablePcap (prefix + "ofnetwork",  m_ofSwitches, promiscuous);
+
 }
 
 void
@@ -132,7 +166,9 @@ EpcNetwork::GetNSwitches (void) const
 Ptr<Node>
 EpcNetwork::GetServerNode ()
 {
+  // FIXME Temporiariamente salvando o nó servidor nesta classe
   return m_webNetwork->GetServerNode ();
+  // return m_webNode;
 }
 
 Ptr<Node>
@@ -182,12 +218,23 @@ EpcNetwork::NotifyConstructionCompleted (void)
     "NewSwitchConnection", MakeCallback (
       &NetworkStatsCalculator::NotifyNewSwitchConnection, m_networkStats));
 
+  // Configuring csma links helper for connecting the P-GW to the ring
+  m_gwHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
+  m_gwHelper.SetChannelAttribute ("DataRate", DataRateValue (m_gwLinkRate));
+  m_gwHelper.SetChannelAttribute ("Delay", TimeValue (m_gwLinkDelay));
+
+  
   // Create the ring network topology and Internet topology
   CreateTopology ();
 
 
+  // Configuring the P-GW (after controller)
+  InstallPgw ();
 
-  m_webNetwork->CreateTopology (GetPgwNode ());
+
+
+  // FIXME A criação da topologia acontece dentro do Create Topology, na hora que chama o install Pgw.
+   m_webNetwork->CreateTopology (GetPgwNode ());
 
   // Connect S1U and X2 connection callbacks *after* topology creation.
   // Connecting the P-GW to the OpenFlow network.
@@ -199,6 +246,10 @@ EpcNetwork::NotifyConstructionCompleted (void)
   GetMmeElement ()->TraceConnectWithoutContext (
     "SessionCreated", MakeCallback (
       &EpcController::NotifySessionCreated, m_epcCtrlApp));
+
+  // Connect the switches to the controller. From this point on it is not
+  // possible anymor to add more ports to OpenFlow switches.
+  m_ofSwitchHelper->CreateOpenFlowChannels ();
 
   // Chain up
   Object::NotifyConstructionCompleted ();
@@ -291,6 +342,167 @@ EpcNetwork::InstallController (Ptr<EpcController> controller)
 
 
 
+// TODO Acabei de trazer isso aqui do ring pra cá.
+Ptr<NetDevice>
+EpcNetwork::S5PgwAttach (Ptr<Node> pgwNode)
+{
+  NS_LOG_FUNCTION (this << pgwNode);
+  NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
+
+  // Connect the P-GW node to switch index 0
+  uint16_t swIdx = 0;
+  RegisterGatewayAtSwitch (swIdx, pgwNode);
+  RegisterNodeAtSwitch (swIdx, pgwNode);
+  Ptr<Node> swNode = m_ofSwitches.Get (swIdx);
+
+  // Creating a link between the switch and the node
+  NetDeviceContainer devices;
+  NodeContainer pair;
+  pair.Add (swNode);
+  pair.Add (pgwNode);
+  devices = m_gwHelper.Install (pair);
+
+  Ptr<CsmaNetDevice> portDev, nodeDev;
+  portDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
+  nodeDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
+
+  // Setting interface names for pacp filename
+  Names::Add (Names::FindName (swNode) + "+" +
+              Names::FindName (pgwNode), portDev);
+  Names::Add (Names::FindName (pgwNode) + "+" +
+              Names::FindName (swNode), nodeDev);
+
+  // Set S1U IPv4 address for the new device at node
+  Ipv4InterfaceContainer nodeIpIfaces =
+    m_s1uAddrHelper.Assign (NetDeviceContainer (nodeDev));
+  Ipv4Address nodeAddr = nodeIpIfaces.GetAddress (0);
+
+  // Adding newly created csma device as openflow switch port.
+  Ptr<OFSwitch13Device> swDev = GetSwitchDevice (swIdx);
+  Ptr<OFSwitch13Port> swPort = swDev->AddSwitchPort (portDev);
+  uint32_t portNum = swPort->GetPortNo ();
+
+  // Trace source notifying a new device attached to network
+  m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
+
+  // Let's set queues for link statistics.
+  m_gatewayStats->SetQueues (nodeDev->GetQueue (), portDev->GetQueue ());
+
+  return nodeDev;
+}
+
+Ptr<NetDevice>
+EpcNetwork::S1EnbAttach (Ptr<Node> node, uint16_t cellId)
+{
+  NS_LOG_FUNCTION (this << node);
+  NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
+
+  // Connect the eNBs nodes to switches indexes 1 to N. The three eNBs from
+  // same cell site are connected to the same switch in the ring network.
+  uint16_t swIdx = 1 + ((cellId - 1) / 3);
+  RegisterNodeAtSwitch (swIdx, node);
+  Ptr<Node> swNode = m_ofSwitches.Get (swIdx);
+
+  // Creating a link between the switch and the node
+  NetDeviceContainer devices;
+  NodeContainer pair;
+  pair.Add (swNode);
+  pair.Add (node);
+  devices = m_gwHelper.Install (pair);  // FIXME Vai usar mesmo o gwHelper?
+
+  Ptr<CsmaNetDevice> portDev, nodeDev;
+  portDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
+  nodeDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
+
+  // Setting interface names for pacp filename
+  Names::Add (Names::FindName (swNode) + "+" +
+              Names::FindName (node), portDev);
+  Names::Add (Names::FindName (node) + "+" +
+              Names::FindName (swNode), nodeDev);
+
+  // Set S1U IPv4 address for the new device at node
+  Ipv4InterfaceContainer nodeIpIfaces =
+    m_s1uAddrHelper.Assign (NetDeviceContainer (nodeDev));
+  Ipv4Address nodeAddr = nodeIpIfaces.GetAddress (0);
+
+  // Adding newly created csma device as openflow switch port.
+  Ptr<OFSwitch13Device> swDev = GetSwitchDevice (swIdx);
+  Ptr<OFSwitch13Port> swPort = swDev->AddSwitchPort (portDev);
+  uint32_t portNum = swPort->GetPortNo ();
+
+  // Trace source notifying a new device attached to network
+  m_newAttachTrace (nodeDev, nodeAddr, swDev, swIdx, portNum);
+
+  return nodeDev;
+}
+
+NetDeviceContainer
+EpcNetwork::X2Attach (Ptr<Node> enb1, Ptr<Node> enb2)
+{
+  NS_LOG_FUNCTION (this << enb1 << enb2);
+  NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
+
+  // Create a P2P connection between the eNBs.
+  PointToPointHelper p2ph;
+  p2ph.SetDeviceAttribute ("DataRate", DataRateValue (DataRate ("100Mbps")));
+  p2ph.SetDeviceAttribute ("Mtu", UintegerValue (2000));
+  p2ph.SetChannelAttribute ("Delay", TimeValue (Seconds (0)));
+  NetDeviceContainer enbDevices =  p2ph.Install (enb1, enb2);
+
+  // // Creating a link between the firts eNB and its switch
+  // uint16_t swIdx1 = GetSwitchIdxForNode (enb1);
+  // Ptr<Node> swNode1 = m_ofSwitches.Get (swIdx1);
+  // Ptr<OFSwitch13Device> swDev1 = GetSwitchDevice (swIdx1);
+
+  // NodeContainer pair1;
+  // pair1.Add (swNode1);
+  // pair1.Add (enb1);
+  // NetDeviceContainer devices1 = m_swHelper.Install (pair1);
+
+  // Ptr<CsmaNetDevice> portDev1, enbDev1;
+  // portDev1 = DynamicCast<CsmaNetDevice> (devices1.Get (0));
+  // enbDev1 = DynamicCast<CsmaNetDevice> (devices1.Get (1));
+
+  // // Creating a link between the second eNB and its switch
+  // uint16_t swIdx2 = GetSwitchIdxForNode (enb2);
+  // Ptr<Node> swNode2 = m_ofSwitches.Get (swIdx2);
+  // Ptr<OFSwitch13Device> swDev2 = GetSwitchDevice (swIdx2);
+
+  // NodeContainer pair2;
+  // pair2.Add (swNode2);
+  // pair2.Add (enb2);
+  // NetDeviceContainer devices2 = m_swHelper.Install (pair2);
+
+  // Ptr<CsmaNetDevice> portDev2, enbDev2;
+  // portDev2 = DynamicCast<CsmaNetDevice> (devices2.Get (0));
+  // enbDev2 = DynamicCast<CsmaNetDevice> (devices2.Get (1));
+
+  // // Set X2 IPv4 address for the new devices
+  // NetDeviceContainer enbDevices;
+  // enbDevices.Add (enbDev1);
+  // enbDevices.Add (enbDev2);
+
+  Ipv4InterfaceContainer nodeIpIfaces = m_x2AddrHelper.Assign (enbDevices);
+  m_x2AddrHelper.NewNetwork ();
+  // Ipv4Address nodeAddr1 = nodeIpIfaces.GetAddress (0);
+  // Ipv4Address nodeAddr2 = nodeIpIfaces.GetAddress (1);
+
+  // // Adding newly created csma devices as openflow switch ports.
+  // Ptr<OFSwitch13Port> swPort1 = swDev1->AddSwitchPort (portDev1);
+  // uint32_t portNum1 = swPort1->GetPortNo ();
+
+  // Ptr<OFSwitch13Port> swPort2 = swDev2->AddSwitchPort (portDev2);
+  // uint32_t portNum2 = swPort2->GetPortNo ();
+
+  // // Trace source notifying new devices attached to the network
+  // m_newAttachTrace (enbDev1, nodeAddr1, swDev1, swIdx1, portNum1);
+  // m_newAttachTrace (enbDev2, nodeAddr2, swDev2, swIdx2, portNum2);
+
+  return enbDevices;
+}
+
+
+
 //----------------------------------------------------------------------------------------------------------
 
 
@@ -299,16 +511,70 @@ EpcNetwork::InstallPgw ()
 {
   NS_LOG_FUNCTION (this);
 
-//  // Configure the P-GW node as an OpenFlow switch
-//  m_ofSwitchHelper->InstallSwitch (m_pgwNode);
-//
-//
-//
-//  return;
+
+
+//////  // TODO: Esta aqui é a conexão do PGW com a internet.
+//////  CsmaHelper csmaHelper; 
+//////  csmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (1492));
+//////  csmaHelper.SetChannelAttribute ("DataRate",
+//////                                    DataRateValue (DataRate ("10Gb/s")));
+//////  csmaHelper.SetChannelAttribute ("Delay", TimeValue (Seconds (0)));
+//////
+//////  // Creating a single web node and connecting it to the EPC PGW node
+//////  Ptr<Node> m_webNode = CreateObject<Node> ();
+//////  Names::Add ("srv", m_webNode);
+//////
+//////  InternetStackHelper internet;
+//////  internet.Install (m_webNode);
+//////
+//////  NodeContainer webNodes;
+//////  webNodes.Add (m_pgwNode);
+//////  webNodes.Add (m_webNode);
+//////
+//////  NetDeviceContainer webDevices;
+//////  webDevices = csmaHelper.Install (webNodes);
+//////  
+//////  Ptr<CsmaNetDevice> webDev, pgwDev;
+//////  pgwDev = DynamicCast<CsmaNetDevice> (webDevices.Get (0));
+//////  webDev = DynamicCast<CsmaNetDevice> (webDevices.Get (1));
+//////
+//////  Names::Add (Names::FindName (m_pgwNode) + "+" +
+//////              Names::FindName (m_webNode), pgwDev);
+//////  Names::Add (Names::FindName (m_webNode) + "+" +
+//////              Names::FindName (m_pgwNode), webDev);
+//////
+//////  // FIXME
+//////  // m_internetStats->SetQueues (webDev->GetQueue (), pgwDev->GetQueue ());
+//////
+//////  Ipv4AddressHelper ipv4h;
+//////  ipv4h.SetBase ("192.168.0.0", "255.255.255.0");
+//////  ipv4h.Assign (NetDeviceContainer (pgwDev));  // No IP address to the P-GW device
+//////
+//////  // Defining static routes at the web node to the LTE network
+//////  Ipv4StaticRoutingHelper ipv4RoutingHelper;
+//////  Ptr<Ipv4StaticRouting> webHostStaticRouting =
+//////    ipv4RoutingHelper.GetStaticRouting (m_webNode->GetObject<Ipv4> ());
+//////  webHostStaticRouting->AddNetworkRouteTo (
+//////    Ipv4Address ("7.0.0.0"), Ipv4Mask ("255.0.0.0"),
+//////    Ipv4Address ("192.168.0.1"), 1);
+//////
+//////  // Configure the P-GW node as an OpenFlow switch
+//////  OFSwitch13DeviceContainer pgwSwitchDevice;
+//////  pgwSwitchDevice = m_ofSwitchHelper->InstallSwitch (m_pgwNode);
+//////
+//////  // Adding to the switch the port with Internet connection
+//////  pgwSwitchDevice.Get (0)->AddSwitchPort (pgwDev);
+//////
+//////  // Ok. A porta tá la... configurar as regras pro tráfego.
+//////
+//////  // Agora precisa conectar o switch ao backhaul
+//////  
+//////
+//////  return;
 
   // FIXME Isso aqui vai sumir no futuro, porque o switch já vai ter o stack
   // instalado pelo helper do ofswitch13
-  InternetStackHelper internet;
+   InternetStackHelper internet;
   internet.Install (m_pgwNode);
 
   // create S1-U socket

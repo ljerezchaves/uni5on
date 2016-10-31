@@ -78,7 +78,7 @@ public:
    * \param node The P-GW node pointer.
    * \return A pointer to the device created at the P-GW.
    */
-  virtual Ptr<NetDevice> S5PgwAttach (Ptr<Node> node) = 0;
+  Ptr<NetDevice> S5PgwAttach (Ptr<Node> node);
   
   /**
    * Connect the eNBs to the S1-U interface over the backhaul network
@@ -87,7 +87,7 @@ public:
    * \param cellId The eNB cell ID.
    * \return A pointer to the device created at the eNB.
    */ 
-  virtual Ptr<NetDevice> S1EnbAttach (Ptr<Node> node, uint16_t cellId) = 0;
+  Ptr<NetDevice> S1EnbAttach (Ptr<Node> node, uint16_t cellId);
 
   // FIXME Criar variações do attach pra conectar o S-GW ao S1-U e S5
 
@@ -98,7 +98,7 @@ public:
    * \param node The 2nd eNB node pointer.
    * \return The container with devices created at each eNB.
    */
-  virtual NetDeviceContainer X2Attach (Ptr<Node> enb1, Ptr<Node> enb2) = 0;
+  NetDeviceContainer X2Attach (Ptr<Node> enb1, Ptr<Node> enb2);
 
   /**
    * Enable pcap on LTE EPC network devices (S1-U and X2), and OpenFlow control
@@ -106,7 +106,7 @@ public:
    * \param prefix The file prefix.
    * \param promiscuous If true, enable promisc trace.
    */
-  virtual void EnablePcap (std::string prefix, bool promiscuous = false);
+  void EnablePcap (std::string prefix, bool promiscuous = false);
 
   /**
    * Set an attribute for ns3::OFSwitch13Device
@@ -221,6 +221,11 @@ protected:
   OFSwitch13DeviceContainer      m_ofDevices;      //!< Switch devices.
   Ptr<OFSwitch13Helper>          m_ofSwitchHelper; //!< OpenFlow switch helper.
   Ptr<LinkQueuesStatsCalculator> m_gatewayStats;   //!< Gateway statistics.
+  Ipv4AddressHelper              m_s1uAddrHelper;  //!< S1 address helper.
+  Ipv4AddressHelper              m_x2AddrHelper;   //!< X2 address helper.
+  DataRate                       m_gwLinkRate;     //!< Gateway link data rate.
+  Time                           m_gwLinkDelay;    //!< Gateway link delay.
+  uint16_t                       m_linkMtu;        //!< Link mtu.
 
   /** New connection between two switches trace source. */
   TracedCallback<Ptr<ConnectionInfo> > m_newConnTrace;
@@ -243,6 +248,7 @@ private:
   NetDeviceContainer          m_x2Devices;        //!< X2 devices.
   NetDeviceContainer          m_s5Devices;        //!< S5 devices.
   Ipv4AddressHelper           m_ueAddressHelper;  //!< UE address helper.
+  CsmaHelper                  m_gwHelper;         //!< Gateway conn. helper.
   
   /** Map saving Node / Switch indexes. */
   typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;
@@ -252,7 +258,8 @@ private:
 
 
 
-
+  // FIXME temporário isso aqui
+  Ptr<Node> m_webNode;
 
 
 
