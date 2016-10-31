@@ -225,7 +225,7 @@ EpcNetwork::NotifyConstructionCompleted (void)
 
   
   // Create the ring network topology and Internet topology
-  CreateTopology ();
+  TopologyCreate ();
 
 
   // Configuring the P-GW (after controller)
@@ -273,6 +273,7 @@ void
 EpcNetwork::RegisterGatewayAtSwitch (uint16_t switchIdx, Ptr<Node> node)
 {
   m_pgwSwitchIdx = switchIdx;
+  RegisterNodeAtSwitch (switchIdx, node);
 }
 
 Ptr<OFSwitch13Device>
@@ -321,12 +322,12 @@ EpcNetwork::InstallController (Ptr<EpcController> controller)
   NS_LOG_FUNCTION (this << controller);
   NS_ASSERT_MSG (!m_epcCtrlApp, "Controller application already set.");
 
-  // Installing the controller app into a the controller node
+  // Installing the controller application into controller node
   m_epcCtrlApp = controller;
   m_ofSwitchHelper->InstallController (m_epcCtrlNode, m_epcCtrlApp);
 
+  // FIXME.... 
   m_epcCtrlNode->AddApplication (m_epcCtrlApp->m_pgwCtrlApp);
-
 
   // Connecting controller trace sinks to sources in this network
   TraceConnectWithoutContext (
@@ -349,10 +350,8 @@ EpcNetwork::S5PgwAttach (Ptr<Node> pgwNode)
   NS_LOG_FUNCTION (this << pgwNode);
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
 
-  // Connect the P-GW node to switch index 0
-  uint16_t swIdx = 0;
+  uint16_t swIdx = TopologyGetSwIndexPgw ();
   RegisterGatewayAtSwitch (swIdx, pgwNode);
-  RegisterNodeAtSwitch (swIdx, pgwNode);
   Ptr<Node> swNode = m_ofSwitches.Get (swIdx);
 
   // Creating a link between the switch and the node
@@ -397,9 +396,7 @@ EpcNetwork::S1EnbAttach (Ptr<Node> node, uint16_t cellId)
   NS_LOG_FUNCTION (this << node);
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
 
-  // Connect the eNBs nodes to switches indexes 1 to N. The three eNBs from
-  // same cell site are connected to the same switch in the ring network.
-  uint16_t swIdx = 1 + ((cellId - 1) / 3);
+  uint16_t swIdx = TopologyGetSwIndexEnb (cellId);
   RegisterNodeAtSwitch (swIdx, node);
   Ptr<Node> swNode = m_ofSwitches.Get (swIdx);
 

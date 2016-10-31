@@ -87,7 +87,7 @@ RingNetwork::NotifyConstructionCompleted ()
 }
 
 void
-RingNetwork::CreateTopology ()
+RingNetwork::TopologyCreate ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -163,6 +163,21 @@ RingNetwork::CreateTopology ()
 
   // Fire trace source notifying that all connections between switches are ok.
   m_topoBuiltTrace (m_ofDevices);
+}
+
+uint16_t
+RingNetwork::TopologyGetSwIndexPgw ()
+{
+  // Connect the P-GW node to switch index 0.
+  return 0;
+}
+
+uint16_t
+RingNetwork::TopologyGetSwIndexEnb (uint16_t cellId)
+{
+  // Connect the eNBs nodes to switches indexes 1 to N. The three eNBs from
+  // same cell site are connected to the same switch in the ring network.
+  return 1 + ((cellId - 1) / 3);
 }
 
 };  // namespace ns3

@@ -168,7 +168,21 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
   /** Creates the OpenFlow network infrastructure topology with controller. */
-  virtual void CreateTopology () = 0;
+  virtual void TopologyCreate () = 0;
+
+  /**
+   * Get the switch index in the backhaul network topology to attach the P-GW.
+   * \return The switch index.
+   */
+  virtual uint16_t TopologyGetSwIndexPgw () = 0;
+
+  /**
+   * Get the switch index in the backhaul network topology to attach the given
+   * eNB.
+   * \param cellId The eNB cell id.
+   * \return The switch index.
+   */
+  virtual uint16_t TopologyGetSwIndexEnb (uint16_t cellId) = 0;
 
   /**
    * Store the pair <node, switch index> for further use.

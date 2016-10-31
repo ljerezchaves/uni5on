@@ -52,7 +52,9 @@ protected:
   void NotifyConstructionCompleted (void);
 
   // Inherited from EpcNetwork
-  void CreateTopology ();
+  void TopologyCreate ();
+  uint16_t TopologyGetSwIndexPgw ();
+  uint16_t TopologyGetSwIndexEnb (uint16_t cellId);
 
 private:
   uint16_t          m_numNodes;     //!< Number of switches in this topology.
