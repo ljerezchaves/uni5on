@@ -334,7 +334,7 @@ EpcNetwork::InstallPgw ()
   m_tunDevice->SetSendCallback (MakeCallback (&EpcSgwPgwUserApplication::RecvFromTunDevice, m_sgwPgwUserApp));
 
   // Create MME and connect with SGW via S11 interface
-  GetMmeElement () = CreateObject<EpcMme> ();
+  m_epcCtrlApp->m_mme = CreateObject<EpcMme> ();
   GetMmeElement ()->SetS11SapSgw (m_epcCtrlApp->m_pgwCtrlApp->GetS11SapSgw ());
   m_epcCtrlApp->m_pgwCtrlApp->SetS11SapMme (GetMmeElement ()->GetS11SapMme ());
 
