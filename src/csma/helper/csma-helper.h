@@ -158,6 +158,18 @@ public:
 
   /**
    * This method creates an ns3::CsmaChannel with the attributes configured by
+   * CsmaHelper::SetChannelAttribute. For each node parameter it creates an ns3::CsmaNetDevice (with the attributes 
+   * configured by CsmaHelper::SetDeviceAttribute); adds the device to the 
+   * node; and attaches the channel to the device.
+   *
+   * \param nodeA The first node to install the device in.
+   * \param nodeB The second node to install the device in.
+   * \returns A container holding the added net devices.
+   */
+  NetDeviceContainer Install (Ptr<Node> nodeA, Ptr<Node> nodeB) const;
+  
+  /**
+   * This method creates an ns3::CsmaChannel with the attributes configured by
    * CsmaHelper::SetChannelAttribute.  For each Ptr<node> in the provided
    * container: it creates an ns3::CsmaNetDevice (with the attributes 
    * configured by CsmaHelper::SetDeviceAttribute); adds the device to the 

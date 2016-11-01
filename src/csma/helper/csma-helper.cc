@@ -262,6 +262,16 @@ CsmaHelper::Install (const NodeContainer &c) const
 }
 
 NetDeviceContainer 
+CsmaHelper::Install (Ptr<Node> nodeA, Ptr<Node> nodeB) const
+{
+  NodeContainer pair;
+  pair.Add (nodeA);
+  pair.Add (nodeB);
+
+  return Install (pair);
+}
+
+NetDeviceContainer 
 CsmaHelper::Install (const NodeContainer &c, Ptr<CsmaChannel> channel) const
 {
   NetDeviceContainer devs;
