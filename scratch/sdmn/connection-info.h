@@ -34,7 +34,7 @@ class ConnectionInfo;
 typedef std::pair<uint16_t, uint16_t> SwitchPair_t;
 
 /**
- * \ingroup epcof
+ * \ingroup sdmn
  * Metadata associated to a connection between
  * two any switches in the OpenFlow network.
  */

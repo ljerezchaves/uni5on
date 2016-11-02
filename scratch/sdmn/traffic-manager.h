@@ -33,7 +33,7 @@ namespace ns3 {
 class EpcController;
 
 /**
- * \ingroup epcof
+ * \ingroup sdmn
  * Traffic manager which handles SDMN client applications start/stop events. It
  * interacts with the OpenFlow EPC network and controller to dump statistics
  * and request/release EPS bearers. Each LteUeNetDevice has one TrafficManager

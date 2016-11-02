@@ -31,7 +31,7 @@
 using namespace ns3;
 
 /**
- * \defgroup epcof LTE EPC + OpenFlow
+ * \defgroup sdmn SDMN Architecture
  * Network simulation scenario for LTE EPC + OpenFlow 1.3
  */
 NS_LOG_COMPONENT_DEFINE ("Main");
@@ -310,7 +310,6 @@ EnableVerbose (bool enable)
       LogComponentEnable ("OFSwitch13Port", LOG_LEVEL_WARN);
       LogComponentEnable ("OFSwitch13Queue", LOG_LEVEL_WARN);
 
-      LogComponentEnable ("SdmnEpcHelper", LOG_LEVEL_WARN);
       LogComponentEnable ("EpcNetwork", LOG_LEVEL_WARN);
       LogComponentEnable ("RingNetwork", LOG_LEVEL_WARN);
       LogComponentEnable ("LteNetwork", LOG_LEVEL_ALL);

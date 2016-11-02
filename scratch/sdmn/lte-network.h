@@ -31,7 +31,7 @@
 namespace ns3 {
 
 /**
- * \ingroup epcof
+ * \ingroup sdmn
  * LTE radio network topology with eNBs grouped in three-sector sites layed out
  * on an hexagonal grid. UEs are randomly distributed around the sites and
  * attach to the network automatically using Idle mode cell selection.

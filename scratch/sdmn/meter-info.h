@@ -31,7 +31,7 @@ namespace ns3 {
 class RoutingInfo;
 
 /**
- * \ingroup epcof
+ * \ingroup sdmn
  * Metadata associated to GTP tunnel meter rules.
  */
 class MeterInfo : public Object

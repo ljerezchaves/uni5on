@@ -39,7 +39,7 @@ class ConnectionInfo;
 class EpcController;
 
 /**
- * \ingroup epcof
+ * \ingroup sdmn
  * This class monitors OpenFlow EPC controller statistics.
  */
 class ControllerStatsCalculator : public Object
@@ -109,7 +109,7 @@ private:
 
 // ------------------------------------------------------------------------ //
 /**
- * \ingroup epcof
+ * \ingroup sdmn
  * This class monitors OpenFlow EPC network statistics.
  */
 class NetworkStatsCalculator : public Object
@@ -186,7 +186,7 @@ private:
 
 // ------------------------------------------------------------------------ //
 /**
- * \ingroup epcof
+ * \ingroup sdmn
  * This class monitors link queues' statistics.
  */
 class LinkQueuesStatsCalculator : public Object
@@ -258,7 +258,7 @@ private:
 
 // ------------------------------------------------------------------------ //
 /**
- * \ingroup epcof
+ * \ingroup sdmn
  * This class monitors OpenFlow EPC S1-U QoS statistics.
  */
 class EpcS1uStatsCalculator : public Object

@@ -40,7 +40,7 @@ typedef std::list<ContextBearer_t> BearerList_t;
 
 // ------------------------------------------------------------------------ //
 /**
- * \ingroup epcof
+ * \ingroup sdmn
  * Metadata associated to a routing path between
  * two any switches in the OpenFlow network.
  */

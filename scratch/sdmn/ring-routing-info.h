@@ -29,7 +29,7 @@ class RingController;
 class RoutingInfo;
 
 /**
- * \ingroup epcof
+ * \ingroup sdmn
  * Metadata associated to a ring routing path between
  * two any switches in the OpenFlow ring network.
  */
