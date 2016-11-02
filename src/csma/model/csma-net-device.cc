@@ -1079,7 +1079,6 @@ CsmaNetDevice::SendFrom (Ptr<Packet> packet, const Address& src, const Address& 
     {
       txq = m_queueInterface->GetTxQueue (0);
     }
-  NS_ASSERT_MSG (!txq || !txq->IsStopped (), "Send should not be called when the device is stopped.");
 
   //
   // Only transmit if send side of net device is enabled
