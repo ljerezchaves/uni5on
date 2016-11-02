@@ -892,17 +892,6 @@ CsmaNetDevice::Receive (Ptr<Packet> packet, Ptr<CsmaNetDevice> senderDevice)
     }
 
   //
-  // For all kinds of packetType we receive, we pass the original copy of the
-  // packet to the OpenFlow receive callback. Nothing more is supposed to
-  // happen when this device is configure as OpenFlow port, so we end here.
-  //
-  if (!m_openFlowRxCallback.IsNull ())
-    {
-      m_openFlowRxCallback (this, originalPacket, protocol, header.GetSource (), header.GetDestination (), packetType);
-      return;
-    }
-
-  //
   // For all kinds of packetType we receive, we hit the promiscuous sniffer
   // hook and pass a copy up to the promiscuous callback.  Pass a copy to
   // make sure that nobody messes with our packet.
@@ -914,6 +903,28 @@ CsmaNetDevice::Receive (Ptr<Packet> packet, Ptr<CsmaNetDevice> senderDevice)
       m_promiscRxCallback (this, packet, protocol, header.GetSource (), header.GetDestination (), packetType);
     }
 
+  //
+  // Check if this device is configure as OpenFlow switch port.
+  //
+  if (!m_openFlowRxCallback.IsNull ())
+    {
+      // If the packet is addressed to this port (which is not supposed to
+      // happen in normal situations), we hit the mac packet received trace
+      // hook, but we don't forward the packt up the stack.
+      if (packetType != PACKET_OTHERHOST)
+        {
+          m_snifferTrace (originalPacket);
+          m_macRxTrace (originalPacket);
+        }
+
+      // We forward the original packet (which includes the EthernetHeader) to
+      // the OpenFlow receive callback for all kinds of packetType we receive
+      // (broadcast, multicast, host or other host), and finish here.
+      m_openFlowRxCallback (this, originalPacket, protocol,
+        header.GetSource (), header.GetDestination (), packetType);
+      return;
+    }
+  
   //
   // If this packet is not destined for some other host, it must be for us
   // as either a broadcast, multicast or unicast.  We need to hit the mac
