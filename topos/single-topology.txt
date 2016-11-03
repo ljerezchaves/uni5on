@@ -6,7 +6,7 @@ default ns3::LteNetwork::LteTrace "false"
 
 default ns3::RingNetwork::NumSwitches "3"
 
-default ns3::RingController::Strategy "spo"
+default ns3::RingController::Strategy "spf"
 
 default ns3::EpcController::NonGbrCoexistence "true"
 default ns3::EpcController::VoipQueue "true"
