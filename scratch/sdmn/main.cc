@@ -132,7 +132,7 @@ main (int argc, char *argv[])
   // If necessary, enable pcap output
   if (pcap)
     {
-      ofNetwork->EnablePcap (outputPrefix.str ());
+      ofNetwork->EnablePcap (outputPrefix.str (), true);
     }
 
   // Run the simulation.

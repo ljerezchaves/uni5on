@@ -23,52 +23,53 @@
 
 namespace ns3 {
 
-NS_OBJECT_ENSURE_REGISTERED (PgwTunnelHandler);
-NS_LOG_COMPONENT_DEFINE ("PgwTunnelHandler");
+NS_OBJECT_ENSURE_REGISTERED (PgwS5Handler);
+NS_LOG_COMPONENT_DEFINE ("PgwS5Handler");
 
-PgwTunnelHandler::PgwTunnelHandler ()
+PgwS5Handler::PgwS5Handler ()
 {
   NS_LOG_FUNCTION (this);
 }
 
-PgwTunnelHandler::~PgwTunnelHandler ()
+PgwS5Handler::~PgwS5Handler ()
 {
   NS_LOG_FUNCTION (this);
 }
 
-PgwTunnelHandler::PgwTunnelHandler (Ipv4Address s5Address)
-  : m_pgwS5Address (s5Address)
+PgwS5Handler::PgwS5Handler (Ipv4Address s5Address, Mac48Address webMacAddr)
+  : m_pgwS5Address (s5Address),
+    m_webMacAddress (webMacAddr)
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-PgwTunnelHandler::GetTypeId (void)
+PgwS5Handler::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::PgwTunnelHandler")
+  static TypeId tid = TypeId ("ns3::PgwS5Handler")
     .SetParent<Object> ()
-    .AddConstructor<PgwTunnelHandler> ()
+    .AddConstructor<PgwS5Handler> ()
     .AddTraceSource ("S5Rx",
                      "Trace source for packets received from S5 interface.",
-                     MakeTraceSourceAccessor (&PgwTunnelHandler::m_rxS5Trace),
+                     MakeTraceSourceAccessor (&PgwS5Handler::m_rxS5Trace),
                      "ns3::Packet::TracedCallback")
     .AddTraceSource ("S5Tx",
                      "Trace source for packets sent to the S5 interface.",
-                     MakeTraceSourceAccessor (&PgwTunnelHandler::m_txS5Trace),
+                     MakeTraceSourceAccessor (&PgwS5Handler::m_txS5Trace),
                      "ns3::Packet::TracedCallback")
   ;
   return tid;
 }
 
 void
-PgwTunnelHandler::DoDispose (void)
+PgwS5Handler::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   Object::DoDispose ();
 }
 
 uint64_t
-PgwTunnelHandler::Receive (uint64_t dpId, uint32_t portNo, Ptr<Packet> packet)
+PgwS5Handler::Receive (uint64_t dpId, uint32_t portNo, Ptr<Packet> packet)
 {
   NS_LOG_FUNCTION (this << dpId << portNo << packet);
 
@@ -103,6 +104,7 @@ PgwTunnelHandler::Receive (uint64_t dpId, uint32_t portNo, Ptr<Packet> packet)
       udpHeader.EnableChecksums ();
       udpHeader.InitializeChecksum (ipHeader.GetSource (),
         ipHeader.GetDestination (), UdpL4Protocol::PROT_NUMBER);
+      packet->RemoveHeader (udpHeader);
 
       NS_ASSERT_MSG (udpHeader.IsChecksumOk (), "Invalid UDP checksum.");
       NS_ASSERT_MSG (udpHeader.GetDestinationPort () == 2152,
@@ -121,6 +123,11 @@ PgwTunnelHandler::Receive (uint64_t dpId, uint32_t portNo, Ptr<Packet> packet)
       NS_ASSERT_MSG (teid == teidTag.GetTeid (), "Invalid GTP TEID value.");
     }
 
+  // Packets received from the S5 interface will be forward to the SGi
+  // interface. In this case we need to update the dst MAC address to match the
+  // Internet Web server.
+  ethHeader.SetDestination (m_webMacAddress);
+  
   // Add Ethernet header and trailer back
   packet->AddHeader (ethHeader);
   packet->AddTrailer (ethTrailer);
@@ -129,7 +136,7 @@ PgwTunnelHandler::Receive (uint64_t dpId, uint32_t portNo, Ptr<Packet> packet)
 }
 
 void
-PgwTunnelHandler::Send (uint64_t dpId, uint32_t portNo, Ptr<Packet> packet,
+PgwS5Handler::Send (uint64_t dpId, uint32_t portNo, Ptr<Packet> packet,
                         uint64_t tunnelId)
 {
   NS_LOG_FUNCTION (this << dpId << portNo << packet << tunnelId);
@@ -140,12 +147,17 @@ PgwTunnelHandler::Send (uint64_t dpId, uint32_t portNo, Ptr<Packet> packet,
   EthernetHeader ethHeader;
   packet->RemoveHeader (ethHeader);
 
+  // Get the UE address from packet header
+  // FIXME Remover isso aqui no futuro
+  Ipv4Header innerIpHeader;
+  packet->PeekHeader (innerIpHeader);
+  Ipv4Address ueAddr = innerIpHeader.GetDestination ();
+  Ipv4Address dstAddr = m_controlPlane->GetEnbAddr (ueAddr);
+  tunnelId = m_controlPlane->GetTeid (ueAddr, packet);
+
   // We expect to send only IP packets
   if (ethHeader.GetLengthType () == Ipv4L3Protocol::PROT_NUMBER)
     {
-      // FIXME: Definir o enderenço de destino de acordo com o nó?
-      Ipv4Address dstAddr = Ipv4Address ("10.0.0.2");
-
       // Add GTP-U header using parameter tunnelId
       GtpuHeader gtpuHeader;
       gtpuHeader.SetTeid (tunnelId);
@@ -180,6 +192,9 @@ PgwTunnelHandler::Send (uint64_t dpId, uint32_t portNo, Ptr<Packet> packet,
       ipHeader.EnableChecksum ();
       packet->AddHeader (ipHeader);
     }
+
+  // FIXME. Supostamente isso nao deveria estar aqui. Vamos tentar mover essas modificações pras regras a serem instaladas no switch.
+  ethHeader.SetDestination (Mac48Address::GetBroadcast ());
 
   // Add Ethernet header and trailer back
   packet->AddHeader (ethHeader);

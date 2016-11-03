@@ -58,7 +58,7 @@ RingNetwork::GetTypeId (void)
     .AddAttribute ("SwitchLinkDelay",
                    "The delay for the links between OpenFlow switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   TimeValue (MicroSeconds (100)), // 20km fiber cable latency
+                   TimeValue (MicroSeconds (100)), // 20km fiber cable latency.
                    MakeTimeAccessor (&RingNetwork::m_linkDelay),
                    MakeTimeChecker ())
   ;
@@ -77,12 +77,12 @@ RingNetwork::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Configuring csma link helper for connection between switches
+  // Configuring CSMA helper for connection between switches.
   m_csmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
   m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_linkRate));
   m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
 
-  // Chain up (the topology creation will be triggered by base class)
+  // Chain up (the topology creation will be triggered by base class).
   EpcNetwork::NotifyConstructionCompleted ();
 }
 
@@ -93,36 +93,32 @@ RingNetwork::TopologyCreate ()
 
   NS_ASSERT_MSG (m_numNodes >= 3, "Invalid number of nodes for the ring");
 
-  // Create and install the ring controller application
+  // Install the EPC ring controller application for this topology.
   InstallController (CreateObject<RingController> ());
-  
-  // Creating the switch nodes
+
+  // Creating the switch nodes.
   m_ofSwitches.Create (m_numNodes);
   for (uint16_t i = 0; i < m_numNodes; i++)
     {
-      // Setting switch names
+      // Setting switch names.
       std::ostringstream swName;
       swName << "sw" << i;
       Names::Add (swName.str (), m_ofSwitches.Get (i));
     }
 
-  // Installing the Openflow switch devices for each switch node
+  // Installing the Openflow switch devices for each switch node.
   m_ofDevices = m_ofSwitchHelper->InstallSwitch (m_ofSwitches);
 
-  // Connecting switches in ring topology (clockwise order)
+  // Connecting switches in ring topology (clockwise order).
   for (uint16_t i = 0; i < m_numNodes; i++)
     {
       uint16_t currIndex = i;
-      uint16_t nextIndex = (i + 1) % m_numNodes;  // Next clockwise node
+      uint16_t nextIndex = (i + 1) % m_numNodes;  // Next clockwise node.
 
-      // Creating a link between current and next node
+      // Creating a link between current and next node.
       Ptr<Node> currNode = m_ofSwitches.Get (currIndex);
       Ptr<Node> nextNode = m_ofSwitches.Get (nextIndex);
-
-      NodeContainer pair;
-      pair.Add (currNode);
-      pair.Add (nextNode);
-      NetDeviceContainer devs = m_csmaHelper.Install (pair);
+      NetDeviceContainer devs = m_csmaHelper.Install (currNode, nextNode);
 
       // Setting interface names for pacp filename
       Names::Add (Names::FindName (currNode) + "+" +
@@ -144,24 +140,26 @@ RingNetwork::TopologyCreate ()
       nextPortNum = nextDevice->AddSwitchPort (nextPortDevice)->GetPortNo ();
 
       // Switch order inside ConnectionInfo object must respect clockwise order
-      // (RingController assume this order when installing switch rules).
-      ConnectionInfo::SwitchData currSw = {
+      // (RingController assumes this order when installing switch rules).
+      ConnectionInfo::SwitchData currSwData = {
         currIndex, currDevice,
         currPortDevice, currPortNum
       };
-      ConnectionInfo::SwitchData nextSw = {
+      ConnectionInfo::SwitchData nextSwData = {
         nextIndex, nextDevice,
         nextPortDevice, nextPortNum
       };
       Ptr<ConnectionInfo> cInfo = CreateObject<ConnectionInfo> (
-          currSw, nextSw, DynamicCast<CsmaChannel> (
-            currPortDevice->GetChannel ()));
+        currSwData, nextSwData, DynamicCast<CsmaChannel> (
+          currPortDevice->GetChannel ()));
 
       // Fire trace source notifying new connection between switches.
+      m_epcCtrlApp->NewSwitchConnection (cInfo);
       m_newConnTrace (cInfo);
     }
 
   // Fire trace source notifying that all connections between switches are ok.
+  m_epcCtrlApp->TopologyBuilt (m_ofDevices);
   m_topoBuiltTrace (m_ofDevices);
 }
 

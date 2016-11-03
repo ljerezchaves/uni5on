@@ -199,7 +199,21 @@ EpcController::GetDscpMappedValue (EpsBearer::Qci qci)
 }
 
 void
-EpcController::NotifyNewEpcAttach (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
+EpcController::NewSgiAttach (Ptr<OFSwitch13Device> pgwSwDev,
+  Ptr<NetDevice> pgwSgiDev, Ipv4Address pgwSgiAddr, uint32_t pgwSgiPort,
+  uint32_t pgwS5Port, Ipv4Address webAddr)
+{
+  NS_LOG_FUNCTION (this << pgwSgiAddr << pgwSgiPort << webAddr);
+
+  // Save ARP and index information
+  Mac48Address macAddr = Mac48Address::ConvertFrom (pgwSgiDev->GetAddress ());
+  SaveArpEntry (pgwSgiAddr, macAddr);
+
+  ConfigurePgwRules (pgwSwDev, pgwSgiPort, pgwS5Port, webAddr);
+}
+
+void
+EpcController::NewS5Attach (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
   Ptr<OFSwitch13Device> swtchDev, uint16_t swtchIdx, uint32_t swtchPort)
 {
   NS_LOG_FUNCTION (this << nodeIp << swtchIdx << swtchPort);
@@ -213,18 +227,18 @@ EpcController::NotifyNewEpcAttach (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
 }
 
 void
-EpcController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
+EpcController::NewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
 
   // Connecting this controller to ConnectionInfo trace source
   cInfo->TraceConnectWithoutContext (
     "NonGbrAdjusted", MakeCallback (
-      &EpcController::NotifyNonGbrAdjusted, this));
+      &EpcController::NonGbrAdjusted, this));
 }
 
 void
-EpcController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
+EpcController::TopologyBuilt (OFSwitch13DeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -323,7 +337,7 @@ EpcController::NotifySessionCreated (uint64_t imsi, uint16_t cellId,
 }
 
 void
-EpcController::NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
+EpcController::NonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_INFO (this << cInfo);
 }
@@ -348,7 +362,7 @@ EpcController::NotifyConstructionCompleted ()
   NS_LOG_FUNCTION (this);
 
   // TODO In the future, this will be moved to the RAN controller
-  
+
   // Create the MME object for this controller
   m_mme = CreateObject<EpcMme> ();
   m_pgwCtrlApp = CreateObject<EpcSgwPgwCtrlApplication> ();
@@ -381,6 +395,11 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // to the controller.
   DpctlExecute (swtch, "set-config miss=128");
 
+  if (swtch->GetDpId () == m_pgwDpId)
+    {
+      // Don't install the following rules on the P-GW switch.
+      return;
+    }
 
   // -------------------------------------------------------------------------
   // Table 0 -- Input table -- [from higher to lower priority]
@@ -686,13 +705,47 @@ EpcController::ConfigureLocalPortRules (Ptr<OFSwitch13Device> swtchDev,
   // GTP packets addressed to EPC elements connected to this switch over EPC
   // ports. Write the output port epcPort into action set. Send the packet
   // directly to Output table.
-  Mac48Address devMacAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ());
+//  Mac48Address devMacAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ()); //FIXME
   std::ostringstream cmdOut;
   cmdOut << "flow-mod cmd=add,table=2,prio=256 eth_type=0x800"
-         << ",eth_dst=" << devMacAddr << ",ip_dst=" << nodeIp
+//         << ",eth_dst=" << devMacAddr << ",ip_dst=" << nodeIp
+         << ",ip_dst=" << nodeIp
          << " write:output=" << swtchPort
          << " goto:4";
   DpctlSchedule (swtchDev->GetDatapathId (), cmdOut.str ());
+}
+
+void
+EpcController::ConfigurePgwRules (Ptr<OFSwitch13Device> pgwDev,
+  uint32_t pgwSgiPort, uint32_t pgwS5Port, Ipv4Address webAddr)
+{
+  NS_LOG_FUNCTION (this << pgwDev << pgwSgiPort << pgwS5Port << webAddr);
+  m_pgwDpId = pgwDev->GetDatapathId ();
+
+  // ARP request packets. Send to controller.
+  DpctlSchedule (m_pgwDpId,
+    "flow-mod cmd=add,table=0,prio=16 eth_type=0x0806 apply:output=ctrl");
+
+  // Table miss entry. Send to controller.
+  DpctlSchedule (m_pgwDpId,
+    "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
+
+  // IP packets coming from the Internet and addressed to the LTE network are
+  // forwared from the SGi to the S5 interface port.
+  std::ostringstream cmdIn;
+  cmdIn << "flow-mod cmd=add,table=0,prio=1 eth_type=0x800"
+        << ",in_port=" << pgwSgiPort
+        << " apply:output=" << pgwS5Port;
+  DpctlSchedule (m_pgwDpId, cmdIn.str ());
+
+  // IP packets coming from the LTE network and addressed to the Internet are
+  // forwared from the S5 to the SGi interface port.
+  std::ostringstream cmdOut;
+  cmdOut << "flow-mod cmd=add,table=0,prio=1 eth_type=0x800"
+         << ",in_port=" << pgwS5Port
+         << ",ip_dst=" << webAddr
+         << " apply:output=" << pgwSgiPort;
+  DpctlSchedule (m_pgwDpId, cmdOut.str ());
 }
 
 ofl_err

@@ -28,7 +28,7 @@
 namespace ns3 {
 
 /**
- * \ingroup epcof
+ * \ingroup sdmn
  * OpenFlow EPC controller for ring network.
  */
 class RingController : public EpcController
@@ -55,9 +55,9 @@ protected:
   virtual void DoDispose ();
 
   // Inherited from EpcController
-  void NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo);
-  void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
-  void NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo);
+  void NewSwitchConnection (Ptr<ConnectionInfo> cInfo);
+  void TopologyBuilt (OFSwitch13DeviceContainer devices);
+  void NonGbrAdjusted (Ptr<ConnectionInfo> cInfo);
   bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer);
   bool TopologyRemoveRouting (Ptr<RoutingInfo> rInfo);
   bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo);

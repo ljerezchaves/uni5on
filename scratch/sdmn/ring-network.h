@@ -27,16 +27,16 @@
 namespace ns3 {
 
 /**
- * \ingroup epcof
- * This class generates and simple n-switch OpenFlow ring topology
- * controlled by RingController, which will be used by S1-U and
- * X2 EPC interfaces.
+ * \ingroup sdmn
+ * This class generates and simple n-switch OpenFlow ring topology controlled
+ * by RingController, which will be used as backaul infrastructure for the SDMN
+ * architecture.
  */
 class RingNetwork : public EpcNetwork
 {
 public:
-  RingNetwork ();   //!< Default constructor
-  ~RingNetwork ();  //!< Dummy destructor, see DoDipose
+  RingNetwork ();           //!< Default constructor.
+  virtual ~RingNetwork ();  //!< Dummy destructor, see DoDipose.
 
   /**
    * Register this type.
@@ -45,13 +45,13 @@ public:
   static TypeId GetTypeId (void);
 
 protected:
-  /** Destructor implementation */
+  /** Destructor implementation. */
   void DoDispose ();
 
-  // Inherited from ObjectBase
+  // Inherited from ObjectBase.
   void NotifyConstructionCompleted (void);
 
-  // Inherited from EpcNetwork
+  // Inherited from EpcNetwork.
   void TopologyCreate ();
   uint16_t TopologyGetSwIndexPgw ();
   uint16_t TopologyGetSwIndexEnb (uint16_t cellId);

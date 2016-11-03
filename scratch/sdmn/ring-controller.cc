@@ -78,13 +78,13 @@ RingController::DoDispose ()
 }
 
 void
-RingController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
+RingController::NewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this);
 
   // Call base method which will connect trace sources and sinks, and save this
   // connection info for further usage.
-  EpcController::NotifyNewSwitchConnection (cInfo);
+  EpcController::NewSwitchConnection (cInfo);
   SaveConnectionInfo (cInfo);
 
   // Installing groups and meters for ring network. Note that following
@@ -122,7 +122,7 @@ RingController::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 }
 
 void
-RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
+RingController::TopologyBuilt (OFSwitch13DeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -130,7 +130,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
   m_noSwitches = devices.GetN ();
 
   // Call base method which will save devices and create the spanning tree
-  EpcController::NotifyTopologyBuilt (devices);
+  EpcController::TopologyBuilt (devices);
 
   // Configure routes to keep forwarding packets already in the ring until they
   // reach the destination switch.
@@ -168,7 +168,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
 }
 
 void
-RingController::NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
+RingController::NonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
 

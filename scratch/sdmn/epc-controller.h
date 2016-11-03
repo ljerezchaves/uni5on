@@ -33,7 +33,7 @@
 namespace ns3 {
 
 /**
- * \ingroup epcof
+ * \ingroup sdmn
  * Create an OpenFlow EPC controller. This is an abstract base class which
  * should be extended in accordance to OpenFlow network topology.
  */
@@ -86,21 +86,38 @@ public:
   virtual bool ReleaseDedicatedBearer (EpsBearer bearer, uint64_t imsi,
     uint16_t cellId, uint32_t teid);
 
-  /** \name Trace sinks for network topology and LTE EPC monitoring. */
+  /** \name Methods for network topology and LTE EPC monitoring. */
   //\{
   /**
-   * Notify this controller of a new eNB or SgwPgw device connected to the
+   * Notify this controller of the P-GW and Internet Web server connection over
+   * the SGi interface. This function will save the IP address / MAC address
+   * from this new device for further ARP resolution, and will configure the
+   * P-GW datapath.
+   * \param pgwSwDev The OpenFlow P-GW switch device.
+   * \param pgwSgiDev The SGi device attached to the OpenFlow P-GW switch.
+   * \param pgwSgiAddr The IPv4 address assigned to the SGi device.
+   * \param pgwSgiPort The OpenFlow port number for the SGi device.
+   * \param pgwS5Port The OpenFlow port number for the S5 device.
+   * \param webAddr The IPv4 address assignet to the Internet Web server.
+   */
+  virtual void NewSgiAttach (Ptr<OFSwitch13Device> pgwSwDev,
+    Ptr<NetDevice> pgwSgiDev, Ipv4Address pgwSgiAddr, uint32_t pgwSgiPort,
+    uint32_t pgwS5Port, Ipv4Address webAddr);
+
+  /**
+   * Notify this controller of a new S-GW or P-GW device connected to the S5
    * OpenFlow network over some switch port. This function will save the IP
    * address / MAC address from this new device for further ARP resolution, and
-   * will configure local port delivery. The user is supposed to connect this
-   * function as trace sink for EpcNetwork::NewEpcAttach trace source.
-   * \param nodeDev The device connected to the OpenFlow switch.
+   * will configure local port delivery.
+   * \param nodeDev The device connected to the OpenFlow switch (this is not
+   * the one added as port to switch, instead, this is the 'other' end of this
+   * connection, associated with the S-GW or P-GW node).
    * \param nodeIp The IPv4 address assigned to this device.
    * \param swtchDev The OpenFlow switch device.
    * \param swtchIdx The OpenFlow switch index.
    * \param swtchPort The port number for nodeDev at OpenFlow switch.
    */
-  virtual void NotifyNewEpcAttach (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
+  virtual void NewS5Attach (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
     Ptr<OFSwitch13Device> swtchDev, uint16_t swtchIdx, uint32_t swtchPort);
 
   /**
@@ -109,7 +126,7 @@ public:
    * sink for EpcNetwork::NewSwitchConnection trace source.
    * \param cInfo The connection information and metadata.
    */
-  virtual void NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo);
+  virtual void NewSwitchConnection (Ptr<ConnectionInfo> cInfo);
 
   /**
    * Notify this controller that all connection between switches have already
@@ -118,7 +135,7 @@ public:
    * source.
    * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
    */
-  virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
+  virtual void TopologyBuilt (OFSwitch13DeviceContainer devices);
 
   /**
    * Notify this controller when the MME receives a context created response
@@ -142,7 +159,7 @@ public:
    * on GBR resource reservation.
    * \param cInfo The connection information
    */
-  virtual void NotifyNonGbrAdjusted (Ptr<ConnectionInfo> cInfo);
+  virtual void NonGbrAdjusted (Ptr<ConnectionInfo> cInfo);
   //\}
 
   /**
@@ -177,6 +194,7 @@ public:
   /** MME element */
   Ptr<EpcMme> m_mme;
   // FIXME o mme vai pra dentro do controlador.
+
 
 protected:
   /** Destructor implementation */
@@ -305,6 +323,16 @@ private:
     Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, uint32_t swtchPort);
 
   /**
+   * Install flow table entry for SGi packet forwarding.
+   * \param pgwDev The P-GW switch OFSwitch13Device pointer.
+   * \param pgwSgiPort The SGi interface port number on P-GW switch.
+   * \param pgwS5Port The S5 interface port number on P-GW switch.
+   * \param webAddr The IPv4 address assignet to the Internet Web server.
+   */
+  void ConfigurePgwRules (Ptr<OFSwitch13Device> pgwDev, uint32_t pgwSgiPort,
+    uint32_t pgwS5Port, Ipv4Address webAddr);
+
+  /**
    * Handle packet-in messages sent from switch with ARP message.
    * \param msg The packet-in message.
    * \param swtch The switch information.
@@ -381,6 +409,7 @@ protected:
 private:
   OFSwitch13DeviceContainer      m_ofDevices;       //!< OpenFlow devices.
   Ptr<ControllerStatsCalculator> m_controllerStats; //!< Admission statistics.
+  uint32_t                       m_pgwDpId;         //!< P-GW datapath ID.
 
   /** Map saving <TEID / Routing information > */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;

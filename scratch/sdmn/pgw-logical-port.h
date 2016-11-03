@@ -31,17 +31,18 @@ namespace ns3 {
  * This handler is responsible for implementing the
  * GTP tunnel de/encapsulation on P-GW node.
  */
-class PgwTunnelHandler: public Object
+class PgwS5Handler: public Object
 {
 public:
-  PgwTunnelHandler ();   //!< Default constructor
-  virtual ~PgwTunnelHandler ();  //!< Dummy destructor
+  PgwS5Handler ();   //!< Default constructor
+  virtual ~PgwS5Handler ();  //!< Dummy destructor
 
   /**
    * Complete constructor/
    * \param s5Address The IPv4 address for the P-GW S5 interface.
+   * \param webMacAddr The MAC address of the Internet Web server.
    */
-  PgwTunnelHandler (Ipv4Address s5Address);
+  PgwS5Handler (Ipv4Address s5Address, Mac48Address webMacAddr);
 
   /**
    * Register this type.
@@ -74,12 +75,15 @@ public:
   void Send (uint64_t dpId, uint32_t portNo, Ptr<Packet> packet,
              uint64_t tunnelId);
 
+ Ptr<EpcSgwPgwCtrlApplication> m_controlPlane; // FIXME remover isso aqui
+
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
 private:
   Ipv4Address     m_pgwS5Address;     //!< IP address of S5 interface device.
+  Mac48Address    m_webMacAddress;    //!< MAC address of the Web server.
 
   /**
    * Trace source fired when a packet arrives this P-GW from

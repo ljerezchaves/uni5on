@@ -25,17 +25,17 @@
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
 #include <ns3/lte-module.h>
+#include "pgw-logical-port.h"
 
 namespace ns3 {
 
 class ConnectionInfo;
-class InternetNetwork;
 class LinkQueuesStatsCalculator;
 class NetworkStatsCalculator;
 class EpcController;
 
 /**
- * \ingroup epcof
+ * \ingroup sdmn
  * Create an OpenFlow EPC S1-U network infrastructure. This is an abstract base
  * class which should be extended to create any desired network topology. For
  * each subclass, a corresponding topology-aware controller must be
@@ -60,7 +60,8 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  // Inherited from EpcHelper
+  // Inherited from EpcHelper. These methods will be called from the LteHelper
+  // to notify the EPC about topology configuration.
   virtual uint8_t ActivateEpsBearer (Ptr<NetDevice> ueLteDevice, uint64_t imsi,
     Ptr<EpcTft> tft, EpsBearer bearer);
   virtual void AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice,
@@ -73,23 +74,13 @@ public:
   virtual Ipv4Address GetUeDefaultGatewayAddress ();
 
   /**
-   * Connect the P-GW to the S5 interface over the backhaul network
-   * infrastructure.
-   * \param node The P-GW node pointer.
-   * \return A pointer to the device created at the P-GW.
-   */
-  Ptr<NetDevice> S5PgwAttach (Ptr<Node> node);
-  
-  /**
    * Connect the eNBs to the S1-U interface over the backhaul network
    * infrastructure.
    * \param node The eNB node pointer.
    * \param cellId The eNB cell ID.
    * \return A pointer to the device created at the eNB.
-   */ 
+   */
   Ptr<NetDevice> S1EnbAttach (Ptr<Node> node, uint16_t cellId);
-
-  // FIXME Criar variações do attach pra conectar o S-GW ao S1-U e S5
 
   /**
    * Connect the eNBs nodes to the X2 interface over the backhaul network
@@ -121,44 +112,55 @@ public:
   uint16_t GetNSwitches (void) const;
 
   /**
-   * Get the pointer to the Internet server node created by the topology.
+   * Get the pointer to the Internet server node created by this class.
    * \return The pointer to the server node.
    */
-  Ptr<Node> GetServerNode ();
+  Ptr<Node> GetServerNode () const;
 
   /**
    * Retrieve the controller node pointer.
    * \return The OpenFlow controller node.
    */
-  Ptr<Node> GetControllerNode ();
+  Ptr<Node> GetControllerNode () const;
 
   /**
    * Retrieve the controller application pointer.
    * \return The OpenFlow controller application.
    */
-  Ptr<EpcController> GetControllerApp ();
+  Ptr<EpcController> GetControllerApp () const;
+
+  /**
+   * Get the OFSwitch13Device of a specific switch.
+   * \param index The switch index.
+   * \return The pointer to the switch OFSwitch13Device.
+   */
+  Ptr<OFSwitch13Device> GetSwitchDevice (uint16_t index) const;
+
+  /**
+   * Retrieve the switch index for node pointer.
+   * \param node Ptr<Node> The node pointer.
+   * \return The switch index in m_ofSwitches.
+   */
+  uint16_t GetSwitchIdxForNode (Ptr<Node> node) const;
+
+  /**
+   * Retrieve the switch index for switch device.
+   * \param dev The OpenFlow device pointer.
+   * \return The switch index in m_ofSwitches.
+   */
+  uint16_t GetSwitchIdxForDevice (Ptr<OFSwitch13Device> dev) const;
+
+  /**
+   * Retrieve the switch index at which the P-GW is connected.
+   * \return The switch index in m_ofSwitches.
+   */
+  uint16_t GetGatewaySwitchIdx () const;
 
   /**
    * BoolTracedCallback signature for topology creation completed.
    * \param devices The NetDeviceContainer for OpenFlow switch devices.
    */
   typedef void (*TopologyTracedCallback)(NetDeviceContainer devices);
-
-  /**
-  * AttachTracedCallback signature for new  EPC entity connected to OpenFlow
-  * network.
-  * \attention This nodeDev is not the one added as port to switch. Instead,
-  * this is the 'other' end of this connection, associated with the EPC eNB or
-  * SgwPgw node.
-  * \param nodeDev The device connected to the OpenFlow switch.
-  * \param nodeIp The IPv4 address assigned to this device.
-  * \param swtchDev The OpenFlow switch device.
-  * \param swtchIdx The OpenFlow switch index.
-  * \param swtchPort The port number for nodeDev at OpenFlow switch.
-  */
-  typedef void (*AttachTracedCallback)(
-    Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, Ptr<OFSwitch13Device> swtchDev,
-    uint16_t swtchIdx, uint32_t swtchPort);
 
 protected:
   /** Destructor implementation */
@@ -185,6 +187,31 @@ protected:
   virtual uint16_t TopologyGetSwIndexEnb (uint16_t cellId) = 0;
 
   /**
+   * Install the EPC controller for this network.
+   * \param controller The controller application.
+   */
+  void InstallController (Ptr<EpcController> controller);
+
+  /** New connection between two switches trace source. */
+  TracedCallback<Ptr<ConnectionInfo> > m_newConnTrace;
+
+  /** Connections between switches finished trace source. */
+  TracedCallback<OFSwitch13DeviceContainer> m_topoBuiltTrace;
+
+  // Backhaul network (used by the topology derived class)
+  NodeContainer                   m_ofSwitches;       //!< Switch nodes.
+  OFSwitch13DeviceContainer       m_ofDevices;        //!< Switch devices.
+  Ptr<OFSwitch13Helper>           m_ofSwitchHelper;   //!< Switch helper.
+
+  // EPC controller
+  Ptr<Node>                       m_epcCtrlNode;      //!< EPC controller node.
+  Ptr<EpcController>              m_epcCtrlApp;       //!< EPC controller app.
+
+  uint16_t                        m_linkMtu;          //!< Link mtu.
+  const uint16_t                  m_gtpuPort = 2152;  //!< Default GTP port.
+
+private:
+  /**
    * Store the pair <node, switch index> for further use.
    * \param switchIdx The switch index in m_ofSwitches.
    * \param Ptr<Node> The node pointer.
@@ -199,98 +226,63 @@ protected:
   void RegisterGatewayAtSwitch (uint16_t switchIdx, Ptr<Node> node);
 
   /**
-   * Get the OFSwitch13Device of a specific switch.
-   * \param index The switch index.
-   * \return The pointer to the switch OFSwitch13Device.
+   * This method will create the P-GW node, attach it to the backhaul network
+   * and configure it as an OpenFlow switch. It will also create the Internet
+   * web server and connect to the P-GW.
    */
-  Ptr<OFSwitch13Device> GetSwitchDevice (uint16_t index);
+  void ConfigureGatewayAndInternet ();
 
-  /**
-   * Retrieve the switch index for node pointer.
-   * \param node Ptr<Node> The node pointer.
-   * \return The switch index in m_ofSwitches.
-   */
-  uint16_t GetSwitchIdxForNode (Ptr<Node> node);
+  // Connection attributes and helper
+  CsmaHelper                      m_csmaHelper;       //!< Connection helper.
+  DataRate                        m_linkRate;         //!< Gw link data rate.
+  Time                            m_linkDelay;        //!< Gw link delay.
 
-  /**
-   * Retrieve the switch index for switch device.
-   * \param dev The OpenFlow device pointer.
-   * \return The switch index in m_ofSwitches.
-   */
-  uint16_t GetSwitchIdxForDevice (Ptr<OFSwitch13Device> dev);
+  // EPC user-plane device
+  NetDeviceContainer              m_x2Devices;        //!< X2 devices.
+  NetDeviceContainer              m_s5Devices;        //!< S5 devices.
 
-  /**
-   * Retrieve the switch index at which the P-GW is connected.
-   * \return The switch index in m_ofSwitches.
-   */
-  uint16_t GetGatewaySwitchIdx ();
+  // IP addresses
+  Ipv4Address                     m_ueNetworkAddr;    //!< UE network address.
+  Ipv4Address                     m_s5NetworkAddr;    //!< S5 network address.
+  Ipv4Address                     m_x2NetworkAddr;    //!< X2 network address.
+  Ipv4Address                     m_webNetworkAddr;   //!< Web network address.
+  Ipv4AddressHelper               m_ueAddrHelper;     //!< UE address helper.
+  Ipv4AddressHelper               m_s5AddrHelper;     //!< S5 address helper.
+  Ipv4AddressHelper               m_x2AddrHelper;     //!< X2 address helper.
+  Ipv4AddressHelper               m_webAddrHelper;    //!< Web address helper.
 
-  /**
-   * Install the OpenFlow controller for this network.
-   * \param controller The controller application.
-   */
-  void InstallController (Ptr<EpcController> controller);
+  // P-GW
+  Ptr<Node>                       m_pgwNode;          //!< P-GW node.
+  uint16_t                        m_pgwSwitchIdx;     //!< P-GW switch index.
+  Ptr<OFSwitch13Device>           m_pgwSwitchDev;     //!< P-GW switch device.
+  Ipv4Address                     m_pgwSGiAddr;       //!< P-GW SGi IP addr.
+  Ipv4Address                     m_pgwS5Addr;        //!< P-GW S5 IP addr.
+  Ipv4Address                     m_pgwGwAddr;        //!< P-GW gateway addr.
+  Ptr<PgwS5Handler>               m_pgwTunnel;        //!< S5 logical port.
 
-  NodeContainer                  m_ofSwitches;     //!< Switch nodes.
-  OFSwitch13DeviceContainer      m_ofDevices;      //!< Switch devices.
-  Ptr<OFSwitch13Helper>          m_ofSwitchHelper; //!< OpenFlow switch helper.
-  Ptr<LinkQueuesStatsCalculator> m_gatewayStats;   //!< Gateway statistics.
-  Ipv4AddressHelper              m_s1uAddrHelper;  //!< S1 address helper.
-  Ipv4AddressHelper              m_x2AddrHelper;   //!< X2 address helper.
-  DataRate                       m_gwLinkRate;     //!< Gateway link data rate.
-  Time                           m_gwLinkDelay;    //!< Gateway link delay.
-  uint16_t                       m_linkMtu;        //!< Link mtu.
+  // Internet network (web server)
+  Ptr<Node>                       m_webNode;          //!< Internet node.
+  NetDeviceContainer              m_webDevices;       //!< Internet devices.
 
-  /** New connection between two switches trace source. */
-  TracedCallback<Ptr<ConnectionInfo> > m_newConnTrace;
+  // Statistics
+  Ptr<LinkQueuesStatsCalculator>  m_pgwStats;         //!< Gateway statistics.
+  Ptr<LinkQueuesStatsCalculator>  m_webStats;         //!< Internet statistics.
+  Ptr<NetworkStatsCalculator>     m_epcStats;         //!< Backhaul statistics.
 
-  /** Connections between switches finished trace source. */
-  TracedCallback<OFSwitch13DeviceContainer> m_topoBuiltTrace;
-
-  /** New EPC entity connected to OpenFlow network trace source. */
-  TracedCallback<Ptr<NetDevice>, Ipv4Address, Ptr<OFSwitch13Device>,
-                 uint16_t, uint32_t> m_newAttachTrace;
-
-private:
-  uint16_t                    m_pgwSwitchIdx;     //!< Switch index for P-GW.
-  Ptr<NetDevice>              m_pgwS5Dev;         //!< P-GW S5 device.
-  Ptr<Node>                   m_pgwNode;          //!< P-GW node. 
-  Ptr<Node>                   m_epcCtrlNode;      //!< EPC controller node.
-  Ptr<EpcController>          m_epcCtrlApp;       //!< EPC controller app.
-  Ptr<InternetNetwork>        m_webNetwork;       //!< Internet network.
-  Ptr<NetworkStatsCalculator> m_networkStats;     //!< Network statistics.
-  NetDeviceContainer          m_x2Devices;        //!< X2 devices.
-  NetDeviceContainer          m_s5Devices;        //!< S5 devices.
-  Ipv4AddressHelper           m_ueAddressHelper;  //!< UE address helper.
-  CsmaHelper                  m_gwHelper;         //!< Gateway conn. helper.
-  
   /** Map saving Node / Switch indexes. */
   typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;
-  NodeSwitchMap_t     m_nodeSwitchMap;    //!< Registered nodes per switch idx.
-
-  const uint16_t m_gtpuUdpPort = 2152;    //!< Default GTP port.
+  NodeSwitchMap_t     m_nodeSwitchMap;  //!< Registered nodes per switch idx.
 
 
-
-  // FIXME temporário isso aqui
-  Ptr<Node> m_webNode;
-
-
-
-  
-  //
+  // FIXME
   // Colocando aqui todas as coisas do sdmn-epc-heper... organizar depois.
   //
-
 public:
     /**
    * Get a pointer to the MME element.
    * \return The MME element.
    */ // FIXME Isso aqui vai pro controlador!
   Ptr<EpcMme> GetMmeElement ();
-
-  // FIXME Colocar isso no create topology?
-  void InstallPgw ();
 
 private:
   /**
@@ -312,13 +304,6 @@ private:
    * connected to the OpenFlow network.
    */
   virtual Ipv4Address GetAddressForDevice (Ptr<NetDevice> device);
-
-  /** SgwPgw application */
-  Ptr<EpcSgwPgwUserApplication> m_sgwPgwUserApp;  // FIXME: esse aqui vai ser substituído pelo switch
-
-  /** VirtualNetDevice for GTP tunneling implementation */
-  Ptr<VirtualNetDevice> m_tunDevice;
-  // FIXME no gateway com switch openflow isso nao vai existir mais
 };
 
 };  // namespace ns3
