@@ -543,11 +543,6 @@ private:
   Ptr<Queue> m_queue;
 
   /**
-   * The NetDevice queue interface aggregated to this device.
-   */
-  Ptr<NetDeviceQueueInterface> m_queueInterface;
-
-  /**
    * Error model for receive packet events.  When active this model will be
    * used to model transmission errors by marking some of the packets
    * received as corrupt.
@@ -707,6 +702,11 @@ private:
    * The callback used to notify OpenFlow device that a packet has been received.
    */
   NetDevice::PromiscReceiveCallback m_openFlowRxCallback;
+  
+  /**
+   * The NetDevice queue interface aggregated to this device.
+   */
+  Ptr<NetDeviceQueueInterface> m_queueInterface;
 
   /**
    * The callback used to notify higher layers that a packet has been received.
