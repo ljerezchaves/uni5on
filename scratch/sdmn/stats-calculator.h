@@ -24,12 +24,12 @@
 #include <ns3/nstime.h>
 #include <ns3/queue.h>
 #include <ns3/ofswitch13-device-container.h>
-#include <ns3/global-value.h> 
+#include <ns3/global-value.h>
 #include "apps/sdmn-application.h"
 
 namespace ns3 {
 
-static GlobalValue g_dumpTimeout = 
+static GlobalValue g_dumpTimeout =
   GlobalValue ("DumpStatsTimeout", "Periodic statistics dump interval.",
                TimeValue (Seconds (10)),
                ns3::MakeTimeChecker ());

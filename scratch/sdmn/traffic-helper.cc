@@ -67,10 +67,11 @@ TrafficHelper::TrafficHelper (Ptr<EpcNetwork> epcNetwork,
                               Ptr<LteNetwork> lteNetwork)
   : m_epcNetwork (epcNetwork),
     m_lteNetwork (lteNetwork),
-    m_webNode (epcNetwork->GetServerNode ())
+    m_webNode (epcNetwork->GetWebNode ())
 {
   NS_LOG_FUNCTION (this);
 
+  // FIXME: Usar o GetWebIpAddr () para recuperar o ip
   // Configuring server address and mask
   Ptr<Ipv4> serverIpv4 = m_webNode->GetObject<Ipv4> ();
   m_webAddr = serverIpv4->GetAddress (1,0).GetLocal ();

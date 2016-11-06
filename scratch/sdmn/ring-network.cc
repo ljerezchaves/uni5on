@@ -150,8 +150,8 @@ RingNetwork::TopologyCreate ()
         nextPortDevice, nextPortNum
       };
       Ptr<ConnectionInfo> cInfo = CreateObject<ConnectionInfo> (
-        currSwData, nextSwData, DynamicCast<CsmaChannel> (
-          currPortDevice->GetChannel ()));
+          currSwData, nextSwData, DynamicCast<CsmaChannel> (
+            currPortDevice->GetChannel ()));
 
       // Fire trace source notifying new connection between switches.
       m_epcCtrlApp->NewSwitchConnection (cInfo);
@@ -164,14 +164,14 @@ RingNetwork::TopologyCreate ()
 }
 
 uint16_t
-RingNetwork::TopologyGetSwIndexPgw ()
+RingNetwork::TopologyGetPgwIndex ()
 {
   // Connect the P-GW node to switch index 0.
   return 0;
 }
 
 uint16_t
-RingNetwork::TopologyGetSwIndexEnb (uint16_t cellId)
+RingNetwork::TopologyGetEnbIndex (uint16_t cellId)
 {
   // Connect the eNBs nodes to switches indexes 1 to N. The three eNBs from
   // same cell site are connected to the same switch in the ring network.

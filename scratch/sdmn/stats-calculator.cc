@@ -700,10 +700,10 @@ EpcS1uStatsCalculator::EpcS1uStatsCalculator (Ptr<EpcController> controller)
     "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uTx",
     MakeCallback (&EpcS1uStatsCalculator::EpcInputPacket, this));
   Config::Connect (
-    "/NodeList/*/$ns3::PgwS5Handler/S5Rx",
+    "/NodeList/*/ApplicationList/*/$ns3::PgwUserApp/S5Rx",
     MakeCallback (&EpcS1uStatsCalculator::EpcOutputPacket, this));
   Config::Connect (
-    "/NodeList/*/$ns3::PgwS5Handler/S5Tx",
+    "/NodeList/*/ApplicationList/*/$ns3::PgwUserApp/S5Tx",
     MakeCallback (&EpcS1uStatsCalculator::EpcInputPacket, this));
   Config::Connect (
     "/NodeList/*/$ns3::OFSwitch13Device/MeterDrop",

@@ -25,7 +25,6 @@
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
 #include <ns3/lte-module.h>
-#include "pgw-logical-port.h"
 
 namespace ns3 {
 
@@ -36,17 +35,12 @@ class EpcController;
 
 /**
  * \ingroup sdmn
- * Create an OpenFlow EPC S1-U network infrastructure. This is an abstract base
- * class which should be extended to create any desired network topology. For
- * each subclass, a corresponding topology-aware controller must be
- * implemented, extending the generig EpcController.
- */ // FIXME Ajustar a documentação da classe
-/**
- * Create an EPC network connected through CSMA devices to an user-defined
- * backhaul network. This Helper will create an EPC network topology comprising
- * of a single node that implements both the SGW and PGW functionality, and an
- * MME node. The S1 and X2 interfaces are realized over CSMA devices
- * connected to an user-defined backhaul network.
+ * This class extends the EpcHelper to create an OpenFlow EPC S5 backhaul
+ * network infrastructure, where EPC S5 entities (P-GW and S-GW) are connected
+ * through CSMA devices to the user-defined backhaul network. This is an
+ * abstract base class which should be extended to create any desired network
+ * topology. For each subclass, a corresponding topology-aware controller must
+ * be implemented, extending the generig EpcController.
  */
 class EpcNetwork : public EpcHelper
 {
@@ -63,9 +57,9 @@ public:
   // Inherited from EpcHelper. These methods will be called from the LteHelper
   // to notify the EPC about topology configuration.
   virtual uint8_t ActivateEpsBearer (Ptr<NetDevice> ueLteDevice, uint64_t imsi,
-    Ptr<EpcTft> tft, EpsBearer bearer);
+                                     Ptr<EpcTft> tft, EpsBearer bearer);
   virtual void AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice,
-    uint16_t cellId);
+                       uint16_t cellId);
   virtual void AddUe (Ptr<NetDevice> ueLteDevice, uint64_t imsi);
   virtual void AddX2Interface (Ptr<Node> enbNode1, Ptr<Node> enbNode2);
   virtual Ptr<Node> GetPgwNode ();
@@ -112,10 +106,16 @@ public:
   uint16_t GetNSwitches (void) const;
 
   /**
-   * Get the pointer to the Internet server node created by this class.
-   * \return The pointer to the server node.
+   * Get the pointer to the Internet Web server node created by this class.
+   * \return The pointer to the web node.
    */
-  Ptr<Node> GetServerNode () const;
+  Ptr<Node> GetWebNode () const;
+
+  /**
+   * Get the Internet Web server IPv4 address assigned by this class.
+   * \return The web server IP address.
+   */
+  Ipv4Address GetWebIpAddress () const;
 
   /**
    * Retrieve the controller node pointer.
@@ -176,7 +176,7 @@ protected:
    * Get the switch index in the backhaul network topology to attach the P-GW.
    * \return The switch index.
    */
-  virtual uint16_t TopologyGetSwIndexPgw () = 0;
+  virtual uint16_t TopologyGetPgwIndex () = 0;
 
   /**
    * Get the switch index in the backhaul network topology to attach the given
@@ -184,7 +184,7 @@ protected:
    * \param cellId The eNB cell id.
    * \return The switch index.
    */
-  virtual uint16_t TopologyGetSwIndexEnb (uint16_t cellId) = 0;
+  virtual uint16_t TopologyGetEnbIndex (uint16_t cellId) = 0;
 
   /**
    * Install the EPC controller for this network.
@@ -198,17 +198,12 @@ protected:
   /** Connections between switches finished trace source. */
   TracedCallback<OFSwitch13DeviceContainer> m_topoBuiltTrace;
 
-  // Backhaul network (used by the topology derived class)
+  // Member variables used by derived topology classes
   NodeContainer                   m_ofSwitches;       //!< Switch nodes.
   OFSwitch13DeviceContainer       m_ofDevices;        //!< Switch devices.
   Ptr<OFSwitch13Helper>           m_ofSwitchHelper;   //!< Switch helper.
-
-  // EPC controller
-  Ptr<Node>                       m_epcCtrlNode;      //!< EPC controller node.
-  Ptr<EpcController>              m_epcCtrlApp;       //!< EPC controller app.
-
   uint16_t                        m_linkMtu;          //!< Link mtu.
-  const uint16_t                  m_gtpuPort = 2152;  //!< Default GTP port.
+  Ptr<EpcController>              m_epcCtrlApp;       //!< EPC controller app.
 
 private:
   /**
@@ -234,18 +229,23 @@ private:
 
   // Connection attributes and helper
   CsmaHelper                      m_csmaHelper;       //!< Connection helper.
-  DataRate                        m_linkRate;         //!< Gw link data rate.
-  Time                            m_linkDelay;        //!< Gw link delay.
+  DataRate                        m_linkRate;         //!< Link data rate.
+  Time                            m_linkDelay;        //!< Link delay.
+
+  const uint16_t                  m_gtpuPort = 2152;  //!< Default GTP port.
+  Ptr<Node>                       m_epcCtrlNode;      //!< EPC controller node.
 
   // EPC user-plane device
   NetDeviceContainer              m_x2Devices;        //!< X2 devices.
   NetDeviceContainer              m_s5Devices;        //!< S5 devices.
+  NetDeviceContainer              m_sgiDevices;       //!< SGi devices.
 
   // IP addresses
   Ipv4Address                     m_ueNetworkAddr;    //!< UE network address.
   Ipv4Address                     m_s5NetworkAddr;    //!< S5 network address.
   Ipv4Address                     m_x2NetworkAddr;    //!< X2 network address.
   Ipv4Address                     m_webNetworkAddr;   //!< Web network address.
+
   Ipv4AddressHelper               m_ueAddrHelper;     //!< UE address helper.
   Ipv4AddressHelper               m_s5AddrHelper;     //!< S5 address helper.
   Ipv4AddressHelper               m_x2AddrHelper;     //!< X2 address helper.
@@ -253,17 +253,15 @@ private:
 
   // P-GW
   Ptr<Node>                       m_pgwNode;          //!< P-GW node.
-  uint16_t                        m_pgwSwitchIdx;     //!< P-GW switch index.
   Ptr<OFSwitch13Device>           m_pgwSwitchDev;     //!< P-GW switch device.
-  Ipv4Address                     m_pgwSGiAddr;       //!< P-GW SGi IP addr.
+  uint16_t                        m_pgwSwIdx;         //!< P-GW switch index.
+  Ipv4Address                     m_pgwSgiAddr;       //!< P-GW SGi IP addr.
   Ipv4Address                     m_pgwS5Addr;        //!< P-GW S5 IP addr.
   Ipv4Address                     m_pgwGwAddr;        //!< P-GW gateway addr.
-  Ptr<PgwS5Handler>               m_pgwTunnel;        //!< S5 logical port.
 
   // Internet network (web server)
-  Ptr<Node>                       m_webNode;          //!< Internet node.
-  NetDeviceContainer              m_webDevices;       //!< Internet devices.
-
+  Ptr<Node>                       m_webNode;          //!< Web server node.
+  Ipv4Address                     m_webSgiIpAddr;     //!< Web server IP addr.
   // Statistics
   Ptr<LinkQueuesStatsCalculator>  m_pgwStats;         //!< Gateway statistics.
   Ptr<LinkQueuesStatsCalculator>  m_webStats;         //!< Internet statistics.
@@ -278,10 +276,10 @@ private:
   // Colocando aqui todas as coisas do sdmn-epc-heper... organizar depois.
   //
 public:
-    /**
+  /** FIXME Isso aqui vai pro controlador!
    * Get a pointer to the MME element.
    * \return The MME element.
-   */ // FIXME Isso aqui vai pro controlador!
+   */
   Ptr<EpcMme> GetMmeElement ();
 
 private:
