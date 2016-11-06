@@ -35,10 +35,14 @@ namespace ns3 {
 /**
  * \ingroup sdmn
  * Create an OpenFlow EPC controller. This is an abstract base class which
- * should be extended in accordance to OpenFlow network topology.
+ * should be extended in accordance to OpenFlow network topology. It implements
+ * the logic for traffic routing and engineering within the backhaul network
+ * and the P-GW control plane.
  */
 class EpcController : public OFSwitch13Controller
 {
+  friend class MemberEpcS11SapSgw<EpcController>;
+
 public:
   EpcController ();           //!< Default constructor
   virtual ~EpcController ();  //!< Dummy destructor, see DoDipose
@@ -190,7 +194,47 @@ public:
    */
   typedef void (*BearerTracedCallback)(bool ok, Ptr<const RoutingInfo> rInfo);
 
-  Ptr<EpcSgwPgwCtrlApplication> m_pgwCtrlApp;  // FIXME: mover para privado
+  /** \name Methods for the P-GW control plane. */
+  //\{
+  // FIXME Acho que essas funções vão pro S-GW.
+  /**
+   * Set the MME side of the S11 SAP.
+   * \param s the MME side of the S11 SAP.
+   */
+  void SetS11SapMme (EpcS11SapMme * s);
+
+  /**
+   * Get the S-GW side of the S11 SAP.
+   * \return the SGW side of the S11 SAP.
+   */
+  EpcS11SapSgw* GetS11SapSgw ();
+
+  /**
+   * Let the S-GW be aware of a new eNB.
+   * \param cellId The cell identifier.
+   * \param enbAddr The IPv4 address of the eNB.
+   * \param sgwAddr The IPv4 address of the S-GW.
+   */
+  void AddEnb (uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr);
+
+  /**
+   * Let the S-GW be aware of a new UE.
+   * \param imsi The unique identifier of the UE.
+   */
+  void AddUe (uint64_t imsi);
+
+  /**
+   * Set the address of a previously added UE.
+   * \param imsi The unique identifier of the UE.
+   * \param ueAddr The IPv4 address of the UE.
+   */
+  void SetUeAddress (uint64_t imsi, Ipv4Address ueAddr);
+
+  // Vai remover loguinho.
+  uint32_t GetTeid (Ipv4Address addr, Ptr<Packet> packet);
+  Ipv4Address GetEnbAddr (Ipv4Address ueAddr);
+  //\}
+
   /** MME element */
   Ptr<EpcMme> m_mme;
   // FIXME o mme vai pra dentro do controlador.
@@ -362,6 +406,14 @@ private:
   Ptr<Packet> CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
     Mac48Address dstMac, Ipv4Address dstIp);
 
+  /** \name Methods for the P-GW control plane. */
+  //\{
+  // S11 SAP SGW methods
+  void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
+  void DoModifyBearerRequest (EpcS11SapSgw::ModifyBearerRequestMessage msg);
+  void DoDeleteBearerCommand (EpcS11SapSgw::DeleteBearerCommandMessage req);
+  void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage req);
+
   /**
    * Insert a new bearer entry in global bearer map.
    * \param teid The GTP tunnel ID.
@@ -374,6 +426,71 @@ private:
    * \param teid The GTP tunnel ID.
    */
   static void UnregisterBearer (uint32_t teid);
+  //\}
+
+  /**
+   * EpcController inner friend utility class used to
+    * store info for each UE connected to this S-GW.
+   */
+  class UeInfo : public SimpleRefCount<UeInfo>
+  {
+  public:
+    UeInfo ();          //!< Default constructor
+    virtual ~UeInfo (); //!< Default destructor
+
+    /**
+     * Add a new bearer context for this user.
+     * \param tft The Traffic Flow Template of the new bearer to be added.
+     * \param epsBearerId The ID of the EPS Bearer to be activated.
+     * \param teid The TEID of the new bearer.
+     */
+    void AddBearer (Ptr<EpcTft> tft, uint8_t epsBearerId, uint32_t teid);
+
+    /**
+     * Remove the bearer context for this user.
+     * \param bearerId The bearer id whose contexts to be removed.
+     */
+    void RemoveBearer (uint8_t bearerId);
+
+    /** // FIXME remover
+     * \param p the IP packet from the internet to be classified
+     *
+     * \return the corresponding bearer ID > 0 identifying the bearer
+     * among all the bearers of this UE;  returns 0 if no bearers
+     * matches with the previously declared TFTs
+     */
+    uint32_t Classify (Ptr<Packet> p);
+
+    /**
+     * Get the address of the eNB to which the UE is connected to.
+     * \return The eNB address.
+     */
+    Ipv4Address GetEnbAddr ();
+
+    /**
+     * Set the address of the eNB to which the UE is connected to.
+     * \param addr The eNB address.
+     */
+    void SetEnbAddr (Ipv4Address addr);
+
+    /**
+     * Get the address of the UE.
+     * \return The UE address.
+     */
+    Ipv4Address GetUeAddr ();
+
+    /**
+     * Set the address of the UE.
+     * \param addr The UE address.
+     */
+    void SetUeAddr (Ipv4Address addr);
+
+    private:
+      EpcTftClassifier m_tftClassifier;
+      Ipv4Address m_enbAddr;
+      Ipv4Address m_ueAddr;
+      std::map<uint8_t, uint32_t> m_teidByBearerIdMap;
+  };
 
   /**
    * EpcController inner friend utility class
@@ -430,6 +547,33 @@ private:
   /** Map saving <EpsBearer::Qci / IP Dscp value> */
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
   static QciDscpMap_t m_qciDscpTable;     //!< DSCP mapped values.
+
+
+  
+  /** Struct representing eNB info. */
+  struct EnbInfo
+  {
+    Ipv4Address enbAddr;
+    Ipv4Address sgwAddr;
+  };
+
+  std::map<uint16_t, EnbInfo> m_enbInfoByCellId;
+
+  /** Map saving <UE address / UE info> */
+  std::map<Ipv4Address, Ptr<UeInfo> > m_ueInfoByAddrMap;
+
+  /** Map saving <IMSI / UE info> */
+  std::map<uint64_t, Ptr<UeInfo> > m_ueInfoByImsiMap;
+
+  /**
+   * TEID counter, used to allocate new GTP-U TEID values.
+   * \internal This counter is initialized at 0x0000000F, reserving the first
+   *           values for further usage.
+   */
+  uint32_t m_teidCount;
+
+  EpcS11SapMme* m_s11SapMme;      //!< MME side of the S11 SAP
+  EpcS11SapSgw* m_s11SapSgw;      //!< SGW side of the S11 SAP
 };
 
 };  // namespace ns3

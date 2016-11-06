@@ -48,7 +48,7 @@ EpcNetwork::EpcNetwork ()
 
   // Creating network nodes
   m_webNode = CreateObject<Node> ();
-  Names::Add ("srv", m_webNode);
+  Names::Add ("web", m_webNode);
 
   m_pgwNode = CreateObject<Node> ();
   Names::Add ("pgw", m_pgwNode);
@@ -339,11 +339,7 @@ EpcNetwork::InstallController (Ptr<EpcController> controller)
   // Installing the controller application into controller node
   m_epcCtrlApp = controller;
   m_ofSwitchHelper->InstallController (m_epcCtrlNode, m_epcCtrlApp);
-
-  // FIXME....
-  m_epcCtrlNode->AddApplication (m_epcCtrlApp->m_pgwCtrlApp);
 }
-
 
 Ptr<NetDevice>
 EpcNetwork::S1EnbAttach (Ptr<Node> node, uint16_t cellId)
@@ -544,7 +540,7 @@ EpcNetwork::ConfigureGatewayAndInternet ()
   Ptr<PgwUserApp> pgwUserApp = CreateObject <PgwUserApp> (
       pgwS5PortDev, m_webSgiIpAddr, webSgiMacAddr, pgwSgiMacAddr);
   m_pgwNode->AddApplication (pgwUserApp);
-  pgwUserApp->m_controlPlane = m_epcCtrlApp->m_pgwCtrlApp;
+  pgwUserApp->m_controlPlane = m_epcCtrlApp;
   // FIXME Remover essa dependencia acima
 
   // Adding the swS5Dev device as OpenFlow switch port.
@@ -569,18 +565,40 @@ EpcNetwork::ConfigureGatewayAndInternet ()
   NS_LOG_LOGIC ("P-GW gateway address: " << GetUeDefaultGatewayAddress ());
 }
 
+//
+// Implementing methods inherited from EpcHelper
+//
+uint8_t
+EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
+                               Ptr<EpcTft> tft, EpsBearer bearer)
+{
+  NS_LOG_FUNCTION (this << ueDevice << imsi);
 
+  // Retrieve the IPv4 address of the UE and notify it to the S-GW;
+  Ptr<Node> ueNode = ueDevice->GetNode ();
+  Ptr<Ipv4> ueIpv4 = ueNode->GetObject<Ipv4> ();
+  NS_ASSERT_MSG (ueIpv4 != 0, "UEs need to have IPv4 installed.");
 
+  // Get interface
+  int32_t interface = ueIpv4->GetInterfaceForDevice (ueDevice);
+  NS_ASSERT (interface >= 0);
+  NS_ASSERT (ueIpv4->GetNAddresses (interface) == 1);
+  Ipv4Address ueAddr = ueIpv4->GetAddress (interface, 0).GetLocal ();
+  NS_LOG_LOGIC (" UE IP address: " << ueAddr);
+  m_epcCtrlApp->SetUeAddress (imsi, ueAddr);
 
-//----------------------------------------------------------------------------------------------------------
-
-
-
-
-
+  uint8_t bearerId = GetMmeElement ()->AddBearer (imsi, tft, bearer);
+  Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
+  if (ueLteDevice)
+    {
+      ueLteDevice->GetNas ()->ActivateEpsBearer (bearer, tft);
+    }
+  return bearerId;
+}
 
 void
-EpcNetwork::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t cellId)
+EpcNetwork::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
+                    uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << enb << lteEnbNetDevice << cellId);
 
@@ -634,7 +652,7 @@ EpcNetwork::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t cell
 
   NS_LOG_INFO ("connect S1-AP interface");
   GetMmeElement ()->AddEnb (cellId, enbAddress, enbApp->GetS1apSapEnb ());
-  m_epcCtrlApp->m_pgwCtrlApp->AddEnb (cellId, enbAddress, sgwAddress);
+  m_epcCtrlApp->AddEnb (cellId, enbAddress, sgwAddress);
   enbApp->SetS1apSapMme (GetMmeElement ()->GetS1apSapMme ());
 }
 
@@ -675,34 +693,7 @@ EpcNetwork::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
   NS_LOG_FUNCTION (this << imsi << ueDevice );
 
   GetMmeElement ()->AddUe (imsi);
-  m_epcCtrlApp->m_pgwCtrlApp->AddUe (imsi);
-}
-
-uint8_t
-EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer)
-{
-  NS_LOG_FUNCTION (this << ueDevice << imsi);
-
-  // we now retrieve the IPv4 address of the UE and notify it to the SGW;
-  // we couldn't do it before since address assignment is triggered by
-  // the user simulation program, rather than done by the EPC
-  Ptr<Node> ueNode = ueDevice->GetNode ();
-  Ptr<Ipv4> ueIpv4 = ueNode->GetObject<Ipv4> ();
-  NS_ASSERT_MSG (ueIpv4 != 0, "UEs need to have IPv4 installed before EPS bearers can be activated");
-  int32_t interface =  ueIpv4->GetInterfaceForDevice (ueDevice);
-  NS_ASSERT (interface >= 0);
-  NS_ASSERT (ueIpv4->GetNAddresses (interface) == 1);
-  Ipv4Address ueAddr = ueIpv4->GetAddress (interface, 0).GetLocal ();
-  NS_LOG_LOGIC (" UE IP address: " << ueAddr);
-  m_epcCtrlApp->m_pgwCtrlApp->SetUeAddress (imsi, ueAddr);
-
-  uint8_t bearerId = GetMmeElement ()->AddBearer (imsi, tft, bearer);
-  Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
-  if (ueLteDevice)
-    {
-      ueLteDevice->GetNas ()->ActivateEpsBearer (bearer, tft);
-    }
-  return bearerId;
+  m_epcCtrlApp->AddUe (imsi);
 }
 
 Ptr<Node>
