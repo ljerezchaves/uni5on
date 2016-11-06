@@ -701,10 +701,10 @@ EpcS1uStatsCalculator::EpcS1uStatsCalculator (
     "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uTx",
     MakeCallback (&EpcS1uStatsCalculator::EpcInputPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::EpcSgwPgwUserApplication/S1uRx",
+    "/NodeList/*/ApplicationList/*/$ns3::EpcSgwPgwApplication/S1uRx",
     MakeCallback (&EpcS1uStatsCalculator::EpcOutputPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::EpcSgwPgwUserApplication/S1uTx",
+    "/NodeList/*/ApplicationList/*/$ns3::EpcSgwPgwApplication/S1uTx",
     MakeCallback (&EpcS1uStatsCalculator::EpcInputPacket, this));
   Config::Connect (
     "/NodeList/*/$ns3::OFSwitch13Device/MeterDrop",

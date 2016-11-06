@@ -28,6 +28,13 @@
 
 namespace ns3 {
 
+class Node;
+class NetDevice;
+class VirtualNetDevice;
+class EpcSgwPgwApplication;
+class EpcX2;
+class EpcMme;
+
 /**
  * Create an EPC network connected through CSMA devices to an user-defined
  * backhaul network. This Helper will create an EPC network topology comprising
@@ -152,8 +159,7 @@ private:
   Ptr<Node> m_sgwPgw;
 
   /** SgwPgw application */
-  Ptr<EpcSgwPgwCtrlApplication> m_sgwPgwCtrlApp;
-  Ptr<EpcSgwPgwUserApplication> m_sgwPgwUserApp;
+  Ptr<EpcSgwPgwApplication> m_sgwPgwApp;
 
   /** MME element */
   Ptr<EpcMme> m_mme;
