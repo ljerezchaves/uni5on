@@ -181,6 +181,12 @@ EpcTft::Add (PacketFilter f)
   return (m_numFilters - 1);
 }
     
+uint8_t
+EpcTft::GetNumFilters (void) const
+{
+  return m_numFilters;
+}
+
 EpcTft::PacketFilter
 EpcTft::GetFilter (uint8_t id) const
 {

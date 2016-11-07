@@ -137,6 +137,11 @@ public:
    */
   uint8_t Add (PacketFilter f);
 
+  /**
+   * Get the number of packet filters installed on this TFT.
+   * \return The number of packet filters.
+   */
+  uint8_t GetNumFilters (void) const;
 
   /**
    * Get a packet filter from this TFT.
