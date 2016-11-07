@@ -138,6 +138,13 @@ public:
   uint8_t Add (PacketFilter f);
 
 
+  /**
+   * Get a packet filter from this TFT.
+   * \param id The packet filter ID.
+   * \return The packet filter.
+   */
+  PacketFilter GetFilter (uint8_t id) const;
+  
     /** 
      * 
      * \param direction 

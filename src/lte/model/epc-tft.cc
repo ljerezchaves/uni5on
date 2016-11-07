@@ -181,6 +181,15 @@ EpcTft::Add (PacketFilter f)
   return (m_numFilters - 1);
 }
     
+EpcTft::PacketFilter
+EpcTft::GetFilter (uint8_t id) const
+{
+  NS_ASSERT (m_numFilters > id);
+  std::list<PacketFilter>::const_iterator it = m_filters.begin ();
+  std::advance (it, id);
+  return *it;
+}
+
 bool 
 EpcTft::Matches (Direction direction,
 		 Ipv4Address remoteAddress, 
