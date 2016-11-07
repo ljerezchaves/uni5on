@@ -67,6 +67,7 @@ public:
   GbrQosInformation GetQosInfo (void) const;
   EpsBearer::Qci GetQciInfo (void) const;
   EpsBearer GetEpsBearer (void) const;
+  Ptr<EpcTft> GetTft (void) const;
   uint32_t GetTeid (void) const;
   uint64_t GetImsi (void) const;
   uint16_t GetCellId (void) const;

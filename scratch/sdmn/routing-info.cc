@@ -81,6 +81,12 @@ RoutingInfo::GetEpsBearer (void) const
   return m_bearer.bearerLevelQos;
 }
 
+Ptr<EpcTft>
+RoutingInfo::GetTft (void) const
+{
+  return m_bearer.tft;
+}
+
 uint32_t
 RoutingInfo::GetTeid (void) const
 {
