@@ -536,9 +536,6 @@ EpcNetwork::ConfigureGatewayAndInternet ()
       pgwS5PortDev, m_webSgiIpAddr, webSgiMacAddr, pgwSgiMacAddr);
   m_pgwNode->AddApplication (pgwUserApp);
   
-  // FIXME Remove
-  pgwUserApp->m_controlPlane = m_epcCtrlApp;
-
   // Adding the swS5Dev device as OpenFlow switch port.
   Ptr<OFSwitch13Device> swDev = GetSwitchDevice (swIdx);
   Ptr<OFSwitch13Port> swS5Port = swDev->AddSwitchPort (swS5Dev);

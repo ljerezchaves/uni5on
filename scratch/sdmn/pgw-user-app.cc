@@ -104,21 +104,6 @@ PgwUserApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
   uint32_t teid = tagValue;
   Ipv4Address enbAddr (tagValue >> 32);
 
-  /// TEMPORARY
-  // Get the IP address of the UE
-  Ipv4Header ipv4Header;
-  packet->PeekHeader (ipv4Header);
-  Ipv4Address ueAddr = ipv4Header.GetDestination ();
-  NS_LOG_LOGIC ("packet addressed to UE " << ueAddr);
-  // TODO: Aqui, na hora que for mudar pro switch vai ser a hora que vai ter
-  // que ter uma entrada no OpenFlow para cada fluxo dizendo o que fazer com o
-  // pacote. Não teremos mais o elememento classificador... Espero que essas
-  // duas informações venham embutidas no tunnel ID
-  // find corresponding UeInfo address
-  enbAddr = m_controlPlane->GetEnbAddr (ueAddr);
-  teid = m_controlPlane->GetTeid (ueAddr, packet);
-  /// TEMPORARY
-
   // Add the GTP header
   GtpuHeader gtpu;
   gtpu.SetTeid (teid);

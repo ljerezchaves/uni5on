@@ -26,7 +26,6 @@
 #include <ns3/virtual-net-device-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/applications-module.h>
-#include "epc-controller.h"
 
 namespace ns3 {
 
@@ -76,8 +75,6 @@ public:
    * \param socket Pointer to the tunnel socket.
    */
   void RecvFromTunnelSocket (Ptr<Socket> socket);
-
-  Ptr<EpcController> m_controlPlane; // FIXME remove
 
 protected:
   /** Destructor implementation */
