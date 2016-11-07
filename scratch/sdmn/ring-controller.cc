@@ -205,9 +205,6 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
   bool meterInstalled = false;
 
-  // Increasing the priority every time we (re)install TEID rules.
-  rInfo->IncreasePriority ();
-
   // flow-mod flags OFPFF_SEND_FLOW_REM and OFPFF_CHECK_OVERLAP, used to notify
   // the controller when a flow entry expires and to avoid overlapping rules.
   std::string flagsStr ("0x0003");
@@ -225,32 +222,6 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
        << ",cookie=" << cookieStr
        << ",prio=" << rInfo->GetPriority ()
        << ",idle=" << rInfo->GetTimeout ();
-
-//  // Installing the TFT downlink rule into P-GW switch
-//  std::ostringstream pgwTft;
-//  pgwTft << " ip_src=" <<
-//         << ",ip_dst=" << 
-//  if (// TCP)
-//    {
-//      pgwTft << ",ip_proto=6"
-//             << ",tcp_src=" << 
-//             << ",tcp_dst=" << 
-//    }
-//  else
-//    {
-//      pgwTft << ",ip_proto=17"
-//             << ",udp_src=" << 
-//             << ",src_dst=" << 
-//    }
-//  
-//  // Set teid and enbAddr
-//
-//  pgwTft << " apply:output=" << // output port no
-//
-//
-//  std::string pgwCmdStr = args.str () + pgwTft.str ();
-//  DpctlExecute (GetPgwDatapathId (), pgwCmdStr);
-//
 
   // Configuring downlink routing
   if (rInfo->HasDownlinkTraffic ())
@@ -362,7 +333,7 @@ RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
 
   // We will only remove meter entries from switch. This will automatically
   // remove referring flow rules. The other rules will expired due idle
-  // timeout. 
+  // timeout.
   return RemoveMeterRules (rInfo);
 }
 

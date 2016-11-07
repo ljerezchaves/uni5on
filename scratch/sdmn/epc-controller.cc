@@ -129,6 +129,8 @@ EpcController::RequestDedicatedBearer (
 
   // Everything is ok! Let's activate and install this bearer.
   rInfo->SetActive (true);
+  rInfo->IncreasePriority ();
+  InstallPgwTftRules (rInfo);
   return TopologyInstallRouting (rInfo);
 }
 
@@ -292,6 +294,7 @@ EpcController::NotifySessionCreated (
   NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
 
   // Install rules for default bearer
+  InstallPgwTftRules (rInfo);
   if (!TopologyInstallRouting (rInfo))
     {
       NS_LOG_ERROR ("TEID rule installation failed!");
@@ -362,7 +365,7 @@ EpcController::DoDispose ()
   m_enbInfoByCellId.clear ();
   m_ueInfoByAddrMap.clear ();
   m_ueInfoByImsiMap.clear ();
- 
+
   m_mme = 0;
 
   delete (m_s11SapSgw);
@@ -595,6 +598,10 @@ EpcController::HandleFlowRemoved (
   if (rInfo->IsActive ())
     {
       NS_LOG_WARN ("Flow " << teid << " is still active. Reinstall rules...");
+
+      // Reinstall rules (increasing priority).
+      rInfo->IncreasePriority ();
+      InstallPgwTftRules (rInfo);
       if (!TopologyInstallRouting (rInfo))
         {
           NS_LOG_ERROR ("TEID rule installation failed!");
@@ -740,6 +747,7 @@ EpcController::ConfigurePgwRules (
 {
   NS_LOG_FUNCTION (this << pgwDev << pgwSgiPort << pgwS5Port << webAddr);
   m_pgwDpId = pgwDev->GetDatapathId ();
+  m_pgwS5Port = pgwS5Port;
 
   // -------------------------------------------------------------------------
   // Table 0 -- P-GW default table -- [from higher to lower priority]
@@ -749,9 +757,7 @@ EpcController::ConfigurePgwRules (
   // TEID and eNB addr within tunnel metadata.
   std::ostringstream cmdIn;
   cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-//        << ",in_port=" << pgwSgiPort << " goto:1";
-        << ",in_port=" << pgwSgiPort
-        << " apply:output=" << pgwS5Port;  
+        << ",in_port=" << pgwSgiPort << " goto:1";
   DpctlSchedule (m_pgwDpId, cmdIn.str ());
 
   // IP packets coming from the LTE network and addressed to the Internet are
@@ -772,9 +778,94 @@ EpcController::ConfigurePgwRules (
                  "apply:output=ctrl");
 
   // -------------------------------------------------------------------------
-  // Table 1 -- P-GW TFT table -- [from higher to lower priority]
+  // Table 1 -- P-GW TFT downlink table -- [from higher to lower priority]
   //
-  // Entries will be installed here by TopologyInstallRouting function.
+  // Entries will be installed here by InstallPgwTftRules function.
+}
+
+void
+EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
+{
+  NS_LOG_FUNCTION (this << rInfo << buffer);
+
+  if (rInfo->IsDefault ())
+    {
+      // TODO
+//      // For the default bearer, we install
+//      std::ostringstream cmdOut;
+//      cmdOut << "flow-mod cmd=add,table=1,prio=32 "
+//             << ",in_port=" << pgwS5Port
+//             << ",ip_dst=" << webAddr
+//             << " apply:output=" << pgwSgiPort;
+//
+//
+//
+//      DpctlExecute (GetPgwDatapathId (),
+//          "flow-mod cmd=add,table=1,prio=0 apply");
+      return;
+    }
+
+  // flow-mod flags OFPFF_SEND_FLOW_REM and OFPFF_CHECK_OVERLAP, used to notify
+  // the controller when a flow entry expires and to avoid overlapping rules.
+  std::string flagsStr ("0x0003");
+
+  // Printing the cookie and buffer values in dpctl string format
+  char cookieStr [9], bufferStr [12];
+  sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
+  sprintf (bufferStr, "%u",   buffer);
+
+  // Building the dpctl command + arguments string
+  std::ostringstream args;
+  args << "flow-mod cmd=add,table=1"
+       << ",buffer=" << bufferStr
+       << ",flags=" << flagsStr
+       << ",cookie=" << cookieStr
+       << ",prio=" << rInfo->GetPriority ()
+       << ",idle=" << rInfo->GetTimeout ();
+
+  // Install one rule for each downlink filter
+  Ptr<EpcTft> tft = rInfo->GetTft ();
+  for (uint8_t i = 0; i < tft->GetNumFilters (); i++)
+    {
+      EpcTft::PacketFilter filter = tft->GetFilter (i);
+      if (filter.direction == EpcTft::UPLINK)
+        {
+          continue;
+        }
+
+      // The current implementation doesn't differ from UDP or TCP packets, so
+      // we are going to install two independent rules.
+      std::ostringstream tcp;
+      tcp << " eth_type=0x800"
+          << ",ip_src=" << filter.remoteAddress
+          << ",ip_dst=" << filter.localAddress
+          << ",ip_proto=6"
+//          << ",tcp_src=" << filter.remotePortStart
+          << ",tcp_dst=" << filter.localPortStart;
+
+      std::ostringstream udp;
+      udp << " eth_type=0x800"
+          << ",ip_src=" << filter.remoteAddress
+          << ",ip_dst=" << filter.localAddress
+          << ",ip_proto=17"
+//          << ",udp_src=" << filter.remotePortStart
+          << ",udp_dst=" << filter.localPortStart;
+
+      // Set TEID and destination IPv4 address into tunnel metadata
+      uint64_t tunnelId = (uint64_t)rInfo->GetEnbAddr ().Get () << 32;
+      tunnelId |= rInfo->GetTeid ();
+      char tunnelIdStr [12];
+      sprintf (tunnelIdStr, "0x%016lX", tunnelId);
+
+      std::ostringstream act;
+      act << " apply:set_field=tunn_id:" << tunnelIdStr
+          << ",output=" << m_pgwS5Port;
+
+      std::string cmdTcpStr = args.str () + tcp.str () + act.str ();
+      std::string cmdUdpStr = args.str () + udp.str () + act.str ();
+      DpctlExecute (GetPgwDatapathId (), cmdTcpStr);
+      DpctlExecute (GetPgwDatapathId (), cmdUdpStr);
+    }
 }
 
 ofl_err
@@ -1158,7 +1249,7 @@ EpcController::DoCreateSessionRequest (
 
   ImsiUeInfoMap_t::iterator ueit = m_ueInfoByImsiMap.find (req.imsi);
   NS_ASSERT (ueit != m_ueInfoByImsiMap.end ());
-  
+
   uint16_t cellId = req.uli.gci;
   CellIdEnbInfo_t::iterator enbit = m_enbInfoByCellId.find (cellId);
   NS_ASSERT (enbit != m_enbInfoByCellId.end ());
@@ -1167,7 +1258,7 @@ EpcController::DoCreateSessionRequest (
   ueit->second->SetEnbAddr (enbAddr);
 
   EpcS11SapMme::CreateSessionResponseMessage res;
-  res.teid = req.imsi; // trick to avoid the need for allocating TEIDs on the S11 interface
+  res.teid = req.imsi; // trick to avoid allocating TEIDs on S11 interface.
 
   std::list<EpcS11SapSgw::BearerContextToBeCreated>::iterator bit;
   for (bit = req.bearerContextsToBeCreated.begin ();

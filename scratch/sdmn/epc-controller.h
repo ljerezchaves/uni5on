@@ -255,8 +255,8 @@ protected:
   /**
    * Configure the switches with OpenFlow commands for TEID routing, based on
    * network topology information.
-   * \attention This function must increase the priority before installing the
-   * rules, to avoid conflicts with old entries.
+   * \attention To avoid conflicts with old entries, increase the routing
+   * priority before installing the rules.
    * \param rInfo The routing information to configure.
    * \param buffer The buffered packet to apply this rule to.
    * \return True if configuration succeeded, false otherwise.
@@ -381,6 +381,16 @@ private:
    */
   void ConfigurePgwRules (Ptr<OFSwitch13Device> pgwDev, uint32_t pgwSgiPort,
     uint32_t pgwS5Port, Ipv4Address webAddr);
+
+  /**
+   * Configure the P-GW with OpenFlow rules for downlink TFT packet filtering.
+   * \attention To avoid conflicts with old entries, increase the routing
+   * priority before installing the rules.
+   * \param rInfo The routing information to configure.
+   * \param buffer The buffered packet to apply this rule to.
+   */
+  void InstallPgwTftRules (Ptr<RoutingInfo> rInfo,
+    uint32_t buffer = OFP_NO_BUFFER);
 
   /**
    * Handle packet-in messages sent from switch with ARP message.
@@ -533,6 +543,7 @@ private:
   OFSwitch13DeviceContainer      m_ofDevices;       //!< OpenFlow devices.
   Ptr<ControllerStatsCalculator> m_controllerStats; //!< Admission statistics.
   uint32_t                       m_pgwDpId;         //!< P-GW datapath ID.
+  uint32_t                       m_pgwS5Port;       //!< P-GW S5 port no.
 
   /** Map saving <TEID / Routing information > */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
