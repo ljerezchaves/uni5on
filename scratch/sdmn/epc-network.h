@@ -162,6 +162,9 @@ public:
    */
   typedef void (*TopologyTracedCallback)(NetDeviceContainer devices);
 
+  /** Default GTP-U UDP port for tunnel sockets */
+  static const uint16_t m_gtpuPort;
+
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
@@ -232,7 +235,6 @@ private:
   DataRate                        m_linkRate;         //!< Link data rate.
   Time                            m_linkDelay;        //!< Link delay.
 
-  const uint16_t                  m_gtpuPort = 2152;  //!< Default GTP port.
   Ptr<Node>                       m_epcCtrlNode;      //!< EPC controller node.
 
   // EPC user-plane device

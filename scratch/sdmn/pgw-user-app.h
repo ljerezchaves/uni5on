@@ -98,7 +98,6 @@ private:
                   uint16_t protocolNumber);
 
   Ptr<Socket>           m_tunnelSocket;     //!< UDP tunnel socket.
-  const uint16_t        m_gtpuPort = 2152;  //!< GTP UDP port.
   Ptr<VirtualNetDevice> m_s5PortDevice;     //!< S5 logical port device.
   Ipv4Address           m_webIpAddr;        //!< Web IP address.
   Mac48Address          m_webMacAddr;       //!< Web MAC address.

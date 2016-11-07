@@ -226,6 +226,32 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
        << ",prio=" << rInfo->GetPriority ()
        << ",idle=" << rInfo->GetTimeout ();
 
+//  // Installing the TFT downlink rule into P-GW switch
+//  std::ostringstream pgwTft;
+//  pgwTft << " ip_src=" <<
+//         << ",ip_dst=" << 
+//  if (// TCP)
+//    {
+//      pgwTft << ",ip_proto=6"
+//             << ",tcp_src=" << 
+//             << ",tcp_dst=" << 
+//    }
+//  else
+//    {
+//      pgwTft << ",ip_proto=17"
+//             << ",udp_src=" << 
+//             << ",src_dst=" << 
+//    }
+//  
+//  // Set teid and enbAddr
+//
+//  pgwTft << " apply:output=" << // output port no
+//
+//
+//  std::string pgwCmdStr = args.str () + pgwTft.str ();
+//  DpctlExecute (GetPgwDatapathId (), pgwCmdStr);
+//
+
   // Configuring downlink routing
   if (rInfo->HasDownlinkTraffic ())
     {

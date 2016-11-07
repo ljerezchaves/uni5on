@@ -29,6 +29,8 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("EpcNetwork");
 NS_OBJECT_ENSURE_REGISTERED (EpcNetwork);
 
+const uint16_t EpcNetwork::m_gtpuPort = 2152;
+
 EpcNetwork::EpcNetwork ()
   : m_ofSwitchHelper (0),
     m_epcCtrlApp (0),
@@ -252,13 +254,6 @@ EpcNetwork::NotifyConstructionCompleted (void)
 
   // Configuring the P-GW and the Internet topology.
   ConfigureGatewayAndInternet ();
-
-  // Connect the EPC controller to the MME SessionCreated trace source *after*
-  // topology creation. FIXME: The mme will be part of the controller... this
-  // will not be necessary anymore.
-  GetMmeElement ()->TraceConnectWithoutContext (
-    "SessionCreated", MakeCallback (
-      &EpcController::NotifySessionCreated, m_epcCtrlApp));
 
   // The OpenFlow backhaul network topology is done. Connect the OpenFlow
   // switches to the EPC controller. From this point on it is not possible to
@@ -540,8 +535,9 @@ EpcNetwork::ConfigureGatewayAndInternet ()
   Ptr<PgwUserApp> pgwUserApp = CreateObject <PgwUserApp> (
       pgwS5PortDev, m_webSgiIpAddr, webSgiMacAddr, pgwSgiMacAddr);
   m_pgwNode->AddApplication (pgwUserApp);
+  
+  // FIXME Remove
   pgwUserApp->m_controlPlane = m_epcCtrlApp;
-  // FIXME Remover essa dependencia acima
 
   // Adding the swS5Dev device as OpenFlow switch port.
   Ptr<OFSwitch13Device> swDev = GetSwitchDevice (swIdx);
@@ -553,7 +549,6 @@ EpcNetwork::ConfigureGatewayAndInternet ()
   m_epcCtrlApp->NewS5Attach (pgwS5Dev, m_pgwS5Addr, swDev, swIdx, swS5PortNum);
   m_epcCtrlApp->NewSgiAttach (m_pgwSwitchDev, pgwSgiDev, m_pgwSgiAddr,
                               pgwSgiPortNum, pgwS5PortNum, m_webSgiIpAddr);
-// FIXME aqui que o controlador vai ficar ciente dos parametros do gateway. ele precisa salvar o par IP m_pgwSgiAddr /  pgwSgiMacAddr pra responder ARP vindo da internet.
 
   // Configure P-GW and Internet link statistics
   m_pgwStats->SetQueues (pgwS5Dev->GetQueue (), swS5Dev->GetQueue ());
@@ -578,8 +573,7 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
   Ptr<Node> ueNode = ueDevice->GetNode ();
   Ptr<Ipv4> ueIpv4 = ueNode->GetObject<Ipv4> ();
   NS_ASSERT_MSG (ueIpv4 != 0, "UEs need to have IPv4 installed.");
-
-  // Get interface
+  
   int32_t interface = ueIpv4->GetInterfaceForDevice (ueDevice);
   NS_ASSERT (interface >= 0);
   NS_ASSERT (ueIpv4->GetNAddresses (interface) == 1);

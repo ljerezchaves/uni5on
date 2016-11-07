@@ -204,9 +204,10 @@ EpcController::GetDscpMappedValue (EpsBearer::Qci qci)
 }
 
 void
-EpcController::NewSgiAttach (Ptr<OFSwitch13Device> pgwSwDev,
-  Ptr<NetDevice> pgwSgiDev, Ipv4Address pgwSgiAddr, uint32_t pgwSgiPort,
-  uint32_t pgwS5Port, Ipv4Address webAddr)
+EpcController::NewSgiAttach (
+  Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwSgiDev,
+  Ipv4Address pgwSgiAddr, uint32_t pgwSgiPort, uint32_t pgwS5Port,
+  Ipv4Address webAddr)
 {
   NS_LOG_FUNCTION (this << pgwSgiAddr << pgwSgiPort << webAddr);
 
@@ -218,8 +219,9 @@ EpcController::NewSgiAttach (Ptr<OFSwitch13Device> pgwSwDev,
 }
 
 void
-EpcController::NewS5Attach (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
-  Ptr<OFSwitch13Device> swtchDev, uint16_t swtchIdx, uint32_t swtchPort)
+EpcController::NewS5Attach (
+  Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, Ptr<OFSwitch13Device> swtchDev,
+  uint16_t swtchIdx, uint32_t swtchPort)
 {
   NS_LOG_FUNCTION (this << nodeIp << swtchIdx << swtchPort);
 
@@ -252,8 +254,9 @@ EpcController::TopologyBuilt (OFSwitch13DeviceContainer devices)
 }
 
 void
-EpcController::NotifySessionCreated (uint64_t imsi, uint16_t cellId,
-  Ipv4Address enbAddr, Ipv4Address sgwAddr, BearerList_t bearerList)
+EpcController::NotifySessionCreated (
+  uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr,
+  BearerList_t bearerList)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << sgwAddr);
 
@@ -356,6 +359,10 @@ EpcController::DoDispose ()
   m_arpTable.clear ();
   m_ipSwitchTable.clear ();
   m_routes.clear ();
+  m_enbInfoByCellId.clear ();
+  m_ueInfoByAddrMap.clear ();
+  m_ueInfoByImsiMap.clear ();
+ 
   m_mme = 0;
 
   delete (m_s11SapSgw);
@@ -604,6 +611,12 @@ EpcController::GetDatapathId (uint16_t index) const
   return m_ofDevices.Get (index)->GetDatapathId ();
 }
 
+uint64_t
+EpcController::GetPgwDatapathId () const
+{
+  return m_pgwDpId;
+}
+
 void
 EpcController::SaveRoutingInfo (Ptr<RoutingInfo> rInfo)
 {
@@ -686,8 +699,9 @@ EpcController::GetArpEntry (Ipv4Address ip)
 }
 
 void
-EpcController::ConfigureLocalPortRules (Ptr<OFSwitch13Device> swtchDev,
-  Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, uint32_t swtchPort)
+EpcController::ConfigureLocalPortRules (
+  Ptr<OFSwitch13Device> swtchDev, Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
+  uint32_t swtchPort)
 {
   NS_LOG_FUNCTION (this << swtchDev << nodeDev << nodeIp << swtchPort);
 
@@ -720,36 +734,47 @@ EpcController::ConfigureLocalPortRules (Ptr<OFSwitch13Device> swtchDev,
 }
 
 void
-EpcController::ConfigurePgwRules (Ptr<OFSwitch13Device> pgwDev,
-  uint32_t pgwSgiPort, uint32_t pgwS5Port, Ipv4Address webAddr)
+EpcController::ConfigurePgwRules (
+  Ptr<OFSwitch13Device> pgwDev, uint32_t pgwSgiPort, uint32_t pgwS5Port,
+  Ipv4Address webAddr)
 {
   NS_LOG_FUNCTION (this << pgwDev << pgwSgiPort << pgwS5Port << webAddr);
   m_pgwDpId = pgwDev->GetDatapathId ();
 
-  // ARP request packets. Send to controller.
-  DpctlSchedule (m_pgwDpId,
-    "flow-mod cmd=add,table=0,prio=16 eth_type=0x0806 apply:output=ctrl");
-
-  // Table miss entry. Send to controller.
-  DpctlSchedule (m_pgwDpId,
-    "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
-
-  // IP packets coming from the Internet and addressed to the LTE network are
-  // forwared from the SGi to the S5 interface port.
+  // -------------------------------------------------------------------------
+  // Table 0 -- P-GW default table -- [from higher to lower priority]
+  //
+  // IP packets coming from the Internet (SGI) and addressed to the LTE network
+  // (S5) are sent to table 1, where TFT rules will match the flow and set both
+  // TEID and eNB addr within tunnel metadata.
   std::ostringstream cmdIn;
-  cmdIn << "flow-mod cmd=add,table=0,prio=1 eth_type=0x800"
+  cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+//        << ",in_port=" << pgwSgiPort << " goto:1";
         << ",in_port=" << pgwSgiPort
-        << " apply:output=" << pgwS5Port;
+        << " apply:output=" << pgwS5Port;  
   DpctlSchedule (m_pgwDpId, cmdIn.str ());
 
   // IP packets coming from the LTE network and addressed to the Internet are
   // forwared from the S5 to the SGi interface port.
   std::ostringstream cmdOut;
-  cmdOut << "flow-mod cmd=add,table=0,prio=1 eth_type=0x800"
+  cmdOut << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
          << ",in_port=" << pgwS5Port
          << ",ip_dst=" << webAddr
          << " apply:output=" << pgwSgiPort;
   DpctlSchedule (m_pgwDpId, cmdOut.str ());
+
+  // ARP request packets. Send to controller.
+  DpctlSchedule (m_pgwDpId, "flow-mod cmd=add,table=0,prio=16 eth_type=0x0806 "
+                 "apply:output=ctrl");
+
+  // Table miss entry. Send to controller.
+  DpctlSchedule (m_pgwDpId, "flow-mod cmd=add,table=0,prio=0 "
+                 "apply:output=ctrl");
+
+  // -------------------------------------------------------------------------
+  // Table 1 -- P-GW TFT table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by TopologyInstallRouting function.
 }
 
 ofl_err
@@ -854,7 +879,7 @@ EpcController::ExtractIpv4Address (uint32_t oxm_of, ofl_match* match)
 
 Ptr<Packet>
 EpcController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
-  Mac48Address dstMac, Ipv4Address dstIp)
+                               Mac48Address dstMac, Ipv4Address dstIp)
 {
   NS_LOG_FUNCTION (this << srcMac << srcIp << dstMac << dstIp);
 
@@ -920,6 +945,7 @@ EpcController::UnregisterBearer (uint32_t teid)
 
 EpcController::QciDscpInitializer::QciDscpInitializer ()
 {
+  // FIXME: Agora no ns-3 tem os valores do DSCP definidos. Substituir.
   NS_LOG_FUNCTION_NOARGS ();
 
   std::pair <EpsBearer::Qci, uint16_t> entries [9];
@@ -985,11 +1011,11 @@ EpcController::UeInfo::Classify (Ptr<Packet> p)
   NS_LOG_FUNCTION (this << p);
   // we hardcode DOWNLINK direction since the PGW is espected to
   // classify only downlink packets (uplink packets will go to the
-  // internet without any classification). 
+  // internet without any classification).
   return m_tftClassifier.Classify (p, EpcTft::DOWNLINK);
 }
 
-Ipv4Address 
+Ipv4Address
 EpcController::UeInfo::GetEnbAddr ()
 {
   return m_enbAddr;
@@ -1001,7 +1027,7 @@ EpcController::UeInfo::SetEnbAddr (Ipv4Address enbAddr)
   m_enbAddr = enbAddr;
 }
 
-Ipv4Address 
+Ipv4Address
 EpcController::UeInfo::GetUeAddr ()
 {
   return m_ueAddr;
@@ -1015,17 +1041,20 @@ EpcController::UeInfo::SetUeAddr (Ipv4Address ueAddr)
 
 
 
-  
+
 Ipv4Address
 EpcController::GetEnbAddr (Ipv4Address ueAddr)
 {
   NS_LOG_FUNCTION (this << ueAddr);
 
-  // find corresponding UeInfo address
-  std::map<Ipv4Address, Ptr<UeInfo> >::iterator it = m_ueInfoByAddrMap.find (ueAddr);
-  NS_ASSERT_MSG (it != m_ueInfoByAddrMap.end (), "unknown UE address " << ueAddr);
-      
-  return it->second->GetEnbAddr ();      
+  // Find corresponding UeInfo address
+  IpUeInfoMap_t::iterator ret;
+  ret = m_ueInfoByAddrMap.find (ueAddr);
+  if (ret != m_ueInfoByAddrMap.end ())
+    {
+      return ret->second->GetEnbAddr ();
+    }
+  NS_FATAL_ERROR ("UE address registered in map.");
 }
 
 uint32_t
@@ -1033,101 +1062,152 @@ EpcController::GetTeid (Ipv4Address ueAddr, Ptr<Packet> packet)
 {
   NS_LOG_FUNCTION (this << ueAddr << packet);
 
-  // find corresponding UeInfo address
-  std::map<Ipv4Address, Ptr<UeInfo> >::iterator it = m_ueInfoByAddrMap.find (ueAddr);
-  NS_ASSERT_MSG (it != m_ueInfoByAddrMap.end (), "unknown UE address " << ueAddr);
-      
-  return it->second->Classify (packet);   
+  // Find corresponding UeInfo address
+  IpUeInfoMap_t::iterator ret;
+  ret = m_ueInfoByAddrMap.find (ueAddr);
+  if (ret != m_ueInfoByAddrMap.end ())
+    {
+      return ret->second->Classify (packet);
+    }
+  NS_FATAL_ERROR ("UE address registered in map.");
 }
 
-
-void 
+void
 EpcController::SetS11SapMme (EpcS11SapMme * s)
 {
   m_s11SapMme = s;
 }
 
-EpcS11SapSgw* 
+EpcS11SapSgw*
 EpcController::GetS11SapSgw ()
 {
   return m_s11SapSgw;
 }
 
-void 
-EpcController::AddEnb (uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr)
+void
+EpcController::AddEnb (uint16_t cellId, Ipv4Address enbAddr,
+                       Ipv4Address sgwAddr)
 {
   NS_LOG_FUNCTION (this << cellId << enbAddr << sgwAddr);
+
+  // Create and insert eNB info into map.
   EnbInfo enbInfo;
   enbInfo.enbAddr = enbAddr;
   enbInfo.sgwAddr = sgwAddr;
-  m_enbInfoByCellId[cellId] = enbInfo;
+
+  std::pair<uint16_t, EnbInfo> entry (cellId, enbInfo);
+  std::pair <CellIdEnbInfo_t::iterator, bool> ret;
+  ret = m_enbInfoByCellId.insert (entry);
+  if (ret.second == false)
+    {
+      NS_FATAL_ERROR ("Existing information for cellId " << cellId);
+    }
 }
 
-void 
+void
 EpcController::AddUe (uint64_t imsi)
 {
   NS_LOG_FUNCTION (this << imsi);
-  Ptr<UeInfo> ueInfo = Create<UeInfo> ();
-  m_ueInfoByImsiMap[imsi] = ueInfo;
+
+  // Create and insert UE info into map.
+  std::pair<uint64_t, Ptr<UeInfo> > entry (imsi, Create<UeInfo> ());
+  std::pair <ImsiUeInfoMap_t::iterator, bool> ret;
+  ret = m_ueInfoByImsiMap.insert (entry);
+  if (ret.second == false)
+    {
+      NS_FATAL_ERROR ("Existing information for ISMI " << imsi);
+    }
 }
 
-void 
+void
 EpcController::SetUeAddress (uint64_t imsi, Ipv4Address ueAddr)
 {
   NS_LOG_FUNCTION (this << imsi << ueAddr);
-  std::map<uint64_t, Ptr<UeInfo> >::iterator ueit = m_ueInfoByImsiMap.find (imsi);
-  NS_ASSERT_MSG (ueit != m_ueInfoByImsiMap.end (), "unknown IMSI " << imsi); 
-  m_ueInfoByAddrMap[ueAddr] = ueit->second;
-  ueit->second->SetUeAddr (ueAddr);
+
+  // Find UE info by ISMI
+  ImsiUeInfoMap_t::iterator imsiIt = m_ueInfoByImsiMap.find (imsi);
+  if (imsiIt == m_ueInfoByImsiMap.end ())
+    {
+      NS_FATAL_ERROR ("Unknown IMSI " << imsi);
+    }
+  imsiIt->second->SetUeAddr (ueAddr);
+
+  // Save UE info by eNB address (only in the first time)
+  IpUeInfoMap_t::iterator ipIt = m_ueInfoByAddrMap.find (ueAddr);
+  if (ipIt != m_ueInfoByAddrMap.end ())
+    {
+      NS_ASSERT_MSG (ipIt->second == imsiIt->second, "Invalid UeInfo");
+    }
+  else
+    {
+      std::pair<Ipv4Address, Ptr<UeInfo> > entry (ueAddr, imsiIt->second);
+      std::pair <IpUeInfoMap_t::iterator, bool> ret;
+      ret = m_ueInfoByAddrMap.insert (entry);
+      if (ret.second == false)
+        {
+          NS_FATAL_ERROR ("Existing information for IP " << ueAddr);
+        }
+    }
 }
 
-void 
-EpcController::DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage req)
+void
+EpcController::DoCreateSessionRequest (
+  EpcS11SapSgw::CreateSessionRequestMessage req)
 {
   NS_LOG_FUNCTION (this << req.imsi);
-  std::map<uint64_t, Ptr<UeInfo> >::iterator ueit = m_ueInfoByImsiMap.find (req.imsi);
-  NS_ASSERT_MSG (ueit != m_ueInfoByImsiMap.end (), "unknown IMSI " << req.imsi); 
+
+  ImsiUeInfoMap_t::iterator ueit = m_ueInfoByImsiMap.find (req.imsi);
+  NS_ASSERT (ueit != m_ueInfoByImsiMap.end ());
+  
   uint16_t cellId = req.uli.gci;
-  std::map<uint16_t, EnbInfo>::iterator enbit = m_enbInfoByCellId.find (cellId);
-  NS_ASSERT_MSG (enbit != m_enbInfoByCellId.end (), "unknown CellId " << cellId); 
+  CellIdEnbInfo_t::iterator enbit = m_enbInfoByCellId.find (cellId);
+  NS_ASSERT (enbit != m_enbInfoByCellId.end ());
+
   Ipv4Address enbAddr = enbit->second.enbAddr;
   ueit->second->SetEnbAddr (enbAddr);
 
   EpcS11SapMme::CreateSessionResponseMessage res;
   res.teid = req.imsi; // trick to avoid the need for allocating TEIDs on the S11 interface
 
-  for (std::list<EpcS11SapSgw::BearerContextToBeCreated>::iterator bit = req.bearerContextsToBeCreated.begin ();
+  std::list<EpcS11SapSgw::BearerContextToBeCreated>::iterator bit;
+  for (bit = req.bearerContextsToBeCreated.begin ();
        bit != req.bearerContextsToBeCreated.end ();
        ++bit)
     {
       // simple sanity check. If you ever need more than 4M teids
       // throughout your simulation, you'll need to implement a smarter teid
-      // management algorithm. 
+      // management algorithm.
       NS_ABORT_IF (m_teidCount == 0xFFFFFFFF);
-      uint32_t teid = ++m_teidCount;  
+      uint32_t teid = ++m_teidCount;
       ueit->second->AddBearer (bit->tft, bit->epsBearerId, teid);
 
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.teid = teid;
       bearerContext.sgwFteid.address = enbit->second.sgwAddr;
-      bearerContext.epsBearerId =  bit->epsBearerId; 
-      bearerContext.bearerLevelQos = bit->bearerLevelQos; 
+      bearerContext.epsBearerId =  bit->epsBearerId;
+      bearerContext.bearerLevelQos = bit->bearerLevelQos;
       bearerContext.tft = bit->tft;
       res.bearerContextsCreated.push_back (bearerContext);
     }
+
+  // Notify the controller of the new create session request accepted.
+  NotifySessionCreated (req.imsi, cellId, enbit->second.enbAddr,
+                        enbit->second.sgwAddr, res.bearerContextsCreated);
+
+  // Send the response message.
   m_s11SapMme->CreateSessionResponse (res);
 }
 
-void 
+void
 EpcController::DoModifyBearerRequest (EpcS11SapSgw::ModifyBearerRequestMessage req)
 {
   NS_LOG_FUNCTION (this << req.teid);
   uint64_t imsi = req.teid; // trick to avoid the need for allocating TEIDs on the S11 interface
-  std::map<uint64_t, Ptr<UeInfo> >::iterator ueit = m_ueInfoByImsiMap.find (imsi);
-  NS_ASSERT_MSG (ueit != m_ueInfoByImsiMap.end (), "unknown IMSI " << imsi); 
+  ImsiUeInfoMap_t::iterator ueit = m_ueInfoByImsiMap.find (imsi);
+  NS_ASSERT_MSG (ueit != m_ueInfoByImsiMap.end (), "unknown IMSI " << imsi);
   uint16_t cellId = req.uli.gci;
-  std::map<uint16_t, EnbInfo>::iterator enbit = m_enbInfoByCellId.find (cellId);
-  NS_ASSERT_MSG (enbit != m_enbInfoByCellId.end (), "unknown CellId " << cellId); 
+  CellIdEnbInfo_t::iterator enbit = m_enbInfoByCellId.find (cellId);
+  NS_ASSERT_MSG (enbit != m_enbInfoByCellId.end (), "unknown CellId " << cellId);
   Ipv4Address enbAddr = enbit->second.enbAddr;
   ueit->second->SetEnbAddr (enbAddr);
   // no actual bearer modification: for now we just support the minimum needed for path switch request (handover)
@@ -1136,13 +1216,13 @@ EpcController::DoModifyBearerRequest (EpcS11SapSgw::ModifyBearerRequestMessage r
   res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
   m_s11SapMme->ModifyBearerResponse (res);
 }
- 
+
 void
 EpcController::DoDeleteBearerCommand (EpcS11SapSgw::DeleteBearerCommandMessage req)
 {
   NS_LOG_FUNCTION (this << req.teid);
   uint64_t imsi = req.teid; // trick to avoid the need for allocating TEIDs on the S11 interface
-  std::map<uint64_t, Ptr<UeInfo> >::iterator ueit = m_ueInfoByImsiMap.find (imsi);
+  ImsiUeInfoMap_t::iterator ueit = m_ueInfoByImsiMap.find (imsi);
   NS_ASSERT_MSG (ueit != m_ueInfoByImsiMap.end (), "unknown IMSI " << imsi);
 
   EpcS11SapMme::DeleteBearerRequestMessage res;
@@ -1165,7 +1245,7 @@ EpcController::DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage
 {
   NS_LOG_FUNCTION (this << req.teid);
   uint64_t imsi = req.teid; // trick to avoid the need for allocating TEIDs on the S11 interface
-  std::map<uint64_t, Ptr<UeInfo> >::iterator ueit = m_ueInfoByImsiMap.find (imsi);
+  ImsiUeInfoMap_t::iterator ueit = m_ueInfoByImsiMap.find (imsi);
   NS_ASSERT_MSG (ueit != m_ueInfoByImsiMap.end (), "unknown IMSI " << imsi);
 
   for (std::list<EpcS11SapSgw::BearerContextRemovedSgwPgw>::iterator bit = req.bearerContextsRemoved.begin ();

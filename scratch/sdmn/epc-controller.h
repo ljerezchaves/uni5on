@@ -310,6 +310,12 @@ protected:
    */
   uint64_t GetDatapathId (uint16_t index) const;
 
+  /**
+   * Get the OpenFlow datapath ID for the P-GW switch.
+   * \return The P-GW datapath ID.
+   */
+  uint64_t GetPgwDatapathId () const;
+
 private:
   /**
    * Save the RoutingInfo metadata for further usage.
@@ -557,13 +563,17 @@ private:
     Ipv4Address sgwAddr;
   };
 
-  std::map<uint16_t, EnbInfo> m_enbInfoByCellId;
+  /** Map saving <Cell ID / eNB info> */
+  typedef std::map<uint16_t, EnbInfo> CellIdEnbInfo_t;
+  CellIdEnbInfo_t     m_enbInfoByCellId;    //!< eNBInfo mapped values.
 
   /** Map saving <UE address / UE info> */
-  std::map<Ipv4Address, Ptr<UeInfo> > m_ueInfoByAddrMap;
+  typedef std::map<Ipv4Address, Ptr<UeInfo> > IpUeInfoMap_t;
+  IpUeInfoMap_t       m_ueInfoByAddrMap;    //!< UeInfo mapped values by IP.
 
   /** Map saving <IMSI / UE info> */
-  std::map<uint64_t, Ptr<UeInfo> > m_ueInfoByImsiMap;
+  typedef std::map<uint64_t, Ptr<UeInfo> > ImsiUeInfoMap_t;
+  ImsiUeInfoMap_t     m_ueInfoByImsiMap;    //!< UeInfo mapped values by ISMI.
 
   /**
    * TEID counter, used to allocate new GTP-U TEID values.

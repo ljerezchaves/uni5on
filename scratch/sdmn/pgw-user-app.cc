@@ -21,6 +21,7 @@
 #include <ns3/lte-module.h>
 #include <ns3/ofswitch13-module.h>
 #include "pgw-user-app.h"
+#include "epc-network.h"
 
 namespace ns3 {
 
@@ -81,7 +82,7 @@ PgwUserApp::StartApplication ()
   m_tunnelSocket = Socket::CreateSocket (
       GetNode (), TypeId::LookupByName ("ns3::UdpSocketFactory"));
   m_tunnelSocket->Bind (
-    InetSocketAddress (Ipv4Address::GetAny (), m_gtpuPort));
+    InetSocketAddress (Ipv4Address::GetAny (), EpcNetwork::m_gtpuPort));
   m_tunnelSocket->SetRecvCallback (
     MakeCallback (&PgwUserApp::RecvFromTunnelSocket, this));
 }
@@ -94,11 +95,14 @@ PgwUserApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
 
   // Retrieve the GTP TEID from TunnelId tag, if available.
   TunnelIdTag tunnelIdTag;
-  uint64_t teid = 0;
-  if (packet->RemovePacketTag (tunnelIdTag))
-    {
-      teid = (uint32_t)tunnelIdTag.GetTunnelId ();
-    }
+  bool foud = packet->RemovePacketTag (tunnelIdTag);
+  NS_ASSERT_MSG (foud, "Expected TunnelId tag but not found.");
+  
+  // We expect that the S-GW address will be available in the 32 msb of
+  // tunnelId, while the TEID will be available in the 32 lsb of tunnelId.
+  uint64_t tagValue = tunnelIdTag.GetTunnelId ();
+  uint32_t teid = tagValue;
+  Ipv4Address enbAddr (tagValue >> 32);
 
   /// TEMPORARY
   // Get the IP address of the UE
@@ -111,7 +115,7 @@ PgwUserApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
   // pacote. Não teremos mais o elememento classificador... Espero que essas
   // duas informações venham embutidas no tunnel ID
   // find corresponding UeInfo address
-  Ipv4Address enbAddr = m_controlPlane->GetEnbAddr (ueAddr);
+  enbAddr = m_controlPlane->GetEnbAddr (ueAddr);
   teid = m_controlPlane->GetTeid (ueAddr, packet);
   /// TEMPORARY
 
@@ -128,7 +132,8 @@ PgwUserApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
 
   // Send the packet to the tunnel socket
   NS_LOG_DEBUG ("Sending packet to IP " << enbAddr);
-  m_tunnelSocket->SendTo (packet, 0, InetSocketAddress (enbAddr, m_gtpuPort));
+  m_tunnelSocket->SendTo (
+      packet, 0, InetSocketAddress (enbAddr, EpcNetwork::m_gtpuPort));
   return true;
 }
 
