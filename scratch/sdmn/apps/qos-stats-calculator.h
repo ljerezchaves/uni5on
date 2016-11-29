@@ -111,11 +111,11 @@ private:
   uint16_t           m_windowSize;       //!< Packet loss window size
   uint32_t           m_rxPackets;        //!< Number of received packets
   uint32_t           m_rxBytes;          //!< Number of RX bytes
-  Time               m_previousRx;       //!< Previous Rx time
-  Time               m_previousRxTx;     //!< Previous Rx or Tx time
+  Time               m_firstRxTime;      //!< First Rx time
+  Time               m_lastRxTime;       //!< Last Rx time
+  Time               m_lastTimestamp;    //!< Last timestamp
   int64_t            m_jitter;           //!< Jitter estimation
   Time               m_delaySum;         //!< Sum of packet delays
-  Time               m_lastResetTime;    //!< Last reset time
 
   // Fields used by EPC network monitoring
   uint32_t           m_seqNum;           //!< Sequence number counter

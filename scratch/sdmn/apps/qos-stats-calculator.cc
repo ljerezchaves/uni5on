@@ -31,11 +31,11 @@ QosStatsCalculator::QosStatsCalculator ()
     m_windowSize (32),
     m_rxPackets (0),
     m_rxBytes (0),
-    m_previousRx (Simulator::Now ()),
-    m_previousRxTx (Simulator::Now ()),
+    m_firstRxTime (Simulator::Now ()),
+    m_lastRxTime (Simulator::Now ()),
+    m_lastTimestamp (Simulator::Now ()),
     m_jitter (0),
     m_delaySum (Time ()),
-    m_lastResetTime (Simulator::Now ()),
     m_seqNum (0),
     m_meterDrop (0),
     m_queueDrop (0)
@@ -74,9 +74,9 @@ QosStatsCalculator::ResetCounters ()
   m_rxBytes = 0;
   m_jitter = 0;
   m_delaySum = Time ();
-  m_previousRx = Simulator::Now ();
-  m_previousRxTx = Simulator::Now ();
-  m_lastResetTime = Simulator::Now ();
+  m_firstRxTime = Simulator::Now ();
+  m_lastRxTime = Simulator::Now ();
+  m_lastTimestamp = Simulator::Now ();
   m_seqNum = 0;
   m_meterDrop = 0;
   m_queueDrop = 0;
@@ -95,13 +95,14 @@ QosStatsCalculator::NotifyReceived (uint32_t seqNum, Time timestamp,
                                     uint32_t rxBytes)
 {
   // The jitter is calculated using the RFC 1889 (RTP) jitter definition.
-  Time delta = (Simulator::Now () - m_previousRx) - (timestamp - m_previousRxTx);
+  Time now = Simulator::Now ();
+  Time delta = (now - m_lastRxTime) - (timestamp - m_lastTimestamp);
   m_jitter += ((Abs (delta)).GetTimeStep () - m_jitter) >> 4;
-  m_previousRx = Simulator::Now ();
-  m_previousRxTx = timestamp;
+  m_lastRxTime = now;
+  m_lastTimestamp = timestamp;
 
   // Updating delay, byte and packet counter
-  Time delay = Simulator::Now () - timestamp;
+  Time delay = now - timestamp;
   m_delaySum += delay;
   m_rxPackets++;
   m_rxBytes += rxBytes;  
@@ -125,7 +126,7 @@ QosStatsCalculator::NotifyQueueDrop ()
 Time      
 QosStatsCalculator::GetActiveTime (void) const
 {
-  return Simulator::Now () - m_lastResetTime;
+  return m_lastRxTime - m_firstRxTime;
 }
 
 uint32_t
