@@ -24,6 +24,7 @@
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
+#include "sdmn-server-app.h"
 #include "stored-video-client.h"
 
 namespace ns3 {
@@ -36,7 +37,7 @@ class StoredVideoClient;
  * listen for client video requests, and send data as fast as possible up to
  * random video length duration over TCP connection.
  */
-class StoredVideoServer : public Application
+class StoredVideoServer : public SdmnServerApp
 {
 public:
   /**

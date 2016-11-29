@@ -24,6 +24,7 @@
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
+#include "sdmn-server-app.h"
 #include "real-time-video-client.h"
 
 namespace ns3 {
@@ -36,7 +37,7 @@ class RealTimeVideoClient;
  * send UDP datagrams to a client following a MPEG video pattern with random
  * video length.
  */
-class RealTimeVideoServer : public Application
+class RealTimeVideoServer : public SdmnServerApp
 {
   friend class RealTimeVideoClient;
 

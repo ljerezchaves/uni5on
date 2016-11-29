@@ -42,7 +42,7 @@ TypeId
 StoredVideoServer::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::StoredVideoServer")
-    .SetParent<Application> ()
+    .SetParent<SdmnServerApp> ()
     .AddConstructor<StoredVideoServer> ()
     .AddAttribute ("LocalPort",
                    "Local TCP port listening for incoming connections.",
@@ -114,7 +114,7 @@ StoredVideoServer::DoDispose (void)
   m_lengthRng = 0;
   m_rxPacket = 0;
   m_entries.clear ();
-  Application::DoDispose ();
+  SdmnServerApp::DoDispose ();
 }
 
 void

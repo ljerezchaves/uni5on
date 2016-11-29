@@ -31,7 +31,7 @@ TypeId
 HttpServer::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::HttpServer")
-    .SetParent<Application> ()
+    .SetParent<SdmnServerApp> ()
     .AddConstructor<HttpServer> ()
     .AddAttribute ("LocalPort",
                    "Local TCP port listening for incoming connections.",
@@ -92,7 +92,7 @@ HttpServer::DoDispose (void)
   m_mainObjectSizeStream = 0;
   m_numOfInlineObjStream = 0;
   m_inlineObjectSizeStream = 0;
-  Application::DoDispose ();
+  SdmnServerApp::DoDispose ();
 }
 
 void

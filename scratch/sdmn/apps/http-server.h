@@ -26,6 +26,7 @@
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
 #include "ns3/http-header.h"
+#include "sdmn-server-app.h"
 #include "http-client.h"
 #include <string>
 #include <sstream>
@@ -46,7 +47,7 @@ class HttpClient;
  * modules of ns-3. To allow deeper studies about the HTTP Protocol it needs
  * some improvements.
  */
-class HttpServer : public Application
+class HttpServer : public SdmnServerApp
 {
 public:
   /**

@@ -49,7 +49,7 @@ TypeId
 RealTimeVideoServer::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RealTimeVideoServer")
-    .SetParent<Application> ()
+    .SetParent<SdmnServerApp> ()
     .AddConstructor<RealTimeVideoServer> ()
     .AddAttribute ("ClientAddress",
                    "The client IPv4 address.",
@@ -139,7 +139,7 @@ RealTimeVideoServer::DoDispose (void)
   m_clientApp = 0;
   m_lengthRng = 0;
   m_entries.clear ();
-  Application::DoDispose ();
+  SdmnServerApp::DoDispose ();
 }
 
 void

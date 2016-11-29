@@ -35,7 +35,7 @@ TypeId
 VoipServer::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::VoipServer")
-    .SetParent<Application> ()
+    .SetParent<SdmnServerApp> ()
     .AddConstructor<VoipServer> ()
     .AddAttribute ("ClientAddress",
                    "The IPv4 destination address of the outbound packets",
@@ -121,7 +121,7 @@ VoipServer::DoDispose (void)
   m_socket = 0;
   m_qosStats = 0;
   m_lengthRng = 0;
-  Application::DoDispose ();
+  SdmnServerApp::DoDispose ();
 }
 
 void

@@ -25,6 +25,7 @@
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
+#include "sdmn-server-app.h"
 #include "voip-client.h"
 #include "qos-stats-calculator.h"
 
@@ -38,7 +39,7 @@ class VoipClient;
  * receives UDP datagrams following voip traffic pattern. The start/stop events
  * are called by the client application. 
  */
-class VoipServer : public Application
+class VoipServer : public SdmnServerApp
 {
   friend class VoipClient;
 
