@@ -32,7 +32,9 @@ NS_OBJECT_ENSURE_REGISTERED (RealTimeVideoServer);
 /**
  * \brief Default trace to send
  */
-struct RealTimeVideoServer::TraceEntry RealTimeVideoServer::g_defaultEntries[] = {
+struct RealTimeVideoServer::TraceEntry
+  RealTimeVideoServer::g_defaultEntries[] =
+{
   {  0,  534, 'I'},
   { 40, 1542, 'P'},
   {120,  134, 'B'},
@@ -170,7 +172,7 @@ RealTimeVideoServer::StopApplication ()
     }
 }
 
-void 
+void
 RealTimeVideoServer::StartSending (Time maxDuration)
 {
   NS_LOG_FUNCTION (this);
@@ -190,7 +192,7 @@ RealTimeVideoServer::StartSending (Time maxDuration)
   SendStream ();
 }
 
-void 
+void
 RealTimeVideoServer::StopSending ()
 {
   NS_LOG_FUNCTION (this);
@@ -245,7 +247,7 @@ RealTimeVideoServer::LoadDefaultTrace (void)
   NS_LOG_FUNCTION (this);
 
   uint32_t prevTime = 0;
-  for (uint32_t i = 0; i < (sizeof (g_defaultEntries) / 
+  for (uint32_t i = 0; i < (sizeof (g_defaultEntries) /
                             sizeof (struct TraceEntry)); i++)
     {
       struct TraceEntry entry = g_defaultEntries[i];
@@ -279,7 +281,7 @@ RealTimeVideoServer::SendStream (void)
         }
       uint16_t sizetosend = entry->packetSize % m_maxPacketSize;
       SendPacket (sizetosend);
-      
+
       m_currentEntry++;
       m_currentEntry %= m_entries.size ();
       entry = &m_entries[m_currentEntry];
@@ -287,7 +289,7 @@ RealTimeVideoServer::SendStream (void)
   while (entry->timeToSend == 0);
 
   // Schedulle next transmission
-  m_sendEvent = Simulator::Schedule (MilliSeconds (entry->timeToSend), 
+  m_sendEvent = Simulator::Schedule (MilliSeconds (entry->timeToSend),
                                      &RealTimeVideoServer::SendStream, this);
 }
 
@@ -300,9 +302,9 @@ RealTimeVideoServer::SendPacket (uint32_t size)
   uint32_t packetSize = 0;
   if (size > 12)
     {
-      packetSize = size - 12; 
+      packetSize = size - 12;
     }
-  
+
   SeqTsHeader seqTs;
   seqTs.SetSeq (m_pktSent);
 

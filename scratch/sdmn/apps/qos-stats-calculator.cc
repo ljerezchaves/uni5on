@@ -69,7 +69,7 @@ void
 QosStatsCalculator::ResetCounters ()
 {
   delete m_lossCounter;
-  
+
   m_rxPackets = 0;
   m_rxBytes = 0;
   m_jitter = 0;
@@ -91,7 +91,7 @@ QosStatsCalculator::GetNextSeqNum ()
 }
 
 void
-QosStatsCalculator::NotifyReceived (uint32_t seqNum, Time timestamp, 
+QosStatsCalculator::NotifyReceived (uint32_t seqNum, Time timestamp,
                                     uint32_t rxBytes)
 {
   // The jitter is calculated using the RFC 1889 (RTP) jitter definition.
@@ -105,8 +105,8 @@ QosStatsCalculator::NotifyReceived (uint32_t seqNum, Time timestamp,
   Time delay = now - timestamp;
   m_delaySum += delay;
   m_rxPackets++;
-  m_rxBytes += rxBytes;  
-  
+  m_rxBytes += rxBytes;
+
   // Notify packet loss counter
   m_lossCounter->NotifyReceived (seqNum);
 }
@@ -123,7 +123,7 @@ QosStatsCalculator::NotifyQueueDrop ()
   m_queueDrop++;
 }
 
-Time      
+Time
 QosStatsCalculator::GetActiveTime (void) const
 {
   return m_lastRxTime - m_firstRxTime;
@@ -132,7 +132,7 @@ QosStatsCalculator::GetActiveTime (void) const
 uint32_t
 QosStatsCalculator::GetLostPackets (void) const
 {
-  // Workaround for lost packets not yet identified 
+  // Workaround for lost packets not yet identified
   // by the PacketLossCounter packet window.
   uint32_t lost = m_lossCounter->GetLost ();
   uint32_t drops = m_meterDrop + m_queueDrop;
@@ -147,31 +147,31 @@ QosStatsCalculator::GetLossRatio (void) const
   return txPkts ? (double)lost / txPkts : 0.;
 }
 
-uint32_t  
+uint32_t
 QosStatsCalculator::GetRxPackets (void) const
 {
   return m_rxPackets;
 }
 
-uint32_t  
+uint32_t
 QosStatsCalculator::GetRxBytes (void) const
 {
   return m_rxBytes;
 }
 
-Time      
+Time
 QosStatsCalculator::GetRxDelay (void) const
 {
   return m_rxPackets ? (m_delaySum / (int64_t)m_rxPackets) : m_delaySum;
 }
 
-Time      
+Time
 QosStatsCalculator::GetRxJitter (void) const
 {
   return Time (m_jitter);
 }
 
-DataRate 
+DataRate
 QosStatsCalculator::GetRxThroughput (void) const
 {
   return DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ());

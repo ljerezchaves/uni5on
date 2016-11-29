@@ -37,7 +37,7 @@ class VoipServer;
  * \ingroup applications
  * This is the client side of a voip traffic generator. This client sends and
  * receives UDP datagrams following voip traffic pattern. This client control
- * start/stop events on the server application. 
+ * start/stop events on the server application.
  */
 class VoipClient : public SdmnClientApp
 {
@@ -45,9 +45,9 @@ public:
   /**
    * \brief Register this type.
    * \return the object TypeId
-   */ 
+   */
   static TypeId GetTypeId (void);
-  
+
   VoipClient ();             //!< Default constructor
   virtual ~VoipClient ();    //!< Dummy destructor, see DoDipose
 
@@ -61,18 +61,18 @@ public:
                   uint16_t serverPort);
 
   /**
-   * \brief Get the VoIP server application. 
-   * \return The pointer to server application. 
+   * \brief Get the VoIP server application.
+   * \return The pointer to server application.
    */
   Ptr<VoipServer> GetServerApp ();
- 
+
   /**
    * Get QoS statistics
    * \return Get the const pointer to QosStatsCalculator
    */
   Ptr<const QosStatsCalculator> GetServerQosStats (void) const;
 
-  /** 
+  /**
    * Reset the QoS statistics
    */
   void ResetQosStats ();
@@ -94,7 +94,7 @@ protected:
    * \brief Dump application statistcs and fire stop callback.
    */
   void NotifyStop ();
-  
+
 private:
   // inherited from Application base class.
   virtual void StartApplication (void);    // Called at time specified by Start
@@ -104,7 +104,7 @@ private:
    * \brief Start the streaming.
    */
   void StartSending ();
-  
+
   /**
    * \brief Stop the streaming.
    */

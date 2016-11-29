@@ -30,7 +30,7 @@
 namespace ns3 {
 
 /**
- * \ingroup applications 
+ * \ingroup applications
  * Create a StoredVideoHelper which will make life easier for people trying to
  * set up simulations with stored video client/server.
  */

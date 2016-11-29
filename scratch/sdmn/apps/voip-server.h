@@ -37,7 +37,7 @@ class VoipClient;
  * \ingroup applications
  * This is the server side of a voip traffic generator. This server sends and
  * receives UDP datagrams following voip traffic pattern. The start/stop events
- * are called by the client application. 
+ * are called by the client application.
  */
 class VoipServer : public SdmnServerApp
 {
@@ -47,9 +47,9 @@ public:
   /**
    * \brief Register this type.
    * \return the object TypeId
-   */ 
+   */
   static TypeId GetTypeId (void);
-  
+
   VoipServer ();             //!< Default constructor
   virtual ~VoipServer ();    //!< Dummy destructor, see DoDipose
 
@@ -59,7 +59,7 @@ public:
    * \param clientAddress The IPv4 address of the client.
    * \param clientPort The port number on the client.
    */
-  void SetClient (Ptr<VoipClient> client, Ipv4Address clientAddress, 
+  void SetClient (Ptr<VoipClient> client, Ipv4Address clientAddress,
                   uint16_t clientPort);
 
   /**
@@ -68,14 +68,14 @@ public:
    */
   Ptr<VoipClient> GetClientApp ();
 
-  /** 
+  /**
    * Reset the QoS statistics
    */
   void ResetQosStats ();
 
   /**
    * Get QoS statistics
-   * \return Get the const pointer to QosStatsCalculator 
+   * \return Get the const pointer to QosStatsCalculator
    */
   Ptr<const QosStatsCalculator> GetQosStats (void) const;
 
@@ -86,13 +86,13 @@ private:
   // inherited from Application base class.
   virtual void StartApplication (void);    // Called at time specified by Start
   virtual void StopApplication (void);     // Called at time specified by Stop
-  
+
   /**
    * \brief Start the streaming.
    * \param maxDuration The maximum duration for this traffic.
    */
   void StartSending (Time maxDuration = Time ());
-  
+
   /**
    * \brief Stop the streaming.
    */

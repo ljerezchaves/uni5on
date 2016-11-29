@@ -57,7 +57,7 @@ public:
    * \param clientAddress The IPv4 address of the client.
    * \param clientPort The port number on the client.
    */
-  void SetClient (Ptr<RealTimeVideoClient> client, 
+  void SetClient (Ptr<RealTimeVideoClient> client,
                   Ipv4Address clientAddress, uint16_t clientPort);
 
   /**
@@ -93,7 +93,7 @@ private:
    * \brief Stop the streaming.
    */
   void StopSending ();
- 
+
   /**
    * \brief Load a trace file.
    * \param filename The trace file path.

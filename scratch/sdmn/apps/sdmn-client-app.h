@@ -49,7 +49,7 @@ class SdmnClientApp : public Application
 public:
   SdmnClientApp ();            //!< Default constructor
   virtual ~SdmnClientApp ();   //!< Dummy destructor, see DoDipose
-  
+
   /**
    * Get the type ID.
    * \return the object TypeId
@@ -61,7 +61,7 @@ public:
    * \return Get the const pointer to QosStatsCalculator
    */
   Ptr<const QosStatsCalculator> GetQosStats (void) const;
-  
+
   /**
    * \return The pgw tft for this application.
    */
@@ -71,12 +71,12 @@ public:
    * \return The EpsBearer for this application.
    */
   EpsBearer GetEpsBearer (void) const;
-  
+
   /**
    * \return The teid for this application.
    */
   uint32_t GetTeid (void) const;
-  
+
   /**
    * Get the application name.
    * \return The application name.
@@ -98,7 +98,7 @@ public:
    * TracedCallback signature for SdmnClientApp.
    * \param app The SdmnClientApp.
    */
-  typedef void (* EpcAppTracedCallback)(Ptr<const SdmnClientApp> app);
+  typedef void (*EpcAppTracedCallback)(Ptr<const SdmnClientApp> app);
 
 protected:
   /** Destructor implementation */
@@ -110,7 +110,7 @@ protected:
   virtual void ResetQosStats ();
 
   Ptr<QosStatsCalculator> m_qosStats;   //!< QoS statistics
- 
+
   Time m_maxDurationTime;   //!< Application max duration time
   bool m_active;            //!< Active state for this application
   std::string m_name;       //!< Name for this application
@@ -122,7 +122,7 @@ protected:
   TracedCallback<Ptr<const SdmnClientApp> > m_appStopTrace;
 
 private:
-  // LTE EPC metadata 
+  // LTE EPC metadata
   Ptr<EpcTft>   m_tft;        //!< Traffic flow template for this app
   EpsBearer     m_bearer;     //!< EPS bearer info
   uint32_t      m_teid;       //!< GTP TEID associated with this app

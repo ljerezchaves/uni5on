@@ -42,7 +42,7 @@ VoipServer::GetTypeId (void)
                    Ipv4AddressValue (),
                    MakeIpv4AddressAccessor (&VoipServer::m_clientAddress),
                    MakeIpv4AddressChecker ())
-    .AddAttribute ("ClientPort", 
+    .AddAttribute ("ClientPort",
                    "The destination port of the outbound packets",
                    UintegerValue (100),
                    MakeUintegerAccessor (&VoipServer::m_clientPort),
@@ -87,7 +87,7 @@ VoipServer::~VoipServer ()
 }
 
 void
-VoipServer::SetClient (Ptr<VoipClient> client, Ipv4Address clientAddress, 
+VoipServer::SetClient (Ptr<VoipClient> client, Ipv4Address clientAddress,
                        uint16_t clientPort)
 {
   m_clientApp = client;
@@ -95,13 +95,13 @@ VoipServer::SetClient (Ptr<VoipClient> client, Ipv4Address clientAddress,
   m_clientPort = clientPort;
 }
 
-Ptr<VoipClient> 
+Ptr<VoipClient>
 VoipServer::GetClientApp ()
 {
   return m_clientApp;
 }
 
-void 
+void
 VoipServer::ResetQosStats ()
 {
   m_qosStats->ResetCounters ();
@@ -128,7 +128,7 @@ void
 VoipServer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
-  
+
   if (m_socket == 0)
     {
       TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
@@ -153,12 +153,12 @@ VoipServer::StopApplication ()
     }
 }
 
-void 
+void
 VoipServer::StartSending (Time maxDuration)
 {
   NS_LOG_FUNCTION (this);
 
- // Schedule traffic end, respecting max hard traffic duration
+  // Schedule traffic end, respecting max hard traffic duration
   Time stopTime = Seconds (std::abs (m_lengthRng->GetValue ()));
   if (!maxDuration.IsZero () && stopTime > maxDuration)
     {
@@ -171,7 +171,7 @@ VoipServer::StartSending (Time maxDuration)
   m_sendEvent = Simulator::Schedule (m_interval, &VoipServer::SendPacket, this);
 }
 
-void 
+void
 VoipServer::StopSending ()
 {
   NS_LOG_FUNCTION (this);
@@ -196,7 +196,7 @@ VoipServer::SendPacket ()
 
   Ptr<Packet> packet = Create<Packet> (m_pktSize);
   packet->AddHeader (seqTs);
- 
+
   if (m_socket->Send (packet))
     {
       m_pktSent++;
@@ -221,7 +221,7 @@ VoipServer::ReadPacket (Ptr<Socket> socket)
         {
           SeqTsHeader seqTs;
           packet->RemoveHeader (seqTs);
-          NS_LOG_DEBUG ("VoIP RX " << packet->GetSize () <<" bytes");
+          NS_LOG_DEBUG ("VoIP RX " << packet->GetSize () << " bytes");
           m_qosStats->NotifyReceived (seqTs.GetSeq (), seqTs.GetTs (), packet->GetSize ());
         }
     }

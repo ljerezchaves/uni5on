@@ -74,7 +74,7 @@ RealTimeVideoClient::SetTraceFilename (std::string filename)
   m_serverApp->SetAttribute ("TraceFilename", StringValue (filename));
 }
 
-void 
+void
 RealTimeVideoClient::ServerTrafficEnd (uint32_t pkts)
 {
   NS_LOG_FUNCTION (this);
@@ -83,7 +83,7 @@ RealTimeVideoClient::ServerTrafficEnd (uint32_t pkts)
   Simulator::Schedule (MilliSeconds (250), &RealTimeVideoClient::NotifyStop, this);
 }
 
-void 
+void
 RealTimeVideoClient::Start (void)
 {
   NS_LOG_FUNCTION (this);
@@ -103,7 +103,7 @@ RealTimeVideoClient::DoDispose (void)
   SdmnClientApp::DoDispose ();
 }
 
-void 
+void
 RealTimeVideoClient::NotifyStop ()
 {
   NS_LOG_FUNCTION (this);

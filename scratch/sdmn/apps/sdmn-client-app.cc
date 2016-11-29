@@ -26,7 +26,7 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("SdmnClientApp");
 NS_OBJECT_ENSURE_REGISTERED (SdmnClientApp);
 
-SdmnClientApp::SdmnClientApp()
+SdmnClientApp::SdmnClientApp ()
   : m_qosStats (Create<QosStatsCalculator> ()),
     m_active (false),
     m_tft (0),
@@ -35,7 +35,7 @@ SdmnClientApp::SdmnClientApp()
   NS_LOG_FUNCTION (this);
 }
 
-SdmnClientApp::~SdmnClientApp()
+SdmnClientApp::~SdmnClientApp ()
 {
   NS_LOG_FUNCTION (this);
 }
@@ -64,7 +64,7 @@ SdmnClientApp::GetTypeId (void)
     .AddTraceSource ("AppStop",
                      "SdmnClientApp stop trace source.",
                      MakeTraceSourceAccessor (&SdmnClientApp::m_appStopTrace),
-                     "ns3::SdmnClientApp::EpcAppTracedCallback")  
+                     "ns3::SdmnClientApp::EpcAppTracedCallback")
   ;
   return tid;
 }
@@ -105,7 +105,7 @@ SdmnClientApp::GetTeid (void) const
   return m_teid;
 }
 
-std::string 
+std::string
 SdmnClientApp::GetAppName (void) const
 {
   return m_name;

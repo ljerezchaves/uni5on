@@ -32,7 +32,7 @@
 namespace ns3 {
 
 /**
- * \ingroup applications 
+ * \ingroup applications
  * Create a VoipHelper which will make life easier for people trying to set up
  * simulations with voip client/server.
  */
@@ -65,7 +65,7 @@ public:
    * \return The client application created.
    */
   Ptr<VoipClient>
-  Install (Ptr<Node> clientNode, Ptr<Node> serverNode, Ipv4Address clientAddr, 
+  Install (Ptr<Node> clientNode, Ptr<Node> serverNode, Ipv4Address clientAddr,
            Ipv4Address serverAddr, uint16_t port);
 
 private:

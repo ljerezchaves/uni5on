@@ -30,7 +30,7 @@
 namespace ns3 {
 
 /**
- * \ingroup applications 
+ * \ingroup applications
  * Create a RealTimeVideoHelper which will make life easier for people trying
  * to set up simulations with real-time video client/server.
  */
@@ -62,7 +62,7 @@ public:
    * \return The client application created.
    */
   Ptr<RealTimeVideoClient>
-  Install (Ptr<Node> clientNode, Ptr<Node> serverNode, 
+  Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
            Ipv4Address clientAddress, uint16_t port);
 
 private:

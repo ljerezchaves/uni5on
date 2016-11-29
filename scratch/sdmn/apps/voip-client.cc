@@ -42,7 +42,7 @@ VoipClient::GetTypeId (void)
                    Ipv4AddressValue (),
                    MakeIpv4AddressAccessor (&VoipClient::m_serverAddress),
                    MakeIpv4AddressChecker ())
-    .AddAttribute ("ServerPort", 
+    .AddAttribute ("ServerPort",
                    "The destination port of the outbound packets",
                    UintegerValue (100),
                    MakeUintegerAccessor (&VoipClient::m_serverPort),
@@ -90,7 +90,7 @@ VoipClient::SetServer (Ptr<VoipServer> server, Ipv4Address serverAddress,
   m_serverPort = serverPort;
 }
 
-Ptr<VoipServer> 
+Ptr<VoipServer>
 VoipClient::GetServerApp ()
 {
   return m_serverApp;
@@ -102,25 +102,25 @@ VoipClient::GetServerQosStats (void) const
   return m_serverApp->GetQosStats ();
 }
 
-void 
+void
 VoipClient::ResetQosStats ()
 {
   m_qosStats->ResetCounters ();
   m_serverApp->ResetQosStats ();
 }
 
-void 
+void
 VoipClient::ServerTrafficEnd (uint32_t pkts)
 {
   NS_LOG_FUNCTION (this);
-  
+
   StopSending ();
 
   // Let's wait some msec for delayed packets before notifying stopped app.
   Simulator::Schedule (MilliSeconds (250), &VoipClient::NotifyStop, this);
 }
 
-void 
+void
 VoipClient::Start (void)
 {
   NS_LOG_FUNCTION (this);
@@ -141,7 +141,7 @@ VoipClient::DoDispose (void)
   SdmnClientApp::DoDispose ();
 }
 
-void 
+void
 VoipClient::NotifyStop ()
 {
   NS_LOG_FUNCTION (this);
@@ -155,7 +155,7 @@ void
 VoipClient::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
-  
+
   if (m_socket == 0)
     {
       TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
@@ -172,7 +172,7 @@ VoipClient::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
   Simulator::Cancel (m_sendEvent);
-  
+
   if (m_socket != 0)
     {
       m_socket->Close ();
@@ -180,16 +180,16 @@ VoipClient::StopApplication ()
     }
 }
 
-void 
+void
 VoipClient::StartSending ()
 {
   NS_LOG_FUNCTION (this);
-  
+
   m_pktSent = 0;
   m_sendEvent = Simulator::Schedule (m_interval, &VoipClient::SendPacket, this);
 }
 
-void 
+void
 VoipClient::StopSending ()
 {
   NS_LOG_FUNCTION (this);
@@ -207,7 +207,7 @@ VoipClient::SendPacket ()
 
   Ptr<Packet> packet = Create<Packet> (m_pktSize);
   packet->AddHeader (seqTs);
- 
+
   if (m_socket->Send (packet))
     {
       m_pktSent++;
@@ -232,7 +232,7 @@ VoipClient::ReadPacket (Ptr<Socket> socket)
         {
           SeqTsHeader seqTs;
           packet->RemoveHeader (seqTs);
-          NS_LOG_DEBUG ("VoIP RX " << packet->GetSize () <<" bytes");
+          NS_LOG_DEBUG ("VoIP RX " << packet->GetSize () << " bytes");
           m_qosStats->NotifyReceived (seqTs.GetSeq (), seqTs.GetTs (), packet->GetSize ());
         }
     }

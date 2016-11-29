@@ -48,23 +48,23 @@ VoipHelper::SetServerAttribute (std::string name, const AttributeValue &value)
   m_serverFactory.Set (name, value);
 }
 
-Ptr<VoipClient> 
-VoipHelper::Install (Ptr<Node>   clientNode, Ptr<Node>   serverNode, 
+Ptr<VoipClient>
+VoipHelper::Install (Ptr<Node>   clientNode, Ptr<Node>   serverNode,
                      Ipv4Address clientAddr, Ipv4Address serverAddr,
                      uint16_t    port)
 {
   Ptr<VoipClient> clientApp = m_clientFactory.Create<VoipClient> ();
   Ptr<VoipServer> serverApp = m_serverFactory.Create<VoipServer> ();
-  
+
   clientApp->SetAttribute ("LocalPort", UintegerValue (port));
   clientApp->SetServer (serverApp, serverAddr, port);
   clientNode->AddApplication (clientApp);
-  
+
   serverApp->SetAttribute ("LocalPort", UintegerValue (port));
   serverApp->SetAttribute ("StartTime", TimeValue (Seconds (0)));
   serverApp->SetClient (clientApp, clientAddr, port);
   serverNode->AddApplication (serverApp);
-  
+
   return clientApp;
 }
 

@@ -26,7 +26,7 @@
 #include "ns3/nstime.h"
 
 namespace ns3 {
-  
+
 /**
  * \ingroup applications
  *
@@ -40,7 +40,7 @@ class QosStatsCalculator : public SimpleRefCount<QosStatsCalculator>
 public:
   QosStatsCalculator ();  //!< Default constructor
   virtual ~QosStatsCalculator (); //!< Default destructor
-  
+
   /**
    * Returns the size of the window used for checking loss.
    * \return The window size.
@@ -52,12 +52,12 @@ public:
    * \param The window size. This value should be a multiple of 8.
    */
   void SetPacketWindowSize (uint16_t size);
-  
-  /** 
-   * Reset all internal counters. 
+
+  /**
+   * Reset all internal counters.
    */
   void ResetCounters ();
-  
+
   /**
    * Update stats using information from a new received packet.
    * \param seqNum The sequence number for this packet.
@@ -82,7 +82,7 @@ public:
    * \return The next sequence number to use.
    */
   uint32_t GetNextSeqNum ();
-  
+
   /**
    * Get QoS statistics.
    * \return The statistic value.
@@ -100,11 +100,11 @@ public:
   uint32_t  GetQueueDrops   (void) const;
   //\}
 
-  /** 
+  /**
    * TracedCallback signature for QosStatsCalculator.
    * \param stats The statistics.
    */
-  typedef void (* QosStatsCallback)(Ptr<const QosStatsCalculator> stats);
+  typedef void (*QosStatsCallback)(Ptr<const QosStatsCalculator> stats);
 
 private:
   PacketLossCounter *m_lossCounter;      //!< Lost packet counter
