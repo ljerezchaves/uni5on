@@ -42,17 +42,18 @@ RealTimeVideoHelper::SetServerAttribute (std::string name, const AttributeValue 
 
 Ptr<RealTimeVideoClient>
 RealTimeVideoHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
-                              Ipv4Address clientAddress, uint16_t clientPort)
+                              Ipv4Address clientAddress, uint16_t port)
 {
   Ptr<RealTimeVideoClient> clientApp = m_clientFactory.Create<RealTimeVideoClient> ();
   Ptr<RealTimeVideoServer> serverApp = m_serverFactory.Create<RealTimeVideoServer> ();
 
-  clientApp->SetAttribute ("LocalPort", UintegerValue (clientPort));
+  clientApp->SetAttribute ("LocalPort", UintegerValue (port));
   clientApp->SetServer (serverApp);
   clientNode->AddApplication (clientApp);
 
-  serverApp->SetClient (clientApp, clientAddress, clientPort);
+  serverApp->SetAttribute ("LocalPort", UintegerValue (port));
   serverApp->SetAttribute ("StartTime", TimeValue (Seconds (0)));
+  serverApp->SetClient (clientApp, clientAddress, port);
   serverNode->AddApplication (serverApp);
 
   return clientApp;

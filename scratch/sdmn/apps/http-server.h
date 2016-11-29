@@ -124,11 +124,10 @@ private:
   void SendObject (Ptr<Socket> socket, uint32_t available);
 
   Ptr<Socket>     m_socket;             //!< Local socket.
-  uint16_t        m_port;               //!< Local port.
+  uint16_t        m_localPort;          //!< Local port.
   bool            m_connected;          //!< True if connected
   Ptr<HttpClient> m_clientApp;          //!< Client application.
   uint32_t        m_pendingBytes;       //!< Pending TX bytes
-  Ptr<Packet>     m_rxPacket;           //!< RX packet.
 
   /** Random variable for main object size. */
   Ptr<WeibullRandomVariable>      m_mainObjectSizeStream;

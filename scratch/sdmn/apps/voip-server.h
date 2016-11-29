@@ -114,9 +114,8 @@ private:
   Ipv4Address               m_clientAddress;  //!< Client address
   uint16_t                  m_clientPort;     //!< Client port
   Ptr<VoipClient>           m_clientApp;      //!< Client application
-  uint16_t                  m_localPort;      //!< Inbound local port
-  Ptr<Socket>               m_txSocket;       //!< Outbound TX socket
-  Ptr<Socket>               m_rxSocket;       //!< Inbound RX socket
+  uint16_t                  m_localPort;      //!< Local port
+  Ptr<Socket>               m_socket;         //!< Local socket
   EventId                   m_sendEvent;      //!< SendPacket event
   Ptr<QosStatsCalculator>   m_qosStats;       //!< QoS statistics
   Ptr<RandomVariableStream> m_lengthRng;      //!< Random call length

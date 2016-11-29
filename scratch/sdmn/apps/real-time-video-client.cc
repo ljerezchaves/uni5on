@@ -34,7 +34,7 @@ RealTimeVideoClient::GetTypeId (void)
     .AddConstructor<RealTimeVideoClient> ()
     .AddAttribute ("LocalPort",
                    "Local TCP port on which we listen for incoming connections.",
-                   UintegerValue (80),
+                   UintegerValue (100),
                    MakeUintegerAccessor (&RealTimeVideoClient::m_localPort),
                    MakeUintegerChecker<uint16_t> ())
   ;
@@ -121,8 +121,7 @@ RealTimeVideoClient::StartApplication ()
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tid);
-      m_socket->Bind (
-        InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
+      m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
       m_socket->SetRecvCallback (
         MakeCallback (&RealTimeVideoClient::ReadPacket, this));
     }

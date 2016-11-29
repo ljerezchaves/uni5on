@@ -96,8 +96,8 @@ private:
    */
   void ReadPacket (Ptr<Socket> socket);
   
-  uint16_t                  m_localPort;  //!< Inbound local port
-  Ptr<Socket>               m_socket;     //!< Inbound RX socket
+  uint16_t                  m_localPort;  //!< Local port
+  Ptr<Socket>               m_socket;     //!< Local socket
   Ptr<RealTimeVideoServer>  m_serverApp;  //!< Server application
 };
 

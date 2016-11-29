@@ -127,9 +127,8 @@ private:
   Ipv4Address               m_serverAddress;  //!< Server address
   uint16_t                  m_serverPort;     //!< Server port
   Ptr<VoipServer>           m_serverApp;      //!< Server application
-  uint16_t                  m_localPort;      //!< Inbound local port
-  Ptr<Socket>               m_txSocket;       //!< Outbound TX socket
-  Ptr<Socket>               m_rxSocket;       //!< Inbound RX socket
+  uint16_t                  m_localPort;      //!< Local port
+  Ptr<Socket>               m_socket;         //!< Local socket
   EventId                   m_sendEvent;      //!< SendPacket event
 };
 

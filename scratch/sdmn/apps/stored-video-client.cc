@@ -39,8 +39,13 @@ StoredVideoClient::GetTypeId (void)
                    MakeIpv4AddressChecker ())
     .AddAttribute ("ServerPort",
                    "The server TCP port.",
-                   UintegerValue (80),
+                   UintegerValue (100),
                    MakeUintegerAccessor (&StoredVideoClient::m_serverPort),
+                   MakeUintegerChecker<uint16_t> ())
+    .AddAttribute ("LocalPort",
+                   "Local TCP port.",
+                   UintegerValue (100),
+                   MakeUintegerAccessor (&StoredVideoClient::m_localPort),
                    MakeUintegerChecker<uint16_t> ())
   ;
   return tid;
@@ -63,10 +68,10 @@ StoredVideoClient::~StoredVideoClient ()
 }
 
 void
-StoredVideoClient::SetServer (Ptr<StoredVideoServer> server,
+StoredVideoClient::SetServer (Ptr<StoredVideoServer> serverApp,
                               Ipv4Address serverAddress, uint16_t serverPort)
 {
-  m_serverApp = server;
+  m_serverApp = serverApp;
   m_serverAddress = serverAddress;
   m_serverPort = serverPort;
 }
@@ -140,7 +145,7 @@ StoredVideoClient::OpenSocket ()
       NS_LOG_LOGIC ("Opening the TCP connection.");
       TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tcpFactory);
-      m_socket->Bind ();
+      m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
       m_socket->Connect (InetSocketAddress (m_serverAddress, m_serverPort));
       m_socket->SetConnectCallback (
         MakeCallback (&StoredVideoClient::ConnectionSucceeded, this),

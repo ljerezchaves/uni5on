@@ -43,6 +43,11 @@ HttpClient::GetTypeId (void)
                    UintegerValue (80),
                    MakeUintegerAccessor (&HttpClient::m_serverPort),
                    MakeUintegerChecker<uint16_t> ())
+    .AddAttribute ("LocalPort",
+                   "Local TCP port.",
+                   UintegerValue (80),
+                   MakeUintegerAccessor (&HttpClient::m_localPort),
+                   MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("MaxReadingTime",
                    "The reading time threshold to stop application.",
                    TimeValue (Time::Max ()),
@@ -91,10 +96,10 @@ HttpClient::~HttpClient ()
 }
 
 void
-HttpClient::SetServer (Ptr<HttpServer> server, Ipv4Address serverAddress,
+HttpClient::SetServer (Ptr<HttpServer> serverApp, Ipv4Address serverAddress,
                        uint16_t serverPort)
 {
-  m_serverApp = server;
+  m_serverApp = serverApp;
   m_serverAddress = serverAddress;
   m_serverPort = serverPort;
 }
@@ -163,7 +168,7 @@ HttpClient::OpenSocket ()
       NS_LOG_LOGIC ("Opening the TCP connection.");
       TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tcpFactory);
-      m_socket->Bind ();
+      m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
       m_socket->Connect (InetSocketAddress (m_serverAddress, m_serverPort));
       m_socket->SetConnectCallback (
         MakeCallback (&HttpClient::ConnectionSucceeded, this),

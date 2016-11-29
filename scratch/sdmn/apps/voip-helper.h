@@ -13,7 +13,8 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Author: Saulo da Mata <damata.saulo@gmail.com>
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
@@ -60,13 +61,12 @@ public:
    * \param serverNode The node to install the server app.
    * \param clientAddr The IPv4 address of the client.
    * \param serverAddr The IPv4 address of the server.
-   * \param clientPort The port number on the client.
-   * \param serverPort The port number on the server.
+   * \param port The port number on both client and server.
    * \return The client application created.
    */
   Ptr<VoipClient>
   Install (Ptr<Node> clientNode, Ptr<Node> serverNode, Ipv4Address clientAddr, 
-           Ipv4Address serverAddr, uint16_t clientPort, uint16_t serverPort);
+           Ipv4Address serverAddr, uint16_t port);
 
 private:
   ObjectFactory m_clientFactory; //!< Object client factory.

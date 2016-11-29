@@ -46,8 +46,8 @@ StoredVideoServer::GetTypeId (void)
     .AddConstructor<StoredVideoServer> ()
     .AddAttribute ("LocalPort",
                    "Local TCP port listening for incoming connections.",
-                   UintegerValue (2000),
-                   MakeUintegerAccessor (&StoredVideoServer::m_port),
+                   UintegerValue (100),
+                   MakeUintegerAccessor (&StoredVideoServer::m_localPort),
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("TraceFilename",
                    "Name of file to load a trace from.",
@@ -65,7 +65,7 @@ StoredVideoServer::GetTypeId (void)
 
 StoredVideoServer::StoredVideoServer ()
   : m_socket (0),
-    m_port (0),
+    m_localPort (0),
     m_connected (false),
     m_clientApp (0),
     m_pendingBytes (0),
@@ -126,9 +126,8 @@ StoredVideoServer::StartApplication (void)
     {
       TypeId tid = TypeId::LookupByName ("ns3::TcpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tid);
-      InetSocketAddress local =
-        InetSocketAddress (Ipv4Address::GetAny (), m_port);
-      m_socket->Bind (local);
+      m_socket->SetAttribute ("SndBufSize", UintegerValue (4096));
+      m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
       m_socket->Listen ();
       m_socket->SetAcceptCallback (
         MakeCallback (&StoredVideoServer::HandleRequest, this),

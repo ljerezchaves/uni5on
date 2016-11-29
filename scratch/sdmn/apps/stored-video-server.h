@@ -153,7 +153,7 @@ private:
   static struct TraceEntry        g_defaultEntries[]; //!< Default trace
   std::vector<struct TraceEntry>  m_entries;          //!< Trace entries
   Ptr<Socket>                     m_socket;           //!< Local socket
-  uint16_t                        m_port;             //!< Local port
+  uint16_t                        m_localPort;        //!< Local port
   bool                            m_connected;        //!< True if connected
   Ptr<StoredVideoClient>          m_clientApp;        //!< Client application
   Ptr<RandomVariableStream>       m_lengthRng;        //!< Length generator

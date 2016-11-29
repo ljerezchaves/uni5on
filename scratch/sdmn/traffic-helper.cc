@@ -301,30 +301,21 @@ TrafficHelper::InstallGbrVoip ()
 
   // Bidirectional VoIP traffic
   Ptr<VoipClient> cApp = m_voipHelper.Install (m_ueNode, m_webNode, m_ueAddr,
-                                               m_webAddr, portNo, portNo);
+                                               m_webAddr, portNo);
 
-  // TFT downlink packet filter
+  // TFT Packet filter
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
-  EpcTft::PacketFilter filterDown;
-  filterDown.direction = EpcTft::DOWNLINK;
-  filterDown.remoteAddress = m_webAddr;
-  filterDown.remoteMask = m_webMask;
-  filterDown.localAddress = m_ueAddr;
-  filterDown.localMask = m_ueMask;
-  filterDown.localPortStart = portNo;
-  filterDown.localPortEnd = portNo;
-  tft->Add (filterDown);
-
-  // TFT uplink packet filter
-  EpcTft::PacketFilter filterUp;
-  filterUp.direction = EpcTft::UPLINK;
-  filterUp.remoteAddress = m_webAddr;
-  filterUp.remoteMask = m_webMask;
-  filterUp.localAddress = m_ueAddr;
-  filterUp.localMask = m_ueMask;
-  filterUp.remotePortStart = portNo;
-  filterUp.remotePortEnd = portNo;
-  tft->Add (filterUp);
+  EpcTft::PacketFilter filter;
+  filter.direction = EpcTft::BIDIRECTIONAL;
+  filter.remoteAddress = m_webAddr;
+  filter.remoteMask = m_webMask;
+  filter.remotePortStart = portNo;
+  filter.remotePortEnd = portNo;
+  filter.localAddress = m_ueAddr;
+  filter.localMask = m_ueMask;
+  filter.localPortStart = portNo;
+  filter.localPortEnd = portNo;
+  tft->Add (filter);
 
   // Dedicated GBR EPS bearer (QCI 1)
   GbrQosInformation qos;
@@ -352,7 +343,7 @@ TrafficHelper::InstallGbrLiveVideoStreaming ()
       return;
     }
 
-  static uint16_t portNo = 20000;
+  static uint16_t portNo = 15000;
   portNo++;
 
   // Downlink real-time video traffic
@@ -369,6 +360,8 @@ TrafficHelper::InstallGbrLiveVideoStreaming ()
   filter.direction = EpcTft::DOWNLINK;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;
+  filter.remotePortStart = portNo;
+  filter.remotePortEnd = portNo;
   filter.localAddress = m_ueAddr;
   filter.localMask = m_ueMask;
   filter.localPortStart = portNo;
@@ -401,7 +394,7 @@ TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
       return;
     }
 
-  static uint16_t portNo = 30000;
+  static uint16_t portNo = 20000;
   portNo++;
 
   // Downlink stored video traffic (with TCP bidirectional traffic filter).
@@ -418,10 +411,12 @@ TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
   filter.direction = EpcTft::BIDIRECTIONAL;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;
-  filter.localAddress = m_ueAddr;
-  filter.localMask = m_ueMask;
   filter.remotePortStart = portNo;
   filter.remotePortEnd = portNo;
+  filter.localAddress = m_ueAddr;
+  filter.localMask = m_ueMask;
+  filter.localPortStart = portNo;
+  filter.localPortEnd = portNo;
   tft->Add (filter);
 
   // Dedicated Non-GBR EPS bearer (QCI 6)
@@ -448,7 +443,7 @@ TrafficHelper::InstallNonGbrLiveVideoStreaming ()
       return;
     }
 
-  static uint16_t portNo = 40000;
+  static uint16_t portNo = 25000;
   portNo++;
 
   // Downlink real-time video traffic
@@ -465,6 +460,8 @@ TrafficHelper::InstallNonGbrLiveVideoStreaming ()
   filter.direction = EpcTft::DOWNLINK;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;
+  filter.remotePortStart = portNo;
+  filter.remotePortEnd = portNo;
   filter.localAddress = m_ueAddr;
   filter.localMask = m_ueMask;
   filter.localPortStart = portNo;
@@ -495,7 +492,7 @@ TrafficHelper::InstallNonGbrHttp ()
       return;
     }
 
-  static uint16_t portNo = 50000;
+  static uint16_t portNo = 30000;
   portNo++;
 
   // Downlink HTTP web traffic (with TCP bidirectional traffic filter).
@@ -508,10 +505,12 @@ TrafficHelper::InstallNonGbrHttp ()
   filter.direction = EpcTft::BIDIRECTIONAL;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;
-  filter.localAddress = m_ueAddr;
-  filter.localMask = m_ueMask;
   filter.remotePortStart = portNo;
   filter.remotePortEnd = portNo;
+  filter.localAddress = m_ueAddr;
+  filter.localMask = m_ueMask;
+  filter.localPortStart = portNo;
+  filter.localPortEnd = portNo;
   tft->Add (filter);
 
   // Dedicated Non-GBR EPS bearer (QCI 8)

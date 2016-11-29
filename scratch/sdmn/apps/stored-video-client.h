@@ -48,16 +48,16 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  StoredVideoClient ();   //!< Default constructor
-  ~StoredVideoClient ();  //!< Dummy destructor, see DoDipose
+  StoredVideoClient ();           //!< Default constructor
+  virtual ~StoredVideoClient ();  //!< Dummy destructor, see DoDipose
 
   /**
    * \brief Set the server application.
-   * \param server The pointer to server application.
+   * \param serverApp The pointer to server application.
    * \param serverAddress The IPv4 address of the server.
    * \param serverPort The port number on the server
    */
-  void SetServer (Ptr<StoredVideoServer> server, Ipv4Address serverAddress,
+  void SetServer (Ptr<StoredVideoServer> serverApp, Ipv4Address serverAddress,
                   uint16_t serverPort);
 
   /**
@@ -119,6 +119,7 @@ private:
   void HandleReceive (Ptr<Socket> socket);
 
   Ptr<Socket>             m_socket;         //!< Local socket.
+  uint16_t                m_localPort;      //!< Local port.
   Ipv4Address             m_serverAddress;  //!< Server address.
   uint16_t                m_serverPort;     //!< Server port.
   Ptr<StoredVideoServer>  m_serverApp;      //!< Server application.

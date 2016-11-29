@@ -42,15 +42,16 @@ StoredVideoHelper::SetServerAttribute (std::string name, const AttributeValue &v
 
 Ptr<StoredVideoClient>
 StoredVideoHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
-                            Ipv4Address serverAddress, uint16_t serverPort)
+                            Ipv4Address serverAddress, uint16_t port)
 {
   Ptr<StoredVideoClient> clientApp = m_clientFactory.Create<StoredVideoClient> ();
   Ptr<StoredVideoServer> serverApp = m_serverFactory.Create<StoredVideoServer> ();
 
-  clientApp->SetServer (serverApp, serverAddress, serverPort);
+  clientApp->SetAttribute ("LocalPort", UintegerValue (port));
+  clientApp->SetServer (serverApp, serverAddress, port);
   clientNode->AddApplication (clientApp);
 
-  serverApp->SetAttribute ("LocalPort", UintegerValue (serverPort));
+  serverApp->SetAttribute ("LocalPort", UintegerValue (port));
   serverApp->SetAttribute ("StartTime", TimeValue (Seconds (0)));
   serverApp->SetClient (clientApp);
   serverNode->AddApplication (serverApp);

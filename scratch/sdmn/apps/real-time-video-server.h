@@ -132,6 +132,7 @@ private:
   EventId                         m_sendEvent;        //!< SendPacket event
   uint16_t                        m_maxPacketSize;    //!< Maximum packet size
   Ptr<Socket>                     m_socket;           //!< Outbouding TX socket
+  uint16_t                        m_localPort;        //!< Local port
   Ipv4Address                     m_clientAddress;    //!< Client address
   uint16_t                        m_clientPort;       //!< Client UDP port
   Ptr<RealTimeVideoClient>        m_clientApp;        //!< Client application

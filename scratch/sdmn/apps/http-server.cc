@@ -36,7 +36,7 @@ HttpServer::GetTypeId (void)
     .AddAttribute ("LocalPort",
                    "Local TCP port listening for incoming connections.",
                    UintegerValue (80),
-                   MakeUintegerAccessor (&HttpServer::m_port),
+                   MakeUintegerAccessor (&HttpServer::m_localPort),
                    MakeUintegerChecker<uint16_t> ())
   ;
   return tid;
@@ -44,11 +44,10 @@ HttpServer::GetTypeId (void)
 
 HttpServer::HttpServer ()
   : m_socket (0),
-    m_port (0),
+    m_localPort (0),
     m_connected (false),
     m_clientApp (0),
-    m_pendingBytes (0),
-    m_rxPacket (0)
+    m_pendingBytes (0)
 {
   NS_LOG_FUNCTION (this);
 
@@ -90,7 +89,6 @@ HttpServer::DoDispose (void)
   NS_LOG_FUNCTION (this);
   m_socket = 0;
   m_clientApp = 0;
-  m_rxPacket = 0;
   m_mainObjectSizeStream = 0;
   m_numOfInlineObjStream = 0;
   m_inlineObjectSizeStream = 0;
@@ -106,9 +104,7 @@ HttpServer::StartApplication (void)
     {
       TypeId tid = TypeId::LookupByName ("ns3::TcpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tid);
-      InetSocketAddress local =
-        InetSocketAddress (Ipv4Address::GetAny (), m_port);
-      m_socket->Bind (local);
+      m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
       m_socket->Listen ();
       m_socket->SetAcceptCallback (
         MakeCallback (&HttpServer::HandleRequest, this),
@@ -218,7 +214,6 @@ HttpServer::HandleAccept (Ptr<Socket> socket, const Address& address)
   socket->SetRecvCallback (MakeCallback (&HttpServer::HandleReceive, this));
   m_connected = true;
   m_pendingBytes = 0;
-  m_rxPacket = 0;
 }
 
 void
@@ -228,9 +223,9 @@ HttpServer::HandleReceive (Ptr<Socket> socket)
 
   // This application expects to receive a single HTTP GET message at a time.
   HttpHeader httpHeader;
-  m_rxPacket = socket->Recv ();
-  m_rxPacket->RemoveHeader (httpHeader);
-  NS_ASSERT (m_rxPacket->GetSize () == 0);
+  Ptr<Packet> packet = socket->Recv ();
+  packet->RemoveHeader (httpHeader);
+  NS_ASSERT (packet->GetSize () == 0);
 
   ProccessHttpRequest (socket, httpHeader);
 }

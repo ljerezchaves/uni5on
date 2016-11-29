@@ -58,12 +58,12 @@ public:
    * \param clientNode The node to install the client app.
    * \param serverNode The node to install the server app.
    * \param serverAddress The IPv4 address of the server.
-   * \param serverPort The port number on the server
+   * \param port The port number on both client and server.
    * \return The client application created.
    */
   Ptr<StoredVideoClient>
   Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
-           Ipv4Address serverAddress, uint16_t serverPort);
+           Ipv4Address serverAddress, uint16_t port);
 
 private:
   ObjectFactory m_clientFactory; //!< Object client factory.

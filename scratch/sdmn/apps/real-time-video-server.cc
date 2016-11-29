@@ -61,6 +61,11 @@ RealTimeVideoServer::GetTypeId (void)
                    UintegerValue (100),
                    MakeUintegerAccessor (&RealTimeVideoServer::m_clientPort),
                    MakeUintegerChecker<uint16_t> ())
+    .AddAttribute ("LocalPort",
+                   "Local TCP port.",
+                   UintegerValue (100),
+                   MakeUintegerAccessor (&RealTimeVideoServer::m_localPort),
+                   MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("MaxPacketSize",
                    "The maximum size [bytes] of a packet.",
                    UintegerValue (1400),
@@ -146,7 +151,7 @@ RealTimeVideoServer::StartApplication (void)
     {
       TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), udpFactory);
-      m_socket->Bind ();
+      m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
       m_socket->Connect (InetSocketAddress (m_clientAddress, m_clientPort));
       m_socket->ShutdownRecv ();
       m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());

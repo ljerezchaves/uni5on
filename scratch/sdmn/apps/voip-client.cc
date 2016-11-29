@@ -69,8 +69,7 @@ VoipClient::GetTypeId (void)
 VoipClient::VoipClient ()
   : m_pktSent (0),
     m_serverApp (0),
-    m_txSocket (0),
-    m_rxSocket (0)
+    m_socket (0)
 {
   NS_LOG_FUNCTION (this);
   m_sendEvent = EventId ();
@@ -138,8 +137,7 @@ VoipClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   m_serverApp = 0;
-  m_txSocket = 0;
-  m_rxSocket = 0;
+  m_socket = 0;
   SdmnApplication::DoDispose ();
 }
 
@@ -158,24 +156,13 @@ VoipClient::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
   
-  // Inbound side
-  if (m_rxSocket == 0)
+  if (m_socket == 0)
     {
       TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
-      m_rxSocket = Socket::CreateSocket (GetNode (), udpFactory);
-      m_rxSocket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
-      m_rxSocket->SetRecvCallback (MakeCallback (&VoipClient::ReadPacket, this));
-    }
-
-  // Outbound side
-  if (m_txSocket == 0)
-    {
-      TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
-      m_txSocket = Socket::CreateSocket (GetNode (), udpFactory);
-      m_txSocket->Bind ();
-      m_txSocket->Connect (InetSocketAddress (m_serverAddress, m_serverPort));
-      m_txSocket->ShutdownRecv ();
-      m_txSocket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
+      m_socket = Socket::CreateSocket (GetNode (), udpFactory);
+      m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
+      m_socket->Connect (InetSocketAddress (m_serverAddress, m_serverPort));
+      m_socket->SetRecvCallback (MakeCallback (&VoipClient::ReadPacket, this));
     }
   Simulator::Cancel (m_sendEvent);
 }
@@ -186,16 +173,10 @@ VoipClient::StopApplication ()
   NS_LOG_FUNCTION (this);
   Simulator::Cancel (m_sendEvent);
   
-  if (m_txSocket != 0)
+  if (m_socket != 0)
     {
-      m_txSocket->Close ();
-      m_txSocket = 0;
-    }
-  
-  if (m_rxSocket == 0)
-    {
-      m_rxSocket->Close ();
-      m_rxSocket = 0;
+      m_socket->Close ();
+      m_socket = 0;
     }
 }
 
@@ -227,7 +208,7 @@ VoipClient::SendPacket ()
   Ptr<Packet> packet = Create<Packet> (m_pktSize);
   packet->AddHeader (seqTs);
  
-  if (m_txSocket->Send (packet))
+  if (m_socket->Send (packet))
     {
       m_pktSent++;
       NS_LOG_DEBUG ("VoIP TX " << m_pktSize << " bytes");
