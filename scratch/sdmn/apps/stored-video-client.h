@@ -25,7 +25,7 @@
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
 #include "stored-video-server.h"
-#include "sdmn-application.h"
+#include "sdmn-client-app.h"
 #include "qos-stats-calculator.h"
 
 namespace ns3 {
@@ -39,7 +39,7 @@ class StoredVideoServer;
  * the main video object. After receiving the entire video, the client closes
  * the connection.
  */
-class StoredVideoClient : public SdmnApplication
+class StoredVideoClient : public SdmnClientApp
 {
 public:
   /**
@@ -72,7 +72,7 @@ public:
    */
   void SetTraceFilename (std::string filename);
 
-  // Inherited from SdmnApplication
+  // Inherited from SdmnClientApp
   void Start (void);
 
 protected:

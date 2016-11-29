@@ -30,7 +30,7 @@ TypeId
 RealTimeVideoClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RealTimeVideoClient")
-    .SetParent<SdmnApplication> ()
+    .SetParent<SdmnClientApp> ()
     .AddConstructor<RealTimeVideoClient> ()
     .AddAttribute ("LocalPort",
                    "Local TCP port on which we listen for incoming connections.",
@@ -100,7 +100,7 @@ RealTimeVideoClient::DoDispose (void)
   NS_LOG_FUNCTION (this);
   m_serverApp = 0;
   m_socket = 0;
-  SdmnApplication::DoDispose ();
+  SdmnClientApp::DoDispose ();
 }
 
 void 

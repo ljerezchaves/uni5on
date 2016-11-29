@@ -25,7 +25,7 @@
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
 #include "real-time-video-server.h"
-#include "sdmn-application.h"
+#include "sdmn-client-app.h"
 #include "qos-stats-calculator.h"
 
 namespace ns3 {
@@ -38,7 +38,7 @@ class RealTimeVideoServer;
  * start the transmission at the server (using a direct member function call),
  * and receives UDP datagrams from server to measures statistiscs.
  */
-class RealTimeVideoClient : public SdmnApplication
+class RealTimeVideoClient : public SdmnClientApp
 {
 public:
   /**
@@ -74,7 +74,7 @@ public:
    */
   void ServerTrafficEnd (uint32_t pkts);
 
-  // Inherited from SdmnApplication
+  // Inherited from SdmnClientApp
   void Start (void);
 
 protected:

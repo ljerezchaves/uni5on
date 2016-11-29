@@ -27,7 +27,7 @@
 #include "ns3/internet-module.h"
 #include "ns3/http-header.h"
 #include "http-server.h"
-#include "sdmn-application.h"
+#include "sdmn-client-app.h"
 #include "qos-stats-calculator.h"
 #include <string>
 #include <sstream>
@@ -52,7 +52,7 @@ class HttpServer;
  * proposed algorithm in other modules of ns-3. To allow deeper studies about
  * the HTTP Protocol it needs some improvements.
  */
-class HttpClient : public SdmnApplication
+class HttpClient : public SdmnClientApp
 {
 public:
   /**
@@ -79,7 +79,7 @@ public:
    */
   Ptr<HttpServer> GetServerApp ();
 
-  // Inherited from SdmnApplication
+  // Inherited from SdmnClientApp
   void Start (void);
 
 protected:

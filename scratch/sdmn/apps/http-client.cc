@@ -31,7 +31,7 @@ TypeId
 HttpClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::HttpClient")
-    .SetParent<SdmnApplication> ()
+    .SetParent<SdmnClientApp> ()
     .AddConstructor<HttpClient> ()
     .AddAttribute ("ServerAddress",
                    "The server IPv4 address.",
@@ -136,7 +136,7 @@ HttpClient::DoDispose (void)
   m_readingTimeAdjustStream = 0;
   Simulator::Cancel (m_forceStop);
   Simulator::Cancel (m_nextRequest);
-  SdmnApplication::DoDispose ();
+  SdmnClientApp::DoDispose ();
 }
 
 void

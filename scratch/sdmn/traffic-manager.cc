@@ -60,7 +60,7 @@ TrafficManager::GetTypeId (void)
 }
 
 void
-TrafficManager::AddSdmnApplication (Ptr<SdmnApplication> app)
+TrafficManager::AddSdmnClientApp (Ptr<SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -76,7 +76,7 @@ TrafficManager::AddSdmnApplication (Ptr<SdmnApplication> app)
 }
 
 void
-TrafficManager::AppStartTry (Ptr<SdmnApplication> app)
+TrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -124,20 +124,20 @@ TrafficManager::AppStartTry (Ptr<SdmnApplication> app)
       // Set the maximum traffic duration.
       Time duration = nextStartTry - Seconds (3);
       app->SetAttribute ("MaxDurationTime", TimeValue (duration));
-      Simulator::Schedule (Seconds (1), &SdmnApplication::Start, app);
+      Simulator::Schedule (Seconds (1), &SdmnClientApp::Start, app);
     }
 }
 
 void
-TrafficManager::NotifyAppStop (Ptr<const SdmnApplication> app)
+TrafficManager::NotifyAppStop (Ptr<const SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << app);
 
   uint32_t appTeid = app->GetTeid ();
   if (appTeid != m_defaultTeid)
     {
-      // No resource release for traffic over default bearer. Schedule the
-      // release for 1 second after application stop.
+      // No resource release for traffic over default bearer.
+      // Schedule the release for 1 second after application stop.
       Simulator::Schedule (Seconds (1), &EpcController::ReleaseDedicatedBearer,
         m_controller, app->GetEpsBearer (), m_imsi, m_cellId, appTeid);
     }
@@ -160,10 +160,10 @@ TrafficManager::SessionCreatedCallback (
   m_defaultTeid = bearerList.front ().sgwFteid.teid;
 
   // For each application, set the corresponding teid
-  std::vector<Ptr<SdmnApplication> >::iterator appIt;
+  std::vector<Ptr<SdmnClientApp> >::iterator appIt;
   for (appIt = m_apps.begin (); appIt != m_apps.end (); appIt++)
     {
-      Ptr<SdmnApplication> app = *appIt;
+      Ptr<SdmnClientApp> app = *appIt;
 
       // Using the tft to match bearers and apps
       Ptr<EpcTft> tft = app->GetTft ();

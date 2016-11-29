@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef EPC_APPLICATION_H
-#define EPC_APPLICATION_H
+#ifndef SDMN_CLIENT_APP_H
+#define SDMN_CLIENT_APP_H
 
 #include "ns3/object.h"
 #include "ns3/ptr.h"
@@ -33,22 +33,22 @@ namespace ns3 {
 
 /**
  * \ingroup applications
- * This class extends the Application class to proper work with SDMN
+ * This class extends the Application class to proper work with the SDMN
  * architecture. Only clients applications (those which will be installed into
- * UEs) should use this SdmnApplication as superclass. It includes a
- * QosStatsCalculator for traffic statistics, and a stop callback to notify the
- * SDN controller when the traffic stops. Each application is associated with
- * an EPS bearer, and application traffic is sent within GTP tunnels over EPC
- * interfaces. These informations are also saved here for further usage.
+ * UEs) should extends this class. It includes a QosStatsCalculator for traffic
+ * statistics, and start/stop callbacks to notify the SDMN controller when the
+ * traffic stats/stops. Each application is associated with an EPS bearer, and
+ * application traffic is sent within GTP tunnels over EPC interfaces. These
+ * informations are also saved here for further usage.
  */
-class SdmnApplication : public Application
+class SdmnClientApp : public Application
 {
   friend class TrafficHelper;
   friend class TrafficManager;
 
 public:
-  SdmnApplication ();            //!< Default constructor
-  virtual ~SdmnApplication ();   //!< Dummy destructor, see DoDipose
+  SdmnClientApp ();            //!< Default constructor
+  virtual ~SdmnClientApp ();   //!< Dummy destructor, see DoDipose
   
   /**
    * Get the type ID.
@@ -95,10 +95,10 @@ public:
   bool IsActive (void) const;
 
   /**
-   * TracedCallback signature for SdmnApplication.
-   * \param app The SdmnApplication.
+   * TracedCallback signature for SdmnClientApp.
+   * \param app The SdmnClientApp.
    */
-  typedef void (* EpcAppTracedCallback)(Ptr<const SdmnApplication> app);
+  typedef void (* EpcAppTracedCallback)(Ptr<const SdmnClientApp> app);
 
 protected:
   /** Destructor implementation */
@@ -116,10 +116,10 @@ protected:
   std::string m_name;       //!< Name for this application
 
   /** Application start trace source, fired when application start. */
-  TracedCallback<Ptr<const SdmnApplication> > m_appStartTrace;
+  TracedCallback<Ptr<const SdmnClientApp> > m_appStartTrace;
 
   /** Application stop trace source, fired when application stopts. */
-  TracedCallback<Ptr<const SdmnApplication> > m_appStopTrace;
+  TracedCallback<Ptr<const SdmnClientApp> > m_appStopTrace;
 
 private:
   // LTE EPC metadata 
@@ -129,4 +129,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* EPC_APPLICATION_H */
+#endif /* SDMN_CLIENT_APP_H */
