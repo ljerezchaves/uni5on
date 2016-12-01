@@ -46,7 +46,7 @@ public:
   LteNetwork (Ptr<EpcHelper> epcHelper);
 
   LteNetwork ();           //!< Default constructor
-  virtual ~LteNetwork ();  //!< Dummy destructor, see DoDipose
+  virtual ~LteNetwork ();  //!< Dummy destructor, see DoDispose
 
   /**
    * Register this type.

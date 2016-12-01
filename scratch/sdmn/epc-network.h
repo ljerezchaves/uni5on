@@ -46,7 +46,7 @@ class EpcNetwork : public EpcHelper
 {
 public:
   EpcNetwork ();          //!< Default constructor
-  virtual ~EpcNetwork (); //!< Dummy destructor, see DoDipose
+  virtual ~EpcNetwork (); //!< Dummy destructor, see DoDispose
 
   /**
    * Register this type.

@@ -362,7 +362,7 @@ EpcController::DoDispose ()
   m_enbInfoByCellId.clear ();
   m_ueInfoByAddrMap.clear ();
   m_ueInfoByImsiMap.clear ();
- 
+
   m_mme = 0;
 
   delete (m_s11SapSgw);
@@ -751,7 +751,7 @@ EpcController::ConfigurePgwRules (
   cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
 //        << ",in_port=" << pgwSgiPort << " goto:1";
         << ",in_port=" << pgwSgiPort
-        << " apply:output=" << pgwS5Port;  
+        << " apply:output=" << pgwS5Port;
   DpctlSchedule (m_pgwDpId, cmdIn.str ());
 
   // IP packets coming from the LTE network and addressed to the Internet are
@@ -1158,7 +1158,7 @@ EpcController::DoCreateSessionRequest (
 
   ImsiUeInfoMap_t::iterator ueit = m_ueInfoByImsiMap.find (req.imsi);
   NS_ASSERT (ueit != m_ueInfoByImsiMap.end ());
-  
+
   uint16_t cellId = req.uli.gci;
   CellIdEnbInfo_t::iterator enbit = m_enbInfoByCellId.find (cellId);
   NS_ASSERT (enbit != m_enbInfoByCellId.end ());

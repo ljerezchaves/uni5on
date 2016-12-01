@@ -41,7 +41,7 @@ class MeterInfo : public Object
 
 public:
   MeterInfo ();          //!< Default constructor
-  virtual ~MeterInfo (); //!< Dummy destructor, see DoDipose
+  virtual ~MeterInfo (); //!< Dummy destructor, see DoDispose
 
   /**
    * Complete constructor.

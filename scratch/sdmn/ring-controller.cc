@@ -229,20 +229,20 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
 //  // Installing the TFT downlink rule into P-GW switch
 //  std::ostringstream pgwTft;
 //  pgwTft << " ip_src=" <<
-//         << ",ip_dst=" << 
+//         << ",ip_dst=" <<
 //  if (// TCP)
 //    {
 //      pgwTft << ",ip_proto=6"
-//             << ",tcp_src=" << 
-//             << ",tcp_dst=" << 
+//             << ",tcp_src=" <<
+//             << ",tcp_dst=" <<
 //    }
 //  else
 //    {
 //      pgwTft << ",ip_proto=17"
-//             << ",udp_src=" << 
-//             << ",src_dst=" << 
+//             << ",udp_src=" <<
+//             << ",src_dst=" <<
 //    }
-//  
+//
 //  // Set teid and enbAddr
 //
 //  pgwTft << " apply:output=" << // output port no
@@ -362,7 +362,7 @@ RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
 
   // We will only remove meter entries from switch. This will automatically
   // remove referring flow rules. The other rules will expired due idle
-  // timeout. 
+  // timeout.
   return RemoveMeterRules (rInfo);
 }
 

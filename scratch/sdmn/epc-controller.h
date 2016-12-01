@@ -45,7 +45,7 @@ class EpcController : public OFSwitch13Controller
 
 public:
   EpcController ();           //!< Default constructor
-  virtual ~EpcController ();  //!< Dummy destructor, see DoDipose
+  virtual ~EpcController ();  //!< Dummy destructor, see DoDispose
 
   /**
    * Register this type.
@@ -491,11 +491,11 @@ private:
      */
     void SetUeAddr (Ipv4Address addr);
 
-    private:
-      EpcTftClassifier m_tftClassifier;
-      Ipv4Address m_enbAddr;
-      Ipv4Address m_ueAddr;
-      std::map<uint8_t, uint32_t> m_teidByBearerIdMap;
+  private:
+    EpcTftClassifier            m_tftClassifier;
+    Ipv4Address                 m_enbAddr;
+    Ipv4Address                 m_ueAddr;
+    std::map<uint8_t, uint32_t> m_teidByBearerIdMap;
   };
 
   /**
@@ -555,7 +555,7 @@ private:
   static QciDscpMap_t m_qciDscpTable;     //!< DSCP mapped values.
 
 
-  
+
   /** Struct representing eNB info. */
   struct EnbInfo
   {

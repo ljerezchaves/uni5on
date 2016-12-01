@@ -46,7 +46,7 @@ public:
   };
 
   RingRoutingInfo ();          //!< Default constructor
-  virtual ~RingRoutingInfo (); //!< Dummy destructor, see DoDipose
+  virtual ~RingRoutingInfo (); //!< Dummy destructor, see DoDispose
 
   /**
    * Complete constructor.

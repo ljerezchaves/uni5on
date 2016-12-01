@@ -535,7 +535,7 @@ EpcNetwork::ConfigureGatewayAndInternet ()
   Ptr<PgwUserApp> pgwUserApp = CreateObject <PgwUserApp> (
       pgwS5PortDev, m_webSgiIpAddr, webSgiMacAddr, pgwSgiMacAddr);
   m_pgwNode->AddApplication (pgwUserApp);
-  
+
   // FIXME Remove
   pgwUserApp->m_controlPlane = m_epcCtrlApp;
 
@@ -573,7 +573,7 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
   Ptr<Node> ueNode = ueDevice->GetNode ();
   Ptr<Ipv4> ueIpv4 = ueNode->GetObject<Ipv4> ();
   NS_ASSERT_MSG (ueIpv4 != 0, "UEs need to have IPv4 installed.");
-  
+
   int32_t interface = ueIpv4->GetInterfaceForDevice (ueDevice);
   NS_ASSERT (interface >= 0);
   NS_ASSERT (ueIpv4->GetNAddresses (interface) == 1);

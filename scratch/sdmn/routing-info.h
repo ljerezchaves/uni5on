@@ -51,7 +51,7 @@ class RoutingInfo : public Object
 
 public:
   RoutingInfo ();          //!< Default constructor
-  virtual ~RoutingInfo (); //!< Dummy destructor, see DoDipose
+  virtual ~RoutingInfo (); //!< Dummy destructor, see DoDispose
 
   /**
    * Register this type.
