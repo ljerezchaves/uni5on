@@ -31,33 +31,13 @@ StoredVideoClient::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::StoredVideoClient")
     .SetParent<SdmnClientApp> ()
     .AddConstructor<StoredVideoClient> ()
-    .AddAttribute ("ServerAddress",
-                   "The server IPv4 address.",
-                   Ipv4AddressValue (),
-                   MakeIpv4AddressAccessor (
-                     &StoredVideoClient::m_serverAddress),
-                   MakeIpv4AddressChecker ())
-    .AddAttribute ("ServerPort",
-                   "The server TCP port.",
-                   UintegerValue (100),
-                   MakeUintegerAccessor (&StoredVideoClient::m_serverPort),
-                   MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("LocalPort",
-                   "Local TCP port.",
-                   UintegerValue (100),
-                   MakeUintegerAccessor (&StoredVideoClient::m_localPort),
-                   MakeUintegerChecker<uint16_t> ())
   ;
   return tid;
 }
 
 StoredVideoClient::StoredVideoClient ()
-  : m_socket (0),
-    m_serverPort (0),
-    m_serverApp (0),
-    m_forceStop (EventId ()),
-    m_pendingBytes (0),
-    m_rxPacket (0)
+  : m_rxPacket (0),
+    m_pendingBytes (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -68,78 +48,18 @@ StoredVideoClient::~StoredVideoClient ()
 }
 
 void
-StoredVideoClient::SetServer (Ptr<StoredVideoServer> serverApp,
-                              Ipv4Address serverAddress, uint16_t serverPort)
-{
-  m_serverApp = serverApp;
-  m_serverAddress = serverAddress;
-  m_serverPort = serverPort;
-}
-
-Ptr<StoredVideoServer>
-StoredVideoClient::GetServerApp ()
-{
-  return m_serverApp;
-}
-
-void
-StoredVideoClient::SetTraceFilename (std::string filename)
-{
-  NS_LOG_FUNCTION (this << filename);
-
-  NS_ASSERT_MSG (m_serverApp, "No server application found.");
-  m_serverApp->SetAttribute ("TraceFilename", StringValue (filename));
-}
-
-void
 StoredVideoClient::Start (void)
 {
-  ResetQosStats ();
-  m_active = true;
-  m_appStartTrace (this);
-
-  if (!m_maxDurationTime.IsZero ())
-    {
-      m_forceStop =
-        Simulator::Schedule (m_maxDurationTime,
-                             &StoredVideoClient::CloseSocket, this);
-    }
-  OpenSocket ();
-}
-
-void
-StoredVideoClient::DoDispose (void)
-{
   NS_LOG_FUNCTION (this);
-  m_socket = 0;
-  m_serverApp = 0;
-  m_rxPacket = 0;
-  Simulator::Cancel (m_forceStop);
-  SdmnClientApp::DoDispose ();
-}
 
-void
-StoredVideoClient::StartApplication ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-void
-StoredVideoClient::StopApplication ()
-{
-  NS_LOG_FUNCTION (this);
-  CloseSocket ();
-}
-
-void
-StoredVideoClient::OpenSocket ()
-{
-  NS_LOG_FUNCTION (this);
+  // Chain up to fire start trace
+  SdmnClientApp::Start ();
 
   // Preparing internal variables for new traffic cycle
   m_pendingBytes = 0;
   m_rxPacket = 0;
 
+  // Open the TCP connection
   if (!m_socket)
     {
       NS_LOG_LOGIC ("Opening the TCP connection.");
@@ -154,23 +74,31 @@ StoredVideoClient::OpenSocket ()
 }
 
 void
-StoredVideoClient::CloseSocket ()
+StoredVideoClient::Stop ()
 {
   NS_LOG_FUNCTION (this);
 
-  Simulator::Cancel (m_forceStop);
+  // Close the TCP socket
   if (m_socket != 0)
     {
       NS_LOG_LOGIC ("Closing the TCP connection.");
       m_socket->ShutdownRecv ();
       m_socket->Close ();
-      m_socket->SetRecvCallback (MakeNullCallback<void, Ptr< Socket > > ());
+      m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
       m_socket = 0;
     }
 
-  // Fire stop trace source
-  m_active = false;
-  m_appStopTrace (this);
+  // Chain up to fire stop trace
+  SdmnClientApp::Stop ();
+}
+
+void
+StoredVideoClient::DoDispose (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  m_rxPacket = 0;
+  SdmnClientApp::DoDispose ();
 }
 
 void
@@ -180,7 +108,7 @@ StoredVideoClient::ConnectionSucceeded (Ptr<Socket> socket)
 
   NS_LOG_LOGIC ("Server accepted connection request!");
   socket->SetRecvCallback (
-    MakeCallback (&StoredVideoClient::HandleReceive, this));
+    MakeCallback (&StoredVideoClient::ReceiveData, this));
 
   // Request the video object
   SendRequest (socket, "main/video");
@@ -194,32 +122,13 @@ StoredVideoClient::ConnectionFailed (Ptr<Socket> socket)
 }
 
 void
-StoredVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
-{
-  NS_LOG_FUNCTION (this);
-
-  // Setting request message
-  HttpHeader httpHeader;
-  httpHeader.SetVersion ("HTTP/1.1");
-  httpHeader.SetRequest ();
-  httpHeader.SetRequestMethod ("GET");
-  httpHeader.SetRequestUrl (url);
-  NS_LOG_INFO ("Request for " << url);
-
-  Ptr<Packet> packet = Create<Packet> ();
-  packet->AddHeader (httpHeader);
-  socket->Send (packet);
-}
-
-void
-StoredVideoClient::HandleReceive (Ptr<Socket> socket)
+StoredVideoClient::ReceiveData (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-  NS_ASSERT_MSG (m_active, "Invalid active state");
 
   do
     {
-      // Get (more) data from socket, if available
+      // Get (more) data from socket, if available.
       if (!m_rxPacket || m_rxPacket->GetSize () == 0)
         {
           m_rxPacket = socket->Recv ();
@@ -243,8 +152,8 @@ StoredVideoClient::HandleReceive (Ptr<Socket> socket)
                          "Invalid HTTP response message.");
 
           // Get the content length for this message
-          m_pendingBytes =
-            std::atoi (httpHeader.GetHeaderField ("ContentLength").c_str ());
+          m_pendingBytes = std::atoi (
+              httpHeader.GetHeaderField ("ContentLength").c_str ());
         }
 
       // Let's consume received data
@@ -258,12 +167,37 @@ StoredVideoClient::HandleReceive (Ptr<Socket> socket)
           // This is the end of the HTTP message.
           NS_LOG_INFO ("Stored video successfully received.");
           NS_ASSERT (m_rxPacket->GetSize () == 0);
-          CloseSocket ();
+          Stop ();
           break;
         }
 
     } // Repeat until no more data available to process
   while (socket->GetRxAvailable () || m_rxPacket->GetSize ());
+}
+
+void
+StoredVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
+{
+  NS_LOG_FUNCTION (this);
+
+  // When the force stop flag is active, don't send new requests.
+  if (IsForceStop ())
+    {
+      NS_LOG_DEBUG ("Can't send video request on force stop mode.");
+      return;
+    }
+
+  // Setting request message
+  HttpHeader httpHeader;
+  httpHeader.SetRequest ();
+  httpHeader.SetVersion ("HTTP/1.1");
+  httpHeader.SetRequestMethod ("GET");
+  httpHeader.SetRequestUrl (url);
+  NS_LOG_INFO ("Request for " << url);
+
+  Ptr<Packet> packet = Create<Packet> ();
+  packet->AddHeader (httpHeader);
+  socket->Send (packet);
 }
 
 } // Namespace ns3

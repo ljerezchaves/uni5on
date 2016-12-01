@@ -13,7 +13,8 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Author: Saulo da Mata <damata.saulo@gmail.com>
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
@@ -21,10 +22,9 @@
 
 #include "http-client.h"
 
-NS_LOG_COMPONENT_DEFINE ("HttpClient");
-
 namespace ns3 {
 
+NS_LOG_COMPONENT_DEFINE ("HttpClient");
 NS_OBJECT_ENSURE_REGISTERED (HttpClient);
 
 TypeId
@@ -33,21 +33,6 @@ HttpClient::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::HttpClient")
     .SetParent<SdmnClientApp> ()
     .AddConstructor<HttpClient> ()
-    .AddAttribute ("ServerAddress",
-                   "The server IPv4 address.",
-                   Ipv4AddressValue (),
-                   MakeIpv4AddressAccessor (&HttpClient::m_serverAddress),
-                   MakeIpv4AddressChecker ())
-    .AddAttribute ("ServerPort",
-                   "The server TCP port.",
-                   UintegerValue (80),
-                   MakeUintegerAccessor (&HttpClient::m_serverPort),
-                   MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("LocalPort",
-                   "Local TCP port.",
-                   UintegerValue (80),
-                   MakeUintegerAccessor (&HttpClient::m_localPort),
-                   MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("MaxReadingTime",
                    "The reading time threshold to stop application.",
                    TimeValue (Time::Max ()),
@@ -63,14 +48,10 @@ HttpClient::GetTypeId (void)
 }
 
 HttpClient::HttpClient ()
-  : m_socket (0),
-    m_serverPort (0),
-    m_serverApp (0),
-    m_pagesLoaded (0),
-    m_forceStop (EventId ()),
-    m_nextRequest (EventId ()),
-    m_pendingBytes (0),
+  : m_nextRequest (EventId ()),
     m_rxPacket (0),
+    m_pagesLoaded (0),
+    m_pendingBytes (0),
     m_pendingObjects (0)
 {
   NS_LOG_FUNCTION (this);
@@ -96,66 +77,12 @@ HttpClient::~HttpClient ()
 }
 
 void
-HttpClient::SetServer (Ptr<HttpServer> serverApp, Ipv4Address serverAddress,
-                       uint16_t serverPort)
-{
-  m_serverApp = serverApp;
-  m_serverAddress = serverAddress;
-  m_serverPort = serverPort;
-}
-
-Ptr<HttpServer>
-HttpClient::GetServerApp ()
-{
-  return m_serverApp;
-}
-
-void
-HttpClient::Start (void)
-{
-  ResetQosStats ();
-  m_active = true;
-  m_appStartTrace (this);
-
-  if (!m_maxDurationTime.IsZero ())
-    {
-      m_forceStop = Simulator::Schedule (m_maxDurationTime,
-                                         &HttpClient::CloseSocket, this);
-    }
-  OpenSocket ();
-}
-
-void
-HttpClient::DoDispose (void)
+HttpClient::Start ()
 {
   NS_LOG_FUNCTION (this);
-  m_socket = 0;
-  m_serverApp = 0;
-  m_rxPacket = 0;
-  m_readingTimeStream = 0;
-  m_readingTimeAdjustStream = 0;
-  Simulator::Cancel (m_forceStop);
-  Simulator::Cancel (m_nextRequest);
-  SdmnClientApp::DoDispose ();
-}
 
-void
-HttpClient::StartApplication ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-void
-HttpClient::StopApplication ()
-{
-  NS_LOG_FUNCTION (this);
-  CloseSocket ();
-}
-
-void
-HttpClient::OpenSocket ()
-{
-  NS_LOG_FUNCTION (this);
+  // Chain up to fire start trace
+  SdmnClientApp::Start ();
 
   // Preparing internal variables for new traffic cycle
   m_pendingBytes = 0;
@@ -163,6 +90,7 @@ HttpClient::OpenSocket ()
   m_pagesLoaded = 0;
   m_rxPacket = 0;
 
+  // Open the TCP connection
   if (!m_socket)
     {
       NS_LOG_LOGIC ("Opening the TCP connection.");
@@ -177,24 +105,37 @@ HttpClient::OpenSocket ()
 }
 
 void
-HttpClient::CloseSocket ()
+HttpClient::Stop ()
 {
   NS_LOG_FUNCTION (this);
 
-  Simulator::Cancel (m_forceStop);
+  // Cancel further requests
   Simulator::Cancel (m_nextRequest);
+
+  // Close the TCP socket
   if (m_socket != 0)
     {
       NS_LOG_LOGIC ("Closing the TCP connection.");
       m_socket->ShutdownRecv ();
       m_socket->Close ();
-      m_socket->SetRecvCallback (MakeNullCallback<void, Ptr< Socket > > ());
+      m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
       m_socket = 0;
     }
 
-  // Fire stop trace source
-  m_active = false;
-  m_appStopTrace (this);
+  // Chain up to fire stop trace
+  SdmnClientApp::Stop ();
+}
+
+void
+HttpClient::DoDispose (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  m_rxPacket = 0;
+  m_readingTimeStream = 0;
+  m_readingTimeAdjustStream = 0;
+  Simulator::Cancel (m_nextRequest);
+  SdmnClientApp::DoDispose ();
 }
 
 void
@@ -203,7 +144,7 @@ HttpClient::ConnectionSucceeded (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);
 
   NS_LOG_LOGIC ("Server accepted connection request!");
-  socket->SetRecvCallback (MakeCallback (&HttpClient::HandleReceive, this));
+  socket->SetRecvCallback (MakeCallback (&HttpClient::ReceiveData, this));
 
   // Request the first main/object
   SendRequest (socket, "main/object");
@@ -217,34 +158,14 @@ HttpClient::ConnectionFailed (Ptr<Socket> socket)
 }
 
 void
-HttpClient::SendRequest (Ptr<Socket> socket, std::string url)
-{
-  NS_LOG_FUNCTION (this);
-
-  // Setting request message
-  HttpHeader httpHeader;
-  httpHeader.SetRequest ();
-  httpHeader.SetVersion ("HTTP/1.1");
-  httpHeader.SetRequestMethod ("GET");
-  httpHeader.SetRequestUrl (url);
-  NS_LOG_INFO ("Request for " << url);
-
-  Ptr<Packet> packet = Create<Packet> ();
-  packet->AddHeader (httpHeader);
-  socket->Send (packet);
-}
-
-void
-HttpClient::HandleReceive (Ptr<Socket> socket)
+HttpClient::ReceiveData (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-  NS_ASSERT_MSG (m_active, "Invalid active state");
-
   static std::string contentType = "";
 
   do
     {
-      // Get more data from socket, if available
+      // Get (more) data from socket, if available.
       if (!m_rxPacket || m_rxPacket->GetSize () == 0)
         {
           m_rxPacket = socket->Recv ();
@@ -268,15 +189,15 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
                          "Invalid HTTP response message.");
 
           // Get the content length for this message
-          m_pendingBytes =
-            std::atoi (httpHeader.GetHeaderField ("ContentLength").c_str ());
+          m_pendingBytes = std::atoi (
+              httpHeader.GetHeaderField ("ContentLength").c_str ());
 
           // For main/objects, get the number of inline objects to load
           contentType = httpHeader.GetHeaderField ("ContentType");
           if (contentType == "main/object")
             {
-              m_pendingObjects =
-                atoi (httpHeader.GetHeaderField ("InlineObjects").c_str ());
+              m_pendingObjects = std::atoi (
+                  httpHeader.GetHeaderField ("InlineObjects").c_str ());
             }
         }
 
@@ -321,6 +242,31 @@ HttpClient::HandleReceive (Ptr<Socket> socket)
 }
 
 void
+HttpClient::SendRequest (Ptr<Socket> socket, std::string url)
+{
+  NS_LOG_FUNCTION (this);
+
+  // When the force stop flag is active, don't send new requests.
+  if (IsForceStop ())
+    {
+      NS_LOG_DEBUG ("Can't send http request on force stop mode.");
+      return;
+    }
+
+  // Setting request message
+  HttpHeader httpHeader;
+  httpHeader.SetRequest ();
+  httpHeader.SetVersion ("HTTP/1.1");
+  httpHeader.SetRequestMethod ("GET");
+  httpHeader.SetRequestUrl (url);
+  NS_LOG_INFO ("Request for " << url);
+
+  Ptr<Packet> packet = Create<Packet> ();
+  packet->AddHeader (httpHeader);
+  socket->Send (packet);
+}
+
+void
 HttpClient::SetReadingTime (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
@@ -339,7 +285,7 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   if (readingTime > m_maxReadingTime)
     {
       NS_LOG_DEBUG ("Closing socket due to reading time threshold.");
-      CloseSocket ();
+      Stop ();
       return;
     }
 
@@ -347,7 +293,7 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   if (m_pagesLoaded >= m_maxPages)
     {
       NS_LOG_DEBUG ("Closing socket due to max page threshold.");
-      CloseSocket ();
+      Stop ();
       return;
     }
 

@@ -13,7 +13,8 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Author: Saulo da Mata <damata.saulo@gmail.com>
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
@@ -21,10 +22,9 @@
 
 #include "http-server.h"
 
-NS_LOG_COMPONENT_DEFINE ("HttpServer");
-
 namespace ns3 {
 
+NS_LOG_COMPONENT_DEFINE ("HttpServer");
 NS_OBJECT_ENSURE_REGISTERED (HttpServer);
 
 TypeId
@@ -33,20 +33,12 @@ HttpServer::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::HttpServer")
     .SetParent<SdmnServerApp> ()
     .AddConstructor<HttpServer> ()
-    .AddAttribute ("LocalPort",
-                   "Local TCP port listening for incoming connections.",
-                   UintegerValue (80),
-                   MakeUintegerAccessor (&HttpServer::m_localPort),
-                   MakeUintegerChecker<uint16_t> ())
   ;
   return tid;
 }
 
 HttpServer::HttpServer ()
-  : m_socket (0),
-    m_localPort (0),
-    m_connected (false),
-    m_clientApp (0),
+  : m_connected (false),
     m_pendingBytes (0)
 {
   NS_LOG_FUNCTION (this);
@@ -72,23 +64,10 @@ HttpServer::~HttpServer ()
 }
 
 void
-HttpServer::SetClient (Ptr<HttpClient> client)
-{
-  m_clientApp = client;
-}
-
-Ptr<HttpClient>
-HttpServer::GetClientApp ()
-{
-  return m_clientApp;
-}
-
-void
 HttpServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
-  m_socket = 0;
-  m_clientApp = 0;
+
   m_mainObjectSizeStream = 0;
   m_numOfInlineObjStream = 0;
   m_inlineObjectSizeStream = 0;
@@ -96,7 +75,7 @@ HttpServer::DoDispose (void)
 }
 
 void
-HttpServer::StartApplication (void)
+HttpServer::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -104,6 +83,7 @@ HttpServer::StartApplication (void)
     {
       TypeId tid = TypeId::LookupByName ("ns3::TcpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tid);
+      m_socket->SetAttribute ("SndBufSize", UintegerValue (16384));
       m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
       m_socket->Listen ();
       m_socket->SetAcceptCallback (
@@ -116,7 +96,7 @@ HttpServer::StartApplication (void)
 }
 
 void
-HttpServer::StopApplication (void)
+HttpServer::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -125,13 +105,119 @@ HttpServer::StopApplication (void)
       m_socket->ShutdownRecv ();
       m_socket->Close ();
       m_socket->SetAcceptCallback (
-        MakeNullCallback<bool, Ptr< Socket >, const Address &> (),
-        MakeNullCallback<void, Ptr< Socket >, const Address &> ());
+        MakeNullCallback<bool, Ptr<Socket>, const Address &> (),
+        MakeNullCallback<void, Ptr<Socket>, const Address &> ());
       m_socket->SetSendCallback (
-        MakeNullCallback<void, Ptr< Socket >, uint32_t> ());
+        MakeNullCallback<void, Ptr<Socket>, uint32_t> ());
       m_socket->SetRecvCallback (
-        MakeNullCallback<void, Ptr< Socket > > ());
+        MakeNullCallback<void, Ptr<Socket> > ());
       m_socket = 0;
+    }
+}
+
+bool
+HttpServer::HandleRequest (Ptr<Socket> socket, const Address& address)
+{
+  NS_LOG_FUNCTION (this << socket << address);
+
+  Ipv4Address ipAddr = InetSocketAddress::ConvertFrom (address).GetIpv4 ();
+  NS_LOG_LOGIC ("Connection request from " << ipAddr);
+  return !m_connected;
+}
+
+void
+HttpServer::HandleAccept (Ptr<Socket> socket, const Address& address)
+{
+  NS_LOG_FUNCTION (this << socket << address);
+
+  Ipv4Address ipAddr = InetSocketAddress::ConvertFrom (address).GetIpv4 ();
+  NS_LOG_LOGIC ("Connection successfully established with " << ipAddr);
+  socket->SetSendCallback (MakeCallback (&HttpServer::SendData, this));
+  socket->SetRecvCallback (MakeCallback (&HttpServer::ReceiveData, this));
+  m_connected = true;
+  m_pendingBytes = 0;
+}
+
+void
+HttpServer::HandlePeerClose (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+
+  NS_LOG_LOGIC ("Connection closed.");
+  socket->ShutdownSend ();
+  socket->ShutdownRecv ();
+  socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
+  socket->SetSendCallback (MakeNullCallback<void, Ptr<Socket>, uint32_t> ());
+  m_connected = false;
+}
+
+void
+HttpServer::HandlePeerError (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+
+  NS_LOG_LOGIC ("Connection error.");
+  socket->ShutdownSend ();
+  socket->ShutdownRecv ();
+  socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
+  socket->SetSendCallback (MakeNullCallback<void, Ptr<Socket>, uint32_t> ());
+  m_connected = false;
+}
+
+void
+HttpServer::ReceiveData (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+
+  // Receive the HTTP GET message.
+  HttpHeader httpHeader;
+  Ptr<Packet> packet = socket->Recv ();
+  packet->RemoveHeader (httpHeader);
+  NS_ASSERT (packet->GetSize () == 0);
+
+  ProccessHttpRequest (socket, httpHeader);
+}
+
+void
+HttpServer::SendData (Ptr<Socket> socket, uint32_t available)
+{
+  NS_LOG_FUNCTION (this << socket << available);
+
+  if (!m_pendingBytes)
+    {
+      NS_LOG_DEBUG ("No pending data to send.");
+      return;
+    }
+
+  if (IsForceStop ())
+    {
+      NS_LOG_DEBUG ("Can't send data on force stop mode.");
+      return;
+    }
+
+  if (!m_connected)
+    {
+      NS_LOG_DEBUG ("Socket not connected.");
+      return;
+    }
+
+  if (!available)
+    {
+      NS_LOG_DEBUG ("No TX buffer space available.");
+      return;
+    }
+
+  uint32_t pktSize = std::min (available, m_pendingBytes);
+  Ptr<Packet> packet = Create<Packet> (pktSize);
+  int bytesSent = socket->Send (packet);
+  if (bytesSent > 0)
+    {
+      NS_LOG_DEBUG ("HTTP server TX " << bytesSent << " bytes.");
+      m_pendingBytes -= static_cast<uint32_t> (bytesSent);
+    }
+  else
+    {
+      NS_LOG_ERROR ("HTTP server TX error.");
     }
 }
 
@@ -141,6 +227,7 @@ HttpServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
   NS_LOG_FUNCTION (this << socket);
   NS_ASSERT_MSG (header.IsRequest (), "Invalid HTTP request.");
 
+  // Check for valid request.
   std::string url = header.GetRequestUrl ();
   NS_LOG_INFO ("Client requesting a " + url);
   if (url == "main/object")
@@ -165,7 +252,7 @@ HttpServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
       socket->Send (outPacket);
 
       // Start sending the HTTP object.
-      SendObject (socket, socket->GetTxAvailable ());
+      SendData (socket, socket->GetTxAvailable ());
     }
   else if (url == "inline/object")
     {
@@ -187,85 +274,11 @@ HttpServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
       socket->Send (outPacket);
 
       // Start sending the HTTP object.
-      SendObject (socket, socket->GetTxAvailable ());
+      SendData (socket, socket->GetTxAvailable ());
     }
   else
     {
       NS_FATAL_ERROR ("Invalid request.");
-    }
-}
-
-bool
-HttpServer::HandleRequest (Ptr<Socket> socket, const Address& address)
-{
-  NS_LOG_FUNCTION (this << socket << address);
-  NS_LOG_LOGIC ("Received request for connection from " <<
-                InetSocketAddress::ConvertFrom (address).GetIpv4 ());
-  return !m_connected;
-}
-
-void
-HttpServer::HandleAccept (Ptr<Socket> socket, const Address& address)
-{
-  NS_LOG_FUNCTION (this << socket << address);
-  NS_LOG_LOGIC ("Connection successfully established with client " <<
-                InetSocketAddress::ConvertFrom (address).GetIpv4 ());
-  socket->SetSendCallback (MakeCallback (&HttpServer::SendObject, this));
-  socket->SetRecvCallback (MakeCallback (&HttpServer::HandleReceive, this));
-  m_connected = true;
-  m_pendingBytes = 0;
-}
-
-void
-HttpServer::HandleReceive (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
-
-  // This application expects to receive a single HTTP GET message at a time.
-  HttpHeader httpHeader;
-  Ptr<Packet> packet = socket->Recv ();
-  packet->RemoveHeader (httpHeader);
-  NS_ASSERT (packet->GetSize () == 0);
-
-  ProccessHttpRequest (socket, httpHeader);
-}
-
-void
-HttpServer::HandlePeerClose (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
-  NS_LOG_LOGIC ("Connection closed.");
-  socket->ShutdownSend ();
-  m_connected = false;
-}
-
-void
-HttpServer::HandlePeerError (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
-  NS_LOG_LOGIC ("Connection error.");
-  socket->ShutdownSend ();
-  m_connected = false;
-}
-
-void
-HttpServer::SendObject (Ptr<Socket> socket, uint32_t available)
-{
-  NS_LOG_FUNCTION (this);
-
-  if (!available || !m_connected || !m_pendingBytes)
-    {
-      return;
-    }
-
-  uint32_t pktSize = std::min (available, m_pendingBytes);
-  Ptr<Packet> packet = Create<Packet> (pktSize);
-  int bytesSent = socket->Send (packet);
-
-  NS_LOG_DEBUG ("HTTP server TX " << bytesSent << " bytes");
-  if (bytesSent > 0)
-    {
-      m_pendingBytes -= static_cast<uint32_t> (bytesSent);
     }
 }
 

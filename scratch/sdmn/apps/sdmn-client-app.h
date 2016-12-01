@@ -1,6 +1,6 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2015 University of Campinas (Unicamp)
+ * Copyright (c) 2016 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -21,18 +21,19 @@
 #ifndef SDMN_CLIENT_APP_H
 #define SDMN_CLIENT_APP_H
 
-#include "ns3/object.h"
-#include "ns3/ptr.h"
-#include "ns3/epc-tft.h"
-#include "ns3/eps-bearer.h"
-#include "ns3/traced-callback.h"
+#include <ns3/core-module.h>
+#include <ns3/lte-module.h>
+#include <ns3/network-module.h>
+#include <ns3/internet-module.h>
+#include <ns3/lte-module.h>
 #include "qos-stats-calculator.h"
-#include "ns3/string.h"
 
 namespace ns3 {
 
+class SdmnServerApp;
+
 /**
- * \ingroup applications
+ * \ingroup sdmn
  * This class extends the Application class to proper work with the SDMN
  * architecture. Only clients applications (those which will be installed into
  * UEs) should extends this class. It includes a QosStatsCalculator for traffic
@@ -48,7 +49,7 @@ class SdmnClientApp : public Application
 
 public:
   SdmnClientApp ();            //!< Default constructor
-  virtual ~SdmnClientApp ();   //!< Dummy destructor, see DoDipose
+  virtual ~SdmnClientApp ();   //!< Dummy destructor, see DoDispose
 
   /**
    * Get the type ID.
@@ -57,13 +58,37 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Get QoS statistics
-   * \return Get the const pointer to QosStatsCalculator
+   * Get the active state for this application.
+   * \return true if the application is active, false otherwise.
+   */
+  bool IsActive (void) const;
+
+  /**
+   * Get the force stop state for this application.
+   * \return true if the application is in force stop state, false otherwise.
+   */
+  bool IsForceStop (void) const;
+
+  /**
+   * Get the application name.
+   * \return The application name.
+   */
+  std::string GetAppName (void) const;
+
+  /**
+   * Get QoS statistics.
+   * \return Get the constant pointer to QosStatsCalculator
    */
   Ptr<const QosStatsCalculator> GetQosStats (void) const;
 
   /**
-   * \return The pgw tft for this application.
+   * Get QoS statistics from server.
+   * \return Get the constant pointer to QosStatsCalculator
+   */
+  Ptr<const QosStatsCalculator> GetServerQosStats (void) const;
+
+  /**
+   * \return The P-GW TFT for this application.
    */
   Ptr<EpcTft> GetTft (void) const;
 
@@ -73,30 +98,34 @@ public:
   EpsBearer GetEpsBearer (void) const;
 
   /**
-   * \return The teid for this application.
+   * \return The TEID for this application.
    */
   uint32_t GetTeid (void) const;
 
   /**
-   * Get the application name.
-   * \return The application name.
+   * \brief Set the server application.
+   * \param serverApp The pointer to server application.
+   * \param serverAddress The IPv4 address of the server.
+   * \param serverPort The port number on the server.
    */
-  std::string GetAppName (void) const;
+  void SetServer (Ptr<SdmnServerApp> serverApp, Ipv4Address serverAddress,
+                  uint16_t serverPort);
 
   /**
-   * Start this application at any time.
+   * \brief Get the server application.
+   * \return The pointer to server application.
    */
-  virtual void Start (void);
+  Ptr<SdmnServerApp> GetServerApp ();
 
   /**
-   * Get the active state for this application.
-   * \return true if the application is active, false otherwise.
+   * Start this application. Start traffic generation,
+   * reset internal counters and fire the start trace.
    */
-  bool IsActive (void) const;
+  virtual void Start ();
 
   /**
    * TracedCallback signature for SdmnClientApp.
-   * \param app The SdmnClientApp.
+   * \param app The client application.
    */
   typedef void (*EpcAppTracedCallback)(Ptr<const SdmnClientApp> app);
 
@@ -105,27 +134,49 @@ protected:
   virtual void DoDispose (void);
 
   /**
-   * Reset the QoS statistics
+   * Stop this application. Close the socket and fire the stop trace (which
+   * will trigger statistics dumps). This function is expected to be called
+   * only after application traffic is completely stopped (no pending bytes
+   * for transmission and no in-transit packets).
    */
-  virtual void ResetQosStats ();
+  virtual void Stop ();
 
-  Ptr<QosStatsCalculator> m_qosStats;   //!< QoS statistics
+  /**
+   * Force this application to stop. This function will stops the traffic
+   * generation, allowing on-transit packets to reach the destination before
+   * effectively stopping the application.
+   */
+  virtual void ForceStop ();
 
-  Time m_maxDurationTime;   //!< Application max duration time
-  bool m_active;            //!< Active state for this application
-  std::string m_name;       //!< Name for this application
+  Ptr<QosStatsCalculator> m_qosStats;         //!< QoS statistics.
+  Ptr<Socket>             m_socket;           //!< Local socket.
+  uint16_t                m_localPort;        //!< Local port.
+  Ipv4Address             m_serverAddress;    //!< Server address.
+  uint16_t                m_serverPort;       //!< Server port.
+  Ptr<SdmnServerApp>      m_serverApp;        //!< Server application.
 
   /** Application start trace source, fired when application start. */
   TracedCallback<Ptr<const SdmnClientApp> > m_appStartTrace;
 
-  /** Application stop trace source, fired when application stopts. */
+  /** Application stop trace source, fired when application stops. */
   TracedCallback<Ptr<const SdmnClientApp> > m_appStopTrace;
 
 private:
+  /**
+   * Reset the QoS statistics
+   */
+  virtual void ResetQosStats ();
+
+  std::string   m_name;           //!< Application name.
+  bool          m_active;         //!< Active state.
+  Time          m_maxOnTime;      //!< Max duration time.
+  EventId       m_forceStop;      //!< Max duration stop event.
+  bool          m_forceStopFlag;  //!< Force stop flag.
+
   // LTE EPC metadata
-  Ptr<EpcTft>   m_tft;        //!< Traffic flow template for this app
-  EpsBearer     m_bearer;     //!< EPS bearer info
-  uint32_t      m_teid;       //!< GTP TEID associated with this app
+  Ptr<EpcTft>   m_tft;            //!< Traffic flow template for this app.
+  EpsBearer     m_bearer;         //!< EPS bearer info.
+  uint32_t      m_teid;           //!< GTP TEID associated with this app.
 };
 
 } // namespace ns3

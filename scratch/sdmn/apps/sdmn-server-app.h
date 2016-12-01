@@ -21,27 +21,30 @@
 #ifndef SDMN_SERVER_APP_H
 #define SDMN_SERVER_APP_H
 
-#include "ns3/object.h"
-#include "ns3/ptr.h"
-#include "ns3/epc-tft.h"
-#include "ns3/eps-bearer.h"
-#include "ns3/traced-callback.h"
+#include <ns3/core-module.h>
+#include <ns3/lte-module.h>
+#include <ns3/network-module.h>
+#include <ns3/internet-module.h>
+#include <ns3/lte-module.h>
 #include "qos-stats-calculator.h"
-#include "ns3/string.h"
 
 namespace ns3 {
 
+class SdmnClientApp;
+
 /**
- * \ingroup applications
+ * \ingroup sdmn
  * This class extends the Application class to proper work with SDMN
  * architecture. Only server applications (those which will be installed into
  * web server node) extends this class.
  */
 class SdmnServerApp : public Application
 {
+  friend class SdmnClientApp;
+
 public:
   SdmnServerApp ();            //!< Default constructor
-  virtual ~SdmnServerApp ();   //!< Dummy destructor, see DoDipose
+  virtual ~SdmnServerApp ();   //!< Dummy destructor, see DoDispose
 
   /**
    * Get the type ID.
@@ -49,9 +52,80 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  /**
+   * Get the active state for this application.
+   * \return true if the application is active, false otherwise.
+   */
+  bool IsActive (void) const;
+
+  /**
+   * Get the force stop state for this application.
+   * \return true if the application is in force stop state, false otherwise.
+   */
+  bool IsForceStop (void) const;
+
+  /**
+   * Get QoS statistics
+   * \return Get the constant pointer to QosStatsCalculator
+   */
+  Ptr<const QosStatsCalculator> GetQosStats (void) const;
+
+  /**
+   * \brief Set the client application.
+   * \param clientApp The pointer to client application.
+   * \param clientAddress The IPv4 address of the client.
+   * \param clientPort The port number on the client.
+   */
+  void SetClient (Ptr<SdmnClientApp> clientApp, Ipv4Address clientAddress,
+                  uint16_t clientPort);
+
+  /**
+   * \brief Get the client application.
+   * \return The pointer to client application.
+   */
+  Ptr<SdmnClientApp> GetClientApp ();
+
 protected:
   /** Destructor implementation */
   virtual void DoDispose (void);
+
+  /**
+   * Notify this server of a start event on the client application. The server
+   * must reset internal counters and start generating traffic (when
+   * applicable).
+   */
+  virtual void NotifyStart ();
+
+  /**
+   * Notify this server of a stop event on the client application. The server
+   * must close the socket (when applicable). This function is expected to be
+   * called only after application traffic is completely stopped (no pending
+   * bytes for transmission and no in-transit packets).
+   */
+  virtual void NotifyStop ();
+
+  /**
+   * Notify this server of a force stop event on the client application. The
+   * server must stop generating traffic (when applicable), and be prepared to
+   * the upcoming stop event on the client side.
+   */
+  virtual void NotifyForceStop ();
+
+  /**
+   * Reset the QoS statistics
+   */
+  void ResetQosStats ();
+
+  Ptr<QosStatsCalculator> m_qosStats;         //!< QoS statistics.
+  Ptr<Socket>             m_socket;           //!< Local socket.
+  uint16_t                m_localPort;        //!< Local port.
+  Ipv4Address             m_clientAddress;    //!< Client address.
+  uint16_t                m_clientPort;       //!< Client port.
+  Ptr<SdmnClientApp>      m_clientApp;        //!< Client application.
+
+private:
+  bool                    m_active;           //!< Active state.
+  bool                    m_forceStopFlag;    //!< Force stop flag.
 };
 
 } // namespace ns3

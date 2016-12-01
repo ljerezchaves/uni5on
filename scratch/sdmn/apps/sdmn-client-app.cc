@@ -1,6 +1,6 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2015 University of Campinas (Unicamp)
+ * Copyright (c) 2016 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -19,7 +19,7 @@
  */
 
 #include "sdmn-client-app.h"
-#include "ns3/log.h"
+#include "sdmn-server-app.h"
 
 namespace ns3 {
 
@@ -28,7 +28,11 @@ NS_OBJECT_ENSURE_REGISTERED (SdmnClientApp);
 
 SdmnClientApp::SdmnClientApp ()
   : m_qosStats (Create<QosStatsCalculator> ()),
+    m_socket (0),
+    m_serverApp (0),
     m_active (false),
+    m_forceStop (EventId ()),
+    m_forceStopFlag (false),
     m_tft (0),
     m_teid (0)
 {
@@ -46,16 +50,32 @@ SdmnClientApp::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::SdmnClientApp")
     .SetParent<Application> ()
     .AddConstructor<SdmnClientApp> ()
-    .AddAttribute ("MaxDurationTime",
+    .AddAttribute ("MaxOnTime",
                    "A hard duration time threshold.",
                    TimeValue (Time ()),
-                   MakeTimeAccessor (&SdmnClientApp::m_maxDurationTime),
+                   MakeTimeAccessor (&SdmnClientApp::m_maxOnTime),
                    MakeTimeChecker ())
     .AddAttribute ("AppName",
                    "The application name.",
                    StringValue ("NoName"),
                    MakeStringAccessor (&SdmnClientApp::m_name),
                    MakeStringChecker ())
+
+    .AddAttribute ("ServerAddress",
+                   "The server IPv4 address.",
+                   Ipv4AddressValue (),
+                   MakeIpv4AddressAccessor (&SdmnClientApp::m_serverAddress),
+                   MakeIpv4AddressChecker ())
+    .AddAttribute ("ServerPort",
+                   "The server port.",
+                   UintegerValue (10000),
+                   MakeUintegerAccessor (&SdmnClientApp::m_serverPort),
+                   MakeUintegerChecker<uint16_t> ())
+    .AddAttribute ("LocalPort",
+                   "Local port.",
+                   UintegerValue (10000),
+                   MakeUintegerAccessor (&SdmnClientApp::m_localPort),
+                   MakeUintegerChecker<uint16_t> ())
 
     .AddTraceSource ("AppStart",
                      "SdmnClientApp start trace source.",
@@ -69,22 +89,34 @@ SdmnClientApp::GetTypeId (void)
   return tid;
 }
 
+bool
+SdmnClientApp::IsActive (void) const
+{
+  return m_active;
+}
+
+bool
+SdmnClientApp::IsForceStop (void) const
+{
+  return m_forceStopFlag;
+}
+
+std::string
+SdmnClientApp::GetAppName (void) const
+{
+  return m_name;
+}
+
 Ptr<const QosStatsCalculator>
 SdmnClientApp::GetQosStats (void) const
 {
   return m_qosStats;
 }
 
-void
-SdmnClientApp::Start ()
+Ptr<const QosStatsCalculator>
+SdmnClientApp::GetServerQosStats (void) const
 {
-  NS_LOG_FUNCTION (this);
-}
-
-bool
-SdmnClientApp::IsActive (void) const
-{
-  return m_active;
+  return m_serverApp->GetQosStats ();
 }
 
 Ptr<EpcTft>
@@ -105,10 +137,37 @@ SdmnClientApp::GetTeid (void) const
   return m_teid;
 }
 
-std::string
-SdmnClientApp::GetAppName (void) const
+void
+SdmnClientApp::SetServer (Ptr<SdmnServerApp> serverApp,
+                          Ipv4Address serverAddress, uint16_t serverPort)
 {
-  return m_name;
+  m_serverApp = serverApp;
+  m_serverAddress = serverAddress;
+  m_serverPort = serverPort;
+}
+
+Ptr<SdmnServerApp>
+SdmnClientApp::GetServerApp ()
+{
+  return m_serverApp;
+}
+
+void
+SdmnClientApp::Start ()
+{
+  NS_LOG_FUNCTION (this);
+  NS_ASSERT_MSG (!IsActive (), "Can't start an already active application.");
+
+  ResetQosStats ();
+  m_active = true;
+  m_forceStopFlag = false;
+  if (!m_maxOnTime.IsZero ())
+    {
+      m_forceStop = Simulator::Schedule (
+          m_maxOnTime, &SdmnClientApp::ForceStop, this);
+    }
+  m_serverApp->NotifyStart ();
+  m_appStartTrace (this);
 }
 
 void
@@ -117,7 +176,34 @@ SdmnClientApp::DoDispose (void)
   NS_LOG_FUNCTION (this);
   m_qosStats = 0;
   m_tft = 0;
+  m_socket = 0;
+  m_serverApp = 0;
+  Simulator::Cancel (m_forceStop);
   Application::DoDispose ();
+}
+
+void
+SdmnClientApp::Stop ()
+{
+  NS_LOG_FUNCTION (this);
+  NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
+
+  Simulator::Cancel (m_forceStop);
+  m_active = false;
+  m_serverApp->NotifyStop ();
+  m_appStopTrace (this);
+}
+
+void
+SdmnClientApp::ForceStop ()
+{
+  NS_LOG_FUNCTION (this);
+  NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
+
+  Simulator::Cancel (m_forceStop);
+  Simulator::Schedule (Seconds (1), &SdmnClientApp::Stop, this);
+  m_forceStopFlag = true;
+  m_serverApp->NotifyForceStop ();
 }
 
 void

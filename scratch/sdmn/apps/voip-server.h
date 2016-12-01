@@ -22,27 +22,17 @@
 #ifndef VOIP_SERVER_H_
 #define VOIP_SERVER_H_
 
-#include "ns3/core-module.h"
-#include "ns3/network-module.h"
-#include "ns3/internet-module.h"
 #include "sdmn-server-app.h"
-#include "voip-client.h"
-#include "qos-stats-calculator.h"
 
 namespace ns3 {
 
-class VoipClient;
-
 /**
- * \ingroup applications
- * This is the server side of a voip traffic generator. This server sends and
- * receives UDP datagrams following voip traffic pattern. The start/stop events
- * are called by the client application.
+ * \ingroup sdmn
+ * This is the server side of a VoIP traffic generator, sending and receiving
+ * UDP datagrams following VoIP traffic pattern.
  */
 class VoipServer : public SdmnServerApp
 {
-  friend class VoipClient;
-
 public:
   /**
    * \brief Register this type.
@@ -51,75 +41,36 @@ public:
   static TypeId GetTypeId (void);
 
   VoipServer ();             //!< Default constructor
-  virtual ~VoipServer ();    //!< Dummy destructor, see DoDipose
-
-  /**
-   * \brief Set the client application.
-   * \param client The pointer to client application.
-   * \param clientAddress The IPv4 address of the client.
-   * \param clientPort The port number on the client.
-   */
-  void SetClient (Ptr<VoipClient> client, Ipv4Address clientAddress,
-                  uint16_t clientPort);
-
-  /**
-   * \brief Get the client application.
-   * \return The pointer to client application.
-   */
-  Ptr<VoipClient> GetClientApp ();
-
-  /**
-   * Reset the QoS statistics
-   */
-  void ResetQosStats ();
-
-  /**
-   * Get QoS statistics
-   * \return Get the const pointer to QosStatsCalculator
-   */
-  Ptr<const QosStatsCalculator> GetQosStats (void) const;
+  virtual ~VoipServer ();    //!< Dummy destructor, see DoDispose
 
 protected:
+  // Inherited from Object
   virtual void DoDispose (void);
 
 private:
-  // inherited from Application base class.
-  virtual void StartApplication (void);    // Called at time specified by Start
-  virtual void StopApplication (void);     // Called at time specified by Stop
+  // Inherited from Application
+  virtual void StartApplication (void);
+  virtual void StopApplication (void);
+
+  // Inherited from SdmnServerApp
+  void NotifyStart ();
+  void NotifyForceStop ();
 
   /**
-   * \brief Start the streaming.
-   * \param maxDuration The maximum duration for this traffic.
+   * \brief Socket receive callback.
+   * \param socket Socket with data available to be read.
    */
-  void StartSending (Time maxDuration = Time ());
-
-  /**
-   * \brief Stop the streaming.
-   */
-  void StopSending ();
+  void ReadPacket (Ptr<Socket> socket);
 
   /**
    * \brief Handle a packet transmission.
    */
   void SendPacket ();
 
-  /**
-   * \brief Handle a packet reception.
-   * \param socket the socket the packet was received to.
-   */
-  void ReadPacket (Ptr<Socket> socket);
-
   Time                      m_interval;       //!< Interval between packets
   uint32_t                  m_pktSize;        //!< Packet size
   uint32_t                  m_pktSent;        //!< Number of TX packets
-  Ipv4Address               m_clientAddress;  //!< Client address
-  uint16_t                  m_clientPort;     //!< Client port
-  Ptr<VoipClient>           m_clientApp;      //!< Client application
-  uint16_t                  m_localPort;      //!< Local port
-  Ptr<Socket>               m_socket;         //!< Local socket
   EventId                   m_sendEvent;      //!< SendPacket event
-  Ptr<QosStatsCalculator>   m_qosStats;       //!< QoS statistics
-  Ptr<RandomVariableStream> m_lengthRng;      //!< Random call length
 };
 
 } // namespace ns3

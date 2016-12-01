@@ -21,26 +21,17 @@
 #ifndef REAL_TIME_VIDEO_SERVER_H
 #define REAL_TIME_VIDEO_SERVER_H
 
-#include "ns3/core-module.h"
-#include "ns3/network-module.h"
-#include "ns3/internet-module.h"
 #include "sdmn-server-app.h"
-#include "real-time-video-client.h"
 
 namespace ns3 {
 
-class RealTimeVideoClient;
-
 /**
- * \ingroup applications
- * This is the server side of a real-time video traffic generator. The server
- * send UDP datagrams to a client following a MPEG video pattern with random
- * video length.
+ * \ingroup sdmn
+ * This is the server side of a real-time video traffic generator, sending UDP
+ * datagrams following a MPEG video pattern with random video length.
  */
 class RealTimeVideoServer : public SdmnServerApp
 {
-  friend class RealTimeVideoClient;
-
 public:
   /**
    * \brief Get the type ID.
@@ -48,23 +39,8 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  RealTimeVideoServer ();   //!< Default constructor
-  ~RealTimeVideoServer ();  //!< Dummy destructor, see DoDipose
-
-  /**
-   * \brief Set the client application.
-   * \param client The pointer to client application.
-   * \param clientAddress The IPv4 address of the client.
-   * \param clientPort The port number on the client.
-   */
-  void SetClient (Ptr<RealTimeVideoClient> client,
-                  Ipv4Address clientAddress, uint16_t clientPort);
-
-  /**
-   * \brief Get the client application.
-   * \return The pointer to client application.
-   */
-  Ptr<RealTimeVideoClient> GetClientApp ();
+  RealTimeVideoServer ();           //!< Default constructor
+  virtual ~RealTimeVideoServer ();  //!< Dummy destructor, see DoDispose
 
   /**
    * \brief Set the trace file to be used by the application
@@ -76,23 +52,17 @@ public:
   void SetTraceFile (std::string filename);
 
 protected:
+  // Inherited from Object
   virtual void DoDispose (void);
 
 private:
-  // inherited from Application base class.
-  virtual void StartApplication (void);    // Called at time specified by Start
-  virtual void StopApplication (void);     // Called at time specified by Stop
+  // Inherited from Application
+  virtual void StartApplication (void);
+  virtual void StopApplication (void);
 
-  /**
-   * \brief Start the streaming.
-   * \param maxDuration The maximum duration for this traffic.
-   */
-  void StartSending (Time maxDuration = Time ());
-
-  /**
-   * \brief Stop the streaming.
-   */
-  void StopSending ();
+  // Inherited from SdmnServerApp
+  void NotifyStart ();
+  void NotifyForceStop ();
 
   /**
    * \brief Load a trace file.
@@ -101,7 +71,7 @@ private:
   void LoadTrace (std::string filename);
 
   /**
-   * \brief Load the default trace
+   * \brief Load the default trace.
    */
   void LoadDefaultTrace (void);
 
@@ -126,21 +96,13 @@ private:
     char frameType;       //!< Frame type (I, P or B)
   };
 
-  static struct TraceEntry        g_defaultEntries[]; //!< Default trace
-  std::vector<struct TraceEntry>  m_entries;          //!< Entries in the trace
-  uint32_t                        m_currentEntry;     //!< Current entry index
+  uint16_t                        m_pktSize;          //!< Maximum packet size
   uint32_t                        m_pktSent;          //!< Number of TX packets
   EventId                         m_sendEvent;        //!< SendPacket event
-  uint16_t                        m_maxPacketSize;    //!< Maximum packet size
-  Ptr<Socket>                     m_socket;           //!< Outbouding TX socket
-  uint16_t                        m_localPort;        //!< Local port
-  Ipv4Address                     m_clientAddress;    //!< Client address
-  uint16_t                        m_clientPort;       //!< Client UDP port
-  Ptr<RealTimeVideoClient>        m_clientApp;        //!< Client application
-  Ptr<RandomVariableStream>       m_lengthRng;        //!< Random video length
-  Time                            m_lengthTime;       //!< Video length
+  uint32_t                        m_currentEntry;     //!< Current entry index
+  static struct TraceEntry        g_defaultEntries[]; //!< Default trace
+  std::vector<struct TraceEntry>  m_entries;          //!< Entries in the trace
 };
 
 } // namespace ns3
-
 #endif /* REAL_TIME_VIDEO_SERVER_H */

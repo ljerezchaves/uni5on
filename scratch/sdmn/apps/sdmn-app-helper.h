@@ -1,6 +1,6 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2015 University of Campinas (Unicamp)
+ * Copyright (c) 2016 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -18,26 +18,33 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef STORED_VIDEO_HELPER_H
-#define STORED_VIDEO_HELPER_H
+#ifndef SDMN_APP_HELPER_H_
+#define SDMN_APP_HELPER_H_
 
-#include "ns3/core-module.h"
-#include "ns3/network-module.h"
-#include "ns3/internet-module.h"
-#include "stored-video-client.h"
-#include "stored-video-server.h"
+#include <ns3/core-module.h>
+#include <ns3/network-module.h>
+#include <ns3/internet-module.h>
+#include "sdmn-client-app.h"
+#include "sdmn-server-app.h"
 
 namespace ns3 {
 
 /**
- * \ingroup applications
- * Create a StoredVideoHelper which will make life easier for people trying to
- * set up simulations with stored video client/server.
+ * \ingroup sdmn
+ * This helper will make life easier for people trying to set up client/server
+ * applications on the SDMN architecture.
  */
-class StoredVideoHelper
+class SdmnAppHelper
 {
 public:
-  StoredVideoHelper (); //!< Default constructor
+  SdmnAppHelper ();     //!< Default constructor.
+
+  /**
+   * Complete constructor.
+   * \param clientType The TypeId of client application class.
+   * \param serverType The TypeId of server application class.
+   */
+  SdmnAppHelper (TypeId clientType, TypeId serverType);
 
   /**
    * Record an attribute to be set in each client application.
@@ -57,13 +64,14 @@ public:
    * Create a pair of client + server applications on input nodes.
    * \param clientNode The node to install the client app.
    * \param serverNode The node to install the server app.
-   * \param serverAddress The IPv4 address of the server.
+   * \param clientAddr The IPv4 address of the client.
+   * \param serverAddr The IPv4 address of the server.
    * \param port The port number on both client and server.
    * \return The client application created.
    */
-  Ptr<StoredVideoClient>
-  Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
-           Ipv4Address serverAddress, uint16_t port);
+  Ptr<SdmnClientApp> Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
+                              Ipv4Address clientAddr, Ipv4Address serverAddr,
+                              uint16_t port);
 
 private:
   ObjectFactory m_clientFactory; //!< Object client factory.
@@ -71,4 +79,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* STORED_VIDEO_HELPER_H */
+#endif /* SDMN_APP_HELPER_H_ */

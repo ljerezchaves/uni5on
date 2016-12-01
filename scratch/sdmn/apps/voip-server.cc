@@ -19,12 +19,8 @@
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include <ns3/core-module.h>
-#include <ns3/network-module.h>
-#include <ns3/internet-module.h>
 #include <ns3/seq-ts-header.h>
 #include "voip-server.h"
-#include "voip-client.h"
 
 namespace ns3 {
 
@@ -37,21 +33,6 @@ VoipServer::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::VoipServer")
     .SetParent<SdmnServerApp> ()
     .AddConstructor<VoipServer> ()
-    .AddAttribute ("ClientAddress",
-                   "The IPv4 destination address of the outbound packets",
-                   Ipv4AddressValue (),
-                   MakeIpv4AddressAccessor (&VoipServer::m_clientAddress),
-                   MakeIpv4AddressChecker ())
-    .AddAttribute ("ClientPort",
-                   "The destination port of the outbound packets",
-                   UintegerValue (100),
-                   MakeUintegerAccessor (&VoipServer::m_clientPort),
-                   MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("LocalPort",
-                   "Port on which we listen for incoming packets.",
-                   UintegerValue (100),
-                   MakeUintegerAccessor (&VoipServer::m_localPort),
-                   MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("PayloadSize",
                    "The payload size of packets (in bytes).",
                    UintegerValue (20),
@@ -62,23 +43,14 @@ VoipServer::GetTypeId (void)
                    TimeValue (Seconds (0.02)),
                    MakeTimeAccessor (&VoipServer::m_interval),
                    MakeTimeChecker ())
-    .AddAttribute ("CallDuration",
-                   "A random variable used to pick the call duration [s].",
-                   StringValue ("ns3::ConstantRandomVariable[Constant=30.0]"),
-                   MakePointerAccessor (&VoipServer::m_lengthRng),
-                   MakePointerChecker <RandomVariableStream> ())
   ;
   return tid;
 }
 
 VoipServer::VoipServer ()
-  : m_pktSent (0),
-    m_clientApp (0),
-    m_socket (0)
+  : m_sendEvent (EventId ())
 {
   NS_LOG_FUNCTION (this);
-  m_sendEvent = EventId ();
-  m_qosStats = Create<QosStatsCalculator> ();
 }
 
 VoipServer::~VoipServer ()
@@ -87,40 +59,11 @@ VoipServer::~VoipServer ()
 }
 
 void
-VoipServer::SetClient (Ptr<VoipClient> client, Ipv4Address clientAddress,
-                       uint16_t clientPort)
-{
-  m_clientApp = client;
-  m_clientAddress = clientAddress;
-  m_clientPort = clientPort;
-}
-
-Ptr<VoipClient>
-VoipServer::GetClientApp ()
-{
-  return m_clientApp;
-}
-
-void
-VoipServer::ResetQosStats ()
-{
-  m_qosStats->ResetCounters ();
-}
-
-Ptr<const QosStatsCalculator>
-VoipServer::GetQosStats (void) const
-{
-  return m_qosStats;
-}
-
-void
 VoipServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
-  m_clientApp = 0;
-  m_socket = 0;
-  m_qosStats = 0;
-  m_lengthRng = 0;
+
+  Simulator::Cancel (m_sendEvent);
   SdmnServerApp::DoDispose ();
 }
 
@@ -137,94 +80,95 @@ VoipServer::StartApplication (void)
       m_socket->Connect (InetSocketAddress (m_clientAddress, m_clientPort));
       m_socket->SetRecvCallback (MakeCallback (&VoipServer::ReadPacket, this));
     }
-  Simulator::Cancel (m_sendEvent);
 }
 
 void
 VoipServer::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
-  Simulator::Cancel (m_sendEvent);
 
   if (m_socket == 0)
     {
+      m_socket->ShutdownSend ();
+      m_socket->ShutdownRecv ();
       m_socket->Close ();
+      m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
       m_socket = 0;
+
     }
 }
 
 void
-VoipServer::StartSending (Time maxDuration)
+VoipServer::NotifyStart ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Schedule traffic end, respecting max hard traffic duration
-  Time stopTime = Seconds (std::abs (m_lengthRng->GetValue ()));
-  if (!maxDuration.IsZero () && stopTime > maxDuration)
-    {
-      stopTime = maxDuration;
-    }
-  Simulator::Schedule (stopTime, &VoipServer::StopSending, this);
-  NS_LOG_INFO ("VoIP call lenght: " << stopTime.As (Time::S));
+  // Chain up
+  SdmnServerApp::NotifyStart ();
 
+  // Start traffic
   m_pktSent = 0;
-  m_sendEvent = Simulator::Schedule (m_interval, &VoipServer::SendPacket, this);
+  Simulator::Cancel (m_sendEvent);
+  m_sendEvent = Simulator::Schedule (
+      m_interval, &VoipServer::SendPacket, this);
+  NS_LOG_INFO ("VoIP server started.");
 }
 
 void
-VoipServer::StopSending ()
+VoipServer::NotifyForceStop ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Stop stream and notify the client of traffic end
-  NS_LOG_INFO ("VoIP call stopped.");
+  // Chain up
+  SdmnServerApp::NotifyForceStop ();
+
+  // Stop traffic
   Simulator::Cancel (m_sendEvent);
-  if (m_clientApp)
-    {
-      m_clientApp->ServerTrafficEnd (m_pktSent);
-    }
+  NS_LOG_INFO ("VoIP server stopped.");
 }
 
 void
 VoipServer::SendPacket ()
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT (m_sendEvent.IsExpired ());
 
-  SeqTsHeader seqTs;
-  seqTs.SetSeq (m_pktSent);
-
+  // Create the packet and add seq header
   Ptr<Packet> packet = Create<Packet> (m_pktSize);
+  SeqTsHeader seqTs;
+  seqTs.SetSeq (m_pktSent++);
   packet->AddHeader (seqTs);
 
-  if (m_socket->Send (packet))
+  // Send the packet
+  int bytesSent = m_socket->Send (packet);
+  if (bytesSent > 0)
     {
-      m_pktSent++;
-      NS_LOG_DEBUG ("VoIP TX " << m_pktSize << " bytes");
+      NS_LOG_DEBUG ("VoIP TX " << packet->GetSize () << " bytes. " <<
+                    "Sequence " << seqTs.GetSeq ());
     }
   else
     {
-      NS_LOG_ERROR ("VoIP TX error");
+      NS_LOG_ERROR ("VoIP TX error.");
     }
-  m_sendEvent = Simulator::Schedule (m_interval, &VoipServer::SendPacket, this);
+
+  // Schedule next packet transmission
+  m_sendEvent = Simulator::Schedule (
+      m_interval, &VoipServer::SendPacket, this);
 }
 
 void
 VoipServer::ReadPacket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-  Ptr<Packet> packet;
-  Address from;
-  while ((packet = socket->RecvFrom (from)))
-    {
-      if (packet->GetSize () > 0)
-        {
-          SeqTsHeader seqTs;
-          packet->RemoveHeader (seqTs);
-          NS_LOG_DEBUG ("VoIP RX " << packet->GetSize () << " bytes");
-          m_qosStats->NotifyReceived (seqTs.GetSeq (), seqTs.GetTs (), packet->GetSize ());
-        }
-    }
+
+  // Receive the datagram from the socket
+  Ptr<Packet> packet = socket->Recv ();
+
+  SeqTsHeader seqTs;
+  packet->PeekHeader (seqTs);
+  m_qosStats->NotifyReceived (seqTs.GetSeq (), seqTs.GetTs (),
+                              packet->GetSize ());
+  NS_LOG_DEBUG ("VoIP RX " << packet->GetSize () << " bytes. " <<
+                "Sequence " << seqTs.GetSeq ());
 }
 
 } // Namespace ns3
