@@ -26,7 +26,7 @@
 #include "ns3/nstime.h"
 
 namespace ns3 {
-  
+
 /**
  * \ingroup applications
  *
@@ -40,7 +40,7 @@ class QosStatsCalculator : public SimpleRefCount<QosStatsCalculator>
 public:
   QosStatsCalculator ();  //!< Default constructor
   virtual ~QosStatsCalculator (); //!< Default destructor
-  
+
   /**
    * Returns the size of the window used for checking loss.
    * \return The window size.
@@ -52,12 +52,12 @@ public:
    * \param The window size. This value should be a multiple of 8.
    */
   void SetPacketWindowSize (uint16_t size);
-  
-  /** 
-   * Reset all internal counters. 
+
+  /**
+   * Reset all internal counters.
    */
   void ResetCounters ();
-  
+
   /**
    * Update stats using information from a new received packet.
    * \param seqNum The sequence number for this packet.
@@ -82,7 +82,7 @@ public:
    * \return The next sequence number to use.
    */
   uint32_t GetNextSeqNum ();
-  
+
   /**
    * Get QoS statistics.
    * \return The statistic value.
@@ -100,22 +100,22 @@ public:
   uint32_t  GetQueueDrops   (void) const;
   //\}
 
-  /** 
+  /**
    * TracedCallback signature for QosStatsCalculator.
    * \param stats The statistics.
    */
-  typedef void (* QosStatsCallback)(Ptr<const QosStatsCalculator> stats);
+  typedef void (*QosStatsCallback)(Ptr<const QosStatsCalculator> stats);
 
 private:
   PacketLossCounter *m_lossCounter;      //!< Lost packet counter
   uint16_t           m_windowSize;       //!< Packet loss window size
   uint32_t           m_rxPackets;        //!< Number of received packets
   uint32_t           m_rxBytes;          //!< Number of RX bytes
-  Time               m_previousRx;       //!< Previous Rx time
-  Time               m_previousRxTx;     //!< Previous Rx or Tx time
+  Time               m_firstRxTime;      //!< First Rx time
+  Time               m_lastRxTime;       //!< Last Rx time
+  Time               m_lastTimestamp;    //!< Last timestamp
   int64_t            m_jitter;           //!< Jitter estimation
   Time               m_delaySum;         //!< Sum of packet delays
-  Time               m_lastResetTime;    //!< Last reset time
 
   // Fields used by EPC network monitoring
   uint32_t           m_seqNum;           //!< Sequence number counter

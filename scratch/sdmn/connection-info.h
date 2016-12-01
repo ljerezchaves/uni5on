@@ -64,7 +64,7 @@ public:
   };
 
   ConnectionInfo ();            //!< Default constructor
-  virtual ~ConnectionInfo ();   //!< Dummy destructor, see DoDipose
+  virtual ~ConnectionInfo ();   //!< Dummy destructor, see DoDispose
 
   /**
    * Complete constructor.

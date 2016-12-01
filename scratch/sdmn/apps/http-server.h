@@ -13,7 +13,8 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Author: Saulo da Mata <damata.saulo@gmail.com>
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
@@ -22,20 +23,12 @@
 #ifndef HTTP_SERVER_H_
 #define HTTP_SERVER_H_
 
-#include "ns3/core-module.h"
-#include "ns3/network-module.h"
-#include "ns3/internet-module.h"
-#include "ns3/http-header.h"
-#include "http-client.h"
-#include <string>
-#include <sstream>
+#include "sdmn-server-app.h"
 
 namespace ns3 {
 
-class HttpClient;
-
 /**
- * \ingroup applications
+ * \ingroup sdmn
  * This is the server side of a HTTP Traffic Generator. The server listen for
  * client object requests. The implementation of this application is simplistic
  * and it does not support pipelining in this current version. The model used
@@ -46,44 +39,26 @@ class HttpClient;
  * modules of ns-3. To allow deeper studies about the HTTP Protocol it needs
  * some improvements.
  */
-class HttpServer : public Application
+class HttpServer : public SdmnServerApp
 {
 public:
   /**
    * \brief Get the type ID.
-   * \return type ID
+   * \return the object TypeId
    */
   static TypeId GetTypeId (void);
 
   HttpServer ();          //!< Default constructor
-  virtual ~HttpServer (); //!< Dummy destructor, see DoDipose
-
-  /**
-   * \brief Set the client application.
-   * \param client The pointer to client application.
-   */
-  void SetClient (Ptr<HttpClient> client);
-
-  /**
-   * \brief Get the client application.
-   * \return The pointer to client application.
-   */
-  Ptr<HttpClient> GetClientApp ();
+  virtual ~HttpServer (); //!< Dummy destructor, see DoDispose
 
 protected:
+  // Inherited from Object
   virtual void DoDispose (void);
 
 private:
-  // inherited from Application base class.
-  virtual void StartApplication (void);    // Called at time specified by Start
-  virtual void StopApplication (void);     // Called at time specified by Stop
-
-  /**
-   * Process the Http request message, sending back the response.
-   * \param socket The TCP socket.
-   * \param header The HTTP request header.
-   */
-  void ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header);
+  // Inherited from Application
+  virtual void StartApplication (void);
+  virtual void StopApplication (void);
 
   /**
    * \brief Processes the request of client to establish a TCP connection.
@@ -94,51 +69,48 @@ private:
   /**
    * \brief Handle the acceptance or denial of the TCP connection.
    * \param socket Socket for the TCP connection.
-   * \param address Address of the client
+   * \param address Address of the client.
    */
   void HandleAccept (Ptr<Socket> socket, const Address& address);
 
   /**
-   * \brief Receive method.
-   * \param socket Socket that receives packets from client.
-   */
-  void HandleReceive (Ptr<Socket> socket);
-
-  /**
-   * \brief Handle an connection close
-   * \param socket The connected socket
+   * \brief Handle an connection close.
+   * \param socket The connected socket.
    */
   void HandlePeerClose (Ptr<Socket> socket);
 
   /**
-   * \brief Handle an connection error
-   * \param socket The connected socket
+   * \brief Handle an connection error.
+   * \param socket The connected socket.
    */
   void HandlePeerError (Ptr<Socket> socket);
 
   /**
-   * \brief Start sending the object. Callback for socket SetSendCallback.
-   * \param socket The pointer to the socket.
-   * \param available The number of bytes available for writing into the buffer
+   * \brief Socket receive callback.
+   * \param socket Socket with data available to be read.
    */
-  void SendObject (Ptr<Socket> socket, uint32_t available);
+  void ReceiveData (Ptr<Socket> socket);
 
-  Ptr<Socket>     m_socket;             //!< Local socket.
-  uint16_t        m_port;               //!< Local port.
-  bool            m_connected;          //!< True if connected
-  Ptr<HttpClient> m_clientApp;          //!< Client application.
-  uint32_t        m_pendingBytes;       //!< Pending TX bytes
-  Ptr<Packet>     m_rxPacket;           //!< RX packet.
+  /**
+   * \brief Socket send callback.
+   * \param socket The pointer to the socket with space in the transmit buffer.
+   * \param available The number of bytes available for writing into buffer.
+   */
+  void SendData (Ptr<Socket> socket, uint32_t available);
 
-  /** Random variable for main object size. */
-  Ptr<WeibullRandomVariable>      m_mainObjectSizeStream;
+  /**
+   * Process the Http request message, sending back the response.
+   * \param socket The connected socket.
+   * \param header The HTTP request header.
+   */
+  void ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header);
 
-  /** Random variable for number of inline objects. */
-  Ptr<ExponentialRandomVariable>  m_numOfInlineObjStream;
-
-  /** Random variable for inline object size. */
-  Ptr<LogNormalRandomVariable>    m_inlineObjectSizeStream;
+  bool                           m_connected;              //!< Connected state
+  uint32_t                       m_pendingBytes;           //!< Pending bytes
+  Ptr<WeibullRandomVariable>     m_mainObjectSizeStream;   //!< Main obj size
+  Ptr<ExponentialRandomVariable> m_numOfInlineObjStream;   //!< Num inline obj
+  Ptr<LogNormalRandomVariable>   m_inlineObjectSizeStream; //!< Inline obj size
 };
 
-}
+} // Namespace ns3
 #endif /* HTTP_SERVER_H_ */

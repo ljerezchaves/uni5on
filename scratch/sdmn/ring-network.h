@@ -36,7 +36,7 @@ class RingNetwork : public EpcNetwork
 {
 public:
   RingNetwork ();           //!< Default constructor.
-  virtual ~RingNetwork ();  //!< Dummy destructor, see DoDipose.
+  virtual ~RingNetwork ();  //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.

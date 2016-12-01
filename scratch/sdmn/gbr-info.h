@@ -41,7 +41,7 @@ class GbrInfo : public Object
 
 public:
   GbrInfo ();          //!< Default constructor
-  virtual ~GbrInfo (); //!< Dummy destructor, see DoDipose
+  virtual ~GbrInfo (); //!< Dummy destructor, see DoDispose
 
   /**
    * Complete constructor.

@@ -169,6 +169,13 @@ void ConfigureDefaults ()
   Config::SetDefault ("ns3::TcpSocketBase::MinRto", TimeValue (Seconds (0.2)));
 
   //
+  // Reducing the TCP maximum segment lifetime to 1 second, used for TIME_WAIT
+  // state transition to CLOSED state. This is necessary to allow fast TCP
+  // endpoint release, allowing the reuse of TCP ports on new sockets.
+  //
+  Config::SetDefault ("ns3::TcpSocketBase::MaxSegLifetime", DoubleValue (1));
+
+  //
   // Increasing SrsPeriodicity to allow more UEs per eNB. Allowed values are:
   // {2, 5, 10, 20, 40, 80, 160, 320}. The default value (40) allows no more
   // than ~40 UEs for each eNB. Note that the value needs to be higher than the
@@ -322,6 +329,8 @@ EnableVerbose (bool enable)
       LogComponentEnable ("RingController", LOG_LEVEL_ALL);
       LogComponentEnable ("RingController", LOG_PREFIX_TIME);
 
+      LogComponentEnable ("SdmnClientApp", LOG_LEVEL_WARN);
+      LogComponentEnable ("SdmnServerApp", LOG_LEVEL_WARN);
       LogComponentEnable ("HttpClient", LOG_LEVEL_WARN);
       LogComponentEnable ("HttpServer", LOG_LEVEL_WARN);
       LogComponentEnable ("VoipClient", LOG_LEVEL_WARN);
@@ -332,6 +341,5 @@ EnableVerbose (bool enable)
       LogComponentEnable ("RealTimeVideoServer", LOG_LEVEL_WARN);
       LogComponentEnable ("TrafficManager", LOG_LEVEL_WARN);
       LogComponentEnable ("TrafficHelper", LOG_LEVEL_WARN);
-      LogComponentEnable ("SdmnApplication", LOG_LEVEL_WARN);
     }
 }

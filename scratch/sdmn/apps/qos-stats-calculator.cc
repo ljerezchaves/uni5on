@@ -31,11 +31,11 @@ QosStatsCalculator::QosStatsCalculator ()
     m_windowSize (32),
     m_rxPackets (0),
     m_rxBytes (0),
-    m_previousRx (Simulator::Now ()),
-    m_previousRxTx (Simulator::Now ()),
+    m_firstRxTime (Simulator::Now ()),
+    m_lastRxTime (Simulator::Now ()),
+    m_lastTimestamp (Simulator::Now ()),
     m_jitter (0),
     m_delaySum (Time ()),
-    m_lastResetTime (Simulator::Now ()),
     m_seqNum (0),
     m_meterDrop (0),
     m_queueDrop (0)
@@ -69,14 +69,14 @@ void
 QosStatsCalculator::ResetCounters ()
 {
   delete m_lossCounter;
-  
+
   m_rxPackets = 0;
   m_rxBytes = 0;
   m_jitter = 0;
   m_delaySum = Time ();
-  m_previousRx = Simulator::Now ();
-  m_previousRxTx = Simulator::Now ();
-  m_lastResetTime = Simulator::Now ();
+  m_firstRxTime = Simulator::Now ();
+  m_lastRxTime = Simulator::Now ();
+  m_lastTimestamp = Simulator::Now ();
   m_seqNum = 0;
   m_meterDrop = 0;
   m_queueDrop = 0;
@@ -91,21 +91,22 @@ QosStatsCalculator::GetNextSeqNum ()
 }
 
 void
-QosStatsCalculator::NotifyReceived (uint32_t seqNum, Time timestamp, 
+QosStatsCalculator::NotifyReceived (uint32_t seqNum, Time timestamp,
                                     uint32_t rxBytes)
 {
   // The jitter is calculated using the RFC 1889 (RTP) jitter definition.
-  Time delta = (Simulator::Now () - m_previousRx) - (timestamp - m_previousRxTx);
+  Time now = Simulator::Now ();
+  Time delta = (now - m_lastRxTime) - (timestamp - m_lastTimestamp);
   m_jitter += ((Abs (delta)).GetTimeStep () - m_jitter) >> 4;
-  m_previousRx = Simulator::Now ();
-  m_previousRxTx = timestamp;
+  m_lastRxTime = now;
+  m_lastTimestamp = timestamp;
 
   // Updating delay, byte and packet counter
-  Time delay = Simulator::Now () - timestamp;
+  Time delay = now - timestamp;
   m_delaySum += delay;
   m_rxPackets++;
-  m_rxBytes += rxBytes;  
-  
+  m_rxBytes += rxBytes;
+
   // Notify packet loss counter
   m_lossCounter->NotifyReceived (seqNum);
 }
@@ -122,16 +123,16 @@ QosStatsCalculator::NotifyQueueDrop ()
   m_queueDrop++;
 }
 
-Time      
+Time
 QosStatsCalculator::GetActiveTime (void) const
 {
-  return Simulator::Now () - m_lastResetTime;
+  return m_lastRxTime - m_firstRxTime;
 }
 
 uint32_t
 QosStatsCalculator::GetLostPackets (void) const
 {
-  // Workaround for lost packets not yet identified 
+  // Workaround for lost packets not yet identified
   // by the PacketLossCounter packet window.
   uint32_t lost = m_lossCounter->GetLost ();
   uint32_t drops = m_meterDrop + m_queueDrop;
@@ -146,31 +147,31 @@ QosStatsCalculator::GetLossRatio (void) const
   return txPkts ? (double)lost / txPkts : 0.;
 }
 
-uint32_t  
+uint32_t
 QosStatsCalculator::GetRxPackets (void) const
 {
   return m_rxPackets;
 }
 
-uint32_t  
+uint32_t
 QosStatsCalculator::GetRxBytes (void) const
 {
   return m_rxBytes;
 }
 
-Time      
+Time
 QosStatsCalculator::GetRxDelay (void) const
 {
   return m_rxPackets ? (m_delaySum / (int64_t)m_rxPackets) : m_delaySum;
 }
 
-Time      
+Time
 QosStatsCalculator::GetRxJitter (void) const
 {
   return Time (m_jitter);
 }
 
-DataRate 
+DataRate
 QosStatsCalculator::GetRxThroughput (void) const
 {
   return DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ());

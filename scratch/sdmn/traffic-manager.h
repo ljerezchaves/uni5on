@@ -25,7 +25,7 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
-#include "apps/sdmn-application.h"
+#include "apps/sdmn-client-app.h"
 #include "routing-info.h"
 
 namespace ns3 {
@@ -45,7 +45,7 @@ class TrafficManager : public Object
 
 public:
   TrafficManager ();          //!< Default constructor
-  virtual ~TrafficManager (); //!< Dummy destructor, see DoDipose
+  virtual ~TrafficManager (); //!< Dummy destructor, see DoDispose
 
   /**
    * Register this type.
@@ -57,21 +57,20 @@ public:
    * Add a new application to this manager.
    * \param app The application pointer.
    */
-  void AddSdmnApplication (Ptr<SdmnApplication> app);
+  void AddSdmnClientApp (Ptr<SdmnClientApp> app);
 
   /**
    * Attempt to (re)start this application. This method will request for bearer
    * resources to the controller before starting the application. If the
    * controller accept the request, this starts the application. Otherwise, it
    * reschedule the (re)start attempt.
-   * \internal
-   * The teid approach only works because we currently have a single
+   * \internal The teid approach only works because we currently have a single
    * application associated with each bearer/tunnel. If we would like to
    * aggregate traffic from several applications into same bearer we will need
    * to revise this.
    * \param app The application pointer.
    */
-  void AppStartTry (Ptr<SdmnApplication> app);
+  void AppStartTry (Ptr<SdmnClientApp> app);
 
   /**
    * Member function called by applications to notify this manager when traffic
@@ -79,7 +78,7 @@ public:
    * application restart attempt.
    * \param app The application pointer.
    */
-  void NotifyAppStop (Ptr<const SdmnApplication> app);
+  void NotifyAppStop (Ptr<const SdmnClientApp> app);
 
   /**
    * Trace sink notified when new session is created. This will be used to get
@@ -101,7 +100,7 @@ protected:
 private:
   Ptr<ExponentialRandomVariable>      m_poissonRng; //!< Inter-arrival traffic
   Ptr<EpcController>                  m_controller; //!< OpenFlow controller
-  std::vector<Ptr<SdmnApplication> >  m_apps;       //!< Application list
+  std::vector<Ptr<SdmnClientApp> >    m_apps;       //!< Application list
 
   uint64_t    m_imsi;         //!< UE IMSI identifier
   uint16_t    m_cellId;       //!< Current eNB cellId

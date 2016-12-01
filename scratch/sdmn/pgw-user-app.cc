@@ -97,7 +97,7 @@ PgwUserApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
   TunnelIdTag tunnelIdTag;
   bool foud = packet->RemovePacketTag (tunnelIdTag);
   NS_ASSERT_MSG (foud, "Expected TunnelId tag but not found.");
-  
+
   // We expect that the S-GW address will be available in the 32 msb of
   // tunnelId, while the TEID will be available in the 32 lsb of tunnelId.
   uint64_t tagValue = tunnelIdTag.GetTunnelId ();
@@ -118,7 +118,7 @@ PgwUserApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
   // Send the packet to the tunnel socket
   NS_LOG_DEBUG ("Sending packet to IP " << enbAddr);
   m_tunnelSocket->SendTo (
-      packet, 0, InetSocketAddress (enbAddr, EpcNetwork::m_gtpuPort));
+    packet, 0, InetSocketAddress (enbAddr, EpcNetwork::m_gtpuPort));
   return true;
 }
 

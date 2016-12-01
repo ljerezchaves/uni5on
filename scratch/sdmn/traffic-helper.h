@@ -25,11 +25,7 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
-#include "apps/sdmn-application.h"
-#include "apps/http-helper.h"
-#include "apps/real-time-video-helper.h"
-#include "apps/voip-helper.h"
-#include "apps/stored-video-helper.h"
+#include "apps/sdmn-app-helper.h"
 
 namespace ns3 {
 
@@ -55,7 +51,7 @@ public:
   TrafficHelper (Ptr<EpcNetwork> epcNetwork, Ptr<LteNetwork> lteNetwork);
 
   TrafficHelper ();           //!< Default constructor
-  virtual ~TrafficHelper ();  //!< Dummy destructor, see DoDipose
+  virtual ~TrafficHelper ();  //!< Dummy destructor, see DoDispose
 
   /**
    * Register this type.
@@ -188,15 +184,15 @@ private:
   Ptr<TrafficManager> m_ueManager;      //!< Current client traffic manager
 
   bool                m_gbrVoip;        //!< VoIP enable
-  bool                m_gbrLiveVideo;   //!< GBR live streaming vide enable
-  bool                m_nonBufferVideo; //!< Buffered video enable
-  bool                m_nonLiveVideo;   //!< Non-GBR live straming video enable
+  bool                m_gbrLVid;        //!< GBR live streaming vide enable
+  bool                m_nonBVid;        //!< Buffered video enable
+  bool                m_nonLVid;        //!< Non-GBR live straming video enable
   bool                m_nonHttp;        //!< HTTP enable
 
-  VoipHelper          m_voipHelper;     //!< Voip application helper
-  RealTimeVideoHelper m_rtVideoHelper;  //!< Real-time video application helper
-  StoredVideoHelper   m_stVideoHelper;  //!< Stored video application helper
-  HttpHelper          m_httpHelper;     //!< HTTP application helper
+  SdmnAppHelper       m_voipHelper;     //!< Voip application helper
+  SdmnAppHelper       m_rtVideoHelper;  //!< Real-time video application helper
+  SdmnAppHelper       m_stVideoHelper;  //!< Stored video application helper
+  SdmnAppHelper       m_httpHelper;     //!< HTTP application helper
 
   Ptr<UniformRandomVariable> m_videoRng;      //!< Random video selection
   static const std::string   m_videoDir;      //!< Video trace directory

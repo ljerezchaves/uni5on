@@ -13,7 +13,8 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Author: Saulo da Mata <damata.saulo@gmail.com>
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
@@ -22,22 +23,12 @@
 #ifndef HTTP_CLIENT_H_
 #define HTTP_CLIENT_H_
 
-#include "ns3/core-module.h"
-#include "ns3/network-module.h"
-#include "ns3/internet-module.h"
-#include "ns3/http-header.h"
-#include "http-server.h"
-#include "sdmn-application.h"
-#include "qos-stats-calculator.h"
-#include <string>
-#include <sstream>
+#include "sdmn-client-app.h"
 
 namespace ns3 {
 
-class HttpServer;
-
 /**
- * \ingroup applications
+ * \ingroup sdmn
  * This is the client side of a HTTP Traffic Generator. The client establishes
  * a TCP connection with the server and sends a request for the main object of
  * a given web page. When client gets the main object, it process the message
@@ -52,78 +43,53 @@ class HttpServer;
  * proposed algorithm in other modules of ns-3. To allow deeper studies about
  * the HTTP Protocol it needs some improvements.
  */
-class HttpClient : public SdmnApplication
+class HttpClient : public SdmnClientApp
 {
 public:
   /**
    * \brief Get the type ID.
-   * \return type ID
+   * \return the object TypeId
    */
   static TypeId GetTypeId (void);
 
   HttpClient ();          //!< Default constructor
-  virtual ~HttpClient (); //!< Dummy destructor, see DoDipose
+  virtual ~HttpClient (); //!< Dummy destructor, see DoDispose
 
-  /**
-   * \brief Set the server application.
-   * \param server The pointer to server application.
-   * \param serverAddress The IPv4 address of the server.
-   * \param serverPort The port number on the server
-   */
-  void SetServer (Ptr<HttpServer> server, Ipv4Address serverAddress,
-                  uint16_t serverPort);
-
-  /**
-   * \brief Get the server application.
-   * \return The pointer to server application.
-   */
-  Ptr<HttpServer> GetServerApp ();
-
-  // Inherited from SdmnApplication
-  void Start (void);
+  // Inherited from SdmnClientApp
+  void Start ();
 
 protected:
+  // Inherited from Object
   virtual void DoDispose (void);
 
+  // Inherited from SdmnClientApp
+  void Stop ();
+
 private:
-  // inherited from Application base class.
-  virtual void StartApplication (void);    // Called at time specified by Start
-  virtual void StopApplication (void);     // Called at time specified by Stop
-
-  /**
-   * \brief Open the TCP connection between this client and the server.
-   */
-  void OpenSocket ();
-
-  /**
-   * \brief Close the TCP connection between this client and the server.
-   */
-  void CloseSocket ();
-
   /**
    * \brief Handle a connection succeed event.
-   * \param socket the connected socket
+   * \param socket The connected socket.
    */
   void ConnectionSucceeded (Ptr<Socket> socket);
 
   /**
    * \brief Handle a connection failed event.
-   * \param socket the not connected socket
+   * \param socket The connected socket.
    */
   void ConnectionFailed (Ptr<Socket> socket);
 
   /**
-   * \brief Send the request to server side.
-   * \param socket Socket that sends requests.
+   * \brief Socket receive callback.
+   * \param socket Socket with data available to be read.
+   */
+  void ReceiveData (Ptr<Socket> socket);
+
+  /**
+   * \brief Send the request to server.
+   * \param socket The connected socket.
    * \param url The URL of the object requested.
    */
   void SendRequest (Ptr<Socket> socket, std::string url);
-
-  /**
-   * \brief Receive method.
-   * \param socket The socket that receives packets from server.
-   */
-  void HandleReceive (Ptr<Socket> socket);
 
   /**
    * \brief Set a reading time before requesting a new main object.
@@ -131,25 +97,16 @@ private:
    */
   void SetReadingTime (Ptr<Socket> socket);
 
-  Ptr<Socket>        m_socket;            //!< Local socket.
-  Ipv4Address        m_serverAddress;     //!< Server address.
-  uint16_t           m_serverPort;        //!< Server port.
-  Ptr<HttpServer>    m_serverApp;         //!< Server application.
-  uint16_t           m_pagesLoaded;       //!< Pages loaded.
-  Time               m_maxReadingTime;    //!< Reading time threshold.
-  uint16_t           m_maxPages;          //!< Max pages threshold.
-  EventId            m_forceStop;         //!< Maximum duration stop event.
-  EventId            m_nextRequest;       //!< Next request event.
-  uint32_t           m_pendingBytes;      //!< Pending RX bytes.
-  Ptr<Packet>        m_rxPacket;          //!< RX packet.
-  uint32_t           m_pendingObjects;    //!< Pending RX objects.
-
-  /** Random variable for reading time. */
-  Ptr<LogNormalRandomVariable>  m_readingTimeStream;
-
-  /** Random variable for reading time adjust. */
-  Ptr<UniformRandomVariable>    m_readingTimeAdjustStream;
+  uint16_t                     m_maxPages;                //!< Pages thres
+  Time                         m_maxReadingTime;          //!< Reading thres
+  EventId                      m_nextRequest;             //!< Next request
+  Ptr<Packet>                  m_rxPacket;                //!< RX packet
+  uint16_t                     m_pagesLoaded;             //!< Pages loaded
+  uint32_t                     m_pendingBytes;            //!< Pending bytes
+  uint32_t                     m_pendingObjects;          //!< Pending objects
+  Ptr<LogNormalRandomVariable> m_readingTimeStream;       //!< Reading time
+  Ptr<UniformRandomVariable>   m_readingTimeAdjustStream; //!< Time adjust
 };
 
-} // namespace ns3
+} // Namespace ns3
 #endif /* HTTP_CLIENT_H_ */

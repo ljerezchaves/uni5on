@@ -18,7 +18,7 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "ns3/seq-ts-header.h"
+#include <ns3/seq-ts-header.h>
 #include "real-time-video-client.h"
 
 namespace ns3 {
@@ -30,13 +30,13 @@ TypeId
 RealTimeVideoClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RealTimeVideoClient")
-    .SetParent<SdmnApplication> ()
+    .SetParent<SdmnClientApp> ()
     .AddConstructor<RealTimeVideoClient> ()
-    .AddAttribute ("LocalPort",
-                   "Local TCP port on which we listen for incoming connections.",
-                   UintegerValue (80),
-                   MakeUintegerAccessor (&RealTimeVideoClient::m_localPort),
-                   MakeUintegerChecker<uint16_t> ())
+    .AddAttribute ("VideoDuration",
+                   "A random variable used to pick the video duration [s].",
+                   StringValue ("ns3::ConstantRandomVariable[Constant=30.0]"),
+                   MakePointerAccessor (&RealTimeVideoClient::m_lengthRng),
+                   MakePointerChecker <RandomVariableStream> ())
   ;
   return tid;
 }
@@ -44,8 +44,6 @@ RealTimeVideoClient::GetTypeId (void)
 RealTimeVideoClient::RealTimeVideoClient ()
 {
   NS_LOG_FUNCTION (this);
-  m_socket = 0;
-  m_serverApp = 0;
 }
 
 RealTimeVideoClient::~RealTimeVideoClient ()
@@ -54,75 +52,50 @@ RealTimeVideoClient::~RealTimeVideoClient ()
 }
 
 void
-RealTimeVideoClient::SetServer (Ptr<RealTimeVideoServer> server)
-{
-  m_serverApp = server;
-}
-
-Ptr<RealTimeVideoServer>
-RealTimeVideoClient::GetServerApp ()
-{
-  return m_serverApp;
-}
-
-void
-RealTimeVideoClient::SetTraceFilename (std::string filename)
-{
-  NS_LOG_FUNCTION (this << filename);
-
-  NS_ASSERT_MSG (m_serverApp, "No server application found.");
-  m_serverApp->SetAttribute ("TraceFilename", StringValue (filename));
-}
-
-void 
-RealTimeVideoClient::ServerTrafficEnd (uint32_t pkts)
+RealTimeVideoClient::Start ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Let's wait some msec for delayed packets before notifying stopped app.
-  Simulator::Schedule (MilliSeconds (250), &RealTimeVideoClient::NotifyStop, this);
-}
+  // Schedule the stop event based on video lenght. It will schedule the
+  // ForceStop method to stop traffic generation before firing the stop trace.
+  Time stopTime = Seconds (std::abs (m_lengthRng->GetValue ()));
+  m_stopEvent = Simulator::Schedule (
+      stopTime, &RealTimeVideoClient::ForceStop, this);
+  NS_LOG_INFO ("Real-time video lenght: " << stopTime.As (Time::S));
 
-void 
-RealTimeVideoClient::Start (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  ResetQosStats ();
-  m_active = true;
-  m_appStartTrace (this);
-  m_serverApp->StartSending (m_maxDurationTime);
+  // Chain up to fire start trace
+  SdmnClientApp::Start ();
 }
 
 void
 RealTimeVideoClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
-  m_serverApp = 0;
-  m_socket = 0;
-  SdmnApplication::DoDispose ();
+
+  Simulator::Cancel (m_stopEvent);
+  SdmnClientApp::DoDispose ();
 }
 
-void 
-RealTimeVideoClient::NotifyStop ()
+void
+RealTimeVideoClient::ForceStop ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Fire stop trace source
-  m_active = false;
-  m_appStopTrace (this);
+  Simulator::Cancel (m_stopEvent);
+  SdmnClientApp::ForceStop ();
 }
 
 void
 RealTimeVideoClient::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
+
   if (m_socket == 0)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tid);
-      m_socket->Bind (
-        InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
+      m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
+      m_socket->ShutdownSend ();
       m_socket->SetRecvCallback (
         MakeCallback (&RealTimeVideoClient::ReadPacket, this));
     }
@@ -132,9 +105,12 @@ void
 RealTimeVideoClient::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
+
   if (m_socket != 0)
     {
+      m_socket->ShutdownRecv ();
       m_socket->Close ();
+      m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
       m_socket = 0;
     }
 }
@@ -143,18 +119,16 @@ void
 RealTimeVideoClient::ReadPacket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-  Ptr<Packet> packet;
-  Address from;
-  while ((packet = socket->RecvFrom (from)))
-    {
-      if (packet->GetSize () > 0)
-        {
-          SeqTsHeader seqTs;
-          packet->RemoveHeader (seqTs);
-          NS_LOG_DEBUG ("Real-time video RX " << packet->GetSize () << " bytes");
-          m_qosStats->NotifyReceived (seqTs.GetSeq (), seqTs.GetTs (), packet->GetSize ());
-        }
-    }
+
+  // Receive the datagram from the socket
+  Ptr<Packet> packet = socket->Recv ();
+
+  SeqTsHeader seqTs;
+  packet->PeekHeader (seqTs);
+  m_qosStats->NotifyReceived (seqTs.GetSeq (), seqTs.GetTs (),
+                              packet->GetSize ());
+  NS_LOG_DEBUG ("Real-time video RX " << packet->GetSize () << " bytes. " <<
+                "Sequence " << seqTs.GetSeq ());
 }
 
 } // Namespace ns3

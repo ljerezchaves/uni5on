@@ -21,24 +21,16 @@
 #ifndef REAL_TIME_VIDEO_CLIENT_H
 #define REAL_TIME_VIDEO_CLIENT_H
 
-#include "ns3/core-module.h"
-#include "ns3/network-module.h"
-#include "ns3/internet-module.h"
-#include "real-time-video-server.h"
-#include "sdmn-application.h"
-#include "qos-stats-calculator.h"
+#include "sdmn-client-app.h"
 
 namespace ns3 {
 
-class RealTimeVideoServer;
-
 /**
- * \ingroup applications
- * This is the client side of a real-time video traffic generator. The client
- * start the transmission at the server (using a direct member function call),
- * and receives UDP datagrams from server to measures statistiscs.
+ * \ingroup sdmn
+ * This is the client side of a real-time video traffic generator, receiving
+ * UDP datagrams following a MPEG video pattern with random video length.
  */
-class RealTimeVideoClient : public SdmnApplication
+class RealTimeVideoClient : public SdmnClientApp
 {
 public:
   /**
@@ -48,58 +40,32 @@ public:
   static TypeId GetTypeId (void);
 
   RealTimeVideoClient ();   //!< Default constructor
-  ~RealTimeVideoClient ();  //!< Dummy destructor, see DoDipose
+  virtual ~RealTimeVideoClient ();  //!< Dummy destructor, see DosDipose
 
-  /**
-   * \brief Set the server application.
-   * \param server The pointer to server application.
-   */
-  void SetServer (Ptr<RealTimeVideoServer> server);
-
-  /**
-   * \brief Get the server application.
-   * \return The pointer to server application.
-   */
-  Ptr<RealTimeVideoServer> GetServerApp ();
-
-  /**
-   * Set the server trace file attribute.
-   * \param filename Name of file to load a trace from.
-   */
-  void SetTraceFilename (std::string filename);
-
-  /**
-   * \brief Invoked when server stops sending traffic.
-   * \param pkts The total number of packets transmitted by the server.
-   */
-  void ServerTrafficEnd (uint32_t pkts);
-
-  // Inherited from SdmnApplication
-  void Start (void);
+  // Inherited from SdmnClientApp
+  void Start ();
 
 protected:
+  // Inherited from Object
   virtual void DoDispose (void);
 
-  /**
-   * \brief Dump application statistcs and fire stop callback.
-   */
-  void NotifyStop ();
+  // Inherited from SdmnClientApp
+  void ForceStop ();
 
 private:
-  // inherited from Application base class.
-  virtual void StartApplication (void);    // Called at time specified by Start
-  virtual void StopApplication (void);     // Called at time specified by Stop
+  // Inherited from Application
+  virtual void StartApplication (void);
+  virtual void StopApplication (void);
 
   /**
-   * \brief Handle a packet reception.
-   * \param socket the socket the packet was received to.
+   * \brief Socket receive callback.
+   * \param socket Socket with data available to be read.
    */
   void ReadPacket (Ptr<Socket> socket);
-  
-  uint16_t                  m_localPort;  //!< Inbound local port
-  Ptr<Socket>               m_socket;     //!< Inbound RX socket
-  Ptr<RealTimeVideoServer>  m_serverApp;  //!< Server application
+
+  EventId                   m_stopEvent;        //!< Stop event
+  Ptr<RandomVariableStream> m_lengthRng;        //!< Random video length
 };
 
-} // namespace ns3
+} // Namespace ns3
 #endif /* REAL_TIME_VIDEO_CLIENT_H */

@@ -60,7 +60,7 @@ TrafficManager::GetTypeId (void)
 }
 
 void
-TrafficManager::AddSdmnApplication (Ptr<SdmnApplication> app)
+TrafficManager::AddSdmnClientApp (Ptr<SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -76,7 +76,7 @@ TrafficManager::AddSdmnApplication (Ptr<SdmnApplication> app)
 }
 
 void
-TrafficManager::AppStartTry (Ptr<SdmnApplication> app)
+TrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -88,57 +88,66 @@ TrafficManager::AppStartTry (Ptr<SdmnApplication> app)
     {
       // No resource request for traffic over default bearer.
       authorized = m_controller->RequestDedicatedBearer (
-        app->GetEpsBearer (), m_imsi, m_cellId, appTeid);
+          app->GetEpsBearer (), m_imsi, m_cellId, appTeid);
     }
 
   //
   // Before starting the traffic, let's set the next start attempt for this
   // same application. We will use this interval to limit the current traffic
-  // duration, to avoid overlapping traffic which would not be possible. Doing
-  // this, we can respect almost all inter-arrival times for the Poisson
-  // process. However, we must ensure a minimum interval between start attempts
-  // so the network can prepare for application traffic and release resources
-  // after that.In this implementation, we are using 3 seconds for traffic
-  // duration + 3 seconds for other procedures. See the timeline bellow for
-  // better understanding. Note that in current implementation, no retries are
+  // duration, to avoid overlapping traffic which would not be possible in
+  // current implementation. Doing this, we can respect almost all
+  // inter-arrival times for the Poisson process and reuse application and
+  // bearers along the simulation. However, we must ensure a minimum interval
+  // between start attempts so the network can prepare for application traffic
+  // and release resources after that. In this implementation, we are using 1
+  // second for traffic preparation, at least 3 seconds for traffic duration
+  // and 4 seconds for release procedures. See the timeline bellow for better
+  // understanding. Note that in current implementation, no retries are
   // performed for for non-authorized traffic.
   //
-  //     Now       Now+1s                    t-2s       t-1s        t
-  //      |----------|---------- ... ---------|----------|----------|---> time
-  //      |          |                        |          |          |
-  //  AppStartTry AppStart                 AppStop  MeterRemove AppStartTry
-  //    (this)                                                    (next)
-  //                 |<-- traffic duration -->|
-  //                      (at least 3 sec)
+  //  Now  Now+1s              t-4s   t-3s   t-2s   t-1s    t
+  //   |------|------ ... ------|------|------|------|------|---> time
+  //   A      B                 C      D      E      F      G
+  //           <-- MaxOnTime -->
+  //           (at least 3 secs)
   //
-  Time nextStartTry = Seconds (std::max (6.0, m_poissonRng->GetValue ()));
+  // A: This AppStartTry (install rules into switches)
+  // B: Application starts (traffic begin)
+  // C: Traffic generation ends (still have packets on the wire)
+  // D: Application stops (fire dump statistics)
+  // E: Resource release (remove rules from switches)
+  // F: The socket will be effectivelly closed
+  // G: Next AppStartTry (following Poisson proccess)
+  //
+  Time nextStartTry = Seconds (std::max (8.0, m_poissonRng->GetValue ()));
   Simulator::Schedule (nextStartTry, &TrafficManager::AppStartTry, this, app);
-  NS_LOG_DEBUG ("App " << app->GetAppName () << " at user " << m_imsi
-                << " will start at "
-                << (Simulator::Now () + Seconds (1)).GetSeconds () << ". "
-                << " Next start try will occur at "
-                << (Simulator::Now () + nextStartTry).GetSeconds ());
+  NS_LOG_DEBUG ("App " << app->GetAppName () << " at user " << m_imsi <<
+                " will start at " <<
+                (Simulator::Now () + Seconds (1)).GetSeconds () <<
+                ". Next start try will occur at " <<
+                (Simulator::Now () + nextStartTry).GetSeconds ());
 
   if (authorized)
     {
       // Set the maximum traffic duration.
-      Time duration = nextStartTry - Seconds (3);
-      app->SetAttribute ("MaxDurationTime", TimeValue (duration));
-      Simulator::Schedule (Seconds (1), &SdmnApplication::Start, app);
+      Time duration = nextStartTry - Seconds (5);
+      app->SetAttribute ("MaxOnTime", TimeValue (duration));
+      Simulator::Schedule (Seconds (1), &SdmnClientApp::Start, app);
     }
 }
 
 void
-TrafficManager::NotifyAppStop (Ptr<const SdmnApplication> app)
+TrafficManager::NotifyAppStop (Ptr<const SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << app);
 
   uint32_t appTeid = app->GetTeid ();
   if (appTeid != m_defaultTeid)
     {
-      // No resource release for traffic over default bearer. Schedule the
-      // release for 1 second after application stop.
-      Simulator::Schedule (Seconds (1), &EpcController::ReleaseDedicatedBearer,
+      // No resource release for traffic over default bearer.
+      // Schedule the release for 1 second after application stops.
+      Simulator::Schedule (
+        Seconds (1), &EpcController::ReleaseDedicatedBearer,
         m_controller, app->GetEpsBearer (), m_imsi, m_cellId, appTeid);
     }
 }
@@ -160,10 +169,10 @@ TrafficManager::SessionCreatedCallback (
   m_defaultTeid = bearerList.front ().sgwFteid.teid;
 
   // For each application, set the corresponding teid
-  std::vector<Ptr<SdmnApplication> >::iterator appIt;
+  std::vector<Ptr<SdmnClientApp> >::iterator appIt;
   for (appIt = m_apps.begin (); appIt != m_apps.end (); appIt++)
     {
-      Ptr<SdmnApplication> app = *appIt;
+      Ptr<SdmnClientApp> app = *appIt;
 
       // Using the tft to match bearers and apps
       Ptr<EpcTft> tft = app->GetTft ();

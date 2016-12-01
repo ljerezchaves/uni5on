@@ -42,7 +42,7 @@ public:
   };
 
   RingController ();            //!< Default constructor
-  virtual ~RingController ();   //!< Dummy destructor, see DoDipose
+  virtual ~RingController ();   //!< Dummy destructor, see DoDispose
 
   /**
    * Register this type.

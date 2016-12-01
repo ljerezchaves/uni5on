@@ -22,115 +22,59 @@
 #ifndef VOIP_CLIENT_H_
 #define VOIP_CLIENT_H_
 
-#include "ns3/core-module.h"
-#include "ns3/network-module.h"
-#include "ns3/internet-module.h"
-#include "voip-server.h"
-#include "sdmn-application.h"
-#include "qos-stats-calculator.h"
+#include "sdmn-client-app.h"
 
 namespace ns3 {
 
-class VoipServer;
-
 /**
- * \ingroup applications
- * This is the client side of a voip traffic generator. This client sends and
- * receives UDP datagrams following voip traffic pattern. This client control
- * start/stop events on the server application. 
+ * \ingroup sdmn
+ * This is the client side of a VoIP traffic generator, sending and receiving
+ * UDP datagrams following VoIP traffic pattern.
  */
-class VoipClient : public SdmnApplication
+class VoipClient : public SdmnClientApp
 {
 public:
   /**
    * \brief Register this type.
    * \return the object TypeId
-   */ 
+   */
   static TypeId GetTypeId (void);
-  
+
   VoipClient ();             //!< Default constructor
-  virtual ~VoipClient ();    //!< Dummy destructor, see DoDipose
+  virtual ~VoipClient ();    //!< Dummy destructor, see DoDispose
 
-  /**
-   * \brief Set the server application.
-   * \param server The pointer to server application.
-   * \param serverAddress The IPv4 address of the server.
-   * \param serverPort The port number on the server
-   */
-  void SetServer (Ptr<VoipServer> server, Ipv4Address serverAddress,
-                  uint16_t serverPort);
-
-  /**
-   * \brief Get the VoIP server application. 
-   * \return The pointer to server application. 
-   */
-  Ptr<VoipServer> GetServerApp ();
- 
-  /**
-   * Get QoS statistics
-   * \return Get the const pointer to QosStatsCalculator
-   */
-  Ptr<const QosStatsCalculator> GetServerQosStats (void) const;
-
-  /** 
-   * Reset the QoS statistics
-   */
-  void ResetQosStats ();
-
-  /**
-   * \brief Callback invoked when server stops sending traffic.
-   * \param pkts The total number of packets transmitted by the server.
-   */
-  void ServerTrafficEnd (uint32_t pkts);
-
-  // Inherited from SdmnApplication
+  // Inherited from SdmnClientApp
   void Start (void);
 
 protected:
-  /** Destructor implementation */
+  // Inherited from Object
   virtual void DoDispose (void);
 
-  /**
-   * \brief Dump application statistcs and fire stop callback.
-   */
-  void NotifyStop ();
-  
+  // Inherited from SdmnClientApp
+  void ForceStop ();
+
 private:
-  // inherited from Application base class.
-  virtual void StartApplication (void);    // Called at time specified by Start
-  virtual void StopApplication (void);     // Called at time specified by Stop
+  // Inherited from Application
+  virtual void StartApplication (void);
+  virtual void StopApplication (void);
 
   /**
-   * \brief Start the streaming.
+   * \brief Socket receive callback.
+   * \param socket Socket with data available to be read.
    */
-  void StartSending ();
-  
-  /**
-   * \brief Stop the streaming.
-   */
-  void StopSending ();
+  void ReadPacket (Ptr<Socket> socket);
 
   /**
    * \brief Handle a packet transmission.
    */
   void SendPacket ();
 
-  /**
-   * \brief Handle a packet reception.
-   * \param socket the socket the packet was received to.
-   */
-  void ReadPacket (Ptr<Socket> socket);
-
-  Time                      m_interval;       //!< Interval between packets
-  uint32_t                  m_pktSize;        //!< Packet size
-  uint32_t                  m_pktSent;        //!< Number of TX packets
-  Ipv4Address               m_serverAddress;  //!< Server address
-  uint16_t                  m_serverPort;     //!< Server port
-  Ptr<VoipServer>           m_serverApp;      //!< Server application
-  uint16_t                  m_localPort;      //!< Inbound local port
-  Ptr<Socket>               m_txSocket;       //!< Outbound TX socket
-  Ptr<Socket>               m_rxSocket;       //!< Inbound RX socket
-  EventId                   m_sendEvent;      //!< SendPacket event
+  Time                      m_interval;         //!< Interval between packets
+  uint32_t                  m_pktSize;          //!< Maximum packet size
+  uint32_t                  m_pktSent;          //!< Number of TX packets
+  EventId                   m_sendEvent;        //!< SendPacket event
+  EventId                   m_stopEvent;        //!< Stop event
+  Ptr<RandomVariableStream> m_lengthRng;        //!< Random call length
 };
 
 } // namespace ns3

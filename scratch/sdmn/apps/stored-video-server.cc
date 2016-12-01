@@ -18,7 +18,7 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "stored-video-client.h"
+#include "stored-video-server.h"
 #include <cstdlib>
 #include <cstdio>
 #include <fstream>
@@ -31,24 +31,27 @@ NS_OBJECT_ENSURE_REGISTERED (StoredVideoServer);
 /**
  * \brief Default trace to send
  */
-struct StoredVideoServer::TraceEntry StoredVideoServer::g_defaultEntries[] =
+struct StoredVideoServer::TraceEntry
+  StoredVideoServer::g_defaultEntries[] =
 {
-  {  0,  534, 'I'}, { 40, 1542, 'P'}, {120,  134, 'B'}, { 80,  390, 'B'},
-  {240,  765, 'P'}, {160,  407, 'B'}, {200,  504, 'B'}, {360,  903, 'P'},
-  {280,  421, 'B'}, {320,  587, 'B'}
+  {  0,  534, 'I'},
+  { 40, 1542, 'P'},
+  {120,  134, 'B'},
+  { 80,  390, 'B'},
+  {240,  765, 'P'},
+  {160,  407, 'B'},
+  {200,  504, 'B'},
+  {360,  903, 'P'},
+  {280,  421, 'B'},
+  {320,  587, 'B'}
 };
 
 TypeId
 StoredVideoServer::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::StoredVideoServer")
-    .SetParent<Application> ()
+    .SetParent<SdmnServerApp> ()
     .AddConstructor<StoredVideoServer> ()
-    .AddAttribute ("LocalPort",
-                   "Local TCP port listening for incoming connections.",
-                   UintegerValue (2000),
-                   MakeUintegerAccessor (&StoredVideoServer::m_port),
-                   MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("TraceFilename",
                    "Name of file to load a trace from.",
                    StringValue (""),
@@ -64,12 +67,8 @@ StoredVideoServer::GetTypeId (void)
 }
 
 StoredVideoServer::StoredVideoServer ()
-  : m_socket (0),
-    m_port (0),
-    m_connected (false),
-    m_clientApp (0),
-    m_pendingBytes (0),
-    m_rxPacket (0)
+  : m_connected (false),
+    m_pendingBytes (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -80,21 +79,10 @@ StoredVideoServer::~StoredVideoServer ()
 }
 
 void
-StoredVideoServer::SetClient (Ptr<StoredVideoClient> client)
-{
-  m_clientApp = client;
-}
-
-Ptr<StoredVideoClient>
-StoredVideoServer::GetClientApp ()
-{
-  return m_clientApp;
-}
-
-void
 StoredVideoServer::SetTraceFile (std::string traceFile)
 {
   NS_LOG_FUNCTION (this << traceFile);
+
   if (traceFile == "")
     {
       LoadDefaultTrace ();
@@ -109,16 +97,14 @@ void
 StoredVideoServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
-  m_socket = 0;
-  m_clientApp = 0;
+
   m_lengthRng = 0;
-  m_rxPacket = 0;
   m_entries.clear ();
-  Application::DoDispose ();
+  SdmnServerApp::DoDispose ();
 }
 
 void
-StoredVideoServer::StartApplication (void)
+StoredVideoServer::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -126,9 +112,8 @@ StoredVideoServer::StartApplication (void)
     {
       TypeId tid = TypeId::LookupByName ("ns3::TcpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tid);
-      InetSocketAddress local =
-        InetSocketAddress (Ipv4Address::GetAny (), m_port);
-      m_socket->Bind (local);
+      m_socket->SetAttribute ("SndBufSize", UintegerValue (16384));
+      m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
       m_socket->Listen ();
       m_socket->SetAcceptCallback (
         MakeCallback (&StoredVideoServer::HandleRequest, this),
@@ -149,13 +134,120 @@ StoredVideoServer::StopApplication ()
       m_socket->ShutdownRecv ();
       m_socket->Close ();
       m_socket->SetAcceptCallback (
-        MakeNullCallback<bool, Ptr< Socket >, const Address &> (),
-        MakeNullCallback<void, Ptr< Socket >, const Address &> ());
+        MakeNullCallback<bool, Ptr<Socket>, const Address &> (),
+        MakeNullCallback<void, Ptr<Socket>, const Address &> ());
       m_socket->SetSendCallback (
-        MakeNullCallback<void, Ptr< Socket >, uint32_t> ());
+        MakeNullCallback<void, Ptr<Socket>, uint32_t> ());
       m_socket->SetRecvCallback (
-        MakeNullCallback<void, Ptr< Socket > > ());
+        MakeNullCallback<void, Ptr<Socket> > ());
       m_socket = 0;
+    }
+}
+
+bool
+StoredVideoServer::HandleRequest (Ptr<Socket> socket, const Address& address)
+{
+  NS_LOG_FUNCTION (this << socket << address);
+
+  Ipv4Address ipAddr = InetSocketAddress::ConvertFrom (address).GetIpv4 ();
+  NS_LOG_LOGIC ("Connection request from " << ipAddr);
+  return !m_connected;
+}
+
+void
+StoredVideoServer::HandleAccept (Ptr<Socket> socket, const Address& address)
+{
+  NS_LOG_FUNCTION (this << socket << address);
+
+  Ipv4Address ipAddr = InetSocketAddress::ConvertFrom (address).GetIpv4 ();
+  NS_LOG_LOGIC ("Connection successfully established with " << ipAddr);
+  socket->SetSendCallback (MakeCallback (&StoredVideoServer::SendData, this));
+  socket->SetRecvCallback (
+    MakeCallback (&StoredVideoServer::ReceiveData, this));
+  m_connected = true;
+  m_pendingBytes = 0;
+}
+
+void
+StoredVideoServer::HandlePeerClose (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+
+  NS_LOG_LOGIC ("Connection closed.");
+  socket->ShutdownSend ();
+  socket->ShutdownRecv ();
+  socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
+  socket->SetSendCallback (MakeNullCallback<void, Ptr<Socket>, uint32_t> ());
+  m_connected = false;
+}
+
+void
+StoredVideoServer::HandlePeerError (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+
+  NS_LOG_LOGIC ("Connection error.");
+  socket->ShutdownSend ();
+  socket->ShutdownRecv ();
+  socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
+  socket->SetSendCallback (MakeNullCallback<void, Ptr<Socket>, uint32_t> ());
+  m_connected = false;
+}
+
+void
+StoredVideoServer::ReceiveData (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+
+  // Receive the HTTP GET message.
+  HttpHeader httpHeader;
+  Ptr<Packet> packet = socket->Recv ();
+  packet->RemoveHeader (httpHeader);
+  NS_ASSERT (packet->GetSize () == 0);
+
+  ProccessHttpRequest (socket, httpHeader);
+}
+
+void
+StoredVideoServer::SendData (Ptr<Socket> socket, uint32_t available)
+{
+  NS_LOG_FUNCTION (this << socket << available);
+
+  if (!m_pendingBytes)
+    {
+      NS_LOG_DEBUG ("No pending data to send.");
+      return;
+    }
+
+  if (IsForceStop ())
+    {
+      NS_LOG_DEBUG ("Can't send data on force stop mode.");
+      return;
+    }
+
+  if (!m_connected)
+    {
+      NS_LOG_DEBUG ("Socket not connected.");
+      return;
+    }
+
+  if (!available)
+    {
+      NS_LOG_DEBUG ("No TX buffer space available.");
+      return;
+    }
+
+  uint32_t pktSize = std::min (available, m_pendingBytes);
+  Ptr<Packet> packet = Create<Packet> (pktSize);
+  int bytesSent = socket->Send (packet);
+  if (bytesSent > 0)
+    {
+      NS_LOG_DEBUG ("Stored video server TX " << bytesSent << " bytes.");
+      m_pendingBytes -= static_cast<uint32_t> (bytesSent);
+    }
+  else
+    {
+      NS_LOG_ERROR ("Stored video server TX error.");
     }
 }
 
@@ -189,7 +281,7 @@ StoredVideoServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
       socket->Send (outPacket);
 
       // Start sending the stored video stream to the client.
-      SendStream (socket, socket->GetTxAvailable ());
+      SendData (socket, socket->GetTxAvailable ());
     }
   else
     {
@@ -197,77 +289,24 @@ StoredVideoServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
     }
 }
 
-bool
-StoredVideoServer::HandleRequest (Ptr<Socket> socket, const Address& address)
-{
-  NS_LOG_FUNCTION (this << socket << address);
-  NS_LOG_LOGIC ("Received request for connection from " <<
-                InetSocketAddress::ConvertFrom (address).GetIpv4 ());
-  return !m_connected;
-}
-
-void
-StoredVideoServer::HandleAccept (Ptr<Socket> socket, const Address& address)
-{
-  NS_LOG_FUNCTION (this << socket << address);
-  NS_LOG_LOGIC ("Connection successfully established with client " <<
-                InetSocketAddress::ConvertFrom (address).GetIpv4 ());
-  socket->SetSendCallback (
-    MakeCallback (&StoredVideoServer::SendStream, this));
-  socket->SetRecvCallback (
-    MakeCallback (&StoredVideoServer::HandleReceive, this));
-  m_connected = true;
-  m_pendingBytes = 0;
-  m_rxPacket = 0;
-}
-
-void
-StoredVideoServer::HandleReceive (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
-
-  // This application expects to receive a single HTTP GET message at a time.
-  HttpHeader httpHeader;
-  m_rxPacket = socket->Recv ();
-  m_rxPacket->RemoveHeader (httpHeader);
-  NS_ASSERT (m_rxPacket->GetSize () == 0);
-
-  ProccessHttpRequest (socket, httpHeader);
-}
-
-void
-StoredVideoServer::HandlePeerClose (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
-  NS_LOG_LOGIC ("Connection closed.");
-  socket->ShutdownSend ();
-  m_connected = false;
-}
-
-void
-StoredVideoServer::HandlePeerError (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
-  NS_LOG_LOGIC ("Connection error.");
-  socket->ShutdownSend ();
-  m_connected = false;
-}
-
 void
 StoredVideoServer::LoadTrace (std::string filename)
 {
   NS_LOG_FUNCTION (this << filename);
+
   uint32_t time, index, size, prevTime = 0;
   char frameType;
   TraceEntry entry;
+  m_entries.clear ();
+
   std::ifstream ifTraceFile;
   ifTraceFile.open (filename.c_str (), std::ifstream::in);
-  m_entries.clear ();
   if (!ifTraceFile.good ())
     {
       NS_LOG_WARN ("Trace file not found. Loading default trace.");
       LoadDefaultTrace ();
     }
+
   while (ifTraceFile.good ())
     {
       ifTraceFile >> index >> frameType >> time >> size;
@@ -291,6 +330,7 @@ void
 StoredVideoServer::LoadDefaultTrace (void)
 {
   NS_LOG_FUNCTION (this);
+
   uint32_t prevTime = 0;
   for (uint32_t i = 0; i < (sizeof (g_defaultEntries) /
                             sizeof (struct TraceEntry)); i++)
@@ -326,27 +366,6 @@ StoredVideoServer::GetVideoBytes (Time length)
       currentEntry = currentEntry % m_entries.size ();
     }
   return total;
-}
-
-void
-StoredVideoServer::SendStream (Ptr<Socket> socket, uint32_t available)
-{
-  NS_LOG_FUNCTION (this);
-
-  if (!available || !m_connected || !m_pendingBytes)
-    {
-      return;
-    }
-
-  uint32_t pktSize = std::min (available, m_pendingBytes);
-  Ptr<Packet> packet = Create<Packet> (pktSize);
-  int bytesSent = socket->Send (packet);
-
-  NS_LOG_DEBUG ("Stored video server TX " << bytesSent << " bytes");
-  if (bytesSent > 0)
-    {
-      m_pendingBytes -= static_cast<uint32_t> (bytesSent);
-    }
 }
 
 } // Namespace ns3
