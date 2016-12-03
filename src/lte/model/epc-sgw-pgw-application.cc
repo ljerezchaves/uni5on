@@ -26,7 +26,6 @@
 #include "ns3/ipv4.h"
 #include "ns3/inet-socket-address.h"
 #include "ns3/epc-gtpu-header.h"
-#include "ns3/epc-gtpu-tag.h"
 #include "ns3/abort.h"
 
 namespace ns3 {
@@ -102,16 +101,7 @@ EpcSgwPgwApplication::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::EpcSgwPgwApplication")
     .SetParent<Object> ()
-    .SetGroupName ("Lte")
-    .AddTraceSource ("S1uRx",
-                     "Trace source indicating a packet received from S1-U interface.",
-                     MakeTraceSourceAccessor (&EpcSgwPgwApplication::m_rxS1uTrace),
-                     "ns3::Packet::TracedCallback")
-    .AddTraceSource ("S1uTx",
-                     "Trace source indicating a packet transmitted over the S1-U interface.",
-                     MakeTraceSourceAccessor (&EpcSgwPgwApplication::m_txS1uTrace),
-                     "ns3::Packet::TracedCallback")
-    ;
+    .SetGroupName("Lte");
   return tid;
 }
 
@@ -130,7 +120,7 @@ EpcSgwPgwApplication::EpcSgwPgwApplication (const Ptr<VirtualNetDevice> tunDevic
   : m_s1uSocket (s1uSocket),
     m_tunDevice (tunDevice),
     m_gtpuUdpPort (2152), // fixed by the standard
-    m_teidCount (0x0000000F),
+    m_teidCount (0),
     m_s11SapMme (0)
 {
   NS_LOG_FUNCTION (this << tunDevice << s1uSocket);
@@ -189,11 +179,6 @@ EpcSgwPgwApplication::RecvFromS1uSocket (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);  
   NS_ASSERT (socket == m_s1uSocket);
   Ptr<Packet> packet = socket->Recv ();
-  
-  m_rxS1uTrace (packet);
-  EpcGtpuTag teidTag;
-  packet->RemovePacketTag (teidTag);
-
   GtpuHeader gtpu;
   packet->RemoveHeader (gtpu);
   uint32_t teid = gtpu.GetTeid ();
@@ -221,11 +206,6 @@ EpcSgwPgwApplication::SendToS1uSocket (Ptr<Packet> packet, Ipv4Address enbAddr, 
   gtpu.SetLength (packet->GetSize () + gtpu.GetSerializedSize () - 8);  
   packet->AddHeader (gtpu);
   uint32_t flags = 0;
-
-  EpcGtpuTag teidTag (teid, EpcGtpuTag::PGW);
-  packet->AddPacketTag (teidTag);
-  m_txS1uTrace (packet);
-
   m_s1uSocket->SendTo (packet, flags, InetSocketAddress (enbAddr, m_gtpuUdpPort));
 }
 
@@ -305,6 +285,7 @@ EpcSgwPgwApplication::DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequest
       res.bearerContextsCreated.push_back (bearerContext);
     }
   m_s11SapMme->CreateSessionResponse (res);
+  
 }
 
 void 

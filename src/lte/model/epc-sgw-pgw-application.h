@@ -252,11 +252,6 @@ public:
    */
   uint16_t m_gtpuUdpPort;
 
-  /**
-   * TEID counter, used to allocate GTP teid values.
-   * \internal
-   * This counter is initialized at 0x0000000F, reserving the first values.
-   */
   uint32_t m_teidCount;
 
   /**
@@ -278,16 +273,6 @@ public:
   };
 
   std::map<uint16_t, EnbInfo> m_enbInfoByCellId;
-
-  /** 
-   * Trace source fired when a packet arrives this eNB from S1-U interface. 
-   */
-  TracedCallback<Ptr<const Packet> > m_rxS1uTrace;
-
-  /** 
-   * Trace source fired when a packet leaves this eNB over the S1-U interface.
-   */
-  TracedCallback<Ptr<const Packet> > m_txS1uTrace;
 };
 
 } //namespace ns3
