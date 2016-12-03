@@ -23,9 +23,8 @@
 #define EPC_TFT_H
 
 
-#include <ns3/simple-ref-count.h>
-#include <ns3/ipv4-address.h>
 #include <ns3/object.h>
+#include <ns3/ipv4-address.h>
 
 #include <list>
 
@@ -119,7 +118,6 @@ public:
   
     uint8_t typeOfService;     /**< type of service field */
     uint8_t typeOfServiceMask; /**< type of service field mask */
-
   };
   
   EpcTft ();
@@ -129,7 +127,6 @@ public:
    * \return The object TypeId.
    */
   static TypeId GetTypeId (void);
-
 
   /** 
    * add a PacketFilter to the Traffic Flow Template
