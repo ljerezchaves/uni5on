@@ -29,7 +29,6 @@
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("EpcTft");
-
 NS_OBJECT_ENSURE_REGISTERED (EpcTft);
 
 std::ostream& operator<< (std::ostream& os, EpcTft::Direction& d)
@@ -53,6 +52,7 @@ std::ostream& operator<< (std::ostream& os, EpcTft::Direction& d)
 std::ostream& operator<< (std::ostream& os, EpcTft::PacketFilter& f)
 {
   os << " direction: " << f.direction
+     << " protocol: " << f.protocol
      << " remoteAddress: "  << f.remoteAddress 
      << " remoteMask: "  << f.remoteMask 
      << " localAddress: "  << f.localAddress 
@@ -69,6 +69,7 @@ std::ostream& operator<< (std::ostream& os, EpcTft::PacketFilter& f)
 EpcTft::PacketFilter::PacketFilter ()
   : precedence (255),
     direction (BIDIRECTIONAL),
+    protocol (0),
     remoteMask ("0.0.0.0"),
     localMask ("0.0.0.0"),
     remotePortStart (0),

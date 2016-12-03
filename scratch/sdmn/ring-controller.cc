@@ -106,14 +106,21 @@ RingController::NewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 
   if (m_nonGbrCoexistence)
     {
+      // Meter flags OFPMF_KBPS
+      std::string flagsStr ("0x0001");
+
       // Non-GBR meter for clockwise direction
       kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::FWD) / 1000;
-      cmd02 << "meter-mod cmd=add,flags=1,meter=" << RingRoutingInfo::CLOCK
+      cmd02 << "meter-mod cmd=add"
+            << ",flags=" << flagsStr
+            << ",meter=" << RingRoutingInfo::CLOCK
             << " drop:rate=" << kbps;
 
       // Non-GBR meter for counterclockwise direction
       kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::BWD) / 1000;
-      cmd12 << "meter-mod cmd=add,flags=1,meter=" << RingRoutingInfo::COUNTER
+      cmd12 << "meter-mod cmd=add"
+            << ",flags=" << flagsStr
+            << ",meter=" << RingRoutingInfo::COUNTER
             << " drop:rate=" << kbps;
 
       DpctlSchedule (cInfo->GetSwDpId (0), cmd02.str ());
@@ -132,6 +139,10 @@ RingController::TopologyBuilt (OFSwitch13DeviceContainer devices)
   // Call base method which will save devices and create the spanning tree
   EpcController::TopologyBuilt (devices);
 
+  // Flow-mod flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and
+  // OFPFF_RESET_COUNTS
+  std::string flagsStr ("0x0007");
+
   // Configure routes to keep forwarding packets already in the ring until they
   // reach the destination switch.
   for (uint16_t sw1 = 0; sw1 < GetNSwitches (); sw1++)
@@ -149,14 +160,16 @@ RingController::TopologyBuilt (OFSwitch13DeviceContainer devices)
       char metadataStr [9];
 
       sprintf (metadataStr, "0x%x", RingRoutingInfo::COUNTER);
-      cmd0 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
+      cmd0 << "flow-mod cmd=add,table=2,prio=128"
+           << ",flags=" << flagsStr
            << " meta=0x0,in_port=" << cInfo->GetPortNo (0)
            << " write:group=" << RingRoutingInfo::COUNTER
            << " meta:" << metadataStr
            << " goto:3";
 
       sprintf (metadataStr, "0x%x", RingRoutingInfo::CLOCK);
-      cmd1 << "flow-mod cmd=add,table=2,flags=0x0002,prio=128"
+      cmd1 << "flow-mod cmd=add,table=2,prio=128"
+           << ",flags=" << flagsStr
            << " meta=0x0,in_port=" << cInfo->GetPortNo (1)
            << " write:group=" << RingRoutingInfo::CLOCK
            << " meta:" << metadataStr
@@ -177,17 +190,23 @@ RingController::NonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
       std::ostringstream cmd1, cmd2;
       uint64_t kbps = 0;
 
+      // Meter flags OFPMF_KBPS
+      std::string flagsStr ("0x0001");
+
       // Update Non-GBR meter for clockwise direction
       kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::FWD) / 1000;
-      cmd1 << "meter-mod cmd=mod,flags=1,meter=" << RingRoutingInfo::CLOCK
+      cmd1 << "meter-mod cmd=mod"
+           << ",flags=" << flagsStr
+           << ",meter=" << RingRoutingInfo::CLOCK
            << " drop:rate=" << kbps;
+      DpctlExecute (cInfo->GetSwDpId (0), cmd1.str ());
 
       // Update Non-GBR meter for counterclockwise direction
       kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::BWD) / 1000;
-      cmd2 << "meter-mod cmd=mod,flags=1,meter=" << RingRoutingInfo::COUNTER
+      cmd2 << "meter-mod cmd=mod"
+           << ",flags=" << flagsStr
+           << ",meter=" << RingRoutingInfo::COUNTER
            << " drop:rate=" << kbps;
-
-      DpctlExecute (cInfo->GetSwDpId (0), cmd1.str ());
       DpctlExecute (cInfo->GetSwDpId (1), cmd2.str ());
     }
 }
@@ -205,9 +224,15 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
   bool meterInstalled = false;
 
-  // flow-mod flags OFPFF_SEND_FLOW_REM and OFPFF_CHECK_OVERLAP, used to notify
-  // the controller when a flow entry expires and to avoid overlapping rules.
-  std::string flagsStr ("0x0003");
+  // Increasing the priority every time we (re)install routing rules.
+  rInfo->IncreasePriority ();
+
+  // Install P-GW TFT rules
+  InstallPgwTftRules (rInfo, buffer);
+
+  // Flow-mod flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and
+  // OFPFF_RESET_COUNTS
+  std::string flagsStr ("0x0007");
 
   // Printing the cookie and buffer values in dpctl string format
   char cookieStr [9], bufferStr [12], metadataStr [9];
@@ -215,18 +240,18 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
   sprintf (bufferStr, "%u",   buffer);
 
   // Building the dpctl command + arguments string
-  std::ostringstream args;
-  args << "flow-mod cmd=add,table=1"
-       << ",buffer=" << bufferStr
-       << ",flags=" << flagsStr
-       << ",cookie=" << cookieStr
-       << ",prio=" << rInfo->GetPriority ()
-       << ",idle=" << rInfo->GetTimeout ();
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=add,table=1"
+      << ",buffer=" << bufferStr
+      << ",flags=" << flagsStr
+      << ",cookie=" << cookieStr
+      << ",prio=" << rInfo->GetPriority ()
+      << ",idle=" << rInfo->GetTimeout ();
 
   // Configuring downlink routing
   if (rInfo->HasDownlinkTraffic ())
     {
-      std::ostringstream match, inst;
+      std::ostringstream match, act;
 
       // In downlink the input switch is the gateway
       uint16_t swIdx = rInfo->GetSgwSwIdx ();
@@ -249,31 +274,30 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
             }
 
           // Building the per-flow meter instruction string
-          inst << " meter:" << rInfo->GetTeid ();
+          act << " meter:" << rInfo->GetTeid ();
         }
 
       // For GBR bearers, mark the IP DSCP field
       if (rInfo->IsGbr ())
         {
           // Build the apply set_field action instruction string
-          inst << " apply:set_field=ip_dscp:"
-               << rInfo->GetObject<GbrInfo> ()->GetDscp ();
+          act << " apply:set_field=ip_dscp:"
+              << rInfo->GetObject<GbrInfo> ()->GetDscp ();
         }
 
       // Build the metatada, write and goto instructions string
       sprintf (metadataStr, "0x%x", ringInfo->GetDownPath ());
-      inst << " meta:" << metadataStr
-           << " goto:2";
+      act << " meta:" << metadataStr << " goto:2";
 
       // Installing the rule into input switch
-      std::string commandStr = args.str () + match.str () + inst.str ();
+      std::string commandStr = cmd.str () + match.str () + act.str ();
       DpctlExecute (GetDatapathId (swIdx), commandStr);
     }
 
   // Configuring uplink routing
   if (rInfo->HasUplinkTraffic ())
     {
-      std::ostringstream match, inst;
+      std::ostringstream match, act;
 
       // In uplink the input switch is the eNB
       uint16_t swIdx = rInfo->GetEnbSwIdx ();
@@ -295,24 +319,23 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
             }
 
           // Building the per-flow meter instruction string
-          inst << " meter:" << rInfo->GetTeid ();
+          act << " meter:" << rInfo->GetTeid ();
         }
 
       // For GBR bearers, mark the IP DSCP field
       if (rInfo->IsGbr ())
         {
           // Build the apply set_field action instruction string
-          inst << " apply:set_field=ip_dscp:"
+          act << " apply:set_field=ip_dscp:"
                << rInfo->GetObject<GbrInfo> ()->GetDscp ();
         }
 
       // Build the metatada, write and goto instructions string
       sprintf (metadataStr, "0x%x", ringInfo->GetUpPath ());
-      inst << " meta:" << metadataStr
-           << " goto:2";
+      act << " meta:" << metadataStr << " goto:2";
 
       // Installing the rule into input switch
-      std::string commandStr = args.str () + match.str () + inst.str ();
+      std::string commandStr = cmd.str () + match.str () + act.str ();
       DpctlExecute (GetDatapathId (swIdx), commandStr);
     }
 
@@ -438,7 +461,7 @@ RingController::TopologyCreateSpanningTree ()
 
   // Let's configure one single link to drop packets when flooding over ports
   // (OFPP_FLOOD). Here we are disabling the farthest gateway link,
-  // configuring its ports to OFPPC_NO_FWD flag (0x20).
+  // configuring its ports to OFPPC_NO_FWD config (0x20).
 
   uint16_t half = (GetNSwitches () / 2);
   Ptr<ConnectionInfo> cInfo = GetConnectionInfo (half, half + 1);

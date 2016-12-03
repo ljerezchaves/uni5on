@@ -255,8 +255,8 @@ protected:
   /**
    * Configure the switches with OpenFlow commands for TEID routing, based on
    * network topology information.
-   * \attention To avoid conflicts with old entries, increase the routing
-   * priority before installing the rules.
+   * \attention This function must increase the routing priority before
+   * installing the rules, to avoid conflicts with old entries.
    * \param rInfo The routing information to configure.
    * \param buffer The buffered packet to apply this rule to.
    * \return True if configuration succeeded, false otherwise.
@@ -295,6 +295,16 @@ protected:
    */
   virtual void TopologyCreateSpanningTree () = 0;
   //\}
+
+  /**
+   * Configure the P-GW with OpenFlow rules for downlink TFT packet filtering.
+   * \attention To avoid conflicts with old entries, increase the routing
+   * priority before installing P-GW TFT rules.
+   * \param rInfo The routing information to configure.
+   * \param buffer The buffered packet to apply this rule to.
+   */
+  void InstallPgwTftRules (Ptr<RoutingInfo> rInfo,
+    uint32_t buffer = OFP_NO_BUFFER);
 
   // Inherited from OFSwitch13Controller
   virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
@@ -359,17 +369,17 @@ private:
   Mac48Address GetArpEntry (Ipv4Address ip);
 
   /**
-   * Install flow table entry for local port when a new IP device is connected
-   * to the OpenFlow network. This entry will match both MAC address and IP
-   * address for the local device in order to output packets on respective
-   * device port. It will also match input port for packet classification and
+   * Install flow table entry for S5 port when a new IP device is connected to
+   * the OpenFlow network. This entry will match both MAC address and IP
+   * address for the S5 device in order to output packets on respective device
+   * port. It will also match input port for packet classification and
    * routing.
    * \param swtchDev The Switch OFSwitch13Device pointer.
    * \param nodeDev The device connected to the OpenFlow network.
    * \param nodeIp The IPv4 address assigned to this device.
    * \param swtchPort The number of switch port this device is attached to.
    */
-  void ConfigureLocalPortRules (Ptr<OFSwitch13Device> swtchDev,
+  void ConfigureS5PortRules (Ptr<OFSwitch13Device> swtchDev,
     Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, uint32_t swtchPort);
 
   /**
@@ -381,16 +391,6 @@ private:
    */
   void ConfigurePgwRules (Ptr<OFSwitch13Device> pgwDev, uint32_t pgwSgiPort,
     uint32_t pgwS5Port, Ipv4Address webAddr);
-
-  /**
-   * Configure the P-GW with OpenFlow rules for downlink TFT packet filtering.
-   * \attention To avoid conflicts with old entries, increase the routing
-   * priority before installing the rules.
-   * \param rInfo The routing information to configure.
-   * \param buffer The buffered packet to apply this rule to.
-   */
-  void InstallPgwTftRules (Ptr<RoutingInfo> rInfo,
-    uint32_t buffer = OFP_NO_BUFFER);
 
   /**
    * Handle packet-in messages sent from switch with ARP message.
@@ -589,7 +589,7 @@ private:
   /**
    * TEID counter, used to allocate new GTP-U TEID values.
    * \internal This counter is initialized at 0x0000000F, reserving the first
-   *           values for further usage.
+   *           values for controller usage.
    */
   uint32_t m_teidCount;
 

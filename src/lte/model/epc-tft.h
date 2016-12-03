@@ -104,6 +104,8 @@ public:
 
     Direction direction; /**< whether the filter needs to be applied
 			    to uplink / downlink only, or in both cases*/
+    
+    uint8_t protocol;          /**< Transport protocol */
 
     Ipv4Address remoteAddress;     /**< IPv4 address of the remote host  */
     Ipv4Mask remoteMask; /**< IPv4 address mask of the remote host */
@@ -117,6 +119,7 @@ public:
   
     uint8_t typeOfService;     /**< type of service field */
     uint8_t typeOfServiceMask; /**< type of service field mask */
+
   };
   
   EpcTft ();

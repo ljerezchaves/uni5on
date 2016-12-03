@@ -129,8 +129,6 @@ EpcController::RequestDedicatedBearer (
 
   // Everything is ok! Let's activate and install this bearer.
   rInfo->SetActive (true);
-  rInfo->IncreasePriority ();
-  InstallPgwTftRules (rInfo);
   return TopologyInstallRouting (rInfo);
 }
 
@@ -232,7 +230,7 @@ EpcController::NewS5Attach (
   SaveArpEntry (nodeIp, macAddr);
   SaveSwitchIndex (nodeIp, swtchIdx);
 
-  ConfigureLocalPortRules (swtchDev, nodeDev, nodeIp, swtchPort);
+  ConfigureS5PortRules (swtchDev, nodeDev, nodeIp, swtchPort);
 }
 
 void
@@ -278,7 +276,7 @@ EpcController::NotifySessionCreated (
   rInfo->m_enbIdx = GetSwitchIndex (enbAddr);
   rInfo->m_sgwAddr = sgwAddr;
   rInfo->m_enbAddr = enbAddr;
-  rInfo->m_priority = 127;                // Priority for default bearer
+  rInfo->m_priority = 0x7F;               // Priority for default bearer
   rInfo->m_timeout = 0;                   // No timeout for default bearer
   rInfo->m_isInstalled = false;           // Bearer rules not installed yet
   rInfo->m_isActive = true;               // Default bearer is always active
@@ -294,7 +292,6 @@ EpcController::NotifySessionCreated (
   NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
 
   // Install rules for default bearer
-  InstallPgwTftRules (rInfo);
   if (!TopologyInstallRouting (rInfo))
     {
       NS_LOG_ERROR ("TEID rule installation failed!");
@@ -316,7 +313,7 @@ EpcController::NotifySessionCreated (
       rInfo->m_enbIdx = GetSwitchIndex (enbAddr);
       rInfo->m_sgwAddr = sgwAddr;
       rInfo->m_enbAddr = enbAddr;
-      rInfo->m_priority = 127;              // Priority for dedicated bearer
+      rInfo->m_priority = 0x1FFF;           // Priority for dedicated bearer
       rInfo->m_timeout = m_dedicatedTmo;    // Timeout for dedicated bearer
       rInfo->m_isInstalled = false;         // Switch rules not installed
       rInfo->m_isActive = false;            // Dedicated bearer not active
@@ -397,6 +394,95 @@ EpcController::NotifyConstructionCompleted ()
 }
 
 void
+EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
+{
+  NS_LOG_FUNCTION (this << rInfo << buffer);
+
+  // Flow-mod flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and
+  // OFPFF_RESET_COUNTS
+  std::string flagsStr ("0x0007");
+
+  // Printing the cookie and buffer values in dpctl string format
+  char cookieStr [9], bufferStr [12];
+  sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
+  sprintf (bufferStr, "%u",   buffer);
+
+  // Building the dpctl command + arguments string (withoug p
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=add,table=1"
+      << ",buffer=" << bufferStr
+      << ",flags=" << flagsStr
+      << ",cookie=" << cookieStr
+      << ",prio=" << rInfo->GetPriority ()
+      << ",idle=" << rInfo->GetTimeout ();
+
+  // Printing TEID and destination IPv4 address into tunnel metadata
+  uint64_t tunnelId = (uint64_t)rInfo->GetEnbAddr ().Get () << 32;
+  tunnelId |= rInfo->GetTeid ();
+  char tunnelIdStr [12];
+  sprintf (tunnelIdStr, "0x%016lX", tunnelId);
+
+  // Build instruction string
+  std::ostringstream act;
+  act << " apply:set_field=tunn_id:" << tunnelIdStr
+      << ",output=" << m_pgwS5Port;
+
+  if (rInfo->IsDefault ())
+    {
+      // TODO Install TFT for default bearer
+      // std::ostringstream match;
+      // match << " eth_type=0x800"
+      //       << ",ip_src=" << filter.remoteAddress
+      //       << ",ip_dst=" << filter.localAddress
+      //       << ",ip_proto=6"
+      //       << ",tcp_src=" << filter.remotePortStart
+      //       << ",tcp_dst=" << filter.localPortStart;
+      // std::string cmdStr = cmd.str () + match.str () + act.str ();
+      // DpctlExecute (GetPgwDatapathId (), cmdStr);
+      return;
+    }
+
+  // Install one downlink dedicated bearer rule for each packet filter
+  Ptr<EpcTft> tft = rInfo->GetTft ();
+  for (uint8_t i = 0; i < tft->GetNumFilters (); i++)
+    {
+      EpcTft::PacketFilter filter = tft->GetFilter (i);
+      if (filter.direction == EpcTft::UPLINK)
+        {
+          continue;
+        }
+
+      // Install rules for TCP traffic
+      if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
+        {
+          std::ostringstream match;
+          match << " eth_type=0x800"
+                << ",ip_src=" << filter.remoteAddress
+                << ",ip_dst=" << filter.localAddress
+                << ",ip_proto=6"
+                << ",tcp_src=" << filter.remotePortStart
+                << ",tcp_dst=" << filter.localPortStart;
+          std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
+          DpctlExecute (GetPgwDatapathId (), cmdTcpStr);
+        }
+
+      // Install rules for UDP traffic
+      else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
+        {
+          std::ostringstream match;
+          match << " eth_type=0x800"
+                << ",ip_src=" << filter.remoteAddress
+                << ",ip_dst=" << filter.localAddress
+                << ",ip_proto=17"
+                << ",udp_src=" << filter.remotePortStart
+                << ",udp_dst=" << filter.localPortStart;
+          std::string cmdUdpStr = cmd.str () + match.str () + act.str ();
+          DpctlExecute (GetPgwDatapathId (), cmdUdpStr);
+        }
+    }
+}
+
+void
 EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
   NS_LOG_FUNCTION (this << swtch);
@@ -418,7 +504,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 0 -- Input table -- [from higher to lower priority]
   //
-  // Entries will be installed here by ConfigureLocalPortRules function.
+  // Entries will be installed here by ConfigureS5PortRules function.
 
   // GTP packets entering the switch from any port other then EPC ports.
   // Send to Routing table.
@@ -445,7 +531,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 2 -- Routing table -- [from higher to lower priority]
   //
-  // Entries will be installed here by ConfigureLocalPortRules function.
+  // Entries will be installed here by ConfigureS5PortRules function.
   // Entries will be installed here by NotifyTopologyBuilt function.
 
   // GTP packets classified at previous table. Write the output group into
@@ -598,10 +684,6 @@ EpcController::HandleFlowRemoved (
   if (rInfo->IsActive ())
     {
       NS_LOG_WARN ("Flow " << teid << " is still active. Reinstall rules...");
-
-      // Reinstall rules (increasing priority).
-      rInfo->IncreasePriority ();
-      InstallPgwTftRules (rInfo);
       if (!TopologyInstallRouting (rInfo))
         {
           NS_LOG_ERROR ("TEID rule installation failed!");
@@ -706,11 +788,15 @@ EpcController::GetArpEntry (Ipv4Address ip)
 }
 
 void
-EpcController::ConfigureLocalPortRules (
+EpcController::ConfigureS5PortRules (
   Ptr<OFSwitch13Device> swtchDev, Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
   uint32_t swtchPort)
 {
   NS_LOG_FUNCTION (this << swtchDev << nodeDev << nodeIp << swtchPort);
+
+  // Flow-mod flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and
+  // OFPFF_RESET_COUNTS
+  std::string flagsStr ("0x0007");
 
   // -------------------------------------------------------------------------
   // Table 0 -- Input table -- [from higher to lower priority]
@@ -718,7 +804,7 @@ EpcController::ConfigureLocalPortRules (
   // GTP packets entering the ring network from any EPC port.
   // Send to the Classification table.
   std::ostringstream cmdIn;
-  cmdIn << "flow-mod cmd=add,table=0,prio=64"
+  cmdIn << "flow-mod cmd=add,table=0,prio=64,flags=0x0007"
         << " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152"
         << ",in_port=" << swtchPort
         << " goto:1";
@@ -781,91 +867,6 @@ EpcController::ConfigurePgwRules (
   // Table 1 -- P-GW TFT downlink table -- [from higher to lower priority]
   //
   // Entries will be installed here by InstallPgwTftRules function.
-}
-
-void
-EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
-{
-  NS_LOG_FUNCTION (this << rInfo << buffer);
-
-  if (rInfo->IsDefault ())
-    {
-      // TODO
-//      // For the default bearer, we install
-//      std::ostringstream cmdOut;
-//      cmdOut << "flow-mod cmd=add,table=1,prio=32 "
-//             << ",in_port=" << pgwS5Port
-//             << ",ip_dst=" << webAddr
-//             << " apply:output=" << pgwSgiPort;
-//
-//
-//
-//      DpctlExecute (GetPgwDatapathId (),
-//          "flow-mod cmd=add,table=1,prio=0 apply");
-      return;
-    }
-
-  // flow-mod flags OFPFF_SEND_FLOW_REM and OFPFF_CHECK_OVERLAP, used to notify
-  // the controller when a flow entry expires and to avoid overlapping rules.
-  std::string flagsStr ("0x0003");
-
-  // Printing the cookie and buffer values in dpctl string format
-  char cookieStr [9], bufferStr [12];
-  sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
-  sprintf (bufferStr, "%u",   buffer);
-
-  // Building the dpctl command + arguments string
-  std::ostringstream args;
-  args << "flow-mod cmd=add,table=1"
-       << ",buffer=" << bufferStr
-       << ",flags=" << flagsStr
-       << ",cookie=" << cookieStr
-       << ",prio=" << rInfo->GetPriority ()
-       << ",idle=" << rInfo->GetTimeout ();
-
-  // Install one rule for each downlink filter
-  Ptr<EpcTft> tft = rInfo->GetTft ();
-  for (uint8_t i = 0; i < tft->GetNumFilters (); i++)
-    {
-      EpcTft::PacketFilter filter = tft->GetFilter (i);
-      if (filter.direction == EpcTft::UPLINK)
-        {
-          continue;
-        }
-
-      // The current implementation doesn't differ from UDP or TCP packets, so
-      // we are going to install two independent rules.
-      std::ostringstream tcp;
-      tcp << " eth_type=0x800"
-          << ",ip_src=" << filter.remoteAddress
-          << ",ip_dst=" << filter.localAddress
-          << ",ip_proto=6"
-//          << ",tcp_src=" << filter.remotePortStart
-          << ",tcp_dst=" << filter.localPortStart;
-
-      std::ostringstream udp;
-      udp << " eth_type=0x800"
-          << ",ip_src=" << filter.remoteAddress
-          << ",ip_dst=" << filter.localAddress
-          << ",ip_proto=17"
-//          << ",udp_src=" << filter.remotePortStart
-          << ",udp_dst=" << filter.localPortStart;
-
-      // Set TEID and destination IPv4 address into tunnel metadata
-      uint64_t tunnelId = (uint64_t)rInfo->GetEnbAddr ().Get () << 32;
-      tunnelId |= rInfo->GetTeid ();
-      char tunnelIdStr [12];
-      sprintf (tunnelIdStr, "0x%016lX", tunnelId);
-
-      std::ostringstream act;
-      act << " apply:set_field=tunn_id:" << tunnelIdStr
-          << ",output=" << m_pgwS5Port;
-
-      std::string cmdTcpStr = args.str () + tcp.str () + act.str ();
-      std::string cmdUdpStr = args.str () + udp.str () + act.str ();
-      DpctlExecute (GetPgwDatapathId (), cmdTcpStr);
-      DpctlExecute (GetPgwDatapathId (), cmdUdpStr);
-    }
 }
 
 ofl_err

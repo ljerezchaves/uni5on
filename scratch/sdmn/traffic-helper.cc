@@ -308,6 +308,7 @@ TrafficHelper::InstallGbrVoip ()
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
   filter.direction = EpcTft::BIDIRECTIONAL;
+  filter.protocol = UdpL4Protocol::PROT_NUMBER;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;
   filter.remotePortStart = portNo;
@@ -352,6 +353,7 @@ TrafficHelper::InstallGbrLiveVideoStreaming ()
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
   filter.direction = EpcTft::DOWNLINK;
+  filter.protocol = UdpL4Protocol::PROT_NUMBER;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;
   filter.remotePortStart = portNo;
@@ -396,6 +398,7 @@ TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
   filter.direction = EpcTft::BIDIRECTIONAL;
+  filter.protocol = TcpL4Protocol::PROT_NUMBER;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;
   filter.remotePortStart = portNo;
@@ -438,6 +441,7 @@ TrafficHelper::InstallNonGbrLiveVideoStreaming ()
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
   filter.direction = EpcTft::DOWNLINK;
+  filter.protocol = UdpL4Protocol::PROT_NUMBER;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;
   filter.remotePortStart = portNo;
@@ -476,6 +480,7 @@ TrafficHelper::InstallNonGbrHttp ()
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
   filter.direction = EpcTft::BIDIRECTIONAL;
+  filter.protocol = TcpL4Protocol::PROT_NUMBER;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;
   filter.remotePortStart = portNo;
