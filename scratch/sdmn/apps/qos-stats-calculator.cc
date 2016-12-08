@@ -69,19 +69,19 @@ void
 QosStatsCalculator::ResetCounters ()
 {
   delete m_lossCounter;
+  m_lossCounter = new PacketLossCounter (m_windowSize);
 
   m_rxPackets = 0;
   m_rxBytes = 0;
-  m_jitter = 0;
-  m_delaySum = Time ();
   m_firstRxTime = Simulator::Now ();
   m_lastRxTime = Simulator::Now ();
   m_lastTimestamp = Simulator::Now ();
+  m_jitter = 0;
+  m_delaySum = Time ();
+
   m_seqNum = 0;
   m_meterDrop = 0;
   m_queueDrop = 0;
-
-  m_lossCounter = new PacketLossCounter (m_windowSize);
 }
 
 uint32_t
@@ -94,8 +94,14 @@ void
 QosStatsCalculator::NotifyReceived (uint32_t seqNum, Time timestamp,
                                     uint32_t rxBytes)
 {
-  // The jitter is calculated using the RFC 1889 (RTP) jitter definition.
+  // Check for the first packet received
   Time now = Simulator::Now ();
+  if (m_rxPackets == 0)
+    {
+      m_firstRxTime = now;
+    }
+
+  // The jitter is calculated using the RFC 1889 (RTP) jitter definition.
   Time delta = (now - m_lastRxTime) - (timestamp - m_lastTimestamp);
   m_jitter += ((Abs (delta)).GetTimeStep () - m_jitter) >> 4;
   m_lastRxTime = now;
@@ -126,7 +132,14 @@ QosStatsCalculator::NotifyQueueDrop ()
 Time
 QosStatsCalculator::GetActiveTime (void) const
 {
-  return m_lastRxTime - m_firstRxTime;
+  if (m_rxPackets > 1)
+    {
+      return m_lastRxTime - m_firstRxTime;
+    }
+  else
+    {
+      return Time ();
+    }
 }
 
 uint32_t
@@ -134,17 +147,17 @@ QosStatsCalculator::GetLostPackets (void) const
 {
   // Workaround for lost packets not yet identified
   // by the PacketLossCounter packet window.
-  uint32_t lost = m_lossCounter->GetLost ();
-  uint32_t drops = m_meterDrop + m_queueDrop;
-  return lost < drops ? drops : lost;
+  uint32_t lostPkts = m_lossCounter->GetLost ();
+  uint32_t dropPkts = m_meterDrop + m_queueDrop;
+  return lostPkts < dropPkts ? dropPkts : lostPkts;
 }
 
 double
 QosStatsCalculator::GetLossRatio (void) const
 {
-  uint32_t lost = GetLostPackets ();
-  uint32_t txPkts = lost + GetRxPackets ();
-  return txPkts ? (double)lost / txPkts : 0.;
+  uint32_t lostPkts = GetLostPackets ();
+  uint32_t txPkts = lostPkts + GetRxPackets ();
+  return txPkts ? (double)lostPkts / txPkts : 0.;
 }
 
 uint32_t
@@ -162,7 +175,7 @@ QosStatsCalculator::GetRxBytes (void) const
 Time
 QosStatsCalculator::GetRxDelay (void) const
 {
-  return m_rxPackets ? (m_delaySum / (int64_t)m_rxPackets) : m_delaySum;
+  return m_rxPackets > 1 ? (m_delaySum / (int64_t)m_rxPackets) : m_delaySum;
 }
 
 Time
@@ -174,7 +187,9 @@ QosStatsCalculator::GetRxJitter (void) const
 DataRate
 QosStatsCalculator::GetRxThroughput (void) const
 {
-  return DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ());
+  return m_rxPackets > 1 ?
+    DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ()) :
+    DataRate (0);
 }
 
 uint32_t
