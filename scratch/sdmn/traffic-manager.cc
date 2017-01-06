@@ -103,7 +103,7 @@ TrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
   // second for traffic preparation, at least 3 seconds for traffic duration
   // and 4 seconds for release procedures. See the timeline bellow for better
   // understanding. Note that in current implementation, no retries are
-  // performed for for non-authorized traffic.
+  // performed for a non-authorized traffic.
   //
   //  Now  Now+1s              t-4s   t-3s   t-2s   t-1s    t
   //   |------|------ ... ------|------|------|------|------|---> time
@@ -116,9 +116,14 @@ TrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
   // C: Traffic generation ends (still have packets on the wire)
   // D: Application stops (fire dump statistics)
   // E: Resource release (remove rules from switches)
-  // F: The socket will be effectivelly closed
+  // F: The socket will be effectivelly closed (Note 1)
   // G: Next AppStartTry (following Poisson proccess)
   //
+  // Note 1: In this implementation the TCP socket maximum segment lifetime
+  // attribute was adjusted to 1 second, which will allow the TCP state machine
+  // to change from TIME_WAIT state to CLOSED state 2 seconds after the close
+  // procedure.
+  // 
   Time nextStartTry = Seconds (std::max (8.0, m_poissonRng->GetValue ()));
   Simulator::Schedule (nextStartTry, &TrafficManager::AppStartTry, this, app);
   NS_LOG_DEBUG ("App " << app->GetAppName () << " at user " << m_imsi <<
