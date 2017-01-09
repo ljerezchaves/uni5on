@@ -150,7 +150,7 @@ StoredVideoServer::HandleRequest (Ptr<Socket> socket, const Address& address)
   NS_LOG_FUNCTION (this << socket << address);
 
   Ipv4Address ipAddr = InetSocketAddress::ConvertFrom (address).GetIpv4 ();
-  NS_LOG_LOGIC ("Connection request from " << ipAddr);
+  NS_LOG_INFO ("Connection request from " << ipAddr);
   return !m_connected;
 }
 
@@ -160,7 +160,7 @@ StoredVideoServer::HandleAccept (Ptr<Socket> socket, const Address& address)
   NS_LOG_FUNCTION (this << socket << address);
 
   Ipv4Address ipAddr = InetSocketAddress::ConvertFrom (address).GetIpv4 ();
-  NS_LOG_LOGIC ("Connection successfully established with " << ipAddr);
+  NS_LOG_INFO ("Connection successfully established with " << ipAddr);
   socket->SetSendCallback (MakeCallback (&StoredVideoServer::SendData, this));
   socket->SetRecvCallback (
     MakeCallback (&StoredVideoServer::ReceiveData, this));
@@ -173,7 +173,7 @@ StoredVideoServer::HandlePeerClose (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  NS_LOG_LOGIC ("Connection closed.");
+  NS_LOG_INFO ("Connection closed.");
   socket->ShutdownSend ();
   socket->ShutdownRecv ();
   socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
@@ -186,7 +186,7 @@ StoredVideoServer::HandlePeerError (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  NS_LOG_LOGIC ("Connection error.");
+  NS_LOG_ERROR ("Connection error.");
   socket->ShutdownSend ();
   socket->ShutdownRecv ();
   socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());

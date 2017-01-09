@@ -108,7 +108,7 @@ EpcController::RequestDedicatedBearer (
   if (rInfo->IsActive ())
     {
       NS_ASSERT_MSG (rInfo->IsInstalled (), "Bearer should be installed.");
-      NS_LOG_DEBUG ("Routing path for " << teid << " is already installed.");
+      NS_LOG_WARN ("Routing path for " << teid << " is already installed.");
       return true;
     }
 
@@ -124,11 +124,13 @@ EpcController::RequestDedicatedBearer (
   m_bearerRequestTrace (accepted, rInfo);
   if (!accepted)
     {
+      NS_LOG_INFO ("Bearer request blocked by controller.");
       return false;
     }
 
   // Everything is ok! Let's activate and install this bearer.
   rInfo->SetActive (true);
+  NS_LOG_INFO ("Bearer request accepted by controller.");
   return TopologyInstallRouting (rInfo);
 }
 
@@ -347,7 +349,7 @@ EpcController::NotifySessionCreated (
 void
 EpcController::NonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
 {
-  NS_LOG_INFO (this << cInfo);
+  NS_LOG_FUNCTION (this << cInfo);
 }
 
 void
@@ -663,7 +665,7 @@ EpcController::HandleFlowRemoved (
   // 1) The application is stopped and the bearer must be inactive.
   if (!rInfo->IsActive ())
     {
-      NS_LOG_DEBUG ("Flow " << teid << " removed for stopped application.");
+      NS_LOG_INFO ("Flow " << teid << " removed for stopped application.");
       return 0;
     }
 
@@ -672,7 +674,7 @@ EpcController::HandleFlowRemoved (
   // case, the bearer priority should have been increased to avoid conflicts.
   if (rInfo->GetPriority () > prio)
     {
-      NS_LOG_DEBUG ("Flow " << teid << " removed for old rule.");
+      NS_LOG_INFO ("Flow " << teid << " removed for old rule.");
       return 0;
     }
 

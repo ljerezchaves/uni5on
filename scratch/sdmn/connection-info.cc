@@ -305,7 +305,7 @@ ConnectionInfo::GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
     }
   else
     {
-      NS_LOG_DEBUG ("No bandwidth available.");
+      NS_LOG_WARN ("No bandwidth available.");
       return 0;
     }
 }
@@ -426,7 +426,7 @@ ConnectionInfo::IncreaseNonGbrBitRate (Direction dir, uint64_t bitRate)
 
   if (GetNonGbrBitRate (dir) == m_nonMaxBitRate)
     {
-      NS_LOG_DEBUG ("Can't increase Non-GBR bit rate.");
+      NS_LOG_WARN ("Can't increase Non-GBR bit rate.");
       return false;
     }
 
@@ -450,7 +450,7 @@ ConnectionInfo::DecreaseNonGbrBitRate (Direction dir, uint64_t bitRate)
 
   if (GetNonGbrBitRate (dir) == m_nonMinBitRate)
     {
-      NS_LOG_DEBUG ("Can't decrease Non-GBR bit rate.");
+      NS_LOG_WARN ("Can't decrease Non-GBR bit rate.");
       return false;
     }
 

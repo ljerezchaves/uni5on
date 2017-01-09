@@ -93,7 +93,7 @@ HttpClient::Start ()
   // Open the TCP connection
   if (!m_socket)
     {
-      NS_LOG_LOGIC ("Opening the TCP connection.");
+      NS_LOG_INFO ("Opening the TCP connection.");
       TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tcpFactory);
       m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
@@ -115,7 +115,7 @@ HttpClient::Stop ()
   // Close the TCP socket
   if (m_socket != 0)
     {
-      NS_LOG_LOGIC ("Closing the TCP connection.");
+      NS_LOG_INFO ("Closing the TCP connection.");
       m_socket->ShutdownRecv ();
       m_socket->Close ();
       m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
@@ -143,7 +143,7 @@ HttpClient::ConnectionSucceeded (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  NS_LOG_LOGIC ("Server accepted connection request!");
+  NS_LOG_INFO ("Server accepted connection request!");
   socket->SetRecvCallback (MakeCallback (&HttpClient::ReceiveData, this));
 
   // Request the first main/object
@@ -225,7 +225,7 @@ HttpClient::ReceiveData (Ptr<Socket> socket)
           // When necessary, request inline objects
           if (m_pendingObjects)
             {
-              NS_LOG_DEBUG ("Request for inline/object " << m_pendingObjects);
+              NS_LOG_INFO ("Request for inline/object " << m_pendingObjects);
               SendRequest (socket, "inline/object");
             }
           else
@@ -249,7 +249,7 @@ HttpClient::SendRequest (Ptr<Socket> socket, std::string url)
   // When the force stop flag is active, don't send new requests.
   if (IsForceStop ())
     {
-      NS_LOG_DEBUG ("Can't send http request on force stop mode.");
+      NS_LOG_WARN ("Can't send http request on force stop mode.");
       return;
     }
 
@@ -284,7 +284,7 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   // Stop application due to reading time threshold.
   if (readingTime > m_maxReadingTime)
     {
-      NS_LOG_DEBUG ("Closing socket due to reading time threshold.");
+      NS_LOG_INFO ("Closing socket due to reading time threshold.");
       Stop ();
       return;
     }
@@ -292,7 +292,7 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   // Stop application due to max page threshold.
   if (m_pagesLoaded >= m_maxPages)
     {
-      NS_LOG_DEBUG ("Closing socket due to max page threshold.");
+      NS_LOG_INFO ("Closing socket due to max page threshold.");
       Stop ();
       return;
     }

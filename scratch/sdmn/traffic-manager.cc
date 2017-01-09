@@ -73,17 +73,22 @@ TrafficManager::AddSdmnClientApp (Ptr<SdmnClientApp> app)
   // Wait at least 2 seconds for simulation initial setup.
   Time start = Seconds (2) + Seconds (std::abs (m_poissonRng->GetValue ()));
   Simulator::Schedule (start, &TrafficManager::AppStartTry, this, app);
+  NS_LOG_DEBUG ("First start try for app " << app->GetAppName () <<
+                " at user " << m_imsi << " with teid " << app->GetTeid () <<
+                " will occur at " <<
+                (Simulator::Now () + start).GetSeconds ());
 }
 
 void
 TrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << app);
-
   NS_ASSERT_MSG (!app->IsActive (), "Can't start an active application.");
 
   bool authorized = true;
   uint32_t appTeid = app->GetTeid ();
+
+  NS_LOG_INFO ("Attemp to start traffic for bearer " << appTeid);
   if (appTeid != m_defaultTeid)
     {
       // No resource request for traffic over default bearer.
@@ -123,22 +128,26 @@ TrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
   // attribute was adjusted to 1 second, which will allow the TCP state machine
   // to change from TIME_WAIT state to CLOSED state 2 seconds after the close
   // procedure.
-  // 
+  //
   Time nextStartTry = Seconds (std::max (8.0, m_poissonRng->GetValue ()));
-  Simulator::Schedule (nextStartTry, &TrafficManager::AppStartTry, this, app);
-  NS_LOG_DEBUG ("App " << app->GetAppName () << " at user " << m_imsi <<
-                " will start at " <<
-                (Simulator::Now () + Seconds (1)).GetSeconds () <<
-                ". Next start try will occur at " <<
-                (Simulator::Now () + nextStartTry).GetSeconds ());
-
   if (authorized)
     {
       // Set the maximum traffic duration.
       Time duration = nextStartTry - Seconds (5);
       app->SetAttribute ("MaxOnTime", TimeValue (duration));
+
       Simulator::Schedule (Seconds (1), &SdmnClientApp::Start, app);
+      NS_LOG_DEBUG ("App " << app->GetAppName () << " at user " << m_imsi <<
+                    " with teid " << app->GetTeid () << " will start at " <<
+                    (Simulator::Now () + Seconds (1)).GetSeconds () <<
+                    " with maximum duration of " << duration.GetSeconds ());
     }
+
+  Simulator::Schedule (nextStartTry, &TrafficManager::AppStartTry, this, app);
+  NS_LOG_DEBUG ("Next start try for app " << app->GetAppName () <<
+                " at user " << m_imsi << " with teid " << app->GetTeid () <<
+                " will occur at " <<
+                (Simulator::Now () + nextStartTry).GetSeconds ());
 }
 
 void
@@ -197,8 +206,8 @@ TrafficManager::SessionCreatedCallback (
           // This application uses the default bearer
           app->m_teid = m_defaultTeid;
         }
-      NS_LOG_DEBUG ("Application " << app->GetAppName () << " [" << imsi <<
-                    "@" << cellId << "] set with teid " << app->GetTeid ());
+      NS_LOG_INFO ("Application " << app->GetAppName () << " [" << imsi <<
+                   "@" << cellId << "] set with teid " << app->GetTeid ());
     }
 }
 

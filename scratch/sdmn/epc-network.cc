@@ -272,7 +272,8 @@ EpcNetwork::RegisterNodeAtSwitch (uint16_t switchIdx, Ptr<Node> node)
   ret = m_nodeSwitchMap.insert (entry);
   if (ret.second == true)
     {
-      NS_LOG_DEBUG ("Node " << node << " -- switch " << (int)switchIdx);
+      NS_LOG_DEBUG ("Node " << node <<
+                    " registered at switch " << (int)switchIdx);
       return;
     }
   NS_FATAL_ERROR ("Can't register node at switch.");
@@ -472,7 +473,7 @@ EpcNetwork::ConfigureGatewayAndInternet ()
   // OpenFlow switch port will no have an IP address assigned to it. However,
   // we need this address on the PgwUserApp, so we set it here.
   m_pgwSgiAddr = m_webAddrHelper.NewAddress ();
-  NS_LOG_LOGIC ("P-GW SGi interface address: " << m_pgwSgiAddr);
+  NS_LOG_DEBUG ("P-GW SGi interface address: " << m_pgwSgiAddr);
 
   // Set the IP address on the Internet Web server.
   InternetStackHelper internet;
@@ -480,7 +481,7 @@ EpcNetwork::ConfigureGatewayAndInternet ()
   Ipv4InterfaceContainer webSgiIfContainer;
   webSgiIfContainer = m_webAddrHelper.Assign (NetDeviceContainer (webSgiDev));
   m_webSgiIpAddr = webSgiIfContainer.GetAddress (0);
-  NS_LOG_LOGIC ("Web SGi interface address: " << m_webSgiIpAddr);
+  NS_LOG_DEBUG ("Web SGi interface address: " << m_webSgiIpAddr);
 
   // Defining static routes at the Internet Web server to the LTE network
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
@@ -515,7 +516,7 @@ EpcNetwork::ConfigureGatewayAndInternet ()
   Ipv4InterfaceContainer pgwS5IfContainer;
   pgwS5IfContainer = m_s5AddrHelper.Assign (NetDeviceContainer (pgwS5Dev));
   m_pgwS5Addr = pgwS5IfContainer.GetAddress (0);
-  NS_LOG_LOGIC ("P-GW S5 interface address: " << m_pgwS5Addr);
+  NS_LOG_DEBUG ("P-GW S5 interface address: " << m_pgwS5Addr);
 
   // Create the virtual net device to work as the logical ports on the P-GW S5
   // interface. This logical ports will connect to the PG-W user-plane
@@ -554,7 +555,7 @@ EpcNetwork::ConfigureGatewayAndInternet ()
   // Setting the default P-GW gateway address.
   // This address will be used to set the static route at UEs.
   m_pgwGwAddr = m_ueAddrHelper.NewAddress ();
-  NS_LOG_LOGIC ("P-GW gateway address: " << GetUeDefaultGatewayAddress ());
+  NS_LOG_DEBUG ("P-GW gateway address: " << GetUeDefaultGatewayAddress ());
 }
 
 //
@@ -575,7 +576,7 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
   NS_ASSERT (interface >= 0);
   NS_ASSERT (ueIpv4->GetNAddresses (interface) == 1);
   Ipv4Address ueAddr = ueIpv4->GetAddress (interface, 0).GetLocal ();
-  NS_LOG_LOGIC (" UE IP address: " << ueAddr);
+  NS_LOG_DEBUG ("Activete EPS bearer UE IP address: " << ueAddr);
   m_epcCtrlApp->SetUeAddress (imsi, ueAddr);
 
   uint8_t bearerId = GetMmeElement ()->AddBearer (imsi, tft, bearer);
@@ -598,14 +599,14 @@ EpcNetwork::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   // add an IPv4 stack to the previously created eNB
   InternetStackHelper internet;
   internet.Install (enb);
-  NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB after node creation: " <<
+  NS_LOG_DEBUG ("number of Ipv4 ifaces of the eNB after node creation: " <<
                 enb->GetObject<Ipv4> ()->GetNInterfaces ());
 
   // Callback the OpenFlow network to connect this eNB to the network.
   Ptr<NetDevice> enbDevice = S1EnbAttach (enb, cellId);
   m_s5Devices.Add (enbDevice);
 
-  NS_LOG_LOGIC ("number of Ipv4 ifaces of the eNB after OpenFlow dev + Ipv4 addr: " <<
+  NS_LOG_DEBUG ("number of Ipv4 ifaces of the eNB after OpenFlow dev + Ipv4 addr: " <<
                 enb->GetObject<Ipv4> ()->GetNInterfaces ());
 
   Ipv4Address enbAddress = GetAddressForDevice (enbDevice);
@@ -630,18 +631,14 @@ EpcNetwork::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   retval = enbLteSocket->Connect (enbLteSocketConnectAddress);
   NS_ASSERT (retval == 0);
 
-  NS_LOG_INFO ("create EpcEnbApplication");
   Ptr<EpcEnbApplication> enbApp = CreateObject<EpcEnbApplication> (enbLteSocket, enbS1uSocket, enbAddress, sgwAddress, cellId);
   enb->AddApplication (enbApp);
   NS_ASSERT (enb->GetNApplications () == 1);
   NS_ASSERT_MSG (enb->GetApplication (0)->GetObject<EpcEnbApplication> () != 0, "cannot retrieve EpcEnbApplication");
-  NS_LOG_LOGIC ("enb: " << enb << ", enb->GetApplication (0): " << enb->GetApplication (0));
 
-  NS_LOG_INFO ("Create EpcX2 entity");
   Ptr<EpcX2> x2 = CreateObject<EpcX2> ();
   enb->AggregateObject (x2);
 
-  NS_LOG_INFO ("connect S1-AP interface");
   GetMmeElement ()->AddEnb (cellId, enbAddress, enbApp->GetS1apSapEnb ());
   m_epcCtrlApp->AddEnb (cellId, enbAddress, sgwAddress);
   enbApp->SetS1apSapMme (GetMmeElement ()->GetS1apSapMme ());
@@ -664,12 +661,12 @@ EpcNetwork::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
   Ptr<EpcX2> enb1X2 = enb1->GetObject<EpcX2> ();
   Ptr<LteEnbNetDevice> enb1LteDev = enb1->GetDevice (0)->GetObject<LteEnbNetDevice> ();
   uint16_t enb1CellId = enb1LteDev->GetCellId ();
-  NS_LOG_LOGIC ("LteEnbNetDevice #1 = " << enb1LteDev << " - CellId = " << enb1CellId);
+  NS_LOG_DEBUG ("LteEnbNetDevice #1 = " << enb1LteDev << " - CellId = " << enb1CellId);
 
   Ptr<EpcX2> enb2X2 = enb2->GetObject<EpcX2> ();
   Ptr<LteEnbNetDevice> enb2LteDev = enb2->GetDevice (0)->GetObject<LteEnbNetDevice> ();
   uint16_t enb2CellId = enb2LteDev->GetCellId ();
-  NS_LOG_LOGIC ("LteEnbNetDevice #2 = " << enb2LteDev << " - CellId = " << enb2CellId);
+  NS_LOG_DEBUG ("LteEnbNetDevice #2 = " << enb2LteDev << " - CellId = " << enb2CellId);
 
   enb1X2->AddX2Interface (enb1CellId, enb1X2Address, enb2CellId, enb2X2Address);
   enb2X2->AddX2Interface (enb2CellId, enb2X2Address, enb1CellId, enb1X2Address);

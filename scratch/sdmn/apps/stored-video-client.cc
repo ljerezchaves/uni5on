@@ -62,7 +62,7 @@ StoredVideoClient::Start (void)
   // Open the TCP connection
   if (!m_socket)
     {
-      NS_LOG_LOGIC ("Opening the TCP connection.");
+      NS_LOG_INFO ("Opening the TCP connection.");
       TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tcpFactory);
       m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
@@ -81,7 +81,7 @@ StoredVideoClient::Stop ()
   // Close the TCP socket
   if (m_socket != 0)
     {
-      NS_LOG_LOGIC ("Closing the TCP connection.");
+      NS_LOG_INFO ("Closing the TCP connection.");
       m_socket->ShutdownRecv ();
       m_socket->Close ();
       m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
@@ -106,7 +106,7 @@ StoredVideoClient::ConnectionSucceeded (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  NS_LOG_LOGIC ("Server accepted connection request!");
+  NS_LOG_INFO ("Server accepted connection request!");
   socket->SetRecvCallback (
     MakeCallback (&StoredVideoClient::ReceiveData, this));
 
@@ -183,7 +183,7 @@ StoredVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
   // When the force stop flag is active, don't send new requests.
   if (IsForceStop ())
     {
-      NS_LOG_DEBUG ("Can't send video request on force stop mode.");
+      NS_LOG_WARN ("Can't send video request on force stop mode.");
       return;
     }
 

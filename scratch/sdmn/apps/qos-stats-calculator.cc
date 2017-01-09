@@ -188,8 +188,8 @@ DataRate
 QosStatsCalculator::GetRxThroughput (void) const
 {
   return m_rxPackets > 1 ?
-    DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ()) :
-    DataRate (0);
+         DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ()) :
+         DataRate (0);
 }
 
 uint32_t

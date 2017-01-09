@@ -327,7 +327,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
         {
           // Build the apply set_field action instruction string
           act << " apply:set_field=ip_dscp:"
-               << rInfo->GetObject<GbrInfo> ()->GetDscp ();
+              << rInfo->GetObject<GbrInfo> ()->GetDscp ();
         }
 
       // Build the metatada, write and goto instructions string
@@ -346,6 +346,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
     }
 
   rInfo->SetInstalled (true);
+  NS_LOG_INFO ("Topology routing installed for bearer " << rInfo->GetTeid ());
   return true;
 }
 
@@ -406,11 +407,12 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       {
         if (dlShortBw >= dlRequest && ulShortBw >= ulRequest)
           {
+            NS_LOG_INFO ("Routing bearer " << teid << " over shortest path.");
             return ReserveGbrBitRate (ringInfo, gbrInfo);
           }
         else
           {
-            NS_LOG_WARN ("No resources. Block!");
+            NS_LOG_WARN ("No resources for bearer " << teid << ". Block!");
             return false;
           }
         break;
@@ -419,18 +421,19 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       {
         if (dlShortBw >= dlRequest && ulShortBw >= ulRequest)
           {
+            NS_LOG_INFO ("Routing bearer " << teid << " over shortest path.");
             return ReserveGbrBitRate (ringInfo, gbrInfo);
           }
         else if (dlLongBw >= dlRequest && ulLongBw >= ulRequest)
           {
             // Let's invert the path and reserve the bit rate
-            NS_LOG_DEBUG ("Inverting from short to long path.");
             ringInfo->InvertPaths ();
+            NS_LOG_INFO ("Routing bearer " << teid << " over longest path.");
             return ReserveGbrBitRate (ringInfo, gbrInfo);
           }
         else
           {
-            NS_LOG_WARN ("No resources. Block!");
+            NS_LOG_WARN ("No resources for bearer " << teid << ". Block!");
             return false;
           }
         break;
@@ -449,6 +452,7 @@ RingController::TopologyBearerRelease (Ptr<RoutingInfo> rInfo)
     {
       Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
       NS_ASSERT_MSG (ringInfo, "No ringInfo for bearer release.");
+      NS_LOG_INFO ("Releasing resources for bearer " << rInfo->GetTeid ());
       ReleaseGbrBitRate (ringInfo, gbrInfo);
     }
   return true;
@@ -649,6 +653,7 @@ RingController::ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
 {
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
+  NS_LOG_INFO ("Reserving resources for gbr bearer.");
   // Reserving resources in both directions
   PerLinkReserve (ringInfo->GetSgwSwIdx (), ringInfo->GetEnbSwIdx (),
                   ringInfo->GetDownPath (), gbrInfo->GetDownBitRate ());
