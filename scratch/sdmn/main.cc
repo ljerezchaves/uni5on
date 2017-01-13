@@ -161,6 +161,13 @@ void ConfigureDefaults ()
   ForceDefaults ();
 
   //
+  // The default TCP retransmission timeout when opening connection is set to 3
+  // second in ns-3. However, we are going to use a small value of 1 second to
+  // keep up with fast retransmission approach.
+  //
+  Config::SetDefault ("ns3::TcpSocket::ConnTimeout", TimeValue (Seconds (1)));
+
+  //
   // The default TCP minimum retransmit timeout value is set to 1 second in
   // ns-3, according to RFC 6298. However, Linux uses 200 ms as the default
   // value, and we are going to keep up with this fast retransmission
