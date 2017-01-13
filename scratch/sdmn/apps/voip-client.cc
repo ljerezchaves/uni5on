@@ -153,10 +153,10 @@ VoipClient::SendPacket ()
   packet->AddHeader (seqTs);
 
   // Send the packet
-  int bytesSent = m_socket->Send (packet);
-  if (bytesSent > 0)
+  int bytes = m_socket->Send (packet);
+  if (bytes == (int)packet->GetSize ())
     {
-      NS_LOG_DEBUG ("VoIP TX " << packet->GetSize () << " bytes. " <<
+      NS_LOG_DEBUG ("VoIP TX " << bytes << " bytes " <<
                     "Sequence " << seqTs.GetSeq ());
     }
   else

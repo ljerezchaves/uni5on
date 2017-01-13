@@ -271,10 +271,10 @@ RealTimeVideoServer::SendPacket (uint32_t size)
   packet->AddHeader (seqTs);
 
   // Send the packet
-  int bytesSent = m_socket->Send (packet);
-  if (bytesSent > 0)
+  int bytes = m_socket->Send (packet);
+  if (bytes == (int)packet->GetSize ())
     {
-      NS_LOG_DEBUG ("Real-time video TX " << packet->GetSize () << " bytes " <<
+      NS_LOG_DEBUG ("Real-time video TX " << bytes << " bytes " <<
                     "Sequence " << seqTs.GetSeq ());
     }
   else

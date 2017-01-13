@@ -116,10 +116,14 @@ PgwUserApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
   m_txS5Trace (packet);
 
   // Send the packet to the tunnel socket
-  NS_LOG_DEBUG ("Sending packet to tunnel." <<
-                "Dst IP " << enbAddr << ", TEID tag " << teid);
-  m_tunnelSocket->SendTo (
-    packet, 0, InetSocketAddress (enbAddr, EpcNetwork::m_gtpuPort));
+  NS_LOG_DEBUG ("Send packet " << packet->GetUid () << " to tunnel " << teid);
+  int bytes = m_tunnelSocket->SendTo (
+      packet, 0, InetSocketAddress (enbAddr, EpcNetwork::m_gtpuPort));
+  if (bytes != (int)packet->GetSize ())
+    {
+      NS_LOG_ERROR ("Not all bytes were copied to the socket buffer.");
+      return false;
+    }
   return true;
 }
 
@@ -146,7 +150,8 @@ PgwUserApp::RecvFromTunnelSocket (Ptr<Socket> socket)
   // Add the Ethernet header to the packet and send it to the logical port
   AddHeader (packet, m_pgwMacAddr, m_webMacAddr, Ipv4L3Protocol::PROT_NUMBER);
 
-  NS_LOG_DEBUG ("Receiving from tunnel with tag " << teidTag.GetTeid ());
+  NS_LOG_DEBUG ("Receive packet " << packet->GetUid () << " from tunnel " <<
+                teidTag.GetTeid ());
   m_s5PortDevice->Receive (packet, Ipv4L3Protocol::PROT_NUMBER, m_pgwMacAddr,
                            m_webMacAddr, NetDevice::PACKET_HOST);
 }

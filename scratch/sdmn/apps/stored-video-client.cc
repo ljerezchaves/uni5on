@@ -197,7 +197,11 @@ StoredVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
 
   Ptr<Packet> packet = Create<Packet> ();
   packet->AddHeader (httpHeader);
-  socket->Send (packet);
+  int bytes = socket->Send (packet);
+  if (bytes != (int)packet->GetSize ())
+    {
+      NS_LOG_ERROR ("Not all bytes were copied to the socket buffer.");
+    }
 }
 
 } // Namespace ns3

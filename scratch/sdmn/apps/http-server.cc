@@ -209,11 +209,11 @@ HttpServer::SendData (Ptr<Socket> socket, uint32_t available)
 
   uint32_t pktSize = std::min (available, m_pendingBytes);
   Ptr<Packet> packet = Create<Packet> (pktSize);
-  int bytesSent = socket->Send (packet);
-  if (bytesSent > 0)
+  int bytes = socket->Send (packet);
+  if (bytes > 0)
     {
-      NS_LOG_DEBUG ("HTTP server TX " << bytesSent << " bytes.");
-      m_pendingBytes -= static_cast<uint32_t> (bytesSent);
+      NS_LOG_DEBUG ("HTTP server TX " << bytes << " bytes.");
+      m_pendingBytes -= static_cast<uint32_t> (bytes);
     }
   else
     {
@@ -249,7 +249,11 @@ HttpServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
       httpHeaderOut.SetHeaderField ("InlineObjects", numOfInlineObj);
       Ptr<Packet> outPacket = Create<Packet> (0);
       outPacket->AddHeader (httpHeaderOut);
-      socket->Send (outPacket);
+      int bytes = socket->Send (outPacket);
+      if (bytes != (int)outPacket->GetSize ())
+        {
+          NS_LOG_ERROR ("Not all bytes were copied to the socket buffer.");
+        }
 
       // Start sending the HTTP object.
       SendData (socket, socket->GetTxAvailable ());
@@ -271,7 +275,11 @@ HttpServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
       httpHeaderOut.SetHeaderField ("InlineObjects", 0);
       Ptr<Packet> outPacket = Create<Packet> (0);
       outPacket->AddHeader (httpHeaderOut);
-      socket->Send (outPacket);
+      int bytes = socket->Send (outPacket);
+      if (bytes != (int)outPacket->GetSize ())
+        {
+          NS_LOG_ERROR ("Not all bytes were copied to the socket buffer.");
+        }
 
       // Start sending the HTTP object.
       SendData (socket, socket->GetTxAvailable ());
