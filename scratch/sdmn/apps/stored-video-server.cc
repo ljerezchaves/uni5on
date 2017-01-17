@@ -202,6 +202,7 @@ StoredVideoServer::ReceiveData (Ptr<Socket> socket)
   // Receive the HTTP GET message.
   HttpHeader httpHeader;
   Ptr<Packet> packet = socket->Recv ();
+  NotifyRx (packet->GetSize ());
   packet->RemoveHeader (httpHeader);
   NS_ASSERT (packet->GetSize () == 0);
 
@@ -276,8 +277,11 @@ StoredVideoServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
       httpHeaderOut.SetResponsePhrase ("OK");
       httpHeaderOut.SetHeaderField ("ContentLength", m_pendingBytes);
       httpHeaderOut.SetHeaderField ("ContentType", "main/video");
+
       Ptr<Packet> outPacket = Create<Packet> (0);
       outPacket->AddHeader (httpHeaderOut);
+
+      NotifyTx (outPacket->GetSize () + m_pendingBytes);
       int bytes = socket->Send (outPacket);
       if (bytes != (int)outPacket->GetSize ())
         {

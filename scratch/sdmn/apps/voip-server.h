@@ -69,7 +69,6 @@ private:
 
   Time                      m_interval;       //!< Interval between packets
   uint32_t                  m_pktSize;        //!< Packet size
-  uint32_t                  m_pktSent;        //!< Number of TX packets
   EventId                   m_sendEvent;      //!< SendPacket event
 };
 

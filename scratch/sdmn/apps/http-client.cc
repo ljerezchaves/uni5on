@@ -51,6 +51,7 @@ HttpClient::HttpClient ()
   : m_nextRequest (EventId ()),
     m_rxPacket (0),
     m_pagesLoaded (0),
+    m_httpPacketSize (0),
     m_pendingBytes (0),
     m_pendingObjects (0)
 {
@@ -85,6 +86,7 @@ HttpClient::Start ()
   SdmnClientApp::Start ();
 
   // Preparing internal variables for new traffic cycle
+  m_httpPacketSize = 0;
   m_pendingBytes = 0;
   m_pendingObjects = 0;
   m_pagesLoaded = 0;
@@ -169,15 +171,11 @@ HttpClient::ReceiveData (Ptr<Socket> socket)
       if (!m_rxPacket || m_rxPacket->GetSize () == 0)
         {
           m_rxPacket = socket->Recv ();
-          m_qosStats->NotifyReceived (0, Simulator::Now (),
-                                      m_rxPacket->GetSize ());
         }
       else if (socket->GetRxAvailable ())
         {
           Ptr<Packet> pktTemp = socket->Recv ();
           m_rxPacket->AddAtEnd (pktTemp);
-          m_qosStats->NotifyReceived (0, Simulator::Now (),
-                                      pktTemp->GetSize ());
         }
 
       if (!m_pendingBytes)
@@ -187,10 +185,12 @@ HttpClient::ReceiveData (Ptr<Socket> socket)
           m_rxPacket->RemoveHeader (httpHeader);
           NS_ASSERT_MSG (httpHeader.GetResponseStatusCode () == "200",
                          "Invalid HTTP response message.");
+          m_httpPacketSize = httpHeader.GetSerializedSize ();
 
           // Get the content length for this message
           m_pendingBytes = std::atoi (
               httpHeader.GetHeaderField ("ContentLength").c_str ());
+          m_httpPacketSize += m_pendingBytes;
 
           // For main/objects, get the number of inline objects to load
           contentType = httpHeader.GetHeaderField ("ContentType");
@@ -212,6 +212,7 @@ HttpClient::ReceiveData (Ptr<Socket> socket)
           // This is the end of the HTTP message.
           NS_LOG_INFO ("HTTP " << contentType << " successfully received.");
           NS_ASSERT (m_rxPacket->GetSize () == 0);
+          NotifyRx (m_httpPacketSize);
 
           if (contentType == "main/object")
             {
@@ -263,6 +264,8 @@ HttpClient::SendRequest (Ptr<Socket> socket, std::string url)
 
   Ptr<Packet> packet = Create<Packet> ();
   packet->AddHeader (httpHeader);
+
+  NotifyTx (packet->GetSize ());
   int bytes = socket->Send (packet);
   if (bytes != (int)packet->GetSize ())
     {

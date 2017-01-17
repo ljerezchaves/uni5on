@@ -102,6 +102,7 @@ private:
   EventId                      m_nextRequest;             //!< Next request
   Ptr<Packet>                  m_rxPacket;                //!< RX packet
   uint16_t                     m_pagesLoaded;             //!< Pages loaded
+  uint32_t                     m_httpPacketSize;          //!< HTTP packet size
   uint32_t                     m_pendingBytes;            //!< Pending bytes
   uint32_t                     m_pendingObjects;          //!< Pending objects
   Ptr<LogNormalRandomVariable> m_readingTimeStream;       //!< Reading time

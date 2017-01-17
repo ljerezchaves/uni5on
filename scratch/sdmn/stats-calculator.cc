@@ -29,7 +29,7 @@
 #include "gbr-info.h"
 #include "connection-info.h"
 #include "epc-controller.h"
-#include "apps/voip-client.h"
+#include "apps/real-time-video-client.h"
 
 using namespace std;
 
@@ -873,8 +873,10 @@ EpcS1uStatsCalculator::EpcInputPacket (std::string context,
     {
       Ptr<QosStatsCalculator> qosStats =
         GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      SeqNumTag seqTag (qosStats->GetNextSeqNum ());
-      packet->AddPacketTag (seqTag);
+      qosStats->NotifyTx (packet->GetSize ());
+      // uint32_t seqNum = qosStats->NotifyTx (packet->GetSize ());
+      // SeqNumTag seqTag (seqNum);
+      // packet->AddPacketTag (seqTag);
     }
 }
 
@@ -885,15 +887,13 @@ EpcS1uStatsCalculator::EpcOutputPacket (std::string context,
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      SeqNumTag seqTag;
-      if (packet->PeekPacketTag (seqTag))
-        {
-          Ptr<QosStatsCalculator> qosStats =
-            GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-          qosStats->NotifyReceived (seqTag.GetSeqNum (),
-                                    gtpuTag.GetTimestamp (),
-                                    packet->GetSize ());
-        }
+      // SeqNumTag seqTag;
+      // if (packet->PeekPacketTag (seqTag))
+      //   {
+      Ptr<QosStatsCalculator> qosStats =
+        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      qosStats->NotifyRx (packet->GetSize (), gtpuTag.GetTimestamp ());
+      //   }
     }
 }
 
@@ -909,7 +909,8 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context,
   Ptr<const QosStatsCalculator> epcStats;
   Ptr<const QosStatsCalculator> appStats;
 
-  bool uplink = (app->GetInstanceTypeId () == VoipClient::GetTypeId ());
+  bool uplink =
+    (app->GetInstanceTypeId () != RealTimeVideoClient::GetTypeId ());
   if (uplink)
     {
       // Dump uplink statistics
@@ -939,7 +940,7 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context,
       << setw (16) << static_cast<double> (epcThp.GetBitRate ()) / 1000
       << std::endl;
 
-      appStats = DynamicCast<const VoipClient> (app)->GetServerQosStats ();
+      appStats = app->GetServerQosStats ();
       DataRate appThp = appStats->GetRxThroughput ();
       *m_appWrapper->GetStream ()
       << left

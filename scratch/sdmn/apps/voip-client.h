@@ -71,7 +71,6 @@ private:
 
   Time                      m_interval;         //!< Interval between packets
   uint32_t                  m_pktSize;          //!< Maximum packet size
-  uint32_t                  m_pktSent;          //!< Number of TX packets
   EventId                   m_sendEvent;        //!< SendPacket event
   EventId                   m_stopEvent;        //!< Stop event
   Ptr<RandomVariableStream> m_lengthRng;        //!< Random call length

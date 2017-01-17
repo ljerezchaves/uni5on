@@ -139,7 +139,6 @@ RealTimeVideoServer::NotifyStart ()
 
   Simulator::Cancel (m_sendEvent);
   m_currentEntry = 0;
-  m_pktSent = 0;
 
   // Chain up
   SdmnServerApp::NotifyStart ();
@@ -267,7 +266,7 @@ RealTimeVideoServer::SendPacket (uint32_t size)
   Ptr<Packet> packet = Create<Packet> (packetSize);
 
   SeqTsHeader seqTs;
-  seqTs.SetSeq (m_pktSent++);
+  seqTs.SetSeq (NotifyTx (packet->GetSize () + seqTs.GetSerializedSize ()));
   packet->AddHeader (seqTs);
 
   // Send the packet

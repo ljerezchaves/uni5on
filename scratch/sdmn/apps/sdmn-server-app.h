@@ -112,6 +112,20 @@ protected:
   virtual void NotifyForceStop ();
 
   /**
+   * Update TX counter for a new transmitted packet on client stats calculator.
+   * \param txBytes The total number of bytes in this packet.
+   * \return The next TX sequence number to use.
+   */
+  uint32_t NotifyTx (uint32_t txBytes);
+
+  /**
+   * Update RX counter for a new received packet on server stats calculator.
+   * \param rxBytes The total number of bytes in this packet.
+   * \param timestamp The timestamp when this packet was sent.
+   */
+  void NotifyRx (uint32_t rxBytes, Time timestamp = Simulator::Now ());
+
+  /**
    * Reset the QoS statistics
    */
   void ResetQosStats ();

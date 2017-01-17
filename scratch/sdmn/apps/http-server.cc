@@ -172,6 +172,7 @@ HttpServer::ReceiveData (Ptr<Socket> socket)
   // Receive the HTTP GET message.
   HttpHeader httpHeader;
   Ptr<Packet> packet = socket->Recv ();
+  NotifyRx (packet->GetSize ());
   packet->RemoveHeader (httpHeader);
   NS_ASSERT (packet->GetSize () == 0);
 
@@ -247,8 +248,11 @@ HttpServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
       httpHeaderOut.SetHeaderField ("ContentLength", m_pendingBytes);
       httpHeaderOut.SetHeaderField ("ContentType", "main/object");
       httpHeaderOut.SetHeaderField ("InlineObjects", numOfInlineObj);
+
       Ptr<Packet> outPacket = Create<Packet> (0);
       outPacket->AddHeader (httpHeaderOut);
+
+      NotifyTx (outPacket->GetSize () + m_pendingBytes);
       int bytes = socket->Send (outPacket);
       if (bytes != (int)outPacket->GetSize ())
         {
@@ -273,8 +277,11 @@ HttpServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
       httpHeaderOut.SetHeaderField ("ContentLength", m_pendingBytes);
       httpHeaderOut.SetHeaderField ("ContentType", "inline/object");
       httpHeaderOut.SetHeaderField ("InlineObjects", 0);
+
       Ptr<Packet> outPacket = Create<Packet> (0);
       outPacket->AddHeader (httpHeaderOut);
+
+      NotifyTx (outPacket->GetSize () + m_pendingBytes);
       int bytes = socket->Send (outPacket);
       if (bytes != (int)outPacket->GetSize ())
         {

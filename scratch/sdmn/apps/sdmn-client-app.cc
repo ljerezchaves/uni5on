@@ -210,6 +210,18 @@ SdmnClientApp::ForceStop ()
   m_serverApp->NotifyForceStop ();
 }
 
+uint32_t
+SdmnClientApp::NotifyTx (uint32_t txBytes)
+{
+  return m_serverApp->m_qosStats->NotifyTx (txBytes);
+}
+
+void
+SdmnClientApp::NotifyRx (uint32_t rxBytes, Time timestamp)
+{
+  m_qosStats->NotifyRx (rxBytes, timestamp);
+}
+
 void
 SdmnClientApp::ResetQosStats ()
 {

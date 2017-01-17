@@ -125,8 +125,7 @@ RealTimeVideoClient::ReadPacket (Ptr<Socket> socket)
 
   SeqTsHeader seqTs;
   packet->PeekHeader (seqTs);
-  m_qosStats->NotifyReceived (seqTs.GetSeq (), seqTs.GetTs (),
-                              packet->GetSize ());
+  NotifyRx (packet->GetSize (), seqTs.GetTs ());
   NS_LOG_DEBUG ("Real-time video RX " << packet->GetSize () << " bytes. " <<
                 "Sequence " << seqTs.GetSeq ());
 }

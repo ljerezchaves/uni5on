@@ -19,7 +19,6 @@
  */
 
 #include "qos-stats-calculator.h"
-#include "ns3/simulator.h"
 #include "ns3/log.h"
 
 namespace ns3 {
@@ -27,76 +26,69 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("QosStatsCalculator");
 
 QosStatsCalculator::QosStatsCalculator ()
-  : m_lossCounter (0),
-    m_windowSize (32),
+  : m_txPackets (0),
+    m_txBytes (0),
     m_rxPackets (0),
     m_rxBytes (0),
+    m_firstTxTime (Simulator::Now ()),
     m_firstRxTime (Simulator::Now ()),
     m_lastRxTime (Simulator::Now ()),
     m_lastTimestamp (Simulator::Now ()),
     m_jitter (0),
     m_delaySum (Time ()),
-    m_seqNum (0),
     m_meterDrop (0),
     m_queueDrop (0)
 {
   NS_LOG_FUNCTION (this);
-  m_lossCounter = new PacketLossCounter (m_windowSize);
 }
 
 QosStatsCalculator::~QosStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
-  delete m_lossCounter;
-}
-
-uint16_t
-QosStatsCalculator::GetPacketWindowSize () const
-{
-  NS_LOG_FUNCTION (this);
-  return m_windowSize;
-}
-
-void
-QosStatsCalculator::SetPacketWindowSize (uint16_t size)
-{
-  NS_LOG_FUNCTION (this << size);
-  m_windowSize = size;
-  m_lossCounter->SetBitMapSize (m_windowSize);
 }
 
 void
 QosStatsCalculator::ResetCounters ()
 {
-  delete m_lossCounter;
-  m_lossCounter = new PacketLossCounter (m_windowSize);
-
+  m_txPackets = 0;
+  m_txBytes = 0;
   m_rxPackets = 0;
   m_rxBytes = 0;
+  m_firstTxTime = Simulator::Now ();
   m_firstRxTime = Simulator::Now ();
   m_lastRxTime = Simulator::Now ();
   m_lastTimestamp = Simulator::Now ();
   m_jitter = 0;
   m_delaySum = Time ();
 
-  m_seqNum = 0;
   m_meterDrop = 0;
   m_queueDrop = 0;
 }
 
 uint32_t
-QosStatsCalculator::GetNextSeqNum ()
+QosStatsCalculator::NotifyTx (uint32_t txBytes)
 {
-  return m_seqNum++;
+  m_txPackets++;
+  m_txBytes += txBytes;
+
+  // Check for the first TX packet
+  if (m_txPackets == 1)
+    {
+      m_firstTxTime = Simulator::Now ();
+    }
+
+  return m_txPackets - 1;
 }
 
 void
-QosStatsCalculator::NotifyReceived (uint32_t seqNum, Time timestamp,
-                                    uint32_t rxBytes)
+QosStatsCalculator::NotifyRx (uint32_t rxBytes, Time timestamp)
 {
-  // Check for the first packet received
+  m_rxPackets++;
+  m_rxBytes += rxBytes;
   Time now = Simulator::Now ();
-  if (m_rxPackets == 0)
+
+  // Check for the first RX packet
+  if (m_rxPackets == 1)
     {
       m_firstRxTime = now;
     }
@@ -107,14 +99,8 @@ QosStatsCalculator::NotifyReceived (uint32_t seqNum, Time timestamp,
   m_lastRxTime = now;
   m_lastTimestamp = timestamp;
 
-  // Updating delay, byte and packet counter
-  Time delay = now - timestamp;
-  m_delaySum += delay;
-  m_rxPackets++;
-  m_rxBytes += rxBytes;
-
-  // Notify packet loss counter
-  m_lossCounter->NotifyReceived (seqNum);
+  // Updating delay sum
+  m_delaySum += (now - timestamp);
 }
 
 void
@@ -132,9 +118,9 @@ QosStatsCalculator::NotifyQueueDrop ()
 Time
 QosStatsCalculator::GetActiveTime (void) const
 {
-  if (m_rxPackets > 1)
+  if (GetRxPackets ())
     {
-      return m_lastRxTime - m_firstRxTime;
+      return m_lastRxTime - m_firstTxTime;
     }
   else
     {
@@ -145,19 +131,40 @@ QosStatsCalculator::GetActiveTime (void) const
 uint32_t
 QosStatsCalculator::GetLostPackets (void) const
 {
-  // Workaround for lost packets not yet identified
-  // by the PacketLossCounter packet window.
-  uint32_t lostPkts = m_lossCounter->GetLost ();
-  uint32_t dropPkts = m_meterDrop + m_queueDrop;
-  return lostPkts < dropPkts ? dropPkts : lostPkts;
+  NS_ASSERT (!GetTxPackets () || GetTxPackets () >= GetRxPackets ());
+  if (GetTxPackets ())
+    {
+      return GetTxPackets () - GetRxPackets ();
+    }
+  else
+    {
+      return 0;
+    }
 }
 
 double
 QosStatsCalculator::GetLossRatio (void) const
 {
-  uint32_t lostPkts = GetLostPackets ();
-  uint32_t txPkts = lostPkts + GetRxPackets ();
-  return txPkts ? (double)lostPkts / txPkts : 0.;
+  if (GetLostPackets ())
+    {
+      return (double)GetLostPackets () / GetTxPackets ();
+    }
+  else
+    {
+      return 0.0;
+    }
+}
+
+uint32_t
+QosStatsCalculator::GetTxPackets (void) const
+{
+  return m_txPackets;
+}
+
+uint32_t
+QosStatsCalculator::GetTxBytes (void) const
+{
+  return m_txBytes;
 }
 
 uint32_t
@@ -175,7 +182,14 @@ QosStatsCalculator::GetRxBytes (void) const
 Time
 QosStatsCalculator::GetRxDelay (void) const
 {
-  return m_rxPackets > 1 ? (m_delaySum / (int64_t)m_rxPackets) : m_delaySum;
+  if (GetRxPackets ())
+    {
+      return m_delaySum / (int64_t)GetRxPackets ();
+    }
+  else
+    {
+      return m_delaySum;
+    }
 }
 
 Time
@@ -187,9 +201,14 @@ QosStatsCalculator::GetRxJitter (void) const
 DataRate
 QosStatsCalculator::GetRxThroughput (void) const
 {
-  return m_rxPackets > 1 ?
-         DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ()) :
-         DataRate (0);
+  if (GetRxPackets ())
+    {
+      return DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ());
+    }
+  else
+    {
+      return DataRate (0);
+    }
 }
 
 uint32_t

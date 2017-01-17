@@ -97,7 +97,6 @@ private:
   };
 
   uint16_t                        m_pktSize;          //!< Maximum packet size
-  uint32_t                        m_pktSent;          //!< Number of TX packets
   EventId                         m_sendEvent;        //!< SendPacket event
   uint32_t                        m_currentEntry;     //!< Current entry index
   static struct TraceEntry        g_defaultEntries[]; //!< Default trace

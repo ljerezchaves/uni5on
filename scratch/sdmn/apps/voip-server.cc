@@ -107,7 +107,6 @@ VoipServer::NotifyStart ()
   SdmnServerApp::NotifyStart ();
 
   // Start traffic
-  m_pktSent = 0;
   Simulator::Cancel (m_sendEvent);
   m_sendEvent = Simulator::Schedule (
       m_interval, &VoipServer::SendPacket, this);
@@ -135,7 +134,7 @@ VoipServer::SendPacket ()
   // Create the packet and add seq header
   Ptr<Packet> packet = Create<Packet> (m_pktSize);
   SeqTsHeader seqTs;
-  seqTs.SetSeq (m_pktSent++);
+  seqTs.SetSeq (NotifyTx (packet->GetSize () + seqTs.GetSerializedSize ()));
   packet->AddHeader (seqTs);
 
   // Send the packet
@@ -165,8 +164,7 @@ VoipServer::ReadPacket (Ptr<Socket> socket)
 
   SeqTsHeader seqTs;
   packet->PeekHeader (seqTs);
-  m_qosStats->NotifyReceived (seqTs.GetSeq (), seqTs.GetTs (),
-                              packet->GetSize ());
+  NotifyRx (packet->GetSize (), seqTs.GetTs ());
   NS_LOG_DEBUG ("VoIP RX " << packet->GetSize () << " bytes. " <<
                 "Sequence " << seqTs.GetSeq ());
 }
