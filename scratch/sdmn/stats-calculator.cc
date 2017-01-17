@@ -23,7 +23,6 @@
 #include <iomanip>
 #include <iostream>
 #include "stats-calculator.h"
-#include "seq-num-tag.h"
 #include "routing-info.h"
 #include "ring-routing-info.h"
 #include "gbr-info.h"
@@ -874,9 +873,6 @@ EpcS1uStatsCalculator::EpcInputPacket (std::string context,
       Ptr<QosStatsCalculator> qosStats =
         GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
       qosStats->NotifyTx (packet->GetSize ());
-      // uint32_t seqNum = qosStats->NotifyTx (packet->GetSize ());
-      // SeqNumTag seqTag (seqNum);
-      // packet->AddPacketTag (seqTag);
     }
 }
 
@@ -887,13 +883,9 @@ EpcS1uStatsCalculator::EpcOutputPacket (std::string context,
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      // SeqNumTag seqTag;
-      // if (packet->PeekPacketTag (seqTag))
-      //   {
       Ptr<QosStatsCalculator> qosStats =
         GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
       qosStats->NotifyRx (packet->GetSize (), gtpuTag.GetTimestamp ());
-      //   }
     }
 }
 
