@@ -799,7 +799,7 @@ EpcS1uStatsCalculator::NotifyConstructionCompleted (void)
   << setw (12) << "LossRatio"
   << setw (6)  << "Losts"
   << setw (10) << "RxBytes"
-  << setw (17)  << "Throughput(kbps)"
+  << setw (17) << "Throughput(kbps)"
   << std::endl;
 
   m_epcWrapper = Create<OutputStreamWrapper> (m_epcStatsFilename,
@@ -826,7 +826,7 @@ EpcS1uStatsCalculator::NotifyConstructionCompleted (void)
   << setw (7)  << "Meter"
   << setw (7)  << "Queue"
   << setw (10) << "RxBytes"
-  << setw (17)  << "Throughput(kbps)"
+  << setw (17) << "Throughput(kbps)"
   << std::endl;
 
   // Chain up
