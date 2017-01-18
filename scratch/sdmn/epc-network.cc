@@ -470,7 +470,7 @@ EpcNetwork::ConfigureGatewayAndInternet ()
   uint32_t pgwSgiPortNum = pgwSgiPort->GetPortNo ();
 
   // Note that the SGi device created on the P-GW node and configure as an
-  // OpenFlow switch port will no have an IP address assigned to it. However,
+  // OpenFlow switch port will have no IP address assigned to it. However,
   // we need this address on the PgwUserApp, so we set it here.
   m_pgwSgiAddr = m_webAddrHelper.NewAddress ();
   NS_LOG_DEBUG ("P-GW SGi interface address: " << m_pgwSgiAddr);
