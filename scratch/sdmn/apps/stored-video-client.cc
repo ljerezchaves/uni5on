@@ -168,7 +168,7 @@ StoredVideoClient::ReceiveData (Ptr<Socket> socket)
           NS_LOG_INFO ("Stored video successfully received.");
           NS_ASSERT (m_rxPacket->GetSize () == 0);
           NotifyRx (m_httpPacketSize);
-          
+
           Stop ();
           break;
         }

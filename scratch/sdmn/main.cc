@@ -23,9 +23,7 @@
 #include <iomanip>
 #include <iostream>
 #include "lte-network.h"
-#include "epc-controller.h"
 #include "ring-network.h"
-#include "stats-calculator.h"
 #include "traffic-helper.h"
 
 using namespace ns3;
@@ -114,20 +112,18 @@ main (int argc, char *argv[])
 
   // Create the simulation scenario.
   // The following objects must be created in this order:
-  // * The Internet / OpenFlow EPC network
+  // * The OpenFlow EPC network
   // * The LTE radio access network
-  // * Applications and traffic managers
-  // * EPC stats calculator
+  // * The traffic helper for applications
   NS_LOG_INFO ("Creating simulation scenario...");
 
-  Ptr<RingNetwork> ofNetwork = CreateObject<RingNetwork> ();
-  Ptr<LteNetwork> lteNetwork = CreateObject<LteNetwork> (ofNetwork);
+  Ptr<RingNetwork>   ofNetwork;
+  Ptr<LteNetwork>    lteNetwork;
+  Ptr<TrafficHelper> trafficHelper;
 
-  Ptr<TrafficHelper> trafficHelper =
-    CreateObject<TrafficHelper> (ofNetwork, lteNetwork);
-
-  Ptr<EpcS1uStatsCalculator> epcS1uStats =
-    CreateObject<EpcS1uStatsCalculator> (ofNetwork->GetControllerApp ());
+  ofNetwork     = CreateObject<RingNetwork> ();
+  lteNetwork    = CreateObject<LteNetwork> (ofNetwork);
+  trafficHelper = CreateObject<TrafficHelper> (ofNetwork, lteNetwork);
 
   // If necessary, enable pcap output
   if (pcap)

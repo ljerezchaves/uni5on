@@ -227,6 +227,10 @@ TrafficHelper::NotifyConstructionCompleted ()
   // Install the applications
   Install (m_lteNetwork->GetUeNodes (), m_lteNetwork->GetUeDevices ());
 
+  // Create the traffic stats calculator
+  Ptr<EpcController> controller = m_epcNetwork->GetControllerApp ();
+  m_trafficStats = CreateObject<TrafficStatsCalculator> (controller);
+
   // Chain up
   Object::NotifyConstructionCompleted ();
 }

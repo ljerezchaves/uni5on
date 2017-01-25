@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef EPCOF_STATS_CALCULATOR_H
-#define EPCOF_STATS_CALCULATOR_H
+#ifndef SDMN_STATS_CALCULATOR_H
+#define SDMN_STATS_CALCULATOR_H
 
 #include <ns3/nstime.h>
 #include <ns3/queue.h>
@@ -42,11 +42,11 @@ class EpcController;
  * \ingroup sdmn
  * This class monitors OpenFlow EPC controller statistics.
  */
-class ControllerStatsCalculator : public Object
+class AdmissionStatsCalculator : public Object
 {
 public:
-  ControllerStatsCalculator ();          //!< Default constructor
-  virtual ~ControllerStatsCalculator (); //!< Default destructor
+  AdmissionStatsCalculator ();          //!< Default constructor
+  virtual ~AdmissionStatsCalculator (); //!< Default destructor
 
   /**
    * Register this type.
@@ -55,13 +55,7 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Dump regular statistics into file.
-   * \param next The inverval before next dump.
-   */
-  void DumpStatistics (Time next);
-
-  /**
-   * Notify new bearer request.
+   * Notify a new bearer request.
    * \param accepted True when the bearer is accepted into network.
    * \param rInfo The bearer routing information.
    */
@@ -71,39 +65,31 @@ protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
-  // Inherited from ObjectBase
+  // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
 
 private:
   /**
-   * Reset all internal counters.
+   * Dump statistics into file.
+   * \param nextDump The interval before next dump.
+   */
+  void DumpStatistics (Time nextDump);
+
+  /**
+   * Reset internal counters.
    */
   void ResetCounters ();
 
-  /**
-   * Get the NonGBR block ratio.
-   * \return The ratio.
-   */
-  double GetNonGbrBlockRatio (void) const;
-
-  /**
-   * Get the GBR block ratio.
-   * \return The ratio.
-   */
-  double GetGbrBlockRatio (void) const;
-
-  uint32_t    m_nonRequests;        //!< number of non-GBR requests
-  uint32_t    m_nonAccepted;        //!< number of non-GBR accepted
-  uint32_t    m_nonBlocked;         //!< number of non-GBR blocked
-  uint32_t    m_gbrRequests;        //!< Number of GBR requests
-  uint32_t    m_gbrAccepted;        //!< Number of GBR accepted
-  uint32_t    m_gbrBlocked;         //!< Number of GBR blocked
-
-  std::string m_admStatsFilename;   //!< AdmStats filename
-  std::string m_brqStatsFilename;   //!< BrqStats filename
-
-  Ptr<OutputStreamWrapper> m_admWrapper;  //!< AdmStats file wrapper
-  Ptr<OutputStreamWrapper> m_brqWrapper;  //!< BrqStats file wrapper
+  uint32_t                  m_nonRequests;  //!< Number of non-GBR requests
+  uint32_t                  m_nonAccepted;  //!< Number of non-GBR accepted
+  uint32_t                  m_nonBlocked;   //!< Number of non-GBR blocked
+  uint32_t                  m_gbrRequests;  //!< Number of GBR requests
+  uint32_t                  m_gbrAccepted;  //!< Number of GBR accepted
+  uint32_t                  m_gbrBlocked;   //!< Number of GBR blocked
+  std::string               m_admFilename;  //!< AdmStats filename
+  Ptr<OutputStreamWrapper>  m_admWrapper;   //!< AdmStats file wrapper
+  std::string               m_brqFilename;  //!< BrqStats filename
+  Ptr<OutputStreamWrapper>  m_brqWrapper;   //!< BrqStats file wrapper
 };
 
 
@@ -123,12 +109,6 @@ public:
    * \return The object TypeId.
    */
   static TypeId GetTypeId (void);
-
-  /**
-   * Dump regular statistics into file.
-   * \param next The inverval before next dump.
-   */
-  void DumpStatistics (Time next);
 
   /**
    * Notify this stats calculator of a new connection between two switches in
@@ -153,7 +133,13 @@ protected:
 
 private:
   /**
-   * Reset all internal counters.
+   * Dump statistics into file.
+   * \param nextDump The interval before next dump.
+   */
+  void DumpStatistics (Time nextDump);
+
+  /**
+   * Reset internal counters.
    */
   void ResetCounters ();
 
@@ -163,24 +149,24 @@ private:
    */
   Time GetActiveTime (void) const;
 
-  OFSwitch13DeviceContainer         m_devices;      //!< Switch devices
-  std::vector<Ptr<ConnectionInfo> > m_connections;  //!< Switch connections
+  /** A Vector of connection information objects. */
+  typedef std::vector<Ptr<ConnectionInfo> > ConnInfoList_t;
 
-  Time m_lastResetTime;                 //!< Last reset time
-
-  std::string m_regStatsFilename;       //!< RegStats filename
-  std::string m_renStatsFilename;       //!< RenStats filename
-  std::string m_bwbStatsFilename;       //!< BwbStats filename
-  std::string m_bwgStatsFilename;       //!< BwgStats filename
-  std::string m_bwnStatsFilename;       //!< BwnStats filename
-  std::string m_swtStatsFilename;         //!< SwtStats filename
-
-  Ptr<OutputStreamWrapper> m_regWrapper;  //!< RegStats file wrapper
-  Ptr<OutputStreamWrapper> m_renWrapper;  //!< RenStats file wrapper
-  Ptr<OutputStreamWrapper> m_bwbWrapper;  //!< BwbStats file wrapper
-  Ptr<OutputStreamWrapper> m_bwgWrapper;  //!< BwgStats file wrapper
-  Ptr<OutputStreamWrapper> m_bwnWrapper;  //!< BwnStats file wrapper
-  Ptr<OutputStreamWrapper> m_swtWrapper;  //!< SwtStats file wrapper
+  OFSwitch13DeviceContainer m_devices;        //!< Switch devices
+  ConnInfoList_t            m_connections;    //!< Switch connections
+  Time                      m_lastResetTime;  //!< Last reset time
+  std::string               m_regFilename;    //!< RegStats filename
+  Ptr<OutputStreamWrapper>  m_regWrapper;     //!< RegStats file wrapper
+  std::string               m_renFilename;    //!< RenStats filename
+  Ptr<OutputStreamWrapper>  m_renWrapper;     //!< RenStats file wrapper
+  std::string               m_bwbFilename;    //!< BwbStats filename
+  Ptr<OutputStreamWrapper>  m_bwbWrapper;     //!< BwbStats file wrapper
+  std::string               m_bwgFilename;    //!< BwgStats filename
+  Ptr<OutputStreamWrapper>  m_bwgWrapper;     //!< BwgStats file wrapper
+  std::string               m_bwnFilename;    //!< BwnStats filename
+  Ptr<OutputStreamWrapper>  m_bwnWrapper;     //!< BwnStats file wrapper
+  std::string               m_swtFilename;    //!< SwtStats filename
+  Ptr<OutputStreamWrapper>  m_swtWrapper;     //!< SwtStats file wrapper
 };
 
 
@@ -202,12 +188,6 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Dump regular statistics into file.
-   * \param next The inverval before next dump.
-   */
-  void DumpStatistics (Time next);
-
-  /**
    * Set queue pointers for statistics dump.
    * \param downQueue The downlink tx queue at server node.
    * \param upQueue The uplink tx queue at client node.
@@ -223,7 +203,13 @@ protected:
 
 private:
   /**
-   * Reset all internal counters.
+   * Dump statistics into file.
+   * \param nextDump The interval before next dump.
+   */
+  void DumpStatistics (Time nextDump);
+
+  /**
+   * Reset internal counters.
    */
   void ResetCounters ();
 
@@ -245,33 +231,34 @@ private:
    */
   uint64_t GetUpBitRate (void) const;
 
-  uint32_t    m_pgwDownBytes;   //!< Pgw traffic downlink bytes.
-  uint32_t    m_pgwUpBytes;     //!< Pgw traffic uplink bytes.
-  Ptr<Queue>  m_downQueue;      //!< Internet downlink queue
-  Ptr<Queue>  m_upQueue;        //!< Internet uplink queue
-  Time        m_lastResetTime;  //!< Last reset time
-
-  std::string m_lnkStatsFilename;         //!< LinkStats filename
-  Ptr<OutputStreamWrapper> m_lnkWrapper;  //!< LinkStats file wrapper
+  uint32_t                  m_pgwDownBytes;   //!< Pgw traffic downlink bytes
+  uint32_t                  m_pgwUpBytes;     //!< Pgw traffic uplink bytes
+  Ptr<Queue>                m_downQueue;      //!< Internet downlink queue
+  Ptr<Queue>                m_upQueue;        //!< Internet uplink queue
+  Time                      m_lastResetTime;  //!< Last reset time
+  std::string               m_lnkFilename;    //!< LinkStats filename
+  Ptr<OutputStreamWrapper>  m_lnkWrapper;     //!< LinkStats file wrapper
 };
 
 
 // ------------------------------------------------------------------------ //
 /**
  * \ingroup sdmn
- * This class monitors OpenFlow EPC S1-U QoS statistics.
+ * This class monitors the traffic QoS statistics at application L7 level for
+ * end-to-end traffic, and also at IP network L3 level for traffic within the
+ * LTE EPC.
  */
-class EpcS1uStatsCalculator : public Object
+class TrafficStatsCalculator : public Object
 {
 public:
+  TrafficStatsCalculator ();          //!< Default constructor
+  virtual ~TrafficStatsCalculator (); //!< Default destructor
+
   /**
    * Complete constructor.
    * \param controller The OpenFlow EPC controller application.
    */
-  EpcS1uStatsCalculator (Ptr<EpcController> controller);
-
-  EpcS1uStatsCalculator ();  //!< Default constructor
-  virtual ~EpcS1uStatsCalculator (); //!< Default destructor
+  TrafficStatsCalculator (Ptr<EpcController> controller);
 
   /**
    * Register this type.
@@ -279,14 +266,8 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * Set the controller pointer used by this stats calculator.
-   * \param controller The controller pointer.
-   */
-  void SetController (Ptr<EpcController> controller);
-
 protected:
-  /** Destructor implementation */
+  /** Destructor implementation. */
   virtual void DoDispose ();
 
   // Inherited from ObjectBase
@@ -294,51 +275,48 @@ protected:
 
 private:
   /**
-   * Trace sink fired when packets are dropped by meter bands. The tag will be
-   * read from packet, and EPC QoS stats updated.
-   * \param context Context information.
-   * \param packet The dropped packet.
-   */
-  void MeterDropPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink fired when packets are dropped by OpenFlow port queues.
-   * \param context Context information.
-   * \param packet The dropped packet.
-   */
-  void QueueDropPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink fired when packets enter the EPC. The packet will get tagged
-   * for EPC QoS monitoring.
-   * \param context Context information.
-   * \param packet The packet.
-   */
-  void EpcInputPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink fired when packets leave the EPC. The tag will be read from
-   * packet, and EPC QoS stats updated.
-   * \param context Context information.
-   * \param packet The packet.
-   */
-  void EpcOutputPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
-   * Trace sink fired when application traffic stops. Used to dump EPC and APP
-   * traffic statistics.
+   * Dump statistics into file.
+   * Trace sink fired when application traffic stops.
    * \param context Context information.
    * \param app The client application.
    */
   void DumpStatistics (std::string context, Ptr<const SdmnClientApp> app);
 
   /**
-   * Trace sink fired when application traffic starts. Used to reset EPC
-   * traffic statistics.
+   * Reset internal counters.
+   * Trace sink fired when application traffic starts.
    * \param context Context information.
    * \param app The client application.
    */
-  void ResetEpcStatistics (std::string context, Ptr<const SdmnClientApp> app);
+  void ResetCounters (std::string context, Ptr<const SdmnClientApp> app);
+
+  /**
+   * Trace sink fired when a packets is dropped by meter band.
+   * \param context Context information.
+   * \param packet The dropped packet.
+   */
+  void MeterDropPacket (std::string context, Ptr<const Packet> packet);
+
+  /**
+   * Trace sink fired when a packet is dropped by OpenFlow port queues.
+   * \param context Context information.
+   * \param packet The dropped packet.
+   */
+  void QueueDropPacket (std::string context, Ptr<const Packet> packet);
+
+  /**
+   * Trace sink fired when a packet enters the EPC.
+   * \param context Context information.
+   * \param packet The packet.
+   */
+  void EpcInputPacket (std::string context, Ptr<const Packet> packet);
+
+  /**
+   * Trace sink fired when a packet leaves the EPC.
+   * \param context Context information.
+   * \param packet The packet.
+   */
+  void EpcOutputPacket (std::string context, Ptr<const Packet> packet);
 
   /**
    * Retrieve the LTE EPC QoS statistics information for the GTP tunnel id.
@@ -348,22 +326,20 @@ private:
    */
   Ptr<QosStatsCalculator> GetQosStatsFromTeid (uint32_t teid, bool isDown);
 
-  Ptr<const EpcController> m_controller;  //!< Network controller
-
-  /** A pair of QosStatsCalculator, for downlink and uplink EPC statistics */
+  /** A pair of QosStatsCalculator, for downlink and uplink EPC statistics. */
   typedef std::pair<Ptr<QosStatsCalculator>,
                     Ptr<QosStatsCalculator> > QosStatsPair_t;
 
-  /** A Map saving <GTP TEID / QoS stats pair > */
+  /** A Map saving <GTP TEID / QoS stats pair >. */
   typedef std::map<uint32_t, QosStatsPair_t> TeidQosMap_t;
-  TeidQosMap_t m_qosStats; //!< TEID QoS statistics
 
-  std::string m_appStatsFilename;       //!< AppStats filename
-  std::string m_epcStatsFilename;       //!< EpcStats filename
-
-  Ptr<OutputStreamWrapper> m_appWrapper;  //!< AppStats file wrapper
-  Ptr<OutputStreamWrapper> m_epcWrapper;  //!< EpcStats file wrapper
+  TeidQosMap_t              m_qosStats;     //!< TEID QoS statistics
+  Ptr<const EpcController>  m_controller;   //!< Network controller
+  std::string               m_appFilename;  //!< AppStats filename
+  Ptr<OutputStreamWrapper>  m_appWrapper;   //!< AppStats file wrapper
+  std::string               m_epcFilename;  //!< EpcStats filename
+  Ptr<OutputStreamWrapper>  m_epcWrapper;   //!< EpcStats file wrapper
 };
 
 } // namespace ns3
-#endif /* EPCOF_STATS_CALCULATOR_H */
+#endif /* SDMN_STATS_CALCULATOR_H */

@@ -25,6 +25,7 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
+#include "stats-calculator.h"
 #include "apps/sdmn-app-helper.h"
 
 namespace ns3 {
@@ -194,11 +195,13 @@ private:
   SdmnAppHelper       m_stVideoHelper;  //!< Stored video application helper
   SdmnAppHelper       m_httpHelper;     //!< HTTP application helper
 
-  Ptr<UniformRandomVariable> m_videoRng;      //!< Random video selection
-  static const std::string   m_videoDir;      //!< Video trace directory
-  static const std::string   m_videoTrace []; //!< Stored video trace filenames
-  static const uint64_t      m_gbrBitRate []; //!< Stored video gbr bitrate
-  static const uint64_t      m_mbrBitRate []; //!< Stored video max bitrate
+  Ptr<UniformRandomVariable>  m_videoRng;      //!< Random video selection
+  static const std::string    m_videoDir;      //!< Video trace directory
+  static const std::string    m_videoTrace []; //!< Video trace filenames
+  static const uint64_t       m_gbrBitRate []; //!< Video gbr bitrate
+  static const uint64_t       m_mbrBitRate []; //!< Video max bitrate
+  
+  Ptr<TrafficStatsCalculator> m_trafficStats;  //!< Traffic stats calculator
 };
 
 };  // namespace ns3

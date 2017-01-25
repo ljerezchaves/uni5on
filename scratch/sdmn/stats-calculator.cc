@@ -35,82 +35,53 @@ using namespace std;
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("StatsCalculator");
-NS_OBJECT_ENSURE_REGISTERED (ControllerStatsCalculator);
+NS_OBJECT_ENSURE_REGISTERED (AdmissionStatsCalculator);
 NS_OBJECT_ENSURE_REGISTERED (LinkQueuesStatsCalculator);
 NS_OBJECT_ENSURE_REGISTERED (NetworkStatsCalculator);
-NS_OBJECT_ENSURE_REGISTERED (EpcS1uStatsCalculator);
+NS_OBJECT_ENSURE_REGISTERED (TrafficStatsCalculator);
 
-ControllerStatsCalculator::ControllerStatsCalculator ()
+AdmissionStatsCalculator::AdmissionStatsCalculator ()
   : m_nonRequests (0),
     m_nonAccepted (0),
-    m_nonBlocked (0),
+    m_nonBlocked  (0),
     m_gbrRequests (0),
     m_gbrAccepted (0),
-    m_gbrBlocked (0)
+    m_gbrBlocked  (0)
 {
   NS_LOG_FUNCTION (this);
 }
 
-ControllerStatsCalculator::~ControllerStatsCalculator ()
+AdmissionStatsCalculator::~AdmissionStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-ControllerStatsCalculator::GetTypeId (void)
+AdmissionStatsCalculator::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::ControllerStatsCalculator")
+  // Admission
+  static TypeId tid = TypeId ("ns3::AdmissionStatsCalculator")
     .SetParent<Object> ()
-    .AddConstructor<ControllerStatsCalculator> ()
+    .AddConstructor<AdmissionStatsCalculator> ()
     .AddAttribute ("AdmStatsFilename",
                    "Filename for bearer admission control statistics.",
-                   StringValue ("adm_stats.txt"),
+                   StringValue ("admission_counters_stats.txt"),
                    MakeStringAccessor (
-                     &ControllerStatsCalculator::m_admStatsFilename),
+                     &AdmissionStatsCalculator::m_admFilename),
                    MakeStringChecker ())
     .AddAttribute ("BrqStatsFilename",
                    "Filename for bearer request statistics.",
-                   StringValue ("brq_stats.txt"),
+                   StringValue ("admission_requests_stats.txt"),
                    MakeStringAccessor (
-                     &ControllerStatsCalculator::m_brqStatsFilename),
+                     &AdmissionStatsCalculator::m_brqFilename),
                    MakeStringChecker ())
   ;
   return tid;
 }
 
 void
-ControllerStatsCalculator::DumpStatistics (Time next)
-{
-  NS_LOG_FUNCTION (this);
-
-  *m_admWrapper->GetStream ()
-  << left
-  << setw (11) << Simulator::Now ().GetSeconds () << " "
-  << right
-  << setw (9)  << m_gbrRequests                   << " "
-  << setw (9)  << m_gbrBlocked                    << " "
-  << setw (9)  << GetGbrBlockRatio ()             << " "
-  << setw (9)  << m_nonRequests                   << " "
-  << setw (9)  << m_nonBlocked                    << " "
-  << setw (9)  << GetNonGbrBlockRatio ()
-  << std::endl;
-
-  ResetCounters ();
-  Simulator::Schedule (
-    next, &ControllerStatsCalculator::DumpStatistics, this, next);
-}
-
-void
-ControllerStatsCalculator::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-  m_admWrapper = 0;
-  m_brqWrapper = 0;
-}
-
-void
-ControllerStatsCalculator::NotifyBearerRequest (bool accepted,
-                                                Ptr<const RoutingInfo> rInfo)
+AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
+                                               Ptr<const RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << accepted << rInfo);
 
@@ -149,7 +120,7 @@ ControllerStatsCalculator::NotifyBearerRequest (bool accepted,
   // Save request stats into output file
   *m_brqWrapper->GetStream ()
   << left
-  << setw (9) << Simulator::Now ().GetSeconds ()            << " "
+  << setw (9)  << Simulator::Now ().GetSeconds ()           << " "
   << right
   << setw (4)  << rInfo->GetQciInfo ()                      << " "
   << setw (6)  << rInfo->IsGbr ()                           << " "
@@ -166,34 +137,38 @@ ControllerStatsCalculator::NotifyBearerRequest (bool accepted,
 }
 
 void
-ControllerStatsCalculator::NotifyConstructionCompleted (void)
+AdmissionStatsCalculator::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+  m_admWrapper = 0;
+  m_brqWrapper = 0;
+}
+
+void
+AdmissionStatsCalculator::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
-  SetAttribute ("AdmStatsFilename", StringValue (prefix + m_admStatsFilename));
-  SetAttribute ("BrqStatsFilename", StringValue (prefix + m_brqStatsFilename));
+  SetAttribute ("AdmStatsFilename", StringValue (prefix + m_admFilename));
+  SetAttribute ("BrqStatsFilename", StringValue (prefix + m_brqFilename));
 
   // Opening output files and printing header lines
-  m_admWrapper = Create<OutputStreamWrapper> (m_admStatsFilename,
-                                              std::ios::out);
+  m_admWrapper = Create<OutputStreamWrapper> (m_admFilename, std::ios::out);
   *m_admWrapper->GetStream ()
   << fixed << setprecision (4)
   << left
   << setw (11) << "Time(s)"
   << right
-  << setw (10)  << "GBRReqs"
-  << setw (10)  << "GBRBlocks"
-  << setw (10)  << "GBRRatio"
-  << setw (10)  << "NonReqs"
-  << setw (10)  << "NonBlocks"
-  << setw (10)  << "NonRatio"
+  << setw (8)  << "GbrReqs"
+  << setw (10) << "GbrBlocks"
+  << setw (11) << "NonGbrReqs"
+  << setw (13) << "NonGbrBlocks"
   << std::endl;
 
-  m_brqWrapper = Create<OutputStreamWrapper> (m_brqStatsFilename,
-                                              std::ios::out);
+  m_brqWrapper = Create<OutputStreamWrapper> (m_brqFilename, std::ios::out);
   *m_brqWrapper->GetStream ()
   << boolalpha << fixed << setprecision (4)
   << left
@@ -208,46 +183,50 @@ ControllerStatsCalculator::NotifyConstructionCompleted (void)
   << setw (10) << "Accepted"
   << setw (12) << "Down(kbps)"
   << setw (12) << "Up(kbps)"
-  << left << "  "
+  << left      << "  "
   << setw (12) << "RoutingPath"
   << std::endl;
 
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
-  Time next = timeValue.Get ();
-  Simulator::Schedule (
-    next, &ControllerStatsCalculator::DumpStatistics, this, next);
+  Time nextDump = timeValue.Get ();
+  Simulator::Schedule (nextDump, &AdmissionStatsCalculator::DumpStatistics,
+                       this, nextDump);
 
   // Chain up
   Object::NotifyConstructionCompleted ();
 }
 
 void
-ControllerStatsCalculator::ResetCounters ()
+AdmissionStatsCalculator::DumpStatistics (Time nextDump)
+{
+  NS_LOG_FUNCTION (this);
+
+  *m_admWrapper->GetStream ()
+  << left
+  << setw (11) << Simulator::Now ().GetSeconds () << " "
+  << right
+  << setw (7)  << m_gbrRequests                   << " "
+  << setw (9)  << m_gbrBlocked                    << " "
+  << setw (10) << m_nonRequests                   << " "
+  << setw (12) << m_nonBlocked
+  << std::endl;
+
+  ResetCounters ();
+  Simulator::Schedule (nextDump, &AdmissionStatsCalculator::DumpStatistics,
+                       this, nextDump);
+}
+
+void
+AdmissionStatsCalculator::ResetCounters ()
 {
   NS_LOG_FUNCTION (this);
   m_nonRequests = 0;
   m_nonAccepted = 0;
-  m_nonBlocked = 0;
+  m_nonBlocked  = 0;
   m_gbrRequests = 0;
   m_gbrAccepted = 0;
-  m_gbrBlocked = 0;
-}
-
-double
-ControllerStatsCalculator::GetNonGbrBlockRatio (void) const
-{
-  return m_nonRequests ?
-         static_cast<double> (m_nonBlocked) / m_nonRequests
-         : 0;
-}
-
-double
-ControllerStatsCalculator::GetGbrBlockRatio (void) const
-{
-  return m_gbrRequests ?
-         static_cast<double> (m_gbrBlocked) / m_gbrRequests
-         : 0;
+  m_gbrBlocked  = 0;
 }
 
 
@@ -272,44 +251,38 @@ NetworkStatsCalculator::GetTypeId (void)
     .AddAttribute ("RegStatsFilename",
                    "Filename for GBR reservation statistics.",
                    StringValue ("reg_stats.txt"),
-                   MakeStringAccessor (
-                     &NetworkStatsCalculator::m_regStatsFilename),
+                   MakeStringAccessor (&NetworkStatsCalculator::m_regFilename),
                    MakeStringChecker ())
     .AddAttribute ("RenStatsFilename",
                    "Filename for Non-GBR allowed bandwidth statistics.",
                    StringValue ("ren_stats.txt"),
-                   MakeStringAccessor (
-                     &NetworkStatsCalculator::m_renStatsFilename),
+                   MakeStringAccessor (&NetworkStatsCalculator::m_renFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwbStatsFilename",
                    "Filename for network bandwidth statistics.",
                    StringValue ("bwb_stats.txt"),
-                   MakeStringAccessor (
-                     &NetworkStatsCalculator::m_bwbStatsFilename),
+                   MakeStringAccessor (&NetworkStatsCalculator::m_bwbFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwgStatsFilename",
                    "Filename for GBR bandwidth statistics.",
                    StringValue ("bwg_stats.txt"),
-                   MakeStringAccessor (
-                     &NetworkStatsCalculator::m_bwgStatsFilename),
+                   MakeStringAccessor (&NetworkStatsCalculator::m_bwgFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwnStatsFilename",
                    "Filename for Non-GBR bandwidth statistics.",
                    StringValue ("bwn_stats.txt"),
-                   MakeStringAccessor (
-                     &NetworkStatsCalculator::m_bwnStatsFilename),
+                   MakeStringAccessor (&NetworkStatsCalculator::m_bwnFilename),
                    MakeStringChecker ())
     .AddAttribute ("SwtStatsFilename",
                    "FilName for flow table entries statistics.",
                    StringValue ("swt_stats.txt"),
-                   MakeStringAccessor (
-                     &NetworkStatsCalculator::m_swtStatsFilename),
+                   MakeStringAccessor (&NetworkStatsCalculator::m_swtFilename),
                    MakeStringChecker ());
   return tid;
 }
 
 void
-NetworkStatsCalculator::DumpStatistics (Time next)
+NetworkStatsCalculator::DumpStatistics (Time nextDump)
 {
   NS_LOG_FUNCTION (this);
 
@@ -339,7 +312,7 @@ NetworkStatsCalculator::DumpStatistics (Time next)
   << " " << right;
 
   double interval = GetActiveTime ().GetSeconds ();
-  std::vector<Ptr<ConnectionInfo> >::iterator it;
+  ConnInfoList_t::iterator it;
   for (it = m_connections.begin (); it != m_connections.end (); it++)
     {
       Ptr<ConnectionInfo> cInfo = *it;
@@ -397,8 +370,8 @@ NetworkStatsCalculator::DumpStatistics (Time next)
   *m_swtWrapper->GetStream () << std::endl;
 
   ResetCounters ();
-  Simulator::Schedule (
-    next, &NetworkStatsCalculator::DumpStatistics, this, next);
+  Simulator::Schedule (nextDump, &NetworkStatsCalculator::DumpStatistics, this,
+                       nextDump);
 }
 
 void
@@ -474,55 +447,49 @@ NetworkStatsCalculator::NotifyConstructionCompleted (void)
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
-  SetAttribute ("RegStatsFilename", StringValue (prefix + m_regStatsFilename));
-  SetAttribute ("RenStatsFilename", StringValue (prefix + m_renStatsFilename));
-  SetAttribute ("BwbStatsFilename", StringValue (prefix + m_bwbStatsFilename));
-  SetAttribute ("BwgStatsFilename", StringValue (prefix + m_bwgStatsFilename));
-  SetAttribute ("BwnStatsFilename", StringValue (prefix + m_bwnStatsFilename));
-  SetAttribute ("SwtStatsFilename", StringValue (prefix + m_swtStatsFilename));
+  SetAttribute ("RegStatsFilename", StringValue (prefix + m_regFilename));
+  SetAttribute ("RenStatsFilename", StringValue (prefix + m_renFilename));
+  SetAttribute ("BwbStatsFilename", StringValue (prefix + m_bwbFilename));
+  SetAttribute ("BwgStatsFilename", StringValue (prefix + m_bwgFilename));
+  SetAttribute ("BwnStatsFilename", StringValue (prefix + m_bwnFilename));
+  SetAttribute ("SwtStatsFilename", StringValue (prefix + m_swtFilename));
 
   // Opening output files and printing header lines
-  m_bwbWrapper = Create<OutputStreamWrapper> (m_bwbStatsFilename,
-                                              std::ios::out);
+  m_bwbWrapper = Create<OutputStreamWrapper> (m_bwbFilename, std::ios::out);
   *m_bwbWrapper->GetStream ()
   << left << fixed << setprecision (4)
   << setw (12) << "Time(s)";
 
-  m_bwgWrapper = Create<OutputStreamWrapper> (m_bwgStatsFilename,
-                                              std::ios::out);
+  m_bwgWrapper = Create<OutputStreamWrapper> (m_bwgFilename, std::ios::out);
   *m_bwgWrapper->GetStream ()
   << left << fixed << setprecision (4)
   << setw (12) << "Time(s)";
 
-  m_bwnWrapper = Create<OutputStreamWrapper> (m_bwnStatsFilename,
-                                              std::ios::out);
+  m_bwnWrapper = Create<OutputStreamWrapper> (m_bwnFilename, std::ios::out);
   *m_bwnWrapper->GetStream ()
   << left << fixed << setprecision (4)
   << setw (12) << "Time(s)";
 
-  m_regWrapper = Create<OutputStreamWrapper> (m_regStatsFilename,
-                                              std::ios::out);
+  m_regWrapper = Create<OutputStreamWrapper> (m_regFilename, std::ios::out);
   *m_regWrapper->GetStream ()
   << left << fixed << setprecision (4)
   << setw (12) << "Time(s)";
 
-  m_renWrapper = Create<OutputStreamWrapper> (m_renStatsFilename,
-                                              std::ios::out);
+  m_renWrapper = Create<OutputStreamWrapper> (m_renFilename, std::ios::out);
   *m_renWrapper->GetStream ()
   << left << fixed << setprecision (4)
   << setw (12) << "Time(s)";
 
-  m_swtWrapper = Create<OutputStreamWrapper> (m_swtStatsFilename,
-                                              std::ios::out);
+  m_swtWrapper = Create<OutputStreamWrapper> (m_swtFilename, std::ios::out);
   *m_swtWrapper->GetStream ()
   << left << fixed << setprecision (4)
   << setw (12) << "Time(s)";
 
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
-  Time next = timeValue.Get ();
-  Simulator::Schedule (
-    next, &NetworkStatsCalculator::DumpStatistics, this, next);
+  Time nextDump = timeValue.Get ();
+  Simulator::Schedule (nextDump, &NetworkStatsCalculator::DumpStatistics, this,
+                       nextDump);
 
   // Chain up
   Object::NotifyConstructionCompleted ();
@@ -563,8 +530,7 @@ LinkQueuesStatsCalculator::GetTypeId (void)
     .AddAttribute ("LnkStatsFilename",
                    "Filename for link queue traffic statistics.",
                    StringValue ("lnk_stats.txt"),
-                   MakeStringAccessor (
-                     &LinkQueuesStatsCalculator::m_lnkStatsFilename),
+                   MakeStringAccessor (&LinkQueuesStatsCalculator::m_lnkFilename),
                    MakeStringChecker ())
   ;
   return tid;
@@ -581,7 +547,7 @@ LinkQueuesStatsCalculator::SetQueues (Ptr<Queue> downQueue, Ptr<Queue> upQueue)
 }
 
 void
-LinkQueuesStatsCalculator::DumpStatistics (Time next)
+LinkQueuesStatsCalculator::DumpStatistics (Time nextDump)
 {
   NS_LOG_FUNCTION (this);
 
@@ -602,8 +568,8 @@ LinkQueuesStatsCalculator::DumpStatistics (Time next)
   << std::endl;
 
   ResetCounters ();
-  Simulator::Schedule (
-    next, &LinkQueuesStatsCalculator::DumpStatistics, this, next);
+  Simulator::Schedule (nextDump, &LinkQueuesStatsCalculator::DumpStatistics,
+                       this, nextDump);
 }
 
 void
@@ -623,11 +589,10 @@ LinkQueuesStatsCalculator::NotifyConstructionCompleted (void)
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
-  SetAttribute ("LnkStatsFilename", StringValue (prefix + m_lnkStatsFilename));
+  SetAttribute ("LnkStatsFilename", StringValue (prefix + m_lnkFilename));
 
   // Opening output files and printing header lines
-  m_lnkWrapper = Create<OutputStreamWrapper> (m_lnkStatsFilename,
-                                              std::ios::out);
+  m_lnkWrapper = Create<OutputStreamWrapper> (m_lnkFilename, std::ios::out);
   *m_lnkWrapper->GetStream ()
   << fixed << setprecision (4) << boolalpha
   << left
@@ -647,9 +612,9 @@ LinkQueuesStatsCalculator::NotifyConstructionCompleted (void)
 
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
-  Time next = timeValue.Get ();
-  Simulator::Schedule (
-    next, &LinkQueuesStatsCalculator::DumpStatistics, this, next);
+  Time nextDump = timeValue.Get ();
+  Simulator::Schedule (nextDump, &LinkQueuesStatsCalculator::DumpStatistics,
+                       this, nextDump);
 
   // Chain up
   Object::NotifyConstructionCompleted ();
@@ -686,7 +651,17 @@ LinkQueuesStatsCalculator::GetUpBitRate (void) const
 
 
 // ------------------------------------------------------------------------ //
-EpcS1uStatsCalculator::EpcS1uStatsCalculator (Ptr<EpcController> controller)
+TrafficStatsCalculator::TrafficStatsCalculator ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+TrafficStatsCalculator::~TrafficStatsCalculator ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+TrafficStatsCalculator::TrafficStatsCalculator (Ptr<EpcController> controller)
   : m_controller (controller)
 {
   NS_LOG_FUNCTION (this);
@@ -694,70 +669,52 @@ EpcS1uStatsCalculator::EpcS1uStatsCalculator (Ptr<EpcController> controller)
   // Connecting all EPC trace sinks for QoS monitoring
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uRx",
-    MakeCallback (&EpcS1uStatsCalculator::EpcOutputPacket, this));
+    MakeCallback (&TrafficStatsCalculator::EpcOutputPacket, this));
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uTx",
-    MakeCallback (&EpcS1uStatsCalculator::EpcInputPacket, this));
+    MakeCallback (&TrafficStatsCalculator::EpcInputPacket, this));
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::PgwUserApp/S5Rx",
-    MakeCallback (&EpcS1uStatsCalculator::EpcOutputPacket, this));
+    MakeCallback (&TrafficStatsCalculator::EpcOutputPacket, this));
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::PgwUserApp/S5Tx",
-    MakeCallback (&EpcS1uStatsCalculator::EpcInputPacket, this));
+    MakeCallback (&TrafficStatsCalculator::EpcInputPacket, this));
   Config::Connect (
     "/NodeList/*/$ns3::OFSwitch13Device/MeterDrop",
-    MakeCallback (&EpcS1uStatsCalculator::MeterDropPacket, this));
+    MakeCallback (&TrafficStatsCalculator::MeterDropPacket, this));
   Config::Connect (
     "/NodeList/*/$ns3::OFSwitch13Device/PortList/*/PortQueue/Drop",
-    MakeCallback (&EpcS1uStatsCalculator::QueueDropPacket, this));
+    MakeCallback (&TrafficStatsCalculator::QueueDropPacket, this));
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::SdmnClientApp/AppStart",
-    MakeCallback (&EpcS1uStatsCalculator::ResetEpcStatistics, this));
+    MakeCallback (&TrafficStatsCalculator::ResetCounters, this));
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::SdmnClientApp/AppStop",
-    MakeCallback (&EpcS1uStatsCalculator::DumpStatistics, this));
-}
-
-EpcS1uStatsCalculator::EpcS1uStatsCalculator ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-EpcS1uStatsCalculator::~EpcS1uStatsCalculator ()
-{
-  NS_LOG_FUNCTION (this);
+    MakeCallback (&TrafficStatsCalculator::DumpStatistics, this));
 }
 
 TypeId
-EpcS1uStatsCalculator::GetTypeId (void)
+TrafficStatsCalculator::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::EpcS1uStatsCalculator")
+  static TypeId tid = TypeId ("ns3::TrafficStatsCalculator")
     .SetParent<Object> ()
-    .AddConstructor<EpcS1uStatsCalculator> ()
+    .AddConstructor<TrafficStatsCalculator> ()
     .AddAttribute ("AppStatsFilename",
-                   "Filename for application QoS statistics.",
-                   StringValue ("app_stats.txt"),
-                   MakeStringAccessor (
-                     &EpcS1uStatsCalculator::m_appStatsFilename),
+                   "Filename for L7 traffic application QoS statistics.",
+                   StringValue ("traffic_l7_app_stats.txt"),
+                   MakeStringAccessor (&TrafficStatsCalculator::m_appFilename),
                    MakeStringChecker ())
     .AddAttribute ("EpcStatsFilename",
-                   "Filename for EPC QoS S1U statistics.",
-                   StringValue ("epc_stats.txt"),
-                   MakeStringAccessor (
-                     &EpcS1uStatsCalculator::m_epcStatsFilename),
+                   "Filename for L3 traffic EPC QoS statistics.",
+                   StringValue ("traffic_l3_epc_stats.txt"),
+                   MakeStringAccessor (&TrafficStatsCalculator::m_epcFilename),
                    MakeStringChecker ())
   ;
   return tid;
 }
 
 void
-EpcS1uStatsCalculator::SetController (Ptr<EpcController> controller)
-{
-  m_controller = controller;
-}
-
-void
-EpcS1uStatsCalculator::DoDispose ()
+TrafficStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_controller = 0;
@@ -766,19 +723,18 @@ EpcS1uStatsCalculator::DoDispose ()
 }
 
 void
-EpcS1uStatsCalculator::NotifyConstructionCompleted (void)
+TrafficStatsCalculator::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
-  SetAttribute ("AppStatsFilename", StringValue (prefix + m_appStatsFilename));
-  SetAttribute ("EpcStatsFilename", StringValue (prefix + m_epcStatsFilename));
+  SetAttribute ("AppStatsFilename", StringValue (prefix + m_appFilename));
+  SetAttribute ("EpcStatsFilename", StringValue (prefix + m_epcFilename));
 
   // Opening output files and printing header lines
-  m_appWrapper = Create<OutputStreamWrapper> (m_appStatsFilename,
-                                              std::ios::out);
+  m_appWrapper = Create<OutputStreamWrapper> (m_appFilename, std::ios::out);
   *m_appWrapper->GetStream ()
   << fixed << setprecision (4) << boolalpha
   << left
@@ -802,8 +758,7 @@ EpcS1uStatsCalculator::NotifyConstructionCompleted (void)
   << setw (17) << "Throughput(kbps)"
   << std::endl;
 
-  m_epcWrapper = Create<OutputStreamWrapper> (m_epcStatsFilename,
-                                              std::ios::out);
+  m_epcWrapper = Create<OutputStreamWrapper> (m_epcFilename, std::ios::out);
   *m_epcWrapper->GetStream ()
   << fixed << setprecision (4) << boolalpha
   << left
@@ -834,64 +789,8 @@ EpcS1uStatsCalculator::NotifyConstructionCompleted (void)
 }
 
 void
-EpcS1uStatsCalculator::MeterDropPacket (std::string context,
-                                        Ptr<const Packet> packet)
-{
-  NS_LOG_FUNCTION (this << context << packet);
-
-  EpcGtpuTag gtpuTag;
-  if (packet->PeekPacketTag (gtpuTag))
-    {
-      Ptr<QosStatsCalculator> qosStats =
-        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      qosStats->NotifyMeterDrop ();
-    }
-}
-
-void
-EpcS1uStatsCalculator::QueueDropPacket (std::string context,
-                                        Ptr<const Packet> packet)
-{
-  NS_LOG_FUNCTION (this << context << packet);
-
-  EpcGtpuTag gtpuTag;
-  if (packet->PeekPacketTag (gtpuTag))
-    {
-      Ptr<QosStatsCalculator> qosStats =
-        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      qosStats->NotifyQueueDrop ();
-    }
-}
-
-void
-EpcS1uStatsCalculator::EpcInputPacket (std::string context,
-                                       Ptr<const Packet> packet)
-{
-  EpcGtpuTag gtpuTag;
-  if (packet->PeekPacketTag (gtpuTag))
-    {
-      Ptr<QosStatsCalculator> qosStats =
-        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      qosStats->NotifyTx (packet->GetSize ());
-    }
-}
-
-void
-EpcS1uStatsCalculator::EpcOutputPacket (std::string context,
-                                        Ptr<const Packet> packet)
-{
-  EpcGtpuTag gtpuTag;
-  if (packet->PeekPacketTag (gtpuTag))
-    {
-      Ptr<QosStatsCalculator> qosStats =
-        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      qosStats->NotifyRx (packet->GetSize (), gtpuTag.GetTimestamp ());
-    }
-}
-
-void
-EpcS1uStatsCalculator::DumpStatistics (std::string context,
-                                       Ptr<const SdmnClientApp> app)
+TrafficStatsCalculator::DumpStatistics (std::string context,
+                                        Ptr<const SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << context << app->GetTeid ());
   NS_ASSERT_MSG (m_controller, "Invalid controller application.");
@@ -901,9 +800,8 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context,
   Ptr<const QosStatsCalculator> epcStats;
   Ptr<const QosStatsCalculator> appStats;
 
-  bool uplink =
-    (app->GetInstanceTypeId () != RealTimeVideoClient::GetTypeId ());
-  if (uplink)
+  // The real time video streaming is the only app with no uplink traffic.
+  if (app->GetInstanceTypeId () != RealTimeVideoClient::GetTypeId ())
     {
       // Dump uplink statistics
       epcStats = GetQosStatsFromTeid (teid, false);
@@ -1010,23 +908,76 @@ EpcS1uStatsCalculator::DumpStatistics (std::string context,
 }
 
 void
-EpcS1uStatsCalculator::ResetEpcStatistics (std::string context,
-                                           Ptr<const SdmnClientApp> app)
+TrafficStatsCalculator::ResetCounters (std::string context,
+                                       Ptr<const SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << context << app);
 
-  uint32_t teid = app->GetTeid ();
+  GetQosStatsFromTeid (app->GetTeid (),  true)->ResetCounters ();
+  GetQosStatsFromTeid (app->GetTeid (), false)->ResetCounters ();
+}
 
-  GetQosStatsFromTeid (teid, true)->ResetCounters ();
-  GetQosStatsFromTeid (teid, false)->ResetCounters ();
+void
+TrafficStatsCalculator::MeterDropPacket (std::string context,
+                                         Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << context << packet);
+
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      Ptr<QosStatsCalculator> qosStats =
+        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      qosStats->NotifyMeterDrop ();
+    }
+}
+
+void
+TrafficStatsCalculator::QueueDropPacket (std::string context,
+                                         Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << context << packet);
+
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      Ptr<QosStatsCalculator> qosStats =
+        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      qosStats->NotifyQueueDrop ();
+    }
+}
+
+void
+TrafficStatsCalculator::EpcInputPacket (std::string context,
+                                        Ptr<const Packet> packet)
+{
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      Ptr<QosStatsCalculator> qosStats =
+        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      qosStats->NotifyTx (packet->GetSize ());
+    }
+}
+
+void
+TrafficStatsCalculator::EpcOutputPacket (std::string context,
+                                         Ptr<const Packet> packet)
+{
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      Ptr<QosStatsCalculator> qosStats =
+        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      qosStats->NotifyRx (packet->GetSize (), gtpuTag.GetTimestamp ());
+    }
 }
 
 Ptr<QosStatsCalculator>
-EpcS1uStatsCalculator::GetQosStatsFromTeid (uint32_t teid, bool isDown)
+TrafficStatsCalculator::GetQosStatsFromTeid (uint32_t teid, bool isDown)
 {
   Ptr<QosStatsCalculator> qosStats = 0;
-  TeidQosMap_t::iterator it;
-  it = m_qosStats.find (teid);
+  TeidQosMap_t::iterator it = m_qosStats.find (teid);
   if (it != m_qosStats.end ())
     {
       QosStatsPair_t value = it->second;
@@ -1035,8 +986,8 @@ EpcS1uStatsCalculator::GetQosStatsFromTeid (uint32_t teid, bool isDown)
   else
     {
       // Create and insert the structure
-      QosStatsPair_t pair (Create<QosStatsCalculator> (),
-                           Create<QosStatsCalculator> ());
+      QosStatsPair_t pair (
+        Create<QosStatsCalculator> (), Create<QosStatsCalculator> ());
       std::pair <uint32_t, QosStatsPair_t> entry (teid, pair);
       std::pair <TeidQosMap_t::iterator, bool> ret;
       ret = m_qosStats.insert (entry);

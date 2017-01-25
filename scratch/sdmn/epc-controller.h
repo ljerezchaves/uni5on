@@ -541,7 +541,7 @@ protected:
 
 private:
   OFSwitch13DeviceContainer      m_ofDevices;       //!< OpenFlow devices.
-  Ptr<ControllerStatsCalculator> m_controllerStats; //!< Admission statistics.
+  Ptr<AdmissionStatsCalculator>  m_admissionStats;  //!< Admission statistics.
   uint32_t                       m_pgwDpId;         //!< P-GW datapath ID.
   uint32_t                       m_pgwS5Port;       //!< P-GW S5 port no.
 
