@@ -30,7 +30,7 @@ namespace ns3 {
 
 class ConnectionInfo;
 class LinkQueuesStatsCalculator;
-class NetworkStatsCalculator;
+class BackhaulStatsCalculator;
 class EpcController;
 
 /**
@@ -267,7 +267,7 @@ private:
   // Statistics
   Ptr<LinkQueuesStatsCalculator>  m_pgwStats;         //!< Gateway statistics.
   Ptr<LinkQueuesStatsCalculator>  m_webStats;         //!< Internet statistics.
-  Ptr<NetworkStatsCalculator>     m_epcStats;         //!< Backhaul statistics.
+  Ptr<BackhaulStatsCalculator>    m_epcStats;         //!< Backhaul statistics.
 
   /** Map saving Node / Switch indexes. */
   typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;

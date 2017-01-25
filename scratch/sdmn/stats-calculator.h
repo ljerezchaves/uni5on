@@ -40,7 +40,8 @@ class EpcController;
 
 /**
  * \ingroup sdmn
- * This class monitors OpenFlow EPC controller statistics.
+ * This class monitors the SDN EPC bearer admission control and dump bearer
+ * requests and blocking statistics.
  */
 class AdmissionStatsCalculator : public Object
 {
@@ -96,13 +97,14 @@ private:
 // ------------------------------------------------------------------------ //
 /**
  * \ingroup sdmn
- * This class monitors OpenFlow EPC network statistics.
+ * This class monitors the backhaul OpenFlow network and dump bandwidth usage
+ * and resource reservation statistics on links between OpenFlow switches.
  */
-class NetworkStatsCalculator : public Object
+class BackhaulStatsCalculator : public Object
 {
 public:
-  NetworkStatsCalculator ();  //!< Default constructor
-  virtual ~NetworkStatsCalculator (); //!< Default destructor
+  BackhaulStatsCalculator ();          //!< Default constructor
+  virtual ~BackhaulStatsCalculator (); //!< Default destructor
 
   /**
    * Register this type.
@@ -112,14 +114,14 @@ public:
 
   /**
    * Notify this stats calculator of a new connection between two switches in
-   * the OpenFlow network.
+   * the OpenFlow backhaul network.
    * \param cInfo The connection information and metadata.
    */
   void NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo);
 
   /**
-   * Notify this stats calculator that all connection between switches have
-   * already been configure and the topology is finished.
+   * Notify this stats calculator that all connection between OpenFlow switches
+   * have already been configure and the backhaul topology is done.
    * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
    */
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
@@ -128,7 +130,7 @@ protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
-  // Inherited from ObjectBase
+  // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
 
 private:
@@ -152,7 +154,7 @@ private:
   /** A Vector of connection information objects. */
   typedef std::vector<Ptr<ConnectionInfo> > ConnInfoList_t;
 
-  OFSwitch13DeviceContainer m_devices;        //!< Switch devices
+//  OFSwitch13DeviceContainer m_devices;        //!< Switch devices
   ConnInfoList_t            m_connections;    //!< Switch connections
   Time                      m_lastResetTime;  //!< Last reset time
   std::string               m_regFilename;    //!< RegStats filename
@@ -165,8 +167,8 @@ private:
   Ptr<OutputStreamWrapper>  m_bwgWrapper;     //!< BwgStats file wrapper
   std::string               m_bwnFilename;    //!< BwnStats filename
   Ptr<OutputStreamWrapper>  m_bwnWrapper;     //!< BwnStats file wrapper
-  std::string               m_swtFilename;    //!< SwtStats filename
-  Ptr<OutputStreamWrapper>  m_swtWrapper;     //!< SwtStats file wrapper
+//  std::string               m_swtFilename;    //!< SwtStats filename
+//  Ptr<OutputStreamWrapper>  m_swtWrapper;     //!< SwtStats file wrapper
 };
 
 

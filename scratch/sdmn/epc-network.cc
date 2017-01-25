@@ -67,7 +67,7 @@ EpcNetwork::EpcNetwork ()
       "LnkStatsFilename", StringValue ("pgw_stats.txt"));
   m_webStats = CreateObjectWithAttributes<LinkQueuesStatsCalculator> (
       "LnkStatsFilename", StringValue ("web_stats.txt"));
-  m_epcStats = CreateObject<NetworkStatsCalculator> ();
+  m_epcStats = CreateObject<BackhaulStatsCalculator> ();
 }
 
 EpcNetwork::~EpcNetwork ()
@@ -220,10 +220,10 @@ EpcNetwork::NotifyConstructionCompleted (void)
   // Connect EPC stats calculator to trace sources *before* topology creation.
   TraceConnectWithoutContext (
     "TopologyBuilt", MakeCallback (
-      &NetworkStatsCalculator::NotifyTopologyBuilt, m_epcStats));
+      &BackhaulStatsCalculator::NotifyTopologyBuilt, m_epcStats));
   TraceConnectWithoutContext (
     "NewSwitchConnection", MakeCallback (
-      &NetworkStatsCalculator::NotifyNewSwitchConnection, m_epcStats));
+      &BackhaulStatsCalculator::NotifyNewSwitchConnection, m_epcStats));
 
   // Configuring CSMA helper for connecting EPC nodes (P-GW and S-GWs) to the
   // backhaul topology. This same helper will be used to connect the P-GW to
