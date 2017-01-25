@@ -36,31 +36,31 @@ LteNetwork::LteNetwork (Ptr<EpcHelper> epcHelper)
   std::string prefix = stringValue.Get ();
 
   Config::SetDefault ("ns3::RadioBearerStatsCalculator::DlRlcOutputFilename",
-                      StringValue (prefix + "dl_rlc_lte.txt"));
+                      StringValue (prefix + "dl_rlc_lte.log"));
   Config::SetDefault ("ns3::RadioBearerStatsCalculator::UlRlcOutputFilename",
-                      StringValue (prefix + "ul_rlc_lte.txt"));
+                      StringValue (prefix + "ul_rlc_lte.log"));
   Config::SetDefault ("ns3::RadioBearerStatsCalculator::DlPdcpOutputFilename",
-                      StringValue (prefix + "dl_pdcp_lte.txt"));
+                      StringValue (prefix + "dl_pdcp_lte.log"));
   Config::SetDefault ("ns3::RadioBearerStatsCalculator::UlPdcpOutputFilename",
-                      StringValue (prefix + "ul_pdcp_lte.txt"));
+                      StringValue (prefix + "ul_pdcp_lte.log"));
   Config::SetDefault ("ns3::MacStatsCalculator::DlOutputFilename",
-                      StringValue (prefix + "dl_mac_lte.txt"));
+                      StringValue (prefix + "dl_mac_lte.log"));
   Config::SetDefault ("ns3::MacStatsCalculator::UlOutputFilename",
-                      StringValue (prefix + "ul_mac_lte.txt"));
+                      StringValue (prefix + "ul_mac_lte.log"));
   Config::SetDefault ("ns3::PhyStatsCalculator::DlRsrpSinrFilename",
-                      StringValue (prefix + "dl_rsrp_sinr_lte.txt"));
+                      StringValue (prefix + "dl_rsrp_sinr_lte.log"));
   Config::SetDefault ("ns3::PhyStatsCalculator::UlSinrFilename",
-                      StringValue (prefix + "ul_sinr_lte.txt"));
+                      StringValue (prefix + "ul_sinr_lte.log"));
   Config::SetDefault ("ns3::PhyStatsCalculator::UlInterferenceFilename",
-                      StringValue (prefix + "ul_interference_lte.txt"));
+                      StringValue (prefix + "ul_interference_lte.log"));
   Config::SetDefault ("ns3::PhyRxStatsCalculator::DlRxOutputFilename",
-                      StringValue (prefix + "dl_rx_phy_lte.txt"));
+                      StringValue (prefix + "dl_rx_phy_lte.log"));
   Config::SetDefault ("ns3::PhyRxStatsCalculator::UlRxOutputFilename",
-                      StringValue (prefix + "ul_rx_phy_lte.txt"));
+                      StringValue (prefix + "ul_rx_phy_lte.log"));
   Config::SetDefault ("ns3::PhyTxStatsCalculator::DlTxOutputFilename",
-                      StringValue (prefix + "dl_tx_phy_lte.txt"));
+                      StringValue (prefix + "dl_tx_phy_lte.log"));
   Config::SetDefault ("ns3::PhyTxStatsCalculator::UlTxOutputFilename",
-                      StringValue (prefix + "ul_tx_phy_lte.txt"));
+                      StringValue (prefix + "ul_tx_phy_lte.log"));
 }
 
 LteNetwork::LteNetwork ()

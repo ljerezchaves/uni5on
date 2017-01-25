@@ -49,8 +49,8 @@ massif.*
 syntax: glob
 TAGS
 waf
-topos/*_stats.txt
-topos/*_lte.txt
+topos/*_stats.log
+topos/*_lte.log
 topos/*.dat
 topos/*.gpi
 topos/*.pdf

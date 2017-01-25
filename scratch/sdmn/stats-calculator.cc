@@ -65,13 +65,13 @@ AdmissionStatsCalculator::GetTypeId (void)
     .AddConstructor<AdmissionStatsCalculator> ()
     .AddAttribute ("AdmStatsFilename",
                    "Filename for bearer admission control statistics.",
-                   StringValue ("admission_counters_stats.txt"),
+                   StringValue ("admission_counters_stats.log"),
                    MakeStringAccessor (
                      &AdmissionStatsCalculator::m_admFilename),
                    MakeStringChecker ())
     .AddAttribute ("BrqStatsFilename",
                    "Filename for bearer request statistics.",
-                   StringValue ("admission_requests_stats.txt"),
+                   StringValue ("admission_requests_stats.log"),
                    MakeStringAccessor (
                      &AdmissionStatsCalculator::m_brqFilename),
                    MakeStringChecker ())
@@ -250,32 +250,32 @@ NetworkStatsCalculator::GetTypeId (void)
     .AddConstructor<NetworkStatsCalculator> ()
     .AddAttribute ("RegStatsFilename",
                    "Filename for GBR reservation statistics.",
-                   StringValue ("reg_stats.txt"),
+                   StringValue ("reg_stats.log"),
                    MakeStringAccessor (&NetworkStatsCalculator::m_regFilename),
                    MakeStringChecker ())
     .AddAttribute ("RenStatsFilename",
                    "Filename for Non-GBR allowed bandwidth statistics.",
-                   StringValue ("ren_stats.txt"),
+                   StringValue ("ren_stats.log"),
                    MakeStringAccessor (&NetworkStatsCalculator::m_renFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwbStatsFilename",
                    "Filename for network bandwidth statistics.",
-                   StringValue ("bwb_stats.txt"),
+                   StringValue ("bwb_stats.log"),
                    MakeStringAccessor (&NetworkStatsCalculator::m_bwbFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwgStatsFilename",
                    "Filename for GBR bandwidth statistics.",
-                   StringValue ("bwg_stats.txt"),
+                   StringValue ("bwg_stats.log"),
                    MakeStringAccessor (&NetworkStatsCalculator::m_bwgFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwnStatsFilename",
                    "Filename for Non-GBR bandwidth statistics.",
-                   StringValue ("bwn_stats.txt"),
+                   StringValue ("bwn_stats.log"),
                    MakeStringAccessor (&NetworkStatsCalculator::m_bwnFilename),
                    MakeStringChecker ())
     .AddAttribute ("SwtStatsFilename",
                    "FilName for flow table entries statistics.",
-                   StringValue ("swt_stats.txt"),
+                   StringValue ("swt_stats.log"),
                    MakeStringAccessor (&NetworkStatsCalculator::m_swtFilename),
                    MakeStringChecker ());
   return tid;
@@ -529,7 +529,7 @@ LinkQueuesStatsCalculator::GetTypeId (void)
     .AddConstructor<LinkQueuesStatsCalculator> ()
     .AddAttribute ("LnkStatsFilename",
                    "Filename for link queue traffic statistics.",
-                   StringValue ("lnk_stats.txt"),
+                   StringValue ("lnk_stats.log"),
                    MakeStringAccessor (&LinkQueuesStatsCalculator::m_lnkFilename),
                    MakeStringChecker ())
   ;
@@ -701,12 +701,12 @@ TrafficStatsCalculator::GetTypeId (void)
     .AddConstructor<TrafficStatsCalculator> ()
     .AddAttribute ("AppStatsFilename",
                    "Filename for L7 traffic application QoS statistics.",
-                   StringValue ("traffic_l7_app_stats.txt"),
+                   StringValue ("traffic_l7_app_stats.log"),
                    MakeStringAccessor (&TrafficStatsCalculator::m_appFilename),
                    MakeStringChecker ())
     .AddAttribute ("EpcStatsFilename",
                    "Filename for L3 traffic EPC QoS statistics.",
-                   StringValue ("traffic_l3_epc_stats.txt"),
+                   StringValue ("traffic_l3_epc_stats.log"),
                    MakeStringAccessor (&TrafficStatsCalculator::m_epcFilename),
                    MakeStringChecker ())
   ;
