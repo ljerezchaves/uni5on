@@ -22,7 +22,6 @@
 #define SDMN_STATS_CALCULATOR_H
 
 #include <ns3/nstime.h>
-#include <ns3/queue.h>
 #include <ns3/ofswitch13-device-container.h>
 #include <ns3/global-value.h>
 #include "apps/sdmn-client-app.h"
@@ -169,77 +168,6 @@ private:
   Ptr<OutputStreamWrapper>  m_bwnWrapper;     //!< BwnStats file wrapper
 //  std::string               m_swtFilename;    //!< SwtStats filename
 //  Ptr<OutputStreamWrapper>  m_swtWrapper;     //!< SwtStats file wrapper
-};
-
-
-// ------------------------------------------------------------------------ //
-/**
- * \ingroup sdmn
- * This class monitors link queues' statistics.
- */
-class LinkQueuesStatsCalculator : public Object
-{
-public:
-  LinkQueuesStatsCalculator ();  //!< Default constructor
-  virtual ~LinkQueuesStatsCalculator (); //!< Default destructor
-
-  /**
-   * Register this type.
-   * \return The object TypeId.
-   */
-  static TypeId GetTypeId (void);
-
-  /**
-   * Set queue pointers for statistics dump.
-   * \param downQueue The downlink tx queue at server node.
-   * \param upQueue The uplink tx queue at client node.
-   */
-  void SetQueues (Ptr<Queue> downQueue, Ptr<Queue> upQueue);
-
-protected:
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  // Inherited from ObjectBase
-  virtual void NotifyConstructionCompleted (void);
-
-private:
-  /**
-   * Dump statistics into file.
-   * \param nextDump The interval before next dump.
-   */
-  void DumpStatistics (Time nextDump);
-
-  /**
-   * Reset internal counters.
-   */
-  void ResetCounters ();
-
-  /**
-   * Get the active time value since last reset.
-   * \return The time value.
-   */
-  Time GetActiveTime (void) const;
-
-  /**
-   * Get the downlink bit rate.
-   * \return The bit rate.
-   */
-  uint64_t GetDownBitRate (void) const;
-
-  /**
-   * Get the uplink bit rate.
-   * \return The bit rate.
-   */
-  uint64_t GetUpBitRate (void) const;
-
-  uint32_t                  m_pgwDownBytes;   //!< Pgw traffic downlink bytes
-  uint32_t                  m_pgwUpBytes;     //!< Pgw traffic uplink bytes
-  Ptr<Queue>                m_downQueue;      //!< Internet downlink queue
-  Ptr<Queue>                m_upQueue;        //!< Internet uplink queue
-  Time                      m_lastResetTime;  //!< Last reset time
-  std::string               m_lnkFilename;    //!< LinkStats filename
-  Ptr<OutputStreamWrapper>  m_lnkWrapper;     //!< LinkStats file wrapper
 };
 
 

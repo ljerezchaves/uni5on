@@ -29,7 +29,6 @@
 namespace ns3 {
 
 class ConnectionInfo;
-class LinkQueuesStatsCalculator;
 class BackhaulStatsCalculator;
 class EpcController;
 
@@ -265,8 +264,6 @@ private:
   Ptr<Node>                       m_webNode;          //!< Web server node.
   Ipv4Address                     m_webSgiIpAddr;     //!< Web server IP addr.
   // Statistics
-  Ptr<LinkQueuesStatsCalculator>  m_pgwStats;         //!< Gateway statistics.
-  Ptr<LinkQueuesStatsCalculator>  m_webStats;         //!< Internet statistics.
   Ptr<BackhaulStatsCalculator>    m_epcStats;         //!< Backhaul statistics.
 
   /** Map saving Node / Switch indexes. */

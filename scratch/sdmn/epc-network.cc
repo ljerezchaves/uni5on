@@ -37,8 +37,6 @@ EpcNetwork::EpcNetwork ()
     m_epcCtrlNode (0),
     m_pgwNode (0),
     m_webNode (0),
-    m_pgwStats (0),
-    m_webStats (0),
     m_epcStats (0)
 {
   NS_LOG_FUNCTION (this);
@@ -63,10 +61,6 @@ EpcNetwork::EpcNetwork ()
   m_pgwSwitchDev = (m_ofSwitchHelper->InstallSwitch (m_pgwNode)).Get (0);
 
   // Creating stats calculators
-  m_pgwStats = CreateObjectWithAttributes<LinkQueuesStatsCalculator> (
-      "LnkStatsFilename", StringValue ("pgw_stats.txt"));
-  m_webStats = CreateObjectWithAttributes<LinkQueuesStatsCalculator> (
-      "LnkStatsFilename", StringValue ("web_stats.txt"));
   m_epcStats = CreateObject<BackhaulStatsCalculator> ();
 }
 
@@ -205,8 +199,6 @@ EpcNetwork::DoDispose ()
   m_epcCtrlNode = 0;
   m_epcCtrlApp = 0;
   m_pgwNode = 0;
-  m_pgwStats = 0;
-  m_webStats = 0;
   m_epcStats = 0;
   m_nodeSwitchMap.clear ();
   Object::DoDispose ();
@@ -547,10 +539,6 @@ EpcNetwork::ConfigureGatewayAndInternet ()
   m_epcCtrlApp->NewS5Attach (pgwS5Dev, m_pgwS5Addr, swDev, swIdx, swS5PortNum);
   m_epcCtrlApp->NewSgiAttach (m_pgwSwitchDev, pgwSgiDev, m_pgwSgiAddr,
                               pgwSgiPortNum, pgwS5PortNum, m_webSgiIpAddr);
-
-  // Configure P-GW and Internet link statistics
-  m_pgwStats->SetQueues (pgwS5Dev->GetQueue (), swS5Dev->GetQueue ());
-  m_webStats->SetQueues (webSgiDev->GetQueue (), pgwSgiDev->GetQueue ());
 
   // Setting the default P-GW gateway address.
   // This address will be used to set the static route at UEs.
