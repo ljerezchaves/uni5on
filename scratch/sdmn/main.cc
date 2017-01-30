@@ -308,6 +308,14 @@ void ForceDefaults ()
   // from https://codereview.appspot.com/187880044/
   //
   Config::SetDefault ("ns3::CsmaChannel::FullDuplex", BooleanValue (true));
+
+  //
+  // Adjust the default timeout interval for periodically dumping switch
+  // statistics into log files.
+  //
+  TimeValue timeVal;
+  GlobalValue::GetValueByName ("DumpStatsTimeout", timeVal);
+  Config::SetDefault ("ns3::OFSwitch13StatsCalculator::DumpTimeout", timeVal);
 }
 
 void

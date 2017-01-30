@@ -64,13 +64,13 @@ AdmissionStatsCalculator::GetTypeId (void)
     .AddConstructor<AdmissionStatsCalculator> ()
     .AddAttribute ("AdmStatsFilename",
                    "Filename for bearer admission and counter statistics.",
-                   StringValue ("bearer_counters.log"),
+                   StringValue ("bearer-counters.log"),
                    MakeStringAccessor (
                      &AdmissionStatsCalculator::m_admFilename),
                    MakeStringChecker ())
     .AddAttribute ("BrqStatsFilename",
                    "Filename for bearer request statistics.",
-                   StringValue ("bearer_requests.log"),
+                   StringValue ("bearer-requests.log"),
                    MakeStringAccessor (
                      &AdmissionStatsCalculator::m_brqFilename),
                    MakeStringChecker ())
@@ -264,31 +264,31 @@ BackhaulStatsCalculator::GetTypeId (void)
     .AddConstructor<BackhaulStatsCalculator> ()
     .AddAttribute ("RegStatsFilename",
                    "Filename for GBR reservation statistics.",
-                   StringValue ("backhaul_reserve_gbr.log"),
+                   StringValue ("ofnetwork-reserve-gbr.log"),
                    MakeStringAccessor (
                      &BackhaulStatsCalculator::m_regFilename),
                    MakeStringChecker ())
     .AddAttribute ("RenStatsFilename",
                    "Filename for Non-GBR allowed bandwidth statistics.",
-                   StringValue ("backhaul_reserve_nongbr.log"),
+                   StringValue ("ofnetwork-reserve-nongbr.log"),
                    MakeStringAccessor (
                      &BackhaulStatsCalculator::m_renFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwbStatsFilename",
                    "Filename for network bandwidth statistics.",
-                   StringValue ("backhaul_throughput_all.log"),
+                   StringValue ("ofnetwork-throughput-all.log"),
                    MakeStringAccessor (
                      &BackhaulStatsCalculator::m_bwbFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwgStatsFilename",
                    "Filename for GBR bandwidth statistics.",
-                   StringValue ("backhaul_throughput_gbr.log"),
+                   StringValue ("ofnetwork-throughput-gbr.log"),
                    MakeStringAccessor (
                      &BackhaulStatsCalculator::m_bwgFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwnStatsFilename",
                    "Filename for Non-GBR bandwidth statistics.",
-                   StringValue ("backhaul_throughput_nongbr.log"),
+                   StringValue ("ofnetwork-throughput-nongbr.log"),
                    MakeStringAccessor (
                      &BackhaulStatsCalculator::m_bwnFilename),
                    MakeStringChecker ());
@@ -540,12 +540,12 @@ TrafficStatsCalculator::GetTypeId (void)
     .AddConstructor<TrafficStatsCalculator> ()
     .AddAttribute ("AppStatsFilename",
                    "Filename for L7 traffic application QoS statistics.",
-                   StringValue ("traffic_qos_l7_app.log"),
+                   StringValue ("traffic-qos-l7-app.log"),
                    MakeStringAccessor (&TrafficStatsCalculator::m_appFilename),
                    MakeStringChecker ())
     .AddAttribute ("EpcStatsFilename",
                    "Filename for L3 traffic EPC QoS statistics.",
-                   StringValue ("traffic_qos_l3_epc.log"),
+                   StringValue ("traffic-qos-l3-epc.log"),
                    MakeStringAccessor (&TrafficStatsCalculator::m_epcFilename),
                    MakeStringChecker ())
   ;

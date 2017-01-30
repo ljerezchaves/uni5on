@@ -252,6 +252,12 @@ EpcNetwork::NotifyConstructionCompleted (void)
   // change the OpenFlow network configuration.
   m_ofSwitchHelper->CreateOpenFlowChannels ();
 
+  // Enable OpenFlow switch statistics.
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+  m_ofSwitchHelper->EnableDatapathStats (prefix + "ofswitch-stats", true);
+
   // Chain up
   Object::NotifyConstructionCompleted ();
 }
