@@ -45,8 +45,8 @@ class EpcController;
 class AdmissionStatsCalculator : public Object
 {
 public:
-  AdmissionStatsCalculator ();          //!< Default constructor
-  virtual ~AdmissionStatsCalculator (); //!< Default destructor
+  AdmissionStatsCalculator ();          //!< Default constructor.
+  virtual ~AdmissionStatsCalculator (); //!< Default destructor.
 
   /**
    * Register this type.
@@ -102,8 +102,8 @@ private:
 class BackhaulStatsCalculator : public Object
 {
 public:
-  BackhaulStatsCalculator ();          //!< Default constructor
-  virtual ~BackhaulStatsCalculator (); //!< Default destructor
+  BackhaulStatsCalculator ();          //!< Default constructor.
+  virtual ~BackhaulStatsCalculator (); //!< Default destructor.
 
   /**
    * Register this type.
@@ -126,7 +126,7 @@ public:
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
 
 protected:
-  /** Destructor implementation */
+  /** Destructor implementation. */
   virtual void DoDispose ();
 
   // Inherited from ObjectBase.
@@ -144,16 +144,9 @@ private:
    */
   void ResetCounters ();
 
-  /**
-   * Get the active time value since last reset.
-   * \return The time value.
-   */
-  Time GetActiveTime (void) const;
-
   /** A Vector of connection information objects. */
   typedef std::vector<Ptr<ConnectionInfo> > ConnInfoList_t;
 
-//  OFSwitch13DeviceContainer m_devices;        //!< Switch devices
   ConnInfoList_t            m_connections;    //!< Switch connections
   Time                      m_lastResetTime;  //!< Last reset time
   std::string               m_regFilename;    //!< RegStats filename
@@ -166,8 +159,6 @@ private:
   Ptr<OutputStreamWrapper>  m_bwgWrapper;     //!< BwgStats file wrapper
   std::string               m_bwnFilename;    //!< BwnStats filename
   Ptr<OutputStreamWrapper>  m_bwnWrapper;     //!< BwnStats file wrapper
-//  std::string               m_swtFilename;    //!< SwtStats filename
-//  Ptr<OutputStreamWrapper>  m_swtWrapper;     //!< SwtStats file wrapper
 };
 
 
@@ -181,8 +172,8 @@ private:
 class TrafficStatsCalculator : public Object
 {
 public:
-  TrafficStatsCalculator ();          //!< Default constructor
-  virtual ~TrafficStatsCalculator (); //!< Default destructor
+  TrafficStatsCalculator ();          //!< Default constructor.
+  virtual ~TrafficStatsCalculator (); //!< Default destructor.
 
   /**
    * Complete constructor.
@@ -200,7 +191,7 @@ protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
-  // Inherited from ObjectBase
+  // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
 
 private:

@@ -58,19 +58,18 @@ AdmissionStatsCalculator::~AdmissionStatsCalculator ()
 TypeId
 AdmissionStatsCalculator::GetTypeId (void)
 {
-  // Admission
   static TypeId tid = TypeId ("ns3::AdmissionStatsCalculator")
     .SetParent<Object> ()
     .AddConstructor<AdmissionStatsCalculator> ()
     .AddAttribute ("AdmStatsFilename",
                    "Filename for bearer admission control statistics.",
-                   StringValue ("admission_counters_stats.log"),
+                   StringValue ("admission_counters.log"),
                    MakeStringAccessor (
                      &AdmissionStatsCalculator::m_admFilename),
                    MakeStringChecker ())
     .AddAttribute ("BrqStatsFilename",
                    "Filename for bearer request statistics.",
-                   StringValue ("admission_requests_stats.log"),
+                   StringValue ("bearer_requests.log"),
                    MakeStringAccessor (
                      &AdmissionStatsCalculator::m_brqFilename),
                    MakeStringChecker ())
@@ -154,7 +153,6 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   SetAttribute ("AdmStatsFilename", StringValue (prefix + m_admFilename));
   SetAttribute ("BrqStatsFilename", StringValue (prefix + m_brqFilename));
 
-  // Opening output files and printing header lines
   m_admWrapper = Create<OutputStreamWrapper> (m_admFilename, std::ios::out);
   *m_admWrapper->GetStream ()
   << fixed << setprecision (4)
@@ -188,11 +186,10 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
 
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
-  Time nextDump = timeValue.Get ();
-  Simulator::Schedule (nextDump, &AdmissionStatsCalculator::DumpStatistics,
-                       this, nextDump);
+  Time firstDump = timeValue.Get ();
+  Simulator::Schedule (firstDump, &AdmissionStatsCalculator::DumpStatistics,
+                       this, firstDump);
 
-  // Chain up
   Object::NotifyConstructionCompleted ();
 }
 
@@ -249,39 +246,34 @@ BackhaulStatsCalculator::GetTypeId (void)
     .AddConstructor<BackhaulStatsCalculator> ()
     .AddAttribute ("RegStatsFilename",
                    "Filename for GBR reservation statistics.",
-                   StringValue ("backhaul_reserve_gbr_stats.log"),
+                   StringValue ("backhaul_reserve_gbr.log"),
                    MakeStringAccessor (
                      &BackhaulStatsCalculator::m_regFilename),
                    MakeStringChecker ())
     .AddAttribute ("RenStatsFilename",
                    "Filename for Non-GBR allowed bandwidth statistics.",
-                   StringValue ("backhaul_reserve_nongbr_stats.log"),
+                   StringValue ("backhaul_reserve_nongbr.log"),
                    MakeStringAccessor (
                      &BackhaulStatsCalculator::m_renFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwbStatsFilename",
                    "Filename for network bandwidth statistics.",
-                   StringValue ("backhaul_throughput_stats.log"),
+                   StringValue ("backhaul_throughput_all.log"),
                    MakeStringAccessor (
                      &BackhaulStatsCalculator::m_bwbFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwgStatsFilename",
                    "Filename for GBR bandwidth statistics.",
-                   StringValue ("backhaul_throughput_gbr_stats.log"),
+                   StringValue ("backhaul_throughput_gbr.log"),
                    MakeStringAccessor (
                      &BackhaulStatsCalculator::m_bwgFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwnStatsFilename",
                    "Filename for Non-GBR bandwidth statistics.",
-                   StringValue ("backhaul_throughput_nongbr_stats.log"),
+                   StringValue ("backhaul_throughput_nongbr.log"),
                    MakeStringAccessor (
                      &BackhaulStatsCalculator::m_bwnFilename),
                    MakeStringChecker ());
-//    .AddAttribute ("SwtStatsFilename",
-//                   "FilName for flow table entries statistics.",
-//                   StringValue ("swt_stats.log"),
-//                   MakeStringAccessor (&BackhaulStatsCalculator::m_swtFilename),
-//                   MakeStringChecker ());
   return tid;
 }
 
@@ -290,14 +282,13 @@ BackhaulStatsCalculator::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
 
-  // Save this connection info for further usage
   m_connections.push_back (cInfo);
   SwitchPair_t key = cInfo->GetSwitchIndexPair ();
 
   *m_bwbWrapper->GetStream ()
   << right << setw (10) << key.first  << "-"
   << left  << setw (10) << key.second << "   ";
- // this is the network throughput  
+  
   *m_bwgWrapper->GetStream ()
   << right << setw (10) << key.first  << "-"
   << left  << setw (10) << key.second << "   ";
@@ -323,18 +314,11 @@ BackhaulStatsCalculator::NotifyTopologyBuilt (
 {
   NS_LOG_FUNCTION (this);
 
-//  m_devices = devices;
-//  for (uint16_t i = 0; i < m_devices.GetN (); i++)
-//    {
-//      *m_swtWrapper->GetStream () << right << setw (7) << i;
-//    }
-
   *m_bwbWrapper->GetStream () << left << std::endl;
   *m_bwgWrapper->GetStream () << left << std::endl;
   *m_bwnWrapper->GetStream () << left << std::endl;
   *m_regWrapper->GetStream () << left << std::endl;
   *m_renWrapper->GetStream () << left << std::endl;
-//  *m_swtWrapper->GetStream () << right << std::endl;
 }
 
 void
@@ -347,7 +331,6 @@ BackhaulStatsCalculator::DoDispose ()
   m_bwnWrapper = 0;
   m_regWrapper = 0;
   m_renWrapper = 0;
-//  m_swtWrapper = 0;
   m_connections.clear ();
 }
 
@@ -364,9 +347,7 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
   SetAttribute ("BwbStatsFilename", StringValue (prefix + m_bwbFilename));
   SetAttribute ("BwgStatsFilename", StringValue (prefix + m_bwgFilename));
   SetAttribute ("BwnStatsFilename", StringValue (prefix + m_bwnFilename));
-//  SetAttribute ("SwtStatsFilename", StringValue (prefix + m_swtFilename));
 
-  // Opening output files and printing header lines
   m_bwbWrapper = Create<OutputStreamWrapper> (m_bwbFilename, std::ios::out);
   *m_bwbWrapper->GetStream ()
   << left << fixed << setprecision (4)
@@ -392,18 +373,12 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
   << left << fixed << setprecision (4)
   << setw (12) << "Time(s)";
 
-//  m_swtWrapper = Create<OutputStreamWrapper> (m_swtFilename, std::ios::out);
-//  *m_swtWrapper->GetStream ()
-//  << left << fixed << setprecision (4)
-//  << setw (12) << "Time(s)";
-
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
-  Time nextDump = timeValue.Get ();
-  Simulator::Schedule (nextDump, &BackhaulStatsCalculator::DumpStatistics,
-                       this, nextDump);
+  Time firstDump = timeValue.Get ();
+  Simulator::Schedule (firstDump, &BackhaulStatsCalculator::DumpStatistics,
+                       this, firstDump);
 
-  // Chain up
   Object::NotifyConstructionCompleted ();
 }
 void
@@ -431,12 +406,7 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
   << left << setw (12)
   << Simulator::Now ().GetSeconds ();
 
-//  *m_swtWrapper->GetStream ()
-//  << left << setw (12)
-//  << Simulator::Now ().GetSeconds ()
-//  << " " << right;
-
-  double interval = GetActiveTime ().GetSeconds ();
+  double interval = (Simulator::Now () - m_lastResetTime).GetSeconds ();
   ConnInfoList_t::iterator it;
   for (it = m_connections.begin (); it != m_connections.end (); it++)
     {
@@ -477,20 +447,11 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
       << setw (6) << cInfo->GetNonGbrLinkRatio (ConnectionInfo::BWD) << "   ";
     }
 
-//  OFSwitch13DeviceContainer::Iterator itDev;
-//  for (itDev = m_devices.Begin (); itDev < m_devices.End (); itDev++)
-//    {
-//      *m_swtWrapper->GetStream ()
-//      << setw (6)
-//      << (*itDev)->GetNumberFlowEntries (1) << " ";
-//    }
-
   *m_bwbWrapper->GetStream () << std::endl;
   *m_bwgWrapper->GetStream () << std::endl;
   *m_bwnWrapper->GetStream () << std::endl;
   *m_regWrapper->GetStream () << std::endl;
   *m_renWrapper->GetStream () << std::endl;
-//  *m_swtWrapper->GetStream () << std::endl;
 
   ResetCounters ();
   Simulator::Schedule (nextDump, &BackhaulStatsCalculator::DumpStatistics,
@@ -510,12 +471,6 @@ BackhaulStatsCalculator::ResetCounters ()
     }
 }
 
-Time
-BackhaulStatsCalculator::GetActiveTime (void) const
-{
-  return Simulator::Now () - m_lastResetTime;
-}
-
 
 // ------------------------------------------------------------------------ //
 TrafficStatsCalculator::TrafficStatsCalculator ()
@@ -533,7 +488,6 @@ TrafficStatsCalculator::TrafficStatsCalculator (Ptr<EpcController> controller)
 {
   NS_LOG_FUNCTION (this);
 
-  // Connecting all EPC trace sinks for QoS monitoring
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uRx",
     MakeCallback (&TrafficStatsCalculator::EpcOutputPacket, this));
@@ -568,12 +522,12 @@ TrafficStatsCalculator::GetTypeId (void)
     .AddConstructor<TrafficStatsCalculator> ()
     .AddAttribute ("AppStatsFilename",
                    "Filename for L7 traffic application QoS statistics.",
-                   StringValue ("traffic_l7_app_stats.log"),
+                   StringValue ("traffic_qos_l7_app.log"),
                    MakeStringAccessor (&TrafficStatsCalculator::m_appFilename),
                    MakeStringChecker ())
     .AddAttribute ("EpcStatsFilename",
                    "Filename for L3 traffic EPC QoS statistics.",
-                   StringValue ("traffic_l3_epc_stats.log"),
+                   StringValue ("traffic_qos_l3_epc.log"),
                    MakeStringAccessor (&TrafficStatsCalculator::m_epcFilename),
                    MakeStringChecker ())
   ;
@@ -600,7 +554,6 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   SetAttribute ("AppStatsFilename", StringValue (prefix + m_appFilename));
   SetAttribute ("EpcStatsFilename", StringValue (prefix + m_epcFilename));
 
-  // Opening output files and printing header lines
   m_appWrapper = Create<OutputStreamWrapper> (m_appFilename, std::ios::out);
   *m_appWrapper->GetStream ()
   << fixed << setprecision (4) << boolalpha
@@ -651,7 +604,6 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   << setw (17) << "Throughput(kbps)"
   << std::endl;
 
-  // Chain up
   Object::NotifyConstructionCompleted ();
 }
 
@@ -670,7 +622,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   // The real time video streaming is the only app with no uplink traffic.
   if (app->GetInstanceTypeId () != RealTimeVideoClient::GetTypeId ())
     {
-      // Dump uplink statistics
+      // Dump uplink statistics.
       epcStats = GetQosStatsFromTeid (teid, false);
       DataRate epcThp = epcStats->GetRxThroughput ();
       *m_epcWrapper->GetStream ()
@@ -722,7 +674,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       << std::endl;
     }
 
-  // Dump downlink statistics
+  // Dump downlink statistics.
   epcStats = GetQosStatsFromTeid (teid, true);
   DataRate epcThp = epcStats->GetRxThroughput ();
   *m_epcWrapper->GetStream ()
@@ -852,7 +804,6 @@ TrafficStatsCalculator::GetQosStatsFromTeid (uint32_t teid, bool isDown)
     }
   else
     {
-      // Create and insert the structure
       QosStatsPair_t pair (
         Create<QosStatsCalculator> (), Create<QosStatsCalculator> ());
       std::pair <uint32_t, QosStatsPair_t> entry (teid, pair);
