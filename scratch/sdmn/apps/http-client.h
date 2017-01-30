@@ -28,7 +28,7 @@
 namespace ns3 {
 
 /**
- * \ingroup sdmn
+ * \ingroup sdmnApps
  * This is the client side of a HTTP Traffic Generator. The client establishes
  * a TCP connection with the server and sends a request for the main object of
  * a given web page. When client gets the main object, it process the message

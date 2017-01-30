@@ -28,8 +28,7 @@
 namespace ns3 {
 
 /**
- * \ingroup applications
- *
+ * \ingroup sdmnApps
  * This class monitors some basic QoS statistics in a network traffic flow. It
  * counts the number of transmitted/received bytes and packets, computes the
  * loss ratio, the average delay and the jitter. This class can be used to

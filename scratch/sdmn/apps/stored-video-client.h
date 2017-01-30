@@ -26,7 +26,7 @@
 namespace ns3 {
 
 /**
- * \ingroup sdmn
+ * \ingroup sdmnApps
  * This is the client side of a stored video traffic generator. The client
  * establishes a TCP connection with the server and sends a HTTP request for
  * the main video object. After receiving the entire video, the client closes

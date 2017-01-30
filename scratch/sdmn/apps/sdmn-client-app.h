@@ -33,7 +33,7 @@ namespace ns3 {
 class SdmnServerApp;
 
 /**
- * \ingroup sdmn
+ * \ingroup sdmnApps
  * This class extends the Application class to proper work with the SDMN
  * architecture. Only clients applications (those which will be installed into
  * UEs) should extends this class. It includes a QosStatsCalculator for traffic

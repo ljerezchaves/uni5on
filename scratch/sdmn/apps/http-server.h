@@ -28,7 +28,7 @@
 namespace ns3 {
 
 /**
- * \ingroup sdmn
+ * \ingroup sdmnApps
  * This is the server side of a HTTP Traffic Generator. The server listen for
  * client object requests. The implementation of this application is simplistic
  * and it does not support pipelining in this current version. The model used

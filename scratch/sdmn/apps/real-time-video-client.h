@@ -26,7 +26,7 @@
 namespace ns3 {
 
 /**
- * \ingroup sdmn
+ * \ingroup sdmnApps
  * This is the client side of a real-time video traffic generator, receiving
  * UDP datagrams following a MPEG video pattern with random video length.
  */

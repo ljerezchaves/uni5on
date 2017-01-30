@@ -27,7 +27,7 @@
 namespace ns3 {
 
 /**
- * \ingroup sdmn
+ * \ingroup sdmnApps
  * This is the server side of a VoIP traffic generator, sending and receiving
  * UDP datagrams following VoIP traffic pattern.
  */

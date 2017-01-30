@@ -33,7 +33,7 @@ namespace ns3 {
 class SdmnClientApp;
 
 /**
- * \ingroup sdmn
+ * \ingroup sdmnApps
  * This class extends the Application class to proper work with SDMN
  * architecture. Only server applications (those which will be installed into
  * web server node) extends this class.

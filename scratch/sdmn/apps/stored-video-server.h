@@ -26,7 +26,7 @@
 namespace ns3 {
 
 /**
- * \ingroup sdmn
+ * \ingroup sdmnApps
  * This is the server side of a stored video traffic generator. The server
  * listen for client video requests, and send data as fast as possible up to
  * random video length duration over TCP connection.
