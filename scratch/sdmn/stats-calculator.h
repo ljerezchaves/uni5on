@@ -61,6 +61,13 @@ public:
    */
   void NotifyBearerRequest (bool accepted, Ptr<const RoutingInfo> rInfo);
 
+  /**
+   * Notify a new bearer release.
+   * \param success True when the bearer is successfully released.
+   * \param rInfo The bearer routing information.
+   */
+  void NotifyBearerRelease (bool success, Ptr<const RoutingInfo> rInfo);
+
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
@@ -86,6 +93,7 @@ private:
   uint32_t                  m_gbrRequests;  //!< Number of GBR requests
   uint32_t                  m_gbrAccepted;  //!< Number of GBR accepted
   uint32_t                  m_gbrBlocked;   //!< Number of GBR blocked
+  uint32_t                  m_activeBearers;//!< Number of active bearers
   std::string               m_admFilename;  //!< AdmStats filename
   Ptr<OutputStreamWrapper>  m_admWrapper;   //!< AdmStats file wrapper
   std::string               m_brqFilename;  //!< BrqStats filename

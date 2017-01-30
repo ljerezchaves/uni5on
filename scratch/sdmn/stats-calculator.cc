@@ -45,7 +45,8 @@ AdmissionStatsCalculator::AdmissionStatsCalculator ()
     m_nonBlocked  (0),
     m_gbrRequests (0),
     m_gbrAccepted (0),
-    m_gbrBlocked  (0)
+    m_gbrBlocked  (0),
+    m_activeBearers (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -62,8 +63,8 @@ AdmissionStatsCalculator::GetTypeId (void)
     .SetParent<Object> ()
     .AddConstructor<AdmissionStatsCalculator> ()
     .AddAttribute ("AdmStatsFilename",
-                   "Filename for bearer admission control statistics.",
-                   StringValue ("admission_counters.log"),
+                   "Filename for bearer admission and counter statistics.",
+                   StringValue ("bearer_counters.log"),
                    MakeStringAccessor (
                      &AdmissionStatsCalculator::m_admFilename),
                    MakeStringChecker ())
@@ -93,6 +94,11 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
     {
       m_nonRequests++;
       accepted ? m_nonAccepted++ : m_nonBlocked++;
+    }
+
+  if (accepted)
+    {
+      m_activeBearers++;
     }
 
   // Preparing bearer request stats for trace source
@@ -135,6 +141,16 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
 }
 
 void
+AdmissionStatsCalculator::NotifyBearerRelease (bool success,
+                                               Ptr<const RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << success << rInfo);
+  NS_ASSERT_MSG (m_activeBearers, "No active bearer here.");
+
+  m_activeBearers--;
+}
+
+void
 AdmissionStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
@@ -159,10 +175,11 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   << left
   << setw (11) << "Time(s)"
   << right
-  << setw (8)  << "GbrReqs"
-  << setw (10) << "GbrBlocks"
-  << setw (11) << "NonGbrReqs"
-  << setw (13) << "NonGbrBlocks"
+  << setw (14) << "GbrReqs"
+  << setw (14) << "GbrBlocks"
+  << setw (14) << "NonGbrReqs"
+  << setw (14) << "NonGbrBlocks"
+  << setw (14) << "ActiveBearers"
   << std::endl;
 
   m_brqWrapper = Create<OutputStreamWrapper> (m_brqFilename, std::ios::out);
@@ -202,10 +219,11 @@ AdmissionStatsCalculator::DumpStatistics (Time nextDump)
   << left
   << setw (11) << Simulator::Now ().GetSeconds () << " "
   << right
-  << setw (7)  << m_gbrRequests                   << " "
-  << setw (9)  << m_gbrBlocked                    << " "
-  << setw (10) << m_nonRequests                   << " "
-  << setw (12) << m_nonBlocked
+  << setw (13) << m_gbrRequests                   << " "
+  << setw (13) << m_gbrBlocked                    << " "
+  << setw (13) << m_nonRequests                   << " "
+  << setw (13) << m_nonBlocked                    << " "
+  << setw (13) << m_activeBearers
   << std::endl;
 
   ResetCounters ();

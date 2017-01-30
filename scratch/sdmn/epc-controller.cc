@@ -391,6 +391,10 @@ EpcController::NotifyConstructionCompleted ()
     "BearerRequest", MakeCallback (
       &AdmissionStatsCalculator::NotifyBearerRequest, m_admissionStats));
 
+  TraceConnectWithoutContext (
+    "BearerRelease", MakeCallback (
+      &AdmissionStatsCalculator::NotifyBearerRelease, m_admissionStats));
+
   // Chain up
   ObjectBase::NotifyConstructionCompleted ();
 }
