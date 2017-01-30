@@ -18,4 +18,4 @@ default ns3::TrafficHelper::BufferedVideoTraffic "true"
 default ns3::TrafficHelper::NonGbrLiveVideoTraffic "true"
 default ns3::TrafficHelper::HttpTraffic "true"
 
-default ns3::OFSwitch13Device::LibLogLevel "none"
+global DumpStatsTimeout "5s"

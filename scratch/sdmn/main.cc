@@ -27,6 +27,7 @@
 #include "traffic-helper.h"
 
 using namespace ns3;
+using namespace ns3::ofs;
 
 /**
  * \defgroup sdmn SDMN Architecture
@@ -38,6 +39,7 @@ void PrintCurrentTime (uint32_t);
 void ConfigureDefaults ();
 void ForceDefaults ();
 void EnableVerbose (bool);
+void EnableLibLogs (bool);
 
 // Prefixes used by input and output filenames.
 static ns3::GlobalValue
@@ -55,6 +57,7 @@ main (int argc, char *argv[])
 {
   bool        verbose  = false;
   bool        pcap     = false;
+  bool        libLog   = false;
   uint32_t    progress = 0;
   uint32_t    simTime  = 250;
   std::string prefix   = "";
@@ -68,6 +71,7 @@ main (int argc, char *argv[])
   CommandLine cmd;
   cmd.AddValue ("Verbose",  "Enable verbose output.", verbose);
   cmd.AddValue ("Pcap",     "Enable pcap output.", pcap);
+  cmd.AddValue ("LibLog",   "Enable ofsoftswitch13 logs.", libLog);
   cmd.AddValue ("Progress", "Simulation progress interval [s].", progress);
   cmd.AddValue ("SimTime",  "Simulation stop time [s].", simTime);
   cmd.AddValue ("Prefix",   "Common prefix for filenames.", prefix);
@@ -109,6 +113,7 @@ main (int argc, char *argv[])
   // Enable verbose output and progress report for debug purposes.
   PrintCurrentTime (progress);
   EnableVerbose (verbose);
+  EnableLibLogs (libLog);
 
   // Create the simulation scenario.
   // The following objects must be created in this order:
@@ -338,5 +343,17 @@ EnableVerbose (bool enable)
       LogComponentEnable ("OFSwitch13Helper",     LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("OFSwitch13Port",       LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("OFSwitch13Queue",      LOG_ERROR_WARN_INFO_FT);
+    }
+}
+
+void
+EnableLibLogs (bool enable)
+{
+  if (enable)
+    {
+      StringValue stringValue;
+      GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+      std::string prefix = stringValue.Get ();
+      ofs::EnableLibraryLog (true, prefix);
     }
 }
