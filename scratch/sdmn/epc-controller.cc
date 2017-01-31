@@ -148,11 +148,11 @@ EpcController::ReleaseDedicatedBearer (
       // need for resource release, as default rules were supposed to remain
       // installed during entire simulation and must be Non-GBR.
       NS_ASSERT_MSG (rInfo->IsActive () && rInfo->IsInstalled (),
-                     "Default bearer should be intalled and activated.");
+                     "Default bearer should be installed and activated.");
       return true;
     }
 
-  // Check for active bearer
+  // Check for inactive bearer
   if (rInfo->IsActive () == false)
     {
       return true;
