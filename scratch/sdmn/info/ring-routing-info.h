@@ -41,21 +41,20 @@ public:
   /** Routing direction in the ring. */
   enum RoutingPath
   {
+    LOCAL = 0,
     CLOCK = 1,
     COUNTER = 2
   };
 
-  RingRoutingInfo ();          //!< Default constructor
-  virtual ~RingRoutingInfo (); //!< Dummy destructor, see DoDispose
+  RingRoutingInfo ();          //!< Default constructor.
+  virtual ~RingRoutingInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Complete constructor.
    * \param rInfo RoutingInfo pointer.
-   * \param downPath The _shortest_ path for downlink (uplink will get the
-   * inverse path).
    * \attention This RingRoutingInfo object must be aggregated to rInfo.
    */
-  RingRoutingInfo (Ptr<RoutingInfo> rInfo, RoutingPath shortDownPath);
+  RingRoutingInfo (Ptr<RoutingInfo> rInfo);
 
   /**
    * Register this type.
@@ -68,23 +67,23 @@ public:
    * \return The requested field.
    */
   //\{
-  bool IsInverted (void) const;
-  uint16_t GetSgwSwIdx (void) const;
-  uint16_t GetEnbSwIdx (void) const;
-  RoutingPath GetDownPath (void) const;
-  RoutingPath GetUpPath (void) const;
-  std::string GetPathDesc (void) const;
+  bool        IsDefaultPath (void) const;
+  bool        IsLocalPath   (void) const;
+  uint16_t    GetSgwSwIdx   (void) const;
+  uint16_t    GetEnbSwIdx   (void) const;
+  RoutingPath GetDownPath   (void) const;
+  RoutingPath GetUpPath     (void) const;
   //\}
 
   /**
-   * Invert the routing path
+   * Invert the given routing path.
    * \param path The original routing path.
-   * \return The inverse routing path.
+   * \return The inverted routing path.
    */
   static RoutingPath InvertPath (RoutingPath path);
 
 protected:
-  /** Destructor implementation */
+  /** Destructor implementation. */
   virtual void DoDispose ();
 
   /** \return RoutingInfo pointer. */
@@ -92,17 +91,23 @@ protected:
 
 private:
   /**
-   * \name Path invertion methods.
+   * Set the default routing paths.
+   * \param downPath The downlink default path.
+   * \param upPath The uplink default path.
    */
-  //\{
-  void InvertPaths ();
-  void ResetToShortestPaths ();
-  //\}
+  void SetDefaultPaths (RoutingPath downPath, RoutingPath upPath);
 
-  Ptr<RoutingInfo> m_rInfo;       //!< Routing information
-  RoutingPath      m_downPath;    //!< Downlink routing path
-  RoutingPath      m_upPath;      //!< Uplink routing path
-  bool             m_isInverted;  //!< True when paths are inverted
+  /** Invert both routing paths, only if different from LOCAL. */
+  void InvertBothPaths ();
+
+  /** Reset both routing paths to default values. */
+  void ResetToDefaultPaths ();
+
+  Ptr<RoutingInfo> m_rInfo;         //!< Routing information
+  RoutingPath      m_downPath;      //!< Downlink routing path
+  RoutingPath      m_upPath;        //!< Uplink routing path
+  bool             m_isDefaultPath; //!< True when paths are default
+  bool             m_isLocalPath;   //!< True when routing path is local
 };
 
 };  // namespace ns3

@@ -367,7 +367,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 
   // Reseting ring routing info to the shortest path
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
-  ringInfo->ResetToShortestPaths ();
+  ringInfo->ResetToDefaultPaths ();
 
   if (!rInfo->IsGbr ())
     {
@@ -426,7 +426,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
         else if (dlLongBw >= dlRequest && ulLongBw >= ulRequest)
           {
             // Let's invert the path and reserve the bit rate
-            ringInfo->InvertPaths ();
+            ringInfo->InvertBothPaths ();
             NS_LOG_INFO ("Routing bearer " << teid << " over longest path.");
             return ReserveGbrBitRate (ringInfo, gbrInfo);
           }
@@ -502,12 +502,15 @@ RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
   if (ringInfo == 0)
     {
       // This is the first time in simulation we are querying ring information
-      // for this bearer. Let's create and aggregate its ring routing
-      // metadata. Considering the default down path the one with lower hops.
-      RingRoutingInfo::RoutingPath downPath =
-        FindShortestPath (rInfo->GetSgwSwIdx (), rInfo->GetEnbSwIdx ());
-      ringInfo = CreateObject<RingRoutingInfo> (rInfo, downPath);
+      // for this bearer. Let's create and aggregate its ring routing metadata.
+      ringInfo = CreateObject<RingRoutingInfo> (rInfo);
       rInfo->AggregateObject (ringInfo);
+      
+      // Considering default paths those with lower hops.
+      RingRoutingInfo::RoutingPath dlPath, ulPath;
+      dlPath = FindShortestPath (rInfo->GetSgwSwIdx (), rInfo->GetEnbSwIdx ());
+      ulPath = FindShortestPath (rInfo->GetEnbSwIdx (), rInfo->GetSgwSwIdx ());
+      ringInfo->SetDefaultPaths (dlPath, ulPath);
     }
   return ringInfo;
 }

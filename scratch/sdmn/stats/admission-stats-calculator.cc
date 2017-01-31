@@ -103,14 +103,24 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
       upBitRate = gbrInfo->GetUpBitRate ();
     }
 
-  std::string path = "None";
+  std::string path = "No information";
   Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   if (ringInfo && accepted)
     {
-      path = ringInfo->GetPathDesc ();
+      // For ring routing, print detailed description
+      if (ringInfo->IsDefaultPath ())
+        {
+          path = "Shortest";
+        }
+      else
+        {
+          path = "Inverted";
+        }
+
+      // For default UE bearer, print detailed description.
       if (rInfo->IsDefault ())
         {
-          path += " (default)";
+          path += " (default bearer)";
         }
     }
 

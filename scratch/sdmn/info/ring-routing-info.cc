@@ -30,16 +30,16 @@ RingRoutingInfo::RingRoutingInfo ()
   : m_rInfo (0)
 {
   NS_LOG_FUNCTION (this);
+
+  SetDefaultPaths (RingRoutingInfo::LOCAL, RingRoutingInfo::LOCAL);
 }
 
-RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo,
-                                  RoutingPath shortDownPath)
+RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo)
   : m_rInfo (rInfo)
 {
   NS_LOG_FUNCTION (this);
-  m_downPath   = shortDownPath;
-  m_upPath     = RingRoutingInfo::InvertPath (shortDownPath);
-  m_isInverted = false;
+
+  SetDefaultPaths (RingRoutingInfo::LOCAL, RingRoutingInfo::LOCAL);
 }
 
 RingRoutingInfo::~RingRoutingInfo ()
@@ -60,83 +60,122 @@ RingRoutingInfo::GetTypeId (void)
 RingRoutingInfo::RoutingPath
 RingRoutingInfo::InvertPath (RoutingPath path)
 {
-  return path == RingRoutingInfo::CLOCK ?
-         RingRoutingInfo::COUNTER :
-         RingRoutingInfo::CLOCK;
+  if (path == RingRoutingInfo::LOCAL)
+    {
+      return RingRoutingInfo::LOCAL;
+    }
+  else
+    {
+      return path == RingRoutingInfo::CLOCK ?
+             RingRoutingInfo::COUNTER :
+             RingRoutingInfo::CLOCK;
+    }
 }
 
 void
 RingRoutingInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+
   m_rInfo = 0;
 }
 
 Ptr<RoutingInfo>
 RingRoutingInfo::GetRoutingInfo ()
 {
+  NS_LOG_FUNCTION (this);
+
   return m_rInfo;
 }
 
 bool
-RingRoutingInfo::IsInverted (void) const
+RingRoutingInfo::IsDefaultPath (void) const
 {
-  return m_isInverted;
+  NS_LOG_FUNCTION (this);
+
+  return m_isDefaultPath;
+}
+
+bool
+RingRoutingInfo::IsLocalPath (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_isLocalPath;
 }
 
 uint16_t
 RingRoutingInfo::GetSgwSwIdx (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_rInfo->GetSgwSwIdx ();
 }
 
 uint16_t
 RingRoutingInfo::GetEnbSwIdx (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_rInfo->GetEnbSwIdx ();
 }
 
 RingRoutingInfo::RoutingPath
 RingRoutingInfo::GetDownPath (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_downPath;
 }
 
 RingRoutingInfo::RoutingPath
 RingRoutingInfo::GetUpPath (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_upPath;
 }
 
-std::string
-RingRoutingInfo::GetPathDesc (void) const
+void
+RingRoutingInfo::SetDefaultPaths (RoutingPath downPath, RoutingPath upPath)
 {
-  if (IsInverted ())
+  NS_LOG_FUNCTION (this << downPath << upPath);
+
+  m_downPath = downPath;
+  m_upPath = upPath;
+  m_isDefaultPath = true;
+  m_isLocalPath = false;
+
+  // Check for local routing paths
+  if (downPath == RingRoutingInfo::LOCAL)
     {
-      return "Inverted";
-    }
-  else
-    {
-      return "Shortest";
+      NS_ASSERT_MSG (upPath == RingRoutingInfo::LOCAL, "For local ring routing"
+                     " both downlink and uplink paths must be set to LOCAL.");
+      m_isLocalPath = true;
     }
 }
 
 void
-RingRoutingInfo::InvertPaths ()
-{
-  m_downPath = RingRoutingInfo::InvertPath (m_downPath);
-  m_upPath   = RingRoutingInfo::InvertPath (m_upPath);
-  m_isInverted = !m_isInverted;
-}
-
-void
-RingRoutingInfo::ResetToShortestPaths ()
+RingRoutingInfo::InvertBothPaths ()
 {
   NS_LOG_FUNCTION (this);
 
-  if (IsInverted ())
+  if (m_isLocalPath == false)
     {
-      InvertPaths ();
+      m_downPath = RingRoutingInfo::InvertPath (m_downPath);
+      m_upPath   = RingRoutingInfo::InvertPath (m_upPath);
+      m_isDefaultPath = !m_isDefaultPath;
+    }
+}
+
+void
+RingRoutingInfo::ResetToDefaultPaths ()
+{
+  NS_LOG_FUNCTION (this);
+
+  if (m_isDefaultPath == false)
+    {
+      InvertBothPaths ();
     }
 }
 
