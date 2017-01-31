@@ -24,8 +24,6 @@
 #include <ns3/object.h>
 #include <ns3/epc-s1ap-sap.h>
 #include <ns3/epc-s11-sap.h>
-#include <ns3/traced-callback.h>
-#include <ns3/callback.h>
 
 #include <map>
 #include <list>
@@ -110,15 +108,6 @@ public:
    */
   uint8_t AddBearer (uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer);
 
-  /** 
-   * TracedCallback signature for session created trace source.
-   * \param imsi The IMSI UE identifier.
-   * \param cellId The eNB CellID to which the IMSI UE is attached to.
-   * \param enbAddr The eNB IPv4 address.
-   * \param sgwAddr The SgwPgw IPv4 address.
-   * \param bearerList The list of context bearers created.
-   */
-  typedef void (* SessionCreatedTracedCallback)(uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr, std::list<EpcS11SapMme::BearerContextCreated> bearerList);
 
 private:
 
@@ -191,8 +180,6 @@ private:
 
 
   
-  /** Trace source fired for create session response messages. */
-  TracedCallback<uint64_t, uint16_t, Ipv4Address, Ipv4Address, std::list<EpcS11SapMme::BearerContextCreated> > m_sessionCreatedTrace;
 
   EpcS1apSapMme* m_s1apSapMme;
 

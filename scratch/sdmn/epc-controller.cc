@@ -67,16 +67,18 @@ EpcController::GetTypeId (void)
                    MakeBooleanAccessor (&EpcController::m_nonGbrCoexistence),
                    MakeBooleanChecker ())
 
-    .AddTraceSource ("BearerRequest",
-                     "The bearer request trace source.",
+    .AddTraceSource ("BearerRequest", "The bearer request trace source.",
                      MakeTraceSourceAccessor (
                        &EpcController::m_bearerRequestTrace),
                      "ns3::EpcController::BearerTracedCallback")
-    .AddTraceSource ("BearerRelease",
-                     "The bearer release trace source.",
+    .AddTraceSource ("BearerRelease", "The bearer release trace source.",
                      MakeTraceSourceAccessor (
                        &EpcController::m_bearerReleaseTrace),
                      "ns3::EpcController::BearerTracedCallback")
+    .AddTraceSource ("SessionCreated", "The session created trace source.",
+                     MakeTraceSourceAccessor (
+                       &EpcController::m_sessionCreatedTrace),
+                     "ns3::EpcController::SessionCreatedTracedCallback")
   ;
   return tid;
 }
@@ -342,6 +344,9 @@ EpcController::NotifySessionCreated (
           rInfo->AggregateObject (meterInfo);
         }
     }
+  
+  // Fire trace source notifying session created.
+  m_sessionCreatedTrace (imsi, cellId, enbAddr, pgwAddr, bearerList);
 }
 
 void

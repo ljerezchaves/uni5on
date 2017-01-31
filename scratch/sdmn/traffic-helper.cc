@@ -257,7 +257,7 @@ TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices)
       m_ueNode->AggregateObject (m_ueManager);
 
       // Connecting the manager to new context created trace source.
-      m_epcNetwork->GetMmeElement ()->TraceConnectWithoutContext (
+      m_epcNetwork->GetControllerApp ()->TraceConnectWithoutContext (
         "SessionCreated",
         MakeCallback (&TrafficManager::SessionCreatedCallback, m_ueManager));
 

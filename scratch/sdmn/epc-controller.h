@@ -196,6 +196,17 @@ public:
    */
   typedef void (*BearerTracedCallback)(bool ok, Ptr<const RoutingInfo> rInfo);
 
+  /**
+   * TracedCallback signature for session created trace source.
+   * \param imsi The IMSI UE identifier.
+   * \param cellId The eNB CellID to which the IMSI UE is attached to.
+   * \param enbAddr The eNB IPv4 address.
+   * \param pgwAddr The P-GW IPv4 address.
+   * \param bearerList The list of context bearers created.
+   */
+  typedef void (*SessionCreatedTracedCallback)(uint64_t imsi, uint16_t cellId,
+      Ipv4Address enbAddr, Ipv4Address pgwAddr, BearerList_t bearerList);
+
   /** \name Methods for the P-GW control plane. */
   //\{
   // FIXME Acho que essas funções vão pro S-GW.
@@ -535,6 +546,10 @@ protected:
 
   /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
   TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerReleaseTrace;
+
+  /** The context created trace source, fired at NotifySessionCreated. */
+  TracedCallback<uint64_t, uint16_t, Ipv4Address, Ipv4Address, BearerList_t>
+    m_sessionCreatedTrace;
 
   bool m_voipQos;                         //!< Enable VoIP QoS with queues.
   bool m_nonGbrCoexistence;               //!< Enable Non-GBR coexistence.
