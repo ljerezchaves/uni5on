@@ -21,8 +21,8 @@
 #include <ns3/csma-module.h>
 #include "epc-network.h"
 #include "epc-controller.h"
-#include "stats-calculator.h"
 #include "pgw-user-app.h"
+#include "stats/backhaul-stats-calculator.h"
 
 namespace ns3 {
 

@@ -30,8 +30,19 @@ using namespace ns3;
 using namespace ns3::ofs;
 
 /**
- * \defgroup sdmn SDMN Architecture
- * Network simulation scenario for LTE EPC + OpenFlow 1.3
+ * \defgroup sdmn SDMN architecture
+ * Network simulation scenario for Software-Defined Mobile network
+ * architecture. This scenario comprises an LTE EPC network using a OpenFlow
+ * 1.3 backhaul infrastructure.
+ *
+ * \ingroup sdmn
+ * \defgroup sdmnApps Applications
+ *
+ * \ingroup sdmn
+ * \defgroup sdmnStats Statistics
+ *
+ * \ingroup sdmn
+ * \defgroup sdmnInfo Metadata
  */
 NS_LOG_COMPONENT_DEFINE ("Main");
 
@@ -51,6 +62,12 @@ static ns3::GlobalValue
 g_outputPrefix ("OutputPrefix", "Common prefix for input filenames.",
                 ns3::StringValue (""),
                 ns3::MakeStringChecker ());
+
+// Dump timeout for logging statistics
+static GlobalValue
+g_dumpTimeout ("DumpStatsTimeout", "Periodic statistics dump interval.",
+               TimeValue (Seconds (10)),
+               ns3::MakeTimeChecker ());
 
 int
 main (int argc, char *argv[])
@@ -323,34 +340,36 @@ EnableVerbose (bool enable)
 {
   if (enable)
     {
-      LogComponentEnable ("Main",                 LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("EpcNetwork",           LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("RingNetwork",          LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("LteNetwork",           LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("EpcController",        LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("RingController",       LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("StatsCalculator",      LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("ConnectionInfo",       LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("TrafficHelper",        LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("TrafficManager",       LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("Main",                     LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("EpcNetwork",               LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("RingNetwork",              LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("LteNetwork",               LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("EpcController",            LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("RingController",           LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("TrafficStatsCalculator",   LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("BackhaulStatsCalculator",  LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("AdmissionStatsCalculator", LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("ConnectionInfo",           LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("TrafficHelper",            LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("TrafficManager",           LOG_ERROR_WARN_INFO_FT);
 
-      LogComponentEnable ("SdmnClientApp",        LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("SdmnServerApp",        LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("HttpClient",           LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("HttpServer",           LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("VoipClient",           LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("VoipServer",           LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("StoredVideoClient",    LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("StoredVideoServer",    LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("RealTimeVideoClient",  LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("RealTimeVideoServer",  LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("SdmnClientApp",            LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("SdmnServerApp",            LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("HttpClient",               LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("HttpServer",               LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("VoipClient",               LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("VoipServer",               LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("StoredVideoClient",        LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("StoredVideoServer",        LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("RealTimeVideoClient",      LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("RealTimeVideoServer",      LOG_ERROR_WARN_INFO_FT);
 
-      LogComponentEnable ("OFSwitch13Device",     LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("OFSwitch13Controller", LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("OFSwitch13Interface",  LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("OFSwitch13Helper",     LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("OFSwitch13Port",       LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("OFSwitch13Queue",      LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("OFSwitch13Device",         LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("OFSwitch13Controller",     LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("OFSwitch13Interface",      LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("OFSwitch13Helper",         LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("OFSwitch13Port",           LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("OFSwitch13Queue",          LOG_ERROR_WARN_INFO_FT);
     }
 }
 

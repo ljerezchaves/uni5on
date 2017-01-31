@@ -19,11 +19,11 @@
  */
 
 #include "qos-stats-calculator.h"
-#include "ns3/log.h"
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("QosStatsCalculator");
+NS_OBJECT_ENSURE_REGISTERED (QosStatsCalculator);
 
 QosStatsCalculator::QosStatsCalculator ()
   : m_txPackets (0),
@@ -47,9 +47,21 @@ QosStatsCalculator::~QosStatsCalculator ()
   NS_LOG_FUNCTION (this);
 }
 
+TypeId
+QosStatsCalculator::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::QosStatsCalculator")
+    .SetParent<Object> ()
+    .AddConstructor<QosStatsCalculator> ()
+  ;
+  return tid;
+}
+
 void
 QosStatsCalculator::ResetCounters ()
 {
+  NS_LOG_FUNCTION (this);
+
   m_txPackets = 0;
   m_txBytes = 0;
   m_rxPackets = 0;
@@ -68,6 +80,8 @@ QosStatsCalculator::ResetCounters ()
 uint32_t
 QosStatsCalculator::NotifyTx (uint32_t txBytes)
 {
+  NS_LOG_FUNCTION (this << txBytes);
+
   m_txPackets++;
   m_txBytes += txBytes;
 
@@ -83,6 +97,8 @@ QosStatsCalculator::NotifyTx (uint32_t txBytes)
 void
 QosStatsCalculator::NotifyRx (uint32_t rxBytes, Time timestamp)
 {
+  NS_LOG_FUNCTION (this << rxBytes << timestamp);
+
   m_rxPackets++;
   m_rxBytes += rxBytes;
   Time now = Simulator::Now ();
@@ -106,18 +122,24 @@ QosStatsCalculator::NotifyRx (uint32_t rxBytes, Time timestamp)
 void
 QosStatsCalculator::NotifyMeterDrop ()
 {
+  NS_LOG_FUNCTION (this);
+
   m_meterDrop++;
 }
 
 void
 QosStatsCalculator::NotifyQueueDrop ()
 {
+  NS_LOG_FUNCTION (this);
+
   m_queueDrop++;
 }
 
 Time
 QosStatsCalculator::GetActiveTime (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   if (GetRxPackets ())
     {
       return m_lastRxTime - m_firstTxTime;
@@ -131,6 +153,8 @@ QosStatsCalculator::GetActiveTime (void) const
 uint32_t
 QosStatsCalculator::GetLostPackets (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   NS_ASSERT (!GetTxPackets () || GetTxPackets () >= GetRxPackets ());
   if (GetTxPackets ())
     {
@@ -145,6 +169,8 @@ QosStatsCalculator::GetLostPackets (void) const
 double
 QosStatsCalculator::GetLossRatio (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   if (GetLostPackets ())
     {
       return (double)GetLostPackets () / GetTxPackets ();
@@ -158,30 +184,40 @@ QosStatsCalculator::GetLossRatio (void) const
 uint32_t
 QosStatsCalculator::GetTxPackets (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_txPackets;
 }
 
 uint32_t
 QosStatsCalculator::GetTxBytes (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_txBytes;
 }
 
 uint32_t
 QosStatsCalculator::GetRxPackets (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_rxPackets;
 }
 
 uint32_t
 QosStatsCalculator::GetRxBytes (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_rxBytes;
 }
 
 Time
 QosStatsCalculator::GetRxDelay (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   if (GetRxPackets ())
     {
       return m_delaySum / (int64_t)GetRxPackets ();
@@ -195,12 +231,16 @@ QosStatsCalculator::GetRxDelay (void) const
 Time
 QosStatsCalculator::GetRxJitter (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return Time (m_jitter);
 }
 
 DataRate
 QosStatsCalculator::GetRxThroughput (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   if (GetRxPackets ())
     {
       return DataRate (GetRxBytes () * 8 / GetActiveTime ().GetSeconds ());
@@ -214,13 +254,23 @@ QosStatsCalculator::GetRxThroughput (void) const
 uint32_t
 QosStatsCalculator::GetMeterDrops (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_meterDrop;
 }
 
 uint32_t
 QosStatsCalculator::GetQueueDrops (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_queueDrop;
+}
+
+void
+QosStatsCalculator::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
 }
 
 } // Namespace ns3

@@ -26,7 +26,7 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include "apps/sdmn-client-app.h"
-#include "routing-info.h"
+#include "info/routing-info.h"
 
 namespace ns3 {
 

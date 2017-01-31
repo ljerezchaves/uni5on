@@ -26,9 +26,11 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "routing-info.h"
-#include "connection-info.h"
-#include "stats-calculator.h"
+#include "info/routing-info.h"
+#include "info/connection-info.h"
+#include "info/meter-info.h"
+#include "info/gbr-info.h"
+#include "stats/admission-stats-calculator.h"
 
 namespace ns3 {
 

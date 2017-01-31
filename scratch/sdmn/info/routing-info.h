@@ -37,10 +37,8 @@ typedef EpcS11SapMme::BearerContextCreated ContextBearer_t;
 /** List of created context bearers */
 typedef std::list<ContextBearer_t> BearerList_t;
 
-
-// ------------------------------------------------------------------------ //
 /**
- * \ingroup sdmn
+ * \ingroup sdmnInfo
  * Metadata associated to a routing path between
  * two any switches in the OpenFlow network.
  */

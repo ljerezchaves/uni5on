@@ -26,7 +26,7 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/lte-module.h>
-#include "qos-stats-calculator.h"
+#include "../stats/qos-stats-calculator.h"
 
 namespace ns3 {
 

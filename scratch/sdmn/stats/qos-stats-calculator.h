@@ -18,28 +18,33 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef QOS_STATS_CALCULATOR_H
-#define QOS_STATS_CALCULATOR_H
+#ifndef SDMN_QOS_STATS_CALCULATOR_H
+#define SDMN_QOS_STATS_CALCULATOR_H
 
-#include "ns3/data-rate.h"
-#include "ns3/simulator.h"
-#include "ns3/nstime.h"
+#include <ns3/core-module.h>
+#include <ns3/network-module.h>
 
 namespace ns3 {
 
 /**
- * \ingroup sdmnApps
+ * \ingroup sdmnStats
  * This class monitors some basic QoS statistics in a network traffic flow. It
  * counts the number of transmitted/received bytes and packets, computes the
  * loss ratio, the average delay and the jitter. This class can be used to
  * monitor statistics at application and network level, but keep in mind that
  * it is not aware of duplicated of fragmented packets at lower levels.
  */
-class QosStatsCalculator : public SimpleRefCount<QosStatsCalculator>
+class QosStatsCalculator : public Object
 {
 public:
   QosStatsCalculator ();  //!< Default constructor
   virtual ~QosStatsCalculator (); //!< Default destructor
+
+  /**
+   * Register this type.
+   * \return The object TypeId.
+   */
+  static TypeId GetTypeId (void);
 
   /**
    * Reset all internal counters.
@@ -95,6 +100,10 @@ public:
    */
   typedef void (*QosStatsCallback)(Ptr<const QosStatsCalculator> stats);
 
+protected:
+  /** Destructor implementation. */
+  virtual void DoDispose ();
+
 private:
   uint32_t           m_txPackets;        //!< Number of TX packets
   uint32_t           m_txBytes;          //!< Number of TX bytes
@@ -113,4 +122,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* QOS_STATS_CALCULATOR_H */
+#endif /* SDMN_QOS_STATS_CALCULATOR_H */

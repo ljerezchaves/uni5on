@@ -23,7 +23,6 @@
 #include "lte-network.h"
 #include "epc-network.h"
 #include "epc-controller.h"
-#include "apps/qos-stats-calculator.h"
 #include "apps/http-client.h"
 #include "apps/http-server.h"
 #include "apps/real-time-video-client.h"
@@ -32,6 +31,7 @@
 #include "apps/stored-video-server.h"
 #include "apps/voip-client.h"
 #include "apps/voip-server.h"
+#include "stats/qos-stats-calculator.h"
 
 namespace ns3 {
 

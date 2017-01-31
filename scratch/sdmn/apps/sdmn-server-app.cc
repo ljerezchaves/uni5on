@@ -27,7 +27,7 @@ NS_LOG_COMPONENT_DEFINE ("SdmnServerApp");
 NS_OBJECT_ENSURE_REGISTERED (SdmnServerApp);
 
 SdmnServerApp::SdmnServerApp ()
-  : m_qosStats (Create<QosStatsCalculator> ()),
+  : m_qosStats (CreateObject<QosStatsCalculator> ()),
     m_socket (0),
     m_clientApp (0),
     m_active (false),

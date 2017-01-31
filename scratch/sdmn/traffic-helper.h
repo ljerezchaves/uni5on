@@ -25,8 +25,8 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
-#include "stats-calculator.h"
 #include "apps/sdmn-app-helper.h"
+#include "stats/traffic-stats-calculator.h"
 
 namespace ns3 {
 

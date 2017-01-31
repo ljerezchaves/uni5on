@@ -30,12 +30,6 @@
 namespace ns3 {
 
 /**
- * \ingroup sdmn
- * \defgroup sdmnApps Apps
- *
- * SDMN applications.
- */
-/**
  * \ingroup sdmnApps
  * This helper will make life easier for people trying to set up client/server
  * applications on the SDMN architecture.
