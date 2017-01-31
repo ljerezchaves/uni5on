@@ -27,6 +27,11 @@
 namespace ns3 {
 
 /**
+ * \ingroup sdmn
+ * \defgroup sdmnStats Statistics
+ * Statistics calculators for monitorin the SDMN architecture.
+ */
+/**
  * \ingroup sdmnStats
  * This class monitors some basic QoS statistics in a network traffic flow. It
  * counts the number of transmitted/received bytes and packets, computes the

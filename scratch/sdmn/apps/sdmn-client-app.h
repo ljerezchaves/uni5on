@@ -33,6 +33,11 @@ namespace ns3 {
 class SdmnServerApp;
 
 /**
+ * \ingroup sdmn
+ * \defgroup sdmnApps Applications
+ * Applications prepared to work with the SDMN architecture.
+ */
+/**
  * \ingroup sdmnApps
  * This class extends the Application class to proper work with the SDMN
  * architecture. Only clients applications (those which will be installed into

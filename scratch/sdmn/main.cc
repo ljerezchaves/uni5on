@@ -34,15 +34,6 @@ using namespace ns3::ofs;
  * Network simulation scenario for Software-Defined Mobile network
  * architecture. This scenario comprises an LTE EPC network using a OpenFlow
  * 1.3 backhaul infrastructure.
- *
- * \ingroup sdmn
- * \defgroup sdmnApps Applications
- *
- * \ingroup sdmn
- * \defgroup sdmnStats Statistics
- *
- * \ingroup sdmn
- * \defgroup sdmnInfo Metadata
  */
 NS_LOG_COMPONENT_DEFINE ("Main");
 
