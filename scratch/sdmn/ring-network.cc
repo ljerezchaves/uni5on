@@ -173,9 +173,11 @@ RingNetwork::TopologyGetPgwIndex ()
 uint16_t
 RingNetwork::TopologyGetEnbIndex (uint16_t cellId)
 {
-  // Connect the eNBs nodes to switches indexes 1 to N. The three eNBs from
-  // same cell site are connected to the same switch in the ring network.
-  return 1 + ((cellId - 1) / 3);
+  // Connect the eNBs nodes to switches indexes in clockwise direction,
+  // starting at switch index 1. The three eNBs from same cell site are
+  // connected to the same switch in the ring network.
+  uint16_t siteId = 1 + ((cellId - 1) / 3);
+  return siteId % m_numNodes;
 }
 
 };  // namespace ns3
