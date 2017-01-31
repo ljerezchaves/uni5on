@@ -107,7 +107,7 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
   Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   if (ringInfo && accepted)
     {
-      // For ring routing, print detailed description
+      // For ring routing, print detailed routing path description
       if (ringInfo->IsDefaultPath ())
         {
           path = "Shortest";
@@ -115,12 +115,6 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
       else
         {
           path = "Inverted";
-        }
-
-      // For default UE bearer, print detailed description.
-      if (rInfo->IsDefault ())
-        {
-          path += " (default bearer)";
         }
     }
 
@@ -131,6 +125,7 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
   << right
   << setw (4)  << rInfo->GetQciInfo ()                      << " "
   << setw (6)  << rInfo->IsGbr ()                           << " "
+  << setw (9)  << rInfo->IsDefault ()                       << " "
   << setw (7)  << rInfo->GetImsi ()                         << " "
   << setw (7)  << rInfo->GetCellId ()                       << " "
   << setw (6)  << rInfo->GetEnbSwIdx ()                     << " "
@@ -194,6 +189,7 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   << right
   << setw (4)  << "QCI"
   << setw (7)  << "IsGBR"
+  << setw (10) << "IsDefault"
   << setw (8)  << "UeImsi"
   << setw (8)  << "CellId"
   << setw (7)  << "SwIdx"
