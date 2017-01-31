@@ -255,10 +255,10 @@ EpcController::TopologyBuilt (OFSwitch13DeviceContainer devices)
 
 void
 EpcController::NotifySessionCreated (
-  uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr,
+  uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address pgwAddr,
   BearerList_t bearerList)
 {
-  NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << sgwAddr);
+  NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << pgwAddr);
 
   // Create and save routing information for default bearer
   ContextBearer_t defaultBearer = bearerList.front ();
@@ -272,9 +272,9 @@ EpcController::NotifySessionCreated (
   rInfo->m_teid = teid;
   rInfo->m_imsi = imsi;
   rInfo->m_cellId = cellId;
-  rInfo->m_sgwIdx = GetSwitchIndex (sgwAddr);
+  rInfo->m_pgwIdx = GetSwitchIndex (pgwAddr);
   rInfo->m_enbIdx = GetSwitchIndex (enbAddr);
-  rInfo->m_sgwAddr = sgwAddr;
+  rInfo->m_pgwAddr = pgwAddr;
   rInfo->m_enbAddr = enbAddr;
   rInfo->m_priority = 0x7F;               // Priority for default bearer
   rInfo->m_timeout = 0;                   // No timeout for default bearer
@@ -309,9 +309,9 @@ EpcController::NotifySessionCreated (
       rInfo->m_teid = teid;
       rInfo->m_imsi = imsi;
       rInfo->m_cellId = cellId;
-      rInfo->m_sgwIdx = GetSwitchIndex (sgwAddr);
+      rInfo->m_pgwIdx = GetSwitchIndex (pgwAddr);
       rInfo->m_enbIdx = GetSwitchIndex (enbAddr);
-      rInfo->m_sgwAddr = sgwAddr;
+      rInfo->m_pgwAddr = pgwAddr;
       rInfo->m_enbAddr = enbAddr;
       rInfo->m_priority = 0x1FFF;           // Priority for dedicated bearer
       rInfo->m_timeout = m_dedicatedTmo;    // Timeout for dedicated bearer

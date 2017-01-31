@@ -70,7 +70,7 @@ public:
   uint32_t    GetTeid       (void) const;
   bool        IsDefaultPath (void) const;
   bool        IsLocalPath   (void) const;
-  uint16_t    GetSgwSwIdx   (void) const;
+  uint16_t    GetPgwSwIdx   (void) const;
   uint16_t    GetEnbSwIdx   (void) const;
   RoutingPath GetDownPath   (void) const;
   RoutingPath GetUpPath     (void) const;

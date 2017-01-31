@@ -86,11 +86,11 @@ public:
    * \param imsi The IMSI UE identifier.
    * \param cellId The eNB CellID to which the IMSI UE is attached to.
    * \param enbAddr The eNB IPv4 address.
-   * \param sgwAddr The SgwPgw IPv4 address.
+   * \param pgwAddr The P-GW IPv4 address.
    * \param bearerList The list of context bearers created.
    */
   void SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
-                               Ipv4Address enbAddr, Ipv4Address sgwAddr,
+                               Ipv4Address enbAddr, Ipv4Address pgwAddr,
                                BearerList_t bearerList);
 
 protected:

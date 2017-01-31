@@ -29,7 +29,7 @@ RoutingInfo::RoutingInfo ()
   : m_teid (0),
     m_imsi (0),
     m_cellId (0),
-    m_sgwIdx (0),
+    m_pgwIdx (0),
     m_enbIdx (0),
     m_priority (0),
     m_timeout (0),
@@ -40,7 +40,7 @@ RoutingInfo::RoutingInfo ()
   NS_LOG_FUNCTION (this);
 
   m_enbAddr = Ipv4Address ();
-  m_sgwAddr = Ipv4Address ();
+  m_pgwAddr = Ipv4Address ();
 }
 
 RoutingInfo::~RoutingInfo ()
@@ -129,11 +129,11 @@ RoutingInfo::GetEnbSwIdx (void) const
 }
 
 uint16_t
-RoutingInfo::GetSgwSwIdx (void) const
+RoutingInfo::GetPgwSwIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_sgwIdx;
+  return m_pgwIdx;
 }
 
 Ipv4Address
@@ -145,11 +145,11 @@ RoutingInfo::GetEnbAddr (void) const
 }
 
 Ipv4Address
-RoutingInfo::GetSgwAddr (void) const
+RoutingInfo::GetPgwAddr (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_sgwAddr;
+  return m_pgwAddr;
 }
 
 uint16_t

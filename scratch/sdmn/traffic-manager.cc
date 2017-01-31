@@ -168,7 +168,7 @@ TrafficManager::NotifyAppStop (Ptr<const SdmnClientApp> app)
 
 void
 TrafficManager::SessionCreatedCallback (
-  uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr,
+  uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address pgwAddr,
   BearerList_t bearerList)
 {
   NS_LOG_FUNCTION (this);

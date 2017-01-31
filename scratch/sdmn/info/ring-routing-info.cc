@@ -113,11 +113,11 @@ RingRoutingInfo::IsLocalPath (void) const
 }
 
 uint16_t
-RingRoutingInfo::GetSgwSwIdx (void) const
+RingRoutingInfo::GetPgwSwIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_rInfo->GetSgwSwIdx ();
+  return m_rInfo->GetPgwSwIdx ();
 }
 
 uint16_t

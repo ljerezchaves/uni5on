@@ -253,11 +253,11 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
       std::ostringstream match, act;
 
       // In downlink the input switch is the gateway.
-      uint16_t swIdx = rInfo->GetSgwSwIdx ();
+      uint16_t swIdx = rInfo->GetPgwSwIdx ();
 
       // Building the match string
       match << " eth_type=0x800,ip_proto=17"
-            << ",ip_src=" << rInfo->GetSgwAddr ()
+            << ",ip_src=" << rInfo->GetPgwAddr ()
             << ",ip_dst=" << rInfo->GetEnbAddr ()
             << ",gtp_teid=" << rInfo->GetTeid ();
 
@@ -304,7 +304,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
       // Building the match string.
       match << " eth_type=0x800,ip_proto=17"
             << ",ip_src=" << rInfo->GetEnbAddr ()
-            << ",ip_dst=" << rInfo->GetSgwAddr ()
+            << ",ip_dst=" << rInfo->GetPgwAddr ()
             << ",gtp_teid=" << rInfo->GetTeid ();
 
       // Check for meter entry.
@@ -515,8 +515,8 @@ RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
 
       // Considering default paths those with lower hops.
       RingRoutingInfo::RoutingPath dlPath, ulPath;
-      dlPath = FindShortestPath (rInfo->GetSgwSwIdx (), rInfo->GetEnbSwIdx ());
-      ulPath = FindShortestPath (rInfo->GetEnbSwIdx (), rInfo->GetSgwSwIdx ());
+      dlPath = FindShortestPath (rInfo->GetPgwSwIdx (), rInfo->GetEnbSwIdx ());
+      ulPath = FindShortestPath (rInfo->GetEnbSwIdx (), rInfo->GetPgwSwIdx ());
       ringInfo->SetDefaultPaths (dlPath, ulPath);
     }
   return ringInfo;
@@ -620,7 +620,7 @@ RingController::GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
 {
   NS_LOG_FUNCTION (this << ringInfo << useShortPath);
 
-  uint16_t sgwIdx      = ringInfo->GetSgwSwIdx ();
+  uint16_t pgwIdx      = ringInfo->GetPgwSwIdx ();
   uint16_t enbIdx      = ringInfo->GetEnbSwIdx ();
   uint64_t downBitRate = std::numeric_limits<uint64_t>::max ();
   uint64_t upBitRate   = std::numeric_limits<uint64_t>::max ();
@@ -628,14 +628,14 @@ RingController::GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
   uint16_t current     = enbIdx;
   double   debarFactor = 1.0;
 
-  RingRoutingInfo::RoutingPath upPath = FindShortestPath (enbIdx, sgwIdx);
+  RingRoutingInfo::RoutingPath upPath = FindShortestPath (enbIdx, pgwIdx);
   if (!useShortPath)
     {
       upPath = RingRoutingInfo::InvertPath (upPath);
     }
 
   // From the eNB to the gateway switch index, get the bit rate for each link.
-  while (current != sgwIdx)
+  while (current != pgwIdx)
     {
       uint16_t next = NextSwitchIndex (current, upPath);
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
@@ -676,9 +676,9 @@ RingController::ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
   NS_LOG_INFO ("Reserving resources for GBR bearer " << ringInfo->GetTeid ());
-  PerLinkReserve (ringInfo->GetSgwSwIdx (), ringInfo->GetEnbSwIdx (),
+  PerLinkReserve (ringInfo->GetPgwSwIdx (), ringInfo->GetEnbSwIdx (),
                   ringInfo->GetDownPath (), gbrInfo->GetDownBitRate ());
-  PerLinkReserve (ringInfo->GetEnbSwIdx (), ringInfo->GetSgwSwIdx (),
+  PerLinkReserve (ringInfo->GetEnbSwIdx (), ringInfo->GetPgwSwIdx (),
                   ringInfo->GetUpPath (), gbrInfo->GetUpBitRate ());
   gbrInfo->SetReserved (true);
   return true;
@@ -691,9 +691,9 @@ RingController::ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
   NS_LOG_INFO ("Releasing resources for GBR bearer " << ringInfo->GetTeid ());
-  PerLinkRelease (ringInfo->GetSgwSwIdx (), ringInfo->GetEnbSwIdx (),
+  PerLinkRelease (ringInfo->GetPgwSwIdx (), ringInfo->GetEnbSwIdx (),
                   ringInfo->GetDownPath (), gbrInfo->GetDownBitRate ());
-  PerLinkRelease (ringInfo->GetEnbSwIdx (), ringInfo->GetSgwSwIdx (),
+  PerLinkRelease (ringInfo->GetEnbSwIdx (), ringInfo->GetPgwSwIdx (),
                   ringInfo->GetUpPath (), gbrInfo->GetUpBitRate ());
   gbrInfo->SetReserved (false);
   return true;
@@ -771,7 +771,7 @@ RingController::RemoveMeterRules (Ptr<RoutingInfo> rInfo)
       NS_LOG_DEBUG ("Removing meter entries.");
       if (meterInfo->HasDown ())
         {
-          DpctlExecute (GetDatapathId (rInfo->GetSgwSwIdx ()),
+          DpctlExecute (GetDatapathId (rInfo->GetPgwSwIdx ()),
                         meterInfo->GetDelCmd ());
         }
       if (meterInfo->HasUp ())
