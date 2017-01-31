@@ -80,36 +80,55 @@ void
 MeterInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+
   m_rInfo = 0;
 }
 
 Ptr<RoutingInfo>
 MeterInfo::GetRoutingInfo ()
 {
+  NS_LOG_FUNCTION (this);
+
   return m_rInfo;
+}
+
+uint32_t
+MeterInfo::GetTeid (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_rInfo ? m_rInfo->GetTeid () : 0;
 }
 
 bool
 MeterInfo::IsInstalled (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_isInstalled;
 }
 
 bool
 MeterInfo::HasDown (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_hasDown;
 }
 
 bool
 MeterInfo::HasUp (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_hasUp;
 }
 
 std::string
 MeterInfo::GetDownAddCmd (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   std::ostringstream meter;
   meter << "meter-mod cmd=add,flags=1,meter=" << m_teid
         << " drop:rate=" << m_downBitRate / 1000;
@@ -119,6 +138,8 @@ MeterInfo::GetDownAddCmd (void) const
 std::string
 MeterInfo::GetUpAddCmd (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   std::ostringstream meter;
   meter << "meter-mod cmd=add,flags=1,meter=" << m_teid
         << " drop:rate=" << m_upBitRate / 1000;
@@ -128,6 +149,8 @@ MeterInfo::GetUpAddCmd (void) const
 std::string
 MeterInfo::GetDelCmd (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   std::ostringstream meter;
   meter << "meter-mod cmd=del,meter=" << m_teid;
   return meter.str ();
@@ -136,6 +159,8 @@ MeterInfo::GetDelCmd (void) const
 void
 MeterInfo::SetInstalled (bool installed)
 {
+  NS_LOG_FUNCTION (this << installed);
+
   m_isInstalled = installed;
 }
 

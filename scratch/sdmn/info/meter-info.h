@@ -61,9 +61,10 @@ public:
    * \return The requested field.
    */
   //\{
-  bool IsInstalled (void) const;
-  bool HasDown (void) const;
-  bool HasUp (void) const;
+  uint32_t  GetTeid     (void) const;
+  bool      IsInstalled (void) const;
+  bool      HasDown     (void) const;
+  bool      HasUp       (void) const;
   //\}
 
   /**
@@ -72,12 +73,12 @@ public:
    */
   //\{
   std::string GetDownAddCmd (void) const;
-  std::string GetUpAddCmd (void) const;
-  std::string GetDelCmd (void) const;
+  std::string GetUpAddCmd   (void) const;
+  std::string GetDelCmd     (void) const;
   //\}
 
 protected:
-  /** Destructor implementation */
+  /** Destructor implementation. */
   virtual void DoDispose ();
 
   /** \return RoutingInfo pointer. */
@@ -90,13 +91,13 @@ protected:
   void SetInstalled (bool installed);
 
 private:
-  uint32_t m_teid;          //!< GTP TEID
-  bool     m_isInstalled;   //!< True when this meter is installed
-  bool     m_hasDown;       //!< True for downlink meter
-  bool     m_hasUp;         //!< True for uplink meter
-  uint64_t m_downBitRate;   //!< Downlink meter drop bit rate (bps)
-  uint64_t m_upBitRate;     //!< Uplink meter drop bit rate (bps)
-  Ptr<RoutingInfo> m_rInfo; //!< Routing information
+  uint32_t          m_teid;           //!< GTP TEID
+  bool              m_isInstalled;    //!< True when this meter is installed
+  bool              m_hasDown;        //!< True for downlink meter
+  bool              m_hasUp;          //!< True for uplink meter
+  uint64_t          m_downBitRate;    //!< Downlink meter drop bit rate (bps)
+  uint64_t          m_upBitRate;      //!< Uplink meter drop bit rate (bps)
+  Ptr<RoutingInfo>  m_rInfo;          //!< Routing information
 };
 
 };  // namespace ns3

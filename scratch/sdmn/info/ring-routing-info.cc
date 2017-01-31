@@ -88,6 +88,14 @@ RingRoutingInfo::GetRoutingInfo ()
   return m_rInfo;
 }
 
+uint32_t
+RingRoutingInfo::GetTeid (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_rInfo ? m_rInfo->GetTeid () : 0;
+}
+
 bool
 RingRoutingInfo::IsDefaultPath (void) const
 {

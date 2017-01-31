@@ -38,6 +38,7 @@ RoutingInfo::RoutingInfo ()
     m_isActive (0)
 {
   NS_LOG_FUNCTION (this);
+
   m_enbAddr = Ipv4Address ();
   m_sgwAddr = Ipv4Address ();
 }
@@ -66,132 +67,176 @@ RoutingInfo::DoDispose ()
 GbrQosInformation
 RoutingInfo::GetQosInfo (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_bearer.bearerLevelQos.gbrQosInfo;
 }
 
 EpsBearer::Qci
 RoutingInfo::GetQciInfo (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_bearer.bearerLevelQos.qci;
 }
 
 EpsBearer
 RoutingInfo::GetEpsBearer (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_bearer.bearerLevelQos;
 }
 
 Ptr<EpcTft>
 RoutingInfo::GetTft (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_bearer.tft;
 }
 
 uint32_t
 RoutingInfo::GetTeid (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_teid;
 }
 
 uint64_t
 RoutingInfo::GetImsi (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_imsi;
 }
 
 uint16_t
 RoutingInfo::GetCellId (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_cellId;
 }
 
 uint16_t
 RoutingInfo::GetEnbSwIdx (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_enbIdx;
 }
 
 uint16_t
 RoutingInfo::GetSgwSwIdx (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_sgwIdx;
 }
 
 Ipv4Address
 RoutingInfo::GetEnbAddr (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_enbAddr;
 }
 
 Ipv4Address
 RoutingInfo::GetSgwAddr (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_sgwAddr;
 }
 
 uint16_t
 RoutingInfo::GetPriority (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_priority;
 }
 
 uint16_t
 RoutingInfo::GetTimeout (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_timeout;
 }
 
 bool
 RoutingInfo::HasDownlinkTraffic (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_bearer.tft->HasDownlinkFilter ();
 }
 
 bool
 RoutingInfo::HasUplinkTraffic (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_bearer.tft->HasUplinkFilter ();
 }
 
 bool
 RoutingInfo::IsGbr (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return (!m_isDefault && m_bearer.bearerLevelQos.IsGbr ());
 }
 
 bool
 RoutingInfo::IsDefault (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_isDefault;
 }
 
 bool
 RoutingInfo::IsInstalled (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_isInstalled;
 }
 
 bool
 RoutingInfo::IsActive (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_isActive;
 }
 
 void
 RoutingInfo::SetInstalled (bool installed)
 {
+  NS_LOG_FUNCTION (this << installed);
+
   m_isInstalled = installed;
 }
 
 void
 RoutingInfo::SetActive (bool active)
 {
+  NS_LOG_FUNCTION (this << active);
+
   m_isActive = active;
 }
 
 void
 RoutingInfo::IncreasePriority (void)
 {
+  NS_LOG_FUNCTION (this);
+
   m_priority++;
 }
 

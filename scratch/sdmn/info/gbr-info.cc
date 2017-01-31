@@ -82,42 +82,63 @@ void
 GbrInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+
   m_rInfo = 0;
 }
 
 Ptr<RoutingInfo>
 GbrInfo::GetRoutingInfo ()
 {
+  NS_LOG_FUNCTION (this);
+
   return m_rInfo;
 }
 
 void
 GbrInfo::SetReserved (bool reserved)
 {
+  NS_LOG_FUNCTION (this << reserved);
+
   m_isReserved = reserved;
+}
+
+uint32_t
+GbrInfo::GetTeid (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_rInfo ? m_rInfo->GetTeid () : 0;
 }
 
 uint16_t
 GbrInfo::GetDscp (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_dscp;
 }
 
 uint64_t
 GbrInfo::GetDownBitRate (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_hasDown ? m_downBitRate : 0;
 }
 
 uint64_t
 GbrInfo::GetUpBitRate (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_hasUp ? m_upBitRate : 0;
 }
 
 bool
 GbrInfo::IsReserved (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_isReserved;
 }
 

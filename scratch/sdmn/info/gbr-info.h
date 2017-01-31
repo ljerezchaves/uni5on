@@ -61,14 +61,15 @@ public:
    * \return The requested field.
    */
   //\{
-  uint16_t GetDscp (void) const;
-  uint64_t GetDownBitRate (void) const;
-  uint64_t GetUpBitRate (void) const;
-  bool IsReserved (void) const;
+  uint32_t  GetTeid         (void) const;
+  uint16_t  GetDscp         (void) const;
+  uint64_t  GetDownBitRate  (void) const;
+  uint64_t  GetUpBitRate    (void) const;
+  bool      IsReserved      (void) const;
   //\}
 
 protected:
-  /** Destructor implementation */
+  /** Destructor implementation. */
   virtual void DoDispose ();
 
   /** \return RoutingInfo pointer. */
@@ -81,14 +82,14 @@ protected:
   void SetReserved (bool reserved);
 
 private:
-  uint32_t m_teid;          //!< GTP TEID
-  uint8_t  m_dscp;          //!< DiffServ DSCP value for this bearer
-  bool     m_isReserved;    //!< True when resources are reserved
-  bool     m_hasDown;       //!< True for downlink reserve
-  bool     m_hasUp;         //!< True for uplink reserve
-  uint64_t m_downBitRate;   //!< Downlink reserved bit rate
-  uint64_t m_upBitRate;     //!< Uplink reserved bit rate
-  Ptr<RoutingInfo> m_rInfo; //!< Routing information
+  uint32_t          m_teid;         //!< GTP TEID
+  uint8_t           m_dscp;         //!< DiffServ DSCP value for this bearer
+  bool              m_isReserved;   //!< True when resources are reserved
+  bool              m_hasDown;      //!< True for downlink reserve
+  bool              m_hasUp;        //!< True for uplink reserve
+  uint64_t          m_downBitRate;  //!< Downlink reserved bit rate
+  uint64_t          m_upBitRate;    //!< Uplink reserved bit rate
+  Ptr<RoutingInfo>  m_rInfo;        //!< Routing information
 };
 
 };  // namespace ns3

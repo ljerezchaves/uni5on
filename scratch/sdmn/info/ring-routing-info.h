@@ -67,6 +67,7 @@ public:
    * \return The requested field.
    */
   //\{
+  uint32_t    GetTeid       (void) const;
   bool        IsDefaultPath (void) const;
   bool        IsLocalPath   (void) const;
   uint16_t    GetSgwSwIdx   (void) const;
