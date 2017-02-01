@@ -69,6 +69,7 @@ void
 RingNetwork::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+
   EpcNetwork::DoDispose ();
 }
 
@@ -166,6 +167,8 @@ RingNetwork::TopologyCreate ()
 uint16_t
 RingNetwork::TopologyGetPgwIndex ()
 {
+  NS_LOG_FUNCTION (this);
+
   // Connect the P-GW node to switch index 0.
   return 0;
 }
@@ -173,6 +176,8 @@ RingNetwork::TopologyGetPgwIndex ()
 uint16_t
 RingNetwork::TopologyGetEnbIndex (uint16_t cellId)
 {
+  NS_LOG_FUNCTION (this << cellId);
+
   // Connect the eNBs nodes to switches indexes in clockwise direction,
   // starting at switch index 1. The three eNBs from same cell site are
   // connected to the same switch in the ring network.

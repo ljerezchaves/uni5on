@@ -32,10 +32,11 @@ NS_OBJECT_ENSURE_REGISTERED (EpcNetwork);
 const uint16_t EpcNetwork::m_gtpuPort = 2152;
 
 EpcNetwork::EpcNetwork ()
-  : m_ofSwitchHelper (0),
-    m_epcCtrlApp (0),
+  : m_epcCtrlApp (0),
     m_epcCtrlNode (0),
+    m_ofSwitchHelper (0),
     m_pgwNode (0),
+    m_pgwSwitchDev (0),
     m_webNode (0),
     m_epcStats (0)
 {
@@ -158,36 +159,48 @@ EpcNetwork::EnablePcap (std::string prefix, bool promiscuous)
 void
 EpcNetwork::SetSwitchDeviceAttribute (std::string n1, const AttributeValue &v1)
 {
+  NS_LOG_FUNCTION (this);
+
   m_ofSwitchHelper->SetDeviceAttribute (n1, v1);
 }
 
 uint16_t
 EpcNetwork::GetNSwitches (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_ofSwitches.GetN ();
 }
 
 Ptr<Node>
 EpcNetwork::GetWebNode () const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_webNode;
 }
 
 Ipv4Address
 EpcNetwork::GetWebIpAddress () const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_webSgiIpAddr;
 }
 
 Ptr<Node>
 EpcNetwork::GetControllerNode () const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_epcCtrlNode;
 }
 
 Ptr<EpcController>
 EpcNetwork::GetControllerApp () const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_epcCtrlApp;
 }
 
@@ -195,6 +208,7 @@ void
 EpcNetwork::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+
   m_ofSwitchHelper = 0;
   m_epcCtrlNode = 0;
   m_epcCtrlApp = 0;
@@ -245,7 +259,7 @@ EpcNetwork::NotifyConstructionCompleted (void)
   TopologyCreate ();
 
   // Configuring the P-GW and the Internet topology.
-  ConfigureGatewayAndInternet ();
+  ConfigurePgwAndInternet ();
 
   // The OpenFlow backhaul network topology is done. Connect the OpenFlow
   // switches to the EPC controller. From this point on it is not possible to
@@ -258,13 +272,15 @@ EpcNetwork::NotifyConstructionCompleted (void)
   std::string prefix = stringValue.Get ();
   m_ofSwitchHelper->EnableDatapathStats (prefix + "ofswitch-stats", true);
 
-  // Chain up
+  // Chain up.
   Object::NotifyConstructionCompleted ();
 }
 
 void
 EpcNetwork::RegisterNodeAtSwitch (uint16_t switchIdx, Ptr<Node> node)
 {
+  NS_LOG_FUNCTION (this << switchIdx << node);
+
   std::pair<NodeSwitchMap_t::iterator, bool> ret;
   std::pair<Ptr<Node>, uint16_t> entry (node, switchIdx);
   ret = m_nodeSwitchMap.insert (entry);
@@ -278,8 +294,10 @@ EpcNetwork::RegisterNodeAtSwitch (uint16_t switchIdx, Ptr<Node> node)
 }
 
 void
-EpcNetwork::RegisterGatewayAtSwitch (uint16_t switchIdx, Ptr<Node> node)
+EpcNetwork::RegisterPgwAtSwitch (uint16_t switchIdx, Ptr<Node> node)
 {
+  NS_LOG_FUNCTION (this << switchIdx << node);
+
   m_pgwSwIdx = switchIdx;
   RegisterNodeAtSwitch (switchIdx, node);
 }
@@ -287,6 +305,8 @@ EpcNetwork::RegisterGatewayAtSwitch (uint16_t switchIdx, Ptr<Node> node)
 Ptr<OFSwitch13Device>
 EpcNetwork::GetSwitchDevice (uint16_t index) const
 {
+  NS_LOG_FUNCTION (this << index);
+
   NS_ASSERT (index < m_ofDevices.GetN ());
   return m_ofDevices.Get (index);
 }
@@ -294,6 +314,8 @@ EpcNetwork::GetSwitchDevice (uint16_t index) const
 uint16_t
 EpcNetwork::GetSwitchIdxForNode (Ptr<Node> node) const
 {
+  NS_LOG_FUNCTION (this << node);
+
   NodeSwitchMap_t::const_iterator ret;
   ret = m_nodeSwitchMap.find (node);
   if (ret != m_nodeSwitchMap.end ())
@@ -307,6 +329,8 @@ EpcNetwork::GetSwitchIdxForNode (Ptr<Node> node) const
 uint16_t
 EpcNetwork::GetSwitchIdxForDevice (Ptr<OFSwitch13Device> dev) const
 {
+  NS_LOG_FUNCTION (this << dev);
+
   uint16_t i;
   for (i = 0; i < GetNSwitches (); i++)
     {
@@ -321,6 +345,8 @@ EpcNetwork::GetSwitchIdxForDevice (Ptr<OFSwitch13Device> dev) const
 uint16_t
 EpcNetwork::GetGatewaySwitchIdx () const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_pgwSwIdx;
 }
 
@@ -328,9 +354,9 @@ void
 EpcNetwork::InstallController (Ptr<EpcController> controller)
 {
   NS_LOG_FUNCTION (this << controller);
-  NS_ASSERT_MSG (!m_epcCtrlApp, "Controller application already set.");
 
-  // Installing the controller application into controller node
+  // Installing the controller application into controller node.
+  NS_ASSERT_MSG (!m_epcCtrlApp, "Controller application already set.");
   m_epcCtrlApp = controller;
   m_ofSwitchHelper->InstallController (m_epcCtrlNode, m_epcCtrlApp);
 }
@@ -338,31 +364,32 @@ EpcNetwork::InstallController (Ptr<EpcController> controller)
 Ptr<NetDevice>
 EpcNetwork::S1EnbAttach (Ptr<Node> node, uint16_t cellId)
 {
-  NS_LOG_FUNCTION (this << node);
+  NS_LOG_FUNCTION (this << node << cellId);
+
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
 
   uint16_t swIdx = TopologyGetEnbIndex (cellId);
   RegisterNodeAtSwitch (swIdx, node);
   Ptr<Node> swNode = m_ofSwitches.Get (swIdx);
 
-  // Creating a link between the switch and the node
+  // Creating a link between the switch and the node.
   NetDeviceContainer devices;
   NodeContainer pair;
   pair.Add (swNode);
   pair.Add (node);
-  devices = m_csmaHelper.Install (pair);  // FIXME Vai usar mesmo o gwHelper?
+  devices = m_csmaHelper.Install (pair);
 
   Ptr<CsmaNetDevice> portDev, nodeDev;
   portDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
   nodeDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
 
-  // Setting interface names for pacp filename
+  // Setting interface names for pacp filename.
   Names::Add (Names::FindName (swNode) + "+" +
               Names::FindName (node), portDev);
   Names::Add (Names::FindName (node) + "+" +
               Names::FindName (swNode), nodeDev);
 
-  // Set S1U IPv4 address for the new device at node
+  // Set S1U IPv4 address for the new device at node.
   Ipv4InterfaceContainer nodeIpIfaces =
     m_s5AddrHelper.Assign (NetDeviceContainer (nodeDev));
   Ipv4Address nodeAddr = nodeIpIfaces.GetAddress (0);
@@ -372,7 +399,7 @@ EpcNetwork::S1EnbAttach (Ptr<Node> node, uint16_t cellId)
   Ptr<OFSwitch13Port> swPort = swDev->AddSwitchPort (portDev);
   uint32_t portNum = swPort->GetPortNo ();
 
-  // Notify the controller of a new device attached to network
+  // Notify the controller of a new device attached to network.
   m_epcCtrlApp->NewS5Attach (nodeDev, nodeAddr, swDev, swIdx, portNum);
 
   return nodeDev;
@@ -382,6 +409,7 @@ NetDeviceContainer
 EpcNetwork::X2Attach (Ptr<Node> enb1, Ptr<Node> enb2)
 {
   NS_LOG_FUNCTION (this << enb1 << enb2);
+
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
 
   // Create a P2P connection between the eNBs.
@@ -391,7 +419,7 @@ EpcNetwork::X2Attach (Ptr<Node> enb1, Ptr<Node> enb2)
   p2ph.SetChannelAttribute ("Delay", TimeValue (Seconds (0)));
   NetDeviceContainer enbDevices =  p2ph.Install (enb1, enb2);
 
-  // // Creating a link between the firts eNB and its switch
+  // // TODO Creating a link between the firts eNB and its switch
   // uint16_t swIdx1 = GetSwitchIdxForNode (enb1);
   // Ptr<Node> swNode1 = m_ofSwitches.Get (swIdx1);
   // Ptr<OFSwitch13Device> swDev1 = GetSwitchDevice (swIdx1);
@@ -444,14 +472,14 @@ EpcNetwork::X2Attach (Ptr<Node> enb1, Ptr<Node> enb2)
 }
 
 void
-EpcNetwork::ConfigureGatewayAndInternet ()
+EpcNetwork::ConfigurePgwAndInternet ()
 {
   NS_LOG_FUNCTION (this);
 
   //
   // The first part is to connect the P-GW node to the Interent Web server.
   //
-  // Creating the SGi interface
+  // Creating the SGi interface.
   m_sgiDevices = m_csmaHelper.Install (m_pgwNode, m_webNode);
 
   Ptr<CsmaNetDevice> pgwSgiDev, webSgiDev;
@@ -481,7 +509,7 @@ EpcNetwork::ConfigureGatewayAndInternet ()
   m_webSgiIpAddr = webSgiIfContainer.GetAddress (0);
   NS_LOG_DEBUG ("Web SGi interface address: " << m_webSgiIpAddr);
 
-  // Defining static routes at the Internet Web server to the LTE network
+  // Defining static routes at the Internet Web server to the LTE network.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
   Ptr<Ipv4StaticRouting> webHostStaticRouting =
     ipv4RoutingHelper.GetStaticRouting (m_webNode->GetObject<Ipv4> ());
@@ -495,7 +523,7 @@ EpcNetwork::ConfigureGatewayAndInternet ()
   // Get the switch index for P-GW attach.
   uint16_t swIdx = TopologyGetPgwIndex ();
   Ptr<Node> swNode = m_ofSwitches.Get (swIdx);
-  RegisterGatewayAtSwitch (swIdx, m_pgwNode);
+  RegisterPgwAtSwitch (swIdx, m_pgwNode);
 
   // Connecting the P-GW to the backhaul over S5 interface.
   NetDeviceContainer devices = m_csmaHelper.Install (swNode, m_pgwNode);
@@ -526,7 +554,7 @@ EpcNetwork::ConfigureGatewayAndInternet ()
   Ptr<OFSwitch13Port> pgwS5Port = m_pgwSwitchDev->AddSwitchPort (pgwS5PortDev);
   uint32_t pgwS5PortNum = pgwS5Port->GetPortNo ();
 
-  // Create the P-GW S5 user-plane application
+  // Create the P-GW S5 user-plane application.
   Mac48Address webSgiMacAddr, pgwSgiMacAddr;
   webSgiMacAddr = Mac48Address::ConvertFrom (webSgiDev->GetAddress ());
   pgwSgiMacAddr = Mac48Address::ConvertFrom (pgwSgiDev->GetAddress ());
@@ -553,7 +581,7 @@ EpcNetwork::ConfigureGatewayAndInternet ()
 }
 
 //
-// Implementing methods inherited from EpcHelper
+// Implementing methods inherited from EpcHelper.
 //
 uint8_t
 EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
@@ -561,7 +589,7 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
 {
   NS_LOG_FUNCTION (this << ueDevice << imsi);
 
-  // Retrieve the IPv4 address of the UE and notify it to the S-GW;
+  // Retrieve the IPv4 address of the UE and notify it to the S-GW.
   Ptr<Node> ueNode = ueDevice->GetNode ();
   Ptr<Ipv4> ueIpv4 = ueNode->GetObject<Ipv4> ();
   NS_ASSERT_MSG (ueIpv4 != 0, "UEs need to have IPv4 installed.");
@@ -681,44 +709,48 @@ EpcNetwork::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 Ptr<Node>
 EpcNetwork::GetPgwNode ()
 {
+  NS_LOG_FUNCTION (this);
+
   return m_pgwNode;
 }
 
 Ipv4InterfaceContainer
 EpcNetwork::AssignUeIpv4Address (NetDeviceContainer ueDevices)
 {
+  NS_LOG_FUNCTION (this);
+
   return m_ueAddrHelper.Assign (ueDevices);
 }
 
 Ipv4Address
 EpcNetwork::GetUeDefaultGatewayAddress ()
 {
+  NS_LOG_FUNCTION (this);
+
   return m_pgwGwAddr;
 }
 
 Ptr<EpcMme>
 EpcNetwork::GetMmeElement ()
-{ // FIXME Vai pro controlador
+{
+  NS_LOG_FUNCTION (this);
+
   return m_epcCtrlApp->m_mme;
 }
 
 Ipv4Address
 EpcNetwork::GetSgwS1uAddress ()
 {
-  // FIXME: quando mudar as interface e separar s5 e s1 vai ter que mudar aqui
-  return m_pgwS5Addr;
-}
+  NS_LOG_FUNCTION (this);
 
-Ipv4Address
-EpcNetwork::GetSgwS5Address ()
-{
-  // TODO Ainda nao temos o sgw e as interfaces diferentes
-  return Ipv4Address ("1.1.1.1");
+  return m_pgwS5Addr;
 }
 
 Ipv4Address
 EpcNetwork::GetAddressForDevice (Ptr<NetDevice> device)
 {
+  NS_LOG_FUNCTION (this << device);
+
   Ptr<Node> node = device->GetNode ();
   Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
   int32_t idx = ipv4->GetInterfaceForDevice (device);

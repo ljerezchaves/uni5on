@@ -28,9 +28,9 @@ namespace ns3 {
 
 /**
  * \ingroup sdmn
- * This class generates and simple n-switch OpenFlow ring topology controlled
- * by RingController, which will be used as backaul infrastructure for the SDMN
- * architecture.
+ * This class creates and simple n-switch OpenFlow ring topology controlled by
+ * a RingController. This OpenFlow network which will be used as backaul
+ * infrastructure for the SDMN architecture.
  */
 class RingNetwork : public EpcNetwork
 {
@@ -52,15 +52,15 @@ protected:
   void NotifyConstructionCompleted (void);
 
   // Inherited from EpcNetwork.
-  void TopologyCreate ();
+  void     TopologyCreate ();
   uint16_t TopologyGetPgwIndex ();
   uint16_t TopologyGetEnbIndex (uint16_t cellId);
 
 private:
-  uint16_t          m_numNodes;     //!< Number of switches in this topology.
-  DataRate          m_linkRate;     //!< Link data rate for this topology.
-  Time              m_linkDelay;    //!< Link delay for this topology.
-  CsmaHelper        m_csmaHelper;   //!< Csma connection helper.
+  uint16_t    m_numNodes;     //!< Number of switches in this topology.
+  DataRate    m_linkRate;     //!< Link data rate for this topology.
+  Time        m_linkDelay;    //!< Link delay for this topology.
+  CsmaHelper  m_csmaHelper;   //!< Csma connection helper.
 
 }; // class RingNetwork
 

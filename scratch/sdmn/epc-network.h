@@ -36,8 +36,8 @@ class EpcController;
  * \ingroup sdmn
  * This class extends the EpcHelper to create an OpenFlow EPC S5 backhaul
  * network infrastructure, where EPC S5 entities (P-GW and S-GW) are connected
- * through CSMA devices to the user-defined backhaul network. This is an
- * abstract base class which should be extended to create any desired network
+ * through CSMA devices to the OpenFlow backhaul network. This is an abstract
+ * base class which should be extended to create any desired backhaul network
  * topology. For each subclass, a corresponding topology-aware controller must
  * be implemented, extending the generig EpcController.
  */
@@ -53,8 +53,7 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  // Inherited from EpcHelper. These methods will be called from the LteHelper
-  // to notify the EPC about topology configuration.
+  // Inherited from EpcHelper. FIXME
   virtual uint8_t ActivateEpsBearer (Ptr<NetDevice> ueLteDevice, uint64_t imsi,
                                      Ptr<EpcTft> tft, EpsBearer bearer);
   virtual void AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice,
@@ -65,6 +64,7 @@ public:
   virtual Ipv4InterfaceContainer AssignUeIpv4Address (
     NetDeviceContainer ueDevices);
   virtual Ipv4Address GetUeDefaultGatewayAddress ();
+  // Inherited from EpcHelper.
 
   /**
    * Connect the eNBs to the S1-U interface over the backhaul network
@@ -85,27 +85,27 @@ public:
   NetDeviceContainer X2Attach (Ptr<Node> enb1, Ptr<Node> enb2);
 
   /**
-   * Enable pcap on LTE EPC network devices (S1-U and X2), and OpenFlow control
-   * and user planes.
-   * \param prefix The file prefix.
+   * Enable PCAP traces on LTE EPC network devices, OpenFlow channel
+   * (control-plane) and switch ports (data-plane).
+   * \param prefix Filename prefix to use for pcap files.
    * \param promiscuous If true, enable promisc trace.
    */
   void EnablePcap (std::string prefix, bool promiscuous = false);
 
   /**
-   * Set an attribute for ns3::OFSwitch13Device
-   * \param n1 the name of the attribute to set.
-   * \param v1 the value of the attribute to set.
+   * Set an attribute for ns3::OFSwitch13Device factory.
+   * \param n1 The name of the attribute to set.
+   * \param v1 The value of the attribute to set.
    */
   void SetSwitchDeviceAttribute (std::string n1, const AttributeValue &v1);
 
   /**
-   * \return Number of switches in the network.
+   * \return The number of switches in the backhaul network.
    */
   uint16_t GetNSwitches (void) const;
 
   /**
-   * Get the pointer to the Internet Web server node created by this class.
+   * Get a pointer to the Internet Web server node created by this class.
    * \return The pointer to the web node.
    */
   Ptr<Node> GetWebNode () const;
@@ -117,190 +117,183 @@ public:
   Ipv4Address GetWebIpAddress () const;
 
   /**
-   * Retrieve the controller node pointer.
+   * Get a pointer to the OpenFlow EPC controller node created by this class.
    * \return The OpenFlow controller node.
    */
   Ptr<Node> GetControllerNode () const;
 
   /**
-   * Retrieve the controller application pointer.
+   * Get a pointer to the OpenFlow EPC controller app created by this class.
    * \return The OpenFlow controller application.
    */
   Ptr<EpcController> GetControllerApp () const;
 
   /**
-   * Get the OFSwitch13Device of a specific switch.
+   * Get a pointer to the OpenFlow switch device for a given switch index.
    * \param index The switch index.
-   * \return The pointer to the switch OFSwitch13Device.
+   * \return The OpenFlow switch device.
    */
   Ptr<OFSwitch13Device> GetSwitchDevice (uint16_t index) const;
 
   /**
-   * Retrieve the switch index for node pointer.
-   * \param node Ptr<Node> The node pointer.
-   * \return The switch index in m_ofSwitches.
+   * Get the switch index from the node pointer.
+   * \param node The node pointer.
+   * \return The switch index.
    */
   uint16_t GetSwitchIdxForNode (Ptr<Node> node) const;
 
   /**
-   * Retrieve the switch index for switch device.
-   * \param dev The OpenFlow device pointer.
-   * \return The switch index in m_ofSwitches.
+   * Get the switch index from the OpenFlow switch device.
+   * \param dev The OpenFlow switch device.
+   * \return The switch index.
    */
   uint16_t GetSwitchIdxForDevice (Ptr<OFSwitch13Device> dev) const;
 
   /**
-   * Retrieve the switch index at which the P-GW is connected.
-   * \return The switch index in m_ofSwitches.
+   * Get the switch index at which the P-GW node is connected.
+   * \return The switch index.
    */
   uint16_t GetGatewaySwitchIdx () const;
 
   /**
-   * BoolTracedCallback signature for topology creation completed.
-   * \param devices The NetDeviceContainer for OpenFlow switch devices.
+   * TracedCallback signature for topology creation completed.
+   * \param devices The container of OpenFlow switch devices.
    */
   typedef void (*TopologyTracedCallback)(NetDeviceContainer devices);
 
-  /** Default GTP-U UDP port for tunnel sockets */
+  /** Default GTP-U UDP port for tunnel sockets. */
   static const uint16_t m_gtpuPort;
 
 protected:
-  /** Destructor implementation */
+  /** Destructor implementation. */
   virtual void DoDispose ();
 
-  // Inherited from ObjectBase
+  // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
 
-  /** Creates the OpenFlow network infrastructure topology with controller. */
+  /**
+   * Create the OpenFlow EPC controller application and switch devices for the
+   * OpenFlow network infrastructure, connecting them accordingly to the
+   * desired topology.
+   */
   virtual void TopologyCreate () = 0;
 
   /**
-   * Get the switch index in the backhaul network topology to attach the P-GW.
+   * Get the switch index at which the P-GW node should be connected.
    * \return The switch index.
    */
   virtual uint16_t TopologyGetPgwIndex () = 0;
 
   /**
-   * Get the switch index in the backhaul network topology to attach the given
-   * eNB.
+   * Get the switch index at which the given eNB should be connected.
    * \param cellId The eNB cell id.
    * \return The switch index.
    */
   virtual uint16_t TopologyGetEnbIndex (uint16_t cellId) = 0;
 
   /**
-   * Install the EPC controller for this network.
+   * Install the OpenFlow EPC controller for this network.
    * \param controller The controller application.
    */
   void InstallController (Ptr<EpcController> controller);
 
-  /** New connection between two switches trace source. */
+  /** Trace source for new connection between two switches. */
   TracedCallback<Ptr<ConnectionInfo> > m_newConnTrace;
 
-  /** Connections between switches finished trace source. */
+  /** Trace source for connections between switches finished. */
   TracedCallback<OFSwitch13DeviceContainer> m_topoBuiltTrace;
 
-  // Member variables used by derived topology classes
-  NodeContainer                   m_ofSwitches;       //!< Switch nodes.
-  OFSwitch13DeviceContainer       m_ofDevices;        //!< Switch devices.
-  Ptr<OFSwitch13Helper>           m_ofSwitchHelper;   //!< Switch helper.
-  uint16_t                        m_linkMtu;          //!< Link mtu.
-  Ptr<EpcController>              m_epcCtrlApp;       //!< EPC controller app.
+  // EPC controller
+  Ptr<EpcController>            m_epcCtrlApp;       //!< EPC controller app.
+  Ptr<Node>                     m_epcCtrlNode;      //!< EPC controller node.
+
+  // OpenFlow switches, helper and connection attribute
+  NodeContainer                 m_ofSwitches;       //!< Switch nodes.
+  OFSwitch13DeviceContainer     m_ofDevices;        //!< Switch devices.
+  Ptr<OFSwitch13Helper>         m_ofSwitchHelper;   //!< Switch helper.
+  uint16_t                      m_linkMtu;          //!< Link MTU.
 
 private:
   /**
-   * Store the pair <node, switch index> for further use.
-   * \param switchIdx The switch index in m_ofSwitches.
+   * Save the pair <node, switch index>.
+   * \param switchIdx The switch index.
    * \param Ptr<Node> The node pointer.
    */
   void RegisterNodeAtSwitch (uint16_t switchIdx, Ptr<Node> node);
 
   /**
-   * Store the switch index at which the P-GW is connected.
-   * \param switchIdx The switch index in m_ofSwitches.
-   * \param Ptr<Node> The node pointer.
+   * Save the switch index at which the P-GW is connected.
+   * \param switchIdx The switch index.
+   * \param Ptr<Node> The P-GW node pointer.
    */
-  void RegisterGatewayAtSwitch (uint16_t switchIdx, Ptr<Node> node);
+  void RegisterPgwAtSwitch (uint16_t switchIdx, Ptr<Node> node);
 
   /**
-   * This method will create the P-GW node, attach it to the backhaul network
-   * and configure it as an OpenFlow switch. It will also create the Internet
-   * web server and connect to the P-GW.
+   * Create the P-GW node, configure it as an OpenFlow switch and attach it to
+   * the backhaul network infrastructure vir S5 interface. Then, create the
+   * Internet web server node and connect it to the P-GW via SGi interface.
    */
-  void ConfigureGatewayAndInternet ();
+  void ConfigurePgwAndInternet ();
 
-  // Connection attributes and helper
-  CsmaHelper                      m_csmaHelper;       //!< Connection helper.
-  DataRate                        m_linkRate;         //!< Link data rate.
-  Time                            m_linkDelay;        //!< Link delay.
-
-  Ptr<Node>                       m_epcCtrlNode;      //!< EPC controller node.
-
-  // EPC user-plane device
-  NetDeviceContainer              m_x2Devices;        //!< X2 devices.
-  NetDeviceContainer              m_s5Devices;        //!< S5 devices.
-  NetDeviceContainer              m_sgiDevices;       //!< SGi devices.
-
-  // IP addresses
-  Ipv4Address                     m_ueNetworkAddr;    //!< UE network address.
-  Ipv4Address                     m_s5NetworkAddr;    //!< S5 network address.
-  Ipv4Address                     m_x2NetworkAddr;    //!< X2 network address.
-  Ipv4Address                     m_webNetworkAddr;   //!< Web network address.
-
-  Ipv4AddressHelper               m_ueAddrHelper;     //!< UE address helper.
-  Ipv4AddressHelper               m_s5AddrHelper;     //!< S5 address helper.
-  Ipv4AddressHelper               m_x2AddrHelper;     //!< X2 address helper.
-  Ipv4AddressHelper               m_webAddrHelper;    //!< Web address helper.
-
-  // P-GW
-  Ptr<Node>                       m_pgwNode;          //!< P-GW node.
-  Ptr<OFSwitch13Device>           m_pgwSwitchDev;     //!< P-GW switch device.
-  uint16_t                        m_pgwSwIdx;         //!< P-GW switch index.
-  Ipv4Address                     m_pgwSgiAddr;       //!< P-GW SGi IP addr.
-  Ipv4Address                     m_pgwS5Addr;        //!< P-GW S5 IP addr.
-  Ipv4Address                     m_pgwGwAddr;        //!< P-GW gateway addr.
-
-  // Internet network (web server)
-  Ptr<Node>                       m_webNode;          //!< Web server node.
-  Ipv4Address                     m_webSgiIpAddr;     //!< Web server IP addr.
-  // Statistics
-  Ptr<BackhaulStatsCalculator>    m_epcStats;         //!< Backhaul statistics.
-
-  /** Map saving Node / Switch indexes. */
-  typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;
-  NodeSwitchMap_t     m_nodeSwitchMap;  //!< Registered nodes per switch idx.
-
-
-  // FIXME
-  // Colocando aqui todas as coisas do sdmn-epc-heper... organizar depois.
-  //
-public:
-  /** FIXME Isso aqui vai pro controlador!
-   * Get a pointer to the MME element.
+  /**
+   * Get a pointer to the MME element. FIXME
    * \return The MME element.
    */
   Ptr<EpcMme> GetMmeElement ();
 
-private:
   /**
-   * Retrieve the S-GW IP address at the S1-U interface.
-   * \return The Ipv4Addrress of the S-GW S1-U interface.
+   * Retrieve the S-GW IP address at the S1-U interface. FIXME
+   * \return The S-GW IP address at S1-U interface.
    */
   virtual Ipv4Address GetSgwS1uAddress ();
 
   /**
-   * Retrieve the S-GW IP address at the S5 interface.
-   * \return The Ipv4Addrress of the S-GW S5 interface.
+   * Get the IP address for a given device.
+   * \param device The network device.
+   * \return The IP address assigned to this device.
    */
-  virtual Ipv4Address GetSgwS5Address ();
+  Ipv4Address GetAddressForDevice (Ptr<NetDevice> device);
 
-  /**
-   * Retrieve the IP address for device, set by the OpenFlow network.
-   * \param device NetDevice connected to the OpenFlow network.
-   * \return The Ipv4Addrress of the EPC interface for the specific NetDevice
-   * connected to the OpenFlow network.
-   */
-  virtual Ipv4Address GetAddressForDevice (Ptr<NetDevice> device);
+  // Helper and connection attributes
+  CsmaHelper                    m_csmaHelper;       //!< Connection helper.
+  DataRate                      m_linkRate;         //!< Link data rate.
+  Time                          m_linkDelay;        //!< Link delay.
+
+  // EPC user-plane devices
+  NetDeviceContainer            m_x2Devices;        //!< X2 devices.
+  NetDeviceContainer            m_s5Devices;        //!< S5 devices.
+  NetDeviceContainer            m_sgiDevices;       //!< SGi devices.
+
+  // IP addresses
+  Ipv4Address                   m_ueNetworkAddr;    //!< UE network address.
+  Ipv4Address                   m_s5NetworkAddr;    //!< S5 network address.
+  Ipv4Address                   m_x2NetworkAddr;    //!< X2 network address.
+  Ipv4Address                   m_webNetworkAddr;   //!< Web network address.
+
+  // IP address helpers
+  Ipv4AddressHelper             m_ueAddrHelper;     //!< UE address helper.
+  Ipv4AddressHelper             m_s5AddrHelper;     //!< S5 address helper.
+  Ipv4AddressHelper             m_x2AddrHelper;     //!< X2 address helper.
+  Ipv4AddressHelper             m_webAddrHelper;    //!< Web address helper.
+
+  // P-GW
+  Ptr<Node>                     m_pgwNode;          //!< P-GW node.
+  Ptr<OFSwitch13Device>         m_pgwSwitchDev;     //!< P-GW switch device.
+  uint16_t                      m_pgwSwIdx;         //!< P-GW switch index.
+  Ipv4Address                   m_pgwSgiAddr;       //!< P-GW SGi IP addr.
+  Ipv4Address                   m_pgwS5Addr;        //!< P-GW S5 IP addr.
+  Ipv4Address                   m_pgwGwAddr;        //!< P-GW gateway addr.
+
+  // Internet web server
+  Ptr<Node>                     m_webNode;          //!< Web server node.
+  Ipv4Address                   m_webSgiIpAddr;     //!< Web server IP addr.
+
+  // Statistics calculator
+  Ptr<BackhaulStatsCalculator>  m_epcStats;         //!< Backhaul statistics.
+
+  /** Map saving node / switch index. */
+  typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;
+  NodeSwitchMap_t m_nodeSwitchMap;  //!< Registered nodes by switch index.
 };
 
 };  // namespace ns3
