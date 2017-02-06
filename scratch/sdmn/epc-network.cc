@@ -43,7 +43,7 @@ EpcNetwork::EpcNetwork ()
   NS_LOG_FUNCTION (this);
 
   // Let's use point to point connections for OpenFlow channel
-  m_ofSwitchHelper = CreateObjectWithAttributes<OFSwitch13Helper> (
+  m_ofSwitchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
     "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
   // Creating network nodes

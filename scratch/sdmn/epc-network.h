@@ -210,7 +210,7 @@ protected:
   // OpenFlow switches, helper and connection attribute
   NodeContainer                 m_ofSwitches;       //!< Switch nodes.
   OFSwitch13DeviceContainer     m_ofDevices;        //!< Switch devices.
-  Ptr<OFSwitch13Helper>         m_ofSwitchHelper;   //!< Switch helper.
+  Ptr<OFSwitch13InternalHelper> m_ofSwitchHelper;   //!< Switch helper.
   uint16_t                      m_linkMtu;          //!< Link MTU.
 
 private:
