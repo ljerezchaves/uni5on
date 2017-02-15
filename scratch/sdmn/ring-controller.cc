@@ -40,7 +40,8 @@ TypeId
 RingController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RingController")
-    .SetParent (EpcController::GetTypeId ())
+    .SetParent<EpcController> ()
+    .AddConstructor<RingController> ()
     .AddAttribute ("Strategy",
                    "The ring routing strategy.",
                    EnumValue (RingController::SPO),

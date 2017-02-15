@@ -78,11 +78,13 @@ LteNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::LteNetwork")
     .SetParent<Object> ()
-    .AddAttribute ("NumSites", "The total number of macro eNBs sites.",
+    .AddAttribute ("NumSites",
+                   "The total number of macro sites, with 3 eNBs each.",
                    UintegerValue (1),
                    MakeUintegerAccessor (&LteNetwork::SetNumSites),
                    MakeUintegerChecker<uint32_t> ())
-    .AddAttribute ("NumUes", "The total number of UEs.",
+    .AddAttribute ("NumUes", "The total number of UEs, randomly distributed "
+                   "within the coverage area boundaries.",
                    UintegerValue (1),
                    MakeUintegerAccessor (&LteNetwork::m_nUes),
                    MakeUintegerChecker<uint32_t> ())
@@ -99,18 +101,16 @@ LteNetwork::GetTypeId (void)
                    BooleanValue (false),
                    MakeBooleanAccessor (&LteNetwork::m_ueMobility),
                    MakeBooleanChecker ())
-    .AddAttribute ("PrintRem",
-                   "Print the radio environment map.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&LteNetwork::m_lteRem),
-                   MakeBooleanChecker ())
-    .AddAttribute ("LteTrace",
-                   "Enable/Disable simulation LTE ASCII traces.",
+    .AddAttribute ("LteTrace", "Enable LTE ASCII traces.",
                    BooleanValue (false),
                    MakeBooleanAccessor (&LteNetwork::m_lteTrace),
                    MakeBooleanChecker ())
+    .AddAttribute ("PrintRem", "Print the radio environment map.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&LteNetwork::m_lteRem),
+                   MakeBooleanChecker ())
     .AddAttribute ("RemFilename",
-                   "Filename for radio enviroment map (without extension).",
+                   "Filename for the radio enviroment map (no extension).",
                    StringValue ("radio-map"),
                    MakeStringAccessor (&LteNetwork::m_remFilename),
                    MakeStringChecker ())

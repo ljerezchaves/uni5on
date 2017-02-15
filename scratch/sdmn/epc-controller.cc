@@ -54,7 +54,7 @@ TypeId
 EpcController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::EpcController")
-    .SetParent (OFSwitch13Controller::GetTypeId ())
+    .SetParent<OFSwitch13Controller> ()
     .AddAttribute ("VoipQueue",
                    "Enable VoIP QoS through queuing traffic management.",
                    BooleanValue (true),
