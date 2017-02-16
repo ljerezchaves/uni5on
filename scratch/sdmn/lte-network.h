@@ -27,6 +27,7 @@
 #include <ns3/mobility-module.h>
 #include <ns3/buildings-module.h>
 #include <ns3/internet-module.h>
+#include "sdran-cloud-container.h"
 
 namespace ns3 {
 
@@ -45,8 +46,8 @@ public:
    */
   LteNetwork (Ptr<EpcHelper> epcHelper);
 
-  LteNetwork ();           //!< Default constructor
-  virtual ~LteNetwork ();  //!< Dummy destructor, see DoDispose
+  LteNetwork ();           //!< Default constructor.
+  virtual ~LteNetwork ();  //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -74,26 +75,19 @@ protected:
   void NotifyConstructionCompleted (void);
 
 private:
+  /** Create and configure the helpers objects. */
+  void ConfigureHelpers ();
+
   /** Create the LTE radio topology. */
   void CreateTopology ();
 
-  /**
-   * Set the number of macro eNB sites, and adjust the total eNBs accordingly.
-   * \param sites The number of sites.
-   */
-  void SetNumSites (uint32_t sites);
-
-  /**
-   * Identify the LTE radio coverage area considering the eNB positions.
-   * \return The retangle with the coverage area.
-   */
-  Rectangle IdentifyEnbsCoverageArea ();
+  /** Identify the LTE radio coverage area based on eNB node positions. */
+  void IdentifyCoverageArea ();
 
   /** Print LTE radio environment map. */
   void PrintRadioEnvironmentMap ();
 
-  uint32_t            m_nSites;       //!< Number of sites
-  uint32_t            m_nEnbs;        //!< Number of eNBs (3 * m_nSites)
+  uint32_t            m_nClouds;      //!< Number of SDRAN clouds
   uint32_t            m_nUes;         //!< Number of UEs
   double              m_enbMargin;    //!< eNB coverage margin
   double              m_ueHeight;     //!< UE height
@@ -101,6 +95,7 @@ private:
   bool                m_lteRem;       //!< Print the LTE REM
   bool                m_ueMobility;   //!< Enable UE mobility
   std::string         m_remFilename;  //!< LTE REM filename
+  SdranCloudContainer m_sdranClouds;  //!< SDRAN clouds
   NodeContainer       m_enbNodes;     //!< eNB nodes
   NetDeviceContainer  m_enbDevices;   //!< eNB devices
   NodeContainer       m_ueNodes;      //!< UE nodes

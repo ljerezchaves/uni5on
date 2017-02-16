@@ -78,39 +78,47 @@ LteNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::LteNetwork")
     .SetParent<Object> ()
-    .AddAttribute ("NumSites",
-                   "The total number of macro sites, with 3 eNBs each.",
+    .AddAttribute ("NumClouds",
+                   "The total number of SDRAN clouds on this LTE topology.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (1),
-                   MakeUintegerAccessor (&LteNetwork::SetNumSites),
+                   MakeUintegerAccessor (&LteNetwork::m_nClouds),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("NumUes", "The total number of UEs, randomly distributed "
                    "within the coverage area boundaries.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (1),
                    MakeUintegerAccessor (&LteNetwork::m_nUes),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("UeHeight", "The UE antenna height [m].",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DoubleValue (1.5),
                    MakeDoubleAccessor (&LteNetwork::m_ueHeight),
                    MakeDoubleChecker<double> ())
     .AddAttribute ("EnbMargin", "How much the eNB coverage area extends, "
                    "expressed as fraction of the inter-site distance.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DoubleValue (0.5),
                    MakeDoubleAccessor (&LteNetwork::m_enbMargin),
                    MakeDoubleChecker<double> ())
     .AddAttribute ("UeMobility", "Enable UE random mobility.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (false),
                    MakeBooleanAccessor (&LteNetwork::m_ueMobility),
                    MakeBooleanChecker ())
     .AddAttribute ("LteTrace", "Enable LTE ASCII traces.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (false),
                    MakeBooleanAccessor (&LteNetwork::m_lteTrace),
                    MakeBooleanChecker ())
     .AddAttribute ("PrintRem", "Print the radio environment map.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (false),
                    MakeBooleanAccessor (&LteNetwork::m_lteRem),
                    MakeBooleanChecker ())
     .AddAttribute ("RemFilename",
                    "Filename for the radio enviroment map (no extension).",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    StringValue ("radio-map"),
                    MakeStringAccessor (&LteNetwork::m_remFilename),
                    MakeStringChecker ())
@@ -159,44 +167,39 @@ LteNetwork::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Create LTE topology
+  // Create the LTE network.
+  ConfigureHelpers ();
   CreateTopology ();
+
+  // If enable, print the LTE radio environment map.
+  if (m_lteRem)
+    {
+      PrintRadioEnvironmentMap ();
+    }
+
+  // If enable, print the LTE ASCII trace files.
+  if (m_lteTrace)
+    {
+      m_lteHelper->EnableTraces ();
+    }
 
   // Chain up
   Object::NotifyConstructionCompleted ();
 }
 
 void
-LteNetwork::CreateTopology ()
+LteNetwork::ConfigureHelpers ()
 {
   NS_LOG_FUNCTION (this);
-  NS_LOG_INFO ("Topology with " << m_nSites << " macro eNBs sites.");
 
-  // Creating the nodes for eNBs and UEs and set their names
-  m_enbNodes.Create (m_nEnbs);
-  for (uint32_t i = 0; i < m_nEnbs; i++)
-    {
-      std::ostringstream enbName;
-      enbName << "enb" << i;
-      Names::Add (enbName.str (), m_enbNodes.Get (i));
-    }
-
-  m_ueNodes.Create (m_nUes);
-  for (uint32_t i = 0; i < m_nUes; i++)
-    {
-      std::ostringstream ueName;
-      ueName << "ue" << i;
-      Names::Add (ueName.str (), m_ueNodes.Get (i));
-    }
-
-  // Create the LTE helper for the radio network
+  // Create the LTE helper for the radio network.
   m_lteHelper = CreateObject<LteHelper> ();
   m_lteHelper->SetEpcHelper (m_epcHelper);
 
-  // Use the hybrid pathloss model obtained through a combination of several
-  // well known pathloss models in order to mimic different environmental
+  // Use the hybrid path loss model obtained through a combination of several
+  // well known path loss models in order to mimic different environmental
   // scenarios, considering the phenomenon of indoor/outdoor propagation in the
-  // presence of buildings. Always use the LoS pathloss model.
+  // presence of buildings. Always use the LoS path loss model.
   m_lteHelper->SetAttribute (
     "PathlossModel", StringValue ("ns3::HybridBuildingsPropagationLossModel"));
   m_lteHelper->SetPathlossModelAttribute (
@@ -208,32 +211,54 @@ LteNetwork::CreateTopology ()
   m_lteHelper->SetPathlossModelAttribute (
     "Los2NlosThr", DoubleValue (1e6));
 
-  // Configuring the anntenas for the hexagonal grid topology
+  // Configuring the antennas for the hexagonal grid topology.
   m_lteHelper->SetEnbAntennaModelType ("ns3::ParabolicAntennaModel");
   m_lteHelper->SetEnbAntennaModelAttribute ("Beamwidth", DoubleValue (70));
   m_lteHelper->SetEnbAntennaModelAttribute (
     "MaxAttenuation", DoubleValue (20.0));
 
   // Create the topology helper used to group eNBs in three-sector sites layed
-  // out on an hexagonal grid
+  // out on an hexagonal grid.
   m_topoHelper = CreateObject<LteHexGridEnbTopologyHelper> ();
   m_topoHelper->SetLteHelper (m_lteHelper);
+}
 
-  // Set the constant mobility model for eNB and UE positioning
-  MobilityHelper mobilityHelper;
-  mobilityHelper.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-  mobilityHelper.Install (m_enbNodes);
+void
+LteNetwork::CreateTopology ()
+{
+  NS_LOG_FUNCTION (this);
+  NS_LOG_INFO ("LTE topology with " << m_nClouds << " SDRAN clouds.");
 
-  // Position the nodes on a hex grid and install the corresponding
-  // EnbNetDevices with antenna boresight configured properly.
+  // Create the SDRAN clouds and get the eNB nodes.
+  m_sdranClouds.Create (m_nClouds);
+  SdranCloudContainer::Iterator it;
+  for (it = m_sdranClouds.Begin (); it != m_sdranClouds.End (); ++it)
+    {
+      m_enbNodes.Add ((*it)->GetEnbNodes ());
+    }
+
+  // Place the eNB nodes on the hex grid and install the corresponding eNB
+  // devices with antenna bore sight properly configured.
   m_enbDevices = m_topoHelper->SetPositionAndInstallEnbDevice (m_enbNodes);
 
   // Create an X2 interface between all the eNBs in a given set.
-  m_lteHelper->AddX2Interface (m_enbNodes);
+  // m_lteHelper->AddX2Interface (m_enbNodes);
 
-  // After eNB positioning, identify the LTE radio coverage and spread the UEs
-  // over the coverage area.
-  m_coverageArea = IdentifyEnbsCoverageArea ();
+  // Identify the LTE radio coverage area
+  IdentifyCoverageArea ();
+  NS_LOG_INFO ("Coverage area: " << m_coverageArea);
+
+  // Create the UE nodes and set their names.
+  m_ueNodes.Create (m_nUes);
+  for (uint32_t i = 0; i < m_nUes; i++)
+    {
+      std::ostringstream ueName;
+      ueName << "ue" << i + 1;
+      Names::Add (ueName.str (), m_ueNodes.Get (i));
+    }
+
+  // Spread UEs under LTE coverage area.
+  MobilityHelper mobilityHelper;
   if (m_ueMobility)
     {
       mobilityHelper.SetMobilityModel (
@@ -264,18 +289,21 @@ LteNetwork::CreateTopology ()
       boxPosAllocator->SetAttribute ("X", PointerValue (posX));
       boxPosAllocator->SetAttribute ("Y", PointerValue (posY));
       boxPosAllocator->SetAttribute ("Z", PointerValue (posZ));
+      
+      mobilityHelper.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
       mobilityHelper.SetPositionAllocator (boxPosAllocator);
       mobilityHelper.Install (m_ueNodes);
     }
-  // Install protocol stack into UE nodes
+
+  // Install LTE protocol stack into UE nodes.
   m_ueDevices = m_lteHelper->InstallUeDevice (m_ueNodes);
 
-  // Install TCP/IP protocol stack into UE nodes
+  // Install TCP/IP protocol stack into UE nodes.
   InternetStackHelper internet;
   internet.Install (m_ueNodes);
   m_epcHelper->AssignUeIpv4Address (m_ueDevices);
 
-  // Specifying static routes for each UE to the default gateway
+  // Specifying static routes for each UE to its default S-GW.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
   for (uint32_t i = 0; i < m_nUes; i++)
     {
@@ -286,78 +314,42 @@ LteNetwork::CreateTopology ()
         m_epcHelper->GetUeDefaultGatewayAddress (), 1);
     }
 
-  // Attaching UE to the eNBs using initial cell selection
+  // Attaching UE to the eNBs using initial cell selection.
   m_lteHelper->Attach (m_ueDevices);
 
   // Install the MobilityBuildingInfo into LTE nodes
   BuildingsHelper::Install (m_enbNodes);
   BuildingsHelper::Install (m_ueNodes);
   BuildingsHelper::MakeMobilityModelConsistent ();
-
-  // If enable, print the LTE radio environment map.
-  if (m_lteRem)
-    {
-      PrintRadioEnvironmentMap ();
-    }
-
-  // If enable, print LTE ASCII trace files.
-  if (m_lteTrace)
-    {
-      m_lteHelper->EnableTraces ();
-    }
 }
 
 void
-LteNetwork::SetNumSites (uint32_t sites)
-{
-  NS_LOG_FUNCTION (this << sites);
-
-  m_nSites = sites;
-  m_nEnbs = 3 * sites;
-}
-
-Rectangle
-LteNetwork::IdentifyEnbsCoverageArea ()
+LteNetwork::IdentifyCoverageArea ()
 {
   NS_LOG_FUNCTION (this);
 
-  double xMin = std::numeric_limits<double>::max ();
-  double yMin = std::numeric_limits<double>::max ();
-  double xMax = std::numeric_limits<double>::min ();
-  double yMax = std::numeric_limits<double>::min ();
-
-  // Iterate over all eNBs checking for node positions.
+  // Iterate over all eNBs nodes checking for their positions.
+  std::vector<double> xPos, yPos;
   NodeList::Iterator it;
   for (it = m_enbNodes.Begin (); it != m_enbNodes.End (); it++)
     {
-      Ptr<Node> node = *it;
-      Vector pos = node->GetObject<MobilityModel> ()->GetPosition ();
-      if (pos.x < xMin)
-        {
-          xMin = pos.x;
-        }
-      if (pos.x > xMax)
-        {
-          xMax = pos.x;
-        }
-      if (pos.y < yMin)
-        {
-          yMin = pos.y;
-        }
-      if (pos.y > yMax)
-        {
-          yMax = pos.y;
-        }
+      Vector pos = (*it)->GetObject<MobilityModel> ()->GetPosition ();
+      xPos.push_back (pos.x);
+      yPos.push_back (pos.y);
     }
 
+  // Get the minimum and maximum X and Y positions.
+  double xMin = *std::min_element (xPos.begin (), xPos.end ());
+  double yMin = *std::min_element (yPos.begin (), yPos.end ());
+  double xMax = *std::max_element (xPos.begin (), xPos.end ());
+  double yMax = *std::max_element (yPos.begin (), yPos.end ());
+
+  // Calculate the coverage area considering the eNB margin parameter.
   DoubleValue doubleValue;
   m_topoHelper->GetAttribute ("InterSiteDistance", doubleValue);
   uint32_t adjust = m_enbMargin * doubleValue.Get ();
-  Rectangle coverageArea (round (xMin - adjust), round (xMax + adjust),
-                          round (yMin - adjust), round (yMax + adjust));
-
-  NS_LOG_INFO ("Coverage area: " << coverageArea);
-  return coverageArea;
+  m_coverageArea = Rectangle (round (xMin - adjust), round (xMax + adjust),
+                              round (yMin - adjust), round (yMax + adjust));
 }
 
 void
@@ -365,9 +357,9 @@ LteNetwork::PrintRadioEnvironmentMap ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Forcing UE initialization so we don't have to wait for Nodes to start
+  // Forcing UE initialization so we don't have to wait for nodes to start
   // before positions are assigned (which is needed to output node positions to
-  // plot file)
+  // plot file).
   NodeContainer::Iterator it;
   for (it = m_ueNodes.Begin (); it != m_ueNodes.End (); it++)
     {
@@ -378,11 +370,11 @@ LteNetwork::PrintRadioEnvironmentMap ()
   GlobalValue::GetValueByName ("OutputPrefix", prefixValue);
   std::string filename = prefixValue.Get () + m_remFilename;
 
-  // Create the radio environment map helper and set output filename
+  // Create the radio environment map helper and set output filename.
   m_remHelper = CreateObject<RadioEnvironmentMapHelper> ();
   m_remHelper->SetAttribute ("OutputFile", StringValue (filename + ".dat"));
 
-  // Adjust LTE radio channel ID
+  // Adjust LTE radio channel ID.
   Ptr<LteEnbNetDevice> enbDevice =
     DynamicCast<LteEnbNetDevice> (m_enbDevices.Get (0));
   int id = enbDevice->GetPhy ()->GetDlSpectrumPhy ()->GetChannel ()->GetId ();
@@ -390,7 +382,7 @@ LteNetwork::PrintRadioEnvironmentMap ()
   path << "/ChannelList/" << id;
   m_remHelper->SetAttribute ("ChannelPath", StringValue (path.str ()));
 
-  // Adjust the channel frequency and bandwidth
+  // Adjust the channel frequency and bandwidth.
   UintegerValue earfcnValue;
   enbDevice->GetAttribute ("DlEarfcn", earfcnValue);
   m_remHelper->SetAttribute ("Earfcn", earfcnValue);
@@ -399,7 +391,7 @@ LteNetwork::PrintRadioEnvironmentMap ()
   enbDevice->GetAttribute ("DlBandwidth", dlBandwidthValue);
   m_remHelper->SetAttribute ("Bandwidth", dlBandwidthValue);
 
-  // Adjust the LTE radio coverage area
+  // Adjust the LTE radio coverage area.
   Rectangle area = m_coverageArea;
   m_remHelper->SetAttribute ("XMin", DoubleValue (area.xMin));
   m_remHelper->SetAttribute ("XMax", DoubleValue (area.xMax));
@@ -407,13 +399,13 @@ LteNetwork::PrintRadioEnvironmentMap ()
   m_remHelper->SetAttribute ("YMax", DoubleValue (area.yMax));
   m_remHelper->SetAttribute ("Z", DoubleValue (m_ueHeight));
 
-  // Adjust plot resolution
+  // Adjust plot resolution.
   uint32_t xResolution = area.xMax - area.xMin + 1;
   uint32_t yResolution = area.yMax - area.yMin + 1;
   m_remHelper->SetAttribute ("XRes", UintegerValue (xResolution));
   m_remHelper->SetAttribute ("YRes", UintegerValue (yResolution));
 
-  // Prepare the gnuplot script file
+  // Prepare the GNUPlot script file.
   Ptr<OutputStreamWrapper> fileWrapper;
   fileWrapper = Create<OutputStreamWrapper> (filename + ".gpi", std::ios::out);
 
@@ -433,7 +425,7 @@ LteNetwork::PrintRadioEnvironmentMap ()
   << "set xrange [" << area.xMin << ":" << area.xMax << "]" << std::endl
   << "set yrange [" << area.yMin << ":" << area.yMax << "]" << std::endl;
 
-  // Buildings
+  // Buildings.
   uint32_t index = 0;
   for (BuildingList::Iterator it = BuildingList::Begin ();
        it != BuildingList::End (); it++)
@@ -449,7 +441,7 @@ LteNetwork::PrintRadioEnvironmentMap ()
       << std::endl;
     }
 
-  // UEs positions
+  // UEs positions.
   for (NetDeviceContainer::Iterator it = m_ueDevices.Begin ();
        it != m_ueDevices.End (); it++)
     {
@@ -465,7 +457,7 @@ LteNetwork::PrintRadioEnvironmentMap ()
       << std::endl;
     }
 
-  // Cell site positions
+  // Cell site positions.
   for (NetDeviceContainer::Iterator it = m_enbDevices.Begin ();
        it != m_enbDevices.End (); it++, it++, it++)
     {
@@ -482,13 +474,13 @@ LteNetwork::PrintRadioEnvironmentMap ()
       << std::endl;
     }
 
-  // Radio map
+  // Radio map.
   *fileWrapper->GetStream ()
   << "plot '" << localname << ".dat' using 1:2:(10*log10($4)) with image"
   << std::endl;
   fileWrapper = 0;
 
-  // Finally, install the REM generator
+  // Finally, install the REM generator.
   m_remHelper->Install ();
 }
 

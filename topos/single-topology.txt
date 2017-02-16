@@ -1,4 +1,6 @@
-default ns3::LteNetwork::NumSites "1"
+default ns3::SdranCloud::NumSites "1"
+
+default ns3::LteNetwork::NumClouds "1"
 default ns3::LteNetwork::NumUes "1"
 default ns3::LteNetwork::UeMobility "false"
 default ns3::LteNetwork::PrintRem "false"

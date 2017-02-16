@@ -335,6 +335,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("EpcNetwork",               LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("RingNetwork",              LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("LteNetwork",               LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("SdranCloud",               LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("EpcController",            LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("RingController",           LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("TrafficStatsCalculator",   LOG_ERROR_WARN_INFO_FT);
