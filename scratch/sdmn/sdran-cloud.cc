@@ -54,6 +54,14 @@ SdranCloud::GetTypeId (void)
   return tid;
 }
 
+NodeContainer
+SdranCloud::GetEnbNodes (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_enbNodes;
+}
+
 void
 SdranCloud::DoDispose ()
 {
@@ -64,18 +72,25 @@ void
 SdranCloud::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
+  NS_LOG_INFO ("SDRAN cloud with " << m_nSites << " cell sites.");
 
   // Set the number of eNBs based on the number of cell sites.
   m_nEnbs = 3 * m_nSites;
   
   // Create the eNBs nodes and set their names.
   m_enbNodes.Create (m_nEnbs);
-  for (uint32_t i = 0; i < m_nEnbs; i++)
+  NodeContainer::Iterator it;
+  for (it = m_enbNodes.Begin (); it != m_enbNodes.End (); ++it)
     {
       std::ostringstream enbName;
       enbName << "enb" << ++m_enbCounter;
-      Names::Add (enbName.str (), m_enbNodes.Get (i));
+      Names::Add (enbName.str (), *it);
     }
+
+  // Set the constant mobility model for eNB positioning
+  MobilityHelper mobilityHelper;
+  mobilityHelper.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+  mobilityHelper.Install (m_enbNodes);
 
   // Chain up
   Object::NotifyConstructionCompleted ();

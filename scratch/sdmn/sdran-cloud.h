@@ -24,6 +24,7 @@
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
+#include <ns3/mobility-module.h>
 
 namespace ns3 {
 
@@ -41,6 +42,12 @@ public:
    * \return The object TypeId.
    */
   static TypeId GetTypeId (void);
+
+  /**
+   * Get the container of eNBs nodes created by this SDRAN cloud.
+   * \return The container of eNB nodes.
+   */
+  NodeContainer GetEnbNodes (void) const;
 
 protected:
   /** Destructor implementation */
