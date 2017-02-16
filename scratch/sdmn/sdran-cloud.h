@@ -45,6 +45,16 @@ public:
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
+  
+  // Inherited from ObjectBase
+  void NotifyConstructionCompleted (void);
+
+private:
+  uint32_t            m_nSites;       //!< Number of cell sites
+  uint32_t            m_nEnbs;        //!< Number of eNBs (3 * m_nSites)
+  NodeContainer       m_enbNodes;     //!< eNB nodes
+  
+  static uint32_t     m_enbCounter;   //!< Global eNB counter
 };
 
 } // namespace ns3

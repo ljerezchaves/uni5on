@@ -169,7 +169,8 @@ public:
    */
   void Add (Ptr<SdranCloud> sdranCloud);
 
-  /** Append to this container the single Ptr<SdranCloud> referred to via its
+  /** 
+   * Append to this container the single Ptr<SdranCloud> referred to via its
    * object name service registered name.
    * \param sdranCloudName The name of the SDRAN cloud object to add to the
    *                       container.
@@ -177,7 +178,7 @@ public:
   void Add (std::string sdranCloudName);
 
 private:
-  std::vector<Ptr<SdranCloud> > m_objects; //!< SDRAN cloud smart pointers
+  std::vector<Ptr<SdranCloud> > m_objects;  //!< SDRAN cloud smart pointers
 };
 
 } // namespace ns3
