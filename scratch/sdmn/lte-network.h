@@ -89,7 +89,7 @@ private:
   /** Print LTE radio environment map. */
   void PrintRadioEnvironmentMap ();
 
-  uint32_t            m_nClouds;      //!< Number of SDRAN clouds
+  uint32_t            m_nSdrans;      //!< Number of SDRAN clouds
   uint32_t            m_nUes;         //!< Number of UEs
   double              m_enbMargin;    //!< eNB coverage margin
   double              m_ueHeight;     //!< UE height

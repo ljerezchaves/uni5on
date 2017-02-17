@@ -83,7 +83,7 @@ LteNetwork::GetTypeId (void)
                    "The total number of SDRAN clouds on this LTE topology.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (1),
-                   MakeUintegerAccessor (&LteNetwork::m_nClouds),
+                   MakeUintegerAccessor (&LteNetwork::m_nSdrans),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("NumUes", "The total number of UEs, randomly distributed "
                    "within the coverage area boundaries.",
@@ -228,10 +228,10 @@ void
 LteNetwork::CreateTopology ()
 {
   NS_LOG_FUNCTION (this);
-  NS_LOG_INFO ("LTE topology with " << m_nClouds << " SDRAN clouds.");
+  NS_LOG_INFO ("LTE topology with " << m_nSdrans << " SDRAN clouds.");
 
   // Create the SDRAN clouds and get the eNB nodes.
-  m_sdranClouds.Create (m_nClouds);
+  m_sdranClouds.Create (m_nSdrans);
   SdranCloudContainer::Iterator it;
   for (it = m_sdranClouds.Begin (); it != m_sdranClouds.End (); ++it)
     {
