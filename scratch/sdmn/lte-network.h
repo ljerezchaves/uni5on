@@ -31,6 +31,8 @@
 
 namespace ns3 {
 
+class EpcNetwork;
+
 /**
  * \ingroup sdmn
  * LTE radio network topology with eNBs grouped in three-sector sites layed out
@@ -42,9 +44,9 @@ class LteNetwork : public Object
 public:
   /**
    * Complete constructor.
-   * \param epcHelper The OpenFlow EPC helper.
+   * \param epcNetwork The OpenFlow EPC network.
    */
-  LteNetwork (Ptr<EpcHelper> epcHelper);
+  LteNetwork (Ptr<EpcNetwork> epcNetwork);
 
   LteNetwork ();           //!< Default constructor.
   virtual ~LteNetwork ();  //!< Dummy destructor, see DoDispose.
@@ -104,8 +106,8 @@ private:
 
   Ptr<LteHexGridEnbTopologyHelper> m_topoHelper;  //!< Grid topology helper
   Ptr<RadioEnvironmentMapHelper>   m_remHelper;   //!< Radio map helper
-  Ptr<LteHelper>                   m_lteHelper;   //!< Lte radio helper
-  Ptr<EpcHelper>                   m_epcHelper;   //!< Lte epc helper
+  Ptr<LteHelper>                   m_lteHelper;   //!< LTE radio helper
+  Ptr<EpcNetwork>                  m_epcNetwork;  //!< EPC network
 };
 
 };  // namespace ns3

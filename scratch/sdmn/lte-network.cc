@@ -19,14 +19,15 @@
  */
 
 #include "lte-network.h"
+#include "epc-network.h"
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("LteNetwork");
 NS_OBJECT_ENSURE_REGISTERED (LteNetwork);
 
-LteNetwork::LteNetwork (Ptr<EpcHelper> epcHelper)
-  : m_epcHelper (epcHelper)
+LteNetwork::LteNetwork (Ptr<EpcNetwork> epcNetwork)
+  : m_epcNetwork (epcNetwork)
 {
   NS_LOG_FUNCTION (this);
 
@@ -158,7 +159,7 @@ LteNetwork::DoDispose ()
   m_topoHelper = 0;
   m_remHelper = 0;
   m_lteHelper = 0;
-  m_epcHelper = 0;
+  m_epcNetwork = 0;
   Object::DoDispose ();
 }
 
@@ -194,7 +195,7 @@ LteNetwork::ConfigureHelpers ()
 
   // Create the LTE helper for the radio network.
   m_lteHelper = CreateObject<LteHelper> ();
-  m_lteHelper->SetEpcHelper (m_epcHelper);
+  m_lteHelper->SetEpcHelper (m_epcNetwork);
 
   // Use the hybrid path loss model obtained through a combination of several
   // well known path loss models in order to mimic different environmental
@@ -301,7 +302,7 @@ LteNetwork::CreateTopology ()
   // Install TCP/IP protocol stack into UE nodes.
   InternetStackHelper internet;
   internet.Install (m_ueNodes);
-  m_epcHelper->AssignUeIpv4Address (m_ueDevices);
+  m_epcNetwork->AssignUeIpv4Address (m_ueDevices);
 
   // Specifying static routes for each UE to its default S-GW.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
@@ -311,7 +312,7 @@ LteNetwork::CreateTopology ()
       Ptr<Ipv4StaticRouting> ueStaticRouting =
         ipv4RoutingHelper.GetStaticRouting (ueNode->GetObject<Ipv4> ());
       ueStaticRouting->SetDefaultRoute (
-        m_epcHelper->GetUeDefaultGatewayAddress (), 1);
+        m_epcNetwork->GetUeDefaultGatewayAddress (), 1);
     }
 
   // Attaching UE to the eNBs using initial cell selection.
