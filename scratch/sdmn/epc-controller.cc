@@ -344,7 +344,7 @@ EpcController::NotifySessionCreated (
           rInfo->AggregateObject (meterInfo);
         }
     }
-  
+
   // Fire trace source notifying session created.
   m_sessionCreatedTrace (imsi, cellId, enbAddr, pgwAddr, bearerList);
 }

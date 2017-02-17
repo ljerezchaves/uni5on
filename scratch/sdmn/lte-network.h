@@ -57,17 +57,17 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** \return the eNBs node container */
-  NodeContainer GetEnbNodes ();
+  /** \return The eNB nodes. */
+  NodeContainer GetEnbNodes (void) const;
 
-  /** \return the UEs node container */
-  NodeContainer GetUeNodes ();
+  /** \return The UE nodes. */
+  NodeContainer GetUeNodes (void) const;
 
-  /** \return the UEs NetDevice container */
-  NetDeviceContainer GetUeDevices ();
+  /** \return The UE devices. */
+  NetDeviceContainer GetUeDevices (void) const;
 
-  /** \return the LteHelper used to create this LTE network */
-  Ptr<LteHelper> GetLteHelper ();
+  /** \return The LTE helper used to create this network. */
+  Ptr<LteHelper> GetLteHelper (void) const;
 
 protected:
   /** Destructor implementation */
@@ -77,14 +77,17 @@ protected:
   void NotifyConstructionCompleted (void);
 
 private:
-  /** Create and configure the helpers objects. */
+  /** Configure the helpers. */
   void ConfigureHelpers ();
 
-  /** Create the LTE radio topology. */
-  void CreateTopology ();
+  /** Configure the SDRAN clouds. */
+  void ConfigureSdranClouds ();
 
-  /** Identify the LTE radio coverage area based on eNB node positions. */
-  void IdentifyCoverageArea ();
+  /** Configure the eNBs. */
+  void ConfigureEnbs ();
+
+  /** Configure the UEs. */
+  void ConfigureUes ();
 
   /** Print LTE radio environment map. */
   void PrintRadioEnvironmentMap ();
