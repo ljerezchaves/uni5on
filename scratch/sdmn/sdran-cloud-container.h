@@ -169,7 +169,7 @@ public:
    */
   void Add (Ptr<SdranCloud> sdranCloud);
 
-  /** 
+  /**
    * Append to this container the single Ptr<SdranCloud> referred to via its
    * object name service registered name.
    * \param sdranCloudName The name of the SDRAN cloud object to add to the

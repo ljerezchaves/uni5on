@@ -45,31 +45,31 @@ SdranCloudContainer::SdranCloudContainer (const SdranCloudContainer &a,
   Add (b);
 }
 
-SdranCloudContainer::Iterator 
+SdranCloudContainer::Iterator
 SdranCloudContainer::Begin (void) const
 {
   return m_objects.begin ();
 }
 
-SdranCloudContainer::Iterator 
+SdranCloudContainer::Iterator
 SdranCloudContainer::End (void) const
 {
   return m_objects.end ();
 }
 
-uint32_t 
+uint32_t
 SdranCloudContainer::GetN (void) const
 {
   return m_objects.size ();
 }
 
-Ptr<SdranCloud> 
+Ptr<SdranCloud>
 SdranCloudContainer::Get (uint32_t i) const
 {
   return m_objects[i];
 }
 
-void 
+void
 SdranCloudContainer::Create (uint32_t n)
 {
   for (uint32_t i = 0; i < n; i++)
@@ -78,7 +78,7 @@ SdranCloudContainer::Create (uint32_t n)
     }
 }
 
-void 
+void
 SdranCloudContainer::Add (SdranCloudContainer other)
 {
   for (Iterator i = other.Begin (); i != other.End (); i++)
@@ -87,13 +87,13 @@ SdranCloudContainer::Add (SdranCloudContainer other)
     }
 }
 
-void 
+void
 SdranCloudContainer::Add (Ptr<SdranCloud> sdranCloud)
 {
   m_objects.push_back (sdranCloud);
 }
 
-void 
+void
 SdranCloudContainer::Add (std::string sdranCloudName)
 {
   Ptr<SdranCloud> sdranCloud = Names::Find<SdranCloud> (sdranCloudName);
