@@ -25,12 +25,21 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("SdranCloud");
 NS_OBJECT_ENSURE_REGISTERED (SdranCloud);
 
-// Initializing global eNB counter.
+// Initializing global counters.
 uint32_t SdranCloud::m_enbCounter = 0;
+uint32_t SdranCloud::m_sdranCounter = 0;
 
 SdranCloud::SdranCloud ()
 {
   NS_LOG_FUNCTION (this);
+
+  // Set SDRAN Cloud ID.
+  m_sdranId = ++m_sdranCounter;
+
+  // Create the S-GW node and set its name.
+  m_sgwNode = CreateObject<Node> ();
+  std::string sgwName = "sgw" + m_sdranId;
+  Names::Add (sgwName, m_sgwNode);
 }
 
 SdranCloud::~SdranCloud ()
@@ -49,9 +58,25 @@ SdranCloud::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (1),
                    MakeUintegerAccessor (&SdranCloud::m_nSites),
-                   MakeUintegerChecker<uint32_t> ())  
+                   MakeUintegerChecker<uint32_t> ())
   ;
   return tid;
+}
+
+uint32_t
+SdranCloud::GetId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sdranId;
+}
+
+Ptr<Node>
+SdranCloud::GetSgwNode ()
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sgwNode;
 }
 
 NodeContainer
@@ -66,6 +91,8 @@ void
 SdranCloud::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+
+  m_sgwNode = 0;
 }
 
 void
@@ -76,7 +103,7 @@ SdranCloud::NotifyConstructionCompleted ()
 
   // Set the number of eNBs based on the number of cell sites.
   m_nEnbs = 3 * m_nSites;
-  
+
   // Create the eNBs nodes and set their names.
   m_enbNodes.Create (m_nEnbs);
   NodeContainer::Iterator it;

@@ -43,6 +43,12 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  /** \return The SDRAN Cloud ID. */
+  uint32_t GetId (void) const;
+
+  /** \return The S-GW node pointer. */
+  Ptr<Node> GetSgwNode ();
+
   /**
    * Get the container of eNBs nodes created by this SDRAN cloud.
    * \return The container of eNB nodes.
@@ -52,16 +58,19 @@ public:
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
-  
+
   // Inherited from ObjectBase
   void NotifyConstructionCompleted (void);
 
 private:
-  uint32_t            m_nSites;       //!< Number of cell sites
-  uint32_t            m_nEnbs;        //!< Number of eNBs (3 * m_nSites)
-  NodeContainer       m_enbNodes;     //!< eNB nodes
-  
-  static uint32_t     m_enbCounter;   //!< Global eNB counter
+  uint32_t                m_sdranId;        //!< SDRAN cloud id.
+  uint32_t                m_nSites;         //!< Number of cell sites.
+  uint32_t                m_nEnbs;          //!< Number of eNBs (3 * m_nSites).
+  NodeContainer           m_enbNodes;       //!< eNB nodes.
+  Ptr<Node>               m_sgwNode;        //!< S-GW node.
+
+  static uint32_t         m_enbCounter;     //!< Global eNB counter.
+  static uint32_t         m_sdranCounter;   //!< Global SDRAN cloud counter.
 };
 
 } // namespace ns3
