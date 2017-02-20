@@ -163,10 +163,9 @@ PgwUserApp::AddHeader (Ptr<Packet> packet, Mac48Address source,
   NS_LOG_FUNCTION (packet << source << dest << protocolNumber);
 
   //
-  // All Ethernet frames must carry a minimum payload of 46 bytes.  We need
-  // to pad out if we don't have enough bytes.  These must be real bytes
-  // since they will be written to pcap files and compared in regression
-  // trace files.
+  // All Ethernet frames must carry a minimum payload of 46 bytes. We need to
+  // pad out if we don't have enough bytes. These must be real bytes since they
+  // will be written to pcap files and compared in regression trace files.
   //
   if (packet->GetSize () < 46)
     {
