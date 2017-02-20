@@ -238,6 +238,7 @@ LteNetwork::ConfigureSdranClouds ()
   SdranCloudContainer::Iterator it;
   for (it = m_sdranClouds.Begin (); it != m_sdranClouds.End (); ++it)
     {
+      // m_epcNetwork->AddSdranCloud (*it);
       m_enbNodes.Add ((*it)->GetEnbNodes ());
     }
 }
@@ -249,6 +250,7 @@ LteNetwork::ConfigureEnbs ()
 
   // Set eNB nodes positions on the hex grid and install the corresponding eNB
   // devices with antenna bore sight properly configured.
+  NS_LOG_INFO ("LTE topology with " << m_enbNodes.GetN () << " eNBs.");
   m_enbDevices = m_topoHelper->SetPositionAndInstallEnbDevice (m_enbNodes);
   BuildingsHelper::Install (m_enbNodes);
 
@@ -286,6 +288,7 @@ LteNetwork::ConfigureUes ()
   NS_LOG_FUNCTION (this);
 
   // Create the UE nodes and set their names.
+  NS_LOG_INFO ("LTE topology with " << m_nUes << " UEs.");
   m_ueNodes.Create (m_nUes);
   for (uint32_t i = 0; i < m_nUes; i++)
     {
