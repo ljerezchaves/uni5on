@@ -238,7 +238,7 @@ LteNetwork::ConfigureSdranClouds ()
   SdranCloudContainer::Iterator it;
   for (it = m_sdranClouds.Begin (); it != m_sdranClouds.End (); ++it)
     {
-      // m_epcNetwork->AddSdranCloud (*it);
+      m_epcNetwork->AddSdranCloud (*it);
       m_enbNodes.Add ((*it)->GetEnbNodes ());
     }
 }

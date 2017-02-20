@@ -31,6 +31,7 @@ namespace ns3 {
 class ConnectionInfo;
 class BackhaulStatsCalculator;
 class EpcController;
+class SdranCloud;
 
 /**
  * \ingroup sdmn
@@ -53,7 +54,68 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  // Inherited from EpcHelper. FIXME
+  /** \return The number of switches in the backhaul network. */
+  uint16_t GetNSwitches (void) const;
+
+  /** \return The pointer to the Internet web node. */
+  Ptr<Node> GetWebNode (void) const;
+
+  /** \return The Internet web server IP address. */
+  Ipv4Address GetWebIpAddress (void) const;
+
+  /** \return The pointer to the OpenFlow EPC controller node. */
+  Ptr<Node> GetControllerNode (void) const;
+
+  /** \return The pointer to the OpenFlow EPC controller application. */
+  Ptr<EpcController> GetControllerApp (void) const;
+
+  /** \return The switch index at which the P-GW node is connected. */
+  uint16_t GetGatewaySwitchIdx (void) const;
+
+  /**
+   * Get the OpenFlow switch device for a given switch index.
+   * \param index The switch index.
+   * \return The pointer to the OpenFlow switch device.
+   */
+  Ptr<OFSwitch13Device> GetSwitchDevice (uint16_t index) const;
+
+  /**
+   * Get the switch index for a given switch node.
+   * \param node The pointer to the switch node.
+   * \return The switch index.
+   */
+  uint16_t GetSwitchIdxForNode (Ptr<Node> node) const;
+
+  /**
+   * Get the switch index from a given OpenFlow switch device.
+   * \param dev The pointer to the OpenFlow switch device.
+   * \return The switch index.
+   */
+  uint16_t GetSwitchIdxForDevice (Ptr<OFSwitch13Device> dev) const;
+
+  /**
+   * Set an attribute for ns3::OFSwitch13Device factory.
+   * \param n1 The name of the attribute to set.
+   * \param v1 The value of the attribute to set.
+   */
+  void SetSwitchDeviceAttribute (std::string n1, const AttributeValue &v1);
+
+  /**
+   * Enable PCAP traces on LTE EPC network devices, OpenFlow channel
+   * (control-plane) and switch ports (data-plane).
+   * \param prefix Filename prefix to use for pcap files.
+   * \param promiscuous If true, enable promisc trace.
+   */
+  void EnablePcap (std::string prefix, bool promiscuous = false);
+
+  /**
+   * Configure and connect the S-GW node from the SDRAN cloud to the X5
+   * interface over the backhaul network infrastructure.
+   * \param sdranCloud The SDRAN cloud pointer.
+   */
+  virtual void AddSdranCloud (Ptr<SdranCloud> sdranCloud);
+
+  // Inherited from EpcHelper.
   virtual uint8_t ActivateEpsBearer (Ptr<NetDevice> ueLteDevice, uint64_t imsi,
                                      Ptr<EpcTft> tft, EpsBearer bearer);
   virtual void AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice,
@@ -66,6 +128,7 @@ public:
   virtual Ipv4Address GetUeDefaultGatewayAddress ();
   // Inherited from EpcHelper.
 
+  // FIXME The following attach functions will be moved to the SDRAN cloud.
   /**
    * Connect the eNBs to the S1-U interface over the backhaul network
    * infrastructure.
@@ -83,77 +146,6 @@ public:
    * \return The container with devices created at each eNB.
    */
   NetDeviceContainer X2Attach (Ptr<Node> enb1, Ptr<Node> enb2);
-
-  /**
-   * Enable PCAP traces on LTE EPC network devices, OpenFlow channel
-   * (control-plane) and switch ports (data-plane).
-   * \param prefix Filename prefix to use for pcap files.
-   * \param promiscuous If true, enable promisc trace.
-   */
-  void EnablePcap (std::string prefix, bool promiscuous = false);
-
-  /**
-   * Set an attribute for ns3::OFSwitch13Device factory.
-   * \param n1 The name of the attribute to set.
-   * \param v1 The value of the attribute to set.
-   */
-  void SetSwitchDeviceAttribute (std::string n1, const AttributeValue &v1);
-
-  /**
-   * \return The number of switches in the backhaul network.
-   */
-  uint16_t GetNSwitches (void) const;
-
-  /**
-   * Get a pointer to the Internet Web server node created by this class.
-   * \return The pointer to the web node.
-   */
-  Ptr<Node> GetWebNode () const;
-
-  /**
-   * Get the Internet Web server IPv4 address assigned by this class.
-   * \return The web server IP address.
-   */
-  Ipv4Address GetWebIpAddress () const;
-
-  /**
-   * Get a pointer to the OpenFlow EPC controller node created by this class.
-   * \return The OpenFlow controller node.
-   */
-  Ptr<Node> GetControllerNode () const;
-
-  /**
-   * Get a pointer to the OpenFlow EPC controller app created by this class.
-   * \return The OpenFlow controller application.
-   */
-  Ptr<EpcController> GetControllerApp () const;
-
-  /**
-   * Get a pointer to the OpenFlow switch device for a given switch index.
-   * \param index The switch index.
-   * \return The OpenFlow switch device.
-   */
-  Ptr<OFSwitch13Device> GetSwitchDevice (uint16_t index) const;
-
-  /**
-   * Get the switch index from the node pointer.
-   * \param node The node pointer.
-   * \return The switch index.
-   */
-  uint16_t GetSwitchIdxForNode (Ptr<Node> node) const;
-
-  /**
-   * Get the switch index from the OpenFlow switch device.
-   * \param dev The OpenFlow switch device.
-   * \return The switch index.
-   */
-  uint16_t GetSwitchIdxForDevice (Ptr<OFSwitch13Device> dev) const;
-
-  /**
-   * Get the switch index at which the P-GW node is connected.
-   * \return The switch index.
-   */
-  uint16_t GetGatewaySwitchIdx () const;
 
   /**
    * TracedCallback signature for topology creation completed.

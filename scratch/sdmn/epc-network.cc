@@ -22,6 +22,7 @@
 #include "epc-network.h"
 #include "epc-controller.h"
 #include "pgw-user-app.h"
+#include "sdran-cloud.h"
 #include "stats/backhaul-stats-calculator.h"
 
 namespace ns3 {
@@ -44,7 +45,7 @@ EpcNetwork::EpcNetwork ()
 
   // Let's use point to point connections for OpenFlow channel
   m_ofSwitchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
-    "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
+      "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
   // Creating network nodes
   m_webNode = CreateObject<Node> ();
@@ -139,30 +140,6 @@ EpcNetwork::GetTypeId (void)
   return tid;
 }
 
-void
-EpcNetwork::EnablePcap (std::string prefix, bool promiscuous)
-{
-  NS_LOG_FUNCTION (this << prefix << promiscuous);
-
-  // Enable pcap on OpenFlow channel
-  m_ofSwitchHelper->EnableOpenFlowPcap (prefix + "ofchannel", promiscuous);
-
-  // Enable pcap on CSMA devices
-  CsmaHelper helper;
-  helper.EnablePcap (prefix + "web-sgi",    m_sgiDevices, promiscuous);
-  helper.EnablePcap (prefix + "lte-epc-s5", m_s5Devices,  promiscuous);
-  helper.EnablePcap (prefix + "lte-epc-x2", m_x2Devices,  promiscuous);
-  helper.EnablePcap (prefix + "ofnetwork",  m_ofSwitches, promiscuous);
-}
-
-void
-EpcNetwork::SetSwitchDeviceAttribute (std::string n1, const AttributeValue &v1)
-{
-  NS_LOG_FUNCTION (this);
-
-  m_ofSwitchHelper->SetDeviceAttribute (n1, v1);
-}
-
 uint16_t
 EpcNetwork::GetNSwitches (void) const
 {
@@ -172,7 +149,7 @@ EpcNetwork::GetNSwitches (void) const
 }
 
 Ptr<Node>
-EpcNetwork::GetWebNode () const
+EpcNetwork::GetWebNode (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -180,7 +157,7 @@ EpcNetwork::GetWebNode () const
 }
 
 Ipv4Address
-EpcNetwork::GetWebIpAddress () const
+EpcNetwork::GetWebIpAddress (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -188,7 +165,7 @@ EpcNetwork::GetWebIpAddress () const
 }
 
 Ptr<Node>
-EpcNetwork::GetControllerNode () const
+EpcNetwork::GetControllerNode (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -196,109 +173,19 @@ EpcNetwork::GetControllerNode () const
 }
 
 Ptr<EpcController>
-EpcNetwork::GetControllerApp () const
+EpcNetwork::GetControllerApp (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_epcCtrlApp;
 }
 
-void
-EpcNetwork::DoDispose ()
+uint16_t
+EpcNetwork::GetGatewaySwitchIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  m_ofSwitchHelper = 0;
-  m_epcCtrlNode = 0;
-  m_epcCtrlApp = 0;
-  m_pgwNode = 0;
-  m_epcStats = 0;
-  m_nodeSwitchMap.clear ();
-  Object::DoDispose ();
-}
-
-void
-EpcNetwork::NotifyConstructionCompleted (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  // Connect EPC stats calculator to trace sources *before* topology creation.
-  TraceConnectWithoutContext (
-    "TopologyBuilt", MakeCallback (
-      &BackhaulStatsCalculator::NotifyTopologyBuilt, m_epcStats));
-  TraceConnectWithoutContext (
-    "NewSwitchConnection", MakeCallback (
-      &BackhaulStatsCalculator::NotifyNewSwitchConnection, m_epcStats));
-
-  // Configuring CSMA helper for connecting EPC nodes (P-GW and S-GWs) to the
-  // backhaul topology. This same helper will be used to connect the P-GW to
-  // the server node on the Internet.
-  m_csmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
-  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_linkRate));
-  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
-
-  // Configuring IP addresses (don't change the masks!)
-  // Using a /8 subnet for all UEs and the P-GW gateway address.
-  m_ueAddrHelper.SetBase (m_ueNetworkAddr, "255.0.0.0");
-
-  // Using a /30 subnet which can hold exactly two address for the Internet
-  // connection (one used by the server and the other is logically associated
-  // to the P-GW external interface.
-  m_webAddrHelper.SetBase (m_webNetworkAddr, "255.255.255.252");
-
-  // Using a /24 subnet which can hold up to 253 S-GWs and the P-GW addresses
-  // on the same S5 backhaul network.
-  m_s5AddrHelper.SetBase (m_s5NetworkAddr, "255.255.255.0");
-
-  // Using a /30 subnet which can hold exactly two eNBs addresses for the point
-  // to point X2 interface.
-  m_x2AddrHelper.SetBase (m_x2NetworkAddr, "255.255.255.252");
-
-  // Create the OpenFlow backhaul topology.
-  TopologyCreate ();
-
-  // Configuring the P-GW and the Internet topology.
-  ConfigurePgwAndInternet ();
-
-  // The OpenFlow backhaul network topology is done. Connect the OpenFlow
-  // switches to the EPC controller. From this point on it is not possible to
-  // change the OpenFlow network configuration.
-  m_ofSwitchHelper->CreateOpenFlowChannels ();
-
-  // Enable OpenFlow switch statistics.
-  StringValue stringValue;
-  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
-  std::string prefix = stringValue.Get ();
-  m_ofSwitchHelper->EnableDatapathStats (prefix + "ofswitch-stats", true);
-
-  // Chain up.
-  Object::NotifyConstructionCompleted ();
-}
-
-void
-EpcNetwork::RegisterNodeAtSwitch (uint16_t switchIdx, Ptr<Node> node)
-{
-  NS_LOG_FUNCTION (this << switchIdx << node);
-
-  std::pair<NodeSwitchMap_t::iterator, bool> ret;
-  std::pair<Ptr<Node>, uint16_t> entry (node, switchIdx);
-  ret = m_nodeSwitchMap.insert (entry);
-  if (ret.second == true)
-    {
-      NS_LOG_DEBUG ("Node " << node <<
-                    " registered at switch " << (int)switchIdx);
-      return;
-    }
-  NS_FATAL_ERROR ("Can't register node at switch.");
-}
-
-void
-EpcNetwork::RegisterPgwAtSwitch (uint16_t switchIdx, Ptr<Node> node)
-{
-  NS_LOG_FUNCTION (this << switchIdx << node);
-
-  m_pgwSwIdx = switchIdx;
-  RegisterNodeAtSwitch (switchIdx, node);
+  return m_pgwSwIdx;
 }
 
 Ptr<OFSwitch13Device>
@@ -341,24 +228,40 @@ EpcNetwork::GetSwitchIdxForDevice (Ptr<OFSwitch13Device> dev) const
   NS_FATAL_ERROR ("Device not registered.");
 }
 
-uint16_t
-EpcNetwork::GetGatewaySwitchIdx () const
+void
+EpcNetwork::SetSwitchDeviceAttribute (std::string n1, const AttributeValue &v1)
 {
   NS_LOG_FUNCTION (this);
 
-  return m_pgwSwIdx;
+  m_ofSwitchHelper->SetDeviceAttribute (n1, v1);
 }
 
 void
-EpcNetwork::InstallController (Ptr<EpcController> controller)
+EpcNetwork::EnablePcap (std::string prefix, bool promiscuous)
 {
-  NS_LOG_FUNCTION (this << controller);
+  NS_LOG_FUNCTION (this << prefix << promiscuous);
 
-  // Installing the controller application into controller node.
-  NS_ASSERT_MSG (!m_epcCtrlApp, "Controller application already set.");
-  m_epcCtrlApp = controller;
-  m_ofSwitchHelper->InstallController (m_epcCtrlNode, m_epcCtrlApp);
+  // Enable pcap on OpenFlow channel
+  m_ofSwitchHelper->EnableOpenFlowPcap (prefix + "ofchannel", promiscuous);
+
+  // Enable pcap on CSMA devices
+  CsmaHelper helper;
+  helper.EnablePcap (prefix + "web-sgi",    m_sgiDevices, promiscuous);
+  helper.EnablePcap (prefix + "lte-epc-s5", m_s5Devices,  promiscuous);
+  helper.EnablePcap (prefix + "lte-epc-x2", m_x2Devices,  promiscuous);
+  helper.EnablePcap (prefix + "ofnetwork",  m_ofSwitches, promiscuous);
 }
+
+void
+EpcNetwork::AddSdranCloud (Ptr<SdranCloud> sdranCloud)
+{
+  NS_LOG_FUNCTION (this << sdranCloud);
+  // TODO
+}
+
+//
+// Methods from EpcHelper are implemented at the end of this file.
+//
 
 Ptr<NetDevice>
 EpcNetwork::S1EnbAttach (Ptr<Node> node, uint16_t cellId)
@@ -471,6 +374,115 @@ EpcNetwork::X2Attach (Ptr<Node> enb1, Ptr<Node> enb2)
 }
 
 void
+EpcNetwork::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+
+  m_ofSwitchHelper = 0;
+  m_epcCtrlNode = 0;
+  m_epcCtrlApp = 0;
+  m_pgwNode = 0;
+  m_epcStats = 0;
+  m_nodeSwitchMap.clear ();
+  Object::DoDispose ();
+}
+
+void
+EpcNetwork::NotifyConstructionCompleted (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Connect EPC stats calculator to trace sources *before* topology creation.
+  TraceConnectWithoutContext (
+    "TopologyBuilt", MakeCallback (
+      &BackhaulStatsCalculator::NotifyTopologyBuilt, m_epcStats));
+  TraceConnectWithoutContext (
+    "NewSwitchConnection", MakeCallback (
+      &BackhaulStatsCalculator::NotifyNewSwitchConnection, m_epcStats));
+
+  // Configuring CSMA helper for connecting EPC nodes (P-GW and S-GWs) to the
+  // backhaul topology. This same helper will be used to connect the P-GW to
+  // the server node on the Internet.
+  m_csmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
+  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_linkRate));
+  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
+
+  // Configuring IP addresses (don't change the masks!)
+  // Using a /8 subnet for all UEs and the P-GW gateway address.
+  m_ueAddrHelper.SetBase (m_ueNetworkAddr, "255.0.0.0");
+
+  // Using a /30 subnet which can hold exactly two address for the Internet
+  // connection (one used by the server and the other is logically associated
+  // to the P-GW external interface.
+  m_webAddrHelper.SetBase (m_webNetworkAddr, "255.255.255.252");
+
+  // Using a /24 subnet which can hold up to 253 S-GWs and the P-GW addresses
+  // on the same S5 backhaul network.
+  m_s5AddrHelper.SetBase (m_s5NetworkAddr, "255.255.255.0");
+
+  // Using a /30 subnet which can hold exactly two eNBs addresses for the point
+  // to point X2 interface.
+  m_x2AddrHelper.SetBase (m_x2NetworkAddr, "255.255.255.252");
+
+  // Create the OpenFlow backhaul topology.
+  TopologyCreate ();
+
+  // Configuring the P-GW and the Internet topology.
+  ConfigurePgwAndInternet ();
+
+  // The OpenFlow backhaul network topology is done. Connect the OpenFlow
+  // switches to the EPC controller. From this point on it is not possible to
+  // change the OpenFlow network configuration.
+  m_ofSwitchHelper->CreateOpenFlowChannels ();
+
+  // Enable OpenFlow switch statistics.
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+  m_ofSwitchHelper->EnableDatapathStats (prefix + "ofswitch-stats", true);
+
+  // Chain up.
+  Object::NotifyConstructionCompleted ();
+}
+
+void
+EpcNetwork::InstallController (Ptr<EpcController> controller)
+{
+  NS_LOG_FUNCTION (this << controller);
+
+  // Installing the controller application into controller node.
+  NS_ASSERT_MSG (!m_epcCtrlApp, "Controller application already set.");
+  m_epcCtrlApp = controller;
+  m_ofSwitchHelper->InstallController (m_epcCtrlNode, m_epcCtrlApp);
+}
+
+void
+EpcNetwork::RegisterNodeAtSwitch (uint16_t switchIdx, Ptr<Node> node)
+{
+  NS_LOG_FUNCTION (this << switchIdx << node);
+
+  std::pair<NodeSwitchMap_t::iterator, bool> ret;
+  std::pair<Ptr<Node>, uint16_t> entry (node, switchIdx);
+  ret = m_nodeSwitchMap.insert (entry);
+  if (ret.second == true)
+    {
+      NS_LOG_DEBUG ("Node " << node <<
+                    " registered at switch " << (int)switchIdx);
+      return;
+    }
+  NS_FATAL_ERROR ("Can't register node at switch.");
+}
+
+void
+EpcNetwork::RegisterPgwAtSwitch (uint16_t switchIdx, Ptr<Node> node)
+{
+  NS_LOG_FUNCTION (this << switchIdx << node);
+
+  m_pgwSwIdx = switchIdx;
+  RegisterNodeAtSwitch (switchIdx, node);
+}
+
+void
 EpcNetwork::ConfigurePgwAndInternet ()
 {
   NS_LOG_FUNCTION (this);
@@ -579,6 +591,33 @@ EpcNetwork::ConfigurePgwAndInternet ()
   NS_LOG_DEBUG ("P-GW gateway address: " << GetUeDefaultGatewayAddress ());
 }
 
+Ptr<EpcMme>
+EpcNetwork::GetMmeElement ()
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_epcCtrlApp->m_mme;
+}
+
+Ipv4Address
+EpcNetwork::GetSgwS1uAddress ()
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwS5Addr;
+}
+
+Ipv4Address
+EpcNetwork::GetAddressForDevice (Ptr<NetDevice> device)
+{
+  NS_LOG_FUNCTION (this << device);
+
+  Ptr<Node> node = device->GetNode ();
+  Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
+  int32_t idx = ipv4->GetInterfaceForDevice (device);
+  return ipv4->GetAddress (idx, 0).GetLocal ();
+}
+
 //
 // Implementing methods inherited from EpcHelper.
 //
@@ -614,6 +653,9 @@ EpcNetwork::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
                     uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << enb << lteEnbNetDevice << cellId);
+
+  // FIXME. O processo de adicionar um eNB vai ser gerenciado pelo SDRAN cloud.
+  // fazer uma chamada pra lá!
 
   NS_ASSERT (enb == lteEnbNetDevice->GetNode ());
 
@@ -729,41 +771,4 @@ EpcNetwork::GetUeDefaultGatewayAddress ()
   return m_pgwGwAddr;
 }
 
-Ptr<EpcMme>
-EpcNetwork::GetMmeElement ()
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_epcCtrlApp->m_mme;
-}
-
-Ipv4Address
-EpcNetwork::GetSgwS1uAddress ()
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_pgwS5Addr;
-}
-
-Ipv4Address
-EpcNetwork::GetAddressForDevice (Ptr<NetDevice> device)
-{
-  NS_LOG_FUNCTION (this << device);
-
-  Ptr<Node> node = device->GetNode ();
-  Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
-  int32_t idx = ipv4->GetInterfaceForDevice (device);
-  return ipv4->GetAddress (idx, 0).GetLocal ();
-}
-
-
-
-
-
-
-
-
-
-
 };  // namespace ns3
-
