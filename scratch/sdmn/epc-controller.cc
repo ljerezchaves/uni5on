@@ -206,33 +206,96 @@ EpcController::GetDscpMappedValue (EpsBearer::Qci qci)
 }
 
 void
-EpcController::NewSgiAttach (
-  Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwSgiDev,
-  Ipv4Address pgwSgiAddr, uint32_t pgwSgiPort, uint32_t pgwS5Port,
-  Ipv4Address webAddr)
+EpcController::PgwSgiAttach (
+  Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwSgiDev, 
+  Ipv4Address pgwSgiIp, uint32_t sgiPortNo, uint32_t s5PortNo,
+  Ptr<NetDevice> webSgiDev, Ipv4Address webIp)
 {
-  NS_LOG_FUNCTION (this << pgwSgiAddr << pgwSgiPort << webAddr);
+  NS_LOG_FUNCTION (this << pgwSgiIp << sgiPortNo << webIp);
 
-  // Save ARP and index information
-  Mac48Address macAddr = Mac48Address::ConvertFrom (pgwSgiDev->GetAddress ());
-  SaveArpEntry (pgwSgiAddr, macAddr);
+  m_pgwDpId = pgwSwDev->GetDatapathId ();
+  m_pgwS5Port = s5PortNo;
+  SaveArpEntry (pgwSgiIp, Mac48Address::ConvertFrom (pgwSgiDev->GetAddress ()));
+  SaveArpEntry (webIp, Mac48Address::ConvertFrom (webSgiDev->GetAddress ()));
 
-  ConfigurePgwRules (pgwSwDev, pgwSgiPort, pgwS5Port, webAddr);
+  // Configure SGi port rules.
+  // -------------------------------------------------------------------------
+  // Table 0 -- P-GW default table -- [from higher to lower priority]
+  //
+  // IP packets coming from the Internet (SGi) and addressed to the LTE network
+  // (S5) are sent to table 1, where TFT rules will match the flow and set both
+  // TEID and eNB address on tunnel metadata.
+  std::ostringstream cmdIn;
+  cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+        << ",in_port=" << sgiPortNo
+        << " goto:1";
+  DpctlSchedule (pgwSwDev->GetDatapathId (), cmdIn.str ());
+
+  // IP packets coming from the LTE network (S5) and addressed to the Internet
+  // (SGi) have the destination MAC address rewritten (this is necessary when
+  // using logical ports) and are forward to the SGi interface port.
+  Mac48Address webMac = GetArpEntry (webIp);
+  std::ostringstream cmdOut;
+  cmdOut << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+         << ",in_port=" << s5PortNo
+         << ",ip_dst=" << webIp
+         << " write:set_field=eth_dst:" << webMac
+         << ",output=" << sgiPortNo;
+  DpctlSchedule (pgwSwDev->GetDatapathId (), cmdOut.str ());
+
+  // ARP request packets. Send to controller.
+  DpctlSchedule (pgwSwDev->GetDatapathId (),
+                 "flow-mod cmd=add,table=0,prio=16 eth_type=0x0806 "
+                 "apply:output=ctrl");
+
+  // Table miss entry. Send to controller.
+  DpctlSchedule (pgwSwDev->GetDatapathId (),
+                 "flow-mod cmd=add,table=0,prio=0 "
+                 "apply:output=ctrl");
+
+  // -------------------------------------------------------------------------
+  // Table 1 -- P-GW TFT downlink table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by InstallPgwTftRules function.
 }
 
 void
 EpcController::NewS5Attach (
-  Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, Ptr<OFSwitch13Device> swtchDev,
-  uint16_t swtchIdx, uint32_t swtchPort)
+  Ptr<NetDevice> gwDev, Ipv4Address gwIp, Ptr<OFSwitch13Device> swtchDev,
+  uint16_t swtchIdx, uint32_t portNo)
 {
-  NS_LOG_FUNCTION (this << nodeIp << swtchIdx << swtchPort);
+  NS_LOG_FUNCTION (this << gwIp << swtchIdx << portNo);
 
-  // Save ARP and index information
-  Mac48Address macAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ());
-  SaveArpEntry (nodeIp, macAddr);
-  SaveSwitchIndex (nodeIp, swtchIdx);
+  SaveSwitchIndex (gwIp, swtchIdx);
+  SaveArpEntry (gwIp, Mac48Address::ConvertFrom (gwDev->GetAddress ()));
 
-  ConfigureS5PortRules (swtchDev, nodeDev, nodeIp, swtchPort);
+  // Configure S5 port rules. 
+  // -------------------------------------------------------------------------
+  // Table 0 -- Input table -- [from higher to lower priority]
+  //
+  // GTP packets entering the ring network from any EPC port. Send to the
+  // Classification table.
+  std::ostringstream cmdIn;
+  cmdIn << "flow-mod cmd=add,table=0,prio=64,flags=0x0007"
+        << " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152"
+        << ",in_port=" << portNo
+        << " goto:1";
+  DpctlSchedule (swtchDev->GetDatapathId (), cmdIn.str ());
+
+  // -------------------------------------------------------------------------
+  // Table 2 -- Routing table -- [from higher to lower priority]
+  //
+  // GTP packets addressed to EPC elements connected to this switch over EPC
+  // ports. Write the output port into action set. Send the packet directly to
+  // Output table.
+  Mac48Address gwMac = Mac48Address::ConvertFrom (gwDev->GetAddress ());
+  std::ostringstream cmdOut;
+  cmdOut << "flow-mod cmd=add,table=2,prio=256 eth_type=0x800"
+         << ",eth_dst=" << gwMac
+         << ",ip_dst=" << gwIp
+         << " write:output=" << portNo
+         << " goto:4";
+  DpctlSchedule (swtchDev->GetDatapathId (), cmdOut.str ());
 }
 
 void
@@ -407,8 +470,7 @@ EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
 {
   NS_LOG_FUNCTION (this << rInfo << buffer);
 
-  // Flow-mod flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and
-  // OFPFF_RESET_COUNTS
+  // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS
   std::string flagsStr ("0x0007");
 
   // Printing the cookie and buffer values in dpctl string format
@@ -513,7 +575,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 0 -- Input table -- [from higher to lower priority]
   //
-  // Entries will be installed here by ConfigureS5PortRules function.
+  // Entries will be installed here by NewS5Attach function.
 
   // GTP packets entering the switch from any port other then EPC ports.
   // Send to Routing table.
@@ -540,7 +602,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 2 -- Routing table -- [from higher to lower priority]
   //
-  // Entries will be installed here by ConfigureS5PortRules function.
+  // Entries will be installed here by NewS5Attach function.
   // Entries will be installed here by NotifyTopologyBuilt function.
 
   // GTP packets classified at previous table. Write the output group into
@@ -573,7 +635,6 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
   // Table miss entry. Send the packet to Output table
   DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=0 goto:4");
-
 
   // -------------------------------------------------------------------------
   // Table 4 -- Output table -- [from higher to lower priority]
@@ -794,88 +855,6 @@ EpcController::GetArpEntry (Ipv4Address ip)
       return ret->second;
     }
   NS_FATAL_ERROR ("No ARP information for this IP.");
-}
-
-void
-EpcController::ConfigureS5PortRules (
-  Ptr<OFSwitch13Device> swtchDev, Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
-  uint32_t swtchPort)
-{
-  NS_LOG_FUNCTION (this << swtchDev << nodeDev << nodeIp << swtchPort);
-
-  // Flow-mod flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and
-  // OFPFF_RESET_COUNTS
-  std::string flagsStr ("0x0007");
-
-  // -------------------------------------------------------------------------
-  // Table 0 -- Input table -- [from higher to lower priority]
-  //
-  // GTP packets entering the ring network from any EPC port.
-  // Send to the Classification table.
-  std::ostringstream cmdIn;
-  cmdIn << "flow-mod cmd=add,table=0,prio=64,flags=0x0007"
-        << " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152"
-        << ",in_port=" << swtchPort
-        << " goto:1";
-  DpctlSchedule (swtchDev->GetDatapathId (), cmdIn.str ());
-
-  // -------------------------------------------------------------------------
-  // Table 2 -- Routing table -- [from higher to lower priority]
-  //
-  // GTP packets addressed to EPC elements connected to this switch over EPC
-  // ports. Write the output port epcPort into action set. Send the packet
-  // directly to Output table.
-//  Mac48Address devMacAddr = Mac48Address::ConvertFrom (nodeDev->GetAddress ()); //FIXME
-  std::ostringstream cmdOut;
-  cmdOut << "flow-mod cmd=add,table=2,prio=256 eth_type=0x800"
-//         << ",eth_dst=" << devMacAddr << ",ip_dst=" << nodeIp
-         << ",ip_dst=" << nodeIp
-         << " write:output=" << swtchPort
-         << " goto:4";
-  DpctlSchedule (swtchDev->GetDatapathId (), cmdOut.str ());
-}
-
-void
-EpcController::ConfigurePgwRules (
-  Ptr<OFSwitch13Device> pgwDev, uint32_t pgwSgiPort, uint32_t pgwS5Port,
-  Ipv4Address webAddr)
-{
-  NS_LOG_FUNCTION (this << pgwDev << pgwSgiPort << pgwS5Port << webAddr);
-  m_pgwDpId = pgwDev->GetDatapathId ();
-  m_pgwS5Port = pgwS5Port;
-
-  // -------------------------------------------------------------------------
-  // Table 0 -- P-GW default table -- [from higher to lower priority]
-  //
-  // IP packets coming from the Internet (SGI) and addressed to the LTE network
-  // (S5) are sent to table 1, where TFT rules will match the flow and set both
-  // TEID and eNB addr within tunnel metadata.
-  std::ostringstream cmdIn;
-  cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-        << ",in_port=" << pgwSgiPort << " goto:1";
-  DpctlSchedule (m_pgwDpId, cmdIn.str ());
-
-  // IP packets coming from the LTE network and addressed to the Internet are
-  // forwared from the S5 to the SGi interface port.
-  std::ostringstream cmdOut;
-  cmdOut << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-         << ",in_port=" << pgwS5Port
-         << ",ip_dst=" << webAddr
-         << " apply:output=" << pgwSgiPort;
-  DpctlSchedule (m_pgwDpId, cmdOut.str ());
-
-  // ARP request packets. Send to controller.
-  DpctlSchedule (m_pgwDpId, "flow-mod cmd=add,table=0,prio=16 eth_type=0x0806 "
-                 "apply:output=ctrl");
-
-  // Table miss entry. Send to controller.
-  DpctlSchedule (m_pgwDpId, "flow-mod cmd=add,table=0,prio=0 "
-                 "apply:output=ctrl");
-
-  // -------------------------------------------------------------------------
-  // Table 1 -- P-GW TFT downlink table -- [from higher to lower priority]
-  //
-  // Entries will be installed here by InstallPgwTftRules function.
 }
 
 ofl_err

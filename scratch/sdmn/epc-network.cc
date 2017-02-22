@@ -570,8 +570,7 @@ EpcNetwork::ConfigurePgwAndInternet ()
   webSgiMacAddr = Mac48Address::ConvertFrom (webSgiDev->GetAddress ());
   pgwSgiMacAddr = Mac48Address::ConvertFrom (pgwSgiDev->GetAddress ());
 
-  Ptr<PgwUserApp> pgwUserApp = CreateObject <PgwUserApp> (
-      pgwS5PortDev, m_webSgiIpAddr, webSgiMacAddr, pgwSgiMacAddr);
+  Ptr<PgwUserApp> pgwUserApp = CreateObject <PgwUserApp> (pgwS5PortDev);
   m_pgwNode->AddApplication (pgwUserApp);
 
   // Adding the swS5Dev device as OpenFlow switch port.
@@ -582,8 +581,9 @@ EpcNetwork::ConfigurePgwAndInternet ()
   // Notify the controller of the the P-GW device attached to the Internet and
   // to the OpenFlow backhaul network.
   m_epcCtrlApp->NewS5Attach (pgwS5Dev, m_pgwS5Addr, swDev, swIdx, swS5PortNum);
-  m_epcCtrlApp->NewSgiAttach (m_pgwSwitchDev, pgwSgiDev, m_pgwSgiAddr,
-                              pgwSgiPortNum, pgwS5PortNum, m_webSgiIpAddr);
+  m_epcCtrlApp->PgwSgiAttach (m_pgwSwitchDev, pgwSgiDev, m_pgwSgiAddr,
+                              pgwSgiPortNum, pgwS5PortNum, webSgiDev,
+                              m_webSgiIpAddr);
 
   // Setting the default P-GW gateway address.
   // This address will be used to set the static route at UEs.

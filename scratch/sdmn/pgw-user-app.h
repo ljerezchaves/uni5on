@@ -23,31 +23,32 @@
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
-#include <ns3/virtual-net-device-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/applications-module.h>
+#include <ns3/virtual-net-device-module.h>
 
 namespace ns3 {
 
 /**
- * This application is responsible for implementing the logical port operations
- * connecting the P-GW SGi interface to the S5 interface.
+ * This is the tunneling application for P-GW S5 interface.
+ * This GTP tunnel application is responsible for implementing the logical port
+ * operations to encapsulate and de-encapsulated packets withing GTP tunnel. It
+ * provides the callback implementations that are used by the logical switch
+ * port and UDP socket. This application is stateless: it only adds/removes
+ * protocols headers over packets leaving/entering the OpenFlow switch based on
+ * information that is carried by packet tags.
  */
 class PgwUserApp : public Application
 {
 public:
-  PgwUserApp ();           //!< Default constructor
-  virtual ~PgwUserApp ();  //!< Dummy destructor
+  PgwUserApp ();           //!< Default constructor.
+  virtual ~PgwUserApp ();  //!< Dummy destructor, see DoDispose.
 
   /**
-   * Complete constructor
-   * \param pgwS5PortDevice The P-GW S5 logical port device.
-   * \param webSgiIpAddr The IP addr of the Internet Web server SGi device.
-   * \param webSgiMacAddr The MAC addr of the Internet Web server SGi device.
-   * \param pgwSgiMacAddr The MAC addr of the P-GW SGi port device.
+   * Complete constructor.
+   * \param logicalPort The P-GW S5 OpenFlow logical port device.
    */
-  PgwUserApp (Ptr<VirtualNetDevice> pgwS5PortDevice, Ipv4Address webSgiIpAddr,
-              Mac48Address webSgiMacAddr, Mac48Address pgwSgiMacAddr);
+  PgwUserApp (Ptr<VirtualNetDevice> logicalPort);
 
   /**
    * Register this type.
@@ -56,10 +57,17 @@ public:
   static TypeId GetTypeId (void);
 
   /**
+   * Save the logical port and set the send callback.
+   * \param logicalPort The P-GW S5 OpenFlow logical port device.
+   */
+  void SetLogicalPort (Ptr<VirtualNetDevice> logicalPort);
+
+  /**
    * Method to be assigned to the send callback of the VirtualNetDevice
-   * implementing the OpenFlow logical port. It is called when the switch sends
-   * a packet out over the logical port and must forward the packet to the
-   * tunnel socket.
+   * implementing the OpenFlow logical port. It is called when the OpenFlow
+   * switch sends a packet out over the logical port. The logical port
+   * callbacks here, and we must encapsulate the packet withing GTP and forward
+   * it to the UDP tunnel socket.
    * \param packet The packet received from the logical port.
    * \param source Ethernet source address.
    * \param dst Ethernet destination address.
@@ -69,18 +77,31 @@ public:
                             const Address& dest, uint16_t protocolNumber);
 
   /**
-   * Method to be assigned to the receive callback of the tunnel socket. It is
-   * called when the tunnel socket receives a packet, and must forward the
+   * Send a packet to the logical port.
+   * \param packet The packet to send.
+   */
+  bool SendToLogicalPort (Ptr<Packet>);
+
+  /**
+   * Method to be assigned to the receive callback of the UDP tunnel socket. It
+   * is called when the tunnel socket receives a packet, and must forward the
    * packet to the logical port.
    * \param socket Pointer to the tunnel socket.
    */
   void RecvFromTunnelSocket (Ptr<Socket> socket);
 
+  /**
+   * Send a packet to the UDP tunnel socket.
+   * \param packet The packet to send.
+   * \param dstAddress The address of remote host.
+   */
+  bool SentToTunnelSocket (Ptr<Packet> packet, InetSocketAddress dstAddress);
+
 protected:
-  /** Destructor implementation */
+  /** Destructor implementation. */
   virtual void DoDispose ();
 
-  // Inherited from Application
+  // Inherited from Application.
   virtual void StartApplication (void);
 
 private:
@@ -91,14 +112,9 @@ private:
    * \param dest MAC destination address to which packet should be sent.
    * \param protocolNumber The type of payload contained in this packet.
    */
-  void AddHeader (Ptr<Packet> packet, Mac48Address source, Mac48Address dest,
-                  uint16_t protocolNumber);
-
-  Ptr<Socket>           m_tunnelSocket;     //!< UDP tunnel socket.
-  Ptr<VirtualNetDevice> m_s5PortDevice;     //!< S5 logical port device.
-  Ipv4Address           m_webIpAddr;        //!< Web IP address.
-  Mac48Address          m_webMacAddr;       //!< Web MAC address.
-  Mac48Address          m_pgwMacAddr;       //!< P-GW SGi device MAC address.
+  void AddHeader (Ptr<Packet> packet, Mac48Address source = Mac48Address (),
+                  Mac48Address dest = Mac48Address (),
+                  uint16_t protocolNumber = Ipv4L3Protocol::PROT_NUMBER);
 
   /**
    * Trace source fired when a packet arrives this P-GW from
@@ -111,6 +127,9 @@ private:
    * the S5 interface (entering the EPC).
    */
   TracedCallback<Ptr<const Packet> > m_txS5Trace;
+
+  Ptr<Socket>           m_tunnelSocket;   //!< UDP tunnel socket.
+  Ptr<VirtualNetDevice> m_logicalPort;    //!< OpenFlow logical port device.
 };
 
 } // namespace ns3

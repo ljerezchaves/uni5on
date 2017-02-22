@@ -96,35 +96,34 @@ public:
   //\{
   /**
    * Notify this controller of the P-GW and Internet Web server connection over
-   * the SGi interface. This function will save the IP address / MAC address
-   * from this new device for further ARP resolution, and will configure the
-   * P-GW datapath.
+   * the SGi interface. This function will save the IP / MAC address for ARP
+   * resolution, and will configure local port delivery.
    * \param pgwSwDev The OpenFlow P-GW switch device.
    * \param pgwSgiDev The SGi device attached to the OpenFlow P-GW switch.
-   * \param pgwSgiAddr The IPv4 address assigned to the SGi device.
-   * \param pgwSgiPort The OpenFlow port number for the SGi device.
-   * \param pgwS5Port The OpenFlow port number for the S5 device.
-   * \param webAddr The IPv4 address assignet to the Internet Web server.
+   * \param pgwSgiIp The IPv4 address assigned to the P-GW SGi device.
+   * \param sgiPortNo The SGi port number on the P-GW OpenFlow switch.
+   * \param s5PortNo The S5 port number on the P-GW OpenFlow switch.
+   * \param webSgiDev The SGi device attached to the Internet Web server.
+   * \param webIp The IPv4 address assigned to the Internet Web server SGi dev.
    */
-  virtual void NewSgiAttach (Ptr<OFSwitch13Device> pgwSwDev,
-    Ptr<NetDevice> pgwSgiDev, Ipv4Address pgwSgiAddr, uint32_t pgwSgiPort,
-    uint32_t pgwS5Port, Ipv4Address webAddr);
+  virtual void PgwSgiAttach (Ptr<OFSwitch13Device> pgwSwDev,
+    Ptr<NetDevice> pgwSgiDev, Ipv4Address pgwSgiIp, uint32_t sgiPortNo,
+    uint32_t s5PortNo, Ptr<NetDevice> webSgiDev, Ipv4Address webIp);
 
   /**
-   * Notify this controller of a new S-GW or P-GW device connected to the S5
-   * OpenFlow network over some switch port. This function will save the IP
-   * address / MAC address from this new device for further ARP resolution, and
-   * will configure local port delivery.
-   * \param nodeDev The device connected to the OpenFlow switch (this is not
-   * the one added as port to switch, instead, this is the 'other' end of this
-   * connection, associated with the S-GW or P-GW node).
-   * \param nodeIp The IPv4 address assigned to this device.
+   * Notify this controller of a new S-GW or P-GW connected to the S5 OpenFlow
+   * network over some switch port. This function will save the IP / MAC
+   * address for ARP resolution, and will configure local port delivery.
+   * \param gwDev The device created at the S/P-GW node (this is not the one
+   * added as port to switch, this is the 'other' end of this connection,
+   * associated with the S-GW or P-GW node).
+   * \param gwIp The IPv4 address assigned to the gwDev.
    * \param swtchDev The OpenFlow switch device.
    * \param swtchIdx The OpenFlow switch index.
-   * \param swtchPort The port number for nodeDev at OpenFlow switch.
+   * \param portNo The port number created at the OpenFlow switch.
    */
-  virtual void NewS5Attach (Ptr<NetDevice> nodeDev, Ipv4Address nodeIp,
-    Ptr<OFSwitch13Device> swtchDev, uint16_t swtchIdx, uint32_t swtchPort);
+  virtual void NewS5Attach (Ptr<NetDevice> gwDev, Ipv4Address gwIp,
+    Ptr<OFSwitch13Device> swtchDev, uint16_t swtchIdx, uint32_t portNo);
 
   /**
    * Notify this controller of a new connection between two switches in the
@@ -380,30 +379,6 @@ private:
    * \return The MAC address for this ip.
    */
   Mac48Address GetArpEntry (Ipv4Address ip);
-
-  /**
-   * Install flow table entry for S5 port when a new IP device is connected to
-   * the OpenFlow network. This entry will match both MAC address and IP
-   * address for the S5 device in order to output packets on respective device
-   * port. It will also match input port for packet classification and
-   * routing.
-   * \param swtchDev The Switch OFSwitch13Device pointer.
-   * \param nodeDev The device connected to the OpenFlow network.
-   * \param nodeIp The IPv4 address assigned to this device.
-   * \param swtchPort The number of switch port this device is attached to.
-   */
-  void ConfigureS5PortRules (Ptr<OFSwitch13Device> swtchDev,
-    Ptr<NetDevice> nodeDev, Ipv4Address nodeIp, uint32_t swtchPort);
-
-  /**
-   * Install flow table entry for SGi packet forwarding.
-   * \param pgwDev The P-GW switch OFSwitch13Device pointer.
-   * \param pgwSgiPort The SGi interface port number on P-GW switch.
-   * \param pgwS5Port The S5 interface port number on P-GW switch.
-   * \param webAddr The IPv4 address assignet to the Internet Web server.
-   */
-  void ConfigurePgwRules (Ptr<OFSwitch13Device> pgwDev, uint32_t pgwSgiPort,
-    uint32_t pgwS5Port, Ipv4Address webAddr);
 
   /**
    * Handle packet-in messages sent from switch with ARP message.

@@ -139,8 +139,7 @@ RingController::TopologyBuilt (OFSwitch13DeviceContainer devices)
   // Call base method which will save devices and create the spanning tree.
   EpcController::TopologyBuilt (devices);
 
-  // Flow-mod flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and
-  // OFPFF_RESET_COUNTS.
+  // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0007");
 
   // Configure routes to keep forwarding packets already in the ring until they
@@ -230,8 +229,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
   // Install P-GW TFT rules
   InstallPgwTftRules (rInfo, buffer);
 
-  // Flow-mod flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and
-  // OFPFF_RESET_COUNTS.
+  // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0007");
 
   // Printing the cookie and buffer values in dpctl string format.
