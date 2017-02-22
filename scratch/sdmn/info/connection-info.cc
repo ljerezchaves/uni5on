@@ -41,7 +41,7 @@ ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
                                 Ptr<CsmaChannel> channel)
   : m_channel (channel)
 {
-  NS_LOG_FUNCTION (this << sw1.swIdx << sw2.swIdx);
+  NS_LOG_FUNCTION (this << sw1.swDev << sw2.swDev << channel);
 
   m_switches [0] = sw1;
   m_switches [1] = sw2;
@@ -109,14 +109,6 @@ DpIdPair_t
 ConnectionInfo::GetSwitchDpIdPair (void) const
 {
   return DpIdPair_t (GetSwDpId (0), GetSwDpId (1));
-}
-
-uint16_t
-ConnectionInfo::GetSwIdx (uint8_t idx) const
-{
-  NS_ASSERT_MSG (idx == 0 || idx == 1, "Invalid switch index.");
-
-  return m_switches [idx].swIdx;
 }
 
 uint32_t
@@ -211,13 +203,13 @@ ConnectionInfo::GetLinkBitRate (void) const
 }
 
 ConnectionInfo::Direction
-ConnectionInfo::GetDirection (uint16_t src, uint16_t dst) const
+ConnectionInfo::GetDirection (uint64_t src, uint64_t dst) const
 {
-  NS_ASSERT_MSG ((src == GetSwIdx (0) && dst == GetSwIdx (1))
-                 || (src == GetSwIdx (1) && dst == GetSwIdx (0)),
-                 "Invalid switch indexes for this connection.");
+  NS_ASSERT_MSG ((src == GetSwDpId (0) && dst == GetSwDpId (1))
+                 || (src == GetSwDpId (1) && dst == GetSwDpId (0)),
+                 "Invalid datapath IDs for this connection.");
 
-  if (IsFullDuplexLink () && src == GetSwIdx (1))
+  if (IsFullDuplexLink () && src == GetSwDpId (1))
     {
       return ConnectionInfo::BWD;
     }
@@ -289,14 +281,14 @@ ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
 }
 
 uint64_t
-ConnectionInfo::GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
+ConnectionInfo::GetAvailableGbrBitRate (uint64_t src, uint64_t dst,
                                         double debarFactor) const
 {
-  NS_LOG_FUNCTION (this << srcIdx << dstIdx << debarFactor);
+  NS_LOG_FUNCTION (this << src << dst << debarFactor);
 
   NS_ASSERT_MSG (debarFactor >= 0.0, "Invalid DeBaR factor.");
 
-  ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
+  ConnectionInfo::Direction dir = GetDirection (src, dst);
   uint64_t maxBitRate = static_cast<uint64_t> (debarFactor * m_gbrMaxBitRate);
 
   if (maxBitRate >= GetGbrBitRate (dir))
@@ -326,12 +318,12 @@ ConnectionInfo::GetGuardBitRate (Direction dir) const
 }
 
 bool
-ConnectionInfo::ReserveGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
+ConnectionInfo::ReserveGbrBitRate (uint64_t src, uint64_t dst,
                                    uint64_t bitRate)
 {
-  NS_LOG_FUNCTION (this << srcIdx << dstIdx << bitRate);
+  NS_LOG_FUNCTION (this << src << dst << bitRate);
 
-  ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
+  ConnectionInfo::Direction dir = GetDirection (src, dst);
   bool reserved = IncreaseGbrBitRate (dir, bitRate);
   if (reserved)
     {
@@ -357,12 +349,12 @@ ConnectionInfo::ReserveGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
 }
 
 bool
-ConnectionInfo::ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
+ConnectionInfo::ReleaseGbrBitRate (uint64_t src, uint64_t dst,
                                    uint64_t bitRate)
 {
-  NS_LOG_FUNCTION (this << srcIdx << dstIdx << bitRate);
+  NS_LOG_FUNCTION (this << src << dst << bitRate);
 
-  ConnectionInfo::Direction dir = GetDirection (srcIdx, dstIdx);
+  ConnectionInfo::Direction dir = GetDirection (src, dst);
   bool released = DecreaseGbrBitRate (dir, bitRate);
   if (released)
     {

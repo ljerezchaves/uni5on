@@ -97,18 +97,19 @@ RingNetwork::TopologyCreate ()
   // Install the EPC ring controller application for this topology.
   InstallController (CreateObject<RingController> ());
 
-  // Creating the switch nodes.
+  // Create the switch nodes.
   m_ofSwitches.Create (m_numNodes);
+
+  // Install the Openflow switch devices for each switch node.
+  m_ofDevices = m_ofSwitchHelper->InstallSwitch (m_ofSwitches);
+
+  // Set the name for each switch node.
   for (uint16_t i = 0; i < m_numNodes; i++)
     {
-      // Setting switch names.
       std::ostringstream swName;
-      swName << "sw" << i;
+      swName << "sw" << m_ofDevices.Get (i)->GetDatapathId ();
       Names::Add (swName.str (), m_ofSwitches.Get (i));
     }
-
-  // Installing the Openflow switch devices for each switch node.
-  m_ofDevices = m_ofSwitchHelper->InstallSwitch (m_ofSwitches);
 
   // Connecting switches in ring topology (clockwise order).
   for (uint16_t i = 0; i < m_numNodes; i++)
@@ -132,23 +133,21 @@ RingNetwork::TopologyCreate ()
       Ptr<CsmaNetDevice> currPortDevice, nextPortDevice;
       uint32_t currPortNum, nextPortNum;
 
-      currDevice = GetSwitchDevice (currIndex);
+      currDevice = m_ofDevices.Get (currIndex);
       currPortDevice = DynamicCast<CsmaNetDevice> (devs.Get (0));
       currPortNum = currDevice->AddSwitchPort (currPortDevice)->GetPortNo ();
 
-      nextDevice = GetSwitchDevice (nextIndex);
+      nextDevice = m_ofDevices.Get (nextIndex);
       nextPortDevice = DynamicCast<CsmaNetDevice> (devs.Get (1));
       nextPortNum = nextDevice->AddSwitchPort (nextPortDevice)->GetPortNo ();
 
       // Switch order inside ConnectionInfo object must respect clockwise order
       // (RingController assumes this order when installing switch rules).
       ConnectionInfo::SwitchData currSwData = {
-        currIndex, currDevice,
-        currPortDevice, currPortNum
+        currDevice, currPortDevice, currPortNum
       };
       ConnectionInfo::SwitchData nextSwData = {
-        nextIndex, nextDevice,
-        nextPortDevice, nextPortNum
+        nextDevice, nextPortDevice, nextPortNum
       };
       Ptr<ConnectionInfo> cInfo = CreateObject<ConnectionInfo> (
           currSwData, nextSwData, DynamicCast<CsmaChannel> (
@@ -164,17 +163,17 @@ RingNetwork::TopologyCreate ()
   m_topoBuiltTrace (m_ofDevices);
 }
 
-uint16_t
-RingNetwork::TopologyGetPgwIndex ()
+uint64_t
+RingNetwork::TopologyGetPgwSwitch ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Connect the P-GW node to switch index 0.
-  return 0;
+  // Connect the P-GW node to the first switch.
+  return m_ofDevices.Get (0)->GetDatapathId ();
 }
 
-uint16_t
-RingNetwork::TopologyGetEnbIndex (uint16_t cellId)
+uint64_t
+RingNetwork::TopologyGetEnbSwitch (uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << cellId);
 
@@ -182,7 +181,8 @@ RingNetwork::TopologyGetEnbIndex (uint16_t cellId)
   // starting at switch index 1. The three eNBs from same cell site are
   // connected to the same switch in the ring network.
   uint16_t siteId = 1 + ((cellId - 1) / 3);
-  return siteId % m_numNodes;
+  uint16_t swIdx = siteId % m_numNodes;
+  return m_ofDevices.Get (swIdx)->GetDatapathId ();
 }
 
 };  // namespace ns3

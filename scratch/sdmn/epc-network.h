@@ -69,29 +69,19 @@ public:
   /** \return The pointer to the OpenFlow EPC controller application. */
   Ptr<EpcController> GetControllerApp (void) const;
 
-  /** \return The switch index at which the P-GW node is connected. */
-  uint16_t GetGatewaySwitchIdx (void) const;
+  /**
+   * Get the OpenFlow switch node for a given OpenFlow switch datapath ID.
+   * \param dpId The switch datapath ID.
+   * \return The pointer to the switch node.
+   */
+  Ptr<Node> GetSwitchNode (uint64_t dpId) const;
 
   /**
-   * Get the OpenFlow switch device for a given switch index.
-   * \param index The switch index.
-   * \return The pointer to the OpenFlow switch device.
+   * Get the switch datapath ID for a given node attached to the network.
+   * \param node The pointer to the node.
+   * \return The switch datapath ID.
    */
-  Ptr<OFSwitch13Device> GetSwitchDevice (uint16_t index) const;
-
-  /**
-   * Get the switch index for a given switch node.
-   * \param node The pointer to the switch node.
-   * \return The switch index.
-   */
-  uint16_t GetSwitchIdxForNode (Ptr<Node> node) const;
-
-  /**
-   * Get the switch index from a given OpenFlow switch device.
-   * \param dev The pointer to the OpenFlow switch device.
-   * \return The switch index.
-   */
-  uint16_t GetSwitchIdxForDevice (Ptr<OFSwitch13Device> dev) const;
+  uint64_t GetDpIdForAttachedNode (Ptr<Node> node) const;
 
   /**
    * Set an attribute for ns3::OFSwitch13Device factory.
@@ -171,17 +161,17 @@ protected:
   virtual void TopologyCreate () = 0;
 
   /**
-   * Get the switch index at which the P-GW node should be connected.
-   * \return The switch index.
+   * Get the switch datapath ID at which the P-GW node should be connected.
+   * \return The switch datapath ID.
    */
-  virtual uint16_t TopologyGetPgwIndex () = 0;
+  virtual uint64_t TopologyGetPgwSwitch () = 0;
 
   /**
-   * Get the switch index at which the given eNB should be connected.
+   * Get the switch datapath ID at which the given eNB should be connected.
    * \param cellId The eNB cell id.
-   * \return The switch index.
+   * \return The switch datapath ID.
    */
-  virtual uint16_t TopologyGetEnbIndex (uint16_t cellId) = 0;
+  virtual uint64_t TopologyGetEnbSwitch (uint16_t cellId) = 0;
 
   /**
    * Install the OpenFlow EPC controller for this network.
@@ -207,18 +197,11 @@ protected:
 
 private:
   /**
-   * Save the pair <node, switch index>.
-   * \param switchIdx The switch index.
+   * Save the pair node / switch datapath ID.
+   * \param dpId The switch datapath ID.
    * \param Ptr<Node> The node pointer.
    */
-  void RegisterNodeAtSwitch (uint16_t switchIdx, Ptr<Node> node);
-
-  /**
-   * Save the switch index at which the P-GW is connected.
-   * \param switchIdx The switch index.
-   * \param Ptr<Node> The P-GW node pointer.
-   */
-  void RegisterPgwAtSwitch (uint16_t switchIdx, Ptr<Node> node);
+  void RegisterAttachToSwitch (uint64_t dpId, Ptr<Node> node);
 
   /**
    * Create the P-GW node, configure it as an OpenFlow switch and attach it to
@@ -271,7 +254,6 @@ private:
   // P-GW
   Ptr<Node>                     m_pgwNode;          //!< P-GW node.
   Ptr<OFSwitch13Device>         m_pgwSwitchDev;     //!< P-GW switch device.
-  uint16_t                      m_pgwSwIdx;         //!< P-GW switch index.
   Ipv4Address                   m_pgwSgiAddr;       //!< P-GW SGi IP addr.
   Ipv4Address                   m_pgwS5Addr;        //!< P-GW S5 IP addr.
   Ipv4Address                   m_pgwGwAddr;        //!< P-GW gateway addr.
@@ -283,9 +265,9 @@ private:
   // Statistics calculator
   Ptr<BackhaulStatsCalculator>  m_epcStats;         //!< Backhaul statistics.
 
-  /** Map saving node / switch index. */
-  typedef std::map<Ptr<Node>,uint16_t> NodeSwitchMap_t;
-  NodeSwitchMap_t m_nodeSwitchMap;  //!< Registered nodes by switch index.
+  /** Map saving node / switch datapath ID. */
+  typedef std::map<Ptr<Node>, uint64_t> NodeSwitchMap_t;
+  NodeSwitchMap_t m_nodeSwitchMap;  //!< Registered nodes by switch ID.
 };
 
 };  // namespace ns3

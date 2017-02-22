@@ -73,18 +73,33 @@ void
 RingController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+
   m_connections.clear ();
+  m_ipSwitchTable.clear ();
   EpcController::DoDispose ();
+}
+
+void
+RingController::NewS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo,
+                             Ptr<NetDevice> gwDev, Ipv4Address gwIp)
+{
+  NS_LOG_FUNCTION (this << swtchDev << portNo << gwDev << gwIp);
+
+  SaveIpSwitchPair (gwIp, swtchDev);
+  EpcController::NewS5Attach (swtchDev, portNo, gwDev, gwIp);
 }
 
 void
 RingController::NewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << cInfo);
 
-  // Call base method which will connect trace sources and sinks, and save this
-  // connection info for further usage.
-  EpcController::NewSwitchConnection (cInfo);
+  // Connecting this controller to ConnectionInfo trace source
+  cInfo->TraceConnectWithoutContext (
+    "NonGbrAdjusted", MakeCallback (
+      &RingController::NonGbrAdjusted, Ptr<RingController> (this)));
+
+  // Save this connection info for further usage.
   SaveConnectionInfo (cInfo);
 
   // Installing groups and meters for ring network. Note that following
@@ -96,12 +111,11 @@ RingController::NewSwitchConnection (Ptr<ConnectionInfo> cInfo)
   // Routing group for clockwise packet forwarding.
   cmd01 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::CLOCK
         << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (0);
+  DpctlSchedule (cInfo->GetSwDpId (0), cmd01.str ());
 
   // Routing group for counterclockwise packet forwarding.
   cmd11 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::COUNTER
         << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (1);
-
-  DpctlSchedule (cInfo->GetSwDpId (0), cmd01.str ());
   DpctlSchedule (cInfo->GetSwDpId (1), cmd11.str ());
 
   if (m_nonGbrCoexistence)
@@ -115,6 +129,7 @@ RingController::NewSwitchConnection (Ptr<ConnectionInfo> cInfo)
             << ",flags=" << flagsStr
             << ",meter=" << RingRoutingInfo::CLOCK
             << " drop:rate=" << kbps;
+      DpctlSchedule (cInfo->GetSwDpId (0), cmd02.str ());
 
       // Non-GBR meter for counterclockwise direction.
       kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::BWD) / 1000;
@@ -122,8 +137,6 @@ RingController::NewSwitchConnection (Ptr<ConnectionInfo> cInfo)
             << ",flags=" << flagsStr
             << ",meter=" << RingRoutingInfo::COUNTER
             << " drop:rate=" << kbps;
-
-      DpctlSchedule (cInfo->GetSwDpId (0), cmd02.str ());
       DpctlSchedule (cInfo->GetSwDpId (1), cmd12.str ());
     }
 }
@@ -133,21 +146,19 @@ RingController::TopologyBuilt (OFSwitch13DeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 
-  // Save the number of switches in network topology.
-  m_noSwitches = devices.GetN ();
-
-  // Call base method which will save devices and create the spanning tree.
-  EpcController::TopologyBuilt (devices);
+  // Save the collection of switch devices and create the spanning tree.
+  m_ofDevices = devices;
+  TopologyCreateSpanningTree ();
 
   // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0007");
 
   // Configure routes to keep forwarding packets already in the ring until they
   // reach the destination switch.
-  for (uint16_t sw1 = 0; sw1 < GetNSwitches (); sw1++)
+  for (uint16_t swIdx = 0; swIdx < GetNSwitches (); swIdx++)
     {
-      uint16_t sw2 = NextSwitchIndex (sw1, RingRoutingInfo::CLOCK);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (sw1, sw2);
+      uint16_t nextIdx = NextSwitchIndex (swIdx, RingRoutingInfo::CLOCK);
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfoByIdx (swIdx, nextIdx);
 
       // ---------------------------------------------------------------------
       // Table 2 -- Routing table -- [from higher to lower priority]
@@ -165,6 +176,7 @@ RingController::TopologyBuilt (OFSwitch13DeviceContainer devices)
            << " write:group=" << RingRoutingInfo::COUNTER
            << " meta:" << metadataStr
            << " goto:3";
+      DpctlSchedule (cInfo->GetSwDpId (0), cmd0.str ());
 
       sprintf (metadataStr, "0x%x", RingRoutingInfo::CLOCK);
       cmd1 << "flow-mod cmd=add,table=2,prio=128"
@@ -173,8 +185,6 @@ RingController::TopologyBuilt (OFSwitch13DeviceContainer devices)
            << " write:group=" << RingRoutingInfo::CLOCK
            << " meta:" << metadataStr
            << " goto:3";
-
-      DpctlSchedule (cInfo->GetSwDpId (0), cmd0.str ());
       DpctlSchedule (cInfo->GetSwDpId (1), cmd1.str ());
     }
 }
@@ -214,8 +224,8 @@ bool
 RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
                                         uint32_t buffer)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeid () << rInfo->GetPriority ()
-                        << buffer);
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid () << buffer);
+
   NS_ASSERT_MSG (rInfo->IsActive (), "Rule not active.");
 
   // Getting rInfo associated metadata.
@@ -252,7 +262,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
       std::ostringstream match, act;
 
       // In downlink the input switch is the gateway.
-      uint16_t swIdx = rInfo->GetPgwSwIdx ();
+      uint16_t swIdx = ringInfo->GetPgwSwIdx ();
 
       // Building the match string
       match << " eth_type=0x800,ip_proto=17"
@@ -298,7 +308,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
       std::ostringstream match, act;
 
       // In uplink the input switch is the eNB.
-      uint16_t swIdx = rInfo->GetEnbSwIdx ();
+      uint16_t swIdx = ringInfo->GetEnbSwIdx ();
 
       // Building the match string.
       match << " eth_type=0x800,ip_proto=17"
@@ -471,9 +481,8 @@ RingController::TopologyCreateSpanningTree ()
   // Let's configure one single link to drop packets when flooding over ports
   // (OFPP_FLOOD). Here we are disabling the farthest gateway link,
   // configuring its ports to OFPPC_NO_FWD config (0x20).
-
   uint16_t half = (GetNSwitches () / 2);
-  Ptr<ConnectionInfo> cInfo = GetConnectionInfo (half, half + 1);
+  Ptr<ConnectionInfo> cInfo = GetConnectionInfoByIdx (half, half + 1);
   NS_LOG_DEBUG ("Disabling link from " << half << " to " <<
                 half + 1 << " for broadcast messages.");
 
@@ -481,29 +490,31 @@ RingController::TopologyCreateSpanningTree ()
   std::ostringstream cmd1, cmd2;
 
   macAddr1 = Mac48Address::ConvertFrom (cInfo->GetPortDev (0)->GetAddress ());
-  macAddr2 = Mac48Address::ConvertFrom (cInfo->GetPortDev (1)->GetAddress ());
-
   cmd1 << "port-mod port=" << cInfo->GetPortNo (0)
        << ",addr=" <<  macAddr1
        << ",conf=0x00000020,mask=0x00000020";
+  DpctlSchedule (cInfo->GetSwDpId (0), cmd1.str ());
 
+  macAddr2 = Mac48Address::ConvertFrom (cInfo->GetPortDev (1)->GetAddress ());
   cmd2 << "port-mod port=" << cInfo->GetPortNo (1)
        << ",addr=" << macAddr2
        << ",conf=0x00000020,mask=0x00000020";
-
-  DpctlSchedule (cInfo->GetSwDpId (0), cmd1.str ());
   DpctlSchedule (cInfo->GetSwDpId (1), cmd2.str ());
 }
 
 uint16_t
 RingController::GetNSwitches (void) const
 {
-  return m_noSwitches;
+  NS_LOG_FUNCTION (this);
+
+  return m_ofDevices.GetN ();
 }
 
 Ptr<RingRoutingInfo>
 RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
 {
+  NS_LOG_FUNCTION (this << rInfo);
+
   Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   if (ringInfo == 0)
     {
@@ -512,10 +523,18 @@ RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
       ringInfo = CreateObject<RingRoutingInfo> (rInfo);
       rInfo->AggregateObject (ringInfo);
 
+      // Set internal switch indexes.
+      ringInfo->m_pgwIdx = GetSwitchIndex (rInfo->GetPgwAddr ());
+      ringInfo->m_enbIdx = GetSwitchIndex (rInfo->GetEnbAddr ());
+      rInfo->m_pgwDpId = GetDatapathId (ringInfo->m_pgwIdx);
+      rInfo->m_enbDpId = GetDatapathId (ringInfo->m_enbIdx);
+
       // Considering default paths those with lower hops.
       RingRoutingInfo::RoutingPath dlPath, ulPath;
-      dlPath = FindShortestPath (rInfo->GetPgwSwIdx (), rInfo->GetEnbSwIdx ());
-      ulPath = FindShortestPath (rInfo->GetEnbSwIdx (), rInfo->GetPgwSwIdx ());
+      dlPath = FindShortestPath (ringInfo->GetPgwSwIdx (),
+                                 ringInfo->GetEnbSwIdx ());
+      ulPath = FindShortestPath (ringInfo->GetEnbSwIdx (),
+                                 ringInfo->GetPgwSwIdx ());
       ringInfo->SetDefaultPaths (dlPath, ulPath);
     }
   return ringInfo;
@@ -524,35 +543,37 @@ RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
 void
 RingController::SaveConnectionInfo (Ptr<ConnectionInfo> cInfo)
 {
+  NS_LOG_FUNCTION (this << cInfo);
+
   // Respecting the increasing switch index order when saving connection data.
-  uint16_t swIndex1 = cInfo->GetSwIdx (0);
-  uint16_t swIndex2 = cInfo->GetSwIdx (1);
-  uint16_t port1 = cInfo->GetPortNo (0);
-  uint16_t port2 = cInfo->GetPortNo (1);
+  uint16_t dpId1 = cInfo->GetSwDpId (0);
+  uint16_t dpId2 = cInfo->GetSwDpId (1);
 
   DpIdPair_t key;
-  key.first  = std::min (swIndex1, swIndex2);
-  key.second = std::max (swIndex1, swIndex2);
+  key.first  = std::min (dpId1, dpId2);
+  key.second = std::max (dpId1, dpId2);
   std::pair<DpIdPair_t, Ptr<ConnectionInfo> > entry (key, cInfo);
   std::pair<ConnInfoMap_t::iterator, bool> ret;
   ret = m_connections.insert (entry);
   if (ret.second == true)
     {
-      NS_LOG_DEBUG ("New connection info saved:"
-                    << " switch " << swIndex1 << " port " << port1
-                    << " switch " << swIndex2 << " port " << port2);
+      NS_LOG_DEBUG ("New connection info saved:" <<
+                    " switch " << dpId1 << " port " << cInfo->GetPortNo (0) <<
+                    " switch " << dpId2 << " port " << cInfo->GetPortNo (1));
       return;
     }
   NS_FATAL_ERROR ("Error saving connection info.");
 }
 
 Ptr<ConnectionInfo>
-RingController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
+RingController::GetConnectionInfoByIdx (uint16_t sw1, uint16_t sw2)
 {
+  NS_LOG_FUNCTION (this << sw1 << sw2);
+
   // Respecting the increasing switch index order when getting connection data.
   DpIdPair_t key;
-  key.first = std::min (sw1, sw2);
-  key.second = std::max (sw1, sw2);
+  key.first  = std::min (GetDatapathId (sw1), GetDatapathId (sw2));
+  key.second = std::max (GetDatapathId (sw1), GetDatapathId (sw2));
   ConnInfoMap_t::iterator it = m_connections.find (key);
   if (it != m_connections.end ())
     {
@@ -561,10 +582,63 @@ RingController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
   NS_FATAL_ERROR ("No connection information available.");
 }
 
+void
+RingController::SaveIpSwitchPair (Ipv4Address ipAddr,
+                                  Ptr<OFSwitch13Device> swtchDev)
+{
+  NS_LOG_FUNCTION (this << ipAddr << swtchDev);
+
+  // First, find the switch index based on switch device.
+  uint16_t idx;
+  for (idx = 0; idx < GetNSwitches (); idx++)
+    {
+      if (m_ofDevices.Get (idx) == swtchDev)
+        {
+          break;
+        }
+    }
+  NS_ASSERT_MSG (idx < GetNSwitches (), "Switch not found on collection.");
+
+  // Then, save the pair IP / switch index
+  std::pair<Ipv4Address, uint16_t> entry (ipAddr, idx);
+  std::pair<IpSwitchMap_t::iterator, bool> ret;
+  ret = m_ipSwitchTable.insert (entry);
+  if (ret.second == true)
+    {
+      NS_LOG_DEBUG ("New IP/Switch entry: " << ipAddr << " - " << idx);
+      return;
+    }
+  NS_FATAL_ERROR ("This IP already existis in switch index table.");
+}
+
+uint16_t
+RingController::GetSwitchIndex (Ipv4Address ipAddr) const
+{
+  NS_LOG_FUNCTION (this << ipAddr);
+
+  IpSwitchMap_t::const_iterator ret;
+  ret = m_ipSwitchTable.find (ipAddr);
+  if (ret != m_ipSwitchTable.end ())
+    {
+      return ret->second;
+    }
+  NS_FATAL_ERROR ("IP not registered in switch index table.");
+}
+
+uint64_t
+RingController::GetDatapathId (uint16_t index) const
+{
+  NS_LOG_FUNCTION (this << index);
+
+  NS_ASSERT (index < m_ofDevices.GetN ());
+  return m_ofDevices.Get (index)->GetDatapathId ();
+}
+
 RingRoutingInfo::RoutingPath
 RingController::FindShortestPath (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx)
 {
   NS_LOG_FUNCTION (this << srcSwitchIdx << dstSwitchIdx);
+
   NS_ASSERT (std::max (srcSwitchIdx, dstSwitchIdx) < GetNSwitches ());
 
   // Check for local routing.
@@ -590,6 +664,7 @@ RingController::HopCounter (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
                             RingRoutingInfo::RoutingPath routingPath)
 {
   NS_LOG_FUNCTION (this << srcSwitchIdx << dstSwitchIdx);
+
   NS_ASSERT (std::max (srcSwitchIdx, dstSwitchIdx) < GetNSwitches ());
 
   // Check for local routing.
@@ -637,17 +712,19 @@ RingController::GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
   while (current != pgwIdx)
     {
       uint16_t next = NextSwitchIndex (current, upPath);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
+      uint64_t currDpId = GetDatapathId (current);
+      uint64_t nextDpId = GetDatapathId (next);
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfoByIdx (current, next);
 
       // Check for available bit rate in uplink direction.
-      bitRate = cInfo->GetAvailableGbrBitRate (current, next, debarFactor);
+      bitRate = cInfo->GetAvailableGbrBitRate (currDpId, nextDpId, debarFactor);
       if (bitRate < upBitRate)
         {
           upBitRate = bitRate;
         }
 
       // Check for available bit rate in downlink direction.
-      bitRate = cInfo->GetAvailableGbrBitRate (next, current, debarFactor);
+      bitRate = cInfo->GetAvailableGbrBitRate (nextDpId, currDpId, debarFactor);
       if (bitRate < downBitRate)
         {
           downBitRate = bitRate;
@@ -711,8 +788,10 @@ RingController::PerLinkReserve (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
   while (success && current != dstSwitchIdx)
     {
       uint16_t next = NextSwitchIndex (current, routingPath);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-      success = cInfo->ReserveGbrBitRate (current, next, bitRate);
+      uint64_t currDpId = GetDatapathId (current);
+      uint64_t nextDpId = GetDatapathId (next);
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfoByIdx (current, next);
+      success = cInfo->ReserveGbrBitRate (currDpId, nextDpId, bitRate);
       current = next;
     }
 
@@ -733,8 +812,10 @@ RingController::PerLinkRelease (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
   while (success && current != dstSwitchIdx)
     {
       uint16_t next = NextSwitchIndex (current, routingPath);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-      success = cInfo->ReleaseGbrBitRate (current, next, bitRate);
+      uint64_t currDpId = GetDatapathId (current);
+      uint64_t nextDpId = GetDatapathId (next);
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfoByIdx (current, next);
+      success = cInfo->ReleaseGbrBitRate (currDpId, nextDpId, bitRate);
       current = next;
     }
 
@@ -764,18 +845,19 @@ RingController::RemoveMeterRules (Ptr<RoutingInfo> rInfo)
   NS_ASSERT_MSG (!rInfo->IsActive () && !rInfo->IsInstalled (),
                  "Can't delete meter for valid traffic.");
 
+  Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
   if (meterInfo && meterInfo->IsInstalled ())
     {
       NS_LOG_DEBUG ("Removing meter entries.");
       if (meterInfo->HasDown ())
         {
-          DpctlExecute (GetDatapathId (rInfo->GetPgwSwIdx ()),
+          DpctlExecute (GetDatapathId (ringInfo->GetPgwSwIdx ()),
                         meterInfo->GetDelCmd ());
         }
       if (meterInfo->HasUp ())
         {
-          DpctlExecute (GetDatapathId (rInfo->GetEnbSwIdx ()),
+          DpctlExecute (GetDatapathId (ringInfo->GetEnbSwIdx ()),
                         meterInfo->GetDelCmd ());
         }
       meterInfo->SetInstalled (false);

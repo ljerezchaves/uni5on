@@ -57,10 +57,6 @@ EpcNetwork::EpcNetwork ()
   m_epcCtrlNode = CreateObject<Node> ();
   Names::Add ("ctrl", m_epcCtrlNode);
 
-  // Configure the P-GW node as an OpenFlow switch.
-  // Doing this here will ensure the P-GW datapath ID equals to 1.
-  m_pgwSwitchDev = (m_ofSwitchHelper->InstallSwitch (m_pgwNode)).Get (0);
-
   // Creating stats calculators
   m_epcStats = CreateObject<BackhaulStatsCalculator> ();
 }
@@ -180,25 +176,19 @@ EpcNetwork::GetControllerApp (void) const
   return m_epcCtrlApp;
 }
 
-uint16_t
-EpcNetwork::GetGatewaySwitchIdx (void) const
+Ptr<Node>
+EpcNetwork::GetSwitchNode (uint64_t dpId) const
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << dpId);
 
-  return m_pgwSwIdx;
+  Ptr<Node> node = OFSwitch13Device::GetDevice (dpId)->GetObject<Node> ();
+  NS_ASSERT_MSG (node, "No node found for this datapath ID");
+
+  return node;
 }
 
-Ptr<OFSwitch13Device>
-EpcNetwork::GetSwitchDevice (uint16_t index) const
-{
-  NS_LOG_FUNCTION (this << index);
-
-  NS_ASSERT (index < m_ofDevices.GetN ());
-  return m_ofDevices.Get (index);
-}
-
-uint16_t
-EpcNetwork::GetSwitchIdxForNode (Ptr<Node> node) const
+uint64_t
+EpcNetwork::GetDpIdForAttachedNode (Ptr<Node> node) const
 {
   NS_LOG_FUNCTION (this << node);
 
@@ -210,22 +200,6 @@ EpcNetwork::GetSwitchIdxForNode (Ptr<Node> node) const
       return ret->second;
     }
   NS_FATAL_ERROR ("Node not registered.");
-}
-
-uint16_t
-EpcNetwork::GetSwitchIdxForDevice (Ptr<OFSwitch13Device> dev) const
-{
-  NS_LOG_FUNCTION (this << dev);
-
-  uint16_t i;
-  for (i = 0; i < GetNSwitches (); i++)
-    {
-      if (dev == GetSwitchDevice (i))
-        {
-          return i;
-        }
-    }
-  NS_FATAL_ERROR ("Device not registered.");
 }
 
 void
@@ -270,9 +244,9 @@ EpcNetwork::S1EnbAttach (Ptr<Node> node, uint16_t cellId)
 
   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
 
-  uint16_t swIdx = TopologyGetEnbIndex (cellId);
-  RegisterNodeAtSwitch (swIdx, node);
-  Ptr<Node> swNode = m_ofSwitches.Get (swIdx);
+  uint64_t dpId = TopologyGetEnbSwitch (cellId);
+  RegisterAttachToSwitch (dpId, node);
+  Ptr<Node> swNode = GetSwitchNode (dpId);
 
   // Creating a link between the switch and the node.
   NetDeviceContainer devices;
@@ -297,12 +271,12 @@ EpcNetwork::S1EnbAttach (Ptr<Node> node, uint16_t cellId)
   Ipv4Address nodeAddr = nodeIpIfaces.GetAddress (0);
 
   // Adding newly created csma device as openflow switch port.
-  Ptr<OFSwitch13Device> swDev = GetSwitchDevice (swIdx);
+  Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (dpId);
   Ptr<OFSwitch13Port> swPort = swDev->AddSwitchPort (portDev);
   uint32_t portNum = swPort->GetPortNo ();
 
   // Notify the controller of a new device attached to network.
-  m_epcCtrlApp->NewS5Attach (nodeDev, nodeAddr, swDev, swIdx, portNum);
+  m_epcCtrlApp->NewS5Attach (swDev, portNum, nodeDev, nodeAddr);
 
   return nodeDev;
 }
@@ -457,35 +431,28 @@ EpcNetwork::InstallController (Ptr<EpcController> controller)
 }
 
 void
-EpcNetwork::RegisterNodeAtSwitch (uint16_t switchIdx, Ptr<Node> node)
+EpcNetwork::RegisterAttachToSwitch (uint64_t dpId, Ptr<Node> node)
 {
-  NS_LOG_FUNCTION (this << switchIdx << node);
+  NS_LOG_FUNCTION (this << dpId << node);
 
   std::pair<NodeSwitchMap_t::iterator, bool> ret;
-  std::pair<Ptr<Node>, uint16_t> entry (node, switchIdx);
+  std::pair<Ptr<Node>, uint64_t> entry (node, dpId);
   ret = m_nodeSwitchMap.insert (entry);
   if (ret.second == true)
     {
-      NS_LOG_DEBUG ("Node " << node <<
-                    " registered at switch " << (int)switchIdx);
+      NS_LOG_DEBUG ("Node " << node << " registered at switch " << dpId);
       return;
     }
   NS_FATAL_ERROR ("Can't register node at switch.");
 }
 
 void
-EpcNetwork::RegisterPgwAtSwitch (uint16_t switchIdx, Ptr<Node> node)
-{
-  NS_LOG_FUNCTION (this << switchIdx << node);
-
-  m_pgwSwIdx = switchIdx;
-  RegisterNodeAtSwitch (switchIdx, node);
-}
-
-void
 EpcNetwork::ConfigurePgwAndInternet ()
 {
   NS_LOG_FUNCTION (this);
+
+  // Configure the P-GW node as an OpenFlow switch.
+  m_pgwSwitchDev = (m_ofSwitchHelper->InstallSwitch (m_pgwNode)).Get (0);
 
   //
   // The first part is to connect the P-GW node to the Interent Web server.
@@ -531,10 +498,10 @@ EpcNetwork::ConfigurePgwAndInternet ()
   // The second part is to connect the P-GW node to the OpenFlow backhaul
   // infrasctructure.
   //
-  // Get the switch index for P-GW attach.
-  uint16_t swIdx = TopologyGetPgwIndex ();
-  Ptr<Node> swNode = m_ofSwitches.Get (swIdx);
-  RegisterPgwAtSwitch (swIdx, m_pgwNode);
+  // Get the switch datapath ID for P-GW attach.
+  uint64_t dpId = TopologyGetPgwSwitch ();
+  Ptr<Node> swNode = GetSwitchNode (dpId);
+  RegisterAttachToSwitch (dpId, m_pgwNode);
 
   // Connecting the P-GW to the backhaul over S5 interface.
   NetDeviceContainer devices = m_csmaHelper.Install (swNode, m_pgwNode);
@@ -574,13 +541,13 @@ EpcNetwork::ConfigurePgwAndInternet ()
   m_pgwNode->AddApplication (pgwUserApp);
 
   // Adding the swS5Dev device as OpenFlow switch port.
-  Ptr<OFSwitch13Device> swDev = GetSwitchDevice (swIdx);
+  Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (dpId);
   Ptr<OFSwitch13Port> swS5Port = swDev->AddSwitchPort (swS5Dev);
   uint32_t swS5PortNum = swS5Port->GetPortNo ();
 
   // Notify the controller of the the P-GW device attached to the Internet and
   // to the OpenFlow backhaul network.
-  m_epcCtrlApp->NewS5Attach (pgwS5Dev, m_pgwS5Addr, swDev, swIdx, swS5PortNum);
+  m_epcCtrlApp->NewS5Attach (swDev, swS5PortNum, pgwS5Dev, m_pgwS5Addr);
   m_epcCtrlApp->PgwSgiAttach (m_pgwSwitchDev, pgwSgiDev, m_pgwSgiAddr,
                               pgwSgiPortNum, pgwS5PortNum, webSgiDev,
                               m_webSgiIpAddr);

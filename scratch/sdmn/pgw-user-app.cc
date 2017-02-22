@@ -71,7 +71,7 @@ PgwUserApp::SetLogicalPort (Ptr<VirtualNetDevice> logicalPort)
   // Save the pointer and set the send callback.
   m_logicalPort = logicalPort;
   m_logicalPort->SetSendCallback (
-      MakeCallback (&PgwUserApp::RecvFromLogicalPort, this));
+    MakeCallback (&PgwUserApp::RecvFromLogicalPort, this));
 }
 
 bool
@@ -106,7 +106,7 @@ PgwUserApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
   NS_LOG_DEBUG ("Send packet " << packet->GetUid () << " to tunnel " << teid <<
                 " dst IP " << address << " port " << EpcNetwork::m_gtpuPort);
   return SentToTunnelSocket (
-      packet, InetSocketAddress (address, EpcNetwork::m_gtpuPort));
+           packet, InetSocketAddress (address, EpcNetwork::m_gtpuPort));
 }
 
 bool

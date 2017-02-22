@@ -74,8 +74,8 @@ public:
   uint32_t          GetTeid             (void) const;
   uint64_t          GetImsi             (void) const;
   uint16_t          GetCellId           (void) const;
-  uint16_t          GetEnbSwIdx         (void) const;
-  uint16_t          GetPgwSwIdx         (void) const;
+  uint64_t          GetEnbSwDpId        (void) const;
+  uint64_t          GetPgwSwDpId        (void) const;
   Ipv4Address       GetEnbAddr          (void) const;
   Ipv4Address       GetPgwAddr          (void) const;
   uint16_t          GetPriority         (void) const;
@@ -111,8 +111,8 @@ private:
   uint32_t          m_teid;         //!< GTP TEID
   uint64_t          m_imsi;         //!< UE IMSI
   uint16_t          m_cellId;       //!< eNB cell ID
-  uint16_t          m_pgwIdx;       //!< P-GW switch index
-  uint16_t          m_enbIdx;       //!< eNB switch index
+  uint64_t          m_pgwDpId;      //!< P-GW switch datapath id
+  uint64_t          m_enbDpId;      //!< eNB switch datapath id
   Ipv4Address       m_pgwAddr;      //!< P-GW IPv4 address
   Ipv4Address       m_enbAddr;      //!< eNB IPv4 address
   uint16_t          m_priority;     //!< Flow priority

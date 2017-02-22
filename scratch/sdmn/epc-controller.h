@@ -114,16 +114,15 @@ public:
    * Notify this controller of a new S-GW or P-GW connected to the S5 OpenFlow
    * network over some switch port. This function will save the IP / MAC
    * address for ARP resolution, and will configure local port delivery.
+   * \param swtchDev The OpenFlow switch device.
+   * \param portNo The port number created at the OpenFlow switch.
    * \param gwDev The device created at the S/P-GW node (this is not the one
    * added as port to switch, this is the 'other' end of this connection,
    * associated with the S-GW or P-GW node).
    * \param gwIp The IPv4 address assigned to the gwDev.
-   * \param swtchDev The OpenFlow switch device.
-   * \param swtchIdx The OpenFlow switch index.
-   * \param portNo The port number created at the OpenFlow switch.
    */
-  virtual void NewS5Attach (Ptr<NetDevice> gwDev, Ipv4Address gwIp,
-    Ptr<OFSwitch13Device> swtchDev, uint16_t swtchIdx, uint32_t portNo);
+  virtual void NewS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo,
+                            Ptr<NetDevice> gwDev, Ipv4Address gwIp);
 
   /**
    * Notify this controller of a new connection between two switches in the
@@ -157,14 +156,6 @@ public:
    */
   virtual void NotifySessionCreated (uint64_t imsi, uint16_t cellId,
     Ipv4Address enbAddr, Ipv4Address pgwAddr, BearerList_t bearerList);
-
-  /**
-   * Notify this controller when the Non-GBR allowed bit rate in any network
-   * connection is adjusted. This is used to update Non-GBR meters bands based
-   * on GBR resource reservation.
-   * \param cInfo The connection information
-   */
-  virtual void NonGbrAdjusted (Ptr<ConnectionInfo> cInfo);
   //\}
 
   /**
@@ -205,6 +196,8 @@ public:
    */
   typedef void (*SessionCreatedTracedCallback)(uint64_t imsi, uint16_t cellId,
       Ipv4Address enbAddr, Ipv4Address pgwAddr, BearerList_t bearerList);
+
+
 
   /** \name Methods for the P-GW control plane. */
   //\{
@@ -308,6 +301,14 @@ protected:
   virtual void TopologyCreateSpanningTree () = 0;
   //\}
 
+  // Inherited from OFSwitch13Controller.
+  virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
+  virtual ofl_err HandlePacketIn (
+    ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
+  virtual ofl_err HandleFlowRemoved (
+    ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
+  // Inherited from OFSwitch13Controller.
+
   /**
    * Configure the P-GW with OpenFlow rules for downlink TFT packet filtering.
    * \attention To avoid conflicts with old entries, increase the routing
@@ -316,21 +317,7 @@ protected:
    * \param buffer The buffered packet to apply this rule to.
    */
   void InstallPgwTftRules (Ptr<RoutingInfo> rInfo,
-    uint32_t buffer = OFP_NO_BUFFER);
-
-  // Inherited from OFSwitch13Controller
-  virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
-  virtual ofl_err HandlePacketIn (
-    ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
-  virtual ofl_err HandleFlowRemoved (
-    ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
-
-  /**
-   * Get the OpenFlow datapath ID for a specific switch index.
-   * \param index The switch index in device colection.
-   * \return The OpenFlow datapath ID.
-   */
-  uint64_t GetDatapathId (uint16_t index) const;
+                           uint32_t buffer = OFP_NO_BUFFER);
 
   /**
    * Get the OpenFlow datapath ID for the P-GW switch.
@@ -353,20 +340,6 @@ private:
   Ptr<RoutingInfo> GetRoutingInfo (uint32_t teid);
 
   /**
-   * Save the pair IP / Switch index in switch table.
-   * \param ipAddr The IPv4 address.
-   * \param index The switch index in devices collection..
-   */
-  void SaveSwitchIndex (Ipv4Address ipAddr, uint16_t index);
-
-  /**
-   * Retrieve the switch index for EPC entity attached to OpenFlow network.
-   * \param addr The eNB or SgwPgw IPv4 address.
-   * \return The switch index in devices collection.
-   */
-  uint16_t GetSwitchIndex (Ipv4Address addr);
-
-  /**
    * Save the pair IP / MAC address in ARP table.
    * \param ipAddr The IPv4 address.
    * \param macAddr The MAC address.
@@ -378,7 +351,7 @@ private:
    * \param ip The Ipv4Address to search.
    * \return The MAC address for this ip.
    */
-  Mac48Address GetArpEntry (Ipv4Address ip);
+  Mac48Address GetArpEntry (Ipv4Address ip) const;
 
   /**
    * Handle packet-in messages sent from switch with ARP message.
@@ -409,6 +382,8 @@ private:
    */
   Ptr<Packet> CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
     Mac48Address dstMac, Ipv4Address dstIp);
+
+
 
   /** \name Methods for the P-GW control plane. */
   //\{
@@ -532,18 +507,13 @@ protected:
   static const uint16_t m_dedicatedTmo;   //!< Timeout for dedicated bearers
 
 private:
-  OFSwitch13DeviceContainer      m_ofDevices;       //!< OpenFlow devices.
   Ptr<AdmissionStatsCalculator>  m_admissionStats;  //!< Admission statistics.
-  uint32_t                       m_pgwDpId;         //!< P-GW datapath ID.
+  uint64_t                       m_pgwDpId;         //!< P-GW datapath ID.
   uint32_t                       m_pgwS5Port;       //!< P-GW S5 port no.
 
   /** Map saving <TEID / Routing information > */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
   TeidRoutingMap_t    m_routes;           //!< TEID routing informations.
-
-  /** Map saving <IPv4 address / Switch index > */
-  typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;
-  IpSwitchMap_t       m_ipSwitchTable;    //!< eNB IP / Switch Index table.
 
   /** Map saving <IPv4 address / MAC address> */
   typedef std::map<Ipv4Address, Mac48Address> IpMacMap_t;

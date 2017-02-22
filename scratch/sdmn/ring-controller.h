@@ -26,6 +26,9 @@
 
 namespace ns3 {
 
+/** A pair of switches indexes. */
+typedef std::pair<uint16_t, uint16_t> IndexPair_t;
+
 /**
  * \ingroup sdmn
  * OpenFlow EPC controller for ring network.
@@ -40,8 +43,8 @@ public:
     SPF = 1   //!< Shortest path first (preferably the shortest path).
   };
 
-  RingController ();            //!< Default constructor
-  virtual ~RingController ();   //!< Dummy destructor, see DoDispose
+  RingController ();            //!< Default constructor.
+  virtual ~RingController ();   //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -50,22 +53,30 @@ public:
   static TypeId GetTypeId (void);
 
 protected:
-  /** Destructor implementation */
+  /** Destructor implementation. */
   virtual void DoDispose ();
 
-  // Inherited from EpcController
+  // Inherited from EpcController.
+  void NewS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo,
+                    Ptr<NetDevice> gwDev, Ipv4Address gwIp);
   void NewSwitchConnection (Ptr<ConnectionInfo> cInfo);
   void TopologyBuilt (OFSwitch13DeviceContainer devices);
-  void NonGbrAdjusted (Ptr<ConnectionInfo> cInfo);
   bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer);
   bool TopologyRemoveRouting (Ptr<RoutingInfo> rInfo);
   bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo);
   bool TopologyBearerRelease (Ptr<RoutingInfo> rInfo);
   void TopologyCreateSpanningTree ();
+  // Inherited from EpcController.
 
   /**
-   * \return Number of switches in the network.
+   * Notify this controller when the Non-GBR allowed bit rate in any network
+   * connection is adjusted. This is used to update Non-GBR meters bands based
+   * on GBR resource reservation.
+   * \param cInfo The connection information
    */
+  void NonGbrAdjusted (Ptr<ConnectionInfo> cInfo);
+
+  /** \return The number of switches in the network. */
   uint16_t GetNSwitches (void) const;
 
 private:
@@ -84,12 +95,33 @@ private:
   void SaveConnectionInfo (Ptr<ConnectionInfo> cInfo);
 
   /**
-   * Search for connection information between two switches.
+   * Search for connection information between two switches by their indexes.
    * \param sw1 First switch index.
    * \param sw2 Second switch index.
    * \return Pointer to connection info saved.
    */
-  Ptr<ConnectionInfo> GetConnectionInfo (uint16_t sw1, uint16_t sw2);
+  Ptr<ConnectionInfo> GetConnectionInfoByIdx (uint16_t sw1, uint16_t sw2);
+
+  /**
+   * Save the pair IP address / switch index in switch table.
+   * \param ipAddr The IPv4 address.
+   * \param swtchDev The OpenFlow switch device.
+   */
+  void SaveIpSwitchPair (Ipv4Address ipAddr, Ptr<OFSwitch13Device> swtchDev);
+
+  /**
+   * Retrieve the switch index for IP address.
+   * \param ipAddr The IPv4 address.
+   * \return The switch index in devices collection.
+   */
+  uint16_t GetSwitchIndex (Ipv4Address ipAddr) const;
+
+  /**
+   * Get the OpenFlow datapath ID for a specific switch index.
+   * \param index The switch index in devices colection.
+   * \return The OpenFlow datapath ID.
+   */
+  uint64_t GetDatapathId (uint16_t index) const;
 
   /**
    * Look for the routing path from source to destination switch index with
@@ -195,18 +227,22 @@ private:
    */
   bool RemoveMeterRules (Ptr<RoutingInfo> rInfo);
 
-  uint16_t            m_noSwitches;       //!< Number of switches in topology.
-  RoutingStrategy     m_strategy;         //!< Routing strategy in use.
-  double              m_debarStep;        //!< DeBaR increase step.
-  bool                m_debarShortPath;   //!< True for DeBaR in shortest path.
-  bool                m_debarLongPath;    //!< True for DeBaR in longest path.
+  OFSwitch13DeviceContainer m_ofDevices;      //!< OpenFlow devices.
+  RoutingStrategy           m_strategy;       //!< Routing strategy in use.
+  double                    m_debarStep;      //!< DeBaR increase step.
+  bool                      m_debarShortPath; //!< DeBaR in shortest path.
+  bool                      m_debarLongPath;  //!< DeBaR in longest path.
 
   /**
-   * Map saving <Pair of switch indexes / Connection information.
-   * The pair of switch indexes are saved in increasing order.
+   * Map saving pair of switch indexes / connection information.
+   * The pair of switch datapath IDs are saved in increasing order.
    */
   typedef std::map<DpIdPair_t, Ptr<ConnectionInfo> > ConnInfoMap_t;
   ConnInfoMap_t       m_connections;      //!< Connections between switches.
+
+  /** Map saving IPv4 address / Switch index */
+  typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;
+  IpSwitchMap_t       m_ipSwitchTable;    //!< eNB IP / Switch Index table.
 };
 
 };  // namespace ns3

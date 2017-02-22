@@ -28,9 +28,7 @@
 
 namespace ns3 {
 
-class ConnectionInfo;
-
-/** A pair of switches datapath IDs */
+/** A pair of switch datapath IDs. */
 typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
 
 /**
@@ -43,28 +41,23 @@ class ConnectionInfo : public Object
   friend class RingController;
 
 public:
-  /**
-   * Metadata associated to a switch.
-   */
+  /** Metadata associated to a switch. */
   struct SwitchData
   {
-    uint16_t                  swIdx;    //!< Switch index
-    Ptr<OFSwitch13Device>     swDev;    //!< OpenFlow switch device
-    Ptr<CsmaNetDevice>        portDev;  //!< OpenFlow csma port device
-    uint32_t                  portNum;  //!< OpenFlow port number
+    Ptr<OFSwitch13Device>     swDev;    //!< OpenFlow switch device.
+    Ptr<CsmaNetDevice>        portDev;  //!< OpenFlow csma port device.
+    uint32_t                  portNum;  //!< OpenFlow port number.
   };
 
-  /**
-   * Link direction index.
-   */
+  /** Link direction. */
   enum Direction
   {
-    FWD = 0,  //!< Forward direction (from first to second switch)
-    BWD = 1   //!< Backwad direction (from second to firts switch)
+    FWD = 0,  //!< Forward direction (from first to second switch).
+    BWD = 1   //!< Backwad direction (from second to firts switch).
   };
 
-  ConnectionInfo ();            //!< Default constructor
-  virtual ~ConnectionInfo ();   //!< Dummy destructor, see DoDispose
+  ConnectionInfo ();            //!< Default constructor.
+  virtual ~ConnectionInfo ();   //!< Dummy destructor, see DoDispose.
 
   /**
    * Complete constructor.
@@ -88,7 +81,7 @@ public:
    * internal order.
    * \return The pair of switch datapath IDs.
    */
-  SwitchPair_t GetSwitchDpIdPair (void) const;
+  DpIdPair_t GetSwitchDpIdPair (void) const;
 
   /**
    * \name Private member accessors.
@@ -96,7 +89,6 @@ public:
    * \return The requested field.
    */
   //\{
-  uint16_t                    GetSwIdx    (uint8_t idx) const;
   uint32_t                    GetPortNo   (uint8_t idx) const;
   uint64_t                    GetSwDpId   (uint8_t idx) const;
   Ptr<const OFSwitch13Device> GetSwDev    (uint8_t idx) const;
@@ -136,14 +128,14 @@ public:
   uint64_t GetLinkBitRate (void) const;
 
   /**
-   * For two switch indexes, this methods asserts that boths indexes are valid
-   * for this connection, and identifies the link direction based on source and
-   * destination indexes.
-   * \param src The source switch index.
-   * \param dst The destination switch index.
+   * For two switch, this methods asserts that boths datapath IDs are valid for
+   * this connection, and identifies the link direction based on source and
+   * destination datapath IDs.
+   * \param src The source switch datapath ID.
+   * \param dst The destination switch datapath ID.
    * \return The connection direction.
    */
-  ConnectionInfo::Direction GetDirection (uint16_t src, uint16_t dst) const;
+  ConnectionInfo::Direction GetDirection (uint64_t src, uint64_t dst) const;
 
   /**
    * TracedCallback signature for Ptr<ConnectionInfo>.
@@ -152,10 +144,10 @@ public:
   typedef void (*ConnTracedCallback)(Ptr<ConnectionInfo> cInfo);
 
 protected:
-  /** Destructor implementation */
+  /** Destructor implementation. */
   virtual void DoDispose ();
 
-  // Inherited from ObjectBase
+  // Inherited from ObjectBase.
   void NotifyConstructionCompleted (void);
 
   /**
@@ -168,31 +160,31 @@ protected:
   /**
    * Get the available bit rate between these two switches. Optionally, this
    * function can considers the DeBaR reservation factor.
-   * \param srcIdx The source switch index.
-   * \param dstIdx The destination switch index.
+   * \param src The source switch datapath ID.
+   * \param dst The destination switch datapath ID.
    * \param debarFactor DeBaR reservation factor.
-   * \return The available bit rate from srcIdx to dstIdx.
+   * \return The available bit rate from src to dst.
    */
-  uint64_t GetAvailableGbrBitRate (uint16_t srcIdx, uint16_t dstIdx,
+  uint64_t GetAvailableGbrBitRate (uint64_t src, uint64_t dst,
                                    double debarFactor = 1.0) const;
 
   /**
    * Reserve some bandwidth between these two switches.
-   * \param srcIdx The source switch index.
-   * \param dstIdx The destination switch index.
+   * \param src The source switch datapath ID.
+   * \param dst The destination switch datapath ID.
    * \param bitRate The bit rate to reserve.
    * \return True if everything is ok, false otherwise.
    */
-  bool ReserveGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, uint64_t bitRate);
+  bool ReserveGbrBitRate (uint64_t src, uint64_t dst, uint64_t bitRate);
 
   /**
    * Release some bandwidth between these two switches.
-   * \param srcIdx The source switch index.
-   * \param dstIdx The destination switch index.
+   * \param src The source switch datapath ID.
+   * \param dst The destination switch datapath ID.
    * \param bitRate The bit rate to release.
    * \return True if everything is ok, false otherwise.
    */
-  bool ReleaseGbrBitRate (uint16_t srcIdx, uint16_t dstIdx, uint64_t bitRate);
+  bool ReleaseGbrBitRate (uint64_t src, uint64_t dst, uint64_t bitRate);
 
 private:
   /**

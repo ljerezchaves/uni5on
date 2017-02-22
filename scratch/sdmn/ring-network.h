@@ -53,8 +53,8 @@ protected:
 
   // Inherited from EpcNetwork.
   void     TopologyCreate ();
-  uint16_t TopologyGetPgwIndex ();
-  uint16_t TopologyGetEnbIndex (uint16_t cellId);
+  uint64_t TopologyGetPgwSwitch ();
+  uint64_t TopologyGetEnbSwitch (uint16_t cellId);
 
 private:
   uint16_t    m_numNodes;     //!< Number of switches in this topology.

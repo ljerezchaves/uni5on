@@ -107,6 +107,8 @@ private:
   Ptr<RoutingInfo> m_rInfo;         //!< Routing information
   RoutingPath      m_downPath;      //!< Downlink routing path
   RoutingPath      m_upPath;        //!< Uplink routing path
+  uint16_t         m_pgwIdx;        //!< P-GW switch index
+  uint16_t         m_enbIdx;        //!< eNB switch index
   bool             m_isDefaultPath; //!< True when paths are default
   bool             m_isLocalPath;   //!< True when routing path is local
 };

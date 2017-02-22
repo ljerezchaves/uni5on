@@ -170,6 +170,8 @@ EpcController::ReleaseDedicatedBearer (
 Ptr<const RoutingInfo>
 EpcController::GetConstRoutingInfo (uint32_t teid) const
 {
+  NS_LOG_FUNCTION (this << teid);
+
   Ptr<const RoutingInfo> rInfo = 0;
   TeidRoutingMap_t::const_iterator ret;
   ret = m_routes.find (teid);
@@ -183,6 +185,8 @@ EpcController::GetConstRoutingInfo (uint32_t teid) const
 EpsBearer
 EpcController::GetEpsBearer (uint32_t teid)
 {
+  NS_LOG_FUNCTION_NOARGS ();
+
   TeidBearerMap_t::iterator it;
   it = EpcController::m_bearersTable.find (teid);
   if (it != EpcController::m_bearersTable.end ())
@@ -195,6 +199,8 @@ EpcController::GetEpsBearer (uint32_t teid)
 uint16_t
 EpcController::GetDscpMappedValue (EpsBearer::Qci qci)
 {
+  NS_LOG_FUNCTION_NOARGS ();
+
   QciDscpMap_t::iterator it;
   it = EpcController::m_qciDscpTable.find (qci);
   if (it != EpcController::m_qciDscpTable.end ())
@@ -207,7 +213,7 @@ EpcController::GetDscpMappedValue (EpsBearer::Qci qci)
 
 void
 EpcController::PgwSgiAttach (
-  Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwSgiDev, 
+  Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwSgiDev,
   Ipv4Address pgwSgiIp, uint32_t sgiPortNo, uint32_t s5PortNo,
   Ptr<NetDevice> webSgiDev, Ipv4Address webIp)
 {
@@ -260,16 +266,14 @@ EpcController::PgwSgiAttach (
 }
 
 void
-EpcController::NewS5Attach (
-  Ptr<NetDevice> gwDev, Ipv4Address gwIp, Ptr<OFSwitch13Device> swtchDev,
-  uint16_t swtchIdx, uint32_t portNo)
+EpcController::NewS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo,
+                            Ptr<NetDevice> gwDev, Ipv4Address gwIp)
 {
-  NS_LOG_FUNCTION (this << gwIp << swtchIdx << portNo);
+  NS_LOG_FUNCTION (this << swtchDev << portNo << gwDev << gwIp);
 
-  SaveSwitchIndex (gwIp, swtchIdx);
   SaveArpEntry (gwIp, Mac48Address::ConvertFrom (gwDev->GetAddress ()));
 
-  // Configure S5 port rules. 
+  // Configure S5 port rules.
   // -------------------------------------------------------------------------
   // Table 0 -- Input table -- [from higher to lower priority]
   //
@@ -302,20 +306,12 @@ void
 EpcController::NewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
-
-  // Connecting this controller to ConnectionInfo trace source
-  cInfo->TraceConnectWithoutContext (
-    "NonGbrAdjusted", MakeCallback (
-      &EpcController::NonGbrAdjusted, this));
 }
 
 void
 EpcController::TopologyBuilt (OFSwitch13DeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
-
-  m_ofDevices = devices;
-  TopologyCreateSpanningTree ();
 }
 
 void
@@ -337,8 +333,6 @@ EpcController::NotifySessionCreated (
   rInfo->m_teid = teid;
   rInfo->m_imsi = imsi;
   rInfo->m_cellId = cellId;
-  rInfo->m_pgwIdx = GetSwitchIndex (pgwAddr);
-  rInfo->m_enbIdx = GetSwitchIndex (enbAddr);
   rInfo->m_pgwAddr = pgwAddr;
   rInfo->m_enbAddr = enbAddr;
   rInfo->m_priority = 0x7F;               // Priority for default bearer
@@ -374,8 +368,6 @@ EpcController::NotifySessionCreated (
       rInfo->m_teid = teid;
       rInfo->m_imsi = imsi;
       rInfo->m_cellId = cellId;
-      rInfo->m_pgwIdx = GetSwitchIndex (pgwAddr);
-      rInfo->m_enbIdx = GetSwitchIndex (enbAddr);
       rInfo->m_pgwAddr = pgwAddr;
       rInfo->m_enbAddr = enbAddr;
       rInfo->m_priority = 0x1FFF;           // Priority for dedicated bearer
@@ -413,19 +405,12 @@ EpcController::NotifySessionCreated (
 }
 
 void
-EpcController::NonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
-{
-  NS_LOG_FUNCTION (this << cInfo);
-}
-
-void
 EpcController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
   m_admissionStats = 0;
   m_arpTable.clear ();
-  m_ipSwitchTable.clear ();
   m_routes.clear ();
   m_enbInfoByCellId.clear ();
   m_ueInfoByAddrMap.clear ();
@@ -534,7 +519,7 @@ EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
                 << ",tcp_src=" << filter.remotePortStart
                 << ",tcp_dst=" << filter.localPortStart;
           std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
-          DpctlExecute (GetPgwDatapathId (), cmdTcpStr);
+          DpctlExecute (GetPgwDatapathId (), cmdTcpStr); // FIXME remover GetPgwDatapathId
         }
 
       // Install rules for UDP traffic
@@ -661,8 +646,8 @@ EpcController::HandlePacketIn (
   ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid)
 {
   NS_LOG_FUNCTION (this << swtch << xid);
-  ofl_match_tlv *tlv;
 
+  ofl_match_tlv *tlv;
   enum ofp_packet_in_reason reason = msg->reason;
   if (reason == OFPR_NO_MATCH)
     {
@@ -764,15 +749,10 @@ EpcController::HandleFlowRemoved (
 }
 
 uint64_t
-EpcController::GetDatapathId (uint16_t index) const
-{
-  NS_ASSERT (index < m_ofDevices.GetN ());
-  return m_ofDevices.Get (index)->GetDatapathId ();
-}
-
-uint64_t
 EpcController::GetPgwDatapathId () const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_pgwDpId;
 }
 
@@ -794,6 +774,8 @@ EpcController::SaveRoutingInfo (Ptr<RoutingInfo> rInfo)
 Ptr<RoutingInfo>
 EpcController::GetRoutingInfo (uint32_t teid)
 {
+  NS_LOG_FUNCTION (this << teid);
+
   Ptr<RoutingInfo> rInfo = 0;
   TeidRoutingMap_t::iterator ret;
   ret = m_routes.find (teid);
@@ -805,34 +787,10 @@ EpcController::GetRoutingInfo (uint32_t teid)
 }
 
 void
-EpcController::SaveSwitchIndex (Ipv4Address ipAddr, uint16_t index)
-{
-  std::pair<Ipv4Address, uint16_t> entry (ipAddr, index);
-  std::pair <IpSwitchMap_t::iterator, bool> ret;
-  ret = m_ipSwitchTable.insert (entry);
-  if (ret.second == true)
-    {
-      NS_LOG_DEBUG ("New IP/Switch entry: " << ipAddr << " - " << index);
-      return;
-    }
-  NS_FATAL_ERROR ("This IP already existis in switch index table.");
-}
-
-uint16_t
-EpcController::GetSwitchIndex (Ipv4Address addr)
-{
-  IpSwitchMap_t::iterator ret;
-  ret = m_ipSwitchTable.find (addr);
-  if (ret != m_ipSwitchTable.end ())
-    {
-      return static_cast<uint16_t> (ret->second);
-    }
-  NS_FATAL_ERROR ("IP not registered in switch index table.");
-}
-
-void
 EpcController::SaveArpEntry (Ipv4Address ipAddr, Mac48Address macAddr)
 {
+  NS_LOG_FUNCTION (this << ipAddr << macAddr);
+
   std::pair<Ipv4Address, Mac48Address> entry (ipAddr, macAddr);
   std::pair <IpMacMap_t::iterator, bool> ret;
   ret = m_arpTable.insert (entry);
@@ -845,9 +803,11 @@ EpcController::SaveArpEntry (Ipv4Address ipAddr, Mac48Address macAddr)
 }
 
 Mac48Address
-EpcController::GetArpEntry (Ipv4Address ip)
+EpcController::GetArpEntry (Ipv4Address ip) const
 {
-  IpMacMap_t::iterator ret;
+  NS_LOG_FUNCTION (this << ip);
+
+  IpMacMap_t::const_iterator ret;
   ret = m_arpTable.find (ip);
   if (ret != m_arpTable.end ())
     {
@@ -999,6 +959,8 @@ EpcController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
 void
 EpcController::RegisterBearer (uint32_t teid, EpsBearer bearer)
 {
+  NS_LOG_FUNCTION_NOARGS ();
+
   std::pair <uint32_t, EpsBearer> entry (teid, bearer);
   std::pair <TeidBearerMap_t::iterator, bool> ret;
   ret = EpcController::m_bearersTable.insert (entry);
@@ -1011,6 +973,8 @@ EpcController::RegisterBearer (uint32_t teid, EpsBearer bearer)
 void
 EpcController::UnregisterBearer (uint32_t teid)
 {
+  NS_LOG_FUNCTION_NOARGS ();
+
   TeidBearerMap_t::iterator it;
   it = EpcController::m_bearersTable.find (teid);
   if (it != EpcController::m_bearersTable.end ())
@@ -1023,9 +987,9 @@ EpcController::UnregisterBearer (uint32_t teid)
     }
 }
 
+// FIXME: Agora no ns-3 tem os valores do DSCP definidos. Substituir.
 EpcController::QciDscpInitializer::QciDscpInitializer ()
 {
-  // FIXME: Agora no ns-3 tem os valores do DSCP definidos. Substituir.
   NS_LOG_FUNCTION_NOARGS ();
 
   std::pair <EpsBearer::Qci, uint16_t> entries [9];

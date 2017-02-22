@@ -29,8 +29,8 @@ RoutingInfo::RoutingInfo ()
   : m_teid (0),
     m_imsi (0),
     m_cellId (0),
-    m_pgwIdx (0),
-    m_enbIdx (0),
+    m_pgwDpId (0),
+    m_enbDpId (0),
     m_priority (0),
     m_timeout (0),
     m_isDefault (0),
@@ -120,20 +120,20 @@ RoutingInfo::GetCellId (void) const
   return m_cellId;
 }
 
-uint16_t
-RoutingInfo::GetEnbSwIdx (void) const
+uint64_t
+RoutingInfo::GetEnbSwDpId (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_enbIdx;
+  return m_enbDpId;
 }
 
-uint16_t
-RoutingInfo::GetPgwSwIdx (void) const
+uint64_t
+RoutingInfo::GetPgwSwDpId (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_pgwIdx;
+  return m_pgwDpId;
 }
 
 Ipv4Address

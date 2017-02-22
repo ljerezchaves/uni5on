@@ -117,7 +117,7 @@ RingRoutingInfo::GetPgwSwIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_rInfo->GetPgwSwIdx ();
+  return m_pgwIdx;
 }
 
 uint16_t
@@ -125,7 +125,7 @@ RingRoutingInfo::GetEnbSwIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_rInfo->GetEnbSwIdx ();
+  return m_enbIdx;
 }
 
 RingRoutingInfo::RoutingPath
