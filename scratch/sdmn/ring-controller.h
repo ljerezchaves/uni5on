@@ -205,7 +205,7 @@ private:
    * Map saving <Pair of switch indexes / Connection information.
    * The pair of switch indexes are saved in increasing order.
    */
-  typedef std::map<SwitchPair_t, Ptr<ConnectionInfo> > ConnInfoMap_t;
+  typedef std::map<DpIdPair_t, Ptr<ConnectionInfo> > ConnInfoMap_t;
   ConnInfoMap_t       m_connections;      //!< Connections between switches.
 };
 

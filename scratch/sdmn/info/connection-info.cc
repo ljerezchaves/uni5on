@@ -105,10 +105,10 @@ ConnectionInfo::GetTypeId (void)
   return tid;
 }
 
-SwitchPair_t
-ConnectionInfo::GetSwitchIndexPair (void) const
+DpIdPair_t
+ConnectionInfo::GetSwitchDpIdPair (void) const
 {
-  return SwitchPair_t (GetSwIdx (0), GetSwIdx (1));
+  return DpIdPair_t (GetSwDpId (0), GetSwDpId (1));
 }
 
 uint16_t

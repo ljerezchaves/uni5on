@@ -30,8 +30,8 @@ namespace ns3 {
 
 class ConnectionInfo;
 
-/** A pair of switches index */
-typedef std::pair<uint16_t, uint16_t> SwitchPair_t;
+/** A pair of switches datapath IDs */
+typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
 
 /**
  * \ingroup sdmnInfo
@@ -84,11 +84,11 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Get the pair of switch indexes for this connection, respecting the
+   * Get the pair of switch datapath IDs for this connection, respecting the
    * internal order.
-   * \return The pair of switch indexes.
+   * \return The pair of switch datapath IDs.
    */
-  SwitchPair_t GetSwitchIndexPair (void) const;
+  SwitchPair_t GetSwitchDpIdPair (void) const;
 
   /**
    * \name Private member accessors.
@@ -96,11 +96,11 @@ public:
    * \return The requested field.
    */
   //\{
-  uint16_t                        GetSwIdx    (uint8_t idx) const;
-  uint32_t                        GetPortNo   (uint8_t idx) const;
-  uint64_t                        GetSwDpId   (uint8_t idx) const;
-  Ptr<const OFSwitch13Device>     GetSwDev    (uint8_t idx) const;
-  Ptr<const CsmaNetDevice>        GetPortDev  (uint8_t idx) const;
+  uint16_t                    GetSwIdx    (uint8_t idx) const;
+  uint32_t                    GetPortNo   (uint8_t idx) const;
+  uint64_t                    GetSwDpId   (uint8_t idx) const;
+  Ptr<const OFSwitch13Device> GetSwDev    (uint8_t idx) const;
+  Ptr<const CsmaNetDevice>    GetPortDev  (uint8_t idx) const;
   //\}
 
   /**

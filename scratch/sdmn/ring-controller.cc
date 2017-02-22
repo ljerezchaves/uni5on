@@ -530,10 +530,10 @@ RingController::SaveConnectionInfo (Ptr<ConnectionInfo> cInfo)
   uint16_t port1 = cInfo->GetPortNo (0);
   uint16_t port2 = cInfo->GetPortNo (1);
 
-  SwitchPair_t key;
+  DpIdPair_t key;
   key.first  = std::min (swIndex1, swIndex2);
   key.second = std::max (swIndex1, swIndex2);
-  std::pair<SwitchPair_t, Ptr<ConnectionInfo> > entry (key, cInfo);
+  std::pair<DpIdPair_t, Ptr<ConnectionInfo> > entry (key, cInfo);
   std::pair<ConnInfoMap_t::iterator, bool> ret;
   ret = m_connections.insert (entry);
   if (ret.second == true)
@@ -550,7 +550,7 @@ Ptr<ConnectionInfo>
 RingController::GetConnectionInfo (uint16_t sw1, uint16_t sw2)
 {
   // Respecting the increasing switch index order when getting connection data.
-  SwitchPair_t key;
+  DpIdPair_t key;
   key.first = std::min (sw1, sw2);
   key.second = std::max (sw1, sw2);
   ConnInfoMap_t::iterator it = m_connections.find (key);

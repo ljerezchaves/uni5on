@@ -86,7 +86,7 @@ BackhaulStatsCalculator::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
   NS_LOG_FUNCTION (this << cInfo);
 
   m_connections.push_back (cInfo);
-  SwitchPair_t key = cInfo->GetSwitchIndexPair ();
+  DpIdPair_t key = cInfo->GetSwitchDpIdPair ();
 
   *m_bwbWrapper->GetStream ()
   << right << setw (10) << key.first  << "-"
