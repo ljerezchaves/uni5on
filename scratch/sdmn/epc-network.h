@@ -105,6 +105,12 @@ public:
    */
   virtual void AddSdranCloud (Ptr<SdranCloud> sdranCloud);
 
+  /**
+   * Notify this helper that all SDRAN cloud objects are already connected to
+   * the OpenFlow backhaul infrastructure via the S5 interface.
+   */
+  void SdranCloudsDone (void);
+
   // Inherited from EpcHelper.
   virtual uint8_t ActivateEpsBearer (Ptr<NetDevice> ueLteDevice, uint64_t imsi,
                                      Ptr<EpcTft> tft, EpsBearer bearer);
@@ -162,9 +168,18 @@ protected:
 
   /**
    * Get the switch datapath ID at which the P-GW node should be connected.
+   * \param sgwDev The P-GW OpenFlow switch device.
    * \return The switch datapath ID.
    */
-  virtual uint64_t TopologyGetPgwSwitch () = 0;
+  virtual uint64_t TopologyGetPgwSwitch (Ptr<OFSwitch13Device> pgwDev) = 0;
+  
+  /**
+   * Get the switch datapath ID at which the S-GW node from the SDRAN cloud
+   * should be connected.
+   * \param sdran The SDRAN cloud pointer.
+   * \return The switch datapath ID.
+   */
+  virtual uint64_t TopologyGetSgwSwitch (Ptr<SdranCloud> sdran) = 0;
 
   /**
    * Get the switch datapath ID at which the given eNB should be connected.
@@ -198,14 +213,14 @@ protected:
 private:
   /**
    * Save the pair node / switch datapath ID.
-   * \param dpId The switch datapath ID.
    * \param Ptr<Node> The node pointer.
+   * \param dpId The switch datapath ID.
    */
-  void RegisterAttachToSwitch (uint64_t dpId, Ptr<Node> node);
+  void RegisterNodeAttachToSwitch (Ptr<Node> node, uint64_t dpId);
 
   /**
    * Create the P-GW node, configure it as an OpenFlow switch and attach it to
-   * the backhaul network infrastructure vir S5 interface. Then, create the
+   * the backhaul network infrastructure via S5 interface. Then, create the
    * Internet web server node and connect it to the P-GW via SGi interface.
    */
   void ConfigurePgwAndInternet ();
@@ -229,6 +244,11 @@ private:
    */
   Ipv4Address GetAddressForDevice (Ptr<NetDevice> device);
 
+  /** Map saving node / switch datapath ID. */
+  typedef std::map<Ptr<Node>, uint64_t> NodeSwitchMap_t;
+
+  NodeSwitchMap_t               m_nodeSwitchMap;    //!< Nodes by switch ID.
+  
   // Helper and connection attributes
   CsmaHelper                    m_csmaHelper;       //!< Connection helper.
   DataRate                      m_linkRate;         //!< Link data rate.
@@ -264,10 +284,6 @@ private:
 
   // Statistics calculator
   Ptr<BackhaulStatsCalculator>  m_epcStats;         //!< Backhaul statistics.
-
-  /** Map saving node / switch datapath ID. */
-  typedef std::map<Ptr<Node>, uint64_t> NodeSwitchMap_t;
-  NodeSwitchMap_t m_nodeSwitchMap;  //!< Registered nodes by switch ID.
 };
 
 };  // namespace ns3

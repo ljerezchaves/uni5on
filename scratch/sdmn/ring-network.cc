@@ -21,6 +21,7 @@
 #include "ring-network.h"
 #include "ring-controller.h"
 #include "info/connection-info.h"
+#include "sdran-cloud.h"
 
 namespace ns3 {
 
@@ -164,12 +165,23 @@ RingNetwork::TopologyCreate ()
 }
 
 uint64_t
-RingNetwork::TopologyGetPgwSwitch ()
+RingNetwork::TopologyGetPgwSwitch (Ptr<OFSwitch13Device> pgwDev)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << pgwDev);
 
   // Connect the P-GW node to the first switch.
   return m_ofDevices.Get (0)->GetDatapathId ();
+}
+
+uint64_t
+RingNetwork::TopologyGetSgwSwitch (Ptr<SdranCloud> sdran)
+{
+  NS_LOG_FUNCTION (this << sdran);
+
+  // Connect the S-GW nodes to switches indexes in clockwise direction,
+  // starting at switch index 1. 
+  uint16_t swIdx = sdran->GetId () % m_numNodes;
+  return m_ofDevices.Get (swIdx)->GetDatapathId ();
 }
 
 uint64_t

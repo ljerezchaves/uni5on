@@ -103,7 +103,7 @@ public:
    * \param webSgiDev The SGi device attached to the Internet Web server.
    * \param webIp The IPv4 address assigned to the Internet Web server SGi dev.
    */
-  virtual void PgwSgiAttach (Ptr<OFSwitch13Device> pgwSwDev,
+  virtual void NewPgwAttach (Ptr<OFSwitch13Device> pgwSwDev,
     Ptr<NetDevice> pgwSgiDev, Ipv4Address pgwSgiIp, uint32_t sgiPortNo,
     uint32_t s5PortNo, Ptr<NetDevice> webSgiDev, Ipv4Address webIp);
 

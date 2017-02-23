@@ -53,7 +53,8 @@ protected:
 
   // Inherited from EpcNetwork.
   void     TopologyCreate ();
-  uint64_t TopologyGetPgwSwitch ();
+  uint64_t TopologyGetPgwSwitch (Ptr<OFSwitch13Device> pgwDev);
+  uint64_t TopologyGetSgwSwitch (Ptr<SdranCloud> sdran);
   uint64_t TopologyGetEnbSwitch (uint16_t cellId);
 
 private:

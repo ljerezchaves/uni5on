@@ -168,7 +168,7 @@ EpcController::ReleaseDedicatedBearer (
 }
 
 void
-EpcController::PgwSgiAttach (
+EpcController::NewPgwAttach (
   Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwSgiDev,
   Ipv4Address pgwSgiIp, uint32_t sgiPortNo, uint32_t s5PortNo,
   Ptr<NetDevice> webSgiDev, Ipv4Address webIp)

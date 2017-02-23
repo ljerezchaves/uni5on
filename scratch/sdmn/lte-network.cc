@@ -241,6 +241,7 @@ LteNetwork::ConfigureSdranClouds ()
       m_epcNetwork->AddSdranCloud (*it);
       m_enbNodes.Add ((*it)->GetEnbNodes ());
     }
+  m_epcNetwork->SdranCloudsDone ();
 }
 
 void
