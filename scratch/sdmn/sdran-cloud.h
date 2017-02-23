@@ -46,14 +46,14 @@ public:
   /** \return The SDRAN Cloud ID. */
   uint32_t GetId (void) const;
 
-  /** \return The S-GW node pointer. */
-  Ptr<Node> GetSgwNode ();
-
   /**
    * Get the container of eNBs nodes created by this SDRAN cloud.
    * \return The container of eNB nodes.
    */
   NodeContainer GetEnbNodes (void) const;
+
+  /** \return The S-GW node pointer. */
+  Ptr<Node> GetSgwNode ();
 
 protected:
   /** Destructor implementation */

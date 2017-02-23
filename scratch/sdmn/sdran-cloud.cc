@@ -71,20 +71,20 @@ SdranCloud::GetId (void) const
   return m_sdranId;
 }
 
-Ptr<Node>
-SdranCloud::GetSgwNode ()
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_sgwNode;
-}
-
 NodeContainer
 SdranCloud::GetEnbNodes (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_enbNodes;
+}
+
+Ptr<Node>
+SdranCloud::GetSgwNode ()
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sgwNode;
 }
 
 void
