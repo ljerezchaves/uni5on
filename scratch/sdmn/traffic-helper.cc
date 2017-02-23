@@ -262,11 +262,26 @@ TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices)
         MakeCallback (&TrafficManager::SessionCreatedCallback, m_ueManager));
 
       // Installing applications into UEs
-      if (m_gbrVoip) InstallGbrVoip ();
-      if (m_gbrLVid) InstallGbrLiveVideoStreaming ();
-      if (m_nonBVid) InstallNonGbrBufferedVideoStreaming ();
-      if (m_nonLVid) InstallNonGbrLiveVideoStreaming ();
-      if (m_nonHttp) InstallNonGbrHttp ();
+      if (m_gbrVoip)
+        {
+          InstallGbrVoip ();
+        }
+      if (m_gbrLVid)
+        {
+          InstallGbrLiveVideoStreaming ();
+        }
+      if (m_nonBVid)
+        {
+          InstallNonGbrBufferedVideoStreaming ();
+        }
+      if (m_nonLVid)
+        {
+          InstallNonGbrLiveVideoStreaming ();
+        }
+      if (m_nonHttp)
+        {
+          InstallNonGbrHttp ();
+        }
     }
   m_ueNode = 0;
   m_ueDev = 0;
