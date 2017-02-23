@@ -550,6 +550,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // to the controller.
   DpctlExecute (swtch, "set-config miss=128");
 
+  // FIXME Find a better way to identify which nodes should or not scape here.
   if (swtch->GetDpId () == m_pgwDpId)
     {
       // Don't install the following rules on the P-GW switch.
