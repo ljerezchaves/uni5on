@@ -26,12 +26,9 @@
 
 namespace ns3 {
 
-/** A pair of switches indexes. */
-typedef std::pair<uint16_t, uint16_t> IndexPair_t;
-
 /**
  * \ingroup sdmn
- * OpenFlow EPC controller for ring network.
+ * OpenFlow EPC controller for ring network topology.
  */
 class RingController : public EpcController
 {
@@ -68,6 +65,7 @@ protected:
   void TopologyCreateSpanningTree ();
   // Inherited from EpcController.
 
+private:
   /**
    * Notify this controller when the Non-GBR allowed bit rate in any network
    * connection is adjusted. This is used to update Non-GBR meters bands based
@@ -76,10 +74,6 @@ protected:
    */
   void NonGbrAdjusted (Ptr<ConnectionInfo> cInfo);
 
-  /** \return The number of switches in the network. */
-  uint16_t GetNSwitches (void) const;
-
-private:
   /**
    * Get the RingRoutingInfo associated to this rInfo metadata. When no ring
    * information is available, this function creates it.
@@ -96,18 +90,11 @@ private:
 
   /**
    * Search for connection information between two switches by their indexes.
-   * \param sw1 First switch index.
-   * \param sw2 Second switch index.
+   * \param idx1 First switch index.
+   * \param idx2 Second switch index.
    * \return Pointer to connection info saved.
    */
-  Ptr<ConnectionInfo> GetConnectionInfoByIdx (uint16_t sw1, uint16_t sw2);
-
-  /**
-   * Save the pair IP address / switch index in switch table.
-   * \param ipAddr The IPv4 address.
-   * \param swtchDev The OpenFlow switch device.
-   */
-  void SaveIpSwitchPair (Ipv4Address ipAddr, Ptr<OFSwitch13Device> swtchDev);
+  Ptr<ConnectionInfo> GetConnectionInfo (uint16_t idx1, uint16_t idx2);
 
   /**
    * Retrieve the switch index for IP address.
@@ -117,47 +104,38 @@ private:
   uint16_t GetSwitchIndex (Ipv4Address ipAddr) const;
 
   /**
+   * Retrieve the switch index for switch device.
+   * \param dev The OpenFlow switch device.
+   * \return The switch index in devices collection.
+   */
+  uint16_t GetSwitchIndex (Ptr<OFSwitch13Device> dev) const;
+
+  /**
+   * Get the numver of switches in the network.
+   * \return The number of switches in the network.
+   */
+  uint16_t GetNSwitches (void) const;
+
+  /**
    * Get the OpenFlow datapath ID for a specific switch index.
-   * \param index The switch index in devices colection.
+   * \param idx The switch index in devices colection.
    * \return The OpenFlow datapath ID.
    */
-  uint64_t GetDatapathId (uint16_t index) const;
-
-  /**
-   * Look for the routing path from source to destination switch index with
-   * lowest number of hops.
-   * \param srcSwitchIdx Source switch index.
-   * \param dstSwitchIdx Destination switch index.
-   * \return The routing path.
-   */
-  RingRoutingInfo::RoutingPath FindShortestPath (uint16_t srcSwitchIdx,
-                                                 uint16_t dstSwitchIdx);
-
-  /**
-   * Calculate the number of hops between source and destination for the
-   * indicated routing path.
-   * \param srcSwitchIdx Source switch index.
-   * \param dstSwitchIdx Destination switch index.
-   * \param routingPath The routing path.
-   * \return The number of hops in routing path.
-   */
-  uint16_t HopCounter (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                       RingRoutingInfo::RoutingPath routingPath);
+  uint64_t GetDpId (uint16_t idx) const;
 
   /**
    * Get the available GBR bit rate for this ring routing information,
    * considering both downlink and uplink paths.
-   * \internal
-   * This method implements the GBR Distance-Based Reservation algorithm
-   * (DeBaR) proposed by prof. Deep Medhi. The general idea is a dynamic bit
-   * rate usage factor that can be adjusted based on the distance between the
-   * eNB switch and the gateway switch.
+   * \internal This method implements the GBR Distance-Based Reservation
+   *           algorithm (DeBaR) proposed by prof. Deep Medhi. The general idea
+   *           is a dynamic bit rate usage factor that can be adjusted based on
+   *           the distance between the eNB switch and the gateway switch.
    * \param ringInfo The ring routing information.
    * \param useShortPath When true, get the available bit rate in the shortest
-   * path between source and destination nodes; otherwise, considers the
-   * inverted (long) path.
+   *        path between source and destination nodes; otherwise, considers the
+   *        inverted (long) path.
    * \return A pair of available GBR bit rates, for both downlink and uplink
-   * paths, in this strict order.
+   *         paths, in this strict order.
    */
   std::pair<uint64_t, uint64_t>
   GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
@@ -182,67 +160,80 @@ private:
                           Ptr<GbrInfo> gbrInfo);
 
   /**
-   * Reserve the indicated bit rate at each link from source to
-   * destination switch index following the indicated routing path.
+   * Reserve the indicated bit rate at each link from source to destination
+   * switch index following the indicated routing path.
    * \attention To avoid fatal errors, be sure that there is enough available
-   * bit rate in this link before reserving it.
-   * \param srcSwitchIdx Source switch index.
-   * \param dstSwitchIdx Destination switch index.
-   * \param routingPath The routing path.
+   *            bit rate in this link before reserving it.
+   * \param srcIdx Source switch index.
+   * \param dstIdx Destination switch index.
+   * \param path The routing path.
    * \param bitRate The bit rate to reserve.
    * \return True if success, false otherwise;
    */
-  bool PerLinkReserve (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                       RingRoutingInfo::RoutingPath routingPath,
+  bool PerLinkReserve (uint16_t srcIdx, uint16_t dstIdx,
+                       RingRoutingInfo::RoutingPath path,
                        uint64_t bitRate);
 
   /**
-   * Release the indicated bit rate at each link from source to
-   * destination switch index following the indicated routing path.
+   * Release the indicated bit rate at each link from source to destination
+   * switch index following the indicated routing path.
    * \attention To avoid fatal errors, be sure that there is enough reserved
    * bit rate in this link before releasing it.
-   * \param srcSwitchIdx Source switch index.
-   * \param dstSwitchIdx Destination switch index.
-   * \param routingPath The routing path.
+   * \param srcIdx Source switch index.
+   * \param dstIdx Destination switch index.
+   * \param path The routing path.
    * \param bitRate The bit rate to release.
    * \return True if success, false otherwise;
    */
-  bool PerLinkRelease (uint16_t srcSwitchIdx, uint16_t dstSwitchIdx,
-                       RingRoutingInfo::RoutingPath routingPath,
+  bool PerLinkRelease (uint16_t srcIdx, uint16_t dstIdx,
+                       RingRoutingInfo::RoutingPath path,
                        uint64_t bitRate);
 
   /**
-   * Get the next switch index following the indicated routing path.
-   * \param current Current switch index.
+   * Get the next switch index following the given routing path.
+   * \param idx Current switch index.
    * \param path The routing path direction.
    * \return The next switch index.
    */
-  uint16_t NextSwitchIndex (uint16_t current,
-                            RingRoutingInfo::RoutingPath routingPath);
+  uint16_t NextSwitchIndex (uint16_t idx, RingRoutingInfo::RoutingPath path);
 
   /**
-   * Remove meter rules from switches.
-   * \param rInfo The routing information.
-   * \return True if remove succeeded, false otherwise.
+   * Look for the routing path from source to destination switch index with
+   * lowest number of hops.
+   * \param srcIdx Source switch index.
+   * \param dstIdx Destination switch index.
+   * \return The routing path.
    */
-  bool RemoveMeterRules (Ptr<RoutingInfo> rInfo);
+  RingRoutingInfo::RoutingPath
+  FindShortestPath (uint16_t srcIdx, uint16_t dstIdx);
 
-  OFSwitch13DeviceContainer m_ofDevices;      //!< OpenFlow devices.
-  RoutingStrategy           m_strategy;       //!< Routing strategy in use.
-  double                    m_debarStep;      //!< DeBaR increase step.
-  bool                      m_debarShortPath; //!< DeBaR in shortest path.
-  bool                      m_debarLongPath;  //!< DeBaR in longest path.
+  /**
+   * Count the number of hops between source and destination switch index
+   * following the given routing path.
+   * \param srcIdx Source switch index.
+   * \param dstIdx Destination switch index.
+   * \param path The routing path.
+   * \return The number of hops in routing path.
+   */
+  uint16_t HopCounter (uint16_t srcIdx, uint16_t dstIdx,
+                       RingRoutingInfo::RoutingPath path);
 
   /**
    * Map saving pair of switch indexes / connection information.
    * The pair of switch datapath IDs are saved in increasing order.
    */
   typedef std::map<DpIdPair_t, Ptr<ConnectionInfo> > ConnInfoMap_t;
-  ConnInfoMap_t       m_connections;      //!< Connections between switches.
 
-  /** Map saving IPv4 address / Switch index */
+  /** Map saving IPv4 address / switch index. */
   typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;
-  IpSwitchMap_t       m_ipSwitchTable;    //!< eNB IP / Switch Index table.
+  
+  ConnInfoMap_t             m_connections;    //!< Switch connections.
+  IpSwitchMap_t             m_ipSwitchTable;  //!< IP / switch index table.
+  OFSwitch13DeviceContainer m_ofDevices;      //!< OpenFlow devices.
+  RoutingStrategy           m_strategy;       //!< Routing strategy in use.
+  double                    m_debarStep;      //!< DeBaR increase step.
+  bool                      m_debarShortPath; //!< DeBaR in shortest path.
+  bool                      m_debarLongPath;  //!< DeBaR in longest path.
 };
 
 };  // namespace ns3

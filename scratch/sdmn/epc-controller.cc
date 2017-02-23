@@ -167,50 +167,6 @@ EpcController::ReleaseDedicatedBearer (
   return TopologyRemoveRouting (rInfo);
 }
 
-Ptr<const RoutingInfo>
-EpcController::GetConstRoutingInfo (uint32_t teid) const
-{
-  NS_LOG_FUNCTION (this << teid);
-
-  Ptr<const RoutingInfo> rInfo = 0;
-  TeidRoutingMap_t::const_iterator ret;
-  ret = m_routes.find (teid);
-  if (ret != m_routes.end ())
-    {
-      rInfo = ret->second;
-    }
-  return rInfo;
-}
-
-EpsBearer
-EpcController::GetEpsBearer (uint32_t teid)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  TeidBearerMap_t::iterator it;
-  it = EpcController::m_bearersTable.find (teid);
-  if (it != EpcController::m_bearersTable.end ())
-    {
-      return it->second;
-    }
-  NS_FATAL_ERROR ("No bearer information for teid " << teid);
-}
-
-uint16_t
-EpcController::GetDscpMappedValue (EpsBearer::Qci qci)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  QciDscpMap_t::iterator it;
-  it = EpcController::m_qciDscpTable.find (qci);
-  if (it != EpcController::m_qciDscpTable.end ())
-    {
-      NS_LOG_DEBUG ("Found DSCP value: " << qci << " - " << it->second);
-      return it->second;
-    }
-  NS_FATAL_ERROR ("No DSCP mapped value for QCI " << qci);
-}
-
 void
 EpcController::PgwSgiAttach (
   Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwSgiDev,
@@ -388,8 +344,7 @@ EpcController::NotifySessionCreated (
           rInfo->AggregateObject (gbrInfo);
 
           // Set the appropriated DiffServ DSCP value for this bearer.
-          gbrInfo->m_dscp =
-            EpcController::GetDscpMappedValue (rInfo->GetQciInfo ());
+          gbrInfo->m_dscp = EpcController::GetDscpValue (rInfo->GetQciInfo ());
         }
 
       // If necessary, create the meter metadata for maximum bit rate.
@@ -402,6 +357,50 @@ EpcController::NotifySessionCreated (
 
   // Fire trace source notifying session created.
   m_sessionCreatedTrace (imsi, cellId, enbAddr, pgwAddr, bearerList);
+}
+
+Ptr<const RoutingInfo>
+EpcController::GetConstRoutingInfo (uint32_t teid) const
+{
+  NS_LOG_FUNCTION (this << teid);
+
+  Ptr<const RoutingInfo> rInfo = 0;
+  TeidRoutingMap_t::const_iterator ret;
+  ret = m_routes.find (teid);
+  if (ret != m_routes.end ())
+    {
+      rInfo = ret->second;
+    }
+  return rInfo;
+}
+
+EpsBearer
+EpcController::GetEpsBearer (uint32_t teid)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  TeidBearerMap_t::iterator it;
+  it = EpcController::m_bearersTable.find (teid);
+  if (it != EpcController::m_bearersTable.end ())
+    {
+      return it->second;
+    }
+  NS_FATAL_ERROR ("No bearer information for teid " << teid);
+}
+
+uint16_t
+EpcController::GetDscpValue (EpsBearer::Qci qci)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  QciDscpMap_t::iterator it;
+  it = EpcController::m_qciDscpTable.find (qci);
+  if (it != EpcController::m_qciDscpTable.end ())
+    {
+      NS_LOG_DEBUG ("Found DSCP value: " << qci << " - " << it->second);
+      return it->second;
+    }
+  NS_FATAL_ERROR ("No DSCP mapped value for QCI " << qci);
 }
 
 void
@@ -417,9 +416,9 @@ EpcController::DoDispose ()
   m_ueInfoByImsiMap.clear ();
 
   m_mme = 0;
-
   delete (m_s11SapSgw);
 
+  // Chain up.
   Object::DoDispose ();
 }
 
@@ -428,16 +427,16 @@ EpcController::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
-  // TODO In the future, this will be moved to the RAN controller
+  // TODO In the future, this will be moved to the RAN controller.
 
-  // Create the MME object for this controller
+  // Create the MME object for this controller.
   m_mme = CreateObject<EpcMme> ();
 
-  // Connect the MME to the S-GW via S11 interface
+  // Connect the MME to the S-GW via S11 interface.
   m_mme->SetS11SapSgw (GetS11SapSgw ());
   SetS11SapMme (m_mme->GetS11SapMme ());
 
-  // Connect the admission stats calculator
+  // Connect the admission stats calculator.
   TraceConnectWithoutContext (
     "BearerRequest", MakeCallback (
       &AdmissionStatsCalculator::NotifyBearerRequest, m_admissionStats));
@@ -446,7 +445,7 @@ EpcController::NotifyConstructionCompleted ()
     "BearerRelease", MakeCallback (
       &AdmissionStatsCalculator::NotifyBearerRelease, m_admissionStats));
 
-  // Chain up
+  // Chain up.
   ObjectBase::NotifyConstructionCompleted ();
 }
 
@@ -494,7 +493,7 @@ EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
       //       << ",tcp_src=" << filter.remotePortStart
       //       << ",tcp_dst=" << filter.localPortStart;
       // std::string cmdStr = cmd.str () + match.str () + act.str ();
-      // DpctlExecute (GetPgwDatapathId (), cmdStr);
+      // DpctlExecute (m_pgwDpId, cmdStr);
       return;
     }
 
@@ -519,7 +518,7 @@ EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
                 << ",tcp_src=" << filter.remotePortStart
                 << ",tcp_dst=" << filter.localPortStart;
           std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
-          DpctlExecute (GetPgwDatapathId (), cmdTcpStr); // FIXME remover GetPgwDatapathId
+          DpctlExecute (m_pgwDpId, cmdTcpStr); // FIXME remover m_pgwDpId
         }
 
       // Install rules for UDP traffic
@@ -533,7 +532,7 @@ EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
                 << ",udp_src=" << filter.remotePortStart
                 << ",udp_dst=" << filter.localPortStart;
           std::string cmdUdpStr = cmd.str () + match.str () + act.str ();
-          DpctlExecute (GetPgwDatapathId (), cmdUdpStr);
+          DpctlExecute (m_pgwDpId, cmdUdpStr);
         }
     }
 }
@@ -626,8 +625,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   //
   if (m_voipQos)
     {
-      int dscpVoip =
-        EpcController::GetDscpMappedValue (EpsBearer::GBR_CONV_VOICE);
+      int dscpVoip = EpcController::GetDscpValue (EpsBearer::GBR_CONV_VOICE);
 
       // VoIP packets. Write the high-priority output queue #1.
       std::ostringstream cmd;
@@ -746,14 +744,6 @@ EpcController::HandleFlowRemoved (
       return 0;
     }
   NS_ABORT_MSG ("Should not get here :/");
-}
-
-uint64_t
-EpcController::GetPgwDatapathId () const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_pgwDpId;
 }
 
 void
@@ -925,15 +915,14 @@ EpcController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
 
   Ptr<Packet> packet = Create<Packet> ();
 
-  // ARP header
+  // Add ARP header.
   ArpHeader arp;
   arp.SetReply (srcMac, srcIp, dstMac, dstIp);
   packet->AddHeader (arp);
 
-  // Ethernet header
-  EthernetHeader eth (false);
-  eth.SetSource (srcMac);
-  eth.SetDestination (dstMac);
+  // All Ethernet frames must carry a minimum payload of 46 bytes. We need to
+  // pad out if we don't have enough bytes. These must be real bytes since they
+  // will be written to pcap files and compared in regression trace files.
   if (packet->GetSize () < 46)
     {
       uint8_t buffer[46];
@@ -941,10 +930,14 @@ EpcController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
       Ptr<Packet> padd = Create<Packet> (buffer, 46 - packet->GetSize ());
       packet->AddAtEnd (padd);
     }
+
+  // Add Ethernet header and trailer.
+  EthernetHeader eth (false);
+  eth.SetSource (srcMac);
+  eth.SetDestination (dstMac);
   eth.SetLengthType (ArpL3Protocol::PROT_NUMBER);
   packet->AddHeader (eth);
 
-  // Ethernet trailer
   EthernetTrailer trailer;
   if (Node::ChecksumEnabled ())
     {
@@ -987,23 +980,31 @@ EpcController::UnregisterBearer (uint32_t teid)
     }
 }
 
-// FIXME: Agora no ns-3 tem os valores do DSCP definidos. Substituir.
 EpcController::QciDscpInitializer::QciDscpInitializer ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
   std::pair <EpsBearer::Qci, uint16_t> entries [9];
-  entries [0] = std::make_pair (EpsBearer::GBR_CONV_VOICE, 44);      // Voice
-  entries [1] = std::make_pair (EpsBearer::GBR_CONV_VIDEO, 12);      // AF 12
-  entries [2] = std::make_pair (EpsBearer::GBR_GAMING, 18);          // AF 21
-  entries [3] = std::make_pair (EpsBearer::GBR_NON_CONV_VIDEO, 18);  // AF 11
+  entries [0] = std::make_pair (
+      EpsBearer::GBR_CONV_VOICE, Ipv4Header::DSCP_EF);
+  entries [1] = std::make_pair (
+      EpsBearer::GBR_CONV_VIDEO, Ipv4Header::DSCP_AF12);
+  entries [2] = std::make_pair (
+      EpsBearer::GBR_GAMING, Ipv4Header::DSCP_AF21);
+  entries [3] = std::make_pair (
+      EpsBearer::GBR_NON_CONV_VIDEO, Ipv4Header::DSCP_AF11);
 
   // Currently we are mapping all Non-GBR bearers to best effort DSCP traffic.
-  entries [4] = std::make_pair (EpsBearer::NGBR_IMS, 0);
-  entries [5] = std::make_pair (EpsBearer::NGBR_VIDEO_TCP_OPERATOR, 0);
-  entries [6] = std::make_pair (EpsBearer::NGBR_VOICE_VIDEO_GAMING, 0);
-  entries [7] = std::make_pair (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, 0);
-  entries [8] = std::make_pair (EpsBearer::NGBR_VIDEO_TCP_DEFAULT, 0);
+  entries [4] = std::make_pair (
+      EpsBearer::NGBR_IMS, Ipv4Header::DscpDefault);
+  entries [5] = std::make_pair (
+      EpsBearer::NGBR_VIDEO_TCP_OPERATOR, Ipv4Header::DscpDefault);
+  entries [6] = std::make_pair (
+      EpsBearer::NGBR_VOICE_VIDEO_GAMING, Ipv4Header::DscpDefault);
+  entries [7] = std::make_pair (
+      EpsBearer::NGBR_VIDEO_TCP_PREMIUM, Ipv4Header::DscpDefault);
+  entries [8] = std::make_pair (
+      EpsBearer::NGBR_VIDEO_TCP_DEFAULT, Ipv4Header::DscpDefault);
 
   std::pair <QciDscpMap_t::iterator, bool> ret;
   for (int i = 0; i < 9; i++)
@@ -1012,14 +1013,6 @@ EpcController::QciDscpInitializer::QciDscpInitializer ()
       NS_ASSERT_MSG (ret.second, "Can't insert DSCP map value.");
     }
 }
-
-
-
-
-
-
-
-
 
 
 

@@ -46,8 +46,8 @@ class EpcController : public OFSwitch13Controller
   friend class MemberEpcS11SapSgw<EpcController>;
 
 public:
-  EpcController ();           //!< Default constructor
-  virtual ~EpcController ();  //!< Dummy destructor, see DoDispose
+  EpcController ();           //!< Default constructor.
+  virtual ~EpcController ();  //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -59,30 +59,28 @@ public:
    * Request a new dedicated EPS bearer. This is used to check for necessary
    * resources in the network (mainly available data rate for GBR bearers).
    * When returning false, it aborts the bearer creation process.
-   * \internal
-   * Current implementation assumes that each application traffic flow is
-   * associated with a unique bearer/tunnel. Because of that, we can use only
-   * the teid for the tunnel to prepare and install route. If we would like to
-   * aggregate traffic from several applications into same bearer we will need
-   * to revise this.
+   * \internal Current implementation assumes that each application traffic
+   *           flow is associated with a unique bearer/tunnel. Because of that,
+   *           we can use only the teid for the tunnel to prepare and install
+   *           route. If we would like to aggregate traffic from several
+   *           applications into same bearer we will need to revise this.
    * \param teid The teid for this bearer, if already defined.
    * \param imsi uint64_t IMSI UE identifier.
    * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
    * \param bearer EpsBearer bearer QoS characteristics of the bearer.
    * \returns true if successful (the bearer creation process will proceed),
-   * false otherwise (the bearer creation process will abort).
+   *          false otherwise (the bearer creation process will abort).
    */
   virtual bool RequestDedicatedBearer (EpsBearer bearer, uint64_t imsi,
     uint16_t cellId, uint32_t teid);
 
   /**
    * Release a dedicated EPS bearer.
-   * \internal
-   * Current implementation assumes that each application traffic flow is
-   * associated with a unique bearer/tunnel. Because of that, we can use only
-   * the teid for the tunnel to prepare and install route. If we would like to
-   * aggregate traffic from several applications into same bearer we will need
-   * to revise this.
+   * \internal Current implementation assumes that each application traffic
+   *           flow is associated with a unique bearer/tunnel. Because of that,
+   *           we can use only the teid for the tunnel to prepare and install
+   *           route. If we would like to aggregate traffic from several
+   *           applications into same bearer we will need to revise this.
    * \param teid The teid for this bearer, if already defined.
    * \param imsi uint64_t IMSI UE identifier.
    * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
@@ -96,8 +94,7 @@ public:
   //\{
   /**
    * Notify this controller of the P-GW and Internet Web server connection over
-   * the SGi interface. This function will save the IP / MAC address for ARP
-   * resolution, and will configure local port delivery.
+   * the SGi interface.
    * \param pgwSwDev The OpenFlow P-GW switch device.
    * \param pgwSgiDev The SGi device attached to the OpenFlow P-GW switch.
    * \param pgwSgiIp The IPv4 address assigned to the P-GW SGi device.
@@ -112,8 +109,7 @@ public:
 
   /**
    * Notify this controller of a new S-GW or P-GW connected to the S5 OpenFlow
-   * network over some switch port. This function will save the IP / MAC
-   * address for ARP resolution, and will configure local port delivery.
+   * network over some switch port.
    * \param swtchDev The OpenFlow switch device.
    * \param portNo The port number created at the OpenFlow switch.
    * \param gwDev The device created at the S/P-GW node (this is not the one
@@ -122,7 +118,7 @@ public:
    * \param gwIp The IPv4 address assigned to the gwDev.
    */
   virtual void NewS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo,
-                            Ptr<NetDevice> gwDev, Ipv4Address gwIp);
+    Ptr<NetDevice> gwDev, Ipv4Address gwIp);
 
   /**
    * Notify this controller of a new connection between two switches in the
@@ -177,7 +173,7 @@ public:
    * \param qci The EPS bearer QCI.
    * \return The IP DSCP mapped value for this QCI.
    */
-  static uint16_t GetDscpMappedValue (EpsBearer::Qci qci);
+  static uint16_t GetDscpValue (EpsBearer::Qci qci);
 
   /**
    * TracedCallback signature for new bearer request.
@@ -197,8 +193,214 @@ public:
   typedef void (*SessionCreatedTracedCallback)(uint64_t imsi, uint16_t cellId,
       Ipv4Address enbAddr, Ipv4Address pgwAddr, BearerList_t bearerList);
 
+protected:
+  /** Destructor implementation. */
+  virtual void DoDispose ();
+
+  // Inherited from ObjectBase.
+  virtual void NotifyConstructionCompleted (void);
+
+  /** \name Topology methods.
+   * This virtual methods must be implemented by topology subclasses, as they
+   * are dependent on network topology.
+   */
+  //\{
+  /**
+   * Configure the switches with OpenFlow commands for TEID routing, based on
+   * network topology information.
+   * \attention This function must increase the routing priority before
+   *            installing the rules, to avoid conflicts with old entries.
+   * \param rInfo The routing information to configure.
+   * \param buffer The buffered packet to apply this rule to.
+   * \return True if configuration succeeded, false otherwise.
+   */
+  virtual bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
+    uint32_t buffer = OFP_NO_BUFFER) = 0;
+
+  /**
+   * Remove TEID routing rules from switches.
+   * \param rInfo The routing information to remove.
+   * \return True if remove succeeded, false otherwise.
+   */
+  virtual bool TopologyRemoveRouting (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Process the bearer resource request and bit rate allocation based on
+   * network topology information.
+   * \param rInfo The routing information to process.
+   * \return True when the request is satisfied.
+   */
+  virtual bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Process the bearer and bit rate release based on network topology
+   * information.
+   * \param rInfo The routing information to process.
+   * \return True when the resources are successfully released.
+   */
+  virtual bool TopologyBearerRelease (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * To avoid flooding problems when broadcasting packets (like in ARP
+   * protocol), let's find a Spanning Tree and drop packets at selected ports
+   * when flooding (OFPP_FLOOD). This is accomplished by configuring the port
+   * with OFPPC_NO_FWD flag (0x20).
+   */
+  virtual void TopologyCreateSpanningTree () = 0;
+  //\}
+
+  /**
+   * Configure the P-GW with OpenFlow rules for downlink TFT packet filtering.
+   * \attention To avoid conflicts with old entries, increase the routing
+   *            priority before installing P-GW TFT rules.
+   * \param rInfo The routing information to configure.
+   * \param buffer The buffered packet to apply this rule to.
+   */
+  void InstallPgwTftRules (Ptr<RoutingInfo> rInfo,
+                           uint32_t buffer = OFP_NO_BUFFER);
+
+  // Inherited from OFSwitch13Controller.
+  virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
+  virtual ofl_err HandlePacketIn (
+    ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
+  virtual ofl_err HandleFlowRemoved (
+    ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
+  // Inherited from OFSwitch13Controller.
+
+private:
+  /**
+   * Save the RoutingInfo metadata for further usage.
+   * \param rInfo The routing information to save.
+   */
+  void SaveRoutingInfo (Ptr<RoutingInfo> rInfo);
+
+  /**
+   * Retrieve stored information for a specific GTP teid.
+   * \param teid The GTP tunnel ID.
+   * \return The routing information for this tunnel.
+   */
+  Ptr<RoutingInfo> GetRoutingInfo (uint32_t teid);
+
+  /**
+   * Save the pair IP / MAC address in ARP table.
+   * \param ipAddr The IPv4 address.
+   * \param macAddr The MAC address.
+   */
+  void SaveArpEntry (Ipv4Address ipAddr, Mac48Address macAddr);
+
+  /**
+   * Perform an ARP resolution.
+   * \param ip The Ipv4Address to search.
+   * \return The MAC address for this ip.
+   */
+  Mac48Address GetArpEntry (Ipv4Address ip) const;
+
+  /**
+   * Handle packet-in messages sent from switch with ARP message.
+   * \param msg The packet-in message.
+   * \param swtch The switch information.
+   * \param xid Transaction id.
+   * \return 0 if everything's ok, otherwise an error number.
+   */
+  ofl_err HandleArpPacketIn (ofl_msg_packet_in *msg,
+    Ptr<const RemoteSwitch> swtch, uint32_t xid);
+
+  /**
+   * Extract an IPv4 address from packet match.
+   * \param oxm_of The OXM_IF_* IPv4 field.
+   * \param match The ofl_match structure pointer.
+   * \return The IPv4 address.
+   */
+  Ipv4Address ExtractIpv4Address (uint32_t oxm_of, ofl_match* match);
+
+  /**
+   * Create a Packet with an ARP reply, encapsulated inside of an Ethernet
+   * frame (with header and trailer.
+   * \param srcMac Source MAC address.
+   * \param srcIP Source IP address.
+   * \param dstMac Destination MAC address.
+   * \param dstMac Destination IP address.
+   * \return The ns3 Ptr<Packet> with the ARP reply.
+   */
+  Ptr<Packet> CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
+    Mac48Address dstMac, Ipv4Address dstIp);
+
+  /**
+   * Insert a new bearer entry in global bearer map.
+   * \param teid The GTP tunnel ID.
+   * \param bearer The bearer information.
+   */
+  static void RegisterBearer (uint32_t teid, EpsBearer bearer);
+
+  /**
+   * Remove a bearer entry from global bearer map.
+   * \param teid The GTP tunnel ID.
+   */
+  static void UnregisterBearer (uint32_t teid);
+
+  /**
+   * EpcController inner friend utility class
+   * used to initialize static DSCP map table.
+   */
+  class QciDscpInitializer
+  {
+  public:
+    /** Initializer function. */
+    QciDscpInitializer ();
+  };
+  friend class QciDscpInitializer;
+
+  /**
+   * Static instance of Initializer. When this is created, its constructor
+   * initializes the EpcController s' static DSCP map table.
+   */
+  static QciDscpInitializer initializer;
+
+//
+// Member variables
+//
+protected:
+  /** The bearer request trace source, fired at RequestDedicatedBearer. */
+  TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerRequestTrace;
+
+  /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
+  TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerReleaseTrace;
+
+  /** The context created trace source, fired at NotifySessionCreated. */
+  TracedCallback<uint64_t, uint16_t, Ipv4Address, Ipv4Address, BearerList_t>
+    m_sessionCreatedTrace;
+
+  bool                  m_voipQos;            //!< VoIP QoS with queues.
+  bool                  m_nonGbrCoexistence;  //!< Non-GBR coexistence.
+  static const uint16_t m_dedicatedTmo;       //!< Timeout for bearers.
+
+private:
+  /** Map saving TEID / routing information. */
+  typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
+
+  /** Map saving IPv4 address / MAC address. */
+  typedef std::map<Ipv4Address, Mac48Address> IpMacMap_t;
+
+  /** Map saving TEID / EpsBearer. */
+  typedef std::map<uint32_t, EpsBearer> TeidBearerMap_t;
+
+  /** Map saving EpsBearer::Qci / IP DSCP value. */
+  typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
+
+  Ptr<AdmissionStatsCalculator> m_admissionStats; //!< Admission statistics.
+  uint64_t                      m_pgwDpId;        //!< P-GW datapath ID.
+  uint32_t                      m_pgwS5Port;      //!< P-GW S5 port no.
+  TeidRoutingMap_t              m_routes;         //!< TEID routing info.
+  IpMacMap_t                    m_arpTable;       //!< ARP resolution table.
+
+  static TeidBearerMap_t        m_bearersTable;   //!< TEID bearers table.
+  static QciDscpMap_t           m_qciDscpTable;   //!< DSCP mapped values.
 
 
+//
+// Everything below is from P-GW control plane.
+//
+public:
   /** \name Methods for the P-GW control plane. */
   //\{
   // FIXME Acho que essas funções vão pro S-GW.
@@ -244,147 +446,7 @@ public:
   Ptr<EpcMme> m_mme;
   // FIXME o mme vai pra dentro do controlador.
 
-
-protected:
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  // Inherited from ObjectBase
-  virtual void NotifyConstructionCompleted (void);
-
-  /** \name Topology-dependent functions
-   * This virtual functions must be implemented by subclasses, as they are
-   * dependent on network topology.
-   */
-  //\{
-  /**
-   * Configure the switches with OpenFlow commands for TEID routing, based on
-   * network topology information.
-   * \attention This function must increase the routing priority before
-   * installing the rules, to avoid conflicts with old entries.
-   * \param rInfo The routing information to configure.
-   * \param buffer The buffered packet to apply this rule to.
-   * \return True if configuration succeeded, false otherwise.
-   */
-  virtual bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
-    uint32_t buffer = OFP_NO_BUFFER) = 0;
-
-  /**
-   * Remove TEID routing rules from switches.
-   * \param rInfo The routing information to remove.
-   * \return True if remove succeeded, false otherwise.
-   */
-  virtual bool TopologyRemoveRouting (Ptr<RoutingInfo> rInfo) = 0;
-
-  /**
-   * Process the bearer resource request and bit rate allocation based on
-   * network topology information.
-   * \param rInfo The routing information to process.
-   * \return True when the request is satisfied.
-   */
-  virtual bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo) = 0;
-
-  /**
-   * Process the bearer and bit rate release based on network topology
-   * information.
-   * \param rInfo The routing information to process.
-   * \return True when the resources are successfully released.
-   */
-  virtual bool TopologyBearerRelease (Ptr<RoutingInfo> rInfo) = 0;
-
-  /**
-   * To avoid flooding problems when broadcasting packets (like in ARP
-   * protocol), let's find a Spanning Tree and drop packets at selected ports
-   * when flooding (OFPP_FLOOD). This is accomplished by configuring the port
-   * with OFPPC_NO_FWD flag (0x20).
-   */
-  virtual void TopologyCreateSpanningTree () = 0;
-  //\}
-
-  // Inherited from OFSwitch13Controller.
-  virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
-  virtual ofl_err HandlePacketIn (
-    ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
-  virtual ofl_err HandleFlowRemoved (
-    ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
-  // Inherited from OFSwitch13Controller.
-
-  /**
-   * Configure the P-GW with OpenFlow rules for downlink TFT packet filtering.
-   * \attention To avoid conflicts with old entries, increase the routing
-   * priority before installing P-GW TFT rules.
-   * \param rInfo The routing information to configure.
-   * \param buffer The buffered packet to apply this rule to.
-   */
-  void InstallPgwTftRules (Ptr<RoutingInfo> rInfo,
-                           uint32_t buffer = OFP_NO_BUFFER);
-
-  /**
-   * Get the OpenFlow datapath ID for the P-GW switch.
-   * \return The P-GW datapath ID.
-   */
-  uint64_t GetPgwDatapathId () const;
-
 private:
-  /**
-   * Save the RoutingInfo metadata for further usage.
-   * \param rInfo The routing information to save.
-   */
-  void SaveRoutingInfo (Ptr<RoutingInfo> rInfo);
-
-  /**
-   * Retrieve stored information for a specific GTP teid.
-   * \param teid The GTP tunnel ID.
-   * \return The routing information for this tunnel.
-   */
-  Ptr<RoutingInfo> GetRoutingInfo (uint32_t teid);
-
-  /**
-   * Save the pair IP / MAC address in ARP table.
-   * \param ipAddr The IPv4 address.
-   * \param macAddr The MAC address.
-   */
-  void SaveArpEntry (Ipv4Address ipAddr, Mac48Address macAddr);
-
-  /**
-   * Perform an ARP resolution
-   * \param ip The Ipv4Address to search.
-   * \return The MAC address for this ip.
-   */
-  Mac48Address GetArpEntry (Ipv4Address ip) const;
-
-  /**
-   * Handle packet-in messages sent from switch with ARP message.
-   * \param msg The packet-in message.
-   * \param swtch The switch information.
-   * \param xid Transaction id.
-   * \return 0 if everything's ok, otherwise an error number.
-   */
-  ofl_err HandleArpPacketIn (ofl_msg_packet_in *msg,
-    Ptr<const RemoteSwitch> swtch, uint32_t xid);
-
-  /**
-   * Extract an IPv4 address from packet match.
-   * \param oxm_of The OXM_IF_* IPv4 field.
-   * \param match The ofl_match structure pointer.
-   * \return The IPv4 address.
-   */
-  Ipv4Address ExtractIpv4Address (uint32_t oxm_of, ofl_match* match);
-
-  /**
-   * Create a Packet with an ARP reply, encapsulated inside of an Ethernet
-   * frame (with header and trailer.
-   * \param srcMac Source MAC address.
-   * \param srcIP Source IP address.
-   * \param dstMac Destination MAC address.
-   * \param dstMac Destination IP address.
-   * \return The ns3 Ptr<Packet> with the ARP reply.
-   */
-  Ptr<Packet> CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
-    Mac48Address dstMac, Ipv4Address dstIp);
-
-
-
   /** \name Methods for the P-GW control plane. */
   //\{
   // S11 SAP SGW methods
@@ -392,19 +454,6 @@ private:
   void DoModifyBearerRequest (EpcS11SapSgw::ModifyBearerRequestMessage msg);
   void DoDeleteBearerCommand (EpcS11SapSgw::DeleteBearerCommandMessage req);
   void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage req);
-
-  /**
-   * Insert a new bearer entry in global bearer map.
-   * \param teid The GTP tunnel ID.
-   * \param bearer The bearer information.
-   */
-  static void RegisterBearer (uint32_t teid, EpsBearer bearer);
-
-  /**
-   * Remove a bearer entry from global bearer map.
-   * \param teid The GTP tunnel ID.
-   */
-  static void UnregisterBearer (uint32_t teid);
   //\}
 
   /**
@@ -470,64 +519,6 @@ private:
     Ipv4Address                 m_ueAddr;
     std::map<uint8_t, uint32_t> m_teidByBearerIdMap;
   };
-
-  /**
-   * EpcController inner friend utility class
-   * used to initialize static DSCP map table.
-   */
-  class QciDscpInitializer
-  {
-  public:
-    /** Initializer function. */
-    QciDscpInitializer ();
-  };
-  friend class QciDscpInitializer;
-
-  /**
-   * Static instance of Initializer. When this is created, its constructor
-   * initializes the EpcController s' static DSCP map table.
-   */
-  static QciDscpInitializer initializer;
-
-// Member variables
-protected:
-  /** The bearer request trace source, fired at RequestDedicatedBearer. */
-  TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerRequestTrace;
-
-  /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
-  TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerReleaseTrace;
-
-  /** The context created trace source, fired at NotifySessionCreated. */
-  TracedCallback<uint64_t, uint16_t, Ipv4Address, Ipv4Address, BearerList_t>
-    m_sessionCreatedTrace;
-
-  bool m_voipQos;                         //!< Enable VoIP QoS with queues.
-  bool m_nonGbrCoexistence;               //!< Enable Non-GBR coexistence.
-
-  static const uint16_t m_dedicatedTmo;   //!< Timeout for dedicated bearers
-
-private:
-  Ptr<AdmissionStatsCalculator>  m_admissionStats;  //!< Admission statistics.
-  uint64_t                       m_pgwDpId;         //!< P-GW datapath ID.
-  uint32_t                       m_pgwS5Port;       //!< P-GW S5 port no.
-
-  /** Map saving <TEID / Routing information > */
-  typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
-  TeidRoutingMap_t    m_routes;           //!< TEID routing informations.
-
-  /** Map saving <IPv4 address / MAC address> */
-  typedef std::map<Ipv4Address, Mac48Address> IpMacMap_t;
-  IpMacMap_t          m_arpTable;         //!< ARP resolution table.
-
-  /** Map saving <TEID / EpsBearer > */
-  typedef std::map<uint32_t, EpsBearer> TeidBearerMap_t;
-  static TeidBearerMap_t m_bearersTable;  //!< TEID bearers table.
-
-  /** Map saving <EpsBearer::Qci / IP Dscp value> */
-  typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
-  static QciDscpMap_t m_qciDscpTable;     //!< DSCP mapped values.
-
-
 
   /** Struct representing eNB info. */
   struct EnbInfo
