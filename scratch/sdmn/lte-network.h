@@ -70,10 +70,10 @@ public:
   Ptr<LteHelper> GetLteHelper (void) const;
 
 protected:
-  /** Destructor implementation */
+  /** Destructor implementation. */
   void DoDispose ();
 
-  // Inherited from ObjectBase
+  // Inherited from ObjectBase.
   void NotifyConstructionCompleted (void);
 
 private:

@@ -29,7 +29,7 @@ NS_OBJECT_ENSURE_REGISTERED (LteNetwork);
 LteNetwork::LteNetwork (Ptr<EpcNetwork> epcNetwork)
   : m_epcNetwork (epcNetwork)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << epcNetwork);
 
   // Adjust filenames for LTE trace files before creating the network.
   StringValue stringValue;
@@ -128,24 +128,32 @@ LteNetwork::GetTypeId (void)
 NodeContainer
 LteNetwork::GetEnbNodes (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_enbNodes;
 }
 
 NodeContainer
 LteNetwork::GetUeNodes (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_ueNodes;
 }
 
 NetDeviceContainer
 LteNetwork::GetUeDevices (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_ueDevices;
 }
 
 Ptr<LteHelper>
 LteNetwork::GetLteHelper (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_lteHelper;
 }
 
