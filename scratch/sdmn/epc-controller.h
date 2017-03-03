@@ -90,8 +90,6 @@ public:
   virtual bool ReleaseDedicatedBearer (EpsBearer bearer, uint64_t imsi,
     uint16_t cellId, uint32_t teid);
 
-  /** \name Methods for network topology and LTE EPC monitoring. */
-  //\{
   /**
    * Notify this controller of the P-GW and Internet Web server connection over
    * the SGi interface.
@@ -152,7 +150,6 @@ public:
    */
   virtual void NotifySessionCreated (uint64_t imsi, uint16_t cellId,
     Ipv4Address enbAddr, Ipv4Address pgwAddr, BearerList_t bearerList);
-  //\}
 
   /**
    * Retrieve stored information for a specific GTP teid.
@@ -201,8 +198,8 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
   /** \name Topology methods.
-   * This virtual methods must be implemented by topology subclasses, as they
-   * are dependent on network topology.
+   * These virtual methods must be implemented by topology subclasses, as they
+   * are dependent on the backhaul OpenFlow network topology.
    */
   //\{
   /**
