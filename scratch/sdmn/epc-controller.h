@@ -159,6 +159,18 @@ public:
   Ptr<const RoutingInfo> GetConstRoutingInfo (uint32_t teid) const;
 
   /**
+   * Set the pointer to the commom LTE MME element.
+   * \param mme The MME element.
+   */
+  void SetMme (Ptr<EpcMme> mme);
+
+  /**
+   * Get a pointer to the commom LTE MME element.
+   * \return The MME element.
+   */
+  Ptr<EpcMme> GetMme ();
+
+  /**
    * Retrieve stored information for a specific bearer.
    * \param teid The GTP tunnel ID.
    * \return The EpsBearer information for this teid.
@@ -439,9 +451,6 @@ public:
   Ipv4Address GetEnbAddr (Ipv4Address ueAddr);
   //\}
 
-  /** MME element */
-  Ptr<EpcMme> m_mme;
-  // FIXME o mme vai pra dentro do controlador.
 
 private:
   /** \name Methods for the P-GW control plane. */
@@ -545,6 +554,8 @@ private:
 
   EpcS11SapMme* m_s11SapMme;      //!< MME side of the S11 SAP
   EpcS11SapSgw* m_s11SapSgw;      //!< SGW side of the S11 SAP
+
+  Ptr<EpcMme>   m_mme;            //!< LTE MME element.
 };
 
 };  // namespace ns3

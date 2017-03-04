@@ -374,6 +374,27 @@ EpcController::GetConstRoutingInfo (uint32_t teid) const
   return rInfo;
 }
 
+void
+EpcController::SetMme (Ptr<EpcMme> mme)
+{
+  NS_LOG_FUNCTION (this << mme);
+
+  m_mme = mme;
+
+  // TODO In the future, this will be moved to the RAN controller.
+  // Connect the MME to the S-GW control plane via S11 interface.
+  mme->SetS11SapSgw (GetS11SapSgw ());
+  SetS11SapMme (mme->GetS11SapMme ());
+}
+
+Ptr<EpcMme>
+EpcController::GetMme ()
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_mme;
+}
+
 EpsBearer
 EpcController::GetEpsBearer (uint32_t teid)
 {
@@ -427,14 +448,7 @@ EpcController::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
-  // TODO In the future, this will be moved to the RAN controller.
 
-  // Create the MME object for this controller.
-  m_mme = CreateObject<EpcMme> ();
-
-  // Connect the MME to the S-GW via S11 interface.
-  m_mme->SetS11SapSgw (GetS11SapSgw ());
-  SetS11SapMme (m_mme->GetS11SapMme ());
 
   // Connect the admission stats calculator.
   TraceConnectWithoutContext (
@@ -753,8 +767,8 @@ EpcController::SaveRoutingInfo (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo);
 
   uint32_t teid = rInfo->GetTeid ();
-  std::pair <uint32_t, Ptr<RoutingInfo> > entry (teid, rInfo);
-  std::pair <TeidRoutingMap_t::iterator, bool> ret;
+  std::pair<uint32_t, Ptr<RoutingInfo> > entry (teid, rInfo);
+  std::pair<TeidRoutingMap_t::iterator, bool> ret;
   ret = m_routes.insert (entry);
   if (ret.second == false)
     {
@@ -783,7 +797,7 @@ EpcController::SaveArpEntry (Ipv4Address ipAddr, Mac48Address macAddr)
   NS_LOG_FUNCTION (this << ipAddr << macAddr);
 
   std::pair<Ipv4Address, Mac48Address> entry (ipAddr, macAddr);
-  std::pair <IpMacMap_t::iterator, bool> ret;
+  std::pair<IpMacMap_t::iterator, bool> ret;
   ret = m_arpTable.insert (entry);
   if (ret.second == true)
     {
@@ -955,8 +969,8 @@ EpcController::RegisterBearer (uint32_t teid, EpsBearer bearer)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  std::pair <uint32_t, EpsBearer> entry (teid, bearer);
-  std::pair <TeidBearerMap_t::iterator, bool> ret;
+  std::pair<uint32_t, EpsBearer> entry (teid, bearer);
+  std::pair<TeidBearerMap_t::iterator, bool> ret;
   ret = EpcController::m_bearersTable.insert (entry);
   if (ret.second == false)
     {
@@ -985,7 +999,7 @@ EpcController::QciDscpInitializer::QciDscpInitializer ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  std::pair <EpsBearer::Qci, uint16_t> entries [9];
+  std::pair<EpsBearer::Qci, uint16_t> entries [9];
   entries [0] = std::make_pair (
       EpsBearer::GBR_CONV_VOICE, Ipv4Header::DSCP_EF);
   entries [1] = std::make_pair (
@@ -1007,7 +1021,7 @@ EpcController::QciDscpInitializer::QciDscpInitializer ()
   entries [8] = std::make_pair (
       EpsBearer::NGBR_VIDEO_TCP_DEFAULT, Ipv4Header::DscpDefault);
 
-  std::pair <QciDscpMap_t::iterator, bool> ret;
+  std::pair<QciDscpMap_t::iterator, bool> ret;
   for (int i = 0; i < 9; i++)
     {
       ret = EpcController::m_qciDscpTable.insert (entries [i]);
@@ -1134,7 +1148,7 @@ EpcController::AddEnb (uint16_t cellId, Ipv4Address enbAddr,
   enbInfo.sgwAddr = sgwAddr;
 
   std::pair<uint16_t, EnbInfo> entry (cellId, enbInfo);
-  std::pair <CellIdEnbInfo_t::iterator, bool> ret;
+  std::pair<CellIdEnbInfo_t::iterator, bool> ret;
   ret = m_enbInfoByCellId.insert (entry);
   if (ret.second == false)
     {
@@ -1149,7 +1163,7 @@ EpcController::AddUe (uint64_t imsi)
 
   // Create and insert UE info into map.
   std::pair<uint64_t, Ptr<UeInfo> > entry (imsi, Create<UeInfo> ());
-  std::pair <ImsiUeInfoMap_t::iterator, bool> ret;
+  std::pair<ImsiUeInfoMap_t::iterator, bool> ret;
   ret = m_ueInfoByImsiMap.insert (entry);
   if (ret.second == false)
     {
@@ -1179,7 +1193,7 @@ EpcController::SetUeAddress (uint64_t imsi, Ipv4Address ueAddr)
   else
     {
       std::pair<Ipv4Address, Ptr<UeInfo> > entry (ueAddr, imsiIt->second);
-      std::pair <IpUeInfoMap_t::iterator, bool> ret;
+      std::pair<IpUeInfoMap_t::iterator, bool> ret;
       ret = m_ueInfoByAddrMap.insert (entry);
       if (ret.second == false)
         {
