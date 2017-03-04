@@ -205,21 +205,6 @@ EpcNetwork::GetSdranCloud (Ptr<Node> enb)
   NS_FATAL_ERROR ("eNB node not registered.");
 }
 
-uint64_t
-EpcNetwork::GetDpIdForAttachedNode (Ptr<Node> node) const
-{
-  NS_LOG_FUNCTION (this << node);
-
-  NodeSwitchMap_t::const_iterator ret;
-  ret = m_nodeSwitchMap.find (node);
-  if (ret != m_nodeSwitchMap.end ())
-    {
-      NS_LOG_DEBUG ("Found switch " << (int)ret->second << " for " << node);
-      return ret->second;
-    }
-  NS_FATAL_ERROR ("Node not registered.");
-}
-
 void
 EpcNetwork::SetSwitchDeviceAttribute (std::string n1, const AttributeValue &v1)
 {
@@ -274,7 +259,6 @@ EpcNetwork::AddSdranCloud (Ptr<SdranCloud> sdranCloud)
   // Get the switch datapath ID on the backhaul network to attatch the S-GW.
   uint64_t swDpId = TopologyGetSgwSwitch (sdranCloud);
   Ptr<Node> swNode = GetSwitchNode (swDpId);
-  RegisterNodeAttachToSwitch (sgwNode, swDpId);
 
   // Connect the S-GW to the backhaul network over S5 interface.
   NetDeviceContainer devices = m_csmaHelper.Install (swNode, sgwNode);
@@ -354,7 +338,6 @@ EpcNetwork::DoDispose ()
   m_epcStats = 0;
   m_mme = 0;
 
-  m_nodeSwitchMap.clear ();
   m_enbSdranMap.clear ();
 
   Object::DoDispose ();
@@ -420,22 +403,6 @@ EpcNetwork::InstallController (Ptr<EpcController> controller)
 }
 
 void
-EpcNetwork::RegisterNodeAttachToSwitch (Ptr<Node> node, uint64_t dpId)
-{
-  NS_LOG_FUNCTION (this << node << dpId);
-
-  std::pair<NodeSwitchMap_t::iterator, bool> ret;
-  std::pair<Ptr<Node>, uint64_t> entry (node, dpId);
-  ret = m_nodeSwitchMap.insert (entry);
-  if (ret.second == true)
-    {
-      NS_LOG_DEBUG ("Node " << node << " registered at switch " << dpId);
-      return;
-    }
-  NS_FATAL_ERROR ("Can't register node at switch.");
-}
-
-void
 EpcNetwork::ConfigurePgwAndInternet ()
 {
   NS_LOG_FUNCTION (this);
@@ -490,7 +457,6 @@ EpcNetwork::ConfigurePgwAndInternet ()
   // Get the switch datapath ID on the backhaul network to attatch the P-GW.
   uint64_t swDpId = TopologyGetPgwSwitch (m_pgwSwitchDev);
   Ptr<Node> swNode = GetSwitchNode (swDpId);
-  RegisterNodeAttachToSwitch (m_pgwNode, swDpId);
 
   // Connect the P-GW to the backhaul over S5 interface.
   NetDeviceContainer devices = m_csmaHelper.Install (swNode, m_pgwNode);

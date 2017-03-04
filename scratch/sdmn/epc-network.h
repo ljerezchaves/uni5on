@@ -99,13 +99,6 @@ public:
   Ptr<SdranCloud> GetSdranCloud (Ptr<Node> enb);
 
   /**
-   * Get the switch datapath ID for a given node attached to the network.
-   * \param node The pointer to the node.
-   * \return The switch datapath ID.
-   */
-  uint64_t GetDpIdForAttachedNode (Ptr<Node> node) const;
-
-  /**
    * Set an attribute for ns3::OFSwitch13Device factory.
    * \param n1 The name of the attribute to set.
    * \param v1 The value of the attribute to set.
@@ -215,13 +208,6 @@ protected:
 
 private:
   /**
-   * Save the pair node / switch datapath ID.
-   * \param node The node pointer.
-   * \param dpId The switch datapath ID.
-   */
-  void RegisterNodeAttachToSwitch (Ptr<Node> node, uint64_t dpId);
-
-  /**
    * Create the P-GW node, configure it as an OpenFlow switch and attach it to
    * the backhaul network infrastructure via S5 interface. Then, create the
    * Internet web server node and connect it to the P-GW via SGi interface.
@@ -234,13 +220,9 @@ private:
    */
   Ptr<EpcMme> GetMme ();
 
-  /** Map saving node / switch datapath ID. */
-  typedef std::map<Ptr<Node>, uint64_t> NodeSwitchMap_t;
-
   /** Map saving node / SDRAN pointer. */
   typedef std::map<Ptr<Node>, Ptr<SdranCloud> > NodeSdranMap_t;
 
-  NodeSwitchMap_t               m_nodeSwitchMap;    //!< Nodes by switch ID.
   NodeSdranMap_t                m_enbSdranMap;      //!< SDRAN by eNB node.
 
   // Helper and connection attributes
