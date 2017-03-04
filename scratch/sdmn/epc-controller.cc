@@ -380,8 +380,6 @@ EpcController::DoDispose ()
   m_admissionStats = 0;
   m_arpTable.clear ();
   m_enbInfoByCellId.clear ();
-  m_ueInfoByAddrMap.clear ();
-  m_ueInfoByImsiMap.clear ();
 
   delete (m_s11SapSgw);
 
@@ -912,101 +910,6 @@ EpcController::QciDscpInitializer::QciDscpInitializer ()
     }
 }
 
-
-
-EpcController::UeInfo::UeInfo ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-EpcController::UeInfo::~UeInfo ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-void
-EpcController::UeInfo::AddBearer (Ptr<EpcTft> tft, uint8_t bearerId,
-                                  uint32_t teid)
-{
-  NS_LOG_FUNCTION (this << tft << teid);
-  m_teidByBearerIdMap[bearerId] = teid;
-  return m_tftClassifier.Add (tft, teid);
-}
-
-void
-EpcController::UeInfo::RemoveBearer (uint8_t bearerId)
-{
-  NS_LOG_FUNCTION (this << bearerId);
-  m_teidByBearerIdMap.erase (bearerId);
-}
-
-uint32_t
-EpcController::UeInfo::Classify (Ptr<Packet> p)
-{
-  NS_LOG_FUNCTION (this << p);
-  // we hardcode DOWNLINK direction since the PGW is espected to
-  // classify only downlink packets (uplink packets will go to the
-  // internet without any classification).
-  return m_tftClassifier.Classify (p, EpcTft::DOWNLINK);
-}
-
-Ipv4Address
-EpcController::UeInfo::GetEnbAddr ()
-{
-  return m_enbAddr;
-}
-
-void
-EpcController::UeInfo::SetEnbAddr (Ipv4Address enbAddr)
-{
-  m_enbAddr = enbAddr;
-}
-
-Ipv4Address
-EpcController::UeInfo::GetUeAddr ()
-{
-  return m_ueAddr;
-}
-
-void
-EpcController::UeInfo::SetUeAddr (Ipv4Address ueAddr)
-{
-  m_ueAddr = ueAddr;
-}
-
-
-
-
-Ipv4Address
-EpcController::GetEnbAddr (Ipv4Address ueAddr)
-{
-  NS_LOG_FUNCTION (this << ueAddr);
-
-  // Find corresponding UeInfo address
-  IpUeInfoMap_t::iterator ret;
-  ret = m_ueInfoByAddrMap.find (ueAddr);
-  if (ret != m_ueInfoByAddrMap.end ())
-    {
-      return ret->second->GetEnbAddr ();
-    }
-  NS_FATAL_ERROR ("UE address registered in map.");
-}
-
-uint32_t
-EpcController::GetTeid (Ipv4Address ueAddr, Ptr<Packet> packet)
-{
-  NS_LOG_FUNCTION (this << ueAddr << packet);
-
-  // Find corresponding UeInfo address
-  IpUeInfoMap_t::iterator ret;
-  ret = m_ueInfoByAddrMap.find (ueAddr);
-  if (ret != m_ueInfoByAddrMap.end ())
-    {
-      return ret->second->Classify (packet);
-    }
-  NS_FATAL_ERROR ("UE address registered in map.");
-}
-
 void
 EpcController::SetS11SapMme (EpcS11SapMme * s)
 {
@@ -1025,7 +928,7 @@ EpcController::AddEnb (uint16_t cellId, Ipv4Address enbAddr,
 {
   NS_LOG_FUNCTION (this << cellId << enbAddr << sgwAddr);
 
-  // Create and insert eNB info into map.
+  // Create and save the eNB info for this cell ID.
   EnbInfo enbInfo;
   enbInfo.enbAddr = enbAddr;
   enbInfo.sgwAddr = sgwAddr;
@@ -1035,7 +938,7 @@ EpcController::AddEnb (uint16_t cellId, Ipv4Address enbAddr,
   ret = m_enbInfoByCellId.insert (entry);
   if (ret.second == false)
     {
-      NS_FATAL_ERROR ("Existing information for cellId " << cellId);
+      NS_FATAL_ERROR ("Existing information for cell ID " << cellId);
     }
 }
 
@@ -1044,14 +947,8 @@ EpcController::AddUe (uint64_t imsi)
 {
   NS_LOG_FUNCTION (this << imsi);
 
-  // Create and insert UE info into map.
-  std::pair<uint64_t, Ptr<UeInfo> > entry (imsi, Create<UeInfo> ());
-  std::pair<ImsiUeInfoMap_t::iterator, bool> ret;
-  ret = m_ueInfoByImsiMap.insert (entry);
-  if (ret.second == false)
-    {
-      NS_FATAL_ERROR ("Existing information for ISMI " << imsi);
-    }
+  // Create the UE info object for this ISMI.
+  CreateObject<UeInfo> (imsi);
 }
 
 void
@@ -1059,138 +956,129 @@ EpcController::SetUeAddress (uint64_t imsi, Ipv4Address ueAddr)
 {
   NS_LOG_FUNCTION (this << imsi << ueAddr);
 
-  // Find UE info by ISMI
-  ImsiUeInfoMap_t::iterator imsiIt = m_ueInfoByImsiMap.find (imsi);
-  if (imsiIt == m_ueInfoByImsiMap.end ())
-    {
-      NS_FATAL_ERROR ("Unknown IMSI " << imsi);
-    }
-  imsiIt->second->SetUeAddr (ueAddr);
-
-  // Save UE info by eNB address (only in the first time)
-  IpUeInfoMap_t::iterator ipIt = m_ueInfoByAddrMap.find (ueAddr);
-  if (ipIt != m_ueInfoByAddrMap.end ())
-    {
-      NS_ASSERT_MSG (ipIt->second == imsiIt->second, "Invalid UeInfo");
-    }
-  else
-    {
-      std::pair<Ipv4Address, Ptr<UeInfo> > entry (ueAddr, imsiIt->second);
-      std::pair<IpUeInfoMap_t::iterator, bool> ret;
-      ret = m_ueInfoByAddrMap.insert (entry);
-      if (ret.second == false)
-        {
-          NS_FATAL_ERROR ("Existing information for IP " << ueAddr);
-        }
-    }
+  UeInfo::GetPointer (imsi)->SetUeAddress (ueAddr);
 }
 
+EpcController::EnbInfo
+EpcController::GetEnbInfo (uint16_t cellId)
+{
+  NS_LOG_FUNCTION (this << cellId);
+
+  CellIdEnbInfo_t::iterator it = m_enbInfoByCellId.find (cellId);
+  if (it == m_enbInfoByCellId.end ())
+    {
+      NS_FATAL_ERROR ("No info found for eNB cell ID " << cellId);
+    }
+  return it->second;
+}
+
+//
+// On the following Do* methods, note the trick to avoid the need for
+// allocating TEID on the S11 interface using the IMSI as identifier.
+//
 void
 EpcController::DoCreateSessionRequest (
   EpcS11SapSgw::CreateSessionRequestMessage req)
 {
   NS_LOG_FUNCTION (this << req.imsi);
 
-  ImsiUeInfoMap_t::iterator ueit = m_ueInfoByImsiMap.find (req.imsi);
-  NS_ASSERT (ueit != m_ueInfoByImsiMap.end ());
-
   uint16_t cellId = req.uli.gci;
-  CellIdEnbInfo_t::iterator enbit = m_enbInfoByCellId.find (cellId);
-  NS_ASSERT (enbit != m_enbInfoByCellId.end ());
-
-  Ipv4Address enbAddr = enbit->second.enbAddr;
-  ueit->second->SetEnbAddr (enbAddr);
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (req.imsi);
+  EnbInfo enbInfo = GetEnbInfo (cellId);
+  
+  ueInfo->SetEnbAddress (enbInfo.enbAddr);
 
   EpcS11SapMme::CreateSessionResponseMessage res;
-  res.teid = req.imsi; // trick to avoid allocating TEIDs on S11 interface.
+  res.teid = req.imsi;
 
   std::list<EpcS11SapSgw::BearerContextToBeCreated>::iterator bit;
   for (bit = req.bearerContextsToBeCreated.begin ();
        bit != req.bearerContextsToBeCreated.end ();
        ++bit)
     {
-      // simple sanity check. If you ever need more than 4M teids
-      // throughout your simulation, you'll need to implement a smarter teid
-      // management algorithm.
+      // Check for available TEID.
       NS_ABORT_IF (m_teidCount == 0xFFFFFFFF);
       uint32_t teid = ++m_teidCount;
-      ueit->second->AddBearer (bit->tft, bit->epsBearerId, teid);
+      ueInfo->AddBearer (bit->epsBearerId, teid);
 
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.teid = teid;
-      bearerContext.sgwFteid.address = enbit->second.sgwAddr;
-      bearerContext.epsBearerId =  bit->epsBearerId;
+      bearerContext.sgwFteid.address = enbInfo.sgwAddr;
+      bearerContext.epsBearerId = bit->epsBearerId;
       bearerContext.bearerLevelQos = bit->bearerLevelQos;
       bearerContext.tft = bit->tft;
       res.bearerContextsCreated.push_back (bearerContext);
     }
 
   // Notify the controller of the new create session request accepted.
-  NotifySessionCreated (req.imsi, cellId, enbit->second.enbAddr,
-                        enbit->second.sgwAddr, res.bearerContextsCreated);
+  NotifySessionCreated (req.imsi, cellId, enbInfo.enbAddr, enbInfo.sgwAddr,
+                        res.bearerContextsCreated);
 
-  // Send the response message.
   m_s11SapMme->CreateSessionResponse (res);
 }
 
 void
-EpcController::DoModifyBearerRequest (EpcS11SapSgw::ModifyBearerRequestMessage req)
+EpcController::DoModifyBearerRequest (
+  EpcS11SapSgw::ModifyBearerRequestMessage req)
 {
   NS_LOG_FUNCTION (this << req.teid);
-  uint64_t imsi = req.teid; // trick to avoid the need for allocating TEIDs on the S11 interface
-  ImsiUeInfoMap_t::iterator ueit = m_ueInfoByImsiMap.find (imsi);
-  NS_ASSERT_MSG (ueit != m_ueInfoByImsiMap.end (), "unknown IMSI " << imsi);
+
+  uint64_t imsi = req.teid;
   uint16_t cellId = req.uli.gci;
-  CellIdEnbInfo_t::iterator enbit = m_enbInfoByCellId.find (cellId);
-  NS_ASSERT_MSG (enbit != m_enbInfoByCellId.end (), "unknown CellId " << cellId);
-  Ipv4Address enbAddr = enbit->second.enbAddr;
-  ueit->second->SetEnbAddr (enbAddr);
-  // no actual bearer modification: for now we just support the minimum needed for path switch request (handover)
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  EnbInfo enbInfo = GetEnbInfo (cellId);
+  
+  ueInfo->SetEnbAddress (enbInfo.enbAddr);
+
+  // No actual bearer modification: for now we just support the minimum needed
+  // for path switch request (handover).
   EpcS11SapMme::ModifyBearerResponseMessage res;
-  res.teid = imsi; // trick to avoid the need for allocating TEIDs on the S11 interface
+  res.teid = imsi;
   res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
+
   m_s11SapMme->ModifyBearerResponse (res);
 }
 
 void
-EpcController::DoDeleteBearerCommand (EpcS11SapSgw::DeleteBearerCommandMessage req)
+EpcController::DoDeleteBearerCommand (
+  EpcS11SapSgw::DeleteBearerCommandMessage req)
 {
   NS_LOG_FUNCTION (this << req.teid);
-  uint64_t imsi = req.teid; // trick to avoid the need for allocating TEIDs on the S11 interface
-  ImsiUeInfoMap_t::iterator ueit = m_ueInfoByImsiMap.find (imsi);
-  NS_ASSERT_MSG (ueit != m_ueInfoByImsiMap.end (), "unknown IMSI " << imsi);
+
+  uint64_t imsi = req.teid;
 
   EpcS11SapMme::DeleteBearerRequestMessage res;
   res.teid = imsi;
 
-  for (std::list<EpcS11SapSgw::BearerContextToBeRemoved>::iterator bit = req.bearerContextsToBeRemoved.begin ();
+  std::list<EpcS11SapSgw::BearerContextToBeRemoved>::iterator bit;
+  for (bit = req.bearerContextsToBeRemoved.begin ();
        bit != req.bearerContextsToBeRemoved.end ();
        ++bit)
     {
       EpcS11SapMme::BearerContextRemoved bearerContext;
-      bearerContext.epsBearerId =  bit->epsBearerId;
+      bearerContext.epsBearerId = bit->epsBearerId;
       res.bearerContextsRemoved.push_back (bearerContext);
     }
-  //schedules Delete Bearer Request towards MME
+
   m_s11SapMme->DeleteBearerRequest (res);
 }
 
 void
-EpcController::DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage req)
+EpcController::DoDeleteBearerResponse (
+  EpcS11SapSgw::DeleteBearerResponseMessage req)
 {
   NS_LOG_FUNCTION (this << req.teid);
-  uint64_t imsi = req.teid; // trick to avoid the need for allocating TEIDs on the S11 interface
-  ImsiUeInfoMap_t::iterator ueit = m_ueInfoByImsiMap.find (imsi);
-  NS_ASSERT_MSG (ueit != m_ueInfoByImsiMap.end (), "unknown IMSI " << imsi);
 
-  for (std::list<EpcS11SapSgw::BearerContextRemovedSgwPgw>::iterator bit = req.bearerContextsRemoved.begin ();
+  uint64_t imsi = req.teid;
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+
+  std::list<EpcS11SapSgw::BearerContextRemovedSgwPgw>::iterator bit;
+  for (bit = req.bearerContextsRemoved.begin ();
        bit != req.bearerContextsRemoved.end ();
        ++bit)
     {
-      //Function to remove de-activated bearer contexts from S-Gw and P-Gw side
-      ueit->second->RemoveBearer (bit->epsBearerId);
+      ueInfo->RemoveBearer (bit->epsBearerId);
     }
 }
-
 
 };  // namespace ns3
