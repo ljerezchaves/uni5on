@@ -93,14 +93,14 @@ public:
   //\}
 
   /**
-   * Retrieve the routing information from the global map for a specific TEID.
+   * Get the routing information from the global map for a specific TEID.
    * \param teid The GTP tunnel ID.
    * \return The routing information for this tunnel.
    */
-  static Ptr<const RoutingInfo> GetConstInfo (uint32_t teid);
+  static Ptr<const RoutingInfo> GetConstPointer (uint32_t teid);
 
   /**
-   * Retrieve stored information for a specific EPS bearer.
+   * Get stored information for a specific EPS bearer.
    * \param teid The GTP tunnel ID.
    * \return The EpsBearer information for this teid.
    */
@@ -126,17 +126,17 @@ protected:
   void IncreasePriority ();
 
   /**
-   * Retrieve the routing information from the global map for a specific TEID.
+   * Get the routing information from the global map for a specific TEID.
    * \param teid The GTP tunnel ID.
    * \return The routing information for this tunnel.
    */
-  static Ptr<RoutingInfo> GetInfo (uint32_t teid);
+  static Ptr<RoutingInfo> GetPointer (uint32_t teid);
 
   /**
-   * Save the routing information in global map for further usage.
+   * Register the routing information in global map for further usage.
    * \param rInfo The routing information to save.
    */
-  static void SaveRoutingInfo (Ptr<RoutingInfo> rInfo);
+  static void RegisterRoutingInfo (Ptr<RoutingInfo> rInfo);
 
 private:
   uint32_t          m_teid;         //!< GTP TEID

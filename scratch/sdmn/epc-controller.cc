@@ -88,7 +88,7 @@ EpcController::RequestDedicatedBearer (
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
-  Ptr<RoutingInfo> rInfo = RoutingInfo::GetInfo (teid);
+  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
   NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer " << teid);
 
   // Is it a default bearer?
@@ -139,7 +139,7 @@ EpcController::ReleaseDedicatedBearer (
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
-  Ptr<RoutingInfo> rInfo = RoutingInfo::GetInfo (teid);
+  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
   NS_ASSERT_MSG (rInfo, "No routing information for teid.");
 
   // Is it a default bearer?
@@ -281,7 +281,7 @@ EpcController::NotifySessionCreated (
   NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
 
   uint32_t teid = defaultBearer.sgwFteid.teid;
-  Ptr<RoutingInfo> rInfo = RoutingInfo::GetInfo (teid);
+  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
   NS_ASSERT_MSG (rInfo == 0, "Existing routing for default bearer " << teid);
 
   rInfo = CreateObject<RoutingInfo> (teid);
@@ -683,7 +683,7 @@ EpcController::HandleFlowRemoved (
     }
 
   // Check for existing routing information for this bearer
-  Ptr<RoutingInfo> rInfo = RoutingInfo::GetInfo (teid);
+  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
   if (rInfo == 0)
     {
       NS_FATAL_ERROR ("Routing info for TEID " << teid << " not found.");

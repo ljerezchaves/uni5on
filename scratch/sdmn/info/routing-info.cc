@@ -45,7 +45,7 @@ RoutingInfo::RoutingInfo (uint32_t teid)
   m_enbAddr = Ipv4Address ();
   m_pgwAddr = Ipv4Address ();
 
-  SaveRoutingInfo (Ptr<RoutingInfo> (this));
+  RegisterRoutingInfo (Ptr<RoutingInfo> (this));
 }
 
 RoutingInfo::~RoutingInfo ()
@@ -215,7 +215,7 @@ RoutingInfo::IsActive (void) const
 }
 
 Ptr<const RoutingInfo>
-RoutingInfo::GetConstInfo (uint32_t teid)
+RoutingInfo::GetConstPointer (uint32_t teid)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -234,7 +234,7 @@ RoutingInfo::GetEpsBearer (uint32_t teid)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  return GetConstInfo (teid)->GetEpsBearer ();
+  return GetConstPointer (teid)->GetEpsBearer ();
 }
 
 void
@@ -268,7 +268,7 @@ RoutingInfo::IncreasePriority ()
 }
 
 Ptr<RoutingInfo>
-RoutingInfo::GetInfo (uint32_t teid)
+RoutingInfo::GetPointer (uint32_t teid)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -283,7 +283,7 @@ RoutingInfo::GetInfo (uint32_t teid)
 }
 
 void
-RoutingInfo::SaveRoutingInfo (Ptr<RoutingInfo> rInfo)
+RoutingInfo::RegisterRoutingInfo (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION_NOARGS ();
 

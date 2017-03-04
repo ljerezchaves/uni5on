@@ -170,7 +170,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   NS_LOG_FUNCTION (this << context << app->GetTeid ());
 
   uint32_t teid = app->GetTeid ();
-  Ptr<const RoutingInfo> rInfo = RoutingInfo::GetConstInfo (teid);
+  Ptr<const RoutingInfo> rInfo = RoutingInfo::GetConstPointer (teid);
   Ptr<const QosStatsCalculator> epcStats;
   Ptr<const QosStatsCalculator> appStats;
 
