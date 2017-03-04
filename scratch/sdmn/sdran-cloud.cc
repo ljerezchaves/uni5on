@@ -28,9 +28,10 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("SdranCloud");
 NS_OBJECT_ENSURE_REGISTERED (SdranCloud);
 
-// Initializing global counters.
+// Initializing SdranCloud static members.
 uint32_t SdranCloud::m_enbCounter = 0;
 uint32_t SdranCloud::m_sdranCounter = 0;
+SdranCloud::NodeSdranMap_t SdranCloud::m_enbSdranMap;
 
 SdranCloud::SdranCloud ()
 {
@@ -410,7 +411,8 @@ SdranCloud::NotifyConstructionCompleted ()
   // Configure the S1-U address helper.
   m_s1uAddrHelper.SetBase (m_s1uNetworkAddr, "255.255.255.0");
 
-  // Chain up
+  // Register this object and chain up
+  RegisterSdranCloud (Ptr<SdranCloud> (this));
   Object::NotifyConstructionCompleted ();
 }
 
@@ -439,6 +441,40 @@ SdranCloud::GetMme ()
   NS_LOG_FUNCTION (this);
 
   return m_mme;
+}
+
+Ptr<SdranCloud>
+SdranCloud::GetPointer (Ptr<Node> enb)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  Ptr<SdranCloud> sdran = 0;
+  NodeSdranMap_t::iterator ret;
+  ret = m_enbSdranMap.find (enb);
+  if (ret != m_enbSdranMap.end ())
+    {
+      sdran = ret->second;
+    }
+  return sdran;
+}
+
+void
+SdranCloud::RegisterSdranCloud (Ptr<SdranCloud> sdran)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  // Saving map by eNB node.
+  NodeContainer enbs = sdran->GetEnbNodes ();
+  for (NodeContainer::Iterator it = enbs.Begin (); it != enbs.End (); ++it)
+    {
+      std::pair<NodeSdranMap_t::iterator, bool> ret;
+      std::pair<Ptr<Node>, Ptr<SdranCloud> > entry (*it, sdran);
+      ret = m_enbSdranMap.insert (entry);
+      if (ret.second == false)
+        {
+          NS_FATAL_ERROR ("Can't register eNB at SDRAN cloud.");
+        }
+    }
 }
 
 } // namespace ns3

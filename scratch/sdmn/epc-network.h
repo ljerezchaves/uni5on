@@ -92,13 +92,6 @@ public:
   Ptr<Node> GetSwitchNode (uint64_t dpId) const;
 
   /**
-   * Get the SDRAN cloud for this eNB node.
-   * \param enb The eNB node pointer.
-   * \return The SDRAN cloud pointer.
-   */
-  Ptr<SdranCloud> GetSdranCloud (Ptr<Node> enb);
-
-  /**
    * Set an attribute for ns3::OFSwitch13Device factory.
    * \param n1 The name of the attribute to set.
    * \param v1 The value of the attribute to set.
@@ -219,11 +212,6 @@ private:
    * \return The MME element.
    */
   Ptr<EpcMme> GetMme ();
-
-  /** Map saving node / SDRAN pointer. */
-  typedef std::map<Ptr<Node>, Ptr<SdranCloud> > NodeSdranMap_t;
-
-  NodeSdranMap_t                m_enbSdranMap;      //!< SDRAN by eNB node.
 
   // Helper and connection attributes
   CsmaHelper                    m_csmaHelper;       //!< Connection helper.

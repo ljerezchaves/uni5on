@@ -190,21 +190,6 @@ EpcNetwork::GetSwitchNode (uint64_t dpId) const
   return node;
 }
 
-Ptr<SdranCloud>
-EpcNetwork::GetSdranCloud (Ptr<Node> enb)
-{
-  NS_LOG_FUNCTION (this << enb);
-
-  NodeSdranMap_t::iterator ret;
-  ret = m_enbSdranMap.find (enb);
-  if (ret != m_enbSdranMap.end ())
-    {
-      NS_LOG_DEBUG ("Found SDRAN " << ret->second << " for eNB " << enb);
-      return ret->second;
-    }
-  NS_FATAL_ERROR ("eNB node not registered.");
-}
-
 void
 EpcNetwork::SetSwitchDeviceAttribute (std::string n1, const AttributeValue &v1)
 {
@@ -233,20 +218,6 @@ void
 EpcNetwork::AddSdranCloud (Ptr<SdranCloud> sdranCloud)
 {
   NS_LOG_FUNCTION (this << sdranCloud);
-
-  // Save eNB nodes into SDRAN cloud map.
-  NodeContainer enbs = sdranCloud->GetEnbNodes ();
-  for (NodeContainer::Iterator it = enbs.Begin (); it != enbs.End (); ++it)
-    {
-      std::pair<NodeSdranMap_t::iterator, bool> ret;
-      std::pair<Ptr<Node>, Ptr<SdranCloud> > entry (*it, sdranCloud);
-      ret = m_enbSdranMap.insert (entry);
-      if (ret.second == false)
-        {
-          NS_FATAL_ERROR ("Can't register eNB at SDRAN cloud.");
-        }
-      NS_LOG_DEBUG ("eNB node " << *it << " registered SDRAN " << sdranCloud);
-    }
 
   // Set the common LTE MME element.
   sdranCloud->SetMme (GetMme ());
@@ -337,8 +308,6 @@ EpcNetwork::DoDispose ()
   m_pgwNode = 0;
   m_epcStats = 0;
   m_mme = 0;
-
-  m_enbSdranMap.clear ();
 
   Object::DoDispose ();
 }
@@ -554,7 +523,7 @@ EpcNetwork::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
 {
   NS_LOG_FUNCTION (this << enb << lteEnbNetDevice << cellId);
 
-  GetSdranCloud (enb)->AddEnb (enb, lteEnbNetDevice, cellId);
+  SdranCloud::GetPointer (enb)->AddEnb (enb, lteEnbNetDevice, cellId);
 }
 
 void
@@ -563,8 +532,8 @@ EpcNetwork::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
   NS_LOG_FUNCTION (this << enb1 << enb2);
 
   // TODO
-  // Ptr<SdranCloud> sdran1 = GetSdranCloud (enb1);
-  // Ptr<SdranCloud> sdran2 = GetSdranCloud (enb2);
+  // Ptr<SdranCloud> sdran1 = SdranCloud::GetPointer (enb1);
+  // Ptr<SdranCloud> sdran2 = SdranCloud::GetPointer (enb2);
   // if (sdran1 == sdran2)
   //   {
   //     sdran1->AddX2Interface (enb1, enb2);

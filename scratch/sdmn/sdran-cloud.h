@@ -37,6 +37,8 @@ class EpcController;
  */
 class SdranCloud : public Object
 {
+  friend class EpcNetwork;
+
 public:
   SdranCloud ();           //!< Default constructor.
   virtual ~SdranCloud ();  //!< Dummy destructor.
@@ -101,8 +103,20 @@ protected:
    */
   Ptr<EpcMme> GetMme ();
 
+  /**
+   * Get the SDRAN cloud pointer from the global map for this eNB node.
+   * \param enb The eNB node pointer.
+   * \return The SDRAN cloud pointer.
+   */
+  static Ptr<SdranCloud> GetPointer (Ptr<Node> enb);
 
 private:
+  /**
+   * Register the SDRAN cloud into global map for further usage.
+   * \param sdran The SDRAN cloud pointer.
+   */
+  static void RegisterSdranCloud (Ptr<SdranCloud> sdran);
+
   uint32_t                m_sdranId;        //!< SDRAN cloud id.
   uint32_t                m_nSites;         //!< Number of cell sites.
   uint32_t                m_nEnbs;          //!< Number of eNBs (3 * m_nSites).
@@ -123,6 +137,10 @@ private:
 
   static uint32_t         m_enbCounter;     //!< Global eNB counter.
   static uint32_t         m_sdranCounter;   //!< Global SDRAN cloud counter.
+
+  /** Map saving node / SDRAN pointer. */
+  typedef std::map<Ptr<Node>, Ptr<SdranCloud> > NodeSdranMap_t;
+  static NodeSdranMap_t m_enbSdranMap;  //!< SDRAN by eNB node.
 };
 
 } // namespace ns3
