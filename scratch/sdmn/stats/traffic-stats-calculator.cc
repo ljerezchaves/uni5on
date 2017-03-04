@@ -21,7 +21,6 @@
 #include <iomanip>
 #include <iostream>
 #include "traffic-stats-calculator.h"
-#include "../epc-controller.h"
 #include "../apps/sdmn-client-app.h"
 #include "../apps/real-time-video-client.h"
 #include "../info/routing-info.h"

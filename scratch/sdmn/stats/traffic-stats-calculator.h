@@ -26,7 +26,6 @@
 
 namespace ns3 {
 
-class EpcController;
 class SdmnClientApp;
 class QosStatsCalculator;
 

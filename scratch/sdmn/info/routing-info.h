@@ -28,9 +28,6 @@
 
 namespace ns3 {
 
-class EpcController;
-class RingController;
-
 /** EPS context bearer */
 typedef EpcS11SapMme::BearerContextCreated ContextBearer_t;
 

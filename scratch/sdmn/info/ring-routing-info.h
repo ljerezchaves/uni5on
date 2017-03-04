@@ -25,7 +25,6 @@
 
 namespace ns3 {
 
-class RingController;
 class RoutingInfo;
 
 /**
