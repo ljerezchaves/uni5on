@@ -600,7 +600,7 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
   NS_LOG_DEBUG ("Activete EPS bearer UE IP address: " << ueAddr);
   m_epcCtrlApp->SetUeAddress (imsi, ueAddr);
 
-  uint8_t bearerId = GetMmeElement ()->AddBearer (imsi, tft, bearer);
+  uint8_t bearerId = EpcMme::Get ()->AddBearer (imsi, tft, bearer);
   Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
   if (ueLteDevice)
     {
@@ -660,9 +660,9 @@ EpcNetwork::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   Ptr<EpcX2> x2 = CreateObject<EpcX2> ();
   enb->AggregateObject (x2);
 
-  GetMmeElement ()->AddEnb (cellId, enbAddress, enbApp->GetS1apSapEnb ());
+  EpcMme::Get ()->AddEnb (cellId, enbAddress, enbApp->GetS1apSapEnb ());
   m_epcCtrlApp->AddEnb (cellId, enbAddress, sgwAddress);
-  enbApp->SetS1apSapMme (GetMmeElement ()->GetS1apSapMme ());
+  enbApp->SetS1apSapMme (EpcMme::Get ()->GetS1apSapMme ());
 }
 
 void
@@ -701,7 +701,7 @@ EpcNetwork::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 {
   NS_LOG_FUNCTION (this << imsi << ueDevice );
 
-  GetMmeElement ()->AddUe (imsi);
+  EpcMme::Get ()->AddUe (imsi);
   m_epcCtrlApp->AddUe (imsi);
 }
 
@@ -727,14 +727,6 @@ EpcNetwork::GetUeDefaultGatewayAddress ()
   NS_LOG_FUNCTION (this);
 
   return m_pgwGwAddr;
-}
-
-Ptr<EpcMme>
-EpcNetwork::GetMmeElement ()
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_epcCtrlApp->m_mme;
 }
 
 Ipv4Address

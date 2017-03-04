@@ -236,12 +236,6 @@ private:
   void ConfigurePgwAndInternet ();
 
   /**
-   * Get a pointer to the MME element. FIXME
-   * \return The MME element.
-   */
-  Ptr<EpcMme> GetMmeElement ();
-
-  /**
    * Retrieve the S-GW IP address at the S1-U interface. FIXME
    * \return The S-GW IP address at S1-U interface.
    */

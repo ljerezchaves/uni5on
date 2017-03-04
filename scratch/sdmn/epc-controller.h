@@ -241,10 +241,6 @@ public:
   Ipv4Address GetEnbAddr (Ipv4Address ueAddr);
   //\}
 
-  /** MME element */
-  Ptr<EpcMme> m_mme;
-  // FIXME o mme vai pra dentro do controlador.
-
 
 protected:
   /** Destructor implementation */

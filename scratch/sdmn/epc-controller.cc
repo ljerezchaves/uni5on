@@ -335,8 +335,6 @@ EpcController::DoDispose ()
   m_ueInfoByAddrMap.clear ();
   m_ueInfoByImsiMap.clear ();
 
-  m_mme = 0;
-
   delete (m_s11SapSgw);
 
   Object::DoDispose ();
@@ -349,12 +347,9 @@ EpcController::NotifyConstructionCompleted ()
 
   // TODO In the future, this will be moved to the RAN controller
 
-  // Create the MME object for this controller
-  m_mme = CreateObject<EpcMme> ();
-
   // Connect the MME to the S-GW via S11 interface
-  m_mme->SetS11SapSgw (GetS11SapSgw ());
-  SetS11SapMme (m_mme->GetS11SapMme ());
+  EpcMme::Get ()->SetS11SapSgw (GetS11SapSgw ());
+  SetS11SapMme (EpcMme::Get ()->GetS11SapMme ());
 
   // Connect the admission stats calculator
   TraceConnectWithoutContext (
