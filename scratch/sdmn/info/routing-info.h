@@ -99,6 +99,13 @@ public:
    */
   static Ptr<const RoutingInfo> GetConstInfo (uint32_t teid);
 
+  /**
+   * Retrieve stored information for a specific EPS bearer.
+   * \param teid The GTP tunnel ID.
+   * \return The EpsBearer information for this teid.
+   */
+  static EpsBearer GetEpsBearer (uint32_t teid);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();

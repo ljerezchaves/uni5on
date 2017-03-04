@@ -422,19 +422,6 @@ private:
   void DoModifyBearerRequest (EpcS11SapSgw::ModifyBearerRequestMessage msg);
   void DoDeleteBearerCommand (EpcS11SapSgw::DeleteBearerCommandMessage req);
   void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage req);
-
-  /**
-   * Insert a new bearer entry in global bearer map.
-   * \param teid The GTP tunnel ID.
-   * \param bearer The bearer information.
-   */
-  static void RegisterBearer (uint32_t teid, EpsBearer bearer);
-
-  /**
-   * Remove a bearer entry from global bearer map.
-   * \param teid The GTP tunnel ID.
-   */
-  static void UnregisterBearer (uint32_t teid);
   //\}
 
   /**
@@ -549,10 +536,6 @@ private:
   /** Map saving <IPv4 address / MAC address> */
   typedef std::map<Ipv4Address, Mac48Address> IpMacMap_t;
   IpMacMap_t          m_arpTable;         //!< ARP resolution table.
-
-  /** Map saving <TEID / EpsBearer > */
-  typedef std::map<uint32_t, EpsBearer> TeidBearerMap_t;
-  static TeidBearerMap_t m_bearersTable;  //!< TEID bearers table.
 
   /** Map saving <EpsBearer::Qci / IP Dscp value> */
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
