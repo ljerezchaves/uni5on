@@ -30,6 +30,7 @@
 #include "info/connection-info.h"
 #include "info/meter-info.h"
 #include "info/gbr-info.h"
+#include "info/ue-info.h"
 #include "stats/admission-stats-calculator.h"
 
 namespace ns3 {
@@ -235,10 +236,6 @@ public:
    * \param ueAddr The IPv4 address of the UE.
    */
   void SetUeAddress (uint64_t imsi, Ipv4Address ueAddr);
-
-  // Vai remover loguinho.
-  uint32_t GetTeid (Ipv4Address addr, Ptr<Packet> packet);
-  Ipv4Address GetEnbAddr (Ipv4Address ueAddr);
   //\}
 
 
@@ -421,70 +418,6 @@ private:
   //\}
 
   /**
-   * EpcController inner friend utility class used to
-    * store info for each UE connected to this S-GW.
-   */
-  class UeInfo : public SimpleRefCount<UeInfo>
-  {
-  public:
-    UeInfo ();          //!< Default constructor
-    virtual ~UeInfo (); //!< Default destructor
-
-    /**
-     * Add a new bearer context for this user.
-     * \param tft The Traffic Flow Template of the new bearer to be added.
-     * \param epsBearerId The ID of the EPS Bearer to be activated.
-     * \param teid The TEID of the new bearer.
-     */
-    void AddBearer (Ptr<EpcTft> tft, uint8_t epsBearerId, uint32_t teid);
-
-    /**
-     * Remove the bearer context for this user.
-     * \param bearerId The bearer id whose contexts to be removed.
-     */
-    void RemoveBearer (uint8_t bearerId);
-
-    /** // FIXME remover
-     * \param p the IP packet from the internet to be classified
-     *
-     * \return the corresponding bearer ID > 0 identifying the bearer
-     * among all the bearers of this UE;  returns 0 if no bearers
-     * matches with the previously declared TFTs
-     */
-    uint32_t Classify (Ptr<Packet> p);
-
-    /**
-     * Get the address of the eNB to which the UE is connected to.
-     * \return The eNB address.
-     */
-    Ipv4Address GetEnbAddr ();
-
-    /**
-     * Set the address of the eNB to which the UE is connected to.
-     * \param addr The eNB address.
-     */
-    void SetEnbAddr (Ipv4Address addr);
-
-    /**
-     * Get the address of the UE.
-     * \return The UE address.
-     */
-    Ipv4Address GetUeAddr ();
-
-    /**
-     * Set the address of the UE.
-     * \param addr The UE address.
-     */
-    void SetUeAddr (Ipv4Address addr);
-
-  private:
-    EpcTftClassifier            m_tftClassifier;
-    Ipv4Address                 m_enbAddr;
-    Ipv4Address                 m_ueAddr;
-    std::map<uint8_t, uint32_t> m_teidByBearerIdMap;
-  };
-
-  /**
    * EpcController inner friend utility class
    * used to initialize static DSCP map table.
    */
@@ -550,13 +483,11 @@ private:
   typedef std::map<uint16_t, EnbInfo> CellIdEnbInfo_t;
   CellIdEnbInfo_t     m_enbInfoByCellId;    //!< eNBInfo mapped values.
 
-  /** Map saving <UE address / UE info> */
-  typedef std::map<Ipv4Address, Ptr<UeInfo> > IpUeInfoMap_t;
-  IpUeInfoMap_t       m_ueInfoByAddrMap;    //!< UeInfo mapped values by IP.
-
-  /** Map saving <IMSI / UE info> */
-  typedef std::map<uint64_t, Ptr<UeInfo> > ImsiUeInfoMap_t;
-  ImsiUeInfoMap_t     m_ueInfoByImsiMap;    //!< UeInfo mapped values by ISMI.
+  /**
+   * Get the eNB information for this cell ID
+   * \param cellId The eNB cell ID.
+   */
+  EnbInfo GetEnbInfo (uint16_t cellId);
 
   /**
    * TEID counter, used to allocate new GTP-U TEID values.
