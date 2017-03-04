@@ -262,7 +262,7 @@ ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      EpsBearer bearer = EpcController::GetEpsBearer (gtpuTag.GetTeid ());
+      EpsBearer bearer = RoutingInfo::GetEpsBearer (gtpuTag.GetTeid ());
       if (bearer.IsGbr ())
         {
           m_gbrTxBytes [dir] += packet->GetSize ();

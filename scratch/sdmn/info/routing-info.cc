@@ -259,6 +259,14 @@ RoutingInfo::GetConstInfo (uint32_t teid)
   return rInfo;
 }
 
+EpsBearer
+RoutingInfo::GetEpsBearer (uint32_t teid)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  return GetConstInfo (teid)->GetEpsBearer ();
+}
+
 Ptr<RoutingInfo>
 RoutingInfo::GetInfo (uint32_t teid)
 {

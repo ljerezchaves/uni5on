@@ -164,13 +164,6 @@ public:
   Ptr<EpcMme> GetMme ();
 
   /**
-   * Retrieve stored information for a specific bearer.
-   * \param teid The GTP tunnel ID.
-   * \return The EpsBearer information for this teid.
-   */
-  static EpsBearer GetEpsBearer (uint32_t teid);
-
-  /**
    * Retrieve stored mapped value for a specific EPS QCI.
    * \param qci The EPS bearer QCI.
    * \return The IP DSCP mapped value for this QCI.
@@ -315,19 +308,6 @@ private:
     Mac48Address dstMac, Ipv4Address dstIp);
 
   /**
-   * Insert a new bearer entry in global bearer map.
-   * \param teid The GTP tunnel ID.
-   * \param bearer The bearer information.
-   */
-  static void RegisterBearer (uint32_t teid, EpsBearer bearer);
-
-  /**
-   * Remove a bearer entry from global bearer map.
-   * \param teid The GTP tunnel ID.
-   */
-  static void UnregisterBearer (uint32_t teid);
-
-  /**
    * EpcController inner friend utility class
    * used to initialize static DSCP map table.
    */
@@ -367,9 +347,6 @@ private:
   /** Map saving IPv4 address / MAC address. */
   typedef std::map<Ipv4Address, Mac48Address> IpMacMap_t;
 
-  /** Map saving TEID / EpsBearer. */
-  typedef std::map<uint32_t, EpsBearer> TeidBearerMap_t;
-
   /** Map saving EpsBearer::Qci / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
 
@@ -378,7 +355,6 @@ private:
   uint32_t                      m_pgwS5Port;      //!< P-GW S5 port no.
   IpMacMap_t                    m_arpTable;       //!< ARP resolution table.
 
-  static TeidBearerMap_t        m_bearersTable;   //!< TEID bearers table.
   static QciDscpMap_t           m_qciDscpTable;   //!< DSCP mapped values.
 
 

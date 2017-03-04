@@ -27,7 +27,6 @@ NS_OBJECT_ENSURE_REGISTERED (EpcController);
 
 const uint16_t EpcController::m_dedicatedTmo = 15;
 
-EpcController::TeidBearerMap_t EpcController::m_bearersTable;
 EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
 EpcController::QciDscpInitializer EpcController::initializer;
 
@@ -296,7 +295,6 @@ EpcController::NotifySessionCreated (
   rInfo->m_isActive = true;               // Default bearer is always active
   rInfo->m_isDefault = true;              // This is a default bearer
   rInfo->m_bearer = defaultBearer;
-  EpcController::RegisterBearer (teid, rInfo->GetEpsBearer ());
 
   // For default bearer, no Meter nor Reserver metadata.
   // For logic consistence, let's check for available resources.
@@ -329,7 +327,6 @@ EpcController::NotifySessionCreated (
       rInfo->m_isActive = false;            // Dedicated bearer not active
       rInfo->m_isDefault = false;           // This is a dedicated bearer
       rInfo->m_bearer = dedicatedBearer;
-      EpcController::RegisterBearer (teid, rInfo->GetEpsBearer ());
 
       GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
 
@@ -374,20 +371,6 @@ EpcController::GetMme ()
   NS_LOG_FUNCTION (this);
 
   return m_mme;
-}
-
-EpsBearer
-EpcController::GetEpsBearer (uint32_t teid)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  TeidBearerMap_t::iterator it;
-  it = EpcController::m_bearersTable.find (teid);
-  if (it != EpcController::m_bearersTable.end ())
-    {
-      return it->second;
-    }
-  NS_FATAL_ERROR ("No bearer information for teid " << teid);
 }
 
 uint16_t
@@ -912,37 +895,6 @@ EpcController::CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
   packet->AddTrailer (trailer);
 
   return packet;
-}
-
-void
-EpcController::RegisterBearer (uint32_t teid, EpsBearer bearer)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  std::pair<uint32_t, EpsBearer> entry (teid, bearer);
-  std::pair<TeidBearerMap_t::iterator, bool> ret;
-  ret = EpcController::m_bearersTable.insert (entry);
-  if (ret.second == false)
-    {
-      NS_FATAL_ERROR ("Existing bearer information for teid " << teid);
-    }
-}
-
-void
-EpcController::UnregisterBearer (uint32_t teid)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  TeidBearerMap_t::iterator it;
-  it = EpcController::m_bearersTable.find (teid);
-  if (it != EpcController::m_bearersTable.end ())
-    {
-      EpcController::m_bearersTable.erase (it);
-    }
-  else
-    {
-      NS_FATAL_ERROR ("Error removing bearer information for teid " << teid);
-    }
 }
 
 EpcController::QciDscpInitializer::QciDscpInitializer ()
