@@ -43,12 +43,6 @@ public:
   virtual ~TrafficStatsCalculator (); //!< Default destructor.
 
   /**
-   * Complete constructor.
-   * \param controller The OpenFlow EPC controller application.
-   */
-  TrafficStatsCalculator (Ptr<EpcController> controller);
-
-  /**
    * Register this type.
    * \return The object TypeId.
    */
@@ -122,7 +116,6 @@ private:
   typedef std::map<uint32_t, QosStatsPair_t> TeidQosMap_t;
 
   TeidQosMap_t              m_qosStats;     //!< TEID QoS statistics
-  Ptr<const EpcController>  m_controller;   //!< Network controller
   std::string               m_appFilename;  //!< AppStats filename
   Ptr<OutputStreamWrapper>  m_appWrapper;   //!< AppStats file wrapper
   std::string               m_epcFilename;  //!< EpcStats filename

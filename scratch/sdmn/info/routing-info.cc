@@ -25,8 +25,11 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("RoutingInfo");
 NS_OBJECT_ENSURE_REGISTERED (RoutingInfo);
 
-RoutingInfo::RoutingInfo ()
-  : m_teid (0),
+// Initializing RoutingInfo static members.
+RoutingInfo::TeidRoutingMap_t RoutingInfo::m_globalInfoMap;
+
+RoutingInfo::RoutingInfo (uint32_t teid)
+  : m_teid (teid),
     m_imsi (0),
     m_cellId (0),
     m_pgwIdx (0),
@@ -41,6 +44,8 @@ RoutingInfo::RoutingInfo ()
 
   m_enbAddr = Ipv4Address ();
   m_pgwAddr = Ipv4Address ();
+
+  SaveRoutingInfo (Ptr<RoutingInfo> (this));
 }
 
 RoutingInfo::~RoutingInfo ()
@@ -53,7 +58,6 @@ RoutingInfo::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RoutingInfo")
     .SetParent<Object> ()
-    .AddConstructor<RoutingInfo> ()
   ;
   return tid;
 }
@@ -238,6 +242,51 @@ RoutingInfo::IncreasePriority (void)
   NS_LOG_FUNCTION (this);
 
   m_priority++;
+}
+
+Ptr<const RoutingInfo>
+RoutingInfo::GetConstInfo (uint32_t teid)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  Ptr<const RoutingInfo> rInfo = 0;
+  TeidRoutingMap_t::const_iterator ret;
+  ret = RoutingInfo::m_globalInfoMap.find (teid);
+  if (ret != RoutingInfo::m_globalInfoMap.end ())
+    {
+      rInfo = ret->second;
+    }
+  return rInfo;
+}
+
+Ptr<RoutingInfo>
+RoutingInfo::GetInfo (uint32_t teid)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  Ptr<RoutingInfo> rInfo = 0;
+  TeidRoutingMap_t::iterator ret;
+  ret = RoutingInfo::m_globalInfoMap.find (teid);
+  if (ret != RoutingInfo::m_globalInfoMap.end ())
+    {
+      rInfo = ret->second;
+    }
+  return rInfo;
+}
+
+void
+RoutingInfo::SaveRoutingInfo (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  uint32_t teid = rInfo->GetTeid ();
+  std::pair<uint32_t, Ptr<RoutingInfo> > entry (teid, rInfo);
+  std::pair<TeidRoutingMap_t::iterator, bool> ret;
+  ret = RoutingInfo::m_globalInfoMap.insert (entry);
+  if (ret.second == false)
+    {
+      NS_FATAL_ERROR ("Existing routing information for teid " << teid);
+    }
 }
 
 };  // namespace ns3

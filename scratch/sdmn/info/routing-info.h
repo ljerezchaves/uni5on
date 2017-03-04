@@ -53,7 +53,11 @@ class RoutingInfo : public Object
   friend class RingController;
 
 public:
-  RoutingInfo ();          //!< Default constructor
+  /**
+   * Complete constructor.
+   * \param teid The TEID value.
+   */
+  RoutingInfo (uint32_t teid);
   virtual ~RoutingInfo (); //!< Dummy destructor, see DoDispose
 
   /**
@@ -88,6 +92,13 @@ public:
   bool              IsActive            (void) const;
   //\}
 
+  /**
+   * Retrieve the routing information from the global map for a specific TEID.
+   * \param teid The GTP tunnel ID.
+   * \return The routing information for this tunnel.
+   */
+  static Ptr<const RoutingInfo> GetConstInfo (uint32_t teid);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -107,7 +118,20 @@ protected:
   /** Increase the priority value by one unit. */
   void IncreasePriority (void);
 
+  /**
+   * Retrieve the routing information from the global map for a specific TEID.
+   * \param teid The GTP tunnel ID.
+   * \return The routing information for this tunnel.
+   */
+  static Ptr<RoutingInfo> GetInfo (uint32_t teid);
+
 private:
+  /**
+   * Save the routing information in global map for further usage.
+   * \param rInfo The routing information to save.
+   */
+  static void SaveRoutingInfo (Ptr<RoutingInfo> rInfo);
+
   uint32_t          m_teid;         //!< GTP TEID
   uint64_t          m_imsi;         //!< UE IMSI
   uint16_t          m_cellId;       //!< eNB cell ID
@@ -121,6 +145,10 @@ private:
   bool              m_isInstalled;  //!< Rule is installed into switches
   bool              m_isActive;     //!< Application traffic is active
   ContextBearer_t   m_bearer;       //!< EPS bearer information
+
+  /** Map saving TEID / routing information. */
+  typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
+  static TeidRoutingMap_t m_globalInfoMap;  //!< Global routing info map.
 };
 
 };  // namespace ns3

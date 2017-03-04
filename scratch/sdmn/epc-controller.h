@@ -169,13 +169,6 @@ public:
   //\}
 
   /**
-   * Retrieve stored information for a specific GTP teid.
-   * \param teid The GTP tunnel ID.
-   * \return The routing information for this tunnel.
-   */
-  Ptr<const RoutingInfo> GetConstRoutingInfo (uint32_t teid) const;
-
-  /**
    * Retrieve stored information for a specific bearer.
    * \param teid The GTP tunnel ID.
    * \return The EpsBearer information for this teid.
@@ -340,19 +333,6 @@ protected:
   uint64_t GetPgwDatapathId () const;
 
 private:
-  /**
-   * Save the RoutingInfo metadata for further usage.
-   * \param rInfo The routing information to save.
-   */
-  void SaveRoutingInfo (Ptr<RoutingInfo> rInfo);
-
-  /**
-   * Retrieve stored information for a specific GTP teid.
-   * \param teid The GTP tunnel ID.
-   * \return The routing information for this tunnel.
-   */
-  Ptr<RoutingInfo> GetRoutingInfo (uint32_t teid);
-
   /**
    * Save the pair IP / Switch index in switch table.
    * \param ipAddr The IPv4 address.
@@ -561,10 +541,6 @@ private:
   Ptr<AdmissionStatsCalculator>  m_admissionStats;  //!< Admission statistics.
   uint32_t                       m_pgwDpId;         //!< P-GW datapath ID.
   uint32_t                       m_pgwS5Port;       //!< P-GW S5 port no.
-
-  /** Map saving <TEID / Routing information > */
-  typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
-  TeidRoutingMap_t    m_routes;           //!< TEID routing informations.
 
   /** Map saving <IPv4 address / Switch index > */
   typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;
