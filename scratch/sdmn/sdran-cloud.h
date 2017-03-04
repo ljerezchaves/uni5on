@@ -83,7 +83,7 @@ public:
   virtual void AddX2Interface (Ptr<Node> enbNode1, Ptr<Node> enbNode2);
 
 protected:
-  /** Destructor implementation */
+  /** Destructor implementation. */
   virtual void DoDispose ();
 
   // Inherited from ObjectBase.
@@ -95,7 +95,6 @@ protected:
    * \return The IP address assigned to this device.
    */
   Ipv4Address GetAddressForDevice (Ptr<NetDevice> device);
-
 
   /**
    * Get a pointer to the commom LTE MME element.
@@ -135,12 +134,12 @@ private:
   Time                    m_linkDelay;      //!< Link delay.
   uint16_t                m_linkMtu;        //!< Link MTU.
 
-  static uint32_t         m_enbCounter;     //!< Global eNB counter.
-  static uint32_t         m_sdranCounter;   //!< Global SDRAN cloud counter.
-
   /** Map saving node / SDRAN pointer. */
   typedef std::map<Ptr<Node>, Ptr<SdranCloud> > NodeSdranMap_t;
-  static NodeSdranMap_t m_enbSdranMap;  //!< SDRAN by eNB node.
+
+  static uint32_t         m_enbCounter;     //!< Global eNB counter.
+  static uint32_t         m_sdranCounter;   //!< Global SDRAN cloud counter.
+  static NodeSdranMap_t   m_enbSdranMap;    //!< Global SDRAN by eNB node map.
 };
 
 } // namespace ns3

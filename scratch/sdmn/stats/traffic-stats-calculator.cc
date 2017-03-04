@@ -371,8 +371,8 @@ TrafficStatsCalculator::GetQosStatsFromTeid (uint32_t teid, bool isDown)
     {
       QosStatsPair_t pair (CreateObject<QosStatsCalculator> (),
                            CreateObject<QosStatsCalculator> ());
-      std::pair <uint32_t, QosStatsPair_t> entry (teid, pair);
-      std::pair <TeidQosMap_t::iterator, bool> ret;
+      std::pair<uint32_t, QosStatsPair_t> entry (teid, pair);
+      std::pair<TeidQosMap_t::iterator, bool> ret;
       ret = m_qosStats.insert (entry);
       if (ret.second == false)
         {
