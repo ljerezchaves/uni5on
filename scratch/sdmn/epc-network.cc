@@ -57,9 +57,6 @@ EpcNetwork::EpcNetwork ()
   m_epcCtrlNode = CreateObject<Node> ();
   Names::Add ("ctrl", m_epcCtrlNode);
 
-  // Create the commom LTE MME element.
-  m_mme = CreateObject<EpcMme> ();
-
   // Creating stats calculators.
   m_epcStats = CreateObject<BackhaulStatsCalculator> ();
 }
@@ -219,9 +216,6 @@ EpcNetwork::AddSdranCloud (Ptr<SdranCloud> sdranCloud)
 {
   NS_LOG_FUNCTION (this << sdranCloud);
 
-  // Set the common LTE MME element.
-  sdranCloud->SetMme (GetMme ());
-
   // Configure the S-GW node from the SDRAN cloud as an OpenFlow switch.
   Ptr<Node> sgwNode = sdranCloud->GetSgwNode ();
   Ptr<OFSwitch13Device> sgwSwitchDev =
@@ -307,7 +301,6 @@ EpcNetwork::DoDispose ()
   m_epcCtrlApp = 0;
   m_pgwNode = 0;
   m_epcStats = 0;
-  m_mme = 0;
 
   Object::DoDispose ();
 }
@@ -367,7 +360,6 @@ EpcNetwork::InstallController (Ptr<EpcController> controller)
   // Installing the controller application into controller node.
   NS_ASSERT_MSG (!m_epcCtrlApp, "Controller application already set.");
   m_epcCtrlApp = controller;
-  m_epcCtrlApp->SetMme (GetMme ());
   m_ofSwitchHelper->InstallController (m_epcCtrlNode, m_epcCtrlApp);
 }
 
@@ -478,14 +470,6 @@ EpcNetwork::ConfigurePgwAndInternet ()
   NS_LOG_DEBUG ("P-GW gateway address: " << GetUeDefaultGatewayAddress ());
 }
 
-Ptr<EpcMme>
-EpcNetwork::GetMme ()
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_mme;
-}
-
 //
 // Implementing methods inherited from EpcHelper.
 //
@@ -508,7 +492,7 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
   m_epcCtrlApp->SetUeAddress (imsi, ueAddr);
 
   NS_LOG_DEBUG ("Activete EPS bearer UE IP address: " << ueAddr);
-  uint8_t bearerId = GetMme ()->AddBearer (imsi, tft, bearer);
+  uint8_t bearerId = EpcMme::Get ()->AddBearer (imsi, tft, bearer);
   Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
   if (ueLteDevice)
     {
@@ -545,7 +529,7 @@ EpcNetwork::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 {
   NS_LOG_FUNCTION (this << imsi << ueDevice );
 
-  GetMme ()->AddUe (imsi);
+  EpcMme::Get ()->AddUe (imsi);
   m_epcCtrlApp->AddUe (imsi); // FIXME? pgw ou sgw?
 }
 

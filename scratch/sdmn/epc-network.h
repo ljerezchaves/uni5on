@@ -207,12 +207,6 @@ private:
    */
   void ConfigurePgwAndInternet ();
 
-  /**
-   * Get a pointer to the commom LTE MME element.
-   * \return The MME element.
-   */
-  Ptr<EpcMme> GetMme ();
-
   // Helper and connection attributes
   CsmaHelper                    m_csmaHelper;       //!< Connection helper.
   DataRate                      m_linkRate;         //!< Link data rate.
@@ -248,9 +242,6 @@ private:
 
   // Statistics calculator
   Ptr<BackhaulStatsCalculator>  m_epcStats;         //!< Backhaul statistics.
-
-  // Commom MME element
-  Ptr<EpcMme>                   m_mme;              //!< LTE MME element.
 };
 
 };  // namespace ns3

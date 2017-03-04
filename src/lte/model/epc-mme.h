@@ -22,6 +22,7 @@
 #define EPC_MME_H
 
 #include <ns3/object.h>
+#include <ns3/singleton.h>
 #include <ns3/epc-s1ap-sap.h>
 #include <ns3/epc-s11-sap.h>
 
@@ -37,7 +38,7 @@ class NetDevice;
  * \brief This object implements the MME functionality.
  *
  */
-class EpcMme : public Object
+class EpcMme : public Object, public Singleton<EpcMme>
 {
 
   friend class MemberEpcS1apSapMme<EpcMme>;

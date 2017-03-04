@@ -70,12 +70,6 @@ public:
    */
   Ptr<OFSwitch13Device> GetSgwSwitchDevice ();
 
-  /**
-   * Set the pointer to the commom LTE MME element.
-   * \param mme The MME element.
-   */
-  void SetMme (Ptr<EpcMme> mme);
-
   // Implementing some of the EpcHelper methods that are redirected to here
   // from the EpcNetwork class.
   virtual void AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice,
@@ -95,12 +89,6 @@ protected:
    * \return The IP address assigned to this device.
    */
   Ipv4Address GetAddressForDevice (Ptr<NetDevice> device);
-
-  /**
-   * Get a pointer to the commom LTE MME element.
-   * \return The MME element.
-   */
-  Ptr<EpcMme> GetMme ();
 
   /**
    * Get the SDRAN cloud pointer from the global map for this eNB node.
@@ -126,7 +114,6 @@ private:
   Ipv4AddressHelper       m_s1uAddrHelper;  //!< S1-U address helper.
   Ipv4Address             m_sgwS1uAddr;     //!< S1-U S-GW IP address.
   Ptr<EpcController>      m_epcCtrlApp;     //!< EPC controller app.
-  Ptr<EpcMme>             m_mme;            //!< LTE MME element.
 
   // Helper and connection attributes
   CsmaHelper              m_csmaHelper;     //!< Connection helper.

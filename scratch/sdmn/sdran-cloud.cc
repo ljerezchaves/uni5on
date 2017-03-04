@@ -265,9 +265,9 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   enb->AggregateObject (x2);
 
   // FIXME ta certo isso aqui? o m_epcCtrlApp nao ta definido // FIXME
-  GetMme ()->AddEnb (cellId, enbAddress, enbApp->GetS1apSapEnb ());
+  EpcMme::Get ()->AddEnb (cellId, enbAddress, enbApp->GetS1apSapEnb ());
   m_epcCtrlApp->AddEnb (cellId, enbAddress, sgwAddress);
-  enbApp->SetS1apSapMme (GetMme ()->GetS1apSapMme ());
+  enbApp->SetS1apSapMme (EpcMme::Get ()->GetS1apSapMme ());
 }
 
 
@@ -425,22 +425,6 @@ SdranCloud::GetAddressForDevice (Ptr<NetDevice> device)
   Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
   int32_t idx = ipv4->GetInterfaceForDevice (device);
   return ipv4->GetAddress (idx, 0).GetLocal ();
-}
-
-void
-SdranCloud::SetMme (Ptr<EpcMme> mme)
-{
-  NS_LOG_FUNCTION (this << mme);
-
-  m_mme = mme;
-}
-
-Ptr<EpcMme>
-SdranCloud::GetMme ()
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_mme;
 }
 
 Ptr<SdranCloud>

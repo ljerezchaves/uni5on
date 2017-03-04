@@ -152,18 +152,6 @@ public:
     Ipv4Address enbAddr, Ipv4Address pgwAddr, BearerList_t bearerList);
 
   /**
-   * Set the pointer to the commom LTE MME element.
-   * \param mme The MME element.
-   */
-  void SetMme (Ptr<EpcMme> mme);
-
-  /**
-   * Get a pointer to the commom LTE MME element.
-   * \return The MME element.
-   */
-  Ptr<EpcMme> GetMme ();
-
-  /**
    * Retrieve stored mapped value for a specific EPS QCI.
    * \param qci The EPS bearer QCI.
    * \return The IP DSCP mapped value for this QCI.
@@ -506,8 +494,6 @@ private:
 
   EpcS11SapMme* m_s11SapMme;      //!< MME side of the S11 SAP
   EpcS11SapSgw* m_s11SapSgw;      //!< SGW side of the S11 SAP
-
-  Ptr<EpcMme>   m_mme;            //!< LTE MME element.
 };
 
 };  // namespace ns3

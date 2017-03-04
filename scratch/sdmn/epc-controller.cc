@@ -42,6 +42,11 @@ EpcController::EpcController ()
 
   // The S-GW side of S11 AP
   m_s11SapSgw = new MemberEpcS11SapSgw<EpcController> (this);
+
+  // TODO In the future, this will be moved to the RAN controller.
+  // Connect the MME to the S-GW control plane via S11 interface.
+  EpcMme::Get ()->SetS11SapSgw (GetS11SapSgw ());
+  SetS11SapMme (EpcMme::Get ()->GetS11SapMme ());
 }
 
 EpcController::~EpcController ()
@@ -352,27 +357,6 @@ EpcController::NotifySessionCreated (
   m_sessionCreatedTrace (imsi, cellId, enbAddr, pgwAddr, bearerList);
 }
 
-void
-EpcController::SetMme (Ptr<EpcMme> mme)
-{
-  NS_LOG_FUNCTION (this << mme);
-
-  m_mme = mme;
-
-  // TODO In the future, this will be moved to the RAN controller.
-  // Connect the MME to the S-GW control plane via S11 interface.
-  mme->SetS11SapSgw (GetS11SapSgw ());
-  SetS11SapMme (mme->GetS11SapMme ());
-}
-
-Ptr<EpcMme>
-EpcController::GetMme ()
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_mme;
-}
-
 uint16_t
 EpcController::GetDscpValue (EpsBearer::Qci qci)
 {
@@ -399,7 +383,6 @@ EpcController::DoDispose ()
   m_ueInfoByAddrMap.clear ();
   m_ueInfoByImsiMap.clear ();
 
-  m_mme = 0;
   delete (m_s11SapSgw);
 
   // Chain up.
@@ -410,8 +393,6 @@ void
 EpcController::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
-
-
 
   // Connect the admission stats calculator.
   TraceConnectWithoutContext (
