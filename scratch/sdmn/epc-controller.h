@@ -152,13 +152,6 @@ public:
     Ipv4Address enbAddr, Ipv4Address pgwAddr, BearerList_t bearerList);
 
   /**
-   * Retrieve stored information for a specific GTP teid.
-   * \param teid The GTP tunnel ID.
-   * \return The routing information for this tunnel.
-   */
-  Ptr<const RoutingInfo> GetConstRoutingInfo (uint32_t teid) const;
-
-  /**
    * Set the pointer to the commom LTE MME element.
    * \param mme The MME element.
    */
@@ -278,19 +271,6 @@ protected:
 
 private:
   /**
-   * Save the RoutingInfo metadata for further usage.
-   * \param rInfo The routing information to save.
-   */
-  void SaveRoutingInfo (Ptr<RoutingInfo> rInfo);
-
-  /**
-   * Retrieve stored information for a specific GTP teid.
-   * \param teid The GTP tunnel ID.
-   * \return The routing information for this tunnel.
-   */
-  Ptr<RoutingInfo> GetRoutingInfo (uint32_t teid);
-
-  /**
    * Save the pair IP / MAC address in ARP table.
    * \param ipAddr The IPv4 address.
    * \param macAddr The MAC address.
@@ -384,9 +364,6 @@ protected:
   static const uint16_t m_dedicatedTmo;       //!< Timeout for bearers.
 
 private:
-  /** Map saving TEID / routing information. */
-  typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
-
   /** Map saving IPv4 address / MAC address. */
   typedef std::map<Ipv4Address, Mac48Address> IpMacMap_t;
 
@@ -399,7 +376,6 @@ private:
   Ptr<AdmissionStatsCalculator> m_admissionStats; //!< Admission statistics.
   uint64_t                      m_pgwDpId;        //!< P-GW datapath ID.
   uint32_t                      m_pgwS5Port;      //!< P-GW S5 port no.
-  TeidRoutingMap_t              m_routes;         //!< TEID routing info.
   IpMacMap_t                    m_arpTable;       //!< ARP resolution table.
 
   static TeidBearerMap_t        m_bearersTable;   //!< TEID bearers table.

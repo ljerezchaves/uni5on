@@ -36,17 +36,6 @@ NS_OBJECT_ENSURE_REGISTERED (TrafficStatsCalculator);
 TrafficStatsCalculator::TrafficStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
-}
-
-TrafficStatsCalculator::~TrafficStatsCalculator ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-TrafficStatsCalculator::TrafficStatsCalculator (Ptr<EpcController> controller)
-  : m_controller (controller)
-{
-  NS_LOG_FUNCTION (this);
 
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uRx",
@@ -74,6 +63,11 @@ TrafficStatsCalculator::TrafficStatsCalculator (Ptr<EpcController> controller)
     MakeCallback (&TrafficStatsCalculator::DumpStatistics, this));
 }
 
+TrafficStatsCalculator::~TrafficStatsCalculator ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
 TypeId
 TrafficStatsCalculator::GetTypeId (void)
 {
@@ -99,7 +93,6 @@ TrafficStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_controller = 0;
   m_appWrapper = 0;
   m_epcWrapper = 0;
 }
@@ -176,9 +169,8 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
 {
   NS_LOG_FUNCTION (this << context << app->GetTeid ());
 
-  NS_ASSERT_MSG (m_controller, "Invalid controller application.");
   uint32_t teid = app->GetTeid ();
-  Ptr<const RoutingInfo> rInfo = m_controller->GetConstRoutingInfo (teid);
+  Ptr<const RoutingInfo> rInfo = RoutingInfo::GetConstInfo (teid);
   Ptr<const QosStatsCalculator> epcStats;
   Ptr<const QosStatsCalculator> appStats;
 

@@ -89,7 +89,7 @@ EpcController::RequestDedicatedBearer (
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
-  Ptr<RoutingInfo> rInfo = GetRoutingInfo (teid);
+  Ptr<RoutingInfo> rInfo = RoutingInfo::GetInfo (teid);
   NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer " << teid);
 
   // Is it a default bearer?
@@ -140,7 +140,7 @@ EpcController::ReleaseDedicatedBearer (
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
-  Ptr<RoutingInfo> rInfo = GetRoutingInfo (teid);
+  Ptr<RoutingInfo> rInfo = RoutingInfo::GetInfo (teid);
   NS_ASSERT_MSG (rInfo, "No routing information for teid.");
 
   // Is it a default bearer?
@@ -282,11 +282,10 @@ EpcController::NotifySessionCreated (
   NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
 
   uint32_t teid = defaultBearer.sgwFteid.teid;
-  Ptr<RoutingInfo> rInfo = GetRoutingInfo (teid);
+  Ptr<RoutingInfo> rInfo = RoutingInfo::GetInfo (teid);
   NS_ASSERT_MSG (rInfo == 0, "Existing routing for default bearer " << teid);
 
-  rInfo = CreateObject<RoutingInfo> ();
-  rInfo->m_teid = teid;
+  rInfo = CreateObject<RoutingInfo> (teid);
   rInfo->m_imsi = imsi;
   rInfo->m_cellId = cellId;
   rInfo->m_pgwAddr = pgwAddr;
@@ -297,7 +296,6 @@ EpcController::NotifySessionCreated (
   rInfo->m_isActive = true;               // Default bearer is always active
   rInfo->m_isDefault = true;              // This is a default bearer
   rInfo->m_bearer = defaultBearer;
-  SaveRoutingInfo (rInfo);
   EpcController::RegisterBearer (teid, rInfo->GetEpsBearer ());
 
   // For default bearer, no Meter nor Reserver metadata.
@@ -320,8 +318,7 @@ EpcController::NotifySessionCreated (
       ContextBearer_t dedicatedBearer = *it;
       teid = dedicatedBearer.sgwFteid.teid;
 
-      rInfo = CreateObject<RoutingInfo> ();
-      rInfo->m_teid = teid;
+      rInfo = CreateObject<RoutingInfo> (teid);
       rInfo->m_imsi = imsi;
       rInfo->m_cellId = cellId;
       rInfo->m_pgwAddr = pgwAddr;
@@ -332,7 +329,6 @@ EpcController::NotifySessionCreated (
       rInfo->m_isActive = false;            // Dedicated bearer not active
       rInfo->m_isDefault = false;           // This is a dedicated bearer
       rInfo->m_bearer = dedicatedBearer;
-      SaveRoutingInfo (rInfo);
       EpcController::RegisterBearer (teid, rInfo->GetEpsBearer ());
 
       GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
@@ -357,21 +353,6 @@ EpcController::NotifySessionCreated (
 
   // Fire trace source notifying session created.
   m_sessionCreatedTrace (imsi, cellId, enbAddr, pgwAddr, bearerList);
-}
-
-Ptr<const RoutingInfo>
-EpcController::GetConstRoutingInfo (uint32_t teid) const
-{
-  NS_LOG_FUNCTION (this << teid);
-
-  Ptr<const RoutingInfo> rInfo = 0;
-  TeidRoutingMap_t::const_iterator ret;
-  ret = m_routes.find (teid);
-  if (ret != m_routes.end ())
-    {
-      rInfo = ret->second;
-    }
-  return rInfo;
 }
 
 void
@@ -431,7 +412,6 @@ EpcController::DoDispose ()
 
   m_admissionStats = 0;
   m_arpTable.clear ();
-  m_routes.clear ();
   m_enbInfoByCellId.clear ();
   m_ueInfoByAddrMap.clear ();
   m_ueInfoByImsiMap.clear ();
@@ -720,7 +700,7 @@ EpcController::HandleFlowRemoved (
     }
 
   // Check for existing routing information for this bearer
-  Ptr<RoutingInfo> rInfo = GetRoutingInfo (teid);
+  Ptr<RoutingInfo> rInfo = RoutingInfo::GetInfo (teid);
   if (rInfo == 0)
     {
       NS_FATAL_ERROR ("Routing info for TEID " << teid << " not found.");
@@ -759,36 +739,6 @@ EpcController::HandleFlowRemoved (
       return 0;
     }
   NS_ABORT_MSG ("Should not get here :/");
-}
-
-void
-EpcController::SaveRoutingInfo (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo);
-
-  uint32_t teid = rInfo->GetTeid ();
-  std::pair<uint32_t, Ptr<RoutingInfo> > entry (teid, rInfo);
-  std::pair<TeidRoutingMap_t::iterator, bool> ret;
-  ret = m_routes.insert (entry);
-  if (ret.second == false)
-    {
-      NS_FATAL_ERROR ("Existing routing information for teid " << teid);
-    }
-}
-
-Ptr<RoutingInfo>
-EpcController::GetRoutingInfo (uint32_t teid)
-{
-  NS_LOG_FUNCTION (this << teid);
-
-  Ptr<RoutingInfo> rInfo = 0;
-  TeidRoutingMap_t::iterator ret;
-  ret = m_routes.find (teid);
-  if (ret != m_routes.end ())
-    {
-      rInfo = ret->second;
-    }
-  return rInfo;
 }
 
 void
