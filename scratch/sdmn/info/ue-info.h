@@ -35,6 +35,7 @@ namespace ns3 {
 class UeInfo : public Object
 {
   friend class EpcController;
+  friend class EpcNetwork;
 
 public:
   /**

@@ -489,7 +489,7 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
   NS_ASSERT (ueIpv4->GetNAddresses (interface) == 1);
 
   Ipv4Address ueAddr = ueIpv4->GetAddress (interface, 0).GetLocal ();
-  m_epcCtrlApp->SetUeAddress (imsi, ueAddr);
+  UeInfo::GetPointer (imsi)->SetUeAddress (ueAddr);
 
   NS_LOG_DEBUG ("Activete EPS bearer UE IP address: " << ueAddr);
   uint8_t bearerId = EpcMme::Get ()->AddBearer (imsi, tft, bearer);
@@ -528,9 +528,10 @@ void
 EpcNetwork::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 {
   NS_LOG_FUNCTION (this << imsi << ueDevice );
-
+  
+  // Create the UE info object for this ISMI.
+  CreateObject<UeInfo> (imsi);
   EpcMme::Get ()->AddUe (imsi);
-  m_epcCtrlApp->AddUe (imsi); // FIXME? pgw ou sgw?
 }
 
 Ptr<Node>

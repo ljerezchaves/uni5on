@@ -264,9 +264,11 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   Ptr<EpcX2> x2 = CreateObject<EpcX2> ();
   enb->AggregateObject (x2);
 
-  // FIXME ta certo isso aqui? o m_epcCtrlApp nao ta definido // FIXME
   EpcMme::Get ()->AddEnb (cellId, enbAddress, enbApp->GetS1apSapEnb ());
-  m_epcCtrlApp->AddEnb (cellId, enbAddress, sgwAddress);
+  
+  // FIXME chamar o AddEnb no controlador do SDRAN local.
+  // m_epcCtrlApp->AddEnb (cellId, enbAddress, sgwAddress);
+  
   enbApp->SetS1apSapMme (EpcMme::Get ()->GetS1apSapMme ());
 }
 

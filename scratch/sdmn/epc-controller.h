@@ -373,19 +373,6 @@ public:
    * \param sgwAddr The IPv4 address of the S-GW.
    */
   void AddEnb (uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr);
-
-  /**
-   * Let the S-GW be aware of a new UE.
-   * \param imsi The unique identifier of the UE.
-   */
-  void AddUe (uint64_t imsi);
-
-  /**
-   * Set the address of a previously added UE.
-   * \param imsi The unique identifier of the UE.
-   * \param ueAddr The IPv4 address of the UE.
-   */
-  void SetUeAddress (uint64_t imsi, Ipv4Address ueAddr);
   //\}
 
 private:

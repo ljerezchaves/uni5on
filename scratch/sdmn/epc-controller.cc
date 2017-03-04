@@ -506,6 +506,10 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // to the controller.
   DpctlExecute (swtch, "set-config miss=128");
 
+  // TODO: Por enquanto o S-GW está registrado aqui neste controlador, mas
+  // deveria ser no controlador do SDRAN. Corrigir isso assim que o SDRAN
+  // controller for implantado.
+
   // FIXME Find a better way to identify which nodes should or not scape here.
   if (swtch->GetDpId () == m_pgwDpId)
     {
@@ -940,23 +944,6 @@ EpcController::AddEnb (uint16_t cellId, Ipv4Address enbAddr,
     {
       NS_FATAL_ERROR ("Existing information for cell ID " << cellId);
     }
-}
-
-void
-EpcController::AddUe (uint64_t imsi)
-{
-  NS_LOG_FUNCTION (this << imsi);
-
-  // Create the UE info object for this ISMI.
-  CreateObject<UeInfo> (imsi);
-}
-
-void
-EpcController::SetUeAddress (uint64_t imsi, Ipv4Address ueAddr)
-{
-  NS_LOG_FUNCTION (this << imsi << ueAddr);
-
-  UeInfo::GetPointer (imsi)->SetUeAddress (ueAddr);
 }
 
 EpcController::EnbInfo
