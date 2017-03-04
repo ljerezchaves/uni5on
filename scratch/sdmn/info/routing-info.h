@@ -123,7 +123,7 @@ protected:
   void SetActive (bool active);
 
   /** Increase the priority value by one unit. */
-  void IncreasePriority (void);
+  void IncreasePriority ();
 
   /**
    * Retrieve the routing information from the global map for a specific TEID.
@@ -132,13 +132,13 @@ protected:
    */
   static Ptr<RoutingInfo> GetInfo (uint32_t teid);
 
-private:
   /**
    * Save the routing information in global map for further usage.
    * \param rInfo The routing information to save.
    */
   static void SaveRoutingInfo (Ptr<RoutingInfo> rInfo);
 
+private:
   uint32_t          m_teid;         //!< GTP TEID
   uint64_t          m_imsi;         //!< UE IMSI
   uint16_t          m_cellId;       //!< eNB cell ID

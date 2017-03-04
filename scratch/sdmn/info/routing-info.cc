@@ -62,12 +62,6 @@ RoutingInfo::GetTypeId (void)
   return tid;
 }
 
-void
-RoutingInfo::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
 GbrQosInformation
 RoutingInfo::GetQosInfo (void) const
 {
@@ -220,30 +214,6 @@ RoutingInfo::IsActive (void) const
   return m_isActive;
 }
 
-void
-RoutingInfo::SetInstalled (bool installed)
-{
-  NS_LOG_FUNCTION (this << installed);
-
-  m_isInstalled = installed;
-}
-
-void
-RoutingInfo::SetActive (bool active)
-{
-  NS_LOG_FUNCTION (this << active);
-
-  m_isActive = active;
-}
-
-void
-RoutingInfo::IncreasePriority (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  m_priority++;
-}
-
 Ptr<const RoutingInfo>
 RoutingInfo::GetConstInfo (uint32_t teid)
 {
@@ -265,6 +235,36 @@ RoutingInfo::GetEpsBearer (uint32_t teid)
   NS_LOG_FUNCTION_NOARGS ();
 
   return GetConstInfo (teid)->GetEpsBearer ();
+}
+
+void
+RoutingInfo::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+void
+RoutingInfo::SetInstalled (bool installed)
+{
+  NS_LOG_FUNCTION (this << installed);
+
+  m_isInstalled = installed;
+}
+
+void
+RoutingInfo::SetActive (bool active)
+{
+  NS_LOG_FUNCTION (this << active);
+
+  m_isActive = active;
+}
+
+void
+RoutingInfo::IncreasePriority ()
+{
+  NS_LOG_FUNCTION (this);
+
+  m_priority++;
 }
 
 Ptr<RoutingInfo>

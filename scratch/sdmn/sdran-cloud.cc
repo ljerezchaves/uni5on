@@ -87,7 +87,7 @@ SdranCloud::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (1492), // Ethernet II - PPoE
                    MakeUintegerAccessor (&SdranCloud::m_linkMtu),
-                   MakeUintegerChecker<uint16_t> ()) ;
+                   MakeUintegerChecker<uint16_t> ());
   return tid;
 }
 
