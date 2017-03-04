@@ -54,19 +54,34 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** \return The number of switches in the backhaul network. */
+  /**
+   * Get The number of OpenFlow switches in the backhaul network.
+   * \return The number of switches.
+   */
   uint16_t GetNSwitches (void) const;
 
-  /** \return The pointer to the Internet web node. */
+  /**
+   * Get the Internet web server node.
+   * \return The Internet node.
+   */
   Ptr<Node> GetWebNode (void) const;
 
-  /** \return The Internet web server IP address. */
+  /**
+   * Get the Internet web server IP address.
+   * \return The IP address.
+   */
   Ipv4Address GetWebIpAddress (void) const;
 
-  /** \return The pointer to the OpenFlow EPC controller node. */
+  /**
+   * Get the OpenFlow EPC controller node.
+   * \return The controller node pointer.
+   */
   Ptr<Node> GetControllerNode (void) const;
 
-  /** \return The pointer to the OpenFlow EPC controller application. */
+  /**
+   * Get the OpenFlow EPC controller application.
+   * \return The controller application pointer.
+   */
   Ptr<EpcController> GetControllerApp (void) const;
 
   /**
@@ -75,6 +90,13 @@ public:
    * \return The pointer to the switch node.
    */
   Ptr<Node> GetSwitchNode (uint64_t dpId) const;
+
+  /**
+   * Get the SDRAN cloud for this eNB node.
+   * \param enb The eNB node pointer.
+   * \return The SDRAN cloud pointer.
+   */
+  Ptr<SdranCloud> GetSdranCloud (Ptr<Node> enb);
 
   /**
    * Get the switch datapath ID for a given node attached to the network.
@@ -124,25 +146,6 @@ public:
   virtual Ipv4Address GetUeDefaultGatewayAddress ();
   // Inherited from EpcHelper.
 
-  // FIXME The following attach functions will be moved to the SDRAN cloud.
-  /**
-   * Connect the eNBs to the S1-U interface over the backhaul network
-   * infrastructure.
-   * \param node The eNB node pointer.
-   * \param cellId The eNB cell ID.
-   * \return A pointer to the device created at the eNB.
-   */
-  Ptr<NetDevice> S1EnbAttach (Ptr<Node> node, uint16_t cellId);
-
-  /**
-   * Connect the eNBs nodes to the X2 interface over the backhaul network
-   * infrastructure.
-   * \param node The 1st eNB node pointer.
-   * \param node The 2nd eNB node pointer.
-   * \return The container with devices created at each eNB.
-   */
-  NetDeviceContainer X2Attach (Ptr<Node> enb1, Ptr<Node> enb2);
-
   /**
    * TracedCallback signature for topology creation completed.
    * \param devices The container of OpenFlow switch devices.
@@ -172,7 +175,7 @@ protected:
    * \return The switch datapath ID.
    */
   virtual uint64_t TopologyGetPgwSwitch (Ptr<OFSwitch13Device> pgwDev) = 0;
-  
+
   /**
    * Get the switch datapath ID at which the S-GW node from the SDRAN cloud
    * should be connected.
@@ -213,7 +216,7 @@ protected:
 private:
   /**
    * Save the pair node / switch datapath ID.
-   * \param Ptr<Node> The node pointer.
+   * \param node The node pointer.
    * \param dpId The switch datapath ID.
    */
   void RegisterNodeAttachToSwitch (Ptr<Node> node, uint64_t dpId);
@@ -226,29 +229,20 @@ private:
   void ConfigurePgwAndInternet ();
 
   /**
-   * Get a pointer to the MME element. FIXME
+   * Get a pointer to the commom LTE MME element.
    * \return The MME element.
    */
-  Ptr<EpcMme> GetMmeElement ();
-
-  /**
-   * Retrieve the S-GW IP address at the S1-U interface. FIXME
-   * \return The S-GW IP address at S1-U interface.
-   */
-  virtual Ipv4Address GetSgwS1uAddress ();
-
-  /**
-   * Get the IP address for a given device.
-   * \param device The network device.
-   * \return The IP address assigned to this device.
-   */
-  Ipv4Address GetAddressForDevice (Ptr<NetDevice> device);
+  Ptr<EpcMme> GetMme ();
 
   /** Map saving node / switch datapath ID. */
   typedef std::map<Ptr<Node>, uint64_t> NodeSwitchMap_t;
 
+  /** Map saving node / SDRAN pointer. */
+  typedef std::map<Ptr<Node>, Ptr<SdranCloud> > NodeSdranMap_t;
+
   NodeSwitchMap_t               m_nodeSwitchMap;    //!< Nodes by switch ID.
-  
+  NodeSdranMap_t                m_enbSdranMap;      //!< SDRAN by eNB node.
+
   // Helper and connection attributes
   CsmaHelper                    m_csmaHelper;       //!< Connection helper.
   DataRate                      m_linkRate;         //!< Link data rate.
@@ -284,6 +278,9 @@ private:
 
   // Statistics calculator
   Ptr<BackhaulStatsCalculator>  m_epcStats;         //!< Backhaul statistics.
+
+  // Commom MME element
+  Ptr<EpcMme>                   m_mme;              //!< LTE MME element.
 };
 
 };  // namespace ns3

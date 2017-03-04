@@ -25,8 +25,12 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/mobility-module.h>
+#include <ns3/ofswitch13-module.h>
+#include <ns3/lte-module.h>
 
 namespace ns3 {
+
+class EpcController;
 
 /**
  * This class represents the SDRAN cloud at the SDMN architecture.
@@ -52,15 +56,51 @@ public:
    */
   NodeContainer GetEnbNodes (void) const;
 
-  /** \return The S-GW node pointer. */
+  /**
+   * Get the S-GW node associated to this SDRAN cloud.
+   * \return The S-GW node pointer.
+   */
   Ptr<Node> GetSgwNode ();
+
+  /**
+   * Get the S-GW OpenFlow switch device.
+   * \return The OpenFlow switch device pointer.
+   */
+  Ptr<OFSwitch13Device> GetSgwSwitchDevice ();
+
+  /**
+   * Set the pointer to the commom LTE MME element.
+   * \param mme The MME element.
+   */
+  void SetMme (Ptr<EpcMme> mme);
+
+  // Implementing some of the EpcHelper methods that are redirected to here
+  // from the EpcNetwork class.
+  virtual void AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice,
+                       uint16_t cellId);
+  virtual void AddX2Interface (Ptr<Node> enbNode1, Ptr<Node> enbNode2);
 
 protected:
   /** Destructor implementation */
   virtual void DoDispose ();
 
-  // Inherited from ObjectBase
+  // Inherited from ObjectBase.
   void NotifyConstructionCompleted (void);
+
+  /**
+   * Get the IP address for a given device.
+   * \param device The network device.
+   * \return The IP address assigned to this device.
+   */
+  Ipv4Address GetAddressForDevice (Ptr<NetDevice> device);
+
+
+  /**
+   * Get a pointer to the commom LTE MME element.
+   * \return The MME element.
+   */
+  Ptr<EpcMme> GetMme ();
+
 
 private:
   uint32_t                m_sdranId;        //!< SDRAN cloud id.
@@ -68,6 +108,18 @@ private:
   uint32_t                m_nEnbs;          //!< Number of eNBs (3 * m_nSites).
   NodeContainer           m_enbNodes;       //!< eNB nodes.
   Ptr<Node>               m_sgwNode;        //!< S-GW node.
+  NetDeviceContainer      m_s1Devices;      //!< S1-U devices.
+  Ipv4Address             m_s1uNetworkAddr; //!< S1-U network address.
+  Ipv4AddressHelper       m_s1uAddrHelper;  //!< S1-U address helper.
+  Ipv4Address             m_sgwS1uAddr;     //!< S1-U S-GW IP address.
+  Ptr<EpcController>      m_epcCtrlApp;     //!< EPC controller app.
+  Ptr<EpcMme>             m_mme;            //!< LTE MME element.
+
+  // Helper and connection attributes
+  CsmaHelper              m_csmaHelper;     //!< Connection helper.
+  DataRate                m_linkRate;       //!< Link data rate.
+  Time                    m_linkDelay;      //!< Link delay.
+  uint16_t                m_linkMtu;        //!< Link MTU.
 
   static uint32_t         m_enbCounter;     //!< Global eNB counter.
   static uint32_t         m_sdranCounter;   //!< Global SDRAN cloud counter.

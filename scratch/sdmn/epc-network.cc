@@ -43,11 +43,11 @@ EpcNetwork::EpcNetwork ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Let's use point to point connections for OpenFlow channel
+  // Let's use point to point connections for OpenFlow channel.
   m_ofSwitchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
       "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
-  // Creating network nodes
+  // Creating network nodes.
   m_webNode = CreateObject<Node> ();
   Names::Add ("web", m_webNode);
 
@@ -57,7 +57,10 @@ EpcNetwork::EpcNetwork ()
   m_epcCtrlNode = CreateObject<Node> ();
   Names::Add ("ctrl", m_epcCtrlNode);
 
-  // Creating stats calculators
+  // Create the commom LTE MME element.
+  m_mme = CreateObject<EpcMme> ();
+
+  // Creating stats calculators.
   m_epcStats = CreateObject<BackhaulStatsCalculator> ();
 }
 
@@ -117,7 +120,7 @@ EpcNetwork::GetTypeId (void)
     .AddAttribute ("X2NetworkAddr",
                    "The IPv4 network address used for X2 devices.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   Ipv4AddressValue (Ipv4Address ("10.2.0.0")),
+                   Ipv4AddressValue (Ipv4Address ("10.3.0.0")),
                    MakeIpv4AddressAccessor (&EpcNetwork::m_x2NetworkAddr),
                    MakeIpv4AddressChecker ())
 
@@ -187,6 +190,21 @@ EpcNetwork::GetSwitchNode (uint64_t dpId) const
   return node;
 }
 
+Ptr<SdranCloud>
+EpcNetwork::GetSdranCloud (Ptr<Node> enb)
+{
+  NS_LOG_FUNCTION (this << enb);
+
+  NodeSdranMap_t::iterator ret;
+  ret = m_enbSdranMap.find (enb);
+  if (ret != m_enbSdranMap.end ())
+    {
+      NS_LOG_DEBUG ("Found SDRAN " << ret->second << " for eNB " << enb);
+      return ret->second;
+    }
+  NS_FATAL_ERROR ("eNB node not registered.");
+}
+
 uint64_t
 EpcNetwork::GetDpIdForAttachedNode (Ptr<Node> node) const
 {
@@ -230,6 +248,23 @@ void
 EpcNetwork::AddSdranCloud (Ptr<SdranCloud> sdranCloud)
 {
   NS_LOG_FUNCTION (this << sdranCloud);
+
+  // Save eNB nodes into SDRAN cloud map.
+  NodeContainer enbs = sdranCloud->GetEnbNodes ();
+  for (NodeContainer::Iterator it = enbs.Begin (); it != enbs.End (); ++it)
+    {
+      std::pair<NodeSdranMap_t::iterator, bool> ret;
+      std::pair<Ptr<Node>, Ptr<SdranCloud> > entry (*it, sdranCloud);
+      ret = m_enbSdranMap.insert (entry);
+      if (ret.second == false)
+        {
+          NS_FATAL_ERROR ("Can't register eNB at SDRAN cloud.");
+        }
+      NS_LOG_DEBUG ("eNB node " << *it << " registered SDRAN " << sdranCloud);
+    }
+
+  // Set the common LTE MME element.
+  sdranCloud->SetMme (GetMme ());
 
   // Configure the S-GW node from the SDRAN cloud as an OpenFlow switch.
   Ptr<Node> sgwNode = sdranCloud->GetSgwNode ();
@@ -289,7 +324,7 @@ void
 EpcNetwork::SdranCloudsDone ()
 {
   NS_LOG_FUNCTION (this);
-  
+
   // The OpenFlow backhaul network topology is done and all P/S-GW gateways are
   // already connected to the S5 interface. Let's connect the OpenFlow switches
   // to the EPC controller. From this point on it is not possible to change the
@@ -307,116 +342,6 @@ EpcNetwork::SdranCloudsDone ()
 // Methods from EpcHelper are implemented at the end of this file.
 //
 
-Ptr<NetDevice>
-EpcNetwork::S1EnbAttach (Ptr<Node> node, uint16_t cellId)
-{
-  NS_LOG_FUNCTION (this << node << cellId);
-
-  NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
-
-  uint64_t dpId = TopologyGetEnbSwitch (cellId);
-  RegisterNodeAttachToSwitch (node, dpId);
-  Ptr<Node> swNode = GetSwitchNode (dpId);
-
-  // Creating a link between the switch and the node.
-  NetDeviceContainer devices;
-  NodeContainer pair;
-  pair.Add (swNode);
-  pair.Add (node);
-  devices = m_csmaHelper.Install (pair);
-
-  Ptr<CsmaNetDevice> portDev, nodeDev;
-  portDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
-  nodeDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
-
-  // Setting interface names for pacp filename.
-  Names::Add (Names::FindName (swNode) + "+" +
-              Names::FindName (node), portDev);
-  Names::Add (Names::FindName (node) + "+" +
-              Names::FindName (swNode), nodeDev);
-
-  // Set S1U IPv4 address for the new device at node.
-  Ipv4InterfaceContainer nodeIpIfaces =
-    m_s5AddrHelper.Assign (NetDeviceContainer (nodeDev));
-  Ipv4Address nodeAddr = nodeIpIfaces.GetAddress (0);
-
-  // Adding newly created csma device as openflow switch port.
-  Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (dpId);
-  Ptr<OFSwitch13Port> swPort = swDev->AddSwitchPort (portDev);
-  uint32_t portNum = swPort->GetPortNo ();
-
-  // Notify the controller of a new device attached to network.
-  m_epcCtrlApp->NewS5Attach (swDev, portNum, nodeDev, nodeAddr);
-
-  return nodeDev;
-}
-
-NetDeviceContainer
-EpcNetwork::X2Attach (Ptr<Node> enb1, Ptr<Node> enb2)
-{
-  NS_LOG_FUNCTION (this << enb1 << enb2);
-
-  NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
-
-  // Create a P2P connection between the eNBs.
-  PointToPointHelper p2ph;
-  p2ph.SetDeviceAttribute ("DataRate", DataRateValue (DataRate ("100Mbps")));
-  p2ph.SetDeviceAttribute ("Mtu", UintegerValue (2000));
-  p2ph.SetChannelAttribute ("Delay", TimeValue (Seconds (0)));
-  NetDeviceContainer enbDevices =  p2ph.Install (enb1, enb2);
-
-  // // TODO Creating a link between the firts eNB and its switch
-  // uint16_t swIdx1 = GetSwitchIdxForNode (enb1);
-  // Ptr<Node> swNode1 = m_ofSwitches.Get (swIdx1);
-  // Ptr<OFSwitch13Device> swDev1 = GetSwitchDevice (swIdx1);
-
-  // NodeContainer pair1;
-  // pair1.Add (swNode1);
-  // pair1.Add (enb1);
-  // NetDeviceContainer devices1 = m_swHelper.Install (pair1);
-
-  // Ptr<CsmaNetDevice> portDev1, enbDev1;
-  // portDev1 = DynamicCast<CsmaNetDevice> (devices1.Get (0));
-  // enbDev1 = DynamicCast<CsmaNetDevice> (devices1.Get (1));
-
-  // // Creating a link between the second eNB and its switch
-  // uint16_t swIdx2 = GetSwitchIdxForNode (enb2);
-  // Ptr<Node> swNode2 = m_ofSwitches.Get (swIdx2);
-  // Ptr<OFSwitch13Device> swDev2 = GetSwitchDevice (swIdx2);
-
-  // NodeContainer pair2;
-  // pair2.Add (swNode2);
-  // pair2.Add (enb2);
-  // NetDeviceContainer devices2 = m_swHelper.Install (pair2);
-
-  // Ptr<CsmaNetDevice> portDev2, enbDev2;
-  // portDev2 = DynamicCast<CsmaNetDevice> (devices2.Get (0));
-  // enbDev2 = DynamicCast<CsmaNetDevice> (devices2.Get (1));
-
-  // // Set X2 IPv4 address for the new devices
-  // NetDeviceContainer enbDevices;
-  // enbDevices.Add (enbDev1);
-  // enbDevices.Add (enbDev2);
-
-  Ipv4InterfaceContainer nodeIpIfaces = m_x2AddrHelper.Assign (enbDevices);
-  m_x2AddrHelper.NewNetwork ();
-  // Ipv4Address nodeAddr1 = nodeIpIfaces.GetAddress (0);
-  // Ipv4Address nodeAddr2 = nodeIpIfaces.GetAddress (1);
-
-  // // Adding newly created csma devices as openflow switch ports.
-  // Ptr<OFSwitch13Port> swPort1 = swDev1->AddSwitchPort (portDev1);
-  // uint32_t portNum1 = swPort1->GetPortNo ();
-
-  // Ptr<OFSwitch13Port> swPort2 = swDev2->AddSwitchPort (portDev2);
-  // uint32_t portNum2 = swPort2->GetPortNo ();
-
-  // // Trace source notifying new devices attached to the network
-  // m_newAttachTrace (enbDev1, nodeAddr1, swDev1, swIdx1, portNum1);
-  // m_newAttachTrace (enbDev2, nodeAddr2, swDev2, swIdx2, portNum2);
-
-  return enbDevices;
-}
-
 void
 EpcNetwork::DoDispose ()
 {
@@ -427,7 +352,11 @@ EpcNetwork::DoDispose ()
   m_epcCtrlApp = 0;
   m_pgwNode = 0;
   m_epcStats = 0;
+  m_mme = 0;
+
   m_nodeSwitchMap.clear ();
+  m_enbSdranMap.clear ();
+
   Object::DoDispose ();
 }
 
@@ -486,6 +415,7 @@ EpcNetwork::InstallController (Ptr<EpcController> controller)
   // Installing the controller application into controller node.
   NS_ASSERT_MSG (!m_epcCtrlApp, "Controller application already set.");
   m_epcCtrlApp = controller;
+  m_epcCtrlApp->SetMme (GetMme ());
   m_ofSwitchHelper->InstallController (m_epcCtrlNode, m_epcCtrlApp);
 }
 
@@ -579,7 +509,7 @@ EpcNetwork::ConfigurePgwAndInternet ()
   Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (swDpId);
   Ptr<OFSwitch13Port> swS5Port = swDev->AddSwitchPort (swS5Dev);
   uint32_t swS5PortNum = swS5Port->GetPortNo ();
-  
+
   // Configure the pgwS5Dev as standard device on P-GW node (with IP address).
   Ipv4InterfaceContainer pgwS5IfContainer;
   pgwS5IfContainer = m_s5AddrHelper.Assign (NetDeviceContainer (pgwS5Dev));
@@ -614,30 +544,11 @@ EpcNetwork::ConfigurePgwAndInternet ()
 }
 
 Ptr<EpcMme>
-EpcNetwork::GetMmeElement ()
+EpcNetwork::GetMme ()
 {
   NS_LOG_FUNCTION (this);
 
-  return m_epcCtrlApp->m_mme;
-}
-
-Ipv4Address
-EpcNetwork::GetSgwS1uAddress ()
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_pgwS5Addr;
-}
-
-Ipv4Address
-EpcNetwork::GetAddressForDevice (Ptr<NetDevice> device)
-{
-  NS_LOG_FUNCTION (this << device);
-
-  Ptr<Node> node = device->GetNode ();
-  Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
-  int32_t idx = ipv4->GetInterfaceForDevice (device);
-  return ipv4->GetAddress (idx, 0).GetLocal ();
+  return m_mme;
 }
 
 //
@@ -657,11 +568,12 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
   int32_t interface = ueIpv4->GetInterfaceForDevice (ueDevice);
   NS_ASSERT (interface >= 0);
   NS_ASSERT (ueIpv4->GetNAddresses (interface) == 1);
+
   Ipv4Address ueAddr = ueIpv4->GetAddress (interface, 0).GetLocal ();
-  NS_LOG_DEBUG ("Activete EPS bearer UE IP address: " << ueAddr);
   m_epcCtrlApp->SetUeAddress (imsi, ueAddr);
 
-  uint8_t bearerId = GetMmeElement ()->AddBearer (imsi, tft, bearer);
+  NS_LOG_DEBUG ("Activete EPS bearer UE IP address: " << ueAddr);
+  uint8_t bearerId = GetMme ()->AddBearer (imsi, tft, bearer);
   Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
   if (ueLteDevice)
     {
@@ -676,57 +588,7 @@ EpcNetwork::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
 {
   NS_LOG_FUNCTION (this << enb << lteEnbNetDevice << cellId);
 
-  // FIXME. O processo de adicionar um eNB vai ser gerenciado pelo SDRAN cloud.
-  // fazer uma chamada pra lá!
-
-  NS_ASSERT (enb == lteEnbNetDevice->GetNode ());
-
-  // add an IPv4 stack to the previously created eNB
-  InternetStackHelper internet;
-  internet.Install (enb);
-  NS_LOG_DEBUG ("number of Ipv4 ifaces of the eNB after node creation: " <<
-                enb->GetObject<Ipv4> ()->GetNInterfaces ());
-
-  // Callback the OpenFlow network to connect this eNB to the network.
-  Ptr<NetDevice> enbDevice = S1EnbAttach (enb, cellId);
-  m_s5Devices.Add (enbDevice);
-
-  NS_LOG_DEBUG ("number of Ipv4 ifaces of the eNB after OpenFlow dev + Ipv4 addr: " <<
-                enb->GetObject<Ipv4> ()->GetNInterfaces ());
-
-  Ipv4Address enbAddress = GetAddressForDevice (enbDevice);
-  Ipv4Address sgwAddress = GetSgwS1uAddress ();
-
-  // create S1-U socket for the ENB
-  Ptr<Socket> enbS1uSocket = Socket::CreateSocket (enb, TypeId::LookupByName ("ns3::UdpSocketFactory"));
-  int retval = enbS1uSocket->Bind (InetSocketAddress (enbAddress, m_gtpuPort));
-  NS_ASSERT (retval == 0);
-
-  // create LTE socket for the ENB
-  Ptr<Socket> enbLteSocket = Socket::CreateSocket (enb, TypeId::LookupByName ("ns3::PacketSocketFactory"));
-  PacketSocketAddress enbLteSocketBindAddress;
-  enbLteSocketBindAddress.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
-  enbLteSocketBindAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
-  retval = enbLteSocket->Bind (enbLteSocketBindAddress);
-  NS_ASSERT (retval == 0);
-  PacketSocketAddress enbLteSocketConnectAddress;
-  enbLteSocketConnectAddress.SetPhysicalAddress (Mac48Address::GetBroadcast ());
-  enbLteSocketConnectAddress.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
-  enbLteSocketConnectAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
-  retval = enbLteSocket->Connect (enbLteSocketConnectAddress);
-  NS_ASSERT (retval == 0);
-
-  Ptr<EpcEnbApplication> enbApp = CreateObject<EpcEnbApplication> (enbLteSocket, enbS1uSocket, enbAddress, sgwAddress, cellId);
-  enb->AddApplication (enbApp);
-  NS_ASSERT (enb->GetNApplications () == 1);
-  NS_ASSERT_MSG (enb->GetApplication (0)->GetObject<EpcEnbApplication> () != 0, "cannot retrieve EpcEnbApplication");
-
-  Ptr<EpcX2> x2 = CreateObject<EpcX2> ();
-  enb->AggregateObject (x2);
-
-  GetMmeElement ()->AddEnb (cellId, enbAddress, enbApp->GetS1apSapEnb ());
-  m_epcCtrlApp->AddEnb (cellId, enbAddress, sgwAddress);
-  enbApp->SetS1apSapMme (GetMmeElement ()->GetS1apSapMme ());
+  GetSdranCloud (enb)->AddEnb (enb, lteEnbNetDevice, cellId);
 }
 
 void
@@ -734,30 +596,13 @@ EpcNetwork::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
 {
   NS_LOG_FUNCTION (this << enb1 << enb2);
 
-  // Callback the OpenFlow network to connect each eNB to the network.
-  NetDeviceContainer enbDevices;
-  enbDevices = X2Attach (enb1, enb2);
-  m_x2Devices.Add (enbDevices);
-
-  Ipv4Address enb1X2Address = GetAddressForDevice (enbDevices.Get (0));
-  Ipv4Address enb2X2Address = GetAddressForDevice (enbDevices.Get (1));
-
-  // Add X2 interface to both eNBs' X2 entities
-  Ptr<EpcX2> enb1X2 = enb1->GetObject<EpcX2> ();
-  Ptr<LteEnbNetDevice> enb1LteDev = enb1->GetDevice (0)->GetObject<LteEnbNetDevice> ();
-  uint16_t enb1CellId = enb1LteDev->GetCellId ();
-  NS_LOG_DEBUG ("LteEnbNetDevice #1 = " << enb1LteDev << " - CellId = " << enb1CellId);
-
-  Ptr<EpcX2> enb2X2 = enb2->GetObject<EpcX2> ();
-  Ptr<LteEnbNetDevice> enb2LteDev = enb2->GetDevice (0)->GetObject<LteEnbNetDevice> ();
-  uint16_t enb2CellId = enb2LteDev->GetCellId ();
-  NS_LOG_DEBUG ("LteEnbNetDevice #2 = " << enb2LteDev << " - CellId = " << enb2CellId);
-
-  enb1X2->AddX2Interface (enb1CellId, enb1X2Address, enb2CellId, enb2X2Address);
-  enb2X2->AddX2Interface (enb2CellId, enb2X2Address, enb1CellId, enb1X2Address);
-
-  enb1LteDev->GetRrc ()->AddX2Neighbour (enb2LteDev->GetCellId ());
-  enb2LteDev->GetRrc ()->AddX2Neighbour (enb1LteDev->GetCellId ());
+  // TODO
+  // Ptr<SdranCloud> sdran1 = GetSdranCloud (enb1);
+  // Ptr<SdranCloud> sdran2 = GetSdranCloud (enb2);
+  // if (sdran1 == sdran2)
+  //   {
+  //     sdran1->AddX2Interface (enb1, enb2);
+  //   }
 }
 
 void
@@ -765,8 +610,8 @@ EpcNetwork::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 {
   NS_LOG_FUNCTION (this << imsi << ueDevice );
 
-  GetMmeElement ()->AddUe (imsi);
-  m_epcCtrlApp->AddUe (imsi);
+  GetMme ()->AddUe (imsi);
+  m_epcCtrlApp->AddUe (imsi); // FIXME? pgw ou sgw?
 }
 
 Ptr<Node>
