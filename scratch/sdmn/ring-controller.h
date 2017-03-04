@@ -226,7 +226,7 @@ private:
 
   /** Map saving IPv4 address / switch index. */
   typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;
-  
+
   ConnInfoMap_t             m_connections;    //!< Switch connections.
   IpSwitchMap_t             m_ipSwitchTable;  //!< IP / switch index table.
   OFSwitch13DeviceContainer m_ofDevices;      //!< OpenFlow devices.

@@ -179,7 +179,7 @@ RingNetwork::TopologyGetSgwSwitch (Ptr<SdranCloud> sdran)
   NS_LOG_FUNCTION (this << sdran);
 
   // Connect the S-GW nodes to switches indexes in clockwise direction,
-  // starting at switch index 1. 
+  // starting at switch index 1.
   uint16_t swIdx = sdran->GetId () % m_numNodes;
   return m_ofDevices.Get (swIdx)->GetDatapathId ();
 }
