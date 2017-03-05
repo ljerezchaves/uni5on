@@ -18,6 +18,7 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#include "sdmn-mme.h"
 #include "epc-controller.h"
 
 namespace ns3 {
@@ -331,7 +332,6 @@ EpcController::DoDispose ()
   m_admissionStats = 0;
   m_arpTable.clear ();
   m_ipSwitchTable.clear ();
-  m_enbInfoByCellId.clear ();
 
   delete (m_s11SapSgw);
 
@@ -346,8 +346,8 @@ EpcController::NotifyConstructionCompleted ()
   // TODO In the future, this will be moved to the RAN controller
 
   // Connect the MME to the S-GW via S11 interface
-  EpcMme::Get ()->SetS11SapSgw (GetS11SapSgw ());
-  SetS11SapMme (EpcMme::Get ()->GetS11SapMme ());
+  SdmnMme::Get ()->SetS11SapSgw (GetS11SapSgw ());
+  SetS11SapMme (SdmnMme::Get ()->GetS11SapMme ());
 
   // Connect the admission stats calculator
   TraceConnectWithoutContext (
@@ -999,35 +999,6 @@ EpcController::GetS11SapSgw ()
 }
 
 void
-EpcController::AddEnb (uint16_t cellId, Ipv4Address enbAddr,
-                       Ipv4Address sgwAddr)
-{
-  NS_LOG_FUNCTION (this << cellId << enbAddr << sgwAddr);
-
-  // Create and save the eNB info for this cell ID.
-  EnbInfo enbInfo;
-  enbInfo.enbAddr = enbAddr;
-  enbInfo.sgwAddr = sgwAddr;
-
-  std::pair<uint16_t, EnbInfo> entry (cellId, enbInfo);
-  std::pair<CellIdEnbInfo_t::iterator, bool> ret;
-  ret = m_enbInfoByCellId.insert (entry);
-  if (ret.second == false)
-    {
-      NS_FATAL_ERROR ("Existing information for cell ID " << cellId);
-    }
-}
-
-void
-EpcController::AddUe (uint64_t imsi)
-{
-  NS_LOG_FUNCTION (this << imsi);
-
-  // Create the UE info object for this ISMI.
-  CreateObject<UeInfo> (imsi);
-}
-
-void
 EpcController::SetUeAddress (uint64_t imsi, Ipv4Address ueAddr)
 {
   NS_LOG_FUNCTION (this << imsi << ueAddr);
@@ -1047,9 +1018,9 @@ EpcController::DoCreateSessionRequest (
 
   uint16_t cellId = req.uli.gci;
 
-  EnbInfo enbInfo = GetEnbInfo (cellId);
+  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (req.imsi);
-  ueInfo->SetEnbAddress (enbInfo.enbAddr);
+  ueInfo->SetEnbAddress (enbInfo->GetEnbAddress ());
 
   EpcS11SapMme::CreateSessionResponseMessage res;
   res.teid = req.imsi;
@@ -1062,11 +1033,10 @@ EpcController::DoCreateSessionRequest (
       // Check for available TEID.
       NS_ABORT_IF (m_teidCount == 0xFFFFFFFF);
       uint32_t teid = ++m_teidCount;
-      ueInfo->AddBearer (bit->epsBearerId, teid);
 
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.teid = teid;
-      bearerContext.sgwFteid.address = enbInfo.sgwAddr;
+      bearerContext.sgwFteid.address = enbInfo->GetSgwAddress ();
       bearerContext.epsBearerId = bit->epsBearerId;
       bearerContext.bearerLevelQos = bit->bearerLevelQos;
       bearerContext.tft = bit->tft;
@@ -1074,8 +1044,8 @@ EpcController::DoCreateSessionRequest (
     }
 
   // Notify the controller of the new create session request accepted.
-  NotifySessionCreated (req.imsi, cellId, enbInfo.enbAddr, enbInfo.sgwAddr,
-                        res.bearerContextsCreated);
+  NotifySessionCreated (req.imsi, cellId, enbInfo->GetEnbAddress (),
+                        enbInfo->GetSgwAddress (), res.bearerContextsCreated);
 
   m_s11SapMme->CreateSessionResponse (res);
 }
@@ -1089,9 +1059,9 @@ EpcController::DoModifyBearerRequest (
   uint64_t imsi = req.teid;
   uint16_t cellId = req.uli.gci;
 
-  EnbInfo enbInfo = GetEnbInfo (cellId);
+  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  ueInfo->SetEnbAddress (enbInfo.enbAddr);
+  ueInfo->SetEnbAddress (enbInfo->GetEnbAddress ());
 
   // No actual bearer modification: for now we just support the minimum needed
   // for path switch request (handover).
@@ -1134,6 +1104,7 @@ EpcController::DoDeleteBearerResponse (
 
   uint64_t imsi = req.teid;
 
+  // FIXME No need of ueInfo.
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
 
   std::list<EpcS11SapSgw::BearerContextRemovedSgwPgw>::iterator bit;
@@ -1141,21 +1112,21 @@ EpcController::DoDeleteBearerResponse (
        bit != req.bearerContextsRemoved.end ();
        ++bit)
     {
-      ueInfo->RemoveBearer (bit->epsBearerId);
+      // TODO Should remove entries from gateway?
     }
 }
 
-EpcController::EnbInfo
-EpcController::GetEnbInfo (uint16_t cellId)
-{
-  NS_LOG_FUNCTION (this << cellId);
-
-  CellIdEnbInfo_t::iterator it = m_enbInfoByCellId.find (cellId);
-  if (it == m_enbInfoByCellId.end ())
-    {
-      NS_FATAL_ERROR ("No info found for eNB cell ID " << cellId);
-    }
-  return it->second;
-}
+// EpcController::EnbInfo
+// EpcController::GetEnbInfo (uint16_t cellId)
+// {
+//   NS_LOG_FUNCTION (this << cellId);
+//
+//   CellIdEnbInfo_t::iterator it = m_enbInfoByCellId.find (cellId);
+//   if (it == m_enbInfoByCellId.end ())
+//     {
+//       NS_FATAL_ERROR ("No info found for eNB cell ID " << cellId);
+//     }
+//   return it->second;
+// }
 
 };  // namespace ns3

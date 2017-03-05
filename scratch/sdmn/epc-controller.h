@@ -31,6 +31,7 @@
 #include "info/meter-info.h"
 #include "info/gbr-info.h"
 #include "info/ue-info.h"
+#include "info/enb-info.h"
 #include "stats/admission-stats-calculator.h"
 
 namespace ns3 {
@@ -215,20 +216,6 @@ public:
    * \return the SGW side of the S11 SAP.
    */
   EpcS11SapSgw* GetS11SapSgw ();
-
-  /**
-   * Let the S-GW be aware of a new eNB.
-   * \param cellId The cell identifier.
-   * \param enbAddr The IPv4 address of the eNB.
-   * \param sgwAddr The IPv4 address of the S-GW.
-   */
-  void AddEnb (uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr);
-
-  /**
-   * Let the S-GW be aware of a new UE.
-   * \param imsi The unique identifier of the UE.
-   */
-  void AddUe (uint64_t imsi);
 
   /**
    * Set the address of a previously added UE.
@@ -469,25 +456,6 @@ private:
   /** Map saving <EpsBearer::Qci / IP Dscp value> */
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
   static QciDscpMap_t m_qciDscpTable;     //!< DSCP mapped values.
-
-
-
-  /** Struct representing eNB info. */
-  struct EnbInfo
-  {
-    Ipv4Address enbAddr;
-    Ipv4Address sgwAddr;
-  };
-
-  /** Map saving <Cell ID / eNB info> */
-  typedef std::map<uint16_t, EnbInfo> CellIdEnbInfo_t;
-  CellIdEnbInfo_t     m_enbInfoByCellId;    //!< eNBInfo mapped values.
-
-  /**
-   * Get the eNB information for this cell ID
-   * \param cellId The eNB cell ID.
-   */
-  EnbInfo GetEnbInfo (uint16_t cellId);
 
   /**
    * TEID counter, used to allocate new GTP-U TEID values.

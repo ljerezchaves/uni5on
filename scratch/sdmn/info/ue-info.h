@@ -30,11 +30,13 @@ namespace ns3 {
 
 /**
  * \ingroup sdmnInfo
- * Metadata associated to a UE connected to a S-GW.
+ * Metadata associated to a UE.
  */
 class UeInfo : public Object
 {
   friend class EpcController;
+  friend class EpcNetwork;
+  friend class SdmnMme;
 
 public:
   /**
@@ -50,44 +52,75 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  /** Hold info on an EPS bearer to be activated. */
+  struct BearerInfo
+  {
+    Ptr<EpcTft> tft;
+    EpsBearer   bearer;
+    uint8_t     bearerId;
+  };
+
   /**
    * \name Private member accessors.
    * \return The requested field.
    */
   //\{
-  uint64_t    GetImsi    (void) const;
-  Ipv4Address GetUeAddr  (void) const;
-  Ipv4Address GetEnbAddr (void) const;
+  uint64_t    GetImsi           (void) const;
+  Ipv4Address GetUeAddress      (void) const;
+  Ipv4Address GetEnbAddress     (void) const;
+  uint64_t    GetMmeUeS1Id      (void) const;
+  uint64_t    GetEnbUeS1Id      (void) const;
+  uint16_t    GetCellId         (void) const;
+  uint16_t    GetBearerCounter  (void) const;
   //\}
+
+  /** \return The iterator for the begin of the bearer list. */
+  std::list<BearerInfo>::const_iterator GetBearerListBegin (void) const;
+
+  /** \return The iterator for the end of the bearer list. */
+  std::list<BearerInfo>::const_iterator GetBearerListEnd (void) const;
 
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
   /**
-   * Add a new bearer context for this UE.
-   * \param epsBearerId The ID of the EPS Bearer to be activated.
-   * \param teid The TEID of the new bearer.
-   */
-  void AddBearer (uint8_t epsBearerId, uint32_t teid);
-
-  /**
-   * Remove the bearer context for this UE.
-   * \param bearerId The bearer id whose contexts to be removed.
-   */
-  void RemoveBearer (uint8_t bearerId);
-
-  /**
    * Set the address of the UE.
    * \param addr The UE address.
    */
   void SetUeAddress (Ipv4Address addr);
-  
+
   /**
    * Set the address of the eNB to which the UE is connected to.
    * \param addr The eNB address.
    */
   void SetEnbAddress (Ipv4Address addr);
+
+  /**
+   * Set the ID for the communication between eNB - UE S1 ID.
+   * \param aenbUeS1Idr The ID to set.
+   */
+  void SetEnbUeS1Id (uint64_t enbUeS1Id);
+
+  /**
+   * Set the cell ID for this UE.
+   * \param addr The eNB address.
+   */
+  void SetCellId (uint16_t cellId);
+
+  /**
+   * Add an EPS bearer to the list of bearers to be activated for this UE.
+   * The bearer will be activated when the UE enters the ECM connected state.
+   * \param bearer The bearer info.
+   * \return The bearer ID.
+   */
+  uint8_t AddBearer (BearerInfo bearer);
+
+  /**
+   * Remove the bearer context for a specific bearer ID.
+   * \param bearerId The bearer ID.
+   */
+  void RemoveBearer (uint8_t bearerId);
 
   /**
    * Get the UE information from the global map for a specific IMSI.
@@ -103,14 +136,18 @@ private:
    */
   static void RegisterUeInfo (Ptr<UeInfo> ueInfo);
 
-  uint64_t                    m_imsi;               //!< UE IMSI
-  Ipv4Address                 m_ueAddr;             //!< UE IP address
-  Ipv4Address                 m_enbAddr;            //!< eNB IP address
-  std::map<uint8_t, uint32_t> m_teidByBearerIdMap;  //!< List of bearers by ID
+  uint64_t               m_imsi;                 //!< UE IMSI.
+  Ipv4Address            m_ueAddr;               //!< UE IP address.
+  Ipv4Address            m_enbAddr;              //!< eNB IP address.
+  uint64_t               m_mmeUeS1Id;            //!< ID for S1-AP at MME.
+  uint16_t               m_enbUeS1Id;            //!< ID for S1-AP at eNB.
+  uint16_t               m_cellId;               //!< UE cell ID.
+  uint16_t               m_bearerCounter;        //!< Number of bearers.
+  std::list<BearerInfo>  m_bearersToBeActivated; //!< Bearer contexts.
 
   /** Map saving UE IMSI / UE information. */
   typedef std::map<uint64_t, Ptr<UeInfo> > ImsiUeInfoMap_t;
-  static ImsiUeInfoMap_t m_ueInfoByImsiMap; //!< Global UE info map.
+  static ImsiUeInfoMap_t m_ueInfoByImsiMap;      //!< Global UE info map.
 };
 
 };  // namespace ns3

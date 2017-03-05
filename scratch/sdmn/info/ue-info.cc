@@ -29,7 +29,11 @@ NS_OBJECT_ENSURE_REGISTERED (UeInfo);
 UeInfo::ImsiUeInfoMap_t UeInfo::m_ueInfoByImsiMap;
 
 UeInfo::UeInfo (uint64_t imsi)
-  : m_imsi (imsi)
+  : m_imsi (imsi),
+    m_mmeUeS1Id (imsi),
+    m_enbUeS1Id (0),
+    m_cellId (0),
+    m_bearerCounter (0)
 {
   NS_LOG_FUNCTION (this);
 
@@ -62,7 +66,7 @@ UeInfo::GetImsi (void) const
 }
 
 Ipv4Address
-UeInfo::GetUeAddr (void) const
+UeInfo::GetUeAddress (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -70,11 +74,59 @@ UeInfo::GetUeAddr (void) const
 }
 
 Ipv4Address
-UeInfo::GetEnbAddr (void) const
+UeInfo::GetEnbAddress (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_enbAddr;
+}
+
+uint64_t
+UeInfo::GetMmeUeS1Id (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_mmeUeS1Id;
+}
+
+uint64_t
+UeInfo::GetEnbUeS1Id (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_enbUeS1Id;
+}
+
+uint16_t
+UeInfo::GetCellId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_cellId;
+}
+
+uint16_t
+UeInfo::GetBearerCounter (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_bearerCounter;
+}
+
+std::list<UeInfo::BearerInfo>::const_iterator
+UeInfo::GetBearerListBegin () const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_bearersToBeActivated.begin ();
+}
+
+std::list<UeInfo::BearerInfo>::const_iterator
+UeInfo::GetBearerListEnd () const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_bearersToBeActivated.end ();
 }
 
 void
@@ -82,23 +134,7 @@ UeInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_teidByBearerIdMap.clear ();
-}
-
-void
-UeInfo::AddBearer (uint8_t bearerId, uint32_t teid)
-{
-  NS_LOG_FUNCTION (this << bearerId << teid);
-
-  m_teidByBearerIdMap [bearerId] = teid;
-}
-
-void
-UeInfo::RemoveBearer (uint8_t bearerId)
-{
-  NS_LOG_FUNCTION (this << bearerId);
-
-  m_teidByBearerIdMap.erase (bearerId);
+  m_bearersToBeActivated.clear ();
 }
 
 void
@@ -115,6 +151,51 @@ UeInfo::SetEnbAddress (Ipv4Address enbAddr)
   NS_LOG_FUNCTION (this << enbAddr);
 
   m_enbAddr = enbAddr;
+}
+
+void
+UeInfo::SetEnbUeS1Id (uint64_t enbUeS1Id)
+{
+  NS_LOG_FUNCTION (this << enbUeS1Id);
+
+  m_enbUeS1Id = enbUeS1Id;
+}
+
+void
+UeInfo::SetCellId (uint16_t cellId)
+{
+  NS_LOG_FUNCTION (this << cellId);
+
+  m_cellId = cellId;
+}
+
+uint8_t
+UeInfo::AddBearer (BearerInfo bearer)
+{
+  NS_LOG_FUNCTION (this << bearer.bearerId);
+
+  NS_ASSERT_MSG (GetBearerCounter () < 11, "No more bearers allowed!");
+  bearer.bearerId = ++m_bearerCounter;
+  m_bearersToBeActivated.push_back (bearer);
+  return bearer.bearerId;
+}
+
+void
+UeInfo::RemoveBearer (uint8_t bearerId)
+{
+  NS_LOG_FUNCTION (this << bearerId);
+
+  std::list<BearerInfo>::iterator it;
+  for (it = m_bearersToBeActivated.begin ();
+       it != m_bearersToBeActivated.end ();
+       ++it)
+    {
+      if (it->bearerId == bearerId)
+        {
+          m_bearersToBeActivated.erase (it);
+          break;
+        }
+    }
 }
 
 Ptr<UeInfo>

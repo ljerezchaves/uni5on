@@ -22,6 +22,7 @@
 #include "epc-network.h"
 #include "epc-controller.h"
 #include "pgw-user-app.h"
+#include "sdmn-mme.h"
 #include "stats/backhaul-stats-calculator.h"
 
 namespace ns3 {
@@ -600,7 +601,12 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
   NS_LOG_DEBUG ("Activete EPS bearer UE IP address: " << ueAddr);
   m_epcCtrlApp->SetUeAddress (imsi, ueAddr);
 
-  uint8_t bearerId = EpcMme::Get ()->AddBearer (imsi, tft, bearer);
+  // Save the bearer context into UE info.
+  UeInfo::BearerInfo bearerInfo;
+  bearerInfo.tft = tft;
+  bearerInfo.bearer = bearer;
+  uint8_t bearerId = UeInfo::GetPointer (imsi)->AddBearer (bearerInfo);
+
   Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
   if (ueLteDevice)
     {
@@ -660,9 +666,16 @@ EpcNetwork::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   Ptr<EpcX2> x2 = CreateObject<EpcX2> ();
   enb->AggregateObject (x2);
 
-  EpcMme::Get ()->AddEnb (cellId, enbAddress, enbApp->GetS1apSapEnb ());
-  m_epcCtrlApp->AddEnb (cellId, enbAddress, sgwAddress);
-  enbApp->SetS1apSapMme (EpcMme::Get ()->GetS1apSapMme ());
+  // SdmnMme::Get ()->AddEnb (cellId, enbAddress, enbApp->GetS1apSapEnb ());
+  // m_epcCtrlApp->AddEnb (cellId, enbAddress, sgwAddress);
+
+  // Create the eNB info.
+  Ptr<EnbInfo> enbInfo = CreateObject<EnbInfo> (cellId);
+  enbInfo->SetEnbAddress (enbAddress);
+  enbInfo->SetSgwAddress (sgwAddress);
+  enbInfo->SetS1apSapEnb (enbApp->GetS1apSapEnb ());
+
+  enbApp->SetS1apSapMme (SdmnMme::Get ()->GetS1apSapMme ());
 }
 
 void
@@ -699,10 +712,10 @@ EpcNetwork::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
 void
 EpcNetwork::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 {
-  NS_LOG_FUNCTION (this << imsi << ueDevice );
+  NS_LOG_FUNCTION (this << imsi << ueDevice);
 
-  EpcMme::Get ()->AddUe (imsi);
-  m_epcCtrlApp->AddUe (imsi);
+  // Create the UE info.
+  CreateObject<UeInfo> (imsi);
 }
 
 Ptr<Node>
