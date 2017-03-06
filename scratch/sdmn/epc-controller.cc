@@ -18,6 +18,7 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#include "sdmn-mme.h"
 #include "epc-controller.h"
 
 namespace ns3 {
@@ -42,11 +43,6 @@ EpcController::EpcController ()
 
   // The S-GW side of S11 AP
   m_s11SapSgw = new MemberEpcS11SapSgw<EpcController> (this);
-
-  // TODO In the future, this will be moved to the RAN controller.
-  // Connect the MME to the S-GW control plane via S11 interface.
-  EpcMme::Get ()->SetS11SapSgw (GetS11SapSgw ());
-  SetS11SapMme (EpcMme::Get ()->GetS11SapMme ());
 }
 
 EpcController::~EpcController ()
@@ -379,7 +375,6 @@ EpcController::DoDispose ()
 
   m_admissionStats = 0;
   m_arpTable.clear ();
-  m_enbInfoByCellId.clear ();
 
   delete (m_s11SapSgw);
 
@@ -392,7 +387,12 @@ EpcController::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Connect the admission stats calculator.
+  // TODO In the future, this will be moved to the RAN controller.
+  // Connect the MME to the S-GW control plane via S11 interface.
+  SdmnMme::Get ()->SetS11SapSgw (GetS11SapSgw ());
+  SetS11SapMme (SdmnMme::Get ()->GetS11SapMme ());
+
+  // Connect the admission stats calculator
   TraceConnectWithoutContext (
     "BearerRequest", MakeCallback (
       &AdmissionStatsCalculator::NotifyBearerRequest, m_admissionStats));
@@ -926,39 +926,6 @@ EpcController::GetS11SapSgw ()
   return m_s11SapSgw;
 }
 
-void
-EpcController::AddEnb (uint16_t cellId, Ipv4Address enbAddr,
-                       Ipv4Address sgwAddr)
-{
-  NS_LOG_FUNCTION (this << cellId << enbAddr << sgwAddr);
-
-  // Create and save the eNB info for this cell ID.
-  EnbInfo enbInfo;
-  enbInfo.enbAddr = enbAddr;
-  enbInfo.sgwAddr = sgwAddr;
-
-  std::pair<uint16_t, EnbInfo> entry (cellId, enbInfo);
-  std::pair<CellIdEnbInfo_t::iterator, bool> ret;
-  ret = m_enbInfoByCellId.insert (entry);
-  if (ret.second == false)
-    {
-      NS_FATAL_ERROR ("Existing information for cell ID " << cellId);
-    }
-}
-
-EpcController::EnbInfo
-EpcController::GetEnbInfo (uint16_t cellId)
-{
-  NS_LOG_FUNCTION (this << cellId);
-
-  CellIdEnbInfo_t::iterator it = m_enbInfoByCellId.find (cellId);
-  if (it == m_enbInfoByCellId.end ())
-    {
-      NS_FATAL_ERROR ("No info found for eNB cell ID " << cellId);
-    }
-  return it->second;
-}
-
 //
 // On the following Do* methods, note the trick to avoid the need for
 // allocating TEID on the S11 interface using the IMSI as identifier.
@@ -970,10 +937,10 @@ EpcController::DoCreateSessionRequest (
   NS_LOG_FUNCTION (this << req.imsi);
 
   uint16_t cellId = req.uli.gci;
+
+  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (req.imsi);
-  EnbInfo enbInfo = GetEnbInfo (cellId);
-  
-  ueInfo->SetEnbAddress (enbInfo.enbAddr);
+  ueInfo->SetEnbAddress (enbInfo->GetEnbAddress ());
 
   EpcS11SapMme::CreateSessionResponseMessage res;
   res.teid = req.imsi;
@@ -986,11 +953,10 @@ EpcController::DoCreateSessionRequest (
       // Check for available TEID.
       NS_ABORT_IF (m_teidCount == 0xFFFFFFFF);
       uint32_t teid = ++m_teidCount;
-      ueInfo->AddBearer (bit->epsBearerId, teid);
 
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.teid = teid;
-      bearerContext.sgwFteid.address = enbInfo.sgwAddr;
+      bearerContext.sgwFteid.address = enbInfo->GetSgwAddress ();
       bearerContext.epsBearerId = bit->epsBearerId;
       bearerContext.bearerLevelQos = bit->bearerLevelQos;
       bearerContext.tft = bit->tft;
@@ -998,8 +964,8 @@ EpcController::DoCreateSessionRequest (
     }
 
   // Notify the controller of the new create session request accepted.
-  NotifySessionCreated (req.imsi, cellId, enbInfo.enbAddr, enbInfo.sgwAddr,
-                        res.bearerContextsCreated);
+  NotifySessionCreated (req.imsi, cellId, enbInfo->GetEnbAddress (),
+                        enbInfo->GetSgwAddress (), res.bearerContextsCreated);
 
   m_s11SapMme->CreateSessionResponse (res);
 }
@@ -1012,10 +978,10 @@ EpcController::DoModifyBearerRequest (
 
   uint64_t imsi = req.teid;
   uint16_t cellId = req.uli.gci;
+
+  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  EnbInfo enbInfo = GetEnbInfo (cellId);
-  
-  ueInfo->SetEnbAddress (enbInfo.enbAddr);
+  ueInfo->SetEnbAddress (enbInfo->GetEnbAddress ());
 
   // No actual bearer modification: for now we just support the minimum needed
   // for path switch request (handover).
@@ -1057,6 +1023,8 @@ EpcController::DoDeleteBearerResponse (
   NS_LOG_FUNCTION (this << req.teid);
 
   uint64_t imsi = req.teid;
+
+  // FIXME No need of ueInfo.
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
 
   std::list<EpcS11SapSgw::BearerContextRemovedSgwPgw>::iterator bit;
@@ -1064,7 +1032,7 @@ EpcController::DoDeleteBearerResponse (
        bit != req.bearerContextsRemoved.end ();
        ++bit)
     {
-      ueInfo->RemoveBearer (bit->epsBearerId);
+      // TODO Should remove entries from gateway?
     }
 }
 

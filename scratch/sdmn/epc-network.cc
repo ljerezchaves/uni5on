@@ -492,7 +492,13 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
   UeInfo::GetPointer (imsi)->SetUeAddress (ueAddr);
 
   NS_LOG_DEBUG ("Activete EPS bearer UE IP address: " << ueAddr);
-  uint8_t bearerId = EpcMme::Get ()->AddBearer (imsi, tft, bearer);
+
+  // Save the bearer context into UE info.
+  UeInfo::BearerInfo bearerInfo;
+  bearerInfo.tft = tft;
+  bearerInfo.bearer = bearer;
+  uint8_t bearerId = UeInfo::GetPointer (imsi)->AddBearer (bearerInfo);
+
   Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
   if (ueLteDevice)
     {
@@ -527,11 +533,10 @@ EpcNetwork::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
 void
 EpcNetwork::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 {
-  NS_LOG_FUNCTION (this << imsi << ueDevice );
-  
-  // Create the UE info object for this ISMI.
+  NS_LOG_FUNCTION (this << imsi << ueDevice);
+
+  // Create the UE info.
   CreateObject<UeInfo> (imsi);
-  EpcMme::Get ()->AddUe (imsi);
 }
 
 Ptr<Node>

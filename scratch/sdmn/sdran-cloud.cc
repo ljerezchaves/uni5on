@@ -22,6 +22,7 @@
 #include "epc-controller.h"
 #include "epc-network.h"
 #include "pgw-user-app.h"
+#include "sdmn-mme.h"
 
 namespace ns3 {
 
@@ -264,12 +265,13 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   Ptr<EpcX2> x2 = CreateObject<EpcX2> ();
   enb->AggregateObject (x2);
 
-  EpcMme::Get ()->AddEnb (cellId, enbAddress, enbApp->GetS1apSapEnb ());
-  
-  // FIXME chamar o AddEnb no controlador do SDRAN local.
-  // m_epcCtrlApp->AddEnb (cellId, enbAddress, sgwAddress);
-  
-  enbApp->SetS1apSapMme (EpcMme::Get ()->GetS1apSapMme ());
+  // Create the eNB info.
+  Ptr<EnbInfo> enbInfo = CreateObject<EnbInfo> (cellId);
+  enbInfo->SetEnbAddress (enbAddress);
+  enbInfo->SetSgwAddress (sgwAddress);
+  enbInfo->SetS1apSapEnb (enbApp->GetS1apSapEnb ());
+
+  enbApp->SetS1apSapMme (SdmnMme::Get ()->GetS1apSapMme ());
 }
 
 
