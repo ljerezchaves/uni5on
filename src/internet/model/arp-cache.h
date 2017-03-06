@@ -181,6 +181,11 @@ public:
   typedef std::pair<Ptr<Packet>, Ipv4Header> Ipv4PayloadHeaderPair;
 
   /**
+   * \brief Statically populate the ARP cache of all nodes in the simulation.
+   */
+  static void PopulateArpCaches ();
+
+  /**
    * \brief A record that that holds information about an ArpCache entry
    */
   class Entry {
