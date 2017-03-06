@@ -280,7 +280,7 @@ private:
 
   // Internet web server
   Ptr<Node>                     m_webNode;          //!< Web server node.
-  Ipv4Address                   m_webSgiIpAddr;     //!< Web server IP addr.
+  Ipv4Address                   m_webSgiAddr;       //!< Web server IP addr.
 
   // Statistics calculator
   Ptr<BackhaulStatsCalculator>  m_epcStats;         //!< Backhaul statistics.

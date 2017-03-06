@@ -185,7 +185,7 @@ EpcNetwork::GetWebIpAddress () const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_webSgiIpAddr;
+  return m_webSgiAddr;
 }
 
 Ptr<Node>
@@ -495,19 +495,15 @@ EpcNetwork::ConfigurePgwAndInternet ()
   Ptr<OFSwitch13Port> pgwSgiPort = m_pgwSwitchDev->AddSwitchPort (pgwSgiDev);
   uint32_t pgwSgiPortNum = pgwSgiPort->GetPortNo ();
 
-  // Note that the SGi device created on the P-GW node and configure as an
-  // OpenFlow switch port will have no IP address assigned to it. However,
-  // we need this address on the PgwUserApp, so we set it here.
-  m_pgwSgiAddr = m_webAddrHelper.NewAddress ();
-  NS_LOG_DEBUG ("P-GW SGi interface address: " << m_pgwSgiAddr);
-
-  // Set the IP address on the Internet Web server.
+  // Set the IP address on the Internet Web server and P-GW SGi interfaces.
   InternetStackHelper internet;
   internet.Install (m_webNode);
-  Ipv4InterfaceContainer webSgiIfContainer;
-  webSgiIfContainer = m_webAddrHelper.Assign (NetDeviceContainer (webSgiDev));
-  m_webSgiIpAddr = webSgiIfContainer.GetAddress (0);
-  NS_LOG_DEBUG ("Web SGi interface address: " << m_webSgiIpAddr);
+  Ipv4InterfaceContainer sgiIfContainer;
+  sgiIfContainer = m_webAddrHelper.Assign (NetDeviceContainer (m_sgiDevices));
+  m_pgwSgiAddr = sgiIfContainer.GetAddress (0);
+  m_webSgiAddr = sgiIfContainer.GetAddress (1);
+  NS_LOG_DEBUG ("Web  SGi interface address: " << m_webSgiAddr);
+  NS_LOG_DEBUG ("P-GW SGi interface address: " << m_pgwSgiAddr);
 
   // Defining static routes at the Internet Web server to the LTE network.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
@@ -560,7 +556,7 @@ EpcNetwork::ConfigurePgwAndInternet ()
   pgwSgiMacAddr = Mac48Address::ConvertFrom (pgwSgiDev->GetAddress ());
 
   Ptr<PgwUserApp> pgwUserApp = CreateObject <PgwUserApp> (
-      pgwS5PortDev, m_webSgiIpAddr, webSgiMacAddr, pgwSgiMacAddr);
+      pgwS5PortDev, m_webSgiAddr, webSgiMacAddr, pgwSgiMacAddr);
   m_pgwNode->AddApplication (pgwUserApp);
 
   // Adding the swS5Dev device as OpenFlow switch port.
@@ -572,7 +568,7 @@ EpcNetwork::ConfigurePgwAndInternet ()
   // to the OpenFlow backhaul network.
   m_epcCtrlApp->NewS5Attach (pgwS5Dev, m_pgwS5Addr, swDev, swIdx, swS5PortNum);
   m_epcCtrlApp->NewSgiAttach (m_pgwSwitchDev, pgwSgiDev, m_pgwSgiAddr,
-                              pgwSgiPortNum, pgwS5PortNum, m_webSgiIpAddr);
+                              pgwSgiPortNum, pgwS5PortNum, m_webSgiAddr);
 
   // Setting the default P-GW gateway address.
   // This address will be used to set the static route at UEs.
