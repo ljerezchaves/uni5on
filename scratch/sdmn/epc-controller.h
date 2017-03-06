@@ -38,10 +38,11 @@ namespace ns3 {
 
 /**
  * \ingroup sdmn
- * Create an OpenFlow EPC controller. This is an abstract base class which
- * should be extended in accordance to OpenFlow network topology. It implements
- * the logic for traffic routing and engineering within the backhaul network
- * and the P-GW control plane.
+ * This is the abstract base class for the OpenFlow EPC controller, which
+ * should be extended in accordance to OpenFlow backhaul network topology. This
+ * controller implements the logic for traffic routing and engineering within
+ * the OpenFlow backhaul network. It is also responsible for implementing the
+ * P-GW control plane and for configuring the P-GW OpenFlow user plane.
  */
 class EpcController : public OFSwitch13Controller
 {
