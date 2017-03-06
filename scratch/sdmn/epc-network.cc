@@ -30,6 +30,7 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("EpcNetwork");
 NS_OBJECT_ENSURE_REGISTERED (EpcNetwork);
 
+// Initializing EpcNetwork static members.
 const uint16_t EpcNetwork::m_gtpuPort = 2152;
 
 EpcNetwork::EpcNetwork ()

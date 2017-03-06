@@ -288,7 +288,7 @@ protected:
 
   bool                  m_voipQos;            //!< VoIP QoS with queues.
   bool                  m_nonGbrCoexistence;  //!< Non-GBR coexistence.
-  static const uint16_t m_dedicatedTmo;       //!< Timeout for bearers.
+  static const uint16_t m_flowTimeout;        //!< Timeout for flow entries.
 
 private:
   Ptr<AdmissionStatsCalculator> m_admissionStats; //!< Admission statistics.

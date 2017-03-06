@@ -20,14 +20,15 @@
 
 #include "sdmn-mme.h"
 #include "epc-controller.h"
+#include "epc-network.h"
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("EpcController");
 NS_OBJECT_ENSURE_REGISTERED (EpcController);
 
-const uint16_t EpcController::m_dedicatedTmo = 15;
-
+// Initializing EpcController static members.
+const uint16_t EpcController::m_flowTimeout = 15;
 EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
 EpcController::QciDscpInitializer EpcController::initializer;
 
@@ -233,7 +234,9 @@ EpcController::NewS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo,
   // Classification table.
   std::ostringstream cmdIn;
   cmdIn << "flow-mod cmd=add,table=0,prio=64,flags=0x0007"
-        << " eth_type=0x800,ip_proto=17,udp_src=2152,udp_dst=2152"
+        << " eth_type=0x800,ip_proto=17"
+        << ",udp_src=" << EpcNetwork::m_gtpuPort
+        << ",udp_dst=" << EpcNetwork::m_gtpuPort
         << ",in_port=" << portNo
         << " goto:1";
   DpctlSchedule (swtchDev->GetDatapathId (), cmdIn.str ());
@@ -319,7 +322,7 @@ EpcController::NotifySessionCreated (
       rInfo->m_pgwAddr = pgwAddr;
       rInfo->m_enbAddr = enbAddr;
       rInfo->m_priority = 0x1FFF;           // Priority for dedicated bearer
-      rInfo->m_timeout = m_dedicatedTmo;    // Timeout for dedicated bearer
+      rInfo->m_timeout = m_flowTimeout;     // Timeout for dedicated bearer
       rInfo->m_isInstalled = false;         // Switch rules not installed
       rInfo->m_isActive = false;            // Dedicated bearer not active
       rInfo->m_isDefault = false;           // This is a dedicated bearer
@@ -519,9 +522,13 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
   // GTP packets entering the switch from any port other then EPC ports.
   // Send to Routing table.
-  DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=32 eth_type=0x800,"
-                "ip_proto=17,udp_src=2152,udp_dst=2152"
-                " goto:2");
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=add,table=0,prio=32"
+      << " eth_type=0x800,ip_proto=17"
+      << ",udp_src=" << EpcNetwork::m_gtpuPort
+      << ",udp_dst=" << EpcNetwork::m_gtpuPort
+      << " goto:2";
+  DpctlExecute (swtch, cmd.str ());
 
   // Table miss entry. Send to controller.
   DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
