@@ -95,7 +95,7 @@ public:
 
   /**
    * Notify this controller of the P-GW and Internet Web server connection over
-   * the SGi interface.
+   * the SGi interface. This function will configure the P-GW datapath.
    * \param pgwSwDev The OpenFlow P-GW switch device.
    * \param pgwSgiDev The SGi device attached to the OpenFlow P-GW switch.
    * \param pgwSgiIp The IPv4 address assigned to the P-GW SGi device.
@@ -255,50 +255,6 @@ protected:
 
 private:
   /**
-   * Save the pair IP / MAC address in ARP table.
-   * \param ipAddr The IPv4 address.
-   * \param macAddr The MAC address.
-   */
-  void SaveArpEntry (Ipv4Address ipAddr, Mac48Address macAddr);
-
-  /**
-   * Perform an ARP resolution.
-   * \param ip The Ipv4Address to search.
-   * \return The MAC address for this ip.
-   */
-  Mac48Address GetArpEntry (Ipv4Address ip) const;
-
-  /**
-   * Handle packet-in messages sent from switch with ARP message.
-   * \param msg The packet-in message.
-   * \param swtch The switch information.
-   * \param xid Transaction id.
-   * \return 0 if everything's ok, otherwise an error number.
-   */
-  ofl_err HandleArpPacketIn (ofl_msg_packet_in *msg,
-    Ptr<const RemoteSwitch> swtch, uint32_t xid);
-
-  /**
-   * Extract an IPv4 address from packet match.
-   * \param oxm_of The OXM_IF_* IPv4 field.
-   * \param match The ofl_match structure pointer.
-   * \return The IPv4 address.
-   */
-  Ipv4Address ExtractIpv4Address (uint32_t oxm_of, ofl_match* match);
-
-  /**
-   * Create a Packet with an ARP reply, encapsulated inside of an Ethernet
-   * frame (with header and trailer.
-   * \param srcMac Source MAC address.
-   * \param srcIP Source IP address.
-   * \param dstMac Destination MAC address.
-   * \param dstMac Destination IP address.
-   * \return The ns3 Ptr<Packet> with the ARP reply.
-   */
-  Ptr<Packet> CreateArpReply (Mac48Address srcMac, Ipv4Address srcIp,
-    Mac48Address dstMac, Ipv4Address dstIp);
-
-  /**
    * EpcController inner friend utility class
    * used to initialize static DSCP map table.
    */
@@ -335,19 +291,13 @@ protected:
   static const uint16_t m_dedicatedTmo;       //!< Timeout for bearers.
 
 private:
-  /** Map saving IPv4 address / MAC address. */
-  typedef std::map<Ipv4Address, Mac48Address> IpMacMap_t;
-
-  /** Map saving EpsBearer::Qci / IP DSCP value. */
-  typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
-
   Ptr<AdmissionStatsCalculator> m_admissionStats; //!< Admission statistics.
   uint64_t                      m_pgwDpId;        //!< P-GW datapath ID.
   uint32_t                      m_pgwS5Port;      //!< P-GW S5 port no.
-  IpMacMap_t                    m_arpTable;       //!< ARP resolution table.
 
+  /** Map saving EpsBearer::Qci / IP DSCP value. */
+  typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
   static QciDscpMap_t           m_qciDscpTable;   //!< DSCP mapped values.
-
 
 //
 // Everything below is from S-GW control plane.

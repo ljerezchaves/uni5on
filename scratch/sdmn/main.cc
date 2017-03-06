@@ -138,6 +138,15 @@ main (int argc, char *argv[])
   lteNetwork    = CreateObject<LteNetwork> (ofNetwork);
   trafficHelper = CreateObject<TrafficHelper> (ofNetwork, lteNetwork);
 
+  // Populating routing and ARP tables. The 'perfect' ARP used here comes from
+  // the patch at https://www.nsnam.org/bugzilla/show_bug.cgi?id=187. This
+  // patch uses a single ARP cache shared among all nodes. Some developers have
+  // pointed that this implementation may fail if a node change what it thinks
+  // that it's a local cache, or if there are global MAC hardware duplications.
+  // Anyway, I've decided to use this to simplify the controller logic.
+  Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
+  ArpCache::PopulateArpCaches ();
+
   // If necessary, enable pcap output
   if (pcap)
     {
