@@ -35,6 +35,7 @@ namespace ns3 {
 class EnbInfo : public Object
 {
   friend class EpcController;
+  friend class SdranController;
   friend class SdranCloud;
   friend class SdmnMme;
 
