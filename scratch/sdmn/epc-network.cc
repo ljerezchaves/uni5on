@@ -101,18 +101,6 @@ EpcNetwork::GetTypeId (void)
                    Ipv4AddressValue (Ipv4Address ("10.2.0.0")),
                    MakeIpv4AddressAccessor (&EpcNetwork::m_x2NetworkAddr),
                    MakeIpv4AddressChecker ())
-
-    // Trace sources used by stats calculators to be aware of backhaul network.
-    .AddTraceSource ("NewSwitchConnection",
-                     "New connection between two OpenFlow switches during "
-                     "backhaul topology creation.",
-                     MakeTraceSourceAccessor (&EpcNetwork::m_newConnTrace),
-                     "ns3::ConnectionInfo::ConnTracedCallback")
-    .AddTraceSource ("TopologyBuilt",
-                     "OpenFlow backhaul network topology is built and no more "
-                     "connections between OpenFlow switches will be created.",
-                     MakeTraceSourceAccessor (&EpcNetwork::m_topoBuiltTrace),
-                     "ns3::EpcNetwork::TopologyTracedCallback")
   ;
   return tid;
 }

@@ -29,20 +29,6 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("RingNetwork");
 NS_OBJECT_ENSURE_REGISTERED (RingNetwork);
 
-RingNetwork::RingNetwork (Ptr<BackhaulStatsCalculator> backhaulStats)
-{
-  NS_LOG_FUNCTION (this << backhaulStats);
-
-  // Connect OpenFlow backhaul stats calculator to trace sources on this class.
-  // This connection must be performed before topology creation.
-  TraceConnectWithoutContext (
-    "TopologyBuilt", MakeCallback (
-      &BackhaulStatsCalculator::NotifyTopologyBuilt, backhaulStats));
-  TraceConnectWithoutContext (
-    "NewSwitchConnection", MakeCallback (
-      &BackhaulStatsCalculator::NotifyNewSwitchConnection, backhaulStats));
-}
-
 RingNetwork::RingNetwork ()
 {
   NS_LOG_FUNCTION (this);
@@ -171,12 +157,10 @@ RingNetwork::TopologyCreate ()
 
       // Fire trace source notifying new connection between switches.
       m_epcCtrlApp->NewSwitchConnection (cInfo);
-      m_newConnTrace (cInfo);
     }
 
   // Fire trace source notifying that all connections between switches are ok.
   m_epcCtrlApp->TopologyBuilt (m_ofDevices);
-  m_topoBuiltTrace (m_ofDevices);
 }
 
 uint64_t

@@ -128,26 +128,25 @@ main (int argc, char *argv[])
 
   // Create the simulation scenario.
   // The following objects must be created in this order:
-  // * The OpenFlow backhaul stats calculator
   // * The OpenFlow EPC backhaul network
   // * The LTE radio access network
   // * The traffic helper for applications
-  // * The traffic and admission stats calculators
+  // * The stats calculators
   NS_LOG_INFO ("Creating simulation scenario...");
 
-  Ptr<BackhaulStatsCalculator>  backhaulStats;
-  Ptr<RingNetwork>              ofNetwork;
-  Ptr<LteNetwork>               lteNetwork;
-  Ptr<TrafficHelper>            trafficHelper;
-  Ptr<TrafficStatsCalculator>   trafficStats;
-  Ptr<AdmissionStatsCalculator> admissionStats;
+  Ptr<RingNetwork>   ofNetwork;
+  Ptr<LteNetwork>    lteNetwork;
+  Ptr<TrafficHelper> trafficHelper;
+  ofNetwork     = CreateObject<RingNetwork> ();
+  lteNetwork    = CreateObject<LteNetwork> (ofNetwork);
+  trafficHelper = CreateObject<TrafficHelper> (ofNetwork, lteNetwork);
 
-  backhaulStats  = CreateObject<BackhaulStatsCalculator> ();
-  ofNetwork      = CreateObject<RingNetwork> (backhaulStats);
-  lteNetwork     = CreateObject<LteNetwork> (ofNetwork);
-  trafficHelper  = CreateObject<TrafficHelper> (ofNetwork, lteNetwork);
-  trafficStats   = CreateObject<TrafficStatsCalculator> ();
+  Ptr<AdmissionStatsCalculator> admissionStats;
+  Ptr<BackhaulStatsCalculator>  backhaulStats;
+  Ptr<TrafficStatsCalculator>   trafficStats;
   admissionStats = CreateObject<AdmissionStatsCalculator> ();
+  backhaulStats  = CreateObject<BackhaulStatsCalculator> ();
+  trafficStats   = CreateObject<TrafficStatsCalculator> ();
 
   // Populating routing and ARP tables. The 'perfect' ARP used here comes from
   // the patch at https://www.nsnam.org/bugzilla/show_bug.cgi?id=187. This

@@ -178,22 +178,10 @@ private:
   void AttachPgwNode (Ptr<Node> pgwNode);
 
 public:
-  /**
-   * TracedCallback signature for topology creation completed.
-   * \param devices The container of OpenFlow switch devices.
-   */
-  typedef void (*TopologyTracedCallback)(NetDeviceContainer devices);
-
   /** Default GTP-U UDP port for tunnel sockets. */
   static const uint16_t m_gtpuPort;
 
 protected:
-  /** Trace source for new connection between two switches. */
-  TracedCallback<Ptr<ConnectionInfo> > m_newConnTrace;
-
-  /** Trace source for connections between switches finished. */
-  TracedCallback<OFSwitch13DeviceContainer> m_topoBuiltTrace;
-
   // EPC controller.
   Ptr<EpcController>            m_epcCtrlApp;       //!< EPC controller app.
   Ptr<Node>                     m_epcCtrlNode;      //!< EPC controller node.
