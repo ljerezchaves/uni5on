@@ -21,7 +21,6 @@
 #include <iomanip>
 #include <iostream>
 #include "backhaul-stats-calculator.h"
-#include "../info/connection-info.h"
 
 using namespace std;
 
@@ -81,50 +80,6 @@ BackhaulStatsCalculator::GetTypeId (void)
 }
 
 void
-BackhaulStatsCalculator::NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo)
-{
-  NS_LOG_FUNCTION (this << cInfo);
-
-  m_connections.push_back (cInfo);
-  DpIdPair_t key = cInfo->GetSwitchDpIdPair ();
-
-  *m_bwbWrapper->GetStream ()
-  << right << setw (10) << key.first  << "-"
-  << left  << setw (10) << key.second << "   ";
-
-  *m_bwgWrapper->GetStream ()
-  << right << setw (10) << key.first  << "-"
-  << left  << setw (10) << key.second << "   ";
-
-  *m_bwnWrapper->GetStream ()
-  << right << setw (10) << key.first  << "-"
-  << left  << setw (10) << key.second << "   ";
-
-  *m_regWrapper->GetStream ()
-  << left
-  << right << setw (6) << key.first  << "-"
-  << left  << setw (6) << key.second << "   ";
-
-  *m_renWrapper->GetStream ()
-  << left
-  << right << setw (6) << key.first  << "-"
-  << left  << setw (6) << key.second << "   ";
-}
-
-void
-BackhaulStatsCalculator::NotifyTopologyBuilt (
-  OFSwitch13DeviceContainer devices)
-{
-  NS_LOG_FUNCTION (this);
-
-  *m_bwbWrapper->GetStream () << left << std::endl;
-  *m_bwgWrapper->GetStream () << left << std::endl;
-  *m_bwnWrapper->GetStream () << left << std::endl;
-  *m_regWrapper->GetStream () << left << std::endl;
-  *m_renWrapper->GetStream () << left << std::endl;
-}
-
-void
 BackhaulStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
@@ -175,6 +130,41 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
   *m_renWrapper->GetStream ()
   << left << fixed << setprecision (4)
   << setw (12) << "Time(s)";
+
+  m_connections = ConnectionInfo::GetList ();
+  ConnInfoList_t::iterator it;
+  for (it = m_connections.begin (); it != m_connections.end (); it++)
+    {
+      DpIdPair_t key = (*it)->GetSwitchDpIdPair ();
+
+      *m_bwbWrapper->GetStream ()
+      << right << setw (10) << key.first  << "-"
+      << left  << setw (10) << key.second << "   ";
+
+      *m_bwgWrapper->GetStream ()
+      << right << setw (10) << key.first  << "-"
+      << left  << setw (10) << key.second << "   ";
+
+      *m_bwnWrapper->GetStream ()
+      << right << setw (10) << key.first  << "-"
+      << left  << setw (10) << key.second << "   ";
+
+      *m_regWrapper->GetStream ()
+      << left
+      << right << setw (6) << key.first  << "-"
+      << left  << setw (6) << key.second << "   ";
+
+      *m_renWrapper->GetStream ()
+      << left
+      << right << setw (6) << key.first  << "-"
+      << left  << setw (6) << key.second << "   ";
+    }
+
+  *m_bwbWrapper->GetStream () << left << std::endl;
+  *m_bwgWrapper->GetStream () << left << std::endl;
+  *m_bwnWrapper->GetStream () << left << std::endl;
+  *m_regWrapper->GetStream () << left << std::endl;
+  *m_renWrapper->GetStream () << left << std::endl;
 
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);

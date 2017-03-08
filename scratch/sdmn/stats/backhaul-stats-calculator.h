@@ -24,6 +24,7 @@
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-device-container.h>
+#include "../info/connection-info.h"
 
 namespace ns3 {
 
@@ -46,20 +47,6 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * Notify this stats calculator of a new connection between two switches in
-   * the OpenFlow backhaul network.
-   * \param cInfo The connection information and metadata.
-   */
-  void NotifyNewSwitchConnection (Ptr<ConnectionInfo> cInfo);
-
-  /**
-   * Notify this stats calculator that all connection between OpenFlow switches
-   * have already been configure and the backhaul topology is done.
-   * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
-   */
-  void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
-
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -78,9 +65,6 @@ private:
    * Reset internal counters.
    */
   void ResetCounters ();
-
-  /** A Vector of connection information objects. */
-  typedef std::vector<Ptr<ConnectionInfo> > ConnInfoList_t;
 
   ConnInfoList_t            m_connections;    //!< Switch connections.
   Time                      m_lastResetTime;  //!< Last reset time.

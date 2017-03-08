@@ -28,7 +28,8 @@ NS_LOG_COMPONENT_DEFINE ("ConnectionInfo");
 NS_OBJECT_ENSURE_REGISTERED (ConnectionInfo);
 
 // Initializing ConnectionInfo static members.
-ConnectionInfo::ConnInfoMap_t ConnectionInfo::m_connections;
+ConnectionInfo::ConnInfoMap_t ConnectionInfo::m_connectionsMap;
+ConnInfoList_t ConnectionInfo::m_connectionsList;
 
 ConnectionInfo::ConnectionInfo ()
 {
@@ -395,12 +396,20 @@ ConnectionInfo::GetPointer (uint64_t dpId1, uint64_t dpId2)
 
   Ptr<ConnectionInfo> cInfo = 0;
   ConnInfoMap_t::iterator ret;
-  ret = ConnectionInfo::m_connections.find (key);
-  if (ret != ConnectionInfo::m_connections.end ())
+  ret = ConnectionInfo::m_connectionsMap.find (key);
+  if (ret != ConnectionInfo::m_connectionsMap.end ())
     {
       cInfo = ret->second;
     }
   return cInfo;
+}
+
+ConnInfoList_t
+ConnectionInfo::GetList (void)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  return ConnectionInfo::m_connectionsList;
 }
 
 bool
@@ -533,11 +542,13 @@ ConnectionInfo::RegisterConnectionInfo (Ptr<ConnectionInfo> cInfo)
 
   std::pair<DpIdPair_t, Ptr<ConnectionInfo> > entry (key, cInfo);
   std::pair<ConnInfoMap_t::iterator, bool> ret;
-  ret = ConnectionInfo::m_connections.insert (entry);
+  ret = ConnectionInfo::m_connectionsMap.insert (entry);
   if (ret.second == false)
     {
       NS_FATAL_ERROR ("Existing connection information.");
     }
+
+  ConnectionInfo::m_connectionsList.push_back (cInfo);
   NS_LOG_DEBUG ("New connection info saved:" <<
                 " switch " << dpId1 << " port " << cInfo->GetPortNo (0) <<
                 " switch " << dpId2 << " port " << cInfo->GetPortNo (1));

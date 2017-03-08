@@ -28,8 +28,13 @@
 
 namespace ns3 {
 
+class ConnectionInfo;
+
 /** A pair of switch datapath IDs. */
 typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
+
+/** A list of connection information objects. */
+typedef std::vector<Ptr<ConnectionInfo> > ConnInfoList_t;
 
 /**
  * \ingroup sdmnInfo
@@ -39,6 +44,7 @@ typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
 class ConnectionInfo : public Object
 {
   friend class RingController;
+  friend class BackhaulStatsCalculator;
 
 public:
   /** Metadata associated to a switch. */
@@ -195,6 +201,12 @@ protected:
    */
   static Ptr<ConnectionInfo> GetPointer (uint64_t dpId1, uint64_t dpId2);
 
+  /**
+   * Get the entire list of connection information.
+   * \return The connection information for this pair of datapath IDs.
+   */
+  static ConnInfoList_t GetList (void);
+
 private:
   /**
    * Get the guard bit rate, which is currently not been used neither by GBR
@@ -267,7 +279,9 @@ private:
    * The pair of switch datapath IDs are saved in increasing order.
    */
   typedef std::map<DpIdPair_t, Ptr<ConnectionInfo> > ConnInfoMap_t;
-  static ConnInfoMap_t m_connections;    //!< Global connection info map.
+
+  static ConnInfoMap_t  m_connectionsMap;   //!< Global connection info map.
+  static ConnInfoList_t m_connectionsList;  //!< Global connection info list.
 };
 
 };  // namespace ns3
