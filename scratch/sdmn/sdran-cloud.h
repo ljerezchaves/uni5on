@@ -27,6 +27,8 @@
 #include <ns3/mobility-module.h>
 #include <ns3/ofswitch13-module.h>
 #include <ns3/lte-module.h>
+#include "sdran-controller.h"
+#include "sdmn-mme.h"
 
 namespace ns3 {
 
@@ -49,20 +51,22 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** \return The SDRAN Cloud ID. */
-  uint32_t GetId (void) const;
+  /**
+   * \name Private member accessors.
+   * \return The requested field.
+   */
+  //\{
+  uint32_t      GetId       (void) const;
+  uint32_t      GetNSites   (void) const;
+  uint32_t      GetNEnbs    (void) const;
+  Ptr<Node>     GetSgwNode  (void) const;
+  //\}
 
   /**
    * Get the container of eNBs nodes created by this SDRAN cloud.
    * \return The container of eNB nodes.
    */
   NodeContainer GetEnbNodes (void) const;
-
-  /**
-   * Get the S-GW node associated to this SDRAN cloud.
-   * \return The S-GW node pointer.
-   */
-  Ptr<Node> GetSgwNode ();
 
   /**
    * Get the S-GW OpenFlow switch device.
@@ -104,22 +108,36 @@ private:
    */
   static void RegisterSdranCloud (Ptr<SdranCloud> sdran);
 
-  uint32_t                m_sdranId;        //!< SDRAN cloud id.
-  uint32_t                m_nSites;         //!< Number of cell sites.
-  uint32_t                m_nEnbs;          //!< Number of eNBs (3 * m_nSites).
-  NodeContainer           m_enbNodes;       //!< eNB nodes.
-  Ptr<Node>               m_sgwNode;        //!< S-GW node.
-  NetDeviceContainer      m_s1Devices;      //!< S1-U devices.
-  Ipv4Address             m_s1uNetworkAddr; //!< S1-U network address.
-  Ipv4AddressHelper       m_s1uAddrHelper;  //!< S1-U address helper.
-  Ipv4Address             m_sgwS1uAddr;     //!< S1-U S-GW IP address.
-  Ptr<EpcController>      m_epcCtrlApp;     //!< EPC controller app.
+  uint32_t                      m_sdranId;        //!< SDRAN cloud id.
+  uint32_t                      m_nSites;         //!< Number of cell sites.
+  uint32_t                      m_nEnbs;          //!< Number of eNBs.
+  NodeContainer                 m_enbNodes;       //!< eNB nodes.
+  
+  // OpenFlow switch helper
+  Ptr<OFSwitch13InternalHelper> m_ofSwitchHelper; //!< Switch helper.
 
-  // Helper and connection attributes
-  CsmaHelper              m_csmaHelper;     //!< Connection helper.
-  DataRate                m_linkRate;       //!< Link data rate.
-  Time                    m_linkDelay;      //!< Link delay.
-  uint16_t                m_linkMtu;        //!< Link MTU.
+  // IP addresses for interfaces
+  Ipv4Address                   m_s1uNetworkAddr; //!< S1-U network address.
+  Ipv4AddressHelper             m_s1uAddrHelper;  //!< S1-U address helper.
+
+  // S-GW user plane
+  Ptr<Node>                     m_sgwNode;        //!< S-GW user-plane node.
+  Ipv4Address                   m_sgwS1uAddr;     //!< S-GW S1-U IP addr.
+  Ipv4Address                   m_sgwS5Addr;      //!< S-GW S5 IP addr.
+
+  // Helper and attributes for S1-U interface.
+  CsmaHelper                    m_csmaHelper;     //!< Connection helper.
+  DataRate                      m_linkRate;       //!< Link data rate.
+  Time                          m_linkDelay;      //!< Link delay.
+  uint16_t                      m_linkMtu;        //!< Link MTU.
+
+  // EPC user-plane devices
+  NetDeviceContainer            m_s1Devices;      //!< S1-U devices.
+
+  // SDRAN controller
+  Ptr<SdranController>          m_sdranCtrlApp;   //!< SDRAN controller app.
+  Ptr<Node>                     m_sdranCtrlNode;  //!< SDRAN controller node
+  Ptr<SdmnMme>                  m_mme;            //!< MME element.
 
   /** Map saving node / SDRAN pointer. */
   typedef std::map<Ptr<Node>, Ptr<SdranCloud> > NodeSdranMap_t;

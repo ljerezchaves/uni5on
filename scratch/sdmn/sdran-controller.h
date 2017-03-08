@@ -118,10 +118,6 @@ protected:
     ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
   // Inherited from OFSwitch13Controller.
 
-private:
-//
-// Member variables
-//
 protected:
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
   TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerRequestTrace;

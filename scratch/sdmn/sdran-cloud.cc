@@ -38,7 +38,7 @@ SdranCloud::SdranCloud ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Set SDRAN Cloud ID.
+  // Set the SDRAN cloud ID.
   m_sdranId = ++m_sdranCounter;
 
   // Create the S-GW node and set its name.
@@ -67,7 +67,7 @@ SdranCloud::GetTypeId (void)
     .AddAttribute ("S1uNetworkAddr",
                    "The IPv4 network address used for S1-U devices.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   Ipv4AddressValue (Ipv4Address ("10.2.0.0")),
+                   Ipv4AddressValue (Ipv4Address ("10.3.0.0")),
                    MakeIpv4AddressAccessor (&SdranCloud::m_s1uNetworkAddr),
                    MakeIpv4AddressChecker ())
 
@@ -89,7 +89,8 @@ SdranCloud::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (1492), // Ethernet II - PPoE
                    MakeUintegerAccessor (&SdranCloud::m_linkMtu),
-                   MakeUintegerChecker<uint16_t> ());
+                   MakeUintegerChecker<uint16_t> ())
+  ;
   return tid;
 }
 
@@ -101,6 +102,30 @@ SdranCloud::GetId (void) const
   return m_sdranId;
 }
 
+uint32_t
+SdranCloud::GetNSites (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_nSites;
+}
+
+uint32_t
+SdranCloud::GetNEnbs (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_nEnbs;
+}
+
+Ptr<Node>
+SdranCloud::GetSgwNode (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sgwNode;
+}
+
 NodeContainer
 SdranCloud::GetEnbNodes (void) const
 {
@@ -109,22 +134,14 @@ SdranCloud::GetEnbNodes (void) const
   return m_enbNodes;
 }
 
-Ptr<Node>
-SdranCloud::GetSgwNode ()
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_sgwNode;
-}
-
 Ptr<OFSwitch13Device>
 SdranCloud::GetSgwSwitchDevice ()
 {
   NS_LOG_FUNCTION (this);
 
-  Ptr<OFSwitch13Device> dev = m_sgwNode->GetObject<OFSwitch13Device> ();
-  NS_ASSERT_MSG (dev, "No OpenFlow device found for S-GW node");
-  return dev;
+  Ptr<OFSwitch13Device> devive = m_sgwNode->GetObject<OFSwitch13Device> ();
+  NS_ASSERT_MSG (devive, "No OpenFlow device found for S-GW node");
+  return devive;
 }
 
 //Ptr<NetDevice>
@@ -378,7 +395,6 @@ SdranCloud::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   m_sgwNode = 0;
-  m_epcCtrlApp = 0;
 }
 
 void

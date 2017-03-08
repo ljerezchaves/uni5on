@@ -38,7 +38,6 @@ EpcNetwork::EpcNetwork ()
     m_epcCtrlNode (0),
     m_ofSwitchHelper (0),
     m_pgwNode (0),
-    m_pgwSwitchDev (0),
     m_webNode (0),
     m_epcStats (0)
 {
@@ -107,7 +106,7 @@ EpcNetwork::GetTypeId (void)
                    "The IPv4 network address used for web devices.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    Ipv4AddressValue (Ipv4Address ("8.0.0.0")),
-                   MakeIpv4AddressAccessor (&EpcNetwork::m_webNetworkAddr),
+                   MakeIpv4AddressAccessor (&EpcNetwork::m_sgiNetworkAddr),
                    MakeIpv4AddressChecker ())
     .AddAttribute ("S5NetworkAddr",
                    "The IPv4 network address used for S5 devices.",
@@ -118,7 +117,7 @@ EpcNetwork::GetTypeId (void)
     .AddAttribute ("X2NetworkAddr",
                    "The IPv4 network address used for X2 devices.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   Ipv4AddressValue (Ipv4Address ("10.3.0.0")),
+                   Ipv4AddressValue (Ipv4Address ("10.2.0.0")),
                    MakeIpv4AddressAccessor (&EpcNetwork::m_x2NetworkAddr),
                    MakeIpv4AddressChecker ())
 
@@ -332,8 +331,8 @@ EpcNetwork::NotifyConstructionCompleted (void)
 
   // Using a /30 subnet which can hold exactly two address for the Internet
   // connection (one used by the server and the other is logically associated
-  // to the P-GW external interface.
-  m_webAddrHelper.SetBase (m_webNetworkAddr, "255.255.255.252");
+  // to the P-GW SGi interface).
+  m_sgiAddrHelper.SetBase (m_sgiNetworkAddr, "255.255.255.252");
 
   // Using a /24 subnet which can hold up to 253 S-GWs and the P-GW addresses
   // on the same S5 backhaul network.
@@ -370,7 +369,8 @@ EpcNetwork::ConfigurePgwAndInternet ()
   NS_LOG_FUNCTION (this);
 
   // Configure the P-GW node as an OpenFlow switch.
-  m_pgwSwitchDev = (m_ofSwitchHelper->InstallSwitch (m_pgwNode)).Get (0);
+  Ptr<OFSwitch13Device> pgwSwitchDev;
+  pgwSwitchDev = (m_ofSwitchHelper->InstallSwitch (m_pgwNode)).Get (0);
 
   //
   // The first part is to connect the P-GW node to the Interent Web server.
@@ -388,14 +388,14 @@ EpcNetwork::ConfigurePgwAndInternet ()
               Names::FindName (m_pgwNode), webSgiDev);
 
   // Add the pgwSgiDev as physical port on the P-GW OpenFlow switch.
-  Ptr<OFSwitch13Port> pgwSgiPort = m_pgwSwitchDev->AddSwitchPort (pgwSgiDev);
+  Ptr<OFSwitch13Port> pgwSgiPort = pgwSwitchDev->AddSwitchPort (pgwSgiDev);
   uint32_t pgwSgiPortNum = pgwSgiPort->GetPortNo ();
 
   // Set the IP address on the Internet Web server and P-GW SGi interfaces.
   InternetStackHelper internet;
   internet.Install (m_webNode);
   Ipv4InterfaceContainer sgiIfContainer;
-  sgiIfContainer = m_webAddrHelper.Assign (NetDeviceContainer (m_sgiDevices));
+  sgiIfContainer = m_sgiAddrHelper.Assign (NetDeviceContainer (m_sgiDevices));
   m_pgwSgiAddr = sgiIfContainer.GetAddress (0);
   m_webSgiAddr = sgiIfContainer.GetAddress (1);
   NS_LOG_DEBUG ("Web  SGi interface address: " << m_webSgiAddr);
@@ -413,7 +413,7 @@ EpcNetwork::ConfigurePgwAndInternet ()
   // infrasctructure.
   //
   // Get the switch datapath ID on the backhaul network to attatch the P-GW.
-  uint64_t swDpId = TopologyGetPgwSwitch (m_pgwSwitchDev);
+  uint64_t swDpId = TopologyGetPgwSwitch (pgwSwitchDev);
   Ptr<Node> swNode = GetSwitchNode (swDpId);
 
   // Connect the P-GW to the backhaul over S5 interface.
@@ -447,7 +447,7 @@ EpcNetwork::ConfigurePgwAndInternet ()
   Ptr<VirtualNetDevice> pgwS5PortDev = CreateObject<VirtualNetDevice> ();
   pgwS5PortDev->SetAttribute ("Mtu", UintegerValue (3000));
   pgwS5PortDev->SetAddress (Mac48Address::Allocate ());
-  Ptr<OFSwitch13Port> pgwS5Port = m_pgwSwitchDev->AddSwitchPort (pgwS5PortDev);
+  Ptr<OFSwitch13Port> pgwS5Port = pgwSwitchDev->AddSwitchPort (pgwS5PortDev);
   uint32_t pgwS5PortNum = pgwS5Port->GetPortNo ();
 
   // Create the P-GW S5 user-plane application.
@@ -457,13 +457,13 @@ EpcNetwork::ConfigurePgwAndInternet ()
   // Notify the controller of the new P-GW device attached to the Internet and
   // to the OpenFlow backhaul network.
   m_epcCtrlApp->NewS5Attach (swDev, swS5PortNum, pgwS5Dev, m_pgwS5Addr);
-  m_epcCtrlApp->NewPgwAttach (m_pgwSwitchDev, pgwSgiDev, m_pgwSgiAddr,
+  m_epcCtrlApp->NewPgwAttach (pgwSwitchDev, pgwSgiDev, m_pgwSgiAddr,
                               pgwSgiPortNum, pgwS5PortNum, webSgiDev,
                               m_webSgiAddr);
 
   // Set the default P-GW gateway address, which will be used to set the static
   // route at UEs.
-  m_pgwGwAddr = m_ueAddrHelper.NewAddress ();
+  m_pgwUeGatewayAddr = m_ueAddrHelper.NewAddress ();
   NS_LOG_DEBUG ("P-GW gateway address: " << GetUeDefaultGatewayAddress ());
 }
 
@@ -557,7 +557,7 @@ EpcNetwork::GetUeDefaultGatewayAddress ()
 {
   NS_LOG_FUNCTION (this);
 
-  return m_pgwGwAddr;
+  return m_pgwUeGatewayAddr;
 }
 
 };  // namespace ns3

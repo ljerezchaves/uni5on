@@ -132,14 +132,6 @@ public:
   virtual Ipv4Address GetUeDefaultGatewayAddress ();
   // Inherited from EpcHelper.
 
-  /**
-   * TracedCallback signature for topology creation completed.
-   * \param devices The container of OpenFlow switch devices.
-   */
-  typedef void (*TopologyTracedCallback)(NetDeviceContainer devices);
-
-  /** Default GTP-U UDP port for tunnel sockets. */
-  static const uint16_t m_gtpuPort;
 
 protected:
   /** Destructor implementation. */
@@ -183,6 +175,25 @@ protected:
    */
   void InstallController (Ptr<EpcController> controller);
 
+private:
+  /**
+   * Create the P-GW node, configure it as an OpenFlow switch and attach it to
+   * the backhaul network infrastructure via S5 interface. Then, create the
+   * Internet web server node and connect it to the P-GW via SGi interface.
+   */
+  void ConfigurePgwAndInternet ();
+
+public:
+  /**
+   * TracedCallback signature for topology creation completed.
+   * \param devices The container of OpenFlow switch devices.
+   */
+  typedef void (*TopologyTracedCallback)(NetDeviceContainer devices);
+
+  /** Default GTP-U UDP port for tunnel sockets. */
+  static const uint16_t m_gtpuPort;
+
+protected:
   /** Trace source for new connection between two switches. */
   TracedCallback<Ptr<ConnectionInfo> > m_newConnTrace;
 
@@ -200,14 +211,7 @@ protected:
   uint16_t                      m_linkMtu;          //!< Link MTU.
 
 private:
-  /**
-   * Create the P-GW node, configure it as an OpenFlow switch and attach it to
-   * the backhaul network infrastructure via S5 interface. Then, create the
-   * Internet web server node and connect it to the P-GW via SGi interface.
-   */
-  void ConfigurePgwAndInternet ();
-
-  // Helper and connection attributes
+  // Helper and attributes for S5 interface
   CsmaHelper                    m_csmaHelper;       //!< Connection helper.
   DataRate                      m_linkRate;         //!< Link data rate.
   Time                          m_linkDelay;        //!< Link delay.
@@ -217,24 +221,21 @@ private:
   NetDeviceContainer            m_s5Devices;        //!< S5 devices.
   NetDeviceContainer            m_sgiDevices;       //!< SGi devices.
 
-  // IP addresses
-  Ipv4Address                   m_ueNetworkAddr;    //!< UE network address.
-  Ipv4Address                   m_s5NetworkAddr;    //!< S5 network address.
+  // IP addresses for interfaces
   Ipv4Address                   m_x2NetworkAddr;    //!< X2 network address.
-  Ipv4Address                   m_webNetworkAddr;   //!< Web network address.
-
-  // IP address helpers
-  Ipv4AddressHelper             m_ueAddrHelper;     //!< UE address helper.
-  Ipv4AddressHelper             m_s5AddrHelper;     //!< S5 address helper.
+  Ipv4Address                   m_s5NetworkAddr;    //!< S5 network address.
+  Ipv4Address                   m_sgiNetworkAddr;   //!< Web network address.
+  Ipv4Address                   m_ueNetworkAddr;    //!< UE network address.
   Ipv4AddressHelper             m_x2AddrHelper;     //!< X2 address helper.
-  Ipv4AddressHelper             m_webAddrHelper;    //!< Web address helper.
+  Ipv4AddressHelper             m_s5AddrHelper;     //!< S5 address helper.
+  Ipv4AddressHelper             m_sgiAddrHelper;    //!< Web address helper.
+  Ipv4AddressHelper             m_ueAddrHelper;     //!< UE address helper.
 
-  // P-GW
-  Ptr<Node>                     m_pgwNode;          //!< P-GW node.
-  Ptr<OFSwitch13Device>         m_pgwSwitchDev;     //!< P-GW switch device.
+  // P-GW user plane
+  Ptr<Node>                     m_pgwNode;          //!< P-GW user-plane node.
   Ipv4Address                   m_pgwSgiAddr;       //!< P-GW SGi IP addr.
   Ipv4Address                   m_pgwS5Addr;        //!< P-GW S5 IP addr.
-  Ipv4Address                   m_pgwGwAddr;        //!< P-GW gateway addr.
+  Ipv4Address                   m_pgwUeGatewayAddr; //!< P-GW gateway addr.
 
   // Internet web server
   Ptr<Node>                     m_webNode;          //!< Web server node.

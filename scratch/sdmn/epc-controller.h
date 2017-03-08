@@ -161,24 +161,6 @@ public:
    */
   static uint16_t GetDscpValue (EpsBearer::Qci qci);
 
-  /**
-   * TracedCallback signature for new bearer request.
-   * \param ok True when the bearer request/release processes succeeds.
-   * \param rInfo The routing information for this bearer tunnel.
-   */
-  typedef void (*BearerTracedCallback)(bool ok, Ptr<const RoutingInfo> rInfo);
-
-  /**
-   * TracedCallback signature for session created trace source.
-   * \param imsi The IMSI UE identifier.
-   * \param cellId The eNB CellID to which the IMSI UE is attached to.
-   * \param enbAddr The eNB IPv4 address.
-   * \param pgwAddr The P-GW IPv4 address.
-   * \param bearerList The list of context bearers created.
-   */
-  typedef void (*SessionCreatedTracedCallback)(uint64_t imsi, uint16_t cellId,
-      Ipv4Address enbAddr, Ipv4Address pgwAddr, BearerList_t bearerList);
-
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -272,9 +254,25 @@ private:
    */
   static QciDscpInitializer initializer;
 
-//
-// Member variables
-//
+public:
+  /**
+   * TracedCallback signature for new bearer request.
+   * \param ok True when the bearer request/release processes succeeds.
+   * \param rInfo The routing information for this bearer tunnel.
+   */
+  typedef void (*BearerTracedCallback)(bool ok, Ptr<const RoutingInfo> rInfo);
+
+  /**
+   * TracedCallback signature for session created trace source.
+   * \param imsi The IMSI UE identifier.
+   * \param cellId The eNB CellID to which the IMSI UE is attached to.
+   * \param enbAddr The eNB IPv4 address.
+   * \param pgwAddr The P-GW IPv4 address.
+   * \param bearerList The list of context bearers created.
+   */
+  typedef void (*SessionCreatedTracedCallback)(uint64_t imsi, uint16_t cellId,
+      Ipv4Address enbAddr, Ipv4Address pgwAddr, BearerList_t bearerList);
+
 protected:
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
   TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerRequestTrace;
