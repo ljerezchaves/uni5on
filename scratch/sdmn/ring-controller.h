@@ -83,12 +83,6 @@ private:
   Ptr<RingRoutingInfo> GetRingRoutingInfo (Ptr<RoutingInfo> rInfo);
 
   /**
-   * Save connection information between two switches for further usage.
-   * \param cInfo The connection information to save.
-   */
-  void SaveConnectionInfo (Ptr<ConnectionInfo> cInfo);
-
-  /**
    * Search for connection information between two switches by their indexes.
    * \param idx1 First switch index.
    * \param idx2 Second switch index.
@@ -218,16 +212,9 @@ private:
   uint16_t HopCounter (uint16_t srcIdx, uint16_t dstIdx,
                        RingRoutingInfo::RoutingPath path);
 
-  /**
-   * Map saving pair of switch indexes / connection information.
-   * The pair of switch datapath IDs are saved in increasing order.
-   */
-  typedef std::map<DpIdPair_t, Ptr<ConnectionInfo> > ConnInfoMap_t;
-
   /** Map saving IPv4 address / switch index. */
   typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;
 
-  ConnInfoMap_t             m_connections;    //!< Switch connections.
   IpSwitchMap_t             m_ipSwitchTable;  //!< IP / switch index table.
   OFSwitch13DeviceContainer m_ofDevices;      //!< OpenFlow devices.
   RoutingStrategy           m_strategy;       //!< Routing strategy in use.

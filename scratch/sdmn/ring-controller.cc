@@ -74,7 +74,6 @@ RingController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_connections.clear ();
   m_ipSwitchTable.clear ();
   EpcController::DoDispose ();
 }
@@ -103,8 +102,6 @@ void
 RingController::NewSwitchConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
-
-  SaveConnectionInfo (cInfo);
 
   // Connecting this controller to ConnectionInfo trace source
   cInfo->TraceConnectWithoutContext (
@@ -558,46 +555,12 @@ RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
   return ringInfo;
 }
 
-void
-RingController::SaveConnectionInfo (Ptr<ConnectionInfo> cInfo)
-{
-  NS_LOG_FUNCTION (this << cInfo);
-
-  // Respecting the increasing switch index order when saving connection data.
-  uint16_t dpId1 = cInfo->GetSwDpId (0);
-  uint16_t dpId2 = cInfo->GetSwDpId (1);
-
-  DpIdPair_t key;
-  key.first = std::min (dpId1, dpId2);
-  key.second = std::max (dpId1, dpId2);
-  std::pair<DpIdPair_t, Ptr<ConnectionInfo> > entry (key, cInfo);
-  std::pair<ConnInfoMap_t::iterator, bool> ret;
-  ret = m_connections.insert (entry);
-  if (ret.second == true)
-    {
-      NS_LOG_DEBUG ("New connection info saved:" <<
-                    " switch " << dpId1 << " port " << cInfo->GetPortNo (0) <<
-                    " switch " << dpId2 << " port " << cInfo->GetPortNo (1));
-      return;
-    }
-  NS_FATAL_ERROR ("Error saving connection info.");
-}
-
 Ptr<ConnectionInfo>
 RingController::GetConnectionInfo (uint16_t idx1, uint16_t idx2)
 {
   NS_LOG_FUNCTION (this << idx1 << idx2);
 
-  // Respecting the increasing switch index order when getting connection data.
-  DpIdPair_t key;
-  key.first = std::min (GetDpId (idx1), GetDpId (idx2));
-  key.second = std::max (GetDpId (idx1), GetDpId (idx2));
-  ConnInfoMap_t::iterator it = m_connections.find (key);
-  if (it != m_connections.end ())
-    {
-      return it->second;
-    }
-  NS_FATAL_ERROR ("No connection information available.");
+  return ConnectionInfo::GetPointer (GetDpId (idx1), GetDpId (idx2));
 }
 
 uint16_t

@@ -27,6 +27,9 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("ConnectionInfo");
 NS_OBJECT_ENSURE_REGISTERED (ConnectionInfo);
 
+// Initializing ConnectionInfo static members.
+ConnectionInfo::ConnInfoMap_t ConnectionInfo::m_connections;
+
 ConnectionInfo::ConnectionInfo ()
 {
   NS_LOG_FUNCTION (this);
@@ -66,6 +69,8 @@ ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
   m_nonBitRate [0] = 0;
   m_nonBitRate [1] = 0;
   ResetTxBytes ();
+
+  RegisterConnectionInfo (Ptr<ConnectionInfo> (this));
 }
 
 TypeId
@@ -379,6 +384,25 @@ ConnectionInfo::ReleaseGbrBitRate (uint64_t src, uint64_t dst,
   return released;
 }
 
+Ptr<ConnectionInfo>
+ConnectionInfo::GetPointer (uint64_t dpId1, uint64_t dpId2)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  DpIdPair_t key;
+  key.first  = std::min (dpId1, dpId2);
+  key.second = std::max (dpId1, dpId2);
+
+  Ptr<ConnectionInfo> cInfo = 0;
+  ConnInfoMap_t::iterator ret;
+  ret = ConnectionInfo::m_connections.find (key);
+  if (ret != ConnectionInfo::m_connections.end ())
+    {
+      cInfo = ret->second;
+    }
+  return cInfo;
+}
+
 bool
 ConnectionInfo::IncreaseGbrBitRate (Direction dir, uint64_t bitRate)
 {
@@ -492,6 +516,31 @@ ConnectionInfo::SetNonGbrAdjustStep (DataRate value)
     {
       NS_ABORT_MSG ("Non-GBR ajust step can't exceed 20% of link capacity.");
     }
+}
+
+void
+ConnectionInfo::RegisterConnectionInfo (Ptr<ConnectionInfo> cInfo)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  // Respecting the increasing switch index order when saving connection data.
+  uint16_t dpId1 = cInfo->GetSwDpId (0);
+  uint16_t dpId2 = cInfo->GetSwDpId (1);
+
+  DpIdPair_t key;
+  key.first  = std::min (dpId1, dpId2);
+  key.second = std::max (dpId1, dpId2);
+
+  std::pair<DpIdPair_t, Ptr<ConnectionInfo> > entry (key, cInfo);
+  std::pair<ConnInfoMap_t::iterator, bool> ret;
+  ret = ConnectionInfo::m_connections.insert (entry);
+  if (ret.second == false)
+    {
+      NS_FATAL_ERROR ("Existing connection information.");
+    }
+  NS_LOG_DEBUG ("New connection info saved:" <<
+                " switch " << dpId1 << " port " << cInfo->GetPortNo (0) <<
+                " switch " << dpId2 << " port " << cInfo->GetPortNo (1));
 }
 
 };  // namespace ns3

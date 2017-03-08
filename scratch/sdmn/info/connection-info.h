@@ -185,6 +185,15 @@ protected:
    * \return True if everything is ok, false otherwise.
    */
   bool ReleaseGbrBitRate (uint64_t src, uint64_t dst, uint64_t bitRate);
+  
+  /**
+   * Get the connection information from the global map for a pair of OpenFlow
+   * datapath IDs.
+   * \param dpId1 The first datapath ID.
+   * \param dpId2 The second datapath ID.
+   * \return The connection information for this pair of datapath IDs.
+   */
+  static Ptr<ConnectionInfo> GetPointer (uint64_t dpId1, uint64_t dpId2);
 
 private:
   /**
@@ -226,6 +235,12 @@ private:
    * \param value The value to set.
    */
   void SetNonGbrAdjustStep (DataRate value);
+  
+  /**
+   * Register the connection information in global map for further usage.
+   * \param cInfo The connection information to save.
+   */
+  static void RegisterConnectionInfo (Ptr<ConnectionInfo> cInfo);
 
   /** Non-GBR allowed bit rate adjusted trace source. */
   TracedCallback<Ptr<ConnectionInfo> > m_nonAdjustedTrace;
@@ -246,6 +261,13 @@ private:
   uint64_t          m_nonMinBitRate;    //!< Non-GBR maximum allowed bit rate.
   uint64_t          m_nonBitRate [2];   //!< Non-GBR allowed bit rate.
   uint32_t          m_nonTxBytes [2];   //!< Non-GBR transmitted bytes.
+
+  /**
+   * Map saving pair of switch datapath IDs / connection information.
+   * The pair of switch datapath IDs are saved in increasing order.
+   */
+  typedef std::map<DpIdPair_t, Ptr<ConnectionInfo> > ConnInfoMap_t;
+  static ConnInfoMap_t m_connections;    //!< Global connection info map.
 };
 
 };  // namespace ns3
