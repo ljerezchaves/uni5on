@@ -291,7 +291,7 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   enbInfo->SetSgwAddress (sgwAddress);
   enbInfo->SetS1apSapEnb (enbApp->GetS1apSapEnb ());
 
-  enbApp->SetS1apSapMme (SdmnMme::Get ()->GetS1apSapMme ());
+  enbApp->SetS1apSapMme (m_sdranCtrlApp->GetMme ()->GetS1apSapMme ());
 }
 
 

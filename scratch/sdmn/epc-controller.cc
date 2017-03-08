@@ -33,13 +33,9 @@ EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
 EpcController::QciDscpInitializer EpcController::initializer;
 
 EpcController::EpcController ()
-  : m_teidCount (0x0000000F),
-    m_s11SapMme (0)
+  : m_teidCount (0x0000000F)
 {
   NS_LOG_FUNCTION (this);
-
-  // The S-GW side of S11 AP
-  m_s11SapSgw = new MemberEpcS11SapSgw<EpcController> (this);
 }
 
 EpcController::~EpcController ()
@@ -369,8 +365,6 @@ EpcController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  delete (m_s11SapSgw);
-
   // Chain up.
   Object::DoDispose ();
 }
@@ -379,11 +373,6 @@ void
 EpcController::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
-
-  // TODO In the future, this will be moved to the RAN controller.
-  // Connect the MME to the S-GW control plane via S11 interface.
-  SdmnMme::Get ()->SetS11SapSgw (GetS11SapSgw ());
-  SetS11SapMme (SdmnMme::Get ()->GetS11SapMme ());
 
   // Chain up.
   ObjectBase::NotifyConstructionCompleted ();
@@ -701,128 +690,6 @@ EpcController::QciDscpInitializer::QciDscpInitializer ()
     {
       ret = EpcController::m_qciDscpTable.insert (entries [i]);
       NS_ASSERT_MSG (ret.second, "Can't insert DSCP map value.");
-    }
-}
-
-void
-EpcController::SetS11SapMme (EpcS11SapMme * s)
-{
-  m_s11SapMme = s;
-}
-
-EpcS11SapSgw*
-EpcController::GetS11SapSgw ()
-{
-  return m_s11SapSgw;
-}
-
-//
-// On the following Do* methods, note the trick to avoid the need for
-// allocating TEID on the S11 interface using the IMSI as identifier.
-//
-void
-EpcController::DoCreateSessionRequest (
-  EpcS11SapSgw::CreateSessionRequestMessage req)
-{
-  NS_LOG_FUNCTION (this << req.imsi);
-
-  uint16_t cellId = req.uli.gci;
-
-  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (req.imsi);
-  ueInfo->SetEnbAddress (enbInfo->GetEnbAddress ());
-
-  EpcS11SapMme::CreateSessionResponseMessage res;
-  res.teid = req.imsi;
-
-  std::list<EpcS11SapSgw::BearerContextToBeCreated>::iterator bit;
-  for (bit = req.bearerContextsToBeCreated.begin ();
-       bit != req.bearerContextsToBeCreated.end ();
-       ++bit)
-    {
-      // Check for available TEID.
-      NS_ABORT_IF (m_teidCount == 0xFFFFFFFF);
-      uint32_t teid = ++m_teidCount;
-
-      EpcS11SapMme::BearerContextCreated bearerContext;
-      bearerContext.sgwFteid.teid = teid;
-      bearerContext.sgwFteid.address = enbInfo->GetSgwAddress ();
-      bearerContext.epsBearerId = bit->epsBearerId;
-      bearerContext.bearerLevelQos = bit->bearerLevelQos;
-      bearerContext.tft = bit->tft;
-      res.bearerContextsCreated.push_back (bearerContext);
-    }
-
-  // Notify the controller of the new create session request accepted.
-  NotifySessionCreated (req.imsi, cellId, enbInfo->GetEnbAddress (),
-                        enbInfo->GetSgwAddress (), res.bearerContextsCreated);
-
-  m_s11SapMme->CreateSessionResponse (res);
-}
-
-void
-EpcController::DoModifyBearerRequest (
-  EpcS11SapSgw::ModifyBearerRequestMessage req)
-{
-  NS_LOG_FUNCTION (this << req.teid);
-
-  uint64_t imsi = req.teid;
-  uint16_t cellId = req.uli.gci;
-
-  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  ueInfo->SetEnbAddress (enbInfo->GetEnbAddress ());
-
-  // No actual bearer modification: for now we just support the minimum needed
-  // for path switch request (handover).
-  EpcS11SapMme::ModifyBearerResponseMessage res;
-  res.teid = imsi;
-  res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
-
-  m_s11SapMme->ModifyBearerResponse (res);
-}
-
-void
-EpcController::DoDeleteBearerCommand (
-  EpcS11SapSgw::DeleteBearerCommandMessage req)
-{
-  NS_LOG_FUNCTION (this << req.teid);
-
-  uint64_t imsi = req.teid;
-
-  EpcS11SapMme::DeleteBearerRequestMessage res;
-  res.teid = imsi;
-
-  std::list<EpcS11SapSgw::BearerContextToBeRemoved>::iterator bit;
-  for (bit = req.bearerContextsToBeRemoved.begin ();
-       bit != req.bearerContextsToBeRemoved.end ();
-       ++bit)
-    {
-      EpcS11SapMme::BearerContextRemoved bearerContext;
-      bearerContext.epsBearerId = bit->epsBearerId;
-      res.bearerContextsRemoved.push_back (bearerContext);
-    }
-
-  m_s11SapMme->DeleteBearerRequest (res);
-}
-
-void
-EpcController::DoDeleteBearerResponse (
-  EpcS11SapSgw::DeleteBearerResponseMessage req)
-{
-  NS_LOG_FUNCTION (this << req.teid);
-
-  uint64_t imsi = req.teid;
-
-  // FIXME No need of ueInfo.
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-
-  std::list<EpcS11SapSgw::BearerContextRemovedSgwPgw>::iterator bit;
-  for (bit = req.bearerContextsRemoved.begin ();
-       bit != req.bearerContextsRemoved.end ();
-       ++bit)
-    {
-      // TODO Should remove entries from gateway?
     }
 }
 

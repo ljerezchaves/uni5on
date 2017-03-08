@@ -45,6 +45,7 @@ namespace ns3 {
  */
 class EpcController : public OFSwitch13Controller
 {
+  friend class SdranController;
   friend class MemberEpcS11SapSgw<EpcController>;
 
 public:
@@ -71,7 +72,6 @@ public:
    * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
    * \param bearer EpsBearer bearer QoS characteristics of the bearer.
    * \returns true if successful (the bearer creation process will proceed),
-   *          false otherwise (the bearer creation process will abort).
    */
   virtual bool RequestDedicatedBearer (
     EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
@@ -294,44 +294,12 @@ private:
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
   static QciDscpMap_t           m_qciDscpTable;   //!< DSCP mapped values.
 
-//
-// Everything below is from S-GW control plane.
-// FIXME Move to the SDRAN controller.
-//
-public:
-  /** \name Methods for the S-GW control plane. */
-  //\{
-  /**
-   * Set the MME side of the S11 SAP.
-   * \param s the MME side of the S11 SAP.
-   */
-  void SetS11SapMme (EpcS11SapMme * s);
-
-  /**
-   * Get the S-GW side of the S11 SAP.
-   * \return the SGW side of the S11 SAP.
-   */
-  EpcS11SapSgw* GetS11SapSgw ();
-  //\}
-
-private:
-  /** \name Methods for the S11 SAP S-GW control plane. */
-  //\{
-  void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
-  void DoModifyBearerRequest (EpcS11SapSgw::ModifyBearerRequestMessage msg);
-  void DoDeleteBearerCommand (EpcS11SapSgw::DeleteBearerCommandMessage req);
-  void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage req);
-  //\}
-
   /**
    * TEID counter, used to allocate new GTP-U TEID values.
    * \internal This counter is initialized at 0x0000000F, reserving the first
    *           values for controller usage.
    */
   uint32_t m_teidCount;
-
-  EpcS11SapMme* m_s11SapMme;      //!< MME side of the S11 SAP
-  EpcS11SapSgw* m_s11SapSgw;      //!< S-GW side of the S11 SAP
 };
 
 };  // namespace ns3

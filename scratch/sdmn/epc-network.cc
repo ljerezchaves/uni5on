@@ -188,6 +188,7 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
   Ptr<Node> sgwNode = sdranCloud->GetSgwNode ();
   Ptr<OFSwitch13Device> sgwSwitchDev = sdranCloud->GetSgwSwitchDevice ();
   Ptr<SdranController> sdranCtrlApp = sdranCloud->GetControllerApp ();
+  sdranCtrlApp->SetEpcController (m_epcCtrlApp);
 
   // Get the switch datapath ID on the backhaul network to attach the S-GW.
   uint64_t swDpId = TopologyGetSgwSwitch (sdranCloud);

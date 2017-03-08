@@ -33,7 +33,7 @@ SdranController::SdranController ()
   // The S-GW side of S11 AP
   m_s11SapSgw = new MemberEpcS11SapSgw<SdranController> (this);
 
-  m_mme = SdmnMme::Get ();    // FIXME should be independent.
+  m_mme = CreateObject<SdmnMme> ();
   m_mme->SetS11SapSgw (m_s11SapSgw);
   m_s11SapMme = m_mme->GetS11SapMme ();
 }
@@ -48,18 +48,7 @@ SdranController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SdranController")
     .SetParent<OFSwitch13Controller> ()
-    .AddTraceSource ("BearerRequest", "The bearer request trace source.",
-                     MakeTraceSourceAccessor (
-                       &SdranController::m_bearerRequestTrace),
-                     "ns3::SdranController::BearerTracedCallback")
-    .AddTraceSource ("BearerRelease", "The bearer release trace source.",
-                     MakeTraceSourceAccessor (
-                       &SdranController::m_bearerReleaseTrace),
-                     "ns3::SdranController::BearerTracedCallback")
-    .AddTraceSource ("SessionCreated", "The session created trace source.",
-                     MakeTraceSourceAccessor (
-                       &SdranController::m_sessionCreatedTrace),
-                     "ns3::SdranController::SessionCreatedTracedCallback")
+    .AddConstructor<SdranController> ()
   ;
   return tid;
 }
@@ -71,7 +60,7 @@ SdranController::RequestDedicatedBearer (
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
   // TODO
-  return true;
+  return m_epcCtrlApp->RequestDedicatedBearer (bearer, imsi, cellId, teid);
 }
 
 bool
@@ -81,7 +70,7 @@ SdranController::ReleaseDedicatedBearer (
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
   // TODO
-  return true;
+  return m_epcCtrlApp->ReleaseDedicatedBearer (bearer, imsi, cellId, teid);
 }
 
 void
@@ -92,6 +81,7 @@ SdranController::NotifySessionCreated (
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << pgwAddr);
 
   // TODO
+  m_epcCtrlApp->NotifySessionCreated (imsi, cellId, enbAddr, pgwAddr, bearerList);
 }
 
 void
@@ -101,7 +91,23 @@ SdranController::NotifyS5Attach (
 {
   NS_LOG_FUNCTION (this << swtchDev << portNo << gwDev << gwIp);
 
-  // TODO
+  // TODO FIXME
+}
+
+void
+SdranController::SetEpcController (Ptr<EpcController> epcCtrlApp)
+{
+  NS_LOG_FUNCTION (this << epcCtrlApp);
+
+  m_epcCtrlApp = epcCtrlApp;
+}
+
+Ptr<SdmnMme>
+SdranController::GetMme (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_mme;
 }
 
 void

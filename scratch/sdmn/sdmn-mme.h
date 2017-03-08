@@ -39,8 +39,7 @@ class NetDevice;
  * instances we want at different places that they all will work over the same
  * data.
  */
-class SdmnMme : public Object,
-                public Singleton<SdmnMme>                // FIXME no singleton.
+class SdmnMme : public Object
 {
   friend class MemberEpcS1apSapMme<SdmnMme>;
   friend class MemberEpcS11SapMme<SdmnMme>;

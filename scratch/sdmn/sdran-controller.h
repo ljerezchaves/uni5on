@@ -30,6 +30,7 @@
 #include "info/ue-info.h"
 #include "info/enb-info.h"
 #include "sdmn-mme.h"
+#include "epc-controller.h"
 
 namespace ns3 {
 
@@ -119,6 +120,19 @@ public:
     Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev,
     Ipv4Address gwIp);
 
+  /**
+   * Set the EPC controller application pointer on this SDRAN controller to
+   * simplify the communication between controllers on the S5 interface.
+   * \param epcCtrlApp The EPC controller application.
+   */
+  void SetEpcController (Ptr<EpcController> epcCtrlApp);
+
+  /**
+   * Get a pointer to the MME element associated to this SDRAN controller.
+   * \return The MME element.
+   */
+  Ptr<SdmnMme> GetMme (void) const;
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -144,28 +158,16 @@ private:
   //\}
 
 protected:
-  /** The bearer request trace source, fired at RequestDedicatedBearer. */
-  TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerRequestTrace;
-
-  /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
-  TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerReleaseTrace;
-
-  /** The context created trace source, fired at NotifySessionCreated. */
-  TracedCallback<uint64_t, uint16_t, Ipv4Address, Ipv4Address, BearerList_t>
-  m_sessionCreatedTrace;
+  uint32_t m_teidCount; // FIXME remover
 
 private:
-  /**
-   * TEID counter, used to allocate new GTP-U TEID values.
-   * \internal This counter is initialized at 0x0000000F, reserving the first
-   *           values for controller usage.
-   */
-  uint32_t m_teidCount;
-
+  // EPC controller.
+   Ptr<EpcController>   m_epcCtrlApp;   //!< EPC controller app.
+   
   // MME communication.
-  Ptr<SdmnMme>  m_mme;            //!< MME element.
-  EpcS11SapMme* m_s11SapMme;      //!< MME side of the S11 SAP.
-  EpcS11SapSgw* m_s11SapSgw;      //!< S-GW side of the S11 SAP.
+  Ptr<SdmnMme>          m_mme;          //!< MME element.
+  EpcS11SapMme*         m_s11SapMme;    //!< MME side of the S11 SAP.
+  EpcS11SapSgw*         m_s11SapSgw;    //!< S-GW side of the S11 SAP.
 };
 
 };  // namespace ns3
