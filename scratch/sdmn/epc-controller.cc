@@ -33,14 +33,10 @@ EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
 EpcController::QciDscpInitializer EpcController::initializer;
 
 EpcController::EpcController ()
-  : m_admissionStats (0),
-    m_teidCount (0x0000000F),
+  : m_teidCount (0x0000000F),
     m_s11SapMme (0)
 {
   NS_LOG_FUNCTION (this);
-
-  // Creating the admission stats calculator for this OpenFlow controller
-  m_admissionStats = CreateObject<AdmissionStatsCalculator> ();
 
   // The S-GW side of S11 AP
   m_s11SapSgw = new MemberEpcS11SapSgw<EpcController> (this);
@@ -372,8 +368,6 @@ EpcController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_admissionStats = 0;
-
   delete (m_s11SapSgw);
 
   // Chain up.
@@ -389,15 +383,6 @@ EpcController::NotifyConstructionCompleted ()
   // Connect the MME to the S-GW control plane via S11 interface.
   SdmnMme::Get ()->SetS11SapSgw (GetS11SapSgw ());
   SetS11SapMme (SdmnMme::Get ()->GetS11SapMme ());
-
-  // Connect the admission stats calculator
-  TraceConnectWithoutContext (
-    "BearerRequest", MakeCallback (
-      &AdmissionStatsCalculator::NotifyBearerRequest, m_admissionStats));
-
-  TraceConnectWithoutContext (
-    "BearerRelease", MakeCallback (
-      &AdmissionStatsCalculator::NotifyBearerRelease, m_admissionStats));
 
   // Chain up.
   ObjectBase::NotifyConstructionCompleted ();

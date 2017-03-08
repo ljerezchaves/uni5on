@@ -25,6 +25,9 @@
 #include "lte-network.h"
 #include "ring-network.h"
 #include "traffic-helper.h"
+#include "stats/backhaul-stats-calculator.h"
+#include "stats/traffic-stats-calculator.h"
+#include "stats/admission-stats-calculator.h"
 
 using namespace ns3;
 using namespace ns3::ofs;
@@ -125,18 +128,27 @@ main (int argc, char *argv[])
 
   // Create the simulation scenario.
   // The following objects must be created in this order:
-  // * The OpenFlow EPC network
+  // * The OpenFlow backhaul stats calculator
+  // * The OpenFlow EPC backhaul network
   // * The LTE radio access network
   // * The traffic helper for applications
+  // * The traffic and admission stats calculators
   NS_LOG_INFO ("Creating simulation scenario...");
 
-  Ptr<RingNetwork>   ofNetwork;
-  Ptr<LteNetwork>    lteNetwork;
-  Ptr<TrafficHelper> trafficHelper;
+  Ptr<BackhaulStatsCalculator> backhaulStats =
+    CreateObject<BackhaulStatsCalculator> ();
 
-  ofNetwork     = CreateObject<RingNetwork> ();
-  lteNetwork    = CreateObject<LteNetwork> (ofNetwork);
-  trafficHelper = CreateObject<TrafficHelper> (ofNetwork, lteNetwork);
+  Ptr<RingNetwork> ofNetwork =
+    CreateObject<RingNetwork> (backhaulStats);
+  Ptr<LteNetwork> lteNetwork =
+    CreateObject<LteNetwork> (ofNetwork);
+  Ptr<TrafficHelper> trafficHelper =
+    CreateObject<TrafficHelper> (ofNetwork, lteNetwork);
+
+  Ptr<TrafficStatsCalculator> trafficStats =
+    CreateObject<TrafficStatsCalculator> ();
+  Ptr<AdmissionStatsCalculator> admissionStats =
+    CreateObject<AdmissionStatsCalculator> ();
 
   // Populating routing and ARP tables. The 'perfect' ARP used here comes from
   // the patch at https://www.nsnam.org/bugzilla/show_bug.cgi?id=187. This

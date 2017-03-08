@@ -39,7 +39,7 @@ class TrafficStatsCalculator : public Object
 {
 public:
   TrafficStatsCalculator ();          //!< Default constructor.
-  virtual ~TrafficStatsCalculator (); //!< Default destructor.
+  virtual ~TrafficStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -111,14 +111,14 @@ private:
   typedef std::pair<Ptr<QosStatsCalculator>,
                     Ptr<QosStatsCalculator> > QosStatsPair_t;
 
-  /** A Map saving <GTP TEID / QoS stats pair >. */
+  /** A Map saving GTP TEID / QoS stats pair. */
   typedef std::map<uint32_t, QosStatsPair_t> TeidQosMap_t;
 
-  TeidQosMap_t              m_qosStats;     //!< TEID QoS statistics
-  std::string               m_appFilename;  //!< AppStats filename
-  Ptr<OutputStreamWrapper>  m_appWrapper;   //!< AppStats file wrapper
-  std::string               m_epcFilename;  //!< EpcStats filename
-  Ptr<OutputStreamWrapper>  m_epcWrapper;   //!< EpcStats file wrapper
+  TeidQosMap_t              m_qosStats;     //!< TEID QoS statistics.
+  std::string               m_appFilename;  //!< AppStats filename.
+  Ptr<OutputStreamWrapper>  m_appWrapper;   //!< AppStats file wrapper.
+  std::string               m_epcFilename;  //!< EpcStats filename.
+  Ptr<OutputStreamWrapper>  m_epcWrapper;   //!< EpcStats file wrapper.
 };
 
 } // namespace ns3

@@ -23,7 +23,6 @@
 #include "epc-controller.h"
 #include "pgw-user-app.h"
 #include "sdran-cloud.h"
-#include "stats/backhaul-stats-calculator.h"
 
 namespace ns3 {
 
@@ -38,27 +37,9 @@ EpcNetwork::EpcNetwork ()
     m_epcCtrlNode (0),
     m_ofSwitchHelper (0),
     m_pgwNode (0),
-    m_webNode (0),
-    m_epcStats (0)
+    m_webNode (0)
 {
   NS_LOG_FUNCTION (this);
-
-  // Let's use point to point connections for OpenFlow channel.
-  m_ofSwitchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
-      "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
-
-  // Creating network nodes.
-  m_webNode = CreateObject<Node> ();
-  Names::Add ("web", m_webNode);
-
-  m_pgwNode = CreateObject<Node> ();
-  Names::Add ("pgw", m_pgwNode);
-
-  m_epcCtrlNode = CreateObject<Node> ();
-  Names::Add ("ctrl", m_epcCtrlNode);
-
-  // Creating stats calculators.
-  m_epcStats = CreateObject<BackhaulStatsCalculator> ();
 }
 
 EpcNetwork::~EpcNetwork ()
@@ -300,7 +281,6 @@ EpcNetwork::DoDispose ()
   m_epcCtrlNode = 0;
   m_epcCtrlApp = 0;
   m_pgwNode = 0;
-  m_epcStats = 0;
 
   Object::DoDispose ();
 }
@@ -310,13 +290,19 @@ EpcNetwork::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Connect EPC stats calculator to trace sources *before* topology creation.
-  TraceConnectWithoutContext (
-    "TopologyBuilt", MakeCallback (
-      &BackhaulStatsCalculator::NotifyTopologyBuilt, m_epcStats));
-  TraceConnectWithoutContext (
-    "NewSwitchConnection", MakeCallback (
-      &BackhaulStatsCalculator::NotifyNewSwitchConnection, m_epcStats));
+  // Let's use point to point connections for OpenFlow channel.
+  m_ofSwitchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
+      "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
+
+  // Creating network nodes.
+  m_webNode = CreateObject<Node> ();
+  Names::Add ("web", m_webNode);
+
+  m_pgwNode = CreateObject<Node> ();
+  Names::Add ("pgw", m_pgwNode);
+
+  m_epcCtrlNode = CreateObject<Node> ();
+  Names::Add ("ctrl", m_epcCtrlNode);
 
   // Configuring CSMA helper for connecting EPC nodes (P-GW and S-GWs) to the
   // backhaul topology. This same helper will be used to connect the P-GW to

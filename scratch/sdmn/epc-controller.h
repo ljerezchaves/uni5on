@@ -32,7 +32,6 @@
 #include "info/gbr-info.h"
 #include "info/ue-info.h"
 #include "info/enb-info.h"
-#include "stats/admission-stats-calculator.h"
 
 namespace ns3 {
 
@@ -289,7 +288,6 @@ protected:
   static const uint16_t m_flowTimeout;        //!< Timeout for flow entries.
 
 private:
-  Ptr<AdmissionStatsCalculator> m_admissionStats; //!< Admission statistics.
   uint64_t                      m_pgwDpId;        //!< P-GW datapath ID.
   uint32_t                      m_pgwS5Port;      //!< P-GW S5 port no.
 

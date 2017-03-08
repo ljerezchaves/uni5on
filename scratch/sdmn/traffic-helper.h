@@ -26,7 +26,6 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include "apps/sdmn-app-helper.h"
-#include "stats/traffic-stats-calculator.h"
 
 namespace ns3 {
 
@@ -51,8 +50,8 @@ public:
    */
   TrafficHelper (Ptr<EpcNetwork> epcNetwork, Ptr<LteNetwork> lteNetwork);
 
-  TrafficHelper ();           //!< Default constructor
-  virtual ~TrafficHelper ();  //!< Dummy destructor, see DoDispose
+  TrafficHelper ();           //!< Default constructor.
+  virtual ~TrafficHelper ();  //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -68,7 +67,7 @@ public:
   void SetManagerAttribute (std::string name, const AttributeValue &value);
 
 protected:
-  /** Destructor implementation */
+  /** Destructor implementation. */
   virtual void DoDispose ();
 
   // Inherited from ObjectBase
@@ -169,39 +168,37 @@ private:
    */
   void EnableFastTraffic (bool fastTraffic);
 
-  ObjectFactory       m_managerFactory; //!< Traffic manager factory
+  ObjectFactory       m_managerFactory; //!< Traffic manager factory.
 
-  Ptr<EpcNetwork>     m_epcNetwork;     //!< The EPC + Internet network
-  Ptr<LteNetwork>     m_lteNetwork;     //!< The LTE network
+  Ptr<EpcNetwork>     m_epcNetwork;     //!< The LTE EPC helper.
+  Ptr<LteNetwork>     m_lteNetwork;     //!< The LTE network.
 
-  Ptr<Node>           m_webNode;        //!< Server node
-  Ipv4Address         m_webAddr;        //!< Server address
-  Ipv4Mask            m_webMask;        //!< Server address mask
+  Ptr<Node>           m_webNode;        //!< Server node.
+  Ipv4Address         m_webAddr;        //!< Server address.
+  Ipv4Mask            m_webMask;        //!< Server address mask.
 
-  Ptr<Node>           m_ueNode;         //!< Current client node
-  Ptr<NetDevice>      m_ueDev;          //!< Current client dev
-  Ipv4Address         m_ueAddr;         //!< Current client address
-  Ipv4Mask            m_ueMask;         //!< Current client address mask
-  Ptr<TrafficManager> m_ueManager;      //!< Current client traffic manager
+  Ptr<Node>           m_ueNode;         //!< Current client node.
+  Ptr<NetDevice>      m_ueDev;          //!< Current client dev.
+  Ipv4Address         m_ueAddr;         //!< Current client address.
+  Ipv4Mask            m_ueMask;         //!< Current client address mask.
+  Ptr<TrafficManager> m_ueManager;      //!< Current client traffic manager.
 
-  bool                m_gbrVoip;        //!< VoIP enable
-  bool                m_gbrLVid;        //!< GBR live streaming vide enable
-  bool                m_nonBVid;        //!< Buffered video enable
-  bool                m_nonLVid;        //!< Non-GBR live straming video enable
-  bool                m_nonHttp;        //!< HTTP enable
+  bool                m_gbrVoip;        //!< VoIP enable.
+  bool                m_gbrLVid;        //!< GBR live streaming vide enable.
+  bool                m_nonBVid;        //!< Buffered video enable.
+  bool                m_nonLVid;        //!< Non-GBR live straming enable.
+  bool                m_nonHttp;        //!< HTTP enable.
 
-  SdmnAppHelper       m_voipHelper;     //!< Voip application helper
-  SdmnAppHelper       m_rtVideoHelper;  //!< Real-time video application helper
-  SdmnAppHelper       m_stVideoHelper;  //!< Stored video application helper
-  SdmnAppHelper       m_httpHelper;     //!< HTTP application helper
+  SdmnAppHelper       m_voipHelper;     //!< Voip app helper.
+  SdmnAppHelper       m_rtVideoHelper;  //!< Real-time video app helper.
+  SdmnAppHelper       m_stVideoHelper;  //!< Stored video app helper.
+  SdmnAppHelper       m_httpHelper;     //!< HTTP app helper.
 
-  Ptr<UniformRandomVariable>  m_videoRng;      //!< Random video selection
-  static const std::string    m_videoDir;      //!< Video trace directory
-  static const std::string    m_videoTrace []; //!< Video trace filenames
-  static const uint64_t       m_gbrBitRate []; //!< Video gbr bitrate
-  static const uint64_t       m_mbrBitRate []; //!< Video max bitrate
-  
-  Ptr<TrafficStatsCalculator> m_trafficStats;  //!< Traffic stats calculator
+  Ptr<UniformRandomVariable>  m_videoRng;      //!< Random video selection.
+  static const std::string    m_videoDir;      //!< Video trace directory.
+  static const std::string    m_videoTrace []; //!< Video trace filenames.
+  static const uint64_t       m_gbrBitRate []; //!< Video gbr bitrate.
+  static const uint64_t       m_mbrBitRate []; //!< Video max bitrate.
 };
 
 };  // namespace ns3

@@ -230,22 +230,22 @@ private:
   /** Non-GBR allowed bit rate adjusted trace source. */
   TracedCallback<Ptr<ConnectionInfo> > m_nonAdjustedTrace;
 
-  SwitchData        m_switches [2];     //!< Switches metadata
-  Ptr<CsmaChannel>  m_channel;          //!< The CSMA link channel
+  SwitchData        m_switches [2];     //!< Switches metadata.
+  Ptr<CsmaChannel>  m_channel;          //!< The CSMA link channel.
 
-  double            m_gbrLinkQuota;     //!< GBR link-capacity reserved quota
-  uint64_t          m_gbrSafeguard;     //!< GBR safeguard bit rate
-  uint64_t          m_nonAdjustStep;    //!< Non-GBR bit rate adjustment step
+  double            m_gbrLinkQuota;     //!< GBR link-capacity reserved quota.
+  uint64_t          m_gbrSafeguard;     //!< GBR safeguard bit rate.
+  uint64_t          m_nonAdjustStep;    //!< Non-GBR bit rate adjustment step.
 
-  uint64_t          m_gbrMaxBitRate;    //!< GBR maximum allowed bit rate
-  uint64_t          m_gbrMinBitRate;    //!< GBR maximum allowed bit rate
-  uint64_t          m_gbrBitRate [2];   //!< GBR current reserved bit rate
-  uint32_t          m_gbrTxBytes [2];   //!< GBR transmitted bytes
+  uint64_t          m_gbrMaxBitRate;    //!< GBR maximum allowed bit rate.
+  uint64_t          m_gbrMinBitRate;    //!< GBR maximum allowed bit rate.
+  uint64_t          m_gbrBitRate [2];   //!< GBR current reserved bit rate.
+  uint32_t          m_gbrTxBytes [2];   //!< GBR transmitted bytes.
 
-  uint64_t          m_nonMaxBitRate;    //!< Non-GBR maximum allowed bit rate
-  uint64_t          m_nonMinBitRate;    //!< Non-GBR maximum allowed bit rate
-  uint64_t          m_nonBitRate [2];   //!< Non-GBR allowed bit rate
-  uint32_t          m_nonTxBytes [2];   //!< Non-GBR transmitted bytes
+  uint64_t          m_nonMaxBitRate;    //!< Non-GBR maximum allowed bit rate.
+  uint64_t          m_nonMinBitRate;    //!< Non-GBR maximum allowed bit rate.
+  uint64_t          m_nonBitRate [2];   //!< Non-GBR allowed bit rate.
+  uint32_t          m_nonTxBytes [2];   //!< Non-GBR transmitted bytes.
 };
 
 };  // namespace ns3

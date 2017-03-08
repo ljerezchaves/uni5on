@@ -165,8 +165,8 @@ private:
    */
   uint32_t m_teidCount;
 
-  EpcS11SapMme* m_s11SapMme;      //!< MME side of the S11 SAP
-  EpcS11SapSgw* m_s11SapSgw;      //!< S-GW side of the S11 SAP
+  EpcS11SapMme* m_s11SapMme;      //!< MME side of the S11 SAP.
+  EpcS11SapSgw* m_s11SapSgw;      //!< S-GW side of the S11 SAP.
 };
 
 };  // namespace ns3

@@ -22,11 +22,26 @@
 #include "ring-controller.h"
 #include "info/connection-info.h"
 #include "sdran-cloud.h"
+#include "stats/backhaul-stats-calculator.h"
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("RingNetwork");
 NS_OBJECT_ENSURE_REGISTERED (RingNetwork);
+
+RingNetwork::RingNetwork (Ptr<BackhaulStatsCalculator> backhaulStats)
+{
+  NS_LOG_FUNCTION (this << backhaulStats);
+
+  // Connect OpenFlow backhaul stats calculator to trace sources on this class.
+  // This connection must be performed before topology creation.
+  TraceConnectWithoutContext (
+    "TopologyBuilt", MakeCallback (
+      &BackhaulStatsCalculator::NotifyTopologyBuilt, backhaulStats));
+  TraceConnectWithoutContext (
+    "NewSwitchConnection", MakeCallback (
+      &BackhaulStatsCalculator::NotifyNewSwitchConnection, backhaulStats));
+}
 
 RingNetwork::RingNetwork ()
 {

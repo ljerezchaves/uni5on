@@ -42,6 +42,14 @@ AdmissionStatsCalculator::AdmissionStatsCalculator ()
     m_activeBearers (0)
 {
   NS_LOG_FUNCTION (this);
+
+  // Connect this stats calculator to required trace sources.
+  Config::ConnectWithoutContext (
+    "/NodeList/*/ApplicationList/*/$ns3::EpcController/BearerRequest",
+    MakeCallback (&AdmissionStatsCalculator::NotifyBearerRequest, this));
+  Config::ConnectWithoutContext (
+    "/NodeList/*/ApplicationList/*/$ns3::EpcController/BearerRelease",
+    MakeCallback (&AdmissionStatsCalculator::NotifyBearerRelease, this));
 }
 
 AdmissionStatsCalculator::~AdmissionStatsCalculator ()
@@ -57,13 +65,13 @@ AdmissionStatsCalculator::GetTypeId (void)
     .AddConstructor<AdmissionStatsCalculator> ()
     .AddAttribute ("AdmStatsFilename",
                    "Filename for bearer admission and counter statistics.",
-                   StringValue ("bearer-counters.log"),
+                   StringValue ("admission-counters.log"),
                    MakeStringAccessor (
                      &AdmissionStatsCalculator::m_admFilename),
                    MakeStringChecker ())
     .AddAttribute ("BrqStatsFilename",
                    "Filename for bearer request statistics.",
-                   StringValue ("bearer-requests.log"),
+                   StringValue ("admission-requests.log"),
                    MakeStringAccessor (
                      &AdmissionStatsCalculator::m_brqFilename),
                    MakeStringChecker ())

@@ -49,31 +49,31 @@ BackhaulStatsCalculator::GetTypeId (void)
     .AddConstructor<BackhaulStatsCalculator> ()
     .AddAttribute ("RegStatsFilename",
                    "Filename for GBR reservation statistics.",
-                   StringValue ("ofnetwork-reserve-gbr.log"),
+                   StringValue ("backhaul-reserve-gbr.log"),
                    MakeStringAccessor (
                      &BackhaulStatsCalculator::m_regFilename),
                    MakeStringChecker ())
     .AddAttribute ("RenStatsFilename",
                    "Filename for Non-GBR allowed bandwidth statistics.",
-                   StringValue ("ofnetwork-reserve-nongbr.log"),
+                   StringValue ("backhaul-reserve-nongbr.log"),
                    MakeStringAccessor (
                      &BackhaulStatsCalculator::m_renFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwbStatsFilename",
                    "Filename for network bandwidth statistics.",
-                   StringValue ("ofnetwork-throughput-all.log"),
+                   StringValue ("backhaul-throughput-all.log"),
                    MakeStringAccessor (
                      &BackhaulStatsCalculator::m_bwbFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwgStatsFilename",
                    "Filename for GBR bandwidth statistics.",
-                   StringValue ("ofnetwork-throughput-gbr.log"),
+                   StringValue ("backhaul-throughput-gbr.log"),
                    MakeStringAccessor (
                      &BackhaulStatsCalculator::m_bwgFilename),
                    MakeStringChecker ())
     .AddAttribute ("BwnStatsFilename",
                    "Filename for Non-GBR bandwidth statistics.",
-                   StringValue ("ofnetwork-throughput-nongbr.log"),
+                   StringValue ("backhaul-throughput-nongbr.log"),
                    MakeStringAccessor (
                      &BackhaulStatsCalculator::m_bwnFilename),
                    MakeStringChecker ());

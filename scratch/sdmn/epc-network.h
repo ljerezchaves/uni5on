@@ -29,7 +29,6 @@
 namespace ns3 {
 
 class ConnectionInfo;
-class BackhaulStatsCalculator;
 class EpcController;
 class SdranCloud;
 
@@ -45,8 +44,8 @@ class SdranCloud;
 class EpcNetwork : public EpcHelper
 {
 public:
-  EpcNetwork ();          //!< Default constructor
-  virtual ~EpcNetwork (); //!< Dummy destructor, see DoDispose
+  EpcNetwork ();          //!< Default constructor.
+  virtual ~EpcNetwork (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -200,28 +199,28 @@ protected:
   /** Trace source for connections between switches finished. */
   TracedCallback<OFSwitch13DeviceContainer> m_topoBuiltTrace;
 
-  // EPC controller
+  // EPC controller.
   Ptr<EpcController>            m_epcCtrlApp;       //!< EPC controller app.
   Ptr<Node>                     m_epcCtrlNode;      //!< EPC controller node.
 
-  // OpenFlow switches, helper and connection attribute
+  // OpenFlow switches, helper and connection attribute.
   NodeContainer                 m_ofSwitches;       //!< Switch nodes.
   OFSwitch13DeviceContainer     m_ofDevices;        //!< Switch devices.
   Ptr<OFSwitch13InternalHelper> m_ofSwitchHelper;   //!< Switch helper.
   uint16_t                      m_linkMtu;          //!< Link MTU.
 
 private:
-  // Helper and attributes for S5 interface
+  // Helper and attributes for S5 interface.
   CsmaHelper                    m_csmaHelper;       //!< Connection helper.
   DataRate                      m_linkRate;         //!< Link data rate.
   Time                          m_linkDelay;        //!< Link delay.
 
-  // EPC user-plane devices
+  // EPC user-plane devices.
   NetDeviceContainer            m_x2Devices;        //!< X2 devices.
   NetDeviceContainer            m_s5Devices;        //!< S5 devices.
   NetDeviceContainer            m_sgiDevices;       //!< SGi devices.
 
-  // IP addresses for interfaces
+  // IP addresses for interfaces.
   Ipv4Address                   m_x2NetworkAddr;    //!< X2 network address.
   Ipv4Address                   m_s5NetworkAddr;    //!< S5 network address.
   Ipv4Address                   m_sgiNetworkAddr;   //!< Web network address.
@@ -231,18 +230,15 @@ private:
   Ipv4AddressHelper             m_sgiAddrHelper;    //!< Web address helper.
   Ipv4AddressHelper             m_ueAddrHelper;     //!< UE address helper.
 
-  // P-GW user plane
+  // P-GW user plane.
   Ptr<Node>                     m_pgwNode;          //!< P-GW user-plane node.
   Ipv4Address                   m_pgwSgiAddr;       //!< P-GW SGi IP addr.
   Ipv4Address                   m_pgwS5Addr;        //!< P-GW S5 IP addr.
   Ipv4Address                   m_pgwUeGatewayAddr; //!< P-GW gateway addr.
 
-  // Internet web server
+  // Internet web server.
   Ptr<Node>                     m_webNode;          //!< Web server node.
   Ipv4Address                   m_webSgiAddr;       //!< Web server IP addr.
-
-  // Statistics calculator
-  Ptr<BackhaulStatsCalculator>  m_epcStats;         //!< Backhaul statistics.
 };
 
 };  // namespace ns3

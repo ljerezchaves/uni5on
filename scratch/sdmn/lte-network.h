@@ -92,25 +92,25 @@ private:
   /** Print LTE radio environment map. */
   void PrintRadioEnvironmentMap ();
 
-  uint32_t            m_nSdrans;      //!< Number of SDRAN clouds
-  uint32_t            m_nUes;         //!< Number of UEs
-  double              m_enbMargin;    //!< eNB coverage margin
-  double              m_ueHeight;     //!< UE height
-  bool                m_lteTrace;     //!< Enable LTE ASCII traces
-  bool                m_lteRem;       //!< Print the LTE REM
-  bool                m_ueMobility;   //!< Enable UE mobility
-  std::string         m_remFilename;  //!< LTE REM filename
-  SdranCloudContainer m_sdranClouds;  //!< SDRAN clouds
-  NodeContainer       m_enbNodes;     //!< eNB nodes
-  NetDeviceContainer  m_enbDevices;   //!< eNB devices
-  NodeContainer       m_ueNodes;      //!< UE nodes
-  NetDeviceContainer  m_ueDevices;    //!< UE devices
-  Rectangle           m_coverageArea; //!< LTE radio coverage area
+  uint32_t            m_nSdrans;      //!< Number of SDRAN clouds.
+  uint32_t            m_nUes;         //!< Number of UEs.
+  double              m_enbMargin;    //!< eNB coverage margin.
+  double              m_ueHeight;     //!< UE height.
+  bool                m_lteTrace;     //!< Enable LTE ASCII traces.
+  bool                m_lteRem;       //!< Print the LTE REM.
+  bool                m_ueMobility;   //!< Enable UE mobility.
+  std::string         m_remFilename;  //!< LTE REM filename.
+  SdranCloudContainer m_sdranClouds;  //!< SDRAN clouds.
+  NodeContainer       m_enbNodes;     //!< eNB nodes.
+  NetDeviceContainer  m_enbDevices;   //!< eNB devices.
+  NodeContainer       m_ueNodes;      //!< UE nodes.
+  NetDeviceContainer  m_ueDevices;    //!< UE devices.
+  Rectangle           m_coverageArea; //!< LTE radio coverage area.
 
-  Ptr<LteHexGridEnbTopologyHelper> m_topoHelper;  //!< Grid topology helper
-  Ptr<RadioEnvironmentMapHelper>   m_remHelper;   //!< Radio map helper
-  Ptr<LteHelper>                   m_lteHelper;   //!< LTE radio helper
-  Ptr<EpcNetwork>                  m_epcNetwork;  //!< EPC network
+  Ptr<LteHexGridEnbTopologyHelper> m_topoHelper;  //!< Grid topology helper.
+  Ptr<RadioEnvironmentMapHelper>   m_remHelper;   //!< Radio map helper.
+  Ptr<LteHelper>                   m_lteHelper;   //!< LTE radio helper.
+  Ptr<EpcNetwork>                  m_epcNetwork;  //!< EPC network.
 };
 
 };  // namespace ns3

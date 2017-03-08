@@ -26,6 +26,8 @@
 
 namespace ns3 {
 
+class BackhaulStatsCalculator;
+
 /**
  * \ingroup sdmn
  * This class creates and simple n-switch OpenFlow ring topology controlled by
@@ -35,6 +37,13 @@ namespace ns3 {
 class RingNetwork : public EpcNetwork
 {
 public:
+  /**
+   * This complete constructor connects the backhaul stats calculator to trace
+   * sources on this class first.
+   * \param backhaulStats The OpenFlow backhaul stats calculator.
+   */
+  RingNetwork (Ptr<BackhaulStatsCalculator> backhaulStats);
+
   RingNetwork ();           //!< Default constructor.
   virtual ~RingNetwork ();  //!< Dummy destructor, see DoDispose.
 

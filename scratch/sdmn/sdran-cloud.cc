@@ -40,11 +40,6 @@ SdranCloud::SdranCloud ()
 
   // Set the SDRAN cloud ID.
   m_sdranId = ++m_sdranCounter;
-
-  // Create the S-GW node and set its name.
-  m_sgwNode = CreateObject<Node> ();
-  std::string sgwName = "sgw" + m_sdranId;
-  Names::Add (sgwName, m_sgwNode);
 }
 
 SdranCloud::~SdranCloud ()
@@ -401,10 +396,14 @@ void
 SdranCloud::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
-  NS_LOG_INFO ("SDRAN cloud with " << m_nSites << " cell sites.");
+
+  // Let's use point to point connections for OpenFlow channel.
+  m_ofSwitchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
+      "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
   // Set the number of eNBs based on the number of cell sites.
   m_nEnbs = 3 * m_nSites;
+  NS_LOG_INFO ("SDRAN: " << m_nSites << " sites, " << m_nEnbs << " eNBs.");
 
   // Create the eNBs nodes and set their names.
   m_enbNodes.Create (m_nEnbs);
@@ -420,16 +419,27 @@ SdranCloud::NotifyConstructionCompleted ()
   MobilityHelper mobilityHelper;
   mobilityHelper.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobilityHelper.Install (m_enbNodes);
+  
+  // Create the S-GW node and set its name.
+  m_sgwNode = CreateObject<Node> ();
+  std::ostringstream sgwName;
+  sgwName << "sgw" << GetId ();
+  Names::Add (sgwName.str (), m_sgwNode);
 
-  // Configuring CSMA helper for connecting EPC nodes (P-GW and S-GWs) to the
-  // backhaul topology. This same helper will be used to connect the P-GW to
-  // the server node on the Internet.
+
+
+
+  // Configuring CSMA helper for connecting eNB nodes to the S-GW.
   m_csmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
   m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_linkRate));
   m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
 
   // Configure the S1-U address helper.
   m_s1uAddrHelper.SetBase (m_s1uNetworkAddr, "255.255.255.0");
+
+
+
+
 
   // Register this object and chain up
   RegisterSdranCloud (Ptr<SdranCloud> (this));

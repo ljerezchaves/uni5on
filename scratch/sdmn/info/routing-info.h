@@ -28,10 +28,10 @@
 
 namespace ns3 {
 
-/** EPS context bearer */
+/** EPS context bearer. */
 typedef EpcS11SapMme::BearerContextCreated ContextBearer_t;
 
-/** List of created context bearers */
+/** List of created context bearers. */
 typedef std::list<ContextBearer_t> BearerList_t;
 
 /**
@@ -55,7 +55,7 @@ public:
    * \param teid The TEID value.
    */
   RoutingInfo (uint32_t teid);
-  virtual ~RoutingInfo (); //!< Dummy destructor, see DoDispose
+  virtual ~RoutingInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -136,19 +136,19 @@ protected:
   static void RegisterRoutingInfo (Ptr<RoutingInfo> rInfo);
 
 private:
-  uint32_t          m_teid;         //!< GTP TEID
-  uint64_t          m_imsi;         //!< UE IMSI
-  uint16_t          m_cellId;       //!< eNB cell ID
-  uint64_t          m_pgwDpId;      //!< P-GW switch datapath id
-  uint64_t          m_enbDpId;      //!< eNB switch datapath id
-  Ipv4Address       m_pgwAddr;      //!< P-GW IPv4 address
-  Ipv4Address       m_enbAddr;      //!< eNB IPv4 address
-  uint16_t          m_priority;     //!< Flow priority
-  uint16_t          m_timeout;      //!< Flow idle timeout
-  bool              m_isDefault;    //!< This info is for default bearer
-  bool              m_isInstalled;  //!< Rule is installed into switches
-  bool              m_isActive;     //!< Application traffic is active
-  ContextBearer_t   m_bearer;       //!< EPS bearer information
+  uint32_t          m_teid;         //!< GTP TEID.
+  uint64_t          m_imsi;         //!< UE IMSI.
+  uint16_t          m_cellId;       //!< eNB cell ID.
+  uint64_t          m_pgwDpId;      //!< P-GW switch datapath id.
+  uint64_t          m_enbDpId;      //!< eNB switch datapath id.
+  Ipv4Address       m_pgwAddr;      //!< P-GW IPv4 address.
+  Ipv4Address       m_enbAddr;      //!< eNB IPv4 address.
+  uint16_t          m_priority;     //!< Flow priority.
+  uint16_t          m_timeout;      //!< Flow idle timeout.
+  bool              m_isDefault;    //!< This info is for default bearer.
+  bool              m_isInstalled;  //!< Rule is installed into switches.
+  bool              m_isActive;     //!< Application traffic is active.
+  ContextBearer_t   m_bearer;       //!< EPS bearer information.
 
   /** Map saving TEID / routing information. */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;

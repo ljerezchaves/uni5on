@@ -36,6 +36,7 @@ TrafficStatsCalculator::TrafficStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 
+  // Connect this stats calculator to required trace sources.
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uRx",
     MakeCallback (&TrafficStatsCalculator::EpcOutputPacket, this));

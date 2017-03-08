@@ -227,9 +227,6 @@ TrafficHelper::NotifyConstructionCompleted ()
   // Install the applications
   Install (m_lteNetwork->GetUeNodes (), m_lteNetwork->GetUeDevices ());
 
-  // Create the traffic stats calculator
-  m_trafficStats = CreateObject<TrafficStatsCalculator> ();
-
   // Chain up
   Object::NotifyConstructionCompleted ();
 }

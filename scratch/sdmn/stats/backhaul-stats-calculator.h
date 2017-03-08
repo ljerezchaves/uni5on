@@ -38,7 +38,7 @@ class BackhaulStatsCalculator : public Object
 {
 public:
   BackhaulStatsCalculator ();          //!< Default constructor.
-  virtual ~BackhaulStatsCalculator (); //!< Default destructor.
+  virtual ~BackhaulStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -82,18 +82,18 @@ private:
   /** A Vector of connection information objects. */
   typedef std::vector<Ptr<ConnectionInfo> > ConnInfoList_t;
 
-  ConnInfoList_t            m_connections;    //!< Switch connections
-  Time                      m_lastResetTime;  //!< Last reset time
-  std::string               m_regFilename;    //!< RegStats filename
-  Ptr<OutputStreamWrapper>  m_regWrapper;     //!< RegStats file wrapper
-  std::string               m_renFilename;    //!< RenStats filename
-  Ptr<OutputStreamWrapper>  m_renWrapper;     //!< RenStats file wrapper
-  std::string               m_bwbFilename;    //!< BwbStats filename
-  Ptr<OutputStreamWrapper>  m_bwbWrapper;     //!< BwbStats file wrapper
-  std::string               m_bwgFilename;    //!< BwgStats filename
-  Ptr<OutputStreamWrapper>  m_bwgWrapper;     //!< BwgStats file wrapper
-  std::string               m_bwnFilename;    //!< BwnStats filename
-  Ptr<OutputStreamWrapper>  m_bwnWrapper;     //!< BwnStats file wrapper
+  ConnInfoList_t            m_connections;    //!< Switch connections.
+  Time                      m_lastResetTime;  //!< Last reset time.
+  std::string               m_regFilename;    //!< RegStats filename.
+  Ptr<OutputStreamWrapper>  m_regWrapper;     //!< RegStats file wrapper.
+  std::string               m_renFilename;    //!< RenStats filename.
+  Ptr<OutputStreamWrapper>  m_renWrapper;     //!< RenStats file wrapper.
+  std::string               m_bwbFilename;    //!< BwbStats filename.
+  Ptr<OutputStreamWrapper>  m_bwbWrapper;     //!< BwbStats file wrapper.
+  std::string               m_bwgFilename;    //!< BwgStats filename.
+  Ptr<OutputStreamWrapper>  m_bwgWrapper;     //!< BwgStats file wrapper.
+  std::string               m_bwnFilename;    //!< BwnStats filename.
+  Ptr<OutputStreamWrapper>  m_bwnWrapper;     //!< BwnStats file wrapper.
 };
 
 } // namespace ns3

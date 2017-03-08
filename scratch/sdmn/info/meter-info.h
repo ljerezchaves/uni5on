@@ -40,8 +40,8 @@ class MeterInfo : public Object
   friend class RingController;
 
 public:
-  MeterInfo ();          //!< Default constructor
-  virtual ~MeterInfo (); //!< Dummy destructor, see DoDispose
+  MeterInfo ();          //!< Default constructor.
+  virtual ~MeterInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Complete constructor.
@@ -91,13 +91,13 @@ protected:
   void SetInstalled (bool installed);
 
 private:
-  uint32_t          m_teid;           //!< GTP TEID
-  bool              m_isInstalled;    //!< True when this meter is installed
-  bool              m_hasDown;        //!< True for downlink meter
-  bool              m_hasUp;          //!< True for uplink meter
-  uint64_t          m_downBitRate;    //!< Downlink meter drop bit rate (bps)
-  uint64_t          m_upBitRate;      //!< Uplink meter drop bit rate (bps)
-  Ptr<RoutingInfo>  m_rInfo;          //!< Routing information
+  uint32_t          m_teid;           //!< GTP TEID.
+  bool              m_isInstalled;    //!< True when this meter is installed.
+  bool              m_hasDown;        //!< True for downlink meter.
+  bool              m_hasUp;          //!< True for uplink meter.
+  uint64_t          m_downBitRate;    //!< Downlink meter drop bit rate (bps).
+  uint64_t          m_upBitRate;      //!< Uplink meter drop bit rate (bps).
+  Ptr<RoutingInfo>  m_rInfo;          //!< Routing information.
 };
 
 };  // namespace ns3

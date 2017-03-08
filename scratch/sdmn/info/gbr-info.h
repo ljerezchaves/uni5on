@@ -40,8 +40,8 @@ class GbrInfo : public Object
   friend class RingController;
 
 public:
-  GbrInfo ();          //!< Default constructor
-  virtual ~GbrInfo (); //!< Dummy destructor, see DoDispose
+  GbrInfo ();          //!< Default constructor.
+  virtual ~GbrInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Complete constructor.
@@ -82,14 +82,14 @@ protected:
   void SetReserved (bool reserved);
 
 private:
-  uint32_t          m_teid;         //!< GTP TEID
-  uint8_t           m_dscp;         //!< DiffServ DSCP value for this bearer
-  bool              m_isReserved;   //!< True when resources are reserved
-  bool              m_hasDown;      //!< True for downlink reserve
-  bool              m_hasUp;        //!< True for uplink reserve
-  uint64_t          m_downBitRate;  //!< Downlink reserved bit rate
-  uint64_t          m_upBitRate;    //!< Uplink reserved bit rate
-  Ptr<RoutingInfo>  m_rInfo;        //!< Routing information
+  uint32_t          m_teid;         //!< GTP TEID.
+  uint8_t           m_dscp;         //!< DiffServ DSCP value for this bearer.
+  bool              m_isReserved;   //!< True when resources are reserved.
+  bool              m_hasDown;      //!< True for downlink reserve.
+  bool              m_hasUp;        //!< True for uplink reserve.
+  uint64_t          m_downBitRate;  //!< Downlink reserved bit rate.
+  uint64_t          m_upBitRate;    //!< Uplink reserved bit rate.
+  Ptr<RoutingInfo>  m_rInfo;        //!< Routing information.
 };
 
 };  // namespace ns3

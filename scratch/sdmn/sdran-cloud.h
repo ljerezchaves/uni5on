@@ -43,7 +43,7 @@ class SdranCloud : public Object
 
 public:
   SdranCloud ();           //!< Default constructor.
-  virtual ~SdranCloud ();  //!< Dummy destructor.
+  virtual ~SdranCloud ();  //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -113,14 +113,14 @@ private:
   uint32_t                      m_nEnbs;          //!< Number of eNBs.
   NodeContainer                 m_enbNodes;       //!< eNB nodes.
   
-  // OpenFlow switch helper
+  // OpenFlow switch helper.
   Ptr<OFSwitch13InternalHelper> m_ofSwitchHelper; //!< Switch helper.
 
-  // IP addresses for interfaces
+  // IP addresses for interfaces.
   Ipv4Address                   m_s1uNetworkAddr; //!< S1-U network address.
   Ipv4AddressHelper             m_s1uAddrHelper;  //!< S1-U address helper.
 
-  // S-GW user plane
+  // S-GW user plane.
   Ptr<Node>                     m_sgwNode;        //!< S-GW user-plane node.
   Ipv4Address                   m_sgwS1uAddr;     //!< S-GW S1-U IP addr.
   Ipv4Address                   m_sgwS5Addr;      //!< S-GW S5 IP addr.
@@ -131,10 +131,10 @@ private:
   Time                          m_linkDelay;      //!< Link delay.
   uint16_t                      m_linkMtu;        //!< Link MTU.
 
-  // EPC user-plane devices
+  // EPC user-plane devices.
   NetDeviceContainer            m_s1Devices;      //!< S1-U devices.
 
-  // SDRAN controller
+  // SDRAN controller.
   Ptr<SdranController>          m_sdranCtrlApp;   //!< SDRAN controller app.
   Ptr<Node>                     m_sdranCtrlNode;  //!< SDRAN controller node
   Ptr<SdmnMme>                  m_mme;            //!< MME element.

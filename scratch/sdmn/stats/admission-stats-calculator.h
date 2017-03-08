@@ -37,7 +37,7 @@ class AdmissionStatsCalculator : public Object
 {
 public:
   AdmissionStatsCalculator ();          //!< Default constructor.
-  virtual ~AdmissionStatsCalculator (); //!< Default destructor.
+  virtual ~AdmissionStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -45,6 +45,14 @@ public:
    */
   static TypeId GetTypeId (void);
 
+protected:
+  /** Destructor implementation. */
+  virtual void DoDispose ();
+
+  // Inherited from ObjectBase.
+  virtual void NotifyConstructionCompleted (void);
+
+private:
   /**
    * Notify a new bearer request.
    * \param accepted True when the bearer is accepted into network.
@@ -59,14 +67,6 @@ public:
    */
   void NotifyBearerRelease (bool success, Ptr<const RoutingInfo> rInfo);
 
-protected:
-  /** Destructor implementation */
-  virtual void DoDispose ();
-
-  // Inherited from ObjectBase.
-  virtual void NotifyConstructionCompleted (void);
-
-private:
   /**
    * Dump statistics into file.
    * \param nextDump The interval before next dump.
@@ -78,17 +78,17 @@ private:
    */
   void ResetCounters ();
 
-  uint32_t                  m_nonRequests;  //!< Number of non-GBR requests
-  uint32_t                  m_nonAccepted;  //!< Number of non-GBR accepted
-  uint32_t                  m_nonBlocked;   //!< Number of non-GBR blocked
-  uint32_t                  m_gbrRequests;  //!< Number of GBR requests
-  uint32_t                  m_gbrAccepted;  //!< Number of GBR accepted
-  uint32_t                  m_gbrBlocked;   //!< Number of GBR blocked
-  uint32_t                  m_activeBearers;//!< Number of active bearers
-  std::string               m_admFilename;  //!< AdmStats filename
-  Ptr<OutputStreamWrapper>  m_admWrapper;   //!< AdmStats file wrapper
-  std::string               m_brqFilename;  //!< BrqStats filename
-  Ptr<OutputStreamWrapper>  m_brqWrapper;   //!< BrqStats file wrapper
+  uint32_t                  m_nonRequests;  //!< Number of non-GBR requests.
+  uint32_t                  m_nonAccepted;  //!< Number of non-GBR accepted.
+  uint32_t                  m_nonBlocked;   //!< Number of non-GBR blocked.
+  uint32_t                  m_gbrRequests;  //!< Number of GBR requests.
+  uint32_t                  m_gbrAccepted;  //!< Number of GBR accepted.
+  uint32_t                  m_gbrBlocked;   //!< Number of GBR blocked.
+  uint32_t                  m_activeBearers;//!< Number of active bearers.
+  std::string               m_admFilename;  //!< AdmStats filename.
+  Ptr<OutputStreamWrapper>  m_admWrapper;   //!< AdmStats file wrapper.
+  std::string               m_brqFilename;  //!< BrqStats filename.
+  Ptr<OutputStreamWrapper>  m_brqWrapper;   //!< BrqStats file wrapper.
 };
 
 } // namespace ns3

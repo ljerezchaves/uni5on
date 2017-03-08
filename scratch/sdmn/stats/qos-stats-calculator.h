@@ -42,8 +42,8 @@ namespace ns3 {
 class QosStatsCalculator : public Object
 {
 public:
-  QosStatsCalculator ();  //!< Default constructor
-  virtual ~QosStatsCalculator (); //!< Default destructor
+  QosStatsCalculator ();          //!< Default constructor.
+  virtual ~QosStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -71,12 +71,12 @@ public:
   void NotifyRx (uint32_t rxBytes, Time timestamp = Simulator::Now ());
 
   /**
-   * Increase the meter dropped packet counter by one
+   * Increase the meter dropped packet counter by one.
    */
   void NotifyMeterDrop ();
 
   /**
-   * Increase the queue dropped packet counter by one
+   * Increase the queue dropped packet counter by one.
    */
   void NotifyQueueDrop ();
 
@@ -110,20 +110,20 @@ protected:
   virtual void DoDispose ();
 
 private:
-  uint32_t           m_txPackets;        //!< Number of TX packets
-  uint32_t           m_txBytes;          //!< Number of TX bytes
-  uint32_t           m_rxPackets;        //!< Number of RX packets
-  uint32_t           m_rxBytes;          //!< Number of RX bytes
-  Time               m_firstTxTime;      //!< First TX time
-  Time               m_firstRxTime;      //!< First RX time
-  Time               m_lastRxTime;       //!< Last RX time
-  Time               m_lastTimestamp;    //!< Last timestamp
-  int64_t            m_jitter;           //!< Jitter estimation
-  Time               m_delaySum;         //!< Sum of packet delays
+  uint32_t           m_txPackets;        //!< Number of TX packets.
+  uint32_t           m_txBytes;          //!< Number of TX bytes.
+  uint32_t           m_rxPackets;        //!< Number of RX packets.
+  uint32_t           m_rxBytes;          //!< Number of RX bytes.
+  Time               m_firstTxTime;      //!< First TX time.
+  Time               m_firstRxTime;      //!< First RX time.
+  Time               m_lastRxTime;       //!< Last RX time.
+  Time               m_lastTimestamp;    //!< Last timestamp.
+  int64_t            m_jitter;           //!< Jitter estimation.
+  Time               m_delaySum;         //!< Sum of packet delays.
 
-  // Fields used by EPC network monitoring
-  uint32_t           m_meterDrop;        //!< Counter for drops by meter rules
-  uint32_t           m_queueDrop;        //!< Counter for drops by queues
+  // Fields used by EPC network monitoring.
+  uint32_t           m_meterDrop;        //!< Counter for drops by meter rules.
+  uint32_t           m_queueDrop;        //!< Counter for drops by queues.
 };
 
 } // namespace ns3

@@ -44,8 +44,8 @@ class TrafficManager : public Object
   friend class TrafficHelper;
 
 public:
-  TrafficManager ();          //!< Default constructor
-  virtual ~TrafficManager (); //!< Dummy destructor, see DoDispose
+  TrafficManager ();          //!< Default constructor.
+  virtual ~TrafficManager (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -94,17 +94,17 @@ public:
                                BearerList_t bearerList);
 
 protected:
-  /** Destructor implementation */
+  /** Destructor implementation. */
   virtual void DoDispose ();
 
 private:
-  Ptr<ExponentialRandomVariable>      m_poissonRng; //!< Inter-arrival traffic
-  Ptr<EpcController>                  m_controller; //!< OpenFlow controller
-  std::vector<Ptr<SdmnClientApp> >    m_apps;       //!< Application list
+  Ptr<ExponentialRandomVariable>      m_poissonRng; //!< Inter-arrival traffic.
+  Ptr<EpcController>                  m_controller; //!< OpenFlow controller.
+  std::vector<Ptr<SdmnClientApp> >    m_apps;       //!< Application list.
 
-  uint64_t    m_imsi;         //!< UE IMSI identifier
-  uint16_t    m_cellId;       //!< Current eNB cellId
-  uint32_t    m_defaultTeid;  //!< TEID for default UE tunnel
+  uint64_t    m_imsi;         //!< UE IMSI identifier.
+  uint16_t    m_cellId;       //!< Current eNB cellId.
+  uint32_t    m_defaultTeid;  //!< TEID for default UE tunnel.
 };
 
 };  // namespace ns3
