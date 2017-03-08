@@ -165,7 +165,7 @@ EpcController::ReleaseDedicatedBearer (
 }
 
 void
-EpcController::NewPgwAttach (
+EpcController::NotifyPgwAttach (
   Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwSgiDev,
   Ipv4Address pgwSgiIp, uint32_t sgiPortNo, uint32_t s5PortNo,
   Ptr<NetDevice> webSgiDev, Ipv4Address webIp)
@@ -217,8 +217,9 @@ EpcController::NewPgwAttach (
 }
 
 void
-EpcController::NewS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo,
-                            Ptr<NetDevice> gwDev, Ipv4Address gwIp)
+EpcController::NotifyS5Attach (
+  Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev,
+  Ipv4Address gwIp)
 {
   NS_LOG_FUNCTION (this << swtchDev << portNo << gwDev << gwIp);
 
@@ -254,7 +255,7 @@ EpcController::NewS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo,
 }
 
 void
-EpcController::NewSwitchConnection (Ptr<ConnectionInfo> cInfo)
+EpcController::NotifySwitchConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
 }

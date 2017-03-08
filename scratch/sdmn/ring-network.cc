@@ -156,7 +156,7 @@ RingNetwork::TopologyCreate ()
             currPortDevice->GetChannel ()));
 
       // Fire trace source notifying new connection between switches.
-      m_epcCtrlApp->NewSwitchConnection (cInfo);
+      m_epcCtrlApp->NotifySwitchConnection (cInfo);
     }
 
   // Fire trace source notifying that all connections between switches are ok.

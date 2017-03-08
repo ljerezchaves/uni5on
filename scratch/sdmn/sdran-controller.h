@@ -115,7 +115,7 @@ public:
    * associated with the S-GW or P-GW node).
    * \param gwIp The IPv4 address assigned to the gwDev.
    */
-  virtual void NewS5Attach (
+  virtual void NotifyS5Attach (
     Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev,
     Ipv4Address gwIp);
 

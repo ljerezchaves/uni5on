@@ -79,8 +79,9 @@ RingController::DoDispose ()
 }
 
 void
-RingController::NewS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo,
-                             Ptr<NetDevice> gwDev, Ipv4Address gwIp)
+RingController::NotifyS5Attach (
+  Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev,
+  Ipv4Address gwIp)
 {
   NS_LOG_FUNCTION (this << swtchDev << portNo << gwDev << gwIp);
 
@@ -95,11 +96,11 @@ RingController::NewS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo,
     }
 
   // Chain up.
-  EpcController::NewS5Attach (swtchDev, portNo, gwDev, gwIp);
+  EpcController::NotifyS5Attach (swtchDev, portNo, gwDev, gwIp);
 }
 
 void
-RingController::NewSwitchConnection (Ptr<ConnectionInfo> cInfo)
+RingController::NotifySwitchConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
 

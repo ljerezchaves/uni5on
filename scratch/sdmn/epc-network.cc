@@ -235,11 +235,11 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
 
   // Notify the EPC controller of the new P-GW device attached to the Internet
   // and to the OpenFlow backhaul network.
-  m_epcCtrlApp->NewS5Attach (swDev, swS5PortNum, sgwS5Dev, sgwS5Addr);
+  m_epcCtrlApp->NotifyS5Attach (swDev, swS5PortNum, sgwS5Dev, sgwS5Addr);
 
   // Notify the SDRAN controller of the new S-GW device attached to the
   // OpenFlow backhaul network. FIXME
-  sdranCtrlApp->NewS5Attach (swDev, swS5PortNum, sgwS5Dev, sgwS5Addr);
+  sdranCtrlApp->NotifyS5Attach (swDev, swS5PortNum, sgwS5Dev, sgwS5Addr);
 }
 
 //
@@ -435,10 +435,10 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
 
   // Notify the EPC controller of the new P-GW device attached to the Internet
   // and to the OpenFlow backhaul network.
-  m_epcCtrlApp->NewS5Attach (swDev, swS5PortNum, pgwS5Dev, m_pgwS5Addr);
-  m_epcCtrlApp->NewPgwAttach (pgwSwitchDev, pgwSgiDev, m_pgwSgiAddr,
-                              pgwSgiPortNum, pgwS5PortNum, webSgiDev,
-                              m_webSgiAddr);
+  m_epcCtrlApp->NotifyS5Attach (swDev, swS5PortNum, pgwS5Dev, m_pgwS5Addr);
+  m_epcCtrlApp->NotifyPgwAttach (pgwSwitchDev, pgwSgiDev, m_pgwSgiAddr,
+                                 pgwSgiPortNum, pgwS5PortNum, webSgiDev,
+                                 m_webSgiAddr);
 }
 
 //

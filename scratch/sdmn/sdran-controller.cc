@@ -95,8 +95,9 @@ SdranController::NotifySessionCreated (
 }
 
 void
-SdranController::NewS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo,
-                              Ptr<NetDevice> gwDev, Ipv4Address gwIp)
+SdranController::NotifyS5Attach (
+  Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev,
+  Ipv4Address gwIp)
 {
   NS_LOG_FUNCTION (this << swtchDev << portNo << gwDev << gwIp);
 

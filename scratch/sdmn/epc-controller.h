@@ -103,34 +103,32 @@ public:
    * \param webSgiDev The SGi device attached to the Internet Web server.
    * \param webIp The IPv4 address assigned to the Internet Web server SGi dev.
    */
-  virtual void NewPgwAttach (
+  virtual void NotifyPgwAttach (
     Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwSgiDev,
     Ipv4Address pgwSgiIp, uint32_t sgiPortNo, uint32_t s5PortNo,
     Ptr<NetDevice> webSgiDev, Ipv4Address webIp);
 
   /**
-   * Notify this controller of a new S-GW or P-GW connected to the S5 OpenFlow
-   * network over some switch port.
-   * \param swtchDev The OpenFlow switch device.
+   * Notify this controller of a new S-GW or P-GW connected to OpenFlow
+   * backhaul network over the S5 interface.
+   * \param swtchDev The OpenFlow switch device on the backhaul network.
    * \param portNo The port number created at the OpenFlow switch.
-   * \param gwDev The device created at the S/P-GW node (this is not the one
-   * added as port to switch, this is the 'other' end of this connection,
-   * associated with the S-GW or P-GW node).
+   * \param gwDev The device created at the S/P-GW node.
    * \param gwIp The IPv4 address assigned to the gwDev.
    */
-  virtual void NewS5Attach (
+  virtual void NotifyS5Attach (
     Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev,
     Ipv4Address gwIp);
 
   /**
    * Notify this controller of a new connection between two switches in the
-   * OpenFlow network.
-   * \param cInfo The connection information and metadata.
+   * OpenFlow backhaul network.
+   * \param cInfo The connection information.
    */
-  virtual void NewSwitchConnection (Ptr<ConnectionInfo> cInfo);
+  virtual void NotifySwitchConnection (Ptr<ConnectionInfo> cInfo);
 
   /**
-   * Notify this controller that all connection between switches have already
+   * Notify this controller that all connections between switches have already
    * been configure and the topology is finished.
    * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
    */
