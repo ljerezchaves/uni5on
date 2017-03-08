@@ -29,6 +29,7 @@
 #include "info/routing-info.h"
 #include "info/ue-info.h"
 #include "info/enb-info.h"
+#include "sdmn-mme.h"
 
 namespace ns3 {
 
@@ -103,6 +104,19 @@ public:
   virtual void NotifySessionCreated (uint64_t imsi, uint16_t cellId,
     Ipv4Address enbAddr, Ipv4Address pgwAddr, BearerList_t bearerList);
 
+    /**
+   * Notify this controller of a new S-GW or P-GW connected to the S5 OpenFlow
+   * network over some switch port.
+   * \param swtchDev The OpenFlow switch device.
+   * \param portNo The port number created at the OpenFlow switch.
+   * \param gwDev The device created at the S/P-GW node (this is not the one
+   * added as port to switch, this is the 'other' end of this connection,
+   * associated with the S-GW or P-GW node).
+   * \param gwIp The IPv4 address assigned to the gwDev.
+   */
+  virtual void NewS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo,
+    Ptr<NetDevice> gwDev, Ipv4Address gwIp);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -118,6 +132,15 @@ protected:
     ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
   // Inherited from OFSwitch13Controller.
 
+private:
+  /** \name Methods for the S11 SAP S-GW control plane. */
+  //\{
+  void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
+  void DoModifyBearerRequest (EpcS11SapSgw::ModifyBearerRequestMessage msg);
+  void DoDeleteBearerCommand (EpcS11SapSgw::DeleteBearerCommandMessage req);
+  void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage req);
+  //\}
+
 protected:
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
   TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerRequestTrace;
@@ -129,35 +152,7 @@ protected:
   TracedCallback<uint64_t, uint16_t, Ipv4Address, Ipv4Address, BearerList_t>
     m_sessionCreatedTrace;
 
-//
-// Everything below is from S-GW control plane.
-// FIXME Move to the SDRAN controller.
-//
-public:
-  /** \name Methods for the S-GW control plane. */
-  //\{
-  /**
-   * Set the MME side of the S11 SAP.
-   * \param s the MME side of the S11 SAP.
-   */
-  void SetS11SapMme (EpcS11SapMme * s);
-
-  /**
-   * Get the S-GW side of the S11 SAP.
-   * \return the SGW side of the S11 SAP.
-   */
-  EpcS11SapSgw* GetS11SapSgw ();
-  //\}
-
 private:
-  /** \name Methods for the S11 SAP S-GW control plane. */
-  //\{
-  void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
-  void DoModifyBearerRequest (EpcS11SapSgw::ModifyBearerRequestMessage msg);
-  void DoDeleteBearerCommand (EpcS11SapSgw::DeleteBearerCommandMessage req);
-  void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage req);
-  //\}
-
   /**
    * TEID counter, used to allocate new GTP-U TEID values.
    * \internal This counter is initialized at 0x0000000F, reserving the first
@@ -165,6 +160,8 @@ private:
    */
   uint32_t m_teidCount;
 
+  // MME communication.
+  Ptr<SdmnMme>  m_mme;            //!< MME element.
   EpcS11SapMme* m_s11SapMme;      //!< MME side of the S11 SAP.
   EpcS11SapSgw* m_s11SapSgw;      //!< S-GW side of the S11 SAP.
 };

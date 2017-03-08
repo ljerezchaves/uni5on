@@ -28,7 +28,6 @@
 #include <ns3/ofswitch13-module.h>
 #include <ns3/lte-module.h>
 #include "sdran-controller.h"
-#include "sdmn-mme.h"
 
 namespace ns3 {
 
@@ -56,23 +55,14 @@ public:
    * \return The requested field.
    */
   //\{
-  uint32_t      GetId       (void) const;
-  uint32_t      GetNSites   (void) const;
-  uint32_t      GetNEnbs    (void) const;
-  Ptr<Node>     GetSgwNode  (void) const;
+  uint32_t              GetId              (void) const;
+  uint32_t              GetNSites          (void) const;
+  uint32_t              GetNEnbs           (void) const;
+  Ptr<Node>             GetSgwNode         (void) const;
+  NodeContainer         GetEnbNodes        (void) const;
+  Ptr<SdranController>  GetControllerApp   (void) const;
+  Ptr<OFSwitch13Device> GetSgwSwitchDevice (void) const;
   //\}
-
-  /**
-   * Get the container of eNBs nodes created by this SDRAN cloud.
-   * \return The container of eNB nodes.
-   */
-  NodeContainer GetEnbNodes (void) const;
-
-  /**
-   * Get the S-GW OpenFlow switch device.
-   * \return The OpenFlow switch device pointer.
-   */
-  Ptr<OFSwitch13Device> GetSgwSwitchDevice ();
 
   // Implementing some of the EpcHelper methods that are redirected to here
   // from the EpcNetwork class.
@@ -87,12 +77,12 @@ protected:
   // Inherited from ObjectBase.
   void NotifyConstructionCompleted (void);
 
-  /**
-   * Get the IP address for a given device.
-   * \param device The network device.
-   * \return The IP address assigned to this device.
-   */
-  Ipv4Address GetAddressForDevice (Ptr<NetDevice> device);
+//  /** FIXME remove?
+//   * Get the IP address for a given device.
+//   * \param device The network device.
+//   * \return The IP address assigned to this device.
+//   */
+//  Ipv4Address GetAddressForDevice (Ptr<NetDevice> device);
 
   /**
    * Get the SDRAN cloud pointer from the global map for this eNB node.
@@ -112,7 +102,7 @@ private:
   uint32_t                      m_nSites;         //!< Number of cell sites.
   uint32_t                      m_nEnbs;          //!< Number of eNBs.
   NodeContainer                 m_enbNodes;       //!< eNB nodes.
-  
+
   // OpenFlow switch helper.
   Ptr<OFSwitch13InternalHelper> m_ofSwitchHelper; //!< Switch helper.
 
@@ -137,7 +127,6 @@ private:
   // SDRAN controller.
   Ptr<SdranController>          m_sdranCtrlApp;   //!< SDRAN controller app.
   Ptr<Node>                     m_sdranCtrlNode;  //!< SDRAN controller node
-  Ptr<SdmnMme>                  m_mme;            //!< MME element.
 
   /** Map saving node / SDRAN pointer. */
   typedef std::map<Ptr<Node>, Ptr<SdranCloud> > NodeSdranMap_t;

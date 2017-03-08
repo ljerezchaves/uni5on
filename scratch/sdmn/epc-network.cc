@@ -197,12 +197,11 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
 {
   NS_LOG_FUNCTION (this << sdranCloud);
 
-  // Configure the S-GW node from the SDRAN cloud as an OpenFlow switch.
   Ptr<Node> sgwNode = sdranCloud->GetSgwNode ();
-  Ptr<OFSwitch13Device> sgwSwitchDev =
-    (m_ofSwitchHelper->InstallSwitch (sgwNode)).Get (0);
+  Ptr<OFSwitch13Device> sgwSwitchDev = sdranCloud->GetSgwSwitchDevice ();
+  Ptr<SdranController> sdranCtrlApp = sdranCloud->GetControllerApp ();
 
-  // Get the switch datapath ID on the backhaul network to attatch the S-GW.
+  // Get the switch datapath ID on the backhaul network to attach the S-GW.
   uint64_t swDpId = TopologyGetSgwSwitch (sdranCloud);
   Ptr<Node> swNode = GetSwitchNode (swDpId);
 
@@ -219,12 +218,13 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
   Names::Add (Names::FindName (sgwNode) + "+" +
               Names::FindName (swNode), sgwS5Dev);
 
-  // Add the swS5Dev device as OpenFlow switch port.
+  // Add the swS5Dev device as OpenFlow switch port on the backhaul switch.
   Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (swDpId);
   Ptr<OFSwitch13Port> swS5Port = swDev->AddSwitchPort (swS5Dev);
   uint32_t swS5PortNum = swS5Port->GetPortNo ();
 
-  // Configure the sgwS5Dev as standard device on S-GW node (with IP address).
+  // Add the sgwS5Dev as standard device on S-GW node.
+  // It will be connected to a logical port through the PgwUserApp.
   Ipv4InterfaceContainer sgwS5IfContainer;
   sgwS5IfContainer = m_s5AddrHelper.Assign (NetDeviceContainer (sgwS5Dev));
   Ipv4Address sgwS5Addr = sgwS5IfContainer.GetAddress (0);
@@ -238,16 +238,20 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
   sgwS5PortDev->SetAttribute ("Mtu", UintegerValue (3000));
   sgwS5PortDev->SetAddress (Mac48Address::Allocate ());
   Ptr<OFSwitch13Port> sgwS5Port = sgwSwitchDev->AddSwitchPort (sgwS5PortDev);
-  // uint32_t sgwS5PortNum = sgwS5Port->GetPortNo (); // FIXME
+  uint32_t sgwS5PortNum = sgwS5Port->GetPortNo ();
+  NS_UNUSED (sgwS5PortNum); // FIXME
 
-  // Create the P-GW S5 user-plane application.
-  Ptr<PgwUserApp> sgwUserApp = CreateObject <PgwUserApp> (sgwS5PortDev);
+  // Create the S-GW S5 user-plane application.
+  Ptr<PgwUserApp> sgwUserApp = CreateObject <PgwUserApp> (sgwS5PortDev);  // FIXME
   sgwNode->AddApplication (sgwUserApp);
 
-  // Notify the controller of the new S-GW device attached to the OpenFlow
-  // backhaul network.
+  // Notify the EPC controller of the new P-GW device attached to the Internet
+  // and to the OpenFlow backhaul network.
   m_epcCtrlApp->NewS5Attach (swDev, swS5PortNum, sgwS5Dev, sgwS5Addr);
-  // m_epcCtrlApp->NewSgwAttach (sgwSwitchDev, sgwS5PortNum); // FIXME
+
+  // Notify the SDRAN controller of the new S-GW device attached to the
+  // OpenFlow backhaul network. FIXME
+  sdranCtrlApp->NewS5Attach (swDev, swS5PortNum, sgwS5Dev, sgwS5Addr);
 }
 
 //
@@ -279,22 +283,21 @@ EpcNetwork::NotifyConstructionCompleted (void)
   m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_linkRate));
   m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
 
-  // Configure IP addresses (don't change the masks!)
-  // Use a /8 subnet for all UEs and the P-GW gateway address.
-  m_ueAddrHelper.SetBase (m_ueNetworkAddr, "255.0.0.0");
-
-  // Use a /30 subnet which can hold exactly two address for the Internet
-  // connection (one used by the server and the other is logically associated
-  // to the P-GW SGi interface).
+  // Use a /30 subnet which can hold exactly two addresses for the connection
+  // between the P-GW and Internet Web server over the SGi interface.
   m_sgiAddrHelper.SetBase (m_sgiNetworkAddr, "255.255.255.252");
 
-  // Use a /24 subnet which can hold up to 253 S-GWs and the P-GW addresses
-  // on the same S5 backhaul network.
+  // Use a /30 subnet which can hold exactly two addresses for the connection
+  // between two eNBs over the X2 interface.
+  m_x2AddrHelper.SetBase (m_x2NetworkAddr, "255.255.255.252");
+
+  // Use a /24 subnet which can hold up to 253 S-GWs and P-GWs elements
+  // connected to the S5 interface over the OpenFlow backhaul network.
   m_s5AddrHelper.SetBase (m_s5NetworkAddr, "255.255.255.0");
 
-  // Use a /30 subnet which can hold exactly two eNBs addresses for the point
-  // to point X2 interface.
-  m_x2AddrHelper.SetBase (m_x2NetworkAddr, "255.255.255.252");
+  // Configure IP addresses (don't change the masks!)
+  // Use a /8 subnet for all UEs and the P-GW gateway logical address.
+  m_ueAddrHelper.SetBase (m_ueNetworkAddr, "255.0.0.0");
 
   // Set the default P-GW gateway logical address, which will be used to set
   // the static route at all UEs.
@@ -331,7 +334,7 @@ EpcNetwork::NotifyConstructionCompleted (void)
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
   m_ofSwitchHelper->EnableDatapathStats (prefix + "ofswitch-stats", true);
-  
+
   // Chain up.
   Object::NotifyConstructionCompleted ();
 }
@@ -342,10 +345,10 @@ EpcNetwork::InstallController (Ptr<EpcController> controller)
   NS_LOG_FUNCTION (this << controller);
 
   NS_ASSERT_MSG (!m_epcCtrlApp, "Controller application already set.");
-  
+
   // Create the controller node.
   m_epcCtrlNode = CreateObject<Node> ();
-  Names::Add ("ctrl", m_epcCtrlNode);
+  Names::Add ("epcCtrl", m_epcCtrlNode);
 
   // Installing the controller application into controller node.
   m_epcCtrlApp = controller;
@@ -363,7 +366,7 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
   pgwSwitchDev = (m_ofSwitchHelper->InstallSwitch (m_pgwNode)).Get (0);
 
   // PART 1:
-  // Connect the P-GW to the Interent Web server.
+  // Connect the P-GW to the Internet Web server.
   //
   // Connect the P-GW to the Web server over SGi interface.
   m_sgiDevices = m_csmaHelper.Install (m_pgwNode, m_webNode);
@@ -397,9 +400,9 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
     m_ueNetworkAddr, Ipv4Mask ("255.0.0.0"), m_pgwSgiAddr, 1);
 
   // PART 2:
-  // Connect the P-GW to the OpenFlow backhaul infrasctructure.
+  // Connect the P-GW to the OpenFlow backhaul infrastructure.
   //
-  // Get the switch datapath ID on the backhaul network to attatch the P-GW.
+  // Get the switch datapath ID on the backhaul network to attach the P-GW.
   uint64_t swDpId = TopologyGetPgwSwitch (pgwSwitchDev);
   Ptr<Node> swNode = GetSwitchNode (swDpId);
 

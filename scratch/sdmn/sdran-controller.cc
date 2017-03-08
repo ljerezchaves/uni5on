@@ -32,6 +32,10 @@ SdranController::SdranController ()
 
   // The S-GW side of S11 AP
   m_s11SapSgw = new MemberEpcS11SapSgw<SdranController> (this);
+
+  m_mme = SdmnMme::Get ();    // FIXME should be independent.
+  m_mme->SetS11SapSgw (m_s11SapSgw);
+  m_s11SapMme = m_mme->GetS11SapMme ();
 }
 
 SdranController::~SdranController ()
@@ -91,6 +95,15 @@ SdranController::NotifySessionCreated (
 }
 
 void
+SdranController::NewS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo,
+                              Ptr<NetDevice> gwDev, Ipv4Address gwIp)
+{
+  NS_LOG_FUNCTION (this << swtchDev << portNo << gwDev << gwIp);
+
+  // TODO
+}
+
+void
 SdranController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
@@ -105,12 +118,6 @@ void
 SdranController::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
-
-  // TODO Create the MME object for this controller.
-
-  // Connect the MME to the S-GW via S11 interface.
-  // m_mme->SetS11SapSgw (GetS11SapSgw ());
-  // SetS11SapMme (m_mme->GetS11SapMme ());
 
   // Chain up.
   ObjectBase::NotifyConstructionCompleted ();
@@ -258,18 +265,6 @@ SdranController::HandleFlowRemoved (
 
   // TODO: implementar logica para regras removidas do S-GW.
   NS_ABORT_MSG ("Should not get here :/");
-}
-
-void
-SdranController::SetS11SapMme (EpcS11SapMme * s)
-{
-  m_s11SapMme = s;
-}
-
-EpcS11SapSgw*
-SdranController::GetS11SapSgw ()
-{
-  return m_s11SapSgw;
 }
 
 //

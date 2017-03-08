@@ -38,7 +38,7 @@ SdranCloud::SdranCloud ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Set the SDRAN cloud ID.
+  // Set the unique SDRAN cloud ID for this instance.
   m_sdranId = ++m_sdranCounter;
 }
 
@@ -121,6 +121,14 @@ SdranCloud::GetSgwNode (void) const
   return m_sgwNode;
 }
 
+Ptr<SdranController>
+SdranCloud::GetControllerApp (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sdranCtrlApp;
+}
+
 NodeContainer
 SdranCloud::GetEnbNodes (void) const
 {
@@ -130,7 +138,7 @@ SdranCloud::GetEnbNodes (void) const
 }
 
 Ptr<OFSwitch13Device>
-SdranCloud::GetSgwSwitchDevice ()
+SdranCloud::GetSgwSwitchDevice (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -397,7 +405,17 @@ SdranCloud::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Let's use point to point connections for OpenFlow channel.
+  // Configuring CSMA helper for connecting eNB nodes to the S-GW.
+  m_csmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
+  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_linkRate));
+  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
+
+  // Configure IP addresses (don't change the masks!)
+  // Use a /30 subnet which can hold exactly two addresses for the connection
+  // between an eNB and the S-GW over the S1-U interface.
+  m_s1uAddrHelper.SetBase (m_s1uNetworkAddr, "255.255.255.252");
+
+  // Create the OFSwitch13 helper using p2p connections for OpenFlow channel.
   m_ofSwitchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
       "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
@@ -419,43 +437,50 @@ SdranCloud::NotifyConstructionCompleted ()
   MobilityHelper mobilityHelper;
   mobilityHelper.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobilityHelper.Install (m_enbNodes);
-  
-  // Create the S-GW node and set its name.
+
+  // Create the S-GW node and configure it as an OpenFlow switch.
   m_sgwNode = CreateObject<Node> ();
   std::ostringstream sgwName;
   sgwName << "sgw" << GetId ();
   Names::Add (sgwName.str (), m_sgwNode);
 
+  Ptr<OFSwitch13Device> sgwSwitchDev;
+  sgwSwitchDev = (m_ofSwitchHelper->InstallSwitch (m_sgwNode)).Get (0);
 
+  // Create the controller node and install the SDRAN controller app on it.
+  m_sdranCtrlNode = CreateObject<Node> ();
+  std::ostringstream sgwCtrlName;
+  sgwCtrlName << "sdranCtrl" << GetId ();
+  Names::Add (sgwCtrlName.str (), m_sdranCtrlNode);
 
+  m_sdranCtrlApp = CreateObject<SdranController> ();
+  m_ofSwitchHelper->InstallController (m_sdranCtrlNode, m_sdranCtrlApp);
 
-  // Configuring CSMA helper for connecting eNB nodes to the S-GW.
-  m_csmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
-  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_linkRate));
-  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
+  // Let's connect the OpenFlow S-GW switch to the SDRAN controller. From this
+  // point on it is not possible to change the OpenFlow network configuration.
+  m_ofSwitchHelper->CreateOpenFlowChannels ();
 
-  // Configure the S1-U address helper.
-  m_s1uAddrHelper.SetBase (m_s1uNetworkAddr, "255.255.255.0");
-
-
-
-
+  // Enable S-GW OpenFlow switch statistics.
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+  m_ofSwitchHelper->EnableDatapathStats (prefix + "ofswitch-stats", true);
 
   // Register this object and chain up
   RegisterSdranCloud (Ptr<SdranCloud> (this));
   Object::NotifyConstructionCompleted ();
 }
 
-Ipv4Address
-SdranCloud::GetAddressForDevice (Ptr<NetDevice> device)
-{
-  NS_LOG_FUNCTION (this << device);
-
-  Ptr<Node> node = device->GetNode ();
-  Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
-  int32_t idx = ipv4->GetInterfaceForDevice (device);
-  return ipv4->GetAddress (idx, 0).GetLocal ();
-}
+// Ipv4Address
+// SdranCloud::GetAddressForDevice (Ptr<NetDevice> device)
+// {
+//   NS_LOG_FUNCTION (this << device);
+//
+//   Ptr<Node> node = device->GetNode ();
+//   Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
+//   int32_t idx = ipv4->GetInterfaceForDevice (device);
+//   return ipv4->GetAddress (idx, 0).GetLocal ();
+// }
 
 Ptr<SdranCloud>
 SdranCloud::GetPointer (Ptr<Node> enb)
