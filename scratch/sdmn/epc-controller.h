@@ -279,8 +279,7 @@ protected:
   TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerReleaseTrace;
 
   /** The context created trace source, fired at NotifySessionCreated. */
-  TracedCallback<uint64_t, uint16_t, Ipv4Address, Ipv4Address, BearerList_t>
-  m_sessionCreatedTrace;
+  TracedCallback<uint64_t, uint16_t, BearerList_t> m_sessionCreatedTrace;
 
   bool                  m_voipQos;            //!< VoIP QoS with queues.
   bool                  m_nonGbrCoexistence;  //!< Non-GBR coexistence.

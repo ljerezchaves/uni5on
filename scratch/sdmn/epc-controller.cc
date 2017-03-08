@@ -342,7 +342,7 @@ EpcController::NotifySessionCreated (
     }
 
   // Fire trace source notifying session created.
-  m_sessionCreatedTrace (imsi, cellId, enbAddr, pgwAddr, bearerList);
+  m_sessionCreatedTrace (imsi, cellId, bearerList);
 }
 
 uint16_t
