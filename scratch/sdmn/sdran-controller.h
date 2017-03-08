@@ -69,8 +69,8 @@ public:
    * \returns true if successful (the bearer creation process will proceed),
    *          false otherwise (the bearer creation process will abort).
    */
-  virtual bool RequestDedicatedBearer (EpsBearer bearer, uint64_t imsi,
-    uint16_t cellId, uint32_t teid);
+  virtual bool RequestDedicatedBearer (
+    EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
 
   /**
    * Release a dedicated EPS bearer.
@@ -85,8 +85,8 @@ public:
    * \param bearer EpsBearer bearer QoS characteristics of the bearer.
    * \returns true if successful, false otherwise.
    */
-  virtual bool ReleaseDedicatedBearer (EpsBearer bearer, uint64_t imsi,
-    uint16_t cellId, uint32_t teid);
+  virtual bool ReleaseDedicatedBearer (
+    EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
 
   /**
    * Notify this controller when the MME receives a context created response
@@ -101,10 +101,11 @@ public:
    * \param pgwAddr The P-GW IPv4 address.
    * \param bearerList The list of context bearers created.
    */
-  virtual void NotifySessionCreated (uint64_t imsi, uint16_t cellId,
-    Ipv4Address enbAddr, Ipv4Address pgwAddr, BearerList_t bearerList);
+  virtual void NotifySessionCreated (
+    uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address pgwAddr,
+    BearerList_t bearerList);
 
-    /**
+  /**
    * Notify this controller of a new S-GW or P-GW connected to the S5 OpenFlow
    * network over some switch port.
    * \param swtchDev The OpenFlow switch device.
@@ -114,8 +115,9 @@ public:
    * associated with the S-GW or P-GW node).
    * \param gwIp The IPv4 address assigned to the gwDev.
    */
-  virtual void NewS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo,
-    Ptr<NetDevice> gwDev, Ipv4Address gwIp);
+  virtual void NewS5Attach (
+    Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev,
+    Ipv4Address gwIp);
 
 protected:
   /** Destructor implementation. */
@@ -150,7 +152,7 @@ protected:
 
   /** The context created trace source, fired at NotifySessionCreated. */
   TracedCallback<uint64_t, uint16_t, Ipv4Address, Ipv4Address, BearerList_t>
-    m_sessionCreatedTrace;
+  m_sessionCreatedTrace;
 
 private:
   /**

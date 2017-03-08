@@ -73,8 +73,8 @@ public:
    * \returns true if successful (the bearer creation process will proceed),
    *          false otherwise (the bearer creation process will abort).
    */
-  virtual bool RequestDedicatedBearer (EpsBearer bearer, uint64_t imsi,
-    uint16_t cellId, uint32_t teid);
+  virtual bool RequestDedicatedBearer (
+    EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
 
   /**
    * Release a dedicated EPS bearer.
@@ -89,8 +89,8 @@ public:
    * \param bearer EpsBearer bearer QoS characteristics of the bearer.
    * \returns true if successful, false otherwise.
    */
-  virtual bool ReleaseDedicatedBearer (EpsBearer bearer, uint64_t imsi,
-    uint16_t cellId, uint32_t teid);
+  virtual bool ReleaseDedicatedBearer (
+    EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
 
   /**
    * Notify this controller of the P-GW and Internet Web server connection over
@@ -103,9 +103,10 @@ public:
    * \param webSgiDev The SGi device attached to the Internet Web server.
    * \param webIp The IPv4 address assigned to the Internet Web server SGi dev.
    */
-  virtual void NewPgwAttach (Ptr<OFSwitch13Device> pgwSwDev,
-    Ptr<NetDevice> pgwSgiDev, Ipv4Address pgwSgiIp, uint32_t sgiPortNo,
-    uint32_t s5PortNo, Ptr<NetDevice> webSgiDev, Ipv4Address webIp);
+  virtual void NewPgwAttach (
+    Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwSgiDev,
+    Ipv4Address pgwSgiIp, uint32_t sgiPortNo, uint32_t s5PortNo,
+    Ptr<NetDevice> webSgiDev, Ipv4Address webIp);
 
   /**
    * Notify this controller of a new S-GW or P-GW connected to the S5 OpenFlow
@@ -117,22 +118,20 @@ public:
    * associated with the S-GW or P-GW node).
    * \param gwIp The IPv4 address assigned to the gwDev.
    */
-  virtual void NewS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo,
-    Ptr<NetDevice> gwDev, Ipv4Address gwIp);
+  virtual void NewS5Attach (
+    Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev,
+    Ipv4Address gwIp);
 
   /**
    * Notify this controller of a new connection between two switches in the
-   * OpenFlow network. The user is supposed to connect this function as trace
-   * sink for EpcNetwork::NewSwitchConnection trace source.
+   * OpenFlow network.
    * \param cInfo The connection information and metadata.
    */
   virtual void NewSwitchConnection (Ptr<ConnectionInfo> cInfo);
 
   /**
    * Notify this controller that all connection between switches have already
-   * been configure and the topology is finished. The user is supposed to
-   * connect this function as trace sink for EpcNetwork::TopologyBuilt trace
-   * source.
+   * been configure and the topology is finished.
    * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
    */
   virtual void TopologyBuilt (OFSwitch13DeviceContainer devices);
@@ -150,8 +149,9 @@ public:
    * \param pgwAddr The P-GW IPv4 address.
    * \param bearerList The list of context bearers created.
    */
-  virtual void NotifySessionCreated (uint64_t imsi, uint16_t cellId,
-    Ipv4Address enbAddr, Ipv4Address pgwAddr, BearerList_t bearerList);
+  virtual void NotifySessionCreated (
+    uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address pgwAddr,
+    BearerList_t bearerList);
 
   /**
    * Retrieve stored mapped value for a specific EPS QCI.
@@ -181,8 +181,8 @@ protected:
    * \param buffer The buffered packet to apply this rule to.
    * \return True if configuration succeeded, false otherwise.
    */
-  virtual bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
-    uint32_t buffer = OFP_NO_BUFFER) = 0;
+  virtual bool TopologyInstallRouting (
+    Ptr<RoutingInfo> rInfo, uint32_t buffer = OFP_NO_BUFFER) = 0;
 
   /**
    * Remove TEID routing rules from switches.
@@ -223,8 +223,8 @@ protected:
    * \param rInfo The routing information to configure.
    * \param buffer The buffered packet to apply this rule to.
    */
-  void InstallPgwTftRules (Ptr<RoutingInfo> rInfo,
-                           uint32_t buffer = OFP_NO_BUFFER);
+  void InstallPgwTftRules (
+    Ptr<RoutingInfo> rInfo, uint32_t buffer = OFP_NO_BUFFER);
 
   // Inherited from OFSwitch13Controller.
   virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
@@ -241,7 +241,7 @@ private:
    */
   class QciDscpInitializer
   {
-  public:
+public:
     /** Initializer function. */
     QciDscpInitializer ();
   };
@@ -269,8 +269,9 @@ public:
    * \param pgwAddr The P-GW IPv4 address.
    * \param bearerList The list of context bearers created.
    */
-  typedef void (*SessionCreatedTracedCallback)(uint64_t imsi, uint16_t cellId,
-      Ipv4Address enbAddr, Ipv4Address pgwAddr, BearerList_t bearerList);
+  typedef void (*SessionCreatedTracedCallback)(
+    uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address pgwAddr,
+    BearerList_t bearerList);
 
 protected:
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
@@ -281,7 +282,7 @@ protected:
 
   /** The context created trace source, fired at NotifySessionCreated. */
   TracedCallback<uint64_t, uint16_t, Ipv4Address, Ipv4Address, BearerList_t>
-    m_sessionCreatedTrace;
+  m_sessionCreatedTrace;
 
   bool                  m_voipQos;            //!< VoIP QoS with queues.
   bool                  m_nonGbrCoexistence;  //!< Non-GBR coexistence.

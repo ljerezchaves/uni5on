@@ -78,17 +78,17 @@ private:
    */
   void ResetCounters ();
 
-  uint32_t                  m_nonRequests;  //!< Number of non-GBR requests.
-  uint32_t                  m_nonAccepted;  //!< Number of non-GBR accepted.
-  uint32_t                  m_nonBlocked;   //!< Number of non-GBR blocked.
-  uint32_t                  m_gbrRequests;  //!< Number of GBR requests.
-  uint32_t                  m_gbrAccepted;  //!< Number of GBR accepted.
-  uint32_t                  m_gbrBlocked;   //!< Number of GBR blocked.
-  uint32_t                  m_activeBearers;//!< Number of active bearers.
-  std::string               m_admFilename;  //!< AdmStats filename.
-  Ptr<OutputStreamWrapper>  m_admWrapper;   //!< AdmStats file wrapper.
-  std::string               m_brqFilename;  //!< BrqStats filename.
-  Ptr<OutputStreamWrapper>  m_brqWrapper;   //!< BrqStats file wrapper.
+  uint32_t                  m_nonRequests;    //!< Number of non-GBR requests.
+  uint32_t                  m_nonAccepted;    //!< Number of non-GBR accepted.
+  uint32_t                  m_nonBlocked;     //!< Number of non-GBR blocked.
+  uint32_t                  m_gbrRequests;    //!< Number of GBR requests.
+  uint32_t                  m_gbrAccepted;    //!< Number of GBR accepted.
+  uint32_t                  m_gbrBlocked;     //!< Number of GBR blocked.
+  uint32_t                  m_activeBearers;  //!< Number of active bearers.
+  std::string               m_admFilename;    //!< AdmStats filename.
+  Ptr<OutputStreamWrapper>  m_admWrapper;     //!< AdmStats file wrapper.
+  std::string               m_brqFilename;    //!< BrqStats filename.
+  Ptr<OutputStreamWrapper>  m_brqWrapper;     //!< BrqStats file wrapper.
 };
 
 } // namespace ns3

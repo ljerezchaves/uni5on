@@ -191,7 +191,7 @@ protected:
    * \return True if everything is ok, false otherwise.
    */
   bool ReleaseGbrBitRate (uint64_t src, uint64_t dst, uint64_t bitRate);
-  
+
   /**
    * Get the connection information from the global map for a pair of OpenFlow
    * datapath IDs.
@@ -247,7 +247,7 @@ private:
    * \param value The value to set.
    */
   void SetNonGbrAdjustStep (DataRate value);
-  
+
   /**
    * Register the connection information in global map for further usage.
    * \param cInfo The connection information to save.
