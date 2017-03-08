@@ -110,13 +110,7 @@ public:
    * interface over the backhaul network infrastructure.
    * \param sdranCloud The SDRAN cloud pointer.
    */
-  virtual void AddSdranCloud (Ptr<SdranCloud> sdranCloud);
-
-  /**
-   * Notify this helper that all SDRAN cloud objects are already connected to
-   * the OpenFlow backhaul infrastructure via the S5 interface.
-   */
-  void SdranCloudsDone (void);
+  virtual void AttachSdranCloud (Ptr<SdranCloud> sdranCloud);
 
   // Inherited from EpcHelper.
   virtual uint8_t ActivateEpsBearer (Ptr<NetDevice> ueLteDevice, uint64_t imsi,
@@ -130,7 +124,6 @@ public:
     NetDeviceContainer ueDevices);
   virtual Ipv4Address GetUeDefaultGatewayAddress ();
   // Inherited from EpcHelper.
-
 
 protected:
   /** Destructor implementation. */
@@ -176,11 +169,13 @@ protected:
 
 private:
   /**
-   * Create the P-GW node, configure it as an OpenFlow switch and attach it to
-   * the backhaul network infrastructure via S5 interface. Then, create the
-   * Internet web server node and connect it to the P-GW via SGi interface.
+   * Configure the pgwNode to work as the P-GW element for this network. This
+   * function will configure the P-GW user-plane as an OpenFlow switch and
+   * attach it to the backhaul network infrastructure via S5 interface. It will
+   * also connect the P-GW to the Internet web server node via SGi interface.
+   * \param pgwNode The node to configure as the P-GW element.
    */
-  void ConfigurePgwAndInternet ();
+  void AttachPgwNode (Ptr<Node> pgwNode);
 
 public:
   /**

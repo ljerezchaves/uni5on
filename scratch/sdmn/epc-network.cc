@@ -193,7 +193,7 @@ EpcNetwork::EnablePcap (std::string prefix, bool promiscuous)
 }
 
 void
-EpcNetwork::AddSdranCloud (Ptr<SdranCloud> sdranCloud)
+EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
 {
   NS_LOG_FUNCTION (this << sdranCloud);
 
@@ -250,24 +250,6 @@ EpcNetwork::AddSdranCloud (Ptr<SdranCloud> sdranCloud)
   // m_epcCtrlApp->NewSgwAttach (sgwSwitchDev, sgwS5PortNum); // FIXME
 }
 
-void
-EpcNetwork::SdranCloudsDone ()
-{
-  NS_LOG_FUNCTION (this);
-
-  // The OpenFlow backhaul network topology is done and all P/S-GW gateways are
-  // already connected to the S5 interface. Let's connect the OpenFlow switches
-  // to the EPC controller. From this point on it is not possible to change the
-  // OpenFlow network configuration.
-  m_ofSwitchHelper->CreateOpenFlowChannels ();
-
-  // Enable OpenFlow switch statistics.
-  StringValue stringValue;
-  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
-  std::string prefix = stringValue.Get ();
-  m_ofSwitchHelper->EnableDatapathStats (prefix + "ofswitch-stats", true);
-}
-
 //
 // Methods from EpcHelper are implemented at the end of this file.
 //
@@ -290,50 +272,66 @@ EpcNetwork::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Let's use point to point connections for OpenFlow channel.
-  m_ofSwitchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
-      "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
-
-  // Creating network nodes.
-  m_webNode = CreateObject<Node> ();
-  Names::Add ("web", m_webNode);
-
-  m_pgwNode = CreateObject<Node> ();
-  Names::Add ("pgw", m_pgwNode);
-
-  m_epcCtrlNode = CreateObject<Node> ();
-  Names::Add ("ctrl", m_epcCtrlNode);
-
-  // Configuring CSMA helper for connecting EPC nodes (P-GW and S-GWs) to the
+  // Configure CSMA helper for connecting EPC nodes (P-GW and S-GWs) to the
   // backhaul topology. This same helper will be used to connect the P-GW to
   // the server node on the Internet.
   m_csmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
   m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_linkRate));
   m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
 
-  // Configuring IP addresses (don't change the masks!)
-  // Using a /8 subnet for all UEs and the P-GW gateway address.
+  // Configure IP addresses (don't change the masks!)
+  // Use a /8 subnet for all UEs and the P-GW gateway address.
   m_ueAddrHelper.SetBase (m_ueNetworkAddr, "255.0.0.0");
 
-  // Using a /30 subnet which can hold exactly two address for the Internet
+  // Use a /30 subnet which can hold exactly two address for the Internet
   // connection (one used by the server and the other is logically associated
   // to the P-GW SGi interface).
   m_sgiAddrHelper.SetBase (m_sgiNetworkAddr, "255.255.255.252");
 
-  // Using a /24 subnet which can hold up to 253 S-GWs and the P-GW addresses
+  // Use a /24 subnet which can hold up to 253 S-GWs and the P-GW addresses
   // on the same S5 backhaul network.
   m_s5AddrHelper.SetBase (m_s5NetworkAddr, "255.255.255.0");
 
-  // Using a /30 subnet which can hold exactly two eNBs addresses for the point
+  // Use a /30 subnet which can hold exactly two eNBs addresses for the point
   // to point X2 interface.
   m_x2AddrHelper.SetBase (m_x2NetworkAddr, "255.255.255.252");
+
+  // Set the default P-GW gateway logical address, which will be used to set
+  // the static route at all UEs.
+  m_pgwUeGatewayAddr = m_ueAddrHelper.NewAddress ();
+  NS_LOG_DEBUG ("P-GW gateway address: " << GetUeDefaultGatewayAddress ());
+
+  // Create the OFSwitch13 helper using p2p connections for OpenFlow channel.
+  m_ofSwitchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
+      "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
+
+  // Create the Internet web server node.
+  m_webNode = CreateObject<Node> ();
+  Names::Add ("web", m_webNode);
+
+  InternetStackHelper internet;
+  internet.Install (m_webNode);
 
   // Create the OpenFlow backhaul topology.
   TopologyCreate ();
 
-  // Configuring the P-GW and the Internet topology.
-  ConfigurePgwAndInternet ();
+  // Create and attach the P-GW element.
+  Ptr<Node> pgwNode = CreateObject<Node> ();
+  Names::Add ("pgw", pgwNode);
+  AttachPgwNode (pgwNode);
 
+  // The OpenFlow backhaul network topology is done and the P-GW gateways are
+  // already connected to the S5 interface. Let's connect the OpenFlow switches
+  // to the EPC controller. From this point on it is not possible to change the
+  // OpenFlow network configuration.
+  m_ofSwitchHelper->CreateOpenFlowChannels ();
+
+  // Enable OpenFlow switch statistics.
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+  m_ofSwitchHelper->EnableDatapathStats (prefix + "ofswitch-stats", true);
+  
   // Chain up.
   Object::NotifyConstructionCompleted ();
 }
@@ -343,25 +341,31 @@ EpcNetwork::InstallController (Ptr<EpcController> controller)
 {
   NS_LOG_FUNCTION (this << controller);
 
-  // Installing the controller application into controller node.
   NS_ASSERT_MSG (!m_epcCtrlApp, "Controller application already set.");
+  
+  // Create the controller node.
+  m_epcCtrlNode = CreateObject<Node> ();
+  Names::Add ("ctrl", m_epcCtrlNode);
+
+  // Installing the controller application into controller node.
   m_epcCtrlApp = controller;
   m_ofSwitchHelper->InstallController (m_epcCtrlNode, m_epcCtrlApp);
 }
 
 void
-EpcNetwork::ConfigurePgwAndInternet ()
+EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
 {
   NS_LOG_FUNCTION (this);
 
   // Configure the P-GW node as an OpenFlow switch.
+  m_pgwNode = pgwNode;
   Ptr<OFSwitch13Device> pgwSwitchDev;
   pgwSwitchDev = (m_ofSwitchHelper->InstallSwitch (m_pgwNode)).Get (0);
 
+  // PART 1:
+  // Connect the P-GW to the Interent Web server.
   //
-  // The first part is to connect the P-GW node to the Interent Web server.
-  //
-  // Create the SGi interface.
+  // Connect the P-GW to the Web server over SGi interface.
   m_sgiDevices = m_csmaHelper.Install (m_pgwNode, m_webNode);
 
   Ptr<CsmaNetDevice> pgwSgiDev, webSgiDev;
@@ -378,14 +382,12 @@ EpcNetwork::ConfigurePgwAndInternet ()
   uint32_t pgwSgiPortNum = pgwSgiPort->GetPortNo ();
 
   // Set the IP address on the Internet Web server and P-GW SGi interfaces.
-  InternetStackHelper internet;
-  internet.Install (m_webNode);
   Ipv4InterfaceContainer sgiIfContainer;
   sgiIfContainer = m_sgiAddrHelper.Assign (NetDeviceContainer (m_sgiDevices));
   m_pgwSgiAddr = sgiIfContainer.GetAddress (0);
   m_webSgiAddr = sgiIfContainer.GetAddress (1);
-  NS_LOG_DEBUG ("Web  SGi interface address: " << m_webSgiAddr);
-  NS_LOG_DEBUG ("P-GW SGi interface address: " << m_pgwSgiAddr);
+  NS_LOG_DEBUG ("Web  SGi interface address: " << m_webSgiAddr <<
+                "P-GW SGi interface address: " << m_pgwSgiAddr);
 
   // Define static routes at the Internet Web server to the LTE network.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
@@ -394,9 +396,8 @@ EpcNetwork::ConfigurePgwAndInternet ()
   webHostStaticRouting->AddNetworkRouteTo (
     m_ueNetworkAddr, Ipv4Mask ("255.0.0.0"), m_pgwSgiAddr, 1);
 
-  //
-  // The second part is to connect the P-GW node to the OpenFlow backhaul
-  // infrasctructure.
+  // PART 2:
+  // Connect the P-GW to the OpenFlow backhaul infrasctructure.
   //
   // Get the switch datapath ID on the backhaul network to attatch the P-GW.
   uint64_t swDpId = TopologyGetPgwSwitch (pgwSwitchDev);
@@ -415,12 +416,13 @@ EpcNetwork::ConfigurePgwAndInternet ()
   Names::Add (Names::FindName (m_pgwNode) + "+" +
               Names::FindName (swNode), pgwS5Dev);
 
-  // Add the swS5Dev device as OpenFlow switch port.
+  // Add the swS5Dev device as OpenFlow switch port on the backhaul switch.
   Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (swDpId);
   Ptr<OFSwitch13Port> swS5Port = swDev->AddSwitchPort (swS5Dev);
   uint32_t swS5PortNum = swS5Port->GetPortNo ();
 
-  // Configure the pgwS5Dev as standard device on P-GW node (with IP address).
+  // Add the pgwS5Dev as standard device on P-GW node.
+  // It will be connected to a logical port through the PgwUserApp.
   Ipv4InterfaceContainer pgwS5IfContainer;
   pgwS5IfContainer = m_s5AddrHelper.Assign (NetDeviceContainer (pgwS5Dev));
   m_pgwS5Addr = pgwS5IfContainer.GetAddress (0);
@@ -440,17 +442,12 @@ EpcNetwork::ConfigurePgwAndInternet ()
   Ptr<PgwUserApp> pgwUserApp = CreateObject <PgwUserApp> (pgwS5PortDev);
   m_pgwNode->AddApplication (pgwUserApp);
 
-  // Notify the controller of the new P-GW device attached to the Internet and
-  // to the OpenFlow backhaul network.
+  // Notify the EPC controller of the new P-GW device attached to the Internet
+  // and to the OpenFlow backhaul network.
   m_epcCtrlApp->NewS5Attach (swDev, swS5PortNum, pgwS5Dev, m_pgwS5Addr);
   m_epcCtrlApp->NewPgwAttach (pgwSwitchDev, pgwSgiDev, m_pgwSgiAddr,
                               pgwSgiPortNum, pgwS5PortNum, webSgiDev,
                               m_webSgiAddr);
-
-  // Set the default P-GW gateway address, which will be used to set the static
-  // route at UEs.
-  m_pgwUeGatewayAddr = m_ueAddrHelper.NewAddress ();
-  NS_LOG_DEBUG ("P-GW gateway address: " << GetUeDefaultGatewayAddress ());
 }
 
 //

@@ -240,16 +240,15 @@ LteNetwork::ConfigureSdranClouds ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Create the SDRAN clouds and get the eNB nodes.
+  // Create the SDRAN clouds and attach them to the backhaul network.
   NS_LOG_INFO ("LTE topology with " << m_nSdrans << " SDRAN clouds.");
   m_sdranClouds.Create (m_nSdrans);
   SdranCloudContainer::Iterator it;
   for (it = m_sdranClouds.Begin (); it != m_sdranClouds.End (); ++it)
     {
-      m_epcNetwork->AddSdranCloud (*it);
       m_enbNodes.Add ((*it)->GetEnbNodes ());
+      m_epcNetwork->AttachSdranCloud (*it);
     }
-  m_epcNetwork->SdranCloudsDone ();
 }
 
 void

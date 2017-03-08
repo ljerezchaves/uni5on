@@ -135,20 +135,19 @@ main (int argc, char *argv[])
   // * The traffic and admission stats calculators
   NS_LOG_INFO ("Creating simulation scenario...");
 
-  Ptr<BackhaulStatsCalculator> backhaulStats =
-    CreateObject<BackhaulStatsCalculator> ();
+  Ptr<BackhaulStatsCalculator>  backhaulStats;
+  Ptr<RingNetwork>              ofNetwork;
+  Ptr<LteNetwork>               lteNetwork;
+  Ptr<TrafficHelper>            trafficHelper;
+  Ptr<TrafficStatsCalculator>   trafficStats;
+  Ptr<AdmissionStatsCalculator> admissionStats;
 
-  Ptr<RingNetwork> ofNetwork =
-    CreateObject<RingNetwork> (backhaulStats);
-  Ptr<LteNetwork> lteNetwork =
-    CreateObject<LteNetwork> (ofNetwork);
-  Ptr<TrafficHelper> trafficHelper =
-    CreateObject<TrafficHelper> (ofNetwork, lteNetwork);
-
-  Ptr<TrafficStatsCalculator> trafficStats =
-    CreateObject<TrafficStatsCalculator> ();
-  Ptr<AdmissionStatsCalculator> admissionStats =
-    CreateObject<AdmissionStatsCalculator> ();
+  backhaulStats  = CreateObject<BackhaulStatsCalculator> ();
+  ofNetwork      = CreateObject<RingNetwork> (backhaulStats);
+  lteNetwork     = CreateObject<LteNetwork> (ofNetwork);
+  trafficHelper  = CreateObject<TrafficHelper> (ofNetwork, lteNetwork);
+  trafficStats   = CreateObject<TrafficStatsCalculator> ();
+  admissionStats = CreateObject<AdmissionStatsCalculator> ();
 
   // Populating routing and ARP tables. The 'perfect' ARP used here comes from
   // the patch at https://www.nsnam.org/bugzilla/show_bug.cgi?id=187. This
