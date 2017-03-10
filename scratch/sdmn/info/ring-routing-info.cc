@@ -27,7 +27,11 @@ NS_LOG_COMPONENT_DEFINE ("RingRoutingInfo");
 NS_OBJECT_ENSURE_REGISTERED (RingRoutingInfo);
 
 RingRoutingInfo::RingRoutingInfo ()
-  : m_rInfo (0)
+  : m_rInfo (0),
+    m_pgwIdx (0),
+    m_sgwIdx (0),
+    m_pgwDpId (0),
+    m_sgwDpId (0)
 {
   NS_LOG_FUNCTION (this);
 
@@ -121,11 +125,27 @@ RingRoutingInfo::GetPgwSwIdx (void) const
 }
 
 uint16_t
-RingRoutingInfo::GetEnbSwIdx (void) const
+RingRoutingInfo::GetSgwSwIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_enbIdx;
+  return m_sgwIdx;
+}
+
+uint64_t
+RingRoutingInfo::GetPgwSwDpId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwDpId;
+}
+
+uint64_t
+RingRoutingInfo::GetSgwSwDpId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sgwDpId;
 }
 
 RingRoutingInfo::RoutingPath

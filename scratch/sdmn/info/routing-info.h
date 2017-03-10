@@ -41,8 +41,7 @@ typedef std::list<ContextBearer_t> BearerList_t;
  */
 /**
  * \ingroup sdmnInfo
- * Metadata associated to a routing path between
- * two any switches in the OpenFlow network.
+ * Metadata associated to the S5 routing path between the S-GW and P-GW nodes.
  */
 class RoutingInfo : public Object
 {
@@ -75,10 +74,8 @@ public:
   uint32_t          GetTeid             (void) const;
   uint64_t          GetImsi             (void) const;
   uint16_t          GetCellId           (void) const;
-  uint64_t          GetEnbSwDpId        (void) const;
-  uint64_t          GetPgwSwDpId        (void) const;
-  Ipv4Address       GetEnbAddr          (void) const;
-  Ipv4Address       GetPgwAddr          (void) const;
+  Ipv4Address       GetSgwAddress       (void) const;
+  Ipv4Address       GetPgwAddress       (void) const;
   uint16_t          GetPriority         (void) const;
   uint16_t          GetTimeout          (void) const;
   bool              HasDownlinkTraffic  (void) const;
@@ -139,10 +136,8 @@ private:
   uint32_t          m_teid;         //!< GTP TEID.
   uint64_t          m_imsi;         //!< UE IMSI.
   uint16_t          m_cellId;       //!< eNB cell ID.
-  uint64_t          m_pgwDpId;      //!< P-GW switch datapath id.
-  uint64_t          m_enbDpId;      //!< eNB switch datapath id.
-  Ipv4Address       m_pgwAddr;      //!< P-GW IPv4 address.
-  Ipv4Address       m_enbAddr;      //!< eNB IPv4 address.
+  Ipv4Address       m_pgwAddr;      //!< P-GW S5 IPv4 address.
+  Ipv4Address       m_sgwAddr;      //!< S-GW S5 IPv4 address.
   uint16_t          m_priority;     //!< Flow priority.
   uint16_t          m_timeout;      //!< Flow idle timeout.
   bool              m_isDefault;    //!< This info is for default bearer.

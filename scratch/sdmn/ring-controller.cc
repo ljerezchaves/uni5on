@@ -241,8 +241,8 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
 
       // Building the match string.
       match << " eth_type=0x800,ip_proto=17"
-            << ",ip_src=" << rInfo->GetPgwAddr ()
-            << ",ip_dst=" << rInfo->GetEnbAddr ()
+            << ",ip_src=" << rInfo->GetPgwAddress ()
+            << ",ip_dst=" << rInfo->GetSgwAddress ()
             << ",gtp_teid=" << rInfo->GetTeid ();
 
       // Check for meter entry.
@@ -281,13 +281,13 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
     {
       std::ostringstream match, act;
 
-      // In uplink the input ring switch is the one connected to the eNB.
-      uint16_t swIdx = ringInfo->GetEnbSwIdx ();
+      // In uplink the input ring switch is the one connected to the S-GW.
+      uint16_t swIdx = ringInfo->GetSgwSwIdx ();
 
       // Building the match string.
       match << " eth_type=0x800,ip_proto=17"
-            << ",ip_src=" << rInfo->GetEnbAddr ()
-            << ",ip_dst=" << rInfo->GetPgwAddr ()
+            << ",ip_src=" << rInfo->GetSgwAddress ()
+            << ",ip_dst=" << rInfo->GetPgwAddress ()
             << ",gtp_teid=" << rInfo->GetTeid ();
 
       // Check for meter entry.
@@ -354,7 +354,7 @@ RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
         }
       if (meterInfo->HasUp ())
         {
-          DpctlExecute (GetDpId (ringInfo->GetEnbSwIdx ()),
+          DpctlExecute (GetDpId (ringInfo->GetSgwSwIdx ()),
                         meterInfo->GetDelCmd ());
         }
       meterInfo->SetInstalled (false);
@@ -540,16 +540,16 @@ RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
       rInfo->AggregateObject (ringInfo);
 
       // Set internal switch indexes.
-      ringInfo->m_pgwIdx = GetSwitchIndex (rInfo->GetPgwAddr ());
-      ringInfo->m_enbIdx = GetSwitchIndex (rInfo->GetEnbAddr ());
-      rInfo->m_pgwDpId = GetDpId (ringInfo->m_pgwIdx);
-      rInfo->m_enbDpId = GetDpId (ringInfo->m_enbIdx);
+      ringInfo->m_pgwIdx = GetSwitchIndex (rInfo->GetPgwAddress ());
+      ringInfo->m_sgwIdx = GetSwitchIndex (rInfo->GetSgwAddress ());
+      ringInfo->m_pgwDpId = GetDpId (ringInfo->m_pgwIdx);
+      ringInfo->m_sgwDpId = GetDpId (ringInfo->m_sgwIdx);
 
       // Considering default paths those with lower hops.
       RingRoutingInfo::RoutingPath dlPath, ulPath;
       dlPath = FindShortestPath (ringInfo->GetPgwSwIdx (),
-                                 ringInfo->GetEnbSwIdx ());
-      ulPath = FindShortestPath (ringInfo->GetEnbSwIdx (),
+                                 ringInfo->GetSgwSwIdx ());
+      ulPath = FindShortestPath (ringInfo->GetSgwSwIdx (),
                                  ringInfo->GetPgwSwIdx ());
       ringInfo->SetDefaultPaths (dlPath, ulPath);
     }
@@ -619,14 +619,14 @@ RingController::GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
   NS_LOG_FUNCTION (this << ringInfo << useShortPath);
 
   uint16_t pgwIdx      = ringInfo->GetPgwSwIdx ();
-  uint16_t enbIdx      = ringInfo->GetEnbSwIdx ();
+  uint16_t sgwIdx      = ringInfo->GetSgwSwIdx ();
   uint64_t downBitRate = std::numeric_limits<uint64_t>::max ();
   uint64_t upBitRate   = std::numeric_limits<uint64_t>::max ();
   uint64_t bitRate     = 0;
-  uint16_t current     = enbIdx;
+  uint16_t current     = sgwIdx;
   double   debarFactor = 1.0;
 
-  RingRoutingInfo::RoutingPath upPath = FindShortestPath (enbIdx, pgwIdx);
+  RingRoutingInfo::RoutingPath upPath = FindShortestPath (sgwIdx, pgwIdx);
   if (!useShortPath)
     {
       upPath = RingRoutingInfo::InvertPath (upPath);
@@ -676,9 +676,9 @@ RingController::ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
   NS_LOG_INFO ("Reserving resources for GBR bearer " << ringInfo->GetTeid ());
-  PerLinkReserve (ringInfo->GetPgwSwIdx (), ringInfo->GetEnbSwIdx (),
+  PerLinkReserve (ringInfo->GetPgwSwIdx (), ringInfo->GetSgwSwIdx (),
                   ringInfo->GetDownPath (), gbrInfo->GetDownBitRate ());
-  PerLinkReserve (ringInfo->GetEnbSwIdx (), ringInfo->GetPgwSwIdx (),
+  PerLinkReserve (ringInfo->GetSgwSwIdx (), ringInfo->GetPgwSwIdx (),
                   ringInfo->GetUpPath (), gbrInfo->GetUpBitRate ());
   gbrInfo->SetReserved (true);
   return true;
@@ -691,9 +691,9 @@ RingController::ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
   NS_LOG_INFO ("Releasing resources for GBR bearer " << ringInfo->GetTeid ());
-  PerLinkRelease (ringInfo->GetPgwSwIdx (), ringInfo->GetEnbSwIdx (),
+  PerLinkRelease (ringInfo->GetPgwSwIdx (), ringInfo->GetSgwSwIdx (),
                   ringInfo->GetDownPath (), gbrInfo->GetDownBitRate ());
-  PerLinkRelease (ringInfo->GetEnbSwIdx (), ringInfo->GetPgwSwIdx (),
+  PerLinkRelease (ringInfo->GetSgwSwIdx (), ringInfo->GetPgwSwIdx (),
                   ringInfo->GetUpPath (), gbrInfo->GetUpBitRate ());
   gbrInfo->SetReserved (false);
   return true;

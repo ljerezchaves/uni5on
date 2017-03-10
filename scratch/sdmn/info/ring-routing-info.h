@@ -29,8 +29,8 @@ class RoutingInfo;
 
 /**
  * \ingroup sdmnInfo
- * Metadata associated to a ring routing path between
- * two any switches in the OpenFlow ring network.
+ * Metadata associated to the ring routing path between the switches in the
+ * OpenFlow backhaul ring network that are attached to the S-GW and P-GW nodes.
  */
 class RingRoutingInfo : public Object
 {
@@ -70,7 +70,9 @@ public:
   bool        IsDefaultPath (void) const;
   bool        IsLocalPath   (void) const;
   uint16_t    GetPgwSwIdx   (void) const;
-  uint16_t    GetEnbSwIdx   (void) const;
+  uint16_t    GetSgwSwIdx   (void) const;
+  uint64_t    GetSgwSwDpId  (void) const;
+  uint64_t    GetPgwSwDpId  (void) const;
   RoutingPath GetDownPath   (void) const;
   RoutingPath GetUpPath     (void) const;
   //\}
@@ -106,8 +108,10 @@ private:
   Ptr<RoutingInfo> m_rInfo;         //!< Routing information.
   RoutingPath      m_downPath;      //!< Downlink routing path.
   RoutingPath      m_upPath;        //!< Uplink routing path.
-  uint16_t         m_pgwIdx;        //!< P-GW switch index.
-  uint16_t         m_enbIdx;        //!< eNB switch index.
+  uint16_t         m_pgwIdx;        //!< Switch index attached to P-GW.
+  uint16_t         m_sgwIdx;        //!< Switch index attached to S-GW.
+  uint64_t         m_pgwDpId;       //!< Switch dp id attached to the P-GW.
+  uint64_t         m_sgwDpId;       //!< Switch dp id attached to the S-GW.
   bool             m_isDefaultPath; //!< True when paths are default.
   bool             m_isLocalPath;   //!< True when routing path is local.
 };

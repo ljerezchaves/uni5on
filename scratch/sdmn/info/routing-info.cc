@@ -32,8 +32,6 @@ RoutingInfo::RoutingInfo (uint32_t teid)
   : m_teid (teid),
     m_imsi (0),
     m_cellId (0),
-    m_pgwDpId (0),
-    m_enbDpId (0),
     m_priority (0),
     m_timeout (0),
     m_isDefault (0),
@@ -42,7 +40,7 @@ RoutingInfo::RoutingInfo (uint32_t teid)
 {
   NS_LOG_FUNCTION (this);
 
-  m_enbAddr = Ipv4Address ();
+  m_sgwAddr = Ipv4Address ();
   m_pgwAddr = Ipv4Address ();
 
   RegisterRoutingInfo (Ptr<RoutingInfo> (this));
@@ -118,32 +116,16 @@ RoutingInfo::GetCellId (void) const
   return m_cellId;
 }
 
-uint64_t
-RoutingInfo::GetEnbSwDpId (void) const
+Ipv4Address
+RoutingInfo::GetSgwAddress (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_enbDpId;
-}
-
-uint64_t
-RoutingInfo::GetPgwSwDpId (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_pgwDpId;
+  return m_sgwAddr;
 }
 
 Ipv4Address
-RoutingInfo::GetEnbAddr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_enbAddr;
-}
-
-Ipv4Address
-RoutingInfo::GetPgwAddr (void) const
+RoutingInfo::GetPgwAddress (void) const
 {
   NS_LOG_FUNCTION (this);
 

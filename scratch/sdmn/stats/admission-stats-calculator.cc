@@ -113,7 +113,8 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
 
   std::string path = "No information";
   Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  if (ringInfo && accepted)
+  NS_ASSERT_MSG (ringInfo, "No ring information for this routing info.");
+  if (accepted)
     {
       // For ring routing, print detailed routing path description
       if (ringInfo->IsDefaultPath ())
@@ -136,8 +137,8 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
   << setw (9)  << rInfo->IsDefault ()                       << " "
   << setw (7)  << rInfo->GetImsi ()                         << " "
   << setw (7)  << rInfo->GetCellId ()                       << " "
-  << setw (6)  << rInfo->GetEnbSwDpId ()                    << " "
-  << setw (6)  << rInfo->GetPgwSwDpId ()                    << " "
+  << setw (6)  << ringInfo->GetSgwSwDpId ()                 << " "
+  << setw (6)  << ringInfo->GetPgwSwDpId ()                 << " "
   << setw (6)  << rInfo->GetTeid ()                         << " "
   << setw (9)  << accepted                                  << " "
   << setw (11) << static_cast<double> (downBitRate) / 1000  << " "

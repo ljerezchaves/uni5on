@@ -81,6 +81,7 @@ SdranController::NotifySessionCreated (
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << pgwAddr);
 
   // TODO
+  // FIXME Aqui teria que mandar o IP do S-GW no lugar do eNB.
   m_epcCtrlApp->NotifySessionCreated (imsi, cellId, enbAddr, pgwAddr, bearerList);
 }
 
@@ -92,6 +93,7 @@ SdranController::NotifyS5Attach (
   NS_LOG_FUNCTION (this << swtchDev << portNo << gwDev << gwIp);
 
   // TODO FIXME
+  m_epcCtrlApp->NotifyS5Attach (swtchDev, portNo, gwDev, gwIp);
 }
 
 void

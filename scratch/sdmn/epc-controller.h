@@ -143,12 +143,12 @@ public:
    * \see 3GPP TS 29.274 7.2.1 for CreateSessionRequest message format.
    * \param imsi The IMSI UE identifier.
    * \param cellId The eNB CellID to which the IMSI UE is attached to.
-   * \param enbAddr The eNB IPv4 address.
-   * \param pgwAddr The P-GW IPv4 address.
+   * \param sgwAddr The S-GW S5 IPv4 address.
+   * \param pgwAddr The P-GW S5 IPv4 address.
    * \param bearerList The list of context bearers created.
    */
   virtual void NotifySessionCreated (
-    uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address pgwAddr,
+    uint64_t imsi, uint16_t cellId, Ipv4Address sgwAddr, Ipv4Address pgwAddr,
     BearerList_t bearerList);
 
   /**

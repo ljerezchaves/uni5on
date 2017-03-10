@@ -264,10 +264,10 @@ EpcController::TopologyBuilt (OFSwitch13DeviceContainer devices)
 
 void
 EpcController::NotifySessionCreated (
-  uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address pgwAddr,
+  uint64_t imsi, uint16_t cellId, Ipv4Address sgwAddr, Ipv4Address pgwAddr,
   BearerList_t bearerList)
 {
-  NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << pgwAddr);
+  NS_LOG_FUNCTION (this << imsi << cellId << sgwAddr << pgwAddr);
 
   // Create and save routing information for default bearer
   ContextBearer_t defaultBearer = bearerList.front ();
@@ -281,7 +281,7 @@ EpcController::NotifySessionCreated (
   rInfo->m_imsi = imsi;
   rInfo->m_cellId = cellId;
   rInfo->m_pgwAddr = pgwAddr;
-  rInfo->m_enbAddr = enbAddr;
+  rInfo->m_sgwAddr = sgwAddr;
   rInfo->m_priority = 0x7F;               // Priority for default bearer
   rInfo->m_timeout = 0;                   // No timeout for default bearer
   rInfo->m_isInstalled = false;           // Bearer rules not installed yet
@@ -313,7 +313,7 @@ EpcController::NotifySessionCreated (
       rInfo->m_imsi = imsi;
       rInfo->m_cellId = cellId;
       rInfo->m_pgwAddr = pgwAddr;
-      rInfo->m_enbAddr = enbAddr;
+      rInfo->m_sgwAddr = sgwAddr;
       rInfo->m_priority = 0x1FFF;           // Priority for dedicated bearer
       rInfo->m_timeout = m_flowTimeout;     // Timeout for dedicated bearer
       rInfo->m_isInstalled = false;         // Switch rules not installed
@@ -401,7 +401,7 @@ EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
       << ",idle=" << rInfo->GetTimeout ();
 
   // Printing TEID and destination IPv4 address into tunnel metadata
-  uint64_t tunnelId = (uint64_t)rInfo->GetEnbAddr ().Get () << 32;
+  uint64_t tunnelId = (uint64_t)rInfo->GetSgwAddress ().Get () << 32;
   tunnelId |= rInfo->GetTeid ();
   char tunnelIdStr [12];
   sprintf (tunnelIdStr, "0x%016lX", tunnelId);
