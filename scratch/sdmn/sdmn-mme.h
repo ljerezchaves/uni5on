@@ -24,8 +24,6 @@
 #include <map>
 #include <list>
 #include <ns3/lte-module.h>
-#include <ns3/singleton.h>
-
 
 namespace ns3 {
 
