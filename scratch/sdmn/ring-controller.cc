@@ -80,14 +80,13 @@ RingController::DoDispose ()
 
 void
 RingController::NotifyS5Attach (
-  Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev,
-  Ipv4Address gwIp)
+  Ptr<OFSwitch13Device> swtchDev, uint32_t portNum, Ptr<NetDevice> gwDev)
 {
-  NS_LOG_FUNCTION (this << swtchDev << portNo << gwDev << gwIp);
+  NS_LOG_FUNCTION (this << swtchDev << portNum << gwDev);
 
   // Save the pair S/P-GW IP address / switch index.
-  uint16_t idx = GetSwitchIndex (swtchDev);
-  std::pair<Ipv4Address, uint16_t> entry (gwIp, idx);
+  std::pair<Ipv4Address, uint16_t> entry (
+    GetIpAddressForDevice (gwDev), GetSwitchIndex (swtchDev));
   std::pair<IpSwitchMap_t::iterator, bool> ret;
   ret = m_ipSwitchTable.insert (entry);
   if (ret.second == false)
@@ -96,7 +95,7 @@ RingController::NotifyS5Attach (
     }
 
   // Chain up.
-  EpcController::NotifyS5Attach (swtchDev, portNo, gwDev, gwIp);
+  EpcController::NotifyS5Attach (swtchDev, portNum, gwDev);
 }
 
 void

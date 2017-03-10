@@ -77,13 +77,6 @@ protected:
   // Inherited from ObjectBase.
   void NotifyConstructionCompleted (void);
 
-//  /** FIXME remove?
-//   * Get the IP address for a given device.
-//   * \param device The network device.
-//   * \return The IP address assigned to this device.
-//   */
-//  Ipv4Address GetAddressForDevice (Ptr<NetDevice> device);
-
   /**
    * Get the SDRAN cloud pointer from the global map for this eNB node.
    * \param enb The eNB node pointer.
@@ -112,8 +105,6 @@ private:
 
   // S-GW user plane.
   Ptr<Node>                     m_sgwNode;        //!< S-GW user-plane node.
-  Ipv4Address                   m_sgwS1uAddr;     //!< S-GW S1-U IP addr.
-  Ipv4Address                   m_sgwS5Addr;      //!< S-GW S5 IP addr.
 
   // Helper and attributes for S1-U interface.
   CsmaHelper                    m_csmaHelper;     //!< Connection helper.

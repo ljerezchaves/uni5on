@@ -54,8 +54,8 @@ protected:
   virtual void DoDispose ();
 
   // Inherited from EpcController.
-  void NotifyS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo,
-                       Ptr<NetDevice> gwDev, Ipv4Address gwIp);
+  void NotifyS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNum,
+                       Ptr<NetDevice> gwDev);
   void NotifySwitchConnection (Ptr<ConnectionInfo> cInfo);
   void TopologyBuilt (OFSwitch13DeviceContainer devices);
   bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer);

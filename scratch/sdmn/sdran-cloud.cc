@@ -291,7 +291,7 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   enbInfo->SetSgwAddress (sgwAddress);
   enbInfo->SetS1apSapEnb (enbApp->GetS1apSapEnb ());
 
-  enbApp->SetS1apSapMme (m_sdranCtrlApp->GetMme ()->GetS1apSapMme ());
+  enbApp->SetS1apSapMme (m_sdranCtrlApp->GetS1apSapMme ());
 }
 
 
@@ -471,16 +471,6 @@ SdranCloud::NotifyConstructionCompleted ()
   Object::NotifyConstructionCompleted ();
 }
 
-// Ipv4Address
-// SdranCloud::GetAddressForDevice (Ptr<NetDevice> device)
-// {
-//   NS_LOG_FUNCTION (this << device);
-//
-//   Ptr<Node> node = device->GetNode ();
-//   Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
-//   int32_t idx = ipv4->GetInterfaceForDevice (device);
-//   return ipv4->GetAddress (idx, 0).GetLocal ();
-// }
 
 Ptr<SdranCloud>
 SdranCloud::GetPointer (Ptr<Node> enb)

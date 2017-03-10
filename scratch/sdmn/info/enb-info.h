@@ -69,13 +69,13 @@ protected:
   virtual void DoDispose ();
 
   /**
-   * Set the address of the eNB to which the UE is connected to.
+   * Set the address of the eNB S1-U interface to which the UE is connected to.
    * \param addr The eNB address.
    */
   void SetEnbAddress (Ipv4Address addr);
 
   /**
-   * Set the address of the S-GW.
+   * Set the address of the S-GW S1-U interface.
    * \param addr The S-GW address.
    */
   void SetSgwAddress (Ipv4Address addr);
@@ -101,8 +101,8 @@ private:
   static void RegisterEnbInfo (Ptr<EnbInfo> enbInfo);
 
   uint16_t               m_cellId;               //!< eNB cell ID.
-  Ipv4Address            m_enbAddr;              //!< eNB IP address.
-  Ipv4Address            m_sgwAddr;              //!< S-GW IP address.
+  Ipv4Address            m_enbAddr;              //!< eNB S1-U IP address.
+  Ipv4Address            m_sgwAddr;              //!< S-GW S1-U IP address.
   EpcS1apSapEnb*         m_s1apSapEnb;           //!< S1-AP eNB SAP provider.
 
   /** Map saving cell ID / eNB information. */

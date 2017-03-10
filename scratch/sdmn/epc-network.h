@@ -66,12 +66,6 @@ public:
   Ptr<Node> GetWebNode (void) const;
 
   /**
-   * Get the Internet web server IP address.
-   * \return The IP address.
-   */
-  Ipv4Address GetWebIpAddress (void) const;
-
-  /**
    * Get the OpenFlow EPC controller node.
    * \return The controller node pointer.
    */
@@ -215,13 +209,10 @@ private:
 
   // P-GW user plane.
   Ptr<Node>                     m_pgwNode;          //!< P-GW user-plane node.
-  Ipv4Address                   m_pgwSgiAddr;       //!< P-GW SGi IP addr.
-  Ipv4Address                   m_pgwS5Addr;        //!< P-GW S5 IP addr.
   Ipv4Address                   m_pgwUeGatewayAddr; //!< P-GW gateway addr.
 
   // Internet web server.
   Ptr<Node>                     m_webNode;          //!< Web server node.
-  Ipv4Address                   m_webSgiAddr;       //!< Web server IP addr.
 };
 
 };  // namespace ns3

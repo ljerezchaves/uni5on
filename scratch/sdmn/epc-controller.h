@@ -93,32 +93,29 @@ public:
     EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
 
   /**
-   * Notify this controller of the P-GW and Internet Web server connection over
-   * the SGi interface. This function will configure the P-GW datapath.
+   * Notify this controller of the P-GW connected to the OpenFlow backhaul
+   * network. This function will configure the P-GW datapath.
    * \param pgwSwDev The OpenFlow P-GW switch device.
-   * \param pgwSgiDev The SGi device attached to the OpenFlow P-GW switch.
-   * \param pgwSgiIp The IPv4 address assigned to the P-GW SGi device.
-   * \param sgiPortNo The SGi port number on the P-GW OpenFlow switch.
-   * \param s5PortNo The S5 port number on the P-GW OpenFlow switch.
-   * \param webSgiDev The SGi device attached to the Internet Web server.
-   * \param webIp The IPv4 address assigned to the Internet Web server SGi dev.
+   * \param pgwS5PortNum The S5 port number on the P-GW OpenFlow switch.
+   * \param pgwSgiPortNum The SGi port number on the P-GW OpenFlow switch.
+   * \param pgwS5Dev The S5 device attached to the P-GW OpenFlow switch.
+   * \param pgwSgiDev The SGi device attached to the P-GW OpenFlow switch.
+   * \param webSgiDev The SGi device attached to the Web server.
    */
   virtual void NotifyPgwAttach (
-    Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwSgiDev,
-    Ipv4Address pgwSgiIp, uint32_t sgiPortNo, uint32_t s5PortNo,
-    Ptr<NetDevice> webSgiDev, Ipv4Address webIp);
+    Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNum,
+    uint32_t pgwSgiPortNum, Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> pgwSgiDev,
+    Ptr<NetDevice> webSgiDev);
 
   /**
    * Notify this controller of a new S-GW or P-GW connected to OpenFlow
    * backhaul network over the S5 interface.
    * \param swtchDev The OpenFlow switch device on the backhaul network.
-   * \param portNo The port number created at the OpenFlow switch.
-   * \param gwDev The device created at the S/P-GW node.
-   * \param gwIp The IPv4 address assigned to the gwDev.
+   * \param portNum The port number created at the OpenFlow switch.
+   * \param gwDev The device created at the gateway node.
    */
   virtual void NotifyS5Attach (
-    Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev,
-    Ipv4Address gwIp);
+    Ptr<OFSwitch13Device> swtchDev, uint32_t portNum, Ptr<NetDevice> gwDev);
 
   /**
    * Notify this controller of a new connection between two switches in the
@@ -135,20 +132,18 @@ public:
   virtual void TopologyBuilt (OFSwitch13DeviceContainer devices);
 
   /**
-   * Notify this controller when the MME receives a context created response
-   * message. This is used to notify this controller with the list of bearers
-   * context created. With this information, the controller can configure the
-   * switches for GTP routing. The user is supposed to connect this function as
-   * trace sink for EpcMme::SessionCreated trace source.
-   * \see 3GPP TS 29.274 7.2.1 for CreateSessionRequest message format.
+   * Notify this controller when the S-GW control plane implemented by the
+   * SDRAN controller receives a create session request message. This is used
+   * to notify this controller with the list of bearers context created. With
+   * this information, this controller can save routing information and
+   * configure the switches for GTP routing.
    * \param imsi The IMSI UE identifier.
    * \param cellId The eNB CellID to which the IMSI UE is attached to.
    * \param sgwAddr The S-GW S5 IPv4 address.
-   * \param pgwAddr The P-GW S5 IPv4 address.
    * \param bearerList The list of context bearers created.
    */
   virtual void NotifySessionCreated (
-    uint64_t imsi, uint16_t cellId, Ipv4Address sgwAddr, Ipv4Address pgwAddr,
+    uint64_t imsi, uint16_t cellId, Ipv4Address sgwAddr,
     BearerList_t bearerList);
 
   /**
@@ -157,6 +152,19 @@ public:
    * \return The IP DSCP mapped value for this QCI.
    */
   static uint16_t GetDscpValue (EpsBearer::Qci qci);
+
+  /**
+   * Get the next available TEID value for global usage.
+   * \return The TEID value.
+   */
+  static uint32_t GetNextTeid (void);
+
+  /**
+   * Get the IPv4 address for a given device.
+   * \param device The network device.
+   * \return The IP address assigned to this device.
+   */
+  static Ipv4Address GetIpAddressForDevice (Ptr<NetDevice> device);
 
 protected:
   /** Destructor implementation. */
@@ -232,24 +240,6 @@ protected:
     ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
   // Inherited from OFSwitch13Controller.
 
-private:
-  /**
-   * EpcController inner friend utility class
-   * used to initialize static DSCP map table.
-   */
-  class QciDscpInitializer
-  {
-public:
-    /** Initializer function. */
-    QciDscpInitializer ();
-  };
-  friend class QciDscpInitializer;
-
-  /**
-   * Static instance of Initializer. When this is created, its constructor
-   * initializes the EpcController s' static DSCP map table.
-   */
-  static QciDscpInitializer initializer;
 
 public:
   /**
@@ -273,10 +263,10 @@ public:
 
 protected:
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
-  TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerRequestTrace;
+  TracedCallback<bool, Ptr<const RoutingInfo> >    m_bearerRequestTrace;
 
   /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
-  TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerReleaseTrace;
+  TracedCallback<bool, Ptr<const RoutingInfo> >    m_bearerReleaseTrace;
 
   /** The context created trace source, fired at NotifySessionCreated. */
   TracedCallback<uint64_t, uint16_t, BearerList_t> m_sessionCreatedTrace;
@@ -286,19 +276,37 @@ protected:
   static const uint16_t m_flowTimeout;        //!< Timeout for flow entries.
 
 private:
-  uint64_t                      m_pgwDpId;        //!< P-GW datapath ID.
-  uint32_t                      m_pgwS5Port;      //!< P-GW S5 port no.
-
-  /** Map saving EpsBearer::Qci / IP DSCP value. */
-  typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
-  static QciDscpMap_t           m_qciDscpTable;   //!< DSCP mapped values.
+  uint64_t              m_pgwDpId;            //!< P-GW datapath ID.
+  uint32_t              m_pgwS5Port;          //!< P-GW S5 port no.
+  Ipv4Address           m_pgwS5Addr;          //!< P-GW S5 IP address.
 
   /**
    * TEID counter, used to allocate new GTP-U TEID values.
    * \internal This counter is initialized at 0x0000000F, reserving the first
    *           values for controller usage.
    */
-  uint32_t m_teidCount;
+  static uint32_t m_teidCount;
+
+  /** Map saving EpsBearer::Qci / IP DSCP value. */
+  typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
+  static QciDscpMap_t m_qciDscpTable;   //!< DSCP mapped values.
+
+  /**
+   * EpcController inner utility class used to initialize DSCP map table.
+   */
+  class QciDscpInitializer
+  {
+public:
+    /** Default constructor, used to initilialize the DSCP table. */
+    QciDscpInitializer ();
+  };
+  friend class QciDscpInitializer;
+
+  /**
+   * Static instance of QciDscpInitializer. When this is created, its
+   * constructor initializes the EpcController's static DSCP map table.
+   */
+  static QciDscpInitializer qciDscpInitializer;
 };
 
 };  // namespace ns3

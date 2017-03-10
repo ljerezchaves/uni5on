@@ -29,11 +29,11 @@ NS_OBJECT_ENSURE_REGISTERED (EpcController);
 
 // Initializing EpcController static members.
 const uint16_t EpcController::m_flowTimeout = 15;
+uint32_t EpcController::m_teidCount = 0x0000000F;
 EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
-EpcController::QciDscpInitializer EpcController::initializer;
+EpcController::QciDscpInitializer EpcController::qciDscpInitializer;
 
 EpcController::EpcController ()
-  : m_teidCount (0x0000000F)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -162,14 +162,16 @@ EpcController::ReleaseDedicatedBearer (
 
 void
 EpcController::NotifyPgwAttach (
-  Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwSgiDev,
-  Ipv4Address pgwSgiIp, uint32_t sgiPortNo, uint32_t s5PortNo,
-  Ptr<NetDevice> webSgiDev, Ipv4Address webIp)
+  Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNum,
+  uint32_t pgwSgiPortNum, Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> pgwSgiDev,
+  Ptr<NetDevice> webSgiDev)
 {
-  NS_LOG_FUNCTION (this << pgwSgiIp << sgiPortNo << webIp);
+  NS_LOG_FUNCTION (this << pgwSwDev << pgwS5PortNum << pgwSgiPortNum <<
+                   pgwS5Dev << pgwSgiDev << webSgiDev);
 
   m_pgwDpId = pgwSwDev->GetDatapathId ();
-  m_pgwS5Port = s5PortNo;
+  m_pgwS5Port = pgwS5PortNum;
+  m_pgwS5Addr = GetIpAddressForDevice (pgwS5Dev);
 
   // Configure SGi port rules.
   // -------------------------------------------------------------------------
@@ -180,7 +182,7 @@ EpcController::NotifyPgwAttach (
   // TEID and eNB address on tunnel metadata.
   std::ostringstream cmdIn;
   cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-        << ",in_port=" << sgiPortNo
+        << ",in_port=" << pgwSgiPortNum
         << " goto:1";
   DpctlSchedule (pgwSwDev->GetDatapathId (), cmdIn.str ());
 
@@ -190,10 +192,10 @@ EpcController::NotifyPgwAttach (
   Mac48Address webMac = Mac48Address::ConvertFrom (webSgiDev->GetAddress ());
   std::ostringstream cmdOut;
   cmdOut << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-         << ",in_port=" << s5PortNo
-         << ",ip_dst=" << webIp
+         << ",in_port=" << pgwS5PortNum
+         << ",ip_dst=" << GetIpAddressForDevice (webSgiDev)
          << " write:set_field=eth_dst:" << webMac
-         << ",output=" << sgiPortNo;
+         << ",output=" << pgwSgiPortNum;
   DpctlSchedule (pgwSwDev->GetDatapathId (), cmdOut.str ());
 
   // ARP request packets. Send to controller.
@@ -214,10 +216,9 @@ EpcController::NotifyPgwAttach (
 
 void
 EpcController::NotifyS5Attach (
-  Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev,
-  Ipv4Address gwIp)
+  Ptr<OFSwitch13Device> swtchDev, uint32_t portNum, Ptr<NetDevice> gwDev)
 {
-  NS_LOG_FUNCTION (this << swtchDev << portNo << gwDev << gwIp);
+  NS_LOG_FUNCTION (this << swtchDev << portNum << gwDev);
 
   // Configure S5 port rules.
   // -------------------------------------------------------------------------
@@ -230,7 +231,7 @@ EpcController::NotifyS5Attach (
         << " eth_type=0x800,ip_proto=17"
         << ",udp_src=" << EpcNetwork::m_gtpuPort
         << ",udp_dst=" << EpcNetwork::m_gtpuPort
-        << ",in_port=" << portNo
+        << ",in_port=" << portNum
         << " goto:1";
   DpctlSchedule (swtchDev->GetDatapathId (), cmdIn.str ());
 
@@ -244,8 +245,8 @@ EpcController::NotifyS5Attach (
   std::ostringstream cmdOut;
   cmdOut << "flow-mod cmd=add,table=2,prio=256 eth_type=0x800"
          << ",eth_dst=" << gwMac
-         << ",ip_dst=" << gwIp
-         << " write:output=" << portNo
+         << ",ip_dst=" << GetIpAddressForDevice (gwDev)
+         << " write:output=" << portNum
          << " goto:4";
   DpctlSchedule (swtchDev->GetDatapathId (), cmdOut.str ());
 }
@@ -264,10 +265,9 @@ EpcController::TopologyBuilt (OFSwitch13DeviceContainer devices)
 
 void
 EpcController::NotifySessionCreated (
-  uint64_t imsi, uint16_t cellId, Ipv4Address sgwAddr, Ipv4Address pgwAddr,
-  BearerList_t bearerList)
+  uint64_t imsi, uint16_t cellId, Ipv4Address sgwAddr, BearerList_t bearerList)
 {
-  NS_LOG_FUNCTION (this << imsi << cellId << sgwAddr << pgwAddr);
+  NS_LOG_FUNCTION (this << imsi << cellId << sgwAddr);
 
   // Create and save routing information for default bearer
   ContextBearer_t defaultBearer = bearerList.front ();
@@ -280,7 +280,7 @@ EpcController::NotifySessionCreated (
   rInfo = CreateObject<RoutingInfo> (teid);
   rInfo->m_imsi = imsi;
   rInfo->m_cellId = cellId;
-  rInfo->m_pgwAddr = pgwAddr;
+  rInfo->m_pgwAddr = m_pgwS5Addr;
   rInfo->m_sgwAddr = sgwAddr;
   rInfo->m_priority = 0x7F;               // Priority for default bearer
   rInfo->m_timeout = 0;                   // No timeout for default bearer
@@ -312,7 +312,7 @@ EpcController::NotifySessionCreated (
       rInfo = CreateObject<RoutingInfo> (teid);
       rInfo->m_imsi = imsi;
       rInfo->m_cellId = cellId;
-      rInfo->m_pgwAddr = pgwAddr;
+      rInfo->m_pgwAddr = m_pgwS5Addr;
       rInfo->m_sgwAddr = sgwAddr;
       rInfo->m_priority = 0x1FFF;           // Priority for dedicated bearer
       rInfo->m_timeout = m_flowTimeout;     // Timeout for dedicated bearer
@@ -358,6 +358,27 @@ EpcController::GetDscpValue (EpsBearer::Qci qci)
       return it->second;
     }
   NS_FATAL_ERROR ("No DSCP mapped value for QCI " << qci);
+}
+
+uint32_t
+EpcController::GetNextTeid (void)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  // Check for available TEID.
+  NS_ABORT_IF (m_teidCount == 0xFFFFFFFF);
+  return ++m_teidCount;
+}
+
+Ipv4Address
+EpcController::GetIpAddressForDevice (Ptr<NetDevice> device)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  Ptr<Node> node = device->GetNode ();
+  Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
+  int32_t idx = ipv4->GetInterfaceForDevice (device);
+  return ipv4->GetAddress (idx, 0).GetLocal ();
 }
 
 void

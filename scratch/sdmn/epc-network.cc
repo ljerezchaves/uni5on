@@ -121,14 +121,6 @@ EpcNetwork::GetWebNode (void) const
   return m_webNode;
 }
 
-Ipv4Address
-EpcNetwork::GetWebIpAddress (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_webSgiAddr;
-}
-
 Ptr<Node>
 EpcNetwork::GetControllerNode (void) const
 {
@@ -214,10 +206,9 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
 
   // Add the sgwS5Dev as standard device on S-GW node.
   // It will be connected to a logical port through the PgwUserApp.
-  Ipv4InterfaceContainer sgwS5IfContainer;
-  sgwS5IfContainer = m_s5AddrHelper.Assign (NetDeviceContainer (sgwS5Dev));
-  Ipv4Address sgwS5Addr = sgwS5IfContainer.GetAddress (0);
-  NS_LOG_DEBUG ("S-GW S5 interface address: " << sgwS5Addr);
+  m_s5AddrHelper.Assign (NetDeviceContainer (sgwS5Dev));
+  NS_LOG_DEBUG ("S-GW S5 address: " <<
+                EpcController::GetIpAddressForDevice (sgwS5Dev));
 
   // Create the virtual net device to work as the logical ports on the S-GW S5
   // interface. This logical ports will connect to the S-GW user-plane
@@ -228,19 +219,14 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
   sgwS5PortDev->SetAddress (Mac48Address::Allocate ());
   Ptr<OFSwitch13Port> sgwS5Port = sgwSwitchDev->AddSwitchPort (sgwS5PortDev);
   uint32_t sgwS5PortNum = sgwS5Port->GetPortNo ();
-  NS_UNUSED (sgwS5PortNum); // FIXME
 
   // Create the S-GW S5 user-plane application.
-  Ptr<PgwUserApp> sgwUserApp = CreateObject <PgwUserApp> (sgwS5PortDev);  // FIXME
-  sgwNode->AddApplication (sgwUserApp);
+  sgwNode->AddApplication (CreateObject <PgwUserApp> (sgwS5PortDev));//FIXME
 
-  // Notify the EPC controller of the new P-GW device attached to the Internet
-  // and to the OpenFlow backhaul network.
-  m_epcCtrlApp->NotifyS5Attach (swDev, swS5PortNum, sgwS5Dev, sgwS5Addr);
-
-  // Notify the SDRAN controller of the new S-GW device attached to the
-  // OpenFlow backhaul network. FIXME
-  sdranCtrlApp->NotifyS5Attach (swDev, swS5PortNum, sgwS5Dev, sgwS5Addr);
+  // Notify the EPC and SDRAN controllers of the new S-GW device attached
+  // OpenFlow backhaul network.
+  m_epcCtrlApp->NotifyS5Attach (swDev, swS5PortNum, sgwS5Dev);
+  sdranCtrlApp->NotifySgwAttach (sgwS5PortNum, sgwS5Dev);
 }
 
 //
@@ -351,52 +337,50 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
 
   // Configure the P-GW node as an OpenFlow switch.
   m_pgwNode = pgwNode;
-  Ptr<OFSwitch13Device> pgwSwitchDev;
-  pgwSwitchDev = (m_ofSwitchHelper->InstallSwitch (m_pgwNode)).Get (0);
+  Ptr<OFSwitch13Device> pgwSwitchDev =
+    (m_ofSwitchHelper->InstallSwitch (pgwNode)).Get (0);
 
-  // PART 1:
-  // Connect the P-GW to the Internet Web server.
+  // PART 1: Connect the P-GW to the Internet Web server.
   //
   // Connect the P-GW to the Web server over SGi interface.
-  m_sgiDevices = m_csmaHelper.Install (m_pgwNode, m_webNode);
+  m_sgiDevices = m_csmaHelper.Install (pgwNode, m_webNode);
 
   Ptr<CsmaNetDevice> pgwSgiDev, webSgiDev;
   pgwSgiDev = DynamicCast<CsmaNetDevice> (m_sgiDevices.Get (0));
   webSgiDev = DynamicCast<CsmaNetDevice> (m_sgiDevices.Get (1));
 
-  Names::Add (Names::FindName (m_pgwNode) + "+" +
+  Names::Add (Names::FindName (pgwNode) + "+" +
               Names::FindName (m_webNode), pgwSgiDev);
   Names::Add (Names::FindName (m_webNode) + "+" +
-              Names::FindName (m_pgwNode), webSgiDev);
+              Names::FindName (pgwNode), webSgiDev);
 
   // Add the pgwSgiDev as physical port on the P-GW OpenFlow switch.
   Ptr<OFSwitch13Port> pgwSgiPort = pgwSwitchDev->AddSwitchPort (pgwSgiDev);
   uint32_t pgwSgiPortNum = pgwSgiPort->GetPortNo ();
 
   // Set the IP address on the Internet Web server and P-GW SGi interfaces.
-  Ipv4InterfaceContainer sgiIfContainer;
-  sgiIfContainer = m_sgiAddrHelper.Assign (NetDeviceContainer (m_sgiDevices));
-  m_pgwSgiAddr = sgiIfContainer.GetAddress (0);
-  m_webSgiAddr = sgiIfContainer.GetAddress (1);
-  NS_LOG_DEBUG ("Web  SGi interface address: " << m_webSgiAddr <<
-                "P-GW SGi interface address: " << m_pgwSgiAddr);
+  m_sgiAddrHelper.Assign (NetDeviceContainer (m_sgiDevices));
+  NS_LOG_DEBUG ("Web SGi address: " <<
+                EpcController::GetIpAddressForDevice (webSgiDev));
+  NS_LOG_DEBUG ("P-GW SGi address: " <<
+                EpcController::GetIpAddressForDevice (pgwSgiDev));
 
   // Define static routes at the Internet Web server to the LTE network.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
   Ptr<Ipv4StaticRouting> webHostStaticRouting =
     ipv4RoutingHelper.GetStaticRouting (m_webNode->GetObject<Ipv4> ());
   webHostStaticRouting->AddNetworkRouteTo (
-    m_ueNetworkAddr, Ipv4Mask ("255.0.0.0"), m_pgwSgiAddr, 1);
+    m_ueNetworkAddr, Ipv4Mask ("255.0.0.0"),
+    EpcController::GetIpAddressForDevice (pgwSgiDev), 1);
 
-  // PART 2:
-  // Connect the P-GW to the OpenFlow backhaul infrastructure.
+  // PART 2: Connect the P-GW to the OpenFlow backhaul infrastructure.
   //
   // Get the switch datapath ID on the backhaul network to attach the P-GW.
   uint64_t swDpId = TopologyGetPgwSwitch (pgwSwitchDev);
   Ptr<Node> swNode = GetSwitchNode (swDpId);
 
   // Connect the P-GW to the backhaul over S5 interface.
-  NetDeviceContainer devices = m_csmaHelper.Install (swNode, m_pgwNode);
+  NetDeviceContainer devices = m_csmaHelper.Install (swNode, pgwNode);
   m_s5Devices.Add (devices.Get (1));
 
   Ptr<CsmaNetDevice> swS5Dev, pgwS5Dev;
@@ -404,8 +388,8 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
   pgwS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (1));
 
   Names::Add (Names::FindName (swNode) + "+" +
-              Names::FindName (m_pgwNode), swS5Dev);
-  Names::Add (Names::FindName (m_pgwNode) + "+" +
+              Names::FindName (pgwNode), swS5Dev);
+  Names::Add (Names::FindName (pgwNode) + "+" +
               Names::FindName (swNode), pgwS5Dev);
 
   // Add the swS5Dev device as OpenFlow switch port on the backhaul switch.
@@ -415,10 +399,9 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
 
   // Add the pgwS5Dev as standard device on P-GW node.
   // It will be connected to a logical port through the PgwUserApp.
-  Ipv4InterfaceContainer pgwS5IfContainer;
-  pgwS5IfContainer = m_s5AddrHelper.Assign (NetDeviceContainer (pgwS5Dev));
-  m_pgwS5Addr = pgwS5IfContainer.GetAddress (0);
-  NS_LOG_DEBUG ("P-GW S5 interface address: " << m_pgwS5Addr);
+  m_s5AddrHelper.Assign (NetDeviceContainer (pgwS5Dev));
+  NS_LOG_DEBUG ("P-GW S5 address: " <<
+                EpcController::GetIpAddressForDevice (pgwS5Dev));
 
   // Create the virtual net device to work as the logical ports on the P-GW S5
   // interface. This logical ports will connect to the P-GW user-plane
@@ -431,15 +414,13 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
   uint32_t pgwS5PortNum = pgwS5Port->GetPortNo ();
 
   // Create the P-GW S5 user-plane application.
-  Ptr<PgwUserApp> pgwUserApp = CreateObject <PgwUserApp> (pgwS5PortDev);
-  m_pgwNode->AddApplication (pgwUserApp);
+  pgwNode->AddApplication (CreateObject <PgwUserApp> (pgwS5PortDev));
 
   // Notify the EPC controller of the new P-GW device attached to the Internet
   // and to the OpenFlow backhaul network.
-  m_epcCtrlApp->NotifyS5Attach (swDev, swS5PortNum, pgwS5Dev, m_pgwS5Addr);
-  m_epcCtrlApp->NotifyPgwAttach (pgwSwitchDev, pgwSgiDev, m_pgwSgiAddr,
-                                 pgwSgiPortNum, pgwS5PortNum, webSgiDev,
-                                 m_webSgiAddr);
+  m_epcCtrlApp->NotifyS5Attach (swDev, swS5PortNum, pgwS5Dev);
+  m_epcCtrlApp->NotifyPgwAttach (pgwSwitchDev, pgwS5PortNum, pgwSgiPortNum,
+                                 pgwS5Dev, pgwSgiDev, webSgiDev);
 }
 
 //

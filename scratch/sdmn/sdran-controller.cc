@@ -26,7 +26,7 @@ NS_LOG_COMPONENT_DEFINE ("SdranController");
 NS_OBJECT_ENSURE_REGISTERED (SdranController);
 
 SdranController::SdranController ()
-  : m_s11SapMme (0)
+  : m_epcCtrlApp (0)
 {
   NS_LOG_FUNCTION (this);
 
@@ -75,25 +75,22 @@ SdranController::ReleaseDedicatedBearer (
 
 void
 SdranController::NotifySessionCreated (
-  uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address pgwAddr,
+  uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr,
   BearerList_t bearerList)
 {
-  NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << pgwAddr);
+  NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << sgwAddr);
 
-  // TODO
-  // FIXME Aqui teria que mandar o IP do S-GW no lugar do eNB.
-  m_epcCtrlApp->NotifySessionCreated (imsi, cellId, enbAddr, pgwAddr, bearerList);
+  m_epcCtrlApp->NotifySessionCreated (imsi, cellId, m_sgwS5Addr, bearerList);
 }
 
 void
-SdranController::NotifyS5Attach (
-  Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev,
-  Ipv4Address gwIp)
+SdranController::NotifySgwAttach (
+  uint32_t sgwS5PortNum, Ptr<NetDevice> sgwS5Dev)
 {
-  NS_LOG_FUNCTION (this << swtchDev << portNo << gwDev << gwIp);
+  NS_LOG_FUNCTION (this << sgwS5PortNum << sgwS5Dev);
 
-  // TODO FIXME
-  m_epcCtrlApp->NotifyS5Attach (swtchDev, portNo, gwDev, gwIp);
+  m_sgwS5Addr = EpcController::GetIpAddressForDevice (sgwS5Dev);
+  // TODO Install forwarding rules on S-GW?
 }
 
 void
@@ -104,12 +101,12 @@ SdranController::SetEpcController (Ptr<EpcController> epcCtrlApp)
   m_epcCtrlApp = epcCtrlApp;
 }
 
-Ptr<SdmnMme>
-SdranController::GetMme (void) const
+EpcS1apSapMme*
+SdranController::GetS1apSapMme (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_mme;
+  return m_mme->GetS1apSapMme ();
 }
 
 void
@@ -117,6 +114,8 @@ SdranController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
+  m_epcCtrlApp = 0;
+  m_mme = 0;
   delete (m_s11SapSgw);
 
   // Chain up.
@@ -300,10 +299,7 @@ SdranController::DoCreateSessionRequest (
        bit != req.bearerContextsToBeCreated.end ();
        ++bit)
     {
-      // Check for available TEID.
-      NS_ABORT_IF (m_teidCount == 0xFFFFFFFF);
-      uint32_t teid = ++m_teidCount;
-
+      uint32_t teid = EpcController::GetNextTeid ();
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.teid = teid;
       bearerContext.sgwFteid.address = enbInfo->GetSgwAddress ();

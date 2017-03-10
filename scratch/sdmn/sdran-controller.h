@@ -90,35 +90,28 @@ public:
     EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
 
   /**
-   * Notify this controller when the MME receives a context created response
-   * message. This is used to notify this controller with the list of bearers
-   * context created. With this information, the controller can configure the
-   * switches for GTP routing. The user is supposed to connect this function as
-   * trace sink for EpcMme::SessionCreated trace source.
-   * \see 3GPP TS 29.274 7.2.1 for CreateSessionRequest message format.
+   * Notify this controller when the S-GW control plane implemented by this
+   * SDRAN controller receives a create session request message. This
+   * controller will forward this message to the EPC controller, so it can
+   * configure the switches for GTP routing.
    * \param imsi The IMSI UE identifier.
    * \param cellId The eNB CellID to which the IMSI UE is attached to.
-   * \param enbAddr The eNB IPv4 address.
-   * \param pgwAddr The P-GW IPv4 address.
+   * \param enbAddr The eNB S1-U IPv4 address.
+   * \param sgwAddr The S-GW S1-U IPv4 address.
    * \param bearerList The list of context bearers created.
    */
   virtual void NotifySessionCreated (
-    uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address pgwAddr,
+    uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr,
     BearerList_t bearerList);
 
   /**
-   * Notify this controller of a new S-GW or P-GW connected to the S5 OpenFlow
-   * network over some switch port.
-   * \param swtchDev The OpenFlow switch device.
-   * \param portNo The port number created at the OpenFlow switch.
-   * \param gwDev The device created at the S/P-GW node (this is not the one
-   * added as port to switch, this is the 'other' end of this connection,
-   * associated with the S-GW or P-GW node).
-   * \param gwIp The IPv4 address assigned to the gwDev.
+   * Notify this controller of the S-GW connected to the OpenFlow backhaul
+   * network over.
+   * \param sgwS5PortNum The S5 port number on the S-GW OpenFlow switch.
+   * \param sgwS5Dev The S5 device attached to the S-GW OpenFlow switch.
    */
-  virtual void NotifyS5Attach (
-    Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev,
-    Ipv4Address gwIp);
+  virtual void NotifySgwAttach (
+    uint32_t sgwS5PortNum, Ptr<NetDevice> sgwS5Dev);
 
   /**
    * Set the EPC controller application pointer on this SDRAN controller to
@@ -128,10 +121,10 @@ public:
   void SetEpcController (Ptr<EpcController> epcCtrlApp);
 
   /**
-   * Get a pointer to the MME element associated to this SDRAN controller.
-   * \return The MME element.
+   * Get a pointer to the MME side of the S1-AP SAP.
+   * \return the S1-AP SAP.
    */
-  Ptr<SdmnMme> GetMme (void) const;
+  EpcS1apSapMme* GetS1apSapMme (void) const;
 
 protected:
   /** Destructor implementation. */
@@ -152,18 +145,15 @@ private:
   /** \name Methods for the S11 SAP S-GW control plane. */
   //\{
   void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
-  void DoModifyBearerRequest (EpcS11SapSgw::ModifyBearerRequestMessage msg);
-  void DoDeleteBearerCommand (EpcS11SapSgw::DeleteBearerCommandMessage req);
+  void DoModifyBearerRequest  (EpcS11SapSgw::ModifyBearerRequestMessage  msg);
+  void DoDeleteBearerCommand  (EpcS11SapSgw::DeleteBearerCommandMessage  req);
   void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage req);
   //\}
 
-protected:
-  uint32_t m_teidCount; // FIXME remover
-
 private:
-  // EPC controller.
-   Ptr<EpcController>   m_epcCtrlApp;   //!< EPC controller app.
-   
+  Ptr<EpcController>    m_epcCtrlApp;   //!< EPC controller app.
+  Ipv4Address           m_sgwS5Addr;    //!< S-GW S5 IP address.
+
   // MME communication.
   Ptr<SdmnMme>          m_mme;          //!< MME element.
   EpcS11SapMme*         m_s11SapMme;    //!< MME side of the S11 SAP.
