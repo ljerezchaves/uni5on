@@ -105,13 +105,22 @@ public:
     BearerList_t bearerList);
 
   /**
-   * Notify this controller of the S-GW connected to the OpenFlow backhaul
-   * network over.
+   * Notify this controller of a new S-GW connected to the OpenFlow backhaul
+   * network over over the S5 interface.
    * \param sgwS5PortNum The S5 port number on the S-GW OpenFlow switch.
    * \param sgwS5Dev The S5 device attached to the S-GW OpenFlow switch.
    */
   virtual void NotifySgwAttach (
     uint32_t sgwS5PortNum, Ptr<NetDevice> sgwS5Dev);
+
+  /**
+   * Notify this controller of a new or eNB connected to S-GW node over the
+   * S1-U interface.
+   * \param sgwS1uPortNum The S1-U port number on the S-GW OpenFlow switch.
+   * TODO
+   */
+  virtual void NotifyEnbAttach (
+    uint32_t sgwS1uPortNum);
 
   /**
    * Set the EPC controller application pointer on this SDRAN controller to

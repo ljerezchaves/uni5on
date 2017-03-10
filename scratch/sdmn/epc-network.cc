@@ -215,13 +215,12 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
   // application, which will forward packets to/from this logical port and the
   // S5 UDP socket binded to the sgwS5Dev.
   Ptr<VirtualNetDevice> sgwS5PortDev = CreateObject<VirtualNetDevice> ();
-  sgwS5PortDev->SetAttribute ("Mtu", UintegerValue (3000));
   sgwS5PortDev->SetAddress (Mac48Address::Allocate ());
   Ptr<OFSwitch13Port> sgwS5Port = sgwSwitchDev->AddSwitchPort (sgwS5PortDev);
   uint32_t sgwS5PortNum = sgwS5Port->GetPortNo ();
 
   // Create the S-GW S5 user-plane application.
-  sgwNode->AddApplication (CreateObject <PgwUserApp> (sgwS5PortDev));//FIXME
+  sgwNode->AddApplication (CreateObject <PgwUserApp> (sgwS5PortDev)); //FIXME
 
   // Notify the EPC and SDRAN controllers of the new S-GW device attached
   // OpenFlow backhaul network.
@@ -408,7 +407,6 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
   // application, which will forward packets to/from this logical port and the
   // S5 UDP socket binded to the pgwS5Dev.
   Ptr<VirtualNetDevice> pgwS5PortDev = CreateObject<VirtualNetDevice> ();
-  pgwS5PortDev->SetAttribute ("Mtu", UintegerValue (3000));
   pgwS5PortDev->SetAddress (Mac48Address::Allocate ());
   Ptr<OFSwitch13Port> pgwS5Port = pgwSwitchDev->AddSwitchPort (pgwS5PortDev);
   uint32_t pgwS5PortNum = pgwS5Port->GetPortNo ();

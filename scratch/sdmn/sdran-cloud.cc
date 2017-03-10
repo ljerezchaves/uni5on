@@ -147,51 +147,6 @@ SdranCloud::GetSgwSwitchDevice (void) const
   return devive;
 }
 
-//Ptr<NetDevice>
-//SdranCloud::S1EnbAttach (Ptr<Node> node, uint16_t cellId)
-//{
-//  NS_LOG_FUNCTION (this << node << cellId);
-//
-//  NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
-//
-//  uint64_t dpId = TopologyGetEnbSwitch (cellId);
-//  RegisterNodeAttachToSwitch (node, dpId);
-//  Ptr<Node> swNode = GetSwitchNode (dpId);
-//
-//  // Creating a link between the switch and the node.
-//  NetDeviceContainer devices;
-//  NodeContainer pair;
-//  pair.Add (swNode);
-//  pair.Add (node);
-//  devices = m_csmaHelper.Install (pair);
-//  m_s1Devices.Add (devices); // FIXME isso ta certo?
-//
-//  Ptr<CsmaNetDevice> portDev, nodeDev;
-//  portDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
-//  nodeDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
-//
-//  // Setting interface names for pacp filename.
-//  Names::Add (Names::FindName (swNode) + "+" +
-//              Names::FindName (node), portDev);
-//  Names::Add (Names::FindName (node) + "+" +
-//              Names::FindName (swNode), nodeDev);
-//
-//  // Set S1U IPv4 address for the new device at node.
-//  Ipv4InterfaceContainer nodeIpIfaces =
-//    m_s5AddrHelper.Assign (NetDeviceContainer (nodeDev));
-//  Ipv4Address nodeAddr = nodeIpIfaces.GetAddress (0);
-//
-//  // Adding newly created csma device as openflow switch port.
-//  Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (dpId);
-//  Ptr<OFSwitch13Port> swPort = swDev->AddSwitchPort (portDev);
-//  uint32_t portNum = swPort->GetPortNo ();
-//
-//  // Notify the controller of a new device attached to network.
-//  m_epcCtrlApp->NewS5Attach (swDev, portNum, nodeDev, nodeAddr);
-//
-//  return nodeDev;
-//}
-
 void
 SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
                     uint16_t cellId)
@@ -204,19 +159,21 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   InternetStackHelper internet;
   internet.Install (enb);
 
+  // PART 1: Connect the eNB to the S-GW.
+  //
   // Creating a link between the eNB node and the S-GW node.
   NetDeviceContainer devices = m_csmaHelper.Install (m_sgwNode, enb);
   m_s1Devices.Add (devices);
 
-  Ptr<CsmaNetDevice> sgwCsmaDevice, enbCsmaDevice;
-  sgwCsmaDevice = DynamicCast<CsmaNetDevice> (devices.Get (0));
-  enbCsmaDevice = DynamicCast<CsmaNetDevice> (devices.Get (1));
+  Ptr<CsmaNetDevice> sgwS1uDev, enbS1uDev;
+  sgwS1uDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
+  enbS1uDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
 
   // Setting interface names for pacp filename.
   Names::Add (Names::FindName (m_sgwNode) + "+" +
-              Names::FindName (enb), sgwCsmaDevice);
+              Names::FindName (enb), sgwS1uDev);
   Names::Add (Names::FindName (enb) + "+" +
-              Names::FindName (m_sgwNode), enbCsmaDevice);
+              Names::FindName (m_sgwNode), enbS1uDev);
 
   // Set S1-U IPv4 address for the devices.
   Ipv4InterfaceContainer s1uIpIfaces = m_s1uAddrHelper.Assign (devices);
@@ -224,35 +181,24 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   Ipv4Address enbAddress = s1uIpIfaces.GetAddress (1);
   m_s1uAddrHelper.NewNetwork ();
 
-  // // Adding newly created csma device as openflow switch port.
-  // Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (dpId);
-  // Ptr<OFSwitch13Port> swPort = swDev->AddSwitchPort (sgwCsmaDevice);
-  // uint32_t portNum = swPort->GetPortNo ();
-
-  // // Notify the controller of a new device attached to network.
-  // m_epcCtrlApp->NewS1uAttach (swDev, portNum, enbCsmaDevice, nodeAddr);
-
-
   // Create the virtual net device to work as the logical ports on the S-GW S1-U
   // interface. This logical ports will connect to the S-GW user-plane
   // application, which will forward packets to/from this logical port and the
-  // S1-U UDP socket binded to the sgwS5Dev.
+  // S1-U UDP socket binded to the sgwS1uDev.
   Ptr<VirtualNetDevice> sgwS1uPortDev = CreateObject<VirtualNetDevice> ();
-  sgwS1uPortDev->SetAttribute ("Mtu", UintegerValue (3000));
   sgwS1uPortDev->SetAddress (Mac48Address::Allocate ());
-  Ptr<OFSwitch13Port> sgwS1uPort = GetSgwSwitchDevice ()->AddSwitchPort (sgwS1uPortDev);
-  // uint32_t sgwS1uPortNum = sgwS1uPort->GetPortNo (); // FIXME
+  Ptr<OFSwitch13Device> sgwSwitchDev = GetSgwSwitchDevice ();
+  Ptr<OFSwitch13Port> sgwS1uPort = sgwSwitchDev->AddSwitchPort (sgwS1uPortDev);
+  uint32_t sgwS1uPortNum = sgwS1uPort->GetPortNo ();
 
   // Create the P-GW S5 user-plane application.
-  Ptr<PgwUserApp> sgwUserApp = CreateObject <PgwUserApp> (sgwS1uPortDev);
-  m_sgwNode->AddApplication (sgwUserApp);
+  m_sgwNode->AddApplication (CreateObject <PgwUserApp> (sgwS1uPortDev));
 
-  // Notify the controller...
+  // Notify the SDRAN controller of a new eNB attached to the S-GW node.
+  m_sdranCtrlApp->NotifyEnbAttach (sgwS1uPortNum); // FIXME add parameters
 
-
-
-
-
+  // PART 2: Configure the eNB node.
+  //
   // Create the S1-U socket for the eNB
   Ptr<Socket> enbS1uSocket = Socket::CreateSocket (
       enb, TypeId::LookupByName ("ns3::UdpSocketFactory"));
@@ -276,11 +222,7 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   Ptr<EpcEnbApplication> enbApp = CreateObject<EpcEnbApplication> (
       enbLteSocket, enbS1uSocket, enbAddress, sgwAddress, cellId);
   enb->AddApplication (enbApp);
-
-  NS_ASSERT_MSG (enb->GetNApplications () == 1,
-                 "Don't install other applications on eNB.");
-  NS_ASSERT_MSG (enb->GetApplication (0)->GetObject<EpcEnbApplication> () != 0,
-                 "Cannot retrieve EpcEnbApplication from eNB.");
+  NS_ASSERT (enb->GetNApplications () == 1);
 
   Ptr<EpcX2> x2 = CreateObject<EpcX2> ();
   enb->AggregateObject (x2);
@@ -293,7 +235,6 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
 
   enbApp->SetS1apSapMme (m_sdranCtrlApp->GetS1apSapMme ());
 }
-
 
 // NetDeviceContainer
 // SdranCloud::X2Attach (Ptr<Node> enb1, Ptr<Node> enb2)

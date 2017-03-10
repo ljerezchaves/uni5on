@@ -198,11 +198,6 @@ EpcController::NotifyPgwAttach (
          << ",output=" << pgwSgiPortNum;
   DpctlSchedule (pgwSwDev->GetDatapathId (), cmdOut.str ());
 
-  // ARP request packets. Send to controller.
-  DpctlSchedule (pgwSwDev->GetDatapathId (),
-                 "flow-mod cmd=add,table=0,prio=16 eth_type=0x0806 "
-                 "apply:output=ctrl");
-
   // Table miss entry. Send to controller.
   DpctlSchedule (pgwSwDev->GetDatapathId (),
                  "flow-mod cmd=add,table=0,prio=0 "
@@ -412,7 +407,7 @@ EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
   sprintf (bufferStr, "%u",   buffer);
 
-  // Building the dpctl command + arguments string (withoug p
+  // Building the dpctl command + arguments string
   std::ostringstream cmd;
   cmd << "flow-mod cmd=add,table=1"
       << ",buffer=" << bufferStr

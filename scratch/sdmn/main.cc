@@ -211,6 +211,12 @@ void ConfigureDefaults ()
   Config::SetDefault ("ns3::TcpSocketBase::MaxSegLifetime", DoubleValue (1));
 
   //
+  // Increasing the default MTU for virtual network devices, which are used as
+  // OpenFlow virtual port devices.
+  //
+  Config::SetDefault ("ns3::VirtualNetDevice::Mtu", UintegerValue (3000));
+
+  //
   // Increasing SrsPeriodicity to allow more UEs per eNB. Allowed values are:
   // {2, 5, 10, 20, 40, 80, 160, 320}. The default value (40) allows no more
   // than ~40 UEs for each eNB. Note that the value needs to be higher than the

@@ -94,6 +94,15 @@ SdranController::NotifySgwAttach (
 }
 
 void
+SdranController::NotifyEnbAttach (
+  uint32_t sgwS1uPortNum)
+{
+  NS_LOG_FUNCTION (this << sgwS1uPortNum);
+
+  // TODO
+}
+
+void
 SdranController::SetEpcController (Ptr<EpcController> epcCtrlApp)
 {
   NS_LOG_FUNCTION (this << epcCtrlApp);

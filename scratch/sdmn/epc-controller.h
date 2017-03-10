@@ -93,7 +93,7 @@ public:
     EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
 
   /**
-   * Notify this controller of the P-GW connected to the OpenFlow backhaul
+   * Notify this controller of a new P-GW connected to the OpenFlow backhaul
    * network. This function will configure the P-GW datapath.
    * \param pgwSwDev The OpenFlow P-GW switch device.
    * \param pgwS5PortNum The S5 port number on the P-GW OpenFlow switch.

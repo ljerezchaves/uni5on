@@ -174,7 +174,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   Ptr<const RoutingInfo> rInfo = RoutingInfo::GetConstPointer (teid);
   Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ring information for this routing info.");
-  
+
   Ptr<const QosStatsCalculator> epcStats;
   Ptr<const QosStatsCalculator> appStats;
 
