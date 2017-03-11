@@ -34,6 +34,7 @@ EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
 EpcController::QciDscpInitializer EpcController::qciDscpInitializer;
 
 EpcController::EpcController ()
+  : m_pgwDpId (0)
 {
   NS_LOG_FUNCTION (this);
 }
