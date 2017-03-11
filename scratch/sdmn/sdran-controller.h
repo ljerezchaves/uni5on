@@ -43,6 +43,7 @@ namespace ns3 {
 class SdranController : public OFSwitch13Controller
 {
   friend class MemberEpcS11SapSgw<SdranController>;
+  friend class TrafficManager;
 
 public:
   SdranController ();           //!< Default constructor.
@@ -116,11 +117,12 @@ public:
   /**
    * Notify this controller of a new or eNB connected to S-GW node over the
    * S1-U interface.
+   * \param cellID The eNB cell ID.
    * \param sgwS1uPortNum The S1-U port number on the S-GW OpenFlow switch.
-   * TODO
+   * TODO parameters
    */
   virtual void NotifyEnbAttach (
-    uint32_t sgwS1uPortNum);
+    uint16_t cellId, uint32_t sgwS1uPortNum);
 
   /**
    * Set the EPC controller application pointer on this SDRAN controller to
@@ -150,6 +152,13 @@ protected:
     ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
   // Inherited from OFSwitch13Controller.
 
+  /**
+   * Get the SDRAN controller pointer from the global map for this cell ID.
+   * \param cellID The eNB cell ID.
+   * \return The SDRAN controller pointer.
+   */
+  static Ptr<SdranController> GetPointer (uint16_t cellId);
+
 private:
   /** \name Methods for the S11 SAP S-GW control plane. */
   //\{
@@ -160,6 +169,13 @@ private:
   //\}
 
 private:
+  /**
+   * Register the SDRAN controller into global map for further usage.
+   * \param ctrl The SDRAN controller pointer.
+   * \param cellId The cell ID used to index the map.
+   */
+  static void RegisterController (Ptr<SdranController> ctrl, uint16_t cellId);
+
   Ptr<EpcController>    m_epcCtrlApp;   //!< EPC controller app.
   Ipv4Address           m_sgwS5Addr;    //!< S-GW S5 IP address.
 
@@ -167,6 +183,10 @@ private:
   Ptr<SdmnMme>          m_mme;          //!< MME element.
   EpcS11SapMme*         m_s11SapMme;    //!< MME side of the S11 SAP.
   EpcS11SapSgw*         m_s11SapSgw;    //!< S-GW side of the S11 SAP.
+
+  /** Map saving cell ID / SDRAN controller pointer. */
+  typedef std::map<uint16_t, Ptr<SdranController> > CellIdCtrlMap_t;
+  static CellIdCtrlMap_t m_cellIdCtrlMap; //!< Global SDRAN ctrl by cell ID.
 };
 
 };  // namespace ns3

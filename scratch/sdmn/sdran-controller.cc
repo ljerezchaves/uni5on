@@ -25,6 +25,9 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("SdranController");
 NS_OBJECT_ENSURE_REGISTERED (SdranController);
 
+// Initializing SdranController static members.
+SdranController::CellIdCtrlMap_t SdranController::m_cellIdCtrlMap;
+
 SdranController::SdranController ()
   : m_epcCtrlApp (0)
 {
@@ -97,9 +100,12 @@ SdranController::NotifySgwAttach (
 
 void
 SdranController::NotifyEnbAttach (
-  uint32_t sgwS1uPortNum)
+  uint16_t cellId, uint32_t sgwS1uPortNum)
 {
   NS_LOG_FUNCTION (this << sgwS1uPortNum);
+
+  // Register this controller by cell ID for further usage.
+  RegisterController (Ptr<SdranController> (this), cellId);
 
   // TODO
 }
@@ -286,6 +292,21 @@ SdranController::HandleFlowRemoved (
   NS_ABORT_MSG ("Should not get here :/");
 }
 
+Ptr<SdranController>
+SdranController::GetPointer (uint16_t cellId)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  Ptr<SdranController> ctrl = 0;
+  CellIdCtrlMap_t::iterator ret;
+  ret = SdranController::m_cellIdCtrlMap.find (cellId);
+  if (ret != SdranController::m_cellIdCtrlMap.end ())
+    {
+      ctrl = ret->second;
+    }
+  return ctrl;
+}
+
 //
 // On the following Do* methods, note the trick to avoid the need for
 // allocating TEID on the S11 interface using the IMSI as identifier.
@@ -390,6 +411,22 @@ SdranController::DoDeleteBearerResponse (
        ++bit)
     {
       // TODO Should remove entries from gateway?
+    }
+}
+
+void
+SdranController::RegisterController (Ptr<SdranController> ctrl,
+                                     uint16_t cellId)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  // Saving map by cell ID.
+  std::pair<CellIdCtrlMap_t::iterator, bool> ret;
+  std::pair<uint16_t, Ptr<SdranController> > entry (cellId, ctrl);
+  ret = SdranController::m_cellIdCtrlMap.insert (entry);
+  if (ret.second == false)
+    {
+      NS_FATAL_ERROR ("Can't register SDRAN controller by cell ID.");
     }
 }
 

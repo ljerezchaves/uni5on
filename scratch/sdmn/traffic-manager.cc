@@ -19,7 +19,6 @@
  */
 
 #include "traffic-manager.h"
-#include "sdran-cloud.h"
 #include "sdran-controller.h"
 
 namespace ns3 {
@@ -174,7 +173,7 @@ TrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
     }
 
   m_cellId = cellId;
-  m_ctrlApp = SdranCloud::GetControllerApp (cellId);
+  m_ctrlApp = SdranController::GetPointer (cellId);
   m_defaultTeid = bearerList.front ().sgwFteid.teid;
 
   // For each application, set the corresponding teid

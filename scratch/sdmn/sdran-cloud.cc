@@ -33,7 +33,6 @@ NS_OBJECT_ENSURE_REGISTERED (SdranCloud);
 uint32_t SdranCloud::m_enbCounter = 0;
 uint32_t SdranCloud::m_sdranCounter = 0;
 SdranCloud::NodeSdranMap_t SdranCloud::m_enbSdranMap;
-SdranCloud::CellIdSdranMap_t SdranCloud::m_cellIdSdranMap;
 
 SdranCloud::SdranCloud ()
 {
@@ -155,7 +154,6 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   NS_LOG_FUNCTION (this << enb << lteEnbNetDevice << cellId);
 
   NS_ASSERT (enb == lteEnbNetDevice->GetNode ());
-  RegisterSdranCloud (Ptr<SdranCloud> (this), cellId);
 
   // Add an IPv4 stack to the previously created eNB
   InternetStackHelper internet;
@@ -197,7 +195,7 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   m_sgwNode->AddApplication (CreateObject <SgwUserApp> (sgwS1uPortDev));
 
   // Notify the SDRAN controller of a new eNB attached to the S-GW node.
-  m_sdranCtrlApp->NotifyEnbAttach (sgwS1uPortNum); // FIXME add parameters
+  m_sdranCtrlApp->NotifyEnbAttach (cellId, sgwS1uPortNum); // FIXME parameters
 
   // PART 2: Configure the eNB node.
   //
@@ -348,21 +346,6 @@ SdranCloud::EnablePcap (std::string prefix, bool promiscuous)
   helper.EnablePcap (prefix + "lte-epc-s1u", m_s1Devices,  promiscuous);
 }
 
-Ptr<SdranController>
-SdranCloud::GetControllerApp (uint16_t cellId)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  Ptr<SdranController> sdranCtrl = 0;
-  CellIdSdranMap_t::iterator ret;
-  ret = SdranCloud::m_cellIdSdranMap.find (cellId);
-  if (ret != SdranCloud::m_cellIdSdranMap.end ())
-    {
-      sdranCtrl = ret->second->GetControllerApp ();
-    }
-  return sdranCtrl;
-}
-
 void
 SdranCloud::DoDispose ()
 {
@@ -473,21 +456,6 @@ SdranCloud::RegisterSdranCloud (Ptr<SdranCloud> sdran)
         {
           NS_FATAL_ERROR ("Can't register SDRAN cloud by eNB node.");
         }
-    }
-}
-
-void
-SdranCloud::RegisterSdranCloud (Ptr<SdranCloud> sdran, uint16_t cellId)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  // Saving map by cell ID.
-  std::pair<CellIdSdranMap_t::iterator, bool> ret;
-  std::pair<uint16_t, Ptr<SdranCloud> > entry (cellId, sdran);
-  ret = SdranCloud::m_cellIdSdranMap.insert (entry);
-  if (ret.second == false)
-    {
-      NS_FATAL_ERROR ("Can't register SDRAN cloud by cell ID.");
     }
 }
 
