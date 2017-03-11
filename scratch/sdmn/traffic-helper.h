@@ -88,7 +88,8 @@ private:
    * \li The Guaranteed Bit Rate field is used by the controller to reserve the
    *     requested bandwidth in OpenFlow EPC network (only for GBR beares).
    */
-  void Install (NodeContainer ueNodes, NetDeviceContainer ueDevices);
+  void InstallApplications (NodeContainer ueNodes,
+                            NetDeviceContainer ueDevices);
 
   /**
    * Get complete filename for video trace files.
@@ -170,7 +171,6 @@ private:
 
   ObjectFactory       m_managerFactory; //!< Traffic manager factory.
 
-  Ptr<EpcNetwork>     m_epcNetwork;     //!< The LTE EPC helper.
   Ptr<LteNetwork>     m_lteNetwork;     //!< The LTE network.
 
   Ptr<Node>           m_webNode;        //!< Server node.

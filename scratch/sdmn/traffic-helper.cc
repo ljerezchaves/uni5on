@@ -65,15 +65,12 @@ const uint64_t TrafficHelper::m_mbrBitRate [] = {
 // ------------------------------------------------------------------------ //
 TrafficHelper::TrafficHelper (Ptr<EpcNetwork> epcNetwork,
                               Ptr<LteNetwork> lteNetwork)
-  : m_epcNetwork (epcNetwork),
-    m_lteNetwork (lteNetwork),
-    m_webNode (epcNetwork->GetWebNode ())
+  : m_lteNetwork (lteNetwork),
+    m_webNode (epcNetwork->GetWebNode ()),
+    m_webAddr (epcNetwork->GetWebIpAddress ()),
+    m_webMask (epcNetwork->GetWebIpMask ())
 {
   NS_LOG_FUNCTION (this);
-
-  // Configuring server address and mask
-  m_webAddr = epcNetwork->GetWebIpAddress ();
-  m_webMask = epcNetwork->GetWebIpMask ();
 
   // Configuring the traffic manager object factory
   m_managerFactory.SetTypeId (TrafficManager::GetTypeId ());
@@ -208,7 +205,6 @@ TrafficHelper::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_epcNetwork = 0;
   m_lteNetwork = 0;
   m_webNode = 0;
   m_ueNode = 0;
@@ -223,14 +219,16 @@ TrafficHelper::NotifyConstructionCompleted ()
   NS_LOG_FUNCTION (this);
 
   // Install the applications
-  Install (m_lteNetwork->GetUeNodes (), m_lteNetwork->GetUeDevices ());
+  InstallApplications (m_lteNetwork->GetUeNodes (),
+                       m_lteNetwork->GetUeDevices ());
 
   // Chain up
   Object::NotifyConstructionCompleted ();
 }
 
 void
-TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices)
+TrafficHelper::InstallApplications (NodeContainer ueNodes,
+                                    NetDeviceContainer ueDevices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -251,8 +249,8 @@ TrafficHelper::Install (NodeContainer ueNodes, NetDeviceContainer ueDevices)
       m_ueNode->AggregateObject (m_ueManager);
 
       // Connecting the manager to new context created trace source.
-      m_epcNetwork->GetControllerApp ()->TraceConnectWithoutContext (
-        "SessionCreated",
+      Config::ConnectWithoutContext (
+        "/NodeList/*/ApplicationList/*/$ns3::EpcController/SessionCreated",
         MakeCallback (&TrafficManager::SessionCreatedCallback, m_ueManager));
 
       // Installing applications into UEs
