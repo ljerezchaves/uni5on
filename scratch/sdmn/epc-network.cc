@@ -22,6 +22,7 @@
 #include "epc-network.h"
 #include "epc-controller.h"
 #include "pgw-user-app.h"
+#include "sgw-user-app.h"
 #include "sdran-cloud.h"
 
 namespace ns3 {
@@ -205,7 +206,7 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
   uint32_t swS5PortNum = swS5Port->GetPortNo ();
 
   // Add the sgwS5Dev as standard device on S-GW node.
-  // It will be connected to a logical port through the PgwUserApp.
+  // It will be connected to a logical port through the SgwUserApp.
   m_s5AddrHelper.Assign (NetDeviceContainer (sgwS5Dev));
   NS_LOG_DEBUG ("S-GW S5 address: " <<
                 EpcController::GetIpAddressForDevice (sgwS5Dev));
@@ -220,7 +221,7 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
   uint32_t sgwS5PortNum = sgwS5Port->GetPortNo ();
 
   // Create the S-GW S5 user-plane application.
-  sgwNode->AddApplication (CreateObject <PgwUserApp> (sgwS5PortDev)); //FIXME
+  sgwNode->AddApplication (CreateObject <SgwUserApp> (sgwS5PortDev));
 
   // Notify the EPC and SDRAN controllers of the new S-GW device attached
   // OpenFlow backhaul network.

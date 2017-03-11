@@ -21,7 +21,7 @@
 #include "sdran-cloud.h"
 #include "epc-controller.h"
 #include "epc-network.h"
-#include "pgw-user-app.h"
+#include "sgw-user-app.h"
 #include "sdmn-mme.h"
 
 namespace ns3 {
@@ -192,7 +192,7 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   uint32_t sgwS1uPortNum = sgwS1uPort->GetPortNo ();
 
   // Create the P-GW S5 user-plane application.
-  m_sgwNode->AddApplication (CreateObject <PgwUserApp> (sgwS1uPortDev));
+  m_sgwNode->AddApplication (CreateObject <SgwUserApp> (sgwS1uPortDev));
 
   // Notify the SDRAN controller of a new eNB attached to the S-GW node.
   m_sdranCtrlApp->NotifyEnbAttach (sgwS1uPortNum); // FIXME add parameters
