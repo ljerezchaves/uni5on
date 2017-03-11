@@ -211,7 +211,7 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
   NS_LOG_DEBUG ("S-GW S5 address: " <<
                 EpcController::GetIpAddressForDevice (sgwS5Dev));
 
-  // Create the virtual net device to work as the logical ports on the S-GW S5
+  // Create the virtual net device to work as the logical port on the S-GW S5
   // interface. This logical ports will connect to the S-GW user-plane
   // application, which will forward packets to/from this logical port and the
   // S5 UDP socket binded to the sgwS5Dev.

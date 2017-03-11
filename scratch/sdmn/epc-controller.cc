@@ -169,6 +169,7 @@ EpcController::NotifyPgwAttach (
   NS_LOG_FUNCTION (this << pgwSwDev << pgwS5PortNum << pgwSgiPortNum <<
                    pgwS5Dev << pgwSgiDev << webSgiDev);
 
+  NS_ASSERT_MSG (!m_pgwDpId, "Only one P-GW allowed on this implementation.");
   m_pgwDpId = pgwSwDev->GetDatapathId ();
   m_pgwS5Port = pgwS5PortNum;
   m_pgwS5Addr = GetIpAddressForDevice (pgwS5Dev);
@@ -463,7 +464,7 @@ EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
                 << ",tcp_src=" << filter.remotePortStart
                 << ",tcp_dst=" << filter.localPortStart;
           std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
-          DpctlExecute (m_pgwDpId, cmdTcpStr); // FIXME remover m_pgwDpId
+          DpctlExecute (m_pgwDpId, cmdTcpStr);
         }
 
       // Install rules for UDP traffic
@@ -495,14 +496,11 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // to the controller.
   DpctlExecute (swtch, "set-config miss=128");
 
-  // TODO: Por enquanto o S-GW está registrado aqui neste controlador, mas
-  // deveria ser no controlador do SDRAN. Corrigir isso assim que o SDRAN
-  // controller for implantado.
-
-  // FIXME Find a better way to identify which nodes should or not scape here.
+  // Install only the table miss entry on the P-GW switch.
   if (swtch->GetDpId () == m_pgwDpId)
     {
-      // Don't install the following rules on the P-GW switch.
+      DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=0"
+                    " apply:output=ctrl");
       return;
     }
 

@@ -181,7 +181,7 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   Ipv4Address enbAddress = s1uIpIfaces.GetAddress (1);
   m_s1uAddrHelper.NewNetwork ();
 
-  // Create the virtual net device to work as the logical ports on the S-GW S1-U
+  // Create the virtual net device to work as the logical port on the S-GW S1-U
   // interface. This logical ports will connect to the S-GW user-plane
   // application, which will forward packets to/from this logical port and the
   // S1-U UDP socket binded to the sgwS1uDev.
