@@ -74,8 +74,6 @@ TrafficHelper::TrafficHelper (Ptr<EpcNetwork> epcNetwork,
 
   // Configuring the traffic manager object factory
   m_managerFactory.SetTypeId (TrafficManager::GetTypeId ());
-  SetManagerAttribute ("Controller",
-                       PointerValue (epcNetwork->GetControllerApp ()));
 
   // Random video selection
   m_videoRng = CreateObject<UniformRandomVariable> ();

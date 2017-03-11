@@ -67,14 +67,11 @@ public:
    *           we can use only the teid for the tunnel to prepare and install
    *           route. If we would like to aggregate traffic from several
    *           applications into same bearer we will need to revise this.
-   * \param teid The teid for this bearer, if already defined.
-   * \param imsi uint64_t IMSI UE identifier.
-   * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
    * \param bearer EpsBearer bearer QoS characteristics of the bearer.
+   * \param teid The teid for this bearer, if already defined.
    * \returns true if successful (the bearer creation process will proceed),
    */
-  virtual bool RequestDedicatedBearer (
-    EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
+  virtual bool RequestDedicatedBearer (EpsBearer bearer, uint32_t teid);
 
   /**
    * Release a dedicated EPS bearer.
@@ -83,14 +80,11 @@ public:
    *           we can use only the teid for the tunnel to prepare and install
    *           route. If we would like to aggregate traffic from several
    *           applications into same bearer we will need to revise this.
-   * \param teid The teid for this bearer, if already defined.
-   * \param imsi uint64_t IMSI UE identifier.
-   * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
    * \param bearer EpsBearer bearer QoS characteristics of the bearer.
+   * \param teid The teid for this bearer, if already defined.
    * \returns true if successful, false otherwise.
    */
-  virtual bool ReleaseDedicatedBearer (
-    EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
+  virtual bool ReleaseDedicatedBearer (EpsBearer bearer, uint32_t teid);
 
   /**
    * Notify this controller of a new P-GW connected to the OpenFlow backhaul
@@ -132,11 +126,10 @@ public:
   virtual void TopologyBuilt (OFSwitch13DeviceContainer devices);
 
   /**
-   * Notify this controller when the S-GW control plane implemented by the
-   * SDRAN controller receives a create session request message. This is used
-   * to notify this controller with the list of bearers context created. With
-   * this information, this controller can save routing information and
-   * configure the switches for GTP routing.
+   * Notify this controller when the S-GW control plane (implemented by the
+   * SDRAN controller) receives a create session request message. This
+   * controller uses the list of bearers to save routing information and
+   * configure the default bearer routing.
    * \param imsi The IMSI UE identifier.
    * \param cellId The eNB CellID to which the IMSI UE is attached to.
    * \param sgwAddr The S-GW S5 IPv4 address.
@@ -169,9 +162,6 @@ public:
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
-
-  // Inherited from ObjectBase.
-  virtual void NotifyConstructionCompleted (void);
 
   /** \name Topology methods.
    * These virtual methods must be implemented by topology subclasses, as they
@@ -229,7 +219,7 @@ protected:
    * \param rInfo The routing information to configure.
    * \param buffer The buffered packet to apply this rule to.
    */
-  void InstallPgwTftRules (
+  virtual void InstallPgwTftRules (
     Ptr<RoutingInfo> rInfo, uint32_t buffer = OFP_NO_BUFFER);
 
   // Inherited from OFSwitch13Controller.
@@ -253,13 +243,10 @@ public:
    * TracedCallback signature for session created trace source.
    * \param imsi The IMSI UE identifier.
    * \param cellId The eNB CellID to which the IMSI UE is attached to.
-   * \param enbAddr The eNB IPv4 address.
-   * \param pgwAddr The P-GW IPv4 address.
    * \param bearerList The list of context bearers created.
    */
   typedef void (*SessionCreatedTracedCallback)(
-    uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address pgwAddr,
-    BearerList_t bearerList);
+    uint64_t imsi, uint16_t cellId, BearerList_t bearerList);
 
 protected:
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
@@ -273,40 +260,37 @@ protected:
 
   bool                  m_voipQos;            //!< VoIP QoS with queues.
   bool                  m_nonGbrCoexistence;  //!< Non-GBR coexistence.
-  static const uint16_t m_flowTimeout;        //!< Timeout for flow entries.
 
 private:
+  // P-GW metadata
   uint64_t              m_pgwDpId;            //!< P-GW datapath ID.
   uint32_t              m_pgwS5Port;          //!< P-GW S5 port no.
   Ipv4Address           m_pgwS5Addr;          //!< P-GW S5 IP address.
 
-  /**
-   * TEID counter, used to allocate new GTP-U TEID values.
-   * \internal This counter is initialized at 0x0000000F, reserving the first
-   *           values for controller usage.
-   */
-  static uint32_t m_teidCount;
-
-  /** Map saving EpsBearer::Qci / IP DSCP value. */
-  typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
-  static QciDscpMap_t m_qciDscpTable;   //!< DSCP mapped values.
-
-  /**
-   * EpcController inner utility class used to initialize DSCP map table.
-   */
+  //
+  // Static attributes
+  //
+  /** EpcController inner utility class used to initialize DSCP map table. */
   class QciDscpInitializer
   {
-public:
+  public:
     /** Default constructor, used to initilialize the DSCP table. */
     QciDscpInitializer ();
   };
   friend class QciDscpInitializer;
 
+  /** Map saving EpsBearer::Qci / IP DSCP value. */
+  typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
+  
   /**
-   * Static instance of QciDscpInitializer. When this is created, its
-   * constructor initializes the EpcController's static DSCP map table.
+   * TEID counter, used to allocate new GTP-U TEID values.
+   * \internal This counter is initialized at 0x0000000F, reserving the first
+   *           values for controller usage.
    */
-  static QciDscpInitializer qciDscpInitializer;
+  static uint32_t           m_teidCount;
+  static const uint16_t     m_flowTimeout;        //!< Timeout for flow entries.
+  static QciDscpInitializer m_qciDscpInitializer; //!< QCI DSCP initializer.
+  static QciDscpMap_t       m_qciDscpTable;       //!< DSCP mapped values.
 };
 
 };  // namespace ns3

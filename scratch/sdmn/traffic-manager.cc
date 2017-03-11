@@ -19,7 +19,8 @@
  */
 
 #include "traffic-manager.h"
-#include "epc-controller.h"
+#include "sdran-cloud.h"
+#include "sdran-controller.h"
 
 namespace ns3 {
 
@@ -43,12 +44,6 @@ TrafficManager::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::TrafficManager")
     .SetParent<Object> ()
     .AddConstructor<TrafficManager> ()
-    .AddAttribute ("Controller",
-                   "The OpenFlow EPC controller.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   PointerValue (),
-                   MakePointerAccessor (&TrafficManager::m_controller),
-                   MakePointerChecker<EpcController> ())
     .AddAttribute ("PoissonInterArrival",
                    "An exponential random variable used to get application "
                    "inter-arrival start times.",
@@ -92,7 +87,7 @@ TrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
   if (appTeid != m_defaultTeid)
     {
       // No resource request for traffic over default bearer.
-      authorized = m_controller->RequestDedicatedBearer (
+      authorized = m_ctrlApp->RequestDedicatedBearer (
           app->GetEpsBearer (), m_imsi, m_cellId, appTeid);
     }
 
@@ -161,8 +156,8 @@ TrafficManager::NotifyAppStop (Ptr<const SdmnClientApp> app)
       // No resource release for traffic over default bearer.
       // Schedule the release for 1 second after application stops.
       Simulator::Schedule (
-        Seconds (1), &EpcController::ReleaseDedicatedBearer,
-        m_controller, app->GetEpsBearer (), m_imsi, m_cellId, appTeid);
+        Seconds (1), &SdranController::ReleaseDedicatedBearer,
+        m_ctrlApp, app->GetEpsBearer (), m_imsi, m_cellId, appTeid);
     }
 }
 
@@ -179,6 +174,7 @@ TrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
     }
 
   m_cellId = cellId;
+  m_ctrlApp = SdranCloud::GetControllerApp (cellId);
   m_defaultTeid = bearerList.front ().sgwFteid.teid;
 
   // For each application, set the corresponding teid
@@ -215,7 +211,7 @@ TrafficManager::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_poissonRng = 0;
-  m_controller = 0;
+  m_ctrlApp = 0;
   m_apps.clear ();
 }
 

@@ -78,6 +78,13 @@ public:
    */
   void EnablePcap (std::string prefix, bool promiscuous = false);
 
+  /**
+   * Get the SDRAN controller pointer responsible for this cell ID.
+   * \param cellID The eNB cell ID.
+   * \return The SDRAN controller pointer.
+   */
+  static Ptr<SdranController> GetControllerApp (uint16_t cellId);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -98,6 +105,13 @@ private:
    * \param sdran The SDRAN cloud pointer.
    */
   static void RegisterSdranCloud (Ptr<SdranCloud> sdran);
+
+  /**
+   * Register the SDRAN cloud into global map for further usage.
+   * \param sdran The SDRAN cloud pointer.
+   * \param cellId The cell ID used to index the map.
+   */
+  static void RegisterSdranCloud (Ptr<SdranCloud> sdran, uint16_t cellId);
 
   uint32_t                      m_sdranId;        //!< SDRAN cloud id.
   uint32_t                      m_nSites;         //!< Number of cell sites.
@@ -130,9 +144,13 @@ private:
   /** Map saving node / SDRAN pointer. */
   typedef std::map<Ptr<Node>, Ptr<SdranCloud> > NodeSdranMap_t;
 
+  /** Map saving cell ID / SDRAN pointer. */
+  typedef std::map<uint16_t, Ptr<SdranCloud> > CellIdSdranMap_t;
+
   static uint32_t         m_enbCounter;     //!< Global eNB counter.
   static uint32_t         m_sdranCounter;   //!< Global SDRAN cloud counter.
   static NodeSdranMap_t   m_enbSdranMap;    //!< Global SDRAN by eNB node map.
+  static CellIdSdranMap_t m_cellIdSdranMap; //!< Global SDRAN by cell ID.
 };
 
 } // namespace ns3

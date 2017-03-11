@@ -31,7 +31,7 @@ NS_OBJECT_ENSURE_REGISTERED (EpcController);
 const uint16_t EpcController::m_flowTimeout = 15;
 uint32_t EpcController::m_teidCount = 0x0000000F;
 EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
-EpcController::QciDscpInitializer EpcController::qciDscpInitializer;
+EpcController::QciDscpInitializer EpcController::m_qciDscpInitializer;
 
 EpcController::EpcController ()
   : m_pgwDpId (0)
@@ -78,10 +78,9 @@ EpcController::GetTypeId (void)
 }
 
 bool
-EpcController::RequestDedicatedBearer (
-  EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
+EpcController::RequestDedicatedBearer (EpsBearer bearer, uint32_t teid)
 {
-  NS_LOG_FUNCTION (this << imsi << cellId << teid);
+  NS_LOG_FUNCTION (this << teid);
 
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
   NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer " << teid);
@@ -129,10 +128,9 @@ EpcController::RequestDedicatedBearer (
 }
 
 bool
-EpcController::ReleaseDedicatedBearer (
-  EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
+EpcController::ReleaseDedicatedBearer (EpsBearer bearer, uint32_t teid)
 {
-  NS_LOG_FUNCTION (this << imsi << cellId << teid);
+  NS_LOG_FUNCTION (this << teid);
 
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
   NS_ASSERT_MSG (rInfo, "No routing information for teid.");
@@ -289,8 +287,8 @@ EpcController::NotifySessionCreated (
   // For default bearer, no Meter nor Reserver metadata.
   // For logic consistence, let's check for available resources.
   bool accepted = TopologyBearerRequest (rInfo);
-  m_bearerRequestTrace (true, rInfo);
   NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
+  m_bearerRequestTrace (accepted, rInfo);
 
   // Install rules for default bearer
   if (!TopologyInstallRouting (rInfo))
@@ -385,15 +383,6 @@ EpcController::DoDispose ()
 
   // Chain up.
   Object::DoDispose ();
-}
-
-void
-EpcController::NotifyConstructionCompleted ()
-{
-  NS_LOG_FUNCTION (this);
-
-  // Chain up.
-  ObjectBase::NotifyConstructionCompleted ();
 }
 
 void
@@ -505,6 +494,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
       return;
     }
 
+  // For the switches on the backhaul network, install following rules:
   // -------------------------------------------------------------------------
   // Table 0 -- Input table -- [from higher to lower priority]
   //
@@ -522,7 +512,6 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
   // Table miss entry. Send to controller.
   DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
-
 
   // -------------------------------------------------------------------------
   // Table 1 -- Classification table -- [from higher to lower priority]
@@ -599,7 +588,7 @@ EpcController::HandlePacketIn (
   free (m);
 
   // All handlers must free the message when everything is ok
-  ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
+  ofl_msg_free ((ofl_msg_header*)msg, 0);
 
   NS_ABORT_MSG ("Packet not supposed to be sent to this controller. Abort.");
   return 0;

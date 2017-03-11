@@ -60,7 +60,7 @@ SdranController::RequestDedicatedBearer (
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
   // TODO
-  return m_epcCtrlApp->RequestDedicatedBearer (bearer, imsi, cellId, teid);
+  return m_epcCtrlApp->RequestDedicatedBearer (bearer, teid);
 }
 
 bool
@@ -70,7 +70,7 @@ SdranController::ReleaseDedicatedBearer (
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
   // TODO
-  return m_epcCtrlApp->ReleaseDedicatedBearer (bearer, imsi, cellId, teid);
+  return m_epcCtrlApp->ReleaseDedicatedBearer (bearer, teid);
 }
 
 void
@@ -80,6 +80,8 @@ SdranController::NotifySessionCreated (
 {
   NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << sgwAddr);
 
+  // TODO ??? Acho que nao precisa fazer mais nada.. se realmente for so isso,
+  // levar essa linha la pra baixo, na funcao chamada pelo mme.
   m_epcCtrlApp->NotifySessionCreated (imsi, cellId, m_sgwS5Addr, bearerList);
 }
 
