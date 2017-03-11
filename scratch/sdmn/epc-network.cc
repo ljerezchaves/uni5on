@@ -122,6 +122,22 @@ EpcNetwork::GetWebNode (void) const
   return m_webNode;
 }
 
+Ipv4Address
+EpcNetwork::GetWebIpAddress (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_webSgiAddr;
+}
+
+Ipv4Mask
+EpcNetwork::GetWebIpMask (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return Ipv4Mask ("255.255.255.252");
+}
+
 Ptr<Node>
 EpcNetwork::GetControllerNode (void) const
 {
@@ -360,8 +376,8 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
 
   // Set the IP address on the Internet Web server and P-GW SGi interfaces.
   m_sgiAddrHelper.Assign (NetDeviceContainer (m_sgiDevices));
-  NS_LOG_DEBUG ("Web SGi address: " <<
-                EpcController::GetIpAddressForDevice (webSgiDev));
+  m_webSgiAddr = EpcController::GetIpAddressForDevice (webSgiDev);  
+  NS_LOG_DEBUG ("Web SGi address: " << m_webSgiAddr);
   NS_LOG_DEBUG ("P-GW SGi address: " <<
                 EpcController::GetIpAddressForDevice (pgwSgiDev));
 

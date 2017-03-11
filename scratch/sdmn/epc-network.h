@@ -66,6 +66,18 @@ public:
   Ptr<Node> GetWebNode (void) const;
 
   /**
+   * Get the Internet web server IP address.
+   * \return The IP address.
+   */
+  Ipv4Address GetWebIpAddress (void) const;
+
+  /**
+   * Get the Internet web server IP mask.
+   * \return The IP mask.
+   */
+  Ipv4Mask GetWebIpMask (void) const;
+
+  /**
    * Get the OpenFlow EPC controller node.
    * \return The controller node pointer.
    */
@@ -213,6 +225,7 @@ private:
 
   // Internet web server.
   Ptr<Node>                     m_webNode;          //!< Web server node.
+  Ipv4Address                   m_webSgiAddr;       //!< Web server IP addr.
 };
 
 };  // namespace ns3

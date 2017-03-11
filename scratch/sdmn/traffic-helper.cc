@@ -71,11 +71,9 @@ TrafficHelper::TrafficHelper (Ptr<EpcNetwork> epcNetwork,
 {
   NS_LOG_FUNCTION (this);
 
-  // FIXME: Usar o GetWebIpAddr () para recuperar o ip
   // Configuring server address and mask
-  Ptr<Ipv4> serverIpv4 = m_webNode->GetObject<Ipv4> ();
-  m_webAddr = serverIpv4->GetAddress (1,0).GetLocal ();
-  m_webMask = serverIpv4->GetAddress (1,0).GetMask ();
+  m_webAddr = epcNetwork->GetWebIpAddress ();
+  m_webMask = epcNetwork->GetWebIpMask ();
 
   // Configuring the traffic manager object factory
   m_managerFactory.SetTypeId (TrafficManager::GetTypeId ());
