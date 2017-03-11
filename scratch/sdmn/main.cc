@@ -161,6 +161,7 @@ main (int argc, char *argv[])
   if (pcap)
     {
       ofNetwork->EnablePcap (outputPrefix.str (), true);
+      lteNetwork->EnablePcap (outputPrefix.str (), true);
     }
 
   // Run the simulation.

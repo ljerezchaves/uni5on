@@ -334,6 +334,19 @@ SdranCloud::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
 }
 
 void
+SdranCloud::EnablePcap (std::string prefix, bool promiscuous)
+{
+  NS_LOG_FUNCTION (this << prefix << promiscuous);
+
+  // Enable pcap on OpenFlow channel.
+  m_ofSwitchHelper->EnableOpenFlowPcap (prefix + "ofchannel", promiscuous);
+
+  // Enable pcap on CSMA devices.
+  CsmaHelper helper;
+  helper.EnablePcap (prefix + "lte-epc-s1u", m_s1Devices,  promiscuous);
+}
+
+void
 SdranCloud::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
@@ -391,7 +404,7 @@ SdranCloud::NotifyConstructionCompleted ()
   // Create the controller node and install the SDRAN controller app on it.
   m_sdranCtrlNode = CreateObject<Node> ();
   std::ostringstream sgwCtrlName;
-  sgwCtrlName << "sdranCtrl" << GetId ();
+  sgwCtrlName << "sdran" << GetId () << "_ctrl";
   Names::Add (sgwCtrlName.str (), m_sdranCtrlNode);
 
   m_sdranCtrlApp = CreateObject<SdranController> ();

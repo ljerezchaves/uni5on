@@ -161,10 +161,10 @@ EpcNetwork::EnablePcap (std::string prefix, bool promiscuous)
 {
   NS_LOG_FUNCTION (this << prefix << promiscuous);
 
-  // Enable pcap on OpenFlow channel
+  // Enable pcap on OpenFlow channel.
   m_ofSwitchHelper->EnableOpenFlowPcap (prefix + "ofchannel", promiscuous);
 
-  // Enable pcap on CSMA devices
+  // Enable pcap on CSMA devices.
   CsmaHelper helper;
   helper.EnablePcap (prefix + "web-sgi",    m_sgiDevices, promiscuous);
   helper.EnablePcap (prefix + "lte-epc-s5", m_s5Devices,  promiscuous);
@@ -194,9 +194,9 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
   swS5Dev  = DynamicCast<CsmaNetDevice> (devices.Get (0));
   sgwS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (1));
 
-  Names::Add (Names::FindName (swNode) + "+" +
+  Names::Add (Names::FindName (swNode) + "_to_" +
               Names::FindName (sgwNode), swS5Dev);
-  Names::Add (Names::FindName (sgwNode) + "+" +
+  Names::Add (Names::FindName (sgwNode) + "_to_" +
               Names::FindName (swNode), sgwS5Dev);
 
   // Add the swS5Dev device as OpenFlow switch port on the backhaul switch.
@@ -322,7 +322,7 @@ EpcNetwork::InstallController (Ptr<EpcController> controller)
 
   // Create the controller node.
   m_epcCtrlNode = CreateObject<Node> ();
-  Names::Add ("epcCtrl", m_epcCtrlNode);
+  Names::Add ("epc_ctrl", m_epcCtrlNode);
 
   // Installing the controller application into controller node.
   m_epcCtrlApp = controller;
@@ -348,9 +348,9 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
   pgwSgiDev = DynamicCast<CsmaNetDevice> (m_sgiDevices.Get (0));
   webSgiDev = DynamicCast<CsmaNetDevice> (m_sgiDevices.Get (1));
 
-  Names::Add (Names::FindName (pgwNode) + "+" +
+  Names::Add (Names::FindName (pgwNode) + "_to_" +
               Names::FindName (m_webNode), pgwSgiDev);
-  Names::Add (Names::FindName (m_webNode) + "+" +
+  Names::Add (Names::FindName (m_webNode) + "_to_" +
               Names::FindName (pgwNode), webSgiDev);
 
   // Add the pgwSgiDev as physical port on the P-GW OpenFlow switch.
@@ -386,9 +386,9 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
   swS5Dev  = DynamicCast<CsmaNetDevice> (devices.Get (0));
   pgwS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (1));
 
-  Names::Add (Names::FindName (swNode) + "+" +
+  Names::Add (Names::FindName (swNode) + "_to_" +
               Names::FindName (pgwNode), swS5Dev);
-  Names::Add (Names::FindName (pgwNode) + "+" +
+  Names::Add (Names::FindName (pgwNode) + "_to_" +
               Names::FindName (swNode), pgwS5Dev);
 
   // Add the swS5Dev device as OpenFlow switch port on the backhaul switch.
@@ -442,7 +442,7 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
   Ipv4Address ueAddr = ueIpv4->GetAddress (interface, 0).GetLocal ();
   UeInfo::GetPointer (imsi)->SetUeAddress (ueAddr);
 
-  NS_LOG_DEBUG ("Activete EPS bearer UE IP address: " << ueAddr);
+  NS_LOG_DEBUG ("Activate EPS bearer UE IP address: " << ueAddr);
 
   // Save the bearer context into UE info.
   UeInfo::BearerInfo bearerInfo;

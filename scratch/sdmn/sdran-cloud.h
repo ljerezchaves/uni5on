@@ -70,6 +70,14 @@ public:
                        uint16_t cellId);
   virtual void AddX2Interface (Ptr<Node> enbNode1, Ptr<Node> enbNode2);
 
+  /**
+   * Enable PCAP traces on the internal SDRAN OpenFlow network (user and
+   * control planes), and on LTE EPC devices of S1-U interface.
+   * \param prefix Filename prefix to use for pcap files.
+   * \param promiscuous If true, enable promisc trace.
+   */
+  void EnablePcap (std::string prefix, bool promiscuous = false);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();

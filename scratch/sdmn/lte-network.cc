@@ -158,6 +158,19 @@ LteNetwork::GetLteHelper (void) const
 }
 
 void
+LteNetwork::EnablePcap (std::string prefix, bool promiscuous)
+{
+  NS_LOG_FUNCTION (this << prefix << promiscuous);
+
+  // Enable PCAP traces on all SDRAN clouds.
+  SdranCloudContainer::Iterator it;
+  for (it = m_sdranClouds.Begin (); it != m_sdranClouds.End (); ++it)
+    {
+      (*it)->EnablePcap (prefix, promiscuous);
+    }
+}
+
+void
 LteNetwork::DoDispose ()
 {
   NS_LOG_FUNCTION (this);

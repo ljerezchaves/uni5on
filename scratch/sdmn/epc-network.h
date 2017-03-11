@@ -92,8 +92,8 @@ public:
   void SetSwitchDeviceAttribute (std::string n1, const AttributeValue &v1);
 
   /**
-   * Enable PCAP traces on LTE EPC network devices, OpenFlow channel
-   * (control-plane) and switch ports (data-plane).
+   * Enable PCAP traces on the OpenFlow backhaul network (user and control
+   * planes), and on LTE EPC devices of S5, SGi and X2 interfaces.
    * \param prefix Filename prefix to use for pcap files.
    * \param promiscuous If true, enable promisc trace.
    */
