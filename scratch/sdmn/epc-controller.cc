@@ -21,6 +21,7 @@
 #include "sdmn-mme.h"
 #include "epc-controller.h"
 #include "epc-network.h"
+#include "sdran-controller.h"
 
 namespace ns3 {
 
@@ -38,6 +39,8 @@ EpcController::EpcController ()
   NS_LOG_FUNCTION (this);
 
   QciDscpInitialize ();
+
+  m_s5SapPgw = new MemberEpcS5SapPgw<EpcController> (this);
 }
 
 EpcController::~EpcController ()
@@ -341,6 +344,14 @@ EpcController::NotifySessionCreated (
   m_sessionCreatedTrace (imsi, cellId, bearerList);
 }
 
+EpcS5SapPgw*
+EpcController::GetS5SapPgw (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s5SapPgw;
+}
+
 uint16_t
 EpcController::GetDscpValue (EpsBearer::Qci qci)
 {
@@ -381,6 +392,8 @@ void
 EpcController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+
+  delete (m_s5SapPgw);
 
   // Chain up.
   Object::DoDispose ();
@@ -488,7 +501,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
     {
       return;
     }
-  
+
   // For the switches on the backhaul network, install following rules:
   // -------------------------------------------------------------------------
   // Table 0 -- Input table -- [from higher to lower priority]
@@ -581,7 +594,7 @@ EpcController::HandlePacketIn (
   char *m = ofl_structs_match_to_string (msg->match, 0);
   NS_LOG_INFO ("Packet in match: " << m);
   free (m);
-  
+
   NS_ABORT_MSG ("Packet not supposed to be sent to this controller. Abort.");
 
   // All handlers must free the message when everything is ok
@@ -656,6 +669,67 @@ EpcController::HandleFlowRemoved (
       return 0;
     }
   NS_ABORT_MSG ("Should not get here :/");
+}
+
+void EpcController::DoCreateSessionRequest (
+  EpcS11SapSgw::CreateSessionRequestMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.imsi);
+
+  uint16_t cellId = msg.uli.gci;
+
+  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (msg.imsi);
+  ueInfo->SetEnbAddress (enbInfo->GetEnbAddress ());
+
+  EpcS11SapMme::CreateSessionResponseMessage res;
+  res.teid = msg.imsi;
+
+  std::list<EpcS11SapSgw::BearerContextToBeCreated>::iterator bit;
+  for (bit = msg.bearerContextsToBeCreated.begin ();
+       bit != msg.bearerContextsToBeCreated.end ();
+       ++bit)
+    {
+      uint32_t teid = EpcController::GetNextTeid ();
+      EpcS11SapMme::BearerContextCreated bearerContext;
+      bearerContext.sgwFteid.teid = teid;
+      bearerContext.sgwFteid.address = enbInfo->GetSgwAddress ();
+      bearerContext.epsBearerId = bit->epsBearerId;
+      bearerContext.bearerLevelQos = bit->bearerLevelQos;
+      bearerContext.tft = bit->tft;
+      res.bearerContextsCreated.push_back (bearerContext);
+    }
+
+  // Notify this controller of the new create session request accepted.
+  Ptr<SdranController> sdranCtrl = SdranController::GetPointer (cellId);
+  NotifySessionCreated (msg.imsi, cellId, sdranCtrl->GetSgwS5Address (),
+                        res.bearerContextsCreated);
+
+  // Send the response message back to the S-GW.
+  sdranCtrl->GetS5SapSgw ()->CreateSessionResponse (res);
+}
+
+void EpcController::DoModifyBearerRequest (
+  EpcS11SapSgw::ModifyBearerRequestMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.teid);
+
+  uint64_t imsi = msg.teid;
+  uint16_t cellId = msg.uli.gci;
+
+  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  ueInfo->SetEnbAddress (enbInfo->GetEnbAddress ());
+
+  // No actual bearer modification: for now we just support the minimum needed
+  // for path switch request (handover).
+  EpcS11SapMme::ModifyBearerResponseMessage res;
+  res.teid = imsi;
+  res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
+
+  // Send the response message back to the S-GW.
+  Ptr<SdranController> sdranCtrl = SdranController::GetPointer (cellId);
+  sdranCtrl->GetS5SapSgw ()->ModifyBearerResponse (res);
 }
 
 void

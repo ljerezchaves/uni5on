@@ -31,6 +31,7 @@
 #include "info/enb-info.h"
 #include "sdmn-mme.h"
 #include "epc-controller.h"
+#include "epc-s5-sap.h"
 
 namespace ns3 {
 
@@ -43,7 +44,9 @@ namespace ns3 {
 class SdranController : public OFSwitch13Controller
 {
   friend class MemberEpcS11SapSgw<SdranController>;
+  friend class MemberEpcS5SapSgw<SdranController>;
   friend class TrafficManager;
+  friend class EpcController;
 
 public:
   SdranController ();           //!< Default constructor.
@@ -91,21 +94,6 @@ public:
     EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
 
   /**
-   * Notify this controller when the S-GW control plane implemented by this
-   * SDRAN controller receives a create session request message. This
-   * controller will forward this message to the EPC controller, so it can
-   * configure the switches for GTP routing.
-   * \param imsi The IMSI UE identifier.
-   * \param cellId The eNB CellID to which the IMSI UE is attached to.
-   * \param enbAddr The eNB S1-U IPv4 address.
-   * \param sgwAddr The S-GW S1-U IPv4 address.
-   * \param bearerList The list of context bearers created.
-   */
-  virtual void NotifySessionCreated (
-    uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr,
-    BearerList_t bearerList);
-
-  /**
    * Notify this controller of a new S-GW connected to the OpenFlow backhaul
    * network over over the S5 interface.
    * \param sgwS5PortNum The S5 port number on the S-GW OpenFlow switch.
@@ -133,9 +121,21 @@ public:
 
   /**
    * Get a pointer to the MME side of the S1-AP SAP.
-   * \return the S1-AP SAP.
+   * \return The S1-AP MME SAP.
    */
   EpcS1apSapMme* GetS1apSapMme (void) const;
+
+  /**
+   * Get a pointer to the S-GW side of the S5 SAP.
+   * \return The S5 S-GW SAP.
+   */
+  EpcS5SapSgw* GetS5SapSgw (void) const;
+
+  /**
+   * Get the IPv4 address assigned to the S5 interface on the S-GW node.
+   * \return The S-GW S5 address.
+   */
+  Ipv4Address GetSgwS5Address (void) const;
 
 protected:
   /** Destructor implementation. */
@@ -161,8 +161,14 @@ private:
   //\{
   void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
   void DoModifyBearerRequest  (EpcS11SapSgw::ModifyBearerRequestMessage  msg);
-  void DoDeleteBearerCommand  (EpcS11SapSgw::DeleteBearerCommandMessage  req);
-  void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage req);
+  void DoDeleteBearerCommand  (EpcS11SapSgw::DeleteBearerCommandMessage  msg);
+  void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage msg);
+  //\}
+
+  /** \name Methods for the S5 SAP S-GW control plane. */
+  //\{
+  void DoCreateSessionResponse (EpcS11SapMme::CreateSessionResponseMessage msg);
+  void DoModifyBearerResponse (EpcS11SapMme::ModifyBearerResponseMessage  msg);
   //\}
 
 private:
@@ -173,8 +179,12 @@ private:
    */
   static void RegisterController (Ptr<SdranController> ctrl, uint16_t cellId);
 
-  Ptr<EpcController>    m_epcCtrlApp;   //!< EPC controller app.
   Ipv4Address           m_sgwS5Addr;    //!< S-GW S5 IP address.
+
+  // P-GW communication.
+  Ptr<EpcController>    m_epcCtrlApp;   //!< EPC controller app.
+  EpcS5SapPgw*          m_s5SapPgw;     //!< P-GW side of the S5 SAP.
+  EpcS5SapSgw*          m_s5SapSgw;     //!< S-GW side of the S5 SAP.
 
   // MME communication.
   Ptr<SdmnMme>          m_mme;          //!< MME element.

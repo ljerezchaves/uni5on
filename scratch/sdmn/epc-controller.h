@@ -32,6 +32,7 @@
 #include "info/gbr-info.h"
 #include "info/ue-info.h"
 #include "info/enb-info.h"
+#include "epc-s5-sap.h"
 
 namespace ns3 {
 
@@ -46,7 +47,7 @@ namespace ns3 {
 class EpcController : public OFSwitch13Controller
 {
   friend class SdranController;
-  friend class MemberEpcS11SapSgw<EpcController>;
+  friend class MemberEpcS5SapPgw<EpcController>;
 
 public:
   EpcController ();           //!< Default constructor.
@@ -126,10 +127,10 @@ public:
   virtual void TopologyBuilt (OFSwitch13DeviceContainer devices);
 
   /**
-   * Notify this controller when the S-GW control plane (implemented by the
-   * SDRAN controller) receives a create session request message. This
-   * controller uses the list of bearers to save routing information and
-   * configure the default bearer routing.
+   * Notify this controller when the P-GW control plane (implemented by this
+   * controller) receives a create session request message. This controller
+   * uses the list of bearers to save routing information and configure the
+   * default bearer routing.
    * \param imsi The IMSI UE identifier.
    * \param cellId The eNB CellID to which the IMSI UE is attached to.
    * \param sgwAddr The S-GW S5 IPv4 address.
@@ -138,6 +139,12 @@ public:
   virtual void NotifySessionCreated (
     uint64_t imsi, uint16_t cellId, Ipv4Address sgwAddr,
     BearerList_t bearerList);
+
+  /**
+   * Get The P-GW side of the S5 SAP.
+   * \return The P-GW side of the S5 SAP.
+   */
+  EpcS5SapPgw* GetS5SapPgw (void) const;
 
   /**
    * Retrieve stored mapped value for a specific EPS QCI.
@@ -230,6 +237,13 @@ protected:
     ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
   // Inherited from OFSwitch13Controller.
 
+private:
+  /** \name Methods for the S5 SAP P-GW control plane. */
+  //\{
+  void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
+  void DoModifyBearerRequest  (EpcS11SapSgw::ModifyBearerRequestMessage  msg);
+  //\}
+
 public:
   /**
    * TracedCallback signature for new bearer request.
@@ -265,6 +279,9 @@ private:
   uint64_t              m_pgwDpId;            //!< P-GW datapath ID.
   uint32_t              m_pgwS5Port;          //!< P-GW S5 port no.
   Ipv4Address           m_pgwS5Addr;          //!< P-GW S5 IP address.
+
+  // S-GW communication.
+  EpcS5SapPgw*          m_s5SapPgw;           //!< P-GW side of the S5 SAP.
 
   /**
    * Initilize the static DSCP map table. This function is called by object

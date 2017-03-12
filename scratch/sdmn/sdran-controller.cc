@@ -33,8 +33,9 @@ SdranController::SdranController ()
 {
   NS_LOG_FUNCTION (this);
 
-  // The S-GW side of S11 AP
+  // The S-GW side of S11 and S5 APs
   m_s11SapSgw = new MemberEpcS11SapSgw<SdranController> (this);
+  m_s5SapSgw  = new MemberEpcS5SapSgw<SdranController> (this);
 
   m_mme = CreateObject<SdmnMme> ();
   m_mme->SetS11SapSgw (m_s11SapSgw);
@@ -77,18 +78,6 @@ SdranController::ReleaseDedicatedBearer (
 }
 
 void
-SdranController::NotifySessionCreated (
-  uint64_t imsi, uint16_t cellId, Ipv4Address enbAddr, Ipv4Address sgwAddr,
-  BearerList_t bearerList)
-{
-  NS_LOG_FUNCTION (this << imsi << cellId << enbAddr << sgwAddr);
-
-  // TODO ??? Acho que nao precisa fazer mais nada.. se realmente for so isso,
-  // levar essa linha la pra baixo, na funcao chamada pelo mme.
-  m_epcCtrlApp->NotifySessionCreated (imsi, cellId, m_sgwS5Addr, bearerList);
-}
-
-void
 SdranController::NotifySgwAttach (
   uint32_t sgwS5PortNum, Ptr<NetDevice> sgwS5Dev)
 {
@@ -116,6 +105,7 @@ SdranController::SetEpcController (Ptr<EpcController> epcCtrlApp)
   NS_LOG_FUNCTION (this << epcCtrlApp);
 
   m_epcCtrlApp = epcCtrlApp;
+  m_s5SapPgw = m_epcCtrlApp->GetS5SapPgw ();
 }
 
 EpcS1apSapMme*
@@ -126,6 +116,22 @@ SdranController::GetS1apSapMme (void) const
   return m_mme->GetS1apSapMme ();
 }
 
+EpcS5SapSgw*
+SdranController::GetS5SapSgw (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s5SapSgw;
+}
+
+Ipv4Address
+SdranController::GetSgwS5Address (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sgwS5Addr;
+}
+
 void
 SdranController::DoDispose ()
 {
@@ -134,6 +140,7 @@ SdranController::DoDispose ()
   m_epcCtrlApp = 0;
   m_mme = 0;
   delete (m_s11SapSgw);
+  delete (m_s5SapSgw);
 
   // Chain up.
   Object::DoDispose ();
@@ -145,7 +152,7 @@ SdranController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   NS_LOG_FUNCTION (this << swtch);
 
   // This function is called after a successfully handshake between the SDRAN
-  // controller and the S-GW user plane. 
+  // controller and the S-GW user plane.
   // TODO
 }
 
@@ -158,7 +165,7 @@ SdranController::HandlePacketIn (
   char *m = ofl_structs_match_to_string (msg->match, 0);
   NS_LOG_INFO ("Packet in match: " << m);
   free (m);
-  
+
   NS_ABORT_MSG ("Packet not supposed to be sent to this controller. Abort.");
 
   // All handlers must free the message when everything is ok
@@ -202,77 +209,41 @@ SdranController::GetPointer (uint16_t cellId)
 //
 void
 SdranController::DoCreateSessionRequest (
-  EpcS11SapSgw::CreateSessionRequestMessage req)
+  EpcS11SapSgw::CreateSessionRequestMessage msg)
 {
-  NS_LOG_FUNCTION (this << req.imsi);
+  NS_LOG_FUNCTION (this << msg.imsi);
 
-  uint16_t cellId = req.uli.gci;
-
-  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (req.imsi);
-  ueInfo->SetEnbAddress (enbInfo->GetEnbAddress ());
-
-  EpcS11SapMme::CreateSessionResponseMessage res;
-  res.teid = req.imsi;
-
-  std::list<EpcS11SapSgw::BearerContextToBeCreated>::iterator bit;
-  for (bit = req.bearerContextsToBeCreated.begin ();
-       bit != req.bearerContextsToBeCreated.end ();
-       ++bit)
-    {
-      uint32_t teid = EpcController::GetNextTeid ();
-      EpcS11SapMme::BearerContextCreated bearerContext;
-      bearerContext.sgwFteid.teid = teid;
-      bearerContext.sgwFteid.address = enbInfo->GetSgwAddress ();
-      bearerContext.epsBearerId = bit->epsBearerId;
-      bearerContext.bearerLevelQos = bit->bearerLevelQos;
-      bearerContext.tft = bit->tft;
-      res.bearerContextsCreated.push_back (bearerContext);
-    }
-
-  // Notify the controller of the new create session request accepted.
-  NotifySessionCreated (req.imsi, cellId, enbInfo->GetEnbAddress (),
-                        enbInfo->GetSgwAddress (), res.bearerContextsCreated);
-
-  m_s11SapMme->CreateSessionResponse (res);
+  // Foward the request message to the P-GW.
+  m_s5SapPgw->CreateSessionRequest (msg);
 }
 
 void
 SdranController::DoModifyBearerRequest (
-  EpcS11SapSgw::ModifyBearerRequestMessage req)
+  EpcS11SapSgw::ModifyBearerRequestMessage msg)
 {
-  NS_LOG_FUNCTION (this << req.teid);
+  NS_LOG_FUNCTION (this << msg.teid);
 
-  uint64_t imsi = req.teid;
-  uint16_t cellId = req.uli.gci;
+  // TODO We can check here if we really need to forward the request to the
+  // P-GW based on source and destination eNBs.
 
-  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  ueInfo->SetEnbAddress (enbInfo->GetEnbAddress ());
-
-  // No actual bearer modification: for now we just support the minimum needed
-  // for path switch request (handover).
-  EpcS11SapMme::ModifyBearerResponseMessage res;
-  res.teid = imsi;
-  res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
-
-  m_s11SapMme->ModifyBearerResponse (res);
+  // Foward the request message to the P-GW.
+  m_s5SapPgw->ModifyBearerRequest (msg);
 }
 
 void
 SdranController::DoDeleteBearerCommand (
-  EpcS11SapSgw::DeleteBearerCommandMessage req)
+  EpcS11SapSgw::DeleteBearerCommandMessage msg)
 {
-  NS_LOG_FUNCTION (this << req.teid);
+  NS_LOG_FUNCTION (this << msg.teid);
 
-  uint64_t imsi = req.teid;
+  uint64_t imsi = msg.teid;
 
   EpcS11SapMme::DeleteBearerRequestMessage res;
   res.teid = imsi;
 
   std::list<EpcS11SapSgw::BearerContextToBeRemoved>::iterator bit;
-  for (bit = req.bearerContextsToBeRemoved.begin ();
-       bit != req.bearerContextsToBeRemoved.end ();
+  for (bit = msg.bearerContextsToBeRemoved.begin ();
+       bit != msg.bearerContextsToBeRemoved.end ();
        ++bit)
     {
       EpcS11SapMme::BearerContextRemoved bearerContext;
@@ -285,11 +256,31 @@ SdranController::DoDeleteBearerCommand (
 
 void
 SdranController::DoDeleteBearerResponse (
-  EpcS11SapSgw::DeleteBearerResponseMessage req)
+  EpcS11SapSgw::DeleteBearerResponseMessage msg)
 {
-  NS_LOG_FUNCTION (this << req.teid);
+  NS_LOG_FUNCTION (this << msg.teid);
 
   NS_LOG_DEBUG ("Nothing to do here. Done.");
+}
+
+void
+SdranController::DoCreateSessionResponse (
+  EpcS11SapMme::CreateSessionResponseMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.teid);
+
+  // Forward the response message to the MME.
+  m_s11SapMme->CreateSessionResponse (msg);
+}
+
+void
+SdranController::DoModifyBearerResponse (
+  EpcS11SapMme::ModifyBearerResponseMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.teid);
+
+  // Forward the response message to the MME.
+  m_s11SapMme->ModifyBearerResponse (msg);
 }
 
 void
