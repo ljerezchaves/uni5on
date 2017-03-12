@@ -31,12 +31,13 @@ NS_OBJECT_ENSURE_REGISTERED (EpcController);
 const uint16_t EpcController::m_flowTimeout = 15;
 uint32_t EpcController::m_teidCount = 0x0000000F;
 EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
-EpcController::QciDscpInitializer EpcController::m_qciDscpInitializer;
 
 EpcController::EpcController ()
   : m_pgwDpId (0)
 {
   NS_LOG_FUNCTION (this);
+
+  QciDscpInitialize ();
 }
 
 EpcController::~EpcController ()
@@ -663,37 +664,44 @@ EpcController::HandleFlowRemoved (
   NS_ABORT_MSG ("Should not get here :/");
 }
 
-EpcController::QciDscpInitializer::QciDscpInitializer ()
+void
+EpcController::QciDscpInitialize ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  std::pair<EpsBearer::Qci, uint16_t> entries [9];
-  entries [0] = std::make_pair (
-      EpsBearer::GBR_CONV_VOICE, Ipv4Header::DSCP_EF);
-  entries [1] = std::make_pair (
-      EpsBearer::GBR_CONV_VIDEO, Ipv4Header::DSCP_AF12);
-  entries [2] = std::make_pair (
-      EpsBearer::GBR_GAMING, Ipv4Header::DSCP_AF21);
-  entries [3] = std::make_pair (
-      EpsBearer::GBR_NON_CONV_VIDEO, Ipv4Header::DSCP_AF11);
-
-  // Currently we are mapping all Non-GBR bearers to best effort DSCP traffic.
-  entries [4] = std::make_pair (
-      EpsBearer::NGBR_IMS, Ipv4Header::DscpDefault);
-  entries [5] = std::make_pair (
-      EpsBearer::NGBR_VIDEO_TCP_OPERATOR, Ipv4Header::DscpDefault);
-  entries [6] = std::make_pair (
-      EpsBearer::NGBR_VOICE_VIDEO_GAMING, Ipv4Header::DscpDefault);
-  entries [7] = std::make_pair (
-      EpsBearer::NGBR_VIDEO_TCP_PREMIUM, Ipv4Header::DscpDefault);
-  entries [8] = std::make_pair (
-      EpsBearer::NGBR_VIDEO_TCP_DEFAULT, Ipv4Header::DscpDefault);
-
-  std::pair<QciDscpMap_t::iterator, bool> ret;
-  for (int i = 0; i < 9; i++)
+  static bool initialized = false;
+  if (!initialized)
     {
-      ret = EpcController::m_qciDscpTable.insert (entries [i]);
-      NS_ASSERT_MSG (ret.second, "Can't insert DSCP map value.");
+      initialized = true;
+
+      std::pair<EpsBearer::Qci, uint16_t> entries [9];
+      entries [0] = std::make_pair (
+          EpsBearer::GBR_CONV_VOICE, Ipv4Header::DSCP_EF);
+      entries [1] = std::make_pair (
+          EpsBearer::GBR_CONV_VIDEO, Ipv4Header::DSCP_AF12);
+      entries [2] = std::make_pair (
+          EpsBearer::GBR_GAMING, Ipv4Header::DSCP_AF21);
+      entries [3] = std::make_pair (
+          EpsBearer::GBR_NON_CONV_VIDEO, Ipv4Header::DSCP_AF11);
+
+      // Mapping all Non-GBR bearers to best effort DSCP traffic.
+      entries [4] = std::make_pair (
+          EpsBearer::NGBR_IMS, Ipv4Header::DscpDefault);
+      entries [5] = std::make_pair (
+          EpsBearer::NGBR_VIDEO_TCP_OPERATOR, Ipv4Header::DscpDefault);
+      entries [6] = std::make_pair (
+          EpsBearer::NGBR_VOICE_VIDEO_GAMING, Ipv4Header::DscpDefault);
+      entries [7] = std::make_pair (
+          EpsBearer::NGBR_VIDEO_TCP_PREMIUM, Ipv4Header::DscpDefault);
+      entries [8] = std::make_pair (
+          EpsBearer::NGBR_VIDEO_TCP_DEFAULT, Ipv4Header::DscpDefault);
+
+      std::pair<QciDscpMap_t::iterator, bool> ret;
+      for (int i = 0; i < 9; i++)
+        {
+          ret = EpcController::m_qciDscpTable.insert (entries [i]);
+          NS_ASSERT_MSG (ret.second, "Can't insert DSCP map value.");
+        }
     }
 }
 

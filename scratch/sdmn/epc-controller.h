@@ -267,21 +267,15 @@ private:
   uint32_t              m_pgwS5Port;          //!< P-GW S5 port no.
   Ipv4Address           m_pgwS5Addr;          //!< P-GW S5 IP address.
 
-  //
-  // Static attributes
-  //
-  /** EpcController inner utility class used to initialize DSCP map table. */
-  class QciDscpInitializer
-  {
-  public:
-    /** Default constructor, used to initilialize the DSCP table. */
-    QciDscpInitializer ();
-  };
-  friend class QciDscpInitializer;
+  /**
+   * Initilize the static DSCP map table. This function is called by object
+   * constructor, but the table will be populated only once.
+   */
+  static void QciDscpInitialize ();
 
   /** Map saving EpsBearer::Qci / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
-  
+
   /**
    * TEID counter, used to allocate new GTP-U TEID values.
    * \internal This counter is initialized at 0x0000000F, reserving the first
@@ -289,7 +283,6 @@ private:
    */
   static uint32_t           m_teidCount;
   static const uint16_t     m_flowTimeout;        //!< Timeout for flow entries.
-  static QciDscpInitializer m_qciDscpInitializer; //!< QCI DSCP initializer.
   static QciDscpMap_t       m_qciDscpTable;       //!< DSCP mapped values.
 };
 
