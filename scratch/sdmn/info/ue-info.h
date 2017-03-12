@@ -144,7 +144,7 @@ private:
   uint16_t               m_enbUeS1Id;            //!< ID for S1-AP at eNB.
   uint16_t               m_cellId;               //!< UE cell ID.
   uint16_t               m_bearerCounter;        //!< Number of bearers.
-  std::list<BearerInfo>  m_bearersToBeActivated; //!< Bearer contexts.
+  std::list<BearerInfo>  m_bearersList;          //!< Bearer contexts.
 
   /** Map saving UE IMSI / UE information. */
   typedef std::map<uint64_t, Ptr<UeInfo> > ImsiUeInfoMap_t;

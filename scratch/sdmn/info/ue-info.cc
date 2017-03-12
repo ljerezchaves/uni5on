@@ -118,7 +118,7 @@ UeInfo::GetBearerListBegin () const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_bearersToBeActivated.begin ();
+  return m_bearersList.begin ();
 }
 
 std::list<UeInfo::BearerInfo>::const_iterator
@@ -126,7 +126,7 @@ UeInfo::GetBearerListEnd () const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_bearersToBeActivated.end ();
+  return m_bearersList.end ();
 }
 
 void
@@ -134,7 +134,7 @@ UeInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_bearersToBeActivated.clear ();
+  m_bearersList.clear ();
 }
 
 void
@@ -176,7 +176,7 @@ UeInfo::AddBearer (BearerInfo bearer)
 
   NS_ASSERT_MSG (GetBearerCounter () < 11, "No more bearers allowed!");
   bearer.bearerId = ++m_bearerCounter;
-  m_bearersToBeActivated.push_back (bearer);
+  m_bearersList.push_back (bearer);
   return bearer.bearerId;
 }
 
@@ -186,13 +186,11 @@ UeInfo::RemoveBearer (uint8_t bearerId)
   NS_LOG_FUNCTION (this << bearerId);
 
   std::list<BearerInfo>::iterator it;
-  for (it = m_bearersToBeActivated.begin ();
-       it != m_bearersToBeActivated.end ();
-       ++it)
+  for (it = m_bearersList.begin (); it != m_bearersList.end (); ++it)
     {
       if (it->bearerId == bearerId)
         {
-          m_bearersToBeActivated.erase (it);
+          m_bearersList.erase (it);
           break;
         }
     }
