@@ -58,8 +58,8 @@ SdmnMme::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  delete m_s1apSapMme;
-  delete m_s11SapMme;
+  delete (m_s1apSapMme);
+  delete (m_s11SapMme);
 }
 
 EpcS1apSapMme*
