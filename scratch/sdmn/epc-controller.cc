@@ -185,7 +185,7 @@ EpcController::NotifyPgwAttach (
   cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
         << ",in_port=" << pgwSgiPortNum
         << " goto:1";
-  DpctlSchedule (pgwSwDev->GetDatapathId (), cmdIn.str ());
+  DpctlSchedule (m_pgwDpId, cmdIn.str ());
 
   // IP packets coming from the LTE network (S5) and addressed to the Internet
   // (SGi) have the destination MAC address rewritten (this is necessary when
@@ -197,12 +197,11 @@ EpcController::NotifyPgwAttach (
          << ",ip_dst=" << GetIpAddressForDevice (webSgiDev)
          << " write:set_field=eth_dst:" << webMac
          << ",output=" << pgwSgiPortNum;
-  DpctlSchedule (pgwSwDev->GetDatapathId (), cmdOut.str ());
+  DpctlSchedule (m_pgwDpId, cmdOut.str ());
 
   // Table miss entry. Send to controller.
-  DpctlSchedule (pgwSwDev->GetDatapathId (),
-                 "flow-mod cmd=add,table=0,prio=0 "
-                 "apply:output=ctrl");
+  DpctlSchedule (m_pgwDpId, "flow-mod cmd=add,table=0,prio=0"
+                 " apply:output=ctrl");
 
   // -------------------------------------------------------------------------
   // Table 1 -- P-GW TFT downlink table -- [from higher to lower priority]
@@ -479,22 +478,16 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
   NS_LOG_FUNCTION (this << swtch);
 
-  // This function is called after a successfully handshake between controller
-  // and switch. So, let's start configure the switch tables in accordance to
-  // our methodology.
-
-  // Configure the switch to buffer packets and send only the first 128 bytes
-  // to the controller.
-  DpctlExecute (swtch, "set-config miss=128");
-
-  // Install only the table miss entry on the P-GW switch.
+  // This function is called after a successfully handshake between the EPC
+  // controller and any switch on the EPC network (including the P-GW user
+  // plane and switches on the OpenFlow backhaul network). For the P-GW switch,
+  // all entries will be installed by NotifyPgwAttach and InstallPgwTftRules
+  // functions, so we scape here.
   if (swtch->GetDpId () == m_pgwDpId)
     {
-      DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=0"
-                    " apply:output=ctrl");
       return;
     }
-
+  
   // For the switches on the backhaul network, install following rules:
   // -------------------------------------------------------------------------
   // Table 0 -- Input table -- [from higher to lower priority]
@@ -587,11 +580,11 @@ EpcController::HandlePacketIn (
   char *m = ofl_structs_match_to_string (msg->match, 0);
   NS_LOG_INFO ("Packet in match: " << m);
   free (m);
+  
+  NS_ABORT_MSG ("Packet not supposed to be sent to this controller. Abort.");
 
   // All handlers must free the message when everything is ok
-  ofl_msg_free ((ofl_msg_header*)msg, 0);
-
-  NS_ABORT_MSG ("Packet not supposed to be sent to this controller. Abort.");
+  ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
   return 0;
 }
 

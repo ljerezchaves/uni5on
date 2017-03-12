@@ -230,7 +230,6 @@ protected:
     ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
   // Inherited from OFSwitch13Controller.
 
-
 public:
   /**
    * TracedCallback signature for new bearer request.
