@@ -140,117 +140,13 @@ SdranController::DoDispose ()
 }
 
 void
-SdranController::NotifyConstructionCompleted ()
-{
-  NS_LOG_FUNCTION (this);
-
-  // Chain up.
-  ObjectBase::NotifyConstructionCompleted ();
-}
-
-void
 SdranController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
   NS_LOG_FUNCTION (this << swtch);
 
-  // This function is called after a successfully handshake between controller
-  // and switch. So, let's start configure the S-GW switch tables in accordance
-  // to our methodology.
-
-  // TODO: Implementar isso aqui.
-
-//  // Configure the switch to buffer packets and send only the first 128 bytes
-//  // to the controller.
-//  DpctlExecute (swtch, "set-config miss=128");
-//
-//  // FIXME Find a better way to identify which nodes should or not scape here.
-//  if (swtch->GetDpId () == m_pgwDpId)
-//    {
-//      // Don't install the following rules on the P-GW switch.
-//      return;
-//    }
-//
-//  // -------------------------------------------------------------------------
-//  // Table 0 -- Input table -- [from higher to lower priority]
-//  //
-//  // Entries will be installed here by NewS5Attach function.
-//
-//  // GTP packets entering the switch from any port other then EPC ports.
-//  // Send to Routing table.
-//  DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=32 eth_type=0x800,"
-//                "ip_proto=17,udp_src=2152,udp_dst=2152"
-//                " goto:2");
-//
-//  // ARP request packets. Send to controller.
-//  DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=16 eth_type=0x0806"
-//                " apply:output=ctrl");
-//
-//  // Table miss entry. Send to controller.
-//  DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
-//
-//
-//  // -------------------------------------------------------------------------
-//  // Table 1 -- Classification table -- [from higher to lower priority]
-//  //
-//  // Entries will be installed here by TopologyInstallRouting function.
-//
-//  // Table miss entry. Send to controller.
-//  DpctlExecute (swtch, "flow-mod cmd=add,table=1,prio=0 apply:output=ctrl");
-//
-//  // -------------------------------------------------------------------------
-//  // Table 2 -- Routing table -- [from higher to lower priority]
-//  //
-//  // Entries will be installed here by NewS5Attach function.
-//  // Entries will be installed here by NotifyTopologyBuilt function.
-//
-//  // GTP packets classified at previous table. Write the output group into
-//  // action set based on metadata field. Send the packet to Coexistence QoS
-//  // table.
-//  DpctlExecute (swtch, "flow-mod cmd=add,table=2,prio=64"
-//                " meta=0x1"
-//                " write:group=1 goto:3");
-//  DpctlExecute (swtch, "flow-mod cmd=add,table=2,prio=64"
-//                " meta=0x2"
-//                " write:group=2 goto:3");
-//
-//  // Table miss entry. Send to controller.
-//  DpctlExecute (swtch, "flow-mod cmd=add,table=2,prio=0 apply:output=ctrl");
-//
-//  // -------------------------------------------------------------------------
-//  // Table 3 -- Coexistence QoS table -- [from higher to lower priority]
-//  //
-//  if (m_nonGbrCoexistence)
-//    {
-//      // Non-GBR packets indicated by DSCP field. Apply corresponding Non-GBR
-//      // meter band. Send the packet to Output table.
-//      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
-//                    " eth_type=0x800,ip_dscp=0,meta=0x1"
-//                    " meter:1 goto:4");
-//      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
-//                    " eth_type=0x800,ip_dscp=0,meta=0x2"
-//                    " meter:2 goto:4");
-//    }
-//
-//  // Table miss entry. Send the packet to Output table
-//  DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=0 goto:4");
-//
-//  // -------------------------------------------------------------------------
-//  // Table 4 -- Output table -- [from higher to lower priority]
-//  //
-//  if (m_voipQos)
-//    {
-//      int dscpVoip = SdranController::GetDscpValue (EpsBearer::GBR_CONV_VOICE);
-//
-//      // VoIP packets. Write the high-priority output queue #1.
-//      std::ostringstream cmd;
-//      cmd << "flow-mod cmd=add,table=4,prio=16"
-//          << " eth_type=0x800,ip_dscp=" << dscpVoip
-//          << " write:queue=1";
-//      DpctlExecute (swtch, cmd.str ());
-//    }
-//
-//  // Table miss entry. No instructions. This will trigger action set execute.
-//  DpctlExecute (swtch, "flow-mod cmd=add,table=4,prio=0");
+  // This function is called after a successfully handshake between the SDRAN
+  // controller and the S-GW user plane. 
+  // TODO
 }
 
 ofl_err
@@ -262,11 +158,11 @@ SdranController::HandlePacketIn (
   char *m = ofl_structs_match_to_string (msg->match, 0);
   NS_LOG_INFO ("Packet in match: " << m);
   free (m);
+  
+  NS_ABORT_MSG ("Packet not supposed to be sent to this controller. Abort.");
 
   // All handlers must free the message when everything is ok
   ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
-
-  NS_ABORT_MSG ("Packet not supposed to be sent to this controller. Abort.");
   return 0;
 }
 
@@ -276,20 +172,13 @@ SdranController::HandleFlowRemoved (
 {
   NS_LOG_FUNCTION (this << swtch << xid << msg->stats->cookie);
 
-  // uint8_t table = msg->stats->table_id;
-  // uint32_t teid = msg->stats->cookie;
-  // uint16_t prio = msg->stats->priority;
-
   char *m = ofl_msg_to_string ((ofl_msg_header*)msg, 0);
   NS_LOG_DEBUG ("Flow removed: " << m);
   free (m);
 
-  // Since handlers must free the message when everything is ok,
-  // let's remove it now, as we already got the necessary information.
-  ofl_msg_free_flow_removed (msg, true, 0);
-
-  // TODO: implementar logica para regras removidas do S-GW.
-  NS_ABORT_MSG ("Should not get here :/");
+  // All handlers must free the message when everything is ok
+  ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
+  return 0;
 }
 
 Ptr<SdranController>
@@ -400,18 +289,7 @@ SdranController::DoDeleteBearerResponse (
 {
   NS_LOG_FUNCTION (this << req.teid);
 
-  uint64_t imsi = req.teid;
-
-  // FIXME No need of ueInfo.
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-
-  std::list<EpcS11SapSgw::BearerContextRemovedSgwPgw>::iterator bit;
-  for (bit = req.bearerContextsRemoved.begin ();
-       bit != req.bearerContextsRemoved.end ();
-       ++bit)
-    {
-      // TODO Should remove entries from gateway?
-    }
+  NS_LOG_DEBUG ("Nothing to do here. Done.");
 }
 
 void

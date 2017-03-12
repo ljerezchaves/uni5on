@@ -141,9 +141,6 @@ protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
-  // Inherited from ObjectBase.
-  virtual void NotifyConstructionCompleted (void);
-
   // Inherited from OFSwitch13Controller.
   virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
   virtual ofl_err HandlePacketIn (

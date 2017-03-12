@@ -264,7 +264,8 @@ EpcController::NotifySessionCreated (
 {
   NS_LOG_FUNCTION (this << imsi << cellId << sgwAddr);
 
-  // Create and save routing information for default bearer
+  // Create and save routing information for default bearer (firts element on
+  // the bearerList).
   ContextBearer_t defaultBearer = bearerList.front ();
   NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
 
@@ -284,20 +285,20 @@ EpcController::NotifySessionCreated (
   rInfo->m_isDefault = true;              // This is a default bearer
   rInfo->m_bearer = defaultBearer;
 
-  // For default bearer, no Meter nor Reserver metadata.
+  // For default bearer, no meter nor gbr metadata.
   // For logic consistence, let's check for available resources.
   bool accepted = TopologyBearerRequest (rInfo);
   NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
   m_bearerRequestTrace (accepted, rInfo);
 
-  // Install rules for default bearer
+  // Install rules for default bearer.
   if (!TopologyInstallRouting (rInfo))
     {
       NS_LOG_ERROR ("TEID rule installation failed!");
     }
 
   // For other dedicated bearers, let's create and save it's routing metadata
-  // NOTE: starting at the second element
+  // (starting at the second element of bearerList).
   BearerList_t::iterator it = bearerList.begin ();
   for (it++; it != bearerList.end (); it++)
     {
@@ -336,7 +337,7 @@ EpcController::NotifySessionCreated (
         }
     }
 
-  // Fire trace source notifying session created.
+  // Fire trace source notifying the created session.
   m_sessionCreatedTrace (imsi, cellId, bearerList);
 }
 
