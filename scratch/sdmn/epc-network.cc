@@ -376,7 +376,7 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
 
   // Set the IP address on the Internet Web server and P-GW SGi interfaces.
   m_sgiAddrHelper.Assign (NetDeviceContainer (m_sgiDevices));
-  m_webSgiAddr = EpcController::GetIpAddressForDevice (webSgiDev);  
+  m_webSgiAddr = EpcController::GetIpAddressForDevice (webSgiDev);
   NS_LOG_DEBUG ("Web SGi address: " << m_webSgiAddr);
   NS_LOG_DEBUG ("P-GW SGi address: " <<
                 EpcController::GetIpAddressForDevice (pgwSgiDev));
