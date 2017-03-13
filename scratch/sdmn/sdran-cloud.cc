@@ -424,6 +424,7 @@ SdranCloud::NotifyConstructionCompleted ()
 
   m_sdranCtrlApp = CreateObject<SdranController> ();
   m_ofSwitchHelper->InstallController (m_sdranCtrlNode, m_sdranCtrlApp);
+  m_sdranCtrlApp->SetSgwDpId (sgwSwitchDev->GetDatapathId ());
 
   // Let's connect the OpenFlow S-GW switch to the SDRAN controller. From this
   // point on it is not possible to change the OpenFlow network configuration.

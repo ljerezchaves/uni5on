@@ -133,6 +133,14 @@ SdranController::SetEpcCtlrApp (Ptr<EpcController> value)
   m_s5SapPgw = m_epcCtrlApp->GetS5SapPgw ();
 }
 
+void
+SdranController::SetSgwDpId (uint64_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_sgwDpId = value;
+}
+
 Ptr<SdranController>
 SdranController::GetPointer (uint16_t cellId)
 {

@@ -116,6 +116,7 @@ public:
   EpcS5SapSgw* GetS5SapSgw (void) const;
 
   void SetEpcCtlrApp (Ptr<EpcController> value);
+  void SetSgwDpId (uint64_t value);
   //\}
 
   /**
@@ -160,6 +161,7 @@ private:
    */
   static void RegisterController (Ptr<SdranController> ctrl, uint16_t cellId);
 
+  uint64_t              m_sgwDpId;      //!< S-GW datapath ID.
   Ipv4Address           m_sgwS5Addr;    //!< S-GW S5 IP address.
   uint32_t              m_sgwS5PortNum; //!< S-GW S5 port number.
 
