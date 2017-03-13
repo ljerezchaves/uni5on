@@ -86,7 +86,7 @@ public:
    * \param bearerList The list of context bearers created.
    */
   void SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
-                               BearerList_t bearerList);
+                               BearerContextList_t bearerList);
 
   /**
    * Set the IMSI attribute.

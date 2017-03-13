@@ -59,9 +59,6 @@ public:
     BWD = 1   //!< Backwad direction (from second to firts switch).
   };
 
-  ConnectionInfo ();            //!< Default constructor.
-  virtual ~ConnectionInfo ();   //!< Dummy destructor, see DoDispose.
-
   /**
    * Complete constructor.
    * \param sw1 First switch metadata.
@@ -72,6 +69,7 @@ public:
    * links.
    */
   ConnectionInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel);
+  virtual ~ConnectionInfo ();   //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -92,10 +90,10 @@ public:
    * \return The requested field.
    */
   //\{
-  uint32_t                    GetPortNo   (uint8_t idx) const;
-  uint64_t                    GetSwDpId   (uint8_t idx) const;
-  Ptr<const OFSwitch13Device> GetSwDev    (uint8_t idx) const;
-  Ptr<const CsmaNetDevice>    GetPortDev  (uint8_t idx) const;
+  uint32_t GetPortNo (uint8_t idx) const;
+  uint64_t GetSwDpId (uint8_t idx) const;
+  Ptr<const OFSwitch13Device> GetSwDev (uint8_t idx) const;
+  Ptr<const CsmaNetDevice> GetPortDev (uint8_t idx) const;
   //\}
 
   /**
@@ -105,12 +103,12 @@ public:
    * \return The requested information.
    */
   //\{
-  uint32_t GetGbrBytes        (Direction dir) const;
-  uint64_t GetGbrBitRate      (Direction dir) const;
-  double   GetGbrLinkRatio    (Direction dir) const;
-  uint32_t GetNonGbrBytes     (Direction dir) const;
-  uint64_t GetNonGbrBitRate   (Direction dir) const;
-  double   GetNonGbrLinkRatio (Direction dir) const;
+  uint32_t GetGbrBytes (Direction dir) const;
+  uint64_t GetGbrBitRate (Direction dir) const;
+  uint32_t GetNonGbrBytes (Direction dir) const;
+  uint64_t GetNonGbrBitRate (Direction dir) const;
+  double GetGbrLinkRatio (Direction dir) const;
+  double GetNonGbrLinkRatio (Direction dir) const;
   //\}
 
   /**
@@ -197,6 +195,7 @@ protected:
   // Inherited from ObjectBase.
   void NotifyConstructionCompleted (void);
 
+private:
   /**
    * Notify this connection of a successfully transmitted packet in link
    * channel. This method will update internal byte counters.
@@ -204,7 +203,6 @@ protected:
    */
   void NotifyTxPacket (std::string context, Ptr<const Packet> packet);
 
-private:
   /**
    * Get the guard bit rate, which is currently not been used neither by GBR
    * nor Non-GBR traffic.

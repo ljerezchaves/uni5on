@@ -162,7 +162,7 @@ TrafficManager::NotifyAppStop (Ptr<const SdmnClientApp> app)
 
 void
 TrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
-                                        BearerList_t bearerList)
+                                        BearerContextList_t bearerList)
 {
   NS_LOG_FUNCTION (this);
 
@@ -186,7 +186,7 @@ TrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
       Ptr<EpcTft> tft = app->GetTft ();
       if (tft)
         {
-          BearerList_t::iterator it;
+          BearerContextList_t::iterator it;
           for (it = bearerList.begin (); it != bearerList.end (); it++)
             {
               if (it->tft == tft)

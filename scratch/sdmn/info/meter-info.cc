@@ -26,17 +26,6 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("MeterInfo");
 NS_OBJECT_ENSURE_REGISTERED (MeterInfo);
 
-MeterInfo::MeterInfo ()
-  : m_isInstalled (false),
-    m_hasDown (false),
-    m_hasUp (false),
-    m_downBitRate (0),
-    m_upBitRate (0),
-    m_rInfo (0)
-{
-  NS_LOG_FUNCTION (this);
-}
-
 MeterInfo::MeterInfo (Ptr<RoutingInfo> rInfo)
   : m_isInstalled (false),
     m_hasDown (false),
@@ -71,25 +60,8 @@ MeterInfo::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::MeterInfo")
     .SetParent<Object> ()
-    .AddConstructor<MeterInfo> ()
   ;
   return tid;
-}
-
-void
-MeterInfo::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-
-  m_rInfo = 0;
-}
-
-Ptr<RoutingInfo>
-MeterInfo::GetRoutingInfo ()
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_rInfo;
 }
 
 uint32_t
@@ -122,6 +94,22 @@ MeterInfo::HasUp (void) const
   NS_LOG_FUNCTION (this);
 
   return m_hasUp;
+}
+
+Ptr<RoutingInfo>
+MeterInfo::GetRoutingInfo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_rInfo;
+}
+
+void
+MeterInfo::SetInstalled (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isInstalled = value;
 }
 
 std::string
@@ -157,11 +145,11 @@ MeterInfo::GetDelCmd (void) const
 }
 
 void
-MeterInfo::SetInstalled (bool installed)
+MeterInfo::DoDispose ()
 {
-  NS_LOG_FUNCTION (this << installed);
+  NS_LOG_FUNCTION (this);
 
-  m_isInstalled = installed;
+  m_rInfo = 0;
 }
 
 };  // namespace ns3

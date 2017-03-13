@@ -58,29 +58,36 @@ public:
 
   /** \name Private member accessors. */
   //\{
-  uint64_t    GetImsi           (void) const;
-  Ipv4Address GetUeAddress      (void) const;
-  Ipv4Address GetEnbAddress     (void) const;
-  uint64_t    GetMmeUeS1Id      (void) const;
-  uint64_t    GetEnbUeS1Id      (void) const;
-  uint16_t    GetCellId         (void) const;
-  uint16_t    GetBearerCounter  (void) const;
+  uint64_t GetImsi (void) const;
+  Ipv4Address GetUeAddress (void) const;
+  Ipv4Address GetEnbAddress (void) const;
+  uint64_t GetMmeUeS1Id (void) const;
+  uint64_t GetEnbUeS1Id (void) const;
+  uint16_t GetCellId (void) const;
+  uint16_t GetBearerCounter (void) const;
 
-  void SetUeAddress  (Ipv4Address value);
+  void SetUeAddress (Ipv4Address value);
   void SetEnbAddress (Ipv4Address value);
-  void SetEnbUeS1Id  (uint64_t    value);
-  void SetCellId     (uint16_t    value);
+  void SetMmeUeS1Id (uint64_t value);
+  void SetEnbUeS1Id (uint64_t value);
+  void SetCellId (uint16_t value);
   //\}
 
-  /** \return The iterator for the begin of the bearer list. */
+  /**
+   * Get the iterator for the begin of the bearer list.
+   * \return The begin iterator.
+   */
   std::list<BearerInfo>::const_iterator GetBearerListBegin (void) const;
 
-  /** \return The iterator for the end of the bearer list. */
+  /**
+    * Get the iterator for the end of the bearer list.
+    * \return The end iterator.
+    */
   std::list<BearerInfo>::const_iterator GetBearerListEnd (void) const;
 
   /**
-   * Add an EPS bearer to the list of bearers to be activated for this UE.
-   * The bearer will be activated when the UE enters the ECM connected state.
+   * Add an EPS bearer to the list of bearers for this UE.  The bearer will be
+   * activated when the UE enters the ECM connected state.
    * \param bearer The bearer info.
    * \return The bearer ID.
    */

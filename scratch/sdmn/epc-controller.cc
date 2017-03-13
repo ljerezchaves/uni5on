@@ -614,7 +614,7 @@ EpcController::DoCreateSessionRequest (
 
   // Create and save routing information for default bearer.
   // (firts element on the res.bearerContextsCreated)
-  ContextBearer_t defaultBearer = res.bearerContextsCreated.front ();
+  BearerContext_t defaultBearer = res.bearerContextsCreated.front ();
   NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
 
   uint32_t teid = defaultBearer.sgwFteid.teid;
@@ -631,7 +631,7 @@ EpcController::DoCreateSessionRequest (
   rInfo->SetInstalled (false);           // Bearer rules not installed yet
   rInfo->SetActive (true);               // Default bearer is always active
   rInfo->SetDefault (true);              // This is a default bearer
-  rInfo->SetBearer (defaultBearer);
+  rInfo->SetBearerContext (defaultBearer);
 
   // For default bearer, no meter nor gbr metadata.
   // For logic consistence, let's check for available resources.
@@ -647,10 +647,10 @@ EpcController::DoCreateSessionRequest (
 
   // For other dedicated bearers, let's create and save it's routing metadata.
   // (starting at the second element of res.bearerContextsCreated).
-  BearerList_t::iterator it = res.bearerContextsCreated.begin ();
+  BearerContextList_t::iterator it = res.bearerContextsCreated.begin ();
   for (it++; it != res.bearerContextsCreated.end (); it++)
     {
-      ContextBearer_t dedicatedBearer = *it;
+      BearerContext_t dedicatedBearer = *it;
       teid = dedicatedBearer.sgwFteid.teid;
 
       rInfo = CreateObject<RoutingInfo> (teid);
@@ -663,7 +663,7 @@ EpcController::DoCreateSessionRequest (
       rInfo->SetInstalled (false);          // Bearer rules not installed yet
       rInfo->SetActive (false);             // Dedicated bearer not active
       rInfo->SetDefault (false);            // This is a dedicated bearer
-      rInfo->SetBearer (dedicatedBearer);
+      rInfo->SetBearerContext (dedicatedBearer);
 
       GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
 

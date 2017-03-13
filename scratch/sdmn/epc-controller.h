@@ -159,7 +159,7 @@ public:
    * \param bearerList The list of context bearers created.
    */
   typedef void (*SessionCreatedTracedCallback)(
-    uint64_t imsi, uint16_t cellId, BearerList_t bearerList);
+    uint64_t imsi, uint16_t cellId, BearerContextList_t bearerList);
 
 protected:
   /** Destructor implementation. */
@@ -257,7 +257,7 @@ private:
   TracedCallback<bool, Ptr<const RoutingInfo> >    m_bearerReleaseTrace;
 
   /** The context created trace source, fired at NotifySessionCreated. */
-  TracedCallback<uint64_t, uint16_t, BearerList_t> m_sessionCreatedTrace;
+  TracedCallback<uint64_t, uint16_t, BearerContextList_t> m_sessionCreatedTrace;
 
   // P-GW metadata
   uint64_t      m_pgwDpId;    //!< P-GW datapath ID.

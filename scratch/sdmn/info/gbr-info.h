@@ -37,15 +37,13 @@ class RoutingInfo;
 class GbrInfo : public Object
 {
 public:
-  GbrInfo ();          //!< Default constructor.
-  virtual ~GbrInfo (); //!< Dummy destructor, see DoDispose.
-
   /**
    * Complete constructor.
    * \param rInfo RoutingInfo pointer.
    * \attention This GbrInfo object must be aggregated to rInfo.
    */
   GbrInfo (Ptr<RoutingInfo> rInfo);
+  virtual ~GbrInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -55,22 +53,20 @@ public:
 
   /** \name Private member accessors. */
   //\{
-  uint32_t  GetTeid         (void) const;
-  uint16_t  GetDscp         (void) const;
-  uint64_t  GetDownBitRate  (void) const;
-  uint64_t  GetUpBitRate    (void) const;
-  bool      IsReserved      (void) const;
+  uint32_t GetTeid (void) const;
+  uint16_t GetDscp (void) const;
+  bool IsReserved (void) const;
+  uint64_t GetDownBitRate (void) const;
+  uint64_t GetUpBitRate (void) const;
+  Ptr<RoutingInfo> GetRoutingInfo (void) const;
 
-  void SetDscp     (uint32_t value);
-  void SetReserved (bool     value);
+  void SetDscp (uint32_t value);
+  void SetReserved (bool value);
   //\}
 
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
-
-  /** \return RoutingInfo pointer. */
-  Ptr<RoutingInfo> GetRoutingInfo ();
 
 private:
   uint32_t          m_teid;         //!< GTP TEID.

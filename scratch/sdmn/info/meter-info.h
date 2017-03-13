@@ -37,15 +37,13 @@ class RoutingInfo;
 class MeterInfo : public Object
 {
 public:
-  MeterInfo ();          //!< Default constructor.
-  virtual ~MeterInfo (); //!< Dummy destructor, see DoDispose.
-
   /**
    * Complete constructor.
    * \param rInfo RoutingInfo pointer.
    * \attention This MeterInfo object must be aggregated to rInfo.
    */
   MeterInfo (Ptr<RoutingInfo> rInfo);
+  virtual ~MeterInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -55,10 +53,13 @@ public:
 
   /** \name Private member accessors. */
   //\{
-  uint32_t  GetTeid     (void) const;
-  bool      IsInstalled (void) const;
-  bool      HasDown     (void) const;
-  bool      HasUp       (void) const;
+  uint32_t GetTeid (void) const;
+  bool IsInstalled (void) const;
+  bool HasDown (void) const;
+  bool HasUp (void) const;
+  Ptr<RoutingInfo> GetRoutingInfo (void) const;
+
+  void SetInstalled (bool value);
   //\}
 
   /**
@@ -67,22 +68,13 @@ public:
    */
   //\{
   std::string GetDownAddCmd (void) const;
-  std::string GetUpAddCmd   (void) const;
-  std::string GetDelCmd     (void) const;
+  std::string GetUpAddCmd (void) const;
+  std::string GetDelCmd (void) const;
   //\}
-
-  /**
-   * Set the internal installed flag.
-   * \param installed The value to set.
-   */
-  void SetInstalled (bool installed);
 
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
-
-  /** \return RoutingInfo pointer. */
-  Ptr<RoutingInfo> GetRoutingInfo ();
 
 private:
   uint32_t          m_teid;           //!< GTP TEID.

@@ -29,10 +29,10 @@
 namespace ns3 {
 
 /** EPS context bearer. */
-typedef EpcS11SapMme::BearerContextCreated ContextBearer_t;
+typedef EpcS11SapMme::BearerContextCreated BearerContext_t;
 
 /** List of created context bearers. */
-typedef std::list<ContextBearer_t> BearerList_t;
+typedef std::list<BearerContext_t> BearerContextList_t;
 
 /**
  * \ingroup sdmn
@@ -61,37 +61,46 @@ public:
 
   /** \name Private member accessors. */
   //\{
-  GbrQosInformation GetQosInfo          (void) const;
-  EpsBearer::Qci    GetQciInfo          (void) const;
-  EpsBearer         GetEpsBearer        (void) const;
-  Ptr<EpcTft>       GetTft              (void) const;
-  uint32_t          GetTeid             (void) const;
-  uint64_t          GetImsi             (void) const;
-  uint16_t          GetCellId           (void) const;
-  Ipv4Address       GetSgwAddress       (void) const;
-  Ipv4Address       GetPgwAddress       (void) const;
-  uint16_t          GetPriority         (void) const;
-  uint16_t          GetTimeout          (void) const;
-  bool              HasDownlinkTraffic  (void) const;
-  bool              HasUplinkTraffic    (void) const;
-  bool              IsGbr               (void) const;
-  bool              IsDefault           (void) const;
-  bool              IsInstalled         (void) const;
-  bool              IsActive            (void) const;
+  uint32_t GetTeid (void) const;
+  uint64_t GetImsi (void) const;
+  uint16_t GetCellId (void) const;
+  Ipv4Address GetSgwAddress (void) const;
+  Ipv4Address GetPgwAddress (void) const;
+  uint16_t GetPriority (void) const;
+  uint16_t GetTimeout (void) const;
+  bool IsDefault (void) const;
+  bool IsInstalled (void) const;
+  bool IsActive (void) const;
 
-  void SetImsi       (uint64_t        value);
-  void SetCellId     (uint16_t        value);
-  void SetPgwAddress (Ipv4Address     value);
-  void SetSgwAddress (Ipv4Address     value);
-  void SetPriority   (uint16_t        value);
-  void SetTimeout    (uint16_t        value);
-  void SetDefault    (bool            value);
-  void SetInstalled  (bool            value);
-  void SetActive     (bool            value);
-  void SetBearer     (ContextBearer_t value);
+  void SetImsi (uint64_t value);
+  void SetCellId (uint16_t value);
+  void SetPgwAddress (Ipv4Address value);
+  void SetSgwAddress (Ipv4Address value);
+  void SetPriority (uint16_t value);
+  void SetTimeout (uint16_t value);
+  void SetDefault (bool value);
+  void SetInstalled (bool value);
+  void SetActive (bool value);
+  void SetBearerContext (BearerContext_t value);
   //\}
 
-  /** Increase the priority value by one unit. */
+  /**
+   *\name Accessors for bearer context information.
+   * \return The requested information.
+   */
+  //\{
+  bool IsGbr (void) const;
+  GbrQosInformation GetQosInfo (void) const;
+  EpsBearer::Qci GetQciInfo (void) const;
+  EpsBearer GetEpsBearer (void) const;
+  Ptr<EpcTft> GetTft (void) const;
+  bool HasDownlinkTraffic (void) const;
+  bool HasUplinkTraffic (void) const;
+  //\}
+
+  /**
+   * Increase the priority value by one unit.
+   */
   void IncreasePriority ();
 
   /**
@@ -129,7 +138,7 @@ private:
   bool              m_isDefault;    //!< This info is for default bearer.
   bool              m_isInstalled;  //!< Rule is installed into switches.
   bool              m_isActive;     //!< Application traffic is active.
-  ContextBearer_t   m_bearer;       //!< EPS bearer information.
+  BearerContext_t   m_bearer;       //!< EPS bearer information.
 
   /** Map saving TEID / routing information. */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;

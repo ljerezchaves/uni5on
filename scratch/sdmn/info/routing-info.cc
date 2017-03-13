@@ -60,38 +60,6 @@ RoutingInfo::GetTypeId (void)
   return tid;
 }
 
-GbrQosInformation
-RoutingInfo::GetQosInfo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_bearer.bearerLevelQos.gbrQosInfo;
-}
-
-EpsBearer::Qci
-RoutingInfo::GetQciInfo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_bearer.bearerLevelQos.qci;
-}
-
-EpsBearer
-RoutingInfo::GetEpsBearer (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_bearer.bearerLevelQos;
-}
-
-Ptr<EpcTft>
-RoutingInfo::GetTft (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_bearer.tft;
-}
-
 uint32_t
 RoutingInfo::GetTeid (void) const
 {
@@ -146,30 +114,6 @@ RoutingInfo::GetTimeout (void) const
   NS_LOG_FUNCTION (this);
 
   return m_timeout;
-}
-
-bool
-RoutingInfo::HasDownlinkTraffic (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_bearer.tft->HasDownlinkFilter ();
-}
-
-bool
-RoutingInfo::HasUplinkTraffic (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_bearer.tft->HasUplinkFilter ();
-}
-
-bool
-RoutingInfo::IsGbr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return (!m_isDefault && m_bearer.bearerLevelQos.IsGbr ());
 }
 
 bool
@@ -269,11 +213,67 @@ RoutingInfo::SetActive (bool value)
 }
 
 void
-RoutingInfo::SetBearer (ContextBearer_t value)
+RoutingInfo::SetBearerContext (BearerContext_t value)
 {
   NS_LOG_FUNCTION (this);
 
   m_bearer = value;
+}
+
+bool
+RoutingInfo::IsGbr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return (!m_isDefault && m_bearer.bearerLevelQos.IsGbr ());
+}
+
+GbrQosInformation
+RoutingInfo::GetQosInfo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_bearer.bearerLevelQos.gbrQosInfo;
+}
+
+EpsBearer::Qci
+RoutingInfo::GetQciInfo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_bearer.bearerLevelQos.qci;
+}
+
+EpsBearer
+RoutingInfo::GetEpsBearer (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_bearer.bearerLevelQos;
+}
+
+Ptr<EpcTft>
+RoutingInfo::GetTft (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_bearer.tft;
+}
+
+bool
+RoutingInfo::HasDownlinkTraffic (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_bearer.tft->HasDownlinkFilter ();
+}
+
+bool
+RoutingInfo::HasUplinkTraffic (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_bearer.tft->HasUplinkFilter ();
 }
 
 void

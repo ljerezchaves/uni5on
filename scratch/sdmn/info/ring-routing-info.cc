@@ -26,18 +26,6 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("RingRoutingInfo");
 NS_OBJECT_ENSURE_REGISTERED (RingRoutingInfo);
 
-RingRoutingInfo::RingRoutingInfo ()
-  : m_rInfo (0),
-    m_pgwIdx (0),
-    m_sgwIdx (0),
-    m_pgwDpId (0),
-    m_sgwDpId (0)
-{
-  NS_LOG_FUNCTION (this);
-
-  SetDefaultPaths (RingRoutingInfo::LOCAL, RingRoutingInfo::LOCAL);
-}
-
 RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo)
   : m_rInfo (rInfo)
 {
@@ -56,24 +44,8 @@ RingRoutingInfo::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RingRoutingInfo")
     .SetParent<Object> ()
-    .AddConstructor<RingRoutingInfo> ()
   ;
   return tid;
-}
-
-RingRoutingInfo::RoutingPath
-RingRoutingInfo::InvertPath (RoutingPath path)
-{
-  if (path == RingRoutingInfo::LOCAL)
-    {
-      return RingRoutingInfo::LOCAL;
-    }
-  else
-    {
-      return path == RingRoutingInfo::CLOCK ?
-             RingRoutingInfo::COUNTER :
-             RingRoutingInfo::CLOCK;
-    }
 }
 
 uint32_t
@@ -84,20 +56,20 @@ RingRoutingInfo::GetTeid (void) const
   return m_rInfo ? m_rInfo->GetTeid () : 0;
 }
 
-bool
-RingRoutingInfo::IsDefaultPath (void) const
+RingRoutingInfo::RoutingPath
+RingRoutingInfo::GetDownPath (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isDefaultPath;
+  return m_downPath;
 }
 
-bool
-RingRoutingInfo::IsLocalPath (void) const
+RingRoutingInfo::RoutingPath
+RingRoutingInfo::GetUpPath (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isLocalPath;
+  return m_upPath;
 }
 
 uint16_t
@@ -132,20 +104,60 @@ RingRoutingInfo::GetSgwSwDpId (void) const
   return m_sgwDpId;
 }
 
-RingRoutingInfo::RoutingPath
-RingRoutingInfo::GetDownPath (void) const
+bool
+RingRoutingInfo::IsDefaultPath (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_downPath;
+  return m_isDefaultPath;
 }
 
-RingRoutingInfo::RoutingPath
-RingRoutingInfo::GetUpPath (void) const
+bool
+RingRoutingInfo::IsLocalPath (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_upPath;
+  return m_isLocalPath;
+}
+
+Ptr<RoutingInfo>
+RingRoutingInfo::GetRoutingInfo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_rInfo;
+}
+
+void
+RingRoutingInfo::SetPgwSwIdx (uint16_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_pgwIdx = value;
+}
+
+void
+RingRoutingInfo::SetSgwSwIdx (uint16_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_sgwIdx = value;
+}
+
+void
+RingRoutingInfo::SetPgwSwDpId (uint64_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_pgwDpId = value;
+}
+
+void
+RingRoutingInfo::SetSgwSwDpId (uint64_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_sgwDpId = value;
 }
 
 void
@@ -191,36 +203,19 @@ RingRoutingInfo::ResetToDefaultPaths ()
     }
 }
 
-void
-RingRoutingInfo::SetPgwSwIdx (uint16_t value)
+RingRoutingInfo::RoutingPath
+RingRoutingInfo::InvertPath (RoutingPath path)
 {
-  NS_LOG_FUNCTION (this << value);
-
-  m_pgwIdx = value;
-}
-
-void
-RingRoutingInfo::SetSgwSwIdx (uint16_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_sgwIdx = value;
-}
-
-void
-RingRoutingInfo::SetPgwSwDpId (uint64_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_pgwDpId = value;
-}
-
-void
-RingRoutingInfo::SetSgwSwDpId (uint64_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_sgwDpId = value;
+  if (path == RingRoutingInfo::LOCAL)
+    {
+      return RingRoutingInfo::LOCAL;
+    }
+  else
+    {
+      return path == RingRoutingInfo::CLOCK ?
+             RingRoutingInfo::COUNTER :
+             RingRoutingInfo::CLOCK;
+    }
 }
 
 void
@@ -229,14 +224,6 @@ RingRoutingInfo::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   m_rInfo = 0;
-}
-
-Ptr<RoutingInfo>
-RingRoutingInfo::GetRoutingInfo ()
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_rInfo;
 }
 
 };  // namespace ns3

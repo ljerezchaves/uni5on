@@ -50,13 +50,13 @@ public:
 
   /** \name Private member accessors. */
   //\{
-  uint16_t       GetCellId      (void) const;
-  Ipv4Address    GetEnbAddress  (void) const;
-  Ipv4Address    GetSgwAddress  (void) const;
-  EpcS1apSapEnb* GetS1apSapEnb  (void) const;
+  uint16_t GetCellId (void) const;
+  Ipv4Address GetEnbAddress (void) const;
+  Ipv4Address GetSgwAddress (void) const;
+  EpcS1apSapEnb* GetS1apSapEnb (void) const;
 
-  void SetEnbAddress (Ipv4Address    value);
-  void SetSgwAddress (Ipv4Address    value);
+  void SetEnbAddress (Ipv4Address value);
+  void SetSgwAddress (Ipv4Address value);
   void SetS1apSapEnb (EpcS1apSapEnb* value);
   //\}
 

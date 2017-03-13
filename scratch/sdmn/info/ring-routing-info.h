@@ -43,15 +43,13 @@ public:
     COUNTER = 2
   };
 
-  RingRoutingInfo ();          //!< Default constructor.
-  virtual ~RingRoutingInfo (); //!< Dummy destructor, see DoDispose.
-
   /**
    * Complete constructor.
    * \param rInfo RoutingInfo pointer.
    * \attention This RingRoutingInfo object must be aggregated to rInfo.
    */
   RingRoutingInfo (Ptr<RoutingInfo> rInfo);
+  virtual ~RingRoutingInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -59,20 +57,26 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  /**
+   * Get the TEID from the aggregated routing info.
+   * \return The TEID value.
+   */
+  uint32_t GetTeid (void) const;
+
   /** \name Private member accessors. */
   //\{
-  uint32_t    GetTeid       (void) const;
-  bool        IsDefaultPath (void) const;
-  bool        IsLocalPath   (void) const;
-  uint16_t    GetPgwSwIdx   (void) const;
-  uint16_t    GetSgwSwIdx   (void) const;
-  uint64_t    GetSgwSwDpId  (void) const;
-  uint64_t    GetPgwSwDpId  (void) const;
-  RoutingPath GetDownPath   (void) const;
-  RoutingPath GetUpPath     (void) const;
+  RoutingPath GetDownPath (void) const;
+  RoutingPath GetUpPath (void) const;
+  uint16_t GetPgwSwIdx (void) const;
+  uint16_t GetSgwSwIdx (void) const;
+  uint64_t GetPgwSwDpId (void) const;
+  uint64_t GetSgwSwDpId (void) const;
+  bool IsDefaultPath (void) const;
+  bool IsLocalPath (void) const;
+  Ptr<RoutingInfo> GetRoutingInfo (void) const;
 
-  void SetPgwSwIdx  (uint16_t value);
-  void SetSgwSwIdx  (uint16_t value);
+  void SetPgwSwIdx (uint16_t value);
+  void SetSgwSwIdx (uint16_t value);
   void SetPgwSwDpId (uint64_t value);
   void SetSgwSwDpId (uint64_t value);
   //\}
@@ -84,10 +88,14 @@ public:
    */
   void SetDefaultPaths (RoutingPath downPath, RoutingPath upPath);
 
-  /** Invert both routing paths, only if different from LOCAL. */
+  /**
+   * Invert both routing paths, only if different from LOCAL.
+   */
   void InvertBothPaths ();
 
-  /** Reset both routing paths to default values. */
+  /**
+   * Reset both routing paths to default values.
+   */
   void ResetToDefaultPaths ();
 
   /**
@@ -101,11 +109,7 @@ protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
-  /** \return RoutingInfo pointer. */
-  Ptr<RoutingInfo> GetRoutingInfo ();
-
 private:
-  Ptr<RoutingInfo> m_rInfo;         //!< Routing information.
   RoutingPath      m_downPath;      //!< Downlink routing path.
   RoutingPath      m_upPath;        //!< Uplink routing path.
   uint16_t         m_pgwIdx;        //!< Switch index attached to P-GW.
@@ -114,6 +118,7 @@ private:
   uint64_t         m_sgwDpId;       //!< Switch dp id attached to the S-GW.
   bool             m_isDefaultPath; //!< True when paths are default.
   bool             m_isLocalPath;   //!< True when routing path is local.
+  Ptr<RoutingInfo> m_rInfo;         //!< Routing information.
 };
 
 };  // namespace ns3

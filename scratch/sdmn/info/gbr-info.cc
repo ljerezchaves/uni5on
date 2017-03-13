@@ -26,18 +26,6 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("GbrInfo");
 NS_OBJECT_ENSURE_REGISTERED (GbrInfo);
 
-GbrInfo::GbrInfo ()
-  : m_dscp (0),
-    m_isReserved (false),
-    m_hasDown (false),
-    m_hasUp (false),
-    m_downBitRate (0),
-    m_upBitRate (0),
-    m_rInfo (0)
-{
-  NS_LOG_FUNCTION (this);
-}
-
 GbrInfo::GbrInfo (Ptr<RoutingInfo> rInfo)
   : m_dscp (0),
     m_isReserved (false),
@@ -73,7 +61,6 @@ GbrInfo::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::GbrInfo")
     .SetParent<Object> ()
-    .AddConstructor<GbrInfo> ()
   ;
   return tid;
 }
@@ -94,6 +81,14 @@ GbrInfo::GetDscp (void) const
   return m_dscp;
 }
 
+bool
+GbrInfo::IsReserved (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_isReserved;
+}
+
 uint64_t
 GbrInfo::GetDownBitRate (void) const
 {
@@ -110,20 +105,12 @@ GbrInfo::GetUpBitRate (void) const
   return m_hasUp ? m_upBitRate : 0;
 }
 
-bool
-GbrInfo::IsReserved (void) const
+Ptr<RoutingInfo>
+GbrInfo::GetRoutingInfo (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isReserved;
-}
-
-void
-GbrInfo::SetReserved (bool value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_isReserved = value;
+  return m_rInfo;
 }
 
 void
@@ -135,19 +122,19 @@ GbrInfo::SetDscp (uint32_t value)
 }
 
 void
+GbrInfo::SetReserved (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isReserved = value;
+}
+
+void
 GbrInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
   m_rInfo = 0;
-}
-
-Ptr<RoutingInfo>
-GbrInfo::GetRoutingInfo ()
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_rInfo;
 }
 
 };  // namespace ns3
