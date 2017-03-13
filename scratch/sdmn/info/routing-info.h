@@ -45,9 +45,6 @@ typedef std::list<ContextBearer_t> BearerList_t;
  */
 class RoutingInfo : public Object
 {
-  friend class EpcController;
-  friend class RingController;
-
 public:
   /**
    * Complete constructor.
@@ -62,10 +59,7 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * \name Private member accessors.
-   * \return The requested field.
-   */
+  /** \name Private member accessors. */
   //\{
   GbrQosInformation GetQosInfo          (void) const;
   EpsBearer::Qci    GetQciInfo          (void) const;
@@ -84,14 +78,21 @@ public:
   bool              IsDefault           (void) const;
   bool              IsInstalled         (void) const;
   bool              IsActive            (void) const;
+
+  void SetImsi       (uint64_t        value);
+  void SetCellId     (uint16_t        value);
+  void SetPgwAddress (Ipv4Address     value);
+  void SetSgwAddress (Ipv4Address     value);
+  void SetPriority   (uint16_t        value);
+  void SetTimeout    (uint16_t        value);
+  void SetDefault    (bool            value);
+  void SetInstalled  (bool            value);
+  void SetActive     (bool            value);
+  void SetBearer     (ContextBearer_t value);
   //\}
 
-  /**
-   * Get the routing information from the global map for a specific TEID.
-   * \param teid The GTP tunnel ID.
-   * \return The routing information for this tunnel.
-   */
-  static Ptr<const RoutingInfo> GetConstPointer (uint32_t teid);
+  /** Increase the priority value by one unit. */
+  void IncreasePriority ();
 
   /**
    * Get stored information for a specific EPS bearer.
@@ -100,25 +101,6 @@ public:
    */
   static EpsBearer GetEpsBearer (uint32_t teid);
 
-protected:
-  /** Destructor implementation. */
-  virtual void DoDispose ();
-
-  /**
-   * Set the internal installed flag.
-   * \param installed The value to set.
-   */
-  void SetInstalled (bool installed);
-
-  /**
-   * Set the internal active flag.
-   * \param active The value to set.
-   */
-  void SetActive (bool active);
-
-  /** Increase the priority value by one unit. */
-  void IncreasePriority ();
-
   /**
    * Get the routing information from the global map for a specific TEID.
    * \param teid The GTP tunnel ID.
@@ -126,13 +108,17 @@ protected:
    */
   static Ptr<RoutingInfo> GetPointer (uint32_t teid);
 
+protected:
+  /** Destructor implementation. */
+  virtual void DoDispose ();
+
+private:
   /**
    * Register the routing information in global map for further usage.
    * \param rInfo The routing information to save.
    */
   static void RegisterRoutingInfo (Ptr<RoutingInfo> rInfo);
 
-private:
   uint32_t          m_teid;         //!< GTP TEID.
   uint64_t          m_imsi;         //!< UE IMSI.
   uint16_t          m_cellId;       //!< eNB cell ID.

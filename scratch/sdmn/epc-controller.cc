@@ -622,16 +622,16 @@ EpcController::DoCreateSessionRequest (
   NS_ASSERT_MSG (rInfo == 0, "Existing routing for default bearer " << teid);
 
   rInfo = CreateObject<RoutingInfo> (teid);
-  rInfo->m_imsi = imsi;
-  rInfo->m_cellId = cellId;
-  rInfo->m_pgwAddr = m_pgwS5Addr;
-  rInfo->m_sgwAddr = sdranCtrl->GetSgwS5Address ();
-  rInfo->m_priority = 0x7F;               // Priority for default bearer
-  rInfo->m_timeout = 0;                   // No timeout for default bearer
-  rInfo->m_isInstalled = false;           // Bearer rules not installed yet
-  rInfo->m_isActive = true;               // Default bearer is always active
-  rInfo->m_isDefault = true;              // This is a default bearer
-  rInfo->m_bearer = defaultBearer;
+  rInfo->SetImsi (imsi);
+  rInfo->SetCellId (cellId);
+  rInfo->SetPgwAddress (m_pgwS5Addr);
+  rInfo->SetSgwAddress (sdranCtrl->GetSgwS5Address ());
+  rInfo->SetPriority (0x7F);             // Priority for default bearer
+  rInfo->SetTimeout (0);                 // No timeout for default bearer
+  rInfo->SetInstalled (false);           // Bearer rules not installed yet
+  rInfo->SetActive (true);               // Default bearer is always active
+  rInfo->SetDefault (true);              // This is a default bearer
+  rInfo->SetBearer (defaultBearer);
 
   // For default bearer, no meter nor gbr metadata.
   // For logic consistence, let's check for available resources.
@@ -654,16 +654,16 @@ EpcController::DoCreateSessionRequest (
       teid = dedicatedBearer.sgwFteid.teid;
 
       rInfo = CreateObject<RoutingInfo> (teid);
-      rInfo->m_imsi = imsi;
-      rInfo->m_cellId = cellId;
-      rInfo->m_pgwAddr = m_pgwS5Addr;
-      rInfo->m_sgwAddr = sdranCtrl->GetSgwS5Address ();
-      rInfo->m_priority = 0x1FFF;           // Priority for dedicated bearer
-      rInfo->m_timeout = m_flowTimeout;     // Timeout for dedicated bearer
-      rInfo->m_isInstalled = false;         // Switch rules not installed
-      rInfo->m_isActive = false;            // Dedicated bearer not active
-      rInfo->m_isDefault = false;           // This is a dedicated bearer
-      rInfo->m_bearer = dedicatedBearer;
+      rInfo->SetImsi (imsi);
+      rInfo->SetCellId (cellId);
+      rInfo->SetPgwAddress (m_pgwS5Addr);
+      rInfo->SetSgwAddress (sdranCtrl->GetSgwS5Address ());
+      rInfo->SetPriority (0x1FFF);          // Priority for dedicated bearer
+      rInfo->SetTimeout (m_flowTimeout);    // Timeout for dedicated bearer
+      rInfo->SetInstalled (false);          // Bearer rules not installed yet
+      rInfo->SetActive (false);             // Dedicated bearer not active
+      rInfo->SetDefault (false);            // This is a dedicated bearer
+      rInfo->SetBearer (dedicatedBearer);
 
       GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
 
@@ -674,7 +674,8 @@ EpcController::DoCreateSessionRequest (
           rInfo->AggregateObject (gbrInfo);
 
           // Set the appropriated DiffServ DSCP value for this bearer.
-          gbrInfo->m_dscp = EpcController::GetDscpValue (rInfo->GetQciInfo ());
+          gbrInfo->SetDscp (
+            EpcController::GetDscpValue (rInfo->GetQciInfo ()));
         }
 
       // If necessary, create the meter metadata for maximum bit rate.

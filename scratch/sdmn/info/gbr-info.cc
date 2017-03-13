@@ -78,30 +78,6 @@ GbrInfo::GetTypeId (void)
   return tid;
 }
 
-void
-GbrInfo::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-
-  m_rInfo = 0;
-}
-
-Ptr<RoutingInfo>
-GbrInfo::GetRoutingInfo ()
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_rInfo;
-}
-
-void
-GbrInfo::SetReserved (bool reserved)
-{
-  NS_LOG_FUNCTION (this << reserved);
-
-  m_isReserved = reserved;
-}
-
 uint32_t
 GbrInfo::GetTeid (void) const
 {
@@ -140,6 +116,38 @@ GbrInfo::IsReserved (void) const
   NS_LOG_FUNCTION (this);
 
   return m_isReserved;
+}
+
+void
+GbrInfo::SetReserved (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isReserved = value;
+}
+
+void
+GbrInfo::SetDscp (uint32_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_dscp = value;
+}
+
+void
+GbrInfo::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+
+  m_rInfo = 0;
+}
+
+Ptr<RoutingInfo>
+GbrInfo::GetRoutingInfo ()
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_rInfo;
 }
 
 };  // namespace ns3

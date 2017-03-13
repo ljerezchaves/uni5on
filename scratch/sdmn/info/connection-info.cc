@@ -225,6 +225,33 @@ ConnectionInfo::GetDirection (uint64_t src, uint64_t dst) const
   return ConnectionInfo::FWD;
 }
 
+Ptr<ConnectionInfo>
+ConnectionInfo::GetPointer (uint64_t dpId1, uint64_t dpId2)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  DpIdPair_t key;
+  key.first  = std::min (dpId1, dpId2);
+  key.second = std::max (dpId1, dpId2);
+
+  Ptr<ConnectionInfo> cInfo = 0;
+  ConnInfoMap_t::iterator ret;
+  ret = ConnectionInfo::m_connectionsMap.find (key);
+  if (ret != ConnectionInfo::m_connectionsMap.end ())
+    {
+      cInfo = ret->second;
+    }
+  return cInfo;
+}
+
+ConnInfoList_t
+ConnectionInfo::GetList (void)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  return ConnectionInfo::m_connectionsList;
+}
+
 void
 ConnectionInfo::DoDispose ()
 {
@@ -383,33 +410,6 @@ ConnectionInfo::ReleaseGbrBitRate (uint64_t src, uint64_t dst,
         }
     }
   return released;
-}
-
-Ptr<ConnectionInfo>
-ConnectionInfo::GetPointer (uint64_t dpId1, uint64_t dpId2)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  DpIdPair_t key;
-  key.first  = std::min (dpId1, dpId2);
-  key.second = std::max (dpId1, dpId2);
-
-  Ptr<ConnectionInfo> cInfo = 0;
-  ConnInfoMap_t::iterator ret;
-  ret = ConnectionInfo::m_connectionsMap.find (key);
-  if (ret != ConnectionInfo::m_connectionsMap.end ())
-    {
-      cInfo = ret->second;
-    }
-  return cInfo;
-}
-
-ConnInfoList_t
-ConnectionInfo::GetList (void)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  return ConnectionInfo::m_connectionsList;
 }
 
 bool

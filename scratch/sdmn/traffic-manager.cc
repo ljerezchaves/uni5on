@@ -191,18 +191,26 @@ TrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
             {
               if (it->tft == tft)
                 {
-                  app->m_teid = it->sgwFteid.teid;
+                  app->SetTeid (it->sgwFteid.teid);
                 }
             }
         }
       else
         {
           // This application uses the default bearer
-          app->m_teid = m_defaultTeid;
+          app->SetTeid (m_defaultTeid);
         }
       NS_LOG_INFO ("Application " << app->GetAppName () << " [" << imsi <<
                    "@" << cellId << "] set with teid " << app->GetTeid ());
     }
+}
+
+void
+TrafficManager::SetImsi (uint64_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_imsi = value;
 }
 
 void

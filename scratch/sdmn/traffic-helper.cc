@@ -243,7 +243,7 @@ TrafficHelper::InstallApplications (NodeContainer ueNodes,
 
       // Each UE gets one traffic manager
       m_ueManager = m_managerFactory.Create<TrafficManager> ();
-      m_ueManager->m_imsi = DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ();
+      m_ueManager->SetImsi (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
       m_ueNode->AggregateObject (m_ueManager);
 
       // Connecting the manager to new context created trace source.
@@ -335,8 +335,8 @@ TrafficHelper::InstallGbrVoip ()
   EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
 
   // Link EPC info to application
-  cApp->m_tft = tft;
-  cApp->m_bearer = bearer;
+  cApp->SetTft (tft);
+  cApp->SetEpsBearer (bearer);
   m_ueManager->AddSdmnClientApp (cApp);
 
   // Activate dedicated bearer
@@ -380,8 +380,8 @@ TrafficHelper::InstallGbrLiveVideoStreaming ()
   EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO, qos);
 
   // Link EPC info to application
-  cApp->m_tft = tft;
-  cApp->m_bearer = bearer;
+  cApp->SetTft (tft);
+  cApp->SetEpsBearer (bearer);
   m_ueManager->AddSdmnClientApp (cApp);
 
   // Activate dedicated bearer
@@ -423,8 +423,8 @@ TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
   EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR, qos);
 
   // Link EPC info to application
-  cApp->m_tft = tft;
-  cApp->m_bearer = bearer;
+  cApp->SetTft (tft);
+  cApp->SetEpsBearer (bearer);
   m_ueManager->AddSdmnClientApp (cApp);
 
   // Activate dedicated bearer
@@ -466,8 +466,8 @@ TrafficHelper::InstallNonGbrLiveVideoStreaming ()
   EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING, qos);
 
   // Link EPC info to application
-  cApp->m_tft = tft;
-  cApp->m_bearer = bearer;
+  cApp->SetTft (tft);
+  cApp->SetEpsBearer (bearer);
   m_ueManager->AddSdmnClientApp (cApp);
 
   // Activate dedicated bearer
@@ -505,8 +505,8 @@ TrafficHelper::InstallNonGbrHttp ()
   EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
 
   // Link EPC info to application
-  cApp->m_tft = tft;
-  cApp->m_bearer = bearer;
+  cApp->SetTft (tft);
+  cApp->SetEpsBearer (bearer);
   m_ueManager->AddSdmnClientApp (cApp);
 
   // Activate dedicated bearer

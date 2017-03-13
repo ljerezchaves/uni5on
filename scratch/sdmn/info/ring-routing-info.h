@@ -34,8 +34,6 @@ class RoutingInfo;
  */
 class RingRoutingInfo : public Object
 {
-  friend class RingController;
-
 public:
   /** Routing direction in the ring. */
   enum RoutingPath
@@ -61,10 +59,7 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * \name Private member accessors.
-   * \return The requested field.
-   */
+  /** \name Private member accessors. */
   //\{
   uint32_t    GetTeid       (void) const;
   bool        IsDefaultPath (void) const;
@@ -75,7 +70,25 @@ public:
   uint64_t    GetPgwSwDpId  (void) const;
   RoutingPath GetDownPath   (void) const;
   RoutingPath GetUpPath     (void) const;
+
+  void SetPgwSwIdx  (uint16_t value);
+  void SetSgwSwIdx  (uint16_t value);
+  void SetPgwSwDpId (uint64_t value);
+  void SetSgwSwDpId (uint64_t value);
   //\}
+
+  /**
+   * Set the default routing paths.
+   * \param downPath The downlink default path.
+   * \param upPath The uplink default path.
+   */
+  void SetDefaultPaths (RoutingPath downPath, RoutingPath upPath);
+
+  /** Invert both routing paths, only if different from LOCAL. */
+  void InvertBothPaths ();
+
+  /** Reset both routing paths to default values. */
+  void ResetToDefaultPaths ();
 
   /**
    * Invert the given routing path.
@@ -92,19 +105,6 @@ protected:
   Ptr<RoutingInfo> GetRoutingInfo ();
 
 private:
-  /**
-   * Set the default routing paths.
-   * \param downPath The downlink default path.
-   * \param upPath The uplink default path.
-   */
-  void SetDefaultPaths (RoutingPath downPath, RoutingPath upPath);
-
-  /** Invert both routing paths, only if different from LOCAL. */
-  void InvertBothPaths ();
-
-  /** Reset both routing paths to default values. */
-  void ResetToDefaultPaths ();
-
   Ptr<RoutingInfo> m_rInfo;         //!< Routing information.
   RoutingPath      m_downPath;      //!< Downlink routing path.
   RoutingPath      m_upPath;        //!< Uplink routing path.

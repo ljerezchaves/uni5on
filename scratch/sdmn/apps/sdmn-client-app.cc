@@ -92,55 +92,97 @@ SdmnClientApp::GetTypeId (void)
 bool
 SdmnClientApp::IsActive (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_active;
 }
 
 bool
 SdmnClientApp::IsForceStop (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_forceStopFlag;
 }
 
 std::string
 SdmnClientApp::GetAppName (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_name;
 }
 
 Ptr<const QosStatsCalculator>
 SdmnClientApp::GetQosStats (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_qosStats;
 }
 
 Ptr<const QosStatsCalculator>
 SdmnClientApp::GetServerQosStats (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_serverApp->GetQosStats ();
 }
 
 Ptr<EpcTft>
 SdmnClientApp::GetTft (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_tft;
 }
 
 EpsBearer
 SdmnClientApp::GetEpsBearer (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_bearer;
 }
 
 uint32_t
 SdmnClientApp::GetTeid (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_teid;
+}
+
+void
+SdmnClientApp::SetTft (Ptr<EpcTft> value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_tft = value;
+}
+
+void
+SdmnClientApp::SetEpsBearer (EpsBearer value)
+{
+  NS_LOG_FUNCTION (this);
+
+  m_bearer = value;
+}
+
+void
+SdmnClientApp::SetTeid (uint32_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_teid = value;
 }
 
 void
 SdmnClientApp::SetServer (Ptr<SdmnServerApp> serverApp,
                           Ipv4Address serverAddress, uint16_t serverPort)
 {
+  NS_LOG_FUNCTION (this << serverApp << serverAddress << serverPort);
+
   m_serverApp = serverApp;
   m_serverAddress = serverAddress;
   m_serverPort = serverPort;
@@ -149,6 +191,8 @@ SdmnClientApp::SetServer (Ptr<SdmnServerApp> serverApp,
 Ptr<SdmnServerApp>
 SdmnClientApp::GetServerApp ()
 {
+  NS_LOG_FUNCTION (this);
+
   return m_serverApp;
 }
 
@@ -156,8 +200,8 @@ void
 SdmnClientApp::Start ()
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT_MSG (!IsActive (), "Can't start an already active application.");
 
+  NS_ASSERT_MSG (!IsActive (), "Can't start an already active application.");
   NS_LOG_INFO ("Starting application " << m_name << " over bearer " << m_teid);
   ResetQosStats ();
   m_active = true;
@@ -175,6 +219,7 @@ void
 SdmnClientApp::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
+
   m_qosStats = 0;
   m_tft = 0;
   m_socket = 0;
@@ -187,8 +232,8 @@ void
 SdmnClientApp::Stop ()
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
 
+  NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
   NS_LOG_INFO ("Stopping application " << m_name << " over bearer " << m_teid);
   Simulator::Cancel (m_forceStop);
   m_active = false;
@@ -200,8 +245,8 @@ void
 SdmnClientApp::ForceStop ()
 {
   NS_LOG_FUNCTION (this);
-  NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
 
+  NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
   NS_LOG_INFO ("Preparing to stop application " << m_name <<
                " over bearer " << m_teid);
   Simulator::Cancel (m_forceStop);
@@ -213,12 +258,16 @@ SdmnClientApp::ForceStop ()
 uint32_t
 SdmnClientApp::NotifyTx (uint32_t txBytes)
 {
+  NS_LOG_FUNCTION (this << txBytes);
+
   return m_serverApp->m_qosStats->NotifyTx (txBytes);
 }
 
 void
 SdmnClientApp::NotifyRx (uint32_t rxBytes, Time timestamp)
 {
+  NS_LOG_FUNCTION (this << rxBytes << timestamp);
+
   m_qosStats->NotifyRx (rxBytes, timestamp);
 }
 
@@ -226,6 +275,7 @@ void
 SdmnClientApp::ResetQosStats ()
 {
   NS_LOG_FUNCTION (this);
+
   m_qosStats->ResetCounters ();
 }
 

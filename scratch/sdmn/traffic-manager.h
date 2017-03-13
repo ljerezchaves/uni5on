@@ -41,8 +41,6 @@ class SdranController;
  */
 class TrafficManager : public Object
 {
-  friend class TrafficHelper;
-
 public:
   TrafficManager ();          //!< Default constructor.
   virtual ~TrafficManager (); //!< Dummy destructor, see DoDispose.
@@ -89,6 +87,12 @@ public:
    */
   void SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
                                BearerList_t bearerList);
+
+  /**
+   * Set the IMSI attribute.
+   * \param value The ISMI value.
+   */
+  void SetImsi (uint64_t value);
 
 protected:
   /** Destructor implementation. */

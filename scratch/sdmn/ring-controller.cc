@@ -539,10 +539,10 @@ RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
       rInfo->AggregateObject (ringInfo);
 
       // Set internal switch indexes.
-      ringInfo->m_pgwIdx = GetSwitchIndex (rInfo->GetPgwAddress ());
-      ringInfo->m_sgwIdx = GetSwitchIndex (rInfo->GetSgwAddress ());
-      ringInfo->m_pgwDpId = GetDpId (ringInfo->m_pgwIdx);
-      ringInfo->m_sgwDpId = GetDpId (ringInfo->m_sgwIdx);
+      ringInfo->SetPgwSwIdx  (GetSwitchIndex (rInfo->GetPgwAddress ()));
+      ringInfo->SetSgwSwIdx  (GetSwitchIndex (rInfo->GetSgwAddress ()));
+      ringInfo->SetPgwSwDpId (GetDpId (ringInfo->GetPgwSwIdx ()));
+      ringInfo->SetSgwSwDpId (GetDpId (ringInfo->GetSgwSwIdx ()));
 
       // Considering default paths those with lower hops.
       RingRoutingInfo::RoutingPath dlPath, ulPath;

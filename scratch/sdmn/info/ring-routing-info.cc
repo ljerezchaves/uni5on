@@ -76,22 +76,6 @@ RingRoutingInfo::InvertPath (RoutingPath path)
     }
 }
 
-void
-RingRoutingInfo::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-
-  m_rInfo = 0;
-}
-
-Ptr<RoutingInfo>
-RingRoutingInfo::GetRoutingInfo ()
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_rInfo;
-}
-
 uint32_t
 RingRoutingInfo::GetTeid (void) const
 {
@@ -205,6 +189,54 @@ RingRoutingInfo::ResetToDefaultPaths ()
     {
       InvertBothPaths ();
     }
+}
+
+void
+RingRoutingInfo::SetPgwSwIdx (uint16_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_pgwIdx = value;
+}
+
+void
+RingRoutingInfo::SetSgwSwIdx (uint16_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_sgwIdx = value;
+}
+
+void
+RingRoutingInfo::SetPgwSwDpId (uint64_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_pgwDpId = value;
+}
+
+void
+RingRoutingInfo::SetSgwSwDpId (uint64_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_sgwDpId = value;
+}
+
+void
+RingRoutingInfo::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+
+  m_rInfo = 0;
+}
+
+Ptr<RoutingInfo>
+RingRoutingInfo::GetRoutingInfo ()
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_rInfo;
 }
 
 };  // namespace ns3

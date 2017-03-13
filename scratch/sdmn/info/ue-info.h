@@ -34,11 +34,6 @@ namespace ns3 {
  */
 class UeInfo : public Object
 {
-  friend class EpcController;
-  friend class SdranController;
-  friend class EpcNetwork;
-  friend class SdmnMme;
-
 public:
   /**
    * Complete constructor.
@@ -61,10 +56,7 @@ public:
     uint8_t     bearerId;
   };
 
-  /**
-   * \name Private member accessors.
-   * \return The requested field.
-   */
+  /** \name Private member accessors. */
   //\{
   uint64_t    GetImsi           (void) const;
   Ipv4Address GetUeAddress      (void) const;
@@ -73,6 +65,11 @@ public:
   uint64_t    GetEnbUeS1Id      (void) const;
   uint16_t    GetCellId         (void) const;
   uint16_t    GetBearerCounter  (void) const;
+
+  void SetUeAddress  (Ipv4Address value);
+  void SetEnbAddress (Ipv4Address value);
+  void SetEnbUeS1Id  (uint64_t    value);
+  void SetCellId     (uint16_t    value);
   //\}
 
   /** \return The iterator for the begin of the bearer list. */
@@ -80,34 +77,6 @@ public:
 
   /** \return The iterator for the end of the bearer list. */
   std::list<BearerInfo>::const_iterator GetBearerListEnd (void) const;
-
-protected:
-  /** Destructor implementation. */
-  virtual void DoDispose ();
-
-  /**
-   * Set the address of the UE.
-   * \param addr The UE address.
-   */
-  void SetUeAddress (Ipv4Address addr);
-
-  /**
-   * Set the address of the eNB to which the UE is connected to.
-   * \param addr The eNB address.
-   */
-  void SetEnbAddress (Ipv4Address addr);
-
-  /**
-   * Set the ID for the communication between eNB - UE S1 ID.
-   * \param aenbUeS1Idr The ID to set.
-   */
-  void SetEnbUeS1Id (uint64_t enbUeS1Id);
-
-  /**
-   * Set the cell ID for this UE.
-   * \param addr The eNB address.
-   */
-  void SetCellId (uint16_t cellId);
 
   /**
    * Add an EPS bearer to the list of bearers to be activated for this UE.
@@ -129,6 +98,10 @@ protected:
    * \return The UE information for this IMSI.
    */
   static Ptr<UeInfo> GetPointer (uint64_t imsi);
+
+protected:
+  /** Destructor implementation. */
+  virtual void DoDispose ();
 
 private:
   /**

@@ -196,49 +196,84 @@ RoutingInfo::IsActive (void) const
   return m_isActive;
 }
 
-Ptr<const RoutingInfo>
-RoutingInfo::GetConstPointer (uint32_t teid)
+void
+RoutingInfo::SetImsi (uint64_t value)
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  NS_LOG_FUNCTION (this << value);
 
-  Ptr<const RoutingInfo> rInfo = 0;
-  TeidRoutingMap_t::const_iterator ret;
-  ret = RoutingInfo::m_globalInfoMap.find (teid);
-  if (ret != RoutingInfo::m_globalInfoMap.end ())
-    {
-      rInfo = ret->second;
-    }
-  return rInfo;
-}
-
-EpsBearer
-RoutingInfo::GetEpsBearer (uint32_t teid)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  return GetConstPointer (teid)->GetEpsBearer ();
+  m_imsi = value;
 }
 
 void
-RoutingInfo::DoDispose ()
+RoutingInfo::SetCellId (uint16_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_cellId = value;
+}
+
+void
+RoutingInfo::SetPgwAddress (Ipv4Address value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_pgwAddr = value;
+}
+
+void
+RoutingInfo::SetSgwAddress (Ipv4Address value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_sgwAddr = value;
+}
+
+void
+RoutingInfo::SetPriority (uint16_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_priority = value;
+}
+
+void
+RoutingInfo::SetTimeout (uint16_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_timeout = value;
+}
+
+void
+RoutingInfo::SetDefault (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isDefault = value;
+}
+
+void
+RoutingInfo::SetInstalled (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isInstalled = value;
+}
+
+void
+RoutingInfo::SetActive (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isActive = value;
+}
+
+void
+RoutingInfo::SetBearer (ContextBearer_t value)
 {
   NS_LOG_FUNCTION (this);
-}
 
-void
-RoutingInfo::SetInstalled (bool installed)
-{
-  NS_LOG_FUNCTION (this << installed);
-
-  m_isInstalled = installed;
-}
-
-void
-RoutingInfo::SetActive (bool active)
-{
-  NS_LOG_FUNCTION (this << active);
-
-  m_isActive = active;
+  m_bearer = value;
 }
 
 void
@@ -247,6 +282,14 @@ RoutingInfo::IncreasePriority ()
   NS_LOG_FUNCTION (this);
 
   m_priority++;
+}
+
+EpsBearer
+RoutingInfo::GetEpsBearer (uint32_t teid)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  return GetPointer (teid)->GetEpsBearer ();
 }
 
 Ptr<RoutingInfo>
@@ -262,6 +305,12 @@ RoutingInfo::GetPointer (uint32_t teid)
       rInfo = ret->second;
     }
   return rInfo;
+}
+
+void
+RoutingInfo::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
 }
 
 void

@@ -36,9 +36,6 @@ class RoutingInfo;
  */
 class GbrInfo : public Object
 {
-  friend class EpcController;
-  friend class RingController;
-
 public:
   GbrInfo ();          //!< Default constructor.
   virtual ~GbrInfo (); //!< Dummy destructor, see DoDispose.
@@ -56,16 +53,16 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * \name Private member accessors.
-   * \return The requested field.
-   */
+  /** \name Private member accessors. */
   //\{
   uint32_t  GetTeid         (void) const;
   uint16_t  GetDscp         (void) const;
   uint64_t  GetDownBitRate  (void) const;
   uint64_t  GetUpBitRate    (void) const;
   bool      IsReserved      (void) const;
+
+  void SetDscp     (uint32_t value);
+  void SetReserved (bool     value);
   //\}
 
 protected:
@@ -74,12 +71,6 @@ protected:
 
   /** \return RoutingInfo pointer. */
   Ptr<RoutingInfo> GetRoutingInfo ();
-
-  /**
-   * Set the internal reserved flag.
-   * \param reserved The value to set.
-   */
-  void SetReserved (bool reserved);
 
 private:
   uint32_t          m_teid;         //!< GTP TEID.

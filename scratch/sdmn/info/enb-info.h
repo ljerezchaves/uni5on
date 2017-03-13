@@ -34,11 +34,6 @@ namespace ns3 {
  */
 class EnbInfo : public Object
 {
-  friend class EpcController;
-  friend class SdranController;
-  friend class SdranCloud;
-  friend class SdmnMme;
-
 public:
   /**
    * Complete constructor.
@@ -53,38 +48,17 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * \name Private member accessors.
-   * \return The requested field.
-   */
+  /** \name Private member accessors. */
   //\{
   uint16_t       GetCellId      (void) const;
   Ipv4Address    GetEnbAddress  (void) const;
   Ipv4Address    GetSgwAddress  (void) const;
   EpcS1apSapEnb* GetS1apSapEnb  (void) const;
+
+  void SetEnbAddress (Ipv4Address    value);
+  void SetSgwAddress (Ipv4Address    value);
+  void SetS1apSapEnb (EpcS1apSapEnb* value);
   //\}
-
-protected:
-  /** Destructor implementation. */
-  virtual void DoDispose ();
-
-  /**
-   * Set the address of the eNB S1-U interface to which the UE is connected to.
-   * \param addr The eNB address.
-   */
-  void SetEnbAddress (Ipv4Address addr);
-
-  /**
-   * Set the address of the S-GW S1-U interface.
-   * \param addr The S-GW address.
-   */
-  void SetSgwAddress (Ipv4Address addr);
-
-  /**
-   * Set the eNB side of the S1-AP SAP.
-   * \param sap The eNB S1-AP SAP.
-   */
-  void SetS1apSapEnb (EpcS1apSapEnb *sap);
 
   /**
    * Get the eNB information from the global map for a specific cell Id.
@@ -92,6 +66,10 @@ protected:
    * \return The eNb information for this cell ID.
    */
   static Ptr<EnbInfo> GetPointer (uint16_t cellId);
+
+protected:
+  /** Destructor implementation. */
+  virtual void DoDispose ();
 
 private:
   /**

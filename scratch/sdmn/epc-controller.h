@@ -46,7 +46,6 @@ namespace ns3 {
  */
 class EpcController : public OFSwitch13Controller
 {
-  friend class SdranController;
   friend class MemberEpcS5SapPgw<EpcController>;
 
 public:

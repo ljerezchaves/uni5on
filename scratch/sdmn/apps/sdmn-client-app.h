@@ -50,8 +50,6 @@ class SdmnServerApp;
 class SdmnClientApp : public Application
 {
   friend class SdmnServerApp;
-  friend class TrafficHelper;
-  friend class TrafficManager;
 
 public:
   SdmnClientApp ();            //!< Default constructor
@@ -107,6 +105,24 @@ public:
    * \return The TEID for this application.
    */
   uint32_t GetTeid (void) const;
+
+  /**
+   * Set the TFT.
+   * \param The value to set.
+   */
+  void SetTft (Ptr<EpcTft> value);
+
+  /**
+   * Set the EPS bearer.
+   * \param The value to set.
+   */
+  void SetEpsBearer (EpsBearer value);
+
+  /**
+   * Set the TEID.
+   * \param The value to set.
+   */
+  void SetTeid (uint32_t value);
 
   /**
    * \brief Set the server application.

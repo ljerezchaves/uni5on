@@ -43,9 +43,6 @@ typedef std::vector<Ptr<ConnectionInfo> > ConnInfoList_t;
  */
 class ConnectionInfo : public Object
 {
-  friend class RingController;
-  friend class BackhaulStatsCalculator;
-
 public:
   /** Metadata associated to a switch. */
   struct SwitchData
@@ -144,26 +141,6 @@ public:
   ConnectionInfo::Direction GetDirection (uint64_t src, uint64_t dst) const;
 
   /**
-   * TracedCallback signature for Ptr<ConnectionInfo>.
-   * \param cInfo The connection information and metadata.
-   */
-  typedef void (*ConnTracedCallback)(Ptr<ConnectionInfo> cInfo);
-
-protected:
-  /** Destructor implementation. */
-  virtual void DoDispose ();
-
-  // Inherited from ObjectBase.
-  void NotifyConstructionCompleted (void);
-
-  /**
-   * Notify this connection of a successfully transmitted packet in link
-   * channel. This method will update internal byte counters.
-   * \param packet The transmitted packet.
-   */
-  void NotifyTxPacket (std::string context, Ptr<const Packet> packet);
-
-  /**
    * Get the available bit rate between these two switches. Optionally, this
    * function can considers the DeBaR reservation factor.
    * \param src The source switch datapath ID.
@@ -206,6 +183,26 @@ protected:
    * \return The connection information for this pair of datapath IDs.
    */
   static ConnInfoList_t GetList (void);
+
+  /**
+   * TracedCallback signature for Ptr<ConnectionInfo>.
+   * \param cInfo The connection information and metadata.
+   */
+  typedef void (*ConnTracedCallback)(Ptr<ConnectionInfo> cInfo);
+
+protected:
+  /** Destructor implementation. */
+  virtual void DoDispose ();
+
+  // Inherited from ObjectBase.
+  void NotifyConstructionCompleted (void);
+
+  /**
+   * Notify this connection of a successfully transmitted packet in link
+   * channel. This method will update internal byte counters.
+   * \param packet The transmitted packet.
+   */
+  void NotifyTxPacket (std::string context, Ptr<const Packet> packet);
 
 private:
   /**

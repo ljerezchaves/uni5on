@@ -85,37 +85,6 @@ EnbInfo::GetS1apSapEnb (void) const
   return m_s1apSapEnb;
 }
 
-void
-EnbInfo::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-void
-EnbInfo::SetEnbAddress (Ipv4Address enbAddr)
-{
-  NS_LOG_FUNCTION (this << enbAddr);
-
-  m_enbAddr = enbAddr;
-}
-
-void
-EnbInfo::SetSgwAddress (Ipv4Address sgwAddr)
-{
-  NS_LOG_FUNCTION (this << sgwAddr);
-
-  m_sgwAddr = sgwAddr;
-}
-
-void
-EnbInfo::SetS1apSapEnb (EpcS1apSapEnb *sap)
-{
-  NS_LOG_FUNCTION (this);
-
-  m_s1apSapEnb = sap;
-}
-
-
 Ptr<EnbInfo>
 EnbInfo::GetPointer (uint16_t cellId)
 {
@@ -129,6 +98,36 @@ EnbInfo::GetPointer (uint16_t cellId)
       enbInfo = ret->second;
     }
   return enbInfo;
+}
+
+void
+EnbInfo::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+void
+EnbInfo::SetEnbAddress (Ipv4Address value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_enbAddr = value;
+}
+
+void
+EnbInfo::SetSgwAddress (Ipv4Address value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_sgwAddr = value;
+}
+
+void
+EnbInfo::SetS1apSapEnb (EpcS1apSapEnb* value)
+{
+  NS_LOG_FUNCTION (this);
+
+  m_s1apSapEnb = value;
 }
 
 void

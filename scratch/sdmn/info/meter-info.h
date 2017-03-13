@@ -36,9 +36,6 @@ class RoutingInfo;
  */
 class MeterInfo : public Object
 {
-  friend class EpcController;
-  friend class RingController;
-
 public:
   MeterInfo ();          //!< Default constructor.
   virtual ~MeterInfo (); //!< Dummy destructor, see DoDispose.
@@ -56,10 +53,7 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * \name Private member accessors.
-   * \return The requested field.
-   */
+  /** \name Private member accessors. */
   //\{
   uint32_t  GetTeid     (void) const;
   bool      IsInstalled (void) const;
@@ -77,18 +71,18 @@ public:
   std::string GetDelCmd     (void) const;
   //\}
 
+  /**
+   * Set the internal installed flag.
+   * \param installed The value to set.
+   */
+  void SetInstalled (bool installed);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
   /** \return RoutingInfo pointer. */
   Ptr<RoutingInfo> GetRoutingInfo ();
-
-  /**
-   * Set the internal installed flag.
-   * \param installed The value to set.
-   */
-  void SetInstalled (bool installed);
 
 private:
   uint32_t          m_teid;           //!< GTP TEID.

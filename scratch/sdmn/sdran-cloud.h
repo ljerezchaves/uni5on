@@ -38,8 +38,6 @@ class EpcController;
  */
 class SdranCloud : public Object
 {
-  friend class EpcNetwork;
-
 public:
   SdranCloud ();           //!< Default constructor.
   virtual ~SdranCloud ();  //!< Dummy destructor, see DoDispose.
@@ -78,19 +76,19 @@ public:
    */
   void EnablePcap (std::string prefix, bool promiscuous = false);
 
-protected:
-  /** Destructor implementation. */
-  virtual void DoDispose ();
-
-  // Inherited from ObjectBase.
-  void NotifyConstructionCompleted (void);
-
   /**
    * Get the SDRAN cloud pointer from the global map for this eNB node.
    * \param enb The eNB node pointer.
    * \return The SDRAN cloud pointer.
    */
   static Ptr<SdranCloud> GetPointer (Ptr<Node> enb);
+
+protected:
+  /** Destructor implementation. */
+  virtual void DoDispose ();
+
+  // Inherited from ObjectBase.
+  void NotifyConstructionCompleted (void);
 
 private:
   /**

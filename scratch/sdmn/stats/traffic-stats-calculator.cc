@@ -171,7 +171,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   NS_LOG_FUNCTION (this << context << app->GetTeid ());
 
   uint32_t teid = app->GetTeid ();
-  Ptr<const RoutingInfo> rInfo = RoutingInfo::GetConstPointer (teid);
+  Ptr<const RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
   Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ring information for this routing info.");
 

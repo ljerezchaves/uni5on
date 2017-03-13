@@ -346,6 +346,21 @@ SdranCloud::EnablePcap (std::string prefix, bool promiscuous)
   helper.EnablePcap (prefix + "lte-epc-s1u", m_s1Devices,  promiscuous);
 }
 
+Ptr<SdranCloud>
+SdranCloud::GetPointer (Ptr<Node> enb)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  Ptr<SdranCloud> sdran = 0;
+  NodeSdranMap_t::iterator ret;
+  ret = SdranCloud::m_enbSdranMap.find (enb);
+  if (ret != SdranCloud::m_enbSdranMap.end ())
+    {
+      sdran = ret->second;
+    }
+  return sdran;
+}
+
 void
 SdranCloud::DoDispose ()
 {
@@ -423,21 +438,6 @@ SdranCloud::NotifyConstructionCompleted ()
   // Register this object and chain up
   RegisterSdranCloud (Ptr<SdranCloud> (this));
   Object::NotifyConstructionCompleted ();
-}
-
-Ptr<SdranCloud>
-SdranCloud::GetPointer (Ptr<Node> enb)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  Ptr<SdranCloud> sdran = 0;
-  NodeSdranMap_t::iterator ret;
-  ret = SdranCloud::m_enbSdranMap.find (enb);
-  if (ret != SdranCloud::m_enbSdranMap.end ())
-    {
-      sdran = ret->second;
-    }
-  return sdran;
 }
 
 void
