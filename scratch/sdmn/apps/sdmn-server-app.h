@@ -52,23 +52,13 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * Get the active state for this application.
-   * \return true if the application is active, false otherwise.
-   */
+  /** \name Private member accessors. */
+  //\{
   bool IsActive (void) const;
-
-  /**
-   * Get the force stop state for this application.
-   * \return true if the application is in force stop state, false otherwise.
-   */
   bool IsForceStop (void) const;
-
-  /**
-   * Get QoS statistics
-   * \return Get the constant pointer to QosStatsCalculator
-   */
+  Ptr<SdmnClientApp> GetClientApp (void) const;
   Ptr<const QosStatsCalculator> GetQosStats (void) const;
+  //\}
 
   /**
    * \brief Set the client application.
@@ -78,12 +68,6 @@ public:
    */
   void SetClient (Ptr<SdmnClientApp> clientApp, Ipv4Address clientAddress,
                   uint16_t clientPort);
-
-  /**
-   * \brief Get the client application.
-   * \return The pointer to client application.
-   */
-  Ptr<SdmnClientApp> GetClientApp ();
 
 protected:
   /** Destructor implementation */

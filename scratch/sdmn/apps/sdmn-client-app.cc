@@ -89,6 +89,14 @@ SdmnClientApp::GetTypeId (void)
   return tid;
 }
 
+std::string
+SdmnClientApp::GetAppName (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_name;
+}
+
 bool
 SdmnClientApp::IsActive (void) const
 {
@@ -103,30 +111,6 @@ SdmnClientApp::IsForceStop (void) const
   NS_LOG_FUNCTION (this);
 
   return m_forceStopFlag;
-}
-
-std::string
-SdmnClientApp::GetAppName (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_name;
-}
-
-Ptr<const QosStatsCalculator>
-SdmnClientApp::GetQosStats (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_qosStats;
-}
-
-Ptr<const QosStatsCalculator>
-SdmnClientApp::GetServerQosStats (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_serverApp->GetQosStats ();
 }
 
 Ptr<EpcTft>
@@ -151,6 +135,30 @@ SdmnClientApp::GetTeid (void) const
   NS_LOG_FUNCTION (this);
 
   return m_teid;
+}
+
+Ptr<SdmnServerApp>
+SdmnClientApp::GetServerApp (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_serverApp;
+}
+
+Ptr<const QosStatsCalculator>
+SdmnClientApp::GetQosStats (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_qosStats;
+}
+
+Ptr<const QosStatsCalculator>
+SdmnClientApp::GetServerQosStats (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_serverApp->GetQosStats ();
 }
 
 void
@@ -186,14 +194,6 @@ SdmnClientApp::SetServer (Ptr<SdmnServerApp> serverApp,
   m_serverApp = serverApp;
   m_serverAddress = serverAddress;
   m_serverPort = serverPort;
-}
-
-Ptr<SdmnServerApp>
-SdmnClientApp::GetServerApp ()
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_serverApp;
 }
 
 void

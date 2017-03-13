@@ -61,68 +61,22 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * Get the active state for this application.
-   * \return true if the application is active, false otherwise.
-   */
-  bool IsActive (void) const;
-
-  /**
-   * Get the force stop state for this application.
-   * \return true if the application is in force stop state, false otherwise.
-   */
-  bool IsForceStop (void) const;
-
-  /**
-   * Get the application name.
-   * \return The application name.
-   */
+  /** \name Private member accessors. */
+  //\{
   std::string GetAppName (void) const;
-
-  /**
-   * Get QoS statistics.
-   * \return Get the constant pointer to QosStatsCalculator
-   */
+  bool IsActive (void) const;
+  bool IsForceStop (void) const;
+  Ptr<EpcTft> GetTft (void) const;
+  EpsBearer GetEpsBearer (void) const;
+  uint32_t GetTeid (void) const;
+  Ptr<SdmnServerApp> GetServerApp (void) const;
   Ptr<const QosStatsCalculator> GetQosStats (void) const;
-
-  /**
-   * Get QoS statistics from server.
-   * \return Get the constant pointer to QosStatsCalculator
-   */
   Ptr<const QosStatsCalculator> GetServerQosStats (void) const;
 
-  /**
-   * \return The P-GW TFT for this application.
-   */
-  Ptr<EpcTft> GetTft (void) const;
-
-  /**
-   * \return The EpsBearer for this application.
-   */
-  EpsBearer GetEpsBearer (void) const;
-
-  /**
-   * \return The TEID for this application.
-   */
-  uint32_t GetTeid (void) const;
-
-  /**
-   * Set the TFT.
-   * \param The value to set.
-   */
   void SetTft (Ptr<EpcTft> value);
-
-  /**
-   * Set the EPS bearer.
-   * \param The value to set.
-   */
   void SetEpsBearer (EpsBearer value);
-
-  /**
-   * Set the TEID.
-   * \param The value to set.
-   */
   void SetTeid (uint32_t value);
+  //\}
 
   /**
    * \brief Set the server application.
@@ -132,12 +86,6 @@ public:
    */
   void SetServer (Ptr<SdmnServerApp> serverApp, Ipv4Address serverAddress,
                   uint16_t serverPort);
-
-  /**
-   * \brief Get the server application.
-   * \return The pointer to server application.
-   */
-  Ptr<SdmnServerApp> GetServerApp ();
 
   /**
    * Start this application. Start traffic generation,

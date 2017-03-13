@@ -48,17 +48,14 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * \name Private member accessors.
-   * \return The requested field.
-   */
+  /** \name Private member accessors. */
   //\{
-  uint32_t              GetId              (void) const;
-  uint32_t              GetNSites          (void) const;
-  uint32_t              GetNEnbs           (void) const;
-  Ptr<Node>             GetSgwNode         (void) const;
-  NodeContainer         GetEnbNodes        (void) const;
-  Ptr<SdranController>  GetControllerApp   (void) const;
+  uint32_t GetId (void) const;
+  uint32_t GetNSites (void) const;
+  uint32_t GetNEnbs (void) const;
+  Ptr<Node> GetSgwNode (void) const;
+  NodeContainer GetEnbNodes (void) const;
+  Ptr<SdranController> GetSdranCtrlApp (void) const;
   Ptr<OFSwitch13Device> GetSgwSwitchDevice (void) const;
   //\}
 
@@ -100,6 +97,7 @@ private:
   uint32_t                      m_sdranId;        //!< SDRAN cloud id.
   uint32_t                      m_nSites;         //!< Number of cell sites.
   uint32_t                      m_nEnbs;          //!< Number of eNBs.
+  Ptr<Node>                     m_sgwNode;        //!< S-GW user-plane node.
   NodeContainer                 m_enbNodes;       //!< eNB nodes.
 
   // OpenFlow switch helper.
@@ -108,9 +106,6 @@ private:
   // IP addresses for interfaces.
   Ipv4Address                   m_s1uNetworkAddr; //!< S1-U network address.
   Ipv4AddressHelper             m_s1uAddrHelper;  //!< S1-U address helper.
-
-  // S-GW user plane.
-  Ptr<Node>                     m_sgwNode;        //!< S-GW user-plane node.
 
   // Helper and attributes for S1-U interface.
   CsmaHelper                    m_csmaHelper;     //!< Connection helper.

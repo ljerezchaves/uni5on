@@ -53,41 +53,15 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * Get The number of OpenFlow switches in the backhaul network.
-   * \return The number of switches.
-   */
+  /** \name Private member accessors. */
+  //\{
   uint16_t GetNSwitches (void) const;
-
-  /**
-   * Get the Internet web server node.
-   * \return The Internet node.
-   */
   Ptr<Node> GetWebNode (void) const;
-
-  /**
-   * Get the Internet web server IP address.
-   * \return The IP address.
-   */
   Ipv4Address GetWebIpAddress (void) const;
-
-  /**
-   * Get the Internet web server IP mask.
-   * \return The IP mask.
-   */
   Ipv4Mask GetWebIpMask (void) const;
-
-  /**
-   * Get the OpenFlow EPC controller node.
-   * \return The controller node pointer.
-   */
-  Ptr<Node> GetControllerNode (void) const;
-
-  /**
-   * Get the OpenFlow EPC controller application.
-   * \return The controller application pointer.
-   */
-  Ptr<EpcController> GetControllerApp (void) const;
+  Ptr<Node> GetEpcCtrlNode (void) const;
+  Ptr<EpcController> GetEpcCtrlApp (void) const;
+  //\}
 
   /**
    * Get the OpenFlow switch node for a given OpenFlow switch datapath ID.
@@ -131,6 +105,9 @@ public:
   virtual Ipv4Address GetUeDefaultGatewayAddress ();
   // Inherited from EpcHelper.
 
+  /** Default GTP-U UDP port for tunnel sockets. */
+  static const uint16_t m_gtpuPort;
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -138,6 +115,11 @@ protected:
   // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
 
+  /** \name Topology methods.
+   * These virtual methods must be implemented by topology subclasses, as they
+   * are dependent on the backhaul OpenFlow network topology.
+   */
+  //\{
   /**
    * Create the OpenFlow EPC controller application and switch devices for the
    * OpenFlow network infrastructure, connecting them accordingly to the
@@ -166,6 +148,7 @@ protected:
    * \return The switch datapath ID.
    */
   virtual uint64_t TopologyGetEnbSwitch (uint16_t cellId) = 0;
+  //\}
 
   /**
    * Install the OpenFlow EPC controller for this network.
@@ -173,21 +156,6 @@ protected:
    */
   void InstallController (Ptr<EpcController> controller);
 
-private:
-  /**
-   * Configure the pgwNode to work as the P-GW element for this network. This
-   * function will configure the P-GW user-plane as an OpenFlow switch and
-   * attach it to the backhaul network infrastructure via S5 interface. It will
-   * also connect the P-GW to the Internet web server node via SGi interface.
-   * \param pgwNode The node to configure as the P-GW element.
-   */
-  void AttachPgwNode (Ptr<Node> pgwNode);
-
-public:
-  /** Default GTP-U UDP port for tunnel sockets. */
-  static const uint16_t m_gtpuPort;
-
-protected:
   // EPC controller.
   Ptr<EpcController>            m_epcCtrlApp;       //!< EPC controller app.
   Ptr<Node>                     m_epcCtrlNode;      //!< EPC controller node.
@@ -199,6 +167,15 @@ protected:
   uint16_t                      m_linkMtu;          //!< Link MTU.
 
 private:
+  /**
+   * Configure the pgwNode to work as the P-GW element for this network. This
+   * function will configure the P-GW user-plane as an OpenFlow switch and
+   * attach it to the backhaul network infrastructure via S5 interface. It will
+   * also connect the P-GW to the Internet web server node via SGi interface.
+   * \param pgwNode The node to configure as the P-GW element.
+   */
+  void AttachPgwNode (Ptr<Node> pgwNode);
+
   // Helper and attributes for S5 interface.
   CsmaHelper                    m_csmaHelper;       //!< Connection helper.
   DataRate                      m_linkRate;         //!< Link data rate.

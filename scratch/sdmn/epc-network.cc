@@ -139,7 +139,7 @@ EpcNetwork::GetWebIpMask (void) const
 }
 
 Ptr<Node>
-EpcNetwork::GetControllerNode (void) const
+EpcNetwork::GetEpcCtrlNode (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -147,7 +147,7 @@ EpcNetwork::GetControllerNode (void) const
 }
 
 Ptr<EpcController>
-EpcNetwork::GetControllerApp (void) const
+EpcNetwork::GetEpcCtrlApp (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -196,7 +196,7 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
 
   Ptr<Node> sgwNode = sdranCloud->GetSgwNode ();
   Ptr<OFSwitch13Device> sgwSwitchDev = sdranCloud->GetSgwSwitchDevice ();
-  Ptr<SdranController> sdranCtrlApp = sdranCloud->GetControllerApp ();
+  Ptr<SdranController> sdranCtrlApp = sdranCloud->GetSdranCtrlApp ();
   sdranCtrlApp->SetEpcCtlrApp (m_epcCtrlApp);
 
   // Get the switch datapath ID on the backhaul network to attach the S-GW.

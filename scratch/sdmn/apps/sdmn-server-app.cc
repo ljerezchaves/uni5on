@@ -69,18 +69,32 @@ SdmnServerApp::GetTypeId (void)
 bool
 SdmnServerApp::IsActive (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_active;
 }
 
 bool
 SdmnServerApp::IsForceStop (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_forceStopFlag;
+}
+
+Ptr<SdmnClientApp>
+SdmnServerApp::GetClientApp (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_clientApp;
 }
 
 Ptr<const QosStatsCalculator>
 SdmnServerApp::GetQosStats (void) const
 {
+  NS_LOG_FUNCTION (this);
+
   return m_qosStats;
 }
 
@@ -88,21 +102,29 @@ void
 SdmnServerApp::SetClient (Ptr<SdmnClientApp> clientApp,
                           Ipv4Address clientAddress, uint16_t clientPort)
 {
+  NS_LOG_FUNCTION (this << clientApp << clientAddress << clientPort);
+
   m_clientApp = clientApp;
   m_clientAddress = clientAddress;
   m_clientPort = clientPort;
 }
 
-Ptr<SdmnClientApp>
-SdmnServerApp::GetClientApp ()
+void
+SdmnServerApp::DoDispose (void)
 {
-  return m_clientApp;
+  NS_LOG_FUNCTION (this);
+
+  m_qosStats = 0;
+  m_socket = 0;
+  m_clientApp = 0;
+  Application::DoDispose ();
 }
 
 void
 SdmnServerApp::NotifyStart ()
 {
   NS_LOG_FUNCTION (this);
+
   ResetQosStats ();
   m_active = true;
   m_forceStopFlag = false;
@@ -112,6 +134,7 @@ void
 SdmnServerApp::NotifyStop ()
 {
   NS_LOG_FUNCTION (this);
+
   m_active = false;
 }
 
@@ -119,18 +142,23 @@ void
 SdmnServerApp::NotifyForceStop ()
 {
   NS_LOG_FUNCTION (this);
+
   m_forceStopFlag = true;
 }
 
 uint32_t
 SdmnServerApp::NotifyTx (uint32_t txBytes)
 {
+  NS_LOG_FUNCTION (this << txBytes);
+
   return m_clientApp->m_qosStats->NotifyTx (txBytes);
 }
 
 void
 SdmnServerApp::NotifyRx (uint32_t rxBytes, Time timestamp)
 {
+  NS_LOG_FUNCTION (this << rxBytes << timestamp);
+
   m_qosStats->NotifyRx (rxBytes, timestamp);
 }
 
@@ -138,17 +166,8 @@ void
 SdmnServerApp::ResetQosStats ()
 {
   NS_LOG_FUNCTION (this);
-  m_qosStats->ResetCounters ();
-}
 
-void
-SdmnServerApp::DoDispose (void)
-{
-  NS_LOG_FUNCTION (this);
-  m_qosStats = 0;
-  m_socket = 0;
-  m_clientApp = 0;
-  Application::DoDispose ();
+  m_qosStats->ResetCounters ();
 }
 
 } // namespace ns3

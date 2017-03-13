@@ -54,17 +54,13 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** \return The MME side of the S1-AP SAP. */
+  /** \name Private member accessors. */
+  //\{
   EpcS1apSapMme* GetS1apSapMme (void) const;
-
-  /** \return The MME side of the S11 SAP. */
   EpcS11SapMme* GetS11SapMme (void) const;
 
-  /**
-   * Set the S-GW side of the S11 SAP.
-   * \param sap the SGW side of the S11 SAP.
-   */
   void SetS11SapSgw (EpcS11SapSgw *sap);
+  //\}
 
 protected:
   /** Destructor implementation. */

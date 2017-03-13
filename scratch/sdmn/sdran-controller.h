@@ -109,30 +109,14 @@ public:
    */
   virtual void NotifyEnbAttach (uint16_t cellId, uint32_t sgwS1uPortNum);
 
-  /**
-   * Set the EPC controller application to simplify the communication between
-   * controllers.
-   * \param epcCtrlApp The EPC controller application.
-   */
-  void SetEpcCtlrApp (Ptr<EpcController> epcCtrlApp);
-
-  /**
-   * Get the IPv4 address assigned to the S5 interface on the S-GW node.
-   * \return The S-GW S5 address.
-   */
+  /** \name Private member accessors. */
+  //\{
   Ipv4Address GetSgwS5Address (void) const;
-
-  /**
-   * Get a pointer to the MME side of the S1-AP SAP.
-   * \return The S1-AP MME SAP.
-   */
   EpcS1apSapMme* GetS1apSapMme (void) const;
-
-  /**
-   * Get a pointer to the S-GW side of the S5 SAP.
-   * \return The S5 S-GW SAP.
-   */
   EpcS5SapSgw* GetS5SapSgw (void) const;
+
+  void SetEpcCtlrApp (Ptr<EpcController> value);
+  //\}
 
   /**
    * Get the SDRAN controller pointer from the global map for this cell ID.

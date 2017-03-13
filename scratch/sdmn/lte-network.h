@@ -57,17 +57,13 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** \return The eNB nodes. */
+  /** \name Private member accessors. */
+  //\{
   NodeContainer GetEnbNodes (void) const;
-
-  /** \return The UE nodes. */
   NodeContainer GetUeNodes (void) const;
-
-  /** \return The UE devices. */
   NetDeviceContainer GetUeDevices (void) const;
-
-  /** \return The LTE helper used to create this network. */
   Ptr<LteHelper> GetLteHelper (void) const;
+  //\}
 
   /**
    * Enable PCAP traces on SDRAN clouds.

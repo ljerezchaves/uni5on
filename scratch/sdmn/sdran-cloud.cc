@@ -122,7 +122,7 @@ SdranCloud::GetSgwNode (void) const
 }
 
 Ptr<SdranController>
-SdranCloud::GetControllerApp (void) const
+SdranCloud::GetSdranCtrlApp (void) const
 {
   NS_LOG_FUNCTION (this);
 

@@ -99,15 +99,6 @@ SdranController::NotifyEnbAttach (
   // TODO
 }
 
-void
-SdranController::SetEpcCtlrApp (Ptr<EpcController> epcCtrlApp)
-{
-  NS_LOG_FUNCTION (this << epcCtrlApp);
-
-  m_epcCtrlApp = epcCtrlApp;
-  m_s5SapPgw = m_epcCtrlApp->GetS5SapPgw ();
-}
-
 Ipv4Address
 SdranController::GetSgwS5Address (void) const
 {
@@ -132,6 +123,29 @@ SdranController::GetS5SapSgw (void) const
   return m_s5SapSgw;
 }
 
+void
+SdranController::SetEpcCtlrApp (Ptr<EpcController> value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_epcCtrlApp = value;
+  m_s5SapPgw = m_epcCtrlApp->GetS5SapPgw ();
+}
+
+Ptr<SdranController>
+SdranController::GetPointer (uint16_t cellId)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  Ptr<SdranController> ctrl = 0;
+  CellIdCtrlMap_t::iterator ret;
+  ret = SdranController::m_cellIdCtrlMap.find (cellId);
+  if (ret != SdranController::m_cellIdCtrlMap.end ())
+    {
+      ctrl = ret->second;
+    }
+  return ctrl;
+}
 
 void
 SdranController::DoDispose ()
@@ -189,20 +203,6 @@ SdranController::HandleFlowRemoved (
   return 0;
 }
 
-Ptr<SdranController>
-SdranController::GetPointer (uint16_t cellId)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  Ptr<SdranController> ctrl = 0;
-  CellIdCtrlMap_t::iterator ret;
-  ret = SdranController::m_cellIdCtrlMap.find (cellId);
-  if (ret != SdranController::m_cellIdCtrlMap.end ())
-    {
-      ctrl = ret->second;
-    }
-  return ctrl;
-}
 
 //
 // On the following Do* methods, note the trick to avoid the need for
