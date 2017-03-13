@@ -381,7 +381,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("StoredVideoServer",        LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("VoipClient",               LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("VoipServer",               LOG_ERROR_WARN_INFO_FT);
- 
+
       LogComponentEnable ("ConnectionInfo",           LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("EnbInfo",                  LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("GbrInfo",                  LOG_ERROR_WARN_INFO_FT);

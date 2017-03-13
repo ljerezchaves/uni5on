@@ -55,29 +55,13 @@ public:
    */
   virtual void ModifyBearerResponse (
     EpcS11SapMme::ModifyBearerResponseMessage msg) = 0;
-};
-
-/**
- * \ingroup sdmn
- * P-GW side of the S5 Service Access Point (SAP), provides the P-GW
- * methods to be called when an S5 message is received by the P-GW.
- */
-class EpcS5SapPgw : public EpcS5Sap
-{
-public:
-  /**
-   * Forward the Create Session Request message from the S-GW to the P-GW.
-   * \param msg The message.
-   */
-  virtual void CreateSessionRequest (
-    EpcS11SapSgw::CreateSessionRequestMessage msg) = 0;
 
   /**
-   * Forward the Modify Bearer Request message from the S-GW to the P-GW.
+   * Send the Delete Bearer Request message.
    * \param msg The message.
    */
-  virtual void ModifyBearerRequest (
-    EpcS11SapSgw::ModifyBearerRequestMessage msg) = 0;
+  virtual void DeleteBearerRequest (
+    EpcS11SapMme::DeleteBearerRequestMessage msg) = 0;
 };
 
 /**
@@ -95,6 +79,8 @@ public:
     EpcS11SapMme::CreateSessionResponseMessage msg);
   virtual void ModifyBearerResponse (
     EpcS11SapMme::ModifyBearerResponseMessage msg);
+  virtual void DeleteBearerRequest (
+    EpcS11SapMme::DeleteBearerRequestMessage msg);
 
 private:
   MemberEpcS5SapSgw ();
@@ -126,6 +112,52 @@ void MemberEpcS5SapSgw<C>::ModifyBearerResponse (
   m_owner->DoModifyBearerResponse (msg);
 }
 
+template <class C>
+void MemberEpcS5SapSgw<C>::DeleteBearerRequest (
+  EpcS11SapMme::DeleteBearerRequestMessage msg)
+{
+  m_owner->DoDeleteBearerRequest (msg);
+}
+
+
+
+/**
+ * \ingroup sdmn
+ * P-GW side of the S5 Service Access Point (SAP), provides the P-GW
+ * methods to be called when an S5 message is received by the P-GW.
+ */
+class EpcS5SapPgw : public EpcS5Sap
+{
+public:
+  /**
+   * Send the Create Session Request message.
+   * \param msg The message.
+   */
+  virtual void CreateSessionRequest (
+    EpcS11SapSgw::CreateSessionRequestMessage msg) = 0;
+
+  /**
+   * Send the Modify Bearer Request message.
+   * \param msg The message.
+   */
+  virtual void ModifyBearerRequest (
+    EpcS11SapSgw::ModifyBearerRequestMessage msg) = 0;
+
+  /**
+   * Send the Delete Bearer Command message.
+   * \param msg The message.
+   */
+  virtual void DeleteBearerCommand (
+    EpcS11SapSgw::DeleteBearerCommandMessage msg) = 0;
+
+  /**
+   * Send the Delete Bearer Response message.
+   * \param msg The message.
+   */
+  virtual void DeleteBearerResponse (
+    EpcS11SapSgw::DeleteBearerResponseMessage msg) = 0;
+};
+
 /**
  * Template for the implementation of the EpcS5SapPgw as a member
  * of an owner class of type C to which all methods are forwarded.
@@ -141,6 +173,10 @@ public:
     EpcS11SapSgw::CreateSessionRequestMessage msg);
   virtual void ModifyBearerRequest (
     EpcS11SapSgw::ModifyBearerRequestMessage msg);
+  virtual void DeleteBearerCommand (
+    EpcS11SapSgw::DeleteBearerCommandMessage msg);
+  virtual void DeleteBearerResponse (
+    EpcS11SapSgw::DeleteBearerResponseMessage msg);
 
 private:
   MemberEpcS5SapPgw ();
@@ -172,5 +208,18 @@ void MemberEpcS5SapPgw<C>::ModifyBearerRequest (
   m_owner->DoModifyBearerRequest (msg);
 }
 
+template <class C>
+void MemberEpcS5SapPgw<C>::DeleteBearerCommand (
+  EpcS11SapSgw::DeleteBearerCommandMessage msg)
+{
+  m_owner->DoDeleteBearerCommand (msg);
+}
+
+template <class C>
+void MemberEpcS5SapPgw<C>::DeleteBearerResponse (
+  EpcS11SapSgw::DeleteBearerResponseMessage msg)
+{
+  m_owner->DoDeleteBearerResponse (msg);
+}
 } //namespace ns3
 #endif /* EPC_S5_SAP_H */

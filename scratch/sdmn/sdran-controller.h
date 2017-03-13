@@ -169,6 +169,7 @@ private:
   //\{
   void DoCreateSessionResponse (EpcS11SapMme::CreateSessionResponseMessage msg);
   void DoModifyBearerResponse (EpcS11SapMme::ModifyBearerResponseMessage  msg);
+  void DoDeleteBearerRequest  (EpcS11SapMme::DeleteBearerRequestMessage   msg);
   //\}
 
 private:

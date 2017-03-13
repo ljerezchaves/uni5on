@@ -671,7 +671,8 @@ EpcController::HandleFlowRemoved (
   NS_ABORT_MSG ("Should not get here :/");
 }
 
-void EpcController::DoCreateSessionRequest (
+void
+EpcController::DoCreateSessionRequest (
   EpcS11SapSgw::CreateSessionRequestMessage msg)
 {
   NS_LOG_FUNCTION (this << msg.imsi);
@@ -709,27 +710,31 @@ void EpcController::DoCreateSessionRequest (
   sdranCtrl->GetS5SapSgw ()->CreateSessionResponse (res);
 }
 
-void EpcController::DoModifyBearerRequest (
+void
+EpcController::DoModifyBearerRequest (
   EpcS11SapSgw::ModifyBearerRequestMessage msg)
 {
   NS_LOG_FUNCTION (this << msg.teid);
 
-  uint64_t imsi = msg.teid;
-  uint16_t cellId = msg.uli.gci;
+  NS_FATAL_ERROR ("Unimplemented method.");
+}
 
-  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  ueInfo->SetEnbAddress (enbInfo->GetEnbAddress ());
+void
+EpcController::DoDeleteBearerCommand (
+  EpcS11SapSgw::DeleteBearerCommandMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.teid);
 
-  // No actual bearer modification: for now we just support the minimum needed
-  // for path switch request (handover).
-  EpcS11SapMme::ModifyBearerResponseMessage res;
-  res.teid = imsi;
-  res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
+  NS_FATAL_ERROR ("Unimplemented method.");
+}
 
-  // Send the response message back to the S-GW.
-  Ptr<SdranController> sdranCtrl = SdranController::GetPointer (cellId);
-  sdranCtrl->GetS5SapSgw ()->ModifyBearerResponse (res);
+void
+EpcController::DoDeleteBearerResponse (
+  EpcS11SapSgw::DeleteBearerResponseMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.teid);
+
+  NS_FATAL_ERROR ("Unimplemented method.");
 }
 
 void

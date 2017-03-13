@@ -242,6 +242,8 @@ private:
   //\{
   void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
   void DoModifyBearerRequest  (EpcS11SapSgw::ModifyBearerRequestMessage  msg);
+  void DoDeleteBearerCommand  (EpcS11SapSgw::DeleteBearerCommandMessage  msg);
+  void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage msg);
   //\}
 
 public:

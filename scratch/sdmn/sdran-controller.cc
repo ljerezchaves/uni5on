@@ -213,7 +213,7 @@ SdranController::DoCreateSessionRequest (
 {
   NS_LOG_FUNCTION (this << msg.imsi);
 
-  // Foward the request message to the P-GW.
+  // Send the request message to the P-GW.
   m_s5SapPgw->CreateSessionRequest (msg);
 }
 
@@ -223,11 +223,22 @@ SdranController::DoModifyBearerRequest (
 {
   NS_LOG_FUNCTION (this << msg.teid);
 
-  // TODO We can check here if we really need to forward the request to the
-  // P-GW based on source and destination eNBs.
+  uint64_t imsi = msg.teid;
+  uint16_t cellId = msg.uli.gci;
 
-  // Foward the request message to the P-GW.
-  m_s5SapPgw->ModifyBearerRequest (msg);
+  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  ueInfo->SetEnbAddress (enbInfo->GetEnbAddress ());
+
+  // In current implementation, this Modify Bearer Request is triggered only by
+  // X2 handover procedures. There is no actual bearer modification, for now we
+  // just support the minimum needed for path switch request (handover). There
+  // is no need to forward the request message to the P-GW.
+  EpcS11SapMme::ModifyBearerResponseMessage res;
+  res.teid = imsi;
+  res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
+
+  m_s11SapMme->ModifyBearerResponse (res);
 }
 
 void
@@ -279,8 +290,16 @@ SdranController::DoModifyBearerResponse (
 {
   NS_LOG_FUNCTION (this << msg.teid);
 
-  // Forward the response message to the MME.
-  m_s11SapMme->ModifyBearerResponse (msg);
+  NS_FATAL_ERROR ("Unimplemented method.");
+}
+
+void
+SdranController::DoDeleteBearerRequest (
+  EpcS11SapMme::DeleteBearerRequestMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.teid);
+
+  NS_FATAL_ERROR ("Unimplemented method.");
 }
 
 void
