@@ -124,21 +124,7 @@ public:
    * been configure and the topology is finished.
    * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
    */
-  virtual void TopologyBuilt (OFSwitch13DeviceContainer devices);
-
-  /**
-   * Notify this controller when the P-GW control plane (implemented by this
-   * controller) receives a create session request message. This controller
-   * uses the list of bearers to save routing information and configure the
-   * default bearer routing.
-   * \param imsi The IMSI UE identifier.
-   * \param cellId The eNB CellID to which the IMSI UE is attached to.
-   * \param sgwAddr The S-GW S5 IPv4 address.
-   * \param bearerList The list of context bearers created.
-   */
-  virtual void NotifySessionCreated (
-    uint64_t imsi, uint16_t cellId, Ipv4Address sgwAddr,
-    BearerList_t bearerList);
+  virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
 
   /**
    * Get The P-GW side of the S5 SAP.
@@ -154,17 +140,27 @@ public:
   static uint16_t GetDscpValue (EpsBearer::Qci qci);
 
   /**
-   * Get the next available TEID value for global usage.
-   * \return The TEID value.
-   */
-  static uint32_t GetNextTeid (void);
-
-  /**
    * Get the IPv4 address for a given device.
    * \param device The network device.
    * \return The IP address assigned to this device.
    */
   static Ipv4Address GetIpAddressForDevice (Ptr<NetDevice> device);
+
+  /**
+   * TracedCallback signature for new bearer request.
+   * \param ok True when the bearer request/release processes succeeds.
+   * \param rInfo The routing information for this bearer tunnel.
+   */
+  typedef void (*BearerTracedCallback)(bool ok, Ptr<const RoutingInfo> rInfo);
+
+  /**
+   * TracedCallback signature for session created trace source.
+   * \param imsi The IMSI UE identifier.
+   * \param cellId The eNB CellID to which the IMSI UE is attached to.
+   * \param bearerList The list of context bearers created.
+   */
+  typedef void (*SessionCreatedTracedCallback)(
+    uint64_t imsi, uint16_t cellId, BearerList_t bearerList);
 
 protected:
   /** Destructor implementation. */
@@ -226,8 +222,7 @@ protected:
    * \param rInfo The routing information to configure.
    * \param buffer The buffered packet to apply this rule to.
    */
-  virtual void InstallPgwTftRules (
-    Ptr<RoutingInfo> rInfo, uint32_t buffer = OFP_NO_BUFFER);
+  virtual void InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer);
 
   // Inherited from OFSwitch13Controller.
   virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
@@ -236,6 +231,10 @@ protected:
   virtual ofl_err HandleFlowRemoved (
     ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
   // Inherited from OFSwitch13Controller.
+
+  // Class attributes.
+  bool m_voipQos;            //!< VoIP QoS with queues.
+  bool m_nonGbrCoexistence;  //!< Non-GBR coexistence.
 
 private:
   /** \name Methods for the S5 SAP P-GW control plane. */
@@ -246,24 +245,12 @@ private:
   void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage msg);
   //\}
 
-public:
   /**
-   * TracedCallback signature for new bearer request.
-   * \param ok True when the bearer request/release processes succeeds.
-   * \param rInfo The routing information for this bearer tunnel.
+   * Initilize the static DSCP map table. This function is called by object
+   * constructor, but the table will be populated only once.
    */
-  typedef void (*BearerTracedCallback)(bool ok, Ptr<const RoutingInfo> rInfo);
+  static void QciDscpInitialize ();
 
-  /**
-   * TracedCallback signature for session created trace source.
-   * \param imsi The IMSI UE identifier.
-   * \param cellId The eNB CellID to which the IMSI UE is attached to.
-   * \param bearerList The list of context bearers created.
-   */
-  typedef void (*SessionCreatedTracedCallback)(
-    uint64_t imsi, uint16_t cellId, BearerList_t bearerList);
-
-protected:
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
   TracedCallback<bool, Ptr<const RoutingInfo> >    m_bearerRequestTrace;
 
@@ -273,23 +260,13 @@ protected:
   /** The context created trace source, fired at NotifySessionCreated. */
   TracedCallback<uint64_t, uint16_t, BearerList_t> m_sessionCreatedTrace;
 
-  bool                  m_voipQos;            //!< VoIP QoS with queues.
-  bool                  m_nonGbrCoexistence;  //!< Non-GBR coexistence.
-
-private:
   // P-GW metadata
-  uint64_t              m_pgwDpId;            //!< P-GW datapath ID.
-  uint32_t              m_pgwS5Port;          //!< P-GW S5 port no.
-  Ipv4Address           m_pgwS5Addr;          //!< P-GW S5 IP address.
+  uint64_t      m_pgwDpId;    //!< P-GW datapath ID.
+  uint32_t      m_pgwS5Port;  //!< P-GW S5 port no.
+  Ipv4Address   m_pgwS5Addr;  //!< P-GW S5 IP address.
 
   // S-GW communication.
-  EpcS5SapPgw*          m_s5SapPgw;           //!< P-GW side of the S5 SAP.
-
-  /**
-   * Initilize the static DSCP map table. This function is called by object
-   * constructor, but the table will be populated only once.
-   */
-  static void QciDscpInitialize ();
+  EpcS5SapPgw*  m_s5SapPgw;   //!< P-GW side of the S5 SAP.
 
   /** Map saving EpsBearer::Qci / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
@@ -299,11 +276,10 @@ private:
    * \internal This counter is initialized at 0x0000000F, reserving the first
    *           values for controller usage.
    */
-  static uint32_t           m_teidCount;
-  static const uint16_t     m_flowTimeout;        //!< Timeout for flow entries.
-  static QciDscpMap_t       m_qciDscpTable;       //!< DSCP mapped values.
+  static uint32_t       m_teidCount;
+  static const uint16_t m_flowTimeout;  //!< Timeout for flow entries.
+  static QciDscpMap_t   m_qciDscpTable; //!< DSCP mapped values.
 };
 
 };  // namespace ns3
 #endif // EPC_CONTROLLER_H
-

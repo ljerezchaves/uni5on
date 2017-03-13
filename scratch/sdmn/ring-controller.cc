@@ -147,7 +147,7 @@ RingController::NotifySwitchConnection (Ptr<ConnectionInfo> cInfo)
 }
 
 void
-RingController::TopologyBuilt (OFSwitch13DeviceContainer devices)
+RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 

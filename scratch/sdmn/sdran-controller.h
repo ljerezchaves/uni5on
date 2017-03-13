@@ -45,8 +45,6 @@ class SdranController : public OFSwitch13Controller
 {
   friend class MemberEpcS11SapSgw<SdranController>;
   friend class MemberEpcS5SapSgw<SdranController>;
-  friend class TrafficManager;
-  friend class EpcController;
 
 public:
   SdranController ();           //!< Default constructor.
@@ -109,15 +107,20 @@ public:
    * \param sgwS1uPortNum The S1-U port number on the S-GW OpenFlow switch.
    * TODO parameters
    */
-  virtual void NotifyEnbAttach (
-    uint16_t cellId, uint32_t sgwS1uPortNum);
+  virtual void NotifyEnbAttach (uint16_t cellId, uint32_t sgwS1uPortNum);
 
   /**
-   * Set the EPC controller application pointer on this SDRAN controller to
-   * simplify the communication between controllers on the S5 interface.
+   * Set the EPC controller application to simplify the communication between
+   * controllers.
    * \param epcCtrlApp The EPC controller application.
    */
-  void SetEpcController (Ptr<EpcController> epcCtrlApp);
+  void SetEpcCtlrApp (Ptr<EpcController> epcCtrlApp);
+
+  /**
+   * Get the IPv4 address assigned to the S5 interface on the S-GW node.
+   * \return The S-GW S5 address.
+   */
+  Ipv4Address GetSgwS5Address (void) const;
 
   /**
    * Get a pointer to the MME side of the S1-AP SAP.
@@ -132,10 +135,11 @@ public:
   EpcS5SapSgw* GetS5SapSgw (void) const;
 
   /**
-   * Get the IPv4 address assigned to the S5 interface on the S-GW node.
-   * \return The S-GW S5 address.
+   * Get the SDRAN controller pointer from the global map for this cell ID.
+   * \param cellID The eNB cell ID.
+   * \return The SDRAN controller pointer.
    */
-  Ipv4Address GetSgwS5Address (void) const;
+  static Ptr<SdranController> GetPointer (uint16_t cellId);
 
 protected:
   /** Destructor implementation. */
@@ -148,13 +152,6 @@ protected:
   virtual ofl_err HandleFlowRemoved (
     ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
   // Inherited from OFSwitch13Controller.
-
-  /**
-   * Get the SDRAN controller pointer from the global map for this cell ID.
-   * \param cellID The eNB cell ID.
-   * \return The SDRAN controller pointer.
-   */
-  static Ptr<SdranController> GetPointer (uint16_t cellId);
 
 private:
   /** \name Methods for the S11 SAP S-GW control plane. */
@@ -172,7 +169,6 @@ private:
   void DoDeleteBearerRequest  (EpcS11SapMme::DeleteBearerRequestMessage   msg);
   //\}
 
-private:
   /**
    * Register the SDRAN controller into global map for further usage.
    * \param ctrl The SDRAN controller pointer.
@@ -199,4 +195,3 @@ private:
 
 };  // namespace ns3
 #endif // SDRAN_CONTROLLER_H
-

@@ -100,12 +100,20 @@ SdranController::NotifyEnbAttach (
 }
 
 void
-SdranController::SetEpcController (Ptr<EpcController> epcCtrlApp)
+SdranController::SetEpcCtlrApp (Ptr<EpcController> epcCtrlApp)
 {
   NS_LOG_FUNCTION (this << epcCtrlApp);
 
   m_epcCtrlApp = epcCtrlApp;
   m_s5SapPgw = m_epcCtrlApp->GetS5SapPgw ();
+}
+
+Ipv4Address
+SdranController::GetSgwS5Address (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sgwS5Addr;
 }
 
 EpcS1apSapMme*
@@ -124,13 +132,6 @@ SdranController::GetS5SapSgw (void) const
   return m_s5SapSgw;
 }
 
-Ipv4Address
-SdranController::GetSgwS5Address (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_sgwS5Addr;
-}
 
 void
 SdranController::DoDispose ()

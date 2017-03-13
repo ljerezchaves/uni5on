@@ -160,7 +160,7 @@ RingNetwork::TopologyCreate ()
     }
 
   // Fire trace source notifying that all connections between switches are ok.
-  m_epcCtrlApp->TopologyBuilt (m_ofDevices);
+  m_epcCtrlApp->NotifyTopologyBuilt (m_ofDevices);
 }
 
 uint64_t

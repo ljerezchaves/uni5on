@@ -256,92 +256,9 @@ EpcController::NotifySwitchConnection (Ptr<ConnectionInfo> cInfo)
 }
 
 void
-EpcController::TopologyBuilt (OFSwitch13DeviceContainer devices)
+EpcController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
-}
-
-void
-EpcController::NotifySessionCreated (
-  uint64_t imsi, uint16_t cellId, Ipv4Address sgwAddr, BearerList_t bearerList)
-{
-  NS_LOG_FUNCTION (this << imsi << cellId << sgwAddr);
-
-  // Create and save routing information for default bearer (firts element on
-  // the bearerList).
-  ContextBearer_t defaultBearer = bearerList.front ();
-  NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
-
-  uint32_t teid = defaultBearer.sgwFteid.teid;
-  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (rInfo == 0, "Existing routing for default bearer " << teid);
-
-  rInfo = CreateObject<RoutingInfo> (teid);
-  rInfo->m_imsi = imsi;
-  rInfo->m_cellId = cellId;
-  rInfo->m_pgwAddr = m_pgwS5Addr;
-  rInfo->m_sgwAddr = sgwAddr;
-  rInfo->m_priority = 0x7F;               // Priority for default bearer
-  rInfo->m_timeout = 0;                   // No timeout for default bearer
-  rInfo->m_isInstalled = false;           // Bearer rules not installed yet
-  rInfo->m_isActive = true;               // Default bearer is always active
-  rInfo->m_isDefault = true;              // This is a default bearer
-  rInfo->m_bearer = defaultBearer;
-
-  // For default bearer, no meter nor gbr metadata.
-  // For logic consistence, let's check for available resources.
-  bool accepted = TopologyBearerRequest (rInfo);
-  NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
-  m_bearerRequestTrace (accepted, rInfo);
-
-  // Install rules for default bearer.
-  if (!TopologyInstallRouting (rInfo))
-    {
-      NS_LOG_ERROR ("TEID rule installation failed!");
-    }
-
-  // For other dedicated bearers, let's create and save it's routing metadata
-  // (starting at the second element of bearerList).
-  BearerList_t::iterator it = bearerList.begin ();
-  for (it++; it != bearerList.end (); it++)
-    {
-      ContextBearer_t dedicatedBearer = *it;
-      teid = dedicatedBearer.sgwFteid.teid;
-
-      rInfo = CreateObject<RoutingInfo> (teid);
-      rInfo->m_imsi = imsi;
-      rInfo->m_cellId = cellId;
-      rInfo->m_pgwAddr = m_pgwS5Addr;
-      rInfo->m_sgwAddr = sgwAddr;
-      rInfo->m_priority = 0x1FFF;           // Priority for dedicated bearer
-      rInfo->m_timeout = m_flowTimeout;     // Timeout for dedicated bearer
-      rInfo->m_isInstalled = false;         // Switch rules not installed
-      rInfo->m_isActive = false;            // Dedicated bearer not active
-      rInfo->m_isDefault = false;           // This is a dedicated bearer
-      rInfo->m_bearer = dedicatedBearer;
-
-      GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
-
-      // For all GBR beares, create the GBR metadata.
-      if (rInfo->IsGbr ())
-        {
-          Ptr<GbrInfo> gbrInfo = CreateObject<GbrInfo> (rInfo);
-          rInfo->AggregateObject (gbrInfo);
-
-          // Set the appropriated DiffServ DSCP value for this bearer.
-          gbrInfo->m_dscp = EpcController::GetDscpValue (rInfo->GetQciInfo ());
-        }
-
-      // If necessary, create the meter metadata for maximum bit rate.
-      if (gbrQoS.mbrDl || gbrQoS.mbrUl)
-        {
-          Ptr<MeterInfo> meterInfo = CreateObject<MeterInfo> (rInfo);
-          rInfo->AggregateObject (meterInfo);
-        }
-    }
-
-  // Fire trace source notifying the created session.
-  m_sessionCreatedTrace (imsi, cellId, bearerList);
 }
 
 EpcS5SapPgw*
@@ -365,16 +282,6 @@ EpcController::GetDscpValue (EpsBearer::Qci qci)
       return it->second;
     }
   NS_FATAL_ERROR ("No DSCP mapped value for QCI " << qci);
-}
-
-uint32_t
-EpcController::GetNextTeid (void)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  // Check for available TEID.
-  NS_ABORT_IF (m_teidCount == 0xFFFFFFFF);
-  return ++m_teidCount;
 }
 
 Ipv4Address
@@ -678,20 +585,24 @@ EpcController::DoCreateSessionRequest (
   NS_LOG_FUNCTION (this << msg.imsi);
 
   uint16_t cellId = msg.uli.gci;
+  uint64_t imsi = msg.imsi;
 
+  Ptr<SdranController> sdranCtrl = SdranController::GetPointer (cellId);
   Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (msg.imsi);
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
   ueInfo->SetEnbAddress (enbInfo->GetEnbAddress ());
 
+  // Create the response message.
   EpcS11SapMme::CreateSessionResponseMessage res;
-  res.teid = msg.imsi;
-
+  res.teid = imsi;
   std::list<EpcS11SapSgw::BearerContextToBeCreated>::iterator bit;
   for (bit = msg.bearerContextsToBeCreated.begin ();
        bit != msg.bearerContextsToBeCreated.end ();
        ++bit)
     {
-      uint32_t teid = EpcController::GetNextTeid ();
+      // Check for available TEID.
+      NS_ABORT_IF (EpcController::m_teidCount == 0xFFFFFFFF);
+      uint32_t teid = ++EpcController::m_teidCount;
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.teid = teid;
       bearerContext.sgwFteid.address = enbInfo->GetSgwAddress ();
@@ -701,10 +612,81 @@ EpcController::DoCreateSessionRequest (
       res.bearerContextsCreated.push_back (bearerContext);
     }
 
-  // Notify this controller of the new create session request accepted.
-  Ptr<SdranController> sdranCtrl = SdranController::GetPointer (cellId);
-  NotifySessionCreated (msg.imsi, cellId, sdranCtrl->GetSgwS5Address (),
-                        res.bearerContextsCreated);
+  // Create and save routing information for default bearer.
+  // (firts element on the res.bearerContextsCreated)
+  ContextBearer_t defaultBearer = res.bearerContextsCreated.front ();
+  NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
+
+  uint32_t teid = defaultBearer.sgwFteid.teid;
+  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+  NS_ASSERT_MSG (rInfo == 0, "Existing routing for default bearer " << teid);
+
+  rInfo = CreateObject<RoutingInfo> (teid);
+  rInfo->m_imsi = imsi;
+  rInfo->m_cellId = cellId;
+  rInfo->m_pgwAddr = m_pgwS5Addr;
+  rInfo->m_sgwAddr = sdranCtrl->GetSgwS5Address ();
+  rInfo->m_priority = 0x7F;               // Priority for default bearer
+  rInfo->m_timeout = 0;                   // No timeout for default bearer
+  rInfo->m_isInstalled = false;           // Bearer rules not installed yet
+  rInfo->m_isActive = true;               // Default bearer is always active
+  rInfo->m_isDefault = true;              // This is a default bearer
+  rInfo->m_bearer = defaultBearer;
+
+  // For default bearer, no meter nor gbr metadata.
+  // For logic consistence, let's check for available resources.
+  bool accepted = TopologyBearerRequest (rInfo);
+  NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
+  m_bearerRequestTrace (accepted, rInfo);
+
+  // Install rules for default bearer.
+  if (!TopologyInstallRouting (rInfo))
+    {
+      NS_FATAL_ERROR ("Default bearer TEID rule installation failed!");
+    }
+
+  // For other dedicated bearers, let's create and save it's routing metadata.
+  // (starting at the second element of res.bearerContextsCreated).
+  BearerList_t::iterator it = res.bearerContextsCreated.begin ();
+  for (it++; it != res.bearerContextsCreated.end (); it++)
+    {
+      ContextBearer_t dedicatedBearer = *it;
+      teid = dedicatedBearer.sgwFteid.teid;
+
+      rInfo = CreateObject<RoutingInfo> (teid);
+      rInfo->m_imsi = imsi;
+      rInfo->m_cellId = cellId;
+      rInfo->m_pgwAddr = m_pgwS5Addr;
+      rInfo->m_sgwAddr = sdranCtrl->GetSgwS5Address ();
+      rInfo->m_priority = 0x1FFF;           // Priority for dedicated bearer
+      rInfo->m_timeout = m_flowTimeout;     // Timeout for dedicated bearer
+      rInfo->m_isInstalled = false;         // Switch rules not installed
+      rInfo->m_isActive = false;            // Dedicated bearer not active
+      rInfo->m_isDefault = false;           // This is a dedicated bearer
+      rInfo->m_bearer = dedicatedBearer;
+
+      GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
+
+      // For all GBR beares, create the GBR metadata.
+      if (rInfo->IsGbr ())
+        {
+          Ptr<GbrInfo> gbrInfo = CreateObject<GbrInfo> (rInfo);
+          rInfo->AggregateObject (gbrInfo);
+
+          // Set the appropriated DiffServ DSCP value for this bearer.
+          gbrInfo->m_dscp = EpcController::GetDscpValue (rInfo->GetQciInfo ());
+        }
+
+      // If necessary, create the meter metadata for maximum bit rate.
+      if (gbrQoS.mbrDl || gbrQoS.mbrUl)
+        {
+          Ptr<MeterInfo> meterInfo = CreateObject<MeterInfo> (rInfo);
+          rInfo->AggregateObject (meterInfo);
+        }
+    }
+
+  // Fire trace source notifying the created session.
+  m_sessionCreatedTrace (imsi, cellId, res.bearerContextsCreated);
 
   // Send the response message back to the S-GW.
   sdranCtrl->GetS5SapSgw ()->CreateSessionResponse (res);

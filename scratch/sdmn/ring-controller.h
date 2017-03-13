@@ -57,7 +57,8 @@ protected:
   void NotifyS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNum,
                        Ptr<NetDevice> gwDev);
   void NotifySwitchConnection (Ptr<ConnectionInfo> cInfo);
-  void TopologyBuilt (OFSwitch13DeviceContainer devices);
+  void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
+
   bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer);
   bool TopologyRemoveRouting (Ptr<RoutingInfo> rInfo);
   bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo);
@@ -225,4 +226,3 @@ private:
 
 };  // namespace ns3
 #endif // RING_CONTROLLER_H
-
