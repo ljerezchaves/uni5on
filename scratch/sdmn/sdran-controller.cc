@@ -84,6 +84,7 @@ SdranController::NotifySgwAttach (
   NS_LOG_FUNCTION (this << sgwS5PortNum << sgwS5Dev);
 
   m_sgwS5Addr = EpcController::GetIpAddressForDevice (sgwS5Dev);
+  m_sgwS5PortNum = sgwS5PortNum;
   // TODO Install forwarding rules on S-GW?
 }
 
@@ -202,7 +203,6 @@ SdranController::HandleFlowRemoved (
   ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
   return 0;
 }
-
 
 //
 // On the following Do* methods, note the trick to avoid the need for

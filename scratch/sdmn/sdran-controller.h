@@ -161,6 +161,7 @@ private:
   static void RegisterController (Ptr<SdranController> ctrl, uint16_t cellId);
 
   Ipv4Address           m_sgwS5Addr;    //!< S-GW S5 IP address.
+  uint32_t              m_sgwS5PortNum; //!< S-GW S5 port number.
 
   // P-GW communication.
   Ptr<EpcController>    m_epcCtrlApp;   //!< EPC controller app.

@@ -15,9 +15,9 @@ default ns3::EpcController::VoipQueue "true"
 
 default ns3::TrafficHelper::FastTraffic "true"
 default ns3::TrafficHelper::VoipTraffic "true"
-default ns3::TrafficHelper::GbrLiveVideoTraffic "true"
-default ns3::TrafficHelper::BufferedVideoTraffic "true"
-default ns3::TrafficHelper::NonGbrLiveVideoTraffic "true"
-default ns3::TrafficHelper::HttpTraffic "true"
+default ns3::TrafficHelper::GbrLiveVideoTraffic "false"
+default ns3::TrafficHelper::BufferedVideoTraffic "false"
+default ns3::TrafficHelper::NonGbrLiveVideoTraffic "false"
+default ns3::TrafficHelper::HttpTraffic "false"
 
 global DumpStatsTimeout "5s"
