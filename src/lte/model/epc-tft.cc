@@ -145,24 +145,17 @@ EpcTft::Default ()
 {
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter defaultPacketFilter;
+  tft->m_default = true;
   tft->Add (defaultPacketFilter);
   return tft;
 }
 
 
 EpcTft::EpcTft ()
-  : m_numFilters (0)
+  : m_numFilters (0),
+    m_default (false)
 {
   NS_LOG_FUNCTION (this);
-}
-
-TypeId 
-EpcTft::GetTypeId (void) 
-{
-  static TypeId tid = TypeId ("ns3::EpcTft") 
-    .SetParent<Object> ()
-  ;
-  return tid; 
 }
 
 uint8_t 
@@ -182,21 +175,6 @@ EpcTft::Add (PacketFilter f)
   return (m_numFilters - 1);
 }
     
-uint8_t
-EpcTft::GetNumFilters (void) const
-{
-  return m_numFilters;
-}
-
-EpcTft::PacketFilter
-EpcTft::GetFilter (uint8_t id) const
-{
-  NS_ASSERT (m_numFilters > id);
-  std::list<PacketFilter>::const_iterator it = m_filters.begin ();
-  std::advance (it, id);
-  return *it;
-}
-
 bool 
 EpcTft::Matches (Direction direction,
 		 Ipv4Address remoteAddress, 
@@ -218,13 +196,47 @@ EpcTft::Matches (Direction direction,
   return false;
 }
 
+TypeId
+EpcTft::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::EpcTft")
+    .SetParent<Object> ()
+  ;
+  return tid;
+}
+
+uint8_t
+EpcTft::GetNumFilters (void) const
+{
+  return m_numFilters;
+}
+
+EpcTft::PacketFilter
+EpcTft::GetFilter (uint8_t idx) const
+{
+  NS_ASSERT (m_numFilters > idx);
+  std::list<PacketFilter>::const_iterator it = m_filters.begin ();
+  std::advance (it, idx);
+  return *it;
+}
+
+void
+EpcTft::RemoveFilter (uint8_t idx)
+{
+  NS_ASSERT (m_numFilters > idx);
+  std::list<PacketFilter>::iterator it = m_filters.begin ();
+  std::advance (it, idx);
+  m_filters.erase (it);
+  --m_numFilters;
+}
+
 bool
 EpcTft::HasDownlinkFilter (void) const
 {
   std::list<PacketFilter>::const_iterator it;
   for (it = m_filters.begin (); it != m_filters.end (); ++it)
     {
-      if (it->direction == EpcTft::DOWNLINK || 
+      if (it->direction == EpcTft::DOWNLINK ||
           it->direction == EpcTft::BIDIRECTIONAL)
         {
           return true;
@@ -239,7 +251,7 @@ EpcTft::HasUplinkFilter (void) const
   std::list<PacketFilter>::const_iterator it;
   for (it = m_filters.begin (); it != m_filters.end (); ++it)
     {
-      if (it->direction == EpcTft::UPLINK || 
+      if (it->direction == EpcTft::UPLINK ||
           it->direction == EpcTft::BIDIRECTIONAL)
         {
           return true;
@@ -248,5 +260,10 @@ EpcTft::HasUplinkFilter (void) const
   return false;
 }
 
+bool
+EpcTft::IsDefaultTft (void) const
+{
+  return m_default;
+}
 
 } // namespace ns3

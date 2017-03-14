@@ -122,11 +122,6 @@ public:
   
   EpcTft ();
   
-  /**
-   * Register this type.
-   * \return The object TypeId.
-   */
-  static TypeId GetTypeId (void);
 
   /** 
    * add a PacketFilter to the Traffic Flow Template
@@ -137,19 +132,7 @@ public:
    */
   uint8_t Add (PacketFilter f);
 
-  /**
-   * Get the number of packet filters installed on this TFT.
-   * \return The number of packet filters.
-   */
-  uint8_t GetNumFilters (void) const;
 
-  /**
-   * Get a packet filter from this TFT.
-   * \param id The packet filter ID.
-   * \return The packet filter.
-   */
-  PacketFilter GetFilter (uint8_t id) const;
-  
     /** 
      * 
      * \param direction 
@@ -170,6 +153,31 @@ public:
 		  uint8_t typeOfService);
 
   /**
+   * Register this type.
+   * \return The object TypeId.
+   */
+  static TypeId GetTypeId (void);
+
+  /**
+   * Get the number of packet filters installed on this TFT.
+   * \return The number of packet filters.
+   */
+  uint8_t GetNumFilters (void) const;
+
+  /**
+   * Get a packet filter from this TFT.
+   * \param idx The packet filter index.
+   * \return The packet filter.
+   */
+  PacketFilter GetFilter (uint8_t idx) const;
+
+  /**
+   * Remove a packet filter from this TFT.
+   * \param idx The packet filter index.
+   */
+  void RemoveFilter (uint8_t idx);
+
+  /**
    * Iterate over current packet filters looking for any downlink or
    * bidirectional filter.
    * \return True if downlink filter found, false otherwise.
@@ -183,10 +191,18 @@ public:
    */
   bool HasUplinkFilter (void) const;
 
+  /**
+   * Check this TFT for the one created with EpcTft::Defaulf (), that is used
+   * as packet filter for the defaulf bearer;
+   * \return true for the default TFT;
+   */
+  bool IsDefaultTft (void) const;
+
 private:
 
   std::list<PacketFilter> m_filters;
   uint8_t m_numFilters;
+  bool m_default;
   
 };
 
