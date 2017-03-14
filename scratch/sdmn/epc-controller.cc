@@ -339,21 +339,6 @@ EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
   act << " apply:set_field=tunn_id:" << tunnelIdStr
       << ",output=" << m_pgwS5Port;
 
-  if (rInfo->IsDefault ())
-    {
-      // TODO Install TFT for default bearer
-      // std::ostringstream match;
-      // match << " eth_type=0x800"
-      //       << ",ip_src=" << filter.remoteAddress
-      //       << ",ip_dst=" << filter.localAddress
-      //       << ",ip_proto=6"
-      //       << ",tcp_src=" << filter.remotePortStart
-      //       << ",tcp_dst=" << filter.localPortStart;
-      // std::string cmdStr = cmd.str () + match.str () + act.str ();
-      // DpctlExecute (m_pgwDpId, cmdStr);
-      return;
-    }
-
   // Install one downlink dedicated bearer rule for each packet filter
   Ptr<EpcTft> tft = rInfo->GetTft ();
   for (uint8_t i = 0; i < tft->GetNumFilters (); i++)
@@ -369,11 +354,16 @@ EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
         {
           std::ostringstream match;
           match << " eth_type=0x800"
-                << ",ip_src=" << filter.remoteAddress
-                << ",ip_dst=" << filter.localAddress
                 << ",ip_proto=6"
-                << ",tcp_src=" << filter.remotePortStart
-                << ",tcp_dst=" << filter.localPortStart;
+                << ",ip_dst=" << filter.localAddress;
+
+          if (tft->IsDefaultTft () == false)
+            {
+              match << ",ip_src=" << filter.remoteAddress
+                    << ",tcp_src=" << filter.remotePortStart
+                    << ",tcp_dst=" << filter.localPortStart;
+            }
+
           std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
           DpctlExecute (m_pgwDpId, cmdTcpStr);
         }
@@ -383,11 +373,16 @@ EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
         {
           std::ostringstream match;
           match << " eth_type=0x800"
-                << ",ip_src=" << filter.remoteAddress
-                << ",ip_dst=" << filter.localAddress
                 << ",ip_proto=17"
-                << ",udp_src=" << filter.remotePortStart
-                << ",udp_dst=" << filter.localPortStart;
+                << ",ip_dst=" << filter.localAddress;
+
+          if (tft->IsDefaultTft () == false)
+            {
+              match << ",ip_src=" << filter.remoteAddress
+                    << ",udp_src=" << filter.remotePortStart
+                    << ",udp_dst=" << filter.localPortStart;
+            }
+
           std::string cmdUdpStr = cmd.str () + match.str () + act.str ();
           DpctlExecute (m_pgwDpId, cmdUdpStr);
         }

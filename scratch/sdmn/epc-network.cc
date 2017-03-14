@@ -461,6 +461,25 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
 
   NS_LOG_DEBUG ("Activate EPS bearer UE IP address: " << ueAddr);
 
+  // Trick for default bearer.
+  if (tft->IsDefaultTft ())
+    {
+      // To avoid rules overlap on the P-GW, we are going to replace the
+      // default packet filter by two filters that includes the UE address and
+      // the protocol (TCP and UDP).
+      tft->RemoveFilter (0);
+
+      EpcTft::PacketFilter filterTcp;
+      filterTcp.protocol = TcpL4Protocol::PROT_NUMBER;
+      filterTcp.localAddress = ueAddr;
+      tft->Add (filterTcp);
+
+      EpcTft::PacketFilter filterUdp;
+      filterUdp.protocol = UdpL4Protocol::PROT_NUMBER;
+      filterUdp.localAddress = ueAddr;
+      tft->Add (filterUdp);
+    }
+
   // Save the bearer context into UE info.
   UeInfo::BearerInfo bearerInfo;
   bearerInfo.tft = tft;
