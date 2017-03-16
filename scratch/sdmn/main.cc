@@ -368,7 +368,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("SdmnMme",                  LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("SdranCloud",               LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("SdranController",          LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("SgwUserApp",               LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("GtpTunnelApp",             LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("TrafficHelper",            LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("TrafficManager",           LOG_ERROR_WARN_INFO_FT);
 

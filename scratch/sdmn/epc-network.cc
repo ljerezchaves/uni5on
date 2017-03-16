@@ -22,7 +22,7 @@
 #include "epc-network.h"
 #include "epc-controller.h"
 #include "pgw-user-app.h"
-#include "sgw-user-app.h"
+#include "gtp-tunnel-app.h"
 #include "sdran-cloud.h"
 
 namespace ns3 {
@@ -166,7 +166,7 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
   uint32_t swS5PortNum = swS5Port->GetPortNo ();
 
   // Add the sgwS5Dev as standard device on S-GW node.
-  // It will be connected to a logical port through the SgwUserApp.
+  // It will be connected to a logical port through the GtpTunnelApp.
   m_s5AddrHelper.Assign (NetDeviceContainer (sgwS5Dev));
   NS_LOG_DEBUG ("S-GW S5 address: " << EpcNetwork::GetIpv4Addr (sgwS5Dev));
 
@@ -180,7 +180,8 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
   uint32_t sgwS5PortNum = sgwS5Port->GetPortNo ();
 
   // Create the S-GW S5 user-plane application.
-  sgwNode->AddApplication (CreateObject <SgwUserApp> (sgwS5PortDev));
+  sgwNode->AddApplication (
+    CreateObject<GtpTunnelApp> (sgwS5PortDev, sgwS5Dev));
 
   // Notify the EPC and SDRAN controllers of the new S-GW device attached
   // OpenFlow backhaul network.
@@ -316,8 +317,9 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
   Ptr<Ipv4StaticRouting> webHostStaticRouting =
     ipv4RoutingHelper.GetStaticRouting (m_webNode->GetObject<Ipv4> ());
-  webHostStaticRouting->AddNetworkRouteTo (EpcNetwork::m_ueAddr,
-                                           EpcNetwork::m_ueMask, EpcNetwork::GetIpv4Addr (pgwSgiDev), 1);
+  webHostStaticRouting->AddNetworkRouteTo (
+    EpcNetwork::m_ueAddr, EpcNetwork::m_ueMask,
+    EpcNetwork::GetIpv4Addr (pgwSgiDev), 1);
 
   // PART 2: Connect the P-GW to the OpenFlow backhaul infrastructure.
   //

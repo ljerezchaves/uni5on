@@ -18,19 +18,19 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef SGW_USER_APP_H
-#define SGW_USER_APP_H
+#ifndef GTP_TUNNEL_APP_H
+#define GTP_TUNNEL_APP_H
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/applications-module.h>
 #include <ns3/virtual-net-device-module.h>
+#include <ns3/csma-module.h>
 
 namespace ns3 {
 
 /**
- * This is the tunneling application for S-GW S5 and S1-U interfaces.
  * This GTP tunnel application is responsible for implementing the logical port
  * operations to encapsulate and de-encapsulated packets withing GTP tunnel. It
  * provides the callback implementations that are used by the logical switch
@@ -38,29 +38,23 @@ namespace ns3 {
  * protocols headers over packets leaving/entering the OpenFlow switch based on
  * information that is carried by packet tags.
  */
-class SgwUserApp : public Application
+class GtpTunnelApp : public Application
 {
 public:
-  SgwUserApp ();           //!< Default constructor.
-  virtual ~SgwUserApp ();  //!< Dummy destructor, see DoDispose.
-
   /**
    * Complete constructor.
-   * \param logicalPort The P-GW S5 OpenFlow logical port device.
+   * \param logicalPort The OpenFlow logical port device.
+   * \param physicalPort The physical network device on node.
    */
-  SgwUserApp (Ptr<VirtualNetDevice> logicalPort);
+  GtpTunnelApp (Ptr<VirtualNetDevice> logicalPort,
+                Ptr<CsmaNetDevice> physicalDev);
+  virtual ~GtpTunnelApp ();  //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
    * \return The object TypeId.
    */
   static TypeId GetTypeId (void);
-
-  /**
-   * Save the logical port and set the send callback.
-   * \param logicalPort The P-GW S5 OpenFlow logical port device.
-   */
-  void SetLogicalPort (Ptr<VirtualNetDevice> logicalPort);
 
   /**
    * Method to be assigned to the send callback of the VirtualNetDevice
@@ -71,16 +65,10 @@ public:
    * \param packet The packet received from the logical port.
    * \param source Ethernet source address.
    * \param dst Ethernet destination address.
-   * \param protocolNumber The type of payload contained in this packet.
+   * \param protocolNum The type of payload contained in this packet.
    */
   bool RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
-                            const Address& dest, uint16_t protocolNumber);
-
-  /**
-   * Send a packet to the logical port.
-   * \param packet The packet to send.
-   */
-  bool SendToLogicalPort (Ptr<Packet>);
+                            const Address& dest, uint16_t protocolNum);
 
   /**
    * Method to be assigned to the receive callback of the UDP tunnel socket. It
@@ -91,11 +79,11 @@ public:
   void RecvFromTunnelSocket (Ptr<Socket> socket);
 
   /**
-   * Send a packet to the UDP tunnel socket.
-   * \param packet The packet to send.
-   * \param dstAddress The address of remote host.
+   * TracedCallback signature for tunnel packets.
+   * \param packet True packet.
+   * \param teid The tunnel TEID for this packet.
    */
-  bool SentToTunnelSocket (Ptr<Packet> packet, InetSocketAddress dstAddress);
+  typedef void (*PacketTeidTracedCallback)(Ptr<Packet> packet, uint32_t teid);
 
 protected:
   /** Destructor implementation. */
@@ -110,15 +98,22 @@ private:
    * \param packet Packet to which header should be added.
    * \param source MAC source address from which packet should be sent.
    * \param dest MAC destination address to which packet should be sent.
-   * \param protocolNumber The type of payload contained in this packet.
+   * \param protocolNum The type of payload contained in this packet.
    */
   void AddHeader (Ptr<Packet> packet, Mac48Address source = Mac48Address (),
                   Mac48Address dest = Mac48Address (),
-                  uint16_t protocolNumber = Ipv4L3Protocol::PROT_NUMBER);
+                  uint16_t protocolNum = Ipv4L3Protocol::PROT_NUMBER);
+
+  /** Trace source fired when a packet is received from the tunnel socket. */
+  TracedCallback<Ptr<Packet>, uint32_t> m_rxSocketTrace;
+
+  /** Trace source fired when a packet is sent to the tunnel socket. */
+  TracedCallback<Ptr<Packet>, uint32_t> m_txSocketTrace;
 
   Ptr<Socket>           m_tunnelSocket;   //!< UDP tunnel socket.
   Ptr<VirtualNetDevice> m_logicalPort;    //!< OpenFlow logical port device.
+  Ptr<CsmaNetDevice>    m_physicalDev;    //!< Node physical network device.
 };
 
 } // namespace ns3
-#endif /* SGW_USER_APP_H */
+#endif /* GTP_TUNNEL_APP_H */
