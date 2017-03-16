@@ -220,8 +220,9 @@ protected:
    *            priority before installing P-GW TFT rules.
    * \param rInfo The routing information to configure.
    * \param buffer The buffered packet to apply this rule to.
+   * \return True if remove succeeded, false otherwise.
    */
-  virtual void InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer);
+  virtual bool InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer);
 
   // Inherited from OFSwitch13Controller.
   virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);

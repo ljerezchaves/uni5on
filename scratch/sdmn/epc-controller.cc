@@ -181,18 +181,19 @@ EpcController::NotifyPgwAttach (
   // -------------------------------------------------------------------------
   // Table 0 -- P-GW default table -- [from higher to lower priority]
   //
-  // IP packets coming from the Internet (SGi) and addressed to the LTE network
-  // (S5) are sent to table 1, where TFT rules will match the flow and set both
-  // TEID and eNB address on tunnel metadata.
+  // IP packets coming from the Internet (SGi port) are sent to table 1, where
+  // TFT rules will match the flow and set both TEID and eNB address on tunnel
+  // metadata.
   std::ostringstream cmdIn;
   cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
         << ",in_port=" << pgwSgiPortNum
         << " goto:1";
   DpctlSchedule (m_pgwDpId, cmdIn.str ());
 
-  // IP packets coming from the LTE network (S5) and addressed to the Internet
-  // (SGi) have the destination MAC address rewritten (this is necessary when
-  // using logical ports) and are forward to the SGi interface port.
+  // IP packets coming from the LTE network (S5 port) and addressed to the
+  // Internet (Web IP address) have the destination MAC address rewritten to
+  // the Web SGi MAC address (this is necessary when using logical ports) and
+  // are forward to the SGi interface port.
   Mac48Address webMac = Mac48Address::ConvertFrom (webSgiDev->GetAddress ());
   std::ostringstream cmdOut;
   cmdOut << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
@@ -306,7 +307,7 @@ EpcController::DoDispose ()
   Object::DoDispose ();
 }
 
-void
+bool
 EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
 {
   NS_LOG_FUNCTION (this << rInfo << buffer);
@@ -387,6 +388,7 @@ EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
           DpctlExecute (m_pgwDpId, cmdUdpStr);
         }
     }
+  return true;
 }
 
 void
@@ -635,10 +637,8 @@ EpcController::DoCreateSessionRequest (
   m_bearerRequestTrace (accepted, rInfo);
 
   // Install rules for default bearer.
-  if (!TopologyInstallRouting (rInfo))
-    {
-      NS_FATAL_ERROR ("Default bearer TEID rule installation failed!");
-    }
+  bool installed = TopologyInstallRouting (rInfo);
+  NS_ASSERT_MSG (installed, "Default bearer must be installed.");
 
   // For other dedicated bearers, let's create and save it's routing metadata.
   // (starting at the second element of res.bearerContextsCreated).
@@ -660,8 +660,6 @@ EpcController::DoCreateSessionRequest (
       rInfo->SetDefault (false);            // This is a dedicated bearer
       rInfo->SetBearerContext (dedicatedBearer);
 
-      GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
-
       // For all GBR beares, create the GBR metadata.
       if (rInfo->IsGbr ())
         {
@@ -674,6 +672,7 @@ EpcController::DoCreateSessionRequest (
         }
 
       // If necessary, create the meter metadata for maximum bit rate.
+      GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
       if (gbrQoS.mbrDl || gbrQoS.mbrUl)
         {
           Ptr<MeterInfo> meterInfo = CreateObject<MeterInfo> (rInfo);

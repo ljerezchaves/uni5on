@@ -210,7 +210,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
   // Increasing the priority every time we (re)install routing rules.
   rInfo->IncreasePriority ();
 
-  // Install P-GW TFT rules
+  // Install the P-GW TFT rules for this bearer.
   InstallPgwTftRules (rInfo, buffer);
 
   // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
