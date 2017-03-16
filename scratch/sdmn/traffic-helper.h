@@ -45,10 +45,10 @@ class TrafficHelper : public Object
 public:
   /**
    * Complete constructor.
-   * \param epcNetwork The OpenFlow EPC network.
    * \param lteNetwork The LTE network.
+   * \param webNode The Internet web server node.
    */
-  TrafficHelper (Ptr<EpcNetwork> epcNetwork, Ptr<LteNetwork> lteNetwork);
+  TrafficHelper (Ptr<LteNetwork> lteNetwork, Ptr<Node> webNode);
 
   TrafficHelper ();           //!< Default constructor.
   virtual ~TrafficHelper ();  //!< Dummy destructor, see DoDispose.

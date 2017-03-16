@@ -175,18 +175,20 @@ EpcController::NotifyPgwAttach (
   NS_ASSERT_MSG (!m_pgwDpId, "Only one P-GW allowed on this implementation.");
   m_pgwDpId = pgwSwDev->GetDatapathId ();
   m_pgwS5Port = pgwS5PortNum;
-  m_pgwS5Addr = GetIpAddressForDevice (pgwS5Dev);
+  m_pgwS5Addr = EpcNetwork::GetIpv4Addr (pgwS5Dev);
 
   // Configure SGi port rules.
   // -------------------------------------------------------------------------
   // Table 0 -- P-GW default table -- [from higher to lower priority]
   //
-  // IP packets coming from the Internet (SGi port) are sent to table 1, where
-  // TFT rules will match the flow and set both TEID and eNB address on tunnel
-  // metadata.
+  // IP packets coming from the Internet (SGi port) and addressed to the UE
+  // network are sent to table 1, where TFT rules will match the flow and set
+  // both TEID and eNB address on tunnel metadata.
   std::ostringstream cmdIn;
   cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
         << ",in_port=" << pgwSgiPortNum
+        << ",ip_dst=" << EpcNetwork::m_ueAddr
+        << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
         << " goto:1";
   DpctlSchedule (m_pgwDpId, cmdIn.str ());
 
@@ -198,7 +200,7 @@ EpcController::NotifyPgwAttach (
   std::ostringstream cmdOut;
   cmdOut << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
          << ",in_port=" << pgwS5PortNum
-         << ",ip_dst=" << GetIpAddressForDevice (webSgiDev)
+         << ",ip_dst=" << EpcNetwork::GetIpv4Addr (webSgiDev)
          << " write:set_field=eth_dst:" << webMac
          << ",output=" << pgwSgiPortNum;
   DpctlSchedule (m_pgwDpId, cmdOut.str ());
@@ -244,7 +246,7 @@ EpcController::NotifyS5Attach (
   std::ostringstream cmdOut;
   cmdOut << "flow-mod cmd=add,table=2,prio=256 eth_type=0x800"
          << ",eth_dst=" << gwMac
-         << ",ip_dst=" << GetIpAddressForDevice (gwDev)
+         << ",ip_dst=" << EpcNetwork::GetIpv4Addr (gwDev)
          << " write:output=" << portNum
          << " goto:4";
   DpctlSchedule (swtchDev->GetDatapathId (), cmdOut.str ());
@@ -283,17 +285,6 @@ EpcController::GetDscpValue (EpsBearer::Qci qci)
       return it->second;
     }
   NS_FATAL_ERROR ("No DSCP mapped value for QCI " << qci);
-}
-
-Ipv4Address
-EpcController::GetIpAddressForDevice (Ptr<NetDevice> device)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  Ptr<Node> node = device->GetNode ();
-  Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
-  int32_t idx = ipv4->GetInterfaceForDevice (device);
-  return ipv4->GetAddress (idx, 0).GetLocal ();
 }
 
 void

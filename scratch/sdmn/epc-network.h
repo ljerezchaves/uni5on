@@ -53,15 +53,11 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** \name Private member accessors. */
-  //\{
-  uint16_t GetNSwitches (void) const;
+  /**
+   * Get the Internet web server node.
+   * \return The pointer to the web node.
+   */
   Ptr<Node> GetWebNode (void) const;
-  Ipv4Address GetWebIpAddress (void) const;
-  Ipv4Mask GetWebIpMask (void) const;
-  Ptr<Node> GetEpcCtrlNode (void) const;
-  Ptr<EpcController> GetEpcCtrlApp (void) const;
-  //\}
 
   /**
    * Get the OpenFlow switch node for a given OpenFlow switch datapath ID.
@@ -105,8 +101,31 @@ public:
   virtual Ipv4Address GetUeDefaultGatewayAddress ();
   // Inherited from EpcHelper.
 
-  /** Default GTP-U UDP port for tunnel sockets. */
-  static const uint16_t m_gtpuPort;
+  /**
+   * Get the IPv4 address assigned to a given device.
+   * \param device The network device.
+   * \return The IPv4 address.
+   */
+  static Ipv4Address GetIpv4Addr (Ptr<NetDevice> device);
+
+  /**
+   * Get the IPv4 mask assigned to a given device.
+   * \param device The network device.
+   * \return The IPv4 mask.
+   */
+  static Ipv4Mask GetIpv4Mask (Ptr<NetDevice> device);
+
+  static const uint16_t     m_gtpuPort;  //!< GTP-U UDP port.
+  static const Ipv4Address  m_ueAddr;    //!< UE network address.
+  static const Ipv4Address  m_sgiAddr;   //!< Web network address.
+  static const Ipv4Address  m_s5Addr;    //!< S5 network address.
+  static const Ipv4Address  m_s1uAddr;   //!< S1-U network address.
+  static const Ipv4Address  m_x2Addr;    //!< X2 network address.
+  static const Ipv4Mask     m_ueMask;    //!< UE network mask.
+  static const Ipv4Mask     m_sgiMask;   //!< Web network mask.
+  static const Ipv4Mask     m_s5Mask;    //!< S5 network mask.
+  static const Ipv4Mask     m_s1uMask;   //!< S1-U network mask.
+  static const Ipv4Mask     m_x2Mask;    //!< X2 network mask.
 
 protected:
   /** Destructor implementation. */
@@ -186,15 +205,11 @@ private:
   NetDeviceContainer            m_s5Devices;        //!< S5 devices.
   NetDeviceContainer            m_sgiDevices;       //!< SGi devices.
 
-  // IP addresses for interfaces.
-  Ipv4Address                   m_x2NetworkAddr;    //!< X2 network address.
-  Ipv4Address                   m_s5NetworkAddr;    //!< S5 network address.
-  Ipv4Address                   m_sgiNetworkAddr;   //!< Web network address.
-  Ipv4Address                   m_ueNetworkAddr;    //!< UE network address.
-  Ipv4AddressHelper             m_x2AddrHelper;     //!< X2 address helper.
-  Ipv4AddressHelper             m_s5AddrHelper;     //!< S5 address helper.
+  // IP address helpers for interfaces.
   Ipv4AddressHelper             m_sgiAddrHelper;    //!< Web address helper.
   Ipv4AddressHelper             m_ueAddrHelper;     //!< UE address helper.
+  Ipv4AddressHelper             m_s5AddrHelper;     //!< S5 address helper.
+  Ipv4AddressHelper             m_x2AddrHelper;     //!< X2 address helper.
 
   // P-GW user plane.
   Ptr<Node>                     m_pgwNode;          //!< P-GW user-plane node.
@@ -202,7 +217,6 @@ private:
 
   // Internet web server.
   Ptr<Node>                     m_webNode;          //!< Web server node.
-  Ipv4Address                   m_webSgiAddr;       //!< Web server IP addr.
 };
 
 };  // namespace ns3

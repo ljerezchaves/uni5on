@@ -31,7 +31,17 @@ NS_LOG_COMPONENT_DEFINE ("EpcNetwork");
 NS_OBJECT_ENSURE_REGISTERED (EpcNetwork);
 
 // Initializing EpcNetwork static members.
-const uint16_t EpcNetwork::m_gtpuPort = 2152;
+const uint16_t    EpcNetwork::m_gtpuPort = 2152;
+const Ipv4Address EpcNetwork::m_ueAddr   = Ipv4Address ("7.0.0.0");
+const Ipv4Address EpcNetwork::m_sgiAddr  = Ipv4Address ("8.0.0.0");
+const Ipv4Address EpcNetwork::m_s5Addr   = Ipv4Address ("10.1.0.0");
+const Ipv4Address EpcNetwork::m_s1uAddr  = Ipv4Address ("10.2.0.0");
+const Ipv4Address EpcNetwork::m_x2Addr   = Ipv4Address ("10.3.0.0");
+const Ipv4Mask    EpcNetwork::m_ueMask   = Ipv4Mask ("255.0.0.0");
+const Ipv4Mask    EpcNetwork::m_sgiMask  = Ipv4Mask ("255.255.255.0");
+const Ipv4Mask    EpcNetwork::m_s5Mask   = Ipv4Mask ("255.255.255.0");
+const Ipv4Mask    EpcNetwork::m_s1uMask  = Ipv4Mask ("255.255.255.0");
+const Ipv4Mask    EpcNetwork::m_x2Mask   = Ipv4Mask ("255.255.255.0");
 
 EpcNetwork::EpcNetwork ()
   : m_epcCtrlApp (0),
@@ -76,42 +86,8 @@ EpcNetwork::GetTypeId (void)
                    UintegerValue (1492), // Ethernet II - PPoE
                    MakeUintegerAccessor (&EpcNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
-
-    // IP network addresses.
-    .AddAttribute ("UeNetworkAddr",
-                   "The IPv4 network address used for UE devices.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   Ipv4AddressValue (Ipv4Address ("7.0.0.0")),
-                   MakeIpv4AddressAccessor (&EpcNetwork::m_ueNetworkAddr),
-                   MakeIpv4AddressChecker ())
-    .AddAttribute ("WebNetworkAddr",
-                   "The IPv4 network address used for web devices.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   Ipv4AddressValue (Ipv4Address ("8.0.0.0")),
-                   MakeIpv4AddressAccessor (&EpcNetwork::m_sgiNetworkAddr),
-                   MakeIpv4AddressChecker ())
-    .AddAttribute ("S5NetworkAddr",
-                   "The IPv4 network address used for S5 devices.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   Ipv4AddressValue (Ipv4Address ("10.1.0.0")),
-                   MakeIpv4AddressAccessor (&EpcNetwork::m_s5NetworkAddr),
-                   MakeIpv4AddressChecker ())
-    .AddAttribute ("X2NetworkAddr",
-                   "The IPv4 network address used for X2 devices.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   Ipv4AddressValue (Ipv4Address ("10.2.0.0")),
-                   MakeIpv4AddressAccessor (&EpcNetwork::m_x2NetworkAddr),
-                   MakeIpv4AddressChecker ())
   ;
   return tid;
-}
-
-uint16_t
-EpcNetwork::GetNSwitches (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ofSwitches.GetN ();
 }
 
 Ptr<Node>
@@ -120,38 +96,6 @@ EpcNetwork::GetWebNode (void) const
   NS_LOG_FUNCTION (this);
 
   return m_webNode;
-}
-
-Ipv4Address
-EpcNetwork::GetWebIpAddress (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_webSgiAddr;
-}
-
-Ipv4Mask
-EpcNetwork::GetWebIpMask (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return Ipv4Mask ("255.255.255.252");
-}
-
-Ptr<Node>
-EpcNetwork::GetEpcCtrlNode (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_epcCtrlNode;
-}
-
-Ptr<EpcController>
-EpcNetwork::GetEpcCtrlApp (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_epcCtrlApp;
 }
 
 Ptr<Node>
@@ -224,8 +168,7 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
   // Add the sgwS5Dev as standard device on S-GW node.
   // It will be connected to a logical port through the SgwUserApp.
   m_s5AddrHelper.Assign (NetDeviceContainer (sgwS5Dev));
-  NS_LOG_DEBUG ("S-GW S5 address: " <<
-                EpcController::GetIpAddressForDevice (sgwS5Dev));
+  NS_LOG_DEBUG ("S-GW S5 address: " << EpcNetwork::GetIpv4Addr (sgwS5Dev));
 
   // Create the virtual net device to work as the logical port on the S-GW S5
   // interface. This logical ports will connect to the S-GW user-plane
@@ -274,21 +217,11 @@ EpcNetwork::NotifyConstructionCompleted (void)
   m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_linkRate));
   m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
 
-  // Use a /30 subnet which can hold exactly two addresses for the connection
-  // between the P-GW and Internet Web server over the SGi interface.
-  m_sgiAddrHelper.SetBase (m_sgiNetworkAddr, "255.255.255.252");
-
-  // Use a /30 subnet which can hold exactly two addresses for the connection
-  // between two eNBs over the X2 interface.
-  m_x2AddrHelper.SetBase (m_x2NetworkAddr, "255.255.255.252");
-
-  // Use a /24 subnet which can hold up to 253 S-GWs and P-GWs elements
-  // connected to the S5 interface over the OpenFlow backhaul network.
-  m_s5AddrHelper.SetBase (m_s5NetworkAddr, "255.255.255.0");
-
-  // Configure IP addresses (don't change the masks!)
-  // Use a /8 subnet for all UEs and the P-GW gateway logical address.
-  m_ueAddrHelper.SetBase (m_ueNetworkAddr, "255.0.0.0");
+  // Configure IP address helpers.
+  m_ueAddrHelper.SetBase (m_ueAddr, m_ueMask);
+  m_sgiAddrHelper.SetBase (m_sgiAddr, m_sgiMask);
+  m_s5AddrHelper.SetBase (m_s5Addr, m_s5Mask);
+  m_x2AddrHelper.SetBase (m_x2Addr, m_x2Mask);
 
   // Set the default P-GW gateway logical address, which will be used to set
   // the static route at all UEs.
@@ -376,18 +309,15 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
 
   // Set the IP address on the Internet Web server and P-GW SGi interfaces.
   m_sgiAddrHelper.Assign (NetDeviceContainer (m_sgiDevices));
-  m_webSgiAddr = EpcController::GetIpAddressForDevice (webSgiDev);
-  NS_LOG_DEBUG ("Web SGi address: " << m_webSgiAddr);
-  NS_LOG_DEBUG ("P-GW SGi address: " <<
-                EpcController::GetIpAddressForDevice (pgwSgiDev));
+  NS_LOG_DEBUG ("Web SGi address: " << EpcNetwork::GetIpv4Addr (webSgiDev));
+  NS_LOG_DEBUG ("P-GW SGi address: " << EpcNetwork::GetIpv4Addr (pgwSgiDev));
 
   // Define static routes at the Internet Web server to the LTE network.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
   Ptr<Ipv4StaticRouting> webHostStaticRouting =
     ipv4RoutingHelper.GetStaticRouting (m_webNode->GetObject<Ipv4> ());
-  webHostStaticRouting->AddNetworkRouteTo (
-    m_ueNetworkAddr, Ipv4Mask ("255.0.0.0"),
-    EpcController::GetIpAddressForDevice (pgwSgiDev), 1);
+  webHostStaticRouting->AddNetworkRouteTo (EpcNetwork::m_ueAddr,
+                                           EpcNetwork::m_ueMask, EpcNetwork::GetIpv4Addr (pgwSgiDev), 1);
 
   // PART 2: Connect the P-GW to the OpenFlow backhaul infrastructure.
   //
@@ -416,8 +346,7 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
   // Add the pgwS5Dev as standard device on P-GW node.
   // It will be connected to a logical port through the PgwUserApp.
   m_s5AddrHelper.Assign (NetDeviceContainer (pgwS5Dev));
-  NS_LOG_DEBUG ("P-GW S5 address: " <<
-                EpcController::GetIpAddressForDevice (pgwS5Dev));
+  NS_LOG_DEBUG ("P-GW S5 address: " << EpcNetwork::GetIpv4Addr (pgwS5Dev));
 
   // Create the virtual net device to work as the logical ports on the P-GW S5
   // interface. This logical ports will connect to the P-GW user-plane
@@ -548,6 +477,28 @@ EpcNetwork::GetUeDefaultGatewayAddress ()
   NS_LOG_FUNCTION (this);
 
   return m_pgwUeGatewayAddr;
+}
+
+Ipv4Address
+EpcNetwork::GetIpv4Addr (Ptr<NetDevice> device)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  Ptr<Node> node = device->GetNode ();
+  Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
+  int32_t idx = ipv4->GetInterfaceForDevice (device);
+  return ipv4->GetAddress (idx, 0).GetLocal ();
+}
+
+Ipv4Mask
+EpcNetwork::GetIpv4Mask (Ptr<NetDevice> device)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  Ptr<Node> node = device->GetNode ();
+  Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
+  int32_t idx = ipv4->GetInterfaceForDevice (device);
+  return ipv4->GetAddress (idx, 0).GetMask ();
 }
 
 };  // namespace ns3

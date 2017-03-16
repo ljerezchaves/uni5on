@@ -63,14 +63,17 @@ const uint64_t TrafficHelper::m_mbrBitRate [] = {
 
 
 // ------------------------------------------------------------------------ //
-TrafficHelper::TrafficHelper (Ptr<EpcNetwork> epcNetwork,
-                              Ptr<LteNetwork> lteNetwork)
+TrafficHelper::TrafficHelper (Ptr<LteNetwork> lteNetwork,
+                              Ptr<Node> webNode)
   : m_lteNetwork (lteNetwork),
-    m_webNode (epcNetwork->GetWebNode ()),
-    m_webAddr (epcNetwork->GetWebIpAddress ()),
-    m_webMask (epcNetwork->GetWebIpMask ())
+    m_webNode (webNode)
 {
   NS_LOG_FUNCTION (this);
+
+  NS_ASSERT_MSG (m_webNode->GetNDevices () == 2, "Single device expected.");
+  Ptr<NetDevice> webDev = m_webNode->GetDevice (1);
+  m_webAddr = EpcNetwork::GetIpv4Addr (webDev);
+  m_webMask = EpcNetwork::GetIpv4Mask (webDev);
 
   // Configuring the traffic manager object factory
   m_managerFactory.SetTypeId (TrafficManager::GetTypeId ());

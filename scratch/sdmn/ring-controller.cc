@@ -19,6 +19,7 @@
  */
 
 #include "ring-controller.h"
+#include "epc-network.h"
 #include <string>
 
 namespace ns3 {
@@ -86,7 +87,7 @@ RingController::NotifyS5Attach (
 
   // Save the pair S/P-GW IP address / switch index.
   std::pair<Ipv4Address, uint16_t> entry (
-    GetIpAddressForDevice (gwDev), GetSwitchIndex (swtchDev));
+    EpcNetwork::GetIpv4Addr (gwDev), GetSwitchIndex (swtchDev));
   std::pair<IpSwitchMap_t::iterator, bool> ret;
   ret = m_ipSwitchTable.insert (entry);
   if (ret.second == false)

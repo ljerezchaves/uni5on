@@ -19,6 +19,7 @@
  */
 
 #include "sdran-controller.h"
+#include "epc-network.h"
 
 namespace ns3 {
 
@@ -83,7 +84,7 @@ SdranController::NotifySgwAttach (
 {
   NS_LOG_FUNCTION (this << sgwS5PortNum << sgwS5Dev);
 
-  m_sgwS5Addr = EpcController::GetIpAddressForDevice (sgwS5Dev);
+  m_sgwS5Addr = EpcNetwork::GetIpv4Addr (sgwS5Dev);
   m_sgwS5PortNum = sgwS5PortNum;
   // TODO Install forwarding rules on S-GW?
 }

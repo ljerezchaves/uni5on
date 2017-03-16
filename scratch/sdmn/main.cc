@@ -139,7 +139,8 @@ main (int argc, char *argv[])
   Ptr<TrafficHelper> trafficHelper;
   ofNetwork     = CreateObject<RingNetwork> ();
   lteNetwork    = CreateObject<LteNetwork> (ofNetwork);
-  trafficHelper = CreateObject<TrafficHelper> (ofNetwork, lteNetwork);
+  trafficHelper = CreateObject<TrafficHelper> (lteNetwork,
+                                               ofNetwork->GetWebNode ());
 
   Ptr<AdmissionStatsCalculator> admissionStats;
   Ptr<BackhaulStatsCalculator>  backhaulStats;

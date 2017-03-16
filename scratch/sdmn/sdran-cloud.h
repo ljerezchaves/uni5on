@@ -94,6 +94,12 @@ private:
    */
   static void RegisterSdranCloud (Ptr<SdranCloud> sdran);
 
+  /**
+   * Initilize the S1-U address static helper. This function is called by
+   * object constructor, but the helper will be initializaed only once.
+   */
+  static void S1uAddrHelperInitialize ();
+
   uint32_t                      m_sdranId;        //!< SDRAN cloud id.
   uint32_t                      m_nSites;         //!< Number of cell sites.
   uint32_t                      m_nEnbs;          //!< Number of eNBs.
@@ -102,10 +108,6 @@ private:
 
   // OpenFlow switch helper.
   Ptr<OFSwitch13InternalHelper> m_ofSwitchHelper; //!< Switch helper.
-
-  // IP addresses for interfaces.
-  Ipv4Address                   m_s1uNetworkAddr; //!< S1-U network address.
-  Ipv4AddressHelper             m_s1uAddrHelper;  //!< S1-U address helper.
 
   // Helper and attributes for S1-U interface.
   CsmaHelper                    m_csmaHelper;     //!< Connection helper.
@@ -123,9 +125,10 @@ private:
   /** Map saving node / SDRAN pointer. */
   typedef std::map<Ptr<Node>, Ptr<SdranCloud> > NodeSdranMap_t;
 
-  static uint32_t         m_enbCounter;     //!< Global eNB counter.
-  static uint32_t         m_sdranCounter;   //!< Global SDRAN cloud counter.
-  static NodeSdranMap_t   m_enbSdranMap;    //!< Global SDRAN by eNB node map.
+  static Ipv4AddressHelper m_s1uAddrHelper; //!< Global S1-U address helper.
+  static uint32_t          m_enbCounter;    //!< Global eNB counter.
+  static uint32_t          m_sdranCounter;  //!< Global SDRAN cloud counter.
+  static NodeSdranMap_t    m_enbSdranMap;   //!< Global SDRAN by eNB node map.
 };
 
 } // namespace ns3

@@ -30,6 +30,7 @@ NS_LOG_COMPONENT_DEFINE ("SdranCloud");
 NS_OBJECT_ENSURE_REGISTERED (SdranCloud);
 
 // Initializing SdranCloud static members.
+Ipv4AddressHelper SdranCloud::m_s1uAddrHelper;
 uint32_t SdranCloud::m_enbCounter = 0;
 uint32_t SdranCloud::m_sdranCounter = 0;
 SdranCloud::NodeSdranMap_t SdranCloud::m_enbSdranMap;
@@ -37,6 +38,8 @@ SdranCloud::NodeSdranMap_t SdranCloud::m_enbSdranMap;
 SdranCloud::SdranCloud ()
 {
   NS_LOG_FUNCTION (this);
+
+  S1uAddrHelperInitialize ();
 
   // Set the unique SDRAN cloud ID for this instance.
   m_sdranId = ++m_sdranCounter;
@@ -59,12 +62,6 @@ SdranCloud::GetTypeId (void)
                    UintegerValue (1),
                    MakeUintegerAccessor (&SdranCloud::m_nSites),
                    MakeUintegerChecker<uint32_t> ())
-    .AddAttribute ("S1uNetworkAddr",
-                   "The IPv4 network address used for S1-U devices.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   Ipv4AddressValue (Ipv4Address ("10.3.0.0")),
-                   MakeIpv4AddressAccessor (&SdranCloud::m_s1uNetworkAddr),
-                   MakeIpv4AddressChecker ())
 
     .AddAttribute ("LinkDataRate",
                    "The data rate for the link connecting the S-GW to the eNB.",
@@ -379,11 +376,6 @@ SdranCloud::NotifyConstructionCompleted ()
   m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_linkRate));
   m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
 
-  // Configure IP addresses (don't change the masks!)
-  // Use a /30 subnet which can hold exactly two addresses for the connection
-  // between an eNB and the S-GW over the S1-U interface.
-  m_s1uAddrHelper.SetBase (m_s1uNetworkAddr, "255.255.255.252");
-
   // Create the OFSwitch13 helper using p2p connections for OpenFlow channel.
   m_ofSwitchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
       "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
@@ -457,6 +449,20 @@ SdranCloud::RegisterSdranCloud (Ptr<SdranCloud> sdran)
         {
           NS_FATAL_ERROR ("Can't register SDRAN cloud by eNB node.");
         }
+    }
+}
+
+void
+SdranCloud::S1uAddrHelperInitialize ()
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  static bool initialized = false;
+  if (!initialized)
+    {
+      initialized = true;
+      SdranCloud::m_s1uAddrHelper.SetBase (EpcNetwork::m_s1uAddr,
+                                           EpcNetwork::m_s1uMask);
     }
 }
 

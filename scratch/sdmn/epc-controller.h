@@ -139,13 +139,6 @@ public:
   static uint16_t GetDscpValue (EpsBearer::Qci qci);
 
   /**
-   * Get the IPv4 address for a given device.
-   * \param device The network device.
-   * \return The IP address assigned to this device.
-   */
-  static Ipv4Address GetIpAddressForDevice (Ptr<NetDevice> device);
-
-  /**
    * TracedCallback signature for new bearer request.
    * \param ok True when the bearer request/release processes succeeds.
    * \param rInfo The routing information for this bearer tunnel.

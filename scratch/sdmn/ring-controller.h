@@ -106,7 +106,7 @@ private:
   uint16_t GetSwitchIndex (Ptr<OFSwitch13Device> dev) const;
 
   /**
-   * Get the numver of switches in the network.
+   * Get the number of switches in the network.
    * \return The number of switches in the network.
    */
   uint16_t GetNSwitches (void) const;
