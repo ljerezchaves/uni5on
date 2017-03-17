@@ -65,10 +65,10 @@ public:
    * \param packet The packet received from the logical port.
    * \param source Ethernet source address.
    * \param dst Ethernet destination address.
-   * \param protocolNum The type of payload contained in this packet.
+   * \param protocolNo The type of payload contained in this packet.
    */
   bool RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
-                            const Address& dest, uint16_t protocolNum);
+                            const Address& dest, uint16_t protocolNo);
 
   /**
    * Method to be assigned to the receive callback of the UDP tunnel socket. It
@@ -98,11 +98,11 @@ private:
    * \param packet Packet to which header should be added.
    * \param source MAC source address from which packet should be sent.
    * \param dest MAC destination address to which packet should be sent.
-   * \param protocolNum The type of payload contained in this packet.
+   * \param protocolNo The type of payload contained in this packet.
    */
   void AddHeader (Ptr<Packet> packet, Mac48Address source = Mac48Address (),
                   Mac48Address dest = Mac48Address (),
-                  uint16_t protocolNum = Ipv4L3Protocol::PROT_NUMBER);
+                  uint16_t protocolNo = Ipv4L3Protocol::PROT_NUMBER);
 
   /** Trace source fired when a packet is received from the tunnel socket. */
   TracedCallback<Ptr<Packet>, uint32_t> m_rxSocketTrace;

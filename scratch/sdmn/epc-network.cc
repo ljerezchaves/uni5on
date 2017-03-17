@@ -163,7 +163,7 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
   // Add the swS5Dev device as OpenFlow switch port on the backhaul switch.
   Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (swDpId);
   Ptr<OFSwitch13Port> swS5Port = swDev->AddSwitchPort (swS5Dev);
-  uint32_t swS5PortNum = swS5Port->GetPortNo ();
+  uint32_t swS5PortNo = swS5Port->GetPortNo ();
 
   // Add the sgwS5Dev as standard device on S-GW node.
   // It will be connected to a logical port through the GtpTunnelApp.
@@ -177,7 +177,7 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
   Ptr<VirtualNetDevice> sgwS5PortDev = CreateObject<VirtualNetDevice> ();
   sgwS5PortDev->SetAddress (Mac48Address::Allocate ());
   Ptr<OFSwitch13Port> sgwS5Port = sgwSwitchDev->AddSwitchPort (sgwS5PortDev);
-  uint32_t sgwS5PortNum = sgwS5Port->GetPortNo ();
+  uint32_t sgwS5PortNo = sgwS5Port->GetPortNo ();
 
   // Create the S-GW S5 user-plane application.
   sgwNode->AddApplication (
@@ -185,8 +185,8 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
 
   // Notify the EPC and SDRAN controllers of the new S-GW device attached
   // OpenFlow backhaul network.
-  m_epcCtrlApp->NotifyS5Attach (swDev, swS5PortNum, sgwS5Dev);
-  sdranCtrlApp->NotifySgwAttach (sgwS5PortNum, sgwS5Dev);
+  m_epcCtrlApp->NotifyS5Attach (swDev, swS5PortNo, sgwS5Dev);
+  sdranCtrlApp->NotifySgwAttach (sgwS5PortNo, sgwS5Dev);
 }
 
 //
@@ -306,7 +306,7 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
 
   // Add the pgwSgiDev as physical port on the P-GW OpenFlow switch.
   Ptr<OFSwitch13Port> pgwSgiPort = pgwSwitchDev->AddSwitchPort (pgwSgiDev);
-  uint32_t pgwSgiPortNum = pgwSgiPort->GetPortNo ();
+  uint32_t pgwSgiPortNo = pgwSgiPort->GetPortNo ();
 
   // Set the IP address on the Internet Web server and P-GW SGi interfaces.
   m_sgiAddrHelper.Assign (NetDeviceContainer (m_sgiDevices));
@@ -343,7 +343,7 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
   // Add the swS5Dev device as OpenFlow switch port on the backhaul switch.
   Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (swDpId);
   Ptr<OFSwitch13Port> swS5Port = swDev->AddSwitchPort (swS5Dev);
-  uint32_t swS5PortNum = swS5Port->GetPortNo ();
+  uint32_t swS5PortNo = swS5Port->GetPortNo ();
 
   // Add the pgwS5Dev as standard device on P-GW node.
   // It will be connected to a logical port through the PgwUserApp.
@@ -357,15 +357,15 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
   Ptr<VirtualNetDevice> pgwS5PortDev = CreateObject<VirtualNetDevice> ();
   pgwS5PortDev->SetAddress (Mac48Address::Allocate ());
   Ptr<OFSwitch13Port> pgwS5Port = pgwSwitchDev->AddSwitchPort (pgwS5PortDev);
-  uint32_t pgwS5PortNum = pgwS5Port->GetPortNo ();
+  uint32_t pgwS5PortNo = pgwS5Port->GetPortNo ();
 
   // Create the P-GW S5 user-plane application.
   pgwNode->AddApplication (CreateObject <PgwUserApp> (pgwS5PortDev));
 
   // Notify the EPC controller of the new P-GW device attached to the Internet
   // and to the OpenFlow backhaul network.
-  m_epcCtrlApp->NotifyS5Attach (swDev, swS5PortNum, pgwS5Dev);
-  m_epcCtrlApp->NotifyPgwAttach (pgwSwitchDev, pgwS5PortNum, pgwSgiPortNum,
+  m_epcCtrlApp->NotifyS5Attach (swDev, swS5PortNo, pgwS5Dev);
+  m_epcCtrlApp->NotifyPgwAttach (pgwSwitchDev, pgwS5PortNo, pgwSgiPortNo,
                                  pgwS5Dev, pgwSgiDev, webSgiDev);
 }
 

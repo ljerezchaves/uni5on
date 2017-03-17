@@ -78,24 +78,22 @@ SdranController::ReleaseDedicatedBearer (
 
 void
 SdranController::NotifySgwAttach (
-  uint32_t sgwS5PortNum, Ptr<NetDevice> sgwS5Dev)
+  uint32_t sgwS5PortNo, Ptr<NetDevice> sgwS5Dev)
 {
-  NS_LOG_FUNCTION (this << sgwS5PortNum << sgwS5Dev);
+  NS_LOG_FUNCTION (this << sgwS5PortNo << sgwS5Dev);
 
   m_sgwS5Addr = EpcNetwork::GetIpv4Addr (sgwS5Dev);
-  m_sgwS5PortNum = sgwS5PortNum;
+  m_sgwS5PortNo = sgwS5PortNo;
   // TODO Install forwarding rules on S-GW?
 }
 
 void
-SdranController::NotifyEnbAttach (
-  uint16_t cellId, uint32_t sgwS1uPortNum)
+SdranController::NotifyEnbAttach (uint16_t cellId)
 {
-  NS_LOG_FUNCTION (this << sgwS1uPortNum);
+  NS_LOG_FUNCTION (this << cellId);
 
   // Register this controller by cell ID for further usage.
   RegisterController (Ptr<SdranController> (this), cellId);
-  // TODO
 }
 
 Ipv4Address

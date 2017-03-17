@@ -119,7 +119,7 @@ ConnectionInfo::GetPortNo (uint8_t idx) const
   NS_LOG_FUNCTION (this << idx);
 
   NS_ASSERT_MSG (idx == 0 || idx == 1, "Invalid switch index.");
-  return m_switches [idx].portNum;
+  return m_switches [idx].portNo;
 }
 
 uint64_t

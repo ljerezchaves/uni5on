@@ -63,9 +63,9 @@ GtpTunnelApp::GetTypeId (void)
 
 bool
 GtpTunnelApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
-                                   const Address& dest, uint16_t protocolNum)
+                                   const Address& dest, uint16_t protocolNo)
 {
-  NS_LOG_FUNCTION (this << packet << source << dest << protocolNum);
+  NS_LOG_FUNCTION (this << packet << source << dest << protocolNo);
 
   // Retrieve the GTP TEID from TunnelId tag.
   TunnelIdTag tunnelIdTag;
@@ -165,9 +165,9 @@ GtpTunnelApp::StartApplication ()
 
 void
 GtpTunnelApp::AddHeader (Ptr<Packet> packet, Mac48Address source,
-                         Mac48Address dest, uint16_t protocolNum)
+                         Mac48Address dest, uint16_t protocolNo)
 {
-  NS_LOG_FUNCTION (this << packet << source << dest << protocolNum);
+  NS_LOG_FUNCTION (this << packet << source << dest << protocolNo);
 
   // All Ethernet frames must carry a minimum payload of 46 bytes. We need to
   // pad out if we don't have enough bytes. These must be real bytes since they
@@ -183,7 +183,7 @@ GtpTunnelApp::AddHeader (Ptr<Packet> packet, Mac48Address source,
   EthernetHeader header (false);
   header.SetSource (source);
   header.SetDestination (dest);
-  header.SetLengthType (protocolNum);
+  header.SetLengthType (protocolNo);
   packet->AddHeader (header);
 
   EthernetTrailer trailer;

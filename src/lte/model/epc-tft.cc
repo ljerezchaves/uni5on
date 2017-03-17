@@ -206,7 +206,7 @@ EpcTft::GetTypeId (void)
 }
 
 uint8_t
-EpcTft::GetNumFilters (void) const
+EpcTft::GetNFilters (void) const
 {
   return m_numFilters;
 }

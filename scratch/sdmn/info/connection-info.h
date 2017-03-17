@@ -49,7 +49,7 @@ public:
   {
     Ptr<OFSwitch13Device>     swDev;    //!< OpenFlow switch device.
     Ptr<CsmaNetDevice>        portDev;  //!< OpenFlow csma port device.
-    uint32_t                  portNum;  //!< OpenFlow port number.
+    uint32_t                  portNo;   //!< OpenFlow port number.
   };
 
   /** Link direction. */

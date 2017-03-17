@@ -133,23 +133,23 @@ RingNetwork::TopologyCreate ()
       // Adding newly created csma devices as Openflow switch ports.
       Ptr<OFSwitch13Device> currDevice, nextDevice;
       Ptr<CsmaNetDevice> currPortDevice, nextPortDevice;
-      uint32_t currPortNum, nextPortNum;
+      uint32_t currPortNo, nextPortNo;
 
       currDevice = m_ofDevices.Get (currIndex);
       currPortDevice = DynamicCast<CsmaNetDevice> (devs.Get (0));
-      currPortNum = currDevice->AddSwitchPort (currPortDevice)->GetPortNo ();
+      currPortNo = currDevice->AddSwitchPort (currPortDevice)->GetPortNo ();
 
       nextDevice = m_ofDevices.Get (nextIndex);
       nextPortDevice = DynamicCast<CsmaNetDevice> (devs.Get (1));
-      nextPortNum = nextDevice->AddSwitchPort (nextPortDevice)->GetPortNo ();
+      nextPortNo = nextDevice->AddSwitchPort (nextPortDevice)->GetPortNo ();
 
       // Switch order inside ConnectionInfo object must respect clockwise order
       // (RingController assumes this order when installing switch rules).
       ConnectionInfo::SwitchData currSwData = {
-        currDevice, currPortDevice, currPortNum
+        currDevice, currPortDevice, currPortNo
       };
       ConnectionInfo::SwitchData nextSwData = {
-        nextDevice, nextPortDevice, nextPortNum
+        nextDevice, nextPortDevice, nextPortNo
       };
       Ptr<ConnectionInfo> cInfo = CreateObject<ConnectionInfo> (
           currSwData, nextSwData, DynamicCast<CsmaChannel> (

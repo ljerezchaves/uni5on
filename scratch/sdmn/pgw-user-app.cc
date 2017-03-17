@@ -76,9 +76,9 @@ PgwUserApp::SetLogicalPort (Ptr<VirtualNetDevice> logicalPort)
 
 bool
 PgwUserApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
-                                 const Address& dest, uint16_t protocolNumber)
+                                 const Address& dest, uint16_t protocolNo)
 {
-  NS_LOG_FUNCTION (this << packet << source << dest << protocolNumber);
+  NS_LOG_FUNCTION (this << packet << source << dest << protocolNo);
 
   // Retrieve the GTP TEID from TunnelId tag.
   TunnelIdTag tunnelIdTag;
@@ -196,9 +196,9 @@ PgwUserApp::StartApplication ()
 
 void
 PgwUserApp::AddHeader (Ptr<Packet> packet, Mac48Address source,
-                       Mac48Address dest, uint16_t protocolNumber)
+                       Mac48Address dest, uint16_t protocolNo)
 {
-  NS_LOG_FUNCTION (this << packet << source << dest << protocolNumber);
+  NS_LOG_FUNCTION (this << packet << source << dest << protocolNo);
 
   // All Ethernet frames must carry a minimum payload of 46 bytes. We need to
   // pad out if we don't have enough bytes. These must be real bytes since they
@@ -214,7 +214,7 @@ PgwUserApp::AddHeader (Ptr<Packet> packet, Mac48Address source,
   EthernetHeader header (false);
   header.SetSource (source);
   header.SetDestination (dest);
-  header.SetLengthType (protocolNumber);
+  header.SetLengthType (protocolNo);
   packet->AddHeader (header);
 
   EthernetTrailer trailer;

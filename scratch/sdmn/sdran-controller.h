@@ -94,20 +94,17 @@ public:
   /**
    * Notify this controller of a new S-GW connected to the OpenFlow backhaul
    * network over over the S5 interface.
-   * \param sgwS5PortNum The S5 port number on the S-GW OpenFlow switch.
+   * \param sgwS5PortNo The S5 port number on the S-GW OpenFlow switch.
    * \param sgwS5Dev The S5 device attached to the S-GW OpenFlow switch.
    */
-  virtual void NotifySgwAttach (
-    uint32_t sgwS5PortNum, Ptr<NetDevice> sgwS5Dev);
+  virtual void NotifySgwAttach (uint32_t sgwS5PortNo, Ptr<NetDevice> sgwS5Dev);
 
   /**
    * Notify this controller of a new or eNB connected to S-GW node over the
    * S1-U interface.
    * \param cellID The eNB cell ID.
-   * \param sgwS1uPortNum The S1-U port number on the S-GW OpenFlow switch.
-   * TODO parameters
    */
-  virtual void NotifyEnbAttach (uint16_t cellId, uint32_t sgwS1uPortNum);
+  virtual void NotifyEnbAttach (uint16_t cellId);
 
   /** \name Private member accessors. */
   //\{
@@ -172,7 +169,7 @@ private:
 
   uint64_t              m_sgwDpId;      //!< S-GW datapath ID.
   Ipv4Address           m_sgwS5Addr;    //!< S-GW S5 IP address.
-  uint32_t              m_sgwS5PortNum; //!< S-GW S5 port number.
+  uint32_t              m_sgwS5PortNo;  //!< S-GW S5 port number.
 
   // P-GW communication.
   Ptr<EpcController>    m_epcCtrlApp;   //!< EPC controller app.

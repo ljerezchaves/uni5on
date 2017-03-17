@@ -186,14 +186,14 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   sgwS1uPortDev->SetAddress (Mac48Address::Allocate ());
   Ptr<OFSwitch13Device> sgwSwitchDev = GetSgwSwitchDevice ();
   Ptr<OFSwitch13Port> sgwS1uPort = sgwSwitchDev->AddSwitchPort (sgwS1uPortDev);
-  uint32_t sgwS1uPortNum = sgwS1uPort->GetPortNo ();
+  uint32_t sgwS1uPortNo = sgwS1uPort->GetPortNo ();
 
   // Create the P-GW S5 user-plane application.
   m_sgwNode->AddApplication (
     CreateObject<GtpTunnelApp> (sgwS1uPortDev, sgwS1uDev));
 
   // Notify the SDRAN controller of a new eNB attached to the S-GW node.
-  m_sdranCtrlApp->NotifyEnbAttach (cellId, sgwS1uPortNum); // FIXME parameters
+  m_sdranCtrlApp->NotifyEnbAttach (cellId);
 
   // PART 2: Configure the eNB node.
   //
@@ -219,6 +219,7 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   // Create the eNB application
   Ptr<EpcEnbApplication> enbApp = CreateObject<EpcEnbApplication> (
       enbLteSocket, enbS1uSocket, enbS1uAddr, sgwS1uAddr, cellId);
+  enbApp->SetS1apSapMme (m_sdranCtrlApp->GetS1apSapMme ());
   enb->AddApplication (enbApp);
   NS_ASSERT (enb->GetNApplications () == 1);
 
@@ -229,9 +230,8 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   Ptr<EnbInfo> enbInfo = CreateObject<EnbInfo> (cellId);
   enbInfo->SetEnbS1uAddr (enbS1uAddr);
   enbInfo->SetSgwS1uAddr (sgwS1uAddr);
+  enbInfo->SetSgwS1uPortNo (sgwS1uPortNo);
   enbInfo->SetS1apSapEnb (enbApp->GetS1apSapEnb ());
-
-  enbApp->SetS1apSapMme (m_sdranCtrlApp->GetS1apSapMme ());
 }
 
 void

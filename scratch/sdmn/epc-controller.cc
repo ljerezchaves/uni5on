@@ -165,16 +165,16 @@ EpcController::ReleaseDedicatedBearer (EpsBearer bearer, uint32_t teid)
 
 void
 EpcController::NotifyPgwAttach (
-  Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNum,
-  uint32_t pgwSgiPortNum, Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> pgwSgiDev,
+  Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNo,
+  uint32_t pgwSgiPortNo, Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> pgwSgiDev,
   Ptr<NetDevice> webSgiDev)
 {
-  NS_LOG_FUNCTION (this << pgwSwDev << pgwS5PortNum << pgwSgiPortNum <<
+  NS_LOG_FUNCTION (this << pgwSwDev << pgwS5PortNo << pgwSgiPortNo <<
                    pgwS5Dev << pgwSgiDev << webSgiDev);
 
   NS_ASSERT_MSG (!m_pgwDpId, "Only one P-GW allowed on this implementation.");
   m_pgwDpId = pgwSwDev->GetDatapathId ();
-  m_pgwS5Port = pgwS5PortNum;
+  m_pgwS5Port = pgwS5PortNo;
   m_pgwS5Addr = EpcNetwork::GetIpv4Addr (pgwS5Dev);
 
   // Configure SGi port rules.
@@ -186,7 +186,7 @@ EpcController::NotifyPgwAttach (
   // both TEID and eNB address on tunnel metadata.
   std::ostringstream cmdIn;
   cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-        << ",in_port=" << pgwSgiPortNum
+        << ",in_port=" << pgwSgiPortNo
         << ",ip_dst=" << EpcNetwork::m_ueAddr
         << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
         << " goto:1";
@@ -199,10 +199,10 @@ EpcController::NotifyPgwAttach (
   Mac48Address webMac = Mac48Address::ConvertFrom (webSgiDev->GetAddress ());
   std::ostringstream cmdOut;
   cmdOut << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-         << ",in_port=" << pgwS5PortNum
+         << ",in_port=" << pgwS5PortNo
          << ",ip_dst=" << EpcNetwork::GetIpv4Addr (webSgiDev)
          << " write:set_field=eth_dst:" << webMac
-         << ",output=" << pgwSgiPortNum;
+         << ",output=" << pgwSgiPortNo;
   DpctlSchedule (m_pgwDpId, cmdOut.str ());
 
   // Table miss entry. Send to controller.
@@ -217,9 +217,9 @@ EpcController::NotifyPgwAttach (
 
 void
 EpcController::NotifyS5Attach (
-  Ptr<OFSwitch13Device> swtchDev, uint32_t portNum, Ptr<NetDevice> gwDev)
+  Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev)
 {
-  NS_LOG_FUNCTION (this << swtchDev << portNum << gwDev);
+  NS_LOG_FUNCTION (this << swtchDev << portNo << gwDev);
 
   // Configure S5 port rules.
   // -------------------------------------------------------------------------
@@ -232,7 +232,7 @@ EpcController::NotifyS5Attach (
         << " eth_type=0x800,ip_proto=17"
         << ",udp_src=" << EpcNetwork::m_gtpuPort
         << ",udp_dst=" << EpcNetwork::m_gtpuPort
-        << ",in_port=" << portNum
+        << ",in_port=" << portNo
         << " goto:1";
   DpctlSchedule (swtchDev->GetDatapathId (), cmdIn.str ());
 
@@ -247,7 +247,7 @@ EpcController::NotifyS5Attach (
   cmdOut << "flow-mod cmd=add,table=2,prio=256 eth_type=0x800"
          << ",eth_dst=" << gwMac
          << ",ip_dst=" << EpcNetwork::GetIpv4Addr (gwDev)
-         << " write:output=" << portNum
+         << " write:output=" << portNo
          << " goto:4";
   DpctlSchedule (swtchDev->GetDatapathId (), cmdOut.str ());
 }
@@ -333,7 +333,7 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
 
   // Install one downlink dedicated bearer rule for each packet filter
   Ptr<EpcTft> tft = rInfo->GetTft ();
-  for (uint8_t i = 0; i < tft->GetNumFilters (); i++)
+  for (uint8_t i = 0; i < tft->GetNFilters (); i++)
     {
       EpcTft::PacketFilter filter = tft->GetFilter (i);
       if (filter.direction == EpcTft::UPLINK)

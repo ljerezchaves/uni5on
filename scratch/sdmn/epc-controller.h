@@ -91,26 +91,26 @@ public:
    * Notify this controller of a new P-GW connected to the OpenFlow backhaul
    * network. This function will configure the P-GW datapath.
    * \param pgwSwDev The OpenFlow P-GW switch device.
-   * \param pgwS5PortNum The S5 port number on the P-GW OpenFlow switch.
-   * \param pgwSgiPortNum The SGi port number on the P-GW OpenFlow switch.
+   * \param pgwS5PortNo The S5 port number on the P-GW OpenFlow switch.
+   * \param pgwSgiPortNo The SGi port number on the P-GW OpenFlow switch.
    * \param pgwS5Dev The S5 device attached to the P-GW OpenFlow switch.
    * \param pgwSgiDev The SGi device attached to the P-GW OpenFlow switch.
    * \param webSgiDev The SGi device attached to the Web server.
    */
   virtual void NotifyPgwAttach (
-    Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNum,
-    uint32_t pgwSgiPortNum, Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> pgwSgiDev,
+    Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNo,
+    uint32_t pgwSgiPortNo, Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> pgwSgiDev,
     Ptr<NetDevice> webSgiDev);
 
   /**
    * Notify this controller of a new S-GW or P-GW connected to OpenFlow
    * backhaul network over the S5 interface.
    * \param swtchDev The OpenFlow switch device on the backhaul network.
-   * \param portNum The port number created at the OpenFlow switch.
+   * \param portNo The port number created at the OpenFlow switch.
    * \param gwDev The device created at the gateway node.
    */
   virtual void NotifyS5Attach (
-    Ptr<OFSwitch13Device> swtchDev, uint32_t portNum, Ptr<NetDevice> gwDev);
+    Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev);
 
   /**
    * Notify this controller of a new connection between two switches in the
