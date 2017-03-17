@@ -111,7 +111,7 @@ public:
 
   /** \name Private member accessors. */
   //\{
-  Ipv4Address GetSgwS5Address (void) const;
+  Ipv4Address GetSgwS5Addr (void) const;
   EpcS1apSapMme* GetS1apSapMme (void) const;
   EpcS5SapSgw* GetS5SapSgw (void) const;
 

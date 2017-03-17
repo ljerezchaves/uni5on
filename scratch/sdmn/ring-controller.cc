@@ -240,8 +240,8 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
 
       // Building the match string.
       match << " eth_type=0x800,ip_proto=17"
-            << ",ip_src=" << rInfo->GetPgwAddress ()
-            << ",ip_dst=" << rInfo->GetSgwAddress ()
+            << ",ip_src=" << rInfo->GetPgwS5Addr ()
+            << ",ip_dst=" << rInfo->GetSgwS5Addr ()
             << ",gtp_teid=" << rInfo->GetTeid ();
 
       // Check for meter entry.
@@ -285,8 +285,8 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
 
       // Building the match string.
       match << " eth_type=0x800,ip_proto=17"
-            << ",ip_src=" << rInfo->GetSgwAddress ()
-            << ",ip_dst=" << rInfo->GetPgwAddress ()
+            << ",ip_src=" << rInfo->GetSgwS5Addr ()
+            << ",ip_dst=" << rInfo->GetPgwS5Addr ()
             << ",gtp_teid=" << rInfo->GetTeid ();
 
       // Check for meter entry.
@@ -539,8 +539,8 @@ RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
       rInfo->AggregateObject (ringInfo);
 
       // Set internal switch indexes.
-      ringInfo->SetPgwSwIdx  (GetSwitchIndex (rInfo->GetPgwAddress ()));
-      ringInfo->SetSgwSwIdx  (GetSwitchIndex (rInfo->GetSgwAddress ()));
+      ringInfo->SetPgwSwIdx  (GetSwitchIndex (rInfo->GetPgwS5Addr ()));
+      ringInfo->SetSgwSwIdx  (GetSwitchIndex (rInfo->GetSgwS5Addr ()));
       ringInfo->SetPgwSwDpId (GetDpId (ringInfo->GetPgwSwIdx ()));
       ringInfo->SetSgwSwDpId (GetDpId (ringInfo->GetSgwSwIdx ()));
 

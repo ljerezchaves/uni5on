@@ -63,7 +63,6 @@ SdranController::RequestDedicatedBearer (
   EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
-
   // TODO
   return m_epcCtrlApp->RequestDedicatedBearer (bearer, teid);
 }
@@ -73,7 +72,6 @@ SdranController::ReleaseDedicatedBearer (
   EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
-
   // TODO
   return m_epcCtrlApp->ReleaseDedicatedBearer (bearer, teid);
 }
@@ -97,12 +95,11 @@ SdranController::NotifyEnbAttach (
 
   // Register this controller by cell ID for further usage.
   RegisterController (Ptr<SdranController> (this), cellId);
-
   // TODO
 }
 
 Ipv4Address
-SdranController::GetSgwS5Address (void) const
+SdranController::GetSgwS5Addr (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -175,7 +172,6 @@ bool
 SdranController::InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
-
   // TODO
   return true;
 }
@@ -247,7 +243,7 @@ SdranController::DoModifyBearerRequest (
 
   Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  ueInfo->SetEnbAddress (enbInfo->GetEnbAddress ());
+  ueInfo->SetEnbS1uAddr (enbInfo->GetEnbS1uAddr ());
 
   // In current implementation, this Modify Bearer Request is triggered only by
   // X2 handover procedures. There is no actual bearer modification, for now we

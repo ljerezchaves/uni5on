@@ -174,8 +174,8 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
 
   // Set S1-U IPv4 address for the devices.
   Ipv4InterfaceContainer s1uIpIfaces = m_s1uAddrHelper.Assign (devices);
-  Ipv4Address sgwAddress = s1uIpIfaces.GetAddress (0);
-  Ipv4Address enbAddress = s1uIpIfaces.GetAddress (1);
+  Ipv4Address sgwS1uAddr = s1uIpIfaces.GetAddress (0);
+  Ipv4Address enbS1uAddr = s1uIpIfaces.GetAddress (1);
   m_s1uAddrHelper.NewNetwork ();
 
   // Create the virtual net device to work as the logical port on the S-GW S1-U
@@ -200,7 +200,7 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   // Create the S1-U socket for the eNB
   Ptr<Socket> enbS1uSocket = Socket::CreateSocket (
       enb, TypeId::LookupByName ("ns3::UdpSocketFactory"));
-  enbS1uSocket->Bind (InetSocketAddress (enbAddress, EpcNetwork::m_gtpuPort));
+  enbS1uSocket->Bind (InetSocketAddress (enbS1uAddr, EpcNetwork::m_gtpuPort));
 
   // Create the LTE socket for the eNB
   Ptr<Socket> enbLteSocket = Socket::CreateSocket (
@@ -218,7 +218,7 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
 
   // Create the eNB application
   Ptr<EpcEnbApplication> enbApp = CreateObject<EpcEnbApplication> (
-      enbLteSocket, enbS1uSocket, enbAddress, sgwAddress, cellId);
+      enbLteSocket, enbS1uSocket, enbS1uAddr, sgwS1uAddr, cellId);
   enb->AddApplication (enbApp);
   NS_ASSERT (enb->GetNApplications () == 1);
 
@@ -227,108 +227,18 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
 
   // Create the eNB info.
   Ptr<EnbInfo> enbInfo = CreateObject<EnbInfo> (cellId);
-  enbInfo->SetEnbAddress (enbAddress);
-  enbInfo->SetSgwAddress (sgwAddress);
+  enbInfo->SetEnbS1uAddr (enbS1uAddr);
+  enbInfo->SetSgwS1uAddr (sgwS1uAddr);
   enbInfo->SetS1apSapEnb (enbApp->GetS1apSapEnb ());
 
   enbApp->SetS1apSapMme (m_sdranCtrlApp->GetS1apSapMme ());
 }
 
-// NetDeviceContainer
-// SdranCloud::X2Attach (Ptr<Node> enb1, Ptr<Node> enb2)
-// {
-//   NS_LOG_FUNCTION (this << enb1 << enb2);
-//
-//   NS_ASSERT (m_ofSwitches.GetN () == m_ofDevices.GetN ());
-//
-//   // Create a P2P connection between the eNBs.
-//   PointToPointHelper p2ph;
-//   p2ph.SetDeviceAttribute ("DataRate", DataRateValue (DataRate ("100Mbps")));
-//   p2ph.SetDeviceAttribute ("Mtu", UintegerValue (2000));
-//   p2ph.SetChannelAttribute ("Delay", TimeValue (Seconds (0)));
-//   NetDeviceContainer enbDevices =  p2ph.Install (enb1, enb2);
-//
-//   // // TODO Creating a link between the firts eNB and its switch
-//   // uint16_t swIdx1 = GetSwitchIdxForNode (enb1);
-//   // Ptr<Node> swNode1 = m_ofSwitches.Get (swIdx1);
-//   // Ptr<OFSwitch13Device> swDev1 = GetSwitchDevice (swIdx1);
-//
-//   // NodeContainer pair1;
-//   // pair1.Add (swNode1);
-//   // pair1.Add (enb1);
-//   // NetDeviceContainer devices1 = m_swHelper.Install (pair1);
-//
-//   // Ptr<CsmaNetDevice> portDev1, enbDev1;
-//   // portDev1 = DynamicCast<CsmaNetDevice> (devices1.Get (0));
-//   // enbDev1 = DynamicCast<CsmaNetDevice> (devices1.Get (1));
-//
-//   // // Creating a link between the second eNB and its switch
-//   // uint16_t swIdx2 = GetSwitchIdxForNode (enb2);
-//   // Ptr<Node> swNode2 = m_ofSwitches.Get (swIdx2);
-//   // Ptr<OFSwitch13Device> swDev2 = GetSwitchDevice (swIdx2);
-//
-//   // NodeContainer pair2;
-//   // pair2.Add (swNode2);
-//   // pair2.Add (enb2);
-//   // NetDeviceContainer devices2 = m_swHelper.Install (pair2);
-//
-//   // Ptr<CsmaNetDevice> portDev2, enbDev2;
-//   // portDev2 = DynamicCast<CsmaNetDevice> (devices2.Get (0));
-//   // enbDev2 = DynamicCast<CsmaNetDevice> (devices2.Get (1));
-//
-//   // // Set X2 IPv4 address for the new devices
-//   // NetDeviceContainer enbDevices;
-//   // enbDevices.Add (enbDev1);
-//   // enbDevices.Add (enbDev2);
-//
-//   Ipv4InterfaceContainer nodeIpIfaces = m_x2AddrHelper.Assign (enbDevices);
-//   m_x2AddrHelper.NewNetwork ();
-//   // Ipv4Address nodeAddr1 = nodeIpIfaces.GetAddress (0);
-//   // Ipv4Address nodeAddr2 = nodeIpIfaces.GetAddress (1);
-//
-//   // // Adding newly created csma devices as openflow switch ports.
-//   // Ptr<OFSwitch13Port> swPort1 = swDev1->AddSwitchPort (portDev1);
-//   // uint32_t portNum1 = swPort1->GetPortNo ();
-//
-//   // Ptr<OFSwitch13Port> swPort2 = swDev2->AddSwitchPort (portDev2);
-//   // uint32_t portNum2 = swPort2->GetPortNo ();
-//
-//   // // Trace source notifying new devices attached to the network
-//   // m_newAttachTrace (enbDev1, nodeAddr1, swDev1, swIdx1, portNum1);
-//   // m_newAttachTrace (enbDev2, nodeAddr2, swDev2, swIdx2, portNum2);
-//
-//   return enbDevices;
-// }
-
 void
 SdranCloud::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
 {
   NS_LOG_FUNCTION (this << enb1 << enb2);
-
-//  // Callback the OpenFlow network to connect each eNB to the network.
-//  NetDeviceContainer enbDevices;
-//  enbDevices = X2Attach (enb1, enb2);
-//  m_x2Devices.Add (enbDevices);
-//
-//  Ipv4Address enb1X2Address = GetAddressForDevice (enbDevices.Get (0));
-//  Ipv4Address enb2X2Address = GetAddressForDevice (enbDevices.Get (1));
-//
-//  // Add X2 interface to both eNBs' X2 entities
-//  Ptr<EpcX2> enb1X2 = enb1->GetObject<EpcX2> ();
-//  Ptr<LteEnbNetDevice> enb1LteDev = enb1->GetDevice (0)->GetObject<LteEnbNetDevice> ();
-//  uint16_t enb1CellId = enb1LteDev->GetCellId ();
-//  NS_LOG_DEBUG ("LteEnbNetDevice #1 = " << enb1LteDev << " - CellId = " << enb1CellId);
-//
-//  Ptr<EpcX2> enb2X2 = enb2->GetObject<EpcX2> ();
-//  Ptr<LteEnbNetDevice> enb2LteDev = enb2->GetDevice (0)->GetObject<LteEnbNetDevice> ();
-//  uint16_t enb2CellId = enb2LteDev->GetCellId ();
-//  NS_LOG_DEBUG ("LteEnbNetDevice #2 = " << enb2LteDev << " - CellId = " << enb2CellId);
-//
-//  enb1X2->AddX2Interface (enb1CellId, enb1X2Address, enb2CellId, enb2X2Address);
-//  enb2X2->AddX2Interface (enb2CellId, enb2X2Address, enb1CellId, enb1X2Address);
-//
-//  enb1LteDev->GetRrc ()->AddX2Neighbour (enb2LteDev->GetCellId ());
-//  enb2LteDev->GetRrc ()->AddX2Neighbour (enb1LteDev->GetCellId ());
+  // TODO
 }
 
 void

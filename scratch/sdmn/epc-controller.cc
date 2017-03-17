@@ -321,7 +321,7 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
       << ",idle=" << rInfo->GetTimeout ();
 
   // Printing TEID and destination IPv4 address into tunnel metadata
-  uint64_t tunnelId = (uint64_t)rInfo->GetSgwAddress ().Get () << 32;
+  uint64_t tunnelId = (uint64_t)rInfo->GetSgwS5Addr ().Get () << 32;
   tunnelId |= rInfo->GetTeid ();
   char tunnelIdStr [12];
   sprintf (tunnelIdStr, "0x%016lX", tunnelId);
@@ -578,7 +578,7 @@ EpcController::DoCreateSessionRequest (
   Ptr<SdranController> sdranCtrl = SdranController::GetPointer (cellId);
   Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  ueInfo->SetEnbAddress (enbInfo->GetEnbAddress ());
+  ueInfo->SetEnbS1uAddr (enbInfo->GetEnbS1uAddr ());
 
   // Create the response message.
   EpcS11SapMme::CreateSessionResponseMessage res;
@@ -593,7 +593,7 @@ EpcController::DoCreateSessionRequest (
       uint32_t teid = ++EpcController::m_teidCount;
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.teid = teid;
-      bearerContext.sgwFteid.address = enbInfo->GetSgwAddress ();
+      bearerContext.sgwFteid.address = enbInfo->GetSgwS1uAddr ();
       bearerContext.epsBearerId = bit->epsBearerId;
       bearerContext.bearerLevelQos = bit->bearerLevelQos;
       bearerContext.tft = bit->tft;
@@ -612,8 +612,8 @@ EpcController::DoCreateSessionRequest (
   rInfo = CreateObject<RoutingInfo> (teid);
   rInfo->SetImsi (imsi);
   rInfo->SetCellId (cellId);
-  rInfo->SetPgwAddress (m_pgwS5Addr);
-  rInfo->SetSgwAddress (sdranCtrl->GetSgwS5Address ());
+  rInfo->SetPgwS5Addr (m_pgwS5Addr);
+  rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
   rInfo->SetPriority (0x7F);             // Priority for default bearer
   rInfo->SetTimeout (0);                 // No timeout for default bearer
   rInfo->SetInstalled (false);           // Bearer rules not installed yet
@@ -642,8 +642,8 @@ EpcController::DoCreateSessionRequest (
       rInfo = CreateObject<RoutingInfo> (teid);
       rInfo->SetImsi (imsi);
       rInfo->SetCellId (cellId);
-      rInfo->SetPgwAddress (m_pgwS5Addr);
-      rInfo->SetSgwAddress (sdranCtrl->GetSgwS5Address ());
+      rInfo->SetPgwS5Addr (m_pgwS5Addr);
+      rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
       rInfo->SetPriority (0x1FFF);          // Priority for dedicated bearer
       rInfo->SetTimeout (m_flowTimeout);    // Timeout for dedicated bearer
       rInfo->SetInstalled (false);          // Bearer rules not installed yet

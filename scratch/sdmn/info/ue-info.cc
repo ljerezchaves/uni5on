@@ -38,7 +38,7 @@ UeInfo::UeInfo (uint64_t imsi)
   NS_LOG_FUNCTION (this);
 
   m_ueAddr  = Ipv4Address ();
-  m_enbAddr = Ipv4Address ();
+  m_enbS1uAddr = Ipv4Address ();
 
   RegisterUeInfo (Ptr<UeInfo> (this));
 }
@@ -66,7 +66,7 @@ UeInfo::GetImsi (void) const
 }
 
 Ipv4Address
-UeInfo::GetUeAddress (void) const
+UeInfo::GetUeAddr (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -74,11 +74,11 @@ UeInfo::GetUeAddress (void) const
 }
 
 Ipv4Address
-UeInfo::GetEnbAddress (void) const
+UeInfo::GetEnbS1uAddr (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_enbAddr;
+  return m_enbS1uAddr;
 }
 
 uint64_t
@@ -106,7 +106,7 @@ UeInfo::GetCellId (void) const
 }
 
 void
-UeInfo::SetUeAddress (Ipv4Address value)
+UeInfo::SetUeAddr (Ipv4Address value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -114,11 +114,11 @@ UeInfo::SetUeAddress (Ipv4Address value)
 }
 
 void
-UeInfo::SetEnbAddress (Ipv4Address value)
+UeInfo::SetEnbS1uAddr (Ipv4Address value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_enbAddr = value;
+  m_enbS1uAddr = value;
 }
 
 void

@@ -226,7 +226,7 @@ EpcNetwork::NotifyConstructionCompleted (void)
 
   // Set the default P-GW gateway logical address, which will be used to set
   // the static route at all UEs.
-  m_pgwUeGatewayAddr = m_ueAddrHelper.NewAddress ();
+  m_pgwAddr = m_ueAddrHelper.NewAddress ();
   NS_LOG_DEBUG ("P-GW gateway address: " << GetUeDefaultGatewayAddress ());
 
   // Create the OFSwitch13 helper using p2p connections for OpenFlow channel.
@@ -388,7 +388,7 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
   NS_ASSERT (ueIpv4->GetNAddresses (interface) == 1);
 
   Ipv4Address ueAddr = ueIpv4->GetAddress (interface, 0).GetLocal ();
-  UeInfo::GetPointer (imsi)->SetUeAddress (ueAddr);
+  UeInfo::GetPointer (imsi)->SetUeAddr (ueAddr);
 
   NS_LOG_DEBUG ("Activate EPS bearer UE IP address: " << ueAddr);
 
@@ -478,7 +478,7 @@ EpcNetwork::GetUeDefaultGatewayAddress ()
 {
   NS_LOG_FUNCTION (this);
 
-  return m_pgwUeGatewayAddr;
+  return m_pgwAddr;
 }
 
 Ipv4Address

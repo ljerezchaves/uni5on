@@ -51,12 +51,12 @@ public:
   /** \name Private member accessors. */
   //\{
   uint16_t GetCellId (void) const;
-  Ipv4Address GetEnbAddress (void) const;
-  Ipv4Address GetSgwAddress (void) const;
+  Ipv4Address GetEnbS1uAddr (void) const;
+  Ipv4Address GetSgwS1uAddr (void) const;
   EpcS1apSapEnb* GetS1apSapEnb (void) const;
 
-  void SetEnbAddress (Ipv4Address value);
-  void SetSgwAddress (Ipv4Address value);
+  void SetEnbS1uAddr (Ipv4Address value);
+  void SetSgwS1uAddr (Ipv4Address value);
   void SetS1apSapEnb (EpcS1apSapEnb* value);
   //\}
 
@@ -79,8 +79,8 @@ private:
   static void RegisterEnbInfo (Ptr<EnbInfo> enbInfo);
 
   uint16_t               m_cellId;               //!< eNB cell ID.
-  Ipv4Address            m_enbAddr;              //!< eNB S1-U IP address.
-  Ipv4Address            m_sgwAddr;              //!< S-GW S1-U IP address.
+  Ipv4Address            m_enbS1uAddr;           //!< eNB S1-U IP address.
+  Ipv4Address            m_sgwS1uAddr;           //!< S-GW S1-U IP address.
   EpcS1apSapEnb*         m_s1apSapEnb;           //!< S1-AP eNB SAP provider.
 
   /** Map saving cell ID / eNB information. */

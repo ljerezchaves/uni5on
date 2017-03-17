@@ -33,8 +33,8 @@ EnbInfo::EnbInfo (uint16_t cellId)
 {
   NS_LOG_FUNCTION (this);
 
-  m_enbAddr = Ipv4Address ();
-  m_sgwAddr = Ipv4Address ();
+  m_enbS1uAddr = Ipv4Address ();
+  m_sgwS1uAddr = Ipv4Address ();
 
   RegisterEnbInfo (Ptr<EnbInfo> (this));
 }
@@ -62,19 +62,19 @@ EnbInfo::GetCellId (void) const
 }
 
 Ipv4Address
-EnbInfo::GetEnbAddress (void) const
+EnbInfo::GetEnbS1uAddr (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_enbAddr;
+  return m_enbS1uAddr;
 }
 
 Ipv4Address
-EnbInfo::GetSgwAddress (void) const
+EnbInfo::GetSgwS1uAddr (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_sgwAddr;
+  return m_sgwS1uAddr;
 }
 
 EpcS1apSapEnb*
@@ -86,19 +86,19 @@ EnbInfo::GetS1apSapEnb (void) const
 }
 
 void
-EnbInfo::SetEnbAddress (Ipv4Address value)
+EnbInfo::SetEnbS1uAddr (Ipv4Address value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_enbAddr = value;
+  m_enbS1uAddr = value;
 }
 
 void
-EnbInfo::SetSgwAddress (Ipv4Address value)
+EnbInfo::SetSgwS1uAddr (Ipv4Address value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_sgwAddr = value;
+  m_sgwS1uAddr = value;
 }
 
 void

@@ -64,8 +64,8 @@ public:
   uint32_t GetTeid (void) const;
   uint64_t GetImsi (void) const;
   uint16_t GetCellId (void) const;
-  Ipv4Address GetSgwAddress (void) const;
-  Ipv4Address GetPgwAddress (void) const;
+  Ipv4Address GetSgwS5Addr (void) const;
+  Ipv4Address GetPgwS5Addr (void) const;
   uint16_t GetPriority (void) const;
   uint16_t GetTimeout (void) const;
   bool IsDefault (void) const;
@@ -74,8 +74,8 @@ public:
 
   void SetImsi (uint64_t value);
   void SetCellId (uint16_t value);
-  void SetPgwAddress (Ipv4Address value);
-  void SetSgwAddress (Ipv4Address value);
+  void SetPgwS5Addr (Ipv4Address value);
+  void SetSgwS5Addr (Ipv4Address value);
   void SetPriority (uint16_t value);
   void SetTimeout (uint16_t value);
   void SetDefault (bool value);
@@ -131,8 +131,8 @@ private:
   uint32_t          m_teid;         //!< GTP TEID.
   uint64_t          m_imsi;         //!< UE IMSI.
   uint16_t          m_cellId;       //!< eNB cell ID.
-  Ipv4Address       m_pgwAddr;      //!< P-GW S5 IPv4 address.
-  Ipv4Address       m_sgwAddr;      //!< S-GW S5 IPv4 address.
+  Ipv4Address       m_pgwS5Addr;    //!< P-GW S5 IPv4 address.
+  Ipv4Address       m_sgwS5Addr;    //!< S-GW S5 IPv4 address.
   uint16_t          m_priority;     //!< Flow priority.
   uint16_t          m_timeout;      //!< Flow idle timeout.
   bool              m_isDefault;    //!< This info is for default bearer.

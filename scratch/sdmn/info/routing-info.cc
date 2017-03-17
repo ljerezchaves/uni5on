@@ -40,8 +40,8 @@ RoutingInfo::RoutingInfo (uint32_t teid)
 {
   NS_LOG_FUNCTION (this);
 
-  m_sgwAddr = Ipv4Address ();
-  m_pgwAddr = Ipv4Address ();
+  m_sgwS5Addr = Ipv4Address ();
+  m_pgwS5Addr = Ipv4Address ();
 
   RegisterRoutingInfo (Ptr<RoutingInfo> (this));
 }
@@ -85,19 +85,19 @@ RoutingInfo::GetCellId (void) const
 }
 
 Ipv4Address
-RoutingInfo::GetSgwAddress (void) const
+RoutingInfo::GetSgwS5Addr (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_sgwAddr;
+  return m_sgwS5Addr;
 }
 
 Ipv4Address
-RoutingInfo::GetPgwAddress (void) const
+RoutingInfo::GetPgwS5Addr (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_pgwAddr;
+  return m_pgwS5Addr;
 }
 
 uint16_t
@@ -157,19 +157,19 @@ RoutingInfo::SetCellId (uint16_t value)
 }
 
 void
-RoutingInfo::SetPgwAddress (Ipv4Address value)
+RoutingInfo::SetPgwS5Addr (Ipv4Address value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_pgwAddr = value;
+  m_pgwS5Addr = value;
 }
 
 void
-RoutingInfo::SetSgwAddress (Ipv4Address value)
+RoutingInfo::SetSgwS5Addr (Ipv4Address value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_sgwAddr = value;
+  m_sgwS5Addr = value;
 }
 
 void

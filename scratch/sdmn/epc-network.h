@@ -213,7 +213,7 @@ private:
 
   // P-GW user plane.
   Ptr<Node>                     m_pgwNode;          //!< P-GW user-plane node.
-  Ipv4Address                   m_pgwUeGatewayAddr; //!< P-GW gateway addr.
+  Ipv4Address                   m_pgwAddr;          //!< P-GW gateway addr.
 
   // Internet web server.
   Ptr<Node>                     m_webNode;          //!< Web server node.
