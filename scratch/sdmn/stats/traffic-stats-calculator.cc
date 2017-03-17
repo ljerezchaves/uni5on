@@ -46,10 +46,10 @@ TrafficStatsCalculator::TrafficStatsCalculator ()
     "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uTx",
     MakeCallback (&TrafficStatsCalculator::EpcInputPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::PgwUserApp/S5Rx",
+    "/NodeList/*/ApplicationList/*/$ns3::PgwApp/S5Rx",
     MakeCallback (&TrafficStatsCalculator::EpcOutputPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::PgwUserApp/S5Tx",
+    "/NodeList/*/ApplicationList/*/$ns3::PgwApp/S5Tx",
     MakeCallback (&TrafficStatsCalculator::EpcInputPacket, this));
   Config::Connect (
     "/NodeList/*/$ns3::OFSwitch13Device/MeterDrop",

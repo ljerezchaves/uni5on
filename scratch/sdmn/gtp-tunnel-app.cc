@@ -37,6 +37,9 @@ GtpTunnelApp::GtpTunnelApp (Ptr<VirtualNetDevice> logicalPort,
   m_logicalPort->SetSendCallback (
     MakeCallback (&GtpTunnelApp::RecvFromLogicalPort, this));
   m_physicalDev = physicalDev;
+
+  m_txSocket = MakeNullCallback<void, Ptr<Packet>, uint32_t> ();
+  m_rxSocket = MakeNullCallback<void, Ptr<Packet>, uint32_t> ();
 }
 
 GtpTunnelApp::~GtpTunnelApp ()
@@ -49,14 +52,6 @@ GtpTunnelApp::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::GtpTunnelApp")
     .SetParent<Application> ()
-    .AddTraceSource ("RxTunnelSocket",
-                     "Trace source for packets received from tunnel socket.",
-                     MakeTraceSourceAccessor (&GtpTunnelApp::m_rxSocketTrace),
-                     "ns3::GtpTunnelApp::PacketTeidTracedCallback")
-    .AddTraceSource ("TxTunnelSocket",
-                     "Trace source for packets sent to the tunnel socket.",
-                     MakeTraceSourceAccessor (&GtpTunnelApp::m_txSocketTrace),
-                     "ns3::GtpTunnelApp::PacketTeidTracedCallback")
   ;
   return tid;
 }
@@ -67,7 +62,7 @@ GtpTunnelApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
 {
   NS_LOG_FUNCTION (this << packet << source << dest << protocolNo);
 
-  // Retrieve the GTP TEID from TunnelId tag.
+  // Remove the TunnelId tag with TEID value and destination address.
   TunnelIdTag tunnelIdTag;
   bool foud = packet->RemovePacketTag (tunnelIdTag);
   NS_ASSERT_MSG (foud, "Expected TunnelId tag not found.");
@@ -77,6 +72,7 @@ GtpTunnelApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
   uint64_t tagValue = tunnelIdTag.GetTunnelId ();
   uint32_t teid = tagValue;
   Ipv4Address ipv4Addr (tagValue >> 32);
+  InetSocketAddress inetAddr (ipv4Addr, EpcNetwork::m_gtpuPort);
 
   // Add the GTP header.
   GtpuHeader gtpu;
@@ -84,13 +80,17 @@ GtpTunnelApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
   gtpu.SetLength (packet->GetSize () + gtpu.GetSerializedSize () - 8);
   packet->AddHeader (gtpu);
 
-  m_txSocketTrace (packet, teid);
+  // Socket TX callback.
+  if (!m_txSocket.IsNull ())
+    {
+      m_txSocket (packet, teid);
+    }
+
   NS_LOG_DEBUG ("Send packet " << packet->GetUid () <<
                 " to tunnel with TEID " << teid <<
                 " IP " << ipv4Addr << " port " << EpcNetwork::m_gtpuPort);
 
   // Send the packet to the tunnel socket.
-  InetSocketAddress inetAddr (ipv4Addr, EpcNetwork::m_gtpuPort);
   int bytes = m_tunnelSocket->SendTo (packet, 0, inetAddr);
   if (bytes != (int)packet->GetSize ())
     {
@@ -107,12 +107,17 @@ GtpTunnelApp::RecvFromTunnelSocket (Ptr<Socket> socket)
 
   NS_ASSERT (socket == m_tunnelSocket);
   Ptr<Packet> packet = socket->Recv ();
+  GtpuHeader gtpu;
+
+  // Socket RX callback.
+  if (!m_rxSocket.IsNull ())
+    {
+      packet->PeekHeader (gtpu);
+      m_rxSocket (packet, gtpu.GetTeid ());
+    }
 
   // Remove the GTP header.
-  GtpuHeader gtpu;
   packet->RemoveHeader (gtpu);
-
-  m_rxSocketTrace (packet, gtpu.GetTeid ());
   NS_LOG_DEBUG ("Received packet " << packet->GetUid () <<
                 " from tunnel with TEID " << gtpu.GetTeid ());
 

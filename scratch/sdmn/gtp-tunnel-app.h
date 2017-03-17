@@ -37,6 +37,12 @@ namespace ns3 {
  * port and UDP socket. This application is stateless: it only adds/removes
  * protocols headers over packets leaving/entering the OpenFlow switch based on
  * information that is carried by packet tags.
+ *
+ * When sending a packet to the GTP tunnel, this application expects that the
+ * packet carries the TunnelId tag set with the destination address in the 32
+ * MSB and the TEID in the 32 LSB of packet tag. When a packet is received from
+ * the GTP tunnel, this application attachs the TunnelId tag only with the GTP
+ * TEID value.
  */
 class GtpTunnelApp : public Application
 {
@@ -79,11 +85,11 @@ public:
   void RecvFromTunnelSocket (Ptr<Socket> socket);
 
   /**
-   * TracedCallback signature for tunnel packets.
-   * \param packet True packet.
+   * Callback signature for packet received/sent to tunnel socket.
+   * \param packet The packet.
    * \param teid The tunnel TEID for this packet.
    */
-  typedef void (*PacketTeidTracedCallback)(Ptr<Packet> packet, uint32_t teid);
+  typedef Callback<void, Ptr<Packet>, uint32_t> PacketTeidCallback;
 
 protected:
   /** Destructor implementation. */
@@ -91,6 +97,9 @@ protected:
 
   // Inherited from Application.
   virtual void StartApplication (void);
+
+  PacketTeidCallback m_rxSocket;    //!< Tunnel socket rx callback.
+  PacketTeidCallback m_txSocket;    //!< Tunnel socket tx callback.
 
 private:
   /**
@@ -103,12 +112,6 @@ private:
   void AddHeader (Ptr<Packet> packet, Mac48Address source = Mac48Address (),
                   Mac48Address dest = Mac48Address (),
                   uint16_t protocolNo = Ipv4L3Protocol::PROT_NUMBER);
-
-  /** Trace source fired when a packet is received from the tunnel socket. */
-  TracedCallback<Ptr<Packet>, uint32_t> m_rxSocketTrace;
-
-  /** Trace source fired when a packet is sent to the tunnel socket. */
-  TracedCallback<Ptr<Packet>, uint32_t> m_txSocketTrace;
 
   Ptr<Socket>           m_tunnelSocket;   //!< UDP tunnel socket.
   Ptr<VirtualNetDevice> m_logicalPort;    //!< OpenFlow logical port device.
