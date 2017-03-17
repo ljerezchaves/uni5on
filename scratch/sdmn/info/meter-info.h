@@ -54,12 +54,14 @@ public:
   /** \name Private member accessors. */
   //\{
   uint32_t GetTeid (void) const;
-  bool IsInstalled (void) const;
+  bool IsDownInstalled (void) const;
+  bool IsUpInstalled (void) const;
   bool HasDown (void) const;
   bool HasUp (void) const;
   Ptr<RoutingInfo> GetRoutingInfo (void) const;
 
-  void SetInstalled (bool value);
+  void SetDownInstalled (bool value);
+  void SetUpInstalled (bool value);
   //\}
 
   /**
@@ -77,13 +79,14 @@ protected:
   virtual void DoDispose ();
 
 private:
-  uint32_t          m_teid;           //!< GTP TEID.
-  bool              m_isInstalled;    //!< True when this meter is installed.
-  bool              m_hasDown;        //!< True for downlink meter.
-  bool              m_hasUp;          //!< True for uplink meter.
-  uint64_t          m_downBitRate;    //!< Downlink meter drop bit rate (bps).
-  uint64_t          m_upBitRate;      //!< Uplink meter drop bit rate (bps).
-  Ptr<RoutingInfo>  m_rInfo;          //!< Routing information.
+  uint32_t          m_teid;            //!< GTP TEID.
+  bool              m_isDownInstalled; //!< True when this meter is installed.
+  bool              m_isUpInstalled;   //!< True when this meter is installed.
+  bool              m_hasDown;         //!< True for downlink meter.
+  bool              m_hasUp;           //!< True for uplink meter.
+  uint64_t          m_downBitRate;     //!< Downlink meter drop bit rate (bps).
+  uint64_t          m_upBitRate;       //!< Uplink meter drop bit rate (bps).
+  Ptr<RoutingInfo>  m_rInfo;           //!< Routing information.
 };
 
 };  // namespace ns3

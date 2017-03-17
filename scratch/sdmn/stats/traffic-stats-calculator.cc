@@ -307,6 +307,7 @@ TrafficStatsCalculator::MeterDropPacket (std::string context,
 {
   NS_LOG_FUNCTION (this << context << packet);
 
+  // FIXME No EpcGtpuTag available for meter drop on downlink traffic at P-GW.
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {

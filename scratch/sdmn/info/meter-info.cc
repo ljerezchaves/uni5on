@@ -27,7 +27,8 @@ NS_LOG_COMPONENT_DEFINE ("MeterInfo");
 NS_OBJECT_ENSURE_REGISTERED (MeterInfo);
 
 MeterInfo::MeterInfo (Ptr<RoutingInfo> rInfo)
-  : m_isInstalled (false),
+  : m_isDownInstalled (false),
+    m_isUpInstalled (false),
     m_hasDown (false),
     m_hasUp (false),
     m_downBitRate (0),
@@ -73,11 +74,19 @@ MeterInfo::GetTeid (void) const
 }
 
 bool
-MeterInfo::IsInstalled (void) const
+MeterInfo::IsDownInstalled (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isInstalled;
+  return m_isDownInstalled;
+}
+
+bool
+MeterInfo::IsUpInstalled (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_isUpInstalled;
 }
 
 bool
@@ -105,11 +114,19 @@ MeterInfo::GetRoutingInfo (void) const
 }
 
 void
-MeterInfo::SetInstalled (bool value)
+MeterInfo::SetDownInstalled (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_isInstalled = value;
+  m_isDownInstalled = value;
+}
+
+void
+MeterInfo::SetUpInstalled (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isUpInstalled = value;
 }
 
 std::string

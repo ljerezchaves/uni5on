@@ -303,16 +303,22 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS
+  // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0007");
 
-  // Printing the cookie and buffer values in dpctl string format
+  // Print the cookie and buffer values in dpctl string format.
   char cookieStr [9], bufferStr [12];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
   sprintf (bufferStr, "%u", OFP_NO_BUFFER);
 
-  // Building the dpctl command + arguments string
-  std::ostringstream cmd;
+  // Print downlink TEID and destination IPv4 address into tunnel metadata.
+  uint64_t tunnelId = (uint64_t)rInfo->GetSgwS5Addr ().Get () << 32;
+  tunnelId |= rInfo->GetTeid ();
+  char tunnelIdStr [17];
+  sprintf (tunnelIdStr, "0x%016lX", tunnelId);
+
+  // Build the dpctl command string
+  std::ostringstream cmd, act;
   cmd << "flow-mod cmd=add,table=1"
       << ",buffer=" << bufferStr
       << ",flags=" << flagsStr
@@ -320,18 +326,26 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
       << ",prio=" << rInfo->GetPriority ()
       << ",idle=" << rInfo->GetTimeout ();
 
-  // Printing TEID and destination IPv4 address into tunnel metadata
-  uint64_t tunnelId = (uint64_t)rInfo->GetSgwS5Addr ().Get () << 32;
-  tunnelId |= rInfo->GetTeid ();
-  char tunnelIdStr [17];
-  sprintf (tunnelIdStr, "0x%016lX", tunnelId);
+  // Check for meter entry.
+  Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
+  if (meterInfo && meterInfo->HasDown ())
+    {
+      if (!meterInfo->IsDownInstalled ())
+        {
+          // Install the per-flow meter entry.
+          DpctlExecute (m_pgwDpId, meterInfo->GetDownAddCmd ());
+          meterInfo->SetDownInstalled (true);
+        }
 
-  // Build instruction string
-  std::ostringstream act;
+      // Instruction: meter.
+      act << " meter:" << rInfo->GetTeid ();
+    }
+
+  // Instruction: apply action: set tunnel ID, output port.
   act << " apply:set_field=tunn_id:" << tunnelIdStr
       << ",output=" << m_pgwS5Port;
 
-  // Install one downlink dedicated bearer rule for each packet filter
+  // Install one downlink dedicated bearer rule for each packet filter.
   Ptr<EpcTft> tft = rInfo->GetTft ();
   for (uint8_t i = 0; i < tft->GetNFilters (); i++)
     {
@@ -341,7 +355,7 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
           continue;
         }
 
-      // Install rules for TCP traffic
+      // Install rules for TCP traffic.
       if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
         {
           std::ostringstream match;
@@ -360,7 +374,7 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
           DpctlExecute (m_pgwDpId, cmdTcpStr);
         }
 
-      // Install rules for UDP traffic
+      // Install rules for UDP traffic.
       else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
         {
           std::ostringstream match;

@@ -202,10 +202,8 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
 
   NS_ASSERT_MSG (rInfo->IsActive (), "Rule not active.");
 
-  // Getting rInfo associated metadata.
+  // Getting ring routing information.
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
-  Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
-  bool meterInstalled = false;
 
   // Increasing the priority every time we (re)install routing rules.
   rInfo->IncreasePriority ();
@@ -244,20 +242,6 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
             << ",ip_dst=" << rInfo->GetSgwS5Addr ()
             << ",gtp_teid=" << rInfo->GetTeid ();
 
-      // Check for meter entry.
-      if (meterInfo && meterInfo->HasDown ())
-        {
-          if (!meterInfo->IsInstalled ())
-            {
-              // Install the per-flow meter entry.
-              DpctlExecute (GetDpId (swIdx), meterInfo->GetDownAddCmd ());
-              meterInstalled = true;
-            }
-
-          // Building the per-flow meter instruction string.
-          act << " meter:" << rInfo->GetTeid ();
-        }
-
       // For GBR bearers, mark the IP DSCP field.
       if (rInfo->IsGbr ())
         {
@@ -289,20 +273,6 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
             << ",ip_dst=" << rInfo->GetPgwS5Addr ()
             << ",gtp_teid=" << rInfo->GetTeid ();
 
-      // Check for meter entry.
-      if (meterInfo && meterInfo->HasUp ())
-        {
-          if (!meterInfo->IsInstalled ())
-            {
-              // Install the per-flow meter entry.
-              DpctlExecute (GetDpId (swIdx), meterInfo->GetUpAddCmd ());
-              meterInstalled = true;
-            }
-
-          // Building the per-flow meter instruction string.
-          act << " meter:" << rInfo->GetTeid ();
-        }
-
       // For GBR bearers, mark the IP DSCP field.
       if (rInfo->IsGbr ())
         {
@@ -318,12 +288,6 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
       // Installing the rule into input switch.
       std::string commandStr = cmd.str () + match.str () + act.str ();
       DpctlExecute (GetDpId (swIdx), commandStr);
-    }
-
-  // Updating meter installation flag.
-  if (meterInstalled)
-    {
-      meterInfo->SetInstalled (true);
     }
 
   rInfo->SetInstalled (true);
@@ -343,21 +307,21 @@ RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
 
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
-  if (meterInfo && meterInfo->IsInstalled ())
-    {
-      NS_LOG_DEBUG ("Removing meter entries.");
-      if (meterInfo->HasDown ())
-        {
-          DpctlExecute (GetDpId (ringInfo->GetPgwSwIdx ()),
-                        meterInfo->GetDelCmd ());
-        }
-      if (meterInfo->HasUp ())
-        {
-          DpctlExecute (GetDpId (ringInfo->GetSgwSwIdx ()),
-                        meterInfo->GetDelCmd ());
-        }
-      meterInfo->SetInstalled (false);
-    }
+//  if (meterInfo && meterInfo->IsInstalled ())
+//    {
+//      NS_LOG_DEBUG ("Removing meter entries."); // FIXME remover do sgw e pgw
+//      if (meterInfo->HasDown ())
+//        {
+//          DpctlExecute (GetDpId (ringInfo->GetPgwSwIdx ()),
+//                        meterInfo->GetDelCmd ());
+//        }
+//      if (meterInfo->HasUp ())
+//        {
+//          DpctlExecute (GetDpId (ringInfo->GetSgwSwIdx ()),
+//                        meterInfo->GetDelCmd ());
+//        }
+//      meterInfo->SetInstalled (false);
+//    }
   return true;
 }
 

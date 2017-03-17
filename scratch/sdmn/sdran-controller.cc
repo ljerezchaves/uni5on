@@ -200,10 +200,10 @@ SdranController::InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo)
   Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
   Ptr<const EnbInfo> enbInfo = EnbInfo::GetPointer (ueInfo->GetCellId ());
 
-  // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS
+  // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0007");
 
-  // Printing the cookie and buffer values in dpctl string format
+  // Print the cookie and buffer values in dpctl string format.
   char cookieStr [9], bufferStr [12];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
   sprintf (bufferStr, "%u", OFP_NO_BUFFER);
@@ -211,13 +211,13 @@ SdranController::InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo)
   // Configure downlink.
   if (rInfo->HasDownlinkTraffic ())
     {
-      // Printing TEID and destination IPv4 address into tunnel metadata
+      // Print downlink TEID and destination IPv4 address into tunnel metadata.
       uint64_t tunnelId = (uint64_t)enbInfo->GetEnbS1uAddr ().Get () << 32;
       tunnelId |= rInfo->GetTeid ();
       char tunnelIdStr [17];
       sprintf (tunnelIdStr, "0x%016lX", tunnelId);
 
-      // Building the dpctl command + arguments string
+      // Build the dpctl command string.
       std::ostringstream cmd;
       cmd << "flow-mod cmd=add,table=1"
           << ",buffer=" << bufferStr
@@ -235,25 +235,45 @@ SdranController::InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo)
   // Configure uplink.
   if (rInfo->HasUplinkTraffic ())
     {
-      // Printing TEID and destination IPv4 address into tunnel metadata
+      // Print uplink TEID and destination IPv4 address into tunnel metadata.
       uint64_t tunnelId = (uint64_t)rInfo->GetPgwS5Addr ().Get () << 32;
       tunnelId |= rInfo->GetTeid ();
       char tunnelIdStr [17];
       sprintf (tunnelIdStr, "0x%016lX", tunnelId);
 
-      // Building the dpctl command + arguments string
-      std::ostringstream cmd;
+      // Build the dpctl command string.
+      std::ostringstream cmd, match, act;
       cmd << "flow-mod cmd=add,table=2"
           << ",buffer=" << bufferStr
           << ",flags=" << flagsStr
           << ",cookie=" << cookieStr
           << ",prio=" << rInfo->GetPriority ()
-          << ",idle=" << rInfo->GetTimeout ()
-          << " tunn_id=" << cookieStr // TEID value
-          << " apply:set_field=tunn_id:" << tunnelIdStr
+          << ",idle=" << rInfo->GetTimeout ();
+
+      // Match IP and the TEID value.
+      match << " eth_type=0x800,tunn_id=" << cookieStr;
+
+      // Check for meter entry.
+      Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
+      if (meterInfo && meterInfo->HasUp ())
+        {
+          if (!meterInfo->IsUpInstalled ())
+            {
+              // Install the per-flow meter entry.
+              DpctlExecute (m_sgwDpId, meterInfo->GetUpAddCmd ());
+              meterInfo->SetUpInstalled (true);
+            }
+
+          // Instruction: meter.
+          act << " meter:" << rInfo->GetTeid ();
+        }
+
+      // Instruction: apply action: set tunnel ID, output port.
+      act << " apply:set_field=tunn_id:" << tunnelIdStr
           << ",output=" << m_sgwS5PortNo;
 
-      DpctlExecute (m_sgwDpId, cmd.str ());
+      std::string commandStr = cmd.str () + match.str () + act.str ();
+      DpctlExecute (m_sgwDpId, commandStr);
     }
   return true;
 }
