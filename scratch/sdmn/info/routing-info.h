@@ -72,7 +72,6 @@ public:
   bool IsActive (void) const;
 
   void SetImsi (uint64_t value);
-  void SetCellId (uint16_t value);
   void SetPgwS5Addr (Ipv4Address value);
   void SetSgwS5Addr (Ipv4Address value);
   void SetPriority (uint16_t value);

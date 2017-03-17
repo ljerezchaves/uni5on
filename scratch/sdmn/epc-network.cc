@@ -438,14 +438,7 @@ void
 EpcNetwork::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
 {
   NS_LOG_FUNCTION (this << enb1 << enb2);
-
   // TODO
-  // Ptr<SdranCloud> sdran1 = SdranCloud::GetPointer (enb1);
-  // Ptr<SdranCloud> sdran2 = SdranCloud::GetPointer (enb2);
-  // if (sdran1 == sdran2)
-  //   {
-  //     sdran1->AddX2Interface (enb1, enb2);
-  //   }
 }
 
 void

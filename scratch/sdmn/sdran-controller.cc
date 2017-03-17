@@ -63,8 +63,13 @@ SdranController::RequestDedicatedBearer (
   EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
-  // TODO
-  return m_epcCtrlApp->RequestDedicatedBearer (bearer, teid);
+
+  bool accepted = m_epcCtrlApp->RequestDedicatedBearer (bearer, teid);
+  if (accepted)
+    {
+      InstallSgwSwitchRules (RoutingInfo::GetPointer (teid));
+    }
+  return accepted;
 }
 
 bool
@@ -192,48 +197,64 @@ SdranController::InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-//  // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS
-//  std::string flagsStr ("0x0007");
-//
-//  // Printing the cookie and buffer values in dpctl string format
-//  char cookieStr [9], bufferStr [12];
-//  sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
-//  sprintf (bufferStr, "%u", OFP_NO_BUFFER);
-//
-//  // Building the dpctl command + arguments string
-//  std::ostringstream cmd;
-//  cmd << "flow-mod cmd=add,table=1"
-//      << ",buffer=" << bufferStr
-//      << ",flags=" << flagsStr
-//      << ",cookie=" << cookieStr
-//      << ",prio=" << rInfo->GetPriority ()
-//      << ",idle=" << rInfo->GetTimeout ();
-//
-//  // Printing TEID and destination IPv4 address into tunnel metadata
-//  uint64_t tunnelId = (uint64_t)rInfo->GetSgwS5Addr ().Get () << 32;
-//  tunnelId |= rInfo->GetTeid ();
-//  char tunnelIdStr [12];
-//  sprintf (tunnelIdStr, "0x%016lX", tunnelId);
-//
-//  // IP packets coming from the UEs at S1-U interface and addressed to the
-//  // Internet are sent to the P-GW over the S5 interface.
-//  std::ostringstream cmdOut;
-//  cmdOut << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-//         << ",in_port=" << sgwS1uPortNum
-//         << ",ip_src=" << EpcNetwork::m_ueAddr
-//         << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
-//         << ",ip_dst=" << EpcNetwork::m_sgiAddr
-//         << "/" << EpcNetwork::m_sgiMask.GetPrefixLength ()
-//         << " apply:set_field=tunn_id:" << tunnelIdStr
-//         << ",output=" << m_sgwS5PortNum;
-//  DpctlSchedule (m_sgwDpId, cmdOut.str ());
-//
-//  //  std::ostringstream cmdOut;
-//  //  cmdOut << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-//  //         << ",in_port=" << m_sgwS5PortNum
-//  //         << " write:output=" << sgwS1uPortNum;
-//  //  DpctlSchedule (m_sgwDpId, cmdOut.str ());
-//
+  Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
+  Ptr<const EnbInfo> enbInfo = EnbInfo::GetPointer (ueInfo->GetCellId ());
+
+  // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS
+  std::string flagsStr ("0x0007");
+
+  // Printing the cookie and buffer values in dpctl string format
+  char cookieStr [9], bufferStr [12];
+  sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
+  sprintf (bufferStr, "%u", OFP_NO_BUFFER);
+
+  // Configure downlink.
+  if (rInfo->HasDownlinkTraffic ())
+    {
+      // Printing TEID and destination IPv4 address into tunnel metadata
+      uint64_t tunnelId = (uint64_t)enbInfo->GetEnbS1uAddr ().Get () << 32;
+      tunnelId |= rInfo->GetTeid ();
+      char tunnelIdStr [17];
+      sprintf (tunnelIdStr, "0x%016lX", tunnelId);
+
+      // Building the dpctl command + arguments string
+      std::ostringstream cmd;
+      cmd << "flow-mod cmd=add,table=1"
+          << ",buffer=" << bufferStr
+          << ",flags=" << flagsStr
+          << ",cookie=" << cookieStr
+          << ",prio=" << rInfo->GetPriority ()
+          << ",idle=" << rInfo->GetTimeout ()
+          << " tunn_id=" << cookieStr // TEID value
+          << " apply:set_field=tunn_id:" << tunnelIdStr
+          << ",output=" << enbInfo->GetSgwS1uPortNo ();
+
+      DpctlExecute (m_sgwDpId, cmd.str ());
+    }
+
+  // Configure uplink.
+  if (rInfo->HasUplinkTraffic ())
+    {
+      // Printing TEID and destination IPv4 address into tunnel metadata
+      uint64_t tunnelId = (uint64_t)rInfo->GetPgwS5Addr ().Get () << 32;
+      tunnelId |= rInfo->GetTeid ();
+      char tunnelIdStr [17];
+      sprintf (tunnelIdStr, "0x%016lX", tunnelId);
+
+      // Building the dpctl command + arguments string
+      std::ostringstream cmd;
+      cmd << "flow-mod cmd=add,table=2"
+          << ",buffer=" << bufferStr
+          << ",flags=" << flagsStr
+          << ",cookie=" << cookieStr
+          << ",prio=" << rInfo->GetPriority ()
+          << ",idle=" << rInfo->GetTimeout ()
+          << " tunn_id=" << cookieStr // TEID value
+          << " apply:set_field=tunn_id:" << tunnelIdStr
+          << ",output=" << m_sgwS5PortNo;
+
+      DpctlExecute (m_sgwDpId, cmd.str ());
+    }
   return true;
 }
 

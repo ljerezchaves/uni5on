@@ -66,7 +66,6 @@ TrafficManager::AddSdmnClientApp (Ptr<SdmnClientApp> app)
   // Schedule the first start attempt for this app.
   // Wait at least 2 seconds for simulation initial setup.
   Time start = Seconds (2) + Seconds (std::abs (m_poissonRng->GetValue ()));
-  start = Seconds (2);  // FIXME remove this.
   Simulator::Schedule (start, &TrafficManager::AppStartTry, this, app);
   NS_LOG_DEBUG ("First start try for app " << app->GetAppName () <<
                 " at user " << m_imsi << " with teid " << app->GetTeid () <<
@@ -125,7 +124,6 @@ TrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
   // procedure.
   //
   Time nextStartTry = Seconds (std::max (8.0, m_poissonRng->GetValue ()));
-  nextStartTry = Seconds (8); // FIXME remove this.
   if (authorized)
     {
       // Set the maximum traffic duration.

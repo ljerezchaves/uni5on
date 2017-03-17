@@ -275,8 +275,8 @@ LteNetwork::ConfigureEnbs ()
   m_enbDevices = m_topoHelper->SetPositionAndInstallEnbDevice (m_enbNodes);
   BuildingsHelper::Install (m_enbNodes);
 
-  // TODO Create an X2 interface between all the eNBs in a given set.
-  // m_lteHelper->AddX2Interface (m_enbNodes);
+  // Create an X2 interface between all the eNBs in a given set.
+  m_lteHelper->AddX2Interface (m_enbNodes);
 
   // Identify the LTE radio coverage area based on eNB nodes positions.
   std::vector<double> xPos, yPos;
