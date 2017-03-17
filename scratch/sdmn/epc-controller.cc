@@ -38,7 +38,7 @@ EpcController::EpcController ()
 {
   NS_LOG_FUNCTION (this);
 
-  QciDscpInitialize ();
+  StaticInitialize ();
 
   m_s5SapPgw = new MemberEpcS5SapPgw<EpcController> (this);
 }
@@ -706,7 +706,7 @@ EpcController::DoDeleteBearerResponse (
 }
 
 void
-EpcController::QciDscpInitialize ()
+EpcController::StaticInitialize ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 

@@ -94,11 +94,8 @@ private:
    */
   static void RegisterSdranCloud (Ptr<SdranCloud> sdran);
 
-  /**
-   * Initilize the S1-U address static helper. This function is called by
-   * object constructor, but the helper will be initializaed only once.
-   */
-  static void S1uAddrHelperInitialize ();
+  /** Initialize static attributes only once. */
+  static void StaticInitialize (void);
 
   uint32_t                      m_sdranId;        //!< SDRAN cloud id.
   uint32_t                      m_nSites;         //!< Number of cell sites.

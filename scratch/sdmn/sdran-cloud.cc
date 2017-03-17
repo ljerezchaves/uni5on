@@ -39,7 +39,7 @@ SdranCloud::SdranCloud ()
 {
   NS_LOG_FUNCTION (this);
 
-  S1uAddrHelperInitialize ();
+  StaticInitialize ();
 
   // Set the unique SDRAN cloud ID for this instance.
   m_sdranId = ++m_sdranCounter;
@@ -454,7 +454,7 @@ SdranCloud::RegisterSdranCloud (Ptr<SdranCloud> sdran)
 }
 
 void
-SdranCloud::S1uAddrHelperInitialize ()
+SdranCloud::StaticInitialize ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 

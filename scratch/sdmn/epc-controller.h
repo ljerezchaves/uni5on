@@ -236,11 +236,8 @@ private:
   void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage msg);
   //\}
 
-  /**
-   * Initilize the static DSCP map table. This function is called by object
-   * constructor, but the table will be populated only once.
-   */
-  static void QciDscpInitialize ();
+  /** Initialize static attributes only once. */
+  static void StaticInitialize (void);
 
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
   TracedCallback<bool, Ptr<const RoutingInfo> >    m_bearerRequestTrace;
