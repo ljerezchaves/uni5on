@@ -140,7 +140,7 @@ private:
    * Reserve the bit rate for this bearer in network.
    * \param ringInfo The ring routing information.
    * \param gbrInfo The GBR information.
-   * \return True if success, false otherwise;
+   * \return True if succeeded, false otherwise.
    */
   bool ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
                           Ptr<GbrInfo> gbrInfo);
@@ -149,7 +149,7 @@ private:
    * Release the bit rate for this bearer in network.
    * \param ringInfo The ring routing information.
    * \param gbrInfo The GBR information.
-   * \return True if success, false otherwise;
+   * \return True if succeeded, false otherwise.
    */
   bool ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
                           Ptr<GbrInfo> gbrInfo);
@@ -163,7 +163,7 @@ private:
    * \param dstIdx Destination switch index.
    * \param path The routing path.
    * \param bitRate The bit rate to reserve.
-   * \return True if success, false otherwise;
+   * \return True if succeeded, false otherwise.
    */
   bool PerLinkReserve (uint16_t srcIdx, uint16_t dstIdx,
                        RingRoutingInfo::RoutingPath path,
@@ -178,7 +178,7 @@ private:
    * \param dstIdx Destination switch index.
    * \param path The routing path.
    * \param bitRate The bit rate to release.
-   * \return True if success, false otherwise;
+   * \return True if succeeded, false otherwise.
    */
   bool PerLinkRelease (uint16_t srcIdx, uint16_t dstIdx,
                        RingRoutingInfo::RoutingPath path,

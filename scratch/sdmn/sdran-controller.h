@@ -69,7 +69,7 @@ public:
    * \param imsi uint64_t IMSI UE identifier.
    * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
    * \param bearer EpsBearer bearer QoS characteristics of the bearer.
-   * \returns true if successful (the bearer creation process will proceed),
+   * \returns True if succeeded (the bearer creation process will proceed),
    *          false otherwise (the bearer creation process will abort).
    */
   virtual bool RequestDedicatedBearer (
@@ -86,7 +86,7 @@ public:
    * \param imsi uint64_t IMSI UE identifier.
    * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
    * \param bearer EpsBearer bearer QoS characteristics of the bearer.
-   * \returns true if successful, false otherwise.
+   * \return True if succeeded, false otherwise.
    */
   virtual bool ReleaseDedicatedBearer (
     EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
@@ -129,6 +129,15 @@ public:
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
+
+  /**
+   * Configure the S-GW with OpenFlow rules for packet forwarding.
+   * \attention To avoid conflicts with old entries, increase the routing
+   *            priority before installing S-GW rules.
+   * \param rInfo The routing information to configure.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo);
 
   // Inherited from OFSwitch13Controller.
   virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);

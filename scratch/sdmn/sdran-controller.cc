@@ -171,6 +171,15 @@ SdranController::DoDispose ()
   Object::DoDispose ();
 }
 
+bool
+SdranController::InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+
+  // TODO
+  return true;
+}
+
 void
 SdranController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
@@ -289,6 +298,13 @@ SdranController::DoCreateSessionResponse (
   EpcS11SapMme::CreateSessionResponseMessage msg)
 {
   NS_LOG_FUNCTION (this << msg.teid);
+
+  // Install S-GW rules for default bearer.
+  BearerContext_t defaultBearer = msg.bearerContextsCreated.front ();
+  NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
+  uint32_t teid = defaultBearer.sgwFteid.teid;
+
+  InstallSgwSwitchRules (RoutingInfo::GetPointer (teid));
 
   // Forward the response message to the MME.
   m_s11SapMme->CreateSessionResponse (msg);

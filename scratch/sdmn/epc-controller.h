@@ -69,7 +69,8 @@ public:
    *           applications into same bearer we will need to revise this.
    * \param bearer EpsBearer bearer QoS characteristics of the bearer.
    * \param teid The teid for this bearer, if already defined.
-   * \returns true if successful (the bearer creation process will proceed),
+   * \returns True if succeeded (the bearer creation process will proceed),
+   *          false otherwise (the bearer creation process will abort).
    */
   virtual bool RequestDedicatedBearer (EpsBearer bearer, uint32_t teid);
 
@@ -82,7 +83,7 @@ public:
    *           applications into same bearer we will need to revise this.
    * \param bearer EpsBearer bearer QoS characteristics of the bearer.
    * \param teid The teid for this bearer, if already defined.
-   * \returns true if successful, false otherwise.
+   * \return True if succeeded, false otherwise.
    */
   virtual bool ReleaseDedicatedBearer (EpsBearer bearer, uint32_t teid);
 
@@ -169,14 +170,14 @@ protected:
    * \attention This function must increase the routing priority before
    *            installing the rules, to avoid conflicts with old entries.
    * \param rInfo The routing information to configure.
-   * \return True if configuration succeeded, false otherwise.
+   * \return True if succeeded, false otherwise.
    */
   virtual bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
    * Remove TEID routing rules from switches.
    * \param rInfo The routing information to remove.
-   * \return True if remove succeeded, false otherwise.
+   * \return True if succeeded, false otherwise.
    */
   virtual bool TopologyRemoveRouting (Ptr<RoutingInfo> rInfo) = 0;
 
@@ -184,7 +185,7 @@ protected:
    * Process the bearer resource request and bit rate allocation based on
    * network topology information.
    * \param rInfo The routing information to process.
-   * \return True when the request is satisfied.
+   * \return True if succeeded, false otherwise.
    */
   virtual bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo) = 0;
 
@@ -192,7 +193,7 @@ protected:
    * Process the bearer and bit rate release based on network topology
    * information.
    * \param rInfo The routing information to process.
-   * \return True when the resources are successfully released.
+   * \return True if succeeded, false otherwise.
    */
   virtual bool TopologyBearerRelease (Ptr<RoutingInfo> rInfo) = 0;
 
@@ -210,7 +211,7 @@ protected:
    * \attention To avoid conflicts with old entries, increase the routing
    *            priority before installing P-GW rules.
    * \param rInfo The routing information to configure.
-   * \return True if remove succeeded, false otherwise.
+   * \return True if succeeded, false otherwise.
    */
   virtual bool InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo);
 

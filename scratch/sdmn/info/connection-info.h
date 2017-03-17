@@ -154,7 +154,7 @@ public:
    * \param src The source switch datapath ID.
    * \param dst The destination switch datapath ID.
    * \param bitRate The bit rate to reserve.
-   * \return True if everything is ok, false otherwise.
+   * \return True if succeeded, false otherwise.
    */
   bool ReserveGbrBitRate (uint64_t src, uint64_t dst, uint64_t bitRate);
 
@@ -163,7 +163,7 @@ public:
    * \param src The source switch datapath ID.
    * \param dst The destination switch datapath ID.
    * \param bitRate The bit rate to release.
-   * \return True if everything is ok, false otherwise.
+   * \return True if succeeded, false otherwise.
    */
   bool ReleaseGbrBitRate (uint64_t src, uint64_t dst, uint64_t bitRate);
 
@@ -216,7 +216,7 @@ private:
    * Increase/decrease the GBR reserved bit rate and Non-GBR allowed bit rate.
    * \param dir The link direction.
    * \param bitRate The bitRate amount.
-   * \return True if everything is ok, false otherwise.
+   * \return True if succeeded, false otherwise.
    */
   //\{
   bool IncreaseGbrBitRate (Direction dir, uint64_t bitRate);
