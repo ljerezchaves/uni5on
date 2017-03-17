@@ -64,7 +64,6 @@ public:
   uint64_t GetMmeUeS1Id (void) const;
   uint64_t GetEnbUeS1Id (void) const;
   uint16_t GetCellId (void) const;
-  uint16_t GetBearerCounter (void) const;
 
   void SetUeAddress (Ipv4Address value);
   void SetEnbAddress (Ipv4Address value);

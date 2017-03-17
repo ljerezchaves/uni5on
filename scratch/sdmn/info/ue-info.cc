@@ -105,14 +105,6 @@ UeInfo::GetCellId (void) const
   return m_cellId;
 }
 
-uint16_t
-UeInfo::GetBearerCounter (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_bearerCounter;
-}
-
 void
 UeInfo::SetUeAddress (Ipv4Address value)
 {
@@ -174,7 +166,7 @@ UeInfo::AddBearer (BearerInfo bearer)
 {
   NS_LOG_FUNCTION (this << bearer.bearerId);
 
-  NS_ASSERT_MSG (GetBearerCounter () < 11, "No more bearers allowed!");
+  NS_ASSERT_MSG (m_bearerCounter < 11, "No more bearers allowed!");
   bearer.bearerId = ++m_bearerCounter;
   m_bearersList.push_back (bearer);
   return bearer.bearerId;
