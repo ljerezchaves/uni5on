@@ -577,8 +577,6 @@ EpcController::DoCreateSessionRequest (
 
   Ptr<SdranController> sdranCtrl = SdranController::GetPointer (cellId);
   Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  ueInfo->SetEnbS1uAddr (enbInfo->GetEnbS1uAddr ());
 
   // Create the response message.
   EpcS11SapMme::CreateSessionResponseMessage res;
@@ -611,7 +609,6 @@ EpcController::DoCreateSessionRequest (
 
   rInfo = CreateObject<RoutingInfo> (teid);
   rInfo->SetImsi (imsi);
-  rInfo->SetCellId (cellId);
   rInfo->SetPgwS5Addr (m_pgwS5Addr);
   rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
   rInfo->SetPriority (0x7F);             // Priority for default bearer
@@ -641,7 +638,6 @@ EpcController::DoCreateSessionRequest (
 
       rInfo = CreateObject<RoutingInfo> (teid);
       rInfo->SetImsi (imsi);
-      rInfo->SetCellId (cellId);
       rInfo->SetPgwS5Addr (m_pgwS5Addr);
       rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
       rInfo->SetPriority (0x1FFF);          // Priority for dedicated bearer

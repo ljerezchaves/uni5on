@@ -60,16 +60,14 @@ public:
   //\{
   uint64_t GetImsi (void) const;
   Ipv4Address GetUeAddr (void) const;
-  Ipv4Address GetEnbS1uAddr (void) const;
+  uint16_t GetCellId (void) const;
   uint64_t GetMmeUeS1Id (void) const;
   uint64_t GetEnbUeS1Id (void) const;
-  uint16_t GetCellId (void) const;
 
   void SetUeAddr (Ipv4Address value);
-  void SetEnbS1uAddr (Ipv4Address value);
+  void SetCellId (uint16_t value);
   void SetMmeUeS1Id (uint64_t value);
   void SetEnbUeS1Id (uint64_t value);
-  void SetCellId (uint16_t value);
   //\}
 
   /**
@@ -118,10 +116,9 @@ private:
 
   uint64_t               m_imsi;                 //!< UE IMSI.
   Ipv4Address            m_ueAddr;               //!< UE IP address.
-  Ipv4Address            m_enbS1uAddr;           //!< eNB IP address.
+  uint16_t               m_cellId;               //!< UE cell ID.
   uint64_t               m_mmeUeS1Id;            //!< ID for S1-AP at MME.
   uint16_t               m_enbUeS1Id;            //!< ID for S1-AP at eNB.
-  uint16_t               m_cellId;               //!< UE cell ID.
   uint16_t               m_bearerCounter;        //!< Number of bearers.
   std::list<BearerInfo>  m_bearersList;          //!< Bearer contexts.
 

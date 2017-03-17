@@ -30,15 +30,14 @@ UeInfo::ImsiUeInfoMap_t UeInfo::m_ueInfoByImsiMap;
 
 UeInfo::UeInfo (uint64_t imsi)
   : m_imsi (imsi),
+    m_cellId (0),
     m_mmeUeS1Id (imsi),
     m_enbUeS1Id (0),
-    m_cellId (0),
     m_bearerCounter (0)
 {
   NS_LOG_FUNCTION (this);
 
   m_ueAddr  = Ipv4Address ();
-  m_enbS1uAddr = Ipv4Address ();
 
   RegisterUeInfo (Ptr<UeInfo> (this));
 }
@@ -73,12 +72,12 @@ UeInfo::GetUeAddr (void) const
   return m_ueAddr;
 }
 
-Ipv4Address
-UeInfo::GetEnbS1uAddr (void) const
+uint16_t
+UeInfo::GetCellId (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_enbS1uAddr;
+  return m_cellId;
 }
 
 uint64_t
@@ -97,14 +96,6 @@ UeInfo::GetEnbUeS1Id (void) const
   return m_enbUeS1Id;
 }
 
-uint16_t
-UeInfo::GetCellId (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_cellId;
-}
-
 void
 UeInfo::SetUeAddr (Ipv4Address value)
 {
@@ -114,11 +105,11 @@ UeInfo::SetUeAddr (Ipv4Address value)
 }
 
 void
-UeInfo::SetEnbS1uAddr (Ipv4Address value)
+UeInfo::SetCellId (uint16_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_enbS1uAddr = value;
+  m_cellId = value;
 }
 
 void
@@ -135,14 +126,6 @@ UeInfo::SetEnbUeS1Id (uint64_t value)
   NS_LOG_FUNCTION (this << value);
 
   m_enbUeS1Id = value;
-}
-
-void
-UeInfo::SetCellId (uint16_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_cellId = value;
 }
 
 std::list<UeInfo::BearerInfo>::const_iterator

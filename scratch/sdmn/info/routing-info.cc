@@ -31,7 +31,6 @@ RoutingInfo::TeidRoutingMap_t RoutingInfo::m_globalInfoMap;
 RoutingInfo::RoutingInfo (uint32_t teid)
   : m_teid (teid),
     m_imsi (0),
-    m_cellId (0),
     m_priority (0),
     m_timeout (0),
     m_isDefault (0),
@@ -76,12 +75,12 @@ RoutingInfo::GetImsi (void) const
   return m_imsi;
 }
 
-uint16_t
-RoutingInfo::GetCellId (void) const
+Ipv4Address
+RoutingInfo::GetPgwS5Addr (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_cellId;
+  return m_pgwS5Addr;
 }
 
 Ipv4Address
@@ -90,14 +89,6 @@ RoutingInfo::GetSgwS5Addr (void) const
   NS_LOG_FUNCTION (this);
 
   return m_sgwS5Addr;
-}
-
-Ipv4Address
-RoutingInfo::GetPgwS5Addr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_pgwS5Addr;
 }
 
 uint16_t
@@ -146,14 +137,6 @@ RoutingInfo::SetImsi (uint64_t value)
   NS_LOG_FUNCTION (this << value);
 
   m_imsi = value;
-}
-
-void
-RoutingInfo::SetCellId (uint16_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_cellId = value;
 }
 
 void

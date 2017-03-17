@@ -23,6 +23,7 @@
 #include "traffic-stats-calculator.h"
 #include "../apps/sdmn-client-app.h"
 #include "../apps/real-time-video-client.h"
+#include "../info/ue-info.h"
 #include "../info/routing-info.h"
 #include "../info/ring-routing-info.h"
 
@@ -172,6 +173,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
 
   uint32_t teid = app->GetTeid ();
   Ptr<const RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+  Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
   Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ring information for this routing info.");
 
@@ -191,8 +193,8 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       << setw (8)  << app->GetAppName ()                              << " "
       << setw (4)  << rInfo->GetQciInfo ()                            << " "
       << setw (6)  << rInfo->IsGbr ()                                 << " "
-      << setw (7)  << rInfo->GetImsi ()                               << " "
-      << setw (7)  << rInfo->GetCellId ()                             << " "
+      << setw (7)  << ueInfo->GetImsi ()                              << " "
+      << setw (7)  << ueInfo->GetCellId ()                            << " "
       << setw (6)  << ringInfo->GetSgwSwDpId ()                       << " "
       << setw (6)  << ringInfo->GetPgwSwDpId ()                       << " "
       << setw (10) << "up"                                            << " "
@@ -218,8 +220,8 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       << setw (8)  << app->GetAppName ()                              << " "
       << setw (4)  << rInfo->GetQciInfo ()                            << " "
       << setw (6)  << rInfo->IsGbr ()                                 << " "
-      << setw (7)  << rInfo->GetImsi ()                               << " "
-      << setw (7)  << rInfo->GetCellId ()                             << " "
+      << setw (7)  << ueInfo->GetImsi ()                              << " "
+      << setw (7)  << ueInfo->GetCellId ()                            << " "
       << setw (6)  << ringInfo->GetSgwSwDpId ()                       << " "
       << setw (6)  << ringInfo->GetPgwSwDpId ()                       << " "
       << setw (10) << "up"                                            << " "
@@ -245,8 +247,8 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   << setw (8)  << app->GetAppName ()                                  << " "
   << setw (4)  << rInfo->GetQciInfo ()                                << " "
   << setw (6)  << rInfo->IsGbr ()                                     << " "
-  << setw (7)  << rInfo->GetImsi ()                                   << " "
-  << setw (7)  << rInfo->GetCellId ()                                 << " "
+  << setw (7)  << ueInfo->GetImsi ()                                  << " "
+  << setw (7)  << ueInfo->GetCellId ()                                << " "
   << setw (6)  << ringInfo->GetSgwSwDpId ()                           << " "
   << setw (6)  << ringInfo->GetPgwSwDpId ()                           << " "
   << setw (10) << "down"                                              << " "
@@ -272,8 +274,8 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   << setw (8)  << app->GetAppName ()                                  << " "
   << setw (4)  << rInfo->GetQciInfo ()                                << " "
   << setw (6)  << rInfo->IsGbr ()                                     << " "
-  << setw (7)  << rInfo->GetImsi ()                                   << " "
-  << setw (7)  << rInfo->GetCellId ()                                 << " "
+  << setw (7)  << ueInfo->GetImsi ()                                  << " "
+  << setw (7)  << ueInfo->GetCellId ()                                << " "
   << setw (6)  << ringInfo->GetSgwSwDpId ()                           << " "
   << setw (6)  << ringInfo->GetPgwSwDpId ()                           << " "
   << setw (10) << "down"                                              << " "

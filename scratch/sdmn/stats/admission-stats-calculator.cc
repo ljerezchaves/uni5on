@@ -21,6 +21,7 @@
 #include <iomanip>
 #include <iostream>
 #include "admission-stats-calculator.h"
+#include "../info/ue-info.h"
 #include "../info/routing-info.h"
 #include "../info/ring-routing-info.h"
 #include "../info/gbr-info.h"
@@ -85,6 +86,11 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
 {
   NS_LOG_FUNCTION (this << accepted << rInfo);
 
+  Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
+  Ptr<const GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
+  Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  NS_ASSERT_MSG (ringInfo, "No ring information for this routing info.");
+
   // Update internal counters
   if (rInfo->IsGbr ())
     {
@@ -104,7 +110,6 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
 
   // Preparing bearer request stats for trace source
   uint64_t downBitRate = 0, upBitRate = 0;
-  Ptr<const GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
   if (gbrInfo)
     {
       downBitRate = gbrInfo->GetDownBitRate ();
@@ -112,8 +117,6 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
     }
 
   std::string path = "No information";
-  Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  NS_ASSERT_MSG (ringInfo, "No ring information for this routing info.");
   if (accepted)
     {
       // For ring routing, print detailed routing path description
@@ -135,8 +138,8 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
   << setw (4)  << rInfo->GetQciInfo ()                      << " "
   << setw (6)  << rInfo->IsGbr ()                           << " "
   << setw (9)  << rInfo->IsDefault ()                       << " "
-  << setw (7)  << rInfo->GetImsi ()                         << " "
-  << setw (7)  << rInfo->GetCellId ()                       << " "
+  << setw (7)  << ueInfo->GetImsi ()                        << " "
+  << setw (7)  << ueInfo->GetCellId ()                      << " "
   << setw (6)  << ringInfo->GetSgwSwDpId ()                 << " "
   << setw (6)  << ringInfo->GetPgwSwDpId ()                 << " "
   << setw (6)  << rInfo->GetTeid ()                         << " "

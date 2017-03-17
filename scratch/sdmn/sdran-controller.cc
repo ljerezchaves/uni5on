@@ -238,19 +238,12 @@ SdranController::DoModifyBearerRequest (
 {
   NS_LOG_FUNCTION (this << msg.teid);
 
-  uint64_t imsi = msg.teid;
-  uint16_t cellId = msg.uli.gci;
-
-  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  ueInfo->SetEnbS1uAddr (enbInfo->GetEnbS1uAddr ());
-
   // In current implementation, this Modify Bearer Request is triggered only by
   // X2 handover procedures. There is no actual bearer modification, for now we
   // just support the minimum needed for path switch request (handover). There
   // is no need to forward the request message to the P-GW.
   EpcS11SapMme::ModifyBearerResponseMessage res;
-  res.teid = imsi;
+  res.teid = msg.teid;
   res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
 
   m_s11SapMme->ModifyBearerResponse (res);
