@@ -210,13 +210,13 @@ HttpClient::ReceiveData (Ptr<Socket> socket)
       if (!m_pendingBytes)
         {
           // This is the end of the HTTP message.
-          NS_LOG_INFO ("HTTP " << contentType << " successfully received.");
+          NS_LOG_DEBUG ("HTTP " << contentType << " successfully received.");
           NS_ASSERT (m_rxPacket->GetSize () == 0);
           NotifyRx (m_httpPacketSize);
 
           if (contentType == "main/object")
             {
-              NS_LOG_INFO ("There are inline objects: " << m_pendingObjects);
+              NS_LOG_DEBUG ("There are inline objects: " << m_pendingObjects);
             }
           else
             {
@@ -226,7 +226,7 @@ HttpClient::ReceiveData (Ptr<Socket> socket)
           // When necessary, request inline objects
           if (m_pendingObjects)
             {
-              NS_LOG_INFO ("Request for inline/object " << m_pendingObjects);
+              NS_LOG_DEBUG ("Request for inline/object " << m_pendingObjects);
               SendRequest (socket, "inline/object");
             }
           else
@@ -260,7 +260,7 @@ HttpClient::SendRequest (Ptr<Socket> socket, std::string url)
   httpHeader.SetVersion ("HTTP/1.1");
   httpHeader.SetRequestMethod ("GET");
   httpHeader.SetRequestUrl (url);
-  NS_LOG_INFO ("Request for " << url);
+  NS_LOG_DEBUG ("Request for " << url);
 
   Ptr<Packet> packet = Create<Packet> ();
   packet->AddHeader (httpHeader);

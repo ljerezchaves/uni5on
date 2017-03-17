@@ -230,14 +230,14 @@ HttpServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
 
   // Check for valid request.
   std::string url = header.GetRequestUrl ();
-  NS_LOG_INFO ("Client requesting a " + url);
+  NS_LOG_DEBUG ("Client requesting a " + url);
   if (url == "main/object")
     {
       // Setting random parameter values.
       m_pendingBytes = m_mainObjectSizeStream->GetInteger ();
       uint32_t numOfInlineObj = m_numOfInlineObjStream->GetInteger ();
-      NS_LOG_INFO ("HTTP main object size (bytes): " << m_pendingBytes);
-      NS_LOG_INFO ("Inline objects: " << numOfInlineObj);
+      NS_LOG_DEBUG ("HTTP main object size (bytes): " << m_pendingBytes);
+      NS_LOG_DEBUG ("Inline objects: " << numOfInlineObj);
 
       // Setting the HTTP response message.
       HttpHeader httpHeaderOut;
@@ -266,7 +266,7 @@ HttpServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
     {
       // Setting random parameter values.
       m_pendingBytes = m_inlineObjectSizeStream->GetInteger ();
-      NS_LOG_INFO ("HTTP inline object size (bytes): " << m_pendingBytes);
+      NS_LOG_DEBUG ("HTTP inline object size (bytes): " << m_pendingBytes);
 
       // Setting the HTTP response message.
       HttpHeader httpHeaderOut;
