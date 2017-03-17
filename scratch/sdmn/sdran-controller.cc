@@ -84,16 +84,37 @@ SdranController::NotifySgwAttach (
 
   m_sgwS5Addr = EpcNetwork::GetIpv4Addr (sgwS5Dev);
   m_sgwS5PortNo = sgwS5PortNo;
-  // TODO Install forwarding rules on S-GW?
+
+  // IP packets coming from the P-GW (S-GW S5 port) and addressed to the UE
+  // network are sent to table 1, where rules will match the flow and set both
+  // TEID and eNB address on tunnel metadata.
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+      << ",in_port=" << sgwS5PortNo
+      << ",ip_dst=" << EpcNetwork::m_ueAddr
+      << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
+      << " goto:1";
+  DpctlSchedule (m_sgwDpId, cmd.str ());
 }
 
 void
-SdranController::NotifyEnbAttach (uint16_t cellId)
+SdranController::NotifyEnbAttach (uint16_t cellId, uint32_t sgwS1uPortNo)
 {
-  NS_LOG_FUNCTION (this << cellId);
+  NS_LOG_FUNCTION (this << cellId << sgwS1uPortNo);
 
   // Register this controller by cell ID for further usage.
   RegisterController (Ptr<SdranController> (this), cellId);
+
+  // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
+  // Internet are sent to table 2, where rules will match the flow and set both
+  // TEID and P-GW address on tunnel metadata.
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+      << ",in_port=" << sgwS1uPortNo
+      << ",ip_dst=" << EpcNetwork::m_sgiAddr
+      << "/" << EpcNetwork::m_sgiMask.GetPrefixLength ()
+      << " goto:2";
+  DpctlSchedule (m_sgwDpId, cmd.str ());
 }
 
 Ipv4Address
@@ -170,7 +191,49 @@ bool
 SdranController::InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
-  // TODO
+
+//  // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS
+//  std::string flagsStr ("0x0007");
+//
+//  // Printing the cookie and buffer values in dpctl string format
+//  char cookieStr [9], bufferStr [12];
+//  sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
+//  sprintf (bufferStr, "%u", OFP_NO_BUFFER);
+//
+//  // Building the dpctl command + arguments string
+//  std::ostringstream cmd;
+//  cmd << "flow-mod cmd=add,table=1"
+//      << ",buffer=" << bufferStr
+//      << ",flags=" << flagsStr
+//      << ",cookie=" << cookieStr
+//      << ",prio=" << rInfo->GetPriority ()
+//      << ",idle=" << rInfo->GetTimeout ();
+//
+//  // Printing TEID and destination IPv4 address into tunnel metadata
+//  uint64_t tunnelId = (uint64_t)rInfo->GetSgwS5Addr ().Get () << 32;
+//  tunnelId |= rInfo->GetTeid ();
+//  char tunnelIdStr [12];
+//  sprintf (tunnelIdStr, "0x%016lX", tunnelId);
+//
+//  // IP packets coming from the UEs at S1-U interface and addressed to the
+//  // Internet are sent to the P-GW over the S5 interface.
+//  std::ostringstream cmdOut;
+//  cmdOut << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+//         << ",in_port=" << sgwS1uPortNum
+//         << ",ip_src=" << EpcNetwork::m_ueAddr
+//         << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
+//         << ",ip_dst=" << EpcNetwork::m_sgiAddr
+//         << "/" << EpcNetwork::m_sgiMask.GetPrefixLength ()
+//         << " apply:set_field=tunn_id:" << tunnelIdStr
+//         << ",output=" << m_sgwS5PortNum;
+//  DpctlSchedule (m_sgwDpId, cmdOut.str ());
+//
+//  //  std::ostringstream cmdOut;
+//  //  cmdOut << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+//  //         << ",in_port=" << m_sgwS5PortNum
+//  //         << " write:output=" << sgwS1uPortNum;
+//  //  DpctlSchedule (m_sgwDpId, cmdOut.str ());
+//
   return true;
 }
 
@@ -179,9 +242,34 @@ SdranController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
   NS_LOG_FUNCTION (this << swtch);
 
-  // This function is called after a successfully handshake between the SDRAN
-  // controller and the S-GW user plane.
-  // TODO
+  // Configure S-GW port rules.
+  // -------------------------------------------------------------------------
+  // Table 0 -- Input table -- [from higher to lower priority]
+  //
+  // IP packets coming from the P-GW (S-GW S5 port) and addressed to the UE
+  // network are sent to table 1, where rules will match the flow and set both
+  // TEID and eNB address on tunnel metadata.
+  //
+  // Entries will be installed here by NotifySgwAttach function.
+
+  // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
+  // Internet are sent to table 2, where rules will match the flow and set both
+  // TEID and P-GW address on tunnel metadata.
+  //
+  // Entries will be installed here by NotifyEnbAttach function.
+
+  // Table miss entry. Send to controller.
+  DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
+
+  // -------------------------------------------------------------------------
+  // Table 1 -- S-GW downlink forward table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by InstallSgwSwitchRules function.
+
+  // -------------------------------------------------------------------------
+  // Table 2 -- S-GW uplink forward table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by InstallSgwSwitchRules function.
 }
 
 ofl_err

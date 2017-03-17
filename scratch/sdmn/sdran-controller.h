@@ -103,8 +103,9 @@ public:
    * Notify this controller of a new or eNB connected to S-GW node over the
    * S1-U interface.
    * \param cellID The eNB cell ID.
+   * \param sgwS1uPortNo The S1-U port number on the S-GW OpenFlow switch.
    */
-  virtual void NotifyEnbAttach (uint16_t cellId);
+  virtual void NotifyEnbAttach (uint16_t cellId, uint32_t sgwS1uPortNo);
 
   /** \name Private member accessors. */
   //\{

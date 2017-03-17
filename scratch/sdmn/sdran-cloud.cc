@@ -193,7 +193,7 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
     CreateObject<GtpTunnelApp> (sgwS1uPortDev, sgwS1uDev));
 
   // Notify the SDRAN controller of a new eNB attached to the S-GW node.
-  m_sdranCtrlApp->NotifyEnbAttach (cellId);
+  m_sdranCtrlApp->NotifyEnbAttach (cellId, sgwS1uPortNo);
 
   // PART 2: Configure the eNB node.
   //
