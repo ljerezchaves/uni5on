@@ -196,10 +196,9 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
 }
 
 bool
-RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
-                                        uint32_t buffer)
+RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid () << buffer);
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
   NS_ASSERT_MSG (rInfo->IsActive (), "Rule not active.");
 
@@ -212,7 +211,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
   rInfo->IncreasePriority ();
 
   // Install the P-GW TFT rules for this bearer.
-  InstallPgwTftRules (rInfo, buffer);
+  InstallPgwSwitchRules (rInfo);
 
   // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0007");
@@ -220,7 +219,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
   // Printing the cookie and buffer values in dpctl string format.
   char cookieStr [9], bufferStr [12], metadataStr [9];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
-  sprintf (bufferStr, "%u",   buffer);
+  sprintf (bufferStr, "%u", OFP_NO_BUFFER);
 
   // Building the dpctl command + arguments string.
   std::ostringstream cmd;
@@ -335,7 +334,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo,
 bool
 RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo);
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
   // We will only remove meter entries from switch. This will automatically
   // remove referring flow rules. Other rules will expired due idle timeout.
@@ -365,7 +364,7 @@ RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
 bool
 RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo);
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
   // Reseting ring routing info to the shortest path.
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
@@ -453,7 +452,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 bool
 RingController::TopologyBearerRelease (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo);
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
   Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
   if (gbrInfo && gbrInfo->IsReserved ())
@@ -467,7 +466,7 @@ RingController::TopologyBearerRelease (Ptr<RoutingInfo> rInfo)
 }
 
 void
-RingController::TopologyCreateSpanningTree ()
+RingController::TopologyCreateSpanningTree (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -529,7 +528,7 @@ RingController::NonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
 Ptr<RingRoutingInfo>
 RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo);
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
   Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   if (ringInfo == 0)

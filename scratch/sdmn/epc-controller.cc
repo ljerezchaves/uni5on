@@ -212,7 +212,7 @@ EpcController::NotifyPgwAttach (
   // -------------------------------------------------------------------------
   // Table 1 -- P-GW TFT downlink table -- [from higher to lower priority]
   //
-  // Entries will be installed here by InstallPgwTftRules function.
+  // Entries will be installed here by InstallPgwSwitchRules function.
 }
 
 void
@@ -299,9 +299,9 @@ EpcController::DoDispose ()
 }
 
 bool
-EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
+EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo << buffer);
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
   // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS
   std::string flagsStr ("0x0007");
@@ -309,7 +309,7 @@ EpcController::InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer)
   // Printing the cookie and buffer values in dpctl string format
   char cookieStr [9], bufferStr [12];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
-  sprintf (bufferStr, "%u",   buffer);
+  sprintf (bufferStr, "%u", OFP_NO_BUFFER);
 
   // Building the dpctl command + arguments string
   std::ostringstream cmd;
@@ -390,7 +390,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // This function is called after a successfully handshake between the EPC
   // controller and any switch on the EPC network (including the P-GW user
   // plane and switches on the OpenFlow backhaul network). For the P-GW switch,
-  // all entries will be installed by NotifyPgwAttach and InstallPgwTftRules
+  // all entries will be installed by NotifyPgwAttach and InstallPgwSwitchRules
   // functions, so we scape here.
   if (swtch->GetDpId () == m_pgwDpId)
     {

@@ -169,11 +169,9 @@ protected:
    * \attention This function must increase the routing priority before
    *            installing the rules, to avoid conflicts with old entries.
    * \param rInfo The routing information to configure.
-   * \param buffer The buffered packet to apply this rule to.
    * \return True if configuration succeeded, false otherwise.
    */
-  virtual bool TopologyInstallRouting (
-    Ptr<RoutingInfo> rInfo, uint32_t buffer = OFP_NO_BUFFER) = 0;
+  virtual bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
    * Remove TEID routing rules from switches.
@@ -204,18 +202,17 @@ protected:
    * when flooding (OFPP_FLOOD). This is accomplished by configuring the port
    * with OFPPC_NO_FWD flag (0x20).
    */
-  virtual void TopologyCreateSpanningTree () = 0;
+  virtual void TopologyCreateSpanningTree (void) = 0;
   //\}
 
   /**
    * Configure the P-GW with OpenFlow rules for downlink TFT packet filtering.
    * \attention To avoid conflicts with old entries, increase the routing
-   *            priority before installing P-GW TFT rules.
+   *            priority before installing P-GW rules.
    * \param rInfo The routing information to configure.
-   * \param buffer The buffered packet to apply this rule to.
    * \return True if remove succeeded, false otherwise.
    */
-  virtual bool InstallPgwTftRules (Ptr<RoutingInfo> rInfo, uint32_t buffer);
+  virtual bool InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo);
 
   // Inherited from OFSwitch13Controller.
   virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);

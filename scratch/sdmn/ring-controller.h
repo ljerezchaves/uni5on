@@ -59,11 +59,11 @@ protected:
   void NotifySwitchConnection (Ptr<ConnectionInfo> cInfo);
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
 
-  bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo, uint32_t buffer);
-  bool TopologyRemoveRouting (Ptr<RoutingInfo> rInfo);
-  bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo);
-  bool TopologyBearerRelease (Ptr<RoutingInfo> rInfo);
-  void TopologyCreateSpanningTree ();
+  bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo);
+  bool TopologyRemoveRouting  (Ptr<RoutingInfo> rInfo);
+  bool TopologyBearerRequest  (Ptr<RoutingInfo> rInfo);
+  bool TopologyBearerRelease  (Ptr<RoutingInfo> rInfo);
+  void TopologyCreateSpanningTree (void);
   // Inherited from EpcController.
 
 private:
