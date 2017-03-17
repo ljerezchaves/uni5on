@@ -48,7 +48,7 @@ TrafficManager::GetTypeId (void)
                    "inter-arrival start times.",
                    StringValue ("ns3::ExponentialRandomVariable[Mean=180.0]"),
                    MakePointerAccessor (&TrafficManager::m_poissonRng),
-                   MakePointerChecker <ExponentialRandomVariable> ())
+                   MakePointerChecker <RandomVariableStream> ())
   ;
   return tid;
 }

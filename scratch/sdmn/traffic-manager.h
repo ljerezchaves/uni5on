@@ -99,7 +99,7 @@ protected:
   virtual void DoDispose ();
 
 private:
-  Ptr<ExponentialRandomVariable>      m_poissonRng; //!< Inter-arrival traffic.
+  Ptr<RandomVariableStream>           m_poissonRng; //!< Inter-arrival traffic.
   Ptr<SdranController>                m_ctrlApp;    //!< OpenFlow controller.
   std::vector<Ptr<SdmnClientApp> >    m_apps;       //!< Application list.
 

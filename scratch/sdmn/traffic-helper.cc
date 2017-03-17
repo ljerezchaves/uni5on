@@ -523,9 +523,10 @@ TrafficHelper::EnableFastTraffic (bool fastTraffic)
 
   if (fastTraffic)
     {
-      SetManagerAttribute (
-        "PoissonInterArrival",
-        StringValue ("ns3::ExponentialRandomVariable[Mean=20.0]"));
+      Ptr<RandomVariableStream> rnd = CreateObject<UniformRandomVariable> ();
+      rnd->SetAttribute ("Min", DoubleValue (0.0));
+      rnd->SetAttribute ("Max", DoubleValue (12.0));
+      SetManagerAttribute ("PoissonInterArrival", PointerValue (rnd));
     }
 }
 
