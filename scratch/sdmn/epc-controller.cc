@@ -323,7 +323,7 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
   // Printing TEID and destination IPv4 address into tunnel metadata
   uint64_t tunnelId = (uint64_t)rInfo->GetSgwS5Addr ().Get () << 32;
   tunnelId |= rInfo->GetTeid ();
-  char tunnelIdStr [12];
+  char tunnelIdStr [17];
   sprintf (tunnelIdStr, "0x%016lX", tunnelId);
 
   // Build instruction string
