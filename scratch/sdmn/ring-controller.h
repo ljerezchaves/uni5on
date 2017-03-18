@@ -63,10 +63,17 @@ protected:
   bool TopologyRemoveRouting  (Ptr<RoutingInfo> rInfo);
   bool TopologyBearerRequest  (Ptr<RoutingInfo> rInfo);
   bool TopologyBearerRelease  (Ptr<RoutingInfo> rInfo);
-  void TopologyCreateSpanningTree (void);
   // Inherited from EpcController.
 
 private:
+  /**
+   * To avoid flooding problems when broadcasting packets (like in ARP
+   * protocol), let's find a Spanning Tree and drop packets at selected ports
+   * when flooding (OFPP_FLOOD). This is accomplished by configuring the port
+   * with OFPPC_NO_FWD flag (0x20).
+   */
+  void CreateSpanningTree (void);
+
   /**
    * Notify this controller when the Non-GBR allowed bit rate in any network
    * connection is adjusted. This is used to update Non-GBR meters bands based

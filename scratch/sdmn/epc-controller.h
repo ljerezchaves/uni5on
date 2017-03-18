@@ -165,55 +165,35 @@ protected:
    */
   //\{
   /**
-   * Configure the switches with OpenFlow commands for TEID routing, based on
-   * network topology information.
-   * \attention This function must increase the routing priority before
-   *            installing the rules, to avoid conflicts with old entries.
-   * \param rInfo The routing information to configure.
+   * Install TEID routing OpenFlow match rules into backhaul switches.
+   * \attention To avoid conflicts with old entries, increase the routing
+   *            priority before installing OpenFlow rules.
+   * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
   virtual bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
-   * Remove TEID routing rules from switches.
-   * \param rInfo The routing information to remove.
+   * Remove TEID routing OpenFlow match rules from backhaul switches.
+   * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
   virtual bool TopologyRemoveRouting (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
-   * Process the bearer resource request and bit rate allocation based on
-   * network topology information.
+   * Process the bearer request and reserve backhaul bandwidth.
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
   virtual bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
-   * Process the bearer and bit rate release based on network topology
-   * information.
+   * Release the backhaul bandwidth previously reserved for this bearer.
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
   virtual bool TopologyBearerRelease (Ptr<RoutingInfo> rInfo) = 0;
-
-  /**
-   * To avoid flooding problems when broadcasting packets (like in ARP
-   * protocol), let's find a Spanning Tree and drop packets at selected ports
-   * when flooding (OFPP_FLOOD). This is accomplished by configuring the port
-   * with OFPPC_NO_FWD flag (0x20).
-   */
-  virtual void TopologyCreateSpanningTree (void) = 0;
   //\}
-
-  /**
-   * Configure the P-GW with OpenFlow rules for downlink TFT packet filtering.
-   * \attention To avoid conflicts with old entries, increase the routing
-   *            priority before installing P-GW rules.
-   * \param rInfo The routing information to configure.
-   * \return True if succeeded, false otherwise.
-   */
-  virtual bool InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo);
 
   // Inherited from OFSwitch13Controller.
   virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
@@ -228,6 +208,36 @@ protected:
   bool m_nonGbrCoexistence;  //!< Non-GBR coexistence.
 
 private:
+  /**
+   * Configure the P-GW with OpenFlow rules for downlink TFT packet filtering.
+   * \attention To avoid conflicts with old entries, increase the routing
+   *            priority before installing OpenFlow rules.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo);
+
+  /**
+   * Remove OpenFlow rules for downlink TFT packet filtering from P-GW.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool RemovePgwSwitchRules (Ptr<RoutingInfo> rInfo);
+
+  /**
+   * Install OpenFlow match rules for this bearer.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool InstallBearer (Ptr<RoutingInfo> rInfo);
+
+  /**
+   * Remove OpenFlow match rules for this bearer.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool RemoveBearer (Ptr<RoutingInfo> rInfo);
+
   /** \name Methods for the S5 SAP P-GW control plane. */
   //\{
   void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);

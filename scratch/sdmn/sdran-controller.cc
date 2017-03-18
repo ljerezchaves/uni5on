@@ -64,12 +64,11 @@ SdranController::RequestDedicatedBearer (
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
-  bool accepted = m_epcCtrlApp->RequestDedicatedBearer (bearer, teid);
-  if (accepted)
+  if (m_epcCtrlApp->RequestDedicatedBearer (bearer, teid))
     {
-      InstallSgwSwitchRules (RoutingInfo::GetPointer (teid));
+      return InstallSgwSwitchRules (RoutingInfo::GetPointer (teid));
     }
-  return accepted;
+  return false;
 }
 
 bool
@@ -77,8 +76,12 @@ SdranController::ReleaseDedicatedBearer (
   EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
-  // TODO
-  return m_epcCtrlApp->ReleaseDedicatedBearer (bearer, teid);
+
+  if (m_epcCtrlApp->ReleaseDedicatedBearer (bearer, teid))
+    {
+      return RemoveSgwSwitchRules (RoutingInfo::GetPointer (teid));
+    }
+  return false;
 }
 
 void
@@ -192,6 +195,113 @@ SdranController::DoDispose ()
   Object::DoDispose ();
 }
 
+void
+SdranController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
+{
+  NS_LOG_FUNCTION (this << swtch);
+
+  // Configure S-GW port rules.
+  // -------------------------------------------------------------------------
+  // Table 0 -- Input table -- [from higher to lower priority]
+  //
+  // IP packets coming from the P-GW (S-GW S5 port) and addressed to the UE
+  // network are sent to table 1, where rules will match the flow and set both
+  // TEID and eNB address on tunnel metadata.
+  //
+  // Entries will be installed here by NotifySgwAttach function.
+
+  // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
+  // Internet are sent to table 2, where rules will match the flow and set both
+  // TEID and P-GW address on tunnel metadata.
+  //
+  // Entries will be installed here by NotifyEnbAttach function.
+
+  // Table miss entry. Send to controller.
+  DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
+
+  // -------------------------------------------------------------------------
+  // Table 1 -- S-GW downlink forward table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by InstallSgwSwitchRules function.
+
+  // -------------------------------------------------------------------------
+  // Table 2 -- S-GW uplink forward table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by InstallSgwSwitchRules function.
+}
+
+ofl_err
+SdranController::HandlePacketIn (
+  ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid)
+{
+  NS_LOG_FUNCTION (this << swtch << xid);
+
+  char *m = ofl_structs_match_to_string (msg->match, 0);
+  NS_LOG_INFO ("Packet in match: " << m);
+  free (m);
+
+  NS_ABORT_MSG ("Packet not supposed to be sent to this controller. Abort.");
+
+  // All handlers must free the message when everything is ok
+  ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
+  return 0;
+}
+
+ofl_err
+SdranController::HandleFlowRemoved (
+  ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid)
+{
+  NS_LOG_FUNCTION (this << swtch << xid << msg->stats->cookie);
+
+  uint32_t teid = msg->stats->cookie;
+  uint16_t prio = msg->stats->priority;
+
+  char *m = ofl_msg_to_string ((ofl_msg_header*)msg, 0);
+  NS_LOG_DEBUG ("Flow removed: " << m);
+  free (m);
+
+  // Since handlers must free the message when everything is ok,
+  // let's remove it now, as we already got the necessary information.
+  ofl_msg_free_flow_removed (msg, true, 0);
+
+  // Check for existing routing information for this bearer.
+  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer " << teid);
+
+  // When a flow is removed, check the following situations:
+  // 1) The application is stopped and the bearer must be inactive.
+  if (!rInfo->IsActive ())
+    {
+      NS_LOG_INFO ("Flow " << teid << " removed for stopped application.");
+      return 0;
+    }
+
+  // 2) The application is running and the bearer is active, but the
+  // application has already been stopped since last rule installation. In this
+  // case, the bearer priority should have been increased to avoid conflicts.
+  if (rInfo->GetPriority () > prio)
+    {
+      NS_LOG_INFO ("Flow " << teid << " removed for old rule.");
+      return 0;
+    }
+
+  // 3) The application is running and the bearer is active. This is the
+  // critical situation. For some reason, the traffic absence lead to flow
+  // expiration, and we need to reinstall the rules with higher priority to
+  // avoid problems.
+  NS_ASSERT_MSG (rInfo->GetPriority () == prio, "Invalid flow priority.");
+  if (rInfo->IsActive ())
+    {
+      NS_LOG_WARN ("Flow " << teid << " is still active. Reinstall rules...");
+      if (!InstallSgwSwitchRules (rInfo))
+        {
+          NS_FATAL_ERROR ("TEID rule installation failed!");
+        }
+      return 0;
+    }
+  NS_ABORT_MSG ("Should not get here :/");
+}
+
 bool
 SdranController::InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo)
 {
@@ -278,71 +388,21 @@ SdranController::InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo)
   return true;
 }
 
-void
-SdranController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
+bool
+SdranController::RemoveSgwSwitchRules (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << swtch);
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  // Configure S-GW port rules.
-  // -------------------------------------------------------------------------
-  // Table 0 -- Input table -- [from higher to lower priority]
-  //
-  // IP packets coming from the P-GW (S-GW S5 port) and addressed to the UE
-  // network are sent to table 1, where rules will match the flow and set both
-  // TEID and eNB address on tunnel metadata.
-  //
-  // Entries will be installed here by NotifySgwAttach function.
-
-  // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
-  // Internet are sent to table 2, where rules will match the flow and set both
-  // TEID and P-GW address on tunnel metadata.
-  //
-  // Entries will be installed here by NotifyEnbAttach function.
-
-  // Table miss entry. Send to controller.
-  DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
-
-  // -------------------------------------------------------------------------
-  // Table 1 -- S-GW downlink forward table -- [from higher to lower priority]
-  //
-  // Entries will be installed here by InstallSgwSwitchRules function.
-
-  // -------------------------------------------------------------------------
-  // Table 2 -- S-GW uplink forward table -- [from higher to lower priority]
-  //
-  // Entries will be installed here by InstallSgwSwitchRules function.
-}
-
-ofl_err
-SdranController::HandlePacketIn (
-  ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid)
-{
-  NS_LOG_FUNCTION (this << swtch << xid);
-
-  char *m = ofl_structs_match_to_string (msg->match, 0);
-  NS_LOG_INFO ("Packet in match: " << m);
-  free (m);
-
-  NS_ABORT_MSG ("Packet not supposed to be sent to this controller. Abort.");
-
-  // All handlers must free the message when everything is ok
-  ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
-  return 0;
-}
-
-ofl_err
-SdranController::HandleFlowRemoved (
-  ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid)
-{
-  NS_LOG_FUNCTION (this << swtch << xid << msg->stats->cookie);
-
-  char *m = ofl_msg_to_string ((ofl_msg_header*)msg, 0);
-  NS_LOG_DEBUG ("Flow removed: " << m);
-  free (m);
-
-  // All handlers must free the message when everything is ok
-  ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
-  return 0;
+  // We will only remove meter entries, which will automatically remove
+  // referring flow rules. Other rules will expired due idle timeout.
+  Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
+  if (meterInfo && meterInfo->IsUpInstalled ())
+    {
+      NS_LOG_DEBUG ("Removing meter entries from S-GW.");
+      DpctlExecute (m_sgwDpId, meterInfo->GetDelCmd ());
+      meterInfo->SetUpInstalled (false);
+    }
+  return true;
 }
 
 //
@@ -419,7 +479,6 @@ SdranController::DoCreateSessionResponse (
   BearerContext_t defaultBearer = msg.bearerContextsCreated.front ();
   NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
   uint32_t teid = defaultBearer.sgwFteid.teid;
-
   InstallSgwSwitchRules (RoutingInfo::GetPointer (teid));
 
   // Forward the response message to the MME.

@@ -128,15 +128,6 @@ protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
-  /**
-   * Configure the S-GW with OpenFlow rules for packet forwarding.
-   * \attention To avoid conflicts with old entries, increase the routing
-   *            priority before installing S-GW rules.
-   * \param rInfo The routing information to configure.
-   * \return True if succeeded, false otherwise.
-   */
-  virtual bool InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo);
-
   // Inherited from OFSwitch13Controller.
   virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
   virtual ofl_err HandlePacketIn (
@@ -146,6 +137,22 @@ protected:
   // Inherited from OFSwitch13Controller.
 
 private:
+  /**
+   * Configure the S-GW with OpenFlow rules for packet forwarding.
+   * \attention To avoid conflicts with old entries, increase the routing
+   *            priority before installing S-GW rules.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo);
+
+  /**
+   * Remove OpenFlow rules for packet forwarding from S-GW.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool RemoveSgwSwitchRules (Ptr<RoutingInfo> rInfo);
+
   /** \name Methods for the S11 SAP S-GW control plane. */
   //\{
   void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);

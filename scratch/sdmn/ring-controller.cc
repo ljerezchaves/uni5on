@@ -154,7 +154,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
 
   // Save the collection of switch devices and create the spanning tree.
   m_ofDevices = devices;
-  TopologyCreateSpanningTree ();
+  CreateSpanningTree ();
 
   // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0007");
@@ -200,16 +200,8 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  NS_ASSERT_MSG (rInfo->IsActive (), "Rule not active.");
-
   // Getting ring routing information.
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
-
-  // Increasing the priority every time we (re)install routing rules.
-  rInfo->IncreasePriority ();
-
-  // Install the P-GW TFT rules for this bearer.
-  InstallPgwSwitchRules (rInfo);
 
   // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0007");
@@ -242,7 +234,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
             << ",ip_dst=" << rInfo->GetSgwS5Addr ()
             << ",gtp_teid=" << rInfo->GetTeid ();
 
-      // For GBR bearers, mark the IP DSCP field.
+      // For GBR bearers, set the IP DSCP field.
       if (rInfo->IsGbr ())
         {
           // Build the apply set_field action instruction string.
@@ -273,7 +265,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
             << ",ip_dst=" << rInfo->GetPgwS5Addr ()
             << ",gtp_teid=" << rInfo->GetTeid ();
 
-      // For GBR bearers, mark the IP DSCP field.
+      // For GBR bearers, set the IP DSCP field.
       if (rInfo->IsGbr ())
         {
           // Build the apply set_field action instruction string.
@@ -290,7 +282,6 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
       DpctlExecute (GetDpId (swIdx), commandStr);
     }
 
-  rInfo->SetInstalled (true);
   NS_LOG_INFO ("Topology routing installed for bearer " << rInfo->GetTeid ());
   return true;
 }
@@ -300,28 +291,7 @@ RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  // We will only remove meter entries from switch. This will automatically
-  // remove referring flow rules. Other rules will expired due idle timeout.
-  NS_ASSERT_MSG (!rInfo->IsActive () && !rInfo->IsInstalled (),
-                 "Can't delete meter for valid traffic.");
-
-  Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
-  Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
-//  if (meterInfo && meterInfo->IsInstalled ())
-//    {
-//      NS_LOG_DEBUG ("Removing meter entries."); // FIXME remover do sgw e pgw
-//      if (meterInfo->HasDown ())
-//        {
-//          DpctlExecute (GetDpId (ringInfo->GetPgwSwIdx ()),
-//                        meterInfo->GetDelCmd ());
-//        }
-//      if (meterInfo->HasUp ())
-//        {
-//          DpctlExecute (GetDpId (ringInfo->GetSgwSwIdx ()),
-//                        meterInfo->GetDelCmd ());
-//        }
-//      meterInfo->SetInstalled (false);
-//    }
+  // We will let rules expire due idle timeout. Nothing to do here.
   return true;
 }
 
@@ -430,7 +400,7 @@ RingController::TopologyBearerRelease (Ptr<RoutingInfo> rInfo)
 }
 
 void
-RingController::TopologyCreateSpanningTree (void)
+RingController::CreateSpanningTree (void)
 {
   NS_LOG_FUNCTION (this);
 

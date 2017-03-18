@@ -88,33 +88,14 @@ EpcController::RequestDedicatedBearer (EpsBearer bearer, uint32_t teid)
 
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
   NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer " << teid);
-
-  // Is it a default bearer?
-  if (rInfo->IsDefault ())
-    {
-      // If the application traffic is sent over default bearer, there is no
-      // need for resource reservation nor reinstall the switch rules, as
-      // default rules were supposed to remain installed during entire
-      // simulation and must be Non-GBR.
-      NS_ASSERT_MSG (rInfo->IsActive () && rInfo->IsInstalled (),
-                     "Default bearer should be intalled and activated.");
-      return true;
-    }
-
-  // Is it an active (aready configured) bearer?
-  if (rInfo->IsActive ())
-    {
-      NS_ASSERT_MSG (rInfo->IsInstalled (), "Bearer should be installed.");
-      NS_LOG_WARN ("Routing path for " << teid << " is already installed.");
-      return true;
-    }
-
+  NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
-  // So, this bearer must be inactive and we are goind to reuse it's metadata.
+
+  // This bearer must be inactive and we are going to reuse it's metadata.
   // Every time the application starts using an (old) existing bearer, let's
-  // reinstall the rules on the switches, which will inscrease the bearer
-  // priority. Doing this, we avoid problems with old 'expiring' rules, and we
-  // can even use new routing paths when necessary.
+  // reinstall the rules on the switches, which will increase the bearer
+  // priority. Doing this, we avoid problems with old 'expiring' rules, and
+  // we can even use new routing paths when necessary.
 
   // Let's first check for available resources and fire trace source
   bool accepted = TopologyBearerRequest (rInfo);
@@ -124,11 +105,11 @@ EpcController::RequestDedicatedBearer (EpsBearer bearer, uint32_t teid)
       NS_LOG_INFO ("Bearer request blocked by controller.");
       return false;
     }
+  NS_LOG_INFO ("Bearer request accepted by controller.");
 
   // Everything is ok! Let's activate and install this bearer.
   rInfo->SetActive (true);
-  NS_LOG_INFO ("Bearer request accepted by controller.");
-  return TopologyInstallRouting (rInfo);
+  return InstallBearer (rInfo);
 }
 
 bool
@@ -137,30 +118,17 @@ EpcController::ReleaseDedicatedBearer (EpsBearer bearer, uint32_t teid)
   NS_LOG_FUNCTION (this << teid);
 
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (rInfo, "No routing information for teid.");
+  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer " << teid);
+  NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't release the default bearer.");
+  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
 
-  // Is it a default bearer?
-  if (rInfo->IsDefault ())
-    {
-      // If the application traffic is sent over default bearer, there is no
-      // need for resource release, as default rules were supposed to remain
-      // installed during entire simulation and must be Non-GBR.
-      NS_ASSERT_MSG (rInfo->IsActive () && rInfo->IsInstalled (),
-                     "Default bearer should be installed and activated.");
-      return true;
-    }
+  bool released = TopologyBearerRelease (rInfo);
+  m_bearerReleaseTrace (released, rInfo);
+  NS_LOG_INFO ("Bearer released by controller.");
 
-  // Check for inactive bearer
-  if (rInfo->IsActive () == false)
-    {
-      return true;
-    }
-
+  // Everything is ok! Let's deactivate and remove this bearer.
   rInfo->SetActive (false);
-  rInfo->SetInstalled (false);
-  bool success = TopologyBearerRelease (rInfo);
-  m_bearerReleaseTrace (success, rInfo);
-  return TopologyRemoveRouting (rInfo);
+  return RemoveBearer (rInfo);
 }
 
 void
@@ -298,104 +266,6 @@ EpcController::DoDispose ()
   Object::DoDispose ();
 }
 
-bool
-EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
-
-  // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
-  std::string flagsStr ("0x0007");
-
-  // Print the cookie and buffer values in dpctl string format.
-  char cookieStr [9], bufferStr [12];
-  sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
-  sprintf (bufferStr, "%u", OFP_NO_BUFFER);
-
-  // Print downlink TEID and destination IPv4 address into tunnel metadata.
-  uint64_t tunnelId = (uint64_t)rInfo->GetSgwS5Addr ().Get () << 32;
-  tunnelId |= rInfo->GetTeid ();
-  char tunnelIdStr [17];
-  sprintf (tunnelIdStr, "0x%016lX", tunnelId);
-
-  // Build the dpctl command string
-  std::ostringstream cmd, act;
-  cmd << "flow-mod cmd=add,table=1"
-      << ",buffer=" << bufferStr
-      << ",flags=" << flagsStr
-      << ",cookie=" << cookieStr
-      << ",prio=" << rInfo->GetPriority ()
-      << ",idle=" << rInfo->GetTimeout ();
-
-  // Check for meter entry.
-  Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
-  if (meterInfo && meterInfo->HasDown ())
-    {
-      if (!meterInfo->IsDownInstalled ())
-        {
-          // Install the per-flow meter entry.
-          DpctlExecute (m_pgwDpId, meterInfo->GetDownAddCmd ());
-          meterInfo->SetDownInstalled (true);
-        }
-
-      // Instruction: meter.
-      act << " meter:" << rInfo->GetTeid ();
-    }
-
-  // Instruction: apply action: set tunnel ID, output port.
-  act << " apply:set_field=tunn_id:" << tunnelIdStr
-      << ",output=" << m_pgwS5Port;
-
-  // Install one downlink dedicated bearer rule for each packet filter.
-  Ptr<EpcTft> tft = rInfo->GetTft ();
-  for (uint8_t i = 0; i < tft->GetNFilters (); i++)
-    {
-      EpcTft::PacketFilter filter = tft->GetFilter (i);
-      if (filter.direction == EpcTft::UPLINK)
-        {
-          continue;
-        }
-
-      // Install rules for TCP traffic.
-      if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
-        {
-          std::ostringstream match;
-          match << " eth_type=0x800"
-                << ",ip_proto=6"
-                << ",ip_dst=" << filter.localAddress;
-
-          if (tft->IsDefaultTft () == false)
-            {
-              match << ",ip_src=" << filter.remoteAddress
-                    << ",tcp_src=" << filter.remotePortStart
-                    << ",tcp_dst=" << filter.localPortStart;
-            }
-
-          std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
-          DpctlExecute (m_pgwDpId, cmdTcpStr);
-        }
-
-      // Install rules for UDP traffic.
-      else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
-        {
-          std::ostringstream match;
-          match << " eth_type=0x800"
-                << ",ip_proto=17"
-                << ",ip_dst=" << filter.localAddress;
-
-          if (tft->IsDefaultTft () == false)
-            {
-              match << ",ip_src=" << filter.remoteAddress
-                    << ",udp_src=" << filter.remotePortStart
-                    << ",udp_dst=" << filter.localPortStart;
-            }
-
-          std::string cmdUdpStr = cmd.str () + match.str () + act.str ();
-          DpctlExecute (m_pgwDpId, cmdUdpStr);
-        }
-    }
-  return true;
-}
-
 void
 EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
@@ -530,21 +400,17 @@ EpcController::HandleFlowRemoved (
   ofl_msg_free_flow_removed (msg, true, 0);
 
   // Only entries at Classification table (#1) can expire due idle timeout or
-  // can be removed by TopologyRemoveRouting (if they reference any per-flow
-  // meter entry). So, other flows cannot be removed.
+  // can be removed by RemoveBearer if they reference any per-flow meter entry.
+  // So, other flows cannot be removed.
   if (table != 1)
     {
       NS_FATAL_ERROR ("Flow not supposed to be removed from table " << table);
       return 0;
     }
 
-  // Check for existing routing information for this bearer
+  // Check for existing routing information for this bearer.
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  if (rInfo == 0)
-    {
-      NS_FATAL_ERROR ("Routing info for TEID " << teid << " not found.");
-      return 0;
-    }
+  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer " << teid);
 
   // When a flow is removed, check the following situations:
   // 1) The application is stopped and the bearer must be inactive.
@@ -571,13 +437,164 @@ EpcController::HandleFlowRemoved (
   if (rInfo->IsActive ())
     {
       NS_LOG_WARN ("Flow " << teid << " is still active. Reinstall rules...");
-      if (!TopologyInstallRouting (rInfo))
+      if (!InstallBearer (rInfo))
         {
-          NS_LOG_ERROR ("TEID rule installation failed!");
+          NS_FATAL_ERROR ("TEID rule installation failed!");
         }
       return 0;
     }
   NS_ABORT_MSG ("Should not get here :/");
+}
+
+bool
+EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+
+  // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
+  std::string flagsStr ("0x0007");
+
+  // Print the cookie and buffer values in dpctl string format.
+  char cookieStr [9], bufferStr [12];
+  sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
+  sprintf (bufferStr, "%u", OFP_NO_BUFFER);
+
+  // Print downlink TEID and destination IPv4 address into tunnel metadata.
+  uint64_t tunnelId = (uint64_t)rInfo->GetSgwS5Addr ().Get () << 32;
+  tunnelId |= rInfo->GetTeid ();
+  char tunnelIdStr [17];
+  sprintf (tunnelIdStr, "0x%016lX", tunnelId);
+
+  // Build the dpctl command string
+  std::ostringstream cmd, act;
+  cmd << "flow-mod cmd=add,table=1"
+      << ",buffer=" << bufferStr
+      << ",flags=" << flagsStr
+      << ",cookie=" << cookieStr
+      << ",prio=" << rInfo->GetPriority ()
+      << ",idle=" << rInfo->GetTimeout ();
+
+  // Check for meter entry.
+  Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
+  if (meterInfo && meterInfo->HasDown ())
+    {
+      if (!meterInfo->IsDownInstalled ())
+        {
+          // Install the per-flow meter entry.
+          DpctlExecute (m_pgwDpId, meterInfo->GetDownAddCmd ());
+          meterInfo->SetDownInstalled (true);
+        }
+
+      // Instruction: meter.
+      act << " meter:" << rInfo->GetTeid ();
+    }
+
+  // Instruction: apply action: set tunnel ID, output port.
+  act << " apply:set_field=tunn_id:" << tunnelIdStr
+      << ",output=" << m_pgwS5Port;
+
+  // Install one downlink dedicated bearer rule for each packet filter.
+  Ptr<EpcTft> tft = rInfo->GetTft ();
+  for (uint8_t i = 0; i < tft->GetNFilters (); i++)
+    {
+      EpcTft::PacketFilter filter = tft->GetFilter (i);
+      if (filter.direction == EpcTft::UPLINK)
+        {
+          continue;
+        }
+
+      // Install rules for TCP traffic.
+      if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
+        {
+          std::ostringstream match;
+          match << " eth_type=0x800"
+                << ",ip_proto=6"
+                << ",ip_dst=" << filter.localAddress;
+
+          if (tft->IsDefaultTft () == false)
+            {
+              match << ",ip_src=" << filter.remoteAddress
+                    << ",tcp_src=" << filter.remotePortStart
+                    << ",tcp_dst=" << filter.localPortStart;
+            }
+
+          std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
+          DpctlExecute (m_pgwDpId, cmdTcpStr);
+        }
+
+      // Install rules for UDP traffic.
+      else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
+        {
+          std::ostringstream match;
+          match << " eth_type=0x800"
+                << ",ip_proto=17"
+                << ",ip_dst=" << filter.localAddress;
+
+          if (tft->IsDefaultTft () == false)
+            {
+              match << ",ip_src=" << filter.remoteAddress
+                    << ",udp_src=" << filter.remotePortStart
+                    << ",udp_dst=" << filter.localPortStart;
+            }
+
+          std::string cmdUdpStr = cmd.str () + match.str () + act.str ();
+          DpctlExecute (m_pgwDpId, cmdUdpStr);
+        }
+    }
+  return true;
+}
+
+bool
+EpcController::RemovePgwSwitchRules (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+
+  // We will only remove meter entries, which will automatically remove
+  // referring flow rules. Other rules will expired due idle timeout.
+  Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
+  if (meterInfo && meterInfo->IsDownInstalled ())
+    {
+      NS_LOG_DEBUG ("Removing meter entries from P-GW.");
+      DpctlExecute (m_pgwDpId, meterInfo->GetDelCmd ());
+      meterInfo->SetDownInstalled (false);
+    }
+  return true;
+}
+
+bool
+EpcController::InstallBearer (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+
+  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
+
+  // Increasing the priority every time we (re)install routing rules.
+  rInfo->IncreasePriority ();
+  rInfo->SetInstalled (false);
+  bool ok1 = InstallPgwSwitchRules (rInfo);
+  bool ok2 = TopologyInstallRouting (rInfo);
+  if (ok1 && ok2)
+    {
+      rInfo->SetInstalled (true);
+    }
+  return rInfo->IsInstalled ();
+}
+
+bool
+EpcController::RemoveBearer (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+
+  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
+
+  bool ok1 = RemovePgwSwitchRules (rInfo);
+  bool ok2 = TopologyRemoveRouting (rInfo);
+  if (ok1 && ok2)
+    {
+      rInfo->SetInstalled (false);
+      return true;
+    }
+  return false;
 }
 
 void
@@ -639,7 +656,7 @@ EpcController::DoCreateSessionRequest (
   m_bearerRequestTrace (accepted, rInfo);
 
   // Install rules for default bearer.
-  bool installed = TopologyInstallRouting (rInfo);
+  bool installed = InstallBearer (rInfo);
   NS_ASSERT_MSG (installed, "Default bearer must be installed.");
 
   // For other dedicated bearers, let's create and save it's routing metadata.
