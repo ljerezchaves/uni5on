@@ -455,14 +455,14 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
   std::string flagsStr ("0x0007");
 
   // Print the cookie and buffer values in dpctl string format.
-  char cookieStr [9], bufferStr [12];
+  char cookieStr [12], bufferStr [12];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
   sprintf (bufferStr, "%u", OFP_NO_BUFFER);
 
   // Print downlink TEID and destination IPv4 address into tunnel metadata.
   uint64_t tunnelId = (uint64_t)rInfo->GetSgwS5Addr ().Get () << 32;
   tunnelId |= rInfo->GetTeid ();
-  char tunnelIdStr [17];
+  char tunnelIdStr [20];
   sprintf (tunnelIdStr, "0x%016lX", tunnelId);
 
   // Build the dpctl command string
@@ -549,12 +549,22 @@ EpcController::RemovePgwSwitchRules (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  // We will only remove meter entries, which will automatically remove
-  // referring flow rules. Other rules will expired due idle timeout.
+  // Print the cookie value in dpctl string format.
+  char cookieStr [12];
+  sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
+  NS_LOG_DEBUG ("Removing P-GW entries for teid " << rInfo->GetTeid ());
+
+  // Remove flow entries for this TEID.
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=del,"
+      << ",cookie=" << cookieStr
+      << ",cookie_mask=" << cookieStr;
+  DpctlExecute (m_pgwDpId, cmd.str ());
+
+  // Remove meter entry for this TEID.
   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
   if (meterInfo && meterInfo->IsDownInstalled ())
     {
-      NS_LOG_DEBUG ("Removing meter entries from P-GW.");
       DpctlExecute (m_pgwDpId, meterInfo->GetDelCmd ());
       meterInfo->SetDownInstalled (false);
     }

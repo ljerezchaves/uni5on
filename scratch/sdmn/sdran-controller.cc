@@ -314,7 +314,7 @@ SdranController::InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo)
   std::string flagsStr ("0x0007");
 
   // Print the cookie and buffer values in dpctl string format.
-  char cookieStr [9], bufferStr [12];
+  char cookieStr [12], bufferStr [12];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
   sprintf (bufferStr, "%u", OFP_NO_BUFFER);
 
@@ -324,7 +324,7 @@ SdranController::InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo)
       // Print downlink TEID and destination IPv4 address into tunnel metadata.
       uint64_t tunnelId = (uint64_t)enbInfo->GetEnbS1uAddr ().Get () << 32;
       tunnelId |= rInfo->GetTeid ();
-      char tunnelIdStr [17];
+      char tunnelIdStr [20];
       sprintf (tunnelIdStr, "0x%016lX", tunnelId);
 
       // Build the dpctl command string.
@@ -348,7 +348,7 @@ SdranController::InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo)
       // Print uplink TEID and destination IPv4 address into tunnel metadata.
       uint64_t tunnelId = (uint64_t)rInfo->GetPgwS5Addr ().Get () << 32;
       tunnelId |= rInfo->GetTeid ();
-      char tunnelIdStr [17];
+      char tunnelIdStr [20];
       sprintf (tunnelIdStr, "0x%016lX", tunnelId);
 
       // Build the dpctl command string.
@@ -393,12 +393,22 @@ SdranController::RemoveSgwSwitchRules (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  // We will only remove meter entries, which will automatically remove
-  // referring flow rules. Other rules will expired due idle timeout.
+  // Print the cookie value in dpctl string format.
+  char cookieStr [12];
+  sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
+  NS_LOG_DEBUG ("Removing S-GW entries for teid " << rInfo->GetTeid ());
+
+  // Remove flow entries for this TEID.
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=del,"
+      << ",cookie=" << cookieStr
+      << ",cookie_mask=" << cookieStr;
+  DpctlExecute (m_sgwDpId, cmd.str ());
+
+  // Remove meter entry for this TEID.
   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
   if (meterInfo && meterInfo->IsUpInstalled ())
     {
-      NS_LOG_DEBUG ("Removing meter entries from S-GW.");
       DpctlExecute (m_sgwDpId, meterInfo->GetDelCmd ());
       meterInfo->SetUpInstalled (false);
     }

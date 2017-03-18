@@ -173,7 +173,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
       // into action set based on input port. Write the same group number into
       // metadata field. Send the packet to Coexistence QoS table.
       std::ostringstream cmd0, cmd1;
-      char metadataStr [9];
+      char metadataStr [12];
 
       sprintf (metadataStr, "0x%x", RingRoutingInfo::COUNTER);
       cmd0 << "flow-mod cmd=add,table=2,prio=128"
@@ -207,7 +207,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
   std::string flagsStr ("0x0007");
 
   // Printing the cookie and buffer values in dpctl string format.
-  char cookieStr [9], bufferStr [12], metadataStr [9];
+  char cookieStr [12], bufferStr [12], metadataStr [12];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
   sprintf (bufferStr, "%u", OFP_NO_BUFFER);
 
@@ -223,18 +223,15 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
   // Configuring downlink routing.
   if (rInfo->HasDownlinkTraffic ())
     {
-      std::ostringstream match, act;
-
-      // In downlink the input ring switch is the one connected to the P-GW.
-      uint16_t swIdx = ringInfo->GetPgwSwIdx ();
-
       // Building the match string.
+      std::ostringstream match;
       match << " eth_type=0x800,ip_proto=17"
             << ",ip_src=" << rInfo->GetPgwS5Addr ()
             << ",ip_dst=" << rInfo->GetSgwS5Addr ()
             << ",gtp_teid=" << rInfo->GetTeid ();
 
       // For GBR bearers, set the IP DSCP field.
+      std::ostringstream act;
       if (rInfo->IsGbr ())
         {
           // Build the apply set_field action instruction string.
@@ -247,25 +244,23 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
       act << " meta:" << metadataStr << " goto:2";
 
       // Installing the rule into input switch.
+      // In downlink the input ring switch is the one connected to the P-GW.
       std::string commandStr = cmd.str () + match.str () + act.str ();
-      DpctlExecute (GetDpId (swIdx), commandStr);
+      DpctlExecute (ringInfo->GetPgwSwDpId (), commandStr);
     }
 
   // Configuring uplink routing.
   if (rInfo->HasUplinkTraffic ())
     {
-      std::ostringstream match, act;
-
-      // In uplink the input ring switch is the one connected to the S-GW.
-      uint16_t swIdx = ringInfo->GetSgwSwIdx ();
-
       // Building the match string.
+      std::ostringstream match;
       match << " eth_type=0x800,ip_proto=17"
             << ",ip_src=" << rInfo->GetSgwS5Addr ()
             << ",ip_dst=" << rInfo->GetPgwS5Addr ()
             << ",gtp_teid=" << rInfo->GetTeid ();
 
       // For GBR bearers, set the IP DSCP field.
+      std::ostringstream act;
       if (rInfo->IsGbr ())
         {
           // Build the apply set_field action instruction string.
@@ -278,8 +273,9 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
       act << " meta:" << metadataStr << " goto:2";
 
       // Installing the rule into input switch.
+      // In uplink the input ring switch is the one connected to the S-GW.
       std::string commandStr = cmd.str () + match.str () + act.str ();
-      DpctlExecute (GetDpId (swIdx), commandStr);
+      DpctlExecute (ringInfo->GetSgwSwDpId (), commandStr);
     }
 
   NS_LOG_INFO ("Topology routing installed for bearer " << rInfo->GetTeid ());
@@ -291,7 +287,31 @@ RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  // We will let rules expire due idle timeout. Nothing to do here.
+  // Print the cookie value in dpctl string format.
+  char cookieStr [12];
+  sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
+  NS_LOG_DEBUG ("Removing topology entries for teid " << rInfo->GetTeid ());
+
+  // Getting ring routing information.
+  Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
+
+  // Remove flow entries for this TEID.
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=del,"
+      << ",cookie=" << cookieStr
+      << ",cookie_mask=" << cookieStr;
+
+  // Remove downlink routing.
+  if (rInfo->HasDownlinkTraffic ())
+    {
+      DpctlExecute (ringInfo->GetPgwSwDpId (), cmd.str ());
+    }
+
+  // Remove uplink routing.
+  if (rInfo->HasUplinkTraffic ())
+    {
+      DpctlExecute (ringInfo->GetSgwSwDpId (), cmd.str ());
+    }
   return true;
 }
 
