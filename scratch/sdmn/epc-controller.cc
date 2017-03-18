@@ -399,14 +399,10 @@ EpcController::HandleFlowRemoved (
   // let's remove it now, as we already got the necessary information.
   ofl_msg_free_flow_removed (msg, true, 0);
 
-  // Only entries at Classification table (#1) can expire due idle timeout or
-  // can be removed by RemoveBearer if they reference any per-flow meter entry.
-  // So, other flows cannot be removed.
-  if (table != 1)
-    {
-      NS_FATAL_ERROR ("Flow not supposed to be removed from table " << table);
-      return 0;
-    }
+  // Only entries at table 1 (both for the P-GW and for backhaul switches) can
+  // expire due idle timeout or can be removed by RemoveBearer. Other flows
+  // cannot be removed.
+  NS_ASSERT_MSG (table == 1, "Flow cannot be removed from table " << table);
 
   // Check for existing routing information for this bearer.
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
@@ -437,10 +433,8 @@ EpcController::HandleFlowRemoved (
   if (rInfo->IsActive ())
     {
       NS_LOG_WARN ("Flow " << teid << " is still active. Reinstall rules...");
-      if (!InstallBearer (rInfo))
-        {
-          NS_FATAL_ERROR ("TEID rule installation failed!");
-        }
+      bool installed = InstallBearer (rInfo);
+      NS_ASSERT_MSG (installed, "TEID rule installation failed!");
       return 0;
     }
   NS_ABORT_MSG ("Should not get here :/");
@@ -556,7 +550,7 @@ EpcController::RemovePgwSwitchRules (Ptr<RoutingInfo> rInfo)
 
   // Remove flow entries for this TEID.
   std::ostringstream cmd;
-  cmd << "flow-mod cmd=del,"
+  cmd << "flow-mod cmd=del,table=1"
       << ",cookie=" << cookieStr
       << ",cookie_mask=" << cookieStr;
   DpctlExecute (m_pgwDpId, cmd.str ());

@@ -293,10 +293,8 @@ SdranController::HandleFlowRemoved (
   if (rInfo->IsActive ())
     {
       NS_LOG_WARN ("Flow " << teid << " is still active. Reinstall rules...");
-      if (!InstallSgwSwitchRules (rInfo))
-        {
-          NS_FATAL_ERROR ("TEID rule installation failed!");
-        }
+      bool installed = InstallSgwSwitchRules (rInfo);
+      NS_ASSERT_MSG (installed, "S-GW rule installation failed!");
       return 0;
     }
   NS_ABORT_MSG ("Should not get here :/");

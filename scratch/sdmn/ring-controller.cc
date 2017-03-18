@@ -297,7 +297,7 @@ RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
 
   // Remove flow entries for this TEID.
   std::ostringstream cmd;
-  cmd << "flow-mod cmd=del,"
+  cmd << "flow-mod cmd=del,table=1"
       << ",cookie=" << cookieStr
       << ",cookie_mask=" << cookieStr;
 
