@@ -302,17 +302,29 @@ TrafficStatsCalculator::ResetCounters (std::string context,
 }
 
 void
-TrafficStatsCalculator::MeterDropPacket (std::string context,
-                                         Ptr<const Packet> packet)
+TrafficStatsCalculator::MeterDropPacket (
+  std::string context, Ptr<const Packet> packet, uint32_t meterId)
 {
-  NS_LOG_FUNCTION (this << context << packet);
+  NS_LOG_FUNCTION (this << context << packet << meterId);
 
-  // FIXME No EpcGtpuTag available for meter drop on downlink traffic at P-GW.
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
       Ptr<QosStatsCalculator> qosStats =
         GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      qosStats->NotifyMeterDrop ();
+    }
+  else
+    {
+      //
+      // This only happens when a packet is dropped at the P-GW, before
+      // entering the logical port that is responsible for attaching the
+      // EpcGtpuTag and notifying that the packet is entering the EPC. To keep
+      // consistent log results, we are doing this manually here.
+      //
+      NS_ASSERT_MSG (meterId, "Invalid meter ID for dropped packet.");
+      Ptr<QosStatsCalculator> qosStats = GetQosStatsFromTeid (meterId, true);
+      qosStats->NotifyTx (packet->GetSize ());
       qosStats->NotifyMeterDrop ();
     }
 }

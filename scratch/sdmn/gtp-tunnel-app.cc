@@ -30,7 +30,7 @@ NS_OBJECT_ENSURE_REGISTERED (GtpTunnelApp);
 GtpTunnelApp::GtpTunnelApp (Ptr<VirtualNetDevice> logicalPort,
                             Ptr<CsmaNetDevice> physicalDev)
 {
-  NS_LOG_FUNCTION (this << logicalPort);
+  NS_LOG_FUNCTION (this << logicalPort << physicalDev);
 
   // Save the pointers and set the send callback.
   m_logicalPort = logicalPort;

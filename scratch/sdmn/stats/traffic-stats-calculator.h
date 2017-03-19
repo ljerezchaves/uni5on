@@ -75,8 +75,10 @@ private:
    * Trace sink fired when a packets is dropped by meter band.
    * \param context Context information.
    * \param packet The dropped packet.
+   * \param meterId The meter ID that dropped the packet.
    */
-  void MeterDropPacket (std::string context, Ptr<const Packet> packet);
+  void MeterDropPacket (std::string context, Ptr<const Packet> packet,
+                        uint32_t meterId);
 
   /**
    * Trace sink fired when a packet is dropped by OpenFlow port queues.
