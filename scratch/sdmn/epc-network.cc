@@ -168,7 +168,7 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
   // Add the sgwS5Dev as standard device on S-GW node.
   // It will be connected to a logical port through the GtpTunnelApp.
   m_s5AddrHelper.Assign (NetDeviceContainer (sgwS5Dev));
-  NS_LOG_DEBUG ("S-GW S5 address: " << EpcNetwork::GetIpv4Addr (sgwS5Dev));
+  NS_LOG_INFO ("S-GW S5 address: " << EpcNetwork::GetIpv4Addr (sgwS5Dev));
 
   // Create the virtual net device to work as the logical port on the S-GW S5
   // interface. This logical ports will connect to the S-GW user-plane
@@ -227,7 +227,7 @@ EpcNetwork::NotifyConstructionCompleted (void)
   // Set the default P-GW gateway logical address, which will be used to set
   // the static route at all UEs.
   m_pgwAddr = m_ueAddrHelper.NewAddress ();
-  NS_LOG_DEBUG ("P-GW gateway address: " << GetUeDefaultGatewayAddress ());
+  NS_LOG_INFO ("P-GW gateway address: " << GetUeDefaultGatewayAddress ());
 
   // Create the OFSwitch13 helper using p2p connections for OpenFlow channel.
   m_ofSwitchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
@@ -310,8 +310,8 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
 
   // Set the IP address on the Internet Web server and P-GW SGi interfaces.
   m_sgiAddrHelper.Assign (NetDeviceContainer (m_sgiDevices));
-  NS_LOG_DEBUG ("Web SGi address: " << EpcNetwork::GetIpv4Addr (webSgiDev));
-  NS_LOG_DEBUG ("P-GW SGi address: " << EpcNetwork::GetIpv4Addr (pgwSgiDev));
+  NS_LOG_INFO ("Web SGi address: " << EpcNetwork::GetIpv4Addr (webSgiDev));
+  NS_LOG_INFO ("P-GW SGi address: " << EpcNetwork::GetIpv4Addr (pgwSgiDev));
 
   // Define static routes at the Internet Web server to the LTE network.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
@@ -348,7 +348,7 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
   // Add the pgwS5Dev as standard device on P-GW node.
   // It will be connected to a logical port through the PgwApp.
   m_s5AddrHelper.Assign (NetDeviceContainer (pgwS5Dev));
-  NS_LOG_DEBUG ("P-GW S5 address: " << EpcNetwork::GetIpv4Addr (pgwS5Dev));
+  NS_LOG_INFO ("P-GW S5 address: " << EpcNetwork::GetIpv4Addr (pgwS5Dev));
 
   // Create the virtual net device to work as the logical ports on the P-GW S5
   // interface. This logical ports will connect to the P-GW user-plane
@@ -390,7 +390,7 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
   Ipv4Address ueAddr = ueIpv4->GetAddress (interface, 0).GetLocal ();
   UeInfo::GetPointer (imsi)->SetUeAddr (ueAddr);
 
-  NS_LOG_DEBUG ("Activate EPS bearer UE IP address: " << ueAddr);
+  NS_LOG_INFO ("Activate EPS bearer UE IP address: " << ueAddr);
 
   // Trick for default bearer.
   if (tft->IsDefaultTft ())

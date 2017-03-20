@@ -290,7 +290,7 @@ RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
   // Print the cookie value in dpctl string format.
   char cookieStr [12];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
-  NS_LOG_DEBUG ("Removing topology entries for teid " << rInfo->GetTeid ());
+  NS_LOG_INFO ("Removing topology entries for teid " << rInfo->GetTeid ());
 
   // Getting ring routing information.
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);

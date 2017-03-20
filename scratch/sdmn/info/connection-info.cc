@@ -569,9 +569,9 @@ ConnectionInfo::RegisterConnectionInfo (Ptr<ConnectionInfo> cInfo)
     }
 
   ConnectionInfo::m_connectionsList.push_back (cInfo);
-  NS_LOG_DEBUG ("New connection info saved:" <<
-                " switch " << dpId1 << " port " << cInfo->GetPortNo (0) <<
-                " switch " << dpId2 << " port " << cInfo->GetPortNo (1));
+  NS_LOG_INFO ("New connection info saved:" <<
+               " switch " << dpId1 << " port " << cInfo->GetPortNo (0) <<
+               " switch " << dpId2 << " port " << cInfo->GetPortNo (1));
 }
 
 };  // namespace ns3

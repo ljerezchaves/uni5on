@@ -67,10 +67,9 @@ TrafficManager::AddSdmnClientApp (Ptr<SdmnClientApp> app)
   // Wait at least 2 seconds for simulation initial setup.
   Time start = Seconds (2) + Seconds (std::abs (m_poissonRng->GetValue ()));
   Simulator::Schedule (start, &TrafficManager::AppStartTry, this, app);
-  NS_LOG_DEBUG ("First start try for app " << app->GetAppName () <<
-                " at user " << m_imsi << " with teid " << app->GetTeid () <<
-                " will occur at " <<
-                (Simulator::Now () + start).GetSeconds ());
+  NS_LOG_INFO ("First start try for app " << app->GetAppName () <<
+               " at user " << m_imsi << " with teid " << app->GetTeid () <<
+               " will occur at " << (Simulator::Now () + start).GetSeconds ());
 }
 
 void
@@ -131,17 +130,17 @@ TrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
       app->SetAttribute ("MaxOnTime", TimeValue (duration));
 
       Simulator::Schedule (Seconds (1), &SdmnClientApp::Start, app);
-      NS_LOG_DEBUG ("App " << app->GetAppName () << " at user " << m_imsi <<
-                    " with teid " << app->GetTeid () << " will start at " <<
-                    (Simulator::Now () + Seconds (1)).GetSeconds () <<
-                    " with maximum duration of " << duration.GetSeconds ());
+      NS_LOG_INFO ("App " << app->GetAppName () << " at user " << m_imsi <<
+                   " with teid " << app->GetTeid () << " will start at " <<
+                   (Simulator::Now () + Seconds (1)).GetSeconds () <<
+                   " with maximum duration of " << duration.GetSeconds ());
     }
 
   Simulator::Schedule (nextStartTry, &TrafficManager::AppStartTry, this, app);
-  NS_LOG_DEBUG ("Next start try for app " << app->GetAppName () <<
-                " at user " << m_imsi << " with teid " << app->GetTeid () <<
-                " will occur at " <<
-                (Simulator::Now () + nextStartTry).GetSeconds ());
+  NS_LOG_INFO ("Next start try for app " << app->GetAppName () <<
+               " at user " << m_imsi << " with teid " << app->GetTeid () <<
+               " will occur at " <<
+               (Simulator::Now () + nextStartTry).GetSeconds ());
 }
 
 void

@@ -249,7 +249,6 @@ EpcController::GetDscpValue (EpsBearer::Qci qci)
   it = EpcController::m_qciDscpTable.find (qci);
   if (it != EpcController::m_qciDscpTable.end ())
     {
-      NS_LOG_DEBUG ("Found DSCP value: " << qci << " - " << it->second);
       return it->second;
     }
   NS_FATAL_ERROR ("No DSCP mapped value for QCI " << qci);
@@ -371,7 +370,7 @@ EpcController::HandlePacketIn (
   NS_LOG_FUNCTION (this << swtch << xid);
 
   char *m = ofl_structs_match_to_string (msg->match, 0);
-  NS_LOG_INFO ("Packet in match: " << m);
+  NS_LOG_DEBUG ("Packet in match: " << m);
   free (m);
 
   NS_ABORT_MSG ("Packet not supposed to be sent to this controller. Abort.");
@@ -546,7 +545,7 @@ EpcController::RemovePgwSwitchRules (Ptr<RoutingInfo> rInfo)
   // Print the cookie value in dpctl string format.
   char cookieStr [12];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
-  NS_LOG_DEBUG ("Removing P-GW entries for teid " << rInfo->GetTeid ());
+  NS_LOG_INFO ("Removing P-GW entries for teid " << rInfo->GetTeid ());
 
   // Remove flow entries for this TEID.
   std::ostringstream cmd;
