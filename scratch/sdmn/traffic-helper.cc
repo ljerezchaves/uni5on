@@ -219,11 +219,11 @@ TrafficHelper::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Install the applications
+  // Install the applications.
   InstallApplications (m_lteNetwork->GetUeNodes (),
                        m_lteNetwork->GetUeDevices ());
 
-  // Chain up
+  // Chain up.
   Object::NotifyConstructionCompleted ();
 }
 
@@ -233,7 +233,7 @@ TrafficHelper::InstallApplications (NodeContainer ueNodes,
 {
   NS_LOG_FUNCTION (this);
 
-  // Installing manager and applications into nodes
+  // Install manager and applications into nodes.
   for (uint32_t u = 0; u < ueNodes.GetN (); u++)
     {
       m_ueNode = ueNodes.Get (u);
@@ -244,17 +244,17 @@ TrafficHelper::InstallApplications (NodeContainer ueNodes,
       m_ueAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
       m_ueMask = clientIpv4->GetAddress (1, 0).GetMask ();
 
-      // Each UE gets one traffic manager
+      // Each UE gets one traffic manager.
       m_ueManager = m_managerFactory.Create<TrafficManager> ();
       m_ueManager->SetImsi (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
       m_ueNode->AggregateObject (m_ueManager);
 
-      // Connecting the manager to new context created trace source.
+      // Connect the manager to new context created trace source.
       Config::ConnectWithoutContext (
         "/NodeList/*/ApplicationList/*/$ns3::EpcController/SessionCreated",
         MakeCallback (&TrafficManager::SessionCreatedCallback, m_ueManager));
 
-      // Installing applications into UEs
+      // Install applications into UEs
       if (m_gbrVoip)
         {
           InstallGbrVoip ();
@@ -312,11 +312,11 @@ TrafficHelper::InstallGbrVoip ()
   static uint16_t portNo = 10000;
   portNo++;
 
-  // Bidirectional VoIP traffic
+  // Bidirectional VoIP traffic.
   Ptr<SdmnClientApp> cApp = m_voipHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, portNo);
 
-  // TFT Packet filter
+  // TFT Packet filter.
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
   filter.direction = EpcTft::BIDIRECTIONAL;
@@ -331,18 +331,18 @@ TrafficHelper::InstallGbrVoip ()
   filter.localPortEnd = portNo;
   tft->Add (filter);
 
-  // Dedicated GBR EPS bearer (QCI 1)
+  // Dedicated GBR EPS bearer (QCI 1).
   GbrQosInformation qos;
   qos.gbrDl = 47200;  // ~46.09 Kbps (considering tunnel overhead)
   qos.gbrUl = 47200;  // ~46.09 Kbps (considering tunnel overhead)
   EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
 
-  // Link EPC info to application
+  // Link EPC info to application.
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
   m_ueManager->AddSdmnClientApp (cApp);
 
-  // Activate dedicated bearer
+  // Activate dedicated bearer.
   GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
@@ -353,7 +353,7 @@ TrafficHelper::InstallGbrLiveVideoStreaming ()
   static uint16_t portNo = 15000;
   portNo++;
 
-  // Downlink real-time video traffic
+  // Downlink real-time video traffic.
   int videoIdx = m_videoRng->GetInteger ();
   std::string filename = GetVideoFilename (videoIdx);
   m_rtVideoHelper.SetServerAttribute ("TraceFilename", StringValue (filename));
@@ -361,7 +361,7 @@ TrafficHelper::InstallGbrLiveVideoStreaming ()
   Ptr<SdmnClientApp> cApp = m_rtVideoHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, portNo);
 
-  // TFT downlink packet filter
+  // TFT downlink packet filter.
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
   filter.direction = EpcTft::DOWNLINK;
@@ -382,12 +382,12 @@ TrafficHelper::InstallGbrLiveVideoStreaming ()
   qos.mbrDl = GetVideoMbr (videoIdx).GetBitRate ();
   EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO, qos);
 
-  // Link EPC info to application
+  // Link EPC info to application.
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
   m_ueManager->AddSdmnClientApp (cApp);
 
-  // Activate dedicated bearer
+  // Activate dedicated bearer.
   GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
@@ -406,7 +406,7 @@ TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
   Ptr<SdmnClientApp> cApp = m_stVideoHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, portNo);
 
-  // TFT Packet filter
+  // TFT Packet filter.
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
   filter.direction = EpcTft::BIDIRECTIONAL;
@@ -421,16 +421,16 @@ TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
   filter.localPortEnd = portNo;
   tft->Add (filter);
 
-  // Dedicated Non-GBR EPS bearer (QCI 6)
+  // Dedicated Non-GBR EPS bearer (QCI 6).
   GbrQosInformation qos;
   EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR, qos);
 
-  // Link EPC info to application
+  // Link EPC info to application.
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
   m_ueManager->AddSdmnClientApp (cApp);
 
-  // Activate dedicated bearer
+  // Activate dedicated bearer.
   GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
@@ -441,7 +441,7 @@ TrafficHelper::InstallNonGbrLiveVideoStreaming ()
   static uint16_t portNo = 25000;
   portNo++;
 
-  // Downlink real-time video traffic
+  // Downlink real-time video traffic.
   int videoIdx = m_videoRng->GetInteger ();
   std::string filename = GetVideoFilename (videoIdx);
   m_rtVideoHelper.SetServerAttribute ("TraceFilename", StringValue (filename));
@@ -449,7 +449,7 @@ TrafficHelper::InstallNonGbrLiveVideoStreaming ()
   Ptr<SdmnClientApp> cApp = m_rtVideoHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, portNo);
 
-  // TFT downlink packet filter
+  // TFT downlink packet filter.
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
   filter.direction = EpcTft::DOWNLINK;
@@ -468,12 +468,12 @@ TrafficHelper::InstallNonGbrLiveVideoStreaming ()
   GbrQosInformation qos;
   EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING, qos);
 
-  // Link EPC info to application
+  // Link EPC info to application.
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
   m_ueManager->AddSdmnClientApp (cApp);
 
-  // Activate dedicated bearer
+  // Activate dedicated bearer.
   GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
@@ -488,7 +488,7 @@ TrafficHelper::InstallNonGbrHttp ()
   Ptr<SdmnClientApp> cApp = m_httpHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, portNo);
 
-  // TFT Packet filter
+  // TFT Packet filter.
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
   filter.direction = EpcTft::BIDIRECTIONAL;
@@ -503,16 +503,16 @@ TrafficHelper::InstallNonGbrHttp ()
   filter.localPortEnd = portNo;
   tft->Add (filter);
 
-  // Dedicated Non-GBR EPS bearer (QCI 8)
+  // Dedicated Non-GBR EPS bearer (QCI 8).
   GbrQosInformation qos;
   EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
 
-  // Link EPC info to application
+  // Link EPC info to application.
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
   m_ueManager->AddSdmnClientApp (cApp);
 
-  // Activate dedicated bearer
+  // Activate dedicated bearer.
   GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 

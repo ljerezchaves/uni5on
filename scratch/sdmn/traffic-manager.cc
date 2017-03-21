@@ -58,12 +58,12 @@ TrafficManager::AddSdmnClientApp (Ptr<SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << app);
 
-  // Save application and configure stop callback
+  // Save application and configure stop callback.
   m_apps.push_back (app);
   app->TraceConnectWithoutContext (
     "AppStop", MakeCallback (&TrafficManager::NotifyAppStop, this));
 
-  // Schedule the first start attempt for this app.
+  // Schedule the first start attempt for this application.
   // Wait at least 2 seconds for simulation initial setup.
   Time start = Seconds (2) + Seconds (std::abs (m_poissonRng->GetValue ()));
   Simulator::Schedule (start, &TrafficManager::AppStartTry, this, app);
@@ -80,11 +80,11 @@ TrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
 
   bool authorized = true;
   uint32_t appTeid = app->GetTeid ();
-
   NS_LOG_INFO ("Attemp to start traffic for bearer " << appTeid);
+
+  // No resource request for traffic over default bearer.
   if (appTeid != m_defaultTeid)
     {
-      // No resource request for traffic over default bearer.
       authorized = m_ctrlApp->RequestDedicatedBearer (
           app->GetEpsBearer (), m_imsi, m_cellId, appTeid);
     }
@@ -96,33 +96,38 @@ TrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
   // current implementation. Doing this, we can respect almost all
   // inter-arrival times for the Poisson process and reuse application and
   // bearers along the simulation. However, we must ensure a minimum interval
-  // between start attempts so the network can prepare for application traffic
-  // and release resources after that. In this implementation, we are using 1
-  // second for traffic preparation, at least 3 seconds for traffic duration
-  // and 4 seconds for release procedures. See the timeline bellow for better
-  // understanding. Note that in current implementation, no retries are
+  // between start attempts so the network can prepare for application
+  // traffic and release resources after that. See the timeline bellow for
+  // better understanding. Note that in current implementation, no retries are
   // performed for a non-authorized traffic.
   //
-  //  Now  Now+1s              t-4s   t-3s   t-2s   t-1s    t
-  //   |------|------ ... ------|------|------|------|------|---> time
-  //   A      B                 C      D      E      F      G
-  //           <-- MaxOnTime -->
-  //           (at least 3 secs)
+  //     1sec                                                            time
+  //   |------|------ ... ------|------|------|------|------ ... ------|--->
+  //   A      B                 C      D             E                 F
+  // (Now)     <-- MaxOnTime -->                      <----- ... ----->
+  //           (at least 3 secs)                      (at least 2 secs)
   //
-  // A: This AppStartTry (install rules into switches)
-  // B: Application starts (traffic begin)
-  // C: Traffic generation ends (still have packets on the wire)
-  // D: Application stops (fire dump statistics)
-  // E: Resource release (remove rules from switches)
-  // F: The socket will be effectivelly closed (Note 1)
-  // G: Next AppStartTry (following Poisson proccess)
+  // A: This is the current AppStartTry. If the resources requested were
+  //    accepted, the switch rules are installed and the application is
+  //    scheduled to start in 1 second.
   //
-  // Note 1: In this implementation the TCP socket maximum segment lifetime
-  // attribute was adjusted to 1 second, which will allow the TCP state machine
-  // to change from TIME_WAIT state to CLOSED state 2 seconds after the close
-  // procedure.
+  // B: The application effectively starts and the traffic begins.
   //
-  Time nextStartTry = Seconds (std::max (8.0, m_poissonRng->GetValue ()));
+  // C: The application prepares to stop. No more traffic is generated, but we
+  //    may have packets on the fly.
+  //
+  // D: The application effectively stops. This will fire dump statistics and
+  //    sockets will be closed. The resource release is scheduled for +2 secs.
+  //
+  // E: The resources are released and switch rules are removed. Note that at
+  //    this point, TCP socket are already effectively in closed, as the TCP
+  //    socket maximum segment lifetime attribute was adjusted to 900 ms which
+  //    will allow the TCP state machine to change from TIME_WAIT state to
+  //    CLOSED state before 2 secs after the close procedure.
+  //
+  // F: This is the next AppStartTry, following the Poisson process.
+  //
+  Time nextStartTry = Seconds (std::max (9.0, m_poissonRng->GetValue ()));
   if (authorized)
     {
       // Set the maximum traffic duration.
@@ -148,13 +153,13 @@ TrafficManager::NotifyAppStop (Ptr<const SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << app);
 
+  // No resource release for traffic over default bearer.
   uint32_t appTeid = app->GetTeid ();
   if (appTeid != m_defaultTeid)
     {
-      // No resource release for traffic over default bearer.
-      // Schedule the release for 1 second after application stops.
+      // Schedule the release for +2 seconds.
       Simulator::Schedule (
-        Seconds (1), &SdranController::ReleaseDedicatedBearer,
+        Seconds (2), &SdranController::ReleaseDedicatedBearer,
         m_ctrlApp, app->GetEpsBearer (), m_imsi, m_cellId, appTeid);
     }
 }
@@ -165,7 +170,7 @@ TrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
 {
   NS_LOG_FUNCTION (this);
 
-  // Check the imsi match for current manager
+  // Check the imsi match for current manager.
   if (imsi != m_imsi)
     {
       return;
@@ -175,13 +180,13 @@ TrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
   m_ctrlApp = SdranController::GetPointer (cellId);
   m_defaultTeid = bearerList.front ().sgwFteid.teid;
 
-  // For each application, set the corresponding teid
+  // For each application, set the corresponding teid.
   std::vector<Ptr<SdmnClientApp> >::iterator appIt;
   for (appIt = m_apps.begin (); appIt != m_apps.end (); appIt++)
     {
       Ptr<SdmnClientApp> app = *appIt;
 
-      // Using the tft to match bearers and apps
+      // Using the TFT to match bearers and apps.
       Ptr<EpcTft> tft = app->GetTft ();
       if (tft)
         {
@@ -196,7 +201,7 @@ TrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
         }
       else
         {
-          // This application uses the default bearer
+          // This application uses the default bearer.
           app->SetTeid (m_defaultTeid);
         }
       NS_LOG_INFO ("Application " << app->GetAppName () << " [" << imsi <<

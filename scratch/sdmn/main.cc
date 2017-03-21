@@ -191,28 +191,6 @@ void ConfigureDefaults ()
   ForceDefaults ();
 
   //
-  // The default TCP retransmission timeout when opening connection is set to 3
-  // second in ns-3. However, we are going to use a small value of 1 second to
-  // keep up with fast retransmission approach.
-  //
-  Config::SetDefault ("ns3::TcpSocket::ConnTimeout", TimeValue (Seconds (1)));
-
-  //
-  // The default TCP minimum retransmit timeout value is set to 1 second in
-  // ns-3, according to RFC 6298. However, Linux uses 200 ms as the default
-  // value, and we are going to keep up with this fast retransmission
-  // approach.
-  //
-  Config::SetDefault ("ns3::TcpSocketBase::MinRto", TimeValue (Seconds (0.2)));
-
-  //
-  // Reducing the TCP maximum segment lifetime to 1 second, used for TIME_WAIT
-  // state transition to CLOSED state. This is necessary to allow fast TCP
-  // endpoint release, allowing the reuse of TCP ports on new sockets.
-  //
-  Config::SetDefault ("ns3::TcpSocketBase::MaxSegLifetime", DoubleValue (1));
-
-  //
   // Increasing the default MTU for virtual network devices, which are used as
   // OpenFlow virtual port devices.
   //
@@ -334,6 +312,32 @@ void ForceDefaults ()
   // to avoid packet fragmentation.
   //
   Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1400));
+
+  //
+  // The default number of TCP connection attempts before returning a failure
+  // is set to 6 in ns-3, with an interval of 3 seconds between each attempt.
+  // We are going to reduce the number of attempts to 3, with a small interval
+  // of 500 ms between them.
+  //
+  Config::SetDefault ("ns3::TcpSocket::ConnCount", UintegerValue (3));
+  Config::SetDefault ("ns3::TcpSocket::ConnTimeout",
+                      TimeValue (MilliSeconds (500)));
+
+  //
+  // Reducing the TCP maximum segment lifetime to 1 second, used for TIME_WAIT
+  // state transition to CLOSED state. This is necessary to allow fast TCP
+  // endpoint release, allowing the reuse of TCP ports on new sockets.
+  //
+  Config::SetDefault ("ns3::TcpSocketBase::MaxSegLifetime", DoubleValue (0.9));
+
+  //
+  // The default TCP minimum retransmit timeout value is set to 1 second in
+  // ns-3, according to RFC 6298. However, Linux uses 200 ms as the default
+  // value, and we are going to keep up with this fast retransmission
+  // approach.
+  //
+  Config::SetDefault ("ns3::TcpSocketBase::MinRto",
+                      TimeValue (MilliSeconds (200)));
 
   //
   // Whenever possible, use the full-duplex CSMA channel to improve throughput.
