@@ -207,16 +207,14 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
 
   // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0007");
-  std::string bufferStr ("0xFFFFFFFF");
 
   // Printing the cookie and buffer values in dpctl string format.
-  char cookieStr [12], metadataStr [12];
+  char cookieStr [20], metadataStr [12];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
 
   // Building the dpctl command + arguments string.
   std::ostringstream cmd;
   cmd << "flow-mod cmd=add,table=1"
-      << ",buffer=" << bufferStr
       << ",flags=" << flagsStr
       << ",cookie=" << cookieStr
       << ",prio=" << rInfo->GetPriority ()
@@ -292,7 +290,7 @@ RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
   NS_LOG_INFO ("Removing topology entries for teid " << rInfo->GetTeid ());
 
   // Print the cookie value in dpctl string format.
-  char cookieStr [12];
+  char cookieStr [20];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
 
   // Getting ring routing information.
@@ -302,7 +300,7 @@ RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
   std::ostringstream cmd;
   cmd << "flow-mod cmd=del,table=1"
       << ",cookie=" << cookieStr
-      << ",cookie_mask=" << cookieStr;
+      << ",cookie_mask=0xffffffffffffffff"; // Strict cookie match.
 
   // Remove downlink routing.
   if (rInfo->HasDownlinkTraffic ())
