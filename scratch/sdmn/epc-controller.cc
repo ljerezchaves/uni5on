@@ -444,13 +444,15 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
+  NS_LOG_INFO ("Installing P-GW entries for teid " << rInfo->GetTeid ());
+
   // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0007");
+  std::string bufferStr ("0xFFFFFFFF");
 
   // Print the cookie and buffer values in dpctl string format.
-  char cookieStr [12], bufferStr [12];
+  char cookieStr [12];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
-  sprintf (bufferStr, "%u", OFP_NO_BUFFER);
 
   // Print downlink TEID and destination IPv4 address into tunnel metadata.
   uint64_t tunnelId = (uint64_t)rInfo->GetSgwS5Addr ().Get () << 32;
@@ -542,10 +544,11 @@ EpcController::RemovePgwSwitchRules (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
+  NS_LOG_INFO ("Removing P-GW entries for teid " << rInfo->GetTeid ());
+
   // Print the cookie value in dpctl string format.
   char cookieStr [12];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
-  NS_LOG_INFO ("Removing P-GW entries for teid " << rInfo->GetTeid ());
 
   // Remove flow entries for this TEID.
   std::ostringstream cmd;

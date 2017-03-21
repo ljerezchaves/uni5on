@@ -305,16 +305,17 @@ SdranController::InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
+  NS_LOG_INFO ("Installing S-GW entries for teid " << rInfo->GetTeid ());
   Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
   Ptr<const EnbInfo> enbInfo = EnbInfo::GetPointer (ueInfo->GetCellId ());
 
   // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0007");
+  std::string bufferStr ("0xFFFFFFFF");
 
   // Print the cookie and buffer values in dpctl string format.
-  char cookieStr [12], bufferStr [12];
+  char cookieStr [12];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
-  sprintf (bufferStr, "%u", OFP_NO_BUFFER);
 
   // Configure downlink.
   if (rInfo->HasDownlinkTraffic ())
@@ -391,10 +392,11 @@ SdranController::RemoveSgwSwitchRules (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
+  NS_LOG_INFO ("Removing S-GW entries for teid " << rInfo->GetTeid ());
+
   // Print the cookie value in dpctl string format.
   char cookieStr [12];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
-  NS_LOG_INFO ("Removing S-GW entries for teid " << rInfo->GetTeid ());
 
   // Remove flow entries for this TEID.
   std::ostringstream cmd;

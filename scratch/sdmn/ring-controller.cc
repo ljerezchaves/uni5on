@@ -200,16 +200,18 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
+  NS_LOG_INFO ("Installing topology entries for teid " << rInfo->GetTeid ());
+
   // Getting ring routing information.
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
 
   // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0007");
+  std::string bufferStr ("0xFFFFFFFF");
 
   // Printing the cookie and buffer values in dpctl string format.
-  char cookieStr [12], bufferStr [12], metadataStr [12];
+  char cookieStr [12], metadataStr [12];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
-  sprintf (bufferStr, "%u", OFP_NO_BUFFER);
 
   // Building the dpctl command + arguments string.
   std::ostringstream cmd;
@@ -287,10 +289,11 @@ RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
+  NS_LOG_INFO ("Removing topology entries for teid " << rInfo->GetTeid ());
+
   // Print the cookie value in dpctl string format.
   char cookieStr [12];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
-  NS_LOG_INFO ("Removing topology entries for teid " << rInfo->GetTeid ());
 
   // Getting ring routing information.
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
