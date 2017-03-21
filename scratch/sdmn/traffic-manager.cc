@@ -131,7 +131,7 @@ TrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
   if (authorized)
     {
       // Set the maximum traffic duration.
-      Time duration = nextStartTry - Seconds (5);
+      Time duration = nextStartTry - Seconds (6.0);
       app->SetAttribute ("MaxOnTime", TimeValue (duration));
 
       Simulator::Schedule (Seconds (1), &SdmnClientApp::Start, app);
