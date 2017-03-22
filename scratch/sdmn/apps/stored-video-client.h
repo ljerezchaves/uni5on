@@ -29,7 +29,7 @@ namespace ns3 {
  * \ingroup sdmnApps
  * This is the client side of a stored video traffic generator. The client
  * establishes a TCP connection with the server and sends a HTTP request for
- * the main video object. After receiving the entire video, the client closes
+ * the main video object. After receiving all video chunks, the client closes
  * the connection.
  */
 class StoredVideoClient : public SdmnClientApp
@@ -37,21 +37,21 @@ class StoredVideoClient : public SdmnClientApp
 public:
   /**
    * \brief Get the type ID.
-   * \return the object TypeId
+   * \return the object TypeId.
    */
   static TypeId GetTypeId (void);
 
-  StoredVideoClient ();           //!< Default constructor
-  virtual ~StoredVideoClient ();  //!< Dummy destructor, see DoDispose
+  StoredVideoClient ();           //!< Default constructor.
+  virtual ~StoredVideoClient ();  //!< Dummy destructor, see DoDispose.
 
-  // Inherited from SdmnClientApp
+  // Inherited from SdmnClientApp.
   void Start ();
 
 protected:
-  // Inherited from Object
+  // Inherited from Object.
   virtual void DoDispose (void);
 
-  // Inherited from SdmnClientApp
+  // Inherited from SdmnClientApp.
   void Stop ();
 
 private:
@@ -81,8 +81,9 @@ private:
   void SendRequest (Ptr<Socket> socket, std::string url);
 
   Ptr<Packet>             m_rxPacket;       //!< RX packet.
-  uint32_t                m_httpPacketSize; //!< HTTP packet size
+  uint32_t                m_httpPacketSize; //!< HTTP packet size.
   uint32_t                m_pendingBytes;   //!< Pending bytes.
+  uint32_t                m_pendingObjects; //!< Pending video chunks.
 };
 
 } // Namespace ns3

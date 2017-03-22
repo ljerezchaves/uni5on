@@ -38,7 +38,8 @@ StoredVideoClient::GetTypeId (void)
 StoredVideoClient::StoredVideoClient ()
   : m_rxPacket (0),
     m_httpPacketSize (0),
-    m_pendingBytes (0)
+    m_pendingBytes (0),
+    m_pendingObjects (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -53,15 +54,16 @@ StoredVideoClient::Start (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Chain up to fire start trace
+  // Chain up to fire start trace.
   SdmnClientApp::Start ();
 
-  // Preparing internal variables for new traffic cycle
+  // Preparing internal variables for new traffic cycle.
   m_httpPacketSize = 0;
   m_pendingBytes = 0;
+  m_pendingObjects = 0;
   m_rxPacket = 0;
 
-  // Open the TCP connection
+  // Open the TCP connection.
   if (!m_socket)
     {
       NS_LOG_INFO ("Opening the TCP connection.");
@@ -80,7 +82,7 @@ StoredVideoClient::Stop ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Close the TCP socket
+  // Close the TCP socket.
   if (m_socket != 0)
     {
       NS_LOG_INFO ("Closing the TCP connection.");
@@ -90,7 +92,7 @@ StoredVideoClient::Stop ()
       m_socket = 0;
     }
 
-  // Chain up to fire stop trace
+  // Chain up to fire stop trace.
   SdmnClientApp::Stop ();
 }
 
@@ -112,7 +114,7 @@ StoredVideoClient::ConnectionSucceeded (Ptr<Socket> socket)
   socket->SetRecvCallback (
     MakeCallback (&StoredVideoClient::ReceiveData, this));
 
-  // Request the video object
+  // Request the video object.
   SendRequest (socket, "main/video");
 }
 
@@ -127,6 +129,7 @@ void
 StoredVideoClient::ReceiveData (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
+  static std::string contentType = "";
 
   do
     {
@@ -150,13 +153,21 @@ StoredVideoClient::ReceiveData (Ptr<Socket> socket)
                          "Invalid HTTP response message.");
           m_httpPacketSize = httpHeader.GetSerializedSize ();
 
-          // Get the content length for this message
+          // Get the content length for this message.
           m_pendingBytes = std::atoi (
               httpHeader.GetHeaderField ("ContentLength").c_str ());
           m_httpPacketSize += m_pendingBytes;
+
+          // For main/video, get the number of chunks to load.
+          contentType = httpHeader.GetHeaderField ("ContentType");
+          if (contentType == "main/video")
+            {
+              m_pendingObjects = std::atoi (
+                  httpHeader.GetHeaderField ("NumChunks").c_str ());
+            }
         }
 
-      // Let's consume received data
+      // Let's consume received data.
       uint32_t consume = std::min (m_rxPacket->GetSize (), m_pendingBytes);
       m_rxPacket->RemoveAtStart (consume);
       m_pendingBytes -= consume;
@@ -165,15 +176,35 @@ StoredVideoClient::ReceiveData (Ptr<Socket> socket)
       if (!m_pendingBytes)
         {
           // This is the end of the HTTP message.
-          NS_LOG_INFO ("Stored video successfully received.");
+          NS_LOG_DEBUG ("HTTP " << contentType << " successfully received.");
           NS_ASSERT (m_rxPacket->GetSize () == 0);
           NotifyRx (m_httpPacketSize);
 
-          Stop ();
-          break;
+          if (contentType == "main/video")
+            {
+              NS_LOG_DEBUG ("There are " << m_pendingObjects <<
+                            " video chunks to load.");
+            }
+          else
+            {
+              m_pendingObjects--;
+            }
+
+          // When necessary, request video chunks.
+          if (m_pendingObjects)
+            {
+              NS_LOG_DEBUG ("Request for chunk/video " << m_pendingObjects);
+              SendRequest (socket, "chunk/video");
+            }
+          else
+            {
+              NS_LOG_INFO ("Stored video successfully received.");
+              Stop ();
+              break;
+            }
         }
 
-    } // Repeat until no more data available to process
+    } // Repeat until no more data available to process.
   while (socket->GetRxAvailable () || m_rxPacket->GetSize ());
 }
 

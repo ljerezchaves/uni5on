@@ -28,23 +28,23 @@ namespace ns3 {
 /**
  * \ingroup sdmnApps
  * This is the server side of a stored video traffic generator. The server
- * listen for client video requests, and send data as fast as possible up to
- * random video length duration over TCP connection.
+ * listen for client video requests, and send video chunks as fast as possible
+ * up to random video length duration over TCP connection.
  */
 class StoredVideoServer : public SdmnServerApp
 {
 public:
   /**
    * \brief Get the type ID.
-   * \return the object TypeId
+   * \return the object TypeId.
    */
   static TypeId GetTypeId (void);
 
-  StoredVideoServer ();           //!< Default constructor
-  virtual ~StoredVideoServer ();  //!< Dummy destructor, see DoDispose
+  StoredVideoServer ();           //!< Default constructor.
+  virtual ~StoredVideoServer ();  //!< Dummy destructor, see DoDispose.
 
   /**
-   * \brief Set the trace file to be used by the application
+   * \brief Set the trace file to be used by the application.
    * \param filename a path to an MPEG4 trace file formatted as follows:
    *  Frame No Frametype   Time[ms]    Length [byte]
    *  Frame No Frametype   Time[ms]    Length [byte]
@@ -53,11 +53,11 @@ public:
   void SetTraceFile (std::string filename);
 
 protected:
-  // Inherited from Object
+  // Inherited from Object.
   virtual void DoDispose (void);
 
 private:
-  // Inherited from Application
+  // Inherited from Application.
   virtual void StartApplication (void);
   virtual void StopApplication (void);
 
@@ -118,27 +118,28 @@ private:
   void LoadDefaultTrace (void);
 
   /**
-   * Compute the bideo size based on given length.
+   * Get the number of chunks to send for the given video length.
    * \param length The video length.
-   * \return The size in bytes.
+   * \return The number of chunks for this video.
    */
-  uint32_t GetVideoBytes (Time length);
+  uint32_t GetVideoChunks (Time length);
 
   /**
    * Trace entry, representing a MPEG frame.
    */
   struct TraceEntry
   {
-    uint32_t timeToSend;  //!< Relative time to send the frame (ms)
-    uint32_t packetSize;  //!< Size of the frame
-    char frameType;       //!< Frame type (I, P or B)
+    uint32_t timeToSend;  //!< Relative time to send the frame (ms).
+    uint32_t packetSize;  //!< Size of the frame.
+    char frameType;       //!< Frame type (I, P or B).
   };
 
-  bool                            m_connected;        //!< True if connected
-  uint32_t                        m_pendingBytes;     //!< Pending TX bytes
-  Ptr<RandomVariableStream>       m_lengthRng;        //!< Length generator
-  static struct TraceEntry        g_defaultEntries[]; //!< Default trace
-  std::vector<struct TraceEntry>  m_entries;          //!< Trace entries
+  bool                            m_connected;        //!< True if connected.
+  uint32_t                        m_pendingBytes;     //!< Pending TX bytes.
+  uint32_t                        m_chunkSize;        //!< Chunk size.
+  Ptr<RandomVariableStream>       m_lengthRng;        //!< Length generator.
+  static struct TraceEntry        g_defaultEntries[]; //!< Default trace.
+  std::vector<struct TraceEntry>  m_entries;          //!< Trace entries.
 };
 
 } // Namespace ns3

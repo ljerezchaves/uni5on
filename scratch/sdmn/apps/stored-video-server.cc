@@ -82,6 +82,11 @@ StoredVideoServer::GetTypeId (void)
                    StringValue ("ns3::ConstantRandomVariable[Constant=30.0]"),
                    MakePointerAccessor (&StoredVideoServer::m_lengthRng),
                    MakePointerChecker <RandomVariableStream> ())
+    .AddAttribute ("ChunkSize",
+                   "The number of bytes on each chunck of the video.",
+                   UintegerValue (256000), // 256 KB
+                   MakeUintegerAccessor (&StoredVideoServer::m_chunkSize),
+                   MakeUintegerChecker<uint32_t> ())
   ;
   return tid;
 }
@@ -284,12 +289,14 @@ StoredVideoServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
   if (url == "main/video")
     {
       // Set the random video length.
+      m_pendingBytes = 0;
       Time videoLength = Seconds (std::abs (m_lengthRng->GetValue ()));
-      m_pendingBytes = GetVideoBytes (videoLength);
+      uint32_t numChunks = GetVideoChunks (videoLength);
       NS_LOG_INFO ("Stored video lenght " << videoLength.As (Time::S) <<
-                   " with " << m_pendingBytes << " bytes");
+                   " with " << numChunks << " chunks of " << m_chunkSize <<
+                   " bytes each.");
 
-      // Setting the HTTP response with number of bytes.
+      // Setting the HTTP response with number of chunks for this video.
       HttpHeader httpHeaderOut;
       httpHeaderOut.SetResponse ();
       httpHeaderOut.SetVersion ("HTTP/1.1");
@@ -297,6 +304,31 @@ StoredVideoServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
       httpHeaderOut.SetResponsePhrase ("OK");
       httpHeaderOut.SetHeaderField ("ContentLength", m_pendingBytes);
       httpHeaderOut.SetHeaderField ("ContentType", "main/video");
+      httpHeaderOut.SetHeaderField ("NumChunks", numChunks);
+
+      Ptr<Packet> outPacket = Create<Packet> (0);
+      outPacket->AddHeader (httpHeaderOut);
+
+      NotifyTx (outPacket->GetSize () + m_pendingBytes);
+      int bytes = socket->Send (outPacket);
+      if (bytes != (int)outPacket->GetSize ())
+        {
+          NS_LOG_ERROR ("Not all bytes were copied to the socket buffer.");
+        }
+    }
+  else if (url == "chunk/video")
+    {
+      m_pendingBytes = m_chunkSize;
+      NS_LOG_DEBUG ("Video chunk size (bytes): " << m_pendingBytes);
+
+      // Setting the HTTP response message.
+      HttpHeader httpHeaderOut;
+      httpHeaderOut.SetResponse ();
+      httpHeaderOut.SetVersion ("HTTP/1.1");
+      httpHeaderOut.SetResponseStatusCode ("200");
+      httpHeaderOut.SetResponsePhrase ("OK");
+      httpHeaderOut.SetHeaderField ("ContentLength", m_pendingBytes);
+      httpHeaderOut.SetHeaderField ("ContentType", "chunk/video");
 
       Ptr<Packet> outPacket = Create<Packet> (0);
       outPacket->AddHeader (httpHeaderOut);
@@ -308,7 +340,7 @@ StoredVideoServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
           NS_LOG_ERROR ("Not all bytes were copied to the socket buffer.");
         }
 
-      // Start sending the stored video stream to the client.
+      // Start sending the HTTP object.
       SendData (socket, socket->GetTxAvailable ());
     }
   else
@@ -379,7 +411,7 @@ StoredVideoServer::LoadDefaultTrace (void)
 }
 
 uint32_t
-StoredVideoServer::GetVideoBytes (Time length)
+StoredVideoServer::GetVideoChunks (Time length)
 {
   uint32_t currentEntry = 0;
   Time elapsed = Seconds (0);
@@ -393,7 +425,7 @@ StoredVideoServer::GetVideoBytes (Time length)
       currentEntry++;
       currentEntry = currentEntry % m_entries.size ();
     }
-  return total;
+  return total / m_chunkSize;
 }
 
 } // Namespace ns3
