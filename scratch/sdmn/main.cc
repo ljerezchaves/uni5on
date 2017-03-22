@@ -25,9 +25,10 @@
 #include "lte-network.h"
 #include "ring-network.h"
 #include "traffic-helper.h"
-#include "stats/backhaul-stats-calculator.h"
-#include "stats/traffic-stats-calculator.h"
 #include "stats/admission-stats-calculator.h"
+#include "stats/backhaul-stats-calculator.h"
+#include "stats/connection-stats-calculator.h"
+#include "stats/traffic-stats-calculator.h"
 
 using namespace ns3;
 using namespace ns3::ofs;
@@ -142,12 +143,14 @@ main (int argc, char *argv[])
   trafficHelper = CreateObject<TrafficHelper> (lteNetwork,
                                                ofNetwork->GetWebNode ());
 
-  Ptr<AdmissionStatsCalculator> admissionStats;
-  Ptr<BackhaulStatsCalculator>  backhaulStats;
-  Ptr<TrafficStatsCalculator>   trafficStats;
-  admissionStats = CreateObject<AdmissionStatsCalculator> ();
-  backhaulStats  = CreateObject<BackhaulStatsCalculator> ();
-  trafficStats   = CreateObject<TrafficStatsCalculator> ();
+  Ptr<AdmissionStatsCalculator>   admissionStats;
+  Ptr<BackhaulStatsCalculator>    backhaulStats;
+  Ptr<ConnectionStatsCalculator>  connectionStats;
+  Ptr<TrafficStatsCalculator>     trafficStats;
+  admissionStats  = CreateObject<AdmissionStatsCalculator> ();
+  backhaulStats   = CreateObject<BackhaulStatsCalculator> ();
+  connectionStats = CreateObject<ConnectionStatsCalculator> ();
+  trafficStats    = CreateObject<TrafficStatsCalculator> ();
 
   // Populating routing and ARP tables. The 'perfect' ARP used here comes from
   // the patch at https://www.nsnam.org/bugzilla/show_bug.cgi?id=187. This
