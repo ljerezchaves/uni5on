@@ -19,7 +19,7 @@
  */
 
 #define NS_LOG_APPEND_CONTEXT \
-  { std::clog << "[" << GetAppName () << " server - teid " << GetTeid () << "] "; }
+  { std::clog << "[" << GetAppName () << " server teid " << GetTeid () << "] "; }
 
 
 #include "sdmn-server-app.h"

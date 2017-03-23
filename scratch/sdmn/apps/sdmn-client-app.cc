@@ -19,7 +19,7 @@
  */
 
 #define NS_LOG_APPEND_CONTEXT \
-  { std::clog << "[" << m_name << " client - teid " << m_teid << "] "; }
+  { std::clog << "[" << m_name << " client teid " << m_teid << "] "; }
 
 #include "sdmn-client-app.h"
 #include "sdmn-server-app.h"

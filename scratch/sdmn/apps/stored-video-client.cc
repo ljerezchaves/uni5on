@@ -19,7 +19,7 @@
  */
 
 #define NS_LOG_APPEND_CONTEXT \
-  { std::clog << "[BuffVid client - teid " << GetTeid () << "] "; }
+  { std::clog << "[BuffVid client teid " << GetTeid () << "] "; }
 
 #include "stored-video-client.h"
 

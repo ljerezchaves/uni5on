@@ -19,7 +19,7 @@
  */
 
 #define NS_LOG_APPEND_CONTEXT \
-  { std::clog << "[BuffVid server - teid " << GetTeid () << "] "; }
+  { std::clog << "[BuffVid server teid " << GetTeid () << "] "; }
 
 #include "stored-video-server.h"
 #include <cstdlib>

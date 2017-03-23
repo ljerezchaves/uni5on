@@ -21,7 +21,7 @@
  */
 
 #define NS_LOG_APPEND_CONTEXT \
-  { std::clog << "[Http client - teid " << GetTeid () << "] "; }
+  { std::clog << "[Http client teid " << GetTeid () << "] "; }
 
 #include "http-client.h"
 

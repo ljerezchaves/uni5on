@@ -19,7 +19,7 @@
  */
 
 #define NS_LOG_APPEND_CONTEXT \
-  { std::clog << "[LiveVid client - teid " << GetTeid () << "] "; }
+  { std::clog << "[LiveVid client teid " << GetTeid () << "] "; }
 
 #include <ns3/seq-ts-header.h>
 #include "real-time-video-client.h"

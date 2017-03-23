@@ -20,7 +20,7 @@
  */
 
 #define NS_LOG_APPEND_CONTEXT \
-  { std::clog << "[Voip client - teid " << GetTeid () << "] "; }
+  { std::clog << "[Voip client teid " << GetTeid () << "] "; }
 
 #include <ns3/seq-ts-header.h>
 #include "voip-client.h"
