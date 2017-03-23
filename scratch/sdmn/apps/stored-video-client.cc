@@ -18,6 +18,9 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#define NS_LOG_APPEND_CONTEXT \
+  { std::clog << "[BuffVid client - teid " << GetTeid () << "] "; }
+
 #include "stored-video-client.h"
 
 namespace ns3 {
@@ -66,8 +69,7 @@ StoredVideoClient::Start (void)
   // Open the TCP connection.
   if (!m_socket)
     {
-      NS_LOG_INFO ("Opening the TCP connection for app " << GetAppName () <<
-                   " with teid " << GetTeid ());
+      NS_LOG_INFO ("Opening the TCP connection.");
       TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tcpFactory);
       m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
@@ -86,8 +88,7 @@ StoredVideoClient::Stop ()
   // Close the TCP socket.
   if (m_socket != 0)
     {
-      NS_LOG_INFO ("Closing the TCP connection for app " << GetAppName () <<
-                   " with teid " << GetTeid ());
+      NS_LOG_INFO ("Closing the TCP connection.");
       m_socket->ShutdownRecv ();
       m_socket->Close ();
       m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
@@ -112,12 +113,11 @@ StoredVideoClient::ConnectionSucceeded (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  NS_LOG_INFO ("Server accepted connection request for app " <<
-               GetAppName () << " with teid " << GetTeid ());
+  NS_LOG_INFO ("Server accepted connection request.");
   socket->SetRecvCallback (
     MakeCallback (&StoredVideoClient::ReceiveData, this));
 
-  // Request the video object.
+  // Request the first object.
   SendRequest (socket, "main/video");
 }
 
@@ -125,6 +125,7 @@ void
 StoredVideoClient::ConnectionFailed (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
+
   NS_FATAL_ERROR ("Server refused connection request!");
 }
 
@@ -161,7 +162,7 @@ StoredVideoClient::ReceiveData (Ptr<Socket> socket)
               httpHeader.GetHeaderField ("ContentLength").c_str ());
           m_httpPacketSize += m_pendingBytes;
 
-          // For main/video, get the number of chunks to load.
+          // Get the number of chunks to load.
           contentType = httpHeader.GetHeaderField ("ContentType");
           if (contentType == "main/video")
             {
@@ -174,19 +175,18 @@ StoredVideoClient::ReceiveData (Ptr<Socket> socket)
       uint32_t consume = std::min (m_rxPacket->GetSize (), m_pendingBytes);
       m_rxPacket->RemoveAtStart (consume);
       m_pendingBytes -= consume;
-      NS_LOG_DEBUG ("Stored video RX " << consume << " bytes");
+      NS_LOG_DEBUG ("Client RX " << consume << " bytes.");
 
       if (!m_pendingBytes)
         {
           // This is the end of the HTTP message.
-          NS_LOG_DEBUG ("HTTP " << contentType << " successfully received.");
+          NS_LOG_DEBUG (contentType << " successfully received.");
           NS_ASSERT (m_rxPacket->GetSize () == 0);
           NotifyRx (m_httpPacketSize);
 
           if (contentType == "main/video")
             {
-              NS_LOG_DEBUG ("There are " << m_pendingObjects <<
-                            " video chunks to load.");
+              NS_LOG_DEBUG ("There are chunks to load: " << m_pendingObjects);
             }
           else
             {
@@ -201,8 +201,7 @@ StoredVideoClient::ReceiveData (Ptr<Socket> socket)
             }
           else
             {
-              NS_LOG_INFO ("Stored video successfully received by app " <<
-                           GetAppName () << " with teid " << GetTeid ());
+              NS_LOG_INFO ("Stored video successfully received.");
               Stop ();
               break;
             }
@@ -220,8 +219,7 @@ StoredVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
   // When the force stop flag is active, don't send new requests.
   if (IsForceStop ())
     {
-      NS_LOG_WARN ("App " << GetAppName () << " with teid " << GetTeid () <<
-                   " can't send request on force stop mode.");
+      NS_LOG_WARN ("Can't send request on force stop mode.");
       return;
     }
 
@@ -240,8 +238,7 @@ StoredVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
   int bytes = socket->Send (packet);
   if (bytes != (int)packet->GetSize ())
     {
-      NS_LOG_ERROR ("Not all bytes were sent to socket of app " <<
-                    GetAppName () << " with teid " << GetTeid ());
+      NS_LOG_ERROR ("Not all bytes were copied to the socket buffer.");
     }
 }
 

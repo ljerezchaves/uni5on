@@ -18,6 +18,9 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#define NS_LOG_APPEND_CONTEXT \
+  { std::clog << "[BuffVid server - teid " << GetTeid () << "] "; }
+
 #include "stored-video-server.h"
 #include <cstdlib>
 #include <cstdio>
@@ -175,7 +178,7 @@ StoredVideoServer::HandleRequest (Ptr<Socket> socket, const Address& address)
   NS_LOG_FUNCTION (this << socket << address);
 
   Ipv4Address ipAddr = InetSocketAddress::ConvertFrom (address).GetIpv4 ();
-  NS_LOG_INFO ("Connection request from " << ipAddr);
+  NS_LOG_INFO ("Connection request received from " << ipAddr);
   return !m_connected;
 }
 
@@ -198,7 +201,7 @@ StoredVideoServer::HandlePeerClose (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  NS_LOG_INFO ("Connection closed.");
+  NS_LOG_INFO ("Connection successfully closed.");
   socket->ShutdownSend ();
   socket->ShutdownRecv ();
   socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
@@ -211,7 +214,7 @@ StoredVideoServer::HandlePeerError (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  NS_LOG_ERROR ("Connection error.");
+  NS_LOG_ERROR ("Connection closed with errors.");
   socket->ShutdownSend ();
   socket->ShutdownRecv ();
   socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
@@ -268,12 +271,12 @@ StoredVideoServer::SendData (Ptr<Socket> socket, uint32_t available)
   int bytes = socket->Send (packet);
   if (bytes > 0)
     {
-      NS_LOG_DEBUG ("Stored video server TX " << bytes << " bytes.");
+      NS_LOG_DEBUG ("Server TX " << bytes << " bytes.");
       m_pendingBytes -= static_cast<uint32_t> (bytes);
     }
   else
     {
-      NS_LOG_ERROR ("Stored video server TX error.");
+      NS_LOG_ERROR ("Server TX error.");
     }
 }
 
@@ -281,22 +284,21 @@ void
 StoredVideoServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
 {
   NS_LOG_FUNCTION (this << socket);
-  NS_ASSERT_MSG (header.IsRequest (), "Invalid HTTP request.");
+  NS_ASSERT_MSG (header.IsRequest (), "Invalid request.");
 
   // Check for valid request.
   std::string url = header.GetRequestUrl ();
-  NS_LOG_INFO ("Client requesting a " + url);
+  NS_LOG_INFO ("Client requesting " << url);
   if (url == "main/video")
     {
       // Set the random video length.
       m_pendingBytes = 0;
       Time videoLength = Seconds (std::abs (m_lengthRng->GetValue ()));
       uint32_t numChunks = GetVideoChunks (videoLength);
-      NS_LOG_INFO ("Stored video lenght " << videoLength.As (Time::S) <<
-                   " with " << numChunks << " chunks of " << m_chunkSize <<
-                   " bytes each.");
+      NS_LOG_INFO ("Video with " << numChunks << " chunks of " <<
+                   m_chunkSize << " bytes each.");
 
-      // Setting the HTTP response with number of chunks for this video.
+      // Setting the HTTP response message.
       HttpHeader httpHeaderOut;
       httpHeaderOut.SetResponse ();
       httpHeaderOut.SetVersion ("HTTP/1.1");

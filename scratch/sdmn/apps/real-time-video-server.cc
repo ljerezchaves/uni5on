@@ -18,6 +18,9 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#define NS_LOG_APPEND_CONTEXT \
+  { std::clog << "[LiveVid server - teid " << GetTeid () << "] "; }
+
 #include <ns3/seq-ts-header.h>
 #include "real-time-video-server.h"
 #include <cstdlib>
@@ -164,7 +167,6 @@ RealTimeVideoServer::NotifyStart ()
   SdmnServerApp::NotifyStart ();
 
   // Start streaming
-  NS_LOG_INFO ("Real-time video started.");
   SendStream ();
 }
 
@@ -173,13 +175,11 @@ RealTimeVideoServer::NotifyForceStop ()
 {
   NS_LOG_FUNCTION (this);
 
-  Simulator::Cancel (m_sendEvent);
-
   // Chain up
   SdmnServerApp::NotifyForceStop ();
 
   // Stop streaming
-  NS_LOG_INFO ("Real-time video stopped.");
+  Simulator::Cancel (m_sendEvent);
 }
 
 void

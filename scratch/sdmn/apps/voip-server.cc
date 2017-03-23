@@ -19,6 +19,9 @@
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#define NS_LOG_APPEND_CONTEXT \
+  { std::clog << "[Voip server - teid " << GetTeid () << "] "; }
+
 #include <ns3/seq-ts-header.h>
 #include "voip-server.h"
 
@@ -110,7 +113,6 @@ VoipServer::NotifyStart ()
   Simulator::Cancel (m_sendEvent);
   m_sendEvent = Simulator::Schedule (
       m_interval, &VoipServer::SendPacket, this);
-  NS_LOG_INFO ("VoIP server started.");
 }
 
 void
@@ -123,7 +125,6 @@ VoipServer::NotifyForceStop ()
 
   // Stop traffic
   Simulator::Cancel (m_sendEvent);
-  NS_LOG_INFO ("VoIP server stopped.");
 }
 
 void

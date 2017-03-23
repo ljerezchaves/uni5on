@@ -18,6 +18,10 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#define NS_LOG_APPEND_CONTEXT \
+  { std::clog << "[" << GetAppName () << " server - teid " << GetTeid () << "] "; }
+
+
 #include "sdmn-server-app.h"
 #include "sdmn-client-app.h"
 
@@ -66,6 +70,13 @@ SdmnServerApp::GetTypeId (void)
   return tid;
 }
 
+std::string
+SdmnServerApp::GetAppName (void) const
+{
+  // No log to avoid infinite recursion.
+  return m_clientApp ? m_clientApp->GetAppName () : "";
+}
+
 bool
 SdmnServerApp::IsActive (void) const
 {
@@ -80,6 +91,13 @@ SdmnServerApp::IsForceStop (void) const
   NS_LOG_FUNCTION (this);
 
   return m_forceStopFlag;
+}
+
+uint32_t
+SdmnServerApp::GetTeid (void) const
+{
+  // No log to avoid infinite recursion.
+  return m_clientApp ? m_clientApp->GetTeid () : 0;
 }
 
 Ptr<SdmnClientApp>
@@ -125,6 +143,7 @@ SdmnServerApp::NotifyStart ()
 {
   NS_LOG_FUNCTION (this);
 
+  NS_LOG_INFO ("Starting server application.");
   ResetQosStats ();
   m_active = true;
   m_forceStopFlag = false;
@@ -135,6 +154,7 @@ SdmnServerApp::NotifyStop ()
 {
   NS_LOG_FUNCTION (this);
 
+  NS_LOG_INFO ("Stopping server application.");
   m_active = false;
 }
 
@@ -143,6 +163,7 @@ SdmnServerApp::NotifyForceStop ()
 {
   NS_LOG_FUNCTION (this);
 
+  NS_LOG_INFO ("Preparing to stop server application.");
   m_forceStopFlag = true;
 }
 

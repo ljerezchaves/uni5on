@@ -20,6 +20,9 @@
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#define NS_LOG_APPEND_CONTEXT \
+  { std::clog << "[Http client - teid " << GetTeid () << "] "; }
+
 #include "http-client.h"
 
 namespace ns3 {
@@ -82,21 +85,20 @@ HttpClient::Start ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Chain up to fire start trace
+  // Chain up to fire start trace.
   SdmnClientApp::Start ();
 
-  // Preparing internal variables for new traffic cycle
+  // Preparing internal variables for new traffic cycle.
   m_httpPacketSize = 0;
   m_pendingBytes = 0;
   m_pendingObjects = 0;
   m_pagesLoaded = 0;
   m_rxPacket = 0;
 
-  // Open the TCP connection
+  // Open the TCP connection.
   if (!m_socket)
     {
-      NS_LOG_INFO ("Opening the TCP connection for app " << GetAppName () <<
-                   " with teid " << GetTeid ());
+      NS_LOG_INFO ("Opening the TCP connection.");
       TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tcpFactory);
       m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
@@ -112,21 +114,20 @@ HttpClient::Stop ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Cancel further requests
+  // Cancel further requests.
   Simulator::Cancel (m_nextRequest);
 
-  // Close the TCP socket
+  // Close the TCP socket.
   if (m_socket != 0)
     {
-      NS_LOG_INFO ("Closing the TCP connection for app " << GetAppName () <<
-                   " with teid " << GetTeid ());
+      NS_LOG_INFO ("Closing the TCP connection.");
       m_socket->ShutdownRecv ();
       m_socket->Close ();
       m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
       m_socket = 0;
     }
 
-  // Chain up to fire stop trace
+  // Chain up to fire stop trace.
   SdmnClientApp::Stop ();
 }
 
@@ -147,11 +148,10 @@ HttpClient::ConnectionSucceeded (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  NS_LOG_INFO ("Server accepted connection request for app " <<
-               GetAppName () << " with teid " << GetTeid ());
+  NS_LOG_INFO ("Server accepted connection request.");
   socket->SetRecvCallback (MakeCallback (&HttpClient::ReceiveData, this));
 
-  // Request the first main/object
+  // Request the first object.
   SendRequest (socket, "main/object");
 }
 
@@ -159,6 +159,7 @@ void
 HttpClient::ConnectionFailed (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
+
   NS_FATAL_ERROR ("Server refused connection request!");
 }
 
@@ -190,12 +191,12 @@ HttpClient::ReceiveData (Ptr<Socket> socket)
                          "Invalid HTTP response message.");
           m_httpPacketSize = httpHeader.GetSerializedSize ();
 
-          // Get the content length for this message
+          // Get the content length for this message.
           m_pendingBytes = std::atoi (
               httpHeader.GetHeaderField ("ContentLength").c_str ());
           m_httpPacketSize += m_pendingBytes;
 
-          // For main/objects, get the number of inline objects to load
+          // Get the number of inline objects to load.
           contentType = httpHeader.GetHeaderField ("ContentType");
           if (contentType == "main/object")
             {
@@ -204,16 +205,16 @@ HttpClient::ReceiveData (Ptr<Socket> socket)
             }
         }
 
-      // Let's consume received data
+      // Let's consume received data.
       uint32_t consume = std::min (m_rxPacket->GetSize (), m_pendingBytes);
       m_rxPacket->RemoveAtStart (consume);
       m_pendingBytes -= consume;
-      NS_LOG_DEBUG ("HTTP RX " << consume << " bytes");
+      NS_LOG_DEBUG ("Client RX " << consume << " bytes.");
 
       if (!m_pendingBytes)
         {
           // This is the end of the HTTP message.
-          NS_LOG_DEBUG ("HTTP " << contentType << " successfully received.");
+          NS_LOG_DEBUG (contentType << " successfully received.");
           NS_ASSERT (m_rxPacket->GetSize () == 0);
           NotifyRx (m_httpPacketSize);
 
@@ -226,7 +227,7 @@ HttpClient::ReceiveData (Ptr<Socket> socket)
               m_pendingObjects--;
             }
 
-          // When necessary, request inline objects
+          // When necessary, request inline objects.
           if (m_pendingObjects)
             {
               NS_LOG_DEBUG ("Request for inline/object " << m_pendingObjects);
@@ -234,15 +235,14 @@ HttpClient::ReceiveData (Ptr<Socket> socket)
             }
           else
             {
-              NS_LOG_INFO ("HTTP page successfully received by app " <<
-                           GetAppName () << " with teid " << GetTeid ());
+              NS_LOG_INFO ("HTTP page successfully received.");
               m_pagesLoaded++;
               SetReadingTime (socket);
               break;
             }
         }
 
-    } // Repeat until no more data available to process
+    } // Repeat until no more data available to process.
   while (socket->GetRxAvailable () || m_rxPacket->GetSize ());
 }
 
@@ -254,8 +254,7 @@ HttpClient::SendRequest (Ptr<Socket> socket, std::string url)
   // When the force stop flag is active, don't send new requests.
   if (IsForceStop ())
     {
-      NS_LOG_WARN ("App " << GetAppName () << " with teid " << GetTeid () <<
-                   " can't send request on force stop mode.");
+      NS_LOG_WARN ("Can't send request on force stop mode.");
       return;
     }
 
@@ -274,8 +273,7 @@ HttpClient::SendRequest (Ptr<Socket> socket, std::string url)
   int bytes = socket->Send (packet);
   if (bytes != (int)packet->GetSize ())
     {
-      NS_LOG_ERROR ("Not all bytes were sent to socket of app " <<
-                    GetAppName () << " with teid " << GetTeid ());
+      NS_LOG_ERROR ("Not all bytes were copied to the socket buffer.");
     }
 }
 
@@ -297,8 +295,7 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   // Stop application due to reading time threshold.
   if (readingTime > m_maxReadingTime)
     {
-      NS_LOG_INFO ("App " << GetAppName () << " with teid " << GetTeid () <<
-                   " is closing the socket due to reading time threshold.");
+      NS_LOG_INFO ("Closing the socket due to reading time threshold.");
       Stop ();
       return;
     }
@@ -306,14 +303,12 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   // Stop application due to max page threshold.
   if (m_pagesLoaded >= m_maxPages)
     {
-      NS_LOG_INFO ("App " << GetAppName () << " with teid " << GetTeid () <<
-                   " is closing the socket due to max page threshold.");
+      NS_LOG_INFO ("Closing the socket due to max page threshold.");
       Stop ();
       return;
     }
 
-  NS_LOG_INFO ("App " << GetAppName () << " with teid " << GetTeid () <<
-               " set the reading time to " << readingTime.As (Time::S));
+  NS_LOG_INFO ("Setting the reading time to " << readingTime.As (Time::S));
   m_nextRequest = Simulator::Schedule (readingTime, &HttpClient::SendRequest,
                                        this, socket, "main/object");
 }

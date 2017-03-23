@@ -48,21 +48,21 @@ class HttpClient : public SdmnClientApp
 public:
   /**
    * \brief Get the type ID.
-   * \return the object TypeId
+   * \return the object TypeId.
    */
   static TypeId GetTypeId (void);
 
-  HttpClient ();          //!< Default constructor
-  virtual ~HttpClient (); //!< Dummy destructor, see DoDispose
+  HttpClient ();          //!< Default constructor.
+  virtual ~HttpClient (); //!< Dummy destructor, see DoDispose.
 
-  // Inherited from SdmnClientApp
+  // Inherited from SdmnClientApp.
   void Start ();
 
 protected:
-  // Inherited from Object
+  // Inherited from Object.
   virtual void DoDispose (void);
 
-  // Inherited from SdmnClientApp
+  // Inherited from SdmnClientApp.
   void Stop ();
 
 private:

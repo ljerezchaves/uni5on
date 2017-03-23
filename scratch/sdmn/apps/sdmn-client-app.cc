@@ -18,6 +18,9 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#define NS_LOG_APPEND_CONTEXT \
+  { std::clog << "[" << m_name << " client - teid " << m_teid << "] "; }
+
 #include "sdmn-client-app.h"
 #include "sdmn-server-app.h"
 
@@ -92,8 +95,7 @@ SdmnClientApp::GetTypeId (void)
 std::string
 SdmnClientApp::GetAppName (void) const
 {
-  NS_LOG_FUNCTION (this);
-
+  // No log to avoid infinite recursion.
   return m_name;
 }
 
@@ -132,8 +134,7 @@ SdmnClientApp::GetEpsBearer (void) const
 uint32_t
 SdmnClientApp::GetTeid (void) const
 {
-  NS_LOG_FUNCTION (this);
-
+  // No log to avoid infinite recursion.
   return m_teid;
 }
 
@@ -202,7 +203,7 @@ SdmnClientApp::Start ()
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (!IsActive (), "Can't start an already active application.");
-  NS_LOG_INFO ("Starting application " << m_name << " with teid " << m_teid);
+  NS_LOG_INFO ("Starting client application.");
   ResetQosStats ();
   m_active = true;
   m_forceStopFlag = false;
@@ -234,7 +235,7 @@ SdmnClientApp::Stop ()
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
-  NS_LOG_INFO ("Stopping application " << m_name << " with teid " << m_teid);
+  NS_LOG_INFO ("Stopping client application.");
   Simulator::Cancel (m_forceStop);
   m_active = false;
   m_serverApp->NotifyStop ();
@@ -247,8 +248,7 @@ SdmnClientApp::ForceStop ()
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
-  NS_LOG_INFO ("Preparing to stop application " << m_name <<
-               " with teid " << m_teid);
+  NS_LOG_INFO ("Preparing to stop client application.");
   Simulator::Cancel (m_forceStop);
   Simulator::Schedule (Seconds (1), &SdmnClientApp::Stop, this);
   m_forceStopFlag = true;

@@ -54,8 +54,10 @@ public:
 
   /** \name Private member accessors. */
   //\{
+  std::string GetAppName (void) const;
   bool IsActive (void) const;
   bool IsForceStop (void) const;
+  uint32_t GetTeid (void) const;
   Ptr<SdmnClientApp> GetClientApp (void) const;
   Ptr<const QosStatsCalculator> GetQosStats (void) const;
   //\}

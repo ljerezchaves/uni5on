@@ -134,8 +134,8 @@ private:
     char frameType;       //!< Frame type (I, P or B).
   };
 
-  bool                            m_connected;        //!< True if connected.
-  uint32_t                        m_pendingBytes;     //!< Pending TX bytes.
+  bool                            m_connected;        //!< Connected state.
+  uint32_t                        m_pendingBytes;     //!< Pending bytes.
   uint32_t                        m_chunkSize;        //!< Chunk size.
   Ptr<RandomVariableStream>       m_lengthRng;        //!< Length generator.
   static struct TraceEntry        g_defaultEntries[]; //!< Default trace.

@@ -44,19 +44,19 @@ class HttpServer : public SdmnServerApp
 public:
   /**
    * \brief Get the type ID.
-   * \return the object TypeId
+   * \return the object TypeId.
    */
   static TypeId GetTypeId (void);
 
-  HttpServer ();          //!< Default constructor
-  virtual ~HttpServer (); //!< Dummy destructor, see DoDispose
+  HttpServer ();          //!< Default constructor.
+  virtual ~HttpServer (); //!< Dummy destructor, see DoDispose.
 
 protected:
-  // Inherited from Object
+  // Inherited from Object.
   virtual void DoDispose (void);
 
 private:
-  // Inherited from Application
+  // Inherited from Application.
   virtual void StartApplication (void);
   virtual void StopApplication (void);
 

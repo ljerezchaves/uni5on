@@ -20,6 +20,9 @@
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#define NS_LOG_APPEND_CONTEXT \
+  { std::clog << "[Http server - teid " << GetTeid () << "] "; }
+
 #include "http-server.h"
 
 namespace ns3 {
@@ -121,7 +124,7 @@ HttpServer::HandleRequest (Ptr<Socket> socket, const Address& address)
   NS_LOG_FUNCTION (this << socket << address);
 
   Ipv4Address ipAddr = InetSocketAddress::ConvertFrom (address).GetIpv4 ();
-  NS_LOG_INFO ("Connection request from " << ipAddr);
+  NS_LOG_INFO ("Connection request received from " << ipAddr);
   return !m_connected;
 }
 
@@ -143,7 +146,7 @@ HttpServer::HandlePeerClose (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  NS_LOG_INFO ("Connection closed.");
+  NS_LOG_INFO ("Connection successfully closed.");
   socket->ShutdownSend ();
   socket->ShutdownRecv ();
   socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
@@ -156,7 +159,7 @@ HttpServer::HandlePeerError (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  NS_LOG_ERROR ("Connection error.");
+  NS_LOG_ERROR ("Connection closed with errors.");
   socket->ShutdownSend ();
   socket->ShutdownRecv ();
   socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
@@ -213,12 +216,12 @@ HttpServer::SendData (Ptr<Socket> socket, uint32_t available)
   int bytes = socket->Send (packet);
   if (bytes > 0)
     {
-      NS_LOG_DEBUG ("HTTP server TX " << bytes << " bytes.");
+      NS_LOG_DEBUG ("Server TX " << bytes << " bytes.");
       m_pendingBytes -= static_cast<uint32_t> (bytes);
     }
   else
     {
-      NS_LOG_ERROR ("HTTP server TX error.");
+      NS_LOG_ERROR ("Server TX error.");
     }
 }
 
@@ -226,11 +229,11 @@ void
 HttpServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
 {
   NS_LOG_FUNCTION (this << socket);
-  NS_ASSERT_MSG (header.IsRequest (), "Invalid HTTP request.");
+  NS_ASSERT_MSG (header.IsRequest (), "Invalid request.");
 
   // Check for valid request.
   std::string url = header.GetRequestUrl ();
-  NS_LOG_DEBUG ("Client requesting a " + url);
+  NS_LOG_INFO ("Client requesting " << url);
   if (url == "main/object")
     {
       // Setting random parameter values.

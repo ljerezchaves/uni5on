@@ -80,10 +80,10 @@ private:
    */
   void SendRequest (Ptr<Socket> socket, std::string url);
 
-  Ptr<Packet>             m_rxPacket;       //!< RX packet.
-  uint32_t                m_httpPacketSize; //!< HTTP packet size.
-  uint32_t                m_pendingBytes;   //!< Pending bytes.
-  uint32_t                m_pendingObjects; //!< Pending video chunks.
+  Ptr<Packet>             m_rxPacket;           //!< RX packet.
+  uint32_t                m_httpPacketSize;     //!< HTTP packet size.
+  uint32_t                m_pendingBytes;       //!< Pending bytes.
+  uint32_t                m_pendingObjects;     //!< Pending video chunks.
 };
 
 } // Namespace ns3
