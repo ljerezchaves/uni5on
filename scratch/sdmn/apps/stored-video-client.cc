@@ -66,7 +66,8 @@ StoredVideoClient::Start (void)
   // Open the TCP connection.
   if (!m_socket)
     {
-      NS_LOG_INFO ("Opening the TCP connection.");
+      NS_LOG_INFO ("Opening the TCP connection for app " << GetAppName () <<
+                   " with teid " << GetTeid ());
       TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tcpFactory);
       m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
@@ -85,7 +86,8 @@ StoredVideoClient::Stop ()
   // Close the TCP socket.
   if (m_socket != 0)
     {
-      NS_LOG_INFO ("Closing the TCP connection.");
+      NS_LOG_INFO ("Closing the TCP connection for app " << GetAppName () <<
+                   " with teid " << GetTeid ());
       m_socket->ShutdownRecv ();
       m_socket->Close ();
       m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
@@ -110,7 +112,8 @@ StoredVideoClient::ConnectionSucceeded (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  NS_LOG_INFO ("Server accepted connection request!");
+  NS_LOG_INFO ("Server accepted connection request for app " <<
+               GetAppName () << " with teid " << GetTeid ());
   socket->SetRecvCallback (
     MakeCallback (&StoredVideoClient::ReceiveData, this));
 
@@ -122,7 +125,7 @@ void
 StoredVideoClient::ConnectionFailed (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-  NS_FATAL_ERROR ("Server did not accepted connection request!");
+  NS_FATAL_ERROR ("Server refused connection request!");
 }
 
 void
@@ -198,7 +201,8 @@ StoredVideoClient::ReceiveData (Ptr<Socket> socket)
             }
           else
             {
-              NS_LOG_INFO ("Stored video successfully received.");
+              NS_LOG_INFO ("Stored video successfully received by app " <<
+                           GetAppName () << " with teid " << GetTeid ());
               Stop ();
               break;
             }
@@ -216,7 +220,8 @@ StoredVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
   // When the force stop flag is active, don't send new requests.
   if (IsForceStop ())
     {
-      NS_LOG_WARN ("Can't send video request on force stop mode.");
+      NS_LOG_WARN ("App " << GetAppName () << " with teid " << GetTeid () <<
+                   " can't send request on force stop mode.");
       return;
     }
 
@@ -226,7 +231,7 @@ StoredVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
   httpHeader.SetVersion ("HTTP/1.1");
   httpHeader.SetRequestMethod ("GET");
   httpHeader.SetRequestUrl (url);
-  NS_LOG_INFO ("Request for " << url);
+  NS_LOG_DEBUG ("Request for " << url);
 
   Ptr<Packet> packet = Create<Packet> ();
   packet->AddHeader (httpHeader);
@@ -235,7 +240,8 @@ StoredVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
   int bytes = socket->Send (packet);
   if (bytes != (int)packet->GetSize ())
     {
-      NS_LOG_ERROR ("Not all bytes were copied to the socket buffer.");
+      NS_LOG_ERROR ("Not all bytes were sent to socket of app " <<
+                    GetAppName () << " with teid " << GetTeid ());
     }
 }
 

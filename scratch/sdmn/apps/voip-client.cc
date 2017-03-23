@@ -73,7 +73,8 @@ VoipClient::Start ()
   // ForceStop method to stop traffic generation before firing the stop trace.
   Time stopTime = Seconds (std::abs (m_lengthRng->GetValue ()));
   m_stopEvent = Simulator::Schedule (stopTime, &VoipClient::ForceStop, this);
-  NS_LOG_INFO ("VoIP call lenght: " << stopTime.As (Time::S));
+  NS_LOG_INFO ("App " << GetAppName () << " with teid " << GetTeid () <<
+               "set call lenght to " << stopTime.As (Time::S));
 
   // Chain up to fire start trace
   SdmnClientApp::Start ();
@@ -82,7 +83,8 @@ VoipClient::Start ()
   Simulator::Cancel (m_sendEvent);
   m_sendEvent = Simulator::Schedule (
       m_interval, &VoipClient::SendPacket, this);
-  NS_LOG_INFO ("VoIP client started.");
+  NS_LOG_INFO ("App " << GetAppName () << " with teid " << GetTeid () <<
+               " started.");
 }
 
 void
@@ -137,7 +139,8 @@ VoipClient::ForceStop ()
 
   // Chain up
   SdmnClientApp::ForceStop ();
-  NS_LOG_INFO ("VoIP client stopped.");
+  NS_LOG_INFO ("App " << GetAppName () << " with teid " << GetTeid () <<
+               " stopped.");
 }
 
 void

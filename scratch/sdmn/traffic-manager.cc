@@ -204,8 +204,10 @@ TrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
           // This application uses the default bearer.
           app->SetTeid (m_defaultTeid);
         }
-      NS_LOG_INFO ("Application " << app->GetAppName () << " [" << imsi <<
-                   "@" << cellId << "] set with teid " << app->GetTeid ());
+      NS_LOG_INFO ("Application " << app->GetAppName () <<
+                   " at user " << imsi <<
+                   " located at cell " << cellId <<
+                   " is set with teid " << app->GetTeid ());
     }
 }
 

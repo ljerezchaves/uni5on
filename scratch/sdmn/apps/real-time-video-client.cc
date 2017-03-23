@@ -61,7 +61,8 @@ RealTimeVideoClient::Start ()
   Time stopTime = Seconds (std::abs (m_lengthRng->GetValue ()));
   m_stopEvent = Simulator::Schedule (
       stopTime, &RealTimeVideoClient::ForceStop, this);
-  NS_LOG_INFO ("Real-time video lenght: " << stopTime.As (Time::S));
+  NS_LOG_INFO ("App " << GetAppName () << " with teid " << GetTeid () <<
+               "set video lenght to " << stopTime.As (Time::S));
 
   // Chain up to fire start trace
   SdmnClientApp::Start ();

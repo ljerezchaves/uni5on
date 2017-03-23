@@ -95,7 +95,8 @@ HttpClient::Start ()
   // Open the TCP connection
   if (!m_socket)
     {
-      NS_LOG_INFO ("Opening the TCP connection.");
+      NS_LOG_INFO ("Opening the TCP connection for app " << GetAppName () <<
+                   " with teid " << GetTeid ());
       TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tcpFactory);
       m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
@@ -117,7 +118,8 @@ HttpClient::Stop ()
   // Close the TCP socket
   if (m_socket != 0)
     {
-      NS_LOG_INFO ("Closing the TCP connection.");
+      NS_LOG_INFO ("Closing the TCP connection for app " << GetAppName () <<
+                   " with teid " << GetTeid ());
       m_socket->ShutdownRecv ();
       m_socket->Close ();
       m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
@@ -145,7 +147,8 @@ HttpClient::ConnectionSucceeded (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  NS_LOG_INFO ("Server accepted connection request!");
+  NS_LOG_INFO ("Server accepted connection request for app " <<
+               GetAppName () << " with teid " << GetTeid ());
   socket->SetRecvCallback (MakeCallback (&HttpClient::ReceiveData, this));
 
   // Request the first main/object
@@ -156,7 +159,7 @@ void
 HttpClient::ConnectionFailed (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-  NS_FATAL_ERROR ("Server did not accepted connection request!");
+  NS_FATAL_ERROR ("Server refused connection request!");
 }
 
 void
@@ -231,7 +234,8 @@ HttpClient::ReceiveData (Ptr<Socket> socket)
             }
           else
             {
-              NS_LOG_INFO ("HTTP page successfully received.");
+              NS_LOG_INFO ("HTTP page successfully received by app " <<
+                           GetAppName () << " with teid " << GetTeid ());
               m_pagesLoaded++;
               SetReadingTime (socket);
               break;
@@ -250,7 +254,8 @@ HttpClient::SendRequest (Ptr<Socket> socket, std::string url)
   // When the force stop flag is active, don't send new requests.
   if (IsForceStop ())
     {
-      NS_LOG_WARN ("Can't send http request on force stop mode.");
+      NS_LOG_WARN ("App " << GetAppName () << " with teid " << GetTeid () <<
+                   " can't send request on force stop mode.");
       return;
     }
 
@@ -269,7 +274,8 @@ HttpClient::SendRequest (Ptr<Socket> socket, std::string url)
   int bytes = socket->Send (packet);
   if (bytes != (int)packet->GetSize ())
     {
-      NS_LOG_ERROR ("Not all bytes were copied to the socket buffer.");
+      NS_LOG_ERROR ("Not all bytes were sent to socket of app " <<
+                    GetAppName () << " with teid " << GetTeid ());
     }
 }
 
@@ -291,7 +297,8 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   // Stop application due to reading time threshold.
   if (readingTime > m_maxReadingTime)
     {
-      NS_LOG_INFO ("Closing socket due to reading time threshold.");
+      NS_LOG_INFO ("App " << GetAppName () << " with teid " << GetTeid () <<
+                   " is closing the socket due to reading time threshold.");
       Stop ();
       return;
     }
@@ -299,12 +306,14 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   // Stop application due to max page threshold.
   if (m_pagesLoaded >= m_maxPages)
     {
-      NS_LOG_INFO ("Closing socket due to max page threshold.");
+      NS_LOG_INFO ("App " << GetAppName () << " with teid " << GetTeid () <<
+                   " is closing the socket due to max page threshold.");
       Stop ();
       return;
     }
 
-  NS_LOG_INFO ("Reading time: " << readingTime.As (Time::S));
+  NS_LOG_INFO ("App " << GetAppName () << " with teid " << GetTeid () <<
+               " set the reading time to " << readingTime.As (Time::S));
   m_nextRequest = Simulator::Schedule (readingTime, &HttpClient::SendRequest,
                                        this, socket, "main/object");
 }

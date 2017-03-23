@@ -202,7 +202,7 @@ SdmnClientApp::Start ()
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (!IsActive (), "Can't start an already active application.");
-  NS_LOG_INFO ("Starting application " << m_name << " over bearer " << m_teid);
+  NS_LOG_INFO ("Starting application " << m_name << " with teid " << m_teid);
   ResetQosStats ();
   m_active = true;
   m_forceStopFlag = false;
@@ -234,7 +234,7 @@ SdmnClientApp::Stop ()
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
-  NS_LOG_INFO ("Stopping application " << m_name << " over bearer " << m_teid);
+  NS_LOG_INFO ("Stopping application " << m_name << " with teid " << m_teid);
   Simulator::Cancel (m_forceStop);
   m_active = false;
   m_serverApp->NotifyStop ();
@@ -248,7 +248,7 @@ SdmnClientApp::ForceStop ()
 
   NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
   NS_LOG_INFO ("Preparing to stop application " << m_name <<
-               " over bearer " << m_teid);
+               " with teid " << m_teid);
   Simulator::Cancel (m_forceStop);
   Simulator::Schedule (Seconds (1), &SdmnClientApp::Stop, this);
   m_forceStopFlag = true;
