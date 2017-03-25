@@ -33,9 +33,7 @@ NS_OBJECT_ENSURE_REGISTERED (SdmnServerApp);
 SdmnServerApp::SdmnServerApp ()
   : m_qosStats (CreateObject<QosStatsCalculator> ()),
     m_socket (0),
-    m_clientApp (0),
-    m_active (false),
-    m_forceStopFlag (false)
+    m_clientApp (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -82,7 +80,8 @@ SdmnServerApp::IsActive (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_active;
+  NS_ASSERT_MSG (m_clientApp, "Client application undefined.");
+  return m_clientApp->IsActive ();
 }
 
 bool
@@ -90,7 +89,8 @@ SdmnServerApp::IsForceStop (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_forceStopFlag;
+  NS_ASSERT_MSG (m_clientApp, "Client application undefined.");
+  return m_clientApp->IsForceStop ();
 }
 
 uint32_t
@@ -145,8 +145,6 @@ SdmnServerApp::NotifyStart ()
 
   NS_LOG_INFO ("Starting server application.");
   ResetQosStats ();
-  m_active = true;
-  m_forceStopFlag = false;
 }
 
 void
@@ -155,7 +153,6 @@ SdmnServerApp::NotifyStop ()
   NS_LOG_FUNCTION (this);
 
   NS_LOG_INFO ("Stopping server application.");
-  m_active = false;
 }
 
 void
@@ -164,7 +161,6 @@ SdmnServerApp::NotifyForceStop ()
   NS_LOG_FUNCTION (this);
 
   NS_LOG_INFO ("Preparing to stop server application.");
-  m_forceStopFlag = true;
 }
 
 uint32_t

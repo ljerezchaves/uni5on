@@ -41,7 +41,7 @@ class SdmnServerApp;
  * \ingroup sdmnApps
  * This class extends the Application class to proper work with the SDMN
  * architecture. Only clients applications (those which will be installed into
- * UEs) should extends this class. It includes a QosStatsCalculator for traffic
+ * UEs) should extend this class. It includes a QosStatsCalculator for traffic
  * statistics, and start/stop callbacks to notify the SDMN controller when the
  * traffic stats/stops. Each application is associated with an EPS bearer, and
  * application traffic is sent within GTP tunnels over EPC interfaces. These
@@ -52,12 +52,12 @@ class SdmnClientApp : public Application
   friend class SdmnServerApp;
 
 public:
-  SdmnClientApp ();            //!< Default constructor
-  virtual ~SdmnClientApp ();   //!< Dummy destructor, see DoDispose
+  SdmnClientApp ();            //!< Default constructor.
+  virtual ~SdmnClientApp ();   //!< Dummy destructor, see DoDispose.
 
   /**
    * Get the type ID.
-   * \return the object TypeId
+   * \return the object TypeId.
    */
   static TypeId GetTypeId (void);
 
@@ -88,8 +88,8 @@ public:
                   uint16_t serverPort);
 
   /**
-   * Start this application. Start traffic generation,
-   * reset internal counters and fire the start trace.
+   * Start this application. Start traffic generation, reset internal counters,
+   * notify the server application, and fire the start trace source.
    */
   virtual void Start ();
 
@@ -104,17 +104,17 @@ protected:
   virtual void DoDispose (void);
 
   /**
-   * Stop this application. Close the socket and fire the stop trace (which
-   * will trigger statistics dumps). This function is expected to be called
-   * only after application traffic is completely stopped (no pending bytes
-   * for transmission and no in-transit packets).
+   * Notify the stop event on this client application. This function is
+   * expected to be called only after application traffic is completely stopped
+   * (no pending bytes for transmission, no in-transit packets, and closed
+   * sockets). It will fire stop trace source.
    */
-  virtual void Stop ();
+  void NotifyStop ();
 
   /**
-   * Force this application to stop. This function will stops the traffic
+   * Force this application to stop. This function will interrupt traffic
    * generation, allowing on-transit packets to reach the destination before
-   * effectively stopping the application.
+   * closing sockets and notifying the stop event.
    */
   virtual void ForceStop ();
 
@@ -147,9 +147,9 @@ protected:
 
 private:
   /**
-   * Reset the QoS statistics
+   * Reset the QoS statistics.
    */
-  virtual void ResetQosStats ();
+  void ResetQosStats ();
 
   std::string   m_name;           //!< Application name.
   bool          m_active;         //!< Active state.

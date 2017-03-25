@@ -36,15 +36,15 @@ class SdmnClientApp;
  * \ingroup sdmnApps
  * This class extends the Application class to proper work with SDMN
  * architecture. Only server applications (those which will be installed into
- * web server node) extends this class.
+ * web server node) should extend this class.
  */
 class SdmnServerApp : public Application
 {
   friend class SdmnClientApp;
 
 public:
-  SdmnServerApp ();            //!< Default constructor
-  virtual ~SdmnServerApp ();   //!< Dummy destructor, see DoDispose
+  SdmnServerApp ();            //!< Default constructor.
+  virtual ~SdmnServerApp ();   //!< Dummy destructor, see DoDispose.
 
   /**
    * Get the type ID.
@@ -72,28 +72,27 @@ public:
                   uint16_t clientPort);
 
 protected:
-  /** Destructor implementation */
+  /** Destructor implementation. */
   virtual void DoDispose (void);
 
   /**
    * Notify this server of a start event on the client application. The server
-   * must reset internal counters and start generating traffic (when
-   * applicable).
+   * must reset internal counters and start traffic when applicable.
    */
   virtual void NotifyStart ();
 
   /**
-   * Notify this server of a stop event on the client application. The server
-   * must close the socket (when applicable). This function is expected to be
-   * called only after application traffic is completely stopped (no pending
-   * bytes for transmission and no in-transit packets).
+   * Notify this server of a stop event on the client application. This
+   * function is expected to be called only after application traffic is
+   * completely stopped (no pending bytes for transmission, no in-transit
+   * packets, and closed sockets).
    */
   virtual void NotifyStop ();
 
   /**
-   * Notify this server of a force stop event on the client application. The
-   * server must stop generating traffic (when applicable), and be prepared to
-   * the upcoming stop event on the client side.
+   * Notify this server of a force stop event on the client application. When
+   * applicabe, the server must stop generating traffic and close the open
+   * socket.
    */
   virtual void NotifyForceStop ();
 
@@ -112,7 +111,7 @@ protected:
   void NotifyRx (uint32_t rxBytes, Time timestamp = Simulator::Now ());
 
   /**
-   * Reset the QoS statistics
+   * Reset the QoS statistics.
    */
   void ResetQosStats ();
 
@@ -122,10 +121,6 @@ protected:
   Ipv4Address             m_clientAddress;    //!< Client address.
   uint16_t                m_clientPort;       //!< Client port.
   Ptr<SdmnClientApp>      m_clientApp;        //!< Client application.
-
-private:
-  bool                    m_active;           //!< Active state.
-  bool                    m_forceStopFlag;    //!< Force stop flag.
 };
 
 } // namespace ns3
