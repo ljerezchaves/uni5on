@@ -91,7 +91,7 @@ protected:
 
   /**
    * Notify this server of a force stop event on the client application. When
-   * applicabe, the server must stop generating traffic and close the open
+   * applicable, the server must stop generating traffic and close the open
    * socket.
    */
   virtual void NotifyForceStop ();

@@ -87,7 +87,7 @@ StoredVideoServer::GetTypeId (void)
                    MakePointerChecker <RandomVariableStream> ())
     .AddAttribute ("ChunkSize",
                    "The number of bytes on each chunck of the video.",
-                   UintegerValue (256000), // 256 KB
+                   UintegerValue (512000), // 512 KB
                    MakeUintegerAccessor (&StoredVideoServer::m_chunkSize),
                    MakeUintegerChecker<uint32_t> ())
   ;
@@ -136,20 +136,17 @@ StoredVideoServer::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
 
-  if (!m_socket)
-    {
-      TypeId tid = TypeId::LookupByName ("ns3::TcpSocketFactory");
-      m_socket = Socket::CreateSocket (GetNode (), tid);
-      m_socket->SetAttribute ("SndBufSize", UintegerValue (16384));
-      m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
-      m_socket->Listen ();
-      m_socket->SetAcceptCallback (
-        MakeCallback (&StoredVideoServer::HandleRequest, this),
-        MakeCallback (&StoredVideoServer::HandleAccept, this));
-      m_socket->SetCloseCallbacks (
-        MakeCallback (&StoredVideoServer::HandlePeerClose, this),
-        MakeCallback (&StoredVideoServer::HandlePeerError, this));
-    }
+  NS_LOG_INFO ("Creating the listening TCP socket.");
+  TypeId tid = TypeId::LookupByName ("ns3::TcpSocketFactory");
+  m_socket = Socket::CreateSocket (GetNode (), tid);
+  m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
+  m_socket->Listen ();
+  m_socket->SetAcceptCallback (
+    MakeCallback (&StoredVideoServer::NotifyConnectionRequest, this),
+    MakeCallback (&StoredVideoServer::NotifyNewConnectionCreated, this));
+  m_socket->SetCloseCallbacks (
+    MakeCallback (&StoredVideoServer::NotifyNormalClose, this),
+    MakeCallback (&StoredVideoServer::NotifyErrorClose, this));
 }
 
 void
@@ -159,82 +156,81 @@ StoredVideoServer::StopApplication ()
 
   if (m_socket != 0)
     {
-      m_socket->ShutdownRecv ();
       m_socket->Close ();
-      m_socket->SetAcceptCallback (
-        MakeNullCallback<bool, Ptr<Socket>, const Address &> (),
-        MakeNullCallback<void, Ptr<Socket>, const Address &> ());
-      m_socket->SetSendCallback (
-        MakeNullCallback<void, Ptr<Socket>, uint32_t> ());
-      m_socket->SetRecvCallback (
-        MakeNullCallback<void, Ptr<Socket> > ());
+      m_socket->Dispose ();
       m_socket = 0;
     }
 }
 
 bool
-StoredVideoServer::HandleRequest (Ptr<Socket> socket, const Address& address)
+StoredVideoServer::NotifyConnectionRequest (Ptr<Socket> socket,
+                                            const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
 
   Ipv4Address ipAddr = InetSocketAddress::ConvertFrom (address).GetIpv4 ();
   NS_LOG_INFO ("Connection request received from " << ipAddr);
+
   return !m_connected;
 }
 
 void
-StoredVideoServer::HandleAccept (Ptr<Socket> socket, const Address& address)
+StoredVideoServer::NotifyNewConnectionCreated (Ptr<Socket> socket,
+                                               const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
 
   Ipv4Address ipAddr = InetSocketAddress::ConvertFrom (address).GetIpv4 ();
   NS_LOG_INFO ("Connection successfully established with " << ipAddr);
-  socket->SetSendCallback (MakeCallback (&StoredVideoServer::SendData, this));
-  socket->SetRecvCallback (
-    MakeCallback (&StoredVideoServer::ReceiveData, this));
   m_connected = true;
+  m_pendingBytes = 0;
+
+  socket->SetSendCallback (
+    MakeCallback (&StoredVideoServer::SendData, this));
+  socket->SetRecvCallback (
+    MakeCallback (&StoredVideoServer::DataReceived, this));
+}
+
+void
+StoredVideoServer::NotifyNormalClose (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+
+  NS_LOG_INFO ("Connection successfully closed. ");
+  socket->ShutdownSend ();
+  socket->ShutdownRecv ();
+  m_connected = false;
   m_pendingBytes = 0;
 }
 
 void
-StoredVideoServer::HandlePeerClose (Ptr<Socket> socket)
+StoredVideoServer::NotifyErrorClose (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  NS_LOG_INFO ("Connection successfully closed.");
+  NS_LOG_WARN ("Connection closed with errors.");
   socket->ShutdownSend ();
   socket->ShutdownRecv ();
-  socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
-  socket->SetSendCallback (MakeNullCallback<void, Ptr<Socket>, uint32_t> ());
   m_connected = false;
+  m_pendingBytes = 0;
 }
 
 void
-StoredVideoServer::HandlePeerError (Ptr<Socket> socket)
+StoredVideoServer::DataReceived (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  NS_LOG_ERROR ("Connection closed with errors.");
-  socket->ShutdownSend ();
-  socket->ShutdownRecv ();
-  socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
-  socket->SetSendCallback (MakeNullCallback<void, Ptr<Socket>, uint32_t> ());
-  m_connected = false;
-}
-
-void
-StoredVideoServer::ReceiveData (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
-
-  // Receive the HTTP GET message.
-  HttpHeader httpHeader;
+  // This application expects to receive only
+  // a single HTTP request message at a time.
   Ptr<Packet> packet = socket->Recv ();
   NotifyRx (packet->GetSize ());
-  packet->RemoveHeader (httpHeader);
-  NS_ASSERT (packet->GetSize () == 0);
 
-  ProccessHttpRequest (socket, httpHeader);
+  HttpHeader httpHeaderRequest;
+  packet->RemoveHeader (httpHeaderRequest);
+  NS_ASSERT_MSG (httpHeaderRequest.IsRequest (), "Invalid HTTP request.");
+  NS_ASSERT_MSG (packet->GetSize () == 0, "Invalid RX data.");
+
+  ProccessHttpRequest (socket, httpHeaderRequest);
 }
 
 void
@@ -245,24 +241,6 @@ StoredVideoServer::SendData (Ptr<Socket> socket, uint32_t available)
   if (!m_pendingBytes)
     {
       NS_LOG_DEBUG ("No pending data to send.");
-      return;
-    }
-
-  if (IsForceStop ())
-    {
-      NS_LOG_DEBUG ("Can't send data on force stop mode.");
-      return;
-    }
-
-  if (!m_connected)
-    {
-      NS_LOG_DEBUG ("Socket not connected.");
-      return;
-    }
-
-  if (!available)
-    {
-      NS_LOG_DEBUG ("No TX buffer space available.");
       return;
     }
 
@@ -284,21 +262,19 @@ void
 StoredVideoServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
 {
   NS_LOG_FUNCTION (this << socket);
-  NS_ASSERT_MSG (header.IsRequest (), "Invalid request.");
 
-  // Check for valid request.
+  // Check for requested URL.
   std::string url = header.GetRequestUrl ();
-  NS_LOG_INFO ("Client requesting " << url);
+  NS_LOG_INFO ("Client requested " << url);
   if (url == "main/video")
     {
-      // Set the random video length.
       m_pendingBytes = 0;
       Time videoLength = Seconds (std::abs (m_lengthRng->GetValue ()));
       uint32_t numChunks = GetVideoChunks (videoLength);
       NS_LOG_INFO ("Video with " << numChunks << " chunks of " <<
                    m_chunkSize << " bytes each.");
 
-      // Setting the HTTP response message.
+      // Set the HTTP response message.
       HttpHeader httpHeaderOut;
       httpHeaderOut.SetResponse ();
       httpHeaderOut.SetVersion ("HTTP/1.1");
@@ -306,12 +282,12 @@ StoredVideoServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
       httpHeaderOut.SetResponsePhrase ("OK");
       httpHeaderOut.SetHeaderField ("ContentLength", m_pendingBytes);
       httpHeaderOut.SetHeaderField ("ContentType", "main/video");
-      httpHeaderOut.SetHeaderField ("NumChunks", numChunks);
+      httpHeaderOut.SetHeaderField ("VideoChunks", numChunks);
 
       Ptr<Packet> outPacket = Create<Packet> (0);
       outPacket->AddHeader (httpHeaderOut);
 
-      NotifyTx (outPacket->GetSize () + m_pendingBytes);
+      NotifyTx (outPacket->GetSize ());
       int bytes = socket->Send (outPacket);
       if (bytes != (int)outPacket->GetSize ())
         {
@@ -323,7 +299,7 @@ StoredVideoServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
       m_pendingBytes = m_chunkSize;
       NS_LOG_DEBUG ("Video chunk size (bytes): " << m_pendingBytes);
 
-      // Setting the HTTP response message.
+      // Set the HTTP response message.
       HttpHeader httpHeaderOut;
       httpHeaderOut.SetResponse ();
       httpHeaderOut.SetVersion ("HTTP/1.1");
@@ -342,12 +318,12 @@ StoredVideoServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
           NS_LOG_ERROR ("Not all bytes were copied to the socket buffer.");
         }
 
-      // Start sending the HTTP object.
+      // Start sending the HTTP payload.
       SendData (socket, socket->GetTxAvailable ());
     }
   else
     {
-      NS_FATAL_ERROR ("Invalid request.");
+      NS_FATAL_ERROR ("Invalid URL requested.");
     }
 }
 

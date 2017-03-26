@@ -51,27 +51,39 @@ protected:
   // Inherited from Object.
   virtual void DoDispose (void);
 
-  // Inherited from SdmnClientApp.
-  void Stop ();
+  // Inherited from SdmnServerApp.
+  void ForceStop ();
 
 private:
   /**
-   * \brief Handle a connection succeed event.
+   * Callback for a connection successfully established.
    * \param socket The connected socket.
    */
-  void ConnectionSucceeded (Ptr<Socket> socket);
+  void NotifyConnectionSucceeded (Ptr<Socket> socket);
 
   /**
-   * \brief Handle a connection failed event.
+   * Callback for a connection failed.
    * \param socket The connected socket.
    */
-  void ConnectionFailed (Ptr<Socket> socket);
+  void NotifyConnectionFailed (Ptr<Socket> socket);
 
   /**
-   * \brief Socket receive callback.
-   * \param socket Socket with data available to be read.
+   * Callback for a connection gracefully closed.
+   * \param socket The connected socket.
    */
-  void ReceiveData (Ptr<Socket> socket);
+  void NotifyNormalClose (Ptr<Socket> socket);
+
+  /**
+   * Callback for a connection abnormally closed.
+   * \param socket The connected socket.
+   */
+  void NotifyErrorClose (Ptr<Socket> socket);
+
+  /**
+   * Callback for in-order bytes available in receive buffer.
+   * \param socket The connected socket.
+   */
+  void DataReceived (Ptr<Socket> socket);
 
   /**
    * \brief Send the request to server.
@@ -81,7 +93,6 @@ private:
   void SendRequest (Ptr<Socket> socket, std::string url);
 
   Ptr<Packet>             m_rxPacket;           //!< RX packet.
-  uint32_t                m_httpPacketSize;     //!< HTTP packet size.
   uint32_t                m_pendingBytes;       //!< Pending bytes.
   uint32_t                m_pendingObjects;     //!< Pending video chunks.
 };

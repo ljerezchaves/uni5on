@@ -331,7 +331,7 @@ void ForceDefaults ()
   // state transition to CLOSED state. This is necessary to allow fast TCP
   // endpoint release, allowing the reuse of TCP ports on new sockets.
   //
-  Config::SetDefault ("ns3::TcpSocketBase::MaxSegLifetime", DoubleValue (0.9));
+  Config::SetDefault ("ns3::TcpSocketBase::MaxSegLifetime", DoubleValue (1.0));
 
   //
   // The default TCP minimum retransmit timeout value is set to 1 second in

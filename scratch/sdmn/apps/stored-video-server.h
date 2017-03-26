@@ -28,8 +28,8 @@ namespace ns3 {
 /**
  * \ingroup sdmnApps
  * This is the server side of a stored video traffic generator. The server
- * listen for client video requests, and send video chunks as fast as possible
- * up to random video length duration over TCP connection.
+ * listen for a client requesting video chunks and send the chunks back as fast
+ * as possible.
  */
 class StoredVideoServer : public SdmnServerApp
 {
@@ -62,63 +62,63 @@ private:
   virtual void StopApplication (void);
 
   /**
-   * \brief Processes the request of client to establish a TCP connection.
-   * \param socket Socket that receives the TCP request for connection.
+   * Callback for connection request from peer.
+   * \param socket The socket that receives the connection request.
    */
-  bool HandleRequest (Ptr<Socket> socket, const Address& address);
+  bool NotifyConnectionRequest (Ptr<Socket> socket, const Address& address);
 
   /**
-   * \brief Handle the acceptance or denial of the TCP connection.
-   * \param socket Socket for the TCP connection.
-   * \param address Address of the client.
+   * Callback for a new connection created.
+   * \param socket The new (forked) socket for this connection.
+   * \param address The peer address.
    */
-  void HandleAccept (Ptr<Socket> socket, const Address& address);
+  void NotifyNewConnectionCreated (Ptr<Socket> socket, const Address& address);
 
   /**
-   * \brief Handle an connection close.
+   * Callback for a connection gracefully closed.
    * \param socket The connected socket.
    */
-  void HandlePeerClose (Ptr<Socket> socket);
+  void NotifyNormalClose (Ptr<Socket> socket);
 
   /**
-   * \brief Handle an connection error.
+   * Callback for a connection abnormally closed.
    * \param socket The connected socket.
    */
-  void HandlePeerError (Ptr<Socket> socket);
+  void NotifyErrorClose (Ptr<Socket> socket);
 
   /**
-   * \brief Socket receive callback.
-   * \param socket Socket with data available to be read.
+   * Callback for in-order bytes available in receive buffer.
+   * \param socket The connected socket.
    */
-  void ReceiveData (Ptr<Socket> socket);
+  void DataReceived (Ptr<Socket> socket);
 
   /**
-   * \brief Socket send callback.
-   * \param socket The pointer to the socket with space in the transmit buffer.
-   * \param available The number of bytes available for writing into buffer.
+   * Callback for bytes available in transmission buffer.
+   * \param socket The connected socket.
+   * \param available The number of bytes available into tx buffer.
    */
   void SendData (Ptr<Socket> socket, uint32_t available);
 
   /**
-   * Process the Http request message, sending back the response.
+   * Process the HTTP request message.
    * \param socket The connected socket.
    * \param header The HTTP request header.
    */
   void ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header);
 
   /**
-   * \brief Load a trace file.
+   * \brief Load a video trace file.
    * \param filename The trace file path.
    */
   void LoadTrace (std::string filename);
 
   /**
-   * \brief Load the default trace.
+   * \brief Load the default video trace.
    */
   void LoadDefaultTrace (void);
 
   /**
-   * Get the number of chunks to send for the given video length.
+   * Get the number of chunks based on the given video length and chunk size.
    * \param length The video length.
    * \return The number of chunks for this video.
    */
@@ -131,7 +131,7 @@ private:
   {
     uint32_t timeToSend;  //!< Relative time to send the frame (ms).
     uint32_t packetSize;  //!< Size of the frame.
-    char frameType;       //!< Frame type (I, P or B).
+    char     frameType;   //!< Frame type (I, P or B).
   };
 
   bool                            m_connected;        //!< Connected state.

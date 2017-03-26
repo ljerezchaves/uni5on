@@ -152,7 +152,7 @@ SdmnServerApp::NotifyStop ()
 {
   NS_LOG_FUNCTION (this);
 
-  NS_LOG_INFO ("Stopping server application.");
+  NS_LOG_INFO ("Server application stopped.");
 }
 
 void
@@ -160,7 +160,7 @@ SdmnServerApp::NotifyForceStop ()
 {
   NS_LOG_FUNCTION (this);
 
-  NS_LOG_INFO ("Preparing to stop server application.");
+  NS_LOG_INFO ("Forcing the server application to stop.");
 }
 
 uint32_t
