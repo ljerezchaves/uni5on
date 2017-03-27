@@ -32,7 +32,7 @@ NS_LOG_COMPONENT_DEFINE ("StoredVideoServer");
 NS_OBJECT_ENSURE_REGISTERED (StoredVideoServer);
 
 /**
- * \brief Default trace to send
+ * \brief Default trace to send.
  */
 struct StoredVideoServer::TraceEntry
 StoredVideoServer::g_defaultEntries[] =
