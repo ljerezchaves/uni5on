@@ -61,55 +61,55 @@ private:
   virtual void StopApplication (void);
 
   /**
-   * \brief Processes the request of client to establish a TCP connection.
-   * \param socket Socket that receives the TCP request for connection.
+   * Callback for connection request from peer.
+   * \param socket The socket that receives the connection request.
    */
-  bool HandleRequest (Ptr<Socket> socket, const Address& address);
+  bool NotifyConnectionRequest (Ptr<Socket> socket, const Address& address);
 
   /**
-   * \brief Handle the acceptance or denial of the TCP connection.
-   * \param socket Socket for the TCP connection.
-   * \param address Address of the client.
+   * Callback for a new connection created.
+   * \param socket The new (forked) socket for this connection.
+   * \param address The peer address.
    */
-  void HandleAccept (Ptr<Socket> socket, const Address& address);
+  void NotifyNewConnectionCreated (Ptr<Socket> socket, const Address& address);
 
   /**
-   * \brief Handle an connection close.
+   * Callback for a connection gracefully closed.
    * \param socket The connected socket.
    */
-  void HandlePeerClose (Ptr<Socket> socket);
+  void NotifyNormalClose (Ptr<Socket> socket);
 
   /**
-   * \brief Handle an connection error.
+   * Callback for a connection abnormally closed.
    * \param socket The connected socket.
    */
-  void HandlePeerError (Ptr<Socket> socket);
+  void NotifyErrorClose (Ptr<Socket> socket);
 
   /**
-   * \brief Socket receive callback.
-   * \param socket Socket with data available to be read.
+   * Callback for in-order bytes available in receive buffer.
+   * \param socket The connected socket.
    */
-  void ReceiveData (Ptr<Socket> socket);
+  void DataReceived (Ptr<Socket> socket);
 
   /**
-   * \brief Socket send callback.
-   * \param socket The pointer to the socket with space in the transmit buffer.
-   * \param available The number of bytes available for writing into buffer.
+   * Callback for bytes available in transmission buffer.
+   * \param socket The connected socket.
+   * \param available The number of bytes available into tx buffer.
    */
   void SendData (Ptr<Socket> socket, uint32_t available);
 
   /**
-   * Process the Http request message, sending back the response.
+   * Process the HTTP request message.
    * \param socket The connected socket.
    * \param header The HTTP request header.
    */
   void ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header);
 
-  bool                           m_connected;              //!< Connected state
-  uint32_t                       m_pendingBytes;           //!< Pending bytes
-  Ptr<WeibullRandomVariable>     m_mainObjectSizeStream;   //!< Main obj size
-  Ptr<ExponentialRandomVariable> m_numOfInlineObjStream;   //!< Num inline obj
-  Ptr<LogNormalRandomVariable>   m_inlineObjectSizeStream; //!< Inline obj size
+  bool                           m_connected;            //!< Connected state.
+  uint32_t                       m_pendingBytes;         //!< Pending bytes.
+  Ptr<WeibullRandomVariable>     m_mainObjectSizeStream; //!< Main obj size.
+  Ptr<ExponentialRandomVariable> m_numOfInlineObjStream; //!< No inline objs.
+  Ptr<LogNormalRandomVariable>   m_inlineObjSizeStream;  //!< Inline obj size.
 };
 
 } // Namespace ns3

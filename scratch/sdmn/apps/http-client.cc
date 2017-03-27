@@ -54,7 +54,6 @@ HttpClient::HttpClient ()
   : m_nextRequest (EventId ()),
     m_rxPacket (0),
     m_pagesLoaded (0),
-    m_httpPacketSize (0),
     m_pendingBytes (0),
     m_pendingObjects (0)
 {
@@ -88,47 +87,17 @@ HttpClient::Start ()
   // Chain up to fire start trace.
   SdmnClientApp::Start ();
 
-  // Preparing internal variables for new traffic cycle.
-  m_httpPacketSize = 0;
-  m_pendingBytes = 0;
-  m_pendingObjects = 0;
-  m_pagesLoaded = 0;
-  m_rxPacket = 0;
-
-  // Open the TCP connection.
-  if (!m_socket)
-    {
-      NS_LOG_INFO ("Opening the TCP connection.");
-      TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
-      m_socket = Socket::CreateSocket (GetNode (), tcpFactory);
-      m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
-      m_socket->Connect (InetSocketAddress (m_serverAddress, m_serverPort));
-      m_socket->SetConnectCallback (
-        MakeCallback (&HttpClient::ConnectionSucceeded, this),
-        MakeCallback (&HttpClient::ConnectionFailed, this));
-    }
-}
-
-void
-HttpClient::Stop ()
-{
-  NS_LOG_FUNCTION (this);
-
-  // Cancel further requests.
-  Simulator::Cancel (m_nextRequest);
-
-  // Close the TCP socket.
-  if (m_socket != 0)
-    {
-      NS_LOG_INFO ("Closing the TCP connection.");
-      m_socket->ShutdownRecv ();
-      m_socket->Close ();
-      m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
-      m_socket = 0;
-    }
-
-  // Chain up to fire stop trace.
-  SdmnClientApp::Stop ();
+  NS_LOG_INFO ("Opening the TCP connection.");
+  TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
+  m_socket = Socket::CreateSocket (GetNode (), tcpFactory);
+  m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
+  m_socket->Connect (InetSocketAddress (m_serverAddress, m_serverPort));
+  m_socket->SetConnectCallback (
+    MakeCallback (&HttpClient::NotifyConnectionSucceeded, this),
+    MakeCallback (&HttpClient::NotifyConnectionFailed, this));
+  m_socket->SetCloseCallbacks (
+    MakeCallback (&HttpClient::NotifyNormalClose, this),
+    MakeCallback (&HttpClient::NotifyErrorClose, this));
 }
 
 void
@@ -139,24 +108,49 @@ HttpClient::DoDispose (void)
   m_rxPacket = 0;
   m_readingTimeStream = 0;
   m_readingTimeAdjustStream = 0;
-  Simulator::Cancel (m_nextRequest);
+  m_nextRequest.Cancel ();
   SdmnClientApp::DoDispose ();
 }
 
 void
-HttpClient::ConnectionSucceeded (Ptr<Socket> socket)
+HttpClient::ForceStop ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // Chain up to set flag and notify server.
+  SdmnClientApp::ForceStop ();
+
+  // If we are on the reading time, cancel any further schedulled requests and
+  // close the open socket. Otherwise, the socket will be closed after
+  // receiving the current object.
+  if (m_nextRequest.IsRunning ())
+    {
+      m_nextRequest.Cancel ();
+      m_socket->ShutdownRecv ();
+      m_socket->Close ();
+    }
+}
+
+void
+HttpClient::NotifyConnectionSucceeded (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
   NS_LOG_INFO ("Server accepted connection request.");
-  socket->SetRecvCallback (MakeCallback (&HttpClient::ReceiveData, this));
+  socket->SetRecvCallback (MakeCallback (&HttpClient::DataReceived, this));
+
+  // Preparing internal variables for new traffic cycle.
+  m_pendingBytes = 0;
+  m_pendingObjects = 0;
+  m_pagesLoaded = 0;
+  m_rxPacket = Create<Packet> (0);
 
   // Request the first object.
   SendRequest (socket, "main/object");
 }
 
 void
-HttpClient::ConnectionFailed (Ptr<Socket> socket)
+HttpClient::NotifyConnectionFailed (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
@@ -164,44 +158,70 @@ HttpClient::ConnectionFailed (Ptr<Socket> socket)
 }
 
 void
-HttpClient::ReceiveData (Ptr<Socket> socket)
+HttpClient::NotifyNormalClose (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-  static std::string contentType = "";
 
-  do
+  NS_LOG_INFO ("Connection successfully closed.");
+  socket->ShutdownSend ();
+  socket->ShutdownRecv ();
+  m_socket = 0;
+
+  // Notify to fire stop trace.
+  SdmnClientApp::NotifyStop ();
+}
+
+void
+HttpClient::NotifyErrorClose (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+
+  NS_LOG_WARN ("Connection closed with errors.");
+  socket->ShutdownSend ();
+  socket->ShutdownRecv ();
+  m_socket = 0;
+
+  // Notify to fire stop trace.
+  SdmnClientApp::NotifyStop ();
+}
+
+void
+HttpClient::DataReceived (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+
+  static std::string contentTypeStr = "";
+  static uint32_t httpPacketSize = 0;
+
+  // Repeat while we have data to process.
+  while (socket->GetRxAvailable () || m_rxPacket->GetSize ())
     {
       // Get (more) data from socket, if available.
-      if (!m_rxPacket || m_rxPacket->GetSize () == 0)
+      if (socket->GetRxAvailable ())
         {
-          m_rxPacket = socket->Recv ();
-        }
-      else if (socket->GetRxAvailable ())
-        {
-          Ptr<Packet> pktTemp = socket->Recv ();
-          m_rxPacket->AddAtEnd (pktTemp);
+          m_rxPacket->AddAtEnd (socket->Recv ());
         }
 
+      // This is the start of a new HTTP message.
       if (!m_pendingBytes)
         {
-          // No pending bytes. This is the start of a new HTTP message.
+          // Check for valid HTTP header.
           HttpHeader httpHeader;
           m_rxPacket->RemoveHeader (httpHeader);
-          NS_ASSERT_MSG (httpHeader.GetResponseStatusCode () == "200",
-                         "Invalid HTTP response message.");
-          m_httpPacketSize = httpHeader.GetSerializedSize ();
+          NS_ASSERT (httpHeader.GetResponseStatusCode () == "200");
+          httpPacketSize = httpHeader.GetSerializedSize ();
 
           // Get the content length for this message.
-          m_pendingBytes = std::atoi (
-              httpHeader.GetHeaderField ("ContentLength").c_str ());
-          m_httpPacketSize += m_pendingBytes;
+          std::string length = httpHeader.GetHeaderField ("ContentLength");
+          m_pendingBytes = std::atoi (length.c_str ());
+          httpPacketSize += m_pendingBytes;
 
           // Get the number of inline objects to load.
-          contentType = httpHeader.GetHeaderField ("ContentType");
-          if (contentType == "main/object")
+          contentTypeStr = httpHeader.GetHeaderField ("ContentType");
+          if (contentTypeStr == "main/object")
             {
-              m_pendingObjects = std::atoi (
-                  httpHeader.GetHeaderField ("InlineObjects").c_str ());
+              std::string inObjs = httpHeader.GetHeaderField ("InlineObjects");
+              m_pendingObjects = std::atoi (inObjs.c_str ());
             }
         }
 
@@ -211,39 +231,43 @@ HttpClient::ReceiveData (Ptr<Socket> socket)
       m_pendingBytes -= consume;
       NS_LOG_DEBUG ("Client RX " << consume << " bytes.");
 
+      // This is the end of the HTTP message.
       if (!m_pendingBytes)
         {
-          // This is the end of the HTTP message.
-          NS_LOG_DEBUG (contentType << " successfully received.");
           NS_ASSERT (m_rxPacket->GetSize () == 0);
-          NotifyRx (m_httpPacketSize);
+          NS_LOG_DEBUG (contentTypeStr << " successfully received.");
+          NotifyRx (httpPacketSize);
 
-          if (contentType == "main/object")
-            {
-              NS_LOG_DEBUG ("There are inline objects: " << m_pendingObjects);
-            }
-          else
+          // Check for a successfully received object.
+          if (contentTypeStr == "inline/object")
             {
               m_pendingObjects--;
             }
 
-          // When necessary, request inline objects.
-          if (m_pendingObjects)
+          if (!m_pendingObjects)
             {
-              NS_LOG_DEBUG ("Request for inline/object " << m_pendingObjects);
-              SendRequest (socket, "inline/object");
-            }
-          else
-            {
+              // No more objects to load.
               NS_LOG_INFO ("HTTP page successfully received.");
               m_pagesLoaded++;
               SetReadingTime (socket);
-              break;
+              return;
+            }
+          else if (IsForceStop ())
+            {
+              // There are objects to load, but we were forced to stop traffic.
+              NS_LOG_INFO ("Can't send more requests on force stop mode.");
+              socket->ShutdownRecv ();
+              socket->Close ();
+              return;
+            }
+          else
+            {
+              // Request for the next object.
+              NS_LOG_DEBUG ("Request for inline/object " << m_pendingObjects);
+              SendRequest (socket, "inline/object");
             }
         }
-
-    } // Repeat until no more data available to process.
-  while (socket->GetRxAvailable () || m_rxPacket->GetSize ());
+    }
 }
 
 void
@@ -251,23 +275,16 @@ HttpClient::SendRequest (Ptr<Socket> socket, std::string url)
 {
   NS_LOG_FUNCTION (this);
 
-  // When the force stop flag is active, don't send new requests.
-  if (IsForceStop ())
-    {
-      NS_LOG_WARN ("Can't send request on force stop mode.");
-      return;
-    }
-
-  // Setting request message
-  HttpHeader httpHeader;
-  httpHeader.SetRequest ();
-  httpHeader.SetVersion ("HTTP/1.1");
-  httpHeader.SetRequestMethod ("GET");
-  httpHeader.SetRequestUrl (url);
-  NS_LOG_DEBUG ("Request for " << url);
+  // Setting request message.
+  HttpHeader httpHeaderRequest;
+  httpHeaderRequest.SetRequest ();
+  httpHeaderRequest.SetVersion ("HTTP/1.1");
+  httpHeaderRequest.SetRequestMethod ("GET");
+  httpHeaderRequest.SetRequestUrl (url);
+  NS_LOG_DEBUG ("Request for URL " << url);
 
   Ptr<Packet> packet = Create<Packet> ();
-  packet->AddHeader (httpHeader);
+  packet->AddHeader (httpHeaderRequest);
 
   NotifyTx (packet->GetSize ());
   int bytes = socket->Send (packet);
@@ -296,7 +313,8 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   if (readingTime > m_maxReadingTime)
     {
       NS_LOG_INFO ("Closing the socket due to reading time threshold.");
-      Stop ();
+      socket->ShutdownRecv ();
+      socket->Close ();
       return;
     }
 
@@ -304,7 +322,8 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
   if (m_pagesLoaded >= m_maxPages)
     {
       NS_LOG_INFO ("Closing the socket due to max page threshold.");
-      Stop ();
+      socket->ShutdownRecv ();
+      socket->Close ();
       return;
     }
 

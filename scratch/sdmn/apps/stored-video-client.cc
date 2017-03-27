@@ -94,7 +94,7 @@ StoredVideoClient::NotifyConnectionSucceeded (Ptr<Socket> socket)
   m_pendingObjects = 0;
   m_rxPacket = Create<Packet> (0);
 
-  // Request the main video object.
+  // Request the first object.
   SendRequest (socket, "main/video");
 }
 
@@ -161,16 +161,16 @@ StoredVideoClient::DataReceived (Ptr<Socket> socket)
           httpPacketSize = httpHeader.GetSerializedSize ();
 
           // Get the content length for this message.
-          std::string lengthStr = httpHeader.GetHeaderField ("ContentLength");
-          m_pendingBytes = std::atoi (lengthStr.c_str ());
+          std::string length = httpHeader.GetHeaderField ("ContentLength");
+          m_pendingBytes = std::atoi (length.c_str ());
           httpPacketSize += m_pendingBytes;
 
-          // Get the number of video chunks to load.
+          // Get the number of inline objects to load.
           contentTypeStr = httpHeader.GetHeaderField ("ContentType");
           if (contentTypeStr == "main/video")
             {
-              std::string chunkStr = httpHeader.GetHeaderField ("VideoChunks");
-              m_pendingObjects = std::atoi (chunkStr.c_str ());
+              std::string inObjs = httpHeader.GetHeaderField ("InlineObjects");
+              m_pendingObjects = std::atoi (inObjs.c_str ());
             }
         }
 
@@ -187,33 +187,31 @@ StoredVideoClient::DataReceived (Ptr<Socket> socket)
           NS_LOG_DEBUG (contentTypeStr << " successfully received.");
           NotifyRx (httpPacketSize);
 
-          // Check for a successfully received chunk.
+          // Check for a successfully received object.
           if (contentTypeStr == "video/chunk")
             {
               m_pendingObjects--;
             }
 
-          // No more chunks to load.
           if (!m_pendingObjects)
             {
+              // No more objects to load.
               NS_LOG_INFO ("Stored video successfully received.");
               socket->ShutdownRecv ();
               socket->Close ();
               return;
             }
-
-          // There are objects to load, but we were forced to stop traffic.
           else if (IsForceStop ())
             {
+              // There are objects to load, but we were forced to stop traffic.
               NS_LOG_INFO ("Can't send more requests on force stop mode.");
               socket->ShutdownRecv ();
               socket->Close ();
               return;
             }
-
-          // Request for the next object.
           else
             {
+              // Request for the next object.
               NS_LOG_DEBUG ("Request for chunk/video " << m_pendingObjects);
               SendRequest (socket, "video/chunk");
             }
@@ -226,7 +224,7 @@ StoredVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
 {
   NS_LOG_FUNCTION (this);
 
-  // Setting HTTP request message.
+  // Setting request message.
   HttpHeader httpHeaderRequest;
   httpHeaderRequest.SetRequest ();
   httpHeaderRequest.SetVersion ("HTTP/1.1");

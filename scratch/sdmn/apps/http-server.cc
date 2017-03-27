@@ -47,8 +47,7 @@ HttpServer::HttpServer ()
   NS_LOG_FUNCTION (this);
 
   // Random variable parameters was taken from paper 'An HTTP Web Traffic Model
-  // Based on the Top One Million Visited Web Pages' by Rastin Pries et. al
-  // (Table II).
+  // Based on the Top One Million Visited Web Pages' by Rastin Pries et. al.
   m_mainObjectSizeStream = CreateObject<WeibullRandomVariable> ();
   m_mainObjectSizeStream->SetAttribute ("Scale", DoubleValue (19104.9));
   m_mainObjectSizeStream->SetAttribute ("Shape", DoubleValue (0.771807));
@@ -56,9 +55,9 @@ HttpServer::HttpServer ()
   m_numOfInlineObjStream = CreateObject<ExponentialRandomVariable> ();
   m_numOfInlineObjStream->SetAttribute ("Mean", DoubleValue (31.9291));
 
-  m_inlineObjectSizeStream = CreateObject<LogNormalRandomVariable> ();
-  m_inlineObjectSizeStream->SetAttribute ("Mu", DoubleValue (8.91365));
-  m_inlineObjectSizeStream->SetAttribute ("Sigma", DoubleValue (1.24816));
+  m_inlineObjSizeStream = CreateObject<LogNormalRandomVariable> ();
+  m_inlineObjSizeStream->SetAttribute ("Mu", DoubleValue (8.91365));
+  m_inlineObjSizeStream->SetAttribute ("Sigma", DoubleValue (1.24816));
 }
 
 HttpServer::~HttpServer ()
@@ -73,7 +72,7 @@ HttpServer::DoDispose (void)
 
   m_mainObjectSizeStream = 0;
   m_numOfInlineObjStream = 0;
-  m_inlineObjectSizeStream = 0;
+  m_inlineObjSizeStream = 0;
   SdmnServerApp::DoDispose ();
 }
 
@@ -82,20 +81,17 @@ HttpServer::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
 
-  if (!m_socket)
-    {
-      TypeId tid = TypeId::LookupByName ("ns3::TcpSocketFactory");
-      m_socket = Socket::CreateSocket (GetNode (), tid);
-      m_socket->SetAttribute ("SndBufSize", UintegerValue (16384));
-      m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
-      m_socket->Listen ();
-      m_socket->SetAcceptCallback (
-        MakeCallback (&HttpServer::HandleRequest, this),
-        MakeCallback (&HttpServer::HandleAccept, this));
-      m_socket->SetCloseCallbacks (
-        MakeCallback (&HttpServer::HandlePeerClose, this),
-        MakeCallback (&HttpServer::HandlePeerError, this));
-    }
+  NS_LOG_INFO ("Creating the listening TCP socket.");
+  TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
+  m_socket = Socket::CreateSocket (GetNode (), tcpFactory);
+  m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
+  m_socket->Listen ();
+  m_socket->SetAcceptCallback (
+    MakeCallback (&HttpServer::NotifyConnectionRequest, this),
+    MakeCallback (&HttpServer::NotifyNewConnectionCreated, this));
+  m_socket->SetCloseCallbacks (
+    MakeCallback (&HttpServer::NotifyNormalClose, this),
+    MakeCallback (&HttpServer::NotifyErrorClose, this));
 }
 
 void
@@ -105,81 +101,79 @@ HttpServer::StopApplication ()
 
   if (m_socket != 0)
     {
-      m_socket->ShutdownRecv ();
       m_socket->Close ();
-      m_socket->SetAcceptCallback (
-        MakeNullCallback<bool, Ptr<Socket>, const Address &> (),
-        MakeNullCallback<void, Ptr<Socket>, const Address &> ());
-      m_socket->SetSendCallback (
-        MakeNullCallback<void, Ptr<Socket>, uint32_t> ());
-      m_socket->SetRecvCallback (
-        MakeNullCallback<void, Ptr<Socket> > ());
+      m_socket->Dispose ();
       m_socket = 0;
     }
 }
 
 bool
-HttpServer::HandleRequest (Ptr<Socket> socket, const Address& address)
+HttpServer::NotifyConnectionRequest (Ptr<Socket> socket,
+                                     const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
 
   Ipv4Address ipAddr = InetSocketAddress::ConvertFrom (address).GetIpv4 ();
   NS_LOG_INFO ("Connection request received from " << ipAddr);
+
   return !m_connected;
 }
 
 void
-HttpServer::HandleAccept (Ptr<Socket> socket, const Address& address)
+HttpServer::NotifyNewConnectionCreated (Ptr<Socket> socket,
+                                        const Address& address)
 {
   NS_LOG_FUNCTION (this << socket << address);
 
   Ipv4Address ipAddr = InetSocketAddress::ConvertFrom (address).GetIpv4 ();
   NS_LOG_INFO ("Connection successfully established with " << ipAddr);
-  socket->SetSendCallback (MakeCallback (&HttpServer::SendData, this));
-  socket->SetRecvCallback (MakeCallback (&HttpServer::ReceiveData, this));
   m_connected = true;
   m_pendingBytes = 0;
+
+  socket->SetSendCallback (MakeCallback (&HttpServer::SendData, this));
+  socket->SetRecvCallback (MakeCallback (&HttpServer::DataReceived, this));
 }
 
 void
-HttpServer::HandlePeerClose (Ptr<Socket> socket)
+HttpServer::NotifyNormalClose (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
   NS_LOG_INFO ("Connection successfully closed.");
   socket->ShutdownSend ();
   socket->ShutdownRecv ();
-  socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
-  socket->SetSendCallback (MakeNullCallback<void, Ptr<Socket>, uint32_t> ());
   m_connected = false;
+  m_pendingBytes = 0;
 }
 
 void
-HttpServer::HandlePeerError (Ptr<Socket> socket)
+HttpServer::NotifyErrorClose (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  NS_LOG_ERROR ("Connection closed with errors.");
+  NS_LOG_WARN ("Connection closed with errors.");
   socket->ShutdownSend ();
   socket->ShutdownRecv ();
-  socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
-  socket->SetSendCallback (MakeNullCallback<void, Ptr<Socket>, uint32_t> ());
   m_connected = false;
+  m_pendingBytes = 0;
 }
 
 void
-HttpServer::ReceiveData (Ptr<Socket> socket)
+HttpServer::DataReceived (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  // Receive the HTTP GET message.
-  HttpHeader httpHeader;
+  // This application expects to receive only
+  // a single HTTP request message at a time.
   Ptr<Packet> packet = socket->Recv ();
   NotifyRx (packet->GetSize ());
-  packet->RemoveHeader (httpHeader);
-  NS_ASSERT (packet->GetSize () == 0);
 
-  ProccessHttpRequest (socket, httpHeader);
+  HttpHeader httpHeaderRequest;
+  packet->RemoveHeader (httpHeaderRequest);
+  NS_ASSERT_MSG (httpHeaderRequest.IsRequest (), "Invalid HTTP request.");
+  NS_ASSERT_MSG (packet->GetSize () == 0, "Invalid RX data.");
+
+  ProccessHttpRequest (socket, httpHeaderRequest);
 }
 
 void
@@ -190,24 +184,6 @@ HttpServer::SendData (Ptr<Socket> socket, uint32_t available)
   if (!m_pendingBytes)
     {
       NS_LOG_DEBUG ("No pending data to send.");
-      return;
-    }
-
-  if (IsForceStop ())
-    {
-      NS_LOG_DEBUG ("Can't send data on force stop mode.");
-      return;
-    }
-
-  if (!m_connected)
-    {
-      NS_LOG_DEBUG ("Socket not connected.");
-      return;
-    }
-
-  if (!available)
-    {
-      NS_LOG_DEBUG ("No TX buffer space available.");
       return;
     }
 
@@ -229,20 +205,19 @@ void
 HttpServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
 {
   NS_LOG_FUNCTION (this << socket);
-  NS_ASSERT_MSG (header.IsRequest (), "Invalid request.");
 
-  // Check for valid request.
+  // Check for requested URL.
   std::string url = header.GetRequestUrl ();
-  NS_LOG_INFO ("Client requesting " << url);
+  NS_LOG_INFO ("Client requested " << url);
   if (url == "main/object")
     {
-      // Setting random parameter values.
+      // Set parameter values.
       m_pendingBytes = m_mainObjectSizeStream->GetInteger ();
       uint32_t numOfInlineObj = m_numOfInlineObjStream->GetInteger ();
-      NS_LOG_DEBUG ("HTTP main object size (bytes): " << m_pendingBytes);
-      NS_LOG_DEBUG ("Inline objects: " << numOfInlineObj);
+      NS_LOG_INFO ("HTTP main object size is " << m_pendingBytes <<
+                   " bytes with " << numOfInlineObj << " inline objects.");
 
-      // Setting the HTTP response message.
+      // Set the response message.
       HttpHeader httpHeaderOut;
       httpHeaderOut.SetResponse ();
       httpHeaderOut.SetVersion ("HTTP/1.1");
@@ -262,16 +237,15 @@ HttpServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
           NS_LOG_ERROR ("Not all bytes were copied to the socket buffer.");
         }
 
-      // Start sending the HTTP object.
+      // Start sending the payload.
       SendData (socket, socket->GetTxAvailable ());
     }
   else if (url == "inline/object")
     {
-      // Setting random parameter values.
-      m_pendingBytes = m_inlineObjectSizeStream->GetInteger ();
+      m_pendingBytes = m_inlineObjSizeStream->GetInteger ();
       NS_LOG_DEBUG ("HTTP inline object size (bytes): " << m_pendingBytes);
 
-      // Setting the HTTP response message.
+      // Set the response message.
       HttpHeader httpHeaderOut;
       httpHeaderOut.SetResponse ();
       httpHeaderOut.SetVersion ("HTTP/1.1");
@@ -291,12 +265,12 @@ HttpServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
           NS_LOG_ERROR ("Not all bytes were copied to the socket buffer.");
         }
 
-      // Start sending the HTTP object.
+      // Start sending the payload.
       SendData (socket, socket->GetTxAvailable ());
     }
   else
     {
-      NS_FATAL_ERROR ("Invalid request.");
+      NS_FATAL_ERROR ("Invalid URL requested.");
     }
 }
 
