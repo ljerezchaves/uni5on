@@ -225,7 +225,7 @@ SdmnClientApp::DoDispose (void)
   m_tft = 0;
   m_socket = 0;
   m_serverApp = 0;
-  Simulator::Cancel (m_forceStop);
+  m_forceStop.Cancel ();
   Application::DoDispose ();
 }
 
@@ -236,7 +236,7 @@ SdmnClientApp::NotifyStop ()
 
   NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
   NS_LOG_INFO ("Client application stopped.");
-  Simulator::Cancel (m_forceStop);
+  m_forceStop.Cancel ();
   m_active = false;
   m_serverApp->NotifyStop ();
   m_appStopTrace (this);
@@ -249,7 +249,7 @@ SdmnClientApp::ForceStop ()
 
   NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
   NS_LOG_INFO ("Forcing the client application to stop.");
-  Simulator::Cancel (m_forceStop);
+  m_forceStop.Cancel ();
   m_forceStopFlag = true;
   m_serverApp->NotifyForceStop ();
 }
