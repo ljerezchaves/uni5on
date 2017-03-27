@@ -33,7 +33,7 @@ NS_LOG_COMPONENT_DEFINE ("RealTimeVideoServer");
 NS_OBJECT_ENSURE_REGISTERED (RealTimeVideoServer);
 
 /**
- * \brief Default trace to send
+ * \brief Default trace to send.
  */
 struct RealTimeVideoServer::TraceEntry
 RealTimeVideoServer::g_defaultEntries[] =
@@ -121,6 +121,7 @@ RealTimeVideoServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
+  m_sendEvent.Cancel ();
   m_entries.clear ();
   SdmnServerApp::DoDispose ();
 }
@@ -130,15 +131,12 @@ RealTimeVideoServer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_socket == 0)
-    {
-      TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
-      m_socket = Socket::CreateSocket (GetNode (), udpFactory);
-      m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
-      m_socket->Connect (InetSocketAddress (m_clientAddress, m_clientPort));
-      m_socket->ShutdownRecv ();
-      m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
-    }
+  NS_LOG_INFO ("Opening the UDP socket.");
+  TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
+  m_socket = Socket::CreateSocket (GetNode (), udpFactory);
+  m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
+  m_socket->Connect (InetSocketAddress (m_clientAddress, m_clientPort));
+  m_socket->ShutdownRecv ();
 }
 
 void
@@ -148,9 +146,8 @@ RealTimeVideoServer::StopApplication ()
 
   if (m_socket != 0)
     {
-      m_socket->ShutdownSend ();
       m_socket->Close ();
-      m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
+      m_socket->Dispose ();
       m_socket = 0;
     }
 }
@@ -160,13 +157,12 @@ RealTimeVideoServer::NotifyStart ()
 {
   NS_LOG_FUNCTION (this);
 
-  Simulator::Cancel (m_sendEvent);
-  m_currentEntry = 0;
-
-  // Chain up
+  // Chain up to reset statistics.
   SdmnServerApp::NotifyStart ();
 
-  // Start streaming
+  // Start streaming.
+  m_sendEvent.Cancel ();
+  m_currentEntry = 0;
   SendStream ();
 }
 
@@ -175,11 +171,11 @@ RealTimeVideoServer::NotifyForceStop ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Chain up
+  // Chain up just for log.
   SdmnServerApp::NotifyForceStop ();
 
-  // Stop streaming
-  Simulator::Cancel (m_sendEvent);
+  // Stop streaming.
+  m_sendEvent.Cancel ();
 }
 
 void
@@ -249,17 +245,17 @@ RealTimeVideoServer::SendStream (void)
   NS_LOG_FUNCTION (this);
   NS_ASSERT (m_sendEvent.IsExpired ());
 
-  Ptr<Packet> packet;
   struct TraceEntry *entry = &m_entries[m_currentEntry];
-  NS_LOG_DEBUG ("Real-time video frame " << entry->packetSize << " bytes");
+  NS_LOG_DEBUG ("Frame no. " << m_currentEntry <<
+                " with " << entry->packetSize << " bytes");
   do
     {
       for (uint32_t i = 0; i < entry->packetSize / m_pktSize; i++)
         {
           SendPacket (m_pktSize);
         }
-      uint16_t sizetosend = entry->packetSize % m_pktSize;
-      SendPacket (sizetosend);
+      uint16_t sizeToSend = entry->packetSize % m_pktSize;
+      SendPacket (sizeToSend);
 
       m_currentEntry++;
       m_currentEntry %= m_entries.size ();
@@ -267,7 +263,7 @@ RealTimeVideoServer::SendStream (void)
     }
   while (entry->timeToSend == 0);
 
-  // Schedulle next transmission
+  // Schedulle next transmission.
   m_sendEvent = Simulator::Schedule (MilliSeconds (entry->timeToSend),
                                      &RealTimeVideoServer::SendStream, this);
 }
@@ -277,28 +273,25 @@ RealTimeVideoServer::SendPacket (uint32_t size)
 {
   NS_LOG_FUNCTION (this << size);
 
-  // Create the packet and add the seq header without increasing packet size
-  uint32_t packetSize = 0;
-  if (size > 12)
-    {
-      packetSize = size - 12;
-    }
+  static const uint32_t seqTsSize = 12;
+
+  // Create the packet and add the seq header without increasing packet size.
+  uint32_t packetSize = size > seqTsSize ? size - seqTsSize : 0;
   Ptr<Packet> packet = Create<Packet> (packetSize);
 
   SeqTsHeader seqTs;
-  seqTs.SetSeq (NotifyTx (packet->GetSize () + seqTs.GetSerializedSize ()));
+  seqTs.SetSeq (NotifyTx (packetSize + seqTsSize));
   packet->AddHeader (seqTs);
 
-  // Send the packet
   int bytes = m_socket->Send (packet);
   if (bytes == (int)packet->GetSize ())
     {
-      NS_LOG_DEBUG ("Real-time video TX " << bytes << " bytes " <<
-                    "Sequence " << seqTs.GetSeq ());
+      NS_LOG_DEBUG ("Server TX " << bytes << " bytes with " <<
+                    "sequence number " << seqTs.GetSeq ());
     }
   else
     {
-      NS_LOG_ERROR ("Real-time video TX error.");
+      NS_LOG_ERROR ("Server TX error.");
     }
 }
 

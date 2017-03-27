@@ -56,7 +56,7 @@ StoredVideoClient::Start (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Chain up to fire start trace.
+  // Chain up to reset statistics, notify server, and fire start trace source.
   SdmnClientApp::Start ();
 
   NS_LOG_INFO ("Opening the TCP connection.");

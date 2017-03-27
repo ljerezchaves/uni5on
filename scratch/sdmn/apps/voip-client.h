@@ -36,25 +36,25 @@ class VoipClient : public SdmnClientApp
 public:
   /**
    * \brief Register this type.
-   * \return the object TypeId
+   * \return the object TypeId.
    */
   static TypeId GetTypeId (void);
 
-  VoipClient ();             //!< Default constructor
-  virtual ~VoipClient ();    //!< Dummy destructor, see DoDispose
+  VoipClient ();             //!< Default constructor.
+  virtual ~VoipClient ();    //!< Dummy destructor, see DoDispose.
 
-  // Inherited from SdmnClientApp
-  void Start (void);
+  // Inherited from SdmnClientApp.
+  void Start ();
 
 protected:
-  // Inherited from Object
+  // Inherited from Object.
   virtual void DoDispose (void);
 
-  // Inherited from SdmnClientApp
+  // Inherited from SdmnClientApp.
   void ForceStop ();
 
 private:
-  // Inherited from Application
+  // Inherited from Application.
   virtual void StartApplication (void);
   virtual void StopApplication (void);
 
@@ -69,11 +69,11 @@ private:
    */
   void SendPacket ();
 
-  Time                      m_interval;         //!< Interval between packets
-  uint32_t                  m_pktSize;          //!< Maximum packet size
-  EventId                   m_sendEvent;        //!< SendPacket event
-  EventId                   m_stopEvent;        //!< Stop event
-  Ptr<RandomVariableStream> m_lengthRng;        //!< Random call length
+  Time                        m_interval;     //!< Interval between packets.
+  uint32_t                    m_pktSize;      //!< Packet max size.
+  EventId                     m_sendEvent;    //!< SendPacket event.
+  EventId                     m_stopEvent;    //!< Stop event.
+  Ptr<RandomVariableStream>   m_lengthRng;    //!< Random call length.
 };
 
 } // namespace ns3

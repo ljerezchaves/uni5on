@@ -82,17 +82,8 @@ protected:
   virtual void NotifyStart ();
 
   /**
-   * Notify this server of a stop event on the client application. This
-   * function is expected to be called only after application traffic is
-   * completely stopped (no pending bytes for transmission, no in-transit
-   * packets, and closed sockets).
-   */
-  virtual void NotifyStop ();
-
-  /**
    * Notify this server of a force stop event on the client application. When
-   * applicable, the server must stop generating traffic and close the open
-   * socket.
+   * applicable, the server must stop generating traffic.
    */
   virtual void NotifyForceStop ();
 

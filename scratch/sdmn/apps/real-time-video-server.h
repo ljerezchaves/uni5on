@@ -35,15 +35,15 @@ class RealTimeVideoServer : public SdmnServerApp
 public:
   /**
    * \brief Get the type ID.
-   * \return the object TypeId
+   * \return the object TypeId.
    */
   static TypeId GetTypeId (void);
 
-  RealTimeVideoServer ();           //!< Default constructor
-  virtual ~RealTimeVideoServer ();  //!< Dummy destructor, see DoDispose
+  RealTimeVideoServer ();           //!< Default constructor.
+  virtual ~RealTimeVideoServer ();  //!< Dummy destructor, see DoDispose.
 
   /**
-   * \brief Set the trace file to be used by the application
+   * \brief Set the trace file to be used by the application.
    * \param filename a path to an MPEG4 trace file formatted as follows:
    *  Frame No Frametype   Time[ms]    Length [byte]
    *  Frame No Frametype   Time[ms]    Length [byte]
@@ -52,15 +52,15 @@ public:
   void SetTraceFile (std::string filename);
 
 protected:
-  // Inherited from Object
+  // Inherited from Object.
   virtual void DoDispose (void);
 
 private:
-  // Inherited from Application
+  // Inherited from Application.
   virtual void StartApplication (void);
   virtual void StopApplication (void);
 
-  // Inherited from SdmnServerApp
+  // Inherited from SdmnServerApp.
   void NotifyStart ();
   void NotifyForceStop ();
 
@@ -93,14 +93,14 @@ private:
   {
     uint32_t timeToSend;  //!< Relative time to send the frame (ms)
     uint32_t packetSize;  //!< Size of the frame
-    char frameType;       //!< Frame type (I, P or B)
+    char     frameType;   //!< Frame type (I, P or B)
   };
 
-  uint16_t                        m_pktSize;          //!< Maximum packet size
-  EventId                         m_sendEvent;        //!< SendPacket event
-  uint32_t                        m_currentEntry;     //!< Current entry index
-  static struct TraceEntry        g_defaultEntries[]; //!< Default trace
-  std::vector<struct TraceEntry>  m_entries;          //!< Entries in the trace
+  uint16_t                        m_pktSize;          //!< Packet max size.
+  EventId                         m_sendEvent;        //!< SendPacket event.
+  uint32_t                        m_currentEntry;     //!< Current entry.
+  static struct TraceEntry        g_defaultEntries[]; //!< Default trace.
+  std::vector<struct TraceEntry>  m_entries;          //!< Trace entries.
 };
 
 } // namespace ns3

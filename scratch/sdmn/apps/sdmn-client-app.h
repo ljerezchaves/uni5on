@@ -88,8 +88,8 @@ public:
                   uint16_t serverPort);
 
   /**
-   * Start this application. Start traffic generation, reset internal counters,
-   * notify the server application, and fire the start trace source.
+   * Start this application. Reset internal counters, notify the server
+   * application, fire the start trace source, and start traffic generation.
    */
   virtual void Start ();
 

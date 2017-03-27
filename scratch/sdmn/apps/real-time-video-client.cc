@@ -45,6 +45,7 @@ RealTimeVideoClient::GetTypeId (void)
 }
 
 RealTimeVideoClient::RealTimeVideoClient ()
+  : m_stopEvent (EventId ())
 {
   NS_LOG_FUNCTION (this);
 }
@@ -59,14 +60,14 @@ RealTimeVideoClient::Start ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Schedule the stop event based on video lenght. It will schedule the
-  // ForceStop method to stop traffic generation before firing the stop trace.
-  Time stopTime = Seconds (std::abs (m_lengthRng->GetValue ()));
+  // Schedule the ForceStop method to stop traffic generation on server side
+  // based on video length.
+  Time videoLength = Seconds (std::abs (m_lengthRng->GetValue ()));
   m_stopEvent = Simulator::Schedule (
-      stopTime, &RealTimeVideoClient::ForceStop, this);
-  NS_LOG_INFO ("Set video lenght to " << stopTime.As (Time::S));
+      videoLength, &RealTimeVideoClient::ForceStop, this);
+  NS_LOG_INFO ("Set video length to " << videoLength.As (Time::S));
 
-  // Chain up to fire start trace
+  // Chain up to reset statistics, notify server, and fire start trace source.
   SdmnClientApp::Start ();
 }
 
@@ -75,7 +76,8 @@ RealTimeVideoClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
-  Simulator::Cancel (m_stopEvent);
+  m_lengthRng = 0;
+  m_stopEvent.Cancel ();
   SdmnClientApp::DoDispose ();
 }
 
@@ -84,8 +86,14 @@ RealTimeVideoClient::ForceStop ()
 {
   NS_LOG_FUNCTION (this);
 
-  Simulator::Cancel (m_stopEvent);
+  // Cancel (possible) pending stop event.
+  m_stopEvent.Cancel ();
+
+  // Chain up to notify server.
   SdmnClientApp::ForceStop ();
+
+  // Notify the stopped application one second later.
+  Simulator::Schedule (Seconds (1), &RealTimeVideoClient::NotifyStop, this);
 }
 
 void
@@ -93,15 +101,13 @@ RealTimeVideoClient::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_socket == 0)
-    {
-      TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-      m_socket = Socket::CreateSocket (GetNode (), tid);
-      m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
-      m_socket->ShutdownSend ();
-      m_socket->SetRecvCallback (
-        MakeCallback (&RealTimeVideoClient::ReadPacket, this));
-    }
+  NS_LOG_INFO ("Opening the UDP socket.");
+  TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
+  m_socket = Socket::CreateSocket (GetNode (), udpFactory);
+  m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
+  m_socket->ShutdownSend ();
+  m_socket->SetRecvCallback (
+    MakeCallback (&RealTimeVideoClient::ReadPacket, this));
 }
 
 void
@@ -111,9 +117,8 @@ RealTimeVideoClient::StopApplication ()
 
   if (m_socket != 0)
     {
-      m_socket->ShutdownRecv ();
       m_socket->Close ();
-      m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
+      m_socket->Dispose ();
       m_socket = 0;
     }
 }
@@ -123,14 +128,14 @@ RealTimeVideoClient::ReadPacket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  // Receive the datagram from the socket
+  // Receive the datagram from the socket.
   Ptr<Packet> packet = socket->Recv ();
 
   SeqTsHeader seqTs;
   packet->PeekHeader (seqTs);
   NotifyRx (packet->GetSize (), seqTs.GetTs ());
-  NS_LOG_DEBUG ("Real-time video RX " << packet->GetSize () << " bytes. " <<
-                "Sequence " << seqTs.GetSeq ());
+  NS_LOG_DEBUG ("Client RX " << packet->GetSize () << " bytes with " <<
+                "sequence number " << seqTs.GetSeq ());
 }
 
 } // Namespace ns3

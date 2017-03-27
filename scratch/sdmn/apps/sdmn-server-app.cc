@@ -142,24 +142,16 @@ void
 SdmnServerApp::NotifyStart ()
 {
   NS_LOG_FUNCTION (this);
-
   NS_LOG_INFO ("Starting server application.");
+
+  // Reset internal statistics.
   ResetQosStats ();
-}
-
-void
-SdmnServerApp::NotifyStop ()
-{
-  NS_LOG_FUNCTION (this);
-
-  NS_LOG_INFO ("Server application stopped.");
 }
 
 void
 SdmnServerApp::NotifyForceStop ()
 {
   NS_LOG_FUNCTION (this);
-
   NS_LOG_INFO ("Forcing the server application to stop.");
 }
 
@@ -168,6 +160,7 @@ SdmnServerApp::NotifyTx (uint32_t txBytes)
 {
   NS_LOG_FUNCTION (this << txBytes);
 
+  NS_ASSERT_MSG (m_clientApp, "Client application undefined.");
   return m_clientApp->m_qosStats->NotifyTx (txBytes);
 }
 

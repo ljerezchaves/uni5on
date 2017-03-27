@@ -66,7 +66,7 @@ VoipServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
-  Simulator::Cancel (m_sendEvent);
+  m_sendEvent.Cancel ();
   SdmnServerApp::DoDispose ();
 }
 
@@ -75,14 +75,12 @@ VoipServer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_socket == 0)
-    {
-      TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
-      m_socket = Socket::CreateSocket (GetNode (), udpFactory);
-      m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
-      m_socket->Connect (InetSocketAddress (m_clientAddress, m_clientPort));
-      m_socket->SetRecvCallback (MakeCallback (&VoipServer::ReadPacket, this));
-    }
+  NS_LOG_INFO ("Opening the UDP socket.");
+  TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
+  m_socket = Socket::CreateSocket (GetNode (), udpFactory);
+  m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
+  m_socket->Connect (InetSocketAddress (m_clientAddress, m_clientPort));
+  m_socket->SetRecvCallback (MakeCallback (&VoipServer::ReadPacket, this));
 }
 
 void
@@ -90,14 +88,11 @@ VoipServer::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_socket == 0)
+  if (m_socket != 0)
     {
-      m_socket->ShutdownSend ();
-      m_socket->ShutdownRecv ();
       m_socket->Close ();
-      m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
+      m_socket->Dispose ();
       m_socket = 0;
-
     }
 }
 
@@ -106,11 +101,11 @@ VoipServer::NotifyStart ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Chain up
+  // Chain up to reset statistics.
   SdmnServerApp::NotifyStart ();
 
-  // Start traffic
-  Simulator::Cancel (m_sendEvent);
+  // Start traffic.
+  m_sendEvent.Cancel ();
   m_sendEvent = Simulator::Schedule (
       m_interval, &VoipServer::SendPacket, this);
 }
@@ -120,11 +115,11 @@ VoipServer::NotifyForceStop ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Chain up
+  // Chain up just for log.
   SdmnServerApp::NotifyForceStop ();
 
-  // Stop traffic
-  Simulator::Cancel (m_sendEvent);
+  // Stop streaming.
+  m_sendEvent.Cancel ();
 }
 
 void
@@ -132,25 +127,24 @@ VoipServer::SendPacket ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Create the packet and add seq header
   Ptr<Packet> packet = Create<Packet> (m_pktSize);
+
   SeqTsHeader seqTs;
   seqTs.SetSeq (NotifyTx (packet->GetSize () + seqTs.GetSerializedSize ()));
   packet->AddHeader (seqTs);
 
-  // Send the packet
   int bytes = m_socket->Send (packet);
   if (bytes == (int)packet->GetSize ())
     {
-      NS_LOG_DEBUG ("VoIP TX " << bytes << " bytes " <<
-                    "Sequence " << seqTs.GetSeq ());
+      NS_LOG_DEBUG ("Server TX " << bytes << " bytes with " <<
+                    "sequence number " << seqTs.GetSeq ());
     }
   else
     {
-      NS_LOG_ERROR ("VoIP TX error.");
+      NS_LOG_ERROR ("Server TX error.");
     }
 
-  // Schedule next packet transmission
+  // Schedule next packet transmission.
   m_sendEvent = Simulator::Schedule (
       m_interval, &VoipServer::SendPacket, this);
 }
@@ -160,14 +154,14 @@ VoipServer::ReadPacket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  // Receive the datagram from the socket
+  // Receive the datagram from the socket.
   Ptr<Packet> packet = socket->Recv ();
 
   SeqTsHeader seqTs;
   packet->PeekHeader (seqTs);
   NotifyRx (packet->GetSize (), seqTs.GetTs ());
-  NS_LOG_DEBUG ("VoIP RX " << packet->GetSize () << " bytes. " <<
-                "Sequence " << seqTs.GetSeq ());
+  NS_LOG_DEBUG ("Server RX " << packet->GetSize () << " bytes with " <<
+                "sequence number " << seqTs.GetSeq ());
 }
 
 } // Namespace ns3

@@ -39,21 +39,21 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  RealTimeVideoClient ();   //!< Default constructor
-  virtual ~RealTimeVideoClient ();  //!< Dummy destructor, see DosDipose
+  RealTimeVideoClient ();   //!< Default constructor.
+  virtual ~RealTimeVideoClient ();  //!< Dummy destructor, see DosDipose.
 
-  // Inherited from SdmnClientApp
+  // Inherited from SdmnClientApp.
   void Start ();
 
 protected:
-  // Inherited from Object
+  // Inherited from Object.
   virtual void DoDispose (void);
 
-  // Inherited from SdmnClientApp
+  // Inherited from SdmnClientApp.
   void ForceStop ();
 
 private:
-  // Inherited from Application
+  // Inherited from Application.
   virtual void StartApplication (void);
   virtual void StopApplication (void);
 
@@ -63,8 +63,8 @@ private:
    */
   void ReadPacket (Ptr<Socket> socket);
 
-  EventId                   m_stopEvent;        //!< Stop event
-  Ptr<RandomVariableStream> m_lengthRng;        //!< Random video length
+  EventId                     m_stopEvent;    //!< Stop event.
+  Ptr<RandomVariableStream>   m_lengthRng;    //!< Random video length.
 };
 
 } // Namespace ns3

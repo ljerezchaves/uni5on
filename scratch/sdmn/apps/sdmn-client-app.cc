@@ -159,6 +159,7 @@ SdmnClientApp::GetServerQosStats (void) const
 {
   NS_LOG_FUNCTION (this);
 
+  NS_ASSERT_MSG (m_serverApp, "Server application undefined.");
   return m_serverApp->GetQosStats ();
 }
 
@@ -201,17 +202,25 @@ void
 SdmnClientApp::Start ()
 {
   NS_LOG_FUNCTION (this);
-
-  NS_ASSERT_MSG (!IsActive (), "Can't start an already active application.");
   NS_LOG_INFO ("Starting client application.");
-  ResetQosStats ();
+
+  // Set the active flag.
+  NS_ASSERT_MSG (!IsActive (), "Can't start an already active application.");
   m_active = true;
+
+  // Reset internal statistics.
+  ResetQosStats ();
+
+  // Schedule the force stop event.
   m_forceStopFlag = false;
   if (!m_maxOnTime.IsZero ())
     {
-      m_forceStop = Simulator::Schedule (
-          m_maxOnTime, &SdmnClientApp::ForceStop, this);
+      m_forceStop =
+        Simulator::Schedule (m_maxOnTime, &SdmnClientApp::ForceStop, this);
     }
+
+  // Notify the server and fire start trace source.
+  NS_ASSERT_MSG (m_serverApp, "Server application undefined.");
   m_serverApp->NotifyStart ();
   m_appStartTrace (this);
 }
@@ -233,12 +242,14 @@ void
 SdmnClientApp::NotifyStop ()
 {
   NS_LOG_FUNCTION (this);
-
-  NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
   NS_LOG_INFO ("Client application stopped.");
-  m_forceStop.Cancel ();
+
+  // Set the active flag.
+  NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
   m_active = false;
-  m_serverApp->NotifyStop ();
+  m_forceStop.Cancel ();
+
+  // Fire the stop trace source.
   m_appStopTrace (this);
 }
 
@@ -246,11 +257,15 @@ void
 SdmnClientApp::ForceStop ()
 {
   NS_LOG_FUNCTION (this);
-
-  NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
   NS_LOG_INFO ("Forcing the client application to stop.");
-  m_forceStop.Cancel ();
+
+  // Set the force stop flag.
+  NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
   m_forceStopFlag = true;
+  m_forceStop.Cancel ();
+
+  // Notify the server.
+  NS_ASSERT_MSG (m_serverApp, "Server application undefined.");
   m_serverApp->NotifyForceStop ();
 }
 
@@ -259,6 +274,7 @@ SdmnClientApp::NotifyTx (uint32_t txBytes)
 {
   NS_LOG_FUNCTION (this << txBytes);
 
+  NS_ASSERT_MSG (m_serverApp, "Server application undefined.");
   return m_serverApp->m_qosStats->NotifyTx (txBytes);
 }
 

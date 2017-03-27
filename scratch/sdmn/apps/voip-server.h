@@ -36,23 +36,23 @@ class VoipServer : public SdmnServerApp
 public:
   /**
    * \brief Register this type.
-   * \return the object TypeId
+   * \return the object TypeId.
    */
   static TypeId GetTypeId (void);
 
-  VoipServer ();             //!< Default constructor
-  virtual ~VoipServer ();    //!< Dummy destructor, see DoDispose
+  VoipServer ();             //!< Default constructor.
+  virtual ~VoipServer ();    //!< Dummy destructor, see DoDispose.
 
 protected:
-  // Inherited from Object
+  // Inherited from Object.
   virtual void DoDispose (void);
 
 private:
-  // Inherited from Application
+  // Inherited from Application.
   virtual void StartApplication (void);
   virtual void StopApplication (void);
 
-  // Inherited from SdmnServerApp
+  // Inherited from SdmnServerApp.
   void NotifyStart ();
   void NotifyForceStop ();
 
@@ -67,9 +67,9 @@ private:
    */
   void SendPacket ();
 
-  Time                      m_interval;       //!< Interval between packets
-  uint32_t                  m_pktSize;        //!< Packet size
-  EventId                   m_sendEvent;      //!< SendPacket event
+  Time                        m_interval;     //!< Interval between packets.
+  uint32_t                    m_pktSize;      //!< Packet max size.
+  EventId                     m_sendEvent;    //!< SendPacket event.
 };
 
 } // namespace ns3
