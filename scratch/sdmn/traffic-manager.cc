@@ -63,9 +63,8 @@ TrafficManager::AddSdmnClientApp (Ptr<SdmnClientApp> app)
   app->TraceConnectWithoutContext (
     "AppStop", MakeCallback (&TrafficManager::NotifyAppStop, this));
 
-  // Schedule the first start attempt for this application.
-  // Wait at least 2 seconds for simulation initial setup.
-  Time start = Seconds (2) + Seconds (std::abs (m_poissonRng->GetValue ()));
+  // Schedule the first start attempt for this application (after the 1st sec).
+  Time start = Seconds (1) + Seconds (std::abs (m_poissonRng->GetValue ()));
   Simulator::Schedule (start, &TrafficManager::AppStartTry, this, app);
   NS_LOG_INFO ("First start try for app " << app->GetAppName () <<
                " at user " << m_imsi << " with teid " << app->GetTeid () <<
