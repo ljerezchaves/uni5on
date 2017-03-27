@@ -51,9 +51,6 @@ protected:
   // Inherited from Object.
   virtual void DoDispose (void);
 
-  // Inherited from SdmnServerApp.
-  void ForceStop ();
-
 private:
   /**
    * Callback for a connection successfully established.

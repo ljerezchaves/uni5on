@@ -86,8 +86,8 @@ StoredVideoServer::GetTypeId (void)
                    MakePointerAccessor (&StoredVideoServer::m_lengthRng),
                    MakePointerChecker <RandomVariableStream> ())
     .AddAttribute ("ChunkSize",
-                   "The number of bytes on each chunck of the video.",
-                   UintegerValue (512000), // 512 KB
+                   "The number of bytes on each chunk of the video.",
+                   UintegerValue (128000),
                    MakeUintegerAccessor (&StoredVideoServer::m_chunkSize),
                    MakeUintegerChecker<uint32_t> ())
   ;
@@ -137,8 +137,8 @@ StoredVideoServer::StartApplication ()
   NS_LOG_FUNCTION (this);
 
   NS_LOG_INFO ("Creating the listening TCP socket.");
-  TypeId tid = TypeId::LookupByName ("ns3::TcpSocketFactory");
-  m_socket = Socket::CreateSocket (GetNode (), tid);
+  TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
+  m_socket = Socket::CreateSocket (GetNode (), tcpFactory);
   m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
   m_socket->Listen ();
   m_socket->SetAcceptCallback (
@@ -294,7 +294,7 @@ StoredVideoServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
           NS_LOG_ERROR ("Not all bytes were copied to the socket buffer.");
         }
     }
-  else if (url == "chunk/video")
+  else if (url == "video/chunk")
     {
       m_pendingBytes = m_chunkSize;
       NS_LOG_DEBUG ("Video chunk size (bytes): " << m_pendingBytes);
@@ -306,7 +306,7 @@ StoredVideoServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
       httpHeaderOut.SetResponseStatusCode ("200");
       httpHeaderOut.SetResponsePhrase ("OK");
       httpHeaderOut.SetHeaderField ("ContentLength", m_pendingBytes);
-      httpHeaderOut.SetHeaderField ("ContentType", "chunk/video");
+      httpHeaderOut.SetHeaderField ("ContentType", "video/chunk");
 
       Ptr<Packet> outPacket = Create<Packet> (0);
       outPacket->AddHeader (httpHeaderOut);
