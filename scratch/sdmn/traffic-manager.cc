@@ -198,10 +198,14 @@ TrafficManager::NotifyAppStop (Ptr<SdmnClientApp> app)
   // Schedule the next start attempt for this application, ensuring at least 2
   // seconds from now.
   Time now = Simulator::Now ();
-  Time nextTry = Max (Seconds (2), GetNextAppStartTry (app) - now);
+  Time nextTry = GetNextAppStartTry (app) - now;
+  if (nextTry < Seconds (2))
+    {
+      nextTry = Seconds (2);
+      NS_LOG_INFO ("Next start try for app " << app->GetNameTeid () <<
+                   " delayed to +2s.");
+    }
   Simulator::Schedule (nextTry, &TrafficManager::AppStartTry, this, app);
-  NS_LOG_INFO ("Schedule next start try for app " << app->GetNameTeid () <<
-               " in " << nextTry.As (Time::S));
 }
 
 void
