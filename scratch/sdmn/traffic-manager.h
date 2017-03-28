@@ -34,10 +34,9 @@ class SdranController;
 
 /**
  * \ingroup sdmn
- * Traffic manager which handles SDMN client applications start/stop events. It
- * interacts with the OpenFlow EPC network and controller to dump statistics
- * and request/release EPS bearers. Each LteUeNetDevice has one TrafficManager
- * object aggregated to it.
+ * Traffic manager which handles SDMN client applications start/stop events.
+ * It interacts with the SDMN architecture to request and release EPS bearers.
+ * Each LteUeNetDevice has one TrafficManager object aggregated to it.
  */
 class TrafficManager : public Object
 {
@@ -56,27 +55,6 @@ public:
    * \param app The application pointer.
    */
   void AddSdmnClientApp (Ptr<SdmnClientApp> app);
-
-  /**
-   * Attempt to (re)start this application. This method will request for bearer
-   * resources to the controller before starting the application. If the
-   * controller accept the request, this starts the application. Otherwise, it
-   * reschedule the (re)start attempt.
-   * \internal The teid approach only works because we currently have a single
-   * application associated with each bearer/tunnel. If we would like to
-   * aggregate traffic from several applications into same bearer we will need
-   * to revise this.
-   * \param app The application pointer.
-   */
-  void AppStartTry (Ptr<SdmnClientApp> app);
-
-  /**
-   * Member function called by applications to notify this manager when traffic
-   * stops. This method will fire network statistics (EPC) and schedule
-   * application restart attempt.
-   * \param app The application pointer.
-   */
-  void NotifyAppStop (Ptr<const SdmnClientApp> app);
 
   /**
    * Trace sink notified when new session is created. This will be used to get
@@ -99,13 +77,47 @@ protected:
   virtual void DoDispose ();
 
 private:
-  Ptr<RandomVariableStream>           m_poissonRng; //!< Inter-arrival traffic.
-  Ptr<SdranController>                m_ctrlApp;    //!< OpenFlow controller.
-  std::vector<Ptr<SdmnClientApp> >    m_apps;       //!< Application list.
+  /**
+   * Attempt to (re)start this application. This method will request for bearer
+   * resources to the controller before starting the application. If the
+   * controller accept the request, the application starts.
+   * \internal The teid approach only works because we currently have a single
+   * application associated with each bearer/tunnel. If we would like to
+   * aggregate traffic from several applications into same bearer we will need
+   * to revise this.
+   * \param app The application pointer.
+   */
+  void AppStartTry (Ptr<SdmnClientApp> app);
 
-  uint64_t    m_imsi;         //!< UE IMSI identifier.
-  uint16_t    m_cellId;       //!< Current eNB cellId.
-  uint32_t    m_defaultTeid;  //!< TEID for default UE tunnel.
+  /**
+   * Member function called by applications to notify this manager when traffic
+   * stops. This method will fire network statistics (EPC) and schedule
+   * application restart attempt.
+   * \param app The application pointer.
+   */
+  void NotifyAppStop (Ptr<SdmnClientApp> app);
+
+  /**
+   * Set the time for the next attempt to start the application.
+   * \param app The application pointer.
+   */
+  void SetNextAppStartTry (Ptr<SdmnClientApp> app);
+
+  /**
+   * Get the absolute time for the next attemp to start the application.
+   * \param app The application pointer.
+   */
+  Time GetNextAppStartTry (Ptr<SdmnClientApp> app) const;
+
+  /** Map saving application pointer / next start time. */
+  typedef std::map<Ptr<SdmnClientApp>, Time> AppTimeMap_t;
+
+  Ptr<RandomVariableStream> m_poissonRng;     //!< Inter-arrival traffic.
+  Ptr<SdranController>      m_ctrlApp;        //!< OpenFlow controller.
+  AppTimeMap_t              m_appStartTable;  //!< Application map.
+  uint64_t                  m_imsi;           //!< UE IMSI identifier.
+  uint16_t                  m_cellId;         //!< Current eNB cellId.
+  uint32_t                  m_defaultTeid;    //!< TEID for default UE tunnel.
 };
 
 };  // namespace ns3

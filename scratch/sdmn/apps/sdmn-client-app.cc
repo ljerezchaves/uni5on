@@ -99,12 +99,29 @@ SdmnClientApp::GetAppName (void) const
   return m_name;
 }
 
+std::string
+SdmnClientApp::GetNameTeid (void) const
+{
+  // No log to avoid infinite recursion.
+  std::ostringstream value;
+  value << GetAppName () << " with teid " << GetTeid ();
+  return value.str ();
+}
+
 bool
 SdmnClientApp::IsActive (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_active;
+}
+
+Time
+SdmnClientApp::GetMaxOnTime (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_maxOnTime;
 }
 
 bool

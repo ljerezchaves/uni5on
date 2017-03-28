@@ -64,7 +64,9 @@ public:
   /** \name Private member accessors. */
   //\{
   std::string GetAppName (void) const;
+  std::string GetNameTeid (void) const;
   bool IsActive (void) const;
+  Time GetMaxOnTime (void) const;
   bool IsForceStop (void) const;
   Ptr<EpcTft> GetTft (void) const;
   EpsBearer GetEpsBearer (void) const;
@@ -97,7 +99,7 @@ public:
    * TracedCallback signature for SdmnClientApp.
    * \param app The client application.
    */
-  typedef void (*EpcAppTracedCallback)(Ptr<const SdmnClientApp> app);
+  typedef void (*EpcAppTracedCallback)(Ptr<SdmnClientApp> app);
 
 protected:
   /** Destructor implementation */
@@ -140,10 +142,10 @@ protected:
   Ptr<SdmnServerApp>      m_serverApp;        //!< Server application.
 
   /** Application start trace source, fired when application start. */
-  TracedCallback<Ptr<const SdmnClientApp> > m_appStartTrace;
+  TracedCallback<Ptr<SdmnClientApp> > m_appStartTrace;
 
   /** Application stop trace source, fired when application stops. */
-  TracedCallback<Ptr<const SdmnClientApp> > m_appStopTrace;
+  TracedCallback<Ptr<SdmnClientApp> > m_appStopTrace;
 
 private:
   /**
