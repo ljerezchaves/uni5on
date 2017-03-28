@@ -65,7 +65,7 @@ RealTimeVideoClient::Start ()
   Time videoLength = Seconds (std::abs (m_lengthRng->GetValue ()));
   m_stopEvent = Simulator::Schedule (
       videoLength, &RealTimeVideoClient::ForceStop, this);
-  NS_LOG_INFO ("Set video length to " << videoLength.As (Time::S));
+  NS_LOG_INFO ("Set video length to " << videoLength.GetSeconds () << "s.");
 
   // Chain up to reset statistics, notify server, and fire start trace source.
   SdmnClientApp::Start ();

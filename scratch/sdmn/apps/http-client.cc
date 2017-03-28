@@ -327,7 +327,7 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
       return;
     }
 
-  NS_LOG_INFO ("Setting the reading time to " << readingTime.As (Time::S));
+  NS_LOG_INFO ("Set reading time to " << readingTime.GetSeconds () << "s.");
   m_nextRequest = Simulator::Schedule (readingTime, &HttpClient::SendRequest,
                                        this, socket, "main/object");
 }

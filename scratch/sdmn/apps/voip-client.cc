@@ -76,7 +76,7 @@ VoipClient::Start ()
   // based on call length.
   Time callLength = Seconds (std::abs (m_lengthRng->GetValue ()));
   m_stopEvent = Simulator::Schedule (callLength, &VoipClient::ForceStop, this);
-  NS_LOG_INFO ("Set call length to " << callLength.As (Time::S));
+  NS_LOG_INFO ("Set call length to " << callLength.GetSeconds () << "s.");
 
   // Chain up to reset statistics, notify server, and fire start trace source.
   SdmnClientApp::Start ();
