@@ -29,7 +29,7 @@ NS_LOG_COMPONENT_DEFINE ("EpcController");
 NS_OBJECT_ENSURE_REGISTERED (EpcController);
 
 // Initializing EpcController static members.
-const uint16_t EpcController::m_flowTimeout = 15;
+const uint16_t EpcController::m_flowTimeout = 0;
 uint32_t EpcController::m_teidCount = 0x0000000F;
 EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
 
