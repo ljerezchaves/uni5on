@@ -88,6 +88,10 @@ SdmnClientApp::GetTypeId (void)
                      "SdmnClientApp stop trace source.",
                      MakeTraceSourceAccessor (&SdmnClientApp::m_appStopTrace),
                      "ns3::SdmnClientApp::EpcAppTracedCallback")
+    .AddTraceSource ("AppError",
+                     "SdmnClientApp error trace source.",
+                     MakeTraceSourceAccessor (&SdmnClientApp::m_appErrorTrace),
+                     "ns3::SdmnClientApp::EpcAppTracedCallback")
   ;
   return tid;
 }
@@ -268,6 +272,21 @@ SdmnClientApp::NotifyStop ()
 
   // Fire the stop trace source.
   m_appStopTrace (this);
+}
+
+void
+SdmnClientApp::NotifyError ()
+{
+  NS_LOG_FUNCTION (this);
+  NS_LOG_ERROR ("Client application reported an error.");
+
+  // Set the active flag.
+  NS_ASSERT_MSG (IsActive (), "Errors can't happen on stopped application.");
+  m_active = false;
+  m_forceStop.Cancel ();
+
+  // Fire the error trace source.
+  m_appErrorTrace (this);
 }
 
 void

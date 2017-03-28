@@ -114,6 +114,14 @@ protected:
   void NotifyStop ();
 
   /**
+   * Notify and error event on this client applications. Some applications
+   * running on top of TCP sockets may experience errors when closing the
+   * socket, and this method can be used to notify the error to avoid further
+   * problems with this application.
+   */
+  void NotifyError ();
+
+  /**
    * Force this application to stop. This function will interrupt traffic
    * generation, allowing on-transit packets to reach the destination before
    * closing sockets and notifying the stop event.
@@ -141,11 +149,14 @@ protected:
   uint16_t                m_serverPort;       //!< Server port.
   Ptr<SdmnServerApp>      m_serverApp;        //!< Server application.
 
-  /** Application start trace source, fired when application start. */
+  /** Trace source fired when application start. */
   TracedCallback<Ptr<SdmnClientApp> > m_appStartTrace;
 
-  /** Application stop trace source, fired when application stops. */
+  /** Trace source fired when application stops. */
   TracedCallback<Ptr<SdmnClientApp> > m_appStopTrace;
+
+  /** Trace source fired when application reports an error. */
+  TracedCallback<Ptr<SdmnClientApp> > m_appErrorTrace;
 
 private:
   /**
