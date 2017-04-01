@@ -63,6 +63,9 @@ TrafficStatsCalculator::TrafficStatsCalculator ()
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::SdmnClientApp/AppStop",
     MakeCallback (&TrafficStatsCalculator::DumpStatistics, this));
+  Config::Connect (
+    "/NodeList/*/ApplicationList/*/$ns3::SdmnClientApp/AppError",
+    MakeCallback (&TrafficStatsCalculator::DumpStatistics, this));
 }
 
 TrafficStatsCalculator::~TrafficStatsCalculator ()
