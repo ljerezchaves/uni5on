@@ -327,8 +327,8 @@ TrafficHelper::InstallGbrVoip ()
   filter.remotePortEnd = portNo;
   filter.localAddress = m_ueAddr;
   filter.localMask = m_ueMask;
-  filter.localPortStart = portNo;
-  filter.localPortEnd = portNo;
+  filter.localPortStart = 0;
+  filter.localPortEnd = 65535;
   tft->Add (filter);
 
   // Dedicated GBR EPS bearer (QCI 1).
@@ -372,8 +372,8 @@ TrafficHelper::InstallGbrLiveVideoStreaming ()
   filter.remotePortEnd = portNo;
   filter.localAddress = m_ueAddr;
   filter.localMask = m_ueMask;
-  filter.localPortStart = portNo;
-  filter.localPortEnd = portNo;
+  filter.localPortStart = 0;
+  filter.localPortEnd = 65535;
   tft->Add (filter);
 
   // Dedicated GBR EPS bearer (QCI 2).
@@ -417,8 +417,8 @@ TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
   filter.remotePortEnd = portNo;
   filter.localAddress = m_ueAddr;
   filter.localMask = m_ueMask;
-  filter.localPortStart = portNo;
-  filter.localPortEnd = portNo;
+  filter.localPortStart = 0;
+  filter.localPortEnd = 65535;
   tft->Add (filter);
 
   // Dedicated Non-GBR EPS bearer (QCI 6).
@@ -460,8 +460,8 @@ TrafficHelper::InstallNonGbrLiveVideoStreaming ()
   filter.remotePortEnd = portNo;
   filter.localAddress = m_ueAddr;
   filter.localMask = m_ueMask;
-  filter.localPortStart = portNo;
-  filter.localPortEnd = portNo;
+  filter.localPortStart = 0;
+  filter.localPortEnd = 65535;
   tft->Add (filter);
 
   // Dedicated Non-GBR EPS bearer (QCI 7).
@@ -499,8 +499,8 @@ TrafficHelper::InstallNonGbrHttp ()
   filter.remotePortEnd = portNo;
   filter.localAddress = m_ueAddr;
   filter.localMask = m_ueMask;
-  filter.localPortStart = portNo;
-  filter.localPortEnd = portNo;
+  filter.localPortStart = 0;
+  filter.localPortEnd = 65535;
   tft->Add (filter);
 
   // Dedicated Non-GBR EPS bearer (QCI 8).

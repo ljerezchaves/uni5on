@@ -507,8 +507,7 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
           if (tft->IsDefaultTft () == false)
             {
               match << ",ip_src=" << filter.remoteAddress
-                    << ",tcp_src=" << filter.remotePortStart
-                    << ",tcp_dst=" << filter.localPortStart;
+                    << ",tcp_src=" << filter.remotePortStart;
             }
 
           std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
@@ -526,8 +525,7 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
           if (tft->IsDefaultTft () == false)
             {
               match << ",ip_src=" << filter.remoteAddress
-                    << ",udp_src=" << filter.remotePortStart
-                    << ",udp_dst=" << filter.localPortStart;
+                    << ",udp_src=" << filter.remotePortStart;
             }
 
           std::string cmdUdpStr = cmd.str () + match.str () + act.str ();
