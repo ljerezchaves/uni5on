@@ -114,7 +114,8 @@ HttpServer::NotifyConnectionRequest (Ptr<Socket> socket,
   NS_LOG_FUNCTION (this << socket << address);
 
   Ipv4Address ipAddr = InetSocketAddress::ConvertFrom (address).GetIpv4 ();
-  NS_LOG_INFO ("Connection request received from " << ipAddr);
+  uint16_t port = InetSocketAddress::ConvertFrom (address).GetPort ();
+  NS_LOG_INFO ("Connection request received from " << ipAddr << ":" << port);
 
   return !m_connected;
 }
@@ -126,7 +127,8 @@ HttpServer::NotifyNewConnectionCreated (Ptr<Socket> socket,
   NS_LOG_FUNCTION (this << socket << address);
 
   Ipv4Address ipAddr = InetSocketAddress::ConvertFrom (address).GetIpv4 ();
-  NS_LOG_INFO ("Connection successfully established with " << ipAddr);
+  uint16_t port = InetSocketAddress::ConvertFrom (address).GetPort ();
+  NS_LOG_INFO ("Connection established with " << ipAddr << ":" << port);
   m_connected = true;
   m_pendingBytes = 0;
 

@@ -62,7 +62,7 @@ StoredVideoClient::Start (void)
   NS_LOG_INFO ("Opening the TCP connection.");
   TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
   m_socket = Socket::CreateSocket (GetNode (), tcpFactory);
-  m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
+  m_socket->Bind ();
   m_socket->Connect (InetSocketAddress (m_serverAddress, m_serverPort));
   m_socket->SetConnectCallback (
     MakeCallback (&StoredVideoClient::NotifyConnectionSucceeded, this),
