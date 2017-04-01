@@ -319,19 +319,11 @@ void ForceDefaults ()
   //
   // The default number of TCP connection attempts before returning a failure
   // is set to 6 in ns-3, with an interval of 3 seconds between each attempt.
-  // We are going to reduce the number of attempts to 3, with a small interval
-  // of 500 ms between them.
+  // We are going to keep the number of attempts but with a small interval of
+  // 500 ms between them.
   //
-  Config::SetDefault ("ns3::TcpSocket::ConnCount", UintegerValue (3));
   Config::SetDefault ("ns3::TcpSocket::ConnTimeout",
                       TimeValue (MilliSeconds (500)));
-
-  //
-  // Reducing the TCP maximum segment lifetime to 1 second, used for TIME_WAIT
-  // state transition to CLOSED state. This is necessary to allow fast TCP
-  // endpoint release, allowing the reuse of TCP ports on new sockets.
-  //
-  Config::SetDefault ("ns3::TcpSocketBase::MaxSegLifetime", DoubleValue (1.0));
 
   //
   // The default TCP minimum retransmit timeout value is set to 1 second in
