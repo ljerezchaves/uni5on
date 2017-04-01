@@ -281,7 +281,7 @@ SdmnClientApp::NotifyError ()
   NS_LOG_ERROR ("Client application reported an error.");
 
   // Set the active flag.
-  NS_ASSERT_MSG (IsActive (), "Errors can't happen on stopped application.");
+  NS_ASSERT_MSG (IsActive (), "Errors can't happen on inactive application.");
   m_active = false;
   m_forceStop.Cancel ();
 

@@ -114,10 +114,10 @@ protected:
   void NotifyStop ();
 
   /**
-   * Notify and error event on this client applications. Some applications
-   * running on top of TCP sockets may experience errors when closing the
-   * socket, and this method can be used to notify the error to avoid further
-   * problems with this application.
+   * Notify and error event on this client applications. Some applications may
+   * experience internal errors, and this method can be used to notify the
+   * error to set the application as innactive. It will fire error trace
+   * source.
    */
   void NotifyError ();
 
