@@ -106,6 +106,13 @@ protected:
   virtual void DoDispose (void);
 
   /**
+   * Force this application to stop. This function will interrupt traffic
+   * generation, allowing on-transit packets to reach the destination before
+   * closing sockets and notifying the stop event.
+   */
+  virtual void ForceStop ();
+
+  /**
    * Notify the stop event on this client application. This function is
    * expected to be called only after application traffic is completely stopped
    * (no pending bytes for transmission, no in-transit packets, and closed
@@ -120,13 +127,6 @@ protected:
    * source.
    */
   void NotifyError ();
-
-  /**
-   * Force this application to stop. This function will interrupt traffic
-   * generation, allowing on-transit packets to reach the destination before
-   * closing sockets and notifying the stop event.
-   */
-  virtual void ForceStop ();
 
   /**
    * Update TX counter for a new transmitted packet on server stats calculator.

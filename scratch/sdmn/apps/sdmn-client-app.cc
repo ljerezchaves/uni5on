@@ -260,6 +260,22 @@ SdmnClientApp::DoDispose (void)
 }
 
 void
+SdmnClientApp::ForceStop ()
+{
+  NS_LOG_FUNCTION (this);
+  NS_LOG_INFO ("Forcing the client application to stop.");
+
+  // Set the force stop flag.
+  NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
+  m_forceStopFlag = true;
+  m_forceStop.Cancel ();
+
+  // Notify the server.
+  NS_ASSERT_MSG (m_serverApp, "Server application undefined.");
+  m_serverApp->NotifyForceStop ();
+}
+
+void
 SdmnClientApp::NotifyStop ()
 {
   NS_LOG_FUNCTION (this);
@@ -287,22 +303,6 @@ SdmnClientApp::NotifyError ()
 
   // Fire the error trace source.
   m_appErrorTrace (this);
-}
-
-void
-SdmnClientApp::ForceStop ()
-{
-  NS_LOG_FUNCTION (this);
-  NS_LOG_INFO ("Forcing the client application to stop.");
-
-  // Set the force stop flag.
-  NS_ASSERT_MSG (IsActive (), "Can't stop an inactive application.");
-  m_forceStopFlag = true;
-  m_forceStop.Cancel ();
-
-  // Notify the server.
-  NS_ASSERT_MSG (m_serverApp, "Server application undefined.");
-  m_serverApp->NotifyForceStop ();
 }
 
 uint32_t
