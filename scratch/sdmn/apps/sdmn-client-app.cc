@@ -276,9 +276,9 @@ SdmnClientApp::ForceStop ()
 }
 
 void
-SdmnClientApp::NotifyStop ()
+SdmnClientApp::NotifyStop (bool withError)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << withError);
   NS_LOG_INFO ("Client application stopped.");
 
   // Set the active flag.
@@ -287,22 +287,15 @@ SdmnClientApp::NotifyStop ()
   m_forceStop.Cancel ();
 
   // Fire the stop trace source.
-  m_appStopTrace (this);
-}
-
-void
-SdmnClientApp::NotifyError ()
-{
-  NS_LOG_FUNCTION (this);
-  NS_LOG_ERROR ("Client application reported an error.");
-
-  // Set the active flag.
-  NS_ASSERT_MSG (IsActive (), "Errors can't happen on inactive application.");
-  m_active = false;
-  m_forceStop.Cancel ();
-
-  // Fire the error trace source.
-  m_appErrorTrace (this);
+  if (withError)
+    {
+      NS_LOG_ERROR ("Client application stopped with error.");
+      m_appErrorTrace (this);
+    }
+  else
+    {
+      m_appStopTrace (this);
+    }
 }
 
 uint32_t

@@ -117,16 +117,9 @@ protected:
    * expected to be called only after application traffic is completely stopped
    * (no pending bytes for transmission, no in-transit packets, and closed
    * sockets). It will fire stop trace source.
+   * \param withError If true indicates an event with erros, false otherwise.
    */
-  void NotifyStop ();
-
-  /**
-   * Notify and error event on this client applications. Some applications may
-   * experience internal errors, and this method can be used to notify the
-   * error to set the application as innactive. It will fire error trace
-   * source.
-   */
-  void NotifyError ();
+  virtual void NotifyStop (bool withError = false);
 
   /**
    * Update TX counter for a new transmitted packet on server stats calculator.

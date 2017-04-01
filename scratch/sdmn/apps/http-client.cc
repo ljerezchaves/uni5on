@@ -168,7 +168,7 @@ HttpClient::NotifyNormalClose (Ptr<Socket> socket)
   m_socket = 0;
 
   // Notify to fire stop trace.
-  SdmnClientApp::NotifyStop ();
+  SdmnClientApp::NotifyStop (false);
 }
 
 void
@@ -182,7 +182,7 @@ HttpClient::NotifyErrorClose (Ptr<Socket> socket)
   m_socket = 0;
 
   // Notify to fire stop trace.
-  SdmnClientApp::NotifyStop ();
+  SdmnClientApp::NotifyStop (false);
 }
 
 void

@@ -93,7 +93,8 @@ RealTimeVideoClient::ForceStop ()
   SdmnClientApp::ForceStop ();
 
   // Notify the stopped application one second later.
-  Simulator::Schedule (Seconds (1), &RealTimeVideoClient::NotifyStop, this);
+  Simulator::Schedule (
+    Seconds (1), &RealTimeVideoClient::NotifyStop, this, false);
 }
 
 void

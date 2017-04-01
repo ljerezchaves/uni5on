@@ -111,7 +111,7 @@ VoipClient::ForceStop ()
   SdmnClientApp::ForceStop ();
 
   // Notify the stopped application one second later.
-  Simulator::Schedule (Seconds (1), &VoipClient::NotifyStop, this);
+  Simulator::Schedule (Seconds (1), &VoipClient::NotifyStop, this, false);
 }
 
 void
