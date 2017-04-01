@@ -225,7 +225,7 @@ TrafficManager::SetNextAppStartTry (Ptr<SdmnClientApp> app)
   //
   // A: This is the current AppStartTry. If the resources requested were
   //    accepted, the switch rules are installed and the application is
-  //    scheduled to start in +1 second.
+  //    scheduled to start in A + 1 second.
   //
   // B: The application effectively starts and the traffic begins.
   //
@@ -234,33 +234,27 @@ TrafficManager::SetNextAppStartTry (Ptr<SdmnClientApp> app)
   //    by the MaxOnTime app attribute value. At this point no more data is
   //    sent by the applications, but we may have packets on the fly.
   //
-  // D: The application reports itself as stopped. For applications running on
-  //    top of UDP sockets, this happens +1 second after C (this is enough time
-  //    for packets on the fly to reach their destinations). For applications
-  //    on top of TCP sockets, this report will occur when the client socket is
-  //    completely closed and the endpoint is deallocated*. This event will
-  //    fire dump statistics and the resource release procedure will be
-  //    scheduled for +1 second.
-  //
-  //   *In current configuration, the TCP socket maximum segment lifetime
-  //    attribute was adjusted to 1 sec, which will allow the TCP finite state
-  //    machine to change from TIME_WAIT to CLOSED state 2 secs after receiving
-  //    all pending data on the client side (the client is responsible for
-  //    closing the connections).
+  // D: The application reports itself as stopped. In normal conditions, this
+  //    happens at C + 1 second (this is enough time for packets on the fly
+  //    to reach their destinations). For applications on top of TCP sockets,
+  //    an error event is also scheduled for C + 2 seconds to force the
+  //    application to stop and notify the error. This event will fire dump
+  //    statistics and the resource release procedure will be scheduled for
+  //    D + 1 second.
   //
   // E: The resources are released and switch rules are removed.
   //
   // F: This is the next AppStartTry, following the Poisson process.
   //
-  // So, a minimum of 9 seconds must be ensured between two consecutive start
+  // So, a minimum of 8 seconds must be ensured between two consecutive start
   // attempts to guarantee the following intervals:
   //    A-B: 1 sec
   //    B-C: at least 3 secs of traffic
-  //    C-D: 3 secs for stop report, as TCP normally takes 2.x secs
+  //    C-D: 2 secs for stop report
   //    D-E: 1 sec
   //    E-F: at least 1 sec
   //
-  Time nextTry = Seconds (std::max (9.0, m_poissonRng->GetValue ()));
+  Time nextTry = Seconds (std::max (8.0, m_poissonRng->GetValue ()));
 
   // Save the absolute time into map.
   AppTimeMap_t::iterator it = m_appStartTable.find (app);
@@ -270,7 +264,7 @@ TrafficManager::SetNextAppStartTry (Ptr<SdmnClientApp> app)
                " should occur at " << it->second.GetSeconds () << "s.");
 
   // Set the maximum traffic duration.
-  app->SetAttribute ("MaxOnTime", TimeValue (nextTry - Seconds (6.0)));
+  app->SetAttribute ("MaxOnTime", TimeValue (nextTry - Seconds (5.0)));
 }
 
 Time
