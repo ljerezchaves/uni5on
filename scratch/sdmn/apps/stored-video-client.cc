@@ -39,7 +39,8 @@ StoredVideoClient::GetTypeId (void)
 }
 
 StoredVideoClient::StoredVideoClient ()
-  : m_rxPacket (0),
+  : m_errorEvent (EventId ()),
+    m_rxPacket (0),
     m_pendingBytes (0),
     m_pendingObjects (0)
 {
@@ -52,7 +53,7 @@ StoredVideoClient::~StoredVideoClient ()
 }
 
 void
-StoredVideoClient::Start (void)
+StoredVideoClient::Start ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -67,9 +68,6 @@ StoredVideoClient::Start (void)
   m_socket->SetConnectCallback (
     MakeCallback (&StoredVideoClient::NotifyConnectionSucceeded, this),
     MakeCallback (&StoredVideoClient::NotifyConnectionFailed, this));
-  m_socket->SetCloseCallbacks (
-    MakeCallback (&StoredVideoClient::NotifyNormalClose, this),
-    MakeCallback (&StoredVideoClient::NotifyErrorClose, this));
 }
 
 void
@@ -78,7 +76,37 @@ StoredVideoClient::DoDispose (void)
   NS_LOG_FUNCTION (this);
 
   m_rxPacket = 0;
+  m_errorEvent.Cancel ();
   SdmnClientApp::DoDispose ();
+}
+
+void
+StoredVideoClient::ForceStop ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // Chain up to set flag and notify server.
+  SdmnClientApp::ForceStop ();
+
+  // Timeout event to force applications with internal errors to stop.
+  m_errorEvent = Simulator::Schedule (
+      Seconds (2), &StoredVideoClient::NotifyStop, this, true);
+}
+
+void
+StoredVideoClient::NotifyStop (bool withError)
+{
+  NS_LOG_FUNCTION (this << withError);
+
+  // Cancel (possible) pending error event.
+  m_errorEvent.Cancel ();
+
+  // Dispose current socket.
+  m_socket->Dispose ();
+  m_socket = 0;
+
+  // Chain up to fire trace source.
+  SdmnClientApp::NotifyStop (withError);
 }
 
 void
@@ -104,34 +132,6 @@ StoredVideoClient::NotifyConnectionFailed (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);
 
   NS_FATAL_ERROR ("Server refused connection request!");
-}
-
-void
-StoredVideoClient::NotifyNormalClose (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
-
-  NS_LOG_INFO ("Connection successfully closed.");
-  socket->ShutdownSend ();
-  socket->ShutdownRecv ();
-  m_socket = 0;
-
-  // Notify to fire stop trace.
-  SdmnClientApp::NotifyStop ();
-}
-
-void
-StoredVideoClient::NotifyErrorClose (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
-
-  NS_LOG_WARN ("Connection closed with errors.");
-  socket->ShutdownSend ();
-  socket->ShutdownRecv ();
-  m_socket = 0;
-
-  // Notify to fire stop trace.
-  SdmnClientApp::NotifyStop ();
 }
 
 void
@@ -193,28 +193,33 @@ StoredVideoClient::DataReceived (Ptr<Socket> socket)
               m_pendingObjects--;
             }
 
+          if (m_pendingObjects && !IsForceStop ())
+            {
+              // Request for the next object and continue.
+              NS_LOG_DEBUG ("Request for chunk/video " << m_pendingObjects);
+              SendRequest (socket, "video/chunk");
+              continue;
+            }
+
+          // Why are we not requesting for more objects?
           if (!m_pendingObjects)
             {
               // No more objects to load.
               NS_LOG_INFO ("Stored video successfully received.");
-              socket->ShutdownRecv ();
-              socket->Close ();
-              return;
-            }
-          else if (IsForceStop ())
-            {
-              // There are objects to load, but we were forced to stop traffic.
-              NS_LOG_INFO ("Can't send more requests on force stop mode.");
-              socket->ShutdownRecv ();
-              socket->Close ();
-              return;
             }
           else
             {
-              // Request for the next object.
-              NS_LOG_DEBUG ("Request for chunk/video " << m_pendingObjects);
-              SendRequest (socket, "video/chunk");
+              // There are objects to load, but we were forced to stop traffic.
+              NS_LOG_INFO ("Can't send more requests on force stop mode.");
             }
+
+          // In both cases close the socket, schedule the NotifyStop for one
+          // second later, and return.
+          socket->ShutdownRecv ();
+          socket->Close ();
+          Simulator::Schedule (
+            Seconds (1), &StoredVideoClient::NotifyStop, this, false);
+          return;
         }
     }
 }

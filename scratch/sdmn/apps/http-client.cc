@@ -51,7 +51,8 @@ HttpClient::GetTypeId (void)
 }
 
 HttpClient::HttpClient ()
-  : m_nextRequest (EventId ()),
+  : m_errorEvent (EventId ()),
+    m_nextRequest (EventId ()),
     m_rxPacket (0),
     m_pagesLoaded (0),
     m_pendingBytes (0),
@@ -95,9 +96,6 @@ HttpClient::Start ()
   m_socket->SetConnectCallback (
     MakeCallback (&HttpClient::NotifyConnectionSucceeded, this),
     MakeCallback (&HttpClient::NotifyConnectionFailed, this));
-  m_socket->SetCloseCallbacks (
-    MakeCallback (&HttpClient::NotifyNormalClose, this),
-    MakeCallback (&HttpClient::NotifyErrorClose, this));
 }
 
 void
@@ -108,6 +106,7 @@ HttpClient::DoDispose (void)
   m_rxPacket = 0;
   m_readingTimeStream = 0;
   m_readingTimeAdjustStream = 0;
+  m_errorEvent.Cancel ();
   m_nextRequest.Cancel ();
   SdmnClientApp::DoDispose ();
 }
@@ -120,15 +119,36 @@ HttpClient::ForceStop ()
   // Chain up to set flag and notify server.
   SdmnClientApp::ForceStop ();
 
-  // If we are on the reading time, cancel any further schedulled requests and
-  // close the open socket. Otherwise, the socket will be closed after
-  // receiving the current object.
+  // Timeout event to force applications with internal errors to stop.
+  m_errorEvent =
+    Simulator::Schedule (Seconds (2), &HttpClient::NotifyStop, this, true);
+
+  // If we are on the reading time, cancel any further schedulled requests,
+  // close the open socket, and schedule the NotifyStop for one second later.
+  // Otherwise, the socket will be closed after receiving the current object.
   if (m_nextRequest.IsRunning ())
     {
       m_nextRequest.Cancel ();
       m_socket->ShutdownRecv ();
       m_socket->Close ();
+      Simulator::Schedule (Seconds (1), &HttpClient::NotifyStop, this, false);
     }
+}
+
+void
+HttpClient::NotifyStop (bool withError)
+{
+  NS_LOG_FUNCTION (this << withError);
+
+  // Cancel (possible) pending error event.
+  m_errorEvent.Cancel ();
+
+  // Dispose current socket.
+  m_socket->Dispose ();
+  m_socket = 0;
+
+  // Chain up to fire trace source.
+  SdmnClientApp::NotifyStop (withError);
 }
 
 void
@@ -155,34 +175,6 @@ HttpClient::NotifyConnectionFailed (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);
 
   NS_FATAL_ERROR ("Server refused connection request!");
-}
-
-void
-HttpClient::NotifyNormalClose (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
-
-  NS_LOG_INFO ("Connection successfully closed.");
-  socket->ShutdownSend ();
-  socket->ShutdownRecv ();
-  m_socket = 0;
-
-  // Notify to fire stop trace.
-  SdmnClientApp::NotifyStop (false);
-}
-
-void
-HttpClient::NotifyErrorClose (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
-
-  NS_LOG_WARN ("Connection closed with errors.");
-  socket->ShutdownSend ();
-  socket->ShutdownRecv ();
-  m_socket = 0;
-
-  // Notify to fire stop trace.
-  SdmnClientApp::NotifyStop (false);
 }
 
 void
@@ -244,27 +236,34 @@ HttpClient::DataReceived (Ptr<Socket> socket)
               m_pendingObjects--;
             }
 
+          if (m_pendingObjects && !IsForceStop ())
+            {
+              // Request for the next object and retur.
+              NS_LOG_DEBUG ("Request for inline/object " << m_pendingObjects);
+              SendRequest (socket, "inline/object");
+              continue;
+            }
+
+          // Why are we not requesting for more objects?
           if (!m_pendingObjects)
             {
-              // No more objects to load.
+              // No more objects to load. Set the reading time and return.
               NS_LOG_INFO ("HTTP page successfully received.");
               m_pagesLoaded++;
               SetReadingTime (socket);
               return;
             }
-          else if (IsForceStop ())
+          else
             {
               // There are objects to load, but we were forced to stop traffic.
+              // In this case close the socket, schedule the NotifyStop for one
+              // second later, and return.
               NS_LOG_INFO ("Can't send more requests on force stop mode.");
               socket->ShutdownRecv ();
               socket->Close ();
+              Simulator::Schedule (
+                Seconds (1), &HttpClient::NotifyStop, this, false);
               return;
-            }
-          else
-            {
-              // Request for the next object.
-              NS_LOG_DEBUG ("Request for inline/object " << m_pendingObjects);
-              SendRequest (socket, "inline/object");
             }
         }
     }
@@ -315,6 +314,7 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
       NS_LOG_INFO ("Closing the socket due to reading time threshold.");
       socket->ShutdownRecv ();
       socket->Close ();
+      Simulator::Schedule (Seconds (1), &HttpClient::NotifyStop, this, false);
       return;
     }
 
@@ -324,6 +324,7 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
       NS_LOG_INFO ("Closing the socket due to max page threshold.");
       socket->ShutdownRecv ();
       socket->Close ();
+      Simulator::Schedule (Seconds (1), &HttpClient::NotifyStop, this, false);
       return;
     }
 
