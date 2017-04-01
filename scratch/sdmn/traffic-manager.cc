@@ -72,9 +72,11 @@ TrafficManager::AddSdmnClientApp (Ptr<SdmnClientApp> app)
       NS_FATAL_ERROR ("Can't insert application " << app << " into map.");
     }
 
-  // Configure the application stop callback.
+  // Connect to AppStop and AppError trace sources.
   app->TraceConnectWithoutContext (
     "AppStop", MakeCallback (&TrafficManager::NotifyAppStop, this));
+  app->TraceConnectWithoutContext (
+    "AppError", MakeCallback (&TrafficManager::NotifyAppStop, this));
 
   // Schedule the first start attempt for this application (after the 1st sec).
   Time firstTry = Seconds (1) + Seconds (std::abs (m_poissonRng->GetValue ()));
