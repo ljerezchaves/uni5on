@@ -20,41 +20,41 @@
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "sdmn-mme.h"
+#include "sdran-mme.h"
 #include "info/ue-info.h"
 #include "info/enb-info.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("SdmnMme");
-NS_OBJECT_ENSURE_REGISTERED (SdmnMme);
+NS_LOG_COMPONENT_DEFINE ("SdranMme");
+NS_OBJECT_ENSURE_REGISTERED (SdranMme);
 
-SdmnMme::SdmnMme ()
+SdranMme::SdranMme ()
   : m_s11SapSgw (0)
 {
   NS_LOG_FUNCTION (this);
 
-  m_s1apSapMme = new MemberEpcS1apSapMme<SdmnMme> (this);
-  m_s11SapMme = new MemberEpcS11SapMme<SdmnMme> (this);
+  m_s1apSapMme = new MemberEpcS1apSapMme<SdranMme> (this);
+  m_s11SapMme = new MemberEpcS11SapMme<SdranMme> (this);
 }
 
-SdmnMme::~SdmnMme ()
+SdranMme::~SdranMme ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-SdmnMme::GetTypeId (void)
+SdranMme::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::SdmnMme")
+  static TypeId tid = TypeId ("ns3::SdranMme")
     .SetParent<Object> ()
-    .AddConstructor<SdmnMme> ()
+    .AddConstructor<SdranMme> ()
   ;
   return tid;
 }
 
 void
-SdmnMme::DoDispose ()
+SdranMme::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -63,7 +63,7 @@ SdmnMme::DoDispose ()
 }
 
 EpcS1apSapMme*
-SdmnMme::GetS1apSapMme (void) const
+SdranMme::GetS1apSapMme (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -71,7 +71,7 @@ SdmnMme::GetS1apSapMme (void) const
 }
 
 EpcS11SapMme*
-SdmnMme::GetS11SapMme (void) const
+SdranMme::GetS11SapMme (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -79,7 +79,7 @@ SdmnMme::GetS11SapMme (void) const
 }
 
 void
-SdmnMme::SetS11SapSgw (EpcS11SapSgw *sap)
+SdranMme::SetS11SapSgw (EpcS11SapSgw *sap)
 {
   NS_LOG_FUNCTION (this);
 
@@ -90,8 +90,8 @@ SdmnMme::SetS11SapSgw (EpcS11SapSgw *sap)
 // S1-AP SAP MME forwarded methods
 //
 void
-SdmnMme::DoInitialUeMessage (uint64_t mmeUeS1Id, uint16_t enbUeS1Id,
-                             uint64_t imsi, uint16_t ecgi)
+SdranMme::DoInitialUeMessage (
+  uint64_t mmeUeS1Id, uint16_t enbUeS1Id, uint64_t imsi, uint16_t ecgi)
 {
   NS_LOG_FUNCTION (this << mmeUeS1Id << enbUeS1Id << imsi << ecgi);
 
@@ -119,7 +119,7 @@ SdmnMme::DoInitialUeMessage (uint64_t mmeUeS1Id, uint16_t enbUeS1Id,
 }
 
 void
-SdmnMme::DoInitialContextSetupResponse (
+SdranMme::DoInitialContextSetupResponse (
   uint64_t mmeUeS1Id, uint16_t enbUeS1Id,
   std::list<EpcS1apSapMme::ErabSetupItem> erabList)
 {
@@ -133,7 +133,7 @@ SdmnMme::DoInitialContextSetupResponse (
 // allocating TEID on the S11 interface using the IMSI as identifier.
 //
 void
-SdmnMme::DoPathSwitchRequest (
+SdranMme::DoPathSwitchRequest (
   uint64_t enbUeS1Id, uint64_t mmeUeS1Id, uint16_t gci,
   std::list<EpcS1apSapMme::ErabSwitchedInDownlinkItem> erabList)
 {
@@ -156,7 +156,7 @@ SdmnMme::DoPathSwitchRequest (
 }
 
 void
-SdmnMme::DoErabReleaseIndication (
+SdranMme::DoErabReleaseIndication (
   uint64_t mmeUeS1Id, uint16_t enbUeS1Id,
   std::list<EpcS1apSapMme::ErabToBeReleasedIndication> erabList)
 {
@@ -183,7 +183,7 @@ SdmnMme::DoErabReleaseIndication (
 // S11 SAP MME forwarded methods
 //
 void
-SdmnMme::DoCreateSessionResponse (
+SdranMme::DoCreateSessionResponse (
   EpcS11SapMme::CreateSessionResponseMessage msg)
 {
   NS_LOG_FUNCTION (this << msg.teid);
@@ -214,7 +214,8 @@ SdmnMme::DoCreateSessionResponse (
 }
 
 void
-SdmnMme::DoModifyBearerResponse (EpcS11SapMme::ModifyBearerResponseMessage msg)
+SdranMme::DoModifyBearerResponse (
+  EpcS11SapMme::ModifyBearerResponseMessage msg)
 {
   NS_LOG_FUNCTION (this << msg.teid);
 
@@ -234,7 +235,7 @@ SdmnMme::DoModifyBearerResponse (EpcS11SapMme::ModifyBearerResponseMessage msg)
 }
 
 void
-SdmnMme::DoDeleteBearerRequest (EpcS11SapMme::DeleteBearerRequestMessage msg)
+SdranMme::DoDeleteBearerRequest (EpcS11SapMme::DeleteBearerRequestMessage msg)
 {
   NS_LOG_FUNCTION (this);
 

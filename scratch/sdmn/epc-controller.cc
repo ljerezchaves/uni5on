@@ -18,7 +18,6 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "sdmn-mme.h"
 #include "epc-controller.h"
 #include "epc-network.h"
 #include "sdran-controller.h"

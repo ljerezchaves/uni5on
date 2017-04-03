@@ -38,7 +38,7 @@ SdranController::SdranController ()
   m_s11SapSgw = new MemberEpcS11SapSgw<SdranController> (this);
   m_s5SapSgw  = new MemberEpcS5SapSgw<SdranController> (this);
 
-  m_mme = CreateObject<SdmnMme> ();
+  m_mme = CreateObject<SdranMme> ();
   m_mme->SetS11SapSgw (m_s11SapSgw);
   m_s11SapMme = m_mme->GetS11SapMme ();
 }

@@ -39,14 +39,14 @@ class NetDevice;
  * instances we want at different places that they all will work over the same
  * data.
  */
-class SdmnMme : public Object
+class SdranMme : public Object
 {
-  friend class MemberEpcS1apSapMme<SdmnMme>;
-  friend class MemberEpcS11SapMme<SdmnMme>;
+  friend class MemberEpcS1apSapMme<SdranMme>;
+  friend class MemberEpcS11SapMme<SdranMme>;
 
 public:
-  SdmnMme ();          //!< Default constructor.
-  virtual ~SdmnMme (); //!< Dummy destructor, see DoDispose.
+  SdranMme ();          //!< Default constructor.
+  virtual ~SdranMme (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.

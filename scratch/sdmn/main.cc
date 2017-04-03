@@ -364,9 +364,9 @@ EnableVerbose (bool enable)
       LogComponentEnable ("PgwApp",                   LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("RingController",           LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("RingNetwork",              LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("SdmnMme",                  LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("SdranCloud",               LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("SdranController",          LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("SdranMme",                 LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("GtpTunnelApp",             LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("TrafficHelper",            LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("TrafficManager",           LOG_ERROR_WARN_INFO_FT);

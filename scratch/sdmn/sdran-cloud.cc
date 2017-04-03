@@ -22,7 +22,7 @@
 #include "epc-controller.h"
 #include "epc-network.h"
 #include "gtp-tunnel-app.h"
-#include "sdmn-mme.h"
+#include "sdran-mme.h"
 
 namespace ns3 {
 

@@ -29,7 +29,7 @@
 #include "info/routing-info.h"
 #include "info/ue-info.h"
 #include "info/enb-info.h"
-#include "sdmn-mme.h"
+#include "sdran-mme.h"
 #include "epc-controller.h"
 #include "epc-s5-sap.h"
 
@@ -187,7 +187,7 @@ private:
   EpcS5SapSgw*          m_s5SapSgw;     //!< S-GW side of the S5 SAP.
 
   // MME communication.
-  Ptr<SdmnMme>          m_mme;          //!< MME element.
+  Ptr<SdranMme>         m_mme;          //!< MME element.
   EpcS11SapMme*         m_s11SapMme;    //!< MME side of the S11 SAP.
   EpcS11SapSgw*         m_s11SapSgw;    //!< S-GW side of the S11 SAP.
 
