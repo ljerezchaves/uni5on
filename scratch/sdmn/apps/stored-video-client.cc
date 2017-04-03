@@ -40,6 +40,7 @@ StoredVideoClient::GetTypeId (void)
 
 StoredVideoClient::StoredVideoClient ()
   : m_errorEvent (EventId ()),
+    m_stopEvent (EventId ()),
     m_rxPacket (0),
     m_pendingBytes (0),
     m_pendingObjects (0)
@@ -77,6 +78,7 @@ StoredVideoClient::DoDispose (void)
 
   m_rxPacket = 0;
   m_errorEvent.Cancel ();
+  m_stopEvent.Cancel ();
   SdmnClientApp::DoDispose ();
 }
 
@@ -98,12 +100,16 @@ StoredVideoClient::NotifyStop (bool withError)
 {
   NS_LOG_FUNCTION (this << withError);
 
-  // Cancel (possible) pending error event.
+  // Cancel (possible) pending NotifyStop event.
   m_errorEvent.Cancel ();
+  m_stopEvent.Cancel ();
 
   // Dispose current socket.
-  m_socket->Dispose ();
-  m_socket = 0;
+  if (m_socket)
+    {
+      m_socket->Dispose ();
+      m_socket = 0;
+    }
 
   // Chain up to fire trace source.
   SdmnClientApp::NotifyStop (withError);
@@ -217,8 +223,8 @@ StoredVideoClient::DataReceived (Ptr<Socket> socket)
           // second later, and return.
           socket->ShutdownRecv ();
           socket->Close ();
-          Simulator::Schedule (
-            Seconds (1), &StoredVideoClient::NotifyStop, this, false);
+          m_stopEvent = Simulator::Schedule (
+              Seconds (1), &StoredVideoClient::NotifyStop, this, false);
           return;
         }
     }

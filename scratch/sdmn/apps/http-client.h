@@ -101,6 +101,7 @@ private:
   uint16_t                     m_maxPages;                //!< Pages thres
   Time                         m_maxReadingTime;          //!< Reading thres
   EventId                      m_errorEvent;              //!< Error timeout.
+  EventId                      m_stopEvent;               //!< Stop timeout.
   EventId                      m_nextRequest;             //!< Next request
   Ptr<Packet>                  m_rxPacket;                //!< RX packet
   uint16_t                     m_pagesLoaded;             //!< Pages loaded
