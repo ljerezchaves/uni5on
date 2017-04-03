@@ -365,24 +365,26 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
 ofl_err
 EpcController::HandlePacketIn (
-  ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid)
+  struct ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch,
+  uint32_t xid)
 {
   NS_LOG_FUNCTION (this << swtch << xid);
 
-  char *m = ofl_structs_match_to_string (msg->match, 0);
-  NS_LOG_DEBUG ("Packet in match: " << m);
-  free (m);
+  char *msgStr = ofl_structs_match_to_string (msg->match, 0);
+  NS_LOG_DEBUG ("Packet in match: " << msgStr);
+  free (msgStr);
 
   NS_ABORT_MSG ("Packet not supposed to be sent to this controller. Abort.");
 
   // All handlers must free the message when everything is ok
-  ofl_msg_free ((ofl_msg_header*)msg, 0 /*dp->exp*/);
+  ofl_msg_free ((struct ofl_msg_header*)msg, 0);
   return 0;
 }
 
 ofl_err
 EpcController::HandleFlowRemoved (
-  ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid)
+  struct ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch,
+  uint32_t xid)
 {
   NS_LOG_FUNCTION (this << swtch << xid << msg->stats->cookie);
 
@@ -390,9 +392,9 @@ EpcController::HandleFlowRemoved (
   uint32_t teid = msg->stats->cookie;
   uint16_t prio = msg->stats->priority;
 
-  char *m = ofl_msg_to_string ((ofl_msg_header*)msg, 0);
-  NS_LOG_DEBUG ("Flow removed: " << m);
-  free (m);
+  char *msgStr = ofl_msg_to_string ((struct ofl_msg_header*)msg, 0);
+  NS_LOG_DEBUG ("Flow removed: " << msgStr);
+  free (msgStr);
 
   // Since handlers must free the message when everything is ok,
   // let's remove it now, as we already got the necessary information.

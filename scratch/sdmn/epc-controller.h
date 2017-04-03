@@ -198,9 +198,11 @@ protected:
   // Inherited from OFSwitch13Controller.
   virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
   virtual ofl_err HandlePacketIn (
-    ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
+    struct ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch,
+    uint32_t xid);
   virtual ofl_err HandleFlowRemoved (
-    ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch, uint32_t xid);
+    struct ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch,
+    uint32_t xid);
   // Inherited from OFSwitch13Controller.
 
   // Class attributes.
