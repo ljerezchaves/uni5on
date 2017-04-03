@@ -21,7 +21,7 @@
   { std::clog << "[User " << m_imsi << " at cell " << m_cellId << "] "; }
 
 #include "traffic-manager.h"
-#include "sdran-controller.h"
+#include "sdran/sdran-controller.h"
 
 namespace ns3 {
 

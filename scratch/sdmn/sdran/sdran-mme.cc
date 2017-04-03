@@ -21,8 +21,8 @@
  */
 
 #include "sdran-mme.h"
-#include "info/ue-info.h"
-#include "info/enb-info.h"
+#include "../info/ue-info.h"
+#include "../info/enb-info.h"
 
 namespace ns3 {
 

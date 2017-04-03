@@ -26,17 +26,17 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "info/routing-info.h"
-#include "info/ue-info.h"
-#include "info/enb-info.h"
 #include "sdran-mme.h"
-#include "epc-controller.h"
-#include "epc-s5-sap.h"
+#include "../info/routing-info.h"
+#include "../info/ue-info.h"
+#include "../info/enb-info.h"
+#include "../epc-controller.h"
+#include "../epc-s5-sap.h"
 
 namespace ns3 {
 
 /**
- * \ingroup sdmn
+ * \ingroup sdmnSdran
  * This is the class for the OpenFlow SDRAN controller. This controller is
  * responsible for implementing the S-GW control plane and for configuring the
  * S-GW OpenFlow user plane.

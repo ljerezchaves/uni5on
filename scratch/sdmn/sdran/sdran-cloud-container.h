@@ -27,7 +27,7 @@
 namespace ns3 {
 
 /**
- * \ingroup sdmn
+ * \ingroup sdmnSdran
  * Keep track of a set of SDRAN cloud pointers.
  */
 class SdranCloudContainer

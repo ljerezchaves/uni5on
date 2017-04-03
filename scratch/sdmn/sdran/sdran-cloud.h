@@ -35,6 +35,12 @@ class EpcController;
 
 /**
  * \ingroup sdmn
+ * \defgroup sdmnSdran SDRAN
+ * Software-Defined Radio Access Network for the SDMN architecture.
+ */
+
+/**
+ * \ingroup sdmnSdran
  * This class represents the SDRAN cloud at the SDMN architecture.
  */
 class SdranCloud : public Object
