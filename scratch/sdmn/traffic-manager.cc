@@ -234,15 +234,15 @@ TrafficManager::SetNextAppStartTry (Ptr<SdmnClientApp> app)
   // C: The application traffic stops. This event occurs naturally when there's
   //    no more data to be transmitted by the application, or it can be forced
   //    by the MaxOnTime app attribute value. At this point no more data is
-  //    sent by the applications, but we may have packets on the fly.
+  //    sent by the applications, but we may have pending data on socket
+  //    buffers and packets on the fly.
   //
-  // D: The application reports itself as stopped. In normal conditions, this
-  //    happens at C + 1 second (this is enough time for packets on the fly
-  //    to reach their destinations). For applications on top of TCP sockets,
-  //    an error event is also scheduled for C + 2 seconds to force the
-  //    application to stop and notify the error. This event will fire dump
-  //    statistics and the resource release procedure will be scheduled for
-  //    D + 1 second.
+  // D: The application reports itself as stopped. For applications on top of
+  //    UDP sockets, this happens at C + 1 second (this is enough time for
+  //    packets on the fly to reach their destinations). For applications on
+  //    top of TCP sockets, this happens when all pending data on buffers were
+  //    successfully transmitted. This event will fire dump statistics and the
+  //    resource release procedure will be scheduled for D + 1 second.
   //
   // E: The resources are released and switch rules are removed.
   //

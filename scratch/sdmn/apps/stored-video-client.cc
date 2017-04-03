@@ -39,9 +39,7 @@ StoredVideoClient::GetTypeId (void)
 }
 
 StoredVideoClient::StoredVideoClient ()
-  : m_errorEvent (EventId ()),
-    m_stopEvent (EventId ()),
-    m_rxPacket (0),
+  : m_rxPacket (0),
     m_pendingBytes (0),
     m_pendingObjects (0)
 {
@@ -77,42 +75,7 @@ StoredVideoClient::DoDispose (void)
   NS_LOG_FUNCTION (this);
 
   m_rxPacket = 0;
-  m_errorEvent.Cancel ();
-  m_stopEvent.Cancel ();
   SdmnClientApp::DoDispose ();
-}
-
-void
-StoredVideoClient::ForceStop ()
-{
-  NS_LOG_FUNCTION (this);
-
-  // Chain up to set flag and notify server.
-  SdmnClientApp::ForceStop ();
-
-  // Timeout event to force applications with internal errors to stop.
-  m_errorEvent = Simulator::Schedule (
-      Seconds (2), &StoredVideoClient::NotifyStop, this, true);
-}
-
-void
-StoredVideoClient::NotifyStop (bool withError)
-{
-  NS_LOG_FUNCTION (this << withError);
-
-  // Cancel (possible) pending NotifyStop event.
-  m_errorEvent.Cancel ();
-  m_stopEvent.Cancel ();
-
-  // Dispose current socket.
-  if (m_socket)
-    {
-      m_socket->Dispose ();
-      m_socket = 0;
-    }
-
-  // Chain up to fire trace source.
-  SdmnClientApp::NotifyStop (withError);
 }
 
 void
@@ -219,12 +182,11 @@ StoredVideoClient::DataReceived (Ptr<Socket> socket)
               NS_LOG_INFO ("Can't send more requests on force stop mode.");
             }
 
-          // In both cases close the socket, schedule the NotifyStop for one
-          // second later, and return.
+          // In both cases close the socket, call NotifyStop (), and return.
           socket->ShutdownRecv ();
           socket->Close ();
-          m_stopEvent = Simulator::Schedule (
-              Seconds (1), &StoredVideoClient::NotifyStop, this, false);
+          m_socket = 0;
+          NotifyStop (false);
           return;
         }
     }

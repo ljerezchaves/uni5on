@@ -51,9 +51,7 @@ HttpClient::GetTypeId (void)
 }
 
 HttpClient::HttpClient ()
-  : m_errorEvent (EventId ()),
-    m_stopEvent (EventId ()),
-    m_nextRequest (EventId ()),
+  : m_nextRequest (EventId ()),
     m_rxPacket (0),
     m_pagesLoaded (0),
     m_pendingBytes (0),
@@ -107,8 +105,6 @@ HttpClient::DoDispose (void)
   m_rxPacket = 0;
   m_readingTimeStream = 0;
   m_readingTimeAdjustStream = 0;
-  m_errorEvent.Cancel ();
-  m_stopEvent.Cancel ();
   m_nextRequest.Cancel ();
   SdmnClientApp::DoDispose ();
 }
@@ -121,41 +117,17 @@ HttpClient::ForceStop ()
   // Chain up to set flag and notify server.
   SdmnClientApp::ForceStop ();
 
-  // Timeout event to force applications with internal errors to stop.
-  m_errorEvent = Simulator::Schedule (
-      Seconds (2), &HttpClient::NotifyStop, this, true);
-
   // If we are on the reading time, cancel any further schedulled requests,
-  // close the open socket, and schedule the NotifyStop for one second later.
-  // Otherwise, the socket will be closed after receiving the current object.
+  // close the open socket and call NotifyStop ().  Otherwise, the socket will
+  // be closed after receiving the current object.
   if (m_nextRequest.IsRunning ())
     {
       m_nextRequest.Cancel ();
       m_socket->ShutdownRecv ();
       m_socket->Close ();
-      m_stopEvent = Simulator::Schedule (
-          Seconds (1), &HttpClient::NotifyStop, this, false);
-    }
-}
-
-void
-HttpClient::NotifyStop (bool withError)
-{
-  NS_LOG_FUNCTION (this << withError);
-
-  // Cancel (possible) pending NotifyStop event.
-  m_errorEvent.Cancel ();
-  m_stopEvent.Cancel ();
-
-  // Dispose current socket.
-  if (m_socket)
-    {
-      m_socket->Dispose ();
       m_socket = 0;
+      NotifyStop (false);
     }
-
-  // Chain up to fire trace source.
-  SdmnClientApp::NotifyStop (withError);
 }
 
 void
@@ -263,13 +235,12 @@ HttpClient::DataReceived (Ptr<Socket> socket)
           else
             {
               // There are objects to load, but we were forced to stop traffic.
-              // In this case close the socket, schedule the NotifyStop for one
-              // second later, and return.
+              // In this case close the socket, call NotifyStop (), and return.
               NS_LOG_INFO ("Can't send more requests on force stop mode.");
               socket->ShutdownRecv ();
               socket->Close ();
-              m_stopEvent = Simulator::Schedule (
-                  Seconds (1), &HttpClient::NotifyStop, this, false);
+              m_socket = 0;
+              NotifyStop (false);
               return;
             }
         }
@@ -321,8 +292,8 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
       NS_LOG_INFO ("Closing the socket due to reading time threshold.");
       socket->ShutdownRecv ();
       socket->Close ();
-      m_stopEvent = Simulator::Schedule (
-          Seconds (1), &HttpClient::NotifyStop, this, false);
+      m_socket = 0;
+      NotifyStop (false);
       return;
     }
 
@@ -332,8 +303,8 @@ HttpClient::SetReadingTime (Ptr<Socket> socket)
       NS_LOG_INFO ("Closing the socket due to max page threshold.");
       socket->ShutdownRecv ();
       socket->Close ();
-      m_stopEvent = Simulator::Schedule (
-          Seconds (1), &HttpClient::NotifyStop, this, false);
+      m_socket = 0;
+      NotifyStop (false);
       return;
     }
 

@@ -51,10 +51,6 @@ protected:
   // Inherited from Object.
   virtual void DoDispose (void);
 
-  // Inherited from SdmnClientApp.
-  void ForceStop ();
-  void NotifyStop (bool withError);
-
 private:
   /**
    * Callback for a connection successfully established.
@@ -81,8 +77,6 @@ private:
    */
   void SendRequest (Ptr<Socket> socket, std::string url);
 
-  EventId                 m_errorEvent;         //!< Error timeout.
-  EventId                 m_stopEvent;          //!< Stop timeout.
   Ptr<Packet>             m_rxPacket;           //!< RX packet.
   uint32_t                m_pendingBytes;       //!< Pending bytes.
   uint32_t                m_pendingObjects;     //!< Pending video chunks.
