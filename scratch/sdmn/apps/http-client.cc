@@ -143,7 +143,7 @@ HttpClient::NotifyStop (bool withError)
 {
   NS_LOG_FUNCTION (this << withError);
 
-  // Cancel (possible) pending error and stop event.
+  // Cancel (possible) pending NotifyStop event.
   m_errorEvent.Cancel ();
   m_stopEvent.Cancel ();
 
