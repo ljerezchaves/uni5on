@@ -34,6 +34,7 @@ namespace ns3 {
 class EpcController;
 
 /**
+ * \ingroup sdmn
  * This class represents the SDRAN cloud at the SDMN architecture.
  */
 class SdranCloud : public Object
