@@ -20,7 +20,7 @@
 
 #include "epc-controller.h"
 #include "epc-network.h"
-#include "sdran/sdran-controller.h"
+#include "../sdran/sdran-controller.h"
 
 namespace ns3 {
 

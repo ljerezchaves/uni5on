@@ -18,9 +18,9 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#include <ns3/tunnel-id-tag.h>
 #include "gtp-tunnel-app.h"
 #include "epc-network.h"
-#include <ns3/tunnel-id-tag.h>
 
 namespace ns3 {
 

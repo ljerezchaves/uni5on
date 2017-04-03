@@ -34,6 +34,12 @@ class SdranCloud;
 
 /**
  * \ingroup sdmn
+ * \defgroup sdmnEpc EPC
+ * Software-Defined EPC for the SDMN architecture.
+ */
+
+/**
+ * \ingroup sdmnEpc
  * This class extends the EpcHelper to create an OpenFlow EPC S5 backhaul
  * network infrastructure, where EPC S5 entities (P-GW and S-GW) are connected
  * through CSMA devices to the OpenFlow backhaul network. This is an abstract

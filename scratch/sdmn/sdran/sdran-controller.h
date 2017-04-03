@@ -27,11 +27,11 @@
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
 #include "sdran-mme.h"
+#include "../epc/epc-controller.h"
+#include "../epc/epc-s5-sap.h"
 #include "../info/routing-info.h"
 #include "../info/ue-info.h"
 #include "../info/enb-info.h"
-#include "../epc-controller.h"
-#include "../epc-s5-sap.h"
 
 namespace ns3 {
 

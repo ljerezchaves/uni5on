@@ -20,9 +20,9 @@
 
 #include "ring-network.h"
 #include "ring-controller.h"
-#include "info/connection-info.h"
-#include "sdran/sdran-cloud.h"
-#include "stats/backhaul-stats-calculator.h"
+#include "../info/connection-info.h"
+#include "../sdran/sdran-cloud.h"
+#include "../stats/backhaul-stats-calculator.h"
 
 namespace ns3 {
 

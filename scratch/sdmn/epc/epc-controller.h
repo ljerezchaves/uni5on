@@ -26,18 +26,18 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "info/routing-info.h"
-#include "info/connection-info.h"
-#include "info/meter-info.h"
-#include "info/gbr-info.h"
-#include "info/ue-info.h"
-#include "info/enb-info.h"
 #include "epc-s5-sap.h"
+#include "../info/routing-info.h"
+#include "../info/connection-info.h"
+#include "../info/meter-info.h"
+#include "../info/gbr-info.h"
+#include "../info/ue-info.h"
+#include "../info/enb-info.h"
 
 namespace ns3 {
 
 /**
- * \ingroup sdmn
+ * \ingroup sdmnEpc
  * This is the abstract base class for the OpenFlow EPC controller, which
  * should be extended in accordance to OpenFlow backhaul network topology. This
  * controller implements the logic for traffic routing and engineering within

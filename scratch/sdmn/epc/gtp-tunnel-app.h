@@ -31,7 +31,7 @@
 namespace ns3 {
 
 /**
- * \ingroup sdmn
+ * \ingroup sdmnEpc
  * This GTP tunnel application is responsible for implementing the logical port
  * operations to encapsulate and de-encapsulated packets withing GTP tunnel. It
  * provides the callback implementations that are used by the logical switch

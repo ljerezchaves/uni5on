@@ -20,7 +20,7 @@
 
 #include "connection-info.h"
 #include <ns3/epc-gtpu-tag.h>
-#include "../epc-controller.h"
+#include "../epc/epc-controller.h"
 
 namespace ns3 {
 

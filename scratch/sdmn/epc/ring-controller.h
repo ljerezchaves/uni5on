@@ -22,12 +22,12 @@
 #define RING_CONTROLLER_H
 
 #include "epc-controller.h"
-#include "info/ring-routing-info.h"
+#include "../info/ring-routing-info.h"
 
 namespace ns3 {
 
 /**
- * \ingroup sdmn
+ * \ingroup sdmnEpc
  * OpenFlow EPC controller for ring network topology.
  */
 class RingController : public EpcController

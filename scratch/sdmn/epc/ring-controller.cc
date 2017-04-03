@@ -18,9 +18,9 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#include <string>
 #include "ring-controller.h"
 #include "epc-network.h"
-#include <string>
 
 namespace ns3 {
 

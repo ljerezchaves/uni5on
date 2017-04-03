@@ -20,9 +20,9 @@
 
 #include "sdran-cloud.h"
 #include "sdran-mme.h"
-#include "../epc-controller.h"
-#include "../epc-network.h"
-#include "../gtp-tunnel-app.h"
+#include "../epc/epc-controller.h"
+#include "../epc/epc-network.h"
+#include "../epc/gtp-tunnel-app.h"
 
 namespace ns3 {
 

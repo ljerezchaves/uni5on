@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "pgw-app.h"
 #include <ns3/epc-gtpu-tag.h>
+#include "pgw-app.h"
 
 namespace ns3 {
 

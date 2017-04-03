@@ -35,7 +35,7 @@ public:
 };
 
 /**
- * \ingroup sdmn
+ * \ingroup sdmnEpc
  * S-GW side of the S5 Service Access Point (SAP), provides the S-GW
  * methods to be called when an S5 message is received by the S-GW.
  */

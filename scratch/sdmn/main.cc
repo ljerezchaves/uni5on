@@ -23,8 +23,8 @@
 #include <iomanip>
 #include <iostream>
 #include "lte-network.h"
-#include "ring-network.h"
 #include "traffic-helper.h"
+#include "epc/ring-network.h"
 #include "stats/admission-stats-calculator.h"
 #include "stats/backhaul-stats-calculator.h"
 #include "stats/connection-stats-calculator.h"

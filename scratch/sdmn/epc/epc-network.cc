@@ -23,7 +23,7 @@
 #include "epc-controller.h"
 #include "pgw-app.h"
 #include "gtp-tunnel-app.h"
-#include "sdran/sdran-cloud.h"
+#include "../sdran/sdran-cloud.h"
 
 namespace ns3 {
 

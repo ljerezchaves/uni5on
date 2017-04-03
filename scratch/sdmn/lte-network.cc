@@ -19,7 +19,7 @@
  */
 
 #include "lte-network.h"
-#include "epc-network.h"
+#include "epc/epc-network.h"
 
 namespace ns3 {
 

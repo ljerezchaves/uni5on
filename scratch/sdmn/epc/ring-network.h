@@ -29,7 +29,7 @@ namespace ns3 {
 class BackhaulStatsCalculator;
 
 /**
- * \ingroup sdmn
+ * \ingroup sdmnEpc
  * This class creates and simple n-switch OpenFlow ring topology controlled by
  * a RingController. This OpenFlow network which will be used as backaul
  * infrastructure for the SDMN architecture.
