@@ -1,4 +1,14 @@
-default ns3::SdranCloud::NumSites "1"
+global DumpStatsTimeout "5s"
+
+default ns3::ConnectionInfo::GbrLinkQuota "0.4"
+default ns3::ConnectionInfo::GbrSafeguard "5Mb/s"
+default ns3::ConnectionInfo::NonGbrAdjustmentStep "5Mb/s"
+
+default ns3::EpcController::VoipQueue "true"
+default ns3::EpcController::NonGbrCoexistence "true"
+
+default ns3::EpcNetwork::EpcLinkDataRate "10Gb/s"
+default ns3::EpcNetwork::EpcLinkDelay "1us"
 
 default ns3::LteNetwork::NumSdrans "1"
 default ns3::LteNetwork::NumUes "1"
@@ -6,12 +16,15 @@ default ns3::LteNetwork::UeMobility "false"
 default ns3::LteNetwork::PrintRem "false"
 default ns3::LteNetwork::LteTrace "false"
 
-default ns3::RingNetwork::NumSwitches "3"
-
 default ns3::RingController::Strategy "spf"
 
-default ns3::EpcController::NonGbrCoexistence "true"
-default ns3::EpcController::VoipQueue "true"
+default ns3::RingNetwork::NumSwitches "3"
+default ns3::RingNetwork::SwitchLinkDataRate "100Mb/s"
+default ns3::RingNetwork::SwitchLinkDelay "100us"
+
+default ns3::SdranCloud::NumSites "1"
+default ns3::SdranCloud::LinkDataRate "10Gb/s"
+default ns3::SdranCloud::LinkDelay "1us"
 
 default ns3::TrafficHelper::FastTraffic "true"
 default ns3::TrafficHelper::VoipTraffic "true"
@@ -19,5 +32,3 @@ default ns3::TrafficHelper::GbrLiveVideoTraffic "true"
 default ns3::TrafficHelper::BufferedVideoTraffic "true"
 default ns3::TrafficHelper::NonGbrLiveVideoTraffic "true"
 default ns3::TrafficHelper::HttpTraffic "true"
-
-global DumpStatsTimeout "5s"
