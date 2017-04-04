@@ -10,6 +10,8 @@ default ns3::EpcController::NonGbrCoexistence "true"
 default ns3::EpcNetwork::EpcLinkDataRate "10Gb/s"
 default ns3::EpcNetwork::EpcLinkDelay "1us"
 
+default ns3::LteHexGridEnbTopologyHelper::GridWidth "2"
+
 default ns3::LteNetwork::NumSdrans "1"
 default ns3::LteNetwork::NumUes "1"
 default ns3::LteNetwork::UeMobility "false"
