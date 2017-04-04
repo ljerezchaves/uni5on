@@ -65,6 +65,7 @@ public:
 };
 
 /**
+ * \ingroup sdmnEpc
  * Template for the implementation of the EpcS5SapSgw as a member
  * of an owner class of type C to which all methods are forwarded.
  */
@@ -122,7 +123,7 @@ void MemberEpcS5SapSgw<C>::DeleteBearerRequest (
 
 
 /**
- * \ingroup sdmn
+ * \ingroup sdmnEpc
  * P-GW side of the S5 Service Access Point (SAP), provides the P-GW
  * methods to be called when an S5 message is received by the P-GW.
  */
@@ -159,6 +160,7 @@ public:
 };
 
 /**
+ * \ingroup sdmnEpc
  * Template for the implementation of the EpcS5SapPgw as a member
  * of an owner class of type C to which all methods are forwarded.
  */

@@ -33,7 +33,7 @@ class Node;
 class NetDevice;
 
 /**
- * \ingroup sdmn
+ * \ingroup sdmnSdran
  * This class implements the MME functionality. This is a stateless
  * implementation in terms of UE and eNB information, so we can have as many
  * instances we want at different places that they all will work over the same
