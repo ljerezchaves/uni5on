@@ -400,6 +400,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("OFSwitch13Helper",         LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("OFSwitch13Interface",      LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("OFSwitch13Port",           LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("OFSwitch13SocketHandler",  LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("OFSwitch13Queue",          LOG_ERROR_WARN_INFO_FT);
     }
 }
