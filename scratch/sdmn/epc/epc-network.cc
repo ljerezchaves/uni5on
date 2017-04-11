@@ -21,8 +21,8 @@
 #include <ns3/csma-module.h>
 #include "epc-network.h"
 #include "epc-controller.h"
-#include "pgw-app.h"
 #include "gtp-tunnel-app.h"
+#include "pgw-tunnel-app.h"
 #include "../sdran/sdran-cloud.h"
 
 namespace ns3 {
@@ -346,7 +346,7 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
   uint32_t swS5PortNo = swS5Port->GetPortNo ();
 
   // Add the pgwS5Dev as standard device on P-GW node.
-  // It will be connected to a logical port through the PgwApp.
+  // It will be connected to a logical port through the PgwTunnelApp.
   m_s5AddrHelper.Assign (NetDeviceContainer (pgwS5Dev));
   NS_LOG_INFO ("P-GW S5 address: " << EpcNetwork::GetIpv4Addr (pgwS5Dev));
 
@@ -360,7 +360,7 @@ EpcNetwork::AttachPgwNode (Ptr<Node> pgwNode)
   uint32_t pgwS5PortNo = pgwS5Port->GetPortNo ();
 
   // Create the P-GW S5 user-plane application.
-  pgwNode->AddApplication (CreateObject <PgwApp> (pgwS5PortDev, pgwS5Dev));
+  pgwNode->AddApplication (CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev));
 
   // Notify the EPC controller of the new P-GW device attached to the Internet
   // and to the OpenFlow backhaul network.

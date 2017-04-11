@@ -31,7 +31,7 @@ namespace ns3 {
  * tunnel application for attach and remove the EpcGtpuTag tag on packets
  * entering/leaving the OpenFlow EPC backhaul network over S5 interface.
  */
-class PgwApp : public GtpTunnelApp
+class PgwTunnelApp : public GtpTunnelApp
 {
 public:
   /**
@@ -39,9 +39,9 @@ public:
    * \param logicalPort The OpenFlow logical port device.
    * \param physicalPort The physical network device on node.
    */
-  PgwApp (Ptr<VirtualNetDevice> logicalPort,
-          Ptr<CsmaNetDevice> physicalDev);
-  virtual ~PgwApp ();  //!< Dummy destructor, see DoDispose.
+  PgwTunnelApp (Ptr<VirtualNetDevice> logicalPort,
+                Ptr<CsmaNetDevice> physicalDev);
+  virtual ~PgwTunnelApp ();  //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.

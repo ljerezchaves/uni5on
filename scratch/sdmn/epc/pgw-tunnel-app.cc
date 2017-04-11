@@ -19,48 +19,48 @@
  */
 
 #include <ns3/epc-gtpu-tag.h>
-#include "pgw-app.h"
+#include "pgw-tunnel-app.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("PgwApp");
-NS_OBJECT_ENSURE_REGISTERED (PgwApp);
+NS_LOG_COMPONENT_DEFINE ("PgwTunnelApp");
+NS_OBJECT_ENSURE_REGISTERED (PgwTunnelApp);
 
-PgwApp::PgwApp (Ptr<VirtualNetDevice> logicalPort,
-                Ptr<CsmaNetDevice> physicalDev)
+PgwTunnelApp::PgwTunnelApp (Ptr<VirtualNetDevice> logicalPort,
+                            Ptr<CsmaNetDevice> physicalDev)
   : GtpTunnelApp (logicalPort, physicalDev)
 {
   NS_LOG_FUNCTION (this << logicalPort << physicalDev);
 
   // Set callbacks from parent class.
-  m_txSocket = MakeCallback (&PgwApp::AttachEpcGtpuTag, this);
-  m_rxSocket = MakeCallback (&PgwApp::RemoveEpcGtpuTag, this);
+  m_txSocket = MakeCallback (&PgwTunnelApp::AttachEpcGtpuTag, this);
+  m_rxSocket = MakeCallback (&PgwTunnelApp::RemoveEpcGtpuTag, this);
 }
 
-PgwApp::~PgwApp ()
+PgwTunnelApp::~PgwTunnelApp ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-PgwApp::GetTypeId (void)
+PgwTunnelApp::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::PgwApp")
+  static TypeId tid = TypeId ("ns3::PgwTunnelApp")
     .SetParent<GtpTunnelApp> ()
     .AddTraceSource ("S5Rx",
                      "Trace source for packets received from S5 interface.",
-                     MakeTraceSourceAccessor (&PgwApp::m_rxS5Trace),
+                     MakeTraceSourceAccessor (&PgwTunnelApp::m_rxS5Trace),
                      "ns3::Packet::TracedCallback")
     .AddTraceSource ("S5Tx",
                      "Trace source for packets sent to the S5 interface.",
-                     MakeTraceSourceAccessor (&PgwApp::m_txS5Trace),
+                     MakeTraceSourceAccessor (&PgwTunnelApp::m_txS5Trace),
                      "ns3::Packet::TracedCallback")
   ;
   return tid;
 }
 
 void
-PgwApp::DoDispose ()
+PgwTunnelApp::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -68,7 +68,7 @@ PgwApp::DoDispose ()
 }
 
 void
-PgwApp::AttachEpcGtpuTag (Ptr<Packet> packet, uint32_t teid)
+PgwTunnelApp::AttachEpcGtpuTag (Ptr<Packet> packet, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << packet << teid);
 
@@ -79,7 +79,7 @@ PgwApp::AttachEpcGtpuTag (Ptr<Packet> packet, uint32_t teid)
 }
 
 void
-PgwApp::RemoveEpcGtpuTag (Ptr<Packet> packet, uint32_t teid)
+PgwTunnelApp::RemoveEpcGtpuTag (Ptr<Packet> packet, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << packet << teid);
 
