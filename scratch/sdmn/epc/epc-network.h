@@ -135,7 +135,7 @@ public:
 
 protected:
   /** Destructor implementation. */
-  virtual void DoDispose ();
+  virtual void DoDispose (void);
 
   // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
@@ -150,14 +150,13 @@ protected:
    * OpenFlow network infrastructure, connecting them accordingly to the
    * desired topology.
    */
-  virtual void TopologyCreate () = 0;
+  virtual void TopologyCreate (void) = 0;
 
   /**
    * Get the switch datapath ID at which the P-GW node should be connected.
-   * \param sgwDev The P-GW OpenFlow switch device.
    * \return The switch datapath ID.
    */
-  virtual uint64_t TopologyGetPgwSwitch (Ptr<OFSwitch13Device> pgwDev) = 0;
+  virtual uint64_t TopologyGetPgwSwitch (void) = 0;
 
   /**
    * Get the switch datapath ID at which the S-GW node from the SDRAN cloud
@@ -186,20 +185,24 @@ protected:
   Ptr<Node>                     m_epcCtrlNode;      //!< EPC controller node.
 
   // OpenFlow switches, helper and connection attribute.
-  NodeContainer                 m_ofSwitches;       //!< Switch nodes.
-  OFSwitch13DeviceContainer     m_ofDevices;        //!< Switch devices.
+  NodeContainer                 m_backNodes;        //!< Backhaul nodes.
+  OFSwitch13DeviceContainer     m_backOfDevices;    //!< Backhaul switch devs.
   Ptr<OFSwitch13InternalHelper> m_ofSwitchHelper;   //!< Switch helper.
   uint16_t                      m_linkMtu;          //!< Link MTU.
 
 private:
   /**
-   * Configure the pgwNode to work as the P-GW element for this network. This
-   * function will configure the P-GW user-plane as an OpenFlow switch and
-   * attach it to the backhaul network infrastructure via S5 interface. It will
-   * also connect the P-GW to the Internet web server node via SGi interface.
-   * \param pgwNode The node to configure as the P-GW element.
+   * Create the Internet network composed of a single node where server
+   * applications will be installed.
    */
-  void AttachPgwNode (Ptr<Node> pgwNode);
+  void InternetCreate (void);
+
+  /**
+   * Create the P-GW user-plane network composed of OpenFlow switches managed
+   * by the EPC controller. This function will also attach the P-GW to the S5
+   * and SGi interfaces.
+   */
+  void PgwCreate (void);
 
   // Helper and attributes for S5 interface.
   CsmaHelper                    m_csmaHelper;       //!< Connection helper.
@@ -217,12 +220,14 @@ private:
   Ipv4AddressHelper             m_s5AddrHelper;     //!< S5 address helper.
   Ipv4AddressHelper             m_x2AddrHelper;     //!< X2 address helper.
 
-  // P-GW user plane.
-  Ptr<Node>                     m_pgwNode;          //!< P-GW user-plane node.
-  Ipv4Address                   m_pgwAddr;          //!< P-GW gateway addr.
-
   // Internet web server.
   Ptr<Node>                     m_webNode;          //!< Web server node.
+
+  // P-GW user plane.
+  Ipv4Address                   m_pgwAddr;          //!< P-GW gateway addr.
+  NodeContainer                 m_pgwNodes;         //!< P-GW user-plane nodes.
+  OFSwitch13DeviceContainer     m_pgwOfDevices;     //!< P-GW switch devices.
+  uint16_t                      m_pgwNumNodes;      //!< Num of P-GW nodes.
 };
 
 };  // namespace ns3

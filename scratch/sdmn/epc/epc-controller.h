@@ -103,6 +103,22 @@ public:
     Ptr<NetDevice> webSgiDev);
 
   /**
+   * Notify this controller of the P-GW main switch connected to the
+   * OpenFlow backhaul network and to the SGi interface. This function will
+   * configure the P-GW datapath for uplink traffic.
+   * \param pgwSwDev The OpenFlow P-GW switch device.
+   * \param pgwS5PortNo The S5 port number on the P-GW OpenFlow switch.
+   * \param pgwSgiPortNo The SGi port number on the P-GW OpenFlow switch.
+   * \param pgwS5Dev The S5 device attached to the P-GW OpenFlow switch.
+   * \param pgwSgiDev The SGi device attached to the P-GW OpenFlow switch.
+   * \param webSgiDev The SGi device attached to the Web server.
+   */
+  virtual void NotifyPgwMainAttach (
+    Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNo,
+    uint32_t pgwSgiPortNo, Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> pgwSgiDev,
+    Ptr<NetDevice> webSgiDev);
+
+  /**
    * Notify this controller of a new S-GW or P-GW connected to OpenFlow
    * backhaul network over the S5 interface.
    * \param swtchDev The OpenFlow switch device on the backhaul network.

@@ -54,16 +54,16 @@ protected:
   void NotifyConstructionCompleted (void);
 
   // Inherited from EpcNetwork.
-  void TopologyCreate ();
-  uint64_t TopologyGetPgwSwitch (Ptr<OFSwitch13Device> pgwDev);
+  void TopologyCreate (void);
+  uint64_t TopologyGetPgwSwitch (void);
   uint64_t TopologyGetSgwSwitch (Ptr<SdranCloud> sdran);
   uint64_t TopologyGetEnbSwitch (uint16_t cellId);
 
 private:
-  uint16_t    m_numNodes;     //!< Number of switches in this topology.
-  DataRate    m_linkRate;     //!< Link data rate for this topology.
-  Time        m_linkDelay;    //!< Link delay for this topology.
-  CsmaHelper  m_csmaHelper;   //!< Csma connection helper.
+  uint16_t                      m_numNodes;         //!< Number of switches.
+  DataRate                      m_linkRate;         //!< Link data rate.
+  Time                          m_linkDelay;        //!< Link delay.
+  CsmaHelper                    m_csmaHelper;       //!< Connection helper.
 
 }; // class RingNetwork
 

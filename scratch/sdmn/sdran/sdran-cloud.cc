@@ -251,7 +251,7 @@ SdranCloud::EnablePcap (std::string prefix, bool promiscuous)
 
   // Enable pcap on CSMA devices.
   CsmaHelper helper;
-  helper.EnablePcap (prefix + "lte-epc-s1u", m_s1Devices,  promiscuous);
+  helper.EnablePcap (prefix + "epc-s1u", m_s1Devices,  promiscuous);
 }
 
 Ptr<SdranCloud>

@@ -183,6 +183,58 @@ EpcController::NotifyPgwAttach (
 }
 
 void
+EpcController::NotifyPgwMainAttach (
+  Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNo,
+  uint32_t pgwSgiPortNo, Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> pgwSgiDev,
+  Ptr<NetDevice> webSgiDev)
+{
+  NS_LOG_FUNCTION (this << pgwSwDev << pgwS5PortNo << pgwSgiPortNo <<
+                   pgwS5Dev << pgwSgiDev << webSgiDev);
+
+  NS_ASSERT_MSG (!m_pgwDpId, "Only one P-GW allowed on this implementation.");
+  m_pgwDpId = pgwSwDev->GetDatapathId ();
+  m_pgwS5Port = pgwS5PortNo;
+  m_pgwS5Addr = EpcNetwork::GetIpv4Addr (pgwS5Dev);
+
+  // Configure SGi port rules.
+  // -------------------------------------------------------------------------
+  // Table 0 -- P-GW default table -- [from higher to lower priority]
+  //
+  // IP packets coming from the Internet (SGi port) and addressed to the UE
+  // network are sent to table 1, where TFT rules will match the flow and set
+  // both TEID and eNB address on tunnel metadata.
+  std::ostringstream cmdIn;
+  cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+        << ",in_port=" << pgwSgiPortNo
+        << ",ip_dst=" << EpcNetwork::m_ueAddr
+        << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
+        << " goto:1";
+  DpctlSchedule (m_pgwDpId, cmdIn.str ());
+
+  // IP packets coming from the LTE network (S5 port) and addressed to the
+  // Internet (Web IP address) have the destination MAC address rewritten to
+  // the Web SGi MAC address (this is necessary when using logical ports) and
+  // are forward to the SGi interface port.
+  Mac48Address webMac = Mac48Address::ConvertFrom (webSgiDev->GetAddress ());
+  std::ostringstream cmdOut;
+  cmdOut << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+         << ",in_port=" << pgwS5PortNo
+         << ",ip_dst=" << EpcNetwork::GetIpv4Addr (webSgiDev)
+         << " write:set_field=eth_dst:" << webMac
+         << ",output=" << pgwSgiPortNo;
+  DpctlSchedule (m_pgwDpId, cmdOut.str ());
+
+  // Table miss entry. Send to controller.
+  DpctlSchedule (m_pgwDpId, "flow-mod cmd=add,table=0,prio=0"
+                 " apply:output=ctrl");
+
+  // -------------------------------------------------------------------------
+  // Table 1 -- P-GW TFT downlink table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by InstallPgwSwitchRules function.
+}
+
+void
 EpcController::NotifyS5Attach (
   Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev)
 {
@@ -274,7 +326,8 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // plane and switches on the OpenFlow backhaul network). For the P-GW switch,
   // all entries will be installed by NotifyPgwAttach and InstallPgwSwitchRules
   // functions, so we scape here.
-  if (swtch->GetDpId () == m_pgwDpId)
+  // FIXME Identificar automaticamente aqui quem é do backhaul e quem é do P-GW.
+  if (swtch->GetDpId () == m_pgwDpId || swtch->GetDpId () >= 4)
     {
       return;
     }
