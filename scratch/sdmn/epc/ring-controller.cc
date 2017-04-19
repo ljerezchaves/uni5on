@@ -224,9 +224,9 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
   if (rInfo->HasDownlinkTraffic ())
     {
       // Building the match string.
+      // No match on source IP because we may have several P-GW TFT switches.
       std::ostringstream match;
       match << " eth_type=0x800,ip_proto=17"
-            << ",ip_src=" << rInfo->GetPgwS5Addr ()
             << ",ip_dst=" << rInfo->GetSgwS5Addr ()
             << ",gtp_teid=" << rInfo->GetTeid ();
 

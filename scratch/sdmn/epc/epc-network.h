@@ -227,6 +227,7 @@ private:
   Ipv4Address                   m_pgwAddr;          //!< P-GW gateway addr.
   NodeContainer                 m_pgwNodes;         //!< P-GW user-plane nodes.
   OFSwitch13DeviceContainer     m_pgwOfDevices;     //!< P-GW switch devices.
+  NetDeviceContainer            m_pgwIntDevices;    //!< P-GW int port devices.
   uint16_t                      m_pgwNumNodes;      //!< Num of P-GW nodes.
 };
 

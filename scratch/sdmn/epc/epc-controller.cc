@@ -21,6 +21,7 @@
 #include "epc-controller.h"
 #include "epc-network.h"
 #include "../sdran/sdran-controller.h"
+#include <algorithm>
 
 namespace ns3 {
 
@@ -33,7 +34,6 @@ uint32_t EpcController::m_teidCount = 0x0000000F;
 EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
 
 EpcController::EpcController ()
-  : m_pgwDpId (0)
 {
   NS_LOG_FUNCTION (this);
 
@@ -62,6 +62,12 @@ EpcController::GetTypeId (void)
                    "installing meters to limit Non-GBR traffic bit rate.",
                    BooleanValue (true),
                    MakeBooleanAccessor (&EpcController::m_nonGbrCoexistence),
+                   MakeBooleanChecker ())
+    .AddAttribute ("PgwLoadBalancing",
+                   "Enable the P-GW TFT load balancing mechanism.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&EpcController::SetPgwLoadBalancing,
+                                        &EpcController::GetPgwLoadBalancing),
                    MakeBooleanChecker ())
 
     .AddTraceSource ("BearerRequest", "The bearer request trace source.",
@@ -131,34 +137,21 @@ EpcController::ReleaseDedicatedBearer (EpsBearer bearer, uint32_t teid)
 }
 
 void
-EpcController::NotifyPgwAttach (
-  Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNo,
-  uint32_t pgwSgiPortNo, Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> pgwSgiDev,
-  Ptr<NetDevice> webSgiDev)
+EpcController::NotifyPgwMainAttach (
+  Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNo, uint32_t pgwSgiPortNo,
+  Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> webSgiDev)
 {
   NS_LOG_FUNCTION (this << pgwSwDev << pgwS5PortNo << pgwSgiPortNo <<
-                   pgwS5Dev << pgwSgiDev << webSgiDev);
+                   pgwS5Dev << webSgiDev);
 
-  NS_ASSERT_MSG (!m_pgwDpId, "Only one P-GW allowed on this implementation.");
-  m_pgwDpId = pgwSwDev->GetDatapathId ();
-  m_pgwS5Port = pgwS5PortNo;
+  // Saving information for P-GW main switch at first index.
+  m_pgwDpIds.push_back (pgwSwDev->GetDatapathId ());
+  m_pgwS5PortsNo.push_back (pgwS5PortNo);
   m_pgwS5Addr = EpcNetwork::GetIpv4Addr (pgwS5Dev);
 
-  // Configure SGi port rules.
   // -------------------------------------------------------------------------
   // Table 0 -- P-GW default table -- [from higher to lower priority]
   //
-  // IP packets coming from the Internet (SGi port) and addressed to the UE
-  // network are sent to table 1, where TFT rules will match the flow and set
-  // both TEID and eNB address on tunnel metadata.
-  std::ostringstream cmdIn;
-  cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-        << ",in_port=" << pgwSgiPortNo
-        << ",ip_dst=" << EpcNetwork::m_ueAddr
-        << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
-        << " goto:1";
-  DpctlSchedule (m_pgwDpId, cmdIn.str ());
-
   // IP packets coming from the LTE network (S5 port) and addressed to the
   // Internet (Web IP address) have the destination MAC address rewritten to
   // the Web SGi MAC address (this is necessary when using logical ports) and
@@ -170,66 +163,88 @@ EpcController::NotifyPgwAttach (
          << ",ip_dst=" << EpcNetwork::GetIpv4Addr (webSgiDev)
          << " write:set_field=eth_dst:" << webMac
          << ",output=" << pgwSgiPortNo;
-  DpctlSchedule (m_pgwDpId, cmdOut.str ());
+  DpctlSchedule (pgwSwDev->GetDatapathId (), cmdOut.str ());
+
+  // IP packets coming from the Internet (SGi port) and addressed to the UE
+  // network are sent to the table 1 if load balancing mechanism is disable, or
+  // to table 2 otherwise.
+  std::ostringstream cmdIn;
+  cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+        << ",in_port=" << pgwSgiPortNo
+        << ",ip_dst=" << EpcNetwork::m_ueAddr
+        << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
+        << " goto:" << (GetPgwLoadBalancing () ? 2 : 1);
+  DpctlSchedule (pgwSwDev->GetDatapathId (), cmdIn.str ());
 
   // Table miss entry. Send to controller.
-  DpctlSchedule (m_pgwDpId, "flow-mod cmd=add,table=0,prio=0"
+  DpctlSchedule (pgwSwDev->GetDatapathId (), "flow-mod cmd=add,table=0,prio=0"
                  " apply:output=ctrl");
 
   // -------------------------------------------------------------------------
-  // Table 1 -- P-GW TFT downlink table -- [from higher to lower priority]
+  // Table 1 -- P-GW LB disable table -- [from higher to lower priority]
   //
-  // Entries will be installed here by InstallPgwSwitchRules function.
+  // Table used when we have a single TFT switch.
+  // Entries will be installed here by NotifyPgwTftAttach function.
+  //
+  // -------------------------------------------------------------------------
+  // Table 2 -- P-GW LB enable table -- [from higher to lower priority]
+  //
+  // Table used when we have a pair of TFT switches.
+  // Entries will be installed here by NotifyPgwTftAttach function.
 }
 
 void
-EpcController::NotifyPgwMainAttach (
-  Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNo,
-  uint32_t pgwSgiPortNo, Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> pgwSgiDev,
-  Ptr<NetDevice> webSgiDev)
+EpcController::NotifyPgwTftAttach (
+  uint16_t pgwTftCounter, Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNo,
+  uint32_t pgwMainPortNo)
 {
-  NS_LOG_FUNCTION (this << pgwSwDev << pgwS5PortNo << pgwSgiPortNo <<
-                   pgwS5Dev << pgwSgiDev << webSgiDev);
+  NS_LOG_FUNCTION (this << pgwTftCounter << pgwSwDev << pgwS5PortNo <<
+                   pgwMainPortNo);
 
-  NS_ASSERT_MSG (!m_pgwDpId, "Only one P-GW allowed on this implementation.");
-  m_pgwDpId = pgwSwDev->GetDatapathId ();
-  m_pgwS5Port = pgwS5PortNo;
-  m_pgwS5Addr = EpcNetwork::GetIpv4Addr (pgwS5Dev);
+  // Saving information for P-GW TFT switches.
+  m_pgwDpIds.push_back (pgwSwDev->GetDatapathId ());
+  m_pgwS5PortsNo.push_back (pgwS5PortNo);
 
-  // Configure SGi port rules.
-  // -------------------------------------------------------------------------
-  // Table 0 -- P-GW default table -- [from higher to lower priority]
   //
-  // IP packets coming from the Internet (SGi port) and addressed to the UE
-  // network are sent to table 1, where TFT rules will match the flow and set
-  // both TEID and eNB address on tunnel metadata.
-  std::ostringstream cmdIn;
-  cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-        << ",in_port=" << pgwSgiPortNo
-        << ",ip_dst=" << EpcNetwork::m_ueAddr
-        << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
-        << " goto:1";
-  DpctlSchedule (m_pgwDpId, cmdIn.str ());
+  // Note that in current implementation we only have support for two TFT
+  // switches on the P-GW user plane. When the LB is disable, all the traffic
+  // is handled by the first P-GW TFT switch. When the LB is enable, odd IP
+  // addresses are handled by the first P-GW TFT switch while even IP addresses
+  // are handled by the second P-GW TFT switch. Tables 1 and 2 at P-GW main
+  // switch are previously configured for these two situations, and the only
+  // thing that we have to do to enable or diable the LB mechanisms is to
+  // change the single talbe 0 rule that forwards downlink packets on the P-GW
+  // main switch to one of these tables.
+  //
 
-  // IP packets coming from the LTE network (S5 port) and addressed to the
-  // Internet (Web IP address) have the destination MAC address rewritten to
-  // the Web SGi MAC address (this is necessary when using logical ports) and
-  // are forward to the SGi interface port.
-  Mac48Address webMac = Mac48Address::ConvertFrom (webSgiDev->GetAddress ());
-  std::ostringstream cmdOut;
-  cmdOut << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-         << ",in_port=" << pgwS5PortNo
-         << ",ip_dst=" << EpcNetwork::GetIpv4Addr (webSgiDev)
-         << " write:set_field=eth_dst:" << webMac
-         << ",output=" << pgwSgiPortNo;
-  DpctlSchedule (m_pgwDpId, cmdOut.str ());
+  // Configuring the P-GW main switch to forward traffic to this TFT switch.
+  if (pgwTftCounter == 1)
+    {
+      // Table 1 forwards all the traffic to this switch.
+      std::ostringstream cmd1;
+      cmd1 << "flow-mod cmd=add,table=1,prio=64 "
+           << " apply:output=" << pgwMainPortNo;
+      DpctlSchedule (m_pgwDpIds.at (0), cmd1.str ());
 
-  // Table miss entry. Send to controller.
-  DpctlSchedule (m_pgwDpId, "flow-mod cmd=add,table=0,prio=0"
-                 " apply:output=ctrl");
+      // Table 2 forwards only the traffic of odd UE IP addresses.
+      std::ostringstream cmd2;
+      cmd2 << "flow-mod cmd=add,table=2,prio=64 "
+           << "eth_type=0x800,ip_dst=0.0.0.1/0.0.0.1"  // odd IPs
+           << " apply:output=" << pgwMainPortNo;
+      DpctlSchedule (m_pgwDpIds.at (0), cmd2.str ());
+    }
+  else if (pgwTftCounter == 2)
+    {
+      // Table 2 forwards only the traffic of even UE IP addresses.
+      std::ostringstream cmd1;
+      cmd1 << "flow-mod cmd=add,table=2,prio=64 "
+           << "eth_type=0x800,ip_dst=0.0.0.0/0.0.0.1"  // even IPs
+           << " apply:output=" << pgwMainPortNo;
+      DpctlSchedule (m_pgwDpIds.at (0), cmd1.str ());
+    }
 
   // -------------------------------------------------------------------------
-  // Table 1 -- P-GW TFT downlink table -- [from higher to lower priority]
+  // Table 0 -- P-GW TFT default table -- [from higher to lower priority]
   //
   // Entries will be installed here by InstallPgwSwitchRules function.
 }
@@ -283,6 +298,29 @@ EpcController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
   NS_LOG_FUNCTION (this);
 }
 
+uint16_t
+EpcController::GetPgwTftIdx (Ptr<const RoutingInfo> rInfo) const
+{
+  NS_LOG_FUNCTION (this << rInfo);
+
+  // When the load balancing mechanisms is enabled, the traffic of UEs with
+  // even IP addresses are sent to second P-GW TFT switch.
+  Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
+  if (GetPgwLoadBalancing () && (ueInfo->GetUeAddr ().Get () % 2 == 0))
+    {
+      return 2;
+    }
+  return 1;
+}
+
+bool
+EpcController::GetPgwLoadBalancing (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwLoadBal;
+}
+
 EpcS5SapPgw*
 EpcController::GetS5SapPgw (void) const
 {
@@ -323,12 +361,14 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
   // This function is called after a successfully handshake between the EPC
   // controller and any switch on the EPC network (including the P-GW user
-  // plane and switches on the OpenFlow backhaul network). For the P-GW switch,
-  // all entries will be installed by NotifyPgwAttach and InstallPgwSwitchRules
-  // functions, so we scape here.
-  // FIXME Identificar automaticamente aqui quem é do backhaul e quem é do P-GW.
-  if (swtch->GetDpId () == m_pgwDpId || swtch->GetDpId () >= 4)
+  // plane and the OpenFlow backhaul network). For the P-GW switches, all
+  // entries will be installed by NotifyPgw*Attach and InstallPgwSwitchRules
+  // methods, so we scape here.
+  std::vector<uint64_t>::iterator it;
+  it = std::find (m_pgwDpIds.begin (), m_pgwDpIds.end (), swtch->GetDpId ());
+  if (it != m_pgwDpIds.end ())
     {
+      // Do nothing for P-GW user plane switches.
       return;
     }
 
@@ -440,7 +480,6 @@ EpcController::HandleFlowRemoved (
 {
   NS_LOG_FUNCTION (this << swtch << xid << msg->stats->cookie);
 
-  uint8_t table = msg->stats->table_id;
   uint32_t teid = msg->stats->cookie;
   uint16_t prio = msg->stats->priority;
 
@@ -451,11 +490,6 @@ EpcController::HandleFlowRemoved (
   // Since handlers must free the message when everything is ok,
   // let's remove it now, as we already got the necessary information.
   ofl_msg_free_flow_removed (msg, true, 0);
-
-  // Only entries at table 1 (both for the P-GW and for backhaul switches) can
-  // expire due idle timeout or can be removed by RemoveBearer. Other flows
-  // cannot be removed.
-  NS_ASSERT_MSG (table == 1, "Flow cannot be removed from table " << table);
 
   // Check for existing routing information for this bearer.
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
@@ -493,6 +527,17 @@ EpcController::HandleFlowRemoved (
   NS_ABORT_MSG ("Should not get here :/");
 }
 
+void
+EpcController::SetPgwLoadBalancing (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_pgwLoadBal = value;
+
+  // TODO If simulation is running we have to update the P-GW main table 0 and
+  // redistribute the active rules among TFT switches.
+}
+
 bool
 EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
 {
@@ -513,9 +558,14 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
   char tunnelIdStr [20];
   sprintf (tunnelIdStr, "0x%016lx", tunnelId);
 
+  // Get the correct TFT switch and port for this traffic.
+  uint16_t pgwTftIdx = GetPgwTftIdx (rInfo);
+  uint64_t pgwTftDpId = m_pgwDpIds.at (pgwTftIdx);
+  uint32_t pgwS5PortNo = m_pgwS5PortsNo.at (pgwTftIdx);
+
   // Build the dpctl command string
   std::ostringstream cmd, act;
-  cmd << "flow-mod cmd=add,table=1"
+  cmd << "flow-mod cmd=add,table=0"
       << ",flags=" << flagsStr
       << ",cookie=" << cookieStr
       << ",prio=" << rInfo->GetPriority ()
@@ -528,7 +578,7 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
       if (!meterInfo->IsDownInstalled ())
         {
           // Install the per-flow meter entry.
-          DpctlExecute (m_pgwDpId, meterInfo->GetDownAddCmd ());
+          DpctlExecute (pgwTftDpId, meterInfo->GetDownAddCmd ());
           meterInfo->SetDownInstalled (true);
         }
 
@@ -538,7 +588,7 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
 
   // Instruction: apply action: set tunnel ID, output port.
   act << " apply:set_field=tunn_id:" << tunnelIdStr
-      << ",output=" << m_pgwS5Port;
+      << ",output=" << pgwS5PortNo;
 
   // Install one downlink dedicated bearer rule for each packet filter.
   Ptr<EpcTft> tft = rInfo->GetTft ();
@@ -565,7 +615,7 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
             }
 
           std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
-          DpctlExecute (m_pgwDpId, cmdTcpStr);
+          DpctlExecute (pgwTftDpId, cmdTcpStr);
         }
 
       // Install rules for UDP traffic.
@@ -583,7 +633,7 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
             }
 
           std::string cmdUdpStr = cmd.str () + match.str () + act.str ();
-          DpctlExecute (m_pgwDpId, cmdUdpStr);
+          DpctlExecute (pgwTftDpId, cmdUdpStr);
         }
     }
   return true;
@@ -600,18 +650,21 @@ EpcController::RemovePgwSwitchRules (Ptr<RoutingInfo> rInfo)
   char cookieStr [20];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
 
-  // Remove flow entries for this TEID.
+  // Get the correct P-GW TFT switch for this traffic.
+  uint64_t pgwTftDpId = m_pgwDpIds.at (GetPgwTftIdx (rInfo));
+
+  // Remove P-GW TFT flow entries for this TEID.
   std::ostringstream cmd;
-  cmd << "flow-mod cmd=del,table=1"
+  cmd << "flow-mod cmd=del,table=0"
       << ",cookie=" << cookieStr
       << ",cookie_mask=0xffffffffffffffff"; // Strict cookie match.
-  DpctlExecute (m_pgwDpId, cmd.str ());
+  DpctlExecute (pgwTftDpId, cmd.str ());
 
   // Remove meter entry for this TEID.
   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
   if (meterInfo && meterInfo->IsDownInstalled ())
     {
-      DpctlExecute (m_pgwDpId, meterInfo->GetDelCmd ());
+      DpctlExecute (pgwTftDpId, meterInfo->GetDelCmd ());
       meterInfo->SetDownInstalled (false);
     }
   return true;

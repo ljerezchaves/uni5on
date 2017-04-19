@@ -90,7 +90,8 @@ EpcNetwork::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (3),
                    MakeUintegerAccessor (&EpcNetwork::m_pgwNumNodes),
-                   MakeUintegerChecker<uint16_t> (2))
+                   // Current implementation only supports 3 switches on P-GW.
+                   MakeUintegerChecker<uint16_t> (3, 3))
   ;
   return tid;
 }
@@ -132,6 +133,7 @@ EpcNetwork::EnablePcap (std::string prefix, bool promiscuous)
 
   // Enable pcap on CSMA devices.
   CsmaHelper helper;
+  helper.EnablePcap (prefix + "pgw-int",  m_pgwIntDevices, promiscuous);
   helper.EnablePcap (prefix + "web-sgi",  m_sgiDevices, promiscuous);
   helper.EnablePcap (prefix + "epc-s5",   m_s5Devices,  promiscuous);
   helper.EnablePcap (prefix + "epc-x2",   m_x2Devices,  promiscuous);
@@ -288,16 +290,6 @@ EpcNetwork::PgwCreate (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Set the default P-GW gateway logical address, which will be used to set
-  // the static route at all UEs.
-  m_pgwAddr = m_ueAddrHelper.NewAddress ();
-  NS_LOG_INFO ("P-GW gateway address: " << GetUeDefaultGatewayAddress ());
-
-  // Identify the node on the backhaul network to attach the P-GW.
-  uint64_t backOfDpId = TopologyGetPgwSwitch ();
-  Ptr<Node> backNode = GetSwitchNode (backOfDpId);
-  Ptr<OFSwitch13Device> backOfDev = OFSwitch13Device::GetDevice (backOfDpId);
-
   // Create the P-GW nodes and configure them as OpenFlow switches.
   m_pgwNodes.Create (m_pgwNumNodes);
   m_pgwOfDevices = m_ofSwitchHelper->InstallSwitch (m_pgwNodes);
@@ -308,15 +300,27 @@ EpcNetwork::PgwCreate (void)
       Names::Add (pgwNodeName.str (), m_pgwNodes.Get (i));
     }
 
-  // We are going to connect the main (first) P-GW switch to the SGi and S5
-  // interfaces. On the uplink direction, the traffic will flow directly from
-  // the S5 to the SGi interface thought this switch. On the downlink
-  // direction, this switch will send the traffic to the other switches for
-  // implementing TFT rules.
+  // Set the default P-GW gateway logical address, which will be used to set
+  // the static route at all UEs.
+  m_pgwAddr = m_ueAddrHelper.NewAddress ();
+  NS_LOG_INFO ("P-GW gateway address: " << GetUeDefaultGatewayAddress ());
+
+  // Get the backhaul node and device to attach the P-GW.
+  uint64_t backOfDpId = TopologyGetPgwSwitch ();
+  Ptr<Node> backNode = GetSwitchNode (backOfDpId);
+  Ptr<OFSwitch13Device> backOfDev = OFSwitch13Device::GetDevice (backOfDpId);
+
+  // Get the P-GW main node and device.
   Ptr<Node> pgwMainNode = m_pgwNodes.Get (0);
   Ptr<OFSwitch13Device> pgwMainOfDev = m_pgwOfDevices.Get (0);
 
-  // Connect the main P-GW node to the Web server over SGi interface.
+  //
+  // Connect the P-GW main switch to the SGi and S5 interfaces. On the uplink
+  // direction, the traffic will flow directly from the S5 to the SGi interface
+  // thought this switch. On the downlink direction, this switch will send the
+  // traffic to the other TFT switches.
+  //
+  // Connect the P-GW main node to the web server node (SGi interface).
   m_sgiDevices = m_csmaHelper.Install (pgwMainNode, m_webNode);
 
   Ptr<CsmaNetDevice> pgwSgiDev, webSgiDev;
@@ -328,7 +332,7 @@ EpcNetwork::PgwCreate (void)
   Names::Add (Names::FindName (m_webNode) + "_to_" +
               Names::FindName (pgwMainNode), webSgiDev);
 
-  // Add the pgwSgiDev as physical port on the main P-GW OpenFlow switch.
+  // Add the pgwSgiDev as physical port on the P-GW main OpenFlow switch.
   Ptr<OFSwitch13Port> pgwSgiPort = pgwMainOfDev->AddSwitchPort (pgwSgiDev);
   uint32_t pgwSgiPortNo = pgwSgiPort->GetPortNo ();
 
@@ -337,7 +341,7 @@ EpcNetwork::PgwCreate (void)
   NS_LOG_INFO ("Web SGi address: " << EpcNetwork::GetIpv4Addr (webSgiDev));
   NS_LOG_INFO ("P-GW SGi address: " << EpcNetwork::GetIpv4Addr (pgwSgiDev));
 
-  // Define static routes at the Internet Web server to the LTE network.
+  // Define static routes at the web server to the LTE network.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
   Ptr<Ipv4StaticRouting> webHostStaticRouting =
     ipv4RoutingHelper.GetStaticRouting (m_webNode->GetObject<Ipv4> ());
@@ -345,25 +349,25 @@ EpcNetwork::PgwCreate (void)
     EpcNetwork::m_ueAddr, EpcNetwork::m_ueMask,
     EpcNetwork::GetIpv4Addr (pgwSgiDev), 1);
 
-  // Connect the main P-GW node to the OpenFlow backhaul over S5 interface.
-  NetDeviceContainer devices = m_csmaHelper.Install (backNode, pgwMainNode);
-  m_s5Devices.Add (devices.Get (1));
+  // Connect the P-GW main node to the OpenFlow backhaul node (S5 interface).
+  NetDeviceContainer devices = m_csmaHelper.Install (pgwMainNode, backNode);
+  m_s5Devices.Add (devices.Get (0));
 
-  Ptr<CsmaNetDevice> backS5Dev, pgwS5Dev;
-  backS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (0));
-  pgwS5Dev  = DynamicCast<CsmaNetDevice> (devices.Get (1));
+  Ptr<CsmaNetDevice> pgwS5Dev, backS5Dev;
+  pgwS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (0));
+  backS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (1));
 
   Names::Add (Names::FindName (backNode) + "_to_" +
               Names::FindName (pgwMainNode), backS5Dev);
   Names::Add (Names::FindName (pgwMainNode) + "_to_" +
               Names::FindName (backNode), pgwS5Dev);
 
-  // Add the backS5Dev device as OpenFlow switch port on the backhaul switch.
-  Ptr<OFSwitch13Port> swS5Port = backOfDev->AddSwitchPort (backS5Dev);
-  uint32_t swS5PortNo = swS5Port->GetPortNo ();
+  // Add the backS5Dev as physical port on the backhaul OpenFlow switch.
+  Ptr<OFSwitch13Port> backS5Port = backOfDev->AddSwitchPort (backS5Dev);
+  uint32_t backS5PortNo = backS5Port->GetPortNo ();
 
-  // Add the pgwS5Dev as standard device on P-GW node.
-  // It will be connected to a logical port through the PgwTunnelApp.
+  // Set the IP address on pgwS5Dev interface. It will be left as standard
+  // device on P-GW main node and will be connected to a logical port.
   m_s5AddrHelper.Assign (NetDeviceContainer (pgwS5Dev));
   NS_LOG_INFO ("P-GW S5 address: " << EpcNetwork::GetIpv4Addr (pgwS5Dev));
 
@@ -377,16 +381,80 @@ EpcNetwork::PgwCreate (void)
   uint32_t pgwS5PortNo = pgwS5Port->GetPortNo ();
 
   // Create the P-GW S5 user-plane application.
-  pgwMainNode->AddApplication (
-    CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev));
+  Ptr<PgwTunnelApp> tunnelApp;
+  tunnelApp = CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev);
+  pgwMainNode->AddApplication (tunnelApp);
 
-  // Notify the EPC controller of the new P-GW device attached to the Internet
+  // Notify the EPC controller of the P-GW main switch attached to the Internet
   // and to the OpenFlow backhaul network.
-  m_epcCtrlApp->NotifyS5Attach (backOfDev, swS5PortNo, pgwS5Dev);
+  m_epcCtrlApp->NotifyS5Attach (backOfDev, backS5PortNo, pgwS5Dev);
   m_epcCtrlApp->NotifyPgwMainAttach (pgwMainOfDev, pgwS5PortNo, pgwSgiPortNo,
-                                     pgwS5Dev, pgwSgiDev, webSgiDev);
+                                     pgwS5Dev, webSgiDev);
 
-  // TODO continuar as conexoes do gateway
+  //
+  // Connect all P-GW TFT switches to the P-GW main switch and to the S5
+  // interface. Only downlink traffic will be sent to these switches.
+  //
+  for (uint16_t tftIdx = 1; tftIdx < m_pgwNumNodes; tftIdx++)
+    {
+      Ptr<Node> pgwTftNode = m_pgwNodes.Get (tftIdx);
+      Ptr<OFSwitch13Device> pgwTftOfDev = m_pgwOfDevices.Get (tftIdx);
+
+      // Connect the P-GW main node to the P-GW TFT node.
+      devices = m_csmaHelper.Install (pgwTftNode, pgwMainNode);
+      m_pgwIntDevices.Add (devices);
+
+      Ptr<CsmaNetDevice> tftDev, mainDev;
+      tftDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
+      mainDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
+
+      // Add the mainDev as physical port on the P-GW main OpenFlow switch.
+      Ptr<OFSwitch13Port> mainPort = pgwMainOfDev->AddSwitchPort (mainDev);
+      uint32_t mainPortNo = mainPort->GetPortNo ();
+
+      // Add the tftDev as physical port on the P-GW TFT OpenFlow switch.
+      Ptr<OFSwitch13Port> tftPort = pgwTftOfDev->AddSwitchPort (tftDev);
+      uint32_t tftPortNo = tftPort->GetPortNo ();
+      NS_UNUSED (tftPortNo);
+
+      // Connect the P-GW TFT node to the OpenFlow backhaul node (S5 interf).
+      devices = m_csmaHelper.Install (pgwTftNode, backNode);
+      m_s5Devices.Add (devices.Get (0));
+
+      pgwS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (0));
+      backS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (1));
+
+      Names::Add (Names::FindName (backNode) + "_to_" +
+                  Names::FindName (pgwTftNode), backS5Dev);
+      Names::Add (Names::FindName (pgwTftNode) + "_to_" +
+                  Names::FindName (backNode), pgwS5Dev);
+
+      // Add the backS5Dev as physical port on the backhaul OpenFlow switch.
+      backS5Port = backOfDev->AddSwitchPort (backS5Dev);
+      backS5PortNo = backS5Port->GetPortNo ();
+
+      // Set the IP address on pgwS5Dev interface. It will be left as standard
+      // device on P-GW TFT node and will be connected to a logical port.
+      m_s5AddrHelper.Assign (NetDeviceContainer (pgwS5Dev));
+      NS_LOG_INFO ("P-GW TFT S5 addr: " << EpcNetwork::GetIpv4Addr (pgwS5Dev));
+
+      // Create the virtual net device to work as the logical ports on the P-GW
+      // S5 interface.
+      pgwS5PortDev = CreateObject<VirtualNetDevice> ();
+      pgwS5PortDev->SetAddress (Mac48Address::Allocate ());
+      pgwS5Port = pgwTftOfDev->AddSwitchPort (pgwS5PortDev);
+      pgwS5PortNo = pgwS5Port->GetPortNo ();
+
+      // Create the P-GW S5 user-plane application.
+      tunnelApp = CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev);
+      pgwTftNode->AddApplication (tunnelApp);
+
+      // Notify the EPC controller of the P-GW TFT switch attached to the P-GW
+      // main switch and to the OpenFlow backhaul network.
+      m_epcCtrlApp->NotifyS5Attach (backOfDev, backS5PortNo, pgwS5Dev);
+      m_epcCtrlApp->NotifyPgwTftAttach (tftIdx, pgwTftOfDev, pgwS5PortNo,
+                                        mainPortNo);
+    }
 }
 
 //

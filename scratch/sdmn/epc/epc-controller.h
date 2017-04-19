@@ -88,35 +88,31 @@ public:
   virtual bool ReleaseDedicatedBearer (EpsBearer bearer, uint32_t teid);
 
   /**
-   * Notify this controller of a new P-GW connected to the OpenFlow backhaul
-   * network. This function will configure the P-GW datapath.
-   * \param pgwSwDev The OpenFlow P-GW switch device.
-   * \param pgwS5PortNo The S5 port number on the P-GW OpenFlow switch.
-   * \param pgwSgiPortNo The SGi port number on the P-GW OpenFlow switch.
-   * \param pgwS5Dev The S5 device attached to the P-GW OpenFlow switch.
-   * \param pgwSgiDev The SGi device attached to the P-GW OpenFlow switch.
-   * \param webSgiDev The SGi device attached to the Web server.
-   */
-  virtual void NotifyPgwAttach (
-    Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNo,
-    uint32_t pgwSgiPortNo, Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> pgwSgiDev,
-    Ptr<NetDevice> webSgiDev);
-
-  /**
-   * Notify this controller of the P-GW main switch connected to the
-   * OpenFlow backhaul network and to the SGi interface. This function will
-   * configure the P-GW datapath for uplink traffic.
-   * \param pgwSwDev The OpenFlow P-GW switch device.
-   * \param pgwS5PortNo The S5 port number on the P-GW OpenFlow switch.
-   * \param pgwSgiPortNo The SGi port number on the P-GW OpenFlow switch.
-   * \param pgwS5Dev The S5 device attached to the P-GW OpenFlow switch.
-   * \param pgwSgiDev The SGi device attached to the P-GW OpenFlow switch.
+   * Notify this controller of the P-GW main switch connected to the OpenFlow
+   * backhaul network over the S5 interface, and to the web server over the SGi
+   * interface.
+   * \param pgwSwDev The OpenFlow P-GW main switch device.
+   * \param pgwS5PortNo The S5 port number on the P-GW main switch.
+   * \param pgwSgiPortNo The SGi port number on the P-GW main switch.
+   * \param pgwS5Dev The S5 device attached to the P-GW main switch.
    * \param webSgiDev The SGi device attached to the Web server.
    */
   virtual void NotifyPgwMainAttach (
     Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNo,
-    uint32_t pgwSgiPortNo, Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> pgwSgiDev,
-    Ptr<NetDevice> webSgiDev);
+    uint32_t pgwSgiPortNo, Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> webSgiDev);
+
+  /**
+   * Notify this controller of a new P-GW TFT switch connected to the OpenFlow
+   * backhaul network over the S5 interface and to the P-GW main switch over
+   * internal interface.
+   * \param pgwTftCounter The counter for P-GW TFT switches.
+   * \param pgwSwDev The OpenFlow P-GW TFT switch device.
+   * \param pgwS5PortNo The S5 port number on the P-GW TFT switch.
+   * \param pgwMainPortNo The port number on the P-GW main switch.
+   */
+  virtual void NotifyPgwTftAttach (
+    uint16_t pgwTftCounter, Ptr<OFSwitch13Device> pgwSwDev,
+    uint32_t pgwS5PortNo, uint32_t pgwMainPortNo);
 
   /**
    * Notify this controller of a new S-GW or P-GW connected to OpenFlow
@@ -141,6 +137,19 @@ public:
    * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
    */
   virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
+
+  /**
+   * Get the active P-GW TFT index for a given traffic flow.
+   * \param rInfo The routing information to process.
+   * \return The P-GW TFT index.
+   */
+  uint16_t GetPgwTftIdx (Ptr<const RoutingInfo> rInfo) const;
+
+  /**
+   * Get the P-GW load balancing mechanism status.
+   * \return The P-GW load balancing status.
+   */
+  bool GetPgwLoadBalancing (void) const;
 
   /**
    * Get The P-GW side of the S5 SAP.
@@ -227,6 +236,12 @@ protected:
 
 private:
   /**
+   * Enable/Disable the P-GW TFT load balancing mechanism.
+   * \param value The value to set.
+   */
+  void SetPgwLoadBalancing (bool value);
+
+  /**
    * Configure the P-GW with OpenFlow rules for downlink TFT packet filtering.
    * \attention To avoid conflicts with old entries, increase the routing
    *            priority before installing OpenFlow rules.
@@ -268,21 +283,22 @@ private:
   static void StaticInitialize (void);
 
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
-  TracedCallback<bool, Ptr<const RoutingInfo> >    m_bearerRequestTrace;
+  TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerRequestTrace;
 
   /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
-  TracedCallback<bool, Ptr<const RoutingInfo> >    m_bearerReleaseTrace;
+  TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerReleaseTrace;
 
   /** The context created trace source, fired at NotifySessionCreated. */
   TracedCallback<uint64_t, uint16_t, BearerContextList_t> m_sessionCreatedTrace;
 
   // P-GW metadata
-  uint64_t      m_pgwDpId;    //!< P-GW datapath ID.
-  uint32_t      m_pgwS5Port;  //!< P-GW S5 port no.
-  Ipv4Address   m_pgwS5Addr;  //!< P-GW S5 IP address.
+  std::vector<uint64_t>   m_pgwDpIds;     //!< P-GW datapath IDs.
+  std::vector<uint32_t>   m_pgwS5PortsNo; //!< P-GW S5 ports no.
+  Ipv4Address             m_pgwS5Addr;    //!< P-GW S5 IP address for uplink.
+  bool                    m_pgwLoadBal;   //!< P-GW load balancing mechanism.
 
   // S-GW communication.
-  EpcS5SapPgw*  m_s5SapPgw;   //!< P-GW side of the S5 SAP.
+  EpcS5SapPgw*            m_s5SapPgw;     //!< P-GW side of the S5 SAP.
 
   /** Map saving EpsBearer::Qci / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
@@ -292,9 +308,9 @@ private:
    * \internal This counter is initialized at 0x0000000F, reserving the first
    *           values for controller usage.
    */
-  static uint32_t       m_teidCount;
-  static const uint16_t m_flowTimeout;  //!< Timeout for flow entries.
-  static QciDscpMap_t   m_qciDscpTable; //!< DSCP mapped values.
+  static uint32_t         m_teidCount;
+  static const uint16_t   m_flowTimeout;  //!< Timeout for flow entries.
+  static QciDscpMap_t     m_qciDscpTable; //!< DSCP mapped values.
 };
 
 };  // namespace ns3
