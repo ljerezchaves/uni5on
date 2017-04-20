@@ -138,16 +138,16 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
       DpIdPair_t key = (*it)->GetSwitchDpIdPair ();
 
       *m_bwbWrapper->GetStream ()
-      << right << setw (10) << key.first  << "-"
-      << left  << setw (10) << key.second << "   ";
+      << right << setw (12) << key.first  << "-"
+      << left  << setw (12) << key.second << "   ";
 
       *m_bwgWrapper->GetStream ()
-      << right << setw (10) << key.first  << "-"
-      << left  << setw (10) << key.second << "   ";
+      << right << setw (12) << key.first  << "-"
+      << left  << setw (12) << key.second << "   ";
 
       *m_bwnWrapper->GetStream ()
-      << right << setw (10) << key.first  << "-"
-      << left  << setw (10) << key.second << "   ";
+      << right << setw (12) << key.first  << "-"
+      << left  << setw (12) << key.second << "   ";
 
       *m_regWrapper->GetStream ()
       << left
@@ -216,18 +216,18 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
 
       *m_bwgWrapper->GetStream ()
       << right
-      << setw (10) << gbrFwdKbits / interval << " "
-      << setw (10) << gbrBwdKbits / interval << "   ";
+      << setw (12) << gbrFwdKbits / interval << " "
+      << setw (12) << gbrBwdKbits / interval << "   ";
 
       *m_bwnWrapper->GetStream ()
       << right
-      << setw (10) << nonFwdKbits / interval << " "
-      << setw (10) << nonBwdKbits / interval << "   ";
+      << setw (12) << nonFwdKbits / interval << " "
+      << setw (12) << nonBwdKbits / interval << "   ";
 
       *m_bwbWrapper->GetStream ()
       << right
-      << setw (10) << (gbrFwdKbits + nonFwdKbits) / interval << " "
-      << setw (10) << (gbrBwdKbits + nonBwdKbits) / interval << "   ";
+      << setw (12) << (gbrFwdKbits + nonFwdKbits) / interval << " "
+      << setw (12) << (gbrBwdKbits + nonBwdKbits) / interval << "   ";
 
       *m_regWrapper->GetStream ()
       << right
