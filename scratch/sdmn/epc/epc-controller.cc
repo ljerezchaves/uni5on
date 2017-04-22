@@ -69,6 +69,13 @@ EpcController::GetTypeId (void)
                    MakeBooleanAccessor (&EpcController::SetPgwLoadBalancing,
                                         &EpcController::GetPgwLoadBalancing),
                    MakeBooleanChecker ())
+    .AddAttribute ("AutoPgwLoadBalancing",
+                   "Automatically enable/disable the P-GW TFT load balancing "
+                   "mechanism based on switch statistics.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&EpcController::m_pgwAutoTftLb),
+                   MakeBooleanChecker ())
 
     .AddTraceSource ("BearerRequest", "The bearer request trace source.",
                      MakeTraceSourceAccessor (
@@ -319,7 +326,7 @@ EpcController::GetPgwLoadBalancing (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_pgwLoadBal;
+  return m_pgwTftLb;
 }
 
 EpcS5SapPgw*
@@ -533,9 +540,9 @@ EpcController::SetPgwLoadBalancing (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  if (m_pgwLoadBal != value)
+  if (m_pgwTftLb != value)
     {
-      m_pgwLoadBal = value;
+      m_pgwTftLb = value;
 
       // Let's find the bearers of UEs with even IP addresses that are
       // currently installed and must be moved to the other P-GW TFT switch.

@@ -309,7 +309,8 @@ private:
   std::vector<uint32_t>   m_pgwS5PortsNo; //!< P-GW S5 ports no.
   Ipv4Address             m_pgwS5Addr;    //!< P-GW S5 IP address for uplink.
   uint32_t                m_pgwSgiPortNo; //!< P-GW SGi port no.
-  bool                    m_pgwLoadBal;   //!< P-GW load balancing mechanism.
+  bool                    m_pgwTftLb;     //!< P-GW TFT load balancing.
+  bool                    m_pgwAutoTftLb; //!< Auto P-GW TFT load balancing.
 
   // S-GW communication.
   EpcS5SapPgw*            m_s5SapPgw;     //!< P-GW side of the S5 SAP.
