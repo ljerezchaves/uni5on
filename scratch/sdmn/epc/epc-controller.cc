@@ -533,17 +533,18 @@ EpcController::SetPgwLoadBalancing (bool value)
   NS_LOG_FUNCTION (this << value);
 
   m_pgwLoadBal = value;
-
-  // TODO If simulation is running we have to update the P-GW main table 0 and
-  // redistribute the active rules among TFT switches.
 }
 
 bool
-EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
+EpcController::InstallPgwSwitchRules (
+  Ptr<RoutingInfo> rInfo, uint64_t pgwTftDpId, uint32_t pgwTftS5PortNo,
+  bool forceMeterInstall)
 {
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid () << pgwTftDpId <<
+                   pgwTftS5PortNo);
 
-  NS_LOG_INFO ("Installing P-GW entries for teid " << rInfo->GetTeid ());
+  NS_LOG_INFO ("Installing P-GW entries for teid " << rInfo->GetTeid () <<
+               " into P-GW TFT switch " << pgwTftDpId);
 
   // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0007");
@@ -558,11 +559,6 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
   char tunnelIdStr [20];
   sprintf (tunnelIdStr, "0x%016lx", tunnelId);
 
-  // Get the correct TFT switch and port for this traffic.
-  uint16_t pgwTftIdx = GetPgwTftIdx (rInfo);
-  uint64_t pgwTftDpId = m_pgwDpIds.at (pgwTftIdx);
-  uint32_t pgwS5PortNo = m_pgwS5PortsNo.at (pgwTftIdx);
-
   // Build the dpctl command string
   std::ostringstream cmd, act;
   cmd << "flow-mod cmd=add,table=0"
@@ -575,7 +571,7 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
   if (meterInfo && meterInfo->HasDown ())
     {
-      if (!meterInfo->IsDownInstalled ())
+      if (forceMeterInstall || !meterInfo->IsDownInstalled ())
         {
           // Install the per-flow meter entry.
           DpctlExecute (pgwTftDpId, meterInfo->GetDownAddCmd ());
@@ -588,7 +584,7 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
 
   // Instruction: apply action: set tunnel ID, output port.
   act << " apply:set_field=tunn_id:" << tunnelIdStr
-      << ",output=" << pgwS5PortNo;
+      << ",output=" << pgwTftS5PortNo;
 
   // Install one downlink dedicated bearer rule for each packet filter.
   Ptr<EpcTft> tft = rInfo->GetTft ();
@@ -640,7 +636,8 @@ EpcController::InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo)
 }
 
 bool
-EpcController::RemovePgwSwitchRules (Ptr<RoutingInfo> rInfo)
+EpcController::RemovePgwSwitchRules (
+  Ptr<RoutingInfo> rInfo, uint64_t pgwTftDpId, bool keepMeterFlag)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
@@ -649,9 +646,6 @@ EpcController::RemovePgwSwitchRules (Ptr<RoutingInfo> rInfo)
   // Print the cookie value in dpctl string format.
   char cookieStr [20];
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
-
-  // Get the correct P-GW TFT switch for this traffic.
-  uint64_t pgwTftDpId = m_pgwDpIds.at (GetPgwTftIdx (rInfo));
 
   // Remove P-GW TFT flow entries for this TEID.
   std::ostringstream cmd;
@@ -665,7 +659,10 @@ EpcController::RemovePgwSwitchRules (Ptr<RoutingInfo> rInfo)
   if (meterInfo && meterInfo->IsDownInstalled ())
     {
       DpctlExecute (pgwTftDpId, meterInfo->GetDelCmd ());
-      meterInfo->SetDownInstalled (false);
+      if (!keepMeterFlag)
+        {
+          meterInfo->SetDownInstalled (false);
+        }
     }
   return true;
 }
@@ -680,7 +677,14 @@ EpcController::InstallBearer (Ptr<RoutingInfo> rInfo)
   // Increasing the priority every time we (re)install routing rules.
   rInfo->IncreasePriority ();
   rInfo->SetInstalled (false);
-  bool ok1 = InstallPgwSwitchRules (rInfo);
+
+  // Get the correct P-GW TFT switch for this traffic.
+  uint16_t pgwTftIdx = GetPgwTftIdx (rInfo);
+  uint64_t pgwTftDpId = m_pgwDpIds.at (pgwTftIdx);
+  uint32_t pgwTftS5PortNo = m_pgwS5PortsNo.at (pgwTftIdx);
+
+  // Install the rules.
+  bool ok1 = InstallPgwSwitchRules (rInfo, pgwTftDpId, pgwTftS5PortNo);
   bool ok2 = TopologyInstallRouting (rInfo);
   if (ok1 && ok2)
     {
@@ -696,7 +700,12 @@ EpcController::RemoveBearer (Ptr<RoutingInfo> rInfo)
 
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
-  bool ok1 = RemovePgwSwitchRules (rInfo);
+  // Get the correct P-GW TFT switch for this traffic.
+  uint16_t pgwTftIdx = GetPgwTftIdx (rInfo);
+  uint64_t pgwTftDpId = m_pgwDpIds.at (pgwTftIdx);
+
+  // Remove the rules.
+  bool ok1 = RemovePgwSwitchRules (rInfo, pgwTftDpId);
   bool ok2 = TopologyRemoveRouting (rInfo);
   if (ok1 && ok2)
     {

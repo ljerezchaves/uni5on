@@ -242,20 +242,33 @@ private:
   void SetPgwLoadBalancing (bool value);
 
   /**
-   * Configure the P-GW with OpenFlow rules for downlink TFT packet filtering.
+   * Install OpenFlow rules for downlink packet filtering on the P-GW TFT
+   * switch.
    * \attention To avoid conflicts with old entries, increase the routing
    *            priority before installing OpenFlow rules.
    * \param rInfo The routing information to process.
+   * \param pgwTftDpId The P-GW TFT datapath ID.
+   * \param pgwTftS5PortNo The S5 port number on the P-GW TFT switch.
+   * \param forceMeterInstall Force the meter entry installation even when the
+   *        rInfo->IsDownInstalled () is true (use this only when moving rules
+   *        between P-GW TFT switches).
    * \return True if succeeded, false otherwise.
    */
-  bool InstallPgwSwitchRules (Ptr<RoutingInfo> rInfo);
+  bool InstallPgwSwitchRules (
+    Ptr<RoutingInfo> rInfo, uint64_t pgwTftDpId, uint32_t pgwTftS5PortNo,
+    bool forceMeterInstall = false);
 
   /**
-   * Remove OpenFlow rules for downlink TFT packet filtering from P-GW.
+   * Remove OpenFlow rules for downlink packet filtering from P-GW TFT switch.
    * \param rInfo The routing information to process.
+   * \param pgwTftDpId The P-GW TFT datapath ID.
+   * \param keepMeterFlag Don't update the rInfo->IsDownInstalled () flag when
+   *                      removing the meter entry (use this only when moving
+                          rules between P-GW TFT switches).
    * \return True if succeeded, false otherwise.
    */
-  bool RemovePgwSwitchRules (Ptr<RoutingInfo> rInfo);
+  bool RemovePgwSwitchRules (
+    Ptr<RoutingInfo> rInfo, uint64_t pgwTftDpId, bool keepMeterFlag = false);
 
   /**
    * Install OpenFlow match rules for this bearer.
