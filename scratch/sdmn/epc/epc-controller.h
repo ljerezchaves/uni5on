@@ -308,6 +308,7 @@ private:
   std::vector<uint64_t>   m_pgwDpIds;     //!< P-GW datapath IDs.
   std::vector<uint32_t>   m_pgwS5PortsNo; //!< P-GW S5 ports no.
   Ipv4Address             m_pgwS5Addr;    //!< P-GW S5 IP address for uplink.
+  uint32_t                m_pgwSgiPortNo; //!< P-GW SGi port no.
   bool                    m_pgwLoadBal;   //!< P-GW load balancing mechanism.
 
   // S-GW communication.
