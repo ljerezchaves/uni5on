@@ -20,6 +20,7 @@
 
 #include "epc-controller.h"
 #include "epc-network.h"
+#include "pgw-load-monitor.h"
 #include "../sdran/sdran-controller.h"
 #include <algorithm>
 
@@ -34,6 +35,8 @@ uint32_t EpcController::m_teidCount = 0x0000000F;
 EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
 
 EpcController::EpcController ()
+  : m_pgwTftLb (false),
+    m_pgwAutoTftLb (false)
 {
   NS_LOG_FUNCTION (this);
 
@@ -63,18 +66,19 @@ EpcController::GetTypeId (void)
                    BooleanValue (true),
                    MakeBooleanAccessor (&EpcController::m_nonGbrCoexistence),
                    MakeBooleanChecker ())
-    .AddAttribute ("PgwLoadBalancing",
-                   "Enable the P-GW TFT load balancing mechanism.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&EpcController::SetPgwLoadBalancing,
-                                        &EpcController::GetPgwLoadBalancing),
-                   MakeBooleanChecker ())
     .AddAttribute ("AutoPgwLoadBalancing",
-                   "Automatically enable/disable the P-GW TFT load balancing "
+                   "Enable/Disable the automatic P-GW load balancing "
                    "mechanism based on switch statistics.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (false),
                    MakeBooleanAccessor (&EpcController::m_pgwAutoTftLb),
+                   MakeBooleanChecker ())
+    .AddAttribute ("PgwLoadBalancing",
+                   "Enable/disable the manual P-GW load balancing mechanism.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&EpcController::SetPgwLoadBalancing,
+                                        &EpcController::GetPgwLoadBalancing),
                    MakeBooleanChecker ())
 
     .AddTraceSource ("BearerRequest", "The bearer request trace source.",
@@ -174,8 +178,8 @@ EpcController::NotifyPgwMainAttach (
   DpctlSchedule (pgwSwDev->GetDatapathId (), cmdOut.str ());
 
   // IP packets coming from the Internet (SGi port) and addressed to the UE
-  // network are sent to the table 1 if load balancing mechanism is disable, or
-  // to table 2 otherwise.
+  // network are sent to the table 1 if P-GW load balancing mechanism is
+  // disable, or to table 2 otherwise.
   std::ostringstream cmdIn;
   cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
         << ",in_port=" << pgwSgiPortNo
@@ -240,6 +244,21 @@ EpcController::NotifyPgwTftAttach (
            << "eth_type=0x800,ip_dst=0.0.0.1/0.0.0.1"  // odd IPs
            << " apply:output=" << pgwMainPortNo;
       DpctlSchedule (m_pgwDpIds.at (0), cmd2.str ());
+
+      // When the P-GW load balancing mechanism is on automatic mode, we watch
+      // the 1st P-GW TFT switch statistics to enable or disable the mechanism.
+      if (m_pgwAutoTftLb)
+        {
+          // Create the load monitor and bind it to the switch device.
+          Ptr<PgwLoadMonitor> loadMonitor = CreateObject<PgwLoadMonitor> ();
+          loadMonitor->AggregateObject (pgwSwDev);
+          loadMonitor->HookSinks (pgwSwDev);
+
+          // Connecting this controller to load monitor trace source.
+          loadMonitor->TraceConnectWithoutContext (
+            "LoadBalancing", MakeCallback (
+              &EpcController::SetPgwLoadBalancing, this));
+        }
     }
   else if (pgwTftCounter == 2)
     {
@@ -360,6 +379,22 @@ EpcController::DoDispose ()
 
   // Chain up.
   Object::DoDispose ();
+}
+
+void
+EpcController::NotifyConstructionCompleted (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  // When the P-GW load balancing mechanism is on automatic mode, the default
+  // behaviour is to start the simulation with the load balancing disabled.
+  if (m_pgwAutoTftLb && GetPgwLoadBalancing ())
+    {
+      SetPgwLoadBalancing (false);
+    }
+
+  // Chain up.
+  Object::NotifyConstructionCompleted ();
 }
 
 void
@@ -569,7 +604,7 @@ EpcController::SetPgwLoadBalancing (bool value)
       // We have bearers to move from one P-GW TFT to the other.
       if (value)
         {
-          NS_LOG_INFO ("Enabling the P-GW TFT load balancing mechanism.");
+          NS_LOG_INFO ("Enabling the P-GW load balancing mechanism.");
 
           // 1st: reinstall active bearers on the second P-GW TFT switch.
           uint64_t dstDpId = m_pgwDpIds.at (2);
@@ -588,7 +623,7 @@ EpcController::SetPgwLoadBalancing (bool value)
               << ",in_port=" << m_pgwSgiPortNo
               << ",ip_dst=" << EpcNetwork::m_ueAddr
               << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
-              << " goto:2"; // Table 2 enables P-GW TFT load balancing.
+              << " goto:2"; // Table 2 enables P-GW load balancing.
           DpctlExecute (m_pgwDpIds.at (0), cmd.str ());
 
           // 3rd: remove old rules from first P-GW TFT switch.
@@ -600,7 +635,7 @@ EpcController::SetPgwLoadBalancing (bool value)
         }
       else
         {
-          NS_LOG_INFO ("Disabling the P-GW TFT load balancing mechanism.");
+          NS_LOG_INFO ("Disabling the P-GW load balancing mechanism.");
 
           // 1st: reinstall active bearers on the first P-GW TFT switch.
           uint64_t dstDpId = m_pgwDpIds.at (1);
@@ -619,7 +654,7 @@ EpcController::SetPgwLoadBalancing (bool value)
               << ",in_port=" << m_pgwSgiPortNo
               << ",ip_dst=" << EpcNetwork::m_ueAddr
               << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
-              << " goto:1"; // Table 1 disables P-GW TFT load balancing.
+              << " goto:1"; // Table 1 disables P-GW load balancing.
           DpctlExecute (m_pgwDpIds.at (0), cmd.str ());
 
           // 3rd: remove old rules from second P-GW TFT switch.

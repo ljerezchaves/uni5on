@@ -362,6 +362,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("LteNetwork",               LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("Main",                     LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("PgwTunnelApp",             LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("PgwLoadMonitor",           LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("RingController",           LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("RingNetwork",              LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("SdranCloud",               LOG_ERROR_WARN_INFO_FT);

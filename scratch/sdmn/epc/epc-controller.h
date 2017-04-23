@@ -184,6 +184,9 @@ protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
+  // Inherited from ObjectBase.
+  virtual void NotifyConstructionCompleted (void);
+
   /** \name Topology methods.
    * These virtual methods must be implemented by topology subclasses, as they
    * are dependent on the backhaul OpenFlow network topology.
