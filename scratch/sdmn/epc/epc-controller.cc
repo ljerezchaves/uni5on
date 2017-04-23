@@ -93,6 +93,10 @@ EpcController::GetTypeId (void)
                      MakeTraceSourceAccessor (
                        &EpcController::m_sessionCreatedTrace),
                      "ns3::EpcController::SessionCreatedTracedCallback")
+    .AddTraceSource ("LoadBalFinished", "The load balancing trace source.",
+                     MakeTraceSourceAccessor (
+                       &EpcController::m_loadBalFinishedTrace),
+                     "ns3::EpcController::LoadBalFinishedTracedCallback")
   ;
   return tid;
 }
@@ -664,6 +668,9 @@ EpcController::SetPgwLoadBalancing (bool value)
               RemovePgwSwitchRules (*it, srcDpId, true);
             }
         }
+
+      // Fire the P-GW LB finished trace source.
+      m_loadBalFinishedTrace (m_pgwTftLb, bearersToMove);
     }
 }
 
