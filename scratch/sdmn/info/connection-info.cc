@@ -277,7 +277,7 @@ ConnectionInfo::ReserveGbrBitRate (uint64_t src, uint64_t dst,
       // maximum allowed bit rate gets lower than the safeguard value, we need
       // to decrease the Non-GBR allowed bit rate.
       int adjusted = false;
-      while (GetGuardBitRate (dir) <= m_gbrSafeguard)
+      while (GetGuardBitRate (dir) < m_gbrSafeguard)
         {
           adjusted = true;
           if (!DecreaseNonGbrBitRate (dir, m_nonAdjustStep))
@@ -308,7 +308,7 @@ ConnectionInfo::ReleaseGbrBitRate (uint64_t src, uint64_t dst,
       // maximum allowed bit rate gets higher than the safeguard value + one
       // adjustment step, we need to increase the Non-GBR allowed bit rate.
       int adjusted = 0;
-      while (GetGuardBitRate (dir) >= m_gbrSafeguard + m_nonAdjustStep)
+      while (GetGuardBitRate (dir) > m_gbrSafeguard + m_nonAdjustStep)
         {
           adjusted = true;
           if (!IncreaseNonGbrBitRate (dir, m_nonAdjustStep))
@@ -436,7 +436,7 @@ ConnectionInfo::IncreaseGbrBitRate (Direction dir, uint64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << bitRate);
 
-  if (GetGbrBitRate (dir) + bitRate >= m_gbrMaxBitRate)
+  if (GetGbrBitRate (dir) + bitRate > m_gbrMaxBitRate)
     {
       NS_LOG_WARN ("No bandwidth available to reserve.");
       return false;
@@ -468,7 +468,7 @@ ConnectionInfo::IncreaseNonGbrBitRate (Direction dir, uint64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << bitRate);
 
-  if (GetNonGbrBitRate (dir) == m_nonMaxBitRate)
+  if (GetNonGbrBitRate (dir) >= m_nonMaxBitRate)
     {
       NS_LOG_WARN ("Can't increase Non-GBR bit rate.");
       return false;
@@ -492,7 +492,7 @@ ConnectionInfo::DecreaseNonGbrBitRate (Direction dir, uint64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << bitRate);
 
-  if (GetNonGbrBitRate (dir) == m_nonMinBitRate)
+  if (GetNonGbrBitRate (dir) <= m_nonMinBitRate)
     {
       NS_LOG_WARN ("Can't decrease Non-GBR bit rate.");
       return false;

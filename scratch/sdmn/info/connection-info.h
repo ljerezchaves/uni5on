@@ -260,7 +260,7 @@ private:
   uint64_t          m_nonAdjustStep;    //!< Non-GBR bit rate adjustment step.
 
   uint64_t          m_gbrMaxBitRate;    //!< GBR maximum allowed bit rate.
-  uint64_t          m_gbrMinBitRate;    //!< GBR maximum allowed bit rate.
+  uint64_t          m_gbrMinBitRate;    //!< GBR minimum allowed bit rate.
   uint64_t          m_gbrBitRate [2];   //!< GBR current reserved bit rate.
   uint32_t          m_gbrTxBytes [2];   //!< GBR transmitted bytes.
 
