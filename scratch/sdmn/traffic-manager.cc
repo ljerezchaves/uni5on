@@ -54,6 +54,11 @@ TrafficManager::GetTypeId (void)
                    StringValue ("ns3::ExponentialRandomVariable[Mean=180.0]"),
                    MakePointerAccessor (&TrafficManager::m_poissonRng),
                    MakePointerChecker <RandomVariableStream> ())
+    .AddAttribute ("RestartApps",
+                   "Continuously restart applications after stop events.",
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficManager::m_restartApps),
+                   MakeBooleanChecker ())
   ;
   return tid;
 }
@@ -197,17 +202,20 @@ TrafficManager::NotifyAppStop (Ptr<SdmnClientApp> app)
         m_ctrlApp, app->GetEpsBearer (), m_imsi, m_cellId, appTeid);
     }
 
-  // Schedule the next start attempt for this application, ensuring at least 2
-  // seconds from now.
-  Time now = Simulator::Now ();
-  Time nextTry = GetNextAppStartTry (app) - now;
-  if (nextTry < Seconds (2))
+  if (m_restartApps)
     {
-      nextTry = Seconds (2);
-      NS_LOG_INFO ("Next start try for app " << app->GetNameTeid () <<
-                   " delayed to +2s.");
+      // Schedule the next start attempt for this application, ensuring at
+      // least 2 seconds from now.
+      Time now = Simulator::Now ();
+      Time nextTry = GetNextAppStartTry (app) - now;
+      if (nextTry < Seconds (2))
+        {
+          nextTry = Seconds (2);
+          NS_LOG_INFO ("Next start try for app " << app->GetNameTeid () <<
+                       " delayed to +2s.");
+        }
+      Simulator::Schedule (nextTry, &TrafficManager::AppStartTry, this, app);
     }
-  Simulator::Schedule (nextTry, &TrafficManager::AppStartTry, this, app);
 }
 
 void

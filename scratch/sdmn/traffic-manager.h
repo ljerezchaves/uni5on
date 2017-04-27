@@ -113,6 +113,7 @@ private:
   typedef std::map<Ptr<SdmnClientApp>, Time> AppTimeMap_t;
 
   Ptr<RandomVariableStream> m_poissonRng;     //!< Inter-arrival traffic.
+  bool                      m_restartApps;    //!< Continuously restart apps.
   Ptr<SdranController>      m_ctrlApp;        //!< OpenFlow controller.
   AppTimeMap_t              m_appStartTable;  //!< Application map.
   uint64_t                  m_imsi;           //!< UE IMSI identifier.
