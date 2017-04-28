@@ -107,7 +107,7 @@ EpcController::RequestDedicatedBearer (EpsBearer bearer, uint32_t teid)
   NS_LOG_FUNCTION (this << teid);
 
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer " << teid);
+  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer teid " << teid);
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
@@ -138,7 +138,7 @@ EpcController::ReleaseDedicatedBearer (EpsBearer bearer, uint32_t teid)
   NS_LOG_FUNCTION (this << teid);
 
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer " << teid);
+  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer teid " << teid);
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't release the default bearer.");
   NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
 
@@ -540,13 +540,13 @@ EpcController::HandleFlowRemoved (
 
   // Check for existing routing information for this bearer.
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer " << teid);
+  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer teid " << teid);
 
   // When a flow is removed, check the following situations:
   // 1) The application is stopped and the bearer must be inactive.
   if (!rInfo->IsActive ())
     {
-      NS_LOG_INFO ("Flow " << teid << " removed for stopped application.");
+      NS_LOG_INFO ("Rule removed for inactive bearer teid " << teid);
       return 0;
     }
 
@@ -555,7 +555,7 @@ EpcController::HandleFlowRemoved (
   // case, the bearer priority should have been increased to avoid conflicts.
   if (rInfo->GetPriority () > prio)
     {
-      NS_LOG_INFO ("Flow " << teid << " removed for old rule.");
+      NS_LOG_INFO ("Old rule removed for bearer teid " << teid);
       return 0;
     }
 
@@ -566,9 +566,10 @@ EpcController::HandleFlowRemoved (
   NS_ASSERT_MSG (rInfo->GetPriority () == prio, "Invalid flow priority.");
   if (rInfo->IsActive ())
     {
-      NS_LOG_WARN ("Flow " << teid << " is still active. Reinstall rules...");
+      NS_LOG_WARN ("Rule removed for active bearer teid " << teid << ". " <<
+                   "Reinstall rule...");
       bool installed = InstallBearer (rInfo);
-      NS_ASSERT_MSG (installed, "TEID rule installation failed!");
+      NS_ASSERT_MSG (installed, "Bearer rules installation failed!");
       return 0;
     }
   NS_ABORT_MSG ("Should not get here :/");
@@ -616,8 +617,8 @@ EpcController::SetPgwLoadBalancing (bool value)
           std::vector<Ptr<RoutingInfo> >::iterator it;
           for (it = bearersToMove.begin (); it != bearersToMove.end (); ++it)
             {
-              NS_LOG_INFO ("Moving the bearer " << (*it)->GetTeid () <<
-                           " to the second P-GW TFT switch.");
+              NS_LOG_INFO ("Moving the bearer teid " << (*it)->GetTeid () <<
+                           " to the second P-GW TFT switch " << dstDpId);
               InstallPgwSwitchRules (*it, dstDpId, dstS5PortNo, true);
             }
 
@@ -647,8 +648,8 @@ EpcController::SetPgwLoadBalancing (bool value)
           std::vector<Ptr<RoutingInfo> >::iterator it;
           for (it = bearersToMove.begin (); it != bearersToMove.end (); ++it)
             {
-              NS_LOG_INFO ("Moving the bearer " << (*it)->GetTeid () <<
-                           " to the first P-GW TFT switch.");
+              NS_LOG_INFO ("Moving the bearer teid " << (*it)->GetTeid () <<
+                           " to the P-GW TFT switch " << dstDpId);
               InstallPgwSwitchRules (*it, dstDpId, dstS5PortNo, true);
             }
 
@@ -682,7 +683,7 @@ EpcController::InstallPgwSwitchRules (
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid () << pgwTftDpId <<
                    pgwTftS5PortNo);
 
-  NS_LOG_INFO ("Installing entries for teid " << rInfo->GetTeid () <<
+  NS_LOG_INFO ("Installing P-GW rules for bearer teid " << rInfo->GetTeid () <<
                " into P-GW TFT switch " << pgwTftDpId);
 
   // Flags OFPFF_CHECK_OVERLAP and OFPFF_RESET_COUNTS.
@@ -780,7 +781,7 @@ EpcController::RemovePgwSwitchRules (
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  NS_LOG_INFO ("Removing entries for teid " << rInfo->GetTeid () <<
+  NS_LOG_INFO ("Removing P-GW rules for bearer teid " << rInfo->GetTeid () <<
                " from P-GW TFT switch " << pgwTftDpId);
 
   // Print the cookie value in dpctl string format.
@@ -894,7 +895,7 @@ EpcController::DoCreateSessionRequest (
 
   uint32_t teid = defaultBearer.sgwFteid.teid;
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (rInfo == 0, "Existing routing for default bearer " << teid);
+  NS_ASSERT_MSG (rInfo == 0, "Existing routing for bearer teid " << teid);
 
   rInfo = CreateObject<RoutingInfo> (teid);
   rInfo->SetImsi (imsi);

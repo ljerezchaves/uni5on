@@ -200,7 +200,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  NS_LOG_INFO ("Installing topology entries for teid " << rInfo->GetTeid ());
+  NS_LOG_INFO ("Installing ring rules for bearer teid " << rInfo->GetTeid ());
 
   // Getting ring routing information.
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
@@ -277,8 +277,6 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
       std::string commandStr = cmd.str () + match.str () + act.str ();
       DpctlExecute (ringInfo->GetSgwSwDpId (), commandStr);
     }
-
-  NS_LOG_INFO ("Topology routing installed for bearer " << rInfo->GetTeid ());
   return true;
 }
 
@@ -287,7 +285,7 @@ RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  NS_LOG_INFO ("Removing topology entries for teid " << rInfo->GetTeid ());
+  NS_LOG_INFO ("Removing ring rules for bearer teid " << rInfo->GetTeid ());
 
   // Print the cookie value in dpctl string format.
   char cookieStr [20];
@@ -369,12 +367,12 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       {
         if (dlShortBw >= dlRequest && ulShortBw >= ulRequest)
           {
-            NS_LOG_INFO ("Routing bearer " << teid << " over shortest path.");
+            NS_LOG_INFO ("Routing bearer teid " << teid << ": shortest path");
             return ReserveGbrBitRate (ringInfo, gbrInfo);
           }
         else
           {
-            NS_LOG_WARN ("No resources for bearer " << teid << ". Block!");
+            NS_LOG_WARN ("Blocking bearer teid " << teid);
             return false;
           }
         break;
@@ -383,19 +381,19 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       {
         if (dlShortBw >= dlRequest && ulShortBw >= ulRequest)
           {
-            NS_LOG_INFO ("Routing bearer " << teid << " over shortest path.");
+            NS_LOG_INFO ("Routing bearer teid " << teid << ": shortest path");
             return ReserveGbrBitRate (ringInfo, gbrInfo);
           }
         else if (dlLongBw >= dlRequest && ulLongBw >= ulRequest)
           {
             // Let's invert the path and reserve the bit rate
             ringInfo->InvertBothPaths ();
-            NS_LOG_INFO ("Routing bearer " << teid << " over longest path.");
+            NS_LOG_INFO ("Routing bearer teid " << teid << ": longest path");
             return ReserveGbrBitRate (ringInfo, gbrInfo);
           }
         else
           {
-            NS_LOG_WARN ("No resources for bearer " << teid << ". Block!");
+            NS_LOG_WARN ("Blocking bearer teid " << teid);
             return false;
           }
         break;
@@ -629,7 +627,7 @@ RingController::ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
 {
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
-  NS_LOG_INFO ("Reserving resources for GBR bearer " << ringInfo->GetTeid ());
+  NS_LOG_INFO ("Reserving resources for GBR bearer teid " << ringInfo->GetTeid ());
   PerLinkReserve (ringInfo->GetPgwSwIdx (), ringInfo->GetSgwSwIdx (),
                   ringInfo->GetDownPath (), gbrInfo->GetDownBitRate ());
   PerLinkReserve (ringInfo->GetSgwSwIdx (), ringInfo->GetPgwSwIdx (),
@@ -644,7 +642,7 @@ RingController::ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
 {
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
-  NS_LOG_INFO ("Releasing resources for GBR bearer " << ringInfo->GetTeid ());
+  NS_LOG_INFO ("Releasing resources for GBR bearer teid " << ringInfo->GetTeid ());
   PerLinkRelease (ringInfo->GetPgwSwIdx (), ringInfo->GetSgwSwIdx (),
                   ringInfo->GetDownPath (), gbrInfo->GetDownBitRate ());
   PerLinkRelease (ringInfo->GetSgwSwIdx (), ringInfo->GetPgwSwIdx (),

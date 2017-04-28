@@ -268,13 +268,13 @@ SdranController::HandleFlowRemoved (
 
   // Check for existing routing information for this bearer.
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer " << teid);
+  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer teid " << teid);
 
   // When a flow is removed, check the following situations:
   // 1) The application is stopped and the bearer must be inactive.
   if (!rInfo->IsActive ())
     {
-      NS_LOG_INFO ("Flow " << teid << " removed for stopped application.");
+      NS_LOG_INFO ("Rule removed for inactive bearer teid " << teid);
       return 0;
     }
 
@@ -283,7 +283,7 @@ SdranController::HandleFlowRemoved (
   // case, the bearer priority should have been increased to avoid conflicts.
   if (rInfo->GetPriority () > prio)
     {
-      NS_LOG_INFO ("Flow " << teid << " removed for old rule.");
+      NS_LOG_INFO ("Old rule removed for bearer teid " << teid);
       return 0;
     }
 
@@ -294,9 +294,10 @@ SdranController::HandleFlowRemoved (
   NS_ASSERT_MSG (rInfo->GetPriority () == prio, "Invalid flow priority.");
   if (rInfo->IsActive ())
     {
-      NS_LOG_WARN ("Flow " << teid << " is still active. Reinstall rules...");
+      NS_LOG_WARN ("Rule removed for active bearer teid " << teid << ". " <<
+                   "Reinstall rule...");
       bool installed = InstallSgwSwitchRules (rInfo);
-      NS_ASSERT_MSG (installed, "S-GW rule installation failed!");
+      NS_ASSERT_MSG (installed, "Bearer rules installation failed!");
       return 0;
     }
   NS_ABORT_MSG ("Should not get here :/");
@@ -307,7 +308,7 @@ SdranController::InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  NS_LOG_INFO ("Installing S-GW entries for teid " << rInfo->GetTeid ());
+  NS_LOG_INFO ("Installing S-GW rules for bearer teid " << rInfo->GetTeid ());
   Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
   Ptr<const EnbInfo> enbInfo = EnbInfo::GetPointer (ueInfo->GetCellId ());
 
@@ -391,7 +392,7 @@ SdranController::RemoveSgwSwitchRules (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  NS_LOG_INFO ("Removing S-GW entries for teid " << rInfo->GetTeid ());
+  NS_LOG_INFO ("Removing S-GW rules for bearer teid " << rInfo->GetTeid ());
 
   // Print the cookie value in dpctl string format.
   char cookieStr [20];

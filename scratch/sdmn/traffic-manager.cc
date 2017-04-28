@@ -132,7 +132,7 @@ TrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
           app->SetTeid (m_defaultTeid);
         }
       NS_LOG_INFO ("App " << app->GetAppName () <<
-                   " set with teid " << app->GetTeid ());
+                   " over bearer teid " << app->GetTeid ());
     }
 }
 

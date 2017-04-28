@@ -108,7 +108,7 @@ SdmnClientApp::GetNameTeid (void) const
 {
   // No log to avoid infinite recursion.
   std::ostringstream value;
-  value << GetAppName () << " with teid " << GetTeid ();
+  value << GetAppName () << " over bearer teid " << GetTeid ();
   return value.str ();
 }
 
