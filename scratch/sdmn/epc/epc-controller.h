@@ -186,7 +186,7 @@ public:
    * \param bearerList The list of bearers moved to a new P-GW TFT switch.
    */
   typedef void (*LoadBalFinishedTracedCallback)(
-    bool status, RoutingInfoVector_t bearerList);
+    bool status, RoutingInfoList_t bearerList);
 
 protected:
   /** Destructor implementation. */
@@ -316,7 +316,7 @@ private:
   TracedCallback<uint64_t, uint16_t, BearerContextList_t> m_sessionCreatedTrace;
 
   /** The load bal finished trace source, fired at SetPgwLoadBalancing. */
-  TracedCallback<bool, RoutingInfoVector_t> m_loadBalFinishedTrace;
+  TracedCallback<bool, RoutingInfoList_t> m_loadBalFinishedTrace;
 
   // P-GW metadata
   std::vector<uint64_t>   m_pgwDpIds;     //!< P-GW datapath IDs.

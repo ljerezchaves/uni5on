@@ -36,8 +36,8 @@ typedef EpcS11SapMme::BearerContextCreated BearerContext_t;
 /** List of created context bearers. */
 typedef std::list<BearerContext_t> BearerContextList_t;
 
-/** Vector of routing information. */
-typedef std::vector<Ptr<RoutingInfo> > RoutingInfoVector_t;
+/** List of routing information. */
+typedef std::list<Ptr<RoutingInfo> > RoutingInfoList_t;
 
 /**
  * \ingroup sdmn

@@ -586,7 +586,7 @@ EpcController::SetPgwLoadBalancing (bool value)
 
       // Let's find the bearers of UEs with even IP addresses that are
       // currently installed and must be moved to the other P-GW TFT switch.
-      std::vector<Ptr<RoutingInfo> > bearersToMove;
+      RoutingInfoList_t bearerList;
       for (uint32_t teid = 0x10; teid <= EpcController::m_teidCount; teid++)
         {
           Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
@@ -595,13 +595,13 @@ EpcController::SetPgwLoadBalancing (bool value)
               Ptr<UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
               if (ueInfo->GetUeAddr ().Get () % 2 == 0)
                 {
-                  bearersToMove.push_back (rInfo);
+                  bearerList.push_back (rInfo);
                 }
             }
         }
 
       // If there's no bearer to move we can return.
-      if (bearersToMove.empty ())
+      if (bearerList.empty ())
         {
           return;
         }
@@ -614,8 +614,8 @@ EpcController::SetPgwLoadBalancing (bool value)
           // 1st: reinstall active bearers on the second P-GW TFT switch.
           uint64_t dstDpId = m_pgwDpIds.at (2);
           uint32_t dstS5PortNo = m_pgwS5PortsNo.at (2);
-          std::vector<Ptr<RoutingInfo> >::iterator it;
-          for (it = bearersToMove.begin (); it != bearersToMove.end (); ++it)
+          RoutingInfoList_t::iterator it;
+          for (it = bearerList.begin (); it != bearerList.end (); ++it)
             {
               NS_LOG_INFO ("Moving the bearer teid " << (*it)->GetTeid () <<
                            " to the second P-GW TFT switch " << dstDpId);
@@ -633,7 +633,7 @@ EpcController::SetPgwLoadBalancing (bool value)
 
           // 3rd: remove old rules from first P-GW TFT switch.
           uint64_t srcDpId = m_pgwDpIds.at (1);
-          for (it = bearersToMove.begin (); it != bearersToMove.end (); ++it)
+          for (it = bearerList.begin (); it != bearerList.end (); ++it)
             {
               RemovePgwSwitchRules (*it, srcDpId, true);
             }
@@ -645,8 +645,8 @@ EpcController::SetPgwLoadBalancing (bool value)
           // 1st: reinstall active bearers on the first P-GW TFT switch.
           uint64_t dstDpId = m_pgwDpIds.at (1);
           uint32_t dstS5PortNo = m_pgwS5PortsNo.at (1);
-          std::vector<Ptr<RoutingInfo> >::iterator it;
-          for (it = bearersToMove.begin (); it != bearersToMove.end (); ++it)
+          RoutingInfoList_t::iterator it;
+          for (it = bearerList.begin (); it != bearerList.end (); ++it)
             {
               NS_LOG_INFO ("Moving the bearer teid " << (*it)->GetTeid () <<
                            " to the P-GW TFT switch " << dstDpId);
@@ -664,14 +664,14 @@ EpcController::SetPgwLoadBalancing (bool value)
 
           // 3rd: remove old rules from second P-GW TFT switch.
           uint64_t srcDpId = m_pgwDpIds.at (2);
-          for (it = bearersToMove.begin (); it != bearersToMove.end (); ++it)
+          for (it = bearerList.begin (); it != bearerList.end (); ++it)
             {
               RemovePgwSwitchRules (*it, srcDpId, true);
             }
         }
 
       // Fire the P-GW LB finished trace source.
-      m_loadBalFinishedTrace (m_pgwTftLb, bearersToMove);
+      m_loadBalFinishedTrace (m_pgwTftLb, bearerList);
     }
 }
 

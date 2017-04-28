@@ -57,7 +57,7 @@ protected:
    * \param bearerList The list of bearers moved to a new P-GW TFT switch.
    */
   void NotifyLoadBalFinished (std::string context, bool status,
-                              RoutingInfoVector_t bearerList);
+                              RoutingInfoList_t bearerList);
 
 private:
   std::string               m_lbmFilename;    //!< LbmStats filename.

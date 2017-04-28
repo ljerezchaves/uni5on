@@ -91,7 +91,7 @@ LoadBalStatsCalculator::NotifyConstructionCompleted (void)
 
 void
 LoadBalStatsCalculator::NotifyLoadBalFinished (
-  std::string context, bool status, RoutingInfoVector_t bearerList)
+  std::string context, bool status, RoutingInfoList_t bearerList)
 {
   NS_LOG_FUNCTION (this << context << status);
 
@@ -101,16 +101,15 @@ LoadBalStatsCalculator::NotifyLoadBalFinished (
   << setw (12) << status                          << " ";
 
   // Print the list of TEIDs moved from one switch to another.
-  RoutingInfoVector_t::iterator it;
-  for (it = bearerList.begin (); it != bearerList.end (); it++)
+  RoutingInfoList_t::iterator it;
+  for (it = bearerList.begin (); it != bearerList.end (); )
     {
       *m_lbmWrapper->GetStream () << (*it)->GetTeid ();
-      if ((it + 1) != bearerList.end ())
+      if (++it != bearerList.end ())
         {
           *m_lbmWrapper->GetStream () << ",";
         }
     }
-
   *m_lbmWrapper->GetStream () << std::endl;
 }
 
