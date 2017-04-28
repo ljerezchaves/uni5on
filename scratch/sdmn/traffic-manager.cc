@@ -56,6 +56,7 @@ TrafficManager::GetTypeId (void)
                    MakePointerChecker <RandomVariableStream> ())
     .AddAttribute ("RestartApps",
                    "Continuously restart applications after stop events.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficManager::m_restartApps),
                    MakeBooleanChecker ())
@@ -160,13 +161,12 @@ TrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
   NS_ASSERT_MSG (!app->IsActive (), "Can't start an active application.");
   NS_LOG_INFO ("Attempt to start app " << app->GetNameTeid ());
 
-  // Before requesting for resources and starting the traffic, let's set the
-  // next start attempt for this same application. We will use this interval to
-  // limit the current traffic duration to avoid overlapping traffic, which
-  // would not be possible in current implementation. This is necessary to
-  // respect inter-arrival times for the Poisson process and reuse application
-  // and bearers along the simulation.
-  SetNextAppStartTry (app);
+  // Before requesting for resources and starting the application, let's set
+  // the next start attempt for this same application.
+  if (m_restartApps)
+    {
+      SetNextAppStartTry (app);
+    }
 
   // No resource request for traffic over default bearer.
   bool authorized = true;
@@ -181,9 +181,12 @@ TrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
     {
       // Schedule the application start for +1 second.
       Simulator::Schedule (Seconds (1), &SdmnClientApp::Start, app);
-      NS_LOG_INFO ("App " << app->GetNameTeid () <<
-                   " will start in +1 sec with maximum duration of " <<
-                   app->GetMaxOnTime ().GetSeconds () << "s.");
+      NS_LOG_INFO ("App " << app->GetNameTeid () << " will start in +1 sec.");
+      if (app->GetMaxOnTime ().IsZero () == false)
+        {
+          NS_LOG_INFO ("App maximum duration set to " <<
+                       app->GetMaxOnTime ().GetSeconds () << "s.");
+        }
     }
 }
 
@@ -202,10 +205,10 @@ TrafficManager::NotifyAppStop (Ptr<SdmnClientApp> app)
         m_ctrlApp, app->GetEpsBearer (), m_imsi, m_cellId, appTeid);
     }
 
+  // Schedule the next start attempt for this application, ensuring at least 2
+  // seconds from now.
   if (m_restartApps)
     {
-      // Schedule the next start attempt for this application, ensuring at
-      // least 2 seconds from now.
       Time now = Simulator::Now ();
       Time nextTry = GetNextAppStartTry (app) - now;
       if (nextTry < Seconds (2))

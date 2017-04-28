@@ -99,6 +99,10 @@ private:
 
   /**
    * Set the time for the next attempt to start the application.
+   * \internal We will use this interval to limit the current traffic duration
+   * to avoid overlapping traffic. This is necessary to respect inter-arrival
+   * times for the Poisson process and reuse apps and bearers along the
+   * simulation.
    * \param app The application pointer.
    */
   void SetNextAppStartTry (Ptr<SdmnClientApp> app);
