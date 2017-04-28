@@ -37,7 +37,6 @@ GbrInfo::GbrInfo (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this);
 
-  m_teid = rInfo->GetTeid ();
   GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
   if (gbrQoS.gbrDl)
     {
@@ -63,14 +62,6 @@ GbrInfo::GetTypeId (void)
     .SetParent<Object> ()
   ;
   return tid;
-}
-
-uint32_t
-GbrInfo::GetTeid (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_rInfo ? m_rInfo->GetTeid () : 0;
 }
 
 uint16_t

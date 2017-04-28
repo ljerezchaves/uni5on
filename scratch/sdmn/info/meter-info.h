@@ -53,7 +53,6 @@ public:
 
   /** \name Private member accessors. */
   //\{
-  uint32_t GetTeid (void) const;
   bool IsDownInstalled (void) const;
   bool IsUpInstalled (void) const;
   bool HasDown (void) const;

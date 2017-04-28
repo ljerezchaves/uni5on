@@ -65,14 +65,6 @@ MeterInfo::GetTypeId (void)
   return tid;
 }
 
-uint32_t
-MeterInfo::GetTeid (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_rInfo ? m_rInfo->GetTeid () : 0;
-}
-
 bool
 MeterInfo::IsDownInstalled (void) const
 {

@@ -53,7 +53,6 @@ public:
 
   /** \name Private member accessors. */
   //\{
-  uint32_t GetTeid (void) const;
   uint16_t GetDscp (void) const;
   bool IsReserved (void) const;
   uint64_t GetDownBitRate (void) const;
@@ -69,7 +68,6 @@ protected:
   virtual void DoDispose ();
 
 private:
-  uint32_t          m_teid;         //!< GTP TEID.
   uint8_t           m_dscp;         //!< DiffServ DSCP value for this bearer.
   bool              m_isReserved;   //!< True when resources are reserved.
   bool              m_hasDown;      //!< True for downlink reserve.
