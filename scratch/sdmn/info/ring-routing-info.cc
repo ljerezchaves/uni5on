@@ -48,14 +48,6 @@ RingRoutingInfo::GetTypeId (void)
   return tid;
 }
 
-uint32_t
-RingRoutingInfo::GetTeid (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_rInfo ? m_rInfo->GetTeid () : 0;
-}
-
 RingRoutingInfo::RoutingPath
 RingRoutingInfo::GetDownPath (void) const
 {

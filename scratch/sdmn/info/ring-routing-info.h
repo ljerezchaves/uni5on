@@ -57,12 +57,6 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * Get the TEID from the aggregated routing info.
-   * \return The TEID value.
-   */
-  uint32_t GetTeid (void) const;
-
   /** \name Private member accessors. */
   //\{
   RoutingPath GetDownPath (void) const;

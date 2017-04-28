@@ -627,7 +627,7 @@ RingController::ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
 {
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
-  NS_LOG_INFO ("Reserving resources for GBR bearer teid " << ringInfo->GetTeid ());
+  NS_LOG_INFO ("Reserving resources for GBR bearer.");
   PerLinkReserve (ringInfo->GetPgwSwIdx (), ringInfo->GetSgwSwIdx (),
                   ringInfo->GetDownPath (), gbrInfo->GetDownBitRate ());
   PerLinkReserve (ringInfo->GetSgwSwIdx (), ringInfo->GetPgwSwIdx (),
@@ -642,7 +642,7 @@ RingController::ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
 {
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
-  NS_LOG_INFO ("Releasing resources for GBR bearer teid " << ringInfo->GetTeid ());
+  NS_LOG_INFO ("Releasing resources for GBR bearer.");
   PerLinkRelease (ringInfo->GetPgwSwIdx (), ringInfo->GetSgwSwIdx (),
                   ringInfo->GetDownPath (), gbrInfo->GetDownBitRate ());
   PerLinkRelease (ringInfo->GetSgwSwIdx (), ringInfo->GetPgwSwIdx (),
