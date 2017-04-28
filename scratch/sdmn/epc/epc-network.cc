@@ -466,7 +466,7 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
 {
   NS_LOG_FUNCTION (this << ueDevice << imsi);
 
-  // Retrieve the IPv4 address of the UE and notify it to the S-GW.
+  // Retrieve the IPv4 address of the UE and save it into UeInfo.
   Ptr<Node> ueNode = ueDevice->GetNode ();
   Ptr<Ipv4> ueIpv4 = ueNode->GetObject<Ipv4> ();
   NS_ASSERT_MSG (ueIpv4 != 0, "UEs need to have IPv4 installed.");
