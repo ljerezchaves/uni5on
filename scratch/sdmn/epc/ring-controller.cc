@@ -487,9 +487,8 @@ RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
   if (ringInfo == 0)
     {
       // This is the first time in simulation we are querying ring information
-      // for this bearer. Let's create and aggregate its ring routing metadata.
+      // for this bearer. Let's create its ring routing metadata.
       ringInfo = CreateObject<RingRoutingInfo> (rInfo);
-      rInfo->AggregateObject (ringInfo);
 
       // Set internal switch indexes.
       ringInfo->SetPgwSwIdx  (GetSwitchIndex (rInfo->GetPgwS5Addr ()));

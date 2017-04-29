@@ -32,11 +32,11 @@ GbrInfo::GbrInfo (Ptr<RoutingInfo> rInfo)
     m_hasDown (false),
     m_hasUp (false),
     m_downBitRate (0),
-    m_upBitRate (0),
-    m_rInfo (rInfo)
+    m_upBitRate (0)
 {
   NS_LOG_FUNCTION (this);
 
+  AggregateObject (rInfo);
   GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
   if (gbrQoS.gbrDl)
     {
@@ -96,14 +96,6 @@ GbrInfo::GetUpBitRate (void) const
   return m_hasUp ? m_upBitRate : 0;
 }
 
-Ptr<RoutingInfo>
-GbrInfo::GetRoutingInfo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_rInfo;
-}
-
 void
 GbrInfo::SetDscp (uint32_t value)
 {
@@ -124,8 +116,6 @@ void
 GbrInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-
-  m_rInfo = 0;
 }
 
 };  // namespace ns3

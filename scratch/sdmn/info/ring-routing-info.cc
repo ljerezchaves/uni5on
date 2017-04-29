@@ -27,10 +27,10 @@ NS_LOG_COMPONENT_DEFINE ("RingRoutingInfo");
 NS_OBJECT_ENSURE_REGISTERED (RingRoutingInfo);
 
 RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo)
-  : m_rInfo (rInfo)
 {
   NS_LOG_FUNCTION (this);
 
+  AggregateObject (rInfo);
   SetDefaultPaths (RingRoutingInfo::LOCAL, RingRoutingInfo::LOCAL);
 }
 
@@ -110,14 +110,6 @@ RingRoutingInfo::IsLocalPath (void) const
   NS_LOG_FUNCTION (this);
 
   return m_isLocalPath;
-}
-
-Ptr<RoutingInfo>
-RingRoutingInfo::GetRoutingInfo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_rInfo;
 }
 
 void
@@ -214,8 +206,6 @@ void
 RingRoutingInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
-
-  m_rInfo = 0;
 }
 
 };  // namespace ns3

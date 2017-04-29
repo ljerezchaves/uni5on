@@ -889,7 +889,7 @@ EpcController::DoCreateSessionRequest (
     }
 
   // Create and save routing information for default bearer.
-  // (firts element on the res.bearerContextsCreated)
+  // (first element on the res.bearerContextsCreated)
   BearerContext_t defaultBearer = res.bearerContextsCreated.front ();
   NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
 
@@ -908,7 +908,7 @@ EpcController::DoCreateSessionRequest (
   rInfo->SetDefault (true);              // This is a default bearer
   rInfo->SetBearerContext (defaultBearer);
 
-  // For default bearer, no meter nor gbr metadata.
+  // For default bearer, no meter nor GBR metadata.
   // For logic consistence, let's check for available resources.
   bool accepted = TopologyBearerRequest (rInfo);
   NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
@@ -937,11 +937,10 @@ EpcController::DoCreateSessionRequest (
       rInfo->SetDefault (false);            // This is a dedicated bearer
       rInfo->SetBearerContext (dedicatedBearer);
 
-      // For all GBR beares, create the GBR metadata.
+      // For all GBR bearers, create the GBR metadata.
       if (rInfo->IsGbr ())
         {
           Ptr<GbrInfo> gbrInfo = CreateObject<GbrInfo> (rInfo);
-          rInfo->AggregateObject (gbrInfo);
 
           // Set the appropriated DiffServ DSCP value for this bearer.
           gbrInfo->SetDscp (
@@ -952,8 +951,7 @@ EpcController::DoCreateSessionRequest (
       GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
       if (gbrQoS.mbrDl || gbrQoS.mbrUl)
         {
-          Ptr<MeterInfo> meterInfo = CreateObject<MeterInfo> (rInfo);
-          rInfo->AggregateObject (meterInfo);
+          CreateObject<MeterInfo> (rInfo);
         }
     }
 

@@ -40,7 +40,6 @@ public:
   /**
    * Complete constructor.
    * \param rInfo RoutingInfo pointer.
-   * \attention This MeterInfo object must be aggregated to rInfo.
    */
   MeterInfo (Ptr<RoutingInfo> rInfo);
   virtual ~MeterInfo (); //!< Dummy destructor, see DoDispose.
@@ -57,7 +56,6 @@ public:
   bool IsUpInstalled (void) const;
   bool HasDown (void) const;
   bool HasUp (void) const;
-  Ptr<RoutingInfo> GetRoutingInfo (void) const;
 
   void SetDownInstalled (bool value);
   void SetUpInstalled (bool value);
@@ -85,7 +83,6 @@ private:
   bool              m_hasUp;           //!< True for uplink meter.
   uint64_t          m_downBitRate;     //!< Downlink meter drop bit rate (bps).
   uint64_t          m_upBitRate;       //!< Uplink meter drop bit rate (bps).
-  Ptr<RoutingInfo>  m_rInfo;           //!< Routing information.
 };
 
 };  // namespace ns3

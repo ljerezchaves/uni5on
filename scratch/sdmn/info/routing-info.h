@@ -30,10 +30,10 @@ namespace ns3 {
 
 class RoutingInfo;
 
-/** EPS context bearer. */
+/** EPS bearer context created. */
 typedef EpcS11SapMme::BearerContextCreated BearerContext_t;
 
-/** List of created context bearers. */
+/** List of bearer context created. */
 typedef std::list<BearerContext_t> BearerContextList_t;
 
 /** List of routing information. */
@@ -46,7 +46,8 @@ typedef std::list<Ptr<RoutingInfo> > RoutingInfoList_t;
  */
 /**
  * \ingroup sdmnInfo
- * Metadata associated to the S5 routing path between the S-GW and P-GW nodes.
+ * Metadata associated to the S5 routing path between the S-GW and P-GW nodes
+ * for a single EPS bearer.
  */
 class RoutingInfo : public Object
 {

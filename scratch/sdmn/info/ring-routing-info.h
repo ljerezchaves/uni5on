@@ -29,8 +29,8 @@ class RoutingInfo;
 
 /**
  * \ingroup sdmnInfo
- * Metadata associated to the ring routing path between the switches in the
- * OpenFlow backhaul ring network that are attached to the S-GW and P-GW nodes.
+ * Metadata associated to the routing path for a single EPS bearer among the
+ * switches in the OpenFlow ring backhaul network.
  */
 class RingRoutingInfo : public Object
 {
@@ -46,7 +46,6 @@ public:
   /**
    * Complete constructor.
    * \param rInfo RoutingInfo pointer.
-   * \attention This RingRoutingInfo object must be aggregated to rInfo.
    */
   RingRoutingInfo (Ptr<RoutingInfo> rInfo);
   virtual ~RingRoutingInfo (); //!< Dummy destructor, see DoDispose.
@@ -67,7 +66,6 @@ public:
   uint64_t GetSgwSwDpId (void) const;
   bool IsDefaultPath (void) const;
   bool IsLocalPath (void) const;
-  Ptr<RoutingInfo> GetRoutingInfo (void) const;
 
   void SetPgwSwIdx (uint16_t value);
   void SetSgwSwIdx (uint16_t value);
@@ -112,7 +110,6 @@ private:
   uint64_t         m_sgwDpId;       //!< Switch dp id attached to the S-GW.
   bool             m_isDefaultPath; //!< True when paths are default.
   bool             m_isLocalPath;   //!< True when routing path is local.
-  Ptr<RoutingInfo> m_rInfo;         //!< Routing information.
 };
 
 };  // namespace ns3

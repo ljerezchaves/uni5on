@@ -40,7 +40,6 @@ public:
   /**
    * Complete constructor.
    * \param rInfo RoutingInfo pointer.
-   * \attention This GbrInfo object must be aggregated to rInfo.
    */
   GbrInfo (Ptr<RoutingInfo> rInfo);
   virtual ~GbrInfo (); //!< Dummy destructor, see DoDispose.
@@ -57,7 +56,6 @@ public:
   bool IsReserved (void) const;
   uint64_t GetDownBitRate (void) const;
   uint64_t GetUpBitRate (void) const;
-  Ptr<RoutingInfo> GetRoutingInfo (void) const;
 
   void SetDscp (uint32_t value);
   void SetReserved (bool value);
@@ -74,7 +72,6 @@ private:
   bool              m_hasUp;        //!< True for uplink reserve.
   uint64_t          m_downBitRate;  //!< Downlink reserved bit rate.
   uint64_t          m_upBitRate;    //!< Uplink reserved bit rate.
-  Ptr<RoutingInfo>  m_rInfo;        //!< Routing information.
 };
 
 };  // namespace ns3
