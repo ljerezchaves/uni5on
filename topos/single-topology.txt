@@ -23,6 +23,8 @@ default ns3::LteNetwork::LteTrace "false"
 default ns3::PgwLoadMonitor::UpperThreshold "12"
 default ns3::PgwLoadMonitor::LowerThreshold "4"
 
+default ns3::PgwTunnelApp::UseTftClassifier "true"
+
 default ns3::RingController::Strategy "spf"
 
 default ns3::RingNetwork::NumSwitches "3"
