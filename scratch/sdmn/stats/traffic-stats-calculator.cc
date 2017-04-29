@@ -25,7 +25,6 @@
 #include "../apps/real-time-video-client.h"
 #include "../info/ue-info.h"
 #include "../info/routing-info.h"
-#include "../info/ring-routing-info.h"
 
 using namespace std;
 
@@ -124,8 +123,6 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   << setw (7)  << "IsGBR"
   << setw (8)  << "UeImsi"
   << setw (8)  << "CellId"
-  << setw (7)  << "SgwSw"
-  << setw (7)  << "PgwSw"
   << setw (11) << "Direction"
   << setw (6)  << "TEID"
   << setw (11) << "Active(s)"
@@ -149,8 +146,6 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   << setw (7)  << "IsGBR"
   << setw (8)  << "UeImsi"
   << setw (8)  << "CellId"
-  << setw (7)  << "SgwSw"
-  << setw (7)  << "PgwSw"
   << setw (11) << "Direction"
   << setw (6)  << "TEID"
   << setw (11) << "Active(s)"
@@ -177,8 +172,6 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   uint32_t teid = app->GetTeid ();
   Ptr<const RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
   Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
-  Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  NS_ASSERT_MSG (ringInfo, "No ring information for this routing info.");
 
   Ptr<const QosStatsCalculator> epcStats;
   Ptr<const QosStatsCalculator> appStats;
@@ -198,8 +191,6 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       << setw (6)  << rInfo->IsGbr ()                                 << " "
       << setw (7)  << ueInfo->GetImsi ()                              << " "
       << setw (7)  << ueInfo->GetCellId ()                            << " "
-      << setw (6)  << ringInfo->GetSgwSwDpId ()                       << " "
-      << setw (6)  << ringInfo->GetPgwSwDpId ()                       << " "
       << setw (10) << "up"                                            << " "
       << setw (5)  << teid                                            << " "
       << setw (10) << epcStats->GetActiveTime ().GetSeconds ()        << " "
@@ -225,8 +216,6 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       << setw (6)  << rInfo->IsGbr ()                                 << " "
       << setw (7)  << ueInfo->GetImsi ()                              << " "
       << setw (7)  << ueInfo->GetCellId ()                            << " "
-      << setw (6)  << ringInfo->GetSgwSwDpId ()                       << " "
-      << setw (6)  << ringInfo->GetPgwSwDpId ()                       << " "
       << setw (10) << "up"                                            << " "
       << setw (5)  << teid                                            << " "
       << setw (10) << appStats->GetActiveTime ().GetSeconds ()        << " "
@@ -252,8 +241,6 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   << setw (6)  << rInfo->IsGbr ()                                     << " "
   << setw (7)  << ueInfo->GetImsi ()                                  << " "
   << setw (7)  << ueInfo->GetCellId ()                                << " "
-  << setw (6)  << ringInfo->GetSgwSwDpId ()                           << " "
-  << setw (6)  << ringInfo->GetPgwSwDpId ()                           << " "
   << setw (10) << "down"                                              << " "
   << setw (5)  << teid                                                << " "
   << setw (10) << epcStats->GetActiveTime ().GetSeconds ()            << " "
@@ -279,8 +266,6 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   << setw (6)  << rInfo->IsGbr ()                                     << " "
   << setw (7)  << ueInfo->GetImsi ()                                  << " "
   << setw (7)  << ueInfo->GetCellId ()                                << " "
-  << setw (6)  << ringInfo->GetSgwSwDpId ()                           << " "
-  << setw (6)  << ringInfo->GetPgwSwDpId ()                           << " "
   << setw (10) << "down"                                              << " "
   << setw (5)  << teid                                                << " "
   << setw (10) << appStats->GetActiveTime ().GetSeconds ()            << " "
