@@ -27,6 +27,7 @@ NS_OBJECT_ENSURE_REGISTERED (UeInfo);
 
 // Initializing UeInfo static members.
 UeInfo::ImsiUeInfoMap_t UeInfo::m_ueInfoByImsiMap;
+UeInfo::Ipv4UeInfoMap_t UeInfo::m_ueInfoByIpv4Map;
 
 UeInfo::UeInfo (uint64_t imsi)
   : m_imsi (imsi),
@@ -39,7 +40,7 @@ UeInfo::UeInfo (uint64_t imsi)
 
   m_ueAddr  = Ipv4Address ();
 
-  RegisterUeInfo (Ptr<UeInfo> (this));
+  RegisterUeInfoByImsi (Ptr<UeInfo> (this));
 }
 
 UeInfo::~UeInfo ()
@@ -102,6 +103,7 @@ UeInfo::SetUeAddr (Ipv4Address value)
   NS_LOG_FUNCTION (this << value);
 
   m_ueAddr = value;
+  RegisterUeInfoByIpv4 (Ptr<UeInfo> (this));
 }
 
 void
@@ -171,6 +173,26 @@ UeInfo::RemoveBearer (uint8_t bearerId)
     }
 }
 
+void
+UeInfo::AddTft (Ptr<EpcTft> tft, uint32_t teid)
+{
+  NS_LOG_FUNCTION (this << tft << teid);
+
+  m_tftClassifier.Add (tft, teid);
+}
+
+uint32_t
+UeInfo::Classify (Ptr<Packet> packet)
+{
+  NS_LOG_FUNCTION (this << packet);
+
+  // We hardcoded DOWNLINK direction since this function will only be used by
+  // the PgwTunnelApp to classify downlink packets when attaching the
+  // EpcGtpuTag. The effective GTP encapsulation is performed by OpenFlow rules
+  // installed into P-GW TFT switches and can use a different teid value.
+  return m_tftClassifier.Classify (packet, EpcTft::DOWNLINK);
+}
+
 Ptr<UeInfo>
 UeInfo::GetPointer (uint64_t imsi)
 {
@@ -186,6 +208,21 @@ UeInfo::GetPointer (uint64_t imsi)
   return ueInfo;
 }
 
+Ptr<UeInfo>
+UeInfo::GetPointer (Ipv4Address ipv4)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  Ptr<UeInfo> ueInfo = 0;
+  Ipv4UeInfoMap_t::iterator ret;
+  ret = UeInfo::m_ueInfoByIpv4Map.find (ipv4);
+  if (ret != UeInfo::m_ueInfoByIpv4Map.end ())
+    {
+      ueInfo = ret->second;
+    }
+  return ueInfo;
+}
+
 void
 UeInfo::DoDispose ()
 {
@@ -195,7 +232,7 @@ UeInfo::DoDispose ()
 }
 
 void
-UeInfo::RegisterUeInfo (Ptr<UeInfo> ueInfo)
+UeInfo::RegisterUeInfoByImsi (Ptr<UeInfo> ueInfo)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -206,6 +243,21 @@ UeInfo::RegisterUeInfo (Ptr<UeInfo> ueInfo)
   if (ret.second == false)
     {
       NS_FATAL_ERROR ("Existing UE information for ISMI " << imsi);
+    }
+}
+
+void
+UeInfo::RegisterUeInfoByIpv4 (Ptr<UeInfo> ueInfo)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  Ipv4Address ipv4 = ueInfo->GetUeAddr ();
+  std::pair<Ipv4Address, Ptr<UeInfo> > entry (ipv4, ueInfo);
+  std::pair<Ipv4UeInfoMap_t::iterator, bool> ret;
+  ret = UeInfo::m_ueInfoByIpv4Map.insert (entry);
+  if (ret.second == false)
+    {
+      NS_FATAL_ERROR ("Existing UE information for IPv4 " << ipv4);
     }
 }
 

@@ -466,7 +466,7 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
 {
   NS_LOG_FUNCTION (this << ueDevice << imsi);
 
-  // Retrieve the IPv4 address of the UE and save it into UeInfo.
+  // Retrieve the IPv4 address of the UE and save it into UeInfo, if necessary.
   Ptr<Node> ueNode = ueDevice->GetNode ();
   Ptr<Ipv4> ueIpv4 = ueNode->GetObject<Ipv4> ();
   NS_ASSERT_MSG (ueIpv4 != 0, "UEs need to have IPv4 installed.");
@@ -476,9 +476,13 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
   NS_ASSERT (ueIpv4->GetNAddresses (interface) == 1);
 
   Ipv4Address ueAddr = ueIpv4->GetAddress (interface, 0).GetLocal ();
-  UeInfo::GetPointer (imsi)->SetUeAddr (ueAddr);
-
   NS_LOG_INFO ("Activate EPS bearer UE IP address: " << ueAddr);
+
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  if (ueInfo->GetUeAddr () != ueAddr)
+    {
+      ueInfo->SetUeAddr (ueAddr);
+    }
 
   // Trick for default bearer.
   if (tft->IsDefaultTft ())
@@ -503,7 +507,7 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
   UeInfo::BearerInfo bearerInfo;
   bearerInfo.tft = tft;
   bearerInfo.bearer = bearer;
-  uint8_t bearerId = UeInfo::GetPointer (imsi)->AddBearer (bearerInfo);
+  uint8_t bearerId = ueInfo->AddBearer (bearerInfo);
 
   Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
   if (ueLteDevice)

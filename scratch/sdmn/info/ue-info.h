@@ -97,11 +97,32 @@ public:
   void RemoveBearer (uint8_t bearerId);
 
   /**
+   * Add a TFT entry to the UE TFT classifier.
+   * \param tft The bearer Traffic Flow Template.
+   * \param teid The GTP tunnel ID.
+   */
+  void AddTft (Ptr<EpcTft> tft, uint32_t teid);
+
+  /**
+   * Classify the packet using the UE TFT classifier.
+   * \param packet The IP packet to be classified.
+   * \return The GTP tunnel ID for this packet.
+   */
+  uint32_t Classify (Ptr<Packet> packet);
+
+  /**
    * Get the UE information from the global map for a specific IMSI.
    * \param imsi The IMSI identifier for this UE.
    * \return The UE information for this IMSI.
    */
   static Ptr<UeInfo> GetPointer (uint64_t imsi);
+
+  /**
+   * Get the UE information from the global map for a specific UE IPv4.
+   * \param ipv4 The UE IPv4.
+   * \return The UE information for this IP.
+   */
+  static Ptr<UeInfo> GetPointer (Ipv4Address ipv4);
 
 protected:
   /** Destructor implementation. */
@@ -109,10 +130,16 @@ protected:
 
 private:
   /**
-   * Register the UE information in global map for further usage.
+   * Register the UE information in global map by its IMSI for further usage.
    * \param ueInfo The UE information to save.
    */
-  static void RegisterUeInfo (Ptr<UeInfo> ueInfo);
+  static void RegisterUeInfoByImsi (Ptr<UeInfo> ueInfo);
+
+  /**
+   * Register the UE information in global map by its IPv4 for further usage.
+   * \param ueInfo The UE information to save.
+   */
+  static void RegisterUeInfoByIpv4 (Ptr<UeInfo> ueInfo);
 
   uint64_t               m_imsi;                 //!< UE IMSI.
   Ipv4Address            m_ueAddr;               //!< UE IP address.
@@ -121,10 +148,16 @@ private:
   uint16_t               m_enbUeS1Id;            //!< ID for S1-AP at eNB.
   uint16_t               m_bearerCounter;        //!< Number of bearers.
   std::list<BearerInfo>  m_bearersList;          //!< Bearer contexts.
+  EpcTftClassifier       m_tftClassifier;        //!< P-GW TFT classifier.
 
   /** Map saving UE IMSI / UE information. */
   typedef std::map<uint64_t, Ptr<UeInfo> > ImsiUeInfoMap_t;
-  static ImsiUeInfoMap_t m_ueInfoByImsiMap;      //!< Global UE info map.
+
+  /** Map saving UE IPv4 / UE information. */
+  typedef std::map<Ipv4Address, Ptr<UeInfo> > Ipv4UeInfoMap_t;
+
+  static ImsiUeInfoMap_t m_ueInfoByImsiMap;    //!< Global UE info map by IMSI.
+  static Ipv4UeInfoMap_t m_ueInfoByIpv4Map;    //!< Global UE info map by IPv4.
 };
 
 };  // namespace ns3

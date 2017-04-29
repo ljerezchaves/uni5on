@@ -867,6 +867,7 @@ EpcController::DoCreateSessionRequest (
 
   Ptr<SdranController> sdranCtrl = SdranController::GetPointer (cellId);
   Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
 
   // Create the response message.
   EpcS11SapMme::CreateSessionResponseMessage res;
@@ -886,6 +887,9 @@ EpcController::DoCreateSessionRequest (
       bearerContext.bearerLevelQos = bit->bearerLevelQos;
       bearerContext.tft = bit->tft;
       res.bearerContextsCreated.push_back (bearerContext);
+
+      // Add the TFT entry to the UeInfo (don't move this command from here).
+      ueInfo->AddTft (bit->tft, teid);
     }
 
   // Create and save routing information for default bearer.

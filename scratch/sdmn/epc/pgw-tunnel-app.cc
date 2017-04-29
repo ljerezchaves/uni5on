@@ -19,6 +19,7 @@
  */
 
 #include <ns3/epc-gtpu-tag.h>
+#include <ns3/epc-gtpu-header.h>
 #include "pgw-tunnel-app.h"
 
 namespace ns3 {
@@ -47,6 +48,11 @@ PgwTunnelApp::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::PgwTunnelApp")
     .SetParent<GtpTunnelApp> ()
+    .AddAttribute ("UseTftClassifier",
+                   "Use the UE TFT classifier when attaching the EpcGtpuTag.",
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&PgwTunnelApp::m_useTftClassifier),
+                   MakeBooleanChecker ())
     .AddTraceSource ("S5Rx",
                      "Trace source for packets received from S5 interface.",
                      MakeTraceSourceAccessor (&PgwTunnelApp::m_rxS5Trace),
@@ -71,8 +77,23 @@ void
 PgwTunnelApp::AttachEpcGtpuTag (Ptr<Packet> packet, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << packet << teid);
+  // Packet entering the EPC.
 
-  // Packet entering the EPC: attach the tag and fire the TX trace source.
+  // Ignoring teid parameter and classify the packet again.
+  if (m_useTftClassifier)
+    {
+      Ptr<Packet> packetCopy = packet->Copy ();
+
+      GtpuHeader gtpuHeader;
+      Ipv4Header ipv4Header;
+      packetCopy->RemoveHeader (gtpuHeader);
+      packetCopy->PeekHeader (ipv4Header);
+
+      Ptr<UeInfo> ueInfo = UeInfo::GetPointer (ipv4Header.GetDestination ());
+      teid = ueInfo->Classify (packetCopy);
+    }
+
+  // Attach the tag and fire the S5 TX trace source.
   EpcGtpuTag teidTag (teid, EpcGtpuTag::PGW);
   packet->AddPacketTag (teidTag);
   m_txS5Trace (packet);
@@ -82,8 +103,9 @@ void
 PgwTunnelApp::RemoveEpcGtpuTag (Ptr<Packet> packet, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << packet << teid);
+  // Packet leaving the EPC.
 
-  // Packet leaving the EPC: fire the RX trace source and remove the tag.
+  // Fire the RX trace source and remove the tag.
   m_rxS5Trace (packet);
   EpcGtpuTag teidTag;
   packet->RemovePacketTag (teidTag);
