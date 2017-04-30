@@ -130,7 +130,7 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   << setw (12) << "Jitter(ms)"
   << setw (9)  << "RxPkts"
   << setw (12) << "LossRatio"
-  << setw (6)  << "Losts"
+  << setw (7)  << "Losts"
   << setw (10) << "RxBytes"
   << setw (17) << "Throughput(kbps)"
   << std::endl;
@@ -148,6 +148,7 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   << setw (8)  << "CellId"
   << setw (11) << "Direction"
   << setw (6)  << "TEID"
+  << setw (11) << "Aggregated"
   << setw (11) << "Active(s)"
   << setw (12) << "Delay(ms)"
   << setw (12) << "Jitter(ms)"
@@ -193,6 +194,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       << setw (7)  << ueInfo->GetCellId ()                            << " "
       << setw (10) << "up"                                            << " "
       << setw (5)  << teid                                            << " "
+      << setw (10) << rInfo->IsAggregated ()                          << " "
       << setw (10) << epcStats->GetActiveTime ().GetSeconds ()        << " "
       << setw (11) << epcStats->GetRxDelay ().GetSeconds () * 1000    << " "
       << setw (11) << epcStats->GetRxJitter ().GetSeconds () * 1000   << " "
@@ -223,7 +225,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       << setw (11) << appStats->GetRxJitter ().GetSeconds () * 1000   << " "
       << setw (8)  << appStats->GetRxPackets ()                       << " "
       << setw (11) << appStats->GetLossRatio ()                       << " "
-      << setw (5)  << appStats->GetLostPackets ()                     << " "
+      << setw (6)  << appStats->GetLostPackets ()                     << " "
       << setw (9)  << appStats->GetRxBytes ()                         << " "
       << setw (16) << static_cast<double> (appThp.GetBitRate ()) / 1000
       << std::endl;
@@ -243,6 +245,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   << setw (7)  << ueInfo->GetCellId ()                                << " "
   << setw (10) << "down"                                              << " "
   << setw (5)  << teid                                                << " "
+  << setw (10) << rInfo->IsAggregated ()                              << " "
   << setw (10) << epcStats->GetActiveTime ().GetSeconds ()            << " "
   << setw (11) << epcStats->GetRxDelay ().GetSeconds () * 1000        << " "
   << setw (11) << epcStats->GetRxJitter ().GetSeconds () * 1000       << " "
@@ -273,7 +276,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   << setw (11) << appStats->GetRxJitter ().GetSeconds () * 1000       << " "
   << setw (8)  << appStats->GetRxPackets ()                           << " "
   << setw (11) << appStats->GetLossRatio ()                           << " "
-  << setw (5)  << appStats->GetLostPackets ()                         << " "
+  << setw (6)  << appStats->GetLostPackets ()                         << " "
   << setw (9)  << appStats->GetRxBytes ()                             << " "
   << setw (16) << static_cast<double> (appThp.GetBitRate ()) / 1000
   << std::endl;

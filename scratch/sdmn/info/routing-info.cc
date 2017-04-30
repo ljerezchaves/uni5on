@@ -35,7 +35,8 @@ RoutingInfo::RoutingInfo (uint32_t teid)
     m_timeout (0),
     m_isDefault (0),
     m_isInstalled (0),
-    m_isActive (0)
+    m_isActive (0),
+    m_isAggregated (0)
 {
   NS_LOG_FUNCTION (this);
 
@@ -131,6 +132,14 @@ RoutingInfo::IsActive (void) const
   return m_isActive;
 }
 
+bool
+RoutingInfo::IsAggregated (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_isAggregated;
+}
+
 void
 RoutingInfo::SetImsi (uint64_t value)
 {
@@ -193,6 +202,14 @@ RoutingInfo::SetActive (bool value)
   NS_LOG_FUNCTION (this << value);
 
   m_isActive = value;
+}
+
+void
+RoutingInfo::SetAggregated (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isAggregated = value;
 }
 
 void

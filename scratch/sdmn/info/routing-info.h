@@ -76,6 +76,7 @@ public:
   bool IsDefault (void) const;
   bool IsInstalled (void) const;
   bool IsActive (void) const;
+  bool IsAggregated (void) const;
 
   void SetImsi (uint64_t value);
   void SetPgwS5Addr (Ipv4Address value);
@@ -85,6 +86,7 @@ public:
   void SetDefault (bool value);
   void SetInstalled (bool value);
   void SetActive (bool value);
+  void SetAggregated (bool value);
   void SetBearerContext (BearerContext_t value);
   //\}
 
@@ -141,6 +143,7 @@ private:
   bool              m_isDefault;    //!< This info is for default bearer.
   bool              m_isInstalled;  //!< Rule is installed into switches.
   bool              m_isActive;     //!< Application traffic is active.
+  bool              m_isAggregated; //!< Traffic aggregated over S5 bearer.
   BearerContext_t   m_bearer;       //!< EPS bearer information.
 
   /** Map saving TEID / routing information. */

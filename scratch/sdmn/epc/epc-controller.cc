@@ -106,16 +106,11 @@ EpcController::RequestDedicatedBearer (EpsBearer bearer, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << teid);
 
+  // This bearer must be inactive as we are going to reuse it's metadata.
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
   NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer teid " << teid);
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
-
-  // This bearer must be inactive and we are going to reuse it's metadata.
-  // Every time the application starts using an (old) existing bearer, let's
-  // reinstall the rules on the switches, which will increase the bearer
-  // priority. Doing this, we avoid problems with old 'expiring' rules, and
-  // we can even use new routing paths when necessary.
 
   // Let's first check for available resources and fire trace source
   bool accepted = TopologyBearerRequest (rInfo);
@@ -127,7 +122,10 @@ EpcController::RequestDedicatedBearer (EpsBearer bearer, uint32_t teid)
     }
   NS_LOG_INFO ("Bearer request accepted by controller.");
 
-  // Everything is ok! Let's activate and install this bearer.
+  // Every time the application starts using an (old) existing bearer, let's
+  // reinstall the rules on the switches, which will increase the bearer
+  // priority. Doing this, we avoid problems with old 'expiring' rules, and
+  // we can even use new routing paths when necessary.
   rInfo->SetActive (true);
   return InstallBearer (rInfo);
 }
@@ -802,6 +800,14 @@ EpcController::InstallBearer (Ptr<RoutingInfo> rInfo)
 
   NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
 
+  if (GetS5TrafficAggregation () && !rInfo->IsDefault ())
+    {
+      // When the traffic aggregation is enable, we don't install the rules for
+      // dedicated bearers. This will automatically force the traffic over the
+      // S5 default bearer.
+      return true;
+    }
+
   // Increasing the priority every time we (re)install routing rules.
   rInfo->IncreasePriority ();
   rInfo->SetInstalled (false);
@@ -827,6 +833,12 @@ EpcController::RemoveBearer (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
+
+  if (rInfo->IsAggregated ())
+    {
+      // No rules to remove for aggregated traffic.
+      return true;
+    }
 
   // Get the correct P-GW TFT switch for this traffic.
   uint16_t pgwTftIdx = GetPgwTftIdx (rInfo);
@@ -894,9 +906,10 @@ EpcController::DoCreateSessionRequest (
   rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
   rInfo->SetPriority (0x7F);             // Priority for default bearer
   rInfo->SetTimeout (0);                 // No timeout for default bearer
+  rInfo->SetDefault (true);              // This is a default bearer
   rInfo->SetInstalled (false);           // Bearer rules not installed yet
   rInfo->SetActive (true);               // Default bearer is always active
-  rInfo->SetDefault (true);              // This is a default bearer
+  rInfo->SetAggregated (false);          // Default bearer never aggregates
   rInfo->SetBearerContext (defaultBearer);
 
   // For default bearer, no meter nor GBR metadata.
@@ -923,9 +936,10 @@ EpcController::DoCreateSessionRequest (
       rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
       rInfo->SetPriority (0x1FFF);          // Priority for dedicated bearer
       rInfo->SetTimeout (m_flowTimeout);    // Timeout for dedicated bearer
+      rInfo->SetDefault (false);            // This is a dedicated bearer
       rInfo->SetInstalled (false);          // Bearer rules not installed yet
       rInfo->SetActive (false);             // Dedicated bearer not active
-      rInfo->SetDefault (false);            // This is a dedicated bearer
+      rInfo->SetAggregated (false);         // Dedicated bearer not aggregated
       rInfo->SetBearerContext (dedicatedBearer);
 
       // For all GBR bearers, create the GBR metadata.

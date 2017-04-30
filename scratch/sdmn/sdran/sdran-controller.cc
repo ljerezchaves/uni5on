@@ -77,11 +77,9 @@ SdranController::ReleaseDedicatedBearer (
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
-  if (m_epcCtrlApp->ReleaseDedicatedBearer (bearer, teid))
-    {
-      return RemoveSgwSwitchRules (RoutingInfo::GetPointer (teid));
-    }
-  return false;
+  RemoveSgwSwitchRules (RoutingInfo::GetPointer (teid));
+  m_epcCtrlApp->ReleaseDedicatedBearer (bearer, teid);
+  return true;
 }
 
 void
@@ -389,7 +387,7 @@ SdranController::InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo)
     }
 
   // Configure uplink.
-  if (rInfo->HasUplinkTraffic ())
+  if (rInfo->HasUplinkTraffic () && !rInfo->IsAggregated ())
     {
       // Print uplink TEID and destination IPv4 address into tunnel metadata.
       uint64_t tunnelId = (uint64_t)rInfo->GetPgwS5Addr ().Get () << 32;

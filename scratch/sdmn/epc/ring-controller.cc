@@ -323,6 +323,14 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
   ringInfo->ResetToDefaultPaths ();
 
+  if (GetS5TrafficAggregation () && !rInfo->IsDefault ())
+    {
+      // When the traffic aggregation is enable, we always accept dedicated
+      // bearer requests without guarantees.
+      rInfo->SetAggregated (true);
+      return true;
+    }
+
   if (!rInfo->IsGbr ())
     {
       // For Non-GBR bearers (which includes the default bearer), let's accept
@@ -415,6 +423,7 @@ RingController::TopologyBearerRelease (Ptr<RoutingInfo> rInfo)
       NS_LOG_INFO ("Releasing resources for bearer " << rInfo->GetTeid ());
       ReleaseGbrBitRate (ringInfo, gbrInfo);
     }
+  rInfo->SetAggregated (false);
   return true;
 }
 

@@ -396,8 +396,8 @@ ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      EpsBearer bearer = RoutingInfo::GetEpsBearer (gtpuTag.GetTeid ());
-      if (bearer.IsGbr ())
+      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (gtpuTag.GetTeid ());
+      if (rInfo->IsGbr () && !rInfo->IsAggregated ())
         {
           m_gbrTxBytes [dir] += packet->GetSize ();
         }

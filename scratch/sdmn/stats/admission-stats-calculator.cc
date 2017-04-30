@@ -91,8 +91,8 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
   Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ring information for this routing info.");
 
-  // Update internal counters
-  if (rInfo->IsGbr ())
+  // Update internal counters.
+  if (rInfo->IsGbr () && !rInfo->IsAggregated ())
     {
       m_gbrRequests++;
       accepted ? m_gbrAccepted++ : m_gbrBlocked++;
@@ -108,7 +108,7 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
       m_activeBearers++;
     }
 
-  // Preparing bearer request stats for trace source
+  // Preparing bearer request stats for trace source.
   uint64_t downBitRate = 0, upBitRate = 0;
   if (gbrInfo)
     {
@@ -119,7 +119,7 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
   std::string path = "No information";
   if (accepted)
     {
-      // For ring routing, print detailed routing path description
+      // For ring routing, print detailed routing path description.
       if (ringInfo->IsDefaultPath ())
         {
           path = "Shortest";
@@ -130,7 +130,7 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
         }
     }
 
-  // Save request stats into output file
+  // Save request stats into output file.
   *m_brqWrapper->GetStream ()
   << left
   << setw (9)  << Simulator::Now ().GetSeconds ()           << " "
@@ -144,6 +144,7 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
   << setw (6)  << ringInfo->GetPgwSwDpId ()                 << " "
   << setw (6)  << rInfo->GetTeid ()                         << " "
   << setw (9)  << accepted                                  << " "
+  << setw (10) << rInfo->IsAggregated ()                    << " "
   << setw (11) << static_cast<double> (downBitRate) / 1000  << " "
   << setw (11) << static_cast<double> (upBitRate) / 1000    << "  "
   << left
@@ -209,6 +210,7 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   << setw (7)  << "PgwSw"
   << setw (7)  << "TEID"
   << setw (10) << "Accepted"
+  << setw (11) << "Aggregated"
   << setw (12) << "Down(kbps)"
   << setw (12) << "Up(kbps)"
   << left      << "  "
