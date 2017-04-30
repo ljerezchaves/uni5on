@@ -35,7 +35,6 @@ uint32_t EpcController::m_teidCount = 0x0000000F;
 EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
 
 EpcController::EpcController ()
-  : m_pgwLbStatus (false)
 {
   NS_LOG_FUNCTION (this);
 
@@ -72,7 +71,7 @@ EpcController::GetTypeId (void)
                    MakeEnumAccessor (&EpcController::m_pgwLoadBalancing),
                    MakeEnumChecker (EpcController::OFF, "off",
                                     EpcController::ON, "on",
-                                    EpcController::AUTO, "auto"))
+                                    EpcController::AUTO_OFF, "auto"))
 
     .AddTraceSource ("BearerRequest", "The bearer request trace source.",
                      MakeTraceSourceAccessor (
@@ -244,7 +243,7 @@ EpcController::NotifyPgwTftAttach (
 
       // When the P-GW load balancing mechanism is on automatic mode, we watch
       // the 1st P-GW TFT switch statistics to enable or disable the mechanism.
-      if (m_pgwLoadBalancing == FeatureStatus::AUTO)
+      if (m_pgwLoadBalancing >= FeatureStatus::AUTO_OFF)
         {
           // Create the load monitor and bind it to the switch device.
           Ptr<PgwLoadMonitor> loadMonitor = CreateObject<PgwLoadMonitor> ();
@@ -342,7 +341,7 @@ EpcController::GetPgwLoadBalancing (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_pgwLbStatus;
+  return (m_pgwLoadBalancing % 2);
 }
 
 EpcS5SapPgw*
@@ -376,25 +375,6 @@ EpcController::DoDispose ()
 
   // Chain up.
   Object::DoDispose ();
-}
-
-void
-EpcController::NotifyConstructionCompleted (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  // Set initial status for P-GW load balancing based on attribute value.
-  if (m_pgwLoadBalancing == FeatureStatus::ON)
-    {
-      SetPgwLoadBalancing (true);
-    }
-  else
-    {
-      SetPgwLoadBalancing (false);
-    }
-
-  // Chain up.
-  Object::NotifyConstructionCompleted ();
 }
 
 void
@@ -576,9 +556,12 @@ EpcController::SetPgwLoadBalancing (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  if (m_pgwLbStatus != value)
+  if (GetPgwLoadBalancing () != value)
     {
-      m_pgwLbStatus = value;
+      // Trick to update the enum value considering it as an integer.
+      int enumInt = (int)m_pgwLoadBalancing;
+      value ? enumInt++ : enumInt--;
+      m_pgwLoadBalancing = (FeatureStatus)enumInt;
 
       // Let's find the bearers of UEs with even IP addresses that are
       // currently installed and must be moved to the other P-GW TFT switch.
@@ -645,7 +628,7 @@ EpcController::SetPgwLoadBalancing (bool value)
         }
 
       // Fire the load balancing trace source.
-      m_loadBalancingTrace (m_pgwLbStatus, bearerList);
+      m_loadBalancingTrace (GetPgwLoadBalancing (), bearerList);
     }
 }
 

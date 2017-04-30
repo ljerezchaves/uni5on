@@ -52,9 +52,10 @@ public:
   /** Options to enable or disable internal mechanisms. */
   enum FeatureStatus
   {
-    OFF  = 0,  //!< Always off.
-    ON   = 1,  //!< Always on.
-    AUTO = 2   //!< Automatic.
+    OFF      = 0,   //!< Always off.
+    ON       = 1,   //!< Always on.
+    AUTO_OFF = 2,   //!< Automatic with value off.
+    AUTO_ON  = 3    //!< Automatic with value on.
   };
 
   EpcController ();           //!< Default constructor.
@@ -200,9 +201,6 @@ protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
-  // Inherited from ObjectBase.
-  virtual void NotifyConstructionCompleted (void);
-
   /** \name Topology methods.
    * These virtual methods must be implemented by topology subclasses, as they
    * are dependent on the backhaul OpenFlow network topology.
@@ -332,7 +330,6 @@ private:
   std::vector<uint32_t>   m_pgwS5PortsNo; //!< P-GW S5 ports no.
   Ipv4Address             m_pgwS5Addr;    //!< P-GW S5 IP address for uplink.
   uint32_t                m_pgwSgiPortNo; //!< P-GW SGi port no.
-  bool                    m_pgwLbStatus;  //!< P-GW TFT load balancing.
 
   // S-GW communication.
   EpcS5SapPgw*            m_s5SapPgw;     //!< P-GW side of the S5 SAP.
