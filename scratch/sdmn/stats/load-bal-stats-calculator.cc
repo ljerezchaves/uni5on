@@ -35,7 +35,7 @@ LoadBalStatsCalculator::LoadBalStatsCalculator ()
 
   // Connect this stats calculator to required trace sources.
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::EpcController/LoadBalFinished",
+    "/NodeList/*/ApplicationList/*/$ns3::EpcController/LoadBalancing",
     MakeCallback (&LoadBalStatsCalculator::NotifyLoadBalFinished, this));
 }
 

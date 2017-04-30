@@ -74,7 +74,7 @@ PgwLoadMonitor::GetTypeId (void)
                    MakeUintegerAccessor (&PgwLoadMonitor::m_lowerThreshold),
                    MakeUintegerChecker<uint32_t> ())
 
-    .AddTraceSource ("LoadBalancing",
+    .AddTraceSource ("LoadBalancingAdjust",
                      "Trace source indicating when the EPC controller should "
                      "enable or disable the P-GW load balancing mechanism.",
                      MakeTraceSourceAccessor (&PgwLoadMonitor::m_loadBalTrace),

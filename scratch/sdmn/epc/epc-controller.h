@@ -49,6 +49,14 @@ class EpcController : public OFSwitch13Controller
   friend class MemberEpcS5SapPgw<EpcController>;
 
 public:
+  /** Options to enable or disable internal mechanisms. */
+  enum FeatureStatus
+  {
+    OFF  = 0,  //!< Always off.
+    ON   = 1,  //!< Always on.
+    AUTO = 2   //!< Automatic.
+  };
+
   EpcController ();           //!< Default constructor.
   virtual ~EpcController ();  //!< Dummy destructor, see DoDispose.
 
@@ -181,11 +189,11 @@ public:
     uint64_t imsi, uint16_t cellId, BearerContextList_t bearerList);
 
   /**
-   * TracedCallback signature for the load bal finished trace source.
+   * TracedCallback signature for the load balancing trace source.
    * \param status True when enabling the P-GW load balancing, false otherwise.
    * \param bearerList The list of bearers moved to a new P-GW TFT switch.
    */
-  typedef void (*LoadBalFinishedTracedCallback)(
+  typedef void (*LoadBalancingTracedCallback)(
     bool status, RoutingInfoList_t bearerList);
 
 protected:
@@ -241,9 +249,10 @@ protected:
     uint32_t xid);
   // Inherited from OFSwitch13Controller.
 
-  // Class attributes.
-  bool m_voipQos;            //!< VoIP QoS with queues.
-  bool m_nonGbrCoexistence;  //!< Non-GBR coexistence.
+  // Internal mechanisms for performance improvement.
+  bool          m_voipQos;            //!< VoIP QoS with queues.
+  bool          m_nonGbrCoexistence;  //!< Non-GBR coexistence.
+  FeatureStatus m_pgwLoadBalancing;   //!< P-GW load balancing.
 
 private:
   /**
@@ -315,16 +324,15 @@ private:
   /** The context created trace source, fired at NotifySessionCreated. */
   TracedCallback<uint64_t, uint16_t, BearerContextList_t> m_sessionCreatedTrace;
 
-  /** The load bal finished trace source, fired at SetPgwLoadBalancing. */
-  TracedCallback<bool, RoutingInfoList_t> m_loadBalFinishedTrace;
+  /** The load balancing trace source, fired at SetPgwLoadBalancing. */
+  TracedCallback<bool, RoutingInfoList_t> m_loadBalancingTrace;
 
   // P-GW metadata
   std::vector<uint64_t>   m_pgwDpIds;     //!< P-GW datapath IDs.
   std::vector<uint32_t>   m_pgwS5PortsNo; //!< P-GW S5 ports no.
   Ipv4Address             m_pgwS5Addr;    //!< P-GW S5 IP address for uplink.
   uint32_t                m_pgwSgiPortNo; //!< P-GW SGi port no.
-  bool                    m_pgwTftLb;     //!< P-GW TFT load balancing.
-  bool                    m_pgwAutoTftLb; //!< Auto P-GW TFT load balancing.
+  bool                    m_pgwLbStatus;  //!< P-GW TFT load balancing.
 
   // S-GW communication.
   EpcS5SapPgw*            m_s5SapPgw;     //!< P-GW side of the S5 SAP.
