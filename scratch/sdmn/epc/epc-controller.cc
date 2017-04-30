@@ -72,6 +72,14 @@ EpcController::GetTypeId (void)
                    MakeEnumChecker (EpcController::OFF, "off",
                                     EpcController::ON, "on",
                                     EpcController::AUTO_OFF, "auto"))
+    .AddAttribute ("S5TrafficAggregation",
+                   "Configure the S5 traffic aggregation mechanism.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   EnumValue (EpcController::OFF),
+                   MakeEnumAccessor (&EpcController::m_s5TrafficAggregation),
+                   MakeEnumChecker (EpcController::OFF, "off",
+                                    EpcController::ON, "on",
+                                    EpcController::AUTO_ON, "auto"))
 
     .AddTraceSource ("BearerRequest", "The bearer request trace source.",
                      MakeTraceSourceAccessor (
@@ -342,6 +350,14 @@ EpcController::GetPgwLoadBalancing (void) const
   NS_LOG_FUNCTION (this);
 
   return (m_pgwLoadBalancing % 2);
+}
+
+bool
+EpcController::GetS5TrafficAggregation (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return (m_s5TrafficAggregation % 2);
 }
 
 EpcS5SapPgw*
@@ -629,6 +645,20 @@ EpcController::SetPgwLoadBalancing (bool value)
 
       // Fire the load balancing trace source.
       m_loadBalancingTrace (GetPgwLoadBalancing (), bearerList);
+    }
+}
+
+void
+EpcController::SetS5TrafficAggregation (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  if (GetS5TrafficAggregation () != value)
+    {
+      // Trick to update the enum value considering it as an integer.
+      int enumInt = (int)m_s5TrafficAggregation;
+      value ? enumInt++ : enumInt--;
+      m_s5TrafficAggregation = (FeatureStatus)enumInt;
     }
 }
 

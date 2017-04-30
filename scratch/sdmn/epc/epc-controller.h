@@ -161,6 +161,12 @@ public:
   bool GetPgwLoadBalancing (void) const;
 
   /**
+   * Get the S5 traffic aggregation mechanism status.
+   * \return The S5 traffic aggregation status.
+   */
+  bool GetS5TrafficAggregation (void) const;
+
+  /**
    * Get The P-GW side of the S5 SAP.
    * \return The P-GW side of the S5 SAP.
    */
@@ -248,9 +254,10 @@ protected:
   // Inherited from OFSwitch13Controller.
 
   // Internal mechanisms for performance improvement.
-  bool          m_voipQos;            //!< VoIP QoS with queues.
-  bool          m_nonGbrCoexistence;  //!< Non-GBR coexistence.
-  FeatureStatus m_pgwLoadBalancing;   //!< P-GW load balancing.
+  bool            m_voipQos;                //!< VoIP QoS with queues.
+  bool            m_nonGbrCoexistence;      //!< Non-GBR coexistence.
+  FeatureStatus   m_pgwLoadBalancing;       //!< P-GW load balancing.
+  FeatureStatus   m_s5TrafficAggregation;   //!< Agg traffic S5 def bearer.
 
 private:
   /**
@@ -258,6 +265,12 @@ private:
    * \param value The value to set.
    */
   void SetPgwLoadBalancing (bool value);
+
+  /**
+   * Enable/Disable the S5 traffic aggregation mechanism.
+   * \param value The value to set.
+   */
+  void SetS5TrafficAggregation (bool value);
 
   /**
    * Install OpenFlow rules for downlink packet filtering on the P-GW TFT
