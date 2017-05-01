@@ -357,6 +357,30 @@ EpcController::GetPgwTftIdx (Ptr<const RoutingInfo> rInfo) const
   return 1;
 }
 
+EpcS5SapPgw*
+EpcController::GetS5SapPgw (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s5SapPgw;
+}
+
+bool
+EpcController::GetVoipQos (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_voipQos;
+}
+
+bool
+EpcController::GetNonGbrCoexistence (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_nonGbrCoexistence;
+}
+
 bool
 EpcController::GetPgwLoadBalancing (void) const
 {
@@ -371,14 +395,6 @@ EpcController::GetS5TrafficAggregation (void) const
   NS_LOG_FUNCTION (this);
 
   return (m_s5TrafficAggregation % 2);
-}
-
-EpcS5SapPgw*
-EpcController::GetS5SapPgw (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_s5SapPgw;
 }
 
 uint16_t
@@ -473,7 +489,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 3 -- Coexistence QoS table -- [from higher to lower priority]
   //
-  if (m_nonGbrCoexistence)
+  if (GetNonGbrCoexistence ())
     {
       // Non-GBR packets indicated by DSCP field. Apply corresponding Non-GBR
       // meter band. Send the packet to Output table.
@@ -491,7 +507,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 4 -- Output table -- [from higher to lower priority]
   //
-  if (m_voipQos)
+  if (GetVoipQos ())
     {
       int dscpVoip = EpcController::GetDscpValue (EpsBearer::GBR_CONV_VOICE);
 

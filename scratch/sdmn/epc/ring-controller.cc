@@ -124,7 +124,7 @@ RingController::NotifySwitchConnection (Ptr<ConnectionInfo> cInfo)
         << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (1);
   DpctlSchedule (cInfo->GetSwDpId (1), cmd11.str ());
 
-  if (m_nonGbrCoexistence)
+  if (GetNonGbrCoexistence ())
     {
       // Meter flags OFPMF_KBPS.
       std::string flagsStr ("0x0001");
@@ -461,7 +461,7 @@ RingController::NonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
 
-  if (m_nonGbrCoexistence)
+  if (GetNonGbrCoexistence ())
     {
       std::ostringstream cmd1, cmd2;
       uint64_t kbps = 0;

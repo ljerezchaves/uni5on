@@ -155,22 +155,21 @@ public:
   uint16_t GetPgwTftIdx (Ptr<const RoutingInfo> rInfo) const;
 
   /**
-   * Get the P-GW load balancing mechanism status.
-   * \return The P-GW load balancing status.
-   */
-  bool GetPgwLoadBalancing (void) const;
-
-  /**
-   * Get the S5 traffic aggregation mechanism status.
-   * \return The S5 traffic aggregation status.
-   */
-  bool GetS5TrafficAggregation (void) const;
-
-  /**
    * Get The P-GW side of the S5 SAP.
    * \return The P-GW side of the S5 SAP.
    */
   EpcS5SapPgw* GetS5SapPgw (void) const;
+
+  /**
+   * \name Internal mechanisms status accessors.
+   * \return The requested mechanism status.
+   */
+  //\{
+  bool GetVoipQos (void) const;
+  bool GetNonGbrCoexistence (void) const;
+  bool GetPgwLoadBalancing (void) const;
+  bool GetS5TrafficAggregation (void) const;
+  //\}
 
   /**
    * Retrieve stored mapped value for a specific EPS QCI.
@@ -252,12 +251,6 @@ protected:
     struct ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch,
     uint32_t xid);
   // Inherited from OFSwitch13Controller.
-
-  // Internal mechanisms for performance improvement.
-  bool            m_voipQos;                //!< VoIP QoS with queues.
-  bool            m_nonGbrCoexistence;      //!< Non-GBR coexistence.
-  FeatureStatus   m_pgwLoadBalancing;       //!< P-GW load balancing.
-  FeatureStatus   m_s5TrafficAggregation;   //!< Agg traffic S5 def bearer.
 
 private:
   /**
@@ -353,6 +346,15 @@ private:
   /** The load balancing trace source, fired at SetPgwLoadBalancing. */
   TracedCallback<bool, RoutingInfoList_t> m_loadBalancingTrace;
 
+  // Internal mechanisms for performance improvement.
+  bool            m_voipQos;              //!< VoIP QoS with queues.
+  bool            m_nonGbrCoexistence;    //!< Non-GBR coexistence.
+  FeatureStatus   m_pgwLoadBalancing;     //!< P-GW load balancing.
+  FeatureStatus   m_s5TrafficAggregation; //!< Agg traffic S5 def bearer.
+
+  // S-GW communication.
+  EpcS5SapPgw*    m_s5SapPgw;             //!< P-GW side of the S5 SAP.
+
   // P-GW metadata
   std::vector<uint64_t> m_pgwDpIds;       //!< P-GW datapath IDs.
   std::vector<uint32_t> m_pgwS5PortsNo;   //!< P-GW S5 ports no.
@@ -360,9 +362,6 @@ private:
   uint32_t              m_pgwSgiPortNo;   //!< P-GW SGi port no.
   uint32_t              m_pgwMaxEntries;  //!< P-GW TFT max flow entries.
   std::vector<uint32_t> m_pgwEntries;     //!< P-GW TFT current flow entries.
-
-  // S-GW communication.
-  EpcS5SapPgw*          m_s5SapPgw;       //!< P-GW side of the S5 SAP.
 
   /** Map saving EpsBearer::Qci / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
