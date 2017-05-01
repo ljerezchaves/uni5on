@@ -20,7 +20,6 @@
 
 #include "epc-controller.h"
 #include "epc-network.h"
-#include "pgw-load-monitor.h"
 #include "../sdran/sdran-controller.h"
 #include <algorithm>
 
@@ -41,6 +40,10 @@ EpcController::EpcController ()
   StaticInitialize ();
 
   m_s5SapPgw = new MemberEpcS5SapPgw<EpcController> (this);
+
+  // Manually set the vector with 2 positions, considering that this
+  // implementation only supports two P-GW TFT switches.
+  m_pgwEntries = std::vector<uint32_t> (2, 0);
 }
 
 EpcController::~EpcController ()
@@ -72,6 +75,12 @@ EpcController::GetTypeId (void)
                    MakeEnumChecker (EpcController::OFF, "off",
                                     EpcController::ON, "on",
                                     EpcController::AUTO_OFF, "auto"))
+    .AddAttribute ("PgwMaxEntries",
+                   "The maximum number of flow entries allowed in a P-GW TFT "
+                   "switch datapath flow tables.",
+                   UintegerValue (1024),
+                   MakeUintegerAccessor (&EpcController::m_pgwMaxEntries),
+                   MakeUintegerChecker<uint32_t> (50))
     .AddAttribute ("S5TrafficAggregation",
                    "Configure the S5 traffic aggregation mechanism.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -231,6 +240,16 @@ EpcController::NotifyPgwTftAttach (
   // main switch to one of these tables.
   //
 
+  // When the P-GW load balancing mechanism is on automatic mode, we watch
+  // the P-GW TFT switch statistics to enable or disable the mechanism.
+  if (m_pgwLoadBalancing >= FeatureStatus::AUTO_OFF)
+    {
+      pgwSwDev->TraceConnect (
+        "FlowEntries", std::to_string (pgwTftCounter - 1),
+        MakeCallback (&EpcController::NotifyPgwTftFlowEntries,
+                      Ptr<EpcController> (this)));
+    }
+
   // Configuring the P-GW main switch to forward traffic to this TFT switch.
   if (pgwTftCounter == 1)
     {
@@ -246,21 +265,6 @@ EpcController::NotifyPgwTftAttach (
            << "eth_type=0x800,ip_dst=0.0.0.1/0.0.0.1"  // odd IPs
            << " apply:output=" << pgwMainPortNo;
       DpctlSchedule (m_pgwDpIds.at (0), cmd2.str ());
-
-      // When the P-GW load balancing mechanism is on automatic mode, we watch
-      // the 1st P-GW TFT switch statistics to enable or disable the mechanism.
-      if (m_pgwLoadBalancing >= FeatureStatus::AUTO_OFF)
-        {
-          // Create the load monitor and bind it to the switch device.
-          Ptr<PgwLoadMonitor> loadMonitor = CreateObject<PgwLoadMonitor> ();
-          loadMonitor->AggregateObject (pgwSwDev);
-          loadMonitor->HookSinks (pgwSwDev);
-
-          // Connecting this controller to load monitor trace source.
-          loadMonitor->TraceConnectWithoutContext (
-            "LoadBalancingAdjust", MakeCallback (
-              &EpcController::SetPgwLoadBalancing, this));
-        }
     }
   else if (pgwTftCounter == 2)
     {
@@ -566,6 +570,35 @@ EpcController::HandleFlowRemoved (
 }
 
 void
+EpcController::NotifyPgwTftFlowEntries (std::string context, uint32_t oldValue,
+                                        uint32_t newValue)
+{
+  NS_LOG_FUNCTION (this << context << oldValue << newValue);
+
+  // Update entry.
+  m_pgwEntries.at (std::stoi (context)) = newValue;
+
+  // Enable the mechanisms when hit the max number of flow entries.
+  if (GetPgwLoadBalancing () == false && newValue > m_pgwMaxEntries)
+    {
+      SetPgwLoadBalancing (true);
+    }
+
+  // Disable the mechanisms if all entries together will not exceed 80% of the
+  // max number of flow entries allowed on a single switch.
+  else if (GetPgwLoadBalancing () == true)
+    {
+      uint32_t maxThreshold = 0.8 * m_pgwMaxEntries;
+      uint32_t totalEntries = std::accumulate (m_pgwEntries.begin (),
+                                               m_pgwEntries.end (), 0);
+      if (totalEntries < maxThreshold)
+        {
+          SetPgwLoadBalancing (false);
+        }
+    }
+}
+
+void
 EpcController::SetPgwLoadBalancing (bool value)
 {
   NS_LOG_FUNCTION (this << value);
@@ -593,13 +626,15 @@ EpcController::SetPgwLoadBalancing (bool value)
             }
         }
 
+      // Check for bearers to move from one P-GW TFT to the other.
       if (!bearerList.empty ())
         {
-          // We have bearers to move from one P-GW TFT to the other.
-          uint64_t dstDpId = 0, srcDpId = 0;
-          uint32_t s5PortNo = 0, mainTable = 0;
+          uint64_t srcDpId = 0;
+          uint64_t dstDpId = 0;
+          uint32_t s5PortNo = 0;
+          uint32_t mainTable = 0;
 
-          if (value)
+          if (value == true)
             {
               NS_LOG_INFO ("Enabling the P-GW load balancing mechanism.");
               srcDpId = m_pgwDpIds.at (1);

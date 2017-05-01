@@ -261,6 +261,15 @@ protected:
 
 private:
   /**
+   * Trace sink to monitor the number of flow entries on P-GW TFT datapaths.
+   * \param context The P-GW TFT switch index.
+   * \param oldValue The previous number of flow entries on datapath.
+   * \param newValue The current number of flow entries on datapath.
+   */
+  void NotifyPgwTftFlowEntries (
+    std::string context, uint32_t oldValue, uint32_t newValue);
+
+  /**
    * Enable/Disable the P-GW TFT load balancing mechanism.
    * \param value The value to set.
    */
@@ -339,13 +348,15 @@ private:
   TracedCallback<bool, RoutingInfoList_t> m_loadBalancingTrace;
 
   // P-GW metadata
-  std::vector<uint64_t>   m_pgwDpIds;     //!< P-GW datapath IDs.
-  std::vector<uint32_t>   m_pgwS5PortsNo; //!< P-GW S5 ports no.
-  Ipv4Address             m_pgwS5Addr;    //!< P-GW S5 IP address for uplink.
-  uint32_t                m_pgwSgiPortNo; //!< P-GW SGi port no.
+  std::vector<uint64_t> m_pgwDpIds;       //!< P-GW datapath IDs.
+  std::vector<uint32_t> m_pgwS5PortsNo;   //!< P-GW S5 ports no.
+  Ipv4Address           m_pgwS5Addr;      //!< P-GW S5 IP address for uplink.
+  uint32_t              m_pgwSgiPortNo;   //!< P-GW SGi port no.
+  uint32_t              m_pgwMaxEntries;  //!< P-GW TFT max flow entries.
+  std::vector<uint32_t> m_pgwEntries;     //!< P-GW TFT current flow entries.
 
   // S-GW communication.
-  EpcS5SapPgw*            m_s5SapPgw;     //!< P-GW side of the S5 SAP.
+  EpcS5SapPgw*          m_s5SapPgw;       //!< P-GW side of the S5 SAP.
 
   /** Map saving EpsBearer::Qci / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
@@ -355,9 +366,9 @@ private:
    * \internal This counter is initialized at 0x0000000F, reserving the first
    *           values for controller usage.
    */
-  static uint32_t         m_teidCount;
-  static const uint16_t   m_flowTimeout;  //!< Timeout for flow entries.
-  static QciDscpMap_t     m_qciDscpTable; //!< DSCP mapped values.
+  static uint32_t       m_teidCount;
+  static const uint16_t m_flowTimeout;    //!< Timeout for flow entries.
+  static QciDscpMap_t   m_qciDscpTable;   //!< DSCP mapped values.
 };
 
 };  // namespace ns3

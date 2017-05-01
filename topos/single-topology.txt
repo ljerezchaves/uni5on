@@ -1,4 +1,4 @@
-global DumpStatsTimeout "5s"
+global DumpStatsTimeout "1s"
 
 default ns3::ConnectionInfo::GbrLinkQuota "0.4"
 default ns3::ConnectionInfo::GbrSafeguard "5Mb/s"
@@ -7,7 +7,8 @@ default ns3::ConnectionInfo::NonGbrAdjustmentStep "5Mb/s"
 default ns3::EpcController::VoipQueue "true"
 default ns3::EpcController::NonGbrCoexistence "true"
 default ns3::EpcController::PgwLoadBalancing "auto"
-default ns3::EpcController::S5TrafficAggregation "auto"
+default ns3::EpcController::PgwMaxEntries "50"
+default ns3::EpcController::S5TrafficAggregation "off"
 
 default ns3::EpcNetwork::EpcLinkDataRate "10Gb/s"
 default ns3::EpcNetwork::EpcLinkDelay "1us"
@@ -19,9 +20,6 @@ default ns3::LteNetwork::NumUes "1"
 default ns3::LteNetwork::UeMobility "false"
 default ns3::LteNetwork::PrintRem "false"
 default ns3::LteNetwork::LteTrace "false"
-
-default ns3::PgwLoadMonitor::UpperThreshold "12"
-default ns3::PgwLoadMonitor::LowerThreshold "4"
 
 default ns3::PgwTunnelApp::UseTftClassifier "true"
 
