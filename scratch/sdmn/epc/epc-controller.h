@@ -270,6 +270,12 @@ private:
     std::string context, uint32_t oldValue, uint32_t newValue);
 
   /**
+   * Periodically check for the number of flow entries on the P-GW TFT
+   * datapaths to enable or disable the load balancing mechanism.
+   */
+  void CheckPgwTftFlowEntries (void);
+
+  /**
    * Enable/Disable the P-GW TFT load balancing mechanism.
    * \param value The value to set.
    */

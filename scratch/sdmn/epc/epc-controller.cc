@@ -80,7 +80,7 @@ EpcController::GetTypeId (void)
                    "switch datapath flow tables.",
                    UintegerValue (1024),
                    MakeUintegerAccessor (&EpcController::m_pgwMaxEntries),
-                   MakeUintegerChecker<uint32_t> (50))
+                   MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("S5TrafficAggregation",
                    "Configure the S5 traffic aggregation mechanism.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -224,6 +224,8 @@ EpcController::NotifyPgwTftAttach (
   NS_LOG_FUNCTION (this << pgwTftCounter << pgwSwDev << pgwS5PortNo <<
                    pgwMainPortNo);
 
+  static bool firstSchedule = true;
+
   // Saving information for P-GW TFT switches.
   m_pgwDpIds.push_back (pgwSwDev->GetDatapathId ());
   m_pgwS5PortsNo.push_back (pgwS5PortNo);
@@ -248,6 +250,15 @@ EpcController::NotifyPgwTftAttach (
         "FlowEntries", std::to_string (pgwTftCounter - 1),
         MakeCallback (&EpcController::NotifyPgwTftFlowEntries,
                       Ptr<EpcController> (this)));
+
+      if (firstSchedule)
+        {
+          // We periodically check (every 2 seconds) for the number of flow
+          // entries to enable/disable the load balancing mechanism.
+          firstSchedule = false;
+          Simulator::Schedule (Seconds (2),
+                               &EpcController::CheckPgwTftFlowEntries, this);
+        }
     }
 
   // Configuring the P-GW main switch to forward traffic to this TFT switch.
@@ -575,27 +586,39 @@ EpcController::NotifyPgwTftFlowEntries (std::string context, uint32_t oldValue,
 {
   NS_LOG_FUNCTION (this << context << oldValue << newValue);
 
-  // Update entry.
   m_pgwEntries.at (std::stoi (context)) = newValue;
+}
 
-  // Enable the mechanisms when hit the max number of flow entries.
-  if (GetPgwLoadBalancing () == false && newValue > m_pgwMaxEntries)
+void
+EpcController::CheckPgwTftFlowEntries (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  if (GetPgwLoadBalancing () == false)
     {
-      SetPgwLoadBalancing (true);
+      // Enable the load balancing mechanisms when we hit the max number of
+      // flow entries on the first P-GW TFT switch.
+      if (m_pgwEntries.at (0) > m_pgwMaxEntries)
+        {
+          SetPgwLoadBalancing (true);
+        }
     }
-
-  // Disable the mechanisms if all entries together will not exceed 80% of the
-  // max number of flow entries allowed on a single switch.
-  else if (GetPgwLoadBalancing () == true)
+  else
     {
-      uint32_t maxThreshold = 0.8 * m_pgwMaxEntries;
+      // Disable the load balancing mechanisms when the entries of both P-GW
+      // TFT switches will not exceed 80% of the max number of flow entries.
+      uint32_t minThreshold = 0.8 * m_pgwMaxEntries;
       uint32_t totalEntries = std::accumulate (m_pgwEntries.begin (),
                                                m_pgwEntries.end (), 0);
-      if (totalEntries < maxThreshold)
+      if (totalEntries < minThreshold)
         {
           SetPgwLoadBalancing (false);
         }
     }
+
+  // Schedule the next check.
+  Simulator::Schedule (Seconds (2),
+                       &EpcController::CheckPgwTftFlowEntries, this);
 }
 
 void

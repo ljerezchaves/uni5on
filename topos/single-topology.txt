@@ -7,7 +7,7 @@ default ns3::ConnectionInfo::NonGbrAdjustmentStep "5Mb/s"
 default ns3::EpcController::VoipQueue "true"
 default ns3::EpcController::NonGbrCoexistence "true"
 default ns3::EpcController::PgwLoadBalancing "auto"
-default ns3::EpcController::PgwMaxEntries "50"
+default ns3::EpcController::PgwMaxEntries "10"
 default ns3::EpcController::S5TrafficAggregation "off"
 
 default ns3::EpcNetwork::EpcLinkDataRate "10Gb/s"
