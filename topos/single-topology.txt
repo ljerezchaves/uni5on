@@ -21,6 +21,8 @@ default ns3::LteNetwork::UeMobility "false"
 default ns3::LteNetwork::PrintRem "false"
 default ns3::LteNetwork::LteTrace "false"
 
+default ns3::OFSwitch13::PipelineCapacity "1Mbps"
+
 default ns3::PgwTunnelApp::UseTftClassifier "true"
 
 default ns3::RingController::Strategy "spf"
