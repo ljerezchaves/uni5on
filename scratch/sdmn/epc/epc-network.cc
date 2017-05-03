@@ -75,7 +75,7 @@ EpcNetwork::GetTypeId (void)
                    "The delay for the link connecting a gateway to the "
                    "OpenFlow backhaul network.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   TimeValue (MicroSeconds (1)),
+                   TimeValue (MicroSeconds (100)),
                    MakeTimeAccessor (&EpcNetwork::m_linkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("LinkMtu",

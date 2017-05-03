@@ -60,7 +60,7 @@ RingNetwork::GetTypeId (void)
     .AddAttribute ("SwitchLinkDelay",
                    "The delay for the links between OpenFlow switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   TimeValue (MicroSeconds (100)), // 20km fiber cable latency.
+                   TimeValue (MicroSeconds (200)), // 40km fiber cable latency.
                    MakeTimeAccessor (&RingNetwork::m_linkDelay),
                    MakeTimeChecker ())
   ;

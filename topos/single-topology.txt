@@ -11,7 +11,7 @@ default ns3::EpcController::PgwMaxEntries "10"
 default ns3::EpcController::S5TrafficAggregation "off"
 
 default ns3::EpcNetwork::EpcLinkDataRate "10Gb/s"
-default ns3::EpcNetwork::EpcLinkDelay "1us"
+default ns3::EpcNetwork::EpcLinkDelay "100us"
 
 default ns3::LteHexGridEnbTopologyHelper::GridWidth "2"
 
@@ -27,11 +27,11 @@ default ns3::RingController::Strategy "spf"
 
 default ns3::RingNetwork::NumSwitches "3"
 default ns3::RingNetwork::SwitchLinkDataRate "100Mb/s"
-default ns3::RingNetwork::SwitchLinkDelay "100us"
+default ns3::RingNetwork::SwitchLinkDelay "200us"
 
 default ns3::SdranCloud::NumSites "1"
 default ns3::SdranCloud::LinkDataRate "10Gb/s"
-default ns3::SdranCloud::LinkDelay "1us"
+default ns3::SdranCloud::LinkDelay "100us"
 
 default ns3::TrafficHelper::FastTraffic "true"
 default ns3::TrafficHelper::VoipTraffic "true"
