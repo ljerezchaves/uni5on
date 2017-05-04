@@ -72,7 +72,7 @@ SdranCloud::GetTypeId (void)
     .AddAttribute ("LinkDelay",
                    "The delay for the link connecting the S-GW to the eNB.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   TimeValue (MicroSeconds (100)),
+                   TimeValue (MicroSeconds (50)),
                    MakeTimeAccessor (&SdranCloud::m_linkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("LinkMtu",
