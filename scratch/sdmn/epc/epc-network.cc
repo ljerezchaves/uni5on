@@ -69,14 +69,28 @@ EpcNetwork::GetTypeId (void)
                    "OpenFlow backhaul network.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("10Gb/s")),
-                   MakeDataRateAccessor (&EpcNetwork::m_linkRate),
+                   MakeDataRateAccessor (&EpcNetwork::m_epcLinkRate),
                    MakeDataRateChecker ())
     .AddAttribute ("EpcLinkDelay",
                    "The delay for the link connecting a gateway to the "
                    "OpenFlow backhaul network.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    TimeValue (MicroSeconds (50)),
-                   MakeTimeAccessor (&EpcNetwork::m_linkDelay),
+                   MakeTimeAccessor (&EpcNetwork::m_epcLinkDelay),
+                   MakeTimeChecker ())
+    .AddAttribute ("WebLinkDataRate",
+                   "The data rate for the link connecting the packet gateway "
+                   "to the Internet web server.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   DataRateValue (DataRate ("10Gb/s")),
+                   MakeDataRateAccessor (&EpcNetwork::m_webLinkRate),
+                   MakeDataRateChecker ())
+    .AddAttribute ("WebLinkDelay",
+                   "The delay for the link connecting the packet gateway to "
+                   "the Internet web server.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   TimeValue (MilliSeconds (15)),
+                   MakeTimeAccessor (&EpcNetwork::m_webLinkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("LinkMtu",
                    "The MTU for CSMA OpenFlow links. "
@@ -219,13 +233,6 @@ EpcNetwork::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Configure CSMA helper for connecting EPC nodes (P-GW and S-GWs) to the
-  // backhaul topology. This same helper will be used to configure the P-GW
-  // user-plane and its connection to the server node on the Internet.
-  m_csmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
-  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_linkRate));
-  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
-
   // Configure IP address helpers.
   m_ueAddrHelper.SetBase (m_ueAddr, m_ueMask);
   m_sgiAddrHelper.SetBase (m_sgiAddr, m_sgiMask);
@@ -320,6 +327,11 @@ EpcNetwork::PgwCreate (void)
   // thought this switch. On the downlink direction, this switch will send the
   // traffic to the other TFT switches.
   //
+  // Configure CSMA helper for connecting the P-GW node to the web server node.
+  m_csmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
+  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_webLinkRate));
+  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_webLinkDelay));
+
   // Connect the P-GW main node to the web server node (SGi interface).
   m_sgiDevices = m_csmaHelper.Install (pgwMainNode, m_webNode);
 
@@ -348,6 +360,11 @@ EpcNetwork::PgwCreate (void)
   webHostStaticRouting->AddNetworkRouteTo (
     EpcNetwork::m_ueAddr, EpcNetwork::m_ueMask,
     EpcNetwork::GetIpv4Addr (pgwSgiDev), 1);
+
+  // Configure CSMA helper for connecting EPC nodes (P-GW and S-GWs) to the
+  // OpenFlow backhaul topology.
+  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_epcLinkRate));
+  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_epcLinkDelay));
 
   // Connect the P-GW main node to the OpenFlow backhaul node (S5 interface).
   NetDeviceContainer devices = m_csmaHelper.Install (pgwMainNode, backNode);

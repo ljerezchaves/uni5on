@@ -12,6 +12,8 @@ default ns3::EpcController::S5TrafficAggregation "off"
 
 default ns3::EpcNetwork::EpcLinkDataRate "10Gb/s"
 default ns3::EpcNetwork::EpcLinkDelay "50us"
+default ns3::EpcNetwork::WebLinkDataRate "10Gb/s"
+default ns3::EpcNetwork::WebLinkDelay "15ms"
 
 default ns3::LteHexGridEnbTopologyHelper::GridWidth "2"
 
