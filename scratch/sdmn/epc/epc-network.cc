@@ -104,8 +104,7 @@ EpcNetwork::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (5),
                    MakeUintegerAccessor (&EpcNetwork::m_pgwNumNodes),
-                   // 4 P-GW TFT switches + 1 P-GW main switch.
-                   MakeUintegerChecker<uint16_t> (5, 5))
+                   MakeUintegerChecker<uint16_t> (2, 5))
   ;
   return tid;
 }
@@ -232,6 +231,10 @@ void
 EpcNetwork::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
+
+  // Check the number of P-GW nodes (must have a power of 2 P-GW TFT nodes).
+  NS_ASSERT_MSG ((GetNTftNodes () & (GetNTftNodes () - 1)) == 0,
+                 "Invalid number of P-GW nodes.");
 
   // Configure IP address helpers.
   m_ueAddrHelper.SetBase (m_ueAddr, m_ueMask);
