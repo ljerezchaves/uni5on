@@ -175,6 +175,12 @@ protected:
   //\}
 
   /**
+   * Get the number of P-GW TFT switch nodes available on this topology.
+   * \return The number of TFT nodes.
+   */
+  uint32_t GetNTftNodes (void) const;
+
+  /**
    * Install the OpenFlow EPC controller for this network.
    * \param controller The controller application.
    */

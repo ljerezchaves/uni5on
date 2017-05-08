@@ -102,10 +102,10 @@ EpcNetwork::GetTypeId (void)
     .AddAttribute ("NumPgwNodes",
                    "The number of P-GW user-plane OpenFlow nodes.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (3),
+                   UintegerValue (5),
                    MakeUintegerAccessor (&EpcNetwork::m_pgwNumNodes),
-                   // Current implementation only supports 3 switches on P-GW.
-                   MakeUintegerChecker<uint16_t> (3, 3))
+                   // 4 P-GW TFT switches + 1 P-GW main switch.
+                   MakeUintegerChecker<uint16_t> (5, 5))
   ;
   return tid;
 }
@@ -260,6 +260,14 @@ EpcNetwork::NotifyConstructionCompleted (void)
 
   // Chain up.
   Object::NotifyConstructionCompleted ();
+}
+
+uint32_t
+EpcNetwork::GetNTftNodes (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwNumNodes - 1;
 }
 
 void
