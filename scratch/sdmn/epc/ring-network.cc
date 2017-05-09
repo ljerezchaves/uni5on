@@ -97,7 +97,10 @@ RingNetwork::TopologyCreate (void)
   NS_ASSERT_MSG (m_numNodes >= 3, "Invalid number of nodes for the ring");
 
   // Install the EPC ring controller application for this topology.
-  InstallController (CreateObject<RingController> ());
+  Ptr<RingController> ringController =
+    CreateObjectWithAttributes<RingController> (
+      "NumPgwTftSwitches", UintegerValue (GetNTftNodes ()));
+  InstallController (ringController);
 
   // Create the switch nodes.
   m_backNodes.Create (m_numNodes);
@@ -156,7 +159,7 @@ RingNetwork::TopologyCreate (void)
             currPortDevice->GetChannel ()));
 
       // Fire trace source notifying new connection between switches.
-      m_epcCtrlApp->NotifySwitchConnection (cInfo);
+      m_epcCtrlApp->NotifyTopologyConnection (cInfo);
     }
 
   // Fire trace source notifying that all connections between switches are ok.

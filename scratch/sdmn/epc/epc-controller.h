@@ -52,10 +52,9 @@ public:
   /** Options to enable or disable internal mechanisms. */
   enum FeatureStatus
   {
-    OFF      = 0,   //!< Always off.
-    ON       = 1,   //!< Always on.
-    AUTO_OFF = 2,   //!< Automatic with value off.
-    AUTO_ON  = 3    //!< Automatic with value on.
+    OFF  = 0,   //!< Always off.
+    ON   = 1,   //!< Always on.
+    AUTO = 2    //!< Automatic.
   };
 
   EpcController ();           //!< Default constructor.
@@ -138,21 +137,21 @@ public:
    * OpenFlow backhaul network.
    * \param cInfo The connection information.
    */
-  virtual void NotifySwitchConnection (Ptr<ConnectionInfo> cInfo);
+  virtual void NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo);
 
   /**
-   * Notify this controller that all connections between switches have already
-   * been configure and the topology is finished.
+   * Notify this controller that all backhaul switches have already been
+   * configured and the connections between them are finished.
    * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
    */
   virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
 
   /**
-   * Get the active P-GW TFT index for a given traffic flow.
-   * \param rInfo The routing information to process.
-   * \return The P-GW TFT index.
+   * Notify this controller that all P-GW switches have already been
+   * configured and the connections between them are finished.
+   * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
    */
-  uint16_t GetPgwTftIdx (Ptr<const RoutingInfo> rInfo) const;
+  virtual void NotifyPgwBuilt (OFSwitch13DeviceContainer devices);
 
   /**
    * Get The P-GW side of the S5 SAP.
@@ -165,10 +164,10 @@ public:
    * \return The requested mechanism status.
    */
   //\{
-  bool GetVoipQos (void) const;
-  bool GetNonGbrCoexistence (void) const;
-  bool GetPgwLoadBalancing (void) const;
-  bool GetS5TrafficAggregation (void) const;
+  FeatureStatus GetNonGbrCoexistence (void) const;
+  FeatureStatus GetPgwLoadBalancing (void) const;
+  FeatureStatus GetS5TrafficAggregation (void) const;
+  FeatureStatus GetVoipQos (void) const;
   //\}
 
   /**
@@ -206,7 +205,18 @@ protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
-  /** \name Topology methods.
+  // Inherited from ObjectBase.
+  virtual void NotifyConstructionCompleted (void);
+
+  /**
+   * Get the active P-GW TFT index for a given traffic flow.
+   * \param rInfo The routing information to process.
+   * \return The P-GW TFT index.
+   */
+  uint16_t GetPgwTftIdx (Ptr<const RoutingInfo> rInfo) const;
+
+  /**
+   * \name Topology methods.
    * These virtual methods must be implemented by topology subclasses, as they
    * are dependent on the backhaul OpenFlow network topology.
    */
@@ -254,60 +264,31 @@ protected:
 
 private:
   /**
-   * Trace sink to monitor the number of flow entries on P-GW TFT datapaths.
-   * \param context The P-GW TFT switch index.
-   * \param oldValue The previous number of flow entries on datapath.
-   * \param newValue The current number of flow entries on datapath.
-   */
-  void NotifyPgwTftFlowEntries (
-    std::string context, uint32_t oldValue, uint32_t newValue);
-
-  /**
-   * Periodically check for the number of flow entries on the P-GW TFT
-   * datapaths to enable or disable the load balancing mechanism.
-   */
-  void CheckPgwTftFlowEntries (void);
-
-  /**
-   * Enable/Disable the P-GW TFT load balancing mechanism.
-   * \param value The value to set.
-   */
-  void SetPgwLoadBalancing (bool value);
-
-  /**
-   * Enable/Disable the S5 traffic aggregation mechanism.
-   * \param value The value to set.
-   */
-  void SetS5TrafficAggregation (bool value);
-
-  /**
    * Install OpenFlow rules for downlink packet filtering on the P-GW TFT
    * switch.
    * \attention To avoid conflicts with old entries, increase the routing
    *            priority before installing OpenFlow rules.
    * \param rInfo The routing information to process.
-   * \param pgwTftDpId The P-GW TFT datapath ID.
-   * \param pgwTftS5PortNo The S5 port number on the P-GW TFT switch.
-   * \param forceMeterInstall Force the meter entry installation even when the
-   *        rInfo->IsDownInstalled () is true (use this only when moving rules
-   *        between P-GW TFT switches).
+   * \param pgwTftIdx The P-GW TFT switch index.
+   * \param installMeter Force the meter entry installation even when the
+   *        meterInfo->IsDownInstalled () is true (use this only when moving
+   *        rules between P-GW TFT switches).
    * \return True if succeeded, false otherwise.
    */
   bool InstallPgwSwitchRules (
-    Ptr<RoutingInfo> rInfo, uint64_t pgwTftDpId, uint32_t pgwTftS5PortNo,
-    bool forceMeterInstall = false);
+    Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool installMeter = false);
 
   /**
    * Remove OpenFlow rules for downlink packet filtering from P-GW TFT switch.
    * \param rInfo The routing information to process.
-   * \param pgwTftDpId The P-GW TFT datapath ID.
-   * \param keepMeterFlag Don't update the rInfo->IsDownInstalled () flag when
-   *                      removing the meter entry (use this only when moving
-                          rules between P-GW TFT switches).
+   * \param pgwTftIdx The P-GW TFT switch index.
+   * \param keepMeter Don't update the meterInfo->IsDownInstalled () flag when
+   *        removing the meter entry (use this only when moving rules between
+   *        P-GW TFT switches).
    * \return True if succeeded, false otherwise.
    */
   bool RemovePgwSwitchRules (
-    Ptr<RoutingInfo> rInfo, uint64_t pgwTftDpId, bool keepMeterFlag = false);
+    Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool keepMeter = false);
 
   /**
    * Install OpenFlow match rules for this bearer.
@@ -322,6 +303,21 @@ private:
    * \return True if succeeded, false otherwise.
    */
   bool RemoveBearer (Ptr<RoutingInfo> rInfo);
+
+  /**
+   * Trace sink to monitor the number of flow entries on P-GW TFT datapaths.
+   * \param context The P-GW TFT switch index.
+   * \param oldValue The previous number of flow entries on datapath.
+   * \param newValue The current number of flow entries on datapath.
+   */
+  void NotifyPgwTftFlowEntries (
+    std::string context, uint32_t oldValue, uint32_t newValue);
+
+  /**
+   * Periodically check for the P-GW TFT load to enable/disable the load
+   * balancing mechanism.
+   */
+  void CheckPgwTftLoad (void);
 
   /** \name Methods for the S5 SAP P-GW control plane. */
   //\{
@@ -347,21 +343,25 @@ private:
   TracedCallback<bool, RoutingInfoList_t> m_loadBalancingTrace;
 
   // Internal mechanisms for performance improvement.
-  bool            m_voipQos;              //!< VoIP QoS with queues.
-  bool            m_nonGbrCoexistence;    //!< Non-GBR coexistence.
-  FeatureStatus   m_pgwLoadBalancing;     //!< P-GW load balancing.
-  FeatureStatus   m_s5TrafficAggregation; //!< Agg traffic S5 def bearer.
+  FeatureStatus         m_voipQos;        //!< VoIP QoS with queues.
+  FeatureStatus         m_nonGbrCoex;     //!< Non-GBR coexistence.
+  FeatureStatus         m_pgwLoadBal;     //!< P-GW load balancing.
+  FeatureStatus         m_s5Aggreg;       //!< S5 traffic aggregation.
 
   // S-GW communication.
-  EpcS5SapPgw*    m_s5SapPgw;             //!< P-GW side of the S5 SAP.
+  EpcS5SapPgw*          m_s5SapPgw;       //!< P-GW side of the S5 SAP.
 
-  // P-GW metadata
-  std::vector<uint64_t> m_pgwDpIds;       //!< P-GW datapath IDs.
-  std::vector<uint32_t> m_pgwS5PortsNo;   //!< P-GW S5 ports no.
-  Ipv4Address           m_pgwS5Addr;      //!< P-GW S5 IP address for uplink.
-  uint32_t              m_pgwSgiPortNo;   //!< P-GW SGi port no.
-  uint32_t              m_pgwMaxEntries;  //!< P-GW TFT max flow entries.
-  std::vector<uint32_t> m_pgwEntries;     //!< P-GW TFT current flow entries.
+  // P-GW metadata.
+  std::vector<uint64_t> m_pgwDpIds;       //!< Datapath IDs.
+  Ipv4Address           m_pgwS5Addr;      //!< S5 IP address for uplink.
+  std::vector<uint32_t> m_pgwS5PortsNo;   //!< S5 port numbers.
+  uint32_t              m_pgwSgiPortNo;   //!< SGi port number.
+
+  // P-GW TFT load balancing mechanism.
+  uint32_t              m_tftMaxEntries;  //!< TFT flow table size.
+  std::vector<uint32_t> m_tftEntries;     //!< TFT flow entries counter.
+  uint32_t              m_tftMaximum;     //!< Number of TFTs available.
+  uint32_t              m_tftLbLevel;     //!< Current load balancing level.
 
   /** Map saving EpsBearer::Qci / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;

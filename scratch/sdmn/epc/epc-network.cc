@@ -99,12 +99,13 @@ EpcNetwork::GetTypeId (void)
                    UintegerValue (1492), // Ethernet II - PPoE
                    MakeUintegerAccessor (&EpcNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("NumPgwNodes",
-                   "The number of P-GW user-plane OpenFlow nodes.",
+    .AddAttribute ("NumPgwSwitches",
+                   "The number of P-GW user-plane OpenFlow switches (1 main "
+                   "switch + N TFT switches, where N must be a power of 2).",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (5),
+                   UintegerValue (3),
                    MakeUintegerAccessor (&EpcNetwork::m_pgwNumNodes),
-                   MakeUintegerChecker<uint16_t> (2, 5))
+                   MakeUintegerChecker<uint16_t> (2))
   ;
   return tid;
 }
@@ -423,10 +424,10 @@ EpcNetwork::PgwCreate (void)
   // Connect all P-GW TFT switches to the P-GW main switch and to the S5
   // interface. Only downlink traffic will be sent to these switches.
   //
-  for (uint16_t tftIdx = 1; tftIdx < m_pgwNumNodes; tftIdx++)
+  for (uint16_t tftIdx = 0; tftIdx < GetNTftNodes (); tftIdx++)
     {
-      Ptr<Node> pgwTftNode = m_pgwNodes.Get (tftIdx);
-      Ptr<OFSwitch13Device> pgwTftOfDev = m_pgwOfDevices.Get (tftIdx);
+      Ptr<Node> pgwTftNode = m_pgwNodes.Get (tftIdx + 1);
+      Ptr<OFSwitch13Device> pgwTftOfDev = m_pgwOfDevices.Get (tftIdx + 1);
 
       // Connect the P-GW main node to the P-GW TFT node.
       devices = m_csmaHelper.Install (pgwTftNode, pgwMainNode);
@@ -483,6 +484,7 @@ EpcNetwork::PgwCreate (void)
       m_epcCtrlApp->NotifyPgwTftAttach (tftIdx, pgwTftOfDev, pgwS5PortNo,
                                         mainPortNo);
     }
+  m_epcCtrlApp->NotifyPgwBuilt (m_pgwOfDevices);
 }
 
 //

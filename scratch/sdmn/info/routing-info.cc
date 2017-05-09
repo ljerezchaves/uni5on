@@ -209,6 +209,8 @@ RoutingInfo::SetAggregated (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 
+  NS_ASSERT_MSG (IsDefault () == false || value == false,
+                 "Can't aggregate the default bearer traffic.");
   m_isAggregated = value;
 }
 

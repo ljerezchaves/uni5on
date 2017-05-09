@@ -38,12 +38,7 @@ EpcController::EpcController ()
   NS_LOG_FUNCTION (this);
 
   StaticInitialize ();
-
   m_s5SapPgw = new MemberEpcS5SapPgw<EpcController> (this);
-
-  // Manually set the vector with 2 positions, considering that this
-  // implementation only supports two P-GW TFT switches.
-  m_pgwEntries = std::vector<uint32_t> (2, 0);
 }
 
 EpcController::~EpcController ()
@@ -56,56 +51,62 @@ EpcController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::EpcController")
     .SetParent<OFSwitch13Controller> ()
-    .AddAttribute ("VoipQueue",
-                   "Enable VoIP QoS through queuing traffic management.",
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&EpcController::m_voipQos),
-                   MakeBooleanChecker ())
     .AddAttribute ("NonGbrCoexistence",
                    "Enable the coexistence of GBR and Non-GBR traffic, "
                    "installing meters to limit Non-GBR traffic bit rate.",
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&EpcController::m_nonGbrCoexistence),
-                   MakeBooleanChecker ())
+                   EnumValue (EpcController::ON),
+                   MakeEnumAccessor (&EpcController::m_nonGbrCoex),
+                   MakeEnumChecker (EpcController::OFF, "off",
+                                    EpcController::ON,  "on"))
+    .AddAttribute ("NumPgwTftSwitches",
+                   "The number of P-GW TFT switches available for use.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (1),
+                   MakeUintegerAccessor (&EpcController::m_tftMaximum),
+                   MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("PgwLoadBalancing",
                    "Configure the P-GW load balancing mechanism.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (EpcController::ON),
-                   MakeEnumAccessor (&EpcController::m_pgwLoadBalancing),
-                   MakeEnumChecker (EpcController::OFF, "off",
-                                    EpcController::ON, "on",
-                                    EpcController::AUTO_OFF, "auto"))
-    .AddAttribute ("PgwMaxEntries",
-                   "The maximum number of flow entries allowed in a P-GW TFT "
-                   "switch datapath flow tables.",
+                   MakeEnumAccessor (&EpcController::m_pgwLoadBal),
+                   MakeEnumChecker (EpcController::OFF,  "off",
+                                    EpcController::ON,   "on"))
+    .AddAttribute ("PgwTftMaxEntries",
+                   "The lightweigth maximum number of flow entries allowed "
+                   "in any P-GW TFT switch flow table.",
                    UintegerValue (1024),
-                   MakeUintegerAccessor (&EpcController::m_pgwMaxEntries),
+                   MakeUintegerAccessor (&EpcController::m_tftMaxEntries),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("S5TrafficAggregation",
                    "Configure the S5 traffic aggregation mechanism.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (EpcController::OFF),
-                   MakeEnumAccessor (&EpcController::m_s5TrafficAggregation),
+                   MakeEnumAccessor (&EpcController::m_s5Aggreg),
+                   MakeEnumChecker (EpcController::OFF,  "off",
+                                    EpcController::ON,   "on"))
+    .AddAttribute ("VoipQueue",
+                   "Enable VoIP QoS through queuing traffic management.",
+                   EnumValue (EpcController::ON),
+                   MakeEnumAccessor (&EpcController::m_voipQos),
                    MakeEnumChecker (EpcController::OFF, "off",
-                                    EpcController::ON, "on",
-                                    EpcController::AUTO_ON, "auto"))
+                                    EpcController::ON,  "on"))
 
-    .AddTraceSource ("BearerRequest", "The bearer request trace source.",
-                     MakeTraceSourceAccessor (
-                       &EpcController::m_bearerRequestTrace),
-                     "ns3::EpcController::BearerTracedCallback")
     .AddTraceSource ("BearerRelease", "The bearer release trace source.",
                      MakeTraceSourceAccessor (
                        &EpcController::m_bearerReleaseTrace),
                      "ns3::EpcController::BearerTracedCallback")
-    .AddTraceSource ("SessionCreated", "The session created trace source.",
+    .AddTraceSource ("BearerRequest", "The bearer request trace source.",
                      MakeTraceSourceAccessor (
-                       &EpcController::m_sessionCreatedTrace),
-                     "ns3::EpcController::SessionCreatedTracedCallback")
+                       &EpcController::m_bearerRequestTrace),
+                     "ns3::EpcController::BearerTracedCallback")
     .AddTraceSource ("LoadBalancing", "The load balancing trace source.",
                      MakeTraceSourceAccessor (
                        &EpcController::m_loadBalancingTrace),
                      "ns3::EpcController::LoadBalancingTracedCallback")
+    .AddTraceSource ("SessionCreated", "The session created trace source.",
+                     MakeTraceSourceAccessor (
+                       &EpcController::m_sessionCreatedTrace),
+                     "ns3::EpcController::SessionCreatedTracedCallback")
   ;
   return tid;
 }
@@ -120,6 +121,13 @@ EpcController::RequestDedicatedBearer (EpsBearer bearer, uint32_t teid)
   NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer teid " << teid);
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
+
+  // Check for the traffic aggregation mechanism enabled.
+  if (GetS5TrafficAggregation () && !rInfo->IsDefault ())
+    {
+      NS_LOG_INFO ("Aggregating the traffic of bearer teid " << teid);
+      rInfo->SetAggregated (true);
+    }
 
   // Let's first check for available resources and fire trace source
   bool accepted = TopologyBearerRequest (rInfo);
@@ -189,14 +197,14 @@ EpcController::NotifyPgwMainAttach (
   DpctlSchedule (pgwSwDev->GetDatapathId (), cmdOut.str ());
 
   // IP packets coming from the Internet (SGi port) and addressed to the UE
-  // network are sent to the table 1 if P-GW load balancing mechanism is
-  // disable, or to table 2 otherwise.
+  // network are sent to the table corresponding to the current P-GW load
+  // balancing level.
   std::ostringstream cmdIn;
   cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
         << ",in_port=" << pgwSgiPortNo
         << ",ip_dst=" << EpcNetwork::m_ueAddr
         << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
-        << " goto:" << (GetPgwLoadBalancing () ? 2 : 1);
+        << " goto:" << m_tftLbLevel + 1;
   DpctlSchedule (pgwSwDev->GetDatapathId (), cmdIn.str ());
 
   // Table miss entry. Send to controller.
@@ -204,15 +212,9 @@ EpcController::NotifyPgwMainAttach (
                  " apply:output=ctrl");
 
   // -------------------------------------------------------------------------
-  // Table 1 -- P-GW LB disable table -- [from higher to lower priority]
+  // Table 1 to N -- P-GW LB tables -- [from higher to lower priority]
   //
-  // Table used when we have a single TFT switch.
-  // Entries will be installed here by NotifyPgwTftAttach function.
-  //
-  // -------------------------------------------------------------------------
-  // Table 2 -- P-GW LB enable table -- [from higher to lower priority]
-  //
-  // Table used when we have a pair of TFT switches.
+  // Tables used when balancing the load among TFT switches.
   // Entries will be installed here by NotifyPgwTftAttach function.
 }
 
@@ -224,67 +226,30 @@ EpcController::NotifyPgwTftAttach (
   NS_LOG_FUNCTION (this << pgwTftCounter << pgwSwDev << pgwS5PortNo <<
                    pgwMainPortNo);
 
-  static bool firstSchedule = true;
-
   // Saving information for P-GW TFT switches.
+  NS_ASSERT_MSG (pgwTftCounter < m_tftMaximum, "No more P-GW TFTs allowed.");
   m_pgwDpIds.push_back (pgwSwDev->GetDatapathId ());
   m_pgwS5PortsNo.push_back (pgwS5PortNo);
+  m_tftEntries.push_back (0);
 
-  //
-  // Note that in current implementation we only have support for two TFT
-  // switches on the P-GW user plane. When the LB is disable, all the traffic
-  // is handled by the first P-GW TFT switch. When the LB is enable, odd IP
-  // addresses are handled by the first P-GW TFT switch while even IP addresses
-  // are handled by the second P-GW TFT switch. Tables 1 and 2 at P-GW main
-  // switch are previously configured for these two situations, and the only
-  // thing that we have to do to enable or diable the LB mechanisms is to
-  // change the single talbe 0 rule that forwards downlink packets on the P-GW
-  // main switch to one of these tables.
-  //
+  // Monitoring the P-GW TFT switch statistics.
+  pgwSwDev->TraceConnect (
+    "FlowEntries", std::to_string (pgwTftCounter),
+    MakeCallback (&EpcController::NotifyPgwTftFlowEntries,
+                  Ptr<EpcController> (this)));
 
-  // When the P-GW load balancing mechanism is on automatic mode, we watch
-  // the P-GW TFT switch statistics to enable or disable the mechanism.
-  if (m_pgwLoadBalancing >= FeatureStatus::AUTO_OFF)
+  // Configuring the P-GW main switch to forward traffic to this TFT switch
+  // considering all possible load balancing levels.
+  for (uint16_t tft = m_tftMaximum; pgwTftCounter + 1 <= tft; tft /= 2)
     {
-      pgwSwDev->TraceConnect (
-        "FlowEntries", std::to_string (pgwTftCounter - 1),
-        MakeCallback (&EpcController::NotifyPgwTftFlowEntries,
-                      Ptr<EpcController> (this)));
-
-      if (firstSchedule)
-        {
-          // We periodically check (every 2 seconds) for the number of flow
-          // entries to enable/disable the load balancing mechanism.
-          firstSchedule = false;
-          Simulator::Schedule (Seconds (2),
-                               &EpcController::CheckPgwTftFlowEntries, this);
-        }
-    }
-
-  // Configuring the P-GW main switch to forward traffic to this TFT switch.
-  if (pgwTftCounter == 1)
-    {
-      // Table 1 forwards all the traffic to this switch.
-      std::ostringstream cmd1;
-      cmd1 << "flow-mod cmd=add,table=1,prio=64 "
-           << " apply:output=" << pgwMainPortNo;
-      DpctlSchedule (m_pgwDpIds.at (0), cmd1.str ());
-
-      // Table 2 forwards only the traffic of odd UE IP addresses.
-      std::ostringstream cmd2;
-      cmd2 << "flow-mod cmd=add,table=2,prio=64 "
-           << "eth_type=0x800,ip_dst=0.0.0.1/0.0.0.1"  // odd IPs
-           << " apply:output=" << pgwMainPortNo;
-      DpctlSchedule (m_pgwDpIds.at (0), cmd2.str ());
-    }
-  else if (pgwTftCounter == 2)
-    {
-      // Table 2 forwards only the traffic of even UE IP addresses.
-      std::ostringstream cmd1;
-      cmd1 << "flow-mod cmd=add,table=2,prio=64 "
-           << "eth_type=0x800,ip_dst=0.0.0.0/0.0.0.1"  // even IPs
-           << " apply:output=" << pgwMainPortNo;
-      DpctlSchedule (m_pgwDpIds.at (0), cmd1.str ());
+      uint16_t lbLevel = (uint16_t)log2 (tft);
+      uint16_t ipMask = (1 << lbLevel) - 1;
+      std::ostringstream cmd;
+      cmd << "flow-mod cmd=add,prio=64,table=" << lbLevel + 1
+          << " eth_type=0x800,ip_dst=0.0.0." << pgwTftCounter
+          << "/0.0.0." << ipMask
+          << " apply:output=" << pgwMainPortNo;
+      DpctlSchedule (m_pgwDpIds.at (0), cmd.str ());
     }
 
   // -------------------------------------------------------------------------
@@ -331,7 +296,7 @@ EpcController::NotifyS5Attach (
 }
 
 void
-EpcController::NotifySwitchConnection (Ptr<ConnectionInfo> cInfo)
+EpcController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
 }
@@ -342,19 +307,14 @@ EpcController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
   NS_LOG_FUNCTION (this);
 }
 
-uint16_t
-EpcController::GetPgwTftIdx (Ptr<const RoutingInfo> rInfo) const
+void
+EpcController::NotifyPgwBuilt (OFSwitch13DeviceContainer devices)
 {
-  NS_LOG_FUNCTION (this << rInfo);
+  NS_LOG_FUNCTION (this);
 
-  // When the load balancing mechanisms is enabled, the traffic of UEs with
-  // even IP addresses are sent to second P-GW TFT switch.
-  Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
-  if (GetPgwLoadBalancing () && (ueInfo->GetUeAddr ().Get () % 2 == 0))
-    {
-      return 2;
-    }
-  return 1;
+  NS_ASSERT_MSG (devices.GetN () == m_pgwDpIds.size ()
+                 && devices.GetN () == m_tftMaximum + 1,
+                 "Inconsistent number of P-GW OpenFlow switches.");
 }
 
 EpcS5SapPgw*
@@ -365,36 +325,36 @@ EpcController::GetS5SapPgw (void) const
   return m_s5SapPgw;
 }
 
-bool
+EpcController::FeatureStatus
+EpcController::GetNonGbrCoexistence (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_nonGbrCoex;
+}
+
+EpcController::FeatureStatus
+EpcController::GetPgwLoadBalancing (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwLoadBal;
+}
+
+EpcController::FeatureStatus
+EpcController::GetS5TrafficAggregation (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s5Aggreg;
+}
+
+EpcController::FeatureStatus
 EpcController::GetVoipQos (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_voipQos;
-}
-
-bool
-EpcController::GetNonGbrCoexistence (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_nonGbrCoexistence;
-}
-
-bool
-EpcController::GetPgwLoadBalancing (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return (m_pgwLoadBalancing % 2);
-}
-
-bool
-EpcController::GetS5TrafficAggregation (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return (m_s5TrafficAggregation % 2);
 }
 
 uint16_t
@@ -419,7 +379,52 @@ EpcController::DoDispose ()
   delete (m_s5SapPgw);
 
   // Chain up.
-  Object::DoDispose ();
+  OFSwitch13Controller::DoDispose ();
+}
+
+void
+EpcController::NotifyConstructionCompleted (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Check the number of P-GW TFT switches (must be a power of 2).
+  NS_ASSERT_MSG ((m_tftMaximum & (m_tftMaximum - 1)) == 0,
+                 "Invalid number of P-GW TFT switches.");
+
+  // Set the initial number of P-GW TFT active switches.
+  switch (GetPgwLoadBalancing ())
+    {
+    case FeatureStatus::OFF:
+      {
+        m_tftLbLevel = 0;
+        break;
+      }
+    case FeatureStatus::ON:
+      {
+        m_tftLbLevel = (uint32_t)log2 (m_tftMaximum);
+        break;
+      }
+    case FeatureStatus::AUTO:
+      {
+        m_tftLbLevel = 0;
+        Simulator::Schedule (Seconds (2),
+                             &EpcController::CheckPgwTftLoad, this);
+        break;
+      }
+    }
+
+  // Chain up.
+  OFSwitch13Controller::NotifyConstructionCompleted ();
+}
+
+uint16_t
+EpcController::GetPgwTftIdx (Ptr<const RoutingInfo> rInfo) const
+{
+  NS_LOG_FUNCTION (this << rInfo);
+
+  Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
+  uint32_t activeTfts = 1 << m_tftLbLevel;
+  return 1 + (ueInfo->GetUeAddr ().Get () % activeTfts);
 }
 
 void
@@ -489,7 +494,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 3 -- Coexistence QoS table -- [from higher to lower priority]
   //
-  if (GetNonGbrCoexistence ())
+  if (GetNonGbrCoexistence () == FeatureStatus::ON)
     {
       // Non-GBR packets indicated by DSCP field. Apply corresponding Non-GBR
       // meter band. Send the packet to Output table.
@@ -507,7 +512,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 4 -- Output table -- [from higher to lower priority]
   //
-  if (GetVoipQos ())
+  if (GetVoipQos () == FeatureStatus::ON)
     {
       int dscpVoip = EpcController::GetDscpValue (EpsBearer::GBR_CONV_VOICE);
 
@@ -596,154 +601,17 @@ EpcController::HandleFlowRemoved (
   NS_ABORT_MSG ("Should not get here :/");
 }
 
-void
-EpcController::NotifyPgwTftFlowEntries (std::string context, uint32_t oldValue,
-                                        uint32_t newValue)
-{
-  NS_LOG_FUNCTION (this << context << oldValue << newValue);
-
-  m_pgwEntries.at (std::stoi (context)) = newValue;
-}
-
-void
-EpcController::CheckPgwTftFlowEntries (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  if (GetPgwLoadBalancing () == false)
-    {
-      // Enable the load balancing mechanisms when we hit the max number of
-      // flow entries on the first P-GW TFT switch.
-      if (m_pgwEntries.at (0) > m_pgwMaxEntries)
-        {
-          SetPgwLoadBalancing (true);
-        }
-    }
-  else
-    {
-      // Disable the load balancing mechanisms when the entries of both P-GW
-      // TFT switches will not exceed 80% of the max number of flow entries.
-      uint32_t minThreshold = 0.8 * m_pgwMaxEntries;
-      uint32_t totalEntries = std::accumulate (m_pgwEntries.begin (),
-                                               m_pgwEntries.end (), 0);
-      if (totalEntries < minThreshold)
-        {
-          SetPgwLoadBalancing (false);
-        }
-    }
-
-  // Schedule the next check.
-  Simulator::Schedule (Seconds (2),
-                       &EpcController::CheckPgwTftFlowEntries, this);
-}
-
-void
-EpcController::SetPgwLoadBalancing (bool value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  if (GetPgwLoadBalancing () != value)
-    {
-      // Trick to update the enum value considering it as an integer.
-      int enumInt = (int)m_pgwLoadBalancing;
-      value ? enumInt++ : enumInt--;
-      m_pgwLoadBalancing = (FeatureStatus)enumInt;
-
-      // Let's find the bearers of UEs with even IP addresses that are
-      // currently installed and must be moved to the other P-GW TFT switch.
-      RoutingInfoList_t bearerList;
-      for (uint32_t teid = 0x10; teid <= EpcController::m_teidCount; teid++)
-        {
-          Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-          if (rInfo && rInfo->IsInstalled ())
-            {
-              Ptr<UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
-              if (ueInfo->GetUeAddr ().Get () % 2 == 0)
-                {
-                  bearerList.push_back (rInfo);
-                }
-            }
-        }
-
-      // Check for bearers to move from one P-GW TFT to the other.
-      if (!bearerList.empty ())
-        {
-          uint64_t srcDpId = 0;
-          uint64_t dstDpId = 0;
-          uint32_t s5PortNo = 0;
-          uint32_t mainTable = 0;
-
-          if (value == true)
-            {
-              NS_LOG_INFO ("Enabling the P-GW load balancing mechanism.");
-              srcDpId = m_pgwDpIds.at (1);
-              dstDpId = m_pgwDpIds.at (2);
-              s5PortNo = m_pgwS5PortsNo.at (2);
-              mainTable = 2;
-            }
-          else
-            {
-              NS_LOG_INFO ("Disabling the P-GW load balancing mechanism.");
-              srcDpId = m_pgwDpIds.at (2);
-              dstDpId = m_pgwDpIds.at (1);
-              s5PortNo = m_pgwS5PortsNo.at (1);
-              mainTable = 1;
-            }
-
-          // 1st: reinstall active bearers on the dst P-GW TFT switch.
-          RoutingInfoList_t::iterator it;
-          for (it = bearerList.begin (); it != bearerList.end (); ++it)
-            {
-              NS_LOG_INFO ("Moving bearer teid " << (*it)->GetTeid () <<
-                           " to the P-GW TFT switch " << dstDpId);
-              InstallPgwSwitchRules (*it, dstDpId, s5PortNo, true);
-            }
-
-          // 2nd: update the P-GW main switch.
-          std::ostringstream cmd;
-          cmd << "flow-mod cmd=mods,table=0,prio=64 eth_type=0x800"
-              << ",in_port=" << m_pgwSgiPortNo
-              << ",ip_dst=" << EpcNetwork::m_ueAddr
-              << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
-              << " goto:" << mainTable;
-          DpctlExecute (m_pgwDpIds.at (0), cmd.str ());
-
-          // 3rd: remove old rules from src P-GW TFT switch.
-          for (it = bearerList.begin (); it != bearerList.end (); ++it)
-            {
-              RemovePgwSwitchRules (*it, srcDpId, true);
-            }
-        }
-
-      // Fire the load balancing trace source.
-      m_loadBalancingTrace (GetPgwLoadBalancing (), bearerList);
-    }
-}
-
-void
-EpcController::SetS5TrafficAggregation (bool value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  if (GetS5TrafficAggregation () != value)
-    {
-      // Trick to update the enum value considering it as an integer.
-      int enumInt = (int)m_s5TrafficAggregation;
-      value ? enumInt++ : enumInt--;
-      m_s5TrafficAggregation = (FeatureStatus)enumInt;
-    }
-}
-
 bool
 EpcController::InstallPgwSwitchRules (
-  Ptr<RoutingInfo> rInfo, uint64_t pgwTftDpId, uint32_t pgwTftS5PortNo,
-  bool forceMeterInstall)
+  Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool installMeter)
 {
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid () << pgwTftDpId <<
-                   pgwTftS5PortNo);
+  NS_LOG_FUNCTION (this << rInfo->GetTeid () << pgwTftIdx << installMeter);
 
   NS_LOG_INFO ("Installing P-GW rules for bearer teid " << rInfo->GetTeid () <<
-               " into P-GW TFT switch " << pgwTftDpId);
+               " into P-GW TFT switch index " << pgwTftIdx);
+
+  uint64_t pgwTftDpId = m_pgwDpIds.at (pgwTftIdx);
+  uint32_t pgwTftS5PortNo = m_pgwS5PortsNo.at (pgwTftIdx);
 
   // Flags OFPFF_CHECK_OVERLAP and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0006");
@@ -770,7 +638,7 @@ EpcController::InstallPgwSwitchRules (
   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
   if (meterInfo && meterInfo->HasDown ())
     {
-      if (forceMeterInstall || !meterInfo->IsDownInstalled ())
+      if (installMeter || !meterInfo->IsDownInstalled ())
         {
           // Install the per-flow meter entry.
           DpctlExecute (pgwTftDpId, meterInfo->GetDownAddCmd ());
@@ -836,12 +704,14 @@ EpcController::InstallPgwSwitchRules (
 
 bool
 EpcController::RemovePgwSwitchRules (
-  Ptr<RoutingInfo> rInfo, uint64_t pgwTftDpId, bool keepMeterFlag)
+  Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool keepMeter)
 {
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+  NS_LOG_FUNCTION (this << rInfo->GetTeid () << pgwTftIdx << keepMeter);
 
   NS_LOG_INFO ("Removing P-GW rules for bearer teid " << rInfo->GetTeid () <<
-               " from P-GW TFT switch " << pgwTftDpId);
+               " from P-GW TFT switch index " << pgwTftIdx);
+
+  uint64_t pgwTftDpId = m_pgwDpIds.at (pgwTftIdx);
 
   // Print the cookie value in dpctl string format.
   char cookieStr [20];
@@ -859,7 +729,7 @@ EpcController::RemovePgwSwitchRules (
   if (meterInfo && meterInfo->IsDownInstalled ())
     {
       DpctlExecute (pgwTftDpId, meterInfo->GetDelCmd ());
-      if (!keepMeterFlag)
+      if (!keepMeter)
         {
           meterInfo->SetDownInstalled (false);
         }
@@ -873,26 +743,18 @@ EpcController::InstallBearer (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
   NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
+  rInfo->SetInstalled (false);
 
-  if (GetS5TrafficAggregation () && !rInfo->IsDefault ())
+  if (rInfo->IsAggregated ())
     {
-      // When the traffic aggregation is enable, we don't install the rules for
-      // dedicated bearers. This will automatically force the traffic over the
-      // S5 default bearer.
+      // Don't install rules for aggregated traffic. This will automatically
+      // force the traffic over the S5 default bearer.
       return true;
     }
 
   // Increasing the priority every time we (re)install routing rules.
   rInfo->IncreasePriority ();
-  rInfo->SetInstalled (false);
-
-  // Get the correct P-GW TFT switch for this traffic.
-  uint16_t pgwTftIdx = GetPgwTftIdx (rInfo);
-  uint64_t pgwTftDpId = m_pgwDpIds.at (pgwTftIdx);
-  uint32_t pgwTftS5PortNo = m_pgwS5PortsNo.at (pgwTftIdx);
-
-  // Install the rules.
-  bool ok1 = InstallPgwSwitchRules (rInfo, pgwTftDpId, pgwTftS5PortNo);
+  bool ok1 = InstallPgwSwitchRules (rInfo, GetPgwTftIdx (rInfo));
   bool ok2 = TopologyInstallRouting (rInfo);
   if (ok1 && ok2)
     {
@@ -911,15 +773,12 @@ EpcController::RemoveBearer (Ptr<RoutingInfo> rInfo)
   if (rInfo->IsAggregated ())
     {
       // No rules to remove for aggregated traffic.
+      rInfo->SetAggregated (false);
       return true;
     }
 
-  // Get the correct P-GW TFT switch for this traffic.
-  uint16_t pgwTftIdx = GetPgwTftIdx (rInfo);
-  uint64_t pgwTftDpId = m_pgwDpIds.at (pgwTftIdx);
-
   // Remove the rules.
-  bool ok1 = RemovePgwSwitchRules (rInfo, pgwTftDpId);
+  bool ok1 = RemovePgwSwitchRules (rInfo, GetPgwTftIdx (rInfo));
   bool ok2 = TopologyRemoveRouting (rInfo);
   if (ok1 && ok2)
     {
@@ -927,6 +786,56 @@ EpcController::RemoveBearer (Ptr<RoutingInfo> rInfo)
       return true;
     }
   return false;
+}
+
+void
+EpcController::NotifyPgwTftFlowEntries (
+  std::string context, uint32_t oldValue, uint32_t newValue)
+{
+  NS_LOG_FUNCTION (this << context << oldValue << newValue);
+
+  m_tftEntries.at (std::stoi (context)) = newValue;
+}
+
+void
+EpcController::CheckPgwTftLoad (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  bool needIncrease = false;
+  bool needDecrease = false;
+
+  // Concerning the number of flow entries.
+  uint32_t maxEntries, sumEntries;
+  maxEntries = *std::max_element (m_tftEntries.begin (), m_tftEntries.end ());
+  sumEntries = std::accumulate (m_tftEntries.begin (), m_tftEntries.end (), 0);
+
+  // We may increase the load balancing level when we hit the max number of
+  // flow entries on any P-GW TFT switch.
+  if (maxEntries >= m_tftMaxEntries)
+    {
+      needIncrease = true;
+      NS_LOG_INFO ("Need to increase the load balancing level.");
+    }
+
+  // We may decrease the load balancing level when we can accommodate all
+  // current rules on the lower level using up to 60% of total capacity and not
+  // exceeding the max number of flow entries on any P-GW TFT switch. As the
+  // average number of rules is almost the same for all UEs, we don't need to
+  // check the max capacity because the load will be balanced among switches.
+  uint32_t activeTfts = 1 << m_tftLbLevel;
+  if (sumEntries < ((0.6 * m_tftMaxEntries) * (activeTfts / 2)))
+    {
+      needDecrease = true;
+      NS_LOG_INFO ("Need to decrease the load balancing level.");
+    }
+
+  // Check for invalid state.
+  NS_ASSERT_MSG (needIncrease != true || needDecrease != true, "Can't increase"
+                 " and decrease the load balancing simultaneously.");
+
+  // Schedule the next check.
+  Simulator::Schedule (Seconds (2), &EpcController::CheckPgwTftLoad, this);
 }
 
 void

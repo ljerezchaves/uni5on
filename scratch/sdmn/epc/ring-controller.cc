@@ -100,7 +100,7 @@ RingController::NotifyS5Attach (
 }
 
 void
-RingController::NotifySwitchConnection (Ptr<ConnectionInfo> cInfo)
+RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
 
@@ -124,7 +124,7 @@ RingController::NotifySwitchConnection (Ptr<ConnectionInfo> cInfo)
         << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (1);
   DpctlSchedule (cInfo->GetSwDpId (1), cmd11.str ());
 
-  if (GetNonGbrCoexistence ())
+  if (GetNonGbrCoexistence () == FeatureStatus::ON)
     {
       // Meter flags OFPMF_KBPS.
       std::string flagsStr ("0x0001");
@@ -323,27 +323,13 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
   Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
   ringInfo->ResetToDefaultPaths ();
 
-  if (GetS5TrafficAggregation () && !rInfo->IsDefault ())
+  if (!rInfo->IsGbr () || rInfo->IsAggregated () || ringInfo->IsLocalPath ())
     {
-      // When the traffic aggregation is enable, we always accept dedicated
-      // bearer requests without guarantees.
-      rInfo->SetAggregated (true);
-      return true;
-    }
-
-  if (!rInfo->IsGbr ())
-    {
-      // For Non-GBR bearers (which includes the default bearer), let's accept
-      // it without guarantees. Note that in current implementation, Non-GBR
-      // bearers are always routed over the shortest path. However, nothing
-      // prevents the use of a more sophisticated routing approach.
-      return true;
-    }
-
-  if (ringInfo->IsLocalPath ())
-    {
-      // For GBR bearers that only transverse local switch (local routing),
-      // let's accept it without guarantees.
+      // For Non-GBR bearers (which includes the default bearer), for bearers
+      // with aggregated traffic, and for bearers that only transverse local
+      // switch (local routing): let's accept it without guarantees.  Note that
+      // in current implementation, these bearers are always routed over the
+      // shortest path.
       return true;
     }
 
@@ -423,7 +409,6 @@ RingController::TopologyBearerRelease (Ptr<RoutingInfo> rInfo)
       NS_LOG_INFO ("Releasing resources for bearer " << rInfo->GetTeid ());
       ReleaseGbrBitRate (ringInfo, gbrInfo);
     }
-  rInfo->SetAggregated (false);
   return true;
 }
 
@@ -461,7 +446,7 @@ RingController::NonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
 
-  if (GetNonGbrCoexistence ())
+  if (GetNonGbrCoexistence () == FeatureStatus::ON)
     {
       std::ostringstream cmd1, cmd2;
       uint64_t kbps = 0;
