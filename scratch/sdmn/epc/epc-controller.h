@@ -314,6 +314,15 @@ private:
     std::string context, uint32_t oldValue, uint32_t newValue);
 
   /**
+   * Trace sink to monitor the pipeline load on P-GW TFT datapaths.
+   * \param context The P-GW TFT switch index.
+   * \param oldValue The previous pipeline load.
+   * \param newValue The current pipeline load.
+   */
+  void NotifyPgwTftPipelineLoad (
+    std::string context, DataRate oldValue, DataRate newValue);
+
+  /**
    * Periodically check for the P-GW TFT load to enable/disable the load
    * balancing mechanism.
    */
@@ -358,9 +367,11 @@ private:
   uint32_t              m_pgwSgiPortNo;   //!< SGi port number.
 
   // P-GW TFT load balancing mechanism.
-  uint32_t              m_tftMaxEntries;  //!< TFT flow table size.
+  uint32_t              m_tftMaxEntries;  //!< TFT flow table size threshold.
   std::vector<uint32_t> m_tftEntries;     //!< TFT flow entries counter.
-  uint32_t              m_tftMaximum;     //!< Number of TFTs available.
+  DataRate              m_tftMaxLoad;     //!< TFT pipeline load threshold.
+  std::vector<DataRate> m_tftLoad;        //!< TFT pipeline load.
+  uint32_t              m_tftSwitches;    //!< Number of TFT switches.
   uint32_t              m_tftLbLevel;     //!< Current load balancing level.
 
   /** Map saving EpsBearer::Qci / IP DSCP value. */

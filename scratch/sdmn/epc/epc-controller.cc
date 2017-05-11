@@ -62,7 +62,7 @@ EpcController::GetTypeId (void)
                    "The number of P-GW TFT switches available for use.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (1),
-                   MakeUintegerAccessor (&EpcController::m_tftMaximum),
+                   MakeUintegerAccessor (&EpcController::m_tftSwitches),
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("PgwLoadBalancing",
                    "Configure the P-GW load balancing mechanism.",
@@ -72,11 +72,15 @@ EpcController::GetTypeId (void)
                    MakeEnumChecker (EpcController::OFF,  "off",
                                     EpcController::ON,   "on"))
     .AddAttribute ("PgwTftMaxEntries",
-                   "The lightweigth maximum number of flow entries allowed "
-                   "in any P-GW TFT switch flow table.",
+                   "The P-GW TFT load balancing flow entries max threshold.",
                    UintegerValue (1024),
                    MakeUintegerAccessor (&EpcController::m_tftMaxEntries),
                    MakeUintegerChecker<uint32_t> ())
+    .AddAttribute ("PgwTftMaxLoad",
+                   "The P-GW TFT load balancing pipeline load max threshold.",
+                   DataRateValue (DataRate ("1Gb/s")),
+                   MakeDataRateAccessor (&EpcController::m_tftMaxLoad),
+                   MakeDataRateChecker ())
     .AddAttribute ("S5TrafficAggregation",
                    "Configure the S5 traffic aggregation mechanism.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -227,20 +231,25 @@ EpcController::NotifyPgwTftAttach (
                    pgwMainPortNo);
 
   // Saving information for P-GW TFT switches.
-  NS_ASSERT_MSG (pgwTftCounter < m_tftMaximum, "No more P-GW TFTs allowed.");
+  NS_ASSERT_MSG (pgwTftCounter < m_tftSwitches, "No more P-GW TFTs allowed.");
   m_pgwDpIds.push_back (pgwSwDev->GetDatapathId ());
   m_pgwS5PortsNo.push_back (pgwS5PortNo);
   m_tftEntries.push_back (0);
+  m_tftLoad.push_back (DataRate ());
 
   // Monitoring the P-GW TFT switch statistics.
   pgwSwDev->TraceConnect (
     "FlowEntries", std::to_string (pgwTftCounter),
     MakeCallback (&EpcController::NotifyPgwTftFlowEntries,
                   Ptr<EpcController> (this)));
+  pgwSwDev->TraceConnect (
+    "PipelineLoad", std::to_string (pgwTftCounter),
+    MakeCallback (&EpcController::NotifyPgwTftPipelineLoad,
+                  Ptr<EpcController> (this)));
 
   // Configuring the P-GW main switch to forward traffic to this TFT switch
   // considering all possible load balancing levels.
-  for (uint16_t tft = m_tftMaximum; pgwTftCounter + 1 <= tft; tft /= 2)
+  for (uint16_t tft = m_tftSwitches; pgwTftCounter + 1 <= tft; tft /= 2)
     {
       uint16_t lbLevel = (uint16_t)log2 (tft);
       uint16_t ipMask = (1 << lbLevel) - 1;
@@ -313,7 +322,7 @@ EpcController::NotifyPgwBuilt (OFSwitch13DeviceContainer devices)
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (devices.GetN () == m_pgwDpIds.size ()
-                 && devices.GetN () == m_tftMaximum + 1,
+                 && devices.GetN () == m_tftSwitches + 1,
                  "Inconsistent number of P-GW OpenFlow switches.");
 }
 
@@ -388,7 +397,7 @@ EpcController::NotifyConstructionCompleted (void)
   NS_LOG_FUNCTION (this);
 
   // Check the number of P-GW TFT switches (must be a power of 2).
-  NS_ASSERT_MSG ((m_tftMaximum & (m_tftMaximum - 1)) == 0,
+  NS_ASSERT_MSG ((m_tftSwitches & (m_tftSwitches - 1)) == 0,
                  "Invalid number of P-GW TFT switches.");
 
   // Set the initial number of P-GW TFT active switches.
@@ -401,7 +410,7 @@ EpcController::NotifyConstructionCompleted (void)
       }
     case FeatureStatus::ON:
       {
-        m_tftLbLevel = (uint32_t)log2 (m_tftMaximum);
+        m_tftLbLevel = (uint32_t)log2 (m_tftSwitches);
         break;
       }
     case FeatureStatus::AUTO:
@@ -795,6 +804,15 @@ EpcController::NotifyPgwTftFlowEntries (
   NS_LOG_FUNCTION (this << context << oldValue << newValue);
 
   m_tftEntries.at (std::stoi (context)) = newValue;
+}
+
+void
+EpcController::NotifyPgwTftPipelineLoad (
+  std::string context, DataRate oldValue, DataRate newValue)
+{
+  NS_LOG_FUNCTION (this << context << oldValue << newValue);
+
+  m_tftLoad.at (std::stoi (context)) = newValue;
 }
 
 void

@@ -26,6 +26,8 @@ default ns3::LteNetwork::LteTrace "false"
 
 default ns3::OFSwitch13Device::PipelineCapacity "100Mbps"
 
+default ns3::OFSwitch13Queue::NumQueues "2"
+
 default ns3::PgwTunnelApp::UseTftClassifier "true"
 
 default ns3::RingController::Strategy "spf"
