@@ -840,7 +840,7 @@ EpcController::CheckPgwTftLoad (void)
   sumLoad = std::accumulate (m_tftLoad.begin (), m_tftLoad.end (), 0);
 
   uint32_t maxLevel = (uint32_t)log2 (m_tftSwitches);
-  
+
   // We may increase the load balancing level when we hit the max number of
   // flow entries or pipeline load on any P-GW TFT switch.
   if (m_tftLbLevel < maxLevel
