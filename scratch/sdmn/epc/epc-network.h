@@ -212,8 +212,8 @@ private:
 
   // Helper and attributes for S5 interface.
   CsmaHelper                    m_csmaHelper;       //!< Connection helper.
-  DataRate                      m_epcLinkRate;      //!< Link data rate.
-  Time                          m_epcLinkDelay;     //!< Link delay.
+  DataRate                      m_s5LinkRate;       //!< Link data rate.
+  Time                          m_s5LinkDelay;      //!< Link delay.
 
   // EPC user-plane devices.
   NetDeviceContainer            m_x2Devices;        //!< X2 devices.
@@ -228,8 +228,8 @@ private:
 
   // Internet web server.
   Ptr<Node>                     m_webNode;          //!< Web server node.
-  DataRate                      m_webLinkRate;      //!< Link data rate.
-  Time                          m_webLinkDelay;     //!< Link delay.
+  DataRate                      m_sgiLinkRate;      //!< Link data rate.
+  Time                          m_sgiLinkDelay;     //!< Link delay.
 
   // P-GW user plane.
   Ipv4Address                   m_pgwAddr;          //!< P-GW gateway addr.

@@ -56,26 +56,26 @@ SdranCloud::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::SdranCloud")
     .SetParent<Object> ()
     .AddConstructor<SdranCloud> ()
-    .AddAttribute ("NumSites", "The total number of cell sites managed by "
+    .AddAttribute ("NumCellSites", "The total number of cell sites managed by "
                    "this SDRAN cloud (each site has 3 eNBs).",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (1),
                    MakeUintegerAccessor (&SdranCloud::m_nSites),
                    MakeUintegerChecker<uint32_t> ())
 
-    .AddAttribute ("LinkDataRate",
+    .AddAttribute ("S1uLinkDataRate",
                    "The data rate for the link connecting the S-GW to the eNB.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("10Gb/s")),
                    MakeDataRateAccessor (&SdranCloud::m_linkRate),
                    MakeDataRateChecker ())
-    .AddAttribute ("LinkDelay",
+    .AddAttribute ("S1uLinkDelay",
                    "The delay for the link connecting the S-GW to the eNB.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    TimeValue (MicroSeconds (50)),
                    MakeTimeAccessor (&SdranCloud::m_linkDelay),
                    MakeTimeChecker ())
-    .AddAttribute ("LinkMtu",
+    .AddAttribute ("S1uLinkMtu",
                    "The MTU for CSMA OpenFlow links. "
                    "Consider + 40 byter of GTP/UDP/IP tunnel overhead.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,

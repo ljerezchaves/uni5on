@@ -45,19 +45,19 @@ RingNetwork::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::RingNetwork")
     .SetParent<EpcNetwork> ()
     .AddConstructor<RingNetwork> ()
-    .AddAttribute ("NumSwitches",
+    .AddAttribute ("NumRingSwitches",
                    "The number of OpenFlow switches in the ring (at least 3).",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (3),
                    MakeUintegerAccessor (&RingNetwork::m_numNodes),
                    MakeUintegerChecker<uint16_t> (3))
-    .AddAttribute ("SwitchLinkDataRate",
+    .AddAttribute ("RingLinkDataRate",
                    "The data rate for the links between OpenFlow switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("100Mb/s")),
                    MakeDataRateAccessor (&RingNetwork::m_linkRate),
                    MakeDataRateChecker ())
-    .AddAttribute ("SwitchLinkDelay",
+    .AddAttribute ("RingLinkDelay",
                    "The delay for the links between OpenFlow switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    TimeValue (MicroSeconds (200)), // 40km fiber cable latency.

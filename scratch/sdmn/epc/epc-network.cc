@@ -64,33 +64,33 @@ EpcNetwork::GetTypeId (void)
     .SetParent<EpcHelper> ()
 
     // Attributes for connecting the EPC entities to the backhaul network.
-    .AddAttribute ("EpcLinkDataRate",
+    .AddAttribute ("S5LinkDataRate",
                    "The data rate for the link connecting a gateway to the "
                    "OpenFlow backhaul network.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("10Gb/s")),
-                   MakeDataRateAccessor (&EpcNetwork::m_epcLinkRate),
+                   MakeDataRateAccessor (&EpcNetwork::m_s5LinkRate),
                    MakeDataRateChecker ())
-    .AddAttribute ("EpcLinkDelay",
+    .AddAttribute ("S5LinkDelay",
                    "The delay for the link connecting a gateway to the "
                    "OpenFlow backhaul network.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    TimeValue (MicroSeconds (50)),
-                   MakeTimeAccessor (&EpcNetwork::m_epcLinkDelay),
+                   MakeTimeAccessor (&EpcNetwork::m_s5LinkDelay),
                    MakeTimeChecker ())
-    .AddAttribute ("WebLinkDataRate",
+    .AddAttribute ("SgiLinkDataRate",
                    "The data rate for the link connecting the packet gateway "
                    "to the Internet web server.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("10Gb/s")),
-                   MakeDataRateAccessor (&EpcNetwork::m_webLinkRate),
+                   MakeDataRateAccessor (&EpcNetwork::m_sgiLinkRate),
                    MakeDataRateChecker ())
-    .AddAttribute ("WebLinkDelay",
+    .AddAttribute ("SgiLinkDelay",
                    "The delay for the link connecting the packet gateway to "
                    "the Internet web server.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    TimeValue (MilliSeconds (15)),
-                   MakeTimeAccessor (&EpcNetwork::m_webLinkDelay),
+                   MakeTimeAccessor (&EpcNetwork::m_sgiLinkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("LinkMtu",
                    "The MTU for CSMA OpenFlow links. "
@@ -341,8 +341,8 @@ EpcNetwork::PgwCreate (void)
   //
   // Configure CSMA helper for connecting the P-GW node to the web server node.
   m_csmaHelper.SetDeviceAttribute ("Mtu", UintegerValue (m_linkMtu));
-  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_webLinkRate));
-  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_webLinkDelay));
+  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_sgiLinkRate));
+  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_sgiLinkDelay));
 
   // Connect the P-GW main node to the web server node (SGi interface).
   m_sgiDevices = m_csmaHelper.Install (pgwMainNode, m_webNode);
@@ -375,8 +375,8 @@ EpcNetwork::PgwCreate (void)
 
   // Configure CSMA helper for connecting EPC nodes (P-GW and S-GWs) to the
   // OpenFlow backhaul topology.
-  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_epcLinkRate));
-  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_epcLinkDelay));
+  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_s5LinkRate));
+  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_s5LinkDelay));
 
   // Connect the P-GW main node to the OpenFlow backhaul node (S5 interface).
   NetDeviceContainer devices = m_csmaHelper.Install (pgwMainNode, backNode);
