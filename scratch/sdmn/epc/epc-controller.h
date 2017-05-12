@@ -370,9 +370,10 @@ private:
   uint32_t              m_tftMaxEntries;  //!< TFT flow table size threshold.
   std::vector<uint32_t> m_tftEntries;     //!< TFT flow entries counter.
   DataRate              m_tftMaxLoad;     //!< TFT pipeline load threshold.
-  std::vector<DataRate> m_tftLoad;        //!< TFT pipeline load.
+  std::vector<uint64_t> m_tftLoad;        //!< TFT pipeline load (bitrate).
   uint32_t              m_tftSwitches;    //!< Number of TFT switches.
-  uint32_t              m_tftLbLevel;     //!< Current load balancing level.
+  uint32_t              m_tftLbLevel;     //!< Current TFT load bal. level.
+  Time                  m_tftTimeout;     //!< TFT check load timeout.
 
   /** Map saving EpsBearer::Qci / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;

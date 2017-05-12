@@ -70,7 +70,8 @@ EpcController::GetTypeId (void)
                    EnumValue (EpcController::ON),
                    MakeEnumAccessor (&EpcController::m_pgwLoadBal),
                    MakeEnumChecker (EpcController::OFF,  "off",
-                                    EpcController::ON,   "on"))
+                                    EpcController::ON,   "on",
+                                    EpcController::AUTO, "auto"))
     .AddAttribute ("PgwTftMaxEntries",
                    "The P-GW TFT load balancing flow entries max threshold.",
                    UintegerValue (1024),
@@ -81,6 +82,11 @@ EpcController::GetTypeId (void)
                    DataRateValue (DataRate ("1Gb/s")),
                    MakeDataRateAccessor (&EpcController::m_tftMaxLoad),
                    MakeDataRateChecker ())
+    .AddAttribute ("PgwTftTimeout",
+                   "The P-GW TFT interval between check load operations.",
+                   TimeValue (Seconds (5)),
+                   MakeTimeAccessor (&EpcController::m_tftTimeout),
+                   MakeTimeChecker ())
     .AddAttribute ("S5TrafficAggregation",
                    "Configure the S5 traffic aggregation mechanism.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -235,7 +241,7 @@ EpcController::NotifyPgwTftAttach (
   m_pgwDpIds.push_back (pgwSwDev->GetDatapathId ());
   m_pgwS5PortsNo.push_back (pgwS5PortNo);
   m_tftEntries.push_back (0);
-  m_tftLoad.push_back (DataRate ());
+  m_tftLoad.push_back (0);
 
   // Monitoring the P-GW TFT switch statistics.
   pgwSwDev->TraceConnect (
@@ -416,7 +422,7 @@ EpcController::NotifyConstructionCompleted (void)
     case FeatureStatus::AUTO:
       {
         m_tftLbLevel = 0;
-        Simulator::Schedule (Seconds (2),
+        Simulator::Schedule (m_tftTimeout,
                              &EpcController::CheckPgwTftLoad, this);
         break;
       }
@@ -812,7 +818,7 @@ EpcController::NotifyPgwTftPipelineLoad (
 {
   NS_LOG_FUNCTION (this << context << oldValue << newValue);
 
-  m_tftLoad.at (std::stoi (context)) = newValue;
+  m_tftLoad.at (std::stoi (context)) = newValue.GetBitRate ();
 }
 
 void
@@ -828,21 +834,30 @@ EpcController::CheckPgwTftLoad (void)
   maxEntries = *std::max_element (m_tftEntries.begin (), m_tftEntries.end ());
   sumEntries = std::accumulate (m_tftEntries.begin (), m_tftEntries.end (), 0);
 
+  // Concerning the pipeline load.
+  uint64_t maxLoad, sumLoad;
+  maxLoad = *std::max_element (m_tftLoad.begin (), m_tftLoad.end ());
+  sumLoad = std::accumulate (m_tftLoad.begin (), m_tftLoad.end (), 0);
+
+  uint32_t maxLevel = (uint32_t)log2 (m_tftSwitches);
+  
   // We may increase the load balancing level when we hit the max number of
-  // flow entries on any P-GW TFT switch.
-  if (maxEntries >= m_tftMaxEntries)
+  // flow entries or pipeline load on any P-GW TFT switch.
+  if (m_tftLbLevel < maxLevel
+      && (maxEntries >= m_tftMaxEntries || maxLoad >= m_tftMaxLoad.GetBitRate ()))
     {
       needIncrease = true;
       NS_LOG_INFO ("Need to increase the load balancing level.");
     }
 
-  // We may decrease the load balancing level when we can accommodate all
-  // current rules on the lower level using up to 60% of total capacity and not
-  // exceeding the max number of flow entries on any P-GW TFT switch. As the
-  // average number of rules is almost the same for all UEs, we don't need to
-  // check the max capacity because the load will be balanced among switches.
+  // We may decrease the load balancing level when we can accommodate the
+  // current load on the lower level using up to 60% of available resources.
+  // As the average traffic is almost the same for all UEs, we expect the the
+  // load will be balanced among switches.
   uint32_t activeTfts = 1 << m_tftLbLevel;
-  if (sumEntries < ((0.6 * m_tftMaxEntries) * (activeTfts / 2)))
+  if (m_tftLbLevel
+      && ((sumEntries < ((0.6 * m_tftMaxEntries) * (activeTfts / 2)))
+          || sumLoad < ((0.6 * m_tftMaxLoad.GetBitRate ()) * (activeTfts / 2))))
     {
       needDecrease = true;
       NS_LOG_INFO ("Need to decrease the load balancing level.");
@@ -853,7 +868,7 @@ EpcController::CheckPgwTftLoad (void)
                  " and decrease the load balancing simultaneously.");
 
   // Schedule the next check.
-  Simulator::Schedule (Seconds (2), &EpcController::CheckPgwTftLoad, this);
+  Simulator::Schedule (m_tftTimeout, &EpcController::CheckPgwTftLoad, this);
 }
 
 void
