@@ -237,6 +237,8 @@ private:
   OFSwitch13DeviceContainer     m_pgwOfDevices;     //!< P-GW switch devices.
   NetDeviceContainer            m_pgwIntDevices;    //!< P-GW int port devices.
   uint16_t                      m_pgwNumNodes;      //!< Num of P-GW nodes.
+  DataRate                      m_tftPipeCapacity;  //!< P-GW TFT capacity.
+  uint32_t                      m_tftTableSize;     //!< P-GW TFT table size.
 };
 
 };  // namespace ns3

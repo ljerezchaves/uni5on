@@ -62,8 +62,32 @@ EpcNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::EpcNetwork")
     .SetParent<EpcHelper> ()
-
-    // Attributes for connecting the EPC entities to the backhaul network.
+    .AddAttribute ("LinkMtu",
+                   "The MTU for CSMA OpenFlow links. "
+                   "Consider + 40 byter of GTP/UDP/IP tunnel overhead.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (1492), // Ethernet II - PPoE
+                   MakeUintegerAccessor (&EpcNetwork::m_linkMtu),
+                   MakeUintegerChecker<uint16_t> ())
+    .AddAttribute ("NumPgwSwitches",
+                   "The number of P-GW user-plane OpenFlow switches (1 main "
+                   "switch + N TFT switches, where N must be a power of 2).",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (3),
+                   MakeUintegerAccessor (&EpcNetwork::m_pgwNumNodes),
+                   MakeUintegerChecker<uint16_t> (2))
+    .AddAttribute ("PgwTftPipelineCapacity",
+                   "Pipeline capacity for P-GW TFT switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   DataRateValue (DataRate ("100Gb/s")),
+                   MakeDataRateAccessor (&EpcNetwork::m_tftPipeCapacity),
+                   MakeDataRateChecker ())
+    .AddAttribute ("PgwTftTableSize",
+                   "Flow/Group/Meter table sizes for P-GW TFT switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (65535),
+                   MakeUintegerAccessor (&EpcNetwork::m_tftTableSize),
+                   MakeUintegerChecker<uint16_t> (1, 65535))
     .AddAttribute ("S5LinkDataRate",
                    "The data rate for the link connecting a gateway to the "
                    "OpenFlow backhaul network.",
@@ -92,20 +116,6 @@ EpcNetwork::GetTypeId (void)
                    TimeValue (MilliSeconds (15)),
                    MakeTimeAccessor (&EpcNetwork::m_sgiLinkDelay),
                    MakeTimeChecker ())
-    .AddAttribute ("LinkMtu",
-                   "The MTU for CSMA OpenFlow links. "
-                   "Consider + 40 byter of GTP/UDP/IP tunnel overhead.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (1492), // Ethernet II - PPoE
-                   MakeUintegerAccessor (&EpcNetwork::m_linkMtu),
-                   MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("NumPgwSwitches",
-                   "The number of P-GW user-plane OpenFlow switches (1 main "
-                   "switch + N TFT switches, where N must be a power of 2).",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (3),
-                   MakeUintegerAccessor (&EpcNetwork::m_pgwNumNodes),
-                   MakeUintegerChecker<uint16_t> (2))
   ;
   return tid;
 }
@@ -428,6 +438,16 @@ EpcNetwork::PgwCreate (void)
     {
       Ptr<Node> pgwTftNode = m_pgwNodes.Get (tftIdx + 1);
       Ptr<OFSwitch13Device> pgwTftOfDev = m_pgwOfDevices.Get (tftIdx + 1);
+
+      // Set P-GW TFT attributes.
+      pgwTftOfDev->SetAttribute (
+        "PipelineCapacity", DataRateValue (m_tftPipeCapacity));
+      pgwTftOfDev->SetAttribute (
+        "FlowTableSize", UintegerValue (m_tftTableSize));
+      pgwTftOfDev->SetAttribute (
+        "GroupTableSize", UintegerValue (m_tftTableSize));
+      pgwTftOfDev->SetAttribute (
+        "MeterTableSize", UintegerValue (m_tftTableSize));
 
       // Connect the P-GW main node to the P-GW TFT node.
       devices = m_csmaHelper.Install (pgwTftNode, pgwMainNode);
