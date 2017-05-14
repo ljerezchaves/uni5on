@@ -114,10 +114,10 @@ ConnectionStatsCalculator::NotifyConstructionCompleted (void)
   << setw (11) << "Time(s)"
   << setw (30) << "UE RRC event"
   << right
-  << setw (8)  << "UeImsi"
-  << setw (8)  << "CellId"
-  << setw (8)  << "UeRnti"
-  << setw (14) << "TargetCellId"
+  << setw (6)  << "IMSI"
+  << setw (5)  << "CGI"
+  << setw (6)  << "RNTI"
+  << setw (10) << "TargetCGI"
   << std::endl;
 
   Object::NotifyConstructionCompleted ();
@@ -132,8 +132,8 @@ ConnectionStatsCalculator::NotifyInitialCellSelectionEndOk (
   << setw (10) << Simulator::Now ().GetSeconds ()
   << " " << setw (30) << "Initial cell selection OK"
   << right
-  << " " << setw (7)  << imsi
-  << " " << setw (7)  << cellId
+  << " " << setw (5) << imsi
+  << " " << setw (4) << cellId
   << std::endl;
 }
 
@@ -146,8 +146,8 @@ ConnectionStatsCalculator::NotifyInitialCellSelectionEndError (
   << setw (10) << Simulator::Now ().GetSeconds ()
   << " " << setw (30) << "Initial cell selection error"
   << right
-  << " " << setw (7)  << imsi
-  << " " << setw (7)  << cellId
+  << " " << setw (5) << imsi
+  << " " << setw (4) << cellId
   << std::endl;
 }
 
@@ -160,9 +160,9 @@ ConnectionStatsCalculator::NotifyConnectionEstablished (
   << setw (10) << Simulator::Now ().GetSeconds ()
   << " " << setw (30) << "Connection established"
   << right
-  << " " << setw (7)  << imsi
-  << " " << setw (7)  << cellId
-  << " " << setw (7)  << rnti
+  << " " << setw (5) << imsi
+  << " " << setw (4) << cellId
+  << " " << setw (5) << rnti
   << std::endl;
 }
 
@@ -175,9 +175,9 @@ ConnectionStatsCalculator::NotifyConnectionTimeout (
   << setw (10) << Simulator::Now ().GetSeconds ()
   << " " << setw (30) << "Connection timeout"
   << right
-  << " " << setw (7)  << imsi
-  << " " << setw (7)  << cellId
-  << " " << setw (7)  << rnti
+  << " " << setw (5) << imsi
+  << " " << setw (4) << cellId
+  << " " << setw (5) << rnti
   << std::endl;
 }
 
@@ -190,9 +190,9 @@ ConnectionStatsCalculator::NotifyConnectionReconfiguration (
   << setw (10) << Simulator::Now ().GetSeconds ()
   << " " << setw (30) << "Connection reconfiguration"
   << right
-  << " " << setw (7)  << imsi
-  << " " << setw (7)  << cellId
-  << " " << setw (7)  << rnti
+  << " " << setw (5) << imsi
+  << " " << setw (4) << cellId
+  << " " << setw (5) << rnti
   << std::endl;
 }
 
@@ -206,10 +206,10 @@ ConnectionStatsCalculator::NotifyHandoverStart (
   << setw (10) << Simulator::Now ().GetSeconds ()
   << " " << setw (30) << "Handover start"
   << right
-  << " " << setw (7)  << imsi
-  << " " << setw (7)  << srcCellId
-  << " " << setw (7)  << rnti
-  << " " << setw (13) << dstCellId
+  << " " << setw (5) << imsi
+  << " " << setw (4) << srcCellId
+  << " " << setw (5) << rnti
+  << " " << setw (9) << dstCellId
   << std::endl;
 }
 
@@ -222,9 +222,9 @@ ConnectionStatsCalculator::NotifyHandoverEndOk (
   << setw (10) << Simulator::Now ().GetSeconds ()
   << " " << setw (30) << "Handover OK"
   << right
-  << " " << setw (7)  << imsi
-  << " " << setw (7)  << cellId
-  << " " << setw (7)  << rnti
+  << " " << setw (5) << imsi
+  << " " << setw (4) << cellId
+  << " " << setw (5) << rnti
   << std::endl;
 }
 
@@ -237,9 +237,9 @@ ConnectionStatsCalculator::NotifyHandoverEndError (
   << setw (10) << Simulator::Now ().GetSeconds ()
   << " " << setw (30) << "Handover error"
   << right
-  << " " << setw (7)  << imsi
-  << " " << setw (7)  << cellId
-  << " " << setw (7)  << rnti
+  << " " << setw (7) << imsi
+  << " " << setw (7) << cellId
+  << " " << setw (7) << rnti
   << std::endl;
 }
 

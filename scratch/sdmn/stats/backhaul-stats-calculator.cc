@@ -215,16 +215,19 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
       double nonBwdKbits = static_cast<double> (nonBwdBytes * 8) / 1000;
 
       *m_bwgWrapper->GetStream ()
+      << setfill ('0')
       << right
       << setw (12) << gbrFwdKbits / interval << " "
       << setw (12) << gbrBwdKbits / interval << "   ";
 
       *m_bwnWrapper->GetStream ()
+      << setfill ('0')
       << right
       << setw (12) << nonFwdKbits / interval << " "
       << setw (12) << nonBwdKbits / interval << "   ";
 
       *m_bwbWrapper->GetStream ()
+      << setfill ('0')
       << right
       << setw (12) << (gbrFwdKbits + nonFwdKbits) / interval << " "
       << setw (12) << (gbrBwdKbits + nonBwdKbits) / interval << "   ";
@@ -240,9 +243,9 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
       << setw (6) << cInfo->GetNonGbrLinkRatio (ConnectionInfo::BWD) << "   ";
     }
 
-  *m_bwbWrapper->GetStream () << std::endl;
-  *m_bwgWrapper->GetStream () << std::endl;
-  *m_bwnWrapper->GetStream () << std::endl;
+  *m_bwbWrapper->GetStream () << setfill (' ') << std::endl;
+  *m_bwgWrapper->GetStream () << setfill (' ') << std::endl;
+  *m_bwnWrapper->GetStream () << setfill (' ') << std::endl;
   *m_regWrapper->GetStream () << std::endl;
   *m_renWrapper->GetStream () << std::endl;
 

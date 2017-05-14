@@ -133,18 +133,18 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
   // Save request stats into output file.
   *m_brqWrapper->GetStream ()
   << left
-  << setw (9)  << Simulator::Now ().GetSeconds ()
+  << setw (11) << Simulator::Now ().GetSeconds ()
   << right
+  << " " << setw (6)  << rInfo->GetTeid ()
   << " " << setw (4)  << rInfo->GetQciInfo ()
   << " " << setw (6)  << rInfo->IsGbr ()
   << " " << setw (9)  << rInfo->IsDefault ()
-  << " " << setw (7)  << ueInfo->GetImsi ()
-  << " " << setw (7)  << ueInfo->GetCellId ()
+  << " " << setw (5)  << ueInfo->GetImsi ()
+  << " " << setw (4)  << ueInfo->GetCellId ()
   << " " << setw (6)  << ringInfo->GetSgwSwDpId ()
   << " " << setw (6)  << ringInfo->GetPgwSwDpId ()
-  << " " << setw (6)  << rInfo->GetTeid ()
-  << " " << setw (9)  << accepted
-  << " " << setw (10) << rInfo->IsAggregated ()
+  << " " << setw (7)  << accepted
+  << " " << setw (6)  << rInfo->IsAggregated ()
   << " " << setw (11) << static_cast<double> (downBitRate) / 1000
   << " " << setw (11) << static_cast<double> (upBitRate) / 1000
   << left
@@ -186,35 +186,35 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   *m_admWrapper->GetStream ()
   << fixed << setprecision (4)
   << left
-  << setw (11) << "Time(s)"
+  << setw (12) << "Time(s)"
   << right
-  << setw (14) << "GbrReqs"
-  << setw (14) << "GbrBlocks"
-  << setw (14) << "NonGbrReqs"
-  << setw (14) << "NonGbrBlocks"
-  << setw (14) << "ActiveBearers"
+  << setw (8) << "Actives"
+  << setw (9) << "Req:GBR"
+  << setw (7) << "NonGBR"
+  << setw (9) << "Blk:GBR"
+  << setw (7) << "NonGBR"
   << std::endl;
 
   m_brqWrapper = Create<OutputStreamWrapper> (m_brqFilename, std::ios::out);
   *m_brqWrapper->GetStream ()
   << boolalpha << fixed << setprecision (4)
   << left
-  << setw (10) << "Time(s)"
+  << setw (12) << "Time(s)"
   << right
-  << setw (4)  << "QCI"
+  << setw (6)  << "TEID"
+  << setw (5)  << "QCI"
   << setw (7)  << "IsGBR"
   << setw (10) << "IsDefault"
-  << setw (8)  << "UeImsi"
-  << setw (8)  << "CellId"
-  << setw (7)  << "SgwSw"
-  << setw (7)  << "PgwSw"
-  << setw (7)  << "TEID"
-  << setw (10) << "Accepted"
-  << setw (11) << "Aggregated"
-  << setw (12) << "Down(kbps)"
-  << setw (12) << "Up(kbps)"
+  << setw (6)  << "IMSI"
+  << setw (5)  << "CGI"
+  << setw (7)  << "SGWsw"
+  << setw (7)  << "PGWsw"
+  << setw (8)  << "Accept"
+  << setw (7)  << "S5Agg"
+  << setw (12) << "Down(Kbps)"
+  << setw (12) << "Up(Kbps)"
   << left      << "  "
-  << setw (12) << "RoutingPath"
+  << setw (12) << "RingPath"
   << std::endl;
 
   TimeValue timeValue;
@@ -235,11 +235,11 @@ AdmissionStatsCalculator::DumpStatistics (Time nextDump)
   << left
   << setw (11) << Simulator::Now ().GetSeconds ()
   << right
-  << " " << setw (13) << m_gbrRequests
-  << " " << setw (13) << m_gbrBlocked
-  << " " << setw (13) << m_nonRequests
-  << " " << setw (13) << m_nonBlocked
-  << " " << setw (13) << m_activeBearers
+  << " " << setw (8) << m_activeBearers
+  << " " << setw (8) << m_gbrRequests
+  << " " << setw (6) << m_nonRequests
+  << " " << setw (8) << m_gbrBlocked
+  << " " << setw (6) << m_nonBlocked
   << std::endl;
 
   ResetCounters ();
