@@ -23,8 +23,6 @@
 #include "traffic-stats-calculator.h"
 #include "../apps/sdmn-client-app.h"
 #include "../apps/real-time-video-client.h"
-#include "../info/ue-info.h"
-#include "../info/routing-info.h"
 
 using namespace std;
 
@@ -50,6 +48,9 @@ TrafficStatsCalculator::TrafficStatsCalculator ()
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::PgwTunnelApp/S5Tx",
     MakeCallback (&TrafficStatsCalculator::EpcInputPacket, this));
+  Config::Connect (
+    "/NodeList/*/$ns3::OFSwitch13Device/LoadDrop",
+    MakeCallback (&TrafficStatsCalculator::LoadDropPacket, this));
   Config::Connect (
     "/NodeList/*/$ns3::OFSwitch13Device/MeterDrop",
     MakeCallback (&TrafficStatsCalculator::MeterDropPacket, this));
@@ -114,51 +115,15 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
 
   m_appWrapper = Create<OutputStreamWrapper> (m_appFilename, std::ios::out);
   *m_appWrapper->GetStream ()
-  << fixed << setprecision (4) << boolalpha
-  << left
-  << setw (12) << "Time(s)"
-  << right
-  << setw (8)  << "AppName"
-  << setw (5)  << "QCI"
-  << setw (7)  << "IsGBR"
-  << setw (8)  << "UeImsi"
-  << setw (8)  << "CellId"
-  << setw (11) << "Direction"
-  << setw (6)  << "TEID"
-  << setw (11) << "Active(s)"
-  << setw (12) << "Delay(ms)"
-  << setw (12) << "Jitter(ms)"
-  << setw (9)  << "RxPkts"
-  << setw (12) << "LossRatio"
-  << setw (7)  << "Losts"
-  << setw (10) << "RxBytes"
-  << setw (17) << "Throughput(kbps)"
-  << std::endl;
+  << fixed << setprecision (3) << boolalpha << GetHeader () << std::endl;
 
   m_epcWrapper = Create<OutputStreamWrapper> (m_epcFilename, std::ios::out);
   *m_epcWrapper->GetStream ()
-  << fixed << setprecision (4) << boolalpha
-  << left
-  << setw (12) << "Time(s)"
-  << right
-  << setw (8)  << "AppName"
-  << setw (5)  << "QCI"
-  << setw (7)  << "IsGBR"
-  << setw (8)  << "UeImsi"
-  << setw (8)  << "CellId"
-  << setw (11) << "Direction"
-  << setw (6)  << "TEID"
-  << setw (11) << "Aggregated"
-  << setw (11) << "Active(s)"
-  << setw (12) << "Delay(ms)"
-  << setw (12) << "Jitter(ms)"
-  << setw (9)  << "RxPkts"
-  << setw (12) << "LossRatio"
-  << setw (7)  << "Losts"
+  << fixed << setprecision (3) << boolalpha << GetHeader ()
+  << setw (7)  << "S5Agg"
+  << setw (7)  << "Load"
   << setw (7)  << "Meter"
   << setw (7)  << "Queue"
-  << setw (10) << "RxBytes"
-  << setw (17) << "Throughput(kbps)"
   << std::endl;
 
   Object::NotifyConstructionCompleted ();
@@ -173,112 +138,38 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   uint32_t teid = app->GetTeid ();
   Ptr<const RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
   Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
-
   Ptr<const QosStatsCalculator> epcStats;
-  Ptr<const QosStatsCalculator> appStats;
 
   // The real time video streaming is the only app with no uplink traffic.
   if (app->GetInstanceTypeId () != RealTimeVideoClient::GetTypeId ())
     {
       // Dump uplink statistics.
       epcStats = GetQosStatsFromTeid (teid, false);
-      DataRate epcThp = epcStats->GetRxThroughput ();
       *m_epcWrapper->GetStream ()
-      << left
-      << setw (11) << Simulator::Now ().GetSeconds ()                 << " "
-      << right
-      << setw (8)  << app->GetAppName ()                              << " "
-      << setw (4)  << rInfo->GetQciInfo ()                            << " "
-      << setw (6)  << rInfo->IsGbr ()                                 << " "
-      << setw (7)  << ueInfo->GetImsi ()                              << " "
-      << setw (7)  << ueInfo->GetCellId ()                            << " "
-      << setw (10) << "up"                                            << " "
-      << setw (5)  << teid                                            << " "
-      << setw (10) << rInfo->IsAggregated ()                          << " "
-      << setw (10) << epcStats->GetActiveTime ().GetSeconds ()        << " "
-      << setw (11) << epcStats->GetRxDelay ().GetSeconds () * 1000    << " "
-      << setw (11) << epcStats->GetRxJitter ().GetSeconds () * 1000   << " "
-      << setw (8)  << epcStats->GetRxPackets ()                       << " "
-      << setw (11) << epcStats->GetLossRatio ()                       << " "
-      << setw (6)  << epcStats->GetLostPackets ()                     << " "
-      << setw (6)  << epcStats->GetMeterDrops ()                      << " "
-      << setw (6)  << epcStats->GetQueueDrops ()                      << " "
-      << setw (9)  << epcStats->GetRxBytes ()                         << " "
-      << setw (16) << static_cast<double> (epcThp.GetBitRate ()) / 1000
+      << GetStats (app, rInfo, ueInfo, epcStats, teid, "up")
+      << " " << setw (6)  << rInfo->IsAggregated ()
+      << " " << setw (6)  << epcStats->GetLoadDrops ()
+      << " " << setw (6)  << epcStats->GetMeterDrops ()
+      << " " << setw (6)  << epcStats->GetQueueDrops ()
       << std::endl;
 
-      appStats = app->GetServerQosStats ();
-      DataRate appThp = appStats->GetRxThroughput ();
       *m_appWrapper->GetStream ()
-      << left
-      << setw (11) << Simulator::Now ().GetSeconds ()                 << " "
-      << right
-      << setw (8)  << app->GetAppName ()                              << " "
-      << setw (4)  << rInfo->GetQciInfo ()                            << " "
-      << setw (6)  << rInfo->IsGbr ()                                 << " "
-      << setw (7)  << ueInfo->GetImsi ()                              << " "
-      << setw (7)  << ueInfo->GetCellId ()                            << " "
-      << setw (10) << "up"                                            << " "
-      << setw (5)  << teid                                            << " "
-      << setw (10) << appStats->GetActiveTime ().GetSeconds ()        << " "
-      << setw (11) << appStats->GetRxDelay ().GetSeconds () * 1000    << " "
-      << setw (11) << appStats->GetRxJitter ().GetSeconds () * 1000   << " "
-      << setw (8)  << appStats->GetRxPackets ()                       << " "
-      << setw (11) << appStats->GetLossRatio ()                       << " "
-      << setw (6)  << appStats->GetLostPackets ()                     << " "
-      << setw (9)  << appStats->GetRxBytes ()                         << " "
-      << setw (16) << static_cast<double> (appThp.GetBitRate ()) / 1000
+      << GetStats (app, rInfo, ueInfo, app->GetServerQosStats (), teid, "up")
       << std::endl;
     }
 
   // Dump downlink statistics.
   epcStats = GetQosStatsFromTeid (teid, true);
-  DataRate epcThp = epcStats->GetRxThroughput ();
   *m_epcWrapper->GetStream ()
-  << left
-  << setw (11) << Simulator::Now ().GetSeconds ()                     << " "
-  << right
-  << setw (8)  << app->GetAppName ()                                  << " "
-  << setw (4)  << rInfo->GetQciInfo ()                                << " "
-  << setw (6)  << rInfo->IsGbr ()                                     << " "
-  << setw (7)  << ueInfo->GetImsi ()                                  << " "
-  << setw (7)  << ueInfo->GetCellId ()                                << " "
-  << setw (10) << "down"                                              << " "
-  << setw (5)  << teid                                                << " "
-  << setw (10) << rInfo->IsAggregated ()                              << " "
-  << setw (10) << epcStats->GetActiveTime ().GetSeconds ()            << " "
-  << setw (11) << epcStats->GetRxDelay ().GetSeconds () * 1000        << " "
-  << setw (11) << epcStats->GetRxJitter ().GetSeconds () * 1000       << " "
-  << setw (8)  << epcStats->GetRxPackets ()                           << " "
-  << setw (11) << epcStats->GetLossRatio ()                           << " "
-  << setw (6)  << epcStats->GetLostPackets ()                         << " "
-  << setw (6)  << epcStats->GetMeterDrops ()                          << " "
-  << setw (6)  << epcStats->GetQueueDrops ()                          << " "
-  << setw (9)  << epcStats->GetRxBytes ()                             << " "
-  << setw (16) << static_cast<double> (epcThp.GetBitRate ()) / 1000
+  << GetStats (app, rInfo, ueInfo, epcStats, teid, "down")
+  << " " << setw (6)  << rInfo->IsAggregated ()
+  << " " << setw (6)  << epcStats->GetLoadDrops ()
+  << " " << setw (6)  << epcStats->GetMeterDrops ()
+  << " " << setw (6)  << epcStats->GetQueueDrops ()
   << std::endl;
 
-  appStats = app->GetQosStats ();
-  DataRate appThp = appStats->GetRxThroughput ();
   *m_appWrapper->GetStream ()
-  << left
-  << setw (11) << Simulator::Now ().GetSeconds ()                     << " "
-  << right
-  << setw (8)  << app->GetAppName ()                                  << " "
-  << setw (4)  << rInfo->GetQciInfo ()                                << " "
-  << setw (6)  << rInfo->IsGbr ()                                     << " "
-  << setw (7)  << ueInfo->GetImsi ()                                  << " "
-  << setw (7)  << ueInfo->GetCellId ()                                << " "
-  << setw (10) << "down"                                              << " "
-  << setw (5)  << teid                                                << " "
-  << setw (10) << appStats->GetActiveTime ().GetSeconds ()            << " "
-  << setw (11) << appStats->GetRxDelay ().GetSeconds () * 1000        << " "
-  << setw (11) << appStats->GetRxJitter ().GetSeconds () * 1000       << " "
-  << setw (8)  << appStats->GetRxPackets ()                           << " "
-  << setw (11) << appStats->GetLossRatio ()                           << " "
-  << setw (6)  << appStats->GetLostPackets ()                         << " "
-  << setw (9)  << appStats->GetRxBytes ()                             << " "
-  << setw (16) << static_cast<double> (appThp.GetBitRate ()) / 1000
+  << GetStats (app, rInfo, ueInfo, app->GetQosStats (), teid, "down")
   << std::endl;
 }
 
@@ -290,6 +181,43 @@ TrafficStatsCalculator::ResetCounters (std::string context,
 
   GetQosStatsFromTeid (app->GetTeid (),  true)->ResetCounters ();
   GetQosStatsFromTeid (app->GetTeid (), false)->ResetCounters ();
+}
+
+void
+TrafficStatsCalculator::LoadDropPacket (std::string context,
+                                        Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << context << packet);
+
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      Ptr<QosStatsCalculator> qosStats =
+        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      qosStats->NotifyLoadDrop ();
+    }
+  else
+    {
+      //
+      // This only happens when a packet is dropped at the P-GW, before
+      // entering the logical port that is responsible for attaching the
+      // EpcGtpuTag and notifying that the packet is entering the EPC. To keep
+      // consistent log results, we are doing this manually here.
+      //
+      EthernetHeader ethHeader;
+      Ipv4Header ipv4Header;
+
+      Ptr<Packet> packetCopy = packet->Copy ();
+      packetCopy->RemoveHeader (ethHeader);
+      packetCopy->PeekHeader (ipv4Header);
+
+      Ptr<UeInfo> ueInfo = UeInfo::GetPointer (ipv4Header.GetDestination ());
+      uint32_t teid = ueInfo->Classify (packetCopy);
+
+      Ptr<QosStatsCalculator> qosStats = GetQosStatsFromTeid (teid, true);
+      qosStats->NotifyTx (packetCopy->GetSize ());
+      qosStats->NotifyLoadDrop ();
+    }
 }
 
 void
@@ -391,6 +319,65 @@ TrafficStatsCalculator::GetQosStatsFromTeid (uint32_t teid, bool isDown)
       qosStats = isDown ? pair.first : pair.second;
     }
   return qosStats;
+}
+
+std::string
+TrafficStatsCalculator::GetHeader (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  std::ostringstream str;
+  str << left
+      << setw (12) << "Time(s)"
+      << right
+      << setw (8)  << "AppName"
+      << setw (6)  << "TEID"
+      << setw (5)  << "QCI"
+      << setw (7)  << "IsGBR"
+      << setw (6)  << "IMSI"
+      << setw (5)  << "CGI"
+      << setw (7)  << "Ul/Dl"
+      << setw (11) << "Active(s)"
+      << setw (11) << "Delay(ms)"
+      << setw (12) << "Jitter(ms)"
+      << setw (8)  << "TxPkts"
+      << setw (8)  << "RxPkts"
+      << setw (9)  << "Loss(%)"
+      << setw (10) << "RxBytes"
+      << setw (12) << "Thp(Kbps)";
+  return str.str ();
+}
+
+std::string
+TrafficStatsCalculator::GetStats (
+  Ptr<SdmnClientApp> app, Ptr<const RoutingInfo> rInfo,
+  Ptr<const UeInfo> ueInfo, Ptr<const QosStatsCalculator> stats,
+  uint32_t teid, std::string direction)
+{
+  NS_LOG_FUNCTION (this << stats << direction);
+
+  std::ostringstream str;
+  str << fixed << setprecision (3) << boolalpha
+      << left
+      << setw (11) << Simulator::Now ().GetSeconds ()
+      << right
+      << " " << setw (8)  << app->GetAppName ()
+      << " " << setw (5)  << teid
+      << " " << setw (4)  << rInfo->GetQciInfo ()
+      << " " << setw (6)  << rInfo->IsGbr ()
+      << " " << setw (5)  << ueInfo->GetImsi ()
+      << " " << setw (4)  << ueInfo->GetCellId ()
+      << " " << setw (6)  << direction
+      << " " << setw (10) << stats->GetActiveTime ().GetSeconds ()
+      << " " << setw (10) << stats->GetRxDelay ().GetSeconds () * 1000
+      << " " << setw (11) << stats->GetRxJitter ().GetSeconds () * 1000
+      << " " << setw (7)  << stats->GetTxPackets ()
+      << " " << setw (7)  << stats->GetRxPackets ()
+      << " " << setw (8)  << stats->GetLossRatio () * 100
+      << " " << setw (9)  << stats->GetRxBytes ()
+      << " " << setw (11)
+      << (double)(stats->GetRxThroughput ().GetBitRate ()) / 1000;
+  return str.str ();
 }
 
 } // Namespace ns3

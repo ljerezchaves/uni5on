@@ -23,6 +23,8 @@
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
+#include "../info/ue-info.h"
+#include "../info/routing-info.h"
 
 namespace ns3 {
 
@@ -72,6 +74,14 @@ private:
   void ResetCounters (std::string context, Ptr<SdmnClientApp> app);
 
   /**
+   * Trace sink fired when a packet is dropped while exceeding pipeline load
+   * capacity.
+   * \param context Context information.
+   * \param packet The dropped packet.
+   */
+  void LoadDropPacket (std::string context, Ptr<const Packet> packet);
+
+  /**
    * Trace sink fired when a packets is dropped by meter band.
    * \param context Context information.
    * \param packet The dropped packet.
@@ -108,6 +118,27 @@ private:
    * \return The QoS information.
    */
   Ptr<QosStatsCalculator> GetQosStatsFromTeid (uint32_t teid, bool isDown);
+
+  /**
+   * Get the header for common statistics metrics.
+   * \return The commom formatted string.
+   */
+  std::string GetHeader (void);
+
+  /**
+   * Get the common statistics metrics.
+   * \param app The SDMN client application.
+   * \param rInfo The routing information for this traffic.
+   * \param ueInfo The UE information.
+   * \param stats The QoS statistics.
+   * \param teid The TEID for this traffic.
+   * \param direction The traffic direction (down/up).
+   * \return The commom formatted string.
+   */
+  std::string GetStats (
+    Ptr<SdmnClientApp> app, Ptr<const RoutingInfo> rInfo,
+    Ptr<const UeInfo> ueInfo, Ptr<const QosStatsCalculator> stats,
+    uint32_t teid, std::string direction);
 
   /** A pair of QosStatsCalculator, for downlink and uplink EPC statistics. */
   typedef std::pair<Ptr<QosStatsCalculator>,
