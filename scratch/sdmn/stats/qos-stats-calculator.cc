@@ -165,16 +165,9 @@ QosStatsCalculator::GetLostPackets (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  if (GetTxPackets ())
+  if (GetTxPackets () && (GetTxPackets () >= GetRxPackets ()))
     {
-      if (GetTxPackets () >= GetRxPackets ())
-        {
-          return GetTxPackets () - GetRxPackets ();
-        }
-      else
-        {
-          return 0;
-        }
+      return GetTxPackets () - GetRxPackets ();
     }
   else
     {
