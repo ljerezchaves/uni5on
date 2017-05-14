@@ -328,6 +328,16 @@ private:
    */
   void CheckPgwTftLoad (void);
 
+  /**
+   * Increase the level of the P-GW TFT load balancing mechanism.
+   */
+  void IncreasePgwLoadBalancingLevel (void);
+
+  /**
+   * Decrease the level of the P-GW TFT load balancing mechanism.
+   */
+  void DecreasePgwLoadBalancingLevel (void);
+
   /** \name Methods for the S5 SAP P-GW control plane. */
   //\{
   void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
@@ -371,8 +381,8 @@ private:
   std::vector<uint32_t> m_tftEntries;     //!< TFT flow entries counter.
   DataRate              m_tftMaxLoad;     //!< TFT pipeline load threshold.
   std::vector<uint64_t> m_tftLoad;        //!< TFT pipeline load (bitrate).
-  uint32_t              m_tftSwitches;    //!< Number of TFT switches.
-  uint32_t              m_tftLbLevel;     //!< Current TFT load bal. level.
+  uint16_t              m_tftSwitches;    //!< Number of TFT switches.
+  uint8_t               m_tftLbLevel;     //!< Current TFT load bal. level.
   Time                  m_tftTimeout;     //!< TFT check load timeout.
 
   /** Map saving EpsBearer::Qci / IP DSCP value. */

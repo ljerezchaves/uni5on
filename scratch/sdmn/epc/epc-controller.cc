@@ -328,7 +328,7 @@ EpcController::NotifyPgwBuilt (OFSwitch13DeviceContainer devices)
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (devices.GetN () == m_pgwDpIds.size ()
-                 && devices.GetN () == m_tftSwitches + 1,
+                 && devices.GetN () == (m_tftSwitches + 1U),
                  "Inconsistent number of P-GW OpenFlow switches.");
 }
 
@@ -416,7 +416,7 @@ EpcController::NotifyConstructionCompleted (void)
       }
     case FeatureStatus::ON:
       {
-        m_tftLbLevel = (uint32_t)log2 (m_tftSwitches);
+        m_tftLbLevel = (uint8_t)log2 (m_tftSwitches);
         break;
       }
     case FeatureStatus::AUTO:
@@ -438,7 +438,7 @@ EpcController::GetPgwTftIdx (Ptr<const RoutingInfo> rInfo) const
   NS_LOG_FUNCTION (this << rInfo);
 
   Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
-  uint32_t activeTfts = 1 << m_tftLbLevel;
+  uint16_t activeTfts = 1 << m_tftLbLevel;
   return 1 + (ueInfo->GetUeAddr ().Get () % activeTfts);
 }
 
@@ -839,7 +839,7 @@ EpcController::CheckPgwTftLoad (void)
   maxLoad = *std::max_element (m_tftLoad.begin (), m_tftLoad.end ());
   sumLoad = std::accumulate (m_tftLoad.begin (), m_tftLoad.end (), 0);
 
-  uint32_t maxLevel = (uint32_t)log2 (m_tftSwitches);
+  uint32_t maxLevel = (uint8_t)log2 (m_tftSwitches);
 
   // We may increase the load balancing level when we hit the max number of
   // flow entries or pipeline load on any P-GW TFT switch.
@@ -854,7 +854,7 @@ EpcController::CheckPgwTftLoad (void)
   // current load on the lower level using up to 60% of available resources.
   // As the average traffic is almost the same for all UEs, we expect the the
   // load will be balanced among switches.
-  uint32_t activeTfts = 1 << m_tftLbLevel;
+  uint16_t activeTfts = 1 << m_tftLbLevel;
   if (m_tftLbLevel
       && ((sumEntries < ((0.6 * m_tftMaxEntries) * (activeTfts / 2)))
           || sumLoad < ((0.6 * m_tftMaxLoad.GetBitRate ()) * (activeTfts / 2))))
@@ -867,8 +867,26 @@ EpcController::CheckPgwTftLoad (void)
   NS_ASSERT_MSG (needIncrease != true || needDecrease != true, "Can't increase"
                  " and decrease the load balancing simultaneously.");
 
+  // TODO Check when increase/decrease the mechanism level.
+
   // Schedule the next check.
   Simulator::Schedule (m_tftTimeout, &EpcController::CheckPgwTftLoad, this);
+}
+
+void
+EpcController::IncreasePgwLoadBalancingLevel (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  m_tftLbLevel++;
+}
+
+void
+EpcController::DecreasePgwLoadBalancingLevel (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  m_tftLbLevel--;
 }
 
 void
