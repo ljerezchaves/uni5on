@@ -36,6 +36,7 @@ QosStatsCalculator::QosStatsCalculator ()
     m_lastTimestamp (Simulator::Now ()),
     m_jitter (0),
     m_delaySum (Time ()),
+    m_loadDrop (0),
     m_meterDrop (0),
     m_queueDrop (0)
 {
@@ -73,6 +74,7 @@ QosStatsCalculator::ResetCounters ()
   m_jitter = 0;
   m_delaySum = Time ();
 
+  m_loadDrop = 0;
   m_meterDrop = 0;
   m_queueDrop = 0;
 }
@@ -117,6 +119,14 @@ QosStatsCalculator::NotifyRx (uint32_t rxBytes, Time timestamp)
 
   // Updating delay sum
   m_delaySum += (now - timestamp);
+}
+
+void
+QosStatsCalculator::NotifyLoadDrop ()
+{
+  NS_LOG_FUNCTION (this);
+
+  m_loadDrop++;
 }
 
 void
@@ -255,6 +265,14 @@ QosStatsCalculator::GetRxThroughput (void) const
     {
       return DataRate (0);
     }
+}
+
+uint32_t
+QosStatsCalculator::GetLoadDrops (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_loadDrop;
 }
 
 uint32_t

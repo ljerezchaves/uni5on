@@ -73,6 +73,11 @@ public:
   /**
    * Increase the meter dropped packet counter by one.
    */
+  void NotifyLoadDrop ();
+
+  /**
+   * Increase the meter dropped packet counter by one.
+   */
   void NotifyMeterDrop ();
 
   /**
@@ -95,6 +100,7 @@ public:
   Time      GetRxDelay      (void) const;
   Time      GetRxJitter     (void) const;
   DataRate  GetRxThroughput (void) const;
+  uint32_t  GetLoadDrops    (void) const;
   uint32_t  GetMeterDrops   (void) const;
   uint32_t  GetQueueDrops   (void) const;
   //\}
@@ -122,6 +128,7 @@ private:
   Time               m_delaySum;         //!< Sum of packet delays.
 
   // Fields used by EPC network monitoring.
+  uint32_t           m_loadDrop;         //!< Counter for drops by pipe load.
   uint32_t           m_meterDrop;        //!< Counter for drops by meter rules.
   uint32_t           m_queueDrop;        //!< Counter for drops by queues.
 };
