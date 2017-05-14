@@ -97,8 +97,8 @@ LoadBalStatsCalculator::NotifyLoadBalFinished (
 
   *m_lbmWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds () << " "
-  << setw (12) << status                          << " ";
+  << setw (10) << Simulator::Now ().GetSeconds ()
+  << " " << setw (12) << status << " ";
 
   // Print the list of TEIDs moved from one switch to another.
   RoutingInfoList_t::iterator it;

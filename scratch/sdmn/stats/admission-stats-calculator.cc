@@ -133,22 +133,22 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
   // Save request stats into output file.
   *m_brqWrapper->GetStream ()
   << left
-  << setw (9)  << Simulator::Now ().GetSeconds ()           << " "
+  << setw (9)  << Simulator::Now ().GetSeconds ()
   << right
-  << setw (4)  << rInfo->GetQciInfo ()                      << " "
-  << setw (6)  << rInfo->IsGbr ()                           << " "
-  << setw (9)  << rInfo->IsDefault ()                       << " "
-  << setw (7)  << ueInfo->GetImsi ()                        << " "
-  << setw (7)  << ueInfo->GetCellId ()                      << " "
-  << setw (6)  << ringInfo->GetSgwSwDpId ()                 << " "
-  << setw (6)  << ringInfo->GetPgwSwDpId ()                 << " "
-  << setw (6)  << rInfo->GetTeid ()                         << " "
-  << setw (9)  << accepted                                  << " "
-  << setw (10) << rInfo->IsAggregated ()                    << " "
-  << setw (11) << static_cast<double> (downBitRate) / 1000  << " "
-  << setw (11) << static_cast<double> (upBitRate) / 1000    << "  "
+  << " " << setw (4)  << rInfo->GetQciInfo ()
+  << " " << setw (6)  << rInfo->IsGbr ()
+  << " " << setw (9)  << rInfo->IsDefault ()
+  << " " << setw (7)  << ueInfo->GetImsi ()
+  << " " << setw (7)  << ueInfo->GetCellId ()
+  << " " << setw (6)  << ringInfo->GetSgwSwDpId ()
+  << " " << setw (6)  << ringInfo->GetPgwSwDpId ()
+  << " " << setw (6)  << rInfo->GetTeid ()
+  << " " << setw (9)  << accepted
+  << " " << setw (10) << rInfo->IsAggregated ()
+  << " " << setw (11) << static_cast<double> (downBitRate) / 1000
+  << " " << setw (11) << static_cast<double> (upBitRate) / 1000
   << left
-  << setw (15) << path
+  << "  " << setw (15) << path
   << std::endl;
 }
 
@@ -233,13 +233,13 @@ AdmissionStatsCalculator::DumpStatistics (Time nextDump)
 
   *m_admWrapper->GetStream ()
   << left
-  << setw (11) << Simulator::Now ().GetSeconds () << " "
+  << setw (11) << Simulator::Now ().GetSeconds ()
   << right
-  << setw (13) << m_gbrRequests                   << " "
-  << setw (13) << m_gbrBlocked                    << " "
-  << setw (13) << m_nonRequests                   << " "
-  << setw (13) << m_nonBlocked                    << " "
-  << setw (13) << m_activeBearers
+  << " " << setw (13) << m_gbrRequests
+  << " " << setw (13) << m_gbrBlocked
+  << " " << setw (13) << m_nonRequests
+  << " " << setw (13) << m_nonBlocked
+  << " " << setw (13) << m_activeBearers
   << std::endl;
 
   ResetCounters ();

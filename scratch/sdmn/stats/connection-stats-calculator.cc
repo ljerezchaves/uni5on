@@ -129,11 +129,11 @@ ConnectionStatsCalculator::NotifyInitialCellSelectionEndOk (
 {
   *m_rrcWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds () << " "
-  << setw (30) << "Initial cell selection OK"     << " "
+  << setw (10) << Simulator::Now ().GetSeconds ()
+  << " " << setw (30) << "Initial cell selection OK"
   << right
-  << setw (7)  << imsi    << " "
-  << setw (7)  << cellId  << " "
+  << " " << setw (7)  << imsi
+  << " " << setw (7)  << cellId
   << std::endl;
 }
 
@@ -143,11 +143,11 @@ ConnectionStatsCalculator::NotifyInitialCellSelectionEndError (
 {
   *m_rrcWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds () << " "
-  << setw (30) << "Initial cell selection error"  << " "
+  << setw (10) << Simulator::Now ().GetSeconds ()
+  << " " << setw (30) << "Initial cell selection error"
   << right
-  << setw (7)  << imsi    << " "
-  << setw (7)  << cellId  << " "
+  << " " << setw (7)  << imsi
+  << " " << setw (7)  << cellId
   << std::endl;
 }
 
@@ -157,12 +157,12 @@ ConnectionStatsCalculator::NotifyConnectionEstablished (
 {
   *m_rrcWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds () << " "
-  << setw (30) << "Connection established"        << " "
+  << setw (10) << Simulator::Now ().GetSeconds ()
+  << " " << setw (30) << "Connection established"
   << right
-  << setw (7)  << imsi    << " "
-  << setw (7)  << cellId  << " "
-  << setw (7)  << rnti    << " "
+  << " " << setw (7)  << imsi
+  << " " << setw (7)  << cellId
+  << " " << setw (7)  << rnti
   << std::endl;
 }
 
@@ -172,12 +172,12 @@ ConnectionStatsCalculator::NotifyConnectionTimeout (
 {
   *m_rrcWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds () << " "
-  << setw (30) << "Connection timeout"            << " "
+  << setw (10) << Simulator::Now ().GetSeconds ()
+  << " " << setw (30) << "Connection timeout"
   << right
-  << setw (7)  << imsi    << " "
-  << setw (7)  << cellId  << " "
-  << setw (7)  << rnti    << " "
+  << " " << setw (7)  << imsi
+  << " " << setw (7)  << cellId
+  << " " << setw (7)  << rnti
   << std::endl;
 }
 
@@ -187,12 +187,12 @@ ConnectionStatsCalculator::NotifyConnectionReconfiguration (
 {
   *m_rrcWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds () << " "
-  << setw (30) << "Connection reconfiguration"    << " "
+  << setw (10) << Simulator::Now ().GetSeconds ()
+  << " " << setw (30) << "Connection reconfiguration"
   << right
-  << setw (7)  << imsi    << " "
-  << setw (7)  << cellId  << " "
-  << setw (7)  << rnti    << " "
+  << " " << setw (7)  << imsi
+  << " " << setw (7)  << cellId
+  << " " << setw (7)  << rnti
   << std::endl;
 }
 
@@ -203,13 +203,13 @@ ConnectionStatsCalculator::NotifyHandoverStart (
 {
   *m_rrcWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds () << " "
-  << setw (30) << "Handover start"                << " "
+  << setw (10) << Simulator::Now ().GetSeconds ()
+  << " " << setw (30) << "Handover start"
   << right
-  << setw (7)  << imsi       << " "
-  << setw (7)  << srcCellId  << " "
-  << setw (7)  << rnti       << " "
-  << setw (13) << dstCellId  << " "
+  << " " << setw (7)  << imsi
+  << " " << setw (7)  << srcCellId
+  << " " << setw (7)  << rnti
+  << " " << setw (13) << dstCellId
   << std::endl;
 }
 
@@ -219,12 +219,12 @@ ConnectionStatsCalculator::NotifyHandoverEndOk (
 {
   *m_rrcWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds () << " "
-  << setw (30) << "Handover OK"                   << " "
+  << setw (10) << Simulator::Now ().GetSeconds ()
+  << " " << setw (30) << "Handover OK"
   << right
-  << setw (7)  << imsi    << " "
-  << setw (7)  << cellId  << " "
-  << setw (7)  << rnti    << " "
+  << " " << setw (7)  << imsi
+  << " " << setw (7)  << cellId
+  << " " << setw (7)  << rnti
   << std::endl;
 }
 
@@ -234,12 +234,12 @@ ConnectionStatsCalculator::NotifyHandoverEndError (
 {
   *m_rrcWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds () << " "
-  << setw (30) << "Handover error"                << " "
+  << setw (10) << Simulator::Now ().GetSeconds ()
+  << " " << setw (30) << "Handover error"
   << right
-  << setw (7)  << imsi    << " "
-  << setw (7)  << cellId  << " "
-  << setw (7)  << rnti    << " "
+  << " " << setw (7)  << imsi
+  << " " << setw (7)  << cellId
+  << " " << setw (7)  << rnti
   << std::endl;
 }
 
