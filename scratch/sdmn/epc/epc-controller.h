@@ -305,24 +305,6 @@ private:
   bool RemoveBearer (Ptr<RoutingInfo> rInfo);
 
   /**
-   * Trace sink to monitor the number of flow entries on P-GW TFT datapaths.
-   * \param context The P-GW TFT switch index.
-   * \param oldValue The previous number of flow entries on datapath.
-   * \param newValue The current number of flow entries on datapath.
-   */
-  void NotifyPgwTftFlowEntries (
-    std::string context, uint32_t oldValue, uint32_t newValue);
-
-  /**
-   * Trace sink to monitor the pipeline load on P-GW TFT datapaths.
-   * \param context The P-GW TFT switch index.
-   * \param oldValue The previous pipeline load.
-   * \param newValue The current pipeline load.
-   */
-  void NotifyPgwTftPipelineLoad (
-    std::string context, DataRate oldValue, DataRate newValue);
-
-  /**
    * Periodically check for the P-GW TFT load to enable/disable the load
    * balancing mechanism.
    */
@@ -377,13 +359,12 @@ private:
   uint32_t              m_pgwSgiPortNo;   //!< SGi port number.
 
   // P-GW TFT load balancing mechanism.
-  uint32_t              m_tftMaxEntries;  //!< TFT flow table size threshold.
-  std::vector<uint32_t> m_tftEntries;     //!< TFT flow entries counter.
-  DataRate              m_tftMaxLoad;     //!< TFT pipeline load threshold.
-  std::vector<uint64_t> m_tftLoad;        //!< TFT pipeline load (bitrate).
+  double                m_tftThrshFactor; //!< Threshold factor.
+  uint32_t              m_tftTableSize;   //!< TFT flow table size.
+  DataRate              m_tftPlCapacity;  //!< TFT pipeline capacity.
   uint16_t              m_tftSwitches;    //!< Number of TFT switches.
-  uint8_t               m_tftLbLevel;     //!< Current TFT load bal. level.
-  Time                  m_tftTimeout;     //!< TFT check load timeout.
+  uint8_t               m_tftLbLevel;     //!< Load balancing level.
+  Time                  m_tftTimeout;     //!< CheckLoad timeout.
 
   /** Map saving EpsBearer::Qci / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
