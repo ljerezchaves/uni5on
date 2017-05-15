@@ -61,6 +61,7 @@ protected:
 
   bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo);
   bool TopologyRemoveRouting  (Ptr<RoutingInfo> rInfo);
+  void TopologyBearerCreated  (Ptr<RoutingInfo> rInfo);
   bool TopologyBearerRequest  (Ptr<RoutingInfo> rInfo);
   bool TopologyBearerRelease  (Ptr<RoutingInfo> rInfo);
   // Inherited from EpcController.
@@ -81,14 +82,6 @@ private:
    * \param cInfo The connection information
    */
   void NonGbrAdjusted (Ptr<ConnectionInfo> cInfo);
-
-  /**
-   * Get the RingRoutingInfo associated to this rInfo metadata. When no ring
-   * information is available, this function creates it.
-   * \param rInfo The routing information to process.
-   * \return The ring routing information for this bearer.
-   */
-  Ptr<RingRoutingInfo> GetRingRoutingInfo (Ptr<RoutingInfo> rInfo);
 
   /**
    * Search for connection information between two switches by their indexes.

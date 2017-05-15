@@ -116,7 +116,7 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
       upBitRate = gbrInfo->GetUpBitRate ();
     }
 
-  std::string path = "No information";
+  std::string path = "-";
   if (accepted)
     {
       // For ring routing, print detailed routing path description.

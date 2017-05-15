@@ -136,8 +136,12 @@ EpcController::RequestDedicatedBearer (EpsBearer bearer, uint32_t teid)
       rInfo->SetAggregated (true);
     }
 
-  // Let's first check for available resources and fire trace source
-  bool accepted = TopologyBearerRequest (rInfo);
+  // Let's first check for available resources on P-GW and backhaul switches.
+  bool accepted = false;
+  if (PgwTftBearerRequest (rInfo))
+    {
+      accepted = TopologyBearerRequest (rInfo);
+    }
   m_bearerRequestTrace (accepted, rInfo);
   if (!accepted)
     {
@@ -427,16 +431,6 @@ EpcController::NotifyConstructionCompleted (void)
   OFSwitch13Controller::NotifyConstructionCompleted ();
 }
 
-uint16_t
-EpcController::GetPgwTftIdx (Ptr<const RoutingInfo> rInfo) const
-{
-  NS_LOG_FUNCTION (this << rInfo);
-
-  Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
-  uint16_t activeTfts = 1 << m_tftLbLevel;
-  return 1 + (ueInfo->GetUeAddr ().Get () % activeTfts);
-}
-
 void
 EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
@@ -609,6 +603,54 @@ EpcController::HandleFlowRemoved (
       return 0;
     }
   NS_ABORT_MSG ("Should not get here :/");
+}
+
+ofl_err
+EpcController::HandleError (
+  struct ofl_msg_error *msg, Ptr<const RemoteSwitch> swtch,
+  uint32_t xid)
+{
+  NS_LOG_FUNCTION (this << swtch << xid);
+
+  // Chain up for logging and abort.
+  OFSwitch13Controller::HandleError (msg, swtch, xid);
+  NS_ABORT_MSG ("Should not get here :/");
+}
+
+uint16_t
+EpcController::GetPgwTftIdx (Ptr<const RoutingInfo> rInfo) const
+{
+  NS_LOG_FUNCTION (this << rInfo);
+
+  Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
+  uint16_t activeTfts = 1 << m_tftLbLevel;
+  return 1 + (ueInfo->GetUeAddr ().Get () % activeTfts);
+}
+
+bool
+EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo->GetTeid ());
+
+  // Get the P-GW TFT stats calculator resposible for this bearer.
+  uint16_t idx = GetPgwTftIdx (rInfo);
+  Ptr<OFSwitch13StatsCalculator> stats = OFSwitch13Device::GetDevice (
+      m_pgwDpIds.at (idx))->GetObject<OFSwitch13StatsCalculator> ();
+  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
+
+  // Block if table full or current load is exceeding pipeline capacity.
+  bool accept = true;
+  if (stats->GetEwmaFlowEntries () >= m_tftTableSize)
+    {
+      NS_LOG_WARN ("Blocking bearer: flow tables full.");
+      accept = false;
+    }
+  else if (stats->GetEwmaPipelineLoad () >= m_tftPlCapacity)
+    {
+      NS_LOG_WARN ("Blocking bearer: maximum pipeline load.");
+      accept = false;
+    }
+  return accept;
 }
 
 bool
@@ -807,7 +849,6 @@ EpcController::CheckPgwTftLoad (void)
   uint32_t sumEntries = 0;
   uint64_t maxLoad = 0;
   uint64_t sumLoad = 0;
-
   uint32_t maxLbLevel = (uint8_t)log2 (m_tftSwitches);
   uint16_t activeTfts = 1 << m_tftLbLevel;
 
@@ -835,6 +876,7 @@ EpcController::CheckPgwTftLoad (void)
       NS_LOG_INFO ("Need to increase the load balancing level.");
       if (m_tftLbLevel < maxLbLevel)
         {
+          // IncreasePgwLoadBalancingLevel ();
         }
     }
   // We may decrease the level when we can accommodate the current load and
@@ -847,6 +889,7 @@ EpcController::CheckPgwTftLoad (void)
       NS_LOG_INFO ("Can decrease the load balancing level.");
       if (m_tftLbLevel > 0)
         {
+          // DecreasePgwLoadBalancingLevel ();
         }
     }
 
@@ -926,10 +969,12 @@ EpcController::DoCreateSessionRequest (
   rInfo->SetActive (true);               // Default bearer is always active
   rInfo->SetAggregated (false);          // Default bearer never aggregates
   rInfo->SetBearerContext (defaultBearer);
+  TopologyBearerCreated (rInfo);
 
   // For default bearer, no meter nor GBR metadata.
   // For logic consistence, let's check for available resources.
-  bool accepted = TopologyBearerRequest (rInfo);
+  bool accepted = PgwTftBearerRequest (rInfo);
+  accepted &= TopologyBearerRequest (rInfo);
   NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
   m_bearerRequestTrace (accepted, rInfo);
 
@@ -956,6 +1001,7 @@ EpcController::DoCreateSessionRequest (
       rInfo->SetActive (false);             // Dedicated bearer not active
       rInfo->SetAggregated (false);         // Dedicated bearer not aggregated
       rInfo->SetBearerContext (dedicatedBearer);
+      TopologyBearerCreated (rInfo);
 
       // For all GBR bearers, create the GBR metadata.
       if (rInfo->IsGbr ())

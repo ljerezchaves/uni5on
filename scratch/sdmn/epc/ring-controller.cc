@@ -203,7 +203,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
   NS_LOG_INFO ("Installing ring rules for bearer teid " << rInfo->GetTeid ());
 
   // Getting ring routing information.
-  Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
 
   // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0007");
@@ -292,7 +292,7 @@ RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
 
   // Getting ring routing information.
-  Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
 
   // Remove flow entries for this TEID.
   std::ostringstream cmd;
@@ -314,20 +314,43 @@ RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
   return true;
 }
 
+void
+RingController::TopologyBearerCreated (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+
+  // Let's create its ring routing metadata.
+  Ptr<RingRoutingInfo> ringInfo = CreateObject<RingRoutingInfo> (rInfo);
+
+  // Set internal switch indexes.
+  ringInfo->SetPgwSwIdx  (GetSwitchIndex (rInfo->GetPgwS5Addr ()));
+  ringInfo->SetSgwSwIdx  (GetSwitchIndex (rInfo->GetSgwS5Addr ()));
+  ringInfo->SetPgwSwDpId (GetDpId (ringInfo->GetPgwSwIdx ()));
+  ringInfo->SetSgwSwDpId (GetDpId (ringInfo->GetSgwSwIdx ()));
+
+  // Considering default paths those with lower hops.
+  RingRoutingInfo::RoutingPath dlPath, ulPath;
+  dlPath = FindShortestPath (ringInfo->GetPgwSwIdx (),
+                             ringInfo->GetSgwSwIdx ());
+  ulPath = FindShortestPath (ringInfo->GetSgwSwIdx (),
+                             ringInfo->GetPgwSwIdx ());
+  ringInfo->SetDefaultPaths (dlPath, ulPath);
+}
+
 bool
 RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  // Reseting ring routing info to the shortest path.
-  Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
+  // Reset ring routing info to the shortest path.
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   ringInfo->ResetToDefaultPaths ();
 
   if (!rInfo->IsGbr () || rInfo->IsAggregated () || ringInfo->IsLocalPath ())
     {
       // For Non-GBR bearers (which includes the default bearer), for bearers
       // with aggregated traffic, and for bearers that only transverse local
-      // switch (local routing): let's accept it without guarantees.  Note that
+      // switch (local routing): let's accept it without guarantees. Note that
       // in current implementation, these bearers are always routed over the
       // shortest path.
       return true;
@@ -404,7 +427,7 @@ RingController::TopologyBearerRelease (Ptr<RoutingInfo> rInfo)
   Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
   if (gbrInfo && gbrInfo->IsReserved ())
     {
-      Ptr<RingRoutingInfo> ringInfo = GetRingRoutingInfo (rInfo);
+      Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
       NS_ASSERT_MSG (ringInfo, "No ringInfo for bearer release.");
       NS_LOG_INFO ("Releasing resources for bearer " << rInfo->GetTeid ());
       ReleaseGbrBitRate (ringInfo, gbrInfo);
@@ -470,35 +493,6 @@ RingController::NonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
            << " drop:rate=" << kbps;
       DpctlExecute (cInfo->GetSwDpId (1), cmd2.str ());
     }
-}
-
-Ptr<RingRoutingInfo>
-RingController::GetRingRoutingInfo (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
-
-  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  if (ringInfo == 0)
-    {
-      // This is the first time in simulation we are querying ring information
-      // for this bearer. Let's create its ring routing metadata.
-      ringInfo = CreateObject<RingRoutingInfo> (rInfo);
-
-      // Set internal switch indexes.
-      ringInfo->SetPgwSwIdx  (GetSwitchIndex (rInfo->GetPgwS5Addr ()));
-      ringInfo->SetSgwSwIdx  (GetSwitchIndex (rInfo->GetSgwS5Addr ()));
-      ringInfo->SetPgwSwDpId (GetDpId (ringInfo->GetPgwSwIdx ()));
-      ringInfo->SetSgwSwDpId (GetDpId (ringInfo->GetSgwSwIdx ()));
-
-      // Considering default paths those with lower hops.
-      RingRoutingInfo::RoutingPath dlPath, ulPath;
-      dlPath = FindShortestPath (ringInfo->GetPgwSwIdx (),
-                                 ringInfo->GetSgwSwIdx ());
-      ulPath = FindShortestPath (ringInfo->GetSgwSwIdx (),
-                                 ringInfo->GetPgwSwIdx ());
-      ringInfo->SetDefaultPaths (dlPath, ulPath);
-    }
-  return ringInfo;
 }
 
 Ptr<ConnectionInfo>

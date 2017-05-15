@@ -209,13 +209,6 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
   /**
-   * Get the active P-GW TFT index for a given traffic flow.
-   * \param rInfo The routing information to process.
-   * \return The P-GW TFT index.
-   */
-  uint16_t GetPgwTftIdx (Ptr<const RoutingInfo> rInfo) const;
-
-  /**
    * \name Topology methods.
    * These virtual methods must be implemented by topology subclasses, as they
    * are dependent on the backhaul OpenFlow network topology.
@@ -236,6 +229,12 @@ protected:
    * \return True if succeeded, false otherwise.
    */
   virtual bool TopologyRemoveRouting (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Notify the topology controller of a new bearer context created.
+   * \param rInfo The routing information.
+   */
+  virtual void TopologyBearerCreated (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
    * Process the bearer request and reserve backhaul bandwidth.
@@ -260,9 +259,26 @@ protected:
   virtual ofl_err HandleFlowRemoved (
     struct ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch,
     uint32_t xid);
+  virtual ofl_err HandleError (
+    struct ofl_msg_error *msg, Ptr<const RemoteSwitch> swtch,
+    uint32_t xid);
   // Inherited from OFSwitch13Controller.
 
 private:
+  /**
+   * Get the active P-GW TFT index for a given traffic flow.
+   * \param rInfo The routing information to process.
+   * \return The P-GW TFT index.
+   */
+  uint16_t GetPgwTftIdx (Ptr<const RoutingInfo> rInfo) const;
+
+  /**
+   * Check for available resources on P-GW TFT switch for this bearer request.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool PgwTftBearerRequest (Ptr<RoutingInfo> rInfo);
+
   /**
    * Install OpenFlow rules for downlink packet filtering on the P-GW TFT
    * switch.
