@@ -81,7 +81,7 @@ LoadBalStatsCalculator::NotifyConstructionCompleted (void)
   *m_lbmWrapper->GetStream ()
   << fixed << setprecision (4) << boolalpha
   << left
-  << setw (11) << "Time(s)"
+  << setw (12) << "Time(s)"
   << setw (13) << "Status"
   << setw (11) << "ListOfBearers"
   << std::endl;
@@ -97,7 +97,7 @@ LoadBalStatsCalculator::NotifyLoadBalFinished (
 
   *m_lbmWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds ()
+  << setw (11) << Simulator::Now ().GetSeconds ()
   << " " << setw (12) << status << " ";
 
   // Print the list of TEIDs moved from one switch to another.

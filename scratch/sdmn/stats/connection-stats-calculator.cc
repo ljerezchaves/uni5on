@@ -111,7 +111,7 @@ ConnectionStatsCalculator::NotifyConstructionCompleted (void)
   *m_rrcWrapper->GetStream ()
   << fixed << setprecision (4)
   << left
-  << setw (11) << "Time(s)"
+  << setw (12) << "Time(s)"
   << setw (30) << "UE RRC event"
   << right
   << setw (6)  << "IMSI"
@@ -129,7 +129,7 @@ ConnectionStatsCalculator::NotifyInitialCellSelectionEndOk (
 {
   *m_rrcWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds ()
+  << setw (11) << Simulator::Now ().GetSeconds ()
   << " " << setw (30) << "Initial cell selection OK"
   << right
   << " " << setw (5) << imsi
@@ -143,7 +143,7 @@ ConnectionStatsCalculator::NotifyInitialCellSelectionEndError (
 {
   *m_rrcWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds ()
+  << setw (11) << Simulator::Now ().GetSeconds ()
   << " " << setw (30) << "Initial cell selection error"
   << right
   << " " << setw (5) << imsi
@@ -157,7 +157,7 @@ ConnectionStatsCalculator::NotifyConnectionEstablished (
 {
   *m_rrcWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds ()
+  << setw (11) << Simulator::Now ().GetSeconds ()
   << " " << setw (30) << "Connection established"
   << right
   << " " << setw (5) << imsi
@@ -172,7 +172,7 @@ ConnectionStatsCalculator::NotifyConnectionTimeout (
 {
   *m_rrcWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds ()
+  << setw (11) << Simulator::Now ().GetSeconds ()
   << " " << setw (30) << "Connection timeout"
   << right
   << " " << setw (5) << imsi
@@ -187,7 +187,7 @@ ConnectionStatsCalculator::NotifyConnectionReconfiguration (
 {
   *m_rrcWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds ()
+  << setw (11) << Simulator::Now ().GetSeconds ()
   << " " << setw (30) << "Connection reconfiguration"
   << right
   << " " << setw (5) << imsi
@@ -203,7 +203,7 @@ ConnectionStatsCalculator::NotifyHandoverStart (
 {
   *m_rrcWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds ()
+  << setw (11) << Simulator::Now ().GetSeconds ()
   << " " << setw (30) << "Handover start"
   << right
   << " " << setw (5) << imsi
@@ -219,7 +219,7 @@ ConnectionStatsCalculator::NotifyHandoverEndOk (
 {
   *m_rrcWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds ()
+  << setw (11) << Simulator::Now ().GetSeconds ()
   << " " << setw (30) << "Handover OK"
   << right
   << " " << setw (5) << imsi
@@ -234,7 +234,7 @@ ConnectionStatsCalculator::NotifyHandoverEndError (
 {
   *m_rrcWrapper->GetStream ()
   << left
-  << setw (10) << Simulator::Now ().GetSeconds ()
+  << setw (11) << Simulator::Now ().GetSeconds ()
   << " " << setw (30) << "Handover error"
   << right
   << " " << setw (7) << imsi
