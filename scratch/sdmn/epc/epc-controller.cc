@@ -618,12 +618,16 @@ EpcController::HandleError (
 }
 
 uint16_t
-EpcController::GetPgwTftIdx (Ptr<const RoutingInfo> rInfo) const
+EpcController::GetPgwTftIdx (
+  Ptr<const RoutingInfo> rInfo, uint16_t activeTfts) const
 {
-  NS_LOG_FUNCTION (this << rInfo);
+  NS_LOG_FUNCTION (this << rInfo << activeTfts);
 
+  if (activeTfts == 0)
+    {
+      activeTfts = 1 << m_tftLbLevel;
+    }
   Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
-  uint16_t activeTfts = 1 << m_tftLbLevel;
   return 1 + (ueInfo->GetUeAddr ().Get () % activeTfts);
 }
 

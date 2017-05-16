@@ -268,9 +268,13 @@ private:
   /**
    * Get the active P-GW TFT index for a given traffic flow.
    * \param rInfo The routing information to process.
+   * \param activeTfts The number of active P-GW TFT switches. When set to 0,
+   *        the number of P-GW TFTs will be calculated considering the current
+   *        load balancing level.
    * \return The P-GW TFT index.
    */
-  uint16_t GetPgwTftIdx (Ptr<const RoutingInfo> rInfo) const;
+  uint16_t GetPgwTftIdx (
+    Ptr<const RoutingInfo> rInfo, uint16_t activeTfts = 0) const;
 
   /**
    * Check for available resources on P-GW TFT switch for this bearer request.
