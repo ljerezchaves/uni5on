@@ -298,13 +298,13 @@ private:
    * Remove OpenFlow rules for downlink packet filtering from P-GW TFT switch.
    * \param rInfo The routing information to process.
    * \param pgwTftIdx The P-GW TFT switch index.
-   * \param keepMeter Don't update the meterInfo->IsDownInstalled () flag when
-   *        removing the meter entry (use this only when moving rules between
-   *        P-GW TFT switches).
+   * \param keepMeterFlag Don't update the meterInfo->IsDownInstalled () flag
+   *        when removing the meter entry (use this only when moving rules
+   *        between P-GW TFT switches).
    * \return True if succeeded, false otherwise.
    */
   bool RemovePgwSwitchRules (
-    Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool keepMeter = false);
+    Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool keepMeterFlag = false);
 
   /**
    * Install OpenFlow match rules for this bearer.

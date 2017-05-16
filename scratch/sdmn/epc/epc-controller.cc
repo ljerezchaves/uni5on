@@ -148,12 +148,12 @@ EpcController::RequestDedicatedBearer (EpsBearer bearer, uint32_t teid)
       NS_LOG_INFO ("Bearer request blocked by controller.");
       return false;
     }
-  NS_LOG_INFO ("Bearer request accepted by controller.");
 
   // Every time the application starts using an (old) existing bearer, let's
   // reinstall the rules on the switches, which will increase the bearer
   // priority. Doing this, we avoid problems with old 'expiring' rules, and
   // we can even use new routing paths when necessary.
+  NS_LOG_INFO ("Bearer request accepted by controller.");
   rInfo->SetActive (true);
   return InstallBearer (rInfo);
 }
@@ -597,9 +597,9 @@ EpcController::HandleFlowRemoved (
   if (rInfo->IsActive ())
     {
       NS_LOG_WARN ("Rule removed for active bearer teid " << teid << ". " <<
-                   "Reinstall rule...");
+                   "Reinstall rules...");
       bool installed = InstallBearer (rInfo);
-      NS_ASSERT_MSG (installed, "Bearer rules installation failed!");
+      NS_ASSERT_MSG (installed, "Rules reinstallation failed!");
       return 0;
     }
   NS_ABORT_MSG ("Should not get here :/");
@@ -632,23 +632,25 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeid ());
 
-  // Get the P-GW TFT stats calculator resposible for this bearer.
+  // Get the P-GW TFT stats calculator responsible for this UE.
   uint16_t idx = GetPgwTftIdx (rInfo);
   Ptr<OFSwitch13StatsCalculator> stats = OFSwitch13Device::GetDevice (
       m_pgwDpIds.at (idx))->GetObject<OFSwitch13StatsCalculator> ();
   NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
 
-  // Block if table full or current load is exceeding pipeline capacity.
+  // Block if table is full or if current load is exceeding pipeline capacity.
   bool accept = true;
   if (stats->GetEwmaFlowEntries () >= m_tftTableSize)
     {
-      NS_LOG_WARN ("Blocking bearer: flow tables full.");
       accept = false;
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
+                   " because the flow tables is full.");
     }
   else if (stats->GetEwmaPipelineLoad () >= m_tftPlCapacity)
     {
-      NS_LOG_WARN ("Blocking bearer: maximum pipeline load.");
       accept = false;
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
+                   " because the load is exceeding pipeline capacity.");
     }
   return accept;
 }
@@ -756,9 +758,9 @@ EpcController::InstallPgwSwitchRules (
 
 bool
 EpcController::RemovePgwSwitchRules (
-  Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool keepMeter)
+  Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool keepMeterFlag)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeid () << pgwTftIdx << keepMeter);
+  NS_LOG_FUNCTION (this << rInfo->GetTeid () << pgwTftIdx << keepMeterFlag);
 
   NS_LOG_INFO ("Removing P-GW rules for bearer teid " << rInfo->GetTeid () <<
                " from P-GW TFT switch index " << pgwTftIdx);
@@ -781,7 +783,7 @@ EpcController::RemovePgwSwitchRules (
   if (meterInfo && meterInfo->IsDownInstalled ())
     {
       DpctlExecute (pgwTftDpId, meterInfo->GetDelCmd ());
-      if (!keepMeter)
+      if (!keepMeterFlag)
         {
           meterInfo->SetDownInstalled (false);
         }
@@ -806,13 +808,11 @@ EpcController::InstallBearer (Ptr<RoutingInfo> rInfo)
 
   // Increasing the priority every time we (re)install routing rules.
   rInfo->IncreasePriority ();
-  bool ok1 = InstallPgwSwitchRules (rInfo, GetPgwTftIdx (rInfo));
-  bool ok2 = TopologyInstallRouting (rInfo);
-  if (ok1 && ok2)
-    {
-      rInfo->SetInstalled (true);
-    }
-  return rInfo->IsInstalled ();
+  bool success = true;
+  success &= InstallPgwSwitchRules (rInfo, GetPgwTftIdx (rInfo));
+  success &= TopologyInstallRouting (rInfo);
+  rInfo->SetInstalled (success);
+  return success;
 }
 
 bool
@@ -830,14 +830,14 @@ EpcController::RemoveBearer (Ptr<RoutingInfo> rInfo)
     }
 
   // Remove the rules.
-  bool ok1 = RemovePgwSwitchRules (rInfo, GetPgwTftIdx (rInfo));
-  bool ok2 = TopologyRemoveRouting (rInfo);
-  if (ok1 && ok2)
+  bool success = true;
+  success &= RemovePgwSwitchRules (rInfo, GetPgwTftIdx (rInfo));
+  success &= TopologyRemoveRouting (rInfo);
+  if (success)
     {
       rInfo->SetInstalled (false);
-      return true;
     }
-  return false;
+  return success;
 }
 
 void
@@ -901,6 +901,14 @@ void
 EpcController::IncreasePgwLoadBalancingLevel (void)
 {
   NS_LOG_FUNCTION (this);
+
+  // 1st: Identify which bearers will be moved.
+
+  // 2nd: Reinstall these bearers on the correct P-GW TFT switches.
+
+  // 3rd: Update the P-GW main switch.
+
+  // 4th: Remove old rules from P-GW TFT switches.
 
   m_tftLbLevel++;
 }
@@ -973,7 +981,8 @@ EpcController::DoCreateSessionRequest (
 
   // For default bearer, no meter nor GBR metadata.
   // For logic consistence, let's check for available resources.
-  bool accepted = PgwTftBearerRequest (rInfo);
+  bool accepted = true;
+  accepted &= PgwTftBearerRequest (rInfo);
   accepted &= TopologyBearerRequest (rInfo);
   NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
   m_bearerRequestTrace (accepted, rInfo);
