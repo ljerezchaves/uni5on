@@ -632,10 +632,10 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeid ());
 
-  // Get the P-GW TFT stats calculator responsible for this UE.
-  uint16_t idx = GetPgwTftIdx (rInfo);
+  // Get the P-GW TFT stats calculator responsible for this bearer.
+  uint16_t tftIdx = rInfo->GetPgwTftIdx ();
   Ptr<OFSwitch13StatsCalculator> stats = OFSwitch13Device::GetDevice (
-      m_pgwDpIds.at (idx))->GetObject<OFSwitch13StatsCalculator> ();
+      m_pgwDpIds.at (tftIdx))->GetObject<OFSwitch13StatsCalculator> ();
   NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
 
   // Block if table is full or if current load is exceeding pipeline capacity.
@@ -657,15 +657,19 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
 
 bool
 EpcController::InstallPgwSwitchRules (
-  Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool installMeter)
+  Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool forceMeterInstall)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeid () << pgwTftIdx << installMeter);
+  NS_LOG_FUNCTION (this << rInfo->GetTeid () << pgwTftIdx << forceMeterInstall);
 
-  NS_LOG_INFO ("Installing P-GW rules for bearer teid " << rInfo->GetTeid () <<
-               " into P-GW TFT switch index " << pgwTftIdx);
-
+  // Use the rInfo P-GW TFT index when the parameter is not set.
+  if (pgwTftIdx == 0)
+    {
+      pgwTftIdx = rInfo->GetPgwTftIdx ();
+    }
   uint64_t pgwTftDpId = m_pgwDpIds.at (pgwTftIdx);
   uint32_t pgwTftS5PortNo = m_pgwS5PortsNo.at (pgwTftIdx);
+  NS_LOG_INFO ("Installing P-GW rules for bearer teid " << rInfo->GetTeid () <<
+               " into P-GW TFT switch index " << pgwTftIdx);
 
   // Flags OFPFF_CHECK_OVERLAP and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0006");
@@ -692,7 +696,7 @@ EpcController::InstallPgwSwitchRules (
   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
   if (meterInfo && meterInfo->HasDown ())
     {
-      if (installMeter || !meterInfo->IsDownInstalled ())
+      if (forceMeterInstall || !meterInfo->IsDownInstalled ())
         {
           // Install the per-flow meter entry.
           DpctlExecute (pgwTftDpId, meterInfo->GetDownAddCmd ());
@@ -762,10 +766,14 @@ EpcController::RemovePgwSwitchRules (
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeid () << pgwTftIdx << keepMeterFlag);
 
+  // Use the rInfo P-GW TFT index when the parameter is not set.
+  if (pgwTftIdx == 0)
+    {
+      pgwTftIdx = rInfo->GetPgwTftIdx ();
+    }
+  uint64_t pgwTftDpId = m_pgwDpIds.at (pgwTftIdx);
   NS_LOG_INFO ("Removing P-GW rules for bearer teid " << rInfo->GetTeid () <<
                " from P-GW TFT switch index " << pgwTftIdx);
-
-  uint64_t pgwTftDpId = m_pgwDpIds.at (pgwTftIdx);
 
   // Print the cookie value in dpctl string format.
   char cookieStr [20];
@@ -808,9 +816,12 @@ EpcController::InstallBearer (Ptr<RoutingInfo> rInfo)
 
   // Increasing the priority every time we (re)install routing rules.
   rInfo->IncreasePriority ();
+
+  // Install the rules.
   bool success = true;
-  success &= InstallPgwSwitchRules (rInfo, GetPgwTftIdx (rInfo));
+  success &= InstallPgwSwitchRules (rInfo);
   success &= TopologyInstallRouting (rInfo);
+
   rInfo->SetInstalled (success);
   return success;
 }
@@ -831,12 +842,10 @@ EpcController::RemoveBearer (Ptr<RoutingInfo> rInfo)
 
   // Remove the rules.
   bool success = true;
-  success &= RemovePgwSwitchRules (rInfo, GetPgwTftIdx (rInfo));
+  success &= RemovePgwSwitchRules (rInfo);
   success &= TopologyRemoveRouting (rInfo);
-  if (success)
-    {
-      rInfo->SetInstalled (false);
-    }
+
+  rInfo->SetInstalled (!success);
   return success;
 }
 
@@ -901,14 +910,6 @@ void
 EpcController::IncreasePgwLoadBalancingLevel (void)
 {
   NS_LOG_FUNCTION (this);
-
-  // 1st: Identify which bearers will be moved.
-
-  // 2nd: Reinstall these bearers on the correct P-GW TFT switches.
-
-  // 3rd: Update the P-GW main switch.
-
-  // 4th: Remove old rules from P-GW TFT switches.
 
   m_tftLbLevel++;
 }
@@ -977,6 +978,7 @@ EpcController::DoCreateSessionRequest (
   rInfo->SetActive (true);               // Default bearer is always active
   rInfo->SetAggregated (false);          // Default bearer never aggregates
   rInfo->SetBearerContext (defaultBearer);
+  rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
   TopologyBearerCreated (rInfo);
 
   // For default bearer, no meter nor GBR metadata.
@@ -1010,6 +1012,7 @@ EpcController::DoCreateSessionRequest (
       rInfo->SetActive (false);             // Dedicated bearer not active
       rInfo->SetAggregated (false);         // Dedicated bearer not aggregated
       rInfo->SetBearerContext (dedicatedBearer);
+      rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
       TopologyBearerCreated (rInfo);
 
       // For all GBR bearers, create the GBR metadata.

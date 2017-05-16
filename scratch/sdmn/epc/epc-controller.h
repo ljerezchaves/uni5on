@@ -285,26 +285,28 @@ private:
    * \attention To avoid conflicts with old entries, increase the routing
    *            priority before installing OpenFlow rules.
    * \param rInfo The routing information to process.
-   * \param pgwTftIdx The P-GW TFT switch index.
-   * \param installMeter Force the meter entry installation even when the
-   *        meterInfo->IsDownInstalled () is true (use this only when moving
-   *        rules between P-GW TFT switches).
+   * \param pgwTftIdx The P-GW TFT switch index. When set to 0, the index will
+   *        be get from rInfo->GetPgwTftIdx ().
+   * \param forceMeterInstall Force the meter entry installation even when the
+   *        meterInfo->IsDownInstalled () is true.
    * \return True if succeeded, false otherwise.
    */
   bool InstallPgwSwitchRules (
-    Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool installMeter = false);
+    Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx = 0,
+    bool forceMeterInstall = false);
 
   /**
    * Remove OpenFlow rules for downlink packet filtering from P-GW TFT switch.
    * \param rInfo The routing information to process.
-   * \param pgwTftIdx The P-GW TFT switch index.
-   * \param keepMeterFlag Don't update the meterInfo->IsDownInstalled () flag
-   *        when removing the meter entry (use this only when moving rules
-   *        between P-GW TFT switches).
+   * \param pgwTftIdx The P-GW TFT switch index. When set to 0, the index will
+   *        be get from rInfo->GetPgwTftIdx ().
+   * \param keepMeterFlag Don't set the meterInfo->IsDownInstalled () flag to
+   *        false when removing the meter entry.
    * \return True if succeeded, false otherwise.
    */
   bool RemovePgwSwitchRules (
-    Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool keepMeterFlag = false);
+    Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx = 0,
+    bool keepMeterFlag = false);
 
   /**
    * Install OpenFlow match rules for this bearer.
