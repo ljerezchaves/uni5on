@@ -163,10 +163,7 @@ TrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
 
   // Before requesting for resources and starting the application, let's set
   // the next start attempt for this same application.
-  if (m_restartApps)
-    {
-      SetNextAppStartTry (app);
-    }
+  SetNextAppStartTry (app);
 
   // No resource request for traffic over default bearer.
   bool authorized = true;
