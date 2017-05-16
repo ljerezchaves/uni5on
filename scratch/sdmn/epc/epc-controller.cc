@@ -906,6 +906,7 @@ EpcController::CheckPgwTftLoad (void)
     }
 
   // Check if we need to update the load balancing level.
+  uint32_t moved = 0;
   if (m_tftLbLevel != nextLbLevel)
     {
       // Identify and move bearers to the correct P-GW TFT switches.
@@ -923,22 +924,37 @@ EpcController::CheckPgwTftLoad (void)
                   RemovePgwSwitchRules  (*it, currIdx, true);
                   InstallPgwSwitchRules (*it, destIdx, true);
                   (*it)->SetPgwTftIdx (destIdx);
+                  moved++;
                 }
             }
         }
 
       // Update the load balancing level and the P-GW main switch.
-      m_tftLbLevel = nextLbLevel;
       std::ostringstream cmd;
       cmd << "flow-mod cmd=mods,table=0,prio=64 eth_type=0x800"
           << ",in_port=" << m_pgwSgiPortNo
           << ",ip_dst=" << EpcNetwork::m_ueAddr
           << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
-          << " goto:" << m_tftLbLevel + 1;
+          << " goto:" << nextLbLevel + 1;
       DpctlExecute (m_pgwDpIds.at (0), cmd.str ());
     }
 
-  // Finally, schedule the next check operation.
+  // Fire the load balancing trace source.
+  struct LoadBalancingStats lbStats;
+  lbStats.currentLevel = m_tftLbLevel;
+  lbStats.nextLevel    = nextLbLevel;
+  lbStats.maxLevel     = maxLbLevel;
+  lbStats.tableSize    = m_tftTableSize;
+  lbStats.maxEntries   = maxEntries;
+  lbStats.avgEntries   = sumEntries / activeTfts;
+  lbStats.pipeCapacity = m_tftPlCapacity;
+  lbStats.maxLoad      = DataRate (maxLoad);
+  lbStats.avgLoad      = DataRate (sumLoad / activeTfts);
+  lbStats.bearersMoved = moved;
+  m_loadBalancingTrace (lbStats);
+
+  // Finally, update the level and schedule the next check operation.
+  m_tftLbLevel = nextLbLevel;
   Simulator::Schedule (m_tftTimeout, &EpcController::CheckPgwTftLoad, this);
 }
 

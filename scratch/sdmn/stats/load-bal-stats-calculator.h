@@ -23,6 +23,7 @@
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
+#include "../epc/epc-controller.h"
 #include "../info/routing-info.h"
 
 namespace ns3 {
@@ -51,13 +52,12 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
   /**
-   * Notify a successful P-GW load balancing procedure.
+   * Notify a successful P-GW load balancing.
    * \param context Trace source context.
-   * \param status True when enabling the P-GW load balancing, false otherwise.
-   * \param bearerList The list of bearers moved to a new P-GW TFT switch.
+   * \param stats The load balancing statistics from the last interval.
    */
-  void NotifyLoadBalFinished (std::string context, bool status,
-                              RoutingInfoList_t bearerList);
+  void NotifyLoadBalancing (std::string context,
+                            EpcController::LoadBalancingStats stats);
 
 private:
   std::string               m_lbmFilename;    //!< LbmStats filename.

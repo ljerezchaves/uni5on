@@ -36,7 +36,7 @@ LoadBalStatsCalculator::LoadBalStatsCalculator ()
   // Connect this stats calculator to required trace sources.
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::EpcController/LoadBalancing",
-    MakeCallback (&LoadBalStatsCalculator::NotifyLoadBalFinished, this));
+    MakeCallback (&LoadBalStatsCalculator::NotifyLoadBalancing, this));
 }
 
 LoadBalStatsCalculator::~LoadBalStatsCalculator ()
@@ -79,38 +79,49 @@ LoadBalStatsCalculator::NotifyConstructionCompleted (void)
 
   m_lbmWrapper = Create<OutputStreamWrapper> (m_lbmFilename, std::ios::out);
   *m_lbmWrapper->GetStream ()
-  << fixed << setprecision (4) << boolalpha
+  << fixed << setprecision (3) << boolalpha
   << left
   << setw (12) << "Time(s)"
-  << setw (13) << "Status"
-  << setw (11) << "ListOfBearers"
+  << right
+  << setw (8)  << "MaxLev"
+  << setw (8)  << "NoTFTs"
+  << setw (8)  << "CurLev"
+  << setw (8)  << "NexLev"
+  << setw (8)  << "BeaMov"
+  << setw (8)  << "TabSiz"
+  << setw (8)  << "MaxEnt"
+  << setw (8)  << "AvgEnt"
+  << setw (12) << "PipCap"
+  << setw (12) << "MaxLoa"
+  << setw (12) << "AvgLoa"
   << std::endl;
 
   Object::NotifyConstructionCompleted ();
 }
 
 void
-LoadBalStatsCalculator::NotifyLoadBalFinished (
-  std::string context, bool status, RoutingInfoList_t bearerList)
+LoadBalStatsCalculator::NotifyLoadBalancing (
+  std::string context, EpcController::LoadBalancingStats stats)
 {
-  NS_LOG_FUNCTION (this << context << status);
+  NS_LOG_FUNCTION (this << context);
 
+  uint16_t numTfts = 1 << stats.currentLevel;
   *m_lbmWrapper->GetStream ()
   << left
   << setw (11) << Simulator::Now ().GetSeconds ()
-  << " " << setw (12) << status << " ";
-
-  // Print the list of TEIDs moved from one switch to another.
-  RoutingInfoList_t::iterator it;
-  for (it = bearerList.begin (); it != bearerList.end (); )
-    {
-      *m_lbmWrapper->GetStream () << (*it)->GetTeid ();
-      if (++it != bearerList.end ())
-        {
-          *m_lbmWrapper->GetStream () << ",";
-        }
-    }
-  *m_lbmWrapper->GetStream () << std::endl;
+  << right
+  << " " << setw (8) << stats.maxLevel
+  << " " << setw (7) << numTfts
+  << " " << setw (7) << stats.currentLevel
+  << " " << setw (7) << stats.nextLevel
+  << " " << setw (7) << stats.bearersMoved
+  << " " << setw (7) << stats.tableSize
+  << " " << setw (7) << stats.maxEntries
+  << " " << setw (7) << stats.avgEntries
+  << " " << setw (11) << (double)(stats.pipeCapacity.GetBitRate ()) / 1000
+  << " " << setw (11) << (double)(stats.maxLoad.GetBitRate ()) / 1000
+  << " " << setw (11) << (double)(stats.avgLoad.GetBitRate ()) / 1000
+  << std::endl;
 }
 
 } // Namespace ns3

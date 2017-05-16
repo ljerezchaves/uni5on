@@ -5,6 +5,7 @@ default ns3::ConnectionInfo::GbrSafeguard "5Mb/s"
 default ns3::ConnectionInfo::NonGbrAdjustmentStep "5Mb/s"
 
 default ns3::EpcController::NonGbrCoexistence "on"
+default ns3::EpcController::PgwCheckLoadTimeout "1s"
 default ns3::EpcController::PgwLoadBalancing "auto"
 default ns3::EpcController::PgwThresholdFactor "0.8"
 default ns3::EpcController::S5TrafficAggregation "off"

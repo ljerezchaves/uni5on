@@ -57,6 +57,21 @@ public:
     AUTO = 2    //!< Automatic.
   };
 
+  /** Load balancing statistics sent to the LoadBalancing trace source. */
+  struct LoadBalancingStats
+  {
+    uint32_t avgEntries;      //!< The table size average entries.
+    DataRate avgLoad;         //!< The pipeline average load;
+    uint32_t bearersMoved;    //!< The number of bearers moved between TFTs.
+    uint32_t currentLevel;    //!< The current load balancing level.
+    uint32_t maxEntries;      //!< The table size peak entries.
+    uint32_t maxLevel;        //!< The maximum load balancing level.
+    DataRate maxLoad;         //!< The pipeline peak load;
+    uint32_t nextLevel;       //!< The load balancing level for next cycle.
+    DataRate pipeCapacity;    //!< The OpenFlow pipeline capacity.
+    uint32_t tableSize;       //!< The OpenFlow flow table size in use.
+  };
+
   EpcController ();           //!< Default constructor.
   virtual ~EpcController ();  //!< Dummy destructor, see DoDispose.
 
@@ -195,11 +210,9 @@ public:
 
   /**
    * TracedCallback signature for the load balancing trace source.
-   * \param status True when enabling the P-GW load balancing, false otherwise.
-   * \param bearerList The list of bearers moved to a new P-GW TFT switch.
+   * \param stats The load balancing statistics from the last interval.
    */
-  typedef void (*LoadBalancingTracedCallback)(
-    bool status, RoutingInfoList_t bearerList);
+  typedef void (*LoadBalancingTracedCallback)(struct LoadBalancingStats stats);
 
 protected:
   /** Destructor implementation. */
@@ -353,7 +366,7 @@ private:
   TracedCallback<uint64_t, uint16_t, BearerContextList_t> m_sessionCreatedTrace;
 
   /** The load balancing trace source, fired at SetPgwLoadBalancing. */
-  TracedCallback<bool, RoutingInfoList_t> m_loadBalancingTrace;
+  TracedCallback<struct LoadBalancingStats> m_loadBalancingTrace;
 
   // Internal mechanisms for performance improvement.
   FeatureStatus         m_voipQos;        //!< VoIP QoS with queues.
