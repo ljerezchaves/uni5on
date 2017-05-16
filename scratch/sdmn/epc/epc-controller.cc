@@ -129,6 +129,9 @@ EpcController::RequestDedicatedBearer (EpsBearer bearer, uint32_t teid)
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
+  // Update the P-GW TFT index for this bearer.
+  rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
+
   // Check for the traffic aggregation mechanism enabled.
   if (GetS5TrafficAggregation () && !rInfo->IsDefault ())
     {
@@ -858,18 +861,17 @@ EpcController::CheckPgwTftLoad (void)
 {
   NS_LOG_FUNCTION (this);
 
-  uint32_t maxEntries = 0;
-  uint32_t sumEntries = 0;
-  uint64_t maxLoad = 0;
-  uint64_t sumLoad = 0;
+  uint32_t maxEntries = 0, sumEntries = 0;
+  uint64_t maxLoad    = 0, sumLoad    = 0;
   uint32_t maxLbLevel = (uint8_t)log2 (m_tftSwitches);
   uint16_t activeTfts = 1 << m_tftLbLevel;
+  uint8_t  nextLbLevel = m_tftLbLevel;
 
   Ptr<OFSwitch13Device> device;
   Ptr<OFSwitch13StatsCalculator> stats;
-  for (uint16_t i = 0; i < activeTfts; i++)
+  for (uint16_t tftIdx = 1; tftIdx <= activeTfts; tftIdx++)
     {
-      device = OFSwitch13Device::GetDevice (m_pgwDpIds.at (i + 1));
+      device = OFSwitch13Device::GetDevice (m_pgwDpIds.at (tftIdx));
       stats = device->GetObject<OFSwitch13StatsCalculator> ();
       NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
 
@@ -884,46 +886,60 @@ EpcController::CheckPgwTftLoad (void)
 
   // We may increase the level when we hit the maximum number of flow entries
   // or pipeline capacity on any P-GW TFT switch.
-  if (maxEntries >= m_tftTableSize || maxLoad >= m_tftPlCapacity.GetBitRate ())
+  uint64_t tftPlBitrate = m_tftPlCapacity.GetBitRate ();
+  if ((m_tftLbLevel < maxLbLevel)
+      && (maxEntries >= m_tftTableSize || maxLoad >= tftPlBitrate))
     {
-      NS_LOG_INFO ("Need to increase the load balancing level.");
-      if (m_tftLbLevel < maxLbLevel)
-        {
-          // IncreasePgwLoadBalancingLevel ();
-        }
+      NS_LOG_INFO ("Increasing the load balancing level.");
+      nextLbLevel++;
     }
   // We may decrease the level when we can accommodate the current load and
   // flow entries on the lower level using up to 60% of resources. We expect
   // the the entries and load will be equally distributed among switches
   // because the traffic pattern is the same for all UEs.
-  else if (sumLoad < (0.6 * (activeTfts / 2) * m_tftPlCapacity.GetBitRate ())
-           && sumEntries < (0.6 * (activeTfts / 2) * m_tftTableSize))
+  else if ((m_tftLbLevel > 0)
+           && (sumLoad < (0.6 * (activeTfts >> 1) * tftPlBitrate))
+           && (sumEntries < (0.6 * (activeTfts >> 1) * m_tftTableSize)))
     {
-      NS_LOG_INFO ("Can decrease the load balancing level.");
-      if (m_tftLbLevel > 0)
-        {
-          // DecreasePgwLoadBalancingLevel ();
-        }
+      NS_LOG_INFO ("Decreasing the load balancing level.");
+      nextLbLevel--;
     }
 
-  // Schedule the next check.
+  // Check if we need to update the load balancing level.
+  if (m_tftLbLevel != nextLbLevel)
+    {
+      // Identify and move bearers to the correct P-GW TFT switches.
+      uint16_t futureTfts = 1 << nextLbLevel;
+      for (uint16_t currIdx = 1; currIdx <= activeTfts; currIdx++)
+        {
+          RoutingInfoList_t bearers = RoutingInfo::GetInstalledList (currIdx);
+          RoutingInfoList_t::iterator it;
+          for (it = bearers.begin (); it != bearers.end (); ++it)
+            {
+              uint16_t destIdx = GetPgwTftIdx (*it, futureTfts);
+              if (destIdx != currIdx)
+                {
+                  NS_LOG_INFO ("Moving bearer teid " << (*it)->GetTeid ());
+                  RemovePgwSwitchRules  (*it, currIdx, true);
+                  InstallPgwSwitchRules (*it, destIdx, true);
+                  (*it)->SetPgwTftIdx (destIdx);
+                }
+            }
+        }
+
+      // Update the load balancing level and the P-GW main switch.
+      m_tftLbLevel = nextLbLevel;
+      std::ostringstream cmd;
+      cmd << "flow-mod cmd=mods,table=0,prio=64 eth_type=0x800"
+          << ",in_port=" << m_pgwSgiPortNo
+          << ",ip_dst=" << EpcNetwork::m_ueAddr
+          << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
+          << " goto:" << m_tftLbLevel + 1;
+      DpctlExecute (m_pgwDpIds.at (0), cmd.str ());
+    }
+
+  // Finally, schedule the next check operation.
   Simulator::Schedule (m_tftTimeout, &EpcController::CheckPgwTftLoad, this);
-}
-
-void
-EpcController::IncreasePgwLoadBalancingLevel (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  m_tftLbLevel++;
-}
-
-void
-EpcController::DecreasePgwLoadBalancingLevel (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  m_tftLbLevel--;
 }
 
 void

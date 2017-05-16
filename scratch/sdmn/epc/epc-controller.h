@@ -332,16 +332,6 @@ private:
    */
   void CheckPgwTftLoad (void);
 
-  /**
-   * Increase the level of the P-GW TFT load balancing mechanism.
-   */
-  void IncreasePgwLoadBalancingLevel (void);
-
-  /**
-   * Decrease the level of the P-GW TFT load balancing mechanism.
-   */
-  void DecreasePgwLoadBalancingLevel (void);
-
   /** \name Methods for the S5 SAP P-GW control plane. */
   //\{
   void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
