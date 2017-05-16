@@ -93,6 +93,14 @@ RoutingInfo::GetSgwS5Addr (void) const
 }
 
 uint16_t
+RoutingInfo::GetPgwTftIdx (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwTftIdx;
+}
+
+uint16_t
 RoutingInfo::GetPriority (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -162,6 +170,15 @@ RoutingInfo::SetSgwS5Addr (Ipv4Address value)
   NS_LOG_FUNCTION (this << value);
 
   m_sgwS5Addr = value;
+}
+
+void
+RoutingInfo::SetPgwTftIdx (uint16_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  NS_ASSERT_MSG (value > 0, "The index 0 cannot be used.");
+  m_pgwTftIdx = value;
 }
 
 void
@@ -307,6 +324,30 @@ RoutingInfo::GetPointer (uint32_t teid)
       rInfo = ret->second;
     }
   return rInfo;
+}
+
+RoutingInfoList_t
+RoutingInfo::GetInstalledList (uint16_t pgwTftIdx)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  RoutingInfoList_t list;
+  Ptr<RoutingInfo> rInfo;
+  TeidRoutingMap_t::iterator it;
+  for (it = RoutingInfo::m_globalInfoMap.begin ();
+       it != RoutingInfo::m_globalInfoMap.end (); ++it)
+    {
+      rInfo = it->second;
+      if (pgwTftIdx > 0 && rInfo->GetPgwTftIdx () != pgwTftIdx)
+        {
+          continue;
+        }
+      if (rInfo->IsInstalled ())
+        {
+          list.push_back (rInfo);
+        }
+    }
+  return list;
 }
 
 void

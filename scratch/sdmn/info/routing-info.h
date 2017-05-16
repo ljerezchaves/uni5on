@@ -71,6 +71,7 @@ public:
   uint64_t GetImsi (void) const;
   Ipv4Address GetPgwS5Addr (void) const;
   Ipv4Address GetSgwS5Addr (void) const;
+  uint16_t GetPgwTftIdx (void) const;
   uint16_t GetPriority (void) const;
   uint16_t GetTimeout (void) const;
   bool IsDefault (void) const;
@@ -81,6 +82,7 @@ public:
   void SetImsi (uint64_t value);
   void SetPgwS5Addr (Ipv4Address value);
   void SetSgwS5Addr (Ipv4Address value);
+  void SetPgwTftIdx (uint16_t value);
   void SetPriority (uint16_t value);
   void SetTimeout (uint16_t value);
   void SetDefault (bool value);
@@ -123,6 +125,14 @@ public:
    */
   static Ptr<RoutingInfo> GetPointer (uint32_t teid);
 
+  /**
+   * Get a list of routing information for active bearers that are currently
+   * installed in the OpenFlow switches at the P-GW and backhaul network.
+   * \param pgwTftIdx The P-GW TFT index to filter the list.
+   * \return The list of installed bearers.
+   */
+  static RoutingInfoList_t GetInstalledList (uint16_t pgwTftIdx = 0);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -138,6 +148,7 @@ private:
   uint64_t          m_imsi;         //!< UE IMSI.
   Ipv4Address       m_pgwS5Addr;    //!< P-GW S5 IPv4 address.
   Ipv4Address       m_sgwS5Addr;    //!< S-GW S5 IPv4 address.
+  uint16_t          m_pgwTftIdx;    //!< P-GW TFT switch index.
   uint16_t          m_priority;     //!< Flow priority.
   uint16_t          m_timeout;      //!< Flow idle timeout.
   bool              m_isDefault;    //!< This info is for default bearer.
