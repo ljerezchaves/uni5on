@@ -34,7 +34,7 @@ class ConnectionInfo;
 typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
 
 /** A list of connection information objects. */
-typedef std::vector<Ptr<ConnectionInfo> > ConnInfoList_t;
+typedef std::list<Ptr<ConnectionInfo> > ConnInfoList_t;
 
 /**
  * \ingroup sdmnInfo
