@@ -381,7 +381,7 @@ private:
   uint32_t              m_pgwSgiPortNo;   //!< SGi port number.
 
   // Load balancing mechanism.
-  double                m_tftThrshFactor; //!< Threshold factor.
+  double                m_tftThreshold;   //!< Load balancing threshold.
   uint32_t              m_tftTableSize;   //!< TFT flow table size.
   DataRate              m_tftPlCapacity;  //!< TFT pipeline capacity.
   uint16_t              m_tftSwitches;    //!< Number of TFT switches.

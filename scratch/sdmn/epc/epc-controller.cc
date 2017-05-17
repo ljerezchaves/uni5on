@@ -79,10 +79,10 @@ EpcController::GetTypeId (void)
                    MakeEnumChecker (EpcController::OFF,  "off",
                                     EpcController::ON,   "on",
                                     EpcController::AUTO, "auto"))
-    .AddAttribute ("PgwThresholdFactor",
+    .AddAttribute ("PgwThreshold",
                    "The threshold factor used to trigger the load balancing.",
                    DoubleValue (0.8),
-                   MakeDoubleAccessor (&EpcController::m_tftThrshFactor),
+                   MakeDoubleAccessor (&EpcController::m_tftThreshold),
                    MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("S5TrafficAggregation",
                    "Configure the S5 traffic aggregation mechanism.",
@@ -330,9 +330,9 @@ EpcController::NotifyPgwBuilt (OFSwitch13DeviceContainer devices)
                  "Inconsistent number of P-GW OpenFlow switches.");
 
   // Update table size and pipeline capacity using the threshold factor.
-  uint64_t bitrate = m_tftPlCapacity.GetBitRate () * m_tftThrshFactor;
+  uint64_t bitrate = m_tftPlCapacity.GetBitRate () * m_tftThreshold;
   m_tftPlCapacity = DataRate (bitrate);
-  m_tftTableSize = std::round (m_tftTableSize * m_tftThrshFactor);
+  m_tftTableSize = std::round (m_tftTableSize * m_tftThreshold);
 }
 
 EpcS5SapPgw*
