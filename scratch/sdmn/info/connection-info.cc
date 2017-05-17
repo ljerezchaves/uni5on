@@ -59,7 +59,10 @@ ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
   m_gbrBitRate [1] = 0;
   m_nonBitRate [0] = 0;
   m_nonBitRate [1] = 0;
-  ResetTxBytes ();
+  m_gbrTxBytes [0] = 0;
+  m_gbrTxBytes [1] = 0;
+  m_nonTxBytes [0] = 0;
+  m_nonTxBytes [1] = 0;
 
   RegisterConnectionInfo (Ptr<ConnectionInfo> (this));
 }
@@ -149,7 +152,7 @@ ConnectionInfo::GetPortDev (uint8_t idx) const
   return m_switches [idx].portDev;
 }
 
-uint32_t
+uint64_t
 ConnectionInfo::GetGbrBytes (Direction dir) const
 {
   NS_LOG_FUNCTION (this << dir);
@@ -165,7 +168,7 @@ ConnectionInfo::GetGbrBitRate (Direction dir) const
   return m_gbrBitRate [dir];
 }
 
-uint32_t
+uint64_t
 ConnectionInfo::GetNonGbrBytes (Direction dir) const
 {
   NS_LOG_FUNCTION (this << dir);
@@ -195,17 +198,6 @@ ConnectionInfo::GetNonGbrLinkRatio (Direction dir) const
   NS_LOG_FUNCTION (this << dir);
 
   return static_cast<double> (GetNonGbrBitRate (dir)) / GetLinkBitRate ();
-}
-
-void
-ConnectionInfo::ResetTxBytes (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  m_gbrTxBytes [0] = 0;
-  m_gbrTxBytes [1] = 0;
-  m_nonTxBytes [0] = 0;
-  m_nonTxBytes [1] = 0;
 }
 
 bool

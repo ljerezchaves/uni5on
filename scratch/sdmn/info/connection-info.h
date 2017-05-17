@@ -103,18 +103,13 @@ public:
    * \return The requested information.
    */
   //\{
-  uint32_t GetGbrBytes (Direction dir) const;
+  uint64_t GetGbrBytes (Direction dir) const;
   uint64_t GetGbrBitRate (Direction dir) const;
-  uint32_t GetNonGbrBytes (Direction dir) const;
+  uint64_t GetNonGbrBytes (Direction dir) const;
   uint64_t GetNonGbrBitRate (Direction dir) const;
   double GetGbrLinkRatio (Direction dir) const;
   double GetNonGbrLinkRatio (Direction dir) const;
   //\}
-
-  /**
-   * Reset internal transmitted byte counters.
-   */
-  void ResetTxBytes (void);
 
   /**
    * Inspect physical channel for half-duplex or full-duplex operation mode.
@@ -178,7 +173,7 @@ public:
 
   /**
    * Get the entire list of connection information.
-   * \return The connection information for this pair of datapath IDs.
+   * \return The list of connection information.
    */
   static ConnInfoList_t GetList (void);
 
@@ -262,12 +257,12 @@ private:
   uint64_t          m_gbrMaxBitRate;    //!< GBR maximum allowed bit rate.
   uint64_t          m_gbrMinBitRate;    //!< GBR minimum allowed bit rate.
   uint64_t          m_gbrBitRate [2];   //!< GBR current reserved bit rate.
-  uint32_t          m_gbrTxBytes [2];   //!< GBR transmitted bytes.
+  uint64_t          m_gbrTxBytes [2];   //!< GBR transmitted bytes.
 
   uint64_t          m_nonMaxBitRate;    //!< Non-GBR maximum allowed bit rate.
   uint64_t          m_nonMinBitRate;    //!< Non-GBR maximum allowed bit rate.
   uint64_t          m_nonBitRate [2];   //!< Non-GBR allowed bit rate.
-  uint32_t          m_nonTxBytes [2];   //!< Non-GBR transmitted bytes.
+  uint64_t          m_nonTxBytes [2];   //!< Non-GBR transmitted bytes.
 
   /**
    * Map saving pair of switch datapath IDs / connection information.

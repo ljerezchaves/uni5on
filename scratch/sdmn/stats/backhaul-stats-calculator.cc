@@ -132,7 +132,7 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
   << setw (12) << "Time(s)";
 
   m_connections = ConnectionInfo::GetList ();
-  ConnInfoList_t::iterator it;
+  ConnInfoList_t::const_iterator it;
   for (it = m_connections.begin (); it != m_connections.end (); it++)
     {
       DpIdPair_t key = (*it)->GetSwitchDpIdPair ();
@@ -260,10 +260,9 @@ BackhaulStatsCalculator::ResetCounters ()
   NS_LOG_FUNCTION (this);
 
   m_lastResetTime = Simulator::Now ();
-  ConnInfoList_t::iterator it;
+  ConnInfoList_t::const_iterator it;
   for (it = m_connections.begin (); it != m_connections.end (); it++)
     {
-      (*it)->ResetTxBytes ();
     }
 }
 
