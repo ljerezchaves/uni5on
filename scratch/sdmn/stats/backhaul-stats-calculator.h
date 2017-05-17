@@ -61,13 +61,8 @@ private:
    */
   void DumpStatistics (Time nextDump);
 
-  /**
-   * Reset internal counters.
-   */
-  void ResetCounters ();
-
   ConnInfoList_t            m_connections;    //!< Switch connections.
-  Time                      m_lastResetTime;  //!< Last reset time.
+  Time                      m_lastUpdate;     //!< Last update time.
   std::string               m_regFilename;    //!< RegStats filename.
   Ptr<OutputStreamWrapper>  m_regWrapper;     //!< RegStats file wrapper.
   std::string               m_renFilename;    //!< RenStats filename.
@@ -78,6 +73,7 @@ private:
   Ptr<OutputStreamWrapper>  m_bwgWrapper;     //!< BwgStats file wrapper.
   std::string               m_bwnFilename;    //!< BwnStats filename.
   Ptr<OutputStreamWrapper>  m_bwnWrapper;     //!< BwnStats file wrapper.
+  uint64_t                  *m_counters;      //!< Internal counters.
 };
 
 } // namespace ns3

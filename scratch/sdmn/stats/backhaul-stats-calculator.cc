@@ -30,7 +30,7 @@ NS_LOG_COMPONENT_DEFINE ("BackhaulStatsCalculator");
 NS_OBJECT_ENSURE_REGISTERED (BackhaulStatsCalculator);
 
 BackhaulStatsCalculator::BackhaulStatsCalculator ()
-  : m_lastResetTime (Simulator::Now ())
+  : m_lastUpdate (Simulator::Now ())
 {
   NS_LOG_FUNCTION (this);
 }
@@ -90,6 +90,8 @@ BackhaulStatsCalculator::DoDispose ()
   m_regWrapper = 0;
   m_renWrapper = 0;
   m_connections.clear ();
+  free (m_counters);
+  m_counters = 0;
 }
 
 void
@@ -166,6 +168,11 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
   *m_regWrapper->GetStream () << left << std::endl;
   *m_renWrapper->GetStream () << left << std::endl;
 
+  // For each connection info, we will save 4 counters:
+  // lastGbrFwdBytes, lastGbrBwdBytes, lastNonFwdBytes, lastNonBwdBytes.
+  size_t numConn = m_connections.size ();
+  m_counters = (uint64_t*)calloc (4 * numConn, sizeof (uint64_t));
+
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
   Time firstDump = timeValue.Get ();
@@ -199,38 +206,50 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
   << left << setw (12)
   << Simulator::Now ().GetSeconds ();
 
-  double interval = (Simulator::Now () - m_lastResetTime).GetSeconds ();
+  double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
+  uint32_t idx;
   ConnInfoList_t::iterator it;
-  for (it = m_connections.begin (); it != m_connections.end (); it++)
+  for (idx = 0, it = m_connections.begin ();
+       it != m_connections.end (); ++it, ++idx)
     {
+      uint32_t row = 4U * idx;
       Ptr<ConnectionInfo> cInfo = *it;
       uint64_t gbrFwdBytes = cInfo->GetGbrBytes (ConnectionInfo::FWD);
       uint64_t gbrBwdBytes = cInfo->GetGbrBytes (ConnectionInfo::BWD);
       uint64_t nonFwdBytes = cInfo->GetNonGbrBytes (ConnectionInfo::FWD);
       uint64_t nonBwdBytes = cInfo->GetNonGbrBytes (ConnectionInfo::BWD);
 
-      double gbrFwdKbits = static_cast<double> (gbrFwdBytes * 8) / 1000;
-      double gbrBwdKbits = static_cast<double> (gbrBwdBytes * 8) / 1000;
-      double nonFwdKbits = static_cast<double> (nonFwdBytes * 8) / 1000;
-      double nonBwdKbits = static_cast<double> (nonBwdBytes * 8) / 1000;
+      double gbrFwdKbits =
+        static_cast<double> (gbrFwdBytes - m_counters [row + 0]) * 8 / 1000;
+      double gbrBwdKbits =
+        static_cast<double> (gbrBwdBytes - m_counters [row + 1]) * 8 / 1000;
+      double nonFwdKbits =
+        static_cast<double> (nonFwdBytes - m_counters [row + 2]) * 8 / 1000;
+      double nonBwdKbits =
+        static_cast<double> (nonBwdBytes - m_counters [row + 3]) * 8 / 1000;
+
+      m_counters [row + 0] = gbrFwdBytes;
+      m_counters [row + 1] = gbrBwdBytes;
+      m_counters [row + 2] = nonFwdBytes;
+      m_counters [row + 3] = nonBwdBytes;
 
       *m_bwgWrapper->GetStream ()
       << setfill ('0')
       << right
-      << setw (12) << gbrFwdKbits / interval << " "
-      << setw (12) << gbrBwdKbits / interval << "   ";
+      << setw (12) << gbrFwdKbits / elapSecs << " "
+      << setw (12) << gbrBwdKbits / elapSecs << "   ";
 
       *m_bwnWrapper->GetStream ()
       << setfill ('0')
       << right
-      << setw (12) << nonFwdKbits / interval << " "
-      << setw (12) << nonBwdKbits / interval << "   ";
+      << setw (12) << nonFwdKbits / elapSecs << " "
+      << setw (12) << nonBwdKbits / elapSecs << "   ";
 
       *m_bwbWrapper->GetStream ()
       << setfill ('0')
       << right
-      << setw (12) << (gbrFwdKbits + nonFwdKbits) / interval << " "
-      << setw (12) << (gbrBwdKbits + nonBwdKbits) / interval << "   ";
+      << setw (12) << (gbrFwdKbits + nonFwdKbits) / elapSecs << " "
+      << setw (12) << (gbrBwdKbits + nonBwdKbits) / elapSecs << "   ";
 
       *m_regWrapper->GetStream ()
       << right
@@ -249,21 +268,9 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
   *m_regWrapper->GetStream () << std::endl;
   *m_renWrapper->GetStream () << std::endl;
 
-  ResetCounters ();
+  m_lastUpdate = Simulator::Now ();
   Simulator::Schedule (nextDump, &BackhaulStatsCalculator::DumpStatistics,
                        this, nextDump);
-}
-
-void
-BackhaulStatsCalculator::ResetCounters ()
-{
-  NS_LOG_FUNCTION (this);
-
-  m_lastResetTime = Simulator::Now ();
-  ConnInfoList_t::const_iterator it;
-  for (it = m_connections.begin (); it != m_connections.end (); it++)
-    {
-    }
 }
 
 } // Namespace ns3
