@@ -20,47 +20,47 @@
 
 #include <iomanip>
 #include <iostream>
-#include "load-bal-stats-calculator.h"
+#include "epc-controller-stats-calculator.h"
 
 using namespace std;
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("LoadBalStatsCalculator");
-NS_OBJECT_ENSURE_REGISTERED (LoadBalStatsCalculator);
+NS_LOG_COMPONENT_DEFINE ("EpcCtrlStatsCalculator");
+NS_OBJECT_ENSURE_REGISTERED (EpcCtrlStatsCalculator);
 
-LoadBalStatsCalculator::LoadBalStatsCalculator ()
+EpcCtrlStatsCalculator::EpcCtrlStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 
   // Connect this stats calculator to required trace sources.
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::EpcController/LoadBalancing",
-    MakeCallback (&LoadBalStatsCalculator::NotifyLoadBalancing, this));
+    MakeCallback (&EpcCtrlStatsCalculator::NotifyLoadBalancing, this));
 }
 
-LoadBalStatsCalculator::~LoadBalStatsCalculator ()
+EpcCtrlStatsCalculator::~EpcCtrlStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-LoadBalStatsCalculator::GetTypeId (void)
+EpcCtrlStatsCalculator::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::LoadBalStatsCalculator")
+  static TypeId tid = TypeId ("ns3::EpcCtrlStatsCalculator")
     .SetParent<Object> ()
-    .AddConstructor<LoadBalStatsCalculator> ()
+    .AddConstructor<EpcCtrlStatsCalculator> ()
     .AddAttribute ("LbmStatsFilename",
                    "Filename for EPC P-GW load balancing statistics.",
-                   StringValue ("pgw-load-balancing.log"),
-                   MakeStringAccessor (&LoadBalStatsCalculator::m_lbmFilename),
+                   StringValue ("epc-controller-loadbal.log"),
+                   MakeStringAccessor (&EpcCtrlStatsCalculator::m_lbmFilename),
                    MakeStringChecker ())
   ;
   return tid;
 }
 
 void
-LoadBalStatsCalculator::DoDispose ()
+EpcCtrlStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -68,7 +68,7 @@ LoadBalStatsCalculator::DoDispose ()
 }
 
 void
-LoadBalStatsCalculator::NotifyConstructionCompleted (void)
+EpcCtrlStatsCalculator::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -100,7 +100,7 @@ LoadBalStatsCalculator::NotifyConstructionCompleted (void)
 }
 
 void
-LoadBalStatsCalculator::NotifyLoadBalancing (
+EpcCtrlStatsCalculator::NotifyLoadBalancing (
   std::string context, EpcController::LoadBalancingStats stats)
 {
   NS_LOG_FUNCTION (this << context);

@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef LOAD_BALANCING_STATS_CALCULATOR_H
-#define LOAD_BALANCING_STATS_CALCULATOR_H
+#ifndef EPC_CONTROLLER_STATS_CALCULATOR_H
+#define EPC_CONTROLLER_STATS_CALCULATOR_H
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -30,13 +30,13 @@ namespace ns3 {
 
 /**
  * \ingroup sdmnStats
- * This class monitors the EPC P-GW load balancing mechanisms.
+ * This class monitors the EPC controller for logging internal mechanisms.
  */
-class LoadBalStatsCalculator : public Object
+class EpcCtrlStatsCalculator : public Object
 {
 public:
-  LoadBalStatsCalculator ();          //!< Default constructor.
-  virtual ~LoadBalStatsCalculator (); //!< Dummy destructor, see DoDispose.
+  EpcCtrlStatsCalculator ();          //!< Default constructor.
+  virtual ~EpcCtrlStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -65,4 +65,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* LOAD_BALANCING_STATS_CALCULATOR_H */
+#endif /* EPC_CONTROLLER_STATS_CALCULATOR_H */
