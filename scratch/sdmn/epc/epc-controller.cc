@@ -53,6 +53,11 @@ EpcController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::EpcController")
     .SetParent<OFSwitch13Controller> ()
+    .AddAttribute ("InternalTimeout",
+                   "The interval between internal periodic operations.",
+                   TimeValue (Seconds (5)),
+                   MakeTimeAccessor (&EpcController::m_timeout),
+                   MakeTimeChecker ())
     .AddAttribute ("NonGbrCoexistence",
                    "Enable the coexistence of GBR and Non-GBR traffic, "
                    "installing meters to limit Non-GBR traffic bit rate.",
@@ -79,18 +84,14 @@ EpcController::GetTypeId (void)
                    DoubleValue (0.8),
                    MakeDoubleAccessor (&EpcController::m_tftThrshFactor),
                    MakeDoubleChecker<double> (0.0, 1.0))
-    .AddAttribute ("PgwCheckLoadTimeout",
-                   "The interval between P-GW TFT check-load operations.",
-                   TimeValue (Seconds (1)),
-                   MakeTimeAccessor (&EpcController::m_tftTimeout),
-                   MakeTimeChecker ())
     .AddAttribute ("S5TrafficAggregation",
                    "Configure the S5 traffic aggregation mechanism.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (EpcController::OFF),
                    MakeEnumAccessor (&EpcController::m_s5Aggreg),
                    MakeEnumChecker (EpcController::OFF,  "off",
-                                    EpcController::ON,   "on"))
+                                    EpcController::ON,   "on",
+                                    EpcController::AUTO, "auto"))
     .AddAttribute ("VoipQueue",
                    "Enable VoIP QoS through queuing traffic management.",
                    EnumValue (EpcController::ON),
@@ -424,8 +425,9 @@ EpcController::NotifyConstructionCompleted (void)
     case FeatureStatus::AUTO:
       {
         m_tftLbLevel = 0;
-        Simulator::Schedule (m_tftTimeout,
-                             &EpcController::CheckPgwTftLoad, this);
+
+        // Schedule the first P-GW load check.
+        Simulator::Schedule (m_timeout, &EpcController::CheckPgwTftLoad, this);
         break;
       }
     }
@@ -953,9 +955,9 @@ EpcController::CheckPgwTftLoad (void)
   lbStats.bearersMoved = moved;
   m_loadBalancingTrace (lbStats);
 
-  // Finally, update the level and schedule the next check operation.
+  // Finally, update the level and schedule the next P-GW load check.
   m_tftLbLevel = nextLbLevel;
-  Simulator::Schedule (m_tftTimeout, &EpcController::CheckPgwTftLoad, this);
+  Simulator::Schedule (m_timeout, &EpcController::CheckPgwTftLoad, this);
 }
 
 void

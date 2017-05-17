@@ -374,22 +374,21 @@ private:
   FeatureStatus         m_pgwLoadBal;     //!< P-GW load balancing.
   FeatureStatus         m_s5Aggreg;       //!< S5 traffic aggregation.
 
-  // S-GW communication.
-  EpcS5SapPgw*          m_s5SapPgw;       //!< P-GW side of the S5 SAP.
-
   // P-GW metadata.
   std::vector<uint64_t> m_pgwDpIds;       //!< Datapath IDs.
   Ipv4Address           m_pgwS5Addr;      //!< S5 IP address for uplink.
   std::vector<uint32_t> m_pgwS5PortsNo;   //!< S5 port numbers.
   uint32_t              m_pgwSgiPortNo;   //!< SGi port number.
 
-  // P-GW TFT load balancing mechanism.
+  // Load balancing mechanism.
   double                m_tftThrshFactor; //!< Threshold factor.
   uint32_t              m_tftTableSize;   //!< TFT flow table size.
   DataRate              m_tftPlCapacity;  //!< TFT pipeline capacity.
   uint16_t              m_tftSwitches;    //!< Number of TFT switches.
   uint8_t               m_tftLbLevel;     //!< Load balancing level.
-  Time                  m_tftTimeout;     //!< CheckLoad timeout.
+
+  EpcS5SapPgw*          m_s5SapPgw;       //!< P-GW side of the S5 SAP.
+  Time                  m_timeout;        //!< Internal timeout.
 
   /** Map saving EpsBearer::Qci / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
