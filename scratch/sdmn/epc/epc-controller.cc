@@ -34,8 +34,8 @@ uint32_t EpcController::m_teidCount = 0x0000000F;
 EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
 
 EpcController::EpcController ()
-  : m_tftTableSize (std::numeric_limits<uint32_t>::max ()),
-    m_tftPlCapacity (DataRate (std::numeric_limits<uint64_t>::max ()))
+  : m_tftPlCapacity (DataRate (std::numeric_limits<uint64_t>::max ())),
+    m_tftTableSize (std::numeric_limits<uint32_t>::max ())
 {
   NS_LOG_FUNCTION (this);
 
@@ -69,7 +69,7 @@ EpcController::GetTypeId (void)
                    "The number of P-GW TFT switches available for use.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (1),
-                   MakeUintegerAccessor (&EpcController::m_tftSwitches),
+                   MakeUintegerAccessor (&EpcController::m_tftMaxSwitches),
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("PgwLoadBalancing",
                    "Configure the P-GW load balancing mechanism.",
@@ -79,10 +79,11 @@ EpcController::GetTypeId (void)
                    MakeEnumChecker (EpcController::OFF,  "off",
                                     EpcController::ON,   "on",
                                     EpcController::AUTO, "auto"))
-    .AddAttribute ("PgwThreshold",
-                   "The threshold factor used to trigger the load balancing.",
+    .AddAttribute ("PgwMaxFactor",
+                   "The scaling down factor used to limit P-GW TFT table size "
+                   "and pipeline capacity in the load balancing procedure.",
                    DoubleValue (0.8),
-                   MakeDoubleAccessor (&EpcController::m_tftThreshold),
+                   MakeDoubleAccessor (&EpcController::m_tftMaxFactor),
                    MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("S5TrafficAggregation",
                    "Configure the S5 traffic aggregation mechanism.",
@@ -242,7 +243,7 @@ EpcController::NotifyPgwTftAttach (
                    pgwMainPortNo);
 
   // Saving information for P-GW TFT switches.
-  NS_ASSERT_MSG (pgwTftCounter < m_tftSwitches, "No more P-GW TFTs allowed.");
+  NS_ASSERT_MSG (pgwTftCounter < m_tftMaxSwitches, "No more TFTs allowed.");
   m_pgwDpIds.push_back (pgwSwDev->GetDatapathId ());
   m_pgwS5PortsNo.push_back (pgwS5PortNo);
 
@@ -253,7 +254,7 @@ EpcController::NotifyPgwTftAttach (
 
   // Configuring the P-GW main switch to forward traffic to this TFT switch
   // considering all possible load balancing levels.
-  for (uint16_t tft = m_tftSwitches; pgwTftCounter + 1 <= tft; tft /= 2)
+  for (uint16_t tft = m_tftMaxSwitches; pgwTftCounter + 1 <= tft; tft /= 2)
     {
       uint16_t lbLevel = (uint16_t)log2 (tft);
       uint16_t ipMask = (1 << lbLevel) - 1;
@@ -326,13 +327,13 @@ EpcController::NotifyPgwBuilt (OFSwitch13DeviceContainer devices)
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (devices.GetN () == m_pgwDpIds.size ()
-                 && devices.GetN () == (m_tftSwitches + 1U),
+                 && devices.GetN () == (m_tftMaxSwitches + 1U),
                  "Inconsistent number of P-GW OpenFlow switches.");
 
   // Update table size and pipeline capacity using the threshold factor.
-  uint64_t bitrate = m_tftPlCapacity.GetBitRate () * m_tftThreshold;
+  uint64_t bitrate = m_tftPlCapacity.GetBitRate () * m_tftMaxFactor;
   m_tftPlCapacity = DataRate (bitrate);
-  m_tftTableSize = std::round (m_tftTableSize * m_tftThreshold);
+  m_tftTableSize = std::round (m_tftTableSize * m_tftMaxFactor);
 }
 
 EpcS5SapPgw*
@@ -406,7 +407,7 @@ EpcController::NotifyConstructionCompleted (void)
   NS_LOG_FUNCTION (this);
 
   // Check the number of P-GW TFT switches (must be a power of 2).
-  NS_ASSERT_MSG ((m_tftSwitches & (m_tftSwitches - 1)) == 0,
+  NS_ASSERT_MSG ((m_tftMaxSwitches & (m_tftMaxSwitches - 1)) == 0,
                  "Invalid number of P-GW TFT switches.");
 
   // Set the initial number of P-GW TFT active switches.
@@ -419,7 +420,7 @@ EpcController::NotifyConstructionCompleted (void)
       }
     case FeatureStatus::ON:
       {
-        m_tftLbLevel = (uint8_t)log2 (m_tftSwitches);
+        m_tftLbLevel = (uint8_t)log2 (m_tftMaxSwitches);
         break;
       }
     case FeatureStatus::AUTO:
@@ -865,7 +866,7 @@ EpcController::CheckPgwTftLoad (void)
 
   uint32_t maxEntries = 0, sumEntries = 0;
   uint64_t maxLoad    = 0, sumLoad    = 0;
-  uint32_t maxLbLevel = (uint8_t)log2 (m_tftSwitches);
+  uint32_t maxLbLevel = (uint8_t)log2 (m_tftMaxSwitches);
   uint16_t activeTfts = 1 << m_tftLbLevel;
   uint8_t  nextLbLevel = m_tftLbLevel;
 

@@ -7,7 +7,7 @@ default ns3::ConnectionInfo::NonGbrAdjustmentStep "5Mb/s"
 default ns3::EpcController::InternalTimeout "1s"
 default ns3::EpcController::NonGbrCoexistence "on"
 default ns3::EpcController::PgwLoadBalancing "auto"
-default ns3::EpcController::PgwThreshold "0.8"
+default ns3::EpcController::PgwMaxFactor "0.8"
 default ns3::EpcController::S5TrafficAggregation "off"
 default ns3::EpcController::VoipQueue "on"
 

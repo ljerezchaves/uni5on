@@ -381,14 +381,15 @@ private:
   uint32_t              m_pgwSgiPortNo;   //!< SGi port number.
 
   // Load balancing mechanism.
-  double                m_tftThreshold;   //!< Load balancing threshold.
-  uint32_t              m_tftTableSize;   //!< TFT flow table size.
-  DataRate              m_tftPlCapacity;  //!< TFT pipeline capacity.
-  uint16_t              m_tftSwitches;    //!< Number of TFT switches.
   uint8_t               m_tftLbLevel;     //!< Load balancing level.
+  double                m_tftMaxFactor;   //!< Resources scaling down factor.
+  uint16_t              m_tftMaxSwitches; //!< Max number of TFT switches.
+  DataRate              m_tftPlCapacity;  //!< Pipeline capacity.
+  uint32_t              m_tftTableSize;   //!< Flow table size.
 
+  // Internal members and attributes.
   EpcS5SapPgw*          m_s5SapPgw;       //!< P-GW side of the S5 SAP.
-  Time                  m_timeout;        //!< Internal timeout.
+  Time                  m_timeout;        //!< Controller internal timeout.
 
   /** Map saving EpsBearer::Qci / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
