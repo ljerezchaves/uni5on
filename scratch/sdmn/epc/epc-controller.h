@@ -294,7 +294,15 @@ private:
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
-  bool PgwTftBearerRequest (Ptr<RoutingInfo> rInfo);
+  bool PgwTftBearerRequest (Ptr<const RoutingInfo> rInfo);
+
+  /**
+   * Check whether or not this bearer will have its traffic aggregated over
+   * the S5 interface.
+   * \param rInfo The routing information to process.
+   * \return True if the traffic will be aggregated, false otherwise.
+   */
+  bool S5AggBearerRequest (Ptr<const RoutingInfo> rInfo);
 
   /**
    * Install OpenFlow rules for downlink packet filtering on the P-GW TFT

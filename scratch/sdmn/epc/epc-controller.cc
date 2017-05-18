@@ -138,15 +138,9 @@ EpcController::RequestDedicatedBearer (EpsBearer bearer, uint32_t teid)
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
-  // Update the P-GW TFT index for this bearer.
+  // Update the P-GW TFT index and S5 traffic aggregation flag for this bearer.
   rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
-
-  // Check for the traffic aggregation mechanism enabled.
-  if (GetS5TrafficAggregation () && !rInfo->IsDefault ())
-    {
-      NS_LOG_INFO ("Aggregating the traffic of bearer teid " << teid);
-      rInfo->SetAggregated (true);
-    }
+  rInfo->SetAggregated (S5AggBearerRequest (rInfo));
 
   // Let's first check for available resources on P-GW and backhaul switches.
   bool accepted = false;
@@ -645,7 +639,7 @@ EpcController::GetPgwTftIdx (
 }
 
 bool
-EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
+EpcController::PgwTftBearerRequest (Ptr<const RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeid ());
 
@@ -671,6 +665,38 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
                    " because the load is exceeding pipeline capacity.");
     }
   return accept;
+}
+
+bool
+EpcController::S5AggBearerRequest (Ptr<const RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo->GetTeid ());
+
+  NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't aggregate the default bearer.");
+  switch (GetS5TrafficAggregation ())
+    {
+    case FeatureStatus::AUTO:
+      {
+        // TODO: Check for the current bandwidth usage and deny the aggregation
+        // when exceeding threshold.
+        if (false) // FIXME
+          {
+            return false;
+          }
+        // No break here.
+      }
+    case FeatureStatus::ON:
+      {
+        NS_LOG_INFO ("Aggregating the traffic of bearer teid " <<
+                     rInfo->GetTeid ());
+        return true;
+      }
+    case FeatureStatus::OFF:
+    default:
+      {
+        return false;
+      }
+    }
 }
 
 bool
