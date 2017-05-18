@@ -657,7 +657,8 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
 
   // Block if table is full or if current load is exceeding pipeline capacity.
   bool accept = true;
-  if (stats->GetEwmaFlowEntries () >= m_tftTableSize)
+  if (!rInfo->IsAggregated ()
+      && stats->GetEwmaFlowEntries () >= m_tftTableSize)
     {
       accept = false;
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
