@@ -208,7 +208,7 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
 
   double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
   uint32_t idx;
-  ConnInfoList_t::iterator it;
+  ConnInfoList_t::const_iterator it;
   for (idx = 0, it = m_connections.begin ();
        it != m_connections.end (); ++it, ++idx)
     {
