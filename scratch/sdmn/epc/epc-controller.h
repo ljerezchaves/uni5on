@@ -389,6 +389,7 @@ private:
 
   // Internal members and attributes.
   EpcS5SapPgw*          m_s5SapPgw;       //!< P-GW side of the S5 SAP.
+  double                m_s5AggBwFactor;  //!< S5Agg bandwidth usage threshold.
   Time                  m_timeout;        //!< Controller internal timeout.
 
   /** Map saving EpsBearer::Qci / IP DSCP value. */

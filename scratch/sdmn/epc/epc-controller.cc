@@ -93,6 +93,13 @@ EpcController::GetTypeId (void)
                    MakeEnumChecker (EpcController::OFF,  "off",
                                     EpcController::ON,   "on",
                                     EpcController::AUTO, "auto"))
+    .AddAttribute ("S5AggBwFactor",
+                   "The bandwidth usage threshold factor to control "
+                   "the S5 traffic aggregation mechanism.",
+                   DoubleValue (0.8),
+                   MakeDoubleAccessor (&EpcController::m_s5AggBwFactor),
+                   MakeDoubleChecker<double> (0.0, 1.0))
+
     .AddAttribute ("VoipQueue",
                    "Enable VoIP QoS through queuing traffic management.",
                    EnumValue (EpcController::ON),
