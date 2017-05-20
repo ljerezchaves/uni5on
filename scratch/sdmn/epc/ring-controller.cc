@@ -342,6 +342,12 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
+  // Can't accept a blocked routing info.
+  if (rInfo->IsBlocked ())
+    {
+      return false;
+    }
+
   // Reset ring routing info to the shortest path.
   Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   ringInfo->ResetToDefaultPaths ();
@@ -390,6 +396,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
         else
           {
             NS_LOG_WARN ("Blocking bearer teid " << teid);
+            rInfo->SetBlocked (true);
             return false;
           }
         break;
@@ -411,6 +418,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
         else
           {
             NS_LOG_WARN ("Blocking bearer teid " << teid);
+            rInfo->SetBlocked (true);
             return false;
           }
         break;

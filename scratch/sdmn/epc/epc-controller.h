@@ -295,7 +295,7 @@ private:
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
-  bool PgwTftBearerRequest (Ptr<const RoutingInfo> rInfo);
+  bool PgwTftBearerRequest (Ptr<RoutingInfo> rInfo);
 
   /**
    * Check whether or not this bearer will have its traffic aggregated over

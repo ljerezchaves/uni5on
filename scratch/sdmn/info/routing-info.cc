@@ -36,7 +36,8 @@ RoutingInfo::RoutingInfo (uint32_t teid)
     m_isDefault (0),
     m_isInstalled (0),
     m_isActive (0),
-    m_isAggregated (0)
+    m_isAggregated (0),
+    m_isBlocked (0)
 {
   NS_LOG_FUNCTION (this);
 
@@ -148,6 +149,14 @@ RoutingInfo::IsAggregated (void) const
   return m_isAggregated;
 }
 
+bool
+RoutingInfo::IsBlocked (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_isBlocked;
+}
+
 void
 RoutingInfo::SetImsi (uint64_t value)
 {
@@ -229,6 +238,16 @@ RoutingInfo::SetAggregated (bool value)
   NS_ASSERT_MSG (IsDefault () == false || value == false,
                  "Can't aggregate the default bearer traffic.");
   m_isAggregated = value;
+}
+
+void
+RoutingInfo::SetBlocked (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  NS_ASSERT_MSG (IsDefault () == false || value == false,
+                 "Can't block the default bearer traffic.");
+  m_isBlocked = value;
 }
 
 void

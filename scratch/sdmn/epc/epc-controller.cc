@@ -141,13 +141,12 @@ EpcController::RequestDedicatedBearer (EpsBearer bearer, uint32_t teid)
   // Update the P-GW TFT index and S5 traffic aggregation flag for this bearer.
   rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
   rInfo->SetAggregated (S5AggBearerRequest (rInfo));
+  rInfo->SetBlocked (false);
 
   // Let's first check for available resources on P-GW and backhaul switches.
-  bool accepted = false;
-  if (PgwTftBearerRequest (rInfo))
-    {
-      accepted = TopologyBearerRequest (rInfo);
-    }
+  bool accepted = true;
+  accepted &= PgwTftBearerRequest (rInfo);
+  accepted &= TopologyBearerRequest (rInfo);
   m_bearerRequestTrace (accepted, rInfo);
   if (!accepted)
     {
@@ -634,7 +633,7 @@ EpcController::GetPgwTftIdx (
 }
 
 bool
-EpcController::PgwTftBearerRequest (Ptr<const RoutingInfo> rInfo)
+EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeid ());
 
@@ -653,20 +652,19 @@ EpcController::PgwTftBearerRequest (Ptr<const RoutingInfo> rInfo)
   double loadUseRatio = pipelineLoad / m_tftPlCapacity.GetBitRate ();
 
   // Block if table size or current load is exceeding the threshold factor.
-  bool accept = true;
   if (!rInfo->IsAggregated () && tableUseRatio >= m_tftFactor)
     {
-      accept = false;
+      rInfo->SetBlocked (true);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
                    " because the flow tables is full.");
     }
   else if (loadUseRatio >= m_tftFactor)
     {
-      accept = false;
+      rInfo->SetBlocked (true);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
                    " because the load is exceeding pipeline capacity.");
     }
-  return accept;
+  return !rInfo->IsBlocked ();
 }
 
 bool
