@@ -372,7 +372,8 @@ private:
   TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerReleaseTrace;
 
   /** The context created trace source, fired at NotifySessionCreated. */
-  TracedCallback<uint64_t, uint16_t, BearerContextList_t> m_sessionCreatedTrace;
+  TracedCallback<uint64_t, uint16_t, BearerContextList_t>
+  m_sessionCreatedTrace;
 
   /** The load balancing trace source, fired at SetPgwLoadBalancing. */
   TracedCallback<struct LoadBalancingStats> m_loadBalancingTrace;
