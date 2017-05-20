@@ -83,6 +83,7 @@ EpcCtrlStatsCalculator::NotifyConstructionCompleted (void)
   << left
   << setw (12) << "Time(s)"
   << right
+  << setw (8)  << "ThsFac"
   << setw (8)  << "MaxLev"
   << setw (8)  << "NoTFTs"
   << setw (8)  << "CurLev"
@@ -110,7 +111,8 @@ EpcCtrlStatsCalculator::NotifyLoadBalancing (
   << left
   << setw (11) << Simulator::Now ().GetSeconds ()
   << right
-  << " " << setw (8) << stats.maxLevel
+  << " " << setw (8) << stats.thrsFactor
+  << " " << setw (7) << stats.maxLevel
   << " " << setw (7) << numTfts
   << " " << setw (7) << stats.currentLevel
   << " " << setw (7) << stats.nextLevel

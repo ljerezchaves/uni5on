@@ -79,12 +79,12 @@ EpcController::GetTypeId (void)
                    MakeEnumChecker (EpcController::OFF,  "off",
                                     EpcController::ON,   "on",
                                     EpcController::AUTO, "auto"))
-    .AddAttribute ("PgwMaxFactor",
-                   "The scaling down factor used to limit P-GW TFT table size "
-                   "and pipeline capacity in the load balancing procedure.",
+    .AddAttribute ("PgwTftFactor",
+                   "The P-GW TFT table size usage and pipeline capacity "
+                   "threshold factor.",
                    DoubleValue (0.8),
-                   MakeDoubleAccessor (&EpcController::m_tftMaxFactor),
-                   MakeDoubleChecker<double> (0.0, 1.0))
+                   MakeDoubleAccessor (&EpcController::m_tftFactor),
+                   MakeDoubleChecker<double> (0.5, 1.0))
     .AddAttribute ("S5TrafficAggregation",
                    "Configure the S5 traffic aggregation mechanism.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -330,11 +330,6 @@ EpcController::NotifyPgwBuilt (OFSwitch13DeviceContainer devices)
   NS_ASSERT_MSG (devices.GetN () == m_pgwDpIds.size ()
                  && devices.GetN () == (m_tftMaxSwitches + 1U),
                  "Inconsistent number of P-GW OpenFlow switches.");
-
-  // Update table size and pipeline capacity using the threshold factor.
-  uint64_t bitrate = m_tftPlCapacity.GetBitRate () * m_tftMaxFactor;
-  m_tftPlCapacity = DataRate (bitrate);
-  m_tftTableSize = std::round (m_tftTableSize * m_tftMaxFactor);
 }
 
 EpcS5SapPgw*
@@ -643,22 +638,29 @@ EpcController::PgwTftBearerRequest (Ptr<const RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeid ());
 
-  // Get the P-GW TFT stats calculator responsible for this bearer.
+  // Get the P-GW TFT stats calculator for this bearer.
+  Ptr<OFSwitch13Device> device;
+  Ptr<OFSwitch13StatsCalculator> stats;
   uint16_t tftIdx = rInfo->GetPgwTftIdx ();
-  Ptr<OFSwitch13StatsCalculator> stats = OFSwitch13Device::GetDevice (
-      m_pgwDpIds.at (tftIdx))->GetObject<OFSwitch13StatsCalculator> ();
+
+  device = OFSwitch13Device::GetDevice (m_pgwDpIds.at (tftIdx));
+  stats = device->GetObject<OFSwitch13StatsCalculator> ();
   NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
 
-  // Block if table is full or if current load is exceeding pipeline capacity.
+  double flowEntries = stats->GetEwmaFlowEntries ();
+  double pipelineLoad = stats->GetEwmaPipelineLoad ().GetBitRate ();
+  double tableUseRatio = flowEntries / m_tftTableSize;
+  double loadUseRatio = pipelineLoad / m_tftPlCapacity.GetBitRate ();
+
+  // Block if table size or current load is exceeding the threshold factor.
   bool accept = true;
-  if (!rInfo->IsAggregated ()
-      && stats->GetEwmaFlowEntries () >= m_tftTableSize)
+  if (!rInfo->IsAggregated () && tableUseRatio >= m_tftFactor)
     {
       accept = false;
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
                    " because the flow tables is full.");
     }
-  else if (stats->GetEwmaPipelineLoad () >= m_tftPlCapacity)
+  else if (loadUseRatio >= m_tftFactor)
     {
       accept = false;
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
@@ -898,8 +900,8 @@ EpcController::CheckPgwTftLoad (void)
 {
   NS_LOG_FUNCTION (this);
 
-  uint32_t maxEntries = 0, sumEntries = 0;
-  uint64_t maxLoad    = 0, sumLoad    = 0;
+  double maxEntries = 0.0, sumEntries = 0.0;
+  double maxLoad    = 0.0, sumLoad    = 0.0;
   uint32_t maxLbLevel = (uint8_t)log2 (m_tftMaxSwitches);
   uint16_t activeTfts = 1 << m_tftLbLevel;
   uint8_t  nextLbLevel = m_tftLbLevel;
@@ -912,31 +914,32 @@ EpcController::CheckPgwTftLoad (void)
       stats = device->GetObject<OFSwitch13StatsCalculator> ();
       NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
 
-      uint32_t entries = stats->GetEwmaFlowEntries ();
+      double entries = stats->GetEwmaFlowEntries ();
       maxEntries = std::max (maxEntries, entries);
       sumEntries += entries;
 
-      uint64_t load = stats->GetEwmaPipelineLoad ().GetBitRate ();
+      double load = stats->GetEwmaPipelineLoad ().GetBitRate ();
       maxLoad = std::max (maxLoad, load);
       sumLoad += load;
     }
 
-  // We may increase the level when we hit the maximum number of flow entries
-  // or pipeline capacity on any P-GW TFT switch.
-  uint64_t tftPlBitrate = m_tftPlCapacity.GetBitRate ();
+  // We may increase the level when we hit the threshold factor.
+  double tableUseRatio = maxEntries / m_tftTableSize;
+  double loadUseRatio = maxLoad / m_tftPlCapacity.GetBitRate ();
+
+  // We may decrease the level when we can accommodate the current load and
+  // flow entries on the lower level using up to 60% of resources.
+  double decreaseFactor = 0.6 * m_tftFactor * (activeTfts >> 1);
+
   if ((m_tftLbLevel < maxLbLevel)
-      && (maxEntries >= m_tftTableSize || maxLoad >= tftPlBitrate))
+      && (tableUseRatio >= m_tftFactor || loadUseRatio >= m_tftFactor))
     {
       NS_LOG_INFO ("Increasing the load balancing level.");
       nextLbLevel++;
     }
-  // We may decrease the level when we can accommodate the current load and
-  // flow entries on the lower level using up to 60% of resources. We expect
-  // the the entries and load will be equally distributed among switches
-  // because the traffic pattern is the same for all UEs.
   else if ((m_tftLbLevel > 0)
-           && (sumLoad < (0.6 * (activeTfts >> 1) * tftPlBitrate))
-           && (sumEntries < (0.6 * (activeTfts >> 1) * m_tftTableSize)))
+           && (sumLoad < (decreaseFactor * m_tftPlCapacity.GetBitRate ()))
+           && (sumEntries < (decreaseFactor * m_tftTableSize)))
     {
       NS_LOG_INFO ("Decreasing the load balancing level.");
       nextLbLevel--;
@@ -978,16 +981,17 @@ EpcController::CheckPgwTftLoad (void)
 
   // Fire the load balancing trace source.
   struct LoadBalancingStats lbStats;
-  lbStats.currentLevel = m_tftLbLevel;
-  lbStats.nextLevel    = nextLbLevel;
-  lbStats.maxLevel     = maxLbLevel;
-  lbStats.tableSize    = m_tftTableSize;
-  lbStats.maxEntries   = maxEntries;
   lbStats.avgEntries   = sumEntries / activeTfts;
-  lbStats.pipeCapacity = m_tftPlCapacity;
-  lbStats.maxLoad      = DataRate (maxLoad);
   lbStats.avgLoad      = DataRate (sumLoad / activeTfts);
   lbStats.bearersMoved = moved;
+  lbStats.currentLevel = m_tftLbLevel;
+  lbStats.maxEntries   = maxEntries;
+  lbStats.maxLevel     = maxLbLevel;
+  lbStats.maxLoad      = DataRate (maxLoad);
+  lbStats.nextLevel    = nextLbLevel;
+  lbStats.pipeCapacity = m_tftPlCapacity;
+  lbStats.tableSize    = m_tftTableSize;
+  lbStats.thrsFactor   = m_tftFactor;
   m_loadBalancingTrace (lbStats);
 
   // Finally, update the level and schedule the next P-GW load check.
