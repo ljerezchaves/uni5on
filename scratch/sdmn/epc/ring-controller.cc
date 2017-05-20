@@ -496,7 +496,7 @@ RingController::NonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
 }
 
 Ptr<ConnectionInfo>
-RingController::GetConnectionInfo (uint16_t idx1, uint16_t idx2)
+RingController::GetConnectionInfo (uint16_t idx1, uint16_t idx2) const
 {
   NS_LOG_FUNCTION (this << idx1 << idx2);
 
@@ -551,9 +551,39 @@ RingController::GetDpId (uint16_t idx) const
   return m_ofDevices.Get (idx)->GetDatapathId ();
 }
 
+uint64_t
+RingController::GetMaxBitRate (Ptr<const RingRoutingInfo> ringInfo,
+                               RingRoutingInfo::RoutingPath path) const
+{
+  NS_LOG_FUNCTION (this << ringInfo << path);
+
+  uint16_t pgwIdx  = ringInfo->GetPgwSwIdx ();
+  uint16_t sgwIdx  = ringInfo->GetSgwSwIdx ();
+  uint64_t bitRate = 0;
+
+  // From the S-GW to the P-GW switch index, get the maximum bit rate for each
+  // link and switch pipeline following the given routing path.
+  bitRate = m_ofDevices.Get (sgwIdx)->GetPipelineCapacity ().GetBitRate ();
+  while (sgwIdx != pgwIdx)
+    {
+      uint16_t next = NextSwitchIndex (sgwIdx, path);
+
+      // Get link bitrate.
+      Ptr<const ConnectionInfo> cInfo = GetConnectionInfo (sgwIdx, next);
+      bitRate = std::min (bitRate, cInfo->GetLinkBitRate ());
+
+      // Get switch bitrate.
+      Ptr<const OFSwitch13Device> dev = m_ofDevices.Get (next);
+      bitRate = std::min (bitRate, dev->GetPipelineCapacity ().GetBitRate ());
+
+      sgwIdx = next;
+    }
+  return bitRate;
+}
+
 std::pair<uint64_t, uint64_t>
 RingController::GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                                        bool useShortPath)
+                                        bool useShortPath) const
 {
   NS_LOG_FUNCTION (this << ringInfo << useShortPath);
 
@@ -571,27 +601,21 @@ RingController::GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
       upPath = RingRoutingInfo::InvertPath (upPath);
     }
 
-  // From the eNB to the gateway switch index, get the bit rate for each link.
+  // From the S-GW to the P-GW switch index, get the bit rate for each link.
   while (current != pgwIdx)
     {
       uint16_t next = NextSwitchIndex (current, upPath);
+      uint64_t currDp = GetDpId (current);
+      uint64_t nextDp = GetDpId (next);
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
 
       // Check for available bit rate in uplink direction.
-      bitRate = cInfo->GetAvailableGbrBitRate (
-          GetDpId (current), GetDpId (next), debarFactor);
-      if (bitRate < upBitRate)
-        {
-          upBitRate = bitRate;
-        }
+      bitRate = cInfo->GetAvailableGbrBitRate (currDp, nextDp, debarFactor);
+      upBitRate = std::min (upBitRate, bitRate);
 
       // Check for available bit rate in downlink direction.
-      bitRate = cInfo->GetAvailableGbrBitRate (
-          GetDpId (next), GetDpId (current), debarFactor);
-      if (bitRate < downBitRate)
-        {
-          downBitRate = bitRate;
-        }
+      bitRate = cInfo->GetAvailableGbrBitRate (nextDp, currDp, debarFactor);
+      downBitRate = std::min (downBitRate, bitRate);
       current = next;
 
       // If enable, apply the GBR Distance-Based Reservation algorithm (DeBaR)
@@ -680,7 +704,7 @@ RingController::PerLinkRelease (uint16_t srcIdx, uint16_t dstIdx,
 
 uint16_t
 RingController::NextSwitchIndex (uint16_t idx,
-                                 RingRoutingInfo::RoutingPath path)
+                                 RingRoutingInfo::RoutingPath path) const
 {
   NS_LOG_FUNCTION (this << idx << path);
 
@@ -693,7 +717,7 @@ RingController::NextSwitchIndex (uint16_t idx,
 }
 
 RingRoutingInfo::RoutingPath
-RingController::FindShortestPath (uint16_t srcIdx, uint16_t dstIdx)
+RingController::FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const
 {
   NS_LOG_FUNCTION (this << srcIdx << dstIdx);
 
@@ -719,7 +743,7 @@ RingController::FindShortestPath (uint16_t srcIdx, uint16_t dstIdx)
 
 uint16_t
 RingController::HopCounter (uint16_t srcIdx, uint16_t dstIdx,
-                            RingRoutingInfo::RoutingPath path)
+                            RingRoutingInfo::RoutingPath path) const
 {
   NS_LOG_FUNCTION (this << srcIdx << dstIdx);
 

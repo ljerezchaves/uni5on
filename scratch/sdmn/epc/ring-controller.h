@@ -89,7 +89,7 @@ private:
    * \param idx2 Second switch index.
    * \return Pointer to connection info saved.
    */
-  Ptr<ConnectionInfo> GetConnectionInfo (uint16_t idx1, uint16_t idx2);
+  Ptr<ConnectionInfo> GetConnectionInfo (uint16_t idx1, uint16_t idx2) const;
 
   /**
    * Retrieve the switch index for IP address.
@@ -119,6 +119,17 @@ private:
   uint64_t GetDpId (uint16_t idx) const;
 
   /**
+   * Get the maximum bit rate for this ring routing information, considering
+   * both link bitrate and switches pipeline capacity.
+   * \param ringInfo The ring routing information.
+   * \param path The routing path to follow.
+   * \return The maximum bit rate on this routing path (downlink and uplink
+   *         paths are equal).
+   */
+  uint64_t GetMaxBitRate (Ptr<const RingRoutingInfo> ringInfo,
+                          RingRoutingInfo::RoutingPath path) const;
+
+  /**
    * Get the available GBR bit rate for this ring routing information,
    * considering both downlink and uplink paths.
    * \internal This method implements the GBR Distance-Based Reservation
@@ -134,7 +145,7 @@ private:
    */
   std::pair<uint64_t, uint64_t>
   GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                          bool useShortPath = true);
+                          bool useShortPath = true) const;
 
   /**
    * Reserve the bit rate for this bearer in network.
@@ -190,7 +201,8 @@ private:
    * \param path The routing path direction.
    * \return The next switch index.
    */
-  uint16_t NextSwitchIndex (uint16_t idx, RingRoutingInfo::RoutingPath path);
+  uint16_t NextSwitchIndex (uint16_t idx,
+                            RingRoutingInfo::RoutingPath path) const;
 
   /**
    * Look for the routing path from source to destination switch index with
@@ -200,7 +212,7 @@ private:
    * \return The routing path.
    */
   RingRoutingInfo::RoutingPath
-  FindShortestPath (uint16_t srcIdx, uint16_t dstIdx);
+  FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const;
 
   /**
    * Count the number of hops between source and destination switch index
@@ -211,7 +223,7 @@ private:
    * \return The number of hops in routing path.
    */
   uint16_t HopCounter (uint16_t srcIdx, uint16_t dstIdx,
-                       RingRoutingInfo::RoutingPath path);
+                       RingRoutingInfo::RoutingPath path) const;
 
   /** Map saving IPv4 address / switch index. */
   typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;
