@@ -105,6 +105,8 @@ public:
   //\{
   uint64_t GetGbrTxBytes    (Direction dir) const;
   uint64_t GetNonGbrTxBytes (Direction dir) const;
+  DataRate GetGbrEwmaThp    (Direction dir) const;
+  DataRate GetNonGbrEwmaThp (Direction dir) const;
   //\}
 
   /**
@@ -249,6 +251,11 @@ private:
   void SetNonGbrAdjustStep (DataRate value);
 
   /**
+   * Update link statistics.
+   */
+  void UpdateStatistics (void);
+
+  /**
    * Register the connection information in global map for further usage.
    * \param cInfo The connection information to save.
    */
@@ -259,6 +266,9 @@ private:
 
   SwitchData        m_switches [2];     //!< Switches metadata.
   Ptr<CsmaChannel>  m_channel;          //!< The CSMA link channel.
+  Time              m_timeout;          //!< Update timeout.
+  double            m_alpha;            //!< EWMA alpha parameter.
+  Time              m_lastUpdate;       //!< Last update time.
 
   double            m_gbrLinkQuota;     //!< GBR link-capacity reserved quota.
   uint64_t          m_gbrSafeguard;     //!< GBR safeguard bit rate.
@@ -268,11 +278,15 @@ private:
   uint64_t          m_gbrMinBitRate;    //!< GBR minimum allowed bit rate.
   uint64_t          m_gbrBitRate [2];   //!< GBR reserved bit rate.
   uint64_t          m_gbrTxBytes [2];   //!< GBR transmitted bytes.
+  uint64_t          m_gbrAvgLast [2];   //!< GBR last transmitted bytes.
+  double            m_gbrAvgThpt [2];   //!< GBR EWMA throughput.
 
   uint64_t          m_nonMaxBitRate;    //!< Non-GBR maximum allowed bit rate.
   uint64_t          m_nonMinBitRate;    //!< Non-GBR maximum allowed bit rate.
   uint64_t          m_nonBitRate [2];   //!< Non-GBR reserved bit rate.
   uint64_t          m_nonTxBytes [2];   //!< Non-GBR transmitted bytes.
+  uint64_t          m_nonAvgLast [2];   //!< Non-GBR last transmitted bytes.
+  double            m_nonAvgThpt [2];   //!< Non-GBR EWMA throughput.
 
   /**
    * Map saving pair of switch datapath IDs / connection information.

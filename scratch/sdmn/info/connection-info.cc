@@ -63,6 +63,14 @@ ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
   m_gbrTxBytes [1] = 0;
   m_nonTxBytes [0] = 0;
   m_nonTxBytes [1] = 0;
+  m_gbrAvgThpt [0] = 0;
+  m_gbrAvgThpt [1] = 0;
+  m_nonAvgThpt [0] = 0;
+  m_nonAvgThpt [1] = 0;
+  m_gbrAvgLast [0] = 0;
+  m_gbrAvgLast [1] = 0;
+  m_nonAvgLast [0] = 0;
+  m_nonAvgLast [1] = 0;
 
   RegisterConnectionInfo (Ptr<ConnectionInfo> (this));
 }
@@ -77,6 +85,11 @@ ConnectionInfo::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::ConnectionInfo")
     .SetParent<Object> ()
+    .AddAttribute ("EwmaAlpha",
+                   "The EWMA alpha parameter for averaging link statistics.",
+                   DoubleValue (0.25),
+                   MakeDoubleAccessor (&ConnectionInfo::m_alpha),
+                   MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("GbrLinkQuota",
                    "Maximum bandwitdth ratio that can be reserved to GBR "
                    "traffic in this connection.",
@@ -97,6 +110,11 @@ ConnectionInfo::GetTypeId (void)
                    DataRateValue (DataRate ("5Mb/s")),
                    MakeDataRateAccessor (&ConnectionInfo::SetNonGbrAdjustStep),
                    MakeDataRateChecker ())
+    .AddAttribute ("UpdateTimeout",
+                   "The interval to update link statistics.",
+                   TimeValue (MilliSeconds (100)),
+                   MakeTimeAccessor (&ConnectionInfo::m_timeout),
+                   MakeTimeChecker ())
 
     // Trace source used by controller to install/update Non-GBR meters
     .AddTraceSource ("NonGbrAdjusted",
@@ -166,6 +184,22 @@ ConnectionInfo::GetNonGbrTxBytes (Direction dir) const
   NS_LOG_FUNCTION (this << dir);
 
   return m_nonTxBytes [dir];
+}
+
+DataRate
+ConnectionInfo::GetGbrEwmaThp (Direction dir) const
+{
+  NS_LOG_FUNCTION (this << dir);
+
+  return m_gbrAvgThpt [dir];
+}
+
+DataRate
+ConnectionInfo::GetNonGbrEwmaThp (Direction dir) const
+{
+  NS_LOG_FUNCTION (this << dir);
+
+  return m_nonAvgThpt [dir];
 }
 
 uint64_t
@@ -373,6 +407,10 @@ ConnectionInfo::NotifyConstructionCompleted (void)
   // Fire adjusted trace source to update meters.
   m_nonAdjustedTrace (this);
 
+  // Scheduling the first update statistics.
+  m_lastUpdate = Simulator::Now ();
+  Simulator::Schedule (m_timeout, &ConnectionInfo::UpdateStatistics, this);
+
   // Chain up
   Object::NotifyConstructionCompleted ();
 }
@@ -538,6 +576,38 @@ ConnectionInfo::SetNonGbrAdjustStep (DataRate value)
     {
       NS_ABORT_MSG ("Non-GBR ajust step can't exceed 20% of link capacity.");
     }
+}
+
+void
+ConnectionInfo::UpdateStatistics (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  uint64_t gbrFwdBytes = GetGbrTxBytes (ConnectionInfo::FWD);
+  uint64_t gbrBwdBytes = GetGbrTxBytes (ConnectionInfo::BWD);
+  uint64_t nonFwdBytes = GetNonGbrTxBytes (ConnectionInfo::FWD);
+  uint64_t nonBwdBytes = GetNonGbrTxBytes (ConnectionInfo::BWD);
+
+  double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
+
+  m_gbrAvgThpt [0] = (1 - m_alpha) * m_gbrAvgThpt [0] + m_alpha *
+    static_cast<double> (gbrFwdBytes - m_gbrAvgLast [0]) * 8 / elapSecs;
+  m_gbrAvgThpt [1] = (1 - m_alpha) * m_gbrAvgThpt [1] + m_alpha *
+    static_cast<double> (gbrBwdBytes - m_gbrAvgLast [1]) * 8 / elapSecs;
+
+  m_nonAvgThpt [0] = (1 - m_alpha) * m_nonAvgThpt [0] + m_alpha *
+    static_cast<double> (nonFwdBytes - m_nonAvgLast [0]) * 8 / elapSecs;
+  m_nonAvgThpt [1] = (1 - m_alpha) * m_nonAvgThpt [1] + m_alpha *
+    static_cast<double> (nonBwdBytes - m_nonAvgLast [1]) * 8 / elapSecs;
+
+  m_gbrAvgLast [0] = gbrFwdBytes;
+  m_gbrAvgLast [1] = gbrBwdBytes;
+  m_nonAvgLast [0] = nonFwdBytes;
+  m_nonAvgLast [1] = nonBwdBytes;
+
+  // Scheduling the next update statistics.
+  m_lastUpdate = Simulator::Now ();
+  Simulator::Schedule (m_timeout, &ConnectionInfo::UpdateStatistics, this);
 }
 
 void
