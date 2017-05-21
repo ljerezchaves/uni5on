@@ -153,7 +153,7 @@ ConnectionInfo::GetPortDev (uint8_t idx) const
 }
 
 uint64_t
-ConnectionInfo::GetGbrBytes (Direction dir) const
+ConnectionInfo::GetGbrTxBytes (Direction dir) const
 {
   NS_LOG_FUNCTION (this << dir);
 
@@ -161,15 +161,7 @@ ConnectionInfo::GetGbrBytes (Direction dir) const
 }
 
 uint64_t
-ConnectionInfo::GetGbrBitRate (Direction dir) const
-{
-  NS_LOG_FUNCTION (this << dir);
-
-  return m_gbrBitRate [dir];
-}
-
-uint64_t
-ConnectionInfo::GetNonGbrBytes (Direction dir) const
+ConnectionInfo::GetNonGbrTxBytes (Direction dir) const
 {
   NS_LOG_FUNCTION (this << dir);
 
@@ -177,7 +169,15 @@ ConnectionInfo::GetNonGbrBytes (Direction dir) const
 }
 
 uint64_t
-ConnectionInfo::GetNonGbrBitRate (Direction dir) const
+ConnectionInfo::GetResGbrBitRate (Direction dir) const
+{
+  NS_LOG_FUNCTION (this << dir);
+
+  return m_gbrBitRate [dir];
+}
+
+uint64_t
+ConnectionInfo::GetResNonGbrBitRate (Direction dir) const
 {
   NS_LOG_FUNCTION (this << dir);
 
@@ -185,19 +185,19 @@ ConnectionInfo::GetNonGbrBitRate (Direction dir) const
 }
 
 double
-ConnectionInfo::GetGbrLinkRatio (Direction dir) const
+ConnectionInfo::GetResGbrLinkRatio (Direction dir) const
 {
   NS_LOG_FUNCTION (this << dir);
 
-  return static_cast<double> (GetGbrBitRate (dir)) / GetLinkBitRate ();
+  return static_cast<double> (GetResGbrBitRate (dir)) / GetLinkBitRate ();
 }
 
 double
-ConnectionInfo::GetNonGbrLinkRatio (Direction dir) const
+ConnectionInfo::GetResNonGbrLinkRatio (Direction dir) const
 {
   NS_LOG_FUNCTION (this << dir);
 
-  return static_cast<double> (GetNonGbrBitRate (dir)) / GetLinkBitRate ();
+  return static_cast<double> (GetResNonGbrBitRate (dir)) / GetLinkBitRate ();
 }
 
 bool
@@ -244,9 +244,9 @@ ConnectionInfo::GetAvailableGbrBitRate (uint64_t src, uint64_t dst,
   ConnectionInfo::Direction dir = GetDirection (src, dst);
   uint64_t maxBitRate = static_cast<uint64_t> (debarFactor * m_gbrMaxBitRate);
 
-  if (maxBitRate >= GetGbrBitRate (dir))
+  if (maxBitRate >= GetResGbrBitRate (dir))
     {
-      return maxBitRate - GetGbrBitRate (dir);
+      return maxBitRate - GetResGbrBitRate (dir);
     }
   else
     {
@@ -262,7 +262,7 @@ ConnectionInfo::ReserveGbrBitRate (uint64_t src, uint64_t dst,
   NS_LOG_FUNCTION (this << src << dst << bitRate);
 
   ConnectionInfo::Direction dir = GetDirection (src, dst);
-  bool reserved = IncreaseGbrBitRate (dir, bitRate);
+  bool reserved = IncResGbrBitRate (dir, bitRate);
   if (reserved)
     {
       // When the guard distance between GRB reserved bit rate and Non-GBR
@@ -272,7 +272,7 @@ ConnectionInfo::ReserveGbrBitRate (uint64_t src, uint64_t dst,
       while (GetGuardBitRate (dir) < m_gbrSafeguard)
         {
           adjusted = true;
-          if (!DecreaseNonGbrBitRate (dir, m_nonAdjustStep))
+          if (!DecResNonGbrBitRate (dir, m_nonAdjustStep))
             {
               NS_ABORT_MSG ("Abort... infinite loop.");
             }
@@ -293,7 +293,7 @@ ConnectionInfo::ReleaseGbrBitRate (uint64_t src, uint64_t dst,
   NS_LOG_FUNCTION (this << src << dst << bitRate);
 
   ConnectionInfo::Direction dir = GetDirection (src, dst);
-  bool released = DecreaseGbrBitRate (dir, bitRate);
+  bool released = DecResGbrBitRate (dir, bitRate);
   if (released)
     {
       // When the guard distance between GRB reserved bit rate and Non-GBR
@@ -303,7 +303,7 @@ ConnectionInfo::ReleaseGbrBitRate (uint64_t src, uint64_t dst,
       while (GetGuardBitRate (dir) > m_gbrSafeguard + m_nonAdjustStep)
         {
           adjusted = true;
-          if (!IncreaseNonGbrBitRate (dir, m_nonAdjustStep))
+          if (!IncResNonGbrBitRate (dir, m_nonAdjustStep))
             {
               NS_ABORT_MSG ("Abort... infinite loop.");
             }
@@ -411,7 +411,7 @@ ConnectionInfo::GetGuardBitRate (Direction dir) const
 {
   NS_LOG_FUNCTION (this << dir);
 
-  if (GetGbrBitRate (dir) + GetNonGbrBitRate (dir) > GetLinkBitRate ())
+  if (GetResGbrBitRate (dir) + GetResNonGbrBitRate (dir) > GetLinkBitRate ())
     {
       // In this temporary case, there guard interval would be 'negative', but
       // we return 0, as we are working with unsigned numbers.
@@ -419,54 +419,55 @@ ConnectionInfo::GetGuardBitRate (Direction dir) const
     }
   else
     {
-      return GetLinkBitRate () - GetGbrBitRate (dir) - GetNonGbrBitRate (dir);
+      return GetLinkBitRate () - GetResGbrBitRate (dir) -
+             GetResNonGbrBitRate (dir);
     }
 }
 
 bool
-ConnectionInfo::IncreaseGbrBitRate (Direction dir, uint64_t bitRate)
+ConnectionInfo::IncResGbrBitRate (Direction dir, uint64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << bitRate);
 
-  if (GetGbrBitRate (dir) + bitRate > m_gbrMaxBitRate)
+  if (GetResGbrBitRate (dir) + bitRate > m_gbrMaxBitRate)
     {
       NS_LOG_WARN ("No bandwidth available to reserve.");
       return false;
     }
 
   m_gbrBitRate [dir] += bitRate;
-  NS_LOG_DEBUG ("GBR bit rate adjusted to " << GetGbrBitRate (dir));
+  NS_LOG_DEBUG ("GBR bit rate adjusted to " << GetResGbrBitRate (dir));
   return true;
 }
 
 bool
-ConnectionInfo::DecreaseGbrBitRate (Direction dir, uint64_t bitRate)
+ConnectionInfo::DecResGbrBitRate (Direction dir, uint64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << bitRate);
 
-  if (GetGbrBitRate (dir) < m_gbrMinBitRate + bitRate)
+  if (GetResGbrBitRate (dir) < m_gbrMinBitRate + bitRate)
     {
       NS_LOG_WARN ("No bandwidth available to release.");
       return false;
     }
 
   m_gbrBitRate [dir] -= bitRate;
-  NS_LOG_DEBUG ("GBR bit rate adjusted to " << GetGbrBitRate (dir));
+  NS_LOG_DEBUG ("GBR bit rate adjusted to " << GetResGbrBitRate (dir));
   return true;
 }
 
 bool
-ConnectionInfo::IncreaseNonGbrBitRate (Direction dir, uint64_t bitRate)
+ConnectionInfo::IncResNonGbrBitRate (Direction dir, uint64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << bitRate);
 
-  if (GetNonGbrBitRate (dir) >= m_nonMaxBitRate)
+  if (GetResNonGbrBitRate (dir) >= m_nonMaxBitRate)
     {
       NS_LOG_WARN ("Can't increase Non-GBR bit rate.");
       return false;
     }
 
-  if (GetNonGbrBitRate (dir) + bitRate > m_nonMaxBitRate)
+  if (GetResNonGbrBitRate (dir) + bitRate > m_nonMaxBitRate)
     {
       m_nonBitRate [dir] = m_nonMaxBitRate;
     }
@@ -475,22 +476,22 @@ ConnectionInfo::IncreaseNonGbrBitRate (Direction dir, uint64_t bitRate)
       m_nonBitRate [dir] += bitRate;
     }
 
-  NS_LOG_DEBUG ("Non-GBR bit rate adjusted to " << GetNonGbrBitRate (dir));
+  NS_LOG_DEBUG ("Non-GBR bit rate adjusted to " << GetResNonGbrBitRate (dir));
   return true;
 }
 
 bool
-ConnectionInfo::DecreaseNonGbrBitRate (Direction dir, uint64_t bitRate)
+ConnectionInfo::DecResNonGbrBitRate (Direction dir, uint64_t bitRate)
 {
   NS_LOG_FUNCTION (this << dir << bitRate);
 
-  if (GetNonGbrBitRate (dir) <= m_nonMinBitRate)
+  if (GetResNonGbrBitRate (dir) <= m_nonMinBitRate)
     {
       NS_LOG_WARN ("Can't decrease Non-GBR bit rate.");
       return false;
     }
 
-  if (GetNonGbrBitRate (dir) < m_nonMinBitRate + bitRate)
+  if (GetResNonGbrBitRate (dir) < m_nonMinBitRate + bitRate)
     {
       m_nonBitRate [dir] = m_nonMinBitRate;
     }
@@ -499,7 +500,7 @@ ConnectionInfo::DecreaseNonGbrBitRate (Direction dir, uint64_t bitRate)
       m_nonBitRate [dir] -= bitRate;
     }
 
-  NS_LOG_DEBUG ("Non-GBR bit rate adjusted to " << GetNonGbrBitRate (dir));
+  NS_LOG_DEBUG ("Non-GBR bit rate adjusted to " << GetResNonGbrBitRate (dir));
   return true;
 }
 

@@ -92,7 +92,7 @@ public:
     EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
 
   /**
-   * Notify this controller of a new S-GW connected to the OpenFlow backhaul
+   * Notify this controller of the S-GW connected to the OpenFlow backhaul
    * network over over the S5 interface.
    * \param sgwS5PortNo The S5 port number on the S-GW OpenFlow switch.
    * \param sgwS5Dev The S5 device attached to the S-GW OpenFlow switch.

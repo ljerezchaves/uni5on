@@ -120,7 +120,7 @@ private:
 
   /**
    * Get the maximum bit rate for this ring routing information, considering
-   * both link bitrate and switches pipeline capacity.
+   * both link bit rate and switches pipeline capacity.
    * \param ringInfo The ring routing information.
    * \param path The routing path to follow.
    * \return The maximum bit rate on this routing path (downlink and uplink

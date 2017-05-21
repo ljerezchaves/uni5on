@@ -103,12 +103,21 @@ public:
    * \return The requested information.
    */
   //\{
-  uint64_t GetGbrBytes (Direction dir) const;
-  uint64_t GetGbrBitRate (Direction dir) const;
-  uint64_t GetNonGbrBytes (Direction dir) const;
-  uint64_t GetNonGbrBitRate (Direction dir) const;
-  double GetGbrLinkRatio (Direction dir) const;
-  double GetNonGbrLinkRatio (Direction dir) const;
+  uint64_t GetGbrTxBytes    (Direction dir) const;
+  uint64_t GetNonGbrTxBytes (Direction dir) const;
+  //\}
+
+  /**
+   * \name Reserved bit rate statistics.
+   * Get reserved bit rate for both GBR and Non-GBR traffic.
+   * \param dir The link direction.
+   * \return The requested information.
+   */
+  //\{
+  uint64_t GetResGbrBitRate      (Direction dir) const;
+  uint64_t GetResNonGbrBitRate   (Direction dir) const;
+  double   GetResGbrLinkRatio    (Direction dir) const;
+  double   GetResNonGbrLinkRatio (Direction dir) const;
   //\}
 
   /**
@@ -134,8 +143,9 @@ public:
   ConnectionInfo::Direction GetDirection (uint64_t src, uint64_t dst) const;
 
   /**
-   * Get the available bit rate between these two switches. Optionally, this
-   * function can considers the DeBaR reservation factor.
+   * Get the ammount of GBR bit rate between these two switches that can be
+   * reserved. Optionally, this function can considers the DeBaR reservation
+   * factor.
    * \param src The source switch datapath ID.
    * \param dst The destination switch datapath ID.
    * \param debarFactor DeBaR reservation factor.
@@ -207,17 +217,17 @@ private:
   uint64_t GetGuardBitRate (Direction dir) const;
 
   /**
-   * \name Bit rate adjustment.
-   * Increase/decrease the GBR reserved bit rate and Non-GBR allowed bit rate.
+   * \name Reserved bit rate adjustment.
+   * Increase/decrease the reserved bit rate for both GBR and Non-GBR traffic.
    * \param dir The link direction.
    * \param bitRate The bitRate amount.
    * \return True if succeeded, false otherwise.
    */
   //\{
-  bool IncreaseGbrBitRate (Direction dir, uint64_t bitRate);
-  bool DecreaseGbrBitRate (Direction dir, uint64_t bitRate);
-  bool IncreaseNonGbrBitRate (Direction dir, uint64_t bitRate);
-  bool DecreaseNonGbrBitRate (Direction dir, uint64_t bitRate);
+  bool IncResGbrBitRate    (Direction dir, uint64_t bitRate);
+  bool DecResGbrBitRate    (Direction dir, uint64_t bitRate);
+  bool IncResNonGbrBitRate (Direction dir, uint64_t bitRate);
+  bool DecResNonGbrBitRate (Direction dir, uint64_t bitRate);
   //\}
 
   /**
@@ -256,12 +266,12 @@ private:
 
   uint64_t          m_gbrMaxBitRate;    //!< GBR maximum allowed bit rate.
   uint64_t          m_gbrMinBitRate;    //!< GBR minimum allowed bit rate.
-  uint64_t          m_gbrBitRate [2];   //!< GBR current reserved bit rate.
+  uint64_t          m_gbrBitRate [2];   //!< GBR reserved bit rate.
   uint64_t          m_gbrTxBytes [2];   //!< GBR transmitted bytes.
 
   uint64_t          m_nonMaxBitRate;    //!< Non-GBR maximum allowed bit rate.
   uint64_t          m_nonMinBitRate;    //!< Non-GBR maximum allowed bit rate.
-  uint64_t          m_nonBitRate [2];   //!< Non-GBR allowed bit rate.
+  uint64_t          m_nonBitRate [2];   //!< Non-GBR reserved bit rate.
   uint64_t          m_nonTxBytes [2];   //!< Non-GBR transmitted bytes.
 
   /**

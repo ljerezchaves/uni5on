@@ -197,8 +197,8 @@ private:
   Ptr<UniformRandomVariable>  m_videoRng;      //!< Random video selection.
   static const std::string    m_videoDir;      //!< Video trace directory.
   static const std::string    m_videoTrace []; //!< Video trace filenames.
-  static const uint64_t       m_gbrBitRate []; //!< Video gbr bitrate.
-  static const uint64_t       m_mbrBitRate []; //!< Video max bitrate.
+  static const uint64_t       m_gbrBitRate []; //!< Video gbr bit rate.
+  static const uint64_t       m_mbrBitRate []; //!< Video max bit rate.
 };
 
 };  // namespace ns3

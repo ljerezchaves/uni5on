@@ -130,7 +130,7 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
       std::string flagsStr ("0x0001");
 
       // Non-GBR meter for clockwise direction.
-      kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::FWD) / 1000;
+      kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::FWD) / 1000;
       cmd02 << "meter-mod cmd=add"
             << ",flags=" << flagsStr
             << ",meter=" << RingRoutingInfo::CLOCK
@@ -138,7 +138,7 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
       DpctlSchedule (cInfo->GetSwDpId (0), cmd02.str ());
 
       // Non-GBR meter for counterclockwise direction.
-      kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::BWD) / 1000;
+      kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::BWD) / 1000;
       cmd12 << "meter-mod cmd=add"
             << ",flags=" << flagsStr
             << ",meter=" << RingRoutingInfo::COUNTER
@@ -486,7 +486,7 @@ RingController::NonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
       std::string flagsStr ("0x0001");
 
       // Update Non-GBR meter for clockwise direction.
-      kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::FWD) / 1000;
+      kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::FWD) / 1000;
       cmd1 << "meter-mod cmd=mod"
            << ",flags=" << flagsStr
            << ",meter=" << RingRoutingInfo::CLOCK
@@ -494,7 +494,7 @@ RingController::NonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
       DpctlExecute (cInfo->GetSwDpId (0), cmd1.str ());
 
       // Update Non-GBR meter for counterclockwise direction.
-      kbps = cInfo->GetNonGbrBitRate (ConnectionInfo::BWD) / 1000;
+      kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::BWD) / 1000;
       cmd2 << "meter-mod cmd=mod"
            << ",flags=" << flagsStr
            << ",meter=" << RingRoutingInfo::COUNTER
@@ -576,11 +576,11 @@ RingController::GetMaxBitRate (Ptr<const RingRoutingInfo> ringInfo,
     {
       uint16_t next = NextSwitchIndex (sgwIdx, path);
 
-      // Get link bitrate.
+      // Get link bit rate.
       Ptr<const ConnectionInfo> cInfo = GetConnectionInfo (sgwIdx, next);
       bitRate = std::min (bitRate, cInfo->GetLinkBitRate ());
 
-      // Get switch bitrate.
+      // Get switch bit rate.
       Ptr<const OFSwitch13Device> dev = m_ofDevices.Get (next);
       bitRate = std::min (bitRate, dev->GetPipelineCapacity ().GetBitRate ());
 

@@ -214,10 +214,10 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
     {
       uint32_t row = 4U * idx;
       Ptr<ConnectionInfo> cInfo = *it;
-      uint64_t gbrFwdBytes = cInfo->GetGbrBytes (ConnectionInfo::FWD);
-      uint64_t gbrBwdBytes = cInfo->GetGbrBytes (ConnectionInfo::BWD);
-      uint64_t nonFwdBytes = cInfo->GetNonGbrBytes (ConnectionInfo::FWD);
-      uint64_t nonBwdBytes = cInfo->GetNonGbrBytes (ConnectionInfo::BWD);
+      uint64_t gbrFwdBytes = cInfo->GetGbrTxBytes (ConnectionInfo::FWD);
+      uint64_t gbrBwdBytes = cInfo->GetGbrTxBytes (ConnectionInfo::BWD);
+      uint64_t nonFwdBytes = cInfo->GetNonGbrTxBytes (ConnectionInfo::FWD);
+      uint64_t nonBwdBytes = cInfo->GetNonGbrTxBytes (ConnectionInfo::BWD);
 
       double gbrFwdKbits =
         static_cast<double> (gbrFwdBytes - m_counters [row + 0]) * 8 / 1000;
@@ -253,13 +253,14 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
 
       *m_regWrapper->GetStream ()
       << right
-      << setw (6) << cInfo->GetGbrLinkRatio (ConnectionInfo::FWD) << " "
-      << setw (6) << cInfo->GetGbrLinkRatio (ConnectionInfo::BWD) << "   ";
+      << setw (6) << cInfo->GetResGbrLinkRatio (ConnectionInfo::FWD) << " "
+      << setw (6) << cInfo->GetResGbrLinkRatio (ConnectionInfo::BWD) << "   ";
 
       *m_renWrapper->GetStream ()
       << right
-      << setw (6) << cInfo->GetNonGbrLinkRatio (ConnectionInfo::FWD) << " "
-      << setw (6) << cInfo->GetNonGbrLinkRatio (ConnectionInfo::BWD) << "   ";
+      << setw (6) << cInfo->GetResNonGbrLinkRatio (ConnectionInfo::FWD) << " "
+      << setw (6) << cInfo->GetResNonGbrLinkRatio (ConnectionInfo::BWD)
+      << "   ";
     }
 
   *m_bwbWrapper->GetStream () << setfill (' ') << std::endl;
