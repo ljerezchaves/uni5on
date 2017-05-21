@@ -645,12 +645,21 @@ RingController::ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
   NS_LOG_INFO ("Reserving resources for GBR bearer.");
-  PerLinkReserve (ringInfo->GetPgwSwIdx (), ringInfo->GetSgwSwIdx (),
-                  ringInfo->GetDownPath (), gbrInfo->GetDownBitRate ());
-  PerLinkReserve (ringInfo->GetSgwSwIdx (), ringInfo->GetPgwSwIdx (),
-                  ringInfo->GetUpPath (), gbrInfo->GetUpBitRate ());
-  gbrInfo->SetReserved (true);
-  return true;
+  bool success = true;
+  uint16_t curr = ringInfo->GetPgwSwIdx ();
+  while (success && curr != ringInfo->GetSgwSwIdx ())
+    {
+      uint16_t next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
+      success &= cInfo->ReserveGbrBitRate (
+          GetDpId (curr), GetDpId (next), gbrInfo->GetDownBitRate ());
+      success &= cInfo->ReserveGbrBitRate (
+          GetDpId (next), GetDpId (curr), gbrInfo->GetUpBitRate ());
+      curr = next;
+    }
+  NS_ASSERT_MSG (success, "Error when reserving resources.");
+  gbrInfo->SetReserved (success);
+  return success;
 }
 
 bool
@@ -660,51 +669,20 @@ RingController::ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
   NS_LOG_INFO ("Releasing resources for GBR bearer.");
-  PerLinkRelease (ringInfo->GetPgwSwIdx (), ringInfo->GetSgwSwIdx (),
-                  ringInfo->GetDownPath (), gbrInfo->GetDownBitRate ());
-  PerLinkRelease (ringInfo->GetSgwSwIdx (), ringInfo->GetPgwSwIdx (),
-                  ringInfo->GetUpPath (), gbrInfo->GetUpBitRate ());
-  gbrInfo->SetReserved (false);
-  return true;
-}
-
-bool
-RingController::PerLinkReserve (uint16_t srcIdx, uint16_t dstIdx,
-                                RingRoutingInfo::RoutingPath path,
-                                uint64_t bitRate)
-{
-  NS_LOG_FUNCTION (this << srcIdx << dstIdx << path << bitRate);
-
   bool success = true;
-  while (success && srcIdx != dstIdx)
+  uint16_t curr = ringInfo->GetPgwSwIdx ();
+  while (success && curr != ringInfo->GetSgwSwIdx ())
     {
-      uint16_t next = NextSwitchIndex (srcIdx, path);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (srcIdx, next);
-      success = cInfo->ReserveGbrBitRate (
-          GetDpId (srcIdx), GetDpId (next), bitRate);
-      srcIdx = next;
+      uint16_t next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
+      success &= cInfo->ReleaseGbrBitRate (
+          GetDpId (curr), GetDpId (next), gbrInfo->GetDownBitRate ());
+      success &= cInfo->ReleaseGbrBitRate (
+          GetDpId (next), GetDpId (curr), gbrInfo->GetUpBitRate ());
+      curr = next;
     }
-  NS_ASSERT_MSG (success, "Error when reserving resources.");
-  return success;
-}
-
-bool
-RingController::PerLinkRelease (uint16_t srcIdx, uint16_t dstIdx,
-                                RingRoutingInfo::RoutingPath path,
-                                uint64_t bitRate)
-{
-  NS_LOG_FUNCTION (this << srcIdx << dstIdx << path << bitRate);
-
-  bool success = true;
-  while (success && srcIdx != dstIdx)
-    {
-      uint16_t next = NextSwitchIndex (srcIdx, path);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (srcIdx, next);
-      success = cInfo->ReleaseGbrBitRate (
-          GetDpId (srcIdx), GetDpId (next), bitRate);
-      srcIdx = next;
-    }
-  NS_ASSERT_MSG (success, "Error when reserving resources.");
+  NS_ASSERT_MSG (success, "Error when releasing resources.");
+  gbrInfo->SetReserved (!success);
   return success;
 }
 

@@ -148,7 +148,9 @@ private:
                           bool useShortPath = true) const;
 
   /**
-   * Reserve the bit rate for this bearer in network.
+   * Reserve the bit rate for this GBR bearer in the ring network.
+   * \attention To avoid fatal errors, be sure that there is available GBR
+   *            bit rate over the routing path before reserving it.
    * \param ringInfo The ring routing information.
    * \param gbrInfo The GBR information.
    * \return True if succeeded, false otherwise.
@@ -157,43 +159,13 @@ private:
                           Ptr<GbrInfo> gbrInfo);
 
   /**
-   * Release the bit rate for this bearer in network.
+   * Release the bit rate for this GBR bearer in the ring network.
    * \param ringInfo The ring routing information.
    * \param gbrInfo The GBR information.
    * \return True if succeeded, false otherwise.
    */
   bool ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
                           Ptr<GbrInfo> gbrInfo);
-
-  /**
-   * Reserve the indicated bit rate at each link from source to destination
-   * switch index following the indicated routing path.
-   * \attention To avoid fatal errors, be sure that there is enough available
-   *            bit rate in this link before reserving it.
-   * \param srcIdx Source switch index.
-   * \param dstIdx Destination switch index.
-   * \param path The routing path.
-   * \param bitRate The bit rate to reserve.
-   * \return True if succeeded, false otherwise.
-   */
-  bool PerLinkReserve (uint16_t srcIdx, uint16_t dstIdx,
-                       RingRoutingInfo::RoutingPath path,
-                       uint64_t bitRate);
-
-  /**
-   * Release the indicated bit rate at each link from source to destination
-   * switch index following the indicated routing path.
-   * \attention To avoid fatal errors, be sure that there is enough reserved
-   * bit rate in this link before releasing it.
-   * \param srcIdx Source switch index.
-   * \param dstIdx Destination switch index.
-   * \param path The routing path.
-   * \param bitRate The bit rate to release.
-   * \return True if succeeded, false otherwise.
-   */
-  bool PerLinkRelease (uint16_t srcIdx, uint16_t dstIdx,
-                       RingRoutingInfo::RoutingPath path,
-                       uint64_t bitRate);
 
   /**
    * Get the next switch index following the given routing path.
