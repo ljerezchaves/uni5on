@@ -343,15 +343,15 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
+  // Reset ring routing info to the shortest path.
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  ringInfo->ResetPath ();
+
   // Can't accept a blocked routing info.
   if (rInfo->IsBlocked ())
     {
       return false;
     }
-
-  // Reset ring routing info to the shortest path.
-  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  ringInfo->ResetPath ();
 
   if (!rInfo->IsGbr () || rInfo->IsAggregated () || ringInfo->IsLocalPath ())
     {
@@ -363,69 +363,36 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       return true;
     }
 
-  uint32_t teid = rInfo->GetTeid ();
   Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
-  NS_ASSERT_MSG (gbrInfo, "Invalid configuration for bearer request.");
+  NS_ASSERT_MSG (gbrInfo, "Invalid configuration for GBR bearer request.");
 
-  // Getting available downlink and uplink bit rates in both paths.
-  std::pair<uint64_t, uint64_t> shortPathBand, longPathBand;
-  shortPathBand = GetAvailableGbrBitRate (ringInfo, true);
-  longPathBand  = GetAvailableGbrBitRate (ringInfo, false);
-
-  uint64_t dlShortBw = shortPathBand.first;
-  uint64_t ulShortBw = shortPathBand.second;
-  uint64_t dlLongBw  = longPathBand.first;
-  uint64_t ulLongBw  = longPathBand.second;
-
-  // Getting bit rate requests.
-  uint64_t dlRequest = gbrInfo->GetDownBitRate ();
-  uint64_t ulRequest = gbrInfo->GetUpBitRate ();
-
-  NS_LOG_DEBUG (teid << " req down "   << dlRequest << ", up " << ulRequest);
-  NS_LOG_DEBUG (teid << " short down " << dlShortBw << ", up " << ulShortBw);
-  NS_LOG_DEBUG (teid << " long down "  << dlLongBw  << ", up " << ulLongBw);
-
-  switch (m_strategy)
+  // Check if it possible to route this traffic over the shortest path.
+  if (HasGbrBitRate (ringInfo, gbrInfo))
     {
-    case RingController::SPO:
-      {
-        if (dlShortBw >= dlRequest && ulShortBw >= ulRequest)
-          {
-            NS_LOG_INFO ("Routing bearer teid " << teid << ": shortest path");
-            return ReserveGbrBitRate (ringInfo, gbrInfo);
-          }
-        else
-          {
-            NS_LOG_WARN ("Blocking bearer teid " << teid);
-            rInfo->SetBlocked (true);
-            return false;
-          }
-        break;
-      }
-    case RingController::SPF:
-      {
-        if (dlShortBw >= dlRequest && ulShortBw >= ulRequest)
-          {
-            NS_LOG_INFO ("Routing bearer teid " << teid << ": shortest path");
-            return ReserveGbrBitRate (ringInfo, gbrInfo);
-          }
-        else if (dlLongBw >= dlRequest && ulLongBw >= ulRequest)
-          {
-            // Let's invert the path and reserve the bit rate.
-            NS_LOG_INFO ("Routing bearer teid " << teid << ": longest path");
-            ringInfo->InvertPath ();
-            return ReserveGbrBitRate (ringInfo, gbrInfo);
-          }
-        else
-          {
-            NS_LOG_WARN ("Blocking bearer teid " << teid);
-            rInfo->SetBlocked (true);
-            return false;
-          }
-        break;
-      }
+      NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeid () <<
+                   " over the shortest path");
+      return ReserveGbrBitRate (ringInfo, gbrInfo);
     }
-  NS_ABORT_MSG ("Invalid Routing strategy.");
+
+  // This traffic can't be routed over the shortest path. When using the SPF
+  // routing strategy, invert the routing path and check for available GBR bit
+  // rate over the longest path.
+  if (m_strategy == RingController::SPF)
+    {
+      // Let's invert the routing path and check the longest path.
+      ringInfo->InvertPath ();
+      if (HasGbrBitRate (ringInfo, gbrInfo))
+        {
+          NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeid () <<
+                       " over the longest (inverted) path");
+          return ReserveGbrBitRate (ringInfo, gbrInfo);
+        }
+    }
+
+  // Nothing more to do. Block the traffic.
+  NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid ());
+  rInfo->SetBlocked (true);
+  return false;
 }
 
 bool
@@ -636,6 +603,32 @@ RingController::GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
 
   // Return the pair of available GBR bit rates (downlink and uplink).
   return std::pair<uint64_t, uint64_t> (downBitRate, upBitRate);
+}
+
+bool
+RingController::HasGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
+                               Ptr<const GbrInfo> gbrInfo) const
+{
+  NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
+
+  uint64_t bitRate = 0;
+  bool success = true;
+  uint16_t curr = ringInfo->GetPgwSwIdx ();
+  while (success && curr != ringInfo->GetSgwSwIdx ())
+    {
+      uint16_t next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
+
+      // Check for available GBR bit rate in downlink direction.
+      bitRate = cInfo->GetAvailableGbrBitRate (GetDpId (curr), GetDpId (next));
+      success &= (bitRate >= gbrInfo->GetDownBitRate ());
+
+      // Check for available GBR bit rate in uplink direction.
+      bitRate = cInfo->GetAvailableGbrBitRate (GetDpId (next), GetDpId (curr));
+      success &= (bitRate >= gbrInfo->GetUpBitRate ());
+      curr = next;
+    }
+  return success;
 }
 
 bool

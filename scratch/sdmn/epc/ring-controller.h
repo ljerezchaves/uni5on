@@ -148,6 +148,15 @@ private:
                           bool useShortPath = true) const;
 
   /**
+   * Check for the available GBR bit rate for this ring routing information.
+   * \param ringInfo The ring routing information.
+   * \param gbrInfo The GBR information.
+   * \return True if there's available GBR bit rate, false otherwise.
+   */
+  bool HasGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
+                      Ptr<const GbrInfo> gbrInfo) const;
+
+  /**
    * Reserve the bit rate for this GBR bearer in the ring network.
    * \attention To avoid fatal errors, be sure that there is available GBR
    *            bit rate over the routing path before reserving it.
