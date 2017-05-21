@@ -49,23 +49,6 @@ RingController::GetTypeId (void)
                    MakeEnumAccessor (&RingController::m_strategy),
                    MakeEnumChecker (RingController::SPO, "spo",
                                     RingController::SPF, "spf"))
-    .AddAttribute ("DebarIncStep",
-                   "DeBaR increase adjustment step.",
-                   DoubleValue (0.025), // 2.5% of GBR quota
-                   MakeDoubleAccessor (&RingController::m_debarStep),
-                   MakeDoubleChecker<double> (0.0, 1.0))
-    .AddAttribute ("EnableShortDebar",
-                   "Enable GBR Distance-Based Reservation algorithm (DeBaR) "
-                   "in shortest path.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&RingController::m_debarShortPath),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableLongDebar",
-                   "Enable GBR Distance-Based Reservation algorithm (DeBaR) "
-                   "in longest (inverted) paths.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&RingController::m_debarLongPath),
-                   MakeBooleanChecker ())
   ;
   return tid;
 }
@@ -104,15 +87,6 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
 
-  // Connecting this controller to ConnectionInfo trace source
-  // when the Non-GBR coexistence mechanism is enable.
-  if (GetNonGbrCoexistence () == FeatureStatus::ON)
-    {
-      cInfo->TraceConnectWithoutContext (
-        "NonGbrAdjusted", MakeCallback (
-          &RingController::NonGbrAdjusted, this));
-    }
-
   // Installing groups and meters for ring network. Note that following
   // commands works as connections are created in clockwise direction, and
   // switches inside cInfo are saved in the same direction.
@@ -131,6 +105,12 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
 
   if (GetNonGbrCoexistence () == FeatureStatus::ON)
     {
+      // Connecting this controller to ConnectionInfo trace source
+      // when the Non-GBR coexistence mechanism is enable.
+      cInfo->TraceConnectWithoutContext (
+        "NonGbrAdjusted", MakeCallback (
+          &RingController::NonGbrAdjusted, this));
+
       // Meter flags OFPMF_KBPS.
       std::string flagsStr ("0x0001");
 
@@ -554,78 +534,22 @@ RingController::GetMaxBitRate (Ptr<const RingRoutingInfo> ringInfo,
   return bitRate;
 }
 
-std::pair<uint64_t, uint64_t>
-RingController::GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                                        bool useShortPath) const
-{
-  NS_LOG_FUNCTION (this << ringInfo << useShortPath);
-
-  uint16_t pgwIdx      = ringInfo->GetPgwSwIdx ();
-  uint16_t sgwIdx      = ringInfo->GetSgwSwIdx ();
-  uint64_t downBitRate = std::numeric_limits<uint64_t>::max ();
-  uint64_t upBitRate   = std::numeric_limits<uint64_t>::max ();
-  uint64_t bitRate     = 0;
-  uint16_t current     = sgwIdx;
-  double   debarFactor = 1.0;
-
-  RingRoutingInfo::RoutingPath upPath = FindShortestPath (sgwIdx, pgwIdx);
-  if (!useShortPath)
-    {
-      upPath = RingRoutingInfo::Invert (upPath);
-    }
-
-  // From the S-GW to the P-GW switch index, get the bit rate for each link.
-  while (current != pgwIdx)
-    {
-      uint16_t next = NextSwitchIndex (current, upPath);
-      uint64_t currDp = GetDpId (current);
-      uint64_t nextDp = GetDpId (next);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (current, next);
-
-      // Check for available bit rate in uplink direction.
-      bitRate = cInfo->GetAvailableGbrBitRate (currDp, nextDp, debarFactor);
-      upBitRate = std::min (upBitRate, bitRate);
-
-      // Check for available bit rate in downlink direction.
-      bitRate = cInfo->GetAvailableGbrBitRate (nextDp, currDp, debarFactor);
-      downBitRate = std::min (downBitRate, bitRate);
-      current = next;
-
-      // If enable, apply the GBR Distance-Based Reservation algorithm (DeBaR)
-      // when looking for the available bit rate in routing path.
-      if ((m_debarShortPath && useShortPath)
-          || (m_debarLongPath && !useShortPath))
-        {
-          // Avoiding negative DeBaR factor.
-          debarFactor = std::max (debarFactor - m_debarStep, 0.0);
-        }
-    }
-
-  // Return the pair of available GBR bit rates (downlink and uplink).
-  return std::pair<uint64_t, uint64_t> (downBitRate, upBitRate);
-}
-
 bool
 RingController::HasGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
                                Ptr<const GbrInfo> gbrInfo) const
 {
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
-  uint64_t bitRate = 0;
   bool success = true;
   uint16_t curr = ringInfo->GetPgwSwIdx ();
   while (success && curr != ringInfo->GetSgwSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
-
-      // Check for available GBR bit rate in downlink direction.
-      bitRate = cInfo->GetAvailableGbrBitRate (GetDpId (curr), GetDpId (next));
-      success &= (bitRate >= gbrInfo->GetDownBitRate ());
-
-      // Check for available GBR bit rate in uplink direction.
-      bitRate = cInfo->GetAvailableGbrBitRate (GetDpId (next), GetDpId (curr));
-      success &= (bitRate >= gbrInfo->GetUpBitRate ());
+      success &= cInfo->HasGbrBitRate (
+          GetDpId (curr), GetDpId (next), gbrInfo->GetDownBitRate ());
+      success &= cInfo->HasGbrBitRate (
+          GetDpId (next), GetDpId (curr), gbrInfo->GetUpBitRate ());
       curr = next;
     }
   return success;

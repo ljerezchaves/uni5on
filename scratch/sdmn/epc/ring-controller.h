@@ -130,24 +130,6 @@ private:
                           RingRoutingInfo::RoutingPath path) const;
 
   /**
-   * Get the available GBR bit rate for this ring routing information,
-   * considering both downlink and uplink paths.
-   * \internal This method implements the GBR Distance-Based Reservation
-   *           algorithm (DeBaR) proposed by prof. Deep Medhi. The general idea
-   *           is a dynamic bit rate usage factor that can be adjusted based on
-   *           the distance between the eNB switch and the gateway switch.
-   * \param ringInfo The ring routing information.
-   * \param useShortPath When true, get the available bit rate in the shortest
-   *        path between source and destination nodes; otherwise, considers the
-   *        inverted (long) path.
-   * \return A pair of available GBR bit rates, for both downlink and uplink
-   *         paths, in this strict order.
-   */
-  std::pair<uint64_t, uint64_t>
-  GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                          bool useShortPath = true) const;
-
-  /**
    * Check for the available GBR bit rate for this ring routing information.
    * \param ringInfo The ring routing information.
    * \param gbrInfo The GBR information.
@@ -212,9 +194,6 @@ private:
   IpSwitchMap_t             m_ipSwitchTable;  //!< IP / switch index table.
   OFSwitch13DeviceContainer m_ofDevices;      //!< OpenFlow devices.
   RoutingStrategy           m_strategy;       //!< Routing strategy in use.
-  double                    m_debarStep;      //!< DeBaR increase step.
-  bool                      m_debarShortPath; //!< DeBaR in shortest path.
-  bool                      m_debarLongPath;  //!< DeBaR in longest path.
 };
 
 };  // namespace ns3

@@ -145,16 +145,14 @@ public:
   ConnectionInfo::Direction GetDirection (uint64_t src, uint64_t dst) const;
 
   /**
-   * Get the ammount of GBR bit rate between these two switches that can be
-   * reserved. Optionally, this function can considers the DeBaR reservation
-   * factor.
+   * Check for available GBR bit rate between these two switches that can be
+   * reserved by GRB bearers.
    * \param src The source switch datapath ID.
    * \param dst The destination switch datapath ID.
-   * \param debarFactor DeBaR reservation factor.
-   * \return The available bit rate from src to dst.
+   * \param bitRate The bit rate to check.
+   * \return True if there's available GBR bit rate, false otherwise.
    */
-  uint64_t GetAvailableGbrBitRate (uint64_t src, uint64_t dst,
-                                   double debarFactor = 1.0) const;
+  bool HasGbrBitRate (uint64_t src, uint64_t dst, uint64_t bitRate) const;
 
   /**
    * Reserve some bandwidth between these two switches.

@@ -268,25 +268,14 @@ ConnectionInfo::GetDirection (uint64_t src, uint64_t dst) const
   return ConnectionInfo::FWD;
 }
 
-uint64_t
-ConnectionInfo::GetAvailableGbrBitRate (uint64_t src, uint64_t dst,
-                                        double debarFactor) const
+bool
+ConnectionInfo::HasGbrBitRate (uint64_t src, uint64_t dst,
+                               uint64_t bitRate) const
 {
-  NS_LOG_FUNCTION (this << src << dst << debarFactor);
+  NS_LOG_FUNCTION (this << src << dst << bitRate);
 
-  NS_ASSERT_MSG (debarFactor >= 0.0, "Invalid DeBaR factor.");
   ConnectionInfo::Direction dir = GetDirection (src, dst);
-  uint64_t maxBitRate = static_cast<uint64_t> (debarFactor * m_gbrMaxBitRate);
-
-  if (maxBitRate >= GetResGbrBitRate (dir))
-    {
-      return maxBitRate - GetResGbrBitRate (dir);
-    }
-  else
-    {
-      NS_LOG_WARN ("No bandwidth available.");
-      return 0;
-    }
+  return !(GetResGbrBitRate (dir) + bitRate > m_gbrMaxBitRate);
 }
 
 bool
