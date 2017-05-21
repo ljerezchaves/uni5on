@@ -105,12 +105,17 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
   NS_LOG_FUNCTION (this << cInfo);
 
   // Connecting this controller to ConnectionInfo trace source
-  cInfo->TraceConnectWithoutContext (
-    "NonGbrAdjusted", MakeCallback (&RingController::NonGbrAdjusted, this));
+  // when the Non-GBR coexistence mechanism is enable.
+  if (GetNonGbrCoexistence () == FeatureStatus::ON)
+    {
+      cInfo->TraceConnectWithoutContext (
+        "NonGbrAdjusted", MakeCallback (
+          &RingController::NonGbrAdjusted, this));
+    }
 
   // Installing groups and meters for ring network. Note that following
   // commands works as connections are created in clockwise direction, and
-  // switchs inside cInfo are saved in the same direction.
+  // switches inside cInfo are saved in the same direction.
   std::ostringstream cmd01, cmd11, cmd02, cmd12;
   uint64_t kbps = 0;
 
@@ -328,13 +333,9 @@ RingController::TopologyBearerCreated (Ptr<RoutingInfo> rInfo)
   ringInfo->SetPgwSwDpId (GetDpId (ringInfo->GetPgwSwIdx ()));
   ringInfo->SetSgwSwDpId (GetDpId (ringInfo->GetSgwSwIdx ()));
 
-  // Considering default paths those with lower hops.
-  RingRoutingInfo::RoutingPath dlPath, ulPath;
-  dlPath = FindShortestPath (ringInfo->GetPgwSwIdx (),
-                             ringInfo->GetSgwSwIdx ());
-  ulPath = FindShortestPath (ringInfo->GetSgwSwIdx (),
-                             ringInfo->GetPgwSwIdx ());
-  ringInfo->SetDefaultPaths (dlPath, ulPath);
+  // Set as default path the one with lower hops.
+  ringInfo->SetDefaultPath (
+    FindShortestPath (ringInfo->GetPgwSwIdx (), ringInfo->GetSgwSwIdx ()));
 }
 
 bool
@@ -350,7 +351,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 
   // Reset ring routing info to the shortest path.
   Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  ringInfo->ResetToDefaultPaths ();
+  ringInfo->ResetPath ();
 
   if (!rInfo->IsGbr () || rInfo->IsAggregated () || ringInfo->IsLocalPath ())
     {
@@ -410,9 +411,9 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
           }
         else if (dlLongBw >= dlRequest && ulLongBw >= ulRequest)
           {
-            // Let's invert the path and reserve the bit rate
-            ringInfo->InvertBothPaths ();
+            // Let's invert the path and reserve the bit rate.
             NS_LOG_INFO ("Routing bearer teid " << teid << ": longest path");
+            ringInfo->InvertPath ();
             return ReserveGbrBitRate (ringInfo, gbrInfo);
           }
         else
@@ -477,30 +478,27 @@ RingController::NonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
 
-  if (GetNonGbrCoexistence () == FeatureStatus::ON)
-    {
-      std::ostringstream cmd1, cmd2;
-      uint64_t kbps = 0;
+  std::ostringstream cmd1, cmd2;
+  uint64_t kbps = 0;
 
-      // Meter flags OFPMF_KBPS.
-      std::string flagsStr ("0x0001");
+  // Meter flags OFPMF_KBPS.
+  std::string flagsStr ("0x0001");
 
-      // Update Non-GBR meter for clockwise direction.
-      kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::FWD) / 1000;
-      cmd1 << "meter-mod cmd=mod"
-           << ",flags=" << flagsStr
-           << ",meter=" << RingRoutingInfo::CLOCK
-           << " drop:rate=" << kbps;
-      DpctlExecute (cInfo->GetSwDpId (0), cmd1.str ());
+  // Update Non-GBR meter for clockwise direction.
+  kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::FWD) / 1000;
+  cmd1 << "meter-mod cmd=mod"
+       << ",flags=" << flagsStr
+       << ",meter=" << RingRoutingInfo::CLOCK
+       << " drop:rate=" << kbps;
+  DpctlExecute (cInfo->GetSwDpId (0), cmd1.str ());
 
-      // Update Non-GBR meter for counterclockwise direction.
-      kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::BWD) / 1000;
-      cmd2 << "meter-mod cmd=mod"
-           << ",flags=" << flagsStr
-           << ",meter=" << RingRoutingInfo::COUNTER
-           << " drop:rate=" << kbps;
-      DpctlExecute (cInfo->GetSwDpId (1), cmd2.str ());
-    }
+  // Update Non-GBR meter for counterclockwise direction.
+  kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::BWD) / 1000;
+  cmd2 << "meter-mod cmd=mod"
+       << ",flags=" << flagsStr
+       << ",meter=" << RingRoutingInfo::COUNTER
+       << " drop:rate=" << kbps;
+  DpctlExecute (cInfo->GetSwDpId (1), cmd2.str ());
 }
 
 Ptr<ConnectionInfo>
@@ -606,7 +604,7 @@ RingController::GetAvailableGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
   RingRoutingInfo::RoutingPath upPath = FindShortestPath (sgwIdx, pgwIdx);
   if (!useShortPath)
     {
-      upPath = RingRoutingInfo::InvertPath (upPath);
+      upPath = RingRoutingInfo::Invert (upPath);
     }
 
   // From the S-GW to the P-GW switch index, get the bit rate for each link.

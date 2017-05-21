@@ -74,28 +74,28 @@ public:
   //\}
 
   /**
-   * Set the default routing paths.
+   * Set the default downlink routing path.
+   * The uplink path will always be the same, but with inverted direction.
    * \param downPath The downlink default path.
-   * \param upPath The uplink default path.
    */
-  void SetDefaultPaths (RoutingPath downPath, RoutingPath upPath);
+  void SetDefaultPath (RoutingPath downPath);
 
   /**
-   * Invert both routing paths, only if different from LOCAL.
+   * Invert routing path, only if different from LOCAL.
    */
-  void InvertBothPaths ();
+  void InvertPath ();
 
   /**
-   * Reset both routing paths to default values.
+   * Reset routing path to default values.
    */
-  void ResetToDefaultPaths ();
+  void ResetPath ();
 
   /**
    * Invert the given routing path.
    * \param path The original routing path.
    * \return The inverted routing path.
    */
-  static RoutingPath InvertPath (RoutingPath path);
+  static RoutingPath Invert (RoutingPath path);
 
 protected:
   /** Destructor implementation. */
@@ -103,13 +103,12 @@ protected:
 
 private:
   RoutingPath      m_downPath;      //!< Downlink routing path.
-  RoutingPath      m_upPath;        //!< Uplink routing path.
   uint16_t         m_pgwIdx;        //!< Switch index attached to P-GW.
   uint16_t         m_sgwIdx;        //!< Switch index attached to S-GW.
   uint64_t         m_pgwDpId;       //!< Switch dp id attached to the P-GW.
   uint64_t         m_sgwDpId;       //!< Switch dp id attached to the S-GW.
-  bool             m_isDefaultPath; //!< True when paths are default.
-  bool             m_isLocalPath;   //!< True when routing path is local.
+  bool             m_isDefaultPath; //!< True if path is default (!inverted).
+  bool             m_isLocalPath;   //!< True if path is local.
 };
 
 };  // namespace ns3
