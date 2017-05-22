@@ -83,6 +83,54 @@ RingController::NotifyS5Attach (
 }
 
 void
+RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Save the collection of switch devices and create the spanning tree.
+  m_ofDevices = devices;
+  CreateSpanningTree ();
+
+  // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
+  std::string flagsStr ("0x0007");
+
+  // Configure routes to keep forwarding packets already in the ring until they
+  // reach the destination switch.
+  for (uint16_t swIdx = 0; swIdx < GetNSwitches (); swIdx++)
+    {
+      uint16_t nextIdx = NextSwitchIndex (swIdx, RingRoutingInfo::CLOCK);
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (swIdx, nextIdx);
+
+      // ---------------------------------------------------------------------
+      // Table 2 -- Routing table -- [from higher to lower priority]
+      //
+      // GTP packets being forwarded by this switch. Write the output group
+      // into action set based on input port. Write the same group number into
+      // metadata field. Send the packet to Coexistence QoS table.
+      std::ostringstream cmd0, cmd1;
+      char metadataStr [12];
+
+      sprintf (metadataStr, "0x%x", RingRoutingInfo::COUNTER);
+      cmd0 << "flow-mod cmd=add,table=2,prio=128"
+           << ",flags=" << flagsStr
+           << " meta=0x0,in_port=" << cInfo->GetPortNo (0)
+           << " write:group=" << RingRoutingInfo::COUNTER
+           << " meta:" << metadataStr
+           << " goto:3";
+      DpctlSchedule (cInfo->GetSwDpId (0), cmd0.str ());
+
+      sprintf (metadataStr, "0x%x", RingRoutingInfo::CLOCK);
+      cmd1 << "flow-mod cmd=add,table=2,prio=128"
+           << ",flags=" << flagsStr
+           << " meta=0x0,in_port=" << cInfo->GetPortNo (1)
+           << " write:group=" << RingRoutingInfo::CLOCK
+           << " meta:" << metadataStr
+           << " goto:3";
+      DpctlSchedule (cInfo->GetSwDpId (1), cmd1.str ());
+    }
+}
+
+void
 RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
@@ -133,55 +181,121 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
 }
 
 void
-RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
+RingController::TopologyBearerAggregate (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << rInfo->GetTeid ());
 
-  // Save the collection of switch devices and create the spanning tree.
-  m_ofDevices = devices;
-  CreateSpanningTree ();
+  NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't aggregate the default bearer.");
+  rInfo->SetAggregated (false);
 
-  // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
-  std::string flagsStr ("0x0007");
-
-  // Configure routes to keep forwarding packets already in the ring until they
-  // reach the destination switch.
-  for (uint16_t swIdx = 0; swIdx < GetNSwitches (); swIdx++)
+  if (GetS5TrafficAggregation () == FeatureStatus::ON)
     {
-      uint16_t nextIdx = NextSwitchIndex (swIdx, RingRoutingInfo::CLOCK);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (swIdx, nextIdx);
+      rInfo->SetAggregated (false);
+    }
+  else if (GetS5TrafficAggregation () == FeatureStatus::AUTO)
+    {
+      // TODO Check if we can aggregate or not.
+    }
 
-      // ---------------------------------------------------------------------
-      // Table 2 -- Routing table -- [from higher to lower priority]
-      //
-      // GTP packets being forwarded by this switch. Write the output group
-      // into action set based on input port. Write the same group number into
-      // metadata field. Send the packet to Coexistence QoS table.
-      std::ostringstream cmd0, cmd1;
-      char metadataStr [12];
-
-      sprintf (metadataStr, "0x%x", RingRoutingInfo::COUNTER);
-      cmd0 << "flow-mod cmd=add,table=2,prio=128"
-           << ",flags=" << flagsStr
-           << " meta=0x0,in_port=" << cInfo->GetPortNo (0)
-           << " write:group=" << RingRoutingInfo::COUNTER
-           << " meta:" << metadataStr
-           << " goto:3";
-      DpctlSchedule (cInfo->GetSwDpId (0), cmd0.str ());
-
-      sprintf (metadataStr, "0x%x", RingRoutingInfo::CLOCK);
-      cmd1 << "flow-mod cmd=add,table=2,prio=128"
-           << ",flags=" << flagsStr
-           << " meta=0x0,in_port=" << cInfo->GetPortNo (1)
-           << " write:group=" << RingRoutingInfo::CLOCK
-           << " meta:" << metadataStr
-           << " goto:3";
-      DpctlSchedule (cInfo->GetSwDpId (1), cmd1.str ());
+  if (rInfo->IsAggregated ())
+    {
+      NS_LOG_INFO ("Aggregating traffic of bearer teid " << rInfo->GetTeid ());
     }
 }
 
+void
+RingController::TopologyBearerCreated (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+
+  // Let's create its ring routing metadata.
+  Ptr<RingRoutingInfo> ringInfo = CreateObject<RingRoutingInfo> (rInfo);
+
+  // Set internal switch indexes.
+  ringInfo->SetPgwSwIdx  (GetSwitchIndex (rInfo->GetPgwS5Addr ()));
+  ringInfo->SetSgwSwIdx  (GetSwitchIndex (rInfo->GetSgwS5Addr ()));
+  ringInfo->SetPgwSwDpId (GetDpId (ringInfo->GetPgwSwIdx ()));
+  ringInfo->SetSgwSwDpId (GetDpId (ringInfo->GetSgwSwIdx ()));
+
+  // Set as default path the one with lower hops.
+  ringInfo->SetDefaultPath (
+    FindShortestPath (ringInfo->GetPgwSwIdx (), ringInfo->GetSgwSwIdx ()));
+  // TODO Set max bit rate
+}
+
 bool
-RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
+RingController::TopologyBearerRelease (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+
+  Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
+  if (gbrInfo && gbrInfo->IsReserved ())
+    {
+      Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+      NS_ASSERT_MSG (ringInfo, "No ringInfo for bearer release.");
+      NS_LOG_INFO ("Releasing resources for bearer " << rInfo->GetTeid ());
+      ReleaseGbrBitRate (ringInfo, gbrInfo);
+    }
+  return true;
+}
+
+bool
+RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+
+  // Always reset the ring routing info to the shortest path.
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  ringInfo->ResetPath ();
+
+  // If the bearer is already blocked, there's nothing more to do.
+  if (rInfo->IsBlocked ())
+    {
+      return false;
+    }
+
+  // For Non-GBR bearers (which includes the default bearer), for bearers with
+  // aggregated traffic, and for bearers that only transverse local switch
+  // (local routing): let's accept it without guarantees. Note that in current
+  // implementation, these bearers are always routed over the shortest path.
+  if (!rInfo->IsGbr () || rInfo->IsAggregated () || ringInfo->IsLocalPath ())
+    {
+      return true;
+    }
+
+  Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
+  NS_ASSERT_MSG (gbrInfo, "Invalid configuration for GBR bearer request.");
+
+  // Check if it possible to route this traffic over the shortest path.
+  if (HasGbrBitRate (ringInfo, gbrInfo))
+    {
+      NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeid () <<
+                   " over the shortest path");
+      return ReserveGbrBitRate (ringInfo, gbrInfo);
+    }
+
+  // This traffic can't be routed over the shortest path. When using the SPF
+  // routing strategy, invert the routing path and check for available GBR bit
+  // rate over the longest path.
+  if (m_strategy == RingController::SPF)
+    {
+      ringInfo->InvertPath ();
+      if (HasGbrBitRate (ringInfo, gbrInfo))
+        {
+          NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeid () <<
+                       " over the longest (inverted) path");
+          return ReserveGbrBitRate (ringInfo, gbrInfo);
+        }
+    }
+
+  // Nothing more to do. Block the traffic.
+  NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid ());
+  rInfo->SetBlocked (true);
+  return false;
+}
+
+bool
+RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
@@ -266,7 +380,7 @@ RingController::TopologyInstallRouting (Ptr<RoutingInfo> rInfo)
 }
 
 bool
-RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
+RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
@@ -300,96 +414,6 @@ RingController::TopologyRemoveRouting (Ptr<RoutingInfo> rInfo)
 }
 
 void
-RingController::TopologyBearerCreated (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
-
-  // Let's create its ring routing metadata.
-  Ptr<RingRoutingInfo> ringInfo = CreateObject<RingRoutingInfo> (rInfo);
-
-  // Set internal switch indexes.
-  ringInfo->SetPgwSwIdx  (GetSwitchIndex (rInfo->GetPgwS5Addr ()));
-  ringInfo->SetSgwSwIdx  (GetSwitchIndex (rInfo->GetSgwS5Addr ()));
-  ringInfo->SetPgwSwDpId (GetDpId (ringInfo->GetPgwSwIdx ()));
-  ringInfo->SetSgwSwDpId (GetDpId (ringInfo->GetSgwSwIdx ()));
-
-  // Set as default path the one with lower hops.
-  ringInfo->SetDefaultPath (
-    FindShortestPath (ringInfo->GetPgwSwIdx (), ringInfo->GetSgwSwIdx ()));
-}
-
-bool
-RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
-
-  // Always reset the ring routing info to the shortest path.
-  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  ringInfo->ResetPath ();
-
-  // If the bearer is already blocked, there's nothing more to do.
-  if (rInfo->IsBlocked ())
-    {
-      return false;
-    }
-
-  // For Non-GBR bearers (which includes the default bearer), for bearers with
-  // aggregated traffic, and for bearers that only transverse local switch
-  // (local routing): let's accept it without guarantees. Note that in current
-  // implementation, these bearers are always routed over the shortest path.
-  if (!rInfo->IsGbr () || rInfo->IsAggregated () || ringInfo->IsLocalPath ())
-    {
-      return true;
-    }
-
-  Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
-  NS_ASSERT_MSG (gbrInfo, "Invalid configuration for GBR bearer request.");
-
-  // Check if it possible to route this traffic over the shortest path.
-  if (HasGbrBitRate (ringInfo, gbrInfo))
-    {
-      NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeid () <<
-                   " over the shortest path");
-      return ReserveGbrBitRate (ringInfo, gbrInfo);
-    }
-
-  // This traffic can't be routed over the shortest path. When using the SPF
-  // routing strategy, invert the routing path and check for available GBR bit
-  // rate over the longest path.
-  if (m_strategy == RingController::SPF)
-    {
-      ringInfo->InvertPath ();
-      if (HasGbrBitRate (ringInfo, gbrInfo))
-        {
-          NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeid () <<
-                       " over the longest (inverted) path");
-          return ReserveGbrBitRate (ringInfo, gbrInfo);
-        }
-    }
-
-  // Nothing more to do. Block the traffic.
-  NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid ());
-  rInfo->SetBlocked (true);
-  return false;
-}
-
-bool
-RingController::TopologyBearerRelease (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
-
-  Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
-  if (gbrInfo && gbrInfo->IsReserved ())
-    {
-      Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-      NS_ASSERT_MSG (ringInfo, "No ringInfo for bearer release.");
-      NS_LOG_INFO ("Releasing resources for bearer " << rInfo->GetTeid ());
-      ReleaseGbrBitRate (ringInfo, gbrInfo);
-    }
-  return true;
-}
-
-void
 RingController::CreateSpanningTree (void)
 {
   NS_LOG_FUNCTION (this);
@@ -418,32 +442,29 @@ RingController::CreateSpanningTree (void)
   DpctlSchedule (cInfo->GetSwDpId (1), cmd2.str ());
 }
 
-void
-RingController::NonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
+RingRoutingInfo::RoutingPath
+RingController::FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const
 {
-  NS_LOG_FUNCTION (this << cInfo);
+  NS_LOG_FUNCTION (this << srcIdx << dstIdx);
 
-  std::ostringstream cmd1, cmd2;
-  uint64_t kbps = 0;
+  NS_ASSERT (std::max (srcIdx, dstIdx) < GetNSwitches ());
 
-  // Meter flags OFPMF_KBPS.
-  std::string flagsStr ("0x0001");
+  // Check for local routing.
+  if (srcIdx == dstIdx)
+    {
+      return RingRoutingInfo::LOCAL;
+    }
 
-  // Update Non-GBR meter for clockwise direction.
-  kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::FWD) / 1000;
-  cmd1 << "meter-mod cmd=mod"
-       << ",flags=" << flagsStr
-       << ",meter=" << RingRoutingInfo::CLOCK
-       << " drop:rate=" << kbps;
-  DpctlExecute (cInfo->GetSwDpId (0), cmd1.str ());
-
-  // Update Non-GBR meter for counterclockwise direction.
-  kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::BWD) / 1000;
-  cmd2 << "meter-mod cmd=mod"
-       << ",flags=" << flagsStr
-       << ",meter=" << RingRoutingInfo::COUNTER
-       << " drop:rate=" << kbps;
-  DpctlExecute (cInfo->GetSwDpId (1), cmd2.str ());
+  // Identify the shortest routing path from src to dst switch index.
+  uint16_t maxHops = GetNSwitches () / 2;
+  int clockwiseDistance = dstIdx - srcIdx;
+  if (clockwiseDistance < 0)
+    {
+      clockwiseDistance += GetNSwitches ();
+    }
+  return (clockwiseDistance <= maxHops) ?
+         RingRoutingInfo::CLOCK :
+         RingRoutingInfo::COUNTER;
 }
 
 Ptr<ConnectionInfo>
@@ -452,6 +473,54 @@ RingController::GetConnectionInfo (uint16_t idx1, uint16_t idx2) const
   NS_LOG_FUNCTION (this << idx1 << idx2);
 
   return ConnectionInfo::GetPointer (GetDpId (idx1), GetDpId (idx2));
+}
+
+uint64_t
+RingController::GetDpId (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx < m_ofDevices.GetN (), "Invalid switch index.");
+  return m_ofDevices.Get (idx)->GetDatapathId ();
+}
+
+uint64_t
+RingController::GetMaxBitRate (Ptr<const RingRoutingInfo> ringInfo,
+                               RingRoutingInfo::RoutingPath path) const
+{
+  NS_LOG_FUNCTION (this << ringInfo << path);
+
+  uint16_t pgwIdx  = ringInfo->GetPgwSwIdx ();
+  uint16_t sgwIdx  = ringInfo->GetSgwSwIdx ();
+  uint64_t bitRate = 0;
+
+  // FIXME Ignore switch capacity.
+  // From the S-GW to the P-GW switch index, get the maximum bit rate for each
+  // link and switch pipeline following the given routing path.
+  bitRate = m_ofDevices.Get (sgwIdx)->GetPipelineCapacity ().GetBitRate ();
+  while (sgwIdx != pgwIdx)
+    {
+      uint16_t next = NextSwitchIndex (sgwIdx, path);
+
+      // Get link bit rate.
+      Ptr<const ConnectionInfo> cInfo = GetConnectionInfo (sgwIdx, next);
+      bitRate = std::min (bitRate, cInfo->GetLinkBitRate ());
+
+      // Get switch bit rate.
+      Ptr<const OFSwitch13Device> dev = m_ofDevices.Get (next);
+      bitRate = std::min (bitRate, dev->GetPipelineCapacity ().GetBitRate ());
+
+      sgwIdx = next;
+    }
+  return bitRate;
+}
+
+uint16_t
+RingController::GetNSwitches (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ofDevices.GetN ();
 }
 
 uint16_t
@@ -485,53 +554,6 @@ RingController::GetSwitchIndex (Ptr<OFSwitch13Device> dev) const
   return idx;
 }
 
-uint16_t
-RingController::GetNSwitches (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ofDevices.GetN ();
-}
-
-uint64_t
-RingController::GetDpId (uint16_t idx) const
-{
-  NS_LOG_FUNCTION (this << idx);
-
-  NS_ASSERT_MSG (idx < m_ofDevices.GetN (), "Invalid switch index.");
-  return m_ofDevices.Get (idx)->GetDatapathId ();
-}
-
-uint64_t
-RingController::GetMaxBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                               RingRoutingInfo::RoutingPath path) const
-{
-  NS_LOG_FUNCTION (this << ringInfo << path);
-
-  uint16_t pgwIdx  = ringInfo->GetPgwSwIdx ();
-  uint16_t sgwIdx  = ringInfo->GetSgwSwIdx ();
-  uint64_t bitRate = 0;
-
-  // From the S-GW to the P-GW switch index, get the maximum bit rate for each
-  // link and switch pipeline following the given routing path.
-  bitRate = m_ofDevices.Get (sgwIdx)->GetPipelineCapacity ().GetBitRate ();
-  while (sgwIdx != pgwIdx)
-    {
-      uint16_t next = NextSwitchIndex (sgwIdx, path);
-
-      // Get link bit rate.
-      Ptr<const ConnectionInfo> cInfo = GetConnectionInfo (sgwIdx, next);
-      bitRate = std::min (bitRate, cInfo->GetLinkBitRate ());
-
-      // Get switch bit rate.
-      Ptr<const OFSwitch13Device> dev = m_ofDevices.Get (next);
-      bitRate = std::min (bitRate, dev->GetPipelineCapacity ().GetBitRate ());
-
-      sgwIdx = next;
-    }
-  return bitRate;
-}
-
 bool
 RingController::HasGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
                                Ptr<const GbrInfo> gbrInfo) const
@@ -551,93 +573,6 @@ RingController::HasGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
       curr = next;
     }
   return success;
-}
-
-bool
-RingController::ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                                   Ptr<GbrInfo> gbrInfo)
-{
-  NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
-
-  NS_LOG_INFO ("Reserving resources for GBR bearer.");
-  bool success = true;
-  uint16_t curr = ringInfo->GetPgwSwIdx ();
-  while (success && curr != ringInfo->GetSgwSwIdx ())
-    {
-      uint16_t next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
-      success &= cInfo->ReserveGbrBitRate (
-          GetDpId (curr), GetDpId (next), gbrInfo->GetDownBitRate ());
-      success &= cInfo->ReserveGbrBitRate (
-          GetDpId (next), GetDpId (curr), gbrInfo->GetUpBitRate ());
-      curr = next;
-    }
-  NS_ASSERT_MSG (success, "Error when reserving resources.");
-  gbrInfo->SetReserved (success);
-  return success;
-}
-
-bool
-RingController::ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                                   Ptr<GbrInfo> gbrInfo)
-{
-  NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
-
-  NS_LOG_INFO ("Releasing resources for GBR bearer.");
-  bool success = true;
-  uint16_t curr = ringInfo->GetPgwSwIdx ();
-  while (success && curr != ringInfo->GetSgwSwIdx ())
-    {
-      uint16_t next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
-      success &= cInfo->ReleaseGbrBitRate (
-          GetDpId (curr), GetDpId (next), gbrInfo->GetDownBitRate ());
-      success &= cInfo->ReleaseGbrBitRate (
-          GetDpId (next), GetDpId (curr), gbrInfo->GetUpBitRate ());
-      curr = next;
-    }
-  NS_ASSERT_MSG (success, "Error when releasing resources.");
-  gbrInfo->SetReserved (!success);
-  return success;
-}
-
-uint16_t
-RingController::NextSwitchIndex (uint16_t idx,
-                                 RingRoutingInfo::RoutingPath path) const
-{
-  NS_LOG_FUNCTION (this << idx << path);
-
-  NS_ASSERT_MSG (path != RingRoutingInfo::LOCAL,
-                 "Not supposed to get here for local routing.");
-
-  return path == RingRoutingInfo::CLOCK ?
-         (idx + 1) % GetNSwitches () :
-         (idx == 0 ? GetNSwitches () - 1 : (idx - 1));
-}
-
-RingRoutingInfo::RoutingPath
-RingController::FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const
-{
-  NS_LOG_FUNCTION (this << srcIdx << dstIdx);
-
-  NS_ASSERT (std::max (srcIdx, dstIdx) < GetNSwitches ());
-
-  // Check for local routing.
-  if (srcIdx == dstIdx)
-    {
-      return RingRoutingInfo::LOCAL;
-    }
-
-  // Identify the shortest routing path from src to dst switch index.
-  uint16_t maxHops = GetNSwitches () / 2;
-  int clockwiseDistance = dstIdx - srcIdx;
-  if (clockwiseDistance < 0)
-    {
-      clockwiseDistance += GetNSwitches ();
-    }
-  return (clockwiseDistance <= maxHops) ?
-         RingRoutingInfo::CLOCK :
-         RingRoutingInfo::COUNTER;
 }
 
 uint16_t
@@ -667,6 +602,96 @@ RingController::HopCounter (uint16_t srcIdx, uint16_t dstIdx,
       distance += GetNSwitches ();
     }
   return distance;
+}
+
+uint16_t
+RingController::NextSwitchIndex (uint16_t idx,
+                                 RingRoutingInfo::RoutingPath path) const
+{
+  NS_LOG_FUNCTION (this << idx << path);
+
+  NS_ASSERT_MSG (path != RingRoutingInfo::LOCAL,
+                 "Not supposed to get here for local routing.");
+
+  return path == RingRoutingInfo::CLOCK ?
+         (idx + 1) % GetNSwitches () :
+         (idx == 0 ? GetNSwitches () - 1 : (idx - 1));
+}
+
+void
+RingController::NonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
+{
+  NS_LOG_FUNCTION (this << cInfo);
+
+  std::ostringstream cmd1, cmd2;
+  uint64_t kbps = 0;
+
+  // Meter flags OFPMF_KBPS.
+  std::string flagsStr ("0x0001");
+
+  // Update Non-GBR meter for clockwise direction.
+  kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::FWD) / 1000;
+  cmd1 << "meter-mod cmd=mod"
+       << ",flags=" << flagsStr
+       << ",meter=" << RingRoutingInfo::CLOCK
+       << " drop:rate=" << kbps;
+  DpctlExecute (cInfo->GetSwDpId (0), cmd1.str ());
+
+  // Update Non-GBR meter for counterclockwise direction.
+  kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::BWD) / 1000;
+  cmd2 << "meter-mod cmd=mod"
+       << ",flags=" << flagsStr
+       << ",meter=" << RingRoutingInfo::COUNTER
+       << " drop:rate=" << kbps;
+  DpctlExecute (cInfo->GetSwDpId (1), cmd2.str ());
+}
+
+bool
+RingController::ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
+                                   Ptr<GbrInfo> gbrInfo)
+{
+  NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
+
+  NS_LOG_INFO ("Releasing resources for GBR bearer.");
+  bool success = true;
+  uint16_t curr = ringInfo->GetPgwSwIdx ();
+  while (success && curr != ringInfo->GetSgwSwIdx ())
+    {
+      uint16_t next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
+      success &= cInfo->ReleaseGbrBitRate (
+          GetDpId (curr), GetDpId (next), gbrInfo->GetDownBitRate ());
+      success &= cInfo->ReleaseGbrBitRate (
+          GetDpId (next), GetDpId (curr), gbrInfo->GetUpBitRate ());
+      curr = next;
+    }
+  NS_ASSERT_MSG (success, "Error when releasing resources.");
+  gbrInfo->SetReserved (!success);
+  return success;
+}
+
+bool
+RingController::ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
+                                   Ptr<GbrInfo> gbrInfo)
+{
+  NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
+
+  NS_LOG_INFO ("Reserving resources for GBR bearer.");
+  bool success = true;
+  uint16_t curr = ringInfo->GetPgwSwIdx ();
+  while (success && curr != ringInfo->GetSgwSwIdx ())
+    {
+      uint16_t next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
+      success &= cInfo->ReserveGbrBitRate (
+          GetDpId (curr), GetDpId (next), gbrInfo->GetDownBitRate ());
+      success &= cInfo->ReserveGbrBitRate (
+          GetDpId (next), GetDpId (curr), gbrInfo->GetUpBitRate ());
+      curr = next;
+    }
+  NS_ASSERT_MSG (success, "Error when reserving resources.");
+  gbrInfo->SetReserved (success);
+  return success;
 }
 
 };  // namespace ns3

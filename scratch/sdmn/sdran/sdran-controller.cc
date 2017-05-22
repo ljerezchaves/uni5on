@@ -59,27 +59,47 @@ SdranController::GetTypeId (void)
 }
 
 bool
-SdranController::RequestDedicatedBearer (
+SdranController::DedicatedBearerRelease (
   EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
-  if (m_epcCtrlApp->RequestDedicatedBearer (bearer, teid))
+  SgwRulesRemove (RoutingInfo::GetPointer (teid));
+  m_epcCtrlApp->DedicatedBearerRelease (bearer, teid);
+  return true;
+}
+
+bool
+SdranController::DedicatedBearerRequest (
+  EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
+{
+  NS_LOG_FUNCTION (this << imsi << cellId << teid);
+
+  if (m_epcCtrlApp->DedicatedBearerRequest (bearer, teid))
     {
-      return InstallSgwSwitchRules (RoutingInfo::GetPointer (teid));
+      return SgwRulesInstall (RoutingInfo::GetPointer (teid));
     }
   return false;
 }
 
-bool
-SdranController::ReleaseDedicatedBearer (
-  EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
+void
+SdranController::NotifyEnbAttach (uint16_t cellId, uint32_t sgwS1uPortNo)
 {
-  NS_LOG_FUNCTION (this << imsi << cellId << teid);
+  NS_LOG_FUNCTION (this << cellId << sgwS1uPortNo);
 
-  RemoveSgwSwitchRules (RoutingInfo::GetPointer (teid));
-  m_epcCtrlApp->ReleaseDedicatedBearer (bearer, teid);
-  return true;
+  // Register this controller by cell ID for further usage.
+  RegisterController (Ptr<SdranController> (this), cellId);
+
+  // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
+  // Internet are sent to table 2, where rules will match the flow and set both
+  // TEID and P-GW address on tunnel metadata.
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+      << ",in_port=" << sgwS1uPortNo
+      << ",ip_dst=" << EpcNetwork::m_sgiAddr
+      << "/" << EpcNetwork::m_sgiMask.GetPrefixLength ()
+      << " goto:2";
+  DpctlSchedule (m_sgwDpId, cmd.str ());
 }
 
 void
@@ -103,34 +123,6 @@ SdranController::NotifySgwAttach (
   DpctlSchedule (m_sgwDpId, cmd.str ());
 }
 
-void
-SdranController::NotifyEnbAttach (uint16_t cellId, uint32_t sgwS1uPortNo)
-{
-  NS_LOG_FUNCTION (this << cellId << sgwS1uPortNo);
-
-  // Register this controller by cell ID for further usage.
-  RegisterController (Ptr<SdranController> (this), cellId);
-
-  // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
-  // Internet are sent to table 2, where rules will match the flow and set both
-  // TEID and P-GW address on tunnel metadata.
-  std::ostringstream cmd;
-  cmd << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-      << ",in_port=" << sgwS1uPortNo
-      << ",ip_dst=" << EpcNetwork::m_sgiAddr
-      << "/" << EpcNetwork::m_sgiMask.GetPrefixLength ()
-      << " goto:2";
-  DpctlSchedule (m_sgwDpId, cmd.str ());
-}
-
-Ipv4Address
-SdranController::GetSgwS5Addr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_sgwS5Addr;
-}
-
 EpcS1apSapMme*
 SdranController::GetS1apSapMme (void) const
 {
@@ -145,6 +137,14 @@ SdranController::GetS5SapSgw (void) const
   NS_LOG_FUNCTION (this);
 
   return m_s5SapSgw;
+}
+
+Ipv4Address
+SdranController::GetSgwS5Addr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sgwS5Addr;
 }
 
 void
@@ -191,59 +191,6 @@ SdranController::DoDispose ()
 
   // Chain up.
   Object::DoDispose ();
-}
-
-void
-SdranController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
-{
-  NS_LOG_FUNCTION (this << swtch);
-
-  // Configure S-GW port rules.
-  // -------------------------------------------------------------------------
-  // Table 0 -- Input table -- [from higher to lower priority]
-  //
-  // IP packets coming from the P-GW (S-GW S5 port) and addressed to the UE
-  // network are sent to table 1, where rules will match the flow and set both
-  // TEID and eNB address on tunnel metadata.
-  //
-  // Entries will be installed here by NotifySgwAttach function.
-
-  // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
-  // Internet are sent to table 2, where rules will match the flow and set both
-  // TEID and P-GW address on tunnel metadata.
-  //
-  // Entries will be installed here by NotifyEnbAttach function.
-
-  // Table miss entry. Send to controller.
-  DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
-
-  // -------------------------------------------------------------------------
-  // Table 1 -- S-GW downlink forward table -- [from higher to lower priority]
-  //
-  // Entries will be installed here by InstallSgwSwitchRules function.
-
-  // -------------------------------------------------------------------------
-  // Table 2 -- S-GW uplink forward table -- [from higher to lower priority]
-  //
-  // Entries will be installed here by InstallSgwSwitchRules function.
-}
-
-ofl_err
-SdranController::HandlePacketIn (
-  struct ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch,
-  uint32_t xid)
-{
-  NS_LOG_FUNCTION (this << swtch << xid);
-
-  char *msgStr = ofl_structs_match_to_string (msg->match, 0);
-  NS_LOG_DEBUG ("Packet in match: " << msgStr);
-  free (msgStr);
-
-  NS_ABORT_MSG ("Packet not supposed to be sent to this controller. Abort.");
-
-  // All handlers must free the message when everything is ok
-  ofl_msg_free ((struct ofl_msg_header*)msg, 0);
-  return 0;
 }
 
 ofl_err
@@ -294,15 +241,166 @@ SdranController::HandleFlowRemoved (
     {
       NS_LOG_WARN ("Rule removed for active bearer teid " << teid << ". " <<
                    "Reinstall rule...");
-      bool installed = InstallSgwSwitchRules (rInfo);
+      bool installed = SgwRulesInstall (rInfo);
       NS_ASSERT_MSG (installed, "Bearer rules installation failed!");
       return 0;
     }
   NS_ABORT_MSG ("Should not get here :/");
 }
 
+ofl_err
+SdranController::HandlePacketIn (
+  struct ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch,
+  uint32_t xid)
+{
+  NS_LOG_FUNCTION (this << swtch << xid);
+
+  char *msgStr = ofl_structs_match_to_string (msg->match, 0);
+  NS_LOG_DEBUG ("Packet in match: " << msgStr);
+  free (msgStr);
+
+  NS_ABORT_MSG ("Packet not supposed to be sent to this controller. Abort.");
+
+  // All handlers must free the message when everything is ok
+  ofl_msg_free ((struct ofl_msg_header*)msg, 0);
+  return 0;
+}
+
+void
+SdranController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
+{
+  NS_LOG_FUNCTION (this << swtch);
+
+  // Configure S-GW port rules.
+  // -------------------------------------------------------------------------
+  // Table 0 -- Input table -- [from higher to lower priority]
+  //
+  // IP packets coming from the P-GW (S-GW S5 port) and addressed to the UE
+  // network are sent to table 1, where rules will match the flow and set both
+  // TEID and eNB address on tunnel metadata.
+  //
+  // Entries will be installed here by NotifySgwAttach function.
+
+  // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
+  // Internet are sent to table 2, where rules will match the flow and set both
+  // TEID and P-GW address on tunnel metadata.
+  //
+  // Entries will be installed here by NotifyEnbAttach function.
+
+  // Table miss entry. Send to controller.
+  DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
+
+  // -------------------------------------------------------------------------
+  // Table 1 -- S-GW downlink forward table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by SgwRulesInstall function.
+
+  // -------------------------------------------------------------------------
+  // Table 2 -- S-GW uplink forward table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by SgwRulesInstall function.
+}
+
+//
+// On the following Do* methods, note the trick to avoid the need for
+// allocating TEID on the S11 interface using the IMSI as identifier.
+//
+void
+SdranController::DoCreateSessionRequest (
+  EpcS11SapSgw::CreateSessionRequestMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.imsi);
+
+  // Send the request message to the P-GW.
+  m_s5SapPgw->CreateSessionRequest (msg);
+}
+
+void
+SdranController::DoDeleteBearerCommand (
+  EpcS11SapSgw::DeleteBearerCommandMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.teid);
+
+  uint64_t imsi = msg.teid;
+
+  EpcS11SapMme::DeleteBearerRequestMessage res;
+  res.teid = imsi;
+
+  std::list<EpcS11SapSgw::BearerContextToBeRemoved>::iterator bit;
+  for (bit = msg.bearerContextsToBeRemoved.begin ();
+       bit != msg.bearerContextsToBeRemoved.end ();
+       ++bit)
+    {
+      EpcS11SapMme::BearerContextRemoved bearerContext;
+      bearerContext.epsBearerId = bit->epsBearerId;
+      res.bearerContextsRemoved.push_back (bearerContext);
+    }
+
+  m_s11SapMme->DeleteBearerRequest (res);
+}
+
+void
+SdranController::DoDeleteBearerResponse (
+  EpcS11SapSgw::DeleteBearerResponseMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.teid);
+
+  // Nothing to do here.
+}
+
+void
+SdranController::DoModifyBearerRequest (
+  EpcS11SapSgw::ModifyBearerRequestMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.teid);
+
+  // In current implementation, this Modify Bearer Request is triggered only by
+  // X2 handover procedures. There is no actual bearer modification, for now we
+  // just support the minimum needed for path switch request (handover). There
+  // is no need to forward the request message to the P-GW.
+  EpcS11SapMme::ModifyBearerResponseMessage res;
+  res.teid = msg.teid;
+  res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
+
+  m_s11SapMme->ModifyBearerResponse (res);
+}
+
+void
+SdranController::DoCreateSessionResponse (
+  EpcS11SapMme::CreateSessionResponseMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.teid);
+
+  // Install S-GW rules for default bearer.
+  BearerContext_t defaultBearer = msg.bearerContextsCreated.front ();
+  NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
+  uint32_t teid = defaultBearer.sgwFteid.teid;
+  SgwRulesInstall (RoutingInfo::GetPointer (teid));
+
+  // Forward the response message to the MME.
+  m_s11SapMme->CreateSessionResponse (msg);
+}
+
+void
+SdranController::DoDeleteBearerRequest (
+  EpcS11SapMme::DeleteBearerRequestMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.teid);
+
+  NS_FATAL_ERROR ("Unimplemented method.");
+}
+
+void
+SdranController::DoModifyBearerResponse (
+  EpcS11SapMme::ModifyBearerResponseMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.teid);
+
+  NS_FATAL_ERROR ("Unimplemented method.");
+}
+
 bool
-SdranController::InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo)
+SdranController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
@@ -473,7 +571,7 @@ SdranController::InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo)
 }
 
 bool
-SdranController::RemoveSgwSwitchRules (Ptr<RoutingInfo> rInfo)
+SdranController::SgwRulesRemove (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
@@ -498,104 +596,6 @@ SdranController::RemoveSgwSwitchRules (Ptr<RoutingInfo> rInfo)
       meterInfo->SetUpInstalled (false);
     }
   return true;
-}
-
-//
-// On the following Do* methods, note the trick to avoid the need for
-// allocating TEID on the S11 interface using the IMSI as identifier.
-//
-void
-SdranController::DoCreateSessionRequest (
-  EpcS11SapSgw::CreateSessionRequestMessage msg)
-{
-  NS_LOG_FUNCTION (this << msg.imsi);
-
-  // Send the request message to the P-GW.
-  m_s5SapPgw->CreateSessionRequest (msg);
-}
-
-void
-SdranController::DoModifyBearerRequest (
-  EpcS11SapSgw::ModifyBearerRequestMessage msg)
-{
-  NS_LOG_FUNCTION (this << msg.teid);
-
-  // In current implementation, this Modify Bearer Request is triggered only by
-  // X2 handover procedures. There is no actual bearer modification, for now we
-  // just support the minimum needed for path switch request (handover). There
-  // is no need to forward the request message to the P-GW.
-  EpcS11SapMme::ModifyBearerResponseMessage res;
-  res.teid = msg.teid;
-  res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
-
-  m_s11SapMme->ModifyBearerResponse (res);
-}
-
-void
-SdranController::DoDeleteBearerCommand (
-  EpcS11SapSgw::DeleteBearerCommandMessage msg)
-{
-  NS_LOG_FUNCTION (this << msg.teid);
-
-  uint64_t imsi = msg.teid;
-
-  EpcS11SapMme::DeleteBearerRequestMessage res;
-  res.teid = imsi;
-
-  std::list<EpcS11SapSgw::BearerContextToBeRemoved>::iterator bit;
-  for (bit = msg.bearerContextsToBeRemoved.begin ();
-       bit != msg.bearerContextsToBeRemoved.end ();
-       ++bit)
-    {
-      EpcS11SapMme::BearerContextRemoved bearerContext;
-      bearerContext.epsBearerId = bit->epsBearerId;
-      res.bearerContextsRemoved.push_back (bearerContext);
-    }
-
-  m_s11SapMme->DeleteBearerRequest (res);
-}
-
-void
-SdranController::DoDeleteBearerResponse (
-  EpcS11SapSgw::DeleteBearerResponseMessage msg)
-{
-  NS_LOG_FUNCTION (this << msg.teid);
-
-  // Nothing to do here.
-}
-
-void
-SdranController::DoCreateSessionResponse (
-  EpcS11SapMme::CreateSessionResponseMessage msg)
-{
-  NS_LOG_FUNCTION (this << msg.teid);
-
-  // Install S-GW rules for default bearer.
-  BearerContext_t defaultBearer = msg.bearerContextsCreated.front ();
-  NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
-  uint32_t teid = defaultBearer.sgwFteid.teid;
-  InstallSgwSwitchRules (RoutingInfo::GetPointer (teid));
-
-  // Forward the response message to the MME.
-  m_s11SapMme->CreateSessionResponse (msg);
-}
-
-void
-SdranController::DoModifyBearerResponse (
-  EpcS11SapMme::ModifyBearerResponseMessage msg)
-{
-  NS_LOG_FUNCTION (this << msg.teid);
-
-  NS_FATAL_ERROR ("Unimplemented method.");
-}
-
-void
-SdranController::DoDeleteBearerRequest (
-  EpcS11SapMme::DeleteBearerRequestMessage msg)
-{
-  NS_LOG_FUNCTION (this << msg.teid);
-
-  NS_FATAL_ERROR ("Unimplemented method.");
 }
 
 void

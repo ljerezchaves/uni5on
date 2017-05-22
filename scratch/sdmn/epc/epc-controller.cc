@@ -128,7 +128,26 @@ EpcController::GetTypeId (void)
 }
 
 bool
-EpcController::RequestDedicatedBearer (EpsBearer bearer, uint32_t teid)
+EpcController::DedicatedBearerRelease (EpsBearer bearer, uint32_t teid)
+{
+  NS_LOG_FUNCTION (this << teid);
+
+  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer teid " << teid);
+  NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't release the default bearer.");
+  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
+
+  bool released = TopologyBearerRelease (rInfo);
+  m_bearerReleaseTrace (released, rInfo);
+  NS_LOG_INFO ("Bearer released by controller.");
+
+  // Everything is ok! Let's deactivate and remove this bearer.
+  rInfo->SetActive (false);
+  return BearerRemove (rInfo);
+}
+
+bool
+EpcController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << teid);
 
@@ -138,10 +157,11 @@ EpcController::RequestDedicatedBearer (EpsBearer bearer, uint32_t teid)
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
-  // Update the P-GW TFT index and S5 traffic aggregation flag for this bearer.
+  // Update the P-GW TFT index, the blocked flag, and check for S5 traffic
+  // aggregation.
   rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
-  rInfo->SetAggregated (S5AggBearerRequest (rInfo));
   rInfo->SetBlocked (false);
+  TopologyBearerAggregate (rInfo);
 
   // Let's first check for available resources on P-GW and backhaul switches.
   bool accepted = true;
@@ -160,26 +180,17 @@ EpcController::RequestDedicatedBearer (EpsBearer bearer, uint32_t teid)
   // we can even use new routing paths when necessary.
   NS_LOG_INFO ("Bearer request accepted by controller.");
   rInfo->SetActive (true);
-  return InstallBearer (rInfo);
+  return BearerInstall (rInfo);
 }
 
-bool
-EpcController::ReleaseDedicatedBearer (EpsBearer bearer, uint32_t teid)
+void
+EpcController::NotifyPgwBuilt (OFSwitch13DeviceContainer devices)
 {
-  NS_LOG_FUNCTION (this << teid);
+  NS_LOG_FUNCTION (this);
 
-  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer teid " << teid);
-  NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't release the default bearer.");
-  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
-
-  bool released = TopologyBearerRelease (rInfo);
-  m_bearerReleaseTrace (released, rInfo);
-  NS_LOG_INFO ("Bearer released by controller.");
-
-  // Everything is ok! Let's deactivate and remove this bearer.
-  rInfo->SetActive (false);
-  return RemoveBearer (rInfo);
+  NS_ASSERT_MSG (devices.GetN () == m_pgwDpIds.size ()
+                 && devices.GetN () == (m_tftMaxSwitches + 1U),
+                 "Inconsistent number of P-GW OpenFlow switches.");
 }
 
 void
@@ -269,7 +280,7 @@ EpcController::NotifyPgwTftAttach (
   // -------------------------------------------------------------------------
   // Table 0 -- P-GW TFT default table -- [from higher to lower priority]
   //
-  // Entries will be installed here by InstallPgwSwitchRules function.
+  // Entries will be installed here by PgwRulesInstall function.
 }
 
 void
@@ -310,33 +321,15 @@ EpcController::NotifyS5Attach (
 }
 
 void
-EpcController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
-{
-  NS_LOG_FUNCTION (this << cInfo);
-}
-
-void
 EpcController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 }
 
 void
-EpcController::NotifyPgwBuilt (OFSwitch13DeviceContainer devices)
+EpcController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
 {
-  NS_LOG_FUNCTION (this);
-
-  NS_ASSERT_MSG (devices.GetN () == m_pgwDpIds.size ()
-                 && devices.GetN () == (m_tftMaxSwitches + 1U),
-                 "Inconsistent number of P-GW OpenFlow switches.");
-}
-
-EpcS5SapPgw*
-EpcController::GetS5SapPgw (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_s5SapPgw;
+  NS_LOG_FUNCTION (this << cInfo);
 }
 
 EpcController::FeatureStatus
@@ -369,6 +362,14 @@ EpcController::GetVoipQos (void) const
   NS_LOG_FUNCTION (this);
 
   return m_voipQos;
+}
+
+EpcS5SapPgw*
+EpcController::GetS5SapPgw (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s5SapPgw;
 }
 
 uint16_t
@@ -423,13 +424,98 @@ EpcController::NotifyConstructionCompleted (void)
         m_tftLbLevel = 0;
 
         // Schedule the first P-GW load check.
-        Simulator::Schedule (m_timeout, &EpcController::CheckPgwTftLoad, this);
+        Simulator::Schedule (m_timeout, &EpcController::PgwTftCheckLoad, this);
         break;
       }
     }
 
   // Chain up.
   OFSwitch13Controller::NotifyConstructionCompleted ();
+}
+
+ofl_err
+EpcController::HandleError (
+  struct ofl_msg_error *msg, Ptr<const RemoteSwitch> swtch,
+  uint32_t xid)
+{
+  NS_LOG_FUNCTION (this << swtch << xid);
+
+  // Chain up for logging and abort.
+  OFSwitch13Controller::HandleError (msg, swtch, xid);
+  NS_ABORT_MSG ("Should not get here :/");
+}
+
+ofl_err
+EpcController::HandleFlowRemoved (
+  struct ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch,
+  uint32_t xid)
+{
+  NS_LOG_FUNCTION (this << swtch << xid << msg->stats->cookie);
+
+  uint32_t teid = msg->stats->cookie;
+  uint16_t prio = msg->stats->priority;
+
+  char *msgStr = ofl_msg_to_string ((struct ofl_msg_header*)msg, 0);
+  NS_LOG_DEBUG ("Flow removed: " << msgStr);
+  free (msgStr);
+
+  // Since handlers must free the message when everything is ok,
+  // let's remove it now, as we already got the necessary information.
+  ofl_msg_free_flow_removed (msg, true, 0);
+
+  // Check for existing routing information for this bearer.
+  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer teid " << teid);
+
+  // When a flow is removed, check the following situations:
+  // 1) The application is stopped and the bearer must be inactive.
+  if (!rInfo->IsActive ())
+    {
+      NS_LOG_INFO ("Rule removed for inactive bearer teid " << teid);
+      return 0;
+    }
+
+  // 2) The application is running and the bearer is active, but the
+  // application has already been stopped since last rule installation. In this
+  // case, the bearer priority should have been increased to avoid conflicts.
+  if (rInfo->GetPriority () > prio)
+    {
+      NS_LOG_INFO ("Old rule removed for bearer teid " << teid);
+      return 0;
+    }
+
+  // 3) The application is running and the bearer is active. This is the
+  // critical situation. For some reason, the traffic absence lead to flow
+  // expiration, and we need to reinstall the rules with higher priority to
+  // avoid problems.
+  NS_ASSERT_MSG (rInfo->GetPriority () == prio, "Invalid flow priority.");
+  if (rInfo->IsActive ())
+    {
+      NS_LOG_WARN ("Rule removed for active bearer teid " << teid << ". " <<
+                   "Reinstall rules...");
+      bool installed = BearerInstall (rInfo);
+      NS_ASSERT_MSG (installed, "Rules reinstallation failed!");
+      return 0;
+    }
+  NS_ABORT_MSG ("Should not get here :/");
+}
+
+ofl_err
+EpcController::HandlePacketIn (
+  struct ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch,
+  uint32_t xid)
+{
+  NS_LOG_FUNCTION (this << swtch << xid);
+
+  char *msgStr = ofl_structs_match_to_string (msg->match, 0);
+  NS_LOG_DEBUG ("Packet in match: " << msgStr);
+  free (msgStr);
+
+  NS_ABORT_MSG ("Packet not supposed to be sent to this controller. Abort.");
+
+  // All handlers must free the message when everything is ok
+  ofl_msg_free ((struct ofl_msg_header*)msg, 0);
+  return 0;
 }
 
 void
@@ -440,7 +526,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // This function is called after a successfully handshake between the EPC
   // controller and any switch on the EPC network (including the P-GW user
   // plane and the OpenFlow backhaul network). For the P-GW switches, all
-  // entries will be installed by NotifyPgw*Attach and InstallPgwSwitchRules
+  // entries will be installed by NotifyPgw*Attach and PgwRulesInstall
   // methods, so we scape here.
   std::vector<uint64_t>::iterator it;
   it = std::find (m_pgwDpIds.begin (), m_pgwDpIds.end (), swtch->GetDpId ());
@@ -472,7 +558,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 1 -- Classification table -- [from higher to lower priority]
   //
-  // Entries will be installed here by TopologyInstallRouting function.
+  // Entries will be installed here by TopologyRoutingInstall function.
 
   // Table miss entry. Send to controller.
   DpctlExecute (swtch, "flow-mod cmd=add,table=1,prio=0 apply:output=ctrl");
@@ -533,89 +619,219 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   DpctlExecute (swtch, "flow-mod cmd=add,table=4,prio=0");
 }
 
-ofl_err
-EpcController::HandlePacketIn (
-  struct ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch,
-  uint32_t xid)
+bool
+EpcController::BearerInstall (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << swtch << xid);
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  char *msgStr = ofl_structs_match_to_string (msg->match, 0);
-  NS_LOG_DEBUG ("Packet in match: " << msgStr);
-  free (msgStr);
+  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
+  rInfo->SetInstalled (false);
 
-  NS_ABORT_MSG ("Packet not supposed to be sent to this controller. Abort.");
+  if (rInfo->IsAggregated ())
+    {
+      // Don't install rules for aggregated traffic. This will automatically
+      // force the traffic over the S5 default bearer.
+      return true;
+    }
 
-  // All handlers must free the message when everything is ok
-  ofl_msg_free ((struct ofl_msg_header*)msg, 0);
-  return 0;
+  // Increasing the priority every time we (re)install routing rules.
+  rInfo->IncreasePriority ();
+
+  // Install the rules.
+  bool success = true;
+  success &= PgwRulesInstall (rInfo);
+  success &= TopologyRoutingInstall (rInfo);
+
+  rInfo->SetInstalled (success);
+  return success;
 }
 
-ofl_err
-EpcController::HandleFlowRemoved (
-  struct ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch,
-  uint32_t xid)
+bool
+EpcController::BearerRemove (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << swtch << xid << msg->stats->cookie);
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  uint32_t teid = msg->stats->cookie;
-  uint16_t prio = msg->stats->priority;
+  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
-  char *msgStr = ofl_msg_to_string ((struct ofl_msg_header*)msg, 0);
-  NS_LOG_DEBUG ("Flow removed: " << msgStr);
-  free (msgStr);
+  if (rInfo->IsAggregated ())
+    {
+      // No rules to remove for aggregated traffic.
+      rInfo->SetAggregated (false);
+      return true;
+    }
 
-  // Since handlers must free the message when everything is ok,
-  // let's remove it now, as we already got the necessary information.
-  ofl_msg_free_flow_removed (msg, true, 0);
+  // Remove the rules.
+  bool success = true;
+  success &= PgwRulesRemove (rInfo);
+  success &= TopologyRoutingRemove (rInfo);
 
-  // Check for existing routing information for this bearer.
+  rInfo->SetInstalled (!success);
+  return success;
+}
+
+void
+EpcController::DoCreateSessionRequest (
+  EpcS11SapSgw::CreateSessionRequestMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.imsi);
+
+  uint16_t cellId = msg.uli.gci;
+  uint64_t imsi = msg.imsi;
+
+  Ptr<SdranController> sdranCtrl = SdranController::GetPointer (cellId);
+  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+
+  // Create the response message.
+  EpcS11SapMme::CreateSessionResponseMessage res;
+  res.teid = imsi;
+  std::list<EpcS11SapSgw::BearerContextToBeCreated>::iterator bit;
+  for (bit = msg.bearerContextsToBeCreated.begin ();
+       bit != msg.bearerContextsToBeCreated.end ();
+       ++bit)
+    {
+      // Check for available TEID.
+      NS_ABORT_IF (EpcController::m_teidCount == 0xFFFFFFFF);
+      uint32_t teid = ++EpcController::m_teidCount;
+      EpcS11SapMme::BearerContextCreated bearerContext;
+      bearerContext.sgwFteid.teid = teid;
+      bearerContext.sgwFteid.address = enbInfo->GetSgwS1uAddr ();
+      bearerContext.epsBearerId = bit->epsBearerId;
+      bearerContext.bearerLevelQos = bit->bearerLevelQos;
+      bearerContext.tft = bit->tft;
+      res.bearerContextsCreated.push_back (bearerContext);
+
+      // Add the TFT entry to the UeInfo (don't move this command from here).
+      ueInfo->AddTft (bit->tft, teid);
+    }
+
+  // Create and save routing information for default bearer.
+  // (first element on the res.bearerContextsCreated)
+  BearerContext_t defaultBearer = res.bearerContextsCreated.front ();
+  NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
+
+  uint32_t teid = defaultBearer.sgwFteid.teid;
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer teid " << teid);
+  NS_ASSERT_MSG (rInfo == 0, "Existing routing for bearer teid " << teid);
 
-  // When a flow is removed, check the following situations:
-  // 1) The application is stopped and the bearer must be inactive.
-  if (!rInfo->IsActive ())
+  // Create the routing information for this default bearer.
+  rInfo = CreateObject<RoutingInfo> (teid);
+  rInfo->SetActive (true);
+  rInfo->SetAggregated (false);
+  rInfo->SetBearerContext (defaultBearer);
+  rInfo->SetBlocked (false);
+  rInfo->SetDefault (true);
+  rInfo->SetImsi (imsi);
+  rInfo->SetInstalled (false);
+  rInfo->SetPgwS5Addr (m_pgwS5Addr);
+  rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
+  rInfo->SetPriority (0x7F);
+  rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
+  rInfo->SetTimeout (0);
+  TopologyBearerCreated (rInfo);
+
+  // For default bearer, no meter nor GBR metadata.
+  // For logic consistence, let's check for available resources.
+  bool accepted = true;
+  accepted &= PgwTftBearerRequest (rInfo);
+  accepted &= TopologyBearerRequest (rInfo);
+  NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
+  m_bearerRequestTrace (accepted, rInfo);
+
+  // Install rules for default bearer.
+  bool installed = BearerInstall (rInfo);
+  NS_ASSERT_MSG (installed, "Default bearer must be installed.");
+
+  // For other dedicated bearers, let's create and save it's routing metadata.
+  // (starting at the second element of res.bearerContextsCreated).
+  BearerContextList_t::iterator it = res.bearerContextsCreated.begin ();
+  for (it++; it != res.bearerContextsCreated.end (); it++)
     {
-      NS_LOG_INFO ("Rule removed for inactive bearer teid " << teid);
-      return 0;
+      BearerContext_t dedicatedBearer = *it;
+      teid = dedicatedBearer.sgwFteid.teid;
+
+      // Create the routing information for this dedicated bearer.
+      rInfo = CreateObject<RoutingInfo> (teid);
+      rInfo->SetActive (false);
+      rInfo->SetAggregated (false);
+      rInfo->SetBearerContext (dedicatedBearer);
+      rInfo->SetBlocked (false);
+      rInfo->SetDefault (false);
+      rInfo->SetImsi (imsi);
+      rInfo->SetInstalled (false);
+      rInfo->SetPgwS5Addr (m_pgwS5Addr);
+      rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
+      rInfo->SetPriority (0x1FFF);
+      rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
+      rInfo->SetTimeout (m_flowTimeout);
+      TopologyBearerCreated (rInfo);
+
+      // For all GBR bearers, create the GBR metadata.
+      if (rInfo->IsGbr ())
+        {
+          Ptr<GbrInfo> gbrInfo = CreateObject<GbrInfo> (rInfo);
+
+          // Set the appropriated DiffServ DSCP value for this bearer.
+          gbrInfo->SetDscp (
+            EpcController::GetDscpValue (rInfo->GetQciInfo ()));
+        }
+
+      // If necessary, create the meter metadata for maximum bit rate.
+      GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
+      if (gbrQoS.mbrDl || gbrQoS.mbrUl)
+        {
+          CreateObject<MeterInfo> (rInfo);
+        }
     }
 
-  // 2) The application is running and the bearer is active, but the
-  // application has already been stopped since last rule installation. In this
-  // case, the bearer priority should have been increased to avoid conflicts.
-  if (rInfo->GetPriority () > prio)
-    {
-      NS_LOG_INFO ("Old rule removed for bearer teid " << teid);
-      return 0;
-    }
+  // Fire trace source notifying the created session.
+  m_sessionCreatedTrace (imsi, cellId, res.bearerContextsCreated);
 
-  // 3) The application is running and the bearer is active. This is the
-  // critical situation. For some reason, the traffic absence lead to flow
-  // expiration, and we need to reinstall the rules with higher priority to
-  // avoid problems.
-  NS_ASSERT_MSG (rInfo->GetPriority () == prio, "Invalid flow priority.");
-  if (rInfo->IsActive ())
-    {
-      NS_LOG_WARN ("Rule removed for active bearer teid " << teid << ". " <<
-                   "Reinstall rules...");
-      bool installed = InstallBearer (rInfo);
-      NS_ASSERT_MSG (installed, "Rules reinstallation failed!");
-      return 0;
-    }
-  NS_ABORT_MSG ("Should not get here :/");
+  // Send the response message back to the S-GW.
+  sdranCtrl->GetS5SapSgw ()->CreateSessionResponse (res);
 }
 
-ofl_err
-EpcController::HandleError (
-  struct ofl_msg_error *msg, Ptr<const RemoteSwitch> swtch,
-  uint32_t xid)
+void
+EpcController::DoDeleteBearerCommand (
+  EpcS11SapSgw::DeleteBearerCommandMessage msg)
 {
-  NS_LOG_FUNCTION (this << swtch << xid);
+  NS_LOG_FUNCTION (this << msg.teid);
 
-  // Chain up for logging and abort.
-  OFSwitch13Controller::HandleError (msg, swtch, xid);
-  NS_ABORT_MSG ("Should not get here :/");
+  NS_FATAL_ERROR ("Unimplemented method.");
+}
+
+void
+EpcController::DoDeleteBearerResponse (
+  EpcS11SapSgw::DeleteBearerResponseMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.teid);
+
+  NS_FATAL_ERROR ("Unimplemented method.");
+}
+
+void
+EpcController::DoModifyBearerRequest (
+  EpcS11SapSgw::ModifyBearerRequestMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.teid);
+
+  NS_FATAL_ERROR ("Unimplemented method.");
+}
+
+uint64_t
+EpcController::GetPgwMainDpId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwDpIds.at (0);
+}
+
+uint64_t
+EpcController::GetPgwTftDpId (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  return m_pgwDpIds.at (idx);
 }
 
 uint16_t
@@ -632,103 +848,8 @@ EpcController::GetPgwTftIdx (
   return 1 + (ueInfo->GetUeAddr ().Get () % activeTfts);
 }
 
-uint64_t
-EpcController::GetPgwTftDpId (uint16_t idx) const
-{
-  NS_LOG_FUNCTION (this << idx);
-
-  return m_pgwDpIds.at (idx);
-}
-
-uint64_t
-EpcController::GetPgwMainDpId (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_pgwDpIds.at (0);
-}
-
 bool
-EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo->GetTeid ());
-
-  // For default bearers and for bearers with aggregated traffic:
-  // let's accept it without guarantees.
-  if (rInfo->IsDefault () || rInfo->IsAggregated ())
-    {
-      return true;
-    }
-
-  // Get the P-GW TFT stats calculator for this bearer.
-  Ptr<OFSwitch13Device> device;
-  Ptr<OFSwitch13StatsCalculator> stats;
-  uint16_t tftIdx = rInfo->GetPgwTftIdx ();
-  device = OFSwitch13Device::GetDevice (GetPgwTftDpId (tftIdx));
-  stats = device->GetObject<OFSwitch13StatsCalculator> ();
-  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
-
-  // Non-aggregated bearers always install rules on P-GW TFT flow table.
-  // Block the bearer if the table size is exceeding the threshold value.
-  double tableUseRatio = stats->GetEwmaFlowEntries () / m_tftTableSize;
-  if (tableUseRatio >= m_tftFactor)
-    {
-      rInfo->SetBlocked (true);
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
-                   " because the flow tables is full.");
-    }
-
-  // Non-aggregated GBR bearers require dedicated P-GW TFT pipeline capacity.
-  // Block the bearer if the pipeline load is exceeding the threshold value.
-  if (rInfo->IsGbr ())
-    {
-      double load = stats->GetEwmaPipelineLoad ().GetBitRate ();
-      load += rInfo->GetObject<GbrInfo> ()->GetDownBitRate ();
-      double loadRatio = load / m_tftPlCapacity.GetBitRate ();
-      if (loadRatio >= m_tftFactor)
-        {
-          rInfo->SetBlocked (true);
-          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
-                       " because the load will exceed pipeline capacity.");
-        }
-    }
-  return !rInfo->IsBlocked ();
-}
-
-bool
-EpcController::S5AggBearerRequest (Ptr<const RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo->GetTeid ());
-
-  NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't aggregate the default bearer.");
-  switch (GetS5TrafficAggregation ())
-    {
-    case FeatureStatus::AUTO:
-      {
-        // TODO: Check for the current bandwidth usage and deny the aggregation
-        // when exceeding threshold.
-        if (false) // FIXME
-          {
-            return false;
-          }
-        // No break here.
-      }
-    case FeatureStatus::ON:
-      {
-        NS_LOG_INFO ("Aggregating the traffic of bearer teid " <<
-                     rInfo->GetTeid ());
-        return true;
-      }
-    case FeatureStatus::OFF:
-    default:
-      {
-        return false;
-      }
-    }
-}
-
-bool
-EpcController::InstallPgwSwitchRules (
+EpcController::PgwRulesInstall (
   Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool forceMeterInstall)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeid () << pgwTftIdx << forceMeterInstall);
@@ -833,7 +954,7 @@ EpcController::InstallPgwSwitchRules (
 }
 
 bool
-EpcController::RemovePgwSwitchRules (
+EpcController::PgwRulesRemove (
   Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool keepMeterFlag)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeid () << pgwTftIdx << keepMeterFlag);
@@ -872,57 +993,54 @@ EpcController::RemovePgwSwitchRules (
 }
 
 bool
-EpcController::InstallBearer (Ptr<RoutingInfo> rInfo)
+EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+  NS_LOG_FUNCTION (this << rInfo->GetTeid ());
 
-  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
-  rInfo->SetInstalled (false);
-
-  if (rInfo->IsAggregated ())
+  // For default bearers and for bearers with aggregated traffic:
+  // let's accept it without guarantees.
+  if (rInfo->IsDefault () || rInfo->IsAggregated ())
     {
-      // Don't install rules for aggregated traffic. This will automatically
-      // force the traffic over the S5 default bearer.
       return true;
     }
 
-  // Increasing the priority every time we (re)install routing rules.
-  rInfo->IncreasePriority ();
+  // Get the P-GW TFT stats calculator for this bearer.
+  Ptr<OFSwitch13Device> device;
+  Ptr<OFSwitch13StatsCalculator> stats;
+  uint16_t tftIdx = rInfo->GetPgwTftIdx ();
+  device = OFSwitch13Device::GetDevice (GetPgwTftDpId (tftIdx));
+  stats = device->GetObject<OFSwitch13StatsCalculator> ();
+  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
 
-  // Install the rules.
-  bool success = true;
-  success &= InstallPgwSwitchRules (rInfo);
-  success &= TopologyInstallRouting (rInfo);
-
-  rInfo->SetInstalled (success);
-  return success;
-}
-
-bool
-EpcController::RemoveBearer (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
-
-  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
-
-  if (rInfo->IsAggregated ())
+  // Non-aggregated bearers always install rules on P-GW TFT flow table.
+  // Block the bearer if the table size is exceeding the threshold value.
+  double tableUseRatio = stats->GetEwmaFlowEntries () / m_tftTableSize;
+  if (tableUseRatio >= m_tftFactor)
     {
-      // No rules to remove for aggregated traffic.
-      rInfo->SetAggregated (false);
-      return true;
+      rInfo->SetBlocked (true);
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
+                   " because the flow tables is full.");
     }
 
-  // Remove the rules.
-  bool success = true;
-  success &= RemovePgwSwitchRules (rInfo);
-  success &= TopologyRemoveRouting (rInfo);
-
-  rInfo->SetInstalled (!success);
-  return success;
+  // Non-aggregated GBR bearers require dedicated P-GW TFT pipeline capacity.
+  // Block the bearer if the pipeline load is exceeding the threshold value.
+  if (rInfo->IsGbr ())
+    {
+      double load = stats->GetEwmaPipelineLoad ().GetBitRate ();
+      load += rInfo->GetObject<GbrInfo> ()->GetDownBitRate ();
+      double loadRatio = load / m_tftPlCapacity.GetBitRate ();
+      if (loadRatio >= m_tftFactor)
+        {
+          rInfo->SetBlocked (true);
+          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
+                       " because the load will exceed pipeline capacity.");
+        }
+    }
+  return !rInfo->IsBlocked ();
 }
 
 void
-EpcController::CheckPgwTftLoad (void)
+EpcController::PgwTftCheckLoad (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -987,8 +1105,8 @@ EpcController::CheckPgwTftLoad (void)
               if (destIdx != currIdx)
                 {
                   NS_LOG_INFO ("Moving bearer teid " << (*it)->GetTeid ());
-                  RemovePgwSwitchRules  (*it, currIdx, true);
-                  InstallPgwSwitchRules (*it, destIdx, true);
+                  PgwRulesRemove  (*it, currIdx, true);
+                  PgwRulesInstall (*it, destIdx, true);
                   (*it)->SetPgwTftIdx (destIdx);
                   moved++;
                 }
@@ -1022,156 +1140,7 @@ EpcController::CheckPgwTftLoad (void)
 
   // Finally, update the level and schedule the next P-GW load check.
   m_tftLbLevel = nextLbLevel;
-  Simulator::Schedule (m_timeout, &EpcController::CheckPgwTftLoad, this);
-}
-
-void
-EpcController::DoCreateSessionRequest (
-  EpcS11SapSgw::CreateSessionRequestMessage msg)
-{
-  NS_LOG_FUNCTION (this << msg.imsi);
-
-  uint16_t cellId = msg.uli.gci;
-  uint64_t imsi = msg.imsi;
-
-  Ptr<SdranController> sdranCtrl = SdranController::GetPointer (cellId);
-  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-
-  // Create the response message.
-  EpcS11SapMme::CreateSessionResponseMessage res;
-  res.teid = imsi;
-  std::list<EpcS11SapSgw::BearerContextToBeCreated>::iterator bit;
-  for (bit = msg.bearerContextsToBeCreated.begin ();
-       bit != msg.bearerContextsToBeCreated.end ();
-       ++bit)
-    {
-      // Check for available TEID.
-      NS_ABORT_IF (EpcController::m_teidCount == 0xFFFFFFFF);
-      uint32_t teid = ++EpcController::m_teidCount;
-      EpcS11SapMme::BearerContextCreated bearerContext;
-      bearerContext.sgwFteid.teid = teid;
-      bearerContext.sgwFteid.address = enbInfo->GetSgwS1uAddr ();
-      bearerContext.epsBearerId = bit->epsBearerId;
-      bearerContext.bearerLevelQos = bit->bearerLevelQos;
-      bearerContext.tft = bit->tft;
-      res.bearerContextsCreated.push_back (bearerContext);
-
-      // Add the TFT entry to the UeInfo (don't move this command from here).
-      ueInfo->AddTft (bit->tft, teid);
-    }
-
-  // Create and save routing information for default bearer.
-  // (first element on the res.bearerContextsCreated)
-  BearerContext_t defaultBearer = res.bearerContextsCreated.front ();
-  NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
-
-  uint32_t teid = defaultBearer.sgwFteid.teid;
-  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (rInfo == 0, "Existing routing for bearer teid " << teid);
-
-  // Create the routing information for this default bearer.
-  rInfo = CreateObject<RoutingInfo> (teid);
-  rInfo->SetActive (true);
-  rInfo->SetAggregated (false);
-  rInfo->SetBearerContext (defaultBearer);
-  rInfo->SetBlocked (false);
-  rInfo->SetDefault (true);
-  rInfo->SetImsi (imsi);
-  rInfo->SetInstalled (false);
-  rInfo->SetPgwS5Addr (m_pgwS5Addr);
-  rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
-  rInfo->SetPriority (0x7F);
-  rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
-  rInfo->SetTimeout (0);
-  TopologyBearerCreated (rInfo);
-
-  // For default bearer, no meter nor GBR metadata.
-  // For logic consistence, let's check for available resources.
-  bool accepted = true;
-  accepted &= PgwTftBearerRequest (rInfo);
-  accepted &= TopologyBearerRequest (rInfo);
-  NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
-  m_bearerRequestTrace (accepted, rInfo);
-
-  // Install rules for default bearer.
-  bool installed = InstallBearer (rInfo);
-  NS_ASSERT_MSG (installed, "Default bearer must be installed.");
-
-  // For other dedicated bearers, let's create and save it's routing metadata.
-  // (starting at the second element of res.bearerContextsCreated).
-  BearerContextList_t::iterator it = res.bearerContextsCreated.begin ();
-  for (it++; it != res.bearerContextsCreated.end (); it++)
-    {
-      BearerContext_t dedicatedBearer = *it;
-      teid = dedicatedBearer.sgwFteid.teid;
-
-      // Create the routing information for this dedicated bearer.
-      rInfo = CreateObject<RoutingInfo> (teid);
-      rInfo->SetActive (false);
-      rInfo->SetAggregated (false);
-      rInfo->SetBearerContext (dedicatedBearer);
-      rInfo->SetBlocked (false);
-      rInfo->SetDefault (false);
-      rInfo->SetImsi (imsi);
-      rInfo->SetInstalled (false);
-      rInfo->SetPgwS5Addr (m_pgwS5Addr);
-      rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
-      rInfo->SetPriority (0x1FFF);
-      rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
-      rInfo->SetTimeout (m_flowTimeout);
-      TopologyBearerCreated (rInfo);
-
-      // For all GBR bearers, create the GBR metadata.
-      if (rInfo->IsGbr ())
-        {
-          Ptr<GbrInfo> gbrInfo = CreateObject<GbrInfo> (rInfo);
-
-          // Set the appropriated DiffServ DSCP value for this bearer.
-          gbrInfo->SetDscp (
-            EpcController::GetDscpValue (rInfo->GetQciInfo ()));
-        }
-
-      // If necessary, create the meter metadata for maximum bit rate.
-      GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
-      if (gbrQoS.mbrDl || gbrQoS.mbrUl)
-        {
-          CreateObject<MeterInfo> (rInfo);
-        }
-    }
-
-  // Fire trace source notifying the created session.
-  m_sessionCreatedTrace (imsi, cellId, res.bearerContextsCreated);
-
-  // Send the response message back to the S-GW.
-  sdranCtrl->GetS5SapSgw ()->CreateSessionResponse (res);
-}
-
-void
-EpcController::DoModifyBearerRequest (
-  EpcS11SapSgw::ModifyBearerRequestMessage msg)
-{
-  NS_LOG_FUNCTION (this << msg.teid);
-
-  NS_FATAL_ERROR ("Unimplemented method.");
-}
-
-void
-EpcController::DoDeleteBearerCommand (
-  EpcS11SapSgw::DeleteBearerCommandMessage msg)
-{
-  NS_LOG_FUNCTION (this << msg.teid);
-
-  NS_FATAL_ERROR ("Unimplemented method.");
-}
-
-void
-EpcController::DoDeleteBearerResponse (
-  EpcS11SapSgw::DeleteBearerResponseMessage msg)
-{
-  NS_LOG_FUNCTION (this << msg.teid);
-
-  NS_FATAL_ERROR ("Unimplemented method.");
+  Simulator::Schedule (m_timeout, &EpcController::PgwTftCheckLoad, this);
 }
 
 void

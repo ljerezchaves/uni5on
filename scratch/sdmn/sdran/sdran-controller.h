@@ -57,6 +57,22 @@ public:
   static TypeId GetTypeId (void);
 
   /**
+   * Release a dedicated EPS bearer.
+   * \internal Current implementation assumes that each application traffic
+   *           flow is associated with a unique bearer/tunnel. Because of that,
+   *           we can use only the teid for the tunnel to prepare and install
+   *           route. If we would like to aggregate traffic from several
+   *           applications into same bearer we will need to revise this.
+   * \param teid The teid for this bearer, if already defined.
+   * \param imsi uint64_t IMSI UE identifier.
+   * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
+   * \param bearer EpsBearer bearer QoS characteristics of the bearer.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool DedicatedBearerRelease (
+    EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
+
+  /**
    * Request a new dedicated EPS bearer. This is used to check for necessary
    * resources in the network (mainly available data rate for GBR bearers).
    * When returning false, it aborts the bearer creation process.
@@ -72,32 +88,8 @@ public:
    * \returns True if succeeded (the bearer creation process will proceed),
    *          false otherwise (the bearer creation process will abort).
    */
-  virtual bool RequestDedicatedBearer (
+  virtual bool DedicatedBearerRequest (
     EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
-
-  /**
-   * Release a dedicated EPS bearer.
-   * \internal Current implementation assumes that each application traffic
-   *           flow is associated with a unique bearer/tunnel. Because of that,
-   *           we can use only the teid for the tunnel to prepare and install
-   *           route. If we would like to aggregate traffic from several
-   *           applications into same bearer we will need to revise this.
-   * \param teid The teid for this bearer, if already defined.
-   * \param imsi uint64_t IMSI UE identifier.
-   * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
-   * \param bearer EpsBearer bearer QoS characteristics of the bearer.
-   * \return True if succeeded, false otherwise.
-   */
-  virtual bool ReleaseDedicatedBearer (
-    EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
-
-  /**
-   * Notify this controller of the S-GW connected to the OpenFlow backhaul
-   * network over over the S5 interface.
-   * \param sgwS5PortNo The S5 port number on the S-GW OpenFlow switch.
-   * \param sgwS5Dev The S5 device attached to the S-GW OpenFlow switch.
-   */
-  virtual void NotifySgwAttach (uint32_t sgwS5PortNo, Ptr<NetDevice> sgwS5Dev);
 
   /**
    * Notify this controller of a new or eNB connected to S-GW node over the
@@ -107,11 +99,19 @@ public:
    */
   virtual void NotifyEnbAttach (uint16_t cellId, uint32_t sgwS1uPortNo);
 
+  /**
+   * Notify this controller of the S-GW connected to the OpenFlow backhaul
+   * network over over the S5 interface.
+   * \param sgwS5PortNo The S5 port number on the S-GW OpenFlow switch.
+   * \param sgwS5Dev The S5 device attached to the S-GW OpenFlow switch.
+   */
+  virtual void NotifySgwAttach (uint32_t sgwS5PortNo, Ptr<NetDevice> sgwS5Dev);
+
   /** \name Private member accessors. */
   //\{
-  Ipv4Address GetSgwS5Addr (void) const;
   EpcS1apSapMme* GetS1apSapMme (void) const;
   EpcS5SapSgw* GetS5SapSgw (void) const;
+  Ipv4Address GetSgwS5Addr (void) const;
 
   void SetEpcCtlrApp (Ptr<EpcController> value);
   void SetSgwDpId (uint64_t value);
@@ -129,16 +129,31 @@ protected:
   virtual void DoDispose ();
 
   // Inherited from OFSwitch13Controller.
-  virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
-  virtual ofl_err HandlePacketIn (
-    struct ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch,
-    uint32_t xid);
   virtual ofl_err HandleFlowRemoved (
     struct ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch,
     uint32_t xid);
+  virtual ofl_err HandlePacketIn (
+    struct ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch,
+    uint32_t xid);
+  virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
   // Inherited from OFSwitch13Controller.
 
 private:
+  /** \name Methods for the S11 SAP S-GW control plane. */
+  //\{
+  void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
+  void DoDeleteBearerCommand  (EpcS11SapSgw::DeleteBearerCommandMessage  msg);
+  void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage msg);
+  void DoModifyBearerRequest  (EpcS11SapSgw::ModifyBearerRequestMessage  msg);
+  //\}
+
+  /** \name Methods for the S5 SAP S-GW control plane. */
+  //\{
+  void DoCreateSessionResponse (EpcS11SapMme::CreateSessionResponseMessage msg);
+  void DoDeleteBearerRequest  (EpcS11SapMme::DeleteBearerRequestMessage   msg);
+  void DoModifyBearerResponse (EpcS11SapMme::ModifyBearerResponseMessage  msg);
+  //\}
+
   /**
    * Configure the S-GW with OpenFlow rules for packet forwarding.
    * \attention To avoid conflicts with old entries, increase the routing
@@ -146,29 +161,14 @@ private:
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
-  bool InstallSgwSwitchRules (Ptr<RoutingInfo> rInfo);
+  bool SgwRulesInstall (Ptr<RoutingInfo> rInfo);
 
   /**
    * Remove OpenFlow rules for packet forwarding from S-GW.
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
-  bool RemoveSgwSwitchRules (Ptr<RoutingInfo> rInfo);
-
-  /** \name Methods for the S11 SAP S-GW control plane. */
-  //\{
-  void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
-  void DoModifyBearerRequest  (EpcS11SapSgw::ModifyBearerRequestMessage  msg);
-  void DoDeleteBearerCommand  (EpcS11SapSgw::DeleteBearerCommandMessage  msg);
-  void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage msg);
-  //\}
-
-  /** \name Methods for the S5 SAP S-GW control plane. */
-  //\{
-  void DoCreateSessionResponse (EpcS11SapMme::CreateSessionResponseMessage msg);
-  void DoModifyBearerResponse (EpcS11SapMme::ModifyBearerResponseMessage  msg);
-  void DoDeleteBearerRequest  (EpcS11SapMme::DeleteBearerRequestMessage   msg);
-  //\}
+  bool SgwRulesRemove (Ptr<RoutingInfo> rInfo);
 
   /**
    * Register the SDRAN controller into global map for further usage.

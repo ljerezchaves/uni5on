@@ -169,7 +169,7 @@ TrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
   bool authorized = true;
   if (app->GetTeid () != m_defaultTeid)
     {
-      authorized = m_ctrlApp->RequestDedicatedBearer (
+      authorized = m_ctrlApp->DedicatedBearerRequest (
           app->GetEpsBearer (), m_imsi, m_cellId, app->GetTeid ());
     }
 
@@ -198,7 +198,7 @@ TrafficManager::NotifyAppStop (Ptr<SdmnClientApp> app)
     {
       // Schedule the resource release procedure for +1 second.
       Simulator::Schedule (
-        Seconds (1), &SdranController::ReleaseDedicatedBearer,
+        Seconds (1), &SdranController::DedicatedBearerRelease,
         m_ctrlApp, app->GetEpsBearer (), m_imsi, m_cellId, appTeid);
     }
 

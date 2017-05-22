@@ -56,14 +56,15 @@ protected:
   // Inherited from EpcController.
   void NotifyS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo,
                        Ptr<NetDevice> gwDev);
-  void NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo);
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
+  void NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo);
 
-  bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo);
-  bool TopologyRemoveRouting  (Ptr<RoutingInfo> rInfo);
-  void TopologyBearerCreated  (Ptr<RoutingInfo> rInfo);
-  bool TopologyBearerRequest  (Ptr<RoutingInfo> rInfo);
-  bool TopologyBearerRelease  (Ptr<RoutingInfo> rInfo);
+  void TopologyBearerAggregate (Ptr<RoutingInfo> rInfo);
+  void TopologyBearerCreated   (Ptr<RoutingInfo> rInfo);
+  bool TopologyBearerRelease   (Ptr<RoutingInfo> rInfo);
+  bool TopologyBearerRequest   (Ptr<RoutingInfo> rInfo);
+  bool TopologyRoutingInstall  (Ptr<RoutingInfo> rInfo);
+  bool TopologyRoutingRemove   (Ptr<RoutingInfo> rInfo);
   // Inherited from EpcController.
 
 private:
@@ -76,12 +77,14 @@ private:
   void CreateSpanningTree (void);
 
   /**
-   * Notify this controller when the Non-GBR allowed bit rate in any network
-   * connection is adjusted. This is used to update Non-GBR meters bands based
-   * on GBR resource reservation.
-   * \param cInfo The connection information
+   * Look for the routing path from source to destination switch index with
+   * lowest number of hops.
+   * \param srcIdx Source switch index.
+   * \param dstIdx Destination switch index.
+   * \return The routing path.
    */
-  void NonGbrAdjusted (Ptr<ConnectionInfo> cInfo);
+  RingRoutingInfo::RoutingPath FindShortestPath (uint16_t srcIdx,
+                                                 uint16_t dstIdx) const;
 
   /**
    * Search for connection information between two switches by their indexes.
@@ -90,26 +93,6 @@ private:
    * \return Pointer to connection info saved.
    */
   Ptr<ConnectionInfo> GetConnectionInfo (uint16_t idx1, uint16_t idx2) const;
-
-  /**
-   * Retrieve the switch index for IP address.
-   * \param ipAddr The IPv4 address.
-   * \return The switch index in devices collection.
-   */
-  uint16_t GetSwitchIndex (Ipv4Address ipAddr) const;
-
-  /**
-   * Retrieve the switch index for switch device.
-   * \param dev The OpenFlow switch device.
-   * \return The switch index in devices collection.
-   */
-  uint16_t GetSwitchIndex (Ptr<OFSwitch13Device> dev) const;
-
-  /**
-   * Get the number of switches in the network.
-   * \return The number of switches in the network.
-   */
-  uint16_t GetNSwitches (void) const;
 
   /**
    * Get the OpenFlow datapath ID for a specific switch index.
@@ -130,6 +113,26 @@ private:
                           RingRoutingInfo::RoutingPath path) const;
 
   /**
+   * Get the number of switches in the network.
+   * \return The number of switches in the network.
+   */
+  uint16_t GetNSwitches (void) const;
+
+  /**
+   * Retrieve the switch index for IP address.
+   * \param ipAddr The IPv4 address.
+   * \return The switch index in devices collection.
+   */
+  uint16_t GetSwitchIndex (Ipv4Address ipAddr) const;
+
+  /**
+   * Retrieve the switch index for switch device.
+   * \param dev The OpenFlow switch device.
+   * \return The switch index in devices collection.
+   */
+  uint16_t GetSwitchIndex (Ptr<OFSwitch13Device> dev) const;
+
+  /**
    * Check for the available GBR bit rate for this ring routing information.
    * \param ringInfo The ring routing information.
    * \param gbrInfo The GBR information.
@@ -137,45 +140,6 @@ private:
    */
   bool HasGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
                       Ptr<const GbrInfo> gbrInfo) const;
-
-  /**
-   * Reserve the bit rate for this GBR bearer in the ring network.
-   * \attention To avoid fatal errors, be sure that there is available GBR
-   *            bit rate over the routing path before reserving it.
-   * \param ringInfo The ring routing information.
-   * \param gbrInfo The GBR information.
-   * \return True if succeeded, false otherwise.
-   */
-  bool ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                          Ptr<GbrInfo> gbrInfo);
-
-  /**
-   * Release the bit rate for this GBR bearer in the ring network.
-   * \param ringInfo The ring routing information.
-   * \param gbrInfo The GBR information.
-   * \return True if succeeded, false otherwise.
-   */
-  bool ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                          Ptr<GbrInfo> gbrInfo);
-
-  /**
-   * Get the next switch index following the given routing path.
-   * \param idx Current switch index.
-   * \param path The routing path direction.
-   * \return The next switch index.
-   */
-  uint16_t NextSwitchIndex (uint16_t idx,
-                            RingRoutingInfo::RoutingPath path) const;
-
-  /**
-   * Look for the routing path from source to destination switch index with
-   * lowest number of hops.
-   * \param srcIdx Source switch index.
-   * \param dstIdx Destination switch index.
-   * \return The routing path.
-   */
-  RingRoutingInfo::RoutingPath
-  FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const;
 
   /**
    * Count the number of hops between source and destination switch index
@@ -187,6 +151,43 @@ private:
    */
   uint16_t HopCounter (uint16_t srcIdx, uint16_t dstIdx,
                        RingRoutingInfo::RoutingPath path) const;
+
+  /**
+   * Get the next switch index following the given routing path.
+   * \param idx Current switch index.
+   * \param path The routing path direction.
+   * \return The next switch index.
+   */
+  uint16_t NextSwitchIndex (uint16_t idx,
+                            RingRoutingInfo::RoutingPath path) const;
+
+  /**
+   * Notify this controller when the Non-GBR allowed bit rate in any network
+   * connection is adjusted. This is used to update Non-GBR meters bands based
+   * on GBR resource reservation.
+   * \param cInfo The connection information
+   */
+  void NonGbrAdjusted (Ptr<ConnectionInfo> cInfo);
+
+  /**
+   * Release the bit rate for this GBR bearer in the ring network.
+   * \param ringInfo The ring routing information.
+   * \param gbrInfo The GBR information.
+   * \return True if succeeded, false otherwise.
+   */
+  bool ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
+                          Ptr<GbrInfo> gbrInfo);
+
+  /**
+   * Reserve the bit rate for this GBR bearer in the ring network.
+   * \attention To avoid fatal errors, be sure that there is available GBR
+   *            bit rate over the routing path before reserving it.
+   * \param ringInfo The ring routing information.
+   * \param gbrInfo The GBR information.
+   * \return True if succeeded, false otherwise.
+   */
+  bool ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
+                          Ptr<GbrInfo> gbrInfo);
 
   /** Map saving IPv4 address / switch index. */
   typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;

@@ -83,6 +83,19 @@ public:
   static TypeId GetTypeId (void);
 
   /**
+   * Release a dedicated EPS bearer.
+   * \internal Current implementation assumes that each application traffic
+   *           flow is associated with a unique bearer/tunnel. Because of that,
+   *           we can use only the teid for the tunnel to prepare and install
+   *           route. If we would like to aggregate traffic from several
+   *           applications into same bearer we will need to revise this.
+   * \param bearer EpsBearer bearer QoS characteristics of the bearer.
+   * \param teid The teid for this bearer, if already defined.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool DedicatedBearerRelease (EpsBearer bearer, uint32_t teid);
+
+  /**
    * Request a new dedicated EPS bearer. This is used to check for necessary
    * resources in the network (mainly available data rate for GBR bearers).
    * When returning false, it aborts the bearer creation process.
@@ -96,20 +109,14 @@ public:
    * \returns True if succeeded (the bearer creation process will proceed),
    *          false otherwise (the bearer creation process will abort).
    */
-  virtual bool RequestDedicatedBearer (EpsBearer bearer, uint32_t teid);
+  virtual bool DedicatedBearerRequest (EpsBearer bearer, uint32_t teid);
 
   /**
-   * Release a dedicated EPS bearer.
-   * \internal Current implementation assumes that each application traffic
-   *           flow is associated with a unique bearer/tunnel. Because of that,
-   *           we can use only the teid for the tunnel to prepare and install
-   *           route. If we would like to aggregate traffic from several
-   *           applications into same bearer we will need to revise this.
-   * \param bearer EpsBearer bearer QoS characteristics of the bearer.
-   * \param teid The teid for this bearer, if already defined.
-   * \return True if succeeded, false otherwise.
+   * Notify this controller that all P-GW switches have already been
+   * configured and the connections between them are finished.
+   * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
    */
-  virtual bool ReleaseDedicatedBearer (EpsBearer bearer, uint32_t teid);
+  virtual void NotifyPgwBuilt (OFSwitch13DeviceContainer devices);
 
   /**
    * Notify this controller of the P-GW main switch connected to the OpenFlow
@@ -149,13 +156,6 @@ public:
     Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev);
 
   /**
-   * Notify this controller of a new connection between two switches in the
-   * OpenFlow backhaul network.
-   * \param cInfo The connection information.
-   */
-  virtual void NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo);
-
-  /**
    * Notify this controller that all backhaul switches have already been
    * configured and the connections between them are finished.
    * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
@@ -163,17 +163,11 @@ public:
   virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
 
   /**
-   * Notify this controller that all P-GW switches have already been
-   * configured and the connections between them are finished.
-   * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
+   * Notify this controller of a new connection between two switches in the
+   * OpenFlow backhaul network.
+   * \param cInfo The connection information.
    */
-  virtual void NotifyPgwBuilt (OFSwitch13DeviceContainer devices);
-
-  /**
-   * Get The P-GW side of the S5 SAP.
-   * \return The P-GW side of the S5 SAP.
-   */
-  EpcS5SapPgw* GetS5SapPgw (void) const;
+  virtual void NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo);
 
   /**
    * \name Internal mechanisms status accessors.
@@ -187,6 +181,12 @@ public:
   //\}
 
   /**
+   * Get The P-GW side of the S5 SAP.
+   * \return The P-GW side of the S5 SAP.
+   */
+  EpcS5SapPgw* GetS5SapPgw (void) const;
+
+  /**
    * Retrieve stored mapped value for a specific EPS QCI.
    * \param qci The EPS bearer QCI.
    * \return The IP DSCP mapped value for this QCI.
@@ -198,7 +198,15 @@ public:
    * \param ok True when the bearer request/release processes succeeds.
    * \param rInfo The routing information for this bearer tunnel.
    */
-  typedef void (*BearerTracedCallback)(bool ok, Ptr<const RoutingInfo> rInfo);
+  typedef void (*BearerTracedCallback)(
+    bool ok, Ptr<const RoutingInfo> rInfo);
+
+  /**
+   * TracedCallback signature for the load balancing trace source.
+   * \param stats The load balancing statistics from the last interval.
+   */
+  typedef void (*LoadBalancingTracedCallback)(
+    struct LoadBalancingStats stats);
 
   /**
    * TracedCallback signature for session created trace source.
@@ -208,12 +216,6 @@ public:
    */
   typedef void (*SessionCreatedTracedCallback)(
     uint64_t imsi, uint16_t cellId, BearerContextList_t bearerList);
-
-  /**
-   * TracedCallback signature for the load balancing trace source.
-   * \param stats The load balancing statistics from the last interval.
-   */
-  typedef void (*LoadBalancingTracedCallback)(struct LoadBalancingStats stats);
 
 protected:
   /** Destructor implementation. */
@@ -229,26 +231,24 @@ protected:
    */
   //\{
   /**
-   * Install TEID routing OpenFlow match rules into backhaul switches.
-   * \attention To avoid conflicts with old entries, increase the routing
-   *            priority before installing OpenFlow rules.
+   * Check if this bearer can have its traffic aggregated over S5 interface,
+   * setting the internal rInfo flag accordingly.
    * \param rInfo The routing information to process.
-   * \return True if succeeded, false otherwise.
    */
-  virtual bool TopologyInstallRouting (Ptr<RoutingInfo> rInfo) = 0;
-
-  /**
-   * Remove TEID routing OpenFlow match rules from backhaul switches.
-   * \param rInfo The routing information to process.
-   * \return True if succeeded, false otherwise.
-   */
-  virtual bool TopologyRemoveRouting (Ptr<RoutingInfo> rInfo) = 0;
+  virtual void TopologyBearerAggregate (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
    * Notify the topology controller of a new bearer context created.
    * \param rInfo The routing information.
    */
   virtual void TopologyBearerCreated (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Release the backhaul bandwidth previously reserved for this bearer.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool TopologyBearerRelease (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
    * Process the bearer request and reserve backhaul bandwidth.
@@ -258,27 +258,72 @@ protected:
   virtual bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
-   * Release the backhaul bandwidth previously reserved for this bearer.
+   * Install TEID routing OpenFlow match rules into backhaul switches.
+   * \attention To avoid conflicts with old entries, increase the routing
+   *            priority before installing OpenFlow rules.
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
-  virtual bool TopologyBearerRelease (Ptr<RoutingInfo> rInfo) = 0;
+  virtual bool TopologyRoutingInstall (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Remove TEID routing OpenFlow match rules from backhaul switches.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool TopologyRoutingRemove (Ptr<RoutingInfo> rInfo) = 0;
   //\}
 
   // Inherited from OFSwitch13Controller.
-  virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
-  virtual ofl_err HandlePacketIn (
-    struct ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch,
+  virtual ofl_err HandleError (
+    struct ofl_msg_error *msg, Ptr<const RemoteSwitch> swtch,
     uint32_t xid);
   virtual ofl_err HandleFlowRemoved (
     struct ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch,
     uint32_t xid);
-  virtual ofl_err HandleError (
-    struct ofl_msg_error *msg, Ptr<const RemoteSwitch> swtch,
+  virtual ofl_err HandlePacketIn (
+    struct ofl_msg_packet_in *msg, Ptr<const RemoteSwitch> swtch,
     uint32_t xid);
+  virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
   // Inherited from OFSwitch13Controller.
 
 private:
+  /**
+   * Install OpenFlow match rules for this bearer.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool BearerInstall (Ptr<RoutingInfo> rInfo);
+
+  /**
+   * Remove OpenFlow match rules for this bearer.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool BearerRemove (Ptr<RoutingInfo> rInfo);
+
+
+  /** \name Methods for the S5 SAP P-GW control plane. */
+  //\{
+  void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
+  void DoDeleteBearerCommand  (EpcS11SapSgw::DeleteBearerCommandMessage  msg);
+  void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage msg);
+  void DoModifyBearerRequest  (EpcS11SapSgw::ModifyBearerRequestMessage  msg);
+  //\}
+
+  /**
+   * Get the P-GW main datapath ID.
+   * \return The P-GW main datapath ID.
+   */
+  uint64_t GetPgwMainDpId (void) const;
+
+  /**
+   * Get the P-GW TFT datapath ID for a given index.
+   * \param idx The P-GW TFT index.
+   * \return The P-GW TFT datapath ID.
+   */
+  uint64_t GetPgwTftDpId (uint16_t idx) const;
+
   /**
    * Get the active P-GW TFT index for a given traffic flow.
    * \param rInfo The routing information to process.
@@ -289,34 +334,6 @@ private:
    */
   uint16_t GetPgwTftIdx (
     Ptr<const RoutingInfo> rInfo, uint16_t activeTfts = 0) const;
-
-  /**
-   * Get the P-GW TFT datapath ID for a given index.
-   * \param idx The P-GW TFT index.
-   * \return The P-GW TFT datapath ID.
-   */
-  uint64_t GetPgwTftDpId (uint16_t idx) const;
-
-  /**
-   * Get the P-GW main datapath ID.
-   * \return The P-GW main datapath ID.
-   */
-  uint64_t GetPgwMainDpId (void) const;
-
-  /**
-   * Check for available resources on P-GW TFT switch for this bearer request.
-   * \param rInfo The routing information to process.
-   * \return True if succeeded, false otherwise.
-   */
-  bool PgwTftBearerRequest (Ptr<RoutingInfo> rInfo);
-
-  /**
-   * Check whether or not this bearer will have its traffic aggregated over
-   * the S5 interface.
-   * \param rInfo The routing information to process.
-   * \return True if the traffic will be aggregated, false otherwise.
-   */
-  bool S5AggBearerRequest (Ptr<const RoutingInfo> rInfo);
 
   /**
    * Install OpenFlow rules for downlink packet filtering on the P-GW TFT
@@ -330,7 +347,7 @@ private:
    *        meterInfo->IsDownInstalled () is true.
    * \return True if succeeded, false otherwise.
    */
-  bool InstallPgwSwitchRules (
+  bool PgwRulesInstall (
     Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx = 0,
     bool forceMeterInstall = false);
 
@@ -343,37 +360,22 @@ private:
    *        false when removing the meter entry.
    * \return True if succeeded, false otherwise.
    */
-  bool RemovePgwSwitchRules (
+  bool PgwRulesRemove (
     Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx = 0,
     bool keepMeterFlag = false);
 
   /**
-   * Install OpenFlow match rules for this bearer.
+   * Check for available resources on P-GW TFT switch for this bearer request.
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
-  bool InstallBearer (Ptr<RoutingInfo> rInfo);
-
-  /**
-   * Remove OpenFlow match rules for this bearer.
-   * \param rInfo The routing information to process.
-   * \return True if succeeded, false otherwise.
-   */
-  bool RemoveBearer (Ptr<RoutingInfo> rInfo);
+  bool PgwTftBearerRequest (Ptr<RoutingInfo> rInfo);
 
   /**
    * Periodically check for the P-GW TFT load to enable/disable the load
    * balancing mechanism.
    */
-  void CheckPgwTftLoad (void);
-
-  /** \name Methods for the S5 SAP P-GW control plane. */
-  //\{
-  void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
-  void DoModifyBearerRequest  (EpcS11SapSgw::ModifyBearerRequestMessage  msg);
-  void DoDeleteBearerCommand  (EpcS11SapSgw::DeleteBearerCommandMessage  msg);
-  void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage msg);
-  //\}
+  void PgwTftCheckLoad (void);
 
   /** Initialize static attributes only once. */
   static void StaticInitialize (void);
