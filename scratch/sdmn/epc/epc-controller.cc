@@ -53,11 +53,6 @@ EpcController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::EpcController")
     .SetParent<OFSwitch13Controller> ()
-    .AddAttribute ("InternalTimeout",
-                   "The interval between internal periodic operations.",
-                   TimeValue (Seconds (5)),
-                   MakeTimeAccessor (&EpcController::m_timeout),
-                   MakeTimeChecker ())
     .AddAttribute ("NonGbrCoexistence",
                    "Enable the coexistence of GBR and Non-GBR traffic, "
                    "installing meters to limit Non-GBR traffic bit rate.",
@@ -79,12 +74,23 @@ EpcController::GetTypeId (void)
                    MakeEnumChecker (EpcController::OFF,  "off",
                                     EpcController::ON,   "on",
                                     EpcController::AUTO, "auto"))
+    .AddAttribute ("PgwLoadBalTimeout",
+                   "The interval between internal load balancing operations.",
+                   TimeValue (Seconds (5)),
+                   MakeTimeAccessor (&EpcController::m_tftTimeout),
+                   MakeTimeChecker ())
     .AddAttribute ("PgwTftFactor",
                    "The P-GW TFT table size usage and pipeline capacity "
                    "threshold factor.",
                    DoubleValue (0.8),
                    MakeDoubleAccessor (&EpcController::m_tftFactor),
                    MakeDoubleChecker<double> (0.5, 1.0))
+    .AddAttribute ("S5AggBwFactor",
+                   "The bandwidth usage threshold factor to control "
+                   "the S5 traffic aggregation mechanism.",
+                   DoubleValue (0.8),
+                   MakeDoubleAccessor (&EpcController::m_s5AggBwFactor),
+                   MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("S5TrafficAggregation",
                    "Configure the S5 traffic aggregation mechanism.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -93,12 +99,6 @@ EpcController::GetTypeId (void)
                    MakeEnumChecker (EpcController::OFF,  "off",
                                     EpcController::ON,   "on",
                                     EpcController::AUTO, "auto"))
-    .AddAttribute ("S5AggBwFactor",
-                   "The bandwidth usage threshold factor to control "
-                   "the S5 traffic aggregation mechanism.",
-                   DoubleValue (0.8),
-                   MakeDoubleAccessor (&EpcController::m_s5AggBwFactor),
-                   MakeDoubleChecker<double> (0.0, 1.0))
 
     .AddAttribute ("VoipQueue",
                    "Enable VoIP QoS through queuing traffic management.",
@@ -424,13 +424,22 @@ EpcController::NotifyConstructionCompleted (void)
         m_tftLbLevel = 0;
 
         // Schedule the first P-GW load check.
-        Simulator::Schedule (m_timeout, &EpcController::PgwTftCheckLoad, this);
+        Simulator::Schedule (m_tftTimeout,
+                             &EpcController::PgwTftCheckLoad, this);
         break;
       }
     }
 
   // Chain up.
   OFSwitch13Controller::NotifyConstructionCompleted ();
+}
+
+double
+EpcController::GetS5AggBwFactor (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s5AggBwFactor;
 }
 
 ofl_err
@@ -1140,7 +1149,7 @@ EpcController::PgwTftCheckLoad (void)
 
   // Finally, update the level and schedule the next P-GW load check.
   m_tftLbLevel = nextLbLevel;
-  Simulator::Schedule (m_timeout, &EpcController::PgwTftCheckLoad, this);
+  Simulator::Schedule (m_tftTimeout, &EpcController::PgwTftCheckLoad, this);
 }
 
 void

@@ -225,6 +225,13 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
   /**
+   * Get the bandwidth usage threshold factor to control the S5 traffic
+   * aggregation mechanism.
+   * \return The S5 aggregation factor.
+   */
+  double GetS5AggBwFactor (void) const;
+
+  /**
    * \name Topology methods.
    * These virtual methods must be implemented by topology subclasses, as they
    * are dependent on the backhaul OpenFlow network topology.
@@ -411,11 +418,11 @@ private:
   uint16_t              m_tftMaxSwitches; //!< Max number of TFT switches.
   DataRate              m_tftPlCapacity;  //!< Pipeline capacity.
   uint32_t              m_tftTableSize;   //!< Flow table size.
+  Time                  m_tftTimeout;     //!< Load balancing timeout.
 
   // Internal members and attributes.
   EpcS5SapPgw*          m_s5SapPgw;       //!< P-GW side of the S5 SAP.
   double                m_s5AggBwFactor;  //!< S5Agg bandwidth usage threshold.
-  Time                  m_timeout;        //!< Controller internal timeout.
 
   /** Map saving EpsBearer::Qci / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
