@@ -107,6 +107,7 @@ public:
   uint64_t GetNonGbrTxBytes (Direction dir) const;
   DataRate GetGbrEwmaThp    (Direction dir) const;
   DataRate GetNonGbrEwmaThp (Direction dir) const;
+  DataRate GetEwmaThp       (Direction dir) const;
   //\}
 
   /**

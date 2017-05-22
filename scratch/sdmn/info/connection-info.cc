@@ -202,6 +202,14 @@ ConnectionInfo::GetNonGbrEwmaThp (Direction dir) const
   return m_nonAvgThpt [dir];
 }
 
+DataRate
+ConnectionInfo::GetEwmaThp (Direction dir) const
+{
+  NS_LOG_FUNCTION (this << dir);
+
+  return m_nonAvgThpt [dir] + m_gbrAvgThpt [dir];
+}
+
 uint64_t
 ConnectionInfo::GetResGbrBitRate (Direction dir) const
 {
