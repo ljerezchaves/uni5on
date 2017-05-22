@@ -102,21 +102,21 @@ private:
   uint64_t GetDpId (uint16_t idx) const;
 
   /**
-   * Get the maximum bit rate for this ring routing information, considering
-   * both link bit rate and switches pipeline capacity.
-   * \param ringInfo The ring routing information.
-   * \param path The routing path to follow.
-   * \return The maximum bit rate on this routing path (downlink and uplink
-   *         paths are equal).
-   */
-  uint64_t GetMaxBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                          RingRoutingInfo::RoutingPath path) const;
-
-  /**
    * Get the number of switches in the network.
    * \return The number of switches in the network.
    */
   uint16_t GetNSwitches (void) const;
+
+  /**
+   * Get the average link use ratio between source and destination switch
+   * indexes following the given routing path.
+   * \param srcIdx Source switch index.
+   * \param dstIdx Destination switch index.
+   * \param path The routing path.
+   * \return The link use ratio on this routing path.
+   */
+  double GetPathUseRatio (uint16_t srcIdx, uint16_t dstIdx,
+                          RingRoutingInfo::RoutingPath path) const;
 
   /**
    * Retrieve the switch index for IP address.

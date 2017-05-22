@@ -1,0 +1,54 @@
+global DumpStatsTimeout "1s"
+
+default ns3::ConnectionInfo::GbrLinkQuota "0.4"
+default ns3::ConnectionInfo::GbrSafeguard "1Mb/s"
+default ns3::ConnectionInfo::NonGbrAdjustmentStep "1Mb/s"
+
+default ns3::EpcController::NonGbrCoexistence "on"
+default ns3::EpcController::PgwLoadBalancing "auto"
+default ns3::EpcController::PgwLoadBalTimeout "5s"
+default ns3::EpcController::PgwTftFactor "0.8"
+default ns3::EpcController::S5AggBwFactor "0.1"
+default ns3::EpcController::S5TrafficAggregation "auto"
+default ns3::EpcController::VoipQueue "on"
+
+default ns3::EpcNetwork::NumPgwSwitches "3"
+default ns3::EpcNetwork::PgwTftPipelineCapacity "2Mb/s"
+default ns3::EpcNetwork::PgwTftTableSize "18"
+default ns3::EpcNetwork::S5LinkDataRate "10Gb/s"
+default ns3::EpcNetwork::S5LinkDelay "50us"
+default ns3::EpcNetwork::SgiLinkDataRate "10Gb/s"
+default ns3::EpcNetwork::SgiLinkDelay "15ms"
+
+default ns3::LteHexGridEnbTopologyHelper::GridWidth "2"
+
+default ns3::LteNetwork::NumSdrans "1"
+default ns3::LteNetwork::NumUes "4"
+default ns3::LteNetwork::UeMobility "false"
+default ns3::LteNetwork::PrintRem "false"
+default ns3::LteNetwork::LteTrace "false"
+
+default ns3::OFSwitch13Device::PipelineCapacity "100Mb/s"
+
+default ns3::OFSwitch13Queue::NumQueues "2"
+
+default ns3::PgwTunnelApp::UseTftClassifier "true"
+
+default ns3::RingController::Strategy "spf"
+
+default ns3::RingNetwork::NumRingSwitches "3"
+default ns3::RingNetwork::RingLinkDataRate "10Mb/s"
+default ns3::RingNetwork::RingLinkDelay "200us"
+
+default ns3::SdranCloud::NumCellSites "1"
+default ns3::SdranCloud::S1uLinkDataRate "10Gb/s"
+default ns3::SdranCloud::S1uLinkDelay "50us"
+
+default ns3::TrafficHelper::FastTraffic "true"
+default ns3::TrafficHelper::VoipTraffic "true"
+default ns3::TrafficHelper::GbrLiveVideoTraffic "true"
+default ns3::TrafficHelper::BufferedVideoTraffic "true"
+default ns3::TrafficHelper::NonGbrLiveVideoTraffic "true"
+default ns3::TrafficHelper::HttpTraffic "true"
+
+default ns3::TrafficManager::RestartApps "false"

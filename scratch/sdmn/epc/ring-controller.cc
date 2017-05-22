@@ -190,11 +190,22 @@ RingController::TopologyBearerAggregate (Ptr<RoutingInfo> rInfo)
 
   if (GetS5TrafficAggregation () == FeatureStatus::ON)
     {
-      rInfo->SetAggregated (false);
+      rInfo->SetAggregated (true);
     }
   else if (GetS5TrafficAggregation () == FeatureStatus::AUTO)
     {
-      // TODO Check if we can aggregate or not.
+      Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+      uint16_t pgwIdx = ringInfo->GetPgwSwIdx ();
+      uint16_t sgwIdx = ringInfo->GetSgwSwIdx ();
+
+      double dwRatio, upRatio;
+      dwRatio = GetPathUseRatio (pgwIdx, sgwIdx, ringInfo->GetDownPath ());
+      upRatio = GetPathUseRatio (sgwIdx, pgwIdx, ringInfo->GetUpPath ());
+
+      if (dwRatio <= GetS5AggBwFactor () && upRatio <= GetS5AggBwFactor ())
+        {
+          rInfo->SetAggregated (true);
+        }
     }
 
   if (rInfo->IsAggregated ())
@@ -220,7 +231,6 @@ RingController::TopologyBearerCreated (Ptr<RoutingInfo> rInfo)
   // Set as default path the one with lower hops.
   ringInfo->SetDefaultPath (
     FindShortestPath (ringInfo->GetPgwSwIdx (), ringInfo->GetSgwSwIdx ()));
-  // TODO Set max bit rate
 }
 
 bool
@@ -484,43 +494,33 @@ RingController::GetDpId (uint16_t idx) const
   return m_ofDevices.Get (idx)->GetDatapathId ();
 }
 
-uint64_t
-RingController::GetMaxBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                               RingRoutingInfo::RoutingPath path) const
-{
-  NS_LOG_FUNCTION (this << ringInfo << path);
-
-  uint16_t pgwIdx  = ringInfo->GetPgwSwIdx ();
-  uint16_t sgwIdx  = ringInfo->GetSgwSwIdx ();
-  uint64_t bitRate = 0;
-
-  // FIXME Ignore switch capacity.
-  // From the S-GW to the P-GW switch index, get the maximum bit rate for each
-  // link and switch pipeline following the given routing path.
-  bitRate = m_ofDevices.Get (sgwIdx)->GetPipelineCapacity ().GetBitRate ();
-  while (sgwIdx != pgwIdx)
-    {
-      uint16_t next = NextSwitchIndex (sgwIdx, path);
-
-      // Get link bit rate.
-      Ptr<const ConnectionInfo> cInfo = GetConnectionInfo (sgwIdx, next);
-      bitRate = std::min (bitRate, cInfo->GetLinkBitRate ());
-
-      // Get switch bit rate.
-      Ptr<const OFSwitch13Device> dev = m_ofDevices.Get (next);
-      bitRate = std::min (bitRate, dev->GetPipelineCapacity ().GetBitRate ());
-
-      sgwIdx = next;
-    }
-  return bitRate;
-}
-
 uint16_t
 RingController::GetNSwitches (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_ofDevices.GetN ();
+}
+
+double
+RingController::GetPathUseRatio (uint16_t srcIdx, uint16_t dstIdx,
+                                 RingRoutingInfo::RoutingPath path) const
+{
+  NS_LOG_FUNCTION (this << srcIdx << dstIdx << path);
+
+  uint64_t maxBitRate = std::numeric_limits<uint64_t>::max ();
+  uint64_t useBitRate = 0;
+  while (srcIdx != dstIdx)
+    {
+      uint16_t next = NextSwitchIndex (srcIdx, path);
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (srcIdx, next);
+      DataRate bitRate = cInfo->GetEwmaThp (
+          cInfo->GetDirection (GetDpId (srcIdx), GetDpId (next)));
+      useBitRate = std::max (useBitRate, bitRate.GetBitRate ());
+      maxBitRate = std::min (maxBitRate, cInfo->GetLinkBitRate ());
+      srcIdx = next;
+    }
+  return static_cast<double> (useBitRate) / maxBitRate;
 }
 
 uint16_t
