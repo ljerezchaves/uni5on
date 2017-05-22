@@ -291,6 +291,19 @@ private:
     Ptr<const RoutingInfo> rInfo, uint16_t activeTfts = 0) const;
 
   /**
+   * Get the P-GW TFT datapath ID for a given index.
+   * \param idx The P-GW TFT index.
+   * \return The P-GW TFT datapath ID.
+   */
+  uint64_t GetPgwTftDpId (uint16_t idx) const;
+
+  /**
+   * Get the P-GW main datapath ID.
+   * \return The P-GW main datapath ID.
+   */
+  uint64_t GetPgwMainDpId (void) const;
+
+  /**
    * Check for available resources on P-GW TFT switch for this bearer request.
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.

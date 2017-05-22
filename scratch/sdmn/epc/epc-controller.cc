@@ -263,7 +263,7 @@ EpcController::NotifyPgwTftAttach (
           << " eth_type=0x800,ip_dst=0.0.0." << pgwTftCounter
           << "/0.0.0." << ipMask
           << " apply:output=" << pgwMainPortNo;
-      DpctlSchedule (m_pgwDpIds.at (0), cmd.str ());
+      DpctlSchedule (GetPgwMainDpId (), cmd.str ());
     }
 
   // -------------------------------------------------------------------------
@@ -632,37 +632,65 @@ EpcController::GetPgwTftIdx (
   return 1 + (ueInfo->GetUeAddr ().Get () % activeTfts);
 }
 
+uint64_t
+EpcController::GetPgwTftDpId (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  return m_pgwDpIds.at (idx);
+}
+
+uint64_t
+EpcController::GetPgwMainDpId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwDpIds.at (0);
+}
+
 bool
 EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeid ());
 
+  // For default bearers and for bearers with aggregated traffic:
+  // let's accept it without guarantees.
+  if (rInfo->IsDefault () || rInfo->IsAggregated ())
+    {
+      return true;
+    }
+
   // Get the P-GW TFT stats calculator for this bearer.
   Ptr<OFSwitch13Device> device;
   Ptr<OFSwitch13StatsCalculator> stats;
   uint16_t tftIdx = rInfo->GetPgwTftIdx ();
-
-  device = OFSwitch13Device::GetDevice (m_pgwDpIds.at (tftIdx));
+  device = OFSwitch13Device::GetDevice (GetPgwTftDpId (tftIdx));
   stats = device->GetObject<OFSwitch13StatsCalculator> ();
   NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
 
-  double flowEntries = stats->GetEwmaFlowEntries ();
-  double pipelineLoad = stats->GetEwmaPipelineLoad ().GetBitRate ();
-  double tableUseRatio = flowEntries / m_tftTableSize;
-  double loadUseRatio = pipelineLoad / m_tftPlCapacity.GetBitRate ();
-
-  // Block if table size or current load is exceeding the threshold factor.
-  if (!rInfo->IsAggregated () && tableUseRatio >= m_tftFactor)
+  // Non-aggregated bearers always install rules on P-GW TFT flow table.
+  // Block the bearer if the table size is exceeding the threshold value.
+  double tableUseRatio = stats->GetEwmaFlowEntries () / m_tftTableSize;
+  if (tableUseRatio >= m_tftFactor)
     {
       rInfo->SetBlocked (true);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
                    " because the flow tables is full.");
     }
-  else if (loadUseRatio >= m_tftFactor)
+
+  // Non-aggregated GBR bearers require dedicated P-GW TFT pipeline capacity.
+  // Block the bearer if the pipeline load is exceeding the threshold value.
+  if (rInfo->IsGbr ())
     {
-      rInfo->SetBlocked (true);
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
-                   " because the load is exceeding pipeline capacity.");
+      double load = stats->GetEwmaPipelineLoad ().GetBitRate ();
+      load += rInfo->GetObject<GbrInfo> ()->GetDownBitRate ();
+      double loadRatio = load / m_tftPlCapacity.GetBitRate ();
+      if (loadRatio >= m_tftFactor)
+        {
+          rInfo->SetBlocked (true);
+          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
+                       " because the load will exceed pipeline capacity.");
+        }
     }
   return !rInfo->IsBlocked ();
 }
@@ -710,7 +738,7 @@ EpcController::InstallPgwSwitchRules (
     {
       pgwTftIdx = rInfo->GetPgwTftIdx ();
     }
-  uint64_t pgwTftDpId = m_pgwDpIds.at (pgwTftIdx);
+  uint64_t pgwTftDpId = GetPgwTftDpId (pgwTftIdx);
   uint32_t pgwTftS5PortNo = m_pgwS5PortsNo.at (pgwTftIdx);
   NS_LOG_INFO ("Installing P-GW rules for bearer teid " << rInfo->GetTeid () <<
                " into P-GW TFT switch index " << pgwTftIdx);
@@ -815,7 +843,7 @@ EpcController::RemovePgwSwitchRules (
     {
       pgwTftIdx = rInfo->GetPgwTftIdx ();
     }
-  uint64_t pgwTftDpId = m_pgwDpIds.at (pgwTftIdx);
+  uint64_t pgwTftDpId = GetPgwTftDpId (pgwTftIdx);
   NS_LOG_INFO ("Removing P-GW rules for bearer teid " << rInfo->GetTeid () <<
                " from P-GW TFT switch index " << pgwTftIdx);
 
@@ -908,7 +936,7 @@ EpcController::CheckPgwTftLoad (void)
   Ptr<OFSwitch13StatsCalculator> stats;
   for (uint16_t tftIdx = 1; tftIdx <= activeTfts; tftIdx++)
     {
-      device = OFSwitch13Device::GetDevice (m_pgwDpIds.at (tftIdx));
+      device = OFSwitch13Device::GetDevice (GetPgwTftDpId (tftIdx));
       stats = device->GetObject<OFSwitch13StatsCalculator> ();
       NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
 
@@ -974,7 +1002,7 @@ EpcController::CheckPgwTftLoad (void)
           << ",ip_dst=" << EpcNetwork::m_ueAddr
           << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
           << " goto:" << nextLbLevel + 1;
-      DpctlExecute (m_pgwDpIds.at (0), cmd.str ());
+      DpctlExecute (GetPgwMainDpId (), cmd.str ());
     }
 
   // Fire the load balancing trace source.
@@ -1042,18 +1070,20 @@ EpcController::DoCreateSessionRequest (
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
   NS_ASSERT_MSG (rInfo == 0, "Existing routing for bearer teid " << teid);
 
+  // Create the routing information for this default bearer.
   rInfo = CreateObject<RoutingInfo> (teid);
-  rInfo->SetImsi (imsi);
-  rInfo->SetPgwS5Addr (m_pgwS5Addr);
-  rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
-  rInfo->SetPriority (0x7F);             // Priority for default bearer
-  rInfo->SetTimeout (0);                 // No timeout for default bearer
-  rInfo->SetDefault (true);              // This is a default bearer
-  rInfo->SetInstalled (false);           // Bearer rules not installed yet
-  rInfo->SetActive (true);               // Default bearer is always active
-  rInfo->SetAggregated (false);          // Default bearer never aggregates
+  rInfo->SetActive (true);
+  rInfo->SetAggregated (false);
   rInfo->SetBearerContext (defaultBearer);
+  rInfo->SetBlocked (false);
+  rInfo->SetDefault (true);
+  rInfo->SetImsi (imsi);
+  rInfo->SetInstalled (false);
+  rInfo->SetPgwS5Addr (m_pgwS5Addr);
   rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
+  rInfo->SetPriority (0x7F);
+  rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
+  rInfo->SetTimeout (0);
   TopologyBearerCreated (rInfo);
 
   // For default bearer, no meter nor GBR metadata.
@@ -1076,18 +1106,20 @@ EpcController::DoCreateSessionRequest (
       BearerContext_t dedicatedBearer = *it;
       teid = dedicatedBearer.sgwFteid.teid;
 
+      // Create the routing information for this dedicated bearer.
       rInfo = CreateObject<RoutingInfo> (teid);
-      rInfo->SetImsi (imsi);
-      rInfo->SetPgwS5Addr (m_pgwS5Addr);
-      rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
-      rInfo->SetPriority (0x1FFF);          // Priority for dedicated bearer
-      rInfo->SetTimeout (m_flowTimeout);    // Timeout for dedicated bearer
-      rInfo->SetDefault (false);            // This is a dedicated bearer
-      rInfo->SetInstalled (false);          // Bearer rules not installed yet
-      rInfo->SetActive (false);             // Dedicated bearer not active
-      rInfo->SetAggregated (false);         // Dedicated bearer not aggregated
+      rInfo->SetActive (false);
+      rInfo->SetAggregated (false);
       rInfo->SetBearerContext (dedicatedBearer);
+      rInfo->SetBlocked (false);
+      rInfo->SetDefault (false);
+      rInfo->SetImsi (imsi);
+      rInfo->SetInstalled (false);
+      rInfo->SetPgwS5Addr (m_pgwS5Addr);
       rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
+      rInfo->SetPriority (0x1FFF);
+      rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
+      rInfo->SetTimeout (m_flowTimeout);
       TopologyBearerCreated (rInfo);
 
       // For all GBR bearers, create the GBR metadata.

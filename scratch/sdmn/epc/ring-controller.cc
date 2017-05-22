@@ -323,23 +323,22 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  // Reset ring routing info to the shortest path.
+  // Always reset the ring routing info to the shortest path.
   Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   ringInfo->ResetPath ();
 
-  // Can't accept a blocked routing info.
+  // If the bearer is already blocked, there's nothing more to do.
   if (rInfo->IsBlocked ())
     {
       return false;
     }
 
+  // For Non-GBR bearers (which includes the default bearer), for bearers with
+  // aggregated traffic, and for bearers that only transverse local switch
+  // (local routing): let's accept it without guarantees. Note that in current
+  // implementation, these bearers are always routed over the shortest path.
   if (!rInfo->IsGbr () || rInfo->IsAggregated () || ringInfo->IsLocalPath ())
     {
-      // For Non-GBR bearers (which includes the default bearer), for bearers
-      // with aggregated traffic, and for bearers that only transverse local
-      // switch (local routing): let's accept it without guarantees. Note that
-      // in current implementation, these bearers are always routed over the
-      // shortest path.
       return true;
     }
 
@@ -359,7 +358,6 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
   // rate over the longest path.
   if (m_strategy == RingController::SPF)
     {
-      // Let's invert the routing path and check the longest path.
       ringInfo->InvertPath ();
       if (HasGbrBitRate (ringInfo, gbrInfo))
         {
