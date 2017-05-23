@@ -229,7 +229,7 @@ protected:
    * aggregation mechanism.
    * \return The S5 aggregation factor.
    */
-  double GetS5AggBwFactor (void) const;
+  double GetS5AggFactor (void) const;
 
   /**
    * \name Topology methods.
@@ -309,6 +309,10 @@ private:
    */
   bool BearerRemove (Ptr<RoutingInfo> rInfo);
 
+  /**
+   * Periodic timeout operation.
+   */
+  void ControllerTimeout (void);
 
   /** \name Methods for the S5 SAP P-GW control plane. */
   //\{
@@ -418,11 +422,11 @@ private:
   uint16_t              m_tftMaxSwitches; //!< Max number of TFT switches.
   DataRate              m_tftPlCapacity;  //!< Pipeline capacity.
   uint32_t              m_tftTableSize;   //!< Flow table size.
-  Time                  m_tftTimeout;     //!< Load balancing timeout.
 
   // Internal members and attributes.
   EpcS5SapPgw*          m_s5SapPgw;       //!< P-GW side of the S5 SAP.
-  double                m_s5AggBwFactor;  //!< S5Agg bandwidth usage threshold.
+  double                m_s5AggFactor;    //!< S5Agg bandwidth usage threshold.
+  Time                  m_timeout;        //!< Controller internal timeout.
 
   /** Map saving EpsBearer::Qci / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;

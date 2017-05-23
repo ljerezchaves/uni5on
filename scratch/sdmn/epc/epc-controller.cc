@@ -74,22 +74,17 @@ EpcController::GetTypeId (void)
                    MakeEnumChecker (EpcController::OFF,  "off",
                                     EpcController::ON,   "on",
                                     EpcController::AUTO, "auto"))
-    .AddAttribute ("PgwLoadBalTimeout",
-                   "The interval between internal load balancing operations.",
-                   TimeValue (Seconds (5)),
-                   MakeTimeAccessor (&EpcController::m_tftTimeout),
-                   MakeTimeChecker ())
     .AddAttribute ("PgwTftFactor",
                    "The P-GW TFT table size usage and pipeline capacity "
                    "threshold factor.",
                    DoubleValue (0.8),
                    MakeDoubleAccessor (&EpcController::m_tftFactor),
                    MakeDoubleChecker<double> (0.5, 1.0))
-    .AddAttribute ("S5AggBwFactor",
+    .AddAttribute ("S5AggFactor",
                    "The bandwidth usage threshold factor to control "
                    "the S5 traffic aggregation mechanism.",
                    DoubleValue (0.8),
-                   MakeDoubleAccessor (&EpcController::m_s5AggBwFactor),
+                   MakeDoubleAccessor (&EpcController::m_s5AggFactor),
                    MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("S5TrafficAggregation",
                    "Configure the S5 traffic aggregation mechanism.",
@@ -99,7 +94,11 @@ EpcController::GetTypeId (void)
                    MakeEnumChecker (EpcController::OFF,  "off",
                                     EpcController::ON,   "on",
                                     EpcController::AUTO, "auto"))
-
+    .AddAttribute ("TimeoutInterval",
+                   "The interval between internal periodic operations.",
+                   TimeValue (Seconds (5)),
+                   MakeTimeAccessor (&EpcController::m_timeout),
+                   MakeTimeChecker ())
     .AddAttribute ("VoipQueue",
                    "Enable VoIP QoS through queuing traffic management.",
                    EnumValue (EpcController::ON),
@@ -409,37 +408,32 @@ EpcController::NotifyConstructionCompleted (void)
   // Set the initial number of P-GW TFT active switches.
   switch (GetPgwLoadBalancing ())
     {
-    case FeatureStatus::OFF:
-      {
-        m_tftLbLevel = 0;
-        break;
-      }
     case FeatureStatus::ON:
       {
         m_tftLbLevel = (uint8_t)log2 (m_tftMaxSwitches);
         break;
       }
+    case FeatureStatus::OFF:
     case FeatureStatus::AUTO:
       {
         m_tftLbLevel = 0;
-
-        // Schedule the first P-GW load check.
-        Simulator::Schedule (m_tftTimeout,
-                             &EpcController::PgwTftCheckLoad, this);
         break;
       }
     }
+
+  // Schedule the first timeout operation.
+  Simulator::Schedule (m_timeout, &EpcController::ControllerTimeout, this);
 
   // Chain up.
   OFSwitch13Controller::NotifyConstructionCompleted ();
 }
 
 double
-EpcController::GetS5AggBwFactor (void) const
+EpcController::GetS5AggFactor (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_s5AggBwFactor;
+  return m_s5AggFactor;
 }
 
 ofl_err
@@ -676,6 +670,20 @@ EpcController::BearerRemove (Ptr<RoutingInfo> rInfo)
 
   rInfo->SetInstalled (!success);
   return success;
+}
+
+void
+EpcController::ControllerTimeout (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  if (GetPgwLoadBalancing () == FeatureStatus::AUTO)
+    {
+      PgwTftCheckLoad ();
+    }
+
+  // Schedule the next timeout operation.
+  Simulator::Schedule (m_timeout, &EpcController::ControllerTimeout, this);
 }
 
 void
@@ -1147,9 +1155,7 @@ EpcController::PgwTftCheckLoad (void)
   lbStats.thrsFactor   = m_tftFactor;
   m_loadBalancingTrace (lbStats);
 
-  // Finally, update the level and schedule the next P-GW load check.
   m_tftLbLevel = nextLbLevel;
-  Simulator::Schedule (m_tftTimeout, &EpcController::PgwTftCheckLoad, this);
 }
 
 void

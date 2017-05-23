@@ -202,7 +202,7 @@ RingController::TopologyBearerAggregate (Ptr<RoutingInfo> rInfo)
       dwRatio = GetPathUseRatio (pgwIdx, sgwIdx, ringInfo->GetDownPath ());
       upRatio = GetPathUseRatio (sgwIdx, pgwIdx, ringInfo->GetUpPath ());
 
-      if (dwRatio <= GetS5AggBwFactor () && upRatio <= GetS5AggBwFactor ())
+      if (dwRatio <= GetS5AggFactor () && upRatio <= GetS5AggFactor ())
         {
           rInfo->SetAggregated (true);
         }
