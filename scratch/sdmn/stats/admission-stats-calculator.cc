@@ -108,25 +108,11 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
     }
 
   // Preparing bearer request stats for trace source.
-  uint64_t downBitRate = 0, upBitRate = 0;
+  double dwBitRate = 0.0, upBitRate = 0.0;
   if (gbrInfo)
     {
-      downBitRate = gbrInfo->GetDownBitRate ();
-      upBitRate = gbrInfo->GetUpBitRate ();
-    }
-
-  std::string path = "-";
-  if (!rInfo->IsBlocked ())
-    {
-      // For ring routing, print detailed routing path description.
-      if (ringInfo->IsDefaultPath ())
-        {
-          path = "Shortest";
-        }
-      else
-        {
-          path = "Inverted";
-        }
+      dwBitRate = static_cast<double> (gbrInfo->GetDownBitRate ()) / 1000;
+      upBitRate = static_cast<double> (gbrInfo->GetUpBitRate ()) / 1000;
     }
 
   // Save request stats into output file.
@@ -134,20 +120,23 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
   << left
   << setw (11) << Simulator::Now ().GetSeconds ()
   << right
-  << " " << setw (6)  << rInfo->GetTeid ()
-  << " " << setw (4)  << rInfo->GetQciInfo ()
-  << " " << setw (6)  << rInfo->IsGbr ()
-  << " " << setw (9)  << rInfo->IsDefault ()
-  << " " << setw (5)  << ueInfo->GetImsi ()
-  << " " << setw (4)  << ueInfo->GetCellId ()
-  << " " << setw (6)  << ringInfo->GetSgwSwDpId ()
-  << " " << setw (6)  << ringInfo->GetPgwSwDpId ()
-  << " " << setw (7)  << !rInfo->IsBlocked ()
-  << " " << setw (6)  << rInfo->IsAggregated ()
-  << " " << setw (11) << static_cast<double> (downBitRate) / 1000
-  << " " << setw (11) << static_cast<double> (upBitRate) / 1000
-  << left
-  << "  " << setw (15) << path
+  << " " << setw (6) << rInfo->GetTeid ()
+  << " " << setw (4) << rInfo->GetQciInfo ()
+  << " " << setw (6) << rInfo->IsGbr ()
+  << " " << setw (5) << ueInfo->GetImsi ()
+  << " " << setw (4) << ueInfo->GetCellId ()
+  << " " << setw (6) << rInfo->IsDefault ()
+  << " " << setw (6) << ringInfo->GetSgwSwDpId ()
+  << " " << setw (6) << ringInfo->GetPgwSwDpId ()
+  << " " << setw (6) << rInfo->GetPgwTftIdx ()
+  << setprecision (2)
+  << " " << setw (8) << dwBitRate
+  << " " << setw (8) << upBitRate
+  << setprecision (4)
+  << " " << setw (6) << rInfo->IsAggregated ()
+  << " " << setw (6) << rInfo->IsBlocked ()
+  << " " << setw (9) << rInfo->GetBlockReasonStr ()
+  << " " << setw (9) << ringInfo->GetPathStr ()
   << std::endl;
 }
 
@@ -202,17 +191,18 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   << setw (6)  << "TEID"
   << setw (5)  << "QCI"
   << setw (7)  << "IsGBR"
-  << setw (10) << "IsDefault"
   << setw (6)  << "IMSI"
   << setw (5)  << "CGI"
+  << setw (7)  << "IsDft"
   << setw (7)  << "SGWsw"
   << setw (7)  << "PGWsw"
-  << setw (8)  << "Accept"
+  << setw (7)  << "TFTsw"
+  << setw (9)  << "DwReq"
+  << setw (9)  << "UpReq"
   << setw (7)  << "S5Agg"
-  << setw (12) << "Down(Kbps)"
-  << setw (12) << "Up(Kbps)"
-  << left      << "  "
-  << setw (12) << "RingPath"
+  << setw (7)  << "Block"
+  << setw (10) << "Reason"
+  << setw (10) << "RingPath"
   << std::endl;
 
   TimeValue timeValue;

@@ -112,6 +112,26 @@ RingRoutingInfo::IsLocalPath (void) const
   return m_isLocalPath;
 }
 
+std::string
+RingRoutingInfo::GetPathStr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  bool blocked = GetObject<RoutingInfo> ()->IsBlocked ();
+  if (blocked)
+    {
+      return "-";
+    }
+  else if (IsDefaultPath ())
+    {
+      return "Shortest";
+    }
+  else
+    {
+      return "Inverted";
+    }
+}
+
 void
 RingRoutingInfo::SetPgwSwIdx (uint16_t value)
 {

@@ -66,6 +66,7 @@ public:
   uint64_t GetSgwSwDpId (void) const;
   bool IsDefaultPath (void) const;
   bool IsLocalPath (void) const;
+  std::string GetPathStr (void) const;
 
   void SetPgwSwIdx (uint16_t value);
   void SetSgwSwIdx (uint16_t value);

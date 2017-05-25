@@ -118,7 +118,7 @@ RoutingInfo::GetTimeout (void) const
 }
 
 std::string
-RoutingInfo:: GetBlockReasonStr (void) const
+RoutingInfo::GetBlockReasonStr (void) const
 {
   NS_LOG_FUNCTION (this);
 
