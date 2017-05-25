@@ -52,7 +52,7 @@ LoadBalStatsCalculator::GetTypeId (void)
     .AddConstructor<LoadBalStatsCalculator> ()
     .AddAttribute ("LbmStatsFilename",
                    "Filename for EPC P-GW load balancing statistics.",
-                   StringValue ("epc-controller-loadbal.log"),
+                   StringValue ("loadbal-pgw.log"),
                    MakeStringAccessor (&LoadBalStatsCalculator::m_lbmFilename),
                    MakeStringChecker ())
   ;
