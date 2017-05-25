@@ -189,10 +189,10 @@ public:
   static ConnInfoList_t GetList (void);
 
   /**
-   * TracedCallback signature for Ptr<ConnectionInfo>.
-   * \param cInfo The connection information and metadata.
+   * TracedCallback signature for Ptr<const ConnectionInfo>.
+   * \param cInfo The connection information.
    */
-  typedef void (*ConnTracedCallback)(Ptr<ConnectionInfo> cInfo);
+  typedef void (*CInfoTracedCallback)(Ptr<const ConnectionInfo> cInfo);
 
 protected:
   /** Destructor implementation. */
@@ -261,7 +261,7 @@ private:
   static void RegisterConnectionInfo (Ptr<ConnectionInfo> cInfo);
 
   /** Non-GBR allowed bit rate adjusted trace source. */
-  TracedCallback<Ptr<ConnectionInfo> > m_nonAdjustedTrace;
+  TracedCallback<Ptr<const ConnectionInfo> > m_nonAdjustedTrace;
 
   SwitchData        m_switches [2];     //!< Switches metadata.
   Ptr<CsmaChannel>  m_channel;          //!< The CSMA link channel.

@@ -131,7 +131,7 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
 
 void
 TrafficStatsCalculator::DumpStatistics (std::string context,
-                                        Ptr<SdmnClientApp> app)
+                                        Ptr<const SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << context << app->GetTeid ());
 
@@ -175,7 +175,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
 
 void
 TrafficStatsCalculator::ResetCounters (std::string context,
-                                       Ptr<SdmnClientApp> app)
+                                       Ptr<const SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << context << app);
 
@@ -350,7 +350,7 @@ TrafficStatsCalculator::GetHeader (void)
 
 std::string
 TrafficStatsCalculator::GetStats (
-  Ptr<SdmnClientApp> app, Ptr<const RoutingInfo> rInfo,
+  Ptr<const SdmnClientApp> app, Ptr<const RoutingInfo> rInfo,
   Ptr<const UeInfo> ueInfo, Ptr<const QosStatsCalculator> stats,
   uint32_t teid, std::string direction)
 {

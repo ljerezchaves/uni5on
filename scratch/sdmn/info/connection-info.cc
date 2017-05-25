@@ -121,7 +121,7 @@ ConnectionInfo::GetTypeId (void)
                      "Non-GBR allowed bit rate adjusted.",
                      MakeTraceSourceAccessor (
                        &ConnectionInfo::m_nonAdjustedTrace),
-                     "ns3::ConnectionInfo::ConnTracedCallback")
+                     "ns3::ConnectionInfo::CInfoTracedCallback")
   ;
   return tid;
 }

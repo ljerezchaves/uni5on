@@ -167,7 +167,7 @@ private:
    * on GBR resource reservation.
    * \param cInfo The connection information
    */
-  void NonGbrAdjusted (Ptr<ConnectionInfo> cInfo);
+  void NonGbrAdjusted (Ptr<const ConnectionInfo> cInfo);
 
   /**
    * Release the bit rate for this GBR bearer in the ring network.

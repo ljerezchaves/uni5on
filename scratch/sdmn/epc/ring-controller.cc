@@ -619,7 +619,7 @@ RingController::NextSwitchIndex (uint16_t idx,
 }
 
 void
-RingController::NonGbrAdjusted (Ptr<ConnectionInfo> cInfo)
+RingController::NonGbrAdjusted (Ptr<const ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
 
