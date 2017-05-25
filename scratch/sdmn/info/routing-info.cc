@@ -125,7 +125,7 @@ RoutingInfo::GetBlockReasonStr (void) const
   switch (m_blockReason)
     {
     case RoutingInfo::TFTTABLEFULL:
-      return "TableFull";
+      return "TabFull";
     case RoutingInfo::TFTMAXLOAD:
       return "MaxLoad";
     case RoutingInfo::BANDWIDTH:
