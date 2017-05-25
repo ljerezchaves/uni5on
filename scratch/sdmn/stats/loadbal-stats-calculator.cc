@@ -20,47 +20,47 @@
 
 #include <iomanip>
 #include <iostream>
-#include "epc-controller-stats-calculator.h"
+#include "loadbal-stats-calculator.h"
 
 using namespace std;
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("EpcCtrlStatsCalculator");
-NS_OBJECT_ENSURE_REGISTERED (EpcCtrlStatsCalculator);
+NS_LOG_COMPONENT_DEFINE ("LoadBalStatsCalculator");
+NS_OBJECT_ENSURE_REGISTERED (LoadBalStatsCalculator);
 
-EpcCtrlStatsCalculator::EpcCtrlStatsCalculator ()
+LoadBalStatsCalculator::LoadBalStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 
   // Connect this stats calculator to required trace sources.
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::EpcController/LoadBalancing",
-    MakeCallback (&EpcCtrlStatsCalculator::NotifyLoadBalancing, this));
+    MakeCallback (&LoadBalStatsCalculator::NotifyLoadBalancing, this));
 }
 
-EpcCtrlStatsCalculator::~EpcCtrlStatsCalculator ()
+LoadBalStatsCalculator::~LoadBalStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-EpcCtrlStatsCalculator::GetTypeId (void)
+LoadBalStatsCalculator::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::EpcCtrlStatsCalculator")
+  static TypeId tid = TypeId ("ns3::LoadBalStatsCalculator")
     .SetParent<Object> ()
-    .AddConstructor<EpcCtrlStatsCalculator> ()
+    .AddConstructor<LoadBalStatsCalculator> ()
     .AddAttribute ("LbmStatsFilename",
                    "Filename for EPC P-GW load balancing statistics.",
                    StringValue ("epc-controller-loadbal.log"),
-                   MakeStringAccessor (&EpcCtrlStatsCalculator::m_lbmFilename),
+                   MakeStringAccessor (&LoadBalStatsCalculator::m_lbmFilename),
                    MakeStringChecker ())
   ;
   return tid;
 }
 
 void
-EpcCtrlStatsCalculator::DoDispose ()
+LoadBalStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -68,7 +68,7 @@ EpcCtrlStatsCalculator::DoDispose ()
 }
 
 void
-EpcCtrlStatsCalculator::NotifyConstructionCompleted (void)
+LoadBalStatsCalculator::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -101,7 +101,7 @@ EpcCtrlStatsCalculator::NotifyConstructionCompleted (void)
 }
 
 void
-EpcCtrlStatsCalculator::NotifyLoadBalancing (
+LoadBalStatsCalculator::NotifyLoadBalancing (
   std::string context, EpcController::LoadBalancingStats stats)
 {
   NS_LOG_FUNCTION (this << context);
