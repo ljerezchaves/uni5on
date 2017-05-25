@@ -81,10 +81,9 @@ AdmissionStatsCalculator::GetTypeId (void)
 }
 
 void
-AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
-                                               Ptr<const RoutingInfo> rInfo)
+AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << accepted << rInfo);
+  NS_LOG_FUNCTION (this << rInfo);
 
   Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
   Ptr<const GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
@@ -95,15 +94,15 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
   if (rInfo->IsGbr () && !rInfo->IsAggregated ())
     {
       m_gbrRequests++;
-      accepted ? m_gbrAccepted++ : m_gbrBlocked++;
+      rInfo->IsBlocked () ? m_gbrBlocked++ : m_gbrAccepted++;
     }
   else
     {
       m_nonRequests++;
-      accepted ? m_nonAccepted++ : m_nonBlocked++;
+      rInfo->IsBlocked () ? m_nonBlocked++ : m_nonAccepted++;
     }
 
-  if (accepted)
+  if (!rInfo->IsBlocked ())
     {
       m_activeBearers++;
     }
@@ -117,7 +116,7 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
     }
 
   std::string path = "-";
-  if (accepted)
+  if (!rInfo->IsBlocked ())
     {
       // For ring routing, print detailed routing path description.
       if (ringInfo->IsDefaultPath ())
@@ -143,7 +142,7 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
   << " " << setw (4)  << ueInfo->GetCellId ()
   << " " << setw (6)  << ringInfo->GetSgwSwDpId ()
   << " " << setw (6)  << ringInfo->GetPgwSwDpId ()
-  << " " << setw (7)  << accepted
+  << " " << setw (7)  << !rInfo->IsBlocked ()
   << " " << setw (6)  << rInfo->IsAggregated ()
   << " " << setw (11) << static_cast<double> (downBitRate) / 1000
   << " " << setw (11) << static_cast<double> (upBitRate) / 1000
@@ -153,10 +152,9 @@ AdmissionStatsCalculator::NotifyBearerRequest (bool accepted,
 }
 
 void
-AdmissionStatsCalculator::NotifyBearerRelease (bool success,
-                                               Ptr<const RoutingInfo> rInfo)
+AdmissionStatsCalculator::NotifyBearerRelease (Ptr<const RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << success << rInfo);
+  NS_LOG_FUNCTION (this << rInfo);
 
   NS_ASSERT_MSG (m_activeBearers, "No active bearer here.");
   m_activeBearers--;

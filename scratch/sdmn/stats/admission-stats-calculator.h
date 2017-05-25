@@ -55,17 +55,15 @@ protected:
 private:
   /**
    * Notify a new bearer request.
-   * \param accepted True when the bearer is accepted into network.
    * \param rInfo The bearer routing information.
    */
-  void NotifyBearerRequest (bool accepted, Ptr<const RoutingInfo> rInfo);
+  void NotifyBearerRequest (Ptr<const RoutingInfo> rInfo);
 
   /**
    * Notify a new bearer release.
-   * \param success True when the bearer is successfully released.
    * \param rInfo The bearer routing information.
    */
-  void NotifyBearerRelease (bool success, Ptr<const RoutingInfo> rInfo);
+  void NotifyBearerRelease (Ptr<const RoutingInfo> rInfo);
 
   /**
    * Dump statistics into file.

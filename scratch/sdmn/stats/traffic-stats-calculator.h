@@ -63,7 +63,7 @@ private:
    * \param context Context information.
    * \param app The client application.
    */
-  void DumpStatistics (std::string context, Ptr<const SdmnClientApp> app);
+  void DumpStatistics (std::string context, Ptr<SdmnClientApp> app);
 
   /**
    * Reset internal counters.
@@ -71,7 +71,7 @@ private:
    * \param context Context information.
    * \param app The client application.
    */
-  void ResetCounters (std::string context, Ptr<const SdmnClientApp> app);
+  void ResetCounters (std::string context, Ptr<SdmnClientApp> app);
 
   /**
    * Trace sink fired when a packet is dropped while exceeding pipeline load

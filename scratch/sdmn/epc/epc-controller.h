@@ -194,19 +194,10 @@ public:
   static uint16_t GetDscpValue (EpsBearer::Qci qci);
 
   /**
-   * TracedCallback signature for new bearer request.
-   * \param ok True when the bearer request/release processes succeeds.
-   * \param rInfo The routing information for this bearer tunnel.
-   */
-  typedef void (*BearerTracedCallback)(
-    bool ok, Ptr<const RoutingInfo> rInfo);
-
-  /**
    * TracedCallback signature for the load balancing trace source.
    * \param stats The load balancing statistics from the last interval.
    */
-  typedef void (*LoadBalancingTracedCallback)(
-    struct LoadBalancingStats stats);
+  typedef void (*LoadBalancingTracedCallback)(struct LoadBalancingStats stats);
 
   /**
    * TracedCallback signature for session created trace source.
@@ -392,10 +383,10 @@ private:
   static void StaticInitialize (void);
 
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
-  TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerRequestTrace;
+  TracedCallback<Ptr<const RoutingInfo> > m_bearerRequestTrace;
 
   /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
-  TracedCallback<bool, Ptr<const RoutingInfo> > m_bearerReleaseTrace;
+  TracedCallback<Ptr<const RoutingInfo> > m_bearerReleaseTrace;
 
   /** The context created trace source, fired at NotifySessionCreated. */
   TracedCallback<uint64_t, uint16_t, BearerContextList_t>

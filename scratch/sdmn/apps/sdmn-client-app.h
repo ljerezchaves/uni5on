@@ -96,10 +96,10 @@ public:
   virtual void Start ();
 
   /**
-   * TracedCallback signature for Ptr<const SdmnClientApp>.
+   * TracedCallback signature for Ptr<SdmnClientApp>.
    * \param app The client application.
    */
-  typedef void (*EpcAppTracedCallback)(Ptr<const SdmnClientApp> app);
+  typedef void (*EpcAppTracedCallback)(Ptr<SdmnClientApp> app);
 
 protected:
   /** Destructor implementation */
@@ -143,13 +143,13 @@ protected:
   Ptr<SdmnServerApp>      m_serverApp;        //!< Server application.
 
   /** Trace source fired when application start. */
-  TracedCallback<Ptr<const SdmnClientApp> > m_appStartTrace;
+  TracedCallback<Ptr<SdmnClientApp> > m_appStartTrace;
 
   /** Trace source fired when application stops. */
-  TracedCallback<Ptr<const SdmnClientApp> > m_appStopTrace;
+  TracedCallback<Ptr<SdmnClientApp> > m_appStopTrace;
 
   /** Trace source fired when application reports an error. */
-  TracedCallback<Ptr<const SdmnClientApp> > m_appErrorTrace;
+  TracedCallback<Ptr<SdmnClientApp> > m_appErrorTrace;
 
 private:
   /**

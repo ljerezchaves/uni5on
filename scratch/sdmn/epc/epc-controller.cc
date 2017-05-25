@@ -109,11 +109,11 @@ EpcController::GetTypeId (void)
     .AddTraceSource ("BearerRelease", "The bearer release trace source.",
                      MakeTraceSourceAccessor (
                        &EpcController::m_bearerReleaseTrace),
-                     "ns3::EpcController::BearerTracedCallback")
+                     "ns3::RoutingInfo::TracedCallback")
     .AddTraceSource ("BearerRequest", "The bearer request trace source.",
                      MakeTraceSourceAccessor (
                        &EpcController::m_bearerRequestTrace),
-                     "ns3::EpcController::BearerTracedCallback")
+                     "ns3::RoutingInfo::TracedCallback")
     .AddTraceSource ("LoadBalancing", "The load balancing trace source.",
                      MakeTraceSourceAccessor (
                        &EpcController::m_loadBalancingTrace),
@@ -136,8 +136,8 @@ EpcController::DedicatedBearerRelease (EpsBearer bearer, uint32_t teid)
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't release the default bearer.");
   NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
 
-  bool released = TopologyBearerRelease (rInfo);
-  m_bearerReleaseTrace (released, rInfo);
+  TopologyBearerRelease (rInfo);
+  m_bearerReleaseTrace (rInfo);
   NS_LOG_INFO ("Bearer released by controller.");
 
   // Everything is ok! Let's deactivate and remove this bearer.
@@ -166,7 +166,7 @@ EpcController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
   bool accepted = true;
   accepted &= PgwTftBearerRequest (rInfo);
   accepted &= TopologyBearerRequest (rInfo);
-  m_bearerRequestTrace (accepted, rInfo);
+  m_bearerRequestTrace (rInfo);
   if (!accepted)
     {
       NS_LOG_INFO ("Bearer request blocked by controller.");
@@ -753,7 +753,7 @@ EpcController::DoCreateSessionRequest (
   accepted &= PgwTftBearerRequest (rInfo);
   accepted &= TopologyBearerRequest (rInfo);
   NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
-  m_bearerRequestTrace (accepted, rInfo);
+  m_bearerRequestTrace (rInfo);
 
   // Install rules for default bearer.
   bool installed = BearerInstall (rInfo);

@@ -139,7 +139,7 @@ public:
    * TracedCallback signature for Ptr<const RoutingInfo>.
    * \param rInfo The routing information.
    */
-  typedef void (*RInfoTracedCallback)(Ptr<const RoutingInfo> rInfo);
+  typedef void (*TracedCallback)(Ptr<const RoutingInfo> rInfo);
 
 protected:
   /** Destructor implementation. */
