@@ -1034,7 +1034,7 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
   double tableUseRatio = stats->GetEwmaFlowEntries () / m_tftTableSize;
   if (tableUseRatio >= m_tftFactor)
     {
-      rInfo->SetBlocked (true);
+      rInfo->SetBlocked (true, RoutingInfo::TFTTABLEFULL);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
                    " because the flow tables is full.");
     }
@@ -1048,7 +1048,7 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
       double loadRatio = load / m_tftPlCapacity.GetBitRate ();
       if (loadRatio >= m_tftFactor)
         {
-          rInfo->SetBlocked (true);
+          rInfo->SetBlocked (true, RoutingInfo::TFTMAXLOAD);
           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
                        " because the load will exceed pipeline capacity.");
         }

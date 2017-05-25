@@ -117,6 +117,25 @@ RoutingInfo::GetTimeout (void) const
   return m_timeout;
 }
 
+std::string
+RoutingInfo:: GetBlockReasonStr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  switch (m_blockReason)
+    {
+    case RoutingInfo::TFTTABLEFULL:
+      return "TableFull";
+    case RoutingInfo::TFTMAXLOAD:
+      return "MaxLoad";
+    case RoutingInfo::BANDWIDTH:
+      return "LinkFull";
+    case RoutingInfo::NOREASON:
+    default:
+      return "-";
+    }
+}
+
 bool
 RoutingInfo::IsDefault (void) const
 {
@@ -241,13 +260,17 @@ RoutingInfo::SetAggregated (bool value)
 }
 
 void
-RoutingInfo::SetBlocked (bool value)
+RoutingInfo::SetBlocked (bool value, BlockReason reason)
 {
-  NS_LOG_FUNCTION (this << value);
+  NS_LOG_FUNCTION (this << value << reason);
 
   NS_ASSERT_MSG (IsDefault () == false || value == false,
                  "Can't block the default bearer traffic.");
+  NS_ASSERT_MSG (value == false || reason != RoutingInfo::NOREASON,
+                 "Specify the reason why this bearer was blocked.");
+
   m_isBlocked = value;
+  m_blockReason = reason;
 }
 
 void

@@ -300,7 +300,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 
   // Nothing more to do. Block the traffic.
   NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid ());
-  rInfo->SetBlocked (true);
+  rInfo->SetBlocked (true, RoutingInfo::BANDWIDTH);
   return false;
 }
 

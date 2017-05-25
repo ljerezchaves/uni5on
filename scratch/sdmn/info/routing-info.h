@@ -52,6 +52,15 @@ typedef std::list<Ptr<RoutingInfo> > RoutingInfoList_t;
 class RoutingInfo : public Object
 {
 public:
+  /** Block reason. */
+  enum BlockReason
+  {
+    NOREASON     = 0,  //!< This bearer was not blocked.
+    TFTTABLEFULL = 1,  //!< P-GW TFT flow table is full.
+    TFTMAXLOAD   = 2,  //!< P-GW TFT pipeline load is maximum.
+    BANDWIDTH    = 3   //!< No backahul bandwidth available.
+  };
+
   /**
    * Complete constructor.
    * \param teid The TEID value.
@@ -79,6 +88,7 @@ public:
   bool IsActive (void) const;
   bool IsAggregated (void) const;
   bool IsBlocked (void) const;
+  std::string GetBlockReasonStr (void) const;
 
   void SetImsi (uint64_t value);
   void SetPgwS5Addr (Ipv4Address value);
@@ -90,7 +100,7 @@ public:
   void SetInstalled (bool value);
   void SetActive (bool value);
   void SetAggregated (bool value);
-  void SetBlocked (bool value);
+  void SetBlocked (bool value, BlockReason reason = RoutingInfo::NOREASON);
   void SetBearerContext (BearerContext_t value);
   //\}
 
@@ -164,6 +174,7 @@ private:
   bool              m_isActive;     //!< Application traffic is active.
   bool              m_isAggregated; //!< Traffic aggregated over S5 bearer.
   bool              m_isBlocked;    //!< Traffic requested blocked.
+  BlockReason       m_blockReason;  //!< Traffic blocked reason.
   BearerContext_t   m_bearer;       //!< EPS bearer information.
 
   /** Map saving TEID / routing information. */
