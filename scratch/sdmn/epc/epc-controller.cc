@@ -1031,7 +1031,8 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
 
   // Non-aggregated bearers always install rules on P-GW TFT flow table.
   // Block the bearer if the table size is exceeding the threshold value.
-  double tableUseRatio = stats->GetEwmaFlowEntries () / m_tftTableSize;
+  double tableUseRatio = static_cast<double> (
+      stats->GetEwmaFlowEntries ()) / m_tftTableSize;
   if (tableUseRatio >= m_tftFactor)
     {
       rInfo->SetBlocked (true, RoutingInfo::TFTTABLEFULL);
