@@ -190,6 +190,12 @@ EpcController::NotifyPgwBuilt (OFSwitch13DeviceContainer devices)
   NS_ASSERT_MSG (devices.GetN () == m_pgwDpIds.size ()
                  && devices.GetN () == (m_tftMaxSwitches + 1U),
                  "Inconsistent number of P-GW OpenFlow switches.");
+
+  // When the load balancing is OFF, block the m_tftMaxSwitches to 1.
+  if (GetPgwLoadBalancing () == FeatureStatus::OFF)
+    {
+      m_tftMaxSwitches = 1;
+    }
 }
 
 void
@@ -677,10 +683,7 @@ EpcController::ControllerTimeout (void)
 {
   NS_LOG_FUNCTION (this);
 
-  if (GetPgwLoadBalancing () == FeatureStatus::AUTO)
-    {
-      PgwTftCheckLoad ();
-    }
+  PgwTftCheckLoad ();
 
   // Schedule the next timeout operation.
   Simulator::Schedule (m_timeout, &EpcController::ControllerTimeout, this);
