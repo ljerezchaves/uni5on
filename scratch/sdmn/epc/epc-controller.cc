@@ -1023,7 +1023,7 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
 
   // The blocking threshold should be higher than the load-balancing threshold,
   // otherwise the load balancing mechanism will never get into effect.
-  NS_ASSERT_MSG (m_tftBlFactor > m_tftLbFactor, "The blocking threshold "
+  NS_ASSERT_MSG (m_tftBlFactor >= m_tftLbFactor, "The blocking threshold "
                  "should be higher than the load-balancing threshold.");
 
   // For default bearers and for bearers with aggregated traffic:
