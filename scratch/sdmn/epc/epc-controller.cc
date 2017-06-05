@@ -74,11 +74,15 @@ EpcController::GetTypeId (void)
                    MakeEnumChecker (EpcController::OFF,  "off",
                                     EpcController::ON,   "on",
                                     EpcController::AUTO, "auto"))
-    .AddAttribute ("PgwTftFactor",
-                   "The P-GW TFT table size usage and pipeline capacity "
-                   "threshold factor.",
-                   DoubleValue (0.8),
-                   MakeDoubleAccessor (&EpcController::m_tftFactor),
+    .AddAttribute ("PgwTftBlFactor",
+                   "The P-GW TFT blocking threshold factor.",
+                   DoubleValue (0.95),
+                   MakeDoubleAccessor (&EpcController::m_tftBlFactor),
+                   MakeDoubleChecker<double> (0.5, 1.0))
+    .AddAttribute ("PgwTftLbFactor",
+                   "The P-GW TFT load balancing threshold factor.",
+                   DoubleValue (0.9),
+                   MakeDoubleAccessor (&EpcController::m_tftLbFactor),
                    MakeDoubleChecker<double> (0.5, 1.0))
     .AddAttribute ("S5AggFactor",
                    "The bandwidth usage threshold factor to control "
@@ -1017,6 +1021,11 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeid ());
 
+  // The blocking threshold should be higher than the load-balancing threshold,
+  // otherwise the load balancing mechanism will never get into effect.
+  NS_ASSERT_MSG (m_tftBlFactor > m_tftLbFactor, "The blocking threshold "
+                 "should be higher than the load-balancing threshold.");
+
   // For default bearers and for bearers with aggregated traffic:
   // let's accept it without guarantees.
   if (rInfo->IsDefault () || rInfo->IsAggregated ())
@@ -1036,7 +1045,7 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
   // Block the bearer if the table size is exceeding the threshold value.
   double tableUseRatio = static_cast<double> (
       stats->GetEwmaFlowEntries ()) / m_tftTableSize;
-  if (tableUseRatio >= m_tftFactor)
+  if (tableUseRatio >= m_tftBlFactor)
     {
       rInfo->SetBlocked (true, RoutingInfo::TFTTABLEFULL);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
@@ -1050,7 +1059,7 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
       double load = stats->GetEwmaPipelineLoad ().GetBitRate ();
       load += rInfo->GetObject<GbrInfo> ()->GetDownBitRate ();
       double loadRatio = load / m_tftPlCapacity.GetBitRate ();
-      if (loadRatio >= m_tftFactor)
+      if (loadRatio >= m_tftBlFactor)
         {
           rInfo->SetBlocked (true, RoutingInfo::TFTMAXLOAD);
           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
@@ -1094,10 +1103,10 @@ EpcController::PgwTftCheckLoad (void)
 
   // We may decrease the level when we can accommodate the current load and
   // flow entries on the lower level using up to 60% of resources.
-  double decreaseFactor = 0.6 * m_tftFactor * (activeTfts >> 1);
+  double decreaseFactor = 0.6 * m_tftLbFactor * (activeTfts >> 1);
 
   if ((m_tftLbLevel < maxLbLevel)
-      && (tableUseRatio >= m_tftFactor || loadUseRatio >= m_tftFactor))
+      && (tableUseRatio >= m_tftLbFactor || loadUseRatio >= m_tftLbFactor))
     {
       NS_LOG_INFO ("Increasing the load balancing level.");
       nextLbLevel++;
@@ -1156,7 +1165,8 @@ EpcController::PgwTftCheckLoad (void)
   lbStats.nextLevel    = nextLbLevel;
   lbStats.pipeCapacity = m_tftPlCapacity;
   lbStats.tableSize    = m_tftTableSize;
-  lbStats.thrsFactor   = m_tftFactor;
+  lbStats.thrsBlFactor = m_tftBlFactor;
+  lbStats.thrsLbFactor = m_tftLbFactor;
   m_loadBalancingTrace (lbStats);
 
   m_tftLbLevel = nextLbLevel;

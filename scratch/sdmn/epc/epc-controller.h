@@ -70,7 +70,8 @@ public:
     uint32_t nextLevel;       //!< The load balancing level for next cycle.
     DataRate pipeCapacity;    //!< The OpenFlow pipeline capacity.
     uint32_t tableSize;       //!< The OpenFlow flow table size in use.
-    double   thrsFactor;      //!< The resources threshold factor.
+    double   thrsBlFactor;    //!< The resource blocking threshold factor.
+    double   thrsLbFactor;    //!< The load balancing threshold factor.
   };
 
   EpcController ();           //!< Default constructor.
@@ -409,7 +410,8 @@ private:
 
   // Load balancing mechanism.
   uint8_t               m_tftLbLevel;     //!< Load balancing level.
-  double                m_tftFactor;      //!< Resource threshold factor.
+  double                m_tftLbFactor;    //!< Load balancing threshold factor.
+  double                m_tftBlFactor;    //!< Resource block threshold factor.
   uint16_t              m_tftMaxSwitches; //!< Max number of TFT switches.
   DataRate              m_tftPlCapacity;  //!< Pipeline capacity.
   uint32_t              m_tftTableSize;   //!< Flow table size.

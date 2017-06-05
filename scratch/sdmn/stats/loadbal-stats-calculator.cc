@@ -83,7 +83,8 @@ LoadBalStatsCalculator::NotifyConstructionCompleted (void)
   << left
   << setw (12) << "Time(s)"
   << right
-  << setw (8)  << "ThsFac"
+  << setw (8)  << "BalFac"
+  << setw (8)  << "BloFac"
   << setw (8)  << "MaxLev"
   << setw (8)  << "NoTFTs"
   << setw (8)  << "CurLev"
@@ -111,7 +112,8 @@ LoadBalStatsCalculator::NotifyLoadBalancing (
   << left
   << setw (11) << Simulator::Now ().GetSeconds ()
   << right
-  << " " << setw (8) << stats.thrsFactor
+  << " " << setw (8) << stats.thrsLbFactor
+  << " " << setw (7) << stats.thrsBlFactor
   << " " << setw (7) << stats.maxLevel
   << " " << setw (7) << numTfts
   << " " << setw (7) << stats.currentLevel
