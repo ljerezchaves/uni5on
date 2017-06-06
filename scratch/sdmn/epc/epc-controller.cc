@@ -84,6 +84,12 @@ EpcController::GetTypeId (void)
                    DoubleValue (0.8),
                    MakeDoubleAccessor (&EpcController::m_tftLbFactor),
                    MakeDoubleChecker<double> (0.5, 1.0))
+    .AddAttribute ("PgwTftLoadBlock",
+                   "Block new bearer requests when the P-GW TFT load is above "
+                   "the blocking threshold factor.",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&EpcController::m_tftLoadBlock),
+                   MakeBooleanChecker ())
     .AddAttribute ("S5AggFactor",
                    "The bandwidth usage threshold factor to control "
                    "the S5 traffic aggregation mechanism.",
@@ -1052,12 +1058,10 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
                    " because the flow tables is full.");
     }
 
-  // Non-aggregated GBR bearers require dedicated P-GW TFT pipeline capacity.
   // Block the bearer if the pipeline load is exceeding the threshold value.
-  if (rInfo->IsGbr ())
+  if (m_tftLoadBlock)
     {
       double load = stats->GetEwmaPipelineLoad ().GetBitRate ();
-      load += rInfo->GetObject<GbrInfo> ()->GetDownBitRate ();
       double loadRatio = load / m_tftPlCapacity.GetBitRate ();
       if (loadRatio >= m_tftBlFactor)
         {
