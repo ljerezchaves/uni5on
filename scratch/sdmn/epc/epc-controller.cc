@@ -76,18 +76,18 @@ EpcController::GetTypeId (void)
                                     EpcController::AUTO, "auto"))
     .AddAttribute ("PgwTftBlFactor",
                    "The P-GW TFT blocking threshold factor.",
-                   DoubleValue (0.95),
+                   DoubleValue (0.9),
                    MakeDoubleAccessor (&EpcController::m_tftBlFactor),
                    MakeDoubleChecker<double> (0.5, 1.0))
     .AddAttribute ("PgwTftLbFactor",
                    "The P-GW TFT load balancing threshold factor.",
-                   DoubleValue (0.9),
+                   DoubleValue (0.8),
                    MakeDoubleAccessor (&EpcController::m_tftLbFactor),
                    MakeDoubleChecker<double> (0.5, 1.0))
     .AddAttribute ("S5AggFactor",
                    "The bandwidth usage threshold factor to control "
                    "the S5 traffic aggregation mechanism.",
-                   DoubleValue (0.8),
+                   DoubleValue (0.5),
                    MakeDoubleAccessor (&EpcController::m_s5AggFactor),
                    MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("S5TrafficAggregation",
