@@ -1097,26 +1097,29 @@ EpcController::PgwTftCheckLoad (void)
       sumLoad += load;
     }
 
-  // We may increase the level when we hit the threshold factor.
-  double tableUseRatio = maxEntries / m_tftTableSize;
-  double loadUseRatio = maxLoad / m_tftPlCapacity.GetBitRate ();
-
-  // We may decrease the level when we can accommodate the current load and
-  // flow entries on the lower level using up to 60% of resources.
-  double decreaseFactor = 0.6 * m_tftLbFactor * (activeTfts >> 1);
-
-  if ((m_tftLbLevel < maxLbLevel)
-      && (tableUseRatio >= m_tftLbFactor || loadUseRatio >= m_tftLbFactor))
+  if (GetPgwLoadBalancing () == FeatureStatus::AUTO)
     {
-      NS_LOG_INFO ("Increasing the load balancing level.");
-      nextLbLevel++;
-    }
-  else if ((m_tftLbLevel > 0)
-           && (sumLoad < (decreaseFactor * m_tftPlCapacity.GetBitRate ()))
-           && (sumEntries < (decreaseFactor * m_tftTableSize)))
-    {
-      NS_LOG_INFO ("Decreasing the load balancing level.");
-      nextLbLevel--;
+      // We may increase the level when we hit the threshold factor.
+      double tableUseRatio = maxEntries / m_tftTableSize;
+      double loadUseRatio = maxLoad / m_tftPlCapacity.GetBitRate ();
+
+      // We may decrease the level when we can accommodate the current load and
+      // flow entries on the lower level using up to 60% of resources.
+      double decreaseFactor = 0.6 * m_tftLbFactor * (activeTfts >> 1);
+
+      if ((m_tftLbLevel < maxLbLevel)
+          && (tableUseRatio >= m_tftLbFactor || loadUseRatio >= m_tftLbFactor))
+        {
+          NS_LOG_INFO ("Increasing the load balancing level.");
+          nextLbLevel++;
+        }
+      else if ((m_tftLbLevel > 0)
+               && (sumLoad < (decreaseFactor * m_tftPlCapacity.GetBitRate ()))
+               && (sumEntries < (decreaseFactor * m_tftTableSize)))
+        {
+          NS_LOG_INFO ("Decreasing the load balancing level.");
+          nextLbLevel--;
+        }
     }
 
   // Check if we need to update the load balancing level.
