@@ -93,9 +93,9 @@ LoadBalStatsCalculator::NotifyConstructionCompleted (void)
   << setw (8)  << "TabSiz"
   << setw (8)  << "MaxEnt"
   << setw (8)  << "AvgEnt"
-  << setw (12) << "PipCap"
-  << setw (12) << "MaxLoa"
-  << setw (12) << "AvgLoa"
+  << setw (14) << "PipCap(Kbps)"
+  << setw (14) << "MaxLoa(Kbps)"
+  << setw (14) << "AvgLoa(Kbps)"
   << std::endl;
 
   Object::NotifyConstructionCompleted ();
@@ -122,9 +122,9 @@ LoadBalStatsCalculator::NotifyLoadBalancing (
   << " " << setw (7) << stats.tableSize
   << " " << setw (7) << stats.maxEntries
   << " " << setw (7) << stats.avgEntries
-  << " " << setw (11) << (double)(stats.pipeCapacity.GetBitRate ()) / 1000
-  << " " << setw (11) << (double)(stats.maxLoad.GetBitRate ()) / 1000
-  << " " << setw (11) << (double)(stats.avgLoad.GetBitRate ()) / 1000
+  << " " << setw (13) << (double)(stats.pipeCapacity.GetBitRate ()) / 1000
+  << " " << setw (13) << (double)(stats.maxLoad.GetBitRate ()) / 1000
+  << " " << setw (13) << (double)(stats.avgLoad.GetBitRate ()) / 1000
   << std::endl;
 }
 
