@@ -162,27 +162,27 @@ TrafficHelper::GetTypeId (void)
     .AddConstructor<TrafficHelper> ()
     .AddAttribute ("VoipTraffic",
                    "Enable GBR VoIP traffic over UDP.",
-                   BooleanValue (false),
+                   BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_gbrVoip),
                    MakeBooleanChecker ())
     .AddAttribute ("GbrLiveVideoTraffic",
                    "Enable GBR live video streaming traffic over UDP.",
-                   BooleanValue (false),
+                   BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_gbrLVid),
                    MakeBooleanChecker ())
     .AddAttribute ("BufferedVideoTraffic",
                    "Enable Non-GBR biffered video streaming traffic over TCP.",
-                   BooleanValue (false),
+                   BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_nonBVid),
                    MakeBooleanChecker ())
     .AddAttribute ("NonGbrLiveVideoTraffic",
                    "Enable Non-GBR live video streaming traffic over UDP.",
-                   BooleanValue (false),
+                   BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_nonLVid),
                    MakeBooleanChecker ())
     .AddAttribute ("HttpTraffic",
                    "Enable Non-GBR HTTP traffic over TCP.",
-                   BooleanValue (false),
+                   BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_nonHttp),
                    MakeBooleanChecker ())
     .AddAttribute ("FastTraffic",
