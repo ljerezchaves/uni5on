@@ -87,9 +87,11 @@ EpcController::GetTypeId (void)
     .AddAttribute ("PgwTftLoadBlock",
                    "Block new bearer requests when the P-GW TFT load is above "
                    "the blocking threshold factor.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&EpcController::m_tftLoadBlock),
-                   MakeBooleanChecker ())
+                   EnumValue (EpcController::OFF),
+                   MakeEnumAccessor (&EpcController::m_tftLoadBlock),
+                   MakeEnumChecker (EpcController::OFF,  "off",
+                                    EpcController::ON,   "on",
+                                    EpcController::AUTO, "gbr"))
     .AddAttribute ("S5AggFactor",
                    "The bandwidth usage threshold factor to control "
                    "the S5 traffic aggregation mechanism.",
@@ -1058,17 +1060,22 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
                    " because the flow tables is full.");
     }
 
-  // Block the bearer if the pipeline load is exceeding the threshold value.
-  if (m_tftLoadBlock)
+
+  double load = stats->GetEwmaPipelineLoad ().GetBitRate ();
+  double loadRatio = load / m_tftPlCapacity.GetBitRate ();
+
+  // If the pipeline load is exceeding the threshold value, handle the bearer
+  // request based on the PgwTftLoadBlock attribute value as follow:
+  // - If OFF : don't block the request.
+  // - If ON  : block the request.
+  // - If AUTO: block request only for GBR bearers.
+  if (loadRatio >= m_tftBlFactor
+      && (m_tftLoadBlock == FeatureStatus::ON
+          || (m_tftLoadBlock == FeatureStatus::AUTO && rInfo->IsGbr ())))
     {
-      double load = stats->GetEwmaPipelineLoad ().GetBitRate ();
-      double loadRatio = load / m_tftPlCapacity.GetBitRate ();
-      if (loadRatio >= m_tftBlFactor)
-        {
-          rInfo->SetBlocked (true, RoutingInfo::TFTMAXLOAD);
-          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
-                       " because the load will exceed pipeline capacity.");
-        }
+      rInfo->SetBlocked (true, RoutingInfo::TFTMAXLOAD);
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
+                   " because the load will exceed pipeline capacity.");
     }
   return !rInfo->IsBlocked ();
 }

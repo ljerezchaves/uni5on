@@ -412,7 +412,7 @@ private:
   uint8_t               m_tftLbLevel;     //!< Load balancing level.
   double                m_tftLbFactor;    //!< Load balancing threshold factor.
   double                m_tftBlFactor;    //!< Resource block threshold factor.
-  bool                  m_tftLoadBlock;   //!< Block requests due to pipe load.
+  FeatureStatus         m_tftLoadBlock;   //!< Block requests due to pipe load.
   uint16_t              m_tftMaxSwitches; //!< Max number of TFT switches.
   DataRate              m_tftPlCapacity;  //!< Pipeline capacity.
   uint32_t              m_tftTableSize;   //!< Flow table size.
