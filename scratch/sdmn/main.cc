@@ -74,7 +74,6 @@ main (int argc, char *argv[])
   uint32_t    progress = 0;
   uint32_t    simTime  = 250;
   std::string prefix   = "";
-  std::string cfgName  = "topology.txt";
 
   // Configure some default attribute values. These values can be overridden by
   // users on the command line or in the configuration file.
@@ -88,28 +87,25 @@ main (int argc, char *argv[])
   cmd.AddValue ("Progress", "Simulation progress interval [s].", progress);
   cmd.AddValue ("SimTime",  "Simulation stop time [s].", simTime);
   cmd.AddValue ("Prefix",   "Common prefix for filenames.", prefix);
-  cmd.AddValue ("CfgName",  "Configuration filename.", cfgName);
   cmd.Parse (argc, argv);
 
   // Update input and output prefixes from command line prefix parameter.
+  NS_ASSERT_MSG (prefix != "", "Unknown prefix.");
   std::ostringstream inputPrefix, outputPrefix;
   inputPrefix << prefix;
-  if (prefix != "")
+  char lastChar = *prefix.rbegin ();
+  if (lastChar != '-')
     {
-      char lastChar = *prefix.rbegin ();
-      if (lastChar != '-')
-        {
-          inputPrefix << "-";
-        }
+      inputPrefix << "-";
     }
   outputPrefix << inputPrefix.str () << RngSeedManager::GetRun () << "-";
   Config::SetGlobal ("InputPrefix", StringValue (inputPrefix.str ()));
   Config::SetGlobal ("OutputPrefix", StringValue (outputPrefix.str ()));
 
   // Read the configuration file. The file existence is mandatory.
-  std::string cfgFilename = inputPrefix.str () + cfgName;
+  std::string cfgFilename = prefix + ".topo";
   std::ifstream testFile (cfgFilename.c_str (), std::ifstream::in);
-  NS_ASSERT_MSG (testFile.good (), "Invalid topology file.");
+  NS_ASSERT_MSG (testFile.good (), "Invalid topology file " << cfgFilename);
   testFile.close ();
 
   Config::SetDefault ("ns3::ConfigStore::Mode", StringValue ("Load"));
