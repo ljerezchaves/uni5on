@@ -185,11 +185,6 @@ TrafficHelper::GetTypeId (void)
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_nonHttp),
                    MakeBooleanChecker ())
-    .AddAttribute ("FastTraffic",
-                   "Enable short inter-arrival times.",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&TrafficHelper::EnableFastTraffic),
-                   MakeBooleanChecker ())
   ;
   return tid;
 }
@@ -514,20 +509,6 @@ TrafficHelper::InstallNonGbrHttp ()
 
   // Activate dedicated bearer.
   GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
-}
-
-void
-TrafficHelper::EnableFastTraffic (bool fastTraffic)
-{
-  NS_LOG_FUNCTION (this << fastTraffic);
-
-  if (fastTraffic)
-    {
-      Ptr<RandomVariableStream> rng = CreateObject<UniformRandomVariable> ();
-      rng->SetAttribute ("Min", DoubleValue (0.0));
-      rng->SetAttribute ("Max", DoubleValue (12.0));
-      SetManagerAttribute ("PoissonInterArrival", PointerValue (rng));
-    }
 }
 
 };  // namespace ns3

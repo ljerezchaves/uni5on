@@ -163,12 +163,6 @@ private:
    */
   void InstallNonGbrHttp ();
 
-  /**
-   * Enable fast traffic with short inter-arrival times for debug purposes.
-   * \param fastTraffic If true, enable fast traffic.
-   */
-  void EnableFastTraffic (bool fastTraffic);
-
   ObjectFactory       m_managerFactory; //!< Traffic manager factory.
 
   Ptr<LteNetwork>     m_lteNetwork;     //!< The LTE network.
