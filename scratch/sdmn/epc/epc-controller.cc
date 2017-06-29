@@ -34,7 +34,7 @@ uint32_t EpcController::m_teidCount = 0x0000000F;
 EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
 
 EpcController::EpcController ()
-  : m_tftPlCapacity (DataRate (std::numeric_limits<uint64_t>::max ())),
+  : m_tftMaxLoad (DataRate (std::numeric_limits<uint64_t>::max ())),
     m_tftTableSize (std::numeric_limits<uint32_t>::max ())
 {
   NS_LOG_FUNCTION (this);
@@ -60,38 +60,42 @@ EpcController::GetTypeId (void)
                    MakeEnumAccessor (&EpcController::m_nonGbrCoex),
                    MakeEnumChecker (EpcController::OFF, "off",
                                     EpcController::ON,  "on"))
-    .AddAttribute ("NumPgwTftSwitches",
-                   "The number of P-GW TFT switches available for use.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (1),
-                   MakeUintegerAccessor (&EpcController::m_tftMaxSwitches),
-                   MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("PgwLoadBalancing",
-                   "Configure the P-GW load balancing mechanism.",
+    .AddAttribute ("PgwTftAdaptiveMode",
+                   "P-GW TFT adaptive mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (EpcController::ON),
-                   MakeEnumAccessor (&EpcController::m_pgwLoadBal),
+                   MakeEnumAccessor (&EpcController::m_pgwAdaptive),
                    MakeEnumChecker (EpcController::OFF,  "off",
                                     EpcController::ON,   "on",
                                     EpcController::AUTO, "auto"))
-    .AddAttribute ("PgwTftBlFactor",
-                   "The P-GW TFT blocking threshold factor.",
-                   DoubleValue (0.9),
-                   MakeDoubleAccessor (&EpcController::m_tftBlFactor),
-                   MakeDoubleChecker<double> (0.5, 1.0))
-    .AddAttribute ("PgwTftLbFactor",
-                   "The P-GW TFT load balancing threshold factor.",
-                   DoubleValue (0.8),
-                   MakeDoubleAccessor (&EpcController::m_tftLbFactor),
-                   MakeDoubleChecker<double> (0.5, 1.0))
-    .AddAttribute ("PgwTftLoadBlock",
-                   "Block new bearer requests when the P-GW TFT load is above "
-                   "the blocking threshold factor.",
-                   EnumValue (EpcController::OFF),
-                   MakeEnumAccessor (&EpcController::m_tftLoadBlock),
-                   MakeEnumChecker (EpcController::OFF,  "off",
-                                    EpcController::ON,   "on",
+    .AddAttribute ("PgwTftBlockPolicy",
+                   "P-GW TFT overloaded block policy.",
+                   EnumValue (EpcController::ON),
+                   MakeEnumAccessor (&EpcController::m_tftBlockPolicy),
+                   MakeEnumChecker (EpcController::OFF,  "none",
+                                    EpcController::ON,   "all",
                                     EpcController::AUTO, "gbr"))
+    .AddAttribute ("PgwTftBlockThs",
+                   "The P-GW TFT block threshold.",
+                   DoubleValue (0.95),
+                   MakeDoubleAccessor (&EpcController::m_tftBlockThs),
+                   MakeDoubleChecker<double> (0.8, 1.0))
+    .AddAttribute ("PgwTftJoinThs",
+                   "The P-GW TFT join threshold.",
+                   DoubleValue (0.30),
+                   MakeDoubleAccessor (&EpcController::m_tftJoinThs),
+                   MakeDoubleChecker<double> (0.0, 0.5))
+    .AddAttribute ("PgwTftSplitThs",
+                   "The P-GW TFT split threshold.",
+                   DoubleValue (0.90),
+                   MakeDoubleAccessor (&EpcController::m_tftSplitThs),
+                   MakeDoubleChecker<double> (0.5, 1.0))
+    .AddAttribute ("PgwTftSwitches",
+                   "The number of P-GW TFT switches available for use.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (1),
+                   MakeUintegerAccessor (&EpcController::m_tftSwitches),
+                   MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("S5AggFactor",
                    "The bandwidth usage threshold factor to control "
                    "the S5 traffic aggregation mechanism.",
@@ -126,10 +130,10 @@ EpcController::GetTypeId (void)
                      MakeTraceSourceAccessor (
                        &EpcController::m_bearerRequestTrace),
                      "ns3::RoutingInfo::TracedCallback")
-    .AddTraceSource ("LoadBalancing", "The load balancing trace source.",
+    .AddTraceSource ("PgwTftStats", "The P-GW TFT stats trace source.",
                      MakeTraceSourceAccessor (
-                       &EpcController::m_loadBalancingTrace),
-                     "ns3::EpcController::LoadBalancingTracedCallback")
+                       &EpcController::m_pgwTftStatsTrace),
+                     "ns3::EpcController::PgwTftStatsTracedCallback")
     .AddTraceSource ("SessionCreated", "The session created trace source.",
                      MakeTraceSourceAccessor (
                        &EpcController::m_sessionCreatedTrace),
@@ -200,13 +204,13 @@ EpcController::NotifyPgwBuilt (OFSwitch13DeviceContainer devices)
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (devices.GetN () == m_pgwDpIds.size ()
-                 && devices.GetN () == (m_tftMaxSwitches + 1U),
+                 && devices.GetN () == (m_tftSwitches + 1U),
                  "Inconsistent number of P-GW OpenFlow switches.");
 
-  // When the load balancing is OFF, block the m_tftMaxSwitches to 1.
-  if (GetPgwLoadBalancing () == FeatureStatus::OFF)
+  // When the P-GW adaptive mechanism is OFF, block the m_tftSwitches to 1.
+  if (GetPgwAdaptiveMode () == FeatureStatus::OFF)
     {
-      m_tftMaxSwitches = 1;
+      m_tftSwitches = 1;
     }
 }
 
@@ -241,14 +245,14 @@ EpcController::NotifyPgwMainAttach (
   DpctlSchedule (pgwSwDev->GetDatapathId (), cmdOut.str ());
 
   // IP packets coming from the Internet (SGi port) and addressed to the UE
-  // network are sent to the table corresponding to the current P-GW load
-  // balancing level.
+  // network are sent to the table corresponding to the current P-GW adaptive
+  // mechanism level.
   std::ostringstream cmdIn;
   cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
         << ",in_port=" << pgwSgiPortNo
         << ",ip_dst=" << EpcNetwork::m_ueAddr
         << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
-        << " goto:" << m_tftLbLevel + 1;
+        << " goto:" << m_tftLevel + 1;
   DpctlSchedule (pgwSwDev->GetDatapathId (), cmdIn.str ());
 
   // Table miss entry. Send to controller.
@@ -256,9 +260,8 @@ EpcController::NotifyPgwMainAttach (
                  " apply:output=ctrl");
 
   // -------------------------------------------------------------------------
-  // Table 1 to N -- P-GW LB tables -- [from higher to lower priority]
+  // Table 1 to N -- P-GW adaptive mechanism -- [from higher to lower priority]
   //
-  // Tables used when balancing the load among TFT switches.
   // Entries will be installed here by NotifyPgwTftAttach function.
 }
 
@@ -271,18 +274,18 @@ EpcController::NotifyPgwTftAttach (
                    pgwMainPortNo);
 
   // Saving information for P-GW TFT switches.
-  NS_ASSERT_MSG (pgwTftCounter < m_tftMaxSwitches, "No more TFTs allowed.");
+  NS_ASSERT_MSG (pgwTftCounter < m_tftSwitches, "No more TFTs allowed.");
   m_pgwDpIds.push_back (pgwSwDev->GetDatapathId ());
   m_pgwS5PortsNo.push_back (pgwS5PortNo);
 
   uint32_t tableSize = pgwSwDev->GetFlowTableSize ();
   DataRate plCapacity = pgwSwDev->GetPipelineCapacity ();
   m_tftTableSize = std::min (m_tftTableSize, tableSize);
-  m_tftPlCapacity = std::min (m_tftPlCapacity, plCapacity);
+  m_tftMaxLoad = std::min (m_tftMaxLoad, plCapacity);
 
   // Configuring the P-GW main switch to forward traffic to this TFT switch
-  // considering all possible load balancing levels.
-  for (uint16_t tft = m_tftMaxSwitches; pgwTftCounter + 1 <= tft; tft /= 2)
+  // considering all possible adaptive mechanism levels.
+  for (uint16_t tft = m_tftSwitches; pgwTftCounter + 1 <= tft; tft /= 2)
     {
       uint16_t lbLevel = (uint16_t)log2 (tft);
       uint16_t ipMask = (1 << lbLevel) - 1;
@@ -358,11 +361,11 @@ EpcController::GetNonGbrCoexistence (void) const
 }
 
 EpcController::FeatureStatus
-EpcController::GetPgwLoadBalancing (void) const
+EpcController::GetPgwAdaptiveMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_pgwLoadBal;
+  return m_pgwAdaptive;
 }
 
 EpcController::FeatureStatus
@@ -420,21 +423,21 @@ EpcController::NotifyConstructionCompleted (void)
   NS_LOG_FUNCTION (this);
 
   // Check the number of P-GW TFT switches (must be a power of 2).
-  NS_ASSERT_MSG ((m_tftMaxSwitches & (m_tftMaxSwitches - 1)) == 0,
+  NS_ASSERT_MSG ((m_tftSwitches & (m_tftSwitches - 1)) == 0,
                  "Invalid number of P-GW TFT switches.");
 
   // Set the initial number of P-GW TFT active switches.
-  switch (GetPgwLoadBalancing ())
+  switch (GetPgwAdaptiveMode ())
     {
     case FeatureStatus::ON:
       {
-        m_tftLbLevel = (uint8_t)log2 (m_tftMaxSwitches);
+        m_tftLevel = (uint8_t)log2 (m_tftSwitches);
         break;
       }
     case FeatureStatus::OFF:
     case FeatureStatus::AUTO:
       {
-        m_tftLbLevel = 0;
+        m_tftLevel = 0;
         break;
       }
     }
@@ -695,7 +698,7 @@ EpcController::ControllerTimeout (void)
 {
   NS_LOG_FUNCTION (this);
 
-  PgwTftCheckLoad ();
+  PgwTftCheckUsage ();
 
   // Schedule the next timeout operation.
   Simulator::Schedule (m_timeout, &EpcController::ControllerTimeout, this);
@@ -874,7 +877,7 @@ EpcController::GetPgwTftIdx (
 
   if (activeTfts == 0)
     {
-      activeTfts = 1 << m_tftLbLevel;
+      activeTfts = 1 << m_tftLevel;
     }
   Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
   return 1 + (ueInfo->GetUeAddr ().Get () % activeTfts);
@@ -1029,10 +1032,11 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeid ());
 
-  // The blocking threshold should be higher than the load-balancing threshold,
-  // otherwise the load balancing mechanism will never get into effect.
-  NS_ASSERT_MSG (m_tftBlFactor >= m_tftLbFactor, "The blocking threshold "
-                 "should be higher than the load-balancing threshold.");
+  // Check for valid thresholds attributes.
+  NS_ASSERT_MSG (m_tftSplitThs < m_tftBlockThs
+                 && m_tftSplitThs > 2 * m_tftJoinThs,
+                 "The split threshold should be smaller than the block "
+                 "threshold and two times larger than the join threshold.");
 
   // For default bearers and for bearers with aggregated traffic:
   // let's accept it without guarantees.
@@ -1050,46 +1054,44 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
   NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
 
   // Non-aggregated bearers always install rules on P-GW TFT flow table.
-  // Block the bearer if the table size is exceeding the threshold value.
-  double tableUseRatio = static_cast<double> (
-      stats->GetEwmaFlowEntries ()) / m_tftTableSize;
-  if (tableUseRatio >= m_tftBlFactor)
+  // Block the bearer if the table usage is exceeding the block threshold.
+  double tableUsage =
+    static_cast<double> (stats->GetEwmaFlowEntries ()) / m_tftTableSize;
+  if (tableUsage >= m_tftBlockThs)
     {
       rInfo->SetBlocked (true, RoutingInfo::TFTTABLEFULL);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
-                   " because the flow tables is full.");
+                   " because the TFT flow tables is full.");
     }
 
-
-  double load = stats->GetEwmaPipelineLoad ().GetBitRate ();
-  double loadRatio = load / m_tftPlCapacity.GetBitRate ();
-
-  // If the pipeline load is exceeding the threshold value, handle the bearer
-  // request based on the PgwTftLoadBlock attribute value as follow:
-  // - If OFF : don't block the request.
-  // - If ON  : block the request.
-  // - If AUTO: block request only for GBR bearers.
-  if (loadRatio >= m_tftBlFactor
-      && (m_tftLoadBlock == FeatureStatus::ON
-          || (m_tftLoadBlock == FeatureStatus::AUTO && rInfo->IsGbr ())))
+  // If the load usage is exceeding the block threshold, handle the bearer
+  // request based on the block policy as follow:
+  // - If OFF (none): don't block the request.
+  // - If ON (all)  : block the request.
+  // - If AUTO (gbr): block only if GBR request.
+  double loadUsage =
+    stats->GetEwmaPipelineLoad ().GetBitRate () / m_tftMaxLoad.GetBitRate ();
+  if (loadUsage >= m_tftBlockThs
+      && (m_tftBlockPolicy == FeatureStatus::ON
+          || (m_tftBlockPolicy == FeatureStatus::AUTO && rInfo->IsGbr ())))
     {
       rInfo->SetBlocked (true, RoutingInfo::TFTMAXLOAD);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
-                   " because the load will exceed pipeline capacity.");
+                   " because the TFT processing capacity is overloaded.");
     }
   return !rInfo->IsBlocked ();
 }
 
 void
-EpcController::PgwTftCheckLoad (void)
+EpcController::PgwTftCheckUsage (void)
 {
   NS_LOG_FUNCTION (this);
 
   double maxEntries = 0.0, sumEntries = 0.0;
-  double maxLoad    = 0.0, sumLoad    = 0.0;
-  uint32_t maxLbLevel = (uint8_t)log2 (m_tftMaxSwitches);
-  uint16_t activeTfts = 1 << m_tftLbLevel;
-  uint8_t  nextLbLevel = m_tftLbLevel;
+  double maxLoad = 0.0, sumLoad = 0.0;
+  uint32_t maxLbLevel = (uint8_t)log2 (m_tftSwitches);
+  uint16_t activeTfts = 1 << m_tftLevel;
+  uint8_t nextLevel = m_tftLevel;
 
   Ptr<OFSwitch13Device> device;
   Ptr<OFSwitch13StatsCalculator> stats;
@@ -1108,37 +1110,36 @@ EpcController::PgwTftCheckLoad (void)
       sumLoad += load;
     }
 
-  if (GetPgwLoadBalancing () == FeatureStatus::AUTO)
+  if (GetPgwAdaptiveMode () == FeatureStatus::AUTO)
     {
-      // We may increase the level when we hit the threshold factor.
-      double tableUseRatio = maxEntries / m_tftTableSize;
-      double loadUseRatio = maxLoad / m_tftPlCapacity.GetBitRate ();
+      double maxTableUsage = maxEntries / m_tftTableSize;
+      double maxLoadUsage = maxLoad / m_tftMaxLoad.GetBitRate ();
 
-      // We may decrease the level when we can accommodate the current load and
-      // flow entries on the lower level using up to 60% of resources.
-      double decreaseFactor = 0.6 * m_tftLbFactor * (activeTfts >> 1);
-
-      if ((m_tftLbLevel < maxLbLevel)
-          && (tableUseRatio >= m_tftLbFactor || loadUseRatio >= m_tftLbFactor))
+      // We may increase the level when we hit the split threshold.
+      if ((m_tftLevel < maxLbLevel)
+          && (maxTableUsage >= m_tftSplitThs
+              || maxLoadUsage >= m_tftSplitThs))
         {
-          NS_LOG_INFO ("Increasing the load balancing level.");
-          nextLbLevel++;
+          NS_LOG_INFO ("Increasing the adaptive mechanism level.");
+          nextLevel++;
         }
-      else if ((m_tftLbLevel > 0)
-               && (sumLoad < (decreaseFactor * m_tftPlCapacity.GetBitRate ()))
-               && (sumEntries < (decreaseFactor * m_tftTableSize)))
+
+      // We may decrease the level when we hit the joing threshold.
+      else if ((m_tftLevel > 0)
+               && (maxTableUsage < m_tftJoinThs)
+               && (maxLoadUsage < m_tftJoinThs))
         {
-          NS_LOG_INFO ("Decreasing the load balancing level.");
-          nextLbLevel--;
+          NS_LOG_INFO ("Decreasing the adaptive mechanism level.");
+          nextLevel--;
         }
     }
 
-  // Check if we need to update the load balancing level.
+  // Check if we need to update the adaptive mechanism level.
   uint32_t moved = 0;
-  if (m_tftLbLevel != nextLbLevel)
+  if (m_tftLevel != nextLevel)
     {
       // Identify and move bearers to the correct P-GW TFT switches.
-      uint16_t futureTfts = 1 << nextLbLevel;
+      uint16_t futureTfts = 1 << nextLevel;
       for (uint16_t currIdx = 1; currIdx <= activeTfts; currIdx++)
         {
           RoutingInfoList_t bearers = RoutingInfo::GetInstalledList (currIdx);
@@ -1157,33 +1158,34 @@ EpcController::PgwTftCheckLoad (void)
             }
         }
 
-      // Update the load balancing level and the P-GW main switch.
+      // Update the adaptive mechanism level and the P-GW main switch.
       std::ostringstream cmd;
       cmd << "flow-mod cmd=mods,table=0,prio=64 eth_type=0x800"
           << ",in_port=" << m_pgwSgiPortNo
           << ",ip_dst=" << EpcNetwork::m_ueAddr
           << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
-          << " goto:" << nextLbLevel + 1;
+          << " goto:" << nextLevel + 1;
       DpctlExecute (GetPgwMainDpId (), cmd.str ());
     }
 
-  // Fire the load balancing trace source.
-  struct LoadBalancingStats lbStats;
-  lbStats.avgEntries   = sumEntries / activeTfts;
-  lbStats.avgLoad      = DataRate (sumLoad / activeTfts);
-  lbStats.bearersMoved = moved;
-  lbStats.currentLevel = m_tftLbLevel;
-  lbStats.maxEntries   = maxEntries;
-  lbStats.maxLevel     = maxLbLevel;
-  lbStats.maxLoad      = DataRate (maxLoad);
-  lbStats.nextLevel    = nextLbLevel;
-  lbStats.pipeCapacity = m_tftPlCapacity;
-  lbStats.tableSize    = m_tftTableSize;
-  lbStats.thrsBlFactor = m_tftBlFactor;
-  lbStats.thrsLbFactor = m_tftLbFactor;
-  m_loadBalancingTrace (lbStats);
+  // Fire the P-GW TFT adaptation trace source.
+  struct PgwTftStats tftStats;
+  tftStats.tableSize = m_tftTableSize;
+  tftStats.maxEntries = maxEntries;
+  tftStats.sumEntries = sumEntries;
+  tftStats.pipeCapacity = m_tftMaxLoad.GetBitRate ();
+  tftStats.maxLoad = maxLoad;
+  tftStats.sumLoad = sumLoad;
+  tftStats.currentLevel = m_tftLevel;
+  tftStats.nextLevel = nextLevel;
+  tftStats.maxLevel = maxLbLevel;
+  tftStats.bearersMoved = moved;
+  tftStats.blockThrs = m_tftBlockThs;
+  tftStats.joinThrs = m_tftJoinThs;
+  tftStats.splitThrs = m_tftSplitThs;
+  m_pgwTftStatsTrace (tftStats);
 
-  m_tftLbLevel = nextLbLevel;
+  m_tftLevel = nextLevel;
 }
 
 void

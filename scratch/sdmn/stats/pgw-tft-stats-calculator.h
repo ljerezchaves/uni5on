@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef LOADBAL_STATS_CALCULATOR_H
-#define LOADBAL_STATS_CALCULATOR_H
+#ifndef PGW_TFT_STATS_CALCULATOR_H
+#define PGW_TFT_STATS_CALCULATOR_H
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -30,13 +30,13 @@ namespace ns3 {
 
 /**
  * \ingroup sdmnStats
- * This class monitors the EPC controller for P-GW load balancing mechanism.
+ * This class monitors the EPC controller for P-GW TFT adaptive mechanism.
  */
-class LoadBalStatsCalculator : public Object
+class PgwTftStatsCalculator : public Object
 {
 public:
-  LoadBalStatsCalculator ();          //!< Default constructor.
-  virtual ~LoadBalStatsCalculator (); //!< Dummy destructor, see DoDispose.
+  PgwTftStatsCalculator ();          //!< Default constructor.
+  virtual ~PgwTftStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -52,17 +52,17 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
   /**
-   * Notify a successful P-GW load balancing.
+   * Notify the statistics for P-GW adaptive mechanism.
    * \param context Trace source context.
-   * \param stats The load balancing statistics from the last interval.
+   * \param stats The P-GW TFT statistics.
    */
-  void NotifyLoadBalancing (std::string context,
-                            EpcController::LoadBalancingStats stats);
+  void NotifyPgwTftStats (std::string context,
+                          EpcController::PgwTftStats stats);
 
 private:
-  std::string               m_lbmFilename;    //!< LbmStats filename.
-  Ptr<OutputStreamWrapper>  m_lbmWrapper;     //!< LbmStats file wrapper.
+  std::string               m_tftFilename;    //!< TftStats filename.
+  Ptr<OutputStreamWrapper>  m_tftWrapper;     //!< TftStats file wrapper.
 };
 
 } // namespace ns3
-#endif /* LOADBAL_STATS_CALCULATOR_H */
+#endif /* PGW_TFT_STATS_CALCULATOR_H */

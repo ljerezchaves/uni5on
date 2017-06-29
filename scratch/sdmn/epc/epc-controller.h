@@ -57,21 +57,22 @@ public:
     AUTO = 2    //!< Automatic.
   };
 
-  /** Load balancing statistics sent to the LoadBalancing trace source. */
-  struct LoadBalancingStats
+  /** P-GW adaptive mechamis statistics. */
+  struct PgwTftStats
   {
-    uint32_t avgEntries;      //!< The table size average entries.
-    DataRate avgLoad;         //!< The pipeline average load;
+    double   tableSize;       //!< The OpenFlow flow table size.
+    double   maxEntries;      //!< The table size peak entries.
+    double   sumEntries;      //!< The table size total entries.
+    double   pipeCapacity;    //!< The OpenFlow pipeline capacity.
+    double   maxLoad;         //!< The pipeline peak load;
+    double   sumLoad;         //!< The pipeline total load;
+    uint32_t currentLevel;    //!< The current mechanism level.
+    uint32_t nextLevel;       //!< The mechanism level for next cycle.
+    uint32_t maxLevel;        //!< The maximum mechanism level.
     uint32_t bearersMoved;    //!< The number of bearers moved between TFTs.
-    uint32_t currentLevel;    //!< The current load balancing level.
-    uint32_t maxEntries;      //!< The table size peak entries.
-    uint32_t maxLevel;        //!< The maximum load balancing level.
-    DataRate maxLoad;         //!< The pipeline peak load;
-    uint32_t nextLevel;       //!< The load balancing level for next cycle.
-    DataRate pipeCapacity;    //!< The OpenFlow pipeline capacity.
-    uint32_t tableSize;       //!< The OpenFlow flow table size in use.
-    double   thrsBlFactor;    //!< The resource blocking threshold factor.
-    double   thrsLbFactor;    //!< The load balancing threshold factor.
+    double   blockThrs;       //!< The block threshold.
+    double   joinThrs;        //!< The join threshold.
+    double   splitThrs;       //!< The split threshold.
   };
 
   EpcController ();           //!< Default constructor.
@@ -176,7 +177,7 @@ public:
    */
   //\{
   FeatureStatus GetNonGbrCoexistence (void) const;
-  FeatureStatus GetPgwLoadBalancing (void) const;
+  FeatureStatus GetPgwAdaptiveMode (void) const;
   FeatureStatus GetS5TrafficAggregation (void) const;
   FeatureStatus GetVoipQos (void) const;
   //\}
@@ -195,10 +196,10 @@ public:
   static uint16_t GetDscpValue (EpsBearer::Qci qci);
 
   /**
-   * TracedCallback signature for the load balancing trace source.
-   * \param stats The load balancing statistics from the last interval.
+   * TracedCallback signature for the P-GW TFT stats trace source.
+   * \param stats The P-GW TST statistics from the last interval.
    */
-  typedef void (*LoadBalancingTracedCallback)(struct LoadBalancingStats stats);
+  typedef void (*PgwTftStatsTracedCallback)(struct PgwTftStats stats);
 
   /**
    * TracedCallback signature for session created trace source.
@@ -332,7 +333,7 @@ private:
    * \param rInfo The routing information to process.
    * \param activeTfts The number of active P-GW TFT switches. When set to 0,
    *        the number of P-GW TFTs will be calculated considering the current
-   *        load balancing level.
+   *        adaptive mechanism level.
    * \return The P-GW TFT index.
    */
   uint16_t GetPgwTftIdx (
@@ -375,10 +376,10 @@ private:
   bool PgwTftBearerRequest (Ptr<RoutingInfo> rInfo);
 
   /**
-   * Periodically check for the P-GW TFT load to enable/disable the load
-   * balancing mechanism.
+   * Periodically check for the P-GW TFT processing load and flow table usage
+   * to update the adaptive mechanism.
    */
-  void PgwTftCheckLoad (void);
+  void PgwTftCheckUsage (void);
 
   /** Initialize static attributes only once. */
   static void StaticInitialize (void);
@@ -393,13 +394,12 @@ private:
   TracedCallback<uint64_t, uint16_t, BearerContextList_t>
   m_sessionCreatedTrace;
 
-  /** The load balancing trace source, fired at SetPgwLoadBalancing. */
-  TracedCallback<struct LoadBalancingStats> m_loadBalancingTrace;
+  /** The P-GW TFT stats trace source, fired at PgwTftCheckUsage. */
+  TracedCallback<struct PgwTftStats> m_pgwTftStatsTrace;
 
   // Internal mechanisms for performance improvement.
   FeatureStatus         m_voipQos;        //!< VoIP QoS with queues.
   FeatureStatus         m_nonGbrCoex;     //!< Non-GBR coexistence.
-  FeatureStatus         m_pgwLoadBal;     //!< P-GW load balancing.
   FeatureStatus         m_s5Aggreg;       //!< S5 traffic aggregation.
 
   // P-GW metadata.
@@ -408,13 +408,15 @@ private:
   std::vector<uint32_t> m_pgwS5PortsNo;   //!< S5 port numbers.
   uint32_t              m_pgwSgiPortNo;   //!< SGi port number.
 
-  // Load balancing mechanism.
-  uint8_t               m_tftLbLevel;     //!< Load balancing level.
-  double                m_tftLbFactor;    //!< Load balancing threshold factor.
-  double                m_tftBlFactor;    //!< Resource block threshold factor.
-  FeatureStatus         m_tftLoadBlock;   //!< Block requests due to pipe load.
-  uint16_t              m_tftMaxSwitches; //!< Max number of TFT switches.
-  DataRate              m_tftPlCapacity;  //!< Pipeline capacity.
+  // P-GW TFT adaptive mechanism.
+  FeatureStatus         m_pgwAdaptive;    //!< P-GW adaptive mechanism.
+  uint8_t               m_tftLevel;       //!< Current adaptive level.
+  FeatureStatus         m_tftBlockPolicy; //!< Overload block policy.
+  double                m_tftBlockThs;    //!< Block threshold.
+  double                m_tftJoinThs;     //!< Join threshold.
+  double                m_tftSplitThs;    //!< Split threshold.
+  uint16_t              m_tftSwitches;    //!< Max number of TFT switches.
+  DataRate              m_tftMaxLoad;     //!< Processing capacity.
   uint32_t              m_tftTableSize;   //!< Flow table size.
 
   // Internal members and attributes.

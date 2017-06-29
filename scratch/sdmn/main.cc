@@ -28,7 +28,7 @@
 #include "stats/admission-stats-calculator.h"
 #include "stats/backhaul-stats-calculator.h"
 #include "stats/connection-stats-calculator.h"
-#include "stats/loadbal-stats-calculator.h"
+#include "stats/pgw-tft-stats-calculator.h"
 #include "stats/traffic-stats-calculator.h"
 
 using namespace ns3;
@@ -143,12 +143,12 @@ main (int argc, char *argv[])
   Ptr<AdmissionStatsCalculator>   admissionStats;
   Ptr<BackhaulStatsCalculator>    backhaulStats;
   Ptr<ConnectionStatsCalculator>  connectionStats;
-  Ptr<LoadBalStatsCalculator>     loadBalStats;
+  Ptr<PgwTftStatsCalculator>      pgwTftStats;
   Ptr<TrafficStatsCalculator>     trafficStats;
   admissionStats  = CreateObject<AdmissionStatsCalculator> ();
   backhaulStats   = CreateObject<BackhaulStatsCalculator> ();
   connectionStats = CreateObject<ConnectionStatsCalculator> ();
-  loadBalStats    = CreateObject<LoadBalStatsCalculator> ();
+  pgwTftStats     = CreateObject<PgwTftStatsCalculator> ();
   trafficStats    = CreateObject<TrafficStatsCalculator> ();
 
   // Populating routing and ARP tables. The 'perfect' ARP used here comes from
@@ -382,7 +382,7 @@ EnableVerbose (bool enable)
 
       LogComponentEnable ("AdmissionStatsCalculator", LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("BackhaulStatsCalculator",  LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("LoadBalStatsCalculator",   LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("PgwTftStatsCalculator",    LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("QosStatsCalculator",       LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("TrafficStatsCalculator",   LOG_ERROR_WARN_INFO_FT);
 

@@ -99,7 +99,7 @@ RingNetwork::TopologyCreate (void)
   // Install the EPC ring controller application for this topology.
   Ptr<RingController> ringController =
     CreateObjectWithAttributes<RingController> (
-      "NumPgwTftSwitches", UintegerValue (GetNTftNodes ()));
+      "PgwTftSwitches", UintegerValue (GetNTftNodes ()));
   InstallController (ringController);
 
   // Create the switch nodes.
