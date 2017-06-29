@@ -188,11 +188,11 @@ RingController::TopologyBearerAggregate (Ptr<RoutingInfo> rInfo)
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't aggregate the default bearer.");
   rInfo->SetAggregated (false);
 
-  if (GetS5TrafficAggregation () == FeatureStatus::ON)
+  if (GetS5AggregationMode () == FeatureStatus::ON)
     {
       rInfo->SetAggregated (true);
     }
-  else if (GetS5TrafficAggregation () == FeatureStatus::AUTO)
+  else if (GetS5AggregationMode () == FeatureStatus::AUTO)
     {
       Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
       uint16_t pgwIdx = ringInfo->GetPgwSwIdx ();
@@ -202,7 +202,7 @@ RingController::TopologyBearerAggregate (Ptr<RoutingInfo> rInfo)
       dwRatio = GetPathUseRatio (pgwIdx, sgwIdx, ringInfo->GetDownPath ());
       upRatio = GetPathUseRatio (sgwIdx, pgwIdx, ringInfo->GetUpPath ());
 
-      if (dwRatio <= GetS5AggFactor () && upRatio <= GetS5AggFactor ())
+      if (dwRatio <= GetS5AggBandThs () && upRatio <= GetS5AggBandThs ())
         {
           rInfo->SetAggregated (true);
         }

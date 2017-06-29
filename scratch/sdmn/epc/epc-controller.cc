@@ -64,7 +64,7 @@ EpcController::GetTypeId (void)
                    "P-GW TFT adaptive mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (EpcController::ON),
-                   MakeEnumAccessor (&EpcController::m_pgwAdaptive),
+                   MakeEnumAccessor (&EpcController::m_tftAdaptive),
                    MakeEnumChecker (EpcController::OFF,  "off",
                                     EpcController::ON,   "on",
                                     EpcController::AUTO, "auto"))
@@ -96,20 +96,19 @@ EpcController::GetTypeId (void)
                    UintegerValue (1),
                    MakeUintegerAccessor (&EpcController::m_tftSwitches),
                    MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("S5AggFactor",
-                   "The bandwidth usage threshold factor to control "
-                   "the S5 traffic aggregation mechanism.",
-                   DoubleValue (0.5),
-                   MakeDoubleAccessor (&EpcController::m_s5AggFactor),
-                   MakeDoubleChecker<double> (0.0, 1.0))
-    .AddAttribute ("S5TrafficAggregation",
-                   "Configure the S5 traffic aggregation mechanism.",
+    .AddAttribute ("S5Aggregation",
+                   "S5 traffic aggregation mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (EpcController::OFF),
-                   MakeEnumAccessor (&EpcController::m_s5Aggreg),
+                   MakeEnumAccessor (&EpcController::m_s5Aggregation),
                    MakeEnumChecker (EpcController::OFF,  "off",
                                     EpcController::ON,   "on",
                                     EpcController::AUTO, "auto"))
+    .AddAttribute ("S5AggBandThs",
+                   "The S5 traffic aggregation bandwidth threshold.",
+                   DoubleValue (0.5),
+                   MakeDoubleAccessor (&EpcController::m_s5AggBandThs),
+                   MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("TimeoutInterval",
                    "The interval between internal periodic operations.",
                    TimeValue (Seconds (5)),
@@ -365,15 +364,15 @@ EpcController::GetPgwAdaptiveMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_pgwAdaptive;
+  return m_tftAdaptive;
 }
 
 EpcController::FeatureStatus
-EpcController::GetS5TrafficAggregation (void) const
+EpcController::GetS5AggregationMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_s5Aggreg;
+  return m_s5Aggregation;
 }
 
 EpcController::FeatureStatus
@@ -450,11 +449,11 @@ EpcController::NotifyConstructionCompleted (void)
 }
 
 double
-EpcController::GetS5AggFactor (void) const
+EpcController::GetS5AggBandThs (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_s5AggFactor;
+  return m_s5AggBandThs;
 }
 
 ofl_err

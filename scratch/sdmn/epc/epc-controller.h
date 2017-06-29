@@ -178,7 +178,7 @@ public:
   //\{
   FeatureStatus GetNonGbrCoexistence (void) const;
   FeatureStatus GetPgwAdaptiveMode (void) const;
-  FeatureStatus GetS5TrafficAggregation (void) const;
+  FeatureStatus GetS5AggregationMode (void) const;
   FeatureStatus GetVoipQos (void) const;
   //\}
 
@@ -218,11 +218,11 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
   /**
-   * Get the bandwidth usage threshold factor to control the S5 traffic
+   * Get the bandwidth threshold factor used to enable/disable the S5 traffic
    * aggregation mechanism.
-   * \return The S5 aggregation factor.
+   * \return The bandwidth threshold factor.
    */
-  double GetS5AggFactor (void) const;
+  double GetS5AggBandThs (void) const;
 
   /**
    * \name Topology methods.
@@ -400,7 +400,6 @@ private:
   // Internal mechanisms for performance improvement.
   FeatureStatus         m_voipQos;        //!< VoIP QoS with queues.
   FeatureStatus         m_nonGbrCoex;     //!< Non-GBR coexistence.
-  FeatureStatus         m_s5Aggreg;       //!< S5 traffic aggregation.
 
   // P-GW metadata.
   std::vector<uint64_t> m_pgwDpIds;       //!< Datapath IDs.
@@ -409,7 +408,7 @@ private:
   uint32_t              m_pgwSgiPortNo;   //!< SGi port number.
 
   // P-GW TFT adaptive mechanism.
-  FeatureStatus         m_pgwAdaptive;    //!< P-GW adaptive mechanism.
+  FeatureStatus         m_tftAdaptive;    //!< P-GW adaptive mechanism.
   uint8_t               m_tftLevel;       //!< Current adaptive level.
   FeatureStatus         m_tftBlockPolicy; //!< Overload block policy.
   double                m_tftBlockThs;    //!< Block threshold.
@@ -419,9 +418,12 @@ private:
   DataRate              m_tftMaxLoad;     //!< Processing capacity.
   uint32_t              m_tftTableSize;   //!< Flow table size.
 
+  // S5 traffic aggregation mechanism.
+  FeatureStatus         m_s5Aggregation;  //!< S5 traffic aggregation.
+  double                m_s5AggBandThs;   //!< Bandwidth threshold.
+
   // Internal members and attributes.
   EpcS5SapPgw*          m_s5SapPgw;       //!< P-GW side of the S5 SAP.
-  double                m_s5AggFactor;    //!< S5Agg bandwidth usage threshold.
   Time                  m_timeout;        //!< Controller internal timeout.
 
   /** Map saving EpsBearer::Qci / IP DSCP value. */
