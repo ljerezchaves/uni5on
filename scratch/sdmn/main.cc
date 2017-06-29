@@ -73,6 +73,7 @@ main (int argc, char *argv[])
   bool        libLog   = false;
   uint32_t    progress = 0;
   uint32_t    simTime  = 250;
+  uint32_t    stopApps = 0;
   std::string prefix   = "";
 
   // Configure some default attribute values. These values can be overridden by
@@ -86,6 +87,7 @@ main (int argc, char *argv[])
   cmd.AddValue ("LibLog",   "Enable ofsoftswitch13 logs.", libLog);
   cmd.AddValue ("Progress", "Simulation progress interval [s].", progress);
   cmd.AddValue ("SimTime",  "Simulation stop time [s].", simTime);
+  cmd.AddValue ("StopApps", "Apps restarting loop stop time [s].", stopApps);
   cmd.AddValue ("Prefix",   "Common prefix for filenames.", prefix);
   cmd.Parse (argc, argv);
 
@@ -160,11 +162,19 @@ main (int argc, char *argv[])
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
   ArpCache::PopulateArpCaches ();
 
-  // If necessary, enable pcap output
+  // If necessary, enable pcap output.
   if (pcap)
     {
       ofNetwork->EnablePcap (outputPrefix.str (), true);
       lteNetwork->EnablePcap (outputPrefix.str (), true);
+    }
+
+  // Disable the app restarting loop at indicated time.
+  if (stopApps)
+    {
+      Simulator::Schedule (Seconds (stopApps), Config::Set,
+                           "/NodeList/*/$ns3::TrafficManager/RestartApps",
+                           BooleanValue (false));
     }
 
   // Run the simulation.
