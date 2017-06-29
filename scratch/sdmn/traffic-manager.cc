@@ -56,7 +56,6 @@ TrafficManager::GetTypeId (void)
                    MakePointerChecker <RandomVariableStream> ())
     .AddAttribute ("RestartApps",
                    "Continuously restart applications after stop events.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficManager::m_restartApps),
                    MakeBooleanChecker ())
