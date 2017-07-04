@@ -219,10 +219,17 @@ protected:
 
   /**
    * Get the bandwidth threshold factor used to enable/disable the S5 traffic
-   * aggregation mechanism.
+   * aggregation mechanism for GBR bearers.
    * \return The bandwidth threshold factor.
    */
-  double GetS5AggBandThs (void) const;
+  double GetS5AggGbrThs (void) const;
+
+  /**
+   * Get the bandwidth threshold factor used to enable/disable the S5 traffic
+   * aggregation mechanism for Non-GBR bearers.
+   * \return The bandwidth threshold factor.
+   */
+  double GetS5AggNonGbrThs (void) const;
 
   /**
    * \name Topology methods.
@@ -420,7 +427,8 @@ private:
 
   // S5 traffic aggregation mechanism.
   FeatureStatus         m_s5Aggregation;  //!< S5 traffic aggregation.
-  double                m_s5AggBandThs;   //!< Bandwidth threshold.
+  double                m_s5AggGbrThs;    //!< Bandwidth threshold for GBR.
+  double                m_s5AggNonGbrThs; //!< Bandwidth threshold for Non-GBR.
 
   // Internal members and attributes.
   EpcS5SapPgw*          m_s5SapPgw;       //!< P-GW side of the S5 SAP.

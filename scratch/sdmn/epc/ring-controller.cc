@@ -198,11 +198,13 @@ RingController::TopologyBearerAggregate (Ptr<RoutingInfo> rInfo)
       uint16_t pgwIdx = ringInfo->GetPgwSwIdx ();
       uint16_t sgwIdx = ringInfo->GetSgwSwIdx ();
 
-      double dwRatio, upRatio;
-      dwRatio = GetPathUseRatio (pgwIdx, sgwIdx, ringInfo->GetDownPath ());
-      upRatio = GetPathUseRatio (sgwIdx, pgwIdx, ringInfo->GetUpPath ());
+      double dlRatio, ulRatio, maxRatio;
+      dlRatio = GetPathUseRatio (pgwIdx, sgwIdx, ringInfo->GetDownPath ());
+      ulRatio = GetPathUseRatio (sgwIdx, pgwIdx, ringInfo->GetUpPath ());
+      maxRatio = std::max (dlRatio, ulRatio);
 
-      if (dwRatio <= GetS5AggBandThs () && upRatio <= GetS5AggBandThs ())
+      if ((rInfo->IsGbr () && maxRatio <= GetS5AggGbrThs ())
+          || (!rInfo->IsGbr () && maxRatio <= GetS5AggNonGbrThs ()))
         {
           rInfo->SetAggregated (true);
         }

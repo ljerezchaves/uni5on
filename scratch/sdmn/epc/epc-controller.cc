@@ -104,10 +104,15 @@ EpcController::GetTypeId (void)
                    MakeEnumChecker (EpcController::OFF,  "off",
                                     EpcController::ON,   "on",
                                     EpcController::AUTO, "auto"))
-    .AddAttribute ("S5AggBandThs",
-                   "The S5 traffic aggregation bandwidth threshold.",
+    .AddAttribute ("S5AggGbrThs",
+                   "S5 traffic aggregation GBR bandwidth threshold.",
                    DoubleValue (0.5),
-                   MakeDoubleAccessor (&EpcController::m_s5AggBandThs),
+                   MakeDoubleAccessor (&EpcController::m_s5AggGbrThs),
+                   MakeDoubleChecker<double> (0.0, 1.0))
+    .AddAttribute ("S5AggNonGbrThs",
+                   "S5 traffic aggregation Non-GBR bandwidth threshold.",
+                   DoubleValue (0.5),
+                   MakeDoubleAccessor (&EpcController::m_s5AggNonGbrThs),
                    MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("TimeoutInterval",
                    "The interval between internal periodic operations.",
@@ -449,11 +454,19 @@ EpcController::NotifyConstructionCompleted (void)
 }
 
 double
-EpcController::GetS5AggBandThs (void) const
+EpcController::GetS5AggGbrThs (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_s5AggBandThs;
+  return m_s5AggGbrThs;
+}
+
+double
+EpcController::GetS5AggNonGbrThs (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s5AggNonGbrThs;
 }
 
 ofl_err
