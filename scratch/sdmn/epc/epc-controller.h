@@ -57,7 +57,7 @@ public:
     AUTO = 2    //!< Automatic.
   };
 
-  /** P-GW adaptive mechamis statistics. */
+  /** P-GW adaptive mechanism statistics. */
   struct PgwTftStats
   {
     double   tableSize;       //!< The OpenFlow flow table size.
