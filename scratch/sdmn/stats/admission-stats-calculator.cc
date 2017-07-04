@@ -34,13 +34,16 @@ NS_LOG_COMPONENT_DEFINE ("AdmissionStatsCalculator");
 NS_OBJECT_ENSURE_REGISTERED (AdmissionStatsCalculator);
 
 AdmissionStatsCalculator::AdmissionStatsCalculator ()
-  : m_nonRequests (0),
-    m_nonAccepted (0),
-    m_nonBlocked  (0),
-    m_gbrRequests (0),
-    m_gbrAccepted (0),
-    m_gbrBlocked  (0),
-    m_activeBearers (0)
+  : m_nonRequests   (0),
+    m_nonAccepted   (0),
+    m_nonBlocked    (0),
+    m_nonAggregated (0),
+    m_gbrRequests   (0),
+    m_gbrAccepted   (0),
+    m_gbrBlocked    (0),
+    m_gbrAggregated (0),
+    m_activeBearers (0),
+    m_aggregBearers (0)
 {
   NS_LOG_FUNCTION (this);
 
@@ -91,20 +94,41 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
   NS_ASSERT_MSG (ringInfo, "No ring information for this routing info.");
 
   // Update internal counters.
-  if (rInfo->IsGbr () && !rInfo->IsAggregated ())
+  if (rInfo->IsGbr ())
     {
       m_gbrRequests++;
-      rInfo->IsBlocked () ? m_gbrBlocked++ : m_gbrAccepted++;
+      if (rInfo->IsBlocked ())
+        {
+          m_gbrBlocked++;
+        }
+      else
+        {
+          m_gbrAccepted++;
+          m_activeBearers++;
+          if (rInfo->IsAggregated ())
+            {
+              m_gbrAggregated++;
+              m_aggregBearers++;
+            }
+        }
     }
   else
     {
       m_nonRequests++;
-      rInfo->IsBlocked () ? m_nonBlocked++ : m_nonAccepted++;
-    }
-
-  if (!rInfo->IsBlocked ())
-    {
-      m_activeBearers++;
+      if (rInfo->IsBlocked ())
+        {
+          m_nonBlocked++;
+        }
+      else
+        {
+          m_nonAccepted++;
+          m_activeBearers++;
+          if (rInfo->IsAggregated ())
+            {
+              m_nonAggregated++;
+              m_aggregBearers++;
+            }
+        }
     }
 
   // Preparing bearer request stats for trace source.
@@ -147,6 +171,10 @@ AdmissionStatsCalculator::NotifyBearerRelease (Ptr<const RoutingInfo> rInfo)
 
   NS_ASSERT_MSG (m_activeBearers, "No active bearer here.");
   m_activeBearers--;
+  if (rInfo->IsAggregated ())
+    {
+      m_aggregBearers--;
+    }
 }
 
 void
@@ -175,11 +203,14 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   << left
   << setw (12) << "Time(s)"
   << right
-  << setw (8) << "Actives"
-  << setw (9) << "Req:GBR"
-  << setw (7) << "NonGBR"
-  << setw (9) << "Blk:GBR"
-  << setw (7) << "NonGBR"
+  << setw (8) << "ReqGbr"
+  << setw (8) << "ReqNon"
+  << setw (8) << "AggGbr"
+  << setw (8) << "AggNon"
+  << setw (8) << "BlkGbr"
+  << setw (8) << "BlkNon"
+  << setw (8) << "CurBea"
+  << setw (8) << "CurAgg"
   << std::endl;
 
   m_brqWrapper = Create<OutputStreamWrapper> (m_brqFilename, std::ios::out);
@@ -223,11 +254,14 @@ AdmissionStatsCalculator::DumpStatistics (Time nextDump)
   << left
   << setw (11) << Simulator::Now ().GetSeconds ()
   << right
-  << " " << setw (8) << m_activeBearers
   << " " << setw (8) << m_gbrRequests
-  << " " << setw (6) << m_nonRequests
-  << " " << setw (8) << m_gbrBlocked
-  << " " << setw (6) << m_nonBlocked
+  << " " << setw (7) << m_nonRequests
+  << " " << setw (7) << m_gbrAggregated
+  << " " << setw (7) << m_nonAggregated
+  << " " << setw (7) << m_gbrBlocked
+  << " " << setw (7) << m_nonBlocked
+  << " " << setw (7) << m_activeBearers
+  << " " << setw (7) << m_aggregBearers
   << std::endl;
 
   ResetCounters ();
@@ -240,12 +274,14 @@ AdmissionStatsCalculator::ResetCounters ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_nonRequests = 0;
-  m_nonAccepted = 0;
-  m_nonBlocked  = 0;
-  m_gbrRequests = 0;
-  m_gbrAccepted = 0;
-  m_gbrBlocked  = 0;
+  m_nonRequests   = 0;
+  m_nonAccepted   = 0;
+  m_nonBlocked    = 0;
+  m_nonAggregated = 0,
+  m_gbrRequests   = 0;
+  m_gbrAccepted   = 0;
+  m_gbrBlocked    = 0;
+  m_gbrAggregated = 0;
 }
 
 } // Namespace ns3
