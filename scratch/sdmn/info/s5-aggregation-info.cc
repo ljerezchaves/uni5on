@@ -64,6 +64,30 @@ S5AggregationInfo::GetThreshold (void) const
   return m_threshhold;
 }
 
+double
+S5AggregationInfo::GetDlBandwidthUsage (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_dlBandUsage;
+}
+
+double
+S5AggregationInfo::GetUlBandwidthUsage (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ulBandUsage;
+}
+
+double
+S5AggregationInfo::GetMaxBandwidthUsage (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return std::max (m_dlBandUsage, m_ulBandUsage);
+}
+
 void
 S5AggregationInfo::SetAggregated (bool value)
 {
@@ -78,6 +102,15 @@ S5AggregationInfo::SetThreshold (double value)
   NS_LOG_FUNCTION (this << value);
 
   m_threshhold = value;
+}
+
+void
+S5AggregationInfo::SetBandwidthUsage (double dlValue, double ulValue)
+{
+  NS_LOG_FUNCTION (this << dlValue << ulValue);
+
+  m_dlBandUsage = dlValue;
+  m_ulBandUsage = ulValue;
 }
 
 void

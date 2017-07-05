@@ -51,9 +51,13 @@ public:
   //\{
   bool IsAggregated (void) const;
   double GetThreshold (void) const;
+  double GetDlBandwidthUsage (void) const;
+  double GetUlBandwidthUsage (void) const;
+  double GetMaxBandwidthUsage (void) const;
 
   void SetAggregated (bool value);
   void SetThreshold (double value);
+  void SetBandwidthUsage (double dlValue, double ulValue);
   //\}
 
 protected:
@@ -63,6 +67,8 @@ protected:
 private:
   bool             m_isAggregated;  //!< Traffic aggregated over S5 bearer.
   double           m_threshhold;    //!< Link usage threshold.
+  double           m_dlBandUsage;   //!< Downlink bandwidth usage.
+  double           m_ulBandUsage;   //!< Uplink bandwidth usage.
 };
 
 };  // namespace ns3
