@@ -50,8 +50,10 @@ public:
   /** \name Private member accessors. */
   //\{
   bool IsAggregated (void) const;
+  double GetThreshold (void) const;
 
   void SetAggregated (bool value);
+  void SetThreshold (double value);
   //\}
 
 protected:
@@ -60,6 +62,7 @@ protected:
 
 private:
   bool             m_isAggregated;  //!< Traffic aggregated over S5 bearer.
+  double           m_threshhold;    //!< Link usage threshold.
 };
 
 };  // namespace ns3

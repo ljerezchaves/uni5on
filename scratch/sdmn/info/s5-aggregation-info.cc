@@ -56,12 +56,28 @@ S5AggregationInfo::IsAggregated (void) const
   return m_isAggregated;
 }
 
+double
+S5AggregationInfo::GetThreshold (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_threshhold;
+}
+
 void
 S5AggregationInfo::SetAggregated (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 
   m_isAggregated = value;
+}
+
+void
+S5AggregationInfo::SetThreshold (double value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_threshhold = value;
 }
 
 void
