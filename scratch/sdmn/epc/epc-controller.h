@@ -225,8 +225,7 @@ protected:
    */
   //\{
   /**
-   * Check if this bearer can have its traffic aggregated over S5 interface,
-   * setting the internal rInfo flag accordingly.
+   * Update the S5 traffica aggregation metadata with link bandwitdh usage.
    * \param rInfo The routing information to process.
    */
   virtual void TopologyBearerAggregate (Ptr<RoutingInfo> rInfo) = 0;

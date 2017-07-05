@@ -185,35 +185,15 @@ RingController::TopologyBearerAggregate (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeid ());
 
-  // Get the aggregation info.
+  // Update the aggregation metadata with link bandwidth usage.
   Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
-  NS_ASSERT_MSG (aggInfo, "Can't find the S5 aggregation info.");
-  aggInfo->SetAggregated (false);
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  uint16_t pgwIdx = ringInfo->GetPgwSwIdx ();
+  uint16_t sgwIdx = ringInfo->GetSgwSwIdx ();
 
-  if (GetS5AggregationMode () == OperationMode::ON)
-    {
-      aggInfo->SetAggregated (true);
-    }
-  else if (GetS5AggregationMode () == OperationMode::AUTO)
-    {
-      Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-      uint16_t pgwIdx = ringInfo->GetPgwSwIdx ();
-      uint16_t sgwIdx = ringInfo->GetSgwSwIdx ();
-
-      double dlRatio, ulRatio;
-      dlRatio = GetPathUseRatio (pgwIdx, sgwIdx, ringInfo->GetDownPath ());
-      ulRatio = GetPathUseRatio (sgwIdx, pgwIdx, ringInfo->GetUpPath ());
-
-      if (std::max (dlRatio, ulRatio) <= aggInfo->GetThreshold ())
-        {
-          aggInfo->SetAggregated (true);
-        }
-    }
-
-  if (rInfo->IsAggregated ())
-    {
-      NS_LOG_INFO ("Aggregating traffic of bearer teid " << rInfo->GetTeid ());
-    }
+  aggInfo->SetBandwidthUsage (
+    GetPathUseRatio (pgwIdx, sgwIdx, ringInfo->GetDownPath ()),
+    GetPathUseRatio (sgwIdx, pgwIdx, ringInfo->GetUpPath ()));
 }
 
 void

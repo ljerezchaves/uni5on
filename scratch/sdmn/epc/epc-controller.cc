@@ -180,11 +180,26 @@ EpcController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
   rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
   rInfo->SetBlocked (false);
 
-  // Check for S5 traffic aggregation.
+  // Get the S5 traffic aggregation metadata.
   Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
   NS_ASSERT_MSG (aggInfo, "Can't find the S5 aggregation info.");
-  aggInfo->SetThreshold (rInfo->IsGbr () ? m_s5AggGbrThs : m_s5AggNonGbrThs);
+
+  // Update bandwidth usage and threshold values.
   TopologyBearerAggregate (rInfo);
+  aggInfo->SetThreshold (rInfo->IsGbr () ? m_s5AggGbrThs : m_s5AggNonGbrThs);
+
+  // Check for S5 traffic agregation.
+  if (GetS5AggregationMode () == OperationMode::ON
+      || (GetS5AggregationMode () == OperationMode::AUTO
+          && aggInfo->GetMaxBandwidthUsage () <= aggInfo->GetThreshold ()))
+    {
+      aggInfo->SetAggregated (true);
+      NS_LOG_INFO ("Aggregating traffic of bearer teid " << rInfo->GetTeid ());
+    }
+  else
+    {
+      aggInfo->SetAggregated (false);
+    }
 
   // Let's first check for available resources on P-GW and backhaul switches.
   bool accepted = true;
