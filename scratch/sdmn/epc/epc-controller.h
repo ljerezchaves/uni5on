@@ -27,12 +27,13 @@
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
 #include "epc-s5-sap.h"
-#include "../info/routing-info.h"
 #include "../info/connection-info.h"
-#include "../info/meter-info.h"
-#include "../info/gbr-info.h"
-#include "../info/ue-info.h"
 #include "../info/enb-info.h"
+#include "../info/gbr-info.h"
+#include "../info/meter-info.h"
+#include "../info/routing-info.h"
+#include "../info/s5-aggregation-info.h"
+#include "../info/ue-info.h"
 
 namespace ns3 {
 
@@ -216,20 +217,6 @@ protected:
 
   // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
-
-  /**
-   * Get the bandwidth threshold factor used to enable/disable the S5 traffic
-   * aggregation mechanism for GBR bearers.
-   * \return The bandwidth threshold factor.
-   */
-  double GetS5AggGbrThs (void) const;
-
-  /**
-   * Get the bandwidth threshold factor used to enable/disable the S5 traffic
-   * aggregation mechanism for Non-GBR bearers.
-   * \return The bandwidth threshold factor.
-   */
-  double GetS5AggNonGbrThs (void) const;
 
   /**
    * \name Topology methods.

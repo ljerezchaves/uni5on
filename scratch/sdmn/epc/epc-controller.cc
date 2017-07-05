@@ -176,10 +176,14 @@ EpcController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
-  // Update the P-GW TFT index, the blocked flag, and check for S5 traffic
-  // aggregation.
+  // Update the P-GW TFT index and the blocked flag.
   rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
   rInfo->SetBlocked (false);
+
+  // Check for S5 traffic aggregation.
+  Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
+  NS_ASSERT_MSG (aggInfo, "Can't find the S5 aggregation info.");
+  aggInfo->SetThreshold (rInfo->IsGbr () ? m_s5AggGbrThs : m_s5AggNonGbrThs);
   TopologyBearerAggregate (rInfo);
 
   // Let's first check for available resources on P-GW and backhaul switches.
@@ -451,22 +455,6 @@ EpcController::NotifyConstructionCompleted (void)
 
   // Chain up.
   OFSwitch13Controller::NotifyConstructionCompleted ();
-}
-
-double
-EpcController::GetS5AggGbrThs (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_s5AggGbrThs;
-}
-
-double
-EpcController::GetS5AggNonGbrThs (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_s5AggNonGbrThs;
 }
 
 ofl_err

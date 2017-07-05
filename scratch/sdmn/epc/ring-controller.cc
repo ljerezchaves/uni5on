@@ -21,7 +21,6 @@
 #include <string>
 #include "ring-controller.h"
 #include "epc-network.h"
-#include "../info/s5-aggregation-info.h"
 
 namespace ns3 {
 
@@ -201,13 +200,11 @@ RingController::TopologyBearerAggregate (Ptr<RoutingInfo> rInfo)
       uint16_t pgwIdx = ringInfo->GetPgwSwIdx ();
       uint16_t sgwIdx = ringInfo->GetSgwSwIdx ();
 
-      double dlRatio, ulRatio, maxRatio;
+      double dlRatio, ulRatio;
       dlRatio = GetPathUseRatio (pgwIdx, sgwIdx, ringInfo->GetDownPath ());
       ulRatio = GetPathUseRatio (sgwIdx, pgwIdx, ringInfo->GetUpPath ());
-      maxRatio = std::max (dlRatio, ulRatio);
 
-      if ((rInfo->IsGbr () && maxRatio <= GetS5AggGbrThs ())
-          || (!rInfo->IsGbr () && maxRatio <= GetS5AggNonGbrThs ()))
+      if (std::max (dlRatio, ulRatio) <= aggInfo->GetThreshold ())
         {
           aggInfo->SetAggregated (true);
         }
