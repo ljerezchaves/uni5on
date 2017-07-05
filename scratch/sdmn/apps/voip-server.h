@@ -19,8 +19,8 @@
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef VOIP_SERVER_H_
-#define VOIP_SERVER_H_
+#ifndef VOIP_SERVER_H
+#define VOIP_SERVER_H
 
 #include "sdmn-server-app.h"
 
@@ -73,4 +73,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* VOIP_SERVER_H_ */
+#endif /* VOIP_SERVER_H */

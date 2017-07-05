@@ -20,8 +20,8 @@
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef HTTP_SERVER_H_
-#define HTTP_SERVER_H_
+#ifndef HTTP_SERVER_H
+#define HTTP_SERVER_H
 
 #include "sdmn-server-app.h"
 
@@ -113,4 +113,4 @@ private:
 };
 
 } // Namespace ns3
-#endif /* HTTP_SERVER_H_ */
+#endif /* HTTP_SERVER_H */

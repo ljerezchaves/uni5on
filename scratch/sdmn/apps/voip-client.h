@@ -19,8 +19,8 @@
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef VOIP_CLIENT_H_
-#define VOIP_CLIENT_H_
+#ifndef VOIP_CLIENT_H
+#define VOIP_CLIENT_H
 
 #include "sdmn-client-app.h"
 
@@ -77,4 +77,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* VOIP_CLIENT_H_ */
+#endif /* VOIP_CLIENT_H */

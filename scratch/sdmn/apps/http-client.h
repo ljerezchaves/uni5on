@@ -20,8 +20,8 @@
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef HTTP_CLIENT_H_
-#define HTTP_CLIENT_H_
+#ifndef HTTP_CLIENT_H
+#define HTTP_CLIENT_H
 
 #include "sdmn-client-app.h"
 
@@ -109,4 +109,4 @@ private:
 };
 
 } // Namespace ns3
-#endif /* HTTP_CLIENT_H_ */
+#endif /* HTTP_CLIENT_H */
