@@ -21,6 +21,7 @@
 #include <string>
 #include "ring-controller.h"
 #include "epc-network.h"
+#include "../info/s5-aggregation-info.h"
 
 namespace ns3 {
 
@@ -185,12 +186,14 @@ RingController::TopologyBearerAggregate (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeid ());
 
-  NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't aggregate the default bearer.");
-  rInfo->SetAggregated (false);
+  // Get the aggregation info.
+  Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
+  NS_ASSERT_MSG (aggInfo, "Can't find the S5 aggregation info.");
+  aggInfo->SetAggregated (false);
 
   if (GetS5AggregationMode () == FeatureStatus::ON)
     {
-      rInfo->SetAggregated (true);
+      aggInfo->SetAggregated (true);
     }
   else if (GetS5AggregationMode () == FeatureStatus::AUTO)
     {
@@ -206,7 +209,7 @@ RingController::TopologyBearerAggregate (Ptr<RoutingInfo> rInfo)
       if ((rInfo->IsGbr () && maxRatio <= GetS5AggGbrThs ())
           || (!rInfo->IsGbr () && maxRatio <= GetS5AggNonGbrThs ()))
         {
-          rInfo->SetAggregated (true);
+          aggInfo->SetAggregated (true);
         }
     }
 

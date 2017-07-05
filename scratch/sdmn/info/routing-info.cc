@@ -19,6 +19,7 @@
  */
 
 #include "routing-info.h"
+#include "s5-aggregation-info.h"
 
 namespace ns3 {
 
@@ -36,7 +37,6 @@ RoutingInfo::RoutingInfo (uint32_t teid)
     m_isDefault (0),
     m_isInstalled (0),
     m_isActive (0),
-    m_isAggregated (0),
     m_isBlocked (0)
 {
   NS_LOG_FUNCTION (this);
@@ -165,7 +165,7 @@ RoutingInfo::IsAggregated (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isAggregated;
+  return GetObject<S5AggregationInfo> ()->IsAggregated ();
 }
 
 bool
@@ -247,16 +247,6 @@ RoutingInfo::SetActive (bool value)
   NS_LOG_FUNCTION (this << value);
 
   m_isActive = value;
-}
-
-void
-RoutingInfo::SetAggregated (bool value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  NS_ASSERT_MSG (IsDefault () == false || value == false,
-                 "Can't aggregate the default bearer traffic.");
-  m_isAggregated = value;
 }
 
 void
@@ -396,6 +386,16 @@ void
 RoutingInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+}
+
+void
+RoutingInfo::NotifyConstructionCompleted (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Create the S5 traffic aggregation metadata,
+  // (will be aggregated to this routing info object).
+  CreateObject<S5AggregationInfo> (Ptr<RoutingInfo> (this));
 }
 
 void

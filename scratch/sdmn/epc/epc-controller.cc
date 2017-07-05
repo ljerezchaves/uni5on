@@ -692,7 +692,6 @@ EpcController::BearerRemove (Ptr<RoutingInfo> rInfo)
   if (rInfo->IsAggregated ())
     {
       // No rules to remove for aggregated traffic.
-      rInfo->SetAggregated (false);
       return true;
     }
 
@@ -764,7 +763,6 @@ EpcController::DoCreateSessionRequest (
   // Create the routing information for this default bearer.
   rInfo = CreateObject<RoutingInfo> (teid);
   rInfo->SetActive (true);
-  rInfo->SetAggregated (false);
   rInfo->SetBearerContext (defaultBearer);
   rInfo->SetBlocked (false);
   rInfo->SetDefault (true);
@@ -800,7 +798,6 @@ EpcController::DoCreateSessionRequest (
       // Create the routing information for this dedicated bearer.
       rInfo = CreateObject<RoutingInfo> (teid);
       rInfo->SetActive (false);
-      rInfo->SetAggregated (false);
       rInfo->SetBearerContext (dedicatedBearer);
       rInfo->SetBlocked (false);
       rInfo->SetDefault (false);
