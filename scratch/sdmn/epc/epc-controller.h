@@ -49,8 +49,8 @@ class EpcController : public OFSwitch13Controller
   friend class MemberEpcS5SapPgw<EpcController>;
 
 public:
-  /** Options to enable or disable internal mechanisms. */
-  enum FeatureStatus
+  /** Operation modes for internal mechanisms. */
+  enum OperationMode
   {
     OFF  = 0,   //!< Always off.
     ON   = 1,   //!< Always on.
@@ -172,14 +172,14 @@ public:
   virtual void NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo);
 
   /**
-   * \name Internal mechanisms status accessors.
-   * \return The requested mechanism status.
+   * \name Internal mechanisms operation mode accessors.
+   * \return The requested mechanism operation mode.
    */
   //\{
-  FeatureStatus GetNonGbrCoexistence (void) const;
-  FeatureStatus GetPgwAdaptiveMode (void) const;
-  FeatureStatus GetS5AggregationMode (void) const;
-  FeatureStatus GetVoipQos (void) const;
+  OperationMode GetNonGbrCoexistenceMode (void) const;
+  OperationMode GetPgwAdaptiveMode (void) const;
+  OperationMode GetS5AggregationMode (void) const;
+  OperationMode GetVoipQosMode (void) const;
   //\}
 
   /**
@@ -405,8 +405,8 @@ private:
   TracedCallback<struct PgwTftStats> m_pgwTftStatsTrace;
 
   // Internal mechanisms for performance improvement.
-  FeatureStatus         m_voipQos;        //!< VoIP QoS with queues.
-  FeatureStatus         m_nonGbrCoex;     //!< Non-GBR coexistence.
+  OperationMode         m_voipQos;        //!< VoIP QoS with queues.
+  OperationMode         m_nonGbrCoex;     //!< Non-GBR coexistence.
 
   // P-GW metadata.
   std::vector<uint64_t> m_pgwDpIds;       //!< Datapath IDs.
@@ -415,9 +415,9 @@ private:
   uint32_t              m_pgwSgiPortNo;   //!< SGi port number.
 
   // P-GW TFT adaptive mechanism.
-  FeatureStatus         m_tftAdaptive;    //!< P-GW adaptive mechanism.
+  OperationMode         m_tftAdaptive;    //!< P-GW adaptive mechanism.
   uint8_t               m_tftLevel;       //!< Current adaptive level.
-  FeatureStatus         m_tftBlockPolicy; //!< Overload block policy.
+  OperationMode         m_tftBlockPolicy; //!< Overload block policy.
   double                m_tftBlockThs;    //!< Block threshold.
   double                m_tftJoinThs;     //!< Join threshold.
   double                m_tftSplitThs;    //!< Split threshold.
@@ -426,7 +426,7 @@ private:
   uint32_t              m_tftTableSize;   //!< Flow table size.
 
   // S5 traffic aggregation mechanism.
-  FeatureStatus         m_s5Aggregation;  //!< S5 traffic aggregation.
+  OperationMode         m_s5Aggregation;  //!< S5 traffic aggregation.
   double                m_s5AggGbrThs;    //!< Bandwidth threshold for GBR.
   double                m_s5AggNonGbrThs; //!< Bandwidth threshold for Non-GBR.
 

@@ -212,7 +212,7 @@ EpcController::NotifyPgwBuilt (OFSwitch13DeviceContainer devices)
                  "Inconsistent number of P-GW OpenFlow switches.");
 
   // When the P-GW adaptive mechanism is OFF, block the m_tftSwitches to 1.
-  if (GetPgwAdaptiveMode () == FeatureStatus::OFF)
+  if (GetPgwAdaptiveMode () == OperationMode::OFF)
     {
       m_tftSwitches = 1;
     }
@@ -356,15 +356,15 @@ EpcController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
   NS_LOG_FUNCTION (this << cInfo);
 }
 
-EpcController::FeatureStatus
-EpcController::GetNonGbrCoexistence (void) const
+EpcController::OperationMode
+EpcController::GetNonGbrCoexistenceMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_nonGbrCoex;
 }
 
-EpcController::FeatureStatus
+EpcController::OperationMode
 EpcController::GetPgwAdaptiveMode (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -372,7 +372,7 @@ EpcController::GetPgwAdaptiveMode (void) const
   return m_tftAdaptive;
 }
 
-EpcController::FeatureStatus
+EpcController::OperationMode
 EpcController::GetS5AggregationMode (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -380,8 +380,8 @@ EpcController::GetS5AggregationMode (void) const
   return m_s5Aggregation;
 }
 
-EpcController::FeatureStatus
-EpcController::GetVoipQos (void) const
+EpcController::OperationMode
+EpcController::GetVoipQosMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -433,13 +433,13 @@ EpcController::NotifyConstructionCompleted (void)
   // Set the initial number of P-GW TFT active switches.
   switch (GetPgwAdaptiveMode ())
     {
-    case FeatureStatus::ON:
+    case OperationMode::ON:
       {
         m_tftLevel = (uint8_t)log2 (m_tftSwitches);
         break;
       }
-    case FeatureStatus::OFF:
-    case FeatureStatus::AUTO:
+    case OperationMode::OFF:
+    case OperationMode::AUTO:
       {
         m_tftLevel = 0;
         break;
@@ -621,7 +621,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 3 -- Coexistence QoS table -- [from higher to lower priority]
   //
-  if (GetNonGbrCoexistence () == FeatureStatus::ON)
+  if (GetNonGbrCoexistenceMode () == OperationMode::ON)
     {
       // Non-GBR packets indicated by DSCP field. Apply corresponding Non-GBR
       // meter band. Send the packet to Output table.
@@ -639,7 +639,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 4 -- Output table -- [from higher to lower priority]
   //
-  if (GetVoipQos () == FeatureStatus::ON)
+  if (GetVoipQosMode () == OperationMode::ON)
     {
       int dscpVoip = EpcController::GetDscpValue (EpsBearer::GBR_CONV_VOICE);
 
@@ -1081,8 +1081,8 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
   double loadUsage =
     stats->GetEwmaPipelineLoad ().GetBitRate () / m_tftMaxLoad.GetBitRate ();
   if (loadUsage >= m_tftBlockThs
-      && (m_tftBlockPolicy == FeatureStatus::ON
-          || (m_tftBlockPolicy == FeatureStatus::AUTO && rInfo->IsGbr ())))
+      && (m_tftBlockPolicy == OperationMode::ON
+          || (m_tftBlockPolicy == OperationMode::AUTO && rInfo->IsGbr ())))
     {
       rInfo->SetBlocked (true, RoutingInfo::TFTMAXLOAD);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
@@ -1119,7 +1119,7 @@ EpcController::PgwTftCheckUsage (void)
       sumLoad += load;
     }
 
-  if (GetPgwAdaptiveMode () == FeatureStatus::AUTO)
+  if (GetPgwAdaptiveMode () == OperationMode::AUTO)
     {
       double maxTableUsage = maxEntries / m_tftTableSize;
       double maxLoadUsage = maxLoad / m_tftMaxLoad.GetBitRate ();

@@ -152,7 +152,7 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
         << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (1);
   DpctlSchedule (cInfo->GetSwDpId (1), cmd11.str ());
 
-  if (GetNonGbrCoexistence () == FeatureStatus::ON)
+  if (GetNonGbrCoexistenceMode () == OperationMode::ON)
     {
       // Connecting this controller to ConnectionInfo trace source
       // when the Non-GBR coexistence mechanism is enable.
@@ -191,11 +191,11 @@ RingController::TopologyBearerAggregate (Ptr<RoutingInfo> rInfo)
   NS_ASSERT_MSG (aggInfo, "Can't find the S5 aggregation info.");
   aggInfo->SetAggregated (false);
 
-  if (GetS5AggregationMode () == FeatureStatus::ON)
+  if (GetS5AggregationMode () == OperationMode::ON)
     {
       aggInfo->SetAggregated (true);
     }
-  else if (GetS5AggregationMode () == FeatureStatus::AUTO)
+  else if (GetS5AggregationMode () == OperationMode::AUTO)
     {
       Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
       uint16_t pgwIdx = ringInfo->GetPgwSwIdx ();
