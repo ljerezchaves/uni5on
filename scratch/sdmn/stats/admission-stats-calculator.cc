@@ -24,6 +24,7 @@
 #include "../info/ue-info.h"
 #include "../info/routing-info.h"
 #include "../info/ring-routing-info.h"
+#include "../info/s5-aggregation-info.h"
 #include "../info/gbr-info.h"
 
 using namespace std;
@@ -73,6 +74,12 @@ AdmissionStatsCalculator::GetTypeId (void)
                    MakeStringAccessor (
                      &AdmissionStatsCalculator::m_admFilename),
                    MakeStringChecker ())
+    .AddAttribute ("AggStatsFilename",
+                   "Filename for bearer aggregation statistics.",
+                   StringValue ("admission-aggregation.log"),
+                   MakeStringAccessor (
+                     &AdmissionStatsCalculator::m_aggFilename),
+                   MakeStringChecker ())
     .AddAttribute ("BrqStatsFilename",
                    "Filename for bearer request statistics.",
                    StringValue ("admission-requests.log"),
@@ -91,6 +98,7 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
   Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
   Ptr<const GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
   Ptr<const RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  Ptr<const S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ring information for this routing info.");
 
   // Update internal counters.
@@ -162,6 +170,21 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
   << " " << setw (9) << rInfo->GetBlockReasonStr ()
   << " " << setw (9) << ringInfo->GetPathStr ()
   << std::endl;
+
+  // Save aggregation stats into output file.
+  *m_aggWrapper->GetStream ()
+  << left
+  << setw (11) << Simulator::Now ().GetSeconds ()
+  << right
+  << " " << setw (6) << rInfo->GetTeid ()
+  << " " << setw (6) << rInfo->IsGbr ()
+  << " " << setw (6) << rInfo->IsBlocked ()
+  << " " << setw (6) << rInfo->IsAggregated ()
+  << setprecision (2)
+  << " " << setw (6) << aggInfo->GetMaxBandwidthUsage ()
+  << " " << setw (6) << aggInfo->GetThreshold ()
+  << setprecision (4)
+  << std::endl;
 }
 
 void
@@ -183,6 +206,7 @@ AdmissionStatsCalculator::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   m_admWrapper = 0;
+  m_aggWrapper = 0;
   m_brqWrapper = 0;
 }
 
@@ -195,6 +219,7 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
   SetAttribute ("AdmStatsFilename", StringValue (prefix + m_admFilename));
+  SetAttribute ("AggStatsFilename", StringValue (prefix + m_aggFilename));
   SetAttribute ("BrqStatsFilename", StringValue (prefix + m_brqFilename));
 
   m_admWrapper = Create<OutputStreamWrapper> (m_admFilename, std::ios::out);
@@ -211,6 +236,20 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   << setw (8) << "BlkNon"
   << setw (8) << "CurBea"
   << setw (8) << "CurAgg"
+  << std::endl;
+
+  m_aggWrapper = Create<OutputStreamWrapper> (m_aggFilename, std::ios::out);
+  *m_aggWrapper->GetStream ()
+  << boolalpha << fixed << setprecision (4)
+  << left
+  << setw (12) << "Time(s)"
+  << right
+  << setw (6)  << "TEID"
+  << setw (7)  << "IsGBR"
+  << setw (7)  << "Block"
+  << setw (7)  << "S5Agg"
+  << setw (7)  << "Usage"
+  << setw (7)  << "Thres"
   << std::endl;
 
   m_brqWrapper = Create<OutputStreamWrapper> (m_brqFilename, std::ios::out);

@@ -88,6 +88,8 @@ private:
   uint32_t                 m_aggregBearers; //!< Number of aggregated bearers.
   std::string              m_admFilename;   //!< AdmStats filename.
   Ptr<OutputStreamWrapper> m_admWrapper;    //!< AdmStats file wrapper.
+  std::string              m_aggFilename;   //!< AggStats filename.
+  Ptr<OutputStreamWrapper> m_aggWrapper;    //!< AggStats file wrapper.
   std::string              m_brqFilename;   //!< BrqStats filename.
   Ptr<OutputStreamWrapper> m_brqWrapper;    //!< BrqStats file wrapper.
 };
