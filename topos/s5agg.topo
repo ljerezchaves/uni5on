@@ -18,7 +18,7 @@ default ns3::EpcController::S5AggNonGbrThs "0.1"
 default ns3::EpcController::TimeoutInterval "1s"
 default ns3::EpcController::VoipQueue "on"
 
-default ns3::EpcNetwork::NumPgwSwitches "5"
+default ns3::EpcNetwork::NumPgwTftSwitches "4"
 default ns3::EpcNetwork::PgwTftPipelineCapacity "2Mb/s"
 default ns3::EpcNetwork::PgwTftTableSize "18"
 default ns3::EpcNetwork::S5LinkDataRate "10Gb/s"

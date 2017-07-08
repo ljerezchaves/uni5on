@@ -69,12 +69,12 @@ EpcNetwork::GetTypeId (void)
                    UintegerValue (1492), // Ethernet II - PPoE
                    MakeUintegerAccessor (&EpcNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("NumPgwSwitches",
-                   "The number of P-GW user-plane OpenFlow switches (1 main "
-                   "switch + N TFT switches, where N must be a power of 2).",
+    .AddAttribute ("NumPgwTftSwitches",
+                   "The number of P-GW TFT user-plane OpenFlow switches "
+                   "(must be a power of 2).",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (3),
-                   MakeUintegerAccessor (&EpcNetwork::m_pgwNumNodes),
+                   MakeUintegerAccessor (&EpcNetwork::m_pgwNumTftNodes),
                    MakeUintegerChecker<uint16_t> (2))
     .AddAttribute ("PgwTftPipelineCapacity",
                    "Pipeline capacity for P-GW TFT switches.",
@@ -281,7 +281,7 @@ EpcNetwork::GetNTftNodes (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_pgwNumNodes - 1;
+  return m_pgwNumTftNodes;
 }
 
 void
@@ -320,9 +320,9 @@ EpcNetwork::PgwCreate (void)
   NS_LOG_FUNCTION (this);
 
   // Create the P-GW nodes and configure them as OpenFlow switches.
-  m_pgwNodes.Create (m_pgwNumNodes);
+  m_pgwNodes.Create (m_pgwNumTftNodes + 1);
   m_pgwOfDevices = m_ofSwitchHelper->InstallSwitch (m_pgwNodes);
-  for (uint16_t i = 0; i < m_pgwNumNodes; i++)
+  for (uint16_t i = 0; i < m_pgwNumTftNodes + 1; i++)
     {
       std::ostringstream pgwNodeName;
       pgwNodeName << "pgw" << i + 1;
