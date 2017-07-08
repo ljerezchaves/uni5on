@@ -27,7 +27,10 @@ NS_LOG_COMPONENT_DEFINE ("S5AggregationInfo");
 NS_OBJECT_ENSURE_REGISTERED (S5AggregationInfo);
 
 S5AggregationInfo::S5AggregationInfo (Ptr<RoutingInfo> rInfo)
-  : m_isAggregated (false)
+  : m_isAggregated (false),
+    m_threshhold (0.0),
+    m_dlBandUsage (0.0),
+    m_ulBandUsage (0.0)
 {
   NS_LOG_FUNCTION (this);
 
