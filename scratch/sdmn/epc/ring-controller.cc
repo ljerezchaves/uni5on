@@ -106,7 +106,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
       //
       // GTP packets being forwarded by this switch. Write the output group
       // into action set based on input port. Write the same group number into
-      // metadata field. Send the packet to Coexistence QoS table.
+      // metadata field. Send the packet to slicing table.
       std::ostringstream cmd0, cmd1;
       char metadataStr [12];
 

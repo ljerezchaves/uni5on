@@ -608,8 +608,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // Entries will be installed here by NotifyTopologyBuilt function.
 
   // GTP packets classified at previous table. Write the output group into
-  // action set based on metadata field. Send the packet to Coexistence QoS
-  // table.
+  // action set based on metadata field. Send the packet to Slicing table.
   DpctlExecute (swtch, "flow-mod cmd=add,table=2,prio=64"
                 " meta=0x1"
                 " write:group=1 goto:3");
@@ -621,7 +620,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   DpctlExecute (swtch, "flow-mod cmd=add,table=2,prio=0 apply:output=ctrl");
 
   // -------------------------------------------------------------------------
-  // Table 3 -- Coexistence QoS table -- [from higher to lower priority]
+  // Table 3 -- Slicing table -- [from higher to lower priority]
   //
   if (GetGbrSlicingMode () == OperationMode::ON)
     {
