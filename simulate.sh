@@ -14,22 +14,22 @@ function PrintHelp () {
   echo "Usage: $0 --action [ARGS]"
   echo
   echo "Available actions:"
-  echo "  ${bold}--single seed prefix [\"args\"]${normal}:" 
+  echo "  ${bold}--single seed prefix [\"args\"]${normal}:"
   echo "    Starts a single simulation with specific prefix and seed number."
   echo "    Arguments: seed     is the seed number to use."
   echo "               prefix   is the topology simulation prefix."
-  echo "               [\"args\"] can be any command line argument (optional)."
+  echo "               [\"args\"] any ${PROGNAME} command line argument (optional)."
   echo
   echo "  ${bold}--sequentialSeed firstSeed lastSeed prefix [\"args\"]${normal}:"
   echo "    Starts sequential simulations with specific prefix, one for each seed in"
   echo "    given closed interval."
   echo "  ${bold}--parallelSeed firstSeed lastSeed prefix [\"args\"]${normal}:"
-  echo "    Starts parallel background simulations with specific prefix, one for each" 
+  echo "    Starts parallel background simulations with specific prefix, one for each"
   echo "    seed in given closed interval."
   echo "    Arguments: firstSeed is the first seed number to use."
   echo "               lastSeed  is the last seed number to use."
   echo "               prefix    is the topology simulation prefix."
-  echo "               [\"args\"]  can be any command line argument (optional)."
+  echo "               [\"args\"]  any ${PROGNAME} command line argument (optional)."
   echo
   echo "  ${bold}--sequentialPrefix seed \"prefixes\" [\"args\"]${normal}"
   echo "    Starts sequential simulations with specific seed number, one for each prefix"
@@ -39,7 +39,7 @@ function PrintHelp () {
   echo "    each prefix in given list."
   echo "    Arguments: seed       is the seed number to use."
   echo "               \"prefixes\" is the list of topology simulation prefixes."
-  echo "               [\"args\"]   can be any command line argument (optional)."
+  echo "               [\"args\"]   any ${PROGNAME} command line argument (optional)."
   echo
   echo "  ${bold}--parallelSeedPrefix firstSeed lastSeed \"prefixes\" [\"args\"]${normal}"
   echo "    For each seed in given closed interval, starts parallel background"
@@ -47,7 +47,7 @@ function PrintHelp () {
   echo "    Arguments: firstSeed  is the first seed number to use."
   echo "               lastSeed   is the last seed number to use."
   echo "               \"prefixes\" is the list of topology simulation prefixes."
-  echo "               [\"args\"]   can be any command line argument (optional)."
+  echo "               [\"args\"]   any ${PROGNAME} command line argument (optional)."
   echo
   echo "  ${bold}--abort${normal}"
   echo "    Abort all running simulations."
@@ -55,36 +55,38 @@ function PrintHelp () {
 }
 
 # Test for action argument
-if [ $# -lt 1 ]; 
+if [ $# -lt 1 ];
 then
   PrintHelp
 fi;
 
 ACTION=$1
-case "${ACTION}" in 
+case "${ACTION}" in
   --single)
     # Test for arguments
-    if [ $# -lt 3 ] || [ $# -gt 4 ]; 
-    then 
-      PrintHelp 
+    if [ $# -lt 3 ] || [ $# -gt 4 ];
+    then
+      PrintHelp
     fi;
 
     SEED=$2
     PREFIX=$3
     ARGS=$4
-    
+
     COMMAND="./waf --run=\"${PROGNAME} --RngRun=${SEED} --Prefix=${PREFIX} ${ARGS}\""
-    OUTFILE=$(mktemp --suffix=-${PROGNAME})
+    PREFIXBASENAME=$(basename ${PREFIX})
+    OUTFILE=$(mktemp -p /tmp ${PROGNAME}-${PREFIXBASENAME}-${SEED}-tmpXXX-sdmn)
     echo "${COMMAND}" > ${OUTFILE}
-    
+
     echo "${green}[Start]${reset} ${COMMAND}"
     eval ${COMMAND} &>> ${OUTFILE}
-    
+
     # Check for success
     if [ $? -ne 0 ];
     then
+      echo "ERROR" >> ${OUTFILE}
       echo "${red}[Error]${reset} ${COMMAND}"
-      echo "${yellow}===== Output file content ===== (${OUTFILE})${reset}"
+      echo "${yellow}===== Output file content =====${reset}"
       cat ${OUTFILE}
       echo "${yellow}===== Output file content =====${reset}"
     fi
@@ -92,11 +94,11 @@ case "${ACTION}" in
 
   --parallelSeed)
     # Test for arguments
-    if [ $# -lt 4 ] || [ $# -gt 5 ]; 
-    then 
-      PrintHelp 
+    if [ $# -lt 4 ] || [ $# -gt 5 ];
+    then
+      PrintHelp
     fi;
-  
+
     FIRST=$2
     LAST=$3
     PREFIX=$4
@@ -110,11 +112,11 @@ case "${ACTION}" in
 
   --sequentialSeed)
     # Test for arguments
-    if [ $# -lt 4 ] || [ $# -gt 5 ]; 
-    then 
-      PrintHelp 
+    if [ $# -lt 4 ] || [ $# -gt 5 ];
+    then
+      PrintHelp
     fi;
-  
+
     FIRST=$2
     LAST=$3
     PREFIX=$4
@@ -127,11 +129,11 @@ case "${ACTION}" in
 
   --parallelPrefix)
     # Test for arguments
-    if [ $# -lt 3 ] || [ $# -gt 4 ]; 
-    then 
-      PrintHelp 
+    if [ $# -lt 3 ] || [ $# -gt 4 ];
+    then
+      PrintHelp
     fi;
-  
+
     SEED=$2
     PREFIX_LIST=$3
     ARGS=$4
@@ -144,11 +146,11 @@ case "${ACTION}" in
 
   --sequentialPrefix)
     # Test for arguments
-    if [ $# -lt 3 ] || [ $# -gt 4 ]; 
-    then 
-      PrintHelp 
+    if [ $# -lt 3 ] || [ $# -gt 4 ];
+    then
+      PrintHelp
     fi;
-  
+
     SEED=$2
     PREFIX_LIST=$3
     ARGS=$4
@@ -160,11 +162,11 @@ case "${ACTION}" in
 
   --parallelSeedPrefix)
     # Test for arguments
-    if [ $# -lt 4 ] || [ $# -gt 5 ]; 
-    then 
-      PrintHelp 
+    if [ $# -lt 4 ] || [ $# -gt 5 ];
+    then
+      PrintHelp
     fi;
-  
+
     FIRST=$2
     LAST=$3
     PREFIX_LIST=$4
@@ -179,10 +181,10 @@ case "${ACTION}" in
   --abort)
     # Test for arguments
     if [ $# -ne 1 ];
-    then 
-      PrintHelp 
+    then
+      PrintHelp
     fi;
-    
+
     echo "You are about to abort all running simulations in this machine."
     echo -n "Are you sure you want to continue? (y/N) "
     read ANSWER
