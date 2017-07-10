@@ -420,8 +420,11 @@ private:
   EpcS5SapPgw*          m_s5SapPgw;       //!< P-GW side of the S5 SAP.
   Time                  m_timeout;        //!< Controller internal timeout.
 
-  /** Map saving EpsBearer::Qci / IP DSCP value. */
+  /** Map saving EPS QCI / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
+
+  /** Map saving IP DSCP value / Output queue id. */
+  typedef std::map<uint16_t, uint32_t> DscpQueueMap_t;
 
   /**
    * TEID counter, used to allocate new GTP-U TEID values.
@@ -431,6 +434,7 @@ private:
   static uint32_t       m_teidCount;
   static const uint16_t m_flowTimeout;    //!< Timeout for flow entries.
   static QciDscpMap_t   m_qciDscpTable;   //!< DSCP mapped values.
+  static DscpQueueMap_t m_dscpQueueTable; //!< Output queue mapped values.
 };
 
 };  // namespace ns3
