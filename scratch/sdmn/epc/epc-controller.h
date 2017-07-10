@@ -177,7 +177,7 @@ public:
    * \return The requested mechanism operation mode.
    */
   //\{
-  OperationMode GetNonGbrCoexistenceMode (void) const;
+  OperationMode GetGbrSlicingMode (void) const;
   OperationMode GetPgwAdaptiveMode (void) const;
   OperationMode GetS5AggregationMode (void) const;
   OperationMode GetVoipQosMode (void) const;
@@ -392,7 +392,7 @@ private:
 
   // Internal mechanisms for performance improvement.
   OperationMode         m_voipQos;        //!< VoIP QoS with queues.
-  OperationMode         m_nonGbrCoex;     //!< Non-GBR coexistence.
+  OperationMode         m_gbrSlicing;     //!< GBR slicing mechanism.
 
   // P-GW metadata.
   std::vector<uint64_t> m_pgwDpIds;       //!< Datapath IDs.
@@ -412,7 +412,7 @@ private:
   uint32_t              m_tftTableSize;   //!< Flow table size.
 
   // S5 traffic aggregation mechanism.
-  OperationMode         m_s5Aggregation;  //!< S5 traffic aggregation.
+  OperationMode         m_s5Aggregation;  //!< Traffic aggregation mechanism.
   double                m_s5AggGbrThs;    //!< Bandwidth threshold for GBR.
   double                m_s5AggNonGbrThs; //!< Bandwidth threshold for Non-GBR.
 

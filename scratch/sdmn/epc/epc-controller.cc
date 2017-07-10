@@ -53,11 +53,10 @@ EpcController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::EpcController")
     .SetParent<OFSwitch13Controller> ()
-    .AddAttribute ("NonGbrCoexistence",
-                   "Enable the coexistence of GBR and Non-GBR traffic, "
-                   "installing meters to limit Non-GBR traffic bit rate.",
+    .AddAttribute ("GbrSlicing",
+                   "GBR slicing mechanism operation mode.",
                    EnumValue (EpcController::ON),
-                   MakeEnumAccessor (&EpcController::m_nonGbrCoex),
+                   MakeEnumAccessor (&EpcController::m_gbrSlicing),
                    MakeEnumChecker (EpcController::OFF, "off",
                                     EpcController::ON,  "on"))
     .AddAttribute ("PgwTftAdaptiveMode",
@@ -376,11 +375,11 @@ EpcController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
 }
 
 EpcController::OperationMode
-EpcController::GetNonGbrCoexistenceMode (void) const
+EpcController::GetGbrSlicingMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_nonGbrCoex;
+  return m_gbrSlicing;
 }
 
 EpcController::OperationMode
@@ -624,7 +623,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 3 -- Coexistence QoS table -- [from higher to lower priority]
   //
-  if (GetNonGbrCoexistenceMode () == OperationMode::ON)
+  if (GetGbrSlicingMode () == OperationMode::ON)
     {
       // Non-GBR packets indicated by DSCP field. Apply corresponding Non-GBR
       // meter band. Send the packet to Output table.

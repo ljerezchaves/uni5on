@@ -151,10 +151,10 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
         << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (1);
   DpctlSchedule (cInfo->GetSwDpId (1), cmd11.str ());
 
-  if (GetNonGbrCoexistenceMode () == OperationMode::ON)
+  if (GetGbrSlicingMode () == OperationMode::ON)
     {
       // Connecting this controller to ConnectionInfo trace source
-      // when the Non-GBR coexistence mechanism is enable.
+      // when the GBR slicing mechanism is enable.
       cInfo->TraceConnectWithoutContext (
         "NonGbrAdjusted", MakeCallback (
           &RingController::NonGbrAdjusted, this));
