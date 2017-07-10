@@ -180,7 +180,7 @@ public:
   OperationMode GetGbrSlicingMode (void) const;
   OperationMode GetPgwAdaptiveMode (void) const;
   OperationMode GetS5AggregationMode (void) const;
-  OperationMode GetVoipQosMode (void) const;
+  OperationMode GetPriorityQueuesMode (void) const;
   //\}
 
   /**
@@ -391,7 +391,7 @@ private:
   TracedCallback<struct PgwTftStats> m_pgwTftStatsTrace;
 
   // Internal mechanisms for performance improvement.
-  OperationMode         m_voipQos;        //!< VoIP QoS with queues.
+  OperationMode         m_priorityQueues; //!< DSCP priority queues mechanism.
   OperationMode         m_gbrSlicing;     //!< GBR slicing mechanism.
 
   // P-GW metadata.

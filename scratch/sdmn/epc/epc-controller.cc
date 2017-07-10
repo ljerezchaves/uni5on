@@ -95,6 +95,12 @@ EpcController::GetTypeId (void)
                    UintegerValue (1),
                    MakeUintegerAccessor (&EpcController::m_tftSwitches),
                    MakeUintegerChecker<uint16_t> ())
+    .AddAttribute ("PriorityQueues",
+                   "Priority output queues mechanism operation mode.",
+                   EnumValue (EpcController::ON),
+                   MakeEnumAccessor (&EpcController::m_priorityQueues),
+                   MakeEnumChecker (EpcController::OFF, "off",
+                                    EpcController::ON,  "on"))
     .AddAttribute ("S5Aggregation",
                    "S5 traffic aggregation mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -118,12 +124,6 @@ EpcController::GetTypeId (void)
                    TimeValue (Seconds (5)),
                    MakeTimeAccessor (&EpcController::m_timeout),
                    MakeTimeChecker ())
-    .AddAttribute ("VoipQueue",
-                   "Enable VoIP QoS through queuing traffic management.",
-                   EnumValue (EpcController::ON),
-                   MakeEnumAccessor (&EpcController::m_voipQos),
-                   MakeEnumChecker (EpcController::OFF, "off",
-                                    EpcController::ON,  "on"))
 
     .AddTraceSource ("BearerRelease", "The bearer release trace source.",
                      MakeTraceSourceAccessor (
@@ -399,11 +399,11 @@ EpcController::GetS5AggregationMode (void) const
 }
 
 EpcController::OperationMode
-EpcController::GetVoipQosMode (void) const
+EpcController::GetPriorityQueuesMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_voipQos;
+  return m_priorityQueues;
 }
 
 EpcS5SapPgw*
@@ -640,7 +640,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 4 -- Output table -- [from higher to lower priority]
   //
-  if (GetVoipQosMode () == OperationMode::ON)
+  if (GetPriorityQueuesMode () == OperationMode::ON)
     {
       int dscpVoip = EpcController::GetDscpValue (EpsBearer::GBR_CONV_VOICE);
 
