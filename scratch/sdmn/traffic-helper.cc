@@ -371,11 +371,11 @@ TrafficHelper::InstallGbrLiveVideoStreaming ()
   filter.localPortEnd = 65535;
   tft->Add (filter);
 
-  // Dedicated GBR EPS bearer (QCI 2).
+  // Dedicated GBR EPS bearer (QCI 4).
   GbrQosInformation qos;
   qos.gbrDl = GetVideoGbr (videoIdx).GetBitRate ();
   qos.mbrDl = GetVideoMbr (videoIdx).GetBitRate ();
-  EpsBearer bearer (EpsBearer::GBR_CONV_VIDEO, qos);
+  EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
 
   // Link EPC info to application.
   cApp->SetTft (tft);
