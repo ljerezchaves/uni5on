@@ -33,8 +33,6 @@ default ns3::LteNetwork::NumUes "4"
 default ns3::LteNetwork::UeMobility "false"
 default ns3::LteNetwork::LteTrace "false"
 
-default ns3::OFSwitch13Queue::NumQueues "2"
-
 default ns3::PgwTunnelApp::UseTftClassifier "true"
 
 default ns3::RingController::Strategy "spf"
