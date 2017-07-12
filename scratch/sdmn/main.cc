@@ -182,7 +182,7 @@ main (int argc, char *argv[])
   Simulator::Stop (Seconds (simTime + 1));
   Simulator::Run ();
   Simulator::Destroy ();
-  NS_LOG_INFO ("End!");
+  std::cout << "END OK" << std::endl;
 }
 
 void

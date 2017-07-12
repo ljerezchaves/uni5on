@@ -625,13 +625,23 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   //
   if (GetGbrSlicingMode () == OperationMode::ON)
     {
-      // Non-GBR packets indicated by DSCP field. Apply corresponding Non-GBR
-      // meter band. Send the packet to Output table.
+      // Non-GBR packets are indicated by DSCP field DSCP_AF11 nad DscpDefault.
+      // Apply Non-GBR meter band. Send the packet to Output table.
+
+      // DSCP_AF11 (DSCP decimal 10)
+      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
+                    " eth_type=0x800,meta=0x1,ip_dscp=10"
+                    " meter:1 goto:4");
+      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
+                    " eth_type=0x800,meta=0x2,ip_dscp=10"
+                    " meter:2 goto:4");
+
+      // DscpDefault (DSCP decimal 0)
       DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
-                    " eth_type=0x800,ip_dscp=0,meta=0x1"
+                    " eth_type=0x800,meta=0x1,ip_dscp=0"
                     " meter:1 goto:4");
       DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
-                    " eth_type=0x800,ip_dscp=0,meta=0x2"
+                    " eth_type=0x800,meta=0x2,ip_dscp=0"
                     " meter:2 goto:4");
     }
 
@@ -1213,47 +1223,57 @@ EpcController::StaticInitialize ()
       initialized = true;
 
       // Populating the EPS QCI --> IP DSCP mapping table.
-      const uint8_t numQciEntries = 9;
-      std::pair<EpsBearer::Qci, uint16_t> qciEntries [numQciEntries];
-      qciEntries [0] = std::make_pair (
-          EpsBearer::GBR_CONV_VOICE, Ipv4Header::DSCP_EF);
-      qciEntries [1] = std::make_pair (
-          EpsBearer::GBR_CONV_VIDEO, Ipv4Header::DSCP_AF12);
-      qciEntries [2] = std::make_pair (
-          EpsBearer::GBR_GAMING, Ipv4Header::DSCP_AF21);
-      qciEntries [3] = std::make_pair (
-          EpsBearer::GBR_NON_CONV_VIDEO, Ipv4Header::DSCP_AF11);
-      qciEntries [4] = std::make_pair (
-          EpsBearer::NGBR_IMS, Ipv4Header::DscpDefault);
-      qciEntries [5] = std::make_pair (
-          EpsBearer::NGBR_VIDEO_TCP_OPERATOR, Ipv4Header::DscpDefault);
-      qciEntries [6] = std::make_pair (
-          EpsBearer::NGBR_VOICE_VIDEO_GAMING, Ipv4Header::DscpDefault);
-      qciEntries [7] = std::make_pair (
-          EpsBearer::NGBR_VIDEO_TCP_PREMIUM, Ipv4Header::DscpDefault);
-      qciEntries [8] = std::make_pair (
-          EpsBearer::NGBR_VIDEO_TCP_DEFAULT, Ipv4Header::DscpDefault);
-      std::pair<QciDscpMap_t::iterator, bool> retQci;
-      for (int i = 0; i < numQciEntries; i++)
-        {
-          retQci = EpcController::m_qciDscpTable.insert (qciEntries [i]);
-          NS_ASSERT_MSG (retQci.second, "Can't insert DSCP value.");
-        }
+      // We are using EF (QCIs 1, 2, and 3) and AF41 (QCI 4) for GBR traffic,
+      // AF11 (QCIs 5, 6, 7, and 8) and BE (QCI 9) for Non-GBR traffic.
+      // See https://ericlajoie.com/epcqos.html for details.
+      EpcController::m_qciDscpTable.insert (
+        std::make_pair (EpsBearer::GBR_CONV_VOICE,
+                        Ipv4Header::DSCP_EF));
+
+      EpcController::m_qciDscpTable.insert (
+        std::make_pair (EpsBearer::GBR_CONV_VIDEO,
+                        Ipv4Header::DSCP_EF));
+
+      EpcController::m_qciDscpTable.insert (
+        std::make_pair (EpsBearer::GBR_GAMING,
+                        Ipv4Header::DSCP_EF));
+
+      EpcController::m_qciDscpTable.insert (
+        std::make_pair (EpsBearer::GBR_NON_CONV_VIDEO,
+                        Ipv4Header::DSCP_AF41));
+
+      EpcController::m_qciDscpTable.insert (
+        std::make_pair (EpsBearer::NGBR_IMS,
+                        Ipv4Header::DSCP_AF11));
+
+      EpcController::m_qciDscpTable.insert (
+        std::make_pair (EpsBearer::NGBR_VIDEO_TCP_OPERATOR,
+                        Ipv4Header::DSCP_AF11));
+
+      EpcController::m_qciDscpTable.insert (
+        std::make_pair (EpsBearer::NGBR_VOICE_VIDEO_GAMING,
+                        Ipv4Header::DSCP_AF11));
+
+      EpcController::m_qciDscpTable.insert (
+        std::make_pair (EpsBearer::NGBR_VIDEO_TCP_PREMIUM,
+                        Ipv4Header::DSCP_AF11));
+
+      EpcController::m_qciDscpTable.insert (
+        std::make_pair (EpsBearer::NGBR_VIDEO_TCP_DEFAULT,
+                        Ipv4Header::DscpDefault));
 
       // Populating the IP DSCP --> Output queue id mapping table.
-      const uint8_t numDscpEntries = 1;
-      std::pair<uint16_t, uint32_t> dscpEntries [numDscpEntries];
-      dscpEntries [0] = std::make_pair (Ipv4Header::DSCP_EF, 1);
-      // dscpEntries [1] = std::make_pair (Ipv4Header::DSCP_AF12,   0);
-      // dscpEntries [2] = std::make_pair (Ipv4Header::DSCP_AF21,   0);
-      // dscpEntries [3] = std::make_pair (Ipv4Header::DSCP_AF11,   0);
-      // dscpEntries [4] = std::make_pair (Ipv4Header::DscpDefault, 0);
-      std::pair<DscpQueueMap_t::iterator, bool> retDscp;
-      for (int i = 0; i < numDscpEntries; i++)
-        {
-          retDscp = EpcController::m_dscpQueueTable.insert (dscpEntries [i]);
-          NS_ASSERT_MSG (retDscp.second, "Can't insert output queue value.");
-        }
+      EpcController::m_dscpQueueTable.insert (
+        std::make_pair (Ipv4Header::DSCP_EF, 2));
+
+      EpcController::m_dscpQueueTable.insert (
+        std::make_pair (Ipv4Header::DSCP_AF41, 1));
+
+      EpcController::m_dscpQueueTable.insert (
+        std::make_pair (Ipv4Header::DSCP_AF11, 1));
+
+      EpcController::m_dscpQueueTable.insert (
+        std::make_pair (Ipv4Header::DscpDefault, 0));
     }
 }
 
