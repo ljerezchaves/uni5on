@@ -76,9 +76,14 @@ public:
   void NotifyLoadDrop ();
 
   /**
-   * Increase the meter dropped packet counter by one.
+   * Increase the traffic meter dropped packet counter by one.
    */
   void NotifyMeterDrop ();
+
+  /**
+   * Increase the slicing dropped packet counter by one.
+   */
+  void NotifySliceDrop ();
 
   /**
    * Increase the queue dropped packet counter by one.
@@ -102,6 +107,7 @@ public:
   DataRate  GetRxThroughput (void) const;
   uint32_t  GetLoadDrops    (void) const;
   uint32_t  GetMeterDrops   (void) const;
+  uint32_t  GetSliceDrops   (void) const;
   uint32_t  GetQueueDrops   (void) const;
   //\}
 
@@ -128,9 +134,10 @@ private:
   Time               m_delaySum;         //!< Sum of packet delays.
 
   // Fields used by EPC network monitoring.
-  uint32_t           m_loadDrop;         //!< Counter for drops by pipe load.
-  uint32_t           m_meterDrop;        //!< Counter for drops by meter rules.
-  uint32_t           m_queueDrop;        //!< Counter for drops by queues.
+  uint32_t           m_loadDrop;         //!< Drop counter for pipe load.
+  uint32_t           m_meterDrop;        //!< Drop counter for meter rules.
+  uint32_t           m_sliceDrop;        //!< Drop counter for slicing rules.
+  uint32_t           m_queueDrop;        //!< Drop counter for queues.
 };
 
 } // namespace ns3

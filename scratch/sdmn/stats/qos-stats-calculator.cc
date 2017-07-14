@@ -38,6 +38,7 @@ QosStatsCalculator::QosStatsCalculator ()
     m_delaySum (Time ()),
     m_loadDrop (0),
     m_meterDrop (0),
+    m_sliceDrop (0),
     m_queueDrop (0)
 {
   NS_LOG_FUNCTION (this);
@@ -76,6 +77,7 @@ QosStatsCalculator::ResetCounters ()
 
   m_loadDrop = 0;
   m_meterDrop = 0;
+  m_sliceDrop = 0;
   m_queueDrop = 0;
 }
 
@@ -135,6 +137,14 @@ QosStatsCalculator::NotifyMeterDrop ()
   NS_LOG_FUNCTION (this);
 
   m_meterDrop++;
+}
+
+void
+QosStatsCalculator::NotifySliceDrop ()
+{
+  NS_LOG_FUNCTION (this);
+
+  m_sliceDrop++;
 }
 
 void
@@ -274,6 +284,14 @@ QosStatsCalculator::GetMeterDrops (void) const
   NS_LOG_FUNCTION (this);
 
   return m_meterDrop;
+}
+
+uint32_t
+QosStatsCalculator::GetSliceDrops (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sliceDrop;
 }
 
 uint32_t

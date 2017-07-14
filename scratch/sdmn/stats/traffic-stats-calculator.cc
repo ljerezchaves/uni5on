@@ -23,6 +23,7 @@
 #include "traffic-stats-calculator.h"
 #include "../apps/sdmn-client-app.h"
 #include "../apps/real-time-video-client.h"
+#include "../epc/epc-controller.h"
 
 using namespace std;
 
@@ -124,6 +125,7 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   << setw (7)  << "Load"
   << setw (7)  << "Meter"
   << setw (7)  << "Queue"
+  << setw (7)  << "Slice"
   << std::endl;
 
   Object::NotifyConstructionCompleted ();
@@ -151,6 +153,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       << " " << setw (6)  << epcStats->GetLoadDrops ()
       << " " << setw (6)  << epcStats->GetMeterDrops ()
       << " " << setw (6)  << epcStats->GetQueueDrops ()
+      << " " << setw (6)  << epcStats->GetSliceDrops ()
       << std::endl;
 
       *m_appWrapper->GetStream ()
@@ -166,6 +169,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   << " " << setw (6)  << epcStats->GetLoadDrops ()
   << " " << setw (6)  << epcStats->GetMeterDrops ()
   << " " << setw (6)  << epcStats->GetQueueDrops ()
+  << " " << setw (6)  << epcStats->GetSliceDrops ()
   << std::endl;
 
   *m_appWrapper->GetStream ()
@@ -227,23 +231,32 @@ TrafficStatsCalculator::MeterDropPacket (
   NS_LOG_FUNCTION (this << context << packet << meterId);
 
   EpcGtpuTag gtpuTag;
+  Ptr<QosStatsCalculator> qosStats;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      Ptr<QosStatsCalculator> qosStats =
-        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      qosStats->NotifyMeterDrop ();
+      qosStats = GetQosStatsFromTeid (gtpuTag.GetTeid (),
+                                      gtpuTag.IsDownlink ());
     }
   else
     {
       //
       // This only happens when a packet is dropped at the P-GW, before
       // entering the logical port that is responsible for attaching the
-      // EpcGtpuTag and notifying that the packet is entering the EPC. To keep
-      // consistent log results, we are doing this manually here.
+      // EpcGtpuTag and notifying that the packet is entering the EPC.
+      // To keep consistent log results, we are doing this manually here.
       //
       NS_ASSERT_MSG (meterId, "Invalid meter ID for dropped packet.");
-      Ptr<QosStatsCalculator> qosStats = GetQosStatsFromTeid (meterId, true);
+      qosStats = GetQosStatsFromTeid (meterId, true);
       qosStats->NotifyTx (packet->GetSize ());
+    }
+
+  // Notify the droped packet, based on meter type (traffic or slicing).
+  if (meterId < EpcController::GetFirstTeidValue ())
+    {
+      qosStats->NotifySliceDrop ();
+    }
+  else
+    {
       qosStats->NotifyMeterDrop ();
     }
 }

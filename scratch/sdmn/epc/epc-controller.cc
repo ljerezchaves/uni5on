@@ -30,9 +30,13 @@ NS_OBJECT_ENSURE_REGISTERED (EpcController);
 
 // Initializing EpcController static members.
 const uint16_t EpcController::m_flowTimeout = 0;
-uint32_t EpcController::m_teidCount = 0x0000000F;
 EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
 EpcController::DscpQueueMap_t EpcController::m_dscpQueueTable;
+
+// The TEID counter is initialized at 0x0000000F, reserving the first values
+// for controller usage on slicing implementation.
+const uint32_t EpcController::m_teidInitial = 0x0000000F;
+uint32_t EpcController::m_teidCount = EpcController::m_teidInitial;
 
 EpcController::EpcController ()
   : m_tftMaxLoad (DataRate (std::numeric_limits<uint64_t>::max ())),
@@ -420,13 +424,21 @@ EpcController::GetDscpValue (EpsBearer::Qci qci)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  QciDscpMap_t::iterator it;
+  QciDscpMap_t::const_iterator it;
   it = EpcController::m_qciDscpTable.find (qci);
   if (it != EpcController::m_qciDscpTable.end ())
     {
       return it->second;
     }
   NS_FATAL_ERROR ("No DSCP mapped value for QCI " << qci);
+}
+
+uint32_t
+EpcController::GetFirstTeidValue (void)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  return EpcController::m_teidInitial + 1;
 }
 
 void
