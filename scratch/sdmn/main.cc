@@ -376,6 +376,8 @@ EnableVerbose (bool enable)
       LogComponentEnable ("TrafficHelper",            LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("TrafficManager",           LOG_ERROR_WARN_INFO_FT);
 
+      LogComponentEnable ("AutoPilotClient",          LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("AutoPilotServer",          LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("HttpClient",               LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("HttpServer",               LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("RealTimeVideoClient",      LOG_ERROR_WARN_INFO_FT);
