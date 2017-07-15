@@ -163,8 +163,8 @@ LteNetwork::EnablePcap (std::string prefix, bool promiscuous)
   NS_LOG_FUNCTION (this << prefix << promiscuous);
 
   // Enable PCAP traces on all SDRAN clouds.
-  SdranCloudContainer::Iterator it;
-  for (it = m_sdranClouds.Begin (); it != m_sdranClouds.End (); ++it)
+  for (SdranCloudContainer::Iterator it = m_sdranClouds.Begin ();
+       it != m_sdranClouds.End (); ++it)
     {
       (*it)->EnablePcap (prefix, promiscuous);
     }
@@ -256,8 +256,8 @@ LteNetwork::ConfigureSdranClouds ()
   // Create the SDRAN clouds and attach them to the backhaul network.
   NS_LOG_INFO ("LTE topology with " << m_nSdrans << " SDRAN clouds.");
   m_sdranClouds.Create (m_nSdrans);
-  SdranCloudContainer::Iterator it;
-  for (it = m_sdranClouds.Begin (); it != m_sdranClouds.End (); ++it)
+  for (SdranCloudContainer::Iterator it = m_sdranClouds.Begin ();
+       it != m_sdranClouds.End (); ++it)
     {
       m_enbNodes.Add ((*it)->GetEnbNodes ());
       m_epcNetwork->AttachSdranCloud (*it);
@@ -280,8 +280,8 @@ LteNetwork::ConfigureEnbs ()
 
   // Identify the LTE radio coverage area based on eNB nodes positions.
   std::vector<double> xPos, yPos;
-  NodeList::Iterator it;
-  for (it = m_enbNodes.Begin (); it != m_enbNodes.End (); it++)
+  for (NodeList::Iterator it = m_enbNodes.Begin ();
+       it != m_enbNodes.End (); it++)
     {
       Vector pos = (*it)->GetObject<MobilityModel> ()->GetPosition ();
       xPos.push_back (pos.x);
@@ -367,11 +367,11 @@ LteNetwork::ConfigureUes ()
 
   // Specify static routes for each UE to its default S-GW.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
-  for (uint32_t i = 0; i < m_nUes; i++)
+  for (NodeContainer::Iterator it = m_ueNodes.Begin ();
+       it != m_ueNodes.End (); it++)
     {
-      Ptr<Node> ueNode = m_ueNodes.Get (i);
       Ptr<Ipv4StaticRouting> ueStaticRouting =
-        ipv4RoutingHelper.GetStaticRouting (ueNode->GetObject<Ipv4> ());
+        ipv4RoutingHelper.GetStaticRouting ((*it)->GetObject<Ipv4> ());
       ueStaticRouting->SetDefaultRoute (
         m_epcNetwork->GetUeDefaultGatewayAddress (), 1);
     }
@@ -387,8 +387,8 @@ LteNetwork::PrintRadioEnvironmentMap ()
 
   // Force UE initialization so we don't have to wait for nodes to start before
   // positions are assigned (which is needed to output node positions to plot).
-  NodeContainer::Iterator it;
-  for (it = m_ueNodes.Begin (); it != m_ueNodes.End (); it++)
+  for (NodeContainer::Iterator it = m_ueNodes.Begin ();
+       it != m_ueNodes.End (); it++)
     {
       (*it)->Initialize ();
     }
