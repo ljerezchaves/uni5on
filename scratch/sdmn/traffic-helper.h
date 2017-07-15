@@ -75,7 +75,7 @@ protected:
 
 private:
   /**
-   * Install applications and traffic manager into each UE. It creates the
+   * Install HTC applications and traffic manager into each UE. It creates the
    * client/server application pair, and install them in the respective
    * nodes. It also configure the TFT and EPS bearers.
    * \param ueNodes The UE Nodes container.
@@ -88,8 +88,8 @@ private:
    * \li The Guaranteed Bit Rate field is used by the controller to reserve the
    *     requested bandwidth in OpenFlow EPC network (only for GBR beares).
    */
-  void InstallApplications (NodeContainer ueNodes,
-                            NetDeviceContainer ueDevices);
+  void InstallHtcApplications (NodeContainer ueNodes,
+                               NetDeviceContainer ueDevices);
 
   /**
    * Get complete filename for video trace files.

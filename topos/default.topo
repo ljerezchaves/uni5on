@@ -29,8 +29,8 @@ default ns3::EpcNetwork::SgiLinkDelay "15ms"
 default ns3::LteHexGridEnbTopologyHelper::GridWidth "2"
 
 default ns3::LteNetwork::NumSdrans "1"
-default ns3::LteNetwork::NumUes "1"
-default ns3::LteNetwork::UeMobility "false"
+default ns3::LteNetwork::NumHtcUes "1"
+default ns3::LteNetwork::HtcUeMobility "false"
 default ns3::LteNetwork::LteTrace "false"
 
 default ns3::PgwTunnelApp::UseTftClassifier "true"

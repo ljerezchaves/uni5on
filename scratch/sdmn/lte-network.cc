@@ -84,11 +84,11 @@ LteNetwork::GetTypeId (void)
                    UintegerValue (1),
                    MakeUintegerAccessor (&LteNetwork::m_nSdrans),
                    MakeUintegerChecker<uint32_t> ())
-    .AddAttribute ("NumUes", "The total number of UEs, randomly distributed "
-                   "within the coverage area boundaries.",
+    .AddAttribute ("NumHtcUes", "The total number of HTC UEs, randomly "
+                   "distributed within the coverage area boundaries.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (1),
-                   MakeUintegerAccessor (&LteNetwork::m_nUes),
+                   MakeUintegerAccessor (&LteNetwork::m_nHtcUes),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("UeHeight", "The UE antenna height [m].",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -101,10 +101,10 @@ LteNetwork::GetTypeId (void)
                    DoubleValue (0.5),
                    MakeDoubleAccessor (&LteNetwork::m_enbMargin),
                    MakeDoubleChecker<double> ())
-    .AddAttribute ("UeMobility", "Enable UE random mobility.",
+    .AddAttribute ("HtcUeMobility", "Enable HTC UE random mobility.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (false),
-                   MakeBooleanAccessor (&LteNetwork::m_ueMobility),
+                   MakeBooleanAccessor (&LteNetwork::m_htcUeMobility),
                    MakeBooleanChecker ())
     .AddAttribute ("LteTrace", "Enable LTE ASCII traces.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -134,19 +134,19 @@ LteNetwork::GetEnbNodes (void) const
 }
 
 NodeContainer
-LteNetwork::GetUeNodes (void) const
+LteNetwork::GetHtcUeNodes (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_ueNodes;
+  return m_htcUeNodes;
 }
 
 NetDeviceContainer
-LteNetwork::GetUeDevices (void) const
+LteNetwork::GetHtcUeDevices (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_ueDevices;
+  return m_htcUeDevices;
 }
 
 Ptr<LteHelper>
@@ -309,18 +309,18 @@ LteNetwork::ConfigureUes ()
   NS_LOG_FUNCTION (this);
 
   // Create the UE nodes and set their names.
-  NS_LOG_INFO ("LTE topology with " << m_nUes << " UEs.");
-  m_ueNodes.Create (m_nUes);
-  for (uint32_t i = 0; i < m_nUes; i++)
+  NS_LOG_INFO ("LTE topology with " << m_nHtcUes << " HTC UEs.");
+  m_htcUeNodes.Create (m_nHtcUes);
+  for (uint32_t i = 0; i < m_nHtcUes; i++)
     {
-      std::ostringstream ueName;
-      ueName << "ue" << i + 1;
-      Names::Add (ueName.str (), m_ueNodes.Get (i));
+      std::ostringstream htcUeName;
+      htcUeName << "htcUe" << i + 1;
+      Names::Add (htcUeName.str (), m_htcUeNodes.Get (i));
     }
 
   // Spread UEs under eNBs coverage area.
   MobilityHelper mobilityHelper;
-  if (m_ueMobility)
+  if (m_htcUeMobility)
     {
       mobilityHelper.SetMobilityModel (
         "ns3::SteadyStateRandomWaypointMobilityModel",
@@ -331,7 +331,7 @@ LteNetwork::ConfigureUes ()
         "Z",        DoubleValue (m_ueHeight),
         "MaxSpeed", DoubleValue (10),
         "MinSpeed", DoubleValue (10));
-      mobilityHelper.Install (m_ueNodes);
+      mobilityHelper.Install (m_htcUeNodes);
     }
   else
     {
@@ -353,22 +353,22 @@ LteNetwork::ConfigureUes ()
 
       mobilityHelper.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
       mobilityHelper.SetPositionAllocator (boxPosAllocator);
-      mobilityHelper.Install (m_ueNodes);
+      mobilityHelper.Install (m_htcUeNodes);
     }
-  BuildingsHelper::Install (m_ueNodes);
+  BuildingsHelper::Install (m_htcUeNodes);
 
   // Install LTE protocol stack into UE nodes.
-  m_ueDevices = m_lteHelper->InstallUeDevice (m_ueNodes);
+  m_htcUeDevices = m_lteHelper->InstallUeDevice (m_htcUeNodes);
 
   // Install TCP/IP protocol stack into UE nodes.
   InternetStackHelper internet;
-  internet.Install (m_ueNodes);
-  m_epcNetwork->AssignUeIpv4Address (m_ueDevices);
+  internet.Install (m_htcUeNodes);
+  m_epcNetwork->AssignUeIpv4Address (m_htcUeDevices);
 
   // Specify static routes for each UE to its default S-GW.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
-  for (NodeContainer::Iterator it = m_ueNodes.Begin ();
-       it != m_ueNodes.End (); it++)
+  for (NodeContainer::Iterator it = m_htcUeNodes.Begin ();
+       it != m_htcUeNodes.End (); it++)
     {
       Ptr<Ipv4StaticRouting> ueStaticRouting =
         ipv4RoutingHelper.GetStaticRouting ((*it)->GetObject<Ipv4> ());
@@ -377,7 +377,7 @@ LteNetwork::ConfigureUes ()
     }
 
   // Attach UE to the eNBs using initial cell selection.
-  m_lteHelper->Attach (m_ueDevices);
+  m_lteHelper->Attach (m_htcUeDevices);
 }
 
 void
@@ -387,8 +387,8 @@ LteNetwork::PrintRadioEnvironmentMap ()
 
   // Force UE initialization so we don't have to wait for nodes to start before
   // positions are assigned (which is needed to output node positions to plot).
-  for (NodeContainer::Iterator it = m_ueNodes.Begin ();
-       it != m_ueNodes.End (); it++)
+  for (NodeContainer::Iterator it = m_htcUeNodes.Begin ();
+       it != m_htcUeNodes.End (); it++)
     {
       (*it)->Initialize ();
     }
@@ -468,9 +468,9 @@ LteNetwork::PrintRadioEnvironmentMap ()
       << std::endl;
     }
 
-  // UEs positions.
-  for (NetDeviceContainer::Iterator it = m_ueDevices.Begin ();
-       it != m_ueDevices.End (); it++)
+  // HTC UEs positions.
+  for (NetDeviceContainer::Iterator it = m_htcUeDevices.Begin ();
+       it != m_htcUeDevices.End (); it++)
     {
       Ptr<LteUeNetDevice> ueDev = DynamicCast<LteUeNetDevice> (*it);
       Ptr<Node> node = ueDev->GetNode ();

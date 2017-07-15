@@ -215,16 +215,16 @@ TrafficHelper::NotifyConstructionCompleted ()
   NS_LOG_FUNCTION (this);
 
   // Install the applications.
-  InstallApplications (m_lteNetwork->GetUeNodes (),
-                       m_lteNetwork->GetUeDevices ());
+  InstallHtcApplications (m_lteNetwork->GetHtcUeNodes (),
+                          m_lteNetwork->GetHtcUeDevices ());
 
   // Chain up.
   Object::NotifyConstructionCompleted ();
 }
 
 void
-TrafficHelper::InstallApplications (NodeContainer ueNodes,
-                                    NetDeviceContainer ueDevices)
+TrafficHelper::InstallHtcApplications (NodeContainer ueNodes,
+                                       NetDeviceContainer ueDevices)
 {
   NS_LOG_FUNCTION (this);
 
