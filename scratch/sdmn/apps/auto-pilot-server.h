@@ -26,7 +26,7 @@ namespace ns3 {
 
 /**
  * \ingroup sdmnApps
- * This is the server side of a auto pilot M2M traffic generator.
+ * This is the server side of a auto pilot MTC traffic generator.
  * The server sends a 1KB packet every second.
  */
 class AutoPilotServer : public SdmnServerApp

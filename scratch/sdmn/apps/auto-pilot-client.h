@@ -26,7 +26,7 @@ namespace ns3 {
 
 /**
  * \ingroup sdmnApps
- * This is the client side of a auto pilot M2M traffic generator.
+ * This is the client side of a auto pilot MTC traffic generator.
  * The client sends a 1KB packet with uniformly distributed inter-arrival time
  * ranging from 0.025 to 0.1 sec.
  */
