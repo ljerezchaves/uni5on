@@ -33,6 +33,8 @@ NS_OBJECT_ENSURE_REGISTERED (EpcNetwork);
 // Initializing EpcNetwork static members.
 const uint16_t    EpcNetwork::m_gtpuPort = 2152;
 const Ipv4Address EpcNetwork::m_ueAddr   = Ipv4Address ("7.0.0.0");
+const Ipv4Address EpcNetwork::m_htcBase  = Ipv4Address ("0.1.0.1");
+const Ipv4Address EpcNetwork::m_mtcBase  = Ipv4Address ("0.2.0.1");
 const Ipv4Address EpcNetwork::m_sgiAddr  = Ipv4Address ("8.0.0.0");
 const Ipv4Address EpcNetwork::m_s5Addr   = Ipv4Address ("10.1.0.0");
 const Ipv4Address EpcNetwork::m_s1uAddr  = Ipv4Address ("10.2.0.0");
@@ -605,7 +607,7 @@ EpcNetwork::AssignUeIpv4Address (NetDeviceContainer ueDevices)
 {
   NS_LOG_FUNCTION (this);
 
-  return m_ueAddrHelper.Assign (ueDevices);
+  NS_FATAL_ERROR ("Unimplemented method.");
 }
 
 Ipv4Address
@@ -614,6 +616,24 @@ EpcNetwork::GetUeDefaultGatewayAddress ()
   NS_LOG_FUNCTION (this);
 
   return m_pgwAddr;
+}
+
+Ipv4InterfaceContainer
+EpcNetwork::AssignHtcUeIpv4Address (NetDeviceContainer ueDevices)
+{
+  NS_LOG_FUNCTION (this);
+
+  m_ueAddrHelper.SetBase (m_ueAddr, m_ueMask, m_htcBase);
+  return m_ueAddrHelper.Assign (ueDevices);
+}
+
+Ipv4InterfaceContainer
+EpcNetwork::AssignMtcUeIpv4Address (NetDeviceContainer ueDevices)
+{
+  NS_LOG_FUNCTION (this);
+
+  m_ueAddrHelper.SetBase (m_ueAddr, m_ueMask, m_mtcBase);
+  return m_ueAddrHelper.Assign (ueDevices);
 }
 
 Ipv4Address

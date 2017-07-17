@@ -90,6 +90,12 @@ LteNetwork::GetTypeId (void)
                    UintegerValue (1),
                    MakeUintegerAccessor (&LteNetwork::m_nHtcUes),
                    MakeUintegerChecker<uint32_t> ())
+    .AddAttribute ("NumMtcUes", "The total number of MTC UEs, randomly "
+                   "distributed within the coverage area boundaries.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (0),
+                   MakeUintegerAccessor (&LteNetwork::m_nMtcUes),
+                   MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("UeHeight", "The UE antenna height [m].",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DoubleValue (1.5),
@@ -105,6 +111,11 @@ LteNetwork::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (false),
                    MakeBooleanAccessor (&LteNetwork::m_htcUeMobility),
+                   MakeBooleanChecker ())
+    .AddAttribute ("MtcUeMobility", "Enable MTC UE random mobility.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&LteNetwork::m_mtcUeMobility),
                    MakeBooleanChecker ())
     .AddAttribute ("LteTrace", "Enable LTE ASCII traces.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -155,6 +166,22 @@ LteNetwork::GetLteHelper (void) const
   NS_LOG_FUNCTION (this);
 
   return m_lteHelper;
+}
+
+NodeContainer
+LteNetwork::GetMtcUeNodes (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_mtcUeNodes;
+}
+
+NetDeviceContainer
+LteNetwork::GetMtcUeDevices (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_mtcUeDevices;
 }
 
 void
@@ -308,21 +335,49 @@ LteNetwork::ConfigureUes ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Create the UE nodes and set their names.
+  // Create the HTC UE nodes and set their names.
   NS_LOG_INFO ("LTE topology with " << m_nHtcUes << " HTC UEs.");
   m_htcUeNodes.Create (m_nHtcUes);
   for (uint32_t i = 0; i < m_nHtcUes; i++)
     {
-      std::ostringstream htcUeName;
-      htcUeName << "htcUe" << i + 1;
-      Names::Add (htcUeName.str (), m_htcUeNodes.Get (i));
+      std::ostringstream ueName;
+      ueName << "htcUe" << i + 1;
+      Names::Add (ueName.str (), m_htcUeNodes.Get (i));
     }
 
-  // Spread UEs under eNBs coverage area.
-  MobilityHelper mobilityHelper;
+  // Create the MTC UE nodes and set their names.
+  NS_LOG_INFO ("LTE topology with " << m_nMtcUes << " MTC UEs.");
+  m_mtcUeNodes.Create (m_nMtcUes);
+  for (uint32_t i = 0; i < m_nMtcUes; i++)
+    {
+      std::ostringstream ueName;
+      ueName << "mtcUe" << i + 1;
+      Names::Add (ueName.str (), m_mtcUeNodes.Get (i));
+    }
+
+  // Configure the fixed mobility helper for UEs.
+  MobilityHelper fixedMobilityHelper;
+  Ptr<RandomVariableStream> posX, posY, posZ;
+  posX = CreateObjectWithAttributes<UniformRandomVariable> (
+      "Min", DoubleValue (m_coverageArea.xMin),
+      "Max", DoubleValue (m_coverageArea.xMax));
+  posY = CreateObjectWithAttributes<UniformRandomVariable> (
+      "Min", DoubleValue (m_coverageArea.yMin),
+      "Max", DoubleValue (m_coverageArea.yMax));
+  posZ = CreateObjectWithAttributes<ConstantRandomVariable> (
+      "Constant", DoubleValue (m_ueHeight));
+
+  Ptr<RandomBoxPositionAllocator> boxPosAllocator;
+  boxPosAllocator = CreateObject<RandomBoxPositionAllocator> ();
+  boxPosAllocator->SetAttribute ("X", PointerValue (posX));
+  boxPosAllocator->SetAttribute ("Y", PointerValue (posY));
+  boxPosAllocator->SetAttribute ("Z", PointerValue (posZ));
+
+  // Spread HTC UEs under eNBs coverage area.
+  MobilityHelper htcMobHelper;
   if (m_htcUeMobility)
     {
-      mobilityHelper.SetMobilityModel (
+      htcMobHelper.SetMobilityModel (
         "ns3::SteadyStateRandomWaypointMobilityModel",
         "MinX",     DoubleValue (m_coverageArea.xMin),
         "MaxX",     DoubleValue (m_coverageArea.xMax),
@@ -331,39 +386,49 @@ LteNetwork::ConfigureUes ()
         "Z",        DoubleValue (m_ueHeight),
         "MaxSpeed", DoubleValue (10),
         "MinSpeed", DoubleValue (10));
-      mobilityHelper.Install (m_htcUeNodes);
+      htcMobHelper.Install (m_htcUeNodes);
     }
   else
     {
-      Ptr<RandomVariableStream> posX, posY, posZ;
-      posX = CreateObjectWithAttributes<UniformRandomVariable> (
-          "Min", DoubleValue (m_coverageArea.xMin),
-          "Max", DoubleValue (m_coverageArea.xMax));
-      posY = CreateObjectWithAttributes<UniformRandomVariable> (
-          "Min", DoubleValue (m_coverageArea.yMin),
-          "Max", DoubleValue (m_coverageArea.yMax));
-      posZ = CreateObjectWithAttributes<ConstantRandomVariable> (
-          "Constant", DoubleValue (m_ueHeight));
-
-      Ptr<RandomBoxPositionAllocator> boxPosAllocator;
-      boxPosAllocator = CreateObject<RandomBoxPositionAllocator> ();
-      boxPosAllocator->SetAttribute ("X", PointerValue (posX));
-      boxPosAllocator->SetAttribute ("Y", PointerValue (posY));
-      boxPosAllocator->SetAttribute ("Z", PointerValue (posZ));
-
-      mobilityHelper.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-      mobilityHelper.SetPositionAllocator (boxPosAllocator);
-      mobilityHelper.Install (m_htcUeNodes);
+      htcMobHelper.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+      htcMobHelper.SetPositionAllocator (boxPosAllocator);
+      htcMobHelper.Install (m_htcUeNodes);
     }
   BuildingsHelper::Install (m_htcUeNodes);
 
+  // Spread MTC UEs under eNBs coverage area.
+  MobilityHelper mtcMobHelper;
+  if (m_mtcUeMobility)
+    {
+      mtcMobHelper.SetMobilityModel (
+        "ns3::SteadyStateRandomWaypointMobilityModel",
+        "MinX",     DoubleValue (m_coverageArea.xMin),
+        "MaxX",     DoubleValue (m_coverageArea.xMax),
+        "MinY",     DoubleValue (m_coverageArea.yMin),
+        "MaxY",     DoubleValue (m_coverageArea.yMax),
+        "Z",        DoubleValue (m_ueHeight),
+        "MaxSpeed", DoubleValue (10),
+        "MinSpeed", DoubleValue (10));
+      mtcMobHelper.Install (m_mtcUeNodes);
+    }
+  else
+    {
+      mtcMobHelper.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+      mtcMobHelper.SetPositionAllocator (boxPosAllocator);
+      mtcMobHelper.Install (m_mtcUeNodes);
+    }
+  BuildingsHelper::Install (m_mtcUeNodes);
+
   // Install LTE protocol stack into UE nodes.
   m_htcUeDevices = m_lteHelper->InstallUeDevice (m_htcUeNodes);
+  m_mtcUeDevices = m_lteHelper->InstallUeDevice (m_mtcUeNodes);
 
   // Install TCP/IP protocol stack into UE nodes.
   InternetStackHelper internet;
   internet.Install (m_htcUeNodes);
-  m_epcNetwork->AssignUeIpv4Address (m_htcUeDevices);
+  internet.Install (m_mtcUeNodes);
+  m_epcNetwork->AssignHtcUeIpv4Address (m_htcUeDevices);
+  m_epcNetwork->AssignMtcUeIpv4Address (m_mtcUeDevices);
 
   // Specify static routes for each UE to its default S-GW.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
@@ -375,9 +440,18 @@ LteNetwork::ConfigureUes ()
       ueStaticRouting->SetDefaultRoute (
         m_epcNetwork->GetUeDefaultGatewayAddress (), 1);
     }
+  for (NodeContainer::Iterator it = m_mtcUeNodes.Begin ();
+       it != m_mtcUeNodes.End (); it++)
+    {
+      Ptr<Ipv4StaticRouting> ueStaticRouting =
+        ipv4RoutingHelper.GetStaticRouting ((*it)->GetObject<Ipv4> ());
+      ueStaticRouting->SetDefaultRoute (
+        m_epcNetwork->GetUeDefaultGatewayAddress (), 1);
+    }
 
   // Attach UE to the eNBs using initial cell selection.
   m_lteHelper->Attach (m_htcUeDevices);
+  m_lteHelper->Attach (m_mtcUeDevices);
 }
 
 void
@@ -389,6 +463,11 @@ LteNetwork::PrintRadioEnvironmentMap ()
   // positions are assigned (which is needed to output node positions to plot).
   for (NodeContainer::Iterator it = m_htcUeNodes.Begin ();
        it != m_htcUeNodes.End (); it++)
+    {
+      (*it)->Initialize ();
+    }
+  for (NodeContainer::Iterator it = m_mtcUeNodes.Begin ();
+       it != m_mtcUeNodes.End (); it++)
     {
       (*it)->Initialize ();
     }
@@ -483,6 +562,21 @@ LteNetwork::PrintRadioEnvironmentMap ()
       << "front point pt 1 lw 2 ps 0.3 lc rgb 'grey'"
       << std::endl;
     }
+  for (NetDeviceContainer::Iterator it = m_mtcUeDevices.Begin ();
+       it != m_mtcUeDevices.End (); it++)
+    {
+      Ptr<LteUeNetDevice> ueDev = DynamicCast<LteUeNetDevice> (*it);
+      Ptr<Node> node = ueDev->GetNode ();
+      Vector pos = node->GetObject<MobilityModel> ()->GetPosition ();
+
+      *fileWrapper->GetStream ()
+      << "set label '" << ueDev->GetImsi () << "' "
+      << "at " << pos.x << "," << pos.y << " "
+      << "left font ',5' textcolor rgb 'grey' "
+      << "front point pt 1 lw 2 ps 0.3 lc rgb 'grey'"
+      << std::endl;
+    }
+
 
   // Cell site positions.
   for (NetDeviceContainer::Iterator it = m_enbDevices.Begin ();

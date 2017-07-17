@@ -108,6 +108,20 @@ public:
   // Inherited from EpcHelper.
 
   /**
+   * Assign IPv4 addresses to HTC UE devices.
+   * \param ueDevices The set of UE devices.
+   * \return The interface container.
+   */
+  Ipv4InterfaceContainer AssignHtcUeIpv4Address (NetDeviceContainer ueDevices);
+
+  /**
+   * Assign IPv4 addresses to MTC UE devices.
+   * \param ueDevices The set of UE devices.
+   * \return The interface container.
+   */
+  Ipv4InterfaceContainer AssignMtcUeIpv4Address (NetDeviceContainer ueDevices);
+
+  /**
    * Get the IPv4 address assigned to a given device.
    * \param device The network device.
    * \return The IPv4 address.
@@ -123,6 +137,8 @@ public:
 
   static const uint16_t     m_gtpuPort;  //!< GTP-U UDP port.
   static const Ipv4Address  m_ueAddr;    //!< UE network address.
+  static const Ipv4Address  m_htcBase;   //!< HTC UE base address.
+  static const Ipv4Address  m_mtcBase;   //!< MTC UE base address.
   static const Ipv4Address  m_sgiAddr;   //!< Web network address.
   static const Ipv4Address  m_s5Addr;    //!< S5 network address.
   static const Ipv4Address  m_s1uAddr;   //!< S1-U network address.

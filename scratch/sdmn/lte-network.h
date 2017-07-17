@@ -63,6 +63,8 @@ public:
   NodeContainer GetHtcUeNodes (void) const;
   NetDeviceContainer GetHtcUeDevices (void) const;
   Ptr<LteHelper> GetLteHelper (void) const;
+  NodeContainer GetMtcUeNodes (void) const;
+  NetDeviceContainer GetMtcUeDevices (void) const;
   //\}
 
   /**
@@ -97,17 +99,21 @@ private:
 
   uint32_t            m_nSdrans;        //!< Number of SDRAN clouds.
   uint32_t            m_nHtcUes;        //!< Number of HTC UEs.
+  uint32_t            m_nMtcUes;        //!< Number of MTC UEs.
   double              m_enbMargin;      //!< eNB coverage margin.
   double              m_ueHeight;       //!< UE height.
   bool                m_lteTrace;       //!< Enable LTE ASCII traces.
   bool                m_lteRem;         //!< Print the LTE REM.
   bool                m_htcUeMobility;  //!< Enable HTC UE mobility.
+  bool                m_mtcUeMobility;  //!< Enable MTC UE mobility.
   std::string         m_remFilename;    //!< LTE REM filename.
   SdranCloudContainer m_sdranClouds;    //!< SDRAN clouds.
   NodeContainer       m_enbNodes;       //!< eNB nodes.
   NetDeviceContainer  m_enbDevices;     //!< eNB devices.
   NodeContainer       m_htcUeNodes;     //!< HTC UE nodes.
   NetDeviceContainer  m_htcUeDevices;   //!< HTC UE devices.
+  NodeContainer       m_mtcUeNodes;     //!< MTC UE nodes.
+  NetDeviceContainer  m_mtcUeDevices;   //!< MTC UE devices.
   Rectangle           m_coverageArea;   //!< LTE radio coverage area.
 
   Ptr<LteHexGridEnbTopologyHelper> m_topoHelper;  //!< Grid topology helper.

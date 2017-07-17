@@ -75,13 +75,13 @@ protected:
 
 private:
   /**
-   * Install HTC applications and traffic manager into each UE. It creates the
-   * client/server application pair, and install them in the respective
+   * Install HTC applications and traffic manager into each HTC UE. It creates
+   * the client/server application pair, and install them in the respective
    * nodes. It also configure the TFT and EPS bearers.
-   * \param ueNodes The UE Nodes container.
-   * \param ueDevices The UE NetDevices container.
+   * \param ueNodes The HTC UE Nodes container.
+   * \param ueDevices The HTC UE NetDevices container.
    * \internal
-   * Some notes about internal GbrQosInformation usage
+   * Some notes about internal GbrQosInformation usage:
    * \li The Maximum Bit Rate field is used by controller to install meter
    *     rules for this traffic. When this value is left to 0, no meter rules
    *     will be installed.
@@ -89,6 +89,16 @@ private:
    *     requested bandwidth in OpenFlow EPC network (only for GBR beares).
    */
   void InstallHtcApplications (NodeContainer ueNodes,
+                               NetDeviceContainer ueDevices);
+
+  /**
+   * Install MTC applications and traffic manager into each MTC UE. It creates
+   * the client/server application pair, and install them in the respective
+   * nodes. It also configure the TFT and EPS bearers.
+   * \param ueNodes The MTC UE Nodes container.
+   * \param ueDevices The MTC UE NetDevices container.
+   */
+  void InstallMtcApplications (NodeContainer ueNodes,
                                NetDeviceContainer ueDevices);
 
   /**
@@ -119,7 +129,7 @@ private:
   Ptr<LteHelper> GetLteHelper ();
 
   /**
-   * UDP bidirectional VoIP traffic over dedicated GBR EPS bearer (QCI 1).
+   * UDP bidirect VoIP traffic over dedicated GBR EPS bearer (QCI 1).
    * This QCI is typically associated with conversational voice. This VoIP
    * traffic simulates the G.729 codec (~8.0 kbps for payload). Check
    * http://goo.gl/iChPGQ for bandwidth calculation and discussion.
@@ -127,39 +137,51 @@ private:
   void InstallGbrVoip ();
 
   /**
-   * UDP downlink live video streaming over dedicated GBR EPS bearer (QCI 2).
-   * This QCI is typically associated with conversational video and live
+   * UDP bidirect auto-pilot traffic over dedicated GBR EPS bearer (QCI 3).
+   * This QCI is typically associated with an operator controlled service,
+   * i.e., a service where the data flow aggregate's uplink/downlink packet
+   * filters are known at the point in time when the data flow aggregate is
+   * authorized. This auto-pilot model is based on the MTC application model
+   * indicate on the "Machine-to-Machine Communications: Architectures,
+   * Technology, Standards, and Applications" book, chapter 3: "M2M traffic and
+   * models".
+   */
+  void InstallGbrAutoPilot ();
+
+  /**
+   * UDP down live video streaming over dedicated GBR EPS bearer (QCI 4).
+   * This QCI is typically associated with non-conversational video and live
    * streaming. This video traffic is based on MPEG-4 video traces from
    * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
    */
   void InstallGbrLiveVideoStreaming ();
 
   /**
-   * TCP downlink buffered video streaming over dedicated Non-GBR EPS bearer
-   * (QCI 6). This QCI could be used for priorization of non real-time data of
-   * MPS subscribers. This video traffic is based on MPEG-4 video traces from
+   * TCP bidirect buff video streaming over dedicated Non-GBR bearer (QCI 6).
+   * This QCI could be used for priorization of non real-time data of MPS
+   * subscribers. This video traffic is based on MPEG-4 video traces from
    * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
    */
   void InstallNonGbrBufferedVideoStreaming ();
 
   /**
-   * UDP downlink live video streaming over dedicated Non-GBR EPS bearer (QCI
-   * 7). This QCI is typically associated with voice, live video streaming and
+   * UDP down live video streaming over dedicated Non-GBR bearer (QCI 7).
+   * This QCI is typically associated with voice, live video streaming and
    * interactive games. This video traffic is based on MPEG-4 video traces from
    * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
    */
   void InstallNonGbrLiveVideoStreaming ();
 
   /**
-   * TCP downlink HTTP traffic over dedicated Non-GBR EPS bearer (QCI 8). This
-   * QCI could be used for a dedicated 'premium bearer' for any subscriber, or
-   * could be used for the default bearer of a for 'premium subscribers'. This
-   * HTTP model is based on the distributions indicated in the paper 'An HTTP
-   * Web Traffic Model Based on the Top One Million Visited Web Pages' by
-   * Rastin Pries et. al. Each client will send a get request to the server and
-   * will get the page content back including inline content. These requests
-   * repeats after a reading time period, until MaxPages are loaded or
-   * MaxReadingTime is reached.
+   * TCP bidirect HTTP traffic over dedicated Non-GBR bearer (QCI 8).
+   * This QCI could be used for a dedicated 'premium bearer' for any
+   * subscriber, or could be used for the default bearer of a for 'premium
+   * subscribers'. This HTTP model is based on the distributions indicated in
+   * the paper 'An HTTP Web Traffic Model Based on the Top One Million Visited
+   * Web Pages' by Rastin Pries et. al. Each client will send a get request to
+   * the server and will get the page content back including inline content.
+   * These requests repeats after a reading time period, until MaxPages are
+   * loaded or MaxReadingTime is reached.
    */
   void InstallNonGbrHttp ();
 
@@ -178,12 +200,14 @@ private:
   Ptr<TrafficManager> m_ueManager;      //!< Current client traffic manager.
 
   bool                m_gbrVoip;        //!< VoIP enable.
+  bool                m_gbrPlot;        //!< Auto-pilot enable.
   bool                m_gbrLVid;        //!< GBR live streaming vide enable.
   bool                m_nonBVid;        //!< Buffered video enable.
   bool                m_nonLVid;        //!< Non-GBR live straming enable.
   bool                m_nonHttp;        //!< HTTP enable.
 
   SdmnAppHelper       m_voipHelper;     //!< Voip app helper.
+  SdmnAppHelper       m_pilotHelper;    //!< Pilot app helper.
   SdmnAppHelper       m_rtVideoHelper;  //!< Real-time video app helper.
   SdmnAppHelper       m_stVideoHelper;  //!< Stored video app helper.
   SdmnAppHelper       m_httpHelper;     //!< HTTP app helper.

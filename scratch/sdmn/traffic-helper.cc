@@ -21,6 +21,8 @@
 #include "traffic-helper.h"
 #include "traffic-manager.h"
 #include "lte-network.h"
+#include "apps/auto-pilot-client.h"
+#include "apps/auto-pilot-server.h"
 #include "apps/http-client.h"
 #include "apps/http-server.h"
 #include "apps/real-time-video-client.h"
@@ -98,6 +100,13 @@ TrafficHelper::TrafficHelper (Ptr<LteNetwork> lteNetwork,
     StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=100.0]"));
 
   //
+  // For auto-pilot application, we are not setting the duration yet. TODO
+  //
+  m_pilotHelper = SdmnAppHelper (AutoPilotClient::GetTypeId (),
+                                 AutoPilotServer::GetTypeId ());
+  m_pilotHelper.SetClientAttribute ("AppName", StringValue ("Pilot"));
+
+  //
   // For stored video, we are considering a statistic that the majority of
   // YouTube brand videos are somewhere between 31 and 120 seconds long. So we
   // are using the average length of 1min 30sec, with 15sec stdev.
@@ -165,6 +174,11 @@ TrafficHelper::GetTypeId (void)
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_gbrVoip),
                    MakeBooleanChecker ())
+    .AddAttribute ("PilotTraffic",
+                   "Enable GBR auto-pilot traffic over UDP.",
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_gbrPlot),
+                   MakeBooleanChecker ())
     .AddAttribute ("GbrLiveVideoTraffic",
                    "Enable GBR live video streaming traffic over UDP.",
                    BooleanValue (true),
@@ -214,9 +228,13 @@ TrafficHelper::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Install the applications.
+  // Install the HTC applications.
   InstallHtcApplications (m_lteNetwork->GetHtcUeNodes (),
                           m_lteNetwork->GetHtcUeDevices ());
+
+  // Install the MTC applications.
+  InstallMtcApplications (m_lteNetwork->GetMtcUeNodes (),
+                          m_lteNetwork->GetMtcUeDevices ());
 
   // Chain up.
   Object::NotifyConstructionCompleted ();
@@ -249,7 +267,7 @@ TrafficHelper::InstallHtcApplications (NodeContainer ueNodes,
         "/NodeList/*/ApplicationList/*/$ns3::EpcController/SessionCreated",
         MakeCallback (&TrafficManager::SessionCreatedCallback, m_ueManager));
 
-      // Install applications into UEs
+      // Install HTC applications into UEs
       if (m_gbrVoip)
         {
           InstallGbrVoip ();
@@ -269,6 +287,45 @@ TrafficHelper::InstallHtcApplications (NodeContainer ueNodes,
       if (m_nonHttp)
         {
           InstallNonGbrHttp ();
+        }
+    }
+  m_ueNode = 0;
+  m_ueDev = 0;
+  m_ueManager = 0;
+}
+
+void
+TrafficHelper::InstallMtcApplications (NodeContainer ueNodes,
+                                       NetDeviceContainer ueDevices)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Install manager and applications into nodes.
+  // FIXME. This may be different for MTC applications.
+  for (uint32_t u = 0; u < ueNodes.GetN (); u++)
+    {
+      m_ueNode = ueNodes.Get (u);
+      m_ueDev = ueDevices.Get (u);
+      NS_ASSERT (m_ueDev->GetNode () == m_ueNode);
+
+      Ptr<Ipv4> clientIpv4 = m_ueNode->GetObject<Ipv4> ();
+      m_ueAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
+      m_ueMask = clientIpv4->GetAddress (1, 0).GetMask ();
+
+      // Each UE gets one traffic manager.
+      m_ueManager = m_managerFactory.Create<TrafficManager> ();
+      m_ueManager->SetImsi (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
+      m_ueNode->AggregateObject (m_ueManager);
+
+      // Connect the manager to new context created trace source.
+      Config::ConnectWithoutContext (
+        "/NodeList/*/ApplicationList/*/$ns3::EpcController/SessionCreated",
+        MakeCallback (&TrafficManager::SessionCreatedCallback, m_ueManager));
+
+      // Install MTC applications into UEs
+      if (m_gbrPlot)
+        {
+          InstallGbrAutoPilot ();
         }
     }
   m_ueNode = 0;
@@ -331,6 +388,45 @@ TrafficHelper::InstallGbrVoip ()
   qos.gbrDl = 47200;  // ~46.09 Kbps (considering tunnel overhead)
   qos.gbrUl = 47200;  // ~46.09 Kbps (considering tunnel overhead)
   EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
+
+  // Link EPC info to application.
+  cApp->SetTft (tft);
+  cApp->SetEpsBearer (bearer);
+  m_ueManager->AddSdmnClientApp (cApp);
+
+  // Activate dedicated bearer.
+  GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+}
+
+void
+TrafficHelper::InstallGbrAutoPilot ()
+{
+  NS_LOG_FUNCTION (this);
+  static uint16_t portNo = 40000;
+  portNo++;
+
+  // Bidirectional pilot traffic.
+  Ptr<SdmnClientApp> cApp = m_pilotHelper.Install (
+      m_ueNode, m_webNode, m_ueAddr, m_webAddr, portNo);
+
+  // TFT Packet filter.
+  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
+  EpcTft::PacketFilter filter;
+  filter.direction = EpcTft::BIDIRECTIONAL;
+  filter.protocol = UdpL4Protocol::PROT_NUMBER;
+  filter.remoteAddress = m_webAddr;
+  filter.remoteMask = m_webMask;
+  filter.remotePortStart = portNo;
+  filter.remotePortEnd = portNo;
+  filter.localAddress = m_ueAddr;
+  filter.localMask = m_ueMask;
+  filter.localPortStart = 0;
+  filter.localPortEnd = 65535;
+  tft->Add (filter);
+
+  // Dedicated GBR EPS bearer (QCI 3).
+  GbrQosInformation qos;
+  EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
 
   // Link EPC info to application.
   cApp->SetTft (tft);
