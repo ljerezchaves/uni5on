@@ -36,16 +36,16 @@ HttpClient::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::HttpClient")
     .SetParent<SdmnClientApp> ()
     .AddConstructor<HttpClient> ()
+    .AddAttribute ("MaxPages",
+                   "The number of loaded pages threshold to stop application.",
+                   UintegerValue (3),
+                   MakeUintegerAccessor (&HttpClient::m_maxPages),
+                   MakeUintegerChecker<uint16_t> (1))
     .AddAttribute ("MaxReadingTime",
                    "The reading time threshold to stop application.",
-                   TimeValue (Time::Max ()),
+                   TimeValue (Seconds (10)),
                    MakeTimeAccessor (&HttpClient::m_maxReadingTime),
                    MakeTimeChecker ())
-    .AddAttribute ("MaxPages",
-                   "The number of pages threshold to stop application.",
-                   UintegerValue (std::numeric_limits<uint16_t>::max ()),
-                   MakeUintegerAccessor (&HttpClient::m_maxPages),
-                   MakeUintegerChecker<uint16_t> (1)) // At least 1 page
   ;
   return tid;
 }
@@ -107,6 +107,14 @@ HttpClient::DoDispose (void)
   m_readingTimeAdjustStream = 0;
   m_nextRequest.Cancel ();
   SdmnClientApp::DoDispose ();
+}
+
+void
+HttpClient::NotifyConstructionCompleted (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  SetAttribute ("AppName", StringValue ("Http"));
 }
 
 void

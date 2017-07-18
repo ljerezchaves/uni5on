@@ -34,19 +34,26 @@ AutoPilotClient::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::AutoPilotClient")
     .SetParent<SdmnClientApp> ()
     .AddConstructor<AutoPilotClient> ()
-    .AddAttribute ("PayloadSize",
-                   "The payload size of packets (in bytes).",
-                   UintegerValue (1024),
-                   MakeUintegerAccessor (&AutoPilotClient::m_pktSize),
-                   MakeUintegerChecker<uint32_t> (1024, 1024))
     .AddAttribute ("Interval",
-                   "The time to wait between consecutive packets.",
-                   StringValue ("ns3::UniformRandomVariable[Min=0.025|Max=0.1]"),
+                   "The time to wait between consecutive packets [s].",
+                   StringValue (
+                     "ns3::UniformRandomVariable[Min=0.025|Max=0.1]"),
                    MakePointerAccessor (&AutoPilotClient::m_intervalRng),
                    MakePointerChecker <RandomVariableStream> ())
-    .AddAttribute ("TravelDuration",
-                   "A random variable used to pick the travel duration [s].",
-                   StringValue ("ns3::ConstantRandomVariable[Constant=30.0]"),
+    .AddAttribute ("PayloadSize",
+                   "The payload size of packets [bytes].",
+                   UintegerValue (1024),
+                   MakeUintegerAccessor (&AutoPilotClient::m_pktSize),
+                   MakeUintegerChecker<uint32_t> ())
+    //
+    // For traffic length, we are using a synthetic average length of 60
+    // seconds with 10secs stdev. This will force the application to
+    // periodically stop and report statistics.
+    //
+    .AddAttribute ("TrafficLength",
+                   "A random variable used to pick the traffic length [s].",
+                   StringValue (
+                     "ns3::NormalRandomVariable[Mean=60.0|Variance=100.0]"),
                    MakePointerAccessor (&AutoPilotClient::m_lengthRng),
                    MakePointerChecker <RandomVariableStream> ())
   ;
@@ -95,6 +102,14 @@ AutoPilotClient::DoDispose (void)
   m_stopEvent.Cancel ();
   m_sendEvent.Cancel ();
   SdmnClientApp::DoDispose ();
+}
+
+void
+AutoPilotClient::NotifyConstructionCompleted (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  SetAttribute ("AppName", StringValue ("Pilot"));
 }
 
 void

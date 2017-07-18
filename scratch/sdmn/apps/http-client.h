@@ -62,6 +62,9 @@ protected:
   // Inherited from Object.
   virtual void DoDispose (void);
 
+  // Inherited from ObjectBase.
+  virtual void NotifyConstructionCompleted (void);
+
   // Inherited from SdmnClientApp.
   void ForceStop ();
 

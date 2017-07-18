@@ -36,19 +36,27 @@ VoipClient::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::VoipClient")
     .SetParent<SdmnClientApp> ()
     .AddConstructor<VoipClient> ()
-    .AddAttribute ("PayloadSize",
-                   "The payload size of packets (in bytes).",
-                   UintegerValue (20),
-                   MakeUintegerAccessor (&VoipClient::m_pktSize),
-                   MakeUintegerChecker<uint32_t> (10, 60))
     .AddAttribute ("Interval",
                    "The time to wait between consecutive packets.",
                    TimeValue (Seconds (0.02)),
                    MakeTimeAccessor (&VoipClient::m_interval),
                    MakeTimeChecker ())
-    .AddAttribute ("CallDuration",
-                   "A random variable used to pick the call duration [s].",
-                   StringValue ("ns3::ConstantRandomVariable[Constant=30.0]"),
+    .AddAttribute ("PayloadSize",
+                   "The payload size of packets [bytes].",
+                   UintegerValue (20),
+                   MakeUintegerAccessor (&VoipClient::m_pktSize),
+                   MakeUintegerChecker<uint32_t> ())
+    //
+    // For traffic length, we are considering an estimative from Vodafone that
+    // the average call length is 1 min and 40 sec. We are including a normal
+    // standard deviation of 10 sec. See http://tinyurl.com/pzmyys2 and
+    // http://www.theregister.co.uk/2013/01/30/mobile_phone_calls_shorter for
+    // more information on this topic.
+    //
+    .AddAttribute ("TrafficLength",
+                   "A random variable used to pick the traffic length [s].",
+                   StringValue (
+                     "ns3::NormalRandomVariable[Mean=100.0|Variance=100.0]"),
                    MakePointerAccessor (&VoipClient::m_lengthRng),
                    MakePointerChecker <RandomVariableStream> ())
   ;
@@ -96,6 +104,14 @@ VoipClient::DoDispose (void)
   m_stopEvent.Cancel ();
   m_sendEvent.Cancel ();
   SdmnClientApp::DoDispose ();
+}
+
+void
+VoipClient::NotifyConstructionCompleted (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  SetAttribute ("AppName", StringValue ("Voip"));
 }
 
 void

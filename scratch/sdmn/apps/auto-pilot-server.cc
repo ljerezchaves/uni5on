@@ -34,16 +34,16 @@ AutoPilotServer::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::AutoPilotServer")
     .SetParent<SdmnServerApp> ()
     .AddConstructor<AutoPilotServer> ()
-    .AddAttribute ("PayloadSize",
-                   "The payload size of packets (in bytes).",
-                   UintegerValue (1024),
-                   MakeUintegerAccessor (&AutoPilotServer::m_pktSize),
-                   MakeUintegerChecker<uint32_t> (1024, 1024))
     .AddAttribute ("Interval",
                    "The time to wait between consecutive packets.",
                    TimeValue (Seconds (1)),
                    MakeTimeAccessor (&AutoPilotServer::m_interval),
-                   MakeTimeChecker (Seconds (1), Seconds (1)))
+                   MakeTimeChecker ())
+    .AddAttribute ("PayloadSize",
+                   "The payload size of packets [bytes].",
+                   UintegerValue (1024),
+                   MakeUintegerAccessor (&AutoPilotServer::m_pktSize),
+                   MakeUintegerChecker<uint32_t> ())
   ;
   return tid;
 }

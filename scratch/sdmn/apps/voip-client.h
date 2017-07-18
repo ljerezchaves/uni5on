@@ -50,6 +50,9 @@ protected:
   // Inherited from Object.
   virtual void DoDispose (void);
 
+  // Inherited from ObjectBase.
+  virtual void NotifyConstructionCompleted (void);
+
   // Inherited from SdmnClientApp.
   void ForceStop ();
 
@@ -70,7 +73,7 @@ private:
   void SendPacket ();
 
   Time                        m_interval;     //!< Interval between packets.
-  uint32_t                    m_pktSize;      //!< Packet max size.
+  uint32_t                    m_pktSize;      //!< Packet size.
   EventId                     m_sendEvent;    //!< SendPacket event.
   EventId                     m_stopEvent;    //!< Stop event.
   Ptr<RandomVariableStream>   m_lengthRng;    //!< Random call length.

@@ -36,16 +36,17 @@ VoipServer::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::VoipServer")
     .SetParent<SdmnServerApp> ()
     .AddConstructor<VoipServer> ()
-    .AddAttribute ("PayloadSize",
-                   "The payload size of packets (in bytes).",
-                   UintegerValue (20),
-                   MakeUintegerAccessor (&VoipServer::m_pktSize),
-                   MakeUintegerChecker<uint32_t> (10, 60))
     .AddAttribute ("Interval",
                    "The time to wait between consecutive packets.",
                    TimeValue (Seconds (0.02)),
                    MakeTimeAccessor (&VoipServer::m_interval),
                    MakeTimeChecker ())
+    .AddAttribute ("PayloadSize",
+                   "The payload size of packets [bytes].",
+                   UintegerValue (20),
+                   MakeUintegerAccessor (&VoipServer::m_pktSize),
+                   MakeUintegerChecker<uint32_t> ())
+
   ;
   return tid;
 }

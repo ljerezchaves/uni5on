@@ -76,8 +76,8 @@ RealTimeVideoServer::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::RealTimeVideoServer")
     .SetParent<SdmnServerApp> ()
     .AddConstructor<RealTimeVideoServer> ()
-    .AddAttribute ("MaxPacketSize",
-                   "The maximum size [bytes] of a packet.",
+    .AddAttribute ("MaxPayloadSize",
+                   "The maximum payload size of packets [bytes].",
                    UintegerValue (1400),
                    MakeUintegerAccessor (&RealTimeVideoServer::m_pktSize),
                    MakeUintegerChecker<uint32_t> ())

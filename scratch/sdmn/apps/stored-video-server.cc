@@ -75,21 +75,31 @@ StoredVideoServer::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::StoredVideoServer")
     .SetParent<SdmnServerApp> ()
     .AddConstructor<StoredVideoServer> ()
+    .AddAttribute ("ChunkSize",
+                   "The video chunk size [bytes].",
+                   UintegerValue (128000),
+                   MakeUintegerAccessor (&StoredVideoServer::m_chunkSize),
+                   MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("TraceFilename",
                    "Name of file to load a trace from.",
                    StringValue (""),
                    MakeStringAccessor (&StoredVideoServer::SetTraceFile),
                    MakeStringChecker ())
-    .AddAttribute ("VideoDuration",
-                   "A random variable used to pick the video duration [s].",
-                   StringValue ("ns3::ConstantRandomVariable[Constant=30.0]"),
+    //
+    // For traffic length, we are considering a statistic that the majority of
+    // YouTube brand videos are somewhere between 31 and 120 seconds long. So
+    // we are using the average length of 1min 30sec, with 15sec stdev. See
+    // http://tinyurl.com/q5xkwnn and http://tinyurl.com/klraxum for more
+    // information on this topic. Note that this length will only be used to
+    // get the size of the video which will be sent to the client over a TCP
+    // connection.
+    //
+    .AddAttribute ("TrafficLength",
+                   "A random variable used to pick the traffic length [s].",
+                   StringValue (
+                     "ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"),
                    MakePointerAccessor (&StoredVideoServer::m_lengthRng),
                    MakePointerChecker <RandomVariableStream> ())
-    .AddAttribute ("ChunkSize",
-                   "The number of bytes on each chunk of the video.",
-                   UintegerValue (128000),
-                   MakeUintegerAccessor (&StoredVideoServer::m_chunkSize),
-                   MakeUintegerChecker<uint32_t> ())
   ;
   return tid;
 }

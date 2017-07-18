@@ -68,7 +68,7 @@ private:
   void SendPacket ();
 
   Time                        m_interval;     //!< Interval between packets.
-  uint32_t                    m_pktSize;      //!< Packet max size.
+  uint32_t                    m_pktSize;      //!< Packet size.
   EventId                     m_sendEvent;    //!< SendPacket event.
 };
 

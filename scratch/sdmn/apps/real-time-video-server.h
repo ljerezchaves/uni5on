@@ -96,7 +96,7 @@ private:
     char     frameType;   //!< Frame type (I, P or B)
   };
 
-  uint16_t                        m_pktSize;          //!< Packet max size.
+  uint16_t                        m_pktSize;          //!< Packet size.
   EventId                         m_sendEvent;        //!< SendPacket event.
   uint32_t                        m_currentEntry;     //!< Current entry.
   static struct TraceEntry        g_defaultEntries[]; //!< Default trace.

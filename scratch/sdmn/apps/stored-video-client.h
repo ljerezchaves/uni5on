@@ -51,6 +51,9 @@ protected:
   // Inherited from Object.
   virtual void DoDispose (void);
 
+  // Inherited from ObjectBase.
+  virtual void NotifyConstructionCompleted (void);
+
 private:
   /**
    * Callback for a connection successfully established.

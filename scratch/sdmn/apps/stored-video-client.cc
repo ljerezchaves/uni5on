@@ -79,6 +79,14 @@ StoredVideoClient::DoDispose (void)
 }
 
 void
+StoredVideoClient::NotifyConstructionCompleted (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  SetAttribute ("AppName", StringValue ("BuffVid"));
+}
+
+void
 StoredVideoClient::NotifyConnectionSucceeded (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);

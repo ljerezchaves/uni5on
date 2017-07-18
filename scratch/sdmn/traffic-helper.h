@@ -199,18 +199,20 @@ private:
   Ipv4Mask            m_ueMask;         //!< Current client address mask.
   Ptr<TrafficManager> m_ueManager;      //!< Current client traffic manager.
 
-  bool                m_gbrVoip;        //!< VoIP enable.
-  bool                m_gbrPlot;        //!< Auto-pilot enable.
-  bool                m_gbrLVid;        //!< GBR live streaming vide enable.
-  bool                m_nonBVid;        //!< Buffered video enable.
-  bool                m_nonLVid;        //!< Non-GBR live straming enable.
-  bool                m_nonHttp;        //!< HTTP enable.
+  bool                m_httpEnable;     //!< HTTP enable.
+  bool                m_plotEnable;     //!< Auto-pilot enable.
+  bool                m_rtvgEnable;     //!< GBR live streaming video enable.
+  bool                m_rtvnEnalbe;     //!< Non-GBR live streaming enable.
+  bool                m_stvdEnable;     //!< Buffered video enable.
+  bool                m_voipEnable;     //!< VoIP enable.
 
-  SdmnAppHelper       m_voipHelper;     //!< Voip app helper.
-  SdmnAppHelper       m_pilotHelper;    //!< Pilot app helper.
-  SdmnAppHelper       m_rtVideoHelper;  //!< Real-time video app helper.
-  SdmnAppHelper       m_stVideoHelper;  //!< Stored video app helper.
   SdmnAppHelper       m_httpHelper;     //!< HTTP app helper.
+  SdmnAppHelper       m_plotHelper;     //!< Pilot app helper.
+  SdmnAppHelper       m_rtvdHelper;     //!< Real-time video app helper.
+  SdmnAppHelper       m_stvdHelper;     //!< Stored video app helper.
+  SdmnAppHelper       m_voipHelper;     //!< Voip app helper.
+
+  static uint16_t     m_port;           //!< Port numbers for applications.
 
   Ptr<UniformRandomVariable>  m_videoRng;      //!< Random video selection.
   static const std::string    m_videoDir;      //!< Video trace directory.

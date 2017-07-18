@@ -35,9 +35,17 @@ RealTimeVideoClient::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::RealTimeVideoClient")
     .SetParent<SdmnClientApp> ()
     .AddConstructor<RealTimeVideoClient> ()
-    .AddAttribute ("VideoDuration",
-                   "A random variable used to pick the video duration [s].",
-                   StringValue ("ns3::ConstantRandomVariable[Constant=30.0]"),
+    //
+    // For traffic length, we are considering a statistic that the majority of
+    // YouTube brand videos are somewhere between 31 and 120 seconds long. So
+    // we are using the average length of 1min 30sec, with 15sec stdev. See
+    // http://tinyurl.com/q5xkwnn and http://tinyurl.com/klraxum for more
+    // information on this topic.
+    //
+    .AddAttribute ("TrafficLength",
+                   "A random variable used to pick the traffic length [s].",
+                   StringValue (
+                     "ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"),
                    MakePointerAccessor (&RealTimeVideoClient::m_lengthRng),
                    MakePointerChecker <RandomVariableStream> ())
   ;
@@ -79,6 +87,14 @@ RealTimeVideoClient::DoDispose (void)
   m_lengthRng = 0;
   m_stopEvent.Cancel ();
   SdmnClientApp::DoDispose ();
+}
+
+void
+RealTimeVideoClient::NotifyConstructionCompleted (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  SetAttribute ("AppName", StringValue ("LiveVid"));
 }
 
 void
