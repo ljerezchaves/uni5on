@@ -33,13 +33,15 @@ NS_OBJECT_ENSURE_REGISTERED (EpcNetwork);
 // Initializing EpcNetwork static members.
 const uint16_t    EpcNetwork::m_gtpuPort = 2152;
 const Ipv4Address EpcNetwork::m_ueAddr   = Ipv4Address ("7.0.0.0");
-const Ipv4Address EpcNetwork::m_htcBase  = Ipv4Address ("0.1.0.1");
-const Ipv4Address EpcNetwork::m_mtcBase  = Ipv4Address ("0.2.0.1");
+const Ipv4Address EpcNetwork::m_htcAddr  = Ipv4Address ("7.64.0.0");
+const Ipv4Address EpcNetwork::m_mtcAddr  = Ipv4Address ("7.128.0.0");
 const Ipv4Address EpcNetwork::m_sgiAddr  = Ipv4Address ("8.0.0.0");
 const Ipv4Address EpcNetwork::m_s5Addr   = Ipv4Address ("10.1.0.0");
 const Ipv4Address EpcNetwork::m_s1uAddr  = Ipv4Address ("10.2.0.0");
 const Ipv4Address EpcNetwork::m_x2Addr   = Ipv4Address ("10.3.0.0");
 const Ipv4Mask    EpcNetwork::m_ueMask   = Ipv4Mask ("255.0.0.0");
+const Ipv4Mask    EpcNetwork::m_htcMask  = Ipv4Mask ("255.192.0.0");
+const Ipv4Mask    EpcNetwork::m_mtcMask  = Ipv4Mask ("255.192.0.0");
 const Ipv4Mask    EpcNetwork::m_sgiMask  = Ipv4Mask ("255.0.0.0");
 const Ipv4Mask    EpcNetwork::m_s5Mask   = Ipv4Mask ("255.255.255.0");
 const Ipv4Mask    EpcNetwork::m_s1uMask  = Ipv4Mask ("255.255.255.0");
@@ -623,7 +625,7 @@ EpcNetwork::AssignHtcUeIpv4Address (NetDeviceContainer ueDevices)
 {
   NS_LOG_FUNCTION (this);
 
-  m_ueAddrHelper.SetBase (m_ueAddr, m_ueMask, m_htcBase);
+  m_ueAddrHelper.SetBase (m_htcAddr, m_htcMask);
   return m_ueAddrHelper.Assign (ueDevices);
 }
 
@@ -632,7 +634,7 @@ EpcNetwork::AssignMtcUeIpv4Address (NetDeviceContainer ueDevices)
 {
   NS_LOG_FUNCTION (this);
 
-  m_ueAddrHelper.SetBase (m_ueAddr, m_ueMask, m_mtcBase);
+  m_ueAddrHelper.SetBase (m_mtcAddr, m_mtcMask);
   return m_ueAddrHelper.Assign (ueDevices);
 }
 

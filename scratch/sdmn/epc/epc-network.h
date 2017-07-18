@@ -137,13 +137,15 @@ public:
 
   static const uint16_t     m_gtpuPort;  //!< GTP-U UDP port.
   static const Ipv4Address  m_ueAddr;    //!< UE network address.
-  static const Ipv4Address  m_htcBase;   //!< HTC UE base address.
-  static const Ipv4Address  m_mtcBase;   //!< MTC UE base address.
+  static const Ipv4Address  m_htcAddr;   //!< HTC UE network address.
+  static const Ipv4Address  m_mtcAddr;   //!< MTC UE network address.
   static const Ipv4Address  m_sgiAddr;   //!< Web network address.
   static const Ipv4Address  m_s5Addr;    //!< S5 network address.
   static const Ipv4Address  m_s1uAddr;   //!< S1-U network address.
   static const Ipv4Address  m_x2Addr;    //!< X2 network address.
   static const Ipv4Mask     m_ueMask;    //!< UE network mask.
+  static const Ipv4Mask     m_htcMask;   //!< HTC UE network mask.
+  static const Ipv4Mask     m_mtcMask;   //!< MTC UE network mask.
   static const Ipv4Mask     m_sgiMask;   //!< Web network mask.
   static const Ipv4Mask     m_s5Mask;    //!< S5 network mask.
   static const Ipv4Mask     m_s1uMask;   //!< S1-U network mask.
