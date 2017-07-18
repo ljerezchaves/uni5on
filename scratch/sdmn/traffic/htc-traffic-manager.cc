@@ -111,6 +111,7 @@ HtcTrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
   for (aIt = m_appStartTable.begin (); aIt != m_appStartTable.end (); ++aIt)
     {
       Ptr<SdmnClientApp> app = aIt->first;
+      app->SetTeid (m_defaultTeid);
 
       // Using the TFT to match bearers and applications.
       Ptr<EpcTft> tft = app->GetTft ();
@@ -124,11 +125,6 @@ HtcTrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
                   app->SetTeid (bIt->sgwFteid.teid);
                 }
             }
-        }
-      else
-        {
-          // This application uses the default bearer.
-          app->SetTeid (m_defaultTeid);
         }
       NS_LOG_INFO ("App " << app->GetAppName () <<
                    " over bearer teid " << app->GetTeid ());
