@@ -22,14 +22,14 @@
 #include <ns3/config-store-module.h>
 #include <iomanip>
 #include <iostream>
-#include "lte-network.h"
-#include "traffic-helper.h"
 #include "epc/ring-network.h"
+#include "sdran/lte-network.h"
 #include "stats/admission-stats-calculator.h"
 #include "stats/backhaul-stats-calculator.h"
 #include "stats/connection-stats-calculator.h"
 #include "stats/pgw-tft-stats-calculator.h"
 #include "stats/traffic-stats-calculator.h"
+#include "traffic/traffic-helper.h"
 
 using namespace ns3;
 using namespace ns3::ofs;
