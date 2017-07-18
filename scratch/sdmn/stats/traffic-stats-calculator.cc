@@ -348,7 +348,7 @@ TrafficStatsCalculator::GetHeader (void)
       << setw (12) << "Time(s)"
       << right
       << setw (8)  << "AppName"
-      << setw (6)  << "TEID"
+      << setw (8)  << "TEID"
       << setw (5)  << "QCI"
       << setw (7)  << "IsGBR"
       << setw (6)  << "IMSI"
@@ -379,7 +379,7 @@ TrafficStatsCalculator::GetStats (
       << setw (11) << Simulator::Now ().GetSeconds ()
       << right
       << " " << setw (8)  << app->GetAppName ()
-      << " " << setw (5)  << teid
+      << " " << setw (7)  << teid
       << " " << setw (4)  << rInfo->GetQciInfo ()
       << " " << setw (6)  << rInfo->IsGbr ()
       << " " << setw (5)  << ueInfo->GetImsi ()

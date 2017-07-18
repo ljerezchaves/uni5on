@@ -152,7 +152,7 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
   << left
   << setw (11) << Simulator::Now ().GetSeconds ()
   << right
-  << " " << setw (6) << rInfo->GetTeid ()
+  << " " << setw (8) << rInfo->GetTeid ()
   << " " << setw (4) << rInfo->GetQciInfo ()
   << " " << setw (6) << rInfo->IsGbr ()
   << " " << setw (5) << ueInfo->GetImsi ()
@@ -176,7 +176,7 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
   << left
   << setw (11) << Simulator::Now ().GetSeconds ()
   << right
-  << " " << setw (6) << rInfo->GetTeid ()
+  << " " << setw (8) << rInfo->GetTeid ()
   << " " << setw (6) << rInfo->IsGbr ()
   << " " << setw (6) << rInfo->IsBlocked ()
   << " " << setw (6) << rInfo->IsAggregated ()
@@ -244,7 +244,7 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   << left
   << setw (12) << "Time(s)"
   << right
-  << setw (6)  << "TEID"
+  << setw (8)  << "TEID"
   << setw (7)  << "IsGBR"
   << setw (7)  << "Block"
   << setw (7)  << "S5Agg"
@@ -258,7 +258,7 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   << left
   << setw (12) << "Time(s)"
   << right
-  << setw (6)  << "TEID"
+  << setw (8)  << "TEID"
   << setw (5)  << "QCI"
   << setw (7)  << "IsGBR"
   << setw (6)  << "IMSI"
