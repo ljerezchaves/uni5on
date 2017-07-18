@@ -248,7 +248,6 @@ TrafficHelper::InstallMtcApplications (NodeContainer ueNodes,
   NS_LOG_FUNCTION (this);
 
   // Install manager and applications into nodes.
-  // FIXME. This may be different for MTC applications.
   for (uint32_t u = 0; u < ueNodes.GetN (); u++)
     {
       m_ueNode = ueNodes.Get (u);
