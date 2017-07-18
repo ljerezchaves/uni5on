@@ -56,5 +56,7 @@ default ns3::TrafficHelper::VoipTraffic "true"
 
 default ns3::HtcTrafficManager::PoissonInterArrival "ns3::ExponentialRandomVariable[Mean=180.0]"
 default ns3::HtcTrafficManager::RestartApps "true"
+
+default ns3::AutoPilotClient::TrafficLength "ns3::NormalRandomVariable[Mean=60.0|Variance=100.0]"
 default ns3::MtcTrafficManager::PoissonInterArrival "ns3::ExponentialRandomVariable[Mean=20.0]"
 default ns3::MtcTrafficManager::RestartApps "true"
