@@ -89,13 +89,13 @@ LteNetwork::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (1),
                    MakeUintegerAccessor (&LteNetwork::m_nHtcUes),
-                   MakeUintegerChecker<uint32_t> ())
+                   MakeUintegerChecker<uint32_t> (0, 65535))
     .AddAttribute ("NumMtcUes", "The total number of MTC UEs, randomly "
                    "distributed within the coverage area boundaries.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (0),
                    MakeUintegerAccessor (&LteNetwork::m_nMtcUes),
-                   MakeUintegerChecker<uint32_t> ())
+                   MakeUintegerChecker<uint32_t> (0, 65535))
     .AddAttribute ("UeHeight", "The UE antenna height [m].",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DoubleValue (1.5),
