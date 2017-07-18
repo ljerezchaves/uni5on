@@ -68,13 +68,13 @@ HtcTrafficManager::AddSdmnClientApp (Ptr<SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << app);
 
-  // Save the application into map.
+  // Save the application pointer.
   std::pair<Ptr<SdmnClientApp>, Time> entry (app, Time ());
   std::pair<AppTimeMap_t::iterator, bool> ret;
-  ret = m_appStartTable.insert (entry);
+  ret = m_appTable.insert (entry);
   if (ret.second == false)
     {
-      NS_FATAL_ERROR ("Can't insert application " << app << " into map.");
+      NS_FATAL_ERROR ("Can't save application pointer " << app);
     }
 
   // Connect to AppStop and AppError trace sources.
@@ -108,7 +108,7 @@ HtcTrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
 
   // For each application, set the corresponding TEID.
   AppTimeMap_t::iterator aIt;
-  for (aIt = m_appStartTable.begin (); aIt != m_appStartTable.end (); ++aIt)
+  for (aIt = m_appTable.begin (); aIt != m_appTable.end (); ++aIt)
     {
       Ptr<SdmnClientApp> app = aIt->first;
       app->SetTeid (m_defaultTeid);
@@ -145,7 +145,7 @@ HtcTrafficManager::DoDispose ()
   NS_LOG_FUNCTION (this);
   m_poissonRng = 0;
   m_ctrlApp = 0;
-  m_appStartTable.clear ();
+  m_appTable.clear ();
 }
 
 void
@@ -156,14 +156,16 @@ HtcTrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
   NS_ASSERT_MSG (!app->IsActive (), "Can't start an active application.");
   NS_LOG_INFO ("Attempt to start app " << app->GetNameTeid ());
 
-  // Before requesting for resources and starting the application, let's set
-  // the next start attempt for this same application.
+  // Different from the MTC applications, before requesting for resources and
+  // starting the application, let's set the next start attempt for this same
+  // application. Depending on the next start attempt time, the application
+  // will be forced to stops itself to avoid overlapping operations.
   SetNextAppStartTry (app);
 
-  // No resource request for traffic over default bearer.
   bool authorized = true;
   if (app->GetTeid () != m_defaultTeid)
     {
+      // No resource request for traffic over default bearer.
       authorized = m_ctrlApp->DedicatedBearerRequest (
           app->GetEpsBearer (), m_imsi, m_cellId, app->GetTeid ());
     }
@@ -197,8 +199,8 @@ HtcTrafficManager::NotifyAppStop (Ptr<SdmnClientApp> app)
         m_ctrlApp, app->GetEpsBearer (), m_imsi, m_cellId, appTeid);
     }
 
-  // Schedule the next start attempt for this application, ensuring at least 2
-  // seconds from now.
+  // Schedule the next start attempt for this application,
+  // ensuring at least 2 seconds from now.
   if (m_restartApps)
     {
       Time now = Simulator::Now ();
@@ -260,11 +262,12 @@ HtcTrafficManager::SetNextAppStartTry (Ptr<SdmnClientApp> app)
   //    D-E: 1 sec
   //    E-F: at least 1 sec
   //
-  Time nextTry = Seconds (std::max (8.0, m_poissonRng->GetValue ()));
+  double rngValue = std::abs (m_poissonRng->GetValue ());
+  Time nextTry = Seconds (std::max (8.0, rngValue));
 
-  // Save the absolute time into map.
-  AppTimeMap_t::iterator it = m_appStartTable.find (app);
-  NS_ASSERT_MSG (it != m_appStartTable.end (), "Can't find app " << app);
+  // Save the absolute time into application table.
+  AppTimeMap_t::iterator it = m_appTable.find (app);
+  NS_ASSERT_MSG (it != m_appTable.end (), "Can't find app " << app);
   it->second = Simulator::Now () + nextTry;
   NS_LOG_INFO ("Next start try for app " << app->GetNameTeid () <<
                " should occur at " << it->second.GetSeconds () << "s.");
@@ -278,8 +281,8 @@ HtcTrafficManager::GetNextAppStartTry (Ptr<SdmnClientApp> app) const
 {
   NS_LOG_FUNCTION (this << app);
 
-  AppTimeMap_t::const_iterator it = m_appStartTable.find (app);
-  NS_ASSERT_MSG (it != m_appStartTable.end (), "Can't find app " << app);
+  AppTimeMap_t::const_iterator it = m_appTable.find (app);
+  NS_ASSERT_MSG (it != m_appTable.end (), "Can't find app " << app);
   return it->second;
 }
 
