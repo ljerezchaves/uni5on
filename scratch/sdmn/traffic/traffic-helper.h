@@ -29,7 +29,8 @@
 
 namespace ns3 {
 
-class TrafficManager;
+class HtcTrafficManager;
+class MtcTrafficManager;
 class EpcController;
 class LteNetwork;
 class EpcNetwork;
@@ -58,13 +59,6 @@ public:
    * \return The object TypeId.
    */
   static TypeId GetTypeId (void);
-
-  /**
-   * Record an attribute to be set in each traffic manager.
-   * \param name the name of the attribute to set.
-   * \param value the value of the attribute to set.
-   */
-  void SetManagerAttribute (std::string name, const AttributeValue &value);
 
 protected:
   /** Destructor implementation. */
@@ -185,40 +179,42 @@ private:
    */
   void InstallNonGbrHttp ();
 
-  ObjectFactory       m_managerFactory; //!< Traffic manager factory.
+  ObjectFactory               m_htcFactory;     //!< HTC manager factory.
+  Ptr<HtcTrafficManager>      m_htcManager;     //!< HTC traffic manager.
+  ObjectFactory               m_mtcFactory;     //!< MTC manager factory.
+  Ptr<MtcTrafficManager>      m_mtcManager;     //!< MTC traffic manager.
 
-  Ptr<LteNetwork>     m_lteNetwork;     //!< The LTE network.
+  Ptr<LteNetwork>             m_lteNetwork;     //!< The LTE network.
 
-  Ptr<Node>           m_webNode;        //!< Server node.
-  Ipv4Address         m_webAddr;        //!< Server address.
-  Ipv4Mask            m_webMask;        //!< Server address mask.
+  Ptr<Node>                   m_webNode;        //!< Server node.
+  Ipv4Address                 m_webAddr;        //!< Server address.
+  Ipv4Mask                    m_webMask;        //!< Server address mask.
 
-  Ptr<Node>           m_ueNode;         //!< Current client node.
-  Ptr<NetDevice>      m_ueDev;          //!< Current client dev.
-  Ipv4Address         m_ueAddr;         //!< Current client address.
-  Ipv4Mask            m_ueMask;         //!< Current client address mask.
-  Ptr<TrafficManager> m_ueManager;      //!< Current client traffic manager.
+  Ptr<Node>                   m_ueNode;         //!< Client node.
+  Ptr<NetDevice>              m_ueDev;          //!< Client dev.
+  Ipv4Address                 m_ueAddr;         //!< Client address.
+  Ipv4Mask                    m_ueMask;         //!< Client address mask.
 
-  bool                m_httpEnable;     //!< HTTP enable.
-  bool                m_plotEnable;     //!< Auto-pilot enable.
-  bool                m_rtvgEnable;     //!< GBR live streaming video enable.
-  bool                m_rtvnEnalbe;     //!< Non-GBR live streaming enable.
-  bool                m_stvdEnable;     //!< Buffered video enable.
-  bool                m_voipEnable;     //!< VoIP enable.
+  bool                        m_httpEnable;     //!< HTTP enable.
+  bool                        m_plotEnable;     //!< Auto-pilot enable.
+  bool                        m_rtvgEnable;     //!< GBR live video enable.
+  bool                        m_rtvnEnalbe;     //!< Non-GBR live video enable.
+  bool                        m_stvdEnable;     //!< Buffered video enable.
+  bool                        m_voipEnable;     //!< VoIP enable.
 
-  SdmnAppHelper       m_httpHelper;     //!< HTTP app helper.
-  SdmnAppHelper       m_plotHelper;     //!< Pilot app helper.
-  SdmnAppHelper       m_rtvdHelper;     //!< Real-time video app helper.
-  SdmnAppHelper       m_stvdHelper;     //!< Stored video app helper.
-  SdmnAppHelper       m_voipHelper;     //!< Voip app helper.
+  SdmnAppHelper               m_httpHelper;     //!< HTTP app helper.
+  SdmnAppHelper               m_plotHelper;     //!< Pilot app helper.
+  SdmnAppHelper               m_rtvdHelper;     //!< Live video app helper.
+  SdmnAppHelper               m_stvdHelper;     //!< Stored video app helper.
+  SdmnAppHelper               m_voipHelper;     //!< Voip app helper.
 
-  static uint16_t     m_port;           //!< Port numbers for applications.
+  static uint16_t             m_port;           //!< Port numbers for apps.
 
-  Ptr<UniformRandomVariable>  m_videoRng;      //!< Random video selection.
-  static const std::string    m_videoDir;      //!< Video trace directory.
-  static const std::string    m_videoTrace []; //!< Video trace filenames.
-  static const uint64_t       m_gbrBitRate []; //!< Video gbr bit rate.
-  static const uint64_t       m_mbrBitRate []; //!< Video max bit rate.
+  Ptr<UniformRandomVariable>  m_videoRng;       //!< Random video selection.
+  static const std::string    m_videoDir;       //!< Video trace directory.
+  static const std::string    m_videoTrace [];  //!< Video trace filenames.
+  static const uint64_t       m_gbrBitRate [];  //!< Video gbr bit rate.
+  static const uint64_t       m_mbrBitRate [];  //!< Video max bit rate.
 };
 
 };  // namespace ns3

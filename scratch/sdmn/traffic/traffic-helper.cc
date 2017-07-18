@@ -19,7 +19,8 @@
  */
 
 #include "traffic-helper.h"
-#include "traffic-manager.h"
+#include "htc-traffic-manager.h"
+#include "mtc-traffic-manager.h"
 #include "../sdran/lte-network.h"
 #include "../apps/auto-pilot-client.h"
 #include "../apps/auto-pilot-server.h"
@@ -82,7 +83,8 @@ TrafficHelper::TrafficHelper (Ptr<LteNetwork> lteNetwork,
   m_webMask = EpcNetwork::GetIpv4Mask (webDev);
 
   // Configuring the traffic manager object factory.
-  m_managerFactory.SetTypeId (TrafficManager::GetTypeId ());
+  m_htcFactory.SetTypeId (HtcTrafficManager::GetTypeId ());
+  m_mtcFactory.SetTypeId (MtcTrafficManager::GetTypeId ());
 
   // Random video selection.
   m_videoRng = CreateObject<UniformRandomVariable> ();
@@ -153,13 +155,6 @@ TrafficHelper::GetTypeId (void)
 }
 
 void
-TrafficHelper::SetManagerAttribute (std::string name,
-                                    const AttributeValue &value)
-{
-  m_managerFactory.Set (name, value);
-}
-
-void
 TrafficHelper::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
@@ -168,7 +163,8 @@ TrafficHelper::DoDispose ()
   m_webNode = 0;
   m_ueNode = 0;
   m_ueDev = 0;
-  m_ueManager = 0;
+  m_htcManager = 0;
+  m_mtcManager = 0;
   m_videoRng = 0;
 }
 
@@ -201,20 +197,22 @@ TrafficHelper::InstallHtcApplications (NodeContainer ueNodes,
       m_ueNode = ueNodes.Get (u);
       m_ueDev = ueDevices.Get (u);
       NS_ASSERT (m_ueDev->GetNode () == m_ueNode);
+      uint64_t ueImsi = DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ();
 
       Ptr<Ipv4> clientIpv4 = m_ueNode->GetObject<Ipv4> ();
       m_ueAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
       m_ueMask = clientIpv4->GetAddress (1, 0).GetMask ();
 
-      // Each UE gets one traffic manager.
-      m_ueManager = m_managerFactory.Create<TrafficManager> ();
-      m_ueManager->SetImsi (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
-      m_ueNode->AggregateObject (m_ueManager);
+      // Each HTC UE gets one HTC traffic manager.
+      m_htcManager = m_htcFactory.Create<HtcTrafficManager> ();
+      m_htcManager->SetImsi (ueImsi);
+      m_ueNode->AggregateObject (m_htcManager);
 
       // Connect the manager to new context created trace source.
       Config::ConnectWithoutContext (
         "/NodeList/*/ApplicationList/*/$ns3::EpcController/SessionCreated",
-        MakeCallback (&TrafficManager::SessionCreatedCallback, m_ueManager));
+        MakeCallback (&HtcTrafficManager::SessionCreatedCallback,
+                      m_htcManager));
 
       // Install HTC applications into UEs.
       if (m_voipEnable)
@@ -240,7 +238,7 @@ TrafficHelper::InstallHtcApplications (NodeContainer ueNodes,
     }
   m_ueNode = 0;
   m_ueDev = 0;
-  m_ueManager = 0;
+  m_htcManager = 0;
 }
 
 void
@@ -256,20 +254,22 @@ TrafficHelper::InstallMtcApplications (NodeContainer ueNodes,
       m_ueNode = ueNodes.Get (u);
       m_ueDev = ueDevices.Get (u);
       NS_ASSERT (m_ueDev->GetNode () == m_ueNode);
+      uint64_t ueImsi = DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ();
 
       Ptr<Ipv4> clientIpv4 = m_ueNode->GetObject<Ipv4> ();
       m_ueAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
       m_ueMask = clientIpv4->GetAddress (1, 0).GetMask ();
 
-      // Each UE gets one traffic manager.
-      m_ueManager = m_managerFactory.Create<TrafficManager> ();
-      m_ueManager->SetImsi (DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ());
-      m_ueNode->AggregateObject (m_ueManager);
+      // Each MTC UE gets one MTC traffic manager.
+      m_mtcManager = m_mtcFactory.Create<MtcTrafficManager> ();
+      m_mtcManager->SetImsi (ueImsi);
+      m_ueNode->AggregateObject (m_mtcManager);
 
       // Connect the manager to new context created trace source.
       Config::ConnectWithoutContext (
         "/NodeList/*/ApplicationList/*/$ns3::EpcController/SessionCreated",
-        MakeCallback (&TrafficManager::SessionCreatedCallback, m_ueManager));
+        MakeCallback (&MtcTrafficManager::SessionCreatedCallback,
+                      m_mtcManager));
 
       // Install MTC applications into UEs
       if (m_plotEnable)
@@ -279,7 +279,7 @@ TrafficHelper::InstallMtcApplications (NodeContainer ueNodes,
     }
   m_ueNode = 0;
   m_ueDev = 0;
-  m_ueManager = 0;
+  m_mtcManager = 0;
 }
 
 const std::string
@@ -337,7 +337,7 @@ TrafficHelper::InstallGbrVoip ()
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
-  m_ueManager->AddSdmnClientApp (cApp);
+  m_htcManager->AddSdmnClientApp (cApp);
 
   GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
@@ -371,7 +371,7 @@ TrafficHelper::InstallGbrAutoPilot ()
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
-  m_ueManager->AddSdmnClientApp (cApp);
+  m_mtcManager->AddSdmnClientApp (cApp);
 
   GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
@@ -411,7 +411,7 @@ TrafficHelper::InstallGbrLiveVideoStreaming ()
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
-  m_ueManager->AddSdmnClientApp (cApp);
+  m_htcManager->AddSdmnClientApp (cApp);
 
   GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
@@ -449,7 +449,7 @@ TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
-  m_ueManager->AddSdmnClientApp (cApp);
+  m_htcManager->AddSdmnClientApp (cApp);
 
   GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
@@ -487,7 +487,7 @@ TrafficHelper::InstallNonGbrLiveVideoStreaming ()
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
-  m_ueManager->AddSdmnClientApp (cApp);
+  m_htcManager->AddSdmnClientApp (cApp);
 
   GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
@@ -521,7 +521,7 @@ TrafficHelper::InstallNonGbrHttp ()
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
-  m_ueManager->AddSdmnClientApp (cApp);
+  m_htcManager->AddSdmnClientApp (cApp);
 
   GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }

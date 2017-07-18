@@ -1,6 +1,6 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2015 University of Campinas (Unicamp)
+ * Copyright (c) 2017 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef TRAFFIC_MANAGER_H
-#define TRAFFIC_MANAGER_H
+#ifndef MTC_TRAFFIC_MANAGER_H
+#define MTC_TRAFFIC_MANAGER_H
 
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
@@ -36,13 +36,13 @@ class SdranController;
  * \ingroup sdmn
  * Traffic manager which handles SDMN client applications start/stop events.
  * It interacts with the SDMN architecture to request and release EPS bearers.
- * Each LteUeNetDevice has one TrafficManager object aggregated to it.
+ * Each MTC LteUeNetDevice has one MtcTrafficManager object aggregated to it.
  */
-class TrafficManager : public Object
+class MtcTrafficManager : public Object
 {
 public:
-  TrafficManager ();          //!< Default constructor.
-  virtual ~TrafficManager (); //!< Dummy destructor, see DoDispose.
+  MtcTrafficManager ();          //!< Default constructor.
+  virtual ~MtcTrafficManager (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -126,5 +126,5 @@ private:
 };
 
 };  // namespace ns3
-#endif // TRAFFIC_MANAGER_H
+#endif // MTC_TRAFFIC_MANAGER_H
 
