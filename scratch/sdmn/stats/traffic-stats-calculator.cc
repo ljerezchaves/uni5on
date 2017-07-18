@@ -230,12 +230,23 @@ TrafficStatsCalculator::MeterDropPacket (
 {
   NS_LOG_FUNCTION (this << context << packet << meterId);
 
+  uint32_t teid;
   EpcGtpuTag gtpuTag;
   Ptr<QosStatsCalculator> qosStats;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      qosStats = GetQosStatsFromTeid (gtpuTag.GetTeid (),
-                                      gtpuTag.IsDownlink ());
+      teid = gtpuTag.GetTeid ();
+      qosStats = GetQosStatsFromTeid (teid, gtpuTag.IsDownlink ());
+
+      // Notify the droped packet, based on meter type (traffic or slicing).
+      if (teid == meterId)
+        {
+          qosStats->NotifyMeterDrop ();
+        }
+      else
+        {
+          qosStats->NotifySliceDrop ();
+        }
     }
   else
     {
@@ -245,18 +256,11 @@ TrafficStatsCalculator::MeterDropPacket (
       // EpcGtpuTag and notifying that the packet is entering the EPC.
       // To keep consistent log results, we are doing this manually here.
       //
-      NS_ASSERT_MSG (meterId, "Invalid meter ID for dropped packet.");
-      qosStats = GetQosStatsFromTeid (meterId, true);
+      teid = meterId;
+      qosStats = GetQosStatsFromTeid (teid, true);
       qosStats->NotifyTx (packet->GetSize ());
-    }
 
-  // Notify the droped packet, based on meter type (traffic or slicing).
-  if (meterId < EpcController::GetFirstTeidValue ())
-    {
-      qosStats->NotifySliceDrop ();
-    }
-  else
-    {
+      // Notify the droped packet (it must be a traffic meter).
       qosStats->NotifyMeterDrop ();
     }
 }
