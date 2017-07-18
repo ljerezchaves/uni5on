@@ -82,9 +82,9 @@ VoipClient::Start ()
 
   // Schedule the ForceStop method to stop traffic generation on both sides
   // based on call length.
-  Time callLength = Seconds (std::abs (m_lengthRng->GetValue ()));
-  m_stopEvent = Simulator::Schedule (callLength, &VoipClient::ForceStop, this);
-  NS_LOG_INFO ("Set call length to " << callLength.GetSeconds () << "s.");
+  Time sTime = Seconds (std::abs (m_lengthRng->GetValue ()));
+  m_stopEvent = Simulator::Schedule (sTime, &VoipClient::ForceStop, this);
+  NS_LOG_INFO ("Set traffic length to " << sTime.GetSeconds () << "s.");
 
   // Chain up to reset statistics, notify server, and fire start trace source.
   SdmnClientApp::Start ();

@@ -70,10 +70,10 @@ RealTimeVideoClient::Start ()
 
   // Schedule the ForceStop method to stop traffic generation on server side
   // based on video length.
-  Time videoLength = Seconds (std::abs (m_lengthRng->GetValue ()));
+  Time sTime = Seconds (std::abs (m_lengthRng->GetValue ()));
   m_stopEvent = Simulator::Schedule (
-      videoLength, &RealTimeVideoClient::ForceStop, this);
-  NS_LOG_INFO ("Set video length to " << videoLength.GetSeconds () << "s.");
+      sTime, &RealTimeVideoClient::ForceStop, this);
+  NS_LOG_INFO ("Set traffic length to " << sTime.GetSeconds () << "s.");
 
   // Chain up to reset statistics, notify server, and fire start trace source.
   SdmnClientApp::Start ();
