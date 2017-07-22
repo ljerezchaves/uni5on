@@ -197,12 +197,6 @@ public:
   static uint16_t GetDscpValue (EpsBearer::Qci qci);
 
   /**
-   * Get the first valid TEID for GTP tunnels.
-   * \return The first valid TEID.
-   */
-  static uint32_t GetFirstTeidValue (void);
-
-  /**
    * TracedCallback signature for the P-GW TFT stats trace source.
    * \param stats The P-GW TST statistics from the last interval.
    */
@@ -216,6 +210,9 @@ public:
    */
   typedef void (*SessionCreatedTracedCallback)(
     uint64_t imsi, uint16_t cellId, BearerContextList_t bearerList);
+
+  static const uint32_t m_teidStart;    //!< First valid TEID value.
+  static const uint32_t m_teidEnd;      //!< Last valid TEID value.
 
 protected:
   /** Destructor implementation. */
@@ -433,7 +430,6 @@ private:
   typedef std::map<uint16_t, uint32_t> DscpQueueMap_t;
 
   static const uint16_t m_flowTimeout;    //!< Timeout for flow entries.
-  static const uint32_t m_teidInitial;    //!< Initial TEID value.
   static uint32_t       m_teidCount;      //!< TEID counter.
   static QciDscpMap_t   m_qciDscpTable;   //!< DSCP mapped values.
   static DscpQueueMap_t m_dscpQueueTable; //!< Output queue mapped values.

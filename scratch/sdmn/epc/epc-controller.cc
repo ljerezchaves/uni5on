@@ -33,10 +33,11 @@ const uint16_t EpcController::m_flowTimeout = 0;
 EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
 EpcController::DscpQueueMap_t EpcController::m_dscpQueueTable;
 
-// The TEID counter is initialized at 0x0000000F, reserving the first values
-// for controller usage on slicing implementation.
-const uint32_t EpcController::m_teidInitial = 0x0000000F;
-uint32_t EpcController::m_teidCount = EpcController::m_teidInitial;
+// TEID values for bearers ranges from 0x100 to 0xFEFFFFFF.
+// Other values are reserved for controller usage.
+const uint32_t EpcController::m_teidStart = 0x100;
+const uint32_t EpcController::m_teidEnd = 0xFEFFFFFF;
+uint32_t EpcController::m_teidCount = EpcController::m_teidStart;
 
 EpcController::EpcController ()
   : m_tftMaxLoad (DataRate (std::numeric_limits<uint64_t>::max ())),
@@ -433,14 +434,6 @@ EpcController::GetDscpValue (EpsBearer::Qci qci)
   NS_FATAL_ERROR ("No DSCP mapped value for QCI " << qci);
 }
 
-uint32_t
-EpcController::GetFirstTeidValue (void)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  return EpcController::m_teidInitial + 1;
-}
-
 void
 EpcController::DoDispose ()
 {
@@ -763,9 +756,8 @@ EpcController::DoCreateSessionRequest (
        bit != msg.bearerContextsToBeCreated.end ();
        ++bit)
     {
-      // Check for available TEID.
-      NS_ABORT_IF (EpcController::m_teidCount == 0xFFFFFFFF);
-      uint32_t teid = ++EpcController::m_teidCount;
+      NS_ABORT_IF (EpcController::m_teidCount > EpcController::m_teidEnd);
+      uint32_t teid = EpcController::m_teidCount++;
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.teid = teid;
       bearerContext.sgwFteid.address = enbInfo->GetSgwS1uAddr ();
