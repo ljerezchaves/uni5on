@@ -34,22 +34,11 @@ AutoPilotServer::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::AutoPilotServer")
     .SetParent<SdmnServerApp> ()
     .AddConstructor<AutoPilotServer> ()
-    .AddAttribute ("Interval",
-                   "The time to wait between consecutive packets.",
-                   TimeValue (Seconds (1)),
-                   MakeTimeAccessor (&AutoPilotServer::m_interval),
-                   MakeTimeChecker ())
-    .AddAttribute ("PayloadSize",
-                   "The payload size of packets [bytes].",
-                   UintegerValue (1024),
-                   MakeUintegerAccessor (&AutoPilotServer::m_pktSize),
-                   MakeUintegerChecker<uint32_t> ())
   ;
   return tid;
 }
 
 AutoPilotServer::AutoPilotServer ()
-  : m_sendEvent (EventId ())
 {
   NS_LOG_FUNCTION (this);
 }
@@ -64,7 +53,6 @@ AutoPilotServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
-  m_sendEvent.Cancel ();
   SdmnServerApp::DoDispose ();
 }
 
@@ -77,8 +65,9 @@ AutoPilotServer::StartApplication (void)
   TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
   m_socket = Socket::CreateSocket (GetNode (), udpFactory);
   m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
-  m_socket->Connect (InetSocketAddress (m_clientAddress, m_clientPort));
-  m_socket->SetRecvCallback (MakeCallback (&AutoPilotServer::ReadPacket, this));
+  m_socket->ShutdownSend ();
+  m_socket->SetRecvCallback (
+    MakeCallback (&AutoPilotServer::ReadPacket, this));
 }
 
 void
@@ -101,11 +90,6 @@ AutoPilotServer::NotifyStart ()
 
   // Chain up to reset statistics.
   SdmnServerApp::NotifyStart ();
-
-  // Start traffic.
-  m_sendEvent.Cancel ();
-  m_sendEvent = Simulator::Schedule (
-      m_interval, &AutoPilotServer::SendPacket, this);
 }
 
 void
@@ -115,36 +99,6 @@ AutoPilotServer::NotifyForceStop ()
 
   // Chain up just for log.
   SdmnServerApp::NotifyForceStop ();
-
-  // Stop streaming.
-  m_sendEvent.Cancel ();
-}
-
-void
-AutoPilotServer::SendPacket ()
-{
-  NS_LOG_FUNCTION (this);
-
-  Ptr<Packet> packet = Create<Packet> (m_pktSize);
-
-  SeqTsHeader seqTs;
-  seqTs.SetSeq (NotifyTx (packet->GetSize () + seqTs.GetSerializedSize ()));
-  packet->AddHeader (seqTs);
-
-  int bytes = m_socket->Send (packet);
-  if (bytes == (int)packet->GetSize ())
-    {
-      NS_LOG_DEBUG ("Server TX " << bytes << " bytes with " <<
-                    "sequence number " << seqTs.GetSeq ());
-    }
-  else
-    {
-      NS_LOG_ERROR ("Server TX error.");
-    }
-
-  // Schedule next packet transmission.
-  m_sendEvent = Simulator::Schedule (
-      m_interval, &AutoPilotServer::SendPacket, this);
 }
 
 void

@@ -59,15 +59,6 @@ private:
    * \param socket Socket with data available to be read.
    */
   void ReadPacket (Ptr<Socket> socket);
-
-  /**
-   * \brief Handle a packet transmission.
-   */
-  void SendPacket ();
-
-  Time                        m_interval;     //!< Interval between packets.
-  uint32_t                    m_pktSize;      //!< Packet size.
-  EventId                     m_sendEvent;    //!< SendPacket event.
 };
 
 } // namespace ns3

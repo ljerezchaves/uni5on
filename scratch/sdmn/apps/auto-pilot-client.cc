@@ -137,7 +137,7 @@ AutoPilotClient::StartApplication (void)
   m_socket = Socket::CreateSocket (GetNode (), udpFactory);
   m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
   m_socket->Connect (InetSocketAddress (m_serverAddress, m_serverPort));
-  m_socket->SetRecvCallback (MakeCallback (&AutoPilotClient::ReadPacket, this));
+  m_socket->ShutdownRecv ();
 }
 
 void
@@ -178,21 +178,6 @@ AutoPilotClient::SendPacket ()
   // Schedule next packet transmission.
   Time next = Seconds (m_intervalRng->GetValue ());
   m_sendEvent = Simulator::Schedule (next, &AutoPilotClient::SendPacket, this);
-}
-
-void
-AutoPilotClient::ReadPacket (Ptr<Socket> socket)
-{
-  NS_LOG_FUNCTION (this << socket);
-
-  // Receive the datagram from the socket.
-  Ptr<Packet> packet = socket->Recv ();
-
-  SeqTsHeader seqTs;
-  packet->PeekHeader (seqTs);
-  NotifyRx (packet->GetSize (), seqTs.GetTs ());
-  NS_LOG_DEBUG ("Client RX " << packet->GetSize () << " bytes with " <<
-                "sequence number " << seqTs.GetSeq ());
 }
 
 } // Namespace ns3

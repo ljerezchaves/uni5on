@@ -61,12 +61,6 @@ private:
   virtual void StopApplication (void);
 
   /**
-   * \brief Socket receive callback.
-   * \param socket Socket with data available to be read.
-   */
-  void ReadPacket (Ptr<Socket> socket);
-
-  /**
    * \brief Handle a packet transmission.
    */
   void SendPacket ();

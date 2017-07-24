@@ -131,12 +131,12 @@ private:
   void InstallGbrVoip ();
 
   /**
-   * UDP bidirect auto-pilot traffic over dedicated GBR EPS bearer (QCI 3).
+   * UDP uplink auto-pilot traffic over dedicated GBR EPS bearer (QCI 3).
    * This QCI is typically associated with an operator controlled service,
    * i.e., a service where the data flow aggregate's uplink/downlink packet
    * filters are known at the point in time when the data flow aggregate is
-   * authorized. This auto-pilot model is based on the MTC application model
-   * indicate on the "Machine-to-Machine Communications: Architectures,
+   * authorized. This auto-pilot model is adapted from the MTC application
+   * model indicate on the "Machine-to-Machine Communications: Architectures,
    * Technology, Standards, and Applications" book, chapter 3: "M2M traffic and
    * models".
    */
