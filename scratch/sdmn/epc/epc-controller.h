@@ -159,6 +159,15 @@ public:
     Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev);
 
   /**
+   * Notify this controller of a new S-GW connected to OpenFlow backhaul
+   * network over the S5 interface. This method is used only for configuring
+   * MTC traffic aggregation.
+   * \param gwDev The device created at the gateway node.
+   * \return The MTC aggregation TEID on the uplink S5 interface.
+   */
+  virtual uint32_t NotifySgwAttach (Ptr<NetDevice> gwDev);
+
+  /**
    * Notify this controller that all backhaul switches have already been
    * configured and the connections between them are finished.
    * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
@@ -335,6 +344,13 @@ private:
    */
   uint16_t GetPgwTftIdx (
     Ptr<const RoutingInfo> rInfo, uint16_t activeTfts = 0) const;
+
+  /**
+   * Install OpenFlow match rules for the aggregated MTC bearer.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool MtcAggBearerInstall (Ptr<RoutingInfo> rInfo);
 
   /**
    * Install OpenFlow rules for downlink packet filtering on the P-GW TFT

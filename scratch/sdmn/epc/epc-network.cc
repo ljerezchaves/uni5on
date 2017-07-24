@@ -221,6 +221,8 @@ EpcNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
   // Notify the EPC and SDRAN controllers of the new S-GW device attached
   // OpenFlow backhaul network.
   m_epcCtrlApp->NotifyS5Attach (swDev, swS5PortNo, sgwS5Dev);
+  uint32_t mtcTeid = m_epcCtrlApp->NotifySgwAttach (sgwS5Dev);
+  NS_UNUSED (mtcTeid);  // FIXME Send this to the SDRAN controller.
   sdranCtrlApp->NotifySgwAttach (sgwS5PortNo, sgwS5Dev);
 }
 

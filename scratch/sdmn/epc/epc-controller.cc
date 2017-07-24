@@ -375,6 +375,54 @@ EpcController::NotifyS5Attach (
   DpctlSchedule (swtchDev->GetDatapathId (), cmdOut.str ());
 }
 
+uint32_t
+EpcController::NotifySgwAttach (Ptr<NetDevice> gwDev)
+{
+  NS_LOG_FUNCTION (this << gwDev);
+
+  static uint32_t m_mtcTeidCount = EpcController::m_teidEnd + 1;
+
+  uint32_t mtcTeid = 0;
+  if (GetMtcAggregationMode () == OperationMode::ON)
+    {
+      // When the MTC traffic aggregation is enable, let's create and install
+      // the aggregation uplink GTP tunnel between this S-GW and the P-GW. We
+      // are using a 'fake' rInfo for this aggregation bearer, in order to use
+      // existing methods to install the OpenFlow rules.
+      uint32_t mtcTeid = m_mtcTeidCount++;
+
+      // FIXME Should I use GBR to force DSCP?
+      EpcTft::PacketFilter fakeUplinkfilter;
+      fakeUplinkfilter.direction = EpcTft::UPLINK;
+      Ptr<EpcTft> fakeTft = CreateObject<EpcTft> ();
+      fakeTft->Add (fakeUplinkfilter);
+      BearerContext_t fakeBearer;
+      fakeBearer.tft = fakeTft;
+
+      Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (mtcTeid);
+      rInfo->SetActive (true);
+      rInfo->SetBearerContext (fakeBearer);
+      rInfo->SetBlocked (false);
+      rInfo->SetDefault (false);
+      rInfo->SetInstalled (false);
+      rInfo->SetPgwS5Addr (m_pgwS5Addr);
+      rInfo->SetPriority (0xFF00);
+      rInfo->SetSgwS5Addr (EpcNetwork::GetIpv4Addr (gwDev));
+      rInfo->SetTimeout (0);
+
+      // Get the S5 traffic aggregation metadata.
+      Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
+      NS_ASSERT_MSG (aggInfo, "Can't find the S5 aggregation info.");
+      aggInfo->SetAggregated (true);
+
+      // Install the bearer after .
+      TopologyBearerCreated (rInfo);
+      Simulator::Schedule (Seconds (0.5), &EpcController::MtcAggBearerInstall,
+                           this, rInfo);
+    }
+  return mtcTeid;
+}
+
 void
 EpcController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
 {
@@ -786,6 +834,8 @@ EpcController::DoCreateSessionRequest (
       ueInfo->AddTft (bit->tft, teid);
     }
 
+  // FIXME Don't install rules for aggregated MTC traffic.
+
   // Create and save routing information for default bearer.
   // (first element on the res.bearerContextsCreated)
   BearerContext_t defaultBearer = res.bearerContextsCreated.front ();
@@ -925,6 +975,19 @@ EpcController::GetPgwTftIdx (
     }
   Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
   return 1 + (ueInfo->GetUeAddr ().Get () % activeTfts);
+}
+
+bool
+EpcController::MtcAggBearerInstall (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+
+  bool success = TopologyRoutingInstall (rInfo);
+  NS_ASSERT_MSG (success, "Error when installing the MTC aggregation bearer.");
+
+  NS_LOG_INFO ("MTC aggregation bearer teid " << teid << " installed.");
+  rInfo->SetInstalled (success);
+  return success;
 }
 
 bool

@@ -372,6 +372,7 @@ SdranController::DoCreateSessionResponse (
   NS_LOG_FUNCTION (this << msg.teid);
 
   // Install S-GW rules for default bearer.
+  // FIXME Don't install rules for aggregated MTC traffic.
   BearerContext_t defaultBearer = msg.bearerContextsCreated.front ();
   NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
   uint32_t teid = defaultBearer.sgwFteid.teid;
