@@ -178,6 +178,7 @@ public:
    */
   //\{
   OperationMode GetGbrSlicingMode (void) const;
+  OperationMode GetMtcAggregationMode (void) const;
   OperationMode GetPgwAdaptiveMode (void) const;
   OperationMode GetS5AggregationMode (void) const;
   OperationMode GetPriorityQueuesMode (void) const;
@@ -396,6 +397,7 @@ private:
   // Internal mechanisms for performance improvement.
   OperationMode         m_priorityQueues; //!< DSCP priority queues mechanism.
   OperationMode         m_gbrSlicing;     //!< GBR slicing mechanism.
+  OperationMode         m_mtcAggregation; //!< MTC aggregation mechanism.
 
   // P-GW metadata.
   std::vector<uint64_t> m_pgwDpIds;       //!< Datapath IDs.

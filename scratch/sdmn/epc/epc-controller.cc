@@ -65,6 +65,13 @@ EpcController::GetTypeId (void)
                    MakeEnumAccessor (&EpcController::m_gbrSlicing),
                    MakeEnumChecker (EpcController::OFF, "off",
                                     EpcController::ON,  "on"))
+    .AddAttribute ("MtcAggregation",
+                   "MTC traffic aggregation mechanism operation mode.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   EnumValue (EpcController::OFF),
+                   MakeEnumAccessor (&EpcController::m_mtcAggregation),
+                   MakeEnumChecker (EpcController::OFF,  "off",
+                                    EpcController::ON,   "on"))
     .AddAttribute ("PgwTftAdaptiveMode",
                    "P-GW TFT adaptive mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -386,6 +393,14 @@ EpcController::GetGbrSlicingMode (void) const
   NS_LOG_FUNCTION (this);
 
   return m_gbrSlicing;
+}
+
+EpcController::OperationMode
+EpcController::GetMtcAggregationMode (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_mtcAggregation;
 }
 
 EpcController::OperationMode

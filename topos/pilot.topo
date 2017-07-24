@@ -7,6 +7,7 @@ default ns3::ConnectionInfo::NonGbrAdjustmentStep "5Mb/s"
 default ns3::ConnectionInfo::UpdateTimeout "100ms"
 
 default ns3::EpcController::GbrSlicing "on"
+default ns3::EpcController::MtcAggregation "on"
 default ns3::EpcController::PgwTftAdaptiveMode "on"
 default ns3::EpcController::PgwTftBlockPolicy "all"
 default ns3::EpcController::PgwTftBlockThs "0.95"
