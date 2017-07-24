@@ -330,8 +330,8 @@ TrafficHelper::InstallGbrVoip ()
 
   // Dedicated GBR EPS bearer (QCI 1).
   GbrQosInformation qos;
-  qos.gbrDl = 47200;  // ~46.09 Kbps (considering tunnel overhead)
-  qos.gbrUl = 47200;  // ~46.09 Kbps (considering tunnel overhead)
+  qos.gbrDl = 47200;  // ~46.09 Kbps
+  qos.gbrUl = 47200;  // ~46.09 Kbps
   EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
 
   cApp->SetTft (tft);
@@ -366,6 +366,8 @@ TrafficHelper::InstallGbrAutoPilot ()
 
   // Dedicated GBR EPS bearer (QCI 3).
   GbrQosInformation qos;
+  // FIXME Should I set the GBR value for MTC traffic?
+  // qos.gbrUl = 150000;  // ~146 Kbps
   EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
 
   cApp->SetTft (tft);
