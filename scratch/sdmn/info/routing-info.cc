@@ -32,6 +32,7 @@ RoutingInfo::TeidRoutingMap_t RoutingInfo::m_globalInfoMap;
 RoutingInfo::RoutingInfo (uint32_t teid)
   : m_teid (teid),
     m_imsi (0),
+    m_pgwTftIdx (0),
     m_priority (0),
     m_timeout (0),
     m_isDefault (0),
