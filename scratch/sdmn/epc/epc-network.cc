@@ -536,6 +536,12 @@ EpcNetwork::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
   if (ueInfo->GetUeAddr () != ueAddr)
     {
       ueInfo->SetUeAddr (ueAddr);
+
+      // Identify MTC UEs by the network address.
+      if (m_mtcAddr.IsEqual (ueAddr.CombineMask (m_mtcMask)))
+        {
+          ueInfo->SetMtc (true);
+        }
     }
 
   // Trick for default bearer.

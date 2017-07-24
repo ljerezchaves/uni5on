@@ -34,7 +34,8 @@ UeInfo::UeInfo (uint64_t imsi)
     m_cellId (0),
     m_mmeUeS1Id (imsi),
     m_enbUeS1Id (0),
-    m_bearerCounter (0)
+    m_bearerCounter (0),
+    m_isMtc (false)
 {
   NS_LOG_FUNCTION (this);
 
@@ -97,6 +98,14 @@ UeInfo::GetEnbUeS1Id (void) const
   return m_enbUeS1Id;
 }
 
+bool
+UeInfo::IsMtc (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_isMtc;
+}
+
 void
 UeInfo::SetUeAddr (Ipv4Address value)
 {
@@ -128,6 +137,14 @@ UeInfo::SetEnbUeS1Id (uint64_t value)
   NS_LOG_FUNCTION (this << value);
 
   m_enbUeS1Id = value;
+}
+
+void
+UeInfo::SetMtc (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isMtc = value;
 }
 
 std::list<UeInfo::BearerInfo>::const_iterator

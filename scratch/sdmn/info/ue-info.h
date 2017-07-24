@@ -63,11 +63,13 @@ public:
   uint16_t GetCellId (void) const;
   uint64_t GetMmeUeS1Id (void) const;
   uint64_t GetEnbUeS1Id (void) const;
+  bool IsMtc (void) const;
 
   void SetUeAddr (Ipv4Address value);
   void SetCellId (uint16_t value);
   void SetMmeUeS1Id (uint64_t value);
   void SetEnbUeS1Id (uint64_t value);
+  void SetMtc (bool value);
   //\}
 
   /**
@@ -149,6 +151,7 @@ private:
   uint16_t               m_bearerCounter;        //!< Number of bearers.
   std::list<BearerInfo>  m_bearersList;          //!< Bearer contexts.
   EpcTftClassifier       m_tftClassifier;        //!< P-GW TFT classifier.
+  bool                   m_isMtc;                //!< True for MTC UE.
 
   /** Map saving UE IMSI / UE information. */
   typedef std::map<uint64_t, Ptr<UeInfo> > ImsiUeInfoMap_t;
