@@ -149,23 +149,22 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
 
   // Save request stats into output file.
   *m_brqWrapper->GetStream ()
-  << left
+  << left << setprecision (4)
   << setw (11) << Simulator::Now ().GetSeconds ()
-  << right
+  << right << setprecision (2)
   << " " << setw (8) << rInfo->GetTeid ()
   << " " << setw (4) << rInfo->GetQciInfo ()
   << " " << setw (6) << rInfo->IsGbr ()
+  << " " << setw (6) << ueInfo->IsMtc ()
+  << " " << setw (6) << rInfo->IsDefault ()
+  << " " << setw (6) << rInfo->IsAggregated ()
   << " " << setw (5) << ueInfo->GetImsi ()
   << " " << setw (4) << ueInfo->GetCellId ()
-  << " " << setw (6) << rInfo->IsDefault ()
   << " " << setw (6) << ringInfo->GetSgwSwDpId ()
   << " " << setw (6) << ringInfo->GetPgwSwDpId ()
   << " " << setw (6) << rInfo->GetPgwTftIdx ()
-  << setprecision (2)
   << " " << setw (8) << dwBitRate
   << " " << setw (8) << upBitRate
-  << setprecision (4)
-  << " " << setw (6) << rInfo->IsAggregated ()
   << " " << setw (6) << rInfo->IsBlocked ()
   << " " << setw (9) << rInfo->GetBlockReasonStr ()
   << " " << setw (9) << ringInfo->GetPathStr ()
@@ -173,17 +172,17 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
 
   // Save aggregation stats into output file.
   *m_aggWrapper->GetStream ()
-  << left
+  << left << setprecision (4)
   << setw (11) << Simulator::Now ().GetSeconds ()
-  << right
+  << right << setprecision (2)
   << " " << setw (8) << rInfo->GetTeid ()
   << " " << setw (6) << rInfo->IsGbr ()
+  << " " << setw (6) << ueInfo->IsMtc ()
+  << " " << setw (6) << rInfo->IsDefault ()
   << " " << setw (6) << rInfo->IsBlocked ()
   << " " << setw (6) << rInfo->IsAggregated ()
-  << setprecision (2)
   << " " << setw (6) << aggInfo->GetMaxBandwidthUsage ()
   << " " << setw (6) << aggInfo->GetThreshold ()
-  << setprecision (4)
   << std::endl;
 }
 
@@ -224,7 +223,7 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
 
   m_admWrapper = Create<OutputStreamWrapper> (m_admFilename, std::ios::out);
   *m_admWrapper->GetStream ()
-  << fixed << setprecision (4)
+  << boolalpha << fixed
   << left
   << setw (12) << "Time(s)"
   << right
@@ -240,36 +239,39 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
 
   m_aggWrapper = Create<OutputStreamWrapper> (m_aggFilename, std::ios::out);
   *m_aggWrapper->GetStream ()
-  << boolalpha << fixed << setprecision (4)
+  << boolalpha << fixed
   << left
   << setw (12) << "Time(s)"
   << right
   << setw (8)  << "TEID"
   << setw (7)  << "IsGBR"
+  << setw (7)  << "IsMTC"
+  << setw (7)  << "IsDft"
   << setw (7)  << "Block"
-  << setw (7)  << "S5Agg"
-  << setw (7)  << "Usage"
-  << setw (7)  << "Thres"
+  << setw (7)  << "IsAgg"
+  << setw (7)  << "BwUse"
+  << setw (7)  << "BwThs"
   << std::endl;
 
   m_brqWrapper = Create<OutputStreamWrapper> (m_brqFilename, std::ios::out);
   *m_brqWrapper->GetStream ()
-  << boolalpha << fixed << setprecision (4)
+  << boolalpha << fixed
   << left
   << setw (12) << "Time(s)"
   << right
   << setw (8)  << "TEID"
   << setw (5)  << "QCI"
   << setw (7)  << "IsGBR"
+  << setw (7)  << "IsMTC"
+  << setw (7)  << "IsDft"
+  << setw (7)  << "IsAgg"
   << setw (6)  << "IMSI"
   << setw (5)  << "CGI"
-  << setw (7)  << "IsDft"
   << setw (7)  << "SGWsw"
   << setw (7)  << "PGWsw"
   << setw (7)  << "TFTsw"
   << setw (9)  << "DwReq"
   << setw (9)  << "UpReq"
-  << setw (7)  << "S5Agg"
   << setw (7)  << "Block"
   << setw (10) << "Reason"
   << setw (10) << "RingPath"
@@ -290,9 +292,9 @@ AdmissionStatsCalculator::DumpStatistics (Time nextDump)
   NS_LOG_FUNCTION (this);
 
   *m_admWrapper->GetStream ()
-  << left
+  << left << setprecision (4)
   << setw (11) << Simulator::Now ().GetSeconds ()
-  << right
+  << right << setprecision (2)
   << " " << setw (8) << m_gbrRequests
   << " " << setw (7) << m_nonRequests
   << " " << setw (7) << m_gbrAggregated

@@ -120,7 +120,6 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   m_epcWrapper = Create<OutputStreamWrapper> (m_epcFilename, std::ios::out);
   *m_epcWrapper->GetStream ()
   << fixed << setprecision (3) << boolalpha << GetHeader ()
-  << setw (7)  << "S5Agg"
   << setw (7)  << "Load"
   << setw (7)  << "Meter"
   << setw (7)  << "Queue"
@@ -147,7 +146,6 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       epcStats = GetQosStatsFromTeid (teid, false);
       *m_epcWrapper->GetStream ()
       << GetStats (app, rInfo, ueInfo, epcStats, teid, "up")
-      << " " << setw (6)  << rInfo->IsAggregated ()
       << " " << setw (6)  << epcStats->GetLoadDrops ()
       << " " << setw (6)  << epcStats->GetMeterDrops ()
       << " " << setw (6)  << epcStats->GetQueueDrops ()
@@ -165,7 +163,6 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       epcStats = GetQosStatsFromTeid (teid, true);
       *m_epcWrapper->GetStream ()
       << GetStats (app, rInfo, ueInfo, epcStats, teid, "down")
-      << " " << setw (6)  << rInfo->IsAggregated ()
       << " " << setw (6)  << epcStats->GetLoadDrops ()
       << " " << setw (6)  << epcStats->GetMeterDrops ()
       << " " << setw (6)  << epcStats->GetQueueDrops ()
@@ -353,6 +350,8 @@ TrafficStatsCalculator::GetHeader (void)
       << setw (8)  << "TEID"
       << setw (5)  << "QCI"
       << setw (7)  << "IsGBR"
+      << setw (7)  << "IsMTC"
+      << setw (7)  << "IsAgg"
       << setw (6)  << "IMSI"
       << setw (5)  << "CGI"
       << setw (7)  << "Ul/Dl"
@@ -384,6 +383,8 @@ TrafficStatsCalculator::GetStats (
       << " " << setw (7)  << teid
       << " " << setw (4)  << rInfo->GetQciInfo ()
       << " " << setw (6)  << rInfo->IsGbr ()
+      << " " << setw (6)  << ueInfo->IsMtc ()
+      << " " << setw (6)  << rInfo->IsAggregated ()
       << " " << setw (5)  << ueInfo->GetImsi ()
       << " " << setw (4)  << ueInfo->GetCellId ()
       << " " << setw (6)  << direction
