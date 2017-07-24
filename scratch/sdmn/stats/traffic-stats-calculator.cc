@@ -261,7 +261,8 @@ TrafficStatsCalculator::MeterDropPacket (
       qosStats = GetQosStatsFromTeid (teid, true);
       qosStats->NotifyTx (packet->GetSize ());
 
-      // Notify the droped packet (it must be a traffic meter).
+      // Notify the droped packet (it must be a traffic meter because we only
+      // have slicing meters on ring switches, not on the P-GW).
       qosStats->NotifyMeterDrop ();
     }
 }
