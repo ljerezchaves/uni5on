@@ -178,9 +178,9 @@ public:
    */
   //\{
   OperationMode GetGbrSlicingMode (void) const;
+  OperationMode GetHtcAggregationMode (void) const;
   OperationMode GetMtcAggregationMode (void) const;
   OperationMode GetPgwAdaptiveMode (void) const;
-  OperationMode GetS5AggregationMode (void) const;
   OperationMode GetPriorityQueuesMode (void) const;
   //\}
 
@@ -397,7 +397,6 @@ private:
   // Internal mechanisms for performance improvement.
   OperationMode         m_priorityQueues; //!< DSCP priority queues mechanism.
   OperationMode         m_gbrSlicing;     //!< GBR slicing mechanism.
-  OperationMode         m_mtcAggregation; //!< MTC aggregation mechanism.
 
   // P-GW metadata.
   std::vector<uint64_t> m_pgwDpIds;       //!< Datapath IDs.
@@ -416,10 +415,11 @@ private:
   DataRate              m_tftMaxLoad;     //!< Processing capacity.
   uint32_t              m_tftTableSize;   //!< Flow table size.
 
-  // S5 traffic aggregation mechanism.
-  OperationMode         m_s5Aggregation;  //!< Traffic aggregation mechanism.
-  double                m_s5AggGbrThs;    //!< Bandwidth threshold for GBR.
-  double                m_s5AggNonGbrThs; //!< Bandwidth threshold for Non-GBR.
+  // Traffic aggregation mechanisms.
+  OperationMode         m_mtcAggregation; //!< MTC aggregation mechanism.
+  OperationMode         m_htcAggregation; //!< HTC aggregation mechanism.
+  double                m_htcAggGbrThs;   //!< Bandwidth threshold for GBR.
+  double                m_htcAggNonThs;   //!< Bandwidth threshold for Non-GBR.
 
   // Internal members and attributes.
   EpcS5SapPgw*          m_s5SapPgw;       //!< P-GW side of the S5 SAP.

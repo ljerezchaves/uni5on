@@ -65,6 +65,24 @@ EpcController::GetTypeId (void)
                    MakeEnumAccessor (&EpcController::m_gbrSlicing),
                    MakeEnumChecker (EpcController::OFF, "off",
                                     EpcController::ON,  "on"))
+    .AddAttribute ("HtcAggregation",
+                   "HTC traffic aggregation mechanism operation mode.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   EnumValue (EpcController::OFF),
+                   MakeEnumAccessor (&EpcController::m_htcAggregation),
+                   MakeEnumChecker (EpcController::OFF,  "off",
+                                    EpcController::ON,   "on",
+                                    EpcController::AUTO, "auto"))
+    .AddAttribute ("HtcAggGbrThs",
+                   "HTC traffic aggregation GBR bandwidth threshold.",
+                   DoubleValue (0.5),
+                   MakeDoubleAccessor (&EpcController::m_htcAggGbrThs),
+                   MakeDoubleChecker<double> (0.0, 1.0))
+    .AddAttribute ("HtcAggNonThs",
+                   "HTC traffic aggregation Non-GBR bandwidth threshold.",
+                   DoubleValue (0.5),
+                   MakeDoubleAccessor (&EpcController::m_htcAggNonThs),
+                   MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("MtcAggregation",
                    "MTC traffic aggregation mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -114,24 +132,6 @@ EpcController::GetTypeId (void)
                    MakeEnumAccessor (&EpcController::m_priorityQueues),
                    MakeEnumChecker (EpcController::OFF, "off",
                                     EpcController::ON,  "on"))
-    .AddAttribute ("S5Aggregation",
-                   "S5 traffic aggregation mechanism operation mode.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (EpcController::OFF),
-                   MakeEnumAccessor (&EpcController::m_s5Aggregation),
-                   MakeEnumChecker (EpcController::OFF,  "off",
-                                    EpcController::ON,   "on",
-                                    EpcController::AUTO, "auto"))
-    .AddAttribute ("S5AggGbrThs",
-                   "S5 traffic aggregation GBR bandwidth threshold.",
-                   DoubleValue (0.5),
-                   MakeDoubleAccessor (&EpcController::m_s5AggGbrThs),
-                   MakeDoubleChecker<double> (0.0, 1.0))
-    .AddAttribute ("S5AggNonGbrThs",
-                   "S5 traffic aggregation Non-GBR bandwidth threshold.",
-                   DoubleValue (0.5),
-                   MakeDoubleAccessor (&EpcController::m_s5AggNonGbrThs),
-                   MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("TimeoutInterval",
                    "The interval between internal periodic operations.",
                    TimeValue (Seconds (5)),
@@ -198,11 +198,11 @@ EpcController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
 
   // Update bandwidth usage and threshold values.
   TopologyBearerAggregate (rInfo);
-  aggInfo->SetThreshold (rInfo->IsGbr () ? m_s5AggGbrThs : m_s5AggNonGbrThs);
+  aggInfo->SetThreshold (rInfo->IsGbr () ? m_htcAggGbrThs : m_htcAggNonThs);
 
   // Check for S5 traffic agregation.
-  if (GetS5AggregationMode () == OperationMode::ON
-      || (GetS5AggregationMode () == OperationMode::AUTO
+  if (GetHtcAggregationMode () == OperationMode::ON
+      || (GetHtcAggregationMode () == OperationMode::AUTO
           && aggInfo->GetMaxBandwidthUsage () <= aggInfo->GetThreshold ()))
     {
       aggInfo->SetAggregated (true);
@@ -396,6 +396,14 @@ EpcController::GetGbrSlicingMode (void) const
 }
 
 EpcController::OperationMode
+EpcController::GetHtcAggregationMode (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_htcAggregation;
+}
+
+EpcController::OperationMode
 EpcController::GetMtcAggregationMode (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -411,13 +419,6 @@ EpcController::GetPgwAdaptiveMode (void) const
   return m_tftAdaptive;
 }
 
-EpcController::OperationMode
-EpcController::GetS5AggregationMode (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_s5Aggregation;
-}
 
 EpcController::OperationMode
 EpcController::GetPriorityQueuesMode (void) const
