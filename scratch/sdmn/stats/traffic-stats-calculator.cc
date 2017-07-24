@@ -22,7 +22,6 @@
 #include <iostream>
 #include "traffic-stats-calculator.h"
 #include "../apps/sdmn-client-app.h"
-#include "../apps/real-time-video-client.h"
 #include "../epc/epc-controller.h"
 
 using namespace std;
@@ -142,8 +141,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
   Ptr<const QosStatsCalculator> epcStats;
 
-  // The real time video streaming is the only app with no uplink traffic.
-  if (app->GetInstanceTypeId () != RealTimeVideoClient::GetTypeId ())
+  if (rInfo->HasUplinkTraffic ())
     {
       // Dump uplink statistics.
       epcStats = GetQosStatsFromTeid (teid, false);
@@ -161,20 +159,23 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       << std::endl;
     }
 
-  // Dump downlink statistics.
-  epcStats = GetQosStatsFromTeid (teid, true);
-  *m_epcWrapper->GetStream ()
-  << GetStats (app, rInfo, ueInfo, epcStats, teid, "down")
-  << " " << setw (6)  << rInfo->IsAggregated ()
-  << " " << setw (6)  << epcStats->GetLoadDrops ()
-  << " " << setw (6)  << epcStats->GetMeterDrops ()
-  << " " << setw (6)  << epcStats->GetQueueDrops ()
-  << " " << setw (6)  << epcStats->GetSliceDrops ()
-  << std::endl;
+  if (rInfo->HasDownlinkTraffic ())
+    {
+      // Dump downlink statistics.
+      epcStats = GetQosStatsFromTeid (teid, true);
+      *m_epcWrapper->GetStream ()
+      << GetStats (app, rInfo, ueInfo, epcStats, teid, "down")
+      << " " << setw (6)  << rInfo->IsAggregated ()
+      << " " << setw (6)  << epcStats->GetLoadDrops ()
+      << " " << setw (6)  << epcStats->GetMeterDrops ()
+      << " " << setw (6)  << epcStats->GetQueueDrops ()
+      << " " << setw (6)  << epcStats->GetSliceDrops ()
+      << std::endl;
 
-  *m_appWrapper->GetStream ()
-  << GetStats (app, rInfo, ueInfo, app->GetQosStats (), teid, "down")
-  << std::endl;
+      *m_appWrapper->GetStream ()
+      << GetStats (app, rInfo, ueInfo, app->GetQosStats (), teid, "down")
+      << std::endl;
+    }
 }
 
 void
