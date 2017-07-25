@@ -187,8 +187,8 @@ public:
    */
   //\{
   OperationMode GetGbrSlicingMode (void) const;
-  OperationMode GetHtcAggregationMode (void) const;
-  OperationMode GetMtcAggregationMode (void) const;
+  OperationMode GetHtcAggregMode (void) const;
+  OperationMode GetMtcAggregMode (void) const;
   OperationMode GetPgwAdaptiveMode (void) const;
   OperationMode GetPriorityQueuesMode (void) const;
   //\}

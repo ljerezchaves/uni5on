@@ -61,6 +61,7 @@ EpcController::GetTypeId (void)
     .SetParent<OFSwitch13Controller> ()
     .AddAttribute ("GbrSlicing",
                    "GBR slicing mechanism operation mode.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (EpcController::ON),
                    MakeEnumAccessor (&EpcController::m_gbrSlicing),
                    MakeEnumChecker (EpcController::OFF, "off",
@@ -128,6 +129,7 @@ EpcController::GetTypeId (void)
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("PriorityQueues",
                    "Priority output queues mechanism operation mode.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (EpcController::ON),
                    MakeEnumAccessor (&EpcController::m_priorityQueues),
                    MakeEnumChecker (EpcController::OFF, "off",
@@ -164,7 +166,8 @@ EpcController::DedicatedBearerRelease (EpsBearer bearer, uint32_t teid)
   NS_LOG_FUNCTION (this << teid);
 
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer teid " << teid);
+
+  // This bearer must be active.
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't release the default bearer.");
   NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
 
@@ -182,9 +185,11 @@ EpcController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << teid);
 
-  // This bearer must be inactive as we are going to reuse it's metadata.
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer teid " << teid);
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
+  Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
+
+  // This bearer must be inactive as we are going to reuse it's metadata.
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
@@ -192,25 +197,23 @@ EpcController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
   rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
   rInfo->SetBlocked (false);
 
-  // Get the S5 traffic aggregation metadata.
-  Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
-  NS_ASSERT_MSG (aggInfo, "Can't find the S5 aggregation info.");
-
   // Update bandwidth usage and threshold values.
   TopologyBearerAggregate (rInfo);
   aggInfo->SetThreshold (rInfo->IsGbr () ? m_htcAggGbrThs : m_htcAggNonThs);
 
-  // Check for S5 traffic agregation.
-  if (GetHtcAggregationMode () == OperationMode::ON
-      || (GetHtcAggregationMode () == OperationMode::AUTO
-          && aggInfo->GetMaxBandwidthUsage () <= aggInfo->GetThreshold ()))
+  // Check for S5 traffic agregation. The aggregation flag can only be changed
+  // when the operation mode is set to AUTO (only supported by HTC UEs by now).
+  if (!ueInfo->IsMtc () && GetHtcAggregMode () == OperationMode::AUTO)
     {
-      aggInfo->SetAggregated (true);
-      NS_LOG_INFO ("Aggregating traffic of bearer teid " << rInfo->GetTeid ());
-    }
-  else
-    {
-      aggInfo->SetAggregated (false);
+      if (aggInfo->GetMaxBandwidthUsage () <= aggInfo->GetThreshold ())
+        {
+          aggInfo->SetAggregated (true);
+          NS_LOG_INFO ("Aggregating bearer teid " << rInfo->GetTeid ());
+        }
+      else
+        {
+          aggInfo->SetAggregated (false);
+        }
     }
 
   // Let's first check for available resources on P-GW and backhaul switches.
@@ -381,15 +384,15 @@ EpcController::NotifySgwAttach (Ptr<NetDevice> gwDev)
   NS_LOG_FUNCTION (this << gwDev);
 
   static uint32_t m_mtcTeidCount = EpcController::m_teidEnd + 1;
-
   uint32_t mtcTeid = 0;
-  if (GetMtcAggregationMode () == OperationMode::ON)
+
+  // When the MTC traffic aggregation is enable, let's create and install the
+  // aggregation uplink GTP tunnel between this S-GW and the P-GW. We are using
+  // a 'fake' rInfo for this aggregation bearer, in order to use existing
+  // methods to install the OpenFlow rules.
+  if (GetMtcAggregMode () == OperationMode::ON)
     {
-      // When the MTC traffic aggregation is enable, let's create and install
-      // the aggregation uplink GTP tunnel between this S-GW and the P-GW. We
-      // are using a 'fake' rInfo for this aggregation bearer, in order to use
-      // existing methods to install the OpenFlow rules.
-      uint32_t mtcTeid = m_mtcTeidCount++;
+      mtcTeid = m_mtcTeidCount++;
 
       // FIXME Should I use GBR to force DSCP?
       EpcTft::PacketFilter fakeUplinkfilter;
@@ -399,6 +402,7 @@ EpcController::NotifySgwAttach (Ptr<NetDevice> gwDev)
       BearerContext_t fakeBearer;
       fakeBearer.tft = fakeTft;
 
+      // Creating the 'fake' routing info.
       Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (mtcTeid);
       rInfo->SetActive (true);
       rInfo->SetBearerContext (fakeBearer);
@@ -410,15 +414,13 @@ EpcController::NotifySgwAttach (Ptr<NetDevice> gwDev)
       rInfo->SetSgwS5Addr (EpcNetwork::GetIpv4Addr (gwDev));
       rInfo->SetTimeout (0);
 
-      // Get the S5 traffic aggregation metadata.
-      Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
-      NS_ASSERT_MSG (aggInfo, "Can't find the S5 aggregation info.");
-      aggInfo->SetAggregated (true);
+      // Set the traffic aggregation flag.
+      rInfo->GetObject<S5AggregationInfo> ()->SetAggregated (true);
 
-      // Install the bearer after .
+      // Install the OpenFlow bearer rules after handshake procedures.
       TopologyBearerCreated (rInfo);
-      Simulator::Schedule (Seconds (0.5), &EpcController::MtcAggBearerInstall,
-                           this, rInfo);
+      Simulator::Schedule (Seconds (0.5),
+                           &EpcController::MtcAggBearerInstall, this, rInfo);
     }
   return mtcTeid;
 }
@@ -444,7 +446,7 @@ EpcController::GetGbrSlicingMode (void) const
 }
 
 EpcController::OperationMode
-EpcController::GetHtcAggregationMode (void) const
+EpcController::GetHtcAggregMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -452,7 +454,7 @@ EpcController::GetHtcAggregationMode (void) const
 }
 
 EpcController::OperationMode
-EpcController::GetMtcAggregationMode (void) const
+EpcController::GetMtcAggregMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -834,8 +836,6 @@ EpcController::DoCreateSessionRequest (
       ueInfo->AddTft (bit->tft, teid);
     }
 
-  // FIXME Don't install rules for aggregated MTC traffic.
-
   // Create and save routing information for default bearer.
   // (first element on the res.bearerContextsCreated)
   BearerContext_t defaultBearer = res.bearerContextsCreated.front ();
@@ -859,6 +859,14 @@ EpcController::DoCreateSessionRequest (
   rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
   rInfo->SetTimeout (0);
   TopologyBearerCreated (rInfo);
+
+  // Set the aggregation flag for the default bearer of MTC UEs when MTC
+  // traffic aggregation is ON. This will prevent OpenFlow rules from being
+  // installed even for the default MTC bearer.
+  if (ueInfo->IsMtc () && GetMtcAggregMode () == OperationMode::ON)
+    {
+      rInfo->GetObject<S5AggregationInfo> ()->SetAggregated (true);
+    }
 
   // For default bearer, no meter nor GBR metadata.
   // For logic consistence, let's check for available resources.
@@ -894,6 +902,16 @@ EpcController::DoCreateSessionRequest (
       rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
       rInfo->SetTimeout (m_flowTimeout);
       TopologyBearerCreated (rInfo);
+
+      // Set the aggregation flag for dedicated beareres of UEs when
+      // traffic aggregation is ON. This will prevent OpenFlow rules from
+      // being installed for dedicated bearers.
+      if ((ueInfo->IsMtc () && GetMtcAggregMode () == OperationMode::ON)
+          || (!ueInfo->IsMtc () && GetHtcAggregMode () == OperationMode::ON))
+        {
+          rInfo->GetObject<S5AggregationInfo> ()->SetAggregated (true);
+          NS_LOG_INFO ("Aggregating bearer teid " << rInfo->GetTeid ());
+        }
 
       // For all GBR bearers, create the GBR metadata.
       if (rInfo->IsGbr ())
@@ -984,8 +1002,9 @@ EpcController::MtcAggBearerInstall (Ptr<RoutingInfo> rInfo)
 
   bool success = TopologyRoutingInstall (rInfo);
   NS_ASSERT_MSG (success, "Error when installing the MTC aggregation bearer.");
+  NS_LOG_INFO ("MTC aggregation bearer teid " << rInfo->GetTeid () <<
+               " installed for S-GW " << rInfo->GetSgwS5Addr ());
 
-  NS_LOG_INFO ("MTC aggregation bearer teid " << teid << " installed.");
   rInfo->SetInstalled (success);
   return success;
 }
