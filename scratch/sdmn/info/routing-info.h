@@ -78,6 +78,7 @@ public:
   //\{
   uint32_t GetTeid (void) const;
   uint64_t GetImsi (void) const;
+  uint16_t GetDscp (void) const;
   Ipv4Address GetPgwS5Addr (void) const;
   Ipv4Address GetSgwS5Addr (void) const;
   uint16_t GetPgwTftIdx (void) const;
@@ -91,6 +92,7 @@ public:
   std::string GetBlockReasonStr (void) const;
 
   void SetImsi (uint64_t value);
+  void SetDscp (uint32_t value);
   void SetPgwS5Addr (Ipv4Address value);
   void SetSgwS5Addr (Ipv4Address value);
   void SetPgwTftIdx (uint16_t value);
@@ -166,6 +168,7 @@ private:
 
   uint32_t          m_teid;         //!< GTP TEID.
   uint64_t          m_imsi;         //!< UE IMSI.
+  uint8_t           m_dscp;         //!< DiffServ DSCP value.
   Ipv4Address       m_pgwS5Addr;    //!< P-GW S5 IPv4 address.
   Ipv4Address       m_sgwS5Addr;    //!< S-GW S5 IPv4 address.
   uint16_t          m_pgwTftIdx;    //!< P-GW TFT switch index.

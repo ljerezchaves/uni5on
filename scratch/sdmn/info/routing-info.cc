@@ -32,6 +32,7 @@ RoutingInfo::TeidRoutingMap_t RoutingInfo::m_globalInfoMap;
 RoutingInfo::RoutingInfo (uint32_t teid)
   : m_teid (teid),
     m_imsi (0),
+    m_dscp (0),
     m_pgwTftIdx (0),
     m_priority (0),
     m_timeout (0),
@@ -76,6 +77,14 @@ RoutingInfo::GetImsi (void) const
   NS_LOG_FUNCTION (this);
 
   return m_imsi;
+}
+
+uint16_t
+RoutingInfo::GetDscp (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_dscp;
 }
 
 Ipv4Address
@@ -183,6 +192,14 @@ RoutingInfo::SetImsi (uint64_t value)
   NS_LOG_FUNCTION (this << value);
 
   m_imsi = value;
+}
+
+void
+RoutingInfo::SetDscp (uint32_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_dscp = value;
 }
 
 void

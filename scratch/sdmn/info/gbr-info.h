@@ -52,12 +52,10 @@ public:
 
   /** \name Private member accessors. */
   //\{
-  uint16_t GetDscp (void) const;
   bool IsReserved (void) const;
   uint64_t GetDownBitRate (void) const;
   uint64_t GetUpBitRate (void) const;
 
-  void SetDscp (uint32_t value);
   void SetReserved (bool value);
   //\}
 
@@ -66,7 +64,6 @@ protected:
   virtual void DoDispose ();
 
 private:
-  uint8_t           m_dscp;         //!< DiffServ DSCP value for this bearer.
   bool              m_isReserved;   //!< True when resources are reserved.
   bool              m_hasDown;      //!< True for downlink reserve.
   bool              m_hasUp;        //!< True for uplink reserve.

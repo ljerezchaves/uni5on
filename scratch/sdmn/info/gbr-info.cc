@@ -27,8 +27,7 @@ NS_LOG_COMPONENT_DEFINE ("GbrInfo");
 NS_OBJECT_ENSURE_REGISTERED (GbrInfo);
 
 GbrInfo::GbrInfo (Ptr<RoutingInfo> rInfo)
-  : m_dscp (0),
-    m_isReserved (false),
+  : m_isReserved (false),
     m_hasDown (false),
     m_hasUp (false),
     m_downBitRate (0),
@@ -64,14 +63,6 @@ GbrInfo::GetTypeId (void)
   return tid;
 }
 
-uint16_t
-GbrInfo::GetDscp (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_dscp;
-}
-
 bool
 GbrInfo::IsReserved (void) const
 {
@@ -94,14 +85,6 @@ GbrInfo::GetUpBitRate (void) const
   NS_LOG_FUNCTION (this);
 
   return m_hasUp ? m_upBitRate : 0;
-}
-
-void
-GbrInfo::SetDscp (uint32_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_dscp = value;
 }
 
 void

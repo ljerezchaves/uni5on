@@ -904,17 +904,16 @@ EpcController::DoCreateSessionRequest (
           NS_LOG_INFO ("Aggregating bearer teid " << rInfo->GetTeid ());
         }
 
-      // For all GBR bearers, create the GBR metadata.
+      // Set the appropriated DiffServ DSCP value for this bearer.
+      rInfo->SetDscp (EpcController::GetDscpValue (rInfo->GetQciInfo ()));
+
+      // When necessary, create the GBR metadata.
       if (rInfo->IsGbr ())
         {
-          Ptr<GbrInfo> gbrInfo = CreateObject<GbrInfo> (rInfo);
-
-          // Set the appropriated DiffServ DSCP value for this bearer.
-          gbrInfo->SetDscp (
-            EpcController::GetDscpValue (rInfo->GetQciInfo ()));
+          CreateObject<GbrInfo> (rInfo);
         }
 
-      // If necessary, create the meter metadata for maximum bit rate.
+      // When necessary, create the meter metadata.
       GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
       if (gbrQoS.mbrDl || gbrQoS.mbrUl)
         {
