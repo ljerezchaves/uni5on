@@ -394,12 +394,17 @@ EpcController::NotifySgwAttach (Ptr<NetDevice> gwDev)
     {
       mtcTeid = m_mtcTeidCount++;
 
-      // FIXME Should I use GBR to force DSCP?
+      // Creating a simple uplink packet filter for this aggregation tunnel.
       EpcTft::PacketFilter fakeUplinkfilter;
       fakeUplinkfilter.direction = EpcTft::UPLINK;
       Ptr<EpcTft> fakeTft = CreateObject<EpcTft> ();
       fakeTft->Add (fakeUplinkfilter);
+
+      // Creating the 'fake' GBR bearer for aggregated MTC traffic. We are
+      // using the same QCI (GBR_GAMING) set to MTC traffic by the
+      // TrafficHelper. This will set the same DSCP value for MTC IP packets.
       BearerContext_t fakeBearer;
+      fakeBearer.bearerLevelQos = EpsBearer (EpsBearer::GBR_GAMING);
       fakeBearer.tft = fakeTft;
 
       // Creating the 'fake' routing info.
@@ -408,6 +413,7 @@ EpcController::NotifySgwAttach (Ptr<NetDevice> gwDev)
       rInfo->SetBearerContext (fakeBearer);
       rInfo->SetBlocked (false);
       rInfo->SetDefault (false);
+      rInfo->SetDscp (EpcController::GetDscpValue (rInfo->GetQciInfo ()));
       rInfo->SetInstalled (false);
       rInfo->SetPgwS5Addr (m_pgwS5Addr);
       rInfo->SetPriority (0xFF00);
@@ -687,7 +693,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   //
   if (GetGbrSlicingMode () == OperationMode::ON)
     {
-      // Non-GBR packets are indicated by DSCP field DSCP_AF11 nad DscpDefault.
+      // Non-GBR packets are indicated by DSCP field DSCP_AF11 and DscpDefault.
       // Apply Non-GBR meter band. Send the packet to Output table.
 
       // DSCP_AF11 (DSCP decimal 10)
