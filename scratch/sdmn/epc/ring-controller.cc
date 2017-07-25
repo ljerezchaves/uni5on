@@ -186,12 +186,11 @@ RingController::TopologyBearerAggregate (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo->GetTeid ());
 
   // Update the aggregation metadata with link bandwidth usage.
-  Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
   Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   uint16_t pgwIdx = ringInfo->GetPgwSwIdx ();
   uint16_t sgwIdx = ringInfo->GetSgwSwIdx ();
 
-  aggInfo->SetBandwidthUsage (
+  rInfo->GetObject<S5AggregationInfo> ()->SetBandwidthUsage (
     GetPathUseRatio (pgwIdx, sgwIdx, ringInfo->GetDownPath ()),
     GetPathUseRatio (sgwIdx, pgwIdx, ringInfo->GetUpPath ()));
 }
