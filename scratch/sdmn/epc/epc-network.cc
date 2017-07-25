@@ -79,7 +79,7 @@ EpcNetwork::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (3),
                    MakeUintegerAccessor (&EpcNetwork::m_pgwNumTftNodes),
-                   MakeUintegerChecker<uint16_t> (2))
+                   MakeUintegerChecker<uint16_t> (1))
     .AddAttribute ("PgwTftPipelineCapacity",
                    "Pipeline capacity for P-GW TFT switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
