@@ -104,8 +104,10 @@ public:
    * network over over the S5 interface.
    * \param sgwS5PortNo The S5 port number on the S-GW OpenFlow switch.
    * \param sgwS5Dev The S5 device attached to the S-GW OpenFlow switch.
+   * \param mtcTeid The TEID for the MTC aggregation tunnel.
    */
-  virtual void NotifySgwAttach (uint32_t sgwS5PortNo, Ptr<NetDevice> sgwS5Dev);
+  virtual void NotifySgwAttach (
+    uint32_t sgwS5PortNo, Ptr<NetDevice> sgwS5Dev, uint32_t mtcTeid);
 
   /** \name Private member accessors. */
   //\{

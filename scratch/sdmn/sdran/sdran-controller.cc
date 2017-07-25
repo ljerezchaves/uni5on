@@ -104,9 +104,9 @@ SdranController::NotifyEnbAttach (uint16_t cellId, uint32_t sgwS1uPortNo)
 
 void
 SdranController::NotifySgwAttach (
-  uint32_t sgwS5PortNo, Ptr<NetDevice> sgwS5Dev)
+  uint32_t sgwS5PortNo, Ptr<NetDevice> sgwS5Dev, uint32_t mtcTeid)
 {
-  NS_LOG_FUNCTION (this << sgwS5PortNo << sgwS5Dev);
+  NS_LOG_FUNCTION (this << sgwS5PortNo << sgwS5Dev << mtcTeid);
 
   m_sgwS5Addr = EpcNetwork::GetIpv4Addr (sgwS5Dev);
   m_sgwS5PortNo = sgwS5PortNo;
@@ -121,6 +121,28 @@ SdranController::NotifySgwAttach (
       << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
       << " goto:1";
   DpctlSchedule (m_sgwDpId, cmd.str ());
+
+  // The mtcTeid != 0 means that MTC traffic aggregation is enable.
+  // Install a high-priority match rule on default table for aggregating
+  // traffic from all MTC UEs on the same uplink S5 GTP tunnel.
+  if (mtcTeid != 0)
+    {
+      // Print MTC aggregation TEID and P-GW IPv4 address into tunnel metadata.
+      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (mtcTeid);
+      uint64_t tunnelId = (uint64_t)rInfo->GetPgwS5Addr ().Get () << 32;
+      tunnelId |= rInfo->GetTeid ();
+      char tunnelIdStr [20];
+      sprintf (tunnelIdStr, "0x%016lx", tunnelId);
+
+      // Instal OpenFlow MTC aggregation rule.
+      std::ostringstream cmd;
+      cmd << "flow-mod cmd=add,table=0,prio=65520 eth_type=0x800"
+          << ",ip_src=" << EpcNetwork::m_mtcAddr
+          << "/" << EpcNetwork::m_mtcMask.GetPrefixLength ()
+          << " apply:set_field=tunn_id:" << tunnelIdStr
+          << ",output=" << m_sgwS5PortNo;
+      DpctlSchedule (m_sgwDpId, cmd.str ());
+    }
 }
 
 EpcS1apSapMme*
@@ -372,7 +394,6 @@ SdranController::DoCreateSessionResponse (
   NS_LOG_FUNCTION (this << msg.teid);
 
   // Install S-GW rules for default bearer.
-  // FIXME Don't install rules for aggregated MTC traffic.
   BearerContext_t defaultBearer = msg.bearerContextsCreated.front ();
   NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
   uint32_t teid = defaultBearer.sgwFteid.teid;
