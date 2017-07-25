@@ -256,17 +256,8 @@ SdranController::HandleFlowRemoved (
 
   // 3) The application is running and the bearer is active. This is the
   // critical situation. For some reason, the traffic absence lead to flow
-  // expiration, and we need to reinstall the rules with higher priority to
-  // avoid problems.
+  // expiration, and we are going to abort the program to avoid wrong results.
   NS_ASSERT_MSG (rInfo->GetPriority () == prio, "Invalid flow priority.");
-  if (rInfo->IsActive ())
-    {
-      NS_LOG_WARN ("Rule removed for active bearer teid " << teid << ". " <<
-                   "Reinstall rule...");
-      bool installed = SgwRulesInstall (rInfo);
-      NS_ASSERT_MSG (installed, "Bearer rules installation failed!");
-      return 0;
-    }
   NS_ABORT_MSG ("Should not get here :/");
 }
 
