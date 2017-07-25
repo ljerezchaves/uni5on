@@ -366,7 +366,7 @@ TrafficHelper::InstallGbrAutoPilot ()
 
   // Dedicated GBR EPS bearer (QCI 3).
   GbrQosInformation qos;
-  // FIXME Should I set the GBR value for MTC traffic?
+  // FIXME Should I set the GBR value for MTC traffic? Depends on slicing.
   // qos.gbrUl = 150000;  // ~146 Kbps
   EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
 
@@ -445,8 +445,7 @@ TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
   tft->Add (filter);
 
   // Dedicated Non-GBR EPS bearer (QCI 6).
-  GbrQosInformation qos;
-  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR, qos);
+  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR);
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
@@ -483,8 +482,7 @@ TrafficHelper::InstallNonGbrLiveVideoStreaming ()
   tft->Add (filter);
 
   // Dedicated Non-GBR EPS bearer (QCI 7).
-  GbrQosInformation qos;
-  EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING, qos);
+  EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING);
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
@@ -517,8 +515,7 @@ TrafficHelper::InstallNonGbrHttp ()
   tft->Add (filter);
 
   // Dedicated Non-GBR EPS bearer (QCI 8).
-  GbrQosInformation qos;
-  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM, qos);
+  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
