@@ -38,8 +38,7 @@ typedef std::list<Ptr<ConnectionInfo> > ConnInfoList_t;
 
 /**
  * \ingroup sdmnInfo
- * Metadata associated to a connection between
- * two any switches in the OpenFlow network.
+ * Metadata associated to a connection between two OpenFlow switches.
  */
 class ConnectionInfo : public Object
 {
@@ -48,7 +47,7 @@ public:
   struct SwitchData
   {
     Ptr<OFSwitch13Device>     swDev;    //!< OpenFlow switch device.
-    Ptr<CsmaNetDevice>        portDev;  //!< OpenFlow csma port device.
+    Ptr<CsmaNetDevice>        portDev;  //!< OpenFlow CSMA port device.
     uint32_t                  portNo;   //!< OpenFlow port number.
   };
 
@@ -281,7 +280,7 @@ private:
   double            m_gbrAvgThpt [2];   //!< GBR EWMA throughput.
 
   uint64_t          m_nonMaxBitRate;    //!< Non-GBR maximum allowed bit rate.
-  uint64_t          m_nonMinBitRate;    //!< Non-GBR maximum allowed bit rate.
+  uint64_t          m_nonMinBitRate;    //!< Non-GBR minimum allowed bit rate.
   uint64_t          m_nonBitRate [2];   //!< Non-GBR reserved bit rate.
   uint64_t          m_nonTxBytes [2];   //!< Non-GBR transmitted bytes.
   uint64_t          m_nonAvgLast [2];   //!< Non-GBR last transmitted bytes.
