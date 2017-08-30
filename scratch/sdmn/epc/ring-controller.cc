@@ -493,6 +493,7 @@ RingController::GetPathUseRatio (uint16_t srcIdx, uint16_t dstIdx,
     {
       uint16_t next = NextSwitchIndex (srcIdx, path);
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (srcIdx, next);
+      // FIXME Criar uma versao do GetEwmaThp que aceite os dpids direto.
       DataRate bitRate = cInfo->GetEwmaThp (
           cInfo->GetDirection (GetDpId (srcIdx), GetDpId (next)));
       useBitRate = std::max (useBitRate, bitRate.GetBitRate ());

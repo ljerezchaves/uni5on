@@ -189,7 +189,7 @@ EpcController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
   Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
 
-  // This bearer must be inactive as we are going to reuse it's metadata.
+  // This bearer must be inactive as we are going to reuse its metadata.
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
@@ -198,12 +198,12 @@ EpcController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
   rInfo->SetBlocked (false);
 
   // Update bandwidth usage and threshold values.
-  TopologyBearerAggregate (rInfo);
   aggInfo->SetThreshold (rInfo->IsGbr () ? m_htcAggGbrThs : m_htcAggNonThs);
+  TopologyBearerAggregate (rInfo);
 
   // Check for S5 traffic agregation. The aggregation flag can only be changed
   // when the operation mode is set to AUTO (only supported by HTC UEs by now).
-  if (!ueInfo->IsMtc () && GetHtcAggregMode () == OperationMode::AUTO)
+  if (ueInfo->IsHtc () && GetHtcAggregMode () == OperationMode::AUTO)
     {
       if (aggInfo->GetMaxBandwidthUsage () <= aggInfo->GetThreshold ())
         {
