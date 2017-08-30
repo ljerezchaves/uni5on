@@ -63,6 +63,7 @@ public:
   uint16_t GetCellId (void) const;
   uint64_t GetMmeUeS1Id (void) const;
   uint64_t GetEnbUeS1Id (void) const;
+  bool IsHtc (void) const;
   bool IsMtc (void) const;
 
   void SetUeAddr (Ipv4Address value);

@@ -99,6 +99,14 @@ UeInfo::GetEnbUeS1Id (void) const
 }
 
 bool
+UeInfo::IsHtc (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return !m_isMtc;
+}
+
+bool
 UeInfo::IsMtc (void) const
 {
   NS_LOG_FUNCTION (this);
