@@ -904,7 +904,7 @@ EpcController::DoCreateSessionRequest (
       // traffic aggregation is ON. This will prevent OpenFlow rules from
       // being installed for dedicated bearers.
       if ((ueInfo->IsMtc () && GetMtcAggregMode () == OperationMode::ON)
-          || (!ueInfo->IsMtc () && GetHtcAggregMode () == OperationMode::ON))
+          || (ueInfo->IsHtc () && GetHtcAggregMode () == OperationMode::ON))
         {
           rInfo->GetObject<S5AggregationInfo> ()->SetAggregated (true);
           NS_LOG_INFO ("Aggregating bearer teid " << rInfo->GetTeid ());
