@@ -30,17 +30,18 @@ NS_OBJECT_ENSURE_REGISTERED (RoutingInfo);
 RoutingInfo::TeidRoutingMap_t RoutingInfo::m_globalInfoMap;
 
 RoutingInfo::RoutingInfo (uint32_t teid)
-  : m_teid (teid),
-    m_imsi (0),
+  : m_blockReason (RoutingInfo::NOREASON),
     m_dscp (0),
+    m_imsi (0),
+    m_isActive (false),
+    m_isBlocked (false),
+    m_isDefault (false),
+    m_isInstalled (false),
+    m_isMtc (false),
     m_pgwTftIdx (0),
     m_priority (0),
-    m_timeout (0),
-    m_isDefault (0),
-    m_isInstalled (0),
-    m_isActive (0),
-    m_isBlocked (0),
-    m_isMtc (false)
+    m_teid (teid),
+    m_timeout (0)
 {
   NS_LOG_FUNCTION (this);
 
@@ -64,70 +65,6 @@ RoutingInfo::GetTypeId (void)
   return tid;
 }
 
-uint32_t
-RoutingInfo::GetTeid (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_teid;
-}
-
-uint64_t
-RoutingInfo::GetImsi (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_imsi;
-}
-
-uint16_t
-RoutingInfo::GetDscp (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_dscp;
-}
-
-Ipv4Address
-RoutingInfo::GetPgwS5Addr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_pgwS5Addr;
-}
-
-Ipv4Address
-RoutingInfo::GetSgwS5Addr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_sgwS5Addr;
-}
-
-uint16_t
-RoutingInfo::GetPgwTftIdx (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_pgwTftIdx;
-}
-
-uint16_t
-RoutingInfo::GetPriority (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_priority;
-}
-
-uint16_t
-RoutingInfo::GetTimeout (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_timeout;
-}
-
 std::string
 RoutingInfo::GetBlockReasonStr (void) const
 {
@@ -147,20 +84,68 @@ RoutingInfo::GetBlockReasonStr (void) const
     }
 }
 
-bool
-RoutingInfo::IsDefault (void) const
+uint16_t
+RoutingInfo::GetDscp (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isDefault;
+  return m_dscp;
 }
 
-bool
-RoutingInfo::IsInstalled (void) const
+uint64_t
+RoutingInfo::GetImsi (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isInstalled;
+  return m_imsi;
+}
+
+Ipv4Address
+RoutingInfo::GetPgwS5Addr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwS5Addr;
+}
+
+uint16_t
+RoutingInfo::GetPgwTftIdx (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwTftIdx;
+}
+
+uint16_t
+RoutingInfo::GetPriority (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_priority;
+}
+
+Ipv4Address
+RoutingInfo::GetSgwS5Addr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sgwS5Addr;
+}
+
+uint32_t
+RoutingInfo::GetTeid (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_teid;
+}
+
+uint16_t
+RoutingInfo::GetTimeout (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_timeout;
 }
 
 bool
@@ -188,11 +173,27 @@ RoutingInfo::IsBlocked (void) const
 }
 
 bool
+RoutingInfo::IsDefault (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_isDefault;
+}
+
+bool
 RoutingInfo::IsHtc (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return !m_isMtc;
+}
+
+bool
+RoutingInfo::IsInstalled (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_isInstalled;
 }
 
 bool
@@ -204,11 +205,41 @@ RoutingInfo::IsMtc (void) const
 }
 
 void
-RoutingInfo::SetImsi (uint64_t value)
+RoutingInfo::SetActive (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_imsi = value;
+  m_isActive = value;
+}
+
+void
+RoutingInfo::SetBearerContext (BearerContext_t value)
+{
+  NS_LOG_FUNCTION (this);
+
+  m_bearer = value;
+}
+
+void
+RoutingInfo::SetBlocked (bool value, BlockReason reason)
+{
+  NS_LOG_FUNCTION (this << value << reason);
+
+  NS_ASSERT_MSG (IsDefault () == false || value == false,
+                 "Can't block the default bearer traffic.");
+  NS_ASSERT_MSG (value == false || reason != RoutingInfo::NOREASON,
+                 "Specify the reason why this bearer was blocked.");
+
+  m_isBlocked = value;
+  m_blockReason = reason;
+}
+
+void
+RoutingInfo::SetDefault (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isDefault = value;
 }
 
 void
@@ -220,19 +251,35 @@ RoutingInfo::SetDscp (uint32_t value)
 }
 
 void
+RoutingInfo::SetImsi (uint64_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_imsi = value;
+}
+
+void
+RoutingInfo::SetInstalled (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isInstalled = value;
+}
+
+void
+RoutingInfo::SetMtc (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isMtc = value;
+}
+
+void
 RoutingInfo::SetPgwS5Addr (Ipv4Address value)
 {
   NS_LOG_FUNCTION (this << value);
 
   m_pgwS5Addr = value;
-}
-
-void
-RoutingInfo::SetSgwS5Addr (Ipv4Address value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_sgwS5Addr = value;
 }
 
 void
@@ -253,65 +300,19 @@ RoutingInfo::SetPriority (uint16_t value)
 }
 
 void
+RoutingInfo::SetSgwS5Addr (Ipv4Address value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_sgwS5Addr = value;
+}
+
+void
 RoutingInfo::SetTimeout (uint16_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
   m_timeout = value;
-}
-
-void
-RoutingInfo::SetDefault (bool value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_isDefault = value;
-}
-
-void
-RoutingInfo::SetInstalled (bool value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_isInstalled = value;
-}
-
-void
-RoutingInfo::SetActive (bool value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_isActive = value;
-}
-
-void
-RoutingInfo::SetBlocked (bool value, BlockReason reason)
-{
-  NS_LOG_FUNCTION (this << value << reason);
-
-  NS_ASSERT_MSG (IsDefault () == false || value == false,
-                 "Can't block the default bearer traffic.");
-  NS_ASSERT_MSG (value == false || reason != RoutingInfo::NOREASON,
-                 "Specify the reason why this bearer was blocked.");
-
-  m_isBlocked = value;
-  m_blockReason = reason;
-}
-
-void
-RoutingInfo::SetBearerContext (BearerContext_t value)
-{
-  NS_LOG_FUNCTION (this);
-
-  m_bearer = value;
-}
-
-void
-RoutingInfo::SetMtc (bool value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_isMtc = value;
 }
 
 bool
@@ -322,12 +323,12 @@ RoutingInfo::IsGbr (void) const
   return (!m_isDefault && m_bearer.bearerLevelQos.IsGbr ());
 }
 
-GbrQosInformation
-RoutingInfo::GetQosInfo (void) const
+EpsBearer
+RoutingInfo::GetEpsBearer (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_bearer.bearerLevelQos.gbrQosInfo;
+  return m_bearer.bearerLevelQos;
 }
 
 EpsBearer::Qci
@@ -338,12 +339,12 @@ RoutingInfo::GetQciInfo (void) const
   return m_bearer.bearerLevelQos.qci;
 }
 
-EpsBearer
-RoutingInfo::GetEpsBearer (void) const
+GbrQosInformation
+RoutingInfo::GetQosInfo (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_bearer.bearerLevelQos;
+  return m_bearer.bearerLevelQos.gbrQosInfo;
 }
 
 Ptr<EpcTft>

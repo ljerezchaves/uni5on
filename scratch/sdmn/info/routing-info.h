@@ -76,36 +76,36 @@ public:
 
   /** \name Private member accessors. */
   //\{
-  uint32_t GetTeid (void) const;
-  uint64_t GetImsi (void) const;
+  std::string GetBlockReasonStr (void) const;
   uint16_t GetDscp (void) const;
+  uint64_t GetImsi (void) const;
   Ipv4Address GetPgwS5Addr (void) const;
-  Ipv4Address GetSgwS5Addr (void) const;
   uint16_t GetPgwTftIdx (void) const;
   uint16_t GetPriority (void) const;
+  Ipv4Address GetSgwS5Addr (void) const;
+  uint32_t GetTeid (void) const;
   uint16_t GetTimeout (void) const;
-  bool IsDefault (void) const;
-  bool IsInstalled (void) const;
   bool IsActive (void) const;
   bool IsAggregated (void) const;
   bool IsBlocked (void) const;
-  std::string GetBlockReasonStr (void) const;
+  bool IsDefault (void) const;
   bool IsHtc (void) const;
+  bool IsInstalled (void) const;
   bool IsMtc (void) const;
 
-  void SetImsi (uint64_t value);
+  void SetActive (bool value);
+  void SetBearerContext (BearerContext_t value);
+  void SetBlocked (bool value, BlockReason reason = RoutingInfo::NOREASON);
+  void SetDefault (bool value);
   void SetDscp (uint32_t value);
+  void SetImsi (uint64_t value);
+  void SetInstalled (bool value);
+  void SetMtc (bool value);
   void SetPgwS5Addr (Ipv4Address value);
-  void SetSgwS5Addr (Ipv4Address value);
   void SetPgwTftIdx (uint16_t value);
   void SetPriority (uint16_t value);
+  void SetSgwS5Addr (Ipv4Address value);
   void SetTimeout (uint16_t value);
-  void SetDefault (bool value);
-  void SetInstalled (bool value);
-  void SetActive (bool value);
-  void SetBlocked (bool value, BlockReason reason = RoutingInfo::NOREASON);
-  void SetBearerContext (BearerContext_t value);
-  void SetMtc (bool value);
   //\}
 
   /**
@@ -113,11 +113,11 @@ public:
    * \return The requested information.
    */
   //\{
-  bool IsGbr (void) const;
-  GbrQosInformation GetQosInfo (void) const;
-  EpsBearer::Qci GetQciInfo (void) const;
   EpsBearer GetEpsBearer (void) const;
+  EpsBearer::Qci GetQciInfo (void) const;
+  GbrQosInformation GetQosInfo (void) const;
   Ptr<EpcTft> GetTft (void) const;
+  bool IsGbr (void) const;
   bool HasDownlinkTraffic (void) const;
   bool HasUplinkTraffic (void) const;
   //\}
@@ -169,21 +169,21 @@ private:
    */
   static void RegisterRoutingInfo (Ptr<RoutingInfo> rInfo);
 
-  uint32_t          m_teid;         //!< GTP TEID.
-  uint64_t          m_imsi;         //!< UE IMSI.
-  uint8_t           m_dscp;         //!< DiffServ DSCP value.
-  Ipv4Address       m_pgwS5Addr;    //!< P-GW S5 IPv4 address.
-  Ipv4Address       m_sgwS5Addr;    //!< S-GW S5 IPv4 address.
-  uint16_t          m_pgwTftIdx;    //!< P-GW TFT switch index.
-  uint16_t          m_priority;     //!< Flow priority.
-  uint16_t          m_timeout;      //!< Flow idle timeout.
-  bool              m_isDefault;    //!< This info is for default bearer.
-  bool              m_isInstalled;  //!< Rule is installed into switches.
-  bool              m_isActive;     //!< Application traffic is active.
-  bool              m_isBlocked;    //!< Traffic requested blocked.
-  bool              m_isMtc;        //!< True for MTC UE.
-  BlockReason       m_blockReason;  //!< Traffic blocked reason.
   BearerContext_t   m_bearer;       //!< EPS bearer information.
+  BlockReason       m_blockReason;  //!< Bearer blocked reason.
+  uint8_t           m_dscp;         //!< DiffServ DSCP value.
+  uint64_t          m_imsi;         //!< UE IMSI.
+  bool              m_isActive;     //!< Traffic active status.
+  bool              m_isBlocked;    //!< Bearer request status.
+  bool              m_isDefault;    //!< This is a default bearer.
+  bool              m_isInstalled;  //!< Rules installed status.
+  bool              m_isMtc;        //!< This is a MTC traffic.
+  uint16_t          m_pgwTftIdx;    //!< P-GW TFT switch index.
+  Ipv4Address       m_pgwS5Addr;    //!< P-GW S5 IPv4 address.
+  uint16_t          m_priority;     //!< Flow rule priority.
+  Ipv4Address       m_sgwS5Addr;    //!< S-GW S5 IPv4 address.
+  uint32_t          m_teid;         //!< GTP TEID.
+  uint16_t          m_timeout;      //!< Flow idle timeout.
 
   /** Map saving TEID / routing information. */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
