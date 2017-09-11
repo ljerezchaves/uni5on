@@ -413,8 +413,11 @@ EpcController::NotifySgwAttach (Ptr<NetDevice> gwDev)
       rInfo->SetBlocked (false);
       rInfo->SetDefault (false);
       rInfo->SetDscp (EpcController::GetDscpValue (rInfo->GetQciInfo ()));
+      rInfo->SetImsi (0);
       rInfo->SetInstalled (false);
+      rInfo->SetMtc (true);
       rInfo->SetPgwS5Addr (m_pgwS5Addr);
+      rInfo->SetPgwTftIdx (0);
       rInfo->SetPriority (0xFF00);
       rInfo->SetSgwS5Addr (EpcNetwork::GetIpv4Addr (gwDev));
       rInfo->SetTimeout (0);
