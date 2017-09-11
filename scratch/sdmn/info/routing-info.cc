@@ -39,7 +39,8 @@ RoutingInfo::RoutingInfo (uint32_t teid)
     m_isDefault (0),
     m_isInstalled (0),
     m_isActive (0),
-    m_isBlocked (0)
+    m_isBlocked (0),
+    m_isMtc (false)
 {
   NS_LOG_FUNCTION (this);
 
@@ -186,6 +187,22 @@ RoutingInfo::IsBlocked (void) const
   return m_isBlocked;
 }
 
+bool
+RoutingInfo::IsHtc (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return !m_isMtc;
+}
+
+bool
+RoutingInfo::IsMtc (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_isMtc;
+}
+
 void
 RoutingInfo::SetImsi (uint64_t value)
 {
@@ -287,6 +304,14 @@ RoutingInfo::SetBearerContext (BearerContext_t value)
   NS_LOG_FUNCTION (this);
 
   m_bearer = value;
+}
+
+void
+RoutingInfo::SetMtc (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isMtc = value;
 }
 
 bool

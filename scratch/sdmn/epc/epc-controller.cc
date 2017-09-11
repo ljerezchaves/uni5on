@@ -186,7 +186,6 @@ EpcController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
   NS_LOG_FUNCTION (this << teid);
 
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
   Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
 
   // This bearer must be inactive as we are going to reuse its metadata.
@@ -203,7 +202,7 @@ EpcController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
 
   // Check for S5 traffic agregation. The aggregation flag can only be changed
   // when the operation mode is set to AUTO (only supported by HTC UEs by now).
-  if (ueInfo->IsHtc () && GetHtcAggregMode () == OperationMode::AUTO)
+  if (rInfo->IsHtc () && GetHtcAggregMode () == OperationMode::AUTO)
     {
       if (aggInfo->GetMaxBandwidthUsage () <= aggInfo->GetThreshold ())
         {
@@ -850,6 +849,7 @@ EpcController::DoCreateSessionRequest (
   rInfo->SetDefault (true);
   rInfo->SetImsi (imsi);
   rInfo->SetInstalled (false);
+  rInfo->SetMtc (ueInfo->IsMtc ());
   rInfo->SetPgwS5Addr (m_pgwS5Addr);
   rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
   rInfo->SetPriority (0x7F);
@@ -860,7 +860,7 @@ EpcController::DoCreateSessionRequest (
   // Set the aggregation flag for the default bearer of MTC UEs when MTC
   // traffic aggregation is ON. This will prevent OpenFlow rules from being
   // installed even for the default MTC bearer.
-  if (ueInfo->IsMtc () && GetMtcAggregMode () == OperationMode::ON)
+  if (rInfo->IsMtc () && GetMtcAggregMode () == OperationMode::ON)
     {
       rInfo->GetObject<S5AggregationInfo> ()->SetAggregated (true);
     }
@@ -893,6 +893,7 @@ EpcController::DoCreateSessionRequest (
       rInfo->SetDefault (false);
       rInfo->SetImsi (imsi);
       rInfo->SetInstalled (false);
+      rInfo->SetMtc (ueInfo->IsMtc ());
       rInfo->SetPgwS5Addr (m_pgwS5Addr);
       rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
       rInfo->SetPriority (0x1FFF);
@@ -903,8 +904,8 @@ EpcController::DoCreateSessionRequest (
       // Set the aggregation flag for dedicated beareres of UEs when
       // traffic aggregation is ON. This will prevent OpenFlow rules from
       // being installed for dedicated bearers.
-      if ((ueInfo->IsMtc () && GetMtcAggregMode () == OperationMode::ON)
-          || (ueInfo->IsHtc () && GetHtcAggregMode () == OperationMode::ON))
+      if ((rInfo->IsMtc () && GetMtcAggregMode () == OperationMode::ON)
+          || (rInfo->IsHtc () && GetHtcAggregMode () == OperationMode::ON))
         {
           rInfo->GetObject<S5AggregationInfo> ()->SetAggregated (true);
           NS_LOG_INFO ("Aggregating bearer teid " << rInfo->GetTeid ());

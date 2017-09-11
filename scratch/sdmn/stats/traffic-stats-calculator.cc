@@ -383,7 +383,7 @@ TrafficStatsCalculator::GetStats (
       << " " << setw (7)  << teid
       << " " << setw (4)  << rInfo->GetQciInfo ()
       << " " << setw (6)  << rInfo->IsGbr ()
-      << " " << setw (6)  << ueInfo->IsMtc ()
+      << " " << setw (6)  << rInfo->IsMtc ()
       << " " << setw (6)  << rInfo->IsAggregated ()
       << " " << setw (5)  << ueInfo->GetImsi ()
       << " " << setw (4)  << ueInfo->GetCellId ()

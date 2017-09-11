@@ -90,6 +90,8 @@ public:
   bool IsAggregated (void) const;
   bool IsBlocked (void) const;
   std::string GetBlockReasonStr (void) const;
+  bool IsHtc (void) const;
+  bool IsMtc (void) const;
 
   void SetImsi (uint64_t value);
   void SetDscp (uint32_t value);
@@ -103,6 +105,7 @@ public:
   void SetActive (bool value);
   void SetBlocked (bool value, BlockReason reason = RoutingInfo::NOREASON);
   void SetBearerContext (BearerContext_t value);
+  void SetMtc (bool value);
   //\}
 
   /**
@@ -178,6 +181,7 @@ private:
   bool              m_isInstalled;  //!< Rule is installed into switches.
   bool              m_isActive;     //!< Application traffic is active.
   bool              m_isBlocked;    //!< Traffic requested blocked.
+  bool              m_isMtc;        //!< True for MTC UE.
   BlockReason       m_blockReason;  //!< Traffic blocked reason.
   BearerContext_t   m_bearer;       //!< EPS bearer information.
 
