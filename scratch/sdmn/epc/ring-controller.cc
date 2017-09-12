@@ -155,6 +155,8 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
     {
       // Connecting this controller to ConnectionInfo trace source
       // when the GBR slicing mechanism is enable.
+      // TODO Essa callback é a que atualiza os meters do slice padrão.
+      // Provavelmente o nome dela vai ser modificado.
       cInfo->TraceConnectWithoutContext (
         "NonGbrAdjusted", MakeCallback (
           &RingController::NonGbrAdjusted, this));
@@ -163,6 +165,7 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
       std::string flagsStr ("0x0001");
 
       // Non-GBR meter for clockwise direction.
+      // TODO Trocar o nome função para pegar o valor máximo do slice padrão.
       kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::FWD) / 1000;
       cmd02 << "meter-mod cmd=add"
             << ",flags=" << flagsStr
@@ -494,6 +497,8 @@ RingController::GetPathUseRatio (uint16_t srcIdx, uint16_t dstIdx,
       uint16_t next = NextSwitchIndex (srcIdx, path);
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (srcIdx, next);
       // FIXME Criar uma versao do GetEwmaThp que aceite os dpids direto.
+      // TODO: Essa infomação é usada para decidir sobre agregação.
+      // Tem que repensar nisso aqui.
       DataRate bitRate = cInfo->GetEwmaThp (
           cInfo->GetDirection (GetDpId (srcIdx), GetDpId (next)));
       useBitRate = std::max (useBitRate, bitRate.GetBitRate ());
@@ -540,6 +545,9 @@ RingController::HasGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
 {
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
+  // TODO: Como eu vou montar um esquema genérico de slices, talvez o melhor é
+  // fazer uma função genérica que verifique uma determinada banda em um
+  // determinado slice.
   bool success = true;
   uint16_t curr = ringInfo->GetPgwSwIdx ();
   while (success && curr != ringInfo->GetSgwSwIdx ())
@@ -609,6 +617,11 @@ RingController::NonGbrAdjusted (Ptr<const ConnectionInfo> cInfo)
   // Meter flags OFPMF_KBPS.
   std::string flagsStr ("0x0001");
 
+  // TODO: Essa é a função que atualiza o meter do slice padrão. Será que
+  // termos meters para outros slices? Se tiver, essa função poderia ser
+  // genérica. Mas acho que dá pra simplificar mantendo apenas o slice padrão
+  // com meters e garantindo que os tráfegos direcionados aos outros slices não
+  // excedam a capacidade reservada.
   // Update Non-GBR meter for clockwise direction.
   kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::FWD) / 1000;
   cmd1 << "meter-mod cmd=mod"
@@ -632,6 +645,7 @@ RingController::ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
 {
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
+  // TODO: Adaptar para reservar banda em qualquer slice.
   NS_LOG_INFO ("Releasing resources for GBR bearer.");
   bool success = true;
   uint16_t curr = ringInfo->GetPgwSwIdx ();
@@ -656,6 +670,7 @@ RingController::ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
 {
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
+  // TODO: Adaptar para liberar banda em qualquer slice.
   NS_LOG_INFO ("Reserving resources for GBR bearer.");
   bool success = true;
   uint16_t curr = ringInfo->GetPgwSwIdx ();
