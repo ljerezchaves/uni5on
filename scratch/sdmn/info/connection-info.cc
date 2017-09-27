@@ -173,6 +173,15 @@ ConnectionInfo::GetPortDev (uint8_t idx) const
   return m_switches [idx].portDev;
 }
 
+Mac48Address
+ConnectionInfo::GetPortMacAddr (uint8_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx == 0 || idx == 1, "Invalid switch index.");
+  return Mac48Address::ConvertFrom (GetPortDev (idx)->GetAddress ());
+}
+
 uint64_t
 ConnectionInfo::GetGbrTxBytes (Direction dir) const
 {

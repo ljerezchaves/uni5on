@@ -418,18 +418,14 @@ RingController::CreateSpanningTree (void)
   NS_LOG_DEBUG ("Disabling link from " << half << " to " <<
                 half + 1 << " for broadcast messages.");
 
-  Mac48Address macAddr1, macAddr2;
   std::ostringstream cmd1, cmd2;
-
-  macAddr1 = Mac48Address::ConvertFrom (cInfo->GetPortDev (0)->GetAddress ());
   cmd1 << "port-mod port=" << cInfo->GetPortNo (0)
-       << ",addr=" <<  macAddr1
+       << ",addr=" <<  cInfo->GetPortMacAddr (0)
        << ",conf=0x00000020,mask=0x00000020";
   DpctlSchedule (cInfo->GetSwDpId (0), cmd1.str ());
 
-  macAddr2 = Mac48Address::ConvertFrom (cInfo->GetPortDev (1)->GetAddress ());
   cmd2 << "port-mod port=" << cInfo->GetPortNo (1)
-       << ",addr=" << macAddr2
+       << ",addr=" << cInfo->GetPortMacAddr (1)
        << ",conf=0x00000020,mask=0x00000020";
   DpctlSchedule (cInfo->GetSwDpId (1), cmd2.str ());
 }
