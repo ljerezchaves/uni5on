@@ -39,10 +39,22 @@ typedef std::list<Ptr<ConnectionInfo> > ConnInfoList_t;
 /**
  * \ingroup sdmnInfo
  * Metadata associated to a connection between two OpenFlow switches.
+ * This class is also prepared to handle network slicing.
  */
 class ConnectionInfo : public Object
 {
 public:
+  /** Metadata associated to a network slice. */
+  struct SliceData
+  {
+    uint64_t m_maxRate;               //!< Maximum allowed bit rate.
+    uint64_t m_minRate;               //!< Minimum guaranteed bit rate.
+    uint64_t m_resRate [2];           //!< Reserved bit rate.
+    double   m_ewmaThp [2];           //!< EWMA throughput.
+    uint64_t m_currTxBytes [2];       //!< Current transmitted bytes.
+    uint64_t m_lastTxBytes [2];       //!< Last transmitted throughput.
+  };
+
   /** Metadata associated to a switch. */
   struct SwitchData
   {
@@ -55,7 +67,16 @@ public:
   enum Direction
   {
     FWD = 0,  //!< Forward direction (from first to second switch).
-    BWD = 1   //!< Backwad direction (from second to firts switch).
+    BWD = 1   //!< Backward direction (from second to first switch).
+  };
+
+  /** Available slices. */
+  enum Slices
+  {
+    DFT = 0,  //!< Best-effort (default) slice.
+    GBR = 1,  //!< HTC GBR slice.
+    MTC = 2,  //!< MTC slice.
+    ALL = 3   //!< ALL previous slices.
   };
 
   /**
@@ -64,8 +85,8 @@ public:
    * \param sw2 Second switch metadata.
    * \param channel The CsmaChannel physical link connecting these switches.
    * \attention The switch order must be the same as created by the CsmaHelper.
-   * Internal channel handling is based on this order to get corret full-duplex
-   * links.
+   * Internal channel handling is based on this order to get correct
+   * full-duplex links.
    */
   ConnectionInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel);
   virtual ~ConnectionInfo ();   //!< Dummy destructor, see DoDispose.
@@ -135,7 +156,7 @@ public:
   uint64_t GetLinkBitRate (void) const;
 
   /**
-   * For two switch, this methods asserts that boths datapath IDs are valid for
+   * For two switch, this methods asserts that both datapath IDs are valid for
    * this connection, and identifies the link direction based on source and
    * destination datapath IDs.
    * \param src The source switch datapath ID.
@@ -220,7 +241,7 @@ private:
    * \name Reserved bit rate adjustment.
    * Increase/decrease the reserved bit rate for both GBR and Non-GBR traffic.
    * \param dir The link direction.
-   * \param bitRate The bitRate amount.
+   * \param bitRate The bit rate amount.
    * \return True if succeeded, false otherwise.
    */
   //\{
@@ -271,6 +292,7 @@ private:
   double            m_gbrLinkQuota;     //!< GBR link-capacity reserved quota.
   uint64_t          m_gbrSafeguard;     //!< GBR safeguard bit rate.
   uint64_t          m_nonAdjustStep;    //!< Non-GBR bit rate adjustment step.
+  // TODO: Remove the safeguard... acho que não precisa disso.
 
   uint64_t          m_gbrMaxBitRate;    //!< GBR maximum allowed bit rate.
   uint64_t          m_gbrMinBitRate;    //!< GBR minimum allowed bit rate.
@@ -285,6 +307,8 @@ private:
   uint64_t          m_nonTxBytes [2];   //!< Non-GBR transmitted bytes.
   uint64_t          m_nonAvgLast [2];   //!< Non-GBR last transmitted bytes.
   double            m_nonAvgThpt [2];   //!< Non-GBR EWMA throughput.
+
+  SliceData         m_slices [Slices::ALL];
 
   /**
    * Map saving pair of switch datapath IDs / connection information.

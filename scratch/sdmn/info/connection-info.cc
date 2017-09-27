@@ -72,6 +72,9 @@ ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
   m_nonAvgLast [0] = 0;
   m_nonAvgLast [1] = 0;
 
+  // Erasing slice metadata information.
+  memset (m_slices, 0, (uint8_t)(Slices::ALL) * sizeof (SliceData));
+
   RegisterConnectionInfo (Ptr<ConnectionInfo> (this));
 }
 
