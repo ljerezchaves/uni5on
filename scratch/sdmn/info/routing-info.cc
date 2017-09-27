@@ -40,6 +40,7 @@ RoutingInfo::RoutingInfo (uint32_t teid)
     m_isMtc (false),
     m_pgwTftIdx (0),
     m_priority (0),
+    m_slice (Slice::DFT),
     m_teid (teid),
     m_timeout (0)
 {
@@ -122,6 +123,14 @@ RoutingInfo::GetPriority (void) const
   NS_LOG_FUNCTION (this);
 
   return m_priority;
+}
+
+Slice
+RoutingInfo::GetSlice (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_slice;
 }
 
 Ipv4Address
@@ -297,6 +306,14 @@ RoutingInfo::SetPriority (uint16_t value)
   NS_LOG_FUNCTION (this << value);
 
   m_priority = value;
+}
+
+void
+RoutingInfo::SetSlice (Slice value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_slice = value;
 }
 
 void

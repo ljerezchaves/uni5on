@@ -25,6 +25,7 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
+#include "connection-info.h"
 
 namespace ns3 {
 
@@ -82,6 +83,7 @@ public:
   Ipv4Address GetPgwS5Addr (void) const;
   uint16_t GetPgwTftIdx (void) const;
   uint16_t GetPriority (void) const;
+  Slice GetSlice (void) const;
   Ipv4Address GetSgwS5Addr (void) const;
   uint32_t GetTeid (void) const;
   uint16_t GetTimeout (void) const;
@@ -104,6 +106,7 @@ public:
   void SetPgwS5Addr (Ipv4Address value);
   void SetPgwTftIdx (uint16_t value);
   void SetPriority (uint16_t value);
+  void SetSlice (Slice value);
   void SetSgwS5Addr (Ipv4Address value);
   void SetTimeout (uint16_t value);
   //\}
@@ -181,6 +184,7 @@ private:
   uint16_t          m_pgwTftIdx;    //!< P-GW TFT switch index.
   Ipv4Address       m_pgwS5Addr;    //!< P-GW S5 IPv4 address.
   uint16_t          m_priority;     //!< Flow rule priority.
+  Slice             m_slice;        //!< Traffic backhaul slice.
   Ipv4Address       m_sgwS5Addr;    //!< S-GW S5 IPv4 address.
   uint32_t          m_teid;         //!< GTP TEID.
   uint16_t          m_timeout;      //!< Flow idle timeout.

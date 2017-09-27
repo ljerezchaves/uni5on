@@ -36,6 +36,15 @@ typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
 /** A list of connection information objects. */
 typedef std::list<Ptr<ConnectionInfo> > ConnInfoList_t;
 
+/** Enumeration of available slices. */
+typedef enum
+{
+  DFT = 0,  //!< Best-effort (default) slice.
+  GBR = 1,  //!< HTC GBR slice.
+  MTC = 2,  //!< MTC slice.
+  ALL = 3   //!< ALL previous slices.
+} Slice;
+
 /**
  * \ingroup sdmnInfo
  * Metadata associated to a connection between two OpenFlow switches.
@@ -68,15 +77,6 @@ public:
   {
     FWD = 0,  //!< Forward direction (from first to second switch).
     BWD = 1   //!< Backward direction (from second to first switch).
-  };
-
-  /** Available slices. */
-  enum Slices
-  {
-    DFT = 0,  //!< Best-effort (default) slice.
-    GBR = 1,  //!< HTC GBR slice.
-    MTC = 2,  //!< MTC slice.
-    ALL = 3   //!< ALL previous slices.
   };
 
   /**
@@ -312,7 +312,7 @@ private:
   uint64_t          m_nonAvgLast [2];   //!< Non-GBR last transmitted bytes.
   double            m_nonAvgThpt [2];   //!< Non-GBR EWMA throughput.
 
-  SliceData         m_slices [Slices::ALL];
+  SliceData         m_slices [Slice::ALL];
 
   /**
    * Map saving pair of switch datapath IDs / connection information.
