@@ -128,7 +128,7 @@ public:
   uint64_t GetNonGbrTxBytes (Direction dir) const;
   DataRate GetGbrEwmaThp    (Direction dir) const;
   DataRate GetNonGbrEwmaThp (Direction dir) const;
-  DataRate GetEwmaThp       (Direction dir) const;
+  DataRate GetEwmaThp       (Direction dir) const;  // Manter
   //\}
 
   /**
@@ -174,6 +174,7 @@ public:
    * \param bitRate The bit rate to check.
    * \return True if there's available GBR bit rate, false otherwise.
    */
+  // FIXME Should be generic for any slice.
   bool HasGbrBitRate (uint64_t src, uint64_t dst, uint64_t bitRate) const;
 
   /**
@@ -183,6 +184,7 @@ public:
    * \param bitRate The bit rate to reserve.
    * \return True if succeeded, false otherwise.
    */
+  // FIXME Should be generic for any slice.
   bool ReserveGbrBitRate (uint64_t src, uint64_t dst, uint64_t bitRate);
 
   /**
@@ -192,6 +194,7 @@ public:
    * \param bitRate The bit rate to release.
    * \return True if succeeded, false otherwise.
    */
+  // FIXME Should be generic for any slice.
   bool ReleaseGbrBitRate (uint64_t src, uint64_t dst, uint64_t bitRate);
 
   /**
