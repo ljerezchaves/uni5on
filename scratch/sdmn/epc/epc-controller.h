@@ -186,11 +186,11 @@ public:
    * \return The requested mechanism operation mode.
    */
   //\{
-  OperationMode GetGbrSlicingMode (void) const;
   OperationMode GetHtcAggregMode (void) const;
   OperationMode GetMtcAggregMode (void) const;
   OperationMode GetPgwAdaptiveMode (void) const;
   OperationMode GetPriorityQueuesMode (void) const;
+  OperationMode GetSlicingMode (void) const;
   //\}
 
   /**
@@ -412,7 +412,7 @@ private:
 
   // Internal mechanisms for performance improvement.
   OperationMode         m_priorityQueues; //!< DSCP priority queues mechanism.
-  OperationMode         m_gbrSlicing;     //!< GBR slicing mechanism.
+  OperationMode         m_slicing;        //!< Network slicing mechanism.
 
   // P-GW metadata.
   std::vector<uint64_t> m_pgwDpIds;       //!< Datapath IDs.

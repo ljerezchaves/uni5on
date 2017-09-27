@@ -151,7 +151,7 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
         << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (1);
   DpctlSchedule (cInfo->GetSwDpId (1), cmd11.str ());
 
-  if (GetGbrSlicingMode () == OperationMode::ON)
+  if (GetSlicingMode () == OperationMode::ON)
     {
       // Connecting this controller to ConnectionInfo trace source
       // when the GBR slicing mechanism is enable.

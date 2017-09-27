@@ -59,13 +59,6 @@ EpcController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::EpcController")
     .SetParent<OFSwitch13Controller> ()
-    .AddAttribute ("GbrSlicing",
-                   "GBR slicing mechanism operation mode.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (EpcController::ON),
-                   MakeEnumAccessor (&EpcController::m_gbrSlicing),
-                   MakeEnumChecker (EpcController::OFF, "off",
-                                    EpcController::ON,  "on"))
     .AddAttribute ("HtcAggregation",
                    "HTC traffic aggregation mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -132,6 +125,13 @@ EpcController::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (EpcController::ON),
                    MakeEnumAccessor (&EpcController::m_priorityQueues),
+                   MakeEnumChecker (EpcController::OFF, "off",
+                                    EpcController::ON,  "on"))
+    .AddAttribute ("Slicing",
+                   "Network slicing mechanism operation mode.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   EnumValue (EpcController::ON),
+                   MakeEnumAccessor (&EpcController::m_slicing),
                    MakeEnumChecker (EpcController::OFF, "off",
                                     EpcController::ON,  "on"))
     .AddAttribute ("TimeoutInterval",
@@ -445,14 +445,6 @@ EpcController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
 }
 
 EpcController::OperationMode
-EpcController::GetGbrSlicingMode (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_gbrSlicing;
-}
-
-EpcController::OperationMode
 EpcController::GetHtcAggregMode (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -476,13 +468,20 @@ EpcController::GetPgwAdaptiveMode (void) const
   return m_tftAdaptive;
 }
 
-
 EpcController::OperationMode
 EpcController::GetPriorityQueuesMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_priorityQueues;
+}
+
+EpcController::OperationMode
+EpcController::GetSlicingMode (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_slicing;
 }
 
 EpcS5SapPgw*
@@ -692,7 +691,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 3 -- Slicing table -- [from higher to lower priority]
   //
-  if (GetGbrSlicingMode () == OperationMode::ON)
+  if (GetSlicingMode () == OperationMode::ON)
     {
       // Non-GBR packets are indicated by DSCP field DSCP_AF11 and DscpDefault.
       // Apply Non-GBR meter band. Send the packet to Output table.
