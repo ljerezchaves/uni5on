@@ -90,7 +90,7 @@ BackhaulStatsCalculator::DoDispose ()
   m_regWrapper = 0;
   m_renWrapper = 0;
   m_connections.clear ();
-  free (m_counters);
+//  free (m_counters); // TODO remover.
   m_counters = 0;
 }
 
