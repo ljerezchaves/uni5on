@@ -20,6 +20,9 @@
 
 #include "routing-info.h"
 #include "s5-aggregation-info.h"
+#include "gbr-info.h"
+#include "meter-info.h"
+#include "../epc/epc-controller.h"
 
 namespace ns3 {
 
@@ -29,15 +32,16 @@ NS_OBJECT_ENSURE_REGISTERED (RoutingInfo);
 // Initializing RoutingInfo static members.
 RoutingInfo::TeidRoutingMap_t RoutingInfo::m_globalInfoMap;
 
-RoutingInfo::RoutingInfo (uint32_t teid)
-  : m_blockReason (RoutingInfo::NOREASON),
-    m_dscp (0),
-    m_imsi (0),
+RoutingInfo::RoutingInfo (uint32_t teid, BearerContext_t bearer, uint64_t imsi,
+                          bool isDefault, bool isMtc)
+  : m_bearer (bearer),
+    m_blockReason (RoutingInfo::NOREASON),
+    m_imsi (imsi),
     m_isActive (false),
     m_isBlocked (false),
-    m_isDefault (false),
+    m_isDefault (isDefault),
     m_isInstalled (false),
-    m_isMtc (false),
+    m_isMtc (isMtc),
     m_pgwTftIdx (0),
     m_priority (0),
     m_slice (Slice::DFT),
@@ -46,9 +50,14 @@ RoutingInfo::RoutingInfo (uint32_t teid)
 {
   NS_LOG_FUNCTION (this);
 
+  // Set empty IPv4 addresses for gateways.
   m_sgwS5Addr = Ipv4Address ();
   m_pgwS5Addr = Ipv4Address ();
 
+  // Set the DiffServ DSCP value for this bearer.
+  m_dscp = EpcController::GetDscpValue (GetQciInfo ());
+
+  // Register this routing information object.
   RegisterRoutingInfo (Ptr<RoutingInfo> (this));
 }
 
@@ -222,14 +231,6 @@ RoutingInfo::SetActive (bool value)
 }
 
 void
-RoutingInfo::SetBearerContext (BearerContext_t value)
-{
-  NS_LOG_FUNCTION (this);
-
-  m_bearer = value;
-}
-
-void
 RoutingInfo::SetBlocked (bool value, BlockReason reason)
 {
   NS_LOG_FUNCTION (this << value << reason);
@@ -244,43 +245,11 @@ RoutingInfo::SetBlocked (bool value, BlockReason reason)
 }
 
 void
-RoutingInfo::SetDefault (bool value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_isDefault = value;
-}
-
-void
-RoutingInfo::SetDscp (uint32_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_dscp = value;
-}
-
-void
-RoutingInfo::SetImsi (uint64_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_imsi = value;
-}
-
-void
 RoutingInfo::SetInstalled (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 
   m_isInstalled = value;
-}
-
-void
-RoutingInfo::SetMtc (bool value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_isMtc = value;
 }
 
 void
@@ -454,9 +423,21 @@ RoutingInfo::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Create the S5 traffic aggregation metadata,
-  // (will be aggregated to this routing info object).
+  // Create the S5 traffic aggregation metadata.
   CreateObject<S5AggregationInfo> (Ptr<RoutingInfo> (this));
+
+  // When necessary, create the GBR metadata.
+  if (IsGbr ())
+    {
+      CreateObject<GbrInfo> (Ptr<RoutingInfo> (this));
+    }
+
+  // When necessary, create the meter metadata.
+  GbrQosInformation gbrQoS = GetQosInfo ();
+  if (gbrQoS.mbrDl || gbrQoS.mbrUl)
+    {
+      CreateObject<MeterInfo> (Ptr<RoutingInfo> (this));
+    }
 }
 
 void

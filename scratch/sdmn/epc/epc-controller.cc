@@ -407,19 +407,12 @@ EpcController::NotifySgwAttach (Ptr<NetDevice> gwDev)
       fakeBearer.tft = fakeTft;
 
       // Creating the 'fake' routing info.
-      Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (mtcTeid);
+      Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
+          mtcTeid, fakeBearer, 0, false, true);
       rInfo->SetActive (true);
-      rInfo->SetBearerContext (fakeBearer);
-      rInfo->SetBlocked (false);
-      rInfo->SetDefault (false);
-      rInfo->SetDscp (EpcController::GetDscpValue (rInfo->GetQciInfo ()));
-      rInfo->SetImsi (0);
-      rInfo->SetInstalled (false);
-      rInfo->SetMtc (true);
-      rInfo->SetPgwS5Addr (m_pgwS5Addr);
       rInfo->SetPriority (0xFF00);
+      rInfo->SetPgwS5Addr (m_pgwS5Addr);
       rInfo->SetSgwS5Addr (EpcNetwork::GetIpv4Addr (gwDev));
-      rInfo->SetTimeout (0);
 
       // Set the traffic aggregation flag.
       rInfo->GetObject<S5AggregationInfo> ()->SetAggregated (true);
@@ -811,16 +804,20 @@ EpcController::DoCreateSessionRequest (
   Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
 
-  // Create the response message.
+  // Iterate over request message and create the response message.
   EpcS11SapMme::CreateSessionResponseMessage res;
   res.teid = imsi;
+
   std::list<EpcS11SapSgw::BearerContextToBeCreated>::iterator bit;
   for (bit = msg.bearerContextsToBeCreated.begin ();
        bit != msg.bearerContextsToBeCreated.end ();
        ++bit)
     {
       NS_ABORT_IF (EpcController::m_teidCount > EpcController::m_teidEnd);
+
       uint32_t teid = EpcController::m_teidCount++;
+      bool isDefault = res.bearerContextsCreated.empty ();
+
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.teid = teid;
       bearerContext.sgwFteid.address = enbInfo->GetSgwS1uAddr ();
@@ -831,101 +828,48 @@ EpcController::DoCreateSessionRequest (
 
       // Add the TFT entry to the UeInfo (don't move this command from here).
       ueInfo->AddTft (bit->tft, teid);
-    }
 
-  // Create and save routing information for default bearer.
-  // (first element on the res.bearerContextsCreated)
-  BearerContext_t defaultBearer = res.bearerContextsCreated.front ();
-  NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
-
-  uint32_t teid = defaultBearer.sgwFteid.teid;
-  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (rInfo == 0, "Existing routing for bearer teid " << teid);
-
-  // Create the routing information for this default bearer.
-  rInfo = CreateObject<RoutingInfo> (teid);
-  rInfo->SetActive (true);
-  rInfo->SetBearerContext (defaultBearer);
-  rInfo->SetBlocked (false);
-  rInfo->SetDefault (true);
-  rInfo->SetImsi (imsi);
-  rInfo->SetInstalled (false);
-  rInfo->SetMtc (ueInfo->IsMtc ());
-  rInfo->SetPgwS5Addr (m_pgwS5Addr);
-  rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
-  rInfo->SetPriority (0x7F);
-  rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
-  rInfo->SetTimeout (0);
-  TopologyBearerCreated (rInfo);
-
-  // Set the aggregation flag for the default bearer of MTC UEs when MTC
-  // traffic aggregation is ON. This will prevent OpenFlow rules from being
-  // installed even for the default MTC bearer.
-  if (rInfo->IsMtc () && GetMtcAggregMode () == OperationMode::ON)
-    {
-      rInfo->GetObject<S5AggregationInfo> ()->SetAggregated (true);
-    }
-
-  // For default bearer, no meter nor GBR metadata.
-  // For logic consistence, let's check for available resources.
-  bool accepted = true;
-  accepted &= PgwTftBearerRequest (rInfo);
-  accepted &= TopologyBearerRequest (rInfo);
-  NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
-  m_bearerRequestTrace (rInfo);
-
-  // Install rules for default bearer.
-  bool installed = BearerInstall (rInfo);
-  NS_ASSERT_MSG (installed, "Default bearer must be installed.");
-
-  // For other dedicated bearers, let's create and save it's routing metadata.
-  // (starting at the second element of res.bearerContextsCreated).
-  BearerContextList_t::iterator it = res.bearerContextsCreated.begin ();
-  for (it++; it != res.bearerContextsCreated.end (); it++)
-    {
-      BearerContext_t dedicatedBearer = *it;
-      teid = dedicatedBearer.sgwFteid.teid;
-
-      // Create the routing information for this dedicated bearer.
-      rInfo = CreateObject<RoutingInfo> (teid);
-      rInfo->SetActive (false);
-      rInfo->SetBearerContext (dedicatedBearer);
-      rInfo->SetBlocked (false);
-      rInfo->SetDefault (false);
-      rInfo->SetImsi (imsi);
-      rInfo->SetInstalled (false);
-      rInfo->SetMtc (ueInfo->IsMtc ());
+      // Create the routing metadata for this bearer.
+      Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
+          teid, bearerContext, imsi, isDefault, ueInfo->IsMtc ());
       rInfo->SetPgwS5Addr (m_pgwS5Addr);
       rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
-      rInfo->SetPriority (0x1FFF);
       rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
-      rInfo->SetTimeout (m_flowTimeout);
       TopologyBearerCreated (rInfo);
 
-      // Set the aggregation flag for dedicated beareres of UEs when
-      // traffic aggregation is ON. This will prevent OpenFlow rules from
-      // being installed for dedicated bearers.
+      // Set the aggregation flag when operation mode is ON. This will prevent
+      // OpenFlow rules from being installed for this bearer.
       if ((rInfo->IsMtc () && GetMtcAggregMode () == OperationMode::ON)
-          || (rInfo->IsHtc () && GetHtcAggregMode () == OperationMode::ON))
+          || (rInfo->IsHtc () && isDefault == false
+              && GetHtcAggregMode () == OperationMode::ON))
         {
           rInfo->GetObject<S5AggregationInfo> ()->SetAggregated (true);
           NS_LOG_INFO ("Aggregating bearer teid " << rInfo->GetTeid ());
         }
 
-      // Set the appropriated DiffServ DSCP value for this bearer.
-      rInfo->SetDscp (EpcController::GetDscpValue (rInfo->GetQciInfo ()));
-
-      // When necessary, create the GBR metadata.
-      if (rInfo->IsGbr ())
+      if (isDefault)
         {
-          CreateObject<GbrInfo> (rInfo);
+          // Configure this default bearer.
+          rInfo->SetActive (true);
+          rInfo->SetPriority (0x7F);
+          rInfo->SetTimeout (0);
+
+          // For logic consistence, let's check for available resources.
+          bool accepted = true;
+          accepted &= PgwTftBearerRequest (rInfo);
+          accepted &= TopologyBearerRequest (rInfo);
+          NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
+          m_bearerRequestTrace (rInfo);
+
+          // Install rules for default bearer.
+          bool installed = BearerInstall (rInfo);
+          NS_ASSERT_MSG (installed, "Default bearer must be installed.");
         }
-
-      // When necessary, create the meter metadata.
-      GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
-      if (gbrQoS.mbrDl || gbrQoS.mbrUl)
+      else
         {
-          CreateObject<MeterInfo> (rInfo);
+          // Configure this dedicated bearer.
+          rInfo->SetPriority (0x1FFF);
+          rInfo->SetTimeout (m_flowTimeout);
         }
     }
 

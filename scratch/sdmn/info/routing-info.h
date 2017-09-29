@@ -65,8 +65,13 @@ public:
   /**
    * Complete constructor.
    * \param teid The TEID value.
+   * \param bearer The bearer context.
+   * \param imsi The UE IMSI.
+   * \param isDefault True for default bearer.
+   * \param isMtc True for MTC traffic.
    */
-  RoutingInfo (uint32_t teid);
+  RoutingInfo (uint32_t teid, BearerContext_t bearer, uint64_t imsi,
+               bool isDefault, bool isMtc);
   virtual ~RoutingInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
@@ -96,13 +101,8 @@ public:
   bool IsMtc (void) const;
 
   void SetActive (bool value);
-  void SetBearerContext (BearerContext_t value);
   void SetBlocked (bool value, BlockReason reason = RoutingInfo::NOREASON);
-  void SetDefault (bool value);
-  void SetDscp (uint32_t value);
-  void SetImsi (uint64_t value);
   void SetInstalled (bool value);
-  void SetMtc (bool value);
   void SetPgwS5Addr (Ipv4Address value);
   void SetPgwTftIdx (uint16_t value);
   void SetPriority (uint16_t value);
