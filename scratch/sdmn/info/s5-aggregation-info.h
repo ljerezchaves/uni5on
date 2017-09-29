@@ -22,6 +22,7 @@
 #define S5_AGGREGATION_INFO_H
 
 #include <ns3/core-module.h>
+#include "../epc/epc-controller.h"
 
 namespace ns3 {
 
@@ -49,26 +50,31 @@ public:
 
   /** \name Private member accessors. */
   //\{
-  bool IsAggregated (void) const;
+  double GetLinkUsage (void) const;
+  OperationMode GetOperationMode (void) const;
   double GetThreshold (void) const;
-  double GetDlBandwidthUsage (void) const;
-  double GetUlBandwidthUsage (void) const;
-  double GetMaxBandwidthUsage (void) const;
 
-  void SetAggregated (bool value);
+  // void SetAggregated (bool value);
+  void SetLinkUsage (double value);
+  void SetOperationMode (OperationMode value);
   void SetThreshold (double value);
-  void SetBandwidthUsage (double dlValue, double ulValue);
   //\}
+
+  /**
+   * Check internal members and decide if this bearer has to be aggregated or
+   * not over the S5 interface.
+   * \return True when the bearer has to be aggregated.
+   */
+  bool IsAggregated (void) const;
 
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
 private:
-  bool             m_isAggregated;  //!< Traffic aggregated over S5 bearer.
+  double           m_linkUsage;     //!< Link usage.
+  OperationMode    m_mode;          //!< Operation mode.
   double           m_threshhold;    //!< Link usage threshold.
-  double           m_dlBandUsage;   //!< Downlink bandwidth usage.
-  double           m_ulBandUsage;   //!< Uplink bandwidth usage.
 };
 
 };  // namespace ns3

@@ -59,10 +59,10 @@ protected:
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
   void NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo);
 
-  void TopologyBearerAggregate (Ptr<RoutingInfo> rInfo);
   void TopologyBearerCreated   (Ptr<RoutingInfo> rInfo);
   bool TopologyBearerRelease   (Ptr<RoutingInfo> rInfo);
   bool TopologyBearerRequest   (Ptr<RoutingInfo> rInfo);
+  double TopologyLinkUsage     (Ptr<RoutingInfo> rInfo);
   bool TopologyRoutingInstall  (Ptr<RoutingInfo> rInfo);
   bool TopologyRoutingRemove   (Ptr<RoutingInfo> rInfo);
   // Inherited from EpcController.

@@ -27,10 +27,9 @@ NS_LOG_COMPONENT_DEFINE ("S5AggregationInfo");
 NS_OBJECT_ENSURE_REGISTERED (S5AggregationInfo);
 
 S5AggregationInfo::S5AggregationInfo (Ptr<RoutingInfo> rInfo)
-  : m_isAggregated (false),
-    m_threshhold (0.0),
-    m_dlBandUsage (0.0),
-    m_ulBandUsage (0.0)
+  : m_linkUsage (0.0),
+    m_mode (OperationMode::OFF),
+    m_threshhold (0.0)
 {
   NS_LOG_FUNCTION (this);
 
@@ -51,12 +50,20 @@ S5AggregationInfo::GetTypeId (void)
   return tid;
 }
 
-bool
-S5AggregationInfo::IsAggregated (void) const
+double
+S5AggregationInfo::GetLinkUsage (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isAggregated;
+  return m_linkUsage;
+}
+
+OperationMode
+S5AggregationInfo::GetOperationMode (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_mode;
 }
 
 double
@@ -67,36 +74,20 @@ S5AggregationInfo::GetThreshold (void) const
   return m_threshhold;
 }
 
-double
-S5AggregationInfo::GetDlBandwidthUsage (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_dlBandUsage;
-}
-
-double
-S5AggregationInfo::GetUlBandwidthUsage (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ulBandUsage;
-}
-
-double
-S5AggregationInfo::GetMaxBandwidthUsage (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return std::max (m_dlBandUsage, m_ulBandUsage);
-}
-
 void
-S5AggregationInfo::SetAggregated (bool value)
+S5AggregationInfo::SetLinkUsage (double value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_isAggregated = value;
+  m_linkUsage = value;
+}
+
+void
+S5AggregationInfo::SetOperationMode (OperationMode value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_mode = value;
 }
 
 void
@@ -107,13 +98,20 @@ S5AggregationInfo::SetThreshold (double value)
   m_threshhold = value;
 }
 
-void
-S5AggregationInfo::SetBandwidthUsage (double dlValue, double ulValue)
+bool
+S5AggregationInfo::IsAggregated (void) const
 {
-  NS_LOG_FUNCTION (this << dlValue << ulValue);
+  NS_LOG_FUNCTION (this);
 
-  m_dlBandUsage = dlValue;
-  m_ulBandUsage = ulValue;
+  if ((m_mode == OperationMode::AUTO && m_linkUsage > m_threshhold)
+      || m_mode == OperationMode::OFF)
+    {
+      return false;
+    }
+  else
+    {
+      return true;
+    }
 }
 
 void

@@ -20,6 +20,7 @@
 
 #include "epc-controller.h"
 #include "epc-network.h"
+#include "../info/s5-aggregation-info.h"
 #include "../sdran/sdran-controller.h"
 #include <algorithm>
 
@@ -62,11 +63,11 @@ EpcController::GetTypeId (void)
     .AddAttribute ("HtcAggregation",
                    "HTC traffic aggregation mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (EpcController::OFF),
+                   EnumValue (OperationMode::OFF),
                    MakeEnumAccessor (&EpcController::m_htcAggregation),
-                   MakeEnumChecker (EpcController::OFF,  "off",
-                                    EpcController::ON,   "on",
-                                    EpcController::AUTO, "auto"))
+                   MakeEnumChecker (OperationMode::OFF,  "off",
+                                    OperationMode::ON,   "on",
+                                    OperationMode::AUTO, "auto"))
     .AddAttribute ("HtcAggGbrThs",
                    "HTC traffic aggregation GBR bandwidth threshold.",
                    DoubleValue (0.5),
@@ -80,25 +81,25 @@ EpcController::GetTypeId (void)
     .AddAttribute ("MtcAggregation",
                    "MTC traffic aggregation mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (EpcController::OFF),
+                   EnumValue (OperationMode::OFF),
                    MakeEnumAccessor (&EpcController::m_mtcAggregation),
-                   MakeEnumChecker (EpcController::OFF,  "off",
-                                    EpcController::ON,   "on"))
+                   MakeEnumChecker (OperationMode::OFF,  "off",
+                                    OperationMode::ON,   "on"))
     .AddAttribute ("PgwTftAdaptiveMode",
                    "P-GW TFT adaptive mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (EpcController::ON),
+                   EnumValue (OperationMode::ON),
                    MakeEnumAccessor (&EpcController::m_tftAdaptive),
-                   MakeEnumChecker (EpcController::OFF,  "off",
-                                    EpcController::ON,   "on",
-                                    EpcController::AUTO, "auto"))
+                   MakeEnumChecker (OperationMode::OFF,  "off",
+                                    OperationMode::ON,   "on",
+                                    OperationMode::AUTO, "auto"))
     .AddAttribute ("PgwTftBlockPolicy",
                    "P-GW TFT overloaded block policy.",
-                   EnumValue (EpcController::ON),
+                   EnumValue (OperationMode::ON),
                    MakeEnumAccessor (&EpcController::m_tftBlockPolicy),
-                   MakeEnumChecker (EpcController::OFF,  "none",
-                                    EpcController::ON,   "all",
-                                    EpcController::AUTO, "gbr"))
+                   MakeEnumChecker (OperationMode::OFF,  "none",
+                                    OperationMode::ON,   "all",
+                                    OperationMode::AUTO, "gbr"))
     .AddAttribute ("PgwTftBlockThs",
                    "The P-GW TFT block threshold.",
                    DoubleValue (0.95),
@@ -123,17 +124,17 @@ EpcController::GetTypeId (void)
     .AddAttribute ("PriorityQueues",
                    "Priority output queues mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (EpcController::ON),
+                   EnumValue (OperationMode::ON),
                    MakeEnumAccessor (&EpcController::m_priorityQueues),
-                   MakeEnumChecker (EpcController::OFF, "off",
-                                    EpcController::ON,  "on"))
+                   MakeEnumChecker (OperationMode::OFF, "off",
+                                    OperationMode::ON,  "on"))
     .AddAttribute ("Slicing",
                    "Network slicing mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (EpcController::ON),
+                   EnumValue (OperationMode::ON),
                    MakeEnumAccessor (&EpcController::m_slicing),
-                   MakeEnumChecker (EpcController::OFF, "off",
-                                    EpcController::ON,  "on"))
+                   MakeEnumChecker (OperationMode::OFF, "off",
+                                    OperationMode::ON,  "on"))
     .AddAttribute ("TimeoutInterval",
                    "The interval between internal periodic operations.",
                    TimeValue (Seconds (5)),
@@ -196,23 +197,12 @@ EpcController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
   rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
   rInfo->SetBlocked (false);
 
-  // Update bandwidth usage and threshold values.
+  // Update link bandwidth usage and threshold values.
+  aggInfo->SetLinkUsage (TopologyLinkUsage (rInfo));
   aggInfo->SetThreshold (rInfo->IsGbr () ? m_htcAggGbrThs : m_htcAggNonThs);
-  TopologyBearerAggregate (rInfo);
-
-  // Check for S5 traffic agregation. The aggregation flag can only be changed
-  // when the operation mode is set to AUTO (only supported by HTC UEs by now).
-  if (rInfo->IsHtc () && GetHtcAggregMode () == OperationMode::AUTO)
+  if (rInfo->IsAggregated ())
     {
-      if (aggInfo->GetMaxBandwidthUsage () <= aggInfo->GetThreshold ())
-        {
-          aggInfo->SetAggregated (true);
-          NS_LOG_INFO ("Aggregating bearer teid " << rInfo->GetTeid ());
-        }
-      else
-        {
-          aggInfo->SetAggregated (false);
-        }
+      NS_LOG_INFO ("Aggregating bearer teid " << rInfo->GetTeid ());
     }
 
   // Let's first check for available resources on P-GW and backhaul switches.
@@ -414,8 +404,9 @@ EpcController::NotifySgwAttach (Ptr<NetDevice> gwDev)
       rInfo->SetPgwS5Addr (m_pgwS5Addr);
       rInfo->SetSgwS5Addr (EpcNetwork::GetIpv4Addr (gwDev));
 
-      // Set the traffic aggregation flag.
-      rInfo->GetObject<S5AggregationInfo> ()->SetAggregated (true);
+      // Set the traffic aggregation operation mode.
+      Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
+      aggInfo->SetOperationMode (OperationMode::ON);
 
       // Install the OpenFlow bearer rules after handshake procedures.
       TopologyBearerCreated (rInfo);
@@ -437,7 +428,7 @@ EpcController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
   NS_LOG_FUNCTION (this << cInfo);
 }
 
-EpcController::OperationMode
+OperationMode
 EpcController::GetHtcAggregMode (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -445,7 +436,7 @@ EpcController::GetHtcAggregMode (void) const
   return m_htcAggregation;
 }
 
-EpcController::OperationMode
+OperationMode
 EpcController::GetMtcAggregMode (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -453,7 +444,7 @@ EpcController::GetMtcAggregMode (void) const
   return m_mtcAggregation;
 }
 
-EpcController::OperationMode
+OperationMode
 EpcController::GetPgwAdaptiveMode (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -461,7 +452,7 @@ EpcController::GetPgwAdaptiveMode (void) const
   return m_tftAdaptive;
 }
 
-EpcController::OperationMode
+OperationMode
 EpcController::GetPriorityQueuesMode (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -469,7 +460,7 @@ EpcController::GetPriorityQueuesMode (void) const
   return m_priorityQueues;
 }
 
-EpcController::OperationMode
+OperationMode
 EpcController::GetSlicingMode (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -837,17 +828,20 @@ EpcController::DoCreateSessionRequest (
       rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
       TopologyBearerCreated (rInfo);
 
-      // Set the aggregation flag when operation mode is ON. This will prevent
-      // OpenFlow rules from being installed for this bearer.
-      if ((rInfo->IsMtc () && GetMtcAggregMode () == OperationMode::ON)
-          || (rInfo->IsHtc () && isDefault == false
-              && GetHtcAggregMode () == OperationMode::ON))
+      // Check for the proper traffic aggregation mode for this bearer.
+      OperationMode mode;
+      mode = rInfo->IsMtc () ? GetMtcAggregMode () : GetHtcAggregMode ();
+      if (rInfo->IsHtc () && rInfo->IsDefault ())
         {
-          rInfo->GetObject<S5AggregationInfo> ()->SetAggregated (true);
-          NS_LOG_INFO ("Aggregating bearer teid " << rInfo->GetTeid ());
+          // Never aggregate the default HTC bearer.
+          mode = OperationMode::OFF;
         }
 
-      if (isDefault)
+      // Set the traffic aggregation operation mode.
+      Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
+      aggInfo->SetOperationMode (mode);
+
+      if (rInfo->IsDefault ())
         {
           // Configure this default bearer.
           rInfo->SetActive (true);

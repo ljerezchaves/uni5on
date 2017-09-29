@@ -184,22 +184,6 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
 }
 
 void
-RingController::TopologyBearerAggregate (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo->GetTeid ());
-
-  // Update the aggregation metadata with link bandwidth usage.
-  // FIXME Vamos considerar apenas o slice do tráfego?
-  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  uint16_t pgwIdx = ringInfo->GetPgwSwIdx ();
-  uint16_t sgwIdx = ringInfo->GetSgwSwIdx ();
-
-  rInfo->GetObject<S5AggregationInfo> ()->SetBandwidthUsage (
-    GetPathUseRatio (pgwIdx, sgwIdx, ringInfo->GetDownPath ()),
-    GetPathUseRatio (sgwIdx, pgwIdx, ringInfo->GetUpPath ()));
-}
-
-void
 RingController::TopologyBearerCreated (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
@@ -287,6 +271,21 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
   NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid ());
   rInfo->SetBlocked (true, RoutingInfo::BANDWIDTH);
   return false;
+}
+
+double
+RingController::TopologyLinkUsage (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo->GetTeid ());
+
+  // Update the aggregation metadata with link bandwidth usage.
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  uint16_t pgwIdx = ringInfo->GetPgwSwIdx ();
+  uint16_t sgwIdx = ringInfo->GetSgwSwIdx ();
+
+  // FIXME Should we consider only the current traffic slice?
+  return std::max (GetPathUseRatio (pgwIdx, sgwIdx, ringInfo->GetDownPath ()),
+                   GetPathUseRatio (sgwIdx, pgwIdx, ringInfo->GetUpPath ()));
 }
 
 bool

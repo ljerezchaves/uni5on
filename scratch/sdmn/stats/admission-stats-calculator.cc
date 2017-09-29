@@ -181,7 +181,7 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
   << " " << setw (6) << rInfo->IsDefault ()
   << " " << setw (6) << rInfo->IsBlocked ()
   << " " << setw (6) << rInfo->IsAggregated ()
-  << " " << setw (6) << aggInfo->GetMaxBandwidthUsage ()
+  << " " << setw (6) << aggInfo->GetLinkUsage ()
   << " " << setw (6) << aggInfo->GetThreshold ()
   << std::endl;
 }

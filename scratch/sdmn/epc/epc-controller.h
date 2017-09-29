@@ -32,10 +32,17 @@
 #include "../info/gbr-info.h"
 #include "../info/meter-info.h"
 #include "../info/routing-info.h"
-#include "../info/s5-aggregation-info.h"
 #include "../info/ue-info.h"
 
 namespace ns3 {
+
+/** Enumeration of available operation modes. */
+typedef enum
+{
+  OFF  = 0,   //!< Always off.
+  ON   = 1,   //!< Always on.
+  AUTO = 2    //!< Automatic.
+} OperationMode;
 
 /**
  * \ingroup sdmnEpc
@@ -50,14 +57,6 @@ class EpcController : public OFSwitch13Controller
   friend class MemberEpcS5SapPgw<EpcController>;
 
 public:
-  /** Operation modes for internal mechanisms. */
-  enum OperationMode
-  {
-    OFF  = 0,   //!< Always off.
-    ON   = 1,   //!< Always on.
-    AUTO = 2    //!< Automatic.
-  };
-
   /** P-GW adaptive mechanism statistics. */
   struct PgwTftStats
   {
@@ -238,12 +237,6 @@ protected:
    */
   //\{
   /**
-   * Update the S5 traffica aggregation metadata with link bandwitdh usage.
-   * \param rInfo The routing information to process.
-   */
-  virtual void TopologyBearerAggregate (Ptr<RoutingInfo> rInfo) = 0;
-
-  /**
    * Notify the topology controller of a new bearer context created.
    * \param rInfo The routing information.
    */
@@ -262,6 +255,12 @@ protected:
    * \return True if succeeded, false otherwise.
    */
   virtual bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Get the average link bandwitdh usage.
+   * \param rInfo The routing information to process.
+   */
+  virtual double TopologyLinkUsage (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
    * Install TEID routing OpenFlow match rules into backhaul switches.
