@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "s5-aggregation-info.h"
 #include "routing-info.h"
+#include "s5-aggregation-info.h"
 
 namespace ns3 {
 

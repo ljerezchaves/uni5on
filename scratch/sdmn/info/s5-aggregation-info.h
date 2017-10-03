@@ -54,7 +54,6 @@ public:
   OperationMode GetOperationMode (void) const;
   double GetThreshold (void) const;
 
-  // void SetAggregated (bool value);
   void SetLinkUsage (double value);
   void SetOperationMode (OperationMode value);
   void SetThreshold (double value);

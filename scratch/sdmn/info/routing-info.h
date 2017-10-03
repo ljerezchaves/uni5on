@@ -25,7 +25,6 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
-#include "connection-info.h"
 
 namespace ns3 {
 
@@ -39,6 +38,16 @@ typedef std::list<BearerContext_t> BearerContextList_t;
 
 /** List of routing information. */
 typedef std::list<Ptr<RoutingInfo> > RoutingInfoList_t;
+
+/** Enumeration of available slices. */
+typedef enum
+{
+  DFT = 0,  //!< Best-effort (default) slice.
+  GBR = 1,  //!< HTC GBR slice.
+  MTC = 2,  //!< MTC slice.
+  ALL = 3   //!< ALL previous slices.
+} Slice;
+
 
 /**
  * \ingroup sdmn

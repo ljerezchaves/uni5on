@@ -18,9 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "connection-info.h"
 #include <ns3/epc-gtpu-tag.h>
-#include "../epc/epc-controller.h"
+#include "connection-info.h"
 
 namespace ns3 {
 
