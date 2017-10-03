@@ -403,13 +403,19 @@ EpcController::NotifySgwAttach (Ptr<NetDevice> gwDev)
       rInfo->SetPriority (0xFF00);
       rInfo->SetPgwS5Addr (m_pgwS5Addr);
       rInfo->SetSgwS5Addr (EpcNetwork::GetIpv4Addr (gwDev));
+      TopologyBearerCreated (rInfo);
+
+      // Set the network slice for this bearer.
+      if (GetSlicingMode () == OperationMode::ON)
+        {
+          rInfo->SetSlice (Slice::MTC);
+        }
 
       // Set the traffic aggregation operation mode.
       Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
       aggInfo->SetOperationMode (OperationMode::ON);
 
       // Install the OpenFlow bearer rules after handshake procedures.
-      TopologyBearerCreated (rInfo);
       Simulator::Schedule (Seconds (0.5),
                            &EpcController::MtcAggBearerInstall, this, rInfo);
     }
@@ -679,6 +685,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
     {
       // Non-GBR packets are indicated by DSCP field DSCP_AF11 and DscpDefault.
       // Apply Non-GBR meter band. Send the packet to Output table.
+      // TODO Check this code.
 
       // DSCP_AF11 (DSCP decimal 10)
       DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
@@ -827,6 +834,19 @@ EpcController::DoCreateSessionRequest (
       rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
       rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
       TopologyBearerCreated (rInfo);
+
+      // Set the proper network slice for this bearer.
+      if (GetSlicingMode () == OperationMode::ON)
+        {
+          if (rInfo->IsMtc ())
+            {
+              rInfo->SetSlice (Slice::MTC);
+            }
+          else if (rInfo->IsGbr ())
+            {
+              rInfo->SetSlice (Slice::GBR);
+            }
+        }
 
       // Check for the proper traffic aggregation mode for this bearer.
       OperationMode mode;
