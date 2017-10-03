@@ -18,11 +18,10 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "routing-info.h"
-#include "s5-aggregation-info.h"
 #include "gbr-info.h"
 #include "meter-info.h"
-#include "../epc/epc-controller.h"
+#include "routing-info.h"
+#include "s5-aggregation-info.h"
 
 namespace ns3 {
 
@@ -53,9 +52,6 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerContext_t bearer, uint64_t imsi,
   // Set empty IPv4 addresses for gateways.
   m_sgwS5Addr = Ipv4Address ();
   m_pgwS5Addr = Ipv4Address ();
-
-  // Set the DiffServ DSCP value for this bearer.
-  m_dscp = EpcController::GetDscpValue (GetQciInfo ());
 
   // Register this routing information object.
   RegisterRoutingInfo (Ptr<RoutingInfo> (this));
@@ -242,6 +238,14 @@ RoutingInfo::SetBlocked (bool value, BlockReason reason)
 
   m_isBlocked = value;
   m_blockReason = reason;
+}
+
+void
+RoutingInfo::SetDscp (uint16_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_dscp = value;
 }
 
 void

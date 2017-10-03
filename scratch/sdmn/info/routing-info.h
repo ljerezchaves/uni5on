@@ -111,6 +111,7 @@ public:
 
   void SetActive (bool value);
   void SetBlocked (bool value, BlockReason reason = RoutingInfo::NOREASON);
+  void SetDscp (uint16_t value);
   void SetInstalled (bool value);
   void SetPgwS5Addr (Ipv4Address value);
   void SetPgwTftIdx (uint16_t value);
