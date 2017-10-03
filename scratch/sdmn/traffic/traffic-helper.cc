@@ -366,8 +366,7 @@ TrafficHelper::InstallGbrAutoPilot ()
 
   // Dedicated GBR EPS bearer (QCI 3).
   GbrQosInformation qos;
-  // FIXME Should I set the GBR value for MTC traffic? Depends on slicing.
-  // qos.gbrUl = 150000;  // ~146 Kbps
+  qos.gbrUl = 150000;  // ~146 Kbps
   EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
 
   cApp->SetTft (tft);
