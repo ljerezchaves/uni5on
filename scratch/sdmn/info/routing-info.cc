@@ -426,14 +426,12 @@ RoutingInfo::NotifyConstructionCompleted (void)
   // Create the S5 traffic aggregation metadata.
   CreateObject<S5AggregationInfo> (Ptr<RoutingInfo> (this));
 
-  // When necessary, create the GBR metadata.
-  if (IsGbr ())
+  // Create the GBR amd meter metadata, when necessary.
+  GbrQosInformation gbrQoS = GetQosInfo ();
+  if (gbrQoS.gbrDl || gbrQoS.gbrUl)
     {
       CreateObject<GbrInfo> (Ptr<RoutingInfo> (this));
     }
-
-  // When necessary, create the meter metadata.
-  GbrQosInformation gbrQoS = GetQosInfo ();
   if (gbrQoS.mbrDl || gbrQoS.mbrUl)
     {
       CreateObject<MeterInfo> (Ptr<RoutingInfo> (this));
