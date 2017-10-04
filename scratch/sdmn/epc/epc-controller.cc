@@ -197,7 +197,7 @@ EpcController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
   rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
   rInfo->SetBlocked (false);
 
-  // Update link bandwidth usage and threshold values.
+  // Update the link bandwidth usage and aggregation threshold values.
   aggInfo->SetLinkUsage (TopologyLinkUsage (rInfo));
   aggInfo->SetThreshold (rInfo->IsGbr () ? m_htcAggGbrThs : m_htcAggNonThs);
   if (rInfo->IsAggregated ())
@@ -1115,7 +1115,7 @@ EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeid ());
 
-  // Check for valid thresholds attributes.
+  // Check for valid P-GW TFT thresholds attributes.
   NS_ASSERT_MSG (m_tftSplitThs < m_tftBlockThs
                  && m_tftSplitThs > 2 * m_tftJoinThs,
                  "The split threshold should be smaller than the block "

@@ -239,6 +239,8 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
   // implementation, these bearers are always routed over the shortest path.
   if (!rInfo->IsGbr () || rInfo->IsAggregated () || ringInfo->IsLocalPath ())
     {
+      // FIXME Mesmo quando o tráfego tá agregado tem que ver se no slice dele
+      // vai ter banda sucificente.
       return true;
     }
 
