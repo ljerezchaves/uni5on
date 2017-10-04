@@ -273,7 +273,7 @@ HttpClient::SendRequest (Ptr<Socket> socket, std::string url)
 
   NotifyTx (packet->GetSize ());
   int bytes = socket->Send (packet);
-  if (bytes != (int)packet->GetSize ())
+  if (bytes != static_cast<int> (packet->GetSize ()))
     {
       NS_LOG_ERROR ("Not all bytes were copied to the socket buffer.");
     }

@@ -129,9 +129,11 @@ SdranController::NotifySgwAttach (
     {
       // Print MTC aggregation TEID and P-GW IPv4 address into tunnel metadata.
       Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (mtcTeid);
-      uint64_t tunnelId = (uint64_t)rInfo->GetPgwS5Addr ().Get () << 32;
-      tunnelId |= rInfo->GetTeid ();
+      uint64_t tunnelId;
       char tunnelIdStr [20];
+      tunnelId = static_cast<uint64_t> (rInfo->GetPgwS5Addr ().Get ());
+      tunnelId <<= 32;
+      tunnelId |= rInfo->GetTeid ();
       sprintf (tunnelIdStr, "0x%016lx", tunnelId);
 
       // Instal OpenFlow MTC aggregation rule.
@@ -432,9 +434,11 @@ SdranController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
   if (rInfo->HasDownlinkTraffic ())
     {
       // Print downlink TEID and destination IPv4 address into tunnel metadata.
-      uint64_t tunnelId = (uint64_t)enbInfo->GetEnbS1uAddr ().Get () << 32;
-      tunnelId |= rInfo->GetTeid ();
+      uint64_t tunnelId;
       char tunnelIdStr [20];
+      tunnelId = static_cast<uint64_t> (enbInfo->GetEnbS1uAddr ().Get ());
+      tunnelId <<= 32;
+      tunnelId |= rInfo->GetTeid ();
       sprintf (tunnelIdStr, "0x%016lx", tunnelId);
 
       // Build the dpctl command string.
@@ -501,9 +505,11 @@ SdranController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
   if (rInfo->HasUplinkTraffic () && !rInfo->IsAggregated ())
     {
       // Print uplink TEID and destination IPv4 address into tunnel metadata.
-      uint64_t tunnelId = (uint64_t)rInfo->GetPgwS5Addr ().Get () << 32;
-      tunnelId |= rInfo->GetTeid ();
+      uint64_t tunnelId;
       char tunnelIdStr [20];
+      tunnelId = static_cast<uint64_t> (rInfo->GetPgwS5Addr ().Get ());
+      tunnelId <<= 32;
+      tunnelId |= rInfo->GetTeid ();
       sprintf (tunnelIdStr, "0x%016lx", tunnelId);
 
       // Build the dpctl command string.

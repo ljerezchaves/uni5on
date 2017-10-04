@@ -135,7 +135,7 @@ VoipServer::SendPacket ()
   packet->AddHeader (seqTs);
 
   int bytes = m_socket->Send (packet);
-  if (bytes == (int)packet->GetSize ())
+  if (bytes == static_cast<int> (packet->GetSize ()))
     {
       NS_LOG_DEBUG ("Server TX " << bytes << " bytes with " <<
                     "sequence number " << seqTs.GetSeq ());

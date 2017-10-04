@@ -314,7 +314,7 @@ EpcController::NotifyPgwTftAttach (
   // considering all possible adaptive mechanism levels.
   for (uint16_t tft = m_tftSwitches; pgwTftCounter + 1 <= tft; tft /= 2)
     {
-      uint16_t lbLevel = (uint16_t)log2 (tft);
+      uint16_t lbLevel = static_cast<uint16_t> (log2 (tft));
       uint16_t ipMask = (1 << lbLevel) - 1;
       std::ostringstream cmd;
       cmd << "flow-mod cmd=add,prio=64,table=" << lbLevel + 1
@@ -522,7 +522,7 @@ EpcController::NotifyConstructionCompleted (void)
     {
     case OperationMode::ON:
       {
-        m_tftLevel = (uint8_t)log2 (m_tftSwitches);
+        m_tftLevel = static_cast<uint8_t> (log2 (m_tftSwitches));
         break;
       }
     case OperationMode::OFF:
@@ -990,9 +990,11 @@ EpcController::PgwRulesInstall (
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
 
   // Print downlink TEID and destination IPv4 address into tunnel metadata.
-  uint64_t tunnelId = (uint64_t)rInfo->GetSgwS5Addr ().Get () << 32;
-  tunnelId |= rInfo->GetTeid ();
+  uint64_t tunnelId;
   char tunnelIdStr [20];
+  tunnelId = static_cast<uint64_t> (rInfo->GetSgwS5Addr ().Get ());
+  tunnelId <<= 32;
+  tunnelId |= rInfo->GetTeid ();
   sprintf (tunnelIdStr, "0x%016lx", tunnelId);
 
   // Build the dpctl command string
@@ -1172,7 +1174,7 @@ EpcController::PgwTftCheckUsage (void)
 
   double maxEntries = 0.0, sumEntries = 0.0;
   double maxLoad = 0.0, sumLoad = 0.0;
-  uint32_t maxLbLevel = (uint8_t)log2 (m_tftSwitches);
+  uint32_t maxLbLevel = static_cast<uint32_t> (log2 (m_tftSwitches));
   uint16_t activeTfts = 1 << m_tftLevel;
   uint8_t nextLevel = m_tftLevel;
 

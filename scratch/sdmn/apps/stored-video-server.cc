@@ -302,7 +302,7 @@ StoredVideoServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
 
       NotifyTx (outPacket->GetSize () + m_pendingBytes);
       int bytes = socket->Send (outPacket);
-      if (bytes != (int)outPacket->GetSize ())
+      if (bytes != static_cast<int> (outPacket->GetSize ()))
         {
           NS_LOG_ERROR ("Not all bytes were copied to the socket buffer.");
         }
@@ -330,7 +330,7 @@ StoredVideoServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
 
       NotifyTx (outPacket->GetSize () + m_pendingBytes);
       int bytes = socket->Send (outPacket);
-      if (bytes != (int)outPacket->GetSize ())
+      if (bytes != static_cast<int> (outPacket->GetSize ()))
         {
           NS_LOG_ERROR ("Not all bytes were copied to the socket buffer.");
         }
