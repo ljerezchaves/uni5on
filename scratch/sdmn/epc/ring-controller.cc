@@ -487,18 +487,25 @@ RingController::GetPathUseRatio (uint16_t srcIdx, uint16_t dstIdx,
 {
   NS_LOG_FUNCTION (this << srcIdx << dstIdx << path);
 
-  uint64_t maxBitRate = std::numeric_limits<uint64_t>::max ();
   uint64_t useBitRate = 0;
+  uint64_t maxBitRate = std::numeric_limits<uint64_t>::max ();
+
+  uint16_t next;
+  DataRate bitRate;
+  Ptr<ConnectionInfo> cInfo;
+  ConnectionInfo::Direction dir;
   while (srcIdx != dstIdx)
     {
-      uint16_t next = NextSwitchIndex (srcIdx, path);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (srcIdx, next);
+      next = NextSwitchIndex (srcIdx, path);
+      cInfo = GetConnectionInfo (srcIdx, next);
+
       // FIXME Criar uma versao do GetEwmaThp que aceite os dpids direto.
-      // Essa função olha pro uso do enlace pra decidir se o tráfego pode ou
-      // não agregar. Ela deveria olhar para o enlace como um todo? ou apenas
-      // para o slice ao qual o tráfego pertence?
-      DataRate bitRate = cInfo->GetEwmaThp (
-          cInfo->GetDirection (GetDpId (srcIdx), GetDpId (next)));
+      dir = cInfo->GetDirection (GetDpId (srcIdx), GetDpId (next));
+
+      // FIXME Essa função olha pro uso do enlace pra decidir se o tráfego pode
+      // ou não agregar. Ela deveria olhar para o enlace como um todo? ou
+      // apenas para o slice ao qual o tráfego pertence?
+      bitRate = cInfo->GetEwmaThp (dir);
       useBitRate = std::max (useBitRate, bitRate.GetBitRate ());
       maxBitRate = std::min (maxBitRate, cInfo->GetLinkBitRate ());
       srcIdx = next;
@@ -543,14 +550,17 @@ RingController::HasGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
 {
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo << slice);
 
+  uint16_t next;
+  uint64_t currId;
+  uint64_t nextId;
   bool success = true;
   Ptr<ConnectionInfo> cInfo;
   uint16_t curr = ringInfo->GetPgwSwIdx ();
   while (success && curr != ringInfo->GetSgwSwIdx ())
     {
-      uint16_t next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
-      uint64_t currId = GetDpId (curr);
-      uint64_t nextId = GetDpId (next);
+      next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
+      currId = GetDpId (curr);
+      nextId = GetDpId (next);
 
       cInfo = GetConnectionInfo (curr, next);
       success &= cInfo->HasGbrBitRate (currId, nextId, slice,
@@ -645,14 +655,18 @@ RingController::ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
   NS_LOG_INFO ("Releasing resources for GBR bearer.");
+
+  uint16_t next;
+  uint64_t currId;
+  uint64_t nextId;
   bool success = true;
   Ptr<ConnectionInfo> cInfo;
   uint16_t curr = ringInfo->GetPgwSwIdx ();
   while (success && curr != ringInfo->GetSgwSwIdx ())
     {
-      uint16_t next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
-      uint64_t currId = GetDpId (curr);
-      uint64_t nextId = GetDpId (next);
+      next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
+      currId = GetDpId (curr);
+      nextId = GetDpId (next);
 
       cInfo = GetConnectionInfo (curr, next);
       success &= cInfo->ReleaseGbrBitRate (currId, nextId, slice,
@@ -673,14 +687,18 @@ RingController::ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
   NS_LOG_INFO ("Reserving resources for GBR bearer.");
+
+  uint16_t next;
+  uint64_t currId;
+  uint64_t nextId;
   bool success = true;
   Ptr<ConnectionInfo> cInfo;
   uint16_t curr = ringInfo->GetPgwSwIdx ();
   while (success && curr != ringInfo->GetSgwSwIdx ())
     {
-      uint16_t next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
-      uint64_t currId = GetDpId (curr);
-      uint64_t nextId = GetDpId (next);
+      next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
+      currId = GetDpId (curr);
+      nextId = GetDpId (next);
 
       cInfo = GetConnectionInfo (curr, next);
       success &= cInfo->ReserveGbrBitRate (currId, nextId, slice,
