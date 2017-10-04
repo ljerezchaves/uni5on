@@ -133,13 +133,14 @@ private:
   uint16_t GetSwitchIndex (Ptr<OFSwitch13Device> dev) const;
 
   /**
-   * Check for the available GBR bit rate for this ring routing information.
+   * Check for the available GBR bit rate.
    * \param ringInfo The ring routing information.
    * \param gbrInfo The GBR information.
+   * \param slice The network slice.
    * \return True if there's available GBR bit rate, false otherwise.
    */
   bool HasGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                      Ptr<const GbrInfo> gbrInfo) const;
+                      Ptr<const GbrInfo> gbrInfo, Slice slice) const;
 
   /**
    * Count the number of hops between source and destination switch index
@@ -173,10 +174,11 @@ private:
    * Release the bit rate for this GBR bearer in the ring network.
    * \param ringInfo The ring routing information.
    * \param gbrInfo The GBR information.
+   * \param slice The network slice.
    * \return True if succeeded, false otherwise.
    */
   bool ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                          Ptr<GbrInfo> gbrInfo);
+                          Ptr<GbrInfo> gbrInfo, Slice slice);
 
   /**
    * Reserve the bit rate for this GBR bearer in the ring network.
@@ -184,10 +186,11 @@ private:
    *            bit rate over the routing path before reserving it.
    * \param ringInfo The ring routing information.
    * \param gbrInfo The GBR information.
+   * \param slice The network slice.
    * \return True if succeeded, false otherwise.
    */
   bool ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                          Ptr<GbrInfo> gbrInfo);
+                          Ptr<GbrInfo> gbrInfo, Slice slice);
 
   /** Map saving IPv4 address / switch index. */
   typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;

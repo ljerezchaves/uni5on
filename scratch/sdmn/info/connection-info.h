@@ -159,35 +159,37 @@ public:
   ConnectionInfo::Direction GetDirection (uint64_t src, uint64_t dst) const;
 
   /**
-   * Check for available GBR bit rate between these two switches that can be
-   * reserved by GRB bearers.
+   * Check for available GBR bit rate between these two switches.
    * \param src The source switch datapath ID.
    * \param dst The destination switch datapath ID.
+   * \param slice The network slice.
    * \param bitRate The bit rate to check.
    * \return True if there's available GBR bit rate, false otherwise.
    */
-  // FIXME Should be generic for any slice.
-  bool HasGbrBitRate (uint64_t src, uint64_t dst, uint64_t bitRate) const;
+  bool HasGbrBitRate (uint64_t src, uint64_t dst, Slice slice,
+                      uint64_t bitRate) const;
 
   /**
    * Reserve some bandwidth between these two switches.
    * \param src The source switch datapath ID.
    * \param dst The destination switch datapath ID.
+   * \param slice The network slice.
    * \param bitRate The bit rate to reserve.
    * \return True if succeeded, false otherwise.
    */
-  // FIXME Should be generic for any slice.
-  bool ReserveGbrBitRate (uint64_t src, uint64_t dst, uint64_t bitRate);
+  bool ReserveGbrBitRate (uint64_t src, uint64_t dst, Slice slice,
+                          uint64_t bitRate);
 
   /**
    * Release some bandwidth between these two switches.
    * \param src The source switch datapath ID.
    * \param dst The destination switch datapath ID.
+   * \param slice The network slice.
    * \param bitRate The bit rate to release.
    * \return True if succeeded, false otherwise.
    */
-  // FIXME Should be generic for any slice.
-  bool ReleaseGbrBitRate (uint64_t src, uint64_t dst, uint64_t bitRate);
+  bool ReleaseGbrBitRate (uint64_t src, uint64_t dst, Slice slice,
+                          uint64_t bitRate);
 
   /**
    * Get the connection information from the global map for a pair of OpenFlow

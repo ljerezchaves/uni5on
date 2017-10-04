@@ -213,7 +213,7 @@ RingController::TopologyBearerRelease (Ptr<RoutingInfo> rInfo)
       Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
       NS_ASSERT_MSG (ringInfo, "No ringInfo for bearer release.");
       NS_LOG_INFO ("Releasing resources for bearer " << rInfo->GetTeid ());
-      ReleaseGbrBitRate (ringInfo, gbrInfo);
+      ReleaseGbrBitRate (ringInfo, gbrInfo, rInfo->GetSlice ());
     }
   return true;
 }
@@ -223,49 +223,48 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  // Always reset the ring routing info to the shortest path.
-  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  ringInfo->ResetPath ();
-
   // If the bearer is already blocked, there's nothing more to do.
   if (rInfo->IsBlocked ())
     {
       return false;
     }
 
-  // For Non-GBR bearers (which includes the default bearer), for bearers with
-  // aggregated traffic, and for bearers that only transverse local switch
-  // (local routing): let's accept it without guarantees. Note that in current
-  // implementation, these bearers are always routed over the shortest path.
-  if (!rInfo->IsGbr () || rInfo->IsAggregated () || ringInfo->IsLocalPath ())
+  // Reset the ring routing info to the shortest path.
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  ringInfo->ResetPath ();
+
+  // For Non-GBR bearers (which includes the default bearer), and for bearers
+  // that only transverse local switch (local routing): let's accept it without
+  // guarantees. Note that in current implementation, these bearers are always
+  // routed over the shortest path.
+  if (!rInfo->IsGbr () || ringInfo->IsLocalPath ())
     {
-      // FIXME Mesmo quando o tráfego tá agregado tem que ver se no slice dele
-      // vai ter banda sucificente.
       return true;
     }
 
+  // It only makes sense to check and reserve bandwidth for GBR bearers.
   Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
   NS_ASSERT_MSG (gbrInfo, "Invalid configuration for GBR bearer request.");
 
-  // Check if it possible to route this traffic over the shortest path.
-  if (HasGbrBitRate (ringInfo, gbrInfo))
+  // Check for the requested bit rate over the shortest path.
+  if (HasGbrBitRate (ringInfo, gbrInfo, rInfo->GetSlice ()))
     {
       NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeid () <<
                    " over the shortest path");
-      return ReserveGbrBitRate (ringInfo, gbrInfo);
+      return ReserveGbrBitRate (ringInfo, gbrInfo, rInfo->GetSlice ());
     }
 
-  // This traffic can't be routed over the shortest path. When using the SPF
-  // routing strategy, invert the routing path and check for available GBR bit
-  // rate over the longest path.
+  // The requested bit rate is not available over the shortest path. When
+  // using the SPF routing strategy, invert the routing path and check for the
+  // requested bit rate over the longest path.
   if (m_strategy == RingController::SPF)
     {
       ringInfo->InvertPath ();
-      if (HasGbrBitRate (ringInfo, gbrInfo))
+      if (HasGbrBitRate (ringInfo, gbrInfo, rInfo->GetSlice ()))
         {
           NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeid () <<
                        " over the longest (inverted) path");
-          return ReserveGbrBitRate (ringInfo, gbrInfo);
+          return ReserveGbrBitRate (ringInfo, gbrInfo, rInfo->GetSlice ());
         }
     }
 
@@ -540,23 +539,24 @@ RingController::GetSwitchIndex (Ptr<OFSwitch13Device> dev) const
 
 bool
 RingController::HasGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                               Ptr<const GbrInfo> gbrInfo) const
+                               Ptr<const GbrInfo> gbrInfo, Slice slice) const
 {
-  NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
+  NS_LOG_FUNCTION (this << ringInfo << gbrInfo << slice);
 
-  // TODO: Como eu vou montar um esquema genérico de slices, talvez o melhor é
-  // fazer uma função genérica que verifique uma determinada banda em um
-  // determinado slice.
   bool success = true;
+  Ptr<ConnectionInfo> cInfo;
   uint16_t curr = ringInfo->GetPgwSwIdx ();
   while (success && curr != ringInfo->GetSgwSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
-      success &= cInfo->HasGbrBitRate (
-          GetDpId (curr), GetDpId (next), gbrInfo->GetDownBitRate ());
-      success &= cInfo->HasGbrBitRate (
-          GetDpId (next), GetDpId (curr), gbrInfo->GetUpBitRate ());
+      uint64_t currId = GetDpId (curr);
+      uint64_t nextId = GetDpId (next);
+
+      cInfo = GetConnectionInfo (curr, next);
+      success &= cInfo->HasGbrBitRate (currId, nextId, slice,
+                                       gbrInfo->GetDownBitRate ());
+      success &= cInfo->HasGbrBitRate (nextId, currId, slice,
+                                       gbrInfo->GetUpBitRate ());
       curr = next;
     }
   return success;
@@ -640,22 +640,25 @@ RingController::NonGbrAdjusted (Ptr<const ConnectionInfo> cInfo)
 
 bool
 RingController::ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                                   Ptr<GbrInfo> gbrInfo)
+                                   Ptr<GbrInfo> gbrInfo, Slice slice)
 {
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
-  // TODO: Adaptar para reservar banda em qualquer slice.
   NS_LOG_INFO ("Releasing resources for GBR bearer.");
   bool success = true;
+  Ptr<ConnectionInfo> cInfo;
   uint16_t curr = ringInfo->GetPgwSwIdx ();
   while (success && curr != ringInfo->GetSgwSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
-      success &= cInfo->ReleaseGbrBitRate (
-          GetDpId (curr), GetDpId (next), gbrInfo->GetDownBitRate ());
-      success &= cInfo->ReleaseGbrBitRate (
-          GetDpId (next), GetDpId (curr), gbrInfo->GetUpBitRate ());
+      uint64_t currId = GetDpId (curr);
+      uint64_t nextId = GetDpId (next);
+
+      cInfo = GetConnectionInfo (curr, next);
+      success &= cInfo->ReleaseGbrBitRate (currId, nextId, slice,
+                                           gbrInfo->GetDownBitRate ());
+      success &= cInfo->ReleaseGbrBitRate (nextId, currId, slice,
+                                           gbrInfo->GetUpBitRate ());
       curr = next;
     }
   NS_ASSERT_MSG (success, "Error when releasing resources.");
@@ -665,22 +668,25 @@ RingController::ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
 
 bool
 RingController::ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                                   Ptr<GbrInfo> gbrInfo)
+                                   Ptr<GbrInfo> gbrInfo, Slice slice)
 {
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
-  // TODO: Adaptar para liberar banda em qualquer slice.
   NS_LOG_INFO ("Reserving resources for GBR bearer.");
   bool success = true;
+  Ptr<ConnectionInfo> cInfo;
   uint16_t curr = ringInfo->GetPgwSwIdx ();
   while (success && curr != ringInfo->GetSgwSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
-      success &= cInfo->ReserveGbrBitRate (
-          GetDpId (curr), GetDpId (next), gbrInfo->GetDownBitRate ());
-      success &= cInfo->ReserveGbrBitRate (
-          GetDpId (next), GetDpId (curr), gbrInfo->GetUpBitRate ());
+      uint64_t currId = GetDpId (curr);
+      uint64_t nextId = GetDpId (next);
+
+      cInfo = GetConnectionInfo (curr, next);
+      success &= cInfo->ReserveGbrBitRate (currId, nextId, slice,
+                                           gbrInfo->GetDownBitRate ());
+      success &= cInfo->ReserveGbrBitRate (nextId, currId, slice,
+                                           gbrInfo->GetUpBitRate ());
       curr = next;
     }
   NS_ASSERT_MSG (success, "Error when reserving resources.");

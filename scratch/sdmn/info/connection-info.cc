@@ -288,20 +288,26 @@ ConnectionInfo::GetDirection (uint64_t src, uint64_t dst) const
 }
 
 bool
-ConnectionInfo::HasGbrBitRate (uint64_t src, uint64_t dst,
+ConnectionInfo::HasGbrBitRate (uint64_t src, uint64_t dst, Slice slice,
                                uint64_t bitRate) const
 {
-  NS_LOG_FUNCTION (this << src << dst << bitRate);
+  NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
+
+  // FIXME Currently only GBR slice is supported.
+  NS_ASSERT (slice == Slice::GBR);
 
   ConnectionInfo::Direction dir = GetDirection (src, dst);
   return !(GetResGbrBitRate (dir) + bitRate > m_gbrMaxBitRate);
 }
 
 bool
-ConnectionInfo::ReserveGbrBitRate (uint64_t src, uint64_t dst,
+ConnectionInfo::ReserveGbrBitRate (uint64_t src, uint64_t dst, Slice slice,
                                    uint64_t bitRate)
 {
-  NS_LOG_FUNCTION (this << src << dst << bitRate);
+  NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
+
+  // FIXME Currently only GBR slice is supported.
+  NS_ASSERT (slice == Slice::GBR);
 
   ConnectionInfo::Direction dir = GetDirection (src, dst);
   bool reserved = IncResGbrBitRate (dir, bitRate);
@@ -329,10 +335,13 @@ ConnectionInfo::ReserveGbrBitRate (uint64_t src, uint64_t dst,
 }
 
 bool
-ConnectionInfo::ReleaseGbrBitRate (uint64_t src, uint64_t dst,
+ConnectionInfo::ReleaseGbrBitRate (uint64_t src, uint64_t dst, Slice slice,
                                    uint64_t bitRate)
 {
-  NS_LOG_FUNCTION (this << src << dst << bitRate);
+  NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
+
+  // FIXME Currently only GBR slice is supported.
+  NS_ASSERT (slice == Slice::GBR);
 
   ConnectionInfo::Direction dir = GetDirection (src, dst);
   bool released = DecResGbrBitRate (dir, bitRate);
