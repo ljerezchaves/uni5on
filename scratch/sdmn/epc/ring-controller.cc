@@ -154,19 +154,16 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
   if (GetSlicingMode () == OperationMode::ON)
     {
       // Connecting this controller to ConnectionInfo trace source
-      // when the GBR slicing mechanism is enable.
-      // TODO Essa callback é a que atualiza os meters do slice padrão.
-      // Provavelmente o nome dela vai ser modificado.
+      // when the network slicing mechanism is enable.
       cInfo->TraceConnectWithoutContext (
-        "NonGbrAdjusted", MakeCallback (
-          &RingController::NonGbrAdjusted, this));
+        "MeterAdjusted", MakeCallback (
+          &RingController::MeterAdjusted, this));
 
       // Meter flags OFPMF_KBPS.
       std::string flagsStr ("0x0001");
 
       // Non-GBR meter for clockwise direction.
-      // TODO Trocar o nome função para pegar o valor máximo do slice padrão.
-      kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::FWD) / 1000;
+      kbps = cInfo->GetMeterBitRate (ConnectionInfo::FWD) / 1000;
       cmd02 << "meter-mod cmd=add"
             << ",flags=" << flagsStr
             << ",meter=" << RingRoutingInfo::CLOCK
@@ -174,7 +171,7 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
       DpctlSchedule (cInfo->GetSwDpId (0), cmd02.str ());
 
       // Non-GBR meter for counterclockwise direction.
-      kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::BWD) / 1000;
+      kbps = cInfo->GetMeterBitRate (ConnectionInfo::BWD) / 1000;
       cmd12 << "meter-mod cmd=add"
             << ",flags=" << flagsStr
             << ",meter=" << RingRoutingInfo::COUNTER
@@ -493,19 +490,16 @@ RingController::GetPathUseRatio (uint16_t srcIdx, uint16_t dstIdx,
   uint16_t next;
   DataRate bitRate;
   Ptr<ConnectionInfo> cInfo;
-  ConnectionInfo::Direction dir;
   while (srcIdx != dstIdx)
     {
       next = NextSwitchIndex (srcIdx, path);
       cInfo = GetConnectionInfo (srcIdx, next);
 
-      // FIXME Criar uma versao do GetEwmaThp que aceite os dpids direto.
-      dir = cInfo->GetDirection (GetDpId (srcIdx), GetDpId (next));
-
       // FIXME Essa função olha pro uso do enlace pra decidir se o tráfego pode
       // ou não agregar. Ela deveria olhar para o enlace como um todo? ou
-      // apenas para o slice ao qual o tráfego pertence?
-      bitRate = cInfo->GetEwmaThp (dir);
+      // apenas para o slice ao qual o tráfego pertence? A função GetEwmaThp
+      // pode aceitar como último parametro o slice.
+      bitRate = cInfo->GetEwmaThp (GetDpId (srcIdx), GetDpId (next));
       useBitRate = std::max (useBitRate, bitRate.GetBitRate ());
       maxBitRate = std::min (maxBitRate, cInfo->GetLinkBitRate ());
       srcIdx = next;
@@ -563,10 +557,10 @@ RingController::HasGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
       nextId = GetDpId (next);
 
       cInfo = GetConnectionInfo (curr, next);
-      success &= cInfo->HasGbrBitRate (currId, nextId, slice,
-                                       gbrInfo->GetDownBitRate ());
-      success &= cInfo->HasGbrBitRate (nextId, currId, slice,
-                                       gbrInfo->GetUpBitRate ());
+      success &= cInfo->HasBitRate (currId, nextId, slice,
+                                    gbrInfo->GetDownBitRate ());
+      success &= cInfo->HasBitRate (nextId, currId, slice,
+                                    gbrInfo->GetUpBitRate ());
       curr = next;
     }
   return success;
@@ -601,6 +595,34 @@ RingController::HopCounter (uint16_t srcIdx, uint16_t dstIdx,
   return distance;
 }
 
+void
+RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo)
+{
+  NS_LOG_FUNCTION (this << cInfo);
+
+  std::ostringstream cmd1, cmd2;
+  uint64_t kbps = 0;
+
+  // Meter flags OFPMF_KBPS.
+  std::string flagsStr ("0x0001");
+
+  // Update the meter for clockwise direction.
+  kbps = cInfo->GetMeterBitRate (ConnectionInfo::FWD) / 1000;
+  cmd1 << "meter-mod cmd=mod"
+       << ",flags=" << flagsStr
+       << ",meter=" << RingRoutingInfo::CLOCK
+       << " drop:rate=" << kbps;
+  DpctlExecute (cInfo->GetSwDpId (0), cmd1.str ());
+
+  // Update the meter for counterclockwise direction.
+  kbps = cInfo->GetMeterBitRate (ConnectionInfo::BWD) / 1000;
+  cmd2 << "meter-mod cmd=mod"
+       << ",flags=" << flagsStr
+       << ",meter=" << RingRoutingInfo::COUNTER
+       << " drop:rate=" << kbps;
+  DpctlExecute (cInfo->GetSwDpId (1), cmd2.str ());
+}
+
 uint16_t
 RingController::NextSwitchIndex (uint16_t idx,
                                  RingRoutingInfo::RoutingPath path) const
@@ -613,39 +635,6 @@ RingController::NextSwitchIndex (uint16_t idx,
   return path == RingRoutingInfo::CLOCK ?
          (idx + 1) % GetNSwitches () :
          (idx == 0 ? GetNSwitches () - 1 : (idx - 1));
-}
-
-void
-RingController::NonGbrAdjusted (Ptr<const ConnectionInfo> cInfo)
-{
-  NS_LOG_FUNCTION (this << cInfo);
-
-  std::ostringstream cmd1, cmd2;
-  uint64_t kbps = 0;
-
-  // Meter flags OFPMF_KBPS.
-  std::string flagsStr ("0x0001");
-
-  // TODO: Essa é a função que atualiza o meter do slice padrão. Será que
-  // termos meters para outros slices? Se tiver, essa função poderia ser
-  // genérica. Mas acho que dá pra simplificar mantendo apenas o slice padrão
-  // com meters e garantindo que os tráfegos direcionados aos outros slices não
-  // excedam a capacidade reservada.
-  // Update Non-GBR meter for clockwise direction.
-  kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::FWD) / 1000;
-  cmd1 << "meter-mod cmd=mod"
-       << ",flags=" << flagsStr
-       << ",meter=" << RingRoutingInfo::CLOCK
-       << " drop:rate=" << kbps;
-  DpctlExecute (cInfo->GetSwDpId (0), cmd1.str ());
-
-  // Update Non-GBR meter for counterclockwise direction.
-  kbps = cInfo->GetResNonGbrBitRate (ConnectionInfo::BWD) / 1000;
-  cmd2 << "meter-mod cmd=mod"
-       << ",flags=" << flagsStr
-       << ",meter=" << RingRoutingInfo::COUNTER
-       << " drop:rate=" << kbps;
-  DpctlExecute (cInfo->GetSwDpId (1), cmd2.str ());
 }
 
 bool
@@ -669,10 +658,10 @@ RingController::ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
       nextId = GetDpId (next);
 
       cInfo = GetConnectionInfo (curr, next);
-      success &= cInfo->ReleaseGbrBitRate (currId, nextId, slice,
-                                           gbrInfo->GetDownBitRate ());
-      success &= cInfo->ReleaseGbrBitRate (nextId, currId, slice,
-                                           gbrInfo->GetUpBitRate ());
+      success &= cInfo->ReleaseBitRate (currId, nextId, slice,
+                                        gbrInfo->GetDownBitRate ());
+      success &= cInfo->ReleaseBitRate (nextId, currId, slice,
+                                        gbrInfo->GetUpBitRate ());
       curr = next;
     }
   NS_ASSERT_MSG (success, "Error when releasing resources.");
@@ -701,10 +690,10 @@ RingController::ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
       nextId = GetDpId (next);
 
       cInfo = GetConnectionInfo (curr, next);
-      success &= cInfo->ReserveGbrBitRate (currId, nextId, slice,
-                                           gbrInfo->GetDownBitRate ());
-      success &= cInfo->ReserveGbrBitRate (nextId, currId, slice,
-                                           gbrInfo->GetUpBitRate ());
+      success &= cInfo->ReserveBitRate (currId, nextId, slice,
+                                        gbrInfo->GetDownBitRate ());
+      success &= cInfo->ReserveBitRate (nextId, currId, slice,
+                                        gbrInfo->GetUpBitRate ());
       curr = next;
     }
   NS_ASSERT_MSG (success, "Error when reserving resources.");

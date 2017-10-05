@@ -154,6 +154,14 @@ private:
                        RingRoutingInfo::RoutingPath path) const;
 
   /**
+   * Notify this controller when the the maximum bit rate for best-effort
+   * traffic in any network connection is adjusted. This is used to update
+   * meters bands based on slicing resource reservation.
+   * \param cInfo The connection information
+   */
+  void MeterAdjusted (Ptr<const ConnectionInfo> cInfo);
+
+  /**
    * Get the next switch index following the given routing path.
    * \param idx Current switch index.
    * \param path The routing path direction.
@@ -161,14 +169,6 @@ private:
    */
   uint16_t NextSwitchIndex (uint16_t idx,
                             RingRoutingInfo::RoutingPath path) const;
-
-  /**
-   * Notify this controller when the Non-GBR allowed bit rate in any network
-   * connection is adjusted. This is used to update Non-GBR meters bands based
-   * on GBR resource reservation.
-   * \param cInfo The connection information
-   */
-  void NonGbrAdjusted (Ptr<const ConnectionInfo> cInfo);
 
   /**
    * Release the bit rate for this GBR bearer in the ring network.

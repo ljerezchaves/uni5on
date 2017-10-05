@@ -31,10 +31,11 @@ ConnectionInfo::ConnInfoMap_t ConnectionInfo::m_connectionsMap;
 ConnInfoList_t ConnectionInfo::m_connectionsList;
 
 ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
-                                Ptr<CsmaChannel> channel)
-  : m_channel (channel)
+                                Ptr<CsmaChannel> channel, bool slicing)
+  : m_channel (channel),
+    m_slicing (slicing)
 {
-  NS_LOG_FUNCTION (this << sw1.swDev << sw2.swDev << channel);
+  NS_LOG_FUNCTION (this << sw1.swDev << sw2.swDev << channel << slicing);
 
   m_switches [0] = sw1;
   m_switches [1] = sw2;
@@ -54,25 +55,10 @@ ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
     "PhyTxEnd", "Backward",
     MakeCallback (&ConnectionInfo::NotifyTxPacket, this));
 
-  m_gbrBitRate [0] = 0;
-  m_gbrBitRate [1] = 0;
-  m_nonBitRate [0] = 0;
-  m_nonBitRate [1] = 0;
-  m_gbrTxBytes [0] = 0;
-  m_gbrTxBytes [1] = 0;
-  m_nonTxBytes [0] = 0;
-  m_nonTxBytes [1] = 0;
-  m_gbrAvgThpt [0] = 0;
-  m_gbrAvgThpt [1] = 0;
-  m_nonAvgThpt [0] = 0;
-  m_nonAvgThpt [1] = 0;
-  m_gbrAvgLast [0] = 0;
-  m_gbrAvgLast [1] = 0;
-  m_nonAvgLast [0] = 0;
-  m_nonAvgLast [1] = 0;
-
-  // Erasing slice metadata information.
+  // Preparing slicing metadata structures.
   memset (m_slices, 0, sizeof (SliceData) * static_cast<uint8_t> (Slice::ALL));
+  m_meterBitRate [0] = 0;
+  m_meterBitRate [1] = 0;
 
   RegisterConnectionInfo (Ptr<ConnectionInfo> (this));
 }
@@ -87,53 +73,43 @@ ConnectionInfo::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::ConnectionInfo")
     .SetParent<Object> ()
+    .AddAttribute ("AdjustmentStep",
+                   "Default meter bit rate adjustment step.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   DataRateValue (DataRate ("5Mb/s")),
+                   MakeDataRateAccessor (&ConnectionInfo::m_adjustmentStep),
+                   MakeDataRateChecker ())
     .AddAttribute ("EwmaAlpha",
                    "The EWMA alpha parameter for averaging link statistics.",
                    DoubleValue (0.25),
                    MakeDoubleAccessor (&ConnectionInfo::m_alpha),
                    MakeDoubleChecker<double> (0.0, 1.0))
-    .AddAttribute ("GbrLinkQuota",
-                   "Maximum bandwitdth ratio that can be reserved to GBR "
-                   "traffic in this connection.",
+    .AddAttribute ("GbrSliceQuota",
+                   "Maximum bandwidth ratio for GBR slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DoubleValue (0.4),
-                   MakeDoubleAccessor (&ConnectionInfo::SetGbrLinkQuota),
+                   DoubleValue (0.35),
+                   MakeDoubleAccessor (&ConnectionInfo::m_gbrSliceQuota),
                    MakeDoubleChecker<double> (0.0, 0.5))
-    .AddAttribute ("GbrSafeguard",
-                   "Safeguard bandwidth to protect GBR from Non-GBR traffic.",
+    .AddAttribute ("MtcSliceQuota",
+                   "Maximum bandwidth ratio for MTC slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("5Mb/s")),
-                   MakeDataRateAccessor (&ConnectionInfo::SetGbrSafeguard),
-                   MakeDataRateChecker ())
-    .AddAttribute ("NonGbrAdjustmentStep",
-                   "Step value used to adjust the bandwidth that "
-                   "Non-GBR traffic is allowed to use.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("5Mb/s")),
-                   MakeDataRateAccessor (&ConnectionInfo::SetNonGbrAdjustStep),
-                   MakeDataRateChecker ())
+                   DoubleValue (0.125),
+                   MakeDoubleAccessor (&ConnectionInfo::m_mtcSliceQuota),
+                   MakeDoubleChecker<double> (0.0, 0.5))
     .AddAttribute ("UpdateTimeout",
-                   "The interval to update link statistics.",
+                   "The interval between subsequent link statistics update.",
                    TimeValue (MilliSeconds (100)),
                    MakeTimeAccessor (&ConnectionInfo::m_timeout),
                    MakeTimeChecker ())
 
-    // Trace source used by controller to install/update Non-GBR meters
-    .AddTraceSource ("NonGbrAdjusted",
-                     "Non-GBR allowed bit rate adjusted.",
+    // Trace source used by controller to install/update slicing meters.
+    .AddTraceSource ("MeterAdjusted",
+                     "Default meter bit rate adjusted.",
                      MakeTraceSourceAccessor (
-                       &ConnectionInfo::m_nonAdjustedTrace),
+                       &ConnectionInfo::m_meterAdjustedTrace),
                      "ns3::ConnectionInfo::CInfoTracedCallback")
   ;
   return tid;
-}
-
-DpIdPair_t
-ConnectionInfo::GetSwitchDpIdPair (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return DpIdPair_t (GetSwDpId (0), GetSwDpId (1));
 }
 
 uint32_t
@@ -181,94 +157,6 @@ ConnectionInfo::GetPortMacAddr (uint8_t idx) const
   return Mac48Address::ConvertFrom (GetPortDev (idx)->GetAddress ());
 }
 
-uint64_t
-ConnectionInfo::GetGbrTxBytes (Direction dir) const
-{
-  NS_LOG_FUNCTION (this << dir);
-
-  return m_gbrTxBytes [dir];
-}
-
-uint64_t
-ConnectionInfo::GetNonGbrTxBytes (Direction dir) const
-{
-  NS_LOG_FUNCTION (this << dir);
-
-  return m_nonTxBytes [dir];
-}
-
-DataRate
-ConnectionInfo::GetGbrEwmaThp (Direction dir) const
-{
-  NS_LOG_FUNCTION (this << dir);
-
-  return m_gbrAvgThpt [dir];
-}
-
-DataRate
-ConnectionInfo::GetNonGbrEwmaThp (Direction dir) const
-{
-  NS_LOG_FUNCTION (this << dir);
-
-  return m_nonAvgThpt [dir];
-}
-
-DataRate
-ConnectionInfo::GetEwmaThp (Direction dir) const
-{
-  NS_LOG_FUNCTION (this << dir);
-
-  return m_nonAvgThpt [dir] + m_gbrAvgThpt [dir];
-}
-
-uint64_t
-ConnectionInfo::GetResGbrBitRate (Direction dir) const
-{
-  NS_LOG_FUNCTION (this << dir);
-
-  return m_gbrBitRate [dir];
-}
-
-uint64_t
-ConnectionInfo::GetResNonGbrBitRate (Direction dir) const
-{
-  NS_LOG_FUNCTION (this << dir);
-
-  return m_nonBitRate [dir];
-}
-
-double
-ConnectionInfo::GetResGbrLinkRatio (Direction dir) const
-{
-  NS_LOG_FUNCTION (this << dir);
-
-  return static_cast<double> (GetResGbrBitRate (dir)) / GetLinkBitRate ();
-}
-
-double
-ConnectionInfo::GetResNonGbrLinkRatio (Direction dir) const
-{
-  NS_LOG_FUNCTION (this << dir);
-
-  return static_cast<double> (GetResNonGbrBitRate (dir)) / GetLinkBitRate ();
-}
-
-bool
-ConnectionInfo::IsFullDuplexLink (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_channel->IsFullDuplex ();
-}
-
-uint64_t
-ConnectionInfo::GetLinkBitRate (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_channel->GetDataRate ().GetBitRate ();
-}
-
 ConnectionInfo::Direction
 ConnectionInfo::GetDirection (uint64_t src, uint64_t dst) const
 {
@@ -282,90 +170,230 @@ ConnectionInfo::GetDirection (uint64_t src, uint64_t dst) const
       return ConnectionInfo::BWD;
     }
 
-  // For half-duplex channel always return true, as we will
+  // For half-duplex channel always return FWD, as we will
   // only use the forwarding path for resource reservations.
   return ConnectionInfo::FWD;
 }
 
-bool
-ConnectionInfo::HasGbrBitRate (uint64_t src, uint64_t dst, Slice slice,
-                               uint64_t bitRate) const
+DataRate
+ConnectionInfo::GetEwmaThp (uint64_t src, uint64_t dst, Slice slice) const
 {
-  NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
+  NS_LOG_FUNCTION (this << src << dst << slice);
 
-  // FIXME Currently only GBR slice is supported.
-  NS_ASSERT (slice == Slice::GBR);
-
+  double throughput = 0;
   ConnectionInfo::Direction dir = GetDirection (src, dst);
-  return !(GetResGbrBitRate (dir) + bitRate > m_gbrMaxBitRate);
+  if (slice >= Slice::ALL)
+    {
+      for (int i = 0; i < Slice::ALL; i++)
+        {
+          throughput += m_slices [i].m_ewmaThp [dir];
+        }
+    }
+  else
+    {
+      throughput = m_slices [slice].m_ewmaThp [dir];
+    }
+  return DataRate (static_cast<uint64_t> (throughput));
+}
+
+uint64_t
+ConnectionInfo::GetLinkBitRate (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_channel->GetDataRate ().GetBitRate ();
+}
+
+uint64_t
+ConnectionInfo::GetMaxBitRate (Slice slice) const
+{
+  NS_LOG_FUNCTION (this << slice);
+
+  uint64_t bitrate = 0;
+  if (slice >= Slice::ALL)
+    {
+      bitrate = GetLinkBitRate ();
+    }
+  else
+    {
+      bitrate = m_slices [slice].m_maxRate;
+    }
+  return bitrate;
+}
+
+uint64_t
+ConnectionInfo::GetMeterBitRate (Direction dir) const
+{
+  NS_LOG_FUNCTION (this << dir);
+
+  return m_meterBitRate [dir];
+}
+
+uint64_t
+ConnectionInfo::GetResBitRate (Direction dir, Slice slice) const
+{
+  NS_LOG_FUNCTION (this << dir << slice);
+
+  uint64_t bitrate = 0;
+  if (slice >= Slice::ALL)
+    {
+      for (int i = 0; i < Slice::ALL; i++)
+        {
+          bitrate += m_slices [i].m_resRate [dir];
+        }
+    }
+  else
+    {
+      bitrate = m_slices [slice].m_resRate [dir];
+    }
+  return bitrate;
+}
+
+double
+ConnectionInfo::GetResLinkRatio (Direction dir, Slice slice) const
+{
+  NS_LOG_FUNCTION (this << dir << slice);
+
+  return static_cast<double> (GetResBitRate (dir, slice)) / GetLinkBitRate ();
+}
+
+double
+ConnectionInfo::GetResSliceRatio (Direction dir, Slice slice) const
+{
+  NS_LOG_FUNCTION (this << dir << slice);
+
+  NS_ASSERT_MSG (slice < Slice::ALL, "Invalid slice for this operation.");
+  return static_cast<double> (GetResBitRate (dir, slice))
+         / GetMaxBitRate (slice);
+}
+
+DpIdPair_t
+ConnectionInfo::GetSwitchDpIdPair (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return DpIdPair_t (GetSwDpId (0), GetSwDpId (1));
+}
+
+uint64_t
+ConnectionInfo::GetTxBytes (Direction dir, Slice slice) const
+{
+  NS_LOG_FUNCTION (this << dir << slice);
+
+  uint64_t bytes = 0;
+  if (slice >= Slice::ALL)
+    {
+      for (int i = 0; i < Slice::ALL; i++)
+        {
+          bytes += m_slices [i].m_txBytes [dir];
+        }
+    }
+  else
+    {
+      bytes = m_slices [slice].m_txBytes [dir];
+    }
+  return bytes;
 }
 
 bool
-ConnectionInfo::ReserveGbrBitRate (uint64_t src, uint64_t dst, Slice slice,
-                                   uint64_t bitRate)
+ConnectionInfo::HasBitRate (uint64_t src, uint64_t dst, Slice slice,
+                            uint64_t bitRate) const
 {
   NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
 
-  // FIXME Currently only GBR slice is supported.
-  NS_ASSERT (slice == Slice::GBR);
-
+  NS_ASSERT_MSG (slice < Slice::ALL, "Invalid slice for this operation.");
   ConnectionInfo::Direction dir = GetDirection (src, dst);
-  bool reserved = IncResGbrBitRate (dir, bitRate);
-  if (reserved)
-    {
-      // When the guard distance between GRB reserved bit rate and Non-GBR
-      // maximum allowed bit rate gets lower than the safeguard value, we need
-      // to decrease the Non-GBR allowed bit rate.
-      int adjusted = false;
-      while (GetGuardBitRate (dir) < m_gbrSafeguard)
-        {
-          adjusted = true;
-          if (!DecResNonGbrBitRate (dir, m_nonAdjustStep))
-            {
-              NS_ABORT_MSG ("Abort... infinite loop.");
-            }
-        }
-      if (adjusted)
-        {
-          // Fire adjusted trace source to update meters.
-          m_nonAdjustedTrace (this);
-        }
-    }
-  return reserved;
+
+  return (GetResBitRate (dir, slice) + bitRate <= GetMaxBitRate (slice));
 }
 
 bool
-ConnectionInfo::ReleaseGbrBitRate (uint64_t src, uint64_t dst, Slice slice,
-                                   uint64_t bitRate)
+ConnectionInfo::IsFullDuplexLink (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_channel->IsFullDuplex ();
+}
+
+bool
+ConnectionInfo::ReleaseBitRate (uint64_t src, uint64_t dst, Slice slice,
+                                uint64_t bitRate)
 {
   NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
 
-  // FIXME Currently only GBR slice is supported.
-  NS_ASSERT (slice == Slice::GBR);
-
+  NS_ASSERT_MSG (slice < Slice::ALL, "Invalid slice for this operation.");
   ConnectionInfo::Direction dir = GetDirection (src, dst);
-  bool released = DecResGbrBitRate (dir, bitRate);
-  if (released)
+
+  // Check for reserved bit rate.
+  if (GetResBitRate (dir, slice) < bitRate)
     {
-      // When the guard distance between GRB reserved bit rate and Non-GBR
-      // maximum allowed bit rate gets higher than the safeguard value + one
-      // adjustment step, we need to increase the Non-GBR allowed bit rate.
-      int adjusted = 0;
-      while (GetGuardBitRate (dir) > m_gbrSafeguard + m_nonAdjustStep)
-        {
-          adjusted = true;
-          if (!IncResNonGbrBitRate (dir, m_nonAdjustStep))
-            {
-              NS_ABORT_MSG ("Abort... infinite loop.");
-            }
-        }
-      if (adjusted)
-        {
-          // Fire adjusted trace source to update meters.
-          m_nonAdjustedTrace (this);
-        }
+      NS_LOG_WARN ("No bandwidth available to release.");
+      return false;
     }
-  return released;
+
+  // Releasing the bit rate.
+  m_slices [slice].m_resRate [dir] -= bitRate;
+  NS_LOG_DEBUG ("New reserved bit rate: " << GetResBitRate (dir, slice));
+
+  // Updating the meter bit rate.
+  NS_ASSERT_MSG (GetMeterBitRate (dir) + bitRate <= GetLinkBitRate (),
+                 "Invalid meter bit rate.");
+  m_meterBitRate [dir] += bitRate;
+  m_meterDiff [dir] += bitRate;
+  NS_LOG_DEBUG ("Current meter bit rate: " << GetMeterBitRate (dir));
+  NS_LOG_DEBUG ("Current meter diff: " << m_meterDiff [dir]);
+
+  if (std::abs (m_meterDiff [dir]) >= std::abs (m_meterThresh))
+    {
+      // Fire adjusted trace source to update meters.
+      m_meterAdjustedTrace (Ptr<ConnectionInfo> (this));
+      m_meterDiff [dir] = 0;
+    }
+  return true;
+}
+
+bool
+ConnectionInfo::ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
+                                uint64_t bitRate)
+{
+  NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
+
+  NS_ASSERT_MSG (slice < Slice::ALL, "Invalid slice for this operation.");
+  ConnectionInfo::Direction dir = GetDirection (src, dst);
+
+  // Check for available bit rate.
+  if (!HasBitRate (src, dst, slice, bitRate))
+    {
+      NS_LOG_WARN ("No bandwidth available to reserve.");
+      return false;
+    }
+
+  // Reserving the bit rate.
+  m_slices [slice].m_resRate [dir] += bitRate;
+  NS_LOG_DEBUG ("New reserved bit rate: " << GetResBitRate (dir, slice));
+
+  // Updating the meter bit rate.
+  NS_ASSERT_MSG (GetMeterBitRate (dir) >= bitRate, "Invalid meter bit rate.");
+  m_meterBitRate [dir] -= bitRate;
+  m_meterDiff [dir] -= bitRate;
+  NS_LOG_DEBUG ("Current meter bit rate: " << GetMeterBitRate (dir));
+  NS_LOG_DEBUG ("Current meter diff: " << m_meterDiff [dir]);
+
+  if (std::abs (m_meterDiff [dir]) >= std::abs (m_meterThresh))
+    {
+      // Fire adjusted trace source to update meters.
+      m_meterAdjustedTrace (Ptr<ConnectionInfo> (this));
+      m_meterDiff [dir] = 0;
+    }
+  return true;
+}
+
+ConnInfoList_t
+ConnectionInfo::GetList (void)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  return ConnectionInfo::m_connectionsList;
 }
 
 Ptr<ConnectionInfo>
@@ -387,14 +415,6 @@ ConnectionInfo::GetPointer (uint64_t dpId1, uint64_t dpId2)
   return cInfo;
 }
 
-ConnInfoList_t
-ConnectionInfo::GetList (void)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  return ConnectionInfo::m_connectionsList;
-}
-
 void
 ConnectionInfo::DoDispose ()
 {
@@ -408,21 +428,37 @@ ConnectionInfo::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  m_gbrMinBitRate = 0;
-  m_gbrMaxBitRate = static_cast<uint64_t> (m_gbrLinkQuota * GetLinkBitRate ());
-  NS_LOG_DEBUG ("GBR maximum bit rate: " << m_gbrMaxBitRate << " " <<
-                "GBR minimum bit rate: " << m_gbrMinBitRate);
+  if (m_slicing)
+    {
+      uint64_t mtcRate, gbrRate, dftRate;
+      mtcRate = static_cast<uint64_t> (GetLinkBitRate () * m_mtcSliceQuota);
+      gbrRate = static_cast<uint64_t> (GetLinkBitRate () * m_gbrSliceQuota);
+      dftRate = GetLinkBitRate () - gbrRate - mtcRate;
 
-  m_nonMinBitRate = GetLinkBitRate () - m_gbrMaxBitRate - m_gbrSafeguard;
-  m_nonMaxBitRate = GetLinkBitRate () - m_gbrSafeguard;
-  NS_LOG_DEBUG ("Non-GBR maximum bit rate: " << m_nonMaxBitRate << " " <<
-                "Non-GBR minimum bit rate: " << m_nonMinBitRate);
+      m_slices [Slice::MTC].m_maxRate = mtcRate;
+      m_slices [Slice::GBR].m_maxRate = gbrRate;
+      m_slices [Slice::DFT].m_maxRate = dftRate;
+    }
+  else
+    {
+      m_slices [Slice::DFT].m_maxRate = GetLinkBitRate ();
+    }
 
-  m_nonBitRate [0] = m_nonMaxBitRate - m_nonAdjustStep;
-  m_nonBitRate [1] = m_nonMaxBitRate - m_nonAdjustStep;
+  NS_LOG_DEBUG ("DFT maximum bit rate: " <<  m_slices [Slice::DFT].m_maxRate);
+  NS_LOG_DEBUG ("GBR maximum bit rate: " <<  m_slices [Slice::GBR].m_maxRate);
+  NS_LOG_DEBUG ("MTC maximum bit rate: " <<  m_slices [Slice::MTC].m_maxRate);
 
-  // Fire adjusted trace source to update meters.
-  m_nonAdjustedTrace (this);
+  // Set initial meter bit rate to maximum, as we don't have any reserved bit
+  // rate at this moment.
+  m_meterBitRate [0] = GetLinkBitRate ();
+  m_meterBitRate [1] = GetLinkBitRate ();
+  m_meterDiff [0] = 0;
+  m_meterDiff [1] = 0;
+  m_meterThresh = static_cast<int64_t> (GetLinkBitRate () *
+                                        m_adjustmentStep.GetBitRate ());
+
+  // Fire the adjusted trace source to create the meters.
+  m_meterAdjustedTrace (Ptr<ConnectionInfo> (this));
 
   // Scheduling the first update statistics.
   m_lastUpdate = Simulator::Now ();
@@ -444,154 +480,13 @@ ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
   if (packet->PeekPacketTag (gtpuTag))
     {
       Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (gtpuTag.GetTeid ());
-      if (rInfo->IsGbr () && !rInfo->IsAggregated ())
-        {
-          m_gbrTxBytes [dir] += packet->GetSize ();
-        }
-      else
-        {
-          m_nonTxBytes [dir] += packet->GetSize ();
-        }
+      m_slices [rInfo->GetSlice ()].m_txBytes [dir] += packet->GetSize ();
     }
   else
     {
-      // For the case of non-tagged packets, save bytes in Non-GBR variable.
+      // For the case of non-tagged packets, save bytes in default slice.
       NS_LOG_WARN ("No GTPU packet tag found.");
-      m_nonTxBytes [dir] += packet->GetSize ();
-    }
-}
-
-uint64_t
-ConnectionInfo::GetGuardBitRate (Direction dir) const
-{
-  NS_LOG_FUNCTION (this << dir);
-
-  if (GetResGbrBitRate (dir) + GetResNonGbrBitRate (dir) > GetLinkBitRate ())
-    {
-      // In this temporary case, there guard interval would be 'negative', but
-      // we return 0, as we are working with unsigned numbers.
-      return 0;
-    }
-  else
-    {
-      return GetLinkBitRate () - GetResGbrBitRate (dir) -
-             GetResNonGbrBitRate (dir);
-    }
-}
-
-bool
-ConnectionInfo::IncResGbrBitRate (Direction dir, uint64_t bitRate)
-{
-  NS_LOG_FUNCTION (this << dir << bitRate);
-
-  if (GetResGbrBitRate (dir) + bitRate > m_gbrMaxBitRate)
-    {
-      NS_LOG_WARN ("No bandwidth available to reserve.");
-      return false;
-    }
-
-  m_gbrBitRate [dir] += bitRate;
-  NS_LOG_DEBUG ("GBR bit rate adjusted to " << GetResGbrBitRate (dir));
-  return true;
-}
-
-bool
-ConnectionInfo::DecResGbrBitRate (Direction dir, uint64_t bitRate)
-{
-  NS_LOG_FUNCTION (this << dir << bitRate);
-
-  if (GetResGbrBitRate (dir) < m_gbrMinBitRate + bitRate)
-    {
-      NS_LOG_WARN ("No bandwidth available to release.");
-      return false;
-    }
-
-  m_gbrBitRate [dir] -= bitRate;
-  NS_LOG_DEBUG ("GBR bit rate adjusted to " << GetResGbrBitRate (dir));
-  return true;
-}
-
-bool
-ConnectionInfo::IncResNonGbrBitRate (Direction dir, uint64_t bitRate)
-{
-  NS_LOG_FUNCTION (this << dir << bitRate);
-
-  if (GetResNonGbrBitRate (dir) >= m_nonMaxBitRate)
-    {
-      NS_LOG_WARN ("Can't increase Non-GBR bit rate.");
-      return false;
-    }
-
-  if (GetResNonGbrBitRate (dir) + bitRate > m_nonMaxBitRate)
-    {
-      m_nonBitRate [dir] = m_nonMaxBitRate;
-    }
-  else
-    {
-      m_nonBitRate [dir] += bitRate;
-    }
-
-  NS_LOG_DEBUG ("Non-GBR bit rate adjusted to " << GetResNonGbrBitRate (dir));
-  return true;
-}
-
-bool
-ConnectionInfo::DecResNonGbrBitRate (Direction dir, uint64_t bitRate)
-{
-  NS_LOG_FUNCTION (this << dir << bitRate);
-
-  if (GetResNonGbrBitRate (dir) <= m_nonMinBitRate)
-    {
-      NS_LOG_WARN ("Can't decrease Non-GBR bit rate.");
-      return false;
-    }
-
-  if (GetResNonGbrBitRate (dir) < m_nonMinBitRate + bitRate)
-    {
-      m_nonBitRate [dir] = m_nonMinBitRate;
-    }
-  else
-    {
-      m_nonBitRate [dir] -= bitRate;
-    }
-
-  NS_LOG_DEBUG ("Non-GBR bit rate adjusted to " << GetResNonGbrBitRate (dir));
-  return true;
-}
-
-void
-ConnectionInfo::SetGbrLinkQuota (double value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_gbrLinkQuota = value;
-}
-
-void
-ConnectionInfo::SetGbrSafeguard (DataRate value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_gbrSafeguard = value.GetBitRate ();
-  if (m_gbrSafeguard > GetLinkBitRate () / 10)
-    {
-      NS_ABORT_MSG ("GBR safeguard cannot exceed 10% of link capacity.");
-    }
-}
-
-void
-ConnectionInfo::SetNonGbrAdjustStep (DataRate value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_nonAdjustStep = value.GetBitRate ();
-  if (m_nonAdjustStep == 0)
-    {
-      NS_ABORT_MSG ("Non-GBR ajust step can't be null.");
-    }
-  else if (m_nonAdjustStep > GetLinkBitRate () / 5)
-    {
-      NS_ABORT_MSG ("Non-GBR ajust step can't exceed 20% of link capacity.");
+      m_slices [Slice::DFT].m_txBytes [dir] += packet->GetSize ();
     }
 }
 
@@ -600,27 +495,19 @@ ConnectionInfo::UpdateStatistics (void)
 {
   NS_LOG_FUNCTION (this);
 
-  uint64_t gbrFwdBytes = GetGbrTxBytes (ConnectionInfo::FWD);
-  uint64_t gbrBwdBytes = GetGbrTxBytes (ConnectionInfo::BWD);
-  uint64_t nonFwdBytes = GetNonGbrTxBytes (ConnectionInfo::FWD);
-  uint64_t nonBwdBytes = GetNonGbrTxBytes (ConnectionInfo::BWD);
-
   double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
+  for (int s = 0; s < Slice::ALL; s++)
+    {
+      for (int d = 0; d <= ConnectionInfo::BWD; d++)
+        {
+          double bytes = static_cast<double> (m_slices [s].m_txBytes [d] -
+                                              m_slices [s].m_lastTxBytes [d]);
 
-  m_gbrAvgThpt [0] = (1 - m_alpha) * m_gbrAvgThpt [0] + m_alpha *
-    static_cast<double> (gbrFwdBytes - m_gbrAvgLast [0]) * 8 / elapSecs;
-  m_gbrAvgThpt [1] = (1 - m_alpha) * m_gbrAvgThpt [1] + m_alpha *
-    static_cast<double> (gbrBwdBytes - m_gbrAvgLast [1]) * 8 / elapSecs;
-
-  m_nonAvgThpt [0] = (1 - m_alpha) * m_nonAvgThpt [0] + m_alpha *
-    static_cast<double> (nonFwdBytes - m_nonAvgLast [0]) * 8 / elapSecs;
-  m_nonAvgThpt [1] = (1 - m_alpha) * m_nonAvgThpt [1] + m_alpha *
-    static_cast<double> (nonBwdBytes - m_nonAvgLast [1]) * 8 / elapSecs;
-
-  m_gbrAvgLast [0] = gbrFwdBytes;
-  m_gbrAvgLast [1] = gbrBwdBytes;
-  m_nonAvgLast [0] = nonFwdBytes;
-  m_nonAvgLast [1] = nonBwdBytes;
+          m_slices [s].m_ewmaThp [d] = (m_alpha * 8 * bytes / elapSecs) +
+            (1 - m_alpha) * m_slices [s].m_ewmaThp [d];
+          m_slices [s].m_lastTxBytes [d] = m_slices [s].m_txBytes [d];
+        }
+    }
 
   // Scheduling the next update statistics.
   m_lastUpdate = Simulator::Now ();

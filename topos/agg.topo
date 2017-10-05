@@ -1,9 +1,9 @@
 global DumpStatsTimeout "1s"
 
+default ns3::ConnectionInfo::AdjustmentStep "1Mb/s"
 default ns3::ConnectionInfo::EwmaAlpha "0.25"
-default ns3::ConnectionInfo::GbrLinkQuota "0.4"
-default ns3::ConnectionInfo::GbrSafeguard "1Mb/s"
-default ns3::ConnectionInfo::NonGbrAdjustmentStep "1Mb/s"
+default ns3::ConnectionInfo::GbrSliceQuota "0.35"
+default ns3::ConnectionInfo::MtcSliceQuota "0.125"
 default ns3::ConnectionInfo::UpdateTimeout "100ms"
 
 default ns3::EpcController::HtcAggregation "auto"

@@ -40,7 +40,24 @@ typedef std::list<Ptr<ConnectionInfo> > ConnInfoList_t;
 /**
  * \ingroup sdmnInfo
  * Metadata associated to a connection between two OpenFlow switches.
- * This class is also prepared to handle network slicing.
+ *
+ * This class is prepared to handle network slicing. In current implementation,
+ * the total number of slices is set to three: default, GBR and MTC traffic.
+ * When the slicing mechanism is disabled by the Slicing attribute at
+ * EpcController, only the default slice will be used. In this case, the
+ * maximum bit rate for this slice will be set to the link bit rate. When the
+ * slicing mechanism is enabled, then the size of each slice is defined by the
+ * GbrSliceQuota and MtcSliceQuota attributes, which indicate the link
+ * bandwidth ratio that should be assigned to the GBR and MTC slices,
+ * respectively. All remaining bandwidth is assigned to the default slice. Each
+ * slice can have some reserved bit rate for GBR traffic. The amount of
+ * reserved bit rate is updated by reserve and release procedures, and are
+ * enforced by OpenFlow meters that are regularly updated every time the total
+ * reserved bit rate changes over a threshold value indicated by the
+ * AdjustmentStep attribute. All bandwidth that is not reserved on any slice is
+ * shared among best-effort traffic of all slices that don't have strict QoS
+ * requirements. With this approach, we can ensure that we don't waste
+ * available bandwidth when not in use.
  */
 class ConnectionInfo : public Object
 {
@@ -48,12 +65,11 @@ public:
   /** Metadata associated to a network slice. */
   struct SliceData
   {
-    uint64_t m_maxRate;               //!< Maximum allowed bit rate.
-    uint64_t m_minRate;               //!< Minimum guaranteed bit rate.
+    uint64_t m_maxRate;               //!< Maximum bit rate.
     uint64_t m_resRate [2];           //!< Reserved bit rate.
     double   m_ewmaThp [2];           //!< EWMA throughput.
-    uint64_t m_currTxBytes [2];       //!< Current transmitted bytes.
-    uint64_t m_lastTxBytes [2];       //!< Last transmitted throughput.
+    uint64_t m_txBytes [2];           //!< Total TX bytes.
+    uint64_t m_lastTxBytes [2];       //!< Last timeout TX bytes.
   };
 
   /** Metadata associated to a switch. */
@@ -76,11 +92,13 @@ public:
    * \param sw1 First switch metadata.
    * \param sw2 Second switch metadata.
    * \param channel The CsmaChannel physical link connecting these switches.
+   * \param slicing True when slicing the network.
    * \attention The switch order must be the same as created by the CsmaHelper.
    * Internal channel handling is based on this order to get correct
    * full-duplex links.
    */
-  ConnectionInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel);
+  ConnectionInfo (SwitchData sw1, SwitchData sw2,
+                  Ptr<CsmaChannel> channel, bool slicing);
   virtual ~ConnectionInfo ();   //!< Dummy destructor, see DoDispose.
 
   /**
@@ -90,14 +108,7 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Get the pair of switch datapath IDs for this connection, respecting the
-   * internal order.
-   * \return The pair of switch datapath IDs.
-   */
-  DpIdPair_t GetSwitchDpIdPair (void) const;
-
-  /**
-   * \name Private member accessors.
+   * \name Private OpenFlow switch accessors.
    * \param idx The internal switch index.
    * \return The requested field.
    */
@@ -110,47 +121,8 @@ public:
   //\}
 
   /**
-   * \name Link usage statistics.
-   * Get link usage statistics, for both GBR and Non-GBR traffic.
-   * \param dir The link direction.
-   * \return The requested information.
-   */
-  //\{
-  uint64_t GetGbrTxBytes    (Direction dir) const;
-  uint64_t GetNonGbrTxBytes (Direction dir) const;
-  DataRate GetGbrEwmaThp    (Direction dir) const;
-  DataRate GetNonGbrEwmaThp (Direction dir) const;
-  DataRate GetEwmaThp       (Direction dir) const;  // Manter
-  //\}
-
-  /**
-   * \name Reserved bit rate statistics.
-   * Get reserved bit rate for both GBR and Non-GBR traffic.
-   * \param dir The link direction.
-   * \return The requested information.
-   */
-  //\{
-  uint64_t GetResGbrBitRate      (Direction dir) const;
-  uint64_t GetResNonGbrBitRate   (Direction dir) const;
-  double   GetResGbrLinkRatio    (Direction dir) const;
-  double   GetResNonGbrLinkRatio (Direction dir) const;
-  //\}
-
-  /**
-   * Inspect physical channel for half-duplex or full-duplex operation mode.
-   * \return True when link in full-duplex mode, false otherwise.
-   */
-  bool IsFullDuplexLink (void) const;
-
-  /**
-   * Inspect physical channel for the assigned bit rate.
-   * \return The channel maximum nominal bit rate (bps).
-   */
-  uint64_t GetLinkBitRate (void) const;
-
-  /**
-   * For two switch, this methods asserts that both datapath IDs are valid for
-   * this connection, and identifies the link direction based on source and
+   * For two switches, this methods asserts that both datapath IDs are valid
+   * for this connection, and identifies the link direction based on source and
    * destination datapath IDs.
    * \param src The source switch datapath ID.
    * \param dst The destination switch datapath ID.
@@ -159,37 +131,129 @@ public:
   ConnectionInfo::Direction GetDirection (uint64_t src, uint64_t dst) const;
 
   /**
-   * Check for available GBR bit rate between these two switches.
+   * Get the exponentially weighted moving average throughput metric for this
+   * link on the given direction, optionally filtered by the network slice.
+   * \param src The source switch datapath ID.
+   * \param dst The destination switch datapath ID.
+   * \param slice The network slice.
+   * \return The EWMA throughput.
+   */
+  DataRate GetEwmaThp (uint64_t src, uint64_t dst,
+                       Slice slice = Slice::ALL) const;
+
+  /**
+   * Inspect physical channel for the assigned bit rate.
+   * \return The channel maximum nominal bit rate (bps).
+   */
+  uint64_t GetLinkBitRate (void) const;
+
+  /**
+   * Get the maximum bit rate for this link on the given direction, optionally
+   * filtered by the network slice. If no slice is given, the this method will
+   * return the GetLinkBitRate ();
+   * \param slice The network slice.
+   * \return The maximum bit rate.
+   */
+  uint64_t GetMaxBitRate (Slice slice = Slice::ALL) const;
+
+  /**
+   * Get the maximum bit rate for best-effort traffic over this link on the
+   * given direction.
+   * \param dir The link direction.
+   * \return The maximum bit rate.
+   */
+  uint64_t GetMeterBitRate (Direction dir) const;
+
+  /**
+   * Get the reserved bit rate for traffic over this link on the given
+   * direction, optionally filtered by the network slice.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The reserved bit rate.
+   */
+  uint64_t GetResBitRate (Direction dir, Slice slice = Slice::ALL) const;
+
+  /**
+   * Get the reserved link ratio for traffic over this link on the given
+   * direction, optionally filtered by the network slice.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The reserved link ratio.
+   */
+  double GetResLinkRatio (Direction dir, Slice slice = Slice::ALL) const;
+
+  /**
+   * Get the reserved slice ratio for traffic over this link on the given
+   * direction for the given network slice.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The reserved link ratio.
+   */
+  double GetResSliceRatio (Direction dir, Slice slice) const;
+
+  /**
+   * Get the pair of switch datapath IDs for this connection, respecting the
+   * internal order.
+   * \return The pair of switch datapath IDs.
+   */
+  DpIdPair_t GetSwitchDpIdPair (void) const;
+
+  /**
+   * Get the total number of transmitted bytes over this link on the given
+   * direction, optionally filtered by the network slice.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The TX bytes.
+   */
+  uint64_t GetTxBytes (Direction dir, Slice slice = Slice::ALL) const;
+
+  /**
+   * Check for available bit rate between these two switches that can be
+   * further reserved by ReserveGbrBitRate () method.
    * \param src The source switch datapath ID.
    * \param dst The destination switch datapath ID.
    * \param slice The network slice.
    * \param bitRate The bit rate to check.
-   * \return True if there's available GBR bit rate, false otherwise.
+   * \return True if there is available bit rate, false otherwise.
    */
-  bool HasGbrBitRate (uint64_t src, uint64_t dst, Slice slice,
-                      uint64_t bitRate) const;
+  bool HasBitRate (uint64_t src, uint64_t dst, Slice slice,
+                   uint64_t bitRate) const;
 
   /**
-   * Reserve some bandwidth between these two switches.
-   * \param src The source switch datapath ID.
-   * \param dst The destination switch datapath ID.
-   * \param slice The network slice.
-   * \param bitRate The bit rate to reserve.
-   * \return True if succeeded, false otherwise.
+   * Inspect physical channel for half-duplex or full-duplex operation mode.
+   * \return True when link in full-duplex mode, false otherwise.
    */
-  bool ReserveGbrBitRate (uint64_t src, uint64_t dst, Slice slice,
-                          uint64_t bitRate);
+  bool IsFullDuplexLink (void) const;
 
   /**
-   * Release some bandwidth between these two switches.
+   * Release the requested bit rate between these two switches on the given
+   * network slice.
    * \param src The source switch datapath ID.
    * \param dst The destination switch datapath ID.
    * \param slice The network slice.
    * \param bitRate The bit rate to release.
    * \return True if succeeded, false otherwise.
    */
-  bool ReleaseGbrBitRate (uint64_t src, uint64_t dst, Slice slice,
-                          uint64_t bitRate);
+  bool ReleaseBitRate (uint64_t src, uint64_t dst, Slice slice,
+                       uint64_t bitRate);
+
+  /**
+   * Reserve the requested bit rate between these two switches on the given
+   * network slice.
+   * \param src The source switch datapath ID.
+   * \param dst The destination switch datapath ID.
+   * \param slice The network slice.
+   * \param bitRate The bit rate to reserve.
+   * \return True if succeeded, false otherwise.
+   */
+  bool ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
+                       uint64_t bitRate);
+
+  /**
+   * Get the entire list of connection information.
+   * \return The list of connection information.
+   */
+  static ConnInfoList_t GetList (void);
 
   /**
    * Get the connection information from the global map for a pair of OpenFlow
@@ -199,12 +263,6 @@ public:
    * \return The connection information for this pair of datapath IDs.
    */
   static Ptr<ConnectionInfo> GetPointer (uint64_t dpId1, uint64_t dpId2);
-
-  /**
-   * Get the entire list of connection information.
-   * \return The list of connection information.
-   */
-  static ConnInfoList_t GetList (void);
 
   /**
    * TracedCallback signature for Ptr<const ConnectionInfo>.
@@ -228,46 +286,6 @@ private:
   void NotifyTxPacket (std::string context, Ptr<const Packet> packet);
 
   /**
-   * Get the guard bit rate, which is currently not been used neither by GBR
-   * nor Non-GBR traffic.
-   * \param dir The link direction.
-   * \return The current guard bit rate.
-   */
-  uint64_t GetGuardBitRate (Direction dir) const;
-
-  /**
-   * \name Reserved bit rate adjustment.
-   * Increase/decrease the reserved bit rate for both GBR and Non-GBR traffic.
-   * \param dir The link direction.
-   * \param bitRate The bit rate amount.
-   * \return True if succeeded, false otherwise.
-   */
-  //\{
-  bool IncResGbrBitRate    (Direction dir, uint64_t bitRate);
-  bool DecResGbrBitRate    (Direction dir, uint64_t bitRate);
-  bool IncResNonGbrBitRate (Direction dir, uint64_t bitRate);
-  bool DecResNonGbrBitRate (Direction dir, uint64_t bitRate);
-  //\}
-
-  /**
-   * Update the GBR reserve quota and GBR maximum bit rate.
-   * \param value The value to set.
-   */
-  void SetGbrLinkQuota (double value);
-
-  /**
-   * Update the GBR safeguard bandwidth value.
-   * \param value The value to set.
-   */
-  void SetGbrSafeguard (DataRate value);
-
-  /**
-   * Update the Non-GBR adjustment step value.
-   * \param value The value to set.
-   */
-  void SetNonGbrAdjustStep (DataRate value);
-
-  /**
    * Update link statistics.
    */
   void UpdateStatistics (void);
@@ -278,35 +296,25 @@ private:
    */
   static void RegisterConnectionInfo (Ptr<ConnectionInfo> cInfo);
 
-  /** Non-GBR allowed bit rate adjusted trace source. */
-  TracedCallback<Ptr<const ConnectionInfo> > m_nonAdjustedTrace;
+  /** Default meter bit rate adjusted trace source. */
+  TracedCallback<Ptr<const ConnectionInfo> > m_meterAdjustedTrace;
 
-  SwitchData        m_switches [2];     //!< Switches metadata.
-  Ptr<CsmaChannel>  m_channel;          //!< The CSMA link channel.
-  Time              m_timeout;          //!< Update timeout.
-  double            m_alpha;            //!< EWMA alpha parameter.
-  Time              m_lastUpdate;       //!< Last update time.
+  SwitchData        m_switches [2];         //!< Switches metadata.
+  Ptr<CsmaChannel>  m_channel;              //!< The CSMA link channel.
+  Time              m_lastUpdate;           //!< Last update time.
+  bool              m_slicing;              //!< Network slicing enabled.
 
-  double            m_gbrLinkQuota;     //!< GBR link-capacity reserved quota.
-  uint64_t          m_gbrSafeguard;     //!< GBR safeguard bit rate.
-  uint64_t          m_nonAdjustStep;    //!< Non-GBR bit rate adjustment step.
-  // TODO: Remove the safeguard... acho que não precisa disso.
+  SliceData         m_slices [Slice::ALL];  //!< Slicing metadata.
 
-  uint64_t          m_gbrMaxBitRate;    //!< GBR maximum allowed bit rate.
-  uint64_t          m_gbrMinBitRate;    //!< GBR minimum allowed bit rate.
-  uint64_t          m_gbrBitRate [2];   //!< GBR reserved bit rate.
-  uint64_t          m_gbrTxBytes [2];   //!< GBR transmitted bytes.
-  uint64_t          m_gbrAvgLast [2];   //!< GBR last transmitted bytes.
-  double            m_gbrAvgThpt [2];   //!< GBR EWMA throughput.
+  uint64_t          m_meterBitRate [2];     //!< Meter bit rate.
+  int64_t           m_meterDiff [2];        //!< Current meter bit rate diff.
+  int64_t           m_meterThresh;          //!< Meter bit rate threshold.
 
-  uint64_t          m_nonMaxBitRate;    //!< Non-GBR maximum allowed bit rate.
-  uint64_t          m_nonMinBitRate;    //!< Non-GBR minimum allowed bit rate.
-  uint64_t          m_nonBitRate [2];   //!< Non-GBR reserved bit rate.
-  uint64_t          m_nonTxBytes [2];   //!< Non-GBR transmitted bytes.
-  uint64_t          m_nonAvgLast [2];   //!< Non-GBR last transmitted bytes.
-  double            m_nonAvgThpt [2];   //!< Non-GBR EWMA throughput.
-
-  SliceData         m_slices [Slice::ALL];
+  DataRate          m_adjustmentStep;       //!< Meter adjustment step.
+  double            m_alpha;                //!< EWMA alpha parameter.
+  double            m_gbrSliceQuota;        //!< GBR slice quota.
+  double            m_mtcSliceQuota;        //!< MTC slice quota.
+  Time              m_timeout;              //!< Update timeout.
 
   /**
    * Map saving pair of switch datapath IDs / connection information.

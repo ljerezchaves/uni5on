@@ -102,6 +102,10 @@ RingNetwork::TopologyCreate (void)
       "PgwTftSwitches", UintegerValue (GetNTftNodes ()));
   InstallController (ringController);
 
+  // Get the network slicing attribute value from this single controller
+  // instance, which will be used when creating the ConnectionInfo objects.
+  bool slicingStatus = static_cast<bool> (ringController->GetSlicingMode ());
+
   // Create the switch nodes.
   m_backNodes.Create (m_numNodes);
 
@@ -156,7 +160,7 @@ RingNetwork::TopologyCreate (void)
       };
       Ptr<ConnectionInfo> cInfo = CreateObject<ConnectionInfo> (
           currSwData, nextSwData, DynamicCast<CsmaChannel> (
-            currPortDevice->GetChannel ()));
+            currPortDevice->GetChannel ()), slicingStatus);
 
       // Fire trace source notifying new connection between switches.
       m_epcCtrlApp->NotifyTopologyConnection (cInfo);
