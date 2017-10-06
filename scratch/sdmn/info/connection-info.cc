@@ -336,7 +336,7 @@ ConnectionInfo::ReleaseBitRate (uint64_t src, uint64_t dst, Slice slice,
 
   // Releasing the bit rate.
   NS_LOG_DEBUG ("Releasing bit rate on slice " << SliceStr (slice) <<
-                " direction " << DirectionStr (dir));
+                " in " << DirectionStr (dir) << " direction.");
   m_slices [slice].m_resRate [dir] -= bitRate;
   NS_LOG_DEBUG ("Current reserved bit rate: " << GetResBitRate (dir, slice));
 
@@ -377,7 +377,7 @@ ConnectionInfo::ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
 
   // Reserving the bit rate.
   NS_LOG_DEBUG ("Reserving bit rate on slice " << SliceStr (slice) <<
-                " direction " << DirectionStr (dir));
+                " in " << DirectionStr (dir) << " direction.");
   m_slices [slice].m_resRate [dir] += bitRate;
   NS_LOG_DEBUG ("Current reserved bit rate: " << GetResBitRate (dir, slice));
 
@@ -405,9 +405,9 @@ ConnectionInfo::DirectionStr (Direction dir)
   switch (dir)
     {
     case ConnectionInfo::FWD:
-      return "FWD";
+      return "forward";
     case ConnectionInfo::BWD:
-      return "BWD";
+      return "backward";
     default:
       return "-";
     }

@@ -59,9 +59,9 @@ RingController::RoutingStrategyStr (RoutingStrategy strategy)
   switch (strategy)
     {
     case RingController::SPO:
-      return "SPO";
+      return "shortest path only";
     case RingController::SPF:
-      return "SPF";
+      return "shortest path first";
     default:
       return "-";
     }
