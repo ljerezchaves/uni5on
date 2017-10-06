@@ -457,8 +457,7 @@ ConnectionInfo::NotifyConstructionCompleted (void)
   m_meterBitRate [1] = GetLinkBitRate ();
   m_meterDiff [0] = 0;
   m_meterDiff [1] = 0;
-  m_meterThresh = static_cast<int64_t> (GetLinkBitRate () *
-                                        m_adjustmentStep.GetBitRate ());
+  m_meterThresh = m_adjustmentStep.GetBitRate ();
 
   // Fire the adjusted trace source to create the meters.
   m_meterAdjustedTrace (Ptr<ConnectionInfo> (this));

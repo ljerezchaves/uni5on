@@ -306,9 +306,9 @@ private:
 
   SliceData         m_slices [Slice::ALL];  //!< Slicing metadata.
 
-  uint64_t          m_meterBitRate [2];     //!< Meter bit rate.
+  uint64_t          m_meterThresh;          //!< Meter bit rate threshold.
+  uint64_t          m_meterBitRate [2];     //!< Current meter bit rate.
   int64_t           m_meterDiff [2];        //!< Current meter bit rate diff.
-  int64_t           m_meterThresh;          //!< Meter bit rate threshold.
 
   DataRate          m_adjustmentStep;       //!< Meter adjustment step.
   double            m_alpha;                //!< EWMA alpha parameter.
