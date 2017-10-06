@@ -162,6 +162,9 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
       // Meter flags OFPMF_KBPS.
       std::string flagsStr ("0x0001");
 
+      NS_LOG_DEBUG ("Creating meter for connection info " <<
+                    cInfo->GetSwDpId (0) << " to " << cInfo->GetSwDpId (1));
+
       // Non-GBR meter for clockwise direction.
       kbps = cInfo->GetMeterBitRate (ConnectionInfo::FWD) / 1000;
       cmd02 << "meter-mod cmd=add"
@@ -169,6 +172,8 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
             << ",meter=" << RingRoutingInfo::CLOCK
             << " drop:rate=" << kbps;
       DpctlSchedule (cInfo->GetSwDpId (0), cmd02.str ());
+      NS_LOG_DEBUG ("Forward link set to " << kbps << " Kbps");
+
 
       // Non-GBR meter for counterclockwise direction.
       kbps = cInfo->GetMeterBitRate (ConnectionInfo::BWD) / 1000;
@@ -177,6 +182,7 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
             << ",meter=" << RingRoutingInfo::COUNTER
             << " drop:rate=" << kbps;
       DpctlSchedule (cInfo->GetSwDpId (1), cmd12.str ());
+      NS_LOG_DEBUG ("Backward link set to " << kbps << " Kbps");
     }
 }
 
@@ -606,6 +612,9 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo)
   // Meter flags OFPMF_KBPS.
   std::string flagsStr ("0x0001");
 
+  NS_LOG_DEBUG ("Updating meter for connection info " <<
+                cInfo->GetSwDpId (0) << " to " << cInfo->GetSwDpId (1));
+
   // Update the meter for clockwise direction.
   kbps = cInfo->GetMeterBitRate (ConnectionInfo::FWD) / 1000;
   cmd1 << "meter-mod cmd=mod"
@@ -613,6 +622,7 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo)
        << ",meter=" << RingRoutingInfo::CLOCK
        << " drop:rate=" << kbps;
   DpctlExecute (cInfo->GetSwDpId (0), cmd1.str ());
+  NS_LOG_DEBUG ("Forward link set to " << kbps << " Kbps");
 
   // Update the meter for counterclockwise direction.
   kbps = cInfo->GetMeterBitRate (ConnectionInfo::BWD) / 1000;
@@ -621,6 +631,7 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo)
        << ",meter=" << RingRoutingInfo::COUNTER
        << " drop:rate=" << kbps;
   DpctlExecute (cInfo->GetSwDpId (1), cmd2.str ());
+  NS_LOG_DEBUG ("Backward link set to " << kbps << " Kbps");
 }
 
 uint16_t

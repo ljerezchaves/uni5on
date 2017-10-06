@@ -18,6 +18,9 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#define NS_LOG_APPEND_CONTEXT \
+  if (m_switches [0].swDev != 0 && m_switches [1].swDev != 0) { std::clog << "[CInfo " << m_switches [0].swDev->GetDatapathId () << " to " << m_switches [1].swDev->GetDatapathId () << "] "; }
+
 #include <ns3/epc-gtpu-tag.h>
 #include "connection-info.h"
 
@@ -333,7 +336,7 @@ ConnectionInfo::ReleaseBitRate (uint64_t src, uint64_t dst, Slice slice,
 
   // Releasing the bit rate.
   m_slices [slice].m_resRate [dir] -= bitRate;
-  NS_LOG_DEBUG ("New reserved bit rate: " << GetResBitRate (dir, slice));
+  NS_LOG_DEBUG ("Reserved bit rate on slice: " << GetResBitRate (dir, slice));
 
   // Updating the meter bit rate.
   NS_ASSERT_MSG (GetMeterBitRate (dir) + bitRate <= GetLinkBitRate (),
@@ -342,10 +345,12 @@ ConnectionInfo::ReleaseBitRate (uint64_t src, uint64_t dst, Slice slice,
   m_meterDiff [dir] += bitRate;
   NS_LOG_DEBUG ("Current meter bit rate: " << GetMeterBitRate (dir));
   NS_LOG_DEBUG ("Current meter diff: " << m_meterDiff [dir]);
+  NS_LOG_DEBUG ("Current meter threshold: " << m_meterThresh);
 
   if (std::abs (m_meterDiff [dir]) >= std::abs (m_meterThresh))
     {
       // Fire adjusted trace source to update meters.
+      NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
       m_meterAdjustedTrace (Ptr<ConnectionInfo> (this));
       m_meterDiff [dir] = 0;
     }
@@ -370,7 +375,7 @@ ConnectionInfo::ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
 
   // Reserving the bit rate.
   m_slices [slice].m_resRate [dir] += bitRate;
-  NS_LOG_DEBUG ("New reserved bit rate: " << GetResBitRate (dir, slice));
+  NS_LOG_DEBUG ("Reserved bit rate on slice: " << GetResBitRate (dir, slice));
 
   // Updating the meter bit rate.
   NS_ASSERT_MSG (GetMeterBitRate (dir) >= bitRate, "Invalid meter bit rate.");
@@ -378,10 +383,12 @@ ConnectionInfo::ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
   m_meterDiff [dir] -= bitRate;
   NS_LOG_DEBUG ("Current meter bit rate: " << GetMeterBitRate (dir));
   NS_LOG_DEBUG ("Current meter diff: " << m_meterDiff [dir]);
+  NS_LOG_DEBUG ("Current meter threshold: " << m_meterThresh);
 
   if (std::abs (m_meterDiff [dir]) >= std::abs (m_meterThresh))
     {
       // Fire adjusted trace source to update meters.
+      NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
       m_meterAdjustedTrace (Ptr<ConnectionInfo> (this));
       m_meterDiff [dir] = 0;
     }
@@ -391,16 +398,12 @@ ConnectionInfo::ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
 ConnInfoList_t
 ConnectionInfo::GetList (void)
 {
-  NS_LOG_FUNCTION_NOARGS ();
-
   return ConnectionInfo::m_connectionsList;
 }
 
 Ptr<ConnectionInfo>
 ConnectionInfo::GetPointer (uint64_t dpId1, uint64_t dpId2)
 {
-  NS_LOG_FUNCTION_NOARGS ();
-
   DpIdPair_t key;
   key.first  = std::min (dpId1, dpId2);
   key.second = std::max (dpId1, dpId2);
@@ -517,8 +520,6 @@ ConnectionInfo::UpdateStatistics (void)
 void
 ConnectionInfo::RegisterConnectionInfo (Ptr<ConnectionInfo> cInfo)
 {
-  NS_LOG_FUNCTION_NOARGS ();
-
   // Respecting the increasing switch index order when saving connection data.
   uint16_t dpId1 = cInfo->GetSwDpId (0);
   uint16_t dpId2 = cInfo->GetSwDpId (1);
@@ -536,9 +537,9 @@ ConnectionInfo::RegisterConnectionInfo (Ptr<ConnectionInfo> cInfo)
     }
 
   ConnectionInfo::m_connectionsList.push_back (cInfo);
-  NS_LOG_INFO ("New connection info saved:" <<
-               " switch " << dpId1 << " port " << cInfo->GetPortNo (0) <<
-               " switch " << dpId2 << " port " << cInfo->GetPortNo (1));
+  // NS_LOG_INFO ("New connection info saved:" <<
+  //              " switch " << dpId1 << " port " << cInfo->GetPortNo (0) <<
+  //              " switch " << dpId2 << " port " << cInfo->GetPortNo (1));
 }
 
 };  // namespace ns3
