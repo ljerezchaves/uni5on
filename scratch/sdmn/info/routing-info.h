@@ -48,6 +48,7 @@ typedef enum
   ALL = 3   //!< ALL previous slices.
 } Slice;
 
+std::string SliceStr (Slice slice);
 
 /**
  * \ingroup sdmn
@@ -98,6 +99,7 @@ public:
   uint16_t GetPgwTftIdx (void) const;
   uint16_t GetPriority (void) const;
   Slice GetSlice (void) const;
+  std::string GetSliceStr (void) const;
   Ipv4Address GetSgwS5Addr (void) const;
   uint32_t GetTeid (void) const;
   uint16_t GetTimeout (void) const;
@@ -139,6 +141,13 @@ public:
    * Increase the priority value by one unit.
    */
   void IncreasePriority ();
+
+  /**
+   * Get the string representing the block reason.
+   * \param reason The block reason.
+   * \return The block reason string.
+   */
+  static std::string BlockReasonStr (BlockReason reason);
 
   /**
    * Get stored information for a specific EPS bearer.

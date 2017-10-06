@@ -49,6 +49,13 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  /**
+   * Get the string representing the given routing strategy.
+   * \param strategy The routing strategy.
+   * \return The routing strategy string.
+   */
+  static std::string RoutingStrategyStr (RoutingStrategy strategy);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();

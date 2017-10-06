@@ -98,6 +98,13 @@ public:
    */
   static RoutingPath Invert (RoutingPath path);
 
+  /**
+   * Get the string representing the routing path.
+   * \param path The routing path.
+   * \return The routing path string.
+   */
+  static std::string RoutingPathStr (RoutingPath path);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();

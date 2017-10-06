@@ -335,8 +335,10 @@ ConnectionInfo::ReleaseBitRate (uint64_t src, uint64_t dst, Slice slice,
     }
 
   // Releasing the bit rate.
+  NS_LOG_DEBUG ("Releasing bit rate on slice " << SliceStr (slice) <<
+                " direction " << DirectionStr (dir));
   m_slices [slice].m_resRate [dir] -= bitRate;
-  NS_LOG_DEBUG ("Reserved bit rate on slice: " << GetResBitRate (dir, slice));
+  NS_LOG_DEBUG ("Current reserved bit rate: " << GetResBitRate (dir, slice));
 
   // Updating the meter bit rate.
   NS_ASSERT_MSG (GetMeterBitRate (dir) + bitRate <= GetLinkBitRate (),
@@ -374,8 +376,10 @@ ConnectionInfo::ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
     }
 
   // Reserving the bit rate.
+  NS_LOG_DEBUG ("Reserving bit rate on slice " << SliceStr (slice) <<
+                " direction " << DirectionStr (dir));
   m_slices [slice].m_resRate [dir] += bitRate;
-  NS_LOG_DEBUG ("Reserved bit rate on slice: " << GetResBitRate (dir, slice));
+  NS_LOG_DEBUG ("Current reserved bit rate: " << GetResBitRate (dir, slice));
 
   // Updating the meter bit rate.
   NS_ASSERT_MSG (GetMeterBitRate (dir) >= bitRate, "Invalid meter bit rate.");
@@ -393,6 +397,20 @@ ConnectionInfo::ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
       m_meterDiff [dir] = 0;
     }
   return true;
+}
+
+std::string
+ConnectionInfo::DirectionStr (Direction dir)
+{
+  switch (dir)
+    {
+    case ConnectionInfo::FWD:
+      return "FWD";
+    case ConnectionInfo::BWD:
+      return "BWD";
+    default:
+      return "-";
+    }
 }
 
 ConnInfoList_t

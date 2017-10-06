@@ -218,6 +218,22 @@ RingRoutingInfo::Invert (RoutingPath path)
     }
 }
 
+std::string
+RingRoutingInfo::RoutingPathStr (RoutingPath path)
+{
+  switch (path)
+    {
+    case RingRoutingInfo::LOCAL:
+      return "local";
+    case RingRoutingInfo::CLOCK:
+      return "clockwise";
+    case RingRoutingInfo::COUNTER:
+      return "counterclockwise";
+    default:
+      return "-";
+    }
+}
+
 void
 RingRoutingInfo::DoDispose ()
 {

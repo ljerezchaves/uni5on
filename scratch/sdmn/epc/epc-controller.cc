@@ -29,6 +29,21 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("EpcController");
 NS_OBJECT_ENSURE_REGISTERED (EpcController);
 
+std::string OperationModeStr (OperationMode mode)
+{
+  switch (mode)
+    {
+    case OperationMode::OFF:
+      return "off";
+    case OperationMode::ON:
+      return "on";
+    case OperationMode::AUTO:
+      return "auto";
+    default:
+      return "-";
+    }
+}
+
 // Initializing EpcController static members.
 const uint16_t EpcController::m_flowTimeout = 0;
 EpcController::QciDscpMap_t EpcController::m_qciDscpTable;

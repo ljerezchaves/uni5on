@@ -52,6 +52,7 @@ public:
   //\{
   double GetLinkUsage (void) const;
   OperationMode GetOperationMode (void) const;
+  std::string GetOperationModeStr (void) const;
   double GetThreshold (void) const;
 
   void SetLinkUsage (double value);

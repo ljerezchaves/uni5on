@@ -53,6 +53,20 @@ RingController::GetTypeId (void)
   return tid;
 }
 
+std::string
+RingController::RoutingStrategyStr (RoutingStrategy strategy)
+{
+  switch (strategy)
+    {
+    case RingController::SPO:
+      return "SPO";
+    case RingController::SPF:
+      return "SPF";
+    default:
+      return "-";
+    }
+}
+
 void
 RingController::DoDispose ()
 {

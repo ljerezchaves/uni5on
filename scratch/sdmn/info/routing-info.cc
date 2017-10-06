@@ -28,6 +28,21 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("RoutingInfo");
 NS_OBJECT_ENSURE_REGISTERED (RoutingInfo);
 
+std::string SliceStr (Slice slice)
+{
+  switch (slice)
+    {
+    case Slice::DFT:
+      return "DFT";
+    case Slice::GBR:
+      return "GBR";
+    case Slice::MTC:
+      return "MTC";
+    default:
+      return "-";
+    }
+}
+
 // Initializing RoutingInfo static members.
 RoutingInfo::TeidRoutingMap_t RoutingInfo::m_globalInfoMap;
 
@@ -76,18 +91,7 @@ RoutingInfo::GetBlockReasonStr (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  switch (m_blockReason)
-    {
-    case RoutingInfo::TFTTABLEFULL:
-      return "TabFull";
-    case RoutingInfo::TFTMAXLOAD:
-      return "MaxLoad";
-    case RoutingInfo::BANDWIDTH:
-      return "LinkFull";
-    case RoutingInfo::NOREASON:
-    default:
-      return "-";
-    }
+  return BlockReasonStr (m_blockReason);
 }
 
 uint16_t
@@ -136,6 +140,14 @@ RoutingInfo::GetSlice (void) const
   NS_LOG_FUNCTION (this);
 
   return m_slice;
+}
+
+std::string
+RoutingInfo::GetSliceStr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return SliceStr (m_slice);
 }
 
 Ipv4Address
@@ -375,6 +387,23 @@ RoutingInfo::GetEpsBearer (uint32_t teid)
   NS_LOG_FUNCTION_NOARGS ();
 
   return GetPointer (teid)->GetEpsBearer ();
+}
+
+std::string
+RoutingInfo::BlockReasonStr (BlockReason reason)
+{
+  switch (reason)
+    {
+    case RoutingInfo::TFTTABLEFULL:
+      return "TabFull";
+    case RoutingInfo::TFTMAXLOAD:
+      return "MaxLoad";
+    case RoutingInfo::BANDWIDTH:
+      return "LinkFull";
+    case RoutingInfo::NOREASON:
+    default:
+      return "-";
+    }
 }
 
 Ptr<RoutingInfo>

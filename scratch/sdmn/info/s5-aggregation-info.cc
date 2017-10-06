@@ -66,6 +66,14 @@ S5AggregationInfo::GetOperationMode (void) const
   return m_mode;
 }
 
+std::string
+S5AggregationInfo::GetOperationModeStr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return OperationModeStr (m_mode);
+}
+
 double
 S5AggregationInfo::GetThreshold (void) const
 {

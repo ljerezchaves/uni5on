@@ -250,6 +250,13 @@ public:
                        uint64_t bitRate);
 
   /**
+   * Get the string representing the given direction.
+   * \param dir The link direction.
+   * \return The link direction string.
+   */
+  static std::string DirectionStr (Direction dir);
+
+  /**
    * Get the entire list of connection information.
    * \return The list of connection information.
    */

@@ -44,6 +44,8 @@ typedef enum
   AUTO = 2    //!< Automatic.
 } OperationMode;
 
+std::string OperationModeStr (OperationMode mode);
+
 /**
  * \ingroup sdmnEpc
  * This is the abstract base class for the OpenFlow EPC controller, which
