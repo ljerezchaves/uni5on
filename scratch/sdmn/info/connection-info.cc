@@ -253,19 +253,10 @@ ConnectionInfo::GetResBitRate (Direction dir, Slice slice) const
 }
 
 double
-ConnectionInfo::GetResLinkRatio (Direction dir, Slice slice) const
-{
-  NS_LOG_FUNCTION (this << dir << slice);
-
-  return static_cast<double> (GetResBitRate (dir, slice)) / GetLinkBitRate ();
-}
-
-double
 ConnectionInfo::GetResSliceRatio (Direction dir, Slice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  NS_ASSERT_MSG (slice < Slice::ALL, "Invalid slice for this operation.");
   return static_cast<double> (GetResBitRate (dir, slice))
          / GetMaxBitRate (slice);
 }

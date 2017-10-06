@@ -174,15 +174,6 @@ public:
   uint64_t GetResBitRate (Direction dir, Slice slice = Slice::ALL) const;
 
   /**
-   * Get the reserved link ratio for traffic over this link on the given
-   * direction, optionally filtered by the network slice.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \return The reserved link ratio.
-   */
-  double GetResLinkRatio (Direction dir, Slice slice = Slice::ALL) const;
-
-  /**
    * Get the reserved slice ratio for traffic over this link on the given
    * direction for the given network slice.
    * \param dir The link direction.
