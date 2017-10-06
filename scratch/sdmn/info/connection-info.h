@@ -138,8 +138,20 @@ public:
    * \param slice The network slice.
    * \return The EWMA throughput.
    */
-  DataRate GetEwmaThp (uint64_t src, uint64_t dst,
-                       Slice slice = Slice::ALL) const;
+  DataRate GetEwmaThroughput (uint64_t src, uint64_t dst,
+                              Slice slice = Slice::ALL) const;
+
+  /**
+   * Get the exponentially weighted moving average bandwidth usage ratio for
+   * this link on the given direction, optionally filtered by the network
+   * slice.
+   * \param src The source switch datapath ID.
+   * \param dst The destination switch datapath ID.
+   * \param slice The network slice.
+   * \return The bandwidth usage ratio.
+   */
+  double GetEwmaSliceUsage (uint64_t src, uint64_t dst,
+                            Slice slice = Slice::ALL) const;
 
   /**
    * Inspect physical channel for the assigned bit rate.
@@ -174,13 +186,13 @@ public:
   uint64_t GetResBitRate (Direction dir, Slice slice = Slice::ALL) const;
 
   /**
-   * Get the reserved slice ratio for traffic over this link on the given
-   * direction for the given network slice.
+   * Get the bit rate reserved ratio for traffic over this link on the given
+   * direction, optionally filtered by the network slice.
    * \param dir The link direction.
    * \param slice The network slice.
    * \return The reserved link ratio.
    */
-  double GetResSliceRatio (Direction dir, Slice slice) const;
+  double GetResSliceRatio (Direction dir, Slice slice = Slice::ALL) const;
 
   /**
    * Get the pair of switch datapath IDs for this connection, respecting the

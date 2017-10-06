@@ -119,10 +119,11 @@ private:
    * indexes following the given routing path.
    * \param srcIdx Source switch index.
    * \param dstIdx Destination switch index.
+   * \param slice The network slice.
    * \param path The routing path.
    * \return The link use ratio on this routing path.
    */
-  double GetPathUseRatio (uint16_t srcIdx, uint16_t dstIdx,
+  double GetPathUseRatio (uint16_t srcIdx, uint16_t dstIdx, Slice slice,
                           RingRoutingInfo::RoutingPath path) const;
 
   /**

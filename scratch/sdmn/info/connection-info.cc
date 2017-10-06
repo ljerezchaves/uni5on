@@ -179,7 +179,8 @@ ConnectionInfo::GetDirection (uint64_t src, uint64_t dst) const
 }
 
 DataRate
-ConnectionInfo::GetEwmaThp (uint64_t src, uint64_t dst, Slice slice) const
+ConnectionInfo::GetEwmaThroughput (uint64_t src, uint64_t dst,
+                                   Slice slice) const
 {
   NS_LOG_FUNCTION (this << src << dst << slice);
 
@@ -197,6 +198,16 @@ ConnectionInfo::GetEwmaThp (uint64_t src, uint64_t dst, Slice slice) const
       throughput = m_slices [slice].m_ewmaThp [dir];
     }
   return DataRate (static_cast<uint64_t> (throughput));
+}
+
+double
+ConnectionInfo::GetEwmaSliceUsage (uint64_t src, uint64_t dst,
+                                   Slice slice) const
+{
+  NS_LOG_FUNCTION (this << src << dst << slice);
+
+  return static_cast<double> (GetEwmaThroughput (src, dst, slice).GetBitRate ())
+         / GetMaxBitRate (slice);
 }
 
 uint64_t

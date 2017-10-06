@@ -296,14 +296,15 @@ RingController::TopologyLinkUsage (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeid ());
 
-  // Update the aggregation metadata with link bandwidth usage.
+  // Update the aggregation metadata with slice bandwidth usage.
   Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   uint16_t pgwIdx = ringInfo->GetPgwSwIdx ();
   uint16_t sgwIdx = ringInfo->GetSgwSwIdx ();
+  Slice slice = rInfo->GetSlice ();
 
-  // FIXME Should we consider only the current traffic slice?
-  return std::max (GetPathUseRatio (pgwIdx, sgwIdx, ringInfo->GetDownPath ()),
-                   GetPathUseRatio (sgwIdx, pgwIdx, ringInfo->GetUpPath ()));
+  return std::max (
+           GetPathUseRatio (pgwIdx, sgwIdx, slice, ringInfo->GetDownPath ()),
+           GetPathUseRatio (sgwIdx, pgwIdx, slice, ringInfo->GetUpPath ()));
 }
 
 bool
@@ -499,32 +500,28 @@ RingController::GetNSwitches (void) const
 }
 
 double
-RingController::GetPathUseRatio (uint16_t srcIdx, uint16_t dstIdx,
+RingController::GetPathUseRatio (uint16_t srcIdx, uint16_t dstIdx, Slice slice,
                                  RingRoutingInfo::RoutingPath path) const
 {
   NS_LOG_FUNCTION (this << srcIdx << dstIdx << path);
 
-  uint64_t useBitRate = 0;
-  uint64_t maxBitRate = std::numeric_limits<uint64_t>::max ();
-
+  double useRatio = 0;
   uint16_t next;
-  DataRate bitRate;
+  uint64_t currId;
+  uint64_t nextId;
   Ptr<ConnectionInfo> cInfo;
   while (srcIdx != dstIdx)
     {
       next = NextSwitchIndex (srcIdx, path);
-      cInfo = GetConnectionInfo (srcIdx, next);
+      currId = GetDpId (srcIdx);
+      nextId = GetDpId (next);
 
-      // FIXME Essa função olha pro uso do enlace pra decidir se o tráfego pode
-      // ou não agregar. Ela deveria olhar para o enlace como um todo? ou
-      // apenas para o slice ao qual o tráfego pertence? A função GetEwmaThp
-      // pode aceitar como último parametro o slice.
-      bitRate = cInfo->GetEwmaThp (GetDpId (srcIdx), GetDpId (next));
-      useBitRate = std::max (useBitRate, bitRate.GetBitRate ());
-      maxBitRate = std::min (maxBitRate, cInfo->GetLinkBitRate ());
+      cInfo = GetConnectionInfo (srcIdx, next);
+      useRatio = std::max (useRatio,
+                           cInfo->GetEwmaSliceUsage (currId, nextId, slice));
       srcIdx = next;
     }
-  return static_cast<double> (useBitRate) / maxBitRate;
+  return useRatio;
 }
 
 uint16_t
