@@ -10,7 +10,8 @@ normal=$(tput sgr0)
 
 PROGNAME="sdmn"
 SIMPATH="/local1/luciano/sdmn-simulator"
-MACHINE_LIST="atlas castor clio cronos demeter dionisio eco eolo esculapio heracles hercules hermed hestia hydra kratos morfeu nix pollux satiros tetis zeus"
+# MACHINE_LIST="astreu atlas castor clio cronos demeter dionisio eco eolo esculapio heracles hercules hermes hestia hydra kratos morfeu nix pollux satiros tetis zeus"
+MACHINE_LIST="atlas castor clio cronos demeter dionisio eolo esculapio heracles hercules hermes hestia hydra kratos morfeu nix pollux satiros tetis"
 
 function PrintHelp () {
   echo "Usage: $0 --action [ARGS]"
@@ -47,7 +48,7 @@ case "${ACTION}" in
     else
       hg up
     fi;
-    ./waf -j2
+    ./waf
     cd ${OLDPWD}
   ;;
 
