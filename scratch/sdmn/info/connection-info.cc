@@ -206,8 +206,11 @@ ConnectionInfo::GetEwmaSliceUsage (uint64_t src, uint64_t dst,
 {
   NS_LOG_FUNCTION (this << src << dst << slice);
 
-  return static_cast<double> (GetEwmaThroughput (src, dst, slice).GetBitRate ())
-         / GetMaxBitRate (slice);
+  uint64_t maxRate = GetMaxBitRate (slice);
+  DataRate thp = GetEwmaThroughput (src, dst, slice);
+  NS_ASSERT_MSG (maxRate > 0, "Invalid slice usage.");
+
+  return static_cast<double> (thp.GetBitRate ()) / maxRate;
 }
 
 uint64_t
