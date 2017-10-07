@@ -214,7 +214,8 @@ EpcController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
 
   // Update the link bandwidth usage and aggregation threshold values.
   aggInfo->SetLinkUsage (TopologyLinkUsage (rInfo));
-  aggInfo->SetThreshold (rInfo->IsGbr () ? m_htcAggGbrThs : m_htcAggNonThs);
+  aggInfo->SetThreshold (rInfo->IsMtc () ? 0.0 :
+                         rInfo->IsGbr () ? m_htcAggGbrThs : m_htcAggNonThs);
   if (rInfo->IsAggregated ())
     {
       NS_LOG_INFO ("Aggregating bearer teid " << rInfo->GetTeid ());
