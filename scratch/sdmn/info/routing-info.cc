@@ -399,7 +399,7 @@ RoutingInfo::BlockReasonStr (BlockReason reason)
     case RoutingInfo::TFTMAXLOAD:
       return "MaxLoad";
     case RoutingInfo::BANDWIDTH:
-      return "LinkFull";
+      return "SliceFull";
     case RoutingInfo::NOREASON:
     default:
       return "-";
