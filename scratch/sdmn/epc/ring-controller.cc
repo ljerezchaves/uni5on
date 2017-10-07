@@ -246,9 +246,8 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       return false;
     }
 
-  // Reset the ring routing info to the shortest path.
   Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  ringInfo->ResetPath ();
+  NS_ASSERT_MSG (ringInfo->IsDefaultPath (), "Should be the shortest path.");
 
   // For Non-GBR bearers (which includes the default bearer), for bearers that
   // only transverse local switch (local routing), and for HTC aggregated
@@ -297,8 +296,11 @@ RingController::TopologyLinkUsage (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeid ());
 
-  // Update the aggregation metadata with slice bandwidth usage.
+  // Reset the ring routing info to the shortest path.
   Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  ringInfo->ResetPath ();
+
+  // Update the aggregation metadata with slice bandwidth usage.
   uint16_t pgwIdx = ringInfo->GetPgwSwIdx ();
   uint16_t sgwIdx = ringInfo->GetSgwSwIdx ();
   Slice slice = rInfo->GetSlice ();
