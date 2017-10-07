@@ -190,12 +190,12 @@ ConnectionInfo::GetEwmaThroughput (uint64_t src, uint64_t dst,
     {
       for (int i = 0; i < Slice::ALL; i++)
         {
-          throughput += m_slices [i].m_ewmaThp [dir];
+          throughput += m_slices [i].ewmaThp [dir];
         }
     }
   else
     {
-      throughput = m_slices [slice].m_ewmaThp [dir];
+      throughput = m_slices [slice].ewmaThp [dir];
     }
   return DataRate (static_cast<uint64_t> (throughput));
 }
@@ -230,7 +230,7 @@ ConnectionInfo::GetMaxBitRate (Slice slice) const
     }
   else
     {
-      bitrate = m_slices [slice].m_maxRate;
+      bitrate = m_slices [slice].maxRate;
     }
   return bitrate;
 }
@@ -253,12 +253,12 @@ ConnectionInfo::GetResBitRate (Direction dir, Slice slice) const
     {
       for (int i = 0; i < Slice::ALL; i++)
         {
-          bitrate += m_slices [i].m_resRate [dir];
+          bitrate += m_slices [i].resRate [dir];
         }
     }
   else
     {
-      bitrate = m_slices [slice].m_resRate [dir];
+      bitrate = m_slices [slice].resRate [dir];
     }
   return bitrate;
 }
@@ -290,12 +290,12 @@ ConnectionInfo::GetTxBytes (Direction dir, Slice slice) const
     {
       for (int i = 0; i < Slice::ALL; i++)
         {
-          bytes += m_slices [i].m_txBytes [dir];
+          bytes += m_slices [i].txBytes [dir];
         }
     }
   else
     {
-      bytes = m_slices [slice].m_txBytes [dir];
+      bytes = m_slices [slice].txBytes [dir];
     }
   return bytes;
 }
@@ -339,7 +339,7 @@ ConnectionInfo::ReleaseBitRate (uint64_t src, uint64_t dst, Slice slice,
   // Releasing the bit rate.
   NS_LOG_DEBUG ("Releasing bit rate on slice " << SliceStr (slice) <<
                 " in " << DirectionStr (dir) << " direction.");
-  m_slices [slice].m_resRate [dir] -= bitRate;
+  m_slices [slice].resRate [dir] -= bitRate;
   NS_LOG_DEBUG ("Current reserved bit rate: " << GetResBitRate (dir, slice));
 
   // Updating the meter bit rate.
@@ -380,7 +380,7 @@ ConnectionInfo::ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
   // Reserving the bit rate.
   NS_LOG_DEBUG ("Reserving bit rate on slice " << SliceStr (slice) <<
                 " in " << DirectionStr (dir) << " direction.");
-  m_slices [slice].m_resRate [dir] += bitRate;
+  m_slices [slice].resRate [dir] += bitRate;
   NS_LOG_DEBUG ("Current reserved bit rate: " << GetResBitRate (dir, slice));
 
   // Updating the meter bit rate.
@@ -458,18 +458,18 @@ ConnectionInfo::NotifyConstructionCompleted (void)
       gbrRate = static_cast<uint64_t> (GetLinkBitRate () * m_gbrSliceQuota);
       dftRate = GetLinkBitRate () - gbrRate - mtcRate;
 
-      m_slices [Slice::MTC].m_maxRate = mtcRate;
-      m_slices [Slice::GBR].m_maxRate = gbrRate;
-      m_slices [Slice::DFT].m_maxRate = dftRate;
+      m_slices [Slice::MTC].maxRate = mtcRate;
+      m_slices [Slice::GBR].maxRate = gbrRate;
+      m_slices [Slice::DFT].maxRate = dftRate;
     }
   else
     {
-      m_slices [Slice::DFT].m_maxRate = GetLinkBitRate ();
+      m_slices [Slice::DFT].maxRate = GetLinkBitRate ();
     }
 
-  NS_LOG_DEBUG ("DFT maximum bit rate: " <<  m_slices [Slice::DFT].m_maxRate);
-  NS_LOG_DEBUG ("GBR maximum bit rate: " <<  m_slices [Slice::GBR].m_maxRate);
-  NS_LOG_DEBUG ("MTC maximum bit rate: " <<  m_slices [Slice::MTC].m_maxRate);
+  NS_LOG_DEBUG ("DFT maximum bit rate: " <<  m_slices [Slice::DFT].maxRate);
+  NS_LOG_DEBUG ("GBR maximum bit rate: " <<  m_slices [Slice::GBR].maxRate);
+  NS_LOG_DEBUG ("MTC maximum bit rate: " <<  m_slices [Slice::MTC].maxRate);
 
   // Set initial meter bit rate to maximum, as we don't have any reserved bit
   // rate at this moment.
@@ -502,13 +502,13 @@ ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
   if (packet->PeekPacketTag (gtpuTag))
     {
       Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (gtpuTag.GetTeid ());
-      m_slices [rInfo->GetSlice ()].m_txBytes [dir] += packet->GetSize ();
+      m_slices [rInfo->GetSlice ()].txBytes [dir] += packet->GetSize ();
     }
   else
     {
       // For the case of non-tagged packets, save bytes in default slice.
       NS_LOG_WARN ("No GTPU packet tag found.");
-      m_slices [Slice::DFT].m_txBytes [dir] += packet->GetSize ();
+      m_slices [Slice::DFT].txBytes [dir] += packet->GetSize ();
     }
 }
 
@@ -522,12 +522,12 @@ ConnectionInfo::UpdateStatistics (void)
     {
       for (int d = 0; d <= ConnectionInfo::BWD; d++)
         {
-          double bytes = static_cast<double> (m_slices [s].m_txBytes [d] -
-                                              m_slices [s].m_lastTxBytes [d]);
+          double bytes = static_cast<double> (m_slices [s].txBytes [d] -
+                                              m_slices [s].lastTxBytes [d]);
 
-          m_slices [s].m_ewmaThp [d] = (m_alpha * 8 * bytes / elapSecs) +
-            (1 - m_alpha) * m_slices [s].m_ewmaThp [d];
-          m_slices [s].m_lastTxBytes [d] = m_slices [s].m_txBytes [d];
+          m_slices [s].ewmaThp [d] = (m_alpha * 8 * bytes / elapSecs) +
+            (1 - m_alpha) * m_slices [s].ewmaThp [d];
+          m_slices [s].lastTxBytes [d] = m_slices [s].txBytes [d];
         }
     }
 

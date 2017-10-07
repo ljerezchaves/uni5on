@@ -65,19 +65,19 @@ public:
   /** Metadata associated to a network slice. */
   struct SliceData
   {
-    uint64_t m_maxRate;               //!< Maximum bit rate.
-    uint64_t m_resRate [2];           //!< Reserved bit rate.
-    double   m_ewmaThp [2];           //!< EWMA throughput.
-    uint64_t m_txBytes [2];           //!< Total TX bytes.
-    uint64_t m_lastTxBytes [2];       //!< Last timeout TX bytes.
+    uint64_t maxRate;               //!< Maximum bit rate.
+    uint64_t resRate [2];           //!< Reserved bit rate.
+    double   ewmaThp [2];           //!< EWMA throughput.
+    uint64_t txBytes [2];           //!< Total TX bytes.
+    uint64_t lastTxBytes [2];       //!< Last timeout TX bytes.
   };
 
   /** Metadata associated to a switch. */
   struct SwitchData
   {
-    Ptr<OFSwitch13Device>     swDev;    //!< OpenFlow switch device.
-    Ptr<CsmaNetDevice>        portDev;  //!< OpenFlow CSMA port device.
-    uint32_t                  portNo;   //!< OpenFlow port number.
+    Ptr<OFSwitch13Device> swDev;    //!< OpenFlow switch device.
+    Ptr<CsmaNetDevice>    portDev;  //!< OpenFlow CSMA port device.
+    uint32_t              portNo;   //!< OpenFlow port number.
   };
 
   /** Link direction. */
