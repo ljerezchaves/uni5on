@@ -177,6 +177,14 @@ public:
   uint64_t GetMeterBitRate (Direction dir) const;
 
   /**
+   * Get the bit rate meter ratio for best-effort traffic over this link on the
+   * given direction.
+   * \param dir The link direction.
+   * \return The meter link ratio.
+   */
+  double GetMeterLinkRatio (Direction dir) const;
+
+  /**
    * Get the reserved bit rate for traffic over this link on the given
    * direction, optionally filtered by the network slice.
    * \param dir The link direction.
@@ -190,7 +198,7 @@ public:
    * direction, optionally filtered by the network slice.
    * \param dir The link direction.
    * \param slice The network slice.
-   * \return The reserved link ratio.
+   * \return The reserved slice ratio.
    */
   double GetResSliceRatio (Direction dir, Slice slice = Slice::ALL) const;
 

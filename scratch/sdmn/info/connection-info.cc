@@ -243,6 +243,14 @@ ConnectionInfo::GetMeterBitRate (Direction dir) const
   return m_meterBitRate [dir];
 }
 
+double
+ConnectionInfo::GetMeterLinkRatio (Direction dir) const
+{
+  NS_LOG_FUNCTION (this << dir);
+
+  return static_cast<double> (GetMeterBitRate (dir)) / GetLinkBitRate ();
+}
+
 uint64_t
 ConnectionInfo::GetResBitRate (Direction dir, Slice slice) const
 {
