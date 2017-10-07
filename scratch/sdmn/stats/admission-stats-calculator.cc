@@ -35,15 +35,13 @@ NS_LOG_COMPONENT_DEFINE ("AdmissionStatsCalculator");
 NS_OBJECT_ENSURE_REGISTERED (AdmissionStatsCalculator);
 
 AdmissionStatsCalculator::AdmissionStatsCalculator ()
-  : m_nonRequests   (0),
-    m_nonAccepted   (0),
-    m_nonBlocked    (0),
-    m_nonAggregated (0),
-    m_gbrRequests   (0),
-    m_gbrAccepted   (0),
-    m_gbrBlocked    (0),
-    m_gbrAggregated (0),
+  : m_releases (0),
+    m_requests (0),
+    m_accepted (0),
+    m_blocked (0),
+    m_aggregated (0),
     m_activeBearers (0),
+    m_instalBearers (0),
     m_aggregBearers (0)
 {
   NS_LOG_FUNCTION (this);
@@ -74,12 +72,6 @@ AdmissionStatsCalculator::GetTypeId (void)
                    MakeStringAccessor (
                      &AdmissionStatsCalculator::m_admFilename),
                    MakeStringChecker ())
-    .AddAttribute ("AggStatsFilename",
-                   "Filename for bearer aggregation statistics.",
-                   StringValue ("admission-aggregation.log"),
-                   MakeStringAccessor (
-                     &AdmissionStatsCalculator::m_aggFilename),
-                   MakeStringChecker ())
     .AddAttribute ("BrqStatsFilename",
                    "Filename for bearer request statistics.",
                    StringValue ("admission-requests.log"),
@@ -102,41 +94,16 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
   NS_ASSERT_MSG (ringInfo, "No ring information for this routing info.");
 
   // Update internal counters.
-  if (rInfo->IsGbr ())
+  m_requests++;
+  if (rInfo->IsBlocked ())
     {
-      m_gbrRequests++;
-      if (rInfo->IsBlocked ())
-        {
-          m_gbrBlocked++;
-        }
-      else
-        {
-          m_gbrAccepted++;
-          m_activeBearers++;
-          if (rInfo->IsAggregated ())
-            {
-              m_gbrAggregated++;
-              m_aggregBearers++;
-            }
-        }
+      m_blocked++;
     }
   else
     {
-      m_nonRequests++;
-      if (rInfo->IsBlocked ())
-        {
-          m_nonBlocked++;
-        }
-      else
-        {
-          m_nonAccepted++;
-          m_activeBearers++;
-          if (rInfo->IsAggregated ())
-            {
-              m_nonAggregated++;
-              m_aggregBearers++;
-            }
-        }
+      m_accepted++;
+      m_activeBearers++;
+      rInfo->IsAggregated () ? m_aggregBearers++ : m_instalBearers++;
     }
 
   // Preparing bearer request stats for trace source.
@@ -157,32 +124,24 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
   << " " << setw (6) << rInfo->IsGbr ()
   << " " << setw (6) << rInfo->IsMtc ()
   << " " << setw (6) << rInfo->IsDefault ()
-  << " " << setw (6) << rInfo->IsAggregated ()
   << " " << setw (5) << ueInfo->GetImsi ()
   << " " << setw (4) << ueInfo->GetCellId ()
   << " " << setw (6) << ringInfo->GetSgwSwDpId ()
   << " " << setw (6) << ringInfo->GetPgwSwDpId ()
   << " " << setw (6) << rInfo->GetPgwTftIdx ()
+  << " " << setw (6) << rInfo->GetSliceStr ()
   << " " << setw (8) << dwBitRate
   << " " << setw (8) << upBitRate
   << " " << setw (6) << rInfo->IsBlocked ()
   << " " << setw (9) << rInfo->GetBlockReasonStr ()
   << " " << setw (9) << ringInfo->GetPathStr ()
-  << std::endl;
-
-  // Save aggregation stats into output file.
-  *m_aggWrapper->GetStream ()
-  << left << setprecision (4)
-  << setw (11) << Simulator::Now ().GetSeconds ()
-  << right << setprecision (2)
-  << " " << setw (8) << rInfo->GetTeid ()
-  << " " << setw (6) << rInfo->IsGbr ()
-  << " " << setw (6) << rInfo->IsMtc ()
-  << " " << setw (6) << rInfo->IsDefault ()
-  << " " << setw (6) << rInfo->IsBlocked ()
-  << " " << setw (6) << rInfo->IsAggregated ()
   << " " << setw (6) << aggInfo->GetLinkUsage ()
   << " " << setw (6) << aggInfo->GetThreshold ()
+  << " " << setw (6) << aggInfo->GetOperationModeStr ()
+  << " " << setw (6) << rInfo->IsAggregated ()
+  << " " << setw (6) << m_activeBearers
+  << " " << setw (6) << m_instalBearers
+  << " " << setw (6) << m_aggregBearers
   << std::endl;
 }
 
@@ -192,11 +151,9 @@ AdmissionStatsCalculator::NotifyBearerRelease (Ptr<const RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo);
 
   NS_ASSERT_MSG (m_activeBearers, "No active bearer here.");
+  m_releases++;
   m_activeBearers--;
-  if (rInfo->IsAggregated ())
-    {
-      m_aggregBearers--;
-    }
+  rInfo->IsAggregated () ? m_aggregBearers-- : m_instalBearers--;
 }
 
 void
@@ -205,7 +162,6 @@ AdmissionStatsCalculator::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   m_admWrapper = 0;
-  m_aggWrapper = 0;
   m_brqWrapper = 0;
 }
 
@@ -218,7 +174,6 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
   SetAttribute ("AdmStatsFilename", StringValue (prefix + m_admFilename));
-  SetAttribute ("AggStatsFilename", StringValue (prefix + m_aggFilename));
   SetAttribute ("BrqStatsFilename", StringValue (prefix + m_brqFilename));
 
   m_admWrapper = Create<OutputStreamWrapper> (m_admFilename, std::ios::out);
@@ -227,30 +182,14 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   << left
   << setw (12) << "Time(s)"
   << right
-  << setw (8) << "ReqGbr"
-  << setw (8) << "ReqNon"
-  << setw (8) << "AggGbr"
-  << setw (8) << "AggNon"
-  << setw (8) << "BlkGbr"
-  << setw (8) << "BlkNon"
-  << setw (8) << "CurBea"
-  << setw (8) << "CurAgg"
-  << std::endl;
-
-  m_aggWrapper = Create<OutputStreamWrapper> (m_aggFilename, std::ios::out);
-  *m_aggWrapper->GetStream ()
-  << boolalpha << fixed
-  << left
-  << setw (12) << "Time(s)"
-  << right
-  << setw (8)  << "TEID"
-  << setw (7)  << "IsGBR"
-  << setw (7)  << "IsMTC"
-  << setw (7)  << "IsDft"
-  << setw (7)  << "Block"
-  << setw (7)  << "IsAgg"
-  << setw (7)  << "BwUse"
-  << setw (7)  << "BwThs"
+  << setw (7) << "Relea"
+  << setw (7) << "Reque"
+  << setw (7) << "Accep"
+  << setw (7) << "Block"
+  << setw (7) << "Aggre"
+  << setw (7) << "#Actv"
+  << setw (7) << "#Inst"
+  << setw (7) << "#Aggr"
   << std::endl;
 
   m_brqWrapper = Create<OutputStreamWrapper> (m_brqFilename, std::ios::out);
@@ -264,17 +203,24 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   << setw (7)  << "IsGBR"
   << setw (7)  << "IsMTC"
   << setw (7)  << "IsDft"
-  << setw (7)  << "IsAgg"
   << setw (6)  << "IMSI"
   << setw (5)  << "CGI"
   << setw (7)  << "SGWsw"
   << setw (7)  << "PGWsw"
   << setw (7)  << "TFTsw"
+  << setw (7)  << "Slice"
   << setw (9)  << "DwReq"
   << setw (9)  << "UpReq"
   << setw (7)  << "Block"
   << setw (10) << "Reason"
   << setw (10) << "RingPath"
+  << setw (7)  << "SlUse"
+  << setw (7)  << "AggTh"
+  << setw (7)  << "OpMod"
+  << setw (7)  << "IsAgg"
+  << setw (7)  << "#Actv"
+  << setw (7)  << "#Inst"
+  << setw (7)  << "#Aggr"
   << std::endl;
 
   TimeValue timeValue;
@@ -295,14 +241,14 @@ AdmissionStatsCalculator::DumpStatistics (Time nextDump)
   << left << setprecision (4)
   << setw (11) << Simulator::Now ().GetSeconds ()
   << right << setprecision (2)
-  << " " << setw (8) << m_gbrRequests
-  << " " << setw (7) << m_nonRequests
-  << " " << setw (7) << m_gbrAggregated
-  << " " << setw (7) << m_nonAggregated
-  << " " << setw (7) << m_gbrBlocked
-  << " " << setw (7) << m_nonBlocked
-  << " " << setw (7) << m_activeBearers
-  << " " << setw (7) << m_aggregBearers
+  << " " << setw (7) << m_releases
+  << " " << setw (6) << m_requests
+  << " " << setw (6) << m_accepted
+  << " " << setw (6) << m_blocked
+  << " " << setw (6) << m_aggregated
+  << " " << setw (6) << m_activeBearers
+  << " " << setw (6) << m_instalBearers
+  << " " << setw (6) << m_aggregBearers
   << std::endl;
 
   ResetCounters ();
@@ -315,14 +261,11 @@ AdmissionStatsCalculator::ResetCounters ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_nonRequests   = 0;
-  m_nonAccepted   = 0;
-  m_nonBlocked    = 0;
-  m_nonAggregated = 0,
-  m_gbrRequests   = 0;
-  m_gbrAccepted   = 0;
-  m_gbrBlocked    = 0;
-  m_gbrAggregated = 0;
+  m_releases   = 0;
+  m_requests   = 0;
+  m_accepted   = 0;
+  m_blocked    = 0;
+  m_aggregated = 0;
 }
 
 } // Namespace ns3
