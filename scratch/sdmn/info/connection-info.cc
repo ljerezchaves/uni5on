@@ -276,8 +276,16 @@ ConnectionInfo::GetResSliceRatio (Direction dir, Slice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  return static_cast<double> (GetResBitRate (dir, slice))
-         / GetMaxBitRate (slice);
+  if (GetMaxBitRate (slice) == 0)
+    {
+      NS_ASSERT_MSG (GetResBitRate (dir, slice) == 0, "Invalid slice usage.");
+      return 0.0;
+    }
+  else
+    {
+      return static_cast<double> (GetResBitRate (dir, slice))
+             / GetMaxBitRate (slice);
+    }
 }
 
 DpIdPair_t
