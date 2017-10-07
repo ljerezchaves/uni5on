@@ -38,6 +38,16 @@ class ConnectionInfo;
 class BackhaulStatsCalculator : public Object
 {
 public:
+  /** Statisctics for a network slice. */
+  struct SliceStats
+  {
+    std::vector<uint64_t>     fwdBytes;     //!< FWD TX bytes per connetion.
+    std::vector<uint64_t>     bwdBytes;     //!< BWD TX bytes per connetion.
+
+    Ptr<OutputStreamWrapper>  resWrapper;   //!< RegStats file wrapper.
+    Ptr<OutputStreamWrapper>  thpWrapper;   //!< RenStats file wrapper.
+  };
+
   BackhaulStatsCalculator ();          //!< Default constructor.
   virtual ~BackhaulStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
@@ -61,19 +71,18 @@ private:
    */
   void DumpStatistics (Time nextDump);
 
-  ConnInfoList_t            m_connections;    //!< Switch connections.
-  Time                      m_lastUpdate;     //!< Last update time.
-  std::string               m_regFilename;    //!< RegStats filename.
-  Ptr<OutputStreamWrapper>  m_regWrapper;     //!< RegStats file wrapper.
-  std::string               m_renFilename;    //!< RenStats filename.
-  Ptr<OutputStreamWrapper>  m_renWrapper;     //!< RenStats file wrapper.
-  std::string               m_bwbFilename;    //!< BwbStats filename.
-  Ptr<OutputStreamWrapper>  m_bwbWrapper;     //!< BwbStats file wrapper.
-  std::string               m_bwgFilename;    //!< BwgStats filename.
-  Ptr<OutputStreamWrapper>  m_bwgWrapper;     //!< BwgStats file wrapper.
-  std::string               m_bwnFilename;    //!< BwnStats filename.
-  Ptr<OutputStreamWrapper>  m_bwnWrapper;     //!< BwnStats file wrapper.
-  uint64_t                  *m_counters;      //!< Internal counters.
+  ConnInfoList_t            m_connections;  //!< Switch connections.
+  Time                      m_lastUpdate;   //!< Last update time.
+
+  std::string               m_prefix;       //!< Common filename prefix.
+  std::string               m_resSuffix;    //!< Res filename suffix.
+  std::string               m_thpSuffix;    //!< Thp filename suffix.
+
+  std::string               m_shrFilename;  //!< Shared BE stats filename.
+  Ptr<OutputStreamWrapper>  m_shrWrapper;   //!< Shared BR stats file wrapper.
+
+  SliceStats                m_slices [Slice::ALL];
+
 };
 
 } // namespace ns3

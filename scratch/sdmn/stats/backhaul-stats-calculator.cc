@@ -46,36 +46,28 @@ BackhaulStatsCalculator::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::BackhaulStatsCalculator")
     .SetParent<Object> ()
     .AddConstructor<BackhaulStatsCalculator> ()
-    .AddAttribute ("RegStatsFilename",
-                   "Filename for GBR reservation statistics.",
-                   StringValue ("backhaul-reserve-gbr.log"),
+    .AddAttribute ("ShrStatsFilename",
+                   "Filename for shared best-effort reservation statistics.",
+                   StringValue ("backhaul-shared-res.log"),
                    MakeStringAccessor (
-                     &BackhaulStatsCalculator::m_regFilename),
+                     &BackhaulStatsCalculator::m_shrFilename),
                    MakeStringChecker ())
-    .AddAttribute ("RenStatsFilename",
-                   "Filename for Non-GBR allowed bandwidth statistics.",
-                   StringValue ("backhaul-reserve-nongbr.log"),
-                   MakeStringAccessor (
-                     &BackhaulStatsCalculator::m_renFilename),
+    .AddAttribute ("StatsPrefix",
+                   "Filename prefix for slice statistics.",
+                   StringValue ("backhaul-"),
+                   MakeStringAccessor (&BackhaulStatsCalculator::m_prefix),
                    MakeStringChecker ())
-    .AddAttribute ("BwbStatsFilename",
-                   "Filename for network bandwidth statistics.",
-                   StringValue ("backhaul-throughput-all.log"),
-                   MakeStringAccessor (
-                     &BackhaulStatsCalculator::m_bwbFilename),
+    .AddAttribute ("ResStatsSuffix",
+                   "Filename suffix for slice reservation statistics.",
+                   StringValue ("-res.log"),
+                   MakeStringAccessor (&BackhaulStatsCalculator::m_resSuffix),
                    MakeStringChecker ())
-    .AddAttribute ("BwgStatsFilename",
-                   "Filename for GBR bandwidth statistics.",
-                   StringValue ("backhaul-throughput-gbr.log"),
-                   MakeStringAccessor (
-                     &BackhaulStatsCalculator::m_bwgFilename),
+    .AddAttribute ("ThpStatsSuffix",
+                   "Filename suffix for slice throughput statistics.",
+                   StringValue ("-thp.log"),
+                   MakeStringAccessor (&BackhaulStatsCalculator::m_thpSuffix),
                    MakeStringChecker ())
-    .AddAttribute ("BwnStatsFilename",
-                   "Filename for Non-GBR bandwidth statistics.",
-                   StringValue ("backhaul-throughput-nongbr.log"),
-                   MakeStringAccessor (
-                     &BackhaulStatsCalculator::m_bwnFilename),
-                   MakeStringChecker ());
+  ;
   return tid;
 }
 
@@ -84,14 +76,15 @@ BackhaulStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_bwbWrapper = 0;
-  m_bwgWrapper = 0;
-  m_bwnWrapper = 0;
-  m_regWrapper = 0;
-  m_renWrapper = 0;
+  m_shrWrapper = 0;
   m_connections.clear ();
-//  free (m_counters); // TODO remover.
-  m_counters = 0;
+  for (int i = 0; i < Slice::ALL; i++)
+    {
+      m_slices [i].resWrapper = 0;
+      m_slices [i].thpWrapper = 0;
+      m_slices [i].fwdBytes.clear ();
+      m_slices [i].bwdBytes.clear ();
+    }
 }
 
 void
@@ -99,86 +92,70 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-//   StringValue stringValue;
-//   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
-//   std::string prefix = stringValue.Get ();
-//   SetAttribute ("RegStatsFilename", StringValue (prefix + m_regFilename));
-//   SetAttribute ("RenStatsFilename", StringValue (prefix + m_renFilename));
-//   SetAttribute ("BwbStatsFilename", StringValue (prefix + m_bwbFilename));
-//   SetAttribute ("BwgStatsFilename", StringValue (prefix + m_bwgFilename));
-//   SetAttribute ("BwnStatsFilename", StringValue (prefix + m_bwnFilename));
-// 
-//   m_bwbWrapper = Create<OutputStreamWrapper> (m_bwbFilename, std::ios::out);
-//   *m_bwbWrapper->GetStream ()
-//   << left << fixed << setprecision (4)
-//   << setw (12) << "Time(s)";
-// 
-//   m_bwgWrapper = Create<OutputStreamWrapper> (m_bwgFilename, std::ios::out);
-//   *m_bwgWrapper->GetStream ()
-//   << left << fixed << setprecision (4)
-//   << setw (12) << "Time(s)";
-// 
-//   m_bwnWrapper = Create<OutputStreamWrapper> (m_bwnFilename, std::ios::out);
-//   *m_bwnWrapper->GetStream ()
-//   << left << fixed << setprecision (4)
-//   << setw (12) << "Time(s)";
-// 
-//   m_regWrapper = Create<OutputStreamWrapper> (m_regFilename, std::ios::out);
-//   *m_regWrapper->GetStream ()
-//   << left << fixed << setprecision (4)
-//   << setw (12) << "Time(s)";
-// 
-//   m_renWrapper = Create<OutputStreamWrapper> (m_renFilename, std::ios::out);
-//   *m_renWrapper->GetStream ()
-//   << left << fixed << setprecision (4)
-//   << setw (12) << "Time(s)";
-// 
-//   m_connections = ConnectionInfo::GetList ();
-//   ConnInfoList_t::const_iterator it;
-//   for (it = m_connections.begin (); it != m_connections.end (); it++)
-//     {
-//       DpIdPair_t key = (*it)->GetSwitchDpIdPair ();
-// 
-//       *m_bwbWrapper->GetStream ()
-//       << right << setw (12) << key.first  << "-"
-//       << left  << setw (12) << key.second << "   ";
-// 
-//       *m_bwgWrapper->GetStream ()
-//       << right << setw (12) << key.first  << "-"
-//       << left  << setw (12) << key.second << "   ";
-// 
-//       *m_bwnWrapper->GetStream ()
-//       << right << setw (12) << key.first  << "-"
-//       << left  << setw (12) << key.second << "   ";
-// 
-//       *m_regWrapper->GetStream ()
-//       << left
-//       << right << setw (6) << key.first  << "-"
-//       << left  << setw (6) << key.second << "   ";
-// 
-//       *m_renWrapper->GetStream ()
-//       << left
-//       << right << setw (6) << key.first  << "-"
-//       << left  << setw (6) << key.second << "   ";
-//     }
-// 
-//   *m_bwbWrapper->GetStream () << left << std::endl;
-//   *m_bwgWrapper->GetStream () << left << std::endl;
-//   *m_bwnWrapper->GetStream () << left << std::endl;
-//   *m_regWrapper->GetStream () << left << std::endl;
-//   *m_renWrapper->GetStream () << left << std::endl;
-// 
-//   // For each connection info, we will save 4 counters:
-//   // lastGbrFwdBytes, lastGbrBwdBytes, lastNonFwdBytes, lastNonBwdBytes.
-//   size_t numConn = m_connections.size ();
-//   m_counters = (uint64_t*)calloc (4 * numConn, sizeof (uint64_t));
-// 
-//   TimeValue timeValue;
-//   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
-//   Time firstDump = timeValue.Get ();
-//   Simulator::Schedule (firstDump, &BackhaulStatsCalculator::DumpStatistics,
-//                        this, firstDump);
-// 
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+  SetAttribute ("ShrStatsFilename", StringValue (prefix + m_shrFilename));
+  SetAttribute ("StatsPrefix", StringValue (prefix + m_prefix));
+
+  m_shrWrapper = Create<OutputStreamWrapper> (m_shrFilename, std::ios::out);
+  *m_shrWrapper->GetStream ()
+  << left << fixed << setprecision (4)
+  << setw (12) << "Time(s)";
+
+  m_connections = ConnectionInfo::GetList ();
+  ConnInfoList_t::const_iterator it;
+  for (it = m_connections.begin (); it != m_connections.end (); it++)
+    {
+      DpIdPair_t key = (*it)->GetSwitchDpIdPair ();
+
+      *m_shrWrapper->GetStream ()
+      << right << setw (4) << key.first  << "-"
+      << left  << setw (4) << key.second << "   ";
+    }
+  *m_shrWrapper->GetStream () << left << std::endl;
+
+  for (int i = 0; i < Slice::ALL; i++)
+    {
+      std::string statsPrefix = m_prefix + SliceStr (static_cast<Slice> (i));
+
+      m_slices [i].resWrapper = Create<OutputStreamWrapper> (
+          statsPrefix + m_resSuffix, std::ios::out);
+      *m_slices [i].resWrapper->GetStream ()
+      << left << fixed << setprecision (4)
+      << setw (12) << "Time(s)";
+
+      m_slices [i].thpWrapper = Create<OutputStreamWrapper> (
+          statsPrefix + m_thpSuffix, std::ios::out);
+      *m_slices [i].thpWrapper->GetStream ()
+      << left << fixed << setprecision (4)
+      << setw (12) << "Time(s)";
+
+      for (it = m_connections.begin (); it != m_connections.end (); it++)
+        {
+          DpIdPair_t key = (*it)->GetSwitchDpIdPair ();
+
+          *m_slices [i].resWrapper->GetStream ()
+          << right << setw (4) << key.first  << "-"
+          << left  << setw (4) << key.second << "   ";
+
+          *m_slices [i].thpWrapper->GetStream ()
+          << right << setw (10) << key.first  << "-"
+          << left  << setw (10) << key.second << "   ";
+
+          m_slices [i].fwdBytes.push_back (0);
+          m_slices [i].bwdBytes.push_back (0);
+        }
+      *m_slices [i].resWrapper->GetStream () << left << std::endl;
+      *m_slices [i].thpWrapper->GetStream () << left << std::endl;
+    }
+
+  TimeValue timeValue;
+  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
+  Time firstDump = timeValue.Get ();
+  Simulator::Schedule (firstDump, &BackhaulStatsCalculator::DumpStatistics,
+                       this, firstDump);
+
   Object::NotifyConstructionCompleted ();
 }
 void
@@ -186,92 +163,76 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
 {
   NS_LOG_FUNCTION (this);
 
-//   *m_bwbWrapper->GetStream ()
-//   << left << setw (12)
-//   << Simulator::Now ().GetSeconds ();
-// 
-//   *m_bwgWrapper->GetStream ()
-//   << left << setw (12)
-//   << Simulator::Now ().GetSeconds ();
-// 
-//   *m_bwnWrapper->GetStream ()
-//   << left << setw (12)
-//   << Simulator::Now ().GetSeconds ();
-// 
-//   *m_regWrapper->GetStream ()
-//   << left << setw (12)
-//   << Simulator::Now ().GetSeconds ();
-// 
-//   *m_renWrapper->GetStream ()
-//   << left << setw (12)
-//   << Simulator::Now ().GetSeconds ();
-// 
-//   double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
-//   uint32_t idx;
-//   ConnInfoList_t::const_iterator it;
-//   for (idx = 0, it = m_connections.begin ();
-//        it != m_connections.end (); ++it, ++idx)
-//     {
-//       uint32_t row = 4U * idx;
-//       Ptr<ConnectionInfo> cInfo = *it;
-//       uint64_t gbrFwdBytes = cInfo->GetGbrTxBytes (ConnectionInfo::FWD);
-//       uint64_t gbrBwdBytes = cInfo->GetGbrTxBytes (ConnectionInfo::BWD);
-//       uint64_t nonFwdBytes = cInfo->GetNonGbrTxBytes (ConnectionInfo::FWD);
-//       uint64_t nonBwdBytes = cInfo->GetNonGbrTxBytes (ConnectionInfo::BWD);
-// 
-//       double gbrFwdKbits =
-//         static_cast<double> (gbrFwdBytes - m_counters [row + 0]) * 8 / 1000;
-//       double gbrBwdKbits =
-//         static_cast<double> (gbrBwdBytes - m_counters [row + 1]) * 8 / 1000;
-//       double nonFwdKbits =
-//         static_cast<double> (nonFwdBytes - m_counters [row + 2]) * 8 / 1000;
-//       double nonBwdKbits =
-//         static_cast<double> (nonBwdBytes - m_counters [row + 3]) * 8 / 1000;
-// 
-//       m_counters [row + 0] = gbrFwdBytes;
-//       m_counters [row + 1] = gbrBwdBytes;
-//       m_counters [row + 2] = nonFwdBytes;
-//       m_counters [row + 3] = nonBwdBytes;
-// 
-//       *m_bwgWrapper->GetStream ()
-//       << setfill ('0')
-//       << right
-//       << setw (12) << gbrFwdKbits / elapSecs << " "
-//       << setw (12) << gbrBwdKbits / elapSecs << "   ";
-// 
-//       *m_bwnWrapper->GetStream ()
-//       << setfill ('0')
-//       << right
-//       << setw (12) << nonFwdKbits / elapSecs << " "
-//       << setw (12) << nonBwdKbits / elapSecs << "   ";
-// 
-//       *m_bwbWrapper->GetStream ()
-//       << setfill ('0')
-//       << right
-//       << setw (12) << (gbrFwdKbits + nonFwdKbits) / elapSecs << " "
-//       << setw (12) << (gbrBwdKbits + nonBwdKbits) / elapSecs << "   ";
-// 
-//       *m_regWrapper->GetStream ()
-//       << right
-//       << setw (6) << cInfo->GetResGbrLinkRatio (ConnectionInfo::FWD) << " "
-//       << setw (6) << cInfo->GetResGbrLinkRatio (ConnectionInfo::BWD) << "   ";
-// 
-//       *m_renWrapper->GetStream ()
-//       << right
-//       << setw (6) << cInfo->GetResNonGbrLinkRatio (ConnectionInfo::FWD) << " "
-//       << setw (6) << cInfo->GetResNonGbrLinkRatio (ConnectionInfo::BWD)
-//       << "   ";
-//     }
-// 
-//   *m_bwbWrapper->GetStream () << setfill (' ') << std::endl;
-//   *m_bwgWrapper->GetStream () << setfill (' ') << std::endl;
-//   *m_bwnWrapper->GetStream () << setfill (' ') << std::endl;
-//   *m_regWrapper->GetStream () << std::endl;
-//   *m_renWrapper->GetStream () << std::endl;
-// 
-//   m_lastUpdate = Simulator::Now ();
-//   Simulator::Schedule (nextDump, &BackhaulStatsCalculator::DumpStatistics,
-//                        this, nextDump);
+  double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
+
+  *m_shrWrapper->GetStream ()
+  << left << setprecision (4)
+  << setw (12) << Simulator::Now ().GetSeconds ()
+  << setprecision (2);
+
+  uint32_t cIdx;
+  Ptr<ConnectionInfo> cInfo;
+  ConnInfoList_t::const_iterator it;
+  for (cIdx = 0, it = m_connections.begin ();
+       it != m_connections.end (); ++it, ++cIdx)
+    {
+      cInfo = *it;
+      *m_shrWrapper->GetStream ()
+      << right
+      << setw (4) << cInfo->GetMeterLinkRatio (ConnectionInfo::FWD) << " "
+      << setw (4) << cInfo->GetMeterLinkRatio (ConnectionInfo::BWD) << "   ";
+    }
+  *m_shrWrapper->GetStream () << std::endl;
+
+  for (int i = 0; i < Slice::ALL; i++)
+    {
+      *m_slices [i].resWrapper->GetStream ()
+      << left << setprecision (4)
+      << setw (12) << Simulator::Now ().GetSeconds ()
+      << setprecision (2);
+
+      *m_slices [i].thpWrapper->GetStream ()
+      << left << setprecision (4)
+      << setw (12) << Simulator::Now ().GetSeconds ()
+      << setprecision (2);
+
+      for (cIdx = 0, it = m_connections.begin ();
+           it != m_connections.end (); ++it, ++cIdx)
+        {
+          cInfo = *it;
+          uint64_t fwdBytes = cInfo->GetTxBytes (
+              ConnectionInfo::FWD, static_cast<Slice> (i));
+          uint64_t bwdBytes = cInfo->GetTxBytes (
+              ConnectionInfo::BWD, static_cast<Slice> (i));
+
+          double fwdKbits = static_cast<double> (
+              fwdBytes - m_slices [i].fwdBytes.at (cIdx)) * 8 / 1000;
+          double bwdKbits = static_cast<double> (
+              bwdBytes - m_slices [i].bwdBytes.at (cIdx)) * 8 / 1000;
+
+          m_slices [i].fwdBytes.at (cIdx) = fwdBytes;
+          m_slices [i].bwdBytes.at (cIdx) = bwdBytes;
+
+          *m_slices [i].thpWrapper->GetStream ()
+          << setfill ('0')
+          << right
+          << setw (10) << fwdKbits / elapSecs << " "
+          << setw (10) << bwdKbits / elapSecs << "   ";
+
+          *m_slices [i].resWrapper->GetStream ()
+          << right
+          << setw (4) << cInfo->GetResSliceRatio (
+            ConnectionInfo::FWD, static_cast<Slice> (i)) << " "
+          << setw (4) << cInfo->GetResSliceRatio (
+            ConnectionInfo::BWD, static_cast<Slice> (i)) << "   ";
+        }
+      *m_slices [i].thpWrapper->GetStream () << setfill (' ') << std::endl;
+      *m_slices [i].resWrapper->GetStream () << std::endl;
+    }
+
+  m_lastUpdate = Simulator::Now ();
+  Simulator::Schedule (nextDump, &BackhaulStatsCalculator::DumpStatistics,
+                       this, nextDump);
 }
 
 } // Namespace ns3
