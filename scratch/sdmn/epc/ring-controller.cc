@@ -250,11 +250,12 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
   Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
   ringInfo->ResetPath ();
 
-  // For Non-GBR bearers (which includes the default bearer), and for bearers
-  // that only transverse local switch (local routing): let's accept it without
-  // guarantees. Note that in current implementation, these bearers are always
-  // routed over the shortest path.
-  if (!rInfo->IsGbr () || ringInfo->IsLocalPath ())
+  // For Non-GBR bearers (which includes the default bearer), for bearers that
+  // only transverse local switch (local routing), and for HTC aggregated
+  // bearers: let's accept it without guarantees. Note that in current
+  // implementation, these bearers are always routed over the shortest path.
+  if (!rInfo->IsGbr () || ringInfo->IsLocalPath ()
+      || (rInfo->IsHtc () && rInfo->IsAggregated ()))
     {
       return true;
     }
