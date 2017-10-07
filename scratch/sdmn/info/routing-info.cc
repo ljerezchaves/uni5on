@@ -33,7 +33,7 @@ std::string SliceStr (Slice slice)
   switch (slice)
     {
     case Slice::DFT:
-      return "default";
+      return "dft";
     case Slice::GBR:
       return "gbr";
     case Slice::MTC:
