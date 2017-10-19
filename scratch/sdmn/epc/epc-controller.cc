@@ -103,7 +103,7 @@ EpcController::GetTypeId (void)
     .AddAttribute ("PgwTftAdaptiveMode",
                    "P-GW TFT adaptive mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (OperationMode::ON),
+                   EnumValue (OperationMode::OFF),
                    MakeEnumAccessor (&EpcController::m_tftAdaptive),
                    MakeEnumChecker (OperationMode::OFF,  "off",
                                     OperationMode::ON,   "on",

@@ -77,7 +77,7 @@ EpcNetwork::GetTypeId (void)
                    "The number of P-GW TFT user-plane OpenFlow switches "
                    "(must be a power of 2).",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (3),
+                   UintegerValue (1),
                    MakeUintegerAccessor (&EpcNetwork::m_pgwNumTftNodes),
                    MakeUintegerChecker<uint16_t> (1))
     .AddAttribute ("PgwTftPipelineCapacity",

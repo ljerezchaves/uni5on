@@ -90,13 +90,13 @@ ConnectionInfo::GetTypeId (void)
     .AddAttribute ("GbrSliceQuota",
                    "Maximum bandwidth ratio for GBR slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DoubleValue (0.35),
+                   DoubleValue (0.28),
                    MakeDoubleAccessor (&ConnectionInfo::m_gbrSliceQuota),
                    MakeDoubleChecker<double> (0.0, 0.5))
     .AddAttribute ("MtcSliceQuota",
                    "Maximum bandwidth ratio for MTC slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DoubleValue (0.125),
+                   DoubleValue (0.18),
                    MakeDoubleAccessor (&ConnectionInfo::m_mtcSliceQuota),
                    MakeDoubleChecker<double> (0.0, 0.5))
     .AddAttribute ("UpdateTimeout",
