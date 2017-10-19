@@ -62,7 +62,7 @@ g_outputPrefix ("OutputPrefix", "Common prefix for input filenames.",
 // Dump timeout for logging statistics
 static GlobalValue
 g_dumpTimeout ("DumpStatsTimeout", "Periodic statistics dump interval.",
-               TimeValue (Seconds (10)),
+               TimeValue (Seconds (1)),
                ns3::MakeTimeChecker ());
 
 int

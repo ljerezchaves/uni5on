@@ -76,7 +76,7 @@ TypeId LteHexGridEnbTopologyHelper::GetTypeId (void)
                    MakeDoubleAccessor (&LteHexGridEnbTopologyHelper::m_yMin),
                    MakeDoubleChecker<double> ())
     .AddAttribute ("GridWidth", "The number of sites in even rows (odd rows will have one additional site).",
-                   UintegerValue (1),
+                   UintegerValue (2),
                    MakeUintegerAccessor (&LteHexGridEnbTopologyHelper::m_gridWidth),
                    MakeUintegerChecker<uint32_t> ())
   ;
