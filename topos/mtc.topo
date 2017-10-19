@@ -31,7 +31,7 @@ default ns3::LteHexGridEnbTopologyHelper::GridWidth "2"
 
 default ns3::LteNetwork::NumSdrans "1"
 default ns3::LteNetwork::NumHtcUes "1"
-default ns3::LteNetwork::NumMtcUes "1"
+default ns3::LteNetwork::NumMtcUes "2"
 default ns3::LteNetwork::HtcUeMobility "false"
 default ns3::LteNetwork::MtcUeMobility "false"
 default ns3::LteNetwork::LteTrace "false"

@@ -103,7 +103,15 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
     {
       m_accepted++;
       m_activeBearers++;
-      rInfo->IsAggregated () ? m_aggregBearers++ : m_instalBearers++;
+      if (rInfo->IsAggregated ())
+        {
+          m_aggregBearers++;
+          m_aggregated++;
+        }
+      else
+        {
+          m_instalBearers++;
+        }
     }
 
   // Preparing bearer request stats for trace source.
