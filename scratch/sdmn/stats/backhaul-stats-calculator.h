@@ -46,6 +46,7 @@ public:
 
     Ptr<OutputStreamWrapper>  resWrapper;   //!< RegStats file wrapper.
     Ptr<OutputStreamWrapper>  thpWrapper;   //!< RenStats file wrapper.
+    Ptr<OutputStreamWrapper>  useWrapper;   //!< UseStats file wrapper.
   };
 
   BackhaulStatsCalculator ();          //!< Default constructor.
@@ -77,12 +78,12 @@ private:
   std::string               m_prefix;       //!< Common filename prefix.
   std::string               m_resSuffix;    //!< Res filename suffix.
   std::string               m_thpSuffix;    //!< Thp filename suffix.
+  std::string               m_useSuffix;    //!< Use filename suffix.
 
   std::string               m_shrFilename;  //!< Shared BE stats filename.
   Ptr<OutputStreamWrapper>  m_shrWrapper;   //!< Shared BR stats file wrapper.
 
-  SliceStats                m_slices [Slice::ALL];
-
+  SliceStats                m_slices [Slice::ALL];  //!< Slice statistics.
 };
 
 } // namespace ns3

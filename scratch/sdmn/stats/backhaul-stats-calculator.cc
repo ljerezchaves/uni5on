@@ -67,6 +67,11 @@ BackhaulStatsCalculator::GetTypeId (void)
                    StringValue ("-thp.log"),
                    MakeStringAccessor (&BackhaulStatsCalculator::m_thpSuffix),
                    MakeStringChecker ())
+    .AddAttribute ("UseStatsSuffix",
+                   "Filename suffix for slice usage ratio statistics.",
+                   StringValue ("-use.log"),
+                   MakeStringAccessor (&BackhaulStatsCalculator::m_useSuffix),
+                   MakeStringChecker ())
   ;
   return tid;
 }
@@ -82,6 +87,7 @@ BackhaulStatsCalculator::DoDispose ()
     {
       m_slices [i].resWrapper = 0;
       m_slices [i].thpWrapper = 0;
+      m_slices [i].useWrapper = 0;
       m_slices [i].fwdBytes.clear ();
       m_slices [i].bwdBytes.clear ();
     }
@@ -131,6 +137,12 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
       << left << fixed << setprecision (4)
       << setw (12) << "Time(s)";
 
+      m_slices [i].useWrapper = Create<OutputStreamWrapper> (
+          statsPrefix + m_useSuffix, std::ios::out);
+      *m_slices [i].useWrapper->GetStream ()
+      << left << fixed << setprecision (4)
+      << setw (12) << "Time(s)";
+
       for (it = m_connections.begin (); it != m_connections.end (); it++)
         {
           DpIdPair_t key = (*it)->GetSwitchDpIdPair ();
@@ -143,11 +155,16 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
           << right << setw (10) << key.first  << "-"
           << left  << setw (10) << key.second << "   ";
 
+          *m_slices [i].useWrapper->GetStream ()
+          << right << setw (4) << key.first  << "-"
+          << left  << setw (4) << key.second << "   ";
+
           m_slices [i].fwdBytes.push_back (0);
           m_slices [i].bwdBytes.push_back (0);
         }
       *m_slices [i].resWrapper->GetStream () << left << std::endl;
       *m_slices [i].thpWrapper->GetStream () << left << std::endl;
+      *m_slices [i].useWrapper->GetStream () << left << std::endl;
     }
 
   TimeValue timeValue;
@@ -196,6 +213,11 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
       << setw (12) << Simulator::Now ().GetSeconds ()
       << setprecision (2);
 
+      *m_slices [i].useWrapper->GetStream ()
+      << left << setprecision (4)
+      << setw (12) << Simulator::Now ().GetSeconds ()
+      << setprecision (2);
+
       for (cIdx = 0, it = m_connections.begin ();
            it != m_connections.end (); ++it, ++cIdx)
         {
@@ -225,9 +247,17 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
             ConnectionInfo::FWD, static_cast<Slice> (i)) << " "
           << setw (4) << cInfo->GetResSliceRatio (
             ConnectionInfo::BWD, static_cast<Slice> (i)) << "   ";
+
+          *m_slices [i].useWrapper->GetStream ()
+          << right
+          << setw (4) << cInfo->GetEwmaSliceUsage (
+            ConnectionInfo::FWD, static_cast<Slice> (i)) << " "
+          << setw (4) << cInfo->GetEwmaSliceUsage (
+            ConnectionInfo::BWD, static_cast<Slice> (i)) << "   ";
         }
       *m_slices [i].thpWrapper->GetStream () << setfill (' ') << std::endl;
       *m_slices [i].resWrapper->GetStream () << std::endl;
+      *m_slices [i].useWrapper->GetStream () << std::endl;
     }
 
   m_lastUpdate = Simulator::Now ();
