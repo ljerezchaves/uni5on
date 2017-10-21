@@ -570,12 +570,13 @@ RingController::GetSliceUsage (Slice slice) const
   do
     {
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
-
       uint64_t currId = GetDpId (curr);
       uint64_t nextId = GetDpId (next);
-      double use = std::max (cInfo->GetEwmaSliceUsage (currId, nextId, slice),
-                             cInfo->GetEwmaSliceUsage (nextId, currId, slice));
-      sliceUsage = std::max (sliceUsage, use);
+      ConnectionInfo::Direction fwdDir = cInfo->GetDirection (currId, nextId);
+      ConnectionInfo::Direction bwdDir = cInfo->GetDirection (nextId, currId);
+      double linkUsage = std::max (cInfo->GetEwmaSliceUsage (fwdDir, slice),
+                                   cInfo->GetEwmaSliceUsage (bwdDir, slice));
+      sliceUsage = std::max (sliceUsage, linkUsage);
 
       curr = next;
       next = NextSwitchIndex (curr, RingRoutingInfo::CLOCK);

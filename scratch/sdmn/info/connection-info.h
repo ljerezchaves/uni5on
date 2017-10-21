@@ -133,25 +133,21 @@ public:
   /**
    * Get the exponentially weighted moving average throughput metric for this
    * link on the given direction, optionally filtered by the network slice.
-   * \param src The source switch datapath ID.
-   * \param dst The destination switch datapath ID.
+   * \param dir The link direction.
    * \param slice The network slice.
    * \return The EWMA throughput.
    */
-  DataRate GetEwmaThroughput (uint64_t src, uint64_t dst,
-                              Slice slice = Slice::ALL) const;
+  DataRate GetEwmaThroughput (Direction dir, Slice slice = Slice::ALL) const;
 
   /**
    * Get the exponentially weighted moving average bandwidth usage ratio for
    * this link on the given direction, optionally filtered by the network
    * slice.
-   * \param src The source switch datapath ID.
-   * \param dst The destination switch datapath ID.
+   * \param dir The link direction.
    * \param slice The network slice.
    * \return The bandwidth usage ratio.
    */
-  double GetEwmaSliceUsage (uint64_t src, uint64_t dst,
-                            Slice slice = Slice::ALL) const;
+  double GetEwmaSliceUsage (Direction dir, Slice slice = Slice::ALL) const;
 
   /**
    * Inspect physical channel for the assigned bit rate.

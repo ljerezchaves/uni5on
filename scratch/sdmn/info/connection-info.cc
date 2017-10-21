@@ -179,13 +179,11 @@ ConnectionInfo::GetDirection (uint64_t src, uint64_t dst) const
 }
 
 DataRate
-ConnectionInfo::GetEwmaThroughput (uint64_t src, uint64_t dst,
-                                   Slice slice) const
+ConnectionInfo::GetEwmaThroughput (Direction dir, Slice slice) const
 {
-  NS_LOG_FUNCTION (this << src << dst << slice);
+  NS_LOG_FUNCTION (this << dir << slice);
 
   double throughput = 0;
-  ConnectionInfo::Direction dir = GetDirection (src, dst);
   if (slice >= Slice::ALL)
     {
       for (int i = 0; i < Slice::ALL; i++)
@@ -201,16 +199,21 @@ ConnectionInfo::GetEwmaThroughput (uint64_t src, uint64_t dst,
 }
 
 double
-ConnectionInfo::GetEwmaSliceUsage (uint64_t src, uint64_t dst,
-                                   Slice slice) const
+ConnectionInfo::GetEwmaSliceUsage (Direction dir, Slice slice) const
 {
-  NS_LOG_FUNCTION (this << src << dst << slice);
+  NS_LOG_FUNCTION (this << dir << slice);
 
   uint64_t maxRate = GetMaxBitRate (slice);
-  DataRate throughput = GetEwmaThroughput (src, dst, slice);
-  NS_ASSERT_MSG (maxRate > 0, "Invalid slice usage.");
-
-  return static_cast<double> (throughput.GetBitRate ()) / maxRate;
+  DataRate throughput = GetEwmaThroughput (dir, slice);
+  if (maxRate == 0)
+    {
+      NS_ASSERT_MSG (throughput.GetBitRate () == 0, "Invalid slice usage.");
+      return 0.0;
+    }
+  else
+    {
+      return static_cast<double> (throughput.GetBitRate ()) / maxRate;
+    }
 }
 
 uint64_t
