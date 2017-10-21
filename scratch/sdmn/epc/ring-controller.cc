@@ -666,7 +666,7 @@ bool
 RingController::ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
                                    Ptr<GbrInfo> gbrInfo, Slice slice)
 {
-  NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
+  NS_LOG_FUNCTION (this << ringInfo << gbrInfo << slice);
 
   NS_LOG_INFO ("Releasing resources for GBR bearer.");
 
@@ -698,7 +698,7 @@ bool
 RingController::ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
                                    Ptr<GbrInfo> gbrInfo, Slice slice)
 {
-  NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
+  NS_LOG_FUNCTION (this << ringInfo << gbrInfo << slice);
 
   NS_LOG_INFO ("Reserving resources for GBR bearer.");
 
