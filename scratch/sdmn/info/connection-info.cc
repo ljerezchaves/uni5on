@@ -60,8 +60,6 @@ ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
 
   // Preparing slicing metadata structures.
   memset (m_slices, 0, sizeof (SliceData) * static_cast<uint8_t> (Slice::ALL));
-  m_meterBitRate [0] = 0;
-  m_meterBitRate [1] = 0;
 
   RegisterConnectionInfo (Ptr<ConnectionInfo> (this));
 }
