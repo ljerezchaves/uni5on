@@ -196,8 +196,8 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
       cInfo = *it;
       *m_shrWrapper->GetStream ()
       << right
-      << setw (4) << cInfo->GetMeterLinkRatio (ConnectionInfo::FWD) << " "
-      << setw (4) << cInfo->GetMeterLinkRatio (ConnectionInfo::BWD) << "   ";
+      << setw (4) << cInfo->GetFreeSliceRatio (ConnectionInfo::FWD) << " "
+      << setw (4) << cInfo->GetFreeSliceRatio (ConnectionInfo::BWD) << "   ";
     }
   *m_shrWrapper->GetStream () << std::endl;
 
@@ -250,9 +250,9 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
 
           *m_slices [i].useWrapper->GetStream ()
           << right
-          << setw (4) << cInfo->GetEwmaSliceUsage (
+          << setw (4) << cInfo->GetThpSliceRatio (
             ConnectionInfo::FWD, static_cast<Slice> (i)) << " "
-          << setw (4) << cInfo->GetEwmaSliceUsage (
+          << setw (4) << cInfo->GetThpSliceRatio (
             ConnectionInfo::BWD, static_cast<Slice> (i)) << "   ";
         }
       *m_slices [i].thpWrapper->GetStream () << setfill (' ') << std::endl;

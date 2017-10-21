@@ -131,54 +131,40 @@ public:
   ConnectionInfo::Direction GetDirection (uint64_t src, uint64_t dst) const;
 
   /**
-   * Get the exponentially weighted moving average throughput metric for this
-   * link on the given direction, optionally filtered by the network slice.
+   * Get the EWMA throughput bit rate for this link on the given direction,
+   * optionally filtered by the network slice.
    * \param dir The link direction.
    * \param slice The network slice.
    * \return The EWMA throughput.
    */
-  DataRate GetEwmaThroughput (Direction dir, Slice slice = Slice::ALL) const;
+  uint64_t GetThpBitRate (Direction dir, Slice slice = Slice::ALL) const;
 
   /**
-   * Get the exponentially weighted moving average bandwidth usage ratio for
-   * this link on the given direction, optionally filtered by the network
-   * slice.
+   * Get the EWMA throughput ratio for this link on the given direction,
+   * optionally filtered by the network slice.
    * \param dir The link direction.
    * \param slice The network slice.
    * \return The bandwidth usage ratio.
    */
-  double GetEwmaSliceUsage (Direction dir, Slice slice = Slice::ALL) const;
+  double GetThpSliceRatio (Direction dir, Slice slice = Slice::ALL) const;
 
   /**
-   * Inspect physical channel for the assigned bit rate.
-   * \return The channel maximum nominal bit rate (bps).
-   */
-  uint64_t GetLinkBitRate (void) const;
-
-  /**
-   * Get the maximum bit rate for this link on the given direction, optionally
-   * filtered by the network slice. If no slice is given, the this method will
-   * return the GetLinkBitRate ();
+   * Get the available (not reserved) bit rate for traffic over this link on
+   * the given direction, optionally filtered by the network slice.
+   * \param dir The link direction.
    * \param slice The network slice.
-   * \return The maximum bit rate.
+   * \return The available bit rate.
    */
-  uint64_t GetMaxBitRate (Slice slice = Slice::ALL) const;
+  uint64_t GetFreeBitRate (Direction dir, Slice slice = Slice::ALL) const;
 
   /**
-   * Get the maximum bit rate for best-effort traffic over this link on the
-   * given direction.
+   * Get the available bit rate ratio for traffic over this link on the given
+   * direction, optionally filtered by the network slice.
    * \param dir The link direction.
-   * \return The maximum bit rate.
+   * \param slice The network slice.
+   * \return The available slice ratio.
    */
-  uint64_t GetMeterBitRate (Direction dir) const;
-
-  /**
-   * Get the bit rate meter ratio for best-effort traffic over this link on the
-   * given direction.
-   * \param dir The link direction.
-   * \return The meter link ratio.
-   */
-  double GetMeterLinkRatio (Direction dir) const;
+  double GetFreeSliceRatio (Direction dir, Slice slice = Slice::ALL) const;
 
   /**
    * Get the reserved bit rate for traffic over this link on the given
@@ -190,13 +176,22 @@ public:
   uint64_t GetResBitRate (Direction dir, Slice slice = Slice::ALL) const;
 
   /**
-   * Get the bit rate reserved ratio for traffic over this link on the given
+   * Get the reserved bit rate ratio for traffic over this link on the given
    * direction, optionally filtered by the network slice.
    * \param dir The link direction.
    * \param slice The network slice.
    * \return The reserved slice ratio.
    */
   double GetResSliceRatio (Direction dir, Slice slice = Slice::ALL) const;
+
+  /**
+   * Get the maximum bit rate for this link (same for both directions),
+   * optionally filtered by the network slice. If no slice is given, the this
+   * method will return the GetLinkBitRate ();
+   * \param slice The network slice.
+   * \return The maximum bit rate.
+   */
+  uint64_t GetMaxBitRate (Slice slice = Slice::ALL) const;
 
   /**
    * Get the pair of switch datapath IDs for this connection, respecting the
@@ -293,6 +288,13 @@ protected:
 
 private:
   /**
+   * Inspect physical channel for the assigned bit rate, which is the same for
+   * both directions in full-duplex links.
+   * \return The channel maximum nominal bit rate (bps).
+   */
+  uint64_t GetLinkBitRate (void) const;
+
+  /**
    * Notify this connection of a successfully transmitted packet in link
    * channel. This method will update internal byte counters.
    * \param packet The transmitted packet.
@@ -321,7 +323,6 @@ private:
   SliceData         m_slices [Slice::ALL];  //!< Slicing metadata.
 
   uint64_t          m_meterThresh;          //!< Meter bit rate threshold.
-  uint64_t          m_meterBitRate [2];     //!< Current meter bit rate.
   int64_t           m_meterDiff [2];        //!< Current meter bit rate diff.
 
   DataRate          m_adjustmentStep;       //!< Meter adjustment step.

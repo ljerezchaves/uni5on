@@ -181,7 +181,7 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
                     cInfo->GetSwDpId (0) << " to " << cInfo->GetSwDpId (1));
 
       // Non-GBR meter for clockwise direction.
-      kbps = cInfo->GetMeterBitRate (ConnectionInfo::FWD) / 1000;
+      kbps = cInfo->GetFreeBitRate (ConnectionInfo::FWD) / 1000;
       cmd02 << "meter-mod cmd=add"
             << ",flags=" << flagsStr
             << ",meter=" << RingRoutingInfo::CLOCK
@@ -191,7 +191,7 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
 
 
       // Non-GBR meter for counterclockwise direction.
-      kbps = cInfo->GetMeterBitRate (ConnectionInfo::BWD) / 1000;
+      kbps = cInfo->GetFreeBitRate (ConnectionInfo::BWD) / 1000;
       cmd12 << "meter-mod cmd=add"
             << ",flags=" << flagsStr
             << ",meter=" << RingRoutingInfo::COUNTER
@@ -574,8 +574,8 @@ RingController::GetSliceUsage (Slice slice) const
       uint64_t nextId = GetDpId (next);
       ConnectionInfo::Direction fwdDir = cInfo->GetDirection (currId, nextId);
       ConnectionInfo::Direction bwdDir = cInfo->GetDirection (nextId, currId);
-      double linkUsage = std::max (cInfo->GetEwmaSliceUsage (fwdDir, slice),
-                                   cInfo->GetEwmaSliceUsage (bwdDir, slice));
+      double linkUsage = std::max (cInfo->GetThpSliceRatio (fwdDir, slice),
+                                   cInfo->GetThpSliceRatio (bwdDir, slice));
       sliceUsage = std::max (sliceUsage, linkUsage);
 
       curr = next;
@@ -685,7 +685,7 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo)
                 cInfo->GetSwDpId (0) << " to " << cInfo->GetSwDpId (1));
 
   // Update the meter for clockwise direction.
-  kbps = cInfo->GetMeterBitRate (ConnectionInfo::FWD) / 1000;
+  kbps = cInfo->GetFreeBitRate (ConnectionInfo::FWD) / 1000;
   cmd1 << "meter-mod cmd=mod"
        << ",flags=" << flagsStr
        << ",meter=" << RingRoutingInfo::CLOCK
@@ -694,7 +694,7 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo)
   NS_LOG_DEBUG ("Forward link set to " << kbps << " Kbps");
 
   // Update the meter for counterclockwise direction.
-  kbps = cInfo->GetMeterBitRate (ConnectionInfo::BWD) / 1000;
+  kbps = cInfo->GetFreeBitRate (ConnectionInfo::BWD) / 1000;
   cmd2 << "meter-mod cmd=mod"
        << ",flags=" << flagsStr
        << ",meter=" << RingRoutingInfo::COUNTER

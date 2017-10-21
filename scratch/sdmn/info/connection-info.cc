@@ -176,8 +176,8 @@ ConnectionInfo::GetDirection (uint64_t src, uint64_t dst) const
   return ConnectionInfo::FWD;
 }
 
-DataRate
-ConnectionInfo::GetEwmaThroughput (Direction dir, Slice slice) const
+uint64_t
+ConnectionInfo::GetThpBitRate (Direction dir, Slice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -193,66 +193,49 @@ ConnectionInfo::GetEwmaThroughput (Direction dir, Slice slice) const
     {
       throughput = m_slices [slice].ewmaThp [dir];
     }
-  return DataRate (static_cast<uint64_t> (throughput));
+  return static_cast<uint64_t> (throughput);
 }
 
 double
-ConnectionInfo::GetEwmaSliceUsage (Direction dir, Slice slice) const
+ConnectionInfo::GetThpSliceRatio (Direction dir, Slice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  uint64_t maxRate = GetMaxBitRate (slice);
-  DataRate throughput = GetEwmaThroughput (dir, slice);
-  if (maxRate == 0)
+  if (GetMaxBitRate (slice) == 0)
     {
-      NS_ASSERT_MSG (throughput.GetBitRate () == 0, "Invalid slice usage.");
+      NS_ASSERT_MSG (GetThpBitRate (dir, slice) == 0, "Invalid slice usage.");
       return 0.0;
     }
   else
     {
-      return static_cast<double> (throughput.GetBitRate ()) / maxRate;
+      return static_cast<double> (GetThpBitRate (dir, slice))
+             / GetMaxBitRate (slice);
     }
 }
 
 uint64_t
-ConnectionInfo::GetLinkBitRate (void) const
+ConnectionInfo::GetFreeBitRate (Direction dir, Slice slice) const
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << dir << slice);
 
-  return m_channel->GetDataRate ().GetBitRate ();
-}
-
-uint64_t
-ConnectionInfo::GetMaxBitRate (Slice slice) const
-{
-  NS_LOG_FUNCTION (this << slice);
-
-  uint64_t bitrate = 0;
-  if (slice >= Slice::ALL)
-    {
-      bitrate = GetLinkBitRate ();
-    }
-  else
-    {
-      bitrate = m_slices [slice].maxRate;
-    }
-  return bitrate;
-}
-
-uint64_t
-ConnectionInfo::GetMeterBitRate (Direction dir) const
-{
-  NS_LOG_FUNCTION (this << dir);
-
-  return m_meterBitRate [dir];
+  return GetMaxBitRate (slice) - GetResBitRate (dir, slice);
 }
 
 double
-ConnectionInfo::GetMeterLinkRatio (Direction dir) const
+ConnectionInfo::GetFreeSliceRatio (Direction dir, Slice slice) const
 {
-  NS_LOG_FUNCTION (this << dir);
+  NS_LOG_FUNCTION (this << dir << slice);
 
-  return static_cast<double> (GetMeterBitRate (dir)) / GetLinkBitRate ();
+  if (GetMaxBitRate (slice) == 0)
+    {
+      NS_ASSERT_MSG (GetFreeBitRate (dir, slice) == 0, "Invalid slice usage.");
+      return 0.0;
+    }
+  else
+    {
+      return static_cast<double> (GetFreeBitRate (dir, slice))
+             / GetMaxBitRate (slice);
+    }
 }
 
 uint64_t
@@ -289,6 +272,21 @@ ConnectionInfo::GetResSliceRatio (Direction dir, Slice slice) const
     {
       return static_cast<double> (GetResBitRate (dir, slice))
              / GetMaxBitRate (slice);
+    }
+}
+
+uint64_t
+ConnectionInfo::GetMaxBitRate (Slice slice) const
+{
+  NS_LOG_FUNCTION (this << slice);
+
+  if (slice >= Slice::ALL)
+    {
+      return GetLinkBitRate ();
+    }
+  else
+    {
+      return m_slices [slice].maxRate;
     }
 }
 
@@ -329,7 +327,7 @@ ConnectionInfo::HasBitRate (uint64_t src, uint64_t dst, Slice slice,
   NS_ASSERT_MSG (slice < Slice::ALL, "Invalid slice for this operation.");
   ConnectionInfo::Direction dir = GetDirection (src, dst);
 
-  return (GetResBitRate (dir, slice) + bitRate <= GetMaxBitRate (slice));
+  return (GetFreeBitRate (dir, slice) >= bitRate);
 }
 
 bool
@@ -363,11 +361,8 @@ ConnectionInfo::ReleaseBitRate (uint64_t src, uint64_t dst, Slice slice,
   NS_LOG_DEBUG ("Current reserved bit rate: " << GetResBitRate (dir, slice));
 
   // Updating the meter bit rate.
-  NS_ASSERT_MSG (GetMeterBitRate (dir) + bitRate <= GetLinkBitRate (),
-                 "Invalid meter bit rate.");
-  m_meterBitRate [dir] += bitRate;
   m_meterDiff [dir] += bitRate;
-  NS_LOG_DEBUG ("Current meter bit rate: " << GetMeterBitRate (dir));
+  NS_LOG_DEBUG ("Current free bit rate: " << GetFreeBitRate (dir));
   NS_LOG_DEBUG ("Current meter diff: " << m_meterDiff [dir]);
   NS_LOG_DEBUG ("Current meter threshold: " << m_meterThresh);
 
@@ -391,7 +386,7 @@ ConnectionInfo::ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
   ConnectionInfo::Direction dir = GetDirection (src, dst);
 
   // Check for available bit rate.
-  if (!HasBitRate (src, dst, slice, bitRate))
+  if (GetFreeBitRate (dir, slice) < bitRate)
     {
       NS_LOG_WARN ("No bandwidth available to reserve.");
       return false;
@@ -404,10 +399,8 @@ ConnectionInfo::ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
   NS_LOG_DEBUG ("Current reserved bit rate: " << GetResBitRate (dir, slice));
 
   // Updating the meter bit rate.
-  NS_ASSERT_MSG (GetMeterBitRate (dir) >= bitRate, "Invalid meter bit rate.");
-  m_meterBitRate [dir] -= bitRate;
   m_meterDiff [dir] -= bitRate;
-  NS_LOG_DEBUG ("Current meter bit rate: " << GetMeterBitRate (dir));
+  NS_LOG_DEBUG ("Current free bit rate: " << GetFreeBitRate (dir));
   NS_LOG_DEBUG ("Current meter diff: " << m_meterDiff [dir]);
   NS_LOG_DEBUG ("Current meter threshold: " << m_meterThresh);
 
@@ -493,8 +486,6 @@ ConnectionInfo::NotifyConstructionCompleted (void)
 
   // Set initial meter bit rate to maximum, as we don't have any reserved bit
   // rate at this moment.
-  m_meterBitRate [0] = GetLinkBitRate ();
-  m_meterBitRate [1] = GetLinkBitRate ();
   m_meterDiff [0] = 0;
   m_meterDiff [1] = 0;
   m_meterThresh = m_adjustmentStep.GetBitRate ();
@@ -508,6 +499,14 @@ ConnectionInfo::NotifyConstructionCompleted (void)
 
   // Chain up
   Object::NotifyConstructionCompleted ();
+}
+
+uint64_t
+ConnectionInfo::GetLinkBitRate (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_channel->GetDataRate ().GetBitRate ();
 }
 
 void
