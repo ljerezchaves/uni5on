@@ -27,9 +27,9 @@ NS_LOG_COMPONENT_DEFINE ("S5AggregationInfo");
 NS_OBJECT_ENSURE_REGISTERED (S5AggregationInfo);
 
 S5AggregationInfo::S5AggregationInfo (Ptr<RoutingInfo> rInfo)
-  : m_linkUsage (0.0),
-    m_mode (OperationMode::OFF),
-    m_threshhold (0.0)
+  : m_mode (OperationMode::OFF),
+    m_threshhold (0.0),
+    m_usage (0.0)
 {
   NS_LOG_FUNCTION (this);
 
@@ -50,14 +50,6 @@ S5AggregationInfo::GetTypeId (void)
   return tid;
 }
 
-double
-S5AggregationInfo::GetLinkUsage (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_linkUsage;
-}
-
 OperationMode
 S5AggregationInfo::GetOperationMode (void) const
 {
@@ -75,6 +67,14 @@ S5AggregationInfo::GetOperationModeStr (void) const
 }
 
 double
+S5AggregationInfo::GetSliceUsage (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_usage;
+}
+
+double
 S5AggregationInfo::GetThreshold (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -83,19 +83,19 @@ S5AggregationInfo::GetThreshold (void) const
 }
 
 void
-S5AggregationInfo::SetLinkUsage (double value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_linkUsage = value;
-}
-
-void
 S5AggregationInfo::SetOperationMode (OperationMode value)
 {
   NS_LOG_FUNCTION (this << value);
 
   m_mode = value;
+}
+
+void
+S5AggregationInfo::SetSliceUsage (double value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_usage = value;
 }
 
 void
@@ -111,7 +111,7 @@ S5AggregationInfo::IsAggregated (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  if ((m_mode == OperationMode::AUTO && m_linkUsage > m_threshhold)
+  if ((m_mode == OperationMode::AUTO && m_usage > m_threshhold)
       || m_mode == OperationMode::OFF)
     {
       return false;

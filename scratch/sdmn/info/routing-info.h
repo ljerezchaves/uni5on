@@ -66,10 +66,10 @@ public:
   /** Block reason. */
   enum BlockReason
   {
-    NOREASON     = 0,  //!< This bearer was not blocked.
+    NOTBLOCKED   = 0,  //!< This bearer was not blocked.
     TFTTABLEFULL = 1,  //!< P-GW TFT flow table is full.
     TFTMAXLOAD   = 2,  //!< P-GW TFT pipeline load is maximum.
-    BANDWIDTH    = 3   //!< No backahul bandwidth available.
+    NOBANDWIDTH  = 3   //!< No backahul bandwidth available.
   };
 
   /**
@@ -112,7 +112,7 @@ public:
   bool IsMtc (void) const;
 
   void SetActive (bool value);
-  void SetBlocked (bool value, BlockReason reason = RoutingInfo::NOREASON);
+  void SetBlocked (bool value, BlockReason reason = RoutingInfo::NOTBLOCKED);
   void SetDscp (uint16_t value);
   void SetInstalled (bool value);
   void SetPgwS5Addr (Ipv4Address value);

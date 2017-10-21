@@ -90,7 +90,7 @@ public:
    * Release a dedicated EPS bearer.
    * \internal Current implementation assumes that each application traffic
    *           flow is associated with a unique bearer/tunnel. Because of that,
-   *           we can use only the teid for the tunnel to prepare and install
+   *           we can use only the TEID for the tunnel to prepare and install
    *           route. If we would like to aggregate traffic from several
    *           applications into same bearer we will need to revise this.
    * \param bearer EpsBearer bearer QoS characteristics of the bearer.
@@ -105,7 +105,7 @@ public:
    * When returning false, it aborts the bearer creation process.
    * \internal Current implementation assumes that each application traffic
    *           flow is associated with a unique bearer/tunnel. Because of that,
-   *           we can use only the teid for the tunnel to prepare and install
+   *           we can use only the TEID for the tunnel to prepare and install
    *           route. If we would like to aggregate traffic from several
    *           applications into same bearer we will need to revise this.
    * \param bearer EpsBearer bearer QoS characteristics of the bearer.
@@ -245,24 +245,26 @@ protected:
   virtual void TopologyBearerCreated (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
-   * Release the backhaul bandwidth previously reserved for this bearer.
-   * \param rInfo The routing information to process.
-   * \return True if succeeded, false otherwise.
-   */
-  virtual bool TopologyBearerRelease (Ptr<RoutingInfo> rInfo) = 0;
-
-  /**
-   * Process the bearer request and reserve backhaul bandwidth.
+   * Process the bearer request, checking for available resources in the
+   * backhaul network and deciding for the best routing path.
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
   virtual bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
-   * Get the average link bandwitdh usage.
+   * Release the bit rate for this bearer in the backhaul network.
    * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
    */
-  virtual double TopologyLinkUsage (Ptr<RoutingInfo> rInfo) = 0;
+  virtual bool TopologyBitRateRelease (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Reserve the bit rate for this bearer in the backhaul network.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool TopologyBitRateReserve (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
    * Install TEID routing OpenFlow match rules into backhaul switches.
@@ -354,6 +356,13 @@ private:
   bool MtcAggBearerInstall (Ptr<RoutingInfo> rInfo);
 
   /**
+   * Check for available resources on P-GW TFT switch for this bearer request.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool PgwBearerRequest (Ptr<RoutingInfo> rInfo);
+
+  /**
    * Install OpenFlow rules for downlink packet filtering on the P-GW TFT
    * switch.
    * \attention To avoid conflicts with old entries, increase the routing
@@ -381,13 +390,6 @@ private:
   bool PgwRulesRemove (
     Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx = 0,
     bool keepMeterFlag = false);
-
-  /**
-   * Check for available resources on P-GW TFT switch for this bearer request.
-   * \param rInfo The routing information to process.
-   * \return True if succeeded, false otherwise.
-   */
-  bool PgwTftBearerRequest (Ptr<RoutingInfo> rInfo);
 
   /**
    * Periodically check for the P-GW TFT processing load and flow table usage

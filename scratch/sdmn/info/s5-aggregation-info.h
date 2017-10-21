@@ -50,13 +50,13 @@ public:
 
   /** \name Private member accessors. */
   //\{
-  double GetLinkUsage (void) const;
   OperationMode GetOperationMode (void) const;
   std::string GetOperationModeStr (void) const;
+  double GetSliceUsage (void) const;
   double GetThreshold (void) const;
 
-  void SetLinkUsage (double value);
   void SetOperationMode (OperationMode value);
+  void SetSliceUsage (double value);
   void SetThreshold (double value);
   //\}
 
@@ -72,9 +72,9 @@ protected:
   virtual void DoDispose ();
 
 private:
-  double           m_linkUsage;     //!< Link usage.
   OperationMode    m_mode;          //!< Operation mode.
-  double           m_threshhold;    //!< Link usage threshold.
+  double           m_threshhold;    //!< Slice usage threshold.
+  double           m_usage;         //!< Slice usage.
 };
 
 };  // namespace ns3

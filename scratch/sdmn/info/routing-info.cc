@@ -49,7 +49,7 @@ RoutingInfo::TeidRoutingMap_t RoutingInfo::m_globalInfoMap;
 RoutingInfo::RoutingInfo (uint32_t teid, BearerContext_t bearer, uint64_t imsi,
                           bool isDefault, bool isMtc)
   : m_bearer (bearer),
-    m_blockReason (RoutingInfo::NOREASON),
+    m_blockReason (RoutingInfo::NOTBLOCKED),
     m_imsi (imsi),
     m_isActive (false),
     m_isBlocked (false),
@@ -245,7 +245,7 @@ RoutingInfo::SetBlocked (bool value, BlockReason reason)
 
   NS_ASSERT_MSG (IsDefault () == false || value == false,
                  "Can't block the default bearer traffic.");
-  NS_ASSERT_MSG (value == false || reason != RoutingInfo::NOREASON,
+  NS_ASSERT_MSG (value == false || reason != RoutingInfo::NOTBLOCKED,
                  "Specify the reason why this bearer was blocked.");
 
   m_isBlocked = value;
@@ -398,9 +398,9 @@ RoutingInfo::BlockReasonStr (BlockReason reason)
       return "TabFull";
     case RoutingInfo::TFTMAXLOAD:
       return "MaxLoad";
-    case RoutingInfo::BANDWIDTH:
+    case RoutingInfo::NOBANDWIDTH:
       return "SliceFull";
-    case RoutingInfo::NOREASON:
+    case RoutingInfo::NOTBLOCKED:
     default:
       return "-";
     }

@@ -66,12 +66,12 @@ protected:
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
   void NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo);
 
-  void TopologyBearerCreated   (Ptr<RoutingInfo> rInfo);
-  bool TopologyBearerRelease   (Ptr<RoutingInfo> rInfo);
-  bool TopologyBearerRequest   (Ptr<RoutingInfo> rInfo);
-  double TopologyLinkUsage     (Ptr<RoutingInfo> rInfo);
-  bool TopologyRoutingInstall  (Ptr<RoutingInfo> rInfo);
-  bool TopologyRoutingRemove   (Ptr<RoutingInfo> rInfo);
+  void TopologyBearerCreated  (Ptr<RoutingInfo> rInfo);
+  bool TopologyBearerRequest  (Ptr<RoutingInfo> rInfo);
+  bool TopologyBitRateRelease (Ptr<RoutingInfo> rInfo);
+  bool TopologyBitRateReserve (Ptr<RoutingInfo> rInfo);
+  bool TopologyRoutingInstall (Ptr<RoutingInfo> rInfo);
+  bool TopologyRoutingRemove  (Ptr<RoutingInfo> rInfo);
   // Inherited from EpcController.
 
 private:
@@ -115,16 +115,11 @@ private:
   uint16_t GetNSwitches (void) const;
 
   /**
-   * Get the average link use ratio between source and destination switch
-   * indexes following the given routing path.
-   * \param srcIdx Source switch index.
-   * \param dstIdx Destination switch index.
+   * Get the maximum slice usage on this ring network.
    * \param slice The network slice.
-   * \param path The routing path.
-   * \return The link use ratio on this routing path.
+   * \return The maximum slice usage.
    */
-  double GetPathUseRatio (uint16_t srcIdx, uint16_t dstIdx, Slice slice,
-                          RingRoutingInfo::RoutingPath path) const;
+  double GetSliceUsage (Slice slice) const;
 
   /**
    * Retrieve the switch index for IP address.
@@ -141,14 +136,14 @@ private:
   uint16_t GetSwitchIndex (Ptr<OFSwitch13Device> dev) const;
 
   /**
-   * Check for the available GBR bit rate.
+   * Check for the available bit rate on the given slice.
    * \param ringInfo The ring routing information.
    * \param gbrInfo The GBR information.
    * \param slice The network slice.
    * \return True if there's available GBR bit rate, false otherwise.
    */
-  bool HasGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                      Ptr<const GbrInfo> gbrInfo, Slice slice) const;
+  bool HasBitRate (Ptr<const RingRoutingInfo> ringInfo,
+                   Ptr<const GbrInfo> gbrInfo, Slice slice) const;
 
   /**
    * Count the number of hops between source and destination switch index
@@ -177,28 +172,6 @@ private:
    */
   uint16_t NextSwitchIndex (uint16_t idx,
                             RingRoutingInfo::RoutingPath path) const;
-
-  /**
-   * Release the bit rate for this GBR bearer in the ring network.
-   * \param ringInfo The ring routing information.
-   * \param gbrInfo The GBR information.
-   * \param slice The network slice.
-   * \return True if succeeded, false otherwise.
-   */
-  bool ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                          Ptr<GbrInfo> gbrInfo, Slice slice);
-
-  /**
-   * Reserve the bit rate for this GBR bearer in the ring network.
-   * \attention To avoid fatal errors, be sure that there is available GBR
-   *            bit rate over the routing path before reserving it.
-   * \param ringInfo The ring routing information.
-   * \param gbrInfo The GBR information.
-   * \param slice The network slice.
-   * \return True if succeeded, false otherwise.
-   */
-  bool ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                          Ptr<GbrInfo> gbrInfo, Slice slice);
 
   /** Map saving IPv4 address / switch index. */
   typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;

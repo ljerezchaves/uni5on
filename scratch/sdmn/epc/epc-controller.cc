@@ -187,11 +187,11 @@ EpcController::DedicatedBearerRelease (EpsBearer bearer, uint32_t teid)
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't release the default bearer.");
   NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
 
-  TopologyBearerRelease (rInfo);
+  TopologyBitRateRelease (rInfo);
   m_bearerReleaseTrace (rInfo);
   NS_LOG_INFO ("Bearer released by controller.");
 
-  // Everything is ok! Let's deactivate and remove this bearer.
+  // Deactivate and remove the bearer.
   rInfo->SetActive (false);
   return BearerRemove (rInfo);
 }
@@ -202,7 +202,6 @@ EpcController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
   NS_LOG_FUNCTION (this << teid);
 
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
 
   // This bearer must be inactive as we are going to reuse its metadata.
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
@@ -212,21 +211,19 @@ EpcController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
   rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
   rInfo->SetBlocked (false);
 
-  // Update the link bandwidth usage and aggregation threshold values.
-  aggInfo->SetLinkUsage (TopologyLinkUsage (rInfo));
+  // Update the aggregation threshold values.
+  Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
   aggInfo->SetThreshold (rInfo->IsMtc () ? 0.0 :
                          rInfo->IsGbr () ? m_htcAggGbrThs : m_htcAggNonThs);
-  if (rInfo->IsAggregated ())
-    {
-      NS_LOG_INFO ("Aggregating bearer teid " << rInfo->GetTeid ());
-    }
 
-  // Let's first check for available resources on P-GW and backhaul switches.
-  bool accepted = true;
-  accepted &= PgwTftBearerRequest (rInfo);
-  accepted &= TopologyBearerRequest (rInfo);
+  // Check for available resources on P-GW and backhaul network and then
+  // reserve the requested bandwidth (don't change the order!).
+  bool success = true;
+  success &= TopologyBearerRequest (rInfo);
+  success &= PgwBearerRequest (rInfo);
+  success &= TopologyBitRateReserve (rInfo);
   m_bearerRequestTrace (rInfo);
-  if (!accepted)
+  if (!success)
     {
       NS_LOG_INFO ("Bearer request blocked by controller.");
       return false;
@@ -237,6 +234,12 @@ EpcController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
   // priority. Doing this, we avoid problems with old 'expiring' rules, and
   // we can even use new routing paths when necessary.
   NS_LOG_INFO ("Bearer request accepted by controller.");
+  if (rInfo->IsAggregated ())
+    {
+      NS_LOG_INFO ("Aggregating bearer teid " << rInfo->GetTeid ());
+    }
+
+  // Activate and install the bearer.
   rInfo->SetActive (true);
   return BearerInstall (rInfo);
 }
@@ -870,7 +873,7 @@ EpcController::DoCreateSessionRequest (
       mode = rInfo->IsMtc () ? GetMtcAggregMode () : GetHtcAggregMode ();
       if (rInfo->IsHtc () && rInfo->IsDefault ())
         {
-          // Never aggregate the default HTC bearer.
+          // Never aggregates the default HTC bearer.
           mode = OperationMode::OFF;
         }
 
@@ -881,18 +884,19 @@ EpcController::DoCreateSessionRequest (
       if (rInfo->IsDefault ())
         {
           // Configure this default bearer.
-          rInfo->SetActive (true);
           rInfo->SetPriority (0x7F);
           rInfo->SetTimeout (0);
 
           // For logic consistence, let's check for available resources.
-          bool accepted = true;
-          accepted &= PgwTftBearerRequest (rInfo);
-          accepted &= TopologyBearerRequest (rInfo);
-          NS_ASSERT_MSG (accepted, "Default bearer must be accepted.");
+          bool success = true;
+          success &= TopologyBearerRequest (rInfo);
+          success &= PgwBearerRequest (rInfo);
+          success &= TopologyBitRateReserve (rInfo);
+          NS_ASSERT_MSG (success, "Default bearer must be accepted.");
           m_bearerRequestTrace (rInfo);
 
-          // Install rules for default bearer.
+          // Activate and install the bearer.
+          rInfo->SetActive (true);
           bool installed = BearerInstall (rInfo);
           NS_ASSERT_MSG (installed, "Default bearer must be installed.");
         }
@@ -980,6 +984,67 @@ EpcController::MtcAggBearerInstall (Ptr<RoutingInfo> rInfo)
 
   rInfo->SetInstalled (success);
   return success;
+}
+
+bool
+EpcController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo->GetTeid ());
+
+  // If the bearer is already blocked, there's nothing more to do.
+  if (rInfo->IsBlocked ())
+    {
+      return false;
+    }
+
+  // Check for valid P-GW TFT thresholds attributes.
+  NS_ASSERT_MSG (m_tftSplitThs < m_tftBlockThs
+                 && m_tftSplitThs > 2 * m_tftJoinThs,
+                 "The split threshold should be smaller than the block "
+                 "threshold and two times larger than the join threshold.");
+
+  // Get the P-GW TFT stats calculator for this bearer.
+  Ptr<OFSwitch13Device> device;
+  Ptr<OFSwitch13StatsCalculator> stats;
+  uint16_t tftIdx = rInfo->GetPgwTftIdx ();
+  device = OFSwitch13Device::GetDevice (GetPgwTftDpId (tftIdx));
+  stats = device->GetObject<OFSwitch13StatsCalculator> ();
+  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
+
+  // First check: OpenFlow switch table usage.
+  // Only non-aggregated bearers will install rules on P-GW TFT flow table.
+  // Blocks the bearer if the table usage is exceeding the block threshold.
+  if (!rInfo->IsAggregated ())
+    {
+      uint32_t entries = stats->GetEwmaFlowEntries ();
+      double tableUsage = static_cast<double> (entries) / m_tftTableSize;
+      if (tableUsage >= m_tftBlockThs)
+        {
+          rInfo->SetBlocked (true, RoutingInfo::TFTTABLEFULL);
+          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
+                       " because the TFT flow tables is full.");
+        }
+    }
+
+  // Second check: OpenFlow switch pipeline load.
+  // Is the current pipeline load is exceeding the block threshold, blocks the
+  // bearer accordingly to the PgwTftBlockPolicy attribute:
+  // - If OFF (none): don't block the request.
+  // - If ON (all)  : block the request.
+  // - If AUTO (gbr): block only if GBR request.
+  uint64_t rate = stats->GetEwmaPipelineLoad ().GetBitRate ();
+  double loadUsage = static_cast<double> (rate) / m_tftMaxLoad.GetBitRate ();
+  if (loadUsage >= m_tftBlockThs
+      && (m_tftBlockPolicy == OperationMode::ON
+          || (m_tftBlockPolicy == OperationMode::AUTO && rInfo->IsGbr ())))
+    {
+      rInfo->SetBlocked (true, RoutingInfo::TFTMAXLOAD);
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
+                   " because the TFT processing capacity is overloaded.");
+    }
+
+  // Return false if blocked.
+  return !rInfo->IsBlocked ();
 }
 
 bool
@@ -1126,61 +1191,6 @@ EpcController::PgwRulesRemove (
         }
     }
   return true;
-}
-
-bool
-EpcController::PgwTftBearerRequest (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo->GetTeid ());
-
-  // Check for valid P-GW TFT thresholds attributes.
-  NS_ASSERT_MSG (m_tftSplitThs < m_tftBlockThs
-                 && m_tftSplitThs > 2 * m_tftJoinThs,
-                 "The split threshold should be smaller than the block "
-                 "threshold and two times larger than the join threshold.");
-
-  // Get the P-GW TFT stats calculator for this bearer.
-  Ptr<OFSwitch13Device> device;
-  Ptr<OFSwitch13StatsCalculator> stats;
-  uint16_t tftIdx = rInfo->GetPgwTftIdx ();
-  device = OFSwitch13Device::GetDevice (GetPgwTftDpId (tftIdx));
-  stats = device->GetObject<OFSwitch13StatsCalculator> ();
-  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
-
-  // First check: OpenFlow switch table usage.
-  // Only non-aggregated bearers will install rules on P-GW TFT flow table.
-  // Blocks the bearer if the table usage is exceeding the block threshold.
-  if (!rInfo->IsAggregated ())
-    {
-      uint32_t entries = stats->GetEwmaFlowEntries ();
-      double tableUsage = static_cast<double> (entries) / m_tftTableSize;
-      if (tableUsage >= m_tftBlockThs)
-        {
-          rInfo->SetBlocked (true, RoutingInfo::TFTTABLEFULL);
-          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
-                       " because the TFT flow tables is full.");
-        }
-    }
-
-  // Second check: OpenFlow switch pipeline load.
-  // Is the current pipeline load is exceeding the block threshold, blocks the
-  // bearer accordingly to the PgwTftBlockPolicy attribute:
-  // - If OFF (none): don't block the request.
-  // - If ON (all)  : block the request.
-  // - If AUTO (gbr): block only if GBR request.
-  uint64_t rate = stats->GetEwmaPipelineLoad ().GetBitRate ();
-  double loadUsage = static_cast<double> (rate) / m_tftMaxLoad.GetBitRate ();
-  if (loadUsage >= m_tftBlockThs
-      && (m_tftBlockPolicy == OperationMode::ON
-          || (m_tftBlockPolicy == OperationMode::AUTO && rInfo->IsGbr ())))
-    {
-      rInfo->SetBlocked (true, RoutingInfo::TFTMAXLOAD);
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
-                   " because the TFT processing capacity is overloaded.");
-    }
-
-  // Return false if blocked.
-  return !rInfo->IsBlocked ();
 }
 
 void

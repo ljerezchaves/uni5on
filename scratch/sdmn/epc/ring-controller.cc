@@ -19,8 +19,9 @@
  */
 
 #include <string>
-#include "ring-controller.h"
 #include "epc-network.h"
+#include "ring-controller.h"
+#include "../info/s5-aggregation-info.h"
 
 namespace ns3 {
 
@@ -220,22 +221,6 @@ RingController::TopologyBearerCreated (Ptr<RoutingInfo> rInfo)
 }
 
 bool
-RingController::TopologyBearerRelease (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
-
-  Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
-  if (gbrInfo && gbrInfo->IsReserved ())
-    {
-      Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-      NS_ASSERT_MSG (ringInfo, "No ringInfo for bearer release.");
-      NS_LOG_INFO ("Releasing resources for bearer " << rInfo->GetTeid ());
-      ReleaseGbrBitRate (ringInfo, gbrInfo, rInfo->GetSlice ());
-    }
-  return true;
-}
-
-bool
 RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
@@ -246,8 +231,13 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       return false;
     }
 
+  // Reset the ring routing info to the shortest path.
   Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  NS_ASSERT_MSG (ringInfo->IsDefaultPath (), "Should be the shortest path.");
+  ringInfo->ResetPath ();
+
+  // Update the slice bandwidth usage on aggregation info.
+  Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
+  aggInfo->SetSliceUsage (GetSliceUsage (rInfo->GetSlice ()));
 
   // For Non-GBR bearers (which includes the default bearer), for bearers that
   // only transverse local switch (local routing), and for HTC aggregated
@@ -259,16 +249,16 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       return true;
     }
 
-  // It only makes sense to check and reserve bandwidth for GBR bearers.
+  // It only makes sense to check for available bandwidth for GBR bearers.
   Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
   NS_ASSERT_MSG (gbrInfo, "Invalid configuration for GBR bearer request.");
 
   // Check for the requested bit rate over the shortest path.
-  if (HasGbrBitRate (ringInfo, gbrInfo, rInfo->GetSlice ()))
+  if (HasBitRate (ringInfo, gbrInfo, rInfo->GetSlice ()))
     {
       NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeid () <<
                    " over the shortest path");
-      return ReserveGbrBitRate (ringInfo, gbrInfo, rInfo->GetSlice ());
+      return true;
     }
 
   // The requested bit rate is not available over the shortest path. When
@@ -277,37 +267,104 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
   if (m_strategy == RingController::SPF)
     {
       ringInfo->InvertPath ();
-      if (HasGbrBitRate (ringInfo, gbrInfo, rInfo->GetSlice ()))
+      if (HasBitRate (ringInfo, gbrInfo, rInfo->GetSlice ()))
         {
           NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeid () <<
                        " over the longest (inverted) path");
-          return ReserveGbrBitRate (ringInfo, gbrInfo, rInfo->GetSlice ());
+          return true;
         }
     }
 
   // Nothing more to do. Block the traffic.
   NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid ());
-  rInfo->SetBlocked (true, RoutingInfo::BANDWIDTH);
+  rInfo->SetBlocked (true, RoutingInfo::NOBANDWIDTH);
   return false;
 }
 
-double
-RingController::TopologyLinkUsage (Ptr<RoutingInfo> rInfo)
+bool
+RingController::TopologyBitRateRelease (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeid ());
+  NS_LOG_FUNCTION (this << rInfo);
 
-  // Reset the ring routing info to the shortest path.
+  // For bearers without reserved resources: nothing to release.
+  Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
+  if (!gbrInfo || !gbrInfo->IsReserved ())
+    {
+      return true;
+    }
+
+  NS_LOG_INFO ("Releasing resources for bearer " << rInfo->GetTeid ());
+
   Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-  ringInfo->ResetPath ();
+  NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
-  // Update the aggregation metadata with slice bandwidth usage.
-  uint16_t pgwIdx = ringInfo->GetPgwSwIdx ();
-  uint16_t sgwIdx = ringInfo->GetSgwSwIdx ();
-  Slice slice = rInfo->GetSlice ();
+  bool success = true;
+  uint16_t curr = ringInfo->GetPgwSwIdx ();
+  while (success && curr != ringInfo->GetSgwSwIdx ())
+    {
+      uint16_t next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
 
-  return std::max (
-           GetPathUseRatio (pgwIdx, sgwIdx, slice, ringInfo->GetDownPath ()),
-           GetPathUseRatio (sgwIdx, pgwIdx, slice, ringInfo->GetUpPath ()));
+      uint64_t currId = GetDpId (curr);
+      uint64_t nextId = GetDpId (next);
+      success &= cInfo->ReleaseBitRate (currId, nextId, rInfo->GetSlice (),
+                                        gbrInfo->GetDownBitRate ());
+      success &= cInfo->ReleaseBitRate (nextId, currId, rInfo->GetSlice (),
+                                        gbrInfo->GetUpBitRate ());
+      curr = next;
+    }
+  NS_ASSERT_MSG (success, "Error when releasing resources.");
+  gbrInfo->SetReserved (!success);
+  return success;
+}
+
+bool
+RingController::TopologyBitRateReserve (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo);
+
+  // If the bearer is already blocked, there's nothing more to do.
+  if (rInfo->IsBlocked ())
+    {
+      return false;
+    }
+
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
+
+  // For Non-GBR bearers (which includes the default bearer), for bearers that
+  // only transverse local switch (local routing), and for HTC aggregated
+  // bearers: don't reserve bit rate resources.
+  if (!rInfo->IsGbr () || ringInfo->IsLocalPath ()
+      || (rInfo->IsHtc () && rInfo->IsAggregated ()))
+    {
+      return true;
+    }
+
+  NS_LOG_INFO ("Reserving resources for bearer " << rInfo->GetTeid ());
+
+  // It only makes sense to reserve bandwidth for GBR bearers.
+  Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
+  NS_ASSERT_MSG (gbrInfo, "Invalid configuration for GBR bearer request.");
+
+  bool success = true;
+  uint16_t curr = ringInfo->GetPgwSwIdx ();
+  while (success && curr != ringInfo->GetSgwSwIdx ())
+    {
+      uint16_t next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
+
+      uint64_t currId = GetDpId (curr);
+      uint64_t nextId = GetDpId (next);
+      success &= cInfo->ReserveBitRate (currId, nextId, rInfo->GetSlice (),
+                                        gbrInfo->GetDownBitRate ());
+      success &= cInfo->ReserveBitRate (nextId, currId, rInfo->GetSlice (),
+                                        gbrInfo->GetUpBitRate ());
+      curr = next;
+    }
+  NS_ASSERT_MSG (success, "Error when reserving resources.");
+  gbrInfo->SetReserved (success);
+  return success;
 }
 
 bool
@@ -503,28 +560,29 @@ RingController::GetNSwitches (void) const
 }
 
 double
-RingController::GetPathUseRatio (uint16_t srcIdx, uint16_t dstIdx, Slice slice,
-                                 RingRoutingInfo::RoutingPath path) const
+RingController::GetSliceUsage (Slice slice) const
 {
-  NS_LOG_FUNCTION (this << srcIdx << dstIdx << path);
+  NS_LOG_FUNCTION (this << slice);
 
-  double useRatio = 0;
-  uint16_t next;
-  uint64_t currId;
-  uint64_t nextId;
-  Ptr<ConnectionInfo> cInfo;
-  while (srcIdx != dstIdx)
+  double sliceUsage = 0;
+  uint16_t curr = 0;
+  uint16_t next = NextSwitchIndex (curr, RingRoutingInfo::CLOCK);
+  do
     {
-      next = NextSwitchIndex (srcIdx, path);
-      currId = GetDpId (srcIdx);
-      nextId = GetDpId (next);
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
 
-      cInfo = GetConnectionInfo (srcIdx, next);
-      useRatio = std::max (useRatio,
-                           cInfo->GetEwmaSliceUsage (currId, nextId, slice));
-      srcIdx = next;
+      uint64_t currId = GetDpId (curr);
+      uint64_t nextId = GetDpId (next);
+      double use = std::max (cInfo->GetEwmaSliceUsage (currId, nextId, slice),
+                             cInfo->GetEwmaSliceUsage (nextId, currId, slice));
+      sliceUsage = std::max (sliceUsage, use);
+
+      curr = next;
+      next = NextSwitchIndex (curr, RingRoutingInfo::CLOCK);
     }
-  return useRatio;
+  while (curr != 0);
+
+  return sliceUsage;
 }
 
 uint16_t
@@ -559,24 +617,20 @@ RingController::GetSwitchIndex (Ptr<OFSwitch13Device> dev) const
 }
 
 bool
-RingController::HasGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                               Ptr<const GbrInfo> gbrInfo, Slice slice) const
+RingController::HasBitRate (Ptr<const RingRoutingInfo> ringInfo,
+                            Ptr<const GbrInfo> gbrInfo, Slice slice) const
 {
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo << slice);
 
-  uint16_t next;
-  uint64_t currId;
-  uint64_t nextId;
   bool success = true;
-  Ptr<ConnectionInfo> cInfo;
   uint16_t curr = ringInfo->GetPgwSwIdx ();
   while (success && curr != ringInfo->GetSgwSwIdx ())
     {
-      next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
-      currId = GetDpId (curr);
-      nextId = GetDpId (next);
+      uint16_t next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
+      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
 
-      cInfo = GetConnectionInfo (curr, next);
+      uint64_t currId = GetDpId (curr);
+      uint64_t nextId = GetDpId (next);
       success &= cInfo->HasBitRate (currId, nextId, slice,
                                     gbrInfo->GetDownBitRate ());
       success &= cInfo->HasBitRate (nextId, currId, slice,
@@ -660,70 +714,6 @@ RingController::NextSwitchIndex (uint16_t idx,
   return path == RingRoutingInfo::CLOCK ?
          (idx + 1) % GetNSwitches () :
          (idx == 0 ? GetNSwitches () - 1 : (idx - 1));
-}
-
-bool
-RingController::ReleaseGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                                   Ptr<GbrInfo> gbrInfo, Slice slice)
-{
-  NS_LOG_FUNCTION (this << ringInfo << gbrInfo << slice);
-
-  NS_LOG_INFO ("Releasing resources for GBR bearer.");
-
-  uint16_t next;
-  uint64_t currId;
-  uint64_t nextId;
-  bool success = true;
-  Ptr<ConnectionInfo> cInfo;
-  uint16_t curr = ringInfo->GetPgwSwIdx ();
-  while (success && curr != ringInfo->GetSgwSwIdx ())
-    {
-      next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
-      currId = GetDpId (curr);
-      nextId = GetDpId (next);
-
-      cInfo = GetConnectionInfo (curr, next);
-      success &= cInfo->ReleaseBitRate (currId, nextId, slice,
-                                        gbrInfo->GetDownBitRate ());
-      success &= cInfo->ReleaseBitRate (nextId, currId, slice,
-                                        gbrInfo->GetUpBitRate ());
-      curr = next;
-    }
-  NS_ASSERT_MSG (success, "Error when releasing resources.");
-  gbrInfo->SetReserved (!success);
-  return success;
-}
-
-bool
-RingController::ReserveGbrBitRate (Ptr<const RingRoutingInfo> ringInfo,
-                                   Ptr<GbrInfo> gbrInfo, Slice slice)
-{
-  NS_LOG_FUNCTION (this << ringInfo << gbrInfo << slice);
-
-  NS_LOG_INFO ("Reserving resources for GBR bearer.");
-
-  uint16_t next;
-  uint64_t currId;
-  uint64_t nextId;
-  bool success = true;
-  Ptr<ConnectionInfo> cInfo;
-  uint16_t curr = ringInfo->GetPgwSwIdx ();
-  while (success && curr != ringInfo->GetSgwSwIdx ())
-    {
-      next = NextSwitchIndex (curr, ringInfo->GetDownPath ());
-      currId = GetDpId (curr);
-      nextId = GetDpId (next);
-
-      cInfo = GetConnectionInfo (curr, next);
-      success &= cInfo->ReserveBitRate (currId, nextId, slice,
-                                        gbrInfo->GetDownBitRate ());
-      success &= cInfo->ReserveBitRate (nextId, currId, slice,
-                                        gbrInfo->GetUpBitRate ());
-      curr = next;
-    }
-  NS_ASSERT_MSG (success, "Error when reserving resources.");
-  gbrInfo->SetReserved (success);
-  return success;
 }
 
 };  // namespace ns3
