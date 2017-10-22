@@ -319,6 +319,17 @@ private:
   void NotifyTxPacket (std::string context, Ptr<const Packet> packet);
 
   /**
+   * Update the internal meter diff for firing the meter adjusted trace source
+   * depending on current slicing operation mode.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \param bitRate The bit rate.
+   * \param reserve True when reserving the bit rate, false when releasing.
+   */
+  void UpdateMeterDiff (Direction dir, Slice slice, uint64_t bitRate,
+                        bool reserve);
+
+  /**
    * Update link statistics.
    */
   void UpdateStatistics (void);
@@ -335,7 +346,7 @@ private:
   SwitchData        m_switches [2];         //!< Switches metadata.
   Ptr<CsmaChannel>  m_channel;              //!< The CSMA link channel.
   Time              m_lastUpdate;           //!< Last update time.
-  OperationMode     m_slicing;              //!< Network slicing mode.
+  OperationMode     m_slicingMode;          //!< Network slicing mode.
 
   SliceData         m_slices [Slice::ALL];  //!< Slicing metadata.
 

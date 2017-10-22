@@ -166,18 +166,14 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
         << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (1);
   DpctlSchedule (cInfo->GetSwDpId (1), cmd11.str ());
 
-  // Connect this controller to ConnectionInfo meter ajdusted trace source when
-  // the network slicing mechanism is in auto mode.
-  if (GetSlicingMode () == OperationMode::AUTO)
-    {
-      cInfo->TraceConnectWithoutContext (
-        "MeterAdjusted", MakeCallback (
-          &RingController::MeterAdjusted, this));
-    }
-
   // Set up Non-GBR meters when the network slicing mechanism is enabled.
   if (GetSlicingMode () != OperationMode::OFF)
     {
+      // Connect this controller to ConnectionInfo meter ajdusted trace source.
+      cInfo->TraceConnectWithoutContext (
+        "MeterAdjusted", MakeCallback (
+          &RingController::MeterAdjusted, this));
+
       // Meter flags OFPMF_KBPS.
       std::string flagsStr ("0x0001");
 

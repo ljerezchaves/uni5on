@@ -37,7 +37,7 @@ ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
                                 Ptr<CsmaChannel> channel,
                                 OperationMode slicing)
   : m_channel (channel),
-    m_slicing (slicing)
+    m_slicingMode (slicing)
 {
   NS_LOG_FUNCTION (this << sw1.swDev << sw2.swDev << channel << slicing);
 
@@ -104,7 +104,7 @@ ConnectionInfo::GetTypeId (void)
                    MakeTimeAccessor (&ConnectionInfo::m_timeout),
                    MakeTimeChecker ())
 
-    // Trace source used by controller to install/update slicing meters.
+    // Trace source used by controller to update slicing meters.
     .AddTraceSource ("MeterAdjusted",
                      "Default meter bit rate adjusted.",
                      MakeTraceSourceAccessor (
@@ -296,7 +296,7 @@ ConnectionInfo::GetMeterBitRate (Direction dir) const
 {
   NS_LOG_FUNCTION (this << dir);
 
-  switch (m_slicing)
+  switch (m_slicingMode)
     {
     case OperationMode::OFF:
       return GetLinkBitRate ();
@@ -382,24 +382,14 @@ ConnectionInfo::ReleaseBitRate (uint64_t src, uint64_t dst, Slice slice,
     }
 
   // Releasing the bit rate.
+  m_slices [slice].resRate [dir] -= bitRate;
   NS_LOG_DEBUG ("Releasing bit rate on slice " << SliceStr (slice) <<
                 " in " << DirectionStr (dir) << " direction.");
-  m_slices [slice].resRate [dir] -= bitRate;
   NS_LOG_DEBUG ("Current reserved bit rate: " << GetResBitRate (dir, slice));
+  NS_LOG_DEBUG ("Current free bit rate: " << GetFreeBitRate (dir, slice));
 
   // Updating the meter bit rate.
-  m_meterDiff [dir] += bitRate;
-  NS_LOG_DEBUG ("Current free bit rate: " << GetFreeBitRate (dir));
-  NS_LOG_DEBUG ("Current meter diff: " << m_meterDiff [dir]);
-  NS_LOG_DEBUG ("Current meter threshold: " << m_meterThresh);
-
-  if (std::abs (m_meterDiff [dir]) >= std::abs (m_meterThresh))
-    {
-      // Fire adjusted trace source to update meters.
-      NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
-      m_meterAdjustedTrace (Ptr<ConnectionInfo> (this));
-      m_meterDiff [dir] = 0;
-    }
+  UpdateMeterDiff (dir, slice, bitRate, false);
   return true;
 }
 
@@ -420,24 +410,14 @@ ConnectionInfo::ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
     }
 
   // Reserving the bit rate.
+  m_slices [slice].resRate [dir] += bitRate;
   NS_LOG_DEBUG ("Reserving bit rate on slice " << SliceStr (slice) <<
                 " in " << DirectionStr (dir) << " direction.");
-  m_slices [slice].resRate [dir] += bitRate;
   NS_LOG_DEBUG ("Current reserved bit rate: " << GetResBitRate (dir, slice));
+  NS_LOG_DEBUG ("Current free bit rate: " << GetFreeBitRate (dir, slice));
 
   // Updating the meter bit rate.
-  m_meterDiff [dir] -= bitRate;
-  NS_LOG_DEBUG ("Current free bit rate: " << GetFreeBitRate (dir));
-  NS_LOG_DEBUG ("Current meter diff: " << m_meterDiff [dir]);
-  NS_LOG_DEBUG ("Current meter threshold: " << m_meterThresh);
-
-  if (std::abs (m_meterDiff [dir]) >= std::abs (m_meterThresh))
-    {
-      // Fire adjusted trace source to update meters.
-      NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
-      m_meterAdjustedTrace (Ptr<ConnectionInfo> (this));
-      m_meterDiff [dir] = 0;
-    }
+  UpdateMeterDiff (dir, slice, bitRate, true);
   return true;
 }
 
@@ -491,7 +471,7 @@ ConnectionInfo::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_slicing == OperationMode::OFF)
+  if (m_slicingMode == OperationMode::OFF)
     {
       m_slices [Slice::DFT].maxRate = GetLinkBitRate ();
     }
@@ -515,9 +495,6 @@ ConnectionInfo::NotifyConstructionCompleted (void)
   m_meterDiff [0] = 0;
   m_meterDiff [1] = 0;
   m_meterThresh = m_adjustmentStep.GetBitRate ();
-
-  // Fire the adjusted trace source to create the meters.
-  m_meterAdjustedTrace (Ptr<ConnectionInfo> (this));
 
   // Scheduling the first update statistics.
   m_lastUpdate = Simulator::Now ();
@@ -554,6 +531,38 @@ ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
       // For the case of non-tagged packets, save bytes in default slice.
       NS_LOG_WARN ("No GTPU packet tag found.");
       m_slices [Slice::DFT].txBytes [dir] += packet->GetSize ();
+    }
+}
+
+void
+ConnectionInfo::UpdateMeterDiff (Direction dir, Slice slice, uint64_t bitRate,
+                                 bool reserve)
+{
+  NS_LOG_FUNCTION (this << dir << slice << bitRate << reserve);
+
+  // We update the meter diff when the slicing mechanis is enabled in "auto"
+  // mode for all slices, or in "on" mode only for the default slice.
+  if ((m_slicingMode == OperationMode::ON && slice == Slice::DFT)
+      || m_slicingMode == OperationMode::AUTO)
+    {
+      if (reserve)
+        {
+          m_meterDiff [dir] -= bitRate;
+        }
+      else
+        {
+          m_meterDiff [dir] += bitRate;
+        }
+
+      NS_LOG_DEBUG ("Current meter diff: " << m_meterDiff [dir]);
+      NS_LOG_DEBUG ("Current meter threshold: " << m_meterThresh);
+      if (std::abs (m_meterDiff [dir]) >= std::abs (m_meterThresh))
+        {
+          // Fire adjusted trace source to update meters.
+          NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
+          m_meterAdjustedTrace (Ptr<ConnectionInfo> (this));
+          m_meterDiff [dir] = 0;
+        }
     }
 }
 
