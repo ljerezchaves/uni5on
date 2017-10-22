@@ -80,8 +80,8 @@ private:
   std::string               m_thpSuffix;    //!< Thp filename suffix.
   std::string               m_useSuffix;    //!< Use filename suffix.
 
-  std::string               m_shrFilename;  //!< Shared BE stats filename.
-  Ptr<OutputStreamWrapper>  m_shrWrapper;   //!< Shared BR stats file wrapper.
+  std::string               m_dftFilename;  //!< Dft max stats filename.
+  Ptr<OutputStreamWrapper>  m_dftWrapper;   //!< Dft max stats file wrapper.
 
   SliceStats                m_slices [Slice::ALL];  //!< Slice statistics.
 };
