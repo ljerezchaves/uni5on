@@ -208,7 +208,7 @@ public:
    * \param dir The link direction.
    * \return The meter link ratio.
    */
-  double GetMeterLinkRatio (Direction dir) const;
+  double GetMeterSliceRatio (Direction dir) const;
 
   /**
    * Get the pair of switch datapath IDs for this connection, respecting the

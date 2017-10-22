@@ -299,7 +299,7 @@ ConnectionInfo::GetMeterBitRate (Direction dir) const
   switch (m_slicingMode)
     {
     case OperationMode::OFF:
-      return GetLinkBitRate ();
+      return GetMaxBitRate (Slice::DFT);
     case OperationMode::ON:
       return GetFreeBitRate (dir, Slice::DFT);
     case OperationMode::AUTO:
@@ -310,11 +310,12 @@ ConnectionInfo::GetMeterBitRate (Direction dir) const
 }
 
 double
-ConnectionInfo::GetMeterLinkRatio (Direction dir) const
+ConnectionInfo::GetMeterSliceRatio (Direction dir) const
 {
   NS_LOG_FUNCTION (this << dir);
 
-  return static_cast<double> (GetMeterBitRate (dir)) / GetLinkBitRate ();
+  return static_cast<double> (GetMeterBitRate (dir))
+         / GetMaxBitRate (Slice::DFT);
 }
 
 DpIdPair_t
