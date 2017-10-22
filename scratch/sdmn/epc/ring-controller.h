@@ -22,6 +22,7 @@
 #define RING_CONTROLLER_H
 
 #include "epc-controller.h"
+#include "../info/connection-info.h"
 #include "../info/ring-routing-info.h"
 
 namespace ns3 {

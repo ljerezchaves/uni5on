@@ -20,6 +20,7 @@
 
 #include "epc-controller.h"
 #include "epc-network.h"
+#include "../info/connection-info.h"
 #include "../info/s5-aggregation-info.h"
 #include "../sdran/sdran-controller.h"
 #include <algorithm>
@@ -146,10 +147,11 @@ EpcController::GetTypeId (void)
     .AddAttribute ("Slicing",
                    "Network slicing mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (OperationMode::ON),
+                   EnumValue (OperationMode::AUTO),
                    MakeEnumAccessor (&EpcController::m_slicing),
-                   MakeEnumChecker (OperationMode::OFF, "off",
-                                    OperationMode::ON,  "on"))
+                   MakeEnumChecker (OperationMode::OFF,  "off",
+                                    OperationMode::ON,   "on",
+                                    OperationMode::AUTO, "auto"))
     .AddAttribute ("TimeoutInterval",
                    "The interval between internal periodic operations.",
                    TimeValue (Seconds (5)),
@@ -426,7 +428,7 @@ EpcController::NotifySgwAttach (Ptr<NetDevice> gwDev)
       TopologyBearerCreated (rInfo);
 
       // Set the network slice for this bearer.
-      if (GetSlicingMode () == OperationMode::ON)
+      if (GetSlicingMode () != OperationMode::OFF)
         {
           rInfo->SetSlice (Slice::MTC);
         }
@@ -701,7 +703,7 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 3 -- Slicing table -- [from higher to lower priority]
   //
-  if (GetSlicingMode () == OperationMode::ON)
+  if (GetSlicingMode () != OperationMode::OFF)
     {
       // Non-GBR packets are indicated by DSCP field DSCP_AF11 and DscpDefault.
       // Apply Non-GBR meter band. Send the packet to Output table.
@@ -855,8 +857,8 @@ EpcController::DoCreateSessionRequest (
       rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
       TopologyBearerCreated (rInfo);
 
-      // Set the proper network slice for this bearer.
-      if (GetSlicingMode () == OperationMode::ON)
+      // Set the network slice for this bearer.
+      if (GetSlicingMode () != OperationMode::OFF)
         {
           if (rInfo->IsMtc ())
             {

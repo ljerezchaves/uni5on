@@ -34,7 +34,8 @@ ConnectionInfo::ConnInfoMap_t ConnectionInfo::m_connectionsMap;
 ConnInfoList_t ConnectionInfo::m_connectionsList;
 
 ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
-                                Ptr<CsmaChannel> channel, bool slicing)
+                                Ptr<CsmaChannel> channel,
+                                OperationMode slicing)
   : m_channel (channel),
     m_slicing (slicing)
 {
@@ -290,6 +291,32 @@ ConnectionInfo::GetMaxBitRate (Slice slice) const
     }
 }
 
+uint64_t
+ConnectionInfo::GetMeterBitRate (Direction dir) const
+{
+  NS_LOG_FUNCTION (this << dir);
+
+  switch (m_slicing)
+    {
+    case OperationMode::OFF:
+      return GetLinkBitRate ();
+    case OperationMode::ON:
+      return GetFreeBitRate (dir, Slice::DFT);
+    case OperationMode::AUTO:
+      return GetFreeBitRate (dir, Slice::ALL);
+    default:
+      return 0;
+    }
+}
+
+double
+ConnectionInfo::GetMeterLinkRatio (Direction dir) const
+{
+  NS_LOG_FUNCTION (this << dir);
+
+  return static_cast<double> (GetMeterBitRate (dir)) / GetLinkBitRate ();
+}
+
 DpIdPair_t
 ConnectionInfo::GetSwitchDpIdPair (void) const
 {
@@ -464,7 +491,11 @@ ConnectionInfo::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_slicing)
+  if (m_slicing == OperationMode::OFF)
+    {
+      m_slices [Slice::DFT].maxRate = GetLinkBitRate ();
+    }
+  else
     {
       uint64_t mtcRate, gbrRate, dftRate;
       mtcRate = static_cast<uint64_t> (GetLinkBitRate () * m_mtcSliceQuota);
@@ -475,17 +506,12 @@ ConnectionInfo::NotifyConstructionCompleted (void)
       m_slices [Slice::GBR].maxRate = gbrRate;
       m_slices [Slice::DFT].maxRate = dftRate;
     }
-  else
-    {
-      m_slices [Slice::DFT].maxRate = GetLinkBitRate ();
-    }
 
   NS_LOG_DEBUG ("DFT maximum bit rate: " <<  m_slices [Slice::DFT].maxRate);
   NS_LOG_DEBUG ("GBR maximum bit rate: " <<  m_slices [Slice::GBR].maxRate);
   NS_LOG_DEBUG ("MTC maximum bit rate: " <<  m_slices [Slice::MTC].maxRate);
 
-  // Set initial meter bit rate to maximum, as we don't have any reserved bit
-  // rate at this moment.
+  // Set initial meter bit rates.
   m_meterDiff [0] = 0;
   m_meterDiff [1] = 0;
   m_meterThresh = m_adjustmentStep.GetBitRate ();
@@ -575,9 +601,6 @@ ConnectionInfo::RegisterConnectionInfo (Ptr<ConnectionInfo> cInfo)
     }
 
   ConnectionInfo::m_connectionsList.push_back (cInfo);
-  // NS_LOG_INFO ("New connection info saved:" <<
-  //              " switch " << dpId1 << " port " << cInfo->GetPortNo (0) <<
-  //              " switch " << dpId2 << " port " << cInfo->GetPortNo (1));
 }
 
 };  // namespace ns3

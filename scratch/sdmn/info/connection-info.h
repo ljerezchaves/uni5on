@@ -25,6 +25,7 @@
 #include <ns3/network-module.h>
 #include <ns3/csma-module.h>
 #include <ns3/ofswitch13-module.h>
+#include "../epc/epc-controller.h"
 #include "../info/routing-info.h"
 
 namespace ns3 {
@@ -98,7 +99,7 @@ public:
    * full-duplex links.
    */
   ConnectionInfo (SwitchData sw1, SwitchData sw2,
-                  Ptr<CsmaChannel> channel, bool slicing);
+                  Ptr<CsmaChannel> channel, OperationMode slicing);
   virtual ~ConnectionInfo ();   //!< Dummy destructor, see DoDispose.
 
   /**
@@ -192,6 +193,22 @@ public:
    * \return The maximum bit rate.
    */
   uint64_t GetMaxBitRate (Slice slice = Slice::ALL) const;
+
+  /**
+   * Get the maximum bit rate for best-effort traffic over this link on the
+   * given direction, based on current slicing operation mode.
+   * \param dir The link direction.
+   * \return The maximum bit rate.
+   */
+  uint64_t GetMeterBitRate (Direction dir) const;
+
+  /**
+   * Get the maximum bit rate ratio for best-effort traffic over this link on
+   * the given direction, based on current slicing operation mode.
+   * \param dir The link direction.
+   * \return The meter link ratio.
+   */
+  double GetMeterLinkRatio (Direction dir) const;
 
   /**
    * Get the pair of switch datapath IDs for this connection, respecting the
@@ -318,7 +335,7 @@ private:
   SwitchData        m_switches [2];         //!< Switches metadata.
   Ptr<CsmaChannel>  m_channel;              //!< The CSMA link channel.
   Time              m_lastUpdate;           //!< Last update time.
-  bool              m_slicing;              //!< Network slicing enabled.
+  OperationMode     m_slicing;              //!< Network slicing mode.
 
   SliceData         m_slices [Slice::ALL];  //!< Slicing metadata.
 

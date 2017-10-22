@@ -166,14 +166,18 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
         << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (1);
   DpctlSchedule (cInfo->GetSwDpId (1), cmd11.str ());
 
-  if (GetSlicingMode () == OperationMode::ON)
+  // Connect this controller to ConnectionInfo meter ajdusted trace source when
+  // the network slicing mechanism is in auto mode.
+  if (GetSlicingMode () == OperationMode::AUTO)
     {
-      // Connecting this controller to ConnectionInfo trace source
-      // when the network slicing mechanism is enable.
       cInfo->TraceConnectWithoutContext (
         "MeterAdjusted", MakeCallback (
           &RingController::MeterAdjusted, this));
+    }
 
+  // Set up Non-GBR meters when the network slicing mechanism is enabled.
+  if (GetSlicingMode () != OperationMode::OFF)
+    {
       // Meter flags OFPMF_KBPS.
       std::string flagsStr ("0x0001");
 
@@ -181,7 +185,7 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
                     cInfo->GetSwDpId (0) << " to " << cInfo->GetSwDpId (1));
 
       // Non-GBR meter for clockwise direction.
-      kbps = cInfo->GetFreeBitRate (ConnectionInfo::FWD) / 1000;
+      kbps = cInfo->GetMeterBitRate (ConnectionInfo::FWD) / 1000;
       cmd02 << "meter-mod cmd=add"
             << ",flags=" << flagsStr
             << ",meter=" << RingRoutingInfo::CLOCK
@@ -191,7 +195,7 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
 
 
       // Non-GBR meter for counterclockwise direction.
-      kbps = cInfo->GetFreeBitRate (ConnectionInfo::BWD) / 1000;
+      kbps = cInfo->GetMeterBitRate (ConnectionInfo::BWD) / 1000;
       cmd12 << "meter-mod cmd=add"
             << ",flags=" << flagsStr
             << ",meter=" << RingRoutingInfo::COUNTER
@@ -685,7 +689,7 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo)
                 cInfo->GetSwDpId (0) << " to " << cInfo->GetSwDpId (1));
 
   // Update the meter for clockwise direction.
-  kbps = cInfo->GetFreeBitRate (ConnectionInfo::FWD) / 1000;
+  kbps = cInfo->GetMeterBitRate (ConnectionInfo::FWD) / 1000;
   cmd1 << "meter-mod cmd=mod"
        << ",flags=" << flagsStr
        << ",meter=" << RingRoutingInfo::CLOCK
@@ -694,7 +698,7 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo)
   NS_LOG_DEBUG ("Forward link set to " << kbps << " Kbps");
 
   // Update the meter for counterclockwise direction.
-  kbps = cInfo->GetFreeBitRate (ConnectionInfo::BWD) / 1000;
+  kbps = cInfo->GetMeterBitRate (ConnectionInfo::BWD) / 1000;
   cmd2 << "meter-mod cmd=mod"
        << ",flags=" << flagsStr
        << ",meter=" << RingRoutingInfo::COUNTER

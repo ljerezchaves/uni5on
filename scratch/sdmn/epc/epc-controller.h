@@ -27,7 +27,6 @@
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
 #include "epc-s5-sap.h"
-#include "../info/connection-info.h"
 #include "../info/enb-info.h"
 #include "../info/gbr-info.h"
 #include "../info/meter-info.h"
@@ -35,6 +34,8 @@
 #include "../info/ue-info.h"
 
 namespace ns3 {
+
+class ConnectionInfo;
 
 /** Enumeration of available operation modes. */
 typedef enum
