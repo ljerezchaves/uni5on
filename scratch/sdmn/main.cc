@@ -306,7 +306,7 @@ void ConfigureDefaults ()
   Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::MinY",
                       DoubleValue (250));
   Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::GridWidth",
-                      UintegerValue (1));
+                      UintegerValue (2));
 }
 
 void ForceDefaults ()
