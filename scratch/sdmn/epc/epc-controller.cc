@@ -542,12 +542,12 @@ EpcController::NotifyConstructionCompleted (void)
   switch (GetPgwAdaptiveMode ())
     {
     case OperationMode::ON:
+    case OperationMode::AUTO:
       {
         m_tftLevel = static_cast<uint8_t> (log2 (m_tftSwitches));
         break;
       }
     case OperationMode::OFF:
-    case OperationMode::AUTO:
       {
         m_tftLevel = 0;
         break;
