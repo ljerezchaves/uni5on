@@ -202,11 +202,11 @@ public:
   EpcS5SapPgw* GetS5SapPgw (void) const;
 
   /**
-   * Retrieve stored mapped value for a specific EPS QCI.
+   * Retrieve stored mapped DSCP for a specific EPS QCI.
    * \param qci The EPS bearer QCI.
-   * \return The IP DSCP mapped value for this QCI.
+   * \return The IP DSCP mapped for this QCI.
    */
-  static uint16_t GetDscpValue (EpsBearer::Qci qci);
+  static Ipv4Header::DscpType Qci2Dscp (EpsBearer::Qci qci);
 
   /**
    * TracedCallback signature for the P-GW TFT stats trace source.
@@ -446,10 +446,10 @@ private:
   Time                  m_timeout;        //!< Controller internal timeout.
 
   /** Map saving EPS QCI / IP DSCP value. */
-  typedef std::map<EpsBearer::Qci, uint16_t> QciDscpMap_t;
+  typedef std::map<EpsBearer::Qci, Ipv4Header::DscpType> QciDscpMap_t;
 
   /** Map saving IP DSCP value / Output queue id. */
-  typedef std::map<uint16_t, uint32_t> DscpQueueMap_t;
+  typedef std::map<Ipv4Header::DscpType, uint32_t> DscpQueueMap_t;
 
   static const uint16_t m_flowTimeout;    //!< Timeout for flow entries.
   static uint32_t       m_teidCount;      //!< TEID counter.

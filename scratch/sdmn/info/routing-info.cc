@@ -99,7 +99,7 @@ RoutingInfo::GetDscp (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_dscp;
+  return static_cast<uint16_t> (m_dscp);
 }
 
 uint64_t
@@ -253,7 +253,7 @@ RoutingInfo::SetBlocked (bool value, BlockReason reason)
 }
 
 void
-RoutingInfo::SetDscp (uint16_t value)
+RoutingInfo::SetDscp (Ipv4Header::DscpType value)
 {
   NS_LOG_FUNCTION (this << value);
 

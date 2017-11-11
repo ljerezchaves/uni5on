@@ -421,7 +421,7 @@ EpcController::NotifySgwAttach (Ptr<NetDevice> gwDev)
       Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
           mtcTeid, fakeBearer, 0, false, true);
       rInfo->SetActive (true);
-      rInfo->SetDscp (GetDscpValue (rInfo->GetQciInfo ()));
+      rInfo->SetDscp (Qci2Dscp (rInfo->GetQciInfo ()));
       rInfo->SetPriority (0xFF00);
       rInfo->SetPgwS5Addr (m_pgwS5Addr);
       rInfo->SetSgwS5Addr (EpcNetwork::GetIpv4Addr (gwDev));
@@ -504,8 +504,8 @@ EpcController::GetS5SapPgw (void) const
   return m_s5SapPgw;
 }
 
-uint16_t
-EpcController::GetDscpValue (EpsBearer::Qci qci)
+Ipv4Header::DscpType
+EpcController::Qci2Dscp (EpsBearer::Qci qci)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -851,7 +851,7 @@ EpcController::DoCreateSessionRequest (
       // Create the routing metadata for this bearer.
       Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
           teid, bearerContext, imsi, isDefault, ueInfo->IsMtc ());
-      rInfo->SetDscp (GetDscpValue (rInfo->GetQciInfo ()));
+      rInfo->SetDscp (Qci2Dscp (rInfo->GetQciInfo ()));
       rInfo->SetPgwS5Addr (m_pgwS5Addr);
       rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
       rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());

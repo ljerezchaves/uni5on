@@ -113,7 +113,7 @@ public:
 
   void SetActive (bool value);
   void SetBlocked (bool value, BlockReason reason = RoutingInfo::NOTBLOCKED);
-  void SetDscp (uint16_t value);
+  void SetDscp (Ipv4Header::DscpType value);
   void SetInstalled (bool value);
   void SetPgwS5Addr (Ipv4Address value);
   void SetPgwTftIdx (uint16_t value);
@@ -191,22 +191,22 @@ private:
    */
   static void RegisterRoutingInfo (Ptr<RoutingInfo> rInfo);
 
-  BearerContext_t   m_bearer;       //!< EPS bearer information.
-  BlockReason       m_blockReason;  //!< Bearer blocked reason.
-  uint8_t           m_dscp;         //!< DiffServ DSCP value.
-  uint64_t          m_imsi;         //!< UE IMSI.
-  bool              m_isActive;     //!< Traffic active status.
-  bool              m_isBlocked;    //!< Bearer request status.
-  bool              m_isDefault;    //!< This is a default bearer.
-  bool              m_isInstalled;  //!< Rules installed status.
-  bool              m_isMtc;        //!< This is a MTC traffic.
-  uint16_t          m_pgwTftIdx;    //!< P-GW TFT switch index.
-  Ipv4Address       m_pgwS5Addr;    //!< P-GW S5 IPv4 address.
-  uint16_t          m_priority;     //!< Flow rule priority.
-  Slice             m_slice;        //!< Traffic backhaul slice.
-  Ipv4Address       m_sgwS5Addr;    //!< S-GW S5 IPv4 address.
-  uint32_t          m_teid;         //!< GTP TEID.
-  uint16_t          m_timeout;      //!< Flow idle timeout.
+  BearerContext_t      m_bearer;       //!< EPS bearer information.
+  BlockReason          m_blockReason;  //!< Bearer blocked reason.
+  Ipv4Header::DscpType m_dscp;         //!< DiffServ DSCP value.
+  uint64_t             m_imsi;         //!< UE IMSI.
+  bool                 m_isActive;     //!< Traffic active status.
+  bool                 m_isBlocked;    //!< Bearer request status.
+  bool                 m_isDefault;    //!< This is a default bearer.
+  bool                 m_isInstalled;  //!< Rules installed status.
+  bool                 m_isMtc;        //!< This is a MTC traffic.
+  uint16_t             m_pgwTftIdx;    //!< P-GW TFT switch index.
+  Ipv4Address          m_pgwS5Addr;    //!< P-GW S5 IPv4 address.
+  uint16_t             m_priority;     //!< Flow rule priority.
+  Slice                m_slice;        //!< Traffic backhaul slice.
+  Ipv4Address          m_sgwS5Addr;    //!< S-GW S5 IPv4 address.
+  uint32_t             m_teid;         //!< GTP TEID.
+  uint16_t             m_timeout;      //!< Flow idle timeout.
 
   /** Map saving TEID / routing information. */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
