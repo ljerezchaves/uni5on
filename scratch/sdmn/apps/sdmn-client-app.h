@@ -83,11 +83,9 @@ public:
   /**
    * \brief Set the server application.
    * \param serverApp The pointer to server application.
-   * \param serverAddress The IPv4 address of the server.
-   * \param serverPort The port number on the server.
+   * \param serverAddress The Inet socket address of the server.
    */
-  void SetServer (Ptr<SdmnServerApp> serverApp, Ipv4Address serverAddress,
-                  uint16_t serverPort);
+  void SetServer (Ptr<SdmnServerApp> serverApp, Address serverAddress);
 
   /**
    * Start this application. Reset internal counters, notify the server
@@ -138,8 +136,7 @@ protected:
   Ptr<QosStatsCalculator> m_qosStats;         //!< QoS statistics.
   Ptr<Socket>             m_socket;           //!< Local socket.
   uint16_t                m_localPort;        //!< Local port.
-  Ipv4Address             m_serverAddress;    //!< Server address.
-  uint16_t                m_serverPort;       //!< Server port.
+  Address                 m_serverAddress;    //!< Server address.
   Ptr<SdmnServerApp>      m_serverApp;        //!< Server application.
 
   /** Trace source fired when application start. */

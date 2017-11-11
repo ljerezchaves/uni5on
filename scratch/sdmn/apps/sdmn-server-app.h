@@ -65,11 +65,9 @@ public:
   /**
    * \brief Set the client application.
    * \param clientApp The pointer to client application.
-   * \param clientAddress The IPv4 address of the client.
-   * \param clientPort The port number on the client.
+   * \param clientAddress The Inet socket address of the client.
    */
-  void SetClient (Ptr<SdmnClientApp> clientApp, Ipv4Address clientAddress,
-                  uint16_t clientPort);
+  void SetClient (Ptr<SdmnClientApp> clientApp, Address clientAddress);
 
 protected:
   /** Destructor implementation. */
@@ -109,8 +107,7 @@ protected:
   Ptr<QosStatsCalculator> m_qosStats;         //!< QoS statistics.
   Ptr<Socket>             m_socket;           //!< Local socket.
   uint16_t                m_localPort;        //!< Local port.
-  Ipv4Address             m_clientAddress;    //!< Client address.
-  uint16_t                m_clientPort;       //!< Client port.
+  Address                 m_clientAddress;    //!< Client address.
   Ptr<SdmnClientApp>      m_clientApp;        //!< Client application.
 };
 

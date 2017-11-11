@@ -139,7 +139,7 @@ VoipClient::StartApplication (void)
   TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
   m_socket = Socket::CreateSocket (GetNode (), udpFactory);
   m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
-  m_socket->Connect (InetSocketAddress (m_serverAddress, m_serverPort));
+  m_socket->Connect (InetSocketAddress::ConvertFrom (m_serverAddress));
   m_socket->SetRecvCallback (MakeCallback (&VoipClient::ReadPacket, this));
 }
 

@@ -50,15 +50,10 @@ SdmnServerApp::GetTypeId (void)
     .SetParent<Application> ()
     .AddConstructor<SdmnServerApp> ()
     .AddAttribute ("ClientAddress",
-                   "The client IPv4 address.",
-                   Ipv4AddressValue (),
-                   MakeIpv4AddressAccessor (&SdmnServerApp::m_clientAddress),
-                   MakeIpv4AddressChecker ())
-    .AddAttribute ("ClientPort",
-                   "The client port.",
-                   UintegerValue (10000),
-                   MakeUintegerAccessor (&SdmnServerApp::m_clientPort),
-                   MakeUintegerChecker<uint16_t> ())
+                   "The client socket address.",
+                   AddressValue (),
+                   MakeAddressAccessor (&SdmnServerApp::m_clientAddress),
+                   MakeAddressChecker ())
     .AddAttribute ("LocalPort",
                    "Local port.",
                    UintegerValue (10000),
@@ -117,14 +112,12 @@ SdmnServerApp::GetQosStats (void) const
 }
 
 void
-SdmnServerApp::SetClient (Ptr<SdmnClientApp> clientApp,
-                          Ipv4Address clientAddress, uint16_t clientPort)
+SdmnServerApp::SetClient (Ptr<SdmnClientApp> clientApp, Address clientAddress)
 {
-  NS_LOG_FUNCTION (this << clientApp << clientAddress << clientPort);
+  NS_LOG_FUNCTION (this << clientApp << clientAddress);
 
   m_clientApp = clientApp;
   m_clientAddress = clientAddress;
-  m_clientPort = clientPort;
 }
 
 void

@@ -91,7 +91,7 @@ HttpClient::Start ()
   TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
   m_socket = Socket::CreateSocket (GetNode (), tcpFactory);
   m_socket->Bind ();
-  m_socket->Connect (InetSocketAddress (m_serverAddress, m_serverPort));
+  m_socket->Connect (InetSocketAddress::ConvertFrom (m_serverAddress));
   m_socket->SetConnectCallback (
     MakeCallback (&HttpClient::NotifyConnectionSucceeded, this),
     MakeCallback (&HttpClient::NotifyConnectionFailed, this));

@@ -61,12 +61,14 @@ SdmnAppHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
   serverApp = m_serverFactory.Create ()->GetObject<SdmnServerApp> ();
   NS_ASSERT_MSG (serverApp, "Invalid server type id.");
 
+  InetSocketAddress serverInetAddr (serverAddr, port);
   clientApp->SetAttribute ("LocalPort", UintegerValue (port));
-  clientApp->SetServer (serverApp, serverAddr, port);
+  clientApp->SetServer (serverApp, serverInetAddr);
   clientNode->AddApplication (clientApp);
 
+  InetSocketAddress clientInetAddr (clientAddr, port);
   serverApp->SetAttribute ("LocalPort", UintegerValue (port));
-  serverApp->SetClient (clientApp, clientAddr, port);
+  serverApp->SetClient (clientApp, clientInetAddr);
   serverNode->AddApplication (serverApp);
 
   return clientApp;

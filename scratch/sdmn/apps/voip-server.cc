@@ -80,7 +80,7 @@ VoipServer::StartApplication (void)
   TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
   m_socket = Socket::CreateSocket (GetNode (), udpFactory);
   m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
-  m_socket->Connect (InetSocketAddress (m_clientAddress, m_clientPort));
+  m_socket->Connect (InetSocketAddress::ConvertFrom (m_clientAddress));
   m_socket->SetRecvCallback (MakeCallback (&VoipServer::ReadPacket, this));
 }
 
