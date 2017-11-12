@@ -67,11 +67,13 @@ public:
    * \param clientAddr The IPv4 address of the client.
    * \param serverAddr The IPv4 address of the server.
    * \param port The port number on both client and server.
+   * \param dscp The DSCP value used to set the socket type of service field.
    * \return The client application created.
    */
-  Ptr<SdmnClientApp> Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
-                              Ipv4Address clientAddr, Ipv4Address serverAddr,
-                              uint16_t port);
+  Ptr<SdmnClientApp> Install (
+    Ptr<Node> clientNode, Ptr<Node> serverNode, Ipv4Address clientAddr,
+    Ipv4Address serverAddr, uint16_t port,
+    Ipv4Header::DscpType dscp = Ipv4Header::DscpDefault);
 
 private:
   ObjectFactory m_clientFactory; //!< Object client factory.

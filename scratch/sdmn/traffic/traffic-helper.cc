@@ -311,8 +311,15 @@ TrafficHelper::InstallGbrVoip ()
   NS_LOG_FUNCTION (this);
   m_port++;
 
+  // Dedicated GBR EPS bearer (QCI 1).
+  GbrQosInformation qos;
+  qos.gbrDl = 47200;  // ~46.09 Kbps
+  qos.gbrUl = 47200;  // ~46.09 Kbps
+  EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
+
   Ptr<SdmnClientApp> cApp = m_voipHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port);
+      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port,
+      EpcController::Qci2Dscp (bearer.qci));
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
@@ -328,12 +335,6 @@ TrafficHelper::InstallGbrVoip ()
   filter.localPortEnd = 65535;
   tft->Add (filter);
 
-  // Dedicated GBR EPS bearer (QCI 1).
-  GbrQosInformation qos;
-  qos.gbrDl = 47200;  // ~46.09 Kbps
-  qos.gbrUl = 47200;  // ~46.09 Kbps
-  EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
-
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
   m_htcManager->AddSdmnClientApp (cApp);
@@ -347,8 +348,14 @@ TrafficHelper::InstallGbrAutoPilot ()
   NS_LOG_FUNCTION (this);
   m_port++;
 
+  // Dedicated GBR EPS bearer (QCI 3).
+  GbrQosInformation qos;
+  qos.gbrUl = 150000;  // ~146 Kbps
+  EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
+
   Ptr<SdmnClientApp> cApp = m_plotHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port);
+      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port,
+      EpcController::Qci2Dscp (bearer.qci));
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
@@ -364,10 +371,6 @@ TrafficHelper::InstallGbrAutoPilot ()
   filter.localPortEnd = 65535;
   tft->Add (filter);
 
-  // Dedicated GBR EPS bearer (QCI 3).
-  GbrQosInformation qos;
-  qos.gbrUl = 150000;  // ~146 Kbps
-  EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
@@ -386,8 +389,15 @@ TrafficHelper::InstallGbrLiveVideoStreaming ()
   std::string filename = GetVideoFilename (videoIdx);
   m_rtvdHelper.SetServerAttribute ("TraceFilename", StringValue (filename));
 
+  // Dedicated GBR EPS bearer (QCI 4).
+  GbrQosInformation qos;
+  qos.gbrDl = GetVideoGbr (videoIdx).GetBitRate ();
+  qos.mbrDl = GetVideoMbr (videoIdx).GetBitRate ();
+  EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
+
   Ptr<SdmnClientApp> cApp = m_rtvdHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port);
+      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port,
+      EpcController::Qci2Dscp (bearer.qci));
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
@@ -402,12 +412,6 @@ TrafficHelper::InstallGbrLiveVideoStreaming ()
   filter.localPortStart = 0;
   filter.localPortEnd = 65535;
   tft->Add (filter);
-
-  // Dedicated GBR EPS bearer (QCI 4).
-  GbrQosInformation qos;
-  qos.gbrDl = GetVideoGbr (videoIdx).GetBitRate ();
-  qos.mbrDl = GetVideoMbr (videoIdx).GetBitRate ();
-  EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
@@ -422,12 +426,16 @@ TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
   NS_LOG_FUNCTION (this);
   m_port++;
 
+  // Dedicated Non-GBR EPS bearer (QCI 6).
+  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR);
+
   int videoIdx = m_videoRng->GetInteger ();
   std::string filename = GetVideoFilename (videoIdx);
   m_stvdHelper.SetServerAttribute ("TraceFilename", StringValue (filename));
 
   Ptr<SdmnClientApp> cApp = m_stvdHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port);
+      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port,
+      EpcController::Qci2Dscp (bearer.qci));
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
@@ -443,9 +451,6 @@ TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
   filter.localPortEnd = 65535;
   tft->Add (filter);
 
-  // Dedicated Non-GBR EPS bearer (QCI 6).
-  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR);
-
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
   m_htcManager->AddSdmnClientApp (cApp);
@@ -459,12 +464,16 @@ TrafficHelper::InstallNonGbrLiveVideoStreaming ()
   NS_LOG_FUNCTION (this);
   m_port++;
 
+  // Dedicated Non-GBR EPS bearer (QCI 7).
+  EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING);
+
   int videoIdx = m_videoRng->GetInteger ();
   std::string filename = GetVideoFilename (videoIdx);
   m_rtvdHelper.SetServerAttribute ("TraceFilename", StringValue (filename));
 
   Ptr<SdmnClientApp> cApp = m_rtvdHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port);
+      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port,
+      EpcController::Qci2Dscp (bearer.qci));
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
@@ -480,9 +489,6 @@ TrafficHelper::InstallNonGbrLiveVideoStreaming ()
   filter.localPortEnd = 65535;
   tft->Add (filter);
 
-  // Dedicated Non-GBR EPS bearer (QCI 7).
-  EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING);
-
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
   m_htcManager->AddSdmnClientApp (cApp);
@@ -496,8 +502,12 @@ TrafficHelper::InstallNonGbrHttp ()
   NS_LOG_FUNCTION (this);
   m_port++;
 
+  // Dedicated Non-GBR EPS bearer (QCI 8).
+  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
+
   Ptr<SdmnClientApp> cApp = m_httpHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port);
+      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port,
+      EpcController::Qci2Dscp (bearer.qci));
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
@@ -512,9 +522,6 @@ TrafficHelper::InstallNonGbrHttp ()
   filter.localPortStart = 0;
   filter.localPortEnd = 65535;
   tft->Add (filter);
-
-  // Dedicated Non-GBR EPS bearer (QCI 8).
-  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
