@@ -49,6 +49,7 @@ std::string OperationModeStr (OperationMode mode)
 const uint16_t EpcController::m_flowTimeout = 0;
 EpcController::QciDscpMap_t EpcController::m_qciDscpTable;
 EpcController::DscpQueueMap_t EpcController::m_dscpQueueTable;
+EpcController::DscpTosMap_t EpcController::m_dscpTosTable;
 
 // TEID values for bearers ranges from 0x100 to 0xFEFFFFFF.
 // Other values are reserved for controller usage.
@@ -502,6 +503,20 @@ EpcController::GetS5SapPgw (void) const
   NS_LOG_FUNCTION (this);
 
   return m_s5SapPgw;
+}
+
+uint8_t
+EpcController::Dscp2Tos (Ipv4Header::DscpType dscp)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  DscpTosMap_t::const_iterator it;
+  it = EpcController::m_dscpTosTable.find (dscp);
+  if (it != EpcController::m_dscpTosTable.end ())
+    {
+      return it->second;
+    }
+  NS_FATAL_ERROR ("No ToS mapped value for DSCP " << dscp);
 }
 
 Ipv4Header::DscpType
@@ -1351,7 +1366,7 @@ EpcController::StaticInitialize ()
         std::make_pair (EpsBearer::NGBR_VIDEO_TCP_DEFAULT,
                         Ipv4Header::DscpDefault));
 
-      // Populating the IP DSCP --> Output queue id mapping table.
+      // Populating the IP DSCP --> OpenFlow queue id mapping table.
       EpcController::m_dscpQueueTable.insert (
         std::make_pair (Ipv4Header::DSCP_EF, 2));
 
@@ -1363,6 +1378,23 @@ EpcController::StaticInitialize ()
 
       EpcController::m_dscpQueueTable.insert (
         std::make_pair (Ipv4Header::DscpDefault, 0));
+
+      // Populating the IP DSCP --> IP ToS mapping table.
+      // See the ns3::Socket::IpTos2Priority for details.
+      // IP ToS 0x10 --> Linux priority 6 --> pfifo_fast queue 0 (high prio)
+      EpcController::m_dscpTosTable.insert (
+        std::make_pair (Ipv4Header::DSCP_EF, 0x10));
+
+      // IP ToS 0x00 --> Linux priority 0 --> pfifo_fast queue 1
+      EpcController::m_dscpTosTable.insert (
+        std::make_pair (Ipv4Header::DSCP_AF41, 0x00));
+
+      EpcController::m_dscpTosTable.insert (
+        std::make_pair (Ipv4Header::DSCP_AF11, 0x00));
+
+      // IP ToS 0x08 --> Linux priority 2 --> pfifo_fast queue 2 (low prio)
+      EpcController::m_dscpTosTable.insert (
+        std::make_pair (Ipv4Header::DscpDefault, 0x08));
     }
 }
 

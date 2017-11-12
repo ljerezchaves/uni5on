@@ -19,6 +19,7 @@
  */
 
 #include "sdmn-app-helper.h"
+#include "../epc/epc-controller.h"
 
 namespace ns3 {
 
@@ -53,6 +54,8 @@ SdmnAppHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
                         Ipv4Address clientAddr, Ipv4Address serverAddr,
                         uint16_t port, Ipv4Header::DscpType dscp)
 {
+  uint8_t tos = EpcController::Dscp2Tos (dscp);
+
   Ptr<SdmnClientApp> clientApp;
   clientApp = m_clientFactory.Create ()->GetObject<SdmnClientApp> ();
   NS_ASSERT_MSG (clientApp, "Invalid client type id.");
@@ -61,17 +64,14 @@ SdmnAppHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
   serverApp = m_serverFactory.Create ()->GetObject<SdmnServerApp> ();
   NS_ASSERT_MSG (serverApp, "Invalid server type id.");
 
-  // Using the DSCP value to set the socket type of service field by shifting
-  // it two bits to the left. See ns3::Socket::IpTos2Priority for details.
-
   InetSocketAddress serverInetAddr (serverAddr, port);
-  serverInetAddr.SetTos (static_cast<uint8_t> (dscp) << 2);
+  serverInetAddr.SetTos (tos);
   clientApp->SetAttribute ("LocalPort", UintegerValue (port));
   clientApp->SetServer (serverApp, serverInetAddr);
   clientNode->AddApplication (clientApp);
 
   InetSocketAddress clientInetAddr (clientAddr, port);
-  clientInetAddr.SetTos (static_cast<uint8_t> (dscp) << 2);
+  clientInetAddr.SetTos (tos);
   serverApp->SetAttribute ("LocalPort", UintegerValue (port));
   serverApp->SetClient (clientApp, clientInetAddr);
   serverNode->AddApplication (serverApp);
