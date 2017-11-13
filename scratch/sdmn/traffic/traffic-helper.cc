@@ -19,7 +19,7 @@
  */
 
 #include "traffic-helper.h"
-#include "htc-traffic-manager.h"
+#include "traffic-manager.h"
 #include "mtc-traffic-manager.h"
 #include "../sdran/lte-network.h"
 #include "../apps/auto-pilot-client.h"
@@ -83,7 +83,7 @@ TrafficHelper::TrafficHelper (Ptr<LteNetwork> lteNetwork,
   m_webMask = EpcNetwork::GetIpv4Mask (webDev);
 
   // Configuring the traffic manager object factory.
-  m_htcFactory.SetTypeId (HtcTrafficManager::GetTypeId ());
+  m_htcFactory.SetTypeId (TrafficManager::GetTypeId ());
   m_mtcFactory.SetTypeId (MtcTrafficManager::GetTypeId ());
 
   // Random video selection.
@@ -204,15 +204,14 @@ TrafficHelper::InstallHtcApplications (NodeContainer ueNodes,
       m_ueMask = clientIpv4->GetAddress (1, 0).GetMask ();
 
       // Each HTC UE gets one HTC traffic manager.
-      m_htcManager = m_htcFactory.Create<HtcTrafficManager> ();
+      m_htcManager = m_htcFactory.Create<TrafficManager> ();
       m_htcManager->SetImsi (ueImsi);
       m_ueNode->AggregateObject (m_htcManager);
 
       // Connect the manager to new context created trace source.
       Config::ConnectWithoutContext (
         "/NodeList/*/ApplicationList/*/$ns3::EpcController/SessionCreated",
-        MakeCallback (&HtcTrafficManager::SessionCreatedCallback,
-                      m_htcManager));
+        MakeCallback (&TrafficManager::SessionCreatedCallback, m_htcManager));
 
       // Install HTC applications into UEs.
       if (m_voipEnable)

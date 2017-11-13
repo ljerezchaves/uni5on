@@ -20,15 +20,15 @@
 #define NS_LOG_APPEND_CONTEXT \
   { std::clog << "[User " << m_imsi << " at cell " << m_cellId << "] "; }
 
-#include "htc-traffic-manager.h"
+#include "traffic-manager.h"
 #include "../sdran/sdran-controller.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("HtcTrafficManager");
-NS_OBJECT_ENSURE_REGISTERED (HtcTrafficManager);
+NS_LOG_COMPONENT_DEFINE ("TrafficManager");
+NS_OBJECT_ENSURE_REGISTERED (TrafficManager);
 
-HtcTrafficManager::HtcTrafficManager ()
+TrafficManager::TrafficManager ()
   : m_ctrlApp (0),
     m_imsi (0),
     m_cellId (0),
@@ -37,34 +37,34 @@ HtcTrafficManager::HtcTrafficManager ()
   NS_LOG_FUNCTION (this);
 }
 
-HtcTrafficManager::~HtcTrafficManager ()
+TrafficManager::~TrafficManager ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-HtcTrafficManager::GetTypeId (void)
+TrafficManager::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::HtcTrafficManager")
+  static TypeId tid = TypeId ("ns3::TrafficManager")
     .SetParent<Object> ()
-    .AddConstructor<HtcTrafficManager> ()
+    .AddConstructor<TrafficManager> ()
     .AddAttribute ("PoissonInterArrival",
                    "An exponential random variable used to get application "
                    "inter-arrival start times.",
                    StringValue ("ns3::ExponentialRandomVariable[Mean=180.0]"),
-                   MakePointerAccessor (&HtcTrafficManager::m_poissonRng),
+                   MakePointerAccessor (&TrafficManager::m_poissonRng),
                    MakePointerChecker <RandomVariableStream> ())
     .AddAttribute ("RestartApps",
                    "Continuously restart applications after stop events.",
                    BooleanValue (true),
-                   MakeBooleanAccessor (&HtcTrafficManager::m_restartApps),
+                   MakeBooleanAccessor (&TrafficManager::m_restartApps),
                    MakeBooleanChecker ())
   ;
   return tid;
 }
 
 void
-HtcTrafficManager::AddSdmnClientApp (Ptr<SdmnClientApp> app)
+TrafficManager::AddSdmnClientApp (Ptr<SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -79,20 +79,20 @@ HtcTrafficManager::AddSdmnClientApp (Ptr<SdmnClientApp> app)
 
   // Connect to AppStop and AppError trace sources.
   app->TraceConnectWithoutContext (
-    "AppStop", MakeCallback (&HtcTrafficManager::NotifyAppStop, this));
+    "AppStop", MakeCallback (&TrafficManager::NotifyAppStop, this));
   app->TraceConnectWithoutContext (
-    "AppError", MakeCallback (&HtcTrafficManager::NotifyAppStop, this));
+    "AppError", MakeCallback (&TrafficManager::NotifyAppStop, this));
 
   // Schedule the first start attempt for this application (after the 1st sec).
   Time firstTry = Seconds (1) + Seconds (std::abs (m_poissonRng->GetValue ()));
-  Simulator::Schedule (firstTry, &HtcTrafficManager::AppStartTry, this, app);
+  Simulator::Schedule (firstTry, &TrafficManager::AppStartTry, this, app);
   NS_LOG_INFO ("First start attempt for app " << app->GetAppName () <<
                " will occur at " << firstTry.GetSeconds () << "s.");
 }
 
 void
-HtcTrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
-                                           BearerContextList_t bearerList)
+TrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
+                                        BearerContextList_t bearerList)
 {
   NS_LOG_FUNCTION (this);
 
@@ -132,7 +132,7 @@ HtcTrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
 }
 
 void
-HtcTrafficManager::SetImsi (uint64_t value)
+TrafficManager::SetImsi (uint64_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -140,7 +140,7 @@ HtcTrafficManager::SetImsi (uint64_t value)
 }
 
 void
-HtcTrafficManager::DoDispose ()
+TrafficManager::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   m_poissonRng = 0;
@@ -149,17 +149,17 @@ HtcTrafficManager::DoDispose ()
 }
 
 void
-HtcTrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
+TrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << app);
 
   NS_ASSERT_MSG (!app->IsActive (), "Can't start an active application.");
   NS_LOG_INFO ("Attempt to start app " << app->GetNameTeid ());
 
-  // Different from the MTC applications, before requesting for resources and
-  // starting the application, let's set the next start attempt for this same
-  // application. Depending on the next start attempt time, the application
-  // will be forced to stops itself to avoid overlapping operations.
+  // Before requesting for resources and starting the application, let's set
+  // the next start attempt for this same application. Depending on the next
+  // start attempt time, the application will be forced to stops itself to
+  // avoid overlapping operations.
   SetNextAppStartTry (app);
 
   bool authorized = true;
@@ -185,7 +185,7 @@ HtcTrafficManager::AppStartTry (Ptr<SdmnClientApp> app)
 }
 
 void
-HtcTrafficManager::NotifyAppStop (Ptr<SdmnClientApp> app)
+TrafficManager::NotifyAppStop (Ptr<SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -211,13 +211,12 @@ HtcTrafficManager::NotifyAppStop (Ptr<SdmnClientApp> app)
           NS_LOG_INFO ("Next start try for app " << app->GetNameTeid () <<
                        " delayed to +2s.");
         }
-      Simulator::Schedule (nextTry, &HtcTrafficManager::AppStartTry,
-                           this, app);
+      Simulator::Schedule (nextTry, &TrafficManager::AppStartTry, this, app);
     }
 }
 
 void
-HtcTrafficManager::SetNextAppStartTry (Ptr<SdmnClientApp> app)
+TrafficManager::SetNextAppStartTry (Ptr<SdmnClientApp> app)
 {
   NS_LOG_FUNCTION (this << app);
 
@@ -277,7 +276,7 @@ HtcTrafficManager::SetNextAppStartTry (Ptr<SdmnClientApp> app)
 }
 
 Time
-HtcTrafficManager::GetNextAppStartTry (Ptr<SdmnClientApp> app) const
+TrafficManager::GetNextAppStartTry (Ptr<SdmnClientApp> app) const
 {
   NS_LOG_FUNCTION (this << app);
 

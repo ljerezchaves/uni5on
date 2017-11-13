@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef HTC_TRAFFIC_MANAGER_H
-#define HTC_TRAFFIC_MANAGER_H
+#ifndef TRAFFIC_MANAGER_H
+#define TRAFFIC_MANAGER_H
 
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
@@ -36,13 +36,13 @@ class SdranController;
  * \ingroup sdmn
  * Traffic manager which handles SDMN client applications start/stop events.
  * It interacts with the SDMN architecture to request and release EPS bearers.
- * Each HTC LteUeNetDevice has one HtcTrafficManager object aggregated to it.
+ * Each LteUeNetDevice has one TrafficManager object aggregated to it.
  */
-class HtcTrafficManager : public Object
+class TrafficManager : public Object
 {
 public:
-  HtcTrafficManager ();          //!< Default constructor.
-  virtual ~HtcTrafficManager (); //!< Dummy destructor, see DoDispose.
+  TrafficManager ();          //!< Default constructor.
+  virtual ~TrafficManager (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -124,5 +124,5 @@ private:
 };
 
 };  // namespace ns3
-#endif // HTC_TRAFFIC_MANAGER_H
+#endif // TRAFFIC_MANAGER_H
 

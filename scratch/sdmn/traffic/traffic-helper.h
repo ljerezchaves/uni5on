@@ -29,7 +29,7 @@
 
 namespace ns3 {
 
-class HtcTrafficManager;
+class TrafficManager;
 class MtcTrafficManager;
 class EpcController;
 class LteNetwork;
@@ -180,7 +180,7 @@ private:
   void InstallNonGbrHttp ();
 
   ObjectFactory               m_htcFactory;     //!< HTC manager factory.
-  Ptr<HtcTrafficManager>      m_htcManager;     //!< HTC traffic manager.
+  Ptr<TrafficManager>         m_htcManager;     //!< HTC traffic manager.
   ObjectFactory               m_mtcFactory;     //!< MTC manager factory.
   Ptr<MtcTrafficManager>      m_mtcManager;     //!< MTC traffic manager.
 
