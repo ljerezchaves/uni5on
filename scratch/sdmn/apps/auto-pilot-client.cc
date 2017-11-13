@@ -46,14 +46,14 @@ AutoPilotClient::GetTypeId (void)
                    MakeUintegerAccessor (&AutoPilotClient::m_pktSize),
                    MakeUintegerChecker<uint32_t> ())
     //
-    // For traffic length, we are using a synthetic average length of 60
+    // For traffic length, we are using a synthetic average length of 90
     // seconds with 10secs stdev. This will force the application to
     // periodically stop and report statistics.
     //
     .AddAttribute ("TrafficLength",
                    "A random variable used to pick the traffic length [s].",
                    StringValue (
-                     "ns3::NormalRandomVariable[Mean=60.0|Variance=100.0]"),
+                     "ns3::NormalRandomVariable[Mean=90.0|Variance=100.0]"),
                    MakePointerAccessor (&AutoPilotClient::m_lengthRng),
                    MakePointerChecker <RandomVariableStream> ())
   ;
