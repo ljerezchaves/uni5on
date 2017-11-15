@@ -20,7 +20,6 @@
 
 #include "traffic-helper.h"
 #include "traffic-manager.h"
-#include "mtc-traffic-manager.h"
 #include "../sdran/lte-network.h"
 #include "../apps/auto-pilot-client.h"
 #include "../apps/auto-pilot-server.h"
@@ -81,27 +80,6 @@ TrafficHelper::TrafficHelper (Ptr<LteNetwork> lteNetwork,
   Ptr<NetDevice> webDev = m_webNode->GetDevice (1);
   m_webAddr = EpcNetwork::GetIpv4Addr (webDev);
   m_webMask = EpcNetwork::GetIpv4Mask (webDev);
-
-  // Configuring the traffic manager object factory.
-  m_htcFactory.SetTypeId (TrafficManager::GetTypeId ());
-  m_mtcFactory.SetTypeId (MtcTrafficManager::GetTypeId ());
-
-  // Random video selection.
-  m_videoRng = CreateObject<UniformRandomVariable> ();
-  m_videoRng->SetAttribute ("Min", DoubleValue (0));
-  m_videoRng->SetAttribute ("Max", DoubleValue (14));
-
-  // Configuring SDMN application helpers.
-  m_voipHelper = SdmnAppHelper (VoipClient::GetTypeId (),
-                                VoipServer::GetTypeId ());
-  m_plotHelper = SdmnAppHelper (AutoPilotClient::GetTypeId (),
-                                AutoPilotServer::GetTypeId ());
-  m_stvdHelper = SdmnAppHelper (StoredVideoClient::GetTypeId (),
-                                StoredVideoServer::GetTypeId ());
-  m_rtvdHelper = SdmnAppHelper (RealTimeVideoClient::GetTypeId (),
-                                RealTimeVideoServer::GetTypeId ());
-  m_httpHelper = SdmnAppHelper (HttpClient::GetTypeId (),
-                                HttpServer::GetTypeId ());
 }
 
 TrafficHelper::TrafficHelper ()
@@ -120,33 +98,71 @@ TrafficHelper::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::TrafficHelper")
     .SetParent<Object> ()
     .AddConstructor<TrafficHelper> ()
+
+    // HTC traffic manager attributes.
+    .AddAttribute ("HtcPoissonInterArrival",
+                   "An exponential random variable used to get HTC "
+                   "application inter-arrival start times.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   StringValue ("ns3::ExponentialRandomVariable[Mean=180.0]"),
+                   MakePointerAccessor (&TrafficHelper::m_htcPoissonRng),
+                   MakePointerChecker <RandomVariableStream> ())
+    .AddAttribute ("HtcRestartApps",
+                   "Continuously restart HTC applications after stop events.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_htcRestartApps),
+                   MakeBooleanChecker ())
+
+    // MTC traffic manager attributes.
+    .AddAttribute ("MtcPoissonInterArrival",
+                   "An exponential random variable used to get MTC "
+                   "application inter-arrival start times.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   StringValue ("ns3::ExponentialRandomVariable[Mean=60.0]"),
+                   MakePointerAccessor (&TrafficHelper::m_mtcPoissonRng),
+                   MakePointerChecker <RandomVariableStream> ())
+    .AddAttribute ("MtcRestartApps",
+                   "Continuously restart MTC applications after stop events.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_mtcRestartApps),
+                   MakeBooleanChecker ())
+
+    // Applications to be installed.
     .AddAttribute ("AutoPilotTraffic",
                    "Enable GBR auto-pilot MTC traffic over UDP.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_plotEnable),
                    MakeBooleanChecker ())
     .AddAttribute ("BufferedVideoTraffic",
                    "Enable Non-GBR buffered video streaming traffic over TCP.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_stvdEnable),
                    MakeBooleanChecker ())
     .AddAttribute ("GbrLiveVideoTraffic",
                    "Enable GBR live video streaming traffic over UDP.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_rtvgEnable),
                    MakeBooleanChecker ())
     .AddAttribute ("HttpTraffic",
                    "Enable Non-GBR HTTP traffic over TCP.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_httpEnable),
                    MakeBooleanChecker ())
     .AddAttribute ("NonGbrLiveVideoTraffic",
                    "Enable Non-GBR live video streaming traffic over UDP.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_rtvnEnalbe),
                    MakeBooleanChecker ())
     .AddAttribute ("VoipTraffic",
                    "Enable GBR VoIP traffic over UDP.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_voipEnable),
                    MakeBooleanChecker ())
@@ -172,6 +188,32 @@ void
 TrafficHelper::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
+
+  // Configuring the traffic manager object factory for HTC and MTC UEs.
+  m_htcFactory.SetTypeId (TrafficManager::GetTypeId ());
+  m_htcFactory.Set ("PoissonInterArrival", PointerValue (m_htcPoissonRng));
+  m_htcFactory.Set ("RestartApps", BooleanValue (m_htcRestartApps));
+
+  m_mtcFactory.SetTypeId (TrafficManager::GetTypeId ());
+  m_mtcFactory.Set ("PoissonInterArrival", PointerValue (m_mtcPoissonRng));
+  m_mtcFactory.Set ("RestartApps", BooleanValue (m_mtcRestartApps));
+
+  // Random video selection.
+  m_videoRng = CreateObject<UniformRandomVariable> ();
+  m_videoRng->SetAttribute ("Min", DoubleValue (0));
+  m_videoRng->SetAttribute ("Max", DoubleValue (14));
+
+  // Configuring SDMN application helpers.
+  m_voipHelper = SdmnAppHelper (VoipClient::GetTypeId (),
+                                VoipServer::GetTypeId ());
+  m_plotHelper = SdmnAppHelper (AutoPilotClient::GetTypeId (),
+                                AutoPilotServer::GetTypeId ());
+  m_stvdHelper = SdmnAppHelper (StoredVideoClient::GetTypeId (),
+                                StoredVideoServer::GetTypeId ());
+  m_rtvdHelper = SdmnAppHelper (RealTimeVideoClient::GetTypeId (),
+                                RealTimeVideoServer::GetTypeId ());
+  m_httpHelper = SdmnAppHelper (HttpClient::GetTypeId (),
+                                HttpServer::GetTypeId ());
 
   // Install the HTC applications.
   InstallHtcApplications (m_lteNetwork->GetHtcUeNodes (),
@@ -208,7 +250,7 @@ TrafficHelper::InstallHtcApplications (NodeContainer ueNodes,
       m_htcManager->SetImsi (ueImsi);
       m_ueNode->AggregateObject (m_htcManager);
 
-      // Connect the manager to new context created trace source.
+      // Connect the manager to the controller session created trace source.
       Config::ConnectWithoutContext (
         "/NodeList/*/ApplicationList/*/$ns3::EpcController/SessionCreated",
         MakeCallback (&TrafficManager::SessionCreatedCallback, m_htcManager));
@@ -259,15 +301,14 @@ TrafficHelper::InstallMtcApplications (NodeContainer ueNodes,
       m_ueMask = clientIpv4->GetAddress (1, 0).GetMask ();
 
       // Each MTC UE gets one MTC traffic manager.
-      m_mtcManager = m_mtcFactory.Create<MtcTrafficManager> ();
+      m_mtcManager = m_mtcFactory.Create<TrafficManager> ();
       m_mtcManager->SetImsi (ueImsi);
       m_ueNode->AggregateObject (m_mtcManager);
 
-      // Connect the manager to new context created trace source.
+      // Connect the manager to the controller session created trace source.
       Config::ConnectWithoutContext (
         "/NodeList/*/ApplicationList/*/$ns3::EpcController/SessionCreated",
-        MakeCallback (&MtcTrafficManager::SessionCreatedCallback,
-                      m_mtcManager));
+        MakeCallback (&TrafficManager::SessionCreatedCallback, m_mtcManager));
 
       // Install MTC applications into UEs
       if (m_plotEnable)

@@ -30,7 +30,6 @@
 namespace ns3 {
 
 class TrafficManager;
-class MtcTrafficManager;
 class EpcController;
 class LteNetwork;
 class EpcNetwork;
@@ -181,8 +180,13 @@ private:
 
   ObjectFactory               m_htcFactory;     //!< HTC manager factory.
   Ptr<TrafficManager>         m_htcManager;     //!< HTC traffic manager.
+  Ptr<RandomVariableStream>   m_htcPoissonRng;  //!< HTC inter-arrival traffic.
+  bool                        m_htcRestartApps; //!< HTC restart apps.
+
   ObjectFactory               m_mtcFactory;     //!< MTC manager factory.
-  Ptr<MtcTrafficManager>      m_mtcManager;     //!< MTC traffic manager.
+  Ptr<TrafficManager>         m_mtcManager;     //!< MTC traffic manager.
+  Ptr<RandomVariableStream>   m_mtcPoissonRng;  //!< MTC inter-arrival traffic.
+  bool                        m_mtcRestartApps; //!< MTC restart apps.
 
   Ptr<LteNetwork>             m_lteNetwork;     //!< The LTE network.
 

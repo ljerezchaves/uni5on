@@ -175,9 +175,6 @@ main (int argc, char *argv[])
       Simulator::Schedule (Seconds (stopApps), Config::Set,
                            "/NodeList/*/$ns3::TrafficManager/RestartApps",
                            BooleanValue (false));
-      Simulator::Schedule (Seconds (stopApps), Config::Set,
-                           "/NodeList/*/$ns3::MtcTrafficManager/RestartApps",
-                           BooleanValue (false));
     }
 
   // Run the simulation.
@@ -378,7 +375,6 @@ EnableVerbose (bool enable)
       LogComponentEnable ("GtpTunnelApp",             LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("TrafficHelper",            LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("TrafficManager",           LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("MtcTrafficManager",        LOG_ERROR_WARN_INFO_FT);
 
       LogComponentEnable ("AutoPilotClient",          LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("AutoPilotServer",          LOG_ERROR_WARN_INFO_FT);

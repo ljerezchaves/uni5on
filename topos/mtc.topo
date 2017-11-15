@@ -48,16 +48,14 @@ default ns3::SdranCloud::NumCellSites "1"
 default ns3::SdranCloud::S1uLinkDataRate "10Gb/s"
 default ns3::SdranCloud::S1uLinkDelay "50us"
 
+default ns3::TrafficHelper::HtcPoissonInterArrival "ns3::UniformRandomVariable[Min=0.0|Max=12.0]"
+default ns3::TrafficHelper::HTcRestartApps "true"
+default ns3::TrafficHelper::MtcPoissonInterArrival "ns3::UniformRandomVariable[Min=0.0|Max=12.0]"
+default ns3::TrafficHelper::MtcRestartApps "true"
+
 default ns3::TrafficHelper::AutoPilotTraffic "true"
 default ns3::TrafficHelper::BufferedVideoTraffic "true"
 default ns3::TrafficHelper::GbrLiveVideoTraffic "true"
 default ns3::TrafficHelper::HttpTraffic "true"
 default ns3::TrafficHelper::NonGbrLiveVideoTraffic "true"
 default ns3::TrafficHelper::VoipTraffic "true"
-
-default ns3::TrafficManager::PoissonInterArrival "ns3::UniformRandomVariable[Min=0.0|Max=12.0]"
-default ns3::TrafficManager::RestartApps "true"
-
-default ns3::AutoPilotClient::TrafficLength "ns3::NormalRandomVariable[Mean=10.0|Variance=9.0]"
-default ns3::MtcTrafficManager::PoissonInterArrival "ns3::UniformRandomVariable[Min=0.0|Max=12.0]"
-default ns3::MtcTrafficManager::RestartApps "true"
