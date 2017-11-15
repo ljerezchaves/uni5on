@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef REAL_TIME_VIDEO_CLIENT_H
-#define REAL_TIME_VIDEO_CLIENT_H
+#ifndef LIVE_VIDEO_CLIENT_H
+#define LIVE_VIDEO_CLIENT_H
 
 #include "sdmn-client-app.h"
 
@@ -27,10 +27,10 @@ namespace ns3 {
 
 /**
  * \ingroup sdmnApps
- * This is the client side of a real-time video traffic generator, receiving
+ * This is the client side of a live video traffic generator, receiving
  * UDP datagrams following a MPEG video pattern with random video length.
  */
-class RealTimeVideoClient : public SdmnClientApp
+class LiveVideoClient : public SdmnClientApp
 {
 public:
   /**
@@ -39,8 +39,8 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  RealTimeVideoClient ();   //!< Default constructor.
-  virtual ~RealTimeVideoClient ();  //!< Dummy destructor, see DosDipose.
+  LiveVideoClient ();   //!< Default constructor.
+  virtual ~LiveVideoClient ();  //!< Dummy destructor, see DosDipose.
 
   // Inherited from SdmnClientApp.
   void Start ();
@@ -71,4 +71,4 @@ private:
 };
 
 } // Namespace ns3
-#endif /* REAL_TIME_VIDEO_CLIENT_H */
+#endif /* LIVE_VIDEO_CLIENT_H */

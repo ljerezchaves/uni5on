@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef STORED_VIDEO_SERVER_H
-#define STORED_VIDEO_SERVER_H
+#ifndef BUFFERED_VIDEO_SERVER_H
+#define BUFFERED_VIDEO_SERVER_H
 
 #include "sdmn-server-app.h"
 
@@ -27,11 +27,11 @@ namespace ns3 {
 
 /**
  * \ingroup sdmnApps
- * This is the server side of a stored video traffic generator. The server
+ * This is the server side of a buffered video traffic generator. The server
  * listen for a client requesting video chunks and send the chunks back as fast
  * as possible.
  */
-class StoredVideoServer : public SdmnServerApp
+class BufferedVideoServer : public SdmnServerApp
 {
 public:
   /**
@@ -40,8 +40,8 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  StoredVideoServer ();           //!< Default constructor.
-  virtual ~StoredVideoServer ();  //!< Dummy destructor, see DoDispose.
+  BufferedVideoServer ();           //!< Default constructor.
+  virtual ~BufferedVideoServer ();  //!< Dummy destructor, see DoDispose.
 
   /**
    * \brief Set the trace file to be used by the application.
@@ -143,4 +143,4 @@ private:
 };
 
 } // Namespace ns3
-#endif /* STORED_VIDEO_SERVER_H */
+#endif /* BUFFERED_VIDEO_SERVER_H */

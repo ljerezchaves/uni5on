@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef REAL_TIME_VIDEO_SERVER_H
-#define REAL_TIME_VIDEO_SERVER_H
+#ifndef LIVE_VIDEO_SERVER_H
+#define LIVE_VIDEO_SERVER_H
 
 #include "sdmn-server-app.h"
 
@@ -27,10 +27,10 @@ namespace ns3 {
 
 /**
  * \ingroup sdmnApps
- * This is the server side of a real-time video traffic generator, sending UDP
+ * This is the server side of a live video traffic generator, sending UDP
  * datagrams following a MPEG video pattern with random video length.
  */
-class RealTimeVideoServer : public SdmnServerApp
+class LiveVideoServer : public SdmnServerApp
 {
 public:
   /**
@@ -39,8 +39,8 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  RealTimeVideoServer ();           //!< Default constructor.
-  virtual ~RealTimeVideoServer ();  //!< Dummy destructor, see DoDispose.
+  LiveVideoServer ();           //!< Default constructor.
+  virtual ~LiveVideoServer ();  //!< Dummy destructor, see DoDispose.
 
   /**
    * \brief Set the trace file to be used by the application.
@@ -104,4 +104,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* REAL_TIME_VIDEO_SERVER_H */
+#endif /* LIVE_VIDEO_SERVER_H */

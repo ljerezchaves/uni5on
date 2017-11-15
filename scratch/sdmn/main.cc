@@ -376,16 +376,16 @@ EnableVerbose (bool enable)
       LogComponentEnable ("TrafficHelper",            LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("TrafficManager",           LOG_ERROR_WARN_INFO_FT);
 
-      LogComponentEnable ("AutoPilotClient",          LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("AutoPilotServer",          LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("HttpClient",               LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("HttpServer",               LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("RealTimeVideoClient",      LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("RealTimeVideoServer",      LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("SdmnClientApp",            LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("SdmnServerApp",            LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("StoredVideoClient",        LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("StoredVideoServer",        LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("AutoPilotClient",          LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("AutoPilotServer",          LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("BufferedVideoClient",      LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("BufferedVideoServer",      LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("HttpClient",               LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("HttpServer",               LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("LiveVideoClient",          LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("LiveVideoServer",          LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("VoipClient",               LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("VoipServer",               LOG_ERROR_WARN_INFO_FT);
 

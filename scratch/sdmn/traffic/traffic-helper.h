@@ -128,61 +128,51 @@ private:
   Ptr<LteHelper> GetLteHelper ();
 
   /**
-   * UDP bidirect VoIP traffic over dedicated GBR EPS bearer (QCI 1).
-   * This QCI is typically associated with conversational voice. This VoIP
-   * traffic simulates the G.729 codec (~8.0 kbps for payload). Check
-   * http://goo.gl/iChPGQ for bandwidth calculation and discussion.
+   * UDP uplink auto-pilot traffic.
+   * This auto-pilot model is adapted from the MTC application model indicate
+   * on the "Machine-to-Machine Communications: Architectures, Technology,
+   * Standards, and Applications" book, chapter 3: "M2M traffic and models".
+   * \param bearer The configured EPS bearer for this application.
    */
-  void InstallGbrVoip ();
+  void InstallAutoPilot (EpsBearer bearer);
 
   /**
-   * UDP uplink auto-pilot traffic over dedicated GBR EPS bearer (QCI 3).
-   * This QCI is typically associated with an operator controlled service,
-   * i.e., a service where the data flow aggregate's uplink/downlink packet
-   * filters are known at the point in time when the data flow aggregate is
-   * authorized. This auto-pilot model is adapted from the MTC application
-   * model indicate on the "Machine-to-Machine Communications: Architectures,
-   * Technology, Standards, and Applications" book, chapter 3: "M2M traffic and
-   * models".
-   */
-  void InstallGbrAutoPilot ();
-
-  /**
-   * UDP down live video streaming over dedicated GBR EPS bearer (QCI 4).
-   * This QCI is typically associated with non-conversational video and live
-   * streaming. This video traffic is based on MPEG-4 video traces from
+   * TCP bidirectional buffered video streaming.
+   * This video traffic is based on MPEG-4 video traces from
    * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
+   * \param bearer The configured EPS bearer for this application.
+   * \param name The video filename for this application.
    */
-  void InstallGbrLiveVideoStreaming ();
+  void InstallBufferedVideo (EpsBearer bearer, std::string name);
 
   /**
-   * TCP bidirect buff video streaming over dedicated Non-GBR bearer (QCI 6).
-   * This QCI could be used for priorization of non real-time data of MPS
-   * subscribers. This video traffic is based on MPEG-4 video traces from
-   * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
-   */
-  void InstallNonGbrBufferedVideoStreaming ();
-
-  /**
-   * UDP down live video streaming over dedicated Non-GBR bearer (QCI 7).
-   * This QCI is typically associated with voice, live video streaming and
-   * interactive games. This video traffic is based on MPEG-4 video traces from
-   * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
-   */
-  void InstallNonGbrLiveVideoStreaming ();
-
-  /**
-   * TCP bidirect HTTP traffic over dedicated Non-GBR bearer (QCI 8).
-   * This QCI could be used for a dedicated 'premium bearer' for any
-   * subscriber, or could be used for the default bearer of a for 'premium
-   * subscribers'. This HTTP model is based on the distributions indicated in
+   * TCP bidirectional HTTP traffic.
+   * This HTTP model is based on the distributions indicated in
    * the paper 'An HTTP Web Traffic Model Based on the Top One Million Visited
    * Web Pages' by Rastin Pries et. al. Each client will send a get request to
    * the server and will get the page content back including inline content.
    * These requests repeats after a reading time period, until MaxPages are
    * loaded or MaxReadingTime is reached.
+   * \param bearer The configured EPS bearer for this application.
    */
-  void InstallNonGbrHttp ();
+  void InstallHttp (EpsBearer bearer);
+
+  /**
+   * UDP downlink live video streaming.
+   * This video traffic is based on MPEG-4 video traces from
+   * http://www-tkn.ee.tu-berlin.de/publications/papers/TKN0006.pdf.
+   * \param bearer The configured EPS bearer for this application.
+   * \param name The video filename for this application.
+   */
+  void InstallLiveVideo (EpsBearer bearer, std::string name);
+
+  /**
+   * UDP bidirectional VoIP traffic.
+   * This VoIP traffic simulates the G.729 codec (~8.0 kbps for payload).
+   * Check http://goo.gl/iChPGQ for bandwidth calculation and discussion.
+   * \param bearer The configured EPS bearer for this application.
+   */
+  void InstallVoip (EpsBearer bearer);
 
   ObjectFactory               m_htcFactory;     //!< HTC manager factory.
   Ptr<TrafficManager>         m_htcManager;     //!< HTC traffic manager.
@@ -194,29 +184,29 @@ private:
   Ptr<RandomVariableStream>   m_mtcPoissonRng;  //!< MTC inter-arrival traffic.
   bool                        m_mtcRestartApps; //!< MTC restart apps.
 
-  Ptr<LteNetwork>             m_lteNetwork;     //!< The LTE network.
+  Ptr<LteNetwork>   m_lteNetwork;           //!< The LTE network.
 
-  Ptr<Node>                   m_webNode;        //!< Server node.
-  Ipv4Address                 m_webAddr;        //!< Server address.
-  Ipv4Mask                    m_webMask;        //!< Server address mask.
+  Ptr<Node>         m_webNode;              //!< Server node.
+  Ipv4Address       m_webAddr;              //!< Server address.
+  Ipv4Mask          m_webMask;              //!< Server address mask.
 
-  Ptr<Node>                   m_ueNode;         //!< Client node.
-  Ptr<NetDevice>              m_ueDev;          //!< Client dev.
-  Ipv4Address                 m_ueAddr;         //!< Client address.
-  Ipv4Mask                    m_ueMask;         //!< Client address mask.
+  Ptr<Node>         m_ueNode;               //!< Client node.
+  Ptr<NetDevice>    m_ueDev;                //!< Client dev.
+  Ipv4Address       m_ueAddr;               //!< Client address.
+  Ipv4Mask          m_ueMask;               //!< Client address mask.
 
-  bool                        m_httpEnable;     //!< HTTP enable.
-  bool                        m_plotEnable;     //!< Auto-pilot enable.
-  bool                        m_rtvgEnable;     //!< GBR live video enable.
-  bool                        m_rtvnEnalbe;     //!< Non-GBR live video enable.
-  bool                        m_stvdEnable;     //!< Buffered video enable.
-  bool                        m_voipEnable;     //!< VoIP enable.
+  bool              m_gbrAutoPilot;         //!< GBR auto-pilot enable.
+  bool              m_gbrLiveVideo;         //!< GBR live video enable.
+  bool              m_gbrVoip;              //!< GBR VoIP enable.
+  bool              m_nonGbrBuffVideo;      //!< Non-GBR buffered video enable.
+  bool              m_nonGbrHttp;           //!< Non-GBR HTTP enable.
+  bool              m_nonGbrLiveVideo;      //!< Non-GBR live video enable.
 
-  SdmnAppHelper               m_httpHelper;     //!< HTTP app helper.
-  SdmnAppHelper               m_plotHelper;     //!< Pilot app helper.
-  SdmnAppHelper               m_rtvdHelper;     //!< Live video app helper.
-  SdmnAppHelper               m_stvdHelper;     //!< Stored video app helper.
-  SdmnAppHelper               m_voipHelper;     //!< Voip app helper.
+  SdmnAppHelper     m_autoPilotHelper;      //!< Auto-pilot app helper.
+  SdmnAppHelper     m_buffVideoHelper;      //!< Buffered video app helper.
+  SdmnAppHelper     m_httpHelper;           //!< HTTP app helper.
+  SdmnAppHelper     m_liveVideoHelper;      //!< Live video app helper.
+  SdmnAppHelper     m_voipHelper;           //!< Voip app helper.
 
   static uint16_t             m_port;           //!< Port numbers for apps.
 

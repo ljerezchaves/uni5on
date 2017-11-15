@@ -21,24 +21,24 @@
 #define NS_LOG_APPEND_CONTEXT \
   { std::clog << "[BuffVid client teid " << GetTeid () << "] "; }
 
-#include "stored-video-client.h"
+#include "buffered-video-client.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("StoredVideoClient");
-NS_OBJECT_ENSURE_REGISTERED (StoredVideoClient);
+NS_LOG_COMPONENT_DEFINE ("BufferedVideoClient");
+NS_OBJECT_ENSURE_REGISTERED (BufferedVideoClient);
 
 TypeId
-StoredVideoClient::GetTypeId (void)
+BufferedVideoClient::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::StoredVideoClient")
+  static TypeId tid = TypeId ("ns3::BufferedVideoClient")
     .SetParent<SdmnClientApp> ()
-    .AddConstructor<StoredVideoClient> ()
+    .AddConstructor<BufferedVideoClient> ()
   ;
   return tid;
 }
 
-StoredVideoClient::StoredVideoClient ()
+BufferedVideoClient::BufferedVideoClient ()
   : m_rxPacket (0),
     m_pendingBytes (0),
     m_pendingObjects (0)
@@ -46,13 +46,13 @@ StoredVideoClient::StoredVideoClient ()
   NS_LOG_FUNCTION (this);
 }
 
-StoredVideoClient::~StoredVideoClient ()
+BufferedVideoClient::~BufferedVideoClient ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 void
-StoredVideoClient::Start ()
+BufferedVideoClient::Start ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -65,12 +65,12 @@ StoredVideoClient::Start ()
   m_socket->Bind ();
   m_socket->Connect (InetSocketAddress::ConvertFrom (m_serverAddress));
   m_socket->SetConnectCallback (
-    MakeCallback (&StoredVideoClient::NotifyConnectionSucceeded, this),
-    MakeCallback (&StoredVideoClient::NotifyConnectionFailed, this));
+    MakeCallback (&BufferedVideoClient::NotifyConnectionSucceeded, this),
+    MakeCallback (&BufferedVideoClient::NotifyConnectionFailed, this));
 }
 
 void
-StoredVideoClient::DoDispose (void)
+BufferedVideoClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -79,7 +79,7 @@ StoredVideoClient::DoDispose (void)
 }
 
 void
-StoredVideoClient::NotifyConstructionCompleted (void)
+BufferedVideoClient::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -87,13 +87,13 @@ StoredVideoClient::NotifyConstructionCompleted (void)
 }
 
 void
-StoredVideoClient::NotifyConnectionSucceeded (Ptr<Socket> socket)
+BufferedVideoClient::NotifyConnectionSucceeded (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
   NS_LOG_INFO ("Server accepted connection request.");
   socket->SetRecvCallback (
-    MakeCallback (&StoredVideoClient::DataReceived, this));
+    MakeCallback (&BufferedVideoClient::DataReceived, this));
 
   m_pendingBytes = 0;
   m_pendingObjects = 0;
@@ -104,7 +104,7 @@ StoredVideoClient::NotifyConnectionSucceeded (Ptr<Socket> socket)
 }
 
 void
-StoredVideoClient::NotifyConnectionFailed (Ptr<Socket> socket)
+BufferedVideoClient::NotifyConnectionFailed (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
@@ -112,7 +112,7 @@ StoredVideoClient::NotifyConnectionFailed (Ptr<Socket> socket)
 }
 
 void
-StoredVideoClient::DataReceived (Ptr<Socket> socket)
+BufferedVideoClient::DataReceived (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
@@ -201,7 +201,7 @@ StoredVideoClient::DataReceived (Ptr<Socket> socket)
 }
 
 void
-StoredVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
+BufferedVideoClient::SendRequest (Ptr<Socket> socket, std::string url)
 {
   NS_LOG_FUNCTION (this);
 

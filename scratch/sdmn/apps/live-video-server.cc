@@ -22,21 +22,21 @@
   { std::clog << "[LiveVid server teid " << GetTeid () << "] "; }
 
 #include <ns3/seq-ts-header.h>
-#include "real-time-video-server.h"
+#include "live-video-server.h"
 #include <cstdlib>
 #include <cstdio>
 #include <fstream>
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("RealTimeVideoServer");
-NS_OBJECT_ENSURE_REGISTERED (RealTimeVideoServer);
+NS_LOG_COMPONENT_DEFINE ("LiveVideoServer");
+NS_OBJECT_ENSURE_REGISTERED (LiveVideoServer);
 
 /**
  * \brief Default trace to send.
  */
-struct RealTimeVideoServer::TraceEntry
-RealTimeVideoServer::g_defaultEntries[] =
+struct LiveVideoServer::TraceEntry
+LiveVideoServer::g_defaultEntries[] =
 {
   {
     0,  534, 'I'
@@ -71,38 +71,38 @@ RealTimeVideoServer::g_defaultEntries[] =
 };
 
 TypeId
-RealTimeVideoServer::GetTypeId (void)
+LiveVideoServer::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::RealTimeVideoServer")
+  static TypeId tid = TypeId ("ns3::LiveVideoServer")
     .SetParent<SdmnServerApp> ()
-    .AddConstructor<RealTimeVideoServer> ()
+    .AddConstructor<LiveVideoServer> ()
     .AddAttribute ("MaxPayloadSize",
                    "The maximum payload size of packets [bytes].",
                    UintegerValue (1400),
-                   MakeUintegerAccessor (&RealTimeVideoServer::m_pktSize),
+                   MakeUintegerAccessor (&LiveVideoServer::m_pktSize),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("TraceFilename",
                    "Name of file to load a trace from.",
                    StringValue (""),
-                   MakeStringAccessor (&RealTimeVideoServer::SetTraceFile),
+                   MakeStringAccessor (&LiveVideoServer::SetTraceFile),
                    MakeStringChecker ())
   ;
   return tid;
 }
 
-RealTimeVideoServer::RealTimeVideoServer ()
+LiveVideoServer::LiveVideoServer ()
   : m_sendEvent (EventId ())
 {
   NS_LOG_FUNCTION (this);
 }
 
-RealTimeVideoServer::~RealTimeVideoServer ()
+LiveVideoServer::~LiveVideoServer ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 void
-RealTimeVideoServer::SetTraceFile (std::string traceFile)
+LiveVideoServer::SetTraceFile (std::string traceFile)
 {
   NS_LOG_FUNCTION (this << traceFile);
 
@@ -117,7 +117,7 @@ RealTimeVideoServer::SetTraceFile (std::string traceFile)
 }
 
 void
-RealTimeVideoServer::DoDispose (void)
+LiveVideoServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -127,7 +127,7 @@ RealTimeVideoServer::DoDispose (void)
 }
 
 void
-RealTimeVideoServer::StartApplication (void)
+LiveVideoServer::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -140,7 +140,7 @@ RealTimeVideoServer::StartApplication (void)
 }
 
 void
-RealTimeVideoServer::StopApplication ()
+LiveVideoServer::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -153,7 +153,7 @@ RealTimeVideoServer::StopApplication ()
 }
 
 void
-RealTimeVideoServer::NotifyStart ()
+LiveVideoServer::NotifyStart ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -167,7 +167,7 @@ RealTimeVideoServer::NotifyStart ()
 }
 
 void
-RealTimeVideoServer::NotifyForceStop ()
+LiveVideoServer::NotifyForceStop ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -179,7 +179,7 @@ RealTimeVideoServer::NotifyForceStop ()
 }
 
 void
-RealTimeVideoServer::LoadTrace (std::string filename)
+LiveVideoServer::LoadTrace (std::string filename)
 {
   NS_LOG_FUNCTION (this << filename);
 
@@ -216,7 +216,7 @@ RealTimeVideoServer::LoadTrace (std::string filename)
 }
 
 void
-RealTimeVideoServer::LoadDefaultTrace (void)
+LiveVideoServer::LoadDefaultTrace (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -240,7 +240,7 @@ RealTimeVideoServer::LoadDefaultTrace (void)
 }
 
 void
-RealTimeVideoServer::SendStream (void)
+LiveVideoServer::SendStream (void)
 {
   NS_LOG_FUNCTION (this);
   NS_ASSERT (m_sendEvent.IsExpired ());
@@ -265,11 +265,11 @@ RealTimeVideoServer::SendStream (void)
 
   // Schedulle next transmission.
   m_sendEvent = Simulator::Schedule (MilliSeconds (entry->timeToSend),
-                                     &RealTimeVideoServer::SendStream, this);
+                                     &LiveVideoServer::SendStream, this);
 }
 
 void
-RealTimeVideoServer::SendPacket (uint32_t size)
+LiveVideoServer::SendPacket (uint32_t size)
 {
   NS_LOG_FUNCTION (this << size);
 

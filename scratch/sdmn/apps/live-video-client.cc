@@ -22,19 +22,19 @@
   { std::clog << "[LiveVid client teid " << GetTeid () << "] "; }
 
 #include <ns3/seq-ts-header.h>
-#include "real-time-video-client.h"
+#include "live-video-client.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("RealTimeVideoClient");
-NS_OBJECT_ENSURE_REGISTERED (RealTimeVideoClient);
+NS_LOG_COMPONENT_DEFINE ("LiveVideoClient");
+NS_OBJECT_ENSURE_REGISTERED (LiveVideoClient);
 
 TypeId
-RealTimeVideoClient::GetTypeId (void)
+LiveVideoClient::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::RealTimeVideoClient")
+  static TypeId tid = TypeId ("ns3::LiveVideoClient")
     .SetParent<SdmnClientApp> ()
-    .AddConstructor<RealTimeVideoClient> ()
+    .AddConstructor<LiveVideoClient> ()
     //
     // For traffic length, we are considering a statistic that the majority of
     // YouTube brand videos are somewhere between 31 and 120 seconds long. So
@@ -46,33 +46,32 @@ RealTimeVideoClient::GetTypeId (void)
                    "A random variable used to pick the traffic length [s].",
                    StringValue (
                      "ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"),
-                   MakePointerAccessor (&RealTimeVideoClient::m_lengthRng),
+                   MakePointerAccessor (&LiveVideoClient::m_lengthRng),
                    MakePointerChecker <RandomVariableStream> ())
   ;
   return tid;
 }
 
-RealTimeVideoClient::RealTimeVideoClient ()
+LiveVideoClient::LiveVideoClient ()
   : m_stopEvent (EventId ())
 {
   NS_LOG_FUNCTION (this);
 }
 
-RealTimeVideoClient::~RealTimeVideoClient ()
+LiveVideoClient::~LiveVideoClient ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 void
-RealTimeVideoClient::Start ()
+LiveVideoClient::Start ()
 {
   NS_LOG_FUNCTION (this);
 
   // Schedule the ForceStop method to stop traffic generation on server side
   // based on video length.
   Time sTime = Seconds (std::abs (m_lengthRng->GetValue ()));
-  m_stopEvent = Simulator::Schedule (
-      sTime, &RealTimeVideoClient::ForceStop, this);
+  m_stopEvent = Simulator::Schedule (sTime, &LiveVideoClient::ForceStop, this);
   NS_LOG_INFO ("Set traffic length to " << sTime.GetSeconds () << "s.");
 
   // Chain up to reset statistics, notify server, and fire start trace source.
@@ -80,7 +79,7 @@ RealTimeVideoClient::Start ()
 }
 
 void
-RealTimeVideoClient::DoDispose (void)
+LiveVideoClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -90,7 +89,7 @@ RealTimeVideoClient::DoDispose (void)
 }
 
 void
-RealTimeVideoClient::NotifyConstructionCompleted (void)
+LiveVideoClient::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -98,7 +97,7 @@ RealTimeVideoClient::NotifyConstructionCompleted (void)
 }
 
 void
-RealTimeVideoClient::ForceStop ()
+LiveVideoClient::ForceStop ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -109,12 +108,11 @@ RealTimeVideoClient::ForceStop ()
   SdmnClientApp::ForceStop ();
 
   // Notify the stopped application one second later.
-  Simulator::Schedule (
-    Seconds (1), &RealTimeVideoClient::NotifyStop, this, false);
+  Simulator::Schedule (Seconds (1), &LiveVideoClient::NotifyStop, this, false);
 }
 
 void
-RealTimeVideoClient::StartApplication ()
+LiveVideoClient::StartApplication ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -124,11 +122,11 @@ RealTimeVideoClient::StartApplication ()
   m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
   m_socket->ShutdownSend ();
   m_socket->SetRecvCallback (
-    MakeCallback (&RealTimeVideoClient::ReadPacket, this));
+    MakeCallback (&LiveVideoClient::ReadPacket, this));
 }
 
 void
-RealTimeVideoClient::StopApplication ()
+LiveVideoClient::StopApplication ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -141,7 +139,7 @@ RealTimeVideoClient::StopApplication ()
 }
 
 void
-RealTimeVideoClient::ReadPacket (Ptr<Socket> socket)
+LiveVideoClient::ReadPacket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 

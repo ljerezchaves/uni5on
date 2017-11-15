@@ -23,12 +23,12 @@
 #include "../sdran/lte-network.h"
 #include "../apps/auto-pilot-client.h"
 #include "../apps/auto-pilot-server.h"
+#include "../apps/buffered-video-client.h"
+#include "../apps/buffered-video-server.h"
 #include "../apps/http-client.h"
 #include "../apps/http-server.h"
-#include "../apps/real-time-video-client.h"
-#include "../apps/real-time-video-server.h"
-#include "../apps/stored-video-client.h"
-#include "../apps/stored-video-server.h"
+#include "../apps/live-video-client.h"
+#include "../apps/live-video-server.h"
 #include "../apps/voip-client.h"
 #include "../apps/voip-server.h"
 #include "../epc/epc-network.h"
@@ -134,31 +134,31 @@ TrafficHelper::GetTypeId (void)
                    "Enable HTC GBR live video streaming traffic over UDP.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_rtvgEnable),
+                   MakeBooleanAccessor (&TrafficHelper::m_gbrLiveVideo),
                    MakeBooleanChecker ())
     .AddAttribute ("EnableHtcGbrVoip",
                    "Enable HTC GBR VoIP traffic over UDP.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_voipEnable),
+                   MakeBooleanAccessor (&TrafficHelper::m_gbrVoip),
                    MakeBooleanChecker ())
     .AddAttribute ("EnableHtcNonGbrBufferedVideo",
                    "Enable HTC Non-GBR buffered video traffic over TCP.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_stvdEnable),
+                   MakeBooleanAccessor (&TrafficHelper::m_nonGbrBuffVideo),
                    MakeBooleanChecker ())
     .AddAttribute ("EnableHtcNonGbrHttp",
                    "Enable HTC Non-GBR HTTP traffic over TCP.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_httpEnable),
+                   MakeBooleanAccessor (&TrafficHelper::m_nonGbrHttp),
                    MakeBooleanChecker ())
     .AddAttribute ("EnableHtcNonGbrLiveVideo",
                    "Enable HTC Non-GBR live video streaming traffic over UDP.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_rtvnEnalbe),
+                   MakeBooleanAccessor (&TrafficHelper::m_nonGbrLiveVideo),
                    MakeBooleanChecker ())
 
     // MTC applications to be installed.
@@ -166,7 +166,7 @@ TrafficHelper::GetTypeId (void)
                    "Enable MTC GBR auto-pilot traffic over UDP.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_plotEnable),
+                   MakeBooleanAccessor (&TrafficHelper::m_gbrAutoPilot),
                    MakeBooleanChecker ())
   ;
   return tid;
@@ -206,17 +206,17 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_videoRng->SetAttribute ("Max", DoubleValue (14));
 
   // Configuring SDMN application helpers.
-  m_voipHelper = SdmnAppHelper (VoipClient::GetTypeId (),
-                                VoipServer::GetTypeId ());
-  m_plotHelper = SdmnAppHelper (AutoPilotClient::GetTypeId (),
-                                AutoPilotServer::GetTypeId ());
-  m_stvdHelper = SdmnAppHelper (StoredVideoClient::GetTypeId (),
-                                StoredVideoServer::GetTypeId ());
-  m_rtvdHelper = SdmnAppHelper (RealTimeVideoClient::GetTypeId (),
-                                RealTimeVideoServer::GetTypeId ());
+
+  m_autoPilotHelper = SdmnAppHelper (AutoPilotClient::GetTypeId (),
+                                     AutoPilotServer::GetTypeId ());
+  m_buffVideoHelper = SdmnAppHelper (BufferedVideoClient::GetTypeId (),
+                                     BufferedVideoServer::GetTypeId ());
   m_httpHelper = SdmnAppHelper (HttpClient::GetTypeId (),
                                 HttpServer::GetTypeId ());
-
+  m_liveVideoHelper = SdmnAppHelper (LiveVideoClient::GetTypeId (),
+                                     LiveVideoServer::GetTypeId ());
+  m_voipHelper = SdmnAppHelper (VoipClient::GetTypeId (),
+                                VoipServer::GetTypeId ());
   // Install the HTC applications.
   InstallHtcApplications (m_lteNetwork->GetHtcUeNodes (),
                           m_lteNetwork->GetHtcUeDevices ());
@@ -258,25 +258,58 @@ TrafficHelper::InstallHtcApplications (NodeContainer ueNodes,
         MakeCallback (&TrafficManager::SessionCreatedCallback, m_htcManager));
 
       // Install HTC applications into UEs.
-      if (m_voipEnable)
+      if (m_gbrLiveVideo)
         {
-          InstallGbrVoip ();
+          // UDP downlink live video streaming over dedicated GBR EPS bearer.
+          // This QCI 4 is typically associated with non-conversational video
+          // and live streaming.
+          GbrQosInformation qos;
+          int videoIdx = m_videoRng->GetInteger ();
+          qos.gbrDl = GetVideoGbr (videoIdx).GetBitRate ();
+          qos.mbrDl = GetVideoMbr (videoIdx).GetBitRate ();
+          EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
+          InstallLiveVideo (bearer, GetVideoFilename (videoIdx));
         }
-      if (m_rtvgEnable)
+
+      if (m_gbrVoip)
         {
-          InstallGbrLiveVideoStreaming ();
+          // UDP bidirectional VoIP traffic over dedicated GBR EPS bearer.
+          // This QCI 1 is typically associated with conversational voice.
+          GbrQosInformation qos;
+          qos.gbrDl = 47200;  // ~46.09 Kbps
+          qos.gbrUl = 47200;  // ~46.09 Kbps
+          EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
+          InstallVoip (bearer);
         }
-      if (m_stvdEnable)
+
+      if (m_nonGbrBuffVideo)
         {
-          InstallNonGbrBufferedVideoStreaming ();
+          // TCP bidirectional buffered video streaming over dedicated Non-GBR
+          // EPC bearer. This QCI 6 could be used for prioritization of non
+          // real-time data of MPS subscribers.
+          int videoIdx = m_videoRng->GetInteger ();
+          EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR);
+          InstallBufferedVideo (bearer, GetVideoFilename (videoIdx));
         }
-      if (m_rtvnEnalbe)
+
+      if (m_nonGbrHttp)
         {
-          InstallNonGbrLiveVideoStreaming ();
+          // TCP bidirectional HTTP traffic over dedicated Non-GBR EPS bearer.
+          // This QCI 8 could be used for a dedicated 'premium bearer' for any
+          // subscriber, or could be used for the default bearer of a for
+          // 'premium subscribers'.
+          EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
+          InstallHttp (bearer);
         }
-      if (m_httpEnable)
+
+      if (m_nonGbrLiveVideo)
         {
-          InstallNonGbrHttp ();
+          // UDP downlink live video streaming over dedicated Non-GBR EPS
+          // bearer. This QCI 7 is typically associated with voice, live video
+          // streaming and interactive games.
+          int videoIdx = m_videoRng->GetInteger ();
+          EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING);
+          InstallLiveVideo (bearer, GetVideoFilename (videoIdx));
         }
     }
   m_ueNode = 0;
@@ -313,9 +346,17 @@ TrafficHelper::InstallMtcApplications (NodeContainer ueNodes,
         MakeCallback (&TrafficManager::SessionCreatedCallback, m_mtcManager));
 
       // Install MTC applications into UEs
-      if (m_plotEnable)
+      if (m_gbrAutoPilot)
         {
-          InstallGbrAutoPilot ();
+          // UDP uplink auto-pilot traffic over dedicated GBR EPS bearer.
+          // This QCI 3 is typically associated with an operator controlled
+          // service, i.e., a service where the data flow aggregate's
+          // uplink/downlink packet filters are known at the point in time
+          // when the data flow aggregate is authorized.
+          GbrQosInformation qos;
+          qos.gbrUl = 150000;  // ~146 Kbps
+          EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
+          InstallAutoPilot (bearer);
         }
     }
   m_ueNode = 0;
@@ -355,54 +396,12 @@ TrafficHelper::GetLteHelper ()
 }
 
 void
-TrafficHelper::InstallGbrVoip ()
+TrafficHelper::InstallAutoPilot (EpsBearer bearer)
 {
   NS_LOG_FUNCTION (this);
+
   uint16_t port = GetNextPortNo ();
-
-  // Dedicated GBR EPS bearer (QCI 1).
-  GbrQosInformation qos;
-  qos.gbrDl = 47200;  // ~46.09 Kbps
-  qos.gbrUl = 47200;  // ~46.09 Kbps
-  EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
-
-  Ptr<SdmnClientApp> cApp = m_voipHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port,
-      EpcController::Qci2Dscp (bearer.qci));
-
-  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
-  EpcTft::PacketFilter filter;
-  filter.direction = EpcTft::BIDIRECTIONAL;
-  filter.protocol = UdpL4Protocol::PROT_NUMBER;
-  filter.remoteAddress = m_webAddr;
-  filter.remoteMask = m_webMask;
-  filter.remotePortStart = port;
-  filter.remotePortEnd = port;
-  filter.localAddress = m_ueAddr;
-  filter.localMask = m_ueMask;
-  filter.localPortStart = 0;
-  filter.localPortEnd = 65535;
-  tft->Add (filter);
-
-  cApp->SetTft (tft);
-  cApp->SetEpsBearer (bearer);
-  m_htcManager->AddSdmnClientApp (cApp);
-
-  GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
-}
-
-void
-TrafficHelper::InstallGbrAutoPilot ()
-{
-  NS_LOG_FUNCTION (this);
-  uint16_t port = GetNextPortNo ();
-
-  // Dedicated GBR EPS bearer (QCI 3).
-  GbrQosInformation qos;
-  qos.gbrUl = 150000;  // ~146 Kbps
-  EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
-
-  Ptr<SdmnClientApp> cApp = m_plotHelper.Install (
+  Ptr<SdmnClientApp> cApp = m_autoPilotHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port,
       EpcController::Qci2Dscp (bearer.qci));
 
@@ -420,7 +419,6 @@ TrafficHelper::InstallGbrAutoPilot ()
   filter.localPortEnd = 65535;
   tft->Add (filter);
 
-
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
   m_mtcManager->AddSdmnClientApp (cApp);
@@ -429,60 +427,13 @@ TrafficHelper::InstallGbrAutoPilot ()
 }
 
 void
-TrafficHelper::InstallGbrLiveVideoStreaming ()
+TrafficHelper::InstallBufferedVideo (EpsBearer bearer, std::string name)
 {
   NS_LOG_FUNCTION (this);
+
   uint16_t port = GetNextPortNo ();
-
-  int videoIdx = m_videoRng->GetInteger ();
-  std::string filename = GetVideoFilename (videoIdx);
-  m_rtvdHelper.SetServerAttribute ("TraceFilename", StringValue (filename));
-
-  // Dedicated GBR EPS bearer (QCI 4).
-  GbrQosInformation qos;
-  qos.gbrDl = GetVideoGbr (videoIdx).GetBitRate ();
-  qos.mbrDl = GetVideoMbr (videoIdx).GetBitRate ();
-  EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
-
-  Ptr<SdmnClientApp> cApp = m_rtvdHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port,
-      EpcController::Qci2Dscp (bearer.qci));
-
-  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
-  EpcTft::PacketFilter filter;
-  filter.direction = EpcTft::DOWNLINK;
-  filter.protocol = UdpL4Protocol::PROT_NUMBER;
-  filter.remoteAddress = m_webAddr;
-  filter.remoteMask = m_webMask;
-  filter.remotePortStart = port;
-  filter.remotePortEnd = port;
-  filter.localAddress = m_ueAddr;
-  filter.localMask = m_ueMask;
-  filter.localPortStart = 0;
-  filter.localPortEnd = 65535;
-  tft->Add (filter);
-
-  cApp->SetTft (tft);
-  cApp->SetEpsBearer (bearer);
-  m_htcManager->AddSdmnClientApp (cApp);
-
-  GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
-}
-
-void
-TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
-{
-  NS_LOG_FUNCTION (this);
-  uint16_t port = GetNextPortNo ();
-
-  // Dedicated Non-GBR EPS bearer (QCI 6).
-  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR);
-
-  int videoIdx = m_videoRng->GetInteger ();
-  std::string filename = GetVideoFilename (videoIdx);
-  m_stvdHelper.SetServerAttribute ("TraceFilename", StringValue (filename));
-
-  Ptr<SdmnClientApp> cApp = m_stvdHelper.Install (
+  m_buffVideoHelper.SetServerAttribute ("TraceFilename", StringValue (name));
+  Ptr<SdmnClientApp> cApp = m_buffVideoHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port,
       EpcController::Qci2Dscp (bearer.qci));
 
@@ -508,52 +459,11 @@ TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
 }
 
 void
-TrafficHelper::InstallNonGbrLiveVideoStreaming ()
+TrafficHelper::InstallHttp (EpsBearer bearer)
 {
   NS_LOG_FUNCTION (this);
+
   uint16_t port = GetNextPortNo ();
-
-  // Dedicated Non-GBR EPS bearer (QCI 7).
-  EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING);
-
-  int videoIdx = m_videoRng->GetInteger ();
-  std::string filename = GetVideoFilename (videoIdx);
-  m_rtvdHelper.SetServerAttribute ("TraceFilename", StringValue (filename));
-
-  Ptr<SdmnClientApp> cApp = m_rtvdHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port,
-      EpcController::Qci2Dscp (bearer.qci));
-
-  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
-  EpcTft::PacketFilter filter;
-  filter.direction = EpcTft::DOWNLINK;
-  filter.protocol = UdpL4Protocol::PROT_NUMBER;
-  filter.remoteAddress = m_webAddr;
-  filter.remoteMask = m_webMask;
-  filter.remotePortStart = port;
-  filter.remotePortEnd = port;
-  filter.localAddress = m_ueAddr;
-  filter.localMask = m_ueMask;
-  filter.localPortStart = 0;
-  filter.localPortEnd = 65535;
-  tft->Add (filter);
-
-  cApp->SetTft (tft);
-  cApp->SetEpsBearer (bearer);
-  m_htcManager->AddSdmnClientApp (cApp);
-
-  GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
-}
-
-void
-TrafficHelper::InstallNonGbrHttp ()
-{
-  NS_LOG_FUNCTION (this);
-  uint16_t port = GetNextPortNo ();
-
-  // Dedicated Non-GBR EPS bearer (QCI 8).
-  EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
-
   Ptr<SdmnClientApp> cApp = m_httpHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port,
       EpcController::Qci2Dscp (bearer.qci));
@@ -562,6 +472,69 @@ TrafficHelper::InstallNonGbrHttp ()
   EpcTft::PacketFilter filter;
   filter.direction = EpcTft::BIDIRECTIONAL;
   filter.protocol = TcpL4Protocol::PROT_NUMBER;
+  filter.remoteAddress = m_webAddr;
+  filter.remoteMask = m_webMask;
+  filter.remotePortStart = port;
+  filter.remotePortEnd = port;
+  filter.localAddress = m_ueAddr;
+  filter.localMask = m_ueMask;
+  filter.localPortStart = 0;
+  filter.localPortEnd = 65535;
+  tft->Add (filter);
+
+  cApp->SetTft (tft);
+  cApp->SetEpsBearer (bearer);
+  m_htcManager->AddSdmnClientApp (cApp);
+
+  GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+}
+
+void
+TrafficHelper::InstallLiveVideo (EpsBearer bearer, std::string name)
+{
+  NS_LOG_FUNCTION (this);
+
+  uint16_t port = GetNextPortNo ();
+  m_liveVideoHelper.SetServerAttribute ("TraceFilename", StringValue (name));
+  Ptr<SdmnClientApp> cApp = m_liveVideoHelper.Install (
+      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port,
+      EpcController::Qci2Dscp (bearer.qci));
+
+  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
+  EpcTft::PacketFilter filter;
+  filter.direction = EpcTft::DOWNLINK;
+  filter.protocol = UdpL4Protocol::PROT_NUMBER;
+  filter.remoteAddress = m_webAddr;
+  filter.remoteMask = m_webMask;
+  filter.remotePortStart = port;
+  filter.remotePortEnd = port;
+  filter.localAddress = m_ueAddr;
+  filter.localMask = m_ueMask;
+  filter.localPortStart = 0;
+  filter.localPortEnd = 65535;
+  tft->Add (filter);
+
+  cApp->SetTft (tft);
+  cApp->SetEpsBearer (bearer);
+  m_htcManager->AddSdmnClientApp (cApp);
+
+  GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+}
+
+void
+TrafficHelper::InstallVoip (EpsBearer bearer)
+{
+  NS_LOG_FUNCTION (this);
+
+  uint16_t port = GetNextPortNo ();
+  Ptr<SdmnClientApp> cApp = m_voipHelper.Install (
+      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port,
+      EpcController::Qci2Dscp (bearer.qci));
+
+  Ptr<EpcTft> tft = CreateObject<EpcTft> ();
+  EpcTft::PacketFilter filter;
+  filter.direction = EpcTft::BIDIRECTIONAL;
+  filter.protocol = UdpL4Protocol::PROT_NUMBER;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;
   filter.remotePortStart = port;

@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef STORED_VIDEO_CLIENT_H
-#define STORED_VIDEO_CLIENT_H
+#ifndef BUFFERED_VIDEO_CLIENT_H
+#define BUFFERED_VIDEO_CLIENT_H
 
 #include "sdmn-client-app.h"
 
@@ -27,12 +27,12 @@ namespace ns3 {
 
 /**
  * \ingroup sdmnApps
- * This is the client side of a stored video traffic generator. The client
+ * This is the client side of a buffered video traffic generator. The client
  * establishes a TCP connection with the server and sends a HTTP request for
  * the main video object. After receiving all video chunks, the client closes
  * the connection.
  */
-class StoredVideoClient : public SdmnClientApp
+class BufferedVideoClient : public SdmnClientApp
 {
 public:
   /**
@@ -41,8 +41,8 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  StoredVideoClient ();           //!< Default constructor.
-  virtual ~StoredVideoClient ();  //!< Dummy destructor, see DoDispose.
+  BufferedVideoClient ();           //!< Default constructor.
+  virtual ~BufferedVideoClient ();  //!< Dummy destructor, see DoDispose.
 
   // Inherited from SdmnClientApp.
   void Start ();
@@ -86,4 +86,4 @@ private:
 };
 
 } // Namespace ns3
-#endif /* STORED_VIDEO_CLIENT_H */
+#endif /* BUFFERED_VIDEO_CLIENT_H */
