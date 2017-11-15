@@ -129,42 +129,44 @@ TrafficHelper::GetTypeId (void)
                    MakeBooleanAccessor (&TrafficHelper::m_mtcRestartApps),
                    MakeBooleanChecker ())
 
-    // Applications to be installed.
-    .AddAttribute ("AutoPilotTraffic",
-                   "Enable GBR auto-pilot MTC traffic over UDP.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_plotEnable),
-                   MakeBooleanChecker ())
-    .AddAttribute ("BufferedVideoTraffic",
-                   "Enable Non-GBR buffered video streaming traffic over TCP.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_stvdEnable),
-                   MakeBooleanChecker ())
-    .AddAttribute ("GbrLiveVideoTraffic",
-                   "Enable GBR live video streaming traffic over UDP.",
+    // HTC applications to be installed.
+    .AddAttribute ("EnableHtcGbrLiveVideo",
+                   "Enable HTC GBR live video streaming traffic over UDP.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_rtvgEnable),
                    MakeBooleanChecker ())
-    .AddAttribute ("HttpTraffic",
-                   "Enable Non-GBR HTTP traffic over TCP.",
+    .AddAttribute ("EnableHtcGbrVoip",
+                   "Enable HTC GBR VoIP traffic over UDP.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_voipEnable),
+                   MakeBooleanChecker ())
+    .AddAttribute ("EnableHtcNonGbrBufferedVideo",
+                   "Enable HTC Non-GBR buffered video traffic over TCP.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_stvdEnable),
+                   MakeBooleanChecker ())
+    .AddAttribute ("EnableHtcNonGbrHttp",
+                   "Enable HTC Non-GBR HTTP traffic over TCP.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_httpEnable),
                    MakeBooleanChecker ())
-    .AddAttribute ("NonGbrLiveVideoTraffic",
-                   "Enable Non-GBR live video streaming traffic over UDP.",
+    .AddAttribute ("EnableHtcNonGbrLiveVideo",
+                   "Enable HTC Non-GBR live video streaming traffic over UDP.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_rtvnEnalbe),
                    MakeBooleanChecker ())
-    .AddAttribute ("VoipTraffic",
-                   "Enable GBR VoIP traffic over UDP.",
+
+    // MTC applications to be installed.
+    .AddAttribute ("EnableMtcGbrAutoPilot",
+                   "Enable MTC GBR auto-pilot traffic over UDP.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_voipEnable),
+                   MakeBooleanAccessor (&TrafficHelper::m_plotEnable),
                    MakeBooleanChecker ())
   ;
   return tid;
