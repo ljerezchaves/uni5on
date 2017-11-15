@@ -304,10 +304,6 @@ EpcController::NotifyPgwMainAttach (
         << " goto:" << m_tftLevel + 1;
   DpctlSchedule (pgwSwDev->GetDatapathId (), cmdIn.str ());
 
-  // Table miss entry. Send to controller.
-  DpctlSchedule (pgwSwDev->GetDatapathId (), "flow-mod cmd=add,table=0,prio=0"
-                 " apply:output=ctrl");
-
   // -------------------------------------------------------------------------
   // Table 1 to N -- P-GW adaptive mechanism -- [from higher to lower priority]
   //
@@ -693,9 +689,6 @@ EpcController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // Table 1 -- Classification table -- [from higher to lower priority]
   //
   // Entries will be installed here by TopologyRoutingInstall function.
-
-  // Table miss entry. Send to controller.
-  DpctlExecute (swtch, "flow-mod cmd=add,table=1,prio=0 apply:output=ctrl");
 
   // -------------------------------------------------------------------------
   // Table 2 -- Routing table -- [from higher to lower priority]
