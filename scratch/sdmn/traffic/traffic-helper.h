@@ -95,6 +95,12 @@ private:
                                NetDeviceContainer ueDevices);
 
   /**
+   * Get the next port number available for use.
+   * \return The port number to use.
+   */
+  static uint16_t GetNextPortNo ();
+
+  /**
    * Get complete filename for video trace files.
    * \param idx The video index (see movies folder).
    * \return The complete file path.

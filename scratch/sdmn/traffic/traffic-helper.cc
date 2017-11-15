@@ -321,6 +321,13 @@ TrafficHelper::InstallMtcApplications (NodeContainer ueNodes,
   m_mtcManager = 0;
 }
 
+uint16_t
+TrafficHelper::GetNextPortNo ()
+{
+  NS_ABORT_MSG_IF (m_port == 0xFFFF, "No more ports available for use.");
+  return m_port++;
+}
+
 const std::string
 TrafficHelper::GetVideoFilename (uint8_t idx)
 {
@@ -349,7 +356,7 @@ void
 TrafficHelper::InstallGbrVoip ()
 {
   NS_LOG_FUNCTION (this);
-  m_port++;
+  uint16_t port = GetNextPortNo ();
 
   // Dedicated GBR EPS bearer (QCI 1).
   GbrQosInformation qos;
@@ -358,7 +365,7 @@ TrafficHelper::InstallGbrVoip ()
   EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
 
   Ptr<SdmnClientApp> cApp = m_voipHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port,
+      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port,
       EpcController::Qci2Dscp (bearer.qci));
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
@@ -367,8 +374,8 @@ TrafficHelper::InstallGbrVoip ()
   filter.protocol = UdpL4Protocol::PROT_NUMBER;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;
-  filter.remotePortStart = m_port;
-  filter.remotePortEnd = m_port;
+  filter.remotePortStart = port;
+  filter.remotePortEnd = port;
   filter.localAddress = m_ueAddr;
   filter.localMask = m_ueMask;
   filter.localPortStart = 0;
@@ -386,7 +393,7 @@ void
 TrafficHelper::InstallGbrAutoPilot ()
 {
   NS_LOG_FUNCTION (this);
-  m_port++;
+  uint16_t port = GetNextPortNo ();
 
   // Dedicated GBR EPS bearer (QCI 3).
   GbrQosInformation qos;
@@ -394,7 +401,7 @@ TrafficHelper::InstallGbrAutoPilot ()
   EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
 
   Ptr<SdmnClientApp> cApp = m_plotHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port,
+      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port,
       EpcController::Qci2Dscp (bearer.qci));
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
@@ -403,8 +410,8 @@ TrafficHelper::InstallGbrAutoPilot ()
   filter.protocol = UdpL4Protocol::PROT_NUMBER;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;
-  filter.remotePortStart = m_port;
-  filter.remotePortEnd = m_port;
+  filter.remotePortStart = port;
+  filter.remotePortEnd = port;
   filter.localAddress = m_ueAddr;
   filter.localMask = m_ueMask;
   filter.localPortStart = 0;
@@ -423,7 +430,7 @@ void
 TrafficHelper::InstallGbrLiveVideoStreaming ()
 {
   NS_LOG_FUNCTION (this);
-  m_port++;
+  uint16_t port = GetNextPortNo ();
 
   int videoIdx = m_videoRng->GetInteger ();
   std::string filename = GetVideoFilename (videoIdx);
@@ -436,7 +443,7 @@ TrafficHelper::InstallGbrLiveVideoStreaming ()
   EpsBearer bearer (EpsBearer::GBR_NON_CONV_VIDEO, qos);
 
   Ptr<SdmnClientApp> cApp = m_rtvdHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port,
+      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port,
       EpcController::Qci2Dscp (bearer.qci));
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
@@ -445,8 +452,8 @@ TrafficHelper::InstallGbrLiveVideoStreaming ()
   filter.protocol = UdpL4Protocol::PROT_NUMBER;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;
-  filter.remotePortStart = m_port;
-  filter.remotePortEnd = m_port;
+  filter.remotePortStart = port;
+  filter.remotePortEnd = port;
   filter.localAddress = m_ueAddr;
   filter.localMask = m_ueMask;
   filter.localPortStart = 0;
@@ -464,7 +471,7 @@ void
 TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
 {
   NS_LOG_FUNCTION (this);
-  m_port++;
+  uint16_t port = GetNextPortNo ();
 
   // Dedicated Non-GBR EPS bearer (QCI 6).
   EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_OPERATOR);
@@ -474,7 +481,7 @@ TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
   m_stvdHelper.SetServerAttribute ("TraceFilename", StringValue (filename));
 
   Ptr<SdmnClientApp> cApp = m_stvdHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port,
+      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port,
       EpcController::Qci2Dscp (bearer.qci));
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
@@ -483,8 +490,8 @@ TrafficHelper::InstallNonGbrBufferedVideoStreaming ()
   filter.protocol = TcpL4Protocol::PROT_NUMBER;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;
-  filter.remotePortStart = m_port;
-  filter.remotePortEnd = m_port;
+  filter.remotePortStart = port;
+  filter.remotePortEnd = port;
   filter.localAddress = m_ueAddr;
   filter.localMask = m_ueMask;
   filter.localPortStart = 0;
@@ -502,7 +509,7 @@ void
 TrafficHelper::InstallNonGbrLiveVideoStreaming ()
 {
   NS_LOG_FUNCTION (this);
-  m_port++;
+  uint16_t port = GetNextPortNo ();
 
   // Dedicated Non-GBR EPS bearer (QCI 7).
   EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING);
@@ -512,7 +519,7 @@ TrafficHelper::InstallNonGbrLiveVideoStreaming ()
   m_rtvdHelper.SetServerAttribute ("TraceFilename", StringValue (filename));
 
   Ptr<SdmnClientApp> cApp = m_rtvdHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port,
+      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port,
       EpcController::Qci2Dscp (bearer.qci));
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
@@ -521,8 +528,8 @@ TrafficHelper::InstallNonGbrLiveVideoStreaming ()
   filter.protocol = UdpL4Protocol::PROT_NUMBER;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;
-  filter.remotePortStart = m_port;
-  filter.remotePortEnd = m_port;
+  filter.remotePortStart = port;
+  filter.remotePortEnd = port;
   filter.localAddress = m_ueAddr;
   filter.localMask = m_ueMask;
   filter.localPortStart = 0;
@@ -540,13 +547,13 @@ void
 TrafficHelper::InstallNonGbrHttp ()
 {
   NS_LOG_FUNCTION (this);
-  m_port++;
+  uint16_t port = GetNextPortNo ();
 
   // Dedicated Non-GBR EPS bearer (QCI 8).
   EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
 
   Ptr<SdmnClientApp> cApp = m_httpHelper.Install (
-      m_ueNode, m_webNode, m_ueAddr, m_webAddr, m_port,
+      m_ueNode, m_webNode, m_ueAddr, m_webAddr, port,
       EpcController::Qci2Dscp (bearer.qci));
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
@@ -555,8 +562,8 @@ TrafficHelper::InstallNonGbrHttp ()
   filter.protocol = TcpL4Protocol::PROT_NUMBER;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;
-  filter.remotePortStart = m_port;
-  filter.remotePortEnd = m_port;
+  filter.remotePortStart = port;
+  filter.remotePortEnd = port;
   filter.localAddress = m_ueAddr;
   filter.localMask = m_ueMask;
   filter.localPortStart = 0;
