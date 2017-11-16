@@ -113,7 +113,6 @@ public:
 
   void SetActive (bool value);
   void SetBlocked (bool value, BlockReason reason = RoutingInfo::NOTBLOCKED);
-  void SetDscp (Ipv4Header::DscpType value);
   void SetInstalled (bool value);
   void SetPgwS5Addr (Ipv4Address value);
   void SetPgwTftIdx (uint16_t value);
@@ -193,7 +192,6 @@ private:
 
   BearerContext_t      m_bearer;       //!< EPS bearer information.
   BlockReason          m_blockReason;  //!< Bearer blocked reason.
-  Ipv4Header::DscpType m_dscp;         //!< DiffServ DSCP value.
   uint64_t             m_imsi;         //!< UE IMSI.
   bool                 m_isActive;     //!< Traffic active status.
   bool                 m_isBlocked;    //!< Bearer request status.

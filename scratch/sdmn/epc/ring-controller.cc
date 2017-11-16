@@ -189,7 +189,6 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
       DpctlSchedule (cInfo->GetSwDpId (0), cmd02.str ());
       NS_LOG_DEBUG ("Forward link set to " << kbps << " Kbps");
 
-
       // Non-GBR meter for counterclockwise direction.
       kbps = cInfo->GetMeterBitRate (ConnectionInfo::BWD) / 1000;
       cmd12 << "meter-mod cmd=add"

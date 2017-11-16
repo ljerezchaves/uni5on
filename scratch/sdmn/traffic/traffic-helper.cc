@@ -258,6 +258,11 @@ TrafficHelper::InstallHtcApplications (NodeContainer ueNodes,
         MakeCallback (&TrafficManager::SessionCreatedCallback, m_htcManager));
 
       // Install HTC applications into UEs.
+      //
+      // WARNING: The QCIs used here for each application are strongly related
+      // to the DSCP mapping implemented in the EPC controller. This will
+      // further reflect on the priority queues used by both OpenFlow switches
+      // and traffic control module. Be careful if you intend to change it.
       if (m_gbrLiveVideo)
         {
           // UDP downlink live video streaming over dedicated GBR EPS bearer.
@@ -346,6 +351,11 @@ TrafficHelper::InstallMtcApplications (NodeContainer ueNodes,
         MakeCallback (&TrafficManager::SessionCreatedCallback, m_mtcManager));
 
       // Install MTC applications into UEs
+      //
+      // WARNING: The QCIs used here for each application are strongly related
+      // to the DSCP mapping implemented in the EPC controller. This will
+      // further reflect on the priority queues used by both OpenFlow switches
+      // and traffic control module. Be careful if you intend to change it.
       if (m_gbrAutoPilot)
         {
           // UDP uplink auto-pilot traffic over dedicated GBR EPS bearer.
