@@ -161,9 +161,12 @@ private:
    * Notify this controller when the the maximum bit rate for best-effort
    * traffic in any network connection is adjusted. This is used to update
    * meters bands based on slicing resource reservation.
-   * \param cInfo The connection information
+   * \param cInfo The connection information.
+   * \param dir The link direction.
+   * \param slice The network slice.
    */
-  void MeterAdjusted (Ptr<const ConnectionInfo> cInfo);
+  void MeterAdjusted (Ptr<const ConnectionInfo> cInfo,
+                      ConnectionInfo::Direction dir, Slice slice);
 
   /**
    * Get the next switch index following the given routing path.

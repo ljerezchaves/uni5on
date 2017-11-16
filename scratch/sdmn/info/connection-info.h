@@ -71,6 +71,7 @@ public:
     double   ewmaThp [2];           //!< EWMA throughput.
     uint64_t txBytes [2];           //!< Total TX bytes.
     uint64_t lastTxBytes [2];       //!< Last timeout TX bytes.
+    int64_t  meterDiff [2];         //!< Current meter bit rate diff.
   };
 
   /** Metadata associated to a switch. */
@@ -293,8 +294,11 @@ public:
   /**
    * TracedCallback signature for Ptr<const ConnectionInfo>.
    * \param cInfo The connection information.
+   * \param dir The link direction.
+   * \param slice The network slice.
    */
-  typedef void (*CInfoTracedCallback)(Ptr<const ConnectionInfo> cInfo);
+  typedef void (*CInfoTracedCallback)(Ptr<const ConnectionInfo> cInfo,
+                                      ConnectionInfo::Direction dir, Slice slice);
 
 protected:
   /** Destructor implementation. */
@@ -341,16 +345,14 @@ private:
   static void RegisterConnectionInfo (Ptr<ConnectionInfo> cInfo);
 
   /** Default meter bit rate adjusted trace source. */
-  TracedCallback<Ptr<const ConnectionInfo> > m_meterAdjustedTrace;
+  TracedCallback<Ptr<const ConnectionInfo>, Direction, Slice>
+  m_meterAdjustedTrace;
 
   SwitchData        m_switches [2];         //!< Switches metadata.
   Ptr<CsmaChannel>  m_channel;              //!< The CSMA link channel.
   Time              m_lastUpdate;           //!< Last update time.
   OperationMode     m_slicingMode;          //!< Network slicing mode.
-
   SliceData         m_slices [Slice::ALL];  //!< Slicing metadata.
-
-  int64_t           m_meterDiff [2];        //!< Current meter bit rate diff.
 
   DataRate          m_adjustmentStep;       //!< Meter adjustment step.
   double            m_alpha;                //!< EWMA alpha parameter.

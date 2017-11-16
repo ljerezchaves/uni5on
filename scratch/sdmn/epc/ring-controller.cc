@@ -670,9 +670,10 @@ RingController::HopCounter (uint16_t srcIdx, uint16_t dstIdx,
 }
 
 void
-RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo)
+RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo,
+                               ConnectionInfo::Direction dir, Slice slice)
 {
-  NS_LOG_FUNCTION (this << cInfo);
+  NS_LOG_FUNCTION (this << cInfo << dir << slice);
 
   std::ostringstream cmd1, cmd2;
   uint64_t kbps = 0;

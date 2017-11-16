@@ -492,10 +492,6 @@ ConnectionInfo::NotifyConstructionCompleted (void)
   NS_LOG_DEBUG ("GBR maximum bit rate: " <<  m_slices [Slice::GBR].maxRate);
   NS_LOG_DEBUG ("MTC maximum bit rate: " <<  m_slices [Slice::MTC].maxRate);
 
-  // Set initial meter bit rates.
-  m_meterDiff [0] = 0;
-  m_meterDiff [1] = 0;
-
   // Scheduling the first update statistics.
   m_lastUpdate = Simulator::Now ();
   Simulator::Schedule (m_timeout, &ConnectionInfo::UpdateStatistics, this);
@@ -547,21 +543,21 @@ ConnectionInfo::UpdateMeterDiff (Direction dir, Slice slice, uint64_t bitRate,
     {
       if (reserve)
         {
-          m_meterDiff [dir] -= bitRate;
+          m_slices [slice].meterDiff [dir] -= bitRate;
         }
       else
         {
-          m_meterDiff [dir] += bitRate;
+          m_slices [slice].meterDiff [dir] += bitRate;
         }
 
-      NS_LOG_DEBUG ("Current meter diff: " << m_meterDiff [dir]);
-      if (std::abs (m_meterDiff [dir]) >=
+      NS_LOG_DEBUG ("Current diff: " << m_slices [slice].meterDiff [dir]);
+      if (std::abs (m_slices [slice].meterDiff [dir]) >=
           std::abs (m_adjustmentStep.GetBitRate ()))
         {
           // Fire adjusted trace source to update meters.
           NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
-          m_meterAdjustedTrace (Ptr<ConnectionInfo> (this));
-          m_meterDiff [dir] = 0;
+          m_meterAdjustedTrace (Ptr<ConnectionInfo> (this), dir, slice);
+          m_slices [slice].meterDiff [dir] = 0;
         }
     }
 }
