@@ -168,6 +168,12 @@ TrafficHelper::GetTypeId (void)
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_gbrAutoPilot),
                    MakeBooleanChecker ())
+    .AddAttribute ("EnableMtcNonGbrAutoPilot",
+                   "Enable MTC Non-GBR auto-pilot traffic over UDP.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_nonGbrAutoPilot),
+                   MakeBooleanChecker ())
   ;
   return tid;
 }
@@ -366,6 +372,16 @@ TrafficHelper::InstallMtcApplications (NodeContainer ueNodes,
           GbrQosInformation qos;
           qos.gbrUl = 150000;  // ~146 Kbps
           EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
+          InstallAutoPilot (bearer);
+        }
+
+      if (m_nonGbrAutoPilot)
+        {
+          // UDP uplink auto-pilot traffic over dedicated Non-GBR EPS bearer.
+          // This QCI 5 is typically associated with IMS signalling, but we are
+          // using it here as the last Non-GBR QCI available so we can uniquely
+          // identify the MTC Non-GBR traffic on the network.
+          EpsBearer bearer (EpsBearer::NGBR_IMS);
           InstallAutoPilot (bearer);
         }
     }

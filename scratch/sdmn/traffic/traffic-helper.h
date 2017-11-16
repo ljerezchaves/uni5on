@@ -198,6 +198,7 @@ private:
   bool              m_gbrAutoPilot;         //!< GBR auto-pilot enable.
   bool              m_gbrLiveVideo;         //!< GBR live video enable.
   bool              m_gbrVoip;              //!< GBR VoIP enable.
+  bool              m_nonGbrAutoPilot;      //!< Non-GBR auto-pilot enable.
   bool              m_nonGbrBuffVideo;      //!< Non-GBR buffered video enable.
   bool              m_nonGbrHttp;           //!< Non-GBR HTTP enable.
   bool              m_nonGbrLiveVideo;      //!< Non-GBR live video enable.

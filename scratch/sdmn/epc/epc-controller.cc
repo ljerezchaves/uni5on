@@ -1346,7 +1346,7 @@ EpcController::StaticInitialize ()
         std::make_pair (EpsBearer::GBR_NON_CONV_VIDEO,
                         Ipv4Header::DSCP_AF41));
 
-      // FIXME QCI 5: will be used by the MTC Non-GBR application.
+      // QCI 5: used by the MTC auto pilot application.
       EpcController::m_qciDscpTable.insert (
         std::make_pair (EpsBearer::NGBR_IMS,
                         Ipv4Header::DSCP_AF31));
