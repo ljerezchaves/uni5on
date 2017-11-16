@@ -495,7 +495,6 @@ ConnectionInfo::NotifyConstructionCompleted (void)
   // Set initial meter bit rates.
   m_meterDiff [0] = 0;
   m_meterDiff [1] = 0;
-  m_meterThresh = m_adjustmentStep.GetBitRate ();
 
   // Scheduling the first update statistics.
   m_lastUpdate = Simulator::Now ();
@@ -556,8 +555,8 @@ ConnectionInfo::UpdateMeterDiff (Direction dir, Slice slice, uint64_t bitRate,
         }
 
       NS_LOG_DEBUG ("Current meter diff: " << m_meterDiff [dir]);
-      NS_LOG_DEBUG ("Current meter threshold: " << m_meterThresh);
-      if (std::abs (m_meterDiff [dir]) >= std::abs (m_meterThresh))
+      if (std::abs (m_meterDiff [dir]) >=
+          std::abs (m_adjustmentStep.GetBitRate ()))
         {
           // Fire adjusted trace source to update meters.
           NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");

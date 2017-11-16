@@ -350,7 +350,6 @@ private:
 
   SliceData         m_slices [Slice::ALL];  //!< Slicing metadata.
 
-  uint64_t          m_meterThresh;          //!< Meter bit rate threshold.
   int64_t           m_meterDiff [2];        //!< Current meter bit rate diff.
 
   DataRate          m_adjustmentStep;       //!< Meter adjustment step.
