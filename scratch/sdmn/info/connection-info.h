@@ -197,19 +197,23 @@ public:
 
   /**
    * Get the maximum bit rate for best-effort traffic over this link on the
-   * given direction, based on current slicing operation mode.
+   * given direction for the given network slice. The returned value is based
+   * on current slicing operation mode.
    * \param dir The link direction.
+   * \param slice The network slice.
    * \return The maximum bit rate.
    */
-  uint64_t GetMeterBitRate (Direction dir) const;
+  uint64_t GetMeterBitRate (Direction dir, Slice slice) const;
 
   /**
    * Get the maximum bit rate ratio for best-effort traffic over this link on
-   * the given direction, based on current slicing operation mode.
+   * the given direction for the given network slice. The returned value is
+   * based on current slicing operation mode.
    * \param dir The link direction.
+   * \param slice The network slice.
    * \return The meter link ratio.
    */
-  double GetMeterSliceRatio (Direction dir) const;
+  double GetMeterSliceRatio (Direction dir, Slice slice) const;
 
   /**
    * Get the pair of switch datapath IDs for this connection, respecting the
@@ -298,7 +302,8 @@ public:
    * \param slice The network slice.
    */
   typedef void (*CInfoTracedCallback)(Ptr<const ConnectionInfo> cInfo,
-                                      ConnectionInfo::Direction dir, Slice slice);
+                                      ConnectionInfo::Direction dir,
+                                      Slice slice);
 
 protected:
   /** Destructor implementation. */

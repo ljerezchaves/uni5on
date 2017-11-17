@@ -196,8 +196,10 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
       cInfo = *it;
       *m_dftWrapper->GetStream ()
       << right
-      << setw (4) << cInfo->GetMeterSliceRatio (ConnectionInfo::FWD) << " "
-      << setw (4) << cInfo->GetMeterSliceRatio (ConnectionInfo::BWD) << "   ";
+      << setw (4) << cInfo->GetMeterSliceRatio (
+        ConnectionInfo::FWD, Slice::DFT) << " "
+      << setw (4) << cInfo->GetMeterSliceRatio (
+        ConnectionInfo::BWD, Slice::DFT) << "   ";
     }
   *m_dftWrapper->GetStream () << std::endl;
 

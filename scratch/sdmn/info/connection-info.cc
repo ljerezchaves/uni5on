@@ -292,16 +292,16 @@ ConnectionInfo::GetMaxBitRate (Slice slice) const
 }
 
 uint64_t
-ConnectionInfo::GetMeterBitRate (Direction dir) const
+ConnectionInfo::GetMeterBitRate (Direction dir, Slice slice) const
 {
-  NS_LOG_FUNCTION (this << dir);
+  NS_LOG_FUNCTION (this << dir << slice);
 
   switch (m_slicingMode)
     {
     case OperationMode::OFF:
-      return GetMaxBitRate (Slice::DFT);
+      return GetMaxBitRate (slice);
     case OperationMode::ON:
-      return GetFreeBitRate (dir, Slice::DFT);
+      return GetFreeBitRate (dir, slice);
     case OperationMode::AUTO:
       return GetFreeBitRate (dir, Slice::ALL);
     default:
@@ -310,12 +310,12 @@ ConnectionInfo::GetMeterBitRate (Direction dir) const
 }
 
 double
-ConnectionInfo::GetMeterSliceRatio (Direction dir) const
+ConnectionInfo::GetMeterSliceRatio (Direction dir, Slice slice) const
 {
   NS_LOG_FUNCTION (this << dir);
 
-  return static_cast<double> (GetMeterBitRate (dir))
-         / GetMaxBitRate (Slice::DFT);
+  return static_cast<double> (GetMeterBitRate (dir, slice))
+         / GetMaxBitRate (slice);
 }
 
 DpIdPair_t
@@ -545,7 +545,7 @@ ConnectionInfo::UpdateMeterDiff (Direction dir, Slice slice, uint64_t bitRate,
         {
           m_slices [slice].meterDiff [dir] -= bitRate;
         }
-      else
+      else // release
         {
           m_slices [slice].meterDiff [dir] += bitRate;
         }

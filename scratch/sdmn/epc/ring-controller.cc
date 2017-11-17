@@ -180,8 +180,8 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
       NS_LOG_DEBUG ("Creating meter for connection info " <<
                     cInfo->GetSwDpId (0) << " to " << cInfo->GetSwDpId (1));
 
-      // Non-GBR meter for clockwise direction.
-      kbps = cInfo->GetMeterBitRate (ConnectionInfo::FWD) / 1000;
+      // Non-GBR meter for clockwise direction. // FIXME
+      kbps = cInfo->GetMeterBitRate (ConnectionInfo::FWD, Slice::DFT) / 1000;
       cmd02 << "meter-mod cmd=add"
             << ",flags=" << flagsStr
             << ",meter=" << RingRoutingInfo::CLOCK
@@ -189,8 +189,8 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
       DpctlSchedule (cInfo->GetSwDpId (0), cmd02.str ());
       NS_LOG_DEBUG ("Forward link set to " << kbps << " Kbps");
 
-      // Non-GBR meter for counterclockwise direction.
-      kbps = cInfo->GetMeterBitRate (ConnectionInfo::BWD) / 1000;
+      // Non-GBR meter for counterclockwise direction. // FIXME
+      kbps = cInfo->GetMeterBitRate (ConnectionInfo::BWD, Slice::DFT) / 1000;
       cmd12 << "meter-mod cmd=add"
             << ",flags=" << flagsStr
             << ",meter=" << RingRoutingInfo::COUNTER
@@ -675,8 +675,8 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo,
 {
   NS_LOG_FUNCTION (this << cInfo << dir << slice);
 
-  NS_LOG_DEBUG ("Updating meter for connection info " <<
-                cInfo->GetSwDpId (0) << " to " << cInfo->GetSwDpId (1));
+  NS_LOG_INFO ("Updating meter for connection info " <<
+               cInfo->GetSwDpId (0) << " to " << cInfo->GetSwDpId (1));
 
   std::ostringstream cmd;
   uint64_t kbps = 0;
@@ -697,8 +697,8 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo,
   // Meter flags OFPMF_KBPS.
   std::string flagsStr ("0x0001");
 
-  // Update the meter for the given direction.
-  kbps = cInfo->GetMeterBitRate (dir) / 1000;
+  // Update the meter for the given direction. // FIXME
+  kbps = cInfo->GetMeterBitRate (dir, Slice::DFT) / 1000;
   cmd << "meter-mod cmd=mod"
       << ",flags=" << flagsStr
       << ",meter=" << meterId
