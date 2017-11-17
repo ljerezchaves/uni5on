@@ -675,32 +675,37 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo,
 {
   NS_LOG_FUNCTION (this << cInfo << dir << slice);
 
-  std::ostringstream cmd1, cmd2;
+  NS_LOG_DEBUG ("Updating meter for connection info " <<
+                cInfo->GetSwDpId (0) << " to " << cInfo->GetSwDpId (1));
+
+  std::ostringstream cmd;
   uint64_t kbps = 0;
+  uint8_t  swDpId = 0;
+  uint16_t meterId = 0;
+
+  if (dir == ConnectionInfo::FWD)
+    {
+      swDpId = 0;
+      meterId = RingRoutingInfo::CLOCK;
+    }
+  else // ConnectionInfo::BWD
+    {
+      swDpId = 1;
+      meterId = RingRoutingInfo::COUNTER;
+    }
 
   // Meter flags OFPMF_KBPS.
   std::string flagsStr ("0x0001");
 
-  NS_LOG_DEBUG ("Updating meter for connection info " <<
-                cInfo->GetSwDpId (0) << " to " << cInfo->GetSwDpId (1));
-
-  // Update the meter for clockwise direction.
-  kbps = cInfo->GetMeterBitRate (ConnectionInfo::FWD) / 1000;
-  cmd1 << "meter-mod cmd=mod"
-       << ",flags=" << flagsStr
-       << ",meter=" << RingRoutingInfo::CLOCK
-       << " drop:rate=" << kbps;
-  DpctlExecute (cInfo->GetSwDpId (0), cmd1.str ());
-  NS_LOG_DEBUG ("Forward link set to " << kbps << " Kbps");
-
-  // Update the meter for counterclockwise direction.
-  kbps = cInfo->GetMeterBitRate (ConnectionInfo::BWD) / 1000;
-  cmd2 << "meter-mod cmd=mod"
-       << ",flags=" << flagsStr
-       << ",meter=" << RingRoutingInfo::COUNTER
-       << " drop:rate=" << kbps;
-  DpctlExecute (cInfo->GetSwDpId (1), cmd2.str ());
-  NS_LOG_DEBUG ("Backward link set to " << kbps << " Kbps");
+  // Update the meter for the given direction.
+  kbps = cInfo->GetMeterBitRate (dir) / 1000;
+  cmd << "meter-mod cmd=mod"
+      << ",flags=" << flagsStr
+      << ",meter=" << meterId
+      << " drop:rate=" << kbps;
+  DpctlExecute (cInfo->GetSwDpId (swDpId), cmd.str ());
+  NS_LOG_DEBUG (ConnectionInfo::DirectionStr (dir) <<
+                " link set to " << kbps << " Kbps");
 }
 
 uint16_t
