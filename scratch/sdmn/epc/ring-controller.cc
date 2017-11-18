@@ -445,10 +445,10 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 
       // Set the IP DSCP field when necessary.
       std::ostringstream act;
-      if (rInfo->GetDscp ())
+      if (rInfo->GetDscpValue ())
         {
           // Build the apply set_field action instruction string.
-          act << " apply:set_field=ip_dscp:" << rInfo->GetDscp ();
+          act << " apply:set_field=ip_dscp:" << rInfo->GetDscpValue ();
         }
 
       // Build the metatada, write and goto instructions string.
@@ -473,10 +473,10 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 
       // Set the IP DSCP field when necessary.
       std::ostringstream act;
-      if (rInfo->GetDscp ())
+      if (rInfo->GetDscpValue ())
         {
           // Build the apply set_field action instruction string.
-          act << " apply:set_field=ip_dscp:" << rInfo->GetDscp ();
+          act << " apply:set_field=ip_dscp:" << rInfo->GetDscpValue ();
         }
 
       // Build the metatada, write and goto instructions string.

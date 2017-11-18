@@ -93,7 +93,8 @@ public:
   /** \name Private member accessors. */
   //\{
   std::string GetBlockReasonStr (void) const;
-  uint16_t GetDscp (void) const;
+  Ipv4Header::DscpType GetDscp (void) const;
+  uint16_t GetDscpValue (void) const;
   uint64_t GetImsi (void) const;
   Ipv4Address GetPgwS5Addr (void) const;
   uint16_t GetPgwTftIdx (void) const;

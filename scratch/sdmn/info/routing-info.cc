@@ -96,12 +96,20 @@ RoutingInfo::GetBlockReasonStr (void) const
   return BlockReasonStr (m_blockReason);
 }
 
-uint16_t
+Ipv4Header::DscpType
 RoutingInfo::GetDscp (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return static_cast<uint16_t> (EpcController::Qci2Dscp (GetQciInfo ()));
+  return EpcController::Qci2Dscp (GetQciInfo ());
+}
+
+uint16_t
+RoutingInfo::GetDscpValue (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return static_cast<uint16_t> (GetDscp ());
 }
 
 uint64_t
