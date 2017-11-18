@@ -165,9 +165,9 @@ public:
    * network over the S5 interface. This method is used only for configuring
    * MTC traffic aggregation.
    * \param gwDev The device created at the gateway node.
-   * \return The MTC aggregation TEID on the uplink S5 interface.
+   * \return The pair of MTC aggregation TEIDs on the uplink S5 interface.
    */
-  virtual uint32_t NotifySgwAttach (Ptr<NetDevice> gwDev);
+  virtual std::pair<uint32_t, uint32_t> NotifySgwAttach (Ptr<NetDevice> gwDev);
 
   /**
    * Notify this controller that all backhaul switches have already been

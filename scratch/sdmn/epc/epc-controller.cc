@@ -385,59 +385,79 @@ EpcController::NotifyS5Attach (
   DpctlSchedule (swtchDev->GetDatapathId (), cmdOut.str ());
 }
 
-uint32_t
+std::pair<uint32_t, uint32_t>
 EpcController::NotifySgwAttach (Ptr<NetDevice> gwDev)
 {
   NS_LOG_FUNCTION (this << gwDev);
 
   static uint32_t m_mtcTeidCount = EpcController::m_teidEnd + 1;
-  uint32_t mtcTeid = 0;
+  uint32_t gbrTeid = 0;
+  uint32_t nonTeid = 0;
 
-  // When the MTC traffic aggregation is enable, let's create and install the
-  // aggregation uplink GTP tunnel between this S-GW and the P-GW. We are using
-  // a 'fake' rInfo for this aggregation bearer, in order to use existing
-  // methods to install the OpenFlow rules.
+  // When the MTC traffic aggregation is enable, let's create and install two
+  // aggregation uplink GTP tunnels (for GBR and Non-GBR traffic) between this
+  // S-GW and the P-GW. We are using 'fake' rInfo instances for these bearers,
+  // so we can use existing methods to install the OpenFlow rules.
   if (GetMtcAggregMode () == OperationMode::ON)
     {
-      mtcTeid = m_mtcTeidCount++;
+      Ptr<RoutingInfo> grInfo, nrInfo;
+      Ptr<S5AggregationInfo> aggInfo;
+      gbrTeid = m_mtcTeidCount++;
+      nonTeid = m_mtcTeidCount++;
 
-      // Creating a simple uplink packet filter for this aggregation tunnel.
+      // Creating an uplink packet filter for aggregation tunnels.
       EpcTft::PacketFilter fakeUplinkfilter;
       fakeUplinkfilter.direction = EpcTft::UPLINK;
       Ptr<EpcTft> fakeTft = CreateObject<EpcTft> ();
       fakeTft->Add (fakeUplinkfilter);
 
-      // Creating the 'fake' GBR bearer for aggregated MTC traffic. We are
-      // using the same QCI (GBR_GAMING) set to MTC traffic by the
-      // TrafficHelper. This will set the same DSCP value for MTC IP packets.
-      BearerContext_t fakeBearer;
-      fakeBearer.bearerLevelQos = EpsBearer (EpsBearer::GBR_GAMING);
-      fakeBearer.tft = fakeTft;
+      // Creating the 'fake' bearers for aggregating MTC traffic. We are using
+      // the same QCIs set to MTC traffic by the TrafficHelper, which will
+      // force the same DSCP value for IP packets.
+      BearerContext_t gbrBearer;
+      gbrBearer.bearerLevelQos = EpsBearer (EpsBearer::GBR_GAMING);
+      gbrBearer.tft = fakeTft;
 
-      // Creating the 'fake' routing info.
-      Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
-          mtcTeid, fakeBearer, 0, false, true);
-      rInfo->SetActive (true);
-      rInfo->SetPriority (0xFF00);
-      rInfo->SetPgwS5Addr (m_pgwS5Addr);
-      rInfo->SetSgwS5Addr (EpcNetwork::GetIpv4Addr (gwDev));
-      TopologyBearerCreated (rInfo);
+      BearerContext_t nonBearer;
+      nonBearer.bearerLevelQos = EpsBearer (EpsBearer::NGBR_IMS);
+      nonBearer.tft = fakeTft;
 
-      // Set the network slice for this bearer.
+      // Creating the 'fake' routing info instances.
+      grInfo = CreateObject<RoutingInfo> (gbrTeid, gbrBearer, 0, false, true);
+      grInfo->SetActive (true);
+      grInfo->SetPriority (0xFF00);
+      grInfo->SetPgwS5Addr (m_pgwS5Addr);
+      grInfo->SetSgwS5Addr (EpcNetwork::GetIpv4Addr (gwDev));
+      TopologyBearerCreated (grInfo);
+
+      nrInfo = CreateObject<RoutingInfo> (nonTeid, nonBearer, 0, false, true);
+      nrInfo->SetActive (true);
+      nrInfo->SetPriority (0xFF00);
+      nrInfo->SetPgwS5Addr (m_pgwS5Addr);
+      nrInfo->SetSgwS5Addr (EpcNetwork::GetIpv4Addr (gwDev));
+      TopologyBearerCreated (nrInfo);
+
+      // Set the network slice for these bearers.
       if (GetSlicingMode () != OperationMode::OFF)
         {
-          rInfo->SetSlice (Slice::MTC);
+          grInfo->SetSlice (Slice::MTC);
+          nrInfo->SetSlice (Slice::MTC);
         }
 
       // Set the traffic aggregation operation mode.
-      Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
+      aggInfo = grInfo->GetObject<S5AggregationInfo> ();
       aggInfo->SetOperationMode (OperationMode::ON);
 
-      // Install the OpenFlow bearer rules after handshake procedures.
+      aggInfo = nrInfo->GetObject<S5AggregationInfo> ();
+      aggInfo->SetOperationMode (OperationMode::ON);
+
+      // Install the OpenFlow rules after handshake procedures.
       Simulator::Schedule (Seconds (0.5),
-                           &EpcController::MtcAggBearerInstall, this, rInfo);
+                           &EpcController::MtcAggBearerInstall, this, grInfo);
+      Simulator::Schedule (Seconds (0.5),
+                           &EpcController::MtcAggBearerInstall, this, nrInfo);
     }
-  return mtcTeid;
+  return std::make_pair (gbrTeid, nonTeid);
 }
 
 void

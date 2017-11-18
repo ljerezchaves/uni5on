@@ -104,9 +104,11 @@ SdranController::NotifyEnbAttach (uint16_t cellId, uint32_t sgwS1uPortNo)
 
 void
 SdranController::NotifySgwAttach (
-  uint32_t sgwS5PortNo, Ptr<NetDevice> sgwS5Dev, uint32_t mtcTeid)
+  uint32_t sgwS5PortNo, Ptr<NetDevice> sgwS5Dev, uint32_t mtcGbrTeid,
+  uint32_t mtcNonTeid)
 {
-  NS_LOG_FUNCTION (this << sgwS5PortNo << sgwS5Dev << mtcTeid);
+  NS_LOG_FUNCTION (this << sgwS5PortNo << sgwS5Dev << mtcGbrTeid <<
+                   mtcNonTeid);
 
   m_sgwS5Addr = EpcNetwork::GetIpv4Addr (sgwS5Dev);
   m_sgwS5PortNo = sgwS5PortNo;
@@ -122,13 +124,13 @@ SdranController::NotifySgwAttach (
       << " goto:1";
   DpctlSchedule (m_sgwDpId, cmd.str ());
 
-  // The mtcTeid != 0 means that MTC traffic aggregation is enable.
-  // Install a high-priority match rule on default table for aggregating
-  // traffic from all MTC UEs on the same uplink S5 GTP tunnel.
-  if (mtcTeid != 0)
+  // The mtcGbrTeid != 0 or mtcNonTeid != 0 means that MTC traffic aggregation
+  // is enable. Install high-priority match rules on default table for
+  // aggregating traffic from all MTC UEs on the proper uplink S5 GTP tunnel.
+  if (mtcGbrTeid != 0)
     {
       // Print MTC aggregation TEID and P-GW IPv4 address into tunnel metadata.
-      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (mtcTeid);
+      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (mtcGbrTeid);
       uint64_t tunnelId;
       char tunnelIdStr [20];
       tunnelId = static_cast<uint64_t> (rInfo->GetPgwS5Addr ().Get ());
@@ -136,11 +138,41 @@ SdranController::NotifySgwAttach (
       tunnelId |= rInfo->GetTeid ();
       sprintf (tunnelIdStr, "0x%016lx", tunnelId);
 
-      // Instal OpenFlow MTC aggregation rule.
+      // Instal OpenFlow MTC aggregation rule. We are using the DSCP field to
+      // distinguish GBR/Non-GBR packets. Packets inside the S-GW are not
+      // encapsulated, so the DSCP field is, in fact, the IP ToS set by the
+      // application socket.
+      uint8_t ipTos = EpcController::Dscp2Tos (rInfo->GetDscp ());
       std::ostringstream cmd;
       cmd << "flow-mod cmd=add,table=0,prio=65520 eth_type=0x800"
           << ",ip_src=" << EpcNetwork::m_mtcAddr
           << "/" << EpcNetwork::m_mtcMask.GetPrefixLength ()
+          << ",ip_dscp=" << (ipTos >> 2)
+          << " apply:set_field=tunn_id:" << tunnelIdStr
+          << ",output=" << m_sgwS5PortNo;
+      DpctlSchedule (m_sgwDpId, cmd.str ());
+    }
+  if (mtcNonTeid != 0)
+    {
+      // Print MTC aggregation TEID and P-GW IPv4 address into tunnel metadata.
+      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (mtcNonTeid);
+      uint64_t tunnelId;
+      char tunnelIdStr [20];
+      tunnelId = static_cast<uint64_t> (rInfo->GetPgwS5Addr ().Get ());
+      tunnelId <<= 32;
+      tunnelId |= rInfo->GetTeid ();
+      sprintf (tunnelIdStr, "0x%016lx", tunnelId);
+
+      // Instal OpenFlow MTC aggregation rule. We are using the DSCP field to
+      // distinguish GBR/Non-GBR packets. Packets inside the S-GW are not
+      // encapsulated, so the DSCP field is, in fact, the IP ToS set by the
+      // application socket.
+      uint8_t ipTos = EpcController::Dscp2Tos (rInfo->GetDscp ());
+      std::ostringstream cmd;
+      cmd << "flow-mod cmd=add,table=0,prio=65520 eth_type=0x800"
+          << ",ip_src=" << EpcNetwork::m_mtcAddr
+          << "/" << EpcNetwork::m_mtcMask.GetPrefixLength ()
+          << ",ip_dscp=" << (ipTos >> 2)
           << " apply:set_field=tunn_id:" << tunnelIdStr
           << ",output=" << m_sgwS5PortNo;
       DpctlSchedule (m_sgwDpId, cmd.str ());
