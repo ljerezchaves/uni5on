@@ -196,26 +196,6 @@ public:
   uint64_t GetMaxBitRate (Slice slice = Slice::ALL) const;
 
   /**
-   * Get the maximum bit rate for best-effort traffic over this link on the
-   * given direction for the given network slice. The returned value is based
-   * on current slicing operation mode.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \return The maximum bit rate.
-   */
-  uint64_t GetMeterBitRate (Direction dir, Slice slice) const;
-
-  /**
-   * Get the maximum bit rate ratio for best-effort traffic over this link on
-   * the given direction for the given network slice. The returned value is
-   * based on current slicing operation mode.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \return The meter link ratio.
-   */
-  double GetMeterSliceRatio (Direction dir, Slice slice) const;
-
-  /**
    * Get the pair of switch datapath IDs for this connection, respecting the
    * internal order.
    * \return The pair of switch datapath IDs.

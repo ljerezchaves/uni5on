@@ -153,22 +153,24 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
   // Installing groups and meters for ring network. Note that following
   // commands works as connections are created in clockwise direction, and
   // switches inside cInfo are saved in the same direction.
-  std::ostringstream cmd01, cmd11, cmd02, cmd12;
-  uint64_t kbps = 0;
+  std::ostringstream cmd1, cmd2;
 
   // Routing group for clockwise packet forwarding.
-  cmd01 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::CLOCK
-        << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (0);
-  DpctlSchedule (cInfo->GetSwDpId (0), cmd01.str ());
+  cmd1 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::CLOCK
+       << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (0);
+  DpctlSchedule (cInfo->GetSwDpId (0), cmd1.str ());
 
   // Routing group for counterclockwise packet forwarding.
-  cmd11 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::COUNTER
-        << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (1);
-  DpctlSchedule (cInfo->GetSwDpId (1), cmd11.str ());
+  cmd2 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::COUNTER
+       << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (1);
+  DpctlSchedule (cInfo->GetSwDpId (1), cmd2.str ());
 
   // Set up Non-GBR meters when the network slicing mechanism is enabled.
   if (GetSlicingMode () != OperationMode::OFF)
     {
+      NS_LOG_DEBUG ("Creating slicing meters for connection info " <<
+                    cInfo->GetSwDpId (0) << " to " << cInfo->GetSwDpId (1));
+
       // Connect this controller to ConnectionInfo meter ajdusted trace source.
       cInfo->TraceConnectWithoutContext (
         "MeterAdjusted", MakeCallback (
@@ -176,27 +178,67 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
 
       // Meter flags OFPMF_KBPS.
       std::string flagsStr ("0x0001");
+      std::ostringstream cmdm1, cmdm2, cmdm3, cmdm4;
+      uint64_t kbps = 0;
 
-      NS_LOG_DEBUG ("Creating meter for connection info " <<
-                    cInfo->GetSwDpId (0) << " to " << cInfo->GetSwDpId (1));
+      if (GetSlicingMode () == OperationMode::ON)
+        {
+          // DFT Non-GBR meter for clockwise FWD direction.
+          kbps = cInfo->GetFreeBitRate (ConnectionInfo::FWD, Slice::DFT);
+          cmdm1 << "meter-mod cmd=add,flags=" << flagsStr
+                << ",meter=1 drop:rate=" << kbps / 1000;
+          DpctlSchedule (cInfo->GetSwDpId (0), cmdm1.str ());
+          NS_LOG_DEBUG ("Slice " << SliceStr (Slice::DFT) << ": " <<
+                        ConnectionInfo::DirectionStr (ConnectionInfo::FWD) <<
+                        " link set to " << kbps << " Kbps");
 
-      // Non-GBR meter for clockwise direction. // FIXME
-      kbps = cInfo->GetMeterBitRate (ConnectionInfo::FWD, Slice::DFT) / 1000;
-      cmd02 << "meter-mod cmd=add"
-            << ",flags=" << flagsStr
-            << ",meter=" << RingRoutingInfo::CLOCK
-            << " drop:rate=" << kbps;
-      DpctlSchedule (cInfo->GetSwDpId (0), cmd02.str ());
-      NS_LOG_DEBUG ("Forward link set to " << kbps << " Kbps");
+          // DFT Non-GBR meter for counterclockwise BWD direction.
+          kbps = cInfo->GetFreeBitRate (ConnectionInfo::BWD, Slice::DFT);
+          cmdm2 << "meter-mod cmd=add,flags=" << flagsStr
+                << ",meter=2 drop:rate=" << kbps / 1000;
+          DpctlSchedule (cInfo->GetSwDpId (1), cmdm2.str ());
+          NS_LOG_DEBUG ("Slice " << SliceStr (Slice::DFT) << ": " <<
+                        ConnectionInfo::DirectionStr (ConnectionInfo::BWD) <<
+                        " link set to " << kbps << " Kbps");
 
-      // Non-GBR meter for counterclockwise direction. // FIXME
-      kbps = cInfo->GetMeterBitRate (ConnectionInfo::BWD, Slice::DFT) / 1000;
-      cmd12 << "meter-mod cmd=add"
-            << ",flags=" << flagsStr
-            << ",meter=" << RingRoutingInfo::COUNTER
-            << " drop:rate=" << kbps;
-      DpctlSchedule (cInfo->GetSwDpId (1), cmd12.str ());
-      NS_LOG_DEBUG ("Backward link set to " << kbps << " Kbps");
+          // MTC Non-GBR meter for clockwise FWD direction.
+          kbps = cInfo->GetFreeBitRate (ConnectionInfo::FWD, Slice::MTC);
+          cmdm3 << "meter-mod cmd=add,flags=" << flagsStr
+                << ",meter=3 drop:rate=" << kbps / 1000;
+          DpctlSchedule (cInfo->GetSwDpId (0), cmdm3.str ());
+          NS_LOG_DEBUG ("Slice " << SliceStr (Slice::MTC) << ": " <<
+                        ConnectionInfo::DirectionStr (ConnectionInfo::FWD) <<
+                        " link set to " << kbps << " Kbps");
+
+          // MTC Non-GBR meter for counterclockwise BWD direction.
+          kbps = cInfo->GetFreeBitRate (ConnectionInfo::BWD, Slice::MTC);
+          cmdm4 << "meter-mod cmd=add,flags=" << flagsStr
+                << ",meter=4 drop:rate=" << kbps / 1000;
+          DpctlSchedule (cInfo->GetSwDpId (1), cmdm4.str ());
+          NS_LOG_DEBUG ("Slice " << SliceStr (Slice::MTC) << ": " <<
+                        ConnectionInfo::DirectionStr (ConnectionInfo::BWD) <<
+                        " link set to " << kbps << " Kbps");
+        }
+      else if (GetSlicingMode () == OperationMode::AUTO)
+        {
+          // Non-GBR meter for clockwise FWD direction.
+          kbps = cInfo->GetFreeBitRate (ConnectionInfo::FWD, Slice::ALL);
+          cmdm1 << "meter-mod cmd=add,flags=" << flagsStr
+                << ",meter=1 drop:rate=" << kbps / 1000;
+          DpctlSchedule (cInfo->GetSwDpId (0), cmdm1.str ());
+          NS_LOG_DEBUG ("Slice " << SliceStr (Slice::ALL) << ": " <<
+                        ConnectionInfo::DirectionStr (ConnectionInfo::FWD) <<
+                        " link set to " << kbps << " Kbps");
+
+          // Non-GBR meter for counterclockwise BWD direction.
+          kbps = cInfo->GetFreeBitRate (ConnectionInfo::BWD, Slice::ALL);
+          cmdm2 << "meter-mod cmd=add,flags=" << flagsStr
+                << ",meter=2 drop:rate=" << kbps / 1000;
+          DpctlSchedule (cInfo->GetSwDpId (1), cmdm2.str ());
+          NS_LOG_DEBUG ("Slice " << SliceStr (Slice::ALL) << ": " <<
+                        ConnectionInfo::DirectionStr (ConnectionInfo::BWD) <<
+                        " link set to " << kbps << " Kbps");
+        }
     }
 }
 
@@ -675,37 +717,56 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo,
 {
   NS_LOG_FUNCTION (this << cInfo << dir << slice);
 
-  NS_LOG_INFO ("Updating meter for connection info " <<
+  NS_ASSERT_MSG (GetSlicingMode () != OperationMode::OFF, "Not supposed to "
+                 "ajust slicing meters when network slicing mode is OFF.");
+
+  uint8_t  swDpId  = (dir == ConnectionInfo::FWD) ? 0 : 1;
+  uint16_t meterId = (dir == ConnectionInfo::FWD) ? 1 : 2;
+
+  if (GetSlicingMode () == OperationMode::ON)
+    {
+      // When the network slicing operation mode is ON, the Non-GBR traffic of
+      // each slice will be monitored independently. So we have to identify the
+      // meter ID based on the slice parameter.
+      // * For the DFT slice, the meter IDs are: 1 for FWD and 2 for BWD.
+      // * For the MTC slice, the meter IDs are: 3 for FWD and 4 for BWD.
+      // * For the GBR slice, we don't have Non-GBR traffic on this slice, so
+      //   we don't have meters to update here.
+      if (slice == Slice::GBR)
+        {
+          return;
+        }
+      else if (slice == Slice::MTC)
+        {
+          meterId += 2;
+        }
+    }
+  else if (GetSlicingMode () == OperationMode::AUTO)
+    {
+      // When the network slicing operation mode is AUTO, the Non-GBR traffic
+      // of all slices will be monitored together. The meter IDs in use are:
+      // 1 for FWD and 2 for BWD.
+      slice = Slice::ALL;
+    }
+
+  NS_LOG_INFO ("Updating slicing meter for connection info " <<
                cInfo->GetSwDpId (0) << " to " << cInfo->GetSwDpId (1));
-
-  std::ostringstream cmd;
-  uint64_t kbps = 0;
-  uint8_t  swDpId = 0;
-  uint16_t meterId = 0;
-
-  if (dir == ConnectionInfo::FWD)
-    {
-      swDpId = 0;
-      meterId = RingRoutingInfo::CLOCK;
-    }
-  else // ConnectionInfo::BWD
-    {
-      swDpId = 1;
-      meterId = RingRoutingInfo::COUNTER;
-    }
 
   // Meter flags OFPMF_KBPS.
   std::string flagsStr ("0x0001");
+  std::ostringstream cmd;
+  uint64_t kbps = 0;
 
-  // Update the meter for the given direction. // FIXME
-  kbps = cInfo->GetMeterBitRate (dir, Slice::DFT) / 1000;
+  // Update the proper slicing meter.
+  kbps = cInfo->GetFreeBitRate (dir, slice);
   cmd << "meter-mod cmd=mod"
       << ",flags=" << flagsStr
       << ",meter=" << meterId
-      << " drop:rate=" << kbps;
+      << " drop:rate=" << kbps / 1000;
   DpctlExecute (cInfo->GetSwDpId (swDpId), cmd.str ());
-  NS_LOG_DEBUG (ConnectionInfo::DirectionStr (dir) <<
-                " link set to " << kbps << " Kbps");
+  NS_LOG_DEBUG ("Slice " << SliceStr (slice) << ": " <<
+                ConnectionInfo::DirectionStr (dir) <<
+                " link updated to " << kbps << " Kbps");
 }
 
 uint16_t

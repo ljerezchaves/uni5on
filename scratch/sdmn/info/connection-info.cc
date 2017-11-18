@@ -291,33 +291,6 @@ ConnectionInfo::GetMaxBitRate (Slice slice) const
     }
 }
 
-uint64_t
-ConnectionInfo::GetMeterBitRate (Direction dir, Slice slice) const
-{
-  NS_LOG_FUNCTION (this << dir << slice);
-
-  switch (m_slicingMode)
-    {
-    case OperationMode::OFF:
-      return GetMaxBitRate (slice);
-    case OperationMode::ON:
-      return GetFreeBitRate (dir, slice);
-    case OperationMode::AUTO:
-      return GetFreeBitRate (dir, Slice::ALL);
-    default:
-      return 0;
-    }
-}
-
-double
-ConnectionInfo::GetMeterSliceRatio (Direction dir, Slice slice) const
-{
-  NS_LOG_FUNCTION (this << dir);
-
-  return static_cast<double> (GetMeterBitRate (dir, slice))
-         / GetMaxBitRate (slice);
-}
-
 DpIdPair_t
 ConnectionInfo::GetSwitchDpIdPair (void) const
 {
@@ -536,29 +509,23 @@ ConnectionInfo::UpdateMeterDiff (Direction dir, Slice slice, uint64_t bitRate,
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate << reserve);
 
-  // We update the meter diff when the slicing mechanis is enabled in "auto"
-  // mode for all slices, or in "on" mode only for the default slice.
-  if ((m_slicingMode == OperationMode::ON && slice == Slice::DFT)
-      || m_slicingMode == OperationMode::AUTO)
+  if (reserve)
     {
-      if (reserve)
-        {
-          m_slices [slice].meterDiff [dir] -= bitRate;
-        }
-      else // release
-        {
-          m_slices [slice].meterDiff [dir] += bitRate;
-        }
+      m_slices [slice].meterDiff [dir] -= bitRate;
+    }
+  else // release
+    {
+      m_slices [slice].meterDiff [dir] += bitRate;
+    }
 
-      NS_LOG_DEBUG ("Current diff: " << m_slices [slice].meterDiff [dir]);
-      if (std::abs (m_slices [slice].meterDiff [dir]) >=
-          std::abs (m_adjustmentStep.GetBitRate ()))
-        {
-          // Fire adjusted trace source to update meters.
-          NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
-          m_meterAdjustedTrace (Ptr<ConnectionInfo> (this), dir, slice);
-          m_slices [slice].meterDiff [dir] = 0;
-        }
+  NS_LOG_DEBUG ("Current diff: " << m_slices [slice].meterDiff [dir]);
+  if (std::abs (m_slices [slice].meterDiff [dir]) >=
+      std::abs (m_adjustmentStep.GetBitRate ()))
+    {
+      // Fire meter adjusted trace source to update meters.
+      NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
+      m_meterAdjustedTrace (Ptr<ConnectionInfo> (this), dir, slice);
+      m_slices [slice].meterDiff [dir] = 0;
     }
 }
 
