@@ -38,6 +38,8 @@ std::string SliceStr (Slice slice)
       return "gbr";
     case Slice::MTC:
       return "mtc";
+    case Slice::ALL:
+      return "all";
     default:
       return "-";
     }
