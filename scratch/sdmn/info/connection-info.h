@@ -25,7 +25,6 @@
 #include <ns3/network-module.h>
 #include <ns3/csma-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "../epc/epc-controller.h"
 #include "../info/routing-info.h"
 
 namespace ns3 {
@@ -99,8 +98,8 @@ public:
    * Internal channel handling is based on this order to get correct
    * full-duplex links.
    */
-  ConnectionInfo (SwitchData sw1, SwitchData sw2,
-                  Ptr<CsmaChannel> channel, OperationMode slicing);
+  ConnectionInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel,
+                  bool slicing);
   virtual ~ConnectionInfo ();   //!< Dummy destructor, see DoDispose.
 
   /**
@@ -336,7 +335,7 @@ private:
   SwitchData        m_switches [2];         //!< Switches metadata.
   Ptr<CsmaChannel>  m_channel;              //!< The CSMA link channel.
   Time              m_lastUpdate;           //!< Last update time.
-  OperationMode     m_slicingMode;          //!< Network slicing mode.
+  bool              m_slicing;              //!< Network slicing enable.
   SliceData         m_slices [Slice::ALL];  //!< Slicing metadata.
 
   DataRate          m_adjustmentStep;       //!< Meter adjustment step.

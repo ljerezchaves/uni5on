@@ -34,10 +34,9 @@ ConnectionInfo::ConnInfoMap_t ConnectionInfo::m_connectionsMap;
 ConnInfoList_t ConnectionInfo::m_connectionsList;
 
 ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
-                                Ptr<CsmaChannel> channel,
-                                OperationMode slicing)
+                                Ptr<CsmaChannel> channel, bool slicing)
   : m_channel (channel),
-    m_slicingMode (slicing)
+    m_slicing (slicing)
 {
   NS_LOG_FUNCTION (this << sw1.swDev << sw2.swDev << channel << slicing);
 
@@ -445,11 +444,7 @@ ConnectionInfo::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_slicingMode == OperationMode::OFF)
-    {
-      m_slices [Slice::DFT].maxRate = GetLinkBitRate ();
-    }
-  else
+  if (m_slicing)
     {
       uint64_t mtcRate, gbrRate, dftRate;
       mtcRate = static_cast<uint64_t> (GetLinkBitRate () * m_mtcSliceQuota);
@@ -459,6 +454,10 @@ ConnectionInfo::NotifyConstructionCompleted (void)
       m_slices [Slice::MTC].maxRate = mtcRate;
       m_slices [Slice::GBR].maxRate = gbrRate;
       m_slices [Slice::DFT].maxRate = dftRate;
+    }
+  else
+    {
+      m_slices [Slice::DFT].maxRate = GetLinkBitRate ();
     }
 
   NS_LOG_DEBUG ("DFT maximum bit rate: " <<  m_slices [Slice::DFT].maxRate);
