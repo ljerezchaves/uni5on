@@ -44,8 +44,9 @@ public:
     std::vector<uint64_t>     fwdBytes;     //!< FWD TX bytes per connetion.
     std::vector<uint64_t>     bwdBytes;     //!< BWD TX bytes per connetion.
 
+    Ptr<OutputStreamWrapper>  nonWrapper;   //!< NonStats file wrapper.
     Ptr<OutputStreamWrapper>  resWrapper;   //!< RegStats file wrapper.
-    Ptr<OutputStreamWrapper>  thpWrapper;   //!< RenStats file wrapper.
+    Ptr<OutputStreamWrapper>  thpWrapper;   //!< ThpStats file wrapper.
     Ptr<OutputStreamWrapper>  useWrapper;   //!< UseStats file wrapper.
   };
 
@@ -76,12 +77,13 @@ private:
   Time                      m_lastUpdate;   //!< Last update time.
 
   std::string               m_prefix;       //!< Common filename prefix.
+  std::string               m_nonSuffix;    //!< Non filename suffix.
   std::string               m_resSuffix;    //!< Res filename suffix.
   std::string               m_thpSuffix;    //!< Thp filename suffix.
   std::string               m_useSuffix;    //!< Use filename suffix.
 
-  std::string               m_dftFilename;  //!< Dft max stats filename.
-  Ptr<OutputStreamWrapper>  m_dftWrapper;   //!< Dft max stats file wrapper.
+  std::string               m_shrFilename;  //!< Shared non stats filename.
+  Ptr<OutputStreamWrapper>  m_shrWrapper;   //!< Shared non stats file wrapper.
 
   SliceStats                m_slices [Slice::ALL];  //!< Slice statistics.
 };

@@ -46,19 +46,24 @@ BackhaulStatsCalculator::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::BackhaulStatsCalculator")
     .SetParent<Object> ()
     .AddConstructor<BackhaulStatsCalculator> ()
-    .AddAttribute ("DftStatsFilename",
-                   "Filename for default maximum link usage ratio statistics.",
-                   StringValue ("backhaul-dft-max.log"),
+    .AddAttribute ("ShrStatsFilename",
+                   "Filename for shared non-reserved ratio statistics.",
+                   StringValue ("backhaul-all-non.log"),
                    MakeStringAccessor (
-                     &BackhaulStatsCalculator::m_dftFilename),
+                     &BackhaulStatsCalculator::m_shrFilename),
                    MakeStringChecker ())
     .AddAttribute ("StatsPrefix",
                    "Filename prefix for slice statistics.",
                    StringValue ("backhaul-"),
                    MakeStringAccessor (&BackhaulStatsCalculator::m_prefix),
                    MakeStringChecker ())
+    .AddAttribute ("NonStatsSuffix",
+                   "Filename suffix for slice non-reserved ratio statistics.",
+                   StringValue ("-non.log"),
+                   MakeStringAccessor (&BackhaulStatsCalculator::m_nonSuffix),
+                   MakeStringChecker ())
     .AddAttribute ("ResStatsSuffix",
-                   "Filename suffix for slice reservation statistics.",
+                   "Filename suffix for slice reserved ratio statistics.",
                    StringValue ("-res.log"),
                    MakeStringAccessor (&BackhaulStatsCalculator::m_resSuffix),
                    MakeStringChecker ())
@@ -81,10 +86,11 @@ BackhaulStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_dftWrapper = 0;
+  m_shrWrapper = 0;
   m_connections.clear ();
   for (int i = 0; i < Slice::ALL; i++)
     {
+      m_slices [i].nonWrapper = 0;
       m_slices [i].resWrapper = 0;
       m_slices [i].thpWrapper = 0;
       m_slices [i].useWrapper = 0;
@@ -101,11 +107,11 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
-  SetAttribute ("DftStatsFilename", StringValue (prefix + m_dftFilename));
+  SetAttribute ("ShrStatsFilename", StringValue (prefix + m_shrFilename));
   SetAttribute ("StatsPrefix", StringValue (prefix + m_prefix));
 
-  m_dftWrapper = Create<OutputStreamWrapper> (m_dftFilename, std::ios::out);
-  *m_dftWrapper->GetStream ()
+  m_shrWrapper = Create<OutputStreamWrapper> (m_shrFilename, std::ios::out);
+  *m_shrWrapper->GetStream ()
   << left << fixed << setprecision (4)
   << setw (12) << "Time(s)";
 
@@ -115,15 +121,21 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
     {
       DpIdPair_t key = (*it)->GetSwitchDpIdPair ();
 
-      *m_dftWrapper->GetStream ()
+      *m_shrWrapper->GetStream ()
       << right << setw (4) << key.first  << "-"
       << left  << setw (4) << key.second << "   ";
     }
-  *m_dftWrapper->GetStream () << left << std::endl;
+  *m_shrWrapper->GetStream () << left << std::endl;
 
   for (int i = 0; i < Slice::ALL; i++)
     {
       std::string statsPrefix = m_prefix + SliceStr (static_cast<Slice> (i));
+
+      m_slices [i].nonWrapper = Create<OutputStreamWrapper> (
+          statsPrefix + m_nonSuffix, std::ios::out);
+      *m_slices [i].nonWrapper->GetStream ()
+      << left << fixed << setprecision (4)
+      << setw (12) << "Time(s)";
 
       m_slices [i].resWrapper = Create<OutputStreamWrapper> (
           statsPrefix + m_resSuffix, std::ios::out);
@@ -147,6 +159,10 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
         {
           DpIdPair_t key = (*it)->GetSwitchDpIdPair ();
 
+          *m_slices [i].nonWrapper->GetStream ()
+          << right << setw (4) << key.first  << "-"
+          << left  << setw (4) << key.second << "   ";
+
           *m_slices [i].resWrapper->GetStream ()
           << right << setw (4) << key.first  << "-"
           << left  << setw (4) << key.second << "   ";
@@ -162,6 +178,7 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
           m_slices [i].fwdBytes.push_back (0);
           m_slices [i].bwdBytes.push_back (0);
         }
+      *m_slices [i].nonWrapper->GetStream () << left << std::endl;
       *m_slices [i].resWrapper->GetStream () << left << std::endl;
       *m_slices [i].thpWrapper->GetStream () << left << std::endl;
       *m_slices [i].useWrapper->GetStream () << left << std::endl;
@@ -182,7 +199,7 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
 
   double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
 
-  *m_dftWrapper->GetStream ()
+  *m_shrWrapper->GetStream ()
   << left << setprecision (4)
   << setw (12) << Simulator::Now ().GetSeconds ()
   << setprecision (2);
@@ -194,17 +211,22 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
        it != m_connections.end (); ++it, ++cIdx)
     {
       cInfo = *it;
-      *m_dftWrapper->GetStream ()
+      *m_shrWrapper->GetStream ()
       << right
-      << setw (4) << cInfo->GetMeterSliceRatio (
-        ConnectionInfo::FWD, Slice::DFT) << " "
-      << setw (4) << cInfo->GetMeterSliceRatio (
-        ConnectionInfo::BWD, Slice::DFT) << "   ";
+      << setw (4) << cInfo->GetFreeSliceRatio (
+        ConnectionInfo::FWD, Slice::ALL) << " "
+      << setw (4) << cInfo->GetFreeSliceRatio (
+        ConnectionInfo::BWD, Slice::ALL) << "   ";
     }
-  *m_dftWrapper->GetStream () << std::endl;
+  *m_shrWrapper->GetStream () << std::endl;
 
   for (int i = 0; i < Slice::ALL; i++)
     {
+      *m_slices [i].nonWrapper->GetStream ()
+      << left << setprecision (4)
+      << setw (12) << Simulator::Now ().GetSeconds ()
+      << setprecision (2);
+
       *m_slices [i].resWrapper->GetStream ()
       << left << setprecision (4)
       << setw (12) << Simulator::Now ().GetSeconds ()
@@ -243,6 +265,13 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
           << setw (10) << fwdKbits / elapSecs << " "
           << setw (10) << bwdKbits / elapSecs << "   ";
 
+          *m_slices [i].nonWrapper->GetStream ()
+          << right
+          << setw (4) << cInfo->GetFreeSliceRatio (
+            ConnectionInfo::FWD, static_cast<Slice> (i)) << " "
+          << setw (4) << cInfo->GetFreeSliceRatio (
+            ConnectionInfo::BWD, static_cast<Slice> (i)) << "   ";
+
           *m_slices [i].resWrapper->GetStream ()
           << right
           << setw (4) << cInfo->GetResSliceRatio (
@@ -258,6 +287,7 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
             ConnectionInfo::BWD, static_cast<Slice> (i)) << "   ";
         }
       *m_slices [i].thpWrapper->GetStream () << setfill (' ') << std::endl;
+      *m_slices [i].nonWrapper->GetStream () << std::endl;
       *m_slices [i].resWrapper->GetStream () << std::endl;
       *m_slices [i].useWrapper->GetStream () << std::endl;
     }
