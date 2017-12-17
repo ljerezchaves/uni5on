@@ -375,48 +375,30 @@ LteNetwork::ConfigureUes ()
 
   // Spread HTC UEs under eNBs coverage area.
   MobilityHelper htcMobHelper;
+  htcMobHelper.SetPositionAllocator (boxPosAllocator);
   if (m_htcUeMobility)
     {
       htcMobHelper.SetMobilityModel (
-        "ns3::SteadyStateRandomWaypointMobilityModel",
-        "MinX",     DoubleValue (m_coverageArea.xMin),
-        "MaxX",     DoubleValue (m_coverageArea.xMax),
-        "MinY",     DoubleValue (m_coverageArea.yMin),
-        "MaxY",     DoubleValue (m_coverageArea.yMax),
-        "Z",        DoubleValue (m_ueHeight),
-        "MaxSpeed", DoubleValue (10),
-        "MinSpeed", DoubleValue (10));
-      htcMobHelper.Install (m_htcUeNodes);
+        "ns3::RandomWaypointMobilityModel",
+        "Speed", StringValue ("ns3::UniformRandomVariable[Min=0.7|Max=1.5]"),
+        "Pause", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=10.0]"),
+        "PositionAllocator", PointerValue (boxPosAllocator));
     }
-  else
-    {
-      htcMobHelper.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-      htcMobHelper.SetPositionAllocator (boxPosAllocator);
-      htcMobHelper.Install (m_htcUeNodes);
-    }
+  htcMobHelper.Install (m_htcUeNodes);
   BuildingsHelper::Install (m_htcUeNodes);
 
   // Spread MTC UEs under eNBs coverage area.
   MobilityHelper mtcMobHelper;
+  mtcMobHelper.SetPositionAllocator (boxPosAllocator);
   if (m_mtcUeMobility)
     {
       mtcMobHelper.SetMobilityModel (
-        "ns3::SteadyStateRandomWaypointMobilityModel",
-        "MinX",     DoubleValue (m_coverageArea.xMin),
-        "MaxX",     DoubleValue (m_coverageArea.xMax),
-        "MinY",     DoubleValue (m_coverageArea.yMin),
-        "MaxY",     DoubleValue (m_coverageArea.yMax),
-        "Z",        DoubleValue (m_ueHeight),
-        "MaxSpeed", DoubleValue (10),
-        "MinSpeed", DoubleValue (10));
-      mtcMobHelper.Install (m_mtcUeNodes);
+        "ns3::RandomWaypointMobilityModel",
+        "Speed", StringValue ("ns3::UniformRandomVariable[Min=5.0|Max=18.0]"),
+        "Pause", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=10.0]"),
+        "PositionAllocator", PointerValue (boxPosAllocator));
     }
-  else
-    {
-      mtcMobHelper.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-      mtcMobHelper.SetPositionAllocator (boxPosAllocator);
-      mtcMobHelper.Install (m_mtcUeNodes);
-    }
+  mtcMobHelper.Install (m_mtcUeNodes);
   BuildingsHelper::Install (m_mtcUeNodes);
 
   // Install LTE protocol stack into UE nodes.
@@ -576,7 +558,6 @@ LteNetwork::PrintRadioEnvironmentMap ()
       << "front point pt 1 lw 2 ps 0.3 lc rgb 'grey'"
       << std::endl;
     }
-
 
   // Cell site positions.
   for (NetDeviceContainer::Iterator it = m_enbDevices.Begin ();
