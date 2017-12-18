@@ -90,6 +90,7 @@ RandomWaypointMobilityModel::DoInitializePrivate (void)
   m_helper.Update ();
   m_helper.Pause ();
   Time pause = Seconds (m_pause->GetValue ());
+  m_event.Cancel ();
   m_event = Simulator::Schedule (pause, &RandomWaypointMobilityModel::BeginWalk, this);
   NotifyCourseChange ();
 }
@@ -104,7 +105,7 @@ void
 RandomWaypointMobilityModel::DoSetPosition (const Vector &position)
 {
   m_helper.SetPosition (position);
-  Simulator::Remove (m_event);
+  m_event.Cancel ();
   m_event = Simulator::ScheduleNow (&RandomWaypointMobilityModel::DoInitializePrivate, this);
 }
 Vector
