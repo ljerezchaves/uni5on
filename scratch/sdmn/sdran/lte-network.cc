@@ -223,7 +223,7 @@ LteNetwork::NotifyConstructionCompleted ()
   // Make the buildings mobility model consistent.
   BuildingsHelper::MakeMobilityModelConsistent ();
 
-  // Chain up
+  // Chain up.
   Object::NotifyConstructionCompleted ();
 
   // If enable, print the LTE radio environment map.
@@ -380,8 +380,8 @@ LteNetwork::ConfigureUes ()
     {
       htcMobHelper.SetMobilityModel (
         "ns3::RandomWaypointMobilityModel",
-        "Speed", StringValue ("ns3::UniformRandomVariable[Min=0.7|Max=1.5]"),
-        "Pause", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=10.0]"),
+        "Speed", StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=15.0]"),
+        "Pause", StringValue ("ns3::ExponentialRandomVariable[Mean=25.0]"),
         "PositionAllocator", PointerValue (boxPosAllocator));
     }
   htcMobHelper.Install (m_htcUeNodes);
@@ -394,8 +394,8 @@ LteNetwork::ConfigureUes ()
     {
       mtcMobHelper.SetMobilityModel (
         "ns3::RandomWaypointMobilityModel",
-        "Speed", StringValue ("ns3::UniformRandomVariable[Min=5.0|Max=18.0]"),
-        "Pause", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=10.0]"),
+        "Speed", StringValue ("ns3::UniformRandomVariable[Min=5.0|Max=30.0]"),
+        "Pause", StringValue ("ns3::ExponentialRandomVariable[Mean=10.0]"),
         "PositionAllocator", PointerValue (boxPosAllocator));
     }
   mtcMobHelper.Install (m_mtcUeNodes);
