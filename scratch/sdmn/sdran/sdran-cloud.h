@@ -66,11 +66,10 @@ public:
   Ptr<OFSwitch13Device> GetSgwSwitchDevice (void) const;
   //\}
 
-  // Implementing some of the EpcHelper methods that are redirected to here
-  // from the EpcNetwork class.
+  // Implementing the EpcHelper::AddEnb method that is redirected to here from
+  // the EpcNetwork class.
   virtual void AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice,
                        uint16_t cellId);
-  virtual void AddX2Interface (Ptr<Node> enbNode1, Ptr<Node> enbNode2);
 
   /**
    * Enable PCAP traces on the internal SDRAN OpenFlow network (user and

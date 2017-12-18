@@ -235,13 +235,6 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
 }
 
 void
-SdranCloud::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
-{
-  NS_LOG_FUNCTION (this << enb1 << enb2);
-  // TODO
-}
-
-void
 SdranCloud::EnablePcap (std::string prefix, bool promiscuous)
 {
   NS_LOG_FUNCTION (this << prefix << promiscuous);
