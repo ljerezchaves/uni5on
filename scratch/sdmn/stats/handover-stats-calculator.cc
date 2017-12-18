@@ -20,16 +20,17 @@
 
 #include <iomanip>
 #include <iostream>
-#include "connection-stats-calculator.h"
+#include <ns3/mobility-model.h>
+#include "handover-stats-calculator.h"
 
 using namespace std;
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("ConnectionStatsCalculator");
-NS_OBJECT_ENSURE_REGISTERED (ConnectionStatsCalculator);
+NS_LOG_COMPONENT_DEFINE ("HandoverStatsCalculator");
+NS_OBJECT_ENSURE_REGISTERED (HandoverStatsCalculator);
 
-ConnectionStatsCalculator::ConnectionStatsCalculator ()
+HandoverStatsCalculator::HandoverStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -37,75 +38,103 @@ ConnectionStatsCalculator::ConnectionStatsCalculator ()
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/InitialCellSelectionEndOk",
     MakeCallback (
-      &ConnectionStatsCalculator::NotifyInitialCellSelectionEndOk, this));
+      &HandoverStatsCalculator::NotifyInitialCellSelectionEndOk, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/InitialCellSelectionEndError",
     MakeCallback (
-      &ConnectionStatsCalculator::NotifyInitialCellSelectionEndError, this));
+      &HandoverStatsCalculator::NotifyInitialCellSelectionEndError, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionEstablished",
     MakeCallback (
-      &ConnectionStatsCalculator::NotifyConnectionEstablished, this));
+      &HandoverStatsCalculator::NotifyConnectionEstablished, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionTimeout",
     MakeCallback (
-      &ConnectionStatsCalculator::NotifyConnectionTimeout, this));
+      &HandoverStatsCalculator::NotifyConnectionTimeout, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionReconfiguration",
     MakeCallback (
-      &ConnectionStatsCalculator::NotifyConnectionReconfiguration, this));
+      &HandoverStatsCalculator::NotifyConnectionReconfiguration, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/HandoverStart",
     MakeCallback (
-      &ConnectionStatsCalculator::NotifyHandoverStart, this));
+      &HandoverStatsCalculator::NotifyHandoverStart, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/HandoverEndOk",
     MakeCallback (
-      &ConnectionStatsCalculator::NotifyHandoverEndOk, this));
+      &HandoverStatsCalculator::NotifyHandoverEndOk, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/HandoverEndError",
     MakeCallback (
-      &ConnectionStatsCalculator::NotifyHandoverEndError, this));
+      &HandoverStatsCalculator::NotifyHandoverEndError, this));
+  Config::Connect (
+    "/NodeList/*/$ns3::MobilityModel/CourseChange",
+    MakeCallback (
+      &HandoverStatsCalculator::NotifyMobilityCourseChange, this));
 }
 
-ConnectionStatsCalculator::~ConnectionStatsCalculator ()
+HandoverStatsCalculator::~HandoverStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-ConnectionStatsCalculator::GetTypeId (void)
+HandoverStatsCalculator::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::ConnectionStatsCalculator")
+  static TypeId tid = TypeId ("ns3::HandoverStatsCalculator")
     .SetParent<Object> ()
-    .AddConstructor<ConnectionStatsCalculator> ()
+    .AddConstructor<HandoverStatsCalculator> ()
+    .AddAttribute ("MobStatsFilename",
+                   "Filename for LTE UE mobility model statistics.",
+                   StringValue ("handover-mobility.log"),
+                   MakeStringAccessor (
+                     &HandoverStatsCalculator::m_mobFilename),
+                   MakeStringChecker ())
     .AddAttribute ("RrcStatsFilename",
                    "Filename for LTE UE RRC procedures statistics.",
-                   StringValue ("connection-ue-rrc.log"),
+                   StringValue ("handover-connection.log"),
                    MakeStringAccessor (
-                     &ConnectionStatsCalculator::m_rrcFilename),
+                     &HandoverStatsCalculator::m_rrcFilename),
                    MakeStringChecker ())
   ;
   return tid;
 }
 
 void
-ConnectionStatsCalculator::DoDispose ()
+HandoverStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
+  m_mobWrapper = 0;
   m_rrcWrapper = 0;
 }
 
 void
-ConnectionStatsCalculator::NotifyConstructionCompleted (void)
+HandoverStatsCalculator::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
+  SetAttribute ("MobStatsFilename", StringValue (prefix + m_mobFilename));
   SetAttribute ("RrcStatsFilename", StringValue (prefix + m_rrcFilename));
+
+  m_mobWrapper = Create<OutputStreamWrapper> (m_mobFilename, std::ios::out);
+  *m_mobWrapper->GetStream ()
+  << fixed << setprecision (4)
+  << left
+  << setw (12) << "Time(s)"
+  << right
+  << setw (8) << "NodeId"
+  << setw (10) << "NodeName"
+  << setw (10) << "PosX"
+  << setw (10) << "PosY"
+  << setw (10) << "PosZ"
+  << setw (10) << "VelX"
+  << setw (10) << "VelY"
+  << setw (10) << "VelZ"
+  << std::endl;
 
   m_rrcWrapper = Create<OutputStreamWrapper> (m_rrcFilename, std::ios::out);
   *m_rrcWrapper->GetStream ()
@@ -124,7 +153,7 @@ ConnectionStatsCalculator::NotifyConstructionCompleted (void)
 }
 
 void
-ConnectionStatsCalculator::NotifyInitialCellSelectionEndOk (
+HandoverStatsCalculator::NotifyInitialCellSelectionEndOk (
   std::string context, uint64_t imsi, uint16_t cellId)
 {
   *m_rrcWrapper->GetStream ()
@@ -138,7 +167,7 @@ ConnectionStatsCalculator::NotifyInitialCellSelectionEndOk (
 }
 
 void
-ConnectionStatsCalculator::NotifyInitialCellSelectionEndError (
+HandoverStatsCalculator::NotifyInitialCellSelectionEndError (
   std::string context, uint64_t imsi, uint16_t cellId)
 {
   *m_rrcWrapper->GetStream ()
@@ -152,7 +181,7 @@ ConnectionStatsCalculator::NotifyInitialCellSelectionEndError (
 }
 
 void
-ConnectionStatsCalculator::NotifyConnectionEstablished (
+HandoverStatsCalculator::NotifyConnectionEstablished (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
@@ -167,7 +196,7 @@ ConnectionStatsCalculator::NotifyConnectionEstablished (
 }
 
 void
-ConnectionStatsCalculator::NotifyConnectionTimeout (
+HandoverStatsCalculator::NotifyConnectionTimeout (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
@@ -182,7 +211,7 @@ ConnectionStatsCalculator::NotifyConnectionTimeout (
 }
 
 void
-ConnectionStatsCalculator::NotifyConnectionReconfiguration (
+HandoverStatsCalculator::NotifyConnectionReconfiguration (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
@@ -197,7 +226,7 @@ ConnectionStatsCalculator::NotifyConnectionReconfiguration (
 }
 
 void
-ConnectionStatsCalculator::NotifyHandoverStart (
+HandoverStatsCalculator::NotifyHandoverStart (
   std::string context, uint64_t imsi, uint16_t srcCellId, uint16_t rnti,
   uint16_t dstCellId)
 {
@@ -214,7 +243,7 @@ ConnectionStatsCalculator::NotifyHandoverStart (
 }
 
 void
-ConnectionStatsCalculator::NotifyHandoverEndOk (
+HandoverStatsCalculator::NotifyHandoverEndOk (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
@@ -229,7 +258,7 @@ ConnectionStatsCalculator::NotifyHandoverEndOk (
 }
 
 void
-ConnectionStatsCalculator::NotifyHandoverEndError (
+HandoverStatsCalculator::NotifyHandoverEndError (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
@@ -240,6 +269,29 @@ ConnectionStatsCalculator::NotifyHandoverEndError (
   << " " << setw (7) << imsi
   << " " << setw (7) << cellId
   << " " << setw (7) << rnti
+  << std::endl;
+}
+
+void
+HandoverStatsCalculator::NotifyMobilityCourseChange (
+  std::string context, Ptr<const MobilityModel> mobility)
+{
+  Ptr<Node> node = mobility->GetObject<Node> ();
+  Vector position = mobility->GetPosition ();
+  Vector velocity = mobility->GetVelocity ();
+
+  *m_mobWrapper->GetStream ()
+  << left << setprecision (4)
+  << setw (11) << Simulator::Now ().GetSeconds ()
+  << right << setprecision (2)
+  << " " << setw (8) << node->GetId ()
+  << " " << setw (9)  << Names::FindName (node)
+  << " " << setw (9)  << position.x
+  << " " << setw (9)  << position.y
+  << " " << setw (9)  << position.z
+  << " " << setw (9)  << velocity.x
+  << " " << setw (9)  << velocity.y
+  << " " << setw (9)  << velocity.z
   << std::endl;
 }
 

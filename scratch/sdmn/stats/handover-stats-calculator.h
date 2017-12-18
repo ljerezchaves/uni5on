@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef SDMN_CONNECTION_STATS_CALCULATOR_H
-#define SDMN_CONNECTION_STATS_CALCULATOR_H
+#ifndef SDMN_HANDOVER_STATS_CALCULATOR_H
+#define SDMN_HANDOVER_STATS_CALCULATOR_H
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -31,11 +31,11 @@ namespace ns3 {
  * This class monitors the SDN EPC bearer admission control and dump bearer
  * requests and blocking statistics.
  */
-class ConnectionStatsCalculator : public Object
+class HandoverStatsCalculator : public Object
 {
 public:
-  ConnectionStatsCalculator ();          //!< Default constructor.
-  virtual ~ConnectionStatsCalculator (); //!< Dummy destructor, see DoDispose.
+  HandoverStatsCalculator ();          //!< Default constructor.
+  virtual ~HandoverStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -130,10 +130,19 @@ protected:
   void NotifyHandoverEndError (
     std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
+  /**
+   * Notify a UE mobility model course change.
+   * \param mobility The UE mobility model object.
+   */
+  void NotifyMobilityCourseChange (
+    std::string context, Ptr<const MobilityModel> mobility);
+
 private:
+  std::string               m_mobFilename;    //!< MobStats filename.
+  Ptr<OutputStreamWrapper>  m_mobWrapper;     //!< MobStats file wrapper.
   std::string               m_rrcFilename;    //!< RrcStats filename.
   Ptr<OutputStreamWrapper>  m_rrcWrapper;     //!< RrcStats file wrapper.
 };
 
 } // namespace ns3
-#endif /* SDMN_CONNECTION_STATS_CALCULATOR_H */
+#endif /* SDMN_HANDOVER_STATS_CALCULATOR_H */
