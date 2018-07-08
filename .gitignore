@@ -35,6 +35,8 @@ TAGS
 
 build-dir/
 build/
+/.cproject
+/.project
 
 topos/*.log
 topos/*.dat
@@ -42,4 +44,3 @@ topos/*.gpi
 topos/*.pdf
 
 .DS_Store
-

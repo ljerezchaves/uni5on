@@ -91,8 +91,8 @@ enum WireState
  * flag to indicate if the channel is currently in use. It does not
  * take into account the distances between stations or the speed of
  * light to determine collisions.
- * Optionally, it allows for full- duplex operation when there are only two
- * attached nodes.  To implement full duplex, we internally keep two
+ * Optionally, it allows for full-duplex operation when there are only two
+ * attached nodes. To implement full duplex, we internally keep two
  * "subchannels" (one for each attached node). When in half duplex mode, only
  * the first subchannel is used.
  */
@@ -193,7 +193,7 @@ public:
    * \return True if the channel is not busy and the transmitting net
    * device is currently active.
    */
-  bool TransmitStart (Ptr<Packet> p, uint32_t srcId);
+  bool TransmitStart (Ptr<const Packet> p, uint32_t srcId);
 
   /**
    * \brief Indicates that the net device has finished transmitting
