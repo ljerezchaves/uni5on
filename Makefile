@@ -1,8 +1,8 @@
-# Makefile wrapper for waf
+# Custom Makefile for SVELTE
 
 all:
-	./waf -j4
+	./waf
 
-# free free to change this part to suit your requirements
 configure:
-	./waf configure --with-ofswitch13=/mnt/hgfs/luciano/Documents/Unicamp/doutorado/codigos/ofsoftswitch13/
+	cd ofsoftswitch13-gtp; ./boot.sh; ./configure --enable-ns3-lib; make
+	./waf configure --with-ofswitch13=./ofsoftswitch13-gtp/
