@@ -39,18 +39,17 @@ class CsmaNetDevice;
 
 /**
  * \ingroup csma
- * \brief CsmaNetDevice Record
+ * \brief CsmaNetDevice Record 
  *
  * Stores the information related to each net device that is
- * connected to the channel.
+ * connected to the channel. 
  */
-class CsmaDeviceRec
-{
+class CsmaDeviceRec {
 public:
   Ptr< CsmaNetDevice > devicePtr; //!< Pointer to the net device
   bool                 active;    //!< Is net device enabled to TX/RX
 
-  CsmaDeviceRec ();
+  CsmaDeviceRec();
 
   /**
    * \brief Constructor
@@ -58,7 +57,7 @@ public:
    *
    * \param device the device to record
    */
-  CsmaDeviceRec (Ptr< CsmaNetDevice > device);
+  CsmaDeviceRec(Ptr< CsmaNetDevice > device);
 
   /**
    * Copy constructor
@@ -75,7 +74,7 @@ public:
 
 /**
  * Current state of the channel
- */
+ */ 
 enum WireState
 {
   IDLE,            /**< Channel is IDLE, no packet is being transmitted */
@@ -91,15 +90,16 @@ enum WireState
  * when many nodes are connected to one wire. It uses a single busy
  * flag to indicate if the channel is currently in use. It does not
  * take into account the distances between stations or the speed of
- * light to determine collisions.  Optionally, it allows for full-
- * duplex operation when there are only two attached nodes.  To
- * implement full duplex, we internally keep two "subchannels"
- * (one for each attached node).  When in half duplex mode, only
+ * light to determine collisions.
+ * Optionally, it allows for full- duplex operation when there are only two
+ * attached nodes.  To implement full duplex, we internally keep two
+ * "subchannels" (one for each attached node). When in half duplex mode, only
  * the first subchannel is used.
  */
-class CsmaChannel : public Channel
+class CsmaChannel : public Channel 
 {
 public:
+
   /**
    * \brief Get the type ID.
    * \return the object TypeId
@@ -221,7 +221,7 @@ public:
    * \param deviceId The ID that was assigned to the net device when
    * it was attached to the channel.
    *
-   * Calls the receive function of the other net device that is
+   * Calls the receive function of every active net device that is
    * attached to the channel.
    */
   void PropagationCompleteEvent (uint32_t deviceId);
@@ -261,7 +261,6 @@ public:
    *
    * \param deviceId The ID that was assigned to the net device when
    * it was attached to the channel.
-   *
    * \return Returns true if the net device is attached to the
    * channel, false otherwise.
    */
@@ -366,9 +365,9 @@ private:
   std::vector<CsmaDeviceRec> m_deviceList;
 
   /**
-   * The Packet that is currently being transmitted on the subchannel (or the
-   * last packet to have been transmitted if the subchannel is free).  In
-   * half duplex mode, only the first subchannel is used.
+   * The Packet that is currently being transmitted on the subchannel (or last
+   * packet to have been transmitted on the subchannel if the subchannel is
+   * free.) In half duplex mode, only the first subchannel is used.
    */
   Ptr<Packet>   m_currentPkt[2];
 
@@ -437,7 +436,6 @@ private:
    * \param state The new channel state.
    */
   void SetState (uint32_t deviceId, WireState state);
-
 };
 
 } // namespace ns3
