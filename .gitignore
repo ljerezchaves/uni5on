@@ -35,3 +35,11 @@ TAGS
 
 build-dir/
 build/
+
+topos/*.log
+topos/*.dat
+topos/*.gpi
+topos/*.pdf
+
+.DS_Store
+
