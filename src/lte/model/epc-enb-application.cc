@@ -64,7 +64,7 @@ EpcEnbApplication::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::EpcEnbApplication")
     .SetParent<Object> ()
-    .SetGroupName ("Lte")
+    .SetGroupName("Lte");
     .AddTraceSource ("S1uRx",
                      "Trace source indicating a packet received from S1-U interface.",
                      MakeTraceSourceAccessor (&EpcEnbApplication::m_rxS1uTrace),
