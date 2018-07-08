@@ -549,6 +549,7 @@ CsmaNetDevice::TransmitStart (void)
       //
       // The channel is free, transmit the packet
       //
+      m_phyTxBeginTrace (m_currentPkt);
       if (m_channel->TransmitStart (m_currentPkt, m_deviceId) == false)
         {
           NS_LOG_WARN ("Channel TransmitStart returns an error");
@@ -564,7 +565,6 @@ CsmaNetDevice::TransmitStart (void)
           //
           m_backoff.ResetBackoffTime ();
           m_txMachineState = BUSY;
-          m_phyTxBeginTrace (m_currentPkt);
 
           Time tEvent = m_bps.CalculateBytesTxTime (m_currentPkt->GetSize ());
           NS_LOG_LOGIC ("Schedule TransmitCompleteEvent in " << tEvent.GetSeconds () << "sec");
