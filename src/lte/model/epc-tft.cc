@@ -219,7 +219,7 @@ EpcTft::Default ()
 
 
 EpcTft::EpcTft ()
-: m_numFilters (0)
+: m_numFilters (0),
   m_default (false)
 {
   NS_LOG_FUNCTION (this);
