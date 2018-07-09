@@ -19,11 +19,12 @@
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#define NS_LOG_APPEND_CONTEXT \
-  { std::clog << "[Voip client teid " << GetTeid () << "] "; }
-
 #include <ns3/seq-ts-header.h>
 #include "voip-client.h"
+
+#undef NS_LOG_APPEND_CONTEXT
+#define NS_LOG_APPEND_CONTEXT \
+  { std::clog << "[Voip client teid " << GetTeid () << "] "; }
 
 namespace ns3 {
 

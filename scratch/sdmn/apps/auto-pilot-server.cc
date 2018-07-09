@@ -17,11 +17,12 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#define NS_LOG_APPEND_CONTEXT \
-  { std::clog << "[Pilot server teid " << GetTeid () << "] "; }
-
 #include <ns3/seq-ts-header.h>
 #include "auto-pilot-server.h"
+
+#undef NS_LOG_APPEND_CONTEXT
+#define NS_LOG_APPEND_CONTEXT \
+  { std::clog << "[Pilot server teid " << GetTeid () << "] "; }
 
 namespace ns3 {
 

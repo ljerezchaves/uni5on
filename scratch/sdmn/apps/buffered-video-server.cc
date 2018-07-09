@@ -18,13 +18,14 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#define NS_LOG_APPEND_CONTEXT \
-  { std::clog << "[BuffVid server teid " << GetTeid () << "] "; }
-
 #include "buffered-video-server.h"
 #include <cstdlib>
 #include <cstdio>
 #include <fstream>
+
+#undef NS_LOG_APPEND_CONTEXT
+#define NS_LOG_APPEND_CONTEXT \
+  { std::clog << "[BuffVid server teid " << GetTeid () << "] "; }
 
 namespace ns3 {
 

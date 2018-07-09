@@ -18,11 +18,12 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#define NS_LOG_APPEND_CONTEXT \
-  { std::clog << "[" << m_name << " client teid " << m_teid << "] "; }
-
 #include "sdmn-client-app.h"
 #include "sdmn-server-app.h"
+
+#undef NS_LOG_APPEND_CONTEXT
+#define NS_LOG_APPEND_CONTEXT \
+  { std::clog << "[" << m_name << " client teid " << m_teid << "] "; }
 
 namespace ns3 {
 

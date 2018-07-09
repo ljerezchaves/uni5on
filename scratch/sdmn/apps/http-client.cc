@@ -20,10 +20,11 @@
  *         Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#include "http-client.h"
+
+#undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT \
   { std::clog << "[Http client teid " << GetTeid () << "] "; }
-
-#include "http-client.h"
 
 namespace ns3 {
 

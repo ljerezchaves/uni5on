@@ -18,10 +18,11 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#include "buffered-video-client.h"
+
+#undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT \
   { std::clog << "[BuffVid client teid " << GetTeid () << "] "; }
-
-#include "buffered-video-client.h"
 
 namespace ns3 {
 

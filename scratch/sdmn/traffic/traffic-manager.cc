@@ -17,11 +17,13 @@
  *
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
-#define NS_LOG_APPEND_CONTEXT \
-  { std::clog << "[User " << m_imsi << " at cell " << m_cellId << "] "; }
 
 #include "traffic-manager.h"
 #include "../sdran/sdran-controller.h"
+
+#undef NS_LOG_APPEND_CONTEXT
+#define NS_LOG_APPEND_CONTEXT \
+  { std::clog << "[User " << m_imsi << " at cell " << m_cellId << "] "; }
 
 namespace ns3 {
 
