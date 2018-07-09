@@ -202,7 +202,7 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
       enb, TypeId::LookupByName ("ns3::UdpSocketFactory"));
   enbS1uSocket->Bind (InetSocketAddress (enbS1uAddr, EpcNetwork::m_gtpuPort));
 
-  // Create the LTE socket for the eNB
+  // Create the LTE IPv4 and IPv6 sockets for the eNB
   Ptr<Socket> enbLteSocket = Socket::CreateSocket (
       enb, TypeId::LookupByName ("ns3::PacketSocketFactory"));
   PacketSocketAddress enbLteSocketBindAddress;
@@ -216,9 +216,23 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   enbLteSocketConnectAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
   enbLteSocket->Connect (enbLteSocketConnectAddress);
 
+  Ptr<Socket> enbLteSocket6 = Socket::CreateSocket (
+      enb, TypeId::LookupByName ("ns3::PacketSocketFactory"));
+  PacketSocketAddress enbLteSocketBindAddress6;
+  enbLteSocketBindAddress6.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
+  enbLteSocketBindAddress6.SetProtocol (Ipv6L3Protocol::PROT_NUMBER);
+  enbLteSocket6->Bind (enbLteSocketBindAddress6);
+
+  PacketSocketAddress enbLteSocketConnectAddress6;
+  enbLteSocketConnectAddress6.SetPhysicalAddress (Mac48Address::GetBroadcast ());
+  enbLteSocketConnectAddress6.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
+  enbLteSocketConnectAddress6.SetProtocol (Ipv6L3Protocol::PROT_NUMBER);
+  enbLteSocket6->Connect (enbLteSocketConnectAddress6);
+
   // Create the eNB application
   Ptr<EpcEnbApplication> enbApp = CreateObject<EpcEnbApplication> (
-      enbLteSocket, enbS1uSocket, enbS1uAddr, sgwS1uAddr, cellId);
+      enbLteSocket, enbLteSocket6, enbS1uSocket,
+      enbS1uAddr, sgwS1uAddr, cellId);
   enbApp->SetS1apSapMme (m_sdranCtrlApp->GetS1apSapMme ());
   enb->AddApplication (enbApp);
   NS_ASSERT (enb->GetNApplications () == 1);

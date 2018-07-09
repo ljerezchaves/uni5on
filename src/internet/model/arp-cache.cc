@@ -592,9 +592,6 @@ ArpCache::PopulateArpCaches ()
           Ptr<NetDevice> device = ipv4Iface->GetDevice ();
           NS_ASSERT (device != 0);
 
-          Mac48Address macAddr;
-          macAddr = Mac48Address::ConvertFrom (device->GetAddress ());
-
           // Iterate over all IP addresses for this interface.
           for (uint32_t i = 0; i < ipv4Iface->GetNAddresses (); i++)
             {
@@ -608,7 +605,7 @@ ArpCache::PopulateArpCaches ()
               ArpCache::Entry *entry = arpCache->Add (ipv4Addr);
               entry->MarkWaitReply (Ipv4PayloadHeaderPair (Create<Packet> (),
                                                            Ipv4Header ()));
-              entry->MarkAlive (macAddr);
+              entry->MarkAlive (device->GetAddress ());
               entry->ClearPendingPacket ();
               entry->MarkPermanent ();
             }
