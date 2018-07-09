@@ -519,8 +519,9 @@ ConnectionInfo::UpdateMeterDiff (Direction dir, Slice slice, uint64_t bitRate,
     }
 
   NS_LOG_DEBUG ("Current diff: " << m_slices [slice].meterDiff [dir]);
-  if (std::abs (m_slices [slice].meterDiff [dir]) >=
-      std::abs (m_adjustmentStep.GetBitRate ()))
+  uint64_t diffAbs = static_cast<uint64_t> (
+      std::abs (m_slices [slice].meterDiff [dir]));
+  if (diffAbs >= m_adjustmentStep.GetBitRate ())
     {
       // Fire meter adjusted trace source to update meters.
       NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
