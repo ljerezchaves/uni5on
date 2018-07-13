@@ -1,0 +1,3 @@
+global DumpStatsTimeout "1s"
+
+default ns3::LteHexGridEnbTopologyHelper::GridWidth "2"
