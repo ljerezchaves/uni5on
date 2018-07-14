@@ -190,7 +190,8 @@ PrintCurrentTime (uint32_t interval)
 {
   if (interval)
     {
-      std::cout << "Current simulation time: " << Simulator::Now ().As (Time::S) << std::endl;
+      int64_t now = Simulator::Now ().ToInteger (Time::S);
+      std::cout << "Current simulation time: +" << now << ".0s" << std::endl;
       Simulator::Schedule (Seconds (interval), &PrintCurrentTime, interval);
     }
 }
