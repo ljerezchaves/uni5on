@@ -65,7 +65,7 @@ public:
 
   /**
    * Enable PCAP traces on the OpenFlow backhaul network (user and control
-   * planes), and on LTE EPC devices of S1U, S5, and X2 interfaces.
+   * planes), and on LTE EPC devices of S1, S5, and X2 interfaces.
    * \param prefix Filename prefix to use for pcap files.
    * \param promiscuous If true, enable promisc trace.
    */
@@ -105,15 +105,15 @@ protected:
 private:
   // Helper and attributes for EPC interfaces.
   CsmaHelper                    m_csmaHelper;     //!< Connection helper.
-  DataRate                      m_s1uLinkRate;    //!< S1U link data rate.
-  Time                          m_s1uLinkDelay;   //!< S1U link delay.
+  DataRate                      m_s1LinkRate;     //!< S1 link data rate.
+  Time                          m_s1LinkDelay;    //!< S1 link delay.
   DataRate                      m_s5LinkRate;     //!< S5 link data rate.
   Time                          m_s5LinkDelay;    //!< S5 link delay.
   DataRate                      m_x2LinkRate;     //!< X2 link data rate.
   Time                          m_x2LinkDelay;    //!< X2 link delay.
 
   // EPC user-plane devices.
-  NetDeviceContainer            m_s1uDevices;     //!< S1U devices.
+  NetDeviceContainer            m_s1Devices;      //!< S1 devices.
   NetDeviceContainer            m_s5Devices;      //!< S5 devices.
   NetDeviceContainer            m_x2Devices;      //!< X2 devices.
 };

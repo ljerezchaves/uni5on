@@ -55,20 +55,20 @@ BackhaulNetwork::GetTypeId (void)
                    UintegerValue (1492), // Ethernet II - PPoE
                    MakeUintegerAccessor (&BackhaulNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("S1ULinkDataRate",
-                   "The data rate for the link connecting an S1U interface to "
+    .AddAttribute ("S1LinkDataRate",
+                   "The data rate for the link connecting an S1 interface to "
                    "the OpenFlow backhaul network.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("10Gb/s")),
-                   MakeDataRateAccessor (&BackhaulNetwork::m_s1uLinkRate),
+                   MakeDataRateAccessor (&BackhaulNetwork::m_s1LinkRate),
                    MakeDataRateChecker ())
-    .AddAttribute ("S1ULinkDelay",
-                   "The delay for the link connecting an S1U interface to "
+    .AddAttribute ("S1LinkDelay",
+                   "The delay for the link connecting an S1 interface to "
                    "the OpenFlow backhaul network.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    // The default value is for 10km fiber cable latency.
                    TimeValue (MicroSeconds (50)),
-                   MakeTimeAccessor (&BackhaulNetwork::m_s1uLinkDelay),
+                   MakeTimeAccessor (&BackhaulNetwork::m_s1LinkDelay),
                    MakeTimeChecker ())
     .AddAttribute ("S5LinkDataRate",
                    "The data rate for the link connecting an S5 interface to "
@@ -121,10 +121,10 @@ BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous)
 
   // Enable pcap on CSMA devices.
   CsmaHelper helper;
-  helper.EnablePcap (prefix + "epc-s1u",  m_s1uDevices,  promiscuous);
-  helper.EnablePcap (prefix + "epc-s5",   m_s5Devices,   promiscuous);
-  helper.EnablePcap (prefix + "epc-x2",   m_x2Devices,   promiscuous);
-  helper.EnablePcap (prefix + "backhaul", m_switchNodes, promiscuous);
+  helper.EnablePcap (prefix + "backhaul-s1", m_s1Devices,  promiscuous);
+  helper.EnablePcap (prefix + "backhaul-s5", m_s5Devices,   promiscuous);
+  helper.EnablePcap (prefix + "backhaul-x2", m_x2Devices,   promiscuous);
+  helper.EnablePcap (prefix + "backhaul",    m_switchNodes, promiscuous);
 }
 
 void
