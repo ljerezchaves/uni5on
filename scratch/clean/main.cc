@@ -26,6 +26,7 @@
 #include <ns3/ofswitch13-module.h>
 #include "backhaul/ring-network.h"
 #include "radio/radio-network.h"
+#include "svelte-helper.h"
 
 using namespace ns3;
 using namespace ns3::ofs;
@@ -129,8 +130,9 @@ main (int argc, char *argv[])
   NS_LOG_INFO ("Creating simulation scenario...");
 
 // FIXME Construir gradativamente o cenário de simulação
-  Ptr<RingNetwork>  backhaul = CreateObject<RingNetwork> ();
-  Ptr<RadioNetwork> radio    = CreateObject<RadioNetwork> ();
+  Ptr<SvelteHelper> helper   = CreateObject<SvelteHelper> ();
+  Ptr<RingNetwork>  backhaul = CreateObject<RingNetwork>  ();
+  Ptr<RadioNetwork> radio    = CreateObject<RadioNetwork> (helper);
 //  Ptr<RingNetwork>   ofNetwork;
 //  Ptr<LteNetwork>    lteNetwork;
 //  Ptr<TrafficHelper> trafficHelper;

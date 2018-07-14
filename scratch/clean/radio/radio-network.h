@@ -30,7 +30,7 @@
 
 namespace ns3 {
 
-class BackhaulNetwork;
+class SvelteHelper;
 
 /**
  * \ingroup svelte
@@ -49,9 +49,9 @@ class RadioNetwork : public Object
 public:
   /**
    * Complete constructor.
-   * \param epcNetwork The OpenFlow EPC network.
+   * \param svelteHelper The SVELTE helper (EpcHelper).
    */
-  RadioNetwork (Ptr<BackhaulNetwork> epcNetwork); // FIXME Este é o parametro certo?
+  RadioNetwork (Ptr<SvelteHelper> svelteHelper);
 
   RadioNetwork ();           //!< Default constructor.
   virtual ~RadioNetwork ();  //!< Dummy destructor, see DoDispose.
@@ -118,10 +118,10 @@ private:
   NetDeviceContainer  m_mtcUeDevices;   //!< MTC UE devices.
   Rectangle           m_coverageArea;   //!< LTE radio coverage area.
 
-  Ptr<LteHexGridEnbTopologyHelper> m_topoHelper;  //!< Grid topology helper.
-  Ptr<RadioEnvironmentMapHelper>   m_remHelper;   //!< Radio map helper.
-  Ptr<LteHelper>                   m_lteHelper;   //!< LTE radio helper.
-  Ptr<BackhaulNetwork>             m_epcHelper;   //!< EPC helper. // FIXME
+  Ptr<LteHexGridEnbTopologyHelper> m_topoHelper;    //!< Grid topology helper.
+  Ptr<RadioEnvironmentMapHelper>   m_remHelper;     //!< Radio map helper.
+  Ptr<LteHelper>                   m_lteHelper;     //!< LTE radio helper.
+  Ptr<SvelteHelper>                m_svelteHelper;  //!< SVELTE (EPC) helper.
 };
 
 } // namespace ns3

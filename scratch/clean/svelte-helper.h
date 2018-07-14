@@ -59,7 +59,8 @@ public:
   virtual Ipv4Address GetUeDefaultGatewayAddress ();
   // Inherited from EpcHelper.
 
-  /** \name IPv4 address assign methods.
+  /**
+   * \name IPv4 address assign methods.
    * Assign IPv$ address to LTE devices at different segments.
    * \param devices The set of devices.
    * \return The interface container.

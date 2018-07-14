@@ -208,6 +208,7 @@ SvelteHelper::GetUeDefaultGatewayAddress ()
   NS_LOG_FUNCTION (this);
 
   // FIXME Deveria retornar o IP correto de acordo com o slice.
+  // Fazer variações para cada tipo de UE.
   return m_pgwAddr;
 }
 
