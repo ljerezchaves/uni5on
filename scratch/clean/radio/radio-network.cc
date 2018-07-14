@@ -280,19 +280,18 @@ RadioNetwork::ConfigureEnbs ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Create the eNBs nodes.
+  // Create the eNBs nodes and set their names.
   m_enbNodes.Create (m_nEnbs);
   uint32_t enbCounter = 0;
   NodeContainer::Iterator it;
   for (it = m_enbNodes.Begin (); it != m_enbNodes.End (); ++it)
     {
-      // Set the eNB name.
       std::ostringstream enbName;
       enbName << "enb" << ++enbCounter;
       Names::Add (enbName.str (), *it);
 
       // Attach the eNB to the backhaul network.
-      m_backhaul->AttachEnb (*it);
+      // m_backhaul->AttachEnb (*it);
     }
 
   // Set the constant mobility model for eNB positioning
@@ -306,7 +305,7 @@ RadioNetwork::ConfigureEnbs ()
   BuildingsHelper::Install (m_enbNodes);
 
   // Create an X2 interface between all the eNBs in a given set.
-  m_lteHelper->AddX2Interface (m_enbNodes); // FIXME Funciona?
+  m_lteHelper->AddX2Interface (m_enbNodes); // TODO: Implementar no EpcHelper.
 
   // Identify the LTE radio coverage area based on eNB nodes positions.
   std::vector<double> xPos, yPos;

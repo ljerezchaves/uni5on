@@ -165,6 +165,13 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t ce
 {
   NS_LOG_FUNCTION (this << enb << lteEnbNetDevice << cellId);
 
+  NS_ASSERT (enb == lteEnbNetDevice->GetNode ());
+
+  // Add an IPv4 stack to the previously created eNB
+  InternetStackHelper internet;
+  internet.Install (enb);
+
+
   // TODO
 }
 

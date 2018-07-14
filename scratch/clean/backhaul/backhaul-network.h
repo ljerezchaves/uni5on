@@ -100,7 +100,7 @@ protected:
 
   /**
    * Get the switch datapath ID at which the given eNB should be connected.
-   * \param cellId The eNB cell id.
+   * \param cellId The eNB cell ID.
    * \return The switch datapath ID.
    */
   virtual uint64_t TopologyGetEnbSwitch (uint16_t cellId) = 0;
