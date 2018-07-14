@@ -35,7 +35,11 @@ namespace ns3 {
 class RingNetwork : public BackhaulNetwork
 {
 public:
-  RingNetwork ();           //!< Default constructor.
+  /**
+   * Complete constructor.
+   * \param helper The SVELTE helper.
+   */
+  RingNetwork (Ptr<SvelteHelper> helper);
   virtual ~RingNetwork ();  //!< Dummy destructor, see DoDispose.
 
   /**

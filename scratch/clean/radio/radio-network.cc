@@ -20,16 +20,19 @@
 
 #include "radio-network.h"
 #include "../svelte-helper.h"
+#include "../backhaul/backhaul-network.h"
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("RadioNetwork");
 NS_OBJECT_ENSURE_REGISTERED (RadioNetwork);
 
-RadioNetwork::RadioNetwork (Ptr<SvelteHelper> svelteHelper)
-  : m_svelteHelper (svelteHelper)
+RadioNetwork::RadioNetwork (Ptr<SvelteHelper> helper,
+                            Ptr<BackhaulNetwork> backhaul)
+  : m_svelteHelper (helper),
+  m_backhaul (backhaul)
 {
-  NS_LOG_FUNCTION (this << svelteHelper);
+  NS_LOG_FUNCTION (this << helper);
 
   // Adjust filenames for LTE trace files before creating the network.
   StringValue stringValue;
@@ -62,11 +65,6 @@ RadioNetwork::RadioNetwork (Ptr<SvelteHelper> svelteHelper)
                       StringValue (prefix + "dl_tx_phy_lte.log"));
   Config::SetDefault ("ns3::PhyTxStatsCalculator::UlTxOutputFilename",
                       StringValue (prefix + "ul_tx_phy_lte.log"));
-}
-
-RadioNetwork::RadioNetwork ()
-{
-  NS_LOG_FUNCTION (this);
 }
 
 RadioNetwork::~RadioNetwork ()
@@ -203,6 +201,7 @@ RadioNetwork::DoDispose ()
   m_remHelper = 0;
   m_lteHelper = 0;
   m_svelteHelper = 0;
+  m_backhaul = 0;
   Object::DoDispose ();
 }
 
@@ -281,22 +280,20 @@ RadioNetwork::ConfigureEnbs ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Create the eNBs nodes and set their names.
+  // Create the eNBs nodes.
   m_enbNodes.Create (m_nEnbs);
   uint32_t enbCounter = 0;
   NodeContainer::Iterator it;
   for (it = m_enbNodes.Begin (); it != m_enbNodes.End (); ++it)
     {
+      // Set the eNB name.
       std::ostringstream enbName;
       enbName << "enb" << ++enbCounter;
       Names::Add (enbName.str (), *it);
-    }
 
-  // Attach each eNB to the backhaul network.
-  // m_epcNetwork->AttachSdranCloud (); // FIXME Fazer um for aqui!
-  // FIXME Anteriormente isto aqui conectava o SGW de cada SDRAN no backhaul.
-  // Agora eu vou conectar cada eNB diretamente lá. Ainda não sei como informar
-  // em qual switch conectar. Onde será que essa informação deve ficar?
+      // Attach the eNB to the backhaul network.
+      m_backhaul->AttachEnb (*it);
+    }
 
   // Set the constant mobility model for eNB positioning
   MobilityHelper mobilityHelper;
@@ -309,7 +306,7 @@ RadioNetwork::ConfigureEnbs ()
   BuildingsHelper::Install (m_enbNodes);
 
   // Create an X2 interface between all the eNBs in a given set.
-  // m_lteHelper->AddX2Interface (m_enbNodes); // FIXME ???? Isso aqui funciona?
+  m_lteHelper->AddX2Interface (m_enbNodes); // FIXME Funciona?
 
   // Identify the LTE radio coverage area based on eNB nodes positions.
   std::vector<double> xPos, yPos;

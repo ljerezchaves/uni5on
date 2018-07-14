@@ -21,15 +21,18 @@
 #include "ring-network.h"
 #include "ring-controller.h"
 #include "connection-info.h"
+#include "../svelte-helper.h"
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("RingNetwork");
 NS_OBJECT_ENSURE_REGISTERED (RingNetwork);
 
-RingNetwork::RingNetwork ()
+RingNetwork::RingNetwork (Ptr<SvelteHelper> helper)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << helper);
+
+  m_svelteHelper = helper;
 }
 
 RingNetwork::~RingNetwork ()
@@ -42,7 +45,6 @@ RingNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RingNetwork")
     .SetParent<BackhaulNetwork> ()
-    .AddConstructor<RingNetwork> ()
     .AddAttribute ("NumRingSwitches",
                    "The number of OpenFlow switches in the ring (at least 3).",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,

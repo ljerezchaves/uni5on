@@ -30,6 +30,7 @@ namespace ns3 {
 
 class BackhaulController;
 class ConnectionInfo;
+class SvelteHelper;
 
 /**
  * \ingroup svelte
@@ -71,6 +72,13 @@ public:
    */
   void EnablePcap (std::string prefix, bool promiscuous = false);
 
+  /**
+   * Configure and connect the eNB node to the S1 interface on the OpenFlow
+   * backhaul network.
+   * \param enb The eNB node pointer.
+   */
+  virtual void AttachEnb (Ptr<Node> enb);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose (void);
@@ -95,10 +103,13 @@ protected:
   Ptr<Node>                     m_controllerNode; //!< Controller node.
 
   // OpenFlow switches, helper and connection attribute.
+  Ptr<OFSwitch13InternalHelper> m_switchHelper;   //!< Switch helper.
   NodeContainer                 m_switchNodes;    //!< Switch nodes.
   OFSwitch13DeviceContainer     m_switchDevices;  //!< Switch devices.
-  Ptr<OFSwitch13InternalHelper> m_switchHelper;   //!< Switch helper.
   uint16_t                      m_linkMtu;        //!< Link MTU.
+  
+  // Helper for IP addresses.
+  Ptr<SvelteHelper>             m_svelteHelper;   //!< SVELTE helper.
 
 private:
   // Helper and attributes for EPC interfaces.

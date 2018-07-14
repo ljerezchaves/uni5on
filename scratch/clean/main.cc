@@ -131,8 +131,8 @@ main (int argc, char *argv[])
 
 // FIXME Construir gradativamente o cenário de simulação
   Ptr<SvelteHelper> helper   = CreateObject<SvelteHelper> ();
-  Ptr<RingNetwork>  backhaul = CreateObject<RingNetwork>  ();
-  Ptr<RadioNetwork> radio    = CreateObject<RadioNetwork> (helper);
+  Ptr<RingNetwork>  backhaul = CreateObject<RingNetwork>  (helper);
+  Ptr<RadioNetwork> radio    = CreateObject<RadioNetwork> (helper, backhaul);
 //  Ptr<RingNetwork>   ofNetwork;
 //  Ptr<LteNetwork>    lteNetwork;
 //  Ptr<TrafficHelper> trafficHelper;
