@@ -22,6 +22,7 @@
 #include "backhaul-controller.h"
 #include "backhaul-network.h"
 #include "connection-info.h"
+#include "../svelte-helper.h"
 // #include "../info/s5-aggregation-info.h"
 // #include "../sdran/sdran-controller.h"
 
@@ -501,8 +502,8 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   std::ostringstream cmd;
   cmd << "flow-mod cmd=add,table=0,prio=32"
       << " eth_type=0x800,ip_proto=17"
-      << ",udp_src=" << BackhaulNetwork::m_gtpuPort
-      << ",udp_dst=" << BackhaulNetwork::m_gtpuPort
+      << ",udp_src=" << SvelteHelper::m_gtpuPort
+      << ",udp_dst=" << SvelteHelper::m_gtpuPort
       << " goto:2";
   DpctlExecute (swtch, cmd.str ());
 

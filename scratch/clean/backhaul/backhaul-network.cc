@@ -27,9 +27,6 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("BackhaulNetwork");
 NS_OBJECT_ENSURE_REGISTERED (BackhaulNetwork);
 
-// Initializing BackhaulNetwork static members.
-const uint16_t BackhaulNetwork::m_gtpuPort = 2152;
-
 BackhaulNetwork::BackhaulNetwork ()
   : m_controllerApp (0),
   m_controllerNode (0),

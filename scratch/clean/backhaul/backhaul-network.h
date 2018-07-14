@@ -71,8 +71,6 @@ public:
    */
   void EnablePcap (std::string prefix, bool promiscuous = false);
 
-  static const uint16_t         m_gtpuPort;       //!< GTP-U UDP port.
-
 protected:
   /** Destructor implementation. */
   virtual void DoDispose (void);
