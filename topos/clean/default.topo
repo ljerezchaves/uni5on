@@ -1,3 +1,30 @@
 global DumpStatsTimeout "1s"
 
+default ns3::BackhaulController::HtcAggregation "off"
+default ns3::BackhaulController::HtcAggGbrThs "0.5"
+default ns3::BackhaulController::HtcAggNonThs "0.5"
+default ns3::BackhaulController::MtcAggregation "off"
+default ns3::BackhaulController::PriorityQueues "on"
+default ns3::BackhaulController::Slicing "auto"
+default ns3::BackhaulController::TimeoutInterval "5s"
+
+default ns3::BackhaulNetwork::S1ULinkDataRate "10Gb/s"
+default ns3::BackhaulNetwork::S1ULinkDelay "50us"
+default ns3::BackhaulNetwork::S5LinkDataRate "10Gb/s"
+default ns3::BackhaulNetwork::S5LinkDelay "50us"
+default ns3::BackhaulNetwork::X2LinkDataRate "10Gb/s"
+default ns3::BackhaulNetwork::X2LinkDelay "50us"
+
+default ns3::ConnectionInfo::AdjustmentStep "5Mb/s"
+default ns3::ConnectionInfo::EwmaAlpha "0.25"
+default ns3::ConnectionInfo::GbrSliceQuota "0.28"
+default ns3::ConnectionInfo::MtcSliceQuota "0.18"
+default ns3::ConnectionInfo::UpdateTimeout "100ms"
+
 default ns3::LteHexGridEnbTopologyHelper::GridWidth "2"
+
+default ns3::RingController::Strategy "spf"
+
+default ns3::RingNetwork::NumRingSwitches "3"
+default ns3::RingNetwork::RingLinkDataRate "100Mb/s"
+default ns3::RingNetwork::RingLinkDelay "200us"

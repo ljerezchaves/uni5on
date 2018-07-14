@@ -22,8 +22,9 @@
 #include <iostream>
 #include <ns3/config-store-module.h>
 #include <ns3/core-module.h>
-#include <ns3/ofswitch13-module.h>
 #include <ns3/internet-module.h>
+#include <ns3/ofswitch13-module.h>
+#include "backhaul/ring-network.h"
 
 using namespace ns3;
 using namespace ns3::ofs;
@@ -126,7 +127,8 @@ main (int argc, char *argv[])
   // * The stats calculators
   NS_LOG_INFO ("Creating simulation scenario...");
 
-// FIXME
+// FIXME Construir gradativamente o cenário de simulação
+  Ptr<RingNetwork> backhaul = CreateObject<RingNetwork> ();
 //  Ptr<RingNetwork>   ofNetwork;
 //  Ptr<LteNetwork>    lteNetwork;
 //  Ptr<TrafficHelper> trafficHelper;
@@ -159,7 +161,7 @@ main (int argc, char *argv[])
   if (pcap)
     {
 // FIXME
-//      ofNetwork->EnablePcap (outputPrefix.str (), true);
+      backhaul->EnablePcap (outputPrefix.str (), true);
 //      lteNetwork->EnablePcap (outputPrefix.str (), true);
     }
 
@@ -184,7 +186,7 @@ PrintCurrentTime (uint32_t interval)
 {
   if (interval)
     {
-      std::cout << "Simulation time: " << Simulator::Now ().As (Time::S) << std::endl;
+      std::cout << "Current simulation time: " << Simulator::Now ().As (Time::S) << std::endl;
       Simulator::Schedule (Seconds (interval), &PrintCurrentTime, interval);
     }
 }
@@ -239,7 +241,7 @@ void ConfigureDefaults ()
   // ** Considering Band #1 @2100 MHz (FDD)
   //
   Config::SetDefault ("ns3::LteEnbNetDevice::DlEarfcn", UintegerValue (100));
-  Config::SetDefault ("ns3::LteUeNetDevice::DlEarfcn",  UintegerValue (100));
+  Config::SetDefault ("ns3::LteUeNetDevice::DlEarfcn", UintegerValue (100));
   Config::SetDefault ("ns3::LteEnbNetDevice::UlEarfcn", UintegerValue (18100));
 
   //
@@ -250,7 +252,7 @@ void ConfigureDefaults ()
   // See http://tinyurl.com/nlh6u3t and http://tinyurl.com/nlh6u3t
   //
   Config::SetDefault ("ns3::LteEnbPhy::TxPower", DoubleValue (46));
-  Config::SetDefault ("ns3::LteUePhy::TxPower",  DoubleValue (23));
+  Config::SetDefault ("ns3::LteUePhy::TxPower", DoubleValue (23));
 
   //
   // Disabling UE uplink power control.
@@ -279,7 +281,7 @@ void ConfigureDefaults ()
   // Set the LTE hexagonal grid layout topology to inter-site distance of 500m
   // with a single site in even rows.
   //
-  // Config::SetDefault ("ns3::LteNetwork::EnbMargin", DoubleValue (0.5)); FIXME
+  // Config::SetDefault ("ns3::LteNetwork::EnbMargin", DoubleValue (0.5)); FIXME Voltar
   Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::InterSiteDistance", DoubleValue (500));
   Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::SectorOffset", DoubleValue (0));
   Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::MinX", DoubleValue (500));
@@ -342,13 +344,13 @@ EnableVerbose (bool enable)
   if (enable)
     {
 // FIXME
-//      LogComponentEnable ("EpcNetwork",               LOG_ERROR_WARN_INFO_FT);
-//      LogComponentEnable ("EpcController",            LOG_ERROR_WARN_INFO_FT);
-//      LogComponentEnable ("LteNetwork",               LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("Main",                     LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("BackhaulNetwork",          LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("BackhaulController",       LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("RingNetwork",              LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("RingController",           LOG_ERROR_WARN_INFO_FT);
+//      LogComponentEnable ("LteNetwork",               LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("PgwTunnelApp",             LOG_ERROR_WARN_INFO_FT);
-//      LogComponentEnable ("RingController",           LOG_ERROR_WARN_INFO_FT);
-//      LogComponentEnable ("RingNetwork",              LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("SdranCloud",               LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("SdranController",          LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("SdranMme",                 LOG_ERROR_WARN_INFO_FT);
@@ -369,7 +371,7 @@ EnableVerbose (bool enable)
 //      LogComponentEnable ("VoipClient",               LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("VoipServer",               LOG_ERROR_WARN_INFO_FT);
 //
-//      LogComponentEnable ("ConnectionInfo",           LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("ConnectionInfo",           LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("EnbInfo",                  LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("GbrInfo",                  LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("MeterInfo",                LOG_ERROR_WARN_INFO_FT);
