@@ -25,6 +25,7 @@
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
 #include "backhaul/ring-network.h"
+#include "radio/radio-network.h"
 
 using namespace ns3;
 using namespace ns3::ofs;
@@ -128,7 +129,8 @@ main (int argc, char *argv[])
   NS_LOG_INFO ("Creating simulation scenario...");
 
 // FIXME Construir gradativamente o cenário de simulação
-  Ptr<RingNetwork> backhaul = CreateObject<RingNetwork> ();
+  Ptr<RingNetwork>  backhaul = CreateObject<RingNetwork> ();
+  Ptr<RadioNetwork> radio    = CreateObject<RadioNetwork> ();
 //  Ptr<RingNetwork>   ofNetwork;
 //  Ptr<LteNetwork>    lteNetwork;
 //  Ptr<TrafficHelper> trafficHelper;
@@ -281,7 +283,7 @@ void ConfigureDefaults ()
   // Set the LTE hexagonal grid layout topology to inter-site distance of 500m
   // with a single site in even rows.
   //
-  // Config::SetDefault ("ns3::LteNetwork::EnbMargin", DoubleValue (0.5)); FIXME Voltar
+  Config::SetDefault ("ns3::RadioNetwork::EnbMargin", DoubleValue (0.5));
   Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::InterSiteDistance", DoubleValue (500));
   Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::SectorOffset", DoubleValue (0));
   Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::MinX", DoubleValue (500));
@@ -349,7 +351,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("BackhaulController",       LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("RingNetwork",              LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("RingController",           LOG_ERROR_WARN_INFO_FT);
-//      LogComponentEnable ("LteNetwork",               LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("RadioNetwork",             LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("PgwTunnelApp",             LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("SdranCloud",               LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("SdranController",          LOG_ERROR_WARN_INFO_FT);
@@ -375,7 +377,7 @@ EnableVerbose (bool enable)
 //      LogComponentEnable ("EnbInfo",                  LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("GbrInfo",                  LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("MeterInfo",                LOG_ERROR_WARN_INFO_FT);
-//      LogComponentEnable ("RingRoutingInfo",          LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("RingRoutingInfo",          LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("RoutingInfo",              LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("UeInfo",                   LOG_ERROR_WARN_INFO_FT);
 //

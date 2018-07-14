@@ -23,6 +23,13 @@ default ns3::ConnectionInfo::UpdateTimeout "100ms"
 
 default ns3::LteHexGridEnbTopologyHelper::GridWidth "2"
 
+default ns3::RadioNetwork::NumCellSites "1"
+default ns3::RadioNetwork::NumHtcUes "1"
+default ns3::RadioNetwork::NumMtcUes "1"
+default ns3::RadioNetwork::HtcUeMobility "false"
+default ns3::RadioNetwork::MtcUeMobility "false"
+default ns3::RadioNetwork::LteTrace "false"
+
 default ns3::RingController::Strategy "spf"
 
 default ns3::RingNetwork::NumRingSwitches "3"
