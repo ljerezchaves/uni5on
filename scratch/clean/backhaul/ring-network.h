@@ -57,6 +57,7 @@ protected:
 
   // Inherited from BackhaulNetwork.
   void TopologyCreate (void);
+  uint64_t TopologyGetEnbSwitch (uint16_t cellId);
 
 private:
   CsmaHelper                    m_csmaHelper;     //!< Connection helper.

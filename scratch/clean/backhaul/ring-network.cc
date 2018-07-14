@@ -165,4 +165,17 @@ RingNetwork::TopologyCreate (void)
   m_controllerApp->NotifyTopologyBuilt (m_switchDevices);
 }
 
+uint64_t
+RingNetwork::TopologyGetEnbSwitch (uint16_t cellId)
+{
+  NS_LOG_FUNCTION (this << cellId);
+
+  // Connect the eNBs nodes to switches indexes in clockwise direction,
+  // skipping switch index 0 which is exclusive for the P-GW. The three eNBs
+  // from same cell site are connected to the same switch in the ring network.
+  uint16_t siteId = (cellId - 1) / 3;
+  uint16_t swIdx = 1 + (siteId % (m_numNodes - 1));
+  return m_switchDevices.Get (swIdx)->GetDatapathId ();
+}
+
 } // namespace ns3
