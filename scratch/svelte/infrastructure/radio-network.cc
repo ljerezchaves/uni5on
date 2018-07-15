@@ -181,16 +181,6 @@ RadioNetwork::GetMtcUeDevices (void) const
 }
 
 void
-RadioNetwork::EnablePcap (std::string prefix, bool promiscuous)
-{
-  NS_LOG_FUNCTION (this << prefix << promiscuous);
-
-  // Enable pcap on CSMA devices.
-  CsmaHelper helper;
-  // helper.EnablePcap (prefix + "enb-s1u", m_s1uDevices, promiscuous); // FIXME Vai usar mesmo aqui?
-}
-
-void
 RadioNetwork::DoDispose ()
 {
   NS_LOG_FUNCTION (this);

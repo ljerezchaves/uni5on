@@ -65,13 +65,6 @@ public:
   NetDeviceContainer  GetMtcUeDevices (void) const;
   //\}
 
-  /**
-   * Enable PCAP traces on SDRAN clouds.
-   * \param prefix Filename prefix to use for pcap files.
-   * \param promiscuous If true, enable promisc trace.
-   */
-  void EnablePcap (std::string prefix, bool promiscuous = false);
-
 protected:
   /** Destructor implementation. */
   void DoDispose ();

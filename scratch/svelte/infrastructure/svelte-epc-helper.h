@@ -32,10 +32,9 @@ class RingNetwork;
 class RadioNetwork;
 
 /**
- * \ingroup svelte
- * This class extends the EpcHelper to configure IP addresses and how EPC S5
- * entities (P-GW and S-GW) are connected through CSMA devices to the OpenFlow
- * backhaul network.
+ * \ingroup svelteInfra
+ * This class extends the EpcHelper to create and configure the SVELTE
+ * infrastructure: the LTE radio network and the OpenFlow backhaul network.
  */
 class SvelteEpcHelper : public EpcHelper
 {

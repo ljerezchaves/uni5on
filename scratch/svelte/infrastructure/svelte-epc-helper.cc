@@ -65,7 +65,6 @@ SvelteEpcHelper::EnablePcap (std::string prefix, bool promiscuous)
 
   // Enable pcap on the OpenFlow backhaul network.
   m_backhaul->EnablePcap (prefix, promiscuous);
-  // m_lteRan->EnablePcap (prefix, promiscuous);  // FIXME ????
 }
 
 void
