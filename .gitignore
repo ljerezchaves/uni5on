@@ -44,3 +44,5 @@ topos/*.gpi
 topos/*.pdf
 
 .DS_Store
+*radio-map.pdf
+*radio-map.gpi
