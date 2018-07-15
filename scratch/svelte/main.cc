@@ -341,20 +341,25 @@ EnableVerbose (bool enable)
 {
   if (enable)
     {
-// FIXME
       LogComponentEnable ("Main",                     LOG_LEVEL_ALL_FT);
-      LogComponentEnable ("BackhaulNetwork",          LOG_LEVEL_ALL_FT);
-      LogComponentEnable ("BackhaulController",       LOG_LEVEL_ALL_FT);
-      LogComponentEnable ("RingNetwork",              LOG_LEVEL_ALL_FT);
-      LogComponentEnable ("RingController",           LOG_LEVEL_ALL_FT);
-      LogComponentEnable ("RadioNetwork",             LOG_LEVEL_ALL_FT);
       LogComponentEnable ("SvelteEpcHelper",          LOG_LEVEL_ALL_FT);
+
+      LogComponentEnable ("BackhaulController",       LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("BackhaulNetwork",          LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("ConnectionInfo",           LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("RadioNetwork",             LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("RingController",           LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("RingNetwork",              LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("RingRoutingInfo",          LOG_LEVEL_ALL_FT);
       LogComponentEnable ("SvelteEnbApplication",     LOG_LEVEL_ALL_FT);
+
+      LogComponentEnable ("EnbInfo",                  LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("UeInfo",                   LOG_LEVEL_ALL_FT);
       LogComponentEnable ("SvelteMme",                LOG_LEVEL_ALL_FT);
+
 //      LogComponentEnable ("PgwTunnelApp",             LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("SdranCloud",               LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("SdranController",          LOG_ERROR_WARN_INFO_FT);
-//      LogComponentEnable ("SdranMme",                 LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("GtpTunnelApp",             LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("TrafficHelper",            LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("TrafficManager",           LOG_ERROR_WARN_INFO_FT);
@@ -372,13 +377,10 @@ EnableVerbose (bool enable)
 //      LogComponentEnable ("VoipClient",               LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("VoipServer",               LOG_ERROR_WARN_INFO_FT);
 //
-      LogComponentEnable ("ConnectionInfo",           LOG_ERROR_WARN_INFO_FT);
-//      LogComponentEnable ("EnbInfo",                  LOG_ERROR_WARN_INFO_FT);
+
 //      LogComponentEnable ("GbrInfo",                  LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("MeterInfo",                LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("RingRoutingInfo",          LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("RoutingInfo",              LOG_ERROR_WARN_INFO_FT);
-//      LogComponentEnable ("UeInfo",                   LOG_ERROR_WARN_INFO_FT);
 //
 //      LogComponentEnable ("AdmissionStatsCalculator", LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("BackhaulStatsCalculator",  LOG_ERROR_WARN_INFO_FT);
@@ -392,8 +394,8 @@ EnableVerbose (bool enable)
       LogComponentEnable ("OFSwitch13Helper",         LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("OFSwitch13Interface",      LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("OFSwitch13Port",           LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("OFSwitch13SocketHandler",  LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("OFSwitch13Queue",          LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("OFSwitch13SocketHandler",  LOG_ERROR_WARN_INFO_FT);
     }
 }
 
