@@ -232,15 +232,6 @@ private:
 
 
   /** 
-   * Send a packet to the SGW via the S1-U interface
-   * 
-   * \param packet packet to be sent
-   * \param teid the Tunnel Enpoint IDentifier
-   */
-  void SendToS1uSocket (Ptr<Packet> packet, uint32_t teid);
-
-
-  /** 
    * internal method used for the actual setup of the S1 Bearer
    * 
    * \param teid the Tunnel Endpoint IDentifier
@@ -258,11 +249,6 @@ private:
    * raw packet socket to send and receive the packets to and from the LTE radio interface
    */
   Ptr<Socket> m_lteSocket6;
-
-  /**
-   * UDP socket to send and receive GTP-U the packets to and from the S1-U interface
-   */
-  Ptr<Socket> m_s1uSocket;
 
   /**
    * address of the eNB for S1-U communications
@@ -326,10 +312,6 @@ private:
    */
   TracedCallback<Ptr<const Packet> > m_rxS1uTrace;
 
-  /** 
-   * Trace source fired when a packet leaves this eNB over the S1-U interface.
-   */
-  TracedCallback<Ptr<const Packet> > m_txS1uTrace;
 
   /**
    * \brief Callback to trace RX (reception) data packets from LTE Socket.
@@ -340,6 +322,25 @@ private:
    * \brief Callback to trace RX (reception) data packets from S1-U Socket.
    */ 
   TracedCallback<Ptr<Packet> > m_rxS1uSocketPktTrace;
+
+protected:
+  /** 
+   * Send a packet to the SGW via the S1-U interface
+   * 
+   * \param packet packet to be sent
+   * \param teid the Tunnel Enpoint IDentifier
+   */
+  virtual void SendToS1uSocket (Ptr<Packet> packet, uint32_t teid);
+
+  /**
+   * UDP socket to send and receive GTP-U the packets to and from the S1-U interface
+   */
+  Ptr<Socket> m_s1uSocket;
+
+  /** 
+   * Trace source fired when a packet leaves this eNB over the S1-U interface.
+   */
+  TracedCallback<Ptr<const Packet> > m_txS1uTrace;
 };
 
 } //namespace ns3
