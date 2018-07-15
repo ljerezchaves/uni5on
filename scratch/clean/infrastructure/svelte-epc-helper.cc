@@ -289,26 +289,4 @@ SvelteEpcHelper::AssignSgiIpv4Address (NetDeviceContainer devices)
   return m_sgiAddrHelper.Assign (devices);
 }
 
-Ipv4Address
-SvelteEpcHelper::GetIpv4Addr (Ptr<const NetDevice> device)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  Ptr<Node> node = device->GetNode ();
-  Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
-  int32_t idx = ipv4->GetInterfaceForDevice (device);
-  return ipv4->GetAddress (idx, 0).GetLocal ();
-}
-
-Ipv4Mask
-SvelteEpcHelper::GetIpv4Mask (Ptr<const NetDevice> device)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  Ptr<Node> node = device->GetNode ();
-  Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
-  int32_t idx = ipv4->GetInterfaceForDevice (device);
-  return ipv4->GetAddress (idx, 0).GetMask ();
-}
-
 } // namespace ns3

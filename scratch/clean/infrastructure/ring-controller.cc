@@ -21,7 +21,6 @@
 #include <string>
 #include "backhaul-network.h"
 #include "ring-controller.h"
-#include "svelte-epc-helper.h"
 // #include "../info/s5-aggregation-info.h" FIXME retornar com isso depois
 
 namespace ns3 {
@@ -86,7 +85,7 @@ RingController::NotifyEpcAttach (
 
   // Save the pair EPC IP address / switch index.
   std::pair<Ipv4Address, uint16_t> entry (
-    SvelteEpcHelper::GetIpv4Addr (epcDev), GetSwitchIndex (swDev));
+    Ipv4AddressHelper::GetFirstAddress (epcDev), GetSwitchIndex (swDev));
   std::pair<IpSwitchMap_t::iterator, bool> ret;
   ret = m_ipSwitchTable.insert (entry);
   if (ret.second == false)

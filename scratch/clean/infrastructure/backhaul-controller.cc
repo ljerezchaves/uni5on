@@ -22,7 +22,6 @@
 #include "backhaul-controller.h"
 #include "backhaul-network.h"
 #include "connection-info.h"
-#include "svelte-epc-helper.h"
 // #include "../info/s5-aggregation-info.h"
 // #include "../sdran/sdran-controller.h"
 
@@ -231,7 +230,7 @@ BackhaulController::NotifyEpcAttach (
   std::ostringstream cmdOut;
   cmdOut << "flow-mod cmd=add,table=2,prio=256 eth_type=0x800"
          << ",eth_dst=" << epcMac
-         << ",ip_dst=" << SvelteEpcHelper::GetIpv4Addr (epcDev)
+         << ",ip_dst=" << Ipv4AddressHelper::GetFirstAddress (epcDev)
          << " write:output=" << portNo
          << " goto:4";
   DpctlSchedule (swDev->GetDatapathId (), cmdOut.str ());

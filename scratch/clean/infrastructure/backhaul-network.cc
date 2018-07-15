@@ -21,7 +21,6 @@
 #include <ns3/csma-module.h>
 #include "backhaul-network.h"
 #include "backhaul-controller.h"
-#include "svelte-epc-helper.h"
 
 namespace ns3 {
 
@@ -139,7 +138,8 @@ BackhaulNetwork::AttachEnb (Ptr<Node> enbNode, uint16_t cellId)
 
   // Add the enbS1uDev as standard device on eNB node.
   m_s1uAddrHelper.Assign (NetDeviceContainer (enbS1uDev));
-  NS_LOG_INFO ("eNB S1-U address: " << SvelteEpcHelper::GetIpv4Addr (enbS1uDev));
+  NS_LOG_INFO ("eNB S1-U address: " <<
+               Ipv4AddressHelper::GetFirstAddress (enbS1uDev));
 
   // Notify the backhaul controller of the new EPC device attached to the
   // OpenFlow backhaul network.

@@ -71,20 +71,6 @@ public:
   Ipv4InterfaceContainer AssignSgiIpv4Address   (NetDeviceContainer devices);
   //\}
 
-  /**
-   * Get the IPv4 address assigned to a given device.
-   * \param device The network device.
-   * \return The IPv4 address.
-   */
-  static Ipv4Address GetIpv4Addr (Ptr<const NetDevice> device);
-
-  /**
-   * Get the IPv4 mask assigned to a given device.
-   * \param device The network device.
-   * \return The IPv4 mask.
-   */
-  static Ipv4Mask GetIpv4Mask (Ptr<const NetDevice> device);
-
   static const Ipv4Address      m_htcAddr;          //!< HTC UE network address.
   static const Ipv4Address      m_mtcAddr;          //!< MTC UE network address.
   static const Ipv4Address      m_sgiAddr;          //!< Web network address.
