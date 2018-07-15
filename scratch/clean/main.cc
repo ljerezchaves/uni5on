@@ -355,6 +355,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("RingNetwork",              LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("RingController",           LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("RadioNetwork",             LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("SvelteHelper",             LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("PgwTunnelApp",             LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("SdranCloud",               LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("SdranController",          LOG_ERROR_WARN_INFO_FT);
