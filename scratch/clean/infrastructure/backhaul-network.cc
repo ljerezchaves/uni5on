@@ -50,48 +50,20 @@ BackhaulNetwork::GetTypeId (void)
                    UintegerValue (1492), // Ethernet II - PPoE
                    MakeUintegerAccessor (&BackhaulNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("S1LinkDataRate",
-                   "The data rate for the link connecting an S1 interface to "
+    .AddAttribute ("EpcLinkDataRate",
+                   "The data rate for the link connecting any EPC entity to "
                    "the OpenFlow backhaul network.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("10Gb/s")),
-                   MakeDataRateAccessor (&BackhaulNetwork::m_s1LinkRate),
+                   MakeDataRateAccessor (&BackhaulNetwork::m_linkRate),
                    MakeDataRateChecker ())
-    .AddAttribute ("S1LinkDelay",
-                   "The delay for the link connecting an S1 interface to "
+    .AddAttribute ("EpcLinkDelay",
+                   "The delay for the link connecting any EPC entity to "
                    "the OpenFlow backhaul network.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    // The default value is for 10km fiber cable latency.
                    TimeValue (MicroSeconds (50)),
-                   MakeTimeAccessor (&BackhaulNetwork::m_s1LinkDelay),
-                   MakeTimeChecker ())
-    .AddAttribute ("S5LinkDataRate",
-                   "The data rate for the link connecting an S5 interface to "
-                   "the OpenFlow backhaul network.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("10Gb/s")),
-                   MakeDataRateAccessor (&BackhaulNetwork::m_s5LinkRate),
-                   MakeDataRateChecker ())
-    .AddAttribute ("S5LinkDelay",
-                   "The delay for the link connecting an S5 interface to  "
-                   "the OpenFlow backhaul network.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   TimeValue (MicroSeconds (50)),
-                   MakeTimeAccessor (&BackhaulNetwork::m_s5LinkDelay),
-                   MakeTimeChecker ())
-    .AddAttribute ("X2LinkDataRate",
-                   "The data rate for the link connecting a X2 interface to  "
-                   "the OpenFlow backhaul network.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("10Gb/s")),
-                   MakeDataRateAccessor (&BackhaulNetwork::m_x2LinkRate),
-                   MakeDataRateChecker ())
-    .AddAttribute ("X2LinkDelay",
-                   "The delay for the link connecting a X2 interface to  "
-                   "the OpenFlow backhaul network.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   TimeValue (MicroSeconds (50)),
-                   MakeTimeAccessor (&BackhaulNetwork::m_x2LinkDelay),
+                   MakeTimeAccessor (&BackhaulNetwork::m_linkDelay),
                    MakeTimeChecker ())
   ;
   return tid;

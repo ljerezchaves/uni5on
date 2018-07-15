@@ -38,7 +38,7 @@ typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
 typedef std::list<Ptr<ConnectionInfo> > ConnInfoList_t;
 
 /**
- * \ingroup svelteInfo
+ * \ingroup svelteInfra
  * Metadata associated to a connection between two OpenFlow backhaul switches.
  *
  * This class is prepared to handle network slicing. In current implementation,

@@ -34,8 +34,8 @@ class SvelteHelper;
 
 /**
  * \ingroup svelte
- * \defgroup svelteBackhaul Backhal
- * OpenFlow backhaul network for SVELTE architecture.
+ * \defgroup svelteInfra Infrastructure
+ * SVELTE architecture infrastructure.
  */
 
 /**
@@ -128,12 +128,8 @@ protected:
 private:
   // Helper and attributes for EPC interfaces.
   CsmaHelper                    m_csmaHelper;     //!< Connection helper.
-  DataRate                      m_s1LinkRate;     //!< S1 link data rate.
-  Time                          m_s1LinkDelay;    //!< S1 link delay.
-  DataRate                      m_s5LinkRate;     //!< S5 link data rate.
-  Time                          m_s5LinkDelay;    //!< S5 link delay.
-  DataRate                      m_x2LinkRate;     //!< X2 link data rate.
-  Time                          m_x2LinkDelay;    //!< X2 link delay.
+  DataRate                      m_linkRate;       //!< Backhaul link data rate.
+  Time                          m_linkDelay;      //!< Backhaul link delay.
 
   // EPC user-plane devices.
   NetDeviceContainer            m_s1Devices;      //!< S1 devices.

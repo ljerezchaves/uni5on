@@ -28,7 +28,7 @@ namespace ns3 {
 class RoutingInfo;
 
 /**
- * \ingroup svelteInfo
+ * \ingroup svelteInfra
  * Metadata associated to the routing path for a single EPS bearer among the
  * switches in the OpenFlow ring backhaul network.
  */

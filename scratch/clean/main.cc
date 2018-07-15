@@ -129,10 +129,11 @@ main (int argc, char *argv[])
   // * The stats calculators
   NS_LOG_INFO ("Creating simulation scenario...");
 
-// FIXME Construir gradativamente o cenário de simulação
   Ptr<SvelteHelper> helper   = CreateObject<SvelteHelper> ();
   Ptr<RingNetwork>  backhaul = CreateObject<RingNetwork>  (helper);
   Ptr<RadioNetwork> radio    = CreateObject<RadioNetwork> (helper, backhaul);
+
+// FIXME Construir gradativamente o cenário de simulação
 //  Ptr<RingNetwork>   ofNetwork;
 //  Ptr<LteNetwork>    lteNetwork;
 //  Ptr<TrafficHelper> trafficHelper;

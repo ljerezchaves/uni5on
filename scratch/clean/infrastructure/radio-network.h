@@ -34,13 +34,7 @@ class SvelteHelper;
 class BackhaulNetwork;
 
 /**
- * \ingroup svelte
- * \defgroup svelteRadio Radio
- * LTE radio access network for SVELTE architecture.
- */
-
-/**
- * \ingroup svelteRadio
+ * \ingroup svelteInfra
  * LTE radio access network with eNBs grouped in three-sector sites layed out
  * on an hexagonal grid. UEs are randomly distributed around the sites and
  * attach to the network automatically using idle mode cell selection.
