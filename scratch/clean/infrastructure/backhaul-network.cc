@@ -105,7 +105,7 @@ BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous)
   helper.EnablePcap (prefix + "backhaul", m_switchNodes, promiscuous);
 }
 
-void
+Ipv4Address
 BackhaulNetwork::AttachEnb (Ptr<Node> enbNode, uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << enbNode << cellId);
@@ -137,13 +137,16 @@ BackhaulNetwork::AttachEnb (Ptr<Node> enbNode, uint16_t cellId)
   uint32_t swS1PortNo = swS1Port->GetPortNo ();
 
   // Add the enbS1uDev as standard device on eNB node.
-  m_s1uAddrHelper.Assign (NetDeviceContainer (enbS1uDev));
-  NS_LOG_INFO ("eNB S1-U address: " <<
-               Ipv4AddressHelper::GetFirstAddress (enbS1uDev));
+  Ipv4InterfaceContainer s1uIpIfaces; 
+  s1uIpIfaces = m_s1uAddrHelper.Assign (NetDeviceContainer (enbS1uDev));
+  Ipv4Address enbS1uAddr = s1uIpIfaces.GetAddress (0);
+  NS_LOG_INFO ("eNB S1-U address: " << enbS1uAddr);
 
   // Notify the backhaul controller of the new EPC device attached to the
   // OpenFlow backhaul network.
   m_controllerApp->NotifyEpcAttach (swDev, swS1PortNo, enbS1uDev);
+
+  return enbS1uAddr;
 }
 
 void

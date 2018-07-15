@@ -20,7 +20,9 @@
 
 #include <ns3/csma-module.h>
 #include "svelte-epc-helper.h"
-#include "backhaul-network.h"
+#include "ring-network.h"
+#include "radio-network.h"
+#include "svelte-enb-application.h"
 
 namespace ns3 {
 
@@ -57,6 +59,16 @@ SvelteEpcHelper::GetTypeId (void)
 }
 
 void
+SvelteEpcHelper::EnablePcap (std::string prefix, bool promiscuous)
+{
+  NS_LOG_FUNCTION (this << prefix << promiscuous);
+
+  // Enable pcap on the OpenFlow backhaul network.
+  m_backhaul->EnablePcap (prefix, promiscuous);
+  // m_lteRan->EnablePcap (prefix, promiscuous);  // FIXME ????
+}
+
+void
 SvelteEpcHelper::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
@@ -69,7 +81,12 @@ SvelteEpcHelper::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Configure IP address helpers.
+  // Create the OpenFlow backhaul network and the LTE radio network for the
+  // SVELTE infrastructure.
+  m_backhaul = CreateObject<RingNetwork> ();
+  m_lteRan = CreateObject<RadioNetwork> (Ptr<SvelteEpcHelper> (this));
+
+  // Configure IP address helpers. // FIXME
   m_htcUeAddrHelper.SetBase (m_htcAddr, m_htcMask);
   m_mtcUeAddrHelper.SetBase (m_mtcAddr, m_mtcMask);
   m_sgiAddrHelper.SetBase   (m_sgiAddr, m_sgiMask);
@@ -158,22 +175,17 @@ SvelteEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t
 
   NS_ASSERT (enb == lteEnbNetDevice->GetNode ());
 
-  // FIXME A primeira coisa é fazer a conexão no backhaul (vai configurar endereços IP)
+  // Attach the eNB node to the OpenFlow backhaul network.
+  Ipv4Address enbS1uAddr = m_backhaul->AttachEnb (enb, cellId);
 
-
-  // FIXME Neste momento aqui é preciso fazer a conexão física com o backhaul.
-  // Eu preciso saber qual o IP do eNB (enbS1uAddr) e do SGW (sgwS1uAddr) para que possa prosseguir
-  Ipv4Address enbS1uAddr;
-  Ipv4Address sgwS1uAddr;
-
-  // Create the S1-U socket for the eNB
-  Ptr<Socket> enbS1uSocket = Socket::CreateSocket (
-      enb, TypeId::LookupByName ("ns3::UdpSocketFactory"));
+  // Create the S1-U socket for the eNB node.
+  TypeId udpTid = TypeId::LookupByName ("ns3::UdpSocketFactory");
+  Ptr<Socket> enbS1uSocket = Socket::CreateSocket (enb, udpTid);
   enbS1uSocket->Bind (InetSocketAddress (enbS1uAddr, BackhaulNetwork::m_gtpuPort));
 
-  // Create the LTE IPv4 and IPv6 sockets for the eNB
-  Ptr<Socket> enbLteSocket = Socket::CreateSocket (
-      enb, TypeId::LookupByName ("ns3::PacketSocketFactory"));
+  // Create the LTE IPv4 and IPv6 sockets for the eNB node.
+  TypeId pktTid = TypeId::LookupByName ("ns3::PacketSocketFactory");
+  Ptr<Socket> enbLteSocket = Socket::CreateSocket (enb, pktTid);
   PacketSocketAddress enbLteSocketBindAddress;
   enbLteSocketBindAddress.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
   enbLteSocketBindAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
@@ -185,8 +197,7 @@ SvelteEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t
   enbLteSocketConnectAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
   enbLteSocket->Connect (enbLteSocketConnectAddress);
 
-  Ptr<Socket> enbLteSocket6 = Socket::CreateSocket (
-      enb, TypeId::LookupByName ("ns3::PacketSocketFactory"));
+  Ptr<Socket> enbLteSocket6 = Socket::CreateSocket (enb, pktTid);
   PacketSocketAddress enbLteSocketBindAddress6;
   enbLteSocketBindAddress6.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
   enbLteSocketBindAddress6.SetProtocol (Ipv6L3Protocol::PROT_NUMBER);
@@ -198,21 +209,17 @@ SvelteEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t
   enbLteSocketConnectAddress6.SetProtocol (Ipv6L3Protocol::PROT_NUMBER);
   enbLteSocket6->Connect (enbLteSocketConnectAddress6);
 
-  // Create the eNB application 
-  // FIXME O eNB pode estar associado a mais de um S-GW. Como vamos gerenciar
-  // isso? Talvez seja preciso criar uma versão modificada da aplicação do
-  // enb.
-  Ptr<EpcEnbApplication> enbApp = CreateObject<EpcEnbApplication> (
-      enbLteSocket, enbLteSocket6, enbS1uSocket,
-      enbS1uAddr, sgwS1uAddr, cellId);
-//  enbApp->SetS1apSapMme (m_sdranCtrlApp->GetS1apSapMme ());
+  // Create the custom eNB application for the SVELTE architecture.
+  Ptr<SvelteEnbApplication> enbApp = CreateObject<SvelteEnbApplication> (
+      enbLteSocket, enbLteSocket6, enbS1uSocket, enbS1uAddr, cellId);
+//  enbApp->SetS1apSapMme (m_sdranCtrlApp->GetS1apSapMme ()); // FIXME
   enb->AddApplication (enbApp);
   NS_ASSERT (enb->GetNApplications () == 1);
 
   Ptr<EpcX2> x2 = CreateObject<EpcX2> ();
   enb->AggregateObject (x2);
 
-//  // Create the eNB info.
+//  // Create the eNB info. // FIXME
 //  Ptr<EnbInfo> enbInfo = CreateObject<EnbInfo> (cellId);
 //  enbInfo->SetEnbS1uAddr (enbS1uAddr);
 //  enbInfo->SetSgwS1uAddr (sgwS1uAddr);

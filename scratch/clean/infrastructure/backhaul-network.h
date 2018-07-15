@@ -74,8 +74,9 @@ public:
    * Attach the eNB node to the OpenFlow backhaul network.
    * \param enbNode The eNB node.
    * \param cellId The eNB cell ID.
+   * \return The eNB S1-U IP address.
    */
-  virtual void AttachEnb (Ptr<Node> enbNode, uint16_t cellId);
+  virtual Ipv4Address AttachEnb (Ptr<Node> enbNode, uint16_t cellId);
 
   static const uint16_t         m_gtpuPort;         //!< GTP-U UDP port.
   static const Ipv4Address      m_s1uAddr;          //!< S1-U network address.

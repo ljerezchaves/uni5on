@@ -45,10 +45,8 @@ public:
   /**
    * Complete constructor.
    * \param helper The SVELTE helper (EpcHelper).
-   * \param backhaul The backhaul network.
    */
-  RadioNetwork (Ptr<SvelteEpcHelper> helper,
-                Ptr<BackhaulNetwork> backhaul);
+  RadioNetwork (Ptr<SvelteEpcHelper> helper);
   virtual ~RadioNetwork ();  //!< Dummy destructor, see DoDispose.
 
   /**
@@ -117,7 +115,6 @@ private:
   Ptr<RadioEnvironmentMapHelper>   m_remHelper;     //!< Radio map helper.
   Ptr<LteHelper>                   m_lteHelper;     //!< LTE radio helper.
   Ptr<SvelteEpcHelper>             m_epcHelper;     //!< EPC helper.
-  Ptr<BackhaulNetwork>             m_backhaul;      //!< Backhaul network.
 };
 
 } // namespace ns3

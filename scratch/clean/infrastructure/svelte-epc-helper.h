@@ -28,6 +28,9 @@
 
 namespace ns3 {
 
+class RingNetwork;
+class RadioNetwork;
+
 /**
  * \ingroup svelte
  * This class extends the EpcHelper to configure IP addresses and how EPC S5
@@ -45,6 +48,13 @@ public:
    * \return The object TypeId.
    */
   static TypeId GetTypeId (void);
+
+  /**
+   * Enable PCAP traces on the SVELTE infrastructure.
+   * \param prefix Filename prefix to use for pcap files.
+   * \param promiscuous If true, enable promisc trace.
+   */
+  void EnablePcap (std::string prefix, bool promiscuous = false);
 
   // Inherited from EpcHelper.
   virtual uint8_t ActivateEpsBearer (Ptr<NetDevice> ueLteDevice, uint64_t imsi,
@@ -95,6 +105,9 @@ private:
 
   // FIXME This should be independent per slice.
   Ipv4Address                   m_pgwAddr;          //!< P-GW gateway addr.
+
+  Ptr<RingNetwork>              m_backhaul;         //!< The backhaul network.
+  Ptr<RadioNetwork>             m_lteRan;           //!< The LTE RAN network.
 };
 
 } // namespace ns3

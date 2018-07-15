@@ -24,8 +24,6 @@
 #include <ns3/core-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "infrastructure/ring-network.h"
-#include "infrastructure/radio-network.h"
 #include "infrastructure/svelte-epc-helper.h"
 
 using namespace ns3;
@@ -129,16 +127,12 @@ main (int argc, char *argv[])
   // * The stats calculators
   NS_LOG_INFO ("Creating simulation scenario...");
 
-  Ptr<SvelteEpcHelper> helper = CreateObject<SvelteEpcHelper> ();
-  Ptr<RingNetwork> backhaul = CreateObject<RingNetwork> ();
-  Ptr<RadioNetwork> radio = CreateObject<RadioNetwork> (helper, backhaul);
+  // Creating the SVELTE EPC helper, which will create and configure the SVELTE
+  // infrastructure and ... // TODO
+  Ptr<SvelteEpcHelper> svelteHelper = CreateObject<SvelteEpcHelper> ();
 
-// FIXME Construir gradativamente o cenário de simulação
-//  Ptr<RingNetwork>   ofNetwork;
-//  Ptr<LteNetwork>    lteNetwork;
+// FIXME 
 //  Ptr<TrafficHelper> trafficHelper;
-//  ofNetwork     = CreateObject<RingNetwork> ();
-//  lteNetwork    = CreateObject<LteNetwork> (ofNetwork);
 //  trafficHelper = CreateObject<TrafficHelper> (lteNetwork,
 //                                               ofNetwork->GetWebNode ());
 //
@@ -165,9 +159,7 @@ main (int argc, char *argv[])
   // If necessary, enable pcap output.
   if (pcap)
     {
-// FIXME
-      backhaul->EnablePcap (outputPrefix.str (), true);
-//      lteNetwork->EnablePcap (outputPrefix.str (), true);
+      svelteHelper->EnablePcap (outputPrefix.str (), true);
     }
 
   // Disable the app restarting loop at indicated time.

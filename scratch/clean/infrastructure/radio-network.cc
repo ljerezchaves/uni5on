@@ -27,10 +27,8 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("RadioNetwork");
 NS_OBJECT_ENSURE_REGISTERED (RadioNetwork);
 
-RadioNetwork::RadioNetwork (Ptr<SvelteEpcHelper> helper,
-                            Ptr<BackhaulNetwork> backhaul)
-  : m_epcHelper (helper),
-  m_backhaul (backhaul)
+RadioNetwork::RadioNetwork (Ptr<SvelteEpcHelper> helper)
+  : m_epcHelper (helper)
 {
   NS_LOG_FUNCTION (this << helper);
 
@@ -201,7 +199,6 @@ RadioNetwork::DoDispose ()
   m_remHelper = 0;
   m_lteHelper = 0;
   m_epcHelper = 0;
-  m_backhaul = 0;
   Object::DoDispose ();
 }
 
@@ -289,9 +286,6 @@ RadioNetwork::ConfigureEnbs ()
       std::ostringstream enbName;
       enbName << "enb" << ++enbCounter;
       Names::Add (enbName.str (), *it);
-
-      // Attach the eNB to the backhaul network.
-      // m_backhaul->AttachEnb (*it);
     }
 
   // Set the constant mobility model for eNB positioning
@@ -300,12 +294,14 @@ RadioNetwork::ConfigureEnbs ()
   mobilityHelper.Install (m_enbNodes);
 
   // Set eNB nodes positions on the hex grid and install the corresponding eNB
-  // devices with antenna bore sight properly configured.
+  // devices with antenna bore sight properly configured. This topology helper
+  // will call the EpcHelper::AddEnb () method, which will configure and
+  // connect the eNB to the OpenFlow backhaul network.
   m_enbDevices = m_topoHelper->SetPositionAndInstallEnbDevice (m_enbNodes);
   BuildingsHelper::Install (m_enbNodes);
 
   // Create an X2 interface between all the eNBs in a given set.
-  m_lteHelper->AddX2Interface (m_enbNodes); // TODO: Implementar no EpcHelper.
+  m_lteHelper->AddX2Interface (m_enbNodes);
 
   // Identify the LTE radio coverage area based on eNB nodes positions.
   std::vector<double> xPos, yPos;
