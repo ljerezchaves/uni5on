@@ -23,6 +23,7 @@
 #include "ring-network.h"
 #include "radio-network.h"
 #include "svelte-enb-application.h"
+#include "../logical/svelte-mme.h"
 
 namespace ns3 {
 
@@ -80,6 +81,7 @@ SvelteEpcHelper::NotifyConstructionCompleted (void)
 
   // Create the OpenFlow backhaul network and the LTE radio network for the
   // SVELTE infrastructure.
+  m_mme = CreateObject<SvelteMme> ();
   m_backhaul = CreateObject<RingNetwork> ();
   m_lteRan = CreateObject<RadioNetwork> (Ptr<SvelteEpcHelper> (this));
 
@@ -205,7 +207,7 @@ SvelteEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t
   // Create the custom eNB application for the SVELTE architecture.
   Ptr<SvelteEnbApplication> enbApp = CreateObject<SvelteEnbApplication> (
       enbLteSocket, enbLteSocket6, enbS1uSocket, enbS1uAddr, cellId);
-//  enbApp->SetS1apSapMme (m_sdranCtrlApp->GetS1apSapMme ()); // FIXME
+  enbApp->SetS1apSapMme (m_mme->GetS1apSapMme ());
   enb->AddApplication (enbApp);
   NS_ASSERT (enb->GetNApplications () == 1);
 

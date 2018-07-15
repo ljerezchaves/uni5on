@@ -22,14 +22,15 @@
 #define SVELTE_EPC_HELPER_H
 
 #include <ns3/core-module.h>
+#include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
-#include <ns3/lte-module.h>
 
 namespace ns3 {
 
-class RingNetwork;
 class RadioNetwork;
+class RingNetwork;
+class SvelteMme;
 
 /**
  * \ingroup svelteInfra
@@ -101,6 +102,7 @@ private:
 
   Ptr<RingNetwork>              m_backhaul;         //!< The backhaul network.
   Ptr<RadioNetwork>             m_lteRan;           //!< The LTE RAN network.
+  Ptr<SvelteMme>                m_mme;              //!< SVELTE MME entity.
 };
 
 } // namespace ns3
