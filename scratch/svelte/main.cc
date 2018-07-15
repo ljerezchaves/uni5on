@@ -342,15 +342,15 @@ EnableVerbose (bool enable)
   if (enable)
     {
 // FIXME
-      LogComponentEnable ("Main",                     LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("BackhaulNetwork",          LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("BackhaulController",       LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("RingNetwork",              LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("RingController",           LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("RadioNetwork",             LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("SvelteEpcHelper",          LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("SvelteEnbApplication",     LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("SvelteMme",                LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("Main",                     LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("BackhaulNetwork",          LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("BackhaulController",       LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("RingNetwork",              LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("RingController",           LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("RadioNetwork",             LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("SvelteEpcHelper",          LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("SvelteEnbApplication",     LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("SvelteMme",                LOG_LEVEL_ALL_FT);
 //      LogComponentEnable ("PgwTunnelApp",             LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("SdranCloud",               LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("SdranController",          LOG_ERROR_WARN_INFO_FT);
