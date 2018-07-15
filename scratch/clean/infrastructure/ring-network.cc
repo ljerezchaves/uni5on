@@ -21,18 +21,15 @@
 #include "ring-network.h"
 #include "ring-controller.h"
 #include "connection-info.h"
-#include "svelte-epc-helper.h"
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("RingNetwork");
 NS_OBJECT_ENSURE_REGISTERED (RingNetwork);
 
-RingNetwork::RingNetwork (Ptr<SvelteEpcHelper> helper)
+RingNetwork::RingNetwork ()
 {
-  NS_LOG_FUNCTION (this << helper);
-
-  m_epcHelper = helper;
+  NS_LOG_FUNCTION (this);
 }
 
 RingNetwork::~RingNetwork ()
@@ -45,6 +42,7 @@ RingNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::RingNetwork")
     .SetParent<BackhaulNetwork> ()
+    .AddConstructor<RingNetwork> ()
     .AddAttribute ("NumRingSwitches",
                    "The number of OpenFlow switches in the ring (at least 3).",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -174,9 +172,10 @@ RingNetwork::TopologyGetEnbSwitch (uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << cellId);
 
-  // Connect the eNBs to switches in clockwise direction, skipping switch index
-  // 0 which is exclusive for the P-GW. The three eNBs from the same cell site
-  // are always connected to the same switch in the ring network.
+  // Connect the eNBs to switches in clockwise direction, skipping the first
+  // switch (index 0), which is exclusive for the P-GW connection. The three
+  // eNBs from the same cell site are always connected to the same switch in
+  // the ring network.
   uint16_t siteId = (cellId - 1) / 3;
   uint16_t swIdx = 1 + (siteId % (m_numNodes - 1));
   return m_switchDevices.Get (swIdx)->GetDatapathId ();

@@ -29,8 +29,6 @@
 namespace ns3 {
 
 class BackhaulController;
-class ConnectionInfo;
-class SvelteEpcHelper;
 
 /**
  * \ingroup svelte
@@ -58,13 +56,6 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Get the OpenFlow switch node for a given OpenFlow switch datapath ID.
-   * \param dpId The switch datapath ID.
-   * \return The pointer to the switch node.
-   */
-  Ptr<Node> GetSwitchNode (uint64_t dpId) const;
-
-  /**
    * Set an attribute for ns3::OFSwitch13Device factory.
    * \param n1 The name of the attribute to set.
    * \param v1 The value of the attribute to set.
@@ -85,6 +76,14 @@ public:
    * \param cellId The eNB cell ID.
    */
   virtual void AttachEnb (Ptr<Node> enbNode, uint16_t cellId);
+
+  static const uint16_t         m_gtpuPort;         //!< GTP-U UDP port.
+  static const Ipv4Address      m_s1uAddr;          //!< S1-U network address.
+  static const Ipv4Address      m_s5Addr;           //!< S5 network address.
+  static const Ipv4Address      m_x2Addr;           //!< X2 network address.
+  static const Ipv4Mask         m_s1uMask;          //!< S1-U network mask.
+  static const Ipv4Mask         m_s5Mask;           //!< S5 network mask.
+  static const Ipv4Mask         m_x2Mask;           //!< X2 network mask.
 
 protected:
   /** Destructor implementation. */
@@ -135,17 +134,19 @@ protected:
   OFSwitch13DeviceContainer     m_switchDevices;  //!< Switch devices.
   uint16_t                      m_linkMtu;        //!< Link MTU.
 
-  // Helper for IP addresses.
-  Ptr<SvelteEpcHelper>          m_epcHelper;      //!< EPC helper.
-
 private:
-  // Helper and attributes for EPC interfaces.
-  CsmaHelper                    m_csmaHelper;     //!< Connection helper.
-  DataRate                      m_linkRate;       //!< Backhaul link data rate.
-  Time                          m_linkDelay;      //!< Backhaul link delay.
+  // CSMA helper and attributes for EPC interfaces.
+  CsmaHelper                    m_csmaHelper;     //!< EPC connection helper.
+  DataRate                      m_linkRate;       //!< EPC link data rate.
+  Time                          m_linkDelay;      //!< EPC link delay.
+
+  // IPv4 address helpers for EPC interfaces.
+  Ipv4AddressHelper             m_s1uAddrHelper;  //!< S1-U address helper.
+  Ipv4AddressHelper             m_s5AddrHelper;   //!< S5 address helper.
+  Ipv4AddressHelper             m_x2AddrHelper;   //!< X2 address helper.
 
   // EPC user-plane devices.
-  NetDeviceContainer            m_s1Devices;      //!< S1 devices.
+  NetDeviceContainer            m_s1uDevices;     //!< S1-U devices.
   NetDeviceContainer            m_s5Devices;      //!< S5 devices.
   NetDeviceContainer            m_x2Devices;      //!< X2 devices.
 };

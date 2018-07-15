@@ -68,10 +68,7 @@ public:
   //\{
   Ipv4InterfaceContainer AssignHtcUeIpv4Address (NetDeviceContainer devices);
   Ipv4InterfaceContainer AssignMtcUeIpv4Address (NetDeviceContainer devices);
-  Ipv4InterfaceContainer AssignS1Ipv4Address    (NetDeviceContainer devices);
-  Ipv4InterfaceContainer AssignS5Ipv4Address    (NetDeviceContainer devices);
   Ipv4InterfaceContainer AssignSgiIpv4Address   (NetDeviceContainer devices);
-  Ipv4InterfaceContainer AssignX2Ipv4Address    (NetDeviceContainer devices);
   //\}
 
   /**
@@ -88,21 +85,14 @@ public:
    */
   static Ipv4Mask GetIpv4Mask (Ptr<const NetDevice> device);
 
-  static const uint16_t         m_gtpuPort;         //!< GTP-U UDP port.
   static const Ipv4Address      m_htcAddr;          //!< HTC UE network address.
   static const Ipv4Address      m_mtcAddr;          //!< MTC UE network address.
-  static const Ipv4Address      m_s1uAddr;          //!< S1-U network address.
-  static const Ipv4Address      m_s5Addr;           //!< S5 network address.
   static const Ipv4Address      m_sgiAddr;          //!< Web network address.
   static const Ipv4Address      m_ueAddr;           //!< UE network address.
-  static const Ipv4Address      m_x2Addr;           //!< X2 network address.
   static const Ipv4Mask         m_htcMask;          //!< HTC UE network mask.
   static const Ipv4Mask         m_mtcMask;          //!< MTC UE network mask.
-  static const Ipv4Mask         m_s1uMask;          //!< S1-U network mask.
-  static const Ipv4Mask         m_s5Mask;           //!< S5 network mask.
   static const Ipv4Mask         m_sgiMask;          //!< Web network mask.
   static const Ipv4Mask         m_ueMask;           //!< UE network mask.
-  static const Ipv4Mask         m_x2Mask;           //!< X2 network mask.
 
 protected:
   /** Destructor implementation. */
@@ -115,10 +105,7 @@ private:
   // IP address helpers for interfaces.
   Ipv4AddressHelper             m_htcUeAddrHelper;  //!< HTC UE address helper.
   Ipv4AddressHelper             m_mtcUeAddrHelper;  //!< MTC UE address helper.
-  Ipv4AddressHelper             m_s1uAddrHelper;    //!< S1U address helper.
-  Ipv4AddressHelper             m_s5AddrHelper;     //!< S5 address helper.
   Ipv4AddressHelper             m_sgiAddrHelper;    //!< Web address helper.
-  Ipv4AddressHelper             m_x2AddrHelper;     //!< X2 address helper.
 
   // FIXME This should be independent per slice.
   Ipv4Address                   m_pgwAddr;          //!< P-GW gateway addr.

@@ -20,6 +20,7 @@
 
 #include <ns3/csma-module.h>
 #include "svelte-epc-helper.h"
+#include "backhaul-network.h"
 
 namespace ns3 {
 
@@ -27,21 +28,14 @@ NS_LOG_COMPONENT_DEFINE ("SvelteEpcHelper");
 NS_OBJECT_ENSURE_REGISTERED (SvelteEpcHelper);
 
 // Initializing SvelteEpcHelper static members.
-const uint16_t    SvelteEpcHelper::m_gtpuPort = 2152;
 const Ipv4Address SvelteEpcHelper::m_htcAddr  = Ipv4Address ("7.64.0.0");
 const Ipv4Address SvelteEpcHelper::m_mtcAddr  = Ipv4Address ("7.128.0.0");
-const Ipv4Address SvelteEpcHelper::m_s1uAddr  = Ipv4Address ("10.2.0.0");
-const Ipv4Address SvelteEpcHelper::m_s5Addr   = Ipv4Address ("10.1.0.0");
 const Ipv4Address SvelteEpcHelper::m_sgiAddr  = Ipv4Address ("8.0.0.0");
 const Ipv4Address SvelteEpcHelper::m_ueAddr   = Ipv4Address ("7.0.0.0");
-const Ipv4Address SvelteEpcHelper::m_x2Addr   = Ipv4Address ("10.3.0.0");
 const Ipv4Mask    SvelteEpcHelper::m_htcMask  = Ipv4Mask ("255.192.0.0");
 const Ipv4Mask    SvelteEpcHelper::m_mtcMask  = Ipv4Mask ("255.192.0.0");
-const Ipv4Mask    SvelteEpcHelper::m_s1uMask  = Ipv4Mask ("255.255.255.0");
-const Ipv4Mask    SvelteEpcHelper::m_s5Mask   = Ipv4Mask ("255.255.255.0");
 const Ipv4Mask    SvelteEpcHelper::m_sgiMask  = Ipv4Mask ("255.0.0.0");
 const Ipv4Mask    SvelteEpcHelper::m_ueMask   = Ipv4Mask ("255.0.0.0");
-const Ipv4Mask    SvelteEpcHelper::m_x2Mask   = Ipv4Mask ("255.255.255.0");
 
 SvelteEpcHelper::SvelteEpcHelper ()
 {
@@ -78,10 +72,7 @@ SvelteEpcHelper::NotifyConstructionCompleted (void)
   // Configure IP address helpers.
   m_htcUeAddrHelper.SetBase (m_htcAddr, m_htcMask);
   m_mtcUeAddrHelper.SetBase (m_mtcAddr, m_mtcMask);
-  m_s1uAddrHelper.SetBase   (m_s1uAddr, m_s1uMask);
-  m_s5AddrHelper.SetBase    (m_s5Addr,  m_s5Mask);
   m_sgiAddrHelper.SetBase   (m_sgiAddr, m_sgiMask);
-  m_x2AddrHelper.SetBase    (m_x2Addr,  m_x2Mask);
 
   // Configure the default PG-W address.
   // FIXME This may not make sense with multiple P-GW instances. Check this!
@@ -167,9 +158,7 @@ SvelteEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t
 
   NS_ASSERT (enb == lteEnbNetDevice->GetNode ());
 
-  // Add an IPv4 stack to the previously created eNB
-  InternetStackHelper internet;
-  internet.Install (enb);
+  // FIXME A primeira coisa é fazer a conexão no backhaul (vai configurar endereços IP)
 
 
   // FIXME Neste momento aqui é preciso fazer a conexão física com o backhaul.
@@ -180,7 +169,7 @@ SvelteEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t
   // Create the S1-U socket for the eNB
   Ptr<Socket> enbS1uSocket = Socket::CreateSocket (
       enb, TypeId::LookupByName ("ns3::UdpSocketFactory"));
-  enbS1uSocket->Bind (InetSocketAddress (enbS1uAddr, SvelteEpcHelper::m_gtpuPort));
+  enbS1uSocket->Bind (InetSocketAddress (enbS1uAddr, BackhaulNetwork::m_gtpuPort));
 
   // Create the LTE IPv4 and IPv6 sockets for the eNB
   Ptr<Socket> enbLteSocket = Socket::CreateSocket (
@@ -293,35 +282,11 @@ SvelteEpcHelper::AssignMtcUeIpv4Address (NetDeviceContainer devices)
 }
 
 Ipv4InterfaceContainer
-SvelteEpcHelper::AssignS1Ipv4Address (NetDeviceContainer devices)
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_s1uAddrHelper.Assign (devices);
-}
-
-Ipv4InterfaceContainer
-SvelteEpcHelper::AssignS5Ipv4Address (NetDeviceContainer devices)
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_s5AddrHelper.Assign (devices);
-}
-
-Ipv4InterfaceContainer
 SvelteEpcHelper::AssignSgiIpv4Address (NetDeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 
   return m_sgiAddrHelper.Assign (devices);
-}
-
-Ipv4InterfaceContainer
-SvelteEpcHelper::AssignX2Ipv4Address (NetDeviceContainer devices)
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_x2AddrHelper.Assign (devices);
 }
 
 Ipv4Address

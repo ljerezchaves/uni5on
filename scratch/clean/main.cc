@@ -130,7 +130,7 @@ main (int argc, char *argv[])
   NS_LOG_INFO ("Creating simulation scenario...");
 
   Ptr<SvelteEpcHelper> helper = CreateObject<SvelteEpcHelper> ();
-  Ptr<RingNetwork> backhaul = CreateObject<RingNetwork> (helper);
+  Ptr<RingNetwork> backhaul = CreateObject<RingNetwork> ();
   Ptr<RadioNetwork> radio = CreateObject<RadioNetwork> (helper, backhaul);
 
 // FIXME Construir gradativamente o cenário de simulação

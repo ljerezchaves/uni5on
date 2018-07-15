@@ -33,11 +33,7 @@ namespace ns3 {
 class RingNetwork : public BackhaulNetwork
 {
 public:
-  /**
-   * Complete constructor.
-   * \param helper The SVELTE helper.
-   */
-  RingNetwork (Ptr<SvelteEpcHelper> helper);
+  RingNetwork ();           //!< Default constructor.
   virtual ~RingNetwork ();  //!< Dummy destructor, see DoDispose.
 
   /**
@@ -59,8 +55,8 @@ protected:
   uint64_t TopologyGetEnbSwitch (uint16_t cellId);
 
 private:
-  CsmaHelper                    m_csmaHelper;     //!< Connection helper.
   uint16_t                      m_numNodes;       //!< Number of switches.
+  CsmaHelper                    m_csmaHelper;     //!< Connection helper.
   DataRate                      m_linkRate;       //!< Backhaul link data rate.
   Time                          m_linkDelay;      //!< Backhaul link delay.
 

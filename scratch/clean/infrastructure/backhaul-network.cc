@@ -28,7 +28,19 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("BackhaulNetwork");
 NS_OBJECT_ENSURE_REGISTERED (BackhaulNetwork);
 
+// Initializing BackhaulNetwork static members.
+const uint16_t    BackhaulNetwork::m_gtpuPort = 2152;
+const Ipv4Address BackhaulNetwork::m_s1uAddr  = Ipv4Address ("10.1.0.0");
+const Ipv4Address BackhaulNetwork::m_s5Addr   = Ipv4Address ("10.2.0.0");
+const Ipv4Address BackhaulNetwork::m_x2Addr   = Ipv4Address ("10.3.0.0");
+const Ipv4Mask    BackhaulNetwork::m_s1uMask  = Ipv4Mask ("255.255.255.0");
+const Ipv4Mask    BackhaulNetwork::m_s5Mask   = Ipv4Mask ("255.255.255.0");
+const Ipv4Mask    BackhaulNetwork::m_x2Mask   = Ipv4Mask ("255.255.255.0");
+
 BackhaulNetwork::BackhaulNetwork ()
+  : m_controllerApp (0),
+  m_controllerNode (0),
+  m_switchHelper (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -42,9 +54,9 @@ TypeId
 BackhaulNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::BackhaulNetwork")
-    .SetParent<EpcHelper> ()
+    .SetParent<Object> ()
     .AddAttribute ("LinkMtu",
-                   "The MTU for CSMA OpenFlow links. "
+                   "The MTU for CSMA links. "
                    "Consider + 40 byter of GTP/UDP/IP tunnel overhead.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (1492), // Ethernet II - PPoE
@@ -69,17 +81,6 @@ BackhaulNetwork::GetTypeId (void)
   return tid;
 }
 
-Ptr<Node>
-BackhaulNetwork::GetSwitchNode (uint64_t dpId) const
-{
-  NS_LOG_FUNCTION (this << dpId);
-
-  Ptr<Node> node = OFSwitch13Device::GetDevice (dpId)->GetObject<Node> ();
-  NS_ASSERT_MSG (node, "No node found for this datapath ID");
-
-  return node;
-}
-
 void
 BackhaulNetwork::SetSwitchDeviceAttribute (std::string n1,
                                            const AttributeValue &v1)
@@ -99,10 +100,10 @@ BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous)
 
   // Enable pcap on CSMA devices.
   CsmaHelper helper;
-  helper.EnablePcap (prefix + "backhaul-s1", m_s1Devices,  promiscuous);
-  helper.EnablePcap (prefix + "backhaul-s5", m_s5Devices,   promiscuous);
-  helper.EnablePcap (prefix + "backhaul-x2", m_x2Devices,   promiscuous);
-  helper.EnablePcap (prefix + "backhaul",    m_switchNodes, promiscuous);
+  helper.EnablePcap (prefix + "epc-s1u",  m_s1uDevices,  promiscuous);
+  helper.EnablePcap (prefix + "epc-s5",   m_s5Devices,   promiscuous);
+  helper.EnablePcap (prefix + "epc-x2",   m_x2Devices,   promiscuous);
+  helper.EnablePcap (prefix + "backhaul", m_switchNodes, promiscuous);
 }
 
 void
@@ -110,35 +111,39 @@ BackhaulNetwork::AttachEnb (Ptr<Node> enbNode, uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << enbNode << cellId);
 
-  // Get the switch datapath ID on the backhaul network to attach the eNB.
+  // Add an IPv4 stack to the previously created eNB node.
+  InternetStackHelper internet;
+  internet.Install (enbNode);
+
+  // Get the switch on the backhaul network to attach the eNB.
   uint64_t swDpId = TopologyGetEnbSwitch (cellId);
-  Ptr<Node> swNode = GetSwitchNode (swDpId);
+  Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (swDpId);
+  Ptr<Node> swNode = swDev->GetObject<Node> ();
 
   // Connect the eNB to the backhaul network over S1-U interface.
   NetDeviceContainer devices = m_csmaHelper.Install (swNode, enbNode);
-  m_s1Devices.Add (devices.Get (1));
+  m_s1uDevices.Add (devices.Get (1));
 
-  Ptr<CsmaNetDevice> swS1Dev, enbS1Dev;
-  swS1Dev  = DynamicCast<CsmaNetDevice> (devices.Get (0));
-  enbS1Dev = DynamicCast<CsmaNetDevice> (devices.Get (1));
+  Ptr<CsmaNetDevice> swS1uDev, enbS1uDev;
+  swS1uDev  = DynamicCast<CsmaNetDevice> (devices.Get (0));
+  enbS1uDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
 
   Names::Add (Names::FindName (swNode) + "_to_" +
-              Names::FindName (enbNode), swS1Dev);
+              Names::FindName (enbNode), swS1uDev);
   Names::Add (Names::FindName (enbNode) + "_to_" +
-              Names::FindName (swNode), enbS1Dev);
+              Names::FindName (swNode), enbS1uDev);
 
-  // Add the swS1Dev device as OpenFlow switch port on the backhaul switch.
-  Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (swDpId);
-  Ptr<OFSwitch13Port> swS1Port = swDev->AddSwitchPort (swS1Dev);
+  // Add the swS1uDev device as OpenFlow switch port on the backhaul switch.
+  Ptr<OFSwitch13Port> swS1Port = swDev->AddSwitchPort (swS1uDev);
   uint32_t swS1PortNo = swS1Port->GetPortNo ();
 
-  // Add the enbS1Dev as standard device on eNB node.
-  // m_s1uAddrHelper.Assign (NetDeviceContainer (enbS1Dev)); // FIXME Usar o SvelteEpcHelper???
-  NS_LOG_INFO ("eNB S1-U address: " << SvelteEpcHelper::GetIpv4Addr (enbS1Dev));
+  // Add the enbS1uDev as standard device on eNB node.
+  m_s1uAddrHelper.Assign (NetDeviceContainer (enbS1uDev));
+  NS_LOG_INFO ("eNB S1-U address: " << SvelteEpcHelper::GetIpv4Addr (enbS1uDev));
 
   // Notify the backhaul controller of the new EPC device attached to the
   // OpenFlow backhaul network.
-  m_controllerApp->NotifyEpcAttach (swDev, swS1PortNo, enbS1Dev);
+  m_controllerApp->NotifyEpcAttach (swDev, swS1PortNo, enbS1uDev);
 }
 
 void
@@ -146,10 +151,9 @@ BackhaulNetwork::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
-  m_switchHelper = 0;
-  m_controllerNode = 0;
   m_controllerApp = 0;
-  m_epcHelper = 0;
+  m_controllerNode = 0;
+  m_switchHelper = 0;
 
   Object::DoDispose ();
 }
@@ -159,7 +163,10 @@ BackhaulNetwork::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG  (m_epcHelper, "Create the object with SVELTE helper");
+  // Configure IP address helpers.
+  m_s1uAddrHelper.SetBase (m_s1uAddr, m_s1uMask);
+  m_s5AddrHelper.SetBase (m_s5Addr, m_s5Mask);
+  m_x2AddrHelper.SetBase (m_x2Addr, m_x2Mask);
 
   // Create the OFSwitch13 helper using P2P connections for OpenFlow channel.
   m_switchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
