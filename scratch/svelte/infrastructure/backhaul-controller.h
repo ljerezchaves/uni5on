@@ -49,7 +49,7 @@ class ConnectionInfo;
 // std::string OperationModeStr (OperationMode mode);
 
 /**
- * \ingroup svelteBackhaul
+ * \ingroup svelteInfra
  * This is the abstract base class for the OpenFlow backhaul controller, which
  * should be extended in accordance to the desired backhaul network topology.
  * This controller implements the logic for traffic routing and engineering

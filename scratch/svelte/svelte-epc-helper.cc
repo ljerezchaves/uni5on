@@ -20,8 +20,8 @@
 
 #include <ns3/csma-module.h>
 #include "svelte-epc-helper.h"
-#include "infrastructure/ring-network.h"
 #include "infrastructure/radio-network.h"
+#include "infrastructure/ring-network.h"
 #include "infrastructure/svelte-enb-application.h"
 #include "logical/svelte-mme.h"
 
@@ -65,6 +65,48 @@ SvelteEpcHelper::EnablePcap (std::string prefix, bool promiscuous)
   // Enable pcap on the OpenFlow backhaul network.
   m_backhaul->EnablePcap (prefix, promiscuous);
 }
+
+Ipv4InterfaceContainer
+SvelteEpcHelper::AssignHtcUeAddress (NetDeviceContainer devices)
+{
+  NS_LOG_FUNCTION (this);
+
+  // FIXME Delegar para o slice HTC.
+  m_ueAddrHelper.SetBase (m_htcAddr, m_htcMask);
+  return m_ueAddrHelper.Assign (devices);
+}
+
+Ipv4InterfaceContainer
+SvelteEpcHelper::AssignMtcUeAddress (NetDeviceContainer devices)
+{
+  NS_LOG_FUNCTION (this);
+
+  // FIXME Delegar para o slice MTC.
+  m_ueAddrHelper.SetBase (m_mtcAddr, m_mtcMask);
+  return m_ueAddrHelper.Assign (devices);
+}
+
+Ipv4Address
+SvelteEpcHelper::GetHtcPgwAddress ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // FIXME Recuperar do slice HTC.
+  return m_pgwAddr;
+}
+
+Ipv4Address
+SvelteEpcHelper::GetMtcPgwAddress ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // FIXME Recuperar do slice MTC.
+  return m_pgwAddr;
+}
+
+//
+// Methods from EpcHelper are implemented at the end of this file.
+//
 
 void
 SvelteEpcHelper::DoDispose (void)
@@ -245,7 +287,6 @@ SvelteEpcHelper::GetPgwNode ()
 {
   NS_LOG_FUNCTION (this);
 
-  // FIXME Should return the IP address for the correct slice.
   NS_FATAL_ERROR ("SVELTE has more than one P-GW node.");
 }
 
@@ -262,47 +303,7 @@ SvelteEpcHelper::GetUeDefaultGatewayAddress ()
 {
   NS_LOG_FUNCTION (this);
 
-  // FIXME Deveria retornar o IP correto de acordo com o slice.
-  // Fazer variações para cada tipo de UE.
-  return m_pgwAddr;
-}
-
-Ipv4InterfaceContainer
-SvelteEpcHelper::AssignHtcUeAddress (NetDeviceContainer devices)
-{
-  NS_LOG_FUNCTION (this);
-
-  // FIXME O ideal é delegar isso pro slicenetwork. que vamos criar.
-  m_ueAddrHelper.SetBase (m_htcAddr, m_htcMask);
-  return m_ueAddrHelper.Assign (devices);
-}
-
-Ipv4InterfaceContainer
-SvelteEpcHelper::AssignMtcUeAddress (NetDeviceContainer devices)
-{
-  NS_LOG_FUNCTION (this);
-
-  // FIXME O ideal é delegar isso pro slicenetwork. que vamos criar.
-  m_ueAddrHelper.SetBase (m_mtcAddr, m_mtcMask);
-  return m_ueAddrHelper.Assign (devices);
-}
-
-Ipv4Address
-SvelteEpcHelper::GetMtcPgwAddress ()
-{
-  NS_LOG_FUNCTION (this);
-
-  // FIXME deferia ser independente por slice.
-  return m_pgwAddr;
-}
-
-Ipv4Address
-SvelteEpcHelper::GetHtcPgwAddress ()
-{
-  NS_LOG_FUNCTION (this);
-
-  // FIXME deferia ser independente por slice.
-  return m_pgwAddr;
+  NS_FATAL_ERROR ("Use the specific method for HTC or MTC slice.");
 }
 
 } // namespace ns3

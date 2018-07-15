@@ -33,7 +33,7 @@ class RingNetwork;
 class SvelteMme;
 
 /**
- * \ingroup svelteInfra
+ * \ingroup svelte
  * This class extends the EpcHelper to create and configure the SVELTE
  * infrastructure: the LTE radio network and the OpenFlow backhaul network.
  */
@@ -56,18 +56,6 @@ public:
    */
   void EnablePcap (std::string prefix, bool promiscuous = false);
 
-  // Inherited from EpcHelper.
-  uint8_t ActivateEpsBearer (Ptr<NetDevice> ueLteDevice, uint64_t imsi,
-                             Ptr<EpcTft> tft, EpsBearer bearer);
-  void AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice,
-               uint16_t cellId);
-  void AddUe (Ptr<NetDevice> ueLteDevice, uint64_t imsi);
-  void AddX2Interface (Ptr<Node> enbNode1, Ptr<Node> enbNode2);
-  Ptr<Node> GetPgwNode ();
-  Ipv4InterfaceContainer AssignUeIpv4Address (NetDeviceContainer ueDevices);
-  Ipv4Address GetUeDefaultGatewayAddress ();
-  // Inherited from EpcHelper.
-
   /**
    * \name UE IP address assign methods.
    * Assign IPv4 address to UEs at different LTE network slices.
@@ -85,9 +73,21 @@ public:
    * \return The IP address.
    */
   //\{
-  Ipv4Address GetMtcPgwAddress ();
   Ipv4Address GetHtcPgwAddress ();
+  Ipv4Address GetMtcPgwAddress ();
   //\}
+
+  // Inherited from EpcHelper.
+  uint8_t ActivateEpsBearer (Ptr<NetDevice> ueLteDevice, uint64_t imsi,
+                             Ptr<EpcTft> tft, EpsBearer bearer);
+  void AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice,
+               uint16_t cellId);
+  void AddUe (Ptr<NetDevice> ueLteDevice, uint64_t imsi);
+  void AddX2Interface (Ptr<Node> enbNode1, Ptr<Node> enbNode2);
+  Ptr<Node> GetPgwNode ();
+  Ipv4InterfaceContainer AssignUeIpv4Address (NetDeviceContainer ueDevices);
+  Ipv4Address GetUeDefaultGatewayAddress ();
+  // Inherited from EpcHelper.
 
   static const Ipv4Address      m_ueAddr;           //!< UE network address.
   static const Ipv4Address      m_htcAddr;          //!< HTC UE network address.

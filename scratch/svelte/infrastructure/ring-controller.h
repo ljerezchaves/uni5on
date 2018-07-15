@@ -28,7 +28,7 @@
 namespace ns3 {
 
 /**
- * \ingroup svelteBackhaul
+ * \ingroup svelteInfra
  * OpenFlow backhaul controller for ring topology.
  */
 class RingController : public BackhaulController

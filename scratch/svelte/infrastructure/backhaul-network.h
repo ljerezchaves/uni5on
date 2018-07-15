@@ -37,7 +37,7 @@ class BackhaulController;
  */
 
 /**
- * \ingroup svelteBackhaul
+ * \ingroup svelteInfra
  * This is the abstract base class for the OpenFlow backhaul network, which
  * should be extended in accordance to the desired backhaul network topology.
  * SVELTE EPC entities (eNB, S-GW, and P-GW) are connected to the OpenFlow
