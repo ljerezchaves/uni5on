@@ -56,16 +56,15 @@ public:
   void EnablePcap (std::string prefix, bool promiscuous = false);
 
   // Inherited from EpcHelper.
-  virtual uint8_t ActivateEpsBearer (Ptr<NetDevice> ueLteDevice, uint64_t imsi,
-                                     Ptr<EpcTft> tft, EpsBearer bearer);
-  virtual void AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice,
-                       uint16_t cellId);
-  virtual void AddUe (Ptr<NetDevice> ueLteDevice, uint64_t imsi);
-  virtual void AddX2Interface (Ptr<Node> enbNode1, Ptr<Node> enbNode2);
-  virtual Ptr<Node> GetPgwNode ();
-  virtual Ipv4InterfaceContainer AssignUeIpv4Address (
-    NetDeviceContainer ueDevices);
-  virtual Ipv4Address GetUeDefaultGatewayAddress ();
+  uint8_t ActivateEpsBearer (Ptr<NetDevice> ueLteDevice, uint64_t imsi,
+                             Ptr<EpcTft> tft, EpsBearer bearer);
+  void AddEnb (Ptr<Node> enbNode, Ptr<NetDevice> lteEnbNetDevice,
+               uint16_t cellId);
+  void AddUe (Ptr<NetDevice> ueLteDevice, uint64_t imsi);
+  void AddX2Interface (Ptr<Node> enbNode1, Ptr<Node> enbNode2);
+  Ptr<Node> GetPgwNode ();
+  Ipv4InterfaceContainer AssignUeIpv4Address (NetDeviceContainer ueDevices);
+  Ipv4Address GetUeDefaultGatewayAddress ();
   // Inherited from EpcHelper.
 
   /**
@@ -77,17 +76,14 @@ public:
   //\{
   Ipv4InterfaceContainer AssignHtcUeIpv4Address (NetDeviceContainer devices);
   Ipv4InterfaceContainer AssignMtcUeIpv4Address (NetDeviceContainer devices);
-  Ipv4InterfaceContainer AssignSgiIpv4Address   (NetDeviceContainer devices);
   //\}
 
+  static const Ipv4Address      m_ueAddr;           //!< UE network address.
   static const Ipv4Address      m_htcAddr;          //!< HTC UE network address.
   static const Ipv4Address      m_mtcAddr;          //!< MTC UE network address.
-  static const Ipv4Address      m_sgiAddr;          //!< Web network address.
-  static const Ipv4Address      m_ueAddr;           //!< UE network address.
+  static const Ipv4Mask         m_ueMask;           //!< UE network mask.
   static const Ipv4Mask         m_htcMask;          //!< HTC UE network mask.
   static const Ipv4Mask         m_mtcMask;          //!< MTC UE network mask.
-  static const Ipv4Mask         m_sgiMask;          //!< Web network mask.
-  static const Ipv4Mask         m_ueMask;           //!< UE network mask.
 
 protected:
   /** Destructor implementation. */
@@ -97,10 +93,8 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
 private:
-  // IP address helpers for interfaces.
-  Ipv4AddressHelper             m_htcUeAddrHelper;  //!< HTC UE address helper.
-  Ipv4AddressHelper             m_mtcUeAddrHelper;  //!< MTC UE address helper.
-  Ipv4AddressHelper             m_sgiAddrHelper;    //!< Web address helper.
+  // IP address helpers for UEs. // FIXME Isso deveria ser independente por slice.
+  Ipv4AddressHelper             m_ueAddrHelper;     //!< UE address helper.
 
   // FIXME This should be independent per slice.
   Ipv4Address                   m_pgwAddr;          //!< P-GW gateway addr.

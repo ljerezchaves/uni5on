@@ -30,14 +30,12 @@ NS_LOG_COMPONENT_DEFINE ("SvelteEpcHelper");
 NS_OBJECT_ENSURE_REGISTERED (SvelteEpcHelper);
 
 // Initializing SvelteEpcHelper static members.
+const Ipv4Address SvelteEpcHelper::m_ueAddr   = Ipv4Address ("7.0.0.0");
 const Ipv4Address SvelteEpcHelper::m_htcAddr  = Ipv4Address ("7.64.0.0");
 const Ipv4Address SvelteEpcHelper::m_mtcAddr  = Ipv4Address ("7.128.0.0");
-const Ipv4Address SvelteEpcHelper::m_sgiAddr  = Ipv4Address ("8.0.0.0");
-const Ipv4Address SvelteEpcHelper::m_ueAddr   = Ipv4Address ("7.0.0.0");
+const Ipv4Mask    SvelteEpcHelper::m_ueMask   = Ipv4Mask ("255.0.0.0");
 const Ipv4Mask    SvelteEpcHelper::m_htcMask  = Ipv4Mask ("255.192.0.0");
 const Ipv4Mask    SvelteEpcHelper::m_mtcMask  = Ipv4Mask ("255.192.0.0");
-const Ipv4Mask    SvelteEpcHelper::m_sgiMask  = Ipv4Mask ("255.0.0.0");
-const Ipv4Mask    SvelteEpcHelper::m_ueMask   = Ipv4Mask ("255.0.0.0");
 
 SvelteEpcHelper::SvelteEpcHelper ()
 {
@@ -86,14 +84,10 @@ SvelteEpcHelper::NotifyConstructionCompleted (void)
   m_lteRan = CreateObject<RadioNetwork> (Ptr<SvelteEpcHelper> (this));
 
   // Configure IP address helpers. // FIXME
-  m_htcUeAddrHelper.SetBase (m_htcAddr, m_htcMask);
-  m_mtcUeAddrHelper.SetBase (m_mtcAddr, m_mtcMask);
-  m_sgiAddrHelper.SetBase   (m_sgiAddr, m_sgiMask);
+  m_ueAddrHelper.SetBase (m_ueAddr, m_ueMask);
 
   // Configure the default PG-W address.
   // FIXME This may not make sense with multiple P-GW instances. Check this!
-  Ipv4AddressHelper m_ueAddrHelper;
-  m_ueAddrHelper.SetBase (m_ueAddr, m_ueMask);
   m_pgwAddr = m_ueAddrHelper.NewAddress ();
 
   // Chain up.
@@ -276,7 +270,9 @@ SvelteEpcHelper::AssignHtcUeIpv4Address (NetDeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 
-  return m_htcUeAddrHelper.Assign (devices);
+  // FIXME O ideal é delegar isso pro slicenetwork. que vamos criar.
+  m_ueAddrHelper.SetBase (m_htcAddr, m_htcMask);
+  return m_ueAddrHelper.Assign (devices);
 }
 
 Ipv4InterfaceContainer
@@ -284,15 +280,9 @@ SvelteEpcHelper::AssignMtcUeIpv4Address (NetDeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 
-  return m_mtcUeAddrHelper.Assign (devices);
-}
-
-Ipv4InterfaceContainer
-SvelteEpcHelper::AssignSgiIpv4Address (NetDeviceContainer devices)
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_sgiAddrHelper.Assign (devices);
+  // FIXME O ideal é delegar isso pro slicenetwork. que vamos criar.
+  m_ueAddrHelper.SetBase (m_mtcAddr, m_mtcMask);
+  return m_ueAddrHelper.Assign (devices);
 }
 
 } // namespace ns3
