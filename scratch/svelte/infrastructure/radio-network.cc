@@ -401,8 +401,8 @@ RadioNetwork::ConfigureUes ()
   InternetStackHelper internet;
   internet.Install (m_htcUeNodes);
   internet.Install (m_mtcUeNodes);
-  m_epcHelper->AssignHtcUeIpv4Address (m_htcUeDevices);
-  m_epcHelper->AssignMtcUeIpv4Address (m_mtcUeDevices);
+  m_epcHelper->AssignHtcUeAddress (m_htcUeDevices);
+  m_epcHelper->AssignMtcUeAddress (m_mtcUeDevices);
 
   // Specify static routes for each UE to its default S-GW.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
@@ -411,18 +411,14 @@ RadioNetwork::ConfigureUes ()
     {
       Ptr<Ipv4StaticRouting> ueStaticRouting =
         ipv4RoutingHelper.GetStaticRouting ((*it)->GetObject<Ipv4> ());
-      // FIXME O endereço IP do PGW pode vir de outro lugar se for preciso.
-      ueStaticRouting->SetDefaultRoute (
-        m_epcHelper->GetUeDefaultGatewayAddress (), 1);
+      ueStaticRouting->SetDefaultRoute (m_epcHelper->GetHtcPgwAddress (), 1);
     }
   for (NodeContainer::Iterator it = m_mtcUeNodes.Begin ();
        it != m_mtcUeNodes.End (); it++)
     {
       Ptr<Ipv4StaticRouting> ueStaticRouting =
         ipv4RoutingHelper.GetStaticRouting ((*it)->GetObject<Ipv4> ());
-      // FIXME O endereço IP do PGW pode vir de outro lugar se for preciso
-      ueStaticRouting->SetDefaultRoute (
-        m_epcHelper->GetUeDefaultGatewayAddress (), 1);
+      ueStaticRouting->SetDefaultRoute (m_epcHelper->GetMtcPgwAddress (), 1);
     }
 
   // Attach UE to the eNBs using initial cell selection.

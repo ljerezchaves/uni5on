@@ -268,7 +268,7 @@ SvelteEpcHelper::GetUeDefaultGatewayAddress ()
 }
 
 Ipv4InterfaceContainer
-SvelteEpcHelper::AssignHtcUeIpv4Address (NetDeviceContainer devices)
+SvelteEpcHelper::AssignHtcUeAddress (NetDeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -278,13 +278,31 @@ SvelteEpcHelper::AssignHtcUeIpv4Address (NetDeviceContainer devices)
 }
 
 Ipv4InterfaceContainer
-SvelteEpcHelper::AssignMtcUeIpv4Address (NetDeviceContainer devices)
+SvelteEpcHelper::AssignMtcUeAddress (NetDeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 
   // FIXME O ideal é delegar isso pro slicenetwork. que vamos criar.
   m_ueAddrHelper.SetBase (m_mtcAddr, m_mtcMask);
   return m_ueAddrHelper.Assign (devices);
+}
+
+Ipv4Address
+SvelteEpcHelper::GetMtcPgwAddress ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // FIXME deferia ser independente por slice.
+  return m_pgwAddr;
+}
+
+Ipv4Address
+SvelteEpcHelper::GetHtcPgwAddress ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // FIXME deferia ser independente por slice.
+  return m_pgwAddr;
 }
 
 } // namespace ns3

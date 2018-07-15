@@ -69,14 +69,24 @@ public:
   // Inherited from EpcHelper.
 
   /**
-   * \name IPv4 address assign methods.
-   * Assign IPv$ address to LTE devices at different segments.
+   * \name UE IP address assign methods.
+   * Assign IPv4 address to UEs at different LTE network slices.
    * \param devices The set of devices.
-   * \return The interface container.
+   * \return The IP interface container.
    */
   //\{
-  Ipv4InterfaceContainer AssignHtcUeIpv4Address (NetDeviceContainer devices);
-  Ipv4InterfaceContainer AssignMtcUeIpv4Address (NetDeviceContainer devices);
+  Ipv4InterfaceContainer AssignHtcUeAddress (NetDeviceContainer devices);
+  Ipv4InterfaceContainer AssignMtcUeAddress (NetDeviceContainer devices);
+  //\}
+
+  /**
+   * \name P-GW IP address retrieval.
+   * Get the IPv4 address for the P-GW at different LTE network slices.
+   * \return The IP address.
+   */
+  //\{
+  Ipv4Address GetMtcPgwAddress ();
+  Ipv4Address GetHtcPgwAddress ();
   //\}
 
   static const Ipv4Address      m_ueAddr;           //!< UE network address.
