@@ -23,7 +23,9 @@
 #include "infrastructure/radio-network.h"
 #include "infrastructure/ring-network.h"
 #include "infrastructure/svelte-enb-application.h"
+#include "logical/enb-info.h"
 #include "logical/svelte-mme.h"
+#include "logical/ue-info.h"
 
 namespace ns3 {
 
@@ -256,13 +258,12 @@ SvelteEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t
   Ptr<EpcX2> x2 = CreateObject<EpcX2> ();
   enb->AggregateObject (x2);
 
-//  // Create the eNB info. // FIXME
-//  Ptr<EnbInfo> enbInfo = CreateObject<EnbInfo> (cellId);
-//  enbInfo->SetEnbS1uAddr (enbS1uAddr);
-//  enbInfo->SetSgwS1uAddr (sgwS1uAddr);
-//  enbInfo->SetSgwS1uPortNo (sgwS1uPortNo);
-//  enbInfo->SetS1apSapEnb (enbApp->GetS1apSapEnb ());
-//
+  // Create the eNB info. // FIXME
+  Ptr<EnbInfo> enbInfo = CreateObject<EnbInfo> (cellId);
+  enbInfo->SetEnbS1uAddr (enbS1uAddr);
+  // enbInfo->SetSgwS1uAddr (sgwS1uAddr);
+  // enbInfo->SetSgwS1uPortNo (sgwS1uPortNo);
+  enbInfo->SetS1apSapEnb (enbApp->GetS1apSapEnb ());
 }
 
 void
@@ -278,8 +279,8 @@ SvelteEpcHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 {
   NS_LOG_FUNCTION (this << imsi << ueDevice);
 
-  // Create the UE info. FIXME
-//  CreateObject<UeInfo> (imsi);
+  // Create the UE info.
+  CreateObject<UeInfo> (imsi);
 }
 
 Ptr<Node>
