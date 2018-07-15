@@ -19,8 +19,8 @@
  */
 
 #include "radio-network.h"
+#include "backhaul-network.h"
 #include "../svelte-helper.h"
-#include "../backhaul/backhaul-network.h"
 
 namespace ns3 {
 

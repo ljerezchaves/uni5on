@@ -24,8 +24,8 @@
 #include <ns3/core-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "backhaul/ring-network.h"
-#include "radio/radio-network.h"
+#include "infrastructure/ring-network.h"
+#include "infrastructure/radio-network.h"
 #include "svelte-helper.h"
 
 using namespace ns3;
