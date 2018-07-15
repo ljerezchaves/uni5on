@@ -96,15 +96,15 @@ public:
    */
   virtual bool DedicatedBearerRequest (EpsBearer bearer, uint32_t teid);
 
-//  /**
-//   * Notify this controller of a new S-GW or P-GW connected to OpenFlow
-//   * backhaul network over the S5 interface.
-//   * \param swtchDev The OpenFlow switch device on the backhaul network.
-//   * \param portNo The port number created at the OpenFlow switch.
-//   * \param gwDev The device created at the gateway node.
-//   */
-//  virtual void NotifyS5Attach (
-//    Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev);
+  /**
+   * Notify this controller of a new EPC entity connected to the OpenFlow
+   * backhaul network.
+   * \param swDev The OpenFlow switch device on the backhaul network.
+   * \param portNo The port number created at the OpenFlow switch.
+   * \param epcDev The device created at the EPC node.
+   */
+  virtual void NotifyEpcAttach (
+    Ptr<OFSwitch13Device> swDev, uint32_t portNo, Ptr<NetDevice> epcDev);
 
 //  /**
 //   * Notify this controller of a new S-GW connected to OpenFlow backhaul

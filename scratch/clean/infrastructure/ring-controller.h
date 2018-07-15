@@ -62,7 +62,8 @@ protected:
   virtual void DoDispose ();
 
   // Inherited from BackhaulController.
-//  void NotifyS5Attach (Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev);
+  void NotifyEpcAttach (Ptr<OFSwitch13Device> swDev, uint32_t portNo,
+                        Ptr<NetDevice> epcDev);
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
   void NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo);
 

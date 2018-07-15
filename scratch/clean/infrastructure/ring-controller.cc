@@ -21,6 +21,7 @@
 #include <string>
 #include "backhaul-network.h"
 #include "ring-controller.h"
+#include "../svelte-helper.h"
 // #include "../info/s5-aggregation-info.h" FIXME retornar com isso depois
 
 namespace ns3 {
@@ -77,26 +78,25 @@ RingController::DoDispose ()
   BackhaulController::DoDispose ();
 }
 
-// FIXME
-// void
-// RingController::NotifyS5Attach (
-//   Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev)
-// {
-//   NS_LOG_FUNCTION (this << swtchDev << portNo << gwDev);
-//
-//   // Save the pair S/P-GW IP address / switch index.
-//   std::pair<Ipv4Address, uint16_t> entry (
-//     BackhaulNetwork::GetIpv4Addr (gwDev), GetSwitchIndex (swtchDev));
-//   std::pair<IpSwitchMap_t::iterator, bool> ret;
-//   ret = m_ipSwitchTable.insert (entry);
-//   if (ret.second == false)
-//     {
-//       NS_FATAL_ERROR ("This IP already exists in switch index table.");
-//     }
-//
-//   // Chain up.
-//   BackhaulController::NotifyS5Attach (swtchDev, portNo, gwDev);
-// }
+void
+RingController::NotifyEpcAttach (
+  Ptr<OFSwitch13Device> swDev, uint32_t portNo, Ptr<NetDevice> epcDev)
+{
+  NS_LOG_FUNCTION (this << swDev << portNo << epcDev);
+
+  // Save the pair EPC IP address / switch index.
+  std::pair<Ipv4Address, uint16_t> entry (
+    SvelteHelper::GetIpv4Addr (epcDev), GetSwitchIndex (swDev));
+  std::pair<IpSwitchMap_t::iterator, bool> ret;
+  ret = m_ipSwitchTable.insert (entry);
+  if (ret.second == false)
+    {
+      NS_FATAL_ERROR ("This IP already exists in switch index table.");
+    }
+
+  // Chain up.
+  BackhaulController::NotifyEpcAttach (swDev, portNo, epcDev);
+}
 
 void
 RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)

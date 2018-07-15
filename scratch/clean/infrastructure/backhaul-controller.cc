@@ -200,44 +200,45 @@ BackhaulController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
   return true;
 }
 
+void
+BackhaulController::NotifyEpcAttach (
+  Ptr<OFSwitch13Device> swDev, uint32_t portNo, Ptr<NetDevice> epcDev)
+{
+  NS_LOG_FUNCTION (this << swDev << portNo << epcDev);
+
+  // Configure S5 port rules.
+  // -------------------------------------------------------------------------
+  // Table 0 -- Input table -- [from higher to lower priority]
+  //
+  // GTP packets entering the ring network from any EPC port. Send to the
+  // Classification table.
+  std::ostringstream cmdIn;
+  cmdIn << "flow-mod cmd=add,table=0,prio=64,flags=0x0007"
+        << " eth_type=0x800,ip_proto=17"
+        << ",udp_src=" << SvelteHelper::m_gtpuPort
+        << ",udp_dst=" << SvelteHelper::m_gtpuPort
+        << ",in_port=" << portNo
+        << " goto:1";
+  DpctlSchedule (swDev->GetDatapathId (), cmdIn.str ());
+
+  // -------------------------------------------------------------------------
+  // Table 2 -- Routing table -- [from higher to lower priority]
+  //
+  // GTP packets addressed to EPC elements connected to this switch over EPC
+  // ports. Write the output port into action set. Send the packet directly to
+  // Output table.
+  Mac48Address epcMac = Mac48Address::ConvertFrom (epcDev->GetAddress ());
+  std::ostringstream cmdOut;
+  cmdOut << "flow-mod cmd=add,table=2,prio=256 eth_type=0x800"
+         << ",eth_dst=" << epcMac
+         << ",ip_dst=" << SvelteHelper::GetIpv4Addr (epcDev)
+         << " write:output=" << portNo
+         << " goto:4";
+  DpctlSchedule (swDev->GetDatapathId (), cmdOut.str ());
+}
+
 // FIXME Essas funções terao que ser ajustadas para considerar qq elemento que se conecte à rede backhaul
-// void
-// BackhaulController::NotifyS5Attach (
-//   Ptr<OFSwitch13Device> swtchDev, uint32_t portNo, Ptr<NetDevice> gwDev)
-// {
-//   NS_LOG_FUNCTION (this << swtchDev << portNo << gwDev);
-//
-//   // Configure S5 port rules.
-//   // -------------------------------------------------------------------------
-//   // Table 0 -- Input table -- [from higher to lower priority]
-//   //
-//   // GTP packets entering the ring network from any EPC port. Send to the
-//   // Classification table.
-//   std::ostringstream cmdIn;
-//   cmdIn << "flow-mod cmd=add,table=0,prio=64,flags=0x0007"
-//         << " eth_type=0x800,ip_proto=17"
-//         << ",udp_src=" << BackhaulNetwork::m_gtpuPort
-//         << ",udp_dst=" << BackhaulNetwork::m_gtpuPort
-//         << ",in_port=" << portNo
-//         << " goto:1";
-//   DpctlSchedule (swtchDev->GetDatapathId (), cmdIn.str ());
-//
-//   // -------------------------------------------------------------------------
-//   // Table 2 -- Routing table -- [from higher to lower priority]
-//   //
-//   // GTP packets addressed to EPC elements connected to this switch over EPC
-//   // ports. Write the output port into action set. Send the packet directly to
-//   // Output table.
-//   Mac48Address gwMac = Mac48Address::ConvertFrom (gwDev->GetAddress ());
-//   std::ostringstream cmdOut;
-//   cmdOut << "flow-mod cmd=add,table=2,prio=256 eth_type=0x800"
-//          << ",eth_dst=" << gwMac
-//          << ",ip_dst=" << BackhaulNetwork::GetIpv4Addr (gwDev)
-//          << " write:output=" << portNo
-//          << " goto:4";
-//   DpctlSchedule (swtchDev->GetDatapathId (), cmdOut.str ());
-// }
-//
+// FIXME Isso aqui é bem específico da parte de gragegação MTC. Tem que estudar como implementar.
 // std::pair<uint32_t, uint32_t>
 // BackhaulController::NotifySgwAttach (Ptr<NetDevice> gwDev)
 // {
