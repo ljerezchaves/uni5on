@@ -80,11 +80,11 @@ public:
   void EnablePcap (std::string prefix, bool promiscuous = false);
 
   /**
-   * Configure and connect the eNB node to the S1 interface on the OpenFlow
-   * backhaul network.
-   * \param enb The eNB node pointer.
+   * Attach the eNB node to the OpenFlow backhaul network.
+   * \param enbNode The eNB node.
+   * \param cellId The eNB cell ID.
    */
-  virtual void AttachEnb (Ptr<Node> enb);
+  virtual void AttachEnb (Ptr<Node> enbNode, uint16_t cellId);
 
 protected:
   /** Destructor implementation. */
