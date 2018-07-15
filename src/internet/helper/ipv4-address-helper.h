@@ -180,6 +180,20 @@ public:
  */
   Ipv4InterfaceContainer Assign (const NetDeviceContainer &c);
 
+  /**
+   * Get the first IP address assigned to a network device.
+   * \param device The net device.
+   * \return The IP address value.
+   */
+  static Ipv4Address GetFirstAddress (Ptr<const NetDevice> device);
+
+  /**
+   * Get the first IP mask assigned to a network device.
+   * \param device The net device.
+   * \return The IP address value.
+   */
+  static Ipv4Mask GetFirstMask (Ptr<const NetDevice> device);
+
 private:
   /**
    * \brief Returns the number of address bits (hostpart) for a given netmask
