@@ -20,7 +20,7 @@
 
 #include "radio-network.h"
 #include "backhaul-network.h"
-#include "svelte-epc-helper.h"
+#include "../svelte-epc-helper.h"
 
 namespace ns3 {
 

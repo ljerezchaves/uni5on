@@ -20,10 +20,10 @@
 
 #include <ns3/csma-module.h>
 #include "svelte-epc-helper.h"
-#include "ring-network.h"
-#include "radio-network.h"
-#include "svelte-enb-application.h"
-#include "../logical/svelte-mme.h"
+#include "infrastructure/ring-network.h"
+#include "infrastructure/radio-network.h"
+#include "infrastructure/svelte-enb-application.h"
+#include "logical/svelte-mme.h"
 
 namespace ns3 {
 
