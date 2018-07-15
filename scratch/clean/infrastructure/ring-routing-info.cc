@@ -29,7 +29,7 @@ NS_OBJECT_ENSURE_REGISTERED (RingRoutingInfo);
 // RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo)
 // {
 //   NS_LOG_FUNCTION (this);
-// 
+//
 //   AggregateObject (rInfo);
 //   SetDefaultPath (RingRoutingInfo::LOCAL);
 // }
@@ -59,71 +59,71 @@ RingRoutingInfo::GetTypeId (void)
 // RingRoutingInfo::GetDownPath (void) const
 // {
 //   NS_LOG_FUNCTION (this);
-// 
+//
 //   return m_downPath;
 // }
-// 
+//
 // RingRoutingInfo::RoutingPath
 // RingRoutingInfo::GetUpPath (void) const
 // {
 //   NS_LOG_FUNCTION (this);
-// 
+//
 //   return RingRoutingInfo::Invert (m_downPath);
 // }
-// 
+//
 // uint16_t
 // RingRoutingInfo::GetPgwSwIdx (void) const
 // {
 //   NS_LOG_FUNCTION (this);
-// 
+//
 //   return m_pgwIdx;
 // }
-// 
+//
 // uint16_t
 // RingRoutingInfo::GetSgwSwIdx (void) const
 // {
 //   NS_LOG_FUNCTION (this);
-// 
+//
 //   return m_sgwIdx;
 // }
-// 
+//
 // uint64_t
 // RingRoutingInfo::GetPgwSwDpId (void) const
 // {
 //   NS_LOG_FUNCTION (this);
-// 
+//
 //   return m_pgwDpId;
 // }
-// 
+//
 // uint64_t
 // RingRoutingInfo::GetSgwSwDpId (void) const
 // {
 //   NS_LOG_FUNCTION (this);
-// 
+//
 //   return m_sgwDpId;
 // }
-// 
+//
 // bool
 // RingRoutingInfo::IsDefaultPath (void) const
 // {
 //   NS_LOG_FUNCTION (this);
-// 
+//
 //   return m_isDefaultPath;
 // }
-// 
+//
 // bool
 // RingRoutingInfo::IsLocalPath (void) const
 // {
 //   NS_LOG_FUNCTION (this);
-// 
+//
 //   return m_isLocalPath;
 // }
-// 
+//
 // std::string
 // RingRoutingInfo::GetPathStr (void) const
 // {
 //   NS_LOG_FUNCTION (this);
-// 
+//
 //   bool blocked = GetObject<RoutingInfo> ()->IsBlocked ();
 //   if (blocked)
 //     {
@@ -138,72 +138,72 @@ RingRoutingInfo::GetTypeId (void)
 //       return "Inverted";
 //     }
 // }
-// 
+//
 // void
 // RingRoutingInfo::SetPgwSwIdx (uint16_t value)
 // {
 //   NS_LOG_FUNCTION (this << value);
-// 
+//
 //   m_pgwIdx = value;
 // }
-// 
+//
 // void
 // RingRoutingInfo::SetSgwSwIdx (uint16_t value)
 // {
 //   NS_LOG_FUNCTION (this << value);
-// 
+//
 //   m_sgwIdx = value;
 // }
-// 
+//
 // void
 // RingRoutingInfo::SetPgwSwDpId (uint64_t value)
 // {
 //   NS_LOG_FUNCTION (this << value);
-// 
+//
 //   m_pgwDpId = value;
 // }
-// 
+//
 // void
 // RingRoutingInfo::SetSgwSwDpId (uint64_t value)
 // {
 //   NS_LOG_FUNCTION (this << value);
-// 
+//
 //   m_sgwDpId = value;
 // }
-// 
+//
 // void
 // RingRoutingInfo::SetDefaultPath (RoutingPath downPath)
 // {
 //   NS_LOG_FUNCTION (this << downPath);
-// 
+//
 //   m_downPath = downPath;
 //   m_isDefaultPath = true;
 //   m_isLocalPath = false;
-// 
+//
 //   // Check for local routing paths
 //   if (downPath == RingRoutingInfo::LOCAL)
 //     {
 //       m_isLocalPath = true;
 //     }
 // }
-// 
+//
 // void
 // RingRoutingInfo::InvertPath ()
 // {
 //   NS_LOG_FUNCTION (this);
-// 
+//
 //   if (m_isLocalPath == false)
 //     {
 //       m_downPath = RingRoutingInfo::Invert (m_downPath);
 //       m_isDefaultPath = !m_isDefaultPath;
 //     }
 // }
-// 
+//
 // void
 // RingRoutingInfo::ResetPath ()
 // {
 //   NS_LOG_FUNCTION (this);
-// 
+//
 //   if (m_isDefaultPath == false)
 //     {
 //       InvertPath ();
@@ -247,4 +247,4 @@ RingRoutingInfo::DoDispose ()
   NS_LOG_FUNCTION (this);
 }
 
-};  // namespace ns3
+} // namespace ns3

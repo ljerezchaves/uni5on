@@ -424,7 +424,7 @@ BackhaulController::HandleFlowRemoved (
   uint32_t xid)
 {
   NS_LOG_FUNCTION (this << swtch << xid << msg->stats->cookie);
-  
+
   return 0; // FIXME remover
 // FIXME Comentado apenas para remover a dependencia do rinfo
 //  uint32_t teid = msg->stats->cookie;

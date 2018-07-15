@@ -137,7 +137,7 @@ BackhaulNetwork::AttachEnb (Ptr<Node> enbNode, uint16_t cellId)
   uint32_t swS1PortNo = swS1Port->GetPortNo ();
 
   // Add the enbS1uDev as standard device on eNB node.
-  Ipv4InterfaceContainer s1uIpIfaces; 
+  Ipv4InterfaceContainer s1uIpIfaces;
   s1uIpIfaces = m_s1uAddrHelper.Assign (NetDeviceContainer (enbS1uDev));
   Ipv4Address enbS1uAddr = s1uIpIfaces.GetAddress (0);
   NS_LOG_INFO ("eNB S1-U address: " << enbS1uAddr);

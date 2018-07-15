@@ -120,6 +120,6 @@ private:
 //  bool             m_isLocalPath;   //!< True if path is local.
 };
 
-};  // namespace ns3
+} // namespace ns3
 #endif // RING_ROUTING_INFO_H
 

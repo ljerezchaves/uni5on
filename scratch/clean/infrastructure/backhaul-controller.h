@@ -45,7 +45,7 @@ class ConnectionInfo;
 //   ON   = 1,   //!< Always on.
 //   AUTO = 2    //!< Automatic.
 // } OperationMode;
-// 
+//
 // std::string OperationModeStr (OperationMode mode);
 
 /**
