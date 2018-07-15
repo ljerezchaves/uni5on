@@ -95,29 +95,24 @@ RingNetwork::TopologyCreate (void)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG (m_numNodes >= 3, "Invalid number of nodes for the ring");
+  NS_ASSERT_MSG (m_numNodes >= 3, "Invalid number of nodes for the ring.");
 
-  // Install the EPC ring controller application for this topology.
+  // Install the ring controller application for this topology.
   Ptr<RingController> ringController = CreateObject<RingController> ();
   InstallController (ringController);
 
-  // Create the switch nodes.
+  // Create the switch nodes and install the OpenFlow switch devices.
   m_switchNodes.Create (m_numNodes);
-
-  // Install the OpenFlow switch devices for each switch node.
   m_switchDevices = m_switchHelper->InstallSwitch (m_switchNodes);
-
-  // Set the name for each switch node.
-  for (uint16_t i = 0; i < m_numNodes; i++)
-    {
-      std::ostringstream swName;
-      swName << "sw" << m_switchDevices.Get (i)->GetDatapathId ();
-      Names::Add (swName.str (), m_switchNodes.Get (i));
-    }
 
   // Connecting switches in ring topology (clockwise order).
   for (uint16_t i = 0; i < m_numNodes; i++)
     {
+      // Set the name for each switch node.
+      std::ostringstream swName;
+      swName << "sw" << m_switchDevices.Get (i)->GetDatapathId ();
+      Names::Add (swName.str (), m_switchNodes.Get (i));
+
       uint16_t currIndex = i;
       uint16_t nextIndex = (i + 1) % m_numNodes;  // Next clockwise node.
 
@@ -170,9 +165,9 @@ RingNetwork::TopologyGetEnbSwitch (uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << cellId);
 
-  // Connect the eNBs nodes to switches indexes in clockwise direction,
-  // skipping switch index 0 which is exclusive for the P-GW. The three eNBs
-  // from same cell site are connected to the same switch in the ring network.
+  // Connect the eNBs to switches in clockwise direction, skipping switch index
+  // 0 which is exclusive for the P-GW. The three eNBs from the same cell site
+  // are always connected to the same switch in the ring network.
   uint16_t siteId = (cellId - 1) / 3;
   uint16_t swIdx = 1 + (siteId % (m_numNodes - 1));
   return m_switchDevices.Get (swIdx)->GetDatapathId ();

@@ -26,8 +26,6 @@
 
 namespace ns3 {
 
-// class BackhaulStatsCalculator; FIXME
-
 /**
  * \ingroup svelteInfra
  * OpenFlow backhaul network for ring topology.
