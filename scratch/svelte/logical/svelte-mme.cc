@@ -21,8 +21,8 @@
  */
 
 #include "svelte-mme.h"
-// #include "../info/ue-info.h"
-// #include "../info/enb-info.h"
+#include "../info/ue-info.h"
+#include "../info/enb-info.h"
 
 namespace ns3 {
 
@@ -81,13 +81,13 @@ SvelteMme::GetS11SapMme (void) const
 // gerenciar isso. Como essa informação depende do UE (um mesmo eNB pode estar
 // atrelado à dois SGW diferentes), então o melhor é salvar isso dentro do
 // UeInfo.
-void
-SvelteMme::SetS11SapSgw (EpcS11SapSgw *sap)
-{
-  NS_LOG_FUNCTION (this);
-
-//  m_s11SapSgw = sap;
-}
+// void
+// SvelteMme::SetS11SapSgw (EpcS11SapSgw *sap)
+// {
+//   NS_LOG_FUNCTION (this);
+//
+// //  m_s11SapSgw = sap;
+// }
 
 //
 // S1-AP SAP MME forwarded methods
@@ -98,28 +98,28 @@ SvelteMme::DoInitialUeMessage (
 {
   NS_LOG_FUNCTION (this << mmeUeS1Id << enbUeS1Id << imsi << ecgi);
 
-// FIXME
-//  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-//  ueInfo->SetCellId (ecgi);
-//
-//  EpcS11SapSgw::CreateSessionRequestMessage msg;
-//  msg.imsi = imsi;
-//  msg.uli.gci = ecgi;
-//
-//  std::list<UeInfo::BearerInfo>::const_iterator bit;
-//  for (bit = ueInfo->GetBearerListBegin ();
-//       bit != ueInfo->GetBearerListEnd ();
-//       ++bit)
-//    {
-//      EpcS11SapSgw::BearerContextToBeCreated bearerContext;
-//      bearerContext.epsBearerId     = bit->bearerId;
-//      bearerContext.bearerLevelQos  = bit->bearer;
-//      bearerContext.tft             = bit->tft;
-//
-//      msg.bearerContextsToBeCreated.push_back (bearerContext);
-//    }
-//
-//  // FIXME Enviar a informação para o controlador do S-GW correto.
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  ueInfo->SetCellId (ecgi);
+  ueInfo->SetEnbUeS1Id (enbUeS1Id); // TODO Verificar se isso nao causa erro.
+
+  EpcS11SapSgw::CreateSessionRequestMessage msg;
+  msg.imsi = imsi;
+  msg.uli.gci = ecgi;
+
+  std::list<UeInfo::BearerInfo>::const_iterator bit;
+  for (bit = ueInfo->GetBearerListBegin ();
+       bit != ueInfo->GetBearerListEnd ();
+       ++bit)
+    {
+      EpcS11SapSgw::BearerContextToBeCreated bearerContext;
+      bearerContext.epsBearerId     = bit->bearerId;
+      bearerContext.bearerLevelQos  = bit->bearer;
+      bearerContext.tft             = bit->tft;
+
+      msg.bearerContextsToBeCreated.push_back (bearerContext);
+    }
+
+// FIXME Enviar a informação para o controlador do S-GW correto.
 //  m_s11SapSgw->CreateSessionRequest (msg);
 }
 
@@ -144,20 +144,20 @@ SvelteMme::DoPathSwitchRequest (
 {
   NS_LOG_FUNCTION (this << mmeUeS1Id << enbUeS1Id << gci);
 
-// FIXME
-//  uint64_t imsi = mmeUeS1Id;
-//  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-//  NS_LOG_INFO ("UE IMSI: " << imsi <<
-//               " old eNB: " << ueInfo->GetCellId () <<
-//               " new eNB: " << gci);
-//
-//  ueInfo->SetCellId (gci);
-//  ueInfo->SetEnbUeS1Id (enbUeS1Id);
-//
-//  EpcS11SapSgw::ModifyBearerRequestMessage msg;
-//  msg.teid = imsi;
-//  msg.uli.gci = gci;
-//
+  uint64_t imsi = mmeUeS1Id;
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  NS_LOG_INFO ("UE IMSI: " << imsi <<
+               " old eNB: " << ueInfo->GetCellId () <<
+               " new eNB: " << gci);
+
+  ueInfo->SetCellId (gci);
+  ueInfo->SetEnbUeS1Id (enbUeS1Id);
+
+  EpcS11SapSgw::ModifyBearerRequestMessage msg;
+  msg.teid = imsi;
+  msg.uli.gci = gci;
+
+// FIXME Enviar a informação para o controlador do S-GW correto.
 //  m_s11SapSgw->ModifyBearerRequest (msg);
 }
 
@@ -168,21 +168,21 @@ SvelteMme::DoErabReleaseIndication (
 {
   NS_LOG_FUNCTION (this << mmeUeS1Id << enbUeS1Id);
 
-// FIXME
-//  uint64_t imsi = mmeUeS1Id;
-//  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-//
-//  EpcS11SapSgw::DeleteBearerCommandMessage msg;
-//  msg.teid = imsi;
-//
-//  std::list<EpcS1apSapMme::ErabToBeReleasedIndication>::iterator bit;
-//  for (bit = erabList.begin (); bit != erabList.end (); ++bit)
-//    {
-//      EpcS11SapSgw::BearerContextToBeRemoved bearerContext;
-//      bearerContext.epsBearerId = bit->erabId;
-//      msg.bearerContextsToBeRemoved.push_back (bearerContext);
-//    }
-//
+  uint64_t imsi = mmeUeS1Id;
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+
+  EpcS11SapSgw::DeleteBearerCommandMessage msg;
+  msg.teid = imsi;
+
+  std::list<EpcS1apSapMme::ErabToBeReleasedIndication>::iterator bit;
+  for (bit = erabList.begin (); bit != erabList.end (); ++bit)
+    {
+      EpcS11SapSgw::BearerContextToBeRemoved bearerContext;
+      bearerContext.epsBearerId = bit->erabId;
+      msg.bearerContextsToBeRemoved.push_back (bearerContext);
+    }
+
+// FIXME Enviar a informação para o controlador do S-GW correto.
 //  m_s11SapSgw->DeleteBearerCommand (msg);
 }
 
@@ -195,30 +195,29 @@ SvelteMme::DoCreateSessionResponse (
 {
   NS_LOG_FUNCTION (this << msg.teid);
 
-// FIXME
-//  uint64_t imsi = msg.teid;
-//  std::list<EpcS1apSapEnb::ErabToBeSetupItem> erabToBeSetupList;
-//  std::list<EpcS11SapMme::BearerContextCreated>::iterator bit;
-//  for (bit = msg.bearerContextsCreated.begin ();
-//       bit != msg.bearerContextsCreated.end ();
-//       ++bit)
-//    {
-//      EpcS1apSapEnb::ErabToBeSetupItem erab;
-//      erab.erabId = bit->epsBearerId;
-//      erab.erabLevelQosParameters = bit->bearerLevelQos;
-//      erab.transportLayerAddress = bit->sgwFteid.address;
-//      erab.sgwTeid = bit->sgwFteid.teid;
-//      erabToBeSetupList.push_back (erab);
-//    }
-//
-//  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-//  uint16_t cellId = ueInfo->GetCellId ();
-//  uint16_t enbUeS1Id = ueInfo->GetEnbUeS1Id ();
-//  uint64_t mmeUeS1Id = ueInfo->GetMmeUeS1Id ();
-//
-//  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
-//  enbInfo->GetS1apSapEnb ()->InitialContextSetupRequest (
-//    mmeUeS1Id, enbUeS1Id, erabToBeSetupList);
+  uint64_t imsi = msg.teid;
+  std::list<EpcS1apSapEnb::ErabToBeSetupItem> erabToBeSetupList;
+  std::list<EpcS11SapMme::BearerContextCreated>::iterator bit;
+  for (bit = msg.bearerContextsCreated.begin ();
+       bit != msg.bearerContextsCreated.end ();
+       ++bit)
+    {
+      EpcS1apSapEnb::ErabToBeSetupItem erab;
+      erab.erabId = bit->epsBearerId;
+      erab.erabLevelQosParameters = bit->bearerLevelQos;
+      erab.transportLayerAddress = bit->sgwFteid.address;
+      erab.sgwTeid = bit->sgwFteid.teid;
+      erabToBeSetupList.push_back (erab);
+    }
+
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  uint16_t cellId    = ueInfo->GetCellId ();
+  uint16_t enbUeS1Id = ueInfo->GetEnbUeS1Id ();
+  uint64_t mmeUeS1Id = ueInfo->GetMmeUeS1Id ();
+
+  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
+  enbInfo->GetS1apSapEnb ()->InitialContextSetupRequest (
+    mmeUeS1Id, enbUeS1Id, erabToBeSetupList);
 }
 
 void
@@ -227,20 +226,19 @@ SvelteMme::DoModifyBearerResponse (
 {
   NS_LOG_FUNCTION (this << msg.teid);
 
-// FIXME
-//  NS_ASSERT (msg.cause ==
-//             EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED);
-//
-//  uint64_t imsi = msg.teid;
-//  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-//  uint64_t enbUeS1Id = ueInfo->GetEnbUeS1Id ();
-//  uint64_t mmeUeS1Id = ueInfo->GetMmeUeS1Id ();
-//  uint16_t cellId = ueInfo->GetCellId ();
-//  std::list<EpcS1apSapEnb::ErabSwitchedInUplinkItem> erabList;
-//
-//  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
-//  enbInfo->GetS1apSapEnb ()->PathSwitchRequestAcknowledge (
-//    enbUeS1Id, mmeUeS1Id, cellId, erabList);
+  NS_ASSERT (msg.cause ==
+             EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED);
+
+  uint64_t imsi = msg.teid;
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  uint64_t enbUeS1Id = ueInfo->GetEnbUeS1Id ();
+  uint64_t mmeUeS1Id = ueInfo->GetMmeUeS1Id ();
+  uint16_t cellId    = ueInfo->GetCellId ();
+  std::list<EpcS1apSapEnb::ErabSwitchedInUplinkItem> erabList;
+
+  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
+  enbInfo->GetS1apSapEnb ()->PathSwitchRequestAcknowledge (
+    enbUeS1Id, mmeUeS1Id, cellId, erabList);
 }
 
 void
@@ -248,24 +246,24 @@ SvelteMme::DoDeleteBearerRequest (EpcS11SapMme::DeleteBearerRequestMessage msg)
 {
   NS_LOG_FUNCTION (this);
 
-// FIXME
-//  uint64_t imsi = msg.teid;
-//  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-//
-//  EpcS11SapSgw::DeleteBearerResponseMessage res;
-//  res.teid = imsi;
-//
-//  std::list<EpcS11SapMme::BearerContextRemoved>::iterator bit;
-//  for (bit = msg.bearerContextsRemoved.begin ();
-//       bit != msg.bearerContextsRemoved.end ();
-//       ++bit)
-//    {
-//      EpcS11SapSgw::BearerContextRemovedSgwPgw bearerContext;
-//      bearerContext.epsBearerId = bit->epsBearerId;
-//      res.bearerContextsRemoved.push_back (bearerContext);
-//      ueInfo->RemoveBearer (bearerContext.epsBearerId);
-//    }
-//
+  uint64_t imsi = msg.teid;
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+
+  EpcS11SapSgw::DeleteBearerResponseMessage res;
+  res.teid = imsi;
+
+  std::list<EpcS11SapMme::BearerContextRemoved>::iterator bit;
+  for (bit = msg.bearerContextsRemoved.begin ();
+       bit != msg.bearerContextsRemoved.end ();
+       ++bit)
+    {
+      EpcS11SapSgw::BearerContextRemovedSgwPgw bearerContext;
+      bearerContext.epsBearerId = bit->epsBearerId;
+      res.bearerContextsRemoved.push_back (bearerContext);
+      ueInfo->RemoveBearer (bearerContext.epsBearerId);
+    }
+
+// FIXME Enviar a informação para o controlador do S-GW correto.
 //  m_s11SapSgw->DeleteBearerResponse (res);
 }
 
