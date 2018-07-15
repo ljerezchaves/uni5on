@@ -28,7 +28,10 @@ NS_LOG_COMPONENT_DEFINE ("RadioNetwork");
 NS_OBJECT_ENSURE_REGISTERED (RadioNetwork);
 
 RadioNetwork::RadioNetwork (Ptr<SvelteEpcHelper> helper)
-  : m_epcHelper (helper)
+  : m_topoHelper (0),
+  m_remHelper (0),
+  m_lteHelper (0),
+  m_epcHelper (helper)
 {
   NS_LOG_FUNCTION (this << helper);
 
@@ -189,6 +192,7 @@ RadioNetwork::DoDispose ()
   m_remHelper = 0;
   m_lteHelper = 0;
   m_epcHelper = 0;
+
   Object::DoDispose ();
 }
 
