@@ -69,6 +69,17 @@ BackhaulNetwork::GetTypeId (void)
   return tid;
 }
 
+Ptr<Node>
+BackhaulNetwork::GetSwitchNode (uint64_t dpId) const
+{
+  NS_LOG_FUNCTION (this << dpId);
+
+  Ptr<Node> node = OFSwitch13Device::GetDevice (dpId)->GetObject<Node> ();
+  NS_ASSERT_MSG (node, "No node found for this datapath ID");
+
+  return node;
+}
+
 void
 BackhaulNetwork::SetSwitchDeviceAttribute (std::string n1,
                                            const AttributeValue &v1)

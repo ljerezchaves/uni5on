@@ -58,6 +58,13 @@ public:
   static TypeId GetTypeId (void);
 
   /**
+   * Get the OpenFlow switch node for a given OpenFlow switch datapath ID.
+   * \param dpId The switch datapath ID.
+   * \return The pointer to the switch node.
+   */
+  Ptr<Node> GetSwitchNode (uint64_t dpId) const;
+
+  /**
    * Set an attribute for ns3::OFSwitch13Device factory.
    * \param n1 The name of the attribute to set.
    * \param v1 The value of the attribute to set.
