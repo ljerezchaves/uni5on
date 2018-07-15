@@ -55,6 +55,7 @@ protected:
 
   // Inherited from BackhaulNetwork.
   void TopologyCreate (void);
+  uint64_t TopologyGetPgwSwitch (void);
   uint64_t TopologyGetEnbSwitch (uint16_t cellId);
 
 private:

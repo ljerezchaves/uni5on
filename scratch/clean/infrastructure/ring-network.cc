@@ -161,6 +161,15 @@ RingNetwork::TopologyCreate (void)
 }
 
 uint64_t
+RingNetwork::TopologyGetPgwSwitch ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // Always connect the P-GW node to the first switch.
+  return m_switchDevices.Get (0)->GetDatapathId ();
+}
+
+uint64_t
 RingNetwork::TopologyGetEnbSwitch (uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << cellId);
