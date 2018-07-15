@@ -34,11 +34,11 @@ namespace ns3 {
  * entities (P-GW and S-GW) are connected through CSMA devices to the OpenFlow
  * backhaul network.
  */
-class SvelteHelper : public EpcHelper
+class SvelteEpcHelper : public EpcHelper
 {
 public:
-  SvelteHelper ();          //!< Default constructor.
-  virtual ~SvelteHelper (); //!< Dummy destructor, see DoDispose.
+  SvelteEpcHelper ();          //!< Default constructor.
+  virtual ~SvelteEpcHelper (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.

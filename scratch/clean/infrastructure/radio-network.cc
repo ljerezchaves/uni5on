@@ -20,16 +20,16 @@
 
 #include "radio-network.h"
 #include "backhaul-network.h"
-#include "../svelte-helper.h"
+#include "svelte-epc-helper.h"
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("RadioNetwork");
 NS_OBJECT_ENSURE_REGISTERED (RadioNetwork);
 
-RadioNetwork::RadioNetwork (Ptr<SvelteHelper> helper,
+RadioNetwork::RadioNetwork (Ptr<SvelteEpcHelper> helper,
                             Ptr<BackhaulNetwork> backhaul)
-  : m_svelteHelper (helper),
+  : m_epcHelper (helper),
   m_backhaul (backhaul)
 {
   NS_LOG_FUNCTION (this << helper);
@@ -200,7 +200,7 @@ RadioNetwork::DoDispose ()
   m_topoHelper = 0;
   m_remHelper = 0;
   m_lteHelper = 0;
-  m_svelteHelper = 0;
+  m_epcHelper = 0;
   m_backhaul = 0;
   Object::DoDispose ();
 }
@@ -246,7 +246,7 @@ RadioNetwork::ConfigureHelpers ()
 
   // Create the LTE helper for the radio network.
   m_lteHelper = CreateObject<LteHelper> ();
-  m_lteHelper->SetEpcHelper (m_svelteHelper);
+  m_lteHelper->SetEpcHelper (m_epcHelper);
 
   // Use the hybrid path loss model obtained through a combination of several
   // well known path loss models in order to mimic different environmental
@@ -411,8 +411,8 @@ RadioNetwork::ConfigureUes ()
   InternetStackHelper internet;
   internet.Install (m_htcUeNodes);
   internet.Install (m_mtcUeNodes);
-  m_svelteHelper->AssignHtcUeIpv4Address (m_htcUeDevices);
-  m_svelteHelper->AssignMtcUeIpv4Address (m_mtcUeDevices);
+  m_epcHelper->AssignHtcUeIpv4Address (m_htcUeDevices);
+  m_epcHelper->AssignMtcUeIpv4Address (m_mtcUeDevices);
 
   // Specify static routes for each UE to its default S-GW.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
@@ -423,7 +423,7 @@ RadioNetwork::ConfigureUes ()
         ipv4RoutingHelper.GetStaticRouting ((*it)->GetObject<Ipv4> ());
       // FIXME O endereço IP do PGW pode vir de outro lugar se for preciso.
       ueStaticRouting->SetDefaultRoute (
-        m_svelteHelper->GetUeDefaultGatewayAddress (), 1);
+        m_epcHelper->GetUeDefaultGatewayAddress (), 1);
     }
   for (NodeContainer::Iterator it = m_mtcUeNodes.Begin ();
        it != m_mtcUeNodes.End (); it++)
@@ -432,7 +432,7 @@ RadioNetwork::ConfigureUes ()
         ipv4RoutingHelper.GetStaticRouting ((*it)->GetObject<Ipv4> ());
       // FIXME O endereço IP do PGW pode vir de outro lugar se for preciso
       ueStaticRouting->SetDefaultRoute (
-        m_svelteHelper->GetUeDefaultGatewayAddress (), 1);
+        m_epcHelper->GetUeDefaultGatewayAddress (), 1);
     }
 
   // Attach UE to the eNBs using initial cell selection.

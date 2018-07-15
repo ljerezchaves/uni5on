@@ -19,51 +19,51 @@
  */
 
 #include <ns3/csma-module.h>
-#include "svelte-helper.h"
+#include "svelte-epc-helper.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("SvelteHelper");
-NS_OBJECT_ENSURE_REGISTERED (SvelteHelper);
+NS_LOG_COMPONENT_DEFINE ("SvelteEpcHelper");
+NS_OBJECT_ENSURE_REGISTERED (SvelteEpcHelper);
 
-// Initializing SvelteHelper static members.
-const uint16_t    SvelteHelper::m_gtpuPort = 2152;
-const Ipv4Address SvelteHelper::m_htcAddr  = Ipv4Address ("7.64.0.0");
-const Ipv4Address SvelteHelper::m_mtcAddr  = Ipv4Address ("7.128.0.0");
-const Ipv4Address SvelteHelper::m_s1uAddr  = Ipv4Address ("10.2.0.0");
-const Ipv4Address SvelteHelper::m_s5Addr   = Ipv4Address ("10.1.0.0");
-const Ipv4Address SvelteHelper::m_sgiAddr  = Ipv4Address ("8.0.0.0");
-const Ipv4Address SvelteHelper::m_ueAddr   = Ipv4Address ("7.0.0.0");
-const Ipv4Address SvelteHelper::m_x2Addr   = Ipv4Address ("10.3.0.0");
-const Ipv4Mask    SvelteHelper::m_htcMask  = Ipv4Mask ("255.192.0.0");
-const Ipv4Mask    SvelteHelper::m_mtcMask  = Ipv4Mask ("255.192.0.0");
-const Ipv4Mask    SvelteHelper::m_s1uMask  = Ipv4Mask ("255.255.255.0");
-const Ipv4Mask    SvelteHelper::m_s5Mask   = Ipv4Mask ("255.255.255.0");
-const Ipv4Mask    SvelteHelper::m_sgiMask  = Ipv4Mask ("255.0.0.0");
-const Ipv4Mask    SvelteHelper::m_ueMask   = Ipv4Mask ("255.0.0.0");
-const Ipv4Mask    SvelteHelper::m_x2Mask   = Ipv4Mask ("255.255.255.0");
+// Initializing SvelteEpcHelper static members.
+const uint16_t    SvelteEpcHelper::m_gtpuPort = 2152;
+const Ipv4Address SvelteEpcHelper::m_htcAddr  = Ipv4Address ("7.64.0.0");
+const Ipv4Address SvelteEpcHelper::m_mtcAddr  = Ipv4Address ("7.128.0.0");
+const Ipv4Address SvelteEpcHelper::m_s1uAddr  = Ipv4Address ("10.2.0.0");
+const Ipv4Address SvelteEpcHelper::m_s5Addr   = Ipv4Address ("10.1.0.0");
+const Ipv4Address SvelteEpcHelper::m_sgiAddr  = Ipv4Address ("8.0.0.0");
+const Ipv4Address SvelteEpcHelper::m_ueAddr   = Ipv4Address ("7.0.0.0");
+const Ipv4Address SvelteEpcHelper::m_x2Addr   = Ipv4Address ("10.3.0.0");
+const Ipv4Mask    SvelteEpcHelper::m_htcMask  = Ipv4Mask ("255.192.0.0");
+const Ipv4Mask    SvelteEpcHelper::m_mtcMask  = Ipv4Mask ("255.192.0.0");
+const Ipv4Mask    SvelteEpcHelper::m_s1uMask  = Ipv4Mask ("255.255.255.0");
+const Ipv4Mask    SvelteEpcHelper::m_s5Mask   = Ipv4Mask ("255.255.255.0");
+const Ipv4Mask    SvelteEpcHelper::m_sgiMask  = Ipv4Mask ("255.0.0.0");
+const Ipv4Mask    SvelteEpcHelper::m_ueMask   = Ipv4Mask ("255.0.0.0");
+const Ipv4Mask    SvelteEpcHelper::m_x2Mask   = Ipv4Mask ("255.255.255.0");
 
-SvelteHelper::SvelteHelper ()
+SvelteEpcHelper::SvelteEpcHelper ()
 {
   NS_LOG_FUNCTION (this);
 }
 
-SvelteHelper::~SvelteHelper ()
+SvelteEpcHelper::~SvelteEpcHelper ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-SvelteHelper::GetTypeId (void)
+SvelteEpcHelper::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::SvelteHelper")
+  static TypeId tid = TypeId ("ns3::SvelteEpcHelper")
     .SetParent<EpcHelper> ()
   ;
   return tid;
 }
 
 void
-SvelteHelper::DoDispose (void)
+SvelteEpcHelper::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -71,7 +71,7 @@ SvelteHelper::DoDispose (void)
 }
 
 void
-SvelteHelper::NotifyConstructionCompleted (void)
+SvelteEpcHelper::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -97,7 +97,7 @@ SvelteHelper::NotifyConstructionCompleted (void)
 // Implementing methods inherited from EpcHelper.
 //
 uint8_t
-SvelteHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer)
+SvelteEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer)
 {
   NS_LOG_FUNCTION (this << ueDevice << imsi);
 
@@ -161,7 +161,7 @@ SvelteHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Ptr<Epc
 }
 
 void
-SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t cellId)
+SvelteEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << enb << lteEnbNetDevice << cellId);
 
@@ -180,7 +180,7 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t ce
   // Create the S1-U socket for the eNB
   Ptr<Socket> enbS1uSocket = Socket::CreateSocket (
       enb, TypeId::LookupByName ("ns3::UdpSocketFactory"));
-  enbS1uSocket->Bind (InetSocketAddress (enbS1uAddr, SvelteHelper::m_gtpuPort));
+  enbS1uSocket->Bind (InetSocketAddress (enbS1uAddr, SvelteEpcHelper::m_gtpuPort));
 
   // Create the LTE IPv4 and IPv6 sockets for the eNB
   Ptr<Socket> enbLteSocket = Socket::CreateSocket (
@@ -233,7 +233,7 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t ce
 }
 
 void
-SvelteHelper::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
+SvelteEpcHelper::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
 {
   NS_LOG_FUNCTION (this << enb1 << enb2);
 
@@ -241,7 +241,7 @@ SvelteHelper::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
 }
 
 void
-SvelteHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
+SvelteEpcHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 {
   NS_LOG_FUNCTION (this << imsi << ueDevice);
 
@@ -250,7 +250,7 @@ SvelteHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 }
 
 Ptr<Node>
-SvelteHelper::GetPgwNode ()
+SvelteEpcHelper::GetPgwNode ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -259,7 +259,7 @@ SvelteHelper::GetPgwNode ()
 }
 
 Ipv4InterfaceContainer
-SvelteHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
+SvelteEpcHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -267,7 +267,7 @@ SvelteHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
 }
 
 Ipv4Address
-SvelteHelper::GetUeDefaultGatewayAddress ()
+SvelteEpcHelper::GetUeDefaultGatewayAddress ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -277,7 +277,7 @@ SvelteHelper::GetUeDefaultGatewayAddress ()
 }
 
 Ipv4InterfaceContainer
-SvelteHelper::AssignHtcUeIpv4Address (NetDeviceContainer devices)
+SvelteEpcHelper::AssignHtcUeIpv4Address (NetDeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -285,7 +285,7 @@ SvelteHelper::AssignHtcUeIpv4Address (NetDeviceContainer devices)
 }
 
 Ipv4InterfaceContainer
-SvelteHelper::AssignMtcUeIpv4Address (NetDeviceContainer devices)
+SvelteEpcHelper::AssignMtcUeIpv4Address (NetDeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -293,7 +293,7 @@ SvelteHelper::AssignMtcUeIpv4Address (NetDeviceContainer devices)
 }
 
 Ipv4InterfaceContainer
-SvelteHelper::AssignS1Ipv4Address (NetDeviceContainer devices)
+SvelteEpcHelper::AssignS1Ipv4Address (NetDeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -301,7 +301,7 @@ SvelteHelper::AssignS1Ipv4Address (NetDeviceContainer devices)
 }
 
 Ipv4InterfaceContainer
-SvelteHelper::AssignS5Ipv4Address (NetDeviceContainer devices)
+SvelteEpcHelper::AssignS5Ipv4Address (NetDeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -309,7 +309,7 @@ SvelteHelper::AssignS5Ipv4Address (NetDeviceContainer devices)
 }
 
 Ipv4InterfaceContainer
-SvelteHelper::AssignSgiIpv4Address (NetDeviceContainer devices)
+SvelteEpcHelper::AssignSgiIpv4Address (NetDeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -317,7 +317,7 @@ SvelteHelper::AssignSgiIpv4Address (NetDeviceContainer devices)
 }
 
 Ipv4InterfaceContainer
-SvelteHelper::AssignX2Ipv4Address (NetDeviceContainer devices)
+SvelteEpcHelper::AssignX2Ipv4Address (NetDeviceContainer devices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -325,7 +325,7 @@ SvelteHelper::AssignX2Ipv4Address (NetDeviceContainer devices)
 }
 
 Ipv4Address
-SvelteHelper::GetIpv4Addr (Ptr<const NetDevice> device)
+SvelteEpcHelper::GetIpv4Addr (Ptr<const NetDevice> device)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -336,7 +336,7 @@ SvelteHelper::GetIpv4Addr (Ptr<const NetDevice> device)
 }
 
 Ipv4Mask
-SvelteHelper::GetIpv4Mask (Ptr<const NetDevice> device)
+SvelteEpcHelper::GetIpv4Mask (Ptr<const NetDevice> device)
 {
   NS_LOG_FUNCTION_NOARGS ();
 

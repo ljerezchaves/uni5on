@@ -22,7 +22,7 @@
 #include "backhaul-controller.h"
 #include "backhaul-network.h"
 #include "connection-info.h"
-#include "../svelte-helper.h"
+#include "svelte-epc-helper.h"
 // #include "../info/s5-aggregation-info.h"
 // #include "../sdran/sdran-controller.h"
 
@@ -215,8 +215,8 @@ BackhaulController::NotifyEpcAttach (
   std::ostringstream cmdIn;
   cmdIn << "flow-mod cmd=add,table=0,prio=64,flags=0x0007"
         << " eth_type=0x800,ip_proto=17"
-        << ",udp_src=" << SvelteHelper::m_gtpuPort
-        << ",udp_dst=" << SvelteHelper::m_gtpuPort
+        << ",udp_src=" << SvelteEpcHelper::m_gtpuPort
+        << ",udp_dst=" << SvelteEpcHelper::m_gtpuPort
         << ",in_port=" << portNo
         << " goto:1";
   DpctlSchedule (swDev->GetDatapathId (), cmdIn.str ());
@@ -231,7 +231,7 @@ BackhaulController::NotifyEpcAttach (
   std::ostringstream cmdOut;
   cmdOut << "flow-mod cmd=add,table=2,prio=256 eth_type=0x800"
          << ",eth_dst=" << epcMac
-         << ",ip_dst=" << SvelteHelper::GetIpv4Addr (epcDev)
+         << ",ip_dst=" << SvelteEpcHelper::GetIpv4Addr (epcDev)
          << " write:output=" << portNo
          << " goto:4";
   DpctlSchedule (swDev->GetDatapathId (), cmdOut.str ());
@@ -503,8 +503,8 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   std::ostringstream cmd;
   cmd << "flow-mod cmd=add,table=0,prio=32"
       << " eth_type=0x800,ip_proto=17"
-      << ",udp_src=" << SvelteHelper::m_gtpuPort
-      << ",udp_dst=" << SvelteHelper::m_gtpuPort
+      << ",udp_src=" << SvelteEpcHelper::m_gtpuPort
+      << ",udp_dst=" << SvelteEpcHelper::m_gtpuPort
       << " goto:2";
   DpctlExecute (swtch, cmd.str ());
 

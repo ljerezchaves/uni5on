@@ -21,18 +21,18 @@
 #include "ring-network.h"
 #include "ring-controller.h"
 #include "connection-info.h"
-#include "../svelte-helper.h"
+#include "svelte-epc-helper.h"
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("RingNetwork");
 NS_OBJECT_ENSURE_REGISTERED (RingNetwork);
 
-RingNetwork::RingNetwork (Ptr<SvelteHelper> helper)
+RingNetwork::RingNetwork (Ptr<SvelteEpcHelper> helper)
 {
   NS_LOG_FUNCTION (this << helper);
 
-  m_svelteHelper = helper;
+  m_epcHelper = helper;
 }
 
 RingNetwork::~RingNetwork ()

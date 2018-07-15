@@ -37,7 +37,7 @@ public:
    * Complete constructor.
    * \param helper The SVELTE helper.
    */
-  RingNetwork (Ptr<SvelteHelper> helper);
+  RingNetwork (Ptr<SvelteEpcHelper> helper);
   virtual ~RingNetwork ();  //!< Dummy destructor, see DoDispose.
 
   /**

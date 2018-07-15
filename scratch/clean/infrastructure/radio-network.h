@@ -30,7 +30,7 @@
 
 namespace ns3 {
 
-class SvelteHelper;
+class SvelteEpcHelper;
 class BackhaulNetwork;
 
 /**
@@ -47,7 +47,7 @@ public:
    * \param helper The SVELTE helper (EpcHelper).
    * \param backhaul The backhaul network.
    */
-  RadioNetwork (Ptr<SvelteHelper> helper,
+  RadioNetwork (Ptr<SvelteEpcHelper> helper,
                 Ptr<BackhaulNetwork> backhaul);
   virtual ~RadioNetwork ();  //!< Dummy destructor, see DoDispose.
 
@@ -116,7 +116,7 @@ private:
   Ptr<LteHexGridEnbTopologyHelper> m_topoHelper;    //!< Grid topology helper.
   Ptr<RadioEnvironmentMapHelper>   m_remHelper;     //!< Radio map helper.
   Ptr<LteHelper>                   m_lteHelper;     //!< LTE radio helper.
-  Ptr<SvelteHelper>                m_svelteHelper;  //!< SVELTE (EPC) helper.
+  Ptr<SvelteEpcHelper>             m_epcHelper;     //!< EPC helper.
   Ptr<BackhaulNetwork>             m_backhaul;      //!< Backhaul network.
 };
 

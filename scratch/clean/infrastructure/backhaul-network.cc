@@ -21,7 +21,7 @@
 #include <ns3/csma-module.h>
 #include "backhaul-network.h"
 #include "backhaul-controller.h"
-#include "../svelte-helper.h"
+#include "svelte-epc-helper.h"
 
 namespace ns3 {
 
@@ -133,8 +133,8 @@ BackhaulNetwork::AttachEnb (Ptr<Node> enbNode, uint16_t cellId)
   uint32_t swS1PortNo = swS1Port->GetPortNo ();
 
   // Add the enbS1Dev as standard device on eNB node.
-  // m_s1uAddrHelper.Assign (NetDeviceContainer (enbS1Dev)); // FIXME Usar o SvelteHelper???
-  NS_LOG_INFO ("eNB S1-U address: " << SvelteHelper::GetIpv4Addr (enbS1Dev));
+  // m_s1uAddrHelper.Assign (NetDeviceContainer (enbS1Dev)); // FIXME Usar o SvelteEpcHelper???
+  NS_LOG_INFO ("eNB S1-U address: " << SvelteEpcHelper::GetIpv4Addr (enbS1Dev));
 
   // Notify the backhaul controller of the new EPC device attached to the
   // OpenFlow backhaul network.
@@ -149,7 +149,7 @@ BackhaulNetwork::DoDispose (void)
   m_switchHelper = 0;
   m_controllerNode = 0;
   m_controllerApp = 0;
-  m_svelteHelper = 0;
+  m_epcHelper = 0;
 
   Object::DoDispose ();
 }
@@ -159,7 +159,7 @@ BackhaulNetwork::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG  (m_svelteHelper, "Create the object with SVELTE helper");
+  NS_ASSERT_MSG  (m_epcHelper, "Create the object with SVELTE helper");
 
   // Create the OFSwitch13 helper using P2P connections for OpenFlow channel.
   m_switchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (

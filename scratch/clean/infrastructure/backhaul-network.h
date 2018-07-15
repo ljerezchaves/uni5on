@@ -30,7 +30,7 @@ namespace ns3 {
 
 class BackhaulController;
 class ConnectionInfo;
-class SvelteHelper;
+class SvelteEpcHelper;
 
 /**
  * \ingroup svelte
@@ -136,7 +136,7 @@ protected:
   uint16_t                      m_linkMtu;        //!< Link MTU.
 
   // Helper for IP addresses.
-  Ptr<SvelteHelper>             m_svelteHelper;   //!< SVELTE helper.
+  Ptr<SvelteEpcHelper>          m_epcHelper;      //!< EPC helper.
 
 private:
   // Helper and attributes for EPC interfaces.

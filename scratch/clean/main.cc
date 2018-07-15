@@ -26,7 +26,7 @@
 #include <ns3/ofswitch13-module.h>
 #include "infrastructure/ring-network.h"
 #include "infrastructure/radio-network.h"
-#include "svelte-helper.h"
+#include "infrastructure/svelte-epc-helper.h"
 
 using namespace ns3;
 using namespace ns3::ofs;
@@ -129,9 +129,9 @@ main (int argc, char *argv[])
   // * The stats calculators
   NS_LOG_INFO ("Creating simulation scenario...");
 
-  Ptr<SvelteHelper> helper   = CreateObject<SvelteHelper> ();
-  Ptr<RingNetwork>  backhaul = CreateObject<RingNetwork>  (helper);
-  Ptr<RadioNetwork> radio    = CreateObject<RadioNetwork> (helper, backhaul);
+  Ptr<SvelteEpcHelper> helper = CreateObject<SvelteEpcHelper> ();
+  Ptr<RingNetwork> backhaul = CreateObject<RingNetwork> (helper);
+  Ptr<RadioNetwork> radio = CreateObject<RadioNetwork> (helper, backhaul);
 
 // FIXME Construir gradativamente o cenário de simulação
 //  Ptr<RingNetwork>   ofNetwork;
@@ -356,7 +356,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("RingNetwork",              LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("RingController",           LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("RadioNetwork",             LOG_ERROR_WARN_INFO_FT);
-      LogComponentEnable ("SvelteHelper",             LOG_ERROR_WARN_INFO_FT);
+      LogComponentEnable ("SvelteEpcHelper",          LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("SvelteEnbApplication",     LOG_ERROR_WARN_INFO_FT);
       LogComponentEnable ("SvelteMme",                LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("PgwTunnelApp",             LOG_ERROR_WARN_INFO_FT);
