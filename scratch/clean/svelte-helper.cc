@@ -172,7 +172,64 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t ce
   internet.Install (enb);
 
 
-  // TODO
+  // FIXME Neste momento aqui é preciso fazer a conexão física com o backhaul.
+  // Eu preciso saber qual o IP do eNB (enbS1uAddr) e do SGW (sgwS1uAddr) para que possa prosseguir
+  Ipv4Address enbS1uAddr;
+  Ipv4Address sgwS1uAddr;
+
+  // Create the S1-U socket for the eNB
+  Ptr<Socket> enbS1uSocket = Socket::CreateSocket (
+      enb, TypeId::LookupByName ("ns3::UdpSocketFactory"));
+  enbS1uSocket->Bind (InetSocketAddress (enbS1uAddr, SvelteHelper::m_gtpuPort));
+
+  // Create the LTE IPv4 and IPv6 sockets for the eNB
+  Ptr<Socket> enbLteSocket = Socket::CreateSocket (
+      enb, TypeId::LookupByName ("ns3::PacketSocketFactory"));
+  PacketSocketAddress enbLteSocketBindAddress;
+  enbLteSocketBindAddress.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
+  enbLteSocketBindAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
+  enbLteSocket->Bind (enbLteSocketBindAddress);
+
+  PacketSocketAddress enbLteSocketConnectAddress;
+  enbLteSocketConnectAddress.SetPhysicalAddress (Mac48Address::GetBroadcast ());
+  enbLteSocketConnectAddress.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
+  enbLteSocketConnectAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
+  enbLteSocket->Connect (enbLteSocketConnectAddress);
+
+  Ptr<Socket> enbLteSocket6 = Socket::CreateSocket (
+      enb, TypeId::LookupByName ("ns3::PacketSocketFactory"));
+  PacketSocketAddress enbLteSocketBindAddress6;
+  enbLteSocketBindAddress6.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
+  enbLteSocketBindAddress6.SetProtocol (Ipv6L3Protocol::PROT_NUMBER);
+  enbLteSocket6->Bind (enbLteSocketBindAddress6);
+
+  PacketSocketAddress enbLteSocketConnectAddress6;
+  enbLteSocketConnectAddress6.SetPhysicalAddress (Mac48Address::GetBroadcast ());
+  enbLteSocketConnectAddress6.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
+  enbLteSocketConnectAddress6.SetProtocol (Ipv6L3Protocol::PROT_NUMBER);
+  enbLteSocket6->Connect (enbLteSocketConnectAddress6);
+
+  // Create the eNB application 
+  // FIXME O eNB pode estar associado a mais de um S-GW. Como vamos gerenciar
+  // isso? Talvez seja preciso criar uma versão modificada da aplicação do
+  // enb.
+  Ptr<EpcEnbApplication> enbApp = CreateObject<EpcEnbApplication> (
+      enbLteSocket, enbLteSocket6, enbS1uSocket,
+      enbS1uAddr, sgwS1uAddr, cellId);
+//  enbApp->SetS1apSapMme (m_sdranCtrlApp->GetS1apSapMme ());
+  enb->AddApplication (enbApp);
+  NS_ASSERT (enb->GetNApplications () == 1);
+
+  Ptr<EpcX2> x2 = CreateObject<EpcX2> ();
+  enb->AggregateObject (x2);
+
+//  // Create the eNB info.
+//  Ptr<EnbInfo> enbInfo = CreateObject<EnbInfo> (cellId);
+//  enbInfo->SetEnbS1uAddr (enbS1uAddr);
+//  enbInfo->SetSgwS1uAddr (sgwS1uAddr);
+//  enbInfo->SetSgwS1uPortNo (sgwS1uPortNo);
+//  enbInfo->SetS1apSapEnb (enbApp->GetS1apSapEnb ());
+//
 }
 
 void
