@@ -167,7 +167,7 @@ SvelteEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Ptr<
 //    {
 //      ueInfo->SetUeAddr (ueAddr);
 //
-//      // Identify MTC UEs by the network address.
+//      // Identify MTC UEs by the network address. // FIXME O ideal é marcar o slice do UE.
 //      if (m_mtcAddr.IsEqual (ueAddr.CombineMask (m_mtcMask)))
 //        {
 //          ueInfo->SetMtc (true);
