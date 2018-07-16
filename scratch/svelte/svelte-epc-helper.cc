@@ -258,11 +258,9 @@ SvelteEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t
   Ptr<EpcX2> x2 = CreateObject<EpcX2> ();
   enb->AggregateObject (x2);
 
-  // Create the eNB info. // FIXME
+  // Create the eNB info.
   Ptr<EnbInfo> enbInfo = CreateObject<EnbInfo> (cellId);
   enbInfo->SetEnbS1uAddr (enbS1uAddr);
-  // enbInfo->SetSgwS1uAddr (sgwS1uAddr);
-  // enbInfo->SetSgwS1uPortNo (sgwS1uPortNo);
   enbInfo->SetS1apSapEnb (enbApp->GetS1apSapEnb ());
 }
 
