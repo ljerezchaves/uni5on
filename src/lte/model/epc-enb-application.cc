@@ -28,7 +28,6 @@
 #include "ns3/uinteger.h"
 
 #include "epc-gtpu-header.h"
-#include "epc-gtpu-tag.h"
 #include "eps-bearer-tag.h"
 
 
@@ -73,14 +72,6 @@ EpcEnbApplication::GetTypeId (void)
                      "Receive data packets from S1-U Net Device",
                      MakeTraceSourceAccessor (&EpcEnbApplication::m_rxS1uSocketPktTrace),
                      "ns3::EpcEnbApplication::RxTracedCallback")
-    .AddTraceSource ("S1uRx",
-                     "Trace source indicating a packet received from S1-U interface.",
-                     MakeTraceSourceAccessor (&EpcEnbApplication::m_rxS1uTrace),
-                     "ns3::Packet::TracedCallback")
-    .AddTraceSource ("S1uTx",
-                     "Trace source indicating a packet transmitted over the S1-U interface.",
-                     MakeTraceSourceAccessor (&EpcEnbApplication::m_txS1uTrace),
-                     "ns3::Packet::TracedCallback")
     ;
   return tid;
 }
@@ -297,11 +288,6 @@ EpcEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);  
   NS_ASSERT (socket == m_s1uSocket);
   Ptr<Packet> packet = socket->Recv ();
-
-  m_rxS1uTrace (packet);
-  EpcGtpuTag teidTag;
-  packet->RemovePacketTag (teidTag);
-  
   GtpuHeader gtpu;
   packet->RemoveHeader (gtpu);
   uint32_t teid = gtpu.GetTeid ();
@@ -352,11 +338,6 @@ EpcEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
   gtpu.SetLength (packet->GetSize () + gtpu.GetSerializedSize () - 8);  
   packet->AddHeader (gtpu);
   uint32_t flags = 0;
-
-  EpcGtpuTag teidTag (teid, EpcGtpuTag::ENB);
-  packet->AddPacketTag (teidTag);
-  m_txS1uTrace (packet);
-
   m_s1uSocket->SendTo (packet, flags, InetSocketAddress (m_sgwS1uAddress, m_gtpuUdpPort));
 }
 

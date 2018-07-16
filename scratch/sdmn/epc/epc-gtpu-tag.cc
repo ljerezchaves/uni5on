@@ -26,19 +26,19 @@ NS_OBJECT_ENSURE_REGISTERED (EpcGtpuTag);
 
 EpcGtpuTag::EpcGtpuTag ()
   : m_teid (0),
-    m_inputNode (0),
-    m_ts (Simulator::Now ().GetTimeStep ())
+  m_inputNode (0),
+  m_ts (Simulator::Now ().GetTimeStep ())
 {
 }
 
 EpcGtpuTag::EpcGtpuTag (uint32_t teid, EpcInputNode inputNode)
   : m_teid (teid),
-    m_inputNode ((uint8_t)inputNode),
-    m_ts (Simulator::Now ().GetTimeStep ())
+  m_inputNode ((uint8_t)inputNode),
+  m_ts (Simulator::Now ().GetTimeStep ())
 {
 }
 
-TypeId 
+TypeId
 EpcGtpuTag::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::EpcGtpuTag")
@@ -48,19 +48,19 @@ EpcGtpuTag::GetTypeId (void)
   return tid;
 }
 
-TypeId 
+TypeId
 EpcGtpuTag::GetInstanceTypeId (void) const
 {
   return GetTypeId ();
 }
 
-uint32_t 
+uint32_t
 EpcGtpuTag::GetSerializedSize (void) const
 {
   return 13;
 }
 
-void 
+void
 EpcGtpuTag::Serialize (TagBuffer i) const
 {
   i.WriteU32 (m_teid);
@@ -68,7 +68,7 @@ EpcGtpuTag::Serialize (TagBuffer i) const
   i.WriteU64 (m_ts);
 }
 
-void 
+void
 EpcGtpuTag::Deserialize (TagBuffer i)
 {
   m_teid = i.ReadU32 ();
@@ -76,39 +76,39 @@ EpcGtpuTag::Deserialize (TagBuffer i)
   m_ts = i.ReadU64 ();
 }
 
-void 
+void
 EpcGtpuTag::Print (std::ostream &os) const
 {
-  os << " TEID=" << m_teid 
+  os << " TEID=" << m_teid
      << " input=" << (m_inputNode == (uint8_t)EpcGtpuTag::ENB ? "eNb" : "Pgw")
      << " timestamp=" << m_ts;
 }
 
-uint32_t 
+uint32_t
 EpcGtpuTag::GetTeid () const
 {
   return m_teid;
 }
 
-EpcGtpuTag::EpcInputNode 
+EpcGtpuTag::EpcInputNode
 EpcGtpuTag::GetInputNode () const
 {
   return m_inputNode == 0 ? EpcGtpuTag::ENB : EpcGtpuTag::PGW;
 }
 
-Time 
+Time
 EpcGtpuTag::GetTimestamp () const
 {
   return Time (m_ts);
 }
 
-void 
+void
 EpcGtpuTag::SetTeid (uint32_t teid)
 {
   m_teid = teid;
 }
 
-void 
+void
 EpcGtpuTag::SetInputNode (EpcInputNode inputNode)
 {
   m_inputNode = (uint8_t)inputNode;
@@ -126,4 +126,4 @@ EpcGtpuTag::IsUplink () const
   return (bool)!m_inputNode;
 }
 
-};  // namespace ns3
+} // namespace ns3

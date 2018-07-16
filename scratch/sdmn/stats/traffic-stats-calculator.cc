@@ -23,6 +23,7 @@
 #include "traffic-stats-calculator.h"
 #include "../apps/sdmn-client-app.h"
 #include "../epc/epc-controller.h"
+#include "../epc/epc-gtpu-tag.h"
 
 using namespace std;
 
@@ -37,10 +38,10 @@ TrafficStatsCalculator::TrafficStatsCalculator ()
 
   // Connect this stats calculator to required trace sources.
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uRx",
+    "/NodeList/*/ApplicationList/*/$ns3::SdmnEnbApplication/S1uRx",
     MakeCallback (&TrafficStatsCalculator::EpcOutputPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::EpcEnbApplication/S1uTx",
+    "/NodeList/*/ApplicationList/*/$ns3::SdmnEnbApplication/S1uTx",
     MakeCallback (&TrafficStatsCalculator::EpcInputPacket, this));
   Config::Connect (
     "/NodeList/*/ApplicationList/*/$ns3::PgwTunnelApp/S5Rx",
