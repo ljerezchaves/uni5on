@@ -192,20 +192,4 @@ BackhaulNetwork::NotifyConstructionCompleted (void)
   Object::NotifyConstructionCompleted ();
 }
 
-void
-BackhaulNetwork::InstallController (Ptr<BackhaulController> controller)
-{
-  NS_LOG_FUNCTION (this << controller);
-
-  NS_ASSERT_MSG (!m_controllerApp, "Controller application already set.");
-
-  // Create the controller node.
-  m_controllerNode = CreateObject<Node> ();
-  Names::Add ("backhaul_ctrl", m_controllerNode);
-
-  // Installing the controller application into controller node.
-  m_controllerApp = controller;
-  m_switchHelper->InstallController (m_controllerNode, m_controllerApp);
-}
-
 } // namespace ns3

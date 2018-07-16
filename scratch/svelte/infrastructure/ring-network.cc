@@ -97,20 +97,26 @@ RingNetwork::TopologyCreate (void)
 
   // Install the ring controller application for this topology.
   Ptr<RingController> ringController = CreateObject<RingController> ();
-  InstallController (ringController);
+  m_controllerNode = CreateObject<Node> ();
+  Names::Add ("ring_ctrl", m_controllerNode);
+  m_switchHelper->InstallController (m_controllerNode, ringController);
+  m_controllerApp = ringController;
 
   // Create the switch nodes and install the OpenFlow switch devices.
   m_switchNodes.Create (m_numNodes);
   m_switchDevices = m_switchHelper->InstallSwitch (m_switchNodes);
 
-  // Connecting switches in ring topology (clockwise order).
+  // Set the name for each switch node.
   for (uint16_t i = 0; i < m_numNodes; i++)
     {
-      // Set the name for each switch node.
       std::ostringstream swName;
       swName << "sw" << m_switchDevices.Get (i)->GetDatapathId ();
       Names::Add (swName.str (), m_switchNodes.Get (i));
+    }
 
+  // Connecting switches in ring topology (clockwise order).
+  for (uint16_t i = 0; i < m_numNodes; i++)
+    {
       uint16_t currIndex = i;
       uint16_t nextIndex = (i + 1) % m_numNodes;  // Next clockwise node.
 

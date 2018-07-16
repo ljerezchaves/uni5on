@@ -119,12 +119,6 @@ protected:
   virtual uint64_t TopologyGetEnbSwitch (uint16_t cellId) = 0;
   //\}
 
-  /**
-   * Install the OpenFlow backhaul controller for this network.
-   * \param controller The controller application.
-   */
-  void InstallController (Ptr<BackhaulController> controller);
-
   // Backhaul controller.
   Ptr<BackhaulController>       m_controllerApp;  //!< Controller app.
   Ptr<Node>                     m_controllerNode; //!< Controller node.
