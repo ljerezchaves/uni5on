@@ -67,7 +67,6 @@ public:
 
   void SetUeAddr (Ipv4Address value);
   void SetCellId (uint16_t value);
-  void SetMmeUeS1Id (uint64_t value);
   void SetEnbUeS1Id (uint64_t value);
   void SetMtc (bool value);
   //\}

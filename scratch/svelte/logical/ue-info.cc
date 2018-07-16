@@ -124,14 +124,6 @@ UeInfo::SetCellId (uint16_t value)
 }
 
 void
-UeInfo::SetMmeUeS1Id (uint64_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_mmeUeS1Id = value;
-}
-
-void
 UeInfo::SetEnbUeS1Id (uint64_t value)
 {
   NS_LOG_FUNCTION (this << value);
