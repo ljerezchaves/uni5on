@@ -23,6 +23,7 @@
 #include "../epc/epc-controller.h"
 #include "../epc/epc-network.h"
 #include "../epc/gtp-tunnel-app.h"
+#include "../epc/sdmn-enb-application.h"
 
 namespace ns3 {
 
@@ -230,7 +231,7 @@ SdranCloud::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   enbLteSocket6->Connect (enbLteSocketConnectAddress6);
 
   // Create the eNB application
-  Ptr<EpcEnbApplication> enbApp = CreateObject<EpcEnbApplication> (
+  Ptr<SdmnEnbApplication> enbApp = CreateObject<SdmnEnbApplication> (
       enbLteSocket, enbLteSocket6, enbS1uSocket,
       enbS1uAddr, sgwS1uAddr, cellId);
   enbApp->SetS1apSapMme (m_sdranCtrlApp->GetS1apSapMme ());

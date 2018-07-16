@@ -1,6 +1,6 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2018 University of Campinas (Unicamp)
+ * Copyright (c) 2015 University of Campinas (Unicamp)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -18,49 +18,47 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "svelte-enb-application.h"
+#include "sdmn-enb-application.h"
 #include "epc-gtpu-tag.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("SvelteEnbApplication");
-
-SvelteEnbApplication::SvelteEnbApplication (
-  Ptr<Socket> lteSocket, Ptr<Socket> lteSocket6, Ptr<Socket> s1uSocket,
-  Ipv4Address enbS1uAddress, uint16_t cellId)
-  : EpcEnbApplication (lteSocket, lteSocket6, s1uSocket, enbS1uAddress,
-                       Ipv4Address::GetZero (), cellId)
-{
-  NS_LOG_FUNCTION (this << lteSocket << lteSocket6 << s1uSocket <<
-                   enbS1uAddress << cellId);
-}
-
-SvelteEnbApplication::~SvelteEnbApplication (void)
-{
-  NS_LOG_FUNCTION (this);
-}
+NS_LOG_COMPONENT_DEFINE ("SdmnEnbApplication");
 
 TypeId
-SvelteEnbApplication::GetTypeId (void)
+SdmnEnbApplication::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::SvelteEnbApplication")
+  static TypeId tid = TypeId ("ns3::SdmnEnbApplication")
     .SetParent<EpcEnbApplication> ()
     .AddTraceSource ("S1uRx",
-                     "Trace source for a packet RX from the S1-U interface.",
-                     MakeTraceSourceAccessor (
-                       &SvelteEnbApplication::m_rxS1uTrace),
+                     "Trace source indicating a packet received from S1-U interface.",
+                     MakeTraceSourceAccessor (&SdmnEnbApplication::m_rxS1uTrace),
                      "ns3::Packet::TracedCallback")
     .AddTraceSource ("S1uTx",
-                     "Trace source for a packet TX to the S1-U interface.",
-                     MakeTraceSourceAccessor (
-                       &SvelteEnbApplication::m_txS1uTrace),
+                     "Trace source indicating a packet transmitted over the S1-U interface.",
+                     MakeTraceSourceAccessor (&SdmnEnbApplication::m_txS1uTrace),
                      "ns3::Packet::TracedCallback")
   ;
   return tid;
 }
 
+SdmnEnbApplication::SdmnEnbApplication (
+  Ptr<Socket> lteSocket, Ptr<Socket> lteSocket6, Ptr<Socket> s1uSocket,
+  Ipv4Address enbS1uAddress, Ipv4Address sgwS1uAddress, uint16_t cellId)
+  : EpcEnbApplication (lteSocket, lteSocket6, s1uSocket, enbS1uAddress,
+                       sgwS1uAddress, cellId)
+{
+  NS_LOG_FUNCTION (this << lteSocket << lteSocket6 << s1uSocket <<
+                   enbS1uAddress << sgwS1uAddress << cellId);
+}
+
+SdmnEnbApplication::~SdmnEnbApplication (void)
+{
+  NS_LOG_FUNCTION (this);
+}
+
 void
-SvelteEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
+SdmnEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
   NS_ASSERT (socket == m_s1uSocket);
@@ -81,19 +79,20 @@ SvelteEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
 }
 
 void
-SvelteEnbApplication::DoDispose (void)
+SdmnEnbApplication::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
   EpcEnbApplication::DoDispose ();
 }
 
 void
-SvelteEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
+SdmnEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << packet << teid <<  packet->GetSize ());
-
   GtpuHeader gtpu;
   gtpu.SetTeid (teid);
+  // From 3GPP TS 29.281 v10.0.0 Section 5.1
+  // Length of the payload + the non obligatory GTP-U header
   gtpu.SetLength (packet->GetSize () + gtpu.GetSerializedSize () - 8);
   packet->AddHeader (gtpu);
   uint32_t flags = 0;
@@ -102,8 +101,7 @@ SvelteEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
   packet->AddPacketTag (teidTag);
   m_txS1uTrace (packet);
 
-  // FIXME Implementar corretamente a lógica de identificar para qual S-GW o pacote deve ser enviado.
-  m_s1uSocket->SendTo (packet, flags, InetSocketAddress (Ipv4Address::GetAny (), 2152));
+  m_s1uSocket->SendTo (packet, flags, InetSocketAddress (m_sgwS1uAddress, m_gtpuUdpPort));
 }
 
 }  // namespace ns3

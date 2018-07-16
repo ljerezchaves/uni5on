@@ -29,18 +29,18 @@ namespace ns3 {
 
 class Tag;
 
-/** 
- * Tag used to identify the GTP TEID for packets. 
+/**
+ * Tag used to identify the GTP TEID for packets.
  */
 class EpcGtpuTag : public Tag
 {
 public:
   /** LTE EPC element where this tagged was inserted into the packet */
   enum EpcInputNode
-    {
-      ENB = 0,  //!< At the eNB node
-      PGW = 1   //!< At the SgwPgw node
-    };
+  {
+    ENB = 0,  //!< At the eNB node
+    PGW = 1   //!< At the SgwPgw node
+  };
 
   static TypeId GetTypeId (void);
   virtual TypeId GetInstanceTypeId (void) const;
@@ -63,7 +63,7 @@ public:
 
   /** \return the timestamp field */
   Time GetTimestamp () const;
-  
+
   /** Set the teid field */
   void SetTeid (uint32_t teid);
 
@@ -82,6 +82,6 @@ private:
   uint64_t  m_ts;         //!< Input timestamp
 };
 
-};  // namespace ns3
+} // namespace ns3
 #endif // EPC_GTPU_TAG_H
 

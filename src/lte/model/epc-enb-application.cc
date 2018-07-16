@@ -28,7 +28,6 @@
 #include "ns3/uinteger.h"
 
 #include "epc-gtpu-header.h"
-#include "epc-gtpu-tag.h"
 #include "eps-bearer-tag.h"
 
 
@@ -73,14 +72,6 @@ EpcEnbApplication::GetTypeId (void)
                      "Receive data packets from S1-U Net Device",
                      MakeTraceSourceAccessor (&EpcEnbApplication::m_rxS1uSocketPktTrace),
                      "ns3::EpcEnbApplication::RxTracedCallback")
-    .AddTraceSource ("S1uRx",
-                     "Trace source indicating a packet received from S1-U interface.",
-                     MakeTraceSourceAccessor (&EpcEnbApplication::m_rxS1uTrace),
-                     "ns3::Packet::TracedCallback")
-    .AddTraceSource ("S1uTx",
-                     "Trace source indicating a packet transmitted over the S1-U interface.",
-                     MakeTraceSourceAccessor (&EpcEnbApplication::m_txS1uTrace),
-                     "ns3::Packet::TracedCallback")
     ;
   return tid;
 }
@@ -99,13 +90,13 @@ EpcEnbApplication::DoDispose (void)
 EpcEnbApplication::EpcEnbApplication (Ptr<Socket> lteSocket, Ptr<Socket> lteSocket6, Ptr<Socket> s1uSocket, Ipv4Address enbS1uAddress, Ipv4Address sgwS1uAddress, uint16_t cellId)
   : m_lteSocket (lteSocket),
     m_lteSocket6 (lteSocket6),
+    m_s1uSocket (s1uSocket),    
     m_enbS1uAddress (enbS1uAddress),
     m_sgwS1uAddress (sgwS1uAddress),
     m_gtpuUdpPort (2152), // fixed by the standard
     m_s1SapUser (0),
     m_s1apSapMme (0),
-    m_cellId (cellId),
-    m_s1uSocket (s1uSocket)    
+    m_cellId (cellId)
 {
   NS_LOG_FUNCTION (this << lteSocket << s1uSocket << sgwS1uAddress);
   m_s1uSocket->SetRecvCallback (MakeCallback (&EpcEnbApplication::RecvFromS1uSocket, this));
@@ -297,11 +288,6 @@ EpcEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
   NS_LOG_FUNCTION (this << socket);  
   NS_ASSERT (socket == m_s1uSocket);
   Ptr<Packet> packet = socket->Recv ();
-
-  m_rxS1uTrace (packet);
-  EpcGtpuTag teidTag;
-  packet->RemovePacketTag (teidTag);
-  
   GtpuHeader gtpu;
   packet->RemoveHeader (gtpu);
   uint32_t teid = gtpu.GetTeid ();
@@ -352,11 +338,6 @@ EpcEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
   gtpu.SetLength (packet->GetSize () + gtpu.GetSerializedSize () - 8);  
   packet->AddHeader (gtpu);
   uint32_t flags = 0;
-
-  EpcGtpuTag teidTag (teid, EpcGtpuTag::ENB);
-  packet->AddPacketTag (teidTag);
-  m_txS1uTrace (packet);
-
   m_s1uSocket->SendTo (packet, flags, InetSocketAddress (m_sgwS1uAddress, m_gtpuUdpPort));
 }
 

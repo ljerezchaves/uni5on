@@ -127,7 +127,7 @@ public:
    * 
    * \param socket pointer to the S1-U socket
    */
-  void RecvFromS1uSocket (Ptr<Socket> socket);
+  virtual void RecvFromS1uSocket (Ptr<Socket> socket);
 
   /**
    * TracedCallback signature for data Packet reception event.
@@ -221,6 +221,7 @@ private:
   void DoReleaseIndication (uint64_t imsi, uint16_t rnti, uint8_t bearerId);
 
 
+protected:
   /**
    * Send a packet to the UE via the LTE radio interface of the eNB
    * 
@@ -231,6 +232,15 @@ private:
   void SendToLteSocket (Ptr<Packet> packet, uint16_t rnti, uint8_t bid);
 
 
+  /** 
+   * Send a packet to the SGW via the S1-U interface
+   * 
+   * \param packet packet to be sent
+   * \param teid the Tunnel Enpoint IDentifier
+   */
+  virtual void SendToS1uSocket (Ptr<Packet> packet, uint32_t teid);
+
+private:
   /** 
    * internal method used for the actual setup of the S1 Bearer
    * 
@@ -249,6 +259,12 @@ private:
    * raw packet socket to send and receive the packets to and from the LTE radio interface
    */
   Ptr<Socket> m_lteSocket6;
+
+protected:
+  /**
+   * UDP socket to send and receive GTP-U the packets to and from the S1-U interface
+   */
+  Ptr<Socket> m_s1uSocket;
 
   /**
    * address of the eNB for S1-U communications
@@ -277,6 +293,7 @@ private:
    */
   uint16_t m_gtpuUdpPort;
 
+private:
   /**
    * Provider for the S1 SAP 
    */
@@ -306,41 +323,17 @@ private:
   std::map<uint64_t, uint16_t> m_imsiRntiMap;
 
   uint16_t m_cellId; ///< cell ID
-  
-  /** 
-   * Trace source fired when a packet arrives at this eNB from S1-U interface. 
-   */
-  TracedCallback<Ptr<const Packet> > m_rxS1uTrace;
-
 
   /**
    * \brief Callback to trace RX (reception) data packets from LTE Socket.
    */ 
   TracedCallback<Ptr<Packet> > m_rxLteSocketPktTrace;
 
+protected:
   /**
    * \brief Callback to trace RX (reception) data packets from S1-U Socket.
    */ 
   TracedCallback<Ptr<Packet> > m_rxS1uSocketPktTrace;
-
-protected:
-  /** 
-   * Send a packet to the SGW via the S1-U interface
-   * 
-   * \param packet packet to be sent
-   * \param teid the Tunnel Enpoint IDentifier
-   */
-  virtual void SendToS1uSocket (Ptr<Packet> packet, uint32_t teid);
-
-  /**
-   * UDP socket to send and receive GTP-U the packets to and from the S1-U interface
-   */
-  Ptr<Socket> m_s1uSocket;
-
-  /** 
-   * Trace source fired when a packet leaves this eNB over the S1-U interface.
-   */
-  TracedCallback<Ptr<const Packet> > m_txS1uTrace;
 };
 
 } //namespace ns3
