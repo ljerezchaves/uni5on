@@ -26,7 +26,6 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "enum.h"
 // #include "epc-s5-sap.h"
 // #include "../info/enb-info.h"
 // #include "../info/gbr-info.h"

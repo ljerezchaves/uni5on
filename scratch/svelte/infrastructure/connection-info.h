@@ -25,11 +25,21 @@
 #include <ns3/csma-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "enum.h"
 
 namespace ns3 {
 
 class ConnectionInfo;
+
+/** Enumeration of available slices. */
+typedef enum
+{
+  DFT = 0,  //!< Best-effort (default) slice.
+  GBR = 1,  //!< HTC GBR slice.
+  MTC = 2,  //!< MTC slice.
+  ALL = 3   //!< ALL previous slices.
+} Slice;
+
+std::string SliceStr (Slice slice);
 
 /** A pair of switch datapath IDs. */
 typedef std::pair<uint64_t, uint64_t> DpIdPair_t;

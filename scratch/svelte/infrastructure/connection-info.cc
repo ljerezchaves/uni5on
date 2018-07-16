@@ -30,6 +30,23 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("ConnectionInfo");
 NS_OBJECT_ENSURE_REGISTERED (ConnectionInfo);
 
+std::string SliceStr (Slice slice)
+{
+  switch (slice)
+    {
+    case Slice::DFT:
+      return "dft";
+    case Slice::GBR:
+      return "gbr";
+    case Slice::MTC:
+      return "mtc";
+    case Slice::ALL:
+      return "all";
+    default:
+      return "-";
+    }
+}
+
 // Initializing ConnectionInfo static members.
 ConnectionInfo::ConnInfoMap_t ConnectionInfo::m_connectionsMap;
 ConnInfoList_t ConnectionInfo::m_connectionsList;
