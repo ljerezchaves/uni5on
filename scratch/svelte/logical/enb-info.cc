@@ -29,13 +29,11 @@ NS_OBJECT_ENSURE_REGISTERED (EnbInfo);
 EnbInfo::CellIdEnbInfo_t EnbInfo::m_enbInfoByCellId;
 
 EnbInfo::EnbInfo (uint16_t cellId)
-  : m_cellId (cellId),
-    m_sgwS1uPortNo (0)
+  : m_cellId (cellId)
 {
   NS_LOG_FUNCTION (this);
 
   m_enbS1uAddr = Ipv4Address ();
-  m_sgwS1uAddr = Ipv4Address ();
 
   RegisterEnbInfo (Ptr<EnbInfo> (this));
 }
@@ -70,22 +68,6 @@ EnbInfo::GetEnbS1uAddr (void) const
   return m_enbS1uAddr;
 }
 
-Ipv4Address
-EnbInfo::GetSgwS1uAddr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_sgwS1uAddr;
-}
-
-uint32_t
-EnbInfo::GetSgwS1uPortNo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_sgwS1uPortNo;
-}
-
 EpcS1apSapEnb*
 EnbInfo::GetS1apSapEnb (void) const
 {
@@ -100,22 +82,6 @@ EnbInfo::SetEnbS1uAddr (Ipv4Address value)
   NS_LOG_FUNCTION (this << value);
 
   m_enbS1uAddr = value;
-}
-
-void
-EnbInfo::SetSgwS1uAddr (Ipv4Address value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_sgwS1uAddr = value;
-}
-
-void
-EnbInfo::SetSgwS1uPortNo (uint32_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_sgwS1uPortNo = value;
 }
 
 void

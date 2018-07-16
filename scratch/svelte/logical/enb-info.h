@@ -52,13 +52,9 @@ public:
   //\{
   uint16_t GetCellId (void) const;
   Ipv4Address GetEnbS1uAddr (void) const;
-  Ipv4Address GetSgwS1uAddr (void) const;
-  uint32_t GetSgwS1uPortNo (void) const;
   EpcS1apSapEnb* GetS1apSapEnb (void) const;
 
   void SetEnbS1uAddr (Ipv4Address value);
-  void SetSgwS1uAddr (Ipv4Address value);
-  void SetSgwS1uPortNo (uint32_t value);
   void SetS1apSapEnb (EpcS1apSapEnb* value);
   //\}
 
@@ -82,8 +78,6 @@ private:
 
   uint16_t               m_cellId;               //!< eNB cell ID.
   Ipv4Address            m_enbS1uAddr;           //!< eNB S1-U IP address.
-  Ipv4Address            m_sgwS1uAddr;           //!< S-GW S1-U IP address.
-  uint32_t               m_sgwS1uPortNo;         //!< S-GW S1-U port number.
   EpcS1apSapEnb*         m_s1apSapEnb;           //!< S1-AP eNB SAP provider.
 
   /** Map saving cell ID / eNB information. */
