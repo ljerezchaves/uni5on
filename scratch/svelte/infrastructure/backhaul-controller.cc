@@ -30,20 +30,20 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("BackhaulController");
 NS_OBJECT_ENSURE_REGISTERED (BackhaulController);
 
-// std::string OperationModeStr (OperationMode mode)
-// {
-//   switch (mode)
-//     {
-//     case OperationMode::OFF:
-//       return "off";
-//     case OperationMode::ON:
-//       return "on";
-//     case OperationMode::AUTO:
-//       return "auto";
-//     default:
-//       return "-";
-//     }
-// }
+std::string OperationModeStr (OperationMode mode)
+{
+  switch (mode)
+    {
+    case OperationMode::OFF:
+      return "off";
+    case OperationMode::ON:
+      return "on";
+    case OperationMode::AUTO:
+      return "auto";
+    default:
+      return "-";
+    }
+}
 
 // Initializing BackhaulController static members.
 const uint16_t BackhaulController::m_flowTimeout = 0;

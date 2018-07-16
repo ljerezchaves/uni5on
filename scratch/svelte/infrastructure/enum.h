@@ -39,16 +39,6 @@ typedef enum
 
 std::string SliceStr (Slice slice);
 
-/** Enumeration of available operation modes. */
-typedef enum
-{
-  OFF  = 0,   //!< Always off.
-  ON   = 1,   //!< Always on.
-  AUTO = 2    //!< Automatic.
-} OperationMode;
-
-std::string OperationModeStr (OperationMode mode);
-
 }  // namespace ns3
 #endif // ENUM_INFO_H
 

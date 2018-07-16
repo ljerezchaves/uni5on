@@ -39,20 +39,5 @@ std::string SliceStr (Slice slice)
     }
 }
 
-std::string OperationModeStr (OperationMode mode)
-{
-  switch (mode)
-    {
-    case OperationMode::OFF:
-      return "off";
-    case OperationMode::ON:
-      return "on";
-    case OperationMode::AUTO:
-      return "auto";
-    default:
-      return "-";
-    }
-}
-
 }  // namespace ns3
 

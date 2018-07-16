@@ -38,15 +38,15 @@ namespace ns3 {
 
 class ConnectionInfo;
 
-// /** Enumeration of available operation modes. */
-// typedef enum
-// {
-//   OFF  = 0,   //!< Always off.
-//   ON   = 1,   //!< Always on.
-//   AUTO = 2    //!< Automatic.
-// } OperationMode;
-//
-// std::string OperationModeStr (OperationMode mode);
+/** Enumeration of available operation modes. */
+typedef enum
+{
+  OFF  = 0,   //!< Always off.
+  ON   = 1,   //!< Always on.
+  AUTO = 2    //!< Automatic.
+} OperationMode;
+
+std::string OperationModeStr (OperationMode mode);
 
 /**
  * \ingroup svelteInfra
