@@ -261,6 +261,7 @@ private:
   static void StaticInitialize (void);
 
 // FIXME Comentado para remover dependencia do routinginfo
+// FIXME Deve ficar aqui ou no SliceController?
 //  /** The bearer request trace source, fired at RequestDedicatedBearer. */
 //  TracedCallback<Ptr<const RoutingInfo> > m_bearerRequestTrace;
 //

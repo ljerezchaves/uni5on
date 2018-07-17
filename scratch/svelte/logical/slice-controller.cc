@@ -20,6 +20,7 @@
 
 #include "slice-controller.h"
 #include "svelte-mme.h"
+#include "../infrastructure/backhaul-network.h"
 
 namespace ns3 {
 
@@ -56,29 +57,31 @@ SliceController::GetTypeId (void)
   return tid;
 }
 
-// bool
-// SliceController::DedicatedBearerRelease (
-//   EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
-// {
-//   NS_LOG_FUNCTION (this << imsi << cellId << teid);
-//
+bool
+SliceController::DedicatedBearerRelease (
+  EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
+{
+  NS_LOG_FUNCTION (this << imsi << cellId << teid);
+
 //   SgwRulesRemove (RoutingInfo::GetPointer (teid));
 //   m_epcCtrlApp->DedicatedBearerRelease (bearer, teid);
-//   return true;
-// }
-//
-// bool
-// SliceController::DedicatedBearerRequest (
-//   EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
-// {
-//   NS_LOG_FUNCTION (this << imsi << cellId << teid);
-//
+//   FIXME Copiar EpcController::DedicatedBearerRelease
+  return true;
+}
+
+bool
+SliceController::DedicatedBearerRequest (
+  EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
+{
+  NS_LOG_FUNCTION (this << imsi << cellId << teid);
+
+//   FIXME EpcController::DedicatedBearerRequest
 //   if (m_epcCtrlApp->DedicatedBearerRequest (bearer, teid))
 //     {
 //       return SgwRulesInstall (RoutingInfo::GetPointer (teid));
 //     }
-//   return false;
-// }
+  return false;
+}
 //
 // void
 // SliceController::NotifyEnbAttach (uint16_t cellId, uint32_t sgwS1uPortNo)
@@ -192,6 +195,22 @@ SliceController::GetTypeId (void)
 //   return ctrl;
 // }
 
+OperationMode
+SliceController::GetAggregationMode (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_aggregation;
+}
+
+OperationMode
+SliceController::GetPgwAdaptiveMode (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_tftAdaptive;
+}
+
 void
 SliceController::DoDispose ()
 {
@@ -201,6 +220,18 @@ SliceController::DoDispose ()
   delete (m_s11SapSgw);
 
   Object::DoDispose ();
+}
+
+ofl_err
+SliceController::HandleError (
+  struct ofl_msg_error *msg, Ptr<const RemoteSwitch> swtch,
+  uint32_t xid)
+{
+  NS_LOG_FUNCTION (this << swtch << xid);
+
+  // Chain up for logging an,md abort.
+  OFSwitch13Controller::HandleError (msg, swtch, xid);
+  NS_ABORT_MSG ("Should not get here :/");
 }
 
 ofl_err

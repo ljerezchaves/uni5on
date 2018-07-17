@@ -26,9 +26,12 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
+#include "../infrastructure/backhaul-controller.h"
 
 namespace ns3 {
 
+class BackhaulController;
+class BackhaulNetwork;
 class SvelteMme;
 
 /**
@@ -43,6 +46,24 @@ class SliceController : public OFSwitch13Controller
   friend class MemberEpcS11SapSgw<SliceController>;
 
 public:
+  /** P-GW adaptive mechanism statistics. */
+  struct PgwTftStats
+  {
+    double   tableSize;       //!< The OpenFlow flow table size.
+    double   maxEntries;      //!< The table size peak entries.
+    double   sumEntries;      //!< The table size total entries.
+    double   pipeCapacity;    //!< The OpenFlow pipeline capacity.
+    double   maxLoad;         //!< The pipeline peak load;
+    double   sumLoad;         //!< The pipeline total load;
+    uint32_t currentLevel;    //!< The current mechanism level.
+    uint32_t nextLevel;       //!< The mechanism level for next cycle.
+    uint32_t maxLevel;        //!< The maximum mechanism level.
+    uint32_t bearersMoved;    //!< The number of bearers moved between TFTs.
+    double   blockThrs;       //!< The block threshold.
+    double   joinThrs;        //!< The join threshold.
+    double   splitThrs;       //!< The split threshold.
+  };
+
   SliceController ();           //!< Default constructor.
   virtual ~SliceController ();  //!< Dummy destructor, see DoDispose.
 
@@ -52,41 +73,41 @@ public:
    */
   static TypeId GetTypeId (void);
 
-//  /**
-//   * Release a dedicated EPS bearer.
-//   * \internal Current implementation assumes that each application traffic
-//   *           flow is associated with a unique bearer/tunnel. Because of that,
-//   *           we can use only the teid for the tunnel to prepare and install
-//   *           route. If we would like to aggregate traffic from several
-//   *           applications into same bearer we will need to revise this.
-//   * \param teid The teid for this bearer, if already defined.
-//   * \param imsi uint64_t IMSI UE identifier.
-//   * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
-//   * \param bearer EpsBearer bearer QoS characteristics of the bearer.
-//   * \return True if succeeded, false otherwise.
-//   */
-//  virtual bool DedicatedBearerRelease (
-//    EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
-//
-//  /**
-//   * Request a new dedicated EPS bearer. This is used to check for necessary
-//   * resources in the network (mainly available data rate for GBR bearers).
-//   * When returning false, it aborts the bearer creation process.
-//   * \internal Current implementation assumes that each application traffic
-//   *           flow is associated with a unique bearer/tunnel. Because of that,
-//   *           we can use only the teid for the tunnel to prepare and install
-//   *           route. If we would like to aggregate traffic from several
-//   *           applications into same bearer we will need to revise this.
-//   * \param teid The teid for this bearer, if already defined.
-//   * \param imsi uint64_t IMSI UE identifier.
-//   * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
-//   * \param bearer EpsBearer bearer QoS characteristics of the bearer.
-//   * \returns True if succeeded (the bearer creation process will proceed),
-//   *          false otherwise (the bearer creation process will abort).
-//   */
-//  virtual bool DedicatedBearerRequest (
-//    EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
-//
+  /**
+   * Release a dedicated EPS bearer.
+   * \internal Current implementation assumes that each application traffic
+   *           flow is associated with a unique bearer/tunnel. Because of that,
+   *           we can use only the teid for the tunnel to prepare and install
+   *           route. If we would like to aggregate traffic from several
+   *           applications into same bearer we will need to revise this.
+   * \param teid The teid for this bearer, if already defined.
+   * \param imsi uint64_t IMSI UE identifier.
+   * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
+   * \param bearer EpsBearer bearer QoS characteristics of the bearer.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool DedicatedBearerRelease (
+    EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
+
+  /**
+   * Request a new dedicated EPS bearer. This is used to check for necessary
+   * resources in the network (mainly available data rate for GBR bearers).
+   * When returning false, it aborts the bearer creation process.
+   * \internal Current implementation assumes that each application traffic
+   *           flow is associated with a unique bearer/tunnel. Because of that,
+   *           we can use only the teid for the tunnel to prepare and install
+   *           route. If we would like to aggregate traffic from several
+   *           applications into same bearer we will need to revise this.
+   * \param teid The teid for this bearer, if already defined.
+   * \param imsi uint64_t IMSI UE identifier.
+   * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
+   * \param bearer EpsBearer bearer QoS characteristics of the bearer.
+   * \returns True if succeeded (the bearer creation process will proceed),
+   *          false otherwise (the bearer creation process will abort).
+   */
+  virtual bool DedicatedBearerRequest (
+    EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
+
 //  /**
 //   * Notify this controller of a new or eNB connected to S-GW node over the
 //   * S1-U interface.
@@ -140,19 +161,42 @@ public:
 //  virtual void NotifyPgwTftAttach (
 //    uint16_t pgwTftCounter, Ptr<OFSwitch13Device> pgwSwDev,
 //    uint32_t pgwS5PortNo, uint32_t pgwMainPortNo);
-//
-//  /**
-//   * Get the SDRAN controller pointer from the global map for this cell ID.
-//   * \param cellID The eNB cell ID.
-//   * \return The SDRAN controller pointer.
-//   */
-//  static Ptr<SliceController> GetPointer (uint16_t cellId);
+
+  /**
+   * \name Internal mechanisms operation mode accessors.
+   * \return The requested mechanism operation mode.
+   */
+  //\{
+  OperationMode GetAggregationMode (void) const;
+  OperationMode GetPgwAdaptiveMode (void) const;
+  //\}
+
+  /**
+   * TracedCallback signature for the P-GW TFT stats trace source.
+   * \param stats The P-GW TST statistics from the last interval.
+   */,m
+  typedef void (*PgwTftStatsTracedCallback)(struct PgwTftStats stats);
+
+  /**
+   * TracedCallback signature for session created trace source.
+   * \param imsi The IMSI UE identifier.
+   * \param cellId The eNB CellID to which the IMSI UE is attached to.
+   * \param bearerList The list of context bearers created.
+   */ // FIXME
+//  typedef void (*SessionCreatedTracedCallback)(
+//    uint64_t imsi, uint16_t cellId, BearerContextList_t bearerList);
+
+  static const uint32_t m_teidStart;    //!< First valid TEID value.
+  static const uint32_t m_teidEnd;      //!< Last valid TEID value.
 
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
   // Inherited from OFSwitch13Controller.
+  virtual ofl_err HandleError (
+    struct ofl_msg_error *msg, Ptr<const RemoteSwitch> swtch,
+    uint32_t xid);
   virtual ofl_err HandleFlowRemoved (
     struct ofl_msg_flow_removed *msg, Ptr<const RemoteSwitch> swtch,
     uint32_t xid);
@@ -163,6 +207,25 @@ protected:
   // Inherited from OFSwitch13Controller.
 
 private:
+//  /**
+//   * Install OpenFlow match rules for this bearer.
+//   * \param rInfo The routing information to process.
+//   * \return True if succeeded, false otherwise.
+//   */
+//  bool BearerInstall (Ptr<RoutingInfo> rInfo);
+//
+//  /**
+//   * Remove OpenFlow match rules for this bearer.
+//   * \param rInfo The routing information to process.
+//   * \return True if succeeded, false otherwise.
+//   */
+//  bool BearerRemove (Ptr<RoutingInfo> rInfo);
+//
+//  /**
+//   * Periodic timeout operation.
+//   */
+//  void ControllerTimeout (void);
+  
   /** \name Methods for the S11 SAP S-GW control plane. */
   //\{
   void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
@@ -171,6 +234,79 @@ private:
   void DoModifyBearerRequest  (EpcS11SapSgw::ModifyBearerRequestMessage  msg);
   //\}
 
+//  /**
+//   * Get the P-GW main datapath ID.
+//   * \return The P-GW main datapath ID.
+//   */
+//  uint64_t GetPgwMainDpId (void) const;
+//
+//  /**
+//   * Get the P-GW TFT datapath ID for a given index.
+//   * \param idx The P-GW TFT index.
+//   * \return The P-GW TFT datapath ID.
+//   */
+//  uint64_t GetPgwTftDpId (uint16_t idx) const;
+//
+//  /**
+//   * Get the active P-GW TFT index for a given traffic flow.
+//   * \param rInfo The routing information to process.
+//   * \param activeTfts The number of active P-GW TFT switches. When set to 0,
+//   *        the number of P-GW TFTs will be calculated considering the current
+//   *        adaptive mechanism level.
+//   * \return The P-GW TFT index.
+//   */
+//  uint16_t GetPgwTftIdx (
+//    Ptr<const RoutingInfo> rInfo, uint16_t activeTfts = 0) const;
+//
+//  /**
+//   * Install OpenFlow match rules for the aggregated MTC bearer.
+//   * \param rInfo The routing information to process.
+//   * \return True if succeeded, false otherwise.
+//   */
+//  bool MtcAggBearerInstall (Ptr<RoutingInfo> rInfo);
+//
+//  /**
+//   * Check for available resources on P-GW TFT switch for this bearer request.
+//   * \param rInfo The routing information to process.
+//   * \return True if succeeded, false otherwise.
+//   */
+//  bool PgwBearerRequest (Ptr<RoutingInfo> rInfo);
+//
+//  /**
+//   * Install OpenFlow rules for downlink packet filtering on the P-GW TFT
+//   * switch.
+//   * \attention To avoid conflicts with old entries, increase the routing
+//   *            priority before installing OpenFlow rules.
+//   * \param rInfo The routing information to process.
+//   * \param pgwTftIdx The P-GW TFT switch index. When set to 0, the index will
+//   *        be get from rInfo->GetPgwTftIdx ().
+//   * \param forceMeterInstall Force the meter entry installation even when the
+//   *        meterInfo->IsDownInstalled () is true.
+//   * \return True if succeeded, false otherwise.
+//   */
+//  bool PgwRulesInstall (
+//    Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx = 0,
+//    bool forceMeterInstall = false);
+//
+//  /**
+//   * Remove OpenFlow rules for downlink packet filtering from P-GW TFT switch.
+//   * \param rInfo The routing information to process.
+//   * \param pgwTftIdx The P-GW TFT switch index. When set to 0, the index will
+//   *        be get from rInfo->GetPgwTftIdx ().
+//   * \param keepMeterFlag Don't set the meterInfo->IsDownInstalled () flag to
+//   *        false when removing the meter entry.
+//   * \return True if succeeded, false otherwise.
+//   */
+//  bool PgwRulesRemove (
+//    Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx = 0,
+//    bool keepMeterFlag = false);
+//
+//  /**
+//   * Periodically check for the P-GW TFT processing load and flow table usage
+//   * to update the adaptive mechanism.
+//   */
+//  void PgwTftCheckUsage (void);
+//
 //  /**
 //   * Configure the S-GW with OpenFlow rules for packet forwarding.
 //   * \attention To avoid conflicts with old entries, increase the routing
@@ -193,15 +329,55 @@ private:
 //   * \param cellId The cell ID used to index the map.
 //   */
 //  static void RegisterController (Ptr<SliceController> ctrl, uint16_t cellId);
+//
+//  /** The bearer request trace source, fired at RequestDedicatedBearer. */
+//  TracedCallback<Ptr<const RoutingInfo> > m_bearerRequestTrace;
+//
+//  /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
+//  TracedCallback<Ptr<const RoutingInfo> > m_bearerReleaseTrace;
+//
+//  /** The context created trace source, fired at NotifySessionCreated. */
+//  TracedCallback<uint64_t, uint16_t, BearerContextList_t>
+//  m_sessionCreatedTrace;
+//
+//  /** The P-GW TFT stats trace source, fired at PgwTftCheckUsage. */
+//  TracedCallback<struct PgwTftStats> m_pgwTftStatsTrace;
 
   // MME communication.
   Ptr<SvelteMme>        m_mme;          //!< MME element.
   EpcS11SapMme*         m_s11SapMme;    //!< MME side of the S11 SAP.
   EpcS11SapSgw*         m_s11SapSgw;    //!< S-GW side of the S11 SAP.
 
+  // Infrastructure communication.
+  Ptr<BackhaulController> m_backhaulCtrl;
+  Ptr<BackhaulNetwork>    m_backhaulNet;
+
+  // P-GW metadata. FIXME
+  std::vector<uint64_t> m_pgwDpIds;       //!< Datapath IDs.
+  Ipv4Address           m_pgwS5Addr;      //!< S5 IP address for uplink.
+  std::vector<uint32_t> m_pgwS5PortsNo;   //!< S5 port numbers.
+  uint32_t              m_pgwSgiPortNo;   //!< SGi port number.
+
+  // P-GW TFT adaptive mechanism. FIXME
+  OperationMode         m_tftAdaptive;    //!< P-GW adaptive mechanism.
+  uint8_t               m_tftLevel;       //!< Current adaptive level.
+  OperationMode         m_tftBlockPolicy; //!< Overload block policy.
+  double                m_tftBlockThs;    //!< Block threshold.
+  double                m_tftJoinThs;     //!< Join threshold.
+  double                m_tftSplitThs;    //!< Split threshold.
+  uint16_t              m_tftSwitches;    //!< Max number of TFT switches.
+  DataRate              m_tftMaxLoad;     //!< Processing capacity.
+  uint32_t              m_tftTableSize;   //!< Flow table size.
+
+  // Internal members and attributes.
+  OperationMode         m_aggregation;    //!< Aggregation mechanism. FIXME
+  Time                  m_timeout;        //!< Controller internal timeout.
+
 //  /** Map saving cell ID / SDRAN controller pointer. */
 //  typedef std::map<uint16_t, Ptr<SliceController> > CellIdCtrlMap_t;
 //  static CellIdCtrlMap_t m_cellIdCtrlMap; //!< Global SDRAN ctrl by cell ID.
+
+  static uint32_t       m_teidCount;      //!< TEID counter.
 };
 
 } // namespace ns3
