@@ -55,15 +55,26 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** \name Private member accessors. */
-  //\{
-  Ptr<LteHelper>      GetLteHelper    (void) const;
-  NodeContainer       GetEnbNodes     (void) const;
-  NodeContainer       GetHtcUeNodes   (void) const;
-  NodeContainer       GetMtcUeNodes   (void) const;
-  NetDeviceContainer  GetHtcUeDevices (void) const;
-  NetDeviceContainer  GetMtcUeDevices (void) const;
-  //\}
+  /**
+   * Get the LTE helper used to configure this radio network.
+   * \return The LTE helper.
+   */
+  Ptr<LteHelper> GetLteHelper (void) const;
+
+  /**
+   * Enables automatic attachment of a set of UE devices to a suitable cell
+   * using idle mode initial cell selection procedure.
+   * \param ueDevices The set of UE devices to be attached.
+   */
+  void AttachUes (NetDeviceContainer ueDevices);
+
+  /**
+   * Configure the given nodes as UEs, setting mobility and positioning.
+   * \param ueNodes The nodes.
+   * \param mobility True for UE mobility, false otherwise.
+   * \return The container with the newly created UE devices.
+   */
+  NetDeviceContainer InstallUes (NodeContainer ueNodes, bool mobility);
 
 protected:
   /** Destructor implementation. */
@@ -73,35 +84,19 @@ protected:
   void NotifyConstructionCompleted (void);
 
 private:
-  /** Configure the helpers. */
-  void ConfigureHelpers ();
-
-  /** Configure the eNBs. */
-  void ConfigureEnbs ();
-
-  /** Configure the UEs. */
-  void ConfigureUes ();
-
   /** Print LTE radio environment map. */
   void PrintRadioEnvironmentMap ();
 
   uint32_t            m_nSites;         //!< Number of cell sites.
-  uint32_t            m_nEnbs;          //!< Number of eNBs.
-  uint32_t            m_nHtcUes;        //!< Number of HTC UEs.
-  uint32_t            m_nMtcUes;        //!< Number of MTC UEs.
   double              m_enbMargin;      //!< eNB coverage margin.
   double              m_ueHeight;       //!< UE height.
   bool                m_lteTrace;       //!< Enable LTE ASCII traces.
   bool                m_lteRem;         //!< Print the LTE REM.
-  bool                m_htcUeMobility;  //!< Enable HTC UE mobility.
-  bool                m_mtcUeMobility;  //!< Enable MTC UE mobility.
   std::string         m_remFilename;    //!< LTE REM filename.
   NodeContainer       m_enbNodes;       //!< eNB nodes.
-  NodeContainer       m_htcUeNodes;     //!< HTC UE nodes.
-  NodeContainer       m_mtcUeNodes;     //!< MTC UE nodes.
+  NodeContainer       m_ueNodes;        //!< UE nodes.
   NetDeviceContainer  m_enbDevices;     //!< eNB devices.
-  NetDeviceContainer  m_htcUeDevices;   //!< HTC UE devices.
-  NetDeviceContainer  m_mtcUeDevices;   //!< MTC UE devices.
+  NetDeviceContainer  m_ueDevices;      //!< UE devices.
   Rectangle           m_coverageArea;   //!< LTE radio coverage area.
 
   Ptr<LteHexGridEnbTopologyHelper> m_topoHelper;    //!< Grid topology helper.
