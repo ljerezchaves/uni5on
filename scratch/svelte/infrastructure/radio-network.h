@@ -30,7 +30,6 @@
 
 namespace ns3 {
 
-class BackhaulNetwork;
 class SvelteEpcHelper;
 
 /**
