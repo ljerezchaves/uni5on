@@ -29,6 +29,8 @@
 
 namespace ns3 {
 
+class SvelteMme;
+
 /**
  * \ingroup svelteLogical
  * This is the abstract base class for a logical LTE slice controller, which
@@ -38,8 +40,7 @@ namespace ns3 {
  */
 class SliceController : public OFSwitch13Controller
 {
-//  friend class MemberEpcS11SapSgw<SliceController>;
-//  friend class MemberEpcS5SapSgw<SliceController>;
+  friend class MemberEpcS11SapSgw<SliceController>;
 
 public:
   SliceController ();           //!< Default constructor.
@@ -106,15 +107,39 @@ public:
 //    uint32_t sgwS5PortNo, Ptr<NetDevice> sgwS5Dev, uint32_t mtcGbrTeid,
 //    uint32_t mtcNonTeid);
 //
-//  /** \name Private member accessors. */
-//  //\{
-//  EpcS1apSapMme* GetS1apSapMme (void) const;
-//  EpcS5SapSgw* GetS5SapSgw (void) const;
-//  Ipv4Address GetSgwS5Addr (void) const;
+//  /**
+//   * Notify this controller that all P-GW switches have already been
+//   * configured and the connections between them are finished.
+//   * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
+//   */
+//  virtual void NotifyPgwBuilt (OFSwitch13DeviceContainer devices);
 //
-//  void SetEpcCtlrApp (Ptr<SliceController> value);
-//  void SetSgwDpId (uint64_t value);
-//  //\}
+//  /**
+//   * Notify this controller of the P-GW main switch connected to the OpenFlow
+//   * backhaul network over the S5 interface, and to the web server over the SGi
+//   * interface.
+//   * \param pgwSwDev The OpenFlow P-GW main switch device.
+//   * \param pgwS5PortNo The S5 port number on the P-GW main switch.
+//   * \param pgwSgiPortNo The SGi port number on the P-GW main switch.
+//   * \param pgwS5Dev The S5 device attached to the P-GW main switch.
+//   * \param webSgiDev The SGi device attached to the Web server.
+//   */
+//  virtual void NotifyPgwMainAttach (
+//    Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNo,
+//    uint32_t pgwSgiPortNo, Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> webSgiDev);
+//
+//  /**
+//   * Notify this controller of a new P-GW TFT switch connected to the OpenFlow
+//   * backhaul network over the S5 interface and to the P-GW main switch over
+//   * internal interface.
+//   * \param pgwTftCounter The counter for P-GW TFT switches.
+//   * \param pgwSwDev The OpenFlow P-GW TFT switch device.
+//   * \param pgwS5PortNo The S5 port number on the P-GW TFT switch.
+//   * \param pgwMainPortNo The port number on the P-GW main switch.
+//   */
+//  virtual void NotifyPgwTftAttach (
+//    uint16_t pgwTftCounter, Ptr<OFSwitch13Device> pgwSwDev,
+//    uint32_t pgwS5PortNo, uint32_t pgwMainPortNo);
 //
 //  /**
 //   * Get the SDRAN controller pointer from the global map for this cell ID.
@@ -138,21 +163,14 @@ protected:
   // Inherited from OFSwitch13Controller.
 
 private:
-//  /** \name Methods for the S11 SAP S-GW control plane. */
-//  //\{
-//  void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
-//  void DoDeleteBearerCommand  (EpcS11SapSgw::DeleteBearerCommandMessage  msg);
-//  void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage msg);
-//  void DoModifyBearerRequest  (EpcS11SapSgw::ModifyBearerRequestMessage  msg);
-//  //\}
-//
-//  /** \name Methods for the S5 SAP S-GW control plane. */
-//  //\{
-//  void DoCreateSessionResponse (EpcS11SapMme::CreateSessionResponseMessage msg);
-//  void DoDeleteBearerRequest  (EpcS11SapMme::DeleteBearerRequestMessage   msg);
-//  void DoModifyBearerResponse (EpcS11SapMme::ModifyBearerResponseMessage  msg);
-//  //\}
-//
+  /** \name Methods for the S11 SAP S-GW control plane. */
+  //\{
+  void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
+  void DoDeleteBearerCommand  (EpcS11SapSgw::DeleteBearerCommandMessage  msg);
+  void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage msg);
+  void DoModifyBearerRequest  (EpcS11SapSgw::ModifyBearerRequestMessage  msg);
+  //\}
+
 //  /**
 //   * Configure the S-GW with OpenFlow rules for packet forwarding.
 //   * \attention To avoid conflicts with old entries, increase the routing
@@ -175,21 +193,12 @@ private:
 //   * \param cellId The cell ID used to index the map.
 //   */
 //  static void RegisterController (Ptr<SliceController> ctrl, uint16_t cellId);
-//
-//  uint64_t              m_sgwDpId;      //!< S-GW datapath ID.
-//  Ipv4Address           m_sgwS5Addr;    //!< S-GW S5 IP address.
-//  uint32_t              m_sgwS5PortNo;  //!< S-GW S5 port number.
-//
-//  // P-GW communication.
-//  Ptr<SliceController>    m_epcCtrlApp;   //!< EPC controller app.
-//  EpcS5SapPgw*          m_s5SapPgw;     //!< P-GW side of the S5 SAP.
-//  EpcS5SapSgw*          m_s5SapSgw;     //!< S-GW side of the S5 SAP.
-//
-//  // MME communication.
-//  Ptr<SdranMme>         m_mme;          //!< MME element.
-//  EpcS11SapMme*         m_s11SapMme;    //!< MME side of the S11 SAP.
-//  EpcS11SapSgw*         m_s11SapSgw;    //!< S-GW side of the S11 SAP.
-//
+
+  // MME communication.
+  Ptr<SvelteMme>        m_mme;          //!< MME element.
+  EpcS11SapMme*         m_s11SapMme;    //!< MME side of the S11 SAP.
+  EpcS11SapSgw*         m_s11SapSgw;    //!< S-GW side of the S11 SAP.
+
 //  /** Map saving cell ID / SDRAN controller pointer. */
 //  typedef std::map<uint16_t, Ptr<SliceController> > CellIdCtrlMap_t;
 //  static CellIdCtrlMap_t m_cellIdCtrlMap; //!< Global SDRAN ctrl by cell ID.

@@ -19,6 +19,7 @@
  */
 
 #include "slice-controller.h"
+#include "svelte-mme.h"
 
 namespace ns3 {
 
@@ -29,14 +30,13 @@ NS_OBJECT_ENSURE_REGISTERED (SliceController);
 // FIXME SliceController::CellIdCtrlMap_t SliceController::m_cellIdCtrlMap;
 
 SliceController::SliceController ()
-//  : m_epcCtrlApp (0)
 {
   NS_LOG_FUNCTION (this);
 
-//  // The S-GW side of S11 and S5 APs
-//  m_s11SapSgw = new MemberEpcS11SapSgw<SliceController> (this);
-//  m_s5SapSgw  = new MemberEpcS5SapSgw<SliceController> (this);
-//
+  // The S-GW side of S11 APs
+  m_s11SapSgw = new MemberEpcS11SapSgw<SliceController> (this);
+
+//  // FIXME Receber o MME como parâmetro no construtor
 //  m_mme = CreateObject<SdranMme> ();
 //  m_mme->SetS11SapSgw (m_s11SapSgw);
 //  m_s11SapMme = m_mme->GetS11SapMme ();
@@ -177,47 +177,6 @@ SliceController::GetTypeId (void)
 //     }
 // }
 //
-// EpcS1apSapMme*
-// SliceController::GetS1apSapMme (void) const
-// {
-//   NS_LOG_FUNCTION (this);
-//
-//   return m_mme->GetS1apSapMme ();
-// }
-//
-// EpcS5SapSgw*
-// SliceController::GetS5SapSgw (void) const
-// {
-//   NS_LOG_FUNCTION (this);
-//
-//   return m_s5SapSgw;
-// }
-//
-// Ipv4Address
-// SliceController::GetSgwS5Addr (void) const
-// {
-//   NS_LOG_FUNCTION (this);
-//
-//   return m_sgwS5Addr;
-// }
-//
-// void
-// SliceController::SetEpcCtlrApp (Ptr<SliceController> value)
-// {
-//   NS_LOG_FUNCTION (this << value);
-//
-//   m_epcCtrlApp = value;
-//   m_s5SapPgw = m_epcCtrlApp->GetS5SapPgw ();
-// }
-//
-// void
-// SliceController::SetSgwDpId (uint64_t value)
-// {
-//   NS_LOG_FUNCTION (this << value);
-//
-//   m_sgwDpId = value;
-// }
-//
 // Ptr<SliceController>
 // SliceController::GetPointer (uint16_t cellId)
 // {
@@ -238,12 +197,9 @@ SliceController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-//  m_epcCtrlApp = 0;
-//  m_mme = 0;
-//  delete (m_s11SapSgw);
-//  delete (m_s5SapSgw);
+  m_mme = 0;
+  delete (m_s11SapSgw);
 
-  // Chain up.
   Object::DoDispose ();
 }
 
@@ -352,22 +308,125 @@ SliceController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 // On the following Do* methods, note the trick to avoid the need for
 // allocating TEID on the S11 interface using the IMSI as identifier.
 //
-// void
-// SliceController::DoCreateSessionRequest (
-//   EpcS11SapSgw::CreateSessionRequestMessage msg)
-// {
-//   NS_LOG_FUNCTION (this << msg.imsi);
+void
+SliceController::DoCreateSessionRequest (
+  EpcS11SapSgw::CreateSessionRequestMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.imsi);
+
+//  FIXME O código abaixo veio do antigo EpcController
+//  uint16_t cellId = msg.uli.gci;
+//  uint64_t imsi = msg.imsi;
 //
-//   // Send the request message to the P-GW.
-//   m_s5SapPgw->CreateSessionRequest (msg);
-// }
+//  Ptr<SdranController> sdranCtrl = SdranController::GetPointer (cellId);
+//  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
+//  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
 //
-// void
-// SliceController::DoDeleteBearerCommand (
-//   EpcS11SapSgw::DeleteBearerCommandMessage msg)
-// {
-//   NS_LOG_FUNCTION (this << msg.teid);
+//  // Iterate over request message and create the response message.
+//  EpcS11SapMme::CreateSessionResponseMessage res;
+//  res.teid = imsi;
 //
+//  std::list<EpcS11SapSgw::BearerContextToBeCreated>::iterator bit;
+//  for (bit = msg.bearerContextsToBeCreated.begin ();
+//       bit != msg.bearerContextsToBeCreated.end ();
+//       ++bit)
+//    {
+//      NS_ABORT_IF (EpcController::m_teidCount > EpcController::m_teidEnd);
+//
+//      uint32_t teid = EpcController::m_teidCount++;
+//      bool isDefault = res.bearerContextsCreated.empty ();
+//
+//      EpcS11SapMme::BearerContextCreated bearerContext;
+//      bearerContext.sgwFteid.teid = teid;
+//      bearerContext.sgwFteid.address = enbInfo->GetSgwS1uAddr ();
+//      bearerContext.epsBearerId = bit->epsBearerId;
+//      bearerContext.bearerLevelQos = bit->bearerLevelQos;
+//      bearerContext.tft = bit->tft;
+//      res.bearerContextsCreated.push_back (bearerContext);
+//
+//      // Add the TFT entry to the UeInfo (don't move this command from here).
+//      ueInfo->AddTft (bit->tft, teid);
+//
+//      // Create the routing metadata for this bearer.
+//      Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
+//          teid, bearerContext, imsi, isDefault, ueInfo->IsMtc ());
+//      rInfo->SetPgwS5Addr (m_pgwS5Addr);
+//      rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
+//      rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
+//      TopologyBearerCreated (rInfo);
+//
+//      // Set the network slice for this bearer.
+//      if (GetSlicingMode () != OperationMode::OFF)
+//        {
+//          if (rInfo->IsMtc ())
+//            {
+//              rInfo->SetSlice (Slice::MTC);
+//            }
+//          else if (rInfo->IsGbr ())
+//            {
+//              rInfo->SetSlice (Slice::GBR);
+//            }
+//        }
+//
+//      // Check for the proper traffic aggregation mode for this bearer.
+//      OperationMode mode;
+//      mode = rInfo->IsMtc () ? GetMtcAggregMode () : GetHtcAggregMode ();
+//      if (rInfo->IsHtc () && rInfo->IsDefault ())
+//        {
+//          // Never aggregates the default HTC bearer.
+//          mode = OperationMode::OFF;
+//        }
+//
+//      // Set the traffic aggregation operation mode.
+//      Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
+//      aggInfo->SetOperationMode (mode);
+//
+//      if (rInfo->IsDefault ())
+//        {
+//          // Configure this default bearer.
+//          rInfo->SetPriority (0x7F);
+//          rInfo->SetTimeout (0);
+//
+//          // For logic consistence, let's check for available resources.
+//          bool success = true;
+//          success &= TopologyBearerRequest (rInfo);
+//          success &= PgwBearerRequest (rInfo);
+//          success &= TopologyBitRateReserve (rInfo);
+//          NS_ASSERT_MSG (success, "Default bearer must be accepted.");
+//          m_bearerRequestTrace (rInfo);
+//
+//          // Activate and install the bearer.
+//          rInfo->SetActive (true);
+//          bool installed = BearerInstall (rInfo);
+//          NS_ASSERT_MSG (installed, "Default bearer must be installed.");
+//        }
+//      else
+//        {
+//          // Configure this dedicated bearer.
+//          rInfo->SetPriority (0x1FFF);
+//          rInfo->SetTimeout (m_flowTimeout);
+//        }
+//    }
+//
+//  // Fire trace source notifying the created session.
+//  m_sessionCreatedTrace (imsi, cellId, res.bearerContextsCreated);
+//
+//   // Install S-GW rules for default bearer.
+//   BearerContext_t defaultBearer = msg.bearerContextsCreated.front ();
+//   NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
+//   uint32_t teid = defaultBearer.sgwFteid.teid;
+//   SgwRulesInstall (RoutingInfo::GetPointer (teid));
+//
+//   // Forward the response message to the MME.
+//   m_s11SapMme->CreateSessionResponse (msg);
+}
+
+void
+SliceController::DoDeleteBearerCommand (
+  EpcS11SapSgw::DeleteBearerCommandMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.teid);
+
 //   uint64_t imsi = msg.teid;
 //
 //   EpcS11SapMme::DeleteBearerRequestMessage res;
@@ -384,68 +443,34 @@ SliceController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 //     }
 //
 //   m_s11SapMme->DeleteBearerRequest (res);
-// }
-//
-// void
-// SliceController::DoDeleteBearerResponse (
-//   EpcS11SapSgw::DeleteBearerResponseMessage msg)
-// {
-//   NS_LOG_FUNCTION (this << msg.teid);
-//
-//   // Nothing to do here.
-// }
-//
-// void
-// SliceController::DoModifyBearerRequest (
-//   EpcS11SapSgw::ModifyBearerRequestMessage msg)
-// {
-//   NS_LOG_FUNCTION (this << msg.teid);
-//
-//   // In current implementation, this Modify Bearer Request is triggered only by
-//   // X2 handover procedures. There is no actual bearer modification, for now we
-//   // just support the minimum needed for path switch request (handover). There
-//   // is no need to forward the request message to the P-GW.
-//   EpcS11SapMme::ModifyBearerResponseMessage res;
-//   res.teid = msg.teid;
-//   res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
-//
-//   m_s11SapMme->ModifyBearerResponse (res);
-// }
-//
-// void
-// SliceController::DoCreateSessionResponse (
-//   EpcS11SapMme::CreateSessionResponseMessage msg)
-// {
-//   NS_LOG_FUNCTION (this << msg.teid);
-//
-//   // Install S-GW rules for default bearer.
-//   BearerContext_t defaultBearer = msg.bearerContextsCreated.front ();
-//   NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
-//   uint32_t teid = defaultBearer.sgwFteid.teid;
-//   SgwRulesInstall (RoutingInfo::GetPointer (teid));
-//
-//   // Forward the response message to the MME.
-//   m_s11SapMme->CreateSessionResponse (msg);
-// }
-//
-// void
-// SliceController::DoDeleteBearerRequest (
-//   EpcS11SapMme::DeleteBearerRequestMessage msg)
-// {
-//   NS_LOG_FUNCTION (this << msg.teid);
-//
-//   NS_FATAL_ERROR ("Unimplemented method.");
-// }
-//
-// void
-// SliceController::DoModifyBearerResponse (
-//   EpcS11SapMme::ModifyBearerResponseMessage msg)
-// {
-//   NS_LOG_FUNCTION (this << msg.teid);
-//
-//   NS_FATAL_ERROR ("Unimplemented method.");
-// }
-//
+}
+
+void
+SliceController::DoDeleteBearerResponse (
+  EpcS11SapSgw::DeleteBearerResponseMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.teid);
+
+  // Nothing to do here.
+}
+
+void
+SliceController::DoModifyBearerRequest (
+  EpcS11SapSgw::ModifyBearerRequestMessage msg)
+{
+  NS_LOG_FUNCTION (this << msg.teid);
+
+  // In current implementation, this Modify Bearer Request is triggered only by
+  // X2 handover procedures. There is no actual bearer modification, for now we
+  // just support the minimum needed for path switch request (handover). There
+  // is no need to forward the request message to the P-GW.
+  EpcS11SapMme::ModifyBearerResponseMessage res;
+  res.teid = msg.teid;
+  res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
+
+  // FIXME m_s11SapMme->ModifyBearerResponse (res);
+}
+
 // bool
 // SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 // {
