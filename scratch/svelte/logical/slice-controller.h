@@ -174,7 +174,7 @@ public:
   /**
    * TracedCallback signature for the P-GW TFT stats trace source.
    * \param stats The P-GW TST statistics from the last interval.
-   */,m
+   */
   typedef void (*PgwTftStatsTracedCallback)(struct PgwTftStats stats);
 
   /**
@@ -225,7 +225,7 @@ private:
 //   * Periodic timeout operation.
 //   */
 //  void ControllerTimeout (void);
-  
+
   /** \name Methods for the S11 SAP S-GW control plane. */
   //\{
   void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
@@ -372,10 +372,6 @@ private:
   // Internal members and attributes.
   OperationMode         m_aggregation;    //!< Aggregation mechanism. FIXME
   Time                  m_timeout;        //!< Controller internal timeout.
-
-//  /** Map saving cell ID / SDRAN controller pointer. */
-//  typedef std::map<uint16_t, Ptr<SliceController> > CellIdCtrlMap_t;
-//  static CellIdCtrlMap_t m_cellIdCtrlMap; //!< Global SDRAN ctrl by cell ID.
 
   static uint32_t       m_teidCount;      //!< TEID counter.
 };

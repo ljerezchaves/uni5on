@@ -28,7 +28,7 @@ NS_LOG_COMPONENT_DEFINE ("SliceController");
 NS_OBJECT_ENSURE_REGISTERED (SliceController);
 
 // Initializing SliceController static members.
-// FIXME SliceController::CellIdCtrlMap_t SliceController::m_cellIdCtrlMap;
+// TODO
 
 SliceController::SliceController ()
 {
@@ -179,21 +179,6 @@ SliceController::DedicatedBearerRequest (
 //       DpctlSchedule (m_sgwDpId, cmd.str ());
 //     }
 // }
-//
-// Ptr<SliceController>
-// SliceController::GetPointer (uint16_t cellId)
-// {
-//   NS_LOG_FUNCTION_NOARGS ();
-//
-//   Ptr<SliceController> ctrl = 0;
-//   CellIdCtrlMap_t::iterator ret;
-//   ret = SliceController::m_cellIdCtrlMap.find (cellId);
-//   if (ret != SliceController::m_cellIdCtrlMap.end ())
-//     {
-//       ctrl = ret->second;
-//     }
-//   return ctrl;
-// }
 
 OperationMode
 SliceController::GetAggregationMode (void) const
@@ -229,7 +214,7 @@ SliceController::HandleError (
 {
   NS_LOG_FUNCTION (this << swtch << xid);
 
-  // Chain up for logging an,md abort.
+  // Chain up for logging and abort.
   OFSwitch13Controller::HandleError (msg, swtch, xid);
   NS_ABORT_MSG ("Should not get here :/");
 }
@@ -704,21 +689,4 @@ SliceController::DoModifyBearerRequest (
 //     }
 //   return true;
 // }
-//
-// void
-// SliceController::RegisterController (Ptr<SliceController> ctrl,
-//                                      uint16_t cellId)
-// {
-//   NS_LOG_FUNCTION_NOARGS ();
-//
-//   // Saving map by cell ID.
-//   std::pair<CellIdCtrlMap_t::iterator, bool> ret;
-//   std::pair<uint16_t, Ptr<SliceController> > entry (cellId, ctrl);
-//   ret = SliceController::m_cellIdCtrlMap.insert (entry);
-//   if (ret.second == false)
-//     {
-//       NS_FATAL_ERROR ("Can't register SDRAN controller by cell ID.");
-//     }
-// }
-//
 } // namespace ns3
