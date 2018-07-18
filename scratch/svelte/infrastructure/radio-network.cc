@@ -98,11 +98,6 @@ RadioNetwork::GetTypeId (void)
                    BooleanValue (false),
                    MakeBooleanAccessor (&RadioNetwork::m_lteTrace),
                    MakeBooleanChecker ())
-    .AddAttribute ("PrintRem", "Print the radio environment map.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&RadioNetwork::m_lteRem),
-                   MakeBooleanChecker ())
     .AddAttribute ("RemFilename", "Filename for the radio map (no extension).",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    StringValue ("radio-map"),
@@ -136,6 +131,26 @@ RadioNetwork::AttachUes (NetDeviceContainer ueDevices)
   m_lteHelper->Attach (ueDevices);
 }
 
+NetDeviceContainer
+RadioNetwork::InstallUeDevices (NodeContainer ueNodes,
+                                MobilityHelper mobilityHelper)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Install mobility helper into UE nodes.
+  mobilityHelper.Install (ueNodes);
+  BuildingsHelper::Install (ueNodes);
+
+  // Install LTE protocol stack into UE nodes.
+  NetDeviceContainer ueDevices = m_lteHelper->InstallUeDevice (ueNodes);
+
+  // Saving nodes and devices only for REM.
+  m_ueNodes.Add (ueNodes);
+  m_ueDevices.Add (ueDevices);
+
+  return ueDevices;
+}
+
 MobilityHelper
 RadioNetwork::RandomBoxSteadyPositioning (void) const
 {
@@ -163,148 +178,8 @@ RadioNetwork::RandomBoxSteadyPositioning (void) const
   return mobilityHelper;
 }
 
-NetDeviceContainer
-RadioNetwork::InstallUeDevices (NodeContainer ueNodes,
-                                MobilityHelper mobilityHelper)
-{
-  NS_LOG_FUNCTION (this);
-
-  // Install mobility helper into UE nodes.
-  mobilityHelper.Install (ueNodes);
-  BuildingsHelper::Install (ueNodes);
-
-  // Install LTE protocol stack into UE nodes.
-  NetDeviceContainer ueDevices = m_lteHelper->InstallUeDevice (ueNodes);
-
-  // Saving nodes and devices only for REM.
-  m_ueNodes.Add (ueNodes);
-  m_ueDevices.Add (ueDevices);
-
-  return ueDevices;
-}
-
 void
-RadioNetwork::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-
-  m_topoHelper = 0;
-  m_remHelper = 0;
-  m_lteHelper = 0;
-  m_epcHelper = 0;
-
-  Object::DoDispose ();
-}
-
-void
-RadioNetwork::NotifyConstructionCompleted ()
-{
-  NS_LOG_FUNCTION (this);
-
-  // Create the LTE helper for the radio network.
-  m_lteHelper = CreateObject<LteHelper> ();
-  m_lteHelper->SetEpcHelper (m_epcHelper);
-
-  // Use the hybrid path loss model obtained through a combination of several
-  // well known path loss models in order to mimic different environmental
-  // scenarios, considering the phenomenon of indoor/outdoor propagation in the
-  // presence of buildings. Always use the LoS path loss model.
-  m_lteHelper->SetAttribute (
-    "PathlossModel", StringValue ("ns3::HybridBuildingsPropagationLossModel"));
-  m_lteHelper->SetPathlossModelAttribute (
-    "ShadowSigmaExtWalls", DoubleValue (0));
-  m_lteHelper->SetPathlossModelAttribute (
-    "ShadowSigmaOutdoor", DoubleValue (1.5));
-  m_lteHelper->SetPathlossModelAttribute (
-    "ShadowSigmaIndoor", DoubleValue (1.5));
-  m_lteHelper->SetPathlossModelAttribute (
-    "Los2NlosThr", DoubleValue (1e6));
-
-  // Configure the antennas for the hexagonal grid topology.
-  m_lteHelper->SetEnbAntennaModelType ("ns3::ParabolicAntennaModel");
-  m_lteHelper->SetEnbAntennaModelAttribute ("Beamwidth", DoubleValue (70));
-  m_lteHelper->SetEnbAntennaModelAttribute (
-    "MaxAttenuation", DoubleValue (20.0));
-
-  // Create the topology helper used to group eNBs in three-sector sites layed
-  // out on an hexagonal grid.
-  m_topoHelper = CreateObject<LteHexGridEnbTopologyHelper> ();
-  m_topoHelper->SetLteHelper (m_lteHelper);
-
-  // Set the number of eNBs based on the number of cell sites.
-  NS_LOG_INFO ("LTE RAN with " << m_nSites << " three-sector cell sites.");
-
-  // Create the eNBs nodes and set their names.
-  m_enbNodes.Create (3 * m_nSites);
-  uint32_t enbCounter = 0;
-  NodeContainer::Iterator it;
-  for (it = m_enbNodes.Begin (); it != m_enbNodes.End (); ++it)
-    {
-      std::ostringstream enbName;
-      enbName << "enb" << ++enbCounter;
-      Names::Add (enbName.str (), *it);
-    }
-
-  // Set the constant mobility model for eNB positioning
-  MobilityHelper mobilityHelper;
-  mobilityHelper.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-  mobilityHelper.Install (m_enbNodes);
-
-  // Set eNB nodes positions on the hex grid and install the corresponding eNB
-  // devices with antenna bore sight properly configured. This topology helper
-  // will call the EpcHelper::AddEnb () method, which will configure and
-  // connect the eNB to the OpenFlow backhaul network.
-  m_enbDevices = m_topoHelper->SetPositionAndInstallEnbDevice (m_enbNodes);
-  BuildingsHelper::Install (m_enbNodes);
-
-  // Create an X2 interface between all the eNBs in a given set.
-  m_lteHelper->AddX2Interface (m_enbNodes);
-
-  // Identify the LTE radio coverage area based on eNB nodes positions.
-  std::vector<double> xPos, yPos;
-  for (NodeList::Iterator it = m_enbNodes.Begin ();
-       it != m_enbNodes.End (); it++)
-    {
-      Vector pos = (*it)->GetObject<MobilityModel> ()->GetPosition ();
-      xPos.push_back (pos.x);
-      yPos.push_back (pos.y);
-    }
-
-  // Get the minimum and maximum X and Y positions.
-  double xMin = *std::min_element (xPos.begin (), xPos.end ());
-  double yMin = *std::min_element (yPos.begin (), yPos.end ());
-  double xMax = *std::max_element (xPos.begin (), xPos.end ());
-  double yMax = *std::max_element (yPos.begin (), yPos.end ());
-
-  // Calculate the coverage area considering the eNB margin parameter.
-  DoubleValue doubleValue;
-  m_topoHelper->GetAttribute ("InterSiteDistance", doubleValue);
-  uint32_t adjust = m_enbMargin * doubleValue.Get ();
-  m_coverageArea = Rectangle (round (xMin - adjust), round (xMax + adjust),
-                              round (yMin - adjust), round (yMax + adjust));
-  NS_LOG_INFO ("eNBs coverage area: " << m_coverageArea);
-
-  // Make the buildings mobility model consistent.
-  BuildingsHelper::MakeMobilityModelConsistent ();
-
-  // Chain up.
-  Object::NotifyConstructionCompleted ();
-
-  // If enable, print the LTE radio environment map.
-  if (m_lteRem)
-    {
-      PrintRadioEnvironmentMap ();
-    }
-
-  // If enable, print the LTE ASCII trace files.
-  if (m_lteTrace)
-    {
-      m_lteHelper->EnableTraces ();
-    }
-}
-
-void
-RadioNetwork::PrintRadioEnvironmentMap ()
+RadioNetwork::PrintRadioEnvironmentMap (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -432,6 +307,120 @@ RadioNetwork::PrintRadioEnvironmentMap ()
 
   // Install the REM generator.
   m_remHelper->Install ();
+}
+
+void
+RadioNetwork::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+
+  m_topoHelper = 0;
+  m_remHelper = 0;
+  m_lteHelper = 0;
+  m_epcHelper = 0;
+
+  Object::DoDispose ();
+}
+
+void
+RadioNetwork::NotifyConstructionCompleted ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // Create the LTE helper for the radio network.
+  m_lteHelper = CreateObject<LteHelper> ();
+  m_lteHelper->SetEpcHelper (m_epcHelper);
+
+  // Use the hybrid path loss model obtained through a combination of several
+  // well known path loss models in order to mimic different environmental
+  // scenarios, considering the phenomenon of indoor/outdoor propagation in the
+  // presence of buildings. Always use the LoS path loss model.
+  m_lteHelper->SetAttribute (
+    "PathlossModel", StringValue ("ns3::HybridBuildingsPropagationLossModel"));
+  m_lteHelper->SetPathlossModelAttribute (
+    "ShadowSigmaExtWalls", DoubleValue (0));
+  m_lteHelper->SetPathlossModelAttribute (
+    "ShadowSigmaOutdoor", DoubleValue (1.5));
+  m_lteHelper->SetPathlossModelAttribute (
+    "ShadowSigmaIndoor", DoubleValue (1.5));
+  m_lteHelper->SetPathlossModelAttribute (
+    "Los2NlosThr", DoubleValue (1e6));
+
+  // Configure the antennas for the hexagonal grid topology.
+  m_lteHelper->SetEnbAntennaModelType ("ns3::ParabolicAntennaModel");
+  m_lteHelper->SetEnbAntennaModelAttribute ("Beamwidth", DoubleValue (70));
+  m_lteHelper->SetEnbAntennaModelAttribute (
+    "MaxAttenuation", DoubleValue (20.0));
+
+  // Create the topology helper used to group eNBs in three-sector sites layed
+  // out on an hexagonal grid.
+  m_topoHelper = CreateObject<LteHexGridEnbTopologyHelper> ();
+  m_topoHelper->SetLteHelper (m_lteHelper);
+
+  // Set the number of eNBs based on the number of cell sites.
+  NS_LOG_INFO ("LTE RAN with " << m_nSites << " three-sector cell sites.");
+
+  // Create the eNBs nodes and set their names.
+  m_enbNodes.Create (3 * m_nSites);
+  uint32_t enbCounter = 0;
+  NodeContainer::Iterator it;
+  for (it = m_enbNodes.Begin (); it != m_enbNodes.End (); ++it)
+    {
+      std::ostringstream enbName;
+      enbName << "enb" << ++enbCounter;
+      Names::Add (enbName.str (), *it);
+    }
+
+  // Set the constant mobility model for eNB positioning
+  MobilityHelper mobilityHelper;
+  mobilityHelper.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+  mobilityHelper.Install (m_enbNodes);
+
+  // Set eNB nodes positions on the hex grid and install the corresponding eNB
+  // devices with antenna bore sight properly configured. This topology helper
+  // will call the EpcHelper::AddEnb () method, which will configure and
+  // connect the eNB to the OpenFlow backhaul network.
+  m_enbDevices = m_topoHelper->SetPositionAndInstallEnbDevice (m_enbNodes);
+  BuildingsHelper::Install (m_enbNodes);
+
+  // Create an X2 interface between all the eNBs in a given set.
+  m_lteHelper->AddX2Interface (m_enbNodes);
+
+  // Identify the LTE radio coverage area based on eNB nodes positions.
+  std::vector<double> xPos, yPos;
+  for (NodeList::Iterator it = m_enbNodes.Begin ();
+       it != m_enbNodes.End (); it++)
+    {
+      Vector pos = (*it)->GetObject<MobilityModel> ()->GetPosition ();
+      xPos.push_back (pos.x);
+      yPos.push_back (pos.y);
+    }
+
+  // Get the minimum and maximum X and Y positions.
+  double xMin = *std::min_element (xPos.begin (), xPos.end ());
+  double yMin = *std::min_element (yPos.begin (), yPos.end ());
+  double xMax = *std::max_element (xPos.begin (), xPos.end ());
+  double yMax = *std::max_element (yPos.begin (), yPos.end ());
+
+  // Calculate the coverage area considering the eNB margin parameter.
+  DoubleValue doubleValue;
+  m_topoHelper->GetAttribute ("InterSiteDistance", doubleValue);
+  uint32_t adjust = m_enbMargin * doubleValue.Get ();
+  m_coverageArea = Rectangle (round (xMin - adjust), round (xMax + adjust),
+                              round (yMin - adjust), round (yMax + adjust));
+  NS_LOG_INFO ("eNBs coverage area: " << m_coverageArea);
+
+  // Make the buildings mobility model consistent.
+  BuildingsHelper::MakeMobilityModelConsistent ();
+
+  // If enable, print the LTE ASCII trace files.
+  if (m_lteTrace)
+    {
+      m_lteHelper->EnableTraces ();
+    }
+
+  // Chain up.
+  Object::NotifyConstructionCompleted ();
 }
 
 } // namespace ns3

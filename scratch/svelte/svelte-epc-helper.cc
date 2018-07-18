@@ -61,6 +61,14 @@ SvelteEpcHelper::EnablePcap (std::string prefix, bool promiscuous)
   m_backhaul->EnablePcap (prefix, promiscuous);
 }
 
+void
+SvelteEpcHelper::PrintLteRem (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  NS_ASSERT_MSG (m_lteRan, "No LTE radio network available.");
+  m_lteRan->PrintRadioEnvironmentMap ();
+}
 
 //
 // Implementing methods inherited from EpcHelper.
@@ -240,14 +248,16 @@ SvelteEpcHelper::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Create the OpenFlow backhaul network and the LTE radio network for the
-  // SVELTE infrastructure.
+  // Create the SVELTE infrastructure.
   m_mme = CreateObject<SvelteMme> ();
   m_backhaul = CreateObject<RingNetwork> ();
   m_lteRan = CreateObject<RadioNetwork> (Ptr<SvelteEpcHelper> (this));
 
-
+  // Create the LTE network slices.
   Ptr<SliceNetwork> htcNetwork = CreateObject<HtcNetwork> (m_backhaul, m_lteRan);
+
+  // Configure and install applications and traffic managers.
+  // TODO
 
   // Chain up.
   Object::NotifyConstructionCompleted ();

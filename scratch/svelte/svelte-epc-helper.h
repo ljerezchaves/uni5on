@@ -56,6 +56,11 @@ public:
    */
   void EnablePcap (std::string prefix, bool promiscuous = false);
 
+  /**
+   * Print the LTE radio environment map.
+   */
+  void PrintLteRem (void);
+
   // Inherited from EpcHelper.
   uint8_t ActivateEpsBearer (Ptr<NetDevice> ueLteDevice, uint64_t imsi,
                              Ptr<EpcTft> tft, EpsBearer bearer);

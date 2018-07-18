@@ -64,6 +64,7 @@ main (int argc, char *argv[])
   bool        verbose  = false;
   bool        pcap     = false;
   bool        libLog   = false;
+  bool        lteRem   = false;
   uint32_t    progress = 0;
   uint32_t    simTime  = 250;
   uint32_t    stopApps = 0;
@@ -78,9 +79,10 @@ main (int argc, char *argv[])
   cmd.AddValue ("Verbose",  "Enable verbose output.", verbose);
   cmd.AddValue ("Pcap",     "Enable pcap output.", pcap);
   cmd.AddValue ("LibLog",   "Enable ofsoftswitch13 logs.", libLog);
-  cmd.AddValue ("Progress", "Simulation progress interval [s].", progress);
-  cmd.AddValue ("SimTime",  "Simulation stop time [s].", simTime);
-  cmd.AddValue ("StopApps", "Apps restarting loop stop time [s].", stopApps);
+  cmd.AddValue ("LteRem",   "Print LTE radio environment map.", lteRem);
+  cmd.AddValue ("Progress", "Simulation progress interval (sec).", progress);
+  cmd.AddValue ("SimTime",  "Simulation stop time (sec).", simTime);
+  cmd.AddValue ("StopApps", "Apps restarting loop stop time (sec).", stopApps);
   cmd.AddValue ("Prefix",   "Common prefix for filenames.", prefix);
   cmd.Parse (argc, argv);
 
@@ -155,6 +157,12 @@ main (int argc, char *argv[])
   // Anyway, I've decided to use this to simplify the controller logic.
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
   ArpCache::PopulateArpCaches ();
+
+  // Print the LTE radio environment map.
+  if (lteRem)
+    {
+      svelteHelper->PrintLteRem ();
+    }
 
   // If necessary, enable pcap output.
   if (pcap)

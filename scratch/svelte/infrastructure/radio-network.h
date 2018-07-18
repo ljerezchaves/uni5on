@@ -74,13 +74,6 @@ public:
   void AttachUes (NetDeviceContainer ueDevices);
 
   /**
-   * Configure a mobility helper for randomly spreading UE nodes within eNB
-   * coverage area.
-   * \param ueNodes The nodes.
-   */
-  MobilityHelper RandomBoxSteadyPositioning (void) const;
-
-  /**
    * Configure the given nodes as UEs.
    * \param ueNodes The nodes.
    * \param mobilityHelper The mobility helper for UEs.
@@ -89,6 +82,17 @@ public:
   NetDeviceContainer InstallUeDevices (NodeContainer ueNodes,
                                        MobilityHelper mobilityHelper);
 
+  /**
+   * Create a mobility helper and randomly spreading UE nodes within eNB
+   * coverage area.
+   * \param ueNodes The nodes.
+   */
+  MobilityHelper RandomBoxSteadyPositioning (void) const;
+
+  /**
+   * Print LTE radio environment map.
+   */
+  void PrintRadioEnvironmentMap (void);
 
 protected:
   /** Destructor implementation. */
@@ -98,18 +102,14 @@ protected:
   void NotifyConstructionCompleted (void);
 
 private:
-  /** Print LTE radio environment map. */
-  void PrintRadioEnvironmentMap ();
-
   uint32_t            m_nSites;         //!< Number of cell sites.
   double              m_enbMargin;      //!< eNB coverage margin.
   double              m_ueHeight;       //!< UE height.
   bool                m_lteTrace;       //!< Enable LTE ASCII traces.
-  bool                m_lteRem;         //!< Print the LTE REM.
   std::string         m_remFilename;    //!< LTE REM filename.
   NodeContainer       m_enbNodes;       //!< eNB nodes.
-  NodeContainer       m_ueNodes;        //!< UE nodes.
   NetDeviceContainer  m_enbDevices;     //!< eNB devices.
+  NodeContainer       m_ueNodes;        //!< UE nodes.
   NetDeviceContainer  m_ueDevices;      //!< UE devices.
   Rectangle           m_coverageArea;   //!< LTE radio coverage area.
 
