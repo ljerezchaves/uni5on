@@ -250,7 +250,7 @@ RadioNetwork::PrintRadioEnvironmentMap (void)
     << "set xrange [" << area.xMin << ":" << area.xMax << "]" << std::endl
     << "set yrange [" << area.yMin << ":" << area.yMax << "]" << std::endl;
 
-  // Buildings.
+  // Buildings positions.
   uint32_t index = 0;
   for (BuildingList::Iterator it = BuildingList::Begin ();
        it != BuildingList::End (); it++)
@@ -266,7 +266,7 @@ RadioNetwork::PrintRadioEnvironmentMap (void)
         << std::endl;
     }
 
-  // HTC UEs positions.
+  // UE positions.
   for (NetDeviceContainer::Iterator it = m_ueDevices.Begin ();
        it != m_ueDevices.End (); it++)
     {

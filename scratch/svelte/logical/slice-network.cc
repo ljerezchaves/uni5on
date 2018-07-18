@@ -304,6 +304,7 @@ SliceNetwork::NotifyConstructionCompleted (void)
   // Create the Internet network and the P-GW user-plane.
   InternetCreate ();
   PgwCreate ();
+  SliceCreate ();
 
   // Let's connect the OpenFlow switches to the EPC controller. From this point
   // on it is not possible to change the OpenFlow network configuration.
