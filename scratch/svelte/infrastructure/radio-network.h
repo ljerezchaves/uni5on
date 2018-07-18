@@ -75,7 +75,7 @@ public:
 
   /**
    * Configure the given nodes as UEs.
-   * \param ueNodes The nodes.
+   * \param ueNodes The set of nodes.
    * \param mobilityHelper The mobility helper for UEs.
    * \return The container with the newly created UE devices.
    */
@@ -83,9 +83,10 @@ public:
                                        MobilityHelper mobilityHelper);
 
   /**
-   * Create a mobility helper and randomly spreading UE nodes within eNB
-   * coverage area.
-   * \param ueNodes The nodes.
+   * Create a mobility helper that randomly spreads UE nodes within the eNB
+   * coverage area. Only the position allocator is configured for this helper
+   * (no mobility model).
+   * \return The mobility helper.
    */
   MobilityHelper RandomBoxSteadyPositioning (void) const;
 
