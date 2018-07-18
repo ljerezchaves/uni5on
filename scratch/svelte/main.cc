@@ -129,15 +129,11 @@ main (int argc, char *argv[])
   // * The stats calculators
   NS_LOG_INFO ("Creating simulation scenario...");
 
-  // Creating the SVELTE EPC helper, which will create and configure the SVELTE
-  // infrastructure and ... // TODO
+  // Create the SVELTE helper object, which is responsible for creating and
+  // configuring the infrastructure and logical networks.
   Ptr<SvelteEpcHelper> svelteHelper = CreateObject<SvelteEpcHelper> ();
 
-// FIXME
-//  Ptr<TrafficHelper> trafficHelper;
-//  trafficHelper = CreateObject<TrafficHelper> (lteNetwork,
-//                                               ofNetwork->GetWebNode ());
-//
+//  FIXME
 //  Ptr<AdmissionStatsCalculator>   admissionStats;
 //  Ptr<BackhaulStatsCalculator>    backhaulStats;
 //  Ptr<HandoverStatsCalculator>    handoverStats;

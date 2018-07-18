@@ -35,8 +35,8 @@ class SvelteMme;
 
 /**
  * \ingroup svelte
- * This class extends the EpcHelper to create and configure the SVELTE
- * infrastructure: the LTE radio network and the OpenFlow backhaul network.
+ * This class creates and configures the SVELTE architecture, including the
+ * shared infrastructure and logical networks.
  */
 class SvelteEpcHelper : public EpcHelper
 {
