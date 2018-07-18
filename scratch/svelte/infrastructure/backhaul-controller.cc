@@ -69,31 +69,31 @@ BackhaulController::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::BackhaulController")
     .SetParent<OFSwitch13Controller> ()
 // FIXME Simplificar o sistema de agregação HTC para on/off apenas.
-    .AddAttribute ("HtcAggregation",
-                   "HTC traffic aggregation mechanism operation mode.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (OperationMode::OFF),
-                   MakeEnumAccessor (&BackhaulController::m_htcAggregation),
-                   MakeEnumChecker (OperationMode::OFF,  "off",
-                                    OperationMode::ON,   "on",
-                                    OperationMode::AUTO, "auto"))
-    .AddAttribute ("HtcAggGbrThs",
-                   "HTC traffic aggregation GBR bandwidth threshold.",
-                   DoubleValue (0.5),
-                   MakeDoubleAccessor (&BackhaulController::m_htcAggGbrThs),
-                   MakeDoubleChecker<double> (0.0, 1.0))
-    .AddAttribute ("HtcAggNonThs",
-                   "HTC traffic aggregation Non-GBR bandwidth threshold.",
-                   DoubleValue (0.5),
-                   MakeDoubleAccessor (&BackhaulController::m_htcAggNonThs),
-                   MakeDoubleChecker<double> (0.0, 1.0))
-    .AddAttribute ("MtcAggregation",
-                   "MTC traffic aggregation mechanism operation mode.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (OperationMode::OFF),
-                   MakeEnumAccessor (&BackhaulController::m_mtcAggregation),
-                   MakeEnumChecker (OperationMode::OFF,  "off",
-                                    OperationMode::ON,   "on"))
+//    .AddAttribute ("HtcAggregation",
+//                   "HTC traffic aggregation mechanism operation mode.",
+//                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+//                   EnumValue (OperationMode::OFF),
+//                   MakeEnumAccessor (&BackhaulController::m_htcAggregation),
+//                   MakeEnumChecker (OperationMode::OFF,  "off",
+//                                    OperationMode::ON,   "on",
+//                                    OperationMode::AUTO, "auto"))
+//    .AddAttribute ("HtcAggGbrThs",
+//                   "HTC traffic aggregation GBR bandwidth threshold.",
+//                   DoubleValue (0.5),
+//                   MakeDoubleAccessor (&BackhaulController::m_htcAggGbrThs),
+//                   MakeDoubleChecker<double> (0.0, 1.0))
+//    .AddAttribute ("HtcAggNonThs",
+//                   "HTC traffic aggregation Non-GBR bandwidth threshold.",
+//                   DoubleValue (0.5),
+//                   MakeDoubleAccessor (&BackhaulController::m_htcAggNonThs),
+//                   MakeDoubleChecker<double> (0.0, 1.0))
+//    .AddAttribute ("MtcAggregation",
+//                   "MTC traffic aggregation mechanism operation mode.",
+//                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+//                   EnumValue (OperationMode::OFF),
+//                   MakeEnumAccessor (&BackhaulController::m_mtcAggregation),
+//                   MakeEnumChecker (OperationMode::OFF,  "off",
+//                                    OperationMode::ON,   "on"))
     .AddAttribute ("PriorityQueues",
                    "Priority output queues mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -320,21 +320,21 @@ BackhaulController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
   NS_LOG_FUNCTION (this << cInfo);
 }
 
-OperationMode
-BackhaulController::GetHtcAggregMode (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_htcAggregation;
-}
-
-OperationMode
-BackhaulController::GetMtcAggregMode (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_mtcAggregation;
-}
+//OperationMode
+//BackhaulController::GetHtcAggregMode (void) const
+//{
+//  NS_LOG_FUNCTION (this);
+//
+//  return m_htcAggregation;
+//}
+//
+//OperationMode
+//BackhaulController::GetMtcAggregMode (void) const
+//{
+//  NS_LOG_FUNCTION (this);
+//
+//  return m_mtcAggregation;
+//}
 
 OperationMode
 BackhaulController::GetPriorityQueuesMode (void) const

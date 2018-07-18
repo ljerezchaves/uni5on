@@ -133,8 +133,8 @@ public:
    * \return The requested mechanism operation mode.
    */
   //\{
-  OperationMode GetHtcAggregMode (void) const;
-  OperationMode GetMtcAggregMode (void) const;
+//  OperationMode GetHtcAggregMode (void) const;
+//  OperationMode GetMtcAggregMode (void) const;
   OperationMode GetPriorityQueuesMode (void) const;
   OperationMode GetSlicingMode (void) const;
   //\}
@@ -267,11 +267,11 @@ private:
   OperationMode         m_priorityQueues; //!< DSCP priority queues mechanism.
   OperationMode         m_slicing;        //!< Network slicing mechanism.
 
-  // Traffic aggregation mechanisms.
-  OperationMode         m_mtcAggregation; //!< MTC aggregation mechanism.
-  OperationMode         m_htcAggregation; //!< HTC aggregation mechanism.
-  double                m_htcAggGbrThs;   //!< Bandwidth threshold for GBR. // FIXME simplificar
-  double                m_htcAggNonThs;   //!< Bandwidth threshold for Non-GBR.
+//  // Traffic aggregation mechanisms.
+//  OperationMode         m_mtcAggregation; //!< MTC aggregation mechanism.
+//  OperationMode         m_htcAggregation; //!< HTC aggregation mechanism.
+//  double                m_htcAggGbrThs;   //!< Bandwidth threshold for GBR. // FIXME simplificar
+//  double                m_htcAggNonThs;   //!< Bandwidth threshold for Non-GBR.
 
   /** Map saving EPS QCI / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, Ipv4Header::DscpType> QciDscpMap_t;
