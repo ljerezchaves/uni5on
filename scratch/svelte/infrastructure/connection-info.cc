@@ -587,10 +587,7 @@ ConnectionInfo::RegisterConnectionInfo (Ptr<ConnectionInfo> cInfo)
   std::pair<DpIdPair_t, Ptr<ConnectionInfo> > entry (key, cInfo);
   std::pair<ConnInfoMap_t::iterator, bool> ret;
   ret = ConnectionInfo::m_connectionsMap.insert (entry);
-  if (ret.second == false)
-    {
-      NS_FATAL_ERROR ("Existing connection information.");
-    }
+  NS_ABORT_MSG_IF (ret.second == false, "Existing connection information.");
 
   ConnectionInfo::m_connectionsList.push_back (cInfo);
 }

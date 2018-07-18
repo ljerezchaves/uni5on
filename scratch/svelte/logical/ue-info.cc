@@ -249,10 +249,8 @@ UeInfo::RegisterUeInfoByImsi (Ptr<UeInfo> ueInfo)
   std::pair<uint64_t, Ptr<UeInfo> > entry (imsi, ueInfo);
   std::pair<ImsiUeInfoMap_t::iterator, bool> ret;
   ret = UeInfo::m_ueInfoByImsiMap.insert (entry);
-  if (ret.second == false)
-    {
-      NS_FATAL_ERROR ("Existing UE information for ISMI " << imsi);
-    }
+  NS_ABORT_MSG_IF (ret.second == false,
+                   "Existing UE information for ISMI " << imsi);
 }
 
 void
@@ -264,10 +262,8 @@ UeInfo::RegisterUeInfoByIpv4 (Ptr<UeInfo> ueInfo)
   std::pair<Ipv4Address, Ptr<UeInfo> > entry (ipv4, ueInfo);
   std::pair<Ipv4UeInfoMap_t::iterator, bool> ret;
   ret = UeInfo::m_ueInfoByIpv4Map.insert (entry);
-  if (ret.second == false)
-    {
-      NS_FATAL_ERROR ("Existing UE information for IPv4 " << ipv4);
-    }
+  NS_ABORT_MSG_IF (ret.second == false,
+                   "Existing UE information for IPv4 " << ipv4);
 }
 
 };  // namespace ns3

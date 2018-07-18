@@ -368,7 +368,7 @@ BackhaulController::Dscp2Tos (Ipv4Header::DscpType dscp)
     {
       return it->second;
     }
-  NS_FATAL_ERROR ("No ToS mapped value for DSCP " << dscp);
+  NS_ABORT_MSG ("No ToS mapped value for DSCP " << dscp);
 }
 
 Ipv4Header::DscpType
@@ -382,7 +382,7 @@ BackhaulController::Qci2Dscp (EpsBearer::Qci qci)
     {
       return it->second;
     }
-  NS_FATAL_ERROR ("No DSCP mapped value for QCI " << qci);
+  NS_ABORT_MSG ("No DSCP mapped value for QCI " << qci);
 }
 
 void

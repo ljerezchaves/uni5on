@@ -88,10 +88,8 @@ RingController::NotifyEpcAttach (
     Ipv4AddressHelper::GetFirstAddress (epcDev), GetSwitchIndex (swDev));
   std::pair<IpSwitchMap_t::iterator, bool> ret;
   ret = m_ipSwitchTable.insert (entry);
-  if (ret.second == false)
-    {
-      NS_FATAL_ERROR ("This IP already exists in switch index table.");
-    }
+  NS_ABORT_MSG_IF (ret.second == false,
+                   "This IP already exists in switch index table.");
 
   // Chain up.
   BackhaulController::NotifyEpcAttach (swDev, portNo, epcDev);
@@ -633,7 +631,7 @@ RingController::GetSwitchIndex (Ipv4Address ipAddr) const
     {
       return ret->second;
     }
-  NS_FATAL_ERROR ("IP not registered in switch index table.");
+  NS_ABORT_MSG ("IP not registered in switch index table.");
 }
 
 uint16_t

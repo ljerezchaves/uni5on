@@ -207,7 +207,7 @@ SvelteEpcHelper::GetPgwNode ()
 {
   NS_LOG_FUNCTION (this);
 
-  NS_FATAL_ERROR ("SVELTE has more than one P-GW node.");
+  NS_ABORT_MSG ("Unimplemented method.");
 }
 
 Ipv4InterfaceContainer
@@ -215,7 +215,7 @@ SvelteEpcHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_FATAL_ERROR ("Use the specific method for HTC or MTC UEs.");
+  NS_ABORT_MSG ("Unimplemented method.");
 }
 
 Ipv4Address
@@ -223,7 +223,7 @@ SvelteEpcHelper::GetUeDefaultGatewayAddress ()
 {
   NS_LOG_FUNCTION (this);
 
-  NS_FATAL_ERROR ("Use the specific method for HTC or MTC slice.");
+  NS_ABORT_MSG ("Unimplemented method.");
 }
 
 //

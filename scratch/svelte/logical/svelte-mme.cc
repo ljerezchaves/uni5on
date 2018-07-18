@@ -130,7 +130,7 @@ SvelteMme::DoInitialContextSetupResponse (
 {
   NS_LOG_FUNCTION (this << mmeUeS1Id << enbUeS1Id);
 
-  NS_FATAL_ERROR ("Unimplemented method.");
+  NS_ABORT_MSG ("Unimplemented method.");
 }
 
 //
