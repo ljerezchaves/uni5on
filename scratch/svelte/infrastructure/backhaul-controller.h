@@ -245,11 +245,6 @@ private:
 //   */
 //  bool BearerRemove (Ptr<RoutingInfo> rInfo);
 
-  /**
-   * Periodic timeout operation.
-   */
-  void Timeout (void);
-
 //  /**
 //   * Install OpenFlow match rules for the aggregated MTC bearer.
 //   * \param rInfo The routing information to process.
@@ -277,9 +272,6 @@ private:
   OperationMode         m_htcAggregation; //!< HTC aggregation mechanism.
   double                m_htcAggGbrThs;   //!< Bandwidth threshold for GBR. // FIXME simplificar
   double                m_htcAggNonThs;   //!< Bandwidth threshold for Non-GBR.
-
-  // Internal members and attributes.
-  Time                  m_timeout;        //!< Controller internal timeout.
 
   /** Map saving EPS QCI / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, Ipv4Header::DscpType> QciDscpMap_t;

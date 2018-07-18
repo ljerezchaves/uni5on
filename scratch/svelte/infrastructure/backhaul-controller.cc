@@ -109,11 +109,6 @@ BackhaulController::GetTypeId (void)
                    MakeEnumChecker (OperationMode::OFF,  "off",
                                     OperationMode::ON,   "on",
                                     OperationMode::AUTO, "auto"))
-    .AddAttribute ("TimeoutInterval",
-                   "The interval between internal periodic operations.",
-                   TimeValue (Seconds (5)),
-                   MakeTimeAccessor (&BackhaulController::m_timeout),
-                   MakeTimeChecker ())
 
 //    .AddTraceSource ("BearerRelease", "The bearer release trace source.",
 //                     MakeTraceSourceAccessor (
@@ -398,9 +393,6 @@ void
 BackhaulController::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
-
-  // Schedule the first timeout operation.
-  Simulator::Schedule (m_timeout, &BackhaulController::Timeout, this);
 
   // Chain up.
   OFSwitch13Controller::NotifyConstructionCompleted ();
@@ -687,16 +679,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 //   rInfo->SetInstalled (!success);
 //   return success;
 // }
-
-void
-BackhaulController::Timeout (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  // Schedule the next timeout operation.
-  Simulator::Schedule (m_timeout, &BackhaulController::Timeout, this);
-}
-
+//
 // bool
 // BackhaulController::MtcAggBearerInstall (Ptr<RoutingInfo> rInfo)
 // {

@@ -194,6 +194,9 @@ protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
+  // Inherited from ObjectBase.
+  virtual void NotifyConstructionCompleted (void);
+
   // Inherited from OFSwitch13Controller.
   virtual ofl_err HandleError (
     struct ofl_msg_error *msg, Ptr<const RemoteSwitch> swtch,
@@ -221,11 +224,11 @@ private:
 //   * \return True if succeeded, false otherwise.
 //   */
 //  bool BearerRemove (Ptr<RoutingInfo> rInfo);
-//
-//  /**
-//   * Periodic timeout operation.
-//   */
-//  void ControllerTimeout (void);
+
+   /**
+    * Periodic controller timeout operations.
+    */
+   void ControllerTimeout (void);
 
   /** \name Methods for the S11 SAP S-GW control plane. */
   //\{

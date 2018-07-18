@@ -53,6 +53,11 @@ SliceController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SliceController")
     .SetParent<OFSwitch13Controller> ()
+    .AddAttribute ("TimeoutInterval",
+                   "The interval between internal periodic operations.",
+                   TimeValue (Seconds (5)),
+                   MakeTimeAccessor (&SliceController::m_timeout),
+                   MakeTimeChecker ())
   ;
   return tid;
 }
@@ -207,6 +212,18 @@ SliceController::DoDispose ()
   Object::DoDispose ();
 }
 
+void
+SliceController::NotifyConstructionCompleted (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Schedule the first timeout operation.
+  Simulator::Schedule (m_timeout, &SliceController::ControllerTimeout, this);
+
+  // Chain up.
+  OFSwitch13Controller::NotifyConstructionCompleted ();
+}
+
 ofl_err
 SliceController::HandleError (
   struct ofl_msg_error *msg, Ptr<const RemoteSwitch> swtch,
@@ -318,6 +335,15 @@ SliceController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // Table 2 -- S-GW uplink forward table -- [from higher to lower priority]
   //
   // Entries will be installed here by SgwRulesInstall function.
+}
+
+void
+SliceController::ControllerTimeout (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Schedule the next timeout operation.
+  Simulator::Schedule (m_timeout, &SliceController::ControllerTimeout, this);
 }
 
 //
