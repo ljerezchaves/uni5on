@@ -54,13 +54,6 @@ BackhaulNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::BackhaulNetwork")
     .SetParent<Object> ()
-    .AddAttribute ("LinkMtu",
-                   "The MTU for CSMA links. "
-                   "Consider + 40 byter of GTP/UDP/IP tunnel overhead.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (1492), // Ethernet II - PPoE
-                   MakeUintegerAccessor (&BackhaulNetwork::m_linkMtu),
-                   MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("EpcLinkDataRate",
                    "The data rate for the link connecting any EPC entity to "
                    "the OpenFlow backhaul network.",
@@ -76,6 +69,13 @@ BackhaulNetwork::GetTypeId (void)
                    TimeValue (MicroSeconds (50)),
                    MakeTimeAccessor (&BackhaulNetwork::m_linkDelay),
                    MakeTimeChecker ())
+    .AddAttribute ("LinkMtu",
+                   "The MTU for CSMA links. "
+                   "Consider + 40 byter of GTP/UDP/IP tunnel overhead.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (1492), // Ethernet II - PPoE
+                   MakeUintegerAccessor (&BackhaulNetwork::m_linkMtu),
+                   MakeUintegerChecker<uint16_t> ())
   ;
   return tid;
 }

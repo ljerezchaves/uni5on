@@ -44,8 +44,7 @@ RingController::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::RingController")
     .SetParent<BackhaulController> ()
     .AddConstructor<RingController> ()
-    .AddAttribute ("Strategy",
-                   "The ring routing strategy.",
+    .AddAttribute ("Strategy", "The ring routing strategy.",
                    EnumValue (RingController::SPF),
                    MakeEnumAccessor (&RingController::m_strategy),
                    MakeEnumChecker (RingController::SPO, "spo",
