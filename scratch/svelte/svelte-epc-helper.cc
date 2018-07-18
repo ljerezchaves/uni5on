@@ -26,6 +26,7 @@
 #include "logical/enb-info.h"
 #include "logical/svelte-mme.h"
 #include "logical/ue-info.h"
+#include "logical/htc-network.h"
 
 namespace ns3 {
 
@@ -226,9 +227,6 @@ SvelteEpcHelper::GetUeDefaultGatewayAddress ()
   NS_ABORT_MSG ("Unimplemented method.");
 }
 
-//
-// Methods from EpcHelper are implemented at the end of this file.
-//
 void
 SvelteEpcHelper::DoDispose (void)
 {
@@ -247,6 +245,9 @@ SvelteEpcHelper::NotifyConstructionCompleted (void)
   m_mme = CreateObject<SvelteMme> ();
   m_backhaul = CreateObject<RingNetwork> ();
   m_lteRan = CreateObject<RadioNetwork> (Ptr<SvelteEpcHelper> (this));
+
+
+  Ptr<HtcNetwork> htcNetwork = CreateObject<HtcNetwork> ();
 
   // Chain up.
   Object::NotifyConstructionCompleted ();

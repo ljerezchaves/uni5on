@@ -21,21 +21,15 @@
 #include <ns3/csma-module.h>
 #include "slice-network.h"
 #include "slice-controller.h"
+#include "../infrastructure/backhaul-network.h"
+#include "../infrastructure/radio-network.h"
 // #include "gtp-tunnel-app.h"
 // #include "pgw-tunnel-app.h"
-// #include "../sdran/sdran-cloud.h"
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("SliceNetwork");
 NS_OBJECT_ENSURE_REGISTERED (SliceNetwork);
-
-// Initializing SliceNetwork static members.
-// FIXME O endereço IP de cada slice deve ser diferente pra não dar conflito no gateway
-const Ipv4Address SliceNetwork::m_ueAddr   = Ipv4Address ("7.0.0.0");
-const Ipv4Address SliceNetwork::m_sgiAddr  = Ipv4Address ("8.0.0.0");
-const Ipv4Mask    SliceNetwork::m_ueMask   = Ipv4Mask ("255.0.0.0");
-const Ipv4Mask    SliceNetwork::m_sgiMask  = Ipv4Mask ("255.0.0.0");
 
 SliceNetwork::SliceNetwork ()
   : m_controllerApp (0),
@@ -56,16 +50,6 @@ SliceNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SliceNetwork")
     .SetParent<Object> ()
-    .AddAttribute ("NumUes", "The total number of UEs for this slice.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (1),
-                   MakeUintegerAccessor (&SliceNetwork::m_nUes),
-                   MakeUintegerChecker<uint32_t> (0, 65535))
-    .AddAttribute ("UeMobility", "Enable UE random mobility.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&SliceNetwork::m_ueMobility),
-                   MakeBooleanChecker ())
 
     .AddAttribute ("LinkMtu",
                    "The MTU for CSMA OpenFlow links. "
@@ -74,38 +58,32 @@ SliceNetwork::GetTypeId (void)
                    UintegerValue (1492), // Ethernet II - PPoE
                    MakeUintegerAccessor (&SliceNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("NumPgwTftSwitches",
-                   "The number of P-GW TFT user-plane OpenFlow switches "
-                   "(must be a power of 2).",
+
+    .AddAttribute ("PgwLinkDataRate",
+                   "The data rate for the internal P-GW links.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (1),
-                   MakeUintegerAccessor (&SliceNetwork::m_pgwNumTftNodes),
-                   MakeUintegerChecker<uint16_t> (1))
-    .AddAttribute ("PgwTftPipelineCapacity",
-                   "Pipeline capacity for P-GW TFT switches.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("100Gb/s")),
-                   MakeDataRateAccessor (&SliceNetwork::m_tftPipeCapacity),
+                   DataRateValue (DataRate ("10Gb/s")),
+                   MakeDataRateAccessor (&SliceNetwork::m_pgwLinkRate),
                    MakeDataRateChecker ())
-    .AddAttribute ("PgwTftTableSize",
-                   "Flow/Group/Meter table sizes for P-GW TFT switches.",
+    .AddAttribute ("PgwLinkDelay",
+                   "The delay for the internal P-GW links.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (65535),
-                   MakeUintegerAccessor (&SliceNetwork::m_tftTableSize),
-                   MakeUintegerChecker<uint16_t> (1, 65535))
+                   TimeValue (MicroSeconds (50)),
+                   MakeTimeAccessor (&SliceNetwork::m_pgwLinkDelay),
+                   MakeTimeChecker ())
     .AddAttribute ("SgiLinkDataRate",
                    "The data rate for the link connecting the P-GW "
                    "to the Internet web server.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("10Gb/s")),
-                   MakeDataRateAccessor (&SliceNetwork::m_linkRate),
+                   MakeDataRateAccessor (&SliceNetwork::m_sgiLinkRate),
                    MakeDataRateChecker ())
     .AddAttribute ("SgiLinkDelay",
                    "The delay for the link connecting the P-GW "
                    "to the Internet web server.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    TimeValue (MilliSeconds (15)),
-                   MakeTimeAccessor (&SliceNetwork::m_linkDelay),
+                   MakeTimeAccessor (&SliceNetwork::m_sgiLinkDelay),
                    MakeTimeChecker ())
   ;
   return tid;
@@ -150,6 +128,46 @@ SliceNetwork::AssignUeAddress (NetDeviceContainer ueDevices)
   return Ipv4InterfaceContainer ();
 }
 
+uint32_t
+SliceNetwork::GetNumUes (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_nUes;
+}
+
+Ipv4Address
+SliceNetwork::GetUeAddress (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueAddr;
+}
+
+Ipv4Mask
+SliceNetwork::GetUeMask (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueMask;
+}
+
+Ipv4Address
+SliceNetwork::GetSgiAddress (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sgiAddr;
+}
+
+Ipv4Mask
+SliceNetwork::GetSgiMask (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sgiMask;
+}
+
 NodeContainer
 SliceNetwork::GetUeNodes (void) const
 {
@@ -166,6 +184,29 @@ SliceNetwork::GetUeDevices (void) const
   return m_ueDevices;
 }
 
+uint32_t
+SliceNetwork::GetPgwTftNumNodes (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_tftNumNodes;
+}
+
+DataRate
+SliceNetwork::GetPgwTftPipeCapacity (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_tftPipeCapacity;
+}
+
+uint32_t
+SliceNetwork::GetPgwTftTableSize (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_tftTableSize;
+}
 
 // FIXME Esse aqui é para attach S-GW
 // void
@@ -246,10 +287,6 @@ SliceNetwork::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Check the number of P-GW nodes (must have a power of 2 P-GW TFT nodes).
-  NS_ASSERT_MSG ((GetNTftNodes () & (GetNTftNodes () - 1)) == 0,
-                 "Invalid number of P-GW nodes.");
-
   // Configure IP address helpers.
   m_ueAddrHelper.SetBase (m_ueAddr, m_ueMask);
   m_sgiAddrHelper.SetBase (m_sgiAddr, m_sgiMask);
@@ -276,13 +313,73 @@ SliceNetwork::NotifyConstructionCompleted (void)
   Object::NotifyConstructionCompleted ();
 }
 
-uint32_t
-SliceNetwork::GetNTftNodes (void) const
+void
+SliceNetwork::SetNumUes (uint32_t value)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << value);
 
-  return m_pgwNumTftNodes;
+  m_nUes = value;
 }
+
+void
+SliceNetwork::SetUeAddress (Ipv4Address value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_ueAddr = value;
+}
+
+void
+SliceNetwork::SetUeMask (Ipv4Mask value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_ueMask = value;
+}
+
+void
+SliceNetwork::SetSgiAddress (Ipv4Address value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_sgiAddr = value;
+}
+
+void
+SliceNetwork::SetSgiMask (Ipv4Mask value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_sgiMask = value;
+}
+
+void
+SliceNetwork::SetPgwTftNumNodes (uint32_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  // Check the number of P-GW TFT nodes (must be a power of 2).
+  NS_ABORT_MSG_IF ((value & (value - 1)) != 0, "Invalid number of P-GW TFTs.");
+
+  m_tftNumNodes = value;
+}
+
+void
+SliceNetwork::SetPgwTftPipeCapacity (DataRate value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_tftPipeCapacity = value;
+}
+
+void
+SliceNetwork::SetPgwTftTableSize (uint32_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_tftTableSize = value;
+}
+
 
 void
 SliceNetwork::InstallController (Ptr<SliceController> controller)
@@ -320,9 +417,9 @@ SliceNetwork::PgwCreate (void)
   NS_LOG_FUNCTION (this);
 
 //  // Create the P-GW nodes and configure them as OpenFlow switches.
-//  m_pgwNodes.Create (m_pgwNumTftNodes + 1);
+//  m_pgwNodes.Create (m_tftNumNodes + 1);
 //  m_pgwOfDevices = m_switchHelper->InstallSwitch (m_pgwNodes);
-//  for (uint16_t i = 0; i < m_pgwNumTftNodes + 1; i++)
+//  for (uint16_t i = 0; i < m_tftNumNodes + 1; i++)
 //    {
 //      std::ostringstream pgwNodeName;
 //      pgwNodeName << "pgw" << i + 1;    // FIXME Vai dar pau com nome repetido
@@ -434,7 +531,7 @@ SliceNetwork::PgwCreate (void)
 //  // Connect all P-GW TFT switches to the P-GW main switch and to the S5
 //  // interface. Only downlink traffic will be sent to these switches.
 //  //
-//  for (uint16_t tftIdx = 0; tftIdx < GetNTftNodes (); tftIdx++)
+//  for (uint16_t tftIdx = 0; tftIdx < GetPgwTftNumNodes (); tftIdx++)
 //    {
 //      Ptr<Node> pgwTftNode = m_pgwNodes.Get (tftIdx + 1);
 //      Ptr<OFSwitch13Device> pgwTftOfDev = m_pgwOfDevices.Get (tftIdx + 1);

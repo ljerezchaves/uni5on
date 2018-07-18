@@ -17,13 +17,19 @@ default ns3::ConnectionInfo::GbrSliceQuota "0.28"
 default ns3::ConnectionInfo::MtcSliceQuota "0.18"
 default ns3::ConnectionInfo::UpdateTimeout "100ms"
 
+default ns3::HtcNetwork::NumUes "1"
+default ns3::HtcNetwork::UeAddress "7.64.0.0"
+default ns3::HtcNetwork::UeMask "255.192.0.0"
+default ns3::HtcNetwork::SgiAddress "8.1.0.0"
+default ns3::HtcNetwork::SgiMask "255.255.0.0"
+default ns3::HtcNetwork::NumPgwTftSwitches "1"
+default ns3::HtcNetwork::PgwTftPipelineCapacity "100Gb/s"
+default ns3::HtcNetwork::PgwTftTableSize "65535"
+
+default ns3::LteHexGridEnbTopologyHelper::InterSiteDistance "500"
 default ns3::LteHexGridEnbTopologyHelper::GridWidth "2"
 
 default ns3::RadioNetwork::NumCellSites "1"
-default ns3::RadioNetwork::NumHtcUes "1"
-default ns3::RadioNetwork::NumMtcUes "1"
-default ns3::RadioNetwork::HtcUeMobility "false"
-default ns3::RadioNetwork::MtcUeMobility "false"
 default ns3::RadioNetwork::LteTrace "false"
 
 default ns3::RingController::Strategy "spf"

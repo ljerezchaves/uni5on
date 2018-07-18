@@ -28,6 +28,8 @@
 
 namespace ns3 {
 
+class BackhaulNetwork;
+class RadioNetwork;
 class SliceController;
 
 /**
@@ -82,19 +84,19 @@ public:
    */
   Ipv4InterfaceContainer AssignUeAddress (NetDeviceContainer ueDevices);
 
-  // FIXME A idéia é que os UEs sejam associados a um único slice. Então eles
-  // podem ficar salvos aqui para serem recuperados depois com mais
-  // facilidade.
-  /** \name Private member accessors. */
+  /** \name Private/protected member accessors. */
   //\{
+  uint32_t GetNumUes (void) const;
+  Ipv4Address GetUeAddress (void) const;
+  Ipv4Mask GetUeMask (void) const;
+  Ipv4Address GetSgiAddress (void) const;
+  Ipv4Mask GetSgiMask (void) const;
   NodeContainer GetUeNodes (void) const;
   NetDeviceContainer GetUeDevices (void) const;
+  uint32_t GetPgwTftNumNodes (void) const;
+  DataRate GetPgwTftPipeCapacity (void) const;
+  uint32_t GetPgwTftTableSize (void) const;
   //\}
-
-  static const Ipv4Address  m_ueAddr;    //!< UE network address.
-  static const Ipv4Address  m_sgiAddr;   //!< Web network address.
-  static const Ipv4Mask     m_ueMask;    //!< UE network mask.
-  static const Ipv4Mask     m_sgiMask;   //!< Web network mask.
 
 protected:
   /** Destructor implementation. */
@@ -109,18 +111,22 @@ protected:
    */
   //\{
   /**
-   * Create the LTE network slice, conf.... TODO
-   * OpenFlow network infrastructure, connecting them accordingly to the
-   * desired topology.
+   * Create the LTE network slice.
    */
   virtual void SliceCreate (void) = 0;
   //\}
 
-  /**
-   * Get the number of P-GW TFT switch nodes available on this topology.
-   * \return The number of TFT nodes.
-   */
-  uint32_t GetNTftNodes (void) const;
+  /** \name Private/protected member accessors. */
+  //\{
+  void SetNumUes (uint32_t value);
+  void SetUeAddress (Ipv4Address value);
+  void SetUeMask (Ipv4Mask value);
+  void SetSgiAddress (Ipv4Address value);
+  void SetSgiMask (Ipv4Mask value);
+  void SetPgwTftNumNodes (uint32_t value);
+  void SetPgwTftPipeCapacity (DataRate value);
+  void SetPgwTftTableSize (uint32_t value);
+  //\}
 
   /**
    * Install the OpenFlow slice controller for this network.
@@ -133,11 +139,26 @@ protected:
   Ptr<Node>                     m_controllerNode;   //!< Controller node.
 
   // OpenFlow switches, helper and connection attribute.
-  Ptr<OFSwitch13InternalHelper> m_switchHelper;     //!< Switch helper.
+  Ptr<OFSwitch13InternalHelper> m_switchHelper;     //!< Switch   helper.
   uint16_t                      m_linkMtu;          //!< Link MTU.
+  DataRate                      m_sgiLinkRate;      //!< SGi link data rate.
+  Time                          m_sgiLinkDelay;     //!< SGi link delay.
+  DataRate                      m_pgwLinkRate;      //!< P-GW link data rate.
+  Time                          m_pgwLinkDelay;     //!< P-GW link delay.
 
+  // Attributes
   uint32_t                      m_nUes;             //!< Number of UEs.
-  bool                          m_ueMobility;       //!< Enable UE mobility.
+  Ipv4Address                   m_ueAddr;           //!< UE network address.
+  Ipv4Mask                      m_ueMask;           //!< UE network mask.
+  Ipv4Address                   m_sgiAddr;          //!< SGi network address.
+  Ipv4Mask                      m_sgiMask;          //!< SGi network mask.
+  uint16_t                      m_tftNumNodes;      //!< Num P-GW TFT nodes.
+  DataRate                      m_tftPipeCapacity;  //!< P-GW TFT capacity.
+  uint32_t                      m_tftTableSize;     //!< P-GW TFT table size.
+
+  // Infrastructure interface.
+  Ptr<BackhaulNetwork>          m_backhaul;
+  Ptr<RadioNetwork>             m_lteRan;
 
 private:
   /**
@@ -153,30 +174,26 @@ private:
    */
   void PgwCreate (void);
 
-  // Helper and attributes for S5 interface.
+  // Helper and attributes for CSMA interface.
   CsmaHelper                    m_csmaHelper;       //!< Connection helper.
 
-  NodeContainer                 m_ueNodes;          //!< UE nodes.
-  NetDeviceContainer            m_ueDevices;        //!< UE devices.
-
   // IP address helpers for interfaces.
-  Ipv4AddressHelper             m_sgiAddrHelper;    //!< Web address helper.
   Ipv4AddressHelper             m_ueAddrHelper;     //!< UE address helper.
-
-  // Internet web server.
-  Ptr<Node>                     m_webNode;          //!< Web server node.
-  DataRate                      m_linkRate;         //!< SGi link data rate.
-  Time                          m_linkDelay;        //!< SGi link delay.
-  NetDeviceContainer            m_sgiDevices;       //!< SGi devices.
+  Ipv4AddressHelper             m_sgiAddrHelper;    //!< Web address helper.
 
   // P-GW user plane.
   Ipv4Address                   m_pgwAddr;          //!< P-GW S5 address.
   NodeContainer                 m_pgwNodes;         //!< P-GW user-plane nodes.
   OFSwitch13DeviceContainer     m_pgwOfDevices;     //!< P-GW switch devices.
   NetDeviceContainer            m_pgwIntDevices;    //!< P-GW int port devices.
-  uint16_t                      m_pgwNumTftNodes;   //!< Num of P-GW TFT nodes.
-  DataRate                      m_tftPipeCapacity;  //!< P-GW TFT capacity.
-  uint32_t                      m_tftTableSize;     //!< P-GW TFT table size.
+
+  NodeContainer                 m_ueNodes;          //!< UE nodes.
+  NetDeviceContainer            m_ueDevices;        //!< UE devices.
+
+  // Internet web server.
+  Ptr<Node>                     m_webNode;          //!< Web server node.
+
+  NetDeviceContainer            m_sgiDevices;       //!< SGi devices.
 };
 
 } // namespace ns3
