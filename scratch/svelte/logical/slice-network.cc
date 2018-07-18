@@ -56,6 +56,17 @@ SliceNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SliceNetwork")
     .SetParent<Object> ()
+    .AddAttribute ("NumUes", "The total number of UEs for this slice.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (1),
+                   MakeUintegerAccessor (&SliceNetwork::m_nUes),
+                   MakeUintegerChecker<uint32_t> (0, 65535))
+    .AddAttribute ("UeMobility", "Enable UE random mobility.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&SliceNetwork::m_ueMobility),
+                   MakeBooleanChecker ())
+
     .AddAttribute ("LinkMtu",
                    "The MTU for CSMA OpenFlow links. "
                    "Consider + 40 byter of GTP/UDP/IP tunnel overhead.",
@@ -129,6 +140,32 @@ SliceNetwork::EnablePcap (std::string prefix, bool promiscuous)
   helper.EnablePcap (prefix + "pgw-int",  m_pgwIntDevices, promiscuous);
   helper.EnablePcap (prefix + "web-sgi",  m_sgiDevices, promiscuous);
 }
+
+Ipv4InterfaceContainer
+SliceNetwork::AssignUeAddress (NetDeviceContainer ueDevices)
+{
+  NS_LOG_FUNCTION (this);
+
+  // TODO
+  return Ipv4InterfaceContainer ();
+}
+
+NodeContainer
+SliceNetwork::GetUeNodes (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueNodes;
+}
+
+NetDeviceContainer
+SliceNetwork::GetUeDevices (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueDevices;
+}
+
 
 // FIXME Esse aqui é para attach S-GW
 // void

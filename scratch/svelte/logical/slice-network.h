@@ -82,6 +82,15 @@ public:
    */
   Ipv4InterfaceContainer AssignUeAddress (NetDeviceContainer ueDevices);
 
+  // FIXME A idéia é que os UEs sejam associados a um único slice. Então eles
+  // podem ficar salvos aqui para serem recuperados depois com mais
+  // facilidade.
+  /** \name Private member accessors. */
+  //\{
+  NodeContainer GetUeNodes (void) const;
+  NetDeviceContainer GetUeDevices (void) const;
+  //\}
+
   static const Ipv4Address  m_ueAddr;    //!< UE network address.
   static const Ipv4Address  m_sgiAddr;   //!< Web network address.
   static const Ipv4Mask     m_ueMask;    //!< UE network mask.
@@ -100,7 +109,7 @@ protected:
    */
   //\{
   /**
-   * Create the LTE network slice, conf
+   * Create the LTE network slice, conf.... TODO
    * OpenFlow network infrastructure, connecting them accordingly to the
    * desired topology.
    */
@@ -127,6 +136,9 @@ protected:
   Ptr<OFSwitch13InternalHelper> m_switchHelper;     //!< Switch helper.
   uint16_t                      m_linkMtu;          //!< Link MTU.
 
+  uint32_t                      m_nUes;             //!< Number of UEs.
+  bool                          m_ueMobility;       //!< Enable UE mobility.
+
 private:
   /**
    * Create the Internet network composed of a single node where server
@@ -143,6 +155,9 @@ private:
 
   // Helper and attributes for S5 interface.
   CsmaHelper                    m_csmaHelper;       //!< Connection helper.
+
+  NodeContainer                 m_ueNodes;          //!< UE nodes.
+  NetDeviceContainer            m_ueDevices;        //!< UE devices.
 
   // IP address helpers for interfaces.
   Ipv4AddressHelper             m_sgiAddrHelper;    //!< Web address helper.

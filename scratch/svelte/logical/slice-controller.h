@@ -186,6 +186,7 @@ public:
 //  typedef void (*SessionCreatedTracedCallback)(
 //    uint64_t imsi, uint16_t cellId, BearerContextList_t bearerList);
 
+  // FIXME Gerenciar a alocação dos TEIDs. Tem que ser excludente entre os slices.
   static const uint32_t m_teidStart;    //!< First valid TEID value.
   static const uint32_t m_teidEnd;      //!< Last valid TEID value.
 
