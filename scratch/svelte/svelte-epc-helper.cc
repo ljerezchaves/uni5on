@@ -32,14 +32,6 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("SvelteEpcHelper");
 NS_OBJECT_ENSURE_REGISTERED (SvelteEpcHelper);
 
-// Initializing SvelteEpcHelper static members.
-const Ipv4Address SvelteEpcHelper::m_ueAddr   = Ipv4Address ("7.0.0.0");
-const Ipv4Address SvelteEpcHelper::m_htcAddr  = Ipv4Address ("7.64.0.0");
-const Ipv4Address SvelteEpcHelper::m_mtcAddr  = Ipv4Address ("7.128.0.0");
-const Ipv4Mask    SvelteEpcHelper::m_ueMask   = Ipv4Mask ("255.0.0.0");
-const Ipv4Mask    SvelteEpcHelper::m_htcMask  = Ipv4Mask ("255.192.0.0");
-const Ipv4Mask    SvelteEpcHelper::m_mtcMask  = Ipv4Mask ("255.192.0.0");
-
 SvelteEpcHelper::SvelteEpcHelper ()
 {
   NS_LOG_FUNCTION (this);
@@ -68,77 +60,6 @@ SvelteEpcHelper::EnablePcap (std::string prefix, bool promiscuous)
   m_backhaul->EnablePcap (prefix, promiscuous);
 }
 
-Ipv4InterfaceContainer
-SvelteEpcHelper::AssignHtcUeAddress (NetDeviceContainer devices)
-{
-  NS_LOG_FUNCTION (this);
-
-  // FIXME Delegar para o slice HTC.
-  m_ueAddrHelper.SetBase (m_htcAddr, m_htcMask);
-  return m_ueAddrHelper.Assign (devices);
-}
-
-Ipv4InterfaceContainer
-SvelteEpcHelper::AssignMtcUeAddress (NetDeviceContainer devices)
-{
-  NS_LOG_FUNCTION (this);
-
-  // FIXME Delegar para o slice MTC.
-  m_ueAddrHelper.SetBase (m_mtcAddr, m_mtcMask);
-  return m_ueAddrHelper.Assign (devices);
-}
-
-Ipv4Address
-SvelteEpcHelper::GetHtcPgwAddress ()
-{
-  NS_LOG_FUNCTION (this);
-
-  // FIXME Recuperar do slice HTC.
-  return m_pgwAddr;
-}
-
-Ipv4Address
-SvelteEpcHelper::GetMtcPgwAddress ()
-{
-  NS_LOG_FUNCTION (this);
-
-  // FIXME Recuperar do slice MTC.
-  return m_pgwAddr;
-}
-
-//
-// Methods from EpcHelper are implemented at the end of this file.
-//
-
-void
-SvelteEpcHelper::DoDispose (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  Object::DoDispose ();
-}
-
-void
-SvelteEpcHelper::NotifyConstructionCompleted (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  // Create the OpenFlow backhaul network and the LTE radio network for the
-  // SVELTE infrastructure.
-  m_mme = CreateObject<SvelteMme> ();
-  m_backhaul = CreateObject<RingNetwork> ();
-  m_lteRan = CreateObject<RadioNetwork> (Ptr<SvelteEpcHelper> (this));
-
-  // Configure IP address helpers. // FIXME
-  m_ueAddrHelper.SetBase (m_ueAddr, m_ueMask);
-
-  // Configure the default PG-W address.
-  // FIXME This may not make sense with multiple P-GW instances. Check this!
-  m_pgwAddr = m_ueAddrHelper.NewAddress ();
-
-  // Chain up.
-  Object::NotifyConstructionCompleted ();
-}
 
 //
 // Implementing methods inherited from EpcHelper.
@@ -303,6 +224,32 @@ SvelteEpcHelper::GetUeDefaultGatewayAddress ()
   NS_LOG_FUNCTION (this);
 
   NS_FATAL_ERROR ("Use the specific method for HTC or MTC slice.");
+}
+
+//
+// Methods from EpcHelper are implemented at the end of this file.
+//
+void
+SvelteEpcHelper::DoDispose (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  Object::DoDispose ();
+}
+
+void
+SvelteEpcHelper::NotifyConstructionCompleted (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Create the OpenFlow backhaul network and the LTE radio network for the
+  // SVELTE infrastructure.
+  m_mme = CreateObject<SvelteMme> ();
+  m_backhaul = CreateObject<RingNetwork> ();
+  m_lteRan = CreateObject<RadioNetwork> (Ptr<SvelteEpcHelper> (this));
+
+  // Chain up.
+  Object::NotifyConstructionCompleted ();
 }
 
 } // namespace ns3
