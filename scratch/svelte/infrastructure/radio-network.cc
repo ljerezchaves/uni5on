@@ -112,6 +112,14 @@ RadioNetwork::GetTypeId (void)
   return tid;
 }
 
+Rectangle
+RadioNetwork::GetCoverageArea (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_coverageArea;
+}
+
 Ptr<LteHelper>
 RadioNetwork::GetLteHelper (void) const
 {
@@ -128,13 +136,12 @@ RadioNetwork::AttachUes (NetDeviceContainer ueDevices)
   m_lteHelper->Attach (ueDevices);
 }
 
-NetDeviceContainer
-RadioNetwork::InstallUes (NodeContainer ueNodes, bool mobility)
+void
+RadioNetwork::RandomFixedPositioning (NodeContainer ueNodes)
 {
-  NS_LOG_FUNCTION (this << mobility);
+  NS_LOG_FUNCTION (this);
 
-  // Configure the fixed mobility helper for UEs.
-  MobilityHelper fixedMobilityHelper;
+  // Configure the mobility helper for UEs.
   Ptr<RandomVariableStream> posX, posY, posZ;
   posX = CreateObjectWithAttributes<UniformRandomVariable> (
       "Min", DoubleValue (m_coverageArea.xMin),
@@ -154,16 +161,25 @@ RadioNetwork::InstallUes (NodeContainer ueNodes, bool mobility)
   // Spread UEs under eNBs coverage area.
   MobilityHelper mobilityHelper;
   mobilityHelper.SetPositionAllocator (boxPosAllocator);
-  if (mobility)
-    {
-      mobilityHelper.SetMobilityModel (
-        "ns3::RandomWaypointMobilityModel",
-        "Speed", StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=30.0]"),
-        "Pause", StringValue ("ns3::ExponentialRandomVariable[Mean=10.0]"),
-        "PositionAllocator", PointerValue (boxPosAllocator));
-    }
+// FIXME A mobilidade, quando definida, pode ser responsabilidade da classe que
+// constrói a rede do slice. Assim damos mais flexibilidade para mobilidades
+// personalizadas.
+//  if (mobility)
+//    {
+//      mobilityHelper.SetMobilityModel (
+//        "ns3::RandomWaypointMobilityModel",
+//        "Speed", StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=30.0]"),
+//        "Pause", StringValue ("ns3::ExponentialRandomVariable[Mean=10.0]"),
+//        "PositionAllocator", PointerValue (boxPosAllocator));
+//    }
   mobilityHelper.Install (ueNodes);
   BuildingsHelper::Install (ueNodes);
+}
+
+NetDeviceContainer
+RadioNetwork::InstallUeDevices (NodeContainer ueNodes)
+{
+  NS_LOG_FUNCTION (this);
 
   // Install LTE protocol stack into UE nodes.
   NetDeviceContainer ueDevices = m_lteHelper->InstallUeDevice (ueNodes);

@@ -55,6 +55,12 @@ public:
   static TypeId GetTypeId (void);
 
   /**
+   * Get the LTE RAN coverage area considering the EnbMargin attribute.
+   * \return The coverage area.
+   */
+  Rectangle GetCoverageArea (void) const;
+
+  /**
    * Get the LTE helper used to configure this radio network.
    * \return The LTE helper.
    */
@@ -68,12 +74,19 @@ public:
   void AttachUes (NetDeviceContainer ueDevices);
 
   /**
-   * Configure the given nodes as UEs, setting mobility and positioning.
+   * Randomly spread UE nodes within eNB coverage area.
+   * \attention Call this method before installing UE devices.
    * \param ueNodes The nodes.
-   * \param mobility True for UE mobility, false otherwise.
+   */
+  void RandomFixedPositioning (NodeContainer ueNodes);
+
+  /**
+   * Configure the given nodes as UEs.
+   * \param ueNodes The nodes.
    * \return The container with the newly created UE devices.
    */
-  NetDeviceContainer InstallUes (NodeContainer ueNodes, bool mobility);
+  NetDeviceContainer InstallUeDevices (NodeContainer ueNodes);
+
 
 protected:
   /** Destructor implementation. */
