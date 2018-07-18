@@ -56,13 +56,6 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Set an attribute for ns3::OFSwitch13Device factory.
-   * \param n1 The name of the attribute to set.
-   * \param v1 The value of the attribute to set.
-   */
-  void SetSwitchDeviceAttribute (std::string n1, const AttributeValue &v1);
-
-  /**
    * Enable PCAP traces on the OpenFlow backhaul network (user and control
    * planes), and on LTE EPC devices of S1, S5, and X2 interfaces.
    * \param prefix Filename prefix to use for pcap files.

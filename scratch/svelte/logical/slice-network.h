@@ -57,13 +57,6 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Set an attribute for ns3::OFSwitch13Device factory.
-   * \param n1 The name of the attribute to set.
-   * \param v1 The value of the attribute to set.
-   */
-  void SetSwitchDeviceAttribute (std::string n1, const AttributeValue &v1);
-
-  /**
    * Enable PCAP traces on the S/P-GW OpenFlow internal switches (user and
    * control planes), and on the SGi interface for web network.
    * \param prefix Filename prefix to use for pcap files.

@@ -81,15 +81,6 @@ BackhaulNetwork::GetTypeId (void)
 }
 
 void
-BackhaulNetwork::SetSwitchDeviceAttribute (std::string n1,
-                                           const AttributeValue &v1)
-{
-  NS_LOG_FUNCTION (this);
-
-  m_switchHelper->SetDeviceAttribute (n1, v1);
-}
-
-void
 BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous)
 {
   NS_LOG_FUNCTION (this << prefix << promiscuous);

@@ -84,15 +84,6 @@ SliceNetwork::GetTypeId (void)
   return tid;
 }
 
-
-void
-SliceNetwork::SetSwitchDeviceAttribute (std::string n1, const AttributeValue &v1)
-{
-  NS_LOG_FUNCTION (this);
-
-  m_switchHelper->SetDeviceAttribute (n1, v1);
-}
-
 void
 SliceNetwork::EnablePcap (std::string prefix, bool promiscuous)
 {
