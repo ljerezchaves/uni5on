@@ -435,7 +435,7 @@ SliceNetwork::PgwCreate (void)
   // Set the default P-GW gateway logical address, which will be used to set
   // the static route at all UEs.
   m_pgwAddress = m_ueAddrHelper.NewAddress ();
-  NS_LOG_INFO ("P-GW gateway S5 address: " << GetPgwS5Address ());  // FIXME ????
+  NS_LOG_INFO ("P-GW gateway S5 address: " << m_pgwAddress);
 
 //  // Get the backhaul node and device to attach the P-GW.
 //  uint64_t backOfDpId = TopologyGetPgwSwitch ();
