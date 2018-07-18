@@ -254,7 +254,7 @@ SvelteEpcHelper::NotifyConstructionCompleted (void)
   m_lteRan = CreateObject<RadioNetwork> (Ptr<SvelteEpcHelper> (this));
 
   // Create the LTE network slices.
-  Ptr<SliceNetwork> htcNetwork = CreateObject<HtcNetwork> (m_backhaul, m_lteRan);
+  m_htcNetwork = CreateObject<HtcNetwork> (m_backhaul, m_lteRan);
 
   // Configure and install applications and traffic managers.
   // TODO

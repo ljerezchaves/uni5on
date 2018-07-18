@@ -30,6 +30,7 @@ namespace ns3 {
 
 class RadioNetwork;
 class RingNetwork;
+class SliceNetwork;
 class SvelteMme;
 
 /**
@@ -84,6 +85,8 @@ private:
   Ptr<RingNetwork>              m_backhaul;         //!< The backhaul network.
   Ptr<RadioNetwork>             m_lteRan;           //!< The LTE RAN network.
   Ptr<SvelteMme>                m_mme;              //!< SVELTE MME entity.
+
+  Ptr<SliceNetwork>             m_htcNetwork;
 };
 
 } // namespace ns3
