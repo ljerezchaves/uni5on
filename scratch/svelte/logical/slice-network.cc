@@ -50,7 +50,6 @@ SliceNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SliceNetwork")
     .SetParent<Object> ()
-
     .AddAttribute ("LinkMtu",
                    "The MTU for CSMA OpenFlow links. "
                    "Consider + 40 byter of GTP/UDP/IP tunnel overhead.",
@@ -58,7 +57,6 @@ SliceNetwork::GetTypeId (void)
                    UintegerValue (1492), // Ethernet II - PPoE
                    MakeUintegerAccessor (&SliceNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
-
     .AddAttribute ("PgwLinkDataRate",
                    "The data rate for the internal P-GW links.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -206,6 +204,14 @@ SliceNetwork::GetPgwTftTableSize (void) const
   NS_LOG_FUNCTION (this);
 
   return m_tftTableSize;
+}
+
+Ipv4Address
+SliceNetwork::GetPgwS5Address (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwAddress;
 }
 
 // FIXME Esse aqui é para attach S-GW
@@ -416,21 +422,21 @@ SliceNetwork::PgwCreate (void)
 {
   NS_LOG_FUNCTION (this);
 
-//  // Create the P-GW nodes and configure them as OpenFlow switches.
-//  m_pgwNodes.Create (m_tftNumNodes + 1);
-//  m_pgwOfDevices = m_switchHelper->InstallSwitch (m_pgwNodes);
-//  for (uint16_t i = 0; i < m_tftNumNodes + 1; i++)
-//    {
-//      std::ostringstream pgwNodeName;
-//      pgwNodeName << "pgw" << i + 1;    // FIXME Vai dar pau com nome repetido
-//      Names::Add (pgwNodeName.str (), m_pgwNodes.Get (i));
-//    }
-//
-//  // Set the default P-GW gateway logical address, which will be used to set
-//  // the static route at all UEs.
-//  m_pgwAddr = m_ueAddrHelper.NewAddress ();
-//  NS_LOG_INFO ("P-GW gateway address: " << GetUeDefaultGatewayAddress ());
-//
+  // Create the P-GW nodes and configure them as OpenFlow switches.
+  // m_pgwNodes.Create (GetPgwTftNumNodes () + 1);
+  // m_pgwDevices = m_switchHelper->InstallSwitch (m_pgwNodes);
+  // for (uint16_t i = 0; i < GetPgwTftNumNodes () + 1; i++)
+  //   {
+  //     std::ostringstream pgwNodeName;
+  //     pgwNodeName << "pgw" << i + 1;    // FIXME Vai dar pau com nome repetido
+  //     Names::Add (pgwNodeName.str (), m_pgwNodes.Get (i));
+  //   }
+
+  // Set the default P-GW gateway logical address, which will be used to set
+  // the static route at all UEs.
+  m_pgwAddress = m_ueAddrHelper.NewAddress ();
+  NS_LOG_INFO ("P-GW gateway S5 address: " << GetPgwS5Address ());  // FIXME ????
+
 //  // Get the backhaul node and device to attach the P-GW.
 //  uint64_t backOfDpId = TopologyGetPgwSwitch ();
 //  Ptr<Node> backNode = GetSwitchNode (backOfDpId);
@@ -438,7 +444,7 @@ SliceNetwork::PgwCreate (void)
 //
 //  // Get the P-GW main node and device.
 //  Ptr<Node> pgwMainNode = m_pgwNodes.Get (0);
-//  Ptr<OFSwitch13Device> pgwMainOfDev = m_pgwOfDevices.Get (0);
+//  Ptr<OFSwitch13Device> pgwMainOfDev = m_pgwDevices.Get (0);
 //
 //  //
 //  // Connect the P-GW main switch to the SGi and S5 interfaces. On the uplink
@@ -534,7 +540,7 @@ SliceNetwork::PgwCreate (void)
 //  for (uint16_t tftIdx = 0; tftIdx < GetPgwTftNumNodes (); tftIdx++)
 //    {
 //      Ptr<Node> pgwTftNode = m_pgwNodes.Get (tftIdx + 1);
-//      Ptr<OFSwitch13Device> pgwTftOfDev = m_pgwOfDevices.Get (tftIdx + 1);
+//      Ptr<OFSwitch13Device> pgwTftOfDev = m_pgwDevices.Get (tftIdx + 1);
 //
 //      // Set P-GW TFT attributes.
 //      pgwTftOfDev->SetAttribute (
@@ -601,7 +607,7 @@ SliceNetwork::PgwCreate (void)
 //      m_controllerApp->NotifyPgwTftAttach (tftIdx, pgwTftOfDev, pgwS5PortNo,
 //                                        mainPortNo);
 //    }
-//  m_controllerApp->NotifyPgwBuilt (m_pgwOfDevices);
+//  m_controllerApp->NotifyPgwBuilt (m_pgwDevices);
 }
 
 } // namespace ns3

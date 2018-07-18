@@ -19,11 +19,23 @@
  */
 
 #include "htc-network.h"
+#include "../infrastructure/backhaul-network.h"
+#include "../infrastructure/radio-network.h"
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("HtcNetwork");
 NS_OBJECT_ENSURE_REGISTERED (HtcNetwork);
+
+HtcNetwork::HtcNetwork (Ptr<BackhaulNetwork> backhaul,
+                        Ptr<RadioNetwork> lteRan)
+  : HtcNetwork ()
+{
+  NS_LOG_FUNCTION (this << backhaul << lteRan);
+
+  m_backhaul = backhaul;
+  m_lteRan = lteRan;
+}
 
 HtcNetwork::HtcNetwork ()
 {
@@ -123,7 +135,46 @@ HtcNetwork::SliceCreate (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // TODO
+  // Create the UE nodes and set their names.
+  NS_LOG_INFO ("LTE HTC slice with " << m_nUes << " UEs.");
+  m_ueNodes.Create (m_nUes);
+  for (uint32_t i = 0; i < m_nUes; i++)
+    {
+      std::ostringstream ueName;
+      ueName << "htcUe" << i + 1;
+      Names::Add (ueName.str (), m_ueNodes.Get (i));
+    }
+
+  // Configure UE positioning and mobility
+  MobilityHelper mobilityHelper = m_lteRan->RandomBoxSteadyPositioning ();
+//  mobilityHelper.SetMobilityModel (
+//    "ns3::RandomWaypointMobilityModel",
+//    "Speed", StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=15.0]"),
+//    "Pause", StringValue ("ns3::ExponentialRandomVariable[Mean=25.0]"),
+//    "PositionAllocator", PointerValue (boxPosAllocator));
+
+  // Install LTE protocol stack into UE nodes.
+  m_ueDevices = m_lteRan->InstallUeDevices (m_ueNodes, mobilityHelper);
+
+  // Install TCP/IP protocol stack into UE nodes.
+  InternetStackHelper internet;
+  internet.Install (m_ueNodes);
+  // AssignHtcUeAddress (m_htcUeDevices); // FIXME atribuir endereço
+
+  // Specify static routes for each UE to its default S-GW.
+  Ipv4StaticRoutingHelper ipv4RoutingHelper;
+  NodeContainer::Iterator it;
+  for (it = m_ueNodes.Begin (); it != m_ueNodes.End (); it++)
+    {
+      Ptr<Ipv4StaticRouting> ueStaticRouting =
+        ipv4RoutingHelper.GetStaticRouting ((*it)->GetObject<Ipv4> ());
+      ueStaticRouting->SetDefaultRoute (GetPgwS5Address (), 1);
+    }
+
+  // Attach UE to the eNBs using initial cell selection.
+  m_lteRan->AttachUes (m_ueDevices);
+
+
 }
 
 } // namespace ns3

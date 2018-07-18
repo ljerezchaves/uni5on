@@ -32,6 +32,13 @@ namespace ns3 {
 class HtcNetwork : public SliceNetwork
 {
 public:
+  /**
+   * Complete constructor.
+   * \param backhaul The OpenFlow backhaul network infrastructure.
+   * \param lteRan The LTE radio network infrastructure.
+   */
+  HtcNetwork (Ptr<BackhaulNetwork> backhaul, Ptr<RadioNetwork> lteRan);
+
   HtcNetwork ();           //!< Default constructor.
   virtual ~HtcNetwork ();  //!< Dummy destructor, see DoDispose.
 

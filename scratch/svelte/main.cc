@@ -356,6 +356,9 @@ EnableVerbose (bool enable)
       LogComponentEnable ("EnbInfo",                  LOG_LEVEL_ALL_FT);
       LogComponentEnable ("UeInfo",                   LOG_LEVEL_ALL_FT);
       LogComponentEnable ("SvelteMme",                LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("SliceNetwork",             LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("SliceController",          LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("HtcNetwork",               LOG_LEVEL_ALL_FT);
 
 //      LogComponentEnable ("PgwTunnelApp",             LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("SdranCloud",               LOG_ERROR_WARN_INFO_FT);

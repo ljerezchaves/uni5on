@@ -57,12 +57,6 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Get the Internet web server node.
-   * \return The pointer to the web node.
-   */
-  Ptr<Node> GetWebNode (void) const;
-
-  /**
    * Set an attribute for ns3::OFSwitch13Device factory.
    * \param n1 The name of the attribute to set.
    * \param v1 The value of the attribute to set.
@@ -96,6 +90,8 @@ public:
   uint32_t GetPgwTftNumNodes (void) const;
   DataRate GetPgwTftPipeCapacity (void) const;
   uint32_t GetPgwTftTableSize (void) const;
+  Ptr<Node> GetWebNode (void) const;
+  Ipv4Address GetPgwS5Address (void) const;
   //\}
 
 protected:
@@ -156,6 +152,9 @@ protected:
   DataRate                      m_tftPipeCapacity;  //!< P-GW TFT capacity.
   uint32_t                      m_tftTableSize;     //!< P-GW TFT table size.
 
+  NodeContainer                 m_ueNodes;          //!< UE nodes.
+  NetDeviceContainer            m_ueDevices;        //!< UE devices.
+  
   // Infrastructure interface.
   Ptr<BackhaulNetwork>          m_backhaul;
   Ptr<RadioNetwork>             m_lteRan;
@@ -182,13 +181,12 @@ private:
   Ipv4AddressHelper             m_sgiAddrHelper;    //!< Web address helper.
 
   // P-GW user plane.
-  Ipv4Address                   m_pgwAddr;          //!< P-GW S5 address.
-  NodeContainer                 m_pgwNodes;         //!< P-GW user-plane nodes.
-  OFSwitch13DeviceContainer     m_pgwOfDevices;     //!< P-GW switch devices.
+  Ipv4Address                   m_pgwAddress;       //!< P-GW S5 address.
+  NodeContainer                 m_pgwNodes;         //!< P-GW switch nodes.
+  OFSwitch13DeviceContainer     m_pgwDevices;       //!< P-GW switch devices.
   NetDeviceContainer            m_pgwIntDevices;    //!< P-GW int port devices.
 
-  NodeContainer                 m_ueNodes;          //!< UE nodes.
-  NetDeviceContainer            m_ueDevices;        //!< UE devices.
+
 
   // Internet web server.
   Ptr<Node>                     m_webNode;          //!< Web server node.

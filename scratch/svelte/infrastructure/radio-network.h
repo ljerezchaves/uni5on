@@ -74,18 +74,20 @@ public:
   void AttachUes (NetDeviceContainer ueDevices);
 
   /**
-   * Randomly spread UE nodes within eNB coverage area.
-   * \attention Call this method before installing UE devices.
+   * Configure a mobility helper for randomly spreading UE nodes within eNB
+   * coverage area.
    * \param ueNodes The nodes.
    */
-  void RandomFixedPositioning (NodeContainer ueNodes);
+  MobilityHelper RandomBoxSteadyPositioning (void) const;
 
   /**
    * Configure the given nodes as UEs.
    * \param ueNodes The nodes.
+   * \param mobilityHelper The mobility helper for UEs.
    * \return The container with the newly created UE devices.
    */
-  NetDeviceContainer InstallUeDevices (NodeContainer ueNodes);
+  NetDeviceContainer InstallUeDevices (NodeContainer ueNodes,
+                                       MobilityHelper mobilityHelper);
 
 
 protected:

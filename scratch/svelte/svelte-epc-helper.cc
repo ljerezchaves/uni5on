@@ -247,7 +247,7 @@ SvelteEpcHelper::NotifyConstructionCompleted (void)
   m_lteRan = CreateObject<RadioNetwork> (Ptr<SvelteEpcHelper> (this));
 
 
-  Ptr<HtcNetwork> htcNetwork = CreateObject<HtcNetwork> ();
+  Ptr<SliceNetwork> htcNetwork = CreateObject<HtcNetwork> (m_backhaul, m_lteRan);
 
   // Chain up.
   Object::NotifyConstructionCompleted ();

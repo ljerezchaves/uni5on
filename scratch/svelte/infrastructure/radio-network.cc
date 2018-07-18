@@ -136,8 +136,8 @@ RadioNetwork::AttachUes (NetDeviceContainer ueDevices)
   m_lteHelper->Attach (ueDevices);
 }
 
-void
-RadioNetwork::RandomFixedPositioning (NodeContainer ueNodes)
+MobilityHelper
+RadioNetwork::RandomBoxSteadyPositioning (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -158,28 +158,20 @@ RadioNetwork::RandomFixedPositioning (NodeContainer ueNodes)
   boxPosAllocator->SetAttribute ("Y", PointerValue (posY));
   boxPosAllocator->SetAttribute ("Z", PointerValue (posZ));
 
-  // Spread UEs under eNBs coverage area.
   MobilityHelper mobilityHelper;
   mobilityHelper.SetPositionAllocator (boxPosAllocator);
-// FIXME A mobilidade, quando definida, pode ser responsabilidade da classe que
-// constrói a rede do slice. Assim damos mais flexibilidade para mobilidades
-// personalizadas.
-//  if (mobility)
-//    {
-//      mobilityHelper.SetMobilityModel (
-//        "ns3::RandomWaypointMobilityModel",
-//        "Speed", StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=30.0]"),
-//        "Pause", StringValue ("ns3::ExponentialRandomVariable[Mean=10.0]"),
-//        "PositionAllocator", PointerValue (boxPosAllocator));
-//    }
-  mobilityHelper.Install (ueNodes);
-  BuildingsHelper::Install (ueNodes);
+  return mobilityHelper;
 }
 
 NetDeviceContainer
-RadioNetwork::InstallUeDevices (NodeContainer ueNodes)
+RadioNetwork::InstallUeDevices (NodeContainer ueNodes,
+                                MobilityHelper mobilityHelper)
 {
   NS_LOG_FUNCTION (this);
+
+  // Install mobility helper into UE nodes.
+  mobilityHelper.Install (ueNodes);
+  BuildingsHelper::Install (ueNodes);
 
   // Install LTE protocol stack into UE nodes.
   NetDeviceContainer ueDevices = m_lteHelper->InstallUeDevice (ueNodes);
