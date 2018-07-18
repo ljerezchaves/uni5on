@@ -32,10 +32,6 @@ NS_LOG_COMPONENT_DEFINE ("SliceNetwork");
 NS_OBJECT_ENSURE_REGISTERED (SliceNetwork);
 
 SliceNetwork::SliceNetwork ()
-  : m_controllerApp (0),
-  m_controllerNode (0),
-  m_switchHelper (0),
-  m_webNode (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -80,6 +76,7 @@ SliceNetwork::GetTypeId (void)
                    "The delay for the link connecting the P-GW "
                    "to the Internet web server.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   // Using a high delay as this represents the 'Internet'.
                    TimeValue (MilliSeconds (15)),
                    MakeTimeAccessor (&SliceNetwork::m_sgiLinkDelay),
                    MakeTimeChecker ())
@@ -87,13 +84,6 @@ SliceNetwork::GetTypeId (void)
   return tid;
 }
 
-Ptr<Node>
-SliceNetwork::GetWebNode (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_webNode;
-}
 
 void
 SliceNetwork::SetSwitchDeviceAttribute (std::string n1, const AttributeValue &v1)
@@ -115,15 +105,6 @@ SliceNetwork::EnablePcap (std::string prefix, bool promiscuous)
   CsmaHelper helper;
   helper.EnablePcap (prefix + "pgw-int",  m_pgwIntDevices, promiscuous);
   helper.EnablePcap (prefix + "web-sgi",  m_sgiDevices, promiscuous);
-}
-
-Ipv4InterfaceContainer
-SliceNetwork::AssignUeAddress (NetDeviceContainer ueDevices)
-{
-  NS_LOG_FUNCTION (this);
-
-  // TODO
-  return Ipv4InterfaceContainer ();
 }
 
 uint32_t
@@ -214,6 +195,14 @@ SliceNetwork::GetPgwS5Address (void) const
   return m_pgwAddress;
 }
 
+Ptr<Node>
+SliceNetwork::GetWebNode (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_webNode;
+}
+
 // FIXME Esse aqui é para attach S-GW
 // void
 // SliceNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
@@ -301,9 +290,7 @@ SliceNetwork::NotifyConstructionCompleted (void)
   m_switchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
       "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
-  // Create the Internet network and the P-GW user-plane.
-  InternetCreate ();
-  PgwCreate ();
+  // Create the slice network.
   SliceCreate ();
 
   // Let's connect the OpenFlow switches to the EPC controller. From this point
@@ -395,9 +382,6 @@ SliceNetwork::InstallController (Ptr<SliceController> controller)
 
   NS_ASSERT_MSG (!m_controllerApp, "Controller application already set.");
 
-  // Create the controller node.
-  m_controllerNode = CreateObject<Node> ();
-  Names::Add ("slice_ctrl", m_controllerNode); // FIXME Vai dar pau por nome repetido quando tiver 2 slices.
 
   // Installing the controller application into controller node.
   m_controllerApp = controller;
@@ -405,88 +389,74 @@ SliceNetwork::InstallController (Ptr<SliceController> controller)
 }
 
 void
-SliceNetwork::InternetCreate (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  // Create the single web server node.
-  m_webNode = CreateObject<Node> ();
-  Names::Add ("web", m_webNode);  // FIXME Vai dar pau por causa de nome repetido
-
-  // Install the Internet stack into web node.
-  InternetStackHelper internet;
-  internet.Install (m_webNode);
-}
-
-void
 SliceNetwork::PgwCreate (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Create the P-GW nodes and configure them as OpenFlow switches.
-  // m_pgwNodes.Create (GetPgwTftNumNodes () + 1);
-  // m_pgwDevices = m_switchHelper->InstallSwitch (m_pgwNodes);
-  // for (uint16_t i = 0; i < GetPgwTftNumNodes () + 1; i++)
-  //   {
-  //     std::ostringstream pgwNodeName;
-  //     pgwNodeName << "pgw" << i + 1;    // FIXME Vai dar pau com nome repetido
-  //     Names::Add (pgwNodeName.str (), m_pgwNodes.Get (i));
-  //   }
+  // Configure P-GW nodes as OpenFlow switches.
+  m_pgwDevices = m_switchHelper->InstallSwitch (m_pgwNodes);
 
   // Set the default P-GW gateway logical address, which will be used to set
   // the static route at all UEs.
   m_pgwAddress = m_ueAddrHelper.NewAddress ();
   NS_LOG_INFO ("P-GW gateway S5 address: " << m_pgwAddress);
 
+
+  // Install the Internet stack into web node. // FIXME mover para a hora de conectar o P-Gw no web.
+  InternetStackHelper internet;
+  internet.Install (m_webNode);
+
+
+
 //  // Get the backhaul node and device to attach the P-GW.
 //  uint64_t backOfDpId = TopologyGetPgwSwitch ();
 //  Ptr<Node> backNode = GetSwitchNode (backOfDpId);
 //  Ptr<OFSwitch13Device> backOfDev = OFSwitch13Device::GetDevice (backOfDpId);
 //
-//  // Get the P-GW main node and device.
-//  Ptr<Node> pgwMainNode = m_pgwNodes.Get (0);
-//  Ptr<OFSwitch13Device> pgwMainOfDev = m_pgwDevices.Get (0);
-//
-//  //
-//  // Connect the P-GW main switch to the SGi and S5 interfaces. On the uplink
-//  // direction, the traffic will flow directly from the S5 to the SGi interface
-//  // thought this switch. On the downlink direction, this switch will send the
-//  // traffic to the TFT switches.
-//  //
-//  // Configure CSMA helper for connecting the P-GW node to the web server node.
-//  m_csmaHelper.SetDeviceAttribute  ("Mtu", UintegerValue (m_linkMtu));
-//  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_linkRate));
-//  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
-//
-//  // Connect the P-GW main node to the web server node (SGi interface).
-//  m_sgiDevices = m_csmaHelper.Install (pgwMainNode, m_webNode);
-//
-//  Ptr<CsmaNetDevice> pgwSgiDev, webSgiDev;
-//  pgwSgiDev = DynamicCast<CsmaNetDevice> (m_sgiDevices.Get (0));
-//  webSgiDev = DynamicCast<CsmaNetDevice> (m_sgiDevices.Get (1));
-//
-//  Names::Add (Names::FindName (pgwMainNode) + "_to_" +
-//              Names::FindName (m_webNode), pgwSgiDev);
-//  Names::Add (Names::FindName (m_webNode) + "_to_" +
-//              Names::FindName (pgwMainNode), webSgiDev);
-//
-//  // Add the pgwSgiDev as physical port on the P-GW main OpenFlow switch.
-//  Ptr<OFSwitch13Port> pgwSgiPort = pgwMainOfDev->AddSwitchPort (pgwSgiDev);
-//  uint32_t pgwSgiPortNo = pgwSgiPort->GetPortNo ();
-//
-//  // Set the IP address on SGi interfaces.
-//  m_sgiAddrHelper.Assign (NetDeviceContainer (m_sgiDevices));
-//  NS_LOG_INFO ("Web SGi address: " << SliceNetwork::GetIpv4Addr (webSgiDev));
-//  NS_LOG_INFO ("P-GW SGi address: " << SliceNetwork::GetIpv4Addr (pgwSgiDev));
-//
-//  // Define static routes at the web server to the LTE network.
-//  Ipv4StaticRoutingHelper ipv4RoutingHelper;
-//  Ptr<Ipv4StaticRouting> webHostStaticRouting =
-//    ipv4RoutingHelper.GetStaticRouting (m_webNode->GetObject<Ipv4> ());
-//  webHostStaticRouting->AddNetworkRouteTo (
-//    SliceNetwork::m_ueAddr, SliceNetwork::m_ueMask,
-//    SliceNetwork::GetIpv4Addr (pgwSgiDev), 1);
-//
+  // Get the P-GW main node and device.
+  Ptr<Node> pgwMainNode = m_pgwNodes.Get (0);
+  Ptr<OFSwitch13Device> pgwMainOfDev = m_pgwDevices.Get (0);
+
+  //
+  // Connect the P-GW main switch to the SGi and S5 interfaces. On the uplink
+  // direction, the traffic will flow directly from the S5 to the SGi interface
+  // thought this switch. On the downlink direction, this switch will send the
+  // traffic to the TFT switches.
+  //
+  // Configure CSMA helper for connecting the P-GW node to the web server node.
+  m_csmaHelper.SetDeviceAttribute  ("Mtu", UintegerValue (m_linkMtu));
+  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_sgiLinkRate));
+  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_sgiLinkDelay));
+
+  // Connect the P-GW main node to the web server node (SGi interface).
+  m_sgiDevices = m_csmaHelper.Install (pgwMainNode, m_webNode);
+
+  Ptr<CsmaNetDevice> pgwSgiDev, webSgiDev;
+  pgwSgiDev = DynamicCast<CsmaNetDevice> (m_sgiDevices.Get (0));
+  webSgiDev = DynamicCast<CsmaNetDevice> (m_sgiDevices.Get (1));
+
+  Names::Add (Names::FindName (pgwMainNode) + "_to_" +
+              Names::FindName (m_webNode), pgwSgiDev);
+  Names::Add (Names::FindName (m_webNode) + "_to_" +
+              Names::FindName (pgwMainNode), webSgiDev);
+
+  // Add the pgwSgiDev as physical port on the P-GW main OpenFlow switch.
+  Ptr<OFSwitch13Port> pgwSgiPort = pgwMainOfDev->AddSwitchPort (pgwSgiDev);
+  uint32_t pgwSgiPortNo = pgwSgiPort->GetPortNo ();
+  NS_UNUSED (pgwSgiPortNo); // FIXME
+
+  // Set the IP address on SGi interfaces.
+  m_sgiAddrHelper.Assign (NetDeviceContainer (m_sgiDevices));
+  NS_LOG_INFO ("Web SGi address: " << Ipv4AddressHelper::GetFirstAddress (webSgiDev));
+  NS_LOG_INFO ("P-GW SGi address: " << Ipv4AddressHelper::GetFirstAddress (pgwSgiDev));
+
+  // Define static routes at the web server to the LTE network.
+  Ipv4StaticRoutingHelper ipv4RoutingHelper;
+  Ptr<Ipv4StaticRouting> webHostStaticRouting =
+    ipv4RoutingHelper.GetStaticRouting (m_webNode->GetObject<Ipv4> ());
+  webHostStaticRouting->AddNetworkRouteTo (
+    m_ueAddr, m_ueMask, Ipv4AddressHelper::GetFirstAddress (pgwSgiDev), 1);
+
 //  // Configure CSMA helper for connecting EPC nodes (P-GW and S-GWs) to the
 //  // OpenFlow backhaul topology.
 //  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_s5LinkRate));

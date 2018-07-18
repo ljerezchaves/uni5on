@@ -29,7 +29,7 @@ NS_OBJECT_ENSURE_REGISTERED (HtcNetwork);
 
 HtcNetwork::HtcNetwork (Ptr<BackhaulNetwork> backhaul,
                         Ptr<RadioNetwork> lteRan)
-  : HtcNetwork ()
+  : SliceNetwork ()
 {
   NS_LOG_FUNCTION (this << backhaul << lteRan);
 
@@ -126,7 +126,39 @@ HtcNetwork::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Chain up (the slice creation will be triggered by base class).
+  //
+  // Create all nodes here, so we assign custom names.
+  //
+  // Create the web server node.
+  m_webNode = CreateObject<Node> ();
+  Names::Add ("htc-web", m_webNode);
+
+  // Create the slice controller node.
+  m_controllerNode = CreateObject<Node> ();
+  Names::Add ("htc-ctrl", m_controllerNode);
+
+  // Create the UE nodes.
+  m_ueNodes.Create (m_nUes);
+  for (uint32_t i = 0; i < m_nUes; i++)
+    {
+      std::ostringstream name;
+      name << "htc-ue" << i + 1;
+      Names::Add (name.str (), m_ueNodes.Get (i));
+    }
+
+  // Create the P-GW nodes.
+  m_pgwNodes.Create (GetPgwTftNumNodes () + 1);
+  for (uint16_t i = 0; i < GetPgwTftNumNodes () + 1; i++)
+    {
+      std::ostringstream name;
+      name << "htc-pgw" << i + 1;
+      Names::Add (name.str (), m_pgwNodes.Get (i));
+    }
+
+  // Create the S-GW nodes.
+  // TODO
+
+  // Chain up (the slice creation will be triggered by the base class).
   SliceNetwork::NotifyConstructionCompleted ();
 }
 
@@ -135,18 +167,14 @@ HtcNetwork::SliceCreate (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Create the UE nodes and set their names.
   NS_LOG_INFO ("LTE HTC slice with " << m_nUes << " UEs.");
-  m_ueNodes.Create (m_nUes);
-  for (uint32_t i = 0; i < m_nUes; i++)
-    {
-      std::ostringstream ueName;
-      ueName << "htcUe" << i + 1;
-      Names::Add (ueName.str (), m_ueNodes.Get (i));
-    }
+
+  PgwCreate ();
+
 
   // Configure UE positioning and mobility
   MobilityHelper mobilityHelper = m_lteRan->RandomBoxSteadyPositioning ();
+//  TODO It is possible to set a custom mobility model for UEs in the future.
 //  mobilityHelper.SetMobilityModel (
 //    "ns3::RandomWaypointMobilityModel",
 //    "Speed", StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=15.0]"),
@@ -159,7 +187,7 @@ HtcNetwork::SliceCreate (void)
   // Install TCP/IP protocol stack into UE nodes.
   InternetStackHelper internet;
   internet.Install (m_ueNodes);
-  // AssignHtcUeAddress (m_htcUeDevices); // FIXME atribuir endereço
+  m_ueAddrHelper.Assign (m_ueDevices);
 
   // Specify static routes for each UE to its default S-GW.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
@@ -173,8 +201,6 @@ HtcNetwork::SliceCreate (void)
 
   // Attach UE to the eNBs using initial cell selection.
   m_lteRan->AttachUes (m_ueDevices);
-
-
 }
 
 } // namespace ns3
