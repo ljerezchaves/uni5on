@@ -78,6 +78,20 @@ public:
    */
   virtual Ipv4Address AttachEnb (Ptr<Node> enbNode, uint16_t cellId);
 
+  /**
+   * Attach the P-GW logical node to the OpenFlow backhaul network.
+   * \param pgwNode The P-GW node.
+   * \return The P-GW S5 IP address.
+   */
+  virtual Ipv4Address AttachPgw (Ptr<Node> pgwNode);
+
+  /**
+   * Attach the S-GW logical node to the OpenFlow backhaul network.
+   * \param pgwNode The S-GW node.
+   * \return The S-GW S1-U and S5 pair of IP address.
+   */
+  virtual std::pair<Ipv4Address, Ipv4Address> AttachSgw (Ptr<Node> sgwNode);
+
   static const uint16_t         m_gtpuPort;         //!< GTP-U UDP port.
   static const Ipv4Address      m_s1uAddr;          //!< S1-U network address.
   static const Ipv4Address      m_s5Addr;           //!< S5 network address.

@@ -149,6 +149,24 @@ BackhaulNetwork::AttachEnb (Ptr<Node> enbNode, uint16_t cellId)
   return enbS1uAddr;
 }
 
+Ipv4Address
+BackhaulNetwork::AttachPgw (Ptr<Node> pgwNode)
+{
+  NS_LOG_FUNCTION (this << pgwNode);
+  // TODO
+
+  return Ipv4Address::GetAny ();
+}
+
+std::pair<Ipv4Address, Ipv4Address>
+BackhaulNetwork::AttachSgw (Ptr<Node> sgwNode)
+{
+  NS_LOG_FUNCTION (this << sgwNode);
+  // TODO
+
+  return std::make_pair (Ipv4Address::GetAny (), Ipv4Address::GetAny ());
+}
+
 void
 BackhaulNetwork::DoDispose (void)
 {

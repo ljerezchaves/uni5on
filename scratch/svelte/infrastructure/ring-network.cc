@@ -164,6 +164,7 @@ RingNetwork::TopologyCreate (void)
   m_controllerApp->NotifyTopologyBuilt (m_switchDevices);
 }
 
+// FIXME Levar essas definições de switch para a rede do slice.
 uint64_t
 RingNetwork::TopologyGetPgwSwitch ()
 {
