@@ -155,8 +155,13 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
 
   NS_ASSERT (enb == lteEnbNetDevice->GetNode ());
 
+  // Add an IPv4 stack to the previously created eNB node.
+  InternetStackHelper internet;
+  internet.Install (enb);
+
   // Attach the eNB node to the OpenFlow backhaul network.
-  Ipv4Address enbS1uAddr = m_backhaul->AttachEnb (enb, cellId);
+  Ptr<CsmaNetDevice> enbS1uDev = m_backhaul->AttachEnb (enb, cellId);
+  Ipv4Address enbS1uAddr = Ipv4AddressHelper::GetFirstAddress (enbS1uDev);
 
   // Create the S1-U socket for the eNB node.
   TypeId udpTid = TypeId::LookupByName ("ns3::UdpSocketFactory");
@@ -268,7 +273,7 @@ SvelteHelper::NotifyConstructionCompleted (void)
   m_htcFactory.Set ("Backhaul", PointerValue (m_backhaul));
   m_htcFactory.Set ("Radio", PointerValue (m_lteRan));
   m_htcNetwork = m_htcFactory.Create<SliceNetwork> ();
-  
+
   // TODO Create the LTE MTC network slice.
   // m_mtcFactory.Set ("Backhaul", PointerValue (m_backhaul));
   // m_mtcFactory.Set ("Radio", PointerValue (m_lteRan));

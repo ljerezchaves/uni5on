@@ -96,14 +96,10 @@ BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous)
   helper.EnablePcap (prefix + "backhaul", m_switchNodes, promiscuous);
 }
 
-Ipv4Address
+Ptr<CsmaNetDevice>
 BackhaulNetwork::AttachEnb (Ptr<Node> enbNode, uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << enbNode << cellId);
-
-  // Add an IPv4 stack to the previously created eNB node.
-  InternetStackHelper internet;
-  internet.Install (enbNode);
 
   // Get the switch on the backhaul network to attach the eNB.
   uint64_t swDpId = TopologyGetEnbSwitch (cellId);
@@ -127,26 +123,23 @@ BackhaulNetwork::AttachEnb (Ptr<Node> enbNode, uint16_t cellId)
   Ptr<OFSwitch13Port> swS1Port = swDev->AddSwitchPort (swS1uDev);
   uint32_t swS1PortNo = swS1Port->GetPortNo ();
 
-  // Add the enbS1uDev as standard device on eNB node.
-  Ipv4InterfaceContainer s1uIpIfaces;
-  s1uIpIfaces = m_s1uAddrHelper.Assign (NetDeviceContainer (enbS1uDev));
-  Ipv4Address enbS1uAddr = s1uIpIfaces.GetAddress (0);
-  NS_LOG_INFO ("eNB S1-U address: " << enbS1uAddr);
+  // Configure the enbS1uDev as standard device on eNB node.
+  m_s1uAddrHelper.Assign (NetDeviceContainer (enbS1uDev));
+  NS_LOG_INFO ("eNB S1-U: " << Ipv4AddressHelper::GetFirstAddress (enbS1uDev));
 
-  // Notify the backhaul controller of the new EPC device attached to the
-  // OpenFlow backhaul network.
+  // Notify the controller of the new EPC device attached to the backhaul.
   m_controllerApp->NotifyEpcAttach (swDev, swS1PortNo, enbS1uDev);
 
-  return enbS1uAddr;
+  return enbS1uDev;
 }
 
-Ipv4Address
-BackhaulNetwork::AttachPgw (Ptr<Node> pgwNode)
+Ptr<CsmaNetDevice>
+BackhaulNetwork::AttachPgw (Ptr<Node> pgwNode, uint16_t swIdx)
 {
-  NS_LOG_FUNCTION (this << pgwNode);
   // TODO
+  NS_LOG_FUNCTION (this << pgwNode << swIdx);
 
-  return Ipv4Address::GetAny ();
+  return 0;
 }
 
 std::pair<Ipv4Address, Ipv4Address>

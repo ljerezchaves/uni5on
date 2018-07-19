@@ -67,16 +67,18 @@ public:
    * Attach the eNB node to the OpenFlow backhaul network.
    * \param enbNode The eNB node.
    * \param cellId The eNB cell ID.
-   * \return The eNB S1-U IP address.
+   * \return The network device created at the eNB node.
    */
-  virtual Ipv4Address AttachEnb (Ptr<Node> enbNode, uint16_t cellId);
+  virtual Ptr<CsmaNetDevice> AttachEnb (Ptr<Node> enbNode, uint16_t cellId);
 
   /**
    * Attach the P-GW logical node to the OpenFlow backhaul network.
    * \param pgwNode The P-GW node.
-   * \return The P-GW S5 IP address.
+   * \param swIdx The backhaul switch index at which the P-GW node should be
+   *              connected.
+   * \return The network device created at the P-GW node.
    */
-  virtual Ipv4Address AttachPgw (Ptr<Node> pgwNode);
+  virtual Ptr<CsmaNetDevice> AttachPgw (Ptr<Node> pgwNode, uint16_t swIdx);
 
   /**
    * Attach the S-GW logical node to the OpenFlow backhaul network.
