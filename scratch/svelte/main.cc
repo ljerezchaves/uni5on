@@ -348,6 +348,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("Main",                     LOG_LEVEL_ALL_FT);
       LogComponentEnable ("SvelteEpcHelper",          LOG_LEVEL_ALL_FT);
 
+      // Infrastructure components.
       LogComponentEnable ("BackhaulController",       LOG_LEVEL_ALL_FT);
       LogComponentEnable ("BackhaulNetwork",          LOG_LEVEL_ALL_FT);
       LogComponentEnable ("ConnectionInfo",           LOG_LEVEL_ALL_FT);
@@ -357,12 +358,12 @@ EnableVerbose (bool enable)
       LogComponentEnable ("RingRoutingInfo",          LOG_LEVEL_ALL_FT);
       LogComponentEnable ("SvelteEnbApplication",     LOG_LEVEL_ALL_FT);
 
+      // Logical components.
       LogComponentEnable ("EnbInfo",                  LOG_LEVEL_ALL_FT);
       LogComponentEnable ("UeInfo",                   LOG_LEVEL_ALL_FT);
       LogComponentEnable ("SvelteMme",                LOG_LEVEL_ALL_FT);
       LogComponentEnable ("SliceNetwork",             LOG_LEVEL_ALL_FT);
       LogComponentEnable ("SliceController",          LOG_LEVEL_ALL_FT);
-      LogComponentEnable ("HtcNetwork",               LOG_LEVEL_ALL_FT);
 
 //      LogComponentEnable ("PgwTunnelApp",             LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("SdranCloud",               LOG_ERROR_WARN_INFO_FT);

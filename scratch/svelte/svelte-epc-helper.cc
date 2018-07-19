@@ -26,7 +26,7 @@
 #include "logical/enb-info.h"
 #include "logical/svelte-mme.h"
 #include "logical/ue-info.h"
-#include "logical/htc-network.h"
+#include "logical/slice-network.h"
 
 namespace ns3 {
 
@@ -255,7 +255,9 @@ SvelteEpcHelper::NotifyConstructionCompleted (void)
   m_lteRan = CreateObject<RadioNetwork> (Ptr<SvelteEpcHelper> (this));
 
   // Create the LTE network slices.
-  m_htcNetwork = CreateObject<HtcNetwork> (m_backhaul, m_lteRan);
+  ObjectFactory htcFactory;
+  htcFactory.SetTypeId (SliceNetwork::GetTypeId ());
+  m_htcNetwork = htcFactory.Create<SliceNetwork> ();
 
   // Configure and install applications and traffic managers.
   // TODO

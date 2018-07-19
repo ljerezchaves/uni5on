@@ -20,8 +20,4 @@ default ns3::RadioNetwork::NumCellSites "1"
 default ns3::LteHexGridEnbTopologyHelper::GridWidth "2"
 
 default ns3::SliceController::TimeoutInterval "5s"
-default ns3::HtcNetwork::NumUes "1"
-default ns3::HtcNetwork::NumPgwTftSwitches "1"
-default ns3::HtcNetwork::PgwTftPipelineCapacity "100Gb/s"
-default ns3::HtcNetwork::PgwTftTableSize "65535"
 
