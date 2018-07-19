@@ -82,7 +82,7 @@ RadioNetwork::GetTypeId (void)
                    UintegerValue (1),
                    MakeUintegerAccessor (&RadioNetwork::m_nSites),
                    MakeUintegerChecker<uint32_t> ())
-    .AddAttribute ("UeHeight", "The UE antenna height [m].",
+    .AddAttribute ("UeHeight", "The UE antenna height (m).",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DoubleValue (1.5),
                    MakeDoubleAccessor (&RadioNetwork::m_ueHeight),
