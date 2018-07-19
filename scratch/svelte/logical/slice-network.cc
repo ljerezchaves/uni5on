@@ -367,12 +367,6 @@ SliceNetwork::CreatePgw (void)
   m_pgwAddress = m_ueAddrHelper.NewAddress ();
   NS_LOG_INFO ("P-GW gateway S5 address: " << m_pgwAddress);
 
-// FIXME
-//  // Get the backhaul node and device to attach the P-GW.
-//  uint64_t backOfDpId = TopologyGetPgwSwitch ();
-//  Ptr<Node> backNode = GetSwitchNode (backOfDpId);
-//  Ptr<OFSwitch13Device> backOfDev = OFSwitch13Device::GetDevice (backOfDpId);
-//
   // Get the P-GW main node and device.
   Ptr<Node> pgwMainNode = m_pgwNodes.Get (0);
   Ptr<OFSwitch13Device> pgwMainOfDev = m_pgwDevices.Get (0);
@@ -403,7 +397,6 @@ SliceNetwork::CreatePgw (void)
   // Add the pgwSgiDev as physical port on the P-GW main OpenFlow switch.
   Ptr<OFSwitch13Port> pgwSgiPort = pgwMainOfDev->AddSwitchPort (pgwSgiDev);
   uint32_t pgwSgiPortNo = pgwSgiPort->GetPortNo ();
-  NS_UNUSED (pgwSgiPortNo); // FIXME
 
   // Set the IP address on the Internet network.
   m_webAddrHelper.Assign (NetDeviceContainer (m_webDevices));
@@ -417,48 +410,39 @@ SliceNetwork::CreatePgw (void)
   webHostStaticRouting->AddNetworkRouteTo (
     m_ueAddr, m_ueMask, Ipv4AddressHelper::GetFirstAddress (pgwSgiDev), 1);
 
-//  // Connect the P-GW main node to the OpenFlow backhaul node (S5 interface).
-//  NetDeviceContainer devices = m_csmaHelper.Install (pgwMainNode, backNode);
-//  m_s5Devices.Add (devices.Get (0));
-//
-//  Ptr<CsmaNetDevice> pgwS5Dev, backS5Dev;
-//  pgwS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (0));
-//  backS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (1));
-//
-//  Names::Add (Names::FindName (backNode) + "_to_" +
-//              Names::FindName (pgwMainNode), backS5Dev);
-//  Names::Add (Names::FindName (pgwMainNode) + "_to_" +
-//              Names::FindName (backNode), pgwS5Dev);
-//
-//  // Add the backS5Dev as physical port on the backhaul OpenFlow switch.
-//  Ptr<OFSwitch13Port> backS5Port = backOfDev->AddSwitchPort (backS5Dev);
-//  uint32_t backS5PortNo = backS5Port->GetPortNo ();
-//
-//  // Set the IP address on pgwS5Dev interface. It will be left as standard
-//  // device on P-GW main node and will be connected to a logical port.
-//  m_s5AddrHelper.Assign (NetDeviceContainer (pgwS5Dev));
-//  NS_LOG_INFO ("P-GW S5 address: " << SliceNetwork::GetIpv4Addr (pgwS5Dev));
-//
-//  // Create the virtual net device to work as the logical ports on the P-GW S5
-//  // interface. This logical ports will connect to the P-GW user-plane
-//  // application, which will forward packets to/from this logical port and the
-//  // S5 UDP socket binded to the pgwS5Dev.
-//  Ptr<VirtualNetDevice> pgwS5PortDev = CreateObject<VirtualNetDevice> ();
-//  pgwS5PortDev->SetAddress (Mac48Address::Allocate ());
-//  Ptr<OFSwitch13Port> pgwS5Port = pgwMainOfDev->AddSwitchPort (pgwS5PortDev);
-//  uint32_t pgwS5PortNo = pgwS5Port->GetPortNo ();
-//
-//  // Create the P-GW S5 user-plane application.
+
+  // FIXME Decidir por algum parâmetro em qual switch conectar o P-GW no backhaul.
+  // Por enquanto estou forçando no switch índice 0.
+  Ptr<CsmaNetDevice> pgwS5Dev;
+  pgwS5Dev = m_backhaul->AttachPgw (pgwMainNode, 0);
+
+  // Create the virtual net device to work as the logical ports on the P-GW S5
+  // interface. This logical ports will connect to the P-GW user-plane
+  // application, which will forward packets to/from this logical port and the
+  // S5 UDP socket binded to the pgwS5Dev.
+  Ptr<VirtualNetDevice> pgwS5PortDev = CreateObject<VirtualNetDevice> ();
+  pgwS5PortDev->SetAddress (Mac48Address::Allocate ());
+  Ptr<OFSwitch13Port> pgwS5Port = pgwMainOfDev->AddSwitchPort (pgwS5PortDev);
+  uint32_t pgwS5PortNo = pgwS5Port->GetPortNo ();
+
+
+NS_UNUSED (pgwSgiPortNo);
+NS_UNUSED (pgwS5PortNo);
+  // Create the P-GW S5 user-plane application.
 //  Ptr<PgwTunnelApp> tunnelApp;
 //  tunnelApp = CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev);
 //  pgwMainNode->AddApplication (tunnelApp);
-//
-//  // Notify the EPC controller of the P-GW main switch attached to the Internet
-//  // and to the OpenFlow backhaul network.
-//  m_controllerApp->NotifyS5Attach (backOfDev, backS5PortNo, pgwS5Dev);
+
+  // Notify the controller of the P-GW main switch attached to the Internet
+  // and to the OpenFlow backhaul network.
+// FIXME Essa função ainda não foi criada no controlador.
 //  m_controllerApp->NotifyPgwMainAttach (pgwMainOfDev, pgwS5PortNo, pgwSgiPortNo,
-//                                     pgwS5Dev, webSgiDev);
-//
+//                                        pgwS5Dev, webSgiDev);
+
+// FIXME Vai ter que manualmente notificar o controlador do backhaul de que
+// este switch acima é o principal, porque ele configura com regras
+// diferentes.
+
 //  //
 //  // Connect all P-GW TFT switches to the P-GW main switch and to the S5
 //  // interface. Only downlink traffic will be sent to these switches.
