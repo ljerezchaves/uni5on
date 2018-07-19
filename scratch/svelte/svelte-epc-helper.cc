@@ -254,13 +254,17 @@ SvelteEpcHelper::NotifyConstructionCompleted (void)
   m_backhaul = CreateObject<RingNetwork> ();
   m_lteRan = CreateObject<RadioNetwork> (Ptr<SvelteEpcHelper> (this));
 
+  // FIXME Fazer a leitura dessa configuração de um arquivo.
+  std::string htcConfig = "ns3::SliceNetwork[SliceId=htc|NumUes=2]";
+  std::istringstream htcConfigStream (htcConfig);
+
   // Create the LTE network slices.
   ObjectFactory htcFactory;
-  htcFactory.SetTypeId (SliceNetwork::GetTypeId ());
-  htcFactory.Set ("SliceId", EnumValue (LogicalSlice::HTC));
-  htcFactory.Set ("Backhaul", PointerValue (m_backhaul));
-  htcFactory.Set ("LteRan", PointerValue (m_lteRan));
+  htcConfigStream >> htcFactory;
   m_htcNetwork = htcFactory.Create<SliceNetwork> ();
+  m_htcNetwork->SetBackhaulNetwork (m_backhaul);
+  m_htcNetwork->SetRadioNetwork (m_lteRan);
+  m_htcNetwork->SliceCreate ();
 
   // Configure and install applications and traffic managers.
   // TODO
