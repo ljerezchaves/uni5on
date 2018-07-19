@@ -21,3 +21,6 @@ default ns3::LteHexGridEnbTopologyHelper::GridWidth "2"
 
 default ns3::SliceController::TimeoutInterval "5s"
 
+default ns3::SvelteEpcHelper::HtcSliceAttributes "ns3::SliceNetwork[SliceId=htc]"
+default ns3::SvelteEpcHelper::MtcSliceAttributes "ns3::SliceNetwork[SliceId=mtc]"
+

@@ -48,6 +48,14 @@ SvelteEpcHelper::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SvelteEpcHelper")
     .SetParent<EpcHelper> ()
+    .AddAttribute ("HtcSliceAttributes", "The HTC slice configuration.",
+                   ObjectFactoryValue (ObjectFactory ("ns3::SliceNetwork")),
+                   MakeObjectFactoryAccessor (&SvelteEpcHelper::m_htcFactory),
+                   MakeObjectFactoryChecker ())
+    .AddAttribute ("MtcSliceAttributes", "The MTC slice configuration.",
+                   ObjectFactoryValue (ObjectFactory ("ns3::SliceNetwork")),
+                   MakeObjectFactoryAccessor (&SvelteEpcHelper::m_mtcFactory),
+                   MakeObjectFactoryChecker ())
   ;
   return tid;
 }
@@ -75,7 +83,8 @@ SvelteEpcHelper::PrintLteRem (void)
 // Implementing methods inherited from EpcHelper.
 //
 uint8_t
-SvelteEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Ptr<EpcTft> tft, EpsBearer bearer)
+SvelteEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
+                                    Ptr<EpcTft> tft, EpsBearer bearer)
 {
   NS_LOG_FUNCTION (this << ueDevice << imsi);
 
@@ -139,7 +148,8 @@ SvelteEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi, Ptr<
 }
 
 void
-SvelteEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice, uint16_t cellId)
+SvelteEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
+                         uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << enb << lteEnbNetDevice << cellId);
 
@@ -254,17 +264,15 @@ SvelteEpcHelper::NotifyConstructionCompleted (void)
   m_backhaul = CreateObject<RingNetwork> ();
   m_lteRan = CreateObject<RadioNetwork> (Ptr<SvelteEpcHelper> (this));
 
-  // FIXME Fazer a leitura dessa configuração de um arquivo.
-  std::string htcConfig = "ns3::SliceNetwork[SliceId=htc|NumUes=2]";
-  std::istringstream htcConfigStream (htcConfig);
-
-  // Create the LTE network slices.
-  ObjectFactory htcFactory;
-  htcConfigStream >> htcFactory;
-  m_htcNetwork = htcFactory.Create<SliceNetwork> ();
-  m_htcNetwork->SetBackhaulNetwork (m_backhaul);
-  m_htcNetwork->SetRadioNetwork (m_lteRan);
-  m_htcNetwork->SliceCreate ();
+  // Create the LTE HTC network slice.
+  m_htcFactory.Set ("Backhaul", PointerValue (m_backhaul));
+  m_htcFactory.Set ("Radio", PointerValue (m_lteRan));
+  m_htcNetwork = m_htcFactory.Create<SliceNetwork> ();
+  
+  // TODO Create the LTE MTC network slice.
+  // m_mtcFactory.Set ("Backhaul", PointerValue (m_backhaul));
+  // m_mtcFactory.Set ("Radio", PointerValue (m_lteRan));
+  // m_mtcNetwork = m_mtcFactory.Create<SliceNetwork> ();
 
   // Configure and install applications and traffic managers.
   // TODO

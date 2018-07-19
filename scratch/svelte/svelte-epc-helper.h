@@ -86,7 +86,11 @@ private:
   Ptr<RadioNetwork>             m_lteRan;           //!< The LTE RAN network.
   Ptr<SvelteMme>                m_mme;              //!< SVELTE MME entity.
 
-  Ptr<SliceNetwork>             m_htcNetwork;
+  ObjectFactory                 m_htcFactory;       //!< The HTC slice factory.
+  Ptr<SliceNetwork>             m_htcNetwork;       //!< The HTC slice network.
+
+  ObjectFactory                 m_mtcFactory;       //!< The MTC slice factory.
+  Ptr<SliceNetwork>             m_mtcNetwork;       //!< The MTC slice network.
 };
 
 } // namespace ns3
