@@ -141,7 +141,7 @@ protected:
   void PgwCreate (void);
 
   // Slice identification.
-  LogicalSlice                  m_slice;            //!< Logical slice type.
+  LogicalSlice                  m_sliceId;          //!< Logical slice type.
 
   // Infrastructure interface.
   Ptr<BackhaulNetwork>          m_backhaul;         //!< OpenFlow backhaul.

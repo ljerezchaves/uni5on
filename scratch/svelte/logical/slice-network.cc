@@ -75,7 +75,7 @@ SliceNetwork::GetTypeId (void)
     .AddAttribute ("SliceId", "The LTE logical slice identification.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (LogicalSlice::HTC),
-                   MakeEnumAccessor (&SliceNetwork::m_slice),
+                   MakeEnumAccessor (&SliceNetwork::m_sliceId),
                    MakeEnumChecker (LogicalSlice::HTC, "htc",
                                     LogicalSlice::MTC, "mtc"))
 
@@ -85,7 +85,7 @@ SliceNetwork::GetTypeId (void)
                    PointerValue (),
                    MakePointerAccessor (&SliceNetwork::m_backhaul),
                    MakePointerChecker<BackhaulNetwork> ())
-    .AddAttribute ("LteRan", "The LTE RAN network pointer.",
+    .AddAttribute ("Radio", "The LTE RAN network pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&SliceNetwork::m_lteRan),
