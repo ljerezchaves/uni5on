@@ -44,10 +44,9 @@ typedef enum
 /**
  * Get the logical slice name.
  * \param slice The logical slice identification.
- * \param appendHyphen Append the '-' at the end of the slice name.
  * \return The string with the slice name.
  */
-std::string LogicalSliceStr (LogicalSlice slice, bool appendHyphen);
+std::string LogicalSliceStr (LogicalSlice slice);
 
 /**
  * \ingroup svelte

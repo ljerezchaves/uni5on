@@ -41,7 +41,8 @@ std::string OperationModeStr (OperationMode mode)
     case OperationMode::AUTO:
       return "auto";
     default:
-      return "-";
+      NS_LOG_ERROR ("Invalid operation mode.");
+      return "";
     }
 }
 

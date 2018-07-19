@@ -43,7 +43,7 @@ std::string SliceStr (Slice slice)
     case Slice::ALL:
       return "all";
     default:
-      return "-";
+      return "";
     }
 }
 
