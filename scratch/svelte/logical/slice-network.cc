@@ -69,13 +69,91 @@ SliceNetwork::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SliceNetwork")
     .SetParent<Object> ()
-    .AddAttribute ("LinkMtu",
-                   "The MTU for CSMA OpenFlow links. "
-                   "Consider + 40 byter of GTP/UDP/IP tunnel overhead.",
+    .AddConstructor<SliceNetwork> ()
+
+    // Slice identification.
+    .AddAttribute ("SliceId", "The LTE logical slice identification.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (1492), // Ethernet II - PPoE
-                   MakeUintegerAccessor (&SliceNetwork::m_linkMtu),
-                   MakeUintegerChecker<uint16_t> ())
+                   EnumValue (LogicalSlice::HTC),
+                   MakeEnumAccessor (&SliceNetwork::m_slice),
+                   MakeEnumChecker (LogicalSlice::HTC, "htc",
+                                    LogicalSlice::MTC, "mtc"))
+
+    // Infrastructure interface.
+    .AddAttribute ("Backhaul", "The OpenFlow backhaul network pointer.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   PointerValue (),
+                   MakePointerAccessor (&SliceNetwork::m_backhaul),
+                   MakePointerChecker<BackhaulNetwork> ())
+    .AddAttribute ("LteRan", "The LTE RAN network pointer.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   PointerValue (),
+                   MakePointerAccessor (&SliceNetwork::m_lteRan),
+                   MakePointerChecker<RadioNetwork> ())
+
+    // UEs configuration.
+    .AddAttribute ("NumUes", "The total number of UEs for this slice.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (1),
+                   MakeUintegerAccessor (&SliceNetwork::m_nUes),
+                   MakeUintegerChecker<uint32_t> (0, 3000))
+    .AddAttribute ("UeAddress", "The UE network address.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   Ipv4AddressValue ("7.0.0.0"),
+                   MakeIpv4AddressAccessor (&SliceNetwork::m_ueAddr),
+                   MakeIpv4AddressChecker ())
+    .AddAttribute ("UeMask", "The UE network mask.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   Ipv4MaskValue ("255.255.0.0"),
+                   MakeIpv4MaskAccessor (&SliceNetwork::m_ueMask),
+                   MakeIpv4MaskChecker ())
+
+    // Internet network configuration.
+    .AddAttribute ("WebAddress", "The Internet network address.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   Ipv4AddressValue ("8.1.0.0"),
+                   MakeIpv4AddressAccessor (&SliceNetwork::m_webAddr),
+                   MakeIpv4AddressChecker ())
+    .AddAttribute ("WebMask", "The Internet network mask.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   Ipv4MaskValue ("255.255.0.0"),
+                   MakeIpv4MaskAccessor (&SliceNetwork::m_webMask),
+                   MakeIpv4MaskChecker ())
+    .AddAttribute ("WebLinkDataRate",
+                   "The data rate for the link connecting the P-GW "
+                   "to the Internet web server.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   DataRateValue (DataRate ("10Gb/s")),
+                   MakeDataRateAccessor (&SliceNetwork::m_webLinkRate),
+                   MakeDataRateChecker ())
+    .AddAttribute ("WebLinkDelay",
+                   "The delay for the link connecting the P-GW "
+                   "to the Internet web server.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   TimeValue (MilliSeconds (15)),
+                   MakeTimeAccessor (&SliceNetwork::m_webLinkDelay),
+                   MakeTimeChecker ())
+
+    // P-GW internal configuration.
+    .AddAttribute ("NumPgwTftSwitches",
+                   "The number of P-GW TFT user-plane OpenFlow switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (1),
+                   MakeUintegerAccessor (&SliceNetwork::GetPgwTftNumNodes,
+                                         &SliceNetwork::SetPgwTftNumNodes),
+                   MakeUintegerChecker<uint16_t> (1))
+    .AddAttribute ("PgwTftPipelineCapacity",
+                   "Pipeline capacity for P-GW TFT switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   DataRateValue (DataRate ("100Gb/s")),
+                   MakeDataRateAccessor (&SliceNetwork::m_tftPipeCapacity),
+                   MakeDataRateChecker ())
+    .AddAttribute ("PgwTftTableSize",
+                   "Flow/Group/Meter table sizes for P-GW TFT switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (65535),
+                   MakeUintegerAccessor (&SliceNetwork::m_tftTableSize),
+                   MakeUintegerChecker<uint16_t> (1, 65535))
     .AddAttribute ("PgwLinkDataRate",
                    "The data rate for the internal P-GW links.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -88,21 +166,14 @@ SliceNetwork::GetTypeId (void)
                    TimeValue (MicroSeconds (50)),
                    MakeTimeAccessor (&SliceNetwork::m_pgwLinkDelay),
                    MakeTimeChecker ())
-    .AddAttribute ("SgiLinkDataRate",
-                   "The data rate for the link connecting the P-GW "
-                   "to the Internet web server.",
+
+    .AddAttribute ("LinkMtu",
+                   "The MTU for CSMA OpenFlow links. "
+                   "Consider + 40 byter of GTP/UDP/IP tunnel overhead.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DataRateValue (DataRate ("10Gb/s")),
-                   MakeDataRateAccessor (&SliceNetwork::m_sgiLinkRate),
-                   MakeDataRateChecker ())
-    .AddAttribute ("SgiLinkDelay",
-                   "The delay for the link connecting the P-GW "
-                   "to the Internet web server.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   // Using a high delay as this represents the 'Internet'.
-                   TimeValue (MilliSeconds (15)),
-                   MakeTimeAccessor (&SliceNetwork::m_sgiLinkDelay),
-                   MakeTimeChecker ())
+                   UintegerValue (1492), // Ethernet II - PPoE
+                   MakeUintegerAccessor (&SliceNetwork::m_linkMtu),
+                   MakeUintegerChecker<uint16_t> ())
   ;
   return tid;
 }

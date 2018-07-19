@@ -133,53 +133,6 @@ protected:
    */
   void InstallController (Ptr<SliceController> controller);
 
-  // Slice controller.
-  Ptr<SliceController>          m_controllerApp;    //!< Controller app.
-  Ptr<Node>                     m_controllerNode;   //!< Controller node.
-
-  // OpenFlow switches, helper and connection attribute.
-  Ptr<OFSwitch13InternalHelper> m_switchHelper;     //!< Switch   helper.
-  uint16_t                      m_linkMtu;          //!< Link MTU.
-  DataRate                      m_sgiLinkRate;      //!< SGi link data rate.
-  Time                          m_sgiLinkDelay;     //!< SGi link delay.
-  DataRate                      m_pgwLinkRate;      //!< P-GW link data rate.
-  Time                          m_pgwLinkDelay;     //!< P-GW link delay.
-
-  // IP address helpers.
-  Ipv4AddressHelper             m_ueAddrHelper;     //!< UE address helper.
-  Ipv4AddressHelper             m_sgiAddrHelper;    //!< Web address helper.
-
-  // Attributes
-  uint32_t                      m_nUes;             //!< Number of UEs.
-  Ipv4Address                   m_ueAddr;           //!< UE network address.
-  Ipv4Mask                      m_ueMask;           //!< UE network mask.
-  Ipv4Address                   m_sgiAddr;          //!< SGi network address.
-  Ipv4Mask                      m_sgiMask;          //!< SGi network mask.
-  uint16_t                      m_tftNumNodes;      //!< Num P-GW TFT nodes.
-  DataRate                      m_tftPipeCapacity;  //!< P-GW TFT capacity.
-  uint32_t                      m_tftTableSize;     //!< P-GW TFT table size.
-
-  NodeContainer                 m_ueNodes;          //!< UE nodes.
-  NetDeviceContainer            m_ueDevices;        //!< UE devices.
-  
-  // SVELTE infrastructure.
-  Ptr<BackhaulNetwork>          m_backhaul;         //!< OpenFlow backhaul.
-  Ptr<RadioNetwork>             m_lteRan;           //!< LTE radio network.
-
-  // Helper and attributes for CSMA interface.
-  CsmaHelper                    m_csmaHelper;       //!< Connection helper.
-
-  // P-GW user plane.
-  Ipv4Address                   m_pgwAddress;       //!< P-GW S5 address.
-  NodeContainer                 m_pgwNodes;         //!< P-GW switch nodes.
-  OFSwitch13DeviceContainer     m_pgwDevices;       //!< P-GW switch devices.
-  NetDeviceContainer            m_pgwIntDevices;    //!< P-GW int port devices.
-
-  // Internet web server.
-  Ptr<Node>                     m_webNode;          //!< Web server node.
-
-  NetDeviceContainer            m_sgiDevices;       //!< SGi devices.
-
   /**
    * Create the P-GW user-plane network composed of OpenFlow switches managed
    * by the EPC controller. This function will also attach the P-GW to the S5
@@ -187,8 +140,50 @@ protected:
    */
   void PgwCreate (void);
 
-private:
+  // Slice identification.
+  LogicalSlice                  m_slice;            //!< Logical slice type.
 
+  // Infrastructure interface.
+  Ptr<BackhaulNetwork>          m_backhaul;         //!< OpenFlow backhaul.
+  Ptr<RadioNetwork>             m_lteRan;           //!< LTE radio network.
+
+  // OpenFlow network configuration.
+  Ptr<OFSwitch13InternalHelper> m_switchHelper;     //!< Switch helper.
+  Ptr<SliceController>          m_controllerApp;    //!< Controller app.
+  Ptr<Node>                     m_controllerNode;   //!< Controller node.
+
+  // UEs network.
+  uint32_t                      m_nUes;             //!< Number of UEs.
+  NodeContainer                 m_ueNodes;          //!< UE nodes.
+  NetDeviceContainer            m_ueDevices;        //!< UE devices.
+  Ipv4AddressHelper             m_ueAddrHelper;     //!< UE address helper.
+  Ipv4Address                   m_ueAddr;           //!< UE network address.
+  Ipv4Mask                      m_ueMask;           //!< UE network mask.
+
+  // Internet network.
+  Ptr<Node>                     m_webNode;          //!< Web server node.
+  NetDeviceContainer            m_webDevices;       //!< Web SGi devices.
+  Ipv4AddressHelper             m_webAddrHelper;    //!< Web address helper.
+  Ipv4Address                   m_webAddr;          //!< Web network address.
+  Ipv4Mask                      m_webMask;          //!< Web network mask.
+  DataRate                      m_webLinkRate;      //!< Web link data rate.
+  Time                          m_webLinkDelay;     //!< Web link delay.
+
+  // P-GW user plane.
+  Ipv4Address                   m_pgwAddress;       //!< P-GW S5 address.
+  NodeContainer                 m_pgwNodes;         //!< P-GW switch nodes.
+  OFSwitch13DeviceContainer     m_pgwDevices;       //!< P-GW switch devices.
+  NetDeviceContainer            m_pgwIntDevices;    //!< P-GW int port devices.
+  DataRate                      m_pgwLinkRate;      //!< P-GW link data rate.
+  Time                          m_pgwLinkDelay;     //!< P-GW link delay.
+
+  uint16_t                      m_tftNumNodes;      //!< Number of TFT nodes.
+  DataRate                      m_tftPipeCapacity;  //!< TFT switch capacity.
+  uint32_t                      m_tftTableSize;     //!< TFT switch table size.
+
+  // Helper and attributes for CSMA interface.
+  CsmaHelper                    m_csmaHelper;       //!< Connection helper.
+  uint16_t                      m_linkMtu;          //!< Link MTU.
 };
 
 } // namespace ns3

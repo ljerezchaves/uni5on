@@ -257,6 +257,9 @@ SvelteEpcHelper::NotifyConstructionCompleted (void)
   // Create the LTE network slices.
   ObjectFactory htcFactory;
   htcFactory.SetTypeId (SliceNetwork::GetTypeId ());
+  htcFactory.Set ("SliceId", EnumValue (LogicalSlice::HTC));
+  htcFactory.Set ("Backhaul", PointerValue (m_backhaul));
+  htcFactory.Set ("LteRan", PointerValue (m_lteRan));
   m_htcNetwork = htcFactory.Create<SliceNetwork> ();
 
   // Configure and install applications and traffic managers.
