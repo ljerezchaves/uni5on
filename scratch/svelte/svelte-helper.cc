@@ -19,7 +19,7 @@
  */
 
 #include <ns3/csma-module.h>
-#include "svelte-epc-helper.h"
+#include "svelte-helper.h"
 #include "infrastructure/radio-network.h"
 #include "infrastructure/ring-network.h"
 #include "infrastructure/svelte-enb-application.h"
@@ -30,38 +30,38 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("SvelteEpcHelper");
-NS_OBJECT_ENSURE_REGISTERED (SvelteEpcHelper);
+NS_LOG_COMPONENT_DEFINE ("SvelteHelper");
+NS_OBJECT_ENSURE_REGISTERED (SvelteHelper);
 
-SvelteEpcHelper::SvelteEpcHelper ()
+SvelteHelper::SvelteHelper ()
 {
   NS_LOG_FUNCTION (this);
 }
 
-SvelteEpcHelper::~SvelteEpcHelper ()
+SvelteHelper::~SvelteHelper ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-SvelteEpcHelper::GetTypeId (void)
+SvelteHelper::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::SvelteEpcHelper")
+  static TypeId tid = TypeId ("ns3::SvelteHelper")
     .SetParent<EpcHelper> ()
     .AddAttribute ("HtcSliceAttributes", "The HTC slice configuration.",
                    ObjectFactoryValue (ObjectFactory ("ns3::SliceNetwork")),
-                   MakeObjectFactoryAccessor (&SvelteEpcHelper::m_htcFactory),
+                   MakeObjectFactoryAccessor (&SvelteHelper::m_htcFactory),
                    MakeObjectFactoryChecker ())
     .AddAttribute ("MtcSliceAttributes", "The MTC slice configuration.",
                    ObjectFactoryValue (ObjectFactory ("ns3::SliceNetwork")),
-                   MakeObjectFactoryAccessor (&SvelteEpcHelper::m_mtcFactory),
+                   MakeObjectFactoryAccessor (&SvelteHelper::m_mtcFactory),
                    MakeObjectFactoryChecker ())
   ;
   return tid;
 }
 
 void
-SvelteEpcHelper::EnablePcap (std::string prefix, bool promiscuous)
+SvelteHelper::EnablePcap (std::string prefix, bool promiscuous)
 {
   NS_LOG_FUNCTION (this << prefix << promiscuous);
 
@@ -71,7 +71,7 @@ SvelteEpcHelper::EnablePcap (std::string prefix, bool promiscuous)
 }
 
 void
-SvelteEpcHelper::PrintLteRem (void)
+SvelteHelper::PrintLteRem (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -83,8 +83,8 @@ SvelteEpcHelper::PrintLteRem (void)
 // Implementing methods inherited from EpcHelper.
 //
 uint8_t
-SvelteEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
-                                    Ptr<EpcTft> tft, EpsBearer bearer)
+SvelteHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
+                                 Ptr<EpcTft> tft, EpsBearer bearer)
 {
   NS_LOG_FUNCTION (this << ueDevice << imsi);
 
@@ -148,8 +148,8 @@ SvelteEpcHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
 }
 
 void
-SvelteEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
-                         uint16_t cellId)
+SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
+                      uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << enb << lteEnbNetDevice << cellId);
 
@@ -206,7 +206,7 @@ SvelteEpcHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
 }
 
 void
-SvelteEpcHelper::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
+SvelteHelper::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
 {
   NS_LOG_FUNCTION (this << enb1 << enb2);
 
@@ -214,7 +214,7 @@ SvelteEpcHelper::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
 }
 
 void
-SvelteEpcHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
+SvelteHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 {
   NS_LOG_FUNCTION (this << imsi << ueDevice);
 
@@ -223,7 +223,7 @@ SvelteEpcHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 }
 
 Ptr<Node>
-SvelteEpcHelper::GetPgwNode ()
+SvelteHelper::GetPgwNode ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -231,7 +231,7 @@ SvelteEpcHelper::GetPgwNode ()
 }
 
 Ipv4InterfaceContainer
-SvelteEpcHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
+SvelteHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -239,7 +239,7 @@ SvelteEpcHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
 }
 
 Ipv4Address
-SvelteEpcHelper::GetUeDefaultGatewayAddress ()
+SvelteHelper::GetUeDefaultGatewayAddress ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -247,7 +247,7 @@ SvelteEpcHelper::GetUeDefaultGatewayAddress ()
 }
 
 void
-SvelteEpcHelper::DoDispose (void)
+SvelteHelper::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -255,14 +255,14 @@ SvelteEpcHelper::DoDispose (void)
 }
 
 void
-SvelteEpcHelper::NotifyConstructionCompleted (void)
+SvelteHelper::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
   // Create the SVELTE infrastructure.
   m_mme = CreateObject<SvelteMme> ();
   m_backhaul = CreateObject<RingNetwork> ();
-  m_lteRan = CreateObject<RadioNetwork> (Ptr<SvelteEpcHelper> (this));
+  m_lteRan = CreateObject<RadioNetwork> (Ptr<SvelteHelper> (this));
 
   // Create the LTE HTC network slice.
   m_htcFactory.Set ("Backhaul", PointerValue (m_backhaul));

@@ -30,8 +30,6 @@
 
 namespace ns3 {
 
-class SvelteEpcHelper;
-
 /**
  * \ingroup svelteInfra
  * LTE radio access network with eNBs grouped in three-sector sites layed out
@@ -45,7 +43,7 @@ public:
    * Complete constructor.
    * \param helper The SVELTE helper (EpcHelper).
    */
-  RadioNetwork (Ptr<SvelteEpcHelper> helper);
+  RadioNetwork (Ptr<EpcHelper> helper);
   virtual ~RadioNetwork ();  //!< Dummy destructor, see DoDispose.
 
   /**
@@ -117,7 +115,7 @@ private:
   Ptr<LteHexGridEnbTopologyHelper> m_topoHelper;    //!< Grid topology helper.
   Ptr<RadioEnvironmentMapHelper>   m_remHelper;     //!< Radio map helper.
   Ptr<LteHelper>                   m_lteHelper;     //!< LTE radio helper.
-  Ptr<SvelteEpcHelper>             m_epcHelper;     //!< EPC helper.
+  Ptr<EpcHelper>                   m_epcHelper;     //!< EPC helper.
 };
 
 } // namespace ns3

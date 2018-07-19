@@ -19,14 +19,13 @@
  */
 
 #include "radio-network.h"
-#include "../svelte-epc-helper.h"
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("RadioNetwork");
 NS_OBJECT_ENSURE_REGISTERED (RadioNetwork);
 
-RadioNetwork::RadioNetwork (Ptr<SvelteEpcHelper> helper)
+RadioNetwork::RadioNetwork (Ptr<EpcHelper> helper)
   : m_topoHelper (0),
   m_remHelper (0),
   m_lteHelper (0),

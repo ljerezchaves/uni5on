@@ -38,11 +38,11 @@ class SvelteMme;
  * This class creates and configures the SVELTE architecture, including the
  * shared infrastructure and logical networks.
  */
-class SvelteEpcHelper : public EpcHelper
+class SvelteHelper : public EpcHelper
 {
 public:
-  SvelteEpcHelper ();          //!< Default constructor.
-  virtual ~SvelteEpcHelper (); //!< Dummy destructor, see DoDispose.
+  SvelteHelper ();          //!< Default constructor.
+  virtual ~SvelteHelper (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.

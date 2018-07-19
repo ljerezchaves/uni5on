@@ -24,7 +24,7 @@
 #include <ns3/core-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "svelte-epc-helper.h"
+#include "svelte-helper.h"
 
 using namespace ns3;
 using namespace ns3::ofs;
@@ -131,7 +131,7 @@ main (int argc, char *argv[])
 
   // Create the SVELTE helper object, which is responsible for creating and
   // configuring the infrastructure and logical networks.
-  Ptr<SvelteEpcHelper> svelteHelper = CreateObject<SvelteEpcHelper> ();
+  Ptr<SvelteHelper> svelteHelper = CreateObject<SvelteHelper> ();
 
 //  FIXME
 //  Ptr<AdmissionStatsCalculator>   admissionStats;
@@ -346,7 +346,7 @@ EnableVerbose (bool enable)
   if (enable)
     {
       LogComponentEnable ("Main",                     LOG_LEVEL_ALL_FT);
-      LogComponentEnable ("SvelteEpcHelper",          LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("SvelteHelper",             LOG_LEVEL_ALL_FT);
 
       // Infrastructure components.
       LogComponentEnable ("BackhaulController",       LOG_LEVEL_ALL_FT);
