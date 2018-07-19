@@ -95,19 +95,24 @@ SliceNetwork::GetTypeId (void)
                    MakeIpv4AddressChecker ())
     .AddAttribute ("UeMask", "The UE network mask.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   Ipv4MaskValue ("255.255.0.0"),
+                   Ipv4MaskValue ("255.0.0.0"),
                    MakeIpv4MaskAccessor (&SliceNetwork::m_ueMask),
                    MakeIpv4MaskChecker ())
+    .AddAttribute ("UeMobility", "Enable UE random mobility.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&SliceNetwork::m_ueMobility),
+                   MakeBooleanChecker ())
 
     // Internet network configuration.
     .AddAttribute ("WebAddress", "The Internet network address.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   Ipv4AddressValue ("8.1.0.0"),
+                   Ipv4AddressValue ("8.0.0.0"),
                    MakeIpv4AddressAccessor (&SliceNetwork::m_webAddr),
                    MakeIpv4AddressChecker ())
     .AddAttribute ("WebMask", "The Internet network mask.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   Ipv4MaskValue ("255.255.0.0"),
+                   Ipv4MaskValue ("255.0.0.0"),
                    MakeIpv4MaskAccessor (&SliceNetwork::m_webMask),
                    MakeIpv4MaskChecker ())
     .AddAttribute ("WebLinkDataRate",
@@ -179,64 +184,8 @@ SliceNetwork::EnablePcap (std::string prefix, bool promiscuous)
 
   // Enable pcap on CSMA devices.
   CsmaHelper helper;
-  helper.EnablePcap (prefix + "pgw-int",  m_pgwIntDevices, promiscuous);
-  helper.EnablePcap (prefix + "web-sgi",  m_sgiDevices, promiscuous);
-}
-
-uint32_t
-SliceNetwork::GetNumUes (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_nUes;
-}
-
-Ipv4Address
-SliceNetwork::GetUeAddress (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ueAddr;
-}
-
-Ipv4Mask
-SliceNetwork::GetUeMask (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ueMask;
-}
-
-Ipv4Address
-SliceNetwork::GetSgiAddress (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_sgiAddr;
-}
-
-Ipv4Mask
-SliceNetwork::GetSgiMask (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_sgiMask;
-}
-
-NodeContainer
-SliceNetwork::GetUeNodes (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ueNodes;
-}
-
-NetDeviceContainer
-SliceNetwork::GetUeDevices (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ueDevices;
+  helper.EnablePcap (prefix + "pgw_user", m_pgwIntDevices, promiscuous);
+  helper.EnablePcap (prefix + "internet", m_webDevices, promiscuous);
 }
 
 uint32_t
@@ -245,38 +194,6 @@ SliceNetwork::GetPgwTftNumNodes (void) const
   NS_LOG_FUNCTION (this);
 
   return m_tftNumNodes;
-}
-
-DataRate
-SliceNetwork::GetPgwTftPipeCapacity (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_tftPipeCapacity;
-}
-
-uint32_t
-SliceNetwork::GetPgwTftTableSize (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_tftTableSize;
-}
-
-Ipv4Address
-SliceNetwork::GetPgwS5Address (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_pgwAddress;
-}
-
-Ptr<Node>
-SliceNetwork::GetWebNode (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_webNode;
 }
 
 // FIXME Esse aqui é para attach S-GW
@@ -344,11 +261,12 @@ SliceNetwork::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
+  m_backhaul = 0;
+  m_lteRan = 0;
+  m_switchHelper = 0;
   m_controllerApp = 0;
   m_controllerNode = 0;
-  m_switchHelper = 0;
   m_webNode = 0;
-  m_pgwNodes = NodeContainer ();
 
   Object::DoDispose ();
 }
@@ -358,18 +276,37 @@ SliceNetwork::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
+  NS_ABORT_MSG_IF (!m_backhaul || !m_lteRan, "No infrastructure configured.");
+
+  m_sliceIdStr = LogicalSliceStr (m_sliceId);
+  NS_LOG_INFO ("LTE " << m_sliceIdStr << " slice with " << m_nUes << " UEs.");
+
   // Configure IP address helpers.
   m_ueAddrHelper.SetBase (m_ueAddr, m_ueMask);
-  m_sgiAddrHelper.SetBase (m_sgiAddr, m_sgiMask);
+  m_webAddrHelper.SetBase (m_webAddr, m_webMask);
 
   // Create the OFSwitch13 helper using P2P connections for OpenFlow channel.
   m_switchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
       "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
-  // Create the slice network.
-  SliceCreate ();
+  // Create the slice controller node and application.
+  m_controllerNode = CreateObject<Node> ();
+  Names::Add (m_sliceIdStr + "_ctrl", m_controllerNode);
+  m_controllerApp = CreateObject<SliceController> ();
+  m_switchHelper->InstallController (m_controllerNode, m_controllerApp);
 
-  // Let's connect the OpenFlow switches to the EPC controller. From this point
+  // Create the Internet web server node with Internet stack.
+  m_webNode = CreateObject<Node> ();
+  Names::Add (m_sliceIdStr + "_web", m_webNode);
+  InternetStackHelper internet;
+  internet.Install (m_webNode);
+
+  // Create and configure the logical LTE network.
+  CreatePgw ();
+  CreateSgws ();
+  CreateUes ();
+
+  // Let's connect the OpenFlow switches to the controller. From this point
   // on it is not possible to change the OpenFlow network configuration.
   m_switchHelper->CreateOpenFlowChannels ();
 
@@ -384,43 +321,19 @@ SliceNetwork::NotifyConstructionCompleted (void)
 }
 
 void
-SliceNetwork::SetNumUes (uint32_t value)
+SliceNetwork::SetBackhaulNetwork (Ptr<BackhaulNetwork> value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_nUes = value;
+  m_backhaul = value;
 }
 
 void
-SliceNetwork::SetUeAddress (Ipv4Address value)
+SliceNetwork::SetRadioNetwork (Ptr<RadioNetwork> value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_ueAddr = value;
-}
-
-void
-SliceNetwork::SetUeMask (Ipv4Mask value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_ueMask = value;
-}
-
-void
-SliceNetwork::SetSgiAddress (Ipv4Address value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_sgiAddr = value;
-}
-
-void
-SliceNetwork::SetSgiMask (Ipv4Mask value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_sgiMask = value;
+  m_lteRan = value;
 }
 
 void
@@ -435,55 +348,26 @@ SliceNetwork::SetPgwTftNumNodes (uint32_t value)
 }
 
 void
-SliceNetwork::SetPgwTftPipeCapacity (DataRate value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_tftPipeCapacity = value;
-}
-
-void
-SliceNetwork::SetPgwTftTableSize (uint32_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_tftTableSize = value;
-}
-
-
-void
-SliceNetwork::InstallController (Ptr<SliceController> controller)
-{
-  NS_LOG_FUNCTION (this << controller);
-
-  NS_ASSERT_MSG (!m_controllerApp, "Controller application already set.");
-
-
-  // Installing the controller application into controller node.
-  m_controllerApp = controller;
-  m_switchHelper->InstallController (m_controllerNode, m_controllerApp);
-}
-
-void
-SliceNetwork::PgwCreate (void)
+SliceNetwork::CreatePgw (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Configure P-GW nodes as OpenFlow switches.
+  // Create the P-GW nodes and configure them as OpenFlow switches.
+  m_pgwNodes.Create (m_tftNumNodes + 1);
   m_pgwDevices = m_switchHelper->InstallSwitch (m_pgwNodes);
+  for (uint16_t i = 0; i < m_tftNumNodes + 1; i++)
+    {
+      std::ostringstream name;
+      name << m_sliceIdStr << "_pgw" << i + 1;
+      Names::Add (name.str (), m_pgwNodes.Get (i));
+    }
 
   // Set the default P-GW gateway logical address, which will be used to set
   // the static route at all UEs.
   m_pgwAddress = m_ueAddrHelper.NewAddress ();
   NS_LOG_INFO ("P-GW gateway S5 address: " << m_pgwAddress);
 
-
-  // Install the Internet stack into web node. // FIXME mover para a hora de conectar o P-Gw no web.
-  InternetStackHelper internet;
-  internet.Install (m_webNode);
-
-
-
+// FIXME
 //  // Get the backhaul node and device to attach the P-GW.
 //  uint64_t backOfDpId = TopologyGetPgwSwitch ();
 //  Ptr<Node> backNode = GetSwitchNode (backOfDpId);
@@ -501,15 +385,15 @@ SliceNetwork::PgwCreate (void)
   //
   // Configure CSMA helper for connecting the P-GW node to the web server node.
   m_csmaHelper.SetDeviceAttribute  ("Mtu", UintegerValue (m_linkMtu));
-  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_sgiLinkRate));
-  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_sgiLinkDelay));
+  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_webLinkRate));
+  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_webLinkDelay));
 
   // Connect the P-GW main node to the web server node (SGi interface).
-  m_sgiDevices = m_csmaHelper.Install (pgwMainNode, m_webNode);
+  m_webDevices = m_csmaHelper.Install (pgwMainNode, m_webNode);
 
   Ptr<CsmaNetDevice> pgwSgiDev, webSgiDev;
-  pgwSgiDev = DynamicCast<CsmaNetDevice> (m_sgiDevices.Get (0));
-  webSgiDev = DynamicCast<CsmaNetDevice> (m_sgiDevices.Get (1));
+  pgwSgiDev = DynamicCast<CsmaNetDevice> (m_webDevices.Get (0));
+  webSgiDev = DynamicCast<CsmaNetDevice> (m_webDevices.Get (1));
 
   Names::Add (Names::FindName (pgwMainNode) + "_to_" +
               Names::FindName (m_webNode), pgwSgiDev);
@@ -521,9 +405,9 @@ SliceNetwork::PgwCreate (void)
   uint32_t pgwSgiPortNo = pgwSgiPort->GetPortNo ();
   NS_UNUSED (pgwSgiPortNo); // FIXME
 
-  // Set the IP address on SGi interfaces.
-  m_sgiAddrHelper.Assign (NetDeviceContainer (m_sgiDevices));
-  NS_LOG_INFO ("Web SGi address: " << Ipv4AddressHelper::GetFirstAddress (webSgiDev));
+  // Set the IP address on the Internet network.
+  m_webAddrHelper.Assign (NetDeviceContainer (m_webDevices));
+  NS_LOG_INFO ("Web SGi address: "  << Ipv4AddressHelper::GetFirstAddress (webSgiDev));
   NS_LOG_INFO ("P-GW SGi address: " << Ipv4AddressHelper::GetFirstAddress (pgwSgiDev));
 
   // Define static routes at the web server to the LTE network.
@@ -533,11 +417,6 @@ SliceNetwork::PgwCreate (void)
   webHostStaticRouting->AddNetworkRouteTo (
     m_ueAddr, m_ueMask, Ipv4AddressHelper::GetFirstAddress (pgwSgiDev), 1);
 
-//  // Configure CSMA helper for connecting EPC nodes (P-GW and S-GWs) to the
-//  // OpenFlow backhaul topology.
-//  m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_s5LinkRate));
-//  m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_s5LinkDelay));
-//
 //  // Connect the P-GW main node to the OpenFlow backhaul node (S5 interface).
 //  NetDeviceContainer devices = m_csmaHelper.Install (pgwMainNode, backNode);
 //  m_s5Devices.Add (devices.Get (0));
@@ -656,5 +535,62 @@ SliceNetwork::PgwCreate (void)
 //    }
 //  m_controllerApp->NotifyPgwBuilt (m_pgwDevices);
 }
+
+void
+SliceNetwork::CreateSgws (void)
+{
+  NS_LOG_FUNCTION (this);
+
+}
+
+void
+SliceNetwork::CreateUes (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Create the UE nodes and set their names.
+  m_ueNodes.Create (m_nUes);
+  for (uint32_t i = 0; i < m_nUes; i++)
+    {
+      std::ostringstream name;
+      name << m_sliceIdStr + "_ue" << i + 1;
+      Names::Add (name.str (), m_ueNodes.Get (i));
+    }
+
+  // Configure UE positioning and mobility.
+  // TODO Use attributes for custom configuration.
+  MobilityHelper mobilityHelper = m_lteRan->GetRandomInitialPositioning ();
+  if (m_ueMobility)
+    {
+      // mobilityHelper.SetMobilityModel (
+      //   "ns3::RandomWaypointMobilityModel",
+      //   "Speed", StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=15.0]"),
+      //   "Pause", StringValue ("ns3::ExponentialRandomVariable[Mean=25.0]"),
+      //   "PositionAllocator", PointerValue (boxPosAllocator));
+      // FIXME Como recuperar o PositionAllocator? Criar um novo aqui?
+    }
+
+  // Install LTE protocol stack into UE nodes.
+  m_ueDevices = m_lteRan->InstallUeDevices (m_ueNodes, mobilityHelper);
+
+  // Install TCP/IP protocol stack into UE nodes and assign IP address.
+  InternetStackHelper internet;
+  internet.Install (m_ueNodes);
+  m_ueAddrHelper.Assign (m_ueDevices);
+
+  // Specify static routes for each UE to its default S-GW.
+  Ipv4StaticRoutingHelper ipv4RoutingHelper;
+  NodeContainer::Iterator it;
+  for (it = m_ueNodes.Begin (); it != m_ueNodes.End (); it++)
+    {
+      Ptr<Ipv4StaticRouting> ueStaticRouting =
+        ipv4RoutingHelper.GetStaticRouting ((*it)->GetObject<Ipv4> ());
+      ueStaticRouting->SetDefaultRoute (m_pgwAddress, 1);
+    }
+
+  // Attach UE to the eNBs using initial cell selection.
+  m_lteRan->AttachUeDevices (m_ueDevices);
+}
+
 
 } // namespace ns3

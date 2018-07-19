@@ -90,9 +90,9 @@ BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous)
 
   // Enable pcap on CSMA devices.
   CsmaHelper helper;
-  helper.EnablePcap (prefix + "epc-s1u",  m_s1uDevices,  promiscuous);
-  helper.EnablePcap (prefix + "epc-s5",   m_s5Devices,   promiscuous);
-  helper.EnablePcap (prefix + "epc-x2",   m_x2Devices,   promiscuous);
+  helper.EnablePcap (prefix + "epc_s1u",   m_s1uDevices,  promiscuous);
+  helper.EnablePcap (prefix + "epc_s5",    m_s5Devices,   promiscuous);
+  helper.EnablePcap (prefix + "epc_x2",    m_x2Devices,   promiscuous);
   helper.EnablePcap (prefix + "backhaul", m_switchNodes, promiscuous);
 }
 
@@ -187,7 +187,7 @@ BackhaulNetwork::NotifyConstructionCompleted (void)
   // Create the OpenFlow backhaul network.
   CreateTopology ();
 
-  // Let's connect the OpenFlow switches to the EPC controller. From this point
+  // Let's connect the OpenFlow switches to the controller. From this point
   // on it is not possible to change the OpenFlow network configuration.
   m_switchHelper->CreateOpenFlowChannels ();
 

@@ -56,9 +56,8 @@ std::string LogicalSliceStr (LogicalSlice slice);
 
 /**
  * \ingroup svelteLogical
- * This is the abstract base class for a logical LTE network slice, which
- * should be extended in accordance to the desired network configuration. All
- * LTE network slices share the common OpenFlow backhaul and radio networks.
+ * This is the class for a logical LTE network slice, sharing the common
+ * OpenFlow backhaul and radio networks.
  */
 class SliceNetwork : public Object
 {
@@ -74,26 +73,18 @@ public:
 
   /**
    * Enable PCAP traces on the S/P-GW OpenFlow internal switches (user and
-   * control planes), and on the SGi interface for web network.
+   * control planes), and on the SGi interface for the Internet network.
    * \param prefix Filename prefix to use for pcap files.
    * \param promiscuous If true, enable promisc trace.
    */
   void EnablePcap (std::string prefix, bool promiscuous = false);
 
-  /** \name Private/protected member accessors. */
+  /** \name Private member accessors. */
   //\{
-  uint32_t GetNumUes (void) const;
-  Ipv4Address GetUeAddress (void) const;
-  Ipv4Mask GetUeMask (void) const;
-  Ipv4Address GetSgiAddress (void) const;
-  Ipv4Mask GetSgiMask (void) const;
-  NodeContainer GetUeNodes (void) const;
-  NetDeviceContainer GetUeDevices (void) const;
   uint32_t GetPgwTftNumNodes (void) const;
-  DataRate GetPgwTftPipeCapacity (void) const;
-  uint32_t GetPgwTftTableSize (void) const;
-  Ipv4Address GetPgwS5Address (void) const;
-  Ptr<Node> GetWebNode (void) const;
+  void SetBackhaulNetwork (Ptr<BackhaulNetwork> value);
+  void SetRadioNetwork (Ptr<RadioNetwork> value);
+  void SetPgwTftNumNodes (uint32_t value);
   //\}
 
 protected:
@@ -103,44 +94,27 @@ protected:
   // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
 
-  /** \name Slice methods.
-   * These virtual methods must be implemented by slice subclasses, as they
-   * are dependent on the network configuration.
-   */
-  //\{
+private:
   /**
-   * Create the LTE network slice.
+   * Create the P-GW using OpenFlow switches, connecting it to the Internet web
+   * server and to the OpenFlow backhaul network.
    */
-  virtual void SliceCreate (void) = 0;
-  //\}
-
-  /** \name Private/protected member accessors. */
-  //\{
-  void SetNumUes (uint32_t value);
-  void SetUeAddress (Ipv4Address value);
-  void SetUeMask (Ipv4Mask value);
-  void SetSgiAddress (Ipv4Address value);
-  void SetSgiMask (Ipv4Mask value);
-  void SetPgwTftNumNodes (uint32_t value);
-  void SetPgwTftPipeCapacity (DataRate value);
-  void SetPgwTftTableSize (uint32_t value);
-  //\}
+  void CreatePgw (void);
 
   /**
-   * Install the OpenFlow slice controller for this network.
-   * \param controller The controller application.
+   * Create the S-GWs using OpenFlow switches, connecting them to the OpenFlow
+   * backhaul network.
    */
-  void InstallController (Ptr<SliceController> controller);
+  void CreateSgws (void);
 
   /**
-   * Create the P-GW user-plane network composed of OpenFlow switches managed
-   * by the EPC controller. This function will also attach the P-GW to the S5
-   * and SGi interfaces.
+   * Create the UEs, connecting them to the LTE radio infrastructure network.
    */
-  void PgwCreate (void);
+  void CreateUes (void);
 
   // Slice identification.
-  LogicalSlice                  m_sliceId;          //!< Logical slice type.
+  LogicalSlice                  m_sliceId;          //!< Logical slice ID.
+  std::string                   m_sliceIdStr;       //!< Slice ID string.
 
   // Infrastructure interface.
   Ptr<BackhaulNetwork>          m_backhaul;         //!< OpenFlow backhaul.
@@ -153,6 +127,7 @@ protected:
 
   // UEs network.
   uint32_t                      m_nUes;             //!< Number of UEs.
+  bool                          m_ueMobility;       //!< Enable UE mobility.
   NodeContainer                 m_ueNodes;          //!< UE nodes.
   NetDeviceContainer            m_ueDevices;        //!< UE devices.
   Ipv4AddressHelper             m_ueAddrHelper;     //!< UE address helper.
@@ -172,7 +147,7 @@ protected:
   Ipv4Address                   m_pgwAddress;       //!< P-GW S5 address.
   NodeContainer                 m_pgwNodes;         //!< P-GW switch nodes.
   OFSwitch13DeviceContainer     m_pgwDevices;       //!< P-GW switch devices.
-  NetDeviceContainer            m_pgwIntDevices;    //!< P-GW int port devices.
+  NetDeviceContainer            m_pgwIntDevices;    //!< P-GW int port devices. // FIXME Trocar nome?
   DataRate                      m_pgwLinkRate;      //!< P-GW link data rate.
   Time                          m_pgwLinkDelay;     //!< P-GW link delay.
 
