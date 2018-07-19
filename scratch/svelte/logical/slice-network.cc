@@ -31,19 +31,27 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("SliceNetwork");
 NS_OBJECT_ENSURE_REGISTERED (SliceNetwork);
 
-std::string LogicalSliceStr (LogicalSlice slice)
+std::string LogicalSliceStr (LogicalSlice slice, bool appendHyphen = false)
 {
+  std::string name;
+
   switch (slice)
     {
     case LogicalSlice::HTC:
-      return "htc";
+      name = "htc";
+      break;
     case LogicalSlice::MTC:
-      return "mtc";
-    case LogicalSlice::ALL:
-      return "all";
+      name = "mtc";
+      break;
     default:
-      return "-";
+      NS_LOG_ERROR ("Invalid SVELTE logical slice.");
     }
+
+  if (appendHyphen)
+    {
+      name.append ("-");
+    }
+  return name;
 }
 
 SliceNetwork::SliceNetwork ()
