@@ -110,7 +110,7 @@ protected:
    * Create the controller application and switch devices for the OpenFlow
    * backhaul network, connecting them accordingly to the desired topology.
    */
-  virtual void TopologyCreate (void) = 0;
+  virtual void CreateTopology (void) = 0;
 
   /**
    * Get the switch datapath ID at which the P-GW node should be connected.

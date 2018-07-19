@@ -89,7 +89,7 @@ RingNetwork::NotifyConstructionCompleted ()
 }
 
 void
-RingNetwork::TopologyCreate (void)
+RingNetwork::CreateTopology (void)
 {
   NS_LOG_FUNCTION (this);
 

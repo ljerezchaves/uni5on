@@ -50,7 +50,7 @@ protected:
   void NotifyConstructionCompleted (void);
 
   // Inherited from BackhaulNetwork.
-  void TopologyCreate (void);
+  void CreateTopology (void);
   uint64_t TopologyGetPgwSwitch (void);
   uint64_t TopologyGetEnbSwitch (uint16_t cellId);
 

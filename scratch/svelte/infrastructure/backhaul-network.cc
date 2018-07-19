@@ -185,7 +185,7 @@ BackhaulNetwork::NotifyConstructionCompleted (void)
       "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
   // Create the OpenFlow backhaul network.
-  TopologyCreate ();
+  CreateTopology ();
 
   // Let's connect the OpenFlow switches to the EPC controller. From this point
   // on it is not possible to change the OpenFlow network configuration.
