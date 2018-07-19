@@ -107,24 +107,8 @@ RadioNetwork::GetTypeId (void)
   return tid;
 }
 
-Rectangle
-RadioNetwork::GetCoverageArea (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_coverageArea;
-}
-
-Ptr<LteHelper>
-RadioNetwork::GetLteHelper (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_lteHelper;
-}
-
 void
-RadioNetwork::AttachUes (NetDeviceContainer ueDevices)
+RadioNetwork::AttachUeDevices (NetDeviceContainer ueDevices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -151,8 +135,24 @@ RadioNetwork::InstallUeDevices (NodeContainer ueNodes,
   return ueDevices;
 }
 
+Rectangle
+RadioNetwork::GetCoverageArea (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_coverageArea;
+}
+
+Ptr<LteHelper>
+RadioNetwork::GetLteHelper (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_lteHelper;
+}
+
 MobilityHelper
-RadioNetwork::RandomBoxSteadyPositioning (void) const
+RadioNetwork::GetRandomInitialPositioning (void) const
 {
   NS_LOG_FUNCTION (this);
 

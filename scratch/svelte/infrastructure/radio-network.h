@@ -55,6 +55,22 @@ public:
   static TypeId GetTypeId (void);
 
   /**
+   * Enables automatic attachment of a set of UE devices to a suitable cell
+   * using idle mode initial cell selection procedure.
+   * \param ueDevices The set of UE devices to be attached.
+   */
+  void AttachUeDevices (NetDeviceContainer ueDevices);
+
+  /**
+   * Configure the given nodes as UEs.
+   * \param ueNodes The set of nodes.
+   * \param mobilityHelper The mobility helper for UEs.
+   * \return The container with the newly created UE devices.
+   */
+  NetDeviceContainer InstallUeDevices (NodeContainer ueNodes,
+                                       MobilityHelper mobilityHelper);
+
+  /**
    * Get the LTE RAN coverage area considering the EnbMargin attribute.
    * \return The coverage area.
    */
@@ -67,28 +83,12 @@ public:
   Ptr<LteHelper> GetLteHelper (void) const;
 
   /**
-   * Enables automatic attachment of a set of UE devices to a suitable cell
-   * using idle mode initial cell selection procedure.
-   * \param ueDevices The set of UE devices to be attached.
-   */
-  void AttachUes (NetDeviceContainer ueDevices);
-
-  /**
-   * Configure the given nodes as UEs.
-   * \param ueNodes The set of nodes.
-   * \param mobilityHelper The mobility helper for UEs.
-   * \return The container with the newly created UE devices.
-   */
-  NetDeviceContainer InstallUeDevices (NodeContainer ueNodes,
-                                       MobilityHelper mobilityHelper);
-
-  /**
    * Create a mobility helper that randomly spreads UE nodes within the eNB
-   * coverage area. Only the position allocator is configured for this helper
-   * (no mobility model).
+   * coverage area. Only the position allocator is configured for this helper,
+   * without any mobility model.
    * \return The mobility helper.
    */
-  MobilityHelper RandomBoxSteadyPositioning (void) const;
+  MobilityHelper GetRandomInitialPositioning (void) const;
 
   /**
    * Print LTE radio environment map.

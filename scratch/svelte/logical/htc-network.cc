@@ -173,7 +173,7 @@ HtcNetwork::SliceCreate (void)
 
 
   // Configure UE positioning and mobility
-  MobilityHelper mobilityHelper = m_lteRan->RandomBoxSteadyPositioning ();
+  MobilityHelper mobilityHelper = m_lteRan->GetRandomInitialPositioning ();
 //  TODO It is possible to set a custom mobility model for UEs in the future.
 //  mobilityHelper.SetMobilityModel (
 //    "ns3::RandomWaypointMobilityModel",
@@ -200,7 +200,7 @@ HtcNetwork::SliceCreate (void)
     }
 
   // Attach UE to the eNBs using initial cell selection.
-  m_lteRan->AttachUes (m_ueDevices);
+  m_lteRan->AttachUeDevices (m_ueDevices);
 }
 
 } // namespace ns3
