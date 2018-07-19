@@ -31,6 +31,21 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("SliceNetwork");
 NS_OBJECT_ENSURE_REGISTERED (SliceNetwork);
 
+std::string LogicalSliceStr (LogicalSlice slice)
+{
+  switch (slice)
+    {
+    case LogicalSlice::HTC:
+      return "htc";
+    case LogicalSlice::MTC:
+      return "mtc";
+    case LogicalSlice::ALL:
+      return "all";
+    default:
+      return "-";
+    }
+}
+
 SliceNetwork::SliceNetwork ()
 {
   NS_LOG_FUNCTION (this);

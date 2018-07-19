@@ -32,6 +32,16 @@ class BackhaulNetwork;
 class RadioNetwork;
 class SliceController;
 
+/** Enumeration of available operation modes. */
+typedef enum
+{
+  HTC  = 0,   //!< Network slice for HTC UEs.
+  MTC  = 1,   //!< Network slice for MTC UEs.
+  ALL  = 2    //!< ALL previous slices.
+} LogicalSlice;
+
+std::string LogicalSliceStr (LogicalSlice slice);
+
 /**
  * \ingroup svelte
  * \defgroup svelteLogical Logical
