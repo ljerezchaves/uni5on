@@ -428,9 +428,8 @@ SliceNetwork::CreatePgw (void)
   uint32_t pgwS5PortNo = pgwS5Port->GetPortNo ();
 
   // Create the P-GW S5 user-plane application.
-  Ptr<PgwTunnelApp> tunnelApp;
-  tunnelApp = CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev);
-  pgwMainNode->AddApplication (tunnelApp);
+  pgwMainNode->AddApplication (
+    CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev));
 
   // Notify the controller of the P-GW main switch attached to the Internet and
   // to the OpenFlow backhaul network.
@@ -490,8 +489,8 @@ SliceNetwork::CreatePgw (void)
       pgwS5PortNo = pgwS5Port->GetPortNo ();
 
       // Create the P-GW S5 user-plane application.
-      tunnelApp = CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev);
-      pgwTftNode->AddApplication (tunnelApp);
+      pgwTftNode->AddApplication (
+        CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev));
 
       // Notify the EPC controller of the P-GW TFT switch attached to the P-GW
       // main switch and to the OpenFlow backhaul network.
