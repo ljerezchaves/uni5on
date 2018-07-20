@@ -170,8 +170,9 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
 
   // Attach the eNB node to the OpenFlow backhaul network.
   uint16_t switchIdx = m_backhaul->GetEnbSwitch (cellId);
-  Ptr<CsmaNetDevice> enbS1uDev = m_backhaul->AttachEnb (enb, switchIdx);
+  Ptr<CsmaNetDevice> enbS1uDev = m_backhaul->AttachEpcNode (enb, switchIdx, LteInterface::S1U);
   Ipv4Address enbS1uAddr = Ipv4AddressHelper::GetFirstAddress (enbS1uDev);
+  NS_LOG_INFO ("eNB attached to the S1-U interface with IP " << enbS1uAddr);
 
   // Create the S1-U socket for the eNB node.
   TypeId udpTid = TypeId::LookupByName ("ns3::UdpSocketFactory");

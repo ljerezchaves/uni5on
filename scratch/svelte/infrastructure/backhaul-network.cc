@@ -108,137 +108,57 @@ BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous)
 
   // Enable pcap on CSMA devices.
   CsmaHelper helper;
-  helper.EnablePcap (prefix + "epc_s1u",  m_s1uDevices,  promiscuous);
-  helper.EnablePcap (prefix + "epc_s5",   m_s5Devices,   promiscuous);
-  helper.EnablePcap (prefix + "epc_x2",   m_x2Devices,   promiscuous);
+  helper.EnablePcap (prefix + "epc",      m_epcDevices,   promiscuous);
   helper.EnablePcap (prefix + "backhaul", m_switchNodes, promiscuous);
 }
 
 Ptr<CsmaNetDevice>
-BackhaulNetwork::AttachEnb (Ptr<Node> enbNode, uint16_t swIdx)
+BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
+                                LteInterface iface)
 {
-  NS_LOG_FUNCTION (this << enbNode << swIdx);
+  NS_LOG_FUNCTION (this << epcNode << swIdx << iface);
 
-  // Get the switch on the backhaul network to attach the eNB.
   NS_ASSERT_MSG (swIdx < m_switchDevices.GetN (), "Invalid switch index.");
+
+  // Get the switch on the backhaul network.
   uint64_t swDpId = m_switchDevices.Get (swIdx)->GetDatapathId ();
-  Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (swDpId);
-  Ptr<Node> swNode = swDev->GetObject<Node> ();
+  Ptr<OFSwitch13Device> swOfDev = OFSwitch13Device::GetDevice (swDpId);
+  Ptr<Node> swNode = swOfDev->GetObject<Node> ();
 
-  // Connect the eNB to the backhaul network over S1-U interface.
-  NetDeviceContainer devices = m_csmaHelper.Install (swNode, enbNode);
-  m_s1uDevices.Add (devices.Get (1));
+  // Connect the EPC node to the switch node.
+  NetDeviceContainer devices = m_csmaHelper.Install (swNode, epcNode);
+  Ptr<CsmaNetDevice> swDev   = DynamicCast<CsmaNetDevice> (devices.Get (0));
+  Ptr<CsmaNetDevice> epcDev  = DynamicCast<CsmaNetDevice> (devices.Get (1));
+  m_epcDevices.Add (epcDev);
 
-  Ptr<CsmaNetDevice> swS1uDev, enbS1uDev;
-  swS1uDev  = DynamicCast<CsmaNetDevice> (devices.Get (0));
-  enbS1uDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
-  BackhaulNetwork::SetDeviceNames (swS1uDev, enbS1uDev, "~s1u~");
+  // Set the device name.
+  std::string ifaceName = "~" + LteInterfaceStr (iface) + "~";
+  BackhaulNetwork::SetDeviceNames (swDev, epcDev, ifaceName);
 
-  // Add the swS1uDev device as OpenFlow switch port on the backhaul switch.
-  Ptr<OFSwitch13Port> swS1Port = swDev->AddSwitchPort (swS1uDev);
-  uint32_t swS1PortNo = swS1Port->GetPortNo ();
+  // Add the swDev device as OpenFlow switch port on the switch node.
+  Ptr<OFSwitch13Port> swPort = swOfDev->AddSwitchPort (swDev);
+  uint32_t swPortNo = swPort->GetPortNo ();
 
-  // Configure the enbS1uDev as standard device on eNB node.
-  m_s1uAddrHelper.Assign (NetDeviceContainer (enbS1uDev));
-  NS_LOG_INFO ("eNB S1-U: " << Ipv4AddressHelper::GetFirstAddress (enbS1uDev));
-
-  // Notify the controller of the new EPC device attached to the backhaul.
-  m_controllerApp->NotifyEpcAttach (swDev, swS1PortNo, enbS1uDev);
-
-  return enbS1uDev;
-}
-
-Ptr<CsmaNetDevice>
-BackhaulNetwork::AttachPgw (Ptr<Node> pgwNode, uint16_t swIdx)
-{
-  NS_LOG_FUNCTION (this << pgwNode << swIdx);
-
-  // Get the switch on the backhaul network to attach the P-GW.
-  NS_ASSERT_MSG (swIdx < m_switchDevices.GetN (), "Invalid switch index.");
-  uint64_t swDpId = m_switchDevices.Get (swIdx)->GetDatapathId ();
-  Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (swDpId);
-  Ptr<Node> swNode = swDev->GetObject<Node> ();
-
-  // Connect the P-GW to the backhaul network over S5 interface.
-  NetDeviceContainer devices = m_csmaHelper.Install (swNode, pgwNode);
-  m_s5Devices.Add (devices.Get (1));
-
-  Ptr<CsmaNetDevice> swS5Dev, pgwS5Dev;
-  swS5Dev  = DynamicCast<CsmaNetDevice> (devices.Get (0));
-  pgwS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (1));
-  BackhaulNetwork::SetDeviceNames (swS5Dev, pgwS5Dev, "~s5~");
-
-  // Add the swS5Dev device as OpenFlow switch port on the backhaul network.
-  Ptr<OFSwitch13Port> swS5Port = swDev->AddSwitchPort (swS5Dev);
-  uint32_t swS5PortNo = swS5Port->GetPortNo ();
-
-  // Configure the pgwS5Dev as standard device on the P-GW node.
-  // It will be connected to a logical port later.
-  m_s5AddrHelper.Assign (NetDeviceContainer (pgwS5Dev));
-  NS_LOG_INFO ("P-GW S5: " << Ipv4AddressHelper::GetFirstAddress (pgwS5Dev));
+  // Configure the epcDev IP address according to the LTE logical interface.
+  switch (iface)
+    {
+    case LteInterface::S1U:
+      m_s1uAddrHelper.Assign (NetDeviceContainer (epcDev));
+      break;
+    case LteInterface::S5:
+      m_s5AddrHelper.Assign (NetDeviceContainer (epcDev));
+      break;
+    case LteInterface::X2:
+      m_x2AddrHelper.Assign (NetDeviceContainer (epcDev));
+      break;
+    default:
+      NS_ABORT_MSG ("Invalid LTE interface.");
+    }
 
   // Notify the controller of the new EPC device attached to the backhaul.
-  m_controllerApp->NotifyEpcAttach (swDev, swS5PortNo, pgwS5Dev);
+  m_controllerApp->NotifyEpcAttach (swOfDev, swPortNo, epcDev);
 
-  return pgwS5Dev;
-}
-
-std::pair<Ptr<CsmaNetDevice>, Ptr<CsmaNetDevice> >
-BackhaulNetwork::AttachSgw (Ptr<Node> sgwNode, uint16_t swIdx)
-{
-  NS_LOG_FUNCTION (this << sgwNode << swIdx);
-
-  // Get the switch on the backhaul network to attach the S-GW.
-  NS_ASSERT_MSG (swIdx < m_switchDevices.GetN (), "Invalid switch index.");
-  uint64_t swDpId = m_switchDevices.Get (swIdx)->GetDatapathId ();
-  Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (swDpId);
-  Ptr<Node> swNode = swDev->GetObject<Node> ();
-
-
-  // Connect the S-GW to the backhaul network over S1-U interface.
-  NetDeviceContainer devices = m_csmaHelper.Install (swNode, sgwNode);
-  m_s1uDevices.Add (devices.Get (1));
-
-  Ptr<CsmaNetDevice> swS1uDev, sgwS1uDev;
-  swS1uDev  = DynamicCast<CsmaNetDevice> (devices.Get (0));
-  sgwS1uDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
-  BackhaulNetwork::SetDeviceNames (swS1uDev, sgwS1uDev, "~s1u~");
-
-  // Add the swS1uDev device as OpenFlow switch port on the backhaul network.
-  Ptr<OFSwitch13Port> swS1uPort = swDev->AddSwitchPort (swS1uDev);
-  uint32_t swS1uPortNo = swS1uPort->GetPortNo ();
-
-  // Configure the sgwS1uDev as standard device on the S-GW node.
-  // It will be connected to a logical port later.
-  m_s1uAddrHelper.Assign (NetDeviceContainer (sgwS1uDev));
-  NS_LOG_INFO ("S-GW S1-U: " << Ipv4AddressHelper::GetFirstAddress (sgwS1uDev));
-
-  // Notify the controller of the new EPC device attached to the backhaul.
-  m_controllerApp->NotifyEpcAttach (swDev, swS1uPortNo, sgwS1uDev);
-
-
-  // Connect the S-GW to the backhaul network over S5 interface.
-  devices = m_csmaHelper.Install (swNode, sgwNode);
-  m_s5Devices.Add (devices.Get (1));
-
-  Ptr<CsmaNetDevice> swS5Dev, sgwS5Dev;
-  swS5Dev  = DynamicCast<CsmaNetDevice> (devices.Get (0));
-  sgwS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (1));
-  BackhaulNetwork::SetDeviceNames (swS5Dev, sgwS5Dev, "~s5~");
-
-  // Add the swS5Dev device as OpenFlow switch port on the backhaul network.
-  Ptr<OFSwitch13Port> swS5Port = swDev->AddSwitchPort (swS5Dev);
-  uint32_t swS5PortNo = swS5Port->GetPortNo ();
-
-  // Configure the sgwS5Dev as standard device on the S-GW node.
-  // It will be connected to a logical port later.
-  m_s5AddrHelper.Assign (NetDeviceContainer (sgwS5Dev));
-  NS_LOG_INFO ("S-GW S5: " << Ipv4AddressHelper::GetFirstAddress (sgwS5Dev));
-
-  // Notify the controller of the new EPC device attached to the backhaul.
-  m_controllerApp->NotifyEpcAttach (swDev, swS5PortNo, sgwS5Dev);
-
-  return std::make_pair (sgwS1uDev, sgwS5Dev);
+  return epcDev;
 }
 
 void

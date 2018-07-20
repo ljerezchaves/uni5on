@@ -416,7 +416,9 @@ SliceNetwork::CreatePgw (void)
 
   // Connect the P-GW node to the OpenFlow backhaul network.
   Ptr<CsmaNetDevice> pgwS5Dev;
-  pgwS5Dev = m_backhaul->AttachPgw (pgwMainNode, m_pgwSwitchIdx);
+  pgwS5Dev = m_backhaul->AttachEpcNode (pgwMainNode, m_pgwSwitchIdx, LteInterface::S5);
+  NS_LOG_INFO ("P-GW main switch attached to the S5 interface with IP " <<
+               Ipv4AddressHelper::GetFirstAddress (pgwS5Dev));
 
   // Create the virtual net device to work as the logical ports on the P-GW S5
   // interface. This logical ports will connect to the P-GW user-plane
@@ -479,7 +481,9 @@ SliceNetwork::CreatePgw (void)
 
       // Connect the P-GW TFT node to the OpenFlow backhaul node.
       Ptr<CsmaNetDevice> pgwS5Dev;
-      pgwS5Dev = m_backhaul->AttachPgw (pgwTftNode, m_pgwSwitchIdx);
+      pgwS5Dev = m_backhaul->AttachEpcNode (pgwTftNode, m_pgwSwitchIdx, LteInterface::S5);
+      NS_LOG_INFO ("P-GW TFT switch attached to the S5 interface with IP " <<
+                   Ipv4AddressHelper::GetFirstAddress (pgwS5Dev));
 
       // Create the virtual net device to work as the logical ports on the P-GW
       // S5 interface.
@@ -527,13 +531,16 @@ SliceNetwork::CreateSgws (void)
       Ptr<OFSwitch13Device> sgwDev = m_sgwDevices.Get (sgwIdx);
 
       // Connect the S-GW node to the OpenFlow backhaul node.
-      std::pair<Ptr<CsmaNetDevice>, Ptr<CsmaNetDevice> > sgwEpcDevs;
-      sgwEpcDevs = m_backhaul->AttachSgw (sgwNode, sgwIdx + 1); // FIXME sgwIdx + 1
-
+      // FIXME sgwIdx + 1
       Ptr<CsmaNetDevice> sgwS1uDev, sgwS5Dev;
-      sgwS1uDev = sgwEpcDevs.first;
-      sgwS5Dev = sgwEpcDevs.second;
-
+      sgwS1uDev = m_backhaul->AttachEpcNode (sgwNode, sgwIdx + 1, LteInterface::S1U); 
+      sgwS5Dev = m_backhaul->AttachEpcNode (sgwNode, sgwIdx + 1, LteInterface::S5);
+      
+      NS_LOG_INFO ("S-GW attached to the S1-U interface with IP " <<
+                   Ipv4AddressHelper::GetFirstAddress (sgwS1uDev));
+      NS_LOG_INFO ("S-GW attached to the S5 interface with IP " <<
+                   Ipv4AddressHelper::GetFirstAddress (sgwS5Dev));
+      
       // Create the virtual net device to work as the logical ports on the S-GW
       // S1-U and S5 interface.
       Ptr<VirtualNetDevice> sgwS1uPortDev = CreateObject<VirtualNetDevice> ();

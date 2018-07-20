@@ -82,30 +82,14 @@ public:
   void EnablePcap (std::string prefix, bool promiscuous = false);
 
   /**
-   * Attach the eNB node to the OpenFlow backhaul network.
-   * \param enbNode The eNB node.
-   * \param cellId The eNB cell ID.
-   * \return The network device created at the eNB node.
+   * Attach the EPC node to the OpenFlow backhaul network.
+   * \param epcNode The eNB node.
+   * \param swIdx The switch index at which the EPC node should be connected.
+   * \param iface The LTE logical interface for this connection.
+   * \return The network device created at the EPC node.
    */
-  virtual Ptr<CsmaNetDevice> AttachEnb (Ptr<Node> enbNode, uint16_t cellId);
-
-  /**
-   * Attach the P-GW logical node to the OpenFlow backhaul network.
-   * \param pgwNode The P-GW node.
-   * \param swIdx The switch index at which the P-GW node should be connected.
-   * \return The network device created at the P-GW node for S5 interface.
-   */
-  virtual Ptr<CsmaNetDevice> AttachPgw (Ptr<Node> pgwNode, uint16_t swIdx);
-
-  /**
-   * Attach the S-GW logical node to the OpenFlow backhaul network.
-   * \param pgwNode The S-GW node.
-   * \param swIdx The switch index at which the S-GW node should be connected.
-   * \return The pair os network devices created at the S-GW node for S1-U and
-   *         S5 interfaces, respectively.
-   */
-  virtual std::pair<Ptr<CsmaNetDevice>, Ptr<CsmaNetDevice> >
-  AttachSgw (Ptr<Node> sgwNode, uint16_t swIdx);
+  virtual Ptr<CsmaNetDevice> AttachEpcNode (Ptr<Node> enbNode, uint16_t swIdx,
+                                            LteInterface iface);
 
   /**
    * Set the devices names identifying the connection between the nodes.
@@ -157,11 +141,7 @@ private:
   Ipv4AddressHelper             m_s1uAddrHelper;  //!< S1-U address helper.
   Ipv4AddressHelper             m_s5AddrHelper;   //!< S5 address helper.
   Ipv4AddressHelper             m_x2AddrHelper;   //!< X2 address helper.
-
-  // EPC user-plane devices.
-  NetDeviceContainer            m_s1uDevices;     //!< S1-U devices.
-  NetDeviceContainer            m_s5Devices;      //!< S5 devices.
-  NetDeviceContainer            m_x2Devices;      //!< X2 devices.
+  NetDeviceContainer            m_epcDevices;     //!< EPC devices.
 };
 
 } // namespace ns3
