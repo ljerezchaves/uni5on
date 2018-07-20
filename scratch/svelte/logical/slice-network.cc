@@ -292,7 +292,8 @@ SliceNetwork::NotifyConstructionCompleted (void)
   // Create the slice controller node and application.
   m_controllerNode = CreateObject<Node> ();
   Names::Add (m_sliceIdStr + "_ctrl", m_controllerNode);
-  m_controllerApp = CreateObject<SliceController> ();
+  m_controllerApp = CreateObject<SliceController> (
+      m_ueAddr, m_ueMask, GetPgwTftNumNodes ());
   m_switchHelper->InstallController (m_controllerNode, m_controllerApp);
 
   // Create the Internet web server node with Internet stack.
@@ -397,7 +398,6 @@ SliceNetwork::CreatePgw (void)
   // Add the pgwSgiDev as physical port on the P-GW main OpenFlow switch.
   Ptr<OFSwitch13Port> pgwSgiPort = pgwMainOfDev->AddSwitchPort (pgwSgiDev);
   uint32_t pgwSgiPortNo = pgwSgiPort->GetPortNo ();
-  NS_UNUSED (pgwSgiPortNo);
 
   // Set the IP address on the Internet network.
   m_webAddrHelper.Assign (NetDeviceContainer (m_webDevices));
@@ -414,8 +414,7 @@ SliceNetwork::CreatePgw (void)
   // Connect the P-GW node to the OpenFlow backhaul network.
   Ptr<CsmaNetDevice> pgwS5Dev;
   pgwS5Dev = m_backhaul->AttachPgw (pgwMainNode, 0);
-  // FIXME Decidir por algum parâmetro em qual switch conectar o P-GW no
-  // backhaul. Por enquanto estou forçando no switch índice 0.
+  // FIXME Identificar o switch correto para conectar o P-GW.
 
   // Create the virtual net device to work as the logical ports on the P-GW S5
   // interface. This logical ports will connect to the P-GW user-plane
@@ -425,7 +424,6 @@ SliceNetwork::CreatePgw (void)
   pgwS5PortDev->SetAddress (Mac48Address::Allocate ());
   Ptr<OFSwitch13Port> pgwS5Port = pgwMainOfDev->AddSwitchPort (pgwS5PortDev);
   uint32_t pgwS5PortNo = pgwS5Port->GetPortNo ();
-  NS_UNUSED (pgwS5PortNo);
 
   // Create the P-GW S5 user-plane application.
   Ptr<PgwTunnelApp> tunnelApp;
@@ -434,12 +432,8 @@ SliceNetwork::CreatePgw (void)
 
   // Notify the controller of the P-GW main switch attached to the Internet and
   // to the OpenFlow backhaul network.
-  // FIXME Essa função ainda não foi criada no controlador.
-  // m_controllerApp->NotifyPgwMainAttach (pgwMainOfDev, pgwS5PortNo, pgwSgiPortNo,
-  //                                       pgwS5Dev, webSgiDev);
-  // FIXME Vai ter que manualmente notificar o controlador do backhaul de que
-  // este switch acima é o principal, porque ele configura com regras
-  // diferentes.
+  m_controllerApp->NotifyPgwMainAttach (pgwMainOfDev, pgwS5PortNo, pgwSgiPortNo,
+                                        pgwS5Dev, webSgiDev);
 
   // Configure CSMA helper for connecting P-GW internal node.
   m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_pgwLinkRate));
@@ -476,7 +470,6 @@ SliceNetwork::CreatePgw (void)
       // Add the mainDev as physical port on the P-GW main OpenFlow switch.
       Ptr<OFSwitch13Port> mainPort = pgwMainOfDev->AddSwitchPort (mainDev);
       uint32_t mainPortNo = mainPort->GetPortNo ();
-      NS_UNUSED (mainPortNo);
 
       // Add the tftDev as physical port on the P-GW TFT OpenFlow switch.
       Ptr<OFSwitch13Port> tftPort = pgwTftOfDev->AddSwitchPort (tftDev);
@@ -485,7 +478,8 @@ SliceNetwork::CreatePgw (void)
 
       // Connect the P-GW TFT node to the OpenFlow backhaul node.
       Ptr<CsmaNetDevice> pgwS5Dev;
-      pgwS5Dev = m_backhaul->AttachPgw (pgwTftNode, 0); // FIXME switch index.
+      pgwS5Dev = m_backhaul->AttachPgw (pgwTftNode, 0);
+      // FIXME Identificar o switch correto para conectar o P-GW.
 
       // Create the virtual net device to work as the logical ports on the P-GW
       // S5 interface.
@@ -500,12 +494,10 @@ SliceNetwork::CreatePgw (void)
 
       // Notify the EPC controller of the P-GW TFT switch attached to the P-GW
       // main switch and to the OpenFlow backhaul network.
-      // FIXME Essa função ainda não foi criada no controlador.
-      // m_controllerApp->NotifyPgwTftAttach (tftIdx, pgwTftOfDev, pgwS5PortNo,
-      //                                      mainPortNo);
+      m_controllerApp->NotifyPgwTftAttach (tftIdx, pgwTftOfDev, pgwS5PortNo,
+                                           mainPortNo);
     }
-  // FIXME
-  // m_controllerApp->NotifyPgwBuilt (m_pgwDevices);
+  m_controllerApp->NotifyPgwBuilt (m_pgwDevices);
 }
 
 void

@@ -30,7 +30,11 @@ NS_OBJECT_ENSURE_REGISTERED (SliceController);
 // Initializing SliceController static members.
 // TODO
 
-SliceController::SliceController ()
+SliceController::SliceController (Ipv4Address ueAddress, Ipv4Mask ueMask,
+                                  uint16_t nPgwTfts)
+  : m_ueAddr (ueAddress),
+  m_ueMask (ueMask),
+  m_tftSwitches (nPgwTfts)
 {
   NS_LOG_FUNCTION (this);
 
@@ -53,6 +57,47 @@ SliceController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SliceController")
     .SetParent<OFSwitch13Controller> ()
+
+    .AddAttribute ("UeAddress", "The UE network address.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   Ipv4AddressValue ("7.0.0.0"),
+                   MakeIpv4AddressAccessor (&SliceController::m_ueAddr),
+                   MakeIpv4AddressChecker ())
+    .AddAttribute ("UeMask", "The UE network mask.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   Ipv4MaskValue ("255.0.0.0"),
+                   MakeIpv4MaskAccessor (&SliceController::m_ueMask),
+                   MakeIpv4MaskChecker ())
+    .AddAttribute ("PgwTftAdaptiveMode",
+                   "P-GW TFT adaptive mechanism operation mode.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   EnumValue (OperationMode::OFF),
+                   MakeEnumAccessor (&SliceController::m_tftAdaptive),
+                   MakeEnumChecker (OperationMode::OFF,  "off",
+                                    OperationMode::ON,   "on",
+                                    OperationMode::AUTO, "auto"))
+    .AddAttribute ("PgwTftBlockPolicy",
+                   "P-GW TFT overloaded block policy.",
+                   EnumValue (OperationMode::ON),
+                   MakeEnumAccessor (&SliceController::m_tftBlockPolicy),
+                   MakeEnumChecker (OperationMode::OFF,  "none",
+                                    OperationMode::ON,   "all",
+                                    OperationMode::AUTO, "gbr"))
+    .AddAttribute ("PgwTftBlockThs",
+                   "The P-GW TFT block threshold.",
+                   DoubleValue (0.95),
+                   MakeDoubleAccessor (&SliceController::m_tftBlockThs),
+                   MakeDoubleChecker<double> (0.8, 1.0))
+    .AddAttribute ("PgwTftJoinThs",
+                   "The P-GW TFT join threshold.",
+                   DoubleValue (0.30),
+                   MakeDoubleAccessor (&SliceController::m_tftJoinThs),
+                   MakeDoubleChecker<double> (0.0, 0.5))
+    .AddAttribute ("PgwTftSplitThs",
+                   "The P-GW TFT split threshold.",
+                   DoubleValue (0.90),
+                   MakeDoubleAccessor (&SliceController::m_tftSplitThs),
+                   MakeDoubleChecker<double> (0.5, 1.0))
     .AddAttribute ("TimeoutInterval",
                    "The interval between internal periodic operations.",
                    TimeValue (Seconds (5)),
@@ -116,7 +161,7 @@ SliceController::DedicatedBearerRequest (
 //   NS_LOG_FUNCTION (this << sgwS5PortNo << sgwS5Dev << mtcGbrTeid <<
 //                    mtcNonTeid);
 //
-//   m_sgwS5Addr = LteNetwork::GetIpv4Addr (sgwS5Dev);
+//   m_sgwS5Addr = Ipv4AddressHelper::GetFirstAddress (sgwS5Dev);
 //   m_sgwS5PortNo = sgwS5PortNo;
 //
 //   // IP packets coming from the P-GW (S-GW S5 port) and addressed to the UE
@@ -125,8 +170,8 @@ SliceController::DedicatedBearerRequest (
 //   std::ostringstream cmd;
 //   cmd << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
 //       << ",in_port=" << sgwS5PortNo
-//       << ",ip_dst=" << LteNetwork::m_ueAddr
-//       << "/" << LteNetwork::m_ueMask.GetPrefixLength ()
+//       << ",ip_dst=" << m_ueAddr
+//       << "/" << m_ueMask.GetPrefixLength ()
 //       << " goto:1";
 //   DpctlSchedule (m_sgwDpId, cmd.str ());
 //
@@ -184,6 +229,107 @@ SliceController::DedicatedBearerRequest (
 //       DpctlSchedule (m_sgwDpId, cmd.str ());
 //     }
 // }
+
+void
+SliceController::NotifyPgwBuilt (OFSwitch13DeviceContainer devices)
+{
+  NS_LOG_FUNCTION (this);
+
+  NS_ASSERT_MSG (devices.GetN () == m_pgwDpIds.size ()
+                 && devices.GetN () == (m_tftSwitches + 1U),
+                 "Inconsistent number of P-GW OpenFlow switches.");
+
+  // When the P-GW adaptive mechanism is OFF, block the m_tftSwitches to 1.
+  if (GetPgwAdaptiveMode () == OperationMode::OFF)
+    {
+      m_tftSwitches = 1;
+    }
+}
+
+void
+SliceController::NotifyPgwMainAttach (
+  Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNo, uint32_t pgwSgiPortNo,
+  Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> webSgiDev)
+{
+  NS_LOG_FUNCTION (this << pgwSwDev << pgwS5PortNo << pgwSgiPortNo <<
+                   pgwS5Dev << webSgiDev);
+
+  // Saving information for P-GW main switch at first index.
+  m_pgwDpIds.push_back (pgwSwDev->GetDatapathId ());
+  m_pgwS5PortsNo.push_back (pgwS5PortNo);
+  m_pgwS5Addr = Ipv4AddressHelper::GetFirstAddress (pgwS5Dev);
+  m_pgwSgiPortNo = pgwSgiPortNo;
+
+  // -------------------------------------------------------------------------
+  // Table 0 -- P-GW default table -- [from higher to lower priority]
+  //
+  // IP packets coming from the LTE network (S5 port) and addressed to the
+  // Internet (Web IP address) have the destination MAC address rewritten to
+  // the Web SGi MAC address (this is necessary when using logical ports) and
+  // are forward to the SGi interface port.
+  Mac48Address webMac = Mac48Address::ConvertFrom (webSgiDev->GetAddress ());
+  std::ostringstream cmdOut;
+  cmdOut << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+         << ",in_port=" << pgwS5PortNo
+         << ",ip_dst=" << Ipv4AddressHelper::GetFirstAddress (webSgiDev)
+         << " write:set_field=eth_dst:" << webMac
+         << ",output=" << pgwSgiPortNo;
+  DpctlSchedule (pgwSwDev->GetDatapathId (), cmdOut.str ());
+
+  // IP packets coming from the Internet (SGi port) and addressed to the UE
+  // network are sent to the table corresponding to the current P-GW adaptive
+  // mechanism level.
+  std::ostringstream cmdIn;
+  cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+        << ",in_port=" << pgwSgiPortNo
+        << ",ip_dst=" << m_ueAddr
+        << "/" << m_ueMask.GetPrefixLength ()
+        << " goto:" << m_tftLevel + 1;
+  DpctlSchedule (pgwSwDev->GetDatapathId (), cmdIn.str ());
+
+  // -------------------------------------------------------------------------
+  // Table 1 to N -- P-GW adaptive mechanism -- [from higher to lower priority]
+  //
+  // Entries will be installed here by NotifyPgwTftAttach function.
+}
+
+void
+SliceController::NotifyPgwTftAttach (
+  uint16_t pgwTftCounter, Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNo,
+  uint32_t pgwMainPortNo)
+{
+  NS_LOG_FUNCTION (this << pgwTftCounter << pgwSwDev << pgwS5PortNo <<
+                   pgwMainPortNo);
+
+  // Saving information for P-GW TFT switches.
+  NS_ASSERT_MSG (pgwTftCounter < m_tftSwitches, "No more TFTs allowed.");
+  m_pgwDpIds.push_back (pgwSwDev->GetDatapathId ());
+  m_pgwS5PortsNo.push_back (pgwS5PortNo);
+
+  uint32_t tableSize = pgwSwDev->GetFlowTableSize ();
+  DataRate plCapacity = pgwSwDev->GetPipelineCapacity ();
+  m_tftTableSize = std::min (m_tftTableSize, tableSize);
+  m_tftMaxLoad = std::min (m_tftMaxLoad, plCapacity);
+
+  // Configuring the P-GW main switch to forward traffic to this TFT switch
+  // considering all possible adaptive mechanism levels.
+  for (uint16_t tft = m_tftSwitches; pgwTftCounter + 1 <= tft; tft /= 2)
+    {
+      uint16_t lbLevel = static_cast<uint16_t> (log2 (tft));
+      uint16_t ipMask = (1 << lbLevel) - 1;
+      std::ostringstream cmd;
+      cmd << "flow-mod cmd=add,prio=64,table=" << lbLevel + 1
+          << " eth_type=0x800,ip_dst=0.0.0." << pgwTftCounter
+          << "/0.0.0." << ipMask
+          << " apply:output=" << pgwMainPortNo;
+      DpctlSchedule (GetPgwMainDpId (), cmd.str ());
+    }
+
+  // -------------------------------------------------------------------------
+  // Table 0 -- P-GW TFT default table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by PgwRulesInstall function.
+}
 
 OperationMode
 SliceController::GetAggregationMode (void) const
@@ -341,6 +487,8 @@ void
 SliceController::ControllerTimeout (void)
 {
   NS_LOG_FUNCTION (this);
+
+  PgwTftCheckUsage ();
 
   // Schedule the next timeout operation.
   Simulator::Schedule (m_timeout, &SliceController::ControllerTimeout, this);
@@ -511,6 +659,29 @@ SliceController::DoModifyBearerRequest (
   res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
 
   // FIXME m_s11SapMme->ModifyBearerResponse (res);
+}
+
+uint64_t
+SliceController::GetPgwMainDpId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwDpIds.at (0);
+}
+
+uint64_t
+SliceController::GetPgwTftDpId (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  return m_pgwDpIds.at (idx);
+}
+
+void
+SliceController::PgwTftCheckUsage (void)
+{
+  NS_LOG_FUNCTION (this);
+  // TODO
 }
 
 // bool

@@ -64,7 +64,13 @@ public:
     double   splitThrs;       //!< The split threshold.
   };
 
-  SliceController ();           //!< Default constructor.
+  /**
+   * Complete constructor.
+   * \param ueAddress The UE network address.
+   * \param ueMask The UE network mask.
+   * \param nPgwTfts The number of P-GW TFT switches available.
+   */
+  SliceController (Ipv4Address ueAddress, Ipv4Mask ueMask, uint16_t nPgwTfts);
   virtual ~SliceController ();  //!< Dummy destructor, see DoDispose.
 
   /**
@@ -127,40 +133,40 @@ public:
 //  virtual void NotifySgwAttach (
 //    uint32_t sgwS5PortNo, Ptr<NetDevice> sgwS5Dev, uint32_t mtcGbrTeid,
 //    uint32_t mtcNonTeid);
-//
-//  /**
-//   * Notify this controller that all P-GW switches have already been
-//   * configured and the connections between them are finished.
-//   * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
-//   */
-//  virtual void NotifyPgwBuilt (OFSwitch13DeviceContainer devices);
-//
-//  /**
-//   * Notify this controller of the P-GW main switch connected to the OpenFlow
-//   * backhaul network over the S5 interface, and to the web server over the SGi
-//   * interface.
-//   * \param pgwSwDev The OpenFlow P-GW main switch device.
-//   * \param pgwS5PortNo The S5 port number on the P-GW main switch.
-//   * \param pgwSgiPortNo The SGi port number on the P-GW main switch.
-//   * \param pgwS5Dev The S5 device attached to the P-GW main switch.
-//   * \param webSgiDev The SGi device attached to the Web server.
-//   */
-//  virtual void NotifyPgwMainAttach (
-//    Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNo,
-//    uint32_t pgwSgiPortNo, Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> webSgiDev);
-//
-//  /**
-//   * Notify this controller of a new P-GW TFT switch connected to the OpenFlow
-//   * backhaul network over the S5 interface and to the P-GW main switch over
-//   * internal interface.
-//   * \param pgwTftCounter The counter for P-GW TFT switches.
-//   * \param pgwSwDev The OpenFlow P-GW TFT switch device.
-//   * \param pgwS5PortNo The S5 port number on the P-GW TFT switch.
-//   * \param pgwMainPortNo The port number on the P-GW main switch.
-//   */
-//  virtual void NotifyPgwTftAttach (
-//    uint16_t pgwTftCounter, Ptr<OFSwitch13Device> pgwSwDev,
-//    uint32_t pgwS5PortNo, uint32_t pgwMainPortNo);
+
+  /**
+   * Notify this controller that all P-GW switches have already been
+   * configured and the connections between them are finished.
+   * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
+   */
+  virtual void NotifyPgwBuilt (OFSwitch13DeviceContainer devices);
+
+  /**
+   * Notify this controller of the P-GW main switch connected to the OpenFlow
+   * backhaul network over the S5 interface, and to the web server over the SGi
+   * interface.
+   * \param pgwSwDev The OpenFlow P-GW main switch device.
+   * \param pgwS5PortNo The S5 port number on the P-GW main switch.
+   * \param pgwSgiPortNo The SGi port number on the P-GW main switch.
+   * \param pgwS5Dev The S5 device attached to the P-GW main switch.
+   * \param webSgiDev The SGi device attached to the Web server.
+   */
+  virtual void NotifyPgwMainAttach (
+    Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNo,
+    uint32_t pgwSgiPortNo, Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> webSgiDev);
+
+  /**
+   * Notify this controller of a new P-GW TFT switch connected to the OpenFlow
+   * backhaul network over the S5 interface and to the P-GW main switch over
+   * an internal interface.
+   * \param pgwTftCounter The counter for P-GW TFT switches.
+   * \param pgwSwDev The OpenFlow P-GW TFT switch device.
+   * \param pgwS5PortNo The S5 port number on the P-GW TFT switch.
+   * \param pgwMainPortNo The port number on the P-GW main switch.
+   */
+  virtual void NotifyPgwTftAttach (
+    uint16_t pgwTftCounter, Ptr<OFSwitch13Device> pgwSwDev,
+    uint32_t pgwS5PortNo, uint32_t pgwMainPortNo);
 
   /**
    * \name Internal mechanisms operation mode accessors.
@@ -182,7 +188,8 @@ public:
    * \param imsi The IMSI UE identifier.
    * \param cellId The eNB CellID to which the IMSI UE is attached to.
    * \param bearerList The list of context bearers created.
-   */ // FIXME
+   */
+// FIXME
 //  typedef void (*SessionCreatedTracedCallback)(
 //    uint64_t imsi, uint16_t cellId, BearerContextList_t bearerList);
 
@@ -225,10 +232,10 @@ private:
 //   */
 //  bool BearerRemove (Ptr<RoutingInfo> rInfo);
 
-   /**
-    * Periodic controller timeout operations.
-    */
-   void ControllerTimeout (void);
+  /**
+   * Periodic controller timeout operations.
+   */
+  void ControllerTimeout (void);
 
   /** \name Methods for the S11 SAP S-GW control plane. */
   //\{
@@ -238,19 +245,19 @@ private:
   void DoModifyBearerRequest  (EpcS11SapSgw::ModifyBearerRequestMessage  msg);
   //\}
 
-//  /**
-//   * Get the P-GW main datapath ID.
-//   * \return The P-GW main datapath ID.
-//   */
-//  uint64_t GetPgwMainDpId (void) const;
-//
-//  /**
-//   * Get the P-GW TFT datapath ID for a given index.
-//   * \param idx The P-GW TFT index.
-//   * \return The P-GW TFT datapath ID.
-//   */
-//  uint64_t GetPgwTftDpId (uint16_t idx) const;
-//
+  /**
+   * Get the P-GW main datapath ID.
+   * \return The P-GW main datapath ID.
+   */
+  uint64_t GetPgwMainDpId (void) const;
+
+  /**
+   * Get the P-GW TFT datapath ID for a given index.
+   * \param idx The P-GW TFT index.
+   * \return The P-GW TFT datapath ID.
+   */
+  uint64_t GetPgwTftDpId (uint16_t idx) const;
+
 //  /**
 //   * Get the active P-GW TFT index for a given traffic flow.
 //   * \param rInfo The routing information to process.
@@ -304,13 +311,13 @@ private:
 //  bool PgwRulesRemove (
 //    Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx = 0,
 //    bool keepMeterFlag = false);
-//
-//  /**
-//   * Periodically check for the P-GW TFT processing load and flow table usage
-//   * to update the adaptive mechanism.
-//   */
-//  void PgwTftCheckUsage (void);
-//
+
+  /**
+   * Periodically check for the P-GW TFT processing load and flow table usage
+   * to update the adaptive mechanism.
+   */
+  void PgwTftCheckUsage (void);
+
 //  /**
 //   * Configure the S-GW with OpenFlow rules for packet forwarding.
 //   * \attention To avoid conflicts with old entries, increase the routing
@@ -356,7 +363,11 @@ private:
   Ptr<BackhaulController> m_backhaulCtrl;
   Ptr<BackhaulNetwork>    m_backhaulNet;
 
-  // P-GW metadata. FIXME
+  Ipv4Address           m_ueAddr;         //!< UE network address.
+  Ipv4Mask              m_ueMask;         //!< UE network mask.
+
+
+  // P-GW metadata. // FIXME Tá ok esses aqui
   std::vector<uint64_t> m_pgwDpIds;       //!< Datapath IDs.
   Ipv4Address           m_pgwS5Addr;      //!< S5 IP address for uplink.
   std::vector<uint32_t> m_pgwS5PortsNo;   //!< S5 port numbers.
