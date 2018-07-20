@@ -31,6 +31,24 @@ namespace ns3 {
 class BackhaulController;
 
 /**
+ * Enumeration of LTE logical interfaces.
+ */
+typedef enum
+{
+  S1U  = 0,   //!< S1-U interface connecting eNB to S-GW.
+  S5   = 1,   //!< S5 interface connecting S-GW to P-GW.
+  X2   = 2,   //!< X2 interface connecting eNB to eNB.
+  SGI  = 3    //!< SGi interface connecting P-GW to Internet.
+} LteInterface;
+
+/**
+ * Get the LTE logical interface name.
+ * \param iface The LTE logical interface.
+ * \return The string with the interface name.
+ */
+std::string LteInterfaceStr (LteInterface iface);
+
+/**
  * \ingroup svelte
  * \defgroup svelteInfra Infrastructure
  * SVELTE architecture infrastructure.

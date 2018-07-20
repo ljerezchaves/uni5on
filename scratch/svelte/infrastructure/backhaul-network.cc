@@ -27,6 +27,24 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("BackhaulNetwork");
 NS_OBJECT_ENSURE_REGISTERED (BackhaulNetwork);
 
+std::string LteInterfaceStr (LteInterface iface)
+{
+  switch (iface)
+    {
+    case LteInterface::S1U:
+      return "s1u";
+    case LteInterface::S5:
+      return "s5";
+    case LteInterface::X2:
+      return "x2";
+    case LteInterface::SGI:
+      return "sgi";
+    default:
+      NS_LOG_ERROR ("Invalid LTE interface.");
+      return "";
+    }
+}
+
 // Initializing BackhaulNetwork static members.
 const uint16_t    BackhaulNetwork::m_gtpuPort = 2152;
 const Ipv4Address BackhaulNetwork::m_s1uAddr  = Ipv4Address ("10.1.0.0");
