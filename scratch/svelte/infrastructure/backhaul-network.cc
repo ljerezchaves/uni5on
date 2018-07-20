@@ -139,6 +139,7 @@ BackhaulNetwork::AttachPgw (Ptr<Node> pgwNode, uint16_t swIdx)
   NS_LOG_FUNCTION (this << pgwNode << swIdx);
 
   // Get the switch on the backhaul network to attach the P-GW.
+  NS_ASSERT_MSG (swIdx < m_switchDevices.GetN (), "Invalid switch index.");
   uint64_t swDpId = m_switchDevices.Get (swIdx)->GetDatapathId ();
   Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (swDpId);
   Ptr<Node> swNode = swDev->GetObject<Node> ();

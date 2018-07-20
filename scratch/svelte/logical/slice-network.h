@@ -147,9 +147,10 @@ private:
   Ipv4Address                   m_pgwAddress;       //!< P-GW S5 address.
   NodeContainer                 m_pgwNodes;         //!< P-GW switch nodes.
   OFSwitch13DeviceContainer     m_pgwDevices;       //!< P-GW switch devices.
-  NetDeviceContainer            m_pgwIntDevices;    //!< P-GW int port devices. // FIXME Trocar nome?
+  NetDeviceContainer            m_pgwIntDevices;    //!< P-GW int port devices.
   DataRate                      m_pgwLinkRate;      //!< P-GW link data rate.
   Time                          m_pgwLinkDelay;     //!< P-GW link delay.
+  uint16_t                      m_pgwSwitchIdx;     //!< Backhaul switch index.
 
   uint16_t                      m_tftNumNodes;      //!< Number of TFT nodes.
   DataRate                      m_tftPipeCapacity;  //!< TFT switch capacity.

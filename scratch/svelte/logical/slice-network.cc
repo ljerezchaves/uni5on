@@ -138,14 +138,20 @@ SliceNetwork::GetTypeId (void)
                    MakeUintegerAccessor (&SliceNetwork::GetPgwTftNumNodes,
                                          &SliceNetwork::SetPgwTftNumNodes),
                    MakeUintegerChecker<uint16_t> (1))
+    .AddAttribute ("PgwBackhaulSwitch",
+                   "The backhaul switch index to connect the P-GW.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (0),
+                   MakeUintegerAccessor (&SliceNetwork::m_pgwSwitchIdx),
+                   MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("PgwTftPipelineCapacity",
-                   "Pipeline capacity for P-GW TFT switches.",
+                   "Pipeline capacity for the P-GW TFT switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("100Gb/s")),
                    MakeDataRateAccessor (&SliceNetwork::m_tftPipeCapacity),
                    MakeDataRateChecker ())
     .AddAttribute ("PgwTftTableSize",
-                   "Flow/Group/Meter table sizes for P-GW TFT switches.",
+                   "Flow/Group/Meter table sizes for the P-GW TFT switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (65535),
                    MakeUintegerAccessor (&SliceNetwork::m_tftTableSize),
@@ -413,8 +419,7 @@ SliceNetwork::CreatePgw (void)
 
   // Connect the P-GW node to the OpenFlow backhaul network.
   Ptr<CsmaNetDevice> pgwS5Dev;
-  pgwS5Dev = m_backhaul->AttachPgw (pgwMainNode, 0);
-  // FIXME Identificar o switch correto para conectar o P-GW.
+  pgwS5Dev = m_backhaul->AttachPgw (pgwMainNode, m_pgwSwitchIdx);
 
   // Create the virtual net device to work as the logical ports on the P-GW S5
   // interface. This logical ports will connect to the P-GW user-plane
@@ -478,8 +483,7 @@ SliceNetwork::CreatePgw (void)
 
       // Connect the P-GW TFT node to the OpenFlow backhaul node.
       Ptr<CsmaNetDevice> pgwS5Dev;
-      pgwS5Dev = m_backhaul->AttachPgw (pgwTftNode, 0);
-      // FIXME Identificar o switch correto para conectar o P-GW.
+      pgwS5Dev = m_backhaul->AttachPgw (pgwTftNode, m_pgwSwitchIdx);
 
       // Create the virtual net device to work as the logical ports on the P-GW
       // S5 interface.

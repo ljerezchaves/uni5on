@@ -115,12 +115,6 @@ protected:
   virtual void CreateTopology (void) = 0;
 
   /**
-   * Get the switch datapath ID at which the P-GW node should be connected.
-   * \return The switch datapath ID.
-   */
-  virtual uint64_t TopologyGetPgwSwitch (void) = 0;
-
-  /**
    * Get the switch datapath ID at which the given eNB should be connected.
    * \param cellId The eNB cell ID.
    * \return The switch datapath ID.
