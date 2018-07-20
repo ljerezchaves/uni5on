@@ -113,7 +113,7 @@ BackhaulNetwork::AttachEnb (Ptr<Node> enbNode, uint16_t cellId)
   Ptr<CsmaNetDevice> swS1uDev, enbS1uDev;
   swS1uDev  = DynamicCast<CsmaNetDevice> (devices.Get (0));
   enbS1uDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
-  BackhaulNetwork::SetNames (swNode, swS1uDev, enbNode, enbS1uDev, "~s1u~");
+  BackhaulNetwork::SetDeviceNames (swS1uDev, enbS1uDev, "~s1u~");
 
   // Add the swS1uDev device as OpenFlow switch port on the backhaul switch.
   Ptr<OFSwitch13Port> swS1Port = swDev->AddSwitchPort (swS1uDev);
@@ -147,7 +147,7 @@ BackhaulNetwork::AttachPgw (Ptr<Node> pgwNode, uint16_t swIdx)
   Ptr<CsmaNetDevice> swS5Dev, pgwS5Dev;
   swS5Dev  = DynamicCast<CsmaNetDevice> (devices.Get (0));
   pgwS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (1));
-  BackhaulNetwork::SetNames (swNode, swS5Dev, pgwNode, pgwS5Dev, "~s5~");
+  BackhaulNetwork::SetDeviceNames (swS5Dev, pgwS5Dev, "~s5~");
 
   // Add the swS5Dev device as OpenFlow switch port on the backhaul network.
   Ptr<OFSwitch13Port> swS5Port = swDev->AddSwitchPort (swS5Dev);
@@ -173,16 +173,15 @@ BackhaulNetwork::AttachSgw (Ptr<Node> sgwNode)
   return std::make_pair (Ipv4Address::GetAny (), Ipv4Address::GetAny ());
 
 void
-BackhaulNetwork::SetNames (Ptr<Node> srcNode, Ptr<NetDevice> srcDev,
-                           Ptr<Node> dstNode, Ptr<NetDevice> dstDev,
-                           std::string desc)
+BackhaulNetwork::SetDeviceNames (Ptr<NetDevice> srcDev, Ptr<NetDevice> dstDev,
+                                 std::string desc)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  Names::Add (Names::FindName (srcNode) + desc +
-              Names::FindName (dstNode), srcDev);
-  Names::Add (Names::FindName (dstNode) + desc +
-              Names::FindName (srcNode), dstDev);
+  Names::Add (Names::FindName (srcDev->GetNode ()) + desc +
+              Names::FindName (dstDev->GetNode ()), srcDev);
+  Names::Add (Names::FindName (dstDev->GetNode ()) + desc +
+              Names::FindName (srcDev->GetNode ()), dstDev);
 }
 
 void

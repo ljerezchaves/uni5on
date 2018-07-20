@@ -126,8 +126,7 @@ RingNetwork::CreateTopology (void)
       NetDeviceContainer devs = m_csmaHelper.Install (currNode, nextNode);
 
       // Setting interface names for pacp filename
-      BackhaulNetwork::SetNames (currNode, devs.Get (0),
-                                 nextNode, devs.Get (1), "~");
+      BackhaulNetwork::SetDeviceNames (devs.Get (0), devs.Get (1), "~");
 
       // Adding newly created csma devices as Openflow switch ports.
       Ptr<OFSwitch13Device> currDevice, nextDevice;

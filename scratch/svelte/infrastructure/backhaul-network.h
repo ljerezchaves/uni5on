@@ -89,15 +89,12 @@ public:
 
   /**
    * Set the devices names identifying the connection between the nodes.
-   * \param srcNode The source node.
    * \param srcDev The network device in the source node.
-   * \param dstNode The destination node.
    * \param dstDev The network device in the destination node.
    * \param desc The string describing this connection.
    */
-  static void SetNames (Ptr<Node> srcNode, Ptr<NetDevice> srcDev,
-                        Ptr<Node> dstNode, Ptr<NetDevice> dstDev,
-                        std::string desc);
+  static void SetDeviceNames (Ptr<NetDevice> srcDev, Ptr<NetDevice> dstDev,
+                              std::string desc);
 
   static const uint16_t         m_gtpuPort;         //!< GTP-U UDP port.
   static const Ipv4Address      m_s1uAddr;          //!< S1-U network address.
