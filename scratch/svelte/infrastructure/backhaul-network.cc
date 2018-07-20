@@ -108,19 +108,20 @@ BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous)
 
   // Enable pcap on CSMA devices.
   CsmaHelper helper;
-  helper.EnablePcap (prefix + "epc_s1u",   m_s1uDevices,  promiscuous);
-  helper.EnablePcap (prefix + "epc_s5",    m_s5Devices,   promiscuous);
-  helper.EnablePcap (prefix + "epc_x2",    m_x2Devices,   promiscuous);
+  helper.EnablePcap (prefix + "epc_s1u",  m_s1uDevices,  promiscuous);
+  helper.EnablePcap (prefix + "epc_s5",   m_s5Devices,   promiscuous);
+  helper.EnablePcap (prefix + "epc_x2",   m_x2Devices,   promiscuous);
   helper.EnablePcap (prefix + "backhaul", m_switchNodes, promiscuous);
 }
 
 Ptr<CsmaNetDevice>
-BackhaulNetwork::AttachEnb (Ptr<Node> enbNode, uint16_t cellId)
+BackhaulNetwork::AttachEnb (Ptr<Node> enbNode, uint16_t swIdx)
 {
-  NS_LOG_FUNCTION (this << enbNode << cellId);
+  NS_LOG_FUNCTION (this << enbNode << swIdx);
 
   // Get the switch on the backhaul network to attach the eNB.
-  uint64_t swDpId = TopologyGetEnbSwitch (cellId);
+  NS_ASSERT_MSG (swIdx < m_switchDevices.GetN (), "Invalid switch index.");
+  uint64_t swDpId = m_switchDevices.Get (swIdx)->GetDatapathId ();
   Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (swDpId);
   Ptr<Node> swNode = swDev->GetObject<Node> ();
 

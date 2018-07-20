@@ -132,24 +132,10 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
   /**
-   * \name Topology methods.
-   * These virtual methods must be implemented by subclasses, as they
-   * are dependent on the OpenFlow backhaul network topology.
-   */
-  //\{
-  /**
    * Create the controller application and switch devices for the OpenFlow
    * backhaul network, connecting them accordingly to the desired topology.
    */
   virtual void CreateTopology (void) = 0;
-
-  /**
-   * Get the switch datapath ID at which the given eNB should be connected.
-   * \param cellId The eNB cell ID.
-   * \return The switch datapath ID.
-   */
-  virtual uint64_t TopologyGetEnbSwitch (uint16_t cellId) = 0;
-  //\}
 
   // Backhaul controller.
   Ptr<BackhaulController>       m_controllerApp;  //!< Controller app.

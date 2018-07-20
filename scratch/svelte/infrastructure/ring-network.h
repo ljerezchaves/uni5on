@@ -42,6 +42,13 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  /**
+   * Get the switch index at which the given eNB should be connected.
+   * \param cellId The eNB cell ID.
+   * \return The switch index.
+   */
+  uint16_t GetEnbSwitch (uint16_t cellId);
+
 protected:
   /** Destructor implementation. */
   void DoDispose ();
@@ -51,7 +58,6 @@ protected:
 
   // Inherited from BackhaulNetwork.
   void CreateTopology (void);
-  uint64_t TopologyGetEnbSwitch (uint16_t cellId);
 
 private:
   uint16_t                      m_numNodes;       //!< Number of switches.
