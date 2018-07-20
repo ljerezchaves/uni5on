@@ -26,4 +26,3 @@ default ns3::SvelteHelper::HtcController "ns3::SliceController[TimeoutInterval=5
 
 default ns3::SvelteHelper::HtcSlice "ns3::SliceNetwork[NumUes=1|UeMobility=false|NumPgwTftSwitches=1|PgwBackhaulSwitch=0|PgwTftPipelineCapacity=100Gb/s|PgwTftTableSize=65535]"
 default ns3::SvelteHelper::HtcController "ns3::SliceController[TimeoutInterval=5s|PgwTftAdaptiveMode=off|PgwTftBlockPolicy=all]"
-

@@ -27,7 +27,7 @@
 namespace ns3 {
 
 /**
- * \ingroup sdmnEpc
+ * \ingroup svelteLogical
  * This is the GTP tunneling application for the P-GW. It extends the GTP
  * tunnel application for attach and remove the EpcGtpuTag tag on packets
  * entering/leaving the OpenFlow EPC backhaul network over S5 interface.

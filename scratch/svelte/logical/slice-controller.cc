@@ -665,7 +665,7 @@ SliceController::DoModifyBearerRequest (
   res.teid = msg.teid;
   res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
 
-  // FIXME m_s11SapMme->ModifyBearerResponse (res);
+  m_s11SapMme->ModifyBearerResponse (res);
 }
 
 uint64_t

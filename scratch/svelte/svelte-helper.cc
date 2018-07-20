@@ -292,7 +292,8 @@ SvelteHelper::NotifyConstructionCompleted (void)
   m_htcNetFactory.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
   m_htcNetwork = m_htcNetFactory.Create<SliceNetwork> ();
 
-  // TODO Create the LTE MTC network slice.
+  // Create the LTE MTC network slice.
+  // TODO
 
   // Configure and install applications and traffic managers.
   // TODO

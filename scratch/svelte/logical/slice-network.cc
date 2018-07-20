@@ -557,5 +557,4 @@ SliceNetwork::CreateUes (void)
   m_lteRan->AttachUeDevices (m_ueDevices);
 }
 
-
 } // namespace ns3
