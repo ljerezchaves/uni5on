@@ -151,7 +151,6 @@ private:
   DataRate                      m_pgwLinkRate;      //!< P-GW link data rate.
   Time                          m_pgwLinkDelay;     //!< P-GW link delay.
   uint16_t                      m_pgwSwitchIdx;     //!< Backhaul switch index.
-
   uint16_t                      m_tftNumNodes;      //!< Number of TFT nodes.
   DataRate                      m_tftPipeCapacity;  //!< TFT switch capacity.
   uint32_t                      m_tftTableSize;     //!< TFT switch table size.

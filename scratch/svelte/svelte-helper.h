@@ -30,6 +30,7 @@ namespace ns3 {
 
 class RadioNetwork;
 class RingNetwork;
+class SliceController;
 class SliceNetwork;
 class SvelteMme;
 
@@ -82,15 +83,19 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
 private:
-  Ptr<RingNetwork>              m_backhaul;         //!< The backhaul network.
-  Ptr<RadioNetwork>             m_lteRan;           //!< The LTE RAN network.
-  Ptr<SvelteMme>                m_mme;              //!< SVELTE MME entity.
+  Ptr<RingNetwork>          m_backhaul;         //!< The backhaul network.
+  Ptr<RadioNetwork>         m_lteRan;           //!< The LTE RAN network.
+  Ptr<SvelteMme>            m_mme;              //!< SVELTE MME entity.
 
-  ObjectFactory                 m_htcFactory;       //!< The HTC slice factory.
-  Ptr<SliceNetwork>             m_htcNetwork;       //!< The HTC slice network.
+  ObjectFactory             m_htcNetFactory;    //!< HTC network factory.
+  ObjectFactory             m_htcCtrlFactory;   //!< HTC controller factory.
+  Ptr<SliceNetwork>         m_htcNetwork;       //!< HTC slice network.
+  Ptr<SliceController>      m_htcController;    //!< HTC slice controller.
 
-  ObjectFactory                 m_mtcFactory;       //!< The MTC slice factory.
-  Ptr<SliceNetwork>             m_mtcNetwork;       //!< The MTC slice network.
+  ObjectFactory             m_mtcNetFactory;    //!< MTC network factory.
+  ObjectFactory             m_mtcCtrlFactory;   //!< MTC controller factory.
+  Ptr<SliceNetwork>         m_mtcNetwork;       //!< MTC slice network.
+  Ptr<SliceController>      m_mtcController;    //!< MTC slice controller.
 };
 
 } // namespace ns3

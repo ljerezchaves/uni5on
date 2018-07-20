@@ -85,6 +85,6 @@ private:
   static CellIdEnbInfo_t m_enbInfoByCellId;      //!< Global eNB info map.
 };
 
-};  // namespace ns3
+} // namespace ns3
 #endif // ENB_INFO_H
 

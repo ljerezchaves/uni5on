@@ -360,15 +360,15 @@ EnableVerbose (bool enable)
 
       // Logical components.
       LogComponentEnable ("EnbInfo",                  LOG_LEVEL_ALL_FT);
-      LogComponentEnable ("UeInfo",                   LOG_LEVEL_ALL_FT);
-      LogComponentEnable ("SvelteMme",                LOG_LEVEL_ALL_FT);
-      LogComponentEnable ("SliceNetwork",             LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("GtpTunnelApp",             LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("PgwTunnelApp",             LOG_LEVEL_ALL_FT);
       LogComponentEnable ("SliceController",          LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("SliceNetwork",             LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("SvelteMme",                LOG_LEVEL_ALL_FT);
+      LogComponentEnable ("UeInfo",                   LOG_LEVEL_ALL_FT);
 
-//      LogComponentEnable ("PgwTunnelApp",             LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("SdranCloud",               LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("SdranController",          LOG_ERROR_WARN_INFO_FT);
-//      LogComponentEnable ("GtpTunnelApp",             LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("TrafficHelper",            LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("TrafficManager",           LOG_ERROR_WARN_INFO_FT);
 //
@@ -385,7 +385,6 @@ EnableVerbose (bool enable)
 //      LogComponentEnable ("VoipClient",               LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("VoipServer",               LOG_ERROR_WARN_INFO_FT);
 //
-
 //      LogComponentEnable ("GbrInfo",                  LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("MeterInfo",                LOG_ERROR_WARN_INFO_FT);
 //      LogComponentEnable ("RoutingInfo",              LOG_ERROR_WARN_INFO_FT);

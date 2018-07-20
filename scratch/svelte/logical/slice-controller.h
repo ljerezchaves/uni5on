@@ -64,13 +64,7 @@ public:
     double   splitThrs;       //!< The split threshold.
   };
 
-  /**
-   * Complete constructor.
-   * \param ueAddress The UE network address.
-   * \param ueMask The UE network mask.
-   * \param nPgwTfts The number of P-GW TFT switches available.
-   */
-  SliceController (Ipv4Address ueAddress, Ipv4Mask ueMask, uint16_t nPgwTfts);
+  SliceController ();           //!< Default constructor.
   virtual ~SliceController ();  //!< Dummy destructor, see DoDispose.
 
   /**
@@ -176,6 +170,15 @@ public:
   OperationMode GetAggregationMode (void) const;
   OperationMode GetPgwAdaptiveMode (void) const;
   //\}
+
+  /**
+   * Configure this controller with slice network attributes.
+   * \param ueAddress The UE network address.
+   * \param ueMask The UE network mask.
+   * \param nPgwTfts The number of P-GW TFT switches available for use.
+   */
+  void SetNetworkAttributes (Ipv4Address ueAddress, Ipv4Mask ueMask,
+                             uint16_t nPgwTfts);
 
   /**
    * TracedCallback signature for the P-GW TFT stats trace source.
@@ -354,41 +357,42 @@ private:
 //  /** The P-GW TFT stats trace source, fired at PgwTftCheckUsage. */
 //  TracedCallback<struct PgwTftStats> m_pgwTftStatsTrace;
 
-  // MME communication.
-  Ptr<SvelteMme>        m_mme;          //!< MME element.
-  EpcS11SapMme*         m_s11SapMme;    //!< MME side of the S11 SAP.
-  EpcS11SapSgw*         m_s11SapSgw;    //!< S-GW side of the S11 SAP.
+  // MME interface.
+  Ptr<SvelteMme>          m_mme;          //!< MME element.
+  EpcS11SapMme*           m_s11SapMme;    //!< MME side of the S11 SAP.
+  EpcS11SapSgw*           m_s11SapSgw;    //!< S-GW side of the S11 SAP.
 
-  // Infrastructure communication.
-  Ptr<BackhaulController> m_backhaulCtrl;
-  Ptr<BackhaulNetwork>    m_backhaulNet;
+  // Infrastructure interface.
+  // FIXME Vou precisar disso?
+  // Ptr<BackhaulController> m_backhaulCtrl;   //!< OpenFlow backhaul controller.
+  // Ptr<BackhaulNetwork>    m_backhaulNet;    //!< OpenFlow backhaul network.
 
-  Ipv4Address           m_ueAddr;         //!< UE network address.
-  Ipv4Mask              m_ueMask;         //!< UE network mask.
+  // Network configuration.
+  Ipv4Address             m_ueAddr;         //!< UE network address.
+  Ipv4Mask                m_ueMask;         //!< UE network mask.
 
+  // P-GW user plane.
+  std::vector<uint64_t>   m_pgwDpIds;       //!< Datapath IDs.
+  Ipv4Address             m_pgwS5Addr;      //!< S5 IP address for uplink.
+  std::vector<uint32_t>   m_pgwS5PortsNo;   //!< S5 port numbers.
+  uint32_t                m_pgwSgiPortNo;   //!< SGi port number.
 
-  // P-GW metadata. // FIXME Tá ok esses aqui
-  std::vector<uint64_t> m_pgwDpIds;       //!< Datapath IDs.
-  Ipv4Address           m_pgwS5Addr;      //!< S5 IP address for uplink.
-  std::vector<uint32_t> m_pgwS5PortsNo;   //!< S5 port numbers.
-  uint32_t              m_pgwSgiPortNo;   //!< SGi port number.
-
-  // P-GW TFT adaptive mechanism. FIXME
-  OperationMode         m_tftAdaptive;    //!< P-GW adaptive mechanism.
-  uint8_t               m_tftLevel;       //!< Current adaptive level.
-  OperationMode         m_tftBlockPolicy; //!< Overload block policy.
-  double                m_tftBlockThs;    //!< Block threshold.
-  double                m_tftJoinThs;     //!< Join threshold.
-  double                m_tftSplitThs;    //!< Split threshold.
-  uint16_t              m_tftSwitches;    //!< Max number of TFT switches.
-  DataRate              m_tftMaxLoad;     //!< Processing capacity.
-  uint32_t              m_tftTableSize;   //!< Flow table size.
+  // P-GW TFT adaptive mechanism.
+  OperationMode           m_tftAdaptive;    //!< P-GW adaptive mechanism.
+  uint8_t                 m_tftLevel;       //!< Current adaptive level.
+  OperationMode           m_tftBlockPolicy; //!< Overload block policy.
+  double                  m_tftBlockThs;    //!< Block threshold.
+  double                  m_tftJoinThs;     //!< Join threshold.
+  double                  m_tftSplitThs;    //!< Split threshold.
+  uint16_t                m_tftSwitches;    //!< Max number of TFT switches.
+  DataRate                m_tftMaxLoad;     //!< Processing capacity.
+  uint32_t                m_tftTableSize;   //!< Flow table size.
 
   // Internal members and attributes.
-  OperationMode         m_aggregation;    //!< Aggregation mechanism. FIXME
-  Time                  m_timeout;        //!< Controller internal timeout.
+  OperationMode           m_aggregation;    //!< Aggregation mechanism. FIXME
+  Time                    m_timeout;        //!< Controller internal timeout.
 
-  static uint32_t       m_teidCount;      //!< TEID counter.
+  static uint32_t         m_teidCount;      //!< TEID counter. FIXME
 };
 
 } // namespace ns3

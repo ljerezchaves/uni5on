@@ -28,23 +28,11 @@ NS_LOG_COMPONENT_DEFINE ("SliceController");
 NS_OBJECT_ENSURE_REGISTERED (SliceController);
 
 // Initializing SliceController static members.
-// TODO
+// TODO Gerenciar TEID...
 
-SliceController::SliceController (Ipv4Address ueAddress, Ipv4Mask ueMask,
-                                  uint16_t nPgwTfts)
-  : m_ueAddr (ueAddress),
-  m_ueMask (ueMask),
-  m_tftSwitches (nPgwTfts)
+SliceController::SliceController ()
 {
   NS_LOG_FUNCTION (this);
-
-  // The S-GW side of S11 APs
-  m_s11SapSgw = new MemberEpcS11SapSgw<SliceController> (this);
-
-//  // FIXME Receber o MME como parâmetro no construtor
-//  m_mme = CreateObject<SdranMme> ();
-//  m_mme->SetS11SapSgw (m_s11SapSgw);
-//  m_s11SapMme = m_mme->GetS11SapMme ();
 }
 
 SliceController::~SliceController ()
@@ -57,17 +45,23 @@ SliceController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SliceController")
     .SetParent<OFSwitch13Controller> ()
+    .AddConstructor<SliceController> ()
 
-    .AddAttribute ("UeAddress", "The UE network address.",
+    // Controller
+    .AddAttribute ("TimeoutInterval",
+                   "The interval between internal periodic operations.",
+                   TimeValue (Seconds (5)),
+                   MakeTimeAccessor (&SliceController::m_timeout),
+                   MakeTimeChecker ())
+
+    // Infrastructure.
+    .AddAttribute ("Mme", "The SVELTE MME pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   Ipv4AddressValue ("7.0.0.0"),
-                   MakeIpv4AddressAccessor (&SliceController::m_ueAddr),
-                   MakeIpv4AddressChecker ())
-    .AddAttribute ("UeMask", "The UE network mask.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   Ipv4MaskValue ("255.0.0.0"),
-                   MakeIpv4MaskAccessor (&SliceController::m_ueMask),
-                   MakeIpv4MaskChecker ())
+                   PointerValue (),
+                   MakePointerAccessor (&SliceController::m_mme),
+                   MakePointerChecker<SvelteMme> ())
+
+    // P-GW.
     .AddAttribute ("PgwTftAdaptiveMode",
                    "P-GW TFT adaptive mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -98,11 +92,6 @@ SliceController::GetTypeId (void)
                    DoubleValue (0.90),
                    MakeDoubleAccessor (&SliceController::m_tftSplitThs),
                    MakeDoubleChecker<double> (0.5, 1.0))
-    .AddAttribute ("TimeoutInterval",
-                   "The interval between internal periodic operations.",
-                   TimeValue (Seconds (5)),
-                   MakeTimeAccessor (&SliceController::m_timeout),
-                   MakeTimeChecker ())
   ;
   return tid;
 }
@@ -348,6 +337,17 @@ SliceController::GetPgwAdaptiveMode (void) const
 }
 
 void
+SliceController::SetNetworkAttributes (
+  Ipv4Address ueAddress, Ipv4Mask ueMask, uint16_t nPgwTfts)
+{
+  NS_LOG_FUNCTION (this << ueAddress << ueMask << nPgwTfts);
+
+  m_ueAddr = ueAddress;
+  m_ueMask = ueMask;
+  m_tftSwitches = nPgwTfts;
+}
+
+void
 SliceController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
@@ -362,6 +362,13 @@ void
 SliceController::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
+
+  NS_ABORT_MSG_IF (!m_mme, "No SVELTE MME.");
+
+  // Connecting this controller to the MME.
+  m_s11SapSgw = new MemberEpcS11SapSgw<SliceController> (this);
+  // m_mme->SetS11SapSgw (m_s11SapSgw); FIXME Should be AddS11SapSgw?
+  m_s11SapMme = m_mme->GetS11SapMme ();
 
   // Schedule the first timeout operation.
   Simulator::Schedule (m_timeout, &SliceController::ControllerTimeout, this);

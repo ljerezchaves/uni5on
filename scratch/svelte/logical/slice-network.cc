@@ -62,15 +62,20 @@ SliceNetwork::GetTypeId (void)
     .SetParent<Object> ()
     .AddConstructor<SliceNetwork> ()
 
-    // Slice identification.
+    // Slice.
     .AddAttribute ("SliceId", "The LTE logical slice identification.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (LogicalSlice::HTC),
                    MakeEnumAccessor (&SliceNetwork::m_sliceId),
                    MakeEnumChecker (LogicalSlice::HTC, "htc",
                                     LogicalSlice::MTC, "mtc"))
+    .AddAttribute ("Controller", "The slice controller application pointer.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   PointerValue (),
+                   MakePointerAccessor (&SliceNetwork::m_controllerApp),
+                   MakePointerChecker<SliceController> ())
 
-    // Infrastructure interface.
+    // Infrastructure.
     .AddAttribute ("Backhaul", "The OpenFlow backhaul network pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
@@ -82,7 +87,7 @@ SliceNetwork::GetTypeId (void)
                    MakePointerAccessor (&SliceNetwork::m_lteRan),
                    MakePointerChecker<RadioNetwork> ())
 
-    // UEs configuration.
+    // UEs.
     .AddAttribute ("NumUes", "The total number of UEs for this slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (1),
@@ -104,7 +109,7 @@ SliceNetwork::GetTypeId (void)
                    MakeBooleanAccessor (&SliceNetwork::m_ueMobility),
                    MakeBooleanChecker ())
 
-    // Internet network configuration.
+    // Internet.
     .AddAttribute ("WebAddress", "The Internet network address.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    Ipv4AddressValue ("8.0.0.0"),
@@ -130,7 +135,7 @@ SliceNetwork::GetTypeId (void)
                    MakeTimeAccessor (&SliceNetwork::m_webLinkDelay),
                    MakeTimeChecker ())
 
-    // P-GW internal configuration.
+    // P-GW.
     .AddAttribute ("NumPgwTftSwitches",
                    "The number of P-GW TFT user-plane OpenFlow switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -282,7 +287,8 @@ SliceNetwork::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ABORT_MSG_IF (!m_backhaul || !m_lteRan, "No infrastructure configured.");
+  NS_ABORT_MSG_IF (!m_backhaul || !m_lteRan, "No infrastructure network.");
+  NS_ABORT_MSG_IF (!m_controllerApp, "No slice controller application.");
 
   m_sliceIdStr = LogicalSliceStr (m_sliceId);
   NS_LOG_INFO ("LTE " << m_sliceIdStr << " slice with " << m_nUes << " UEs.");
@@ -295,11 +301,10 @@ SliceNetwork::NotifyConstructionCompleted (void)
   m_switchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
       "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
-  // Create the slice controller node and application.
+  // Configure and install the slice controller application.
+  m_controllerApp->SetNetworkAttributes (m_ueAddr, m_ueMask, m_tftNumNodes);
   m_controllerNode = CreateObject<Node> ();
   Names::Add (m_sliceIdStr + "_ctrl", m_controllerNode);
-  m_controllerApp = CreateObject<SliceController> (
-      m_ueAddr, m_ueMask, GetPgwTftNumNodes ());
   m_switchHelper->InstallController (m_controllerNode, m_controllerApp);
 
   // Create the Internet web server node with Internet stack.

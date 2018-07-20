@@ -21,7 +21,9 @@ default ns3::LteHexGridEnbTopologyHelper::GridWidth "2"
 
 default ns3::SliceController::TimeoutInterval "5s"
 
-default ns3::SvelteHelper::HtcSliceAttributes "ns3::SliceNetwork[SliceId=htc|NumUes=3|UeAddress=7.1.0.0|UeMask=255.255.0.0|WebAddress=8.1.0.0|WebMask=255.255.0.0]"
+default ns3::SvelteHelper::HtcSlice "ns3::SliceNetwork[NumUes=3|UeMobility=false|NumPgwTftSwitches=2|PgwBackhaulSwitch=2|PgwTftPipelineCapacity=100Gb/s|PgwTftTableSize=65535]"
+default ns3::SvelteHelper::HtcController "ns3::SliceController[TimeoutInterval=5s|PgwTftAdaptiveMode=auto|PgwTftBlockPolicy=all]"
 
-default ns3::SvelteHelper::MtcSliceAttributes "ns3::SliceNetwork[SliceId=mtc|NumUes=3|UeAddress=7.2.0.0|UeMask=255.255.0.0|WebAddress=8.2.0.0|WebMask=255.255.0.0]"
+default ns3::SvelteHelper::HtcSlice "ns3::SliceNetwork[NumUes=1|UeMobility=false|NumPgwTftSwitches=1|PgwBackhaulSwitch=0|PgwTftPipelineCapacity=100Gb/s|PgwTftTableSize=65535]"
+default ns3::SvelteHelper::HtcController "ns3::SliceController[TimeoutInterval=5s|PgwTftAdaptiveMode=off|PgwTftBlockPolicy=all]"
 

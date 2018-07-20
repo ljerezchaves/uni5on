@@ -162,6 +162,6 @@ private:
   static Ipv4UeInfoMap_t m_ueInfoByIpv4Map;    //!< Global UE info map by IPv4.
 };
 
-};  // namespace ns3
+} // namespace ns3
 #endif // UE_INFO_H
 

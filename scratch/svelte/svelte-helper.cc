@@ -24,9 +24,10 @@
 #include "infrastructure/ring-network.h"
 #include "infrastructure/svelte-enb-application.h"
 #include "logical/enb-info.h"
+#include "logical/slice-controller.h"
+#include "logical/slice-network.h"
 #include "logical/svelte-mme.h"
 #include "logical/ue-info.h"
-#include "logical/slice-network.h"
 
 namespace ns3 {
 
@@ -48,13 +49,21 @@ SvelteHelper::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SvelteHelper")
     .SetParent<EpcHelper> ()
-    .AddAttribute ("HtcSliceAttributes", "The HTC slice configuration.",
+    .AddAttribute ("HtcSlice", "The HTC slice network configuration.",
                    ObjectFactoryValue (ObjectFactory ("ns3::SliceNetwork")),
-                   MakeObjectFactoryAccessor (&SvelteHelper::m_htcFactory),
+                   MakeObjectFactoryAccessor (&SvelteHelper::m_htcNetFactory),
                    MakeObjectFactoryChecker ())
-    .AddAttribute ("MtcSliceAttributes", "The MTC slice configuration.",
+    .AddAttribute ("HtcController", "The HTC slice controller configuration.",
+                   ObjectFactoryValue (ObjectFactory ("ns3::SliceController")),
+                   MakeObjectFactoryAccessor (&SvelteHelper::m_htcCtrlFactory),
+                   MakeObjectFactoryChecker ())
+    .AddAttribute ("MtcSlice", "The MTC slice network configuration.",
                    ObjectFactoryValue (ObjectFactory ("ns3::SliceNetwork")),
-                   MakeObjectFactoryAccessor (&SvelteHelper::m_mtcFactory),
+                   MakeObjectFactoryAccessor (&SvelteHelper::m_mtcNetFactory),
+                   MakeObjectFactoryChecker ())
+    .AddAttribute ("MtcController", "The MTC slice controller configuration.",
+                   ObjectFactoryValue (ObjectFactory ("ns3::SliceController")),
+                   MakeObjectFactoryAccessor (&SvelteHelper::m_mtcCtrlFactory),
                    MakeObjectFactoryChecker ())
   ;
   return tid;
@@ -269,15 +278,21 @@ SvelteHelper::NotifyConstructionCompleted (void)
   m_backhaul = CreateObject<RingNetwork> ();
   m_lteRan = CreateObject<RadioNetwork> (Ptr<SvelteHelper> (this));
 
-  // Create the LTE HTC network slice.
-  m_htcFactory.Set ("Backhaul", PointerValue (m_backhaul));
-  m_htcFactory.Set ("Radio", PointerValue (m_lteRan));
-  m_htcNetwork = m_htcFactory.Create<SliceNetwork> ();
+  // Create the LTE HTC slice network and controller.
+  m_htcCtrlFactory.Set ("Mme", PointerValue (m_mme));
+  m_htcController = m_htcCtrlFactory.Create<SliceController> ();
+
+  m_htcNetFactory.Set ("SliceId", EnumValue (LogicalSlice::HTC));
+  m_htcNetFactory.Set ("Controller", PointerValue (m_htcController));
+  m_htcNetFactory.Set ("Backhaul", PointerValue (m_backhaul));
+  m_htcNetFactory.Set ("Radio", PointerValue (m_lteRan));
+  m_htcNetFactory.Set ("UeAddress", Ipv4AddressValue ("7.1.0.0"));
+  m_htcNetFactory.Set ("UeMask", Ipv4MaskValue ("255.255.0.0"));
+  m_htcNetFactory.Set ("WebAddress", Ipv4AddressValue ("8.1.0.0"));
+  m_htcNetFactory.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
+  m_htcNetwork = m_htcNetFactory.Create<SliceNetwork> ();
 
   // TODO Create the LTE MTC network slice.
-  // m_mtcFactory.Set ("Backhaul", PointerValue (m_backhaul));
-  // m_mtcFactory.Set ("Radio", PointerValue (m_lteRan));
-  // m_mtcNetwork = m_mtcFactory.Create<SliceNetwork> ();
 
   // Configure and install applications and traffic managers.
   // TODO
