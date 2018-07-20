@@ -229,11 +229,7 @@ SliceNetwork::GetPgwTftNumNodes (void) const
 //   Ptr<CsmaNetDevice> swS5Dev, sgwS5Dev;
 //   swS5Dev  = DynamicCast<CsmaNetDevice> (devices.Get (0));
 //   sgwS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (1));
-//
-//   Names::Add (Names::FindName (swNode) + "~" +
-//               Names::FindName (sgwNode), swS5Dev);
-//   Names::Add (Names::FindName (sgwNode) + "~" +
-//               Names::FindName (swNode), sgwS5Dev);
+//   BackhaulNetwork::SetNames (swNode, swS5Dev, sgwNode, sgwS5Dev, "~");
 //
 //   // Add the swS5Dev device as OpenFlow switch port on the backhaul switch.
 //   Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (swDpId);
@@ -302,7 +298,7 @@ SliceNetwork::NotifyConstructionCompleted (void)
       "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
   // Configure and install the slice controller application.
-  m_controllerApp->SetNetworkAttributes (m_ueAddr, m_ueMask, m_tftNumNodes);
+  m_controllerApp->SetNetworkAttributes (m_ueAddr, m_ueMask, m_nTftNodes);
   m_controllerNode = CreateObject<Node> ();
   Names::Add (m_sliceIdStr + "_ctrl", m_controllerNode);
   m_switchHelper->InstallController (m_controllerNode, m_controllerApp);
@@ -400,11 +396,8 @@ SliceNetwork::CreatePgw (void)
   Ptr<CsmaNetDevice> pgwSgiDev, webSgiDev;
   pgwSgiDev = DynamicCast<CsmaNetDevice> (m_webDevices.Get (0));
   webSgiDev = DynamicCast<CsmaNetDevice> (m_webDevices.Get (1));
-
-  Names::Add (Names::FindName (pgwMainNode) + "~" +
-              Names::FindName (m_webNode), pgwSgiDev);
-  Names::Add (Names::FindName (m_webNode) + "~" +
-              Names::FindName (pgwMainNode), webSgiDev);
+  BackhaulNetwork::SetNames (pgwMainNode, pgwSgiDev,
+                             m_webNode, webSgiDev, "~sgi~");
 
   // Add the pgwSgiDev as physical port on the P-GW main OpenFlow switch.
   Ptr<OFSwitch13Port> pgwSgiPort = pgwMainOfDev->AddSwitchPort (pgwSgiDev);

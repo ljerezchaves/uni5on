@@ -113,11 +113,7 @@ BackhaulNetwork::AttachEnb (Ptr<Node> enbNode, uint16_t cellId)
   Ptr<CsmaNetDevice> swS1uDev, enbS1uDev;
   swS1uDev  = DynamicCast<CsmaNetDevice> (devices.Get (0));
   enbS1uDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
-
-  Names::Add (Names::FindName (swNode) + "~" +
-              Names::FindName (enbNode), swS1uDev);
-  Names::Add (Names::FindName (enbNode) + "~" +
-              Names::FindName (swNode), enbS1uDev);
+  BackhaulNetwork::SetNames (swNode, swS1uDev, enbNode, enbS1uDev, "~s1u~");
 
   // Add the swS1uDev device as OpenFlow switch port on the backhaul switch.
   Ptr<OFSwitch13Port> swS1Port = swDev->AddSwitchPort (swS1uDev);
@@ -151,18 +147,14 @@ BackhaulNetwork::AttachPgw (Ptr<Node> pgwNode, uint16_t swIdx)
   Ptr<CsmaNetDevice> swS5Dev, pgwS5Dev;
   swS5Dev  = DynamicCast<CsmaNetDevice> (devices.Get (0));
   pgwS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (1));
-
-  Names::Add (Names::FindName (swNode) + "~" +
-              Names::FindName (pgwNode), swS5Dev);
-  Names::Add (Names::FindName (pgwNode) + "~" +
-              Names::FindName (swNode), pgwS5Dev);
+  BackhaulNetwork::SetNames (swNode, swS5Dev, pgwNode, pgwS5Dev, "~s5~");
 
   // Add the swS5Dev device as OpenFlow switch port on the backhaul network.
   Ptr<OFSwitch13Port> swS5Port = swDev->AddSwitchPort (swS5Dev);
   uint32_t swS5PortNo = swS5Port->GetPortNo ();
 
-  // Configure the pgwS5Dev as standard device on eNB node. It will be
-  // connected to a logical port later.
+  // Configure the pgwS5Dev as standard device on the P-GW node.
+  // It will be connected to a logical port later.
   m_s5AddrHelper.Assign (NetDeviceContainer (pgwS5Dev));
   NS_LOG_INFO ("P-GW S5: " << Ipv4AddressHelper::GetFirstAddress (pgwS5Dev));
 
