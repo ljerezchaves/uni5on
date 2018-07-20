@@ -42,13 +42,6 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /**
-   * Get the switch index at which the given eNB should be connected.
-   * \param cellId The eNB cell ID.
-   * \return The switch index.
-   */
-  uint16_t GetEnbSwitch (uint16_t cellId);
-
 protected:
   /** Destructor implementation. */
   void DoDispose ();

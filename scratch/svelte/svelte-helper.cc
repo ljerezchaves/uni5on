@@ -168,8 +168,19 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   InternetStackHelper internet;
   internet.Install (enb);
 
+  // Get the number of switches on the backhaul.
+  UintegerValue value;
+  m_backhaul->GetAttribute ("NumRingSwitches", value);
+  uint16_t numSwitches = value.Get ();
+
+  // Connect the eNBs to switches in clockwise direction, skipping the first
+  // switch (index 0), which is exclusive for the P-GW connection. The three
+  // eNBs from the same cell site are always connected to the same switch in
+  // the ring network.
+  uint16_t siteId = (cellId - 1) / 3;
+  uint16_t switchIdx = 1 + (siteId % (numSwitches - 1));
+
   // Attach the eNB node to the OpenFlow backhaul network.
-  uint16_t switchIdx = m_backhaul->GetEnbSwitch (cellId);
   Ptr<CsmaNetDevice> enbS1uDev = m_backhaul->AttachEpcNode (enb, switchIdx, LteInterface::S1U);
   Ipv4Address enbS1uAddr = Ipv4AddressHelper::GetFirstAddress (enbS1uDev);
   NS_LOG_INFO ("eNB attached to the S1-U interface with IP " << enbS1uAddr);

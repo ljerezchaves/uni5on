@@ -66,20 +66,6 @@ RingNetwork::GetTypeId (void)
   return tid;
 }
 
-uint16_t
-RingNetwork::GetEnbSwitch (uint16_t cellId)
-{
-  NS_LOG_FUNCTION (this << cellId);
-
-  // FIXME Isso deveria ser especificado na configuração do cenário.
-  // Connect the eNBs to switches in clockwise direction, skipping the first
-  // switch (index 0), which is exclusive for the P-GW connection. The three
-  // eNBs from the same cell site are always connected to the same switch in
-  // the ring network.
-  uint16_t siteId = (cellId - 1) / 3;
-  return 1 + (siteId % (m_numNodes - 1));
-}
-
 void
 RingNetwork::DoDispose ()
 {
@@ -139,7 +125,7 @@ RingNetwork::CreateTopology (void)
       Ptr<Node> nextNode = m_switchNodes.Get (nextIndex);
       NetDeviceContainer devs = m_csmaHelper.Install (currNode, nextNode);
 
-      // Setting interface names for pacp filename
+      // Set device names for pcap files.
       BackhaulNetwork::SetDeviceNames (devs.Get (0), devs.Get (1), "~");
 
       // Adding newly created csma devices as Openflow switch ports.

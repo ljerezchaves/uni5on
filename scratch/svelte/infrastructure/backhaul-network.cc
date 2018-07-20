@@ -131,7 +131,7 @@ BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
   Ptr<CsmaNetDevice> epcDev  = DynamicCast<CsmaNetDevice> (devices.Get (1));
   m_epcDevices.Add (epcDev);
 
-  // Set the device name.
+  // Set device names for pcap files.
   std::string ifaceName = "~" + LteInterfaceStr (iface) + "~";
   BackhaulNetwork::SetDeviceNames (swDev, epcDev, ifaceName);
 
