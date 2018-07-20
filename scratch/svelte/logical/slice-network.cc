@@ -204,7 +204,7 @@ SliceNetwork::GetPgwTftNumNodes (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_tftNumNodes;
+  return m_nTftNodes;
 }
 
 // FIXME Esse aqui é para attach S-GW
@@ -356,7 +356,7 @@ SliceNetwork::SetPgwTftNumNodes (uint32_t value)
   // Check the number of P-GW TFT nodes (must be a power of 2).
   NS_ABORT_MSG_IF ((value & (value - 1)) != 0, "Invalid number of P-GW TFTs.");
 
-  m_tftNumNodes = value;
+  m_nTftNodes = value;
 }
 
 void
@@ -365,9 +365,9 @@ SliceNetwork::CreatePgw (void)
   NS_LOG_FUNCTION (this);
 
   // Create the P-GW nodes and configure them as OpenFlow switches.
-  m_pgwNodes.Create (m_tftNumNodes + 1);
+  m_pgwNodes.Create (m_nTftNodes + 1);
   m_pgwDevices = m_switchHelper->InstallSwitch (m_pgwNodes);
-  for (uint16_t i = 0; i < m_tftNumNodes + 1; i++)
+  for (uint16_t i = 0; i < m_nTftNodes + 1; i++)
     {
       std::ostringstream name;
       name << m_sliceIdStr << "_pgw" << i + 1;
