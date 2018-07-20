@@ -114,9 +114,9 @@ BackhaulNetwork::AttachEnb (Ptr<Node> enbNode, uint16_t cellId)
   swS1uDev  = DynamicCast<CsmaNetDevice> (devices.Get (0));
   enbS1uDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
 
-  Names::Add (Names::FindName (swNode) + "_to_" +
+  Names::Add (Names::FindName (swNode) + "~" +
               Names::FindName (enbNode), swS1uDev);
-  Names::Add (Names::FindName (enbNode) + "_to_" +
+  Names::Add (Names::FindName (enbNode) + "~" +
               Names::FindName (swNode), enbS1uDev);
 
   // Add the swS1uDev device as OpenFlow switch port on the backhaul switch.
@@ -151,9 +151,9 @@ BackhaulNetwork::AttachPgw (Ptr<Node> pgwNode, uint16_t swIdx)
   swS5Dev  = DynamicCast<CsmaNetDevice> (devices.Get (0));
   pgwS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (1));
 
-  Names::Add (Names::FindName (swNode) + "_to_" +
+  Names::Add (Names::FindName (swNode) + "~" +
               Names::FindName (pgwNode), swS5Dev);
-  Names::Add (Names::FindName (pgwNode) + "_to_" +
+  Names::Add (Names::FindName (pgwNode) + "~" +
               Names::FindName (swNode), pgwS5Dev);
 
   // Add the swS5Dev device as OpenFlow switch port on the backhaul network.

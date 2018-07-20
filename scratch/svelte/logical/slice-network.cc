@@ -219,9 +219,9 @@ SliceNetwork::GetPgwTftNumNodes (void) const
 //   swS5Dev  = DynamicCast<CsmaNetDevice> (devices.Get (0));
 //   sgwS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (1));
 //
-//   Names::Add (Names::FindName (swNode) + "_to_" +
+//   Names::Add (Names::FindName (swNode) + "~" +
 //               Names::FindName (sgwNode), swS5Dev);
-//   Names::Add (Names::FindName (sgwNode) + "_to_" +
+//   Names::Add (Names::FindName (sgwNode) + "~" +
 //               Names::FindName (swNode), sgwS5Dev);
 //
 //   // Add the swS5Dev device as OpenFlow switch port on the backhaul switch.
@@ -390,9 +390,9 @@ SliceNetwork::CreatePgw (void)
   pgwSgiDev = DynamicCast<CsmaNetDevice> (m_webDevices.Get (0));
   webSgiDev = DynamicCast<CsmaNetDevice> (m_webDevices.Get (1));
 
-  Names::Add (Names::FindName (pgwMainNode) + "_to_" +
+  Names::Add (Names::FindName (pgwMainNode) + "~" +
               Names::FindName (m_webNode), pgwSgiDev);
-  Names::Add (Names::FindName (m_webNode) + "_to_" +
+  Names::Add (Names::FindName (m_webNode) + "~" +
               Names::FindName (pgwMainNode), webSgiDev);
 
   // Add the pgwSgiDev as physical port on the P-GW main OpenFlow switch.
