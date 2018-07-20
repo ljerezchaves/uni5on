@@ -171,6 +171,18 @@ BackhaulNetwork::AttachSgw (Ptr<Node> sgwNode)
   // TODO
 
   return std::make_pair (Ipv4Address::GetAny (), Ipv4Address::GetAny ());
+
+void
+BackhaulNetwork::SetNames (Ptr<Node> srcNode, Ptr<NetDevice> srcDev,
+                           Ptr<Node> dstNode, Ptr<NetDevice> dstDev,
+                           std::string desc)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  Names::Add (Names::FindName (srcNode) + desc +
+              Names::FindName (dstNode), srcDev);
+  Names::Add (Names::FindName (dstNode) + desc +
+              Names::FindName (srcNode), dstDev);
 }
 
 void
