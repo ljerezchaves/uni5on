@@ -74,18 +74,20 @@ public:
   /**
    * Attach the P-GW logical node to the OpenFlow backhaul network.
    * \param pgwNode The P-GW node.
-   * \param swIdx The backhaul switch index at which the P-GW node should be
-   *              connected.
-   * \return The network device created at the P-GW node.
+   * \param swIdx The switch index at which the P-GW node should be connected.
+   * \return The network device created at the P-GW node for S5 interface.
    */
   virtual Ptr<CsmaNetDevice> AttachPgw (Ptr<Node> pgwNode, uint16_t swIdx);
 
   /**
    * Attach the S-GW logical node to the OpenFlow backhaul network.
    * \param pgwNode The S-GW node.
-   * \return The S-GW S1-U and S5 pair of IP address.
+   * \param swIdx The switch index at which the S-GW node should be connected.
+   * \return The pair os network devices created at the S-GW node for S1-U and
+   *         S5 interfaces, respectively.
    */
-  virtual std::pair<Ipv4Address, Ipv4Address> AttachSgw (Ptr<Node> sgwNode);
+  virtual std::pair<Ptr<CsmaNetDevice>, Ptr<CsmaNetDevice> >
+  AttachSgw (Ptr<Node> sgwNode, uint16_t swIdx);
 
   /**
    * Set the devices names identifying the connection between the nodes.
