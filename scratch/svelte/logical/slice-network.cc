@@ -506,6 +506,63 @@ SliceNetwork::CreateSgws (void)
 {
   NS_LOG_FUNCTION (this);
 
+  // FIXME O m_nSgws não é fixo (usar atributo da classe?).
+  m_nSgws = 2;
+
+  // Create the S-GW nodes and configure them as OpenFlow switches.
+  m_sgwNodes.Create (m_nSgws);
+  m_sgwDevices = m_switchHelper->InstallSwitch (m_sgwNodes);
+  for (uint16_t i = 0; i < m_nSgws; i++)
+    {
+      std::ostringstream name;
+      name << m_sliceIdStr << "_sgw" << i + 1;
+      Names::Add (name.str (), m_sgwNodes.Get (i));
+    }
+
+  //
+  // Connect all S-GW switches to the S1-U and S5 interfaces.
+  //
+  for (uint16_t sgwIdx = 0; sgwIdx < m_nSgws; sgwIdx++)
+    {
+      Ptr<Node> sgwNode = m_sgwNodes.Get (sgwIdx);
+      Ptr<OFSwitch13Device> sgwDev = m_sgwDevices.Get (sgwIdx);
+
+      // Connect the S-GW node to the OpenFlow backhaul node.
+      std::pair<Ptr<CsmaNetDevice>, Ptr<CsmaNetDevice> > sgwEpcDevs;
+      sgwEpcDevs = m_backhaul->AttachSgw (sgwNode, sgwIdx + 1); // FIXME sgwIdx + 1
+
+      Ptr<CsmaNetDevice> sgwS1uDev, sgwS5Dev;
+      sgwS1uDev = sgwEpcDevs.first;
+      sgwS5Dev = sgwEpcDevs.second;
+
+      // Create the virtual net device to work as the logical ports on the S-GW
+      // S1-U and S5 interface.
+      Ptr<VirtualNetDevice> sgwS1uPortDev = CreateObject<VirtualNetDevice> ();
+      sgwS1uPortDev->SetAddress (Mac48Address::Allocate ());
+      Ptr<OFSwitch13Port> sgwS1uPort = sgwDev->AddSwitchPort (sgwS1uPortDev);
+      uint32_t sgwS1uPortNo = sgwS1uPort->GetPortNo ();
+      NS_UNUSED (sgwS1uPortNo);
+
+      Ptr<VirtualNetDevice> sgwS5PortDev = CreateObject<VirtualNetDevice> ();
+      sgwS5PortDev->SetAddress (Mac48Address::Allocate ());
+      Ptr<OFSwitch13Port> sgwS5Port = sgwDev->AddSwitchPort (sgwS5PortDev);
+      uint32_t sgwS5PortNo = sgwS5Port->GetPortNo ();
+      NS_UNUSED (sgwS5PortNo);
+
+      // Create the S-GW S1-U and S5 user-plane application.
+      sgwNode->AddApplication (
+        CreateObject<GtpTunnelApp> (sgwS1uPortDev, sgwS1uDev));
+      sgwNode->AddApplication (
+        CreateObject<GtpTunnelApp> (sgwS5PortDev, sgwS5Dev));
+
+
+      // Notify the controller of the S-GW switch attached to the OpenFlow
+      // backhaul network.
+      // FIXME
+      // m_controllerApp->NotifySgwAttach (pgwMainOfDev, pgwS5PortNo, pgwSgiPortNo,
+      //                                   pgwS5Dev, webSgiDev);
+    }
+
 }
 
 void

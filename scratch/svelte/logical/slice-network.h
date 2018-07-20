@@ -155,6 +155,11 @@ private:
   DataRate                      m_tftPipeCapacity;  //!< TFT switch capacity.
   uint32_t                      m_tftTableSize;     //!< TFT switch table size.
 
+  // S-GW user planes.
+  uint32_t                      m_nSgws;
+  NodeContainer                 m_sgwNodes;         //!< S-GW switch nodes.
+  OFSwitch13DeviceContainer     m_sgwDevices;       //!< S-GW switch devices.
+
   // Helper and attributes for CSMA interface.
   CsmaHelper                    m_csmaHelper;       //!< Connection helper.
   uint16_t                      m_linkMtu;          //!< Link MTU.
