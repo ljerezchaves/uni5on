@@ -122,8 +122,7 @@ EnbInfo::RegisterEnbInfo (Ptr<EnbInfo> enbInfo)
   std::pair<uint16_t, Ptr<EnbInfo> > entry (cellId, enbInfo);
   std::pair<CellIdEnbInfo_t::iterator, bool> ret;
   ret = EnbInfo::m_enbInfoByCellId.insert (entry);
-  NS_ABORT_MSG_IF (ret.second == false,
-                   "Existing eNB information for cell ID " << cellId);
+  NS_ABORT_MSG_IF (ret.second == false, "Existing eNB info for this cell ID.");
 }
 
 };  // namespace ns3
