@@ -88,50 +88,34 @@ namespace ns3 {
  *  Logging severity classes and levels.
  */
 enum LogLevel {
-  LOG_NONE              = 0x00000000, //!< No logging.
+  LOG_NONE           = 0x00000000, //!< No logging.
 
-  LOG_ERROR             = 0x00000001, //!< Serious error messages only.
-  LOG_ERROR_FT          = 0xc0000001, //!< Serious error messages only with time.
-  LOG_LEVEL_ERROR       = 0x00000001, //!< LOG_ERROR and above.
-  LOG_LEVEL_ERROR_FT    = 0xc0000001, //!< LOG_ERROR and above with time.
+  LOG_ERROR          = 0x00000001, //!< Serious error messages only.
+  LOG_LEVEL_ERROR    = 0x00000001, //!< LOG_ERROR and above.
 
-  LOG_WARN              = 0x00000002, //!< Warning messages.
-  LOG_WARN_FT           = 0xc0000002, //!< Warning messages with time.
-  LOG_LEVEL_WARN        = 0x00000003, //!< LOG_WARN and above.
-  LOG_LEVEL_WARN_FT     = 0xc0000003, //!< LOG_WARN and above with time.
+  LOG_WARN           = 0x00000002, //!< Warning messages.
+  LOG_LEVEL_WARN     = 0x00000003, //!< LOG_WARN and above.
 
-  LOG_DEBUG             = 0x00000004, //!< Rare ad-hoc debug messages.
-  LOG_DEBUG_FT          = 0xc0000004, //!< Rare ad-hoc debug messages with time.
-  LOG_LEVEL_DEBUG       = 0x00000007, //!< LOG_DEBUG and above.
-  LOG_LEVEL_DEBUG_FT    = 0xc0000007, //!< LOG_DEBUG and above with time.
+  LOG_DEBUG          = 0x00000004, //!< Rare ad-hoc debug messages.
+  LOG_LEVEL_DEBUG    = 0x00000007, //!< LOG_DEBUG and above.
 
-  LOG_INFO              = 0x00000008, //!< Informational messages (e.g., banners).
-  LOG_INFO_FT           = 0xc0000008, //!< Informational messages (e.g., banners) with time.
-  LOG_LEVEL_INFO        = 0x0000000f, //!< LOG_INFO and above.
-  LOG_LEVEL_INFO_FT     = 0xc000000f, //!< LOG_INFO and above with time.
+  LOG_INFO           = 0x00000008, //!< Informational messages (e.g., banners).
+  LOG_LEVEL_INFO     = 0x0000000f, //!< LOG_INFO and above.
 
-  LOG_FUNCTION          = 0x00000010, //!< Function tracing.
-  LOG_FUNCTION_FT       = 0xc0000010, //!< Function tracing with time.
-  LOG_LEVEL_FUNCTION    = 0x0000001f, //!< LOG_FUNCTION and above.
-  LOG_LEVEL_FUNCTION_FT = 0xc000001f, //!< LOG_FUNCTION and above with time.
+  LOG_FUNCTION       = 0x00000010, //!< Function tracing.
+  LOG_LEVEL_FUNCTION = 0x0000001f, //!< LOG_FUNCTION and above.
 
-  LOG_LOGIC             = 0x00000020, //!< Control flow tracing within functions.
-  LOG_LOGIC_FT          = 0xc0000020, //!< Control flow tracing within functions with time.
-  LOG_LEVEL_LOGIC       = 0x0000003f, //!< LOG_LOGIC and above.
-  LOG_LEVEL_LOGIC_FT    = 0xc000003f, //!< LOG_LOGIC and above with time.
+  LOG_LOGIC          = 0x00000020, //!< Control flow tracing within functions.
+  LOG_LEVEL_LOGIC    = 0x0000003f, //!< LOG_LOGIC and above.
 
-  LOG_ALL               = 0x0fffffff, //!< Print everything.
-  LOG_ALL_FT            = 0xcfffffff, //!< Print everything with time.
-  LOG_LEVEL_ALL         = LOG_ALL,    //!< Print everything.
-  LOG_LEVEL_ALL_FT      = LOG_ALL_FT,  //!< Print everything with time.
+  LOG_ALL            = 0x0fffffff, //!< Print everything.
+  LOG_LEVEL_ALL      = LOG_ALL,    //!< Print everything.
 
-  LOG_PREFIX_FUNC       = 0x80000000, //!< Prefix all trace prints with function.
-  LOG_PREFIX_TIME       = 0x40000000, //!< Prefix all trace prints with simulation time.
-  LOG_PREFIX_NODE       = 0x20000000, //!< Prefix all trace prints with simulation node.
-  LOG_PREFIX_LEVEL      = 0x10000000, //!< Prefix all trace prints with log level (severity).
-  LOG_PREFIX_ALL        = 0xf0000000, //!< All prefixes.
-
-  LOG_ERROR_WARN_INFO_FT = 0xc000000b  //!< Error, warn and info messages with time.
+  LOG_PREFIX_FUNC    = 0x80000000, //!< Prefix all trace prints with function.
+  LOG_PREFIX_TIME    = 0x40000000, //!< Prefix all trace prints with simulation time.
+  LOG_PREFIX_NODE    = 0x20000000, //!< Prefix all trace prints with simulation node.
+  LOG_PREFIX_LEVEL   = 0x10000000, //!< Prefix all trace prints with log level (severity).
+  LOG_PREFIX_ALL     = 0xf0000000  //!< All prefixes.
 };
 
 /**
