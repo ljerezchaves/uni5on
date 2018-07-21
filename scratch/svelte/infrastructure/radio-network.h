@@ -81,12 +81,11 @@ public:
   Ptr<LteHelper> GetLteHelper (void) const;
 
   /**
-   * Create a mobility helper that randomly spreads UE nodes within the eNB
-   * coverage area. Only the position allocator is configured for this helper,
-   * without any mobility model.
-   * \return The mobility helper.
+   * Create a position allocator that randomly spreads UE nodes
+   * within the eNB coverage area.
+   * \return The position allocator.
    */
-  MobilityHelper GetRandomInitialPositioning (void) const;
+  Ptr<PositionAllocator> GetRandomPositionAllocator (void) const;
 
   /**
    * Print LTE radio environment map.

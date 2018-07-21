@@ -585,17 +585,18 @@ SliceNetwork::CreateUes (void)
       Names::Add (name.str (), m_ueNodes.Get (i));
     }
 
+  // TODO Use attributes for custom mobility configuration.
   // Configure UE positioning and mobility.
-  // TODO Use attributes for custom configuration.
-  MobilityHelper mobilityHelper = m_radio->GetRandomInitialPositioning ();
+  Ptr<PositionAllocator> posAllocator = m_radio->GetRandomPositionAllocator ();
+  MobilityHelper mobilityHelper;
+  mobilityHelper.SetPositionAllocator (posAllocator);
   if (m_ueMobility)
     {
-      // mobilityHelper.SetMobilityModel (
-      //   "ns3::RandomWaypointMobilityModel",
-      //   "Speed", StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=15.0]"),
-      //   "Pause", StringValue ("ns3::ExponentialRandomVariable[Mean=25.0]"),
-      //   "PositionAllocator", PointerValue (boxPosAllocator));
-      // FIXME Como recuperar o PositionAllocator? Criar um novo aqui?
+      mobilityHelper.SetMobilityModel (
+        "ns3::RandomWaypointMobilityModel",
+        "Speed", StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=15.0]"),
+        "Pause", StringValue ("ns3::ExponentialRandomVariable[Mean=25.0]"),
+        "PositionAllocator", PointerValue (posAllocator));
     }
 
   // Install LTE protocol stack into UE nodes.

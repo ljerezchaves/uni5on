@@ -150,12 +150,12 @@ RadioNetwork::GetLteHelper (void) const
   return m_lteHelper;
 }
 
-MobilityHelper
-RadioNetwork::GetRandomInitialPositioning (void) const
+Ptr<PositionAllocator>
+RadioNetwork::GetRandomPositionAllocator (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  // Configure the mobility helper for UEs.
+  // Configure the position allocator for UEs.
   Ptr<RandomVariableStream> posX, posY, posZ;
   posX = CreateObjectWithAttributes<UniformRandomVariable> (
       "Min", DoubleValue (m_coverageArea.xMin),
@@ -172,15 +172,15 @@ RadioNetwork::GetRandomInitialPositioning (void) const
   boxPosAllocator->SetAttribute ("Y", PointerValue (posY));
   boxPosAllocator->SetAttribute ("Z", PointerValue (posZ));
 
-  MobilityHelper mobilityHelper;
-  mobilityHelper.SetPositionAllocator (boxPosAllocator);
-  return mobilityHelper;
+  return boxPosAllocator;
 }
 
 void
 RadioNetwork::PrintRadioEnvironmentMap (void)
 {
   NS_LOG_FUNCTION (this);
+
+  NS_LOG_INFO ("Printing LTE radio environment map...");
 
   // Force UE initialization so we don't have to wait for nodes to start before
   // positions are assigned (which is needed to output node positions to plot).
@@ -407,7 +407,7 @@ RadioNetwork::NotifyConstructionCompleted ()
   uint32_t adjust = m_enbMargin * doubleValue.Get ();
   m_coverageArea = Rectangle (round (xMin - adjust), round (xMax + adjust),
                               round (yMin - adjust), round (yMax + adjust));
-  NS_LOG_INFO ("eNBs coverage area: " << m_coverageArea);
+  NS_LOG_INFO ("LTE RAN coverage area: " << m_coverageArea);
 
   // Make the buildings mobility model consistent.
   BuildingsHelper::MakeMobilityModelConsistent ();
