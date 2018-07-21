@@ -29,8 +29,16 @@ NS_OBJECT_ENSURE_REGISTERED (SliceController);
 
 // Initializing SliceController static members.
 // TODO Gerenciar TEID...
+// FIXME Montar um esquema que o teid tenham bits identificando o slice e outros identificando o tunel.
+const uint16_t SliceController::m_flowTimeout = 0;
+const uint32_t SliceController::m_teidStart = 0x100;
+const uint32_t SliceController::m_teidEnd = 0xFEFFFFFF;
+uint32_t SliceController::m_teidCount = SliceController::m_teidStart;
+
 
 SliceController::SliceController ()
+  : m_tftMaxLoad (DataRate (std::numeric_limits<uint64_t>::max ())),
+  m_tftTableSize (std::numeric_limits<uint32_t>::max ())
 {
   NS_LOG_FUNCTION (this);
 }
@@ -92,6 +100,51 @@ SliceController::GetTypeId (void)
                    DoubleValue (0.90),
                    MakeDoubleAccessor (&SliceController::m_tftSplitThs),
                    MakeDoubleChecker<double> (0.5, 1.0))
+
+    // Aggregation. // FIXME Desabilitar isso???
+//    .AddAttribute ("HtcAggregation",
+//                   "HTC traffic aggregation mechanism operation mode.",
+//                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+//                   EnumValue (OperationMode::OFF),
+//                   MakeEnumAccessor (&SliceController::m_htcAggregation),
+//                   MakeEnumChecker (OperationMode::OFF,  "off",
+//                                    OperationMode::ON,   "on",
+//                                    OperationMode::AUTO, "auto"))
+//    .AddAttribute ("HtcAggGbrThs",
+//                   "HTC traffic aggregation GBR bandwidth threshold.",
+//                   DoubleValue (0.5),
+//                   MakeDoubleAccessor (&SliceController::m_htcAggGbrThs),
+//                   MakeDoubleChecker<double> (0.0, 1.0))
+//    .AddAttribute ("HtcAggNonThs",
+//                   "HTC traffic aggregation Non-GBR bandwidth threshold.",
+//                   DoubleValue (0.5),
+//                   MakeDoubleAccessor (&SliceController::m_htcAggNonThs),
+//                   MakeDoubleChecker<double> (0.0, 1.0))
+//    .AddAttribute ("MtcAggregation",
+//                   "MTC traffic aggregation mechanism operation mode.",
+//                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+//                   EnumValue (OperationMode::OFF),
+//                   MakeEnumAccessor (&SliceController::m_mtcAggregation),
+//                   MakeEnumChecker (OperationMode::OFF,  "off",
+//                                    OperationMode::ON,   "on"))
+
+// FIXME Comentado por causa da dependência com o rInfo.
+//    .AddTraceSource ("BearerRelease", "The bearer release trace source.",
+//                     MakeTraceSourceAccessor (
+//                       &SliceController::m_bearerReleaseTrace),
+//                     "ns3::RoutingInfo::TracedCallback")
+//    .AddTraceSource ("BearerRequest", "The bearer request trace source.",
+//                     MakeTraceSourceAccessor (
+//                       &SliceController::m_bearerRequestTrace),
+//                     "ns3::RoutingInfo::TracedCallback")
+    .AddTraceSource ("PgwTftStats", "The P-GW TFT stats trace source.",
+                     MakeTraceSourceAccessor (
+                       &SliceController::m_pgwTftStatsTrace),
+                     "ns3::SliceController::PgwTftStatsTracedCallback")
+//    .AddTraceSource ("SessionCreated", "The session created trace source.",
+//                     MakeTraceSourceAccessor (
+//                       &SliceController::m_sessionCreatedTrace),
+//                     "ns3::SliceController::SessionCreatedTracedCallback")
   ;
   return tid;
 }
@@ -104,7 +157,22 @@ SliceController::DedicatedBearerRelease (
 
 //   SgwRulesRemove (RoutingInfo::GetPointer (teid));
 //   m_epcCtrlApp->DedicatedBearerRelease (bearer, teid);
-//   FIXME Copiar EpcController::DedicatedBearerRelease
+
+//   FIXME Copiei do SliceController::DedicatedBearerRelease
+//  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+//
+//  // This bearer must be active.
+//  NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't release the default bearer.");
+//  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
+//
+//  TopologyBitRateRelease (rInfo);
+//  m_bearerReleaseTrace (rInfo);
+//  NS_LOG_INFO ("Bearer released by controller.");
+//
+//  // Deactivate and remove the bearer.
+//  rInfo->SetActive (false);
+//  return BearerRemove (rInfo);
+
   return true;
 }
 
@@ -114,7 +182,50 @@ SliceController::DedicatedBearerRequest (
 {
   NS_LOG_FUNCTION (this << imsi << cellId << teid);
 
-//   FIXME EpcController::DedicatedBearerRequest
+//   FIXME copiei do SliceController::DedicatedBearerRequest
+//  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+//
+//  // This bearer must be inactive as we are going to reuse its metadata.
+//  NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
+//  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
+//
+//  // Update the P-GW TFT index and the blocked flag.
+//  rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
+//  rInfo->SetBlocked (false);
+//
+//  // Update the aggregation threshold values.
+//  Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
+//  aggInfo->SetThreshold (rInfo->IsMtc () ? 0.0 :
+//                         rInfo->IsGbr () ? m_htcAggGbrThs : m_htcAggNonThs);
+//
+//  // Check for available resources on P-GW and backhaul network and then
+//  // reserve the requested bandwidth (don't change the order!).
+//  bool success = true;
+//  success &= TopologyBearerRequest (rInfo);
+//  success &= PgwBearerRequest (rInfo);
+//  success &= TopologyBitRateReserve (rInfo);
+//  m_bearerRequestTrace (rInfo);
+//  if (!success)
+//    {
+//      NS_LOG_INFO ("Bearer request blocked by controller.");
+//      return false;
+//    }
+//
+//  // Every time the application starts using an (old) existing bearer, let's
+//  // reinstall the rules on the switches, which will increase the bearer
+//  // priority. Doing this, we avoid problems with old 'expiring' rules, and
+//  // we can even use new routing paths when necessary.
+//  NS_LOG_INFO ("Bearer request accepted by controller.");
+//  if (rInfo->IsAggregated ())
+//    {
+//      NS_LOG_INFO ("Aggregating bearer teid " << rInfo->GetTeid ());
+//    }
+//
+//  // Activate and install the bearer.
+//  rInfo->SetActive (true);
+//  return BearerInstall (rInfo);
+
+
 //   if (m_epcCtrlApp->DedicatedBearerRequest (bearer, teid))
 //     {
 //       return SgwRulesInstall (RoutingInfo::GetPointer (teid));
@@ -127,9 +238,6 @@ SliceController::DedicatedBearerRequest (
 // {
 //   NS_LOG_FUNCTION (this << cellId << sgwS1uPortNo);
 //
-//   // Register this controller by cell ID for further usage.
-//   RegisterController (Ptr<SliceController> (this), cellId);
-//
 //   // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
 //   // Internet are sent to table 2, where rules will match the flow and set both
 //   // TEID and P-GW address on tunnel metadata.
@@ -140,6 +248,7 @@ SliceController::DedicatedBearerRequest (
 //       << "/" << LteNetwork::m_sgiMask.GetPrefixLength ()
 //       << " goto:2";
 //   DpctlSchedule (m_sgwDpId, cmd.str ());
+// // FIXME Precisa dar um jeito de chamar isso aqui para todos os eNBs que são compartilhados entre todas os slices. FIXME FIXME FIXME FIXME FIXME FIXME FIXME OLHAR COM CALMA QUE ACHO QUE DA PRA FAZER NO ATTACH SGW
 // }
 //
 // void
@@ -370,6 +479,22 @@ SliceController::NotifyConstructionCompleted (void)
   // m_mme->SetS11SapSgw (m_s11SapSgw); FIXME Should be AddS11SapSgw?
   m_s11SapMme = m_mme->GetS11SapMme ();
 
+  // Set the initial number of P-GW TFT active switches.
+  switch (GetPgwAdaptiveMode ())
+    {
+    case OperationMode::ON:
+    case OperationMode::AUTO:
+      {
+        m_tftLevel = static_cast<uint8_t> (log2 (m_tftSwitches));
+        break;
+      }
+    case OperationMode::OFF:
+      {
+        m_tftLevel = 0;
+        break;
+      }
+    }
+
   // Schedule the first timeout operation.
   Simulator::Schedule (m_timeout, &SliceController::ControllerTimeout, this);
 
@@ -386,7 +511,7 @@ SliceController::HandleError (
 
   // Chain up for logging and abort.
   OFSwitch13Controller::HandleError (msg, swtch, xid);
-  NS_ABORT_MSG ("Should not get here :/");
+  NS_ABORT_MSG ("Should not get here.");
 }
 
 ofl_err
@@ -444,14 +569,15 @@ SliceController::HandlePacketIn (
 {
   NS_LOG_FUNCTION (this << swtch << xid);
 
+  // Print the message.
   char *msgStr = ofl_structs_match_to_string (msg->match, 0);
   NS_LOG_DEBUG ("Packet in match: " << msgStr);
   free (msgStr);
 
-  NS_ABORT_MSG ("Packet not supposed to be sent to this controller. Abort.");
-
-  // All handlers must free the message when everything is ok
+  // All handlers must free the message when everything is ok.
   ofl_msg_free ((struct ofl_msg_header*)msg, 0);
+  
+  NS_ABORT_MSG ("Should not get here.");
   return 0;
 }
 
@@ -490,6 +616,60 @@ SliceController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // Entries will be installed here by SgwRulesInstall function.
 }
 
+
+
+//bool
+//SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
+//{
+//  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+//
+//  // FIXME Aqui tem que fazer a interface direta lá com o controlador do backaul
+//  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
+//  rInfo->SetInstalled (false);
+//
+//  if (rInfo->IsAggregated ())
+//    {
+//      // Don't install rules for aggregated traffic. This will automatically
+//      // force the traffic over the S5 default bearer.
+//      return true;
+//    }
+//
+//  // Increasing the priority every time we (re)install routing rules.
+//  rInfo->IncreasePriority ();
+//
+//  // Install the rules.
+//  bool success = true;
+//  success &= PgwRulesInstall (rInfo);
+//  success &= TopologyRoutingInstall (rInfo);
+//
+//  rInfo->SetInstalled (success);
+//  return success;
+//}
+//
+//bool
+//SliceController::BearerRemove (Ptr<RoutingInfo> rInfo)
+//{
+//  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+//
+//  // FIXME Aqui tem que fazer a interface direta lá com o controlador do backaul
+//  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
+//
+//  if (rInfo->IsAggregated ())
+//    {
+//      // No rules to remove for aggregated traffic.
+//      return true;
+//    }
+//
+//  // Remove the rules.
+//  bool success = true;
+//  success &= PgwRulesRemove (rInfo);
+//  success &= TopologyRoutingRemove (rInfo);
+//
+//  rInfo->SetInstalled (!success);
+//  return success;
+//}
+
+
 void
 SliceController::ControllerTimeout (void)
 {
@@ -511,7 +691,7 @@ SliceController::DoCreateSessionRequest (
 {
   NS_LOG_FUNCTION (this << msg.imsi);
 
-//  FIXME O código abaixo veio do antigo EpcController
+//  FIXME O código abaixo veio do antigo SliceController. Antes o mesmo controlador configurava o backhaul e o P-GW. Agora eu vou ter que chamar manualmente alguma função no controlador do backhaul pra configurar a parte de lá serparado dos gateways aqui.
 //  uint16_t cellId = msg.uli.gci;
 //  uint64_t imsi = msg.imsi;
 //
@@ -528,9 +708,9 @@ SliceController::DoCreateSessionRequest (
 //       bit != msg.bearerContextsToBeCreated.end ();
 //       ++bit)
 //    {
-//      NS_ABORT_IF (EpcController::m_teidCount > EpcController::m_teidEnd);
+//      NS_ABORT_IF (SliceController::m_teidCount > SliceController::m_teidEnd);
 //
-//      uint32_t teid = EpcController::m_teidCount++;
+//      uint32_t teid = SliceController::m_teidCount++;
 //      bool isDefault = res.bearerContextsCreated.empty ();
 //
 //      EpcS11SapMme::BearerContextCreated bearerContext;
@@ -608,6 +788,7 @@ SliceController::DoCreateSessionRequest (
 //  // Fire trace source notifying the created session.
 //  m_sessionCreatedTrace (imsi, cellId, res.bearerContextsCreated);
 //
+//   /// FIXME Esse pedaço abaixo veio da mensagem de volta, DoCreateSessionResponse no sdran.
 //   // Install S-GW rules for default bearer.
 //   BearerContext_t defaultBearer = msg.bearerContextsCreated.front ();
 //   NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
@@ -684,13 +865,130 @@ SliceController::GetPgwTftDpId (uint16_t idx) const
   return m_pgwDpIds.at (idx);
 }
 
+// uint16_t
+// SliceController::GetPgwTftIdx (
+//   Ptr<const RoutingInfo> rInfo, uint16_t activeTfts) const
+// {
+//   NS_LOG_FUNCTION (this << rInfo << activeTfts);
+// 
+//   if (activeTfts == 0)
+//     {
+//       activeTfts = 1 << m_tftLevel;
+//     }
+//   Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
+//   return 1 + (ueInfo->GetUeAddr ().Get () % activeTfts);
+// }
+
+
+
 void
 SliceController::PgwTftCheckUsage (void)
 {
   NS_LOG_FUNCTION (this);
   // TODO
+
+// double maxEntries = 0.0, sumEntries = 0.0;
+//  double maxLoad = 0.0, sumLoad = 0.0;
+//  uint32_t maxLbLevel = static_cast<uint32_t> (log2 (m_tftSwitches));
+//  uint16_t activeTfts = 1 << m_tftLevel;
+//  uint8_t nextLevel = m_tftLevel;
+//
+//  Ptr<OFSwitch13Device> device;
+//  Ptr<OFSwitch13StatsCalculator> stats;
+//  for (uint16_t tftIdx = 1; tftIdx <= activeTfts; tftIdx++)
+//    {
+//      device = OFSwitch13Device::GetDevice (GetPgwTftDpId (tftIdx));
+//      stats = device->GetObject<OFSwitch13StatsCalculator> ();
+//      NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
+//
+//      double entries = stats->GetEwmaFlowEntries ();
+//      maxEntries = std::max (maxEntries, entries);
+//      sumEntries += entries;
+//
+//      double load = stats->GetEwmaPipelineLoad ().GetBitRate ();
+//      maxLoad = std::max (maxLoad, load);
+//      sumLoad += load;
+//    }
+//
+//  if (GetPgwAdaptiveMode () == OperationMode::AUTO)
+//    {
+//      double maxTableUsage = maxEntries / m_tftTableSize;
+//      double maxLoadUsage = maxLoad / m_tftMaxLoad.GetBitRate ();
+//
+//      // We may increase the level when we hit the split threshold.
+//      if ((m_tftLevel < maxLbLevel)
+//          && (maxTableUsage >= m_tftSplitThs
+//              || maxLoadUsage >= m_tftSplitThs))
+//        {
+//          NS_LOG_INFO ("Increasing the adaptive mechanism level.");
+//          nextLevel++;
+//        }
+//
+//      // We may decrease the level when we hit the joing threshold.
+//      else if ((m_tftLevel > 0)
+//               && (maxTableUsage < m_tftJoinThs)
+//               && (maxLoadUsage < m_tftJoinThs))
+//        {
+//          NS_LOG_INFO ("Decreasing the adaptive mechanism level.");
+//          nextLevel--;
+//        }
+//    }
+//
+//  // Check if we need to update the adaptive mechanism level.
+//  uint32_t moved = 0;
+//  if (m_tftLevel != nextLevel)
+//    {
+//      // Identify and move bearers to the correct P-GW TFT switches.
+//      uint16_t futureTfts = 1 << nextLevel;
+//      for (uint16_t currIdx = 1; currIdx <= activeTfts; currIdx++)
+//        {
+//          RoutingInfoList_t bearers = RoutingInfo::GetInstalledList (currIdx);
+//          RoutingInfoList_t::iterator it;
+//          for (it = bearers.begin (); it != bearers.end (); ++it)
+//            {
+//              uint16_t destIdx = GetPgwTftIdx (*it, futureTfts);
+//              if (destIdx != currIdx)
+//                {
+//                  NS_LOG_INFO ("Moving bearer teid " << (*it)->GetTeid ());
+//                  PgwRulesRemove  (*it, currIdx, true);
+//                  PgwRulesInstall (*it, destIdx, true);
+//                  (*it)->SetPgwTftIdx (destIdx);
+//                  moved++;
+//                }
+//            }
+//        }
+//
+//      // Update the adaptive mechanism level and the P-GW main switch.
+//      std::ostringstream cmd;
+//      cmd << "flow-mod cmd=mods,table=0,prio=64 eth_type=0x800"
+//          << ",in_port=" << m_pgwSgiPortNo
+//          << ",ip_dst=" << EpcNetwork::m_ueAddr
+//          << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
+//          << " goto:" << nextLevel + 1;
+//      DpctlExecute (GetPgwMainDpId (), cmd.str ());
+//    }
+//
+//  // Fire the P-GW TFT adaptation trace source.
+//  struct PgwTftStats tftStats;
+//  tftStats.tableSize = m_tftTableSize;
+//  tftStats.maxEntries = maxEntries;
+//  tftStats.sumEntries = sumEntries;
+//  tftStats.pipeCapacity = m_tftMaxLoad.GetBitRate ();
+//  tftStats.maxLoad = maxLoad;
+//  tftStats.sumLoad = sumLoad;
+//  tftStats.currentLevel = m_tftLevel;
+//  tftStats.nextLevel = nextLevel;
+//  tftStats.maxLevel = maxLbLevel;
+//  tftStats.bearersMoved = moved;
+//  tftStats.blockThrs = m_tftBlockThs;
+//  tftStats.joinThrs = m_tftJoinThs;
+//  tftStats.splitThrs = m_tftSplitThs;
+//  m_pgwTftStatsTrace (tftStats);
+//
+//  m_tftLevel = nextLevel;
 }
 
+// FIXME os dois métodos vieram do SdranController
 // bool
 // SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 // {
@@ -893,4 +1191,230 @@ SliceController::PgwTftCheckUsage (void)
 //     }
 //   return true;
 // }
+
+
+
+// bool
+// SliceController::MtcAggBearerInstall (Ptr<RoutingInfo> rInfo)
+// {
+//   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+// 
+//   bool success = TopologyRoutingInstall (rInfo);
+//   NS_ASSERT_MSG (success, "Error when installing the MTC aggregation bearer.");
+//   NS_LOG_INFO ("MTC aggregation bearer teid " << rInfo->GetTeid () <<
+//                " installed for S-GW " << rInfo->GetSgwS5Addr ());
+// 
+//   rInfo->SetInstalled (success);
+//   return success;
+// }
+// 
+// bool
+// SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
+// {
+//   NS_LOG_FUNCTION (this << rInfo->GetTeid ());
+// 
+//   // If the bearer is already blocked, there's nothing more to do.
+//   if (rInfo->IsBlocked ())
+//     {
+//       return false;
+//     }
+// 
+//   // Check for valid P-GW TFT thresholds attributes.
+//   NS_ASSERT_MSG (m_tftSplitThs < m_tftBlockThs
+//                  && m_tftSplitThs > 2 * m_tftJoinThs,
+//                  "The split threshold should be smaller than the block "
+//                  "threshold and two times larger than the join threshold.");
+// 
+//   // Get the P-GW TFT stats calculator for this bearer.
+//   Ptr<OFSwitch13Device> device;
+//   Ptr<OFSwitch13StatsCalculator> stats;
+//   uint16_t tftIdx = rInfo->GetPgwTftIdx ();
+//   device = OFSwitch13Device::GetDevice (GetPgwTftDpId (tftIdx));
+//   stats = device->GetObject<OFSwitch13StatsCalculator> ();
+//   NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
+// 
+//   // First check: OpenFlow switch table usage.
+//   // Only non-aggregated bearers will install rules on P-GW TFT flow table.
+//   // Blocks the bearer if the table usage is exceeding the block threshold.
+//   if (!rInfo->IsAggregated ())
+//     {
+//       uint32_t entries = stats->GetEwmaFlowEntries ();
+//       double tableUsage = static_cast<double> (entries) / m_tftTableSize;
+//       if (tableUsage >= m_tftBlockThs)
+//         {
+//           rInfo->SetBlocked (true, RoutingInfo::TFTTABLEFULL);
+//           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
+//                        " because the TFT flow tables is full.");
+//         }
+//     }
+// 
+//   // Second check: OpenFlow switch pipeline load.
+//   // Is the current pipeline load is exceeding the block threshold, blocks the
+//   // bearer accordingly to the PgwTftBlockPolicy attribute:
+//   // - If OFF (none): don't block the request.
+//   // - If ON (all)  : block the request.
+//   // - If AUTO (gbr): block only if GBR request.
+//   uint64_t rate = stats->GetEwmaPipelineLoad ().GetBitRate ();
+//   double loadUsage = static_cast<double> (rate) / m_tftMaxLoad.GetBitRate ();
+//   if (loadUsage >= m_tftBlockThs
+//       && (m_tftBlockPolicy == OperationMode::ON
+//           || (m_tftBlockPolicy == OperationMode::AUTO && rInfo->IsGbr ())))
+//     {
+//       rInfo->SetBlocked (true, RoutingInfo::TFTMAXLOAD);
+//       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
+//                    " because the TFT processing capacity is overloaded.");
+//     }
+// 
+//   // Return false if blocked.
+//   return !rInfo->IsBlocked ();
+// }
+// 
+// bool
+// SliceController::PgwRulesInstall (
+//   Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool forceMeterInstall)
+// {
+//   NS_LOG_FUNCTION (this << rInfo->GetTeid () << pgwTftIdx << forceMeterInstall);
+// 
+//   // Use the rInfo P-GW TFT index when the parameter is not set.
+//   if (pgwTftIdx == 0)
+//     {
+//       pgwTftIdx = rInfo->GetPgwTftIdx ();
+//     }
+//   uint64_t pgwTftDpId = GetPgwTftDpId (pgwTftIdx);
+//   uint32_t pgwTftS5PortNo = m_pgwS5PortsNo.at (pgwTftIdx);
+//   NS_LOG_INFO ("Installing P-GW rules for bearer teid " << rInfo->GetTeid () <<
+//                " into P-GW TFT switch index " << pgwTftIdx);
+// 
+//   // Flags OFPFF_CHECK_OVERLAP and OFPFF_RESET_COUNTS.
+//   std::string flagsStr ("0x0006");
+// 
+//   // Print the cookie and buffer values in dpctl string format.
+//   char cookieStr [20];
+//   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
+// 
+//   // Print downlink TEID and destination IPv4 address into tunnel metadata.
+//   uint64_t tunnelId;
+//   char tunnelIdStr [20];
+//   tunnelId = static_cast<uint64_t> (rInfo->GetSgwS5Addr ().Get ());
+//   tunnelId <<= 32;
+//   tunnelId |= rInfo->GetTeid ();
+//   sprintf (tunnelIdStr, "0x%016lx", tunnelId);
+// 
+//   // Build the dpctl command string
+//   std::ostringstream cmd, act;
+//   cmd << "flow-mod cmd=add,table=0"
+//       << ",flags=" << flagsStr
+//       << ",cookie=" << cookieStr
+//       << ",prio=" << rInfo->GetPriority ()
+//       << ",idle=" << rInfo->GetTimeout ();
+// 
+//   // Check for meter entry.
+//   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
+//   if (meterInfo && meterInfo->HasDown ())
+//     {
+//       if (forceMeterInstall || !meterInfo->IsDownInstalled ())
+//         {
+//           // Install the per-flow meter entry.
+//           DpctlExecute (pgwTftDpId, meterInfo->GetDownAddCmd ());
+//           meterInfo->SetDownInstalled (true);
+//         }
+// 
+//       // Instruction: meter.
+//       act << " meter:" << rInfo->GetTeid ();
+//     }
+// 
+//   // Instruction: apply action: set tunnel ID, output port.
+//   act << " apply:set_field=tunn_id:" << tunnelIdStr
+//       << ",output=" << pgwTftS5PortNo;
+// 
+//   // Install one downlink dedicated bearer rule for each packet filter.
+//   Ptr<EpcTft> tft = rInfo->GetTft ();
+//   for (uint8_t i = 0; i < tft->GetNFilters (); i++)
+//     {
+//       EpcTft::PacketFilter filter = tft->GetFilter (i);
+//       if (filter.direction == EpcTft::UPLINK)
+//         {
+//           continue;
+//         }
+// 
+//       // Install rules for TCP traffic.
+//       if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
+//         {
+//           std::ostringstream match;
+//           match << " eth_type=0x800"
+//                 << ",ip_proto=6"
+//                 << ",ip_dst=" << filter.localAddress;
+// 
+//           if (tft->IsDefaultTft () == false)
+//             {
+//               match << ",ip_src=" << filter.remoteAddress
+//                     << ",tcp_src=" << filter.remotePortStart;
+//             }
+// 
+//           std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
+//           DpctlExecute (pgwTftDpId, cmdTcpStr);
+//         }
+// 
+//       // Install rules for UDP traffic.
+//       else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
+//         {
+//           std::ostringstream match;
+//           match << " eth_type=0x800"
+//                 << ",ip_proto=17"
+//                 << ",ip_dst=" << filter.localAddress;
+// 
+//           if (tft->IsDefaultTft () == false)
+//             {
+//               match << ",ip_src=" << filter.remoteAddress
+//                     << ",udp_src=" << filter.remotePortStart;
+//             }
+// 
+//           std::string cmdUdpStr = cmd.str () + match.str () + act.str ();
+//           DpctlExecute (pgwTftDpId, cmdUdpStr);
+//         }
+//     }
+//   return true;
+// }
+// 
+// bool
+// SliceController::PgwRulesRemove (
+//   Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool keepMeterFlag)
+// {
+//   NS_LOG_FUNCTION (this << rInfo->GetTeid () << pgwTftIdx << keepMeterFlag);
+// 
+//   // Use the rInfo P-GW TFT index when the parameter is not set.
+//   if (pgwTftIdx == 0)
+//     {
+//       pgwTftIdx = rInfo->GetPgwTftIdx ();
+//     }
+//   uint64_t pgwTftDpId = GetPgwTftDpId (pgwTftIdx);
+//   NS_LOG_INFO ("Removing P-GW rules for bearer teid " << rInfo->GetTeid () <<
+//                " from P-GW TFT switch index " << pgwTftIdx);
+// 
+//   // Print the cookie value in dpctl string format.
+//   char cookieStr [20];
+//   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
+// 
+//   // Remove P-GW TFT flow entries for this TEID.
+//   std::ostringstream cmd;
+//   cmd << "flow-mod cmd=del,table=0"
+//       << ",cookie=" << cookieStr
+//       << ",cookie_mask=0xffffffffffffffff"; // Strict cookie match.
+//   DpctlExecute (pgwTftDpId, cmd.str ());
+// 
+//   // Remove meter entry for this TEID.
+//   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
+//   if (meterInfo && meterInfo->IsDownInstalled ())
+//     {
+//       DpctlExecute (pgwTftDpId, meterInfo->GetDelCmd ());
+//       if (!keepMeterFlag)
+//         {
+//           meterInfo->SetDownInstalled (false);
+//         }
+//     }
+//   return true;
+// }
+
+
+
 } // namespace ns3

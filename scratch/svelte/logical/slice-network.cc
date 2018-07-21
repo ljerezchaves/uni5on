@@ -568,6 +568,7 @@ SliceNetwork::CreateSgws (void)
       // Notify the controller of the S-GW switch attached to the OpenFlow
       // backhaul network.
       // FIXME Aqui vai ter uma questão relacionada com túneis de agregação.
+      // FIXME Chamar o NotifySgwAttach no controlador da infraestrutura e tb o NotifyEnbAttach pra resolver tudo de uma vez só.
       // m_controllerApp->NotifySgwAttach (pgwMainOfDev, pgwS5PortNo, pgwSgiPortNo,
       //                                   pgwS5Dev, webSgiDev);
       // FIXME ver SdranController::NotifyEnbAttach

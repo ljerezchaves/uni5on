@@ -47,7 +47,6 @@ std::string OperationModeStr (OperationMode mode)
 }
 
 // Initializing BackhaulController static members.
-const uint16_t BackhaulController::m_flowTimeout = 0;
 BackhaulController::QciDscpMap_t BackhaulController::m_qciDscpTable;
 BackhaulController::DscpQueueMap_t BackhaulController::m_dscpQueueTable;
 BackhaulController::DscpTosMap_t BackhaulController::m_dscpTosTable;
@@ -128,7 +127,7 @@ BackhaulController::DedicatedBearerRelease (EpsBearer bearer, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << teid);
 
-// FIXME
+// FIXME ver integração com o Slicecontroller
 //  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
 //
 //  // This bearer must be active.
@@ -150,7 +149,7 @@ BackhaulController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << teid);
 
-// FIXME
+// FIXME ver integração com slicecontroller
 //  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
 //
 //  // This bearer must be inactive as we are going to reuse its metadata.
@@ -408,7 +407,7 @@ BackhaulController::HandleError (
 
   // Chain up for logging and abort.
   OFSwitch13Controller::HandleError (msg, swtch, xid);
-  NS_ABORT_MSG ("Should not get here :/");
+  NS_ABORT_MSG ("Should not get here.");
 }
 
 ofl_err
@@ -466,14 +465,15 @@ BackhaulController::HandlePacketIn (
 {
   NS_LOG_FUNCTION (this << swtch << xid);
 
+  // Print the message.
   char *msgStr = ofl_structs_match_to_string (msg->match, 0);
   NS_LOG_DEBUG ("Packet in match: " << msgStr);
   free (msgStr);
 
-  NS_ABORT_MSG ("Packet not supposed to be sent to this controller. Abort.");
-
-  // All handlers must free the message when everything is ok
+  // All handlers must free the message when everything is ok.
   ofl_msg_free ((struct ofl_msg_header*)msg, 0);
+  
+  NS_ABORT_MSG ("Should not get here.");
   return 0;
 }
 
@@ -511,7 +511,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 2 -- Routing table -- [from higher to lower priority]
   //
-  // Entries will be installed here by NewS5Attach function.
+  // Entries will be installed here by NewEpcAttach function.
   // Entries will be installed here by NotifyTopologyBuilt function.
 
   // GTP packets classified at previous table. Write the output group into

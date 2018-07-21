@@ -343,7 +343,8 @@ private:
 //   * \param cellId The cell ID used to index the map.
 //   */
 //  static void RegisterController (Ptr<SliceController> ctrl, uint16_t cellId);
-//
+
+// FIXME comentado por causa da dependencia com o rinfo.
 //  /** The bearer request trace source, fired at RequestDedicatedBearer. */
 //  TracedCallback<Ptr<const RoutingInfo> > m_bearerRequestTrace;
 //
@@ -353,9 +354,9 @@ private:
 //  /** The context created trace source, fired at NotifySessionCreated. */
 //  TracedCallback<uint64_t, uint16_t, BearerContextList_t>
 //  m_sessionCreatedTrace;
-//
-//  /** The P-GW TFT stats trace source, fired at PgwTftCheckUsage. */
-//  TracedCallback<struct PgwTftStats> m_pgwTftStatsTrace;
+
+  /** The P-GW TFT stats trace source, fired at PgwTftCheckUsage. */
+  TracedCallback<struct PgwTftStats> m_pgwTftStatsTrace;
 
   // MME interface.
   Ptr<SvelteMme>          m_mme;          //!< MME element.
@@ -388,10 +389,18 @@ private:
   DataRate                m_tftMaxLoad;     //!< Processing capacity.
   uint32_t                m_tftTableSize;   //!< Flow table size.
 
+  // Traffic aggregation mechanisms. // FIXME Remover?
+//  OperationMode         m_mtcAggregation; //!< MTC aggregation mechanism.
+//  OperationMode         m_htcAggregation; //!< HTC aggregation mechanism.
+//  double                m_htcAggGbrThs;   //!< Bandwidth threshold for GBR.
+//  double                m_htcAggNonThs;   //!< Bandwidth threshold for Non-GBR.
+
+
   // Internal members and attributes.
   OperationMode           m_aggregation;    //!< Aggregation mechanism. FIXME
   Time                    m_timeout;        //!< Controller internal timeout.
 
+  static const uint16_t   m_flowTimeout;    //!< Timeout for flow entries.
   static uint32_t         m_teidCount;      //!< TEID counter. FIXME
 };
 

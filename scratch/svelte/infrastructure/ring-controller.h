@@ -92,7 +92,8 @@ private:
    * \param dstIdx Destination switch index.
    * \return The routing path.
    */
-  RingRoutingInfo::RoutingPath FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const;
+  RingRoutingInfo::RoutingPath FindShortestPath (uint16_t srcIdx,
+                                                 uint16_t dstIdx) const;
 
   /**
    * Search for connection information between two switches by their indexes.

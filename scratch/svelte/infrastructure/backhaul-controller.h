@@ -267,11 +267,6 @@ private:
   OperationMode         m_priorityQueues; //!< DSCP priority queues mechanism.
   OperationMode         m_slicing;        //!< Network slicing mechanism.
 
-//  // Traffic aggregation mechanisms.
-//  OperationMode         m_mtcAggregation; //!< MTC aggregation mechanism.
-//  OperationMode         m_htcAggregation; //!< HTC aggregation mechanism.
-//  double                m_htcAggGbrThs;   //!< Bandwidth threshold for GBR. // FIXME simplificar
-//  double                m_htcAggNonThs;   //!< Bandwidth threshold for Non-GBR.
 
   /** Map saving EPS QCI / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, Ipv4Header::DscpType> QciDscpMap_t;
@@ -282,7 +277,6 @@ private:
   /** Map saving IP DSCP value / IP ToS. */
   typedef std::map<Ipv4Header::DscpType, uint8_t> DscpTosMap_t;
 
-  static const uint16_t m_flowTimeout;    //!< Timeout for flow entries.
   static QciDscpMap_t   m_qciDscpTable;   //!< DSCP mapped values.
   static DscpQueueMap_t m_dscpQueueTable; //!< OpenFlow queue id mapped values.
   static DscpTosMap_t   m_dscpTosTable;   //!< IP ToS mapped values.
