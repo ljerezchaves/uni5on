@@ -408,22 +408,22 @@ SliceNetwork::CreatePgw (void)
   // Set the IP address on the Internet network.
   m_webAddrHelper.Assign (NetDeviceContainer (m_webDevices));
   NS_LOG_INFO ("Web node " << m_webNode << " attached to the sgi interface " <<
-               "with IP " << Ipv4AddressHelper::GetFirstAddress (webSgiDev));
+               "with IP " << Ipv4AddressHelper::GetAddress (webSgiDev));
   NS_LOG_INFO ("P-GW " << pgwMainNode << " attached to the sgi interface " <<
-               "with IP " << Ipv4AddressHelper::GetFirstAddress (pgwSgiDev));
+               "with IP " << Ipv4AddressHelper::GetAddress (pgwSgiDev));
 
   // Define static routes at the web server to the LTE network.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
   Ptr<Ipv4StaticRouting> webHostStaticRouting =
     ipv4RoutingHelper.GetStaticRouting (m_webNode->GetObject<Ipv4> ());
   webHostStaticRouting->AddNetworkRouteTo (
-    m_ueAddr, m_ueMask, Ipv4AddressHelper::GetFirstAddress (pgwSgiDev), 1);
+    m_ueAddr, m_ueMask, Ipv4AddressHelper::GetAddress (pgwSgiDev), 1);
 
   // Connect the P-GW node to the OpenFlow backhaul network.
   Ptr<CsmaNetDevice> pgwS5Dev;
   pgwS5Dev = m_backhaul->AttachEpcNode (pgwMainNode, m_pgwSwitchIdx, LteInterface::S5);
   NS_LOG_INFO ("P-GW main switch " << pgwMainNode << " attached to the s5 interface " <<
-               "with IP " << Ipv4AddressHelper::GetFirstAddress (pgwS5Dev));
+               "with IP " << Ipv4AddressHelper::GetAddress (pgwS5Dev));
 
   // Create the virtual net device to work as the logical ports on the P-GW S5
   // interface. This logical ports will connect to the P-GW user-plane
@@ -488,7 +488,7 @@ SliceNetwork::CreatePgw (void)
       Ptr<CsmaNetDevice> pgwS5Dev;
       pgwS5Dev = m_backhaul->AttachEpcNode (pgwTftNode, m_pgwSwitchIdx, LteInterface::S5);
       NS_LOG_INFO ("P-GW TFT switch " << pgwTftNode << " attached to the s5 interface " <<
-               "with IP " << Ipv4AddressHelper::GetFirstAddress (pgwS5Dev));
+               "with IP " << Ipv4AddressHelper::GetAddress (pgwS5Dev));
 
       // Create the virtual net device to work as the logical ports on the P-GW
       // S5 interface.
@@ -540,10 +540,10 @@ SliceNetwork::CreateSgws (void)
       Ptr<CsmaNetDevice> sgwS1uDev, sgwS5Dev;
       sgwS1uDev = m_backhaul->AttachEpcNode (sgwNode, sgwIdx + 1, LteInterface::S1U);
       NS_LOG_INFO ("S-GW " << sgwNode << " attached to the s1u interface with IP " <<
-                   Ipv4AddressHelper::GetFirstAddress (sgwS1uDev));
+                   Ipv4AddressHelper::GetAddress (sgwS1uDev));
       sgwS5Dev = m_backhaul->AttachEpcNode (sgwNode, sgwIdx + 1, LteInterface::S5);
       NS_LOG_INFO ("S-GW " << sgwNode << " attached to the s5 interface with IP " <<
-                   Ipv4AddressHelper::GetFirstAddress (sgwS5Dev));
+                   Ipv4AddressHelper::GetAddress (sgwS5Dev));
 
       // Create the virtual net device to work as the logical ports on the S-GW
       // S1-U and S5 interface.

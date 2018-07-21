@@ -172,7 +172,7 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   Ptr<CsmaNetDevice> enbS1uDev;
   uint16_t switchIdx = GetEnbSwitchIdx (cellId);
   enbS1uDev = m_backhaul->AttachEpcNode (enb, switchIdx, LteInterface::S1U);
-  Ipv4Address enbS1uAddr = Ipv4AddressHelper::GetFirstAddress (enbS1uDev);
+  Ipv4Address enbS1uAddr = Ipv4AddressHelper::GetAddress (enbS1uDev);
   NS_LOG_INFO ("eNB " << enb << " attached to the s1u " <<
                "interface with IP " << enbS1uAddr);
 

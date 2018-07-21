@@ -156,7 +156,7 @@ GtpTunnelApp::StartApplication ()
   NS_LOG_FUNCTION (this);
 
   // Get the physical device address to bind the UDP socket.
-  Ipv4Address ipv4Addr = Ipv4AddressHelper::GetFirstAddress (m_physicalDev);
+  Ipv4Address ipv4Addr = Ipv4AddressHelper::GetAddress (m_physicalDev);
   InetSocketAddress inetAddr (ipv4Addr, BackhaulNetwork::m_gtpuPort);
 
   // Create and open the UDP socket for tunnel.

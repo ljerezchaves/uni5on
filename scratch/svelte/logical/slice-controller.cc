@@ -150,7 +150,7 @@ SliceController::DedicatedBearerRequest (
 //   NS_LOG_FUNCTION (this << sgwS5PortNo << sgwS5Dev << mtcGbrTeid <<
 //                    mtcNonTeid);
 //
-//   m_sgwS5Addr = Ipv4AddressHelper::GetFirstAddress (sgwS5Dev);
+//   m_sgwS5Addr = Ipv4AddressHelper::GetAddress (sgwS5Dev);
 //   m_sgwS5PortNo = sgwS5PortNo;
 //
 //   // IP packets coming from the P-GW (S-GW S5 port) and addressed to the UE
@@ -246,7 +246,7 @@ SliceController::NotifyPgwMainAttach (
   // Saving information for P-GW main switch at first index.
   m_pgwDpIds.push_back (pgwSwDev->GetDatapathId ());
   m_pgwS5PortsNo.push_back (pgwS5PortNo);
-  m_pgwS5Addr = Ipv4AddressHelper::GetFirstAddress (pgwS5Dev);
+  m_pgwS5Addr = Ipv4AddressHelper::GetAddress (pgwS5Dev);
   m_pgwSgiPortNo = pgwSgiPortNo;
 
   // -------------------------------------------------------------------------
@@ -260,7 +260,7 @@ SliceController::NotifyPgwMainAttach (
   std::ostringstream cmdOut;
   cmdOut << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
          << ",in_port=" << pgwS5PortNo
-         << ",ip_dst=" << Ipv4AddressHelper::GetFirstAddress (webSgiDev)
+         << ",ip_dst=" << Ipv4AddressHelper::GetAddress (webSgiDev)
          << " write:set_field=eth_dst:" << webMac
          << ",output=" << pgwSgiPortNo;
   DpctlSchedule (pgwSwDev->GetDatapathId (), cmdOut.str ());

@@ -84,7 +84,7 @@ RingController::NotifyEpcAttach (
 
   // Save the pair EPC IP address / switch index.
   std::pair<Ipv4Address, uint16_t> entry (
-    Ipv4AddressHelper::GetFirstAddress (epcDev), GetSwitchIndex (swDev));
+    Ipv4AddressHelper::GetAddress (epcDev), GetSwitchIndex (swDev));
   std::pair<IpSwitchMap_t::iterator, bool> ret;
   ret = m_ipSwitchTable.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false,

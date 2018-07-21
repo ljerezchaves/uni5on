@@ -226,7 +226,7 @@ BackhaulController::NotifyEpcAttach (
   std::ostringstream cmdOut;
   cmdOut << "flow-mod cmd=add,table=2,prio=256 eth_type=0x800"
          << ",eth_dst=" << epcMac
-         << ",ip_dst=" << Ipv4AddressHelper::GetFirstAddress (epcDev)
+         << ",ip_dst=" << Ipv4AddressHelper::GetAddress (epcDev)
          << " write:output=" << portNo
          << " goto:4";
   DpctlSchedule (swDev->GetDatapathId (), cmdOut.str ());
