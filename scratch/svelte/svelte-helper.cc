@@ -84,8 +84,8 @@ SvelteHelper::PrintLteRem (void)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG (m_lteRan, "No LTE radio network available.");
-  m_lteRan->PrintRadioEnvironmentMap ();
+  NS_ASSERT_MSG (m_radio, "No LTE radio network available.");
+  m_radio->PrintRadioEnvironmentMap ();
 }
 
 //
@@ -289,7 +289,7 @@ SvelteHelper::NotifyConstructionCompleted (void)
   // Create the SVELTE infrastructure.
   m_mme = CreateObject<SvelteMme> ();
   m_backhaul = CreateObject<RingNetwork> ();
-  m_lteRan = CreateObject<RadioNetwork> (Ptr<SvelteHelper> (this));
+  m_radio = CreateObject<RadioNetwork> (Ptr<SvelteHelper> (this));
 
   // Create the LTE HTC slice network and controller.
   m_htcCtrlFactory.Set ("Mme", PointerValue (m_mme));
@@ -298,7 +298,7 @@ SvelteHelper::NotifyConstructionCompleted (void)
   m_htcNetFactory.Set ("SliceId", EnumValue (LogicalSlice::HTC));
   m_htcNetFactory.Set ("Controller", PointerValue (m_htcController));
   m_htcNetFactory.Set ("Backhaul", PointerValue (m_backhaul));
-  m_htcNetFactory.Set ("Radio", PointerValue (m_lteRan));
+  m_htcNetFactory.Set ("Radio", PointerValue (m_radio));
   m_htcNetFactory.Set ("UeAddress", Ipv4AddressValue ("7.1.0.0"));
   m_htcNetFactory.Set ("UeMask", Ipv4MaskValue ("255.255.0.0"));
   m_htcNetFactory.Set ("WebAddress", Ipv4AddressValue ("8.1.0.0"));

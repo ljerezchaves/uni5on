@@ -84,7 +84,7 @@ protected:
 
 private:
   Ptr<RingNetwork>          m_backhaul;         //!< The backhaul network.
-  Ptr<RadioNetwork>         m_lteRan;           //!< The LTE RAN network.
+  Ptr<RadioNetwork>         m_radio;            //!< The LTE RAN network.
   Ptr<SvelteMme>            m_mme;              //!< SVELTE MME entity.
 
   ObjectFactory             m_htcNetFactory;    //!< HTC network factory.

@@ -84,7 +84,7 @@ SliceNetwork::GetTypeId (void)
     .AddAttribute ("Radio", "The LTE RAN network pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
-                   MakePointerAccessor (&SliceNetwork::m_lteRan),
+                   MakePointerAccessor (&SliceNetwork::m_radio),
                    MakePointerChecker<RadioNetwork> ())
 
     // UEs.
@@ -269,7 +269,7 @@ SliceNetwork::DoDispose (void)
   NS_LOG_FUNCTION (this);
 
   m_backhaul = 0;
-  m_lteRan = 0;
+  m_radio = 0;
   m_switchHelper = 0;
   m_controllerApp = 0;
   m_controllerNode = 0;
@@ -283,7 +283,7 @@ SliceNetwork::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ABORT_MSG_IF (!m_backhaul || !m_lteRan, "No infrastructure network.");
+  NS_ABORT_MSG_IF (!m_backhaul || !m_radio, "No infrastructure network.");
   NS_ABORT_MSG_IF (!m_controllerApp, "No slice controller application.");
 
   m_sliceIdStr = LogicalSliceStr (m_sliceId);
@@ -341,7 +341,7 @@ SliceNetwork::SetRadioNetwork (Ptr<RadioNetwork> value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_lteRan = value;
+  m_radio = value;
 }
 
 void
@@ -587,7 +587,7 @@ SliceNetwork::CreateUes (void)
 
   // Configure UE positioning and mobility.
   // TODO Use attributes for custom configuration.
-  MobilityHelper mobilityHelper = m_lteRan->GetRandomInitialPositioning ();
+  MobilityHelper mobilityHelper = m_radio->GetRandomInitialPositioning ();
   if (m_ueMobility)
     {
       // mobilityHelper.SetMobilityModel (
@@ -599,7 +599,7 @@ SliceNetwork::CreateUes (void)
     }
 
   // Install LTE protocol stack into UE nodes.
-  m_ueDevices = m_lteRan->InstallUeDevices (m_ueNodes, mobilityHelper);
+  m_ueDevices = m_radio->InstallUeDevices (m_ueNodes, mobilityHelper);
 
   // Install TCP/IP protocol stack into UE nodes and assign IP address.
   InternetStackHelper internet;
@@ -617,7 +617,7 @@ SliceNetwork::CreateUes (void)
     }
 
   // Attach UE to the eNBs using initial cell selection.
-  m_lteRan->AttachUeDevices (m_ueDevices);
+  m_radio->AttachUeDevices (m_ueDevices);
 }
 
 } // namespace ns3

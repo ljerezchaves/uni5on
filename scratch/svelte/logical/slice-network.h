@@ -118,7 +118,7 @@ private:
 
   // Infrastructure interface.
   Ptr<BackhaulNetwork>          m_backhaul;         //!< OpenFlow backhaul.
-  Ptr<RadioNetwork>             m_lteRan;           //!< LTE radio network.
+  Ptr<RadioNetwork>             m_radio;            //!< LTE radio network.
 
   // OpenFlow network configuration.
   Ptr<OFSwitch13InternalHelper> m_switchHelper;     //!< Switch helper.
