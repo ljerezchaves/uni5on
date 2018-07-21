@@ -176,7 +176,7 @@ Ipv4AddressHelper::Assign (const NetDeviceContainer &c)
 }
 
 Ipv4Address
-Ipv4AddressHelper::GetAddress (Ptr<const NetDevice> device, uint32_t addrIndex = 0)
+Ipv4AddressHelper::GetAddress (Ptr<const NetDevice> device, uint32_t addrIndex)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -193,7 +193,7 @@ Ipv4AddressHelper::GetAddress (Ptr<const NetDevice> device, uint32_t addrIndex =
 }
 
 Ipv4Mask
-Ipv4AddressHelper::GetMask (Ptr<const NetDevice> device, uint32_t addrIndex = 0)
+Ipv4AddressHelper::GetMask (Ptr<const NetDevice> device, uint32_t addrIndex)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
