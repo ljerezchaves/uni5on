@@ -83,6 +83,13 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
 private:
+  /**
+   * Get the switch index at which the given eNB should be connected.
+   * \param cellId The eNB cell ID.
+   * \return The switch index.
+   */
+  uint16_t GetEnbSwitchIdx (uint16_t cellId);
+
   Ptr<RingNetwork>          m_backhaul;         //!< The backhaul network.
   Ptr<RadioNetwork>         m_radio;            //!< The LTE RAN network.
   Ptr<SvelteMme>            m_mme;              //!< SVELTE MME entity.

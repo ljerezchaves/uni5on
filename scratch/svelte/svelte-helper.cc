@@ -168,22 +168,13 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   InternetStackHelper internet;
   internet.Install (enb);
 
-  // Get the number of switches on the backhaul.
-  UintegerValue value;
-  m_backhaul->GetAttribute ("NumRingSwitches", value);
-  uint16_t numSwitches = value.Get ();
-
-  // Connect the eNBs to switches in clockwise direction, skipping the first
-  // switch (index 0), which is exclusive for the P-GW connection. The three
-  // eNBs from the same cell site are always connected to the same switch in
-  // the ring network.
-  uint16_t siteId = (cellId - 1) / 3;
-  uint16_t switchIdx = 1 + (siteId % (numSwitches - 1));
-
   // Attach the eNB node to the OpenFlow backhaul network.
-  Ptr<CsmaNetDevice> enbS1uDev = m_backhaul->AttachEpcNode (enb, switchIdx, LteInterface::S1U);
+  Ptr<CsmaNetDevice> enbS1uDev;
+  uint16_t switchIdx = GetEnbSwitchIdx (cellId);
+  enbS1uDev = m_backhaul->AttachEpcNode (enb, switchIdx, LteInterface::S1U);
   Ipv4Address enbS1uAddr = Ipv4AddressHelper::GetFirstAddress (enbS1uDev);
-  NS_LOG_INFO ("eNB attached to the S1-U interface with IP " << enbS1uAddr);
+  NS_LOG_INFO ("eNB " << enb << " attached to the s1u " <<
+               "interface with IP " << enbS1uAddr);
 
   // Create the S1-U socket for the eNB node.
   TypeId udpTid = TypeId::LookupByName ("ns3::UdpSocketFactory");
@@ -313,6 +304,22 @@ SvelteHelper::NotifyConstructionCompleted (void)
 
   // Chain up.
   Object::NotifyConstructionCompleted ();
+}
+
+uint16_t
+SvelteHelper::GetEnbSwitchIdx (uint16_t cellId)
+{
+  NS_LOG_FUNCTION (this << cellId);
+  // FIXME The logic for identifying switches could be set as an attribute.
+
+  // Connect the eNBs to switches in clockwise direction, skipping the first
+  // switch (index 0), which is exclusive for the P-GW connection. The three
+  // eNBs from the same cell site are always connected to the same switch in
+  // the ring network.
+  UintegerValue numSwitchesValue;
+  m_backhaul->GetAttribute ("NumRingSwitches", numSwitchesValue);
+  uint16_t siteId = (cellId - 1) / 3;
+  return 1 + (siteId % (numSwitchesValue.Get () - 1));
 }
 
 } // namespace ns3
