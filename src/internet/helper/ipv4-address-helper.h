@@ -187,7 +187,7 @@ public:
    * \param addrIndex The Ipv4InterfaceAddress index.
    * \return The IP address value.
    */
-  static Ipv4Address GetAddress (Ptr<const NetDevice> device, uint32_t addrIndex);
+  static Ipv4Address GetAddress (Ptr<const NetDevice> device, uint32_t addrIndex = 0);
 
   /**
    * Get the IP maks assigned to a NetDevice for the given
@@ -196,7 +196,7 @@ public:
    * \param addrIndex The Ipv4InterfaceAddress index.
    * \return The IP address value.
    */
-  static Ipv4Mask GetMask (Ptr<const NetDevice> device, uint32_t addrIndex);
+  static Ipv4Mask GetMask (Ptr<const NetDevice> device, uint32_t addrIndex = 0);
 
 private:
   /**
