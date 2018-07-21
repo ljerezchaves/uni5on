@@ -176,7 +176,7 @@ Ipv4AddressHelper::Assign (const NetDeviceContainer &c)
 }
 
 Ipv4Address
-Ipv4AddressHelper::GetFirstAddress (Ptr<const NetDevice> device)
+Ipv4AddressHelper::GetAddress (Ptr<const NetDevice> device, uint32_t addrIndex = 0)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -186,14 +186,14 @@ Ipv4AddressHelper::GetFirstAddress (Ptr<const NetDevice> device)
   Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
   NS_ASSERT_MSG (ipv4, "Device is associated with a node without IPv4 stack.");
 
-  int32_t idx = ipv4->GetInterfaceForDevice (device);
-  NS_ASSERT_MSG (idx >= 0, "Interface index not found for this device.");
+  int32_t ifIndex = ipv4->GetInterfaceForDevice (device);
+  NS_ASSERT_MSG (ifIndex >= 0, "Interface index not found for this device.");
 
-  return ipv4->GetAddress (idx, 0).GetLocal ();
+  return ipv4->GetAddress (ifIndex, addrIndex).GetLocal ();
 }
 
 Ipv4Mask
-Ipv4AddressHelper::GetFirstMask (Ptr<const NetDevice> device)
+Ipv4AddressHelper::GetMask (Ptr<const NetDevice> device, uint32_t addrIndex = 0)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -203,10 +203,10 @@ Ipv4AddressHelper::GetFirstMask (Ptr<const NetDevice> device)
   Ptr<Ipv4> ipv4 = node->GetObject<Ipv4> ();
   NS_ASSERT_MSG (ipv4, "Device is associated with a node without IPv4 stack.");
 
-  int32_t idx = ipv4->GetInterfaceForDevice (device);
-  NS_ASSERT_MSG (idx >= 0, "Interface index not found for this device.");
+  int32_t ifIndex = ipv4->GetInterfaceForDevice (device);
+  NS_ASSERT_MSG (ifIndex >= 0, "Interface index not found for this device.");
 
-  return ipv4->GetAddress (idx, 0).GetMask ();
+  return ipv4->GetAddress (ifIndex, addrIndex).GetMask ();
 }
 
 const uint32_t N_BITS = 32; //!< number of bits in a IPv4 address

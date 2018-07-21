@@ -181,18 +181,22 @@ public:
   Ipv4InterfaceContainer Assign (const NetDeviceContainer &c);
 
   /**
-   * Get the first IP address assigned to a network device.
-   * \param device The net device.
+   * Get the IP address assigned to a NetDevice for the given
+   * Ipv4InterfaceAddress index.
+   * \param device The NetDevice.
+   * \param addrIndex The Ipv4InterfaceAddress index.
    * \return The IP address value.
    */
-  static Ipv4Address GetFirstAddress (Ptr<const NetDevice> device);
+  static Ipv4Address GetAddress (Ptr<const NetDevice> device, uint32_t addrIndex);
 
   /**
-   * Get the first IP mask assigned to a network device.
-   * \param device The net device.
+   * Get the IP maks assigned to a NetDevice for the given
+   * Ipv4InterfaceAddress index.
+   * \param device The NetDevice.
+   * \param addrIndex The Ipv4InterfaceAddress index.
    * \return The IP address value.
    */
-  static Ipv4Mask GetFirstMask (Ptr<const NetDevice> device);
+  static Ipv4Mask GetMask (Ptr<const NetDevice> device, uint32_t addrIndex);
 
 private:
   /**
