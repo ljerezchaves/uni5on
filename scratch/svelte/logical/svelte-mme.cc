@@ -21,8 +21,8 @@
  */
 
 #include "svelte-mme.h"
-#include "ue-info.h"
-#include "enb-info.h"
+#include "metadata/ue-info.h"
+#include "metadata/enb-info.h"
 
 namespace ns3 {
 

@@ -23,11 +23,11 @@
 #include "infrastructure/radio-network.h"
 #include "infrastructure/ring-network.h"
 #include "infrastructure/svelte-enb-application.h"
-#include "logical/enb-info.h"
 #include "logical/slice-controller.h"
 #include "logical/slice-network.h"
 #include "logical/svelte-mme.h"
-#include "logical/ue-info.h"
+#include "logical/metadata/enb-info.h"
+#include "logical/metadata/ue-info.h"
 
 namespace ns3 {
 

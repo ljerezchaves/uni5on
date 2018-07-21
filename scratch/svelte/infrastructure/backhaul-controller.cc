@@ -21,7 +21,7 @@
 #include <algorithm>
 #include "backhaul-controller.h"
 #include "backhaul-network.h"
-#include "connection-info.h"
+#include "metadata/connection-info.h"
 // #include "../info/s5-aggregation-info.h"
 // #include "../sdran/sdran-controller.h"
 

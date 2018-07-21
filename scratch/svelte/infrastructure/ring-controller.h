@@ -22,8 +22,8 @@
 #define RING_CONTROLLER_H
 
 #include "backhaul-controller.h"
-#include "connection-info.h"
-#include "ring-routing-info.h"
+#include "metadata/connection-info.h"
+#include "metadata/ring-routing-info.h"
 
 namespace ns3 {
 
