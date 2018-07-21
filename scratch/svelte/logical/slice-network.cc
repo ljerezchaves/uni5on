@@ -391,12 +391,14 @@ SliceNetwork::CreatePgw (void)
   m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_webLinkDelay));
 
   // Connect the P-GW main node to the web server node (SGi interface).
-  m_webDevices = m_csmaHelper.Install (pgwMainNode, m_webNode);
-
   Ptr<CsmaNetDevice> pgwSgiDev, webSgiDev;
+  m_webDevices = m_csmaHelper.Install (pgwMainNode, m_webNode);
   pgwSgiDev = DynamicCast<CsmaNetDevice> (m_webDevices.Get (0));
   webSgiDev = DynamicCast<CsmaNetDevice> (m_webDevices.Get (1));
-  BackhaulNetwork::SetDeviceNames (pgwSgiDev, webSgiDev, "~sgi~");
+
+  // Set device names for pcap files.
+  std::string ifaceName = "~" + LteInterfaceStr (LteInterface::SGI) + "~";
+  BackhaulNetwork::SetDeviceNames (pgwSgiDev, webSgiDev, ifaceName);
 
   // Add the pgwSgiDev as physical port on the P-GW main OpenFlow switch.
   Ptr<OFSwitch13Port> pgwSgiPort = pgwMainOfDev->AddSwitchPort (pgwSgiDev);
@@ -404,6 +406,7 @@ SliceNetwork::CreatePgw (void)
 
   // Set the IP address on the Internet network.
   m_webAddrHelper.Assign (NetDeviceContainer (m_webDevices));
+  // FIXME melhorar o log.
   NS_LOG_INFO ("Web SGi: " << Ipv4AddressHelper::GetFirstAddress (webSgiDev));
   NS_LOG_INFO ("P-GW SGi: " << Ipv4AddressHelper::GetFirstAddress (pgwSgiDev));
 
@@ -533,14 +536,14 @@ SliceNetwork::CreateSgws (void)
       // Connect the S-GW node to the OpenFlow backhaul node.
       // FIXME sgwIdx + 1
       Ptr<CsmaNetDevice> sgwS1uDev, sgwS5Dev;
-      sgwS1uDev = m_backhaul->AttachEpcNode (sgwNode, sgwIdx + 1, LteInterface::S1U); 
+      sgwS1uDev = m_backhaul->AttachEpcNode (sgwNode, sgwIdx + 1, LteInterface::S1U);
       sgwS5Dev = m_backhaul->AttachEpcNode (sgwNode, sgwIdx + 1, LteInterface::S5);
-      
+
       NS_LOG_INFO ("S-GW attached to the S1-U interface with IP " <<
                    Ipv4AddressHelper::GetFirstAddress (sgwS1uDev));
       NS_LOG_INFO ("S-GW attached to the S5 interface with IP " <<
                    Ipv4AddressHelper::GetFirstAddress (sgwS5Dev));
-      
+
       // Create the virtual net device to work as the logical ports on the S-GW
       // S1-U and S5 interface.
       Ptr<VirtualNetDevice> sgwS1uPortDev = CreateObject<VirtualNetDevice> ();
@@ -561,14 +564,13 @@ SliceNetwork::CreateSgws (void)
       sgwNode->AddApplication (
         CreateObject<GtpTunnelApp> (sgwS5PortDev, sgwS5Dev));
 
-
       // Notify the controller of the S-GW switch attached to the OpenFlow
       // backhaul network.
-      // FIXME
+      // FIXME Aqui vai ter uma questão relacionada com túneis de agregação.
       // m_controllerApp->NotifySgwAttach (pgwMainOfDev, pgwS5PortNo, pgwSgiPortNo,
       //                                   pgwS5Dev, webSgiDev);
+      // FIXME ver SdranController::NotifyEnbAttach
     }
-
 }
 
 void

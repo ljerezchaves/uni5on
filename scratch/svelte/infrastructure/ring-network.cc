@@ -92,6 +92,8 @@ void
 RingNetwork::CreateTopology (void)
 {
   NS_LOG_FUNCTION (this);
+  NS_LOG_INFO ("Creating ring backhaul network with " << m_numNodes <<
+               " switches.");
 
   NS_ASSERT_MSG (m_numNodes >= 3, "Invalid number of nodes for the ring.");
 

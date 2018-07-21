@@ -325,6 +325,8 @@ void
 RadioNetwork::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
+  NS_LOG_INFO ("Creating LTE radio network with " << m_nSites <<
+               " three-sector cell sites (" << 3 * m_nSites << " eNBs).");
 
   // Create the LTE helper for the radio network.
   m_lteHelper = CreateObject<LteHelper> ();
@@ -355,9 +357,6 @@ RadioNetwork::NotifyConstructionCompleted ()
   // out on an hexagonal grid.
   m_topoHelper = CreateObject<LteHexGridEnbTopologyHelper> ();
   m_topoHelper->SetLteHelper (m_lteHelper);
-
-  // Set the number of eNBs based on the number of cell sites.
-  NS_LOG_INFO ("LTE RAN with " << m_nSites << " three-sector cell sites.");
 
   // Create the eNBs nodes and set their names.
   m_enbNodes.Create (3 * m_nSites);

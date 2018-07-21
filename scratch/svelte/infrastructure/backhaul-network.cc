@@ -108,7 +108,7 @@ BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous)
 
   // Enable pcap on CSMA devices.
   CsmaHelper helper;
-  helper.EnablePcap (prefix + "epc",      m_epcDevices,   promiscuous);
+  helper.EnablePcap (prefix + "epc", m_epcDevices, promiscuous);
   helper.EnablePcap (prefix + "backhaul", m_switchNodes, promiscuous);
 }
 
@@ -117,6 +117,8 @@ BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
                                 LteInterface iface)
 {
   NS_LOG_FUNCTION (this << epcNode << swIdx << iface);
+  NS_LOG_INFO ("Attach EPC node " << epcNode << " to backhaul switch index " <<
+               swIdx << " over " << LteInterfaceStr (iface) << " interface.");
 
   NS_ASSERT_MSG (swIdx < m_switchDevices.GetN (), "Invalid switch index.");
 
