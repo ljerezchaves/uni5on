@@ -348,59 +348,59 @@ EnableVerbose (bool enable)
       LogLevel logLevelWarn = static_cast<ns3::LogLevel> (
         LOG_PREFIX_FUNC | LOG_PREFIX_TIME | LOG_LEVEL_WARN);
       
-      LogLevel logLevelInfo = static_cast<ns3::LogLevel> (
+      LogLevel logLevelWarnInfo = static_cast<ns3::LogLevel> (
         LOG_PREFIX_FUNC | LOG_PREFIX_TIME | LOG_LEVEL_WARN | LOG_INFO);
 
-      LogComponentEnable ("Main",                     logLevelInfo);
-      LogComponentEnable ("SvelteHelper",             logLevelInfo);
+      LogComponentEnable ("Main",                     logLevelWarnInfo);
+      LogComponentEnable ("SvelteHelper",             logLevelWarnInfo);
 
       // Infrastructure components.
-      LogComponentEnable ("BackhaulController",       logLevelInfo);
-      LogComponentEnable ("BackhaulNetwork",          logLevelInfo);
-      LogComponentEnable ("ConnectionInfo",           logLevelInfo);
-      LogComponentEnable ("RadioNetwork",             logLevelInfo);
-      LogComponentEnable ("RingController",           logLevelInfo);
-      LogComponentEnable ("RingNetwork",              logLevelInfo);
-      LogComponentEnable ("RingRoutingInfo",          logLevelInfo);
-      LogComponentEnable ("SvelteEnbApplication",     logLevelInfo);
+      LogComponentEnable ("BackhaulController",       logLevelWarnInfo);
+      LogComponentEnable ("BackhaulNetwork",          logLevelWarnInfo);
+      LogComponentEnable ("ConnectionInfo",           logLevelWarnInfo);
+      LogComponentEnable ("RadioNetwork",             logLevelWarnInfo);
+      LogComponentEnable ("RingController",           logLevelWarnInfo);
+      LogComponentEnable ("RingNetwork",              logLevelWarnInfo);
+      LogComponentEnable ("RingRoutingInfo",          logLevelWarnInfo);
+      LogComponentEnable ("SvelteEnbApplication",     logLevelWarnInfo);
 
       // Logical components.
-      LogComponentEnable ("EnbInfo",                  logLevelInfo);
-      LogComponentEnable ("GtpTunnelApp",             logLevelInfo);
-      LogComponentEnable ("PgwTunnelApp",             logLevelInfo);
-      LogComponentEnable ("SliceController",          logLevelInfo);
-      LogComponentEnable ("SliceNetwork",             logLevelInfo);
-      LogComponentEnable ("SvelteMme",                logLevelInfo);
-      LogComponentEnable ("UeInfo",                   logLevelInfo);
+      LogComponentEnable ("EnbInfo",                  logLevelWarnInfo);
+      LogComponentEnable ("GtpTunnelApp",             logLevelWarnInfo);
+      LogComponentEnable ("PgwTunnelApp",             logLevelWarnInfo);
+      LogComponentEnable ("SliceController",          logLevelWarnInfo);
+      LogComponentEnable ("SliceNetwork",             logLevelWarnInfo);
+      LogComponentEnable ("SvelteMme",                logLevelWarnInfo);
+      LogComponentEnable ("UeInfo",                   logLevelWarnInfo);
 
-//      LogComponentEnable ("SdranCloud",               logLevelInfo);
-//      LogComponentEnable ("SdranController",          logLevelInfo);
-//      LogComponentEnable ("TrafficHelper",            logLevelInfo);
-//      LogComponentEnable ("TrafficManager",           logLevelInfo);
+//      LogComponentEnable ("SdranCloud",               logLevelWarnInfo);
+//      LogComponentEnable ("SdranController",          logLevelWarnInfo);
+//      LogComponentEnable ("TrafficHelper",            logLevelWarnInfo);
+//      LogComponentEnable ("TrafficManager",           logLevelWarnInfo);
 //
-//      LogComponentEnable ("SdmnClientApp",            logLevelInfo);
-//      LogComponentEnable ("SdmnServerApp",            logLevelInfo);
-//      LogComponentEnable ("AutoPilotClient",          logLevelInfo);
-//      LogComponentEnable ("AutoPilotServer",          logLevelInfo);
-//      LogComponentEnable ("BufferedVideoClient",      logLevelInfo);
-//      LogComponentEnable ("BufferedVideoServer",      logLevelInfo);
-//      LogComponentEnable ("HttpClient",               logLevelInfo);
-//      LogComponentEnable ("HttpServer",               logLevelInfo);
-//      LogComponentEnable ("LiveVideoClient",          logLevelInfo);
-//      LogComponentEnable ("LiveVideoServer",          logLevelInfo);
-//      LogComponentEnable ("VoipClient",               logLevelInfo);
-//      LogComponentEnable ("VoipServer",               logLevelInfo);
+//      LogComponentEnable ("SdmnClientApp",            logLevelWarnInfo);
+//      LogComponentEnable ("SdmnServerApp",            logLevelWarnInfo);
+//      LogComponentEnable ("AutoPilotClient",          logLevelWarnInfo);
+//      LogComponentEnable ("AutoPilotServer",          logLevelWarnInfo);
+//      LogComponentEnable ("BufferedVideoClient",      logLevelWarnInfo);
+//      LogComponentEnable ("BufferedVideoServer",      logLevelWarnInfo);
+//      LogComponentEnable ("HttpClient",               logLevelWarnInfo);
+//      LogComponentEnable ("HttpServer",               logLevelWarnInfo);
+//      LogComponentEnable ("LiveVideoClient",          logLevelWarnInfo);
+//      LogComponentEnable ("LiveVideoServer",          logLevelWarnInfo);
+//      LogComponentEnable ("VoipClient",               logLevelWarnInfo);
+//      LogComponentEnable ("VoipServer",               logLevelWarnInfo);
 //
-//      LogComponentEnable ("GbrInfo",                  logLevelInfo);
-//      LogComponentEnable ("MeterInfo",                logLevelInfo);
-//      LogComponentEnable ("RoutingInfo",              logLevelInfo);
+//      LogComponentEnable ("GbrInfo",                  logLevelWarnInfo);
+//      LogComponentEnable ("MeterInfo",                logLevelWarnInfo);
+//      LogComponentEnable ("RoutingInfo",              logLevelWarnInfo);
 //
-//      LogComponentEnable ("AdmissionStatsCalculator", logLevelInfo);
-//      LogComponentEnable ("BackhaulStatsCalculator",  logLevelInfo);
-//      LogComponentEnable ("HandoverStatsCalculator",  logLevelInfo);
-//      LogComponentEnable ("PgwTftStatsCalculator",    logLevelInfo);
-//      LogComponentEnable ("QosStatsCalculator",       logLevelInfo);
-//      LogComponentEnable ("TrafficStatsCalculator",   logLevelInfo);
+//      LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);
+//      LogComponentEnable ("BackhaulStatsCalculator",  logLevelWarnInfo);
+//      LogComponentEnable ("HandoverStatsCalculator",  logLevelWarnInfo);
+//      LogComponentEnable ("PgwTftStatsCalculator",    logLevelWarnInfo);
+//      LogComponentEnable ("QosStatsCalculator",       logLevelWarnInfo);
+//      LogComponentEnable ("TrafficStatsCalculator",   logLevelWarnInfo);
 
       LogComponentEnable ("OFSwitch13Controller",     logLevelWarn);
       LogComponentEnable ("OFSwitch13Device",         logLevelWarn);
