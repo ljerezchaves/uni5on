@@ -66,7 +66,6 @@ public:
   uint64_t GetMmeUeS1Id (void) const;
   uint64_t GetEnbUeS1Id (void) const;
   EpcS11SapSgw* GetS11SapSgw (void) const;
-  NS_DEPRECATED bool IsMtc (void) const;
 
   void SetSliceId (SliceId value);
   void SetUeAddr (Ipv4Address value);

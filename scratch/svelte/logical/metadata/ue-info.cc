@@ -112,15 +112,6 @@ UeInfo::GetS11SapSgw (void) const
   return m_s11SapSgw;
 }
 
-bool
-UeInfo::IsMtc (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  // FIXME Remove this function.
-  return m_sliceId == SliceId::MTC ? true : false;
-}
-
 void
 UeInfo::SetSliceId (SliceId value)
 {
