@@ -25,36 +25,18 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
+#include "slice-controller.h"
 
 namespace ns3 {
 
 class BackhaulNetwork;
 class RadioNetwork;
-class SliceController;
 
 /**
  * \ingroup svelte
  * \defgroup svelteLogical Logical
  * SVELTE architecture logical network.
  */
-
-/**
- * \ingroup svelteLogical
- * Enumeration of available SVELTE logical slices.
- */
-typedef enum
-{
-  HTC  = 0,   //!< Slice for HTC UEs.
-  MTC  = 1    //!< Slice for MTC UEs.
-} LogicalSlice;
-
-/**
- * \ingroup svelteLogical
- * Get the logical slice name.
- * \param slice The logical slice.
- * \return The string with the logical slice name.
- */
-std::string LogicalSliceStr (LogicalSlice slice);
 
 /**
  * \ingroup svelteLogical

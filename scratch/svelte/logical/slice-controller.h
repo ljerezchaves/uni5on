@@ -36,6 +36,25 @@ class SvelteMme;
 
 /**
  * \ingroup svelteLogical
+ * Enumeration of available SVELTE logical slices.
+ */
+typedef enum
+{
+  NONE = 0,   //!< Slice undefined.
+  HTC  = 1,   //!< Slice for HTC UEs.
+  MTC  = 2    //!< Slice for MTC UEs.
+} LogicalSlice;
+
+/**
+ * \ingroup svelteLogical
+ * Get the logical slice name.
+ * \param slice The logical slice.
+ * \return The string with the logical slice name.
+ */
+std::string LogicalSliceStr (LogicalSlice slice);
+
+/**
+ * \ingroup svelteLogical
  * This is the abstract base class for a logical LTE slice controller, which
  * should be extended in accordance to the desired network configuration. This
  * slice controller is responsible for implementing S/P-GW control planes and
@@ -357,10 +376,13 @@ private:
   /** The P-GW TFT stats trace source, fired at PgwTftCheckUsage. */
   TracedCallback<struct PgwTftStats> m_pgwTftStatsTrace;
 
+  // Slice identification.
+  LogicalSlice            m_sliceId;        //!< Logical slice ID.
+
   // MME interface.
-  Ptr<SvelteMme>          m_mme;          //!< MME element.
-  EpcS11SapMme*           m_s11SapMme;    //!< MME side of the S11 SAP.
-  EpcS11SapSgw*           m_s11SapSgw;    //!< S-GW side of the S11 SAP.
+  Ptr<SvelteMme>          m_mme;            //!< MME element.
+  EpcS11SapMme*           m_s11SapMme;      //!< MME side of the S11 SAP.
+  EpcS11SapSgw*           m_s11SapSgw;      //!< S-GW side of the S11 SAP.
 
   // Infrastructure interface.
   // FIXME Vou precisar disso?

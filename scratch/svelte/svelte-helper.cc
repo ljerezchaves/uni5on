@@ -284,6 +284,7 @@ SvelteHelper::NotifyConstructionCompleted (void)
   m_radio = CreateObject<RadioNetwork> (Ptr<SvelteHelper> (this));
 
   // Create the LTE HTC slice network and controller.
+  m_htcCtrlFactory.Set ("SliceId", EnumValue (LogicalSlice::HTC));
   m_htcCtrlFactory.Set ("Mme", PointerValue (m_mme));
   m_htcController = m_htcCtrlFactory.Create<SliceController> ();
 

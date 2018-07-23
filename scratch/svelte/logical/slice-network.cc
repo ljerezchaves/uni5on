@@ -22,7 +22,6 @@
 #include "slice-network.h"
 #include "gtp-tunnel-app.h"
 #include "pgw-tunnel-app.h"
-#include "slice-controller.h"
 #include "../infrastructure/backhaul-network.h"
 #include "../infrastructure/radio-network.h"
 
@@ -30,20 +29,6 @@ namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("SliceNetwork");
 NS_OBJECT_ENSURE_REGISTERED (SliceNetwork);
-
-std::string LogicalSliceStr (LogicalSlice slice)
-{
-  switch (slice)
-    {
-    case LogicalSlice::HTC:
-      return "htc";
-    case LogicalSlice::MTC:
-      return "mtc";
-    default:
-      NS_LOG_ERROR ("Invalid logical slice.");
-      return "";
-    }
-}
 
 SliceNetwork::SliceNetwork ()
 {
@@ -65,7 +50,7 @@ SliceNetwork::GetTypeId (void)
     // Slice.
     .AddAttribute ("SliceId", "The LTE logical slice identification.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (LogicalSlice::HTC),
+                   EnumValue (LogicalSlice::NONE),
                    MakeEnumAccessor (&SliceNetwork::m_sliceId),
                    MakeEnumChecker (LogicalSlice::HTC, "htc",
                                     LogicalSlice::MTC, "mtc"))
@@ -221,6 +206,11 @@ SliceNetwork::NotifyConstructionCompleted (void)
 
   NS_ABORT_MSG_IF (!m_backhaul || !m_radio, "No infrastructure network.");
   NS_ABORT_MSG_IF (!m_controllerApp, "No slice controller application.");
+  NS_ABORT_MSG_IF (m_sliceId == LogicalSlice::NONE, "Undefined slice ID.");
+
+  EnumValue enumValue;
+  m_controllerApp->GetAttribute ("SliceId", enumValue);
+  NS_ABORT_MSG_IF (enumValue.Get () != m_sliceId, "Incompatible slice IDs");
 
   m_sliceIdStr = LogicalSliceStr (m_sliceId);
   NS_LOG_INFO ("Creating LTE logical network " << m_sliceIdStr <<

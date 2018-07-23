@@ -19,6 +19,7 @@
  */
 
 #include "slice-controller.h"
+#include "slice-network.h"
 #include "svelte-mme.h"
 #include "../infrastructure/backhaul-network.h"
 
@@ -26,6 +27,22 @@ namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("SliceController");
 NS_OBJECT_ENSURE_REGISTERED (SliceController);
+
+std::string LogicalSliceStr (LogicalSlice slice)
+{
+  switch (slice)
+    {
+    case LogicalSlice::NONE:
+      return "none";
+    case LogicalSlice::HTC:
+      return "htc";
+    case LogicalSlice::MTC:
+      return "mtc";
+    default:
+      NS_LOG_ERROR ("Invalid logical slice.");
+      return "";
+    }
+}
 
 // Initializing SliceController static members.
 // TODO Gerenciar TEID...
@@ -54,6 +71,14 @@ SliceController::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::SliceController")
     .SetParent<OFSwitch13Controller> ()
     .AddConstructor<SliceController> ()
+
+    // Slice.
+    .AddAttribute ("SliceId", "The LTE logical slice identification.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   EnumValue (LogicalSlice::NONE),
+                   MakeEnumAccessor (&SliceController::m_sliceId),
+                   MakeEnumChecker (LogicalSlice::HTC, "htc",
+                                    LogicalSlice::MTC, "mtc"))
 
     // Controller
     .AddAttribute ("TimeoutInterval",
@@ -461,6 +486,7 @@ SliceController::NotifyConstructionCompleted (void)
   NS_LOG_FUNCTION (this);
 
   NS_ABORT_MSG_IF (!m_mme, "No SVELTE MME.");
+  NS_ABORT_MSG_IF (m_sliceId == LogicalSlice::NONE, "Undefined slice ID.");
 
   // Connecting this controller to the MME.
   m_s11SapSgw = new MemberEpcS11SapSgw<SliceController> (this);
