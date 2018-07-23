@@ -51,8 +51,8 @@ typedef enum
 /**
  * \ingroup svelteLogical
  * Get the logical slice name.
- * \param slice The logical slice identification.
- * \return The string with the slice name.
+ * \param slice The logical slice.
+ * \return The string with the logical slice name.
  */
 std::string LogicalSliceStr (LogicalSlice slice);
 
