@@ -125,4 +125,4 @@ EnbInfo::RegisterEnbInfo (Ptr<EnbInfo> enbInfo)
   NS_ABORT_MSG_IF (ret.second == false, "Existing eNB info for this cell ID.");
 }
 
-};  // namespace ns3
+} // namespace ns3

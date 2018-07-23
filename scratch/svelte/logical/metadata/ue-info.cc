@@ -31,11 +31,11 @@ UeInfo::Ipv4UeInfoMap_t UeInfo::m_ueInfoByIpv4Map;
 
 UeInfo::UeInfo (uint64_t imsi)
   : m_imsi (imsi),
-    m_cellId (0),
-    m_mmeUeS1Id (imsi),
-    m_enbUeS1Id (0),
-    m_bearerCounter (0),
-    m_isMtc (false)
+  m_cellId (0),
+  m_mmeUeS1Id (imsi),
+  m_enbUeS1Id (0),
+  m_bearerCounter (0),
+  m_isMtc (false)
 {
   NS_LOG_FUNCTION (this);
 
@@ -264,4 +264,4 @@ UeInfo::RegisterUeInfoByIpv4 (Ptr<UeInfo> ueInfo)
   NS_ABORT_MSG_IF (ret.second == false, "Existing UE info for this IP.");
 }
 
-};  // namespace ns3
+} // namespace ns3

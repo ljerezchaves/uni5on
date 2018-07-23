@@ -30,7 +30,7 @@ namespace ns3 {
 
 class ConnectionInfo;
 
-/** 
+/**
  * \ingroup svelteInfra
  * Enumeration of available infrastructure physical slices.
  */

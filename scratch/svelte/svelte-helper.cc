@@ -169,43 +169,44 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   internet.Install (enb);
 
   // Attach the eNB node to the OpenFlow backhaul network.
-  Ptr<CsmaNetDevice> enbS1uDev;
   uint16_t switchIdx = GetEnbSwitchIdx (cellId);
-  enbS1uDev = m_backhaul->AttachEpcNode (enb, switchIdx, LteInterface::S1U);
+  Ptr<CsmaNetDevice> enbS1uDev = m_backhaul->AttachEpcNode (
+      enb, switchIdx, LteInterface::S1U);
   Ipv4Address enbS1uAddr = Ipv4AddressHelper::GetAddress (enbS1uDev);
   NS_LOG_INFO ("eNB " << enb << " attached to the s1u " <<
                "interface with IP " << enbS1uAddr);
 
   // Create the S1-U socket for the eNB node.
-  TypeId udpTid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  Ptr<Socket> enbS1uSocket = Socket::CreateSocket (enb, udpTid);
-  enbS1uSocket->Bind (InetSocketAddress (enbS1uAddr, BackhaulNetwork::m_gtpuPort));
+  TypeId udpSocketTid = TypeId::LookupByName ("ns3::UdpSocketFactory");
+  Ptr<Socket> enbS1uSocket = Socket::CreateSocket (enb, udpSocketTid);
+  enbS1uSocket->Bind (
+    InetSocketAddress (enbS1uAddr, BackhaulNetwork::m_gtpuPort));
 
   // Create the LTE IPv4 and IPv6 sockets for the eNB node.
-  TypeId pktTid = TypeId::LookupByName ("ns3::PacketSocketFactory");
-  Ptr<Socket> enbLteSocket = Socket::CreateSocket (enb, pktTid);
+  TypeId pktSocketTid = TypeId::LookupByName ("ns3::PacketSocketFactory");
+  Ptr<Socket> enbLteSocket = Socket::CreateSocket (enb, pktSocketTid);
   PacketSocketAddress enbLteSocketBindAddress;
   enbLteSocketBindAddress.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
   enbLteSocketBindAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
   enbLteSocket->Bind (enbLteSocketBindAddress);
 
-  PacketSocketAddress enbLteSocketConnectAddress;
-  enbLteSocketConnectAddress.SetPhysicalAddress (Mac48Address::GetBroadcast ());
-  enbLteSocketConnectAddress.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
-  enbLteSocketConnectAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
-  enbLteSocket->Connect (enbLteSocketConnectAddress);
+  PacketSocketAddress enbLteSocketAddress;
+  enbLteSocketAddress.SetPhysicalAddress (Mac48Address::GetBroadcast ());
+  enbLteSocketAddress.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
+  enbLteSocketAddress.SetProtocol (Ipv4L3Protocol::PROT_NUMBER);
+  enbLteSocket->Connect (enbLteSocketAddress);
 
-  Ptr<Socket> enbLteSocket6 = Socket::CreateSocket (enb, pktTid);
+  Ptr<Socket> enbLteSocket6 = Socket::CreateSocket (enb, pktSocketTid);
   PacketSocketAddress enbLteSocketBindAddress6;
   enbLteSocketBindAddress6.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
   enbLteSocketBindAddress6.SetProtocol (Ipv6L3Protocol::PROT_NUMBER);
   enbLteSocket6->Bind (enbLteSocketBindAddress6);
 
-  PacketSocketAddress enbLteSocketConnectAddress6;
-  enbLteSocketConnectAddress6.SetPhysicalAddress (Mac48Address::GetBroadcast ());
-  enbLteSocketConnectAddress6.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
-  enbLteSocketConnectAddress6.SetProtocol (Ipv6L3Protocol::PROT_NUMBER);
-  enbLteSocket6->Connect (enbLteSocketConnectAddress6);
+  PacketSocketAddress enbLteSocketAddress6;
+  enbLteSocketAddress6.SetPhysicalAddress (Mac48Address::GetBroadcast ());
+  enbLteSocketAddress6.SetSingleDevice (lteEnbNetDevice->GetIfIndex ());
+  enbLteSocketAddress6.SetProtocol (Ipv6L3Protocol::PROT_NUMBER);
+  enbLteSocket6->Connect (enbLteSocketAddress6);
 
   // Create the custom eNB application for the SVELTE architecture.
   Ptr<SvelteEnbApplication> enbApp = CreateObject<SvelteEnbApplication> (

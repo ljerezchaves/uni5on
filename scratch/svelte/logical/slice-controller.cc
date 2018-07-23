@@ -329,8 +329,8 @@ SliceController::NotifySgwAttach (
 void
 SliceController::NotifyPgwMainAttach (
   Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwS5Dev,
-    uint32_t pgwS5PortNo, Ptr<NetDevice> pgwSgiDev, uint32_t pgwSgiPortNo,
-    Ptr<NetDevice> webSgiDev)
+  uint32_t pgwS5PortNo, Ptr<NetDevice> pgwSgiDev, uint32_t pgwSgiPortNo,
+  Ptr<NetDevice> webSgiDev)
 {
   NS_LOG_FUNCTION (this << pgwSwDev << pgwS5Dev << pgwS5PortNo <<
                    pgwSgiDev << pgwSgiPortNo << webSgiDev);

@@ -472,7 +472,7 @@ BackhaulController::HandlePacketIn (
 
   // All handlers must free the message when everything is ok.
   ofl_msg_free ((struct ofl_msg_header*)msg, 0);
-  
+
   NS_ABORT_MSG ("Should not get here.");
   return 0;
 }

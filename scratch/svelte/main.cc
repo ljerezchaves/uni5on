@@ -202,7 +202,8 @@ void ConfigureDefaults ()
   // Increasing the default MTU for virtual network devices, which are used as
   // OpenFlow virtual port devices.
   //
-  Config::SetDefault ("ns3::VirtualNetDevice::Mtu", UintegerValue (3000));
+  Config::SetDefault (
+    "ns3::VirtualNetDevice::Mtu", UintegerValue (3000));
 
   //
   // Increasing SrsPeriodicity to allow more UEs per eNB. Allowed values are:
@@ -216,7 +217,8 @@ void ConfigureDefaults ()
   // See http://tinyurl.com/pg9nfre for discussion.
   // ** Considering maximum value: 320
   //
-  Config::SetDefault ("ns3::LteEnbRrc::SrsPeriodicity", UintegerValue (320));
+  Config::SetDefault (
+    "ns3::LteEnbRrc::SrsPeriodicity", UintegerValue (320));
 
   //
   // In the ns-3 LTE simulator, the channel bandwidth is set by the number of
@@ -229,8 +231,10 @@ void ConfigureDefaults ()
   //   20.0 MHz — 100 PRBs.
   // ** Considering downlink and uplink bandwidth: 100 RBs = 20Mhz.
   //
-  Config::SetDefault ("ns3::LteEnbNetDevice::UlBandwidth", UintegerValue (100));
-  Config::SetDefault ("ns3::LteEnbNetDevice::DlBandwidth", UintegerValue (100));
+  Config::SetDefault (
+    "ns3::LteEnbNetDevice::UlBandwidth", UintegerValue (100));
+  Config::SetDefault (
+    "ns3::LteEnbNetDevice::DlBandwidth", UintegerValue (100));
 
   //
   // LTE supports a wide range of different frequency bands. In Brazil, current
@@ -242,9 +246,12 @@ void ConfigureDefaults ()
   // calculation.
   // ** Considering Band #1 @2100 MHz (FDD)
   //
-  Config::SetDefault ("ns3::LteEnbNetDevice::DlEarfcn", UintegerValue (100));
-  Config::SetDefault ("ns3::LteUeNetDevice::DlEarfcn", UintegerValue (100));
-  Config::SetDefault ("ns3::LteEnbNetDevice::UlEarfcn", UintegerValue (18100));
+  Config::SetDefault (
+    "ns3::LteEnbNetDevice::DlEarfcn", UintegerValue (100));
+  Config::SetDefault (
+    "ns3::LteUeNetDevice::DlEarfcn", UintegerValue (100));
+  Config::SetDefault (
+    "ns3::LteEnbNetDevice::UlEarfcn", UintegerValue (18100));
 
   //
   // We are configuring the eNB transmission power as a macro cell (46 dBm is
@@ -253,42 +260,55 @@ void ConfigureDefaults ()
   // using no power control.
   // See http://tinyurl.com/nlh6u3t and http://tinyurl.com/nlh6u3t
   //
-  Config::SetDefault ("ns3::LteEnbPhy::TxPower", DoubleValue (46));
-  Config::SetDefault ("ns3::LteUePhy::TxPower", DoubleValue (23));
+  Config::SetDefault (
+    "ns3::LteEnbPhy::TxPower", DoubleValue (46));
+  Config::SetDefault (
+    "ns3::LteUePhy::TxPower", DoubleValue (23));
 
   //
   // Disabling UE uplink power control.
   //
-  Config::SetDefault ("ns3::LteUePhy::EnableUplinkPowerControl", BooleanValue (false));
+  Config::SetDefault (
+    "ns3::LteUePhy::EnableUplinkPowerControl", BooleanValue (false));
 
   //
   // Using the UE MIMO transmission diversity (Mode 2 with 4.2bB antenna gain).
   //
-  Config::SetDefault ("ns3::LteEnbRrc::DefaultTransmissionMode", UintegerValue (1));
+  Config::SetDefault (
+    "ns3::LteEnbRrc::DefaultTransmissionMode", UintegerValue (1));
 
   //
   // Using the Channel and QoS Aware (CQA) Scheduler as the LTE MAC downlink
   // scheduling algorithm, which considers the head of line delay, the GBR
   // parameters and channel quality over different subbands.
   //
-  Config::SetDefault ("ns3::LteHelper::Scheduler", StringValue ("ns3::CqaFfMacScheduler"));
+  Config::SetDefault (
+    "ns3::LteHelper::Scheduler", StringValue ("ns3::CqaFfMacScheduler"));
 
   //
   // Disabling error models for both control and data planes.
   //
-  Config::SetDefault ("ns3::LteSpectrumPhy::CtrlErrorModelEnabled", BooleanValue (false));
-  Config::SetDefault ("ns3::LteSpectrumPhy::DataErrorModelEnabled", BooleanValue (false));
+  Config::SetDefault (
+    "ns3::LteSpectrumPhy::CtrlErrorModelEnabled", BooleanValue (false));
+  Config::SetDefault (
+    "ns3::LteSpectrumPhy::DataErrorModelEnabled", BooleanValue (false));
 
   //
   // Set the LTE hexagonal grid layout topology to inter-site distance of 500m
   // with a single site in even rows.
   //
-  Config::SetDefault ("ns3::RadioNetwork::EnbMargin", DoubleValue (0.5));
-  Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::InterSiteDistance", DoubleValue (500));
-  Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::SectorOffset", DoubleValue (0));
-  Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::MinX", DoubleValue (500));
-  Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::MinY", DoubleValue (250));
-  Config::SetDefault ("ns3::LteHexGridEnbTopologyHelper::GridWidth", UintegerValue (2));
+  Config::SetDefault (
+    "ns3::RadioNetwork::EnbMargin", DoubleValue (0.5));
+  Config::SetDefault (
+    "ns3::LteHexGridEnbTopologyHelper::InterSiteDistance", DoubleValue (500));
+  Config::SetDefault (
+    "ns3::LteHexGridEnbTopologyHelper::SectorOffset", DoubleValue (0));
+  Config::SetDefault (
+    "ns3::LteHexGridEnbTopologyHelper::MinX", DoubleValue (500));
+  Config::SetDefault (
+    "ns3::LteHexGridEnbTopologyHelper::MinY", DoubleValue (250));
+  Config::SetDefault (
+    "ns3::LteHexGridEnbTopologyHelper::GridWidth", UintegerValue (2));
 }
 
 void ForceDefaults ()
@@ -297,7 +317,8 @@ void ForceDefaults ()
   // Since we are using an external OpenFlow library that expects complete
   // network packets, we must enable checksum computations.
   //
-  Config::SetGlobal ("ChecksumEnabled", BooleanValue (true));
+  Config::SetGlobal (
+    "ChecksumEnabled", BooleanValue (true));
 
   //
   // The minimum (default) value for TCP MSS is 536, and there's no dynamic MTU
@@ -307,7 +328,8 @@ void ForceDefaults ()
   // headers, and 52 bytes for default TCP/IP headers. Don't use higher values
   // to avoid packet fragmentation.
   //
-  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1400));
+  Config::SetDefault (
+    "ns3::TcpSocket::SegmentSize", UintegerValue (1400));
 
   //
   // The default number of TCP connection attempts before returning a failure
@@ -315,7 +337,8 @@ void ForceDefaults ()
   // We are going to keep the number of attempts but with a small interval of
   // 500 ms between them.
   //
-  Config::SetDefault ("ns3::TcpSocket::ConnTimeout", TimeValue (MilliSeconds (500)));
+  Config::SetDefault (
+    "ns3::TcpSocket::ConnTimeout", TimeValue (MilliSeconds (500)));
 
   //
   // The default TCP minimum retransmit timeout value is set to 1 second in
@@ -323,7 +346,8 @@ void ForceDefaults ()
   // value, and we are going to keep up with this fast retransmission
   // approach.
   //
-  Config::SetDefault ("ns3::TcpSocketBase::MinRto", TimeValue (MilliSeconds (200)));
+  Config::SetDefault (
+    "ns3::TcpSocketBase::MinRto", TimeValue (MilliSeconds (200)));
 
   //
   // Whenever possible, use the full-duplex CSMA channel to improve throughput.
@@ -332,12 +356,14 @@ void ForceDefaults ()
   // This implementation is not available in default ns-3 code, and I got it
   // from https://codereview.appspot.com/187880044/
   //
-  Config::SetDefault ("ns3::CsmaChannel::FullDuplex", BooleanValue (true));
+  Config::SetDefault (
+    "ns3::CsmaChannel::FullDuplex", BooleanValue (true));
 
   //
   // Fix the number of output priority queues on every switch port to 3.
   //
-  Config::SetDefault ("ns3::OFSwitch13Queue::NumQueues", UintegerValue (3));
+  Config::SetDefault (
+    "ns3::OFSwitch13Queue::NumQueues", UintegerValue (3));
 }
 
 void
@@ -346,10 +372,10 @@ EnableVerbose (bool enable)
   if (enable)
     {
       LogLevel logLevelWarn = static_cast<ns3::LogLevel> (
-        LOG_PREFIX_FUNC | LOG_PREFIX_TIME | LOG_LEVEL_WARN);
-      
+          LOG_PREFIX_FUNC | LOG_PREFIX_TIME | LOG_LEVEL_WARN);
+
       LogLevel logLevelWarnInfo = static_cast<ns3::LogLevel> (
-        LOG_PREFIX_FUNC | LOG_PREFIX_TIME | LOG_LEVEL_WARN | LOG_INFO);
+          LOG_PREFIX_FUNC | LOG_PREFIX_TIME | LOG_LEVEL_WARN | LOG_INFO);
 
       LogComponentEnable ("Main",                     logLevelWarnInfo);
       LogComponentEnable ("SvelteHelper",             logLevelWarnInfo);

@@ -22,11 +22,11 @@
 #include "connection-info.h"
 
 #undef NS_LOG_APPEND_CONTEXT
-#define NS_LOG_APPEND_CONTEXT                                               \
-  if (m_switches [0].swDev != 0 && m_switches [1].swDev != 0)               \
-    {                                                                       \
-      std::clog << "[CInfo " << m_switches [0].swDev->GetDatapathId ()      \
-                << " to " << m_switches [1].swDev->GetDatapathId () << "] ";\
+#define NS_LOG_APPEND_CONTEXT                                                 \
+  if (m_switches [0].swDev != 0 && m_switches [1].swDev != 0)                 \
+    {                                                                         \
+      std::clog << "[CInfo " << m_switches [0].swDev->GetDatapathId ()        \
+                << " to " << m_switches [1].swDev->GetDatapathId () << "] ";  \
     }
 
 namespace ns3 {

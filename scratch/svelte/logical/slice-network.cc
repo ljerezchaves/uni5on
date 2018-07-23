@@ -393,10 +393,10 @@ SliceNetwork::CreatePgw (void)
       m_pgwIntDevices.Add (devices);
 
       Ptr<CsmaNetDevice> tftDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
-      Ptr<CsmaNetDevice> mainDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
+      Ptr<CsmaNetDevice> manDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
 
       // Add the mainDev as physical port on the P-GW main OpenFlow switch.
-      Ptr<OFSwitch13Port> mainPort = pgwMainOfDev->AddSwitchPort (mainDev);
+      Ptr<OFSwitch13Port> mainPort = pgwMainOfDev->AddSwitchPort (manDev);
       uint32_t mainPortNo = mainPort->GetPortNo ();
 
       // Add the tftDev as physical port on the P-GW TFT OpenFlow switch.
@@ -423,7 +423,7 @@ SliceNetwork::CreatePgw (void)
 
       // Notify the controller of the new P-GW TFT switch.
       m_controllerApp->NotifyPgwTftAttach (
-          pgwTftOfDev, pgwS5Dev, pgwS5PortNo, mainPortNo, tftIdx);
+        pgwTftOfDev, pgwS5Dev, pgwS5PortNo, mainPortNo, tftIdx);
     }
   m_controllerApp->NotifyPgwBuilt (m_pgwDevices);
 }
@@ -486,7 +486,7 @@ SliceNetwork::CreateSgws (void)
       // FIXME Na implementação do sdmn existe aqui a configuração dos TEIDs
       // para os túneis de agregação que eu estou deixando de lado por agora.
       m_controllerApp->NotifySgwAttach (
-          sgwOfDev, sgwS1uDev, sgwS1uPortNo, sgwS5Dev, sgwS5PortNo);
+        sgwOfDev, sgwS1uDev, sgwS1uPortNo, sgwS5Dev, sgwS5PortNo);
     }
 }
 

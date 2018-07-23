@@ -102,8 +102,10 @@ SvelteEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
   packet->AddPacketTag (teidTag);
   m_txS1uTrace (packet);
 
-  // FIXME Implementar corretamente a lógica de identificar para qual S-GW o pacote deve ser enviado.
-  m_s1uSocket->SendTo (packet, flags, InetSocketAddress (Ipv4Address::GetAny (), 2152));
+  // FIXME Implementar corretamente a lógica de identificar para qual S-GW o
+  // pacote deve ser enviado.
+  m_s1uSocket->SendTo (
+    packet, flags, InetSocketAddress (Ipv4Address::GetAny (), 2152));
 }
 
 }  // namespace ns3
