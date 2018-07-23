@@ -26,12 +26,6 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
-// #include "epc-s5-sap.h"
-// #include "../info/enb-info.h"
-// #include "../info/gbr-info.h"
-// #include "../info/meter-info.h"
-// #include "../info/routing-info.h"
-// #include "../info/ue-info.h"
 
 namespace ns3 {
 
@@ -246,18 +240,9 @@ private:
   /** Initialize static attributes only once. */
   static void StaticInitialize (void);
 
-// FIXME Comentado para remover dependencia do routinginfo
-// FIXME Deve ficar aqui ou no SliceController?
-//  /** The bearer request trace source, fired at RequestDedicatedBearer. */
-//  TracedCallback<Ptr<const RoutingInfo> > m_bearerRequestTrace;
-//
-//  /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
-//  TracedCallback<Ptr<const RoutingInfo> > m_bearerReleaseTrace;
-
   // Internal mechanisms for performance improvement.
   OperationMode         m_priorityQueues; //!< DSCP priority queues mechanism.
   OperationMode         m_slicing;        //!< Network slicing mechanism.
-
 
   /** Map saving EPS QCI / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, Ipv4Header::DscpType> QciDscpMap_t;

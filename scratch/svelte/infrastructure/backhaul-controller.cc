@@ -81,15 +81,6 @@ BackhaulController::GetTypeId (void)
                    MakeEnumChecker (OperationMode::OFF,  "off",
                                     OperationMode::ON,   "on",
                                     OperationMode::AUTO, "auto"))
-
-//    .AddTraceSource ("BearerRelease", "The bearer release trace source.",
-//                     MakeTraceSourceAccessor (
-//                       &BackhaulController::m_bearerReleaseTrace),
-//                     "ns3::RoutingInfo::TracedCallback")
-//    .AddTraceSource ("BearerRequest", "The bearer request trace source.",
-//                     MakeTraceSourceAccessor (
-//                       &BackhaulController::m_bearerRequestTrace),
-//                     "ns3::RoutingInfo::TracedCallback")
   ;
   return tid;
 }
@@ -107,7 +98,7 @@ BackhaulController::DedicatedBearerRelease (EpsBearer bearer, uint32_t teid)
 //  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
 //
 //  TopologyBitRateRelease (rInfo);
-//  m_bearerReleaseTrace (rInfo);
+//  m_bearerReleaseTrace (rInfo); // FIXME Verificar momento exato no slice controller
 //  NS_LOG_INFO ("Bearer released by controller.");
 //
 //  // Deactivate and remove the bearer.
@@ -143,7 +134,7 @@ BackhaulController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
 //  success &= TopologyBearerRequest (rInfo);
 //  success &= PgwBearerRequest (rInfo);
 //  success &= TopologyBitRateReserve (rInfo);
-//  m_bearerRequestTrace (rInfo);
+//  m_bearerRequestTrace (rInfo); // FIXME Verificar momento exato no slice controller
 //  if (!success)
 //    {
 //      NS_LOG_INFO ("Bearer request blocked by controller.");
@@ -408,6 +399,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   //
   if (GetSlicingMode () == OperationMode::ON)
     {
+      // FIXME This should be automatic depending on the number of slices.
       // When the network slicing operation mode is ON, the Non-GBR traffic of
       // each slice will be monitored independently. Here is how we are using
       // meter IDs:
