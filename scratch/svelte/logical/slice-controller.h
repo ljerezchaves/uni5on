@@ -187,6 +187,12 @@ public:
   //\}
 
   /**
+   * Get The S-GW side of the S11 SAP.
+   * \return The S-GW side of the S11 SAP.
+   */
+  EpcS11SapSgw* GetS11SapSgw (void) const;
+
+  /**
    * Configure this controller with slice network attributes.
    * \param nPgwTfts The number of P-GW TFT switches available for use.
    * \param ueAddr The UE network address.

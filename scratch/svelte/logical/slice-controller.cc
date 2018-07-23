@@ -455,6 +455,14 @@ SliceController::GetPgwAdaptiveMode (void) const
   return m_tftAdaptive;
 }
 
+EpcS11SapSgw*
+SliceController::GetS11SapSgw (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s11SapSgw;
+}
+
 void
 SliceController::SetNetworkAttributes (
   uint16_t nPgwTfts, Ipv4Address ueAddr, Ipv4Mask ueMask,
@@ -490,7 +498,6 @@ SliceController::NotifyConstructionCompleted (void)
 
   // Connecting this controller to the MME.
   m_s11SapSgw = new MemberEpcS11SapSgw<SliceController> (this);
-  // m_mme->SetS11SapSgw (m_s11SapSgw); FIXME Should be AddS11SapSgw?
   m_s11SapMme = m_mme->GetS11SapMme ();
 
   // Set the initial number of P-GW TFT active switches.
