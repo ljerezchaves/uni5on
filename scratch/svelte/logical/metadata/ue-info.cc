@@ -39,8 +39,6 @@ UeInfo::UeInfo (uint64_t imsi)
 {
   NS_LOG_FUNCTION (this);
 
-  m_ueAddr  = Ipv4Address ();
-
   RegisterUeInfoByImsi (Ptr<UeInfo> (this));
 }
 

@@ -523,7 +523,7 @@ SliceNetwork::CreateUes (void)
   for (uint32_t i = 0; i < m_ueDevices.GetN (); i++)
     {
       m_ueDevices.Get (i)->GetAttribute ("Imsi", imsiValue);
-      Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsiValue.Get ());
+      Ptr<UeInfo> ueInfo = CreateObject<UeInfo> (imsiValue.Get ());
 
       ueInfo->SetSliceId (m_sliceId);
       ueInfo->SetUeAddr (ueIfaces.GetAddress (i));

@@ -88,7 +88,7 @@ SvelteMme::DoInitialUeMessage (
 
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
   ueInfo->SetCellId (ecgi);
-  ueInfo->SetEnbUeS1Id (enbUeS1Id); // TODO Verificar se isso nao causa erro.
+  ueInfo->SetEnbUeS1Id (enbUeS1Id);
 
   EpcS11SapSgw::CreateSessionRequestMessage msg;
   msg.imsi = imsi;
