@@ -21,6 +21,8 @@
 #include "slice-controller.h"
 #include "slice-network.h"
 #include "svelte-mme.h"
+#include "metadata/enb-info.h"
+#include "metadata/ue-info.h"
 #include "../infrastructure/backhaul-network.h"
 
 namespace ns3 {
@@ -146,10 +148,10 @@ SliceController::GetTypeId (void)
                      MakeTraceSourceAccessor (
                        &SliceController::m_pgwTftStatsTrace),
                      "ns3::SliceController::PgwTftStatsTracedCallback")
-//    .AddTraceSource ("SessionCreated", "The session created trace source.",
-//                     MakeTraceSourceAccessor (
-//                       &SliceController::m_sessionCreatedTrace),
-//                     "ns3::SliceController::SessionCreatedTracedCallback")
+    .AddTraceSource ("SessionCreated", "The session created trace source.",
+                     MakeTraceSourceAccessor (
+                       &SliceController::m_sessionCreatedTrace),
+                     "ns3::SliceController::SessionCreatedTracedCallback")
   ;
   return tid;
 }
@@ -684,24 +686,26 @@ SliceController::DoCreateSessionRequest (
 {
   NS_LOG_FUNCTION (this << msg.imsi);
 
-//  FIXME O código abaixo veio do antigo SliceController. Antes o mesmo controlador configurava o backhaul e o P-GW. Agora eu vou ter que chamar manualmente alguma função no controlador do backhaul pra configurar a parte de lá serparado dos gateways aqui.
-//  uint16_t cellId = msg.uli.gci;
-//  uint64_t imsi = msg.imsi;
-//
-//  Ptr<SdranController> sdranCtrl = SdranController::GetPointer (cellId);
-//  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
-//  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-//
-//  // Iterate over request message and create the response message.
-//  EpcS11SapMme::CreateSessionResponseMessage res;
-//  res.teid = imsi;
-//
-//  std::list<EpcS11SapSgw::BearerContextToBeCreated>::iterator bit;
-//  for (bit = msg.bearerContextsToBeCreated.begin ();
-//       bit != msg.bearerContextsToBeCreated.end ();
-//       ++bit)
-//    {
-//      NS_ABORT_IF (SliceController::m_teidCount > SliceController::m_teidEnd);
+//  FIXME O código abaixo veio do antigo SliceController. Antes o mesmo
+//  controlador configurava o backhaul e o P-GW. Agora eu vou ter que chamar
+//  manualmente alguma função no controlador do backhaul pra configurar a parte
+//  de lá serparado dos gateways aqui.
+  uint16_t cellId = msg.uli.gci;
+  uint64_t imsi = msg.imsi;
+
+  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+
+  // Iterate over request message and create the response message.
+  EpcS11SapMme::CreateSessionResponseMessage res;
+  res.teid = imsi;
+
+  std::list<EpcS11SapSgw::BearerContextToBeCreated>::iterator bit;
+  for (bit = msg.bearerContextsToBeCreated.begin ();
+       bit != msg.bearerContextsToBeCreated.end ();
+       ++bit)
+    {
+      NS_ABORT_IF (SliceController::m_teidCount > SliceController::m_teidEnd);
 //
 //      uint32_t teid = SliceController::m_teidCount++;
 //      bool isDefault = res.bearerContextsCreated.empty ();
@@ -776,11 +780,11 @@ SliceController::DoCreateSessionRequest (
 //          rInfo->SetPriority (0x1FFF);
 //          rInfo->SetTimeout (m_flowTimeout);
 //        }
-//    }
-//
-//  // Fire trace source notifying the created session.
-//  m_sessionCreatedTrace (imsi, cellId, res.bearerContextsCreated);
-//
+    }
+
+  // Fire trace source notifying the created session.
+  m_sessionCreatedTrace (imsi, cellId, res.bearerContextsCreated);
+
 //   /// FIXME Esse pedaço abaixo veio da mensagem de volta, DoCreateSessionResponse no sdran.
 //   // Install S-GW rules for default bearer.
 //   BearerContext_t defaultBearer = msg.bearerContextsCreated.front ();
@@ -788,8 +792,8 @@ SliceController::DoCreateSessionRequest (
 //   uint32_t teid = defaultBearer.sgwFteid.teid;
 //   SgwRulesInstall (RoutingInfo::GetPointer (teid));
 //
-//   // Forward the response message to the MME.
-//   m_s11SapMme->CreateSessionResponse (msg);
+  // Forward the response message to the MME.
+  m_s11SapMme->CreateSessionResponse (res);
 }
 
 void

@@ -34,6 +34,13 @@ class BackhaulController;
 class BackhaulNetwork;
 class SvelteMme;
 
+// FIXME Temporário aqui enquanto não estou usando o routing info.
+/** EPS bearer context created. */
+typedef EpcS11SapMme::BearerContextCreated BearerContext_t;
+
+/** List of bearer context created. */
+typedef std::list<BearerContext_t> BearerContextList_t;
+
 /**
  * \ingroup svelteLogical
  * Enumeration of available SVELTE logical slices IDs.
@@ -216,9 +223,8 @@ public:
    * \param cellId The eNB CellID to which the IMSI UE is attached to.
    * \param bearerList The list of context bearers created.
    */
-// FIXME
-//  typedef void (*SessionCreatedTracedCallback)(
-//    uint64_t imsi, uint16_t cellId, BearerContextList_t bearerList);
+  typedef void (*SessionCreatedTracedCallback)(
+    uint64_t imsi, uint16_t cellId, BearerContextList_t bearerList);
 
   // FIXME Gerenciar a alocação dos TEIDs. Tem que ser excludente entre os slices.
   static const uint32_t m_teidStart;    //!< First valid TEID value.
@@ -374,10 +380,10 @@ private:
 //
 //  /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
 //  TracedCallback<Ptr<const RoutingInfo> > m_bearerReleaseTrace;
-//
-//  /** The context created trace source, fired at NotifySessionCreated. */
-//  TracedCallback<uint64_t, uint16_t, BearerContextList_t>
-//  m_sessionCreatedTrace;
+
+  /** The context created trace source, fired at NotifySessionCreated. */
+  TracedCallback<uint64_t, uint16_t, BearerContextList_t>
+  m_sessionCreatedTrace;
 
   /** The P-GW TFT stats trace source, fired at PgwTftCheckUsage. */
   TracedCallback<struct PgwTftStats> m_pgwTftStatsTrace;
