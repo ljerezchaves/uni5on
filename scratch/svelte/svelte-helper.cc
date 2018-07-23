@@ -195,7 +195,7 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
 
   // Create the eNB info.
   Ptr<EnbInfo> enbInfo = CreateObject<EnbInfo> (cellId);
-  enbInfo->SetEnbS1uAddr (enbS1uAddr);
+  enbInfo->SetS1uAddr (enbS1uAddr);
   enbInfo->SetS1apSapEnb (enbApp->GetS1apSapEnb ());
 }
 
