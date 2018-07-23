@@ -81,14 +81,6 @@ public:
    */
   void EnablePcap (std::string prefix, bool promiscuous = false);
 
-  /** \name Private member accessors. */
-  //\{
-  uint32_t GetPgwTftNumNodes (void) const;
-  void SetBackhaulNetwork (Ptr<BackhaulNetwork> value);
-  void SetRadioNetwork (Ptr<RadioNetwork> value);
-  void SetPgwTftNumNodes (uint32_t value);
-  //\}
-
 protected:
   /** Destructor implementation. */
   virtual void DoDispose (void);
@@ -96,21 +88,33 @@ protected:
   // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
 
+  /**
+   * Get the number of P-GW TFT switch nodes available on this topology.
+   * \return The number of P-GW TFT nodes.
+   */
+  uint32_t GetPgwTftNumNodes (void) const;
+
+  /**
+   * Set the number of P-GW TFT switch nodes available on this topology.
+   * \param value The number of P-GW TFT nodes.
+   */
+  void SetPgwTftNumNodes (uint32_t value);
+
 private:
   /**
-   * Create the P-GW using OpenFlow switches, connecting it to the Internet web
-   * server and to the OpenFlow backhaul network.
+   * Create the P-GW using OpenFlow switches, connecting it to the
+   * Internet web server and to the OpenFlow backhaul network.
    */
   void CreatePgw (void);
 
   /**
-   * Create the S-GWs using OpenFlow switches, connecting them to the OpenFlow
-   * backhaul network.
+   * Create the S-GWs using OpenFlow switches, connecting them
+   * to the OpenFlow backhaul network.
    */
   void CreateSgws (void);
 
   /**
-   * Create the UEs, connecting them to the LTE radio infrastructure network.
+   * Create the UEs, connecting them to the LTE RAN network.
    */
   void CreateUes (void);
 

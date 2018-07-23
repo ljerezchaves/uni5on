@@ -108,25 +108,48 @@ public:
   virtual bool DedicatedBearerRequest (
     EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
 
-//  /**
-//   * Notify this controller of a new or eNB connected to S-GW node over the
-//   * S1-U interface.
-//   * \param cellID The eNB cell ID.
-//   * \param sgwS1uPortNo The S1-U port number on the S-GW OpenFlow switch.
-//   */
-//  virtual void NotifyEnbAttach (uint16_t cellId, uint32_t sgwS1uPortNo);
-//
-//  /**
-//   * Notify this controller of the S-GW connected to the OpenFlow backhaul
-//   * network over over the S5 interface.
-//   * \param sgwS5PortNo The S5 port number on the S-GW OpenFlow switch.
-//   * \param sgwS5Dev The S5 device attached to the S-GW OpenFlow switch.
-//   * \param mtcGbrTeid The TEID for the MTC GBR aggregation tunnel.
-//   * \param mtcNonTeid The TEID for the MTC Non-GBR aggregation tunnel.
-//   */
-//  virtual void NotifySgwAttach (
-//    uint32_t sgwS5PortNo, Ptr<NetDevice> sgwS5Dev, uint32_t mtcGbrTeid,
-//    uint32_t mtcNonTeid);
+  /**
+   * Notify this controller of the S-GW connected to the OpenFlow backhaul
+   * network over the S1-U and S5 interfaces.
+   * \param sgwSwDev The OpenFlow S-GW switch device.
+   * \param sgwS1uDev The S1-U device on the S-GW OpenFlow switch.
+   * \param sgwS1uPortNo The S1-U port number on the S-GW OpenFlow switch.
+   * \param sgwS5Dev The S5 device configure on the S-GW OpenFlow switch.
+   * \param sgwS5PortNo The S5 port number on the S-GW OpenFlow switch.
+   */
+  virtual void NotifySgwAttach (
+    Ptr<OFSwitch13Device> sgwSwDev, Ptr<NetDevice> sgwS1uDev,
+    uint32_t sgwS1uPortNo, Ptr<NetDevice> sgwS5Dev, uint32_t sgwS5PortNo);
+
+  /**
+   * Notify this controller of the P-GW main switch connected to the OpenFlow
+   * backhaul network over the S5 interface, and to the web server over the SGi
+   * interface.
+   * \param pgwSwDev The P-GW main OpenFlow switch device.
+   * \param pgwS5Dev The S5 device on the P-GW OpenFlow switch.
+   * \param pgwS5PortNo The S5 port number on the P-GW OpenFlow switch.
+   * \param pgwSgiDev The SGi device on the P-GW OpenFlow switch.
+   * \param pgwSgiPortNo The SGi port number on the P-GW OpenFlow switch.
+   * \param webSgiDev The SGi device on the Web server.
+   */
+  virtual void NotifyPgwMainAttach (
+    Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwS5Dev,
+    uint32_t pgwS5PortNo, Ptr<NetDevice> pgwSgiDev, uint32_t pgwSgiPortNo,
+    Ptr<NetDevice> webSgiDev);
+
+  /**
+   * Notify this controller of a new P-GW TFT switch connected to the OpenFlow
+   * backhaul network over the S5 interface and to the P-GW main switch over
+   * an internal interface.
+   * \param pgwSwDev The P-GW TFT OpenFlow switch device.
+   * \param pgwS5Dev The S5 device on the P-GW OpenFlow switch.
+   * \param pgwS5PortNo The S5 port number on the P-GW OpenFlow switch.
+   * \param pgwMainPortNo The internal port number on the P-GW main switch.
+   * \param pgwTftCounter The counter (index) for this P-GW TFT switch.
+   */
+  virtual void NotifyPgwTftAttach (
+    Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwS5Dev,
+    uint32_t pgwS5PortNo, uint32_t pgwMainPortNo, uint16_t pgwTftCounter);
 
   /**
    * Notify this controller that all P-GW switches have already been
@@ -134,33 +157,6 @@ public:
    * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
    */
   virtual void NotifyPgwBuilt (OFSwitch13DeviceContainer devices);
-
-  /**
-   * Notify this controller of the P-GW main switch connected to the OpenFlow
-   * backhaul network over the S5 interface, and to the web server over the SGi
-   * interface.
-   * \param pgwSwDev The OpenFlow P-GW main switch device.
-   * \param pgwS5PortNo The S5 port number on the P-GW main switch.
-   * \param pgwSgiPortNo The SGi port number on the P-GW main switch.
-   * \param pgwS5Dev The S5 device attached to the P-GW main switch.
-   * \param webSgiDev The SGi device attached to the Web server.
-   */
-  virtual void NotifyPgwMainAttach (
-    Ptr<OFSwitch13Device> pgwSwDev, uint32_t pgwS5PortNo,
-    uint32_t pgwSgiPortNo, Ptr<NetDevice> pgwS5Dev, Ptr<NetDevice> webSgiDev);
-
-  /**
-   * Notify this controller of a new P-GW TFT switch connected to the OpenFlow
-   * backhaul network over the S5 interface and to the P-GW main switch over
-   * an internal interface.
-   * \param pgwTftCounter The counter for P-GW TFT switches.
-   * \param pgwSwDev The OpenFlow P-GW TFT switch device.
-   * \param pgwS5PortNo The S5 port number on the P-GW TFT switch.
-   * \param pgwMainPortNo The port number on the P-GW main switch.
-   */
-  virtual void NotifyPgwTftAttach (
-    uint16_t pgwTftCounter, Ptr<OFSwitch13Device> pgwSwDev,
-    uint32_t pgwS5PortNo, uint32_t pgwMainPortNo);
 
   /**
    * \name Internal mechanisms operation mode accessors.

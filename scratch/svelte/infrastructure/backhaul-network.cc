@@ -129,8 +129,8 @@ BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
 
   // Connect the EPC node to the switch node.
   NetDeviceContainer devices = m_csmaHelper.Install (swNode, epcNode);
-  Ptr<CsmaNetDevice> swDev   = DynamicCast<CsmaNetDevice> (devices.Get (0));
-  Ptr<CsmaNetDevice> epcDev  = DynamicCast<CsmaNetDevice> (devices.Get (1));
+  Ptr<CsmaNetDevice> swDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
+  Ptr<CsmaNetDevice> epcDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
   m_epcDevices.Add (epcDev);
 
   // Set device names for pcap files.

@@ -199,70 +199,6 @@ SliceNetwork::EnablePcap (std::string prefix, bool promiscuous)
   helper.EnablePcap (prefix + "internet", m_webDevices, promiscuous);
 }
 
-uint32_t
-SliceNetwork::GetPgwTftNumNodes (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_nTftNodes;
-}
-
-// FIXME Esse aqui é para attach S-GW
-// void
-// SliceNetwork::AttachSdranCloud (Ptr<SdranCloud> sdranCloud)
-// {
-//   NS_LOG_FUNCTION (this << sdranCloud);
-//
-//   Ptr<Node> sgwNode = sdranCloud->GetSgwNode ();
-//   Ptr<OFSwitch13Device> sgwSwitchDev = sdranCloud->GetSgwSwitchDevice ();
-//   Ptr<SliceController> sdranCtrlApp = sdranCloud->GetSdranCtrlApp ();
-//   sdranCtrlApp->SetEpcCtlrApp (m_controllerApp);
-//
-//   // Get the switch datapath ID on the backhaul network to attach the S-GW.
-//   uint64_t swDpId = TopologyGetSgwSwitch (sdranCloud);
-//   Ptr<Node> swNode = GetSwitchNode (swDpId);
-//
-//   // Connect the S-GW to the backhaul network over S5 interface.
-//   NetDeviceContainer devices = m_csmaHelper.Install (swNode, sgwNode);
-//   m_s5Devices.Add (devices.Get (1));
-//
-//   Ptr<CsmaNetDevice> swS5Dev, sgwS5Dev;
-//   swS5Dev  = DynamicCast<CsmaNetDevice> (devices.Get (0));
-//   sgwS5Dev = DynamicCast<CsmaNetDevice> (devices.Get (1));
-//   BackhaulNetwork::SetDeviceNames (swS5Dev, sgwS5Dev, "~");
-//
-//   // Add the swS5Dev device as OpenFlow switch port on the backhaul switch.
-//   Ptr<OFSwitch13Device> swDev = OFSwitch13Device::GetDevice (swDpId);
-//   Ptr<OFSwitch13Port> swS5Port = swDev->AddSwitchPort (swS5Dev);
-//   uint32_t swS5PortNo = swS5Port->GetPortNo ();
-//
-//   // Add the sgwS5Dev as standard device on S-GW node.
-//   // It will be connected to a logical port through the GtpTunnelApp.
-//   m_s5AddrHelper.Assign (NetDeviceContainer (sgwS5Dev));
-//   NS_LOG_INFO ("S-GW S5 address: " << SliceNetwork::GetIpv4Addr (sgwS5Dev));
-//
-//   // Create the virtual net device to work as the logical port on the S-GW S5
-//   // interface. This logical ports will connect to the S-GW user-plane
-//   // application, which will forward packets to/from this logical port and the
-//   // S5 UDP socket binded to the sgwS5Dev.
-//   Ptr<VirtualNetDevice> sgwS5PortDev = CreateObject<VirtualNetDevice> ();
-//   sgwS5PortDev->SetAddress (Mac48Address::Allocate ());
-//   Ptr<OFSwitch13Port> sgwS5Port = sgwSwitchDev->AddSwitchPort (sgwS5PortDev);
-//   uint32_t sgwS5PortNo = sgwS5Port->GetPortNo ();
-//
-//   // Create the S-GW S5 user-plane application.
-//   sgwNode->AddApplication (
-//     CreateObject<GtpTunnelApp> (sgwS5PortDev, sgwS5Dev));
-//
-//   // Notify the EPC and SDRAN controllers of the new S-GW device attached
-//   // OpenFlow backhaul network.
-//   std::pair<uint32_t, uint32_t> mtcAggTeids;
-//   m_controllerApp->NotifyS5Attach (swDev, swS5PortNo, sgwS5Dev);
-//   mtcAggTeids = m_controllerApp->NotifySgwAttach (sgwS5Dev);
-//   sdranCtrlApp->NotifySgwAttach (sgwS5PortNo, sgwS5Dev, mtcAggTeids.first,
-//                                  mtcAggTeids.second);
-// }
-
 void
 SliceNetwork::DoDispose (void)
 {
@@ -329,20 +265,12 @@ SliceNetwork::NotifyConstructionCompleted (void)
   Object::NotifyConstructionCompleted ();
 }
 
-void
-SliceNetwork::SetBackhaulNetwork (Ptr<BackhaulNetwork> value)
+uint32_t
+SliceNetwork::GetPgwTftNumNodes (void) const
 {
-  NS_LOG_FUNCTION (this << value);
+  NS_LOG_FUNCTION (this);
 
-  m_backhaul = value;
-}
-
-void
-SliceNetwork::SetRadioNetwork (Ptr<RadioNetwork> value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_radio = value;
+  return m_nTftNodes;
 }
 
 void
@@ -380,7 +308,6 @@ SliceNetwork::CreatePgw (void)
   Ptr<Node> pgwMainNode = m_pgwNodes.Get (0);
   Ptr<OFSwitch13Device> pgwMainOfDev = m_pgwDevices.Get (0);
 
-  //
   // Connect the P-GW main switch to the SGi and S5 interfaces. On the uplink
   // direction, the traffic will flow directly from the S5 to the SGi interface
   // thought this switch. On the downlink direction, this switch will send the
@@ -392,10 +319,10 @@ SliceNetwork::CreatePgw (void)
   m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_webLinkDelay));
 
   // Connect the P-GW main node to the web server node (SGi interface).
-  Ptr<CsmaNetDevice> pgwSgiDev, webSgiDev;
-  m_webDevices = m_csmaHelper.Install (pgwMainNode, m_webNode);
-  pgwSgiDev = DynamicCast<CsmaNetDevice> (m_webDevices.Get (0));
-  webSgiDev = DynamicCast<CsmaNetDevice> (m_webDevices.Get (1));
+  NetDeviceContainer devices = m_csmaHelper.Install (pgwMainNode, m_webNode);
+  Ptr<CsmaNetDevice> pgwSgiDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
+  Ptr<CsmaNetDevice> webSgiDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
+  m_webDevices.Add (devices);
 
   // Set device names for pcap files.
   std::string ifaceName = "~" + LteInterfaceStr (LteInterface::SGI) + "~";
@@ -406,7 +333,7 @@ SliceNetwork::CreatePgw (void)
   uint32_t pgwSgiPortNo = pgwSgiPort->GetPortNo ();
 
   // Set the IP address on the Internet network.
-  m_webAddrHelper.Assign (NetDeviceContainer (m_webDevices));
+  m_webAddrHelper.Assign (NetDeviceContainer (m_webDevices)); // FIXME
   NS_LOG_INFO ("Web node " << m_webNode << " attached to the sgi interface " <<
                "with IP " << Ipv4AddressHelper::GetAddress (webSgiDev));
   NS_LOG_INFO ("P-GW " << pgwMainNode << " attached to the sgi interface " <<
@@ -420,15 +347,13 @@ SliceNetwork::CreatePgw (void)
     m_ueAddr, m_ueMask, Ipv4AddressHelper::GetAddress (pgwSgiDev), 1);
 
   // Connect the P-GW node to the OpenFlow backhaul network.
-  Ptr<CsmaNetDevice> pgwS5Dev;
-  pgwS5Dev = m_backhaul->AttachEpcNode (pgwMainNode, m_pgwSwitchIdx, LteInterface::S5);
-  NS_LOG_INFO ("P-GW main switch " << pgwMainNode << " attached to the s5 interface " <<
-               "with IP " << Ipv4AddressHelper::GetAddress (pgwS5Dev));
+  Ptr<CsmaNetDevice> pgwS5Dev = m_backhaul->AttachEpcNode (
+      pgwMainNode, m_pgwSwitchIdx, LteInterface::S5);
+  NS_LOG_INFO ("P-GW main switch " << pgwMainNode <<
+               " attached to the s5 interface with IP " <<
+               Ipv4AddressHelper::GetAddress (pgwS5Dev));
 
-  // Create the virtual net device to work as the logical ports on the P-GW S5
-  // interface. This logical ports will connect to the P-GW user-plane
-  // application, which will forward packets to/from this logical port and the
-  // S5 UDP socket binded to the pgwS5Dev.
+  // Create the logical port on the P-GW S5 interface.
   Ptr<VirtualNetDevice> pgwS5PortDev = CreateObject<VirtualNetDevice> ();
   pgwS5PortDev->SetAddress (Mac48Address::Allocate ());
   Ptr<OFSwitch13Port> pgwS5Port = pgwMainOfDev->AddSwitchPort (pgwS5PortDev);
@@ -438,20 +363,16 @@ SliceNetwork::CreatePgw (void)
   pgwMainNode->AddApplication (
     CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev));
 
-  // Notify the controller of the P-GW main switch attached to the Internet and
-  // to the OpenFlow backhaul network.
-  m_controllerApp->NotifyPgwMainAttach (pgwMainOfDev, pgwS5PortNo, pgwSgiPortNo,
-                                        pgwS5Dev, webSgiDev);
+  // Notify the controller of the new P-GW main switch.
+  m_controllerApp->NotifyPgwMainAttach (
+    pgwMainOfDev, pgwS5Dev, pgwS5PortNo, pgwSgiDev, pgwSgiPortNo, webSgiDev);
 
   // Configure CSMA helper for connecting P-GW internal node.
   m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_pgwLinkRate));
   m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_pgwLinkDelay));
-  NetDeviceContainer devices;
 
-  //
   // Connect all P-GW TFT switches to the P-GW main switch and to the S5
   // interface. Only downlink traffic will be sent to these switches.
-  //
   for (uint16_t tftIdx = 0; tftIdx < GetPgwTftNumNodes (); tftIdx++)
     {
       Ptr<Node> pgwTftNode = m_pgwNodes.Get (tftIdx + 1);
@@ -471,9 +392,8 @@ SliceNetwork::CreatePgw (void)
       devices = m_csmaHelper.Install (pgwTftNode, pgwMainNode);
       m_pgwIntDevices.Add (devices);
 
-      Ptr<CsmaNetDevice> tftDev, mainDev;
-      tftDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
-      mainDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
+      Ptr<CsmaNetDevice> tftDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
+      Ptr<CsmaNetDevice> mainDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
 
       // Add the mainDev as physical port on the P-GW main OpenFlow switch.
       Ptr<OFSwitch13Port> mainPort = pgwMainOfDev->AddSwitchPort (mainDev);
@@ -485,13 +405,13 @@ SliceNetwork::CreatePgw (void)
       NS_UNUSED (tftPortNo);
 
       // Connect the P-GW TFT node to the OpenFlow backhaul node.
-      Ptr<CsmaNetDevice> pgwS5Dev;
-      pgwS5Dev = m_backhaul->AttachEpcNode (pgwTftNode, m_pgwSwitchIdx, LteInterface::S5);
-      NS_LOG_INFO ("P-GW TFT switch " << pgwTftNode << " attached to the s5 interface " <<
-               "with IP " << Ipv4AddressHelper::GetAddress (pgwS5Dev));
+      Ptr<CsmaNetDevice> pgwS5Dev = m_backhaul->AttachEpcNode (
+          pgwTftNode, m_pgwSwitchIdx, LteInterface::S5);
+      NS_LOG_INFO ("P-GW TFT switch " << pgwTftNode <<
+                   " attached to the s5 interface with IP " <<
+                   Ipv4AddressHelper::GetAddress (pgwS5Dev));
 
-      // Create the virtual net device to work as the logical ports on the P-GW
-      // S5 interface.
+      // Create the logical port on the P-GW S5 interface.
       pgwS5PortDev = CreateObject<VirtualNetDevice> ();
       pgwS5PortDev->SetAddress (Mac48Address::Allocate ());
       pgwS5Port = pgwTftOfDev->AddSwitchPort (pgwS5PortDev);
@@ -501,10 +421,9 @@ SliceNetwork::CreatePgw (void)
       pgwTftNode->AddApplication (
         CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev));
 
-      // Notify the EPC controller of the P-GW TFT switch attached to the P-GW
-      // main switch and to the OpenFlow backhaul network.
-      m_controllerApp->NotifyPgwTftAttach (tftIdx, pgwTftOfDev, pgwS5PortNo,
-                                           mainPortNo);
+      // Notify the controller of the new P-GW TFT switch.
+      m_controllerApp->NotifyPgwTftAttach (
+          pgwTftOfDev, pgwS5Dev, pgwS5PortNo, mainPortNo, tftIdx);
     }
   m_controllerApp->NotifyPgwBuilt (m_pgwDevices);
 }
@@ -527,35 +446,33 @@ SliceNetwork::CreateSgws (void)
       Names::Add (name.str (), m_sgwNodes.Get (i));
     }
 
-  //
   // Connect all S-GW switches to the S1-U and S5 interfaces.
-  //
   for (uint16_t sgwIdx = 0; sgwIdx < m_nSgws; sgwIdx++)
     {
       Ptr<Node> sgwNode = m_sgwNodes.Get (sgwIdx);
-      Ptr<OFSwitch13Device> sgwDev = m_sgwDevices.Get (sgwIdx);
+      Ptr<OFSwitch13Device> sgwOfDev = m_sgwDevices.Get (sgwIdx);
 
       // Connect the S-GW node to the OpenFlow backhaul node.
       // FIXME sgwIdx + 1
-      Ptr<CsmaNetDevice> sgwS1uDev, sgwS5Dev;
-      sgwS1uDev = m_backhaul->AttachEpcNode (sgwNode, sgwIdx + 1, LteInterface::S1U);
-      NS_LOG_INFO ("S-GW " << sgwNode << " attached to the s1u interface with IP " <<
-                   Ipv4AddressHelper::GetAddress (sgwS1uDev));
-      sgwS5Dev = m_backhaul->AttachEpcNode (sgwNode, sgwIdx + 1, LteInterface::S5);
-      NS_LOG_INFO ("S-GW " << sgwNode << " attached to the s5 interface with IP " <<
-                   Ipv4AddressHelper::GetAddress (sgwS5Dev));
+      Ptr<CsmaNetDevice> sgwS1uDev = m_backhaul->AttachEpcNode (
+          sgwNode, sgwIdx + 1, LteInterface::S1U);
+      NS_LOG_INFO ("S-GW " << sgwNode << " attached to the s1u interface " <<
+                   "with IP " << Ipv4AddressHelper::GetAddress (sgwS1uDev));
+      Ptr<CsmaNetDevice> sgwS5Dev = m_backhaul->AttachEpcNode (
+          sgwNode, sgwIdx + 1, LteInterface::S5);
+      NS_LOG_INFO ("S-GW " << sgwNode << " attached to the s5 interface " <<
+                   "with IP " << Ipv4AddressHelper::GetAddress (sgwS5Dev));
 
-      // Create the virtual net device to work as the logical ports on the S-GW
-      // S1-U and S5 interface.
+      // Create the logical ports on the S-GW S1-U and S5 interfaces.
       Ptr<VirtualNetDevice> sgwS1uPortDev = CreateObject<VirtualNetDevice> ();
       sgwS1uPortDev->SetAddress (Mac48Address::Allocate ());
-      Ptr<OFSwitch13Port> sgwS1uPort = sgwDev->AddSwitchPort (sgwS1uPortDev);
+      Ptr<OFSwitch13Port> sgwS1uPort = sgwOfDev->AddSwitchPort (sgwS1uPortDev);
       uint32_t sgwS1uPortNo = sgwS1uPort->GetPortNo ();
       NS_UNUSED (sgwS1uPortNo);
 
       Ptr<VirtualNetDevice> sgwS5PortDev = CreateObject<VirtualNetDevice> ();
       sgwS5PortDev->SetAddress (Mac48Address::Allocate ());
-      Ptr<OFSwitch13Port> sgwS5Port = sgwDev->AddSwitchPort (sgwS5PortDev);
+      Ptr<OFSwitch13Port> sgwS5Port = sgwOfDev->AddSwitchPort (sgwS5PortDev);
       uint32_t sgwS5PortNo = sgwS5Port->GetPortNo ();
       NS_UNUSED (sgwS5PortNo);
 
@@ -565,13 +482,11 @@ SliceNetwork::CreateSgws (void)
       sgwNode->AddApplication (
         CreateObject<GtpTunnelApp> (sgwS5PortDev, sgwS5Dev));
 
-      // Notify the controller of the S-GW switch attached to the OpenFlow
-      // backhaul network.
-      // FIXME Aqui vai ter uma questão relacionada com túneis de agregação.
-      // FIXME Chamar o NotifySgwAttach no controlador da infraestrutura e tb o NotifyEnbAttach pra resolver tudo de uma vez só.
-      // m_controllerApp->NotifySgwAttach (pgwMainOfDev, pgwS5PortNo, pgwSgiPortNo,
-      //                                   pgwS5Dev, webSgiDev);
-      // FIXME ver SdranController::NotifyEnbAttach
+      // Notify the controller of the new S-GW switch.
+      // FIXME Na implementação do sdmn existe aqui a configuração dos TEIDs
+      // para os túneis de agregação que eu estou deixando de lado por agora.
+      m_controllerApp->NotifySgwAttach (
+          sgwOfDev, sgwS1uDev, sgwS1uPortNo, sgwS5Dev, sgwS5PortNo);
     }
 }
 
@@ -589,13 +504,13 @@ SliceNetwork::CreateUes (void)
       Names::Add (name.str (), m_ueNodes.Get (i));
     }
 
-  // TODO Use attributes for custom mobility configuration.
   // Configure UE positioning and mobility.
   Ptr<PositionAllocator> posAllocator = m_radio->GetRandomPositionAllocator ();
   MobilityHelper mobilityHelper;
   mobilityHelper.SetPositionAllocator (posAllocator);
   if (m_ueMobility)
     {
+      // TODO Use attributes for custom mobility configuration.
       mobilityHelper.SetMobilityModel (
         "ns3::RandomWaypointMobilityModel",
         "Speed", StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=15.0]"),
