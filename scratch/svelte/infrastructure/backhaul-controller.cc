@@ -22,8 +22,6 @@
 #include "backhaul-controller.h"
 #include "backhaul-network.h"
 #include "metadata/connection-info.h"
-// #include "../info/s5-aggregation-info.h"
-// #include "../sdran/sdran-controller.h"
 
 namespace ns3 {
 
@@ -68,32 +66,6 @@ BackhaulController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::BackhaulController")
     .SetParent<OFSwitch13Controller> ()
-// FIXME Simplificar o sistema de agregação HTC para on/off apenas.
-//    .AddAttribute ("HtcAggregation",
-//                   "HTC traffic aggregation mechanism operation mode.",
-//                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-//                   EnumValue (OperationMode::OFF),
-//                   MakeEnumAccessor (&BackhaulController::m_htcAggregation),
-//                   MakeEnumChecker (OperationMode::OFF,  "off",
-//                                    OperationMode::ON,   "on",
-//                                    OperationMode::AUTO, "auto"))
-//    .AddAttribute ("HtcAggGbrThs",
-//                   "HTC traffic aggregation GBR bandwidth threshold.",
-//                   DoubleValue (0.5),
-//                   MakeDoubleAccessor (&BackhaulController::m_htcAggGbrThs),
-//                   MakeDoubleChecker<double> (0.0, 1.0))
-//    .AddAttribute ("HtcAggNonThs",
-//                   "HTC traffic aggregation Non-GBR bandwidth threshold.",
-//                   DoubleValue (0.5),
-//                   MakeDoubleAccessor (&BackhaulController::m_htcAggNonThs),
-//                   MakeDoubleChecker<double> (0.0, 1.0))
-//    .AddAttribute ("MtcAggregation",
-//                   "MTC traffic aggregation mechanism operation mode.",
-//                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-//                   EnumValue (OperationMode::OFF),
-//                   MakeEnumAccessor (&BackhaulController::m_mtcAggregation),
-//                   MakeEnumChecker (OperationMode::OFF,  "off",
-//                                    OperationMode::ON,   "on"))
     .AddAttribute ("PriorityQueues",
                    "Priority output queues mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -231,82 +203,6 @@ BackhaulController::NotifyEpcAttach (
   DpctlSchedule (swDev->GetDatapathId (), cmdOut.str ());
 }
 
-// FIXME Aggregation
-// std::pair<uint32_t, uint32_t>
-// BackhaulController::NotifySgwAttach (Ptr<NetDevice> gwDev)
-// {
-//   NS_LOG_FUNCTION (this << gwDev);
-//
-//   static uint32_t m_mtcTeidCount = BackhaulController::m_teidEnd + 1;
-//   uint32_t gbrTeid = 0;
-//   uint32_t nonTeid = 0;
-//
-//   // When the MTC traffic aggregation is enable, let's create and install two
-//   // aggregation uplink GTP tunnels (for GBR and Non-GBR traffic) between this
-//   // S-GW and the P-GW. We are using 'fake' rInfo instances for these bearers,
-//   // so we can use existing methods to install the OpenFlow rules.
-//   if (GetMtcAggregMode () == OperationMode::ON)
-//     {
-//       Ptr<RoutingInfo> grInfo, nrInfo;
-//       Ptr<S5AggregationInfo> aggInfo;
-//       gbrTeid = m_mtcTeidCount++;
-//       nonTeid = m_mtcTeidCount++;
-//
-//       // Creating an uplink packet filter for aggregation tunnels.
-//       EpcTft::PacketFilter fakeUplinkfilter;
-//       fakeUplinkfilter.direction = EpcTft::UPLINK;
-//       Ptr<EpcTft> fakeTft = CreateObject<EpcTft> ();
-//       fakeTft->Add (fakeUplinkfilter);
-//
-//       // Creating the 'fake' bearers for aggregating MTC traffic. We are using
-//       // the same QCIs set to MTC traffic by the TrafficHelper, which will
-//       // force the same DSCP value for IP packets.
-//       BearerContext_t gbrBearer;
-//       gbrBearer.bearerLevelQos = EpsBearer (EpsBearer::GBR_GAMING);
-//       gbrBearer.tft = fakeTft;
-//
-//       BearerContext_t nonBearer;
-//       nonBearer.bearerLevelQos = EpsBearer (EpsBearer::NGBR_IMS);
-//       nonBearer.tft = fakeTft;
-//
-//       // Creating the 'fake' routing info instances.
-//       grInfo = CreateObject<RoutingInfo> (gbrTeid, gbrBearer, 0, false, true);
-//       grInfo->SetActive (true);
-//       grInfo->SetPriority (0xFF00);
-//       grInfo->SetPgwS5Addr (m_pgwS5Addr);
-//       grInfo->SetSgwS5Addr (BackhaulNetwork::GetIpv4Addr (gwDev));
-//       TopologyBearerCreated (grInfo);
-//
-//       nrInfo = CreateObject<RoutingInfo> (nonTeid, nonBearer, 0, false, true);
-//       nrInfo->SetActive (true);
-//       nrInfo->SetPriority (0xFF00);
-//       nrInfo->SetPgwS5Addr (m_pgwS5Addr);
-//       nrInfo->SetSgwS5Addr (BackhaulNetwork::GetIpv4Addr (gwDev));
-//       TopologyBearerCreated (nrInfo);
-//
-//       // Set the network slice for these bearers.
-//       if (GetSlicingMode () != OperationMode::OFF)
-//         {
-//           grInfo->SetSlice (Slice::MTC);
-//           nrInfo->SetSlice (Slice::MTC);
-//         }
-//
-//       // Set the traffic aggregation operation mode.
-//       aggInfo = grInfo->GetObject<S5AggregationInfo> ();
-//       aggInfo->SetOperationMode (OperationMode::ON);
-//
-//       aggInfo = nrInfo->GetObject<S5AggregationInfo> ();
-//       aggInfo->SetOperationMode (OperationMode::ON);
-//
-//       // Install the OpenFlow rules after handshake procedures.
-//       Simulator::Schedule (Seconds (0.5),
-//                            &BackhaulController::MtcAggBearerInstall, this, grInfo);
-//       Simulator::Schedule (Seconds (0.5),
-//                            &BackhaulController::MtcAggBearerInstall, this, nrInfo);
-//     }
-//   return std::make_pair (gbrTeid, nonTeid);
-// }
-
 void
 BackhaulController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
 {
@@ -318,22 +214,6 @@ BackhaulController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
 {
   NS_LOG_FUNCTION (this << cInfo);
 }
-
-//OperationMode
-//BackhaulController::GetHtcAggregMode (void) const
-//{
-//  NS_LOG_FUNCTION (this);
-//
-//  return m_htcAggregation;
-//}
-//
-//OperationMode
-//BackhaulController::GetMtcAggregMode (void) const
-//{
-//  NS_LOG_FUNCTION (this);
-//
-//  return m_mtcAggregation;
-//}
 
 OperationMode
 BackhaulController::GetPriorityQueuesMode (void) const
@@ -675,20 +555,6 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 //   success &= TopologyRoutingRemove (rInfo);
 //
 //   rInfo->SetInstalled (!success);
-//   return success;
-// }
-//
-// bool
-// BackhaulController::MtcAggBearerInstall (Ptr<RoutingInfo> rInfo)
-// {
-//   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
-//
-//   bool success = TopologyRoutingInstall (rInfo);
-//   NS_ASSERT_MSG (success, "Error when installing the MTC aggregation bearer.");
-//   NS_LOG_INFO ("MTC aggregation bearer teid " << rInfo->GetTeid () <<
-//                " installed for S-GW " << rInfo->GetSgwS5Addr ());
-//
-//   rInfo->SetInstalled (success);
 //   return success;
 // }
 

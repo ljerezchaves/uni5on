@@ -142,8 +142,6 @@ public:
    * \return The requested mechanism operation mode.
    */
   //\{
-//  OperationMode GetHtcAggregMode (void) const;
-//  OperationMode GetMtcAggregMode (void) const;
   OperationMode GetPriorityQueuesMode (void) const;
   OperationMode GetSlicingMode (void) const;
   //\}
@@ -253,13 +251,6 @@ private:
 //   * \return True if succeeded, false otherwise.
 //   */
 //  bool BearerRemove (Ptr<RoutingInfo> rInfo);
-
-//  /**
-//   * Install OpenFlow match rules for the aggregated MTC bearer.
-//   * \param rInfo The routing information to process.
-//   * \return True if succeeded, false otherwise.
-//   */
-//  bool MtcAggBearerInstall (Ptr<RoutingInfo> rInfo);
 
   /** Initialize static attributes only once. */
   static void StaticInitialize (void);

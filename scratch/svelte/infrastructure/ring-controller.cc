@@ -21,7 +21,6 @@
 #include <string>
 #include "backhaul-network.h"
 #include "ring-controller.h"
-// #include "../info/s5-aggregation-info.h" FIXME retornar com isso depois
 
 namespace ns3 {
 
