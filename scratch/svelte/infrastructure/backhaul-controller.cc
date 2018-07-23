@@ -231,8 +231,7 @@ BackhaulController::NotifyEpcAttach (
   DpctlSchedule (swDev->GetDatapathId (), cmdOut.str ());
 }
 
-// FIXME Essas funções terao que ser ajustadas para considerar qq elemento que se conecte à rede backhaul
-// FIXME Isso aqui é bem específico da parte de gragegação MTC. Tem que estudar como implementar.
+// FIXME Aggregation
 // std::pair<uint32_t, uint32_t>
 // BackhaulController::NotifySgwAttach (Ptr<NetDevice> gwDev)
 // {
@@ -482,13 +481,11 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
   NS_LOG_FUNCTION (this << swtch);
 
-  // This function is called after a successfully handshake between the
-  // backhaul controller and any switch on the OpenFlow network.
   // For the switches on the backhaul network, install following rules:
   // -------------------------------------------------------------------------
   // Table 0 -- Input table -- [from higher to lower priority]
   //
-  // Entries will be installed here by NewS5Attach function.
+  // Entries will be installed here by NotifyEpcAttach function.
 
   // GTP packets entering the switch from any port other then EPC ports.
   // Send to Routing table.
@@ -511,7 +508,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 2 -- Routing table -- [from higher to lower priority]
   //
-  // Entries will be installed here by NewEpcAttach function.
+  // Entries will be installed here by NotifyEpcAttach function.
   // Entries will be installed here by NotifyTopologyBuilt function.
 
   // GTP packets classified at previous table. Write the output group into

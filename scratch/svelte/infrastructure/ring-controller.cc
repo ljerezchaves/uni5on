@@ -149,18 +149,25 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
   // Installing groups and meters for ring network. Note that following
   // commands works as connections are created in clockwise direction, and
   // switches inside cInfo are saved in the same direction.
-  std::ostringstream cmd1, cmd2;
 
+  // -------------------------------------------------------------------------
+  // Group table
+  //
   // Routing group for clockwise packet forwarding.
+  std::ostringstream cmd1;
   cmd1 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::CLOCK
        << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (0);
   DpctlSchedule (cInfo->GetSwDpId (0), cmd1.str ());
 
   // Routing group for counterclockwise packet forwarding.
+  std::ostringstream cmd2;
   cmd2 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::COUNTER
        << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (1);
   DpctlSchedule (cInfo->GetSwDpId (1), cmd2.str ());
 
+  // -------------------------------------------------------------------------
+  // Meter table
+  //
   // Set up Non-GBR meters when the network slicing mechanism is enabled.
   if (GetSlicingMode () != OperationMode::OFF)
     {
@@ -748,6 +755,9 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo,
   std::ostringstream cmd;
   uint64_t kbps = 0;
 
+  // -------------------------------------------------------------------------
+  // Meter table
+  //
   // Update the proper slicing meter.
   kbps = cInfo->GetFreeBitRate (dir, slice);
   cmd << "meter-mod cmd=mod"

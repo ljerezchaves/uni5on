@@ -320,12 +320,12 @@ SliceController::NotifySgwAttach (
   //   }
 
   // -------------------------------------------------------------------------
-  // Table 1 -- Downlink table -- [from higher to lower priority]
+  // Table 1 -- S-GW downlink table -- [from higher to lower priority]
   //
   // Entries will be installed here by SgwRulesInstall function.
 
   // -------------------------------------------------------------------------
-  // Table 2 -- Uplink table -- [from higher to lower priority]
+  // Table 2 -- S-GW uplink table -- [from higher to lower priority]
   //
   // Entries will be installed here by SgwRulesInstall function.
 }
@@ -594,37 +594,9 @@ SliceController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
   NS_LOG_FUNCTION (this << swtch);
 
-  // Configure S-GW port rules.
-  // -------------------------------------------------------------------------
-  // Table 0 -- Input table -- [from higher to lower priority]
-  //
-  // IP packets coming from the P-GW (S-GW S5 port) and addressed to the UE
-  // network are sent to table 1, where rules will match the flow and set both
-  // TEID and eNB address on tunnel metadata.
-  //
-  // Entries will be installed here by NotifySgwAttach function.
-
-  // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
-  // Internet are sent to table 2, where rules will match the flow and set both
-  // TEID and P-GW address on tunnel metadata.
-  //
-  // Entries will be installed here by NotifyEnbAttach function.
-
   // Table miss entry. Send to controller.
   DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
-
-  // -------------------------------------------------------------------------
-  // Table 1 -- S-GW downlink forward table -- [from higher to lower priority]
-  //
-  // Entries will be installed here by SgwRulesInstall function.
-
-  // -------------------------------------------------------------------------
-  // Table 2 -- S-GW uplink forward table -- [from higher to lower priority]
-  //
-  // Entries will be installed here by SgwRulesInstall function.
 }
-
-
 
 //bool
 //SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
