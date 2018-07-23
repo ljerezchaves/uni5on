@@ -97,63 +97,38 @@ SvelteHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
 {
   NS_LOG_FUNCTION (this << ueDevice << imsi);
 
-  return 0;
-//  FIXME
-//  // Retrieve the IPv4 address of the UE and save it into UeInfo, if necessary.
-//  Ptr<Node> ueNode = ueDevice->GetNode ();
-//  Ptr<Ipv4> ueIpv4 = ueNode->GetObject<Ipv4> ();
-//  NS_ASSERT_MSG (ueIpv4 != 0, "UEs need to have IPv4 installed.");
-//
-//  int32_t interface = ueIpv4->GetInterfaceForDevice (ueDevice);
-//  NS_ASSERT (interface >= 0);
-//  NS_ASSERT (ueIpv4->GetNAddresses (interface) == 1);
-//
-//  Ipv4Address ueAddr = ueIpv4->GetAddress (interface, 0).GetLocal ();
-//  NS_LOG_INFO ("Activate EPS bearer UE IP address: " << ueAddr);
-//
-//  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-//  if (ueInfo->GetUeAddr () != ueAddr)
-//    {
-//      ueInfo->SetUeAddr (ueAddr);
-//
-//      // Identify MTC UEs by the network address. // FIXME O ideal é marcar o slice do UE.
-//      if (m_mtcAddr.IsEqual (ueAddr.CombineMask (m_mtcMask)))
-//        {
-//          ueInfo->SetMtc (true);
-//        }
-//    }
-//
-//  // Trick for default bearer.
-//  if (tft->IsDefaultTft ())
-//    {
-//      // To avoid rules overlap on the P-GW, we are going to replace the
-//      // default packet filter by two filters that includes the UE address and
-//      // the protocol (TCP and UDP).
-//      tft->RemoveFilter (0);
-//
-//      EpcTft::PacketFilter filterTcp;
-//      filterTcp.protocol = TcpL4Protocol::PROT_NUMBER;
-//      filterTcp.localAddress = ueAddr;
-//      tft->Add (filterTcp);
-//
-//      EpcTft::PacketFilter filterUdp;
-//      filterUdp.protocol = UdpL4Protocol::PROT_NUMBER;
-//      filterUdp.localAddress = ueAddr;
-//      tft->Add (filterUdp);
-//    }
-//
-//  // Save the bearer context into UE info.
-//  UeInfo::BearerInfo bearerInfo;
-//  bearerInfo.tft = tft;
-//  bearerInfo.bearer = bearer;
-//  uint8_t bearerId = ueInfo->AddBearer (bearerInfo);
-//
-//  Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
-//  if (ueLteDevice)
-//    {
-//      ueLteDevice->GetNas ()->ActivateEpsBearer (bearer, tft);
-//    }
-//  return bearerId;
+  // To avoid rules overlap on the P-GW, we are going to replace the default
+  // packet filter by two filters that includes the UE address and protocol.
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  if (tft->IsDefaultTft ())
+    {
+      tft->RemoveFilter (0);
+
+      EpcTft::PacketFilter filterTcp;
+      filterTcp.protocol = TcpL4Protocol::PROT_NUMBER;
+      filterTcp.localAddress = ueInfo->GetUeAddr ();
+      tft->Add (filterTcp);
+
+      EpcTft::PacketFilter filterUdp;
+      filterUdp.protocol = UdpL4Protocol::PROT_NUMBER;
+      filterUdp.localAddress = ueInfo->GetUeAddr ();
+      tft->Add (filterUdp);
+    }
+
+  // Save the bearer context into UE info.
+  UeInfo::BearerInfo bearerInfo;
+  bearerInfo.tft = tft;
+  bearerInfo.bearer = bearer;
+  uint8_t bearerId = ueInfo->AddBearer (bearerInfo);
+
+  // Activate the EPS bearer.
+  NS_LOG_DEBUG ("Activating bearer id " << static_cast<uint16_t> (bearerId) <<
+                " for UE IMSI " << imsi);
+  Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
+  NS_ASSERT_MSG (ueLteDevice, "LTE UE device not found.");
+  ueLteDevice->GetNas ()->ActivateEpsBearer (bearer, tft);
+
+  return bearerId;
 }
 
 void
