@@ -373,9 +373,15 @@ EnableVerbose (bool enable)
     {
       LogLevel logLevelWarn = static_cast<ns3::LogLevel> (
           LOG_PREFIX_FUNC | LOG_PREFIX_TIME | LOG_LEVEL_WARN);
+      NS_UNUSED (logLevelWarn);
 
       LogLevel logLevelWarnInfo = static_cast<ns3::LogLevel> (
           LOG_PREFIX_FUNC | LOG_PREFIX_TIME | LOG_LEVEL_WARN | LOG_INFO);
+      NS_UNUSED (logLevelWarnInfo);
+
+      LogLevel logLevelAll = static_cast<ns3::LogLevel> (
+          LOG_PREFIX_FUNC | LOG_PREFIX_TIME | LOG_LEVEL_ALL);
+      NS_UNUSED (logLevelAll);
 
       LogComponentEnable ("Main",                     logLevelWarnInfo);
       LogComponentEnable ("SvelteHelper",             logLevelWarnInfo);
