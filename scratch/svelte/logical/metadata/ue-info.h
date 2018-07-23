@@ -25,6 +25,7 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
+#include "../slice-controller.h"
 
 namespace ns3 {
 
@@ -59,16 +60,17 @@ public:
   /** \name Private member accessors. */
   //\{
   uint64_t GetImsi (void) const;
+  LogicalSlice GetSliceId (void) const;
   Ipv4Address GetUeAddr (void) const;
   uint16_t GetCellId (void) const;
   uint64_t GetMmeUeS1Id (void) const;
   uint64_t GetEnbUeS1Id (void) const;
   bool IsMtc (void) const;
 
+  void SetSliceId (LogicalSlice value);
   void SetUeAddr (Ipv4Address value);
   void SetCellId (uint16_t value);
   void SetEnbUeS1Id (uint64_t value);
-  void SetMtc (bool value);
   //\}
 
   /**
@@ -143,6 +145,7 @@ private:
   static void RegisterUeInfoByIpv4 (Ptr<UeInfo> ueInfo);
 
   uint64_t               m_imsi;                 //!< UE IMSI.
+  LogicalSlice           m_sliceId;              //!< LTE logical slice ID.
   Ipv4Address            m_ueAddr;               //!< UE IP address.
   uint16_t               m_cellId;               //!< UE cell ID.
   uint64_t               m_mmeUeS1Id;            //!< ID for S1-AP at MME.
@@ -150,7 +153,6 @@ private:
   uint16_t               m_bearerCounter;        //!< Number of bearers.
   std::list<BearerInfo>  m_bearersList;          //!< Bearer contexts.
   EpcTftClassifier       m_tftClassifier;        //!< P-GW TFT classifier.
-  bool                   m_isMtc;                //!< True for MTC UE.
 
   /** Map saving UE IMSI / UE information. */
   typedef std::map<uint64_t, Ptr<UeInfo> > ImsiUeInfoMap_t;

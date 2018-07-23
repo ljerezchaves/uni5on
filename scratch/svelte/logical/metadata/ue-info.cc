@@ -31,11 +31,11 @@ UeInfo::Ipv4UeInfoMap_t UeInfo::m_ueInfoByIpv4Map;
 
 UeInfo::UeInfo (uint64_t imsi)
   : m_imsi (imsi),
+  m_sliceId (LogicalSlice::NONE),
   m_cellId (0),
   m_mmeUeS1Id (imsi),
   m_enbUeS1Id (0),
-  m_bearerCounter (0),
-  m_isMtc (false)
+  m_bearerCounter (0)
 {
   NS_LOG_FUNCTION (this);
 
@@ -64,6 +64,14 @@ UeInfo::GetImsi (void) const
   NS_LOG_FUNCTION (this);
 
   return m_imsi;
+}
+
+LogicalSlice
+UeInfo::GetSliceId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sliceId;
 }
 
 Ipv4Address
@@ -103,7 +111,16 @@ UeInfo::IsMtc (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isMtc;
+  // FIXME Remove this function.
+  return m_sliceId == LogicalSlice::MTC ? true : false;
+}
+
+void
+UeInfo::SetSliceId (LogicalSlice value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_sliceId = value;
 }
 
 void
@@ -129,14 +146,6 @@ UeInfo::SetEnbUeS1Id (uint64_t value)
   NS_LOG_FUNCTION (this << value);
 
   m_enbUeS1Id = value;
-}
-
-void
-UeInfo::SetMtc (bool value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_isMtc = value;
 }
 
 std::list<UeInfo::BearerInfo>::const_iterator
