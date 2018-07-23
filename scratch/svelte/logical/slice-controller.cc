@@ -28,15 +28,15 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("SliceController");
 NS_OBJECT_ENSURE_REGISTERED (SliceController);
 
-std::string LogicalSliceStr (LogicalSlice slice)
+std::string SliceIdStr (SliceId slice)
 {
   switch (slice)
     {
-    case LogicalSlice::NONE:
+    case SliceId::NONE:
       return "none";
-    case LogicalSlice::HTC:
+    case SliceId::HTC:
       return "htc";
-    case LogicalSlice::MTC:
+    case SliceId::MTC:
       return "mtc";
     default:
       NS_LOG_ERROR ("Invalid logical slice.");
@@ -75,10 +75,10 @@ SliceController::GetTypeId (void)
     // Slice.
     .AddAttribute ("SliceId", "The LTE logical slice identification.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (LogicalSlice::NONE),
+                   EnumValue (SliceId::NONE),
                    MakeEnumAccessor (&SliceController::m_sliceId),
-                   MakeEnumChecker (LogicalSlice::HTC, "htc",
-                                    LogicalSlice::MTC, "mtc"))
+                   MakeEnumChecker (SliceId::HTC, "htc",
+                                    SliceId::MTC, "mtc"))
 
     // Controller
     .AddAttribute ("TimeoutInterval",
@@ -494,7 +494,7 @@ SliceController::NotifyConstructionCompleted (void)
   NS_LOG_FUNCTION (this);
 
   NS_ABORT_MSG_IF (!m_mme, "No SVELTE MME.");
-  NS_ABORT_MSG_IF (m_sliceId == LogicalSlice::NONE, "Undefined slice ID.");
+  NS_ABORT_MSG_IF (m_sliceId == SliceId::NONE, "Undefined slice ID.");
 
   // Connecting this controller to the MME.
   m_s11SapSgw = new MemberEpcS11SapSgw<SliceController> (this);

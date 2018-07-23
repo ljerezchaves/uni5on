@@ -51,10 +51,10 @@ SliceNetwork::GetTypeId (void)
     // Slice.
     .AddAttribute ("SliceId", "The LTE logical slice identification.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (LogicalSlice::NONE),
+                   EnumValue (SliceId::NONE),
                    MakeEnumAccessor (&SliceNetwork::m_sliceId),
-                   MakeEnumChecker (LogicalSlice::HTC, "htc",
-                                    LogicalSlice::MTC, "mtc"))
+                   MakeEnumChecker (SliceId::HTC, "htc",
+                                    SliceId::MTC, "mtc"))
     .AddAttribute ("Controller", "The slice controller application pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
@@ -207,13 +207,13 @@ SliceNetwork::NotifyConstructionCompleted (void)
 
   NS_ABORT_MSG_IF (!m_backhaul || !m_radio, "No infrastructure network.");
   NS_ABORT_MSG_IF (!m_controllerApp, "No slice controller application.");
-  NS_ABORT_MSG_IF (m_sliceId == LogicalSlice::NONE, "Undefined slice ID.");
+  NS_ABORT_MSG_IF (m_sliceId == SliceId::NONE, "Undefined slice ID.");
 
   EnumValue enumValue;
   m_controllerApp->GetAttribute ("SliceId", enumValue);
   NS_ABORT_MSG_IF (enumValue.Get () != m_sliceId, "Incompatible slice IDs");
 
-  m_sliceIdStr = LogicalSliceStr (m_sliceId);
+  m_sliceIdStr = SliceIdStr (m_sliceId);
   NS_LOG_INFO ("Creating LTE logical network " << m_sliceIdStr <<
                " slice with " << m_nUes << " UEs.");
 

@@ -36,22 +36,22 @@ class SvelteMme;
 
 /**
  * \ingroup svelteLogical
- * Enumeration of available SVELTE logical slices.
+ * Enumeration of available SVELTE logical slices IDs.
  */
 typedef enum
 {
   NONE = 0,   //!< Slice undefined.
   HTC  = 1,   //!< Slice for HTC UEs.
   MTC  = 2    //!< Slice for MTC UEs.
-} LogicalSlice;
+} SliceId;
 
 /**
  * \ingroup svelteLogical
- * Get the logical slice name.
- * \param slice The logical slice.
- * \return The string with the logical slice name.
+ * Get the slice ID name.
+ * \param slice The slice ID.
+ * \return The string with the slice ID name.
  */
-std::string LogicalSliceStr (LogicalSlice slice);
+std::string SliceIdStr (SliceId slice);
 
 /**
  * \ingroup svelteLogical
@@ -383,7 +383,7 @@ private:
   TracedCallback<struct PgwTftStats> m_pgwTftStatsTrace;
 
   // Slice identification.
-  LogicalSlice            m_sliceId;        //!< Logical slice ID.
+  SliceId                 m_sliceId;        //!< Logical slice ID.
 
   // MME interface.
   Ptr<SvelteMme>          m_mme;            //!< MME element.

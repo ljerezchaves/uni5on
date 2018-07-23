@@ -31,7 +31,7 @@ UeInfo::Ipv4UeInfoMap_t UeInfo::m_ueInfoByIpv4Map;
 
 UeInfo::UeInfo (uint64_t imsi)
   : m_imsi (imsi),
-  m_sliceId (LogicalSlice::NONE),
+  m_sliceId (SliceId::NONE),
   m_cellId (0),
   m_mmeUeS1Id (imsi),
   m_enbUeS1Id (0),
@@ -64,7 +64,7 @@ UeInfo::GetImsi (void) const
   return m_imsi;
 }
 
-LogicalSlice
+SliceId
 UeInfo::GetSliceId (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -118,11 +118,11 @@ UeInfo::IsMtc (void) const
   NS_LOG_FUNCTION (this);
 
   // FIXME Remove this function.
-  return m_sliceId == LogicalSlice::MTC ? true : false;
+  return m_sliceId == SliceId::MTC ? true : false;
 }
 
 void
-UeInfo::SetSliceId (LogicalSlice value)
+UeInfo::SetSliceId (SliceId value)
 {
   NS_LOG_FUNCTION (this << value);
 

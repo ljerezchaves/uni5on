@@ -101,7 +101,7 @@ private:
   void CreateUes (void);
 
   // Slice identification.
-  LogicalSlice                  m_sliceId;          //!< Logical slice ID.
+  SliceId                       m_sliceId;          //!< Logical slice ID.
   std::string                   m_sliceIdStr;       //!< Slice ID string.
 
   // Infrastructure interface.
