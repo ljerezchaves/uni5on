@@ -61,7 +61,14 @@ SliceController::GetTypeId (void)
                    TimeValue (Seconds (5)),
                    MakeTimeAccessor (&SliceController::m_timeout),
                    MakeTimeChecker ())
-
+    .AddAttribute ("Aggregation",
+                   "Traffic aggregation mechanism operation mode.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   EnumValue (OperationMode::OFF),
+                   MakeEnumAccessor (&SliceController::m_aggregation),
+                   MakeEnumChecker (OperationMode::OFF,  "off",
+                                    OperationMode::ON,   "on",
+                                    OperationMode::AUTO, "auto"))
     // MME.
     .AddAttribute ("Mme", "The SVELTE MME pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -100,33 +107,6 @@ SliceController::GetTypeId (void)
                    DoubleValue (0.90),
                    MakeDoubleAccessor (&SliceController::m_tftSplitThs),
                    MakeDoubleChecker<double> (0.5, 1.0))
-
-    // Aggregation. // FIXME Desabilitar isso???
-//    .AddAttribute ("HtcAggregation",
-//                   "HTC traffic aggregation mechanism operation mode.",
-//                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-//                   EnumValue (OperationMode::OFF),
-//                   MakeEnumAccessor (&SliceController::m_htcAggregation),
-//                   MakeEnumChecker (OperationMode::OFF,  "off",
-//                                    OperationMode::ON,   "on",
-//                                    OperationMode::AUTO, "auto"))
-//    .AddAttribute ("HtcAggGbrThs",
-//                   "HTC traffic aggregation GBR bandwidth threshold.",
-//                   DoubleValue (0.5),
-//                   MakeDoubleAccessor (&SliceController::m_htcAggGbrThs),
-//                   MakeDoubleChecker<double> (0.0, 1.0))
-//    .AddAttribute ("HtcAggNonThs",
-//                   "HTC traffic aggregation Non-GBR bandwidth threshold.",
-//                   DoubleValue (0.5),
-//                   MakeDoubleAccessor (&SliceController::m_htcAggNonThs),
-//                   MakeDoubleChecker<double> (0.0, 1.0))
-//    .AddAttribute ("MtcAggregation",
-//                   "MTC traffic aggregation mechanism operation mode.",
-//                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-//                   EnumValue (OperationMode::OFF),
-//                   MakeEnumAccessor (&SliceController::m_mtcAggregation),
-//                   MakeEnumChecker (OperationMode::OFF,  "off",
-//                                    OperationMode::ON,   "on"))
 
 // FIXME Comentado por causa da dependência com o rInfo.
 //    .AddTraceSource ("BearerRelease", "The bearer release trace source.",

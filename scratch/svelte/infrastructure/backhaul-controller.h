@@ -114,15 +114,6 @@ public:
   virtual void NotifyEpcAttach (
     Ptr<OFSwitch13Device> swDev, uint32_t portNo, Ptr<NetDevice> epcDev);
 
-//  /**
-//   * Notify this controller of a new S-GW connected to OpenFlow backhaul
-//   * network over the S5 interface. This method is used only for configuring
-//   * MTC traffic aggregation.
-//   * \param gwDev The device created at the gateway node.
-//   * \return The pair of MTC aggregation TEIDs on the uplink S5 interface.
-//   */
-//  virtual std::pair<uint32_t, uint32_t> NotifySgwAttach (Ptr<NetDevice> gwDev);
-
   /**
    * Notify this controller that all backhaul switches have already been
    * configured and the connections between them are finished.

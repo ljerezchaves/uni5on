@@ -390,15 +390,8 @@ private:
   DataRate                m_tftMaxLoad;     //!< Processing capacity.
   uint32_t                m_tftTableSize;   //!< Flow table size.
 
-  // Traffic aggregation mechanisms. // FIXME Remover?
-//  OperationMode         m_mtcAggregation; //!< MTC aggregation mechanism.
-//  OperationMode         m_htcAggregation; //!< HTC aggregation mechanism.
-//  double                m_htcAggGbrThs;   //!< Bandwidth threshold for GBR.
-//  double                m_htcAggNonThs;   //!< Bandwidth threshold for Non-GBR.
-
-
   // Internal members and attributes.
-  OperationMode           m_aggregation;    //!< Aggregation mechanism. FIXME
+  OperationMode           m_aggregation;    //!< Aggregation mechanism.
   Time                    m_timeout;        //!< Controller internal timeout.
 
   static const uint16_t   m_flowTimeout;    //!< Timeout for flow entries.
