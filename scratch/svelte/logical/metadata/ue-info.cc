@@ -106,6 +106,14 @@ UeInfo::GetEnbUeS1Id (void) const
   return m_enbUeS1Id;
 }
 
+EpcS11SapSgw*
+UeInfo::GetS11SapSgw (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s11SapSgw;
+}
+
 bool
 UeInfo::IsMtc (void) const
 {
@@ -146,6 +154,14 @@ UeInfo::SetEnbUeS1Id (uint64_t value)
   NS_LOG_FUNCTION (this << value);
 
   m_enbUeS1Id = value;
+}
+
+void
+UeInfo::SetS11SapSgw (EpcS11SapSgw* value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_s11SapSgw = value;
 }
 
 std::list<UeInfo::BearerInfo>::const_iterator

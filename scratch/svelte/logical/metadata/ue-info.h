@@ -65,12 +65,14 @@ public:
   uint16_t GetCellId (void) const;
   uint64_t GetMmeUeS1Id (void) const;
   uint64_t GetEnbUeS1Id (void) const;
-  bool IsMtc (void) const;
+  EpcS11SapSgw* GetS11SapSgw (void) const;
+  NS_DEPRECATED bool IsMtc (void) const;
 
   void SetSliceId (LogicalSlice value);
   void SetUeAddr (Ipv4Address value);
   void SetCellId (uint16_t value);
   void SetEnbUeS1Id (uint64_t value);
+  void SetS11SapSgw (EpcS11SapSgw* value);
   //\}
 
   /**
@@ -150,6 +152,7 @@ private:
   uint16_t               m_cellId;               //!< UE cell ID.
   uint64_t               m_mmeUeS1Id;            //!< ID for S1-AP at MME.
   uint16_t               m_enbUeS1Id;            //!< ID for S1-AP at eNB.
+  EpcS11SapSgw*          m_s11SapSgw;            //!< S-GW side of the S11 SAP.
   uint16_t               m_bearerCounter;        //!< Number of bearers.
   std::list<BearerInfo>  m_bearersList;          //!< Bearer contexts.
   EpcTftClassifier       m_tftClassifier;        //!< P-GW TFT classifier.

@@ -77,18 +77,6 @@ SvelteMme::GetS11SapMme (void) const
   return m_s11SapMme;
 }
 
-// FIXME. Nós teremos vários S-GW para este MME. Precisamos de um jeito de
-// gerenciar isso. Como essa informação depende do UE (um mesmo eNB pode estar
-// atrelado à dois SGW diferentes), então o melhor é salvar isso dentro do
-// UeInfo.
-// void
-// SvelteMme::SetS11SapSgw (EpcS11SapSgw *sap)
-// {
-//   NS_LOG_FUNCTION (this);
-//
-// //  m_s11SapSgw = sap;
-// }
-
 //
 // S1-AP SAP MME forwarded methods
 //
@@ -119,8 +107,7 @@ SvelteMme::DoInitialUeMessage (
       msg.bearerContextsToBeCreated.push_back (bearerContext);
     }
 
-// FIXME Enviar a informação para o controlador do S-GW correto.
-//  m_s11SapSgw->CreateSessionRequest (msg);
+  ueInfo->GetS11SapSgw ()->CreateSessionRequest (msg);
 }
 
 void
@@ -157,8 +144,7 @@ SvelteMme::DoPathSwitchRequest (
   msg.teid = imsi;
   msg.uli.gci = gci;
 
-// FIXME Enviar a informação para o controlador do S-GW correto.
-//  m_s11SapSgw->ModifyBearerRequest (msg);
+  ueInfo->GetS11SapSgw ()->ModifyBearerRequest (msg);
 }
 
 void
@@ -182,8 +168,7 @@ SvelteMme::DoErabReleaseIndication (
       msg.bearerContextsToBeRemoved.push_back (bearerContext);
     }
 
-// FIXME Enviar a informação para o controlador do S-GW correto.
-//  m_s11SapSgw->DeleteBearerCommand (msg);
+  ueInfo->GetS11SapSgw ()->DeleteBearerCommand (msg);
 }
 
 //
@@ -263,8 +248,7 @@ SvelteMme::DoDeleteBearerRequest (EpcS11SapMme::DeleteBearerRequestMessage msg)
       ueInfo->RemoveBearer (bearerContext.epsBearerId);
     }
 
-// FIXME Enviar a informação para o controlador do S-GW correto.
-//  m_s11SapSgw->DeleteBearerResponse (res);
+  ueInfo->GetS11SapSgw ()->DeleteBearerResponse (res);
 }
 
 } // namespace ns3

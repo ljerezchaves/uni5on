@@ -61,7 +61,6 @@ public:
   //\{
   EpcS1apSapMme* GetS1apSapMme (void) const;
   EpcS11SapMme* GetS11SapMme (void) const;
-  // void SetS11SapSgw (EpcS11SapSgw *sap);
   //\}
 
 protected:
