@@ -22,6 +22,7 @@
 #include "slice-network.h"
 #include "gtp-tunnel-app.h"
 #include "pgw-tunnel-app.h"
+#include "metadata/ue-info.h"
 #include "../infrastructure/backhaul-network.h"
 #include "../infrastructure/radio-network.h"
 
@@ -515,7 +516,20 @@ SliceNetwork::CreateUes (void)
   // Install TCP/IP protocol stack into UE nodes and assign IP address.
   InternetStackHelper internet;
   internet.Install (m_ueNodes);
-  m_ueAddrHelper.Assign (m_ueDevices);
+  Ipv4InterfaceContainer ueIfaces = m_ueAddrHelper.Assign (m_ueDevices);
+
+  // Saving UE metadata.
+  UintegerValue imsiValue;
+  for (uint32_t i = 0; i < m_ueDevices.GetN (); i++)
+    {
+      m_ueDevices.Get (i)->GetAttribute ("Imsi", imsiValue);
+      Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsiValue.Get ());
+
+      ueInfo->SetSliceId (m_sliceId);
+      ueInfo->SetUeAddr (ueIfaces.GetAddress (i));
+      NS_LOG_DEBUG ("UE IMSI " << imsiValue.Get () <<
+                    " configured with IP " << ueInfo->GetUeAddr ());
+    }
 
   // Specify static routes for each UE to its default S-GW.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
