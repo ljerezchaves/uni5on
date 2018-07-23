@@ -37,7 +37,10 @@ namespace ns3 {
 
 class ConnectionInfo;
 
-/** Enumeration of available operation modes. */
+/** 
+ * \ingroup svelteInfra
+ * Enumeration of available operation modes.
+ */
 typedef enum
 {
   OFF  = 0,   //!< Always off.
@@ -45,6 +48,12 @@ typedef enum
   AUTO = 2    //!< Automatic.
 } OperationMode;
 
+/**
+ * \ingroup svelteInfra
+ * Get the operation mode name.
+ * \param mode The operation mode.
+ * \return The string with the operation mode name.
+ */
 std::string OperationModeStr (OperationMode mode);
 
 /**

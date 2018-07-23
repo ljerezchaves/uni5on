@@ -33,6 +33,13 @@ class RadioNetwork;
 class SliceController;
 
 /**
+ * \ingroup svelte
+ * \defgroup svelteLogical Logical
+ * SVELTE architecture logical network.
+ */
+
+/**
+ * \ingroup svelteLogical
  * Enumeration of available SVELTE logical slices.
  */
 typedef enum
@@ -42,17 +49,12 @@ typedef enum
 } LogicalSlice;
 
 /**
+ * \ingroup svelteLogical
  * Get the logical slice name.
  * \param slice The logical slice identification.
  * \return The string with the slice name.
  */
 std::string LogicalSliceStr (LogicalSlice slice);
-
-/**
- * \ingroup svelte
- * \defgroup svelteLogical Logical
- * SVELTE architecture logical network.
- */
 
 /**
  * \ingroup svelteLogical

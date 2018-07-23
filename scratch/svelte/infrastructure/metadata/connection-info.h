@@ -30,7 +30,10 @@ namespace ns3 {
 
 class ConnectionInfo;
 
-/** Enumeration of available slices. */
+/** 
+ * \ingroup svelteInfra
+ * Enumeration of available infrastructure physical slices.
+ */
 typedef enum
 {
   DFT = 0,  //!< Best-effort (default) slice.
@@ -39,6 +42,12 @@ typedef enum
   ALL = 3   //!< ALL previous slices.
 } Slice;
 
+/**
+ * \ingroup svelteInfra
+ * Get the slice name.
+ * \param slice The slice.
+ * \return The string with the slice name.
+ */
 std::string SliceStr (Slice slice);
 
 /** A pair of switch datapath IDs. */
