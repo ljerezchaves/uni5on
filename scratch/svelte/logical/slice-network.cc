@@ -78,7 +78,7 @@ SliceNetwork::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (1),
                    MakeUintegerAccessor (&SliceNetwork::m_nUes),
-                   MakeUintegerChecker<uint32_t> (0, 3000))
+                   MakeUintegerChecker<uint32_t> (0, 4095))
     .AddAttribute ("UeAddress", "The UE network address.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    Ipv4AddressValue ("7.0.0.0"),
