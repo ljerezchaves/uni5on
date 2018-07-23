@@ -169,12 +169,15 @@ public:
 
   /**
    * Configure this controller with slice network attributes.
-   * \param ueAddress The UE network address.
-   * \param ueMask The UE network mask.
    * \param nPgwTfts The number of P-GW TFT switches available for use.
+   * \param ueAddr The UE network address.
+   * \param ueMask The UE network mask.
+   * \param webAddr The Internet network address.
+   * \param webMask The Internet network mask.
    */
-  void SetNetworkAttributes (Ipv4Address ueAddress, Ipv4Mask ueMask,
-                             uint16_t nPgwTfts);
+  void SetNetworkAttributes (
+    uint16_t nPgwTfts, Ipv4Address ueAddr, Ipv4Mask ueMask,
+    Ipv4Address webAddr, Ipv4Mask webMask);
 
   /**
    * TracedCallback signature for the P-GW TFT stats trace source.
@@ -367,6 +370,8 @@ private:
   // Network configuration.
   Ipv4Address             m_ueAddr;         //!< UE network address.
   Ipv4Mask                m_ueMask;         //!< UE network mask.
+  Ipv4Address             m_webAddr;        //!< Web network address.
+  Ipv4Mask                m_webMask;        //!< Web network mask.
 
   // P-GW user plane.
   std::vector<uint64_t>   m_pgwDpIds;       //!< Datapath IDs.

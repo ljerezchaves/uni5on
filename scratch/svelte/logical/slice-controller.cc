@@ -62,7 +62,7 @@ SliceController::GetTypeId (void)
                    MakeTimeAccessor (&SliceController::m_timeout),
                    MakeTimeChecker ())
 
-    // Infrastructure.
+    // MME.
     .AddAttribute ("Mme", "The SVELTE MME pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
@@ -240,90 +240,94 @@ SliceController::NotifySgwAttach (
 {
   NS_LOG_FUNCTION (this << sgwSwDev << sgwS1uDev << sgwS1uPortNo <<
                    sgwS5Dev << sgwS5PortNo);
-//
-//   m_sgwS5Addr = Ipv4AddressHelper::GetAddress (sgwS5Dev);
-//   m_sgwS5PortNo = sgwS5PortNo;
-//
 
-// FIXME ISso aqui veio do antigo NotifyEnbAttach
-//   // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
-//   // Internet are sent to table 2, where rules will match the flow and set both
-//   // TEID and P-GW address on tunnel metadata.
-//   std::ostringstream cmd;
-//   cmd << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-//       << ",in_port=" << sgwS1uPortNo
-//       << ",ip_dst=" << LteNetwork::m_sgiAddr
-//       << "/" << LteNetwork::m_sgiMask.GetPrefixLength ()
-//       << " goto:2";
-//   DpctlSchedule (m_sgwDpId, cmd.str ());
+  // -------------------------------------------------------------------------
+  // Table 0 -- S-GW default table -- [from higher to lower priority]
+  //
+  // IP packets coming from the P-GW (S-GW S5 port) and addressed to the UE
+  // network are sent to table 1, where rules will match the flow and set both
+  // TEID and eNB address on tunnel metadata.
+  std::ostringstream cmdDl;
+  cmdDl << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+        << ",in_port=" << sgwS5PortNo
+        << ",ip_dst=" << m_ueAddr << "/" << m_ueMask.GetPrefixLength ()
+        << " goto:1";
+  DpctlSchedule (sgwSwDev->GetDatapathId (), cmdDl.str ());
 
+  // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
+  // Internet are sent to table 2, where rules will match the flow and set both
+  // TEID and P-GW address on tunnel metadata.
+  std::ostringstream cmdUl;
+  cmdUl << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+        << ",in_port=" << sgwS1uPortNo
+        << ",ip_dst=" << m_webAddr << "/" << m_webMask.GetPrefixLength ()
+        << " goto:2";
+  DpctlSchedule (sgwSwDev->GetDatapathId (), cmdUl.str ());
 
+  // FIXME Aggregation
+  // // The mtcGbrTeid != 0 or mtcNonTeid != 0 means that MTC traffic aggregation
+  // // is enable. Install high-priority match rules on default table for
+  // // aggregating traffic from all MTC UEs on the proper uplink S5 GTP tunnel.
+  // if (mtcGbrTeid != 0)
+  //   {
+  //     // Print MTC aggregation TEID and P-GW IPv4 address into tunnel metadata.
+  //     Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (mtcGbrTeid);
+  //     uint64_t tunnelId;
+  //     char tunnelIdStr [20];
+  //     tunnelId = static_cast<uint64_t> (rInfo->GetPgwS5Addr ().Get ());
+  //     tunnelId <<= 32;
+  //     tunnelId |= rInfo->GetTeid ();
+  //     sprintf (tunnelIdStr, "0x%016lx", tunnelId);
+  //
+  //     // Instal OpenFlow MTC aggregation rule. We are using the DSCP field to
+  //     // distinguish GBR/Non-GBR packets. Packets inside the S-GW are not
+  //     // encapsulated, so the DSCP field is, in fact, the IP ToS set by the
+  //     // application socket.
+  //     uint8_t ipTos = SliceController::Dscp2Tos (rInfo->GetDscp ());
+  //     std::ostringstream cmd;
+  //     cmd << "flow-mod cmd=add,table=0,prio=65520 eth_type=0x800"
+  //         << ",ip_src=" << LteNetwork::m_mtcAddr
+  //         << "/" << LteNetwork::m_mtcMask.GetPrefixLength ()
+  //         << ",ip_dscp=" << (ipTos >> 2)
+  //         << " apply:set_field=tunn_id:" << tunnelIdStr
+  //         << ",output=" << m_sgwS5PortNo;
+  //     DpctlSchedule (m_sgwDpId, cmd.str ());
+  //   }
+  // if (mtcNonTeid != 0)
+  //   {
+  //     // Print MTC aggregation TEID and P-GW IPv4 address into tunnel metadata.
+  //     Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (mtcNonTeid);
+  //     uint64_t tunnelId;
+  //     char tunnelIdStr [20];
+  //     tunnelId = static_cast<uint64_t> (rInfo->GetPgwS5Addr ().Get ());
+  //     tunnelId <<= 32;
+  //     tunnelId |= rInfo->GetTeid ();
+  //     sprintf (tunnelIdStr, "0x%016lx", tunnelId);
+  //
+  //     // Instal OpenFlow MTC aggregation rule. We are using the DSCP field to
+  //     // distinguish GBR/Non-GBR packets. Packets inside the S-GW are not
+  //     // encapsulated, so the DSCP field is, in fact, the IP ToS set by the
+  //     // application socket.
+  //     uint8_t ipTos = SliceController::Dscp2Tos (rInfo->GetDscp ());
+  //     std::ostringstream cmd;
+  //     cmd << "flow-mod cmd=add,table=0,prio=65520 eth_type=0x800"
+  //         << ",ip_src=" << LteNetwork::m_mtcAddr
+  //         << "/" << LteNetwork::m_mtcMask.GetPrefixLength ()
+  //         << ",ip_dscp=" << (ipTos >> 2)
+  //         << " apply:set_field=tunn_id:" << tunnelIdStr
+  //         << ",output=" << m_sgwS5PortNo;
+  //     DpctlSchedule (m_sgwDpId, cmd.str ());
+  //   }
 
+  // -------------------------------------------------------------------------
+  // Table 1 -- Downlink table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by SgwRulesInstall function.
 
-//   // IP packets coming from the P-GW (S-GW S5 port) and addressed to the UE
-//   // network are sent to table 1, where rules will match the flow and set both
-//   // TEID and eNB address on tunnel metadata.
-//   std::ostringstream cmd;
-//   cmd << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-//       << ",in_port=" << sgwS5PortNo
-//       << ",ip_dst=" << m_ueAddr
-//       << "/" << m_ueMask.GetPrefixLength ()
-//       << " goto:1";
-//   DpctlSchedule (m_sgwDpId, cmd.str ());
-//
-//   // The mtcGbrTeid != 0 or mtcNonTeid != 0 means that MTC traffic aggregation
-//   // is enable. Install high-priority match rules on default table for
-//   // aggregating traffic from all MTC UEs on the proper uplink S5 GTP tunnel.
-//   if (mtcGbrTeid != 0)
-//     {
-//       // Print MTC aggregation TEID and P-GW IPv4 address into tunnel metadata.
-//       Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (mtcGbrTeid);
-//       uint64_t tunnelId;
-//       char tunnelIdStr [20];
-//       tunnelId = static_cast<uint64_t> (rInfo->GetPgwS5Addr ().Get ());
-//       tunnelId <<= 32;
-//       tunnelId |= rInfo->GetTeid ();
-//       sprintf (tunnelIdStr, "0x%016lx", tunnelId);
-//
-//       // Instal OpenFlow MTC aggregation rule. We are using the DSCP field to
-//       // distinguish GBR/Non-GBR packets. Packets inside the S-GW are not
-//       // encapsulated, so the DSCP field is, in fact, the IP ToS set by the
-//       // application socket.
-//       uint8_t ipTos = SliceController::Dscp2Tos (rInfo->GetDscp ());
-//       std::ostringstream cmd;
-//       cmd << "flow-mod cmd=add,table=0,prio=65520 eth_type=0x800"
-//           << ",ip_src=" << LteNetwork::m_mtcAddr
-//           << "/" << LteNetwork::m_mtcMask.GetPrefixLength ()
-//           << ",ip_dscp=" << (ipTos >> 2)
-//           << " apply:set_field=tunn_id:" << tunnelIdStr
-//           << ",output=" << m_sgwS5PortNo;
-//       DpctlSchedule (m_sgwDpId, cmd.str ());
-//     }
-//   if (mtcNonTeid != 0)
-//     {
-//       // Print MTC aggregation TEID and P-GW IPv4 address into tunnel metadata.
-//       Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (mtcNonTeid);
-//       uint64_t tunnelId;
-//       char tunnelIdStr [20];
-//       tunnelId = static_cast<uint64_t> (rInfo->GetPgwS5Addr ().Get ());
-//       tunnelId <<= 32;
-//       tunnelId |= rInfo->GetTeid ();
-//       sprintf (tunnelIdStr, "0x%016lx", tunnelId);
-//
-//       // Instal OpenFlow MTC aggregation rule. We are using the DSCP field to
-//       // distinguish GBR/Non-GBR packets. Packets inside the S-GW are not
-//       // encapsulated, so the DSCP field is, in fact, the IP ToS set by the
-//       // application socket.
-//       uint8_t ipTos = SliceController::Dscp2Tos (rInfo->GetDscp ());
-//       std::ostringstream cmd;
-//       cmd << "flow-mod cmd=add,table=0,prio=65520 eth_type=0x800"
-//           << ",ip_src=" << LteNetwork::m_mtcAddr
-//           << "/" << LteNetwork::m_mtcMask.GetPrefixLength ()
-//           << ",ip_dscp=" << (ipTos >> 2)
-//           << " apply:set_field=tunn_id:" << tunnelIdStr
-//           << ",output=" << m_sgwS5PortNo;
-//       DpctlSchedule (m_sgwDpId, cmd.str ());
-//     }
+  // -------------------------------------------------------------------------
+  // Table 2 -- Uplink table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by SgwRulesInstall function.
 }
 
 void
@@ -342,34 +346,33 @@ SliceController::NotifyPgwMainAttach (
   m_pgwSgiPortNo = pgwSgiPortNo;
 
   // -------------------------------------------------------------------------
-  // Table 0 -- P-GW default table -- [from higher to lower priority]
+  // Table 0 -- P-GW MAIN default table -- [from higher to lower priority]
   //
-  // IP packets coming from the LTE network (S5 port) and addressed to the
-  // Internet (Web IP address) have the destination MAC address rewritten to
-  // the Web SGi MAC address (this is necessary when using logical ports) and
-  // are forward to the SGi interface port.
+  // IP packets coming from the S-GW (P-GW S5 port) and addressed to the
+  // Internet (Web IP address) have their destination MAC address rewritten to
+  // the Web SGi MAC address (mandatory when using logical ports) and are
+  // forward to the SGi interface port.
   Mac48Address webMac = Mac48Address::ConvertFrom (webSgiDev->GetAddress ());
-  std::ostringstream cmdOut;
-  cmdOut << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-         << ",in_port=" << pgwS5PortNo
-         << ",ip_dst=" << Ipv4AddressHelper::GetAddress (webSgiDev)
-         << " write:set_field=eth_dst:" << webMac
-         << ",output=" << pgwSgiPortNo;
-  DpctlSchedule (pgwSwDev->GetDatapathId (), cmdOut.str ());
+  std::ostringstream cmdUl;
+  cmdUl << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+        << ",in_port=" << pgwS5PortNo
+        << ",ip_dst=" << Ipv4AddressHelper::GetAddress (webSgiDev)
+        << " write:set_field=eth_dst:" << webMac
+        << ",output=" << pgwSgiPortNo;
+  DpctlSchedule (pgwSwDev->GetDatapathId (), cmdUl.str ());
 
-  // IP packets coming from the Internet (SGi port) and addressed to the UE
-  // network are sent to the table corresponding to the current P-GW adaptive
-  // mechanism level.
-  std::ostringstream cmdIn;
-  cmdIn << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+  // IP packets coming from the Internet (P-GW SGi port) and addressed to the
+  // UE network are sent to the table corresponding to the current P-GW
+  // adaptive mechanism level.
+  std::ostringstream cmdDl;
+  cmdDl << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
         << ",in_port=" << pgwSgiPortNo
-        << ",ip_dst=" << m_ueAddr
-        << "/" << m_ueMask.GetPrefixLength ()
+        << ",ip_dst=" << m_ueAddr << "/" << m_ueMask.GetPrefixLength ()
         << " goto:" << m_tftLevel + 1;
-  DpctlSchedule (pgwSwDev->GetDatapathId (), cmdIn.str ());
+  DpctlSchedule (pgwSwDev->GetDatapathId (), cmdDl.str ());
 
   // -------------------------------------------------------------------------
-  // Table 1 to N -- P-GW adaptive mechanism -- [from higher to lower priority]
+  // Table 1..N -- P-GW MAIN adaptive level -- [from higher to lower priority]
   //
   // Entries will be installed here by NotifyPgwTftAttach function.
 }
@@ -392,8 +395,16 @@ SliceController::NotifyPgwTftAttach (
   m_tftTableSize = std::min (m_tftTableSize, tableSize);
   m_tftMaxLoad = std::min (m_tftMaxLoad, plCapacity);
 
-  // Configuring the P-GW main switch to forward traffic to this TFT switch
-  // considering all possible adaptive mechanism levels.
+  // -------------------------------------------------------------------------
+  // Table 0 -- P-GW TFT default table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by PgwRulesInstall function.
+
+  // -------------------------------------------------------------------------
+  // Table 1..N -- P-GW MAIN adaptive level -- [from higher to lower priority]
+  //
+  // Configuring the P-GW main switch to forward traffic to this P-GW TFT
+  // switch considering all possible adaptive mechanism levels.
   for (uint16_t tft = m_tftSwitches; pgwTftCounter + 1 <= tft; tft /= 2)
     {
       uint16_t lbLevel = static_cast<uint16_t> (log2 (tft));
@@ -405,11 +416,6 @@ SliceController::NotifyPgwTftAttach (
           << " apply:output=" << pgwMainPortNo;
       DpctlSchedule (GetPgwMainDpId (), cmd.str ());
     }
-
-  // -------------------------------------------------------------------------
-  // Table 0 -- P-GW TFT default table -- [from higher to lower priority]
-  //
-  // Entries will be installed here by PgwRulesInstall function.
 }
 
 void
@@ -446,13 +452,16 @@ SliceController::GetPgwAdaptiveMode (void) const
 
 void
 SliceController::SetNetworkAttributes (
-  Ipv4Address ueAddress, Ipv4Mask ueMask, uint16_t nPgwTfts)
+  uint16_t nPgwTfts, Ipv4Address ueAddr, Ipv4Mask ueMask,
+  Ipv4Address webAddr, Ipv4Mask webMask)
 {
-  NS_LOG_FUNCTION (this << ueAddress << ueMask << nPgwTfts);
+  NS_LOG_FUNCTION (this << nPgwTfts << ueAddr << ueMask << webAddr << webMask);
 
-  m_ueAddr = ueAddress;
-  m_ueMask = ueMask;
   m_tftSwitches = nPgwTfts;
+  m_ueAddr = ueAddr;
+  m_ueMask = ueMask;
+  m_webAddr = webAddr;
+  m_webMask = webMask;
 }
 
 void

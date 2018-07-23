@@ -235,7 +235,8 @@ SliceNetwork::NotifyConstructionCompleted (void)
       "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
   // Configure and install the slice controller application.
-  m_controllerApp->SetNetworkAttributes (m_ueAddr, m_ueMask, m_nTftNodes);
+  m_controllerApp->SetNetworkAttributes (
+    m_nTftNodes, m_ueAddr, m_ueMask, m_webAddr, m_webMask);
   m_controllerNode = CreateObject<Node> ();
   Names::Add (m_sliceIdStr + "_ctrl", m_controllerNode);
   m_switchHelper->InstallController (m_controllerNode, m_controllerApp);
