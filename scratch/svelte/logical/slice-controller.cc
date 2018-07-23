@@ -845,107 +845,107 @@ void
 SliceController::PgwTftCheckUsage (void)
 {
   NS_LOG_FUNCTION (this);
-  // TODO
 
-// double maxEntries = 0.0, sumEntries = 0.0;
-//  double maxLoad = 0.0, sumLoad = 0.0;
-//  uint32_t maxLbLevel = static_cast<uint32_t> (log2 (m_tftSwitches));
-//  uint16_t activeTfts = 1 << m_tftLevel;
-//  uint8_t nextLevel = m_tftLevel;
-//
-//  Ptr<OFSwitch13Device> device;
-//  Ptr<OFSwitch13StatsCalculator> stats;
-//  for (uint16_t tftIdx = 1; tftIdx <= activeTfts; tftIdx++)
-//    {
-//      device = OFSwitch13Device::GetDevice (GetPgwTftDpId (tftIdx));
-//      stats = device->GetObject<OFSwitch13StatsCalculator> ();
-//      NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
-//
-//      double entries = stats->GetEwmaFlowEntries ();
-//      maxEntries = std::max (maxEntries, entries);
-//      sumEntries += entries;
-//
-//      double load = stats->GetEwmaPipelineLoad ().GetBitRate ();
-//      maxLoad = std::max (maxLoad, load);
-//      sumLoad += load;
-//    }
-//
-//  if (GetPgwAdaptiveMode () == OperationMode::AUTO)
-//    {
-//      double maxTableUsage = maxEntries / m_tftTableSize;
-//      double maxLoadUsage = maxLoad / m_tftMaxLoad.GetBitRate ();
-//
-//      // We may increase the level when we hit the split threshold.
-//      if ((m_tftLevel < maxLbLevel)
-//          && (maxTableUsage >= m_tftSplitThs
-//              || maxLoadUsage >= m_tftSplitThs))
-//        {
-//          NS_LOG_INFO ("Increasing the adaptive mechanism level.");
-//          nextLevel++;
-//        }
-//
-//      // We may decrease the level when we hit the joing threshold.
-//      else if ((m_tftLevel > 0)
-//               && (maxTableUsage < m_tftJoinThs)
-//               && (maxLoadUsage < m_tftJoinThs))
-//        {
-//          NS_LOG_INFO ("Decreasing the adaptive mechanism level.");
-//          nextLevel--;
-//        }
-//    }
-//
-//  // Check if we need to update the adaptive mechanism level.
-//  uint32_t moved = 0;
-//  if (m_tftLevel != nextLevel)
-//    {
-//      // Identify and move bearers to the correct P-GW TFT switches.
-//      uint16_t futureTfts = 1 << nextLevel;
-//      for (uint16_t currIdx = 1; currIdx <= activeTfts; currIdx++)
-//        {
-//          RoutingInfoList_t bearers = RoutingInfo::GetInstalledList (currIdx);
-//          RoutingInfoList_t::iterator it;
-//          for (it = bearers.begin (); it != bearers.end (); ++it)
-//            {
-//              uint16_t destIdx = GetPgwTftIdx (*it, futureTfts);
-//              if (destIdx != currIdx)
-//                {
-//                  NS_LOG_INFO ("Moving bearer teid " << (*it)->GetTeid ());
-//                  PgwRulesRemove  (*it, currIdx, true);
-//                  PgwRulesInstall (*it, destIdx, true);
-//                  (*it)->SetPgwTftIdx (destIdx);
-//                  moved++;
-//                }
-//            }
-//        }
-//
-//      // Update the adaptive mechanism level and the P-GW main switch.
-//      std::ostringstream cmd;
-//      cmd << "flow-mod cmd=mods,table=0,prio=64 eth_type=0x800"
-//          << ",in_port=" << m_pgwSgiPortNo
-//          << ",ip_dst=" << EpcNetwork::m_ueAddr
-//          << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
-//          << " goto:" << nextLevel + 1;
-//      DpctlExecute (GetPgwMainDpId (), cmd.str ());
-//    }
-//
-//  // Fire the P-GW TFT adaptation trace source.
-//  struct PgwTftStats tftStats;
-//  tftStats.tableSize = m_tftTableSize;
-//  tftStats.maxEntries = maxEntries;
-//  tftStats.sumEntries = sumEntries;
-//  tftStats.pipeCapacity = m_tftMaxLoad.GetBitRate ();
-//  tftStats.maxLoad = maxLoad;
-//  tftStats.sumLoad = sumLoad;
-//  tftStats.currentLevel = m_tftLevel;
-//  tftStats.nextLevel = nextLevel;
-//  tftStats.maxLevel = maxLbLevel;
-//  tftStats.bearersMoved = moved;
-//  tftStats.blockThrs = m_tftBlockThs;
-//  tftStats.joinThrs = m_tftJoinThs;
-//  tftStats.splitThrs = m_tftSplitThs;
-//  m_pgwTftStatsTrace (tftStats);
-//
-//  m_tftLevel = nextLevel;
+  double maxEntries = 0.0, sumEntries = 0.0;
+  double maxLoad = 0.0, sumLoad = 0.0;
+  uint32_t maxLbLevel = static_cast<uint32_t> (log2 (m_tftSwitches));
+  uint16_t activeTfts = 1 << m_tftLevel;
+  uint8_t nextLevel = m_tftLevel;
+
+  Ptr<OFSwitch13Device> device;
+  Ptr<OFSwitch13StatsCalculator> stats;
+  for (uint16_t tftIdx = 1; tftIdx <= activeTfts; tftIdx++)
+    {
+      device = OFSwitch13Device::GetDevice (GetPgwTftDpId (tftIdx));
+      stats = device->GetObject<OFSwitch13StatsCalculator> ();
+      NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
+
+      double entries = stats->GetEwmaFlowEntries ();
+      maxEntries = std::max (maxEntries, entries);
+      sumEntries += entries;
+
+      double load = stats->GetEwmaPipelineLoad ().GetBitRate ();
+      maxLoad = std::max (maxLoad, load);
+      sumLoad += load;
+    }
+
+  if (GetPgwAdaptiveMode () == OperationMode::AUTO)
+    {
+      double maxTableUsage = maxEntries / m_tftTableSize;
+      double maxLoadUsage = maxLoad / m_tftMaxLoad.GetBitRate ();
+
+      // We may increase the level when we hit the split threshold.
+      if ((m_tftLevel < maxLbLevel)
+          && (maxTableUsage >= m_tftSplitThs
+              || maxLoadUsage >= m_tftSplitThs))
+        {
+          NS_LOG_INFO ("Increasing the adaptive mechanism level.");
+          nextLevel++;
+        }
+
+      // We may decrease the level when we hit the joing threshold.
+      else if ((m_tftLevel > 0)
+               && (maxTableUsage < m_tftJoinThs)
+               && (maxLoadUsage < m_tftJoinThs))
+        {
+          NS_LOG_INFO ("Decreasing the adaptive mechanism level.");
+          nextLevel--;
+        }
+    }
+
+  // Check if we need to update the adaptive mechanism level.
+  uint32_t moved = 0;
+  if (m_tftLevel != nextLevel)
+    {
+      // Identify and move bearers to the correct P-GW TFT switches.
+      // FIXME Comentado por dependência do RoutingInfo.
+      // uint16_t futureTfts = 1 << nextLevel;
+      // for (uint16_t currIdx = 1; currIdx <= activeTfts; currIdx++)
+      //   {
+      //     RoutingInfoList_t bearers = RoutingInfo::GetInstalledList (currIdx);
+      //     RoutingInfoList_t::iterator it;
+      //     for (it = bearers.begin (); it != bearers.end (); ++it)
+      //       {
+      //         uint16_t destIdx = GetPgwTftIdx (*it, futureTfts);
+      //         if (destIdx != currIdx)
+      //           {
+      //             NS_LOG_INFO ("Moving bearer teid " << (*it)->GetTeid ());
+      //             PgwRulesRemove  (*it, currIdx, true);
+      //             PgwRulesInstall (*it, destIdx, true);
+      //             (*it)->SetPgwTftIdx (destIdx);
+      //             moved++;
+      //           }
+      //       }
+      //   }
+
+      // // Update the adaptive mechanism level and the P-GW main switch.
+      // std::ostringstream cmd;
+      // cmd << "flow-mod cmd=mods,table=0,prio=64 eth_type=0x800"
+      //     << ",in_port=" << m_pgwSgiPortNo
+      //     << ",ip_dst=" << EpcNetwork::m_ueAddr
+      //     << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
+      //     << " goto:" << nextLevel + 1;
+      // DpctlExecute (GetPgwMainDpId (), cmd.str ());
+    }
+
+  // Fire the P-GW TFT adaptation trace source.
+  struct PgwTftStats tftStats;
+  tftStats.tableSize = m_tftTableSize;
+  tftStats.maxEntries = maxEntries;
+  tftStats.sumEntries = sumEntries;
+  tftStats.pipeCapacity = m_tftMaxLoad.GetBitRate ();
+  tftStats.maxLoad = maxLoad;
+  tftStats.sumLoad = sumLoad;
+  tftStats.currentLevel = m_tftLevel;
+  tftStats.nextLevel = nextLevel;
+  tftStats.maxLevel = maxLbLevel;
+  tftStats.bearersMoved = moved;
+  tftStats.blockThrs = m_tftBlockThs;
+  tftStats.joinThrs = m_tftJoinThs;
+  tftStats.splitThrs = m_tftSplitThs;
+  m_pgwTftStatsTrace (tftStats);
+
+  m_tftLevel = nextLevel;
 }
 
 // FIXME os dois métodos vieram do SdranController
