@@ -630,7 +630,7 @@ SliceController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 //  bool success = true;
 //  success &= PgwRulesInstall (rInfo);
 //  success &= TopologyRoutingInstall (rInfo);
-//
+//  FIXME Instalar tb no S-GW SgwRulesInstall (RoutingInfo::GetPointer (teid));
 //  rInfo->SetInstalled (success);
 //  return success;
 //}
@@ -653,7 +653,7 @@ SliceController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 //  bool success = true;
 //  success &= PgwRulesRemove (rInfo);
 //  success &= TopologyRoutingRemove (rInfo);
-//
+//  FIXME Remover tb do Sgw
 //  rInfo->SetInstalled (!success);
 //  return success;
 //}
@@ -745,19 +745,6 @@ SliceController::DoCreateSessionRequest (
 //      rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
 //      TopologyBearerCreated (rInfo);
 //
-//      // Set the network slice for this bearer.
-//      if (GetSlicingMode () != OperationMode::OFF)
-//        {
-//          if (rInfo->IsMtc ())
-//            {
-//              rInfo->SetSlice (Slice::MTC);
-//            }
-//          else if (rInfo->IsGbr ())
-//            {
-//              rInfo->SetSlice (Slice::GBR);
-//            }
-//        }
-//
 //      // Check for the proper traffic aggregation mode for this bearer.
 //      OperationMode mode;
 //      mode = rInfo->IsMtc () ? GetMtcAggregMode () : GetHtcAggregMode ();
@@ -801,13 +788,6 @@ SliceController::DoCreateSessionRequest (
   // Fire trace source notifying the created session.
   m_sessionCreatedTrace (imsi, cellId, res.bearerContextsCreated);
 
-//   /// FIXME Esse pedaço abaixo veio da mensagem de volta, DoCreateSessionResponse no sdran.
-//   // Install S-GW rules for default bearer.
-//   BearerContext_t defaultBearer = msg.bearerContextsCreated.front ();
-//   NS_ASSERT_MSG (defaultBearer.epsBearerId == 1, "Not a default bearer.");
-//   uint32_t teid = defaultBearer.sgwFteid.teid;
-//   SgwRulesInstall (RoutingInfo::GetPointer (teid));
-//
   // Forward the response message to the MME.
   m_s11SapMme->CreateSessionResponse (res);
 }
