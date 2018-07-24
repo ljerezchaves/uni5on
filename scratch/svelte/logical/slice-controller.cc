@@ -47,13 +47,7 @@ std::string SliceIdStr (SliceId slice)
 }
 
 // Initializing SliceController static members.
-// TODO Gerenciar TEID...
-// FIXME Montar um esquema que o teid tenham bits identificando o slice e outros identificando o tunel.
 const uint16_t SliceController::m_flowTimeout = 0;
-const uint32_t SliceController::m_teidStart = 0x100;
-const uint32_t SliceController::m_teidEnd = 0xFEFFFFFF;
-uint32_t SliceController::m_teidCount = SliceController::m_teidStart;
-
 
 SliceController::SliceController ()
   : m_tftMaxLoad (DataRate (std::numeric_limits<uint64_t>::max ())),
@@ -705,22 +699,44 @@ SliceController::DoCreateSessionRequest (
        bit != msg.bearerContextsToBeCreated.end ();
        ++bit)
     {
-      NS_ABORT_IF (SliceController::m_teidCount > SliceController::m_teidEnd);
-//
-//      uint32_t teid = SliceController::m_teidCount++;
-//      bool isDefault = res.bearerContextsCreated.empty ();
-//
-//      EpcS11SapMme::BearerContextCreated bearerContext;
-//      bearerContext.sgwFteid.teid = teid;
-//      bearerContext.sgwFteid.address = enbInfo->GetSgwS1uAddr ();
-//      bearerContext.epsBearerId = bit->epsBearerId;
-//      bearerContext.bearerLevelQos = bit->bearerLevelQos;
-//      bearerContext.tft = bit->tft;
-//      res.bearerContextsCreated.push_back (bearerContext);
-//
-//      // Add the TFT entry to the UeInfo (don't move this command from here).
-//      ueInfo->AddTft (bit->tft, teid);
-//
+      //
+      // We are using the following TEID allocation strategy:
+      // TEID has 32 bits length: 0x 0 0000 0 00
+      //                            |-|----|-|--|
+      //                             A B    C D
+      //  4 (A) bits are used to identify the logical slice.
+      // 16 (B) bits are used to identify the UE (IMSI).
+      //  4 (C) bits are used to identify the bearer withing the UE.
+      //  8 (D) bits are reserved (not used).
+      //
+      // This approach restricts the number of UEs in the simulation to 61425
+      // (up to 15 slices with 4095 UEs each). However, this is larger than our
+      // current computational resources can simulate.
+      //
+      uint32_t teid = static_cast<uint8_t> (m_sliceId);
+      teid <<= 16;
+      teid |= static_cast<uint16_t> (imsi);
+      teid <<= 4;
+      teid |= static_cast<uint8_t> (bit->epsBearerId);
+      teid <<= 8;
+      NS_LOG_DEBUG ("Allocating TEID for UE IMSI " << imsi << " in slice " <<
+                    SliceIdStr (m_sliceId) << " for internal bearer id " <<
+                    static_cast<uint16_t> (bit->epsBearerId) << ": 0x" <<
+                    std::hex << teid);
+
+      // bool isDefault = res.bearerContextsCreated.empty ();
+
+      EpcS11SapMme::BearerContextCreated bearerContext;
+      bearerContext.sgwFteid.teid = teid;
+      // bearerContext.sgwFteid.address = enbInfo->GetSgwS1uAddr (); // FIXME
+      bearerContext.epsBearerId = bit->epsBearerId;
+      bearerContext.bearerLevelQos = bit->bearerLevelQos;
+      bearerContext.tft = bit->tft;
+      res.bearerContextsCreated.push_back (bearerContext);
+
+      // Add the TFT entry to the UeInfo (don't move this command from here).
+      ueInfo->AddTft (bit->tft, teid);
+
 //      // Create the routing metadata for this bearer.
 //      Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
 //          teid, bearerContext, imsi, isDefault, ueInfo->IsMtc ());

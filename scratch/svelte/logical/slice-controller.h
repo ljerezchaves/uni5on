@@ -44,6 +44,8 @@ typedef std::list<BearerContext_t> BearerContextList_t;
 /**
  * \ingroup svelteLogical
  * Enumeration of available SVELTE logical slices IDs.
+ * \internal Slice IDs can range from 1 to 15 (restricted by the current TEID
+ * allocation strategy).
  */
 typedef enum
 {
@@ -226,10 +228,6 @@ public:
   typedef void (*SessionCreatedTracedCallback)(
     uint64_t imsi, uint16_t cellId, BearerContextList_t bearerList);
 
-  // FIXME Gerenciar a alocação dos TEIDs. Tem que ser excludente entre os slices.
-  static const uint32_t m_teidStart;    //!< First valid TEID value.
-  static const uint32_t m_teidEnd;      //!< Last valid TEID value.
-
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -270,7 +268,10 @@ private:
    */
   void ControllerTimeout (void);
 
-  /** \name Methods for the S11 SAP S-GW control plane. */
+  /**
+   * \name Methods for the S11 SAP S-GW control plane.
+   * \param msg The message sent here by the MME entity.
+   */
   //\{
   void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
   void DoDeleteBearerCommand  (EpcS11SapSgw::DeleteBearerCommandMessage  msg);
@@ -429,7 +430,6 @@ private:
   Time                    m_timeout;        //!< Controller internal timeout.
 
   static const uint16_t   m_flowTimeout;    //!< Timeout for flow entries.
-  static uint32_t         m_teidCount;      //!< TEID counter. FIXME
 };
 
 } // namespace ns3
