@@ -133,7 +133,7 @@ SliceNetwork::GetTypeId (void)
                    "The backhaul switch index to connect the P-GW.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    UintegerValue (0),
-                   MakeUintegerAccessor (&SliceNetwork::m_pgwSwitchIdx),
+                   MakeUintegerAccessor (&SliceNetwork::m_pgwInfraSwIdx),
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("PgwTftPipelineCapacity",
                    "Pipeline capacity for the P-GW TFT switches.",
@@ -340,7 +340,7 @@ SliceNetwork::CreatePgw (void)
 
   // Connect the P-GW node to the OpenFlow backhaul network.
   Ptr<CsmaNetDevice> pgwS5Dev = m_backhaul->AttachEpcNode (
-      pgwMainNode, m_pgwSwitchIdx, LteInterface::S5);
+      pgwMainNode, m_pgwInfraSwIdx, LteInterface::S5);
   NS_LOG_INFO ("P-GW main switch " << pgwMainNode <<
                " attached to the s5 interface with IP " <<
                Ipv4AddressHelper::GetAddress (pgwS5Dev));
@@ -398,7 +398,7 @@ SliceNetwork::CreatePgw (void)
 
       // Connect the P-GW TFT node to the OpenFlow backhaul node.
       Ptr<CsmaNetDevice> pgwS5Dev = m_backhaul->AttachEpcNode (
-          pgwTftNode, m_pgwSwitchIdx, LteInterface::S5);
+          pgwTftNode, m_pgwInfraSwIdx, LteInterface::S5);
       NS_LOG_INFO ("P-GW TFT switch " << pgwTftNode <<
                    " attached to the s5 interface with IP " <<
                    Ipv4AddressHelper::GetAddress (pgwS5Dev));
