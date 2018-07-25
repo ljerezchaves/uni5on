@@ -21,9 +21,9 @@
 #include "slice-controller.h"
 #include "slice-network.h"
 #include "svelte-mme.h"
-#include "metadata/enb-info.h"
 #include "metadata/ue-info.h"
 #include "../infrastructure/backhaul-network.h"
+#include "../infrastructure/metadata/enb-info.h"
 
 namespace ns3 {
 

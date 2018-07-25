@@ -22,7 +22,7 @@
 
 #include "svelte-mme.h"
 #include "metadata/ue-info.h"
-#include "metadata/enb-info.h"
+#include "../infrastructure/metadata/enb-info.h"
 
 namespace ns3 {
 
