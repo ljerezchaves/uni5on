@@ -52,9 +52,13 @@ public:
   //\{
   uint16_t GetCellId (void) const;
   Ipv4Address GetS1uAddr (void) const;
+  uint16_t GetInfraSwIdx (void) const;
+  uint32_t GetInfraSwPortNo (void) const;
   EpcS1apSapEnb* GetS1apSapEnb (void) const;
 
   void SetS1uAddr (Ipv4Address value);
+  void SetInfraSwIdx (uint16_t value);
+  void SetInfraSwPortNo (uint32_t value);
   void SetS1apSapEnb (EpcS1apSapEnb* value);
   //\}
 
@@ -76,8 +80,13 @@ private:
    */
   static void RegisterEnbInfo (Ptr<EnbInfo> enbInfo);
 
+  // eNB metadata.
   uint16_t               m_cellId;               //!< eNB cell ID.
   Ipv4Address            m_s1uAddr;              //!< eNB S1-U IP address.
+  uint16_t               m_infraSwIdx;           //!< Backhaul switch index.
+  uint32_t               m_infraSwPortNo;        //!< Backhaul switch port no.
+
+  // Control-plane communication.
   EpcS1apSapEnb*         m_s1apSapEnb;           //!< S1-AP eNB SAP provider.
 
   /** Map saving cell ID / eNB information. */

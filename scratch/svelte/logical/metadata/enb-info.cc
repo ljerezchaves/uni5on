@@ -68,6 +68,22 @@ EnbInfo::GetS1uAddr (void) const
   return m_s1uAddr;
 }
 
+uint16_t
+EnbInfo::GetInfraSwIdx (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_infraSwIdx;
+}
+
+uint32_t
+EnbInfo::GetInfraSwPortNo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_infraSwPortNo;
+}
+
 EpcS1apSapEnb*
 EnbInfo::GetS1apSapEnb (void) const
 {
@@ -82,6 +98,22 @@ EnbInfo::SetS1uAddr (Ipv4Address value)
   NS_LOG_FUNCTION (this << value);
 
   m_s1uAddr = value;
+}
+
+void
+EnbInfo::SetInfraSwIdx (uint16_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_infraSwIdx = value;
+}
+
+void
+EnbInfo::SetInfraSwPortNo (uint32_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_infraSwPortNo = value;
 }
 
 void
