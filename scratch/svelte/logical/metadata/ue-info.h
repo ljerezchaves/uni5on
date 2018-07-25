@@ -145,13 +145,19 @@ private:
    */
   static void RegisterUeInfoByIpv4 (Ptr<UeInfo> ueInfo);
 
+  // UE metadata.
   uint64_t               m_imsi;                 //!< UE IMSI.
   SliceId                m_sliceId;              //!< LTE logical slice ID.
   Ipv4Address            m_ueAddr;               //!< UE IP address.
-  uint16_t               m_cellId;               //!< UE cell ID.
+  uint16_t               m_cellId;               //!< Serving eNB cell ID.
+  // FIXME Inserir informação de qual gateway está servindo.
+
+  // Control-plane communication.
   uint64_t               m_mmeUeS1Id;            //!< ID for S1-AP at MME.
   uint16_t               m_enbUeS1Id;            //!< ID for S1-AP at eNB.
   EpcS11SapSgw*          m_s11SapSgw;            //!< S-GW side of the S11 SAP.
+
+  // Bearers and TFTs.
   uint16_t               m_bearerCounter;        //!< Number of bearers.
   std::list<BearerInfo>  m_bearersList;          //!< Bearer contexts.
   EpcTftClassifier       m_tftClassifier;        //!< P-GW TFT classifier.
