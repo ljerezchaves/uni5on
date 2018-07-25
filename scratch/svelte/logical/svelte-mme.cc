@@ -93,6 +93,7 @@ SvelteMme::DoInitialUeMessage (
   EpcS11SapSgw::CreateSessionRequestMessage msg;
   msg.imsi = imsi;
   msg.uli.gci = ecgi;
+  msg.teid = 0;
 
   std::list<UeInfo::BearerInfo>::const_iterator bit;
   for (bit = ueInfo->GetBearerListBegin ();
@@ -139,6 +140,7 @@ SvelteMme::DoPathSwitchRequest (
 
   ueInfo->SetCellId (gci);
   ueInfo->SetEnbUeS1Id (enbUeS1Id);
+  // FIXME When the UE handovers, will it change the S-GW?
 
   EpcS11SapSgw::ModifyBearerRequestMessage msg;
   msg.teid = imsi;
@@ -211,8 +213,9 @@ SvelteMme::DoModifyBearerResponse (
 {
   NS_LOG_FUNCTION (this << msg.teid);
 
-  NS_ASSERT (msg.cause ==
-             EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED);
+  NS_ASSERT_MSG (
+    msg.cause == EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED,
+    "Invalid message cause.");
 
   uint64_t imsi = msg.teid;
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
