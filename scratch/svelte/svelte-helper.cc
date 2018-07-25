@@ -144,9 +144,11 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   internet.Install (enb);
 
   // Attach the eNB node to the OpenFlow backhaul network.
-  uint16_t switchIdx = GetEnbSwitchIdx (cellId);
-  Ptr<CsmaNetDevice> enbS1uDev = m_backhaul->AttachEpcNode (
-      enb, switchIdx, LteInterface::S1U);
+  uint16_t infraSwIdx = GetEnbSwitchIdx (cellId);
+  Ptr<CsmaNetDevice> enbS1uDev;
+  Ptr<OFSwitch13Port> infraSwPort;
+  std::tie (enbS1uDev, infraSwPort) = m_backhaul->AttachEpcNode (
+      enb, infraSwIdx, LteInterface::S1U);
   Ipv4Address enbS1uAddr = Ipv4AddressHelper::GetAddress (enbS1uDev);
   NS_LOG_INFO ("eNB " << enb << " attached to the s1u " <<
                "interface with IP " << enbS1uAddr);
@@ -193,9 +195,11 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   Ptr<EpcX2> x2 = CreateObject<EpcX2> ();
   enb->AggregateObject (x2);
 
-  // Create the eNB info.
+  // Creating eNB metadata.
   Ptr<EnbInfo> enbInfo = CreateObject<EnbInfo> (cellId);
   enbInfo->SetS1uAddr (enbS1uAddr);
+  enbInfo->SetInfraSwIdx (infraSwIdx);
+  enbInfo->SetInfraSwPortNo (infraSwPort->GetPortNo ());
   enbInfo->SetS1apSapEnb (enbApp->GetS1apSapEnb ());
 }
 

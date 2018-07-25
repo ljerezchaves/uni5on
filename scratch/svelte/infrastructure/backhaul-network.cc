@@ -112,7 +112,7 @@ BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous)
   helper.EnablePcap (prefix + "backhaul", m_switchNodes, promiscuous);
 }
 
-Ptr<CsmaNetDevice>
+std::pair<Ptr<CsmaNetDevice>, Ptr<OFSwitch13Port> >
 BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
                                 LteInterface iface)
 {
@@ -160,7 +160,7 @@ BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
   // Notify the controller of the new EPC device attached to the backhaul.
   m_controllerApp->NotifyEpcAttach (swOfDev, swPortNo, epcDev);
 
-  return epcDev;
+  return std::make_pair (epcDev, swPort);
 }
 
 void

@@ -88,10 +88,11 @@ public:
    * \param epcNode The eNB node.
    * \param swIdx The switch index at which the EPC node should be connected.
    * \param iface The LTE logical interface for this connection.
-   * \return The network device created at the EPC node.
+   * \return The pair with the network device created at the EPC node and the
+   *         port device create at the backhaul switch.
    */
-  virtual Ptr<CsmaNetDevice> AttachEpcNode (Ptr<Node> enbNode, uint16_t swIdx,
-                                            LteInterface iface);
+  virtual std::pair<Ptr<CsmaNetDevice>, Ptr<OFSwitch13Port> >
+  AttachEpcNode (Ptr<Node> enbNode, uint16_t swIdx, LteInterface iface);
 
   /**
    * Set the devices names identifying the connection between the nodes.
