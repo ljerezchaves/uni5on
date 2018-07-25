@@ -441,7 +441,7 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
       std::ostringstream match;
       match << " eth_type=0x800,ip_proto=17"
             << ",ip_dst=" << rInfo->GetSgwS5Addr ()
-            << ",gtp_teid=" << rInfo->GetTeid ();
+            << ",gtpu_teid=" << rInfo->GetTeid ();
 
       // Set the IP DSCP field when necessary.
       std::ostringstream act;
@@ -469,7 +469,7 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
       match << " eth_type=0x800,ip_proto=17"
             << ",ip_src=" << rInfo->GetSgwS5Addr ()
             << ",ip_dst=" << rInfo->GetPgwS5Addr ()
-            << ",gtp_teid=" << rInfo->GetTeid ();
+            << ",gtpu_teid=" << rInfo->GetTeid ();
 
       // Set the IP DSCP field when necessary.
       std::ostringstream act;
