@@ -159,7 +159,6 @@ private:
   Ipv4Address            m_ueAddr;               //!< UE IP address.
   uint16_t               m_cellId;               //!< Serving eNB cell ID.
   uint64_t               m_sgwId;                //!< Serving S-GW ID.
-  // FIXME Inserir informação de qual gateway está servindo.
 
   // Control-plane communication.
   uint64_t               m_mmeUeS1Id;            //!< ID for S1-AP at MME.

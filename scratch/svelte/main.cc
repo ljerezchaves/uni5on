@@ -400,10 +400,10 @@ EnableVerbose (bool enable)
       // Logical components.
       LogComponentEnable ("GtpTunnelApp",             logLevelWarnInfo);
       LogComponentEnable ("PgwTunnelApp",             logLevelWarnInfo);
+      LogComponentEnable ("SgwInfo",                  logLevelWarnInfo);
       LogComponentEnable ("SliceController",          logLevelWarnInfo);
       LogComponentEnable ("SliceNetwork",             logLevelWarnInfo);
       LogComponentEnable ("SvelteMme",                logLevelWarnInfo);
-      LogComponentEnable ("SgwInfo",                  logLevelWarnInfo);
       LogComponentEnable ("UeInfo",                   logLevelWarnInfo);
 
 //      LogComponentEnable ("SdranCloud",               logLevelWarnInfo);
