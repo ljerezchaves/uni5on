@@ -23,6 +23,7 @@
 #include "gtp-tunnel-app.h"
 #include "pgw-tunnel-app.h"
 #include "metadata/ue-info.h"
+#include "metadata/sgw-info.h"
 #include "../infrastructure/backhaul-network.h"
 #include "../infrastructure/radio-network.h"
 
@@ -427,7 +428,7 @@ SliceNetwork::CreateSgws (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // FIXME O m_nSgws não é fixo (usar atributo da classe?).
+  // FIXME O m_nSgws não é fixo.
   m_nSgws = 1;
 
   // Create the S-GW nodes and configure them as OpenFlow switches.
@@ -445,18 +446,23 @@ SliceNetwork::CreateSgws (void)
     {
       Ptr<Node> sgwNode = m_sgwNodes.Get (sgwIdx);
       Ptr<OFSwitch13Device> sgwOfDev = m_sgwDevices.Get (sgwIdx);
+      uint64_t sgwDpId = sgwOfDev->GetDatapathId ();
+
+      // FIXME sgwIdx + 1 não é fixo.
+      uint16_t infraSwIdx = sgwIdx + 1;
 
       // Connect the S-GW node to the OpenFlow backhaul node.
-      // FIXME sgwIdx + 1
       Ptr<CsmaNetDevice> sgwS1uDev;
-      Ptr<CsmaNetDevice> sgwS5Dev;
-      Ptr<OFSwitch13Port> infraSwPort;
-      std::tie (sgwS1uDev, infraSwPort) = m_backhaul->AttachEpcNode (
-          sgwNode, sgwIdx + 1, LteInterface::S1U);
+      Ptr<OFSwitch13Port> infraSwS1uPort;
+      std::tie (sgwS1uDev, infraSwS1uPort) = m_backhaul->AttachEpcNode (
+          sgwNode, infraSwIdx, LteInterface::S1U);
       NS_LOG_INFO ("S-GW " << sgwNode << " attached to the s1u interface " <<
                    "with IP " << Ipv4AddressHelper::GetAddress (sgwS1uDev));
-      std::tie (sgwS5Dev, infraSwPort) = m_backhaul->AttachEpcNode (
-          sgwNode, sgwIdx + 1, LteInterface::S5);
+
+      Ptr<CsmaNetDevice> sgwS5Dev;
+      Ptr<OFSwitch13Port> infraSwS5Port;
+      std::tie (sgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
+          sgwNode, infraSwIdx, LteInterface::S5);
       NS_LOG_INFO ("S-GW " << sgwNode << " attached to the s5 interface " <<
                    "with IP " << Ipv4AddressHelper::GetAddress (sgwS5Dev));
 
@@ -465,19 +471,28 @@ SliceNetwork::CreateSgws (void)
       sgwS1uPortDev->SetAddress (Mac48Address::Allocate ());
       Ptr<OFSwitch13Port> sgwS1uPort = sgwOfDev->AddSwitchPort (sgwS1uPortDev);
       uint32_t sgwS1uPortNo = sgwS1uPort->GetPortNo ();
-      NS_UNUSED (sgwS1uPortNo);
 
       Ptr<VirtualNetDevice> sgwS5PortDev = CreateObject<VirtualNetDevice> ();
       sgwS5PortDev->SetAddress (Mac48Address::Allocate ());
       Ptr<OFSwitch13Port> sgwS5Port = sgwOfDev->AddSwitchPort (sgwS5PortDev);
       uint32_t sgwS5PortNo = sgwS5Port->GetPortNo ();
-      NS_UNUSED (sgwS5PortNo);
 
       // Create the S-GW S1-U and S5 user-plane application.
       sgwNode->AddApplication (
         CreateObject<GtpTunnelApp> (sgwS1uPortDev, sgwS1uDev));
       sgwNode->AddApplication (
         CreateObject<GtpTunnelApp> (sgwS5PortDev, sgwS5Dev));
+
+      // Saving S-GW metadata.
+      Ptr<SgwInfo> sgwInfo = CreateObject<SgwInfo> (sgwDpId);
+      sgwInfo->SetSliceId (m_sliceId);
+      sgwInfo->SetS1uAddr (Ipv4AddressHelper::GetAddress (sgwS1uDev));
+      sgwInfo->SetS5Addr (Ipv4AddressHelper::GetAddress (sgwS5Dev));
+      sgwInfo->SetS1uPortNo (sgwS1uPortNo);
+      sgwInfo->SetS5PortNo (sgwS5PortNo);
+      sgwInfo->SetInfraSwIdx (infraSwIdx);
+      sgwInfo->SetInfraSwS1uPortNo (infraSwS1uPort->GetPortNo ());
+      sgwInfo->SetInfraSwS5PortNo (infraSwS5Port->GetPortNo ());
 
       // Notify the controller of the new S-GW switch.
       // FIXME Na implementação do sdmn existe aqui a configuração dos TEIDs
