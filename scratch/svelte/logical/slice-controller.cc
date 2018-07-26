@@ -687,7 +687,10 @@ SliceController::DoCreateSessionRequest (
 //  de lá serparado dos gateways aqui.
   uint16_t cellId = msg.uli.gci;
   uint64_t imsi = msg.imsi;
-  NS_ASSERT_MSG (imsi <= 0xFFFFF, "UE IMSI cannot exceed 20 bits in SVELTE.");
+
+  uint32_t slice = static_cast<uint32_t> (m_sliceId);
+  NS_ASSERT_MSG (imsi  <= 0xFFFFF, "UE IMSI cannot exceed 20 bits in SVELTE.");
+  NS_ASSERT_MSG (slice <= 0xF, "Slice ID cannot exceed 4 bits in SVELTE.");
 
   Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
@@ -703,14 +706,16 @@ SliceController::DoCreateSessionRequest (
     {
       //
       // We are using the following TEID allocation strategy:
-      // TEID has 32 bits length: 0x 00 00000 0
-      //                            |--|-----|-|
-      //                             A  B     C
-      //  8 (A) bits are used to identify the logical slice (0x00 is reserved)
-      // 20 (B) bits are used to identify the UE (IMSI).
-      //  4 (C) bits are used to identify the bearer withing the UE.
+      // TEID has 32 bits length: 0x 0 0 00000 0
+      //                            |-|-|-----|-|
+      //                             A B C    D
       //
-      uint32_t teid = static_cast<uint8_t> (m_sliceId);
+      //  4 (A) bits are reserved for further usage.
+      //  4 (B) bits are used to identify the logical slice.
+      // 20 (C) bits are used to identify the UE (IMSI).
+      //  4 (D) bits are used to identify the bearer withing the UE.
+      //
+      uint32_t teid = slice;
       teid <<= 20;
       teid |= static_cast<uint32_t> (imsi);
       teid <<= 4;

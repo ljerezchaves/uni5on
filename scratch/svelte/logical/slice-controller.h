@@ -44,7 +44,7 @@ typedef std::list<BearerContext_t> BearerContextList_t;
 /**
  * \ingroup svelteLogical
  * Enumeration of available SVELTE logical slices IDs.
- * \internal Slice IDs are restricted to the range [0x01, 0xFF] by the current
+ * \internal Slice IDs are restricted to the range [1, 15] by the current
  * TEID allocation strategy.
  */
 typedef enum
