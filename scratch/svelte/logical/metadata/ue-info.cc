@@ -33,8 +33,10 @@ UeInfo::UeInfo (uint64_t imsi)
   : m_imsi (imsi),
   m_sliceId (SliceId::NONE),
   m_cellId (0),
+  m_sgwId (0),
   m_mmeUeS1Id (imsi),
   m_enbUeS1Id (0),
+  m_s11SapSgw (0),
   m_bearerCounter (0)
 {
   NS_LOG_FUNCTION (this);

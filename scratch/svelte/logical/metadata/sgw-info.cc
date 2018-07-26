@@ -29,7 +29,13 @@ NS_OBJECT_ENSURE_REGISTERED (SgwInfo);
 SgwInfo::SgwIdSgwInfo_t SgwInfo::m_sgwInfoBySgwId;
 
 SgwInfo::SgwInfo (uint64_t sgwId)
-  : m_sgwId (sgwId)
+  : m_sgwId (sgwId),
+  m_sliceId (SliceId::NONE),
+  m_s1uPortNo (0),
+  m_s5PortNo (0),
+  m_infraSwIdx (0),
+  m_infraSwS1uPortNo (0),
+  m_infraSwS5PortNo (0)
 {
   NS_LOG_FUNCTION (this);
 

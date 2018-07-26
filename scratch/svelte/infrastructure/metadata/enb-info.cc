@@ -29,11 +29,11 @@ NS_OBJECT_ENSURE_REGISTERED (EnbInfo);
 EnbInfo::CellIdEnbInfo_t EnbInfo::m_enbInfoByCellId;
 
 EnbInfo::EnbInfo (uint16_t cellId)
-  : m_cellId (cellId)
+  : m_cellId (cellId),
+  m_infraSwIdx (0),
+  m_infraSwPortNo (0)
 {
   NS_LOG_FUNCTION (this);
-
-  m_s1uAddr = Ipv4Address ();
 
   RegisterEnbInfo (Ptr<EnbInfo> (this));
 }
