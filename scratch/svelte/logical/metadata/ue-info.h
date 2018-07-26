@@ -30,7 +30,7 @@
 namespace ns3 {
 
 /**
- * \ingroup svelteInfra
+ * \ingroup svelteLogical
  * Metadata associated to a UE.
  */
 class UeInfo : public Object

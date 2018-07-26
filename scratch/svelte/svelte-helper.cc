@@ -195,7 +195,7 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   Ptr<EpcX2> x2 = CreateObject<EpcX2> ();
   enb->AggregateObject (x2);
 
-  // Creating eNB metadata.
+  // Saving eNB metadata.
   Ptr<EnbInfo> enbInfo = CreateObject<EnbInfo> (cellId);
   enbInfo->SetS1uAddr (enbS1uAddr);
   enbInfo->SetInfraSwIdx (infraSwIdx);

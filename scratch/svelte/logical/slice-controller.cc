@@ -234,6 +234,7 @@ SliceController::DedicatedBearerRequest (
   return false;
 }
 
+// FIXME parâmetros não usados.
 void
 SliceController::NotifySgwAttach (
   Ptr<OFSwitch13Device> sgwSwDev, Ptr<NetDevice> sgwS1uDev,
