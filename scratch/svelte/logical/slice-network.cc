@@ -429,13 +429,13 @@ SliceNetwork::CreateSgws (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // FIXME O m_nSgws não é fixo.
-  m_nSgws = 1;
+  // Create a S-GW switch for each OpenFlow backhaul switch.
+  uint32_t nSgws = m_backhaul->GetNSwitches ();
 
   // Create the S-GW nodes and configure them as OpenFlow switches.
-  m_sgwNodes.Create (m_nSgws);
+  m_sgwNodes.Create (nSgws);
   m_sgwDevices = m_switchHelper->InstallSwitch (m_sgwNodes);
-  for (uint16_t i = 0; i < m_nSgws; i++)
+  for (uint16_t i = 0; i < nSgws; i++)
     {
       std::ostringstream name;
       name << m_sliceIdStr << "_sgw" << i + 1;
@@ -443,27 +443,24 @@ SliceNetwork::CreateSgws (void)
     }
 
   // Connect all S-GW switches to the S1-U and S5 interfaces.
-  for (uint16_t sgwIdx = 0; sgwIdx < m_nSgws; sgwIdx++)
+  for (uint16_t sgwIdx = 0; sgwIdx < nSgws; sgwIdx++)
     {
       Ptr<Node> sgwNode = m_sgwNodes.Get (sgwIdx);
       Ptr<OFSwitch13Device> sgwOfDev = m_sgwDevices.Get (sgwIdx);
       uint64_t sgwDpId = sgwOfDev->GetDatapathId ();
 
-      // FIXME sgwIdx + 1 não é fixo.
-      uint16_t infraSwIdx = sgwIdx + 1;
-
       // Connect the S-GW node to the OpenFlow backhaul node.
       Ptr<CsmaNetDevice> sgwS1uDev;
       Ptr<OFSwitch13Port> infraSwS1uPort;
       std::tie (sgwS1uDev, infraSwS1uPort) = m_backhaul->AttachEpcNode (
-          sgwNode, infraSwIdx, LteInterface::S1U);
+          sgwNode, sgwIdx, LteInterface::S1U);
       NS_LOG_INFO ("S-GW " << sgwNode << " attached to the s1u interface " <<
                    "with IP " << Ipv4AddressHelper::GetAddress (sgwS1uDev));
 
       Ptr<CsmaNetDevice> sgwS5Dev;
       Ptr<OFSwitch13Port> infraSwS5Port;
       std::tie (sgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
-          sgwNode, infraSwIdx, LteInterface::S5);
+          sgwNode, sgwIdx, LteInterface::S5);
       NS_LOG_INFO ("S-GW " << sgwNode << " attached to the s5 interface " <<
                    "with IP " << Ipv4AddressHelper::GetAddress (sgwS5Dev));
 
@@ -491,7 +488,7 @@ SliceNetwork::CreateSgws (void)
       sgwInfo->SetS5Addr (Ipv4AddressHelper::GetAddress (sgwS5Dev));
       sgwInfo->SetS1uPortNo (sgwS1uPortNo);
       sgwInfo->SetS5PortNo (sgwS5PortNo);
-      sgwInfo->SetInfraSwIdx (infraSwIdx);
+      sgwInfo->SetInfraSwIdx (sgwIdx);
       sgwInfo->SetInfraSwS1uPortNo (infraSwS1uPort->GetPortNo ());
       sgwInfo->SetInfraSwS5PortNo (infraSwS5Port->GetPortNo ());
 
