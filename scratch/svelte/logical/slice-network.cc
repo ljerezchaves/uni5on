@@ -291,11 +291,12 @@ SliceNetwork::CreatePgw (void)
       name << m_sliceIdStr << "_pgw" << i + 1;
       Names::Add (name.str (), m_pgwNodes.Get (i));
     }
+  NS_LOG_INFO ("P-GW with main switch + " << m_nTftNodes << " TFT switches.");
 
   // Set the default P-GW gateway logical address, which will be used to set
   // the static route at all UEs.
   m_pgwAddress = m_ueAddrHelper.NewAddress ();
-  NS_LOG_INFO ("P-GW default IP address for s5 interface: " << m_pgwAddress);
+  NS_LOG_INFO ("P-GW default IP address: " << m_pgwAddress);
 
   // Get the P-GW main node and device.
   Ptr<Node> pgwMainNode = m_pgwNodes.Get (0);
@@ -326,7 +327,7 @@ SliceNetwork::CreatePgw (void)
   uint32_t pgwSgiPortNo = pgwSgiPort->GetPortNo ();
 
   // Set the IP address on the Internet network.
-  m_webAddrHelper.Assign (NetDeviceContainer (m_webDevices)); // FIXME
+  m_webAddrHelper.Assign (m_webDevices);
   NS_LOG_INFO ("Web node " << m_webNode << " attached to the sgi interface " <<
                "with IP " << Ipv4AddressHelper::GetAddress (webSgiDev));
   NS_LOG_INFO ("P-GW " << pgwMainNode << " attached to the sgi interface " <<
@@ -544,7 +545,6 @@ SliceNetwork::CreateUes (void)
     {
       m_ueDevices.Get (i)->GetAttribute ("Imsi", imsiValue);
       Ptr<UeInfo> ueInfo = CreateObject<UeInfo> (imsiValue.Get ());
-
       ueInfo->SetSliceId (m_sliceId);
       ueInfo->SetUeAddr (ueIfaces.GetAddress (i));
       ueInfo->SetS11SapSgw (m_controllerApp->GetS11SapSgw ());
@@ -552,7 +552,7 @@ SliceNetwork::CreateUes (void)
                     " configured with IP " << ueInfo->GetUeAddr ());
     }
 
-  // Specify static routes for each UE to its default S-GW.
+  // Specify static routes for each UE to its default P-GW.
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
   NodeContainer::Iterator it;
   for (it = m_ueNodes.Begin (); it != m_ueNodes.End (); it++)
