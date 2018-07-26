@@ -89,6 +89,7 @@ SvelteMme::DoInitialUeMessage (
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
   ueInfo->SetCellId (ecgi);
   ueInfo->SetEnbUeS1Id (enbUeS1Id);
+  // FIXME ueInfo->SetSgwId (?);
 
   EpcS11SapSgw::CreateSessionRequestMessage msg;
   msg.imsi = imsi;
@@ -140,7 +141,7 @@ SvelteMme::DoPathSwitchRequest (
 
   ueInfo->SetCellId (gci);
   ueInfo->SetEnbUeS1Id (enbUeS1Id);
-  // FIXME When the UE handovers, will it change the S-GW?
+  // FIXME ueInfo->SetSgwId (?);
 
   EpcS11SapSgw::ModifyBearerRequestMessage msg;
   msg.teid = imsi;

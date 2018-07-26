@@ -89,6 +89,14 @@ UeInfo::GetCellId (void) const
 }
 
 uint64_t
+UeInfo::GetSgwId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sgwId;
+}
+
+uint64_t
 UeInfo::GetMmeUeS1Id (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -118,6 +126,14 @@ UeInfo::SetCellId (uint16_t value)
   NS_LOG_FUNCTION (this << value);
 
   m_cellId = value;
+}
+
+void
+UeInfo::SetSgwId (uint64_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_sgwId = value;
 }
 
 void

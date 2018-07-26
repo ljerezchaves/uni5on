@@ -65,11 +65,13 @@ public:
   SliceId GetSliceId (void) const;
   Ipv4Address GetUeAddr (void) const;
   uint16_t GetCellId (void) const;
+  uint64_t GetSgwId (void) const;
   uint64_t GetMmeUeS1Id (void) const;
   uint64_t GetEnbUeS1Id (void) const;
   EpcS11SapSgw* GetS11SapSgw (void) const;
 
   void SetCellId (uint16_t value);
+  void SetSgwId (uint64_t value);
   void SetEnbUeS1Id (uint64_t value);
   //\}
 
@@ -156,6 +158,7 @@ private:
   SliceId                m_sliceId;              //!< LTE logical slice ID.
   Ipv4Address            m_ueAddr;               //!< UE IP address.
   uint16_t               m_cellId;               //!< Serving eNB cell ID.
+  uint64_t               m_sgwId;                //!< Serving S-GW ID.
   // FIXME Inserir informação de qual gateway está servindo.
 
   // Control-plane communication.
