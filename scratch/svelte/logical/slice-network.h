@@ -144,7 +144,6 @@ private:
   uint32_t                      m_tftTableSize;     //!< TFT switch table size.
 
   // S-GW user planes.
-  uint32_t                      m_nSgws;
   NodeContainer                 m_sgwNodes;         //!< S-GW switch nodes.
   OFSwitch13DeviceContainer     m_sgwDevices;       //!< S-GW switch devices.
 
