@@ -62,8 +62,6 @@ protected:
   virtual void DoDispose ();
 
   // Inherited from BackhaulController.
-  void NotifyEpcAttach (Ptr<OFSwitch13Device> swDev, uint32_t portNo,
-                        Ptr<NetDevice> epcDev);
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
   void NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo);
 
@@ -104,38 +102,11 @@ private:
   Ptr<ConnectionInfo> GetConnectionInfo (uint16_t idx1, uint16_t idx2) const;
 
   /**
-   * Get the OpenFlow datapath ID for a specific switch index.
-   * \param idx The switch index in devices collection.
-   * \return The OpenFlow datapath ID.
-   */
-  uint64_t GetDpId (uint16_t idx) const;
-
-  /**
-   * Get the number of switches in the network.
-   * \return The number of switches in the network.
-   */
-  uint16_t GetNSwitches (void) const;
-
-  /**
    * Get the maximum slice usage on this ring network.
    * \param slice The network slice.
    * \return The maximum slice usage.
    */
   double GetSliceUsage (Slice slice) const;
-
-  /**
-   * Retrieve the switch index for IP address.
-   * \param ipAddr The IPv4 address.
-   * \return The switch index in devices collection.
-   */
-  uint16_t GetSwitchIndex (Ipv4Address ipAddr) const;
-
-  /**
-   * Retrieve the switch index for switch device.
-   * \param dev The OpenFlow switch device.
-   * \return The switch index in devices collection.
-   */
-  uint16_t GetSwitchIndex (Ptr<OFSwitch13Device> dev) const;
 
 //  /**
 //   * Check for the available bit rate on the given slice.
@@ -159,7 +130,8 @@ private:
                        RingRoutingInfo::RoutingPath path) const;
 
   /**
-   * Notify this controller when the the maximum bit rate for best-effort
+   * // FIXME Move to BackhaulController
+   * Notify this controller when the maximum bit rate for best-effort
    * traffic in any network connection is adjusted. This is used to update
    * meters bands based on slicing resource reservation.
    * \param cInfo The connection information.
@@ -178,11 +150,6 @@ private:
   uint16_t NextSwitchIndex (uint16_t idx,
                             RingRoutingInfo::RoutingPath path) const;
 
-  /** Map saving IPv4 address / switch index. */
-  typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;
-
-  IpSwitchMap_t             m_ipSwitchTable;  //!< IP / switch index table.
-  OFSwitch13DeviceContainer m_switchDevices;  //!< OpenFlow switch devices.
   RoutingStrategy           m_strategy;       //!< Routing strategy in use.
 };
 

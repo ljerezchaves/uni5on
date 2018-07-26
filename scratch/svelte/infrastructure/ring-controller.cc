@@ -71,25 +71,7 @@ RingController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_ipSwitchTable.clear ();
   BackhaulController::DoDispose ();
-}
-
-void
-RingController::NotifyEpcAttach (
-  Ptr<OFSwitch13Device> swDev, uint32_t portNo, Ptr<NetDevice> epcDev)
-{
-  NS_LOG_FUNCTION (this << swDev << portNo << epcDev);
-
-  // Save the pair EPC IP address / switch index.
-  std::pair<Ipv4Address, uint16_t> entry (
-    Ipv4AddressHelper::GetAddress (epcDev), GetSwitchIndex (swDev));
-  std::pair<IpSwitchMap_t::iterator, bool> ret;
-  ret = m_ipSwitchTable.insert (entry);
-  NS_ABORT_MSG_IF (ret.second == false, "IP already exists in table.");
-
-  // Chain up.
-  BackhaulController::NotifyEpcAttach (swDev, portNo, epcDev);
 }
 
 void
@@ -253,8 +235,8 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
 //   Ptr<RingRoutingInfo> ringInfo = CreateObject<RingRoutingInfo> (rInfo);
 //
 //   // Set internal switch indexes.
-//   ringInfo->SetPgwSwIdx  (GetSwitchIndex (rInfo->GetPgwS5Addr ()));
-//   ringInfo->SetSgwSwIdx  (GetSwitchIndex (rInfo->GetSgwS5Addr ()));
+//   ringInfo->SetPgwSwIdx  (GetSwIdx (rInfo->GetPgwS5Addr ()));
+//   ringInfo->SetSgwSwIdx  (GetSwIdx (rInfo->GetSgwS5Addr ()));
 //   ringInfo->SetPgwSwDpId (GetDpId (ringInfo->GetPgwSwIdx ()));
 //   ringInfo->SetSgwSwDpId (GetDpId (ringInfo->GetSgwSwIdx ()));
 //
@@ -584,23 +566,6 @@ RingController::GetConnectionInfo (uint16_t idx1, uint16_t idx2) const
   return ConnectionInfo::GetPointer (GetDpId (idx1), GetDpId (idx2));
 }
 
-uint64_t
-RingController::GetDpId (uint16_t idx) const
-{
-  NS_LOG_FUNCTION (this << idx);
-
-  NS_ASSERT_MSG (idx < m_switchDevices.GetN (), "Invalid switch index.");
-  return m_switchDevices.Get (idx)->GetDatapathId ();
-}
-
-uint16_t
-RingController::GetNSwitches (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_switchDevices.GetN ();
-}
-
 double
 RingController::GetSliceUsage (Slice slice) const
 {
@@ -622,37 +587,6 @@ RingController::GetSliceUsage (Slice slice) const
   while (curr != 0);
 
   return sliceUsage;
-}
-
-uint16_t
-RingController::GetSwitchIndex (Ipv4Address ipAddr) const
-{
-  NS_LOG_FUNCTION (this << ipAddr);
-
-  IpSwitchMap_t::const_iterator ret;
-  ret = m_ipSwitchTable.find (ipAddr);
-  if (ret != m_ipSwitchTable.end ())
-    {
-      return ret->second;
-    }
-  NS_ABORT_MSG ("IP not registered in switch index table.");
-}
-
-uint16_t
-RingController::GetSwitchIndex (Ptr<OFSwitch13Device> dev) const
-{
-  NS_LOG_FUNCTION (this << dev);
-
-  uint16_t idx;
-  for (idx = 0; idx < GetNSwitches (); idx++)
-    {
-      if (m_switchDevices.Get (idx) == dev)
-        {
-          break;
-        }
-    }
-  NS_ASSERT_MSG (idx < GetNSwitches (), "Switch not found in collection.");
-  return idx;
 }
 
 // bool
@@ -715,7 +649,7 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo,
   NS_LOG_FUNCTION (this << cInfo << dir << slice);
 
   NS_ASSERT_MSG (GetSlicingMode () != OperationMode::OFF, "Not supposed to "
-                 "ajust slicing meters when network slicing mode is OFF.");
+                 "adjust slicing meters when network slicing mode is OFF.");
 
   uint8_t  swDpId  = (dir == ConnectionInfo::FWD) ? 0 : 1;
   uint16_t meterId = (dir == ConnectionInfo::FWD) ? 1 : 2;

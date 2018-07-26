@@ -132,6 +132,12 @@ public:
   //\}
 
   /**
+   * Get the total number of OpenFlow switches in the backhaul network.
+   * \return The number of OpenFlow switches.
+   */
+  uint16_t GetNSwitches (void) const;
+
+  /**
    * Retrieve stored mapped IP ToS for a specific DSCP. We are mapping the DSCP
    * value (RFC 2474) to the IP Type of Service (ToS) (RFC 1349) field because
    * the pfifo_fast queue discipline from the traffic control module still uses
@@ -156,6 +162,27 @@ protected:
 
   // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
+
+  /**
+   * Get the OpenFlow datapath ID for a specific switch index.
+   * \param idx The backhaul switch index.
+   * \return The OpenFlow datapath ID.
+   */
+  uint64_t GetDpId (uint16_t idx) const;
+
+  /**
+   * Retrieve the OpenFlow switch index for registered EPC IP address.
+   * \param ipAddr The EPC IP address.
+   * \return The backhaul switch index.
+   */
+  uint16_t GetSwIdx (Ipv4Address ipAddr) const;
+
+  /**
+   * Retrieve the switch index for switch device.
+   * \param dev The OpenFlow switch device.
+   * \return The backhaul switch index.
+   */
+  uint16_t GetSwIdx (Ptr<OFSwitch13Device> dev) const;
 
 // FIXME Comentando as funções de topologia pq por enquanto não estou usando o routingInfo.
 //  /**
@@ -222,6 +249,8 @@ protected:
   virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
   // Inherited from OFSwitch13Controller.
 
+  OFSwitch13DeviceContainer m_switchDevices;  //!< OpenFlow switch devices.
+
 private:
 //  /**
 //   * Install OpenFlow match rules for this bearer.
@@ -253,6 +282,10 @@ private:
   /** Map saving IP DSCP value / IP ToS. */
   typedef std::map<Ipv4Header::DscpType, uint8_t> DscpTosMap_t;
 
+  /** Map saving IP address / switch index. */
+  typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;
+
+  IpSwitchMap_t         m_ipSwitchTable;  //!< EPC IP / switch index table.
   static QciDscpMap_t   m_qciDscpTable;   //!< DSCP mapped values.
   static DscpQueueMap_t m_dscpQueueTable; //!< OpenFlow queue id mapped values.
   static DscpTosMap_t   m_dscpTosTable;   //!< IP ToS mapped values.
