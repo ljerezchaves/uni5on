@@ -144,7 +144,7 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   internet.Install (enb);
 
   // Attach the eNB node to the OpenFlow backhaul network.
-  uint16_t infraSwIdx = GetEnbSwitchIdx (cellId);
+  uint16_t infraSwIdx = GetEnbInfraSwIdx (cellId);
   Ptr<CsmaNetDevice> enbS1uDev;
   Ptr<OFSwitch13Port> infraSwPort;
   std::tie (enbS1uDev, infraSwPort) = m_backhaul->AttachEpcNode (
@@ -287,19 +287,15 @@ SvelteHelper::NotifyConstructionCompleted (void)
 }
 
 uint16_t
-SvelteHelper::GetEnbSwitchIdx (uint16_t cellId)
+SvelteHelper::GetEnbInfraSwIdx (uint16_t cellId)
 {
   NS_LOG_FUNCTION (this << cellId);
-  // FIXME The logic for identifying switches could be set as an attribute.
 
-  // Connect the eNBs to switches in clockwise direction, skipping the first
+  // Connect the eNBs to switches in increasing index order, skipping the first
   // switch (index 0), which is exclusive for the P-GW connection. The three
-  // eNBs from the same cell site are always connected to the same switch in
-  // the ring network.
-  UintegerValue numSwitchesValue;
-  m_backhaul->GetAttribute ("NumRingSwitches", numSwitchesValue);
+  // eNBs from the same cell site are always connected to the same switch.
   uint16_t siteId = (cellId - 1) / 3;
-  return 1 + (siteId % (numSwitchesValue.Get () - 1));
+  return 1 + (siteId % (m_backhaul->GetNSwitches () - 1));
 }
 
 } // namespace ns3
