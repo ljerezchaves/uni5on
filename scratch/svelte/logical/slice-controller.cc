@@ -718,8 +718,6 @@ SliceController::DoCreateSessionRequest (
                     static_cast<uint16_t> (bit->epsBearerId) << ": 0x" <<
                     std::hex << teid);
 
-      // bool isDefault = res.bearerContextsCreated.empty ();
-
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.teid = teid;
       bearerContext.sgwFteid.address = Ipv4Address::GetAny (); // Not used.
@@ -731,9 +729,16 @@ SliceController::DoCreateSessionRequest (
       // Add the TFT entry to the UeInfo (don't move this command from here).
       ueInfo->AddTft (bit->tft, teid);
 
-//      // Create the routing metadata for this bearer.
-//      Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
-//          teid, bearerContext, imsi, isDefault, ueInfo->IsMtc ());
+      bool isDefault = res.bearerContextsCreated.empty ();
+      
+      // Create the metadata for this bearer.
+      Ptr<BearerInfo> bInfo = CreateObject<BearerInfo> (
+          teid, bearerContext, imsi, m_sliceId, isDefault);
+      
+      // FIXME Notificar o controlador do backhaul de que criamos este bearer.
+      // Isso era feito com o TopologyBearerCreated (). A idéia é que o
+      // controlador de lá crie o routing info com as informações relevantes à
+      // infraestrutura.
 //      rInfo->SetPgwS5Addr (m_pgwS5Addr);
 //      rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
 //      rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());

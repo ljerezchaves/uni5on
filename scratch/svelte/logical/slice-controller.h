@@ -26,6 +26,7 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
+#include "metadata/bearer-info.h"
 #include "../slice-id.h"
 #include "../operation-mode.h"
 #include "../infrastructure/backhaul-controller.h"
@@ -34,13 +35,6 @@ namespace ns3 {
 
 class BackhaulController;
 class SvelteMme;
-
-// FIXME Temporário aqui enquanto não estou usando o routing info.
-/** EPS bearer context created. */
-typedef EpcS11SapMme::BearerContextCreated BearerContext_t;
-
-/** List of bearer context created. */
-typedef std::list<BearerContext_t> BearerContextList_t;
 
 /**
  * \ingroup svelteLogical
