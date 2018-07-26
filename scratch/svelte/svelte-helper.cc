@@ -259,9 +259,12 @@ SvelteHelper::NotifyConstructionCompleted (void)
   m_backhaul = CreateObject<RingNetwork> ();
   m_radio = CreateObject<RadioNetwork> (Ptr<SvelteHelper> (this));
 
+  Ptr<BackhaulController> backahulCtrl = m_backhaul->GetControllerApp ();
+
   // Create the LTE HTC slice network and controller.
   m_htcCtrlFactory.Set ("SliceId", EnumValue (SliceId::HTC));
   m_htcCtrlFactory.Set ("Mme", PointerValue (m_mme));
+  m_htcCtrlFactory.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
   m_htcController = m_htcCtrlFactory.Create<SliceController> ();
 
   m_htcNetFactory.Set ("SliceId", EnumValue (SliceId::HTC));

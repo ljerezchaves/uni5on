@@ -23,6 +23,7 @@
 #include "svelte-mme.h"
 #include "metadata/ue-info.h"
 #include "../infrastructure/backhaul-network.h"
+#include "../infrastructure/backhaul-controller.h"
 #include "../infrastructure/metadata/enb-info.h"
 
 namespace ns3 {
@@ -76,20 +77,13 @@ SliceController::GetTypeId (void)
                    MakeEnumChecker (SliceId::HTC, "htc",
                                     SliceId::MTC, "mtc"))
 
-    // Controller
-    .AddAttribute ("TimeoutInterval",
-                   "The interval between internal periodic operations.",
-                   TimeValue (Seconds (5)),
-                   MakeTimeAccessor (&SliceController::m_timeout),
-                   MakeTimeChecker ())
-    .AddAttribute ("Aggregation",
-                   "Traffic aggregation mechanism operation mode.",
+    // Infrastructure.
+    .AddAttribute ("BackhaulCtrl", "The OpenFlow backhaul network controller.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (OperationMode::OFF),
-                   MakeEnumAccessor (&SliceController::m_aggregation),
-                   MakeEnumChecker (OperationMode::OFF,  "off",
-                                    OperationMode::ON,   "on",
-                                    OperationMode::AUTO, "auto"))
+                   PointerValue (),
+                   MakePointerAccessor (&SliceController::m_backhaulCtrl),
+                   MakePointerChecker<BackhaulController> ())
+
     // MME.
     .AddAttribute ("Mme", "The SVELTE MME pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -128,6 +122,20 @@ SliceController::GetTypeId (void)
                    DoubleValue (0.90),
                    MakeDoubleAccessor (&SliceController::m_tftSplitThs),
                    MakeDoubleChecker<double> (0.5, 1.0))
+
+    .AddAttribute ("TimeoutInterval",
+                   "The interval between internal periodic operations.",
+                   TimeValue (Seconds (5)),
+                   MakeTimeAccessor (&SliceController::m_timeout),
+                   MakeTimeChecker ())
+    .AddAttribute ("Aggregation",
+                   "Traffic aggregation mechanism operation mode.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   EnumValue (OperationMode::OFF),
+                   MakeEnumAccessor (&SliceController::m_aggregation),
+                   MakeEnumChecker (OperationMode::OFF,  "off",
+                                    OperationMode::ON,   "on",
+                                    OperationMode::AUTO, "auto"))
 
 // FIXME Comentado por causa da dependência com o rInfo.
 //    .AddTraceSource ("BearerRelease", "The bearer release trace source.",
@@ -490,8 +498,9 @@ SliceController::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ABORT_MSG_IF (!m_mme, "No SVELTE MME.");
   NS_ABORT_MSG_IF (m_sliceId == SliceId::NONE, "Undefined slice ID.");
+  NS_ABORT_MSG_IF (!m_backhaulCtrl, "No backhaul controller application.");
+  NS_ABORT_MSG_IF (!m_mme, "No SVELTE MME.");
 
   // Connecting this controller to the MME.
   m_s11SapSgw = new MemberEpcS11SapSgw<SliceController> (this);
@@ -729,7 +738,7 @@ SliceController::DoCreateSessionRequest (
 
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.teid = teid;
-      // bearerContext.sgwFteid.address = enbInfo->GetSgwS1uAddr (); // FIXME
+      bearerContext.sgwFteid.address = Ipv4Address::GetAny (); // Not used.
       bearerContext.epsBearerId = bit->epsBearerId;
       bearerContext.bearerLevelQos = bit->bearerLevelQos;
       bearerContext.tft = bit->tft;

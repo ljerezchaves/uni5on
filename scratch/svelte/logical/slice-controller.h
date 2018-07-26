@@ -31,7 +31,6 @@
 namespace ns3 {
 
 class BackhaulController;
-class BackhaulNetwork;
 class SvelteMme;
 
 // FIXME Temporário aqui enquanto não estou usando o routing info.
@@ -392,15 +391,13 @@ private:
   // Slice identification.
   SliceId                 m_sliceId;        //!< Logical slice ID.
 
+  // Infrastructure interface.
+  Ptr<BackhaulController> m_backhaulCtrl;   //!< OpenFlow backhaul controller.
+
   // MME interface.
   Ptr<SvelteMme>          m_mme;            //!< MME element.
   EpcS11SapMme*           m_s11SapMme;      //!< MME side of the S11 SAP.
   EpcS11SapSgw*           m_s11SapSgw;      //!< S-GW side of the S11 SAP.
-
-  // Infrastructure interface.
-  // FIXME Vou precisar disso?
-  // Ptr<BackhaulController> m_backhaulCtrl;   //!< OpenFlow backhaul controller.
-  // Ptr<BackhaulNetwork>    m_backhaulNet;    //!< OpenFlow backhaul network.
 
   // Network configuration.
   Ipv4Address             m_ueAddr;         //!< UE network address.

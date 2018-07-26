@@ -206,9 +206,10 @@ SliceNetwork::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ABORT_MSG_IF (!m_backhaul || !m_radio, "No infrastructure network.");
-  NS_ABORT_MSG_IF (!m_controllerApp, "No slice controller application.");
   NS_ABORT_MSG_IF (m_sliceId == SliceId::NONE, "Undefined slice ID.");
+  NS_ABORT_MSG_IF (!m_controllerApp, "No slice controller application.");
+  NS_ABORT_MSG_IF (!m_backhaul, "No backhaul network.");
+  NS_ABORT_MSG_IF (!m_radio, "No LTE RAN network.");
 
   EnumValue enumValue;
   m_controllerApp->GetAttribute ("SliceId", enumValue);
