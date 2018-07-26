@@ -36,6 +36,7 @@ namespace ns3 {
 class UeInfo : public Object
 {
   friend class SliceNetwork;
+  friend class SvelteMme;
 
 public:
   /**
@@ -69,10 +70,6 @@ public:
   uint64_t GetMmeUeS1Id (void) const;
   uint64_t GetEnbUeS1Id (void) const;
   EpcS11SapSgw* GetS11SapSgw (void) const;
-
-  void SetCellId (uint16_t value);
-  void SetSgwId (uint64_t value);
-  void SetEnbUeS1Id (uint64_t value);
   //\}
 
   /**
@@ -138,6 +135,9 @@ private:
   //\{
   void SetSliceId (SliceId value);
   void SetUeAddr (Ipv4Address value);
+  void SetCellId (uint16_t value);
+  void SetSgwId (uint64_t value);
+  void SetEnbUeS1Id (uint64_t value);
   void SetS11SapSgw (EpcS11SapSgw* value);
   //\}
 

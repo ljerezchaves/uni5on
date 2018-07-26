@@ -120,30 +120,6 @@ UeInfo::GetS11SapSgw (void) const
   return m_s11SapSgw;
 }
 
-void
-UeInfo::SetCellId (uint16_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_cellId = value;
-}
-
-void
-UeInfo::SetSgwId (uint64_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_sgwId = value;
-}
-
-void
-UeInfo::SetEnbUeS1Id (uint64_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_enbUeS1Id = value;
-}
-
 std::list<UeInfo::BearerInfo>::const_iterator
 UeInfo::GetBearerListBegin () const
 {
@@ -260,6 +236,30 @@ UeInfo::SetUeAddr (Ipv4Address value)
 
   m_ueAddr = value;
   RegisterUeInfoByIpv4 (Ptr<UeInfo> (this));
+}
+
+void
+UeInfo::SetCellId (uint16_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_cellId = value;
+}
+
+void
+UeInfo::SetSgwId (uint64_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_sgwId = value;
+}
+
+void
+UeInfo::SetEnbUeS1Id (uint64_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_enbUeS1Id = value;
 }
 
 void
