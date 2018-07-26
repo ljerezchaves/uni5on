@@ -120,7 +120,7 @@ BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
   NS_LOG_INFO ("Attach EPC node " << epcNode << " to backhaul switch index " <<
                swIdx << " over " << LteInterfaceStr (iface) << " interface.");
 
-  NS_ASSERT_MSG (swIdx < m_switchDevices.GetN (), "Invalid switch index.");
+  NS_ASSERT_MSG (swIdx < GetNSwitches (), "Invalid switch index.");
 
   // Get the switch on the backhaul network.
   uint64_t swDpId = m_switchDevices.Get (swIdx)->GetDatapathId ();
@@ -161,6 +161,14 @@ BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
   m_controllerApp->NotifyEpcAttach (swOfDev, swPortNo, epcDev);
 
   return std::make_pair (epcDev, swPort);
+}
+
+uint32_t
+BackhaulNetwork::GetNSwitches (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_switchDevices.GetN ();
 }
 
 void

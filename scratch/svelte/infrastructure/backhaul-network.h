@@ -95,6 +95,12 @@ public:
   AttachEpcNode (Ptr<Node> enbNode, uint16_t swIdx, LteInterface iface);
 
   /**
+   * Get the total number of OpenFlow switches in the backhaul network.
+   * \return The number of OpenFlow switches.
+   */
+  uint32_t GetNSwitches (void) const;
+
+  /**
    * Set the devices names identifying the connection between the nodes.
    * \param srcDev The network device in the source node.
    * \param dstDev The network device in the destination node.
