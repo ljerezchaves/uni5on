@@ -26,29 +26,11 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
+#include "../operation-mode.h"
 
 namespace ns3 {
 
 class ConnectionInfo;
-
-/**
- * \ingroup svelteInfra
- * Enumeration of available operation modes.
- */
-typedef enum
-{
-  OFF  = 0,   //!< Always off.
-  ON   = 1,   //!< Always on.
-  AUTO = 2    //!< Automatic.
-} OperationMode;
-
-/**
- * \ingroup svelteInfra
- * Get the operation mode name.
- * \param mode The operation mode.
- * \return The string with the operation mode name.
- */
-std::string OperationModeStr (OperationMode mode);
 
 /**
  * \ingroup svelteInfra

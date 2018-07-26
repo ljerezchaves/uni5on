@@ -25,6 +25,7 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
+#include "../lte-interface.h"
 
 namespace ns3 {
 
@@ -35,26 +36,6 @@ class BackhaulController;
  * \defgroup svelteInfra Infrastructure
  * SVELTE architecture infrastructure.
  */
-
-/**
- * \ingroup svelteInfra
- * Enumeration of LTE logical interfaces.
- */
-typedef enum
-{
-  S1U  = 0,   //!< S1-U interface connecting eNB to S-GW.
-  S5   = 1,   //!< S5 interface connecting S-GW to P-GW.
-  X2   = 2,   //!< X2 interface connecting eNB to eNB.
-  SGI  = 3    //!< SGi interface connecting P-GW to Internet.
-} LteInterface;
-
-/**
- * \ingroup svelteInfra
- * Get the LTE interface name.
- * \param iface The LTE interface.
- * \return The string with the LTE interface name.
- */
-std::string LteInterfaceStr (LteInterface iface);
 
 /**
  * \ingroup svelteInfra

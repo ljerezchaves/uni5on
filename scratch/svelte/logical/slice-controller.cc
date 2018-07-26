@@ -31,22 +31,6 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("SliceController");
 NS_OBJECT_ENSURE_REGISTERED (SliceController);
 
-std::string SliceIdStr (SliceId slice)
-{
-  switch (slice)
-    {
-    case SliceId::NONE:
-      return "none";
-    case SliceId::HTC:
-      return "htc";
-    case SliceId::MTC:
-      return "mtc";
-    default:
-      NS_LOG_ERROR ("Invalid logical slice.");
-      return "";
-    }
-}
-
 // Initializing SliceController static members.
 const uint16_t SliceController::m_flowTimeout = 0;
 
@@ -843,8 +827,7 @@ SliceController::DoModifyBearerRequest (
 
   // In current implementation, this Modify Bearer Request is triggered only by
   // X2 handover procedures. There is no actual bearer modification, for now we
-  // just support the minimum needed for path switch request (handover). There
-  // is no need to forward the request message to the P-GW.
+  // just support the minimum needed for path switch request (handover).
   EpcS11SapMme::ModifyBearerResponseMessage res;
   res.teid = msg.teid;
   res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;

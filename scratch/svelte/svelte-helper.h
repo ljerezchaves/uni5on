@@ -25,6 +25,8 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
+#include "lte-interface.h"
+#include "slice-id.h"
 
 namespace ns3 {
 

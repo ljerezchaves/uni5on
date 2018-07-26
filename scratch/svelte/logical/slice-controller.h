@@ -26,6 +26,8 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
+#include "../slice-id.h"
+#include "../operation-mode.h"
 #include "../infrastructure/backhaul-controller.h"
 
 namespace ns3 {
@@ -39,27 +41,6 @@ typedef EpcS11SapMme::BearerContextCreated BearerContext_t;
 
 /** List of bearer context created. */
 typedef std::list<BearerContext_t> BearerContextList_t;
-
-/**
- * \ingroup svelteLogical
- * Enumeration of available SVELTE logical slices IDs.
- * \internal Slice IDs are restricted to the range [1, 15] by the current
- * TEID allocation strategy.
- */
-typedef enum
-{
-  NONE = 0,   //!< Undefined slice.
-  HTC  = 1,   //!< Slice for HTC UEs.
-  MTC  = 2    //!< Slice for MTC UEs.
-} SliceId;
-
-/**
- * \ingroup svelteLogical
- * Get the slice ID name.
- * \param slice The slice ID.
- * \return The string with the slice ID name.
- */
-std::string SliceIdStr (SliceId slice);
 
 /**
  * \ingroup svelteLogical

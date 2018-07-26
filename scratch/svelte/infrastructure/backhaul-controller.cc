@@ -28,22 +28,6 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("BackhaulController");
 NS_OBJECT_ENSURE_REGISTERED (BackhaulController);
 
-std::string OperationModeStr (OperationMode mode)
-{
-  switch (mode)
-    {
-    case OperationMode::OFF:
-      return "off";
-    case OperationMode::ON:
-      return "on";
-    case OperationMode::AUTO:
-      return "auto";
-    default:
-      NS_LOG_ERROR ("Invalid operation mode.");
-      return "";
-    }
-}
-
 // Initializing BackhaulController static members.
 BackhaulController::QciDscpMap_t BackhaulController::m_qciDscpTable;
 BackhaulController::DscpQueueMap_t BackhaulController::m_dscpQueueTable;
