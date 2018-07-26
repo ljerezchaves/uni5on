@@ -119,4 +119,3 @@ private:
 
 } // namespace ns3
 #endif  // RADIO_NETWORK_H
-

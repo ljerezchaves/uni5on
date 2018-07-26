@@ -86,4 +86,3 @@ private:
 
 } //namespace ns3
 #endif /* SVELTE_ENB_APPLICATION_H */
-

@@ -122,4 +122,3 @@ private:
 
 } // namespace ns3
 #endif // RING_ROUTING_INFO_H
-
