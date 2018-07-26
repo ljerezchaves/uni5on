@@ -101,6 +101,12 @@ public:
   uint32_t GetNSwitches (void) const;
 
   /**
+   * Get the OpenFlow backhaul network controller.
+   * \return The OpenFlow controller.
+   */
+  Ptr<BackhaulController> GetControllerApp (void) const;
+
+  /**
    * Set the devices names identifying the connection between the nodes.
    * \param srcDev The network device in the source node.
    * \param dstDev The network device in the destination node.

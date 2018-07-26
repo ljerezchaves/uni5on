@@ -171,6 +171,14 @@ BackhaulNetwork::GetNSwitches (void) const
   return m_switchDevices.GetN ();
 }
 
+Ptr<BackhaulController>
+BackhaulNetwork::GetControllerApp (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_controllerApp;
+}
+
 void
 BackhaulNetwork::SetDeviceNames (Ptr<NetDevice> srcDev, Ptr<NetDevice> dstDev,
                                  std::string desc)
