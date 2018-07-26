@@ -35,6 +35,8 @@ namespace ns3 {
  */
 class SgwInfo : public Object
 {
+  friend class SliceNetwork;
+
 public:
   /**
    * Complete constructor.
@@ -60,15 +62,6 @@ public:
   uint16_t GetInfraSwIdx (void) const;
   uint32_t GetInfraSwS1uPortNo (void) const;
   uint32_t GetInfraSwS5PortNo (void) const;
-
-  void SetSliceId (SliceId value);
-  void SetS1uAddr (Ipv4Address value);
-  void SetS5Addr (Ipv4Address value);
-  void SetS1uPortNo (uint32_t value);
-  void SetS5PortNo (uint32_t value);
-  void SetInfraSwIdx (uint16_t value);
-  void SetInfraSwS1uPortNo (uint32_t value);
-  void SetInfraSwS5PortNo (uint32_t value);
   //\}
 
   /**
@@ -83,6 +76,18 @@ protected:
   virtual void DoDispose ();
 
 private:
+  /** \name Private member accessors. */
+  //\{
+  void SetSliceId (SliceId value);
+  void SetS1uAddr (Ipv4Address value);
+  void SetS5Addr (Ipv4Address value);
+  void SetS1uPortNo (uint32_t value);
+  void SetS5PortNo (uint32_t value);
+  void SetInfraSwIdx (uint16_t value);
+  void SetInfraSwS1uPortNo (uint32_t value);
+  void SetInfraSwS5PortNo (uint32_t value);
+  //\}
+
   /**
    * Register the S-GW information in global map for further usage.
    * \param sgwInfo The S-GW information to save.

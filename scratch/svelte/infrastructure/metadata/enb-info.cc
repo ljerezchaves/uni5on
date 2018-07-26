@@ -92,6 +92,27 @@ EnbInfo::GetS1apSapEnb (void) const
   return m_s1apSapEnb;
 }
 
+Ptr<EnbInfo>
+EnbInfo::GetPointer (uint16_t cellId)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  Ptr<EnbInfo> enbInfo = 0;
+  CellIdEnbInfo_t::iterator ret;
+  ret = EnbInfo::m_enbInfoByCellId.find (cellId);
+  if (ret != EnbInfo::m_enbInfoByCellId.end ())
+    {
+      enbInfo = ret->second;
+    }
+  return enbInfo;
+}
+
+void
+EnbInfo::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
 void
 EnbInfo::SetS1uAddr (Ipv4Address value)
 {
@@ -122,27 +143,6 @@ EnbInfo::SetS1apSapEnb (EpcS1apSapEnb* value)
   NS_LOG_FUNCTION (this);
 
   m_s1apSapEnb = value;
-}
-
-Ptr<EnbInfo>
-EnbInfo::GetPointer (uint16_t cellId)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  Ptr<EnbInfo> enbInfo = 0;
-  CellIdEnbInfo_t::iterator ret;
-  ret = EnbInfo::m_enbInfoByCellId.find (cellId);
-  if (ret != EnbInfo::m_enbInfoByCellId.end ())
-    {
-      enbInfo = ret->second;
-    }
-  return enbInfo;
-}
-
-void
-EnbInfo::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
 }
 
 void

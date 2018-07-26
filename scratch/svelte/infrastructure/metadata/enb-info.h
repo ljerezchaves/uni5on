@@ -34,6 +34,8 @@ namespace ns3 {
  */
 class EnbInfo : public Object
 {
+  friend class SvelteHelper;
+
 public:
   /**
    * Complete constructor.
@@ -55,11 +57,6 @@ public:
   uint16_t GetInfraSwIdx (void) const;
   uint32_t GetInfraSwPortNo (void) const;
   EpcS1apSapEnb* GetS1apSapEnb (void) const;
-
-  void SetS1uAddr (Ipv4Address value);
-  void SetInfraSwIdx (uint16_t value);
-  void SetInfraSwPortNo (uint32_t value);
-  void SetS1apSapEnb (EpcS1apSapEnb* value);
   //\}
 
   /**
@@ -74,6 +71,14 @@ protected:
   virtual void DoDispose ();
 
 private:
+  /** \name Private member accessors. */
+  //\{
+  void SetS1uAddr (Ipv4Address value);
+  void SetInfraSwIdx (uint16_t value);
+  void SetInfraSwPortNo (uint32_t value);
+  void SetS1apSapEnb (EpcS1apSapEnb* value);
+  //\}
+
   /**
    * Register the eNB information in global map for further usage.
    * \param enbInfo The eNB information to save.

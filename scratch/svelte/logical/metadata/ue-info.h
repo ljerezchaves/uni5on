@@ -35,6 +35,8 @@ namespace ns3 {
  */
 class UeInfo : public Object
 {
+  friend class SliceNetwork;
+
 public:
   /**
    * Complete constructor.
@@ -67,11 +69,8 @@ public:
   uint64_t GetEnbUeS1Id (void) const;
   EpcS11SapSgw* GetS11SapSgw (void) const;
 
-  void SetSliceId (SliceId value);
-  void SetUeAddr (Ipv4Address value);
   void SetCellId (uint16_t value);
   void SetEnbUeS1Id (uint64_t value);
-  void SetS11SapSgw (EpcS11SapSgw* value);
   //\}
 
   /**
@@ -133,6 +132,13 @@ protected:
   virtual void DoDispose ();
 
 private:
+  /** \name Private member accessors. */
+  //\{
+  void SetSliceId (SliceId value);
+  void SetUeAddr (Ipv4Address value);
+  void SetS11SapSgw (EpcS11SapSgw* value);
+  //\}
+
   /**
    * Register the UE information in global map by its IMSI for further usage.
    * \param ueInfo The UE information to save.

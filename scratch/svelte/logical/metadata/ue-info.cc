@@ -113,23 +113,6 @@ UeInfo::GetS11SapSgw (void) const
 }
 
 void
-UeInfo::SetSliceId (SliceId value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_sliceId = value;
-}
-
-void
-UeInfo::SetUeAddr (Ipv4Address value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_ueAddr = value;
-  RegisterUeInfoByIpv4 (Ptr<UeInfo> (this));
-}
-
-void
 UeInfo::SetCellId (uint16_t value)
 {
   NS_LOG_FUNCTION (this << value);
@@ -143,14 +126,6 @@ UeInfo::SetEnbUeS1Id (uint64_t value)
   NS_LOG_FUNCTION (this << value);
 
   m_enbUeS1Id = value;
-}
-
-void
-UeInfo::SetS11SapSgw (EpcS11SapSgw* value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_s11SapSgw = value;
 }
 
 std::list<UeInfo::BearerInfo>::const_iterator
@@ -252,6 +227,31 @@ UeInfo::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   m_bearersList.clear ();
+}
+
+void
+UeInfo::SetSliceId (SliceId value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_sliceId = value;
+}
+
+void
+UeInfo::SetUeAddr (Ipv4Address value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_ueAddr = value;
+  RegisterUeInfoByIpv4 (Ptr<UeInfo> (this));
+}
+
+void
+UeInfo::SetS11SapSgw (EpcS11SapSgw* value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_s11SapSgw = value;
 }
 
 void

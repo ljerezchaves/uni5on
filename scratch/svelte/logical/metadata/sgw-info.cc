@@ -123,6 +123,27 @@ SgwInfo::GetInfraSwS5PortNo (void) const
   return m_infraSwS5PortNo;
 }
 
+Ptr<SgwInfo>
+SgwInfo::GetPointer (uint64_t sgwId)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  Ptr<SgwInfo> sgwInfo = 0;
+  SgwIdSgwInfo_t::iterator ret;
+  ret = SgwInfo::m_sgwInfoBySgwId.find (sgwId);
+  if (ret != SgwInfo::m_sgwInfoBySgwId.end ())
+    {
+      sgwInfo = ret->second;
+    }
+  return sgwInfo;
+}
+
+void
+SgwInfo::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
 void
 SgwInfo::SetSliceId (SliceId value)
 {
@@ -185,27 +206,6 @@ SgwInfo::SetInfraSwS5PortNo (uint32_t value)
   NS_LOG_FUNCTION (this << value);
 
   m_infraSwS5PortNo = value;
-}
-
-Ptr<SgwInfo>
-SgwInfo::GetPointer (uint64_t sgwId)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  Ptr<SgwInfo> sgwInfo = 0;
-  SgwIdSgwInfo_t::iterator ret;
-  ret = SgwInfo::m_sgwInfoBySgwId.find (sgwId);
-  if (ret != SgwInfo::m_sgwInfoBySgwId.end ())
-    {
-      sgwInfo = ret->second;
-    }
-  return sgwInfo;
-}
-
-void
-SgwInfo::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
 }
 
 void
