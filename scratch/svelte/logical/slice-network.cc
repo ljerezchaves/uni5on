@@ -493,8 +493,6 @@ SliceNetwork::CreateSgws (void)
       sgwInfo->SetInfraSwS5PortNo (infraSwS5Port->GetPortNo ());
 
       // Notify the controller of the new S-GW switch.
-      // FIXME Na implementação do sdmn existe aqui a configuração dos TEIDs
-      // para os túneis de agregação que eu estou deixando de lado por agora.
       m_controllerApp->NotifySgwAttach (
         sgwOfDev, sgwS1uDev, sgwS1uPortNo, sgwS5Dev, sgwS5PortNo);
     }

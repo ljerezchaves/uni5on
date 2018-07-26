@@ -215,8 +215,6 @@ void
 SvelteHelper::AddUe (Ptr<NetDevice> ueDevice, uint64_t imsi)
 {
   NS_LOG_FUNCTION (this << imsi << ueDevice);
-
-  // Nothing to do here.
 }
 
 Ptr<Node>
