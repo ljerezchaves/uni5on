@@ -121,15 +121,14 @@ SliceController::GetTypeId (void)
                                     OperationMode::ON,   "on",
                                     OperationMode::AUTO, "auto"))
 
-// FIXME Comentado por causa da dependência com o rInfo.
-//    .AddTraceSource ("BearerRelease", "The bearer release trace source.",
-//                     MakeTraceSourceAccessor (
-//                       &SliceController::m_bearerReleaseTrace),
-//                     "ns3::RoutingInfo::TracedCallback")
-//    .AddTraceSource ("BearerRequest", "The bearer request trace source.",
-//                     MakeTraceSourceAccessor (
-//                       &SliceController::m_bearerRequestTrace),
-//                     "ns3::RoutingInfo::TracedCallback")
+    .AddTraceSource ("BearerRelease", "The bearer release trace source.",
+                     MakeTraceSourceAccessor (
+                       &SliceController::m_bearerReleaseTrace),
+                     "ns3::BearerInfo::TracedCallback")
+    .AddTraceSource ("BearerRequest", "The bearer request trace source.",
+                     MakeTraceSourceAccessor (
+                       &SliceController::m_bearerRequestTrace),
+                     "ns3::BearerInfo::TracedCallback")
     .AddTraceSource ("PgwTftStats", "The P-GW TFT stats trace source.",
                      MakeTraceSourceAccessor (
                        &SliceController::m_pgwTftStatsTrace),

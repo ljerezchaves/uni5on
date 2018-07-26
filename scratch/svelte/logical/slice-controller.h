@@ -348,12 +348,11 @@ private:
 //   */
 //  static void RegisterController (Ptr<SliceController> ctrl, uint16_t cellId);
 
-// FIXME comentado por causa da dependencia com o rinfo.
-//  /** The bearer request trace source, fired at RequestDedicatedBearer. */
-//  TracedCallback<Ptr<const RoutingInfo> > m_bearerRequestTrace;
-//
-//  /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
-//  TracedCallback<Ptr<const RoutingInfo> > m_bearerReleaseTrace;
+  /** The bearer request trace source, fired at RequestDedicatedBearer. */
+  TracedCallback<Ptr<const BearerInfo> > m_bearerRequestTrace;
+
+  /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
+  TracedCallback<Ptr<const BearerInfo> > m_bearerReleaseTrace;
 
   /** The context created trace source, fired at NotifySessionCreated. */
   TracedCallback<uint64_t, BearerContextList_t> m_sessionCreatedTrace;
