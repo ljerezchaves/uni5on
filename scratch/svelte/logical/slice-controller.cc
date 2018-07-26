@@ -780,7 +780,7 @@ SliceController::DoCreateSessionRequest (
     }
 
   // Fire trace source notifying the created session.
-  m_sessionCreatedTrace (imsi, cellId, res.bearerContextsCreated);
+  m_sessionCreatedTrace (imsi, res.bearerContextsCreated);
 
   // Forward the response message to the MME.
   m_s11SapMme->CreateSessionResponse (res);
