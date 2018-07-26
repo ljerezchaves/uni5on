@@ -83,6 +83,22 @@ SgwInfo::GetS5Addr (void) const
   return m_s5Addr;
 }
 
+uint32_t
+SgwInfo::GetS1uPortNo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s1uPortNo;
+}
+
+uint32_t
+SgwInfo::GetS5PortNo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s5PortNo;
+}
+
 uint16_t
 SgwInfo::GetInfraSwIdx (void) const
 {
@@ -129,6 +145,22 @@ SgwInfo::SetS5Addr (Ipv4Address value)
   NS_LOG_FUNCTION (this << value);
 
   m_s5Addr = value;
+}
+
+void
+SgwInfo::SetS1uPortNo (uint32_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_s1uPortNo = value;
+}
+
+void
+SgwInfo::SetS5PortNo (uint32_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_s5PortNo = value;
 }
 
 void
