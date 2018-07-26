@@ -340,13 +340,6 @@ private:
 //   * \return True if succeeded, false otherwise.
 //   */
 //  bool SgwRulesRemove (Ptr<RoutingInfo> rInfo);
-//
-//  /**
-//   * Register the SDRAN controller into global map for further usage.
-//   * \param ctrl The SDRAN controller pointer.
-//   * \param cellId The cell ID used to index the map.
-//   */
-//  static void RegisterController (Ptr<SliceController> ctrl, uint16_t cellId);
 
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
   TracedCallback<Ptr<const BearerInfo> > m_bearerRequestTrace;
