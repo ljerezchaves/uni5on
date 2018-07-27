@@ -346,7 +346,7 @@ SliceNetwork::CreatePgw (void)
   Ptr<OFSwitch13Port> infraSwPort;
   std::tie (pgwS5Dev, infraSwPort) = m_backhaul->AttachEpcNode (
       pgwMainNode, m_pgwInfraSwIdx, LteInterface::S5);
-  NS_LOG_INFO ("P-GW main switch " << pgwMainNode <<
+  NS_LOG_INFO ("P-GW main switch " << pgwMainOfDev->GetDatapathId () <<
                " attached to the s5 interface with IP " <<
                Ipv4AddressHelper::GetAddress (pgwS5Dev));
 
@@ -404,7 +404,7 @@ SliceNetwork::CreatePgw (void)
       // Connect the P-GW TFT node to the OpenFlow backhaul node.
       std::tie (pgwS5Dev, infraSwPort) = m_backhaul->AttachEpcNode (
           pgwTftNode, m_pgwInfraSwIdx, LteInterface::S5);
-      NS_LOG_INFO ("P-GW TFT switch " << pgwTftNode <<
+      NS_LOG_INFO ("P-GW TFT switch " << pgwTftOfDev->GetDatapathId () <<
                    " attached to the s5 interface with IP " <<
                    Ipv4AddressHelper::GetAddress (pgwS5Dev));
 
@@ -455,14 +455,14 @@ SliceNetwork::CreateSgws (void)
       Ptr<OFSwitch13Port> infraSwS1uPort;
       std::tie (sgwS1uDev, infraSwS1uPort) = m_backhaul->AttachEpcNode (
           sgwNode, sgwIdx, LteInterface::S1U);
-      NS_LOG_INFO ("S-GW " << sgwNode << " attached to the s1u interface " <<
+      NS_LOG_INFO ("S-GW " << sgwDpId << " attached to the s1u interface " <<
                    "with IP " << Ipv4AddressHelper::GetAddress (sgwS1uDev));
 
       Ptr<CsmaNetDevice> sgwS5Dev;
       Ptr<OFSwitch13Port> infraSwS5Port;
       std::tie (sgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
           sgwNode, sgwIdx, LteInterface::S5);
-      NS_LOG_INFO ("S-GW " << sgwNode << " attached to the s5 interface " <<
+      NS_LOG_INFO ("S-GW " << sgwDpId << " attached to the s5 interface " <<
                    "with IP " << Ipv4AddressHelper::GetAddress (sgwS5Dev));
 
       // Create the logical ports on the S-GW S1-U and S5 interfaces.

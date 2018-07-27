@@ -22,6 +22,7 @@
 
 #include "svelte-mme.h"
 #include "metadata/ue-info.h"
+#include "metadata/sgw-info.h"
 #include "../infrastructure/metadata/enb-info.h"
 
 namespace ns3 {
@@ -86,10 +87,14 @@ SvelteMme::DoInitialUeMessage (
 {
   NS_LOG_FUNCTION (this << mmeUeS1Id << enbUeS1Id << imsi << ecgi);
 
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  Ptr<UeInfo>  ueInfo  = UeInfo::GetPointer (imsi);
+  Ptr<SgwInfo> sgwInfo = SgwInfo::GetPointerBySwIdx (
+      EnbInfo::GetPointer (ecgi)->GetInfraSwIdx ());
   ueInfo->SetCellId (ecgi);
   ueInfo->SetEnbUeS1Id (enbUeS1Id);
-  // FIXME ueInfo->SetSgwId (?);
+  ueInfo->SetSgwId (sgwInfo->GetSgwId ());
+  NS_LOG_INFO ("UE ISMI " << imsi << " at cell ID " << ecgi <<
+               " configured with S-GW ID " << ueInfo->GetSgwId ());
 
   EpcS11SapSgw::CreateSessionRequestMessage msg;
   msg.imsi = imsi;
@@ -141,7 +146,7 @@ SvelteMme::DoPathSwitchRequest (
 
   ueInfo->SetCellId (gci);
   ueInfo->SetEnbUeS1Id (enbUeS1Id);
-  // FIXME ueInfo->SetSgwId (?);
+  ueInfo->SetSgwId (0);   // FIXME Find the best S-GW.
 
   EpcS11SapSgw::ModifyBearerRequestMessage msg;
   msg.teid = imsi;
