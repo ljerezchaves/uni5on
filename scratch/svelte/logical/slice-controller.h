@@ -29,13 +29,13 @@
 #include "metadata/routing-info.h"
 #include "../slice-id.h"
 #include "../operation-mode.h"
-#include "../infrastructure/backhaul-controller.h"
 
 namespace ns3 {
 
 class BackhaulController;
 class SvelteMme;
 class SgwInfo;
+class PgwInfo;
 
 /**
  * \ingroup svelteLogical
@@ -117,6 +117,14 @@ public:
    * \param sgwInfo The S-GW metadata.
    */
   virtual void NotifySgwAttach (Ptr<const SgwInfo> sgwInfo);
+
+  /**
+   * Notify this controller of the P-GW  connected to the OpenFlow backhaul
+   * network over the S5 interface, and to the web server over the SGi
+   * interface.
+   * \param pgwInfo The P-GW metadata.
+   */
+  virtual void NotifyPgwAttach (Ptr<const PgwInfo> pgwInfo);
 
   /**
    * Notify this controller of the P-GW main switch connected to the OpenFlow
@@ -372,6 +380,8 @@ private:
   uint32_t                m_pgwSgiPortNo;   //!< SGi port number.
 
   // P-GW TFT adaptive mechanism.
+  uint64_t                m_pgwId;          //!< P-GW ID for this slice.
+  
   OperationMode           m_tftAdaptive;    //!< P-GW adaptive mechanism.
   uint8_t                 m_tftLevel;       //!< Current adaptive level.
   OperationMode           m_tftBlockPolicy; //!< Overload block policy.

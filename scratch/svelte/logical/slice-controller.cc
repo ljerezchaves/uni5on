@@ -22,7 +22,9 @@
 #include "slice-network.h"
 #include "svelte-mme.h"
 #include "metadata/ue-info.h"
+#include "metadata/pgw-info.h"
 #include "metadata/sgw-info.h"
+#include "metadata/routing-info.h"
 #include "../infrastructure/backhaul-network.h"
 #include "../infrastructure/backhaul-controller.h"
 #include "../infrastructure/metadata/enb-info.h"
@@ -318,6 +320,14 @@ SliceController::NotifySgwAttach (Ptr<const SgwInfo> sgwInfo)
   // Table 2 -- S-GW uplink table -- [from higher to lower priority]
   //
   // Entries will be installed here by SgwRulesInstall function.
+}
+
+void
+SliceController::NotifyPgwAttach (Ptr<const PgwInfo> pgwInfo)
+{
+  NS_LOG_FUNCTION (this << pgwInfo << pgwInfo->GetPgwId ());
+
+  m_pgwId = pgwInfo->GetPgwId ();
 }
 
 void

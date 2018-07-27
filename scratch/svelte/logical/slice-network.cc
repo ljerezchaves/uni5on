@@ -19,11 +19,13 @@
  */
 
 #include <ns3/csma-module.h>
-#include "slice-network.h"
 #include "gtp-tunnel-app.h"
 #include "pgw-tunnel-app.h"
-#include "metadata/ue-info.h"
+#include "slice-controller.h"
+#include "slice-network.h"
+#include "metadata/pgw-info.h"
 #include "metadata/sgw-info.h"
+#include "metadata/ue-info.h"
 #include "../infrastructure/backhaul-network.h"
 #include "../infrastructure/radio-network.h"
 
@@ -302,6 +304,7 @@ SliceNetwork::CreatePgw (void)
   // Get the P-GW main node and device.
   Ptr<Node> pgwMainNode = m_pgwNodes.Get (0);
   Ptr<OFSwitch13Device> pgwMainOfDev = m_pgwDevices.Get (0);
+  uint64_t pgwMainDpId = pgwMainOfDev->GetDatapathId ();
 
   // Connect the P-GW main switch to the SGi and S5 interfaces. On the uplink
   // direction, the traffic will flow directly from the S5 to the SGi interface
@@ -346,7 +349,7 @@ SliceNetwork::CreatePgw (void)
   Ptr<OFSwitch13Port> infraSwPort;
   std::tie (pgwS5Dev, infraSwPort) = m_backhaul->AttachEpcNode (
       pgwMainNode, m_pgwInfraSwIdx, LteInterface::S5);
-  NS_LOG_INFO ("P-GW main switch " << pgwMainOfDev->GetDatapathId () <<
+  NS_LOG_INFO ("P-GW main switch " << pgwMainDpId <<
                " attached to the s5 interface with IP " <<
                Ipv4AddressHelper::GetAddress (pgwS5Dev));
 
@@ -363,6 +366,10 @@ SliceNetwork::CreatePgw (void)
   // Notify the controller of the new P-GW main switch.
   m_controllerApp->NotifyPgwMainAttach (
     pgwMainOfDev, pgwS5Dev, pgwS5PortNo, pgwSgiDev, pgwSgiPortNo, webSgiDev);
+
+  // Saving P-GW metadata.
+  Ptr<PgwInfo> pgwInfo = CreateObject<PgwInfo> (pgwMainDpId);
+  pgwInfo->SetSliceId (m_sliceId); 
 
   // Configure CSMA helper for connecting P-GW internal node.
   m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_pgwLinkRate));
