@@ -31,7 +31,7 @@
 namespace ns3 {
 
 class ConnectionInfo;
-class BearerInfo;
+class RoutingInfo;
 
 /**
  * \ingroup svelteInfra
@@ -166,9 +166,9 @@ protected:
 
   /**
    * Notify this controller of a new bearer context created.
-   * \param bInfo The bearer information.
+   * \param rInfo The routing information to process.
    */
-  virtual void NotifyBearerCreated (Ptr<BearerInfo> bInfo);
+  virtual void NotifyBearerCreated (Ptr<RoutingInfo> rInfo);
 
 //  /**
 //   * \name Topology methods.

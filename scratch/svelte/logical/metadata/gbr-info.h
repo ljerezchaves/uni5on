@@ -28,7 +28,7 @@
 
 namespace ns3 {
 
-class BearerInfo;
+class RoutingInfo;
 
 /**
  * \ingroup svelteLogical
@@ -39,9 +39,9 @@ class GbrInfo : public Object
 public:
   /**
    * Complete constructor.
-   * \param bInfo BearerInfo pointer.
+   * \param rInfo RoutingInfo pointer.
    */
-  GbrInfo (Ptr<BearerInfo> bInfo);
+  GbrInfo (Ptr<RoutingInfo> rInfo);
   virtual ~GbrInfo (); //!< Dummy destructor, see DoDispose.
 
   /**

@@ -124,11 +124,11 @@ SliceController::GetTypeId (void)
     .AddTraceSource ("BearerRelease", "The bearer release trace source.",
                      MakeTraceSourceAccessor (
                        &SliceController::m_bearerReleaseTrace),
-                     "ns3::BearerInfo::TracedCallback")
+                     "ns3::RoutingInfo::TracedCallback")
     .AddTraceSource ("BearerRequest", "The bearer request trace source.",
                      MakeTraceSourceAccessor (
                        &SliceController::m_bearerRequestTrace),
-                     "ns3::BearerInfo::TracedCallback")
+                     "ns3::RoutingInfo::TracedCallback")
     .AddTraceSource ("PgwTftStats", "The P-GW TFT stats trace source.",
                      MakeTraceSourceAccessor (
                        &SliceController::m_pgwTftStatsTrace),
@@ -731,14 +731,14 @@ SliceController::DoCreateSessionRequest (
       bool isDefault = res.bearerContextsCreated.empty ();
 
       // Create the metadata for this bearer.
-      Ptr<BearerInfo> bInfo = CreateObject<BearerInfo> (
+      Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
           teid, bearerContext, imsi, m_sliceId, isDefault);
 
       // FIXME Notificar o controlador do backhaul de que criamos este bearer.
       // Isso era feito com o TopologyBearerCreated (). A idéia é que o
       // controlador de lá crie o routing info com as informações relevantes à
       // infraestrutura.
-      m_backhaulCtrl->NotifyBearerCreated (bInfo);
+      m_backhaulCtrl->NotifyBearerCreated (rInfo);
 
 //      rInfo->SetPgwS5Addr (m_pgwS5Addr);
 //      rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));

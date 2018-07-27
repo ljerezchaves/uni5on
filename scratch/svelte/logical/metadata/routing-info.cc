@@ -18,21 +18,21 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "bearer-info.h"
+#include "routing-info.h"
 #include "gbr-info.h"
 #include "meter-info.h"
 #include "../../infrastructure/backhaul-controller.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("BearerInfo");
-NS_OBJECT_ENSURE_REGISTERED (BearerInfo);
+NS_LOG_COMPONENT_DEFINE ("RoutingInfo");
+NS_OBJECT_ENSURE_REGISTERED (RoutingInfo);
 
-// Initializing BearerInfo static members.
-BearerInfo::TeidBearerMap_t BearerInfo::m_bearerInfoByTeid;
+// Initializing RoutingInfo static members.
+RoutingInfo::TeidRoutingMap_t RoutingInfo::m_routingInfoByTeid;
 
-BearerInfo::BearerInfo (uint32_t teid, BearerContext_t bearer, uint64_t imsi,
-                        SliceId sliceId, bool isDefault)
+RoutingInfo::RoutingInfo (uint32_t teid, BearerContext_t bearer, uint64_t imsi,
+                          SliceId sliceId, bool isDefault)
   : m_teid (teid),
   m_bearer (bearer),
   m_imsi (imsi),
@@ -40,30 +40,30 @@ BearerInfo::BearerInfo (uint32_t teid, BearerContext_t bearer, uint64_t imsi,
   m_isDefault (isDefault),
   m_isActive (false),
   m_isBlocked (false),
-  m_blockReason (BearerInfo::NOTBLOCKED)
+  m_blockReason (RoutingInfo::NOTBLOCKED)
 {
   NS_LOG_FUNCTION (this);
 
-  // Register this bearer information object.
-  RegisterBearerInfo (Ptr<BearerInfo> (this));
+  // Register this routing information object.
+  RegisterRoutingInfo (Ptr<RoutingInfo> (this));
 }
 
-BearerInfo::~BearerInfo ()
+RoutingInfo::~RoutingInfo ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-BearerInfo::GetTypeId (void)
+RoutingInfo::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::BearerInfo")
+  static TypeId tid = TypeId ("ns3::RoutingInfo")
     .SetParent<Object> ()
   ;
   return tid;
 }
 
 uint32_t
-BearerInfo::GetTeid (void) const
+RoutingInfo::GetTeid (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -71,7 +71,7 @@ BearerInfo::GetTeid (void) const
 }
 
 uint64_t
-BearerInfo::GetImsi (void) const
+RoutingInfo::GetImsi (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -79,7 +79,7 @@ BearerInfo::GetImsi (void) const
 }
 
 SliceId
-BearerInfo::GetSliceId (void) const
+RoutingInfo::GetSliceId (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -87,7 +87,7 @@ BearerInfo::GetSliceId (void) const
 }
 
 std::string
-BearerInfo::GetSliceIdStr (void) const
+RoutingInfo::GetSliceIdStr (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -95,7 +95,7 @@ BearerInfo::GetSliceIdStr (void) const
 }
 
 bool
-BearerInfo::IsDefault (void) const
+RoutingInfo::IsDefault (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -103,7 +103,7 @@ BearerInfo::IsDefault (void) const
 }
 
 bool
-BearerInfo::IsActive (void) const
+RoutingInfo::IsActive (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -111,7 +111,7 @@ BearerInfo::IsActive (void) const
 }
 
 bool
-BearerInfo::IsBlocked (void) const
+RoutingInfo::IsBlocked (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -119,7 +119,7 @@ BearerInfo::IsBlocked (void) const
 }
 
 std::string
-BearerInfo::GetBlockReasonStr (void) const
+RoutingInfo::GetBlockReasonStr (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -127,7 +127,7 @@ BearerInfo::GetBlockReasonStr (void) const
 }
 
 EpsBearer
-BearerInfo::GetEpsBearer (void) const
+RoutingInfo::GetEpsBearer (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -135,7 +135,7 @@ BearerInfo::GetEpsBearer (void) const
 }
 
 EpsBearer::Qci
-BearerInfo::GetQciInfo (void) const
+RoutingInfo::GetQciInfo (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -143,7 +143,7 @@ BearerInfo::GetQciInfo (void) const
 }
 
 GbrQosInformation
-BearerInfo::GetQosInfo (void) const
+RoutingInfo::GetQosInfo (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -151,7 +151,7 @@ BearerInfo::GetQosInfo (void) const
 }
 
 Ptr<EpcTft>
-BearerInfo::GetTft (void) const
+RoutingInfo::GetTft (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -159,7 +159,7 @@ BearerInfo::GetTft (void) const
 }
 
 Ipv4Header::DscpType
-BearerInfo::GetDscp (void) const
+RoutingInfo::GetDscp (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -167,7 +167,7 @@ BearerInfo::GetDscp (void) const
 }
 
 uint16_t
-BearerInfo::GetDscpValue (void) const
+RoutingInfo::GetDscpValue (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -175,7 +175,7 @@ BearerInfo::GetDscpValue (void) const
 }
 
 bool
-BearerInfo::IsGbr (void) const
+RoutingInfo::IsGbr (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -183,7 +183,7 @@ BearerInfo::IsGbr (void) const
 }
 
 bool
-BearerInfo::HasDownlinkTraffic (void) const
+RoutingInfo::HasDownlinkTraffic (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -191,7 +191,7 @@ BearerInfo::HasDownlinkTraffic (void) const
 }
 
 bool
-BearerInfo::HasUplinkTraffic (void) const
+RoutingInfo::HasUplinkTraffic (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -199,53 +199,53 @@ BearerInfo::HasUplinkTraffic (void) const
 }
 
 std::string
-BearerInfo::BlockReasonStr (BlockReason reason)
+RoutingInfo::BlockReasonStr (BlockReason reason)
 {
   switch (reason)
     {
-    case BearerInfo::TFTTABLEFULL:
+    case RoutingInfo::TFTTABLEFULL:
       return "TabFull";
-    case BearerInfo::TFTMAXLOAD:
+    case RoutingInfo::TFTMAXLOAD:
       return "MaxLoad";
-    case BearerInfo::NOBANDWIDTH:
+    case RoutingInfo::NOBANDWIDTH:
       return "SliceFull";
-    case BearerInfo::NOTBLOCKED:
+    case RoutingInfo::NOTBLOCKED:
     default:
       return "-";
     }
 }
 
 EpsBearer
-BearerInfo::GetEpsBearer (uint32_t teid)
+RoutingInfo::GetEpsBearer (uint32_t teid)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
   return GetPointer (teid)->GetEpsBearer ();
 }
 
-Ptr<BearerInfo>
-BearerInfo::GetPointer (uint32_t teid)
+Ptr<RoutingInfo>
+RoutingInfo::GetPointer (uint32_t teid)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  Ptr<BearerInfo> bInfo = 0;
-  TeidBearerMap_t::iterator ret;
-  ret = BearerInfo::m_bearerInfoByTeid.find (teid);
-  if (ret != BearerInfo::m_bearerInfoByTeid.end ())
+  Ptr<RoutingInfo> rInfo = 0;
+  TeidRoutingMap_t::iterator ret;
+  ret = RoutingInfo::m_routingInfoByTeid.find (teid);
+  if (ret != RoutingInfo::m_routingInfoByTeid.end ())
     {
-      bInfo = ret->second;
+      rInfo = ret->second;
     }
-  return bInfo;
+  return rInfo;
 }
 
 void
-BearerInfo::DoDispose ()
+RoutingInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 void
-BearerInfo::NotifyConstructionCompleted (void)
+RoutingInfo::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -253,16 +253,16 @@ BearerInfo::NotifyConstructionCompleted (void)
   GbrQosInformation gbrQoS = GetQosInfo ();
   if (gbrQoS.gbrDl || gbrQoS.gbrUl)
     {
-      CreateObject<GbrInfo> (Ptr<BearerInfo> (this));
+      CreateObject<GbrInfo> (Ptr<RoutingInfo> (this));
     }
   if (gbrQoS.mbrDl || gbrQoS.mbrUl)
     {
-      CreateObject<MeterInfo> (Ptr<BearerInfo> (this));
+      CreateObject<MeterInfo> (Ptr<RoutingInfo> (this));
     }
 }
 
 void
-BearerInfo::SetActive (bool value)
+RoutingInfo::SetActive (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -270,13 +270,13 @@ BearerInfo::SetActive (bool value)
 }
 
 void
-BearerInfo::SetBlocked (bool value, BlockReason reason)
+RoutingInfo::SetBlocked (bool value, BlockReason reason)
 {
   NS_LOG_FUNCTION (this << value << reason);
 
   NS_ASSERT_MSG (IsDefault () == false || value == false,
                  "Can't block the default bearer traffic.");
-  NS_ASSERT_MSG (value == false || reason != BearerInfo::NOTBLOCKED,
+  NS_ASSERT_MSG (value == false || reason != RoutingInfo::NOTBLOCKED,
                  "Specify the reason why this bearer was blocked.");
 
   m_isBlocked = value;
@@ -284,15 +284,15 @@ BearerInfo::SetBlocked (bool value, BlockReason reason)
 }
 
 void
-BearerInfo::RegisterBearerInfo (Ptr<BearerInfo> bInfo)
+RoutingInfo::RegisterRoutingInfo (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  uint32_t teid = bInfo->GetTeid ();
-  std::pair<uint32_t, Ptr<BearerInfo> > entry (teid, bInfo);
-  std::pair<TeidBearerMap_t::iterator, bool> ret;
-  ret = BearerInfo::m_bearerInfoByTeid.insert (entry);
-  NS_ABORT_MSG_IF (ret.second == false, "Existing bearer info for this TEID.");
+  uint32_t teid = rInfo->GetTeid ();
+  std::pair<uint32_t, Ptr<RoutingInfo> > entry (teid, rInfo);
+  std::pair<TeidRoutingMap_t::iterator, bool> ret;
+  ret = RoutingInfo::m_routingInfoByTeid.insert (entry);
+  NS_ABORT_MSG_IF (ret.second == false, "Existing routing info for this TEID");
 }
 
 } // namespace ns3

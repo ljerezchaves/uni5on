@@ -26,7 +26,7 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "metadata/bearer-info.h"
+#include "metadata/routing-info.h"
 #include "../slice-id.h"
 #include "../operation-mode.h"
 #include "../infrastructure/backhaul-controller.h"
@@ -342,10 +342,10 @@ private:
 //  bool SgwRulesRemove (Ptr<RoutingInfo> rInfo);
 
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
-  TracedCallback<Ptr<const BearerInfo> > m_bearerRequestTrace;
+  TracedCallback<Ptr<const RoutingInfo> > m_bearerRequestTrace;
 
   /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
-  TracedCallback<Ptr<const BearerInfo> > m_bearerReleaseTrace;
+  TracedCallback<Ptr<const RoutingInfo> > m_bearerReleaseTrace;
 
   /** The context created trace source, fired at NotifySessionCreated. */
   TracedCallback<uint64_t, BearerContextList_t> m_sessionCreatedTrace;

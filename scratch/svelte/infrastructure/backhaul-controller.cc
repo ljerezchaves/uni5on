@@ -22,7 +22,7 @@
 #include "backhaul-controller.h"
 #include "backhaul-network.h"
 #include "metadata/connection-info.h"
-#include "../logical/metadata/bearer-info.h"
+#include "../logical/metadata/routing-info.h"
 
 namespace ns3 {
 
@@ -309,11 +309,11 @@ BackhaulController::GetSwIdx (Ptr<OFSwitch13Device> dev) const
 }
 
 void
-BackhaulController::NotifyBearerCreated (Ptr<BearerInfo> bInfo)
+BackhaulController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << bInfo << bInfo->GetTeid ());
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  // TODO  
+  // TODO
 }
 
 ofl_err

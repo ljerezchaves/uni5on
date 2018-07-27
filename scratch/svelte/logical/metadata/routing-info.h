@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef BEARER_INFO_H
-#define BEARER_INFO_H
+#ifndef ROUTING_INFO_H
+#define ROUTING_INFO_H
 
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
@@ -29,7 +29,7 @@
 
 namespace ns3 {
 
-class BearerInfo;
+class RoutingInfo;
 
 /** EPS bearer context created. */
 typedef EpcS11SapMme::BearerContextCreated BearerContext_t;
@@ -38,13 +38,13 @@ typedef EpcS11SapMme::BearerContextCreated BearerContext_t;
 typedef std::list<BearerContext_t> BearerContextList_t;
 
 /** List of bearer information. */
-typedef std::list<Ptr<BearerInfo> > BearerInfoList_t;
+typedef std::list<Ptr<RoutingInfo> > RoutingInfoList_t;
 
 /**
  * \ingroup svelteLogical
  * Metadata associated to the EPS bearer.
  */
-class BearerInfo : public Object
+class RoutingInfo : public Object
 {
 public:
   /** Block reason. */
@@ -64,9 +64,9 @@ public:
    * \param sliceId The logical slice ID.
    * \param isDefault True for default bearer.
    */
-  BearerInfo (uint32_t teid, BearerContext_t bearer, uint64_t imsi,
-              SliceId sliceId, bool isDefault);
-  virtual ~BearerInfo (); //!< Dummy destructor, see DoDispose.
+  RoutingInfo (uint32_t teid, BearerContext_t bearer, uint64_t imsi,
+               SliceId sliceId, bool isDefault);
+  virtual ~RoutingInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -84,12 +84,10 @@ public:
   bool IsActive (void) const;
   bool IsBlocked (void) const;
   std::string GetBlockReasonStr (void) const;
-
   //\}
 
   /**
-   * \name Accessors for bearer related information.
-   * \return The requested information.
+   * \name Private member accessors for bearer information.
    */
   //\{
   EpsBearer GetEpsBearer (void) const;
@@ -118,17 +116,17 @@ public:
   static EpsBearer GetEpsBearer (uint32_t teid);
 
   /**
-   * Get the bearer information from the global map for a specific TEID.
+   * Get the routing information from the global map for a specific TEID.
    * \param teid The GTP tunnel ID.
-   * \return The bearer information for this tunnel.
+   * \return The routing information for this tunnel.
    */
-  static Ptr<BearerInfo> GetPointer (uint32_t teid);
+  static Ptr<RoutingInfo> GetPointer (uint32_t teid);
 
   /**
-   * TracedCallback signature for Ptr<const BearerInfo>.
-   * \param bInfo The bearer information.
+   * TracedCallback signature for Ptr<const RoutingInfo>.
+   * \param rInfo The bearer information.
    */
-  typedef void (*TracedCallback)(Ptr<const BearerInfo> bInfo);
+  typedef void (*TracedCallback)(Ptr<const RoutingInfo> rInfo);
 
 protected:
   /** Destructor implementation. */
@@ -140,15 +138,15 @@ protected:
   /** \name Private member accessors. */
   //\{
   void SetActive (bool value);
-  void SetBlocked (bool value, BlockReason reason = BearerInfo::NOTBLOCKED);
+  void SetBlocked (bool value, BlockReason reason = RoutingInfo::NOTBLOCKED);
   //\}
 
 private:
   /**
-   * Register the bearer information in global map for further usage.
-   * \param bInfo The bearer information to save.
+   * Register the routing information in global map for further usage.
+   * \param rInfo The routing information to save.
    */
-  static void RegisterBearerInfo (Ptr<BearerInfo> bInfo);
+  static void RegisterRoutingInfo (Ptr<RoutingInfo> rInfo);
 
   uint32_t             m_teid;         //!< GTP TEID.
   BearerContext_t      m_bearer;       //!< EPS bearer information.
@@ -159,10 +157,10 @@ private:
   bool                 m_isBlocked;    //!< Bearer request status.
   BlockReason          m_blockReason;  //!< Bearer blocked reason.
 
-  /** Map saving TEID / bearer information. */
-  typedef std::map<uint32_t, Ptr<BearerInfo> > TeidBearerMap_t;
-  static TeidBearerMap_t m_bearerInfoByTeid;  //!< Global bearer info map.
+  /** Map saving TEID / routing information. */
+  typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
+  static TeidRoutingMap_t m_routingInfoByTeid;  //!< Global routing info map.
 };
 
 } // namespace ns3
-#endif // BEARER_INFO_H
+#endif // ROUTING_INFO_H

@@ -21,7 +21,7 @@
 #include <string>
 #include "backhaul-network.h"
 #include "ring-controller.h"
-#include "../logical/metadata/bearer-info.h"
+#include "../logical/metadata/routing-info.h"
 
 namespace ns3 {
 
@@ -228,12 +228,12 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
 }
 
 void
-RingController::NotifyBearerCreated (Ptr<BearerInfo> bInfo)
+RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << bInfo << bInfo->GetTeid ());
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
   // Chain up so the backhaul controller can create the routing info. ???????????????????
-  BackhaulController::NotifyBearerCreated (bInfo);
+  BackhaulController::NotifyBearerCreated (rInfo);
 
 //  // Let's create its ring routing metadata.
 //  Ptr<RingRoutingInfo> ringInfo = CreateObject<RingRoutingInfo> (rInfo);

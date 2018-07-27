@@ -65,8 +65,8 @@ protected:
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
   void NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo);
 
-  void NotifyBearerCreated (Ptr<BearerInfo> bInfo);
-  
+  void NotifyBearerCreated (Ptr<RoutingInfo> rInfo);
+
   // FIXME Removendo temporariamente
   // bool TopologyBearerRequest  (Ptr<RoutingInfo> rInfo);
   // bool TopologyBitRateRelease (Ptr<RoutingInfo> rInfo);

@@ -19,14 +19,14 @@
  */
 
 #include "gbr-info.h"
-#include "bearer-info.h"
+#include "routing-info.h"
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("GbrInfo");
 NS_OBJECT_ENSURE_REGISTERED (GbrInfo);
 
-GbrInfo::GbrInfo (Ptr<BearerInfo> bInfo)
+GbrInfo::GbrInfo (Ptr<RoutingInfo> rInfo)
   : m_isReserved (false),
   m_hasDown (false),
   m_hasUp (false),
@@ -35,8 +35,8 @@ GbrInfo::GbrInfo (Ptr<BearerInfo> bInfo)
 {
   NS_LOG_FUNCTION (this);
 
-  AggregateObject (bInfo);
-  GbrQosInformation gbrQoS = bInfo->GetQosInfo ();
+  AggregateObject (rInfo);
+  GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
   if (gbrQoS.gbrDl)
     {
       m_hasDown = true;

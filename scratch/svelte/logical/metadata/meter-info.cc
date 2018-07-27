@@ -19,14 +19,14 @@
  */
 
 #include "meter-info.h"
-#include "bearer-info.h"
+#include "routing-info.h"
 
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("MeterInfo");
 NS_OBJECT_ENSURE_REGISTERED (MeterInfo);
 
-MeterInfo::MeterInfo (Ptr<BearerInfo> bInfo)
+MeterInfo::MeterInfo (Ptr<RoutingInfo> rInfo)
   : m_isDownInstalled (false),
   m_isUpInstalled (false),
   m_hasDown (false),
@@ -36,9 +36,9 @@ MeterInfo::MeterInfo (Ptr<BearerInfo> bInfo)
 {
   NS_LOG_FUNCTION (this);
 
-  AggregateObject (bInfo);
-  m_teid = bInfo->GetTeid ();
-  GbrQosInformation gbrQoS = bInfo->GetQosInfo ();
+  AggregateObject (rInfo);
+  m_teid = rInfo->GetTeid ();
+  GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
   if (gbrQoS.mbrDl)
     {
       m_hasDown = true;
