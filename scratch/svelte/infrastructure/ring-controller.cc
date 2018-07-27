@@ -232,9 +232,6 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-  // Chain up so the backhaul controller can create the routing info. ???????????????????
-  BackhaulController::NotifyBearerCreated (rInfo);
-
 //  // Let's create its ring routing metadata.
 //  Ptr<RingRoutingInfo> ringInfo = CreateObject<RingRoutingInfo> (rInfo);
 //

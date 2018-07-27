@@ -308,14 +308,6 @@ BackhaulController::GetSwIdx (Ptr<OFSwitch13Device> dev) const
   return idx;
 }
 
-void
-BackhaulController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
-
-  // TODO
-}
-
 ofl_err
 BackhaulController::HandleError (
   struct ofl_msg_error *msg, Ptr<const RemoteSwitch> swtch,

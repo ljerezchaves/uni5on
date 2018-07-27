@@ -165,17 +165,16 @@ protected:
   uint16_t GetSwIdx (Ptr<OFSwitch13Device> dev) const;
 
   /**
+   * \name Topology methods.
+   * These virtual methods must be implemented by topology subclasses, as
+   * they are dependent on the OpenFlow backhaul network topology.
+   */
+  //\{
+  /**
    * Notify this controller of a new bearer context created.
    * \param rInfo The routing information to process.
    */
-  virtual void NotifyBearerCreated (Ptr<RoutingInfo> rInfo);
-
-//  /**
-//   * \name Topology methods.
-//   * These virtual methods must be implemented by topology subclasses, as they
-//   * are dependent on the backhaul OpenFlow network topology.
-//   */
-//  //\{
+  virtual void NotifyBearerCreated (Ptr<RoutingInfo> rInfo) = 0;
 //  /**
 //   * Process the bearer request, checking for available resources in the
 //   * backhaul network and deciding for the best routing path.
@@ -213,7 +212,7 @@ protected:
 //   * \return True if succeeded, false otherwise.
 //   */
 //  virtual bool TopologyRoutingRemove (Ptr<RoutingInfo> rInfo) = 0;
-//  //\}
+  //\}
 
   // Inherited from OFSwitch13Controller.
   virtual ofl_err HandleError (
