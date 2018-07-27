@@ -745,44 +745,32 @@ SliceController::DoCreateSessionRequest (
 //      rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
 //      TopologyBearerCreated (rInfo);
 //
-//      // Check for the proper traffic aggregation mode for this bearer.
-//      OperationMode mode;
-//      mode = rInfo->IsMtc () ? GetMtcAggregMode () : GetHtcAggregMode ();
-//      if (rInfo->IsHtc () && rInfo->IsDefault ())
-//        {
-//          // Never aggregates the default HTC bearer.
-//          mode = OperationMode::OFF;
-//        }
-//
-//      // Set the traffic aggregation operation mode.
-//      Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
-//      aggInfo->SetOperationMode (mode);
-//
-//      if (rInfo->IsDefault ())
-//        {
-//          // Configure this default bearer.
-//          rInfo->SetPriority (0x7F);
-//          rInfo->SetTimeout (0);
-//
-//          // For logic consistence, let's check for available resources.
-//          bool success = true;
-//          success &= TopologyBearerRequest (rInfo);
-//          success &= PgwBearerRequest (rInfo);
-//          success &= TopologyBitRateReserve (rInfo);
-//          NS_ASSERT_MSG (success, "Default bearer must be accepted.");
-//          m_bearerRequestTrace (rInfo);
-//
-//          // Activate and install the bearer.
-//          rInfo->SetActive (true);
-//          bool installed = BearerInstall (rInfo);
-//          NS_ASSERT_MSG (installed, "Default bearer must be installed.");
-//        }
-//      else
-//        {
-//          // Configure this dedicated bearer.
-//          rInfo->SetPriority (0x1FFF);
-//          rInfo->SetTimeout (m_flowTimeout);
-//        }
+      if (rInfo->IsDefault ())
+        {
+          // Configure this default bearer.
+          rInfo->SetPriority (0x7F);
+          rInfo->SetTimeout (0);
+
+          // FIXME
+          // For logic consistence, let's check for available resources.
+          //   bool success = true;
+          //   success &= TopologyBearerRequest (rInfo);
+          //   success &= PgwBearerRequest (rInfo);
+          //   success &= TopologyBitRateReserve (rInfo);
+          //   NS_ASSERT_MSG (success, "Default bearer must be accepted.");
+          //   m_bearerRequestTrace (rInfo);
+
+          // Activate and install the bearer.
+          //   rInfo->SetActive (true);
+          //   bool installed = BearerInstall (rInfo);
+          //   NS_ASSERT_MSG (installed, "Default bearer must be installed.");
+        }
+      else
+        {
+          // Configure this dedicated bearer.
+          rInfo->SetPriority (0x1FFF);
+          rInfo->SetTimeout (m_flowTimeout);
+        }
     }
 
   // Fire trace source notifying the created session.
