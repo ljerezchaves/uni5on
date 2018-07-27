@@ -392,26 +392,29 @@ EnableVerbose (bool enable)
       // Infrastructure components.
       LogComponentEnable ("BackhaulController",       logLevelWarnInfo);
       LogComponentEnable ("BackhaulNetwork",          logLevelWarnInfo);
-      LogComponentEnable ("ConnectionInfo",           logLevelWarnInfo);
-      LogComponentEnable ("EnbInfo",                  logLevelWarnInfo);
       LogComponentEnable ("RadioNetwork",             logLevelWarnInfo);
       LogComponentEnable ("RingController",           logLevelWarnInfo);
       LogComponentEnable ("RingNetwork",              logLevelWarnInfo);
-      LogComponentEnable ("RingRoutingInfo",          logLevelWarnInfo);
       LogComponentEnable ("SvelteEnbApplication",     logLevelWarnInfo);
+
+      LogComponentEnable ("ConnectionInfo",           logLevelWarnInfo);
+      LogComponentEnable ("EnbInfo",                  logLevelWarnInfo);
+      LogComponentEnable ("RingRoutingInfo",          logLevelWarnInfo);
 
       // Logical components.
       LogComponentEnable ("GtpTunnelApp",             logLevelWarnInfo);
       LogComponentEnable ("PgwTunnelApp",             logLevelWarnInfo);
-      LogComponentEnable ("PgwInfo",                  logLevelWarnInfo);
-      LogComponentEnable ("SgwInfo",                  logLevelWarnInfo);
       LogComponentEnable ("SliceController",          logLevelWarnInfo);
       LogComponentEnable ("SliceNetwork",             logLevelWarnInfo);
       LogComponentEnable ("SvelteMme",                logLevelWarnInfo);
+
+      LogComponentEnable ("GbrInfo",                  logLevelWarnInfo);
+      LogComponentEnable ("MeterInfo",                logLevelWarnInfo);
+      LogComponentEnable ("PgwInfo",                  logLevelWarnInfo);
+      LogComponentEnable ("RoutingInfo",              logLevelWarnInfo);
+      LogComponentEnable ("SgwInfo",                  logLevelWarnInfo);
       LogComponentEnable ("UeInfo",                   logLevelWarnInfo);
 
-//      LogComponentEnable ("SdranCloud",               logLevelWarnInfo);
-//      LogComponentEnable ("SdranController",          logLevelWarnInfo);
 //      LogComponentEnable ("TrafficHelper",            logLevelWarnInfo);
 //      LogComponentEnable ("TrafficManager",           logLevelWarnInfo);
 //
@@ -427,10 +430,6 @@ EnableVerbose (bool enable)
 //      LogComponentEnable ("LiveVideoServer",          logLevelWarnInfo);
 //      LogComponentEnable ("VoipClient",               logLevelWarnInfo);
 //      LogComponentEnable ("VoipServer",               logLevelWarnInfo);
-//
-//      LogComponentEnable ("GbrInfo",                  logLevelWarnInfo);
-//      LogComponentEnable ("MeterInfo",                logLevelWarnInfo);
-//      LogComponentEnable ("RoutingInfo",              logLevelWarnInfo);
 //
 //      LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);
 //      LogComponentEnable ("BackhaulStatsCalculator",  logLevelWarnInfo);

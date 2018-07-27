@@ -116,52 +116,17 @@ public:
    * network over the S1-U and S5 interfaces.
    * \param sgwInfo The S-GW metadata.
    */
-  virtual void NotifySgwAttach (Ptr<const SgwInfo> sgwInfo);
+  virtual void NotifySgwAttach (Ptr<SgwInfo> sgwInfo);
 
   /**
    * Notify this controller of the P-GW  connected to the OpenFlow backhaul
    * network over the S5 interface, and to the web server over the SGi
    * interface.
    * \param pgwInfo The P-GW metadata.
-   */
-  virtual void NotifyPgwAttach (Ptr<const PgwInfo> pgwInfo);
-
-  /**
-   * Notify this controller of the P-GW main switch connected to the OpenFlow
-   * backhaul network over the S5 interface, and to the web server over the SGi
-   * interface.
-   * \param pgwSwDev The P-GW main OpenFlow switch device.
-   * \param pgwS5Dev The S5 device on the P-GW OpenFlow switch.
-   * \param pgwS5PortNo The S5 port number on the P-GW OpenFlow switch.
-   * \param pgwSgiDev The SGi device on the P-GW OpenFlow switch.
-   * \param pgwSgiPortNo The SGi port number on the P-GW OpenFlow switch.
    * \param webSgiDev The SGi device on the Web server.
    */
-  virtual void NotifyPgwMainAttach (
-    Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwS5Dev,
-    uint32_t pgwS5PortNo, Ptr<NetDevice> pgwSgiDev, uint32_t pgwSgiPortNo,
-    Ptr<NetDevice> webSgiDev);
-
-  /**
-   * Notify this controller of a new P-GW TFT switch connected to the OpenFlow
-   * backhaul network over the S5 interface and to the P-GW main switch over
-   * an internal interface.
-   * \param pgwSwDev The P-GW TFT OpenFlow switch device.
-   * \param pgwS5Dev The S5 device on the P-GW OpenFlow switch.
-   * \param pgwS5PortNo The S5 port number on the P-GW OpenFlow switch.
-   * \param pgwMainPortNo The internal port number on the P-GW main switch.
-   * \param pgwTftCounter The counter (index) for this P-GW TFT switch.
-   */
-  virtual void NotifyPgwTftAttach (
-    Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwS5Dev,
-    uint32_t pgwS5PortNo, uint32_t pgwMainPortNo, uint16_t pgwTftCounter);
-
-  /**
-   * Notify this controller that all P-GW switches have already been
-   * configured and the connections between them are finished.
-   * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
-   */
-  virtual void NotifyPgwBuilt (OFSwitch13DeviceContainer devices);
+  virtual void NotifyPgwAttach (Ptr<PgwInfo> pgwInfo,
+                                Ptr<NetDevice> webSgiDev);
 
   /**
    * \name Internal mechanisms operation mode accessors.
@@ -180,15 +145,13 @@ public:
 
   /**
    * Configure this controller with slice network attributes.
-   * \param nPgwTfts The number of P-GW TFT switches available for use.
    * \param ueAddr The UE network address.
    * \param ueMask The UE network mask.
    * \param webAddr The Internet network address.
    * \param webMask The Internet network mask.
    */
-  void SetNetworkAttributes (
-    uint16_t nPgwTfts, Ipv4Address ueAddr, Ipv4Mask ueMask,
-    Ipv4Address webAddr, Ipv4Mask webMask);
+  void SetNetworkAttributes (Ipv4Address ueAddr, Ipv4Mask ueMask,
+                             Ipv4Address webAddr, Ipv4Mask webMask);
 
   /**
    * TracedCallback signature for the P-GW TFT stats trace source.
@@ -254,19 +217,6 @@ private:
   void DoDeleteBearerResponse (EpcS11SapSgw::DeleteBearerResponseMessage msg);
   void DoModifyBearerRequest  (EpcS11SapSgw::ModifyBearerRequestMessage  msg);
   //\}
-
-  /**
-   * Get the P-GW main datapath ID.
-   * \return The P-GW main datapath ID.
-   */
-  uint64_t GetPgwMainDpId (void) const;
-
-  /**
-   * Get the P-GW TFT datapath ID for a given index.
-   * \param idx The P-GW TFT index.
-   * \return The P-GW TFT datapath ID.
-   */
-  uint64_t GetPgwTftDpId (uint16_t idx) const;
 
 //  /**
 //   * Get the active P-GW TFT index for a given traffic flow.
@@ -373,15 +323,8 @@ private:
   Ipv4Address             m_webAddr;        //!< Web network address.
   Ipv4Mask                m_webMask;        //!< Web network mask.
 
-  // P-GW user plane.
-  std::vector<uint64_t>   m_pgwDpIds;       //!< Datapath IDs.
-  Ipv4Address             m_pgwS5Addr;      //!< S5 IP address for uplink.
-  std::vector<uint32_t>   m_pgwS5PortsNo;   //!< S5 port numbers.
-  uint32_t                m_pgwSgiPortNo;   //!< SGi port number.
-
-  // P-GW TFT adaptive mechanism.
-  uint64_t                m_pgwId;          //!< P-GW ID for this slice.
-  
+  // P-GW metadata and TFT adaptive mechanism.
+  Ptr<PgwInfo>            m_pgwInfo;        //!< P-GW metadata for this slice.
   OperationMode           m_tftAdaptive;    //!< P-GW adaptive mechanism.
   uint8_t                 m_tftLevel;       //!< Current adaptive level.
   OperationMode           m_tftBlockPolicy; //!< Overload block policy.

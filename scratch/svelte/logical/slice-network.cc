@@ -230,8 +230,8 @@ SliceNetwork::NotifyConstructionCompleted (void)
       "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
   // Configure and install the slice controller application.
-  m_controllerApp->SetNetworkAttributes (
-    m_nTftNodes, m_ueAddr, m_ueMask, m_webAddr, m_webMask);
+  m_controllerApp->SetNetworkAttributes (m_ueAddr, m_ueMask,
+                                         m_webAddr, m_webMask);
   m_controllerNode = CreateObject<Node> ();
   Names::Add (m_sliceIdStr + "_ctrl", m_controllerNode);
   m_switchHelper->InstallController (m_controllerNode, m_controllerApp);
@@ -304,7 +304,13 @@ SliceNetwork::CreatePgw (void)
   // Get the P-GW main node and device.
   Ptr<Node> pgwMainNode = m_pgwNodes.Get (0);
   Ptr<OFSwitch13Device> pgwMainOfDev = m_pgwDevices.Get (0);
-  uint64_t pgwMainDpId = pgwMainOfDev->GetDatapathId ();
+  uint64_t pgwDpId = pgwMainOfDev->GetDatapathId ();
+
+  // Saving P-GW metadata.
+  Ptr<PgwInfo> pgwInfo = CreateObject<PgwInfo> (pgwDpId);
+  pgwInfo->SetSliceId (m_sliceId);
+  pgwInfo->SetInfraSwIdx (m_pgwInfraSwIdx);
+  pgwInfo->SetNumTfts (m_nTftNodes);
 
   // Connect the P-GW main switch to the SGi and S5 interfaces. On the uplink
   // direction, the traffic will flow directly from the S5 to the SGi interface
@@ -328,7 +334,7 @@ SliceNetwork::CreatePgw (void)
 
   // Add the pgwSgiDev as physical port on the P-GW main OpenFlow switch.
   Ptr<OFSwitch13Port> pgwSgiPort = pgwMainOfDev->AddSwitchPort (pgwSgiDev);
-  uint32_t pgwSgiPortNo = pgwSgiPort->GetPortNo ();
+  pgwInfo->SetMainSgiPortNo (pgwSgiPort->GetPortNo ());
 
   // Set the IP address on the Internet network.
   m_webAddrHelper.Assign (m_webDevices);
@@ -346,30 +352,24 @@ SliceNetwork::CreatePgw (void)
 
   // Connect the P-GW node to the OpenFlow backhaul network.
   Ptr<CsmaNetDevice> pgwS5Dev;
-  Ptr<OFSwitch13Port> infraSwPort;
-  std::tie (pgwS5Dev, infraSwPort) = m_backhaul->AttachEpcNode (
+  Ptr<OFSwitch13Port> infraSwS5Port;
+  Ipv4Address pgwS5Addr;
+  std::tie (pgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
       pgwMainNode, m_pgwInfraSwIdx, LteInterface::S5);
-  NS_LOG_INFO ("P-GW main switch " << pgwMainDpId <<
-               " attached to the s5 interface with IP " <<
-               Ipv4AddressHelper::GetAddress (pgwS5Dev));
+  pgwS5Addr = Ipv4AddressHelper::GetAddress (pgwS5Dev);
+  NS_LOG_INFO ("P-GW main switch " << pgwDpId <<
+               " attached to the s5 interface with IP " << pgwS5Addr);
 
   // Create the logical port on the P-GW S5 interface.
   Ptr<VirtualNetDevice> pgwS5PortDev = CreateObject<VirtualNetDevice> ();
   pgwS5PortDev->SetAddress (Mac48Address::Allocate ());
   Ptr<OFSwitch13Port> pgwS5Port = pgwMainOfDev->AddSwitchPort (pgwS5PortDev);
-  uint32_t pgwS5PortNo = pgwS5Port->GetPortNo ();
-
-  // Create the P-GW S5 user-plane application.
   pgwMainNode->AddApplication (
     CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev));
 
-  // Notify the controller of the new P-GW main switch.
-  m_controllerApp->NotifyPgwMainAttach (
-    pgwMainOfDev, pgwS5Dev, pgwS5PortNo, pgwSgiDev, pgwSgiPortNo, webSgiDev);
-
-  // Saving P-GW metadata.
-  Ptr<PgwInfo> pgwInfo = CreateObject<PgwInfo> (pgwMainDpId);
-  pgwInfo->SetSliceId (m_sliceId); 
+  // Saving P-GW MAIN metadata first.
+  pgwInfo->SaveSwitchInfo (pgwDpId, pgwS5Addr, pgwS5Port->GetPortNo (),
+                           infraSwS5Port->GetPortNo ());
 
   // Configure CSMA helper for connecting P-GW internal node.
   m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_pgwLinkRate));
@@ -377,10 +377,11 @@ SliceNetwork::CreatePgw (void)
 
   // Connect all P-GW TFT switches to the P-GW main switch and to the S5
   // interface. Only downlink traffic will be sent to these switches.
-  for (uint16_t tftIdx = 0; tftIdx < GetPgwTftNumNodes (); tftIdx++)
+  for (uint16_t tftIdx = 1; tftIdx <= m_nTftNodes; tftIdx++)
     {
-      Ptr<Node> pgwTftNode = m_pgwNodes.Get (tftIdx + 1);
-      Ptr<OFSwitch13Device> pgwTftOfDev = m_pgwDevices.Get (tftIdx + 1);
+      Ptr<Node> pgwTftNode = m_pgwNodes.Get (tftIdx);
+      Ptr<OFSwitch13Device> pgwTftOfDev = m_pgwDevices.Get (tftIdx);
+      pgwDpId = pgwTftOfDev->GetDatapathId ();
 
       // Set P-GW TFT attributes.
       pgwTftOfDev->SetAttribute (
@@ -394,42 +395,38 @@ SliceNetwork::CreatePgw (void)
 
       // Connect the P-GW main node to the P-GW TFT node.
       devices = m_csmaHelper.Install (pgwTftNode, pgwMainNode);
-      m_pgwIntDevices.Add (devices);
-
       Ptr<CsmaNetDevice> tftDev = DynamicCast<CsmaNetDevice> (devices.Get (0));
       Ptr<CsmaNetDevice> manDev = DynamicCast<CsmaNetDevice> (devices.Get (1));
+      m_pgwIntDevices.Add (devices);
 
       // Add the mainDev as physical port on the P-GW main OpenFlow switch.
       Ptr<OFSwitch13Port> mainPort = pgwMainOfDev->AddSwitchPort (manDev);
-      uint32_t mainPortNo = mainPort->GetPortNo ();
 
       // Add the tftDev as physical port on the P-GW TFT OpenFlow switch.
       Ptr<OFSwitch13Port> tftPort = pgwTftOfDev->AddSwitchPort (tftDev);
-      uint32_t tftPortNo = tftPort->GetPortNo ();
-      NS_UNUSED (tftPortNo);
 
       // Connect the P-GW TFT node to the OpenFlow backhaul node.
-      std::tie (pgwS5Dev, infraSwPort) = m_backhaul->AttachEpcNode (
+      std::tie (pgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
           pgwTftNode, m_pgwInfraSwIdx, LteInterface::S5);
-      NS_LOG_INFO ("P-GW TFT switch " << pgwTftOfDev->GetDatapathId () <<
-                   " attached to the s5 interface with IP " <<
-                   Ipv4AddressHelper::GetAddress (pgwS5Dev));
+      pgwS5Addr = Ipv4AddressHelper::GetAddress (pgwS5Dev);
+      NS_LOG_INFO ("P-GW TFT switch " << pgwDpId <<
+                   " attached to the s5 interface with IP " << pgwS5Addr);
 
       // Create the logical port on the P-GW S5 interface.
       pgwS5PortDev = CreateObject<VirtualNetDevice> ();
       pgwS5PortDev->SetAddress (Mac48Address::Allocate ());
       pgwS5Port = pgwTftOfDev->AddSwitchPort (pgwS5PortDev);
-      pgwS5PortNo = pgwS5Port->GetPortNo ();
-
-      // Create the P-GW S5 user-plane application.
       pgwTftNode->AddApplication (
         CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev));
 
-      // Notify the controller of the new P-GW TFT switch.
-      m_controllerApp->NotifyPgwTftAttach (
-        pgwTftOfDev, pgwS5Dev, pgwS5PortNo, mainPortNo, tftIdx);
+      // Saving P-GW TFT metadata.
+      pgwInfo->SaveSwitchInfo (
+        pgwDpId, pgwS5Addr, pgwS5Port->GetPortNo (),
+        infraSwS5Port->GetPortNo (), mainPort->GetPortNo ());
     }
-  m_controllerApp->NotifyPgwBuilt (m_pgwDevices);
+
+  // Notify the controller of the new P-GW entity.
+  m_controllerApp->NotifyPgwAttach (pgwInfo, webSgiDev);
 }
 
 void
@@ -476,14 +473,12 @@ SliceNetwork::CreateSgws (void)
       Ptr<VirtualNetDevice> sgwS1uPortDev = CreateObject<VirtualNetDevice> ();
       sgwS1uPortDev->SetAddress (Mac48Address::Allocate ());
       Ptr<OFSwitch13Port> sgwS1uPort = sgwOfDev->AddSwitchPort (sgwS1uPortDev);
+      sgwNode->AddApplication (
+        CreateObject<GtpTunnelApp> (sgwS1uPortDev, sgwS1uDev));
 
       Ptr<VirtualNetDevice> sgwS5PortDev = CreateObject<VirtualNetDevice> ();
       sgwS5PortDev->SetAddress (Mac48Address::Allocate ());
       Ptr<OFSwitch13Port> sgwS5Port = sgwOfDev->AddSwitchPort (sgwS5PortDev);
-
-      // Create the S-GW S1-U and S5 user-plane application.
-      sgwNode->AddApplication (
-        CreateObject<GtpTunnelApp> (sgwS1uPortDev, sgwS1uDev));
       sgwNode->AddApplication (
         CreateObject<GtpTunnelApp> (sgwS5PortDev, sgwS5Dev));
 

@@ -38,7 +38,8 @@ NS_OBJECT_ENSURE_REGISTERED (SliceController);
 const uint16_t SliceController::m_flowTimeout = 0;
 
 SliceController::SliceController ()
-  : m_tftMaxLoad (DataRate (std::numeric_limits<uint64_t>::max ())),
+  : m_pgwInfo (0),
+  m_tftMaxLoad (DataRate (std::numeric_limits<uint64_t>::max ())),
   m_tftTableSize (std::numeric_limits<uint32_t>::max ())
 {
   NS_LOG_FUNCTION (this);
@@ -229,7 +230,7 @@ SliceController::DedicatedBearerRequest (
 }
 
 void
-SliceController::NotifySgwAttach (Ptr<const SgwInfo> sgwInfo)
+SliceController::NotifySgwAttach (Ptr<SgwInfo> sgwInfo)
 {
   NS_LOG_FUNCTION (this << sgwInfo << sgwInfo->GetSgwId ());
 
@@ -323,28 +324,45 @@ SliceController::NotifySgwAttach (Ptr<const SgwInfo> sgwInfo)
 }
 
 void
-SliceController::NotifyPgwAttach (Ptr<const PgwInfo> pgwInfo)
+SliceController::NotifyPgwAttach (Ptr<PgwInfo> pgwInfo,
+                                  Ptr<NetDevice> webSgiDev)
 {
-  NS_LOG_FUNCTION (this << pgwInfo << pgwInfo->GetPgwId ());
+  NS_LOG_FUNCTION (this << pgwInfo << pgwInfo->GetPgwId () << webSgiDev);
 
-  m_pgwId = pgwInfo->GetPgwId ();
-}
+  // Save the P-GW metadata.
+  m_pgwInfo = pgwInfo;
 
-void
-SliceController::NotifyPgwMainAttach (
-  Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwS5Dev,
-  uint32_t pgwS5PortNo, Ptr<NetDevice> pgwSgiDev, uint32_t pgwSgiPortNo,
-  Ptr<NetDevice> webSgiDev)
-{
-  NS_LOG_FUNCTION (this << pgwSwDev << pgwS5Dev << pgwS5PortNo <<
-                   pgwSgiDev << pgwSgiPortNo << webSgiDev);
+  // Set the number of P-GW TFT active switches and the
+  // adaptive mechanism initial level.
+  switch (GetPgwAdaptiveMode ())
+    {
+    case OperationMode::ON:
+    case OperationMode::AUTO:
+      {
+        m_tftSwitches = pgwInfo->GetNumTfts ();
+        m_tftLevel = static_cast<uint8_t> (log2 (m_tftSwitches));
+        break;
+      }
+    case OperationMode::OFF:
+      {
+        m_tftSwitches = 1;
+        m_tftLevel = 0;
+        break;
+      }
+    }
 
-  // Saving information for P-GW main switch at first index.
-  m_pgwDpIds.push_back (pgwSwDev->GetDatapathId ());
-  m_pgwS5PortsNo.push_back (pgwS5PortNo);
-  m_pgwS5Addr = Ipv4AddressHelper::GetAddress (pgwS5Dev);
-  m_pgwSgiPortNo = pgwSgiPortNo;
+  // Get the minimum table size and pipeline capacity of P-GW TFT switches.
+  for (uint16_t tftIdx = 1; tftIdx <= pgwInfo->GetNumTfts (); tftIdx++)
+    {
+      uint32_t tableSize = pgwInfo->GetTftFlowTableSize (tftIdx);
+      DataRate plCapacity = pgwInfo->GetTftPipelineCapacity (tftIdx);
+      m_tftTableSize = std::min (m_tftTableSize, tableSize);
+      m_tftMaxLoad = std::min (m_tftMaxLoad, plCapacity);
+    }
+  NS_LOG_DEBUG ("P-GW TFT table size set to " << m_tftTableSize);
+  NS_LOG_DEBUG ("P-GW TFT pipeline capacity set to " << m_tftMaxLoad);
 
+  // Configuring the P-GW MAIN switch.
   // -------------------------------------------------------------------------
   // Table 0 -- P-GW MAIN default table -- [from higher to lower priority]
   //
@@ -355,83 +373,48 @@ SliceController::NotifyPgwMainAttach (
   Mac48Address webMac = Mac48Address::ConvertFrom (webSgiDev->GetAddress ());
   std::ostringstream cmdUl;
   cmdUl << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-        << ",in_port=" << pgwS5PortNo
+        << ",in_port=" << pgwInfo->GetMainS5PortNo ()
         << ",ip_dst=" << Ipv4AddressHelper::GetAddress (webSgiDev)
         << " write:set_field=eth_dst:" << webMac
-        << ",output=" << pgwSgiPortNo;
-  DpctlSchedule (pgwSwDev->GetDatapathId (), cmdUl.str ());
+        << ",output=" << pgwInfo->GetMainSgiPortNo ();
+  DpctlSchedule (pgwInfo->GetMainDpId (), cmdUl.str ());
 
   // IP packets coming from the Internet (P-GW SGi port) and addressed to the
   // UE network are sent to the table corresponding to the current P-GW
-  // adaptive mechanism level.
+  // adaptive mechanism level. This is the only rule that is updated when the
+  // level changes, sending packets to a different pipeline table.
   std::ostringstream cmdDl;
   cmdDl << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-        << ",in_port=" << pgwSgiPortNo
+        << ",in_port=" << pgwInfo->GetMainSgiPortNo ()
         << ",ip_dst=" << m_ueAddr << "/" << m_ueMask.GetPrefixLength ()
         << " goto:" << m_tftLevel + 1;
-  DpctlSchedule (pgwSwDev->GetDatapathId (), cmdDl.str ());
+  DpctlSchedule (pgwInfo->GetMainDpId (), cmdDl.str ());
 
   // -------------------------------------------------------------------------
   // Table 1..N -- P-GW MAIN adaptive level -- [from higher to lower priority]
   //
-  // Entries will be installed here by NotifyPgwTftAttach function.
-}
+  for (uint16_t tftIdx = 1; tftIdx <= pgwInfo->GetNumTfts (); tftIdx++)
+    {
+      // Configuring the P-GW main switch to forward traffic to different P-GW
+      // TFT switches considering all possible adaptive mechanism levels.
+      for (uint16_t tft = pgwInfo->GetNumTfts (); tftIdx <= tft; tft /= 2)
+        {
+          uint16_t lbLevel = static_cast<uint16_t> (log2 (tft));
+          uint16_t ipMask = (1 << lbLevel) - 1;
+          std::ostringstream cmd;
+          cmd << "flow-mod cmd=add,prio=64,table=" << lbLevel + 1
+              << " eth_type=0x800,ip_dst=0.0.0." << tftIdx - 1
+              << "/0.0.0." << ipMask
+              << " apply:output=" << pgwInfo->GetMainToTftPortNo (tftIdx);
+          DpctlSchedule (pgwInfo->GetMainDpId (), cmd.str ());
+        }
+    }
 
-void
-SliceController::NotifyPgwTftAttach (
-  Ptr<OFSwitch13Device> pgwSwDev, Ptr<NetDevice> pgwS5Dev,
-  uint32_t pgwS5PortNo, uint32_t pgwMainPortNo, uint16_t pgwTftCounter)
-{
-  NS_LOG_FUNCTION (this << pgwSwDev << pgwS5Dev << pgwS5PortNo <<
-                   pgwS5PortNo << pgwTftCounter);
-
-  // Saving information for P-GW TFT switches.
-  NS_ASSERT_MSG (pgwTftCounter < m_tftSwitches, "No more TFTs allowed.");
-  m_pgwDpIds.push_back (pgwSwDev->GetDatapathId ());
-  m_pgwS5PortsNo.push_back (pgwS5PortNo);
-
-  uint32_t tableSize = pgwSwDev->GetFlowTableSize ();
-  DataRate plCapacity = pgwSwDev->GetPipelineCapacity ();
-  m_tftTableSize = std::min (m_tftTableSize, tableSize);
-  m_tftMaxLoad = std::min (m_tftMaxLoad, plCapacity);
-
-  // -------------------------------------------------------------------------
+  // Configuring the P-GW TFT switches.
+  // ---------------------------------------------------------------------
   // Table 0 -- P-GW TFT default table -- [from higher to lower priority]
   //
   // Entries will be installed here by PgwRulesInstall function.
-
-  // -------------------------------------------------------------------------
-  // Table 1..N -- P-GW MAIN adaptive level -- [from higher to lower priority]
-  //
-  // Configuring the P-GW main switch to forward traffic to this P-GW TFT
-  // switch considering all possible adaptive mechanism levels.
-  for (uint16_t tft = m_tftSwitches; pgwTftCounter + 1 <= tft; tft /= 2)
-    {
-      uint16_t lbLevel = static_cast<uint16_t> (log2 (tft));
-      uint16_t ipMask = (1 << lbLevel) - 1;
-      std::ostringstream cmd;
-      cmd << "flow-mod cmd=add,prio=64,table=" << lbLevel + 1
-          << " eth_type=0x800,ip_dst=0.0.0." << pgwTftCounter
-          << "/0.0.0." << ipMask
-          << " apply:output=" << pgwMainPortNo;
-      DpctlSchedule (GetPgwMainDpId (), cmd.str ());
-    }
-}
-
-void
-SliceController::NotifyPgwBuilt (OFSwitch13DeviceContainer devices)
-{
-  NS_LOG_FUNCTION (this);
-
-  NS_ASSERT_MSG (devices.GetN () == m_pgwDpIds.size ()
-                 && devices.GetN () == (m_tftSwitches + 1U),
-                 "Inconsistent number of P-GW OpenFlow switches.");
-
-  // When the P-GW adaptive mechanism is OFF, block the m_tftSwitches to 1.
-  if (GetPgwAdaptiveMode () == OperationMode::OFF)
-    {
-      m_tftSwitches = 1;
-    }
 }
 
 OperationMode
@@ -459,13 +442,11 @@ SliceController::GetS11SapSgw (void) const
 }
 
 void
-SliceController::SetNetworkAttributes (
-  uint16_t nPgwTfts, Ipv4Address ueAddr, Ipv4Mask ueMask,
-  Ipv4Address webAddr, Ipv4Mask webMask)
+SliceController::SetNetworkAttributes (Ipv4Address ueAddr, Ipv4Mask ueMask,
+                                       Ipv4Address webAddr, Ipv4Mask webMask)
 {
-  NS_LOG_FUNCTION (this << nPgwTfts << ueAddr << ueMask << webAddr << webMask);
+  NS_LOG_FUNCTION (this << ueAddr << ueMask << webAddr << webMask);
 
-  m_tftSwitches = nPgwTfts;
   m_ueAddr = ueAddr;
   m_ueMask = ueMask;
   m_webAddr = webAddr;
@@ -478,6 +459,7 @@ SliceController::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   m_mme = 0;
+  m_pgwInfo = 0;
   delete (m_s11SapSgw);
 
   Object::DoDispose ();
@@ -495,22 +477,6 @@ SliceController::NotifyConstructionCompleted (void)
   // Connecting this controller to the MME.
   m_s11SapSgw = new MemberEpcS11SapSgw<SliceController> (this);
   m_s11SapMme = m_mme->GetS11SapMme ();
-
-  // Set the initial number of P-GW TFT active switches.
-  switch (GetPgwAdaptiveMode ())
-    {
-    case OperationMode::ON:
-    case OperationMode::AUTO:
-      {
-        m_tftLevel = static_cast<uint8_t> (log2 (m_tftSwitches));
-        break;
-      }
-    case OperationMode::OFF:
-      {
-        m_tftLevel = 0;
-        break;
-      }
-    }
 
   // Schedule the first timeout operation.
   Simulator::Schedule (m_timeout, &SliceController::ControllerTimeout, this);
@@ -747,7 +713,7 @@ SliceController::DoCreateSessionRequest (
       // infraestrutura.
       m_backhaulCtrl->NotifyBearerCreated (rInfo);
 
-//      rInfo->SetPgwS5Addr (m_pgwS5Addr);
+//      rInfo->SetPgwS5Addr (m_pgwInfo->GetMainS5Addr ());
 //      rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
 //      rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
 //      TopologyBearerCreated (rInfo);
@@ -836,22 +802,6 @@ SliceController::DoModifyBearerRequest (
   m_s11SapMme->ModifyBearerResponse (res);
 }
 
-uint64_t
-SliceController::GetPgwMainDpId (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_pgwDpIds.at (0);
-}
-
-uint64_t
-SliceController::GetPgwTftDpId (uint16_t idx) const
-{
-  NS_LOG_FUNCTION (this << idx);
-
-  return m_pgwDpIds.at (idx);
-}
-
 // uint16_t
 // SliceController::GetPgwTftIdx (
 //   Ptr<const RoutingInfo> rInfo, uint16_t activeTfts) const
@@ -866,12 +816,12 @@ SliceController::GetPgwTftDpId (uint16_t idx) const
 //   return 1 + (ueInfo->GetUeAddr ().Get () % activeTfts);
 // }
 
-
-
 void
 SliceController::PgwTftCheckUsage (void)
 {
   NS_LOG_FUNCTION (this);
+
+  NS_ASSERT_MSG (m_pgwInfo, "No P-GW attached to this slice.");
 
   double maxEntries = 0.0, sumEntries = 0.0;
   double maxLoad = 0.0, sumLoad = 0.0;
@@ -883,7 +833,7 @@ SliceController::PgwTftCheckUsage (void)
   Ptr<OFSwitch13StatsCalculator> stats;
   for (uint16_t tftIdx = 1; tftIdx <= activeTfts; tftIdx++)
     {
-      device = OFSwitch13Device::GetDevice (GetPgwTftDpId (tftIdx));
+      device = OFSwitch13Device::GetDevice (m_pgwInfo->GetTftDpId (tftIdx));
       stats = device->GetObject<OFSwitch13StatsCalculator> ();
       NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
 
@@ -948,11 +898,10 @@ SliceController::PgwTftCheckUsage (void)
       // // Update the adaptive mechanism level and the P-GW main switch.
       // std::ostringstream cmd;
       // cmd << "flow-mod cmd=mods,table=0,prio=64 eth_type=0x800"
-      //     << ",in_port=" << m_pgwSgiPortNo
-      //     << ",ip_dst=" << EpcNetwork::m_ueAddr
-      //     << "/" << EpcNetwork::m_ueMask.GetPrefixLength ()
+      //     << ",in_port=" << m_pgwInfo->GetMainSgiPortNo ()
+      //     << ",ip_dst=" << m_ueAddr << "/" << m_ueMask.GetPrefixLength ()
       //     << " goto:" << nextLevel + 1;
-      // DpctlExecute (GetPgwMainDpId (), cmd.str ());
+      // DpctlExecute (m_pgwInfo->GetMainDpId (), cmd.str ());
     }
 
   // Fire the P-GW TFT adaptation trace source.
@@ -1216,7 +1165,7 @@ SliceController::PgwTftCheckUsage (void)
 //   Ptr<OFSwitch13Device> device;
 //   Ptr<OFSwitch13StatsCalculator> stats;
 //   uint16_t tftIdx = rInfo->GetPgwTftIdx ();
-//   device = OFSwitch13Device::GetDevice (GetPgwTftDpId (tftIdx));
+//   device = OFSwitch13Device::GetDevice (m_pgwInfo->GetTftDpId (tftIdx));
 //   stats = device->GetObject<OFSwitch13StatsCalculator> ();
 //   NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
 //
@@ -1267,8 +1216,8 @@ SliceController::PgwTftCheckUsage (void)
 //     {
 //       pgwTftIdx = rInfo->GetPgwTftIdx ();
 //     }
-//   uint64_t pgwTftDpId = GetPgwTftDpId (pgwTftIdx);
-//   uint32_t pgwTftS5PortNo = m_pgwS5PortsNo.at (pgwTftIdx);
+//   uint64_t pgwTftDpId = m_pgwInfo->GetTftDpId (pgwTftIdx);
+//   uint32_t pgwTftS5PortNo = m_pgwInfo->GetTftS5PortNo (pgwTftIdx);
 //   NS_LOG_INFO ("Installing P-GW rules for bearer teid " << rInfo->GetTeid () <<
 //                " into P-GW TFT switch index " << pgwTftIdx);
 //
@@ -1374,7 +1323,7 @@ SliceController::PgwTftCheckUsage (void)
 //     {
 //       pgwTftIdx = rInfo->GetPgwTftIdx ();
 //     }
-//   uint64_t pgwTftDpId = GetPgwTftDpId (pgwTftIdx);
+//   uint64_t pgwTftDpId = m_pgwInfo->GetTftDpId (pgwTftIdx);
 //   NS_LOG_INFO ("Removing P-GW rules for bearer teid " << rInfo->GetTeid () <<
 //                " from P-GW TFT switch index " << pgwTftIdx);
 //
