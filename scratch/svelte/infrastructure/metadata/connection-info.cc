@@ -42,8 +42,8 @@ std::string SliceStr (Slice slice)
       return "dft";
     case Slice::GBR:
       return "gbr";
-    case Slice::MTC:
-      return "mtc";
+    case Slice::M2M:
+      return "m2m";
     case Slice::ALL:
       return "all";
     default:
@@ -113,11 +113,11 @@ ConnectionInfo::GetTypeId (void)
                    DoubleValue (0.28),
                    MakeDoubleAccessor (&ConnectionInfo::m_gbrSliceQuota),
                    MakeDoubleChecker<double> (0.0, 0.5))
-    .AddAttribute ("MtcSliceQuota",
-                   "Maximum bandwidth ratio for MTC slice.",
+    .AddAttribute ("M2mSliceQuota",
+                   "Maximum bandwidth ratio for M2M slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DoubleValue (0.18),
-                   MakeDoubleAccessor (&ConnectionInfo::m_mtcSliceQuota),
+                   MakeDoubleAccessor (&ConnectionInfo::m_m2mSliceQuota),
                    MakeDoubleChecker<double> (0.0, 0.5))
     .AddAttribute ("UpdateTimeout",
                    "The interval between subsequent link statistics update.",
@@ -469,11 +469,11 @@ ConnectionInfo::NotifyConstructionCompleted (void)
   if (m_slicing)
     {
       uint64_t mtcRate, gbrRate, dftRate;
-      mtcRate = static_cast<uint64_t> (GetLinkBitRate () * m_mtcSliceQuota);
+      mtcRate = static_cast<uint64_t> (GetLinkBitRate () * m_m2mSliceQuota);
       gbrRate = static_cast<uint64_t> (GetLinkBitRate () * m_gbrSliceQuota);
       dftRate = GetLinkBitRate () - gbrRate - mtcRate;
 
-      m_slices [Slice::MTC].maxRate = mtcRate;
+      m_slices [Slice::M2M].maxRate = mtcRate;
       m_slices [Slice::GBR].maxRate = gbrRate;
       m_slices [Slice::DFT].maxRate = dftRate;
     }
@@ -484,7 +484,7 @@ ConnectionInfo::NotifyConstructionCompleted (void)
 
   NS_LOG_DEBUG ("DFT maximum bit rate: " <<  m_slices [Slice::DFT].maxRate);
   NS_LOG_DEBUG ("GBR maximum bit rate: " <<  m_slices [Slice::GBR].maxRate);
-  NS_LOG_DEBUG ("MTC maximum bit rate: " <<  m_slices [Slice::MTC].maxRate);
+  NS_LOG_DEBUG ("M2M maximum bit rate: " <<  m_slices [Slice::M2M].maxRate);
 
   // Scheduling the first update statistics.
   m_lastUpdate = Simulator::Now ();

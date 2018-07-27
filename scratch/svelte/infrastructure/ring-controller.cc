@@ -185,21 +185,21 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
                         ConnectionInfo::DirectionStr (ConnectionInfo::BWD) <<
                         " link set to " << kbps << " Kbps");
 
-          // MTC Non-GBR meter for clockwise FWD direction.
-          kbps = cInfo->GetFreeBitRate (ConnectionInfo::FWD, Slice::MTC);
+          // M2M Non-GBR meter for clockwise FWD direction.
+          kbps = cInfo->GetFreeBitRate (ConnectionInfo::FWD, Slice::M2M);
           cmdm3 << "meter-mod cmd=add,flags=" << flagsStr
                 << ",meter=3 drop:rate=" << kbps / 1000;
           DpctlSchedule (cInfo->GetSwDpId (0), cmdm3.str ());
-          NS_LOG_DEBUG ("Slice " << SliceStr (Slice::MTC) << ": " <<
+          NS_LOG_DEBUG ("Slice " << SliceStr (Slice::M2M) << ": " <<
                         ConnectionInfo::DirectionStr (ConnectionInfo::FWD) <<
                         " link set to " << kbps << " Kbps");
 
-          // MTC Non-GBR meter for counterclockwise BWD direction.
-          kbps = cInfo->GetFreeBitRate (ConnectionInfo::BWD, Slice::MTC);
+          // M2M Non-GBR meter for counterclockwise BWD direction.
+          kbps = cInfo->GetFreeBitRate (ConnectionInfo::BWD, Slice::M2M);
           cmdm4 << "meter-mod cmd=add,flags=" << flagsStr
                 << ",meter=4 drop:rate=" << kbps / 1000;
           DpctlSchedule (cInfo->GetSwDpId (1), cmdm4.str ());
-          NS_LOG_DEBUG ("Slice " << SliceStr (Slice::MTC) << ": " <<
+          NS_LOG_DEBUG ("Slice " << SliceStr (Slice::M2M) << ": " <<
                         ConnectionInfo::DirectionStr (ConnectionInfo::BWD) <<
                         " link set to " << kbps << " Kbps");
         }
@@ -660,14 +660,14 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo,
       // each slice will be monitored independently. So we have to identify the
       // meter ID based on the slice parameter.
       // * For the DFT slice, the meter IDs are: 1 for FWD and 2 for BWD.
-      // * For the MTC slice, the meter IDs are: 3 for FWD and 4 for BWD.
+      // * For the M2M slice, the meter IDs are: 3 for FWD and 4 for BWD.
       // * For the GBR slice, we don't have Non-GBR traffic on this slice, so
       //   we don't have meters to update here.
       if (slice == Slice::GBR)
         {
           return;
         }
-      else if (slice == Slice::MTC)
+      else if (slice == Slice::M2M)
         {
           meterId += 2;
         }

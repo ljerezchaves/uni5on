@@ -38,7 +38,7 @@ typedef enum
 {
   DFT = 0,  //!< Best-effort (default) slice.
   GBR = 1,  //!< HTC GBR slice.
-  MTC = 2,  //!< MTC slice.
+  M2M = 2,  //!< M2M slice.
   ALL = 3   //!< ALL previous slices.
 } Slice;
 
@@ -61,13 +61,13 @@ typedef std::list<Ptr<ConnectionInfo> > ConnInfoList_t;
  * Metadata associated to a connection between two OpenFlow backhaul switches.
  *
  * This class is prepared to handle network slicing. In current implementation,
- * the total number of slices is set to three: default, GBR and MTC traffic.
+ * the total number of slices is set to three: default, GBR and M2M traffic.
  * When the slicing mechanism is disabled by the Slicing attribute at
  * BackhaulController, only the default slice will be used. In this case, the
  * maximum bit rate for this slice will be set to the link bit rate. When the
  * slicing mechanism is enabled, then the size of each slice is defined by the
- * GbrSliceQuota and MtcSliceQuota attributes, which indicate the link
- * bandwidth ratio that should be assigned to the GBR and MTC slices,
+ * GbrSliceQuota and M2mSliceQuota attributes, which indicate the link
+ * bandwidth ratio that should be assigned to the GBR and M2M slices,
  * respectively. All remaining bandwidth is assigned to the default slice. Each
  * slice can have some reserved bit rate for GBR traffic. The amount of
  * reserved bit rate is updated by reserve and release procedures, and are
@@ -360,7 +360,7 @@ private:
   DataRate          m_adjustmentStep;       //!< Meter adjustment step.
   double            m_alpha;                //!< EWMA alpha parameter.
   double            m_gbrSliceQuota;        //!< GBR slice quota.
-  double            m_mtcSliceQuota;        //!< MTC slice quota.
+  double            m_m2mSliceQuota;        //!< M2M slice quota.
   Time              m_timeout;              //!< Update timeout.
 
   /**
