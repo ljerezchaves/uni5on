@@ -403,6 +403,7 @@ EnableVerbose (bool enable)
       // Logical components.
       LogComponentEnable ("GtpTunnelApp",             logLevelWarnInfo);
       LogComponentEnable ("PgwTunnelApp",             logLevelWarnInfo);
+      LogComponentEnable ("PgwInfo",                  logLevelWarnInfo);
       LogComponentEnable ("SgwInfo",                  logLevelWarnInfo);
       LogComponentEnable ("SliceController",          logLevelWarnInfo);
       LogComponentEnable ("SliceNetwork",             logLevelWarnInfo);

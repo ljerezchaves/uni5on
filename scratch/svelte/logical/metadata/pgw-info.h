@@ -25,6 +25,7 @@
 #include <ns3/internet-module.h>
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
+#include <ns3/ofswitch13-module.h>
 #include "../../slice-id.h"
 
 namespace ns3 {
@@ -55,13 +56,20 @@ public:
   //\{
   uint64_t GetPgwId (void) const;
   SliceId GetSliceId (void) const;
-  Ipv4Address GetS1uAddr (void) const;
-  Ipv4Address GetS5Addr (void) const;
-  uint32_t GetS1uPortNo (void) const;
-  uint32_t GetS5PortNo (void) const;
   uint16_t GetInfraSwIdx (void) const;
-  uint32_t GetInfraSwS1uPortNo (void) const;
-  uint32_t GetInfraSwS5PortNo (void) const;
+  uint16_t GetNumTfts (void) const;
+  uint32_t GetMainSgiPortNo (void) const;
+  uint64_t GetMainDpId (void) const;
+  Ipv4Address GetMainS5Addr (void) const;
+  uint32_t GetMainS5PortNo (void) const;
+  uint32_t GetMainInfraSwS5PortNo (void) const;
+  uint32_t GetMainToTftPortNo (uint16_t idx) const;
+  uint64_t GetTftDpId (uint16_t idx) const;
+  Ipv4Address GetTftS5Addr (uint16_t idx) const;
+  uint32_t GetTftS5PortNo (uint16_t idx) const;
+  uint32_t GetTftInfraSwS5PortNo (uint16_t idx) const;
+  uint32_t GetTftFlowTableSize (uint16_t idx) const;
+  DataRate GetTftPipelineCapacity (uint16_t idx) const;
   //\}
 
   /**
@@ -79,14 +87,29 @@ private:
   /** \name Private member accessors. */
   //\{
   void SetSliceId (SliceId value);
-  void SetS1uAddr (Ipv4Address value);
-  void SetS5Addr (Ipv4Address value);
-  void SetS1uPortNo (uint32_t value);
-  void SetS5PortNo (uint32_t value);
   void SetInfraSwIdx (uint16_t value);
-  void SetInfraSwS1uPortNo (uint32_t value);
-  void SetInfraSwS5PortNo (uint32_t value);
+  void SetNumTfts (uint16_t value);
+  void SetMainSgiPortNo (uint32_t value);
   //\}
+
+  /**
+   * Save the metadata associated to a single P-GW OpenFlow switch attached to
+   * the OpenFlow backhaul network.
+   * \param dpId The OpenFlow switch datapath ID.
+   * \param s5Add The IP address assigned to the S5 network device on the P-GW
+   *        switch.
+   * \param s5PortNo The port number assigned to the S5 logical port on the
+   *        P-GW switch that is connected to the S5 network device.
+   * \param infraSwS5PortNo The port number assigned to the S5 physical port on
+   *        the OpenFlow backhaul switch that is connected to the S5 network
+   *        device on the P-GW switch.
+   * \param mainToTftPortNo The port number assigned to the physical port on
+   *        the main switch that is connected to this P-GW switch (when
+   *        invoking this function for the P-GW main switch, this parameter can
+   *        be left to the default value as it does not make sense).
+   */
+  void SaveSwitchInfo (uint64_t dpId, Ipv4Address s5Addr, uint32_t s5PortNo,
+                       uint32_t infraSwS5PortNo, uint32_t mainToTftPortNo = 0);
 
   /**
    * Register the P-GW information in global map for further usage.
@@ -95,21 +118,16 @@ private:
   static void RegisterPgwInfo (Ptr<PgwInfo> pgwInfo);
 
   // P-GW metadata.
-  uint64_t                m_pgwId;              //!< P-GW ID (P-GW main dpId).
-  SliceId                 m_sliceId;            //!< LTE logical slice ID.
-
-  std::vector<uint64_t>   m_pgwDpIds;
-
-
-
-
-  Ipv4Address            m_s1uAddr;              //!< P-GW S1-U IP address.
-  Ipv4Address            m_s5Addr;               //!< P-GW S5 IP address.
-  uint32_t               m_s1uPortNo;            //!< P-GW S1-U port no.
-  uint32_t               m_s5PortNo;             //!< P-GW S5 port no.
-  uint16_t               m_infraSwIdx;           //!< Backhaul switch index.
-  uint32_t               m_infraSwS1uPortNo;     //!< Back switch S1-U port no.
-  uint32_t               m_infraSwS5PortNo;      //!< Back switch S5 port no.
+  uint64_t                  m_pgwId;              //!< P-GW ID (P-GW main dpId).
+  SliceId                   m_sliceId;            //!< LTE logical slice ID.
+  uint16_t                  m_infraSwIdx;         //!< Backhaul switch index.
+  uint32_t                  m_sgiPortNo;          //!< SGi port number.
+  uint16_t                  m_nTfts;              //!< Number of TFT switches.
+  std::vector<uint64_t>     m_dpIds;              //!< Switch datapath IDs.
+  std::vector<Ipv4Address>  m_s5Addrs;            //!< S5 dev IP addresses.
+  std::vector<uint32_t>     m_s5PortNos;          //!< S5 port numbers.
+  std::vector<uint32_t>     m_infraSwS5PortNos;   //!< Back switch S5 port nos.
+  std::vector<uint32_t>     m_mainToTftPortNos;   //!< Main port nos to TFTs.
 
   /** Map saving P-GW ID / P-GW information. */
   typedef std::map<uint64_t, Ptr<PgwInfo> > PgwIdPgwInfo_t;

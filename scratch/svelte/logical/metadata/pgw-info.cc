@@ -31,11 +31,9 @@ PgwInfo::PgwIdPgwInfo_t PgwInfo::m_pgwInfoByPgwId;
 PgwInfo::PgwInfo (uint64_t pgwId)
   : m_pgwId (pgwId),
   m_sliceId (SliceId::NONE),
-  m_s1uPortNo (0),
-  m_s5PortNo (0),
   m_infraSwIdx (0),
-  m_infraSwS1uPortNo (0),
-  m_infraSwS5PortNo (0)
+  m_sgiPortNo (0),
+  m_nTfts (0)
 {
   NS_LOG_FUNCTION (this);
 
@@ -72,39 +70,6 @@ PgwInfo::GetSliceId (void) const
   return m_sliceId;
 }
 
-Ipv4Address
-PgwInfo::GetS1uAddr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_s1uAddr;
-}
-
-
-Ipv4Address
-PgwInfo::GetS5Addr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_s5Addr;
-}
-
-uint32_t
-PgwInfo::GetS1uPortNo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_s1uPortNo;
-}
-
-uint32_t
-PgwInfo::GetS5PortNo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_s5PortNo;
-}
-
 uint16_t
 PgwInfo::GetInfraSwIdx (void) const
 {
@@ -113,20 +78,125 @@ PgwInfo::GetInfraSwIdx (void) const
   return m_infraSwIdx;
 }
 
-uint32_t
-PgwInfo::GetInfraSwS1uPortNo (void) const
+uint16_t
+PgwInfo::GetNumTfts (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_infraSwS1uPortNo;
+  return m_nTfts;
 }
 
 uint32_t
-PgwInfo::GetInfraSwS5PortNo (void) const
+PgwInfo::GetMainSgiPortNo (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_infraSwS5PortNo;
+  return m_sgiPortNo;
+}
+
+uint64_t
+PgwInfo::GetMainDpId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  NS_ASSERT_MSG (m_dpIds.size (), "No P-GW main switch registered.");
+  NS_ASSERT_MSG (m_dpIds.at (0) == m_pgwId, "Inconsistent metadata.");
+  return m_dpIds.at (0);
+}
+
+Ipv4Address
+PgwInfo::GetMainS5Addr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  NS_ASSERT_MSG (m_s5Addrs.size (), "No P-GW main switch registered.");
+  return m_s5Addrs.at (0);
+}
+
+uint32_t
+PgwInfo::GetMainS5PortNo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  NS_ASSERT_MSG (m_s5PortNos.size (), "No P-GW main switch registered.");
+  return m_s5PortNos.at (0);
+}
+
+uint32_t
+PgwInfo::GetMainInfraSwS5PortNo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  NS_ASSERT_MSG (m_infraSwS5PortNos.size (), "No P-GW main switch registered.");
+  return m_infraSwS5PortNos.at (0);
+}
+
+uint32_t
+PgwInfo::GetMainToTftPortNo (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx > 0, "Invalid TFT index.");
+  NS_ASSERT_MSG (idx < m_mainToTftPortNos.size (), "Invalid TFT index.");
+  return m_mainToTftPortNos.at (idx);
+}
+
+uint64_t
+PgwInfo::GetTftDpId (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx > 0, "Invalid TFT index.");
+  NS_ASSERT_MSG (idx < m_dpIds.size (), "Invalid TFT index.");
+  return m_dpIds.at (idx);
+}
+
+Ipv4Address
+PgwInfo::GetTftS5Addr (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx > 0, "Invalid TFT index.");
+  NS_ASSERT_MSG (idx < m_s5Addrs.size (), "Invalid TFT index.");
+  return m_s5Addrs.at (idx);
+}
+
+uint32_t
+PgwInfo::GetTftS5PortNo (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx > 0, "Invalid TFT index.");
+  NS_ASSERT_MSG (idx < m_s5PortNos.size (), "Invalid TFT index.");
+  return m_s5PortNos.at (idx);
+}
+
+uint32_t
+PgwInfo::GetTftInfraSwS5PortNo (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx > 0, "Invalid TFT index.");
+  NS_ASSERT_MSG (idx < m_infraSwS5PortNos.size (), "Invalid TFT index.");
+  return m_infraSwS5PortNos.at (idx);
+}
+
+uint32_t
+PgwInfo::GetTftFlowTableSize (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  return OFSwitch13Device::GetDevice (
+    GetTftDpId (idx))->GetFlowTableSize ();
+}
+
+DataRate
+PgwInfo::GetTftPipelineCapacity (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  return OFSwitch13Device::GetDevice (
+    GetTftDpId (idx))->GetPipelineCapacity ();
 }
 
 Ptr<PgwInfo>
@@ -159,38 +229,6 @@ PgwInfo::SetSliceId (SliceId value)
 }
 
 void
-PgwInfo::SetS1uAddr (Ipv4Address value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_s1uAddr = value;
-}
-
-void
-PgwInfo::SetS5Addr (Ipv4Address value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_s5Addr = value;
-}
-
-void
-PgwInfo::SetS1uPortNo (uint32_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_s1uPortNo = value;
-}
-
-void
-PgwInfo::SetS5PortNo (uint32_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_s5PortNo = value;
-}
-
-void
 PgwInfo::SetInfraSwIdx (uint16_t value)
 {
   NS_LOG_FUNCTION (this << value);
@@ -199,19 +237,32 @@ PgwInfo::SetInfraSwIdx (uint16_t value)
 }
 
 void
-PgwInfo::SetInfraSwS1uPortNo (uint32_t value)
+PgwInfo::SetNumTfts (uint16_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_infraSwS1uPortNo = value;
+  m_nTfts = value;
 }
 
 void
-PgwInfo::SetInfraSwS5PortNo (uint32_t value)
+PgwInfo::SetMainSgiPortNo (uint32_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_infraSwS5PortNo = value;
+  m_sgiPortNo = value;
+}
+
+void
+PgwInfo::SaveSwitchInfo (uint64_t dpId, Ipv4Address s5Addr, uint32_t s5PortNo,
+                         uint32_t infraSwS5PortNo, uint32_t mainToTftPortNo)
+{
+  NS_LOG_FUNCTION (this << dpId << s5Addr << s5PortNo << infraSwS5PortNo);
+
+  m_dpIds.push_back (dpId);
+  m_s5Addrs.push_back (s5Addr);
+  m_s5PortNos.push_back (s5PortNo);
+  m_infraSwS5PortNos.push_back (infraSwS5PortNo);
+  m_mainToTftPortNos.push_back (mainToTftPortNo);
 }
 
 void
