@@ -78,7 +78,7 @@ RadioNetwork::GetTypeId (void)
     .SetParent<Object> ()
     .AddAttribute ("NumCellSites", "The total number of cell sites.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (1),
+                   UintegerValue (2),
                    MakeUintegerAccessor (&RadioNetwork::m_nSites),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("UeHeight", "The UE antenna height (m).",

@@ -13,16 +13,16 @@ default ns3::RingNetwork::RingLinkDelay "200us"
 default ns3::ConnectionInfo::AdjustmentStep "5Mb/s"
 default ns3::ConnectionInfo::EwmaAlpha "0.25"
 default ns3::ConnectionInfo::GbrSliceQuota "0.28"
-default ns3::ConnectionInfo::MtcSliceQuota "0.18"
+default ns3::ConnectionInfo::M2mSliceQuota "0.18"
 default ns3::ConnectionInfo::UpdateTimeout "100ms"
 
-default ns3::RadioNetwork::NumCellSites "1"
+default ns3::RadioNetwork::NumCellSites "2"
 default ns3::LteHexGridEnbTopologyHelper::GridWidth "2"
 
 default ns3::SliceController::TimeoutInterval "5s"
 
-default ns3::SvelteHelper::HtcSlice "ns3::SliceNetwork[NumUes=3|UeMobility=false|NumPgwTftSwitches=2|PgwBackhaulSwitch=2|PgwTftPipelineCapacity=100Gb/s|PgwTftTableSize=65535]"
-default ns3::SvelteHelper::HtcController "ns3::SliceController[TimeoutInterval=5s|PgwTftAdaptiveMode=auto|PgwTftBlockPolicy=all]"
+default ns3::SvelteHelper::HtcSlice "ns3::SliceNetwork[NumUes=2|UeMobility=false|NumPgwTftSwitches=1|PgwBackhaulSwitch=0|PgwTftPipelineCapacity=100Gb/s|PgwTftTableSize=65535]"
+default ns3::SvelteHelper::HtcController "ns3::SliceController[TimeoutInterval=5s|PgwTftAdaptiveMode=off|PgwTftBlockPolicy=all]"
 
-default ns3::SvelteHelper::MtcSlice "ns3::SliceNetwork[NumUes=1|UeMobility=false|NumPgwTftSwitches=1|PgwBackhaulSwitch=0|PgwTftPipelineCapacity=100Gb/s|PgwTftTableSize=65535]"
+default ns3::SvelteHelper::MtcSlice "ns3::SliceNetwork[NumUes=2|UeMobility=false|NumPgwTftSwitches=1|PgwBackhaulSwitch=0|PgwTftPipelineCapacity=100Gb/s|PgwTftTableSize=65535]"
 default ns3::SvelteHelper::MtcController "ns3::SliceController[TimeoutInterval=5s|PgwTftAdaptiveMode=off|PgwTftBlockPolicy=all]"
