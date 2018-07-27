@@ -78,12 +78,15 @@ public:
   //\{
   uint32_t GetTeid (void) const;
   uint64_t GetImsi (void) const;
+  uint16_t GetPriority (void) const;
   SliceId GetSliceId (void) const;
   std::string GetSliceIdStr (void) const;
-  bool IsDefault (void) const;
+  uint16_t GetTimeout (void) const;
   bool IsActive (void) const;
   bool IsBlocked (void) const;
   std::string GetBlockReasonStr (void) const;
+  bool IsDefault (void) const;
+  bool IsInstalled (void) const;
   //\}
 
   /**
@@ -139,7 +142,15 @@ protected:
   //\{
   void SetActive (bool value);
   void SetBlocked (bool value, BlockReason reason = RoutingInfo::NOTBLOCKED);
+  void SetInstalled (bool value);
+  void SetPriority (uint16_t value);
+  void SetTimeout (uint16_t value);
   //\}
+
+  /**
+   * Increase the priority value by one unit.
+   */
+  void IncreasePriority ();
 
 private:
   /**
@@ -152,9 +163,12 @@ private:
   BearerContext_t      m_bearer;       //!< EPS bearer information.
   uint64_t             m_imsi;         //!< UE IMSI.
   SliceId              m_sliceId;      //!< Logical network slice.
-  bool                 m_isDefault;    //!< This is a default bearer.
+  uint16_t             m_priority;     //!< Flow rule priority.
+  uint16_t             m_timeout;      //!< Flow idle timeout.
   bool                 m_isActive;     //!< Bearer active status.
   bool                 m_isBlocked;    //!< Bearer request status.
+  bool                 m_isDefault;    //!< This is a default bearer.
+  bool                 m_isInstalled;  //!< Rules installed status.
   BlockReason          m_blockReason;  //!< Bearer blocked reason.
 
   /** Map saving TEID / routing information. */

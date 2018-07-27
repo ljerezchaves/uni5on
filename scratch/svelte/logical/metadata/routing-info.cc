@@ -37,9 +37,12 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerContext_t bearer, uint64_t imsi,
   m_bearer (bearer),
   m_imsi (imsi),
   m_sliceId (sliceId),
-  m_isDefault (isDefault),
+  m_priority (0),
+  m_timeout (0),
   m_isActive (false),
   m_isBlocked (false),
+  m_isDefault (isDefault),
+  m_isInstalled (false),
   m_blockReason (RoutingInfo::NOTBLOCKED)
 {
   NS_LOG_FUNCTION (this);
@@ -78,6 +81,14 @@ RoutingInfo::GetImsi (void) const
   return m_imsi;
 }
 
+uint16_t
+RoutingInfo::GetPriority (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_priority;
+}
+
 SliceId
 RoutingInfo::GetSliceId (void) const
 {
@@ -94,12 +105,12 @@ RoutingInfo::GetSliceIdStr (void) const
   return SliceIdStr (m_sliceId);
 }
 
-bool
-RoutingInfo::IsDefault (void) const
+uint16_t
+RoutingInfo::GetTimeout (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isDefault;
+  return m_timeout;
 }
 
 bool
@@ -124,6 +135,22 @@ RoutingInfo::GetBlockReasonStr (void) const
   NS_LOG_FUNCTION (this);
 
   return BlockReasonStr (m_blockReason);
+}
+
+bool
+RoutingInfo::IsDefault (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_isDefault;
+}
+
+bool
+RoutingInfo::IsInstalled (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_isInstalled;
 }
 
 EpsBearer
@@ -281,6 +308,30 @@ RoutingInfo::SetBlocked (bool value, BlockReason reason)
 
   m_isBlocked = value;
   m_blockReason = reason;
+}
+
+void
+RoutingInfo::SetInstalled (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isInstalled = value;
+}
+
+void
+RoutingInfo::SetPriority (uint16_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_priority = value;
+}
+
+void
+RoutingInfo::SetTimeout (uint16_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_timeout = value;
 }
 
 void
