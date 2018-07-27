@@ -21,6 +21,7 @@
 #include <string>
 #include "backhaul-network.h"
 #include "ring-controller.h"
+#include "../logical/metadata/bearer-info.h"
 
 namespace ns3 {
 
@@ -224,6 +225,28 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
                         " link set to " << kbps << " Kbps");
         }
     }
+}
+
+void
+RingController::NotifyBearerCreated (Ptr<BearerInfo> bInfo)
+{
+  NS_LOG_FUNCTION (this << bInfo << bInfo->GetTeid ());
+
+  // Chain up so the backhaul controller can create the routing info. ???????????????????
+  BackhaulController::NotifyBearerCreated (bInfo);
+
+//  // Let's create its ring routing metadata.
+//  Ptr<RingRoutingInfo> ringInfo = CreateObject<RingRoutingInfo> (rInfo);
+//
+//  // Set internal switch indexes.
+//  ringInfo->SetPgwSwIdx  (GetSwIdx (rInfo->GetPgwS5Addr ()));
+//  ringInfo->SetSgwSwIdx  (GetSwIdx (rInfo->GetSgwS5Addr ()));
+//  ringInfo->SetPgwSwDpId (GetDpId (ringInfo->GetPgwSwIdx ()));
+//  ringInfo->SetSgwSwDpId (GetDpId (ringInfo->GetSgwSwIdx ()));
+//
+//  // Set as default path the one with lower hops.
+//  ringInfo->SetDefaultPath (
+//    FindShortestPath (ringInfo->GetPgwSwIdx (), ringInfo->GetSgwSwIdx ()));
 }
 
 // void

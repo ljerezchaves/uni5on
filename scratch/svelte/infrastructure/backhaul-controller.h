@@ -31,6 +31,7 @@
 namespace ns3 {
 
 class ConnectionInfo;
+class BearerInfo;
 
 /**
  * \ingroup svelteInfra
@@ -41,6 +42,8 @@ class ConnectionInfo;
  */
 class BackhaulController : public OFSwitch13Controller
 {
+  friend class SliceController;
+
 public:
   BackhaulController ();           //!< Default constructor.
   virtual ~BackhaulController ();  //!< Dummy destructor, see DoDispose.
@@ -53,11 +56,6 @@ public:
 
   /**
    * Release a dedicated EPS bearer.
-   * \internal Current implementation assumes that each application traffic
-   *           flow is associated with a unique bearer/tunnel. Because of that,
-   *           we can use only the TEID for the tunnel to prepare and install
-   *           route. If we would like to aggregate traffic from several
-   *           applications into same bearer we will need to revise this.
    * \param bearer EpsBearer bearer QoS characteristics of the bearer.
    * \param teid The teid for this bearer, if already defined.
    * \return True if succeeded, false otherwise.
@@ -166,19 +164,18 @@ protected:
    */
   uint16_t GetSwIdx (Ptr<OFSwitch13Device> dev) const;
 
-// FIXME Comentando as funções de topologia pq por enquanto não estou usando o routingInfo.
+  /**
+   * Notify this controller of a new bearer context created.
+   * \param bInfo The bearer information.
+   */
+  virtual void NotifyBearerCreated (Ptr<BearerInfo> bInfo);
+
 //  /**
 //   * \name Topology methods.
 //   * These virtual methods must be implemented by topology subclasses, as they
 //   * are dependent on the backhaul OpenFlow network topology.
 //   */
 //  //\{
-//  /**
-//   * Notify the topology controller of a new bearer context created.
-//   * \param rInfo The routing information.
-//   */
-//  virtual void TopologyBearerCreated (Ptr<RoutingInfo> rInfo) = 0;
-//
 //  /**
 //   * Process the bearer request, checking for available resources in the
 //   * backhaul network and deciding for the best routing path.

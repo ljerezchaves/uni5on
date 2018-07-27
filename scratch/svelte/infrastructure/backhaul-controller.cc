@@ -22,6 +22,7 @@
 #include "backhaul-controller.h"
 #include "backhaul-network.h"
 #include "metadata/connection-info.h"
+#include "../logical/metadata/bearer-info.h"
 
 namespace ns3 {
 
@@ -305,6 +306,14 @@ BackhaulController::GetSwIdx (Ptr<OFSwitch13Device> dev) const
     }
   NS_ASSERT_MSG (idx < GetNSwitches (), "Switch not found in collection.");
   return idx;
+}
+
+void
+BackhaulController::NotifyBearerCreated (Ptr<BearerInfo> bInfo)
+{
+  NS_LOG_FUNCTION (this << bInfo << bInfo->GetTeid ());
+
+  // TODO  
 }
 
 ofl_err
