@@ -35,6 +35,7 @@ namespace ns3 {
 
 class BackhaulController;
 class SvelteMme;
+class SgwInfo;
 
 /**
  * \ingroup svelteLogical
@@ -113,15 +114,9 @@ public:
   /**
    * Notify this controller of the S-GW connected to the OpenFlow backhaul
    * network over the S1-U and S5 interfaces.
-   * \param sgwSwDev The OpenFlow S-GW switch device.
-   * \param sgwS1uDev The S1-U device on the S-GW OpenFlow switch.
-   * \param sgwS1uPortNo The S1-U port number on the S-GW OpenFlow switch.
-   * \param sgwS5Dev The S5 device configure on the S-GW OpenFlow switch.
-   * \param sgwS5PortNo The S5 port number on the S-GW OpenFlow switch.
+   * \param sgwInfo The S-GW metadata.
    */
-  virtual void NotifySgwAttach (
-    Ptr<OFSwitch13Device> sgwSwDev, Ptr<NetDevice> sgwS1uDev,
-    uint32_t sgwS1uPortNo, Ptr<NetDevice> sgwS5Dev, uint32_t sgwS5PortNo);
+  virtual void NotifySgwAttach (Ptr<const SgwInfo> sgwInfo);
 
   /**
    * Notify this controller of the P-GW main switch connected to the OpenFlow

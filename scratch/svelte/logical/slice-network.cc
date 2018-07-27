@@ -469,12 +469,10 @@ SliceNetwork::CreateSgws (void)
       Ptr<VirtualNetDevice> sgwS1uPortDev = CreateObject<VirtualNetDevice> ();
       sgwS1uPortDev->SetAddress (Mac48Address::Allocate ());
       Ptr<OFSwitch13Port> sgwS1uPort = sgwOfDev->AddSwitchPort (sgwS1uPortDev);
-      uint32_t sgwS1uPortNo = sgwS1uPort->GetPortNo ();
 
       Ptr<VirtualNetDevice> sgwS5PortDev = CreateObject<VirtualNetDevice> ();
       sgwS5PortDev->SetAddress (Mac48Address::Allocate ());
       Ptr<OFSwitch13Port> sgwS5Port = sgwOfDev->AddSwitchPort (sgwS5PortDev);
-      uint32_t sgwS5PortNo = sgwS5Port->GetPortNo ();
 
       // Create the S-GW S1-U and S5 user-plane application.
       sgwNode->AddApplication (
@@ -487,15 +485,14 @@ SliceNetwork::CreateSgws (void)
       sgwInfo->SetSliceId (m_sliceId);
       sgwInfo->SetS1uAddr (Ipv4AddressHelper::GetAddress (sgwS1uDev));
       sgwInfo->SetS5Addr (Ipv4AddressHelper::GetAddress (sgwS5Dev));
-      sgwInfo->SetS1uPortNo (sgwS1uPortNo);
-      sgwInfo->SetS5PortNo (sgwS5PortNo);
+      sgwInfo->SetS1uPortNo (sgwS1uPort->GetPortNo ());
+      sgwInfo->SetS5PortNo (sgwS5Port->GetPortNo ());
       sgwInfo->SetInfraSwIdx (sgwIdx);
       sgwInfo->SetInfraSwS1uPortNo (infraSwS1uPort->GetPortNo ());
       sgwInfo->SetInfraSwS5PortNo (infraSwS5Port->GetPortNo ());
 
       // Notify the controller of the new S-GW switch.
-      m_controllerApp->NotifySgwAttach (
-        sgwOfDev, sgwS1uDev, sgwS1uPortNo, sgwS5Dev, sgwS5PortNo);
+      m_controllerApp->NotifySgwAttach (sgwInfo);
     }
 }
 

@@ -22,6 +22,7 @@
 #include "slice-network.h"
 #include "svelte-mme.h"
 #include "metadata/ue-info.h"
+#include "metadata/sgw-info.h"
 #include "../infrastructure/backhaul-network.h"
 #include "../infrastructure/backhaul-controller.h"
 #include "../infrastructure/metadata/enb-info.h"
@@ -225,14 +226,10 @@ SliceController::DedicatedBearerRequest (
   return false;
 }
 
-// FIXME parâmetros não usados.
 void
-SliceController::NotifySgwAttach (
-  Ptr<OFSwitch13Device> sgwSwDev, Ptr<NetDevice> sgwS1uDev,
-  uint32_t sgwS1uPortNo, Ptr<NetDevice> sgwS5Dev, uint32_t sgwS5PortNo)
+SliceController::NotifySgwAttach (Ptr<const SgwInfo> sgwInfo)
 {
-  NS_LOG_FUNCTION (this << sgwSwDev << sgwS1uDev << sgwS1uPortNo <<
-                   sgwS5Dev << sgwS5PortNo);
+  NS_LOG_FUNCTION (this << sgwInfo << sgwInfo->GetSgwId ());
 
   // -------------------------------------------------------------------------
   // Table 0 -- S-GW default table -- [from higher to lower priority]
@@ -242,20 +239,20 @@ SliceController::NotifySgwAttach (
   // TEID and eNB address on tunnel metadata.
   std::ostringstream cmdDl;
   cmdDl << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-        << ",in_port=" << sgwS5PortNo
+        << ",in_port=" << sgwInfo->GetS5PortNo ()
         << ",ip_dst=" << m_ueAddr << "/" << m_ueMask.GetPrefixLength ()
         << " goto:1";
-  DpctlSchedule (sgwSwDev->GetDatapathId (), cmdDl.str ());
+  DpctlSchedule (sgwInfo->GetSgwId (), cmdDl.str ());
 
   // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
   // Internet are sent to table 2, where rules will match the flow and set both
   // TEID and P-GW address on tunnel metadata.
   std::ostringstream cmdUl;
   cmdUl << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-        << ",in_port=" << sgwS1uPortNo
+        << ",in_port=" << sgwInfo->GetS1uPortNo ()
         << ",ip_dst=" << m_webAddr << "/" << m_webMask.GetPrefixLength ()
         << " goto:2";
-  DpctlSchedule (sgwSwDev->GetDatapathId (), cmdUl.str ());
+  DpctlSchedule (sgwInfo->GetSgwId (), cmdUl.str ());
 
   // FIXME Aggregation
   // // The mtcGbrTeid != 0 or mtcNonTeid != 0 means that MTC traffic aggregation
