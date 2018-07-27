@@ -144,6 +144,26 @@ SgwInfo::GetPointer (uint64_t sgwId)
   return sgwInfo;
 }
 
+Ptr<SgwInfo>
+SgwInfo::GetPointerBySwIdx (uint16_t infaSwIdx)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  Ptr<SgwInfo> sgwInfo = 0;
+  SgwIdSgwInfo_t::iterator it;
+  for (it = SgwInfo::m_sgwInfoBySgwId.begin ();
+       it != SgwInfo::m_sgwInfoBySgwId.end ();
+       ++it)
+    {
+      if ((it->second)->GetInfraSwIdx () == infaSwIdx)
+        {
+          sgwInfo = it->second;
+          break;
+        }
+    }
+  return sgwInfo;
+}
+
 void
 SgwInfo::DoDispose ()
 {

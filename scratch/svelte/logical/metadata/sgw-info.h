@@ -71,6 +71,14 @@ public:
    */
   static Ptr<SgwInfo> GetPointer (uint64_t sgwId);
 
+  /**
+   * Get the S-GW information from the global map for a specific backhaul
+   * switch index.
+   * \param infaSwIdx The backhaul switch index.
+   * \return The S-GW information.
+   */
+  static Ptr<SgwInfo> GetPointerBySwIdx (uint16_t infaSwIdx);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
