@@ -92,6 +92,7 @@ UeInfo::GetCellId (void) const
 {
   NS_LOG_FUNCTION (this);
 
+  NS_ASSERT_MSG (m_enbInfo, "eNB not configured yet.");
   return m_enbInfo->GetCellId ();
 }
 
