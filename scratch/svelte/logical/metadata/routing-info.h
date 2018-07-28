@@ -30,6 +30,9 @@
 namespace ns3 {
 
 class RoutingInfo;
+class UeInfo;
+class GbrInfo;
+class MeterInfo;
 
 /** EPS bearer context created. */
 typedef EpcS11SapMme::BearerContextCreated BearerContext_t;
@@ -46,8 +49,8 @@ typedef std::list<Ptr<RoutingInfo> > RoutingInfoList_t;
  */
 class RoutingInfo : public Object
 {
-  friend class SliceController;
   friend class BackhaulController;
+  friend class SliceController;
 
 public:
   /** Block reason. */
@@ -63,12 +66,11 @@ public:
    * Complete constructor.
    * \param teid The TEID value.
    * \param bearer The bearer context.
-   * \param imsi The UE IMSI.
-   * \param sliceId The logical slice ID.
+   * \param ueInfo The UE metadata.
    * \param isDefault True for default bearer.
    */
-  RoutingInfo (uint32_t teid, BearerContext_t bearer, uint64_t imsi,
-               SliceId sliceId, bool isDefault);
+  RoutingInfo (uint32_t teid, BearerContext_t bearer,
+               Ptr<UeInfo> ueInfo, bool isDefault);
   virtual ~RoutingInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
@@ -80,31 +82,47 @@ public:
   /** \name Private member accessors. */
   //\{
   uint32_t GetTeid (void) const;
-  uint64_t GetImsi (void) const;
-  uint16_t GetPriority (void) const;
-  SliceId GetSliceId (void) const;
-  std::string GetSliceIdStr (void) const;
-  uint16_t GetTimeout (void) const;
+  std::string GetBlockReasonStr (void) const;
   bool IsActive (void) const;
   bool IsBlocked (void) const;
-  std::string GetBlockReasonStr (void) const;
   bool IsDefault (void) const;
   bool IsInstalled (void) const;
+  uint16_t GetPgwTftIdx (void) const;
+  uint16_t GetPriority (void) const;
+  uint16_t GetTimeout (void) const;
+  Ptr<UeInfo> GetUeInfo (void) const;
   //\}
 
   /**
    * \name Private member accessors for bearer information.
    */
   //\{
+  Ipv4Header::DscpType GetDscp (void) const;
+  uint16_t GetDscpValue (void) const;
   EpsBearer GetEpsBearer (void) const;
   EpsBearer::Qci GetQciInfo (void) const;
   GbrQosInformation GetQosInfo (void) const;
   Ptr<EpcTft> GetTft (void) const;
-  Ipv4Header::DscpType GetDscp (void) const;
-  uint16_t GetDscpValue (void) const;
-  bool IsGbr (void) const;
   bool HasDownlinkTraffic (void) const;
   bool HasUplinkTraffic (void) const;
+  bool IsGbr (void) const;
+  //\}
+
+  /**
+   * \name Private member accessors for UE and routing information.
+   */
+  //\{
+  uint64_t GetImsi (void) const;
+  SliceId GetSliceId (void) const;
+  std::string GetSliceIdStr (void) const;
+  Ipv4Address GetEnbS1uAddr (void) const;
+  Ipv4Address GetPgwS5Addr (void) const;
+  Ipv4Address GetSgwS1uAddr (void) const;
+  Ipv4Address GetSgwS5Addr (void) const;
+  Ipv4Address GetUeAddr (void) const;
+  uint16_t GetEnbInfraSwIdx (void) const;
+  uint16_t GetPgwInfraSwIdx (void) const;
+  uint16_t GetSgwInfraSwIdx (void) const;
   //\}
 
   /**
@@ -146,6 +164,7 @@ protected:
   void SetActive (bool value);
   void SetBlocked (bool value, BlockReason reason = RoutingInfo::NOTBLOCKED);
   void SetInstalled (bool value);
+  void SetPgwTftIdx (uint16_t value);
   void SetPriority (uint16_t value);
   void SetTimeout (uint16_t value);
   //\}
@@ -164,15 +183,17 @@ private:
 
   uint32_t             m_teid;         //!< GTP TEID.
   BearerContext_t      m_bearer;       //!< EPS bearer information.
-  uint64_t             m_imsi;         //!< UE IMSI.
-  SliceId              m_sliceId;      //!< Logical network slice.
-  uint16_t             m_priority;     //!< Flow rule priority.
-  uint16_t             m_timeout;      //!< Flow idle timeout.
+  BlockReason          m_blockReason;  //!< Bearer blocked reason.
   bool                 m_isActive;     //!< Bearer active status.
   bool                 m_isBlocked;    //!< Bearer request status.
   bool                 m_isDefault;    //!< This is a default bearer.
   bool                 m_isInstalled;  //!< Rules installed status.
-  BlockReason          m_blockReason;  //!< Bearer blocked reason.
+  uint16_t             m_pgwTftIdx;    //!< P-GW TFT switch index.
+  uint16_t             m_priority;     //!< Flow rule priority.
+  uint16_t             m_timeout;      //!< Flow idle timeout.
+  Ptr<UeInfo>          m_ueInfo;       //!< UE metadata.
+
+  // Slice                m_slice;        //!< Backhaul slice. ???
 
   /** Map saving TEID / routing information. */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;

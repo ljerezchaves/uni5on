@@ -21,6 +21,10 @@
 #include "routing-info.h"
 #include "gbr-info.h"
 #include "meter-info.h"
+#include "ue-info.h"
+#include "sgw-info.h"
+#include "pgw-info.h"
+#include "../../infrastructure/metadata/enb-info.h"
 #include "../../infrastructure/backhaul-controller.h"
 
 namespace ns3 {
@@ -31,21 +35,23 @@ NS_OBJECT_ENSURE_REGISTERED (RoutingInfo);
 // Initializing RoutingInfo static members.
 RoutingInfo::TeidRoutingMap_t RoutingInfo::m_routingInfoByTeid;
 
-RoutingInfo::RoutingInfo (uint32_t teid, BearerContext_t bearer, uint64_t imsi,
-                          SliceId sliceId, bool isDefault)
+RoutingInfo::RoutingInfo (uint32_t teid, BearerContext_t bearer,
+                          Ptr<UeInfo> ueInfo, bool isDefault)
   : m_teid (teid),
   m_bearer (bearer),
-  m_imsi (imsi),
-  m_sliceId (sliceId),
-  m_priority (0),
-  m_timeout (0),
+  m_blockReason (RoutingInfo::NOTBLOCKED),
   m_isActive (false),
   m_isBlocked (false),
   m_isDefault (isDefault),
   m_isInstalled (false),
-  m_blockReason (RoutingInfo::NOTBLOCKED)
+  m_pgwTftIdx (0),
+  m_priority (0),
+  m_timeout (0),
+  m_ueInfo (ueInfo)
 {
   NS_LOG_FUNCTION (this);
+
+  NS_ASSERT_MSG (m_ueInfo, "Invalid UeInfo pointer.");
 
   // Register this routing information object.
   RegisterRoutingInfo (Ptr<RoutingInfo> (this));
@@ -73,44 +79,12 @@ RoutingInfo::GetTeid (void) const
   return m_teid;
 }
 
-uint64_t
-RoutingInfo::GetImsi (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_imsi;
-}
-
-uint16_t
-RoutingInfo::GetPriority (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_priority;
-}
-
-SliceId
-RoutingInfo::GetSliceId (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_sliceId;
-}
-
 std::string
-RoutingInfo::GetSliceIdStr (void) const
+RoutingInfo::GetBlockReasonStr (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return SliceIdStr (m_sliceId);
-}
-
-uint16_t
-RoutingInfo::GetTimeout (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_timeout;
+  return BlockReasonStr (m_blockReason);
 }
 
 bool
@@ -129,14 +103,6 @@ RoutingInfo::IsBlocked (void) const
   return m_isBlocked;
 }
 
-std::string
-RoutingInfo::GetBlockReasonStr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return BlockReasonStr (m_blockReason);
-}
-
 bool
 RoutingInfo::IsDefault (void) const
 {
@@ -151,6 +117,54 @@ RoutingInfo::IsInstalled (void) const
   NS_LOG_FUNCTION (this);
 
   return m_isInstalled;
+}
+
+uint16_t
+RoutingInfo::GetPgwTftIdx (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwTftIdx;
+}
+
+uint16_t
+RoutingInfo::GetPriority (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_priority;
+}
+
+uint16_t
+RoutingInfo::GetTimeout (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_timeout;
+}
+
+Ptr<UeInfo>
+RoutingInfo::GetUeInfo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo;
+}
+
+Ipv4Header::DscpType
+RoutingInfo::GetDscp (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return BackhaulController::Qci2Dscp (GetQciInfo ());
+}
+
+uint16_t
+RoutingInfo::GetDscpValue (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return static_cast<uint16_t> (GetDscp ());
 }
 
 EpsBearer
@@ -185,30 +199,6 @@ RoutingInfo::GetTft (void) const
   return m_bearer.tft;
 }
 
-Ipv4Header::DscpType
-RoutingInfo::GetDscp (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return BackhaulController::Qci2Dscp (GetQciInfo ());
-}
-
-uint16_t
-RoutingInfo::GetDscpValue (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return static_cast<uint16_t> (GetDscp ());
-}
-
-bool
-RoutingInfo::IsGbr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return (!m_isDefault && m_bearer.bearerLevelQos.IsGbr ());
-}
-
 bool
 RoutingInfo::HasDownlinkTraffic (void) const
 {
@@ -223,6 +213,102 @@ RoutingInfo::HasUplinkTraffic (void) const
   NS_LOG_FUNCTION (this);
 
   return m_bearer.tft->HasUplinkFilter ();
+}
+
+bool
+RoutingInfo::IsGbr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return (!m_isDefault && m_bearer.bearerLevelQos.IsGbr ());
+}
+
+uint64_t
+RoutingInfo::GetImsi (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetImsi ();
+}
+
+SliceId
+RoutingInfo::GetSliceId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetSliceId ();
+}
+
+std::string
+RoutingInfo::GetSliceIdStr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return SliceIdStr (m_ueInfo->GetSliceId ());
+}
+
+Ipv4Address
+RoutingInfo::GetEnbS1uAddr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetEnbInfo ()->GetS1uAddr ();
+}
+
+Ipv4Address
+RoutingInfo::GetPgwS5Addr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetPgwInfo ()->GetMainS5Addr ();
+}
+
+Ipv4Address
+RoutingInfo::GetSgwS1uAddr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetSgwInfo ()->GetS1uAddr ();
+}
+
+Ipv4Address
+RoutingInfo::GetSgwS5Addr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetSgwInfo ()->GetS5Addr ();
+}
+
+Ipv4Address
+RoutingInfo::GetUeAddr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetUeAddr ();
+}
+
+uint16_t
+RoutingInfo::GetEnbInfraSwIdx (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetEnbInfo ()->GetInfraSwIdx ();
+}
+
+uint16_t
+RoutingInfo::GetPgwInfraSwIdx (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetPgwInfo ()->GetInfraSwIdx ();
+}
+
+uint16_t
+RoutingInfo::GetSgwInfraSwIdx (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetSgwInfo ()->GetInfraSwIdx ();
 }
 
 std::string
@@ -269,6 +355,8 @@ void
 RoutingInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+
+  m_ueInfo = 0;
 }
 
 void
@@ -319,6 +407,15 @@ RoutingInfo::SetInstalled (bool value)
 }
 
 void
+RoutingInfo::SetPgwTftIdx (uint16_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  NS_ASSERT_MSG (value > 0, "The index 0 cannot be used.");
+  m_pgwTftIdx = value;
+}
+
+void
 RoutingInfo::SetPriority (uint16_t value)
 {
   NS_LOG_FUNCTION (this << value);
@@ -332,6 +429,14 @@ RoutingInfo::SetTimeout (uint16_t value)
   NS_LOG_FUNCTION (this << value);
 
   m_timeout = value;
+}
+
+void
+RoutingInfo::IncreasePriority ()
+{
+  NS_LOG_FUNCTION (this);
+
+  m_priority++;
 }
 
 void

@@ -699,7 +699,7 @@ SliceController::DoCreateSessionRequest (
 
       // Create the metadata for this bearer.
       Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
-          teid, bearerContext, imsi, m_sliceId, isDefault);
+          teid, bearerContext, ueInfo, isDefault);
 
       // FIXME Notificar o controlador do backhaul de que criamos este bearer.
       // Isso era feito com o TopologyBearerCreated (). A idéia é que o
