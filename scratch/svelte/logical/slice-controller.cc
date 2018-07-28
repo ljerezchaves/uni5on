@@ -187,11 +187,6 @@ SliceController::DedicatedBearerRequest (
 //  rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
 //  rInfo->SetBlocked (false);
 //
-//  // Update the aggregation threshold values.
-//  Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
-//  aggInfo->SetThreshold (rInfo->IsMtc () ? 0.0 :
-//                         rInfo->IsGbr () ? m_htcAggGbrThs : m_htcAggNonThs);
-//
 //  // Check for available resources on P-GW and backhaul network and then
 //  // reserve the requested bandwidth (don't change the order!).
 //  bool success = true;
@@ -210,16 +205,11 @@ SliceController::DedicatedBearerRequest (
 //  // priority. Doing this, we avoid problems with old 'expiring' rules, and
 //  // we can even use new routing paths when necessary.
 //  NS_LOG_INFO ("Bearer request accepted by controller.");
-//  if (rInfo->IsAggregated ())
-//    {
-//      NS_LOG_INFO ("Aggregating bearer teid " << rInfo->GetTeid ());
-//    }
 //
 //  // Activate and install the bearer.
 //  rInfo->SetActive (true);
 //  return BearerInstall (rInfo);
-
-
+//
 //   if (m_epcCtrlApp->DedicatedBearerRequest (bearer, teid))
 //     {
 //       return SgwRulesInstall (RoutingInfo::GetPointer (teid));
@@ -254,61 +244,6 @@ SliceController::NotifySgwAttach (Ptr<SgwInfo> sgwInfo)
         << ",ip_dst=" << m_webAddr << "/" << m_webMask.GetPrefixLength ()
         << " goto:2";
   DpctlSchedule (sgwInfo->GetSgwId (), cmdUl.str ());
-
-  // FIXME Aggregation
-  // // The mtcGbrTeid != 0 or mtcNonTeid != 0 means that MTC traffic aggregation
-  // // is enable. Install high-priority match rules on default table for
-  // // aggregating traffic from all MTC UEs on the proper uplink S5 GTP tunnel.
-  // if (mtcGbrTeid != 0)
-  //   {
-  //     // Print MTC aggregation TEID and P-GW IPv4 address into tunnel metadata.
-  //     Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (mtcGbrTeid);
-  //     uint64_t tunnelId;
-  //     char tunnelIdStr [20];
-  //     tunnelId = static_cast<uint64_t> (rInfo->GetPgwS5Addr ().Get ());
-  //     tunnelId <<= 32;
-  //     tunnelId |= rInfo->GetTeid ();
-  //     sprintf (tunnelIdStr, "0x%016lx", tunnelId);
-  //
-  //     // Instal OpenFlow MTC aggregation rule. We are using the DSCP field to
-  //     // distinguish GBR/Non-GBR packets. Packets inside the S-GW are not
-  //     // encapsulated, so the DSCP field is, in fact, the IP ToS set by the
-  //     // application socket.
-  //     uint8_t ipTos = SliceController::Dscp2Tos (rInfo->GetDscp ());
-  //     std::ostringstream cmd;
-  //     cmd << "flow-mod cmd=add,table=0,prio=65520 eth_type=0x800"
-  //         << ",ip_src=" << LteNetwork::m_mtcAddr
-  //         << "/" << LteNetwork::m_mtcMask.GetPrefixLength ()
-  //         << ",ip_dscp=" << (ipTos >> 2)
-  //         << " apply:set_field=tunn_id:" << tunnelIdStr
-  //         << ",output=" << m_sgwS5PortNo;
-  //     DpctlSchedule (m_sgwDpId, cmd.str ());
-  //   }
-  // if (mtcNonTeid != 0)
-  //   {
-  //     // Print MTC aggregation TEID and P-GW IPv4 address into tunnel metadata.
-  //     Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (mtcNonTeid);
-  //     uint64_t tunnelId;
-  //     char tunnelIdStr [20];
-  //     tunnelId = static_cast<uint64_t> (rInfo->GetPgwS5Addr ().Get ());
-  //     tunnelId <<= 32;
-  //     tunnelId |= rInfo->GetTeid ();
-  //     sprintf (tunnelIdStr, "0x%016lx", tunnelId);
-  //
-  //     // Instal OpenFlow MTC aggregation rule. We are using the DSCP field to
-  //     // distinguish GBR/Non-GBR packets. Packets inside the S-GW are not
-  //     // encapsulated, so the DSCP field is, in fact, the IP ToS set by the
-  //     // application socket.
-  //     uint8_t ipTos = SliceController::Dscp2Tos (rInfo->GetDscp ());
-  //     std::ostringstream cmd;
-  //     cmd << "flow-mod cmd=add,table=0,prio=65520 eth_type=0x800"
-  //         << ",ip_src=" << LteNetwork::m_mtcAddr
-  //         << "/" << LteNetwork::m_mtcMask.GetPrefixLength ()
-  //         << ",ip_dscp=" << (ipTos >> 2)
-  //         << " apply:set_field=tunn_id:" << tunnelIdStr
-  //         << ",output=" << m_sgwS5PortNo;
-  //     DpctlSchedule (m_sgwDpId, cmd.str ());
-  //   }
 
   // -------------------------------------------------------------------------
   // Table 1 -- S-GW downlink table -- [from higher to lower priority]
@@ -567,13 +502,6 @@ SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
 //  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
 //  rInfo->SetInstalled (false);
 //
-//  if (rInfo->IsAggregated ())
-//    {
-//      // Don't install rules for aggregated traffic. This will automatically
-//      // force the traffic over the S5 default bearer.
-//      return true;
-//    }
-//
 //  // Increasing the priority every time we (re)install routing rules.
 //  rInfo->IncreasePriority ();
 //
@@ -595,12 +523,6 @@ SliceController::BearerRemove (Ptr<RoutingInfo> rInfo)
 
 //  // FIXME Aqui tem que fazer a interface direta lá com o controlador do backaul
 //  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
-//
-//  if (rInfo->IsAggregated ())
-//    {
-//      // No rules to remove for aggregated traffic.
-//      return true;
-//    }
 //
 //  // Remove the rules.
 //  bool success = true;
@@ -796,20 +718,6 @@ SliceController::GetPgwTftIdx (
   return 1 + (rInfo->GetUeAddr ().Get () % activeTfts);
 }
 
-// bool
-// SliceController::MtcAggBearerInstall (Ptr<RoutingInfo> rInfo)
-// {
-//   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
-//
-//   bool success = TopologyRoutingInstall (rInfo);
-//   NS_ASSERT_MSG (success, "Error when installing the MTC aggregation bearer.");
-//   NS_LOG_INFO ("MTC aggregation bearer teid " << rInfo->GetTeid () <<
-//                " installed for S-GW " << rInfo->GetSgwS5Addr ());
-//
-//   rInfo->SetInstalled (success);
-//   return success;
-// }
-
 bool
 SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
 {
@@ -836,18 +744,14 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
 //   NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
 //
 //   // First check: OpenFlow switch table usage.
-//   // Only non-aggregated bearers will install rules on P-GW TFT flow table.
 //   // Blocks the bearer if the table usage is exceeding the block threshold.
-//   if (!rInfo->IsAggregated ())
+//   uint32_t entries = stats->GetEwmaFlowEntries ();
+//   double tableUsage = static_cast<double> (entries) / m_pgwInfo->GetTftFlowTableSize ();
+//   if (tableUsage >= m_tftBlockThs)
 //     {
-//       uint32_t entries = stats->GetEwmaFlowEntries ();
-//       double tableUsage = static_cast<double> (entries) / m_pgwInfo->GetTftFlowTableSize ();
-//       if (tableUsage >= m_tftBlockThs)
-//         {
-//           rInfo->SetBlocked (true, RoutingInfo::TFTTABLEFULL);
-//           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
-//                        " because the TFT flow tables is full.");
-//         }
+//       rInfo->SetBlocked (true, RoutingInfo::TFTTABLEFULL);
+//       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
+//                    " because the TFT flow tables is full.");
 //     }
 //
 //   // Second check: OpenFlow switch pipeline load.
@@ -1213,7 +1117,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 //     }
 //
 //   // Configure uplink.
-//   if (rInfo->HasUplinkTraffic () && !rInfo->IsAggregated ())
+//   if (rInfo->HasUplinkTraffic ())
 //     {
 //       // Print uplink TEID and destination IPv4 address into tunnel metadata.
 //       uint64_t tunnelId;

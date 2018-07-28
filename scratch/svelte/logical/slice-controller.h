@@ -231,13 +231,6 @@ private:
   uint16_t GetPgwTftIdx (
     Ptr<const RoutingInfo> rInfo, uint16_t activeTfts = 0) const;
 
-//  /**
-//   * Install OpenFlow match rules for the aggregated MTC bearer.
-//   * \param rInfo The routing information to process.
-//   * \return True if succeeded, false otherwise.
-//   */
-//  bool MtcAggBearerInstall (Ptr<RoutingInfo> rInfo);
-
   /**
    * Check for available resources on P-GW TFT switch for this bearer request.
    * \param rInfo The routing information to process.

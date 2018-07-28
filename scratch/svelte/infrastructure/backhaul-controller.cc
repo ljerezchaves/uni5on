@@ -108,11 +108,6 @@ BackhaulController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
 //  rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
 //  rInfo->SetBlocked (false);
 //
-//  // Update the aggregation threshold values.
-//  Ptr<S5AggregationInfo> aggInfo = rInfo->GetObject<S5AggregationInfo> ();
-//  aggInfo->SetThreshold (rInfo->IsMtc () ? 0.0 :
-//                         rInfo->IsGbr () ? m_htcAggGbrThs : m_htcAggNonThs);
-//
 //  // Check for available resources on P-GW and backhaul network and then
 //  // reserve the requested bandwidth (don't change the order!).
 //  bool success = true;
@@ -131,10 +126,6 @@ BackhaulController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
 //  // priority. Doing this, we avoid problems with old 'expiring' rules, and
 //  // we can even use new routing paths when necessary.
 //  NS_LOG_INFO ("Bearer request accepted by controller.");
-//  if (rInfo->IsAggregated ())
-//    {
-//      NS_LOG_INFO ("Aggregating bearer teid " << rInfo->GetTeid ());
-//    }
 //
 //  // Activate and install the bearer.
 //  rInfo->SetActive (true);
@@ -547,13 +538,6 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 //   NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
 //   rInfo->SetInstalled (false);
 //
-//   if (rInfo->IsAggregated ())
-//     {
-//       // Don't install rules for aggregated traffic. This will automatically
-//       // force the traffic over the S5 default bearer.
-//       return true;
-//     }
-//
 //   // Increasing the priority every time we (re)install routing rules.
 //   rInfo->IncreasePriority ();
 //
@@ -572,12 +556,6 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 //   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 //
 //   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
-//
-//   if (rInfo->IsAggregated ())
-//     {
-//       // No rules to remove for aggregated traffic.
-//       return true;
-//     }
 //
 //   // Remove the rules.
 //   bool success = true;
