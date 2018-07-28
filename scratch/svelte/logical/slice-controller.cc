@@ -753,22 +753,21 @@ SliceController::DoDeleteBearerCommand (
 {
   NS_LOG_FUNCTION (this << msg.teid);
 
-//   uint64_t imsi = msg.teid;
-//
-//   EpcS11SapMme::DeleteBearerRequestMessage res;
-//   res.teid = imsi;
-//
-//   std::list<EpcS11SapSgw::BearerContextToBeRemoved>::iterator bit;
-//   for (bit = msg.bearerContextsToBeRemoved.begin ();
-//        bit != msg.bearerContextsToBeRemoved.end ();
-//        ++bit)
-//     {
-//       EpcS11SapMme::BearerContextRemoved bearerContext;
-//       bearerContext.epsBearerId = bit->epsBearerId;
-//       res.bearerContextsRemoved.push_back (bearerContext);
-//     }
-//
-//   m_s11SapMme->DeleteBearerRequest (res);
+  EpcS11SapMme::DeleteBearerRequestMessage res;
+  res.teid = msg.teid;
+
+  std::list<EpcS11SapSgw::BearerContextToBeRemoved>::iterator bit;
+  for (bit = msg.bearerContextsToBeRemoved.begin ();
+       bit != msg.bearerContextsToBeRemoved.end ();
+       ++bit)
+    {
+      EpcS11SapMme::BearerContextRemoved bearerContext;
+      bearerContext.epsBearerId = bit->epsBearerId;
+      res.bearerContextsRemoved.push_back (bearerContext);
+    }
+
+  // Forward the response message to the MME.
+  m_s11SapMme->DeleteBearerRequest (res);
 }
 
 void
