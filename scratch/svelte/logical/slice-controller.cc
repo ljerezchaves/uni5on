@@ -637,7 +637,6 @@ SliceController::DoCreateSessionRequest (
 //  controlador configurava o backhaul e o P-GW. Agora eu vou ter que chamar
 //  manualmente alguma função no controlador do backhaul pra configurar a parte
 //  de lá serparado dos gateways aqui.
-  uint16_t cellId = msg.uli.gci;
   uint64_t imsi = msg.imsi;
 
   uint32_t slice = static_cast<uint32_t> (m_sliceId);
@@ -648,9 +647,8 @@ SliceController::DoCreateSessionRequest (
   // the UE. In current implementation, each slice has a single P-GW. We are
   // using the S-GW attached to the same OpenFlow backhaul switch where the
   // UE's serving eNB is also attached. The S-GW may change during handover.
-  Ptr<UeInfo>  ueInfo  = UeInfo::GetPointer (imsi);
-  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
-  uint16_t enbInfraSwIdx = enbInfo->GetInfraSwIdx ();
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  uint16_t enbInfraSwIdx = ueInfo->GetEnbInfo ()->GetInfraSwIdx ();
   Ptr<SgwInfo> sgwInfo = SgwInfo::GetPointerBySwIdx (enbInfraSwIdx);
 
   ueInfo->SetPgwInfo (m_pgwInfo);

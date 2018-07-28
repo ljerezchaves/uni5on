@@ -77,6 +77,7 @@ public:
   uint64_t GetMmeUeS1Id (void) const;
   uint64_t GetEnbUeS1Id (void) const;
   EpcS11SapSgw* GetS11SapSgw (void) const;
+  EpcS1apSapEnb* GetS1apSapEnb (void) const;
   //\}
 
   /**

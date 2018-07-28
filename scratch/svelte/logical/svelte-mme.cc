@@ -160,7 +160,6 @@ SvelteMme::DoErabReleaseIndication (
   NS_LOG_FUNCTION (this << mmeUeS1Id << enbUeS1Id);
 
   uint64_t imsi = mmeUeS1Id;
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
 
   EpcS11SapSgw::DeleteBearerCommandMessage msg;
   msg.teid = imsi;
@@ -173,6 +172,7 @@ SvelteMme::DoErabReleaseIndication (
       msg.bearerContextsToBeRemoved.push_back (bearerContext);
     }
 
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
   ueInfo->GetS11SapSgw ()->DeleteBearerCommand (msg);
 }
 
@@ -201,13 +201,8 @@ SvelteMme::DoCreateSessionResponse (
     }
 
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  uint16_t cellId    = ueInfo->GetCellId ();
-  uint16_t enbUeS1Id = ueInfo->GetEnbUeS1Id ();
-  uint64_t mmeUeS1Id = ueInfo->GetMmeUeS1Id ();
-
-  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
-  enbInfo->GetS1apSapEnb ()->InitialContextSetupRequest (
-    mmeUeS1Id, enbUeS1Id, erabToBeSetupList);
+  ueInfo->GetS1apSapEnb ()->InitialContextSetupRequest (
+    ueInfo->GetMmeUeS1Id (), ueInfo->GetEnbUeS1Id (), erabToBeSetupList);
 }
 
 void
@@ -221,15 +216,12 @@ SvelteMme::DoModifyBearerResponse (
     "Invalid message cause.");
 
   uint64_t imsi = msg.teid;
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  uint64_t enbUeS1Id = ueInfo->GetEnbUeS1Id ();
-  uint64_t mmeUeS1Id = ueInfo->GetMmeUeS1Id ();
-  uint16_t cellId    = ueInfo->GetCellId ();
   std::list<EpcS1apSapEnb::ErabSwitchedInUplinkItem> erabList;
 
-  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
-  enbInfo->GetS1apSapEnb ()->PathSwitchRequestAcknowledge (
-    enbUeS1Id, mmeUeS1Id, cellId, erabList);
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  ueInfo->GetS1apSapEnb ()->PathSwitchRequestAcknowledge (
+    ueInfo->GetEnbUeS1Id (), ueInfo->GetMmeUeS1Id (),
+    ueInfo->GetCellId (), erabList);
 }
 
 void

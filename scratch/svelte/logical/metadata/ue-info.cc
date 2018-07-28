@@ -144,6 +144,15 @@ UeInfo::GetS11SapSgw (void) const
   return m_s11SapSgw;
 }
 
+EpcS1apSapEnb*
+UeInfo::GetS1apSapEnb (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  NS_ASSERT_MSG (m_enbInfo, "eNB not configured yet.");
+  return m_enbInfo->GetS1apSapEnb ();
+}
+
 std::list<UeInfo::BearerInfo>::const_iterator
 UeInfo::GetBearerListBegin () const
 {

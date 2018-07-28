@@ -200,6 +200,7 @@ SliceNetwork::DoDispose (void)
   m_controllerApp = 0;
   m_controllerNode = 0;
   m_webNode = 0;
+  m_pgwInfo = 0;
 
   Object::DoDispose ();
 }
