@@ -801,19 +801,18 @@ SliceController::DoModifyBearerRequest (
   m_s11SapMme->ModifyBearerResponse (res);
 }
 
-// uint16_t
-// SliceController::GetPgwTftIdx (
-//   Ptr<const RoutingInfo> rInfo, uint16_t activeTfts) const
-// {
-//   NS_LOG_FUNCTION (this << rInfo << activeTfts);
-//
-//   if (activeTfts == 0)
-//     {
-//       activeTfts = 1 << m_tftLevel;
-//     }
-//   Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
-//   return 1 + (ueInfo->GetUeAddr ().Get () % activeTfts);
-// }
+uint16_t
+SliceController::GetPgwTftIdx (
+  Ptr<const RoutingInfo> rInfo, uint16_t activeTfts) const
+{
+  NS_LOG_FUNCTION (this << rInfo << activeTfts);
+
+  if (activeTfts == 0)
+    {
+      activeTfts = 1 << m_tftLevel;
+    }
+  return 1 + (rInfo->GetUeAddr ().Get () % activeTfts);
+}
 
 void
 SliceController::PgwTftCheckUsage (void)

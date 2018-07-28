@@ -218,17 +218,17 @@ private:
   void DoModifyBearerRequest  (EpcS11SapSgw::ModifyBearerRequestMessage  msg);
   //\}
 
-//  /**
-//   * Get the active P-GW TFT index for a given traffic flow.
-//   * \param rInfo The routing information to process.
-//   * \param activeTfts The number of active P-GW TFT switches. When set to 0,
-//   *        the number of P-GW TFTs will be calculated considering the current
-//   *        adaptive mechanism level.
-//   * \return The P-GW TFT index.
-//   */
-//  uint16_t GetPgwTftIdx (
-//    Ptr<const RoutingInfo> rInfo, uint16_t activeTfts = 0) const;
-//
+  /**
+   * Get the active P-GW TFT index for a given traffic flow.
+   * \param rInfo The routing information to process.
+   * \param activeTfts The number of active P-GW TFT switches. When set to 0,
+   *        the number of P-GW TFTs will be calculated considering the current
+   *        adaptive mechanism level.
+   * \return The P-GW TFT index.
+   */
+  uint16_t GetPgwTftIdx (
+    Ptr<const RoutingInfo> rInfo, uint16_t activeTfts = 0) const;
+
 //  /**
 //   * Install OpenFlow match rules for the aggregated MTC bearer.
 //   * \param rInfo The routing information to process.
