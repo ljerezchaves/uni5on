@@ -29,6 +29,10 @@
 
 namespace ns3 {
 
+class EnbInfo;
+class SgwInfo;
+class PgwInfo;
+
 /**
  * \ingroup svelteLogical
  * Metadata associated to a UE.
@@ -66,8 +70,9 @@ public:
   SliceId GetSliceId (void) const;
   Ipv4Address GetUeAddr (void) const;
   uint16_t GetCellId (void) const;
-  uint64_t GetSgwId (void) const;
-  uint64_t GetPgwId (void) const;
+  Ptr<EnbInfo> GetEnbInfo (void) const;
+  Ptr<SgwInfo> GetSgwInfo (void) const;
+  Ptr<PgwInfo> GetPgwInfo (void) const;
   uint64_t GetMmeUeS1Id (void) const;
   uint64_t GetEnbUeS1Id (void) const;
   EpcS11SapSgw* GetS11SapSgw (void) const;
@@ -136,9 +141,9 @@ private:
   //\{
   void SetSliceId (SliceId value);
   void SetUeAddr (Ipv4Address value);
-  void SetCellId (uint16_t value);
-  void SetSgwId (uint64_t value);
-  void SetPgwId (uint64_t value);
+  void SetEnbInfo (Ptr<EnbInfo> value);
+  void SetSgwInfo (Ptr<SgwInfo> value);
+  void SetPgwInfo (Ptr<PgwInfo> value);
   void SetEnbUeS1Id (uint64_t value);
   void SetS11SapSgw (EpcS11SapSgw* value);
   //\}
@@ -160,8 +165,9 @@ private:
   SliceId                m_sliceId;              //!< LTE logical slice ID.
   Ipv4Address            m_ueAddr;               //!< UE IP address.
   uint16_t               m_cellId;               //!< Serving eNB cell ID.
-  uint64_t               m_sgwId;                //!< Serving S-GW ID.
-  uint64_t               m_pgwId;                //!< Serving P-GW ID.
+  Ptr<EnbInfo>           m_enbInfo;              //!< Serving eNB info
+  Ptr<SgwInfo>           m_sgwInfo;              //!< Serving S-GW info.
+  Ptr<PgwInfo>           m_pgwInfo;              //!< Serving P-GW info.
 
   // Control-plane communication.
   uint64_t               m_mmeUeS1Id;            //!< ID for S1-AP at MME.

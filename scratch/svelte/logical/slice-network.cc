@@ -35,7 +35,7 @@ NS_LOG_COMPONENT_DEFINE ("SliceNetwork");
 NS_OBJECT_ENSURE_REGISTERED (SliceNetwork);
 
 SliceNetwork::SliceNetwork ()
-  : m_pgwId (0)
+  : m_pgwInfo (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -286,6 +286,8 @@ SliceNetwork::CreatePgw (void)
 {
   NS_LOG_FUNCTION (this);
 
+  NS_ASSERT_MSG (!m_pgwInfo, "P-GW already configured.");
+
   // Create the P-GW nodes and configure them as OpenFlow switches.
   m_pgwNodes.Create (m_nTftNodes + 1);
   m_pgwDevices = m_switchHelper->InstallSwitch (m_pgwNodes);
@@ -306,13 +308,12 @@ SliceNetwork::CreatePgw (void)
   Ptr<Node> pgwMainNode = m_pgwNodes.Get (0);
   Ptr<OFSwitch13Device> pgwMainOfDev = m_pgwDevices.Get (0);
   uint64_t pgwDpId = pgwMainOfDev->GetDatapathId ();
-  m_pgwId = pgwDpId;
 
   // Saving P-GW metadata.
-  Ptr<PgwInfo> pgwInfo = CreateObject<PgwInfo> (pgwDpId);
-  pgwInfo->SetSliceId (m_sliceId);
-  pgwInfo->SetInfraSwIdx (m_pgwInfraSwIdx);
-  pgwInfo->SetNumTfts (m_nTftNodes);
+  m_pgwInfo = CreateObject<PgwInfo> (pgwDpId);
+  m_pgwInfo->SetSliceId (m_sliceId);
+  m_pgwInfo->SetInfraSwIdx (m_pgwInfraSwIdx);
+  m_pgwInfo->SetNumTfts (m_nTftNodes);
 
   // Connect the P-GW main switch to the SGi and S5 interfaces. On the uplink
   // direction, the traffic will flow directly from the S5 to the SGi interface
@@ -336,7 +337,7 @@ SliceNetwork::CreatePgw (void)
 
   // Add the pgwSgiDev as physical port on the P-GW main OpenFlow switch.
   Ptr<OFSwitch13Port> pgwSgiPort = pgwMainOfDev->AddSwitchPort (pgwSgiDev);
-  pgwInfo->SetMainSgiPortNo (pgwSgiPort->GetPortNo ());
+  m_pgwInfo->SetMainSgiPortNo (pgwSgiPort->GetPortNo ());
 
   // Set the IP address on the Internet network.
   m_webAddrHelper.Assign (m_webDevices);
@@ -370,8 +371,8 @@ SliceNetwork::CreatePgw (void)
     CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev));
 
   // Saving P-GW MAIN metadata first.
-  pgwInfo->SaveSwitchInfo (pgwDpId, pgwS5Addr, pgwS5Port->GetPortNo (),
-                           infraSwS5Port->GetPortNo ());
+  m_pgwInfo->SaveSwitchInfo (pgwDpId, pgwS5Addr, pgwS5Port->GetPortNo (),
+                             infraSwS5Port->GetPortNo ());
 
   // Configure CSMA helper for connecting P-GW internal node.
   m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_pgwLinkRate));
@@ -422,13 +423,13 @@ SliceNetwork::CreatePgw (void)
         CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev));
 
       // Saving P-GW TFT metadata.
-      pgwInfo->SaveSwitchInfo (
+      m_pgwInfo->SaveSwitchInfo (
         pgwDpId, pgwS5Addr, pgwS5Port->GetPortNo (),
         infraSwS5Port->GetPortNo (), mainPort->GetPortNo ());
     }
 
   // Notify the controller of the new P-GW entity.
-  m_controllerApp->NotifyPgwAttach (pgwInfo, webSgiDev);
+  m_controllerApp->NotifyPgwAttach (m_pgwInfo, webSgiDev);
 }
 
 void
@@ -505,7 +506,7 @@ SliceNetwork::CreateUes (void)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG (m_pgwId, "P-GW not configured yet.");
+  NS_ASSERT_MSG (m_pgwInfo, "P-GW not configured yet.");
 
   // Create the UE nodes and set their names.
   m_ueNodes.Create (m_nUes);
@@ -546,7 +547,7 @@ SliceNetwork::CreateUes (void)
       Ptr<UeInfo> ueInfo = CreateObject<UeInfo> (imsiValue.Get ());
       ueInfo->SetSliceId (m_sliceId);
       ueInfo->SetUeAddr (ueIfaces.GetAddress (i));
-      ueInfo->SetPgwId (m_pgwId);
+      ueInfo->SetPgwInfo (m_pgwInfo);
       ueInfo->SetS11SapSgw (m_controllerApp->GetS11SapSgw ());
       NS_LOG_DEBUG ("UE IMSI " << imsiValue.Get () <<
                     " configured with IP " << ueInfo->GetUeAddr ());

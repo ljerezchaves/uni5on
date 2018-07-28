@@ -134,7 +134,7 @@ private:
   Time                          m_webLinkDelay;     //!< Web link delay.
 
   // P-GW user plane.
-  uint64_t                      m_pgwId;            //!< P-GW ID.
+  Ptr<PgwInfo>                  m_pgwInfo;          //!< P-GW metadata.
   Ipv4Address                   m_pgwAddress;       //!< P-GW S5 address.
   NodeContainer                 m_pgwNodes;         //!< P-GW switch nodes.
   OFSwitch13DeviceContainer     m_pgwDevices;       //!< P-GW switch devices.

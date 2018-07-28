@@ -265,7 +265,10 @@ PgwInfo::SaveSwitchInfo (uint64_t dpId, Ipv4Address s5Addr, uint32_t s5PortNo,
   m_mainToTftPortNos.push_back (mainToTftPortNo);
 
   // Nothing to do for the P-GW MAIN switch.
-  if (m_dpIds.size () == 1) return;
+  if (m_dpIds.size () == 1)
+    {
+      return;
+    }
 
   // Get the minimum table size and pipeline capacity of P-GW TFT switches.
   Ptr<OFSwitch13Device> dev = OFSwitch13Device::GetDevice (dpId);

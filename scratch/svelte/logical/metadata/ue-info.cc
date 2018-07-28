@@ -19,6 +19,9 @@
  */
 
 #include "ue-info.h"
+#include "sgw-info.h"
+#include "pgw-info.h"
+#include "../../infrastructure/metadata/enb-info.h"
 
 namespace ns3 {
 
@@ -33,8 +36,9 @@ UeInfo::UeInfo (uint64_t imsi)
   : m_imsi (imsi),
   m_sliceId (SliceId::NONE),
   m_cellId (0),
-  m_sgwId (0),
-  m_pgwId (0),
+  m_enbInfo (0),
+  m_sgwInfo (0),
+  m_pgwInfo (0),
   m_mmeUeS1Id (imsi),
   m_enbUeS1Id (0),
   m_s11SapSgw (0),
@@ -88,23 +92,31 @@ UeInfo::GetCellId (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_cellId;
+  return m_enbInfo->GetCellId ();
 }
 
-uint64_t
-UeInfo::GetSgwId (void) const
+Ptr<EnbInfo>
+UeInfo::GetEnbInfo (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_sgwId;
+  return m_enbInfo;
 }
 
-uint64_t
-UeInfo::GetPgwId (void) const
+Ptr<SgwInfo>
+UeInfo::GetSgwInfo (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_pgwId;
+  return m_sgwInfo;
+}
+
+Ptr<PgwInfo>
+UeInfo::GetPgwInfo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwInfo;
 }
 
 uint64_t
@@ -229,6 +241,9 @@ UeInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
+  m_enbInfo = 0;
+  m_sgwInfo = 0;
+  m_pgwInfo = 0;
   m_bearersList.clear ();
 }
 
@@ -250,27 +265,27 @@ UeInfo::SetUeAddr (Ipv4Address value)
 }
 
 void
-UeInfo::SetCellId (uint16_t value)
+UeInfo::SetEnbInfo (Ptr<EnbInfo> value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_cellId = value;
+  m_enbInfo = value;
 }
 
 void
-UeInfo::SetSgwId (uint64_t value)
+UeInfo::SetSgwInfo (Ptr<SgwInfo> value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_sgwId = value;
+  m_sgwInfo = value;
 }
 
 void
-UeInfo::SetPgwId (uint64_t value)
+UeInfo::SetPgwInfo (Ptr<PgwInfo> value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_pgwId = value;
+  m_pgwInfo = value;
 }
 
 void
