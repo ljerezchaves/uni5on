@@ -61,12 +61,12 @@ public:
 
   /** \name Private member accessors. */
   //\{
-  RoutingPath GetDownPath (LteInterface iface) const;
-  RoutingPath GetUpPath (LteInterface iface) const;
-  bool IsDefaultPath (LteInterface iface) const;
-  bool IsLocalPath (LteInterface iface) const;
+  RoutingPath GetDownPath (LteIface iface) const;
+  RoutingPath GetUpPath (LteIface iface) const;
+  bool IsDefaultPath (LteIface iface) const;
+  bool IsLocalPath (LteIface iface) const;
   bool IsLocalPath (void) const;
-  std::string GetPathStr (LteInterface iface) const;
+  std::string GetPathStr (LteIface iface) const;
   uint16_t GetEnbInfraSwIdx (void) const;
   uint16_t GetPgwInfraSwIdx (void) const;
   uint16_t GetSgwInfraSwIdx (void) const;
@@ -97,13 +97,13 @@ private:
    * \param downPath The downlink default path.
    * \param iface The LTE logical interface for this path.
    */
-  void SetDefaultPath (RoutingPath downPath, LteInterface iface);
+  void SetDefaultPath (RoutingPath downPath, LteIface iface);
 
   /**
    * Invert the S1-U or S5 routing path, only if different from LOCAL.
    * \param iface The LTE logical interface for this path.
    */
-  void InvertPath (LteInterface iface);
+  void InvertPath (LteIface iface);
 
   /**
    * Reset both routing paths (S1-U and S5) to the default values.

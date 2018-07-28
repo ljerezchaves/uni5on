@@ -96,11 +96,11 @@ BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous)
 
 std::pair<Ptr<CsmaNetDevice>, Ptr<OFSwitch13Port> >
 BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
-                                LteInterface iface)
+                                LteIface iface)
 {
   NS_LOG_FUNCTION (this << epcNode << swIdx << iface);
   NS_LOG_INFO ("Attach EPC node " << epcNode << " to backhaul switch index " <<
-               swIdx << " over " << LteInterfaceStr (iface) << " interface.");
+               swIdx << " over " << LteIfaceStr (iface) << " interface.");
 
   NS_ASSERT_MSG (swIdx < GetNSwitches (), "Invalid switch index.");
 
@@ -116,7 +116,7 @@ BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
   m_epcDevices.Add (epcDev);
 
   // Set device names for pcap files.
-  std::string ifaceName = "~" + LteInterfaceStr (iface) + "~";
+  std::string ifaceName = "~" + LteIfaceStr (iface) + "~";
   BackhaulNetwork::SetDeviceNames (swDev, epcDev, ifaceName);
 
   // Add the swDev device as OpenFlow switch port on the switch node.
@@ -126,13 +126,13 @@ BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
   // Configure the epcDev IP address according to the LTE logical interface.
   switch (iface)
     {
-    case LteInterface::S1U:
+    case LteIface::S1U:
       m_s1uAddrHelper.Assign (NetDeviceContainer (epcDev));
       break;
-    case LteInterface::S5:
+    case LteIface::S5:
       m_s5AddrHelper.Assign (NetDeviceContainer (epcDev));
       break;
-    case LteInterface::X2:
+    case LteIface::X2:
       m_x2AddrHelper.Assign (NetDeviceContainer (epcDev));
       break;
     default:

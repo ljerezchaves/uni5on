@@ -38,7 +38,7 @@ typedef enum
   S5   = 1,   //!< S5 interface connecting S-GW to P-GW.
   X2   = 2,   //!< X2 interface connecting eNB to eNB.
   SGI  = 3    //!< SGi interface connecting P-GW to Internet.
-} LteInterface;
+} LteIface;
 
 /**
  * \ingroup svelteInfra
@@ -46,7 +46,7 @@ typedef enum
  * \param iface The LTE interface.
  * \return The string with the LTE interface name.
  */
-std::string LteInterfaceStr (LteInterface iface);
+std::string LteIfaceStr (LteIface iface);
 
 } // namespace ns3
 #endif // LTE_INTERFACE_H

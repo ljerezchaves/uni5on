@@ -245,8 +245,8 @@ RingController::TopologyBearerCreated (Ptr<RoutingInfo> rInfo)
       rInfo->GetSgwInfraSwIdx (), rInfo->GetEnbInfraSwIdx ());
   RingRoutingInfo::RoutingPath s5DownPath = FindShortestPath (
       rInfo->GetPgwInfraSwIdx (), rInfo->GetSgwInfraSwIdx ());
-  ringInfo->SetDefaultPath (s1uDownPath, LteInterface::S1U);
-  ringInfo->SetDefaultPath (s5DownPath, LteInterface::S5);
+  ringInfo->SetDefaultPath (s1uDownPath, LteIface::S1U);
+  ringInfo->SetDefaultPath (s5DownPath, LteIface::S5);
 
   NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeid () <<
                 " default downlink S1-U path to " << s1uDownPath <<
@@ -335,7 +335,7 @@ RingController::TopologyBitRateRelease (Ptr<RoutingInfo> rInfo)
   uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
 
   // S5 interface (from P-GW to S-GW)
-  downPath = ringInfo->GetDownPath (LteInterface::S5);
+  downPath = ringInfo->GetDownPath (LteIface::S5);
   while (success && curr != ringInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
@@ -352,7 +352,7 @@ RingController::TopologyBitRateRelease (Ptr<RoutingInfo> rInfo)
     }
 
   // S5 interface (from P-GW to S-GW)
-  downPath = ringInfo->GetDownPath (LteInterface::S1U);
+  downPath = ringInfo->GetDownPath (LteIface::S1U);
   while (success && curr != ringInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
@@ -406,7 +406,7 @@ RingController::TopologyBitRateReserve (Ptr<RoutingInfo> rInfo)
   uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
 
   // S5 interface (from P-GW to S-GW)
-  downPath = ringInfo->GetDownPath (LteInterface::S5);
+  downPath = ringInfo->GetDownPath (LteIface::S5);
   while (success && curr != ringInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
@@ -423,7 +423,7 @@ RingController::TopologyBitRateReserve (Ptr<RoutingInfo> rInfo)
     }
 
   // S1-U interface (from S-GW to eNB)
-  downPath = ringInfo->GetDownPath (LteInterface::S1U);
+  downPath = ringInfo->GetDownPath (LteIface::S1U);
   while (success && curr != ringInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
@@ -493,7 +493,7 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 
       // Build the metatada, write and goto instructions string.
       // FIXME Essas regras de act tem que ser diferentes tb.
-      sprintf (metadataStr, "0x%x", ringInfo->GetDownPath (LteInterface::S5));
+      sprintf (metadataStr, "0x%x", ringInfo->GetDownPath (LteIface::S5));
       act << " meta:" << metadataStr << " goto:2";
 
       // Installing downlink rules into switch connected to P-GW and S-GW.
@@ -650,7 +650,7 @@ RingController::HasBitRate (Ptr<const RingRoutingInfo> ringInfo,
   uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
 
   // S5 interface (from P-GW to S-GW)
-  downPath = ringInfo->GetDownPath (LteInterface::S5);
+  downPath = ringInfo->GetDownPath (LteIface::S5);
   while (success && curr != ringInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
@@ -667,7 +667,7 @@ RingController::HasBitRate (Ptr<const RingRoutingInfo> ringInfo,
     }
 
   // S1-U interface (from S-GW to eNB)
-  downPath = ringInfo->GetDownPath (LteInterface::S1U);
+  downPath = ringInfo->GetDownPath (LteIface::S1U);
   while (success && curr != ringInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);

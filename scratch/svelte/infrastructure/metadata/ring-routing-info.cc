@@ -31,8 +31,8 @@ RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this);
 
   AggregateObject (rInfo);
-  SetDefaultPath (RingRoutingInfo::LOCAL, LteInterface::S1U);
-  SetDefaultPath (RingRoutingInfo::LOCAL, LteInterface::S5);
+  SetDefaultPath (RingRoutingInfo::LOCAL, LteIface::S1U);
+  SetDefaultPath (RingRoutingInfo::LOCAL, LteIface::S5);
 }
 
 RingRoutingInfo::~RingRoutingInfo ()
@@ -50,14 +50,14 @@ RingRoutingInfo::GetTypeId (void)
 }
 
 RingRoutingInfo::RoutingPath
-RingRoutingInfo::GetDownPath (LteInterface iface) const
+RingRoutingInfo::GetDownPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
   switch (iface)
     {
-    case LteInterface::S1U:
-    case LteInterface::S5:
+    case LteIface::S1U:
+    case LteIface::S5:
       return m_downPath [iface];
     default:
       NS_ABORT_MSG ("Invalid LTE interface.");
@@ -65,14 +65,14 @@ RingRoutingInfo::GetDownPath (LteInterface iface) const
 }
 
 RingRoutingInfo::RoutingPath
-RingRoutingInfo::GetUpPath (LteInterface iface) const
+RingRoutingInfo::GetUpPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
   switch (iface)
     {
-    case LteInterface::S1U:
-    case LteInterface::S5:
+    case LteIface::S1U:
+    case LteIface::S5:
       return RingRoutingInfo::Invert (m_downPath [iface]);
     default:
       NS_ABORT_MSG ("Invalid LTE interface.");
@@ -80,14 +80,14 @@ RingRoutingInfo::GetUpPath (LteInterface iface) const
 }
 
 bool
-RingRoutingInfo::IsDefaultPath (LteInterface iface) const
+RingRoutingInfo::IsDefaultPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
   switch (iface)
     {
-    case LteInterface::S1U:
-    case LteInterface::S5:
+    case LteIface::S1U:
+    case LteIface::S5:
       return m_isDefaultPath [iface];
     default:
       NS_ABORT_MSG ("Invalid LTE interface.");
@@ -95,14 +95,14 @@ RingRoutingInfo::IsDefaultPath (LteInterface iface) const
 }
 
 bool
-RingRoutingInfo::IsLocalPath (LteInterface iface) const
+RingRoutingInfo::IsLocalPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
   switch (iface)
     {
-    case LteInterface::S1U:
-    case LteInterface::S5:
+    case LteIface::S1U:
+    case LteIface::S5:
       return m_isLocalPath [iface];
     default:
       NS_ABORT_MSG ("Invalid LTE interface.");
@@ -114,11 +114,11 @@ RingRoutingInfo::IsLocalPath (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return (IsLocalPath (LteInterface::S1U) && IsLocalPath (LteInterface::S5));
+  return (IsLocalPath (LteIface::S1U) && IsLocalPath (LteIface::S5));
 }
 
 std::string
-RingRoutingInfo::GetPathStr (LteInterface iface) const
+RingRoutingInfo::GetPathStr (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -199,14 +199,14 @@ RingRoutingInfo::DoDispose ()
 }
 
 void
-RingRoutingInfo::SetDefaultPath (RoutingPath downPath, LteInterface iface)
+RingRoutingInfo::SetDefaultPath (RoutingPath downPath, LteIface iface)
 {
   NS_LOG_FUNCTION (this << downPath << iface);
 
   switch (iface)
     {
-    case LteInterface::S1U:
-    case LteInterface::S5:
+    case LteIface::S1U:
+    case LteIface::S5:
       m_downPath [iface] = downPath;
       m_isDefaultPath [iface] = true;
       m_isLocalPath [iface] = false;
@@ -221,14 +221,14 @@ RingRoutingInfo::SetDefaultPath (RoutingPath downPath, LteInterface iface)
 }
 
 void
-RingRoutingInfo::InvertPath (LteInterface iface)
+RingRoutingInfo::InvertPath (LteIface iface)
 {
   NS_LOG_FUNCTION (this << iface);
 
   switch (iface)
     {
-    case LteInterface::S1U:
-    case LteInterface::S5:
+    case LteIface::S1U:
+    case LteIface::S5:
       if (m_isLocalPath [iface] == false)
         {
           m_downPath [iface] = RingRoutingInfo::Invert (m_downPath [iface]);
@@ -245,14 +245,14 @@ RingRoutingInfo::ResetToDefaults ()
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_isDefaultPath [LteInterface::S1U] == false)
+  if (m_isDefaultPath [LteIface::S1U] == false)
     {
-      InvertPath (LteInterface::S1U);
+      InvertPath (LteIface::S1U);
     }
 
-  if (m_isDefaultPath [LteInterface::S5] == false)
+  if (m_isDefaultPath [LteIface::S5] == false)
     {
-      InvertPath (LteInterface::S5);
+      InvertPath (LteIface::S5);
     }
 }
 

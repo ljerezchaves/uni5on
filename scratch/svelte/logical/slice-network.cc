@@ -333,7 +333,7 @@ SliceNetwork::CreatePgw (void)
   m_webDevices.Add (devices);
 
   // Set device names for pcap files.
-  std::string ifaceName = "~" + LteInterfaceStr (LteInterface::SGI) + "~";
+  std::string ifaceName = "~" + LteIfaceStr (LteIface::SGI) + "~";
   BackhaulNetwork::SetDeviceNames (pgwSgiDev, webSgiDev, ifaceName);
 
   // Add the pgwSgiDev as physical port on the P-GW main OpenFlow switch.
@@ -359,7 +359,7 @@ SliceNetwork::CreatePgw (void)
   Ptr<OFSwitch13Port> infraSwS5Port;
   Ipv4Address pgwS5Addr;
   std::tie (pgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
-      pgwMainNode, m_pgwInfraSwIdx, LteInterface::S5);
+      pgwMainNode, m_pgwInfraSwIdx, LteIface::S5);
   pgwS5Addr = Ipv4AddressHelper::GetAddress (pgwS5Dev);
   NS_LOG_INFO ("P-GW main switch " << pgwDpId <<
                " attached to the s5 interface with IP " << pgwS5Addr);
@@ -411,7 +411,7 @@ SliceNetwork::CreatePgw (void)
 
       // Connect the P-GW TFT node to the OpenFlow backhaul node.
       std::tie (pgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
-          pgwTftNode, m_pgwInfraSwIdx, LteInterface::S5);
+          pgwTftNode, m_pgwInfraSwIdx, LteIface::S5);
       pgwS5Addr = Ipv4AddressHelper::GetAddress (pgwS5Dev);
       NS_LOG_INFO ("P-GW TFT switch " << pgwDpId <<
                    " attached to the s5 interface with IP " << pgwS5Addr);
@@ -462,14 +462,14 @@ SliceNetwork::CreateSgws (void)
       Ptr<CsmaNetDevice> sgwS1uDev;
       Ptr<OFSwitch13Port> infraSwS1uPort;
       std::tie (sgwS1uDev, infraSwS1uPort) = m_backhaul->AttachEpcNode (
-          sgwNode, sgwIdx, LteInterface::S1U);
+          sgwNode, sgwIdx, LteIface::S1U);
       NS_LOG_INFO ("S-GW " << sgwDpId << " attached to the s1u interface " <<
                    "with IP " << Ipv4AddressHelper::GetAddress (sgwS1uDev));
 
       Ptr<CsmaNetDevice> sgwS5Dev;
       Ptr<OFSwitch13Port> infraSwS5Port;
       std::tie (sgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
-          sgwNode, sgwIdx, LteInterface::S5);
+          sgwNode, sgwIdx, LteIface::S5);
       NS_LOG_INFO ("S-GW " << sgwDpId << " attached to the s5 interface " <<
                    "with IP " << Ipv4AddressHelper::GetAddress (sgwS5Dev));
 

@@ -73,7 +73,7 @@ public:
    *         port device create at the backhaul switch.
    */
   virtual std::pair<Ptr<CsmaNetDevice>, Ptr<OFSwitch13Port> >
-  AttachEpcNode (Ptr<Node> enbNode, uint16_t swIdx, LteInterface iface);
+  AttachEpcNode (Ptr<Node> enbNode, uint16_t swIdx, LteIface iface);
 
   /**
    * Get the total number of OpenFlow switches in the backhaul network.
