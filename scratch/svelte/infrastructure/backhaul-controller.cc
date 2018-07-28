@@ -327,45 +327,43 @@ BackhaulController::HandleFlowRemoved (
 {
   NS_LOG_FUNCTION (this << swtch << xid << msg->stats->cookie);
 
-  return 0; // FIXME remover
-// FIXME Comentado apenas para remover a dependencia do rinfo
-//  uint32_t teid = msg->stats->cookie;
-//  uint16_t prio = msg->stats->priority;
-//
-//  char *msgStr = ofl_msg_to_string ((struct ofl_msg_header*)msg, 0);
-//  NS_LOG_DEBUG ("Flow removed: " << msgStr);
-//  free (msgStr);
-//
-//  // Since handlers must free the message when everything is ok,
-//  // let's remove it now, as we already got the necessary information.
-//  ofl_msg_free_flow_removed (msg, true, 0);
-//
-//  // Check for existing routing information for this bearer.
-//  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-//  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer teid " << teid);
-//
-//  // When a flow is removed, check the following situations:
-//  // 1) The application is stopped and the bearer must be inactive.
-//  if (!rInfo->IsActive ())
-//    {
-//      NS_LOG_INFO ("Rule removed for inactive bearer teid " << teid);
-//      return 0;
-//    }
-//
-//  // 2) The application is running and the bearer is active, but the
-//  // application has already been stopped since last rule installation. In this
-//  // case, the bearer priority should have been increased to avoid conflicts.
-//  if (rInfo->GetPriority () > prio)
-//    {
-//      NS_LOG_INFO ("Old rule removed for bearer teid " << teid);
-//      return 0;
-//    }
-//
-//  // 3) The application is running and the bearer is active. This is the
-//  // critical situation. For some reason, the traffic absence lead to flow
-//  // expiration, and we are going to abort the program to avoid wrong results.
-//  NS_ASSERT_MSG (rInfo->GetPriority () == prio, "Invalid flow priority.");
-//  NS_ABORT_MSG ("Should not get here :/");
+  uint32_t teid = msg->stats->cookie;
+  uint16_t prio = msg->stats->priority;
+
+  char *msgStr = ofl_msg_to_string ((struct ofl_msg_header*)msg, 0);
+  NS_LOG_DEBUG ("Flow removed: " << msgStr);
+  free (msgStr);
+
+  // Since handlers must free the message when everything is ok,
+  // let's remove it now, as we already got the necessary information.
+  ofl_msg_free_flow_removed (msg, true, 0);
+
+  // Check for existing routing information for this bearer.
+  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer teid " << teid);
+
+  // When a flow is removed, check the following situations:
+  // 1) The application is stopped and the bearer must be inactive.
+  if (!rInfo->IsActive ())
+    {
+      NS_LOG_INFO ("Rule removed for inactive bearer teid " << teid);
+      return 0;
+    }
+
+  // 2) The application is running and the bearer is active, but the
+  // application has already been stopped since last rule installation. In this
+  // case, the bearer priority should have been increased to avoid conflicts.
+  if (rInfo->GetPriority () > prio)
+    {
+      NS_LOG_INFO ("Old rule removed for bearer teid " << teid);
+      return 0;
+    }
+
+  // 3) The application is running and the bearer is active. This is the
+  // critical situation. For some reason, the traffic absence lead to flow
+  // expiration, and we are going to abort the program to avoid wrong results.
+  NS_ASSERT_MSG (rInfo->GetPriority () == prio, "Invalid flow priority.");
+  NS_ABORT_MSG ("Should not get here :/");
 }
 
 ofl_err
