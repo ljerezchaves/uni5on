@@ -27,6 +27,8 @@
 
 namespace ns3 {
 
+class GbrInfo;
+
 /**
  * \ingroup svelteInfra
  * OpenFlow backhaul controller for ring topology.
@@ -107,15 +109,15 @@ private:
    */
   double GetSliceUsage (Slice slice) const;
 
-//  /**
-//   * Check for the available bit rate on the given slice.
-//   * \param ringInfo The ring routing information.
-//   * \param gbrInfo The GBR information.
-//   * \param slice The network slice.
-//   * \return True if there's available GBR bit rate, false otherwise.
-//   */
-//  bool HasBitRate (Ptr<const RingRoutingInfo> ringInfo,
-//                   Ptr<const GbrInfo> gbrInfo, Slice slice) const;
+  /**
+   * Check for the available bit rate on the given slice.
+   * \param ringInfo The ring routing information.
+   * \param gbrInfo The GBR information.
+   * \param slice The network slice.
+   * \return True if there's available GBR bit rate, false otherwise.
+   */
+  bool HasBitRate (Ptr<const RingRoutingInfo> ringInfo,
+                   Ptr<const GbrInfo> gbrInfo, Slice slice) const;
 
   /**
    * Count the number of hops between source and destination switch index

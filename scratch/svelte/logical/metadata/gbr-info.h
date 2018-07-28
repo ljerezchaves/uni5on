@@ -36,6 +36,8 @@ class RoutingInfo;
  */
 class GbrInfo : public Object
 {
+  friend class RingController;
+
 public:
   /**
    * Complete constructor.

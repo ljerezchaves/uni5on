@@ -109,6 +109,14 @@ RingRoutingInfo::IsLocalPath (LteInterface iface) const
     }
 }
 
+bool
+RingRoutingInfo::IsLocalPath (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return (IsLocalPath (LteInterface::S1U) && IsLocalPath (LteInterface::S5));
+}
+
 std::string
 RingRoutingInfo::GetPathStr (LteInterface iface) const
 {

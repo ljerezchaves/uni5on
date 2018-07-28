@@ -65,6 +65,7 @@ public:
   RoutingPath GetUpPath (LteInterface iface) const;
   bool IsDefaultPath (LteInterface iface) const;
   bool IsLocalPath (LteInterface iface) const;
+  bool IsLocalPath (void) const;
   std::string GetPathStr (LteInterface iface) const;
   uint16_t GetEnbInfraSwIdx (void) const;
   uint16_t GetPgwInfraSwIdx (void) const;
