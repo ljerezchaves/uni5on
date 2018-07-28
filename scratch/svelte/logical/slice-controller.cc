@@ -81,7 +81,7 @@ SliceController::GetTypeId (void)
     .AddAttribute ("PgwTftAdaptiveMode",
                    "P-GW TFT adaptive mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (OpMode::OFF),
+                   EnumValue (OpMode::AUTO),
                    MakeEnumAccessor (&SliceController::m_tftAdaptive),
                    MakeEnumChecker (OpMode::OFF,  "off",
                                     OpMode::ON,   "on",
