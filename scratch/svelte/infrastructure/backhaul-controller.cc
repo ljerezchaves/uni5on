@@ -20,9 +20,9 @@
 
 #include <algorithm>
 #include "backhaul-controller.h"
+#include "../metadata/connection-info.h"
+#include "../metadata/routing-info.h"
 #include "backhaul-network.h"
-#include "metadata/connection-info.h"
-#include "../logical/metadata/routing-info.h"
 
 namespace ns3 {
 

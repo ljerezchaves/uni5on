@@ -19,13 +19,13 @@
  */
 
 #include "routing-info.h"
+#include "enb-info.h"
 #include "gbr-info.h"
 #include "meter-info.h"
 #include "pgw-info.h"
 #include "sgw-info.h"
 #include "ue-info.h"
-#include "../../infrastructure/metadata/enb-info.h"
-#include "../../infrastructure/backhaul-controller.h"
+#include "../infrastructure/backhaul-controller.h"
 
 namespace ns3 {
 

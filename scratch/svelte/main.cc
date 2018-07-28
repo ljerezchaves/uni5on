@@ -24,9 +24,6 @@
 #include <ns3/core-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "slice-id.h"
-#include "operation-mode.h"
-#include "lte-interface.h"
 #include "svelte-helper.h"
 
 using namespace ns3;
@@ -397,10 +394,6 @@ EnableVerbose (bool enable)
       LogComponentEnable ("RingNetwork",              logLevelWarnInfo);
       LogComponentEnable ("SvelteEnbApplication",     logLevelWarnInfo);
 
-      LogComponentEnable ("ConnectionInfo",           logLevelWarnInfo);
-      LogComponentEnable ("EnbInfo",                  logLevelWarnInfo);
-      LogComponentEnable ("RingRoutingInfo",          logLevelWarnInfo);
-
       // Logical components.
       LogComponentEnable ("GtpTunnelApp",             logLevelWarnInfo);
       LogComponentEnable ("PgwTunnelApp",             logLevelWarnInfo);
@@ -408,11 +401,16 @@ EnableVerbose (bool enable)
       LogComponentEnable ("SliceNetwork",             logLevelWarnInfo);
       LogComponentEnable ("SvelteMme",                logLevelWarnInfo);
 
+      // Metadata components.
+      LogComponentEnable ("ConnectionInfo",           logLevelWarnInfo);
+      LogComponentEnable ("EnbInfo",                  logLevelWarnInfo);
       LogComponentEnable ("GbrInfo",                  logLevelWarnInfo);
       LogComponentEnable ("MeterInfo",                logLevelWarnInfo);
       LogComponentEnable ("PgwInfo",                  logLevelWarnInfo);
+      LogComponentEnable ("RingRoutingInfo",          logLevelWarnInfo);
       LogComponentEnable ("RoutingInfo",              logLevelWarnInfo);
       LogComponentEnable ("SgwInfo",                  logLevelWarnInfo);
+      LogComponentEnable ("SvelteEnum",               logLevelWarnInfo);
       LogComponentEnable ("UeInfo",                   logLevelWarnInfo);
 
 //      LogComponentEnable ("TrafficHelper",            logLevelWarnInfo);
@@ -459,60 +457,3 @@ EnableLibLogs (bool enable)
       ofs::EnableLibraryLog (true, prefix);
     }
 }
-
-namespace ns3 {
-
-// Implementing the lte-interface.h
-std::string LteIfaceStr (LteIface iface)
-{
-  switch (iface)
-    {
-    case LteIface::S1U:
-      return "s1u";
-    case LteIface::S5:
-      return "s5";
-    case LteIface::X2:
-      return "x2";
-    case LteIface::SGI:
-      return "sgi";
-    default:
-      NS_LOG_ERROR ("Invalid LTE interface.");
-      return "";
-    }
-}
-
-// Implementing the operation-mode.h
-std::string OperationModeStr (OperationMode mode)
-{
-  switch (mode)
-    {
-    case OperationMode::OFF:
-      return "off";
-    case OperationMode::ON:
-      return "on";
-    case OperationMode::AUTO:
-      return "auto";
-    default:
-      NS_LOG_ERROR ("Invalid operation mode.");
-      return "";
-    }
-}
-
-// Implementing the slice-id.h
-std::string SliceIdStr (SliceId slice)
-{
-  switch (slice)
-    {
-    case SliceId::NONE:
-      return "none";
-    case SliceId::HTC:
-      return "htc";
-    case SliceId::MTC:
-      return "mtc";
-    default:
-      NS_LOG_ERROR ("Invalid logical slice.");
-      return "";
-    }
-}
-
-} // namespace ns3

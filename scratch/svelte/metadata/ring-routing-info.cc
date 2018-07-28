@@ -19,7 +19,7 @@
  */
 
 #include "ring-routing-info.h"
-#include "../../logical/metadata/routing-info.h"
+#include "routing-info.h"
 
 namespace ns3 {
 

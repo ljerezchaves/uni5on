@@ -26,9 +26,8 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
-#include "metadata/routing-info.h"
-#include "../slice-id.h"
-#include "../operation-mode.h"
+#include "../metadata/routing-info.h"
+#include "../metadata/svelte-enum.h"
 
 namespace ns3 {
 

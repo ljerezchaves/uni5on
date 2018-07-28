@@ -21,14 +21,14 @@
 #include <ns3/csma-module.h>
 #include "svelte-helper.h"
 #include "infrastructure/backhaul-controller.h"
-#include "infrastructure/metadata/enb-info.h"
 #include "infrastructure/radio-network.h"
 #include "infrastructure/ring-network.h"
 #include "infrastructure/svelte-enb-application.h"
 #include "logical/slice-controller.h"
 #include "logical/slice-network.h"
 #include "logical/svelte-mme.h"
-#include "logical/metadata/ue-info.h"
+#include "metadata/enb-info.h"
+#include "metadata/ue-info.h"
 
 namespace ns3 {
 

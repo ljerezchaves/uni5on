@@ -19,12 +19,12 @@
  */
 
 #include <string>
-#include "backhaul-network.h"
 #include "ring-controller.h"
-#include "../lte-interface.h"
-#include "../logical/metadata/gbr-info.h"
-#include "../logical/metadata/meter-info.h"
-#include "../logical/metadata/routing-info.h"
+#include "../metadata/gbr-info.h"
+#include "../metadata/meter-info.h"
+#include "../metadata/routing-info.h"
+#include "../metadata/svelte-enum.h"
+#include "backhaul-network.h"
 
 namespace ns3 {
 

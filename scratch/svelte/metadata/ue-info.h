@@ -25,7 +25,7 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
-#include "../../slice-id.h"
+#include "svelte-enum.h"
 
 namespace ns3 {
 

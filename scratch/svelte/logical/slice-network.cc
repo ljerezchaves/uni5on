@@ -19,15 +19,15 @@
  */
 
 #include <ns3/csma-module.h>
+#include "../infrastructure/backhaul-network.h"
+#include "../infrastructure/radio-network.h"
+#include "../metadata/pgw-info.h"
+#include "../metadata/sgw-info.h"
+#include "../metadata/ue-info.h"
 #include "gtp-tunnel-app.h"
 #include "pgw-tunnel-app.h"
 #include "slice-controller.h"
 #include "slice-network.h"
-#include "metadata/pgw-info.h"
-#include "metadata/sgw-info.h"
-#include "metadata/ue-info.h"
-#include "../infrastructure/backhaul-network.h"
-#include "../infrastructure/radio-network.h"
 
 namespace ns3 {
 

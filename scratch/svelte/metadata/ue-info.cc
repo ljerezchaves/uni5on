@@ -19,9 +19,9 @@
  */
 
 #include "ue-info.h"
-#include "sgw-info.h"
+#include "enb-info.h"
 #include "pgw-info.h"
-#include "../../infrastructure/metadata/enb-info.h"
+#include "sgw-info.h"
 
 namespace ns3 {
 

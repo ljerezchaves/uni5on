@@ -22,7 +22,7 @@
 #define RING_ROUTING_INFO_H
 
 #include <ns3/core-module.h>
-#include "../../lte-interface.h"
+#include "svelte-enum.h"
 
 namespace ns3 {
 

@@ -18,12 +18,54 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef SLICE_ID_H
-#define SLICE_ID_H
+#ifndef SVELTE_ENUM_H
+#define SVELTE_ENUM_H
 
 #include <string>
 
 namespace ns3 {
+
+/**
+ * \ingroup svelteInfra
+ * Enumeration of LTE logical interfaces.
+ */
+typedef enum
+{
+  // Don't change enum order.
+  // These values are used as array indices in RingRoutingInfo.
+
+  S1U  = 0,   //!< S1-U interface connecting eNB to S-GW.
+  S5   = 1,   //!< S5 interface connecting S-GW to P-GW.
+  X2   = 2,   //!< X2 interface connecting eNB to eNB.
+  SGI  = 3    //!< SGi interface connecting P-GW to Internet.
+} LteIface;
+
+/**
+ * \ingroup svelteInfra
+ * Get the LTE interface name.
+ * \param iface The LTE interface.
+ * \return The string with the LTE interface name.
+ */
+std::string LteIfaceStr (LteIface iface);
+
+/**
+ * \ingroup svelteInfra
+ * Enumeration of available operation modes.
+ */
+typedef enum
+{
+  OFF  = 0,   //!< Always off.
+  ON   = 1,   //!< Always on.
+  AUTO = 2    //!< Automatic.
+} OperationMode;
+
+/**
+ * \ingroup svelteInfra
+ * Get the operation mode name.
+ * \param mode The operation mode.
+ * \return The string with the operation mode name.
+ */
+std::string OperationModeStr (OperationMode mode);
 
 /**
  * \ingroup svelteLogical
@@ -47,4 +89,4 @@ typedef enum
 std::string SliceIdStr (SliceId slice);
 
 } // namespace ns3
-#endif // SLICE_ID_H
+#endif // SVELTE_ENUM_H
