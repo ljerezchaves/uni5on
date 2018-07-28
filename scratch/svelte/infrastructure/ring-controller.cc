@@ -21,6 +21,7 @@
 #include <string>
 #include "backhaul-network.h"
 #include "ring-controller.h"
+#include "../lte-interface.h"
 #include "../logical/metadata/routing-info.h"
 
 namespace ns3 {
@@ -232,18 +233,22 @@ RingController::TopologyBearerCreated (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-//   // Let's create its ring routing metadata.
-//   Ptr<RingRoutingInfo> ringInfo = CreateObject<RingRoutingInfo> (rInfo);
-//
-//   // Set internal switch indexes.
-//   ringInfo->SetPgwSwIdx  (GetSwIdx (rInfo->GetPgwS5Addr ()));
-//   ringInfo->SetSgwSwIdx  (GetSwIdx (rInfo->GetSgwS5Addr ()));
-//   ringInfo->SetPgwSwDpId (GetDpId (ringInfo->GetPgwSwIdx ()));
-//   ringInfo->SetSgwSwDpId (GetDpId (ringInfo->GetSgwSwIdx ()));
-//
-//   // Set as default path the one with lower hops.
-//   ringInfo->SetDefaultPath (
-//     FindShortestPath (ringInfo->GetPgwSwIdx (), ringInfo->GetSgwSwIdx ()));
+  // FIXME Aqui tem que marcar qual o cinfo slice que este tráfego pertence
+
+  // Let's create its ring routing metadata.
+  Ptr<RingRoutingInfo> ringInfo = CreateObject<RingRoutingInfo> (rInfo);
+
+  // Set default paths to those with lower hops.
+  RingRoutingInfo::RoutingPath s1uDownPath = FindShortestPath (
+      rInfo->GetSgwInfraSwIdx (), rInfo->GetEnbInfraSwIdx ());
+  RingRoutingInfo::RoutingPath s5DownPath = FindShortestPath (
+      rInfo->GetPgwInfraSwIdx (), rInfo->GetSgwInfraSwIdx ());
+  ringInfo->SetDefaultPath (s1uDownPath, LteInterface::S1U);
+  ringInfo->SetDefaultPath (s5DownPath, LteInterface::S5);
+
+  NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeid () <<
+                " default downlink S1-U path to " << s1uDownPath <<
+                " and S5 path to " << s5DownPath);
 }
 
 bool
