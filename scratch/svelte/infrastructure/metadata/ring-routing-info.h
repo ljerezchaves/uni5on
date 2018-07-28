@@ -22,6 +22,7 @@
 #define RING_ROUTING_INFO_H
 
 #include <ns3/core-module.h>
+#include "../../lte-interface.h"
 
 namespace ns3 {
 
@@ -34,6 +35,8 @@ class RoutingInfo;
  */
 class RingRoutingInfo : public Object
 {
+  friend class RingController;
+
 public:
   /** Routing direction in the ring. */
   enum RoutingPath
@@ -47,8 +50,7 @@ public:
    * Complete constructor.
    * \param rInfo RoutingInfo pointer.
    */
-  // RingRoutingInfo (Ptr<RoutingInfo> rInfo);
-  RingRoutingInfo ();
+  RingRoutingInfo (Ptr<RoutingInfo> rInfo);
   virtual ~RingRoutingInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
@@ -57,40 +59,17 @@ public:
    */
   static TypeId GetTypeId (void);
 
-//  /** \name Private member accessors. */
-//  //\{
-//  RoutingPath GetDownPath (void) const;
-//  RoutingPath GetUpPath (void) const;
-//  uint16_t GetPgwSwIdx (void) const;
-//  uint16_t GetSgwSwIdx (void) const;
-//  uint64_t GetPgwSwDpId (void) const;
-//  uint64_t GetSgwSwDpId (void) const;
-//  bool IsDefaultPath (void) const;
-//  bool IsLocalPath (void) const;
-//  std::string GetPathStr (void) const;
-//
-//  void SetPgwSwIdx (uint16_t value);
-//  void SetSgwSwIdx (uint16_t value);
-//  void SetPgwSwDpId (uint64_t value);
-//  void SetSgwSwDpId (uint64_t value);
-//  //\}
-//
-//  /**
-//   * Set the default downlink routing path.
-//   * The uplink path will always be the same, but with inverted direction.
-//   * \param downPath The downlink default path.
-//   */
-//  void SetDefaultPath (RoutingPath downPath);
-//
-//  /**
-//   * Invert routing path, only if different from LOCAL.
-//   */
-//  void InvertPath ();
-//
-//  /**
-//   * Reset routing path to default values.
-//   */
-//  void ResetPath ();
+  /** \name Private member accessors. */
+  //\{
+  RoutingPath GetDownPath (LteInterface iface) const;
+  RoutingPath GetUpPath (LteInterface iface) const;
+  bool IsDefaultPath (LteInterface iface) const;
+  bool IsLocalPath (LteInterface iface) const;
+  std::string GetPathStr (LteInterface iface) const;
+  uint16_t GetEnbInfraSwIdx (void) const;
+  uint16_t GetPgwInfraSwIdx (void) const;
+  uint16_t GetSgwInfraSwIdx (void) const;
+  //\}
 
   /**
    * Invert the given routing path.
@@ -111,13 +90,28 @@ protected:
   virtual void DoDispose ();
 
 private:
-//  RoutingPath      m_downPath;      //!< Downlink routing path.
-//  uint16_t         m_pgwIdx;        //!< Switch index attached to P-GW.
-//  uint16_t         m_sgwIdx;        //!< Switch index attached to S-GW.
-//  uint64_t         m_pgwDpId;       //!< Switch dp id attached to the P-GW.
-//  uint64_t         m_sgwDpId;       //!< Switch dp id attached to the S-GW.
-//  bool             m_isDefaultPath; //!< True if path is default (!inverted).
-//  bool             m_isLocalPath;   //!< True if path is local.
+  /**
+   * Set the default downlink routing path for S1-U or S5 interface.
+   * The uplink path will always be the same, but with inverted direction.
+   * \param downPath The downlink default path.
+   * \param iface The LTE logical interface for this path.
+   */
+  void SetDefaultPath (RoutingPath downPath, LteInterface iface);
+
+  /**
+   * Invert the S1-U or S5 routing path, only if different from LOCAL.
+   * \param iface The LTE logical interface for this path.
+   */
+  void InvertPath (LteInterface iface);
+
+  /**
+   * Reset both routing paths (S1-U and S5) to the default values.
+   */
+  void ResetToDefaults ();
+
+  RoutingPath      m_downPath [2];       //!< Downlink routing path.
+  bool             m_isDefaultPath [2];  //!< True for default path.
+  bool             m_isLocalPath [2];    //!< True for local path.
 };
 
 } // namespace ns3
