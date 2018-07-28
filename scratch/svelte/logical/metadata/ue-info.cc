@@ -34,6 +34,7 @@ UeInfo::UeInfo (uint64_t imsi)
   m_sliceId (SliceId::NONE),
   m_cellId (0),
   m_sgwId (0),
+  m_pgwId (0),
   m_mmeUeS1Id (imsi),
   m_enbUeS1Id (0),
   m_s11SapSgw (0),
@@ -96,6 +97,14 @@ UeInfo::GetSgwId (void) const
   NS_LOG_FUNCTION (this);
 
   return m_sgwId;
+}
+
+uint64_t
+UeInfo::GetPgwId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwId;
 }
 
 uint64_t
@@ -254,6 +263,14 @@ UeInfo::SetSgwId (uint64_t value)
   NS_LOG_FUNCTION (this << value);
 
   m_sgwId = value;
+}
+
+void
+UeInfo::SetPgwId (uint64_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_pgwId = value;
 }
 
 void

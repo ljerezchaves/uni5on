@@ -35,6 +35,7 @@ NS_LOG_COMPONENT_DEFINE ("SliceNetwork");
 NS_OBJECT_ENSURE_REGISTERED (SliceNetwork);
 
 SliceNetwork::SliceNetwork ()
+  : m_pgwId (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -305,6 +306,7 @@ SliceNetwork::CreatePgw (void)
   Ptr<Node> pgwMainNode = m_pgwNodes.Get (0);
   Ptr<OFSwitch13Device> pgwMainOfDev = m_pgwDevices.Get (0);
   uint64_t pgwDpId = pgwMainOfDev->GetDatapathId ();
+  m_pgwId = pgwDpId;
 
   // Saving P-GW metadata.
   Ptr<PgwInfo> pgwInfo = CreateObject<PgwInfo> (pgwDpId);
@@ -503,6 +505,8 @@ SliceNetwork::CreateUes (void)
 {
   NS_LOG_FUNCTION (this);
 
+  NS_ASSERT_MSG (m_pgwId, "P-GW not configured yet.");
+
   // Create the UE nodes and set their names.
   m_ueNodes.Create (m_nUes);
   for (uint32_t i = 0; i < m_nUes; i++)
@@ -542,6 +546,7 @@ SliceNetwork::CreateUes (void)
       Ptr<UeInfo> ueInfo = CreateObject<UeInfo> (imsiValue.Get ());
       ueInfo->SetSliceId (m_sliceId);
       ueInfo->SetUeAddr (ueIfaces.GetAddress (i));
+      ueInfo->SetPgwId (m_pgwId);
       ueInfo->SetS11SapSgw (m_controllerApp->GetS11SapSgw ());
       NS_LOG_DEBUG ("UE IMSI " << imsiValue.Get () <<
                     " configured with IP " << ueInfo->GetUeAddr ());
