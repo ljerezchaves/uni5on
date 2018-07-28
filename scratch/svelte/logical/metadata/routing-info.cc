@@ -21,9 +21,9 @@
 #include "routing-info.h"
 #include "gbr-info.h"
 #include "meter-info.h"
-#include "ue-info.h"
-#include "sgw-info.h"
 #include "pgw-info.h"
+#include "sgw-info.h"
+#include "ue-info.h"
 #include "../../infrastructure/metadata/enb-info.h"
 #include "../../infrastructure/backhaul-controller.h"
 
@@ -47,6 +47,8 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerContext_t bearer,
   m_pgwTftIdx (0),
   m_priority (0),
   m_timeout (0),
+  m_gbrInfo (0),
+  m_meterInfo (0),
   m_ueInfo (ueInfo)
 {
   NS_LOG_FUNCTION (this);
@@ -85,6 +87,22 @@ RoutingInfo::GetBlockReasonStr (void) const
   NS_LOG_FUNCTION (this);
 
   return BlockReasonStr (m_blockReason);
+}
+
+bool
+RoutingInfo::HasGbrInfo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_gbrInfo;
+}
+
+bool
+RoutingInfo::HasMeterInfo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_meterInfo;
 }
 
 bool
@@ -141,6 +159,22 @@ RoutingInfo::GetTimeout (void) const
   NS_LOG_FUNCTION (this);
 
   return m_timeout;
+}
+
+Ptr<GbrInfo>
+RoutingInfo::GetGbrInfo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_gbrInfo;
+}
+
+Ptr<MeterInfo>
+RoutingInfo::GetMeterInfo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_meterInfo;
 }
 
 Ptr<UeInfo>
@@ -356,6 +390,8 @@ RoutingInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
+  m_gbrInfo = 0;
+  m_meterInfo = 0;
   m_ueInfo = 0;
 }
 
@@ -368,11 +404,11 @@ RoutingInfo::NotifyConstructionCompleted (void)
   GbrQosInformation gbrQoS = GetQosInfo ();
   if (gbrQoS.gbrDl || gbrQoS.gbrUl)
     {
-      CreateObject<GbrInfo> (Ptr<RoutingInfo> (this));
+      m_gbrInfo = CreateObject<GbrInfo> (Ptr<RoutingInfo> (this));
     }
   if (gbrQoS.mbrDl || gbrQoS.mbrUl)
     {
-      CreateObject<MeterInfo> (Ptr<RoutingInfo> (this));
+      m_meterInfo = CreateObject<MeterInfo> (Ptr<RoutingInfo> (this));
     }
 }
 

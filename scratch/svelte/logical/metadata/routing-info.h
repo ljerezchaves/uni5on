@@ -83,6 +83,8 @@ public:
   //\{
   uint32_t GetTeid (void) const;
   std::string GetBlockReasonStr (void) const;
+  bool HasGbrInfo (void) const;
+  bool HasMeterInfo (void) const;
   bool IsActive (void) const;
   bool IsBlocked (void) const;
   bool IsDefault (void) const;
@@ -90,6 +92,8 @@ public:
   uint16_t GetPgwTftIdx (void) const;
   uint16_t GetPriority (void) const;
   uint16_t GetTimeout (void) const;
+  Ptr<GbrInfo> GetGbrInfo (void) const;
+  Ptr<MeterInfo> GetMeterInfo (void) const;
   Ptr<UeInfo> GetUeInfo (void) const;
   //\}
 
@@ -191,6 +195,8 @@ private:
   uint16_t             m_pgwTftIdx;    //!< P-GW TFT switch index.
   uint16_t             m_priority;     //!< Flow rule priority.
   uint16_t             m_timeout;      //!< Flow idle timeout.
+  Ptr<GbrInfo>         m_gbrInfo;      //!< GBR metadata.
+  Ptr<MeterInfo>       m_meterInfo;    //!< Meter metadata.
   Ptr<UeInfo>          m_ueInfo;       //!< UE metadata.
 
   // Slice                m_slice;        //!< Backhaul slice. ???
