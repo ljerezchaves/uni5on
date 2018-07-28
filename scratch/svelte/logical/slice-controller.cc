@@ -38,9 +38,7 @@ NS_OBJECT_ENSURE_REGISTERED (SliceController);
 const uint16_t SliceController::m_flowTimeout = 0;
 
 SliceController::SliceController ()
-  : m_pgwInfo (0),
-  m_tftMaxLoad (DataRate (std::numeric_limits<uint64_t>::max ())),
-  m_tftTableSize (std::numeric_limits<uint32_t>::max ())
+  : m_pgwInfo (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -350,17 +348,6 @@ SliceController::NotifyPgwAttach (Ptr<PgwInfo> pgwInfo,
         break;
       }
     }
-
-  // Get the minimum table size and pipeline capacity of P-GW TFT switches.
-  for (uint16_t tftIdx = 1; tftIdx <= pgwInfo->GetNumTfts (); tftIdx++)
-    {
-      uint32_t tableSize = pgwInfo->GetTftFlowTableSize (tftIdx);
-      DataRate plCapacity = pgwInfo->GetTftPipelineCapacity (tftIdx);
-      m_tftTableSize = std::min (m_tftTableSize, tableSize);
-      m_tftMaxLoad = std::min (m_tftMaxLoad, plCapacity);
-    }
-  NS_LOG_DEBUG ("P-GW TFT table size set to " << m_tftTableSize);
-  NS_LOG_DEBUG ("P-GW TFT pipeline capacity set to " << m_tftMaxLoad);
 
   // Configuring the P-GW MAIN switch.
   // -------------------------------------------------------------------------
@@ -846,8 +833,8 @@ SliceController::PgwTftCheckUsage (void)
 
   if (GetPgwAdaptiveMode () == OperationMode::AUTO)
     {
-      double maxTableUsage = maxEntries / m_tftTableSize;
-      double maxLoadUsage = maxLoad / m_tftMaxLoad.GetBitRate ();
+      double maxTableUsage = maxEntries / m_pgwInfo->GetTftFlowTableSize ();
+      double maxLoadUsage = maxLoad / m_pgwInfo->GetTftPipelineCapacity ().GetBitRate ();
 
       // We may increase the level when we hit the split threshold.
       if ((m_tftLevel < maxLbLevel)
@@ -904,10 +891,10 @@ SliceController::PgwTftCheckUsage (void)
 
   // Fire the P-GW TFT adaptation trace source.
   struct PgwTftStats tftStats;
-  tftStats.tableSize = m_tftTableSize;
+  tftStats.tableSize = m_pgwInfo->GetTftFlowTableSize ();
   tftStats.maxEntries = maxEntries;
   tftStats.sumEntries = sumEntries;
-  tftStats.pipeCapacity = m_tftMaxLoad.GetBitRate ();
+  tftStats.pipeCapacity = m_pgwInfo->GetTftPipelineCapacity ().GetBitRate ();
   tftStats.maxLoad = maxLoad;
   tftStats.sumLoad = sumLoad;
   tftStats.currentLevel = m_tftLevel;
@@ -1173,7 +1160,7 @@ SliceController::PgwTftCheckUsage (void)
 //   if (!rInfo->IsAggregated ())
 //     {
 //       uint32_t entries = stats->GetEwmaFlowEntries ();
-//       double tableUsage = static_cast<double> (entries) / m_tftTableSize;
+//       double tableUsage = static_cast<double> (entries) / m_pgwInfo->GetTftFlowTableSize ();
 //       if (tableUsage >= m_tftBlockThs)
 //         {
 //           rInfo->SetBlocked (true, RoutingInfo::TFTTABLEFULL);
@@ -1189,7 +1176,7 @@ SliceController::PgwTftCheckUsage (void)
 //   // - If ON (all)  : block the request.
 //   // - If AUTO (gbr): block only if GBR request.
 //   uint64_t rate = stats->GetEwmaPipelineLoad ().GetBitRate ();
-//   double loadUsage = static_cast<double> (rate) / m_tftMaxLoad.GetBitRate ();
+//   double loadUsage = static_cast<double> (rate) / m_pgwInfo->GetTftPipelineCapacity ().GetBitRate ();
 //   if (loadUsage >= m_tftBlockThs
 //       && (m_tftBlockPolicy == OperationMode::ON
 //           || (m_tftBlockPolicy == OperationMode::AUTO && rInfo->IsGbr ())))

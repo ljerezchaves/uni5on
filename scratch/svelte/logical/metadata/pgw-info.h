@@ -68,8 +68,8 @@ public:
   Ipv4Address GetTftS5Addr (uint16_t idx) const;
   uint32_t GetTftS5PortNo (uint16_t idx) const;
   uint32_t GetTftInfraSwS5PortNo (uint16_t idx) const;
-  uint32_t GetTftFlowTableSize (uint16_t idx) const;
-  DataRate GetTftPipelineCapacity (uint16_t idx) const;
+  uint32_t GetTftFlowTableSize () const;
+  DataRate GetTftPipelineCapacity () const;
   //\}
 
   /**
@@ -95,6 +95,8 @@ private:
   /**
    * Save the metadata associated to a single P-GW OpenFlow switch attached to
    * the OpenFlow backhaul network.
+   * \attention Invoke this method first for the P-GW MAIN switch, then for the
+   *            P-GW TFT switches.
    * \param dpId The OpenFlow switch datapath ID.
    * \param s5Add The IP address assigned to the S5 network device on the P-GW
    *        switch.
@@ -128,6 +130,8 @@ private:
   std::vector<uint32_t>     m_s5PortNos;          //!< S5 port numbers.
   std::vector<uint32_t>     m_infraSwS5PortNos;   //!< Back switch S5 port nos.
   std::vector<uint32_t>     m_mainToTftPortNos;   //!< Main port nos to TFTs.
+  DataRate                  m_tftPipeCapacity;    //!< Min TFT pipe capacity.
+  uint32_t                  m_tftFlowTableSize;   //!< Min TFT Flow table size.
 
   /** Map saving P-GW ID / P-GW information. */
   typedef std::map<uint64_t, Ptr<PgwInfo> > PgwIdPgwInfo_t;

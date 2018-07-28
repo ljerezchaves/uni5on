@@ -332,8 +332,6 @@ private:
   double                  m_tftJoinThs;     //!< Join threshold.
   double                  m_tftSplitThs;    //!< Split threshold.
   uint16_t                m_tftSwitches;    //!< Max number of TFT switches.
-  DataRate                m_tftMaxLoad;     //!< Processing capacity.
-  uint32_t                m_tftTableSize;   //!< Flow table size.
 
   // Internal members and attributes.
   OperationMode           m_aggregation;    //!< Aggregation mechanism.

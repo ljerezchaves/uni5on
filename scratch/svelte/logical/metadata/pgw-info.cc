@@ -33,7 +33,9 @@ PgwInfo::PgwInfo (uint64_t pgwId)
   m_sliceId (SliceId::NONE),
   m_infraSwIdx (0),
   m_sgiPortNo (0),
-  m_nTfts (0)
+  m_nTfts (0),
+  m_tftPipeCapacity (DataRate (std::numeric_limits<uint64_t>::max ())),
+  m_tftFlowTableSize (std::numeric_limits<uint32_t>::max ())
 {
   NS_LOG_FUNCTION (this);
 
@@ -182,21 +184,19 @@ PgwInfo::GetTftInfraSwS5PortNo (uint16_t idx) const
 }
 
 uint32_t
-PgwInfo::GetTftFlowTableSize (uint16_t idx) const
+PgwInfo::GetTftFlowTableSize () const
 {
-  NS_LOG_FUNCTION (this << idx);
+  NS_LOG_FUNCTION (this);
 
-  return OFSwitch13Device::GetDevice (
-    GetTftDpId (idx))->GetFlowTableSize ();
+  return m_tftFlowTableSize;
 }
 
 DataRate
-PgwInfo::GetTftPipelineCapacity (uint16_t idx) const
+PgwInfo::GetTftPipelineCapacity () const
 {
-  NS_LOG_FUNCTION (this << idx);
+  NS_LOG_FUNCTION (this);
 
-  return OFSwitch13Device::GetDevice (
-    GetTftDpId (idx))->GetPipelineCapacity ();
+  return m_tftPipeCapacity;
 }
 
 Ptr<PgwInfo>
@@ -263,6 +263,19 @@ PgwInfo::SaveSwitchInfo (uint64_t dpId, Ipv4Address s5Addr, uint32_t s5PortNo,
   m_s5PortNos.push_back (s5PortNo);
   m_infraSwS5PortNos.push_back (infraSwS5PortNo);
   m_mainToTftPortNos.push_back (mainToTftPortNo);
+
+  // Nothing to do for the P-GW MAIN switch.
+  if (m_dpIds.size () == 1) return;
+
+  // Get the minimum table size and pipeline capacity of P-GW TFT switches.
+  Ptr<OFSwitch13Device> dev = OFSwitch13Device::GetDevice (dpId);
+  uint32_t tableSize = dev->GetFlowTableSize ();
+  DataRate pipeCapacity = dev->GetPipelineCapacity ();
+
+  m_tftFlowTableSize = std::min (m_tftFlowTableSize, tableSize);
+  m_tftPipeCapacity = std::min (m_tftPipeCapacity, pipeCapacity);
+  NS_LOG_DEBUG ("P-GW TFT min flow table size set to " << m_tftFlowTableSize);
+  NS_LOG_DEBUG ("P-GW TFT min pipeline capacity set to " << m_tftPipeCapacity);
 }
 
 void
