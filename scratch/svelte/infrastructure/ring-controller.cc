@@ -451,51 +451,55 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 
   NS_LOG_INFO ("Installing ring rules for bearer teid " << rInfo->GetTeid ());
 
-//   // Getting ring routing information.
-//   Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
-//
-//   // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
-//   std::string flagsStr ("0x0007");
-//
-//   // Printing the cookie in dpctl string format.
-//   char cookieStr [20], metadataStr [12];
-//   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
-//
-//   // Building the dpctl command + arguments string.
-//   std::ostringstream cmd;
-//   cmd << "flow-mod cmd=add,table=1"
-//       << ",flags=" << flagsStr
-//       << ",cookie=" << cookieStr
-//       << ",prio=" << rInfo->GetPriority ()
-//       << ",idle=" << rInfo->GetTimeout ();
-//
-//   // Configuring downlink routing.
-//   if (rInfo->HasDownlinkTraffic ())
-//     {
-//       // Building the match string.
-//       // No match on source IP because we may have several P-GW TFT switches.
-//       std::ostringstream match;
-//       match << " eth_type=0x800,ip_proto=17"
-//             << ",ip_dst=" << rInfo->GetSgwS5Addr ()
-//             << ",gtpu_teid=" << rInfo->GetTeid ();
-//
-//       // Set the IP DSCP field when necessary.
-//       std::ostringstream act;
-//       if (rInfo->GetDscpValue ())
-//         {
-//           // Build the apply set_field action instruction string.
-//           act << " apply:set_field=ip_dscp:" << rInfo->GetDscpValue ();
-//         }
-//
-//       // Build the metatada, write and goto instructions string.
-//       sprintf (metadataStr, "0x%x", ringInfo->GetDownPath ());
-//       act << " meta:" << metadataStr << " goto:2";
-//
-//       // Installing the rule into input switch.
-//       // In downlink the input ring switch is the one connected to the P-GW.
-//       std::string commandStr = cmd.str () + match.str () + act.str ();
-//       DpctlExecute (ringInfo->GetPgwSwDpId (), commandStr);
-//     }
+  // Getting ring routing information.
+  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+
+  // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
+  std::string flagsStr ("0x0007");
+
+  // Printing the cookie in dpctl string format.
+  char cookieStr [20], metadataStr [12];
+  sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
+
+  // Building the dpctl command + arguments string.
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=add,table=1"
+      << ",flags=" << flagsStr
+      << ",cookie=" << cookieStr
+      << ",prio=" << rInfo->GetPriority ()
+      << ",idle=" << rInfo->GetTimeout ();
+
+  // Configuring downlink routing.
+  if (rInfo->HasDownlinkTraffic ())
+    {
+      // Building the match string for both (S1-U and S5) interfaces
+      // No match on source IP because we may have several P-GW TFT switches.
+      std::ostringstream matchS5, matchS1u;
+      matchS5 << " eth_type=0x800,ip_proto=17"
+              << ",ip_dst=" << rInfo->GetSgwS5Addr ()
+              << ",gtpu_teid=" << rInfo->GetTeid ();
+
+      matchS1u << " eth_type=0x800,ip_proto=17"
+               << ",ip_dst=" << rInfo->GetEnbS1uAddr ()
+               << ",gtpu_teid=" << rInfo->GetTeid ();
+
+      // Set the IP DSCP field when necessary.
+      std::ostringstream act;
+      if (rInfo->GetDscpValue ())
+        {
+          // Build the apply set_field action instruction string.
+          act << " apply:set_field=ip_dscp:" << rInfo->GetDscpValue ();
+        }
+
+      // Build the metatada, write and goto instructions string.
+      // FIXME Essas regras de act tem que ser diferentes tb.
+      sprintf (metadataStr, "0x%x", ringInfo->GetDownPath (LteInterface::S5));
+      act << " meta:" << metadataStr << " goto:2";
+
+      // Installing downlink rules into switch connected to P-GW and S-GW.
+      DpctlExecute (GetDpId (ringInfo->GetPgwInfraSwIdx ()), cmd.str () + matchS5.str () + act.str ());
+      DpctlExecute (GetDpId (ringInfo->GetSgwInfraSwIdx ()), cmd.str () + matchS1u.str () + act.str ());
+    }
 //
 //   // Configuring uplink routing.
 //   if (rInfo->HasUplinkTraffic ())
