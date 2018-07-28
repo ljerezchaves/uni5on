@@ -188,19 +188,19 @@ protected:
   // Inherited from OFSwitch13Controller.
 
 private:
-//  /**
-//   * Install OpenFlow match rules for this bearer.
-//   * \param rInfo The routing information to process.
-//   * \return True if succeeded, false otherwise.
-//   */
-//  bool BearerInstall (Ptr<RoutingInfo> rInfo);
-//
-//  /**
-//   * Remove OpenFlow match rules for this bearer.
-//   * \param rInfo The routing information to process.
-//   * \return True if succeeded, false otherwise.
-//   */
-//  bool BearerRemove (Ptr<RoutingInfo> rInfo);
+  /**
+   * Install OpenFlow match rules for this bearer.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool BearerInstall (Ptr<RoutingInfo> rInfo);
+
+  /**
+   * Remove OpenFlow match rules for this bearer.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool BearerRemove (Ptr<RoutingInfo> rInfo);
 
   /**
    * Periodic controller timeout operations.
@@ -210,6 +210,8 @@ private:
   /**
    * \name Methods for the S11 SAP S-GW control plane.
    * \param msg The message sent here by the MME entity.
+   * \internal Note the trick to avoid the need for allocating TEID on the S11
+   *           interface using the IMSI as identifier.
    */
   //\{
   void DoCreateSessionRequest (EpcS11SapSgw::CreateSessionRequestMessage msg);
@@ -235,42 +237,13 @@ private:
 //   * \return True if succeeded, false otherwise.
 //   */
 //  bool MtcAggBearerInstall (Ptr<RoutingInfo> rInfo);
-//
-//  /**
-//   * Check for available resources on P-GW TFT switch for this bearer request.
-//   * \param rInfo The routing information to process.
-//   * \return True if succeeded, false otherwise.
-//   */
-//  bool PgwBearerRequest (Ptr<RoutingInfo> rInfo);
-//
-//  /**
-//   * Install OpenFlow rules for downlink packet filtering on the P-GW TFT
-//   * switch.
-//   * \attention To avoid conflicts with old entries, increase the routing
-//   *            priority before installing OpenFlow rules.
-//   * \param rInfo The routing information to process.
-//   * \param pgwTftIdx The P-GW TFT switch index. When set to 0, the index will
-//   *        be get from rInfo->GetPgwTftIdx ().
-//   * \param forceMeterInstall Force the meter entry installation even when the
-//   *        meterInfo->IsDownInstalled () is true.
-//   * \return True if succeeded, false otherwise.
-//   */
-//  bool PgwRulesInstall (
-//    Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx = 0,
-//    bool forceMeterInstall = false);
-//
-//  /**
-//   * Remove OpenFlow rules for downlink packet filtering from P-GW TFT switch.
-//   * \param rInfo The routing information to process.
-//   * \param pgwTftIdx The P-GW TFT switch index. When set to 0, the index will
-//   *        be get from rInfo->GetPgwTftIdx ().
-//   * \param keepMeterFlag Don't set the meterInfo->IsDownInstalled () flag to
-//   *        false when removing the meter entry.
-//   * \return True if succeeded, false otherwise.
-//   */
-//  bool PgwRulesRemove (
-//    Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx = 0,
-//    bool keepMeterFlag = false);
+
+  /**
+   * Check for available resources on P-GW TFT switch for this bearer request.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool PgwBearerRequest (Ptr<RoutingInfo> rInfo);
 
   /**
    * Periodically check for the P-GW TFT processing load and flow table usage
@@ -278,21 +251,49 @@ private:
    */
   void PgwTftCheckUsage (void);
 
-//  /**
-//   * Configure the S-GW with OpenFlow rules for packet forwarding.
-//   * \attention To avoid conflicts with old entries, increase the routing
-//   *            priority before installing S-GW rules.
-//   * \param rInfo The routing information to process.
-//   * \return True if succeeded, false otherwise.
-//   */
-//  bool SgwRulesInstall (Ptr<RoutingInfo> rInfo);
-//
-//  /**
-//   * Remove OpenFlow rules for packet forwarding from S-GW.
-//   * \param rInfo The routing information to process.
-//   * \return True if succeeded, false otherwise.
-//   */
-//  bool SgwRulesRemove (Ptr<RoutingInfo> rInfo);
+  /**
+   * Install downlink packet filtering rules on the P-GW TFT OpenFlow switch.
+   * \attention To avoid conflicts with old entries, increase the routing
+   *            priority before installing OpenFlow rules.
+   * \param rInfo The routing information to process.
+   * \param pgwTftIdx The P-GW TFT switch index. When set to 0, the index will
+   *        be get from rInfo->GetPgwTftIdx ().
+   * \param forceMeterInstall Force the meter entry installation even when the
+   *        meterInfo->IsDownInstalled () is true (useful when moving rules
+   *        among TFT switches).
+   * \return True if succeeded, false otherwise.
+   */
+  bool PgwRulesInstall (Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx = 0,
+                        bool forceMeterInstall = false);
+
+  /**
+   * Remove downlink packet filtering rules from the P-GW TFT OpenFlow switch.
+   * \param rInfo The routing information to process.
+   * \param pgwTftIdx The P-GW TFT switch index. When set to 0, the index will
+   *        be get from rInfo->GetPgwTftIdx ().
+   * \param keepMeterFlag Don't set the meterInfo->IsDownInstalled () flag to
+   *        false when removing the meter entry (useful when moving rules
+   *        among TFT switches).
+   * \return True if succeeded, false otherwise.
+   */
+  bool PgwRulesRemove (Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx = 0,
+                       bool keepMeterFlag = false);
+
+  /**
+   * Install packet forwarding rules on the S-GW OpenFlow switch.
+   * \attention To avoid conflicts with old entries, increase the routing
+   *            priority before installing S-GW rules.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool SgwRulesInstall (Ptr<RoutingInfo> rInfo);
+
+  /**
+   * Remove packet forwarding rules from the S-GW OpenFlow switch.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool SgwRulesRemove (Ptr<RoutingInfo> rInfo);
 
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
   TracedCallback<Ptr<const RoutingInfo> > m_bearerRequestTrace;
