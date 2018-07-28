@@ -228,29 +228,10 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
 }
 
 void
-RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
+RingController::TopologyBearerCreated (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
 
-//  // Let's create its ring routing metadata.
-//  Ptr<RingRoutingInfo> ringInfo = CreateObject<RingRoutingInfo> (rInfo);
-//
-//  // Set internal switch indexes.
-//  ringInfo->SetPgwSwIdx  (GetSwIdx (rInfo->GetPgwS5Addr ()));
-//  ringInfo->SetSgwSwIdx  (GetSwIdx (rInfo->GetSgwS5Addr ()));
-//  ringInfo->SetPgwSwDpId (GetDpId (ringInfo->GetPgwSwIdx ()));
-//  ringInfo->SetSgwSwDpId (GetDpId (ringInfo->GetSgwSwIdx ()));
-//
-//  // Set as default path the one with lower hops.
-//  ringInfo->SetDefaultPath (
-//    FindShortestPath (ringInfo->GetPgwSwIdx (), ringInfo->GetSgwSwIdx ()));
-}
-
-// void
-// RingController::TopologyBearerCreated (Ptr<RoutingInfo> rInfo)
-// {
-//   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
-//
 //   // Let's create its ring routing metadata.
 //   Ptr<RingRoutingInfo> ringInfo = CreateObject<RingRoutingInfo> (rInfo);
 //
@@ -263,13 +244,13 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 //   // Set as default path the one with lower hops.
 //   ringInfo->SetDefaultPath (
 //     FindShortestPath (ringInfo->GetPgwSwIdx (), ringInfo->GetSgwSwIdx ()));
-// }
-//
-// bool
-// RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
-// {
-//   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
-//
+}
+
+bool
+RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+
 //   // If the bearer is already blocked, there's nothing more to do.
 //   if (rInfo->IsBlocked ())
 //     {
@@ -323,14 +304,14 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 //   // Nothing more to do. Block the traffic.
 //   NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid ());
 //   rInfo->SetBlocked (true, RoutingInfo::NOBANDWIDTH);
-//   return false;
-// }
-//
-// bool
-// RingController::TopologyBitRateRelease (Ptr<RoutingInfo> rInfo)
-// {
-//   NS_LOG_FUNCTION (this << rInfo);
-//
+  return false;
+}
+
+bool
+RingController::TopologyBitRateRelease (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo);
+
 //   // For bearers without reserved resources: nothing to release.
 //   Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
 //   if (!gbrInfo || !gbrInfo->IsReserved ())
@@ -343,7 +324,7 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 //   Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
 //   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 //
-//   bool success = true;
+  bool success = true;
 //   uint16_t curr = ringInfo->GetPgwSwIdx ();
 //   while (success && curr != ringInfo->GetSgwSwIdx ())
 //     {
@@ -360,14 +341,14 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 //     }
 //   NS_ASSERT_MSG (success, "Error when releasing resources.");
 //   gbrInfo->SetReserved (!success);
-//   return success;
-// }
-//
-// bool
-// RingController::TopologyBitRateReserve (Ptr<RoutingInfo> rInfo)
-// {
-//   NS_LOG_FUNCTION (this << rInfo);
-//
+  return success;
+}
+
+bool
+RingController::TopologyBitRateReserve (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo);
+
 //   // If the bearer is already blocked, there's nothing more to do.
 //   if (rInfo->IsBlocked ())
 //     {
@@ -392,7 +373,7 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 //   Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
 //   NS_ASSERT_MSG (gbrInfo, "Invalid configuration for GBR bearer request.");
 //
-//   bool success = true;
+  bool success = true;
 //   uint16_t curr = ringInfo->GetPgwSwIdx ();
 //   while (success && curr != ringInfo->GetSgwSwIdx ())
 //     {
@@ -409,16 +390,16 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 //     }
 //   NS_ASSERT_MSG (success, "Error when reserving resources.");
 //   gbrInfo->SetReserved (success);
-//   return success;
-// }
-//
-// bool
-// RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
-// {
-//   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
-//
-//   NS_LOG_INFO ("Installing ring rules for bearer teid " << rInfo->GetTeid ());
-//
+  return success;
+}
+
+bool
+RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+
+  NS_LOG_INFO ("Installing ring rules for bearer teid " << rInfo->GetTeid ());
+
 //   // Getting ring routing information.
 //   Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
 //
@@ -492,16 +473,16 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 //       std::string commandStr = cmd.str () + match.str () + act.str ();
 //       DpctlExecute (ringInfo->GetSgwSwDpId (), commandStr);
 //     }
-//   return true;
-// }
-//
-// bool
-// RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
-// {
-//   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
-//
-//   NS_LOG_INFO ("Removing ring rules for bearer teid " << rInfo->GetTeid ());
-//
+  return true;
+}
+
+bool
+RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+
+  NS_LOG_INFO ("Removing ring rules for bearer teid " << rInfo->GetTeid ());
+
 //   // Print the cookie value in dpctl string format.
 //   char cookieStr [20];
 //   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
@@ -526,8 +507,8 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 //     {
 //       DpctlExecute (ringInfo->GetSgwSwDpId (), cmd.str ());
 //     }
-//   return true;
-// }
+  return true;
+}
 
 void
 RingController::CreateSpanningTree (void)

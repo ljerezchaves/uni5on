@@ -174,44 +174,45 @@ protected:
    * Notify this controller of a new bearer context created.
    * \param rInfo The routing information to process.
    */
-  virtual void NotifyBearerCreated (Ptr<RoutingInfo> rInfo) = 0;
-//  /**
-//   * Process the bearer request, checking for available resources in the
-//   * backhaul network and deciding for the best routing path.
-//   * \param rInfo The routing information to process.
-//   * \return True if succeeded, false otherwise.
-//   */
-//  virtual bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo) = 0;
-//
-//  /**
-//   * Release the bit rate for this bearer in the backhaul network.
-//   * \param rInfo The routing information to process.
-//   * \return True if succeeded, false otherwise.
-//   */
-//  virtual bool TopologyBitRateRelease (Ptr<RoutingInfo> rInfo) = 0;
-//
-//  /**
-//   * Reserve the bit rate for this bearer in the backhaul network.
-//   * \param rInfo The routing information to process.
-//   * \return True if succeeded, false otherwise.
-//   */
-//  virtual bool TopologyBitRateReserve (Ptr<RoutingInfo> rInfo) = 0;
-//
-//  /**
-//   * Install TEID routing OpenFlow match rules into backhaul switches.
-//   * \attention To avoid conflicts with old entries, increase the routing
-//   *            priority before installing OpenFlow rules.
-//   * \param rInfo The routing information to process.
-//   * \return True if succeeded, false otherwise.
-//   */
-//  virtual bool TopologyRoutingInstall (Ptr<RoutingInfo> rInfo) = 0;
-//
-//  /**
-//   * Remove TEID routing OpenFlow match rules from backhaul switches.
-//   * \param rInfo The routing information to process.
-//   * \return True if succeeded, false otherwise.
-//   */
-//  virtual bool TopologyRoutingRemove (Ptr<RoutingInfo> rInfo) = 0;
+  virtual void TopologyBearerCreated (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Process the bearer request, checking for available resources in the
+   * backhaul network and deciding for the best routing path.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Release the bit rate for this bearer in the backhaul network.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool TopologyBitRateRelease (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Reserve the bit rate for this bearer in the backhaul network.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool TopologyBitRateReserve (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Install TEID routing OpenFlow match rules into backhaul switches.
+   * \attention To avoid conflicts with old entries, increase the routing
+   *            priority before installing OpenFlow rules.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool TopologyRoutingInstall (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Remove TEID routing OpenFlow match rules from backhaul switches.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool TopologyRoutingRemove (Ptr<RoutingInfo> rInfo) = 0;
   //\}
 
   // Inherited from OFSwitch13Controller.

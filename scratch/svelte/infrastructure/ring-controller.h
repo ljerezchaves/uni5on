@@ -65,14 +65,12 @@ protected:
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
   void NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo);
 
-  void NotifyBearerCreated (Ptr<RoutingInfo> rInfo);
-
-  // FIXME Removendo temporariamente
-  // bool TopologyBearerRequest  (Ptr<RoutingInfo> rInfo);
-  // bool TopologyBitRateRelease (Ptr<RoutingInfo> rInfo);
-  // bool TopologyBitRateReserve (Ptr<RoutingInfo> rInfo);
-  // bool TopologyRoutingInstall (Ptr<RoutingInfo> rInfo);
-  // bool TopologyRoutingRemove  (Ptr<RoutingInfo> rInfo);
+  void TopologyBearerCreated  (Ptr<RoutingInfo> rInfo);
+  bool TopologyBearerRequest  (Ptr<RoutingInfo> rInfo);
+  bool TopologyBitRateRelease (Ptr<RoutingInfo> rInfo);
+  bool TopologyBitRateReserve (Ptr<RoutingInfo> rInfo);
+  bool TopologyRoutingInstall (Ptr<RoutingInfo> rInfo);
+  bool TopologyRoutingRemove  (Ptr<RoutingInfo> rInfo);
   // Inherited from BackhaulController.
 
 private:
