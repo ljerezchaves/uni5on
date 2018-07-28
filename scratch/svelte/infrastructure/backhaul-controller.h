@@ -107,8 +107,8 @@ public:
    * \return The requested mechanism operation mode.
    */
   //\{
-  OperationMode GetPriorityQueuesMode (void) const;
-  OperationMode GetSlicingMode (void) const;
+  OpMode GetPriorityQueuesMode (void) const;
+  OpMode GetSlicingMode (void) const;
   //\}
 
   /**
@@ -249,8 +249,8 @@ private:
   static void StaticInitialize (void);
 
   // Internal mechanisms for performance improvement.
-  OperationMode         m_priorityQueues; //!< DSCP priority queues mechanism.
-  OperationMode         m_slicing;        //!< Network slicing mechanism.
+  OpMode                m_priorityQueues; //!< DSCP priority queues mechanism.
+  OpMode                m_slicing;        //!< Network slicing mechanism.
 
   /** Map saving EPS QCI / IP DSCP value. */
   typedef std::map<EpsBearer::Qci, Ipv4Header::DscpType> QciDscpMap_t;

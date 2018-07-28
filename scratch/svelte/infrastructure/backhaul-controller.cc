@@ -54,18 +54,18 @@ BackhaulController::GetTypeId (void)
     .AddAttribute ("PriorityQueues",
                    "Priority output queues mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (OperationMode::ON),
+                   EnumValue (OpMode::ON),
                    MakeEnumAccessor (&BackhaulController::m_priorityQueues),
-                   MakeEnumChecker (OperationMode::OFF, "off",
-                                    OperationMode::ON,  "on"))
+                   MakeEnumChecker (OpMode::OFF, "off",
+                                    OpMode::ON,  "on"))
     .AddAttribute ("Slicing",
                    "Network slicing mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (OperationMode::AUTO),
+                   EnumValue (OpMode::AUTO),
                    MakeEnumAccessor (&BackhaulController::m_slicing),
-                   MakeEnumChecker (OperationMode::OFF,  "off",
-                                    OperationMode::ON,   "on",
-                                    OperationMode::AUTO, "auto"))
+                   MakeEnumChecker (OpMode::OFF,  "off",
+                                    OpMode::ON,   "on",
+                                    OpMode::AUTO, "auto"))
   ;
   return tid;
 }
@@ -189,7 +189,7 @@ BackhaulController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
   NS_LOG_FUNCTION (this << cInfo);
 }
 
-OperationMode
+OpMode
 BackhaulController::GetPriorityQueuesMode (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -197,7 +197,7 @@ BackhaulController::GetPriorityQueuesMode (void) const
   return m_priorityQueues;
 }
 
-OperationMode
+OpMode
 BackhaulController::GetSlicingMode (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -426,7 +426,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 3 -- Slicing table -- [from higher to lower priority]
   //
-  if (GetSlicingMode () == OperationMode::ON)
+  if (GetSlicingMode () == OpMode::ON)
     {
       // FIXME This should be automatic depending on the number of slices.
       // When the network slicing operation mode is ON, the Non-GBR traffic of
@@ -469,7 +469,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
                     " eth_type=0x800,meta=0x2,ip_dscp=26"
                     " meter:4 goto:4");
     }
-  else if (GetSlicingMode () == OperationMode::AUTO)
+  else if (GetSlicingMode () == OpMode::AUTO)
     {
       // When the network slicing operation mode is AUTO, the Non-GBR traffic
       // of all slices will be monitored together. Here is how we are using
@@ -511,7 +511,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 4 -- Output table -- [from higher to lower priority]
   //
-  if (GetPriorityQueuesMode () == OperationMode::ON)
+  if (GetPriorityQueuesMode () == OpMode::ON)
     {
       // Priority output queues rules.
       DscpQueueMap_t::iterator it;

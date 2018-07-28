@@ -57,7 +57,7 @@ typedef enum
   OFF  = 0,   //!< Always off.
   ON   = 1,   //!< Always on.
   AUTO = 2    //!< Automatic.
-} OperationMode;
+} OpMode;
 
 /**
  * \ingroup svelteInfra
@@ -65,7 +65,7 @@ typedef enum
  * \param mode The operation mode.
  * \return The string with the operation mode name.
  */
-std::string OperationModeStr (OperationMode mode);
+std::string OpModeStr (OpMode mode);
 
 /**
  * \ingroup svelteLogical

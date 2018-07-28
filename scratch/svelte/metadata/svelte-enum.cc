@@ -46,15 +46,15 @@ std::string LteIfaceStr (LteIface iface)
 }
 
 // Implementing the operation-mode.h
-std::string OperationModeStr (OperationMode mode)
+std::string OpModeStr (OpMode mode)
 {
   switch (mode)
     {
-    case OperationMode::OFF:
+    case OpMode::OFF:
       return "off";
-    case OperationMode::ON:
+    case OpMode::ON:
       return "on";
-    case OperationMode::AUTO:
+    case OpMode::AUTO:
       return "auto";
     default:
       NS_LOG_ERROR ("Invalid operation mode.");

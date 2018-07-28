@@ -154,7 +154,7 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
   // Meter table
   //
   // Set up Non-GBR meters when the network slicing mechanism is enabled.
-  if (GetSlicingMode () != OperationMode::OFF)
+  if (GetSlicingMode () != OpMode::OFF)
     {
       NS_LOG_DEBUG ("Creating slicing meters for connection info " <<
                     cInfo->GetSwDpId (0) << " to " << cInfo->GetSwDpId (1));
@@ -169,7 +169,7 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
       std::ostringstream cmdm1, cmdm2, cmdm3, cmdm4;
       uint64_t kbps = 0;
 
-      if (GetSlicingMode () == OperationMode::ON)
+      if (GetSlicingMode () == OpMode::ON)
         {
           // DFT Non-GBR meter for clockwise FWD direction.
           kbps = cInfo->GetFreeBitRate (ConnectionInfo::FWD, Slice::DFT);
@@ -207,7 +207,7 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
                         ConnectionInfo::DirectionStr (ConnectionInfo::BWD) <<
                         " link set to " << kbps << " Kbps");
         }
-      else if (GetSlicingMode () == OperationMode::AUTO)
+      else if (GetSlicingMode () == OpMode::AUTO)
         {
           // Non-GBR meter for clockwise FWD direction.
           kbps = cInfo->GetFreeBitRate (ConnectionInfo::FWD, Slice::ALL);
@@ -721,13 +721,13 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo,
 {
   NS_LOG_FUNCTION (this << cInfo << dir << slice);
 
-  NS_ASSERT_MSG (GetSlicingMode () != OperationMode::OFF, "Not supposed to "
+  NS_ASSERT_MSG (GetSlicingMode () != OpMode::OFF, "Not supposed to "
                  "adjust slicing meters when network slicing mode is OFF.");
 
   uint8_t  swDpId  = (dir == ConnectionInfo::FWD) ? 0 : 1;
   uint16_t meterId = (dir == ConnectionInfo::FWD) ? 1 : 2;
 
-  if (GetSlicingMode () == OperationMode::ON)
+  if (GetSlicingMode () == OpMode::ON)
     {
       // When the network slicing operation mode is ON, the Non-GBR traffic of
       // each slice will be monitored independently. So we have to identify the
@@ -745,7 +745,7 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo,
           meterId += 2;
         }
     }
-  else if (GetSlicingMode () == OperationMode::AUTO)
+  else if (GetSlicingMode () == OpMode::AUTO)
     {
       // When the network slicing operation mode is AUTO, the Non-GBR traffic
       // of all slices will be monitored together. The meter IDs in use are:

@@ -132,8 +132,8 @@ public:
    * \return The requested mechanism operation mode.
    */
   //\{
-  OperationMode GetAggregationMode (void) const;
-  OperationMode GetPgwAdaptiveMode (void) const;
+  OpMode GetAggregationMode (void) const;
+  OpMode GetPgwAdaptiveMode (void) const;
   //\}
 
   /**
@@ -318,16 +318,16 @@ private:
 
   // P-GW metadata and TFT adaptive mechanism.
   Ptr<PgwInfo>            m_pgwInfo;        //!< P-GW metadata for this slice.
-  OperationMode           m_tftAdaptive;    //!< P-GW adaptive mechanism.
+  OpMode                  m_tftAdaptive;    //!< P-GW adaptive mechanism.
   uint8_t                 m_tftLevel;       //!< Current adaptive level.
-  OperationMode           m_tftBlockPolicy; //!< Overload block policy.
+  OpMode                  m_tftBlockPolicy; //!< Overload block policy.
   double                  m_tftBlockThs;    //!< Block threshold.
   double                  m_tftJoinThs;     //!< Join threshold.
   double                  m_tftSplitThs;    //!< Split threshold.
   uint16_t                m_tftSwitches;    //!< Max number of TFT switches.
 
   // Internal members and attributes.
-  OperationMode           m_aggregation;    //!< Aggregation mechanism.
+  OpMode                  m_aggregation;    //!< Aggregation mechanism.
   Time                    m_timeout;        //!< Controller internal timeout.
 
   static const uint16_t   m_flowTimeout;    //!< Timeout for flow entries.

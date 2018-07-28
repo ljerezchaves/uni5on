@@ -81,18 +81,18 @@ SliceController::GetTypeId (void)
     .AddAttribute ("PgwTftAdaptiveMode",
                    "P-GW TFT adaptive mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (OperationMode::OFF),
+                   EnumValue (OpMode::OFF),
                    MakeEnumAccessor (&SliceController::m_tftAdaptive),
-                   MakeEnumChecker (OperationMode::OFF,  "off",
-                                    OperationMode::ON,   "on",
-                                    OperationMode::AUTO, "auto"))
+                   MakeEnumChecker (OpMode::OFF,  "off",
+                                    OpMode::ON,   "on",
+                                    OpMode::AUTO, "auto"))
     .AddAttribute ("PgwTftBlockPolicy",
                    "P-GW TFT overloaded block policy.",
-                   EnumValue (OperationMode::ON),
+                   EnumValue (OpMode::ON),
                    MakeEnumAccessor (&SliceController::m_tftBlockPolicy),
-                   MakeEnumChecker (OperationMode::OFF,  "none",
-                                    OperationMode::ON,   "all",
-                                    OperationMode::AUTO, "gbr"))
+                   MakeEnumChecker (OpMode::OFF,  "none",
+                                    OpMode::ON,   "all",
+                                    OpMode::AUTO, "gbr"))
     .AddAttribute ("PgwTftBlockThs",
                    "The P-GW TFT block threshold.",
                    DoubleValue (0.95),
@@ -117,11 +117,11 @@ SliceController::GetTypeId (void)
     .AddAttribute ("Aggregation",
                    "Traffic aggregation mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (OperationMode::OFF),
+                   EnumValue (OpMode::OFF),
                    MakeEnumAccessor (&SliceController::m_aggregation),
-                   MakeEnumChecker (OperationMode::OFF,  "off",
-                                    OperationMode::ON,   "on",
-                                    OperationMode::AUTO, "auto"))
+                   MakeEnumChecker (OpMode::OFF,  "off",
+                                    OpMode::ON,   "on",
+                                    OpMode::AUTO, "auto"))
 
     .AddTraceSource ("BearerRelease", "The bearer release trace source.",
                      MakeTraceSourceAccessor (
@@ -269,14 +269,14 @@ SliceController::NotifyPgwAttach (Ptr<PgwInfo> pgwInfo,
   // adaptive mechanism initial level.
   switch (GetPgwAdaptiveMode ())
     {
-    case OperationMode::ON:
-    case OperationMode::AUTO:
+    case OpMode::ON:
+    case OpMode::AUTO:
       {
         m_tftSwitches = pgwInfo->GetNumTfts ();
         m_tftLevel = static_cast<uint8_t> (log2 (m_tftSwitches));
         break;
       }
-    case OperationMode::OFF:
+    case OpMode::OFF:
       {
         m_tftSwitches = 1;
         m_tftLevel = 0;
@@ -339,7 +339,7 @@ SliceController::NotifyPgwAttach (Ptr<PgwInfo> pgwInfo,
   // Entries will be installed here by PgwRulesInstall function.
 }
 
-OperationMode
+OpMode
 SliceController::GetAggregationMode (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -347,7 +347,7 @@ SliceController::GetAggregationMode (void) const
   return m_aggregation;
 }
 
-OperationMode
+OpMode
 SliceController::GetPgwAdaptiveMode (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -763,8 +763,8 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
 //   uint64_t rate = stats->GetEwmaPipelineLoad ().GetBitRate ();
 //   double loadUsage = static_cast<double> (rate) / m_pgwInfo->GetTftPipelineCapacity ().GetBitRate ();
 //   if (loadUsage >= m_tftBlockThs
-//       && (m_tftBlockPolicy == OperationMode::ON
-//           || (m_tftBlockPolicy == OperationMode::AUTO && rInfo->IsGbr ())))
+//       && (m_tftBlockPolicy == OpMode::ON
+//           || (m_tftBlockPolicy == OpMode::AUTO && rInfo->IsGbr ())))
 //     {
 //       rInfo->SetBlocked (true, RoutingInfo::TFTMAXLOAD);
 //       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
@@ -805,7 +805,7 @@ SliceController::PgwTftCheckUsage (void)
       sumLoad += load;
     }
 
-  if (GetPgwAdaptiveMode () == OperationMode::AUTO)
+  if (GetPgwAdaptiveMode () == OpMode::AUTO)
     {
       double maxTableUsage = maxEntries / m_pgwInfo->GetTftFlowTableSize ();
       double maxLoadUsage = maxLoad / m_pgwInfo->GetTftPipelineCapacity ().GetBitRate ();
