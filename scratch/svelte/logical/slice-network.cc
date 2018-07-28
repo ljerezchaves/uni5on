@@ -547,7 +547,6 @@ SliceNetwork::CreateUes (void)
       Ptr<UeInfo> ueInfo = CreateObject<UeInfo> (imsiValue.Get ());
       ueInfo->SetSliceId (m_sliceId);
       ueInfo->SetUeAddr (ueIfaces.GetAddress (i));
-      ueInfo->SetPgwInfo (m_pgwInfo);
       ueInfo->SetS11SapSgw (m_controllerApp->GetS11SapSgw ());
       NS_LOG_DEBUG ("UE IMSI " << imsiValue.Get () <<
                     " configured with IP " << ueInfo->GetUeAddr ());

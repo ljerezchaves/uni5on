@@ -39,6 +39,7 @@ class PgwInfo;
  */
 class UeInfo : public Object
 {
+  friend class SliceController;
   friend class SliceNetwork;
   friend class SvelteMme;
 

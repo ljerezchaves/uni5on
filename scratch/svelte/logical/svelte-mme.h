@@ -75,7 +75,7 @@ private:
     uint64_t mmeUeS1Id, uint16_t enbUeS1Id,
     std::list<EpcS1apSapMme::ErabSetupItem> erabList);
   void DoPathSwitchRequest (
-    uint64_t enbUeS1Id, uint64_t mmeUeS1Id, uint16_t cgi,
+    uint64_t enbUeS1Id, uint64_t mmeUeS1Id, uint16_t gci,
     std::list<EpcS1apSapMme::ErabSwitchedInDownlinkItem> erabList);
   void DoErabReleaseIndication (
     uint64_t mmeUeS1Id, uint16_t enbUeS1Id,

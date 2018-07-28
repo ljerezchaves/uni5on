@@ -631,6 +631,8 @@ SliceController::DoCreateSessionRequest (
 {
   NS_LOG_FUNCTION (this << msg.imsi);
 
+  NS_ASSERT_MSG (m_pgwInfo, "P-GW not configure with this controller.");
+
 //  FIXME O código abaixo veio do antigo SliceController. Antes o mesmo
 //  controlador configurava o backhaul e o P-GW. Agora eu vou ter que chamar
 //  manualmente alguma função no controlador do backhaul pra configurar a parte
@@ -642,8 +644,17 @@ SliceController::DoCreateSessionRequest (
   NS_ASSERT_MSG (imsi  <= 0xFFFFF, "UE IMSI cannot exceed 20 bits in SVELTE.");
   NS_ASSERT_MSG (slice <= 0xF, "Slice ID cannot exceed 4 bits in SVELTE.");
 
+  // This controller is responsible for assigning the S-GW and P-GW elements to
+  // the UE. In current implementation, each slice has a single P-GW. We are
+  // using the S-GW attached to the same OpenFlow backhaul switch where the
+  // UE's serving eNB is also attached. The S-GW may change during handover.
+  Ptr<UeInfo>  ueInfo  = UeInfo::GetPointer (imsi);
   Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  uint16_t enbInfraSwIdx = enbInfo->GetInfraSwIdx ();
+  Ptr<SgwInfo> sgwInfo = SgwInfo::GetPointerBySwIdx (enbInfraSwIdx);
+
+  ueInfo->SetPgwInfo (m_pgwInfo);
+  ueInfo->SetSgwInfo (sgwInfo);
 
   // Iterate over request message and create the response message.
   EpcS11SapMme::CreateSessionResponseMessage res;
@@ -780,6 +791,12 @@ SliceController::DoModifyBearerRequest (
   // In current implementation, this Modify Bearer Request is triggered only by
   // X2 handover procedures. There is no actual bearer modification, for now we
   // just support the minimum needed for path switch request (handover).
+
+  // FIXME: We need to identify which is the best S-GW for this UE after the
+  // handover procedure. We also need to move the S-GW rules from the old S-GW
+  // switch to the new one.
+  // ueInfo->SetSgwInfo (?);
+
   EpcS11SapMme::ModifyBearerResponseMessage res;
   res.teid = msg.teid;
   res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;

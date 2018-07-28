@@ -87,17 +87,12 @@ SvelteMme::DoInitialUeMessage (
 {
   NS_LOG_FUNCTION (this << mmeUeS1Id << enbUeS1Id << imsi << ecgi);
 
-  Ptr<UeInfo>  ueInfo  = UeInfo::GetPointer (imsi);
-  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (ecgi);
-  Ptr<SgwInfo> sgwInfo = SgwInfo::GetPointerBySwIdx (
-      enbInfo->GetInfraSwIdx ());
-  NS_LOG_INFO ("UE ISMI " << imsi << " at cell ID " << ecgi <<
-               " configured with S-GW ID " << sgwInfo->GetSgwId ());
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  NS_LOG_INFO ("UE ISMI " << imsi << " attached to the cell ID " << ecgi);
 
   // Update UE metadata.
   ueInfo->SetEnbUeS1Id (enbUeS1Id);
-  ueInfo->SetEnbInfo (enbInfo);
-  ueInfo->SetSgwInfo (sgwInfo);
+  ueInfo->SetEnbInfo (EnbInfo::GetPointer (ecgi));
 
   EpcS11SapSgw::CreateSessionRequestMessage msg;
   msg.imsi = imsi;
@@ -142,22 +137,13 @@ SvelteMme::DoPathSwitchRequest (
   NS_LOG_FUNCTION (this << mmeUeS1Id << enbUeS1Id << gci);
 
   uint64_t imsi = mmeUeS1Id;
-  Ptr<UeInfo>  ueInfo  = UeInfo::GetPointer (imsi);
-  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (gci);
-  Ptr<SgwInfo> sgwInfo = SgwInfo::GetPointerBySwIdx (
-      enbInfo->GetInfraSwIdx ());
-  NS_LOG_INFO ("UE IMSI: " << imsi <<
-               " old eNB: " << ueInfo->GetCellId () <<
-               " new eNB: " << gci);
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  NS_LOG_INFO ("UE IMSI " << imsi << " handover from "
+               "cell ID " << ueInfo->GetCellId () << " to cell ID " << gci);
 
   // Update UE metadata.
   ueInfo->SetEnbUeS1Id (enbUeS1Id);
-  ueInfo->SetEnbInfo (enbInfo);
-  ueInfo->SetSgwInfo (sgwInfo);
-
-  // TODO: We need to identify which is the best S-GW for UEs during handover.
-  // Moreover, we also need to move the S-GW rules from the old S-GW switch to
-  // the new one.
+  ueInfo->SetEnbInfo (EnbInfo::GetPointer (gci));
 
   EpcS11SapSgw::ModifyBearerRequestMessage msg;
   msg.teid = imsi;
