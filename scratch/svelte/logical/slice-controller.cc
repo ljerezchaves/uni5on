@@ -700,18 +700,9 @@ SliceController::DoCreateSessionRequest (
       // Create the metadata for this bearer.
       Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
           teid, bearerContext, ueInfo, isDefault);
+      rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
+      m_backhaulCtrl->TopologyBearerCreated (rInfo);
 
-      // FIXME Notificar o controlador do backhaul de que criamos este bearer.
-      // Isso era feito com o TopologyBearerCreated (). A idéia é que o
-      // controlador de lá crie o routing info com as informações relevantes à
-      // infraestrutura.
-      m_backhaulCtrl->NotifyBearerCreated (rInfo);
-
-//      rInfo->SetPgwS5Addr (m_pgwInfo->GetMainS5Addr ());
-//      rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
-//      rInfo->SetSgwS5Addr (sdranCtrl->GetSgwS5Addr ());
-//      TopologyBearerCreated (rInfo);
-//
       if (rInfo->IsDefault ())
         {
           // Configure this default bearer.
