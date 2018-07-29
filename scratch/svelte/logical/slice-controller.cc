@@ -571,10 +571,7 @@ SliceController::DoCreateSessionRequest (
        ++bit)
     {
       uint32_t teid = GetSvelteTeid (m_sliceId, imsi, bit->epsBearerId);
-      NS_LOG_DEBUG ("Allocating TEID for UE IMSI " << imsi << " in slice " <<
-                    SliceIdStr (m_sliceId) << " for internal bearer id " <<
-                    static_cast<uint16_t> (bit->epsBearerId) << ": 0x" <<
-                    std::hex << teid);
+
 
       bool isDefault = res.bearerContextsCreated.empty ();
       EpcS11SapMme::BearerContextCreated bearerContext;
@@ -588,9 +585,14 @@ SliceController::DoCreateSessionRequest (
       // Add the TFT entry to the UeInfo (don't move this command from here).
       ueInfo->AddTft (bit->tft, teid);
 
-      // Create the metadata for this bearer.
+      // Saving bearer metadata.
       Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
           teid, bearerContext, ueInfo, isDefault);
+      NS_LOG_DEBUG ("Saving bearer info for UE IMSI " << imsi << ", slice " <<
+                    SliceIdStr (m_sliceId) << ", internal bearer id " <<
+                    static_cast<uint16_t> (bit->epsBearerId) << ", teid " <<
+                    rInfo->GetTeidHex ());
+
       rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
       m_backhaulCtrl->TopologyBearerCreated (rInfo);
 
