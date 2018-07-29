@@ -36,6 +36,8 @@ class GbrInfo;
  */
 class RingController : public BackhaulController
 {
+  friend class RingNetwork;
+
 public:
   /** Routing strategy to find the paths in the ring. */
   enum RoutingStrategy

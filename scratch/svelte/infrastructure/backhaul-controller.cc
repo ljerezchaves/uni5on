@@ -133,55 +133,6 @@ BackhaulController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
   return true;
 }
 
-void
-BackhaulController::NotifyEpcAttach (
-  Ptr<OFSwitch13Device> swDev, uint32_t portNo, Ptr<NetDevice> epcDev)
-{
-  NS_LOG_FUNCTION (this << swDev << portNo << epcDev);
-
-  // Configure port rules.
-  // -------------------------------------------------------------------------
-  // Table 0 -- Input table -- [from higher to lower priority]
-  //
-  // GTP packets entering the ring network from any EPC port. Send to the
-  // Classification table.
-  std::ostringstream cmdIn;
-  cmdIn << "flow-mod cmd=add,table=0,prio=64,flags=0x0007"
-        << " eth_type=0x800,ip_proto=17"
-        << ",udp_src=" << GTPU_PORT
-        << ",udp_dst=" << GTPU_PORT
-        << ",in_port=" << portNo
-        << " goto:1";
-  DpctlSchedule (swDev->GetDatapathId (), cmdIn.str ());
-
-  // -------------------------------------------------------------------------
-  // Table 2 -- Routing table -- [from higher to lower priority]
-  //
-  // GTP packets addressed to EPC elements connected to this switch over EPC
-  // ports. Write the output port into action set. Send the packet directly to
-  // Output table.
-  Mac48Address epcMac = Mac48Address::ConvertFrom (epcDev->GetAddress ());
-  std::ostringstream cmdOut;
-  cmdOut << "flow-mod cmd=add,table=2,prio=256 eth_type=0x800"
-         << ",eth_dst=" << epcMac
-         << ",ip_dst=" << Ipv4AddressHelper::GetAddress (epcDev)
-         << " write:output=" << portNo
-         << " goto:4";
-  DpctlSchedule (swDev->GetDatapathId (), cmdOut.str ());
-}
-
-void
-BackhaulController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
-{
-  NS_LOG_FUNCTION (this);
-}
-
-void
-BackhaulController::NotifyTopologyConnection (Ptr<LinkInfo> lInfo)
-{
-  NS_LOG_FUNCTION (this << lInfo);
-}
-
 OpMode
 BackhaulController::GetPriorityQueuesMode (void) const
 {
@@ -258,6 +209,43 @@ BackhaulController::GetDpId (uint16_t idx) const
 
   NS_ASSERT_MSG (idx < m_switchDevices.GetN (), "Invalid switch index.");
   return m_switchDevices.Get (idx)->GetDatapathId ();
+}
+
+void
+BackhaulController::NotifyEpcAttach (
+  Ptr<OFSwitch13Device> swDev, uint32_t portNo, Ptr<NetDevice> epcDev)
+{
+  NS_LOG_FUNCTION (this << swDev << portNo << epcDev);
+
+  // Configure port rules.
+  // -------------------------------------------------------------------------
+  // Table 0 -- Input table -- [from higher to lower priority]
+  //
+  // GTP packets entering the ring network from any EPC port. Send to the
+  // Classification table.
+  std::ostringstream cmdIn;
+  cmdIn << "flow-mod cmd=add,table=0,prio=64,flags=0x0007"
+        << " eth_type=0x800,ip_proto=17"
+        << ",udp_src=" << GTPU_PORT
+        << ",udp_dst=" << GTPU_PORT
+        << ",in_port=" << portNo
+        << " goto:1";
+  DpctlSchedule (swDev->GetDatapathId (), cmdIn.str ());
+
+  // -------------------------------------------------------------------------
+  // Table 2 -- Routing table -- [from higher to lower priority]
+  //
+  // GTP packets addressed to EPC elements connected to this switch over EPC
+  // ports. Write the output port into action set. Send the packet directly to
+  // Output table.
+  Mac48Address epcMac = Mac48Address::ConvertFrom (epcDev->GetAddress ());
+  std::ostringstream cmdOut;
+  cmdOut << "flow-mod cmd=add,table=2,prio=256 eth_type=0x800"
+         << ",eth_dst=" << epcMac
+         << ",ip_dst=" << Ipv4AddressHelper::GetAddress (epcDev)
+         << " write:output=" << portNo
+         << " goto:4";
+  DpctlSchedule (swDev->GetDatapathId (), cmdOut.str ());
 }
 
 ofl_err

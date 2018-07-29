@@ -152,11 +152,11 @@ RingNetwork::CreateTopology (void)
             currPortDev->GetChannel ()), ringController->GetSlicingMode ());
 
       // Fire trace source notifying new connection between switches.
-      m_controllerApp->NotifyTopologyConnection (lInfo);
+      ringController->NotifyTopologyConnection (lInfo);
     }
 
   // Fire trace source notifying that all connections between switches are ok.
-  m_controllerApp->NotifyTopologyBuilt (m_switchDevices);
+  ringController->NotifyTopologyBuilt (m_switchDevices);
 }
 
 } // namespace ns3

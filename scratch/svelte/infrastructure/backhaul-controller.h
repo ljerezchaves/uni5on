@@ -42,6 +42,7 @@ class RoutingInfo;
  */
 class BackhaulController : public OFSwitch13Controller
 {
+  friend class BackhaulNetwork;
   friend class SliceController;
 
 public:
@@ -77,30 +78,6 @@ public:
    *          false otherwise (the bearer creation process will abort).
    */
   virtual bool DedicatedBearerRequest (EpsBearer bearer, uint32_t teid);
-
-  /**
-   * Notify this controller of a new EPC entity connected to the OpenFlow
-   * backhaul network.
-   * \param swDev The OpenFlow switch device on the backhaul network.
-   * \param portNo The port number created at the OpenFlow switch.
-   * \param epcDev The device created at the EPC node.
-   */
-  virtual void NotifyEpcAttach (
-    Ptr<OFSwitch13Device> swDev, uint32_t portNo, Ptr<NetDevice> epcDev);
-
-  /**
-   * Notify this controller that all backhaul switches have already been
-   * configured and the connections between them are finished.
-   * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
-   */
-  virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
-
-  /**
-   * Notify this controller of a new connection between two switches in the
-   * OpenFlow backhaul network.
-   * \param lInfo The link information.
-   */
-  virtual void NotifyTopologyConnection (Ptr<LinkInfo> lInfo);
 
   /**
    * \name Internal mechanisms operation mode accessors.
@@ -151,11 +128,35 @@ protected:
   uint64_t GetDpId (uint16_t idx) const;
 
   /**
+   * Notify this controller of a new EPC entity connected to the OpenFlow
+   * backhaul network.
+   * \param swDev The OpenFlow switch device on the backhaul network.
+   * \param portNo The port number created at the OpenFlow switch.
+   * \param epcDev The device created at the EPC node.
+   */
+  virtual void NotifyEpcAttach (
+    Ptr<OFSwitch13Device> swDev, uint32_t portNo, Ptr<NetDevice> epcDev);
+
+  /**
    * \name Topology methods.
    * These virtual methods must be implemented by topology subclasses, as
    * they are dependent on the OpenFlow backhaul network topology.
    */
   //\{
+  /**
+   * Notify this controller that all backhaul switches have already been
+   * configured and the connections between them are finished.
+   * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
+   */
+  virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices) = 0;
+
+  /**
+   * Notify this controller of a new connection between two switches in the
+   * OpenFlow backhaul network.
+   * \param lInfo The link information.
+   */
+  virtual void NotifyTopologyConnection (Ptr<LinkInfo> lInfo) = 0;
+
   /**
    * Notify this controller of a new bearer context created.
    * \param rInfo The routing information to process.
