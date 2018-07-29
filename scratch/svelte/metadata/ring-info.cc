@@ -18,39 +18,43 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "ring-routing-info.h"
+#include "ring-info.h"
 #include "routing-info.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("RingRoutingInfo");
-NS_OBJECT_ENSURE_REGISTERED (RingRoutingInfo);
+NS_LOG_COMPONENT_DEFINE ("RingInfo");
+NS_OBJECT_ENSURE_REGISTERED (RingInfo);
 
-RingRoutingInfo::RingRoutingInfo (Ptr<RoutingInfo> rInfo)
+RingInfo::RingInfo (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this);
 
+  NS_ASSERT_MSG ((LteIface::S1U == 0 && LteIface::S5 == 1)
+                 || (LteIface::S5 == 0 && LteIface::S1U == 1),
+                 "Incompatible LteIface enum values.");
+
   AggregateObject (rInfo);
-  SetDefaultPath (RingRoutingInfo::LOCAL, LteIface::S1U);
-  SetDefaultPath (RingRoutingInfo::LOCAL, LteIface::S5);
+  SetDefaultPath (RingInfo::LOCAL, LteIface::S1U);
+  SetDefaultPath (RingInfo::LOCAL, LteIface::S5);
 }
 
-RingRoutingInfo::~RingRoutingInfo ()
+RingInfo::~RingInfo ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-RingRoutingInfo::GetTypeId (void)
+RingInfo::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::RingRoutingInfo")
+  static TypeId tid = TypeId ("ns3::RingInfo")
     .SetParent<Object> ()
   ;
   return tid;
 }
 
-RingRoutingInfo::RoutingPath
-RingRoutingInfo::GetDownPath (LteIface iface) const
+RingInfo::RingPath
+RingInfo::GetDownPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -64,8 +68,8 @@ RingRoutingInfo::GetDownPath (LteIface iface) const
     }
 }
 
-RingRoutingInfo::RoutingPath
-RingRoutingInfo::GetUpPath (LteIface iface) const
+RingInfo::RingPath
+RingInfo::GetUpPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -73,14 +77,14 @@ RingRoutingInfo::GetUpPath (LteIface iface) const
     {
     case LteIface::S1U:
     case LteIface::S5:
-      return RingRoutingInfo::Invert (m_downPath [iface]);
+      return RingInfo::Invert (m_downPath [iface]);
     default:
       NS_ABORT_MSG ("Invalid LTE interface.");
     }
 }
 
 bool
-RingRoutingInfo::IsDefaultPath (LteIface iface) const
+RingInfo::IsDefaultPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -95,7 +99,7 @@ RingRoutingInfo::IsDefaultPath (LteIface iface) const
 }
 
 bool
-RingRoutingInfo::IsLocalPath (LteIface iface) const
+RingInfo::IsLocalPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -110,7 +114,7 @@ RingRoutingInfo::IsLocalPath (LteIface iface) const
 }
 
 bool
-RingRoutingInfo::IsLocalPath (void) const
+RingInfo::IsLocalPath (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -118,7 +122,7 @@ RingRoutingInfo::IsLocalPath (void) const
 }
 
 std::string
-RingRoutingInfo::GetPathStr (LteIface iface) const
+RingInfo::GetPathStr (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -138,7 +142,7 @@ RingRoutingInfo::GetPathStr (LteIface iface) const
 }
 
 uint16_t
-RingRoutingInfo::GetEnbInfraSwIdx (void) const
+RingInfo::GetEnbInfraSwIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -146,7 +150,7 @@ RingRoutingInfo::GetEnbInfraSwIdx (void) const
 }
 
 uint16_t
-RingRoutingInfo::GetPgwInfraSwIdx (void) const
+RingInfo::GetPgwInfraSwIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -154,38 +158,38 @@ RingRoutingInfo::GetPgwInfraSwIdx (void) const
 }
 
 uint16_t
-RingRoutingInfo::GetSgwInfraSwIdx (void) const
+RingInfo::GetSgwInfraSwIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return GetObject<RoutingInfo> ()->GetSgwInfraSwIdx ();
 }
 
-RingRoutingInfo::RoutingPath
-RingRoutingInfo::Invert (RoutingPath path)
+RingInfo::RingPath
+RingInfo::Invert (RingPath path)
 {
-  if (path == RingRoutingInfo::LOCAL)
+  if (path == RingInfo::LOCAL)
     {
-      return RingRoutingInfo::LOCAL;
+      return RingInfo::LOCAL;
     }
   else
     {
-      return path == RingRoutingInfo::CLOCK ?
-             RingRoutingInfo::COUNTER :
-             RingRoutingInfo::CLOCK;
+      return path == RingInfo::CLOCK ?
+             RingInfo::COUNTER :
+             RingInfo::CLOCK;
     }
 }
 
 std::string
-RingRoutingInfo::RoutingPathStr (RoutingPath path)
+RingInfo::RingPathStr (RingPath path)
 {
   switch (path)
     {
-    case RingRoutingInfo::LOCAL:
+    case RingInfo::LOCAL:
       return "local";
-    case RingRoutingInfo::CLOCK:
+    case RingInfo::CLOCK:
       return "clockwise";
-    case RingRoutingInfo::COUNTER:
+    case RingInfo::COUNTER:
       return "counterclockwise";
     default:
       return "-";
@@ -193,13 +197,13 @@ RingRoutingInfo::RoutingPathStr (RoutingPath path)
 }
 
 void
-RingRoutingInfo::DoDispose ()
+RingInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 void
-RingRoutingInfo::SetDefaultPath (RoutingPath downPath, LteIface iface)
+RingInfo::SetDefaultPath (RingPath downPath, LteIface iface)
 {
   NS_LOG_FUNCTION (this << downPath << iface);
 
@@ -210,7 +214,7 @@ RingRoutingInfo::SetDefaultPath (RoutingPath downPath, LteIface iface)
       m_downPath [iface] = downPath;
       m_isDefaultPath [iface] = true;
       m_isLocalPath [iface] = false;
-      if (downPath == RingRoutingInfo::LOCAL)
+      if (downPath == RingInfo::LOCAL)
         {
           m_isLocalPath [iface] = true;
         }
@@ -221,7 +225,7 @@ RingRoutingInfo::SetDefaultPath (RoutingPath downPath, LteIface iface)
 }
 
 void
-RingRoutingInfo::InvertPath (LteIface iface)
+RingInfo::InvertPath (LteIface iface)
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -231,7 +235,7 @@ RingRoutingInfo::InvertPath (LteIface iface)
     case LteIface::S5:
       if (m_isLocalPath [iface] == false)
         {
-          m_downPath [iface] = RingRoutingInfo::Invert (m_downPath [iface]);
+          m_downPath [iface] = RingInfo::Invert (m_downPath [iface]);
           m_isDefaultPath [iface] = !m_isDefaultPath [iface];
         }
       break;
@@ -241,7 +245,7 @@ RingRoutingInfo::InvertPath (LteIface iface)
 }
 
 void
-RingRoutingInfo::ResetToDefaults ()
+RingInfo::ResetToDefaults ()
 {
   NS_LOG_FUNCTION (this);
 

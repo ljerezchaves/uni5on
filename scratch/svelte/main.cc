@@ -407,7 +407,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("GbrInfo",                  logLevelWarnInfo);
       LogComponentEnable ("MeterInfo",                logLevelWarnInfo);
       LogComponentEnable ("PgwInfo",                  logLevelWarnInfo);
-      LogComponentEnable ("RingRoutingInfo",          logLevelWarnInfo);
+      LogComponentEnable ("RingInfo",                 logLevelWarnInfo);
       LogComponentEnable ("RoutingInfo",              logLevelWarnInfo);
       LogComponentEnable ("SgwInfo",                  logLevelWarnInfo);
       LogComponentEnable ("SvelteEnum",               logLevelWarnInfo);

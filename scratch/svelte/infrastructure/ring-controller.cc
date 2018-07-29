@@ -94,7 +94,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
   // reach the destination switch.
   for (uint16_t swIdx = 0; swIdx < GetNSwitches (); swIdx++)
     {
-      uint16_t nextIdx = NextSwitchIndex (swIdx, RingRoutingInfo::CLOCK);
+      uint16_t nextIdx = NextSwitchIndex (swIdx, RingInfo::CLOCK);
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (swIdx, nextIdx);
 
       // ---------------------------------------------------------------------
@@ -106,20 +106,20 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
       std::ostringstream cmd0, cmd1;
       char metadataStr [12];
 
-      sprintf (metadataStr, "0x%x", RingRoutingInfo::COUNTER);
+      sprintf (metadataStr, "0x%x", RingInfo::COUNTER);
       cmd0 << "flow-mod cmd=add,table=2,prio=128"
            << ",flags=" << flagsStr
            << " meta=0x0,in_port=" << cInfo->GetPortNo (0)
-           << " write:group=" << RingRoutingInfo::COUNTER
+           << " write:group=" << RingInfo::COUNTER
            << " meta:" << metadataStr
            << " goto:3";
       DpctlSchedule (cInfo->GetSwDpId (0), cmd0.str ());
 
-      sprintf (metadataStr, "0x%x", RingRoutingInfo::CLOCK);
+      sprintf (metadataStr, "0x%x", RingInfo::CLOCK);
       cmd1 << "flow-mod cmd=add,table=2,prio=128"
            << ",flags=" << flagsStr
            << " meta=0x0,in_port=" << cInfo->GetPortNo (1)
-           << " write:group=" << RingRoutingInfo::CLOCK
+           << " write:group=" << RingInfo::CLOCK
            << " meta:" << metadataStr
            << " goto:3";
       DpctlSchedule (cInfo->GetSwDpId (1), cmd1.str ());
@@ -140,13 +140,13 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
   //
   // Routing group for clockwise packet forwarding.
   std::ostringstream cmd1;
-  cmd1 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::CLOCK
+  cmd1 << "group-mod cmd=add,type=ind,group=" << RingInfo::CLOCK
        << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (0);
   DpctlSchedule (cInfo->GetSwDpId (0), cmd1.str ());
 
   // Routing group for counterclockwise packet forwarding.
   std::ostringstream cmd2;
-  cmd2 << "group-mod cmd=add,type=ind,group=" << RingRoutingInfo::COUNTER
+  cmd2 << "group-mod cmd=add,type=ind,group=" << RingInfo::COUNTER
        << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (1);
   DpctlSchedule (cInfo->GetSwDpId (1), cmd2.str ());
 
@@ -238,12 +238,12 @@ RingController::TopologyBearerCreated (Ptr<RoutingInfo> rInfo)
   // FIXME Aqui tem que marcar qual o cinfo slice que este tráfego pertence
 
   // Let's create its ring routing metadata.
-  Ptr<RingRoutingInfo> ringInfo = CreateObject<RingRoutingInfo> (rInfo);
+  Ptr<RingInfo> ringInfo = CreateObject<RingInfo> (rInfo);
 
   // Set default paths to those with lower hops.
-  RingRoutingInfo::RoutingPath s1uDownPath = FindShortestPath (
+  RingInfo::RingPath s1uDownPath = FindShortestPath (
       rInfo->GetSgwInfraSwIdx (), rInfo->GetEnbInfraSwIdx ());
-  RingRoutingInfo::RoutingPath s5DownPath = FindShortestPath (
+  RingInfo::RingPath s5DownPath = FindShortestPath (
       rInfo->GetPgwInfraSwIdx (), rInfo->GetSgwInfraSwIdx ());
   ringInfo->SetDefaultPath (s1uDownPath, LteIface::S1U);
   ringInfo->SetDefaultPath (s5DownPath, LteIface::S5);
@@ -264,7 +264,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
       return false;
     }
 
-  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
   // Reset the ring routing info to the shortest path.
@@ -327,11 +327,11 @@ RingController::TopologyBitRateRelease (Ptr<RoutingInfo> rInfo)
   NS_LOG_INFO ("Releasing resources for bearer " << rInfo->GetTeid ());
 
   // It only makes sense to release bandwidth for GBR bearers.
-  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
   bool success = true;
-  RingRoutingInfo::RoutingPath downPath;
+  RingInfo::RingPath downPath;
   uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
 
   // S5 interface (from P-GW to S-GW)
@@ -384,7 +384,7 @@ RingController::TopologyBitRateReserve (Ptr<RoutingInfo> rInfo)
       return false;
     }
 
-  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
 
   // For Non-GBR bearers (which includes the default bearer) and for bearers
@@ -402,7 +402,7 @@ RingController::TopologyBitRateReserve (Ptr<RoutingInfo> rInfo)
   NS_ASSERT_MSG (gbrInfo, "Invalid configuration for GBR bearer request.");
 
   bool success = true;
-  RingRoutingInfo::RoutingPath downPath;
+  RingInfo::RingPath downPath;
   uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
 
   // S5 interface (from P-GW to S-GW)
@@ -452,7 +452,7 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
   NS_LOG_INFO ("Installing ring rules for bearer teid " << rInfo->GetTeid ());
 
   // Getting ring routing information.
-  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
 
   // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0007");
@@ -543,7 +543,7 @@ RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
 
   // Getting ring routing information.
-  Ptr<RingRoutingInfo> ringInfo = rInfo->GetObject<RingRoutingInfo> ();
+  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
 
   // Remove flow entries for this TEID.
   std::ostringstream cmd;
@@ -583,7 +583,7 @@ RingController::CreateSpanningTree (void)
   DpctlSchedule (cInfo->GetSwDpId (1), cmd2.str ());
 }
 
-RingRoutingInfo::RoutingPath
+RingInfo::RingPath
 RingController::FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const
 {
   NS_LOG_FUNCTION (this << srcIdx << dstIdx);
@@ -593,7 +593,7 @@ RingController::FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const
   // Check for local routing.
   if (srcIdx == dstIdx)
     {
-      return RingRoutingInfo::LOCAL;
+      return RingInfo::LOCAL;
     }
 
   // Identify the shortest routing path from src to dst switch index.
@@ -604,8 +604,8 @@ RingController::FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const
       clockwiseDistance += GetNSwitches ();
     }
   return (clockwiseDistance <= maxHops) ?
-         RingRoutingInfo::CLOCK :
-         RingRoutingInfo::COUNTER;
+         RingInfo::CLOCK :
+         RingInfo::COUNTER;
 }
 
 Ptr<ConnectionInfo>
@@ -623,7 +623,7 @@ RingController::GetSliceUsage (Slice slice) const
 
   double sliceUsage = 0;
   uint16_t curr = 0;
-  uint16_t next = NextSwitchIndex (curr, RingRoutingInfo::CLOCK);
+  uint16_t next = NextSwitchIndex (curr, RingInfo::CLOCK);
   do
     {
       Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
@@ -632,7 +632,7 @@ RingController::GetSliceUsage (Slice slice) const
             cInfo->GetThpSliceRatio (ConnectionInfo::FWD, slice),
             cInfo->GetThpSliceRatio (ConnectionInfo::BWD, slice)));
       curr = next;
-      next = NextSwitchIndex (curr, RingRoutingInfo::CLOCK);
+      next = NextSwitchIndex (curr, RingInfo::CLOCK);
     }
   while (curr != 0);
 
@@ -640,13 +640,13 @@ RingController::GetSliceUsage (Slice slice) const
 }
 
 bool
-RingController::HasBitRate (Ptr<const RingRoutingInfo> ringInfo,
+RingController::HasBitRate (Ptr<const RingInfo> ringInfo,
                             Ptr<const GbrInfo> gbrInfo, Slice slice) const
 {
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo << slice);
 
   bool success = true;
-  RingRoutingInfo::RoutingPath downPath;
+  RingInfo::RingPath downPath;
   uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
 
   // S5 interface (from P-GW to S-GW)
@@ -688,14 +688,14 @@ RingController::HasBitRate (Ptr<const RingRoutingInfo> ringInfo,
 
 uint16_t
 RingController::HopCounter (uint16_t srcIdx, uint16_t dstIdx,
-                            RingRoutingInfo::RoutingPath path) const
+                            RingInfo::RingPath path) const
 {
   NS_LOG_FUNCTION (this << srcIdx << dstIdx);
 
   NS_ASSERT (std::max (srcIdx, dstIdx) < GetNSwitches ());
 
   // Check for local routing.
-  if (path == RingRoutingInfo::LOCAL)
+  if (path == RingInfo::LOCAL)
     {
       NS_ASSERT (srcIdx == dstIdx);
       return 0;
@@ -704,7 +704,7 @@ RingController::HopCounter (uint16_t srcIdx, uint16_t dstIdx,
   // Count the number of hops from src to dst switch index.
   NS_ASSERT (srcIdx != dstIdx);
   int distance = dstIdx - srcIdx;
-  if (path == RingRoutingInfo::COUNTER)
+  if (path == RingInfo::COUNTER)
     {
       distance = srcIdx - dstIdx;
     }
@@ -777,15 +777,14 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo,
 }
 
 uint16_t
-RingController::NextSwitchIndex (uint16_t idx,
-                                 RingRoutingInfo::RoutingPath path) const
+RingController::NextSwitchIndex (uint16_t idx, RingInfo::RingPath path) const
 {
   NS_LOG_FUNCTION (this << idx << path);
 
-  NS_ASSERT_MSG (path != RingRoutingInfo::LOCAL,
+  NS_ASSERT_MSG (path != RingInfo::LOCAL,
                  "Not supposed to get here for local routing.");
 
-  return path == RingRoutingInfo::CLOCK ?
+  return path == RingInfo::CLOCK ?
          (idx + 1) % GetNSwitches () :
          (idx == 0 ? GetNSwitches () - 1 : (idx - 1));
 }

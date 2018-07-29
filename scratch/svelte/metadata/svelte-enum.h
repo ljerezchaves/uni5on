@@ -31,9 +31,7 @@ namespace ns3 {
  */
 typedef enum
 {
-  // Don't change enum order.
-  // These values are used as array indices in RingRoutingInfo.
-
+  // Don't change enum order. S1U and S5 are used as array indices in RingInfo.
   S1U  = 0,   //!< S1-U interface connecting eNB to S-GW.
   S5   = 1,   //!< S5 interface connecting S-GW to P-GW.
   X2   = 2,   //!< X2 interface connecting eNB to eNB.

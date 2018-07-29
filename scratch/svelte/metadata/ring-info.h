@@ -33,13 +33,13 @@ class RoutingInfo;
  * Metadata associated to the routing path for a single EPS bearer among the
  * switches in the OpenFlow ring backhaul network.
  */
-class RingRoutingInfo : public Object
+class RingInfo : public Object
 {
   friend class RingController;
 
 public:
   /** Routing direction in the ring. */
-  enum RoutingPath
+  enum RingPath
   {
     LOCAL = 0,
     CLOCK = 1,
@@ -50,8 +50,8 @@ public:
    * Complete constructor.
    * \param rInfo RoutingInfo pointer.
    */
-  RingRoutingInfo (Ptr<RoutingInfo> rInfo);
-  virtual ~RingRoutingInfo (); //!< Dummy destructor, see DoDispose.
+  RingInfo (Ptr<RoutingInfo> rInfo);
+  virtual ~RingInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -61,8 +61,8 @@ public:
 
   /** \name Private member accessors. */
   //\{
-  RoutingPath GetDownPath (LteIface iface) const;
-  RoutingPath GetUpPath (LteIface iface) const;
+  RingPath GetDownPath (LteIface iface) const;
+  RingPath GetUpPath (LteIface iface) const;
   bool IsDefaultPath (LteIface iface) const;
   bool IsLocalPath (LteIface iface) const;
   bool IsLocalPath (void) const;
@@ -77,14 +77,14 @@ public:
    * \param path The original routing path.
    * \return The inverted routing path.
    */
-  static RoutingPath Invert (RoutingPath path);
+  static RingPath Invert (RingPath path);
 
   /**
    * Get the string representing the routing path.
    * \param path The routing path.
    * \return The routing path string.
    */
-  static std::string RoutingPathStr (RoutingPath path);
+  static std::string RingPathStr (RingPath path);
 
 protected:
   /** Destructor implementation. */
@@ -97,7 +97,7 @@ private:
    * \param downPath The downlink default path.
    * \param iface The LTE logical interface for this path.
    */
-  void SetDefaultPath (RoutingPath downPath, LteIface iface);
+  void SetDefaultPath (RingPath downPath, LteIface iface);
 
   /**
    * Invert the S1-U or S5 routing path, only if different from LOCAL.
@@ -110,7 +110,7 @@ private:
    */
   void ResetToDefaults ();
 
-  RoutingPath      m_downPath [2];       //!< Downlink routing path.
+  RingPath         m_downPath [2];       //!< Downlink routing path.
   bool             m_isDefaultPath [2];  //!< True for default path.
   bool             m_isLocalPath [2];    //!< True for local path.
 };

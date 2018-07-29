@@ -23,7 +23,7 @@
 
 #include "backhaul-controller.h"
 #include "../metadata/connection-info.h"
-#include "../metadata/ring-routing-info.h"
+#include "../metadata/ring-info.h"
 
 namespace ns3 {
 
@@ -91,8 +91,7 @@ private:
    * \param dstIdx Destination switch index.
    * \return The routing path.
    */
-  RingRoutingInfo::RoutingPath FindShortestPath (uint16_t srcIdx,
-                                                 uint16_t dstIdx) const;
+  RingInfo::RingPath FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const;
 
   /**
    * Search for connection information between two switches by their indexes.
@@ -116,7 +115,7 @@ private:
    * \param slice The network slice.
    * \return True if there's available GBR bit rate, false otherwise.
    */
-  bool HasBitRate (Ptr<const RingRoutingInfo> ringInfo,
+  bool HasBitRate (Ptr<const RingInfo> ringInfo,
                    Ptr<const GbrInfo> gbrInfo, Slice slice) const;
 
   /**
@@ -128,7 +127,7 @@ private:
    * \return The number of hops in routing path.
    */
   uint16_t HopCounter (uint16_t srcIdx, uint16_t dstIdx,
-                       RingRoutingInfo::RoutingPath path) const;
+                       RingInfo::RingPath path) const;
 
   /**
    * // FIXME Move to BackhaulController
@@ -148,8 +147,7 @@ private:
    * \param path The routing path direction.
    * \return The next switch index.
    */
-  uint16_t NextSwitchIndex (uint16_t idx,
-                            RingRoutingInfo::RoutingPath path) const;
+  uint16_t NextSwitchIndex (uint16_t idx, RingInfo::RingPath path) const;
 
   RoutingStrategy           m_strategy;       //!< Routing strategy in use.
 };
