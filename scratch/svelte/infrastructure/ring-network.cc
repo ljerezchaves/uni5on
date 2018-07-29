@@ -130,7 +130,7 @@ RingNetwork::CreateTopology (void)
       // Set device names for pcap files.
       BackhaulNetwork::SetDeviceNames (devs.Get (0), devs.Get (1), "~");
 
-      // Adding newly created csma devices as Openflow switch ports.
+      // Adding newly created csma devices as OpenFlow switch ports.
       Ptr<OFSwitch13Device> currDev, nextDev;
       Ptr<CsmaNetDevice> currPortDev, nextPortDev;
       uint32_t currPortNo, nextPortNo;
