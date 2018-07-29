@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef CONNECTION_INFO_H
-#define CONNECTION_INFO_H
+#ifndef LINK_INFO_H
+#define LINK_INFO_H
 
 #include <ns3/core-module.h>
 #include <ns3/csma-module.h>
@@ -28,7 +28,7 @@
 
 namespace ns3 {
 
-class ConnectionInfo;
+class LinkInfo;
 
 /**
  * \ingroup svelteInfra
@@ -54,7 +54,7 @@ std::string SliceStr (Slice slice);
 typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
 
 /** A list of connection information objects. */
-typedef std::list<Ptr<ConnectionInfo> > ConnInfoList_t;
+typedef std::list<Ptr<LinkInfo> > LinkInfoList_t;
 
 /**
  * \ingroup svelteInfra
@@ -78,7 +78,7 @@ typedef std::list<Ptr<ConnectionInfo> > ConnInfoList_t;
  * requirements. With this approach, we can ensure that we don't waste
  * available bandwidth when not in use.
  */
-class ConnectionInfo : public Object
+class LinkInfo : public Object
 {
 public:
   /** Metadata associated to a network slice. */
@@ -117,9 +117,9 @@ public:
    * Internal channel handling is based on this order to get correct
    * full-duplex links.
    */
-  ConnectionInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel,
-                  bool slicing);
-  virtual ~ConnectionInfo ();   //!< Dummy destructor, see DoDispose.
+  LinkInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel,
+            bool slicing);
+  virtual ~LinkInfo ();   //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -148,7 +148,7 @@ public:
    * \param dst The destination switch datapath ID.
    * \return The connection direction.
    */
-  ConnectionInfo::Direction GetDirection (uint64_t src, uint64_t dst) const;
+  LinkInfo::Direction GetDirection (uint64_t src, uint64_t dst) const;
 
   /**
    * Get the EWMA throughput bit rate for this link on the given direction,
@@ -282,7 +282,7 @@ public:
    * Get the entire list of connection information.
    * \return The list of connection information.
    */
-  static ConnInfoList_t GetList (void);
+  static LinkInfoList_t GetList (void);
 
   /**
    * Get the connection information from the global map for a pair of OpenFlow
@@ -291,17 +291,16 @@ public:
    * \param dpId2 The second datapath ID.
    * \return The connection information for this pair of datapath IDs.
    */
-  static Ptr<ConnectionInfo> GetPointer (uint64_t dpId1, uint64_t dpId2);
+  static Ptr<LinkInfo> GetPointer (uint64_t dpId1, uint64_t dpId2);
 
   /**
-   * TracedCallback signature for Ptr<const ConnectionInfo>.
-   * \param cInfo The connection information.
+   * TracedCallback signature for Ptr<const LinkInfo>.
+   * \param lInfo The connection information.
    * \param dir The link direction.
    * \param slice The network slice.
    */
-  typedef void (*CInfoTracedCallback)(Ptr<const ConnectionInfo> cInfo,
-                                      ConnectionInfo::Direction dir,
-                                      Slice slice);
+  typedef void (*CInfoTracedCallback)(Ptr<const LinkInfo> lInfo,
+                                      LinkInfo::Direction dir, Slice slice);
 
 protected:
   /** Destructor implementation. */
@@ -343,12 +342,12 @@ private:
 
   /**
    * Register the connection information in global map for further usage.
-   * \param cInfo The connection information to save.
+   * \param lInfo The connection information to save.
    */
-  static void RegisterConnectionInfo (Ptr<ConnectionInfo> cInfo);
+  static void RegisterLinkInfo (Ptr<LinkInfo> lInfo);
 
   /** Default meter bit rate adjusted trace source. */
-  TracedCallback<Ptr<const ConnectionInfo>, Direction, Slice>
+  TracedCallback<Ptr<const LinkInfo>, Direction, Slice>
   m_meterAdjustedTrace;
 
   SwitchData        m_switches [2];         //!< Switches metadata.
@@ -367,11 +366,11 @@ private:
    * Map saving pair of switch datapath IDs / connection information.
    * The pair of switch datapath IDs are saved in increasing order.
    */
-  typedef std::map<DpIdPair_t, Ptr<ConnectionInfo> > ConnInfoMap_t;
+  typedef std::map<DpIdPair_t, Ptr<LinkInfo> > ConnInfoMap_t;
 
   static ConnInfoMap_t  m_connectionsMap;   //!< Global connection info map.
-  static ConnInfoList_t m_connectionsList;  //!< Global connection info list.
+  static LinkInfoList_t m_connectionsList;  //!< Global connection info list.
 };
 
 } // namespace ns3
-#endif  // CONNECTION_INFO_H
+#endif  // LINK_INFO_H

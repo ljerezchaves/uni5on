@@ -20,7 +20,7 @@
 
 #include <algorithm>
 #include "backhaul-controller.h"
-#include "../metadata/connection-info.h"
+#include "../metadata/link-info.h"
 #include "../metadata/routing-info.h"
 #include "backhaul-network.h"
 
@@ -184,9 +184,9 @@ BackhaulController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
 }
 
 void
-BackhaulController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
+BackhaulController::NotifyTopologyConnection (Ptr<LinkInfo> lInfo)
 {
-  NS_LOG_FUNCTION (this << cInfo);
+  NS_LOG_FUNCTION (this << lInfo);
 }
 
 OpMode

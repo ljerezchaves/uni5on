@@ -30,7 +30,7 @@
 
 namespace ns3 {
 
-class ConnectionInfo;
+class LinkInfo;
 class RoutingInfo;
 
 /**
@@ -98,9 +98,9 @@ public:
   /**
    * Notify this controller of a new connection between two switches in the
    * OpenFlow backhaul network.
-   * \param cInfo The connection information.
+   * \param lInfo The link information.
    */
-  virtual void NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo);
+  virtual void NotifyTopologyConnection (Ptr<LinkInfo> lInfo);
 
   /**
    * \name Internal mechanisms operation mode accessors.

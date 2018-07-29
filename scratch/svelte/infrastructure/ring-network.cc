@@ -19,7 +19,7 @@
  */
 
 #include "ring-network.h"
-#include "../metadata/connection-info.h"
+#include "../metadata/link-info.h"
 #include "ring-controller.h"
 
 namespace ns3 {
@@ -131,32 +131,28 @@ RingNetwork::CreateTopology (void)
       BackhaulNetwork::SetDeviceNames (devs.Get (0), devs.Get (1), "~");
 
       // Adding newly created csma devices as Openflow switch ports.
-      Ptr<OFSwitch13Device> currDevice, nextDevice;
-      Ptr<CsmaNetDevice> currPortDevice, nextPortDevice;
+      Ptr<OFSwitch13Device> currDev, nextDev;
+      Ptr<CsmaNetDevice> currPortDev, nextPortDev;
       uint32_t currPortNo, nextPortNo;
 
-      currDevice = m_switchDevices.Get (currIndex);
-      currPortDevice = DynamicCast<CsmaNetDevice> (devs.Get (0));
-      currPortNo = currDevice->AddSwitchPort (currPortDevice)->GetPortNo ();
+      currDev = m_switchDevices.Get (currIndex);
+      currPortDev = DynamicCast<CsmaNetDevice> (devs.Get (0));
+      currPortNo = currDev->AddSwitchPort (currPortDev)->GetPortNo ();
 
-      nextDevice = m_switchDevices.Get (nextIndex);
-      nextPortDevice = DynamicCast<CsmaNetDevice> (devs.Get (1));
-      nextPortNo = nextDevice->AddSwitchPort (nextPortDevice)->GetPortNo ();
+      nextDev = m_switchDevices.Get (nextIndex);
+      nextPortDev = DynamicCast<CsmaNetDevice> (devs.Get (1));
+      nextPortNo = nextDev->AddSwitchPort (nextPortDev)->GetPortNo ();
 
-      // Switch order inside ConnectionInfo object must respect clockwise order
+      // Switch order inside LinkInfo object must respect clockwise order
       // (RingController assumes this order when installing switch rules).
-      ConnectionInfo::SwitchData currSwData = {
-        currDevice, currPortDevice, currPortNo
-      };
-      ConnectionInfo::SwitchData nextSwData = {
-        nextDevice, nextPortDevice, nextPortNo
-      };
-      Ptr<ConnectionInfo> cInfo = CreateObject<ConnectionInfo> (
+      LinkInfo::SwitchData currSwData = {currDev, currPortDev, currPortNo};
+      LinkInfo::SwitchData nextSwData = {nextDev, nextPortDev, nextPortNo};
+      Ptr<LinkInfo> lInfo = CreateObject<LinkInfo> (
           currSwData, nextSwData, DynamicCast<CsmaChannel> (
-            currPortDevice->GetChannel ()), ringController->GetSlicingMode ());
+            currPortDev->GetChannel ()), ringController->GetSlicingMode ());
 
       // Fire trace source notifying new connection between switches.
-      m_controllerApp->NotifyTopologyConnection (cInfo);
+      m_controllerApp->NotifyTopologyConnection (lInfo);
     }
 
   // Fire trace source notifying that all connections between switches are ok.

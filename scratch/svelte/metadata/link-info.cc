@@ -19,7 +19,7 @@
  */
 
 #include <ns3/epc-gtpu-tag.h>
-#include "connection-info.h"
+#include "link-info.h"
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT                                                 \
@@ -31,8 +31,8 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("ConnectionInfo");
-NS_OBJECT_ENSURE_REGISTERED (ConnectionInfo);
+NS_LOG_COMPONENT_DEFINE ("LinkInfo");
+NS_OBJECT_ENSURE_REGISTERED (LinkInfo);
 
 std::string SliceStr (Slice slice)
 {
@@ -51,12 +51,12 @@ std::string SliceStr (Slice slice)
     }
 }
 
-// Initializing ConnectionInfo static members.
-ConnectionInfo::ConnInfoMap_t ConnectionInfo::m_connectionsMap;
-ConnInfoList_t ConnectionInfo::m_connectionsList;
+// Initializing LinkInfo static members.
+LinkInfo::ConnInfoMap_t LinkInfo::m_connectionsMap;
+LinkInfoList_t LinkInfo::m_connectionsList;
 
-ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
-                                Ptr<CsmaChannel> channel, bool slicing)
+LinkInfo::LinkInfo (SwitchData sw1, SwitchData sw2,
+                    Ptr<CsmaChannel> channel, bool slicing)
   : m_channel (channel),
   m_slicing (slicing)
 {
@@ -74,69 +74,66 @@ ConnectionInfo::ConnectionInfo (SwitchData sw1, SwitchData sw2,
   // Connecting trace source to CsmaNetDevice PhyTxEnd trace source, used to
   // monitor data transmitted over this connection.
   m_switches [0].portDev->TraceConnect (
-    "PhyTxEnd", "Forward",
-    MakeCallback (&ConnectionInfo::NotifyTxPacket, this));
+    "PhyTxEnd", "Forward", MakeCallback (&LinkInfo::NotifyTxPacket, this));
   m_switches [1].portDev->TraceConnect (
-    "PhyTxEnd", "Backward",
-    MakeCallback (&ConnectionInfo::NotifyTxPacket, this));
+    "PhyTxEnd", "Backward", MakeCallback (&LinkInfo::NotifyTxPacket, this));
 
   // Preparing slicing metadata structures.
   memset (m_slices, 0, sizeof (SliceData) * static_cast<uint8_t> (Slice::ALL));
 
-  RegisterConnectionInfo (Ptr<ConnectionInfo> (this));
+  RegisterLinkInfo (Ptr<LinkInfo> (this));
 }
 
-ConnectionInfo::~ConnectionInfo ()
+LinkInfo::~LinkInfo ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-ConnectionInfo::GetTypeId (void)
+LinkInfo::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::ConnectionInfo")
+  static TypeId tid = TypeId ("ns3::LinkInfo")
     .SetParent<Object> ()
     .AddAttribute ("AdjustmentStep",
                    "Default meter bit rate adjustment step.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("5Mb/s")),
-                   MakeDataRateAccessor (&ConnectionInfo::m_adjustmentStep),
+                   MakeDataRateAccessor (&LinkInfo::m_adjustmentStep),
                    MakeDataRateChecker ())
     .AddAttribute ("EwmaAlpha",
                    "The EWMA alpha parameter for averaging link statistics.",
                    DoubleValue (0.25),
-                   MakeDoubleAccessor (&ConnectionInfo::m_alpha),
+                   MakeDoubleAccessor (&LinkInfo::m_alpha),
                    MakeDoubleChecker<double> (0.0, 1.0))
     .AddAttribute ("GbrSliceQuota",
                    "Maximum bandwidth ratio for GBR slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DoubleValue (0.28),
-                   MakeDoubleAccessor (&ConnectionInfo::m_gbrSliceQuota),
+                   MakeDoubleAccessor (&LinkInfo::m_gbrSliceQuota),
                    MakeDoubleChecker<double> (0.0, 0.5))
     .AddAttribute ("M2mSliceQuota",
                    "Maximum bandwidth ratio for M2M slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DoubleValue (0.18),
-                   MakeDoubleAccessor (&ConnectionInfo::m_m2mSliceQuota),
+                   MakeDoubleAccessor (&LinkInfo::m_m2mSliceQuota),
                    MakeDoubleChecker<double> (0.0, 0.5))
     .AddAttribute ("UpdateTimeout",
                    "The interval between subsequent link statistics update.",
                    TimeValue (MilliSeconds (100)),
-                   MakeTimeAccessor (&ConnectionInfo::m_timeout),
+                   MakeTimeAccessor (&LinkInfo::m_timeout),
                    MakeTimeChecker ())
 
     // Trace source used by controller to update slicing meters.
     .AddTraceSource ("MeterAdjusted",
                      "Default meter bit rate adjusted.",
-                     MakeTraceSourceAccessor (
-                       &ConnectionInfo::m_meterAdjustedTrace),
-                     "ns3::ConnectionInfo::CInfoTracedCallback")
+                     MakeTraceSourceAccessor (&LinkInfo::m_meterAdjustedTrace),
+                     "ns3::LinkInfo::CInfoTracedCallback")
   ;
   return tid;
 }
 
 uint32_t
-ConnectionInfo::GetPortNo (uint8_t idx) const
+LinkInfo::GetPortNo (uint8_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
@@ -145,7 +142,7 @@ ConnectionInfo::GetPortNo (uint8_t idx) const
 }
 
 uint64_t
-ConnectionInfo::GetSwDpId (uint8_t idx) const
+LinkInfo::GetSwDpId (uint8_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
@@ -154,7 +151,7 @@ ConnectionInfo::GetSwDpId (uint8_t idx) const
 }
 
 Ptr<const OFSwitch13Device>
-ConnectionInfo::GetSwDev (uint8_t idx) const
+LinkInfo::GetSwDev (uint8_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
@@ -163,7 +160,7 @@ ConnectionInfo::GetSwDev (uint8_t idx) const
 }
 
 Ptr<const CsmaNetDevice>
-ConnectionInfo::GetPortDev (uint8_t idx) const
+LinkInfo::GetPortDev (uint8_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
@@ -172,7 +169,7 @@ ConnectionInfo::GetPortDev (uint8_t idx) const
 }
 
 Mac48Address
-ConnectionInfo::GetPortMacAddr (uint8_t idx) const
+LinkInfo::GetPortMacAddr (uint8_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
@@ -180,8 +177,8 @@ ConnectionInfo::GetPortMacAddr (uint8_t idx) const
   return Mac48Address::ConvertFrom (GetPortDev (idx)->GetAddress ());
 }
 
-ConnectionInfo::Direction
-ConnectionInfo::GetDirection (uint64_t src, uint64_t dst) const
+LinkInfo::Direction
+LinkInfo::GetDirection (uint64_t src, uint64_t dst) const
 {
   NS_LOG_FUNCTION (this << src << dst);
 
@@ -190,16 +187,16 @@ ConnectionInfo::GetDirection (uint64_t src, uint64_t dst) const
                  "Invalid datapath IDs for this connection.");
   if (IsFullDuplexLink () && src == GetSwDpId (1))
     {
-      return ConnectionInfo::BWD;
+      return LinkInfo::BWD;
     }
 
   // For half-duplex channel always return FWD, as we will
   // only use the forwarding path for resource reservations.
-  return ConnectionInfo::FWD;
+  return LinkInfo::FWD;
 }
 
 uint64_t
-ConnectionInfo::GetThpBitRate (Direction dir, Slice slice) const
+LinkInfo::GetThpBitRate (Direction dir, Slice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -219,7 +216,7 @@ ConnectionInfo::GetThpBitRate (Direction dir, Slice slice) const
 }
 
 double
-ConnectionInfo::GetThpSliceRatio (Direction dir, Slice slice) const
+LinkInfo::GetThpSliceRatio (Direction dir, Slice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -236,7 +233,7 @@ ConnectionInfo::GetThpSliceRatio (Direction dir, Slice slice) const
 }
 
 uint64_t
-ConnectionInfo::GetFreeBitRate (Direction dir, Slice slice) const
+LinkInfo::GetFreeBitRate (Direction dir, Slice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -244,7 +241,7 @@ ConnectionInfo::GetFreeBitRate (Direction dir, Slice slice) const
 }
 
 double
-ConnectionInfo::GetFreeSliceRatio (Direction dir, Slice slice) const
+LinkInfo::GetFreeSliceRatio (Direction dir, Slice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -261,7 +258,7 @@ ConnectionInfo::GetFreeSliceRatio (Direction dir, Slice slice) const
 }
 
 uint64_t
-ConnectionInfo::GetResBitRate (Direction dir, Slice slice) const
+LinkInfo::GetResBitRate (Direction dir, Slice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -281,7 +278,7 @@ ConnectionInfo::GetResBitRate (Direction dir, Slice slice) const
 }
 
 double
-ConnectionInfo::GetResSliceRatio (Direction dir, Slice slice) const
+LinkInfo::GetResSliceRatio (Direction dir, Slice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -298,7 +295,7 @@ ConnectionInfo::GetResSliceRatio (Direction dir, Slice slice) const
 }
 
 uint64_t
-ConnectionInfo::GetMaxBitRate (Slice slice) const
+LinkInfo::GetMaxBitRate (Slice slice) const
 {
   NS_LOG_FUNCTION (this << slice);
 
@@ -313,7 +310,7 @@ ConnectionInfo::GetMaxBitRate (Slice slice) const
 }
 
 DpIdPair_t
-ConnectionInfo::GetSwitchDpIdPair (void) const
+LinkInfo::GetSwitchDpIdPair (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -321,7 +318,7 @@ ConnectionInfo::GetSwitchDpIdPair (void) const
 }
 
 uint64_t
-ConnectionInfo::GetTxBytes (Direction dir, Slice slice) const
+LinkInfo::GetTxBytes (Direction dir, Slice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -341,19 +338,19 @@ ConnectionInfo::GetTxBytes (Direction dir, Slice slice) const
 }
 
 bool
-ConnectionInfo::HasBitRate (uint64_t src, uint64_t dst, Slice slice,
-                            uint64_t bitRate) const
+LinkInfo::HasBitRate (uint64_t src, uint64_t dst, Slice slice,
+                      uint64_t bitRate) const
 {
   NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
 
   NS_ASSERT_MSG (slice < Slice::ALL, "Invalid slice for this operation.");
-  ConnectionInfo::Direction dir = GetDirection (src, dst);
+  LinkInfo::Direction dir = GetDirection (src, dst);
 
   return (GetFreeBitRate (dir, slice) >= bitRate);
 }
 
 bool
-ConnectionInfo::IsFullDuplexLink (void) const
+LinkInfo::IsFullDuplexLink (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -361,13 +358,13 @@ ConnectionInfo::IsFullDuplexLink (void) const
 }
 
 bool
-ConnectionInfo::ReleaseBitRate (uint64_t src, uint64_t dst, Slice slice,
-                                uint64_t bitRate)
+LinkInfo::ReleaseBitRate (uint64_t src, uint64_t dst, Slice slice,
+                          uint64_t bitRate)
 {
   NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
 
   NS_ASSERT_MSG (slice < Slice::ALL, "Invalid slice for this operation.");
-  ConnectionInfo::Direction dir = GetDirection (src, dst);
+  LinkInfo::Direction dir = GetDirection (src, dst);
 
   // Check for reserved bit rate.
   if (GetResBitRate (dir, slice) < bitRate)
@@ -389,13 +386,13 @@ ConnectionInfo::ReleaseBitRate (uint64_t src, uint64_t dst, Slice slice,
 }
 
 bool
-ConnectionInfo::ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
-                                uint64_t bitRate)
+LinkInfo::ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
+                          uint64_t bitRate)
 {
   NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
 
   NS_ASSERT_MSG (slice < Slice::ALL, "Invalid slice for this operation.");
-  ConnectionInfo::Direction dir = GetDirection (src, dst);
+  LinkInfo::Direction dir = GetDirection (src, dst);
 
   // Check for available bit rate.
   if (GetFreeBitRate (dir, slice) < bitRate)
@@ -417,44 +414,44 @@ ConnectionInfo::ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
 }
 
 std::string
-ConnectionInfo::DirectionStr (Direction dir)
+LinkInfo::DirectionStr (Direction dir)
 {
   switch (dir)
     {
-    case ConnectionInfo::FWD:
+    case LinkInfo::FWD:
       return "forward";
-    case ConnectionInfo::BWD:
+    case LinkInfo::BWD:
       return "backward";
     default:
       return "-";
     }
 }
 
-ConnInfoList_t
-ConnectionInfo::GetList (void)
+LinkInfoList_t
+LinkInfo::GetList (void)
 {
-  return ConnectionInfo::m_connectionsList;
+  return LinkInfo::m_connectionsList;
 }
 
-Ptr<ConnectionInfo>
-ConnectionInfo::GetPointer (uint64_t dpId1, uint64_t dpId2)
+Ptr<LinkInfo>
+LinkInfo::GetPointer (uint64_t dpId1, uint64_t dpId2)
 {
   DpIdPair_t key;
   key.first  = std::min (dpId1, dpId2);
   key.second = std::max (dpId1, dpId2);
 
-  Ptr<ConnectionInfo> cInfo = 0;
+  Ptr<LinkInfo> lInfo = 0;
   ConnInfoMap_t::iterator ret;
-  ret = ConnectionInfo::m_connectionsMap.find (key);
-  if (ret != ConnectionInfo::m_connectionsMap.end ())
+  ret = LinkInfo::m_connectionsMap.find (key);
+  if (ret != LinkInfo::m_connectionsMap.end ())
     {
-      cInfo = ret->second;
+      lInfo = ret->second;
     }
-  return cInfo;
+  return lInfo;
 }
 
 void
-ConnectionInfo::DoDispose ()
+LinkInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -462,7 +459,7 @@ ConnectionInfo::DoDispose ()
 }
 
 void
-ConnectionInfo::NotifyConstructionCompleted (void)
+LinkInfo::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -488,14 +485,14 @@ ConnectionInfo::NotifyConstructionCompleted (void)
 
   // Scheduling the first update statistics.
   m_lastUpdate = Simulator::Now ();
-  Simulator::Schedule (m_timeout, &ConnectionInfo::UpdateStatistics, this);
+  Simulator::Schedule (m_timeout, &LinkInfo::UpdateStatistics, this);
 
   // Chain up
   Object::NotifyConstructionCompleted ();
 }
 
 uint64_t
-ConnectionInfo::GetLinkBitRate (void) const
+LinkInfo::GetLinkBitRate (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -503,12 +500,12 @@ ConnectionInfo::GetLinkBitRate (void) const
 }
 
 void
-ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
+LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
 {
   NS_LOG_FUNCTION (this << context << packet);
 
-  ConnectionInfo::Direction dir;
-  dir = (context == "Forward") ? ConnectionInfo::FWD : ConnectionInfo::BWD;
+  LinkInfo::Direction dir;
+  dir = (context == "Forward") ? LinkInfo::FWD : LinkInfo::BWD;
 
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
@@ -527,8 +524,8 @@ ConnectionInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
 }
 
 void
-ConnectionInfo::UpdateMeterDiff (Direction dir, Slice slice, uint64_t bitRate,
-                                 bool reserve)
+LinkInfo::UpdateMeterDiff (Direction dir, Slice slice, uint64_t bitRate,
+                           bool reserve)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate << reserve);
 
@@ -548,20 +545,20 @@ ConnectionInfo::UpdateMeterDiff (Direction dir, Slice slice, uint64_t bitRate,
     {
       // Fire meter adjusted trace source to update meters.
       NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
-      m_meterAdjustedTrace (Ptr<ConnectionInfo> (this), dir, slice);
+      m_meterAdjustedTrace (Ptr<LinkInfo> (this), dir, slice);
       m_slices [slice].meterDiff [dir] = 0;
     }
 }
 
 void
-ConnectionInfo::UpdateStatistics (void)
+LinkInfo::UpdateStatistics (void)
 {
   NS_LOG_FUNCTION (this);
 
   double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
   for (int s = 0; s < Slice::ALL; s++)
     {
-      for (int d = 0; d <= ConnectionInfo::BWD; d++)
+      for (int d = 0; d <= LinkInfo::BWD; d++)
         {
           double bytes = static_cast<double> (m_slices [s].txBytes [d] -
                                               m_slices [s].lastTxBytes [d]);
@@ -574,26 +571,26 @@ ConnectionInfo::UpdateStatistics (void)
 
   // Scheduling the next update statistics.
   m_lastUpdate = Simulator::Now ();
-  Simulator::Schedule (m_timeout, &ConnectionInfo::UpdateStatistics, this);
+  Simulator::Schedule (m_timeout, &LinkInfo::UpdateStatistics, this);
 }
 
 void
-ConnectionInfo::RegisterConnectionInfo (Ptr<ConnectionInfo> cInfo)
+LinkInfo::RegisterLinkInfo (Ptr<LinkInfo> lInfo)
 {
   // Respecting the increasing switch index order when saving connection data.
-  uint16_t dpId1 = cInfo->GetSwDpId (0);
-  uint16_t dpId2 = cInfo->GetSwDpId (1);
+  uint16_t dpId1 = lInfo->GetSwDpId (0);
+  uint16_t dpId2 = lInfo->GetSwDpId (1);
 
   DpIdPair_t key;
   key.first  = std::min (dpId1, dpId2);
   key.second = std::max (dpId1, dpId2);
 
-  std::pair<DpIdPair_t, Ptr<ConnectionInfo> > entry (key, cInfo);
+  std::pair<DpIdPair_t, Ptr<LinkInfo> > entry (key, lInfo);
   std::pair<ConnInfoMap_t::iterator, bool> ret;
-  ret = ConnectionInfo::m_connectionsMap.insert (entry);
+  ret = LinkInfo::m_connectionsMap.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing connection information.");
 
-  ConnectionInfo::m_connectionsList.push_back (cInfo);
+  LinkInfo::m_connectionsList.push_back (lInfo);
 }
 
 } // namespace ns3

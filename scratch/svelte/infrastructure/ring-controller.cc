@@ -95,7 +95,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
   for (uint16_t swIdx = 0; swIdx < GetNSwitches (); swIdx++)
     {
       uint16_t nextIdx = NextSwitchIndex (swIdx, RingInfo::CLOCK);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (swIdx, nextIdx);
+      Ptr<LinkInfo> lInfo = GetLinkInfo (swIdx, nextIdx);
 
       // ---------------------------------------------------------------------
       // Table 2 -- Routing table -- [from higher to lower priority]
@@ -109,31 +109,31 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
       sprintf (metadataStr, "0x%x", RingInfo::COUNTER);
       cmd0 << "flow-mod cmd=add,table=2,prio=128"
            << ",flags=" << flagsStr
-           << " meta=0x0,in_port=" << cInfo->GetPortNo (0)
+           << " meta=0x0,in_port=" << lInfo->GetPortNo (0)
            << " write:group=" << RingInfo::COUNTER
            << " meta:" << metadataStr
            << " goto:3";
-      DpctlSchedule (cInfo->GetSwDpId (0), cmd0.str ());
+      DpctlSchedule (lInfo->GetSwDpId (0), cmd0.str ());
 
       sprintf (metadataStr, "0x%x", RingInfo::CLOCK);
       cmd1 << "flow-mod cmd=add,table=2,prio=128"
            << ",flags=" << flagsStr
-           << " meta=0x0,in_port=" << cInfo->GetPortNo (1)
+           << " meta=0x0,in_port=" << lInfo->GetPortNo (1)
            << " write:group=" << RingInfo::CLOCK
            << " meta:" << metadataStr
            << " goto:3";
-      DpctlSchedule (cInfo->GetSwDpId (1), cmd1.str ());
+      DpctlSchedule (lInfo->GetSwDpId (1), cmd1.str ());
     }
 }
 
 void
-RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
+RingController::NotifyTopologyConnection (Ptr<LinkInfo> lInfo)
 {
-  NS_LOG_FUNCTION (this << cInfo);
+  NS_LOG_FUNCTION (this << lInfo);
 
   // Installing groups and meters for ring network. Note that following
-  // commands works as connections are created in clockwise direction, and
-  // switches inside cInfo are saved in the same direction.
+  // commands works as LINKS ARE CREATED IN CLOCKWISE DIRECTION, and switches
+  // inside lInfo are saved in the same direction.
 
   // -------------------------------------------------------------------------
   // Group table
@@ -141,14 +141,14 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
   // Routing group for clockwise packet forwarding.
   std::ostringstream cmd1;
   cmd1 << "group-mod cmd=add,type=ind,group=" << RingInfo::CLOCK
-       << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (0);
-  DpctlSchedule (cInfo->GetSwDpId (0), cmd1.str ());
+       << " weight=0,port=any,group=any output=" << lInfo->GetPortNo (0);
+  DpctlSchedule (lInfo->GetSwDpId (0), cmd1.str ());
 
   // Routing group for counterclockwise packet forwarding.
   std::ostringstream cmd2;
   cmd2 << "group-mod cmd=add,type=ind,group=" << RingInfo::COUNTER
-       << " weight=0,port=any,group=any output=" << cInfo->GetPortNo (1);
-  DpctlSchedule (cInfo->GetSwDpId (1), cmd2.str ());
+       << " weight=0,port=any,group=any output=" << lInfo->GetPortNo (1);
+  DpctlSchedule (lInfo->GetSwDpId (1), cmd2.str ());
 
   // -------------------------------------------------------------------------
   // Meter table
@@ -157,12 +157,11 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
   if (GetSlicingMode () != OpMode::OFF)
     {
       NS_LOG_DEBUG ("Creating slicing meters for connection info " <<
-                    cInfo->GetSwDpId (0) << " to " << cInfo->GetSwDpId (1));
+                    lInfo->GetSwDpId (0) << " to " << lInfo->GetSwDpId (1));
 
-      // Connect this controller to ConnectionInfo meter ajdusted trace source.
-      cInfo->TraceConnectWithoutContext (
-        "MeterAdjusted", MakeCallback (
-          &RingController::MeterAdjusted, this));
+      // Connect this controller to LinkInfo meter ajdusted trace source.
+      lInfo->TraceConnectWithoutContext (
+        "MeterAdjusted", MakeCallback (&RingController::MeterAdjusted, this));
 
       // Meter flags OFPMF_KBPS.
       std::string flagsStr ("0x0001");
@@ -172,59 +171,59 @@ RingController::NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo)
       if (GetSlicingMode () == OpMode::ON)
         {
           // DFT Non-GBR meter for clockwise FWD direction.
-          kbps = cInfo->GetFreeBitRate (ConnectionInfo::FWD, Slice::DFT);
+          kbps = lInfo->GetFreeBitRate (LinkInfo::FWD, Slice::DFT);
           cmdm1 << "meter-mod cmd=add,flags=" << flagsStr
                 << ",meter=1 drop:rate=" << kbps / 1000;
-          DpctlSchedule (cInfo->GetSwDpId (0), cmdm1.str ());
+          DpctlSchedule (lInfo->GetSwDpId (0), cmdm1.str ());
           NS_LOG_DEBUG ("Slice " << SliceStr (Slice::DFT) << ": " <<
-                        ConnectionInfo::DirectionStr (ConnectionInfo::FWD) <<
+                        LinkInfo::DirectionStr (LinkInfo::FWD) <<
                         " link set to " << kbps << " Kbps");
 
           // DFT Non-GBR meter for counterclockwise BWD direction.
-          kbps = cInfo->GetFreeBitRate (ConnectionInfo::BWD, Slice::DFT);
+          kbps = lInfo->GetFreeBitRate (LinkInfo::BWD, Slice::DFT);
           cmdm2 << "meter-mod cmd=add,flags=" << flagsStr
                 << ",meter=2 drop:rate=" << kbps / 1000;
-          DpctlSchedule (cInfo->GetSwDpId (1), cmdm2.str ());
+          DpctlSchedule (lInfo->GetSwDpId (1), cmdm2.str ());
           NS_LOG_DEBUG ("Slice " << SliceStr (Slice::DFT) << ": " <<
-                        ConnectionInfo::DirectionStr (ConnectionInfo::BWD) <<
+                        LinkInfo::DirectionStr (LinkInfo::BWD) <<
                         " link set to " << kbps << " Kbps");
 
           // M2M Non-GBR meter for clockwise FWD direction.
-          kbps = cInfo->GetFreeBitRate (ConnectionInfo::FWD, Slice::M2M);
+          kbps = lInfo->GetFreeBitRate (LinkInfo::FWD, Slice::M2M);
           cmdm3 << "meter-mod cmd=add,flags=" << flagsStr
                 << ",meter=3 drop:rate=" << kbps / 1000;
-          DpctlSchedule (cInfo->GetSwDpId (0), cmdm3.str ());
+          DpctlSchedule (lInfo->GetSwDpId (0), cmdm3.str ());
           NS_LOG_DEBUG ("Slice " << SliceStr (Slice::M2M) << ": " <<
-                        ConnectionInfo::DirectionStr (ConnectionInfo::FWD) <<
+                        LinkInfo::DirectionStr (LinkInfo::FWD) <<
                         " link set to " << kbps << " Kbps");
 
           // M2M Non-GBR meter for counterclockwise BWD direction.
-          kbps = cInfo->GetFreeBitRate (ConnectionInfo::BWD, Slice::M2M);
+          kbps = lInfo->GetFreeBitRate (LinkInfo::BWD, Slice::M2M);
           cmdm4 << "meter-mod cmd=add,flags=" << flagsStr
                 << ",meter=4 drop:rate=" << kbps / 1000;
-          DpctlSchedule (cInfo->GetSwDpId (1), cmdm4.str ());
+          DpctlSchedule (lInfo->GetSwDpId (1), cmdm4.str ());
           NS_LOG_DEBUG ("Slice " << SliceStr (Slice::M2M) << ": " <<
-                        ConnectionInfo::DirectionStr (ConnectionInfo::BWD) <<
+                        LinkInfo::DirectionStr (LinkInfo::BWD) <<
                         " link set to " << kbps << " Kbps");
         }
       else if (GetSlicingMode () == OpMode::AUTO)
         {
           // Non-GBR meter for clockwise FWD direction.
-          kbps = cInfo->GetFreeBitRate (ConnectionInfo::FWD, Slice::ALL);
+          kbps = lInfo->GetFreeBitRate (LinkInfo::FWD, Slice::ALL);
           cmdm1 << "meter-mod cmd=add,flags=" << flagsStr
                 << ",meter=1 drop:rate=" << kbps / 1000;
-          DpctlSchedule (cInfo->GetSwDpId (0), cmdm1.str ());
+          DpctlSchedule (lInfo->GetSwDpId (0), cmdm1.str ());
           NS_LOG_DEBUG ("Slice " << SliceStr (Slice::ALL) << ": " <<
-                        ConnectionInfo::DirectionStr (ConnectionInfo::FWD) <<
+                        LinkInfo::DirectionStr (LinkInfo::FWD) <<
                         " link set to " << kbps << " Kbps");
 
           // Non-GBR meter for counterclockwise BWD direction.
-          kbps = cInfo->GetFreeBitRate (ConnectionInfo::BWD, Slice::ALL);
+          kbps = lInfo->GetFreeBitRate (LinkInfo::BWD, Slice::ALL);
           cmdm2 << "meter-mod cmd=add,flags=" << flagsStr
                 << ",meter=2 drop:rate=" << kbps / 1000;
-          DpctlSchedule (cInfo->GetSwDpId (1), cmdm2.str ());
+          DpctlSchedule (lInfo->GetSwDpId (1), cmdm2.str ());
           NS_LOG_DEBUG ("Slice " << SliceStr (Slice::ALL) << ": " <<
-                        ConnectionInfo::DirectionStr (ConnectionInfo::BWD) <<
+                        LinkInfo::DirectionStr (LinkInfo::BWD) <<
                         " link set to " << kbps << " Kbps");
         }
     }
@@ -339,14 +338,14 @@ RingController::TopologyBitRateRelease (Ptr<RoutingInfo> rInfo)
   while (success && curr != ringInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
+      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
 
       // FIXME Precisa resolver a questão do slice.
       // uint64_t currId = GetDpId (curr);
       // uint64_t nextId = GetDpId (next);
-      // success &= cInfo->ReleaseBitRate (currId, nextId, rInfo->GetSlice (),
+      // success &= lInfo->ReleaseBitRate (currId, nextId, rInfo->GetSlice (),
       //                                   gbrInfo->GetDownBitRate ());
-      // success &= cInfo->ReleaseBitRate (nextId, currId, rInfo->GetSlice (),
+      // success &= lInfo->ReleaseBitRate (nextId, currId, rInfo->GetSlice (),
       //                                   gbrInfo->GetUpBitRate ());
       curr = next;
     }
@@ -356,14 +355,14 @@ RingController::TopologyBitRateRelease (Ptr<RoutingInfo> rInfo)
   while (success && curr != ringInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
+      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
 
       // FIXME Precisa resolver a questão do slice.
       // uint64_t currId = GetDpId (curr);
       // uint64_t nextId = GetDpId (next);
-      // success &= cInfo->ReleaseBitRate (currId, nextId, rInfo->GetSlice (),
+      // success &= lInfo->ReleaseBitRate (currId, nextId, rInfo->GetSlice (),
       //                                   gbrInfo->GetDownBitRate ());
-      // success &= cInfo->ReleaseBitRate (nextId, currId, rInfo->GetSlice (),
+      // success &= lInfo->ReleaseBitRate (nextId, currId, rInfo->GetSlice (),
       //                                   gbrInfo->GetUpBitRate ());
       curr = next;
     }
@@ -410,14 +409,14 @@ RingController::TopologyBitRateReserve (Ptr<RoutingInfo> rInfo)
   while (success && curr != ringInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
+      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
 
       // FIXME Precisa resolver a questão do slice.
       // uint64_t currId = GetDpId (curr);
       // uint64_t nextId = GetDpId (next);
-      // success &= cInfo->ReserveBitRate (currId, nextId, rInfo->GetSlice (),
+      // success &= lInfo->ReserveBitRate (currId, nextId, rInfo->GetSlice (),
       //                                   gbrInfo->GetDownBitRate ());
-      // success &= cInfo->ReserveBitRate (nextId, currId, rInfo->GetSlice (),
+      // success &= lInfo->ReserveBitRate (nextId, currId, rInfo->GetSlice (),
       //                                   gbrInfo->GetUpBitRate ());
       curr = next;
     }
@@ -427,14 +426,14 @@ RingController::TopologyBitRateReserve (Ptr<RoutingInfo> rInfo)
   while (success && curr != ringInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
+      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
 
       // FIXME Precisa resolver a questão do slice.
       // uint64_t currId = GetDpId (curr);
       // uint64_t nextId = GetDpId (next);
-      // success &= cInfo->ReserveBitRate (currId, nextId, rInfo->GetSlice (),
+      // success &= lInfo->ReserveBitRate (currId, nextId, rInfo->GetSlice (),
       //                                   gbrInfo->GetDownBitRate ());
-      // success &= cInfo->ReserveBitRate (nextId, currId, rInfo->GetSlice (),
+      // success &= lInfo->ReserveBitRate (nextId, currId, rInfo->GetSlice (),
       //                                   gbrInfo->GetUpBitRate ());
       curr = next;
     }
@@ -567,20 +566,20 @@ RingController::CreateSpanningTree (void)
   // Let's configure one single link to drop packets when flooding over ports
   // (OFPP_FLOOD) with OFPPC_NO_FWD config (0x20).
   uint16_t half = (GetNSwitches () / 2);
-  Ptr<ConnectionInfo> cInfo = GetConnectionInfo (half, half + 1);
+  Ptr<LinkInfo> lInfo = GetLinkInfo (half, half + 1);
   NS_LOG_DEBUG ("Disabling link from " << half << " to " <<
                 half + 1 << " for broadcast messages.");
 
   std::ostringstream cmd1, cmd2;
-  cmd1 << "port-mod port=" << cInfo->GetPortNo (0)
-       << ",addr=" <<  cInfo->GetPortMacAddr (0)
+  cmd1 << "port-mod port=" << lInfo->GetPortNo (0)
+       << ",addr=" <<  lInfo->GetPortMacAddr (0)
        << ",conf=0x00000020,mask=0x00000020";
-  DpctlSchedule (cInfo->GetSwDpId (0), cmd1.str ());
+  DpctlSchedule (lInfo->GetSwDpId (0), cmd1.str ());
 
-  cmd2 << "port-mod port=" << cInfo->GetPortNo (1)
-       << ",addr=" << cInfo->GetPortMacAddr (1)
+  cmd2 << "port-mod port=" << lInfo->GetPortNo (1)
+       << ",addr=" << lInfo->GetPortMacAddr (1)
        << ",conf=0x00000020,mask=0x00000020";
-  DpctlSchedule (cInfo->GetSwDpId (1), cmd2.str ());
+  DpctlSchedule (lInfo->GetSwDpId (1), cmd2.str ());
 }
 
 RingInfo::RingPath
@@ -608,12 +607,12 @@ RingController::FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const
          RingInfo::COUNTER;
 }
 
-Ptr<ConnectionInfo>
-RingController::GetConnectionInfo (uint16_t idx1, uint16_t idx2) const
+Ptr<LinkInfo>
+RingController::GetLinkInfo (uint16_t idx1, uint16_t idx2) const
 {
   NS_LOG_FUNCTION (this << idx1 << idx2);
 
-  return ConnectionInfo::GetPointer (GetDpId (idx1), GetDpId (idx2));
+  return LinkInfo::GetPointer (GetDpId (idx1), GetDpId (idx2));
 }
 
 double
@@ -626,11 +625,11 @@ RingController::GetSliceUsage (Slice slice) const
   uint16_t next = NextSwitchIndex (curr, RingInfo::CLOCK);
   do
     {
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
+      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
       sliceUsage = std::max (
           sliceUsage, std::max (
-            cInfo->GetThpSliceRatio (ConnectionInfo::FWD, slice),
-            cInfo->GetThpSliceRatio (ConnectionInfo::BWD, slice)));
+            lInfo->GetThpSliceRatio (LinkInfo::FWD, slice),
+            lInfo->GetThpSliceRatio (LinkInfo::BWD, slice)));
       curr = next;
       next = NextSwitchIndex (curr, RingInfo::CLOCK);
     }
@@ -654,14 +653,14 @@ RingController::HasBitRate (Ptr<const RingInfo> ringInfo,
   while (success && curr != ringInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
+      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
 
       // FIXME Precisa resolver a questão do slice.
       // uint64_t currId = GetDpId (curr);
       // uint64_t nextId = GetDpId (next);
-      // success &= cInfo->HasBitRate (currId, nextId, slice,
+      // success &= lInfo->HasBitRate (currId, nextId, slice,
       //                               gbrInfo->GetDownBitRate ());
-      // success &= cInfo->HasBitRate (nextId, currId, slice,
+      // success &= lInfo->HasBitRate (nextId, currId, slice,
       //                               gbrInfo->GetUpBitRate ());
       curr = next;
     }
@@ -671,14 +670,14 @@ RingController::HasBitRate (Ptr<const RingInfo> ringInfo,
   while (success && curr != ringInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<ConnectionInfo> cInfo = GetConnectionInfo (curr, next);
+      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
 
       // FIXME Precisa resolver a questão do slice.
       // uint64_t currId = GetDpId (curr);
       // uint64_t nextId = GetDpId (next);
-      // success &= cInfo->HasBitRate (currId, nextId, slice,
+      // success &= lInfo->HasBitRate (currId, nextId, slice,
       //                               gbrInfo->GetDownBitRate ());
-      // success &= cInfo->HasBitRate (nextId, currId, slice,
+      // success &= lInfo->HasBitRate (nextId, currId, slice,
       //                               gbrInfo->GetUpBitRate ());
       curr = next;
     }
@@ -716,16 +715,16 @@ RingController::HopCounter (uint16_t srcIdx, uint16_t dstIdx,
 }
 
 void
-RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo,
-                               ConnectionInfo::Direction dir, Slice slice)
+RingController::MeterAdjusted (Ptr<const LinkInfo> lInfo,
+                               LinkInfo::Direction dir, Slice slice)
 {
-  NS_LOG_FUNCTION (this << cInfo << dir << slice);
+  NS_LOG_FUNCTION (this << lInfo << dir << slice);
 
   NS_ASSERT_MSG (GetSlicingMode () != OpMode::OFF, "Not supposed to "
                  "adjust slicing meters when network slicing mode is OFF.");
 
-  uint8_t  swDpId  = (dir == ConnectionInfo::FWD) ? 0 : 1;
-  uint16_t meterId = (dir == ConnectionInfo::FWD) ? 1 : 2;
+  uint8_t  swDpId  = (dir == LinkInfo::FWD) ? 0 : 1;
+  uint16_t meterId = (dir == LinkInfo::FWD) ? 1 : 2;
 
   if (GetSlicingMode () == OpMode::ON)
     {
@@ -754,7 +753,7 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo,
     }
 
   NS_LOG_INFO ("Updating slicing meter for connection info " <<
-               cInfo->GetSwDpId (0) << " to " << cInfo->GetSwDpId (1));
+               lInfo->GetSwDpId (0) << " to " << lInfo->GetSwDpId (1));
 
   // Meter flags OFPMF_KBPS.
   std::string flagsStr ("0x0001");
@@ -765,14 +764,14 @@ RingController::MeterAdjusted (Ptr<const ConnectionInfo> cInfo,
   // Meter table
   //
   // Update the proper slicing meter.
-  kbps = cInfo->GetFreeBitRate (dir, slice);
+  kbps = lInfo->GetFreeBitRate (dir, slice);
   cmd << "meter-mod cmd=mod"
       << ",flags=" << flagsStr
       << ",meter=" << meterId
       << " drop:rate=" << kbps / 1000;
-  DpctlExecute (cInfo->GetSwDpId (swDpId), cmd.str ());
-  NS_LOG_DEBUG ("Slice " << SliceStr (slice) << ": " <<
-                ConnectionInfo::DirectionStr (dir) <<
+  DpctlExecute (lInfo->GetSwDpId (swDpId), cmd.str ());
+  NS_LOG_DEBUG ("Slice " << SliceStr (slice) <<
+                ": " << LinkInfo::DirectionStr (dir) <<
                 " link updated to " << kbps << " Kbps");
 }
 

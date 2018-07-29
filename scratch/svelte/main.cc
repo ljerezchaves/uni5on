@@ -402,9 +402,9 @@ EnableVerbose (bool enable)
       LogComponentEnable ("SvelteMme",                logLevelWarnInfo);
 
       // Metadata components.
-      LogComponentEnable ("ConnectionInfo",           logLevelWarnInfo);
       LogComponentEnable ("EnbInfo",                  logLevelWarnInfo);
       LogComponentEnable ("GbrInfo",                  logLevelWarnInfo);
+      LogComponentEnable ("LinkInfo",                 logLevelWarnInfo);
       LogComponentEnable ("MeterInfo",                logLevelWarnInfo);
       LogComponentEnable ("PgwInfo",                  logLevelWarnInfo);
       LogComponentEnable ("RingInfo",                 logLevelWarnInfo);

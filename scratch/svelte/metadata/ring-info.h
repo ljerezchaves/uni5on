@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef RING_ROUTING_INFO_H
-#define RING_ROUTING_INFO_H
+#ifndef RING_INFO_H
+#define RING_INFO_H
 
 #include <ns3/core-module.h>
 #include "svelte-enum.h"
@@ -116,4 +116,4 @@ private:
 };
 
 } // namespace ns3
-#endif // RING_ROUTING_INFO_H
+#endif // RING_INFO_H

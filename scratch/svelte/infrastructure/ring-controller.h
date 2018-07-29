@@ -22,7 +22,7 @@
 #define RING_CONTROLLER_H
 
 #include "backhaul-controller.h"
-#include "../metadata/connection-info.h"
+#include "../metadata/link-info.h"
 #include "../metadata/ring-info.h"
 
 namespace ns3 {
@@ -65,7 +65,7 @@ protected:
 
   // Inherited from BackhaulController.
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
-  void NotifyTopologyConnection (Ptr<ConnectionInfo> cInfo);
+  void NotifyTopologyConnection (Ptr<LinkInfo> lInfo);
 
   void TopologyBearerCreated  (Ptr<RoutingInfo> rInfo);
   bool TopologyBearerRequest  (Ptr<RoutingInfo> rInfo);
@@ -99,7 +99,7 @@ private:
    * \param idx2 Second switch index.
    * \return Pointer to connection info saved.
    */
-  Ptr<ConnectionInfo> GetConnectionInfo (uint16_t idx1, uint16_t idx2) const;
+  Ptr<LinkInfo> GetLinkInfo (uint16_t idx1, uint16_t idx2) const;
 
   /**
    * Get the maximum slice usage on this ring network.
@@ -134,12 +134,12 @@ private:
    * Notify this controller when the maximum bit rate for best-effort
    * traffic in any network connection is adjusted. This is used to update
    * meters bands based on slicing resource reservation.
-   * \param cInfo The connection information.
+   * \param lInfo The connection information.
    * \param dir The link direction.
    * \param slice The network slice.
    */
-  void MeterAdjusted (Ptr<const ConnectionInfo> cInfo,
-                      ConnectionInfo::Direction dir, Slice slice);
+  void MeterAdjusted (Ptr<const LinkInfo> lInfo, LinkInfo::Direction dir,
+                      Slice slice);
 
   /**
    * Get the next switch index following the given routing path.
