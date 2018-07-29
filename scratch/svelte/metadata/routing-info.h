@@ -25,7 +25,7 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
-#include "svelte-enum.h"
+#include "../svelte-common.h"
 
 namespace ns3 {
 
@@ -44,7 +44,7 @@ typedef std::list<BearerContext_t> BearerContextList_t;
 typedef std::list<Ptr<RoutingInfo> > RoutingInfoList_t;
 
 /**
- * \ingroup svelteLogical
+ * \ingroup svelteMeta
  * Metadata associated to the EPS bearer.
  */
 class RoutingInfo : public Object

@@ -27,7 +27,7 @@
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
 #include "../metadata/routing-info.h"
-#include "../metadata/svelte-enum.h"
+#include "../svelte-common.h"
 
 namespace ns3 {
 

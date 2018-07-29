@@ -384,6 +384,7 @@ EnableVerbose (bool enable)
       NS_UNUSED (logLevelAll);
 
       LogComponentEnable ("Main",                     logLevelWarnInfo);
+      LogComponentEnable ("SvelteCommon",             logLevelWarnInfo);
       LogComponentEnable ("SvelteHelper",             logLevelWarnInfo);
 
       // Infrastructure components.
@@ -410,7 +411,6 @@ EnableVerbose (bool enable)
       LogComponentEnable ("RingInfo",                 logLevelWarnInfo);
       LogComponentEnable ("RoutingInfo",              logLevelWarnInfo);
       LogComponentEnable ("SgwInfo",                  logLevelWarnInfo);
-      LogComponentEnable ("SvelteEnum",               logLevelWarnInfo);
       LogComponentEnable ("UeInfo",                   logLevelWarnInfo);
 
 //      LogComponentEnable ("TrafficHelper",            logLevelWarnInfo);

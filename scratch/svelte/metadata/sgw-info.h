@@ -25,12 +25,12 @@
 #include <ns3/internet-module.h>
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
-#include "svelte-enum.h"
+#include "../svelte-common.h"
 
 namespace ns3 {
 
 /**
- * \ingroup svelteLogical
+ * \ingroup svelteMeta
  * Metadata associated to a logical S-GW.
  */
 class SgwInfo : public Object

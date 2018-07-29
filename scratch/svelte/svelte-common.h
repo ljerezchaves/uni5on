@@ -18,15 +18,15 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef SVELTE_ENUM_H
-#define SVELTE_ENUM_H
+#ifndef SVELTE_COMMON_H
+#define SVELTE_COMMON_H
 
 #include <string>
 
 namespace ns3 {
 
 /**
- * \ingroup svelteInfra
+ * \ingroup svelte
  * Enumeration of LTE logical interfaces.
  */
 typedef enum
@@ -39,7 +39,7 @@ typedef enum
 } LteIface;
 
 /**
- * \ingroup svelteInfra
+ * \ingroup svelte
  * Get the LTE interface name.
  * \param iface The LTE interface.
  * \return The string with the LTE interface name.
@@ -47,7 +47,7 @@ typedef enum
 std::string LteIfaceStr (LteIface iface);
 
 /**
- * \ingroup svelteInfra
+ * \ingroup svelte
  * Enumeration of available operation modes.
  */
 typedef enum
@@ -58,7 +58,7 @@ typedef enum
 } OpMode;
 
 /**
- * \ingroup svelteInfra
+ * \ingroup svelte
  * Get the operation mode name.
  * \param mode The operation mode.
  * \return The string with the operation mode name.
@@ -66,7 +66,7 @@ typedef enum
 std::string OpModeStr (OpMode mode);
 
 /**
- * \ingroup svelteLogical
+ * \ingroup svelte
  * Enumeration of available SVELTE logical slices IDs.
  * \internal Slice IDs are restricted to the range [1, 15] by the current
  * TEID allocation strategy.
@@ -79,7 +79,7 @@ typedef enum
 } SliceId;
 
 /**
- * \ingroup svelteLogical
+ * \ingroup svelte
  * Get the slice ID name.
  * \param slice The slice ID.
  * \return The string with the slice ID name.
@@ -87,4 +87,4 @@ typedef enum
 std::string SliceIdStr (SliceId slice);
 
 } // namespace ns3
-#endif // SVELTE_ENUM_H
+#endif // SVELTE_COMMON_H

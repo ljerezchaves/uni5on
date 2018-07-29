@@ -31,7 +31,7 @@ namespace ns3 {
 class LinkInfo;
 
 /**
- * \ingroup svelteInfra
+ * \ingroup svelteMeta
  * Enumeration of available infrastructure physical slices.
  */
 typedef enum
@@ -43,7 +43,7 @@ typedef enum
 } Slice;
 
 /**
- * \ingroup svelteInfra
+ * \ingroup svelteMeta
  * Get the slice name.
  * \param slice The slice.
  * \return The string with the slice name.

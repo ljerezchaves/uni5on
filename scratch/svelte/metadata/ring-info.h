@@ -22,14 +22,14 @@
 #define RING_INFO_H
 
 #include <ns3/core-module.h>
-#include "svelte-enum.h"
+#include "../svelte-common.h"
 
 namespace ns3 {
 
 class RoutingInfo;
 
 /**
- * \ingroup svelteInfra
+ * \ingroup svelteMeta
  * Metadata associated to the routing path for a single EPS bearer among the
  * switches in the OpenFlow ring backhaul network.
  */

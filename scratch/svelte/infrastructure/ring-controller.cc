@@ -23,7 +23,7 @@
 #include "../metadata/gbr-info.h"
 #include "../metadata/meter-info.h"
 #include "../metadata/routing-info.h"
-#include "../metadata/svelte-enum.h"
+#include "../svelte-common.h"
 #include "backhaul-network.h"
 
 namespace ns3 {

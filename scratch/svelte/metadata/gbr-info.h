@@ -31,7 +31,7 @@ namespace ns3 {
 class RoutingInfo;
 
 /**
- * \ingroup svelteLogical
+ * \ingroup svelteMeta
  * Metadata associated to GBR bearers.
  */
 class GbrInfo : public Object

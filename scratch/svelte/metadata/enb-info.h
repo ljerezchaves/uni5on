@@ -29,7 +29,7 @@
 namespace ns3 {
 
 /**
- * \ingroup svelteInfra
+ * \ingroup svelteMeta
  * Metadata associated to an eNB.
  */
 class EnbInfo : public Object

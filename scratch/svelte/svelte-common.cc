@@ -20,13 +20,12 @@
 
 #include <string>
 #include <ns3/core-module.h>
-#include "svelte-enum.h"
+#include "svelte-common.h"
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("SvelteEnum");
+NS_LOG_COMPONENT_DEFINE ("SvelteCommon");
 
-// Implementing the lte-interface.h
 std::string LteIfaceStr (LteIface iface)
 {
   switch (iface)
@@ -45,7 +44,6 @@ std::string LteIfaceStr (LteIface iface)
     }
 }
 
-// Implementing the operation-mode.h
 std::string OpModeStr (OpMode mode)
 {
   switch (mode)
@@ -62,7 +60,6 @@ std::string OpModeStr (OpMode mode)
     }
 }
 
-// Implementing the slice-id.h
 std::string SliceIdStr (SliceId slice)
 {
   switch (slice)

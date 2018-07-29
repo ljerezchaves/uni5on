@@ -25,7 +25,7 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
-#include "svelte-enum.h"
+#include "../svelte-common.h"
 
 namespace ns3 {
 
@@ -34,7 +34,13 @@ class SgwInfo;
 class PgwInfo;
 
 /**
- * \ingroup svelteLogical
+ * \ingroup svelte
+ * \defgroup svelteMeta Metadata
+ * SVELTE architecture metadata.
+ */
+
+/**
+ * \ingroup svelteMeta
  * Metadata associated to a UE.
  */
 class UeInfo : public Object
