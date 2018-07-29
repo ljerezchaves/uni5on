@@ -111,7 +111,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
            << " meta:" << RingInfo::COUNTER
            << " goto:3";
       DpctlSchedule (lInfo->GetSwDpId (0), cmd0.str ());
-      
+
       std::ostringstream cmd1;
       cmd1 << "flow-mod cmd=add,table=2,prio=128"
            << ",flags=" << flagsStr

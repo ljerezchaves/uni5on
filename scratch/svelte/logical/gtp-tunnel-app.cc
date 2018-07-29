@@ -148,10 +148,10 @@ GtpTunnelApp::GetTunnelIdStr (uint32_t teid, Ipv4Address dstIp)
   uint64_t tunnelId = static_cast<uint64_t> (dstIp.Get ());
   tunnelId <<= 32;
   tunnelId |= static_cast<uint64_t> (teid);
-  
+
   char tunnelIdStr [19];
   sprintf (tunnelIdStr, "0x%016lx", tunnelId);
-  return std::string (tunnelIdStr); 
+  return std::string (tunnelIdStr);
 }
 
 void

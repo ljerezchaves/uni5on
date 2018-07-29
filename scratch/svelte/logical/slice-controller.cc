@@ -376,6 +376,25 @@ SliceController::SetNetworkAttributes (Ipv4Address ueAddr, Ipv4Mask ueMask,
   m_webMask = webMask;
 }
 
+uint32_t
+SliceController::GetSvelteTeid (SliceId sliceId, uint32_t ueImsi,
+                                uint8_t bearerId)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  NS_ABORT_MSG_IF (static_cast<uint32_t> (sliceId) > 0xF,
+                   "Slice ID cannot exceed 4 bits in SVELTE.");
+  NS_ABORT_MSG_IF (ueImsi > 0xFFFFF,
+                   "UE IMSI cannot exceed 20 bits in SVELTE.");
+
+  uint32_t teid = static_cast<uint32_t> (sliceId);
+  teid <<= 20;
+  teid |= static_cast<uint32_t> (ueImsi);
+  teid <<= 4;
+  teid |= static_cast<uint32_t> (bearerId);
+  return teid;
+}
+
 void
 SliceController::DoDispose ()
 {
@@ -553,16 +572,13 @@ SliceController::DoCreateSessionRequest (
 {
   NS_LOG_FUNCTION (this << msg.imsi);
 
-  uint64_t imsi = msg.imsi;
-  uint32_t slice = static_cast<uint32_t> (m_sliceId);
-  NS_ASSERT_MSG (imsi  <= 0xFFFFF, "UE IMSI cannot exceed 20 bits in SVELTE.");
-  NS_ASSERT_MSG (slice <= 0xF, "Slice ID cannot exceed 4 bits in SVELTE.");
   NS_ASSERT_MSG (m_pgwInfo, "P-GW not configure with this controller.");
 
   // This controller is responsible for assigning the S-GW and P-GW elements to
   // the UE. In current implementation, each slice has a single P-GW. We are
   // using the S-GW attached to the same OpenFlow backhaul switch where the
   // UE's serving eNB is also attached. The S-GW may change during handover.
+  uint64_t imsi = msg.imsi;
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
   uint16_t enbInfraSwIdx = ueInfo->GetEnbInfo ()->GetInfraSwIdx ();
   Ptr<SgwInfo> sgwInfo = SgwInfo::GetPointerBySwIdx (enbInfraSwIdx);
@@ -579,21 +595,8 @@ SliceController::DoCreateSessionRequest (
        bit != msg.bearerContextsToBeCreated.end ();
        ++bit)
     {
-      // We are using the following TEID allocation strategy:
-      // TEID has 32 bits length: 0x 0 0 00000 0
-      //                            |-|-|-----|-|
-      //                             A B C    D
-      //
-      //  4 (A) bits are reserved for further usage.
-      //  4 (B) bits are used to identify the logical slice.
-      // 20 (C) bits are used to identify the UE (IMSI).
-      //  4 (D) bits are used to identify the bearer withing the UE.
-      //
-      uint32_t teid = slice;
-      teid <<= 20;
-      teid |= static_cast<uint32_t> (imsi);
-      teid <<= 4;
-      teid |= static_cast<uint8_t> (bit->epsBearerId);
+      uint32_t teid = SliceController::GetSvelteTeid (
+          m_sliceId, imsi, bit->epsBearerId);
       NS_LOG_DEBUG ("Allocating TEID for UE IMSI " << imsi << " in slice " <<
                     SliceIdStr (m_sliceId) << " for internal bearer id " <<
                     static_cast<uint16_t> (bit->epsBearerId) << ": 0x" <<
