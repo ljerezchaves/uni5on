@@ -96,21 +96,6 @@ private:
   RingInfo::RingPath FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const;
 
   /**
-   * Search for connection information between two switches by their indexes.
-   * \param idx1 First switch index.
-   * \param idx2 Second switch index.
-   * \return Pointer to connection info saved.
-   */
-  Ptr<LinkInfo> GetLinkInfo (uint16_t idx1, uint16_t idx2) const;
-
-  /**
-   * Get the maximum slice usage on this ring network.
-   * \param slice The link slice.
-   * \return The maximum slice usage.
-   */
-  double GetSliceUsage (LinkSlice slice) const;
-
-  /**
    * Check for the available bit rate on the given slice.
    * \param ringInfo The ring routing information.
    * \param gbrInfo The GBR information.
@@ -134,9 +119,9 @@ private:
   /**
    * // FIXME Move to BackhaulController
    * Notify this controller when the maximum bit rate for best-effort
-   * traffic in any network connection is adjusted. This is used to update
+   * traffic in any network link is adjusted. This is used to update
    * meters bands based on slicing resource reservation.
-   * \param lInfo The connection information.
+   * \param lInfo The link information.
    * \param dir The link direction.
    * \param slice The link slice.
    */

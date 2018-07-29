@@ -149,12 +149,39 @@ BackhaulController::GetSlicingMode (void) const
   return m_slicing;
 }
 
+uint64_t
+BackhaulController::GetDpId (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx < m_switchDevices.GetN (), "Invalid switch index.");
+  return m_switchDevices.Get (idx)->GetDatapathId ();
+}
+
 uint16_t
 BackhaulController::GetNSwitches (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_switchDevices.GetN ();
+}
+
+double
+BackhaulController::GetSliceUsage (LinkSlice slice) const
+{
+  NS_LOG_FUNCTION (this << slice);
+
+  double sliceUsage = 0;
+  LinkInfoList_t linkList = LinkInfo::GetList ();
+  LinkInfoList_t::const_iterator it;
+  for (it = linkList.begin (); it != linkList.end (); it++)
+    {
+      sliceUsage = std::max (
+          sliceUsage, std::max (
+            (*it)->GetThpSliceRatio (LinkInfo::FWD, slice),
+            (*it)->GetThpSliceRatio (LinkInfo::BWD, slice)));
+    }
+  return sliceUsage;
 }
 
 uint8_t
@@ -202,13 +229,12 @@ BackhaulController::NotifyConstructionCompleted (void)
   OFSwitch13Controller::NotifyConstructionCompleted ();
 }
 
-uint64_t
-BackhaulController::GetDpId (uint16_t idx) const
+Ptr<LinkInfo>
+BackhaulController::GetLinkInfo (uint16_t idx1, uint16_t idx2) const
 {
-  NS_LOG_FUNCTION (this << idx);
+  NS_LOG_FUNCTION (this << idx1 << idx2);
 
-  NS_ASSERT_MSG (idx < m_switchDevices.GetN (), "Invalid switch index.");
-  return m_switchDevices.Get (idx)->GetDatapathId ();
+  return LinkInfo::GetPointer (GetDpId (idx1), GetDpId (idx2));
 }
 
 void

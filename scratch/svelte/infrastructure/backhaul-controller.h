@@ -89,10 +89,24 @@ public:
   //\}
 
   /**
+   * Get the OpenFlow datapath ID for a specific switch index.
+   * \param idx The backhaul switch index.
+   * \return The OpenFlow datapath ID.
+   */
+  uint64_t GetDpId (uint16_t idx) const;
+
+  /**
    * Get the total number of OpenFlow switches in the backhaul network.
    * \return The number of OpenFlow switches.
    */
   uint16_t GetNSwitches (void) const;
+
+  /**
+   * Get the slice usage considering the maximum usage in any backhaul link.
+   * \param slice The link slice.
+   * \return The maximum slice usage.
+   */
+  double GetSliceUsage (LinkSlice slice) const;
 
   /**
    * Retrieve stored mapped IP ToS for a specific DSCP. We are mapping the DSCP
@@ -121,11 +135,12 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
   /**
-   * Get the OpenFlow datapath ID for a specific switch index.
-   * \param idx The backhaul switch index.
-   * \return The OpenFlow datapath ID.
+   * Search for link information between two switches by their indexes.
+   * \param idx1 First switch index.
+   * \param idx2 Second switch index.
+   * \return Pointer to link info saved.
    */
-  uint64_t GetDpId (uint16_t idx) const;
+  Ptr<LinkInfo> GetLinkInfo (uint16_t idx1, uint16_t idx2) const;
 
   /**
    * Notify this controller of a new EPC entity connected to the OpenFlow

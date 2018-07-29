@@ -595,37 +595,6 @@ RingController::FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const
          RingInfo::COUNTER;
 }
 
-Ptr<LinkInfo>
-RingController::GetLinkInfo (uint16_t idx1, uint16_t idx2) const
-{
-  NS_LOG_FUNCTION (this << idx1 << idx2);
-
-  return LinkInfo::GetPointer (GetDpId (idx1), GetDpId (idx2));
-}
-
-double
-RingController::GetSliceUsage (LinkSlice slice) const
-{
-  NS_LOG_FUNCTION (this << slice);
-
-  double sliceUsage = 0;
-  uint16_t curr = 0;
-  uint16_t next = NextSwitchIndex (curr, RingInfo::CLOCK);
-  do
-    {
-      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-      sliceUsage = std::max (
-          sliceUsage, std::max (
-            lInfo->GetThpSliceRatio (LinkInfo::FWD, slice),
-            lInfo->GetThpSliceRatio (LinkInfo::BWD, slice)));
-      curr = next;
-      next = NextSwitchIndex (curr, RingInfo::CLOCK);
-    }
-  while (curr != 0);
-
-  return sliceUsage;
-}
-
 bool
 RingController::HasBitRate (Ptr<const RingInfo> ringInfo,
                             Ptr<const GbrInfo> gbrInfo, LinkSlice slice) const
