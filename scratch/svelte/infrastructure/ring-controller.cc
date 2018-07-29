@@ -86,9 +86,6 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
   m_switchDevices = devices;
   CreateSpanningTree ();
 
-  // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
-  std::string flagsStr ("0x0007");
-
   // Configure routes to keep forwarding packets already in the ring until they
   // reach the destination switch.
   for (uint16_t swIdx = 0; swIdx < GetNSwitches (); swIdx++)
@@ -103,8 +100,8 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
       // into action set based on input port. Write the same group number into
       // metadata field. Send the packet to slicing table.
       std::ostringstream cmd0;
-      cmd0 << "flow-mod cmd=add,table=2,prio=128"
-           << ",flags=" << flagsStr
+      cmd0 << "flow-mod cmd=add,table=2,prio=128,flags="
+           << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
            << " meta=0x0,in_port=" << lInfo->GetPortNo (0)
            << " write:group=" << RingInfo::COUNTER
            << " meta:" << RingInfo::COUNTER
@@ -112,8 +109,8 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
       DpctlSchedule (lInfo->GetSwDpId (0), cmd0.str ());
 
       std::ostringstream cmd1;
-      cmd1 << "flow-mod cmd=add,table=2,prio=128"
-           << ",flags=" << flagsStr
+      cmd1 << "flow-mod cmd=add,table=2,prio=128,flags="
+           << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
            << " meta=0x0,in_port=" << lInfo->GetPortNo (1)
            << " write:group=" << RingInfo::CLOCK
            << " meta:" << RingInfo::CLOCK
@@ -160,7 +157,6 @@ RingController::NotifyTopologyConnection (Ptr<LinkInfo> lInfo)
         "MeterAdjusted", MakeCallback (&RingController::MeterAdjusted, this));
 
       // Meter flags OFPMF_KBPS.
-      std::string flagsStr ("0x0001");
       std::ostringstream cmdm1, cmdm2, cmdm3, cmdm4;
       uint64_t kbps = 0;
 
@@ -168,7 +164,7 @@ RingController::NotifyTopologyConnection (Ptr<LinkInfo> lInfo)
         {
           // DFT Non-GBR meter for clockwise FWD direction.
           kbps = lInfo->GetFreeBitRate (LinkInfo::FWD, LinkSlice::DFT);
-          cmdm1 << "meter-mod cmd=add,flags=" << flagsStr
+          cmdm1 << "meter-mod cmd=add,flags=" << OFPMF_KBPS
                 << ",meter=1 drop:rate=" << kbps / 1000;
           DpctlSchedule (lInfo->GetSwDpId (0), cmdm1.str ());
           NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::DFT) <<
@@ -177,7 +173,7 @@ RingController::NotifyTopologyConnection (Ptr<LinkInfo> lInfo)
 
           // DFT Non-GBR meter for counterclockwise BWD direction.
           kbps = lInfo->GetFreeBitRate (LinkInfo::BWD, LinkSlice::DFT);
-          cmdm2 << "meter-mod cmd=add,flags=" << flagsStr
+          cmdm2 << "meter-mod cmd=add,flags=" << OFPMF_KBPS
                 << ",meter=2 drop:rate=" << kbps / 1000;
           DpctlSchedule (lInfo->GetSwDpId (1), cmdm2.str ());
           NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::DFT) <<
@@ -186,7 +182,7 @@ RingController::NotifyTopologyConnection (Ptr<LinkInfo> lInfo)
 
           // M2M Non-GBR meter for clockwise FWD direction.
           kbps = lInfo->GetFreeBitRate (LinkInfo::FWD, LinkSlice::M2M);
-          cmdm3 << "meter-mod cmd=add,flags=" << flagsStr
+          cmdm3 << "meter-mod cmd=add,flags=" << OFPMF_KBPS
                 << ",meter=3 drop:rate=" << kbps / 1000;
           DpctlSchedule (lInfo->GetSwDpId (0), cmdm3.str ());
           NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::M2M) <<
@@ -195,7 +191,7 @@ RingController::NotifyTopologyConnection (Ptr<LinkInfo> lInfo)
 
           // M2M Non-GBR meter for counterclockwise BWD direction.
           kbps = lInfo->GetFreeBitRate (LinkInfo::BWD, LinkSlice::M2M);
-          cmdm4 << "meter-mod cmd=add,flags=" << flagsStr
+          cmdm4 << "meter-mod cmd=add,flags=" << OFPMF_KBPS
                 << ",meter=4 drop:rate=" << kbps / 1000;
           DpctlSchedule (lInfo->GetSwDpId (1), cmdm4.str ());
           NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::M2M) <<
@@ -206,7 +202,7 @@ RingController::NotifyTopologyConnection (Ptr<LinkInfo> lInfo)
         {
           // Non-GBR meter for clockwise FWD direction.
           kbps = lInfo->GetFreeBitRate (LinkInfo::FWD, LinkSlice::ALL);
-          cmdm1 << "meter-mod cmd=add,flags=" << flagsStr
+          cmdm1 << "meter-mod cmd=add,flags=" << OFPMF_KBPS
                 << ",meter=1 drop:rate=" << kbps / 1000;
           DpctlSchedule (lInfo->GetSwDpId (0), cmdm1.str ());
           NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::ALL) <<
@@ -215,7 +211,7 @@ RingController::NotifyTopologyConnection (Ptr<LinkInfo> lInfo)
 
           // Non-GBR meter for counterclockwise BWD direction.
           kbps = lInfo->GetFreeBitRate (LinkInfo::BWD, LinkSlice::ALL);
-          cmdm2 << "meter-mod cmd=add,flags=" << flagsStr
+          cmdm2 << "meter-mod cmd=add,flags=" << OFPMF_KBPS
                 << ",meter=2 drop:rate=" << kbps / 1000;
           DpctlSchedule (lInfo->GetSwDpId (1), cmdm2.str ());
           NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::ALL) <<
@@ -449,13 +445,10 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
   // Getting ring routing information.
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
 
-  // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
-  std::string flagsStr ("0x0007");
-
   // Building the dpctl command + arguments string.
   std::ostringstream cmd;
-  cmd << "flow-mod cmd=add,table=1"
-      << ",flags=" << flagsStr
+  cmd << "flow-mod cmd=add,table=1,flags="
+      << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
       << ",cookie=" << rInfo->GetTeidHex ()
       << ",prio=" << rInfo->GetPriority ()
       << ",idle=" << rInfo->GetTimeout ();
@@ -743,8 +736,6 @@ RingController::MeterAdjusted (Ptr<const LinkInfo> lInfo,
   NS_LOG_INFO ("Updating slicing meter for connection info " <<
                lInfo->GetSwDpId (0) << " to " << lInfo->GetSwDpId (1));
 
-  // Meter flags OFPMF_KBPS.
-  std::string flagsStr ("0x0001");
   std::ostringstream cmd;
   uint64_t kbps = 0;
 
@@ -754,7 +745,7 @@ RingController::MeterAdjusted (Ptr<const LinkInfo> lInfo,
   // Update the proper slicing meter.
   kbps = lInfo->GetFreeBitRate (dir, slice);
   cmd << "meter-mod cmd=mod"
-      << ",flags=" << flagsStr
+      << ",flags=" << OFPMF_KBPS
       << ",meter=" << meterId
       << " drop:rate=" << kbps / 1000;
   DpctlExecute (lInfo->GetSwDpId (swDpId), cmd.str ());

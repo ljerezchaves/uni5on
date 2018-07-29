@@ -883,13 +883,10 @@ SliceController::PgwRulesInstall (
 //   NS_LOG_INFO ("Installing P-GW rules for bearer teid " << rInfo->GetTeidHex () <<
 //               " into P-GW TFT switch index " << pgwTftIdx);
 //
-//   // Flags OFPFF_CHECK_OVERLAP and OFPFF_RESET_COUNTS.
-//   std::string flagsStr ("0x0006");
-//
 //   // Build the dpctl command string
 //   std::ostringstream cmd, act;
 //   cmd << "flow-mod cmd=add,table=0"
-//       << ",flags=" << flagsStr
+//       << ",flags=" << (OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
 //       << ",cookie=" << rInfo->GetTeidHex ()
 //       << ",prio=" << rInfo->GetPriority ()
 //       << ",idle=" << rInfo->GetTimeout ();
@@ -1006,16 +1003,13 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 //   Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
 //   Ptr<const EnbInfo> enbInfo = EnbInfo::GetPointer (ueInfo->GetCellId ());
 //
-//   // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
-//   std::string flagsStr ("0x0007");
-//
 //   // Configure downlink.
 //   if (rInfo->HasDownlinkTraffic ())
 //     {
 //       // Build the dpctl command string.
 //       std::ostringstream cmd, act;
-//       cmd << "flow-mod cmd=add,table=1"
-//           << ",flags=" << flagsStr
+//       cmd << "flow-mod cmd=add,table=1,flags="
+//           << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
 //           << ",cookie=" << rInfo->GetTeidHex ()
 //           << ",prio=" << rInfo->GetPriority ()
 //           << ",idle=" << rInfo->GetTimeout ();
@@ -1077,8 +1071,8 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 //     {
 //       // Build the dpctl command string.
 //       std::ostringstream cmd, act;
-//       cmd << "flow-mod cmd=add,table=2"
-//           << ",flags=" << flagsStr
+//       cmd << "flow-mod cmd=add,table=2,flags="
+//           << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
 //           << ",cookie=" << rInfo->GetTeidHex ()
 //           << ",prio=" << rInfo->GetPriority ()
 //           << ",idle=" << rInfo->GetTimeout ();
