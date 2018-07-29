@@ -23,7 +23,6 @@
 #include "../metadata/gbr-info.h"
 #include "../metadata/meter-info.h"
 #include "../metadata/routing-info.h"
-#include "../svelte-common.h"
 #include "backhaul-network.h"
 
 namespace ns3 {
@@ -168,59 +167,59 @@ RingController::NotifyTopologyConnection (Ptr<LinkInfo> lInfo)
       if (GetSlicingMode () == OpMode::ON)
         {
           // DFT Non-GBR meter for clockwise FWD direction.
-          kbps = lInfo->GetFreeBitRate (LinkInfo::FWD, Slice::DFT);
+          kbps = lInfo->GetFreeBitRate (LinkInfo::FWD, LinkSlice::DFT);
           cmdm1 << "meter-mod cmd=add,flags=" << flagsStr
                 << ",meter=1 drop:rate=" << kbps / 1000;
           DpctlSchedule (lInfo->GetSwDpId (0), cmdm1.str ());
-          NS_LOG_DEBUG ("Slice " << SliceStr (Slice::DFT) << ": " <<
-                        LinkInfo::DirectionStr (LinkInfo::FWD) <<
+          NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::DFT) <<
+                        ": " << LinkInfo::DirectionStr (LinkInfo::FWD) <<
                         " link set to " << kbps << " Kbps");
 
           // DFT Non-GBR meter for counterclockwise BWD direction.
-          kbps = lInfo->GetFreeBitRate (LinkInfo::BWD, Slice::DFT);
+          kbps = lInfo->GetFreeBitRate (LinkInfo::BWD, LinkSlice::DFT);
           cmdm2 << "meter-mod cmd=add,flags=" << flagsStr
                 << ",meter=2 drop:rate=" << kbps / 1000;
           DpctlSchedule (lInfo->GetSwDpId (1), cmdm2.str ());
-          NS_LOG_DEBUG ("Slice " << SliceStr (Slice::DFT) << ": " <<
-                        LinkInfo::DirectionStr (LinkInfo::BWD) <<
+          NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::DFT) <<
+                        ": " << LinkInfo::DirectionStr (LinkInfo::BWD) <<
                         " link set to " << kbps << " Kbps");
 
           // M2M Non-GBR meter for clockwise FWD direction.
-          kbps = lInfo->GetFreeBitRate (LinkInfo::FWD, Slice::M2M);
+          kbps = lInfo->GetFreeBitRate (LinkInfo::FWD, LinkSlice::M2M);
           cmdm3 << "meter-mod cmd=add,flags=" << flagsStr
                 << ",meter=3 drop:rate=" << kbps / 1000;
           DpctlSchedule (lInfo->GetSwDpId (0), cmdm3.str ());
-          NS_LOG_DEBUG ("Slice " << SliceStr (Slice::M2M) << ": " <<
-                        LinkInfo::DirectionStr (LinkInfo::FWD) <<
+          NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::M2M) <<
+                        ": " << LinkInfo::DirectionStr (LinkInfo::FWD) <<
                         " link set to " << kbps << " Kbps");
 
           // M2M Non-GBR meter for counterclockwise BWD direction.
-          kbps = lInfo->GetFreeBitRate (LinkInfo::BWD, Slice::M2M);
+          kbps = lInfo->GetFreeBitRate (LinkInfo::BWD, LinkSlice::M2M);
           cmdm4 << "meter-mod cmd=add,flags=" << flagsStr
                 << ",meter=4 drop:rate=" << kbps / 1000;
           DpctlSchedule (lInfo->GetSwDpId (1), cmdm4.str ());
-          NS_LOG_DEBUG ("Slice " << SliceStr (Slice::M2M) << ": " <<
-                        LinkInfo::DirectionStr (LinkInfo::BWD) <<
+          NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::M2M) <<
+                        ": " << LinkInfo::DirectionStr (LinkInfo::BWD) <<
                         " link set to " << kbps << " Kbps");
         }
       else if (GetSlicingMode () == OpMode::AUTO)
         {
           // Non-GBR meter for clockwise FWD direction.
-          kbps = lInfo->GetFreeBitRate (LinkInfo::FWD, Slice::ALL);
+          kbps = lInfo->GetFreeBitRate (LinkInfo::FWD, LinkSlice::ALL);
           cmdm1 << "meter-mod cmd=add,flags=" << flagsStr
                 << ",meter=1 drop:rate=" << kbps / 1000;
           DpctlSchedule (lInfo->GetSwDpId (0), cmdm1.str ());
-          NS_LOG_DEBUG ("Slice " << SliceStr (Slice::ALL) << ": " <<
-                        LinkInfo::DirectionStr (LinkInfo::FWD) <<
+          NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::ALL) <<
+                        ": " << LinkInfo::DirectionStr (LinkInfo::FWD) <<
                         " link set to " << kbps << " Kbps");
 
           // Non-GBR meter for counterclockwise BWD direction.
-          kbps = lInfo->GetFreeBitRate (LinkInfo::BWD, Slice::ALL);
+          kbps = lInfo->GetFreeBitRate (LinkInfo::BWD, LinkSlice::ALL);
           cmdm2 << "meter-mod cmd=add,flags=" << flagsStr
                 << ",meter=2 drop:rate=" << kbps / 1000;
           DpctlSchedule (lInfo->GetSwDpId (1), cmdm2.str ());
-          NS_LOG_DEBUG ("Slice " << SliceStr (Slice::ALL) << ": " <<
-                        LinkInfo::DirectionStr (LinkInfo::BWD) <<
+          NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::ALL) <<
+                        ": " << LinkInfo::DirectionStr (LinkInfo::BWD) <<
                         " link set to " << kbps << " Kbps");
         }
     }
@@ -605,7 +604,7 @@ RingController::GetLinkInfo (uint16_t idx1, uint16_t idx2) const
 }
 
 double
-RingController::GetSliceUsage (Slice slice) const
+RingController::GetSliceUsage (LinkSlice slice) const
 {
   NS_LOG_FUNCTION (this << slice);
 
@@ -629,7 +628,7 @@ RingController::GetSliceUsage (Slice slice) const
 
 bool
 RingController::HasBitRate (Ptr<const RingInfo> ringInfo,
-                            Ptr<const GbrInfo> gbrInfo, Slice slice) const
+                            Ptr<const GbrInfo> gbrInfo, LinkSlice slice) const
 {
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo << slice);
 
@@ -705,7 +704,7 @@ RingController::HopCounter (uint16_t srcIdx, uint16_t dstIdx,
 
 void
 RingController::MeterAdjusted (Ptr<const LinkInfo> lInfo,
-                               LinkInfo::Direction dir, Slice slice)
+                               LinkInfo::Direction dir, LinkSlice slice)
 {
   NS_LOG_FUNCTION (this << lInfo << dir << slice);
 
@@ -724,11 +723,11 @@ RingController::MeterAdjusted (Ptr<const LinkInfo> lInfo,
       // * For the M2M slice, the meter IDs are: 3 for FWD and 4 for BWD.
       // * For the GBR slice, we don't have Non-GBR traffic on this slice, so
       //   we don't have meters to update here.
-      if (slice == Slice::GBR)
+      if (slice == LinkSlice::GBR)
         {
           return;
         }
-      else if (slice == Slice::M2M)
+      else if (slice == LinkSlice::M2M)
         {
           meterId += 2;
         }
@@ -738,7 +737,7 @@ RingController::MeterAdjusted (Ptr<const LinkInfo> lInfo,
       // When the network slicing operation mode is AUTO, the Non-GBR traffic
       // of all slices will be monitored together. The meter IDs in use are:
       // 1 for FWD and 2 for BWD.
-      slice = Slice::ALL;
+      slice = LinkSlice::ALL;
     }
 
   NS_LOG_INFO ("Updating slicing meter for connection info " <<
@@ -759,7 +758,7 @@ RingController::MeterAdjusted (Ptr<const LinkInfo> lInfo,
       << ",meter=" << meterId
       << " drop:rate=" << kbps / 1000;
   DpctlExecute (lInfo->GetSwDpId (swDpId), cmd.str ());
-  NS_LOG_DEBUG ("Slice " << SliceStr (slice) <<
+  NS_LOG_DEBUG ("Link slice " << LinkSliceStr (slice) <<
                 ": " << LinkInfo::DirectionStr (dir) <<
                 " link updated to " << kbps << " Kbps");
 }

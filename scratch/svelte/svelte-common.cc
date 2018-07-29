@@ -29,6 +29,24 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("SvelteCommon");
 
 std::string
+LinkSliceStr (LinkSlice slice)
+{
+  switch (slice)
+    {
+    case LinkSlice::DFT:
+      return "dft";
+    case LinkSlice::GBR:
+      return "gbr";
+    case LinkSlice::M2M:
+      return "m2m";
+    case LinkSlice::ALL:
+      return "all";
+    default:
+      return "";
+    }
+}
+
+std::string
 LteIfaceStr (LteIface iface)
 {
   switch (iface)

@@ -34,23 +34,6 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("LinkInfo");
 NS_OBJECT_ENSURE_REGISTERED (LinkInfo);
 
-std::string SliceStr (Slice slice)
-{
-  switch (slice)
-    {
-    case Slice::DFT:
-      return "dft";
-    case Slice::GBR:
-      return "gbr";
-    case Slice::M2M:
-      return "m2m";
-    case Slice::ALL:
-      return "all";
-    default:
-      return "";
-    }
-}
-
 // Initializing LinkInfo static members.
 LinkInfo::LinkInfoMap_t LinkInfo::m_linksMap;
 LinkInfoList_t LinkInfo::m_linksList;
@@ -79,7 +62,8 @@ LinkInfo::LinkInfo (SwitchData sw1, SwitchData sw2,
     "PhyTxEnd", "Backward", MakeCallback (&LinkInfo::NotifyTxPacket, this));
 
   // Preparing slicing metadata structures.
-  memset (m_slices, 0, sizeof (SliceData) * static_cast<uint8_t> (Slice::ALL));
+  uint8_t numSlices = static_cast<uint8_t> (LinkSlice::ALL);
+  memset (m_slices, 0, sizeof (SliceData) * numSlices);
 
   RegisterLinkInfo (Ptr<LinkInfo> (this));
 }
@@ -196,14 +180,14 @@ LinkInfo::GetDirection (uint64_t src, uint64_t dst) const
 }
 
 uint64_t
-LinkInfo::GetThpBitRate (Direction dir, Slice slice) const
+LinkInfo::GetThpBitRate (Direction dir, LinkSlice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
   double throughput = 0;
-  if (slice >= Slice::ALL)
+  if (slice >= LinkSlice::ALL)
     {
-      for (int i = 0; i < Slice::ALL; i++)
+      for (int i = 0; i < LinkSlice::ALL; i++)
         {
           throughput += m_slices [i].ewmaThp [dir];
         }
@@ -216,7 +200,7 @@ LinkInfo::GetThpBitRate (Direction dir, Slice slice) const
 }
 
 double
-LinkInfo::GetThpSliceRatio (Direction dir, Slice slice) const
+LinkInfo::GetThpSliceRatio (Direction dir, LinkSlice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -233,7 +217,7 @@ LinkInfo::GetThpSliceRatio (Direction dir, Slice slice) const
 }
 
 uint64_t
-LinkInfo::GetFreeBitRate (Direction dir, Slice slice) const
+LinkInfo::GetFreeBitRate (Direction dir, LinkSlice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -241,7 +225,7 @@ LinkInfo::GetFreeBitRate (Direction dir, Slice slice) const
 }
 
 double
-LinkInfo::GetFreeSliceRatio (Direction dir, Slice slice) const
+LinkInfo::GetFreeSliceRatio (Direction dir, LinkSlice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -258,14 +242,14 @@ LinkInfo::GetFreeSliceRatio (Direction dir, Slice slice) const
 }
 
 uint64_t
-LinkInfo::GetResBitRate (Direction dir, Slice slice) const
+LinkInfo::GetResBitRate (Direction dir, LinkSlice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
   uint64_t bitrate = 0;
-  if (slice >= Slice::ALL)
+  if (slice >= LinkSlice::ALL)
     {
-      for (int i = 0; i < Slice::ALL; i++)
+      for (int i = 0; i < LinkSlice::ALL; i++)
         {
           bitrate += m_slices [i].resRate [dir];
         }
@@ -278,7 +262,7 @@ LinkInfo::GetResBitRate (Direction dir, Slice slice) const
 }
 
 double
-LinkInfo::GetResSliceRatio (Direction dir, Slice slice) const
+LinkInfo::GetResSliceRatio (Direction dir, LinkSlice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
@@ -295,11 +279,11 @@ LinkInfo::GetResSliceRatio (Direction dir, Slice slice) const
 }
 
 uint64_t
-LinkInfo::GetMaxBitRate (Slice slice) const
+LinkInfo::GetMaxBitRate (LinkSlice slice) const
 {
   NS_LOG_FUNCTION (this << slice);
 
-  if (slice >= Slice::ALL)
+  if (slice >= LinkSlice::ALL)
     {
       return GetLinkBitRate ();
     }
@@ -318,14 +302,14 @@ LinkInfo::GetSwitchDpIdPair (void) const
 }
 
 uint64_t
-LinkInfo::GetTxBytes (Direction dir, Slice slice) const
+LinkInfo::GetTxBytes (Direction dir, LinkSlice slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
   uint64_t bytes = 0;
-  if (slice >= Slice::ALL)
+  if (slice >= LinkSlice::ALL)
     {
-      for (int i = 0; i < Slice::ALL; i++)
+      for (int i = 0; i < LinkSlice::ALL; i++)
         {
           bytes += m_slices [i].txBytes [dir];
         }
@@ -338,12 +322,12 @@ LinkInfo::GetTxBytes (Direction dir, Slice slice) const
 }
 
 bool
-LinkInfo::HasBitRate (uint64_t src, uint64_t dst, Slice slice,
-                      uint64_t bitRate) const
+LinkInfo::HasBitRate (
+  uint64_t src, uint64_t dst, LinkSlice slice, uint64_t bitRate) const
 {
   NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
 
-  NS_ASSERT_MSG (slice < Slice::ALL, "Invalid slice for this operation.");
+  NS_ASSERT_MSG (slice < LinkSlice::ALL, "Invalid slice for this operation.");
   LinkInfo::Direction dir = GetDirection (src, dst);
 
   return (GetFreeBitRate (dir, slice) >= bitRate);
@@ -358,12 +342,12 @@ LinkInfo::IsFullDuplexLink (void) const
 }
 
 bool
-LinkInfo::ReleaseBitRate (uint64_t src, uint64_t dst, Slice slice,
-                          uint64_t bitRate)
+LinkInfo::ReleaseBitRate (
+  uint64_t src, uint64_t dst, LinkSlice slice, uint64_t bitRate)
 {
   NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
 
-  NS_ASSERT_MSG (slice < Slice::ALL, "Invalid slice for this operation.");
+  NS_ASSERT_MSG (slice < LinkSlice::ALL, "Invalid slice for this operation.");
   LinkInfo::Direction dir = GetDirection (src, dst);
 
   // Check for reserved bit rate.
@@ -375,7 +359,7 @@ LinkInfo::ReleaseBitRate (uint64_t src, uint64_t dst, Slice slice,
 
   // Releasing the bit rate.
   m_slices [slice].resRate [dir] -= bitRate;
-  NS_LOG_DEBUG ("Releasing bit rate on slice " << SliceStr (slice) <<
+  NS_LOG_DEBUG ("Releasing bit rate on slice " << LinkSliceStr (slice) <<
                 " in " << DirectionStr (dir) << " direction.");
   NS_LOG_DEBUG ("Current reserved bit rate: " << GetResBitRate (dir, slice));
   NS_LOG_DEBUG ("Current free bit rate: " << GetFreeBitRate (dir, slice));
@@ -386,12 +370,12 @@ LinkInfo::ReleaseBitRate (uint64_t src, uint64_t dst, Slice slice,
 }
 
 bool
-LinkInfo::ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
-                          uint64_t bitRate)
+LinkInfo::ReserveBitRate (
+  uint64_t src, uint64_t dst, LinkSlice slice, uint64_t bitRate)
 {
   NS_LOG_FUNCTION (this << src << dst << slice << bitRate);
 
-  NS_ASSERT_MSG (slice < Slice::ALL, "Invalid slice for this operation.");
+  NS_ASSERT_MSG (slice < LinkSlice::ALL, "Invalid slice for this operation.");
   LinkInfo::Direction dir = GetDirection (src, dst);
 
   // Check for available bit rate.
@@ -403,7 +387,7 @@ LinkInfo::ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
 
   // Reserving the bit rate.
   m_slices [slice].resRate [dir] += bitRate;
-  NS_LOG_DEBUG ("Reserving bit rate on slice " << SliceStr (slice) <<
+  NS_LOG_DEBUG ("Reserving bit rate on slice " << LinkSliceStr (slice) <<
                 " in " << DirectionStr (dir) << " direction.");
   NS_LOG_DEBUG ("Current reserved bit rate: " << GetResBitRate (dir, slice));
   NS_LOG_DEBUG ("Current free bit rate: " << GetFreeBitRate (dir, slice));
@@ -470,18 +454,18 @@ LinkInfo::NotifyConstructionCompleted (void)
       gbrRate = static_cast<uint64_t> (GetLinkBitRate () * m_gbrSliceQuota);
       dftRate = GetLinkBitRate () - gbrRate - mtcRate;
 
-      m_slices [Slice::M2M].maxRate = mtcRate;
-      m_slices [Slice::GBR].maxRate = gbrRate;
-      m_slices [Slice::DFT].maxRate = dftRate;
+      m_slices [LinkSlice::M2M].maxRate = mtcRate;
+      m_slices [LinkSlice::GBR].maxRate = gbrRate;
+      m_slices [LinkSlice::DFT].maxRate = dftRate;
     }
   else
     {
-      m_slices [Slice::DFT].maxRate = GetLinkBitRate ();
+      m_slices [LinkSlice::DFT].maxRate = GetLinkBitRate ();
     }
 
-  NS_LOG_DEBUG ("DFT maximum bit rate: " <<  m_slices [Slice::DFT].maxRate);
-  NS_LOG_DEBUG ("GBR maximum bit rate: " <<  m_slices [Slice::GBR].maxRate);
-  NS_LOG_DEBUG ("M2M maximum bit rate: " <<  m_slices [Slice::M2M].maxRate);
+  NS_LOG_DEBUG ("DFT maximum bit rate: " <<  m_slices [LinkSlice::DFT].maxRate);
+  NS_LOG_DEBUG ("GBR maximum bit rate: " <<  m_slices [LinkSlice::GBR].maxRate);
+  NS_LOG_DEBUG ("M2M maximum bit rate: " <<  m_slices [LinkSlice::M2M].maxRate);
 
   // Scheduling the first update statistics.
   m_lastUpdate = Simulator::Now ();
@@ -513,19 +497,19 @@ LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
       // FIXME Voltar
       // Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (gtpuTag.GetTeid ());
       // m_slices [rInfo->GetSlice ()].txBytes [dir] += packet->GetSize ();
-      m_slices [Slice::DFT].txBytes [dir] += packet->GetSize ();
+      m_slices [LinkSlice::DFT].txBytes [dir] += packet->GetSize ();
     }
   else
     {
       // For the case of non-tagged packets, save bytes in default slice.
       NS_LOG_WARN ("No GTPU packet tag found.");
-      m_slices [Slice::DFT].txBytes [dir] += packet->GetSize ();
+      m_slices [LinkSlice::DFT].txBytes [dir] += packet->GetSize ();
     }
 }
 
 void
-LinkInfo::UpdateMeterDiff (Direction dir, Slice slice, uint64_t bitRate,
-                           bool reserve)
+LinkInfo::UpdateMeterDiff (
+  Direction dir, LinkSlice slice, uint64_t bitRate, bool reserve)
 {
   NS_LOG_FUNCTION (this << dir << slice << bitRate << reserve);
 
@@ -556,7 +540,7 @@ LinkInfo::UpdateStatistics (void)
   NS_LOG_FUNCTION (this);
 
   double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
-  for (int s = 0; s < Slice::ALL; s++)
+  for (int s = 0; s < LinkSlice::ALL; s++)
     {
       for (int d = 0; d <= LinkInfo::BWD; d++)
         {

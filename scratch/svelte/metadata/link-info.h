@@ -25,30 +25,11 @@
 #include <ns3/csma-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
+#include "../svelte-common.h"
 
 namespace ns3 {
 
 class LinkInfo;
-
-/**
- * \ingroup svelteMeta
- * Enumeration of available infrastructure physical slices.
- */
-typedef enum
-{
-  DFT = 0,  //!< Best-effort (default) slice.
-  GBR = 1,  //!< HTC GBR slice.
-  M2M = 2,  //!< M2M slice.
-  ALL = 3   //!< ALL previous slices.
-} Slice;
-
-/**
- * \ingroup svelteMeta
- * Get the slice name.
- * \param slice The slice.
- * \return The string with the slice name.
- */
-std::string SliceStr (Slice slice);
 
 /** A pair of switch datapath IDs. */
 typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
@@ -117,8 +98,8 @@ public:
    * Internal channel handling is based on this order to get correct
    * full-duplex links.
    */
-  LinkInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel,
-            bool slicing);
+  LinkInfo (
+    SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel, bool slicing);
   virtual ~LinkInfo ();   //!< Dummy destructor, see DoDispose.
 
   /**
@@ -148,7 +129,8 @@ public:
    * \param dst The destination switch datapath ID.
    * \return The link direction.
    */
-  LinkInfo::Direction GetDirection (uint64_t src, uint64_t dst) const;
+  LinkInfo::Direction GetDirection (
+    uint64_t src, uint64_t dst) const;
 
   /**
    * Get the EWMA throughput bit rate for this link on the given direction,
@@ -157,7 +139,8 @@ public:
    * \param slice The network slice.
    * \return The EWMA throughput.
    */
-  uint64_t GetThpBitRate (Direction dir, Slice slice = Slice::ALL) const;
+  uint64_t GetThpBitRate (
+    Direction dir, LinkSlice slice = LinkSlice::ALL) const;
 
   /**
    * Get the EWMA throughput ratio for this link on the given direction,
@@ -166,7 +149,8 @@ public:
    * \param slice The network slice.
    * \return The bandwidth usage ratio.
    */
-  double GetThpSliceRatio (Direction dir, Slice slice = Slice::ALL) const;
+  double GetThpSliceRatio (
+    Direction dir, LinkSlice slice = LinkSlice::ALL) const;
 
   /**
    * Get the available (not reserved) bit rate for traffic over this link on
@@ -175,7 +159,8 @@ public:
    * \param slice The network slice.
    * \return The available bit rate.
    */
-  uint64_t GetFreeBitRate (Direction dir, Slice slice = Slice::ALL) const;
+  uint64_t GetFreeBitRate (
+    Direction dir, LinkSlice slice = LinkSlice::ALL) const;
 
   /**
    * Get the available bit rate ratio for traffic over this link on the given
@@ -184,7 +169,8 @@ public:
    * \param slice The network slice.
    * \return The available slice ratio.
    */
-  double GetFreeSliceRatio (Direction dir, Slice slice = Slice::ALL) const;
+  double GetFreeSliceRatio (
+    Direction dir, LinkSlice slice = LinkSlice::ALL) const;
 
   /**
    * Get the reserved bit rate for traffic over this link on the given
@@ -193,7 +179,8 @@ public:
    * \param slice The network slice.
    * \return The reserved bit rate.
    */
-  uint64_t GetResBitRate (Direction dir, Slice slice = Slice::ALL) const;
+  uint64_t GetResBitRate (
+    Direction dir, LinkSlice slice = LinkSlice::ALL) const;
 
   /**
    * Get the reserved bit rate ratio for traffic over this link on the given
@@ -202,7 +189,8 @@ public:
    * \param slice The network slice.
    * \return The reserved slice ratio.
    */
-  double GetResSliceRatio (Direction dir, Slice slice = Slice::ALL) const;
+  double GetResSliceRatio (
+    Direction dir, LinkSlice slice = LinkSlice::ALL) const;
 
   /**
    * Get the maximum bit rate for this link (same for both directions),
@@ -211,7 +199,8 @@ public:
    * \param slice The network slice.
    * \return The maximum bit rate.
    */
-  uint64_t GetMaxBitRate (Slice slice = Slice::ALL) const;
+  uint64_t GetMaxBitRate (
+    LinkSlice slice = LinkSlice::ALL) const;
 
   /**
    * Get the pair of switch datapath IDs for this link, respecting the
@@ -227,7 +216,8 @@ public:
    * \param slice The network slice.
    * \return The TX bytes.
    */
-  uint64_t GetTxBytes (Direction dir, Slice slice = Slice::ALL) const;
+  uint64_t GetTxBytes (
+    Direction dir, LinkSlice slice = LinkSlice::ALL) const;
 
   /**
    * Check for available bit rate between these two switches that can be
@@ -238,8 +228,8 @@ public:
    * \param bitRate The bit rate to check.
    * \return True if there is available bit rate, false otherwise.
    */
-  bool HasBitRate (uint64_t src, uint64_t dst, Slice slice,
-                   uint64_t bitRate) const;
+  bool HasBitRate (
+    uint64_t src, uint64_t dst, LinkSlice slice, uint64_t bitRate) const;
 
   /**
    * Inspect physical channel for half-duplex or full-duplex operation mode.
@@ -256,8 +246,8 @@ public:
    * \param bitRate The bit rate to release.
    * \return True if succeeded, false otherwise.
    */
-  bool ReleaseBitRate (uint64_t src, uint64_t dst, Slice slice,
-                       uint64_t bitRate);
+  bool ReleaseBitRate (
+    uint64_t src, uint64_t dst, LinkSlice slice, uint64_t bitRate);
 
   /**
    * Reserve the requested bit rate between these two switches on the given
@@ -268,8 +258,8 @@ public:
    * \param bitRate The bit rate to reserve.
    * \return True if succeeded, false otherwise.
    */
-  bool ReserveBitRate (uint64_t src, uint64_t dst, Slice slice,
-                       uint64_t bitRate);
+  bool ReserveBitRate (
+    uint64_t src, uint64_t dst, LinkSlice slice, uint64_t bitRate);
 
   /**
    * Get the string representing the given direction.
@@ -299,8 +289,8 @@ public:
    * \param dir The link direction.
    * \param slice The network slice.
    */
-  typedef void (*CInfoTracedCallback)(Ptr<const LinkInfo> lInfo,
-                                      LinkInfo::Direction dir, Slice slice);
+  typedef void (*CInfoTracedCallback)(
+    Ptr<const LinkInfo> lInfo, LinkInfo::Direction dir, LinkSlice slice);
 
 protected:
   /** Destructor implementation. */
@@ -332,8 +322,8 @@ private:
    * \param bitRate The bit rate.
    * \param reserve True when reserving the bit rate, false when releasing.
    */
-  void UpdateMeterDiff (Direction dir, Slice slice, uint64_t bitRate,
-                        bool reserve);
+  void UpdateMeterDiff (
+    Direction dir, LinkSlice slice, uint64_t bitRate, bool reserve);
 
   /**
    * Update link statistics.
@@ -347,20 +337,20 @@ private:
   static void RegisterLinkInfo (Ptr<LinkInfo> lInfo);
 
   /** Default meter bit rate adjusted trace source. */
-  TracedCallback<Ptr<const LinkInfo>, Direction, Slice>
+  TracedCallback<Ptr<const LinkInfo>, Direction, LinkSlice>
   m_meterAdjustedTrace;
 
-  SwitchData        m_switches [2];         //!< Switches metadata.
-  Ptr<CsmaChannel>  m_channel;              //!< The CSMA link channel.
-  Time              m_lastUpdate;           //!< Last update time.
-  bool              m_slicing;              //!< Network slicing enable.
-  SliceData         m_slices [Slice::ALL];  //!< Slicing metadata.
+  SwitchData        m_switches [2];             //!< Switches metadata.
+  Ptr<CsmaChannel>  m_channel;                  //!< The CSMA link channel.
+  Time              m_lastUpdate;               //!< Last update time.
+  bool              m_slicing;                  //!< Network slicing enable.
+  SliceData         m_slices [LinkSlice::ALL];  //!< Slicing metadata.
 
-  DataRate          m_adjustmentStep;       //!< Meter adjustment step.
-  double            m_alpha;                //!< EWMA alpha parameter.
-  double            m_gbrSliceQuota;        //!< GBR slice quota.
-  double            m_m2mSliceQuota;        //!< M2M slice quota.
-  Time              m_timeout;              //!< Update timeout.
+  DataRate          m_adjustmentStep;           //!< Meter adjustment step.
+  double            m_alpha;                    //!< EWMA alpha parameter.
+  double            m_gbrSliceQuota;            //!< GBR slice quota.
+  double            m_m2mSliceQuota;            //!< M2M slice quota.
+  Time              m_timeout;                  //!< Update timeout.
 
   /**
    * Map saving pair of switch datapath IDs / link information.
@@ -368,8 +358,8 @@ private:
    */
   typedef std::map<DpIdPair_t, Ptr<LinkInfo> > LinkInfoMap_t;
 
-  static LinkInfoMap_t  m_linksMap;         //!< Global link info map.
-  static LinkInfoList_t m_linksList;        //!< Global link info list.
+  static LinkInfoMap_t  m_linksMap;             //!< Global link info map.
+  static LinkInfoList_t m_linksList;            //!< Global link info list.
 };
 
 } // namespace ns3

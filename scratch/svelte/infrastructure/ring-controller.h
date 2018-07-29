@@ -24,6 +24,7 @@
 #include "backhaul-controller.h"
 #include "../metadata/link-info.h"
 #include "../metadata/ring-info.h"
+#include "../svelte-common.h"
 
 namespace ns3 {
 
@@ -103,20 +104,20 @@ private:
 
   /**
    * Get the maximum slice usage on this ring network.
-   * \param slice The network slice.
+   * \param slice The link slice.
    * \return The maximum slice usage.
    */
-  double GetSliceUsage (Slice slice) const;
+  double GetSliceUsage (LinkSlice slice) const;
 
   /**
    * Check for the available bit rate on the given slice.
    * \param ringInfo The ring routing information.
    * \param gbrInfo The GBR information.
-   * \param slice The network slice.
+   * \param slice The link slice.
    * \return True if there's available GBR bit rate, false otherwise.
    */
   bool HasBitRate (Ptr<const RingInfo> ringInfo,
-                   Ptr<const GbrInfo> gbrInfo, Slice slice) const;
+                   Ptr<const GbrInfo> gbrInfo, LinkSlice slice) const;
 
   /**
    * Count the number of hops between source and destination switch index
@@ -136,10 +137,10 @@ private:
    * meters bands based on slicing resource reservation.
    * \param lInfo The connection information.
    * \param dir The link direction.
-   * \param slice The network slice.
+   * \param slice The link slice.
    */
   void MeterAdjusted (Ptr<const LinkInfo> lInfo, LinkInfo::Direction dir,
-                      Slice slice);
+                      LinkSlice slice);
 
   /**
    * Get the next switch index following the given routing path.

@@ -35,6 +35,18 @@ class NetDevice;
 
 /**
  * \ingroup svelte
+ * Enumeration of available physical link slices.
+ */
+typedef enum
+{
+  DFT = 0,  //!< Best-effort (default) slice.
+  GBR = 1,  //!< HTC GBR slice.
+  M2M = 2,  //!< M2M slice.
+  ALL = 3   //!< ALL previous slices.
+} LinkSlice;
+
+/**
+ * \ingroup svelte
  * Enumeration of LTE logical interfaces.
  */
 typedef enum
@@ -69,6 +81,14 @@ typedef enum
   HTC  = 1,   //!< Slice for HTC UEs.
   MTC  = 2    //!< Slice for MTC UEs.
 } SliceId;
+
+/**
+ * \ingroup svelte
+ * Get the physical link slice name.
+ * \param slice The link slice.
+ * \return The string with the physical link slice name.
+ */
+std::string LinkSliceStr (LinkSlice slice);
 
 /**
  * \ingroup svelte
