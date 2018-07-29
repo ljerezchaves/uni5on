@@ -151,20 +151,6 @@ protected:
   uint64_t GetDpId (uint16_t idx) const;
 
   /**
-   * Retrieve the OpenFlow switch index for registered EPC IP address.
-   * \param ipAddr The EPC IP address.
-   * \return The backhaul switch index.
-   */
-  uint16_t GetSwIdx (Ipv4Address ipAddr) const;
-
-  /**
-   * Retrieve the switch index for switch device.
-   * \param dev The OpenFlow switch device.
-   * \return The backhaul switch index.
-   */
-  uint16_t GetSwIdx (Ptr<OFSwitch13Device> dev) const;
-
-  /**
    * \name Topology methods.
    * These virtual methods must be implemented by topology subclasses, as
    * they are dependent on the OpenFlow backhaul network topology.
@@ -261,10 +247,6 @@ private:
   /** Map saving IP DSCP value / IP ToS. */
   typedef std::map<Ipv4Header::DscpType, uint8_t> DscpTosMap_t;
 
-  /** Map saving IP address / switch index. */
-  typedef std::map<Ipv4Address, uint16_t> IpSwitchMap_t;
-
-  IpSwitchMap_t         m_ipSwitchTable;  //!< EPC IP / switch index table.
   static QciDscpMap_t   m_qciDscpTable;   //!< DSCP mapped values.
   static DscpQueueMap_t m_dscpQueueTable; //!< OpenFlow queue id mapped values.
   static DscpTosMap_t   m_dscpTosTable;   //!< IP ToS mapped values.

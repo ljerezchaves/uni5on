@@ -139,13 +139,6 @@ BackhaulController::NotifyEpcAttach (
 {
   NS_LOG_FUNCTION (this << swDev << portNo << epcDev);
 
-  // Save the pair EPC IP address / switch index.
-  std::pair<Ipv4Address, uint16_t> entry (
-    Ipv4AddressHelper::GetAddress (epcDev), GetSwIdx (swDev));
-  std::pair<IpSwitchMap_t::iterator, bool> ret;
-  ret = m_ipSwitchTable.insert (entry);
-  NS_ABORT_MSG_IF (ret.second == false, "IP already exists in table.");
-
   // Configure port rules.
   // -------------------------------------------------------------------------
   // Table 0 -- Input table -- [from higher to lower priority]
@@ -246,7 +239,6 @@ BackhaulController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_ipSwitchTable.clear ();
   OFSwitch13Controller::DoDispose ();
 }
 
@@ -266,37 +258,6 @@ BackhaulController::GetDpId (uint16_t idx) const
 
   NS_ASSERT_MSG (idx < m_switchDevices.GetN (), "Invalid switch index.");
   return m_switchDevices.Get (idx)->GetDatapathId ();
-}
-
-uint16_t
-BackhaulController::GetSwIdx (Ipv4Address ipAddr) const
-{
-  NS_LOG_FUNCTION (this << ipAddr);
-
-  IpSwitchMap_t::const_iterator ret;
-  ret = m_ipSwitchTable.find (ipAddr);
-  if (ret != m_ipSwitchTable.end ())
-    {
-      return ret->second;
-    }
-  NS_ABORT_MSG ("IP not registered in switch index table.");
-}
-
-uint16_t
-BackhaulController::GetSwIdx (Ptr<OFSwitch13Device> dev) const
-{
-  NS_LOG_FUNCTION (this << dev);
-
-  uint16_t idx;
-  for (idx = 0; idx < GetNSwitches (); idx++)
-    {
-      if (m_switchDevices.Get (idx) == dev)
-        {
-          break;
-        }
-    }
-  NS_ASSERT_MSG (idx < GetNSwitches (), "Switch not found in collection.");
-  return idx;
 }
 
 ofl_err
