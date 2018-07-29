@@ -103,24 +103,21 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
       // GTP packets being forwarded by this switch. Write the output group
       // into action set based on input port. Write the same group number into
       // metadata field. Send the packet to slicing table.
-      std::ostringstream cmd0, cmd1;
-      char metadataStr [12];
-
-      sprintf (metadataStr, "0x%x", RingInfo::COUNTER);
+      std::ostringstream cmd0;
       cmd0 << "flow-mod cmd=add,table=2,prio=128"
            << ",flags=" << flagsStr
            << " meta=0x0,in_port=" << lInfo->GetPortNo (0)
            << " write:group=" << RingInfo::COUNTER
-           << " meta:" << metadataStr
+           << " meta:" << RingInfo::COUNTER
            << " goto:3";
       DpctlSchedule (lInfo->GetSwDpId (0), cmd0.str ());
-
-      sprintf (metadataStr, "0x%x", RingInfo::CLOCK);
+      
+      std::ostringstream cmd1;
       cmd1 << "flow-mod cmd=add,table=2,prio=128"
            << ",flags=" << flagsStr
            << " meta=0x0,in_port=" << lInfo->GetPortNo (1)
            << " write:group=" << RingInfo::CLOCK
-           << " meta:" << metadataStr
+           << " meta:" << RingInfo::CLOCK
            << " goto:3";
       DpctlSchedule (lInfo->GetSwDpId (1), cmd1.str ());
     }
@@ -456,9 +453,6 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
   // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
   std::string flagsStr ("0x0007");
 
-  // Printing the cookie in dpctl string format.
-  char metadataStr [12];
-
   // Building the dpctl command + arguments string.
   std::ostringstream cmd;
   cmd << "flow-mod cmd=add,table=1"
@@ -491,8 +485,7 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 
       // Build the metatada, write and goto instructions string.
       // FIXME Essas regras de act tem que ser diferentes tb.
-      sprintf (metadataStr, "0x%x", ringInfo->GetDownPath (LteIface::S5));
-      act << " meta:" << metadataStr << " goto:2";
+      act << " meta:" << ringInfo->GetDownPath (LteIface::S5) << " goto:2";
 
       // Installing downlink rules into switch connected to P-GW and S-GW.
       DpctlExecute (GetDpId (ringInfo->GetPgwInfraSwIdx ()), cmd.str () + matchS5.str () + act.str ());
@@ -517,9 +510,10 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 //           act << " apply:set_field=ip_dscp:" << rInfo->GetDscpValue ();
 //         }
 //
+// FIXME Ver essa lógica que tá toda errada
 //       // Build the metatada, write and goto instructions string.
 //       sprintf (metadataStr, "0x%x", ringInfo->GetUpPath ());
-//       act << " meta:" << metadataStr << " goto:2";
+//       act << " meta:" << ringInfo->GetUpPath (LteIface::S5) << " goto:2";
 //
 //       // Installing the rule into input switch.
 //       // In uplink the input ring switch is the one connected to the S-GW.
