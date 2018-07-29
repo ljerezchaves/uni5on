@@ -116,8 +116,7 @@ BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
   m_epcDevices.Add (epcDev);
 
   // Set device names for pcap files.
-  std::string ifaceName = "~" + LteIfaceStr (iface) + "~";
-  BackhaulNetwork::SetDeviceNames (swDev, epcDev, ifaceName);
+  SetDeviceNames (swDev, epcDev, "~" + LteIfaceStr (iface) + "~");
 
   // Add the swDev device as OpenFlow switch port on the switch node.
   Ptr<OFSwitch13Port> swPort = swOfDev->AddSwitchPort (swDev);
@@ -159,18 +158,6 @@ BackhaulNetwork::GetControllerApp (void) const
   NS_LOG_FUNCTION (this);
 
   return m_controllerApp;
-}
-
-void
-BackhaulNetwork::SetDeviceNames (Ptr<NetDevice> srcDev, Ptr<NetDevice> dstDev,
-                                 std::string desc)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  Names::Add (Names::FindName (srcDev->GetNode ()) + desc +
-              Names::FindName (dstDev->GetNode ()), srcDev);
-  Names::Add (Names::FindName (dstDev->GetNode ()) + desc +
-              Names::FindName (srcDev->GetNode ()), dstDev);
 }
 
 void

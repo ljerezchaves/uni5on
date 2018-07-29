@@ -87,15 +87,6 @@ public:
    */
   Ptr<BackhaulController> GetControllerApp (void) const;
 
-  /**
-   * Set the devices names identifying the connection between the nodes.
-   * \param srcDev The network device in the source node.
-   * \param dstDev The network device in the destination node.
-   * \param desc The string describing this connection.
-   */
-  static void SetDeviceNames (Ptr<NetDevice> srcDev, Ptr<NetDevice> dstDev,
-                              std::string desc);
-
   static const uint16_t         m_gtpuPort;         //!< GTP-U UDP port.
   static const Ipv4Address      m_s1uAddr;          //!< S1-U network address.
   static const Ipv4Address      m_s5Addr;           //!< S5 network address.

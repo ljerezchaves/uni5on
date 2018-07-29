@@ -153,30 +153,6 @@ public:
                              Ipv4Address webAddr, Ipv4Mask webMask);
 
   /**
-   * Compute the TEID value globally used in the SVELTE architecture for a EPS
-   * bearer considering the slice ID, the UE ISMI and bearer ID.
-   * \param sliceId The SVELTE logical slice ID.
-   * \param ueImsi The UE ISMI.
-   * \param bearerId The UE bearer ID.
-   * \return The TEID for this bearer.
-   *
-   * \internal
-   * \verbatim
-   * We are using the following TEID allocation strategy:
-   * TEID has 32 bits length: 0x 0 0 00000 0
-   *                            |-|-|-----|-|
-   *                             A B C    D
-   *
-   *  4 (A) bits are reserved for further usage.
-   *  4 (B) bits are used to identify the logical slice.
-   * 20 (C) bits are used to identify the UE (IMSI).
-   *  4 (D) bits are used to identify the bearer withing the UE.
-   * \endverbatim
-   */
-  static uint32_t GetSvelteTeid (SliceId sliceId, uint32_t ueImsi,
-                                 uint8_t bearerId);
-
-  /**
    * TracedCallback signature for the P-GW TFT stats trace source.
    * \param stats The P-GW TST statistics from the last interval.
    */

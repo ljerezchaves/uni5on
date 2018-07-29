@@ -140,20 +140,6 @@ GtpTunnelApp::RecvFromTunnelSocket (Ptr<Socket> socket)
                           Mac48Address (), NetDevice::PACKET_HOST);
 }
 
-std::string
-GtpTunnelApp::GetTunnelIdStr (uint32_t teid, Ipv4Address dstIp)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  uint64_t tunnelId = static_cast<uint64_t> (dstIp.Get ());
-  tunnelId <<= 32;
-  tunnelId |= static_cast<uint64_t> (teid);
-
-  char tunnelIdStr [19];
-  sprintf (tunnelIdStr, "0x%016lx", tunnelId);
-  return std::string (tunnelIdStr);
-}
-
 void
 GtpTunnelApp::DoDispose ()
 {

@@ -29,6 +29,10 @@ namespace ns3 {
 #define TEID_SLICE_MASK_STR   "0x0F000000"
 #define TEID_IMSI_MASK_STR    "0x00FFFFF0"
 #define TEID_BID_MASK_STR     "0x0000000F"
+
+class Ipv4Address;
+class NetDevice;
+
 /**
  * \ingroup svelte
  * Enumeration of LTE logical interfaces.
@@ -44,14 +48,6 @@ typedef enum
 
 /**
  * \ingroup svelte
- * Get the LTE interface name.
- * \param iface The LTE interface.
- * \return The string with the LTE interface name.
- */
-std::string LteIfaceStr (LteIface iface);
-
-/**
- * \ingroup svelte
  * Enumeration of available operation modes.
  */
 typedef enum
@@ -60,14 +56,6 @@ typedef enum
   ON   = 1,   //!< Always on.
   AUTO = 2    //!< Automatic.
 } OpMode;
-
-/**
- * \ingroup svelte
- * Get the operation mode name.
- * \param mode The operation mode.
- * \return The string with the operation mode name.
- */
-std::string OpModeStr (OpMode mode);
 
 /**
  * \ingroup svelte
@@ -84,11 +72,70 @@ typedef enum
 
 /**
  * \ingroup svelte
+ * Get the LTE interface name.
+ * \param iface The LTE interface.
+ * \return The string with the LTE interface name.
+ */
+std::string LteIfaceStr (LteIface iface);
+
+/**
+ * \ingroup svelte
+ * Get the operation mode name.
+ * \param mode The operation mode.
+ * \return The string with the operation mode name.
+ */
+std::string OpModeStr (OpMode mode);
+
+/**
+ * \ingroup svelte
  * Get the slice ID name.
  * \param slice The slice ID.
  * \return The string with the slice ID name.
  */
 std::string SliceIdStr (SliceId slice);
+
+/**
+ * \ingroup svelte
+ * Compute the TEID value globally used in the SVELTE architecture for a EPS
+ * bearer considering the slice ID, the UE ISMI and bearer ID.
+ * \param sliceId The SVELTE logical slice ID.
+ * \param ueImsi The UE ISMI.
+ * \param bearerId The UE bearer ID.
+ * \return The TEID for this bearer.
+ *
+ * \internal
+ * \verbatim
+ * We are using the following TEID allocation strategy:
+ * TEID has 32 bits length: 0x 0 0 00000 0
+ *                            |-|-|-----|-|
+ *                             A B C    D
+ *
+ *  4 (A) bits are reserved for further usage.
+ *  4 (B) bits are used to identify the logical slice.
+ * 20 (C) bits are used to identify the UE (IMSI).
+ *  4 (D) bits are used to identify the bearer withing the UE.
+ * \endverbatim
+ */
+uint32_t GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint8_t bearerId);
+
+/**
+ * \ingroup svelte
+ * Encapsulate the destination address in the 32 MSB of tunnel ID and the
+ * TEID in the 32 LSB of tunnel ID.
+ * \param dstIp The destination IP address.
+ * \param teid The tunnel TEID.
+ * \return The string for this tunnel ID.
+ */
+std::string GetTunnelIdStr (uint32_t teid, Ipv4Address dstIp);
+
+/**
+ * \ingroup svelte
+ * Set the devices names identifying the connection between the nodes.
+ * \param src The network device in the source node.
+ * \param dst The network device in the destination node.
+ * \param desc The string describing this connection.
+ */
+void SetDeviceNames (Ptr<NetDevice> src, Ptr<NetDevice> dst, std::string desc);
 
 } // namespace ns3
 #endif // SVELTE_COMMON_H

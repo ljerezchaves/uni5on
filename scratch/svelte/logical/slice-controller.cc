@@ -376,25 +376,6 @@ SliceController::SetNetworkAttributes (Ipv4Address ueAddr, Ipv4Mask ueMask,
   m_webMask = webMask;
 }
 
-uint32_t
-SliceController::GetSvelteTeid (SliceId sliceId, uint32_t ueImsi,
-                                uint8_t bearerId)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  NS_ABORT_MSG_IF (static_cast<uint32_t> (sliceId) > 0xF,
-                   "Slice ID cannot exceed 4 bits in SVELTE.");
-  NS_ABORT_MSG_IF (ueImsi > 0xFFFFF,
-                   "UE IMSI cannot exceed 20 bits in SVELTE.");
-
-  uint32_t teid = static_cast<uint32_t> (sliceId);
-  teid <<= 20;
-  teid |= static_cast<uint32_t> (ueImsi);
-  teid <<= 4;
-  teid |= static_cast<uint32_t> (bearerId);
-  return teid;
-}
-
 void
 SliceController::DoDispose ()
 {
@@ -595,8 +576,7 @@ SliceController::DoCreateSessionRequest (
        bit != msg.bearerContextsToBeCreated.end ();
        ++bit)
     {
-      uint32_t teid = SliceController::GetSvelteTeid (
-          m_sliceId, imsi, bit->epsBearerId);
+      uint32_t teid = GetSvelteTeid (m_sliceId, imsi, bit->epsBearerId);
       NS_LOG_DEBUG ("Allocating TEID for UE IMSI " << imsi << " in slice " <<
                     SliceIdStr (m_sliceId) << " for internal bearer id " <<
                     static_cast<uint16_t> (bit->epsBearerId) << ": 0x" <<
@@ -930,7 +910,7 @@ SliceController::PgwRulesInstall (
 //     }
 //
 //   // Instruction: apply action: set tunnel ID, output port.
-//   act << " apply:set_field=tunn_id:" << GtpTunnelApp::GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetSgwS5Addr ())
+//   act << " apply:set_field=tunn_id:" << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetSgwS5Addr ())
 //       << ",output=" << pgwTftS5PortNo;
 //
 //   // Install one downlink dedicated bearer rule for each packet filter.
@@ -1041,7 +1021,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 //           << ",idle=" << rInfo->GetTimeout ();
 //
 //       // Instruction: apply action: set tunnel ID, output port.
-//       act << " apply:set_field=tunn_id:" << GtpTunnelApp::GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetEnbS1uAddr ())
+//       act << " apply:set_field=tunn_id:" << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetEnbS1uAddr ())
 //           << ",output=" << enbInfo->GetSgwS1uPortNo ();
 //
 //       // Install one downlink dedicated bearer rule for each packet filter.
@@ -1119,7 +1099,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 //         }
 //
 //       // Instruction: apply action: set tunnel ID, output port.
-//       act << " apply:set_field=tunn_id:" << GtpTunnelApp::GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetPgwS5Addr ())
+//       act << " apply:set_field=tunn_id:" << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetPgwS5Addr ())
 //           << ",output=" << m_sgwS5PortNo;
 //
 //       // Install one uplink dedicated bearer rule for each packet filter.
