@@ -53,12 +53,12 @@ std::string SliceStr (Slice slice);
 /** A pair of switch datapath IDs. */
 typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
 
-/** A list of connection information objects. */
+/** A list of link information objects. */
 typedef std::list<Ptr<LinkInfo> > LinkInfoList_t;
 
 /**
  * \ingroup svelteInfra
- * Metadata associated to a connection between two OpenFlow backhaul switches.
+ * Metadata associated to a link between two OpenFlow backhaul switches.
  *
  * This class is prepared to handle network slicing. In current implementation,
  * the total number of slices is set to three: default, GBR and M2M traffic.
@@ -142,11 +142,11 @@ public:
 
   /**
    * For two switches, this methods asserts that both datapath IDs are valid
-   * for this connection, and identifies the link direction based on source and
+   * for this link, and identifies the link direction based on source and
    * destination datapath IDs.
    * \param src The source switch datapath ID.
    * \param dst The destination switch datapath ID.
-   * \return The connection direction.
+   * \return The link direction.
    */
   LinkInfo::Direction GetDirection (uint64_t src, uint64_t dst) const;
 
@@ -214,7 +214,7 @@ public:
   uint64_t GetMaxBitRate (Slice slice = Slice::ALL) const;
 
   /**
-   * Get the pair of switch datapath IDs for this connection, respecting the
+   * Get the pair of switch datapath IDs for this link, respecting the
    * internal order.
    * \return The pair of switch datapath IDs.
    */
@@ -279,23 +279,23 @@ public:
   static std::string DirectionStr (Direction dir);
 
   /**
-   * Get the entire list of connection information.
-   * \return The list of connection information.
+   * Get the entire list of link information.
+   * \return The list of link information.
    */
   static LinkInfoList_t GetList (void);
 
   /**
-   * Get the connection information from the global map for a pair of OpenFlow
+   * Get the link information from the global map for a pair of OpenFlow
    * datapath IDs.
    * \param dpId1 The first datapath ID.
    * \param dpId2 The second datapath ID.
-   * \return The connection information for this pair of datapath IDs.
+   * \return The link information for this pair of datapath IDs.
    */
   static Ptr<LinkInfo> GetPointer (uint64_t dpId1, uint64_t dpId2);
 
   /**
    * TracedCallback signature for Ptr<const LinkInfo>.
-   * \param lInfo The connection information.
+   * \param lInfo The link information.
    * \param dir The link direction.
    * \param slice The network slice.
    */
@@ -318,7 +318,7 @@ private:
   uint64_t GetLinkBitRate (void) const;
 
   /**
-   * Notify this connection of a successfully transmitted packet in link
+   * Notify this link of a successfully transmitted packet in link
    * channel. This method will update internal byte counters.
    * \param packet The transmitted packet.
    */
@@ -341,8 +341,8 @@ private:
   void UpdateStatistics (void);
 
   /**
-   * Register the connection information in global map for further usage.
-   * \param lInfo The connection information to save.
+   * Register the link information in global map for further usage.
+   * \param lInfo The link information to save.
    */
   static void RegisterLinkInfo (Ptr<LinkInfo> lInfo);
 
@@ -363,13 +363,13 @@ private:
   Time              m_timeout;              //!< Update timeout.
 
   /**
-   * Map saving pair of switch datapath IDs / connection information.
+   * Map saving pair of switch datapath IDs / link information.
    * The pair of switch datapath IDs are saved in increasing order.
    */
-  typedef std::map<DpIdPair_t, Ptr<LinkInfo> > ConnInfoMap_t;
+  typedef std::map<DpIdPair_t, Ptr<LinkInfo> > LinkInfoMap_t;
 
-  static ConnInfoMap_t  m_connectionsMap;   //!< Global connection info map.
-  static LinkInfoList_t m_connectionsList;  //!< Global connection info list.
+  static LinkInfoMap_t  m_linksMap;         //!< Global link info map.
+  static LinkInfoList_t m_linksList;        //!< Global link info list.
 };
 
 } // namespace ns3

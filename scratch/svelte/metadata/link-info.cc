@@ -52,8 +52,8 @@ std::string SliceStr (Slice slice)
 }
 
 // Initializing LinkInfo static members.
-LinkInfo::ConnInfoMap_t LinkInfo::m_connectionsMap;
-LinkInfoList_t LinkInfo::m_connectionsList;
+LinkInfo::LinkInfoMap_t LinkInfo::m_linksMap;
+LinkInfoList_t LinkInfo::m_linksList;
 
 LinkInfo::LinkInfo (SwitchData sw1, SwitchData sw2,
                     Ptr<CsmaChannel> channel, bool slicing)
@@ -430,7 +430,7 @@ LinkInfo::DirectionStr (Direction dir)
 LinkInfoList_t
 LinkInfo::GetList (void)
 {
-  return LinkInfo::m_connectionsList;
+  return LinkInfo::m_linksList;
 }
 
 Ptr<LinkInfo>
@@ -441,9 +441,9 @@ LinkInfo::GetPointer (uint64_t dpId1, uint64_t dpId2)
   key.second = std::max (dpId1, dpId2);
 
   Ptr<LinkInfo> lInfo = 0;
-  ConnInfoMap_t::iterator ret;
-  ret = LinkInfo::m_connectionsMap.find (key);
-  if (ret != LinkInfo::m_connectionsMap.end ())
+  LinkInfoMap_t::iterator ret;
+  ret = LinkInfo::m_linksMap.find (key);
+  if (ret != LinkInfo::m_linksMap.end ())
     {
       lInfo = ret->second;
     }
@@ -586,11 +586,11 @@ LinkInfo::RegisterLinkInfo (Ptr<LinkInfo> lInfo)
   key.second = std::max (dpId1, dpId2);
 
   std::pair<DpIdPair_t, Ptr<LinkInfo> > entry (key, lInfo);
-  std::pair<ConnInfoMap_t::iterator, bool> ret;
-  ret = LinkInfo::m_connectionsMap.insert (entry);
+  std::pair<LinkInfoMap_t::iterator, bool> ret;
+  ret = LinkInfo::m_linksMap.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing connection information.");
 
-  LinkInfo::m_connectionsList.push_back (lInfo);
+  LinkInfo::m_linksList.push_back (lInfo);
 }
 
 } // namespace ns3
