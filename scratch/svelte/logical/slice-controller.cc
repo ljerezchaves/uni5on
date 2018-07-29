@@ -496,7 +496,7 @@ SliceController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 bool
 SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
 //  // FIXME Aqui tem que fazer a interface direta lá com o controlador do backaul
 //  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
@@ -519,7 +519,7 @@ SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
 bool
 SliceController::BearerRemove (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
 //  // FIXME Aqui tem que fazer a interface direta lá com o controlador do backaul
 //  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
@@ -721,7 +721,7 @@ SliceController::GetPgwTftIdx (
 bool
 SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeid ());
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
   // If the bearer is already blocked, there's nothing more to do.
   if (rInfo->IsBlocked ())
@@ -750,7 +750,7 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
 //   if (tableUsage >= m_tftBlockThs)
 //     {
 //       rInfo->SetBlocked (true, RoutingInfo::TFTTABLEFULL);
-//       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
+//       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
 //                    " because the TFT flow tables is full.");
 //     }
 //
@@ -767,7 +767,7 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
 //           || (m_tftBlockPolicy == OpMode::AUTO && rInfo->IsGbr ())))
 //     {
 //       rInfo->SetBlocked (true, RoutingInfo::TFTMAXLOAD);
-//       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid () <<
+//       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
 //                    " because the TFT processing capacity is overloaded.");
 //     }
 //
@@ -845,7 +845,7 @@ SliceController::PgwTftCheckUsage (void)
       //         uint16_t destIdx = GetPgwTftIdx (*it, futureTfts);
       //         if (destIdx != currIdx)
       //           {
-      //             NS_LOG_INFO ("Moving bearer teid " << (*it)->GetTeid ());
+      //             NS_LOG_INFO ("Moving bearer teid " << (*it)->GetTeidHex ());
       //             PgwRulesRemove  (*it, currIdx, true);
       //             PgwRulesInstall (*it, destIdx, true);
       //             (*it)->SetPgwTftIdx (destIdx);
@@ -887,7 +887,7 @@ bool
 SliceController::PgwRulesInstall (
   Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool forceMeterInstall)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeid () << pgwTftIdx << forceMeterInstall);
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex () << pgwTftIdx << forceMeterInstall);
 
 //   // Use the rInfo P-GW TFT index when the parameter is not set.
 //   if (pgwTftIdx == 0)
@@ -896,15 +896,11 @@ SliceController::PgwRulesInstall (
 //     }
 //   uint64_t pgwTftDpId = m_pgwInfo->GetTftDpId (pgwTftIdx);
 //   uint32_t pgwTftS5PortNo = m_pgwInfo->GetTftS5PortNo (pgwTftIdx);
-//   NS_LOG_INFO ("Installing P-GW rules for bearer teid " << rInfo->GetTeid () <<
+//   NS_LOG_INFO ("Installing P-GW rules for bearer teid " << rInfo->GetTeidHex () <<
 //               " into P-GW TFT switch index " << pgwTftIdx);
 //
 //   // Flags OFPFF_CHECK_OVERLAP and OFPFF_RESET_COUNTS.
 //   std::string flagsStr ("0x0006");
-//
-//   // Print the cookie and buffer values in dpctl string format.
-//   char cookieStr [20];
-//   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
 //
 //   // Print downlink TEID and destination IPv4 address into tunnel metadata.
 //   uint64_t tunnelId;
@@ -918,7 +914,7 @@ SliceController::PgwRulesInstall (
 //   std::ostringstream cmd, act;
 //   cmd << "flow-mod cmd=add,table=0"
 //       << ",flags=" << flagsStr
-//       << ",cookie=" << cookieStr
+//       << ",cookie=" << rInfo->GetTeidHex ()
 //       << ",prio=" << rInfo->GetPriority ()
 //       << ",idle=" << rInfo->GetTimeout ();
 //
@@ -934,7 +930,7 @@ SliceController::PgwRulesInstall (
 //         }
 //
 //       // Instruction: meter.
-//       act << " meter:" << rInfo->GetTeid ();
+//       act << " meter:" << rInfo->GetTeidHex ();
 //     }
 //
 //   // Instruction: apply action: set tunnel ID, output port.
@@ -994,7 +990,7 @@ bool
 SliceController::PgwRulesRemove (
   Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool keepMeterFlag)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeid () << pgwTftIdx << keepMeterFlag);
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex () << pgwTftIdx << keepMeterFlag);
 
 //   // Use the rInfo P-GW TFT index when the parameter is not set.
 //   if (pgwTftIdx == 0)
@@ -1002,17 +998,13 @@ SliceController::PgwRulesRemove (
 //       pgwTftIdx = rInfo->GetPgwTftIdx ();
 //     }
 //   uint64_t pgwTftDpId = m_pgwInfo->GetTftDpId (pgwTftIdx);
-//   NS_LOG_INFO ("Removing P-GW rules for bearer teid " << rInfo->GetTeid () <<
+//   NS_LOG_INFO ("Removing P-GW rules for bearer teid " << rInfo->GetTeidHex () <<
 //                " from P-GW TFT switch index " << pgwTftIdx);
-//
-//   // Print the cookie value in dpctl string format.
-//   char cookieStr [20];
-//   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
 //
 //   // Remove P-GW TFT flow entries for this TEID.
 //   std::ostringstream cmd;
 //   cmd << "flow-mod cmd=del,table=0"
-//       << ",cookie=" << cookieStr
+//       << ",cookie=" << rInfo->GetTeidHex ()
 //       << ",cookie_mask=0xffffffffffffffff"; // Strict cookie match.
 //   DpctlExecute (pgwTftDpId, cmd.str ());
 //
@@ -1032,7 +1024,7 @@ SliceController::PgwRulesRemove (
 bool
 SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
 //   NS_LOG_INFO ("Installing S-GW rules for bearer teid " << rInfo->GetTeid ());
 //   Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
@@ -1040,10 +1032,6 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 //
 //   // Flags OFPFF_SEND_FLOW_REM, OFPFF_CHECK_OVERLAP, and OFPFF_RESET_COUNTS.
 //   std::string flagsStr ("0x0007");
-//
-//   // Print the cookie and buffer values in dpctl string format.
-//   char cookieStr [20];
-//   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
 //
 //   // Configure downlink.
 //   if (rInfo->HasDownlinkTraffic ())
@@ -1060,7 +1048,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 //       std::ostringstream cmd, act;
 //       cmd << "flow-mod cmd=add,table=1"
 //           << ",flags=" << flagsStr
-//           << ",cookie=" << cookieStr
+//           << ",cookie=" << rInfo->GetTeidHex ()
 //           << ",prio=" << rInfo->GetPriority ()
 //           << ",idle=" << rInfo->GetTimeout ();
 //
@@ -1131,7 +1119,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 //       std::ostringstream cmd, act;
 //       cmd << "flow-mod cmd=add,table=2"
 //           << ",flags=" << flagsStr
-//           << ",cookie=" << cookieStr
+//           << ",cookie=" << rInfo->GetTeidHex ()
 //           << ",prio=" << rInfo->GetPriority ()
 //           << ",idle=" << rInfo->GetTimeout ();
 //
@@ -1147,7 +1135,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 //             }
 //
 //           // Instruction: meter.
-//           act << " meter:" << rInfo->GetTeid ();
+//           act << " meter:" << rInfo->GetTeidHex ();
 //         }
 //
 //       // Instruction: apply action: set tunnel ID, output port.
@@ -1207,18 +1195,14 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 bool
 SliceController::SgwRulesRemove (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-//   NS_LOG_INFO ("Removing S-GW rules for bearer teid " << rInfo->GetTeid ());
-//
-//   // Print the cookie value in dpctl string format.
-//   char cookieStr [20];
-//   sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
+//   NS_LOG_INFO ("Removing S-GW rules for bearer teid " << rInfo->GetTeidHex ());
 //
 //   // Remove flow entries for this TEID.
 //   std::ostringstream cmd;
 //   cmd << "flow-mod cmd=del,"
-//       << ",cookie=" << cookieStr
+//       << ",cookie=" << rInfo->GetTeidHex ()
 //       << ",cookie_mask=0xffffffffffffffff"; // Strict cookie match.
 //   DpctlExecute (m_sgwDpId, cmd.str ());
 //

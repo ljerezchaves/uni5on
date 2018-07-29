@@ -232,7 +232,7 @@ RingController::NotifyTopologyConnection (Ptr<LinkInfo> lInfo)
 void
 RingController::TopologyBearerCreated (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
   // FIXME Aqui tem que marcar qual o cinfo slice que este tráfego pertence
 
@@ -247,7 +247,7 @@ RingController::TopologyBearerCreated (Ptr<RoutingInfo> rInfo)
   ringInfo->SetDefaultPath (s1uDownPath, LteIface::S1U);
   ringInfo->SetDefaultPath (s5DownPath, LteIface::S5);
 
-  NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeid () <<
+  NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeidHex () <<
                 " default downlink S1-U path to " << s1uDownPath <<
                 " and S5 path to " << s5DownPath);
 }
@@ -255,7 +255,7 @@ RingController::TopologyBearerCreated (Ptr<RoutingInfo> rInfo)
 bool
 RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
   // If the bearer is already blocked, there's nothing more to do.
   if (rInfo->IsBlocked ())
@@ -286,7 +286,7 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 //   // Check for the requested bit rate over the shortest path.
 //   if (HasBitRate (ringInfo, gbrInfo, rInfo->GetSlice ()))
 //     {
-//       NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeid () <<
+//       NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
 //                    " over the shortest path");
 //       return true;
 //     }
@@ -299,14 +299,14 @@ RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
 //       ringInfo->InvertPath ();
 //       if (HasBitRate (ringInfo, gbrInfo, rInfo->GetSlice ()))
 //         {
-//           NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeid () <<
+//           NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
 //                        " over the longest (inverted) path");
 //           return true;
 //         }
 //     }
 //
   // Nothing more to do. Block the traffic.
-  NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeid ());
+  NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex ());
   rInfo->SetBlocked (true, RoutingInfo::NOBANDWIDTH);
   return false;
 }
@@ -323,7 +323,7 @@ RingController::TopologyBitRateRelease (Ptr<RoutingInfo> rInfo)
       return true;
     }
 
-  NS_LOG_INFO ("Releasing resources for bearer " << rInfo->GetTeid ());
+  NS_LOG_INFO ("Releasing resources for bearer " << rInfo->GetTeidHex ());
 
   // It only makes sense to release bandwidth for GBR bearers.
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
@@ -394,7 +394,7 @@ RingController::TopologyBitRateReserve (Ptr<RoutingInfo> rInfo)
       return true;
     }
 
-  NS_LOG_INFO ("Reserving resources for bearer " << rInfo->GetTeid ());
+  NS_LOG_INFO ("Reserving resources for bearer " << rInfo->GetTeidHex ());
 
   // It only makes sense to reserve bandwidth for GBR bearers.
   Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
@@ -446,9 +446,9 @@ RingController::TopologyBitRateReserve (Ptr<RoutingInfo> rInfo)
 bool
 RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_LOG_INFO ("Installing ring rules for bearer teid " << rInfo->GetTeid ());
+  NS_LOG_INFO ("Installing ring rules for bearer teid " << rInfo->GetTeidHex ());
 
   // Getting ring routing information.
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
@@ -457,14 +457,13 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
   std::string flagsStr ("0x0007");
 
   // Printing the cookie in dpctl string format.
-  char cookieStr [20], metadataStr [12];
-  sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
+  char metadataStr [12];
 
   // Building the dpctl command + arguments string.
   std::ostringstream cmd;
   cmd << "flow-mod cmd=add,table=1"
       << ",flags=" << flagsStr
-      << ",cookie=" << cookieStr
+      << ",cookie=" << rInfo->GetTeidHex ()
       << ",prio=" << rInfo->GetPriority ()
       << ",idle=" << rInfo->GetTimeout ();
 
@@ -476,11 +475,11 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
       std::ostringstream matchS5, matchS1u;
       matchS5 << " eth_type=0x800,ip_proto=17"
               << ",ip_dst=" << rInfo->GetSgwS5Addr ()
-              << ",gtpu_teid=" << rInfo->GetTeid ();
+              << ",gtpu_teid=" << rInfo->GetTeidHex ();
 
       matchS1u << " eth_type=0x800,ip_proto=17"
                << ",ip_dst=" << rInfo->GetEnbS1uAddr ()
-               << ",gtpu_teid=" << rInfo->GetTeid ();
+               << ",gtpu_teid=" << rInfo->GetTeidHex ();
 
       // Set the IP DSCP field when necessary.
       std::ostringstream act;
@@ -508,7 +507,7 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 //       match << " eth_type=0x800,ip_proto=17"
 //             << ",ip_src=" << rInfo->GetSgwS5Addr ()
 //             << ",ip_dst=" << rInfo->GetPgwS5Addr ()
-//             << ",gtpu_teid=" << rInfo->GetTeid ();
+//             << ",gtpu_teid=" << rInfo->GetTeidHex ();
 //
 //       // Set the IP DSCP field when necessary.
 //       std::ostringstream act;
@@ -533,13 +532,9 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 bool
 RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_LOG_INFO ("Removing ring rules for bearer teid " << rInfo->GetTeid ());
-
-  // Print the cookie value in dpctl string format.
-  char cookieStr [20];
-  sprintf (cookieStr, "0x%x", rInfo->GetTeid ());
+  NS_LOG_INFO ("Removing ring rules for bearer teid " << rInfo->GetTeidHex ());
 
   // Getting ring routing information.
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
@@ -547,7 +542,7 @@ RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
   // Remove flow entries for this TEID.
   std::ostringstream cmd;
   cmd << "flow-mod cmd=del,table=1"
-      << ",cookie=" << cookieStr
+      << ",cookie=" << rInfo->GetTeidHex ()
       << ",cookie_mask=0xffffffffffffffff"; // Strict cookie match.
 
   // FIXME Isso aqui vai dar erro?

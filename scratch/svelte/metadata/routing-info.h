@@ -83,6 +83,7 @@ public:
   /** \name Private member accessors. */
   //\{
   uint32_t GetTeid (void) const;
+  std::string GetTeidHex (void) const;
   std::string GetBlockReasonStr (void) const;
   bool HasGbrInfo (void) const;
   bool HasMeterInfo (void) const;

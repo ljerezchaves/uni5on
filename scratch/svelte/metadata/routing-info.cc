@@ -82,6 +82,16 @@ RoutingInfo::GetTeid (void) const
 }
 
 std::string
+RoutingInfo::GetTeidHex (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  char teidStr [11];
+  sprintf (teidStr, "0x%08x", m_teid);
+  return std::string (teidStr);
+}
+
+std::string
 RoutingInfo::GetBlockReasonStr (void) const
 {
   NS_LOG_FUNCTION (this);

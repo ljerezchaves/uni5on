@@ -494,7 +494,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 // bool
 // BackhaulController::BearerInstall (Ptr<RoutingInfo> rInfo)
 // {
-//   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+//   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 //
 //   NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
 //   rInfo->SetInstalled (false);
@@ -514,7 +514,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 // bool
 // BackhaulController::BearerRemove (Ptr<RoutingInfo> rInfo)
 // {
-//   NS_LOG_FUNCTION (this << rInfo << rInfo->GetTeid ());
+//   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 //
 //   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 //
