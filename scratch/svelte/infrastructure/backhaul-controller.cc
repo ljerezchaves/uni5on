@@ -480,42 +480,6 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   DpctlExecute (swtch, "flow-mod cmd=add,table=4,prio=0");
 }
 
-// bool
-// BackhaulController::BearerInstall (Ptr<RoutingInfo> rInfo)
-// {
-//   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
-//
-//   NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
-//   rInfo->SetInstalled (false);
-//
-//   // Increasing the priority every time we (re)install routing rules.
-//   rInfo->IncreasePriority ();
-//
-//   // Install the rules.
-//   bool success = true;
-//   success &= PgwRulesInstall (rInfo);
-//   success &= TopologyRoutingInstall (rInfo);
-//
-//   rInfo->SetInstalled (success);
-//   return success;
-// }
-//
-// bool
-// BackhaulController::BearerRemove (Ptr<RoutingInfo> rInfo)
-// {
-//   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
-//
-//   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
-//
-//   // Remove the rules.
-//   bool success = true;
-//   success &= PgwRulesRemove (rInfo);
-//   success &= TopologyRoutingRemove (rInfo);
-//
-//   rInfo->SetInstalled (!success);
-//   return success;
-// }
-
 void
 BackhaulController::StaticInitialize ()
 {

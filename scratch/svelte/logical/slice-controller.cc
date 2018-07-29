@@ -499,22 +499,19 @@ SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-//  // FIXME Aqui tem que fazer a interface direta lá com o controlador do backaul
-//  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
-//  rInfo->SetInstalled (false);
-//
-//  // Increasing the priority every time we (re)install routing rules.
-//  rInfo->IncreasePriority ();
-//
-//  // Install the rules.
-//  bool success = true;
-//  success &= PgwRulesInstall (rInfo);
-//  success &= TopologyRoutingInstall (rInfo);
-//  FIXME Instalar tb no S-GW SgwRulesInstall (RoutingInfo::GetPointer (teid));
-//  rInfo->SetInstalled (success);
-//  return success;
+  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
+  rInfo->SetInstalled (false);
 
-  return true;  // FIXME temporário
+  // Increasing the priority every time we (re)install routing rules.
+  rInfo->IncreasePriority ();
+
+  // Install the rules.
+  bool success = true;
+  success &= PgwRulesInstall (rInfo);
+  success &= m_backhaulCtrl->TopologyRoutingInstall (rInfo);
+  success &= SgwRulesInstall (rInfo);
+  rInfo->SetInstalled (success);
+  return success;
 }
 
 bool
@@ -522,18 +519,15 @@ SliceController::BearerRemove (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-//  // FIXME Aqui tem que fazer a interface direta lá com o controlador do backaul
-//  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
-//
-//  // Remove the rules.
-//  bool success = true;
-//  success &= PgwRulesRemove (rInfo);
-//  success &= TopologyRoutingRemove (rInfo);
-//  FIXME Remover tb do Sgw
-//  rInfo->SetInstalled (!success);
-//  return success;
+  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
-  return true; // FIXME temporário
+  // Remove the rules.
+  bool success = true;
+  success &= PgwRulesRemove (rInfo);
+  success &= m_backhaulCtrl->TopologyRoutingRemove (rInfo);
+  success &= SgwRulesRemove (rInfo);
+  rInfo->SetInstalled (!success);
+  return success;
 }
 
 void

@@ -211,20 +211,6 @@ protected:
   OFSwitch13DeviceContainer m_switchDevices;  //!< OpenFlow switch devices.
 
 private:
-//  /**
-//   * Install OpenFlow match rules for this bearer.
-//   * \param rInfo The routing information to process.
-//   * \return True if succeeded, false otherwise.
-//   */
-//  bool BearerInstall (Ptr<RoutingInfo> rInfo);
-//
-//  /**
-//   * Remove OpenFlow match rules for this bearer.
-//   * \param rInfo The routing information to process.
-//   * \return True if succeeded, false otherwise.
-//   */
-//  bool BearerRemove (Ptr<RoutingInfo> rInfo);
-
   /** Initialize static attributes only once. */
   static void StaticInitialize (void);
 
