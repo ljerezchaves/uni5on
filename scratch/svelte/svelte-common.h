@@ -25,6 +25,10 @@
 
 namespace ns3 {
 
+// SVELTE TEID masks for OpenFlow matching.
+#define TEID_SLICE_MASK_STR   "0x0F000000"
+#define TEID_IMSI_MASK_STR    "0x00FFFFF0"
+#define TEID_BID_MASK_STR     "0x0000000F"
 /**
  * \ingroup svelte
  * Enumeration of LTE logical interfaces.
