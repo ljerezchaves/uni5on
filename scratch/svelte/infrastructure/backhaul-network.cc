@@ -28,7 +28,6 @@ NS_LOG_COMPONENT_DEFINE ("BackhaulNetwork");
 NS_OBJECT_ENSURE_REGISTERED (BackhaulNetwork);
 
 // Initializing BackhaulNetwork static members.
-const uint16_t    BackhaulNetwork::m_gtpuPort = 2152;
 const Ipv4Address BackhaulNetwork::m_s1uAddr  = Ipv4Address ("10.1.0.0");
 const Ipv4Address BackhaulNetwork::m_s5Addr   = Ipv4Address ("10.2.0.0");
 const Ipv4Address BackhaulNetwork::m_x2Addr   = Ipv4Address ("10.3.0.0");

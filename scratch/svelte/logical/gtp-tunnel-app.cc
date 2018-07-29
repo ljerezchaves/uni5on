@@ -72,7 +72,7 @@ GtpTunnelApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
   uint64_t tagValue = tunnelIdTag.GetTunnelId ();
   uint32_t teid = tagValue;
   Ipv4Address ipv4Addr (tagValue >> 32);
-  InetSocketAddress inetAddr (ipv4Addr, BackhaulNetwork::m_gtpuPort);
+  InetSocketAddress inetAddr (ipv4Addr, GTPU_PORT);
 
   // Add the GTP header.
   GtpuHeader gtpu;
@@ -88,7 +88,7 @@ GtpTunnelApp::RecvFromLogicalPort (Ptr<Packet> packet, const Address& source,
 
   NS_LOG_DEBUG ("Send packet " << packet->GetUid () <<
                 " to tunnel with TEID " << teid <<
-                " IP " << ipv4Addr << " port " << BackhaulNetwork::m_gtpuPort);
+                " IP " << ipv4Addr << " port " << GTPU_PORT);
 
   // Send the packet to the tunnel socket.
   int bytes = m_tunnelSocket->SendTo (packet, 0, inetAddr);
@@ -157,7 +157,7 @@ GtpTunnelApp::StartApplication ()
 
   // Get the physical device address to bind the UDP socket.
   Ipv4Address ipv4Addr = Ipv4AddressHelper::GetAddress (m_physicalDev);
-  InetSocketAddress inetAddr (ipv4Addr, BackhaulNetwork::m_gtpuPort);
+  InetSocketAddress inetAddr (ipv4Addr, GTPU_PORT);
 
   // Create and open the UDP socket for tunnel.
   m_tunnelSocket = Socket::CreateSocket (

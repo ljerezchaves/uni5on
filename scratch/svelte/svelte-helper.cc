@@ -157,8 +157,7 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   // Create the S1-U socket for the eNB node.
   TypeId udpSocketTid = TypeId::LookupByName ("ns3::UdpSocketFactory");
   Ptr<Socket> enbS1uSocket = Socket::CreateSocket (enb, udpSocketTid);
-  enbS1uSocket->Bind (
-    InetSocketAddress (enbS1uAddr, BackhaulNetwork::m_gtpuPort));
+  enbS1uSocket->Bind (InetSocketAddress (enbS1uAddr, GTPU_PORT));
 
   // Create the LTE IPv4 and IPv6 sockets for the eNB node.
   TypeId pktSocketTid = TypeId::LookupByName ("ns3::PacketSocketFactory");

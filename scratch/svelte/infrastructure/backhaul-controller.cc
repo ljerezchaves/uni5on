@@ -148,8 +148,8 @@ BackhaulController::NotifyEpcAttach (
   std::ostringstream cmdIn;
   cmdIn << "flow-mod cmd=add,table=0,prio=64,flags=0x0007"
         << " eth_type=0x800,ip_proto=17"
-        << ",udp_src=" << BackhaulNetwork::m_gtpuPort
-        << ",udp_dst=" << BackhaulNetwork::m_gtpuPort
+        << ",udp_src=" << GTPU_PORT
+        << ",udp_dst=" << GTPU_PORT
         << ",in_port=" << portNo
         << " goto:1";
   DpctlSchedule (swDev->GetDatapathId (), cmdIn.str ());
@@ -353,8 +353,8 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   std::ostringstream cmd;
   cmd << "flow-mod cmd=add,table=0,prio=32"
       << " eth_type=0x800,ip_proto=17"
-      << ",udp_src=" << BackhaulNetwork::m_gtpuPort
-      << ",udp_dst=" << BackhaulNetwork::m_gtpuPort
+      << ",udp_src=" << GTPU_PORT
+      << ",udp_dst=" << GTPU_PORT
       << " goto:2";
   DpctlExecute (swtch, cmd.str ());
 

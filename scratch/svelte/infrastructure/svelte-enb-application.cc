@@ -19,6 +19,7 @@
  */
 
 #include "svelte-enb-application.h"
+#include "../svelte-common.h"
 #include "epc-gtpu-tag.h"
 
 namespace ns3 {
@@ -105,7 +106,7 @@ SvelteEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
   // FIXME Implementar corretamente a lógica de identificar para qual S-GW o
   // pacote deve ser enviado.
   m_s1uSocket->SendTo (
-    packet, flags, InetSocketAddress (Ipv4Address::GetAny (), 2152));
+    packet, flags, InetSocketAddress (Ipv4Address::GetAny (), GTPU_PORT));
 }
 
 }  // namespace ns3

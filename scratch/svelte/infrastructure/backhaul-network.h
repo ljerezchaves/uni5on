@@ -87,14 +87,6 @@ public:
    */
   Ptr<BackhaulController> GetControllerApp (void) const;
 
-  static const uint16_t         m_gtpuPort;         //!< GTP-U UDP port.
-  static const Ipv4Address      m_s1uAddr;          //!< S1-U network address.
-  static const Ipv4Address      m_s5Addr;           //!< S5 network address.
-  static const Ipv4Address      m_x2Addr;           //!< X2 network address.
-  static const Ipv4Mask         m_s1uMask;          //!< S1-U network mask.
-  static const Ipv4Mask         m_s5Mask;           //!< S5 network mask.
-  static const Ipv4Mask         m_x2Mask;           //!< X2 network mask.
-
 protected:
   /** Destructor implementation. */
   virtual void DoDispose (void);
@@ -117,6 +109,14 @@ protected:
   NodeContainer                 m_switchNodes;    //!< Switch nodes.
   OFSwitch13DeviceContainer     m_switchDevices;  //!< Switch devices.
   uint16_t                      m_linkMtu;        //!< Link MTU.
+
+  // Network addresses.
+  static const Ipv4Address      m_s1uAddr;        //!< S1-U network address.
+  static const Ipv4Address      m_s5Addr;         //!< S5 network address.
+  static const Ipv4Address      m_x2Addr;         //!< X2 network address.
+  static const Ipv4Mask         m_s1uMask;        //!< S1-U network mask.
+  static const Ipv4Mask         m_s5Mask;         //!< S5 network mask.
+  static const Ipv4Mask         m_x2Mask;         //!< X2 network mask.
 
 private:
   // CSMA helper and attributes for EPC interfaces.

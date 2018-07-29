@@ -30,6 +30,9 @@ namespace ns3 {
 #define TEID_IMSI_MASK_STR    "0x00FFFFF0"
 #define TEID_BID_MASK_STR     "0x0000000F"
 
+// GTP-U UDP port number
+#define GTPU_PORT   2152
+
 class Ipv4Address;
 class NetDevice;
 
