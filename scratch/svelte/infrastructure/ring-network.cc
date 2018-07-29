@@ -150,12 +150,9 @@ RingNetwork::CreateTopology (void)
       Ptr<LinkInfo> lInfo = CreateObject<LinkInfo> (
           currSwData, nextSwData, DynamicCast<CsmaChannel> (
             currPortDev->GetChannel ()), ringController->GetSlicingMode ());
-
-      // Fire trace source notifying new connection between switches.
-      ringController->NotifyTopologyConnection (lInfo);
     }
 
-  // Fire trace source notifying that all connections between switches are ok.
+  // Fire trace source notifying that the topology was successfully built.
   ringController->NotifyTopologyBuilt (m_switchDevices);
 }
 

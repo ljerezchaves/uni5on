@@ -68,7 +68,6 @@ protected:
 
   // Inherited from BackhaulController.
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
-  void NotifyTopologyConnection (Ptr<LinkInfo> lInfo);
 
   void TopologyBearerCreated  (Ptr<RoutingInfo> rInfo);
   bool TopologyBearerRequest  (Ptr<RoutingInfo> rInfo);

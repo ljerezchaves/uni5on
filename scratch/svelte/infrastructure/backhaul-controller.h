@@ -151,13 +151,6 @@ protected:
   virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices) = 0;
 
   /**
-   * Notify this controller of a new connection between two switches in the
-   * OpenFlow backhaul network.
-   * \param lInfo The link information.
-   */
-  virtual void NotifyTopologyConnection (Ptr<LinkInfo> lInfo) = 0;
-
-  /**
    * Notify this controller of a new bearer context created.
    * \param rInfo The routing information to process.
    */

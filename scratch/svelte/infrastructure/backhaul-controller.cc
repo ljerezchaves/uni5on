@@ -375,6 +375,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 3 -- Slicing table -- [from higher to lower priority]
   //
+  // FIXME Revisar o link slicing.
   if (GetSlicingMode () == OpMode::ON)
     {
       // FIXME This should be automatic depending on the number of slices.
