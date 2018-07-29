@@ -41,9 +41,10 @@ namespace ns3 {
  *
  * When sending a packet to the GTP tunnel, this application expects that the
  * packet carries the TunnelId tag set with the destination address in the 32
- * MSB and the TEID in the 32 LSB of packet tag. When a packet is received from
- * the GTP tunnel, this application attachs the TunnelId tag only with the GTP
- * TEID value.
+ * MSB and the TEID in the 32 LSB of packet tag (you can use the static method
+ * GetTunnelIdStr () to construct your tunnelId string). When a packet is
+ * received from the GTP tunnel, this application attaches the TunnelId tag
+ * only with the GTP TEID value.
  */
 class GtpTunnelApp : public Application
 {
@@ -84,6 +85,15 @@ public:
    * \param socket Pointer to the tunnel socket.
    */
   void RecvFromTunnelSocket (Ptr<Socket> socket);
+
+  /**
+   * Encapsulate the destination address in the 32 MSB of tunnel ID and the
+   * TEID in the 32 LSB of tunnel ID.
+   * \param dstIp The destination IP address.
+   * \param teid The tunnel TEID.
+   * \return The string for this tunnel ID.
+   */
+  static std::string GetTunnelIdStr (uint32_t teid, Ipv4Address dstIp);
 
   /**
    * Callback signature for packet received/sent to tunnel socket.

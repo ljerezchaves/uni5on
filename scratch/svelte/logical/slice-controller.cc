@@ -26,6 +26,7 @@
 #include "../metadata/routing-info.h"
 #include "../metadata/sgw-info.h"
 #include "../metadata/ue-info.h"
+#include "gtp-tunnel-app.h"
 #include "slice-network.h"
 #include "svelte-mme.h"
 
@@ -902,14 +903,6 @@ SliceController::PgwRulesInstall (
 //   // Flags OFPFF_CHECK_OVERLAP and OFPFF_RESET_COUNTS.
 //   std::string flagsStr ("0x0006");
 //
-//   // Print downlink TEID and destination IPv4 address into tunnel metadata.
-//   uint64_t tunnelId;
-//   char tunnelIdStr [20];
-//   tunnelId = static_cast<uint64_t> (rInfo->GetSgwS5Addr ().Get ());
-//   tunnelId <<= 32;
-//   tunnelId |= rInfo->GetTeid ();
-//   sprintf (tunnelIdStr, "0x%016lx", tunnelId);
-//
 //   // Build the dpctl command string
 //   std::ostringstream cmd, act;
 //   cmd << "flow-mod cmd=add,table=0"
@@ -934,7 +927,7 @@ SliceController::PgwRulesInstall (
 //     }
 //
 //   // Instruction: apply action: set tunnel ID, output port.
-//   act << " apply:set_field=tunn_id:" << tunnelIdStr
+//   act << " apply:set_field=tunn_id:" << GtpTunnelApp::GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetSgwS5Addr ())
 //       << ",output=" << pgwTftS5PortNo;
 //
 //   // Install one downlink dedicated bearer rule for each packet filter.
@@ -1036,14 +1029,6 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 //   // Configure downlink.
 //   if (rInfo->HasDownlinkTraffic ())
 //     {
-//       // Print downlink TEID and destination IPv4 address into tunnel metadata.
-//       uint64_t tunnelId;
-//       char tunnelIdStr [20];
-//       tunnelId = static_cast<uint64_t> (enbInfo->GetEnbS1uAddr ().Get ());
-//       tunnelId <<= 32;
-//       tunnelId |= rInfo->GetTeid ();
-//       sprintf (tunnelIdStr, "0x%016lx", tunnelId);
-//
 //       // Build the dpctl command string.
 //       std::ostringstream cmd, act;
 //       cmd << "flow-mod cmd=add,table=1"
@@ -1053,7 +1038,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 //           << ",idle=" << rInfo->GetTimeout ();
 //
 //       // Instruction: apply action: set tunnel ID, output port.
-//       act << " apply:set_field=tunn_id:" << tunnelIdStr
+//       act << " apply:set_field=tunn_id:" << GtpTunnelApp::GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetEnbS1uAddr ())
 //           << ",output=" << enbInfo->GetSgwS1uPortNo ();
 //
 //       // Install one downlink dedicated bearer rule for each packet filter.
@@ -1107,14 +1092,6 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 //   // Configure uplink.
 //   if (rInfo->HasUplinkTraffic ())
 //     {
-//       // Print uplink TEID and destination IPv4 address into tunnel metadata.
-//       uint64_t tunnelId;
-//       char tunnelIdStr [20];
-//       tunnelId = static_cast<uint64_t> (rInfo->GetPgwS5Addr ().Get ());
-//       tunnelId <<= 32;
-//       tunnelId |= rInfo->GetTeid ();
-//       sprintf (tunnelIdStr, "0x%016lx", tunnelId);
-//
 //       // Build the dpctl command string.
 //       std::ostringstream cmd, act;
 //       cmd << "flow-mod cmd=add,table=2"
@@ -1139,7 +1116,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 //         }
 //
 //       // Instruction: apply action: set tunnel ID, output port.
-//       act << " apply:set_field=tunn_id:" << tunnelIdStr
+//       act << " apply:set_field=tunn_id:" << GtpTunnelApp::GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetPgwS5Addr ())
 //           << ",output=" << m_sgwS5PortNo;
 //
 //       // Install one uplink dedicated bearer rule for each packet filter.

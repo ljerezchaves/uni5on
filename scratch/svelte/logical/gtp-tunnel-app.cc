@@ -134,10 +134,24 @@ GtpTunnelApp::RecvFromTunnelSocket (Ptr<Socket> socket)
   AddHeader (packet, Mac48Address::ConvertFrom (m_physicalDev->GetAddress ()));
 
   // Send the packet to the OpenFlow switch over the logical port.
-  // Don't worry about source and destination addresses becasu they are note
+  // Don't worry about source and destination addresses because they are note
   // used by the receive method.
   m_logicalPort->Receive (packet, Ipv4L3Protocol::PROT_NUMBER, Mac48Address (),
                           Mac48Address (), NetDevice::PACKET_HOST);
+}
+
+std::string
+GtpTunnelApp::GetTunnelIdStr (uint32_t teid, Ipv4Address dstIp)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  uint64_t tunnelId = static_cast<uint64_t> (dstIp.Get ());
+  tunnelId <<= 32;
+  tunnelId |= static_cast<uint64_t> (teid);
+  
+  char tunnelIdStr [19];
+  sprintf (tunnelIdStr, "0x%016lx", tunnelId);
+  return std::string (tunnelIdStr); 
 }
 
 void
