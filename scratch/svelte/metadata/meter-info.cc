@@ -18,6 +18,7 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#include <ns3/ofswitch13-module.h>
 #include "meter-info.h"
 #include "routing-info.h"
 
@@ -38,6 +39,8 @@ MeterInfo::MeterInfo (Ptr<RoutingInfo> rInfo)
 
   AggregateObject (rInfo);
   m_teid = rInfo->GetTeid ();
+  NS_ASSERT_MSG (m_teid <= OFPM_MAX, "Invalid meter ID.");
+
   GbrQosInformation gbrQoS = rInfo->GetQosInfo ();
   if (gbrQoS.mbrDl)
     {
