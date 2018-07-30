@@ -1140,7 +1140,7 @@ SliceController::SgwRulesRemove (Ptr<RoutingInfo> rInfo)
 //   std::ostringstream cmd;
 //   cmd << "flow-mod cmd=del,"
 //       << ",cookie=" << rInfo->GetTeidHex ()
-//       << ",cookie_mask=0xffffffffffffffff"; // Strict cookie match.
+//       << ",cookie_mask=" << COOKIE_STRICT_MASK;
 //   DpctlExecute (m_sgwDpId, cmd.str ());
 //
 //   // Remove meter entry for this TEID.

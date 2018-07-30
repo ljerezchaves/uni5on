@@ -536,7 +536,7 @@ RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
   std::ostringstream cmd;
   cmd << "flow-mod cmd=del,table=1"
       << ",cookie=" << rInfo->GetTeidHex ()
-      << ",cookie_mask=0xffffffffffffffff"; // Strict cookie match.
+      << ",cookie_mask=" << COOKIE_STRICT_MASK;
 
   // FIXME Isso aqui vai dar erro?
   DpctlExecute (GetDpId (ringInfo->GetEnbInfraSwIdx ()), cmd.str ());
