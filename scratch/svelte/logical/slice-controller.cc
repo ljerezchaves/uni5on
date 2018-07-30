@@ -223,7 +223,7 @@ SliceController::NotifySgwAttach (Ptr<SgwInfo> sgwInfo)
         << ",in_port=" << sgwInfo->GetS5PortNo ()
         << ",ip_dst=" << m_ueAddr << "/" << m_ueMask.GetPrefixLength ()
         << " goto:1";
-  DpctlSchedule (sgwInfo->GetSgwId (), cmdDl.str ());
+  DpctlSchedule (sgwInfo->GetDpId (), cmdDl.str ());
 
   // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
   // Internet are sent to table 2, where rules will match the flow and set both
@@ -233,7 +233,7 @@ SliceController::NotifySgwAttach (Ptr<SgwInfo> sgwInfo)
         << ",in_port=" << sgwInfo->GetS1uPortNo ()
         << ",ip_dst=" << m_webAddr << "/" << m_webMask.GetPrefixLength ()
         << " goto:2";
-  DpctlSchedule (sgwInfo->GetSgwId (), cmdUl.str ());
+  DpctlSchedule (sgwInfo->GetDpId (), cmdUl.str ());
 
   // -------------------------------------------------------------------------
   // Table 1 -- S-GW downlink table -- [from higher to lower priority]
@@ -807,7 +807,7 @@ SliceController::PgwTftCheckUsage (void)
         {
           RoutingInfoList_t bearers;
           bearers = RoutingInfo::GetInstalledList (m_sliceId, currIdx);
-          
+
           RoutingInfoList_t::iterator it;
           for (it = bearers.begin (); it != bearers.end (); ++it)
             {
@@ -1136,22 +1136,22 @@ SliceController::SgwRulesRemove (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-//   NS_LOG_INFO ("Removing S-GW rules for bearer teid " << rInfo->GetTeidHex ());
-//
-//   // Remove flow entries for this TEID.
-//   std::ostringstream cmd;
-//   cmd << "flow-mod cmd=del,"
-//       << ",cookie=" << rInfo->GetTeidHex ()
-//       << ",cookie_mask=" << COOKIE_STRICT_MASK;
-//   DpctlExecute (m_sgwDpId, cmd.str ());
-//
-//   // Remove meter entry for this TEID.
-//   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
-//   if (meterInfo && meterInfo->IsUpInstalled ())
-//     {
-//       DpctlExecute (m_sgwDpId, meterInfo->GetDelCmd ());
-//       meterInfo->SetUpInstalled (false);
-//     }
+  NS_LOG_INFO ("Removing S-GW rules for bearer teid " << rInfo->GetTeidHex ());
+
+  // Remove flow entries for this TEID.
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=del,"
+      << ",cookie=" << rInfo->GetTeidHex ()
+      << ",cookie_mask=" << COOKIE_STRICT_MASK;
+  DpctlExecute (rInfo->GetSgwDpId (), cmd.str ());
+
+  // Remove meter entry for this TEID.
+  Ptr<MeterInfo> meterInfo = rInfo->GetMeterInfo ();
+  if (meterInfo && meterInfo->IsUpInstalled ())
+    {
+      DpctlExecute (rInfo->GetSgwDpId (), meterInfo->GetDelCmd ());
+      meterInfo->SetUpInstalled (false);
+    }
   return true;
 }
 
