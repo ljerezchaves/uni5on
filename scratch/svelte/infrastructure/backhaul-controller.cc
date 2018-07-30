@@ -70,69 +70,6 @@ BackhaulController::GetTypeId (void)
   return tid;
 }
 
-bool
-BackhaulController::DedicatedBearerRelease (EpsBearer bearer, uint32_t teid)
-{
-  NS_LOG_FUNCTION (this << teid);
-
-// FIXME ver integração com o Slicecontroller
-//  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-//
-//  // This bearer must be active.
-//  NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't release the default bearer.");
-//  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
-//
-//  TopologyBitRateRelease (rInfo);
-//  m_bearerReleaseTrace (rInfo); // FIXME Verificar momento exato no slice controller
-//  NS_LOG_INFO ("Bearer released by controller.");
-//
-//  // Deactivate and remove the bearer.
-//  rInfo->SetActive (false);
-//  return BearerRemove (rInfo);
-  return true;
-}
-
-bool
-BackhaulController::DedicatedBearerRequest (EpsBearer bearer, uint32_t teid)
-{
-  NS_LOG_FUNCTION (this << teid);
-
-// FIXME ver integração com slicecontroller
-//  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-//
-//  // This bearer must be inactive as we are going to reuse its metadata.
-//  NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
-//  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
-//
-//  // Update the P-GW TFT index and the blocked flag.
-//  rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
-//  rInfo->SetBlocked (false);
-//
-//  // Check for available resources on P-GW and backhaul network and then
-//  // reserve the requested bandwidth (don't change the order!).
-//  bool success = true;
-//  success &= TopologyBearerRequest (rInfo);
-//  success &= PgwBearerRequest (rInfo);
-//  success &= TopologyBitRateReserve (rInfo);
-//  m_bearerRequestTrace (rInfo); // FIXME Verificar momento exato no slice controller
-//  if (!success)
-//    {
-//      NS_LOG_INFO ("Bearer request blocked by controller.");
-//      return false;
-//    }
-//
-//  // Every time the application starts using an (old) existing bearer, let's
-//  // reinstall the rules on the switches, which will increase the bearer
-//  // priority. Doing this, we avoid problems with old 'expiring' rules, and
-//  // we can even use new routing paths when necessary.
-//  NS_LOG_INFO ("Bearer request accepted by controller.");
-//
-//  // Activate and install the bearer.
-//  rInfo->SetActive (true);
-//  return BearerInstall (rInfo);
-  return true;
-}
-
 OpMode
 BackhaulController::GetPriorityQueuesMode (void) const
 {

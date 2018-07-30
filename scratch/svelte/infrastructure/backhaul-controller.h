@@ -56,30 +56,6 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Release a dedicated EPS bearer.
-   * \param bearer EpsBearer bearer QoS characteristics of the bearer.
-   * \param teid The teid for this bearer, if already defined.
-   * \return True if succeeded, false otherwise.
-   */
-  virtual bool DedicatedBearerRelease (EpsBearer bearer, uint32_t teid);
-
-  /**
-   * Request a new dedicated EPS bearer. This is used to check for necessary
-   * resources in the network (mainly available data rate for GBR bearers).
-   * When returning false, it aborts the bearer creation process.
-   * \internal Current implementation assumes that each application traffic
-   *           flow is associated with a unique bearer/tunnel. Because of that,
-   *           we can use only the TEID for the tunnel to prepare and install
-   *           route. If we would like to aggregate traffic from several
-   *           applications into same bearer we will need to revise this.
-   * \param bearer EpsBearer bearer QoS characteristics of the bearer.
-   * \param teid The teid for this bearer, if already defined.
-   * \returns True if succeeded (the bearer creation process will proceed),
-   *          false otherwise (the bearer creation process will abort).
-   */
-  virtual bool DedicatedBearerRequest (EpsBearer bearer, uint32_t teid);
-
-  /**
    * \name Internal mechanisms operation mode accessors.
    * \return The requested mechanism operation mode.
    */
