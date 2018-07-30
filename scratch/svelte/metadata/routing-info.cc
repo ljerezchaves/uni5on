@@ -477,6 +477,35 @@ RoutingInfo::SetTimeout (uint16_t value)
   m_timeout = value;
 }
 
+RoutingInfoList_t
+RoutingInfo::GetInstalledList (SliceId slice, uint16_t pgwTftIdx)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  RoutingInfoList_t list;
+  TeidRoutingMap_t::iterator it;
+  for (it = RoutingInfo::m_routingInfoByTeid.begin ();
+       it != RoutingInfo::m_routingInfoByTeid.end (); ++it)
+    {
+      Ptr<RoutingInfo> rInfo = it->second;
+
+      if (!rInfo->IsInstalled ())
+        {
+          continue;
+        }
+      if (pgwTftIdx > 0 && rInfo->GetPgwTftIdx () != pgwTftIdx)
+        {
+          continue;
+        }
+      if (slice != SliceId::NONE && rInfo->GetSliceId () != slice)
+        {
+          continue;
+        }
+      list.push_back (rInfo);
+    }
+  return list;
+}
+
 void
 RoutingInfo::IncreasePriority ()
 {
