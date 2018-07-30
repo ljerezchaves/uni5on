@@ -335,6 +335,14 @@ RoutingInfo::GetUeAddr (void) const
   return m_ueInfo->GetUeAddr ();
 }
 
+uint64_t
+RoutingInfo::GetSgwDpId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetSgwInfo ()->GetDpId ();
+}
+
 uint16_t
 RoutingInfo::GetEnbInfraSwIdx (void) const
 {

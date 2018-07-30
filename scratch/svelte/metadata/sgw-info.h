@@ -54,6 +54,7 @@ public:
   /** \name Private member accessors. */
   //\{
   uint64_t GetSgwId (void) const;
+  uint64_t GetDpId (void) const;
   SliceId GetSliceId (void) const;
   Ipv4Address GetS1uAddr (void) const;
   Ipv4Address GetS5Addr (void) const;

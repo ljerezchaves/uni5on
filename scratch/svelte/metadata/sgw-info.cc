@@ -64,6 +64,14 @@ SgwInfo::GetSgwId (void) const
   return m_sgwId;
 }
 
+uint64_t
+SgwInfo::GetDpId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sgwId;
+}
+
 SliceId
 SgwInfo::GetSliceId (void) const
 {
