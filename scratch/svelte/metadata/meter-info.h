@@ -36,6 +36,8 @@ class RoutingInfo;
  */
 class MeterInfo : public Object
 {
+  friend class SliceController;
+
 public:
   /**
    * Complete constructor.

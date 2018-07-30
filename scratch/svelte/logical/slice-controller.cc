@@ -22,6 +22,8 @@
 #include "../infrastructure/backhaul-controller.h"
 #include "../infrastructure/backhaul-network.h"
 #include "../metadata/enb-info.h"
+#include "../metadata/gbr-info.h"
+#include "../metadata/meter-info.h"
 #include "../metadata/pgw-info.h"
 #include "../metadata/routing-info.h"
 #include "../metadata/sgw-info.h"
@@ -948,32 +950,32 @@ SliceController::PgwRulesRemove (
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex () << pgwTftIdx << keepMeterFlag);
 
-//   // Use the rInfo P-GW TFT index when the parameter is not set.
-//   if (pgwTftIdx == 0)
-//     {
-//       pgwTftIdx = rInfo->GetPgwTftIdx ();
-//     }
-//   uint64_t pgwTftDpId = m_pgwInfo->GetTftDpId (pgwTftIdx);
-//   NS_LOG_INFO ("Removing P-GW rules for bearer teid " << rInfo->GetTeidHex () <<
-//                " from P-GW TFT switch index " << pgwTftIdx);
-//
-//   // Remove P-GW TFT flow entries for this TEID.
-//   std::ostringstream cmd;
-//   cmd << "flow-mod cmd=del,table=0"
-//       << ",cookie=" << rInfo->GetTeidHex ()
-//       << ",cookie_mask=0xffffffffffffffff"; // Strict cookie match.
-//   DpctlExecute (pgwTftDpId, cmd.str ());
-//
-//   // Remove meter entry for this TEID.
-//   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
-//   if (meterInfo && meterInfo->IsDownInstalled ())
-//     {
-//       DpctlExecute (pgwTftDpId, meterInfo->GetDelCmd ());
-//       if (!keepMeterFlag)
-//         {
-//           meterInfo->SetDownInstalled (false);
-//         }
-//     }
+  // Use the rInfo P-GW TFT index when the parameter is not set.
+  if (pgwTftIdx == 0)
+    {
+      pgwTftIdx = rInfo->GetPgwTftIdx ();
+    }
+  uint64_t pgwTftDpId = m_pgwInfo->GetTftDpId (pgwTftIdx);
+  NS_LOG_INFO ("Removing P-GW rules for teid " << rInfo->GetTeidHex () <<
+               " from P-GW TFT switch index " << pgwTftIdx);
+
+  // Remove P-GW TFT flow entries for this TEID.
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=del,table=0"
+      << ",cookie=" << rInfo->GetTeidHex ()
+      << ",cookie_mask=" << COOKIE_STRICT_MASK;
+  DpctlExecute (pgwTftDpId, cmd.str ());
+
+  // Remove meter entry for this TEID.
+  Ptr<MeterInfo> meterInfo = rInfo->GetMeterInfo ();
+  if (meterInfo && meterInfo->IsDownInstalled ())
+    {
+      DpctlExecute (pgwTftDpId, meterInfo->GetDelCmd ());
+      if (!keepMeterFlag)
+        {
+          meterInfo->SetDownInstalled (false);
+        }
+    }
   return true;
 }
 
