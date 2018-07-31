@@ -92,12 +92,25 @@ SvelteEnbApplication::DoDispose (void)
 }
 
 void
-SvelteEnbApplication::NotifySgwAddress (uint32_t teid, Ipv4Address sgwAddr)
+SvelteEnbApplication::DoInitialContextSetupRequest (
+  uint64_t mmeUeS1Id, uint16_t enbUeS1Id,
+  std::list<EpcS1apSapEnb::ErabToBeSetupItem> erabToBeSetupList)
 {
-  NS_LOG_FUNCTION (this << teid << sgwAddr);
+  NS_LOG_FUNCTION (this);
 
-  // Side effect: create entry if it does not exist.
-  m_teidSgwAddrMap [teid] = sgwAddr;
+  // Save the mapping TEID --> S-GW S1-U IP address.
+  for (auto erabIt = erabToBeSetupList.begin ();
+       erabIt != erabToBeSetupList.end (); ++erabIt)
+    {
+      // Side effect: create entry if it does not exist.
+      m_teidSgwAddrMap [erabIt->sgwTeid] = erabIt->transportLayerAddress;
+      NS_LOG_DEBUG ("eNB mapping teid " << erabIt->sgwTeid <<
+                    " to S-GW S1-U IP " << m_teidSgwAddrMap [erabIt->sgwTeid]);
+    }
+
+  // Chain up
+  EpcEnbApplication::DoInitialContextSetupRequest (
+    mmeUeS1Id, enbUeS1Id, erabToBeSetupList);
 }
 
 void

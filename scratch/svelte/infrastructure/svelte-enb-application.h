@@ -46,7 +46,6 @@ public:
   SvelteEnbApplication (Ptr<Socket> lteSocket, Ptr<Socket> lteSocket6,
                         Ptr<Socket> s1uSocket, Ipv4Address enbS1uAddress,
                         uint16_t cellId);
-
   virtual ~SvelteEnbApplication (void); //!< Dummy destructor, see DoDispose.
 
   /**
@@ -65,11 +64,10 @@ protected:
   /** Destructor implementation. */
   void DoDispose (void);
 
-  /** Notify this eNB about the mapping from TEID to S-GW S5 IP address.
-   * \param teid The S1-U TEID.
-   * \param sgwIp The S-GW S1-U IP address for this teid.
-   */
-  void NotifySgwAddress (uint32_t teid, Ipv4Address sgwAddr);
+  // S1-AP SAP ENB methods
+  void DoInitialContextSetupRequest (
+    uint64_t mmeUeS1Id, uint16_t enbUeS1Id,
+    std::list<EpcS1apSapEnb::ErabToBeSetupItem> erabToBeSetupList);
 
   /**
    * Send a packet to the S-GW via the S1-U interface

@@ -663,7 +663,7 @@ SliceController::DoModifyBearerRequest (
 
   // FIXME: We need to identify which is the best S-GW for this UE after the
   // handover procedure. We also need to move the S-GW rules from the old S-GW
-  // switch to the new one.
+  // switch to the new one. Update the bearer S-GW address.
   // ueInfo->SetSgwInfo (?);
 
   EpcS11SapMme::ModifyBearerResponseMessage res;
