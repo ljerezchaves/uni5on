@@ -343,6 +343,22 @@ RoutingInfo::GetSgwDpId (void) const
   return m_ueInfo->GetSgwInfo ()->GetDpId ();
 }
 
+uint32_t
+RoutingInfo::GetSgwS1uPortNo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetSgwInfo ()->GetS1uPortNo ();
+}
+
+uint32_t
+RoutingInfo::GetSgwS5PortNo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetSgwInfo ()->GetS5PortNo ();
+}
+
 uint16_t
 RoutingInfo::GetEnbInfraSwIdx (void) const
 {

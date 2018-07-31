@@ -127,6 +127,8 @@ public:
   Ipv4Address GetSgwS5Addr (void) const;
   Ipv4Address GetUeAddr (void) const;
   uint64_t GetSgwDpId (void) const;
+  uint32_t GetSgwS1uPortNo (void) const;
+  uint32_t GetSgwS5PortNo (void) const;
   uint16_t GetEnbInfraSwIdx (void) const;
   uint16_t GetPgwInfraSwIdx (void) const;
   uint16_t GetSgwInfraSwIdx (void) const;
