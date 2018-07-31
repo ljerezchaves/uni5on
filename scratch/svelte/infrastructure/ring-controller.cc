@@ -490,7 +490,7 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
       DpctlExecute (GetDpId (ringInfo->GetPgwInfraSwIdx ()), cmd.str () + matchS5.str () + act.str ());
       DpctlExecute (GetDpId (ringInfo->GetSgwInfraSwIdx ()), cmd.str () + matchS1u.str () + act.str ());
     }
-//
+// FIXME
 //   // Configuring uplink routing.
 //   if (rInfo->HasUplinkTraffic ())
 //     {

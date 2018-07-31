@@ -754,6 +754,7 @@ SliceController::PgwAdaptiveMechanism (void)
       DpctlExecute (m_pgwInfo->GetMainDpId (), cmd.str ());
     }
 
+// FIXME
   // Fire the P-GW TFT adaptation trace source.
 //  struct PgwTftStats tftStats;
 //  tftStats.tableSize = m_pgwInfo->GetTftMinFlowTableSize ();
