@@ -65,6 +65,12 @@ protected:
   /** Destructor implementation. */
   void DoDispose (void);
 
+  /** Notify this eNB about the mapping from TEID to S-GW S5 IP address.
+   * \param teid The S1-U TEID.
+   * \param sgwIp The S-GW S1-U IP address for this teid.
+   */
+  void NotifySgwAddress (uint32_t teid, Ipv4Address sgwAddr);
+
   /**
    * Send a packet to the S-GW via the S1-U interface
    * \param packet packet to be sent
@@ -82,6 +88,9 @@ private:
    * Trace source fired when a packet leaves this eNB over the S1-U interface.
    */
   TracedCallback<Ptr<const Packet> > m_txS1uTrace;
+
+  /** Map telling for each S1-U TEID the corresponding S-GW S1-U address. */
+  std::map<uint32_t, Ipv4Address> m_teidSgwAddrMap;
 };
 
 } //namespace ns3

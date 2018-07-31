@@ -67,17 +67,20 @@ SvelteEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
   NS_ASSERT (socket == m_s1uSocket);
   Ptr<Packet> packet = socket->Recv ();
 
+  // Remove the EPC GTP-U packet tag from the packet.
   m_rxS1uTrace (packet);
   EpcGtpuTag teidTag;
   packet->RemovePacketTag (teidTag);
 
+  // Remove the GTP-U header.
   GtpuHeader gtpu;
   packet->RemoveHeader (gtpu);
   uint32_t teid = gtpu.GetTeid ();
-  std::map<uint32_t, EpsFlowId_t>::iterator it = m_teidRbidMap.find (teid);
-  NS_ASSERT (it != m_teidRbidMap.end ());
-
   m_rxS1uSocketPktTrace (packet->Copy ());
+
+  // Send the packet to the UE over the LTE socket.
+  auto it = m_teidRbidMap.find (teid);
+  NS_ASSERT_MSG (it != m_teidRbidMap.end (), "Teid not found in map.");
   SendToLteSocket (packet, it->second.m_rnti, it->second.m_bid);
 }
 
@@ -89,24 +92,34 @@ SvelteEnbApplication::DoDispose (void)
 }
 
 void
+SvelteEnbApplication::NotifySgwAddress (uint32_t teid, Ipv4Address sgwAddr)
+{
+  NS_LOG_FUNCTION (this << teid << sgwAddr);
+
+  // Side effect: create entry if it does not exist.
+  m_teidSgwAddrMap [teid] = sgwAddr;
+}
+
+void
 SvelteEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << packet << teid <<  packet->GetSize ());
 
+  // Attach the GTP-U header.
   GtpuHeader gtpu;
   gtpu.SetTeid (teid);
   gtpu.SetLength (packet->GetSize () + gtpu.GetSerializedSize () - 8);
   packet->AddHeader (gtpu);
-  uint32_t flags = 0;
 
+  // Add the EPC GTP-U packet tag to the packet.
   EpcGtpuTag teidTag (teid, EpcGtpuTag::ENB);
   packet->AddPacketTag (teidTag);
   m_txS1uTrace (packet);
 
-  // FIXME Implementar corretamente a lógica de identificar para qual S-GW o
-  // pacote deve ser enviado.
-  m_s1uSocket->SendTo (
-    packet, flags, InetSocketAddress (Ipv4Address::GetAny (), GTPU_PORT));
+  // Send the packet to the S-GW over the S1-U socket.
+  auto it = m_teidSgwAddrMap.find (teid);
+  NS_ASSERT_MSG (it != m_teidSgwAddrMap.end (), "Teid not found in map.");
+  m_s1uSocket->SendTo (packet, 0, InetSocketAddress (it->second, GTPU_PORT));
 }
 
 }  // namespace ns3
