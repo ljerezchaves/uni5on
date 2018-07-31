@@ -20,7 +20,7 @@
 
 #include "svelte-enb-application.h"
 #include "../svelte-common.h"
-#include "epc-gtpu-tag.h"
+#include "../logical/epc-gtpu-tag.h"
 
 namespace ns3 {
 

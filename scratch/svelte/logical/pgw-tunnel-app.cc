@@ -18,9 +18,10 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include <ns3/epc-gtpu-tag.h>
 #include <ns3/epc-gtpu-header.h>
 #include "pgw-tunnel-app.h"
+#include "epc-gtpu-tag.h"
+#include "../metadata/ue-info.h"
 
 namespace ns3 {
 
@@ -79,7 +80,10 @@ PgwTunnelApp::AttachEpcGtpuTag (Ptr<Packet> packet, uint32_t teid)
   NS_LOG_FUNCTION (this << packet << teid);
   // Packet entering the EPC.
 
-  // Ignoring teid parameter and classify the packet again.
+  // Ignoring teid parameter and classify the packet again. This is useful when
+  // aggregating different bearers withing the same tunnel. Using this
+  // independent classifier ensures that the EPC packet tags can continue to
+  // differentiate the bearers withing the EPC.
   if (m_useTftClassifier)
     {
       Ptr<Packet> packetCopy = packet->Copy ();
@@ -89,9 +93,8 @@ PgwTunnelApp::AttachEpcGtpuTag (Ptr<Packet> packet, uint32_t teid)
       packetCopy->RemoveHeader (gtpuHeader);
       packetCopy->PeekHeader (ipv4Header);
 
-      // FIXME Isso aqui é preciso mesmo?
-      // Ptr<UeInfo> ueInfo = UeInfo::GetPointer (ipv4Header.GetDestination ());
-      // teid = ueInfo->Classify (packetCopy);
+      Ptr<UeInfo> ueInfo = UeInfo::GetPointer (ipv4Header.GetDestination ());
+      teid = ueInfo->Classify (packetCopy);
     }
 
   // Attach the tag and fire the S5 TX trace source.

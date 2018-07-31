@@ -22,7 +22,6 @@
 #define PGW_APP_H
 
 #include "gtp-tunnel-app.h"
-// #include "../info/ue-info.h"
 
 namespace ns3 {
 
