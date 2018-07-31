@@ -565,7 +565,7 @@ SliceController::DoCreateSessionRequest (
       bool isDefault = res.bearerContextsCreated.empty ();
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.teid = teid;
-      bearerContext.sgwFteid.address = Ipv4Address::GetAny (); // Unused.
+      bearerContext.sgwFteid.address = sgwInfo->GetS1uAddr ();
       bearerContext.epsBearerId = bit->epsBearerId;
       bearerContext.bearerLevelQos = bit->bearerLevelQos;
       bearerContext.tft = bit->tft;
