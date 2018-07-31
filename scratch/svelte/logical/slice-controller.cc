@@ -524,7 +524,7 @@ SliceController::ControllerTimeout (void)
 {
   NS_LOG_FUNCTION (this);
 
-  PgwTftCheckUsage ();  // FIXME renomear a função.
+  PgwAdaptiveMechanism ();
 
   // Schedule the next timeout operation.
   Simulator::Schedule (m_timeout, &SliceController::ControllerTimeout, this);
@@ -686,55 +686,8 @@ SliceController::GetPgwTftIdx (
   return 1 + (rInfo->GetUeAddr ().Get () % activeTfts);
 }
 
-bool
-SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
-
-  // If the bearer is already blocked, there's nothing more to do.
-  if (rInfo->IsBlocked ())
-    {
-      return false;
-    }
-
-  // Check for valid P-GW TFT thresholds attributes.
-  NS_ASSERT_MSG (m_tftSplitThs < m_tftBlockThs
-                 && m_tftSplitThs > 2 * m_tftJoinThs,
-                 "The split threshold should be smaller than the block "
-                 "threshold and two times larger than the join threshold.");
-
-  // First check: OpenFlow switch table usage.
-  // Blocks the bearer if the table usage is exceeding the block threshold.
-  double tableUsage = m_pgwInfo->GetFlowTableUsage (rInfo->GetPgwTftIdx ());
-  if (tableUsage >= m_tftBlockThs)
-    {
-      rInfo->SetBlocked (true, RoutingInfo::TFTTABLEFULL);
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because the TFT flow table is full.");
-    }
-
-  // Second check: OpenFlow switch pipeline load.
-  // Is the current pipeline load is exceeding the block threshold, blocks the
-  // bearer accordingly to the PgwTftBlockPolicy attribute:
-  // - If OFF (none): don't block the request.
-  // - If ON (all)  : block the request.
-  // - If AUTO (gbr): block only if GBR request.
-  double pipeUsage = m_pgwInfo->GetPipeCapacityUsage (rInfo->GetPgwTftIdx ());
-  if (pipeUsage >= m_tftBlockThs
-      && (m_tftBlockPolicy == OpMode::ON
-          || (m_tftBlockPolicy == OpMode::AUTO && rInfo->IsGbr ())))
-    {
-      rInfo->SetBlocked (true, RoutingInfo::TFTMAXLOAD);
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because the TFT processing capacity is overloaded.");
-    }
-
-  // Return false if blocked.
-  return !rInfo->IsBlocked ();
-}
-
 void
-SliceController::PgwTftCheckUsage (void)
+SliceController::PgwAdaptiveMechanism (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -819,6 +772,53 @@ SliceController::PgwTftCheckUsage (void)
 //  m_pgwTftStatsTrace (tftStats);
 
   m_tftLevel = nextLevel;
+}
+
+bool
+SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+
+  // If the bearer is already blocked, there's nothing more to do.
+  if (rInfo->IsBlocked ())
+    {
+      return false;
+    }
+
+  // Check for valid P-GW TFT thresholds attributes.
+  NS_ASSERT_MSG (m_tftSplitThs < m_tftBlockThs
+                 && m_tftSplitThs > 2 * m_tftJoinThs,
+                 "The split threshold should be smaller than the block "
+                 "threshold and two times larger than the join threshold.");
+
+  // First check: OpenFlow switch table usage.
+  // Blocks the bearer if the table usage is exceeding the block threshold.
+  double tableUsage = m_pgwInfo->GetFlowTableUsage (rInfo->GetPgwTftIdx ());
+  if (tableUsage >= m_tftBlockThs)
+    {
+      rInfo->SetBlocked (true, RoutingInfo::TFTTABLEFULL);
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                   " because the TFT flow table is full.");
+    }
+
+  // Second check: OpenFlow switch pipeline load.
+  // Is the current pipeline load is exceeding the block threshold, blocks the
+  // bearer accordingly to the PgwTftBlockPolicy attribute:
+  // - If OFF (none): don't block the request.
+  // - If ON (all)  : block the request.
+  // - If AUTO (gbr): block only if GBR request.
+  double pipeUsage = m_pgwInfo->GetPipeCapacityUsage (rInfo->GetPgwTftIdx ());
+  if (pipeUsage >= m_tftBlockThs
+      && (m_tftBlockPolicy == OpMode::ON
+          || (m_tftBlockPolicy == OpMode::AUTO && rInfo->IsGbr ())))
+    {
+      rInfo->SetBlocked (true, RoutingInfo::TFTMAXLOAD);
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                   " because the TFT processing capacity is overloaded.");
+    }
+
+  // Return false if blocked.
+  return !rInfo->IsBlocked ();
 }
 
 bool

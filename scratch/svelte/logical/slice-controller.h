@@ -231,17 +231,17 @@ private:
     Ptr<const RoutingInfo> rInfo, uint16_t activeTfts = 0) const;
 
   /**
+   * Periodically check for the P-GW TFT processing load and flow table usage
+   * to update the adaptive mechanism.
+   */
+  void PgwAdaptiveMechanism (void);
+
+  /**
    * Check for available resources on P-GW TFT switch for this bearer request.
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
   bool PgwBearerRequest (Ptr<RoutingInfo> rInfo);
-
-  /**
-   * Periodically check for the P-GW TFT processing load and flow table usage
-   * to update the adaptive mechanism.
-   */
-  void PgwTftCheckUsage (void);
 
   /**
    * Install downlink packet filtering rules on the P-GW TFT OpenFlow switch.
