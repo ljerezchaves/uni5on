@@ -703,42 +703,44 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
                  "The split threshold should be smaller than the block "
                  "threshold and two times larger than the join threshold.");
 
-//   // Get the P-GW TFT stats calculator for this bearer.
-//   Ptr<OFSwitch13Device> device;
-//   Ptr<OFSwitch13StatsCalculator> stats;
-//   uint16_t tftIdx = rInfo->GetPgwTftIdx ();
-//   device = OFSwitch13Device::GetDevice (m_pgwInfo->GetTftDpId (tftIdx));
-//   stats = device->GetObject<OFSwitch13StatsCalculator> ();
-//   NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
-//
-//   // First check: OpenFlow switch table usage.
-//   // Blocks the bearer if the table usage is exceeding the block threshold.
-//   uint32_t entries = stats->GetEwmaFlowEntries ();
-//   double tableUsage = static_cast<double> (entries) / m_pgwInfo->GetTftFlowTableSize ();
-//   if (tableUsage >= m_tftBlockThs)
-//     {
-//       rInfo->SetBlocked (true, RoutingInfo::TFTTABLEFULL);
-//       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-//                    " because the TFT flow tables is full.");
-//     }
-//
-//   // Second check: OpenFlow switch pipeline load.
-//   // Is the current pipeline load is exceeding the block threshold, blocks the
-//   // bearer accordingly to the PgwTftBlockPolicy attribute:
-//   // - If OFF (none): don't block the request.
-//   // - If ON (all)  : block the request.
-//   // - If AUTO (gbr): block only if GBR request.
-//   uint64_t rate = stats->GetEwmaPipelineLoad ().GetBitRate ();
-//   double loadUsage = static_cast<double> (rate) / m_pgwInfo->GetTftPipelineCapacity ().GetBitRate ();
-//   if (loadUsage >= m_tftBlockThs
-//       && (m_tftBlockPolicy == OpMode::ON
-//           || (m_tftBlockPolicy == OpMode::AUTO && rInfo->IsGbr ())))
-//     {
-//       rInfo->SetBlocked (true, RoutingInfo::TFTMAXLOAD);
-//       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-//                    " because the TFT processing capacity is overloaded.");
-//     }
-//
+  // Get the P-GW TFT stats calculator for this bearer.
+  Ptr<OFSwitch13Device> device;
+  Ptr<OFSwitch13StatsCalculator> stats;
+  uint16_t tftIdx = rInfo->GetPgwTftIdx ();
+  device = OFSwitch13Device::GetDevice (m_pgwInfo->GetTftDpId (tftIdx));
+  stats = device->GetObject<OFSwitch13StatsCalculator> ();
+  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
+
+  // First check: OpenFlow switch table usage.
+  // Blocks the bearer if the table usage is exceeding the block threshold.
+  uint32_t entries = stats->GetEwmaFlowEntries ();
+  double tableUsage = static_cast<double> (entries)
+                      / m_pgwInfo->GetTftFlowTableSize ();
+  if (tableUsage >= m_tftBlockThs)
+    {
+      rInfo->SetBlocked (true, RoutingInfo::TFTTABLEFULL);
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                   " because the TFT flow tables is full.");
+    }
+
+  // Second check: OpenFlow switch pipeline load.
+  // Is the current pipeline load is exceeding the block threshold, blocks the
+  // bearer accordingly to the PgwTftBlockPolicy attribute:
+  // - If OFF (none): don't block the request.
+  // - If ON (all)  : block the request.
+  // - If AUTO (gbr): block only if GBR request.
+  uint64_t rate = stats->GetEwmaPipelineLoad ().GetBitRate ();
+  double loadUsage = static_cast<double> (rate)
+                     / m_pgwInfo->GetTftPipelineCapacity ().GetBitRate ();
+  if (loadUsage >= m_tftBlockThs
+      && (m_tftBlockPolicy == OpMode::ON
+          || (m_tftBlockPolicy == OpMode::AUTO && rInfo->IsGbr ())))
+    {
+      rInfo->SetBlocked (true, RoutingInfo::TFTMAXLOAD);
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                   " because the TFT processing capacity is overloaded.");
+    }
+
   // Return false if blocked.
   return !rInfo->IsBlocked ();
 }
