@@ -119,7 +119,7 @@ public:
    * 
    * \param socket pointer to the LTE socket
    */
-  void RecvFromLteSocket (Ptr<Socket> socket);
+  virtual void RecvFromLteSocket (Ptr<Socket> socket);
 
 
   /** 
@@ -175,7 +175,7 @@ public:
   };
 
 
-private:
+protected:
 
   // ENB S1 SAP provider methods
   /**
@@ -183,17 +183,17 @@ private:
    * \param imsi the IMSI
    * \param rnti the RNTI
    */
-  void DoInitialUeMessage (uint64_t imsi, uint16_t rnti);
+  virtual void DoInitialUeMessage (uint64_t imsi, uint16_t rnti);
   /**
    * Path switch request function
    * \param params PathSwitchRequestParameters
    */
-  void DoPathSwitchRequest (EpcEnbS1SapProvider::PathSwitchRequestParameters params);
+  virtual void DoPathSwitchRequest (EpcEnbS1SapProvider::PathSwitchRequestParameters params);
   /**
    * UE Context Release function
    * \param rnti the RNTI
    */
-  void DoUeContextRelease (uint16_t rnti);
+  virtual void DoUeContextRelease (uint16_t rnti);
   
   // S1-AP SAP ENB methods
   /**
@@ -202,7 +202,7 @@ private:
    * \param enbUeS1Id the ENB UE S1 ID
    * \param erabToBeSetupList the ERAB setup list
    */
-  void DoInitialContextSetupRequest (uint64_t mmeUeS1Id, uint16_t enbUeS1Id, std::list<EpcS1apSapEnb::ErabToBeSetupItem> erabToBeSetupList);
+  virtual void DoInitialContextSetupRequest (uint64_t mmeUeS1Id, uint16_t enbUeS1Id, std::list<EpcS1apSapEnb::ErabToBeSetupItem> erabToBeSetupList);
   /**
    * Path Switch Request Acknowledge 
    * \param mmeUeS1Id the MME UE S1 ID
@@ -210,7 +210,7 @@ private:
    * \param cgi the CGI
    * \param erabToBeSwitchedInUplinkList the ERAB switched in uplink list
    */
-  void DoPathSwitchRequestAcknowledge (uint64_t enbUeS1Id, uint64_t mmeUeS1Id, uint16_t cgi, std::list<EpcS1apSapEnb::ErabSwitchedInUplinkItem> erabToBeSwitchedInUplinkList);
+  virtual void DoPathSwitchRequestAcknowledge (uint64_t enbUeS1Id, uint64_t mmeUeS1Id, uint16_t cgi, std::list<EpcS1apSapEnb::ErabSwitchedInUplinkItem> erabToBeSwitchedInUplinkList);
 
   /** 
    * \brief This function accepts bearer id corresponding to a particular UE and schedules indication of bearer release towards MME
@@ -218,10 +218,9 @@ private:
    * \param rnti maps to enbUeS1Id
    * \param bearerId Bearer Identity which is to be de-activated
    */
-  void DoReleaseIndication (uint64_t imsi, uint16_t rnti, uint8_t bearerId);
+  virtual void DoReleaseIndication (uint64_t imsi, uint16_t rnti, uint8_t bearerId);
 
 
-protected:
   /**
    * Send a packet to the UE via the LTE radio interface of the eNB
    * 
@@ -229,7 +228,7 @@ protected:
    * \param rnti maps to enbUeS1Id
    * \param bid the EPS Bearer IDentifier
    */
-  void SendToLteSocket (Ptr<Packet> packet, uint16_t rnti, uint8_t bid);
+  virtual void SendToLteSocket (Ptr<Packet> packet, uint16_t rnti, uint8_t bid);
 
 
   /** 
@@ -240,7 +239,7 @@ protected:
    */
   virtual void SendToS1uSocket (Ptr<Packet> packet, uint32_t teid);
 
-private:
+
   /** 
    * internal method used for the actual setup of the S1 Bearer
    * 
@@ -260,7 +259,6 @@ private:
    */
   Ptr<Socket> m_lteSocket6;
 
-protected:
   /**
    * UDP socket to send and receive GTP-U the packets to and from the S1-U interface
    */
@@ -293,7 +291,6 @@ protected:
    */
   uint16_t m_gtpuUdpPort;
 
-private:
   /**
    * Provider for the S1 SAP 
    */
@@ -329,7 +326,6 @@ private:
    */ 
   TracedCallback<Ptr<Packet> > m_rxLteSocketPktTrace;
 
-protected:
   /**
    * \brief Callback to trace RX (reception) data packets from S1-U Socket.
    */ 
