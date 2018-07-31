@@ -856,91 +856,92 @@ bool
 SliceController::PgwRulesInstall (
   Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool forceMeterInstall)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex () << pgwTftIdx << forceMeterInstall);
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex () << pgwTftIdx <<
+                   forceMeterInstall);
 
-//   // Use the rInfo P-GW TFT index when the parameter is not set.
-//   if (pgwTftIdx == 0)
-//     {
-//       pgwTftIdx = rInfo->GetPgwTftIdx ();
-//     }
-//   uint64_t pgwTftDpId = m_pgwInfo->GetTftDpId (pgwTftIdx);
-//   uint32_t pgwTftS5PortNo = m_pgwInfo->GetTftS5PortNo (pgwTftIdx);
-//   NS_LOG_INFO ("Installing P-GW rules for bearer teid " << rInfo->GetTeidHex () <<
-//               " into P-GW TFT switch index " << pgwTftIdx);
-//
-//   // Build the dpctl command string
-//   std::ostringstream cmd, act;
-//   cmd << "flow-mod cmd=add,table=0"
-//       << ",flags=" << (OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
-//       << ",cookie=" << rInfo->GetTeidHex ()
-//       << ",prio=" << rInfo->GetPriority ()
-//       << ",idle=" << rInfo->GetTimeout ();
-//
-//   // Check for meter entry.
-//   Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
-//   if (meterInfo && meterInfo->HasDown ())
-//     {
-//       if (forceMeterInstall || !meterInfo->IsDownInstalled ())
-//         {
-//           // Install the per-flow meter entry.
-//           DpctlExecute (pgwTftDpId, meterInfo->GetDownAddCmd ());
-//           meterInfo->SetDownInstalled (true);
-//         }
-//
-//       // Instruction: meter.
-//       act << " meter:" << rInfo->GetTeidHex ();
-//     }
-//
-//   // Instruction: apply action: set tunnel ID, output port.
-//   act << " apply:set_field=tunn_id:" << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetSgwS5Addr ())
-//       << ",output=" << pgwTftS5PortNo;
-//
-//   // Install one downlink dedicated bearer rule for each packet filter.
-//   Ptr<EpcTft> tft = rInfo->GetTft ();
-//   for (uint8_t i = 0; i < tft->GetNFilters (); i++)
-//     {
-//       EpcTft::PacketFilter filter = tft->GetFilter (i);
-//       if (filter.direction == EpcTft::UPLINK)
-//         {
-//           continue;
-//         }
-//
-//       // Install rules for TCP traffic.
-//       if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
-//         {
-//           std::ostringstream match;
-//           match << " eth_type=0x800"
-//                 << ",ip_proto=6"
-//                 << ",ip_dst=" << filter.localAddress;
-//
-//           if (tft->IsDefaultTft () == false)
-//             {
-//               match << ",ip_src=" << filter.remoteAddress
-//                     << ",tcp_src=" << filter.remotePortStart;
-//             }
-//
-//           std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
-//           DpctlExecute (pgwTftDpId, cmdTcpStr);
-//         }
-//
-//       // Install rules for UDP traffic.
-//       else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
-//         {
-//           std::ostringstream match;
-//           match << " eth_type=0x800"
-//                 << ",ip_proto=17"
-//                 << ",ip_dst=" << filter.localAddress;
-//
-//           if (tft->IsDefaultTft () == false)
-//             {
-//               match << ",ip_src=" << filter.remoteAddress
-//                     << ",udp_src=" << filter.remotePortStart;
-//             }
-//
-//           std::string cmdUdpStr = cmd.str () + match.str () + act.str ();
-//           DpctlExecute (pgwTftDpId, cmdUdpStr);
-//         }
-//     }
+  // Use the rInfo P-GW TFT index when the parameter is not set.
+  if (pgwTftIdx == 0)
+    {
+      pgwTftIdx = rInfo->GetPgwTftIdx ();
+    }
+  uint64_t pgwTftDpId = m_pgwInfo->GetTftDpId (pgwTftIdx);
+  NS_LOG_INFO ("Installing P-GW rules for teid " << rInfo->GetTeidHex () <<
+               " into P-GW TFT switch index " << pgwTftIdx);
+
+  // Build the dpctl command string
+  std::ostringstream cmd, act;
+  cmd << "flow-mod cmd=add,table=0"
+      << ",flags=" << (OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
+      << ",cookie=" << rInfo->GetTeidHex ()
+      << ",prio=" << rInfo->GetPriority ()
+      << ",idle=" << rInfo->GetTimeout ();
+
+  // Check for meter entry.
+  Ptr<MeterInfo> meterInfo = rInfo->GetMeterInfo ();
+  if (meterInfo && meterInfo->HasDown ())
+    {
+      if (forceMeterInstall || !meterInfo->IsDownInstalled ())
+        {
+          // Install the per-flow meter entry.
+          DpctlExecute (pgwTftDpId, meterInfo->GetDownAddCmd ());
+          meterInfo->SetDownInstalled (true);
+        }
+
+      // Instruction: meter.
+      act << " meter:" << rInfo->GetTeid ();
+    }
+
+  // Instruction: apply action: set tunnel ID, output port.
+  act << " apply:set_field=tunn_id:"
+      << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetSgwS5Addr ())
+      << ",output=" << m_pgwInfo->GetTftS5PortNo (pgwTftIdx);
+
+  // Install one downlink dedicated bearer rule for each packet filter.
+  Ptr<EpcTft> tft = rInfo->GetTft ();
+  for (uint8_t i = 0; i < tft->GetNFilters (); i++)
+    {
+      EpcTft::PacketFilter filter = tft->GetFilter (i);
+      if (filter.direction == EpcTft::UPLINK)
+        {
+          continue;
+        }
+
+      // Install rules for TCP traffic.
+      if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
+        {
+          std::ostringstream match;
+          match << " eth_type=0x800"
+                << ",ip_proto=6"
+                << ",ip_dst=" << filter.localAddress;
+
+          if (tft->IsDefaultTft () == false)
+            {
+              match << ",ip_src=" << filter.remoteAddress
+                    << ",tcp_src=" << filter.remotePortStart;
+            }
+
+          std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
+          DpctlExecute (pgwTftDpId, cmdTcpStr);
+        }
+
+      // Install rules for UDP traffic.
+      else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
+        {
+          std::ostringstream match;
+          match << " eth_type=0x800"
+                << ",ip_proto=17"
+                << ",ip_dst=" << filter.localAddress;
+
+          if (tft->IsDefaultTft () == false)
+            {
+              match << ",ip_src=" << filter.remoteAddress
+                    << ",udp_src=" << filter.remotePortStart;
+            }
+
+          std::string cmdUdpStr = cmd.str () + match.str () + act.str ();
+          DpctlExecute (pgwTftDpId, cmdUdpStr);
+        }
+    }
   return true;
 }
 
@@ -984,150 +985,150 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-//   NS_LOG_INFO ("Installing S-GW rules for bearer teid " << rInfo->GetTeid ());
-//   Ptr<const UeInfo> ueInfo = UeInfo::GetPointer (rInfo->GetImsi ());
-//   Ptr<const EnbInfo> enbInfo = EnbInfo::GetPointer (ueInfo->GetCellId ());
-//
-//   // Configure downlink.
-//   if (rInfo->HasDownlinkTraffic ())
-//     {
-//       // Build the dpctl command string.
-//       std::ostringstream cmd, act;
-//       cmd << "flow-mod cmd=add,table=1,flags="
-//           << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
-//           << ",cookie=" << rInfo->GetTeidHex ()
-//           << ",prio=" << rInfo->GetPriority ()
-//           << ",idle=" << rInfo->GetTimeout ();
-//
-//       // Instruction: apply action: set tunnel ID, output port.
-//       act << " apply:set_field=tunn_id:" << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetEnbS1uAddr ())
-//           << ",output=" << enbInfo->GetSgwS1uPortNo ();
-//
-//       // Install one downlink dedicated bearer rule for each packet filter.
-//       Ptr<EpcTft> tft = rInfo->GetTft ();
-//       for (uint8_t i = 0; i < tft->GetNFilters (); i++)
-//         {
-//           EpcTft::PacketFilter filter = tft->GetFilter (i);
-//           if (filter.direction == EpcTft::UPLINK)
-//             {
-//               continue;
-//             }
-//
-//           // Install rules for TCP traffic.
-//           if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
-//             {
-//               std::ostringstream match;
-//               match << " eth_type=0x800"
-//                     << ",ip_proto=6"
-//                     << ",ip_dst=" << filter.localAddress;
-//
-//               if (tft->IsDefaultTft () == false)
-//                 {
-//                   match << ",ip_src=" << filter.remoteAddress
-//                         << ",tcp_src=" << filter.remotePortStart;
-//                 }
-//
-//               std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
-//               DpctlExecute (m_sgwDpId, cmdTcpStr);
-//             }
-//
-//           // Install rules for UDP traffic.
-//           else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
-//             {
-//               std::ostringstream match;
-//               match << " eth_type=0x800"
-//                     << ",ip_proto=17"
-//                     << ",ip_dst=" << filter.localAddress;
-//
-//               if (tft->IsDefaultTft () == false)
-//                 {
-//                   match << ",ip_src=" << filter.remoteAddress
-//                         << ",udp_src=" << filter.remotePortStart;
-//                 }
-//
-//               std::string cmdUdpStr = cmd.str () + match.str () + act.str ();
-//               DpctlExecute (m_sgwDpId, cmdUdpStr);
-//             }
-//         }
-//     }
-//
-//   // Configure uplink.
-//   if (rInfo->HasUplinkTraffic ())
-//     {
-//       // Build the dpctl command string.
-//       std::ostringstream cmd, act;
-//       cmd << "flow-mod cmd=add,table=2,flags="
-//           << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
-//           << ",cookie=" << rInfo->GetTeidHex ()
-//           << ",prio=" << rInfo->GetPriority ()
-//           << ",idle=" << rInfo->GetTimeout ();
-//
-//       // Check for meter entry.
-//       Ptr<MeterInfo> meterInfo = rInfo->GetObject<MeterInfo> ();
-//       if (meterInfo && meterInfo->HasUp ())
-//         {
-//           if (!meterInfo->IsUpInstalled ())
-//             {
-//               // Install the per-flow meter entry.
-//               DpctlExecute (m_sgwDpId, meterInfo->GetUpAddCmd ());
-//               meterInfo->SetUpInstalled (true);
-//             }
-//
-//           // Instruction: meter.
-//           act << " meter:" << rInfo->GetTeidHex ();
-//         }
-//
-//       // Instruction: apply action: set tunnel ID, output port.
-//       act << " apply:set_field=tunn_id:" << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetPgwS5Addr ())
-//           << ",output=" << m_sgwS5PortNo;
-//
-//       // Install one uplink dedicated bearer rule for each packet filter.
-//       Ptr<EpcTft> tft = rInfo->GetTft ();
-//       for (uint8_t i = 0; i < tft->GetNFilters (); i++)
-//         {
-//           EpcTft::PacketFilter filter = tft->GetFilter (i);
-//           if (filter.direction == EpcTft::DOWNLINK)
-//             {
-//               continue;
-//             }
-//
-//           // Install rules for TCP traffic.
-//           if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
-//             {
-//               std::ostringstream match;
-//               match << " eth_type=0x800"
-//                     << ",ip_proto=6"
-//                     << ",ip_src=" << filter.localAddress;
-//
-//               if (tft->IsDefaultTft () == false)
-//                 {
-//                   match << ",ip_dst=" << filter.remoteAddress
-//                         << ",tcp_dst=" << filter.remotePortStart;
-//                 }
-//
-//               std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
-//               DpctlExecute (m_sgwDpId, cmdTcpStr);
-//             }
-//
-//           // Install rules for UDP traffic.
-//           else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
-//             {
-//               std::ostringstream match;
-//               match << " eth_type=0x800"
-//                     << ",ip_proto=17"
-//                     << ",ip_src=" << filter.localAddress;
-//
-//               if (tft->IsDefaultTft () == false)
-//                 {
-//                   match << ",ip_dst=" << filter.remoteAddress
-//                         << ",udp_dst=" << filter.remotePortStart;
-//                 }
-//
-//               std::string cmdUdpStr = cmd.str () + match.str () + act.str ();
-//               DpctlExecute (m_sgwDpId, cmdUdpStr);
-//             }
-//         }
-//     }
+  NS_LOG_INFO ("Installing S-GW rules for bearer teid " << rInfo->GetTeid ());
+
+  // Configure downlink.
+  if (rInfo->HasDownlinkTraffic ())
+    {
+      // Build the dpctl command string.
+      std::ostringstream cmd, act;
+      cmd << "flow-mod cmd=add,table=1,flags="
+          << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
+          << ",cookie=" << rInfo->GetTeidHex ()
+          << ",prio=" << rInfo->GetPriority ()
+          << ",idle=" << rInfo->GetTimeout ();
+
+      // Instruction: apply action: set tunnel ID, output port.
+      act << " apply:set_field=tunn_id:"
+          << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetEnbS1uAddr ())
+          << ",output=" << rInfo->GetSgwS1uPortNo ();
+
+      // Install one downlink dedicated bearer rule for each packet filter.
+      Ptr<EpcTft> tft = rInfo->GetTft ();
+      for (uint8_t i = 0; i < tft->GetNFilters (); i++)
+        {
+          EpcTft::PacketFilter filter = tft->GetFilter (i);
+          if (filter.direction == EpcTft::UPLINK)
+            {
+              continue;
+            }
+
+          // Install rules for TCP traffic.
+          if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
+            {
+              std::ostringstream match;
+              match << " eth_type=0x800"
+                    << ",ip_proto=6"
+                    << ",ip_dst=" << filter.localAddress;
+
+              if (tft->IsDefaultTft () == false)
+                {
+                  match << ",ip_src=" << filter.remoteAddress
+                        << ",tcp_src=" << filter.remotePortStart;
+                }
+
+              std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
+              DpctlExecute (rInfo->GetSgwDpId (), cmdTcpStr);
+            }
+
+          // Install rules for UDP traffic.
+          else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
+            {
+              std::ostringstream match;
+              match << " eth_type=0x800"
+                    << ",ip_proto=17"
+                    << ",ip_dst=" << filter.localAddress;
+
+              if (tft->IsDefaultTft () == false)
+                {
+                  match << ",ip_src=" << filter.remoteAddress
+                        << ",udp_src=" << filter.remotePortStart;
+                }
+
+              std::string cmdUdpStr = cmd.str () + match.str () + act.str ();
+              DpctlExecute (rInfo->GetSgwDpId (), cmdUdpStr);
+            }
+        }
+    }
+
+  // Configure uplink.
+  if (rInfo->HasUplinkTraffic ())
+    {
+      // Build the dpctl command string.
+      std::ostringstream cmd, act;
+      cmd << "flow-mod cmd=add,table=2,flags="
+          << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
+          << ",cookie=" << rInfo->GetTeidHex ()
+          << ",prio=" << rInfo->GetPriority ()
+          << ",idle=" << rInfo->GetTimeout ();
+
+      // Check for meter entry.
+      Ptr<MeterInfo> meterInfo = rInfo->GetMeterInfo ();
+      if (meterInfo && meterInfo->HasUp ())
+        {
+          if (!meterInfo->IsUpInstalled ())
+            {
+              // Install the per-flow meter entry.
+              DpctlExecute (rInfo->GetSgwDpId (), meterInfo->GetUpAddCmd ());
+              meterInfo->SetUpInstalled (true);
+            }
+
+          // Instruction: meter.
+          act << " meter:" << rInfo->GetTeid ();
+        }
+
+      // Instruction: apply action: set tunnel ID, output port.
+      act << " apply:set_field=tunn_id:"
+          << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetPgwS5Addr ())
+          << ",output=" << rInfo->GetSgwS5PortNo ();
+
+      // Install one uplink dedicated bearer rule for each packet filter.
+      Ptr<EpcTft> tft = rInfo->GetTft ();
+      for (uint8_t i = 0; i < tft->GetNFilters (); i++)
+        {
+          EpcTft::PacketFilter filter = tft->GetFilter (i);
+          if (filter.direction == EpcTft::DOWNLINK)
+            {
+              continue;
+            }
+
+          // Install rules for TCP traffic.
+          if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
+            {
+              std::ostringstream match;
+              match << " eth_type=0x800"
+                    << ",ip_proto=6"
+                    << ",ip_src=" << filter.localAddress;
+
+              if (tft->IsDefaultTft () == false)
+                {
+                  match << ",ip_dst=" << filter.remoteAddress
+                        << ",tcp_dst=" << filter.remotePortStart;
+                }
+
+              std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
+              DpctlExecute (rInfo->GetSgwDpId (), cmdTcpStr);
+            }
+
+          // Install rules for UDP traffic.
+          else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
+            {
+              std::ostringstream match;
+              match << " eth_type=0x800"
+                    << ",ip_proto=17"
+                    << ",ip_src=" << filter.localAddress;
+
+              if (tft->IsDefaultTft () == false)
+                {
+                  match << ",ip_dst=" << filter.remoteAddress
+                        << ",udp_dst=" << filter.remotePortStart;
+                }
+
+              std::string cmdUdpStr = cmd.str () + match.str () + act.str ();
+              DpctlExecute (rInfo->GetSgwDpId (), cmdUdpStr);
+            }
+        }
+    }
   return true;
 }
 
