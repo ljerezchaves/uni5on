@@ -33,13 +33,7 @@ PgwInfo::PgwInfo (uint64_t pgwId)
   m_sliceId (SliceId::NONE),
   m_infraSwIdx (0),
   m_sgiPortNo (0),
-  m_nTfts (0),
-  m_tftPipeCapacity (DataRate (std::numeric_limits<uint64_t>::max ())),
-  m_tftFlowTableSize (std::numeric_limits<uint32_t>::max ()),
-  m_tftMaxEntries (0.0),
-  m_tftMaxLoad (0.0),
-  m_tftSumEntries (0.0),
-  m_tftSumLoad (0.0)
+  m_nTfts (0)
 {
   NS_LOG_FUNCTION (this);
 
@@ -105,9 +99,7 @@ PgwInfo::GetMainDpId (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG (m_dpIds.size (), "No P-GW main switch registered.");
-  NS_ASSERT_MSG (m_dpIds.at (0) == m_pgwId, "Inconsistent metadata.");
-  return m_dpIds.at (0);
+  return m_pgwId;
 }
 
 Ipv4Address
@@ -153,8 +145,8 @@ PgwInfo::GetTftDpId (uint16_t idx) const
   NS_LOG_FUNCTION (this << idx);
 
   NS_ASSERT_MSG (idx > 0, "Invalid TFT index.");
-  NS_ASSERT_MSG (idx < m_dpIds.size (), "Invalid TFT index.");
-  return m_dpIds.at (idx);
+  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid TFT index.");
+  return m_devices.at (idx)->GetDatapathId ();
 }
 
 Ipv4Address
@@ -188,67 +180,91 @@ PgwInfo::GetTftInfraSwS5PortNo (uint16_t idx) const
 }
 
 uint32_t
-PgwInfo::GetTftFlowTableSize (void) const
+PgwInfo::GetFlowEntries (uint16_t idx) const
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << idx);
 
-  return m_tftFlowTableSize;
+  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
+  Ptr<OFSwitch13StatsCalculator> stats;
+  stats = m_devices.at (idx)->GetObject<OFSwitch13StatsCalculator> ();
+  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
+  return stats->GetEwmaFlowEntries ();
+}
+
+uint32_t
+PgwInfo::GetFlowTableSize (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
+  return m_devices.at (idx)->GetFlowTableSize ();
+}
+
+double
+PgwInfo::GetFlowTableUsage (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  return static_cast<double> (GetFlowEntries (idx)) /
+         static_cast<double> (GetFlowTableSize (idx));
 }
 
 DataRate
-PgwInfo::GetTftPipelineCapacity (void) const
+PgwInfo::GetPipeLoad (uint16_t idx) const
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << idx);
 
-  return m_tftPipeCapacity;
+  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
+  Ptr<OFSwitch13StatsCalculator> stats;
+  stats = m_devices.at (idx)->GetObject<OFSwitch13StatsCalculator> ();
+  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
+  return stats->GetEwmaPipelineLoad ();
+}
+
+DataRate
+PgwInfo::GetPipeCapacity (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
+  return m_devices.at (idx)->GetPipelineCapacity ();
 }
 
 double
-PgwInfo::GetTftMaxEntries (void) const
+PgwInfo::GetPipeCapacityUsage (uint16_t idx) const
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << idx);
 
-  return m_tftMaxEntries;
+  return static_cast<double> (GetPipeLoad (idx).GetBitRate ()) /
+         static_cast<double> (GetPipeCapacity (idx).GetBitRate ());
 }
 
 double
-PgwInfo::GetTftMaxLoad (void) const
+PgwInfo::GetTftWorstFlowTableUsage () const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_tftMaxLoad;
+  // Iterate only over TFT switches for collecting statistics.
+  double tableUsage = 0.0;
+  for (uint16_t idx = 1; idx <= m_nTfts; idx++)
+    {
+      tableUsage = std::max (tableUsage, GetFlowTableUsage (idx));
+    }
+  return tableUsage;
 }
 
 double
-PgwInfo::GetTftSumEntries (void) const
+PgwInfo::GetTftWorstPipeCapacityUsage () const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_tftSumEntries;
-}
-
-double
-PgwInfo::GetTftSumLoad (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_tftSumLoad;
-}
-
-double
-PgwInfo::GetTftMaxTableUsage (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_tftMaxEntries / m_tftFlowTableSize;
-}
-
-double
-PgwInfo::GetTftMaxLoadUsage (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_tftMaxLoad / m_tftPipeCapacity.GetBitRate ();
+  // Iterate only over TFT switches for collecting statistics.
+  double pipeUsage = 0.0;
+  for (uint16_t idx = 1; idx <= m_nTfts; idx++)
+    {
+      pipeUsage = std::max (pipeUsage, GetPipeCapacityUsage (idx));
+    }
+  return pipeUsage;
 }
 
 Ptr<PgwInfo>
@@ -271,7 +287,7 @@ PgwInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_switchStats.clear ();
+  m_devices.clear ();
 }
 
 void
@@ -307,65 +323,23 @@ PgwInfo::SetMainSgiPortNo (uint32_t value)
 }
 
 void
-PgwInfo::SaveSwitchInfo (uint64_t dpId, Ipv4Address s5Addr, uint32_t s5PortNo,
-                         uint32_t infraSwS5PortNo, uint32_t mainToTftPortNo)
+PgwInfo::SaveSwitchInfo (Ptr<OFSwitch13Device> device, Ipv4Address s5Addr,
+                         uint32_t s5PortNo, uint32_t infraSwS5PortNo,
+                         uint32_t mainToTftPortNo)
 {
-  NS_LOG_FUNCTION (this << dpId << s5Addr << s5PortNo << infraSwS5PortNo);
+  NS_LOG_FUNCTION (this << device << s5Addr << s5PortNo << infraSwS5PortNo);
 
-  m_dpIds.push_back (dpId);
+  m_devices.push_back (device);
   m_s5Addrs.push_back (s5Addr);
   m_s5PortNos.push_back (s5PortNo);
   m_infraSwS5PortNos.push_back (infraSwS5PortNo);
   m_mainToTftPortNos.push_back (mainToTftPortNo);
 
-  // Nothing to do for the P-GW MAIN switch.
-  if (m_dpIds.size () == 1)
+  // Check for valid P-GW MAIN switch at first index.
+  if (m_devices.size () == 1)
     {
-      return;
-    }
-
-  // Get the minimum table size and pipeline capacity of P-GW TFT switches.
-  Ptr<OFSwitch13Device> dev = OFSwitch13Device::GetDevice (dpId);
-  uint32_t tableSize = dev->GetFlowTableSize ();
-  DataRate pipeCapacity = dev->GetPipelineCapacity ();
-
-  m_tftFlowTableSize = std::min (m_tftFlowTableSize, tableSize);
-  m_tftPipeCapacity = std::min (m_tftPipeCapacity, pipeCapacity);
-  NS_LOG_DEBUG ("P-GW TFT min flow table size set to " << m_tftFlowTableSize);
-  NS_LOG_DEBUG ("P-GW TFT min pipeline capacity set to " << m_tftPipeCapacity);
-}
-
-void
-PgwInfo::UpdateTftStats (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  if (!m_switchStats.size ())
-    {
-      // This is the first time using this method. Let's save the pointers to
-      // OFSwitch13StatsCalculator instances for each switch (main + TFTs).
-      Ptr<OFSwitch13Device> device = 0;
-      Ptr<OFSwitch13StatsCalculator> stats = 0;
-      for (uint16_t i = 0; i < m_dpIds.size (); i++)
-        {
-          device = OFSwitch13Device::GetDevice (m_dpIds.at (i));
-          stats = device->GetObject<OFSwitch13StatsCalculator> ();
-          NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
-          m_switchStats.push_back (stats);
-        }
-    }
-
-  // Iterate only over TFT switches for collecting statistics.
-  double entries, load;
-  for (uint16_t i = 1; i <= m_nTfts; i++)
-    {
-      entries = m_switchStats.at (i)->GetEwmaFlowEntries ();
-      m_tftMaxEntries = std::max (m_tftMaxEntries, entries);
-      m_tftSumEntries += entries;
-
-      load = m_switchStats.at (i)->GetEwmaPipelineLoad ().GetBitRate ();
-      m_tftMaxLoad = std::max (m_tftMaxLoad, load);
-      m_tftSumLoad += load;
+      NS_ABORT_MSG_IF (m_devices.at (0)->GetDatapathId () != m_pgwId,
+                       "Inconsistent P-GW metadata.");
     }
 }
 

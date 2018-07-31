@@ -703,24 +703,14 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
                  "The split threshold should be smaller than the block "
                  "threshold and two times larger than the join threshold.");
 
-  // Get the P-GW TFT stats calculator for this bearer.
-  Ptr<OFSwitch13Device> device;
-  Ptr<OFSwitch13StatsCalculator> stats;
-  uint16_t tftIdx = rInfo->GetPgwTftIdx ();
-  device = OFSwitch13Device::GetDevice (m_pgwInfo->GetTftDpId (tftIdx));
-  stats = device->GetObject<OFSwitch13StatsCalculator> ();
-  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
-
   // First check: OpenFlow switch table usage.
   // Blocks the bearer if the table usage is exceeding the block threshold.
-  uint32_t entries = stats->GetEwmaFlowEntries ();
-  double tableUsage = static_cast<double> (entries)
-                      / m_pgwInfo->GetTftFlowTableSize ();
+  double tableUsage = m_pgwInfo->GetFlowTableUsage (rInfo->GetPgwTftIdx ());
   if (tableUsage >= m_tftBlockThs)
     {
       rInfo->SetBlocked (true, RoutingInfo::TFTTABLEFULL);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because the TFT flow tables is full.");
+                   " because the TFT flow table is full.");
     }
 
   // Second check: OpenFlow switch pipeline load.
@@ -729,10 +719,8 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
   // - If OFF (none): don't block the request.
   // - If ON (all)  : block the request.
   // - If AUTO (gbr): block only if GBR request.
-  uint64_t rate = stats->GetEwmaPipelineLoad ().GetBitRate ();
-  double loadUsage = static_cast<double> (rate)
-                     / m_pgwInfo->GetTftPipelineCapacity ().GetBitRate ();
-  if (loadUsage >= m_tftBlockThs
+  double pipeUsage = m_pgwInfo->GetPipeCapacityUsage (rInfo->GetPgwTftIdx ());
+  if (pipeUsage >= m_tftBlockThs
       && (m_tftBlockPolicy == OpMode::ON
           || (m_tftBlockPolicy == OpMode::AUTO && rInfo->IsGbr ())))
     {
@@ -756,13 +744,14 @@ SliceController::PgwTftCheckUsage (void)
   uint16_t activeTfts = 1 << m_tftLevel;
   uint8_t nextLevel = m_tftLevel;
 
-  m_pgwInfo->UpdateTftStats ();
   if (GetPgwAdaptiveMode () == OpMode::AUTO)
     {
+      double tableUsage = m_pgwInfo->GetTftWorstFlowTableUsage ();
+      double pipeUsage = m_pgwInfo->GetTftWorstPipeCapacityUsage ();
+
       // We may increase the level when we hit the split threshold.
       if ((m_tftLevel < maxLbLevel)
-          && (m_pgwInfo->GetTftMaxTableUsage () >= m_tftSplitThs
-              || m_pgwInfo->GetTftMaxLoadUsage () >= m_tftSplitThs))
+          && (tableUsage >= m_tftSplitThs || pipeUsage >= m_tftSplitThs))
         {
           NS_LOG_INFO ("Increasing the adaptive mechanism level.");
           nextLevel++;
@@ -770,8 +759,7 @@ SliceController::PgwTftCheckUsage (void)
 
       // We may decrease the level when we hit the join threshold.
       else if ((m_tftLevel > 0)
-               && (m_pgwInfo->GetTftMaxTableUsage () < m_tftJoinThs)
-               && (m_pgwInfo->GetTftMaxLoadUsage () < m_tftJoinThs))
+               && (tableUsage < m_tftJoinThs) && (pipeUsage < m_tftJoinThs))
         {
           NS_LOG_INFO ("Decreasing the adaptive mechanism level.");
           nextLevel--;
@@ -814,21 +802,21 @@ SliceController::PgwTftCheckUsage (void)
     }
 
   // Fire the P-GW TFT adaptation trace source.
-  struct PgwTftStats tftStats;
-  tftStats.tableSize = m_pgwInfo->GetTftFlowTableSize ();
+//  struct PgwTftStats tftStats;
+//  tftStats.tableSize = m_pgwInfo->GetTftMinFlowTableSize ();
 //  tftStats.maxEntries = maxEntries;
 //  tftStats.sumEntries = sumEntries;
-  tftStats.pipeCapacity = m_pgwInfo->GetTftPipelineCapacity ().GetBitRate ();
+//  tftStats.pipeCapacity = m_pgwInfo->GetTftMinPipelineCapacity ().GetBitRate ();
 //  tftStats.maxLoad = maxLoad;
 //  tftStats.sumLoad = sumLoad;
-  tftStats.currentLevel = m_tftLevel;
-  tftStats.nextLevel = nextLevel;
-  tftStats.maxLevel = maxLbLevel;
-  tftStats.bearersMoved = moved;
-  tftStats.blockThrs = m_tftBlockThs;
-  tftStats.joinThrs = m_tftJoinThs;
-  tftStats.splitThrs = m_tftSplitThs;
-  m_pgwTftStatsTrace (tftStats);
+//  tftStats.currentLevel = m_tftLevel;
+//  tftStats.nextLevel = nextLevel;
+//  tftStats.maxLevel = maxLbLevel;
+//  tftStats.bearersMoved = moved;
+//  tftStats.blockThrs = m_tftBlockThs;
+//  tftStats.joinThrs = m_tftJoinThs;
+//  tftStats.splitThrs = m_tftSplitThs;
+//  m_pgwTftStatsTrace (tftStats);
 
   m_tftLevel = nextLevel;
 }

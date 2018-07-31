@@ -69,14 +69,14 @@ public:
   Ipv4Address GetTftS5Addr (uint16_t idx) const;
   uint32_t GetTftS5PortNo (uint16_t idx) const;
   uint32_t GetTftInfraSwS5PortNo (uint16_t idx) const;
-  uint32_t GetTftFlowTableSize (void) const;
-  DataRate GetTftPipelineCapacity (void) const;
-  double GetTftMaxEntries (void) const;
-  double GetTftMaxLoad (void) const;
-  double GetTftSumEntries (void) const;
-  double GetTftSumLoad (void) const;
-  double GetTftMaxTableUsage (void) const;
-  double GetTftMaxLoadUsage (void) const;
+  uint32_t GetFlowEntries (uint16_t idx) const;
+  uint32_t GetFlowTableSize (uint16_t idx) const;
+  double GetFlowTableUsage (uint16_t idx) const;
+  DataRate GetPipeLoad (uint16_t idx) const;
+  DataRate GetPipeCapacity (uint16_t idx) const;
+  double GetPipeCapacityUsage (uint16_t idx) const;
+  double GetTftWorstFlowTableUsage (void) const;
+  double GetTftWorstPipeCapacityUsage (void) const;
   //\}
 
   /**
@@ -100,16 +100,11 @@ private:
   //\}
 
   /**
-   * Update P-GW TFT switch statistics.
-   */
-  void UpdateTftStats (void);
-
-  /**
    * Save the metadata associated to a single P-GW OpenFlow switch attached to
    * the OpenFlow backhaul network.
    * \attention Invoke this method first for the P-GW MAIN switch, then for the
    *            P-GW TFT switches.
-   * \param dpId The OpenFlow switch datapath ID.
+   * \param device The OpenFlow switch device.
    * \param s5Add The IP address assigned to the S5 network device on the P-GW
    *        switch.
    * \param s5PortNo The port number assigned to the S5 logical port on the
@@ -122,8 +117,9 @@ private:
    *        invoking this function for the P-GW main switch, this parameter can
    *        be left to the default value as it does not make sense).
    */
-  void SaveSwitchInfo (uint64_t dpId, Ipv4Address s5Addr, uint32_t s5PortNo,
-                       uint32_t infraSwS5PortNo, uint32_t mainToTftPortNo = 0);
+  void SaveSwitchInfo (Ptr<OFSwitch13Device> device, Ipv4Address s5Addr,
+                       uint32_t s5PortNo, uint32_t infraSwS5PortNo,
+                       uint32_t mainToTftPortNo = 0);
 
   /**
    * Register the P-GW information in global map for further usage.
@@ -132,33 +128,26 @@ private:
   static void RegisterPgwInfo (Ptr<PgwInfo> pgwInfo);
 
   /** Vector of OFSwitch13StatsCalculator */
+  typedef std::vector<Ptr<OFSwitch13Device> > DevicesVector_t;
+
+  /** Vector of OFSwitch13StatsCalculator */
   typedef std::vector<Ptr<OFSwitch13StatsCalculator> > StatsVector_t;
 
   // P-GW metadata.
-  uint64_t                  m_pgwId;              //!< P-GW ID (P-GW main dpId).
+  uint64_t                  m_pgwId;              //!< P-GW ID (main dpId).
   SliceId                   m_sliceId;            //!< LTE logical slice ID.
   uint16_t                  m_infraSwIdx;         //!< Backhaul switch index.
   uint32_t                  m_sgiPortNo;          //!< SGi port number.
   uint16_t                  m_nTfts;              //!< Number of TFT switches.
-  std::vector<uint64_t>     m_dpIds;              //!< Switch datapath IDs.
+  DevicesVector_t           m_devices;            //!< OpenFlow switch devices.
   std::vector<Ipv4Address>  m_s5Addrs;            //!< S5 dev IP addresses.
   std::vector<uint32_t>     m_s5PortNos;          //!< S5 port numbers.
   std::vector<uint32_t>     m_infraSwS5PortNos;   //!< Back switch S5 port nos.
   std::vector<uint32_t>     m_mainToTftPortNos;   //!< Main port nos to TFTs.
-  DataRate                  m_tftPipeCapacity;    //!< Min TFT pipe capacity.
-  uint32_t                  m_tftFlowTableSize;   //!< Min TFT Flow table size.
-  StatsVector_t             m_switchStats;        //!< Switch stats calculator.
-
-  // TFT switch statistics.
-  double                    m_tftMaxEntries;      //!< Max number flow entries.
-  double                    m_tftMaxLoad;         //!< Max pipeline load.
-  double                    m_tftSumEntries;      //!< Sum number flow entries.
-  double                    m_tftSumLoad;         //!< Sum pipeline load.
-
 
   /** Map saving P-GW ID / P-GW information. */
   typedef std::map<uint64_t, Ptr<PgwInfo> > PgwIdPgwInfo_t;
-  static PgwIdPgwInfo_t  m_pgwInfoByPgwId;       //!< Global P-GW info map.
+  static PgwIdPgwInfo_t  m_pgwInfoByPgwId;        //!< Global P-GW info map.
 };
 
 } // namespace ns3

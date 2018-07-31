@@ -371,7 +371,7 @@ SliceNetwork::CreatePgw (void)
     CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev));
 
   // Saving P-GW MAIN metadata first.
-  m_pgwInfo->SaveSwitchInfo (pgwDpId, pgwS5Addr, pgwS5Port->GetPortNo (),
+  m_pgwInfo->SaveSwitchInfo (pgwMainOfDev, pgwS5Addr, pgwS5Port->GetPortNo (),
                              infraSwS5Port->GetPortNo ());
 
   // Configure CSMA helper for connecting P-GW internal node.
@@ -424,7 +424,7 @@ SliceNetwork::CreatePgw (void)
 
       // Saving P-GW TFT metadata.
       m_pgwInfo->SaveSwitchInfo (
-        pgwDpId, pgwS5Addr, pgwS5Port->GetPortNo (),
+        pgwTftOfDev, pgwS5Addr, pgwS5Port->GetPortNo (),
         infraSwS5Port->GetPortNo (), mainPort->GetPortNo ());
     }
 
