@@ -854,10 +854,9 @@ SliceController::PgwTftCheckUsage (void)
 
 bool
 SliceController::PgwRulesInstall (
-  Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool forceMeterInstall)
+  Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool moveFlag)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex () << pgwTftIdx <<
-                   forceMeterInstall);
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex () << pgwTftIdx << moveFlag);
 
   // Use the rInfo P-GW TFT index when the parameter is not set.
   if (pgwTftIdx == 0)
@@ -880,7 +879,7 @@ SliceController::PgwRulesInstall (
   Ptr<MeterInfo> meterInfo = rInfo->GetMeterInfo ();
   if (meterInfo && meterInfo->HasDown ())
     {
-      if (forceMeterInstall || !meterInfo->IsDownInstalled ())
+      if (moveFlag || !meterInfo->IsDownInstalled ())
         {
           // Install the per-flow meter entry.
           DpctlExecute (pgwTftDpId, meterInfo->GetDownAddCmd ());
@@ -947,9 +946,9 @@ SliceController::PgwRulesInstall (
 
 bool
 SliceController::PgwRulesRemove (
-  Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool keepMeterFlag)
+  Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx, bool moveFlag)
 {
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex () << pgwTftIdx << keepMeterFlag);
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex () << pgwTftIdx << moveFlag);
 
   // Use the rInfo P-GW TFT index when the parameter is not set.
   if (pgwTftIdx == 0)
@@ -972,7 +971,7 @@ SliceController::PgwRulesRemove (
   if (meterInfo && meterInfo->IsDownInstalled ())
     {
       DpctlExecute (pgwTftDpId, meterInfo->GetDelCmd ());
-      if (!keepMeterFlag)
+      if (!moveFlag)
         {
           meterInfo->SetDownInstalled (false);
         }

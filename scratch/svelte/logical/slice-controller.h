@@ -250,26 +250,26 @@ private:
    * \param rInfo The routing information to process.
    * \param pgwTftIdx The P-GW TFT switch index. When set to 0, the index will
    *        be get from rInfo->GetPgwTftIdx ().
-   * \param forceMeterInstall Force the meter entry installation even when the
+   * \param moveFlag When true, forces the meter entry install even when
    *        meterInfo->IsDownInstalled () is true (useful when moving rules
    *        among TFT switches).
    * \return True if succeeded, false otherwise.
    */
   bool PgwRulesInstall (Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx = 0,
-                        bool forceMeterInstall = false);
+                        bool moveFlag = false);
 
   /**
    * Remove downlink packet filtering rules from the P-GW TFT OpenFlow switch.
    * \param rInfo The routing information to process.
    * \param pgwTftIdx The P-GW TFT switch index. When set to 0, the index will
    *        be get from rInfo->GetPgwTftIdx ().
-   * \param keepMeterFlag Don't set the meterInfo->IsDownInstalled () flag to
-   *        false when removing the meter entry (useful when moving rules
-   *        among TFT switches).
+   * \param moveFlag When true, don't set the meterInfo->IsDownInstalled ()
+   *        flag to false when removing the meter entry (useful when moving
+   *        rules among TFT switches).
    * \return True if succeeded, false otherwise.
    */
   bool PgwRulesRemove (Ptr<RoutingInfo> rInfo, uint16_t pgwTftIdx = 0,
-                       bool keepMeterFlag = false);
+                       bool moveFlag = false);
 
   /**
    * Install packet forwarding rules on the S-GW OpenFlow switch.
