@@ -19,6 +19,7 @@
  */
 
 #include "enb-info.h"
+#include "../infrastructure/svelte-enb-application.h"
 
 namespace ns3 {
 
@@ -84,12 +85,20 @@ EnbInfo::GetInfraSwPortNo (void) const
   return m_infraSwPortNo;
 }
 
+Ptr<SvelteEnbApplication>
+EnbInfo::GetEnbApplication (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_enbApplication;
+}
+
 EpcS1apSapEnb*
 EnbInfo::GetS1apSapEnb (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_s1apSapEnb;
+  return m_enbApplication->GetS1apSapEnb ();
 }
 
 Ptr<EnbInfo>
@@ -111,6 +120,8 @@ void
 EnbInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+
+  m_enbApplication = 0;
 }
 
 void
@@ -138,11 +149,11 @@ EnbInfo::SetInfraSwPortNo (uint32_t value)
 }
 
 void
-EnbInfo::SetS1apSapEnb (EpcS1apSapEnb* value)
+EnbInfo::SetEnbApplication (Ptr<SvelteEnbApplication> value)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << value);
 
-  m_s1apSapEnb = value;
+  m_enbApplication = value;
 }
 
 void

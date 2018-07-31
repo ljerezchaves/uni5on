@@ -200,7 +200,7 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
   enbInfo->SetS1uAddr (enbS1uAddr);
   enbInfo->SetInfraSwIdx (infraSwIdx);
   enbInfo->SetInfraSwPortNo (infraSwPort->GetPortNo ());
-  enbInfo->SetS1apSapEnb (enbApp->GetS1apSapEnb ());
+  enbInfo->SetEnbApplication (enbApp);
 }
 
 void
