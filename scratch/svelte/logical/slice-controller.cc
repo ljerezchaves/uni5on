@@ -524,7 +524,7 @@ SliceController::ControllerTimeout (void)
 {
   NS_LOG_FUNCTION (this);
 
-  PgwTftCheckUsage ();
+  PgwTftCheckUsage ();  // FIXME renomear a função.
 
   // Schedule the next timeout operation.
   Simulator::Schedule (m_timeout, &SliceController::ControllerTimeout, this);
@@ -752,47 +752,26 @@ SliceController::PgwTftCheckUsage (void)
 
   NS_ASSERT_MSG (m_pgwInfo, "No P-GW attached to this slice.");
 
-  double maxEntries = 0.0, sumEntries = 0.0;
-  double maxLoad = 0.0, sumLoad = 0.0;
   uint32_t maxLbLevel = static_cast<uint32_t> (log2 (m_tftSwitches));
   uint16_t activeTfts = 1 << m_tftLevel;
   uint8_t nextLevel = m_tftLevel;
 
-  Ptr<OFSwitch13Device> device;
-  Ptr<OFSwitch13StatsCalculator> stats;
-  for (uint16_t tftIdx = 1; tftIdx <= activeTfts; tftIdx++)
-    {
-      device = OFSwitch13Device::GetDevice (m_pgwInfo->GetTftDpId (tftIdx));
-      stats = device->GetObject<OFSwitch13StatsCalculator> ();
-      NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
-
-      double entries = stats->GetEwmaFlowEntries ();
-      maxEntries = std::max (maxEntries, entries);
-      sumEntries += entries;
-
-      double load = stats->GetEwmaPipelineLoad ().GetBitRate ();
-      maxLoad = std::max (maxLoad, load);
-      sumLoad += load;
-    }
-
+  m_pgwInfo->UpdateTftStats ();
   if (GetPgwAdaptiveMode () == OpMode::AUTO)
     {
-      double maxTableUsage = maxEntries / m_pgwInfo->GetTftFlowTableSize ();
-      double maxLoadUsage = maxLoad / m_pgwInfo->GetTftPipelineCapacity ().GetBitRate ();
-
       // We may increase the level when we hit the split threshold.
       if ((m_tftLevel < maxLbLevel)
-          && (maxTableUsage >= m_tftSplitThs
-              || maxLoadUsage >= m_tftSplitThs))
+          && (m_pgwInfo->GetTftMaxTableUsage () >= m_tftSplitThs
+              || m_pgwInfo->GetTftMaxLoadUsage () >= m_tftSplitThs))
         {
           NS_LOG_INFO ("Increasing the adaptive mechanism level.");
           nextLevel++;
         }
 
-      // We may decrease the level when we hit the joing threshold.
+      // We may decrease the level when we hit the join threshold.
       else if ((m_tftLevel > 0)
-               && (maxTableUsage < m_tftJoinThs)
-               && (maxLoadUsage < m_tftJoinThs))
+               && (m_pgwInfo->GetTftMaxTableUsage () < m_tftJoinThs)
+               && (m_pgwInfo->GetTftMaxLoadUsage () < m_tftJoinThs))
         {
           NS_LOG_INFO ("Decreasing the adaptive mechanism level.");
           nextLevel--;
@@ -837,11 +816,11 @@ SliceController::PgwTftCheckUsage (void)
   // Fire the P-GW TFT adaptation trace source.
   struct PgwTftStats tftStats;
   tftStats.tableSize = m_pgwInfo->GetTftFlowTableSize ();
-  tftStats.maxEntries = maxEntries;
-  tftStats.sumEntries = sumEntries;
+//  tftStats.maxEntries = maxEntries;
+//  tftStats.sumEntries = sumEntries;
   tftStats.pipeCapacity = m_pgwInfo->GetTftPipelineCapacity ().GetBitRate ();
-  tftStats.maxLoad = maxLoad;
-  tftStats.sumLoad = sumLoad;
+//  tftStats.maxLoad = maxLoad;
+//  tftStats.sumLoad = sumLoad;
   tftStats.currentLevel = m_tftLevel;
   tftStats.nextLevel = nextLevel;
   tftStats.maxLevel = maxLbLevel;

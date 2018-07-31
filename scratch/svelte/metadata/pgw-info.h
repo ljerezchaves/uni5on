@@ -36,6 +36,7 @@ namespace ns3 {
  */
 class PgwInfo : public Object
 {
+  friend class SliceController;
   friend class SliceNetwork;
 
 public:
@@ -68,8 +69,14 @@ public:
   Ipv4Address GetTftS5Addr (uint16_t idx) const;
   uint32_t GetTftS5PortNo (uint16_t idx) const;
   uint32_t GetTftInfraSwS5PortNo (uint16_t idx) const;
-  uint32_t GetTftFlowTableSize () const;
-  DataRate GetTftPipelineCapacity () const;
+  uint32_t GetTftFlowTableSize (void) const;
+  DataRate GetTftPipelineCapacity (void) const;
+  double GetTftMaxEntries (void) const;
+  double GetTftMaxLoad (void) const;
+  double GetTftSumEntries (void) const;
+  double GetTftSumLoad (void) const;
+  double GetTftMaxTableUsage (void) const;
+  double GetTftMaxLoadUsage (void) const;
   //\}
 
   /**
@@ -91,6 +98,11 @@ private:
   void SetNumTfts (uint16_t value);
   void SetMainSgiPortNo (uint32_t value);
   //\}
+
+  /**
+   * Update P-GW TFT switch statistics.
+   */
+  void UpdateTftStats (void);
 
   /**
    * Save the metadata associated to a single P-GW OpenFlow switch attached to
@@ -119,6 +131,9 @@ private:
    */
   static void RegisterPgwInfo (Ptr<PgwInfo> pgwInfo);
 
+  /** Vector of OFSwitch13StatsCalculator */
+  typedef std::vector<Ptr<OFSwitch13StatsCalculator> > StatsVector_t;
+
   // P-GW metadata.
   uint64_t                  m_pgwId;              //!< P-GW ID (P-GW main dpId).
   SliceId                   m_sliceId;            //!< LTE logical slice ID.
@@ -132,6 +147,14 @@ private:
   std::vector<uint32_t>     m_mainToTftPortNos;   //!< Main port nos to TFTs.
   DataRate                  m_tftPipeCapacity;    //!< Min TFT pipe capacity.
   uint32_t                  m_tftFlowTableSize;   //!< Min TFT Flow table size.
+  StatsVector_t             m_switchStats;        //!< Switch stats calculator.
+
+  // TFT switch statistics.
+  double                    m_tftMaxEntries;      //!< Max number flow entries.
+  double                    m_tftMaxLoad;         //!< Max pipeline load.
+  double                    m_tftSumEntries;      //!< Sum number flow entries.
+  double                    m_tftSumLoad;         //!< Sum pipeline load.
+
 
   /** Map saving P-GW ID / P-GW information. */
   typedef std::map<uint64_t, Ptr<PgwInfo> > PgwIdPgwInfo_t;
