@@ -50,7 +50,6 @@ typedef std::list<Ptr<RoutingInfo> > RoutingInfoList_t;
 class RoutingInfo : public Object
 {
   friend class BackhaulController;
-  friend class RingController;
   friend class SliceController;
 
 public:

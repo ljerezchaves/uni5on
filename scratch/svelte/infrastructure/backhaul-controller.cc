@@ -21,7 +21,6 @@
 #include <algorithm>
 #include "backhaul-controller.h"
 #include "../metadata/link-info.h"
-#include "../metadata/routing-info.h"
 #include "backhaul-network.h"
 
 namespace ns3 {
@@ -162,6 +161,16 @@ BackhaulController::NotifyConstructionCompleted (void)
 
   // Chain up.
   OFSwitch13Controller::NotifyConstructionCompleted ();
+}
+
+void
+BackhaulController::BlockBearer (
+  Ptr<RoutingInfo> rInfo, RoutingInfo::BlockReason reason) const
+{
+  NS_LOG_FUNCTION (this << rInfo << reason);
+
+  NS_ASSERT_MSG (reason != RoutingInfo::NOTBLOCKED, "Invalid block reason.");
+  rInfo->SetBlocked (true, reason);
 }
 
 Ptr<LinkInfo>

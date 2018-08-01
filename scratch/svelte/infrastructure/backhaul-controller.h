@@ -26,12 +26,12 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
+#include "../metadata/routing-info.h"
 #include "../svelte-common.h"
 
 namespace ns3 {
 
 class LinkInfo;
-class RoutingInfo;
 
 /**
  * \ingroup svelteInfra
@@ -109,6 +109,14 @@ protected:
 
   // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
+
+  /**
+   * Block this bearer and notify the reason.
+   * \param rInfo The routing information to process.
+   * \param reason The reason for blocking this bearer.
+   */
+  void BlockBearer (Ptr<RoutingInfo> rInfo,
+                    RoutingInfo::BlockReason reason) const;
 
   /**
    * Search for link information between two switches by their indexes.
