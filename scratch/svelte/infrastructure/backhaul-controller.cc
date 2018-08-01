@@ -69,22 +69,6 @@ BackhaulController::GetTypeId (void)
   return tid;
 }
 
-OpMode
-BackhaulController::GetPriorityQueuesMode (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_priorityQueues;
-}
-
-OpMode
-BackhaulController::GetSlicingMode (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_slicing;
-}
-
 uint64_t
 BackhaulController::GetDpId (uint16_t idx) const
 {
@@ -100,6 +84,22 @@ BackhaulController::GetNSwitches (void) const
   NS_LOG_FUNCTION (this);
 
   return m_switchDevices.GetN ();
+}
+
+OpMode
+BackhaulController::GetPriorityQueuesMode (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_priorityQueues;
+}
+
+OpMode
+BackhaulController::GetSlicingMode (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_slicing;
 }
 
 double

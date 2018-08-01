@@ -56,15 +56,6 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * \name Internal mechanisms operation mode accessors.
-   * \return The requested mechanism operation mode.
-   */
-  //\{
-  OpMode GetPriorityQueuesMode (void) const;
-  OpMode GetSlicingMode (void) const;
-  //\}
-
-  /**
    * Get the OpenFlow datapath ID for a specific switch index.
    * \param idx The backhaul switch index.
    * \return The OpenFlow datapath ID.
@@ -76,6 +67,18 @@ public:
    * \return The number of OpenFlow switches.
    */
   uint16_t GetNSwitches (void) const;
+
+  /**
+   * Get the priority output queues mechanism operation mode.
+   * \return The operation mode.
+   */
+  OpMode GetPriorityQueuesMode (void) const;
+
+  /**
+   * Get the Network slicing mechanism operation mode.
+   * \return The operation mode.
+   */
+  OpMode GetSlicingMode (void) const;
 
   /**
    * Get the average slice usage considering all links in the backhaul network.
@@ -111,38 +114,6 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
   /**
-   * Block this bearer and notify the reason.
-   * \param rInfo The routing information to process.
-   * \param reason The reason for blocking this bearer.
-   */
-  void BlockBearer (Ptr<RoutingInfo> rInfo,
-                    RoutingInfo::BlockReason reason) const;
-
-  /**
-   * Search for link information between two switches by their indexes.
-   * \param idx1 First switch index.
-   * \param idx2 Second switch index.
-   * \return Pointer to link info saved.
-   */
-  Ptr<LinkInfo> GetLinkInfo (uint16_t idx1, uint16_t idx2) const;
-
-  /**
-   * Notify this controller of a new EPC entity connected to the OpenFlow
-   * backhaul network.
-   * \param swDev The OpenFlow switch device on the backhaul network.
-   * \param portNo The port number created at the OpenFlow switch.
-   * \param epcDev The device created at the EPC node.
-   */
-  virtual void NotifyEpcAttach (
-    Ptr<OFSwitch13Device> swDev, uint32_t portNo, Ptr<NetDevice> epcDev);
-
-  /**
-   * \name Topology methods.
-   * These virtual methods must be implemented by topology subclasses, as
-   * they are dependent on the OpenFlow backhaul network topology.
-   */
-  //\{
-  /**
    * Process the bearer request, checking for the available resources in the
    * backhaul network, deciding for the best routing path, and reserving the
    * bit rate when necessary.
@@ -159,10 +130,36 @@ protected:
   virtual bool BearerRelease (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
+   * Block this bearer and notify the reason.
+   * \param rInfo The routing information to process.
+   * \param reason The reason for blocking this bearer.
+   */
+  void BlockBearer (Ptr<RoutingInfo> rInfo,
+                    RoutingInfo::BlockReason reason) const;
+
+  /**
+   * Search for link information between two switches by their indexes.
+   * \param idx1 First switch index.
+   * \param idx2 Second switch index.
+   * \return Pointer to link info saved.
+   */
+  Ptr<LinkInfo> GetLinkInfo (uint16_t idx1, uint16_t idx2) const;
+
+  /**
    * Notify this controller of a new bearer context created.
    * \param rInfo The routing information to process.
    */
   virtual void NotifyBearerCreated (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Notify this controller of a new EPC entity connected to the OpenFlow
+   * backhaul network.
+   * \param swDev The OpenFlow switch device on the backhaul network.
+   * \param portNo The port number created at the OpenFlow switch.
+   * \param epcDev The device created at the EPC node.
+   */
+  void NotifyEpcAttach (Ptr<OFSwitch13Device> swDev, uint32_t portNo,
+                        Ptr<NetDevice> epcDev);
 
   /**
    * Notify this controller that all backhaul switches have already been
@@ -186,7 +183,6 @@ protected:
    * \return True if succeeded, false otherwise.
    */
   virtual bool TopologyRoutingRemove (Ptr<RoutingInfo> rInfo) = 0;
-  //\}
 
   // Inherited from OFSwitch13Controller.
   virtual ofl_err HandleError (
