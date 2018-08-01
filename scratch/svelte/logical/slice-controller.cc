@@ -126,22 +126,22 @@ SliceController::GetTypeId (void)
                                     OpMode::ON,   "on",
                                     OpMode::AUTO, "auto"))
 
-    .AddTraceSource ("BearerRelease", "The bearer release trace source.",
-                     MakeTraceSourceAccessor (
-                       &SliceController::m_bearerReleaseTrace),
-                     "ns3::RoutingInfo::TracedCallback")
     .AddTraceSource ("BearerRequest", "The bearer request trace source.",
                      MakeTraceSourceAccessor (
                        &SliceController::m_bearerRequestTrace),
                      "ns3::RoutingInfo::TracedCallback")
-    .AddTraceSource ("PgwTftAdaptive", "The P-GW TFT adaptive trace source.",
+    .AddTraceSource ("BearerRelease", "The bearer release trace source.",
                      MakeTraceSourceAccessor (
-                       &SliceController::m_pgwTftAdaptiveTrace),
-                     "ns3::SliceController::PgwTftStatsTracedCallback")
+                       &SliceController::m_bearerReleaseTrace),
+                     "ns3::RoutingInfo::TracedCallback")
     .AddTraceSource ("SessionCreated", "The session created trace source.",
                      MakeTraceSourceAccessor (
                        &SliceController::m_sessionCreatedTrace),
                      "ns3::SliceController::SessionCreatedTracedCallback")
+    .AddTraceSource ("PgwTftAdaptive", "The P-GW TFT adaptive trace source.",
+                     MakeTraceSourceAccessor (
+                       &SliceController::m_pgwTftAdaptiveTrace),
+                     "ns3::SliceController::PgwTftStatsTracedCallback")
   ;
   return tid;
 }
