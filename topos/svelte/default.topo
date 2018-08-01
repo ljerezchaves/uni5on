@@ -1,7 +1,7 @@
 global DumpStatsTimeout "1s"
 
 default ns3::BackhaulController::PriorityQueues "on"
-default ns3::BackhaulController::Slicing "auto"
+default ns3::BackhaulController::Slicing "off"
 default ns3::RingController::Strategy "spf"
 
 default ns3::BackhaulNetwork::EpcLinkDataRate "10Gb/s"

@@ -154,6 +154,19 @@ BackhaulController::GetLinkInfo (uint16_t idx1, uint16_t idx2) const
 }
 
 void
+BackhaulController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+
+  // Set the LinkSlice for this bearer.
+  rInfo->SetLinkSlice (LinkSlice::DFT);
+  if (GetSlicingMode () != OpMode::OFF)
+    {
+      // TODO
+    }
+}
+
+void
 BackhaulController::NotifyEpcAttach (
   Ptr<OFSwitch13Device> swDev, uint32_t portNo, Ptr<NetDevice> epcDev)
 {

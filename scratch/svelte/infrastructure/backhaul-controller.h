@@ -130,7 +130,7 @@ protected:
    * Notify this controller of a new bearer context created.
    * \param rInfo The routing information to process.
    */
-  virtual void NotifyBearerCreated (Ptr<RoutingInfo> rInfo) = 0;
+  virtual void NotifyBearerCreated (Ptr<RoutingInfo> rInfo);
 
   /**
    * Notify this controller of a new EPC entity connected to the OpenFlow

@@ -156,8 +156,6 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  // FIXME Aqui tem que marcar a qual link slice que este tráfego pertence
-
   // Let's create its ring routing metadata.
   Ptr<RingInfo> ringInfo = CreateObject<RingInfo> (rInfo);
 
@@ -173,6 +171,9 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
   NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeidHex () << " default downlink "
                 "S1-U path to " << RingInfo::RingPathStr (s1uDownPath) <<
                 " and S5 path to " << RingInfo::RingPathStr (s5DownPath));
+
+  // Chain up so the BackhaulController can set the LinkSlice for this bearer.
+  BackhaulController::NotifyBearerCreated (rInfo);
 }
 
 void
