@@ -77,18 +77,28 @@ protected:
 
 private:
   /**
+   * Check for the available bit rate on the given slice.
+   * \param ringInfo The ring routing information.
+   * \param gbrInfo The GBR information.
+   * \return True if there's available GBR bit rate, false otherwise.
+   */
+  bool HasBitRate (Ptr<const RingInfo> ringInfo, Ptr<const GbrInfo> gbrInfo);
+
+  /**
    * Reserve the bit rate for this bearer in the backhaul network.
-   * \param rInfo The routing information to process.
+   * \param ringInfo The ring routing information.
+   * \param gbrInfo The GBR information.
    * \return True if succeeded, false otherwise.
    */
-  bool BitRateReserve (Ptr<RoutingInfo> rInfo);
+  bool BitRateReserve (Ptr<const RingInfo> ringInfo, Ptr<GbrInfo> gbrInfo);
 
   /**
    * Release the bit rate for this bearer in the backhaul network.
-   * \param rInfo The routing information to process.
+   * \param ringInfo The ring routing information.
+   * \param gbrInfo The GBR information.
    * \return True if succeeded, false otherwise.
    */
-  bool BitRateRelease (Ptr<RoutingInfo> rInfo);
+  bool BitRateRelease (Ptr<const RingInfo> ringInfo, Ptr<GbrInfo> gbrInfo);
 
   /**
    * To avoid flooding problems when broadcasting packets (like in ARP
@@ -106,16 +116,6 @@ private:
    * \return The routing path.
    */
   RingInfo::RingPath FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const;
-
-  /**
-   * Check for the available bit rate on the given slice.
-   * \param ringInfo The ring routing information.
-   * \param gbrInfo The GBR information.
-   * \param slice The link slice.
-   * \return True if there's available GBR bit rate, false otherwise.
-   */
-  bool HasBitRate (Ptr<const RingInfo> ringInfo,
-                   Ptr<const GbrInfo> gbrInfo, LinkSlice slice) const;
 
   /**
    * Count the number of hops between source and destination switch index

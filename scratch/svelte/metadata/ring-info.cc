@@ -62,6 +62,14 @@ RingInfo::GetRoutingInfo (void) const
   return m_rInfo;
 }
 
+std::string
+RingInfo::GetTeidHex (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_rInfo->GetTeidHex ();
+}
+
 RingInfo::RingPath
 RingInfo::GetDownPath (LteIface iface) const
 {

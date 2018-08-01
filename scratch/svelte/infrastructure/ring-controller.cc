@@ -148,7 +148,7 @@ RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
       return true;
     }
 
-  return BitRateRelease (rInfo);
+  return BitRateRelease (rInfo->GetObject<RingInfo> (), gbrInfo);
 }
 
 void
@@ -431,33 +431,28 @@ RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
 }
 
 bool
-RingController::BitRateReserve (Ptr<RoutingInfo> rInfo)
+RingController::HasBitRate (Ptr<const RingInfo> ringInfo,
+                            Ptr<const GbrInfo> gbrInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo);
+  NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
-  NS_LOG_INFO ("Reserving resources for bearer " << rInfo->GetTeidHex ());
-
-  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
-  Ptr<GbrInfo> gbrInfo = rInfo->GetGbrInfo ();
-
-  bool success = true;
+  LinkSlice slice = ringInfo->GetLinkSlice ();
+  uint64_t dlRate = gbrInfo->GetDownBitRate ();
+  uint64_t ulRate = gbrInfo->GetUpBitRate ();
   RingInfo::RingPath downPath;
-  uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
+  bool success = true;
 
   // S5 interface (from P-GW to S-GW)
+  uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
   downPath = ringInfo->GetDownPath (LteIface::S5);
   while (success && curr != ringInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
       Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-
-      // FIXME Precisa resolver a questão do slice.
-      // uint64_t currId = GetDpId (curr);
-      // uint64_t nextId = GetDpId (next);
-      // success &= lInfo->ReserveBitRate (currId, nextId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetDownBitRate ());
-      // success &= lInfo->ReserveBitRate (nextId, currId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetUpBitRate ());
+      uint64_t currId = GetDpId (curr);
+      uint64_t nextId = GetDpId (next);
+      success &= lInfo->HasBitRate (currId, nextId, slice, dlRate);
+      success &= lInfo->HasBitRate (nextId, currId, slice, ulRate);
       curr = next;
     }
 
@@ -467,14 +462,54 @@ RingController::BitRateReserve (Ptr<RoutingInfo> rInfo)
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
       Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
+      uint64_t currId = GetDpId (curr);
+      uint64_t nextId = GetDpId (next);
+      success &= lInfo->HasBitRate (currId, nextId, slice, dlRate);
+      success &= lInfo->HasBitRate (nextId, currId, slice, ulRate);
+      curr = next;
+    }
 
-      // FIXME Precisa resolver a questão do slice.
-      // uint64_t currId = GetDpId (curr);
-      // uint64_t nextId = GetDpId (next);
-      // success &= lInfo->ReserveBitRate (currId, nextId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetDownBitRate ());
-      // success &= lInfo->ReserveBitRate (nextId, currId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetUpBitRate ());
+  return success;
+}
+
+bool
+RingController::BitRateReserve (Ptr<const RingInfo> ringInfo,
+                                Ptr<GbrInfo> gbrInfo)
+{
+  NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
+
+  NS_LOG_INFO ("Reserving resources for bearer " << ringInfo->GetTeidHex ());
+
+  LinkSlice slice = ringInfo->GetLinkSlice ();
+  uint64_t dlRate = gbrInfo->GetDownBitRate ();
+  uint64_t ulRate = gbrInfo->GetUpBitRate ();
+  RingInfo::RingPath downPath;
+  bool success = true;
+
+  // S5 interface (from P-GW to S-GW)
+  uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
+  downPath = ringInfo->GetDownPath (LteIface::S5);
+  while (success && curr != ringInfo->GetSgwInfraSwIdx ())
+    {
+      uint16_t next = NextSwitchIndex (curr, downPath);
+      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
+      uint64_t currId = GetDpId (curr);
+      uint64_t nextId = GetDpId (next);
+      success &= lInfo->ReserveBitRate (currId, nextId, slice, dlRate);
+      success &= lInfo->ReserveBitRate (nextId, currId, slice, ulRate);
+      curr = next;
+    }
+
+  // S1-U interface (from S-GW to eNB)
+  downPath = ringInfo->GetDownPath (LteIface::S1U);
+  while (success && curr != ringInfo->GetEnbInfraSwIdx ())
+    {
+      uint16_t next = NextSwitchIndex (curr, downPath);
+      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
+      uint64_t currId = GetDpId (curr);
+      uint64_t nextId = GetDpId (next);
+      success &= lInfo->ReserveBitRate (currId, nextId, slice, dlRate);
+      success &= lInfo->ReserveBitRate (nextId, currId, slice, ulRate);
       curr = next;
     }
 
@@ -484,51 +519,43 @@ RingController::BitRateReserve (Ptr<RoutingInfo> rInfo)
 }
 
 bool
-RingController::BitRateRelease (Ptr<RoutingInfo> rInfo)
+RingController::BitRateRelease (Ptr<const RingInfo> ringInfo,
+                                Ptr<GbrInfo> gbrInfo)
 {
-  NS_LOG_FUNCTION (this << rInfo);
+  NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
-  NS_LOG_INFO ("Releasing resources for bearer " << rInfo->GetTeidHex ());
+  NS_LOG_INFO ("Releasing resources for bearer " << ringInfo->GetTeidHex ());
 
-  // It only makes sense to release bandwidth for GBR bearers.
-  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
-  Ptr<GbrInfo> gbrInfo = rInfo->GetGbrInfo ();
-
-  bool success = true;
+  LinkSlice slice = ringInfo->GetLinkSlice ();
+  uint64_t dlRate = gbrInfo->GetDownBitRate ();
+  uint64_t ulRate = gbrInfo->GetUpBitRate ();
   RingInfo::RingPath downPath;
-  uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
+  bool success = true;
 
   // S5 interface (from P-GW to S-GW)
+  uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
   downPath = ringInfo->GetDownPath (LteIface::S5);
   while (success && curr != ringInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
       Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-
-      // FIXME Precisa resolver a questão do slice.
-      // uint64_t currId = GetDpId (curr);
-      // uint64_t nextId = GetDpId (next);
-      // success &= lInfo->ReleaseBitRate (currId, nextId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetDownBitRate ());
-      // success &= lInfo->ReleaseBitRate (nextId, currId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetUpBitRate ());
+      uint64_t currId = GetDpId (curr);
+      uint64_t nextId = GetDpId (next);
+      success &= lInfo->ReleaseBitRate (currId, nextId, slice, dlRate);
+      success &= lInfo->ReleaseBitRate (nextId, currId, slice, ulRate);
       curr = next;
     }
 
-  // S5 interface (from P-GW to S-GW)
+  // S1-U interface (from S-GW to eNB)
   downPath = ringInfo->GetDownPath (LteIface::S1U);
   while (success && curr != ringInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
       Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-
-      // FIXME Precisa resolver a questão do slice.
-      // uint64_t currId = GetDpId (curr);
-      // uint64_t nextId = GetDpId (next);
-      // success &= lInfo->ReleaseBitRate (currId, nextId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetDownBitRate ());
-      // success &= lInfo->ReleaseBitRate (nextId, currId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetUpBitRate ());
+      uint64_t currId = GetDpId (curr);
+      uint64_t nextId = GetDpId (next);
+      success &= lInfo->ReleaseBitRate (currId, nextId, slice, dlRate);
+      success &= lInfo->ReleaseBitRate (nextId, currId, slice, ulRate);
       curr = next;
     }
 
@@ -584,53 +611,6 @@ RingController::FindShortestPath (uint16_t srcIdx, uint16_t dstIdx) const
   return (clockwiseDistance <= maxHops) ?
          RingInfo::CLOCK :
          RingInfo::COUNTER;
-}
-
-bool
-RingController::HasBitRate (Ptr<const RingInfo> ringInfo,
-                            Ptr<const GbrInfo> gbrInfo, LinkSlice slice) const
-{
-  NS_LOG_FUNCTION (this << ringInfo << gbrInfo << slice);
-
-  bool success = true;
-  RingInfo::RingPath downPath;
-  uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
-
-  // S5 interface (from P-GW to S-GW)
-  downPath = ringInfo->GetDownPath (LteIface::S5);
-  while (success && curr != ringInfo->GetSgwInfraSwIdx ())
-    {
-      uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-
-      // FIXME Precisa resolver a questão do slice.
-      // uint64_t currId = GetDpId (curr);
-      // uint64_t nextId = GetDpId (next);
-      // success &= lInfo->HasBitRate (currId, nextId, slice,
-      //                               gbrInfo->GetDownBitRate ());
-      // success &= lInfo->HasBitRate (nextId, currId, slice,
-      //                               gbrInfo->GetUpBitRate ());
-      curr = next;
-    }
-
-  // S1-U interface (from S-GW to eNB)
-  downPath = ringInfo->GetDownPath (LteIface::S1U);
-  while (success && curr != ringInfo->GetEnbInfraSwIdx ())
-    {
-      uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-
-      // FIXME Precisa resolver a questão do slice.
-      // uint64_t currId = GetDpId (curr);
-      // uint64_t nextId = GetDpId (next);
-      // success &= lInfo->HasBitRate (currId, nextId, slice,
-      //                               gbrInfo->GetDownBitRate ());
-      // success &= lInfo->HasBitRate (nextId, currId, slice,
-      //                               gbrInfo->GetUpBitRate ());
-      curr = next;
-    }
-
-  return success;
 }
 
 uint16_t

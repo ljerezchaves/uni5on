@@ -62,6 +62,7 @@ public:
   /** \name Private member accessors. */
   //\{
   Ptr<RoutingInfo> GetRoutingInfo (void) const;
+  std::string GetTeidHex (void) const;
   RingPath GetDownPath (LteIface iface) const;
   RingPath GetUpPath (LteIface iface) const;
   bool IsDefaultPath (LteIface iface) const;
