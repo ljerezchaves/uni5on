@@ -113,8 +113,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
 //     {
 //       NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
 //                    " over the shortest path");
-//       TopologyBitRateReserve (rInfo);
-//       return true;
+//       return BitRateReserve (rInfo);
 //     }
 //
 //   // The requested bit rate is not available over the shortest path. When
@@ -127,8 +126,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
 //         {
 //           NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
 //                        " over the longest (inverted) path");
-//           TopologyBitRateReserve (rInfo);
-//           return true;
+//           return BitRateReserve (rInfo);
 //         }
 //     }
 //
@@ -150,53 +148,7 @@ RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
       return true;
     }
 
-  NS_LOG_INFO ("Releasing resources for bearer " << rInfo->GetTeidHex ());
-
-  // It only makes sense to release bandwidth for GBR bearers.
-  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
-  NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
-
-  bool success = true;
-  RingInfo::RingPath downPath;
-  uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
-
-  // S5 interface (from P-GW to S-GW)
-  downPath = ringInfo->GetDownPath (LteIface::S5);
-  while (success && curr != ringInfo->GetSgwInfraSwIdx ())
-    {
-      uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-
-      // FIXME Precisa resolver a questão do slice.
-      // uint64_t currId = GetDpId (curr);
-      // uint64_t nextId = GetDpId (next);
-      // success &= lInfo->ReleaseBitRate (currId, nextId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetDownBitRate ());
-      // success &= lInfo->ReleaseBitRate (nextId, currId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetUpBitRate ());
-      curr = next;
-    }
-
-  // S5 interface (from P-GW to S-GW)
-  downPath = ringInfo->GetDownPath (LteIface::S1U);
-  while (success && curr != ringInfo->GetEnbInfraSwIdx ())
-    {
-      uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-
-      // FIXME Precisa resolver a questão do slice.
-      // uint64_t currId = GetDpId (curr);
-      // uint64_t nextId = GetDpId (next);
-      // success &= lInfo->ReleaseBitRate (currId, nextId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetDownBitRate ());
-      // success &= lInfo->ReleaseBitRate (nextId, currId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetUpBitRate ());
-      curr = next;
-    }
-
-  NS_ASSERT_MSG (success, "Error when releasing resources.");
-  gbrInfo->SetReserved (!success);
-  return success;
+  return BitRateRelease (rInfo);
 }
 
 void
@@ -210,12 +162,13 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
   Ptr<RingInfo> ringInfo = CreateObject<RingInfo> (rInfo);
 
   // Set default paths to those with lower hops.
-  RingInfo::RingPath s1uDownPath = FindShortestPath (
-      rInfo->GetSgwInfraSwIdx (), rInfo->GetEnbInfraSwIdx ());
   RingInfo::RingPath s5DownPath = FindShortestPath (
       rInfo->GetPgwInfraSwIdx (), rInfo->GetSgwInfraSwIdx ());
-  ringInfo->SetDefaultPath (s1uDownPath, LteIface::S1U);
   ringInfo->SetDefaultPath (s5DownPath, LteIface::S5);
+
+  RingInfo::RingPath s1uDownPath = FindShortestPath (
+      rInfo->GetSgwInfraSwIdx (), rInfo->GetEnbInfraSwIdx ());
+  ringInfo->SetDefaultPath (s1uDownPath, LteIface::S1U);
 
   NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeidHex () << " default downlink "
                 "S1-U path to " << RingInfo::RingPathStr (s1uDownPath) <<
@@ -469,7 +422,7 @@ RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
       << ",cookie=" << rInfo->GetTeidHex ()
       << ",cookie_mask=" << COOKIE_STRICT_MASK;
 
-  // FIXME Isso aqui vai dar erro?
+  // FIXME Isso aqui vai dar erro? Desinstalar só de onde instalou.
   DpctlExecute (GetDpId (ringInfo->GetEnbInfraSwIdx ()), cmd.str ());
   DpctlExecute (GetDpId (ringInfo->GetPgwInfraSwIdx ()), cmd.str ());
   DpctlExecute (GetDpId (ringInfo->GetSgwInfraSwIdx ()), cmd.str ());
@@ -545,6 +498,63 @@ RingController::BitRateReserve (Ptr<RoutingInfo> rInfo)
 
   NS_ASSERT_MSG (success, "Error when reserving resources.");
   gbrInfo->SetReserved (success);
+  return success;
+}
+
+bool
+RingController::BitRateRelease (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo);
+
+  NS_LOG_INFO ("Releasing resources for bearer " << rInfo->GetTeidHex ());
+
+  // It only makes sense to release bandwidth for GBR bearers.
+  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+  NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
+
+  // FIXME.
+  Ptr<GbrInfo> gbrInfo = rInfo->GetGbrInfo ();
+
+  bool success = true;
+  RingInfo::RingPath downPath;
+  uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
+
+  // S5 interface (from P-GW to S-GW)
+  downPath = ringInfo->GetDownPath (LteIface::S5);
+  while (success && curr != ringInfo->GetSgwInfraSwIdx ())
+    {
+      uint16_t next = NextSwitchIndex (curr, downPath);
+      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
+
+      // FIXME Precisa resolver a questão do slice.
+      // uint64_t currId = GetDpId (curr);
+      // uint64_t nextId = GetDpId (next);
+      // success &= lInfo->ReleaseBitRate (currId, nextId, rInfo->GetSlice (),
+      //                                   gbrInfo->GetDownBitRate ());
+      // success &= lInfo->ReleaseBitRate (nextId, currId, rInfo->GetSlice (),
+      //                                   gbrInfo->GetUpBitRate ());
+      curr = next;
+    }
+
+  // S5 interface (from P-GW to S-GW)
+  downPath = ringInfo->GetDownPath (LteIface::S1U);
+  while (success && curr != ringInfo->GetEnbInfraSwIdx ())
+    {
+      uint16_t next = NextSwitchIndex (curr, downPath);
+      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
+
+      // FIXME Precisa resolver a questão do slice.
+      // uint64_t currId = GetDpId (curr);
+      // uint64_t nextId = GetDpId (next);
+      // success &= lInfo->ReleaseBitRate (currId, nextId, rInfo->GetSlice (),
+      //                                   gbrInfo->GetDownBitRate ());
+      // success &= lInfo->ReleaseBitRate (nextId, currId, rInfo->GetSlice (),
+      //                                   gbrInfo->GetUpBitRate ());
+      curr = next;
+    }
+
+  NS_ASSERT_MSG (success, "Error when releasing resources.");
+  gbrInfo->SetReserved (!success);
   return success;
 }
 

@@ -497,8 +497,8 @@ SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
   // Install the rules.
   bool success = true;
   success &= PgwRulesInstall (rInfo);
-  success &= m_backhaulCtrl->TopologyRoutingInstall (rInfo);
   success &= SgwRulesInstall (rInfo);
+  success &= m_backhaulCtrl->TopologyRoutingInstall (rInfo);
   rInfo->SetInstalled (success);
   return success;
 }
@@ -513,8 +513,8 @@ SliceController::BearerRemove (Ptr<RoutingInfo> rInfo)
   // Remove the rules.
   bool success = true;
   success &= PgwRulesRemove (rInfo);
-  success &= m_backhaulCtrl->TopologyRoutingRemove (rInfo);
   success &= SgwRulesRemove (rInfo);
+  success &= m_backhaulCtrl->TopologyRoutingRemove (rInfo);
   rInfo->SetInstalled (!success);
   return success;
 }
