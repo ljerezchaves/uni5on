@@ -78,9 +78,8 @@ void
 PgwTunnelApp::AttachEpcGtpuTag (Ptr<Packet> packet, uint32_t teid)
 {
   NS_LOG_FUNCTION (this << packet << teid);
-  // Packet entering the EPC.
 
-  // Ignoring teid parameter and classify the packet again. This is useful when
+  // Ignoring TEID parameter and classify the packet again. This is useful when
   // aggregating different bearers withing the same tunnel. Using this
   // independent classifier ensures that the EPC packet tags can continue to
   // differentiate the bearers withing the EPC.
@@ -97,7 +96,7 @@ PgwTunnelApp::AttachEpcGtpuTag (Ptr<Packet> packet, uint32_t teid)
       teid = ueInfo->Classify (packetCopy);
     }
 
-  // Attach the tag and fire the S5 TX trace source.
+  // Packet entering the EPC. Attach the tag and fire the S5 TX trace source.
   EpcGtpuTag teidTag (teid, EpcGtpuTag::PGW);
   packet->AddPacketTag (teidTag);
   m_txS5Trace (packet);
@@ -114,6 +113,5 @@ PgwTunnelApp::RemoveEpcGtpuTag (Ptr<Packet> packet, uint32_t teid)
   EpcGtpuTag teidTag;
   packet->RemovePacketTag (teidTag);
 }
-
 
 } // namespace ns3

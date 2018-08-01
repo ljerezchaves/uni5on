@@ -80,7 +80,7 @@ SvelteEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
 
   // Send the packet to the UE over the LTE socket.
   auto it = m_teidRbidMap.find (teid);
-  NS_ASSERT_MSG (it != m_teidRbidMap.end (), "Teid not found in map.");
+  NS_ASSERT_MSG (it != m_teidRbidMap.end (), "TEID not found in map.");
   SendToLteSocket (packet, it->second.m_rnti, it->second.m_bid);
 }
 
@@ -99,13 +99,12 @@ SvelteEnbApplication::DoInitialContextSetupRequest (
   NS_LOG_FUNCTION (this);
 
   // Save the mapping TEID --> S-GW S1-U IP address.
-  for (auto erabIt = erabToBeSetupList.begin ();
-       erabIt != erabToBeSetupList.end (); ++erabIt)
+  for (auto const &erab : erabToBeSetupList)
     {
       // Side effect: create entry if it does not exist.
-      m_teidSgwAddrMap [erabIt->sgwTeid] = erabIt->transportLayerAddress;
-      NS_LOG_DEBUG ("eNB mapping teid " << erabIt->sgwTeid <<
-                    " to S-GW S1-U IP " << m_teidSgwAddrMap [erabIt->sgwTeid]);
+      m_teidSgwAddrMap [erab.sgwTeid] = erab.transportLayerAddress;
+      NS_LOG_DEBUG ("eNB mapping TEID " << erab.sgwTeid <<
+                    " to S-GW S1-U IP " << m_teidSgwAddrMap [erab.sgwTeid]);
     }
 
   // Chain up
