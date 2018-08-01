@@ -18,9 +18,9 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include <ns3/epc-gtpu-tag.h>
 #include <ns3/epc-gtpu-header.h>
 #include "pgw-tunnel-app.h"
+#include "epc-gtpu-tag.h"
 
 namespace ns3 {
 

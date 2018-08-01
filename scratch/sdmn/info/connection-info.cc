@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include <ns3/epc-gtpu-tag.h>
 #include "connection-info.h"
+#include "../epc/epc-gtpu-tag.h"
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT \
