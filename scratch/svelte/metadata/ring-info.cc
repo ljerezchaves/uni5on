@@ -75,14 +75,10 @@ RingInfo::GetDownPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  switch (iface)
-    {
-    case LteIface::S1U:
-    case LteIface::S5:
-      return m_downPath [iface];
-    default:
-      NS_ABORT_MSG ("Invalid LTE interface.");
-    }
+  NS_ASSERT_MSG (iface == LteIface::S1U || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+
+  return m_downPath [iface];
 }
 
 RingInfo::RingPath
@@ -90,14 +86,10 @@ RingInfo::GetUpPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  switch (iface)
-    {
-    case LteIface::S1U:
-    case LteIface::S5:
-      return RingInfo::Invert (m_downPath [iface]);
-    default:
-      NS_ABORT_MSG ("Invalid LTE interface.");
-    }
+  NS_ASSERT_MSG (iface == LteIface::S1U || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+
+  return RingInfo::Invert (m_downPath [iface]);
 }
 
 bool
@@ -105,14 +97,10 @@ RingInfo::IsDefaultPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  switch (iface)
-    {
-    case LteIface::S1U:
-    case LteIface::S5:
-      return m_isDefaultPath [iface];
-    default:
-      NS_ABORT_MSG ("Invalid LTE interface.");
-    }
+  NS_ASSERT_MSG (iface == LteIface::S1U || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+
+  return m_isDefaultPath [iface];
 }
 
 bool
@@ -120,14 +108,10 @@ RingInfo::IsLocalPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  switch (iface)
-    {
-    case LteIface::S1U:
-    case LteIface::S5:
-      return m_isLocalPath [iface];
-    default:
-      NS_ABORT_MSG ("Invalid LTE interface.");
-    }
+  NS_ASSERT_MSG (iface == LteIface::S1U || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+
+  return m_isLocalPath [iface];
 }
 
 bool
@@ -234,20 +218,15 @@ RingInfo::SetDefaultPath (RingPath downPath, LteIface iface)
 {
   NS_LOG_FUNCTION (this << downPath << iface);
 
-  switch (iface)
+  NS_ASSERT_MSG (iface == LteIface::S1U || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+
+  m_downPath [iface] = downPath;
+  m_isDefaultPath [iface] = true;
+  m_isLocalPath [iface] = false;
+  if (downPath == RingInfo::LOCAL)
     {
-    case LteIface::S1U:
-    case LteIface::S5:
-      m_downPath [iface] = downPath;
-      m_isDefaultPath [iface] = true;
-      m_isLocalPath [iface] = false;
-      if (downPath == RingInfo::LOCAL)
-        {
-          m_isLocalPath [iface] = true;
-        }
-      break;
-    default:
-      NS_ABORT_MSG ("Invalid LTE interface.");
+      m_isLocalPath [iface] = true;
     }
 }
 
@@ -256,18 +235,13 @@ RingInfo::InvertPath (LteIface iface)
 {
   NS_LOG_FUNCTION (this << iface);
 
-  switch (iface)
+  NS_ASSERT_MSG (iface == LteIface::S1U || iface == LteIface::S5,
+                 "Invalid LTE interface. Expected S1-U or S5 interface.");
+
+  if (m_isLocalPath [iface] == false)
     {
-    case LteIface::S1U:
-    case LteIface::S5:
-      if (m_isLocalPath [iface] == false)
-        {
-          m_downPath [iface] = RingInfo::Invert (m_downPath [iface]);
-          m_isDefaultPath [iface] = !m_isDefaultPath [iface];
-        }
-      break;
-    default:
-      NS_ABORT_MSG ("Invalid LTE interface.");
+      m_downPath [iface] = RingInfo::Invert (m_downPath [iface]);
+      m_isDefaultPath [iface] = !m_isDefaultPath [iface];
     }
 }
 
