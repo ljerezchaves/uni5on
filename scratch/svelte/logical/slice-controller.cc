@@ -199,43 +199,20 @@ SliceController::DedicatedBearerRelease (
   return BearerRemove (rInfo);
 }
 
-void
-SliceController::NotifySgwAttach (Ptr<SgwInfo> sgwInfo)
+OpMode
+SliceController::GetPgwAdaptiveMode (void) const
 {
-  NS_LOG_FUNCTION (this << sgwInfo << sgwInfo->GetSgwId ());
+  NS_LOG_FUNCTION (this);
 
-  // -------------------------------------------------------------------------
-  // Table 0 -- S-GW default table -- [from higher to lower priority]
-  //
-  // IP packets coming from the P-GW (S-GW S5 port) and addressed to the UE
-  // network are sent to table 1, where rules will match the flow and set both
-  // TEID and eNB address on tunnel metadata.
-  std::ostringstream cmdDl;
-  cmdDl << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-        << ",in_port=" << sgwInfo->GetS5PortNo ()
-        << ",ip_dst=" << m_ueAddr << "/" << m_ueMask.GetPrefixLength ()
-        << " goto:1";
-  DpctlSchedule (sgwInfo->GetDpId (), cmdDl.str ());
+  return m_tftAdaptive;
+}
 
-  // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
-  // Internet are sent to table 2, where rules will match the flow and set both
-  // TEID and P-GW address on tunnel metadata.
-  std::ostringstream cmdUl;
-  cmdUl << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
-        << ",in_port=" << sgwInfo->GetS1uPortNo ()
-        << ",ip_dst=" << m_webAddr << "/" << m_webMask.GetPrefixLength ()
-        << " goto:2";
-  DpctlSchedule (sgwInfo->GetDpId (), cmdUl.str ());
+EpcS11SapSgw*
+SliceController::GetS11SapSgw (void) const
+{
+  NS_LOG_FUNCTION (this);
 
-  // -------------------------------------------------------------------------
-  // Table 1 -- S-GW downlink table -- [from higher to lower priority]
-  //
-  // Entries will be installed here by SgwRulesInstall function.
-
-  // -------------------------------------------------------------------------
-  // Table 2 -- S-GW uplink table -- [from higher to lower priority]
-  //
-  // Entries will be installed here by SgwRulesInstall function.
+  return m_s11SapSgw;
 }
 
 void
@@ -245,6 +222,7 @@ SliceController::NotifyPgwAttach (Ptr<PgwInfo> pgwInfo,
   NS_LOG_FUNCTION (this << pgwInfo << pgwInfo->GetPgwId () << webSgiDev);
 
   // Save the P-GW metadata.
+  NS_ASSERT_MSG (!m_pgwInfo, "P-GW already configured with this controller.");
   m_pgwInfo = pgwInfo;
 
   // Set the number of P-GW TFT active switches and the
@@ -321,20 +299,43 @@ SliceController::NotifyPgwAttach (Ptr<PgwInfo> pgwInfo,
   // Entries will be installed here by PgwRulesInstall function.
 }
 
-OpMode
-SliceController::GetPgwAdaptiveMode (void) const
+void
+SliceController::NotifySgwAttach (Ptr<SgwInfo> sgwInfo)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << sgwInfo << sgwInfo->GetSgwId ());
 
-  return m_tftAdaptive;
-}
+  // -------------------------------------------------------------------------
+  // Table 0 -- S-GW default table -- [from higher to lower priority]
+  //
+  // IP packets coming from the P-GW (S-GW S5 port) and addressed to the UE
+  // network are sent to table 1, where rules will match the flow and set both
+  // TEID and eNB address on tunnel metadata.
+  std::ostringstream cmdDl;
+  cmdDl << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+        << ",in_port=" << sgwInfo->GetS5PortNo ()
+        << ",ip_dst=" << m_ueAddr << "/" << m_ueMask.GetPrefixLength ()
+        << " goto:1";
+  DpctlSchedule (sgwInfo->GetDpId (), cmdDl.str ());
 
-EpcS11SapSgw*
-SliceController::GetS11SapSgw (void) const
-{
-  NS_LOG_FUNCTION (this);
+  // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
+  // Internet are sent to table 2, where rules will match the flow and set both
+  // TEID and P-GW address on tunnel metadata.
+  std::ostringstream cmdUl;
+  cmdUl << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+        << ",in_port=" << sgwInfo->GetS1uPortNo ()
+        << ",ip_dst=" << m_webAddr << "/" << m_webMask.GetPrefixLength ()
+        << " goto:2";
+  DpctlSchedule (sgwInfo->GetDpId (), cmdUl.str ());
 
-  return m_s11SapSgw;
+  // -------------------------------------------------------------------------
+  // Table 1 -- S-GW downlink table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by SgwRulesInstall function.
+
+  // -------------------------------------------------------------------------
+  // Table 2 -- S-GW uplink table -- [from higher to lower priority]
+  //
+  // Entries will be installed here by SgwRulesInstall function.
 }
 
 void
@@ -356,6 +357,7 @@ SliceController::DoDispose ()
 
   m_mme = 0;
   m_pgwInfo = 0;
+  m_backhaulCtrl = 0;
   delete (m_s11SapSgw);
 
   Object::DoDispose ();
@@ -703,14 +705,15 @@ SliceController::PgwAdaptiveMechanism (void)
       uint16_t futureTfts = 1 << nextLevel;
       for (uint16_t currIdx = 1; currIdx <= activeTfts; currIdx++)
         {
-          for (auto const &rInfo :
-               RoutingInfo::GetInstalledList (m_sliceId, currIdx))
+          RoutingInfoList_t bearerList;
+          bearerList = RoutingInfo::GetInstalledList (m_sliceId, currIdx);
+          for (auto const &rInfo : bearerList)
             {
               uint16_t destIdx = GetTftIdx (rInfo, futureTfts);
               if (destIdx != currIdx)
                 {
                   NS_LOG_INFO ("Move bearer teid " << (rInfo)->GetTeidHex ());
-                  PgwRulesRemove  (rInfo, currIdx, true);
+                  PgwRulesRemove (rInfo, currIdx, true);
                   PgwRulesInstall (rInfo, destIdx, true);
                   rInfo->SetPgwTftIdx (destIdx);
                   moved++;

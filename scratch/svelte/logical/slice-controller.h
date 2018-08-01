@@ -93,11 +93,16 @@ public:
     EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
 
   /**
-   * Notify this controller of the S-GW connected to the OpenFlow backhaul
-   * network over the S1-U and S5 interfaces.
-   * \param sgwInfo The S-GW metadata.
+   * Get the P-GW adaptive mechanisms operation mode.
+   * \return The operation mode.
    */
-  virtual void NotifySgwAttach (Ptr<SgwInfo> sgwInfo);
+  OpMode GetPgwAdaptiveMode (void) const;
+
+  /**
+   * Get The S-GW side of the S11 SAP.
+   * \return The S-GW side of the S11 SAP.
+   */
+  EpcS11SapSgw* GetS11SapSgw (void) const;
 
   /**
    * Notify this controller of the P-GW  connected to the OpenFlow backhaul
@@ -110,16 +115,11 @@ public:
                                 Ptr<NetDevice> webSgiDev);
 
   /**
-   * Get the P-GW adaptive mechanisms operation mode.
-   * \return The operation mode.
+   * Notify this controller of the S-GW connected to the OpenFlow backhaul
+   * network over the S1-U and S5 interfaces.
+   * \param sgwInfo The S-GW metadata.
    */
-  OpMode GetPgwAdaptiveMode (void) const;
-
-  /**
-   * Get The S-GW side of the S11 SAP.
-   * \return The S-GW side of the S11 SAP.
-   */
-  EpcS11SapSgw* GetS11SapSgw (void) const;
+  virtual void NotifySgwAttach (Ptr<SgwInfo> sgwInfo);
 
   /**
    * Configure this controller with slice network attributes.
@@ -318,7 +318,6 @@ private:
 
   // Internal members and attributes.
   Time                    m_timeout;        //!< Controller internal timeout.
-
   static const uint16_t   m_flowTimeout;    //!< Timeout for flow entries.
 };
 
