@@ -99,16 +99,12 @@ SvelteMme::DoInitialUeMessage (
   msg.uli.gci = ecgi;
   msg.teid = 0;
 
-  std::list<UeInfo::BearerInfo>::const_iterator bit;
-  for (bit = ueInfo->GetBearerListBegin ();
-       bit != ueInfo->GetBearerListEnd ();
-       ++bit)
+  for (auto const &bit : ueInfo->GetBearerList ())
     {
       EpcS11SapSgw::BearerContextToBeCreated bearerContext;
-      bearerContext.epsBearerId     = bit->bearerId;
-      bearerContext.bearerLevelQos  = bit->bearer;
-      bearerContext.tft             = bit->tft;
-
+      bearerContext.epsBearerId = bit.bearerId;
+      bearerContext.bearerLevelQos = bit.bearer;
+      bearerContext.tft = bit.tft;
       msg.bearerContextsToBeCreated.push_back (bearerContext);
     }
 
@@ -160,19 +156,18 @@ SvelteMme::DoErabReleaseIndication (
   NS_LOG_FUNCTION (this << mmeUeS1Id << enbUeS1Id);
 
   uint64_t imsi = mmeUeS1Id;
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
 
   EpcS11SapSgw::DeleteBearerCommandMessage msg;
   msg.teid = imsi;
 
-  std::list<EpcS1apSapMme::ErabToBeReleasedIndication>::iterator bit;
-  for (bit = erabList.begin (); bit != erabList.end (); ++bit)
+  for (auto const &bit : erabList)
     {
       EpcS11SapSgw::BearerContextToBeRemoved bearerContext;
-      bearerContext.epsBearerId = bit->erabId;
+      bearerContext.epsBearerId = bit.erabId;
       msg.bearerContextsToBeRemoved.push_back (bearerContext);
     }
 
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
   ueInfo->GetS11SapSgw ()->DeleteBearerCommand (msg);
 }
 
@@ -186,21 +181,20 @@ SvelteMme::DoCreateSessionResponse (
   NS_LOG_FUNCTION (this << msg.teid);
 
   uint64_t imsi = msg.teid;
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+
   std::list<EpcS1apSapEnb::ErabToBeSetupItem> erabToBeSetupList;
-  std::list<EpcS11SapMme::BearerContextCreated>::iterator bit;
-  for (bit = msg.bearerContextsCreated.begin ();
-       bit != msg.bearerContextsCreated.end ();
-       ++bit)
+
+  for (auto const &bit : msg.bearerContextsCreated)
     {
       EpcS1apSapEnb::ErabToBeSetupItem erab;
-      erab.erabId = bit->epsBearerId;
-      erab.erabLevelQosParameters = bit->bearerLevelQos;
-      erab.transportLayerAddress = bit->sgwFteid.address;
-      erab.sgwTeid = bit->sgwFteid.teid;
+      erab.erabId = bit.epsBearerId;
+      erab.erabLevelQosParameters = bit.bearerLevelQos;
+      erab.transportLayerAddress = bit.sgwFteid.address;
+      erab.sgwTeid = bit.sgwFteid.teid;
       erabToBeSetupList.push_back (erab);
     }
 
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
   ueInfo->GetS1apSapEnb ()->InitialContextSetupRequest (
     ueInfo->GetMmeUeS1Id (), ueInfo->GetEnbUeS1Id (), erabToBeSetupList);
 }
@@ -216,9 +210,10 @@ SvelteMme::DoModifyBearerResponse (
     "Invalid message cause.");
 
   uint64_t imsi = msg.teid;
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+
   std::list<EpcS1apSapEnb::ErabSwitchedInUplinkItem> erabList;
 
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
   ueInfo->GetS1apSapEnb ()->PathSwitchRequestAcknowledge (
     ueInfo->GetEnbUeS1Id (), ueInfo->GetMmeUeS1Id (),
     ueInfo->GetCellId (), erabList);
@@ -235,13 +230,10 @@ SvelteMme::DoDeleteBearerRequest (EpcS11SapMme::DeleteBearerRequestMessage msg)
   EpcS11SapSgw::DeleteBearerResponseMessage res;
   res.teid = imsi;
 
-  std::list<EpcS11SapMme::BearerContextRemoved>::iterator bit;
-  for (bit = msg.bearerContextsRemoved.begin ();
-       bit != msg.bearerContextsRemoved.end ();
-       ++bit)
+  for (auto const &bit : msg.bearerContextsRemoved)
     {
       EpcS11SapSgw::BearerContextRemovedSgwPgw bearerContext;
-      bearerContext.epsBearerId = bit->epsBearerId;
+      bearerContext.epsBearerId = bit.epsBearerId;
       res.bearerContextsRemoved.push_back (bearerContext);
       ueInfo->RemoveBearer (bearerContext.epsBearerId);
     }

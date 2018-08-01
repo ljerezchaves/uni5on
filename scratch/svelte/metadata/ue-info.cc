@@ -153,20 +153,12 @@ UeInfo::GetS1apSapEnb (void) const
   return m_enbInfo->GetS1apSapEnb ();
 }
 
-std::list<UeInfo::BearerInfo>::const_iterator
-UeInfo::GetBearerListBegin () const
+std::list<UeInfo::BearerInfo>
+UeInfo::GetBearerList (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_bearersList.begin ();
-}
-
-std::list<UeInfo::BearerInfo>::const_iterator
-UeInfo::GetBearerListEnd () const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_bearersList.end ();
+  return m_bearersList;
 }
 
 uint8_t

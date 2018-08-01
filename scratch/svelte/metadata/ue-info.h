@@ -84,19 +84,8 @@ public:
   uint64_t GetEnbUeS1Id (void) const;
   EpcS11SapSgw* GetS11SapSgw (void) const;
   EpcS1apSapEnb* GetS1apSapEnb (void) const;
+  std::list<BearerInfo> GetBearerList (void) const;
   //\}
-
-  /**
-   * Get the iterator for the begin of the bearer list.
-   * \return The begin iterator.
-   */
-  std::list<BearerInfo>::const_iterator GetBearerListBegin (void) const;
-
-  /**
-    * Get the iterator for the end of the bearer list.
-    * \return The end iterator.
-    */
-  std::list<BearerInfo>::const_iterator GetBearerListEnd (void) const;
 
   /**
    * Add an EPS bearer to the list of bearers for this UE.  The bearer will be
