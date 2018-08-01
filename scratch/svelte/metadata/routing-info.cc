@@ -209,7 +209,7 @@ RoutingInfo::GetDscp (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return BackhaulController::Qci2Dscp (GetQciInfo ());
+  return Qci2Dscp (GetQciInfo ());
 }
 
 uint16_t

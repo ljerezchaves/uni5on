@@ -29,9 +29,7 @@ NS_LOG_COMPONENT_DEFINE ("BackhaulController");
 NS_OBJECT_ENSURE_REGISTERED (BackhaulController);
 
 // Initializing BackhaulController static members.
-BackhaulController::QciDscpMap_t BackhaulController::m_qciDscpTable;
 BackhaulController::DscpQueueMap_t BackhaulController::m_dscpQueueTable;
-BackhaulController::DscpTosMap_t BackhaulController::m_dscpTosTable;
 
 BackhaulController::BackhaulController ()
 {
@@ -118,34 +116,6 @@ BackhaulController::GetSliceUsage (LinkSlice slice) const
 
   NS_ASSERT_MSG (count, "Invalid slice usage for empty topology.");
   return sliceUsage / static_cast<double> (count);
-}
-
-uint8_t
-BackhaulController::Dscp2Tos (Ipv4Header::DscpType dscp)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  DscpTosMap_t::const_iterator it;
-  it = BackhaulController::m_dscpTosTable.find (dscp);
-  if (it != BackhaulController::m_dscpTosTable.end ())
-    {
-      return it->second;
-    }
-  NS_ABORT_MSG ("No ToS mapped value for DSCP " << dscp);
-}
-
-Ipv4Header::DscpType
-BackhaulController::Qci2Dscp (EpsBearer::Qci qci)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  QciDscpMap_t::const_iterator it;
-  it = BackhaulController::m_qciDscpTable.find (qci);
-  if (it != BackhaulController::m_qciDscpTable.end ())
-    {
-      return it->second;
-    }
-  NS_ABORT_MSG ("No DSCP mapped value for QCI " << qci);
 }
 
 void
@@ -460,61 +430,6 @@ BackhaulController::StaticInitialize ()
     {
       initialized = true;
 
-      // Populating the EPS QCI --> IP DSCP mapping table.
-      // The following EPS QCI --> IP DSCP mapping was adapted from
-      // https://ericlajoie.com/epcqos.html to meet our needs.
-      //     GBR traffic: QCI 1, 2, 3 --> DSCP_EF
-      //                  QCI 4       --> DSCP_AF41
-      // Non-GBR traffic: QCI 5       --> DSCP_AF31
-      //                  QCI 6, 7, 8 --> DSCP_AF11
-      //                  QCI 9       --> DSCP_BE
-      //
-      // QCI 1: used by the HTC VoIP application.
-      BackhaulController::m_qciDscpTable.insert (
-        std::make_pair (EpsBearer::GBR_CONV_VOICE,
-                        Ipv4Header::DSCP_EF));
-
-      // QCI 2: not in use.
-      BackhaulController::m_qciDscpTable.insert (
-        std::make_pair (EpsBearer::GBR_CONV_VIDEO,
-                        Ipv4Header::DSCP_EF));
-
-      // QCI 3: used by the MTC auto pilot application.
-      BackhaulController::m_qciDscpTable.insert (
-        std::make_pair (EpsBearer::GBR_GAMING,
-                        Ipv4Header::DSCP_EF));
-
-      // QCI 4: used by the HTC live video application.
-      BackhaulController::m_qciDscpTable.insert (
-        std::make_pair (EpsBearer::GBR_NON_CONV_VIDEO,
-                        Ipv4Header::DSCP_AF41));
-
-      // QCI 5: used by the MTC auto pilot application.
-      BackhaulController::m_qciDscpTable.insert (
-        std::make_pair (EpsBearer::NGBR_IMS,
-                        Ipv4Header::DSCP_AF31));
-
-      // QCI 6: used by the HTC buffered video application.
-      BackhaulController::m_qciDscpTable.insert (
-        std::make_pair (EpsBearer::NGBR_VIDEO_TCP_OPERATOR,
-                        Ipv4Header::DSCP_AF11));
-
-      // QCI 7: used by the HTC live video application.
-      BackhaulController::m_qciDscpTable.insert (
-        std::make_pair (EpsBearer::NGBR_VOICE_VIDEO_GAMING,
-                        Ipv4Header::DSCP_AF11));
-
-      // QCI 8: used by the HTC HTTP application.
-      BackhaulController::m_qciDscpTable.insert (
-        std::make_pair (EpsBearer::NGBR_VIDEO_TCP_PREMIUM,
-                        Ipv4Header::DSCP_AF11));
-
-      // QCI 9: used by default bearers and by aggregated traffic.
-      BackhaulController::m_qciDscpTable.insert (
-        std::make_pair (EpsBearer::NGBR_VIDEO_TCP_DEFAULT,
-                        Ipv4Header::DscpDefault)); // DSCP_BE
-
-
       // Populating the IP DSCP --> OpenFlow queue id mapping table.
       // DSCP_EF   --> OpenFlow queue 2 (high priority)
       // DSCP_AF41 --> OpenFlow queue 1 (normal priority)
@@ -537,39 +452,6 @@ BackhaulController::StaticInitialize ()
         std::make_pair (Ipv4Header::DSCP_AF31, 1));
       BackhaulController::m_dscpQueueTable.insert (
         std::make_pair (Ipv4Header::DSCP_AF11, 1));
-
-
-      // Populating the IP DSCP --> IP ToS mapping table.
-      // This map is required here to ensure priority queueu compatibility
-      // between the OpenFlow queues and the pfifo-fast queue discipline from
-      // the traffic control module. We are mapping DSCP values to the IP ToS
-      // byte that will be translated by the ns3::Socket::IpTos2Priority ()
-      // method into the linux priority that is further used by the pfifo-fast
-      // queue disc to select the priority queue.
-      // See the ns3::Socket::IpTos2Priority for details.
-      // DSCP_EF   --> ToS 0x10 --> priority 6 --> queue 0 (high priority).
-      // DSCP_AF41 --> ToS 0x00 --> priority 0 --> queue 1 (normal priority).
-      // DSCP_AF31 --> ToS 0x18 --> priority 4 --> queue 1 (normal priority).
-      // DSCP_AF11 --> ToS 0x00 --> priority 0 --> queue 1 (normal priority).
-      // DSCP_BE   --> ToS 0x08 --> priority 2 --> queue 2 (low priority).
-      //
-      // Mapping default and aggregated traffic to low priority queues.
-      BackhaulController::m_dscpTosTable.insert (
-        std::make_pair (Ipv4Header::DscpDefault, 0x08));
-
-      // Mapping HTC VoIP and MTC auto pilot traffic to high priority queues.
-      BackhaulController::m_dscpTosTable.insert (
-        std::make_pair (Ipv4Header::DSCP_EF, 0x10));
-
-      // Mapping MTC Non-GBR traffic to normal priority queues.
-      BackhaulController::m_dscpTosTable.insert (
-        std::make_pair (Ipv4Header::DSCP_AF31, 0x18));
-
-      // Mapping other HTC traffics to normal priority queues.
-      BackhaulController::m_dscpTosTable.insert (
-        std::make_pair (Ipv4Header::DSCP_AF41, 0x00));
-      BackhaulController::m_dscpTosTable.insert (
-        std::make_pair (Ipv4Header::DSCP_AF11, 0x00));
     }
 }
 

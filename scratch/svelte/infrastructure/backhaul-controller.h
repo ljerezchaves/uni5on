@@ -87,25 +87,6 @@ public:
    */
   double GetSliceUsage (LinkSlice slice) const;
 
-  /**
-   * Retrieve stored mapped IP ToS for a specific DSCP. We are mapping the DSCP
-   * value (RFC 2474) to the IP Type of Service (ToS) (RFC 1349) field because
-   * the pfifo_fast queue discipline from the traffic control module still uses
-   * the old IP ToS definition. Thus, we are 'translating' the DSCP values so
-   * we can keep the priority queueing consistency both on traffic control
-   * module and OpenFlow port queues.
-   * \param dscp The IP DSCP value.
-   * \return The IP ToS mapped for this DSCP.
-   */
-  static uint8_t Dscp2Tos (Ipv4Header::DscpType dscp);
-
-  /**
-   * Retrieve stored mapped DSCP for a specific EPS QCI.
-   * \param qci The EPS bearer QCI.
-   * \return The IP DSCP mapped for this QCI.
-   */
-  static Ipv4Header::DscpType Qci2Dscp (EpsBearer::Qci qci);
-
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -207,18 +188,9 @@ private:
   OpMode                m_priorityQueues; //!< DSCP priority queues mechanism.
   OpMode                m_slicing;        //!< Network slicing mechanism.
 
-  /** Map saving EPS QCI / IP DSCP value. */
-  typedef std::map<EpsBearer::Qci, Ipv4Header::DscpType> QciDscpMap_t;
-
   /** Map saving IP DSCP value / OpenFlow queue id. */
   typedef std::map<Ipv4Header::DscpType, uint32_t> DscpQueueMap_t;
-
-  /** Map saving IP DSCP value / IP ToS. */
-  typedef std::map<Ipv4Header::DscpType, uint8_t> DscpTosMap_t;
-
-  static QciDscpMap_t   m_qciDscpTable;   //!< DSCP mapped values.
   static DscpQueueMap_t m_dscpQueueTable; //!< OpenFlow queue id mapped values.
-  static DscpTosMap_t   m_dscpTosTable;   //!< IP ToS mapped values.
 };
 
 } // namespace ns3

@@ -99,6 +99,81 @@ SliceIdStr (SliceId slice)
     }
 }
 
+uint8_t
+Dscp2Tos (Ipv4Header::DscpType dscp)
+{
+  switch (dscp)
+    {
+    // Mapping default traffic to low priority queues.
+    case Ipv4Header::DscpDefault:
+      return 0x08;
+
+    // Mapping HTC VoIP and MTC auto pilot traffic to high priority queues.
+    case Ipv4Header::DSCP_EF:
+      return 0x10;
+
+    // Mapping MTC Non-GBR traffic to normal priority queues.
+    case Ipv4Header::DSCP_AF31:
+      return 0x18;
+
+    // Mapping other HTC traffics to normal priority queues.
+    case Ipv4Header::DSCP_AF41:
+    case Ipv4Header::DSCP_AF11:
+      return 0x00;
+
+    default:
+      NS_ABORT_MSG ("No ToS mapped value for DSCP " << dscp);
+      return 0x00;
+    }
+}
+
+Ipv4Header::DscpType
+Qci2Dscp (EpsBearer::Qci qci)
+{
+  switch (qci)
+    {
+    // QCI 1: used by the HTC VoIP application.
+    case EpsBearer::GBR_CONV_VOICE:
+      return Ipv4Header::DSCP_EF;
+
+    // QCI 2: not in use.
+    case EpsBearer::GBR_CONV_VIDEO:
+      return Ipv4Header::DSCP_EF;
+
+    // QCI 3: used by the MTC auto pilot application.
+    case EpsBearer::GBR_GAMING:
+      return Ipv4Header::DSCP_EF;
+
+    // QCI 4: used by the HTC live video application.
+    case EpsBearer::GBR_NON_CONV_VIDEO:
+      return Ipv4Header::DSCP_AF41;
+
+    // QCI 5: used by the MTC auto pilot application.
+    case EpsBearer::NGBR_IMS:
+      return Ipv4Header::DSCP_AF31;
+
+    // QCI 6: used by the HTC buffered video application.
+    case EpsBearer::NGBR_VIDEO_TCP_OPERATOR:
+      return Ipv4Header::DSCP_AF11;
+
+    // QCI 7: used by the HTC live video application.
+    case EpsBearer::NGBR_VOICE_VIDEO_GAMING:
+      return Ipv4Header::DSCP_AF11;
+
+    // QCI 8: used by the HTC HTTP application.
+    case EpsBearer::NGBR_VIDEO_TCP_PREMIUM:
+      return Ipv4Header::DSCP_AF11;
+
+    // QCI 9: used by default bearers and by aggregated traffic.
+    case EpsBearer::NGBR_VIDEO_TCP_DEFAULT:
+      return Ipv4Header::DscpDefault;
+
+    default:
+      NS_ABORT_MSG ("No DSCP mapped value for QCI " << qci);
+      return Ipv4Header::DscpDefault;
+    }
+}
+
 uint32_t
 GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint8_t bearerId)
 {

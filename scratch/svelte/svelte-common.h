@@ -22,6 +22,10 @@
 #define SVELTE_COMMON_H
 
 #include <string>
+#include <ns3/core-module.h>
+#include <ns3/network-module.h>
+#include <ns3/internet-module.h>
+#include <ns3/lte-module.h>
 
 namespace ns3 {
 
@@ -117,6 +121,47 @@ std::string OpModeStr (OpMode mode);
  * \return The string with the slice ID name.
  */
 std::string SliceIdStr (SliceId slice);
+
+/**
+ * \ingroup svelte
+ * Get the mapped IP ToS value for a specific DSCP.
+ * \param dscp The IP DSCP value.
+ * \return The IP ToS mapped for this DSCP.
+ *
+ * \internal We are mapping the DSCP
+ * value (RFC 2474) to the IP Type of Service (ToS) (RFC 1349) field because
+ * the pfifo_fast queue discipline from the traffic control module still uses
+ * the old IP ToS definition. Thus, we are 'translating' the DSCP values so
+ * we can keep the priority queueing consistency both on traffic control
+ * module and OpenFlow port queues.
+ * \verbatim
+ * DSCP_EF   --> ToS 0x10 --> priority 6 --> queue 0 (high priority).
+ * DSCP_AF41 --> ToS 0x00 --> priority 0 --> queue 1 (normal priority).
+ * DSCP_AF31 --> ToS 0x18 --> priority 4 --> queue 1 (normal priority).
+ * DSCP_AF11 --> ToS 0x00 --> priority 0 --> queue 1 (normal priority).
+ * DSCP_BE   --> ToS 0x08 --> priority 2 --> queue 2 (low priority).
+ * \endverbatim
+ * \see See the ns3::Socket::IpTos2Priority for details.
+ */
+uint8_t Dscp2Tos (Ipv4Header::DscpType dscp);
+
+/**
+ * \ingroup svelte
+ * Get the mapped DSCP value for a specific EPS QCI.
+ * \param qci The EPS bearer QCI.
+ * \return The IP DSCP mapped for this QCI.
+ *
+ * \internal The following EPS QCI --> IP DSCP mapping was adapted from
+ * https://ericlajoie.com/epcqos.html to meet our needs.
+ * \verbatim
+ *     GBR traffic: QCI 1, 2, 3 --> DSCP_EF
+ *                  QCI 4       --> DSCP_AF41
+ * Non-GBR traffic: QCI 5       --> DSCP_AF31
+ *                  QCI 6, 7, 8 --> DSCP_AF11
+ *                  QCI 9       --> DSCP_BE
+ * \endverbatim
+ */
+Ipv4Header::DscpType Qci2Dscp (EpsBearer::Qci qci);
 
 /**
  * \ingroup svelte
