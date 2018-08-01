@@ -435,28 +435,10 @@ RingController::BitRateReserve (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo);
 
-  // If the bearer is already blocked, there's nothing more to do.
-  if (rInfo->IsBlocked ())
-    {
-      return false;
-    }
-
-  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
-  NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
-
-  // For Non-GBR bearers (which includes the default bearer) and for bearers
-  // that only transverse local switch (local routing for both S1-U and S5
-  // interfaces): don't reserve bit rate resources.
-  if (!rInfo->IsGbr () || ringInfo->IsLocalPath ())
-    {
-      return true;
-    }
-
   NS_LOG_INFO ("Reserving resources for bearer " << rInfo->GetTeidHex ());
 
-  // It only makes sense to reserve bandwidth for GBR bearers.
-  Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
-  NS_ASSERT_MSG (gbrInfo, "Invalid configuration for GBR bearer request.");
+  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+  Ptr<GbrInfo> gbrInfo = rInfo->GetGbrInfo ();
 
   bool success = true;
   RingInfo::RingPath downPath;
@@ -510,9 +492,6 @@ RingController::BitRateRelease (Ptr<RoutingInfo> rInfo)
 
   // It only makes sense to release bandwidth for GBR bearers.
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
-  NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
-
-  // FIXME.
   Ptr<GbrInfo> gbrInfo = rInfo->GetGbrInfo ();
 
   bool success = true;
