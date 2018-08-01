@@ -44,6 +44,7 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerContext_t bearer,
   m_isBlocked (false),
   m_isDefault (isDefault),
   m_isInstalled (false),
+  m_linkSlice (LinkSlice::DFT),
   m_pgwTftIdx (0),
   m_priority (0),
   m_timeout (0),
@@ -147,6 +148,14 @@ RoutingInfo::IsInstalled (void) const
   return m_isInstalled;
 }
 
+LinkSlice
+RoutingInfo::GetLinkSlice (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_linkSlice;
+}
+
 uint16_t
 RoutingInfo::GetPgwTftIdx (void) const
 {
@@ -161,14 +170,6 @@ RoutingInfo::GetPriority (void) const
   NS_LOG_FUNCTION (this);
 
   return m_priority;
-}
-
-LinkSlice
-RoutingInfo::GetLinkSlice (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_linkSlice;
 }
 
 uint16_t
@@ -485,6 +486,14 @@ RoutingInfo::SetInstalled (bool value)
 }
 
 void
+RoutingInfo::SetLinkSlice (LinkSlice value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_linkSlice = value;
+}
+
+void
 RoutingInfo::SetPgwTftIdx (uint16_t value)
 {
   NS_LOG_FUNCTION (this << value);
@@ -499,14 +508,6 @@ RoutingInfo::SetPriority (uint16_t value)
   NS_LOG_FUNCTION (this << value);
 
   m_priority = value;
-}
-
-void
-RoutingInfo::SetLinkSlice (LinkSlice value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_linkSlice = value;
 }
 
 void

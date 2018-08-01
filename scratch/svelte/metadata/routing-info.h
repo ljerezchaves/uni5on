@@ -90,9 +90,9 @@ public:
   bool IsBlocked (void) const;
   bool IsDefault (void) const;
   bool IsInstalled (void) const;
+  LinkSlice GetLinkSlice (void) const;
   uint16_t GetPgwTftIdx (void) const;
   uint16_t GetPriority (void) const;
-  LinkSlice GetLinkSlice (void) const;
   uint16_t GetTimeout (void) const;
   Ptr<GbrInfo> GetGbrInfo (void) const;
   Ptr<MeterInfo> GetMeterInfo (void) const;
@@ -173,9 +173,9 @@ protected:
   void SetActive (bool value);
   void SetBlocked (bool value, BlockReason reason = RoutingInfo::NOTBLOCKED);
   void SetInstalled (bool value);
+  void SetLinkSlice (LinkSlice value);
   void SetPgwTftIdx (uint16_t value);
   void SetPriority (uint16_t value);
-  void SetLinkSlice (LinkSlice value);
   void SetTimeout (uint16_t value);
   //\}
 
@@ -208,9 +208,9 @@ private:
   bool                 m_isBlocked;    //!< Bearer request status.
   bool                 m_isDefault;    //!< This is a default bearer.
   bool                 m_isInstalled;  //!< Rules installed status.
+  LinkSlice            m_linkSlice;    //!< Link slice.
   uint16_t             m_pgwTftIdx;    //!< P-GW TFT switch index.
   uint16_t             m_priority;     //!< Flow rule priority.
-  LinkSlice            m_linkSlice;    //!< Link slice.
   uint16_t             m_timeout;      //!< Flow idle timeout.
   Ptr<GbrInfo>         m_gbrInfo;      //!< GBR metadata.
   Ptr<MeterInfo>       m_meterInfo;    //!< Meter metadata.
