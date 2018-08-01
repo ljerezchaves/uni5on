@@ -67,6 +67,7 @@ public:
   bool IsDefaultPath (LteIface iface) const;
   bool IsLocalPath (LteIface iface) const;
   bool IsLocalPath (void) const;
+  LinkSlice GetLinkSlice (void) const;
   std::string GetPathStr (LteIface iface) const;
   uint16_t GetEnbInfraSwIdx (void) const;
   uint16_t GetPgwInfraSwIdx (void) const;

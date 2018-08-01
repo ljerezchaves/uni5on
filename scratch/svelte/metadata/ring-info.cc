@@ -130,6 +130,14 @@ RingInfo::IsLocalPath (void) const
   return (IsLocalPath (LteIface::S1U) && IsLocalPath (LteIface::S5));
 }
 
+LinkSlice
+RingInfo::GetLinkSlice (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_rInfo->GetLinkSlice ();
+}
+
 std::string
 RingInfo::GetPathStr (LteIface iface) const
 {
