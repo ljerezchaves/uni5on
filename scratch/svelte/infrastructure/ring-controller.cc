@@ -77,6 +77,151 @@ RingController::DoDispose ()
   BackhaulController::DoDispose ();
 }
 
+bool
+RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+
+  // If the bearer is already blocked, there's nothing more to do.
+  if (rInfo->IsBlocked ())
+    {
+      return false;
+    }
+
+  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+  NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
+
+  // Reset the ring routing info to the shortest path.
+  ringInfo->ResetToDefaults ();
+
+  // For Non-GBR bearers (which includes the default bearer) and for bearers
+  // that only transverse local switch (local routing for both S1-U and S5
+  // interfaces): let's accept it without guarantees. Note that in current
+  // implementation, these bearers are always routed over the shortest path.
+  if (!rInfo->IsGbr () || ringInfo->IsLocalPath ())
+    {
+      return true;
+    }
+
+  // It only makes sense to check for available bandwidth for GBR bearers.
+  Ptr<GbrInfo> gbrInfo = rInfo->GetGbrInfo ();
+  NS_ASSERT_MSG (gbrInfo, "Invalid configuration for GBR bearer request.");
+
+// FIXME Precisa resolver a questão do slice.
+//   // Check for the requested bit rate over the shortest path.
+//   if (HasBitRate (ringInfo, gbrInfo, rInfo->GetSlice ()))
+//     {
+//       NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
+//                    " over the shortest path");
+//       TopologyBitRateReserve (rInfo);
+//       return true;
+//     }
+//
+//   // The requested bit rate is not available over the shortest path. When
+//   // using the SPF routing strategy, invert the routing path and check for the
+//   // requested bit rate over the longest path.
+//   if (m_strategy == RingController::SPF)
+//     {
+//       ringInfo->InvertPath ();
+//       if (HasBitRate (ringInfo, gbrInfo, rInfo->GetSlice ()))
+//         {
+//           NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
+//                        " over the longest (inverted) path");
+//           TopologyBitRateReserve (rInfo);
+//           return true;
+//         }
+//     }
+//
+  // Nothing more to do. Block the traffic.
+  NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex ());
+  BlockBearer (rInfo, RoutingInfo::NOBANDWIDTH);
+  return false;
+}
+
+bool
+RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo);
+
+  // For bearers without reserved resources: nothing to release.
+  Ptr<GbrInfo> gbrInfo = rInfo->GetGbrInfo ();
+  if (!gbrInfo || !gbrInfo->IsReserved ())
+    {
+      return true;
+    }
+
+  NS_LOG_INFO ("Releasing resources for bearer " << rInfo->GetTeidHex ());
+
+  // It only makes sense to release bandwidth for GBR bearers.
+  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+  NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
+
+  bool success = true;
+  RingInfo::RingPath downPath;
+  uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
+
+  // S5 interface (from P-GW to S-GW)
+  downPath = ringInfo->GetDownPath (LteIface::S5);
+  while (success && curr != ringInfo->GetSgwInfraSwIdx ())
+    {
+      uint16_t next = NextSwitchIndex (curr, downPath);
+      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
+
+      // FIXME Precisa resolver a questão do slice.
+      // uint64_t currId = GetDpId (curr);
+      // uint64_t nextId = GetDpId (next);
+      // success &= lInfo->ReleaseBitRate (currId, nextId, rInfo->GetSlice (),
+      //                                   gbrInfo->GetDownBitRate ());
+      // success &= lInfo->ReleaseBitRate (nextId, currId, rInfo->GetSlice (),
+      //                                   gbrInfo->GetUpBitRate ());
+      curr = next;
+    }
+
+  // S5 interface (from P-GW to S-GW)
+  downPath = ringInfo->GetDownPath (LteIface::S1U);
+  while (success && curr != ringInfo->GetEnbInfraSwIdx ())
+    {
+      uint16_t next = NextSwitchIndex (curr, downPath);
+      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
+
+      // FIXME Precisa resolver a questão do slice.
+      // uint64_t currId = GetDpId (curr);
+      // uint64_t nextId = GetDpId (next);
+      // success &= lInfo->ReleaseBitRate (currId, nextId, rInfo->GetSlice (),
+      //                                   gbrInfo->GetDownBitRate ());
+      // success &= lInfo->ReleaseBitRate (nextId, currId, rInfo->GetSlice (),
+      //                                   gbrInfo->GetUpBitRate ());
+      curr = next;
+    }
+
+  NS_ASSERT_MSG (success, "Error when releasing resources.");
+  gbrInfo->SetReserved (!success);
+  return success;
+}
+
+void
+RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+
+  // FIXME Aqui tem que marcar a qual link slice que este tráfego pertence
+
+  // Let's create its ring routing metadata.
+  Ptr<RingInfo> ringInfo = CreateObject<RingInfo> (rInfo);
+
+  // Set default paths to those with lower hops.
+  RingInfo::RingPath s1uDownPath = FindShortestPath (
+      rInfo->GetSgwInfraSwIdx (), rInfo->GetEnbInfraSwIdx ());
+  RingInfo::RingPath s5DownPath = FindShortestPath (
+      rInfo->GetPgwInfraSwIdx (), rInfo->GetSgwInfraSwIdx ());
+  ringInfo->SetDefaultPath (s1uDownPath, LteIface::S1U);
+  ringInfo->SetDefaultPath (s5DownPath, LteIface::S5);
+
+  NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeidHex () << " default downlink "
+                "S1-U path to " << RingInfo::RingPathStr (s1uDownPath) <<
+                " and S5 path to " << RingInfo::RingPathStr (s5DownPath));
+}
+
 void
 RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
 {
@@ -228,220 +373,6 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
     }
 }
 
-void
-RingController::TopologyBearerCreated (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
-
-  // FIXME Aqui tem que marcar qual o cinfo slice que este tráfego pertence
-
-  // Let's create its ring routing metadata.
-  Ptr<RingInfo> ringInfo = CreateObject<RingInfo> (rInfo);
-
-  // Set default paths to those with lower hops.
-  RingInfo::RingPath s1uDownPath = FindShortestPath (
-      rInfo->GetSgwInfraSwIdx (), rInfo->GetEnbInfraSwIdx ());
-  RingInfo::RingPath s5DownPath = FindShortestPath (
-      rInfo->GetPgwInfraSwIdx (), rInfo->GetSgwInfraSwIdx ());
-  ringInfo->SetDefaultPath (s1uDownPath, LteIface::S1U);
-  ringInfo->SetDefaultPath (s5DownPath, LteIface::S5);
-
-  NS_LOG_DEBUG ("Bearer teid " << rInfo->GetTeidHex () <<
-                " default downlink S1-U path to " << s1uDownPath <<
-                " and S5 path to " << s5DownPath);
-}
-
-bool
-RingController::TopologyBearerRequest (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
-
-  // If the bearer is already blocked, there's nothing more to do.
-  if (rInfo->IsBlocked ())
-    {
-      return false;
-    }
-
-  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
-  NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
-
-  // Reset the ring routing info to the shortest path.
-  ringInfo->ResetToDefaults ();
-
-  // For Non-GBR bearers (which includes the default bearer) and for bearers
-  // that only transverse local switch (local routing for both S1-U and S5
-  // interfaces): let's accept it without guarantees. Note that in current
-  // implementation, these bearers are always routed over the shortest path.
-  if (!rInfo->IsGbr () || ringInfo->IsLocalPath ())
-    {
-      return true;
-    }
-
-  // It only makes sense to check for available bandwidth for GBR bearers.
-  Ptr<GbrInfo> gbrInfo = rInfo->GetGbrInfo ();
-  NS_ASSERT_MSG (gbrInfo, "Invalid configuration for GBR bearer request.");
-
-// FIXME Precisa resolver a questão do slice.
-//   // Check for the requested bit rate over the shortest path.
-//   if (HasBitRate (ringInfo, gbrInfo, rInfo->GetSlice ()))
-//     {
-//       NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
-//                    " over the shortest path");
-//       return true;
-//     }
-//
-//   // The requested bit rate is not available over the shortest path. When
-//   // using the SPF routing strategy, invert the routing path and check for the
-//   // requested bit rate over the longest path.
-//   if (m_strategy == RingController::SPF)
-//     {
-//       ringInfo->InvertPath ();
-//       if (HasBitRate (ringInfo, gbrInfo, rInfo->GetSlice ()))
-//         {
-//           NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
-//                        " over the longest (inverted) path");
-//           return true;
-//         }
-//     }
-//
-  // Nothing more to do. Block the traffic.
-  NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex ());
-  BlockBearer (rInfo, RoutingInfo::NOBANDWIDTH);
-  return false;
-}
-
-bool
-RingController::TopologyBitRateRelease (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo);
-
-  // For bearers without reserved resources: nothing to release.
-  Ptr<GbrInfo> gbrInfo = rInfo->GetGbrInfo ();
-  if (!gbrInfo || !gbrInfo->IsReserved ())
-    {
-      return true;
-    }
-
-  NS_LOG_INFO ("Releasing resources for bearer " << rInfo->GetTeidHex ());
-
-  // It only makes sense to release bandwidth for GBR bearers.
-  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
-  NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
-
-  bool success = true;
-  RingInfo::RingPath downPath;
-  uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
-
-  // S5 interface (from P-GW to S-GW)
-  downPath = ringInfo->GetDownPath (LteIface::S5);
-  while (success && curr != ringInfo->GetSgwInfraSwIdx ())
-    {
-      uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-
-      // FIXME Precisa resolver a questão do slice.
-      // uint64_t currId = GetDpId (curr);
-      // uint64_t nextId = GetDpId (next);
-      // success &= lInfo->ReleaseBitRate (currId, nextId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetDownBitRate ());
-      // success &= lInfo->ReleaseBitRate (nextId, currId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetUpBitRate ());
-      curr = next;
-    }
-
-  // S5 interface (from P-GW to S-GW)
-  downPath = ringInfo->GetDownPath (LteIface::S1U);
-  while (success && curr != ringInfo->GetEnbInfraSwIdx ())
-    {
-      uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-
-      // FIXME Precisa resolver a questão do slice.
-      // uint64_t currId = GetDpId (curr);
-      // uint64_t nextId = GetDpId (next);
-      // success &= lInfo->ReleaseBitRate (currId, nextId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetDownBitRate ());
-      // success &= lInfo->ReleaseBitRate (nextId, currId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetUpBitRate ());
-      curr = next;
-    }
-
-  NS_ASSERT_MSG (success, "Error when releasing resources.");
-  gbrInfo->SetReserved (!success);
-  return success;
-}
-
-bool
-RingController::TopologyBitRateReserve (Ptr<RoutingInfo> rInfo)
-{
-  NS_LOG_FUNCTION (this << rInfo);
-
-  // If the bearer is already blocked, there's nothing more to do.
-  if (rInfo->IsBlocked ())
-    {
-      return false;
-    }
-
-  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
-  NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
-
-  // For Non-GBR bearers (which includes the default bearer) and for bearers
-  // that only transverse local switch (local routing for both S1-U and S5
-  // interfaces): don't reserve bit rate resources.
-  if (!rInfo->IsGbr () || ringInfo->IsLocalPath ())
-    {
-      return true;
-    }
-
-  NS_LOG_INFO ("Reserving resources for bearer " << rInfo->GetTeidHex ());
-
-  // It only makes sense to reserve bandwidth for GBR bearers.
-  Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
-  NS_ASSERT_MSG (gbrInfo, "Invalid configuration for GBR bearer request.");
-
-  bool success = true;
-  RingInfo::RingPath downPath;
-  uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
-
-  // S5 interface (from P-GW to S-GW)
-  downPath = ringInfo->GetDownPath (LteIface::S5);
-  while (success && curr != ringInfo->GetSgwInfraSwIdx ())
-    {
-      uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-
-      // FIXME Precisa resolver a questão do slice.
-      // uint64_t currId = GetDpId (curr);
-      // uint64_t nextId = GetDpId (next);
-      // success &= lInfo->ReserveBitRate (currId, nextId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetDownBitRate ());
-      // success &= lInfo->ReserveBitRate (nextId, currId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetUpBitRate ());
-      curr = next;
-    }
-
-  // S1-U interface (from S-GW to eNB)
-  downPath = ringInfo->GetDownPath (LteIface::S1U);
-  while (success && curr != ringInfo->GetEnbInfraSwIdx ())
-    {
-      uint16_t next = NextSwitchIndex (curr, downPath);
-      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
-
-      // FIXME Precisa resolver a questão do slice.
-      // uint64_t currId = GetDpId (curr);
-      // uint64_t nextId = GetDpId (next);
-      // success &= lInfo->ReserveBitRate (currId, nextId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetDownBitRate ());
-      // success &= lInfo->ReserveBitRate (nextId, currId, rInfo->GetSlice (),
-      //                                   gbrInfo->GetUpBitRate ());
-      curr = next;
-    }
-
-  NS_ASSERT_MSG (success, "Error when reserving resources.");
-  gbrInfo->SetReserved (success);
-  return success;
-}
-
 bool
 RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 {
@@ -544,6 +475,77 @@ RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
   DpctlExecute (GetDpId (ringInfo->GetSgwInfraSwIdx ()), cmd.str ());
 
   return true;
+}
+
+bool
+RingController::BitRateReserve (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo);
+
+  // If the bearer is already blocked, there's nothing more to do.
+  if (rInfo->IsBlocked ())
+    {
+      return false;
+    }
+
+  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+  NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
+
+  // For Non-GBR bearers (which includes the default bearer) and for bearers
+  // that only transverse local switch (local routing for both S1-U and S5
+  // interfaces): don't reserve bit rate resources.
+  if (!rInfo->IsGbr () || ringInfo->IsLocalPath ())
+    {
+      return true;
+    }
+
+  NS_LOG_INFO ("Reserving resources for bearer " << rInfo->GetTeidHex ());
+
+  // It only makes sense to reserve bandwidth for GBR bearers.
+  Ptr<GbrInfo> gbrInfo = rInfo->GetObject<GbrInfo> ();
+  NS_ASSERT_MSG (gbrInfo, "Invalid configuration for GBR bearer request.");
+
+  bool success = true;
+  RingInfo::RingPath downPath;
+  uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
+
+  // S5 interface (from P-GW to S-GW)
+  downPath = ringInfo->GetDownPath (LteIface::S5);
+  while (success && curr != ringInfo->GetSgwInfraSwIdx ())
+    {
+      uint16_t next = NextSwitchIndex (curr, downPath);
+      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
+
+      // FIXME Precisa resolver a questão do slice.
+      // uint64_t currId = GetDpId (curr);
+      // uint64_t nextId = GetDpId (next);
+      // success &= lInfo->ReserveBitRate (currId, nextId, rInfo->GetSlice (),
+      //                                   gbrInfo->GetDownBitRate ());
+      // success &= lInfo->ReserveBitRate (nextId, currId, rInfo->GetSlice (),
+      //                                   gbrInfo->GetUpBitRate ());
+      curr = next;
+    }
+
+  // S1-U interface (from S-GW to eNB)
+  downPath = ringInfo->GetDownPath (LteIface::S1U);
+  while (success && curr != ringInfo->GetEnbInfraSwIdx ())
+    {
+      uint16_t next = NextSwitchIndex (curr, downPath);
+      Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
+
+      // FIXME Precisa resolver a questão do slice.
+      // uint64_t currId = GetDpId (curr);
+      // uint64_t nextId = GetDpId (next);
+      // success &= lInfo->ReserveBitRate (currId, nextId, rInfo->GetSlice (),
+      //                                   gbrInfo->GetDownBitRate ());
+      // success &= lInfo->ReserveBitRate (nextId, currId, rInfo->GetSlice (),
+      //                                   gbrInfo->GetUpBitRate ());
+      curr = next;
+    }
+
+  NS_ASSERT_MSG (success, "Error when reserving resources.");
+  gbrInfo->SetReserved (success);
+  return success;
 }
 
 void

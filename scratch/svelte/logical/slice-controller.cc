@@ -158,16 +158,16 @@ SliceController::DedicatedBearerRequest (
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't request the default bearer.");
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
-  // Update the P-GW TFT index and the blocked flag.
+  // Update the P-GW TFT index (the adaptive mechanism level may have changed
+  // since the last time this bearer was active) and the blocked flag.
   rInfo->SetPgwTftIdx (GetTftIdx (rInfo));
   rInfo->SetBlocked (false);
 
   // Check for available resources on P-GW and backhaul network and then
   // reserve the requested bandwidth (don't change the order!).
   bool success = true;
-  success &= m_backhaulCtrl->TopologyBearerRequest (rInfo);
   success &= PgwBearerRequest (rInfo);
-  success &= m_backhaulCtrl->TopologyBitRateReserve (rInfo);
+  success &= m_backhaulCtrl->BearerRequest (rInfo);
   m_bearerRequestTrace (rInfo);
   if (!success)
     {
@@ -198,7 +198,7 @@ SliceController::DedicatedBearerRelease (
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't release the default bearer.");
   NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
 
-  m_backhaulCtrl->TopologyBitRateRelease (rInfo);
+  m_backhaulCtrl->BearerRelease (rInfo);
   m_bearerReleaseTrace (rInfo);
   NS_LOG_INFO ("Bearer released by controller.");
 
@@ -579,7 +579,7 @@ SliceController::DoCreateSessionRequest (
                     rInfo->GetTeidHex ());
 
       rInfo->SetPgwTftIdx (GetTftIdx (rInfo));
-      m_backhaulCtrl->TopologyBearerCreated (rInfo);
+      m_backhaulCtrl->NotifyBearerCreated (rInfo);
 
       if (rInfo->IsDefault ())
         {
@@ -589,9 +589,8 @@ SliceController::DoCreateSessionRequest (
 
           // For logic consistence, let's check for available resources.
           bool success = true;
-          success &= m_backhaulCtrl->TopologyBearerRequest (rInfo);
           success &= PgwBearerRequest (rInfo);
-          success &= m_backhaulCtrl->TopologyBitRateReserve (rInfo);
+          success &= m_backhaulCtrl->BearerRequest (rInfo);
           NS_ASSERT_MSG (success, "Default bearer must be accepted.");
           m_bearerRequestTrace (rInfo);
 
@@ -780,7 +779,7 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
     }
 
   // Second check: OpenFlow switch pipeline load.
-  // Is the current pipeline load is exceeding the block threshold, blocks the
+  // If the current pipeline load is exceeding the block threshold, block the
   // bearer accordingly to the PgwTftBlockPolicy attribute:
   // - If OFF (none): don't block the request.
   // - If ON (all)  : block the request.

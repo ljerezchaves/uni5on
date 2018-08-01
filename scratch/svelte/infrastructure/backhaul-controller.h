@@ -143,39 +143,33 @@ protected:
    */
   //\{
   /**
-   * Notify this controller that all backhaul switches have already been
-   * configured and the connections between them are finished.
-   * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
+   * Process the bearer request, checking for the available resources in the
+   * backhaul network, deciding for the best routing path, and reserving the
+   * bit rate when necessary.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
    */
-  virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices) = 0;
+  virtual bool BearerRequest (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Release the resources for this bearer
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool BearerRelease (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
    * Notify this controller of a new bearer context created.
    * \param rInfo The routing information to process.
    */
-  virtual void TopologyBearerCreated (Ptr<RoutingInfo> rInfo) = 0;
+  virtual void NotifyBearerCreated (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
-   * Process the bearer request, checking for available resources in the
-   * backhaul network and deciding for the best routing path.
-   * \param rInfo The routing information to process.
-   * \return True if succeeded, false otherwise.
+   * Notify this controller that all backhaul switches have already been
+   * configured and the connections between them are finished.
+   * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
    */
-  virtual bool TopologyBearerRequest (Ptr<RoutingInfo> rInfo) = 0;
-
-  /**
-   * Release the bit rate for this bearer in the backhaul network.
-   * \param rInfo The routing information to process.
-   * \return True if succeeded, false otherwise.
-   */
-  virtual bool TopologyBitRateRelease (Ptr<RoutingInfo> rInfo) = 0;
-
-  /**
-   * Reserve the bit rate for this bearer in the backhaul network.
-   * \param rInfo The routing information to process.
-   * \return True if succeeded, false otherwise.
-   */
-  virtual bool TopologyBitRateReserve (Ptr<RoutingInfo> rInfo) = 0;
+  virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices) = 0;
 
   /**
    * Install TEID routing OpenFlow match rules into backhaul switches.

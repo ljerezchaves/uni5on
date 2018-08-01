@@ -67,17 +67,22 @@ protected:
   virtual void DoDispose ();
 
   // Inherited from BackhaulController.
+  bool BearerRequest (Ptr<RoutingInfo> rInfo);
+  bool BearerRelease (Ptr<RoutingInfo> rInfo);
+  void NotifyBearerCreated (Ptr<RoutingInfo> rInfo);
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
-
-  void TopologyBearerCreated  (Ptr<RoutingInfo> rInfo);
-  bool TopologyBearerRequest  (Ptr<RoutingInfo> rInfo);
-  bool TopologyBitRateRelease (Ptr<RoutingInfo> rInfo);
-  bool TopologyBitRateReserve (Ptr<RoutingInfo> rInfo);
   bool TopologyRoutingInstall (Ptr<RoutingInfo> rInfo);
-  bool TopologyRoutingRemove  (Ptr<RoutingInfo> rInfo);
+  bool TopologyRoutingRemove (Ptr<RoutingInfo> rInfo);
   // Inherited from BackhaulController.
 
 private:
+  /**
+   * Reserve the bit rate for this bearer in the backhaul network.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool BitRateReserve (Ptr<RoutingInfo> rInfo);
+
   /**
    * To avoid flooding problems when broadcasting packets (like in ARP
    * protocol), let's find a Spanning Tree and drop packets at selected ports
