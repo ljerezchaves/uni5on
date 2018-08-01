@@ -92,6 +92,7 @@ public:
   bool IsInstalled (void) const;
   uint16_t GetPgwTftIdx (void) const;
   uint16_t GetPriority (void) const;
+  LinkSlice GetLinkSlice (void) const;
   uint16_t GetTimeout (void) const;
   Ptr<GbrInfo> GetGbrInfo (void) const;
   Ptr<MeterInfo> GetMeterInfo (void) const;
@@ -174,6 +175,7 @@ protected:
   void SetInstalled (bool value);
   void SetPgwTftIdx (uint16_t value);
   void SetPriority (uint16_t value);
+  void SetLinkSlice (LinkSlice value);
   void SetTimeout (uint16_t value);
   //\}
 
@@ -208,12 +210,12 @@ private:
   bool                 m_isInstalled;  //!< Rules installed status.
   uint16_t             m_pgwTftIdx;    //!< P-GW TFT switch index.
   uint16_t             m_priority;     //!< Flow rule priority.
+  LinkSlice            m_linkSlice;    //!< Link slice.
   uint16_t             m_timeout;      //!< Flow idle timeout.
   Ptr<GbrInfo>         m_gbrInfo;      //!< GBR metadata.
   Ptr<MeterInfo>       m_meterInfo;    //!< Meter metadata.
   Ptr<UeInfo>          m_ueInfo;       //!< UE metadata.
 
-  // Slice                m_slice;        //!< Backhaul slice. ???
 
   /** Map saving TEID / routing information. */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;

@@ -163,6 +163,14 @@ RoutingInfo::GetPriority (void) const
   return m_priority;
 }
 
+LinkSlice
+RoutingInfo::GetLinkSlice (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_linkSlice;
+}
+
 uint16_t
 RoutingInfo::GetTimeout (void) const
 {
@@ -491,6 +499,14 @@ RoutingInfo::SetPriority (uint16_t value)
   NS_LOG_FUNCTION (this << value);
 
   m_priority = value;
+}
+
+void
+RoutingInfo::SetLinkSlice (LinkSlice value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_linkSlice = value;
 }
 
 void
