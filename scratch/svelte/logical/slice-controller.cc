@@ -159,7 +159,7 @@ SliceController::DedicatedBearerRequest (
   NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
 
   // Update the P-GW TFT index and the blocked flag.
-  rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
+  rInfo->SetPgwTftIdx (GetTftIdx (rInfo));
   rInfo->SetBlocked (false);
 
   // Check for available resources on P-GW and backhaul network and then
@@ -578,7 +578,7 @@ SliceController::DoCreateSessionRequest (
                     static_cast<uint16_t> (bit.epsBearerId) << ", teid " <<
                     rInfo->GetTeidHex ());
 
-      rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
+      rInfo->SetPgwTftIdx (GetTftIdx (rInfo));
       m_backhaulCtrl->TopologyBearerCreated (rInfo);
 
       if (rInfo->IsDefault ())
@@ -667,7 +667,7 @@ SliceController::DoModifyBearerRequest (
 }
 
 uint16_t
-SliceController::GetPgwTftIdx (
+SliceController::GetTftIdx (
   Ptr<const RoutingInfo> rInfo, uint16_t activeTfts) const
 {
   NS_LOG_FUNCTION (this << rInfo << activeTfts);
@@ -723,7 +723,7 @@ SliceController::PgwAdaptiveMechanism (void)
           for (auto const &rInfo :
                RoutingInfo::GetInstalledList (m_sliceId, currIdx))
             {
-              uint16_t destIdx = GetPgwTftIdx (rInfo, futureTfts);
+              uint16_t destIdx = GetTftIdx (rInfo, futureTfts);
               if (destIdx != currIdx)
                 {
                   NS_LOG_INFO ("Move bearer teid " << (rInfo)->GetTeidHex ());

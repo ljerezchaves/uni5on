@@ -219,8 +219,8 @@ private:
    *        adaptive mechanism level.
    * \return The P-GW TFT index.
    */
-  uint16_t GetPgwTftIdx (
-    Ptr<const RoutingInfo> rInfo, uint16_t activeTfts = 0) const;
+  uint16_t GetTftIdx (Ptr<const RoutingInfo> rInfo,
+                      uint16_t activeTfts = 0) const;
 
   /**
    * Periodically check for the P-GW TFT processing load and flow table usage
