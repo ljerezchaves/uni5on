@@ -78,9 +78,9 @@ public:
   uint16_t GetNSwitches (void) const;
 
   /**
-   * Get the slice usage considering the maximum usage in any backhaul link.
+   * Get the average slice usage considering all links in the backhaul network.
    * \param slice The link slice.
-   * \return The maximum slice usage.
+   * \return The average slice usage.
    */
   double GetSliceUsage (LinkSlice slice) const;
 

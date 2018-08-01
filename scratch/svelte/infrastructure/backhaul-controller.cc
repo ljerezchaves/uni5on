@@ -108,14 +108,16 @@ BackhaulController::GetSliceUsage (LinkSlice slice) const
   NS_LOG_FUNCTION (this << slice);
 
   double sliceUsage = 0;
+  uint16_t count = 0;
   for (auto const &lInfo : LinkInfo::GetList ())
     {
-      sliceUsage = std::max (
-          sliceUsage, std::max (
-            lInfo->GetThpSliceRatio (LinkInfo::FWD, slice),
-            lInfo->GetThpSliceRatio (LinkInfo::BWD, slice)));
+      sliceUsage += lInfo->GetThpSliceRatio (LinkInfo::FWD, slice);
+      sliceUsage += lInfo->GetThpSliceRatio (LinkInfo::BWD, slice);
+      count += 2;
     }
-  return sliceUsage;
+
+  NS_ASSERT_MSG (count, "Invalid slice usage for empty topology.");
+  return sliceUsage / static_cast<double> (count);
 }
 
 uint8_t
