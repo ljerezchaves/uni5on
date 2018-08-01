@@ -158,14 +158,11 @@ SgwInfo::GetPointerBySwIdx (uint16_t infaSwIdx)
   NS_LOG_FUNCTION_NOARGS ();
 
   Ptr<SgwInfo> sgwInfo = 0;
-  SgwIdSgwInfo_t::iterator it;
-  for (it = SgwInfo::m_sgwInfoBySgwId.begin ();
-       it != SgwInfo::m_sgwInfoBySgwId.end ();
-       ++it)
+  for (auto const &it : SgwInfo::m_sgwInfoBySgwId)
     {
-      if ((it->second)->GetInfraSwIdx () == infaSwIdx)
+      if ((it.second)->GetInfraSwIdx () == infaSwIdx)
         {
-          sgwInfo = it->second;
+          sgwInfo = it.second;
           break;
         }
     }

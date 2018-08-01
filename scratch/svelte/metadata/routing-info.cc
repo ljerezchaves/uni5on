@@ -511,11 +511,9 @@ RoutingInfo::GetInstalledList (SliceId slice, uint16_t pgwTftIdx)
   NS_LOG_FUNCTION_NOARGS ();
 
   RoutingInfoList_t list;
-  TeidRoutingMap_t::iterator it;
-  for (it = RoutingInfo::m_routingInfoByTeid.begin ();
-       it != RoutingInfo::m_routingInfoByTeid.end (); ++it)
+  for (auto const &it : m_routingInfoByTeid)
     {
-      Ptr<RoutingInfo> rInfo = it->second;
+      Ptr<RoutingInfo> rInfo = it.second;
 
       if (!rInfo->IsInstalled ())
         {

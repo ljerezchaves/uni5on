@@ -109,14 +109,12 @@ BackhaulController::GetSliceUsage (LinkSlice slice) const
   NS_LOG_FUNCTION (this << slice);
 
   double sliceUsage = 0;
-  LinkInfoList_t linkList = LinkInfo::GetList ();
-  LinkInfoList_t::const_iterator it;
-  for (it = linkList.begin (); it != linkList.end (); it++)
+  for (auto const &lInfo : LinkInfo::GetList ())
     {
       sliceUsage = std::max (
           sliceUsage, std::max (
-            (*it)->GetThpSliceRatio (LinkInfo::FWD, slice),
-            (*it)->GetThpSliceRatio (LinkInfo::BWD, slice)));
+            lInfo->GetThpSliceRatio (LinkInfo::FWD, slice),
+            lInfo->GetThpSliceRatio (LinkInfo::BWD, slice)));
     }
   return sliceUsage;
 }
@@ -427,14 +425,12 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   if (GetPriorityQueuesMode () == OpMode::ON)
     {
       // Priority output queues rules.
-      DscpQueueMap_t::iterator it;
-      for (it = BackhaulController::m_dscpQueueTable.begin ();
-           it != BackhaulController::m_dscpQueueTable.end (); ++it)
+      for (auto const &it : m_dscpQueueTable)
         {
           std::ostringstream cmd;
           cmd << "flow-mod cmd=add,table=4,prio=16 eth_type=0x800,"
-              << "ip_dscp=" << static_cast<uint16_t> (it->first)
-              << " write:queue=" << static_cast<uint32_t> (it->second);
+              << "ip_dscp=" << static_cast<uint16_t> (it.first)
+              << " write:queue=" << static_cast<uint32_t> (it.second);
           DpctlExecute (swtch, cmd.str ());
         }
     }
