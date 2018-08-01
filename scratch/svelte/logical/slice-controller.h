@@ -110,13 +110,10 @@ public:
                                 Ptr<NetDevice> webSgiDev);
 
   /**
-   * \name Internal mechanisms operation mode accessors.
-   * \return The requested mechanism operation mode.
+   * Get the P-GW adaptive mechanisms operation mode.
+   * \return The operation mode.
    */
-  //\{
-  OpMode GetAggregationMode (void) const;
   OpMode GetPgwAdaptiveMode (void) const;
-  //\}
 
   /**
    * Get The S-GW side of the S11 SAP.
@@ -320,7 +317,6 @@ private:
   uint16_t                m_tftSwitches;    //!< Max number of TFT switches.
 
   // Internal members and attributes.
-  OpMode                  m_aggregation;    //!< Aggregation mechanism.
   Time                    m_timeout;        //!< Controller internal timeout.
 
   static const uint16_t   m_flowTimeout;    //!< Timeout for flow entries.

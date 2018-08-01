@@ -117,14 +117,6 @@ SliceController::GetTypeId (void)
                    TimeValue (Seconds (5)),
                    MakeTimeAccessor (&SliceController::m_timeout),
                    MakeTimeChecker ())
-    .AddAttribute ("Aggregation",
-                   "Traffic aggregation mechanism operation mode.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   EnumValue (OpMode::OFF),
-                   MakeEnumAccessor (&SliceController::m_aggregation),
-                   MakeEnumChecker (OpMode::OFF,  "off",
-                                    OpMode::ON,   "on",
-                                    OpMode::AUTO, "auto"))
 
     .AddTraceSource ("BearerRequest", "The bearer request trace source.",
                      MakeTraceSourceAccessor (
@@ -327,14 +319,6 @@ SliceController::NotifyPgwAttach (Ptr<PgwInfo> pgwInfo,
   // Table 0 -- P-GW TFT default table -- [from higher to lower priority]
   //
   // Entries will be installed here by PgwRulesInstall function.
-}
-
-OpMode
-SliceController::GetAggregationMode (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_aggregation;
 }
 
 OpMode
