@@ -134,9 +134,9 @@ SliceController::GetTypeId (void)
                      MakeTraceSourceAccessor (
                        &SliceController::m_bearerRequestTrace),
                      "ns3::RoutingInfo::TracedCallback")
-    .AddTraceSource ("PgwTftStats", "The P-GW TFT stats trace source.",
+    .AddTraceSource ("PgwTftAdaptive", "The P-GW TFT adaptive trace source.",
                      MakeTraceSourceAccessor (
-                       &SliceController::m_pgwTftStatsTrace),
+                       &SliceController::m_pgwTftAdaptiveTrace),
                      "ns3::SliceController::PgwTftStatsTracedCallback")
     .AddTraceSource ("SessionCreated", "The session created trace source.",
                      MakeTraceSourceAccessor (
@@ -693,7 +693,7 @@ SliceController::PgwAdaptiveMechanism (void)
 
   NS_ASSERT_MSG (m_pgwInfo, "No P-GW attached to this slice.");
 
-  uint32_t maxLbLevel = static_cast<uint32_t> (log2 (m_tftSwitches));
+  uint32_t maxLevel = static_cast<uint32_t> (log2 (m_tftSwitches));
   uint16_t activeTfts = 1 << m_tftLevel;
   uint8_t nextLevel = m_tftLevel;
 
@@ -703,7 +703,7 @@ SliceController::PgwAdaptiveMechanism (void)
       double pipeUsage = m_pgwInfo->GetTftWorstPipeCapacityUsage ();
 
       // We may increase the level when we hit the split threshold.
-      if ((m_tftLevel < maxLbLevel)
+      if ((m_tftLevel < maxLevel)
           && (tableUsage >= m_tftSplitThs || pipeUsage >= m_tftSplitThs))
         {
           NS_LOG_INFO ("Increasing the adaptive mechanism level.");
@@ -745,7 +745,7 @@ SliceController::PgwAdaptiveMechanism (void)
             }
         }
 
-      // Update the adaptive mechanism level and the P-GW main switch.
+      // Update the P-GW main switch.
       std::ostringstream cmd;
       cmd << "flow-mod cmd=mods,table=0,prio=64 eth_type=0x800"
           << ",in_port=" << m_pgwInfo->GetMainSgiPortNo ()
@@ -754,24 +754,11 @@ SliceController::PgwAdaptiveMechanism (void)
       DpctlExecute (m_pgwInfo->GetMainDpId (), cmd.str ());
     }
 
-//  FIXME
-//  Fire the P-GW TFT adaptation trace source.
-//  struct PgwTftStats tftStats;
-//  tftStats.tableSize = m_pgwInfo->GetTftMinFlowTableSize ();
-//  tftStats.maxEntries = maxEntries;
-//  tftStats.sumEntries = sumEntries;
-//  tftStats.pipeCapacity = m_pgwInfo->GetTftMinPipelineCapacity ().GetBitRate ();
-//  tftStats.maxLoad = maxLoad;
-//  tftStats.sumLoad = sumLoad;
-//  tftStats.currentLevel = m_tftLevel;
-//  tftStats.nextLevel = nextLevel;
-//  tftStats.maxLevel = maxLbLevel;
-//  tftStats.bearersMoved = moved;
-//  tftStats.blockThrs = m_tftBlockThs;
-//  tftStats.joinThrs = m_tftJoinThs;
-//  tftStats.splitThrs = m_tftSplitThs;
-//  m_pgwTftStatsTrace (tftStats);
+  // Fire the P-GW TFT adaptation trace source.
+  m_pgwTftAdaptiveTrace (m_pgwInfo, m_tftLevel, nextLevel, maxLevel, moved,
+                         m_tftBlockThs, m_tftJoinThs, m_tftSplitThs);
 
+  // Update the adaptive mechanism level.
   m_tftLevel = nextLevel;
 }
 

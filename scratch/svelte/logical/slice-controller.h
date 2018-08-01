@@ -48,24 +48,6 @@ class SliceController : public OFSwitch13Controller
   friend class MemberEpcS11SapSgw<SliceController>;
 
 public:
-  /** P-GW adaptive mechanism statistics. */
-  struct PgwTftStats
-  {
-    double   tableSize;       //!< The OpenFlow flow table size.
-    double   maxEntries;      //!< The table size peak entries.
-    double   sumEntries;      //!< The table size total entries.
-    double   pipeCapacity;    //!< The OpenFlow pipeline capacity.
-    double   maxLoad;         //!< The pipeline peak load;
-    double   sumLoad;         //!< The pipeline total load;
-    uint32_t currentLevel;    //!< The current mechanism level.
-    uint32_t nextLevel;       //!< The mechanism level for next cycle.
-    uint32_t maxLevel;        //!< The maximum mechanism level.
-    uint32_t bearersMoved;    //!< The number of bearers moved between TFTs.
-    double   blockThrs;       //!< The block threshold.
-    double   joinThrs;        //!< The join threshold.
-    double   splitThrs;       //!< The split threshold.
-  };
-
   SliceController ();           //!< Default constructor.
   virtual ~SliceController ();  //!< Dummy destructor, see DoDispose.
 
@@ -153,10 +135,20 @@ public:
                              Ipv4Address webAddr, Ipv4Mask webMask);
 
   /**
-   * TracedCallback signature for the P-GW TFT stats trace source.
-   * \param stats The P-GW TST statistics from the last interval.
+   * TracedCallback signature for the P-GW adaptive mechanism trace source.
+   * \param pgwInfo The P-GW metadata.
+   * \param currentLevel The current mechanism level.
+   * \param nextLevel The mechanism level for next cycle.
+   * \param maxLevel The maximum mechanism level.
+   * \param bearersMoved The number of bearers moved.
+   * \param blockThrs The block threshold.
+   * \param joinThrs The join threshold.
+   * \param splitThrs The split threshold.
    */
-  typedef void (*PgwTftStatsTracedCallback)(struct PgwTftStats stats);
+  typedef void (*PgwTftStatsTracedCallback)(
+    Ptr<const PgwInfo> pgwInfo, uint32_t currentLevel, uint32_t nextLevel,
+    uint32_t maxLevel, uint32_t bearersMoved, double blockThrs,
+    double joinThrs, double splitThrs);
 
   /**
    * TracedCallback signature for session created trace source.
@@ -296,8 +288,9 @@ private:
   /** The context created trace source, fired at NotifySessionCreated. */
   TracedCallback<uint64_t, BearerContextList_t> m_sessionCreatedTrace;
 
-  /** The P-GW TFT stats trace source, fired at PgwTftCheckUsage. */
-  TracedCallback<struct PgwTftStats> m_pgwTftStatsTrace;
+  /** The P-GW TFT adaptive trace source, fired at PgwAdaptiveMechanism. */
+  TracedCallback<Ptr<const PgwInfo>, uint32_t, uint32_t, uint32_t, uint32_t,
+                 double, double, double> m_pgwTftAdaptiveTrace;
 
   // Slice identification.
   SliceId                 m_sliceId;        //!< Logical slice ID.
