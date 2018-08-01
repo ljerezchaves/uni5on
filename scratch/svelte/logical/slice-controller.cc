@@ -147,27 +147,6 @@ SliceController::GetTypeId (void)
 }
 
 bool
-SliceController::DedicatedBearerRelease (
-  EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
-{
-  NS_LOG_FUNCTION (this << imsi << cellId << teid);
-
-  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-
-  // This bearer must be active.
-  NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't release the default bearer.");
-  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
-
-  m_backhaulCtrl->TopologyBitRateRelease (rInfo);
-  m_bearerReleaseTrace (rInfo);
-  NS_LOG_INFO ("Bearer released by controller.");
-
-  // Deactivate and remove the bearer.
-  rInfo->SetActive (false);
-  return BearerRemove (rInfo);
-}
-
-bool
 SliceController::DedicatedBearerRequest (
   EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
 {
@@ -205,6 +184,27 @@ SliceController::DedicatedBearerRequest (
   // Activate and install the bearer.
   rInfo->SetActive (true);
   return BearerInstall (rInfo);
+}
+
+bool
+SliceController::DedicatedBearerRelease (
+  EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
+{
+  NS_LOG_FUNCTION (this << imsi << cellId << teid);
+
+  Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+
+  // This bearer must be active.
+  NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't release the default bearer.");
+  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
+
+  m_backhaulCtrl->TopologyBitRateRelease (rInfo);
+  m_bearerReleaseTrace (rInfo);
+  NS_LOG_INFO ("Bearer released by controller.");
+
+  // Deactivate and remove the bearer.
+  rInfo->SetActive (false);
+  return BearerRemove (rInfo);
 }
 
 void
