@@ -107,29 +107,29 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   Ptr<GbrInfo> gbrInfo = rInfo->GetGbrInfo ();
   NS_ASSERT_MSG (gbrInfo, "Invalid configuration for GBR bearer request.");
 
-// FIXME Precisa resolver a questão do slice.
-//   // Check for the requested bit rate over the shortest path.
-//   if (HasBitRate (ringInfo, gbrInfo, rInfo->GetSlice ()))
-//     {
-//       NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
-//                    " over the shortest path");
-//       return BitRateReserve (rInfo);
-//     }
-//
-//   // The requested bit rate is not available over the shortest path. When
-//   // using the SPF routing strategy, invert the routing path and check for the
-//   // requested bit rate over the longest path.
-//   if (m_strategy == RingController::SPF)
-//     {
-//       ringInfo->InvertPath ();
-//       if (HasBitRate (ringInfo, gbrInfo, rInfo->GetSlice ()))
-//         {
-//           NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
-//                        " over the longest (inverted) path");
-//           return BitRateReserve (rInfo);
-//         }
-//     }
-//
+  // Check for the requested bit rate over the shortest path.
+  if (HasBitRate (ringInfo, gbrInfo))
+    {
+      NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
+                   " over the shortest path");
+      return BitRateReserve (ringInfo, gbrInfo);
+    }
+
+  // The requested bit rate is not available over the shortest path. When
+  // using the SPF routing strategy, invert the routing path and check for the
+  // requested bit rate over the longest path.
+  if (m_strategy == RingController::SPF)
+    {
+      // FIXME Qual interface inverter?
+      ringInfo->InvertPath (LteIface::S5);
+      if (HasBitRate (ringInfo, gbrInfo))
+        {
+          NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
+                       " over the longest (inverted) path");
+          return BitRateReserve (ringInfo, gbrInfo);
+        }
+    }
+
   // Nothing more to do. Block the traffic.
   NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex ());
   BlockBearer (rInfo, RoutingInfo::NOBANDWIDTH);
