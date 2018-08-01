@@ -331,7 +331,7 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_LOG_INFO ("Installing ring rules for bearer teid " << rInfo->GetTeidHex ());
+  NS_LOG_INFO ("Installing ring rules for teid " << rInfo->GetTeidHex ());
 
   // Getting ring routing information.
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
@@ -344,65 +344,62 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
       << ",prio=" << rInfo->GetPriority ()
       << ",idle=" << rInfo->GetTimeout ();
 
+  std::ostringstream dscp;
+  if (rInfo->GetDscpValue ())
+    {
+      dscp << " apply:set_field=ip_dscp:" << rInfo->GetDscpValue ();
+    }
+
   // Configuring downlink routing.
   if (rInfo->HasDownlinkTraffic ())
     {
-      // Building the match string for both (S1-U and S5) interfaces
+      // Building the match string for both S1-U and S5 interfaces
       // No match on source IP because we may have several P-GW TFT switches.
       std::ostringstream matchS5, matchS1u;
       matchS5 << " eth_type=0x800,ip_proto=17"
               << ",ip_dst=" << rInfo->GetSgwS5Addr ()
               << ",gtpu_teid=" << rInfo->GetTeidHex ();
-
       matchS1u << " eth_type=0x800,ip_proto=17"
                << ",ip_dst=" << rInfo->GetEnbS1uAddr ()
                << ",gtpu_teid=" << rInfo->GetTeidHex ();
 
-      // Set the IP DSCP field when necessary.
-      std::ostringstream act;
-      if (rInfo->GetDscpValue ())
-        {
-          // Build the apply set_field action instruction string.
-          act << " apply:set_field=ip_dscp:" << rInfo->GetDscpValue ();
-        }
+      // Build the metatada and goto instructions string.
+      std::ostringstream actS5, actS1u;
+      actS5 << " meta:" << ringInfo->GetDownPath (LteIface::S5) << " goto:2";
+      actS1u << " meta:" << ringInfo->GetDownPath (LteIface::S1U) << " goto:2";
 
-      // Build the metatada, write and goto instructions string.
-      // FIXME Essas regras de act tem que ser diferentes tb.
-      act << " meta:" << ringInfo->GetDownPath (LteIface::S5) << " goto:2";
-
-      // Installing downlink rules into switch connected to P-GW and S-GW.
-      DpctlExecute (GetDpId (ringInfo->GetPgwInfraSwIdx ()), cmd.str () + matchS5.str () + act.str ());
-      DpctlExecute (GetDpId (ringInfo->GetSgwInfraSwIdx ()), cmd.str () + matchS1u.str () + act.str ());
+      // Installing downlink rules into switches connected to the P-GW and S-GW.
+      DpctlExecute (GetDpId (ringInfo->GetPgwInfraSwIdx ()),
+                    cmd.str () + matchS5.str () + dscp.str () + actS5.str ());
+      DpctlExecute (GetDpId (ringInfo->GetSgwInfraSwIdx ()),
+                    cmd.str () + matchS1u.str () + dscp.str () + actS1u.str ());
     }
-// FIXME
-//   // Configuring uplink routing.
-//   if (rInfo->HasUplinkTraffic ())
-//     {
-//       // Building the match string.
-//       std::ostringstream match;
-//       match << " eth_type=0x800,ip_proto=17"
-//             << ",ip_src=" << rInfo->GetSgwS5Addr ()
-//             << ",ip_dst=" << rInfo->GetPgwS5Addr ()
-//             << ",gtpu_teid=" << rInfo->GetTeidHex ();
-//
-//       // Set the IP DSCP field when necessary.
-//       std::ostringstream act;
-//       if (rInfo->GetDscpValue ())
-//         {
-//           // Build the apply set_field action instruction string.
-//           act << " apply:set_field=ip_dscp:" << rInfo->GetDscpValue ();
-//         }
-//
-// FIXME Ver essa lógica que tá toda errada
-//       // Build the metatada, write and goto instructions string.
-//       sprintf (metadataStr, "0x%x", ringInfo->GetUpPath ());
-//       act << " meta:" << ringInfo->GetUpPath (LteIface::S5) << " goto:2";
-//
-//       // Installing the rule into input switch.
-//       // In uplink the input ring switch is the one connected to the S-GW.
-//       std::string commandStr = cmd.str () + match.str () + act.str ();
-//       DpctlExecute (ringInfo->GetSgwSwDpId (), commandStr);
-//     }
+
+  // Configuring uplink routing.
+  if (rInfo->HasUplinkTraffic ())
+    {
+      // Building the match string.
+      std::ostringstream matchS1u, matchS5;
+      matchS1u << " eth_type=0x800,ip_proto=17"
+               << ",ip_src=" << rInfo->GetEnbS1uAddr ()
+               << ",ip_dst=" << rInfo->GetSgwS1uAddr ()
+               << ",gtpu_teid=" << rInfo->GetTeidHex ();
+      matchS5 << " eth_type=0x800,ip_proto=17"
+              << ",ip_src=" << rInfo->GetSgwS5Addr ()
+              << ",ip_dst=" << rInfo->GetPgwS5Addr ()
+              << ",gtpu_teid=" << rInfo->GetTeidHex ();
+
+      // Build the metatada and goto instructions string.
+      std::ostringstream actS1u, actS5;
+      actS1u << " meta:" << ringInfo->GetUpPath (LteIface::S1U) << " goto:2";
+      actS5 << " meta:" << ringInfo->GetUpPath (LteIface::S5) << " goto:2";
+
+      // Installing uplink rules into switches connected to the eNB and S-GW.
+      DpctlExecute (GetDpId (ringInfo->GetEnbInfraSwIdx ()),
+                    cmd.str () + matchS1u.str () + dscp.str () + actS1u.str ());
+      DpctlExecute (GetDpId (ringInfo->GetSgwInfraSwIdx ()),
+                    cmd.str () + matchS5.str () + dscp.str () + actS5.str ());
+    }
   return true;
 }
 
@@ -411,7 +408,7 @@ RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_LOG_INFO ("Removing ring rules for bearer teid " << rInfo->GetTeidHex ());
+  NS_LOG_INFO ("Removing ring rules for teid " << rInfo->GetTeidHex ());
 
   // Getting ring routing information.
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
@@ -422,10 +419,10 @@ RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
       << ",cookie=" << rInfo->GetTeidHex ()
       << ",cookie_mask=" << COOKIE_STRICT_MASK;
 
-  // FIXME Isso aqui vai dar erro? Desinstalar só de onde instalou.
-  DpctlExecute (GetDpId (ringInfo->GetEnbInfraSwIdx ()), cmd.str ());
+  // Removing rules from switches connected to the eNB, S-GW and P-GW.
   DpctlExecute (GetDpId (ringInfo->GetPgwInfraSwIdx ()), cmd.str ());
   DpctlExecute (GetDpId (ringInfo->GetSgwInfraSwIdx ()), cmd.str ());
+  DpctlExecute (GetDpId (ringInfo->GetEnbInfraSwIdx ()), cmd.str ());
 
   return true;
 }
@@ -478,7 +475,7 @@ RingController::BitRateReserve (Ptr<const RingInfo> ringInfo,
 {
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
-  NS_LOG_INFO ("Reserving resources for bearer " << ringInfo->GetTeidHex ());
+  NS_LOG_INFO ("Reserving resources for teid " << ringInfo->GetTeidHex ());
 
   LinkSlice slice = ringInfo->GetLinkSlice ();
   uint64_t dlRate = gbrInfo->GetDownBitRate ();
@@ -524,7 +521,7 @@ RingController::BitRateRelease (Ptr<const RingInfo> ringInfo,
 {
   NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
 
-  NS_LOG_INFO ("Releasing resources for bearer " << ringInfo->GetTeidHex ());
+  NS_LOG_INFO ("Releasing resources for teid " << ringInfo->GetTeidHex ());
 
   LinkSlice slice = ringInfo->GetLinkSlice ();
   uint64_t dlRate = gbrInfo->GetDownBitRate ();
@@ -578,7 +575,7 @@ RingController::CreateSpanningTree (void)
 
   std::ostringstream cmd1, cmd2;
   cmd1 << "port-mod port=" << lInfo->GetPortNo (0)
-       << ",addr=" <<  lInfo->GetPortMacAddr (0)
+       << ",addr=" << lInfo->GetPortMacAddr (0)
        << ",conf=0x00000020,mask=0x00000020";
   DpctlSchedule (lInfo->GetSwDpId (0), cmd1.str ());
 
