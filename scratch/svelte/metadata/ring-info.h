@@ -61,6 +61,7 @@ public:
 
   /** \name Private member accessors. */
   //\{
+  Ptr<RoutingInfo> GetRoutingInfo (void) const;
   RingPath GetDownPath (LteIface iface) const;
   RingPath GetUpPath (LteIface iface) const;
   bool IsDefaultPath (LteIface iface) const;
@@ -110,6 +111,7 @@ private:
    */
   void ResetToDefaults ();
 
+  Ptr<RoutingInfo> m_rInfo;              //!< Routing metadata.
   RingPath         m_downPath [2];       //!< Downlink routing path.
   bool             m_isDefaultPath [2];  //!< True for default path.
   bool             m_isLocalPath [2];    //!< True for local path.

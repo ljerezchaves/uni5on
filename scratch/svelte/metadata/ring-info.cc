@@ -34,6 +34,7 @@ RingInfo::RingInfo (Ptr<RoutingInfo> rInfo)
                  || (LteIface::S5 == 0 && LteIface::S1U == 1),
                  "Incompatible LteIface enum values.");
 
+  m_rInfo = rInfo;
   AggregateObject (rInfo);
   SetDefaultPath (RingInfo::LOCAL, LteIface::S1U);
   SetDefaultPath (RingInfo::LOCAL, LteIface::S5);
@@ -51,6 +52,14 @@ RingInfo::GetTypeId (void)
     .SetParent<Object> ()
   ;
   return tid;
+}
+
+Ptr<RoutingInfo>
+RingInfo::GetRoutingInfo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_rInfo;
 }
 
 RingInfo::RingPath
@@ -200,6 +209,8 @@ void
 RingInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+
+  m_rInfo = 0;
 }
 
 void
