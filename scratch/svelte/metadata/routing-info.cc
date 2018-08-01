@@ -152,10 +152,6 @@ RoutingInfo::GetPgwTftIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  if (!m_isInstalled)
-    {
-      NS_LOG_WARN ("This P-GW TFT index may be outdated.");
-    }
   return m_pgwTftIdx;
 }
 
