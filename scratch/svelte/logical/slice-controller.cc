@@ -554,32 +554,28 @@ SliceController::DoCreateSessionRequest (
   EpcS11SapMme::CreateSessionResponseMessage res;
   res.teid = imsi;
 
-  std::list<EpcS11SapSgw::BearerContextToBeCreated>::iterator bit;
-  for (bit = msg.bearerContextsToBeCreated.begin ();
-       bit != msg.bearerContextsToBeCreated.end ();
-       ++bit)
+  for (auto const &bit : msg.bearerContextsToBeCreated)
     {
-      uint32_t teid = GetSvelteTeid (m_sliceId, imsi, bit->epsBearerId);
-
-
+      uint32_t teid = GetSvelteTeid (m_sliceId, imsi, bit.epsBearerId);
       bool isDefault = res.bearerContextsCreated.empty ();
+
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.teid = teid;
       bearerContext.sgwFteid.address = sgwInfo->GetS1uAddr ();
-      bearerContext.epsBearerId = bit->epsBearerId;
-      bearerContext.bearerLevelQos = bit->bearerLevelQos;
-      bearerContext.tft = bit->tft;
+      bearerContext.epsBearerId = bit.epsBearerId;
+      bearerContext.bearerLevelQos = bit.bearerLevelQos;
+      bearerContext.tft = bit.tft;
       res.bearerContextsCreated.push_back (bearerContext);
 
       // Add the TFT entry to the UeInfo (don't move this command from here).
-      ueInfo->AddTft (bit->tft, teid);
+      ueInfo->AddTft (bit.tft, teid);
 
       // Saving bearer metadata.
       Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
           teid, bearerContext, ueInfo, isDefault);
       NS_LOG_DEBUG ("Saving bearer info for UE IMSI " << imsi << ", slice " <<
                     SliceIdStr (m_sliceId) << ", internal bearer id " <<
-                    static_cast<uint16_t> (bit->epsBearerId) << ", teid " <<
+                    static_cast<uint16_t> (bit.epsBearerId) << ", teid " <<
                     rInfo->GetTeidHex ());
 
       rInfo->SetPgwTftIdx (GetPgwTftIdx (rInfo));
@@ -628,13 +624,10 @@ SliceController::DoDeleteBearerCommand (
   EpcS11SapMme::DeleteBearerRequestMessage res;
   res.teid = msg.teid;
 
-  std::list<EpcS11SapSgw::BearerContextToBeRemoved>::iterator bit;
-  for (bit = msg.bearerContextsToBeRemoved.begin ();
-       bit != msg.bearerContextsToBeRemoved.end ();
-       ++bit)
+  for (auto const &bit : msg.bearerContextsToBeRemoved)
     {
       EpcS11SapMme::BearerContextRemoved bearerContext;
-      bearerContext.epsBearerId = bit->epsBearerId;
+      bearerContext.epsBearerId = bit.epsBearerId;
       res.bearerContextsRemoved.push_back (bearerContext);
     }
 
@@ -727,19 +720,16 @@ SliceController::PgwAdaptiveMechanism (void)
       uint16_t futureTfts = 1 << nextLevel;
       for (uint16_t currIdx = 1; currIdx <= activeTfts; currIdx++)
         {
-          RoutingInfoList_t bearers;
-          bearers = RoutingInfo::GetInstalledList (m_sliceId, currIdx);
-
-          RoutingInfoList_t::iterator it;
-          for (it = bearers.begin (); it != bearers.end (); ++it)
+          for (auto const &rInfo :
+               RoutingInfo::GetInstalledList (m_sliceId, currIdx))
             {
-              uint16_t destIdx = GetPgwTftIdx (*it, futureTfts);
+              uint16_t destIdx = GetPgwTftIdx (rInfo, futureTfts);
               if (destIdx != currIdx)
                 {
-                  NS_LOG_INFO ("Moving bearer teid " << (*it)->GetTeidHex ());
-                  PgwRulesRemove  (*it, currIdx, true);
-                  PgwRulesInstall (*it, destIdx, true);
-                  (*it)->SetPgwTftIdx (destIdx);
+                  NS_LOG_INFO ("Move bearer teid " << (rInfo)->GetTeidHex ());
+                  PgwRulesRemove  (rInfo, currIdx, true);
+                  PgwRulesInstall (rInfo, destIdx, true);
+                  rInfo->SetPgwTftIdx (destIdx);
                   moved++;
                 }
             }
