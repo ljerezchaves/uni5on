@@ -71,6 +71,7 @@ public:
   Ptr<EpcTft> GetTft (void) const;
   EpsBearer GetEpsBearer (void) const;
   uint32_t GetTeid (void) const;
+  std::string GetTeidHex (void) const;
   Ptr<SvelteServerApp> GetServerApp (void) const;
   Ptr<const QosStatsCalculator> GetQosStats (void) const;
   Ptr<const QosStatsCalculator> GetServerQosStats (void) const;

@@ -24,7 +24,7 @@
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT \
-  { std::clog << "[Voip server teid " << GetTeid () << "] "; }
+  std::clog << "[Voip server teid " << GetTeidHex () << "] ";
 
 namespace ns3 {
 

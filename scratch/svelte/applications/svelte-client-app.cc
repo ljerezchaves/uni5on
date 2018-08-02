@@ -23,7 +23,7 @@
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT \
-  { std::clog << "[" << m_name << " client teid " << m_teid << "] "; }
+  std::clog << "[" << GetAppName () << " client teid " << GetTeidHex () << "] ";
 
 namespace ns3 {
 
@@ -107,7 +107,7 @@ SvelteClientApp::GetNameTeid (void) const
 {
   // No log to avoid infinite recursion.
   std::ostringstream value;
-  value << GetAppName () << " over bearer teid " << GetTeid ();
+  value << GetAppName () << " over bearer teid " << GetTeidHex ();
   return value.str ();
 }
 
@@ -154,8 +154,18 @@ SvelteClientApp::GetEpsBearer (void) const
 uint32_t
 SvelteClientApp::GetTeid (void) const
 {
-  // No log to avoid infinite recursion.
+  NS_LOG_FUNCTION (this);
+
   return m_teid;
+}
+
+std::string
+SvelteClientApp::GetTeidHex (void) const
+{
+  // No log to avoid infinite recursion.
+  char teidStr [11];
+  sprintf (teidStr, "0x%08x", m_teid);
+  return std::string (teidStr);
 }
 
 Ptr<SvelteServerApp>

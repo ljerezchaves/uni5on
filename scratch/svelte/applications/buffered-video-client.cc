@@ -22,7 +22,7 @@
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT \
-  { std::clog << "[BuffVid client teid " << GetTeid () << "] "; }
+  std::clog << "[BuffVid client teid " << GetTeidHex () << "] ";
 
 namespace ns3 {
 

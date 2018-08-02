@@ -23,7 +23,7 @@
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT \
-  { std::clog << "[" << GetAppName () << " server teid " << GetTeid () << "] "; }
+  std::clog << "[" << GetAppName () << " server teid " << GetTeidHex () << "] ";
 
 namespace ns3 {
 
@@ -88,11 +88,11 @@ SvelteServerApp::IsForceStop (void) const
   return m_clientApp->IsForceStop ();
 }
 
-uint32_t
-SvelteServerApp::GetTeid (void) const
+std::string
+SvelteServerApp::GetTeidHex (void) const
 {
   // No log to avoid infinite recursion.
-  return m_clientApp ? m_clientApp->GetTeid () : 0;
+  return m_clientApp ? m_clientApp->GetTeidHex () : "0x0";
 }
 
 Ptr<SvelteClientApp>
