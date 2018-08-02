@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef SDMN_QOS_STATS_CALCULATOR_H
-#define SDMN_QOS_STATS_CALCULATOR_H
+#ifndef QOS_STATS_CALCULATOR_H
+#define QOS_STATS_CALCULATOR_H
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -141,4 +141,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* SDMN_QOS_STATS_CALCULATOR_H */
+#endif /* QOS_STATS_CALCULATOR_H */

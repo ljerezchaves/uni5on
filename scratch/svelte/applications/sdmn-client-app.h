@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef SDMN_CLIENT_APP_H
-#define SDMN_CLIENT_APP_H
+#ifndef SVELTE_CLIENT_APP_H
+#define SVELTE_CLIENT_APP_H
 
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
@@ -167,4 +167,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* SDMN_CLIENT_APP_H */
+#endif /* SVELTE_CLIENT_APP_H */

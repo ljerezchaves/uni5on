@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef SDMN_APP_HELPER_H
-#define SDMN_APP_HELPER_H
+#ifndef SVELTE_APP_HELPER_H
+#define SVELTE_APP_HELPER_H
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -81,4 +81,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* SDMN_APP_HELPER_H */
+#endif /* SVELTE_APP_HELPER_H */
