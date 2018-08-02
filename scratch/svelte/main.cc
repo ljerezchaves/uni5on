@@ -383,6 +383,7 @@ EnableVerbose (bool enable)
           LOG_PREFIX_FUNC | LOG_PREFIX_TIME | LOG_LEVEL_ALL);
       NS_UNUSED (logLevelAll);
 
+      // Common components.
       LogComponentEnable ("Main",                     logLevelWarnInfo);
       LogComponentEnable ("SvelteCommon",             logLevelWarnInfo);
       LogComponentEnable ("SvelteHelper",             logLevelWarnInfo);
@@ -401,6 +402,8 @@ EnableVerbose (bool enable)
       LogComponentEnable ("SliceController",          logLevelWarnInfo);
       LogComponentEnable ("SliceNetwork",             logLevelWarnInfo);
       LogComponentEnable ("SvelteMme",                logLevelWarnInfo);
+      // LogComponentEnable ("TrafficHelper",            logLevelWarnInfo);
+      // LogComponentEnable ("TrafficManager",           logLevelWarnInfo);
 
       // Metadata components.
       LogComponentEnable ("EnbInfo",                  logLevelWarnInfo);
@@ -413,29 +416,29 @@ EnableVerbose (bool enable)
       LogComponentEnable ("SgwInfo",                  logLevelWarnInfo);
       LogComponentEnable ("UeInfo",                   logLevelWarnInfo);
 
-//      LogComponentEnable ("TrafficHelper",            logLevelWarnInfo);
-//      LogComponentEnable ("TrafficManager",           logLevelWarnInfo);
-//
-//      LogComponentEnable ("SdmnClientApp",            logLevelWarnInfo);
-//      LogComponentEnable ("SdmnServerApp",            logLevelWarnInfo);
-//      LogComponentEnable ("AutoPilotClient",          logLevelWarnInfo);
-//      LogComponentEnable ("AutoPilotServer",          logLevelWarnInfo);
-//      LogComponentEnable ("BufferedVideoClient",      logLevelWarnInfo);
-//      LogComponentEnable ("BufferedVideoServer",      logLevelWarnInfo);
-//      LogComponentEnable ("HttpClient",               logLevelWarnInfo);
-//      LogComponentEnable ("HttpServer",               logLevelWarnInfo);
-//      LogComponentEnable ("LiveVideoClient",          logLevelWarnInfo);
-//      LogComponentEnable ("LiveVideoServer",          logLevelWarnInfo);
-//      LogComponentEnable ("VoipClient",               logLevelWarnInfo);
-//      LogComponentEnable ("VoipServer",               logLevelWarnInfo);
-//
-//      LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);
-//      LogComponentEnable ("BackhaulStatsCalculator",  logLevelWarnInfo);
-//      LogComponentEnable ("HandoverStatsCalculator",  logLevelWarnInfo);
-//      LogComponentEnable ("PgwTftStatsCalculator",    logLevelWarnInfo);
-//      LogComponentEnable ("QosStatsCalculator",       logLevelWarnInfo);
-//      LogComponentEnable ("TrafficStatsCalculator",   logLevelWarnInfo);
+      // Applications.
+      LogComponentEnable ("AutoPilotClient",          logLevelWarnInfo);
+      LogComponentEnable ("AutoPilotServer",          logLevelWarnInfo);
+      LogComponentEnable ("BufferedVideoClient",      logLevelWarnInfo);
+      LogComponentEnable ("BufferedVideoServer",      logLevelWarnInfo);
+      LogComponentEnable ("HttpClient",               logLevelWarnInfo);
+      LogComponentEnable ("HttpServer",               logLevelWarnInfo);
+      LogComponentEnable ("LiveVideoClient",          logLevelWarnInfo);
+      LogComponentEnable ("LiveVideoServer",          logLevelWarnInfo);
+      LogComponentEnable ("SvelteClientApp",          logLevelWarnInfo);
+      LogComponentEnable ("SvelteServerApp",          logLevelWarnInfo);
+      LogComponentEnable ("VoipClient",               logLevelWarnInfo);
+      LogComponentEnable ("VoipServer",               logLevelWarnInfo);
 
+      // Statistic components.
+      // LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);
+      // LogComponentEnable ("BackhaulStatsCalculator",  logLevelWarnInfo);
+      // LogComponentEnable ("HandoverStatsCalculator",  logLevelWarnInfo);
+      // LogComponentEnable ("PgwTftStatsCalculator",    logLevelWarnInfo);
+      LogComponentEnable ("QosStatsCalculator",       logLevelWarnInfo);
+      // LogComponentEnable ("TrafficStatsCalculator",   logLevelWarnInfo);
+
+      // OFSwitch13 module components.
       LogComponentEnable ("OFSwitch13Controller",     logLevelWarn);
       LogComponentEnable ("OFSwitch13Device",         logLevelWarn);
       LogComponentEnable ("OFSwitch13Helper",         logLevelWarn);
