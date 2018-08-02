@@ -68,13 +68,12 @@ public:
    *           applications into same bearer we will need to revise this.
    * \param teid The teid for this bearer, if already defined.
    * \param imsi uint64_t IMSI UE identifier.
-   * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
    * \param bearer EpsBearer bearer QoS characteristics of the bearer.
    * \returns True if succeeded (the bearer creation process will proceed),
    *          false otherwise (the bearer creation process will abort).
    */
-  virtual bool DedicatedBearerRequest (
-    EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
+  virtual bool DedicatedBearerRequest (EpsBearer bearer, uint64_t imsi,
+                                       uint32_t teid);
 
   /**
    * Release a dedicated EPS bearer.
@@ -85,12 +84,11 @@ public:
    *           applications into same bearer we will need to revise this.
    * \param teid The teid for this bearer, if already defined.
    * \param imsi uint64_t IMSI UE identifier.
-   * \param cellId uint16_t eNB CellID to which the IMSI UE is attached to.
    * \param bearer EpsBearer bearer QoS characteristics of the bearer.
    * \return True if succeeded, false otherwise.
    */
-  virtual bool DedicatedBearerRelease (
-    EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid);
+  virtual bool DedicatedBearerRelease (EpsBearer bearer, uint64_t imsi,
+                                       uint32_t teid);
 
   /**
    * Get the P-GW adaptive mechanisms operation mode.

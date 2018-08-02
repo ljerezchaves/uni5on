@@ -140,9 +140,9 @@ SliceController::GetTypeId (void)
 
 bool
 SliceController::DedicatedBearerRequest (
-  EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
+  EpsBearer bearer, uint64_t imsi, uint32_t teid)
 {
-  NS_LOG_FUNCTION (this << imsi << cellId << teid);
+  NS_LOG_FUNCTION (this << imsi << teid);
 
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
 
@@ -180,9 +180,9 @@ SliceController::DedicatedBearerRequest (
 
 bool
 SliceController::DedicatedBearerRelease (
-  EpsBearer bearer, uint64_t imsi, uint16_t cellId, uint32_t teid)
+  EpsBearer bearer, uint64_t imsi, uint32_t teid)
 {
-  NS_LOG_FUNCTION (this << imsi << cellId << teid);
+  NS_LOG_FUNCTION (this << imsi << teid);
 
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
 
@@ -216,8 +216,8 @@ SliceController::GetS11SapSgw (void) const
 }
 
 void
-SliceController::NotifyPgwAttach (Ptr<PgwInfo> pgwInfo,
-                                  Ptr<NetDevice> webSgiDev)
+SliceController::NotifyPgwAttach (
+  Ptr<PgwInfo> pgwInfo, Ptr<NetDevice> webSgiDev)
 {
   NS_LOG_FUNCTION (this << pgwInfo << pgwInfo->GetPgwId () << webSgiDev);
 
@@ -339,8 +339,8 @@ SliceController::NotifySgwAttach (Ptr<SgwInfo> sgwInfo)
 }
 
 void
-SliceController::SetNetworkAttributes (Ipv4Address ueAddr, Ipv4Mask ueMask,
-                                       Ipv4Address webAddr, Ipv4Mask webMask)
+SliceController::SetNetworkAttributes (
+  Ipv4Address ueAddr, Ipv4Mask ueMask, Ipv4Address webAddr, Ipv4Mask webMask)
 {
   NS_LOG_FUNCTION (this << ueAddr << ueMask << webAddr << webMask);
 

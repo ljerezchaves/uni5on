@@ -60,11 +60,9 @@ public:
    * Trace sink notified when new session is created.
    * This will be used to get the teid for each bearer created.
    * \param imsi The IMSI UE identifier.
-   * \param cellId The eNB CellID to which the IMSI UE is attached to.
    * \param bearerList The list of context bearers created.
    */
-  void SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
-                               BearerContextList_t bearerList);
+  void SessionCreatedCallback (uint64_t imsi, BearerContextList_t bearerList);
 
   /**
    * Set the IMSI attribute.
@@ -119,10 +117,8 @@ private:
   Ptr<SliceController>      m_ctrlApp;        //!< OpenFlow slice controller.
   AppTimeMap_t              m_appTable;       //!< Application map.
   uint64_t                  m_imsi;           //!< UE IMSI identifier.
-  uint16_t                  m_cellId;         //!< Current eNB cellId.
   uint32_t                  m_defaultTeid;    //!< TEID for default UE tunnel.
 };
 
-};  // namespace ns3
+} // namespace ns3
 #endif // TRAFFIC_MANAGER_H
-

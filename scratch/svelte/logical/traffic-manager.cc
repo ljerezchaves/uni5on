@@ -23,7 +23,7 @@
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT \
-  std::clog << "[User " << m_imsi << " at cell " << m_cellId << "] ";
+  std::clog << "[User " << m_imsi << "] ";
 
 namespace ns3 {
 
@@ -32,9 +32,8 @@ NS_OBJECT_ENSURE_REGISTERED (TrafficManager);
 
 TrafficManager::TrafficManager ()
   : m_ctrlApp (0),
-    m_imsi (0),
-    m_cellId (0),
-    m_defaultTeid (0)
+  m_imsi (0),
+  m_defaultTeid (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -93,8 +92,8 @@ TrafficManager::AddSvelteClientApp (Ptr<SvelteClientApp> app)
 }
 
 void
-TrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
-                                        BearerContextList_t bearerList)
+TrafficManager::SessionCreatedCallback (
+  uint64_t imsi, BearerContextList_t bearerList)
 {
   NS_LOG_FUNCTION (this);
 
@@ -104,7 +103,6 @@ TrafficManager::SessionCreatedCallback (uint64_t imsi, uint16_t cellId,
       return;
     }
 
-  m_cellId = cellId;
   // FIXME m_ctrlApp = SdranController::GetPointer (cellId);
   m_defaultTeid = bearerList.front ().sgwFteid.teid;
 
@@ -169,7 +167,7 @@ TrafficManager::AppStartTry (Ptr<SvelteClientApp> app)
     {
       // No resource request for traffic over default bearer.
       authorized = m_ctrlApp->DedicatedBearerRequest (
-          app->GetEpsBearer (), m_imsi, m_cellId, app->GetTeid ());
+          app->GetEpsBearer (), m_imsi, app->GetTeid ());
     }
 
   // No retries are performed for a non-authorized traffic.
@@ -198,7 +196,7 @@ TrafficManager::NotifyAppStop (Ptr<SvelteClientApp> app)
       // Schedule the resource release procedure for +1 second.
       Simulator::Schedule (
         Seconds (1), &SliceController::DedicatedBearerRelease,
-        m_ctrlApp, app->GetEpsBearer (), m_imsi, m_cellId, appTeid);
+        m_ctrlApp, app->GetEpsBearer (), m_imsi, appTeid);
     }
 
   // Schedule the next start attempt for this application,
@@ -287,4 +285,4 @@ TrafficManager::GetNextAppStartTry (Ptr<SvelteClientApp> app) const
   return it->second;
 }
 
-};  // namespace ns3
+} // namespace ns3
