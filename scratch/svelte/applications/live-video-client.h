@@ -21,7 +21,7 @@
 #ifndef LIVE_VIDEO_CLIENT_H
 #define LIVE_VIDEO_CLIENT_H
 
-#include "sdmn-client-app.h"
+#include "svelte-client-app.h"
 
 namespace ns3 {
 
@@ -30,7 +30,7 @@ namespace ns3 {
  * This is the client side of a live video traffic generator, receiving
  * UDP datagrams following a MPEG video pattern with random video length.
  */
-class LiveVideoClient : public SdmnClientApp
+class LiveVideoClient : public SvelteClientApp
 {
 public:
   /**
@@ -42,7 +42,7 @@ public:
   LiveVideoClient ();   //!< Default constructor.
   virtual ~LiveVideoClient ();  //!< Dummy destructor, see DosDipose.
 
-  // Inherited from SdmnClientApp.
+  // Inherited from SvelteClientApp.
   void Start ();
 
 protected:
@@ -52,7 +52,7 @@ protected:
   // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
 
-  // Inherited from SdmnClientApp.
+  // Inherited from SvelteClientApp.
   void ForceStop ();
 
 private:

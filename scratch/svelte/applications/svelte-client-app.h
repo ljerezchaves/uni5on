@@ -30,7 +30,7 @@
 
 namespace ns3 {
 
-class SdmnServerApp;
+class SvelteServerApp;
 
 /**
  * \ingroup sdmn
@@ -47,13 +47,13 @@ class SdmnServerApp;
  * application traffic is sent within GTP tunnels over EPC interfaces. These
  * informations are also saved here for further usage.
  */
-class SdmnClientApp : public Application
+class SvelteClientApp : public Application
 {
-  friend class SdmnServerApp;
+  friend class SvelteServerApp;
 
 public:
-  SdmnClientApp ();            //!< Default constructor.
-  virtual ~SdmnClientApp ();   //!< Dummy destructor, see DoDispose.
+  SvelteClientApp ();            //!< Default constructor.
+  virtual ~SvelteClientApp ();   //!< Dummy destructor, see DoDispose.
 
   /**
    * Get the type ID.
@@ -71,7 +71,7 @@ public:
   Ptr<EpcTft> GetTft (void) const;
   EpsBearer GetEpsBearer (void) const;
   uint32_t GetTeid (void) const;
-  Ptr<SdmnServerApp> GetServerApp (void) const;
+  Ptr<SvelteServerApp> GetServerApp (void) const;
   Ptr<const QosStatsCalculator> GetQosStats (void) const;
   Ptr<const QosStatsCalculator> GetServerQosStats (void) const;
 
@@ -85,7 +85,7 @@ public:
    * \param serverApp The pointer to server application.
    * \param serverAddress The Inet socket address of the server.
    */
-  void SetServer (Ptr<SdmnServerApp> serverApp, Address serverAddress);
+  void SetServer (Ptr<SvelteServerApp> serverApp, Address serverAddress);
 
   /**
    * Start this application. Reset internal counters, notify the server
@@ -94,10 +94,10 @@ public:
   virtual void Start ();
 
   /**
-   * TracedCallback signature for Ptr<SdmnClientApp>.
+   * TracedCallback signature for Ptr<SvelteClientApp>.
    * \param app The client application.
    */
-  typedef void (*EpcAppTracedCallback)(Ptr<SdmnClientApp> app);
+  typedef void (*EpcAppTracedCallback)(Ptr<SvelteClientApp> app);
 
 protected:
   /** Destructor implementation */
@@ -137,16 +137,16 @@ protected:
   Ptr<Socket>             m_socket;           //!< Local socket.
   uint16_t                m_localPort;        //!< Local port.
   Address                 m_serverAddress;    //!< Server address.
-  Ptr<SdmnServerApp>      m_serverApp;        //!< Server application.
+  Ptr<SvelteServerApp>    m_serverApp;        //!< Server application.
 
   /** Trace source fired when application start. */
-  TracedCallback<Ptr<SdmnClientApp> > m_appStartTrace;
+  TracedCallback<Ptr<SvelteClientApp> > m_appStartTrace;
 
   /** Trace source fired when application stops. */
-  TracedCallback<Ptr<SdmnClientApp> > m_appStopTrace;
+  TracedCallback<Ptr<SvelteClientApp> > m_appStopTrace;
 
   /** Trace source fired when application reports an error. */
-  TracedCallback<Ptr<SdmnClientApp> > m_appErrorTrace;
+  TracedCallback<Ptr<SvelteClientApp> > m_appErrorTrace;
 
 private:
   /**

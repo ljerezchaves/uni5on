@@ -35,7 +35,7 @@ TypeId
 VoipServer::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::VoipServer")
-    .SetParent<SdmnServerApp> ()
+    .SetParent<SvelteServerApp> ()
     .AddConstructor<VoipServer> ()
     .AddAttribute ("Interval",
                    "The time to wait between consecutive packets.",
@@ -69,7 +69,7 @@ VoipServer::DoDispose (void)
   NS_LOG_FUNCTION (this);
 
   m_sendEvent.Cancel ();
-  SdmnServerApp::DoDispose ();
+  SvelteServerApp::DoDispose ();
 }
 
 void
@@ -104,7 +104,7 @@ VoipServer::NotifyStart ()
   NS_LOG_FUNCTION (this);
 
   // Chain up to reset statistics.
-  SdmnServerApp::NotifyStart ();
+  SvelteServerApp::NotifyStart ();
 
   // Start traffic.
   m_sendEvent.Cancel ();
@@ -118,7 +118,7 @@ VoipServer::NotifyForceStop ()
   NS_LOG_FUNCTION (this);
 
   // Chain up just for log.
-  SdmnServerApp::NotifyForceStop ();
+  SvelteServerApp::NotifyForceStop ();
 
   // Stop streaming.
   m_sendEvent.Cancel ();

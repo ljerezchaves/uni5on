@@ -21,7 +21,7 @@
 #ifndef LIVE_VIDEO_SERVER_H
 #define LIVE_VIDEO_SERVER_H
 
-#include "sdmn-server-app.h"
+#include "svelte-server-app.h"
 
 namespace ns3 {
 
@@ -30,7 +30,7 @@ namespace ns3 {
  * This is the server side of a live video traffic generator, sending UDP
  * datagrams following a MPEG video pattern with random video length.
  */
-class LiveVideoServer : public SdmnServerApp
+class LiveVideoServer : public SvelteServerApp
 {
 public:
   /**
@@ -60,7 +60,7 @@ private:
   virtual void StartApplication (void);
   virtual void StopApplication (void);
 
-  // Inherited from SdmnServerApp.
+  // Inherited from SvelteServerApp.
   void NotifyStart ();
   void NotifyForceStop ();
 

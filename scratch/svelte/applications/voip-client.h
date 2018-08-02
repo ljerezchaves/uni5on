@@ -22,7 +22,7 @@
 #ifndef VOIP_CLIENT_H
 #define VOIP_CLIENT_H
 
-#include "sdmn-client-app.h"
+#include "svelte-client-app.h"
 
 namespace ns3 {
 
@@ -31,7 +31,7 @@ namespace ns3 {
  * This is the client side of a VoIP traffic generator, sending and receiving
  * UDP datagrams following VoIP traffic pattern.
  */
-class VoipClient : public SdmnClientApp
+class VoipClient : public SvelteClientApp
 {
 public:
   /**
@@ -43,7 +43,7 @@ public:
   VoipClient ();             //!< Default constructor.
   virtual ~VoipClient ();    //!< Dummy destructor, see DoDispose.
 
-  // Inherited from SdmnClientApp.
+  // Inherited from SvelteClientApp.
   void Start ();
 
 protected:
@@ -53,7 +53,7 @@ protected:
   // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
 
-  // Inherited from SdmnClientApp.
+  // Inherited from SvelteClientApp.
   void ForceStop ();
 
 private:

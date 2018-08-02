@@ -74,7 +74,7 @@ TypeId
 BufferedVideoServer::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::BufferedVideoServer")
-    .SetParent<SdmnServerApp> ()
+    .SetParent<SvelteServerApp> ()
     .AddConstructor<BufferedVideoServer> ()
     .AddAttribute ("ChunkSize",
                    "The video chunk size [bytes].",
@@ -139,7 +139,7 @@ BufferedVideoServer::DoDispose (void)
 
   m_lengthRng = 0;
   m_entries.clear ();
-  SdmnServerApp::DoDispose ();
+  SvelteServerApp::DoDispose ();
 }
 
 void

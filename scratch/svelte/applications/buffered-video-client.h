@@ -21,7 +21,7 @@
 #ifndef BUFFERED_VIDEO_CLIENT_H
 #define BUFFERED_VIDEO_CLIENT_H
 
-#include "sdmn-client-app.h"
+#include "svelte-client-app.h"
 
 namespace ns3 {
 
@@ -32,7 +32,7 @@ namespace ns3 {
  * the main video object. After receiving all video chunks, the client closes
  * the connection.
  */
-class BufferedVideoClient : public SdmnClientApp
+class BufferedVideoClient : public SvelteClientApp
 {
 public:
   /**
@@ -44,7 +44,7 @@ public:
   BufferedVideoClient ();           //!< Default constructor.
   virtual ~BufferedVideoClient ();  //!< Dummy destructor, see DoDispose.
 
-  // Inherited from SdmnClientApp.
+  // Inherited from SvelteClientApp.
   void Start ();
 
 protected:

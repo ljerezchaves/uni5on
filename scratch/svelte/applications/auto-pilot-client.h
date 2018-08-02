@@ -20,7 +20,7 @@
 #ifndef AUTO_PILOT_CLIENT_H
 #define AUTO_PILOT_CLIENT_H
 
-#include "sdmn-client-app.h"
+#include "svelte-client-app.h"
 
 namespace ns3 {
 
@@ -30,7 +30,7 @@ namespace ns3 {
  * The client sends a 1KB packet with uniformly distributed inter-arrival time
  * ranging from 0.025 to 0.1 sec.
  */
-class AutoPilotClient : public SdmnClientApp
+class AutoPilotClient : public SvelteClientApp
 {
 public:
   /**
@@ -42,7 +42,7 @@ public:
   AutoPilotClient ();             //!< Default constructor.
   virtual ~AutoPilotClient ();    //!< Dummy destructor, see DoDispose.
 
-  // Inherited from SdmnClientApp.
+  // Inherited from SvelteClientApp.
   void Start ();
 
 protected:
@@ -52,7 +52,7 @@ protected:
   // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
 
-  // Inherited from SdmnClientApp.
+  // Inherited from SvelteClientApp.
   void ForceStop ();
 
 private:

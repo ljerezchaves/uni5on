@@ -33,7 +33,7 @@ TypeId
 AutoPilotServer::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::AutoPilotServer")
-    .SetParent<SdmnServerApp> ()
+    .SetParent<SvelteServerApp> ()
     .AddConstructor<AutoPilotServer> ()
   ;
   return tid;
@@ -54,7 +54,7 @@ AutoPilotServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
-  SdmnServerApp::DoDispose ();
+  SvelteServerApp::DoDispose ();
 }
 
 void
@@ -90,7 +90,7 @@ AutoPilotServer::NotifyStart ()
   NS_LOG_FUNCTION (this);
 
   // Chain up to reset statistics.
-  SdmnServerApp::NotifyStart ();
+  SvelteServerApp::NotifyStart ();
 }
 
 void
@@ -99,7 +99,7 @@ AutoPilotServer::NotifyForceStop ()
   NS_LOG_FUNCTION (this);
 
   // Chain up just for log.
-  SdmnServerApp::NotifyForceStop ();
+  SvelteServerApp::NotifyForceStop ();
 }
 
 void

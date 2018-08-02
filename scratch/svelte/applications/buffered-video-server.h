@@ -21,7 +21,7 @@
 #ifndef BUFFERED_VIDEO_SERVER_H
 #define BUFFERED_VIDEO_SERVER_H
 
-#include "sdmn-server-app.h"
+#include "svelte-server-app.h"
 
 namespace ns3 {
 
@@ -31,7 +31,7 @@ namespace ns3 {
  * listen for a client requesting video chunks and send the chunks back as fast
  * as possible.
  */
-class BufferedVideoServer : public SdmnServerApp
+class BufferedVideoServer : public SvelteServerApp
 {
 public:
   /**

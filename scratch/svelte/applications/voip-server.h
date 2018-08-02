@@ -22,7 +22,7 @@
 #ifndef VOIP_SERVER_H
 #define VOIP_SERVER_H
 
-#include "sdmn-server-app.h"
+#include "svelte-server-app.h"
 
 namespace ns3 {
 
@@ -31,7 +31,7 @@ namespace ns3 {
  * This is the server side of a VoIP traffic generator, sending and receiving
  * UDP datagrams following VoIP traffic pattern.
  */
-class VoipServer : public SdmnServerApp
+class VoipServer : public SvelteServerApp
 {
 public:
   /**
@@ -52,7 +52,7 @@ private:
   virtual void StartApplication (void);
   virtual void StopApplication (void);
 
-  // Inherited from SdmnServerApp.
+  // Inherited from SvelteServerApp.
   void NotifyStart ();
   void NotifyForceStop ();
 

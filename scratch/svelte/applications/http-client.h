@@ -23,7 +23,7 @@
 #ifndef HTTP_CLIENT_H
 #define HTTP_CLIENT_H
 
-#include "sdmn-client-app.h"
+#include "svelte-client-app.h"
 
 namespace ns3 {
 
@@ -43,7 +43,7 @@ namespace ns3 {
  * proposed algorithm in other modules of ns-3. To allow deeper studies about
  * the HTTP Protocol it needs some improvements.
  */
-class HttpClient : public SdmnClientApp
+class HttpClient : public SvelteClientApp
 {
 public:
   /**
@@ -55,7 +55,7 @@ public:
   HttpClient ();          //!< Default constructor.
   virtual ~HttpClient (); //!< Dummy destructor, see DoDispose.
 
-  // Inherited from SdmnClientApp.
+  // Inherited from SvelteClientApp.
   void Start ();
 
 protected:
@@ -65,7 +65,7 @@ protected:
   // Inherited from ObjectBase.
   virtual void NotifyConstructionCompleted (void);
 
-  // Inherited from SdmnClientApp.
+  // Inherited from SvelteClientApp.
   void ForceStop ();
 
 private:

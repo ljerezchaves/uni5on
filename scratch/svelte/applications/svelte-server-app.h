@@ -30,7 +30,7 @@
 
 namespace ns3 {
 
-class SdmnClientApp;
+class SvelteClientApp;
 
 /**
  * \ingroup sdmnApps
@@ -38,13 +38,13 @@ class SdmnClientApp;
  * architecture. Only server applications (those which will be installed into
  * web server node) should extend this class.
  */
-class SdmnServerApp : public Application
+class SvelteServerApp : public Application
 {
-  friend class SdmnClientApp;
+  friend class SvelteClientApp;
 
 public:
-  SdmnServerApp ();            //!< Default constructor.
-  virtual ~SdmnServerApp ();   //!< Dummy destructor, see DoDispose.
+  SvelteServerApp ();            //!< Default constructor.
+  virtual ~SvelteServerApp ();   //!< Dummy destructor, see DoDispose.
 
   /**
    * Get the type ID.
@@ -58,7 +58,7 @@ public:
   bool IsActive (void) const;
   bool IsForceStop (void) const;
   uint32_t GetTeid (void) const;
-  Ptr<SdmnClientApp> GetClientApp (void) const;
+  Ptr<SvelteClientApp> GetClientApp (void) const;
   Ptr<const QosStatsCalculator> GetQosStats (void) const;
   //\}
 
@@ -67,7 +67,7 @@ public:
    * \param clientApp The pointer to client application.
    * \param clientAddress The Inet socket address of the client.
    */
-  void SetClient (Ptr<SdmnClientApp> clientApp, Address clientAddress);
+  void SetClient (Ptr<SvelteClientApp> clientApp, Address clientAddress);
 
 protected:
   /** Destructor implementation. */
@@ -108,7 +108,7 @@ protected:
   Ptr<Socket>             m_socket;           //!< Local socket.
   uint16_t                m_localPort;        //!< Local port.
   Address                 m_clientAddress;    //!< Client address.
-  Ptr<SdmnClientApp>      m_clientApp;        //!< Client application.
+  Ptr<SvelteClientApp>    m_clientApp;        //!< Client application.
 };
 
 } // namespace ns3

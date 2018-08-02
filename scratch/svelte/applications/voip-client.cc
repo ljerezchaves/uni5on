@@ -35,7 +35,7 @@ TypeId
 VoipClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::VoipClient")
-    .SetParent<SdmnClientApp> ()
+    .SetParent<SvelteClientApp> ()
     .AddConstructor<VoipClient> ()
     .AddAttribute ("Interval",
                    "The time to wait between consecutive packets.",
@@ -88,7 +88,7 @@ VoipClient::Start ()
   NS_LOG_INFO ("Set traffic length to " << sTime.GetSeconds () << "s.");
 
   // Chain up to reset statistics, notify server, and fire start trace source.
-  SdmnClientApp::Start ();
+  SvelteClientApp::Start ();
 
   // Start traffic.
   m_sendEvent.Cancel ();
@@ -104,7 +104,7 @@ VoipClient::DoDispose (void)
   m_lengthRng = 0;
   m_stopEvent.Cancel ();
   m_sendEvent.Cancel ();
-  SdmnClientApp::DoDispose ();
+  SvelteClientApp::DoDispose ();
 }
 
 void
@@ -125,7 +125,7 @@ VoipClient::ForceStop ()
   m_sendEvent.Cancel ();
 
   // Chain up to notify server.
-  SdmnClientApp::ForceStop ();
+  SvelteClientApp::ForceStop ();
 
   // Notify the stopped application one second later.
   Simulator::Schedule (Seconds (1), &VoipClient::NotifyStop, this, false);

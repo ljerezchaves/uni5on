@@ -20,7 +20,7 @@
 #ifndef AUTO_PILOT_SERVER_H
 #define AUTO_PILOT_SERVER_H
 
-#include "sdmn-server-app.h"
+#include "svelte-server-app.h"
 
 namespace ns3 {
 
@@ -28,7 +28,7 @@ namespace ns3 {
  * \ingroup sdmnApps
  * This is the server side of a auto pilot MTC traffic generator.
  */
-class AutoPilotServer : public SdmnServerApp
+class AutoPilotServer : public SvelteServerApp
 {
 public:
   /**
@@ -49,7 +49,7 @@ private:
   virtual void StartApplication (void);
   virtual void StopApplication (void);
 
-  // Inherited from SdmnServerApp.
+  // Inherited from SvelteServerApp.
   void NotifyStart ();
   void NotifyForceStop ();
 

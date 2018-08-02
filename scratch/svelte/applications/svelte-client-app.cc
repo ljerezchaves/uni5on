@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "sdmn-client-app.h"
-#include "sdmn-server-app.h"
+#include "svelte-client-app.h"
+#include "svelte-server-app.h"
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT \
@@ -27,10 +27,10 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("SdmnClientApp");
-NS_OBJECT_ENSURE_REGISTERED (SdmnClientApp);
+NS_LOG_COMPONENT_DEFINE ("SvelteClientApp");
+NS_OBJECT_ENSURE_REGISTERED (SvelteClientApp);
 
-SdmnClientApp::SdmnClientApp ()
+SvelteClientApp::SvelteClientApp ()
   : m_qosStats (CreateObject<QosStatsCalculator> ()),
   m_socket (0),
   m_serverApp (0),
@@ -43,64 +43,67 @@ SdmnClientApp::SdmnClientApp ()
   NS_LOG_FUNCTION (this);
 }
 
-SdmnClientApp::~SdmnClientApp ()
+SvelteClientApp::~SvelteClientApp ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-SdmnClientApp::GetTypeId (void)
+SvelteClientApp::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::SdmnClientApp")
+  static TypeId tid = TypeId ("ns3::SvelteClientApp")
     .SetParent<Application> ()
-    .AddConstructor<SdmnClientApp> ()
+    .AddConstructor<SvelteClientApp> ()
     .AddAttribute ("MaxOnTime",
                    "A hard duration time threshold.",
                    TimeValue (Time ()),
-                   MakeTimeAccessor (&SdmnClientApp::m_maxOnTime),
+                   MakeTimeAccessor (&SvelteClientApp::m_maxOnTime),
                    MakeTimeChecker ())
     .AddAttribute ("AppName",
                    "The application name.",
                    StringValue ("NoName"),
-                   MakeStringAccessor (&SdmnClientApp::m_name),
+                   MakeStringAccessor (&SvelteClientApp::m_name),
                    MakeStringChecker ())
 
     .AddAttribute ("ServerAddress",
                    "The server socket address.",
                    AddressValue (),
-                   MakeAddressAccessor (&SdmnClientApp::m_serverAddress),
+                   MakeAddressAccessor (&SvelteClientApp::m_serverAddress),
                    MakeAddressChecker ())
     .AddAttribute ("LocalPort",
                    "Local port.",
                    UintegerValue (10000),
-                   MakeUintegerAccessor (&SdmnClientApp::m_localPort),
+                   MakeUintegerAccessor (&SvelteClientApp::m_localPort),
                    MakeUintegerChecker<uint16_t> ())
 
     .AddTraceSource ("AppStart",
-                     "SdmnClientApp start trace source.",
-                     MakeTraceSourceAccessor (&SdmnClientApp::m_appStartTrace),
-                     "ns3::SdmnClientApp::EpcAppTracedCallback")
+                     "SvelteClientApp start trace source.",
+                     MakeTraceSourceAccessor (
+                       &SvelteClientApp::m_appStartTrace),
+                     "ns3::SvelteClientApp::EpcAppTracedCallback")
     .AddTraceSource ("AppStop",
-                     "SdmnClientApp stop trace source.",
-                     MakeTraceSourceAccessor (&SdmnClientApp::m_appStopTrace),
-                     "ns3::SdmnClientApp::EpcAppTracedCallback")
+                     "SvelteClientApp stop trace source.",
+                     MakeTraceSourceAccessor (
+                       &SvelteClientApp::m_appStopTrace),
+                     "ns3::SvelteClientApp::EpcAppTracedCallback")
     .AddTraceSource ("AppError",
-                     "SdmnClientApp error trace source.",
-                     MakeTraceSourceAccessor (&SdmnClientApp::m_appErrorTrace),
-                     "ns3::SdmnClientApp::EpcAppTracedCallback")
+                     "SvelteClientApp error trace source.",
+                     MakeTraceSourceAccessor (
+                       &SvelteClientApp::m_appErrorTrace),
+                     "ns3::SvelteClientApp::EpcAppTracedCallback")
   ;
   return tid;
 }
 
 std::string
-SdmnClientApp::GetAppName (void) const
+SvelteClientApp::GetAppName (void) const
 {
   // No log to avoid infinite recursion.
   return m_name;
 }
 
 std::string
-SdmnClientApp::GetNameTeid (void) const
+SvelteClientApp::GetNameTeid (void) const
 {
   // No log to avoid infinite recursion.
   std::ostringstream value;
@@ -109,7 +112,7 @@ SdmnClientApp::GetNameTeid (void) const
 }
 
 bool
-SdmnClientApp::IsActive (void) const
+SvelteClientApp::IsActive (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -117,7 +120,7 @@ SdmnClientApp::IsActive (void) const
 }
 
 Time
-SdmnClientApp::GetMaxOnTime (void) const
+SvelteClientApp::GetMaxOnTime (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -125,7 +128,7 @@ SdmnClientApp::GetMaxOnTime (void) const
 }
 
 bool
-SdmnClientApp::IsForceStop (void) const
+SvelteClientApp::IsForceStop (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -133,7 +136,7 @@ SdmnClientApp::IsForceStop (void) const
 }
 
 Ptr<EpcTft>
-SdmnClientApp::GetTft (void) const
+SvelteClientApp::GetTft (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -141,7 +144,7 @@ SdmnClientApp::GetTft (void) const
 }
 
 EpsBearer
-SdmnClientApp::GetEpsBearer (void) const
+SvelteClientApp::GetEpsBearer (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -149,14 +152,14 @@ SdmnClientApp::GetEpsBearer (void) const
 }
 
 uint32_t
-SdmnClientApp::GetTeid (void) const
+SvelteClientApp::GetTeid (void) const
 {
   // No log to avoid infinite recursion.
   return m_teid;
 }
 
-Ptr<SdmnServerApp>
-SdmnClientApp::GetServerApp (void) const
+Ptr<SvelteServerApp>
+SvelteClientApp::GetServerApp (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -164,7 +167,7 @@ SdmnClientApp::GetServerApp (void) const
 }
 
 Ptr<const QosStatsCalculator>
-SdmnClientApp::GetQosStats (void) const
+SvelteClientApp::GetQosStats (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -172,7 +175,7 @@ SdmnClientApp::GetQosStats (void) const
 }
 
 Ptr<const QosStatsCalculator>
-SdmnClientApp::GetServerQosStats (void) const
+SvelteClientApp::GetServerQosStats (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -181,7 +184,7 @@ SdmnClientApp::GetServerQosStats (void) const
 }
 
 void
-SdmnClientApp::SetTft (Ptr<EpcTft> value)
+SvelteClientApp::SetTft (Ptr<EpcTft> value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -189,7 +192,7 @@ SdmnClientApp::SetTft (Ptr<EpcTft> value)
 }
 
 void
-SdmnClientApp::SetEpsBearer (EpsBearer value)
+SvelteClientApp::SetEpsBearer (EpsBearer value)
 {
   NS_LOG_FUNCTION (this);
 
@@ -197,7 +200,7 @@ SdmnClientApp::SetEpsBearer (EpsBearer value)
 }
 
 void
-SdmnClientApp::SetTeid (uint32_t value)
+SvelteClientApp::SetTeid (uint32_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -205,7 +208,8 @@ SdmnClientApp::SetTeid (uint32_t value)
 }
 
 void
-SdmnClientApp::SetServer (Ptr<SdmnServerApp> serverApp, Address serverAddress)
+SvelteClientApp::SetServer (Ptr<SvelteServerApp> serverApp,
+                            Address serverAddress)
 {
   NS_LOG_FUNCTION (this << serverApp << serverAddress);
 
@@ -214,7 +218,7 @@ SdmnClientApp::SetServer (Ptr<SdmnServerApp> serverApp, Address serverAddress)
 }
 
 void
-SdmnClientApp::Start ()
+SvelteClientApp::Start ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Starting client application.");
@@ -231,7 +235,7 @@ SdmnClientApp::Start ()
   if (!m_maxOnTime.IsZero ())
     {
       m_forceStop =
-        Simulator::Schedule (m_maxOnTime, &SdmnClientApp::ForceStop, this);
+        Simulator::Schedule (m_maxOnTime, &SvelteClientApp::ForceStop, this);
     }
 
   // Notify the server and fire start trace source.
@@ -241,7 +245,7 @@ SdmnClientApp::Start ()
 }
 
 void
-SdmnClientApp::DoDispose (void)
+SvelteClientApp::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -254,7 +258,7 @@ SdmnClientApp::DoDispose (void)
 }
 
 void
-SdmnClientApp::ForceStop ()
+SvelteClientApp::ForceStop ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Forcing the client application to stop.");
@@ -270,7 +274,7 @@ SdmnClientApp::ForceStop ()
 }
 
 void
-SdmnClientApp::NotifyStop (bool withError)
+SvelteClientApp::NotifyStop (bool withError)
 {
   NS_LOG_FUNCTION (this << withError);
   NS_LOG_INFO ("Client application stopped.");
@@ -293,7 +297,7 @@ SdmnClientApp::NotifyStop (bool withError)
 }
 
 uint32_t
-SdmnClientApp::NotifyTx (uint32_t txBytes)
+SvelteClientApp::NotifyTx (uint32_t txBytes)
 {
   NS_LOG_FUNCTION (this << txBytes);
 
@@ -302,7 +306,7 @@ SdmnClientApp::NotifyTx (uint32_t txBytes)
 }
 
 void
-SdmnClientApp::NotifyRx (uint32_t rxBytes, Time timestamp)
+SvelteClientApp::NotifyRx (uint32_t rxBytes, Time timestamp)
 {
   NS_LOG_FUNCTION (this << rxBytes << timestamp);
 
@@ -310,7 +314,7 @@ SdmnClientApp::NotifyRx (uint32_t rxBytes, Time timestamp)
 }
 
 void
-SdmnClientApp::ResetQosStats ()
+SvelteClientApp::ResetQosStats ()
 {
   NS_LOG_FUNCTION (this);
 

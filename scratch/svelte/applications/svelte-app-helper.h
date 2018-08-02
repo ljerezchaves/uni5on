@@ -24,8 +24,8 @@
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
-#include "sdmn-client-app.h"
-#include "sdmn-server-app.h"
+#include "svelte-client-app.h"
+#include "svelte-server-app.h"
 
 namespace ns3 {
 
@@ -34,17 +34,17 @@ namespace ns3 {
  * This helper will make life easier for people trying to set up client/server
  * applications on the SDMN architecture.
  */
-class SdmnAppHelper
+class SvelteAppHelper
 {
 public:
-  SdmnAppHelper ();     //!< Default constructor.
+  SvelteAppHelper ();     //!< Default constructor.
 
   /**
    * Complete constructor.
    * \param clientType The TypeId of client application class.
    * \param serverType The TypeId of server application class.
    */
-  SdmnAppHelper (TypeId clientType, TypeId serverType);
+  SvelteAppHelper (TypeId clientType, TypeId serverType);
 
   /**
    * Record an attribute to be set in each client application.
@@ -70,7 +70,7 @@ public:
    * \param dscp The DSCP value used to set the socket type of service field.
    * \return The client application created.
    */
-  Ptr<SdmnClientApp> Install (
+  Ptr<SvelteClientApp> Install (
     Ptr<Node> clientNode, Ptr<Node> serverNode, Ipv4Address clientAddr,
     Ipv4Address serverAddr, uint16_t port,
     Ipv4Header::DscpType dscp = Ipv4Header::DscpDefault);

@@ -35,7 +35,7 @@ TypeId
 HttpClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::HttpClient")
-    .SetParent<SdmnClientApp> ()
+    .SetParent<SvelteClientApp> ()
     .AddConstructor<HttpClient> ()
     .AddAttribute ("MaxPages",
                    "The number of loaded pages threshold to stop application.",
@@ -86,7 +86,7 @@ HttpClient::Start ()
   NS_LOG_FUNCTION (this);
 
   // Chain up to reset statistics, notify server, and fire start trace source.
-  SdmnClientApp::Start ();
+  SvelteClientApp::Start ();
 
   NS_LOG_INFO ("Opening the TCP connection.");
   TypeId tcpFactory = TypeId::LookupByName ("ns3::TcpSocketFactory");
@@ -107,7 +107,7 @@ HttpClient::DoDispose (void)
   m_readingTimeStream = 0;
   m_readingTimeAdjustStream = 0;
   m_nextRequest.Cancel ();
-  SdmnClientApp::DoDispose ();
+  SvelteClientApp::DoDispose ();
 }
 
 void
@@ -124,7 +124,7 @@ HttpClient::ForceStop ()
   NS_LOG_FUNCTION (this);
 
   // Chain up to set flag and notify server.
-  SdmnClientApp::ForceStop ();
+  SvelteClientApp::ForceStop ();
 
   // If we are on the reading time, cancel any further schedulled requests,
   // close the open socket and call NotifyStop ().  Otherwise, the socket will
