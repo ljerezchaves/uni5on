@@ -33,16 +33,16 @@ namespace ns3 {
 class SvelteServerApp;
 
 /**
- * \ingroup sdmn
- * \defgroup sdmnApps Applications
- * Applications prepared to work with the SDMN architecture.
+ * \ingroup svelte
+ * \defgroup svelteApps Applications
+ * Applications prepared to work with the SVELTE architecture.
  */
 /**
- * \ingroup sdmnApps
- * This class extends the Application class to proper work with the SDMN
+ * \ingroup svelteApps
+ * This class extends the Application class to proper work with the SVELTE
  * architecture. Only clients applications (those which will be installed into
  * UEs) should extend this class. It includes a QosStatsCalculator for traffic
- * statistics, and start/stop callbacks to notify the SDMN controller when the
+ * statistics, and start/stop callbacks to notify the slice controller when the
  * traffic stats/stops. Each application is associated with an EPS bearer, and
  * application traffic is sent within GTP tunnels over EPC interfaces. These
  * informations are also saved here for further usage.

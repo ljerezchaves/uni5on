@@ -26,7 +26,7 @@
 namespace ns3 {
 
 /**
- * \ingroup sdmnApps
+ * \ingroup svelteApps
  * This is the client side of a live video traffic generator, receiving
  * UDP datagrams following a MPEG video pattern with random video length.
  */

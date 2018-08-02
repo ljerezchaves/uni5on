@@ -25,7 +25,7 @@
 namespace ns3 {
 
 /**
- * \ingroup sdmnApps
+ * \ingroup svelteApps
  * This is the server side of a auto pilot MTC traffic generator.
  */
 class AutoPilotServer : public SvelteServerApp

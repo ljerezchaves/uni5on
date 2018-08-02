@@ -33,8 +33,8 @@ namespace ns3 {
 class SvelteClientApp;
 
 /**
- * \ingroup sdmnApps
- * This class extends the Application class to proper work with SDMN
+ * \ingroup svelteApps
+ * This class extends the Application class to proper work with SVELTE
  * architecture. Only server applications (those which will be installed into
  * web server node) should extend this class.
  */

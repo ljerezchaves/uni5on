@@ -27,7 +27,7 @@
 namespace ns3 {
 
 /**
- * \ingroup sdmnApps
+ * \ingroup svelteApps
  * This is the client side of a VoIP traffic generator, sending and receiving
  * UDP datagrams following VoIP traffic pattern.
  */

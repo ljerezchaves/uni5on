@@ -30,9 +30,9 @@
 namespace ns3 {
 
 /**
- * \ingroup sdmnApps
+ * \ingroup svelteApps
  * This helper will make life easier for people trying to set up client/server
- * applications on the SDMN architecture.
+ * applications on the SVELTE architecture.
  */
 class SvelteAppHelper
 {

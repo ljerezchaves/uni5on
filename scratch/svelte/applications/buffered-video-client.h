@@ -26,7 +26,7 @@
 namespace ns3 {
 
 /**
- * \ingroup sdmnApps
+ * \ingroup svelteApps
  * This is the client side of a buffered video traffic generator. The client
  * establishes a TCP connection with the server and sends a HTTP request for
  * the main video object. After receiving all video chunks, the client closes
