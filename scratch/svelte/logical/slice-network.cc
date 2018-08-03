@@ -308,12 +308,6 @@ SliceNetwork::CreatePgw (void)
   Ptr<OFSwitch13Device> pgwMainOfDev = m_pgwDevices.Get (0);
   uint64_t pgwDpId = pgwMainOfDev->GetDatapathId ();
 
-  // Saving P-GW metadata.
-  m_pgwInfo = CreateObject<PgwInfo> (pgwDpId);
-  m_pgwInfo->SetSliceId (m_sliceId);
-  m_pgwInfo->SetInfraSwIdx (m_pgwInfraSwIdx);
-  m_pgwInfo->SetNumTfts (m_nTftNodes);
-
   // Connect the P-GW main switch to the SGi and S5 interfaces. On the uplink
   // direction, the traffic will flow directly from the S5 to the SGi interface
   // thought this switch. On the downlink direction, this switch will send the
@@ -335,7 +329,6 @@ SliceNetwork::CreatePgw (void)
 
   // Add the pgwSgiDev as physical port on the P-GW main OpenFlow switch.
   Ptr<OFSwitch13Port> pgwSgiPort = pgwMainOfDev->AddSwitchPort (pgwSgiDev);
-  m_pgwInfo->SetMainSgiPortNo (pgwSgiPort->GetPortNo ());
 
   // Set the IP address on the Internet network.
   m_webAddrHelper.Assign (m_webDevices);
@@ -367,6 +360,11 @@ SliceNetwork::CreatePgw (void)
   Ptr<OFSwitch13Port> pgwS5Port = pgwMainOfDev->AddSwitchPort (pgwS5PortDev);
   pgwMainNode->AddApplication (
     CreateObject<PgwTunnelApp> (pgwS5PortDev, pgwS5Dev));
+
+  // Saving P-GW metadata.
+  m_pgwInfo = CreateObject<PgwInfo> (
+      pgwDpId, m_nTftNodes, pgwSgiPort->GetPortNo (),
+      m_pgwInfraSwIdx, m_controllerApp);
 
   // Saving P-GW MAIN metadata first.
   m_pgwInfo->SaveSwitchInfo (pgwMainOfDev, pgwS5Addr, pgwS5Port->GetPortNo (),

@@ -19,6 +19,7 @@
  */
 
 #include "pgw-info.h"
+#include "../logical/slice-controller.h"
 
 namespace ns3 {
 
@@ -28,12 +29,13 @@ NS_OBJECT_ENSURE_REGISTERED (PgwInfo);
 // Initializing PgwInfo static members.
 PgwInfo::PgwIdPgwInfo_t PgwInfo::m_pgwInfoByPgwId;
 
-PgwInfo::PgwInfo (uint64_t pgwId)
+PgwInfo::PgwInfo (uint64_t pgwId, uint16_t nTfts, uint32_t sgiPortNo,
+                  uint16_t infraSwIdx, Ptr<SliceController> ctrlApp)
   : m_pgwId (pgwId),
-  m_sliceId (SliceId::NONE),
-  m_infraSwIdx (0),
-  m_sgiPortNo (0),
-  m_nTfts (0)
+  m_nTfts (nTfts),
+  m_sgiPortNo (sgiPortNo),
+  m_infraSwIdx (infraSwIdx),
+  m_sliceCtrl (ctrlApp)
 {
   NS_LOG_FUNCTION (this);
 
@@ -67,7 +69,15 @@ PgwInfo::GetSliceId (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_sliceId;
+  return m_sliceCtrl->GetSliceId ();
+}
+
+Ptr<SliceController>
+PgwInfo::GetSliceCtrl (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sliceCtrl;
 }
 
 uint16_t
@@ -287,39 +297,8 @@ PgwInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
+  m_sliceCtrl = 0;
   m_devices.clear ();
-}
-
-void
-PgwInfo::SetSliceId (SliceId value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_sliceId = value;
-}
-
-void
-PgwInfo::SetInfraSwIdx (uint16_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_infraSwIdx = value;
-}
-
-void
-PgwInfo::SetNumTfts (uint16_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_nTfts = value;
-}
-
-void
-PgwInfo::SetMainSgiPortNo (uint32_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_sgiPortNo = value;
 }
 
 void

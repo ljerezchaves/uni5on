@@ -30,6 +30,8 @@
 
 namespace ns3 {
 
+class SliceController;
+
 /**
  * \ingroup svelteMeta
  * Metadata associated to a logical P-GW.
@@ -42,9 +44,14 @@ class PgwInfo : public Object
 public:
   /**
    * Complete constructor.
-   * \param PgwId The ID for this P-GW.
+   * \param pgwId The P-GW ID.
+   * \param nTfts The number of TFT switches.
+   * \param sgiPortNo The port number for SGi interface at the P-GW main switch.
+   * \param infraSwIdx The OpenFlow backhaul switch index.
+   * \param sliceCtrl The slice controller application.
    */
-  PgwInfo (uint64_t pgwId);
+  PgwInfo (uint64_t pgwId, uint16_t nTfts, uint32_t sgiPortNo,
+           uint16_t infraSwIdx, Ptr<SliceController> ctrlApp);
   virtual ~PgwInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
@@ -57,6 +64,7 @@ public:
   //\{
   uint64_t GetPgwId (void) const;
   SliceId GetSliceId (void) const;
+  Ptr<SliceController> GetSliceCtrl (void) const;
   uint16_t GetInfraSwIdx (void) const;
   uint16_t GetNumTfts (void) const;
   uint32_t GetMainSgiPortNo (void) const;
@@ -91,14 +99,6 @@ protected:
   virtual void DoDispose ();
 
 private:
-  /** \name Private member accessors. */
-  //\{
-  void SetSliceId (SliceId value);
-  void SetInfraSwIdx (uint16_t value);
-  void SetNumTfts (uint16_t value);
-  void SetMainSgiPortNo (uint32_t value);
-  //\}
-
   /**
    * Save the metadata associated to a single P-GW OpenFlow switch attached to
    * the OpenFlow backhaul network.
@@ -135,15 +135,15 @@ private:
 
   // P-GW metadata.
   uint64_t                  m_pgwId;              //!< P-GW ID (main dpId).
-  SliceId                   m_sliceId;            //!< LTE logical slice ID.
-  uint16_t                  m_infraSwIdx;         //!< Backhaul switch index.
-  uint32_t                  m_sgiPortNo;          //!< SGi port number.
   uint16_t                  m_nTfts;              //!< Number of TFT switches.
+  uint32_t                  m_sgiPortNo;          //!< SGi port number.
+  uint16_t                  m_infraSwIdx;         //!< Backhaul switch index.
   DevicesVector_t           m_devices;            //!< OpenFlow switch devices.
   std::vector<Ipv4Address>  m_s5Addrs;            //!< S5 dev IP addresses.
   std::vector<uint32_t>     m_s5PortNos;          //!< S5 port numbers.
   std::vector<uint32_t>     m_infraSwS5PortNos;   //!< Back switch S5 port nos.
   std::vector<uint32_t>     m_mainToTftPortNos;   //!< Main port nos to TFTs.
+  Ptr<SliceController>      m_sliceCtrl;          //!< LTE logical slice ctrl.
 
   /** Map saving P-GW ID / P-GW information. */
   typedef std::map<uint64_t, Ptr<PgwInfo> > PgwIdPgwInfo_t;
