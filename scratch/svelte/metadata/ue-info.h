@@ -157,16 +157,15 @@ private:
 
   // UE metadata.
   uint64_t               m_imsi;                 //!< UE IMSI.
-  Ptr<SliceController>   m_sliceCtrl;            //!< LTE logical slice ctrl.
   Ipv4Address            m_ueAddr;               //!< UE IP address.
   Ptr<EnbInfo>           m_enbInfo;              //!< Serving eNB info
   Ptr<SgwInfo>           m_sgwInfo;              //!< Serving S-GW info.
   Ptr<PgwInfo>           m_pgwInfo;              //!< Serving P-GW info.
 
   // Control-plane communication.
+  Ptr<SliceController>   m_sliceCtrl;            //!< LTE logical slice ctrl.
   uint64_t               m_mmeUeS1Id;            //!< ID for S1-AP at MME.
   uint16_t               m_enbUeS1Id;            //!< ID for S1-AP at eNB.
-  EpcS11SapSgw*          m_s11SapSgw;            //!< S-GW side of the S11 SAP.
 
   // Bearers and TFTs.
   uint16_t               m_bearerCounter;        //!< Number of bearers.

@@ -36,14 +36,13 @@ UeInfo::Ipv4UeInfoMap_t UeInfo::m_ueInfoByIpv4Map;
 UeInfo::UeInfo (uint64_t imsi, Ipv4Address ueAddr,
                 Ptr<SliceController> sliceCtrl)
   : m_imsi (imsi),
-  m_sliceCtrl (sliceCtrl),
   m_ueAddr (ueAddr),
   m_enbInfo (0),
   m_sgwInfo (0),
   m_pgwInfo (0),
+  m_sliceCtrl (sliceCtrl),
   m_mmeUeS1Id (imsi),
   m_enbUeS1Id (0),
-  m_s11SapSgw (sliceCtrl->GetS11SapSgw ()),
   m_bearerCounter (0)
 {
   NS_LOG_FUNCTION (this);
@@ -143,7 +142,7 @@ UeInfo::GetS11SapSgw (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_s11SapSgw;
+  return m_sliceCtrl->GetS11SapSgw ();
 }
 
 EpcS1apSapEnb*
