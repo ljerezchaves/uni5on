@@ -105,14 +105,13 @@ TrafficManager::SessionCreatedCallback (
       return;
     }
 
-  // FIXME m_ctrlApp = SdranController::GetPointer (cellId);
+  m_ctrlApp = UeInfo::GetPointer (imsi)->GetSliceCtrl ();
   m_defaultTeid = bearerList.front ().sgwFteid.teid;
 
   // For each application, set the corresponding TEID.
-  AppTimeMap_t::iterator aIt;
-  for (aIt = m_appTable.begin (); aIt != m_appTable.end (); ++aIt)
+  for (auto const &ait : m_appTable)
     {
-      Ptr<SvelteClientApp> app = aIt->first;
+      Ptr<SvelteClientApp> app = ait.first;
       app->SetTeid (m_defaultTeid);
 
       // Using the TFT to match bearers and applications.
