@@ -52,9 +52,9 @@ class UeInfo : public Object
 public:
   /**
    * Complete constructor.
-   * \param imsi The IMSI identifier for this UE.
+   * \param imsi The IMSI identifier.
    * \param ueAddr The UE IP address.
-   * \param sliceCtrl The slice controller for this UE.
+   * \param sliceCtrl The slice controller application.
    */
   UeInfo (uint64_t imsi, Ipv4Address ueAddr, Ptr<SliceController> sliceCtrl);
   virtual ~UeInfo (); //!< Dummy destructor, see DoDispose.
@@ -86,6 +86,7 @@ public:
   uint64_t GetEnbUeS1Id (void) const;
   EpcS11SapSgw* GetS11SapSgw (void) const;
   EpcS1apSapEnb* GetS1apSapEnb (void) const;
+  Ptr<SliceController> GetSliceCtrl (void) const;
   std::list<BearerInfo> GetBearerList (void) const;
   //\}
 

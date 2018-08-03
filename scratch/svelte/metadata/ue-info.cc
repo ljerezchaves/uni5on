@@ -154,6 +154,14 @@ UeInfo::GetS1apSapEnb (void) const
   return m_enbInfo->GetS1apSapEnb ();
 }
 
+Ptr<SliceController>
+UeInfo::GetSliceCtrl (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sliceCtrl;
+}
+
 std::list<UeInfo::BearerInfo>
 UeInfo::GetBearerList (void) const
 {
