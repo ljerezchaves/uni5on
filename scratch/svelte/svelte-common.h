@@ -41,6 +41,12 @@ namespace ns3 {
 class Ipv4Address;
 class NetDevice;
 
+/** EPS bearer context created. */
+typedef EpcS11SapMme::BearerContextCreated BearerContext_t;
+
+/** List of bearer context created. */
+typedef std::list<BearerContext_t> BearerContextList_t;
+
 /**
  * \ingroup svelte
  * Enumeration of available physical link slices.

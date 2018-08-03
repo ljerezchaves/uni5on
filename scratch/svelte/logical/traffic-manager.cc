@@ -20,6 +20,8 @@
 
 #include "traffic-manager.h"
 #include "slice-controller.h"
+#include "../applications/svelte-client-app.h"
+#include "../metadata/ue-info.h"
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT \

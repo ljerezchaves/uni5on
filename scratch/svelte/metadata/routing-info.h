@@ -34,12 +34,6 @@ class UeInfo;
 class GbrInfo;
 class MeterInfo;
 
-/** EPS bearer context created. */
-typedef EpcS11SapMme::BearerContextCreated BearerContext_t;
-
-/** List of bearer context created. */
-typedef std::list<BearerContext_t> BearerContextList_t;
-
 /** List of bearer information. */
 typedef std::list<Ptr<RoutingInfo> > RoutingInfoList_t;
 
