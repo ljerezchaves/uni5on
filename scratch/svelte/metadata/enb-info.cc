@@ -30,11 +30,11 @@ NS_OBJECT_ENSURE_REGISTERED (EnbInfo);
 EnbInfo::CellIdEnbInfo_t EnbInfo::m_enbInfoByCellId;
 
 EnbInfo::EnbInfo (uint16_t cellId, Ipv4Address s1uAddr, uint16_t infraSwIdx,
-                  uint32_t infraSwPortNo, Ptr<SvelteEnbApplication> enbApp)
+                  uint32_t infraSwS1uPortNo, Ptr<SvelteEnbApplication> enbApp)
   : m_cellId (cellId),
   m_s1uAddr (s1uAddr),
   m_infraSwIdx (infraSwIdx),
-  m_infraSwPortNo (infraSwPortNo),
+  m_infraSwS1uPortNo (infraSwS1uPortNo),
   m_enbApplication (enbApp)
 {
   NS_LOG_FUNCTION (this);
@@ -81,11 +81,11 @@ EnbInfo::GetInfraSwIdx (void) const
 }
 
 uint32_t
-EnbInfo::GetInfraSwPortNo (void) const
+EnbInfo::GetInfraSwS1uPortNo (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_infraSwPortNo;
+  return m_infraSwS1uPortNo;
 }
 
 Ptr<SvelteEnbApplication>

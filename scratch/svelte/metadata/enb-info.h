@@ -42,11 +42,11 @@ public:
    * \param cellId The cell identifier for this eNB.
    * \param s1uAddr The eNB S1-U IP address.
    * \param infraSwIdx The OpenFlow backhaul switch index.
-   * \param infraSwPortNo The port number for S1-U interface at the switch.
+   * \param infraSwS1uPortNo The port number for S1-U interface at the switch.
    * \param enbApp The eNB application.
    */
   EnbInfo (uint16_t cellId, Ipv4Address s1uAddr, uint16_t infraSwIdx,
-           uint32_t infraSwPortNo, Ptr<SvelteEnbApplication> enbApp);
+           uint32_t infraSwS1uPortNo, Ptr<SvelteEnbApplication> enbApp);
   virtual ~EnbInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
@@ -60,7 +60,7 @@ public:
   uint16_t GetCellId (void) const;
   Ipv4Address GetS1uAddr (void) const;
   uint16_t GetInfraSwIdx (void) const;
-  uint32_t GetInfraSwPortNo (void) const;
+  uint32_t GetInfraSwS1uPortNo (void) const;
   Ptr<SvelteEnbApplication> GetEnbApplication (void) const;
   EpcS1apSapEnb* GetS1apSapEnb (void) const;
   //\}
@@ -87,7 +87,7 @@ private:
   uint16_t                  m_cellId;             //!< eNB cell ID.
   Ipv4Address               m_s1uAddr;            //!< eNB S1-U IP address.
   uint16_t                  m_infraSwIdx;         //!< Backhaul switch index.
-  uint32_t                  m_infraSwPortNo;      //!< Backhaul switch port no.
+  uint32_t                  m_infraSwS1uPortNo;   //!< Backhaul switch port no.
   Ptr<SvelteEnbApplication> m_enbApplication;     //!< eNB application.
 
   /** Map saving cell ID / eNB information. */
