@@ -29,20 +29,31 @@
 
 namespace ns3 {
 
+class SliceController;
+
 /**
  * \ingroup svelteMeta
  * Metadata associated to a logical S-GW.
  */
 class SgwInfo : public Object
 {
-  friend class SliceNetwork;
-
 public:
   /**
    * Complete constructor.
-   * \param sgwId The ID for this S-GW.
+   * \param sgwId The S-GW ID.
+   * \param s1uAddr The S-S1-U interface IP address.
+   * \param s5Addr The S5 interface IP address.
+   * \param s1uPortNo The port number for S1-U interface at the S-GW.
+   * \param s5PortNo The port number for S5 interface at the S-GW.
+   * \param infraSwIdx The OpenFlow backhaul switch index.
+   * \param infraSwS1uPortNo The port number for S1-U interface at the switch.
+   * \param infraSwS5PortNo The port number for S5 interface at the switch.
+   * \param sliceCtrl The slice controller application.
    */
-  SgwInfo (uint64_t sgwId);
+  SgwInfo (uint64_t sgwId, Ipv4Address s1uAddr, Ipv4Address s5Addr,
+           uint32_t s1uPortNo, uint32_t s5PortNo, uint16_t infraSwIdx,
+           uint32_t infraSwS1uPortNo, uint32_t infraSwS5PortNo,
+           Ptr<SliceController> ctrlApp);
   virtual ~SgwInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
@@ -63,6 +74,7 @@ public:
   uint16_t GetInfraSwIdx (void) const;
   uint32_t GetInfraSwS1uPortNo (void) const;
   uint32_t GetInfraSwS5PortNo (void) const;
+  Ptr<SliceController> GetSliceCtrl (void) const;
   //\}
 
   /**
@@ -85,18 +97,6 @@ protected:
   virtual void DoDispose ();
 
 private:
-  /** \name Private member accessors. */
-  //\{
-  void SetSliceId (SliceId value);
-  void SetS1uAddr (Ipv4Address value);
-  void SetS5Addr (Ipv4Address value);
-  void SetS1uPortNo (uint32_t value);
-  void SetS5PortNo (uint32_t value);
-  void SetInfraSwIdx (uint16_t value);
-  void SetInfraSwS1uPortNo (uint32_t value);
-  void SetInfraSwS5PortNo (uint32_t value);
-  //\}
-
   /**
    * Register the S-GW information in global map for further usage.
    * \param sgwInfo The S-GW information to save.
@@ -105,7 +105,6 @@ private:
 
   // S-GW metadata.
   uint64_t               m_sgwId;                //!< S-GW ID.
-  SliceId                m_sliceId;              //!< LTE logical slice ID.
   Ipv4Address            m_s1uAddr;              //!< S-GW S1-U IP address.
   Ipv4Address            m_s5Addr;               //!< S-GW S5 IP address.
   uint32_t               m_s1uPortNo;            //!< S-GW S1-U port no.
@@ -113,6 +112,7 @@ private:
   uint16_t               m_infraSwIdx;           //!< Backhaul switch index.
   uint32_t               m_infraSwS1uPortNo;     //!< Back switch S1-U port no.
   uint32_t               m_infraSwS5PortNo;      //!< Back switch S5 port no.
+  Ptr<SliceController>   m_sliceCtrl;            //!< LTE logical slice ctrl.
 
   /** Map saving S-GW ID / S-GW information. */
   typedef std::map<uint64_t, Ptr<SgwInfo> > SgwIdSgwInfo_t;

@@ -19,6 +19,7 @@
  */
 
 #include "sgw-info.h"
+#include "../logical/slice-controller.h"
 
 namespace ns3 {
 
@@ -28,14 +29,19 @@ NS_OBJECT_ENSURE_REGISTERED (SgwInfo);
 // Initializing SgwInfo static members.
 SgwInfo::SgwIdSgwInfo_t SgwInfo::m_sgwInfoBySgwId;
 
-SgwInfo::SgwInfo (uint64_t sgwId)
+SgwInfo::SgwInfo (
+  uint64_t sgwId, Ipv4Address s1uAddr, Ipv4Address s5Addr, uint32_t s1uPortNo,
+  uint32_t s5PortNo, uint16_t infraSwIdx, uint32_t infraSwS1uPortNo,
+  uint32_t infraSwS5PortNo, Ptr<SliceController> ctrlApp)
   : m_sgwId (sgwId),
-  m_sliceId (SliceId::NONE),
-  m_s1uPortNo (0),
-  m_s5PortNo (0),
-  m_infraSwIdx (0),
-  m_infraSwS1uPortNo (0),
-  m_infraSwS5PortNo (0)
+  m_s1uAddr (s1uAddr),
+  m_s5Addr (s5Addr),
+  m_s1uPortNo (s1uPortNo),
+  m_s5PortNo (s5PortNo),
+  m_infraSwIdx (infraSwIdx),
+  m_infraSwS1uPortNo (infraSwS1uPortNo),
+  m_infraSwS5PortNo (infraSwS5PortNo),
+  m_sliceCtrl (ctrlApp)
 {
   NS_LOG_FUNCTION (this);
 
@@ -77,7 +83,7 @@ SgwInfo::GetSliceId (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_sliceId;
+  return m_sliceCtrl->GetSliceId ();
 }
 
 Ipv4Address
@@ -87,7 +93,6 @@ SgwInfo::GetS1uAddr (void) const
 
   return m_s1uAddr;
 }
-
 
 Ipv4Address
 SgwInfo::GetS5Addr (void) const
@@ -137,6 +142,14 @@ SgwInfo::GetInfraSwS5PortNo (void) const
   return m_infraSwS5PortNo;
 }
 
+Ptr<SliceController>
+SgwInfo::GetSliceCtrl (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sliceCtrl;
+}
+
 Ptr<SgwInfo>
 SgwInfo::GetPointer (uint64_t sgwId)
 {
@@ -172,71 +185,8 @@ SgwInfo::GetPointerBySwIdx (uint16_t infaSwIdx)
 void
 SgwInfo::DoDispose ()
 {
+  m_sliceCtrl = 0;
   NS_LOG_FUNCTION (this);
-}
-
-void
-SgwInfo::SetSliceId (SliceId value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_sliceId = value;
-}
-
-void
-SgwInfo::SetS1uAddr (Ipv4Address value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_s1uAddr = value;
-}
-
-void
-SgwInfo::SetS5Addr (Ipv4Address value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_s5Addr = value;
-}
-
-void
-SgwInfo::SetS1uPortNo (uint32_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_s1uPortNo = value;
-}
-
-void
-SgwInfo::SetS5PortNo (uint32_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_s5PortNo = value;
-}
-
-void
-SgwInfo::SetInfraSwIdx (uint16_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_infraSwIdx = value;
-}
-
-void
-SgwInfo::SetInfraSwS1uPortNo (uint32_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_infraSwS1uPortNo = value;
-}
-
-void
-SgwInfo::SetInfraSwS5PortNo (uint32_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_infraSwS5PortNo = value;
 }
 
 void

@@ -484,15 +484,11 @@ SliceNetwork::CreateSgws (void)
         CreateObject<GtpTunnelApp> (sgwS5PortDev, sgwS5Dev));
 
       // Saving S-GW metadata.
-      Ptr<SgwInfo> sgwInfo = CreateObject<SgwInfo> (sgwDpId);
-      sgwInfo->SetSliceId (m_sliceId);
-      sgwInfo->SetS1uAddr (Ipv4AddressHelper::GetAddress (sgwS1uDev));
-      sgwInfo->SetS5Addr (Ipv4AddressHelper::GetAddress (sgwS5Dev));
-      sgwInfo->SetS1uPortNo (sgwS1uPort->GetPortNo ());
-      sgwInfo->SetS5PortNo (sgwS5Port->GetPortNo ());
-      sgwInfo->SetInfraSwIdx (sgwIdx);
-      sgwInfo->SetInfraSwS1uPortNo (infraSwS1uPort->GetPortNo ());
-      sgwInfo->SetInfraSwS5PortNo (infraSwS5Port->GetPortNo ());
+      Ptr<SgwInfo> sgwInfo = CreateObject<SgwInfo> (
+          sgwDpId, Ipv4AddressHelper::GetAddress (sgwS1uDev),
+          Ipv4AddressHelper::GetAddress (sgwS5Dev), sgwS1uPort->GetPortNo (),
+          sgwS5Port->GetPortNo (), sgwIdx, infraSwS1uPort->GetPortNo (),
+          infraSwS5Port->GetPortNo (), m_controllerApp);
 
       // Notify the controller of the new S-GW switch.
       m_controllerApp->NotifySgwAttach (sgwInfo);
