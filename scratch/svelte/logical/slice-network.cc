@@ -214,10 +214,8 @@ SliceNetwork::NotifyConstructionCompleted (void)
   NS_ABORT_MSG_IF (!m_controllerApp, "No slice controller application.");
   NS_ABORT_MSG_IF (!m_backhaul, "No backhaul network.");
   NS_ABORT_MSG_IF (!m_radio, "No LTE RAN network.");
-
-  EnumValue enumValue;
-  m_controllerApp->GetAttribute ("SliceId", enumValue);
-  NS_ABORT_MSG_IF (enumValue.Get () != m_sliceId, "Incompatible slice IDs");
+  NS_ABORT_MSG_IF (m_controllerApp->GetSliceId () != m_sliceId,
+                   "Incompatible slice IDs for controller and network.");
 
   m_sliceIdStr = SliceIdStr (m_sliceId);
   NS_LOG_INFO ("Creating LTE logical network " << m_sliceIdStr <<
