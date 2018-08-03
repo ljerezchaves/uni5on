@@ -215,6 +215,14 @@ SliceController::GetS11SapSgw (void) const
   return m_s11SapSgw;
 }
 
+SliceId
+SliceController::GetSliceId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sliceId;
+}
+
 void
 SliceController::NotifyPgwAttach (
   Ptr<PgwInfo> pgwInfo, Ptr<NetDevice> webSgiDev)

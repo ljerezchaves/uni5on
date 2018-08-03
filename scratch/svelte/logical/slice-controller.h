@@ -103,6 +103,12 @@ public:
   EpcS11SapSgw* GetS11SapSgw (void) const;
 
   /**
+   * Get the slice ID for this controller.
+   * \return The slice ID.
+   */
+  SliceId GetSliceId (void) const;
+
+  /**
    * Notify this controller of the P-GW  connected to the OpenFlow backhaul
    * network over the S5 interface, and to the web server over the SGi
    * interface.
