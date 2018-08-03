@@ -35,7 +35,6 @@ UeInfo::Ipv4UeInfoMap_t UeInfo::m_ueInfoByIpv4Map;
 UeInfo::UeInfo (uint64_t imsi)
   : m_imsi (imsi),
   m_sliceId (SliceId::NONE),
-  m_cellId (0),
   m_enbInfo (0),
   m_sgwInfo (0),
   m_pgwInfo (0),

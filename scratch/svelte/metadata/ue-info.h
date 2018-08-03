@@ -161,7 +161,6 @@ private:
   uint64_t               m_imsi;                 //!< UE IMSI.
   SliceId                m_sliceId;              //!< LTE logical slice ID.
   Ipv4Address            m_ueAddr;               //!< UE IP address.
-  uint16_t               m_cellId;               //!< Serving eNB cell ID.
   Ptr<EnbInfo>           m_enbInfo;              //!< Serving eNB info
   Ptr<SgwInfo>           m_sgwInfo;              //!< Serving S-GW info.
   Ptr<PgwInfo>           m_pgwInfo;              //!< Serving P-GW info.
