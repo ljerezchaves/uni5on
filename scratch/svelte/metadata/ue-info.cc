@@ -22,6 +22,7 @@
 #include "enb-info.h"
 #include "pgw-info.h"
 #include "sgw-info.h"
+#include "../logical/slice-controller.h"
 
 namespace ns3 {
 
@@ -32,15 +33,17 @@ NS_OBJECT_ENSURE_REGISTERED (UeInfo);
 UeInfo::ImsiUeInfoMap_t UeInfo::m_ueInfoByImsiMap;
 UeInfo::Ipv4UeInfoMap_t UeInfo::m_ueInfoByIpv4Map;
 
-UeInfo::UeInfo (uint64_t imsi)
+UeInfo::UeInfo (uint64_t imsi, Ipv4Address ueAddr,
+                Ptr<SliceController> sliceCtrl)
   : m_imsi (imsi),
-  m_sliceId (SliceId::NONE),
+  m_sliceCtrl (sliceCtrl),
+  m_ueAddr (ueAddr),
   m_enbInfo (0),
   m_sgwInfo (0),
   m_pgwInfo (0),
   m_mmeUeS1Id (imsi),
   m_enbUeS1Id (0),
-  m_s11SapSgw (0),
+  m_s11SapSgw (sliceCtrl->GetS11SapSgw ()),
   m_bearerCounter (0)
 {
   NS_LOG_FUNCTION (this);
@@ -75,7 +78,7 @@ UeInfo::GetSliceId (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_sliceId;
+  return m_sliceCtrl->GetSliceId ();
 }
 
 Ipv4Address
@@ -245,32 +248,17 @@ UeInfo::DoDispose ()
   m_enbInfo = 0;
   m_sgwInfo = 0;
   m_pgwInfo = 0;
+  m_sliceCtrl = 0;
   m_bearersList.clear ();
 }
 
 void
-UeInfo::SetSliceId (SliceId value)
+UeInfo::SetEnbInfo (Ptr<EnbInfo> enbInfo, uint64_t enbUeS1Id)
 {
-  NS_LOG_FUNCTION (this << value);
+  NS_LOG_FUNCTION (this << enbInfo << enbUeS1Id);
 
-  m_sliceId = value;
-}
-
-void
-UeInfo::SetUeAddr (Ipv4Address value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_ueAddr = value;
-  RegisterUeInfoByIpv4 (Ptr<UeInfo> (this));
-}
-
-void
-UeInfo::SetEnbInfo (Ptr<EnbInfo> value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_enbInfo = value;
+  m_enbInfo = enbInfo;
+  m_enbUeS1Id = enbUeS1Id;
 }
 
 void
@@ -287,22 +275,6 @@ UeInfo::SetPgwInfo (Ptr<PgwInfo> value)
   NS_LOG_FUNCTION (this << value);
 
   m_pgwInfo = value;
-}
-
-void
-UeInfo::SetEnbUeS1Id (uint64_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_enbUeS1Id = value;
-}
-
-void
-UeInfo::SetS11SapSgw (EpcS11SapSgw* value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_s11SapSgw = value;
 }
 
 void

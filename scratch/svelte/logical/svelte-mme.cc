@@ -91,8 +91,7 @@ SvelteMme::DoInitialUeMessage (
   NS_LOG_INFO ("UE ISMI " << imsi << " attached to the cell ID " << ecgi);
 
   // Update UE metadata.
-  ueInfo->SetEnbUeS1Id (enbUeS1Id);
-  ueInfo->SetEnbInfo (EnbInfo::GetPointer (ecgi));
+  ueInfo->SetEnbInfo (EnbInfo::GetPointer (ecgi), enbUeS1Id);
 
   EpcS11SapSgw::CreateSessionRequestMessage msg;
   msg.imsi = imsi;
@@ -138,8 +137,7 @@ SvelteMme::DoPathSwitchRequest (
                "cell ID " << ueInfo->GetCellId () << " to cell ID " << gci);
 
   // Update UE metadata.
-  ueInfo->SetEnbUeS1Id (enbUeS1Id);
-  ueInfo->SetEnbInfo (EnbInfo::GetPointer (gci));
+  ueInfo->SetEnbInfo (EnbInfo::GetPointer (gci), enbUeS1Id);
 
   EpcS11SapSgw::ModifyBearerRequestMessage msg;
   msg.teid = imsi;

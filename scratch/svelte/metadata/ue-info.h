@@ -30,8 +30,9 @@
 namespace ns3 {
 
 class EnbInfo;
-class SgwInfo;
 class PgwInfo;
+class SgwInfo;
+class SliceController;
 
 /**
  * \ingroup svelte
@@ -46,15 +47,16 @@ class PgwInfo;
 class UeInfo : public Object
 {
   friend class SliceController;
-  friend class SliceNetwork;
   friend class SvelteMme;
 
 public:
   /**
    * Complete constructor.
    * \param imsi The IMSI identifier for this UE.
+   * \param ueAddr The UE IP address.
+   * \param sliceCtrl The slice controller for this UE.
    */
-  UeInfo (uint64_t imsi);
+  UeInfo (uint64_t imsi, Ipv4Address ueAddr, Ptr<SliceController> sliceCtrl);
   virtual ~UeInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
@@ -136,13 +138,9 @@ protected:
 private:
   /** \name Private member accessors. */
   //\{
-  void SetSliceId (SliceId value);
-  void SetUeAddr (Ipv4Address value);
-  void SetEnbInfo (Ptr<EnbInfo> value);
+  void SetEnbInfo (Ptr<EnbInfo> enbInfo, uint64_t enbUeS1Id);
   void SetSgwInfo (Ptr<SgwInfo> value);
   void SetPgwInfo (Ptr<PgwInfo> value);
-  void SetEnbUeS1Id (uint64_t value);
-  void SetS11SapSgw (EpcS11SapSgw* value);
   //\}
 
   /**
@@ -159,7 +157,7 @@ private:
 
   // UE metadata.
   uint64_t               m_imsi;                 //!< UE IMSI.
-  SliceId                m_sliceId;              //!< LTE logical slice ID.
+  Ptr<SliceController>   m_sliceCtrl;            //!< LTE logical slice ctrl.
   Ipv4Address            m_ueAddr;               //!< UE IP address.
   Ptr<EnbInfo>           m_enbInfo;              //!< Serving eNB info
   Ptr<SgwInfo>           m_sgwInfo;              //!< Serving S-GW info.
