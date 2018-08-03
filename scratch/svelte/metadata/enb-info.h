@@ -36,14 +36,17 @@ class SvelteEnbApplication;
  */
 class EnbInfo : public Object
 {
-  friend class SvelteHelper;
-
 public:
   /**
    * Complete constructor.
    * \param cellId The cell identifier for this eNB.
+   * \param s1uAddr The eNB S1-U IP address.
+   * \param infraSwIdx The OpenFlow backhaul switch index.
+   * \param infraSwPortNo The port number for S1-U interface at the switch.
+   * \param enbApp The eNB application.
    */
-  EnbInfo (uint16_t cellId);
+  EnbInfo (uint16_t cellId, Ipv4Address s1uAddr, uint16_t infraSwIdx,
+           uint32_t infraSwPortNo, Ptr<SvelteEnbApplication> enbApp);
   virtual ~EnbInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
@@ -74,14 +77,6 @@ protected:
   virtual void DoDispose ();
 
 private:
-  /** \name Private member accessors. */
-  //\{
-  void SetS1uAddr (Ipv4Address value);
-  void SetInfraSwIdx (uint16_t value);
-  void SetInfraSwPortNo (uint32_t value);
-  void SetEnbApplication (Ptr<SvelteEnbApplication> value);
-  //\}
-
   /**
    * Register the eNB information in global map for further usage.
    * \param enbInfo The eNB information to save.

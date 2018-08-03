@@ -29,10 +29,13 @@ NS_OBJECT_ENSURE_REGISTERED (EnbInfo);
 // Initializing EnbInfo static members.
 EnbInfo::CellIdEnbInfo_t EnbInfo::m_enbInfoByCellId;
 
-EnbInfo::EnbInfo (uint16_t cellId)
+EnbInfo::EnbInfo (uint16_t cellId, Ipv4Address s1uAddr, uint16_t infraSwIdx,
+                  uint32_t infraSwPortNo, Ptr<SvelteEnbApplication> enbApp)
   : m_cellId (cellId),
-  m_infraSwIdx (0),
-  m_infraSwPortNo (0)
+  m_s1uAddr (s1uAddr),
+  m_infraSwIdx (infraSwIdx),
+  m_infraSwPortNo (infraSwPortNo),
+  m_enbApplication (enbApp)
 {
   NS_LOG_FUNCTION (this);
 
@@ -122,38 +125,6 @@ EnbInfo::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   m_enbApplication = 0;
-}
-
-void
-EnbInfo::SetS1uAddr (Ipv4Address value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_s1uAddr = value;
-}
-
-void
-EnbInfo::SetInfraSwIdx (uint16_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_infraSwIdx = value;
-}
-
-void
-EnbInfo::SetInfraSwPortNo (uint32_t value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_infraSwPortNo = value;
-}
-
-void
-EnbInfo::SetEnbApplication (Ptr<SvelteEnbApplication> value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_enbApplication = value;
 }
 
 void
