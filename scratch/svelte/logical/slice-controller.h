@@ -213,6 +213,13 @@ private:
   //\}
 
   /**
+   * Get the S-GW metadata for a specific backhaul switch index.
+   * \param infaSwIdx The backhaul switch index.
+   * \return The S-GW metadata.
+   */
+  Ptr<SgwInfo> GetSgwInfo (uint16_t infraSwIdx);
+
+  /**
    * Get the active P-GW TFT index for a given traffic flow.
    * \param rInfo The routing information to process.
    * \param activeTfts The number of active P-GW TFT switches. When set to 0,
@@ -323,6 +330,10 @@ private:
   // Internal members and attributes.
   Time                    m_timeout;        //!< Controller internal timeout.
   static const uint16_t   m_flowTimeout;    //!< Timeout for flow entries.
+
+  /** Map saving backhaul switch index / S-GW metadata. */
+  typedef std::map<uint16_t, Ptr<SgwInfo> > SwIdxSgwInfoMap_t;
+  SwIdxSgwInfoMap_t       m_sgwInfoBySwIdx; //!< S-GW info map by switch idx.
 };
 
 } // namespace ns3

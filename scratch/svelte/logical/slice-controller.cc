@@ -312,6 +312,13 @@ SliceController::NotifySgwAttach (Ptr<SgwInfo> sgwInfo)
 {
   NS_LOG_FUNCTION (this << sgwInfo << sgwInfo->GetSgwId ());
 
+  // Save the S-GW metadata.
+  uint16_t swIdx = sgwInfo->GetInfraSwIdx ();
+  std::pair<uint16_t, Ptr<SgwInfo> > entry (swIdx, sgwInfo);
+  std::pair<SwIdxSgwInfoMap_t::iterator, bool> ret;
+  ret = m_sgwInfoBySwIdx.insert (entry);
+  NS_ABORT_MSG_IF (ret.second == false, "Existing S-GW info for this index.");
+
   // -------------------------------------------------------------------------
   // Table 0 -- S-GW default table -- [from higher to lower priority]
   //
@@ -538,8 +545,7 @@ SliceController::DoCreateSessionRequest (
   // UE's serving eNB is also attached. The S-GW may change during handover.
   uint64_t imsi = msg.imsi;
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  uint16_t enbInfraSwIdx = ueInfo->GetEnbInfo ()->GetInfraSwIdx ();
-  Ptr<SgwInfo> sgwInfo = SgwInfo::GetPointerBySwIdx (enbInfraSwIdx);
+  Ptr<SgwInfo> sgwInfo = GetSgwInfo (ueInfo->GetEnbInfo ()->GetInfraSwIdx ());
 
   ueInfo->SetPgwInfo (m_pgwInfo);
   ueInfo->SetSgwInfo (sgwInfo);
@@ -657,6 +663,21 @@ SliceController::DoModifyBearerRequest (
   res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
 
   m_s11SapMme->ModifyBearerResponse (res);
+}
+
+Ptr<SgwInfo>
+SliceController::GetSgwInfo (uint16_t infraSwIdx)
+{
+  NS_LOG_FUNCTION (this << infraSwIdx);
+
+  Ptr<SgwInfo> sgwInfo = 0;
+  SwIdxSgwInfoMap_t::iterator ret;
+  ret = m_sgwInfoBySwIdx.find (infraSwIdx);
+  if (ret != m_sgwInfoBySwIdx.end ())
+    {
+      sgwInfo = ret->second;
+    }
+  return sgwInfo;
 }
 
 uint16_t
