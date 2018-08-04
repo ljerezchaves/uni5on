@@ -88,18 +88,6 @@ public:
   Ptr<PositionAllocator> GetRandomPositionAllocator (void) const;
 
   /**
-   * Get the UE nodes.
-   * \return The UE node container.
-   */
-  NodeContainer GetUeNodes (void) const;
-
-  /**
-   * Get the UE LTE network devices.
-   * \return The UE network device container.
-   */
-  NetDeviceContainer GetUeDevices (void) const;
-
-  /**
    * Print LTE radio environment map.
    */
   void PrintRadioEnvironmentMap (void);

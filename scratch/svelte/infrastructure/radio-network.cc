@@ -175,22 +175,6 @@ RadioNetwork::GetRandomPositionAllocator (void) const
   return boxPosAllocator;
 }
 
-NodeContainer
-RadioNetwork::GetUeNodes (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ueNodes;
-}
-
-NetDeviceContainer
-RadioNetwork::GetUeDevices (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ueDevices;
-}
-
 void
 RadioNetwork::PrintRadioEnvironmentMap (void)
 {
