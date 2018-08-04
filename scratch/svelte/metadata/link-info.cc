@@ -20,6 +20,7 @@
 
 #include "link-info.h"
 #include "../logical/epc-gtpu-tag.h"
+#include "../metadata/routing-info.h"
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT                                                 \
@@ -494,10 +495,8 @@ LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      // FIXME Voltar
-      // Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (gtpuTag.GetTeid ());
-      // m_slices [rInfo->GetSlice ()].txBytes [dir] += packet->GetSize ();
-      m_slices [LinkSlice::DFT].txBytes [dir] += packet->GetSize ();
+      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (gtpuTag.GetTeid ());
+      m_slices [rInfo->GetLinkSlice ()].txBytes [dir] += packet->GetSize ();
     }
   else
     {
