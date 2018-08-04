@@ -284,6 +284,14 @@ RoutingInfo::GetImsi (void) const
   return m_ueInfo->GetImsi ();
 }
 
+uint16_t
+RoutingInfo::GetCellId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetCellId ();
+}
+
 SliceId
 RoutingInfo::GetSliceId (void) const
 {

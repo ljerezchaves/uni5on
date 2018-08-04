@@ -113,6 +113,7 @@ public:
    */
   //\{
   uint64_t GetImsi (void) const;
+  uint16_t GetCellId (void) const;
   SliceId GetSliceId (void) const;
   std::string GetSliceIdStr (void) const;
   Ipv4Address GetEnbS1uAddr (void) const;
