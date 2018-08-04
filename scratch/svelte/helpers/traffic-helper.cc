@@ -29,7 +29,9 @@
 #include "../applications/live-video-server.h"
 #include "../applications/voip-client.h"
 #include "../applications/voip-server.h"
+#include "../infrastructure/radio-network.h"
 #include "../logical/slice-controller.h"
+#include "../logical/slice-network.h"
 #include "../logical/traffic-manager.h"
 #include "../statistics/qos-stats-calculator.h"
 
@@ -67,22 +69,6 @@ const uint64_t TrafficHelper::m_mbrBitRate [] = {
 
 
 // ------------------------------------------------------------------------ //
-TrafficHelper::TrafficHelper (
-  Ptr<Node> webNode, Ptr<LteHelper> lteHelper, NodeContainer ueNodes,
-  NetDeviceContainer ueDevices)
-  : m_lteHelper (lteHelper),
-  m_webNode (webNode),
-  m_ueNodes (ueNodes),
-  m_ueDevices (ueDevices)
-{
-  NS_LOG_FUNCTION (this);
-
-  NS_ASSERT_MSG (m_webNode->GetNDevices () == 2, "Single device expected.");
-  Ptr<NetDevice> webDev = m_webNode->GetDevice (1);
-  m_webAddr = Ipv4AddressHelper::GetAddress (webDev);
-  m_webMask = Ipv4AddressHelper::GetMask (webDev);
-}
-
 TrafficHelper::TrafficHelper ()
 {
   NS_LOG_FUNCTION (this);
@@ -99,6 +85,18 @@ TrafficHelper::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::TrafficHelper")
     .SetParent<Object> ()
     .AddConstructor<TrafficHelper> ()
+
+    // Traffic helper attributes.
+    .AddAttribute ("RadioNet", "The LTE RAN network pointer.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   PointerValue (),
+                   MakePointerAccessor (&TrafficHelper::m_radio),
+                   MakePointerChecker<RadioNetwork> ())
+    .AddAttribute ("SliceNet", "The logical slice network pointer.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   PointerValue (),
+                   MakePointerAccessor (&TrafficHelper::m_slice),
+                   MakePointerChecker<SliceNetwork> ())
 
     // Traffic manager attributes.
     .AddAttribute ("PoissonInterArrival",
@@ -122,6 +120,18 @@ TrafficHelper::GetTypeId (void)
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_gbrAutoPilot),
                    MakeBooleanChecker ())
+    .AddAttribute ("EnableGbrLiveVideo",
+                   "Enable GBR live video streaming traffic over UDP.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_gbrLiveVideo),
+                   MakeBooleanChecker ())
+    .AddAttribute ("EnableGbrVoip",
+                   "Enable GBR VoIP traffic over UDP.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_gbrVoip),
+                   MakeBooleanChecker ())
     .AddAttribute ("EnableNonGbrAutoPilot",
                    "Enable Non-GBR auto-pilot traffic over UDP.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -140,23 +150,11 @@ TrafficHelper::GetTypeId (void)
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_nonGbrHttp),
                    MakeBooleanChecker ())
-    .AddAttribute ("EnableGbrLiveVideo",
-                   "Enable GBR live video streaming traffic over UDP.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_gbrLiveVideo),
-                   MakeBooleanChecker ())
     .AddAttribute ("EnableNonGbrLiveVideo",
                    "Enable Non-GBR live video streaming traffic over UDP.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_nonGbrLiveVideo),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableGbrVoip",
-                   "Enable GBR VoIP traffic over UDP.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_gbrVoip),
                    MakeBooleanChecker ())
   ;
   return tid;
@@ -167,11 +165,14 @@ TrafficHelper::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
+  m_radio = 0;
+  m_slice = 0;
+  m_poissonRng = 0;
   m_lteHelper = 0;
   m_webNode = 0;
-  m_ueNode = 0;
+  m_ueManager = 0;
   m_ueDev = 0;
-  m_manager = 0;
+  m_ueNode = 0;
   m_videoRng = 0;
 }
 
@@ -180,10 +181,23 @@ TrafficHelper::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
+  NS_ABORT_MSG_IF (!m_radio, "No LTE RAN network.");
+  NS_ABORT_MSG_IF (!m_slice, "No slice network.");
+
+  // Saving pointers.
+  m_lteHelper = m_radio->GetLteHelper ();
+  m_webNode = m_slice->GetWebNode ();
+
+  // Saving server metadata.
+  NS_ASSERT_MSG (m_webNode->GetNDevices () == 2, "Single device expected.");
+  Ptr<NetDevice> webDev = m_webNode->GetDevice (1);
+  m_webAddr = Ipv4AddressHelper::GetAddress (webDev);
+  m_webMask = Ipv4AddressHelper::GetMask (webDev);
+
   // Configuring the traffic manager object factory.
-  m_factory.SetTypeId (TrafficManager::GetTypeId ());
-  m_factory.Set ("PoissonInterArrival", PointerValue (m_poissonRng));
-  m_factory.Set ("RestartApps", BooleanValue (m_restartApps));
+  m_managerFac.SetTypeId (TrafficManager::GetTypeId ());
+  m_managerFac.Set ("PoissonInterArrival", PointerValue (m_poissonRng));
+  m_managerFac.Set ("RestartApps", BooleanValue (m_restartApps));
 
   // Random video selection.
   m_videoRng = CreateObject<UniformRandomVariable> ();
@@ -214,11 +228,14 @@ TrafficHelper::InstallApplications ()
 {
   NS_LOG_FUNCTION (this);
 
+  NodeContainer ueNodes = m_radio->GetUeNodes ();
+  NetDeviceContainer ueDevices = m_radio->GetUeDevices ();
+
   // Install manager and applications into nodes.
-  for (uint32_t u = 0; u < m_ueNodes.GetN (); u++)
+  for (uint32_t u = 0; u < ueNodes.GetN (); u++)
     {
-      m_ueNode = m_ueNodes.Get (u);   // FIXME
-      m_ueDev = m_ueDevices.Get (u);  // FIXME
+      m_ueNode = ueNodes.Get (u);
+      m_ueDev = ueDevices.Get (u);
       NS_ASSERT (m_ueDev->GetNode () == m_ueNode);
       uint64_t ueImsi = DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ();
 
@@ -227,14 +244,14 @@ TrafficHelper::InstallApplications ()
       m_ueMask = clientIpv4->GetAddress (1, 0).GetMask ();
 
       // Each UE gets one traffic manager.
-      m_manager = m_factory.Create<TrafficManager> ();
-      m_manager->SetImsi (ueImsi);
-      m_ueNode->AggregateObject (m_manager);
+      m_ueManager = m_managerFac.Create<TrafficManager> ();
+      m_ueManager->SetImsi (ueImsi);
+      m_ueNode->AggregateObject (m_ueManager);
 
       // Connect the manager to the controller session created trace source.
       Config::ConnectWithoutContext (
         "/NodeList/*/ApplicationList/*/$ns3::SliceController/SessionCreated",
-        MakeCallback (&TrafficManager::SessionCreatedCallback, m_manager));
+        MakeCallback (&TrafficManager::SessionCreatedCallback, m_ueManager));
 
       // Install applications into UEs.
       if (m_gbrAutoPilot)
@@ -314,9 +331,9 @@ TrafficHelper::InstallApplications ()
           InstallLiveVideo (bearer, GetVideoFilename (videoIdx));
         }
     }
+  m_ueManager = 0;
   m_ueNode = 0;
   m_ueDev = 0;
-  m_manager = 0;
 }
 
 uint16_t
@@ -369,7 +386,7 @@ TrafficHelper::InstallAutoPilot (EpsBearer bearer)
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
-  m_manager->AddSvelteClientApp (cApp);
+  m_ueManager->AddSvelteClientApp (cApp);
 
   m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
@@ -400,7 +417,7 @@ TrafficHelper::InstallBufferedVideo (EpsBearer bearer, std::string name)
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
-  m_manager->AddSvelteClientApp (cApp);
+  m_ueManager->AddSvelteClientApp (cApp);
 
   m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
@@ -430,7 +447,7 @@ TrafficHelper::InstallHttp (EpsBearer bearer)
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
-  m_manager->AddSvelteClientApp (cApp);
+  m_ueManager->AddSvelteClientApp (cApp);
 
   m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
@@ -461,7 +478,7 @@ TrafficHelper::InstallLiveVideo (EpsBearer bearer, std::string name)
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
-  m_manager->AddSvelteClientApp (cApp);
+  m_ueManager->AddSvelteClientApp (cApp);
 
   m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
@@ -491,7 +508,7 @@ TrafficHelper::InstallVoip (EpsBearer bearer)
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
-  m_manager->AddSvelteClientApp (cApp);
+  m_ueManager->AddSvelteClientApp (cApp);
 
   m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }

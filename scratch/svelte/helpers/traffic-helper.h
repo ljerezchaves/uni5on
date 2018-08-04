@@ -29,6 +29,8 @@
 
 namespace ns3 {
 
+class RadioNetwork;
+class SliceNetwork;
 class TrafficManager;
 
 /**
@@ -40,16 +42,6 @@ class TrafficManager;
 class TrafficHelper : public Object
 {
 public:
-  /**
-   * Complete constructor.
-   * \param webNode The Internet web server node.
-   * \param lteHelper The LTE helper.
-   * \param ueNodes The UE nodes.
-   * \param ueDevices The UE network devices.
-   */
-  TrafficHelper (Ptr<Node> webNode, Ptr<LteHelper> lteHelper,
-                 NodeContainer ueNodes, NetDeviceContainer ueDevices);
-
   TrafficHelper ();           //!< Default constructor.
   virtual ~TrafficHelper ();  //!< Dummy destructor, see DoDispose.
 
@@ -158,25 +150,17 @@ private:
    */
   void InstallVoip (EpsBearer bearer);
 
-  ObjectFactory              m_factory;     //!< Traffic manager factory.
-  Ptr<TrafficManager>        m_manager;     //!< Traffic manager instance.
-  Ptr<RandomVariableStream>  m_poissonRng;  //!< Inter-arrival traffic.
-  bool                       m_restartApps; //!< Restart apps.
+  // Traffic helper.
+  Ptr<RadioNetwork>         m_radio;        //!< LTE radio network.
+  Ptr<SliceNetwork>         m_slice;        //!< LTE logical slice network.
+  static uint16_t           m_port;         //!< Port numbers for apps.
 
-  Ptr<LteHelper>      m_lteHelper;          //!< The LTE helper.
+  // Traffic manager.
+  ObjectFactory             m_managerFac;   //!< Traffic manager factory.
+  Ptr<RandomVariableStream> m_poissonRng;   //!< Inter-arrival traffic.
+  bool                      m_restartApps;  //!< Restart apps.
 
-  Ptr<Node>           m_webNode;            //!< Server node.
-  Ipv4Address         m_webAddr;            //!< Server address.
-  Ipv4Mask            m_webMask;            //!< Server address mask.
-
-  Ptr<Node>           m_ueNode;             //!< Client node.
-  Ptr<NetDevice>      m_ueDev;              //!< Client dev.
-  Ipv4Address         m_ueAddr;             //!< Client address.
-  Ipv4Mask            m_ueMask;             //!< Client address mask.
-
-  NodeContainer       m_ueNodes;
-  NetDeviceContainer  m_ueDevices;
-
+  // Applications.
   bool                m_gbrAutoPilot;       //!< GBR auto-pilot enable.
   bool                m_gbrLiveVideo;       //!< GBR live video enable.
   bool                m_gbrVoip;            //!< GBR VoIP enable.
@@ -184,15 +168,24 @@ private:
   bool                m_nonGbrBuffVideo;    //!< Non-GBR buffered video enable.
   bool                m_nonGbrHttp;         //!< Non-GBR HTTP enable.
   bool                m_nonGbrLiveVideo;    //!< Non-GBR live video enable.
-
   SvelteAppHelper     m_autoPilotHelper;    //!< Auto-pilot app helper.
   SvelteAppHelper     m_buffVideoHelper;    //!< Buffered video app helper.
   SvelteAppHelper     m_httpHelper;         //!< HTTP app helper.
   SvelteAppHelper     m_liveVideoHelper;    //!< Live video app helper.
   SvelteAppHelper     m_voipHelper;         //!< Voip app helper.
 
-  static uint16_t             m_port;           //!< Port numbers for apps.
+  // Temporary variables used only when installing applications.
+  Ptr<LteHelper>            m_lteHelper;    //!< LTE helper.
+  Ptr<Node>                 m_webNode;      //!< Server node.
+  Ipv4Address               m_webAddr;      //!< Server address.
+  Ipv4Mask                  m_webMask;      //!< Server address mask.
+  Ptr<TrafficManager>       m_ueManager;    //!< Traffic manager instance.
+  Ptr<NetDevice>            m_ueDev;        //!< Client dev.
+  Ptr<Node>                 m_ueNode;       //!< Client node.
+  Ipv4Address               m_ueAddr;       //!< Client address.
+  Ipv4Mask                  m_ueMask;       //!< Client address mask.
 
+  // Video traces.
   Ptr<UniformRandomVariable>  m_videoRng;       //!< Random video selection.
   static const std::string    m_videoDir;       //!< Video trace directory.
   static const std::string    m_videoTrace [];  //!< Video trace filenames.

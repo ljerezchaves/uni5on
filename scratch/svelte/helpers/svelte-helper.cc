@@ -278,7 +278,9 @@ SvelteHelper::NotifyConstructionCompleted (void)
   m_1stNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
   m_1stNetwork = m_1stNetworkFac.Create<SliceNetwork> ();
 
-  // m_1stTraffic = m_1stTrafficFac.Create<TrafficHelper> ();
+  m_1stTrafficFac.Set ("RadioNet", PointerValue (m_radio));
+  m_1stTrafficFac.Set ("SliceNet", PointerValue (m_1stNetwork));
+  m_1stTraffic = m_1stTrafficFac.Create<TrafficHelper> ();
 
   // Chain up.
   Object::NotifyConstructionCompleted ();
