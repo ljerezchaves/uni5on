@@ -118,17 +118,15 @@ TrafficManager::SessionCreatedCallback (
       Ptr<EpcTft> tft = app->GetTft ();
       if (tft)
         {
-          BearerContextList_t::iterator bIt;
-          for (bIt = bearerList.begin (); bIt != bearerList.end (); bIt++)
+          for (auto const &bit : bearerList)
             {
-              if (bIt->tft == tft)
+              if (bit.tft == tft)
                 {
-                  app->SetTeid (bIt->sgwFteid.teid);
+                  app->SetTeid (bit.sgwFteid.teid);
                 }
             }
         }
-      NS_LOG_INFO ("App " << app->GetAppName () <<
-                   " over bearer teid " << app->GetTeid ());
+      NS_LOG_INFO ("App " << app->GetNameTeid ());
     }
 }
 
