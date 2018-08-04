@@ -37,6 +37,9 @@ NS_LOG_COMPONENT_DEFINE ("SvelteHelper");
 NS_OBJECT_ENSURE_REGISTERED (SvelteHelper);
 
 SvelteHelper::SvelteHelper ()
+  : m_1stController (0),
+  m_1stNetwork (0),
+  m_1stTraffic (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -51,21 +54,20 @@ SvelteHelper::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SvelteHelper")
     .SetParent<EpcHelper> ()
-    .AddAttribute ("HtcSlice", "The HTC slice network configuration.",
-                   ObjectFactoryValue (ObjectFactory ("ns3::SliceNetwork")),
-                   MakeObjectFactoryAccessor (&SvelteHelper::m_htcNetFactory),
+    .AddAttribute ("1stController", "The 1st slice controller configuration.",
+                   ObjectFactoryValue (ObjectFactory ()),
+                   MakeObjectFactoryAccessor (
+                     &SvelteHelper::m_1stControllerFac),
                    MakeObjectFactoryChecker ())
-    .AddAttribute ("HtcController", "The HTC slice controller configuration.",
-                   ObjectFactoryValue (ObjectFactory ("ns3::SliceController")),
-                   MakeObjectFactoryAccessor (&SvelteHelper::m_htcCtrlFactory),
+    .AddAttribute ("1stSlice", "The 1st slice network configuration.",
+                   ObjectFactoryValue (ObjectFactory ()),
+                   MakeObjectFactoryAccessor (
+                     &SvelteHelper::m_1stNetworkFac),
                    MakeObjectFactoryChecker ())
-    .AddAttribute ("MtcSlice", "The MTC slice network configuration.",
-                   ObjectFactoryValue (ObjectFactory ("ns3::SliceNetwork")),
-                   MakeObjectFactoryAccessor (&SvelteHelper::m_mtcNetFactory),
-                   MakeObjectFactoryChecker ())
-    .AddAttribute ("MtcController", "The MTC slice controller configuration.",
-                   ObjectFactoryValue (ObjectFactory ("ns3::SliceController")),
-                   MakeObjectFactoryAccessor (&SvelteHelper::m_mtcCtrlFactory),
+    .AddAttribute ("1stTraffic", "The 1st slice traffic configuration.",
+                   ObjectFactoryValue (ObjectFactory ()),
+                   MakeObjectFactoryAccessor (
+                     &SvelteHelper::m_1stTrafficFac),
                    MakeObjectFactoryChecker ())
   ;
   return tid;
@@ -78,7 +80,10 @@ SvelteHelper::EnablePcap (std::string prefix, bool promiscuous)
 
   // Enable pcap on the infrastructure and logical networks.
   m_backhaul->EnablePcap (prefix, promiscuous);
-  m_htcNetwork->EnablePcap (prefix, promiscuous);
+  if (m_1stNetwork)
+    {
+      m_1stNetwork->EnablePcap (prefix, promiscuous);
+    }
 }
 
 void
@@ -259,31 +264,21 @@ SvelteHelper::NotifyConstructionCompleted (void)
 
   Ptr<BackhaulController> backahulCtrl = m_backhaul->GetControllerApp ();
 
-  // Create the LTE HTC slice network and controller.
-  m_htcCtrlFactory.Set ("SliceId", EnumValue (SliceId::HTC));
-  m_htcCtrlFactory.Set ("Mme", PointerValue (m_mme));
-  m_htcCtrlFactory.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
-  m_htcController = m_htcCtrlFactory.Create<SliceController> ();
+  // Create the 1st logical slice controller, network, and traffic helper.
+  m_1stControllerFac.Set ("Mme", PointerValue (m_mme));
+  m_1stControllerFac.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
+  m_1stController = m_1stControllerFac.Create<SliceController> ();
 
-  m_htcNetFactory.Set ("SliceId", EnumValue (SliceId::HTC));
-  m_htcNetFactory.Set ("Controller", PointerValue (m_htcController));
-  m_htcNetFactory.Set ("Backhaul", PointerValue (m_backhaul));
-  m_htcNetFactory.Set ("Radio", PointerValue (m_radio));
-  m_htcNetFactory.Set ("UeAddress", Ipv4AddressValue ("7.1.0.0"));
-  m_htcNetFactory.Set ("UeMask", Ipv4MaskValue ("255.255.0.0"));
-  m_htcNetFactory.Set ("WebAddress", Ipv4AddressValue ("8.1.0.0"));
-  m_htcNetFactory.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
-  m_htcNetwork = m_htcNetFactory.Create<SliceNetwork> ();
+  m_1stNetworkFac.Set ("Controller", PointerValue (m_1stController));
+  m_1stNetworkFac.Set ("Backhaul", PointerValue (m_backhaul));
+  m_1stNetworkFac.Set ("Radio", PointerValue (m_radio));
+  m_1stNetworkFac.Set ("UeAddress", Ipv4AddressValue ("7.1.0.0"));
+  m_1stNetworkFac.Set ("UeMask", Ipv4MaskValue ("255.255.0.0"));
+  m_1stNetworkFac.Set ("WebAddress", Ipv4AddressValue ("8.1.0.0"));
+  m_1stNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
+  m_1stNetwork = m_1stNetworkFac.Create<SliceNetwork> ();
 
-  Ptr<TrafficHelper> trafficHelper = CreateObject<TrafficHelper> (
-      m_htcNetwork->GetWebNode (), m_radio->GetLteHelper (),
-      m_radio->GetUeNodes (), m_radio->GetUeDevices ());
-
-  // Create the LTE MTC network slice.
-  // TODO
-
-  // Configure and install applications and traffic managers.
-  // TODO
+  // m_1stTraffic = m_1stTrafficFac.Create<TrafficHelper> ();
 
   // Chain up.
   Object::NotifyConstructionCompleted ();

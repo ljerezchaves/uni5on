@@ -34,6 +34,7 @@ class RingNetwork;
 class SliceController;
 class SliceNetwork;
 class SvelteMme;
+class TrafficHelper;
 
 /**
  * \ingroup svelte
@@ -95,15 +96,12 @@ private:
   Ptr<RadioNetwork>         m_radio;            //!< The LTE RAN network.
   Ptr<SvelteMme>            m_mme;              //!< SVELTE MME entity.
 
-  ObjectFactory             m_htcNetFactory;    //!< HTC network factory.
-  ObjectFactory             m_htcCtrlFactory;   //!< HTC controller factory.
-  Ptr<SliceNetwork>         m_htcNetwork;       //!< HTC slice network.
-  Ptr<SliceController>      m_htcController;    //!< HTC slice controller.
-
-  ObjectFactory             m_mtcNetFactory;    //!< MTC network factory.
-  ObjectFactory             m_mtcCtrlFactory;   //!< MTC controller factory.
-  Ptr<SliceNetwork>         m_mtcNetwork;       //!< MTC slice network.
-  Ptr<SliceController>      m_mtcController;    //!< MTC slice controller.
+  ObjectFactory             m_1stControllerFac; //!< 1st controller factory.
+  ObjectFactory             m_1stNetworkFac;    //!< 1st network factory.
+  ObjectFactory             m_1stTrafficFac;    //!< 1st traffic factory.
+  Ptr<SliceController>      m_1stController;    //!< 1st slice controller.
+  Ptr<SliceNetwork>         m_1stNetwork;       //!< 1st slice network.
+  Ptr<TrafficHelper>        m_1stTraffic;       //!< 1st slice traffic.
 };
 
 } // namespace ns3
