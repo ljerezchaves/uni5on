@@ -86,6 +86,16 @@ protected:
 
 private:
   /**
+   * Check the object factories for proper types.
+   * \param controller The SliceController object factory.
+   * \param network The SliceNetwork object factory.
+   * \param traffic The TrafficHelper object factory.
+   * \return true when all types are ok, false otherwise.
+   */
+  bool AreFactoriesOk (ObjectFactory &controller, ObjectFactory &network,
+                       ObjectFactory &traffic) const;
+
+  /**
    * Get the backahul switch index at which the given eNB should be connected.
    * \param cellId The eNB cell ID.
    * \return The backhaul switch index.
@@ -96,12 +106,21 @@ private:
   Ptr<RadioNetwork>         m_radio;            //!< The LTE RAN network.
   Ptr<SvelteMme>            m_mme;              //!< SVELTE MME entity.
 
+  // First network slice.
   ObjectFactory             m_1stControllerFac; //!< 1st controller factory.
   ObjectFactory             m_1stNetworkFac;    //!< 1st network factory.
   ObjectFactory             m_1stTrafficFac;    //!< 1st traffic factory.
   Ptr<SliceController>      m_1stController;    //!< 1st slice controller.
   Ptr<SliceNetwork>         m_1stNetwork;       //!< 1st slice network.
   Ptr<TrafficHelper>        m_1stTraffic;       //!< 1st slice traffic.
+
+  // Second network slice.
+  ObjectFactory             m_2ndControllerFac; //!< 2nd controller factory.
+  ObjectFactory             m_2ndNetworkFac;    //!< 2nd network factory.
+  ObjectFactory             m_2ndTrafficFac;    //!< 2nd traffic factory.
+  Ptr<SliceController>      m_2ndController;    //!< 2nd slice controller.
+  Ptr<SliceNetwork>         m_2ndNetwork;       //!< 2nd slice network.
+  Ptr<TrafficHelper>        m_2ndTraffic;       //!< 2nd slice traffic.
 };
 
 } // namespace ns3

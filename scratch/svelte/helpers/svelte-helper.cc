@@ -39,7 +39,10 @@ NS_OBJECT_ENSURE_REGISTERED (SvelteHelper);
 SvelteHelper::SvelteHelper ()
   : m_1stController (0),
   m_1stNetwork (0),
-  m_1stTraffic (0)
+  m_1stTraffic (0),
+  m_2ndController (0),
+  m_2ndNetwork (0),
+  m_2ndTraffic (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -69,6 +72,21 @@ SvelteHelper::GetTypeId (void)
                    MakeObjectFactoryAccessor (
                      &SvelteHelper::m_1stTrafficFac),
                    MakeObjectFactoryChecker ())
+    .AddAttribute ("2ndController", "The 2nd slice controller configuration.",
+                   ObjectFactoryValue (ObjectFactory ()),
+                   MakeObjectFactoryAccessor (
+                     &SvelteHelper::m_2ndControllerFac),
+                   MakeObjectFactoryChecker ())
+    .AddAttribute ("2ndSlice", "The 2nd slice network configuration.",
+                   ObjectFactoryValue (ObjectFactory ()),
+                   MakeObjectFactoryAccessor (
+                     &SvelteHelper::m_2ndNetworkFac),
+                   MakeObjectFactoryChecker ())
+    .AddAttribute ("2ndTraffic", "The 2nd slice traffic configuration.",
+                   ObjectFactoryValue (ObjectFactory ()),
+                   MakeObjectFactoryAccessor (
+                     &SvelteHelper::m_2ndTrafficFac),
+                   MakeObjectFactoryChecker ())
   ;
   return tid;
 }
@@ -83,6 +101,10 @@ SvelteHelper::EnablePcap (std::string prefix, bool promiscuous)
   if (m_1stNetwork)
     {
       m_1stNetwork->EnablePcap (prefix, promiscuous);
+    }
+  if (m_2ndNetwork)
+    {
+      m_2ndNetwork->EnablePcap (prefix, promiscuous);
     }
 }
 
@@ -265,25 +287,61 @@ SvelteHelper::NotifyConstructionCompleted (void)
   Ptr<BackhaulController> backahulCtrl = m_backhaul->GetControllerApp ();
 
   // Create the 1st logical slice controller, network, and traffic helper.
-  m_1stControllerFac.Set ("Mme", PointerValue (m_mme));
-  m_1stControllerFac.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
-  m_1stController = m_1stControllerFac.Create<SliceController> ();
+  if (AreFactoriesOk (m_1stControllerFac, m_1stNetworkFac, m_1stTrafficFac))
+    {
+      m_1stControllerFac.Set ("Mme", PointerValue (m_mme));
+      m_1stControllerFac.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
+      m_1stController = m_1stControllerFac.Create<SliceController> ();
 
-  m_1stNetworkFac.Set ("SliceCtrl", PointerValue (m_1stController));
-  m_1stNetworkFac.Set ("BackhaulNet", PointerValue (m_backhaul));
-  m_1stNetworkFac.Set ("RadioNet", PointerValue (m_radio));
-  m_1stNetworkFac.Set ("UeAddress", Ipv4AddressValue ("7.1.0.0"));
-  m_1stNetworkFac.Set ("UeMask", Ipv4MaskValue ("255.255.0.0"));
-  m_1stNetworkFac.Set ("WebAddress", Ipv4AddressValue ("8.1.0.0"));
-  m_1stNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
-  m_1stNetwork = m_1stNetworkFac.Create<SliceNetwork> ();
+      m_1stNetworkFac.Set ("SliceCtrl", PointerValue (m_1stController));
+      m_1stNetworkFac.Set ("BackhaulNet", PointerValue (m_backhaul));
+      m_1stNetworkFac.Set ("RadioNet", PointerValue (m_radio));
+      m_1stNetworkFac.Set ("UeAddress", Ipv4AddressValue ("7.1.0.0"));
+      m_1stNetworkFac.Set ("UeMask", Ipv4MaskValue ("255.255.0.0"));
+      m_1stNetworkFac.Set ("WebAddress", Ipv4AddressValue ("8.1.0.0"));
+      m_1stNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
+      m_1stNetwork = m_1stNetworkFac.Create<SliceNetwork> ();
 
-  m_1stTrafficFac.Set ("RadioNet", PointerValue (m_radio));
-  m_1stTrafficFac.Set ("SliceNet", PointerValue (m_1stNetwork));
-  m_1stTraffic = m_1stTrafficFac.Create<TrafficHelper> ();
+      m_1stTrafficFac.Set ("RadioNet", PointerValue (m_radio));
+      m_1stTrafficFac.Set ("SliceNet", PointerValue (m_1stNetwork));
+      m_1stTraffic = m_1stTrafficFac.Create<TrafficHelper> ();
+    }
+
+  // Create the 2nd logical slice controller, network, and traffic helper.
+  if (AreFactoriesOk (m_2ndControllerFac, m_2ndNetworkFac, m_2ndTrafficFac))
+    {
+      m_2ndControllerFac.Set ("Mme", PointerValue (m_mme));
+      m_2ndControllerFac.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
+      m_2ndController = m_2ndControllerFac.Create<SliceController> ();
+
+      m_2ndNetworkFac.Set ("SliceCtrl", PointerValue (m_2ndController));
+      m_2ndNetworkFac.Set ("BackhaulNet", PointerValue (m_backhaul));
+      m_2ndNetworkFac.Set ("RadioNet", PointerValue (m_radio));
+      m_2ndNetworkFac.Set ("UeAddress", Ipv4AddressValue ("7.2.0.0"));
+      m_2ndNetworkFac.Set ("UeMask", Ipv4MaskValue ("255.255.0.0"));
+      m_2ndNetworkFac.Set ("WebAddress", Ipv4AddressValue ("8.2.0.0"));
+      m_2ndNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
+      m_2ndNetwork = m_2ndNetworkFac.Create<SliceNetwork> ();
+
+      m_2ndTrafficFac.Set ("RadioNet", PointerValue (m_radio));
+      m_2ndTrafficFac.Set ("SliceNet", PointerValue (m_2ndNetwork));
+      m_2ndTraffic = m_2ndTrafficFac.Create<TrafficHelper> ();
+    }
 
   // Chain up.
   Object::NotifyConstructionCompleted ();
+}
+
+bool
+SvelteHelper::AreFactoriesOk (ObjectFactory &controller,
+                              ObjectFactory &network,
+                              ObjectFactory &traffic) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return (controller.GetTypeId () == SliceController::GetTypeId ()
+          && network.GetTypeId () == SliceNetwork::GetTypeId ()
+          && traffic.GetTypeId () == TrafficHelper::GetTypeId ());
 }
 
 uint16_t
