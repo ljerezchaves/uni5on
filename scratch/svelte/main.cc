@@ -25,6 +25,7 @@
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
 #include "helpers/svelte-helper.h"
+#include "statistics/admission-stats-calculator.h"
 #include "statistics/traffic-stats-calculator.h"
 
 using namespace ns3;
@@ -135,12 +136,12 @@ main (int argc, char *argv[])
   Ptr<SvelteHelper> svelteHelper = CreateObject<SvelteHelper> ();
 
 //  FIXME
-//  Ptr<AdmissionStatsCalculator>   admissionStats;
+  Ptr<AdmissionStatsCalculator>   admissionStats;
 //  Ptr<BackhaulStatsCalculator>    backhaulStats;
 //  Ptr<HandoverStatsCalculator>    handoverStats;
 //  Ptr<PgwTftStatsCalculator>      pgwTftStats;
   Ptr<TrafficStatsCalculator>     trafficStats;
-//  admissionStats  = CreateObject<AdmissionStatsCalculator> ();
+  admissionStats  = CreateObject<AdmissionStatsCalculator> ();
 //  backhaulStats   = CreateObject<BackhaulStatsCalculator> ();
 //  handoverStats   = CreateObject<HandoverStatsCalculator> ();
 //  pgwTftStats     = CreateObject<PgwTftStatsCalculator> ();
@@ -434,7 +435,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("VoipServer",               logLevelWarnInfo);
 
       // Statistic components.
-      // LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);
+      LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);
       // LogComponentEnable ("BackhaulStatsCalculator",  logLevelWarnInfo);
       // LogComponentEnable ("HandoverStatsCalculator",  logLevelWarnInfo);
       // LogComponentEnable ("PgwTftStatsCalculator",    logLevelWarnInfo);
