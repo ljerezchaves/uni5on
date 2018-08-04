@@ -126,7 +126,7 @@ std::istream & operator >> (std::istream &is, ObjectFactory &factory)
   is >> v;
   std::string::size_type lbracket, rbracket;
   lbracket = v.find ("[");
-  rbracket = v.find ("]");
+  rbracket = v.rfind ("]");
   if (lbracket == std::string::npos && rbracket == std::string::npos)
     {
       factory.SetTypeId (v);
