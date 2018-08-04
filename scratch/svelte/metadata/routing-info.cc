@@ -41,6 +41,7 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerContext_t bearer,
   m_bearer (bearer),
   m_blockReason (RoutingInfo::NOTBLOCKED),
   m_isActive (false),
+  m_isAggregated (false),
   m_isBlocked (false),
   m_isDefault (isDefault),
   m_isInstalled (false),
@@ -122,6 +123,14 @@ RoutingInfo::IsActive (void) const
   NS_LOG_FUNCTION (this);
 
   return m_isActive;
+}
+
+bool
+RoutingInfo::IsAggregated (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_isAggregated;
 }
 
 bool

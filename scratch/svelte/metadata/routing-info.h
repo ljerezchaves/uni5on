@@ -81,6 +81,7 @@ public:
   bool HasGbrInfo (void) const;
   bool HasMeterInfo (void) const;
   bool IsActive (void) const;
+  bool IsAggregated (void) const;
   bool IsBlocked (void) const;
   bool IsDefault (void) const;
   bool IsInstalled (void) const;
@@ -200,6 +201,7 @@ private:
   BearerContext_t      m_bearer;       //!< EPS bearer information.
   BlockReason          m_blockReason;  //!< Bearer blocked reason.
   bool                 m_isActive;     //!< Bearer active status.
+  bool                 m_isAggregated; //!< Bearer aggregation status.
   bool                 m_isBlocked;    //!< Bearer request status.
   bool                 m_isDefault;    //!< This is a default bearer.
   bool                 m_isInstalled;  //!< Rules installed status.
