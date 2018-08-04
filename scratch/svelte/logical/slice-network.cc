@@ -59,19 +59,19 @@ SliceNetwork::GetTypeId (void)
                    MakeEnumAccessor (&SliceNetwork::m_sliceId),
                    MakeEnumChecker (SliceId::HTC, "htc",
                                     SliceId::MTC, "mtc"))
-    .AddAttribute ("Controller", "The slice controller application pointer.",
+    .AddAttribute ("SliceCtrl", "The slice controller application pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&SliceNetwork::m_controllerApp),
                    MakePointerChecker<SliceController> ())
 
     // Infrastructure.
-    .AddAttribute ("Backhaul", "The OpenFlow backhaul network pointer.",
+    .AddAttribute ("BackhaulNet", "The OpenFlow backhaul network pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&SliceNetwork::m_backhaul),
                    MakePointerChecker<BackhaulNetwork> ())
-    .AddAttribute ("Radio", "The LTE RAN network pointer.",
+    .AddAttribute ("RadioNet", "The LTE RAN network pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),
                    MakePointerAccessor (&SliceNetwork::m_radio),

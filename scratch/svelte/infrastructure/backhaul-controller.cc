@@ -55,7 +55,7 @@ BackhaulController::GetTypeId (void)
                    MakeEnumAccessor (&BackhaulController::m_priorityQueues),
                    MakeEnumChecker (OpMode::OFF, "off",
                                     OpMode::ON,  "on"))
-    .AddAttribute ("Slicing",
+    .AddAttribute ("LinkSlicing",
                    "Network slicing mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (OpMode::AUTO),

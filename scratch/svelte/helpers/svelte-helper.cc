@@ -269,9 +269,9 @@ SvelteHelper::NotifyConstructionCompleted (void)
   m_1stControllerFac.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
   m_1stController = m_1stControllerFac.Create<SliceController> ();
 
-  m_1stNetworkFac.Set ("Controller", PointerValue (m_1stController));
-  m_1stNetworkFac.Set ("Backhaul", PointerValue (m_backhaul));
-  m_1stNetworkFac.Set ("Radio", PointerValue (m_radio));
+  m_1stNetworkFac.Set ("SliceCtrl", PointerValue (m_1stController));
+  m_1stNetworkFac.Set ("BackhaulNet", PointerValue (m_backhaul));
+  m_1stNetworkFac.Set ("RadioNet", PointerValue (m_radio));
   m_1stNetworkFac.Set ("UeAddress", Ipv4AddressValue ("7.1.0.0"));
   m_1stNetworkFac.Set ("UeMask", Ipv4MaskValue ("255.255.0.0"));
   m_1stNetworkFac.Set ("WebAddress", Ipv4AddressValue ("8.1.0.0"));
