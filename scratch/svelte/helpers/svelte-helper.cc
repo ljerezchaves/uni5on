@@ -20,6 +20,7 @@
 
 #include <ns3/csma-module.h>
 #include "svelte-helper.h"
+#include "traffic-helper.h"
 #include "../infrastructure/backhaul-controller.h"
 #include "../infrastructure/radio-network.h"
 #include "../infrastructure/ring-network.h"
@@ -273,6 +274,10 @@ SvelteHelper::NotifyConstructionCompleted (void)
   m_htcNetFactory.Set ("WebAddress", Ipv4AddressValue ("8.1.0.0"));
   m_htcNetFactory.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
   m_htcNetwork = m_htcNetFactory.Create<SliceNetwork> ();
+
+  Ptr<TrafficHelper> trafficHelper = CreateObject<TrafficHelper> (
+      m_htcNetwork->GetWebNode (), m_radio->GetLteHelper (),
+      m_radio->GetUeNodes (), m_radio->GetUeDevices ());
 
   // Create the LTE MTC network slice.
   // TODO
