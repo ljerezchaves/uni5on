@@ -925,7 +925,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_LOG_INFO ("Installing S-GW rules for bearer teid " << rInfo->GetTeid ());
+  NS_LOG_INFO ("Installing S-GW rules for teid " << rInfo->GetTeidHex ());
 
   // Configure downlink.
   if (rInfo->HasDownlinkTraffic ())
