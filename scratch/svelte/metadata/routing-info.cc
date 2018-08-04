@@ -165,6 +165,14 @@ RoutingInfo::GetLinkSlice (void) const
   return m_linkSlice;
 }
 
+std::string
+RoutingInfo::GetLinkSliceStr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return LinkSliceStr (m_linkSlice);
+}
+
 uint16_t
 RoutingInfo::GetPgwTftIdx (void) const
 {

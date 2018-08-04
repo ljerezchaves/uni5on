@@ -86,6 +86,7 @@ public:
   bool IsDefault (void) const;
   bool IsInstalled (void) const;
   LinkSlice GetLinkSlice (void) const;
+  std::string GetLinkSliceStr (void) const;
   uint16_t GetPgwTftIdx (void) const;
   uint16_t GetPriority (void) const;
   uint16_t GetTimeout (void) const;
