@@ -42,10 +42,13 @@ class TrafficHelper : public Object
 public:
   /**
    * Complete constructor.
-   * \param lteNetwork The LTE network.
    * \param webNode The Internet web server node.
+   * \param lteHelper The LTE helper.
+   * \param ueNodes The UE nodes.
+   * \param ueDevices The UE network devices.
    */
-  TrafficHelper (Ptr<LteNetwork> lteNetwork, Ptr<Node> webNode);
+  TrafficHelper (Ptr<Node> webNode, Ptr<LteHelper> lteHelper,
+                 NodeContainer ueNodes, NetDeviceContainer ueDevices);
 
   TrafficHelper ();           //!< Default constructor.
   virtual ~TrafficHelper ();  //!< Dummy destructor, see DoDispose.
@@ -65,31 +68,21 @@ protected:
 
 private:
   /**
-   * Install HTC applications and traffic manager into each HTC UE. It creates
+   * Install applications and traffic manager into each UE. It creates
    * the client/server application pair, and install them in the respective
    * nodes. It also configure the TFT and EPS bearers.
-   * \param ueNodes The HTC UE Nodes container.
-   * \param ueDevices The HTC UE NetDevices container.
-   * \internal
-   * Some notes about internal GbrQosInformation usage:
+   * \attention The QCIs used here for each application are strongly related to
+   *     the DSCP mapping, which will reflect on the priority queues used by
+   *     both OpenFlow switches and traffic control module. Be careful if you
+   *     intend to change it.
+   * \internal Some notes about internal GbrQosInformation usage:
    * \li The Maximum Bit Rate field is used by controller to install meter
    *     rules for this traffic. When this value is left to 0, no meter rules
    *     will be installed.
    * \li The Guaranteed Bit Rate field is used by the controller to reserve the
    *     requested bandwidth in OpenFlow EPC network (only for GBR beares).
    */
-  void InstallHtcApplications (NodeContainer ueNodes,
-                               NetDeviceContainer ueDevices);
-
-  /**
-   * Install MTC applications and traffic manager into each MTC UE. It creates
-   * the client/server application pair, and install them in the respective
-   * nodes. It also configure the TFT and EPS bearers.
-   * \param ueNodes The MTC UE Nodes container.
-   * \param ueDevices The MTC UE NetDevices container.
-   */
-  void InstallMtcApplications (NodeContainer ueNodes,
-                               NetDeviceContainer ueDevices);
+  void InstallApplications ();
 
   /**
    * Get the next port number available for use.
@@ -117,12 +110,6 @@ private:
    * \return The mbr video data rate.
    */
   static const DataRate GetVideoMbr (uint8_t idx);
-
-  /**
-   * Retrieve the LTE helper used by create the LTE network.
-   * \return The LTE helper pointer.
-   */
-  Ptr<LteHelper> GetLteHelper ();
 
   /**
    * UDP uplink auto-pilot traffic.
@@ -171,40 +158,38 @@ private:
    */
   void InstallVoip (EpsBearer bearer);
 
-  ObjectFactory               m_htcFactory;     //!< HTC manager factory.
-  Ptr<TrafficManager>         m_htcManager;     //!< HTC traffic manager.
-  Ptr<RandomVariableStream>   m_htcPoissonRng;  //!< HTC inter-arrival traffic.
-  bool                        m_htcRestartApps; //!< HTC restart apps.
+  ObjectFactory              m_factory;     //!< Traffic manager factory.
+  Ptr<TrafficManager>        m_manager;     //!< Traffic manager instance.
+  Ptr<RandomVariableStream>  m_poissonRng;  //!< Inter-arrival traffic.
+  bool                       m_restartApps; //!< Restart apps.
 
-  ObjectFactory               m_mtcFactory;     //!< MTC manager factory.
-  Ptr<TrafficManager>         m_mtcManager;     //!< MTC traffic manager.
-  Ptr<RandomVariableStream>   m_mtcPoissonRng;  //!< MTC inter-arrival traffic.
-  bool                        m_mtcRestartApps; //!< MTC restart apps.
+  Ptr<LteHelper>      m_lteHelper;          //!< The LTE helper.
 
-  Ptr<LteNetwork>   m_lteNetwork;           //!< The LTE network.
+  Ptr<Node>           m_webNode;            //!< Server node.
+  Ipv4Address         m_webAddr;            //!< Server address.
+  Ipv4Mask            m_webMask;            //!< Server address mask.
 
-  Ptr<Node>         m_webNode;              //!< Server node.
-  Ipv4Address       m_webAddr;              //!< Server address.
-  Ipv4Mask          m_webMask;              //!< Server address mask.
+  Ptr<Node>           m_ueNode;             //!< Client node.
+  Ptr<NetDevice>      m_ueDev;              //!< Client dev.
+  Ipv4Address         m_ueAddr;             //!< Client address.
+  Ipv4Mask            m_ueMask;             //!< Client address mask.
 
-  Ptr<Node>         m_ueNode;               //!< Client node.
-  Ptr<NetDevice>    m_ueDev;                //!< Client dev.
-  Ipv4Address       m_ueAddr;               //!< Client address.
-  Ipv4Mask          m_ueMask;               //!< Client address mask.
+  NodeContainer       m_ueNodes;
+  NetDeviceContainer  m_ueDevices;
 
-  bool              m_gbrAutoPilot;         //!< GBR auto-pilot enable.
-  bool              m_gbrLiveVideo;         //!< GBR live video enable.
-  bool              m_gbrVoip;              //!< GBR VoIP enable.
-  bool              m_nonGbrAutoPilot;      //!< Non-GBR auto-pilot enable.
-  bool              m_nonGbrBuffVideo;      //!< Non-GBR buffered video enable.
-  bool              m_nonGbrHttp;           //!< Non-GBR HTTP enable.
-  bool              m_nonGbrLiveVideo;      //!< Non-GBR live video enable.
+  bool                m_gbrAutoPilot;       //!< GBR auto-pilot enable.
+  bool                m_gbrLiveVideo;       //!< GBR live video enable.
+  bool                m_gbrVoip;            //!< GBR VoIP enable.
+  bool                m_nonGbrAutoPilot;    //!< Non-GBR auto-pilot enable.
+  bool                m_nonGbrBuffVideo;    //!< Non-GBR buffered video enable.
+  bool                m_nonGbrHttp;         //!< Non-GBR HTTP enable.
+  bool                m_nonGbrLiveVideo;    //!< Non-GBR live video enable.
 
-  SvelteAppHelper   m_autoPilotHelper;      //!< Auto-pilot app helper.
-  SvelteAppHelper   m_buffVideoHelper;      //!< Buffered video app helper.
-  SvelteAppHelper   m_httpHelper;           //!< HTTP app helper.
-  SvelteAppHelper   m_liveVideoHelper;      //!< Live video app helper.
-  SvelteAppHelper   m_voipHelper;           //!< Voip app helper.
+  SvelteAppHelper     m_autoPilotHelper;    //!< Auto-pilot app helper.
+  SvelteAppHelper     m_buffVideoHelper;    //!< Buffered video app helper.
+  SvelteAppHelper     m_httpHelper;         //!< HTTP app helper.
+  SvelteAppHelper     m_liveVideoHelper;    //!< Live video app helper.
+  SvelteAppHelper     m_voipHelper;         //!< Voip app helper.
 
   static uint16_t             m_port;           //!< Port numbers for apps.
 

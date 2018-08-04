@@ -67,10 +67,13 @@ const uint64_t TrafficHelper::m_mbrBitRate [] = {
 
 
 // ------------------------------------------------------------------------ //
-TrafficHelper::TrafficHelper (Ptr<LteNetwork> lteNetwork,
-                              Ptr<Node> webNode)
-  : m_lteNetwork (lteNetwork),
-  m_webNode (webNode)
+TrafficHelper::TrafficHelper (
+  Ptr<Node> webNode, Ptr<LteHelper> lteHelper, NodeContainer ueNodes,
+  NetDeviceContainer ueDevices)
+  : m_lteHelper (lteHelper),
+  m_webNode (webNode),
+  m_ueNodes (ueNodes),
+  m_ueDevices (ueDevices)
 {
   NS_LOG_FUNCTION (this);
 
@@ -97,80 +100,63 @@ TrafficHelper::GetTypeId (void)
     .SetParent<Object> ()
     .AddConstructor<TrafficHelper> ()
 
-    // HTC traffic manager attributes.
-    .AddAttribute ("HtcPoissonInterArrival",
-                   "An exponential random variable used to get HTC "
+    // Traffic manager attributes.
+    .AddAttribute ("PoissonInterArrival",
+                   "An exponential random variable used to get "
                    "application inter-arrival start times.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    StringValue ("ns3::ExponentialRandomVariable[Mean=180.0]"),
-                   MakePointerAccessor (&TrafficHelper::m_htcPoissonRng),
+                   MakePointerAccessor (&TrafficHelper::m_poissonRng),
                    MakePointerChecker <RandomVariableStream> ())
-    .AddAttribute ("HtcRestartApps",
-                   "Continuously restart HTC applications after stop events.",
+    .AddAttribute ("RestartApps",
+                   "Continuously restart applications after stop events.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_htcRestartApps),
+                   MakeBooleanAccessor (&TrafficHelper::m_restartApps),
                    MakeBooleanChecker ())
 
-    // MTC traffic manager attributes.
-    .AddAttribute ("MtcPoissonInterArrival",
-                   "An exponential random variable used to get MTC "
-                   "application inter-arrival start times.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   StringValue ("ns3::ExponentialRandomVariable[Mean=60.0]"),
-                   MakePointerAccessor (&TrafficHelper::m_mtcPoissonRng),
-                   MakePointerChecker <RandomVariableStream> ())
-    .AddAttribute ("MtcRestartApps",
-                   "Continuously restart MTC applications after stop events.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_mtcRestartApps),
-                   MakeBooleanChecker ())
-
-    // HTC applications to be installed.
-    .AddAttribute ("EnableHtcGbrLiveVideo",
-                   "Enable HTC GBR live video streaming traffic over UDP.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_gbrLiveVideo),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableHtcGbrVoip",
-                   "Enable HTC GBR VoIP traffic over UDP.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_gbrVoip),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableHtcNonGbrBufferedVideo",
-                   "Enable HTC Non-GBR buffered video traffic over TCP.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_nonGbrBuffVideo),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableHtcNonGbrHttp",
-                   "Enable HTC Non-GBR HTTP traffic over TCP.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_nonGbrHttp),
-                   MakeBooleanChecker ())
-    .AddAttribute ("EnableHtcNonGbrLiveVideo",
-                   "Enable HTC Non-GBR live video streaming traffic over UDP.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_nonGbrLiveVideo),
-                   MakeBooleanChecker ())
-
-    // MTC applications to be installed.
-    .AddAttribute ("EnableMtcGbrAutoPilot",
-                   "Enable MTC GBR auto-pilot traffic over UDP.",
+    // Applications to be installed.
+    .AddAttribute ("EnableGbrAutoPilot",
+                   "Enable GBR auto-pilot traffic over UDP.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_gbrAutoPilot),
                    MakeBooleanChecker ())
-    .AddAttribute ("EnableMtcNonGbrAutoPilot",
-                   "Enable MTC Non-GBR auto-pilot traffic over UDP.",
+    .AddAttribute ("EnableNonGbrAutoPilot",
+                   "Enable Non-GBR auto-pilot traffic over UDP.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_nonGbrAutoPilot),
+                   MakeBooleanChecker ())
+    .AddAttribute ("EnableNonGbrBufferedVideo",
+                   "Enable Non-GBR buffered video traffic over TCP.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_nonGbrBuffVideo),
+                   MakeBooleanChecker ())
+    .AddAttribute ("EnableNonGbrHttp",
+                   "Enable Non-GBR HTTP traffic over TCP.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_nonGbrHttp),
+                   MakeBooleanChecker ())
+    .AddAttribute ("EnableGbrLiveVideo",
+                   "Enable GBR live video streaming traffic over UDP.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_gbrLiveVideo),
+                   MakeBooleanChecker ())
+    .AddAttribute ("EnableNonGbrLiveVideo",
+                   "Enable Non-GBR live video streaming traffic over UDP.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_nonGbrLiveVideo),
+                   MakeBooleanChecker ())
+    .AddAttribute ("EnableGbrVoip",
+                   "Enable GBR VoIP traffic over UDP.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_gbrVoip),
                    MakeBooleanChecker ())
   ;
   return tid;
@@ -181,12 +167,11 @@ TrafficHelper::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_lteNetwork = 0;
+  m_lteHelper = 0;
   m_webNode = 0;
   m_ueNode = 0;
   m_ueDev = 0;
-  m_htcManager = 0;
-  m_mtcManager = 0;
+  m_manager = 0;
   m_videoRng = 0;
 }
 
@@ -195,14 +180,10 @@ TrafficHelper::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Configuring the traffic manager object factory for HTC and MTC UEs.
-  m_htcFactory.SetTypeId (TrafficManager::GetTypeId ());
-  m_htcFactory.Set ("PoissonInterArrival", PointerValue (m_htcPoissonRng));
-  m_htcFactory.Set ("RestartApps", BooleanValue (m_htcRestartApps));
-
-  m_mtcFactory.SetTypeId (TrafficManager::GetTypeId ());
-  m_mtcFactory.Set ("PoissonInterArrival", PointerValue (m_mtcPoissonRng));
-  m_mtcFactory.Set ("RestartApps", BooleanValue (m_mtcRestartApps));
+  // Configuring the traffic manager object factory.
+  m_factory.SetTypeId (TrafficManager::GetTypeId ());
+  m_factory.Set ("PoissonInterArrival", PointerValue (m_poissonRng));
+  m_factory.Set ("RestartApps", BooleanValue (m_restartApps));
 
   // Random video selection.
   m_videoRng = CreateObject<UniformRandomVariable> ();
@@ -210,7 +191,6 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_videoRng->SetAttribute ("Max", DoubleValue (14));
 
   // Configuring SDMN application helpers.
-
   m_autoPilotHelper = SvelteAppHelper (
       AutoPilotClient::GetTypeId (), AutoPilotServer::GetTypeId ());
   m_buffVideoHelper = SvelteAppHelper (
@@ -222,29 +202,23 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_voipHelper = SvelteAppHelper (
       VoipClient::GetTypeId (), VoipServer::GetTypeId ());
 
-  // Install the HTC applications.
-  InstallHtcApplications (
-    m_lteNetwork->GetHtcUeNodes (), m_lteNetwork->GetHtcUeDevices ());
-
-  // Install the MTC applications.
-  InstallMtcApplications (
-    m_lteNetwork->GetMtcUeNodes (), m_lteNetwork->GetMtcUeDevices ());
+  // Install the applications.
+  InstallApplications ();
 
   // Chain up.
   Object::NotifyConstructionCompleted ();
 }
 
 void
-TrafficHelper::InstallHtcApplications (NodeContainer ueNodes,
-                                       NetDeviceContainer ueDevices)
+TrafficHelper::InstallApplications ()
 {
   NS_LOG_FUNCTION (this);
 
   // Install manager and applications into nodes.
-  for (uint32_t u = 0; u < ueNodes.GetN (); u++)
+  for (uint32_t u = 0; u < m_ueNodes.GetN (); u++)
     {
-      m_ueNode = ueNodes.Get (u);
-      m_ueDev = ueDevices.Get (u);
+      m_ueNode = m_ueNodes.Get (u);   // FIXME
+      m_ueDev = m_ueDevices.Get (u);  // FIXME
       NS_ASSERT (m_ueDev->GetNode () == m_ueNode);
       uint64_t ueImsi = DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ();
 
@@ -252,22 +226,40 @@ TrafficHelper::InstallHtcApplications (NodeContainer ueNodes,
       m_ueAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
       m_ueMask = clientIpv4->GetAddress (1, 0).GetMask ();
 
-      // Each HTC UE gets one HTC traffic manager.
-      m_htcManager = m_htcFactory.Create<TrafficManager> ();
-      m_htcManager->SetImsi (ueImsi);
-      m_ueNode->AggregateObject (m_htcManager);
+      // Each UE gets one traffic manager.
+      m_manager = m_factory.Create<TrafficManager> ();
+      m_manager->SetImsi (ueImsi);
+      m_ueNode->AggregateObject (m_manager);
 
       // Connect the manager to the controller session created trace source.
       Config::ConnectWithoutContext (
         "/NodeList/*/ApplicationList/*/$ns3::SliceController/SessionCreated",
-        MakeCallback (&TrafficManager::SessionCreatedCallback, m_htcManager));
+        MakeCallback (&TrafficManager::SessionCreatedCallback, m_manager));
 
-      // Install HTC applications into UEs.
-      //
-      // WARNING: The QCIs used here for each application are strongly related
-      // to the DSCP mapping implemented in the EPC controller. This will
-      // further reflect on the priority queues used by both OpenFlow switches
-      // and traffic control module. Be careful if you intend to change it.
+      // Install applications into UEs.
+      if (m_gbrAutoPilot)
+        {
+          // UDP uplink auto-pilot traffic over dedicated GBR EPS bearer.
+          // This QCI 3 is typically associated with an operator controlled
+          // service, i.e., a service where the data flow aggregate's
+          // uplink/downlink packet filters are known at the point in time
+          // when the data flow aggregate is authorized.
+          GbrQosInformation qos;
+          qos.gbrUl = 150000;  // ~146 Kbps
+          EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
+          InstallAutoPilot (bearer);
+        }
+
+      if (m_nonGbrAutoPilot)
+        {
+          // UDP uplink auto-pilot traffic over dedicated Non-GBR EPS bearer.
+          // This QCI 5 is typically associated with IMS signalling, but we are
+          // using it here as the last Non-GBR QCI available so we can uniquely
+          // identify this Non-GBR traffic on the network.
+          EpsBearer bearer (EpsBearer::NGBR_IMS);
+          InstallAutoPilot (bearer);
+        }
+
       if (m_gbrLiveVideo)
         {
           // UDP downlink live video streaming over dedicated GBR EPS bearer.
@@ -324,69 +316,7 @@ TrafficHelper::InstallHtcApplications (NodeContainer ueNodes,
     }
   m_ueNode = 0;
   m_ueDev = 0;
-  m_htcManager = 0;
-}
-
-void
-TrafficHelper::InstallMtcApplications (NodeContainer ueNodes,
-                                       NetDeviceContainer ueDevices)
-{
-  NS_LOG_FUNCTION (this);
-
-  // Install manager and applications into nodes.
-  for (uint32_t u = 0; u < ueNodes.GetN (); u++)
-    {
-      m_ueNode = ueNodes.Get (u);
-      m_ueDev = ueDevices.Get (u);
-      NS_ASSERT (m_ueDev->GetNode () == m_ueNode);
-      uint64_t ueImsi = DynamicCast<LteUeNetDevice> (m_ueDev)->GetImsi ();
-
-      Ptr<Ipv4> clientIpv4 = m_ueNode->GetObject<Ipv4> ();
-      m_ueAddr = clientIpv4->GetAddress (1, 0).GetLocal ();
-      m_ueMask = clientIpv4->GetAddress (1, 0).GetMask ();
-
-      // Each MTC UE gets one MTC traffic manager.
-      m_mtcManager = m_mtcFactory.Create<TrafficManager> ();
-      m_mtcManager->SetImsi (ueImsi);
-      m_ueNode->AggregateObject (m_mtcManager);
-
-      // Connect the manager to the controller session created trace source.
-      Config::ConnectWithoutContext (
-        "/NodeList/*/ApplicationList/*/$ns3::SliceController/SessionCreated",
-        MakeCallback (&TrafficManager::SessionCreatedCallback, m_mtcManager));
-
-      // Install MTC applications into UEs
-      //
-      // WARNING: The QCIs used here for each application are strongly related
-      // to the DSCP mapping implemented in the EPC controller. This will
-      // further reflect on the priority queues used by both OpenFlow switches
-      // and traffic control module. Be careful if you intend to change it.
-      if (m_gbrAutoPilot)
-        {
-          // UDP uplink auto-pilot traffic over dedicated GBR EPS bearer.
-          // This QCI 3 is typically associated with an operator controlled
-          // service, i.e., a service where the data flow aggregate's
-          // uplink/downlink packet filters are known at the point in time
-          // when the data flow aggregate is authorized.
-          GbrQosInformation qos;
-          qos.gbrUl = 150000;  // ~146 Kbps
-          EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
-          InstallAutoPilot (bearer);
-        }
-
-      if (m_nonGbrAutoPilot)
-        {
-          // UDP uplink auto-pilot traffic over dedicated Non-GBR EPS bearer.
-          // This QCI 5 is typically associated with IMS signalling, but we are
-          // using it here as the last Non-GBR QCI available so we can uniquely
-          // identify the MTC Non-GBR traffic on the network.
-          EpsBearer bearer (EpsBearer::NGBR_IMS);
-          InstallAutoPilot (bearer);
-        }
-    }
-  m_ueNode = 0;
-  m_ueDev = 0;
-  m_mtcManager = 0;
+  m_manager = 0;
 }
 
 uint16_t
@@ -414,12 +344,6 @@ TrafficHelper::GetVideoMbr (uint8_t idx)
   return DataRate (m_mbrBitRate [idx]);
 }
 
-Ptr<LteHelper>
-TrafficHelper::GetLteHelper ()
-{
-  return m_lteNetwork->GetLteHelper ();
-}
-
 void
 TrafficHelper::InstallAutoPilot (EpsBearer bearer)
 {
@@ -445,9 +369,9 @@ TrafficHelper::InstallAutoPilot (EpsBearer bearer)
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
-  m_mtcManager->AddSvelteClientApp (cApp);
+  m_manager->AddSvelteClientApp (cApp);
 
-  GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
 void
@@ -476,9 +400,9 @@ TrafficHelper::InstallBufferedVideo (EpsBearer bearer, std::string name)
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
-  m_htcManager->AddSvelteClientApp (cApp);
+  m_manager->AddSvelteClientApp (cApp);
 
-  GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
 void
@@ -506,9 +430,9 @@ TrafficHelper::InstallHttp (EpsBearer bearer)
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
-  m_htcManager->AddSvelteClientApp (cApp);
+  m_manager->AddSvelteClientApp (cApp);
 
-  GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
 void
@@ -537,9 +461,9 @@ TrafficHelper::InstallLiveVideo (EpsBearer bearer, std::string name)
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
-  m_htcManager->AddSvelteClientApp (cApp);
+  m_manager->AddSvelteClientApp (cApp);
 
-  GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
 void
@@ -567,9 +491,9 @@ TrafficHelper::InstallVoip (EpsBearer bearer)
 
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
-  m_htcManager->AddSvelteClientApp (cApp);
+  m_manager->AddSvelteClientApp (cApp);
 
-  GetLteHelper ()->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
 } // namespace ns3
