@@ -64,6 +64,12 @@ public:
    */
   void EnablePcap (std::string prefix, bool promiscuous = false);
 
+  /**
+   * Get the Internet web server node.
+   * \return The pointer to the web node.
+   */
+  Ptr<Node> GetWebNode (void) const;
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose (void);
