@@ -204,7 +204,7 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_videoRng->SetAttribute ("Min", DoubleValue (0));
   m_videoRng->SetAttribute ("Max", DoubleValue (14));
 
-  // Configuring SDMN application helpers.
+  // Configuring application helpers.
   m_autoPilotHelper = SvelteAppHelper (
       AutoPilotClient::GetTypeId (), AutoPilotServer::GetTypeId ());
   m_buffVideoHelper = SvelteAppHelper (

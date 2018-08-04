@@ -27,12 +27,12 @@
 namespace ns3 {
 
 /**
- * \ingroup sdmn
- * \defgroup sdmnStats Statistics
- * Statistics calculators for monitorin the SDMN architecture.
+ * \ingroup svelte
+ * \defgroup svelteStats Statistics
+ * Statistics calculators for monitorin the SVELTE architecture.
  */
 /**
- * \ingroup sdmnStats
+ * \ingroup svelteStats
  * This class monitors some basic QoS statistics in a network traffic flow. It
  * counts the number of transmitted/received bytes and packets, computes the
  * loss ratio, the average delay and the jitter. This class can be used to
