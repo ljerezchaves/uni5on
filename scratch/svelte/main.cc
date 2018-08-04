@@ -386,7 +386,10 @@ EnableVerbose (bool enable)
       // Common components.
       LogComponentEnable ("Main",                     logLevelWarnInfo);
       LogComponentEnable ("SvelteCommon",             logLevelWarnInfo);
+
+      // Helper components.
       LogComponentEnable ("SvelteHelper",             logLevelWarnInfo);
+      LogComponentEnable ("TrafficHelper",            logLevelWarnInfo);
 
       // Infrastructure components.
       LogComponentEnable ("BackhaulController",       logLevelWarnInfo);
@@ -402,8 +405,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("SliceController",          logLevelWarnInfo);
       LogComponentEnable ("SliceNetwork",             logLevelWarnInfo);
       LogComponentEnable ("SvelteMme",                logLevelWarnInfo);
-      // LogComponentEnable ("TrafficHelper",            logLevelWarnInfo);
-      // LogComponentEnable ("TrafficManager",           logLevelWarnInfo);
+      LogComponentEnable ("TrafficManager",           logLevelWarnInfo);
 
       // Metadata components.
       LogComponentEnable ("EnbInfo",                  logLevelWarnInfo);
