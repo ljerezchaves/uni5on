@@ -145,16 +145,10 @@ private:
   //\}
 
   /**
-   * Register the UE information in global map by its IMSI for further usage.
+   * Register the UE information in global map for further usage.
    * \param ueInfo The UE information to save.
    */
-  static void RegisterUeInfoByImsi (Ptr<UeInfo> ueInfo);
-
-  /**
-   * Register the UE information in global map by its IPv4 for further usage.
-   * \param ueInfo The UE information to save.
-   */
-  static void RegisterUeInfoByIpv4 (Ptr<UeInfo> ueInfo);
+  static void RegisterUeInfo (Ptr<UeInfo> ueInfo);
 
   // UE metadata.
   uint64_t               m_imsi;                 //!< UE IMSI.

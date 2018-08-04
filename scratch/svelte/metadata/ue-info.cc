@@ -47,7 +47,7 @@ UeInfo::UeInfo (uint64_t imsi, Ipv4Address ueAddr,
 {
   NS_LOG_FUNCTION (this);
 
-  RegisterUeInfoByImsi (Ptr<UeInfo> (this));
+  RegisterUeInfo (Ptr<UeInfo> (this));
 }
 
 UeInfo::~UeInfo ()
@@ -285,27 +285,21 @@ UeInfo::SetPgwInfo (Ptr<PgwInfo> value)
 }
 
 void
-UeInfo::RegisterUeInfoByImsi (Ptr<UeInfo> ueInfo)
+UeInfo::RegisterUeInfo (Ptr<UeInfo> ueInfo)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
   uint64_t imsi = ueInfo->GetImsi ();
-  std::pair<uint64_t, Ptr<UeInfo> > entry (imsi, ueInfo);
-  std::pair<ImsiUeInfoMap_t::iterator, bool> ret;
-  ret = UeInfo::m_ueInfoByImsiMap.insert (entry);
-  NS_ABORT_MSG_IF (ret.second == false, "Existing UE info for this ISMI.");
-}
-
-void
-UeInfo::RegisterUeInfoByIpv4 (Ptr<UeInfo> ueInfo)
-{
-  NS_LOG_FUNCTION_NOARGS ();
+  std::pair<uint64_t, Ptr<UeInfo> > entryImsi (imsi, ueInfo);
+  std::pair<ImsiUeInfoMap_t::iterator, bool> retImsi;
+  retImsi = UeInfo::m_ueInfoByImsiMap.insert (entryImsi);
+  NS_ABORT_MSG_IF (retImsi.second == false, "Existing UE info for this ISMI.");
 
   Ipv4Address ipv4 = ueInfo->GetUeAddr ();
-  std::pair<Ipv4Address, Ptr<UeInfo> > entry (ipv4, ueInfo);
-  std::pair<Ipv4UeInfoMap_t::iterator, bool> ret;
-  ret = UeInfo::m_ueInfoByIpv4Map.insert (entry);
-  NS_ABORT_MSG_IF (ret.second == false, "Existing UE info for this IP.");
+  std::pair<Ipv4Address, Ptr<UeInfo> > entryIpv4 (ipv4, ueInfo);
+  std::pair<Ipv4UeInfoMap_t::iterator, bool> retIpv4;
+  retIpv4 = UeInfo::m_ueInfoByIpv4Map.insert (entryIpv4);
+  NS_ABORT_MSG_IF (retIpv4.second == false, "Existing UE info for this IP.");
 }
 
 } // namespace ns3
