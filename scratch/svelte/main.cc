@@ -25,6 +25,7 @@
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
 #include "helpers/svelte-helper.h"
+#include "statistics/traffic-stats-calculator.h"
 
 using namespace ns3;
 using namespace ns3::ofs;
@@ -138,12 +139,12 @@ main (int argc, char *argv[])
 //  Ptr<BackhaulStatsCalculator>    backhaulStats;
 //  Ptr<HandoverStatsCalculator>    handoverStats;
 //  Ptr<PgwTftStatsCalculator>      pgwTftStats;
-//  Ptr<TrafficStatsCalculator>     trafficStats;
+  Ptr<TrafficStatsCalculator>     trafficStats;
 //  admissionStats  = CreateObject<AdmissionStatsCalculator> ();
 //  backhaulStats   = CreateObject<BackhaulStatsCalculator> ();
 //  handoverStats   = CreateObject<HandoverStatsCalculator> ();
 //  pgwTftStats     = CreateObject<PgwTftStatsCalculator> ();
-//  trafficStats    = CreateObject<TrafficStatsCalculator> ();
+  trafficStats    = CreateObject<TrafficStatsCalculator> ();
 
   // Populating routing and ARP tables. The 'perfect' ARP used here comes from
   // the patch at https://www.nsnam.org/bugzilla/show_bug.cgi?id=187. This
@@ -438,7 +439,7 @@ EnableVerbose (bool enable)
       // LogComponentEnable ("HandoverStatsCalculator",  logLevelWarnInfo);
       // LogComponentEnable ("PgwTftStatsCalculator",    logLevelWarnInfo);
       LogComponentEnable ("QosStatsCalculator",       logLevelWarnInfo);
-      // LogComponentEnable ("TrafficStatsCalculator",   logLevelWarnInfo);
+      LogComponentEnable ("TrafficStatsCalculator",   logLevelWarnInfo);
 
       // OFSwitch13 module components.
       LogComponentEnable ("OFSwitch13Controller",     logLevelWarn);
