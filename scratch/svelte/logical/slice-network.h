@@ -65,6 +65,18 @@ public:
   void EnablePcap (std::string prefix, bool promiscuous = false);
 
   /**
+   * Get the UE nodes.
+   * \return The UE node container.
+   */
+  NodeContainer GetUeNodes (void) const;
+
+  /**
+   * Get the UE LTE network devices.
+   * \return The UE network device container.
+   */
+  NetDeviceContainer GetUeDevices (void) const;
+
+  /**
    * Get the Internet web server node.
    * \return The pointer to the web node.
    */

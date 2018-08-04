@@ -228,8 +228,8 @@ TrafficHelper::InstallApplications ()
 {
   NS_LOG_FUNCTION (this);
 
-  NodeContainer ueNodes = m_radio->GetUeNodes ();
-  NetDeviceContainer ueDevices = m_radio->GetUeDevices ();
+  NodeContainer ueNodes = m_slice->GetUeNodes ();
+  NetDeviceContainer ueDevices = m_slice->GetUeDevices ();
 
   // Install manager and applications into nodes.
   for (uint32_t u = 0; u < ueNodes.GetN (); u++)

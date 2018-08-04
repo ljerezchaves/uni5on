@@ -189,6 +189,22 @@ SliceNetwork::EnablePcap (std::string prefix, bool promiscuous)
   helper.EnablePcap (prefix + "internet", m_webDevices, promiscuous);
 }
 
+NodeContainer
+SliceNetwork::GetUeNodes (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueNodes;
+}
+
+NetDeviceContainer
+SliceNetwork::GetUeDevices (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueDevices;
+}
+
 Ptr<Node>
 SliceNetwork::GetWebNode (void) const
 {
