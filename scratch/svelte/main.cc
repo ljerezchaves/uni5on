@@ -27,6 +27,7 @@
 #include "helpers/svelte-helper.h"
 #include "statistics/admission-stats-calculator.h"
 #include "statistics/handover-stats-calculator.h"
+#include "statistics/pgw-tft-stats-calculator.h"
 #include "statistics/traffic-stats-calculator.h"
 
 using namespace ns3;
@@ -136,16 +137,15 @@ main (int argc, char *argv[])
   // configuring the infrastructure and logical networks.
   Ptr<SvelteHelper> svelteHelper = CreateObject<SvelteHelper> ();
 
-//  FIXME
   Ptr<AdmissionStatsCalculator>   admissionStats;
 //  Ptr<BackhaulStatsCalculator>    backhaulStats;
   Ptr<HandoverStatsCalculator>    handoverStats;
-//  Ptr<PgwTftStatsCalculator>      pgwTftStats;
+  Ptr<PgwTftStatsCalculator>      pgwTftStats;
   Ptr<TrafficStatsCalculator>     trafficStats;
   admissionStats  = CreateObject<AdmissionStatsCalculator> ();
 //  backhaulStats   = CreateObject<BackhaulStatsCalculator> ();
   handoverStats   = CreateObject<HandoverStatsCalculator> ();
-//  pgwTftStats     = CreateObject<PgwTftStatsCalculator> ();
+  pgwTftStats     = CreateObject<PgwTftStatsCalculator> ();
   trafficStats    = CreateObject<TrafficStatsCalculator> ();
 
   // Populating routing and ARP tables. The 'perfect' ARP used here comes from
@@ -439,7 +439,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);
       // LogComponentEnable ("BackhaulStatsCalculator",  logLevelWarnInfo);
       LogComponentEnable ("HandoverStatsCalculator",  logLevelWarnInfo);
-      // LogComponentEnable ("PgwTftStatsCalculator",    logLevelWarnInfo);
+      LogComponentEnable ("PgwTftStatsCalculator",    logLevelWarnInfo);
       LogComponentEnable ("QosStatsCalculator",       logLevelWarnInfo);
       LogComponentEnable ("TrafficStatsCalculator",   logLevelWarnInfo);
 
