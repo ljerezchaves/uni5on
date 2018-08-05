@@ -127,7 +127,7 @@ private:
 
   /**
    * Get the common statistics metrics.
-   * \param app The SDMN client application.
+   * \param app The SVELTE client application.
    * \param rInfo The routing information for this traffic.
    * \param stats The QoS statistics.
    * \param direction The traffic direction (down/up).
