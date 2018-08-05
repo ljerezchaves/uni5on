@@ -26,6 +26,7 @@
 #include <ns3/ofswitch13-module.h>
 #include "helpers/svelte-helper.h"
 #include "statistics/admission-stats-calculator.h"
+#include "statistics/handover-stats-calculator.h"
 #include "statistics/traffic-stats-calculator.h"
 
 using namespace ns3;
@@ -138,12 +139,12 @@ main (int argc, char *argv[])
 //  FIXME
   Ptr<AdmissionStatsCalculator>   admissionStats;
 //  Ptr<BackhaulStatsCalculator>    backhaulStats;
-//  Ptr<HandoverStatsCalculator>    handoverStats;
+  Ptr<HandoverStatsCalculator>    handoverStats;
 //  Ptr<PgwTftStatsCalculator>      pgwTftStats;
   Ptr<TrafficStatsCalculator>     trafficStats;
   admissionStats  = CreateObject<AdmissionStatsCalculator> ();
 //  backhaulStats   = CreateObject<BackhaulStatsCalculator> ();
-//  handoverStats   = CreateObject<HandoverStatsCalculator> ();
+  handoverStats   = CreateObject<HandoverStatsCalculator> ();
 //  pgwTftStats     = CreateObject<PgwTftStatsCalculator> ();
   trafficStats    = CreateObject<TrafficStatsCalculator> ();
 
@@ -437,7 +438,7 @@ EnableVerbose (bool enable)
       // Statistic components.
       LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);
       // LogComponentEnable ("BackhaulStatsCalculator",  logLevelWarnInfo);
-      // LogComponentEnable ("HandoverStatsCalculator",  logLevelWarnInfo);
+      LogComponentEnable ("HandoverStatsCalculator",  logLevelWarnInfo);
       // LogComponentEnable ("PgwTftStatsCalculator",    logLevelWarnInfo);
       LogComponentEnable ("QosStatsCalculator",       logLevelWarnInfo);
       LogComponentEnable ("TrafficStatsCalculator",   logLevelWarnInfo);
