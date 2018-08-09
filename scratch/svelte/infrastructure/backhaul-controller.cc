@@ -56,7 +56,7 @@ BackhaulController::GetTypeId (void)
                    MakeEnumChecker (OpMode::OFF, "off",
                                     OpMode::ON,  "on"))
     .AddAttribute ("LinkSlicing",
-                   "Network slicing mechanism operation mode.",
+                   "Link slicing mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (OpMode::AUTO),
                    MakeEnumAccessor (&BackhaulController::m_slicing),
@@ -93,7 +93,7 @@ BackhaulController::GetPriorityQueuesMode (void) const
 }
 
 OpMode
-BackhaulController::GetSlicingMode (void) const
+BackhaulController::GetLinkSlicingMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -327,86 +327,8 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 3 -- Slicing table -- [from higher to lower priority]
   //
-  // FIXME Revisar o link slicing.
-  if (GetSlicingMode () == OpMode::ON)
-    {
-      // FIXME This should be automatic depending on the number of slices.
-      // When the network slicing operation mode is ON, the Non-GBR traffic of
-      // each slice will be monitored independently. Here is how we are using
-      // meter IDs:
-      // DFT slice: meter ID 1 -> clockwise FWD direction
-      //            meter ID 2 -> counterclockwise BWD direction
-      // MTC slice: meter ID 3 -> clockwise FWD direction
-      //            meter ID 4 -> counterclockwise BWD direction
-      // In current implementation we don't have Non-GBR traffic on GBR slice,
-      // so we don't need meters for this slice.
-
-      // DFT Non-GBR packets are filtered by DSCP fields DSCP_AF11 and
-      // DSCP_BE. Apply Non-GBR meter band. Send the packet to Output table.
-      //
-      // DSCP_AF11 (DSCP decimal 10)
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
-                    " eth_type=0x800,meta=0x1,ip_dscp=10"
-                    " meter:1 goto:4");
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
-                    " eth_type=0x800,meta=0x2,ip_dscp=10"
-                    " meter:2 goto:4");
-
-      // DSCP_BE (DSCP decimal 0)
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
-                    " eth_type=0x800,meta=0x1,ip_dscp=0"
-                    " meter:1 goto:4");
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
-                    " eth_type=0x800,meta=0x2,ip_dscp=0"
-                    " meter:2 goto:4");
-
-      // MTC Non-GBR packets are filtered by DSCP field DSCP_AF31.
-      // Apply MTC Non-GBR meter band. Send the packet to Output table.
-      //
-      // DSCP_AF31 (DSCP decimal 26)
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=15"
-                    " eth_type=0x800,meta=0x1,ip_dscp=26"
-                    " meter:3 goto:4");
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=15"
-                    " eth_type=0x800,meta=0x2,ip_dscp=26"
-                    " meter:4 goto:4");
-    }
-  else if (GetSlicingMode () == OpMode::AUTO)
-    {
-      // When the network slicing operation mode is AUTO, the Non-GBR traffic
-      // of all slices will be monitored together. Here is how we are using
-      // meter IDs:
-      // Meter ID 1 -> clockwise FWD direction
-      // Meter ID 2 -> counterclockwise BWD direction
-
-      // Non-GBR packets are filtered by DSCP fields DSCP_AF31, DSCP_AF11, and
-      // DSCP_BE. Apply Non-GBR meter band. Send the packet to Output table.
-      //
-      // DSCP_AF31 (DSCP decimal 26)
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=15"
-                    " eth_type=0x800,meta=0x1,ip_dscp=26"
-                    " meter:1 goto:4");
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=15"
-                    " eth_type=0x800,meta=0x2,ip_dscp=26"
-                    " meter:2 goto:4");
-
-      // DSCP_AF11 (DSCP decimal 10)
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
-                    " eth_type=0x800,meta=0x1,ip_dscp=10"
-                    " meter:1 goto:4");
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
-                    " eth_type=0x800,meta=0x2,ip_dscp=10"
-                    " meter:2 goto:4");
-
-      // DSCP_BE (DSCP decimal 0)
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
-                    " eth_type=0x800,meta=0x1,ip_dscp=0"
-                    " meter:1 goto:4");
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
-                    " eth_type=0x800,meta=0x2,ip_dscp=0"
-                    " meter:2 goto:4");
-    }
-
+  // Entries will be installed and updated here by the topology controller.
+  //
   // Table miss entry. Send the packet to Output table
   DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=0 goto:4");
 

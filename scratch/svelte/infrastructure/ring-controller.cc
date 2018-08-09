@@ -252,7 +252,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
       // Meter table
       //
       // FIXME Revisar o link slicing.
-      if (GetSlicingMode () != OpMode::OFF)
+      if (GetLinkSlicingMode () != OpMode::OFF)
         {
           NS_LOG_DEBUG ("Creating slicing meters for link info " <<
                         lInfo->GetSwDpId (0) << " - " << lInfo->GetSwDpId (1));
@@ -260,12 +260,12 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
           // Connect this controller to LinkInfo meter adjusted trace source.
           lInfo->TraceConnectWithoutContext (
             "MeterAdjusted", MakeCallback (
-              &RingController::MeterAdjusted, this));
+              &RingController::SlicingMeterAdjusted, this));
 
           std::ostringstream cmdm1, cmdm2, cmdm3, cmdm4;
           uint64_t kbps = 0;
 
-          if (GetSlicingMode () == OpMode::ON)
+          if (GetLinkSlicingMode () == OpMode::ON)
             {
               // DFT Non-GBR meter for clockwise FWD direction.
               kbps = lInfo->GetFreeBitRate (LinkInfo::FWD, LinkSlice::DFT);
@@ -303,7 +303,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
                             ": " << LinkInfo::DirectionStr (LinkInfo::BWD) <<
                             " link set to " << kbps << " Kbps");
             }
-          else if (GetSlicingMode () == OpMode::AUTO)
+          else if (GetLinkSlicingMode () == OpMode::AUTO)
             {
               // Non-GBR meter for clockwise FWD direction.
               kbps = lInfo->GetFreeBitRate (LinkInfo::FWD, LinkSlice::ALL);
@@ -426,6 +426,18 @@ RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
   DpctlExecute (GetDpId (ringInfo->GetEnbInfraSwIdx ()), cmd.str ());
 
   return true;
+}
+
+void
+RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
+{
+  NS_LOG_FUNCTION (this << swtch);
+
+  SlicingMeterInstall (swtch);
+
+
+  // Chain up.
+  BackhaulController::HandshakeSuccessful (swtch);
 }
 
 bool
@@ -641,19 +653,19 @@ RingController::HopCounter (uint16_t srcIdx, uint16_t dstIdx,
 }
 
 void
-RingController::MeterAdjusted (Ptr<const LinkInfo> lInfo,
-                               LinkInfo::Direction dir, LinkSlice slice)
+RingController::SlicingMeterAdjusted (Ptr<const LinkInfo> lInfo,
+                                      LinkInfo::Direction dir, LinkSlice slice)
 {
   NS_LOG_FUNCTION (this << lInfo << dir << slice);
 
-  NS_ASSERT_MSG (GetSlicingMode () != OpMode::OFF, "Not supposed to "
+  NS_ASSERT_MSG (GetLinkSlicingMode () != OpMode::OFF, "Not supposed to "
                  "adjust slicing meters when network slicing mode is OFF.");
 
   uint8_t  swDpId  = (dir == LinkInfo::FWD) ? 0 : 1;
   uint16_t meterId = (dir == LinkInfo::FWD) ? 1 : 2;
 
   // FIXME Revisar o link slicing.
-  if (GetSlicingMode () == OpMode::ON)
+  if (GetLinkSlicingMode () == OpMode::ON)
     {
       // When the network slicing operation mode is ON, the Non-GBR traffic of
       // each slice will be monitored independently. So we have to identify the
@@ -671,7 +683,7 @@ RingController::MeterAdjusted (Ptr<const LinkInfo> lInfo,
           meterId += 2;
         }
     }
-  else if (GetSlicingMode () == OpMode::AUTO)
+  else if (GetLinkSlicingMode () == OpMode::AUTO)
     {
       // When the network slicing operation mode is AUTO, the Non-GBR traffic
       // of all slices will be monitored together. The meter IDs in use are:
@@ -698,6 +710,94 @@ RingController::MeterAdjusted (Ptr<const LinkInfo> lInfo,
   NS_LOG_DEBUG ("Link slice " << LinkSliceStr (slice) <<
                 ": " << LinkInfo::DirectionStr (dir) <<
                 " link updated to " << kbps << " Kbps");
+}
+
+void
+RingController::SlicingMeterInstall (Ptr<const RemoteSwitch> swtch)
+{
+  NS_LOG_FUNCTION (this << swtch);
+
+  // -------------------------------------------------------------------------
+  // Table 3 -- Slicing table -- [from higher to lower priority]
+  //
+  if (GetLinkSlicingMode () == OpMode::ON)
+    {
+      // FIXME This should be automatic depending on the number of slices.
+      // When the network slicing operation mode is ON, the Non-GBR traffic of
+      // each slice will be monitored independently. Here is how we are using
+      // meter IDs:
+      // DFT slice: meter ID 1 -> clockwise FWD direction
+      //            meter ID 2 -> counterclockwise BWD direction
+      // MTC slice: meter ID 3 -> clockwise FWD direction
+      //            meter ID 4 -> counterclockwise BWD direction
+      // In current implementation we don't have Non-GBR traffic on GBR slice,
+      // so we don't need meters for this slice.
+
+      // DFT Non-GBR packets are filtered by DSCP fields DSCP_AF11 and
+      // DSCP_BE. Apply Non-GBR meter band. Send the packet to Output table.
+      //
+      // DSCP_AF11 (DSCP decimal 10)
+      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
+                    " eth_type=0x800,meta=0x1,ip_dscp=10"
+                    " meter:1 goto:4");
+      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
+                    " eth_type=0x800,meta=0x2,ip_dscp=10"
+                    " meter:2 goto:4");
+
+      // DSCP_BE (DSCP decimal 0)
+      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
+                    " eth_type=0x800,meta=0x1,ip_dscp=0"
+                    " meter:1 goto:4");
+      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
+                    " eth_type=0x800,meta=0x2,ip_dscp=0"
+                    " meter:2 goto:4");
+
+      // MTC Non-GBR packets are filtered by DSCP field DSCP_AF31.
+      // Apply MTC Non-GBR meter band. Send the packet to Output table.
+      //
+      // DSCP_AF31 (DSCP decimal 26)
+      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=15"
+                    " eth_type=0x800,meta=0x1,ip_dscp=26"
+                    " meter:3 goto:4");
+      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=15"
+                    " eth_type=0x800,meta=0x2,ip_dscp=26"
+                    " meter:4 goto:4");
+    }
+  else if (GetLinkSlicingMode () == OpMode::AUTO)
+    {
+      // When the network slicing operation mode is AUTO, the Non-GBR traffic
+      // of all slices will be monitored together. Here is how we are using
+      // meter IDs:
+      // Meter ID 1 -> clockwise FWD direction
+      // Meter ID 2 -> counterclockwise BWD direction
+
+      // Non-GBR packets are filtered by DSCP fields DSCP_AF31, DSCP_AF11, and
+      // DSCP_BE. Apply Non-GBR meter band. Send the packet to Output table.
+      //
+      // DSCP_AF31 (DSCP decimal 26)
+      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=15"
+                    " eth_type=0x800,meta=0x1,ip_dscp=26"
+                    " meter:1 goto:4");
+      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=15"
+                    " eth_type=0x800,meta=0x2,ip_dscp=26"
+                    " meter:2 goto:4");
+
+      // DSCP_AF11 (DSCP decimal 10)
+      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
+                    " eth_type=0x800,meta=0x1,ip_dscp=10"
+                    " meter:1 goto:4");
+      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
+                    " eth_type=0x800,meta=0x2,ip_dscp=10"
+                    " meter:2 goto:4");
+
+      // DSCP_BE (DSCP decimal 0)
+      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
+                    " eth_type=0x800,meta=0x1,ip_dscp=0"
+                    " meter:1 goto:4");
+      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
+                    " eth_type=0x800,meta=0x2,ip_dscp=0"
+                    " meter:2 goto:4");
+    }
 }
 
 uint16_t

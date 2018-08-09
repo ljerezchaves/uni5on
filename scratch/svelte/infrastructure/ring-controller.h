@@ -75,6 +75,9 @@ protected:
   bool TopologyRoutingRemove (Ptr<RoutingInfo> rInfo);
   // Inherited from BackhaulController.
 
+  // Inherited from OFSwitch13Controller.
+  void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
+
 private:
   /**
    * Check for the available bit rate on the given slice.
@@ -129,16 +132,23 @@ private:
                        RingInfo::RingPath path) const;
 
   /**
-   * // FIXME Move to BackhaulController
    * Notify this controller when the maximum bit rate for best-effort
    * traffic in any network link is adjusted. This is used to update
-   * meters bands based on slicing resource reservation.
-   * \param lInfo The link information.
+   * meters bands based on slicing Install the link slicing rules resource reservation.
+   * \param lInfo The link information. FIXME
    * \param dir The link direction.
    * \param slice The link slice.
    */
-  void MeterAdjusted (Ptr<const LinkInfo> lInfo, LinkInfo::Direction dir,
-                      LinkSlice slice);
+  void SlicingMeterAdjusted (Ptr<const LinkInfo> lInfo, LinkInfo::Direction dir,
+                             LinkSlice slice);
+
+  /**
+   * Install the link slicing rules Notify this controller when the maximum bit rate for best-effort
+   * traffic in any network link is adjusted. This is used to update FIXME
+   * meters bands based on slicing resource reservation.
+   * \param swtch The OpenFlow switch information.
+   */
+  void SlicingMeterInstall (Ptr<const RemoteSwitch> swtch);
 
   /**
    * Get the next switch index following the given routing path.

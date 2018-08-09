@@ -75,10 +75,10 @@ public:
   OpMode GetPriorityQueuesMode (void) const;
 
   /**
-   * Get the Network slicing mechanism operation mode.
+   * Get the link slicing mechanism operation mode.
    * \return The operation mode.
    */
-  OpMode GetSlicingMode (void) const;
+  OpMode GetLinkSlicingMode (void) const;
 
   /**
    * Get the average slice usage considering all links in the backhaul network.
