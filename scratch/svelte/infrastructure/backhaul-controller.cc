@@ -158,12 +158,9 @@ BackhaulController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
+  // FIXME Remove this.
   // Set the LinkSlice for this bearer.
   rInfo->SetLinkSlice (LinkSlice::DFT);
-  if (GetSlicingMode () != OpMode::OFF)
-    {
-      // TODO
-    }
 }
 
 void
@@ -291,7 +288,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   //
   // Entries will be installed here by NotifyEpcAttach function.
 
-  // GTP packets entering the switch from any port other then EPC ports.
+  // GTP packets entering the switch from any port other than EPC ports.
   // Send to Routing table.
   std::ostringstream cmd;
   cmd << "flow-mod cmd=add,table=0,prio=32"

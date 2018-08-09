@@ -261,6 +261,9 @@ TrafficHelper::InstallApplications ()
           // service, i.e., a service where the data flow aggregate's
           // uplink/downlink packet filters are known at the point in time
           // when the data flow aggregate is authorized.
+          // FIXME Acho que com as mudanças no slicing podemos usar um QCI mais
+          // adequado para esta aplicação. Não acredito que vamos precisar usar
+          // o QCI para diferenciar um tráfego na rede.
           GbrQosInformation qos;
           qos.gbrUl = 150000;  // ~146 Kbps
           EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
@@ -273,6 +276,9 @@ TrafficHelper::InstallApplications ()
           // This QCI 5 is typically associated with IMS signalling, but we are
           // using it here as the last Non-GBR QCI available so we can uniquely
           // identify this Non-GBR traffic on the network.
+          // FIXME Acho que com as mudanças no slicing podemos usar um QCI mais
+          // adequado para esta aplicação. Não acredito que vamos precisar usar
+          // o QCI para diferenciar um tráfego na rede.
           EpsBearer bearer (EpsBearer::NGBR_IMS);
           InstallAutoPilot (bearer);
         }
