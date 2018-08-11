@@ -76,7 +76,7 @@ private:
   uint32_t                    m_pktSize;      //!< Packet size.
   EventId                     m_sendEvent;    //!< SendPacket event.
   EventId                     m_stopEvent;    //!< Stop event.
-  Ptr<RandomVariableStream>   m_lengthRng;    //!< Random call length.
+  Ptr<RandomVariableStream>   m_lengthRng;    //!< Random traffic length.
 };
 
 } // namespace ns3

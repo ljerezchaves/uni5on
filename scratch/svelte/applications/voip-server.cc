@@ -120,7 +120,7 @@ VoipServer::NotifyForceStop ()
   // Chain up just for log.
   SvelteServerApp::NotifyForceStop ();
 
-  // Stop streaming.
+  // Stop traffic.
   m_sendEvent.Cancel ();
 }
 
