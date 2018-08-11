@@ -149,7 +149,7 @@ RingNetwork::CreateTopology (void)
       LinkInfo::SwitchData nextSwData = {nextDev, nextPortDev, nextPortNo};
       Ptr<LinkInfo> lInfo = CreateObject<LinkInfo> (
           currSwData, nextSwData, DynamicCast<CsmaChannel> (
-            currPortDev->GetChannel ()), ringController->GetSlicingMode ());
+            currPortDev->GetChannel ()), ringController->GetLinkSlicingMode ());
     }
 
   // Fire trace source notifying that the topology was successfully built.
