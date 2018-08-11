@@ -35,6 +35,11 @@ AutoPilotClient::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::AutoPilotClient")
     .SetParent<SvelteClientApp> ()
     .AddConstructor<AutoPilotClient> ()
+
+    //
+    // The client sends a 1KB packet with uniformly distributed average time
+    // between packets ranging from 0.025 to 0.1 sec.
+    //
     .AddAttribute ("Interval",
                    "The time to wait between consecutive packets [s].",
                    StringValue (
@@ -88,9 +93,9 @@ AutoPilotClient::Start ()
   SvelteClientApp::Start ();
 
   // Start traffic.
-  Time next = Seconds (m_intervalRng->GetValue ());
   m_sendEvent.Cancel ();
-  m_sendEvent = Simulator::Schedule (next, &AutoPilotClient::SendPacket, this);
+  m_sendEvent = Simulator::Schedule (
+      Seconds (m_intervalRng->GetValue ()), &AutoPilotClient::SendPacket, this);
 }
 
 void
@@ -138,7 +143,7 @@ AutoPilotClient::StartApplication (void)
   m_socket = Socket::CreateSocket (GetNode (), udpFactory);
   m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
   m_socket->Connect (InetSocketAddress::ConvertFrom (m_serverAddress));
-  m_socket->ShutdownRecv ();
+  m_socket->SetRecvCallback (MakeCallback (&AutoPilotClient::ReadPacket, this));
 }
 
 void
@@ -177,8 +182,23 @@ AutoPilotClient::SendPacket ()
     }
 
   // Schedule next packet transmission.
-  Time next = Seconds (m_intervalRng->GetValue ());
-  m_sendEvent = Simulator::Schedule (next, &AutoPilotClient::SendPacket, this);
+  m_sendEvent = Simulator::Schedule (
+      Seconds (m_intervalRng->GetValue ()), &AutoPilotClient::SendPacket, this);
+}
+
+void
+AutoPilotClient::ReadPacket (Ptr<Socket> socket)
+{
+  NS_LOG_FUNCTION (this << socket);
+
+  // Receive the datagram from the socket.
+  Ptr<Packet> packet = socket->Recv ();
+
+  SeqTsHeader seqTs;
+  packet->PeekHeader (seqTs);
+  NotifyRx (packet->GetSize (), seqTs.GetTs ());
+  NS_LOG_DEBUG ("Client RX " << packet->GetSize () << " bytes with " <<
+                "sequence number " << seqTs.GetSeq ());
 }
 
 } // Namespace ns3

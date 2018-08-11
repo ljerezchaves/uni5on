@@ -104,7 +104,7 @@ private:
   static const DataRate GetVideoMbr (uint8_t idx);
 
   /**
-   * UDP uplink auto-pilot traffic.
+   * UDP bidirectional auto-pilot traffic.
    * This auto-pilot model is adapted from the MTC application model indicate
    * on the "Machine-to-Machine Communications: Architectures, Technology,
    * Standards, and Applications" book, chapter 3: "M2M traffic and models".

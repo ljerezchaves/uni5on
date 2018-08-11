@@ -26,7 +26,8 @@ namespace ns3 {
 
 /**
  * \ingroup svelteApps
- * This is the server side of a auto pilot MTC traffic generator.
+ * This is the server side of a auto pilot MTC traffic generator, sending and
+ * receiving UDP datagrams following auto pilot traffic pattern.
  */
 class AutoPilotServer : public SvelteServerApp
 {
@@ -58,6 +59,15 @@ private:
    * \param socket Socket with data available to be read.
    */
   void ReadPacket (Ptr<Socket> socket);
+
+  /**
+   * \brief Handle a packet transmission.
+   */
+  void SendPacket ();
+
+  Ptr<RandomVariableStream>   m_intervalRng;  //!< Random interval between pkts.
+  uint32_t                    m_pktSize;      //!< Packet size.
+  EventId                     m_sendEvent;    //!< SendPacket event.
 };
 
 } // namespace ns3

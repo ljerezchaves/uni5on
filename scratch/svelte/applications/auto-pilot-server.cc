@@ -35,11 +35,28 @@ AutoPilotServer::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::AutoPilotServer")
     .SetParent<SvelteServerApp> ()
     .AddConstructor<AutoPilotServer> ()
+
+    //
+    // The server sends a 1KB packet with uniformly distributed average time
+    // between packets ranging from 0.999 to 1.001 sec.
+    //
+    .AddAttribute ("Interval",
+                   "The time to wait between consecutive packets [s].",
+                   StringValue (
+                     "ns3::UniformRandomVariable[Min=0.999|Max=1.001]"),
+                   MakePointerAccessor (&AutoPilotServer::m_intervalRng),
+                   MakePointerChecker <RandomVariableStream> ())
+    .AddAttribute ("PayloadSize",
+                   "The payload size of packets [bytes].",
+                   UintegerValue (1024),
+                   MakeUintegerAccessor (&AutoPilotServer::m_pktSize),
+                   MakeUintegerChecker<uint32_t> ())
   ;
   return tid;
 }
 
 AutoPilotServer::AutoPilotServer ()
+  : m_sendEvent (EventId ())
 {
   NS_LOG_FUNCTION (this);
 }
@@ -54,6 +71,7 @@ AutoPilotServer::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
+  m_sendEvent.Cancel ();
   SvelteServerApp::DoDispose ();
 }
 
@@ -66,9 +84,8 @@ AutoPilotServer::StartApplication (void)
   TypeId udpFactory = TypeId::LookupByName ("ns3::UdpSocketFactory");
   m_socket = Socket::CreateSocket (GetNode (), udpFactory);
   m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
-  m_socket->ShutdownSend ();
-  m_socket->SetRecvCallback (
-    MakeCallback (&AutoPilotServer::ReadPacket, this));
+  m_socket->Connect (InetSocketAddress::ConvertFrom (m_clientAddress));
+  m_socket->SetRecvCallback (MakeCallback (&AutoPilotServer::ReadPacket, this));
 }
 
 void
@@ -91,6 +108,11 @@ AutoPilotServer::NotifyStart ()
 
   // Chain up to reset statistics.
   SvelteServerApp::NotifyStart ();
+
+  // Start traffic.
+  m_sendEvent.Cancel ();
+  m_sendEvent = Simulator::Schedule (
+      Seconds (m_intervalRng->GetValue ()), &AutoPilotServer::SendPacket, this);
 }
 
 void
@@ -100,6 +122,36 @@ AutoPilotServer::NotifyForceStop ()
 
   // Chain up just for log.
   SvelteServerApp::NotifyForceStop ();
+
+  // Stop traffic.
+  m_sendEvent.Cancel ();
+}
+
+void
+AutoPilotServer::SendPacket ()
+{
+  NS_LOG_FUNCTION (this);
+
+  Ptr<Packet> packet = Create<Packet> (m_pktSize);
+
+  SeqTsHeader seqTs;
+  seqTs.SetSeq (NotifyTx (packet->GetSize () + seqTs.GetSerializedSize ()));
+  packet->AddHeader (seqTs);
+
+  int bytes = m_socket->Send (packet);
+  if (bytes == static_cast<int> (packet->GetSize ()))
+    {
+      NS_LOG_DEBUG ("Server TX " << bytes << " bytes with " <<
+                    "sequence number " << seqTs.GetSeq ());
+    }
+  else
+    {
+      NS_LOG_ERROR ("Server TX error.");
+    }
+
+  // Schedule next packet transmission.
+  m_sendEvent = Simulator::Schedule (
+      Seconds (m_intervalRng->GetValue ()), &AutoPilotServer::SendPacket, this);
 }
 
 void

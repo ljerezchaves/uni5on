@@ -378,7 +378,7 @@ TrafficHelper::InstallAutoPilot (EpsBearer bearer)
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
-  filter.direction = EpcTft::UPLINK;
+  filter.direction = EpcTft::BIDIRECTIONAL;
   filter.protocol = UdpL4Protocol::PROT_NUMBER;
   filter.remoteAddress = m_webAddr;
   filter.remoteMask = m_webMask;

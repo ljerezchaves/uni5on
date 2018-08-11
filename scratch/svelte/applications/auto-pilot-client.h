@@ -26,9 +26,8 @@ namespace ns3 {
 
 /**
  * \ingroup svelteApps
- * This is the client side of a auto pilot MTC traffic generator.
- * The client sends a 1KB packet with uniformly distributed inter-arrival time
- * ranging from 0.025 to 0.1 sec.
+ * This is the client side of a auto pilot MTC traffic generator, sending and
+ * receiving UDP datagrams following auto pilot traffic pattern.
  */
 class AutoPilotClient : public SvelteClientApp
 {
@@ -61,6 +60,12 @@ private:
   virtual void StopApplication (void);
 
   /**
+   * \brief Socket receive callback.
+   * \param socket Socket with data available to be read.
+   */
+  void ReadPacket (Ptr<Socket> socket);
+
+  /**
    * \brief Handle a packet transmission.
    */
   void SendPacket ();
@@ -69,7 +74,7 @@ private:
   uint32_t                    m_pktSize;      //!< Packet size.
   EventId                     m_sendEvent;    //!< SendPacket event.
   EventId                     m_stopEvent;    //!< Stop event.
-  Ptr<RandomVariableStream>   m_lengthRng;    //!< Random call length.
+  Ptr<RandomVariableStream>   m_lengthRng;    //!< Random traffic length.
 };
 
 } // namespace ns3
