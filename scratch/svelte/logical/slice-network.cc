@@ -80,7 +80,7 @@ SliceNetwork::GetTypeId (void)
     // UEs.
     .AddAttribute ("NumUes", "The total number of UEs for this slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (2),
+                   UintegerValue (0),
                    MakeUintegerAccessor (&SliceNetwork::m_nUes),
                    MakeUintegerChecker<uint32_t> (0, 4095))
     .AddAttribute ("UeAddress", "The UE network address.",
