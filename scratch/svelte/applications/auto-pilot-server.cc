@@ -35,22 +35,6 @@ AutoPilotServer::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::AutoPilotServer")
     .SetParent<SvelteServerApp> ()
     .AddConstructor<AutoPilotServer> ()
-
-    //
-    // The server sends a 1KB packet with uniformly distributed average time
-    // between packets ranging from 0.999 to 1.001 sec.
-    //
-    .AddAttribute ("Interval",
-                   "The time to wait between consecutive packets [s].",
-                   StringValue (
-                     "ns3::UniformRandomVariable[Min=0.999|Max=1.001]"),
-                   MakePointerAccessor (&AutoPilotServer::m_intervalRng),
-                   MakePointerChecker <RandomVariableStream> ())
-    .AddAttribute ("PayloadSize",
-                   "The payload size of packets [bytes].",
-                   UintegerValue (1024),
-                   MakeUintegerAccessor (&AutoPilotServer::m_pktSize),
-                   MakeUintegerChecker<uint32_t> ())
   ;
   return tid;
 }
@@ -59,6 +43,13 @@ AutoPilotServer::AutoPilotServer ()
   : m_sendEvent (EventId ())
 {
   NS_LOG_FUNCTION (this);
+
+  // The server sends a 1KB packet with uniformly distributed average time
+  // between packets ranging from 0.999 to 1.001 sec.
+  m_pktSize = 1024;
+  m_intervalRng = CreateObject<UniformRandomVariable> ();
+  m_intervalRng->SetAttribute ("Min", DoubleValue (0.999));
+  m_intervalRng->SetAttribute ("Max", DoubleValue (1.001));
 }
 
 AutoPilotServer::~AutoPilotServer ()

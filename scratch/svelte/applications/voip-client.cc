@@ -37,16 +37,6 @@ VoipClient::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::VoipClient")
     .SetParent<SvelteClientApp> ()
     .AddConstructor<VoipClient> ()
-    .AddAttribute ("Interval",
-                   "The time to wait between consecutive packets.",
-                   TimeValue (Seconds (0.02)),
-                   MakeTimeAccessor (&VoipClient::m_interval),
-                   MakeTimeChecker ())
-    .AddAttribute ("PayloadSize",
-                   "The payload size of packets [bytes].",
-                   UintegerValue (20),
-                   MakeUintegerAccessor (&VoipClient::m_pktSize),
-                   MakeUintegerChecker<uint32_t> ())
     //
     // For traffic length, we are considering an estimative from Vodafone that
     // the average call length is 1 min and 40 sec. We are including a normal
@@ -69,6 +59,11 @@ VoipClient::VoipClient ()
   m_stopEvent (EventId ())
 {
   NS_LOG_FUNCTION (this);
+
+  // VoIP traffic simulating the G.729 codec (~8.0 kbps for payload).
+  // The client sends a 20B packet every 0.02 sec.
+  m_pktSize = 20;
+  m_interval = Seconds (0.02);
 }
 
 VoipClient::~VoipClient ()

@@ -35,22 +35,6 @@ AutoPilotClient::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::AutoPilotClient")
     .SetParent<SvelteClientApp> ()
     .AddConstructor<AutoPilotClient> ()
-
-    //
-    // The client sends a 1KB packet with uniformly distributed average time
-    // between packets ranging from 0.025 to 0.1 sec.
-    //
-    .AddAttribute ("Interval",
-                   "The time to wait between consecutive packets [s].",
-                   StringValue (
-                     "ns3::UniformRandomVariable[Min=0.025|Max=0.1]"),
-                   MakePointerAccessor (&AutoPilotClient::m_intervalRng),
-                   MakePointerChecker <RandomVariableStream> ())
-    .AddAttribute ("PayloadSize",
-                   "The payload size of packets [bytes].",
-                   UintegerValue (1024),
-                   MakeUintegerAccessor (&AutoPilotClient::m_pktSize),
-                   MakeUintegerChecker<uint32_t> ())
     //
     // For traffic length, we are using a synthetic average length of 90
     // seconds with 10secs stdev. This will force the application to
@@ -71,6 +55,13 @@ AutoPilotClient::AutoPilotClient ()
   m_stopEvent (EventId ())
 {
   NS_LOG_FUNCTION (this);
+
+  // The client sends a 1KB packet with uniformly distributed average time
+  // between packets ranging from 0.025 to 0.1 sec.
+  m_pktSize = 1024;
+  m_intervalRng = CreateObject<UniformRandomVariable> ();
+  m_intervalRng->SetAttribute ("Min", DoubleValue (0.025));
+  m_intervalRng->SetAttribute ("Max", DoubleValue (0.1));
 }
 
 AutoPilotClient::~AutoPilotClient ()

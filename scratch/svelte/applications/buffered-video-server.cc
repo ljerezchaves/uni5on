@@ -76,11 +76,6 @@ BufferedVideoServer::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::BufferedVideoServer")
     .SetParent<SvelteServerApp> ()
     .AddConstructor<BufferedVideoServer> ()
-    .AddAttribute ("ChunkSize",
-                   "The video chunk size [bytes].",
-                   UintegerValue (128000),
-                   MakeUintegerAccessor (&BufferedVideoServer::m_chunkSize),
-                   MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("TraceFilename",
                    "Name of file to load a trace from.",
                    StringValue (""),
@@ -107,7 +102,8 @@ BufferedVideoServer::GetTypeId (void)
 
 BufferedVideoServer::BufferedVideoServer ()
   : m_connected (false),
-  m_pendingBytes (0)
+  m_pendingBytes (0),
+  m_chunkSize (128000)
 {
   NS_LOG_FUNCTION (this);
 }
