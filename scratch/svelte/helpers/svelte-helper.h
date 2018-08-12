@@ -25,6 +25,10 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
+#include "../statistics/admission-stats-calculator.h"
+#include "../statistics/handover-stats-calculator.h"
+#include "../statistics/pgw-tft-stats-calculator.h"
+#include "../statistics/traffic-stats-calculator.h"
 #include "../svelte-common.h"
 
 namespace ns3 {

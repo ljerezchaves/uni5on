@@ -25,13 +25,8 @@
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
 #include "helpers/svelte-helper.h"
-#include "statistics/admission-stats-calculator.h"
-#include "statistics/handover-stats-calculator.h"
-#include "statistics/pgw-tft-stats-calculator.h"
-#include "statistics/traffic-stats-calculator.h"
 
 using namespace ns3;
-using namespace ns3::ofs;
 
 /**
  * \defgroup svelte SVELTE architecture
@@ -125,28 +120,10 @@ main (int argc, char *argv[])
   EnableVerbose (verbose);
   EnableLibLogs (libLog);
 
-  // Create the simulation scenario.
-  // The following objects must be created in this order:
-  // * The OpenFlow EPC backhaul network
-  // * The LTE radio access network
-  // * The traffic helper for applications
-  // * The stats calculators
-  NS_LOG_INFO ("Creating simulation scenario...");
-
   // Create the SVELTE helper object, which is responsible for creating and
   // configuring the infrastructure and logical networks.
+  NS_LOG_INFO ("Creating simulation scenario...");
   Ptr<SvelteHelper> svelteHelper = CreateObject<SvelteHelper> ();
-
-  Ptr<AdmissionStatsCalculator>   admissionStats;
-//  Ptr<BackhaulStatsCalculator>    backhaulStats;
-  Ptr<HandoverStatsCalculator>    handoverStats;
-  Ptr<PgwTftStatsCalculator>      pgwTftStats;
-  Ptr<TrafficStatsCalculator>     trafficStats;
-  admissionStats  = CreateObject<AdmissionStatsCalculator> ();
-//  backhaulStats   = CreateObject<BackhaulStatsCalculator> ();
-  handoverStats   = CreateObject<HandoverStatsCalculator> ();
-  pgwTftStats     = CreateObject<PgwTftStatsCalculator> ();
-  trafficStats    = CreateObject<TrafficStatsCalculator> ();
 
   // Populating routing and ARP tables. The 'perfect' ARP used here comes from
   // the patch at https://www.nsnam.org/bugzilla/show_bug.cgi?id=187. This
@@ -182,7 +159,9 @@ main (int argc, char *argv[])
   Simulator::Stop (Seconds (simTime + 1));
   Simulator::Run ();
   Simulator::Destroy ();
+
   std::cout << "END OK" << std::endl;
+  return 0;
 }
 
 void
