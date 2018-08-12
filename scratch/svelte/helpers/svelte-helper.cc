@@ -328,16 +328,12 @@ SvelteHelper::NotifyConstructionCompleted (void)
       m_2ndTraffic = m_2ndTrafficFac.Create<TrafficHelper> ();
     }
 
-//   Ptr<AdmissionStatsCalculator>   admissionStats;
-// //  Ptr<BackhaulStatsCalculator>    backhaulStats;
-//   Ptr<HandoverStatsCalculator>    handoverStats;
-//   Ptr<PgwTftStatsCalculator>      pgwTftStats;
-//   Ptr<TrafficStatsCalculator>     trafficStats;
-//   admissionStats  = CreateObject<AdmissionStatsCalculator> ();
-// //  backhaulStats   = CreateObject<BackhaulStatsCalculator> ();
-//   handoverStats   = CreateObject<HandoverStatsCalculator> ();
-//   pgwTftStats     = CreateObject<PgwTftStatsCalculator> ();
-//   trafficStats    = CreateObject<TrafficStatsCalculator> ();
+  // Creating the statistic calculators.
+  m_admissionStats  = CreateObject<AdmissionStatsCalculator> ();
+  m_backhaulStats   = CreateObject<BackhaulStatsCalculator> ();
+  m_handoverStats   = CreateObject<HandoverStatsCalculator> ();
+  m_pgwTftStats     = CreateObject<PgwTftStatsCalculator> ();
+  m_trafficStats    = CreateObject<TrafficStatsCalculator> ();
 
   // Chain up.
   Object::NotifyConstructionCompleted ();

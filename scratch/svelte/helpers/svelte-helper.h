@@ -26,6 +26,7 @@
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
 #include "../statistics/admission-stats-calculator.h"
+#include "../statistics/backhaul-stats-calculator.h"
 #include "../statistics/handover-stats-calculator.h"
 #include "../statistics/pgw-tft-stats-calculator.h"
 #include "../statistics/traffic-stats-calculator.h"
@@ -125,6 +126,13 @@ private:
   Ptr<SliceController>      m_2ndController;    //!< 2nd slice controller.
   Ptr<SliceNetwork>         m_2ndNetwork;       //!< 2nd slice network.
   Ptr<TrafficHelper>        m_2ndTraffic;       //!< 2nd slice traffic.
+
+  // Statistic calculators.
+  Ptr<AdmissionStatsCalculator>   m_admissionStats; //!< Admission stats.
+  Ptr<BackhaulStatsCalculator>    m_backhaulStats;  //!< Backhaul stats.
+  Ptr<HandoverStatsCalculator>    m_handoverStats;  //!< UE handover stats.
+  Ptr<PgwTftStatsCalculator>      m_pgwTftStats;    //!< P-GW adaptive stats.
+  Ptr<TrafficStatsCalculator>     m_trafficStats;   //!< Traffic stats.
 };
 
 } // namespace ns3
