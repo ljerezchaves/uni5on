@@ -34,11 +34,12 @@ using namespace ns3;
  */
 NS_LOG_COMPONENT_DEFINE ("Main");
 
-void PrintCurrentTime (uint32_t);
+
 void ConfigureDefaults ();
 void ForceDefaults ();
+void EnableProgress (uint32_t);
 void EnableVerbose (bool);
-void EnableLibLogs (bool);
+void EnableOfsLogs (bool);
 
 // Prefixes used by input and output filenames.
 static ns3::GlobalValue
@@ -62,7 +63,7 @@ main (int argc, char *argv[])
 {
   bool        verbose  = false;
   bool        pcap     = false;
-  bool        libLog   = false;
+  bool        ofsLog   = false;
   bool        lteRem   = false;
   uint32_t    progress = 0;
   uint32_t    simTime  = 250;
@@ -77,7 +78,7 @@ main (int argc, char *argv[])
   CommandLine cmd;
   cmd.AddValue ("Verbose",  "Enable verbose output.", verbose);
   cmd.AddValue ("Pcap",     "Enable pcap output.", pcap);
-  cmd.AddValue ("LibLog",   "Enable ofsoftswitch13 logs.", libLog);
+  cmd.AddValue ("OfsLog",   "Enable ofsoftswitch13 logs.", ofsLog);
   cmd.AddValue ("LteRem",   "Print LTE radio environment map.", lteRem);
   cmd.AddValue ("Progress", "Simulation progress interval (sec).", progress);
   cmd.AddValue ("SimTime",  "Simulation stop time (sec).", simTime);
@@ -116,9 +117,9 @@ main (int argc, char *argv[])
   ForceDefaults ();
 
   // Enable verbose output and progress report for debug purposes.
-  PrintCurrentTime (progress);
+  EnableProgress (progress);
   EnableVerbose (verbose);
-  EnableLibLogs (libLog);
+  EnableOfsLogs (ofsLog);
 
   // Create the SVELTE helper object, which is responsible for creating and
   // configuring the infrastructure and logical networks.
@@ -162,17 +163,6 @@ main (int argc, char *argv[])
 
   std::cout << "END OK" << std::endl;
   return 0;
-}
-
-void
-PrintCurrentTime (uint32_t interval)
-{
-  if (interval)
-    {
-      int64_t now = Simulator::Now ().ToInteger (Time::S);
-      std::cout << "Current simulation time: +" << now << ".0s" << std::endl;
-      Simulator::Schedule (Seconds (interval), &PrintCurrentTime, interval);
-    }
 }
 
 void ConfigureDefaults ()
@@ -349,6 +339,17 @@ void ForceDefaults ()
 }
 
 void
+EnableProgress (uint32_t interval)
+{
+  if (interval)
+    {
+      int64_t now = Simulator::Now ().ToInteger (Time::S);
+      std::cout << "Current simulation time: +" << now << ".0s" << std::endl;
+      Simulator::Schedule (Seconds (interval), &EnableProgress, interval);
+    }
+}
+
+void
 EnableVerbose (bool enable)
 {
   if (enable)
@@ -434,7 +435,7 @@ EnableVerbose (bool enable)
 }
 
 void
-EnableLibLogs (bool enable)
+EnableOfsLogs (bool enable)
 {
   if (enable)
     {
