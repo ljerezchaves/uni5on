@@ -111,7 +111,7 @@ private:
   Ptr<RadioNetwork>         m_radio;            //!< The LTE RAN network.
   Ptr<SvelteMme>            m_mme;              //!< SVELTE MME entity.
 
-  // HTC network slice.
+  // MTC network slice.
   ObjectFactory             m_mtcControllerFac; //!< MTC controller factory.
   ObjectFactory             m_mtcNetworkFac;    //!< MTC network factory.
   ObjectFactory             m_mtcTrafficFac;    //!< MTC traffic factory.
@@ -119,13 +119,21 @@ private:
   Ptr<SliceNetwork>         m_mtcNetwork;       //!< MTC slice network.
   Ptr<TrafficHelper>        m_mtcTraffic;       //!< MTC slice traffic.
 
-  // MTC network slice.
+  // HTC network slice.
   ObjectFactory             m_htcControllerFac; //!< HTC controller factory.
   ObjectFactory             m_htcNetworkFac;    //!< HTC network factory.
   ObjectFactory             m_htcTrafficFac;    //!< HTC traffic factory.
   Ptr<SliceController>      m_htcController;    //!< HTC slice controller.
   Ptr<SliceNetwork>         m_htcNetwork;       //!< HTC slice network.
   Ptr<TrafficHelper>        m_htcTraffic;       //!< HTC slice traffic.
+
+  // TMP network slice.
+  ObjectFactory             m_tmpControllerFac; //!< TMP controller factory.
+  ObjectFactory             m_tmpNetworkFac;    //!< TMP network factory.
+  ObjectFactory             m_tmpTrafficFac;    //!< TMP traffic factory.
+  Ptr<SliceController>      m_tmpController;    //!< TMP slice controller.
+  Ptr<SliceNetwork>         m_tmpNetwork;       //!< TMP slice network.
+  Ptr<TrafficHelper>        m_tmpTraffic;       //!< TMP slice traffic.
 
   // Statistic calculators.
   Ptr<AdmissionStatsCalculator>   m_admissionStats; //!< Admission stats.

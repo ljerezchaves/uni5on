@@ -42,7 +42,10 @@ SvelteHelper::SvelteHelper ()
   m_mtcTraffic (0),
   m_htcController (0),
   m_htcNetwork (0),
-  m_htcTraffic (0)
+  m_htcTraffic (0),
+  m_tmpController (0),
+  m_tmpNetwork (0),
+  m_tmpTraffic (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -87,6 +90,21 @@ SvelteHelper::GetTypeId (void)
                    MakeObjectFactoryAccessor (
                      &SvelteHelper::m_htcTrafficFac),
                    MakeObjectFactoryChecker ())
+    .AddAttribute ("TmpController", "The TMP slice controller configuration.",
+                   ObjectFactoryValue (ObjectFactory ()),
+                   MakeObjectFactoryAccessor (
+                     &SvelteHelper::m_tmpControllerFac),
+                   MakeObjectFactoryChecker ())
+    .AddAttribute ("TmpSlice", "The TMP slice network configuration.",
+                   ObjectFactoryValue (ObjectFactory ()),
+                   MakeObjectFactoryAccessor (
+                     &SvelteHelper::m_tmpNetworkFac),
+                   MakeObjectFactoryChecker ())
+    .AddAttribute ("TmpTraffic", "The TMP slice traffic configuration.",
+                   ObjectFactoryValue (ObjectFactory ()),
+                   MakeObjectFactoryAccessor (
+                     &SvelteHelper::m_tmpTrafficFac),
+                   MakeObjectFactoryChecker ())
   ;
   return tid;
 }
@@ -105,6 +123,10 @@ SvelteHelper::EnablePcap (std::string prefix, bool promiscuous)
   if (m_htcNetwork)
     {
       m_htcNetwork->EnablePcap (prefix, promiscuous);
+    }
+  if (m_tmpNetwork)
+    {
+      m_tmpNetwork->EnablePcap (prefix, promiscuous);
     }
 }
 
@@ -338,6 +360,33 @@ SvelteHelper::NotifyConstructionCompleted (void)
   else
     {
       NS_LOG_WARN ("HTC slice being ignored by now.");
+    }
+
+  // Create the TMP logical slice controller, network, and traffic helper.
+  if (AreFactoriesOk (m_tmpControllerFac, m_tmpNetworkFac, m_tmpTrafficFac))
+    {
+      m_tmpControllerFac.Set ("SliceId", EnumValue (SliceId::TMP));
+      m_tmpControllerFac.Set ("Mme", PointerValue (m_mme));
+      m_tmpControllerFac.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
+      m_tmpController = m_tmpControllerFac.Create<SliceController> ();
+
+      m_tmpNetworkFac.Set ("SliceId", EnumValue (SliceId::TMP));
+      m_tmpNetworkFac.Set ("SliceCtrl", PointerValue (m_tmpController));
+      m_tmpNetworkFac.Set ("BackhaulNet", PointerValue (m_backhaul));
+      m_tmpNetworkFac.Set ("RadioNet", PointerValue (m_radio));
+      m_tmpNetworkFac.Set ("UeAddress", Ipv4AddressValue ("7.3.0.0"));
+      m_tmpNetworkFac.Set ("UeMask", Ipv4MaskValue ("255.255.0.0"));
+      m_tmpNetworkFac.Set ("WebAddress", Ipv4AddressValue ("8.3.0.0"));
+      m_tmpNetworkFac.Set ("WebMask", Ipv4MaskValue ("255.255.0.0"));
+      m_tmpNetwork = m_tmpNetworkFac.Create<SliceNetwork> ();
+
+      m_tmpTrafficFac.Set ("RadioNet", PointerValue (m_radio));
+      m_tmpTrafficFac.Set ("SliceNet", PointerValue (m_tmpNetwork));
+      m_tmpTraffic = m_tmpTrafficFac.Create<TrafficHelper> ();
+    }
+  else
+    {
+      NS_LOG_WARN ("TMP slice being ignored by now.");
     }
 
   // Creating the statistic calculators.
