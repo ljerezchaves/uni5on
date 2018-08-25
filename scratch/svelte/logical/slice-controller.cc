@@ -63,8 +63,9 @@ SliceController::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (SliceId::NONE),
                    MakeEnumAccessor (&SliceController::m_sliceId),
-                   MakeEnumChecker (SliceId::HTC, "htc",
-                                    SliceId::MTC, "mtc"))
+                   MakeEnumChecker (SliceId::MTC, "mtc",
+                                    SliceId::HTC, "htc",
+                                    SliceId::TMP, "tmp"))
 
     // Infrastructure.
     .AddAttribute ("BackhaulCtrl", "The OpenFlow backhaul network controller.",

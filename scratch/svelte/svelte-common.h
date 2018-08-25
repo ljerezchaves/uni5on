@@ -92,8 +92,9 @@ typedef enum
 typedef enum
 {
   NONE = 0,   //!< Undefined slice.
-  HTC  = 1,   //!< Slice for HTC UEs.
-  MTC  = 2    //!< Slice for MTC UEs.
+  MTC  = 1,   //!< Slice for MTC UEs.
+  HTC  = 2,   //!< Slice for HTC UEs.
+  TMP  = 3    //!< Slice for TMP UEs.
 } SliceId;
 
 /**

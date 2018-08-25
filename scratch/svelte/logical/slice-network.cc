@@ -57,8 +57,9 @@ SliceNetwork::GetTypeId (void)
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    EnumValue (SliceId::NONE),
                    MakeEnumAccessor (&SliceNetwork::m_sliceId),
-                   MakeEnumChecker (SliceId::HTC, "htc",
-                                    SliceId::MTC, "mtc"))
+                   MakeEnumChecker (SliceId::MTC, "mtc",
+                                    SliceId::HTC, "htc",
+                                    SliceId::TMP, "tmp"))
     .AddAttribute ("SliceCtrl", "The slice controller application pointer.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    PointerValue (),

@@ -89,10 +89,12 @@ SliceIdStr (SliceId slice)
     {
     case SliceId::NONE:
       return "NONE";
-    case SliceId::HTC:
-      return "HTC";
     case SliceId::MTC:
       return "MTC";
+    case SliceId::HTC:
+      return "HTC";
+    case SliceId::TMP:
+      return "TMP";
     default:
       NS_LOG_ERROR ("Invalid slice ID.");
       return "";
