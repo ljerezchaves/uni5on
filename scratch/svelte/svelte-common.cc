@@ -52,13 +52,13 @@ LteIfaceStr (LteIface iface)
   switch (iface)
     {
     case LteIface::S1U:
-      return "S1-U";
+      return "s1-u";
     case LteIface::S5:
-      return "S5";
+      return "s5";
     case LteIface::X2:
-      return "X2";
+      return "x2";
     case LteIface::SGI:
-      return "SGi";
+      return "sgi";
     default:
       NS_LOG_ERROR ("Invalid LTE interface.");
       return "";
@@ -88,13 +88,13 @@ SliceIdStr (SliceId slice)
   switch (slice)
     {
     case SliceId::NONE:
-      return "NONE";
+      return "none";
     case SliceId::MTC:
-      return "MTC";
+      return "mtc";
     case SliceId::HTC:
-      return "HTC";
+      return "htc";
     case SliceId::TMP:
-      return "TMP";
+      return "tmp";
     default:
       NS_LOG_ERROR ("Invalid slice ID.");
       return "";
