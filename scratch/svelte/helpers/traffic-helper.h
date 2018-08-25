@@ -156,9 +156,11 @@ private:
   static uint16_t           m_port;         //!< Port numbers for apps.
 
   // Traffic manager.
-  ObjectFactory             m_managerFac;   //!< Traffic manager factory.
-  Ptr<RandomVariableStream> m_poissonRng;   //!< Inter-arrival traffic.
-  bool                      m_restartApps;  //!< Restart apps.
+  ObjectFactory             m_managerFac;        //!< Traffic manager factory.
+  Ptr<RandomVariableStream> m_poissonRng;        //!< Inter-arrival traffic.
+  bool                      m_restartApps;       //!< Continuously restart apps.
+  Time                      m_startAppsAfter;    //!< Time before starting apps.
+  Time                      m_stopRestartAppsAt; //!< Stop restarting apps time.
 
   // Applications.
   bool                m_gbrAutoPilot;       //!< GBR auto-pilot enable.

@@ -52,6 +52,8 @@ default ns3::SliceNetwork::LinkMtu "1492"
 
 default ns3::TrafficHelper::PoissonInterArrival "ns3::ExponentialRandomVariable[Mean=180.0]"
 default ns3::TrafficHelper::RestartApps "true"
+default ns3::TrafficHelper::StartAppsAfter "1s"
+default ns3::TrafficHelper::StopRestartAppsAt "0s"
 default ns3::TrafficHelper::EnableGbrAutoPilot "true"
 default ns3::TrafficHelper::EnableGbrLiveVideo "true"
 default ns3::TrafficHelper::EnableGbrVoip "true"
@@ -62,6 +64,8 @@ default ns3::TrafficHelper::EnableNonGbrLiveVideo "true"
 
 default ns3::TrafficManager::PoissonInterArrival "ns3::ExponentialRandomVariable[Mean=180.0]"
 default ns3::TrafficManager::RestartApps "true"
+default ns3::TrafficManager::StartAppsAfter "1s"
+default ns3::TrafficManager::StopRestartAppsAt "0s"
 
 default ns3::SvelteHelper::MtcController "ns3::SliceController[]"
 default ns3::SvelteHelper::MtcSlice "ns3::SliceNetwork[]"

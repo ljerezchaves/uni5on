@@ -62,6 +62,16 @@ TrafficManager::GetTypeId (void)
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficManager::m_restartApps),
                    MakeBooleanChecker ())
+    .AddAttribute ("StartAppsAfter",
+                   "The time before starting the applications.",
+                   TimeValue (Seconds (1)),
+                   MakeTimeAccessor (&TrafficManager::m_startAppsAfter),
+                   MakeTimeChecker ())
+    .AddAttribute ("StopRestartAppsAt",
+                   "The time to disable the RestartApps attribute.",
+                   TimeValue (Seconds (0)),
+                   MakeTimeAccessor (&TrafficManager::m_stopRestartAppsAt),
+                   MakeTimeChecker ())
   ;
   return tid;
 }
@@ -86,8 +96,9 @@ TrafficManager::AddSvelteClientApp (Ptr<SvelteClientApp> app)
   app->TraceConnectWithoutContext (
     "AppError", MakeCallback (&TrafficManager::NotifyAppStop, this));
 
-  // Schedule the first start attempt for this application (after the 1st sec).
-  Time firstTry = Seconds (1) + Seconds (std::abs (m_poissonRng->GetValue ()));
+  // Schedule the first start attempt for this application.
+  Time firstTry = m_startAppsAfter;
+  firstTry += Seconds (std::abs (m_poissonRng->GetValue ()));
   Simulator::Schedule (firstTry, &TrafficManager::AppStartTry, this, app);
   NS_LOG_INFO ("First start attempt for app " << app->GetAppName () <<
                " will occur at " << firstTry.GetSeconds () << "s.");
@@ -145,6 +156,20 @@ TrafficManager::DoDispose ()
   m_poissonRng = 0;
   m_ctrlApp = 0;
   m_appTable.clear ();
+}
+
+void
+TrafficManager::NotifyConstructionCompleted ()
+{
+  NS_LOG_FUNCTION (this);
+
+  // Schedule the stopTime for applications.
+  if (!m_stopRestartAppsAt.IsZero ())
+    {
+      Simulator::Schedule (
+        m_stopRestartAppsAt, &TrafficManager::SetAttribute, this,
+        "RestartApps", BooleanValue (false));
+    }
 }
 
 void

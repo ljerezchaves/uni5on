@@ -112,6 +112,16 @@ TrafficHelper::GetTypeId (void)
                    BooleanValue (true),
                    MakeBooleanAccessor (&TrafficHelper::m_restartApps),
                    MakeBooleanChecker ())
+    .AddAttribute ("StartAppsAfter",
+                   "The time before starting the applications.",
+                   TimeValue (Seconds (1)),
+                   MakeTimeAccessor (&TrafficHelper::m_startAppsAfter),
+                   MakeTimeChecker ())
+    .AddAttribute ("StopRestartAppsAt",
+                   "The time to disable the RestartApps attribute.",
+                   TimeValue (Seconds (0)),
+                   MakeTimeAccessor (&TrafficHelper::m_stopRestartAppsAt),
+                   MakeTimeChecker ())
 
     // Applications to be installed.
     .AddAttribute ("EnableGbrAutoPilot",
@@ -198,6 +208,8 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_managerFac.SetTypeId (TrafficManager::GetTypeId ());
   m_managerFac.Set ("PoissonInterArrival", PointerValue (m_poissonRng));
   m_managerFac.Set ("RestartApps", BooleanValue (m_restartApps));
+  m_managerFac.Set ("StartAppsAfter", TimeValue (m_startAppsAfter));
+  m_managerFac.Set ("StopRestartAppsAt", TimeValue (m_stopRestartAppsAt));
 
   // Random video selection.
   m_videoRng = CreateObject<UniformRandomVariable> ();

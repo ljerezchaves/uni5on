@@ -67,7 +67,6 @@ main (int argc, char *argv[])
   bool        lteRem   = false;
   uint32_t    progress = 0;
   uint32_t    simTime  = 250;
-  uint32_t    stopApps = 0;
   std::string prefix   = "";
 
   // Configure some default attribute values. These values can be overridden by
@@ -82,7 +81,6 @@ main (int argc, char *argv[])
   cmd.AddValue ("LteRem",   "Print LTE radio environment map.", lteRem);
   cmd.AddValue ("Progress", "Simulation progress interval (sec).", progress);
   cmd.AddValue ("SimTime",  "Simulation stop time (sec).", simTime);
-  cmd.AddValue ("StopApps", "Apps restarting loop stop time (sec).", stopApps);
   cmd.AddValue ("Prefix",   "Common prefix for filenames.", prefix);
   cmd.Parse (argc, argv);
 
@@ -141,18 +139,10 @@ main (int argc, char *argv[])
       svelteHelper->PrintLteRem ();
     }
 
-  // If necessary, enable pcap output.
+  // Enable pcap output.
   if (pcap)
     {
       svelteHelper->EnablePcap (outputPrefix.str (), true);
-    }
-
-  // Disable the app restarting loop at indicated time.
-  if (stopApps)
-    {
-      Simulator::Schedule (
-        Seconds (stopApps), Config::Set,
-        "/NodeList/*/$ns3::TrafficManager/RestartApps", BooleanValue (false));
     }
 
   // Run the simulation.
