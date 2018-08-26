@@ -32,6 +32,10 @@
 #include "slice-network.h"
 #include "svelte-mme.h"
 
+#undef NS_LOG_APPEND_CONTEXT
+#define NS_LOG_APPEND_CONTEXT \
+  std::clog << "[Slice " << m_sliceIdStr << "] ";
+
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("SliceController");
@@ -387,6 +391,8 @@ SliceController::NotifyConstructionCompleted (void)
   NS_ABORT_MSG_IF (m_sliceId == SliceId::NONE, "Undefined slice ID.");
   NS_ABORT_MSG_IF (!m_backhaulCtrl, "No backhaul controller application.");
   NS_ABORT_MSG_IF (!m_mme, "No SVELTE MME.");
+
+  m_sliceIdStr = SliceIdStr (m_sliceId);
 
   // Connecting this controller to the MME.
   m_s11SapSgw = new MemberEpcS11SapSgw<SliceController> (this);

@@ -29,6 +29,10 @@
 #include "slice-controller.h"
 #include "slice-network.h"
 
+#undef NS_LOG_APPEND_CONTEXT
+#define NS_LOG_APPEND_CONTEXT \
+  std::clog << "[Slice " << m_sliceIdStr << "] ";
+
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("SliceNetwork");
