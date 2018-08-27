@@ -70,6 +70,14 @@ RingInfo::GetTeidHex (void) const
   return m_rInfo->GetTeidHex ();
 }
 
+SliceId
+RingInfo::GetSliceId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_rInfo->GetSliceId ();
+}
+
 RingInfo::RingPath
 RingInfo::GetDownPath (LteIface iface) const
 {
@@ -122,20 +130,12 @@ RingInfo::IsLocalPath (void) const
   return (IsLocalPath (LteIface::S1U) && IsLocalPath (LteIface::S5));
 }
 
-LinkSlice
-RingInfo::GetLinkSlice (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_rInfo->GetLinkSlice ();
-}
-
 std::string
 RingInfo::GetPathStr (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
-  bool blocked = GetObject<RoutingInfo> ()->IsBlocked ();
+  bool blocked = m_rInfo->IsBlocked ();
   if (blocked)
     {
       return "-";
@@ -155,7 +155,7 @@ RingInfo::GetEnbInfraSwIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetObject<RoutingInfo> ()->GetEnbInfraSwIdx ();
+  return m_rInfo->GetEnbInfraSwIdx ();
 }
 
 uint16_t
@@ -163,7 +163,7 @@ RingInfo::GetPgwInfraSwIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetObject<RoutingInfo> ()->GetPgwInfraSwIdx ();
+  return m_rInfo->GetPgwInfraSwIdx ();
 }
 
 uint16_t
@@ -171,7 +171,7 @@ RingInfo::GetSgwInfraSwIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetObject<RoutingInfo> ()->GetSgwInfraSwIdx ();
+  return m_rInfo->GetSgwInfraSwIdx ();
 }
 
 RingInfo::RingPath

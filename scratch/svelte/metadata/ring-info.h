@@ -63,12 +63,12 @@ public:
   //\{
   Ptr<RoutingInfo> GetRoutingInfo (void) const;
   std::string GetTeidHex (void) const;
+  SliceId GetSliceId (void) const;
   RingPath GetDownPath (LteIface iface) const;
   RingPath GetUpPath (LteIface iface) const;
   bool IsDefaultPath (LteIface iface) const;
   bool IsLocalPath (LteIface iface) const;
   bool IsLocalPath (void) const;
-  LinkSlice GetLinkSlice (void) const;
   std::string GetPathStr (LteIface iface) const;
   uint16_t GetEnbInfraSwIdx (void) const;
   uint16_t GetPgwInfraSwIdx (void) const;
