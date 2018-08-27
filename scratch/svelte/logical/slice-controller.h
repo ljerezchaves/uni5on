@@ -303,6 +303,7 @@ private:
   // Slice identification.
   SliceId                 m_sliceId;        //!< Logical slice ID.
   std::string             m_sliceIdStr;     //!< Slice ID string.
+  uint16_t                m_slicePrio;      //!< Priority.
   double                  m_sliceQuota;     //!< Infrastructure quota.
 
   // Infrastructure interface.

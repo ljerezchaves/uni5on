@@ -70,6 +70,12 @@ SliceController::GetTypeId (void)
                    MakeEnumChecker (SliceId::MTC, "mtc",
                                     SliceId::HTC, "htc",
                                     SliceId::TMP, "tmp"))
+    .AddAttribute ("Priority",
+                   "Priority for this slice.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (1),
+                   MakeUintegerAccessor (&SliceController::m_slicePrio),
+                   MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("Quota",
                    "Infrastructure quota for this slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
