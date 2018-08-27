@@ -146,12 +146,12 @@ main (int argc, char *argv[])
     }
 
   // Run the simulation.
-  NS_LOG_INFO ("Simulating...");
+  std::cout << "Simulating..." << std::endl;
   Simulator::Stop (Seconds (simTime + 1));
   Simulator::Run ();
   Simulator::Destroy ();
-
   std::cout << "END OK" << std::endl;
+
   return 0;
 }
 
