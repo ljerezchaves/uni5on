@@ -346,8 +346,6 @@ private:
 
   DataRate          m_adjustmentStep;           //!< Meter adjustment step.
   double            m_alpha;                    //!< EWMA alpha parameter.
-  double            m_gbrSliceQuota;            //!< GBR slice quota.
-  double            m_m2mSliceQuota;            //!< M2M slice quota.
   Time              m_timeout;                  //!< Update timeout.
 
   /**

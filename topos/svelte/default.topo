@@ -32,6 +32,7 @@ default ns3::SliceController::PgwTftBlockPolicy "all"
 default ns3::SliceController::PgwTftBlockThs "0.95"
 default ns3::SliceController::PgwTftJoinThs "0.3"
 default ns3::SliceController::PgwTftSplitThs "0.9"
+default ns3::SliceController::Quota "1.0"
 default ns3::SliceController::TimeoutInterval "5s"
 
 default ns3::SliceNetwork::NumUes "0"
@@ -79,8 +80,6 @@ default ns3::SvelteHelper::TmpTraffic "ns3::TrafficHelper[]"
 
 default ns3::LinkInfo::AdjustmentStep "5Mb/s"
 default ns3::LinkInfo::EwmaAlpha "0.25"
-default ns3::LinkInfo::GbrSliceQuota "0.28"
-default ns3::LinkInfo::M2mSliceQuota "0.18"
 default ns3::LinkInfo::UpdateTimeout "100ms"
 
 default ns3::AdmissionStatsCalculator::AdmStatsFilename "admission-counters.log"

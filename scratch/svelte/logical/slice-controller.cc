@@ -70,6 +70,12 @@ SliceController::GetTypeId (void)
                    MakeEnumChecker (SliceId::MTC, "mtc",
                                     SliceId::HTC, "htc",
                                     SliceId::TMP, "tmp"))
+    .AddAttribute ("Quota",
+                   "Infrastructure quota for this slice.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   DoubleValue (1.0),
+                   MakeDoubleAccessor (&SliceController::m_sliceQuota),
+                   MakeDoubleChecker<double> (0.0, 1.0))
 
     // Infrastructure.
     .AddAttribute ("BackhaulCtrl", "The OpenFlow backhaul network controller.",

@@ -87,18 +87,6 @@ LinkInfo::GetTypeId (void)
                    DoubleValue (0.25),
                    MakeDoubleAccessor (&LinkInfo::m_alpha),
                    MakeDoubleChecker<double> (0.0, 1.0))
-    .AddAttribute ("GbrSliceQuota",
-                   "Maximum bandwidth ratio for GBR slice.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DoubleValue (0.28),
-                   MakeDoubleAccessor (&LinkInfo::m_gbrSliceQuota),
-                   MakeDoubleChecker<double> (0.0, 0.5))
-    .AddAttribute ("M2mSliceQuota",
-                   "Maximum bandwidth ratio for M2M slice.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DoubleValue (0.18),
-                   MakeDoubleAccessor (&LinkInfo::m_m2mSliceQuota),
-                   MakeDoubleChecker<double> (0.0, 0.5))
     .AddAttribute ("UpdateTimeout",
                    "The interval between subsequent link statistics update.",
                    TimeValue (MilliSeconds (100)),
