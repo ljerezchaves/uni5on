@@ -39,18 +39,15 @@ NS_OBJECT_ENSURE_REGISTERED (LinkInfo);
 LinkInfo::LinkInfoMap_t LinkInfo::m_linksMap;
 LinkInfoList_t LinkInfo::m_linksList;
 
-LinkInfo::LinkInfo (SwitchData sw1, SwitchData sw2,
-                    Ptr<CsmaChannel> channel, bool slicing)
-  : m_channel (channel),
-  m_slicing (slicing)
+LinkInfo::LinkInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel)
+  : m_channel (channel)
 {
-  NS_LOG_FUNCTION (this << sw1.swDev << sw2.swDev << channel << slicing);
+  NS_LOG_FUNCTION (this << sw1.swDev << sw2.swDev << channel);
 
   m_switches [0] = sw1;
   m_switches [1] = sw2;
 
-  // Asserting internal device order to ensure thar forward and backward
-  // indexes are correct.
+  // Asserting internal device order to ensure FWD and BWD indices order.
   NS_ASSERT_MSG (channel->GetCsmaDevice (0) == GetPortDev (0)
                  && channel->GetCsmaDevice (1) == GetPortDev (1),
                  "Invalid device order in csma channel.");
@@ -452,21 +449,27 @@ LinkInfo::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_slicing)
-    {
-      uint64_t mtcRate, gbrRate, dftRate;
-      mtcRate = static_cast<uint64_t> (GetLinkBitRate () * m_m2mSliceQuota);
-      gbrRate = static_cast<uint64_t> (GetLinkBitRate () * m_gbrSliceQuota);
-      dftRate = GetLinkBitRate () - gbrRate - mtcRate;
+  // FIXME. O tamanho de cada slice deve ser ajustado pelo controlador do
+  // backhaul. Esses tamanhos podem mudar ao longo da simulação e esta classe
+  // deve estar preparada para lidar com isso.  A classe deve ser agnóstica ao
+  // mecanismo de slice em uso. Deve apenas armazenar e retornar as informações
+  // conforme solicitado pelo controlador.
+  // if (m_slicing)
+  //   {
+  //     uint64_t mtcRate, gbrRate, dftRate;
+  //     mtcRate = static_cast<uint64_t> (GetLinkBitRate () * m_m2mSliceQuota);
+  //     gbrRate = static_cast<uint64_t> (GetLinkBitRate () * m_gbrSliceQuota);
+  //     dftRate = GetLinkBitRate () - gbrRate - mtcRate;
 
-      m_slices [LinkSlice::M2M].maxRate = mtcRate;
-      m_slices [LinkSlice::GBR].maxRate = gbrRate;
-      m_slices [LinkSlice::DFT].maxRate = dftRate;
-    }
-  else
-    {
-      m_slices [LinkSlice::DFT].maxRate = GetLinkBitRate ();
-    }
+  //     m_slices [LinkSlice::M2M].maxRate = mtcRate;
+  //     m_slices [LinkSlice::GBR].maxRate = gbrRate;
+  //     m_slices [LinkSlice::DFT].maxRate = dftRate;
+  //   }
+  // else
+  //   {
+  // Deixando esse aqui de baixo para que o código compile por enquanto.
+  m_slices [LinkSlice::DFT].maxRate = GetLinkBitRate ();
+  //   }
 
   NS_LOG_DEBUG ("DFT maximum bit rate: " <<  m_slices [LinkSlice::DFT].maxRate);
   NS_LOG_DEBUG ("GBR maximum bit rate: " <<  m_slices [LinkSlice::GBR].maxRate);

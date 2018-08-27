@@ -93,13 +93,12 @@ public:
    * \param sw1 First switch metadata.
    * \param sw2 Second switch metadata.
    * \param channel The CsmaChannel physical link connecting these switches.
-   * \param slicing True when slicing the network.
    * \attention The switch order must be the same as created by the CsmaHelper.
    * Internal channel handling is based on this order to get correct
    * full-duplex links.
    */
   LinkInfo (
-    SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel, bool slicing);
+    SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel);
   virtual ~LinkInfo ();   //!< Dummy destructor, see DoDispose.
 
   /**
@@ -340,11 +339,10 @@ private:
   TracedCallback<Ptr<const LinkInfo>, Direction, LinkSlice>
   m_meterAdjustedTrace;
 
-  SwitchData        m_switches [2];             //!< Switches metadata.
+  SwitchData        m_switches [2];             //!< Metadata for switches.
+  SliceData         m_slices [LinkSlice::ALL];  //!< Metadata for slices.
   Ptr<CsmaChannel>  m_channel;                  //!< The CSMA link channel.
   Time              m_lastUpdate;               //!< Last update time.
-  bool              m_slicing;                  //!< Network slicing enable.
-  SliceData         m_slices [LinkSlice::ALL];  //!< Slicing metadata.
 
   DataRate          m_adjustmentStep;           //!< Meter adjustment step.
   double            m_alpha;                    //!< EWMA alpha parameter.
