@@ -440,6 +440,10 @@ LinkInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
+  m_switches [0].swDev = 0;
+  m_switches [1].swDev = 0;
+  m_switches [0].portDev = 0;
+  m_switches [1].portDev = 0;
   m_channel = 0;
 }
 
