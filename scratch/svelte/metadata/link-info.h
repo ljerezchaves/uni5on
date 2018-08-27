@@ -284,12 +284,12 @@ public:
   static Ptr<LinkInfo> GetPointer (uint64_t dpId1, uint64_t dpId2);
 
   /**
-   * TracedCallback signature for Ptr<const LinkInfo>.
+   * TracedCallback signature for meter adjusted traced source.
    * \param lInfo The link information.
    * \param dir The link direction.
    * \param slice The network slice.
    */
-  typedef void (*CInfoTracedCallback)(
+  typedef void (*MeterAdjustedTracedCallback)(
     Ptr<const LinkInfo> lInfo, LinkInfo::Direction dir, LinkSlice slice);
 
 protected:

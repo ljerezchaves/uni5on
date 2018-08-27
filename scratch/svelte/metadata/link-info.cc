@@ -26,7 +26,7 @@
 #define NS_LOG_APPEND_CONTEXT                                                 \
   if (m_switches [0].swDev != 0 && m_switches [1].swDev != 0)                 \
     {                                                                         \
-      std::clog << "[CInfo " << m_switches [0].swDev->GetDatapathId ()        \
+      std::clog << "[LInfo " << m_switches [0].swDev->GetDatapathId ()        \
                 << " to " << m_switches [1].swDev->GetDatapathId () << "] ";  \
     }
 
@@ -110,9 +110,9 @@ LinkInfo::GetTypeId (void)
 
     // Trace source used by controller to update slicing meters.
     .AddTraceSource ("MeterAdjusted",
-                     "Default meter bit rate adjusted.",
+                     "Meter bit rate adjusted.",
                      MakeTraceSourceAccessor (&LinkInfo::m_meterAdjustedTrace),
-                     "ns3::LinkInfo::CInfoTracedCallback")
+                     "ns3::LinkInfo::MeterAdjustedTracedCallback")
   ;
   return tid;
 }
