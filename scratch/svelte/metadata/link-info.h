@@ -66,12 +66,12 @@ public:
   /** Metadata associated to a network slice. */
   struct SliceData
   {
-    uint64_t maxRate;               //!< Maximum bit rate.
-    uint64_t resRate [2];           //!< Reserved bit rate.
-    double   ewmaThp [2];           //!< EWMA throughput.
-    uint64_t txBytes [2];           //!< Total TX bytes.
-    uint64_t lastTxBytes [2];       //!< Last timeout TX bytes.
-    int64_t  meterDiff [2];         //!< Current meter bit rate diff.
+    uint64_t maxRate;           //!< Maximum bit rate.
+    uint64_t resRate;           //!< Reserved bit rate.
+    double   ewmaThp;           //!< EWMA throughput (bps).
+    uint64_t txBytes;           //!< Total TX bytes.
+    uint64_t lastTxBytes;       //!< Last timeout TX bytes.
+    int64_t  meterDiff;         //!< Current meter bit rate diff.
   };
 
   /** Metadata associated to a switch. */
@@ -193,14 +193,15 @@ public:
     Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Get the maximum bit rate for this link (same for both directions),
-   * optionally filtered by the network slice. If no slice is given, the this
-   * method will return the GetLinkBitRate ();
+   * Get the maximum bit rate for this link on the given direction, optionally
+   * filtered by the network slice. If no slice is given, the this method will
+   * return the GetLinkBitRate ();
+   * \param dir The link direction.
    * \param slice The network slice.
    * \return The maximum bit rate.
    */
   uint64_t GetMaxBitRate (
-    SliceId slice = SliceId::ALL) const;
+    Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the pair of switch datapath IDs for this link, respecting the
@@ -340,7 +341,7 @@ private:
   TracedCallback<Ptr<const LinkInfo>, Direction, SliceId> m_meterAdjustedTrace;
 
   SwitchData        m_switches [2];             //!< Metadata for switches.
-  SliceData         m_slices [SliceId::ALL];    //!< Metadata for slices.
+  SliceData         m_slices [SliceId::ALL][2]; //!< Metadata for slices.
   Ptr<CsmaChannel>  m_channel;                  //!< The CSMA link channel.
   Time              m_lastUpdate;               //!< Last update time.
 

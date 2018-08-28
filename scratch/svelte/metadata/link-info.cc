@@ -61,7 +61,7 @@ LinkInfo::LinkInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel)
 
   // Preparing slicing metadata structures.
   uint8_t numSlices = static_cast<uint8_t> (SliceId::ALL);
-  memset (m_slices, 0, sizeof (SliceData) * numSlices);
+  memset (m_slices, 0, sizeof (SliceData) * numSlices * 2);
 
   RegisterLinkInfo (Ptr<LinkInfo> (this));
 }
@@ -173,14 +173,14 @@ LinkInfo::GetThpBitRate (Direction dir, SliceId slice) const
   double throughput = 0;
   if (slice >= SliceId::ALL)
     {
-      for (int i = 0; i < SliceId::ALL; i++)
+      for (int s = 0; s < SliceId::ALL; s++)
         {
-          throughput += m_slices [i].ewmaThp [dir];
+          throughput += m_slices [s][dir].ewmaThp;
         }
     }
   else
     {
-      throughput = m_slices [slice].ewmaThp [dir];
+      throughput = m_slices [slice][dir].ewmaThp;
     }
   return static_cast<uint64_t> (throughput);
 }
@@ -190,7 +190,7 @@ LinkInfo::GetThpSliceRatio (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  if (GetMaxBitRate (slice) == 0)
+  if (GetMaxBitRate (dir, slice) == 0)
     {
       NS_ASSERT_MSG (GetThpBitRate (dir, slice) == 0, "Invalid slice usage.");
       return 0.0;
@@ -198,7 +198,7 @@ LinkInfo::GetThpSliceRatio (Direction dir, SliceId slice) const
   else
     {
       return static_cast<double> (GetThpBitRate (dir, slice))
-             / GetMaxBitRate (slice);
+             / GetMaxBitRate (dir, slice);
     }
 }
 
@@ -207,7 +207,7 @@ LinkInfo::GetFreeBitRate (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  return GetMaxBitRate (slice) - GetResBitRate (dir, slice);
+  return GetMaxBitRate (dir, slice) - GetResBitRate (dir, slice);
 }
 
 double
@@ -215,7 +215,7 @@ LinkInfo::GetFreeSliceRatio (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  if (GetMaxBitRate (slice) == 0)
+  if (GetMaxBitRate (dir, slice) == 0)
     {
       NS_ASSERT_MSG (GetFreeBitRate (dir, slice) == 0, "Invalid slice usage.");
       return 0.0;
@@ -223,7 +223,7 @@ LinkInfo::GetFreeSliceRatio (Direction dir, SliceId slice) const
   else
     {
       return static_cast<double> (GetFreeBitRate (dir, slice))
-             / GetMaxBitRate (slice);
+             / GetMaxBitRate (dir, slice);
     }
 }
 
@@ -235,14 +235,14 @@ LinkInfo::GetResBitRate (Direction dir, SliceId slice) const
   uint64_t bitrate = 0;
   if (slice >= SliceId::ALL)
     {
-      for (int i = 0; i < SliceId::ALL; i++)
+      for (int s = 0; s < SliceId::ALL; s++)
         {
-          bitrate += m_slices [i].resRate [dir];
+          bitrate += m_slices [s][dir].resRate;
         }
     }
   else
     {
-      bitrate = m_slices [slice].resRate [dir];
+      bitrate = m_slices [slice][dir].resRate;
     }
   return bitrate;
 }
@@ -252,7 +252,7 @@ LinkInfo::GetResSliceRatio (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  if (GetMaxBitRate (slice) == 0)
+  if (GetMaxBitRate (dir, slice) == 0)
     {
       NS_ASSERT_MSG (GetResBitRate (dir, slice) == 0, "Invalid slice usage.");
       return 0.0;
@@ -260,14 +260,14 @@ LinkInfo::GetResSliceRatio (Direction dir, SliceId slice) const
   else
     {
       return static_cast<double> (GetResBitRate (dir, slice))
-             / GetMaxBitRate (slice);
+             / GetMaxBitRate (dir, slice);
     }
 }
 
 uint64_t
-LinkInfo::GetMaxBitRate (SliceId slice) const
+LinkInfo::GetMaxBitRate (Direction dir, SliceId slice) const
 {
-  NS_LOG_FUNCTION (this << slice);
+  NS_LOG_FUNCTION (this << dir << slice);
 
   if (slice >= SliceId::ALL)
     {
@@ -275,7 +275,7 @@ LinkInfo::GetMaxBitRate (SliceId slice) const
     }
   else
     {
-      return m_slices [slice].maxRate;
+      return m_slices [slice][dir].maxRate;
     }
 }
 
@@ -295,14 +295,14 @@ LinkInfo::GetTxBytes (Direction dir, SliceId slice) const
   uint64_t bytes = 0;
   if (slice >= SliceId::ALL)
     {
-      for (int i = 0; i < SliceId::ALL; i++)
+      for (int s = 0; s < SliceId::ALL; s++)
         {
-          bytes += m_slices [i].txBytes [dir];
+          bytes += m_slices [s][dir].txBytes;
         }
     }
   else
     {
-      bytes = m_slices [slice].txBytes [dir];
+      bytes = m_slices [slice][dir].txBytes;
     }
   return bytes;
 }
@@ -344,7 +344,7 @@ LinkInfo::ReleaseBitRate (
     }
 
   // Releasing the bit rate.
-  m_slices [slice].resRate [dir] -= bitRate;
+  m_slices [slice][dir].resRate -= bitRate;
   NS_LOG_DEBUG ("Releasing bit rate on slice " << SliceIdStr (slice) <<
                 " in " << DirectionStr (dir) << " direction.");
   NS_LOG_DEBUG ("Current reserved bit rate: " << GetResBitRate (dir, slice));
@@ -372,7 +372,7 @@ LinkInfo::ReserveBitRate (
     }
 
   // Reserving the bit rate.
-  m_slices [slice].resRate [dir] += bitRate;
+  m_slices [slice][dir].resRate += bitRate;
   NS_LOG_DEBUG ("Reserving bit rate on slice " << SliceIdStr (slice) <<
                 " in " << DirectionStr (dir) << " direction.");
   NS_LOG_DEBUG ("Current reserved bit rate: " << GetResBitRate (dir, slice));
@@ -456,13 +456,14 @@ LinkInfo::NotifyConstructionCompleted (void)
   // else
   //   {
   // Deixando esse aqui de baixo para que o código compile por enquanto.
-  m_slices [SliceId::NONE].maxRate = GetLinkBitRate ();
+  m_slices [SliceId::NONE][0].maxRate = GetLinkBitRate ();
+  m_slices [SliceId::NONE][1].maxRate = GetLinkBitRate ();
   //   }
 
   for (int s = 0; s < SliceId::ALL; s++)
     {
       NS_LOG_DEBUG ("Slice " << SliceIdStr (static_cast<SliceId> (s)) <<
-                    " max bit rate set to " << m_slices [s].maxRate);
+                    " max bit rate set to " << m_slices [s][0].maxRate); // FIXME
     }
 
   // Scheduling the first update statistics.
@@ -493,14 +494,14 @@ LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
   if (packet->PeekPacketTag (gtpuTag))
     {
       Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (gtpuTag.GetTeid ());
-      m_slices [rInfo->GetSliceId ()].txBytes [dir] += packet->GetSize ();
+      m_slices [rInfo->GetSliceId ()][dir].txBytes += packet->GetSize ();
     }
   else
     {
       // FIXME Is this ok?
       // For non-tagged packets, save bytes in the default (none) slice.
       NS_LOG_WARN ("No GTPU packet tag found.");
-      m_slices [SliceId::NONE].txBytes [dir] += packet->GetSize ();
+      m_slices [SliceId::NONE][dir].txBytes += packet->GetSize ();
     }
 }
 
@@ -512,22 +513,22 @@ LinkInfo::UpdateMeterDiff (
 
   if (reserve)
     {
-      m_slices [slice].meterDiff [dir] -= bitRate;
+      m_slices [slice][dir].meterDiff -= bitRate;
     }
   else // release
     {
-      m_slices [slice].meterDiff [dir] += bitRate;
+      m_slices [slice][dir].meterDiff += bitRate;
     }
 
-  NS_LOG_DEBUG ("Current diff: " << m_slices [slice].meterDiff [dir]);
+  NS_LOG_DEBUG ("Current diff: " << m_slices [slice][dir].meterDiff);
   uint64_t diffAbs = static_cast<uint64_t> (
-      std::abs (m_slices [slice].meterDiff [dir]));
+      std::abs (m_slices [slice][dir].meterDiff));
   if (diffAbs >= m_adjustmentStep.GetBitRate ())
     {
       // Fire meter adjusted trace source to update meters.
       NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
       m_meterAdjustedTrace (Ptr<LinkInfo> (this), dir, slice);
-      m_slices [slice].meterDiff [dir] = 0;
+      m_slices [slice][dir].meterDiff = 0;
     }
 }
 
@@ -541,12 +542,12 @@ LinkInfo::UpdateStatistics (void)
     {
       for (int d = 0; d <= LinkInfo::BWD; d++)
         {
-          double bytes = static_cast<double> (m_slices [s].txBytes [d] -
-                                              m_slices [s].lastTxBytes [d]);
+          double bytes = static_cast<double> (
+              m_slices [s][d].txBytes - m_slices [s][d].lastTxBytes);
 
-          m_slices [s].ewmaThp [d] = (m_alpha * 8 * bytes / elapSecs) +
-            (1 - m_alpha) * m_slices [s].ewmaThp [d];
-          m_slices [s].lastTxBytes [d] = m_slices [s].txBytes [d];
+          m_slices [s][d].ewmaThp = (m_alpha * 8 * bytes / elapSecs) +
+            (1 - m_alpha) * m_slices [s][d].ewmaThp;
+          m_slices [s][d].lastTxBytes = m_slices [s][d].txBytes;
         }
     }
 
