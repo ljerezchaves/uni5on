@@ -170,7 +170,7 @@ LinkInfo::GetThpBitRate (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
 
-  double throughput = 0;
+  uint64_t throughput = 0;
   if (slice >= SliceId::ALL)
     {
       for (int s = 0; s < SliceId::ALL; s++)
@@ -182,7 +182,7 @@ LinkInfo::GetThpBitRate (Direction dir, SliceId slice) const
     {
       throughput = m_slices [slice][dir].ewmaThp;
     }
-  return static_cast<uint64_t> (throughput);
+  return throughput;
 }
 
 double
@@ -535,16 +535,16 @@ LinkInfo::UpdateStatistics (void)
   NS_LOG_FUNCTION (this);
 
   double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
+  uint64_t bytes = 0;
   for (int s = 0; s < SliceId::ALL; s++)
     {
       for (int d = 0; d <= LinkInfo::BWD; d++)
         {
-          double bytes = static_cast<double> (
-              m_slices [s][d].txBytes - m_slices [s][d].lastTxBytes);
-
-          m_slices [s][d].ewmaThp = (m_alpha * 8 * bytes / elapSecs) +
-            (1 - m_alpha) * m_slices [s][d].ewmaThp;
+          bytes = m_slices [s][d].txBytes - m_slices [s][d].lastTxBytes;
           m_slices [s][d].lastTxBytes = m_slices [s][d].txBytes;
+
+          m_slices [s][d].ewmaThp = (m_alpha * 8 * bytes) / elapSecs +
+            (1 - m_alpha) * m_slices [s][d].ewmaThp;
         }
     }
 
