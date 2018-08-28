@@ -456,8 +456,8 @@ LinkInfo::NotifyConstructionCompleted (void)
   // else
   //   {
   // Deixando esse aqui de baixo para que o código compile por enquanto.
-  m_slices [SliceId::NONE][0].maxRate = GetLinkBitRate ();
-  m_slices [SliceId::NONE][1].maxRate = GetLinkBitRate ();
+  m_slices [SliceId::HTC][0].maxRate = GetLinkBitRate ();
+  m_slices [SliceId::HTC][1].maxRate = GetLinkBitRate ();
   //   }
 
   for (int s = 0; s < SliceId::ALL; s++)
