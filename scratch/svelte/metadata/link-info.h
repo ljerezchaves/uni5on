@@ -41,24 +41,15 @@ typedef std::list<Ptr<LinkInfo> > LinkInfoList_t;
  * \ingroup svelteInfra
  * Metadata associated to a link between two OpenFlow backhaul switches.
  *
- * FIXME Review this text.
- * This class is prepared to handle network slicing. In current implementation,
- * the total number of slices is set to three: default, GBR and M2M traffic.
- * When the slicing mechanism is disabled by the Slicing attribute at
- * BackhaulController, only the default slice will be used. In this case, the
- * maximum bit rate for this slice will be set to the link bit rate. When the
- * slicing mechanism is enabled, then the size of each slice is defined by the
- * GbrSliceQuota and M2mSliceQuota attributes, which indicate the link
- * bandwidth ratio that should be assigned to the GBR and M2M slices,
- * respectively. All remaining bandwidth is assigned to the default slice. Each
- * slice can have some reserved bit rate for GBR traffic. The amount of
- * reserved bit rate is updated by reserve and release procedures, and are
- * enforced by OpenFlow meters that are regularly updated every time the total
- * reserved bit rate changes over a threshold value indicated by the
- * AdjustmentStep attribute. All bandwidth that is not reserved on any slice is
- * shared among best-effort traffic of all slices that don't have strict QoS
- * requirements. With this approach, we can ensure that we don't waste
- * available bandwidth when not in use.
+ * Each slice have a maximum bit rate assigned to it, and can also have some
+ * reserved bit rate for GBR traffic. The amount of reserved bit rate is
+ * updated by reserve and release procedures, and are enforced by OpenFlow
+ * meters that are regularly updated every time the total reserved bit rate
+ * changes over a threshold value indicated by the AdjustmentStep attribute.
+ * The bandwidth that is not reserved on any slice is shared among best-effort
+ * traffic that don't have strict QoS requirements. Packets traversing this
+ * link are monitored for throughput statistics, and average values are
+ * periodically updated using EWMAs.
  */
 class LinkInfo : public Object
 {
