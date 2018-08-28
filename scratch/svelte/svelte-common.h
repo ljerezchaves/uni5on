@@ -49,18 +49,6 @@ typedef std::list<BearerContext_t> BearerContextList_t;
 
 /**
  * \ingroup svelte
- * Enumeration of available physical link slices.
- */
-typedef enum
-{
-  DFT = 0,  //!< Best-effort (default) slice.
-  GBR = 1,  //!< HTC GBR slice.
-  M2M = 2,  //!< M2M slice.
-  ALL = 3   //!< ALL previous slices.
-} LinkSlice;
-
-/**
- * \ingroup svelte
  * Enumeration of LTE logical interfaces.
  */
 typedef enum
@@ -94,16 +82,9 @@ typedef enum
   NONE = 0,   //!< Undefined slice.
   MTC  = 1,   //!< Slice for MTC UEs.
   HTC  = 2,   //!< Slice for HTC UEs.
-  TMP  = 3    //!< Slice for TMP UEs.
+  TMP  = 3,   //!< Slice for TMP UEs.
+  ALL  = 4    //!< ALL previous slices.
 } SliceId;
-
-/**
- * \ingroup svelte
- * Get the physical link slice name.
- * \param slice The link slice.
- * \return The string with the physical link slice name.
- */
-std::string LinkSliceStr (LinkSlice slice);
 
 /**
  * \ingroup svelte

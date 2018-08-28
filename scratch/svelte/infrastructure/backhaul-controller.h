@@ -82,10 +82,10 @@ public:
 
   /**
    * Get the average slice usage considering all links in the backhaul network.
-   * \param slice The link slice.
+   * \param slice The network slice.
    * \return The average slice usage.
    */
-  double GetSliceUsage (LinkSlice slice) const;
+  double GetSliceUsage (SliceId slice) const;
 
 protected:
   /** Destructor implementation. */

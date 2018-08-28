@@ -41,6 +41,7 @@ typedef std::list<Ptr<LinkInfo> > LinkInfoList_t;
  * \ingroup svelteInfra
  * Metadata associated to a link between two OpenFlow backhaul switches.
  *
+ * FIXME Review this text.
  * This class is prepared to handle network slicing. In current implementation,
  * the total number of slices is set to three: default, GBR and M2M traffic.
  * When the slicing mechanism is disabled by the Slicing attribute at
@@ -139,7 +140,7 @@ public:
    * \return The EWMA throughput.
    */
   uint64_t GetThpBitRate (
-    Direction dir, LinkSlice slice = LinkSlice::ALL) const;
+    Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the EWMA throughput ratio for this link on the given direction,
@@ -149,7 +150,7 @@ public:
    * \return The bandwidth usage ratio.
    */
   double GetThpSliceRatio (
-    Direction dir, LinkSlice slice = LinkSlice::ALL) const;
+    Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the available (not reserved) bit rate for traffic over this link on
@@ -159,7 +160,7 @@ public:
    * \return The available bit rate.
    */
   uint64_t GetFreeBitRate (
-    Direction dir, LinkSlice slice = LinkSlice::ALL) const;
+    Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the available bit rate ratio for traffic over this link on the given
@@ -169,7 +170,7 @@ public:
    * \return The available slice ratio.
    */
   double GetFreeSliceRatio (
-    Direction dir, LinkSlice slice = LinkSlice::ALL) const;
+    Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the reserved bit rate for traffic over this link on the given
@@ -179,7 +180,7 @@ public:
    * \return The reserved bit rate.
    */
   uint64_t GetResBitRate (
-    Direction dir, LinkSlice slice = LinkSlice::ALL) const;
+    Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the reserved bit rate ratio for traffic over this link on the given
@@ -189,7 +190,7 @@ public:
    * \return The reserved slice ratio.
    */
   double GetResSliceRatio (
-    Direction dir, LinkSlice slice = LinkSlice::ALL) const;
+    Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the maximum bit rate for this link (same for both directions),
@@ -199,7 +200,7 @@ public:
    * \return The maximum bit rate.
    */
   uint64_t GetMaxBitRate (
-    LinkSlice slice = LinkSlice::ALL) const;
+    SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the pair of switch datapath IDs for this link, respecting the
@@ -216,7 +217,7 @@ public:
    * \return The TX bytes.
    */
   uint64_t GetTxBytes (
-    Direction dir, LinkSlice slice = LinkSlice::ALL) const;
+    Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Check for available bit rate between these two switches that can be
@@ -228,7 +229,7 @@ public:
    * \return True if there is available bit rate, false otherwise.
    */
   bool HasBitRate (
-    uint64_t src, uint64_t dst, LinkSlice slice, uint64_t bitRate) const;
+    uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate) const;
 
   /**
    * Inspect physical channel for half-duplex or full-duplex operation mode.
@@ -246,7 +247,7 @@ public:
    * \return True if succeeded, false otherwise.
    */
   bool ReleaseBitRate (
-    uint64_t src, uint64_t dst, LinkSlice slice, uint64_t bitRate);
+    uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate);
 
   /**
    * Reserve the requested bit rate between these two switches on the given
@@ -258,7 +259,7 @@ public:
    * \return True if succeeded, false otherwise.
    */
   bool ReserveBitRate (
-    uint64_t src, uint64_t dst, LinkSlice slice, uint64_t bitRate);
+    uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate);
 
   /**
    * Get the string representing the given direction.
@@ -289,7 +290,7 @@ public:
    * \param slice The network slice.
    */
   typedef void (*MeterAdjustedTracedCallback)(
-    Ptr<const LinkInfo> lInfo, LinkInfo::Direction dir, LinkSlice slice);
+    Ptr<const LinkInfo> lInfo, LinkInfo::Direction dir, SliceId slice);
 
 protected:
   /** Destructor implementation. */
@@ -322,7 +323,7 @@ private:
    * \param reserve True when reserving the bit rate, false when releasing.
    */
   void UpdateMeterDiff (
-    Direction dir, LinkSlice slice, uint64_t bitRate, bool reserve);
+    Direction dir, SliceId slice, uint64_t bitRate, bool reserve);
 
   /**
    * Update link statistics.
@@ -336,11 +337,10 @@ private:
   static void RegisterLinkInfo (Ptr<LinkInfo> lInfo);
 
   /** Default meter bit rate adjusted trace source. */
-  TracedCallback<Ptr<const LinkInfo>, Direction, LinkSlice>
-  m_meterAdjustedTrace;
+  TracedCallback<Ptr<const LinkInfo>, Direction, SliceId> m_meterAdjustedTrace;
 
   SwitchData        m_switches [2];             //!< Metadata for switches.
-  SliceData         m_slices [LinkSlice::ALL];  //!< Metadata for slices.
+  SliceData         m_slices [SliceId::ALL];    //!< Metadata for slices.
   Ptr<CsmaChannel>  m_channel;                  //!< The CSMA link channel.
   Time              m_lastUpdate;               //!< Last update time.
 

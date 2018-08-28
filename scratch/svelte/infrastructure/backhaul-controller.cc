@@ -101,7 +101,7 @@ BackhaulController::GetLinkSlicingMode (void) const
 }
 
 double
-BackhaulController::GetSliceUsage (LinkSlice slice) const
+BackhaulController::GetSliceUsage (SliceId slice) const
 {
   NS_LOG_FUNCTION (this << slice);
 
@@ -109,6 +109,7 @@ BackhaulController::GetSliceUsage (LinkSlice slice) const
   uint16_t count = 0;
   for (auto const &lInfo : LinkInfo::GetList ())
     {
+      // FIXME Se não for full duplex só conta no FWD.
       sliceUsage += lInfo->GetThpSliceRatio (LinkInfo::FWD, slice);
       sliceUsage += lInfo->GetThpSliceRatio (LinkInfo::BWD, slice);
       count += 2;
@@ -157,10 +158,6 @@ void
 BackhaulController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
-
-  // FIXME Remove this.
-  // Set the LinkSlice for this bearer.
-  rInfo->SetLinkSlice (LinkSlice::DFT);
 }
 
 void

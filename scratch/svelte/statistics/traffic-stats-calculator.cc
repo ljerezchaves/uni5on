@@ -350,7 +350,6 @@ TrafficStatsCalculator::GetHeader (void)
       << setw (12) << "TEID"
       << setw (6)  << "IMSI"
       << setw (7)  << "Slice"
-      << setw (6)  << "Link"
       << setw (5)  << "QCI"
       << setw (7)  << "IsGBR"
       << setw (7)  << "IsAgg"
@@ -380,7 +379,6 @@ TrafficStatsCalculator::GetStats (
       << setw (12) << rInfo->GetTeidHex ()
       << setw (6)  << rInfo->GetImsi ()
       << setw (7)  << rInfo->GetSliceIdStr ()
-      << setw (6)  << rInfo->GetLinkSliceStr ()
       << setw (5)  << rInfo->GetQciInfo ()
       << setw (7)  << rInfo->IsGbr ()
       << setw (7)  << rInfo->IsAggregated ()
