@@ -441,35 +441,6 @@ LinkInfo::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // FIXME. O tamanho de cada slice deve ser ajustado pelo controlador do
-  // backhaul. Esses tamanhos podem mudar ao longo da simulação e esta classe
-  // deve estar preparada para lidar com isso.  A classe deve ser agnóstica ao
-  // mecanismo de slice em uso. Deve apenas armazenar e retornar as informações
-  // conforme solicitado pelo controlador.
-  // if (m_slicing)
-  //   {
-  //     uint64_t mtcRate, gbrRate, dftRate;
-  //     mtcRate = static_cast<uint64_t> (GetLinkBitRate () * m_m2mSliceQuota);
-  //     gbrRate = static_cast<uint64_t> (GetLinkBitRate () * m_gbrSliceQuota);
-  //     dftRate = GetLinkBitRate () - gbrRate - mtcRate;
-
-  //     m_slices [SliceId::M2M].maxRate = mtcRate;
-  //     m_slices [SliceId::GBR].maxRate = gbrRate;
-  //     m_slices [SliceId::DFT].maxRate = dftRate;
-  //   }
-  // else
-  //   {
-  // Deixando esse aqui de baixo para que o código compile por enquanto.
-  m_slices [SliceId::HTC][0].maxRate = GetLinkBitRate ();
-  m_slices [SliceId::HTC][1].maxRate = GetLinkBitRate ();
-  //   }
-
-  for (int s = 0; s < SliceId::ALL; s++)
-    {
-      NS_LOG_DEBUG ("Slice " << SliceIdStr (static_cast<SliceId> (s)) <<
-                    " max bit rate set to " << m_slices [s][0].maxRate); // FIXME
-    }
-
   // Scheduling the first update statistics.
   m_lastUpdate = Simulator::Now ();
   Simulator::Schedule (m_timeout, &LinkInfo::UpdateStatistics, this);
