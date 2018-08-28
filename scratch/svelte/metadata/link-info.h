@@ -89,8 +89,7 @@ public:
    * Internal channel handling is based on this order to get correct
    * full-duplex links.
    */
-  LinkInfo (
-    SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel);
+  LinkInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel);
   virtual ~LinkInfo ();   //!< Dummy destructor, see DoDispose.
 
   /**
