@@ -498,10 +498,7 @@ LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
     }
   else
     {
-      // FIXME Is this ok?
-      // For non-tagged packets, save bytes in the default (none) slice.
-      NS_LOG_WARN ("No GTPU packet tag found.");
-      m_slices [SliceId::NONE][dir].txBytes += packet->GetSize ();
+      NS_LOG_WARN ("GTPU packet tag not found for packet " << packet);
     }
 }
 
