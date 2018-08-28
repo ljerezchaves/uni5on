@@ -356,50 +356,50 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
     {
       // Building the match string for both S1-U and S5 interfaces
       // No match on source IP because we may have several P-GW TFT switches.
-      std::ostringstream matchS5, matchS1u;
-      matchS5 << " eth_type=0x800,ip_proto=17"
-              << ",ip_dst=" << rInfo->GetSgwS5Addr ()
-              << ",gtpu_teid=" << rInfo->GetTeidHex ();
-      matchS1u << " eth_type=0x800,ip_proto=17"
-               << ",ip_dst=" << rInfo->GetEnbS1uAddr ()
-               << ",gtpu_teid=" << rInfo->GetTeidHex ();
+      std::ostringstream mS5, mS1u;
+      mS5 << " eth_type=0x800,ip_proto=17"
+          << ",ip_dst=" << rInfo->GetSgwS5Addr ()
+          << ",gtpu_teid=" << rInfo->GetTeidHex ();
+      mS1u << " eth_type=0x800,ip_proto=17"
+           << ",ip_dst=" << rInfo->GetEnbS1uAddr ()
+           << ",gtpu_teid=" << rInfo->GetTeidHex ();
 
       // Build the metatada and goto instructions string.
       std::ostringstream actS5, actS1u;
       actS5 << " meta:" << ringInfo->GetDownPath (LteIface::S5) << " goto:2";
       actS1u << " meta:" << ringInfo->GetDownPath (LteIface::S1U) << " goto:2";
 
-      // Installing downlink rules into switches connected to the P-GW and S-GW.
+      // Installing down rules into switches connected to the P-GW and S-GW.
       DpctlExecute (GetDpId (ringInfo->GetPgwInfraSwIdx ()),
-                    cmd.str () + matchS5.str () + dscp.str () + actS5.str ());
+                    cmd.str () + mS5.str () + dscp.str () + actS5.str ());
       DpctlExecute (GetDpId (ringInfo->GetSgwInfraSwIdx ()),
-                    cmd.str () + matchS1u.str () + dscp.str () + actS1u.str ());
+                    cmd.str () + mS1u.str () + dscp.str () + actS1u.str ());
     }
 
   // Configuring uplink routing.
   if (rInfo->HasUplinkTraffic ())
     {
       // Building the match string.
-      std::ostringstream matchS1u, matchS5;
-      matchS1u << " eth_type=0x800,ip_proto=17"
-               << ",ip_src=" << rInfo->GetEnbS1uAddr ()
-               << ",ip_dst=" << rInfo->GetSgwS1uAddr ()
-               << ",gtpu_teid=" << rInfo->GetTeidHex ();
-      matchS5 << " eth_type=0x800,ip_proto=17"
-              << ",ip_src=" << rInfo->GetSgwS5Addr ()
-              << ",ip_dst=" << rInfo->GetPgwS5Addr ()
-              << ",gtpu_teid=" << rInfo->GetTeidHex ();
+      std::ostringstream mS1u, mS5;
+      mS1u << " eth_type=0x800,ip_proto=17"
+           << ",ip_src=" << rInfo->GetEnbS1uAddr ()
+           << ",ip_dst=" << rInfo->GetSgwS1uAddr ()
+           << ",gtpu_teid=" << rInfo->GetTeidHex ();
+      mS5 << " eth_type=0x800,ip_proto=17"
+          << ",ip_src=" << rInfo->GetSgwS5Addr ()
+          << ",ip_dst=" << rInfo->GetPgwS5Addr ()
+          << ",gtpu_teid=" << rInfo->GetTeidHex ();
 
       // Build the metatada and goto instructions string.
       std::ostringstream actS1u, actS5;
       actS1u << " meta:" << ringInfo->GetUpPath (LteIface::S1U) << " goto:2";
       actS5 << " meta:" << ringInfo->GetUpPath (LteIface::S5) << " goto:2";
 
-      // Installing uplink rules into switches connected to the eNB and S-GW.
+      // Installing up rules into switches connected to the eNB and S-GW.
       DpctlExecute (GetDpId (ringInfo->GetEnbInfraSwIdx ()),
-                    cmd.str () + matchS1u.str () + dscp.str () + actS1u.str ());
+                    cmd.str () + mS1u.str () + dscp.str () + actS1u.str ());
       DpctlExecute (GetDpId (ringInfo->GetSgwInfraSwIdx ()),
-                    cmd.str () + matchS5.str () + dscp.str () + actS5.str ());
+                    cmd.str () + mS5.str () + dscp.str () + actS5.str ());
     }
   return true;
 }

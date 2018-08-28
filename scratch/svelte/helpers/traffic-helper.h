@@ -158,9 +158,9 @@ private:
   // Traffic manager.
   ObjectFactory             m_managerFac;        //!< Traffic manager factory.
   Ptr<RandomVariableStream> m_poissonRng;        //!< Inter-arrival traffic.
-  bool                      m_restartApps;       //!< Continuously restart apps.
-  Time                      m_startAppsAfter;    //!< Time before starting apps.
-  Time                      m_stopRestartAppsAt; //!< Stop restarting apps time.
+  bool                      m_restartApps;       //!< Continuous restart apps.
+  Time                      m_startAppsAfter;    //!< Time before start apps.
+  Time                      m_stopRestartAppsAt; //!< Stop restart apps time.
 
   // Applications.
   bool                m_gbrAutoPilot;       //!< GBR auto-pilot enable.

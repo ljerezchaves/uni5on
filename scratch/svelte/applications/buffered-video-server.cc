@@ -268,7 +268,8 @@ BufferedVideoServer::SendData (Ptr<Socket> socket, uint32_t available)
 }
 
 void
-BufferedVideoServer::ProccessHttpRequest (Ptr<Socket> socket, HttpHeader header)
+BufferedVideoServer::ProccessHttpRequest (Ptr<Socket> socket,
+                                          HttpHeader header)
 {
   NS_LOG_FUNCTION (this << socket);
 

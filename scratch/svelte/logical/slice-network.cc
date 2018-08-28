@@ -354,7 +354,8 @@ SliceNetwork::CreatePgw (void)
   m_webDevices.Add (devices);
 
   // Set device names for pcap files.
-  SetDeviceNames (pgwSgiDev, webSgiDev, "~" + LteIfaceStr (LteIface::SGI) + "~");
+  std::string tempStr = "~" + LteIfaceStr (LteIface::SGI) + "~";
+  SetDeviceNames (pgwSgiDev, webSgiDev, tempStr);
 
   // Add the pgwSgiDev as physical port on the P-GW main OpenFlow switch.
   Ptr<OFSwitch13Port> pgwSgiPort = pgwMainOfDev->AddSwitchPort (pgwSgiDev);

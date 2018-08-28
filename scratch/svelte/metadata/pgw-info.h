@@ -46,7 +46,7 @@ public:
    * Complete constructor.
    * \param pgwId The P-GW ID.
    * \param nTfts The number of TFT switches.
-   * \param sgiPortNo The port number for SGi interface at the P-GW main switch.
+   * \param sgiPortNo The port number for SGi iface at the P-GW main switch.
    * \param infraSwIdx The OpenFlow backhaul switch index.
    * \param sliceCtrl The slice controller application.
    */

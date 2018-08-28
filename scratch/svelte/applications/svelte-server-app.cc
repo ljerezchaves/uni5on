@@ -22,8 +22,9 @@
 #include "svelte-client-app.h"
 
 #undef NS_LOG_APPEND_CONTEXT
-#define NS_LOG_APPEND_CONTEXT \
-  std::clog << "[" << GetAppName () << " server teid " << GetTeidHex () << "] ";
+#define NS_LOG_APPEND_CONTEXT                             \
+  std::clog << "[" << GetAppName ()                       \
+            << " server teid " << GetTeidHex () << "] ";
 
 namespace ns3 {
 

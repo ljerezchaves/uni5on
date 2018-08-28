@@ -140,8 +140,8 @@ private:
    * \param dir The link direction.
    * \param slice The network slice.
    */
-  void SlicingMeterAdjusted (Ptr<const LinkInfo> lInfo, LinkInfo::Direction dir,
-                             SliceId slice);
+  void SlicingMeterAdjusted (Ptr<const LinkInfo> lInfo,
+                             LinkInfo::Direction dir, SliceId slice);
 
   /** FIXME
    * Install the link slicing rules Notify this controller when the maximum bit rate for best-effort

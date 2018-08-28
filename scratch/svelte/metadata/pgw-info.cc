@@ -135,7 +135,7 @@ PgwInfo::GetMainInfraSwS5PortNo (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG (m_infraSwS5PortNos.size (), "No P-GW main switch registered.");
+  NS_ASSERT_MSG (m_infraSwS5PortNos.size (), "No P-GW main switch registered");
   return m_infraSwS5PortNos.at (0);
 }
 

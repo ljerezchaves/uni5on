@@ -65,7 +65,7 @@ private:
    */
   void SendPacket ();
 
-  Ptr<RandomVariableStream>   m_intervalRng;  //!< Random interval between pkts.
+  Ptr<RandomVariableStream>   m_intervalRng;  //!< Rand interval between pkts.
   uint32_t                    m_pktSize;      //!< Packet size.
   EventId                     m_sendEvent;    //!< SendPacket event.
 };

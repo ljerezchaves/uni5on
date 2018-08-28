@@ -85,8 +85,8 @@ AutoPilotClient::Start ()
 
   // Start traffic.
   m_sendEvent.Cancel ();
-  m_sendEvent = Simulator::Schedule (
-      Seconds (m_intervalRng->GetValue ()), &AutoPilotClient::SendPacket, this);
+  m_sendEvent = Simulator::Schedule (Seconds (m_intervalRng->GetValue ()),
+                                     &AutoPilotClient::SendPacket, this);
 }
 
 void
@@ -134,7 +134,8 @@ AutoPilotClient::StartApplication (void)
   m_socket = Socket::CreateSocket (GetNode (), udpFactory);
   m_socket->Bind (InetSocketAddress (Ipv4Address::GetAny (), m_localPort));
   m_socket->Connect (InetSocketAddress::ConvertFrom (m_serverAddress));
-  m_socket->SetRecvCallback (MakeCallback (&AutoPilotClient::ReadPacket, this));
+  m_socket->SetRecvCallback (
+    MakeCallback (&AutoPilotClient::ReadPacket, this));
 }
 
 void
@@ -173,8 +174,8 @@ AutoPilotClient::SendPacket ()
     }
 
   // Schedule next packet transmission.
-  m_sendEvent = Simulator::Schedule (
-      Seconds (m_intervalRng->GetValue ()), &AutoPilotClient::SendPacket, this);
+  m_sendEvent = Simulator::Schedule (Seconds (m_intervalRng->GetValue ()),
+                                     &AutoPilotClient::SendPacket, this);
 }
 
 void
