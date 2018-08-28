@@ -68,7 +68,7 @@ public:
   {
     uint64_t maxRate;           //!< Maximum bit rate.
     uint64_t resRate;           //!< Reserved bit rate.
-    uint64_t ewmaThp;           //!< EWMA throughput (bps).
+    uint64_t ewmaThp;           //!< EWMA throughput bit rate.
     uint64_t txBytes;           //!< Total TX bytes.
     uint64_t lastTxBytes;       //!< Last timeout TX bytes.
     int64_t  meterDiff;         //!< Current meter bit rate diff.

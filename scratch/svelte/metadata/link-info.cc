@@ -52,6 +52,9 @@ LinkInfo::LinkInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel)
                  && channel->GetCsmaDevice (1) == GetPortDev (1),
                  "Invalid device order in csma channel.");
 
+  // Asserting full-duplex csma channel.
+  NS_ASSERT_MSG (IsFullDuplexLink (), "Invalid half-duplex csma channel.");
+
   // Connecting trace source to CsmaNetDevice PhyTxEnd trace source, used to
   // monitor data transmitted over this connection.
   m_switches [0].portDev->TraceConnect (
@@ -155,14 +158,15 @@ LinkInfo::GetDirection (uint64_t src, uint64_t dst) const
   NS_ASSERT_MSG ((src == GetSwDpId (0) && dst == GetSwDpId (1))
                  || (src == GetSwDpId (1) && dst == GetSwDpId (0)),
                  "Invalid datapath IDs for this connection.");
-  if (IsFullDuplexLink () && src == GetSwDpId (1))
+
+  if (src == GetSwDpId (0))
+    {
+      return LinkInfo::FWD;
+    }
+  else
     {
       return LinkInfo::BWD;
     }
-
-  // For half-duplex channel always return FWD, as we will
-  // only use the forwarding path for resource reservations.
-  return LinkInfo::FWD;
 }
 
 uint64_t
