@@ -54,15 +54,11 @@ typedef std::list<Ptr<LinkInfo> > LinkInfoList_t;
 class LinkInfo : public Object
 {
 public:
-  /** Metadata associated to a network slice. */
-  struct SliceData
+  /** Link direction. */
+  enum Direction
   {
-    uint64_t maxRate;           //!< Maximum bit rate.
-    uint64_t resRate;           //!< Reserved bit rate.
-    uint64_t ewmaThp;           //!< EWMA throughput bit rate.
-    uint64_t txBytes;           //!< Total TX bytes.
-    uint64_t lastTxBytes;       //!< Last timeout TX bytes.
-    int64_t  meterDiff;         //!< Current meter bit rate diff.
+    FWD = 0,  //!< Forward direction (from first to second switch).
+    BWD = 1   //!< Backward direction (from second to first switch).
   };
 
   /** Metadata associated to a switch. */
@@ -71,13 +67,6 @@ public:
     Ptr<OFSwitch13Device> swDev;    //!< OpenFlow switch device.
     Ptr<CsmaNetDevice>    portDev;  //!< OpenFlow CSMA port device.
     uint32_t              portNo;   //!< OpenFlow port number.
-  };
-
-  /** Link direction. */
-  enum Direction
-  {
-    FWD = 0,  //!< Forward direction (from first to second switch).
-    BWD = 1   //!< Backward direction (from second to first switch).
   };
 
   /**
@@ -291,6 +280,17 @@ protected:
   void NotifyConstructionCompleted (void);
 
 private:
+  /** Metadata associated to a network slice. */
+  struct SliceData
+  {
+    uint64_t maxRate;           //!< Maximum bit rate.
+    uint64_t resRate;           //!< Reserved bit rate.
+    uint64_t ewmaThp;           //!< EWMA throughput bit rate.
+    uint64_t txBytes;           //!< Total TX bytes.
+    uint64_t lastTxBytes;       //!< Last timeout TX bytes.
+    int64_t  meterDiff;         //!< Current meter bit rate diff.
+  };
+
   /**
    * Inspect physical channel for the assigned bit rate, which is the same for
    * both directions in full-duplex links.
