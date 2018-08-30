@@ -293,6 +293,16 @@ SvelteHelper::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
+  m_mme = 0;
+  m_backhaul = 0;
+  m_radio = 0;
+
+  m_admissionStats = 0;
+  m_backhaulStats = 0;
+  m_handoverStats = 0;
+  m_pgwTftStats = 0;
+  m_trafficStats = 0;
+
   Object::DoDispose ();
 }
 
