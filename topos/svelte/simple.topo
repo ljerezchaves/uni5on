@@ -21,7 +21,7 @@ default ns3::SvelteHelper::MtcController "ns3::SliceController[Priority=2|Quota=
 default ns3::SvelteHelper::MtcSlice "ns3::SliceNetwork[NumUes=1]"
 default ns3::SvelteHelper::MtcTraffic "ns3::TrafficHelper[]"
 
-default ns3::SvelteHelper::TmpController "ns3::SliceController[Priority=1|Quota=40]"
+default ns3::SvelteHelper::TmpController "ns3::SliceController[Priority=1|Quota=20]"
 default ns3::SvelteHelper::TmpSlice "ns3::SliceNetwork[NumUes=1]"
 default ns3::SvelteHelper::TmpTraffic "ns3::TrafficHelper[]"
 
