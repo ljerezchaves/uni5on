@@ -532,11 +532,11 @@ RoutingInfo::GetInstalledList (SliceId slice, uint16_t pgwTftIdx)
         {
           continue;
         }
-      if (pgwTftIdx > 0 && rInfo->GetPgwTftIdx () != pgwTftIdx)
+      if (pgwTftIdx != 0 && rInfo->GetPgwTftIdx () != pgwTftIdx)
         {
           continue;
         }
-      if (slice != SliceId::NONE && rInfo->GetSliceId () != slice)
+      if (slice != SliceId::ALL && rInfo->GetSliceId () != slice)
         {
           continue;
         }

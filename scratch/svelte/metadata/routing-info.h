@@ -180,7 +180,7 @@ protected:
    * \param pgwTftIdx The P-GW TFT index.
    * \return The list of installed bearers.
    */
-  static RoutingInfoList_t GetInstalledList (SliceId slice = SliceId::NONE,
+  static RoutingInfoList_t GetInstalledList (SliceId slice = SliceId::ALL,
                                              uint16_t pgwTftIdx = 0);
 
   /**
