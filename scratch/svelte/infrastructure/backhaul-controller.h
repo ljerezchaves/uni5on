@@ -32,6 +32,7 @@
 namespace ns3 {
 
 class LinkInfo;
+class SliceController;
 
 /**
  * \ingroup svelteInfra
@@ -143,6 +144,12 @@ protected:
                         Ptr<NetDevice> epcDev);
 
   /**
+   * Notify this controller of a new logical slice controller.
+   * \param sliceCtrl The logical slice controller.
+   */
+  void NotifySliceController (Ptr<SliceController> sliceCtrl);
+
+  /**
    * Notify this controller that all backhaul switches have already been
    * configured and the connections between them are finished.
    * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
@@ -183,6 +190,8 @@ protected:
 private:
   /** Initialize static attributes only once. */
   static void StaticInitialize (void);
+
+  Ptr<SliceController>  m_sliceCtrls [SliceId::ALL];  // Slice controllers.
 
   // Internal mechanisms for performance improvement.
   OpMode                m_priorityQueues; //!< DSCP priority queues mechanism.

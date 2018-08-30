@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include "backhaul-controller.h"
+#include "../logical/slice-controller.h"
 #include "../metadata/link-info.h"
 #include "backhaul-network.h"
 
@@ -36,6 +37,12 @@ BackhaulController::BackhaulController ()
   NS_LOG_FUNCTION (this);
 
   StaticInitialize ();
+
+  // Initializing pointers to slice controllers.
+  for (int s = 0; s < SliceId::ALL; s++)
+    {
+      m_sliceCtrls [s] = 0;
+    }
 }
 
 BackhaulController::~BackhaulController ()
@@ -124,6 +131,11 @@ BackhaulController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
+  for (int s = 0; s < SliceId::ALL; s++)
+    {
+      m_sliceCtrls [s] = 0;
+    }
+
   OFSwitch13Controller::DoDispose ();
 }
 
@@ -195,6 +207,17 @@ BackhaulController::NotifyEpcAttach (
          << " write:output=" << portNo
          << " goto:4";
   DpctlSchedule (swDev->GetDatapathId (), cmdOut.str ());
+}
+
+void
+BackhaulController::NotifySliceController (Ptr<SliceController> sliceCtrl)
+{
+  NS_LOG_FUNCTION (this << sliceCtrl);
+
+  NS_ASSERT_MSG (m_sliceCtrls [sliceCtrl->GetSliceId ()] == 0,
+                 "A controller for this slice is already defined.");
+
+  m_sliceCtrls [sliceCtrl->GetSliceId ()] = sliceCtrl;
 }
 
 ofl_err
