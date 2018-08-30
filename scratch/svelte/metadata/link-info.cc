@@ -48,8 +48,8 @@ LinkInfo::LinkInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel)
   m_switches [1] = sw2;
 
   // Asserting internal device order to ensure FWD and BWD indices order.
-  NS_ASSERT_MSG (channel->GetCsmaDevice (0) == GetPortDev (0)
-                 && channel->GetCsmaDevice (1) == GetPortDev (1),
+  NS_ASSERT_MSG (channel->GetCsmaDevice (0) == m_switches [0].portDev
+                 && channel->GetCsmaDevice (1) == m_switches [1].portDev,
                  "Invalid device order in csma channel.");
 
   // Asserting full-duplex csma channel.
@@ -120,25 +120,7 @@ LinkInfo::GetSwDpId (uint8_t idx) const
   NS_LOG_FUNCTION (this << idx);
 
   NS_ASSERT_MSG (idx == 0 || idx == 1, "Invalid switch index.");
-  return GetSwDev (idx)->GetDatapathId ();
-}
-
-Ptr<const OFSwitch13Device>
-LinkInfo::GetSwDev (uint8_t idx) const
-{
-  NS_LOG_FUNCTION (this << idx);
-
-  NS_ASSERT_MSG (idx == 0 || idx == 1, "Invalid switch index.");
-  return m_switches [idx].swDev;
-}
-
-Ptr<const CsmaNetDevice>
-LinkInfo::GetPortDev (uint8_t idx) const
-{
-  NS_LOG_FUNCTION (this << idx);
-
-  NS_ASSERT_MSG (idx == 0 || idx == 1, "Invalid switch index.");
-  return m_switches [idx].portDev;
+  return m_switches [idx].swDev->GetDatapathId ();
 }
 
 Mac48Address
@@ -147,7 +129,7 @@ LinkInfo::GetPortMacAddr (uint8_t idx) const
   NS_LOG_FUNCTION (this << idx);
 
   NS_ASSERT_MSG (idx == 0 || idx == 1, "Invalid switch index.");
-  return Mac48Address::ConvertFrom (GetPortDev (idx)->GetAddress ());
+  return Mac48Address::ConvertFrom (m_switches [idx].portDev->GetAddress ());
 }
 
 LinkInfo::Direction
