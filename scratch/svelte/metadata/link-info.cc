@@ -132,25 +132,6 @@ LinkInfo::GetPortMacAddr (uint8_t idx) const
   return Mac48Address::ConvertFrom (m_switches [idx].portDev->GetAddress ());
 }
 
-LinkInfo::Direction
-LinkInfo::GetDirection (uint64_t src, uint64_t dst) const
-{
-  NS_LOG_FUNCTION (this << src << dst);
-
-  NS_ASSERT_MSG ((src == GetSwDpId (0) && dst == GetSwDpId (1))
-                 || (src == GetSwDpId (1) && dst == GetSwDpId (0)),
-                 "Invalid datapath IDs for this connection.");
-
-  if (src == GetSwDpId (0))
-    {
-      return LinkInfo::FWD;
-    }
-  else
-    {
-      return LinkInfo::BWD;
-    }
-}
-
 uint64_t
 LinkInfo::GetThpBitRate (Direction dir, SliceId slice) const
 {
@@ -306,14 +287,6 @@ LinkInfo::HasBitRate (
 }
 
 bool
-LinkInfo::IsFullDuplexLink (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_channel->IsFullDuplex ();
-}
-
-bool
 LinkInfo::ReleaseBitRate (
   uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate)
 {
@@ -431,12 +404,39 @@ LinkInfo::NotifyConstructionCompleted (void)
   Object::NotifyConstructionCompleted ();
 }
 
+LinkInfo::Direction
+LinkInfo::GetDirection (uint64_t src, uint64_t dst) const
+{
+  NS_LOG_FUNCTION (this << src << dst);
+
+  NS_ASSERT_MSG ((src == GetSwDpId (0) && dst == GetSwDpId (1))
+                 || (src == GetSwDpId (1) && dst == GetSwDpId (0)),
+                 "Invalid datapath IDs for this connection.");
+
+  if (src == GetSwDpId (0))
+    {
+      return LinkInfo::FWD;
+    }
+  else
+    {
+      return LinkInfo::BWD;
+    }
+}
+
 uint64_t
 LinkInfo::GetLinkBitRate (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_channel->GetDataRate ().GetBitRate ();
+}
+
+bool
+LinkInfo::IsFullDuplexLink (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_channel->IsFullDuplex ();
 }
 
 void

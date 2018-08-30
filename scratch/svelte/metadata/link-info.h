@@ -99,17 +99,6 @@ public:
   //\}
 
   /**
-   * For two switches, this methods asserts that both datapath IDs are valid
-   * for this link, and identifies the link direction based on source and
-   * destination datapath IDs.
-   * \param src The source switch datapath ID.
-   * \param dst The destination switch datapath ID.
-   * \return The link direction.
-   */
-  LinkInfo::Direction GetDirection (
-    uint64_t src, uint64_t dst) const;
-
-  /**
    * Get the EWMA throughput bit rate for this link on the given direction,
    * optionally filtered by the network slice.
    * \param dir The link direction.
@@ -210,12 +199,6 @@ public:
     uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate) const;
 
   /**
-   * Inspect physical channel for half-duplex or full-duplex operation mode.
-   * \return True when link in full-duplex mode, false otherwise.
-   */
-  bool IsFullDuplexLink (void) const;
-
-  /**
    * Release the requested bit rate between these two switches on the given
    * network slice.
    * \param src The source switch datapath ID.
@@ -290,11 +273,28 @@ private:
   };
 
   /**
+   * For two switches, this methods asserts that both datapath IDs are valid
+   * for this link, and identifies the link direction based on source and
+   * destination datapath IDs.
+   * \param src The source switch datapath ID.
+   * \param dst The destination switch datapath ID.
+   * \return The link direction.
+   */
+  LinkInfo::Direction GetDirection (
+    uint64_t src, uint64_t dst) const;
+
+  /**
    * Inspect physical channel for the assigned bit rate, which is the same for
    * both directions in full-duplex links.
    * \return The channel maximum nominal bit rate (bps).
    */
   uint64_t GetLinkBitRate (void) const;
+
+  /**
+   * Inspect physical channel for half-duplex or full-duplex operation mode.
+   * \return True when link in full-duplex mode, false otherwise.
+   */
+  bool IsFullDuplexLink (void) const;
 
   /**
    * Notify this link of a successfully transmitted packet in link
