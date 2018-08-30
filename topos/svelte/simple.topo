@@ -13,15 +13,15 @@ default ns3::TrafficHelper::RestartApps "true"
 default ns3::TrafficHelper::StartAppsAfter "1s"
 default ns3::TrafficHelper::StopRestartAppsAt "0s"
 
-default ns3::SvelteHelper::HtcController "ns3::SliceController[Priority=3|Quota=0.4]"
+default ns3::SvelteHelper::HtcController "ns3::SliceController[Priority=3|Quota=40]"
 default ns3::SvelteHelper::HtcSlice "ns3::SliceNetwork[NumUes=1]"
 default ns3::SvelteHelper::HtcTraffic "ns3::TrafficHelper[]"
 
-default ns3::SvelteHelper::MtcController "ns3::SliceController[Priority=2|Quota=0.4]"
+default ns3::SvelteHelper::MtcController "ns3::SliceController[Priority=2|Quota=40]"
 default ns3::SvelteHelper::MtcSlice "ns3::SliceNetwork[NumUes=1]"
 default ns3::SvelteHelper::MtcTraffic "ns3::TrafficHelper[]"
 
-default ns3::SvelteHelper::TmpController "ns3::SliceController[Priority=1|Quota=0.4]"
+default ns3::SvelteHelper::TmpController "ns3::SliceController[Priority=1|Quota=40]"
 default ns3::SvelteHelper::TmpSlice "ns3::SliceNetwork[NumUes=1]"
 default ns3::SvelteHelper::TmpTraffic "ns3::TrafficHelper[]"
 

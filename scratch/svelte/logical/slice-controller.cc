@@ -79,9 +79,9 @@ SliceController::GetTypeId (void)
     .AddAttribute ("Quota",
                    "Infrastructure quota for this slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   DoubleValue (1.0),
-                   MakeDoubleAccessor (&SliceController::m_sliceQuota),
-                   MakeDoubleChecker<double> (0.0, 1.0))
+                   UintegerValue (100),
+                   MakeUintegerAccessor (&SliceController::m_sliceQuota),
+                   MakeUintegerChecker<uint16_t> (0, 100))
 
     // Infrastructure.
     .AddAttribute ("BackhaulCtrl", "The OpenFlow backhaul network controller.",
