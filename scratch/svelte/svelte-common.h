@@ -74,16 +74,16 @@ typedef enum
 /**
  * \ingroup svelte
  * Enumeration of available SVELTE logical slices IDs.
- * \internal Slice IDs are restricted to the range [1, 15] by the current
+ * \internal Slice IDs are restricted to the range [0, 14] by the current
  * TEID allocation strategy.
  */
 typedef enum
 {
-  NONE = 0,   //!< Undefined slice.
-  MTC  = 1,   //!< Slice for MTC UEs.
-  HTC  = 2,   //!< Slice for HTC UEs.
-  TMP  = 3,   //!< Slice for TMP UEs.
-  ALL  = 4    //!< ALL previous slices.
+  MTC  = 0,  //!< Slice for MTC UEs.
+  HTC  = 1,  //!< Slice for HTC UEs.
+  TMP  = 2,  //!< Slice for TMP UEs.
+  ALL  = 3,  //!< ALL previous slices.
+  NONE = 15  //!< Undefined slice.
 } SliceId;
 
 /**
@@ -167,7 +167,7 @@ Ipv4Header::DscpType Qci2Dscp (EpsBearer::Qci qci);
  *                            |-|-|-----|-|
  *                             A B C    D
  *
- *  4 (A) bits are reserved for further usage.
+ *  4 (A) bits are used to identify infrastructure and bearer meters.
  *  4 (B) bits are used to identify the logical slice.
  * 20 (C) bits are used to identify the UE (IMSI).
  *  4 (D) bits are used to identify the bearer withing the UE.

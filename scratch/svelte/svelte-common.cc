@@ -69,8 +69,6 @@ SliceIdStr (SliceId slice)
 {
   switch (slice)
     {
-    case SliceId::NONE:
-      return "none";
     case SliceId::MTC:
       return "mtc";
     case SliceId::HTC:
@@ -79,6 +77,8 @@ SliceIdStr (SliceId slice)
       return "tmp";
     case SliceId::ALL:
       return "all";
+    case SliceId::NONE:
+      return "none";
     default:
       NS_LOG_ERROR ("Invalid slice ID.");
       return "";
@@ -163,10 +163,12 @@ Qci2Dscp (EpsBearer::Qci qci)
 uint32_t
 GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint8_t bearerId)
 {
-  NS_ABORT_MSG_IF (static_cast<uint32_t> (sliceId) > 0xF,
-                   "Slice ID cannot exceed 4 bits in SVELTE.");
-  NS_ABORT_MSG_IF (ueImsi > 0xFFFFF,
-                   "UE IMSI cannot exceed 20 bits in SVELTE.");
+  NS_ASSERT_MSG (static_cast<uint8_t> (SliceId::NONE) == 0xF,
+                 "Invalid SliceId::NONE index.");
+  NS_ASSERT_MSG (sliceId < SliceId::NONE,
+                 "Slice ID cannot exceed 4 bits in SVELTE.");
+  NS_ASSERT_MSG (ueImsi <= 0xFFFFF,
+                 "UE IMSI cannot exceed 20 bits in SVELTE.");
 
   uint32_t teid = static_cast<uint32_t> (sliceId);
   teid <<= 20;
