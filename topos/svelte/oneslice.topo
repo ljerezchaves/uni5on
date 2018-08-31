@@ -1,0 +1,21 @@
+default ns3::BackhaulController::PriorityQueues "off"
+default ns3::BackhaulController::LinkSlicing "on"
+
+default ns3::RadioNetwork::NumCellSites "2"
+default ns3::RingNetwork::NumRingSwitches "3"
+default ns3::RingController::Strategy "spo"
+
+default ns3::RingNetwork::RingLinkDataRate "10Mb/s"
+default ns3::LinkInfo::AdjustmentStep "5Mb/s"
+
+default ns3::SliceNetwork::NumPgwTftSwitches "1"
+default ns3::SliceController::PgwTftAdaptiveMode "off"
+
+default ns3::TrafficHelper::PoissonInterArrival "ns3::ExponentialRandomVariable[Mean=20.0]"
+default ns3::TrafficHelper::RestartApps "true"
+default ns3::TrafficHelper::StartAppsAfter "1s"
+default ns3::TrafficHelper::StopRestartAppsAt "0s"
+
+default ns3::SvelteHelper::HtcController "ns3::SliceController[Priority=3|Quota=100]"
+default ns3::SvelteHelper::HtcSlice "ns3::SliceNetwork[NumUes=1]"
+default ns3::SvelteHelper::HtcTraffic "ns3::TrafficHelper[]"
