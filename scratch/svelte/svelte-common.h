@@ -75,7 +75,7 @@ typedef enum
  * \ingroup svelte
  * Enumeration of available SVELTE logical slices IDs.
  * \internal Slice IDs are restricted to the range [0, 14] by the current
- * TEID allocation strategy.
+ * TEID allocation strategy. The NONE value must be fixed to 0xF (15).
  */
 typedef enum
 {
@@ -158,7 +158,7 @@ Ipv4Header::DscpType Qci2Dscp (EpsBearer::Qci qci);
  * \param sliceId The SVELTE logical slice ID.
  * \param ueImsi The UE ISMI.
  * \param bearerId The UE bearer ID.
- * \return The TEID for this bearer.
+ * \return The TEID value.
  *
  * \internal
  * We are using the following TEID allocation strategy:
@@ -173,7 +173,32 @@ Ipv4Header::DscpType Qci2Dscp (EpsBearer::Qci qci);
  *  4 (D) bits are used to identify the bearer withing the UE (BID).
  * \endverbatim
  */
-uint32_t GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint8_t bearerId);
+uint32_t GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint32_t bearerId);
+
+/**
+ * \ingroup svelte
+ * Compute the meter ID value globally used in the SVELTE architecture for
+ * infrastructure slicing meters.
+ * \param type The slicing meter type.
+ * \param sliceId The SVELTE logical slice ID.
+ * \param topoId The meter identification considering the network topology.
+ * \return The meter ID value.
+ *
+ * \internal
+ * When the network slicing operation mode is active, the traffic of each
+ * slice will be independently monitored by slicing meters using the
+ * following meter ID allocation strategy.
+ * \verbatim
+ * Meter ID has 32 bits length: 0x 0 0 000000
+ *                                |-|-|------|
+ *                                 A B C
+ *
+ *  4 (A) bits are used to identify the meter type.
+ *  4 (B) bits are used to identify the logical slice (slice ID).
+ * 24 (C) bits are used to identify the meter considering the network topology.
+ * \endverbatim
+ */
+uint32_t GetSvelteMeterId (uint32_t type, SliceId sliceId, uint32_t topoId);
 
 /**
  * \ingroup svelte
@@ -186,6 +211,7 @@ uint32_t GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint8_t bearerId);
 std::string GetTunnelIdStr (uint32_t teid, Ipv4Address dstIp);
 
 /**
+ * \ingroup svelte
  * Convert the uint32_t parameter value to a hexadecimal string representation.
  * \param value The uint32_t value.
  * \return The hexadecimal string representation.
@@ -193,6 +219,7 @@ std::string GetTunnelIdStr (uint32_t teid, Ipv4Address dstIp);
 std::string GetUint32Hex (uint32_t value);
 
 /**
+ * \ingroup svelte
  * Convert the uint64_t parameter value to a hexadecimal string representation.
  * \param value The uint64_t value.
  * \return The hexadecimal string representation.

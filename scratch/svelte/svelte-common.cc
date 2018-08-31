@@ -161,21 +161,33 @@ Qci2Dscp (EpsBearer::Qci qci)
 }
 
 uint32_t
-GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint8_t bearerId)
+GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint32_t bearerId)
 {
-  NS_ASSERT_MSG (static_cast<uint8_t> (SliceId::NONE) == 0xF,
-                 "Invalid SliceId::NONE index.");
-  NS_ASSERT_MSG (sliceId < SliceId::NONE,
-                 "Slice ID cannot exceed 4 bits in SVELTE.");
-  NS_ASSERT_MSG (ueImsi <= 0xFFFFF,
-                 "UE IMSI cannot exceed 20 bits in SVELTE.");
+  NS_ASSERT_MSG (sliceId <= 0xF, "Slice ID cannot exceed 4 bits.");
+  NS_ASSERT_MSG (ueImsi <= 0xFFFFF, "UE IMSI cannot exceed 20 bits.");
+  NS_ASSERT_MSG (bearerId <= 0xF, "Bearer ID cannot exceed 4 bits.");
 
   uint32_t teid = static_cast<uint32_t> (sliceId);
   teid <<= 20;
-  teid |= static_cast<uint32_t> (ueImsi);
+  teid |= ueImsi;
   teid <<= 4;
-  teid |= static_cast<uint32_t> (bearerId);
+  teid |= bearerId;
   return teid;
+}
+
+uint32_t
+GetSvelteMeterId (uint32_t type, SliceId sliceId, uint32_t topoId)
+{
+  NS_ASSERT_MSG (type <= 0xF, "Meter type cannot exceed 4 bits.");
+  NS_ASSERT_MSG (sliceId <= 0xF, "Slice ID cannot exceed 4 bits.");
+  NS_ASSERT_MSG (topoId <= 0xFFFFFF, "Topo meter ID cannot exceed 24 bits.");
+
+  uint32_t meter = type;
+  meter <<= 4;
+  meter |= static_cast<uint32_t> (sliceId);
+  meter <<= 24;
+  meter |= topoId;
+  return meter;
 }
 
 std::string
@@ -184,7 +196,6 @@ GetTunnelIdStr (uint32_t teid, Ipv4Address dstIp)
   uint64_t tunnelId = static_cast<uint64_t> (dstIp.Get ());
   tunnelId <<= 32;
   tunnelId |= static_cast<uint64_t> (teid);
-
   return GetUint64Hex (tunnelId);
 }
 
