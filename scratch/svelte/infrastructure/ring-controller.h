@@ -66,6 +66,9 @@ protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
+  // Inherited from ObjectBase.
+  virtual void NotifyConstructionCompleted (void);
+
   // Inherited from BackhaulController.
   bool BearerRequest (Ptr<RoutingInfo> rInfo);
   bool BearerRelease (Ptr<RoutingInfo> rInfo);

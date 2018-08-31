@@ -347,7 +347,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Table 3 -- Slicing table -- [from higher to lower priority]
   //
-  // Entries will be installed and updated here by the topology controller.
+  // Entries will be installed here by the topology controller.
   //
   // Table miss entry. Send the packet to Output table
   DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=0 goto:4");

@@ -74,7 +74,17 @@ RingController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
+  // Chain up.
   BackhaulController::DoDispose ();
+}
+
+void
+RingController::NotifyConstructionCompleted (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Chain up.
+  BackhaulController::NotifyConstructionCompleted ();
 }
 
 bool
