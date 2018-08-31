@@ -679,25 +679,20 @@ RingController::SlicingMeterAdjusted (Ptr<const LinkInfo> lInfo,
                  "adjust slicing meters when network slicing mode is OFF.");
 
   // Identify the meter ID based on slicing operation mode.
-  uint32_t meterId = 0;
+  uint32_t meterId;
+  uint32_t dirId = static_cast<uint32_t> (dir);
   if (GetLinkSlicingMode () == OpMode::ON)
     {
-      // Compose the meter ID.
-      meterId = static_cast<uint32_t> (1);
-      meterId <<= 24;
-      meterId |= static_cast<uint32_t> (slice);
-      meterId <<= 4;
-      meterId |= static_cast<uint32_t> (dir);
+      meterId = GetSvelteMeterId (1, slice, dirId);
     }
   else if (GetLinkSlicingMode () == OpMode::AUTO)
     {
-      meterId = static_cast<uint32_t> (2);
-      meterId <<= 28;
-      meterId |= static_cast<uint32_t> (dir);
+      meterId = GetSvelteMeterId (2, SliceId::ALL, dirId);
     }
 
-  NS_LOG_INFO ("Updating slicing meter for link info " <<
-               lInfo->GetSwDpId (0) << " - " << lInfo->GetSwDpId (1));
+  NS_LOG_INFO ("Updating slicing meter ID " << GetUint32Hex (meterId) <<
+               " for link from " << lInfo->GetSwDpId (0) <<
+               " to " << lInfo->GetSwDpId (1));
 
   // -------------------------------------------------------------------------
   // Meter table
@@ -709,19 +704,17 @@ RingController::SlicingMeterAdjusted (Ptr<const LinkInfo> lInfo,
       << ",flags=" << OFPMF_KBPS
       << ",meter=" << meterId
       << " drop:rate=" << kbps / 1000;
+
   DpctlExecute (lInfo->GetSwDpId (static_cast<uint8_t> (dir)), cmd.str ());
-  NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) <<
-                ": " << LinkInfo::DirectionStr (dir) <<
-                " link updated to " << kbps << " Kbps");
+  NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) << ": " <<
+                LinkInfo::DirectionStr (dir) <<
+                " link set to " << kbps << " Kbps");
 }
 
 void
 RingController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
 {
   NS_LOG_FUNCTION (this << lInfo);
-
-  NS_LOG_DEBUG ("Creating slicing meters for link info " <<
-                lInfo->GetSwDpId (0) << " - " << lInfo->GetSwDpId (1));
 
   if (GetLinkSlicingMode () == OpMode::ON)
     {
@@ -733,22 +726,24 @@ RingController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
           for (int d = 0; d <= LinkInfo::BWD; d++)
             {
               LinkInfo::Direction dir = static_cast<LinkInfo::Direction> (d);
+              uint32_t dirId = static_cast<uint32_t> (dir);
 
               // Compose the meter ID.
-              uint32_t meterId = static_cast<uint32_t> (1);
-              meterId <<= 24;
-              meterId |= static_cast<uint32_t> (s);
-              meterId <<= 4;
-              meterId |= static_cast<uint32_t> (d);
+              uint32_t meterId = GetSvelteMeterId (1, slice, dirId);
+              NS_LOG_INFO ("Creating slicing meter ID " <<
+                           GetUint32Hex (meterId) <<
+                           " for link from " << lInfo->GetSwDpId (0) <<
+                           " to " << lInfo->GetSwDpId (1));
 
               uint64_t kbps = lInfo->GetFreeBitRate (dir, slice);
               std::ostringstream cmd;
               cmd << "meter-mod cmd=add,flags=" << OFPMF_KBPS
                   << ",meter=" << meterId
                   << " drop:rate=" << kbps / 1000;
+
               DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
-              NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) <<
-                            ": " << LinkInfo::DirectionStr (dir) <<
+              NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) << ": " <<
+                            LinkInfo::DirectionStr (dir) <<
                             " link set to " << kbps << " Kbps");
             }
         }
@@ -759,17 +754,21 @@ RingController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
       for (int d = 0; d <= LinkInfo::BWD; d++)
         {
           LinkInfo::Direction dir = static_cast<LinkInfo::Direction> (d);
+          uint32_t dirId = static_cast<uint32_t> (dir);
 
           // Compose the meter ID.
-          uint32_t meterId = static_cast<uint32_t> (2);
-          meterId <<= 28;
-          meterId |= static_cast<uint32_t> (d);
+          uint32_t meterId = GetSvelteMeterId (2, SliceId::ALL, dirId);
+          NS_LOG_INFO ("Creating slicing meter ID " <<
+                       GetUint32Hex (meterId) <<
+                       " for link from " << lInfo->GetSwDpId (0) <<
+                       " to " << lInfo->GetSwDpId (1));
 
           uint64_t kbps = lInfo->GetFreeBitRate (dir, SliceId::ALL);
           std::ostringstream cmd;
           cmd << "meter-mod cmd=add,flags=" << OFPMF_KBPS
               << ",meter=" << meterId
               << " drop:rate=" << kbps / 1000;
+
           DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
           NS_LOG_DEBUG ("Link slice " << SliceIdStr (SliceId::ALL) <<
                         ": " << LinkInfo::DirectionStr (dir) <<
