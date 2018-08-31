@@ -161,16 +161,16 @@ Ipv4Header::DscpType Qci2Dscp (EpsBearer::Qci qci);
  * \return The TEID for this bearer.
  *
  * \internal
- * \verbatim
  * We are using the following TEID allocation strategy:
+ * \verbatim
  * TEID has 32 bits length: 0x 0 0 00000 0
  *                            |-|-|-----|-|
- *                             A B C    D
+ *                             A B C     D
  *
- *  4 (A) bits are used to identify infrastructure and bearer meters.
- *  4 (B) bits are used to identify the logical slice.
+ *  4 (A) bits are reserved for slicing meters.
+ *  4 (B) bits are used to identify the logical slice (slice ID).
  * 20 (C) bits are used to identify the UE (IMSI).
- *  4 (D) bits are used to identify the bearer withing the UE.
+ *  4 (D) bits are used to identify the bearer withing the UE (BID).
  * \endverbatim
  */
 uint32_t GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint8_t bearerId);
