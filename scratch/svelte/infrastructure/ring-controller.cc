@@ -204,6 +204,20 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
       Ptr<LinkInfo> lInfo = GetLinkInfo (swIdx, nextIdx);
 
       // ---------------------------------------------------------------------
+      // Meter table
+      //
+      // Installing meters entries when the link slicing mechanism is enabled.
+      if (GetLinkSlicingMode () != OpMode::OFF)
+        {
+          SlicingMeterInstall (lInfo);
+
+          // Connect this controller to LinkInfo meter adjusted trace source.
+          lInfo->TraceConnectWithoutContext (
+            "MeterAdjusted", MakeCallback (
+              &RingController::SlicingMeterAdjusted, this));
+        }
+
+      // ---------------------------------------------------------------------
       // Group table
       //
       // Configure groups to keep forwarding packets in the ring until they
@@ -255,85 +269,6 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
            << " meta:" << RingInfo::CLOCK
            << " goto:3";
       DpctlSchedule (lInfo->GetSwDpId (1), cmd4.str ());
-
-      // Installing meters entries for each link in the ring network when the
-      // link slicing mechanism is enabled.
-      // ---------------------------------------------------------------------
-      // Meter table
-      //
-      // FIXME Revisar o link slicing.
-      if (GetLinkSlicingMode () != OpMode::OFF)
-        {
-          NS_LOG_DEBUG ("Creating slicing meters for link info " <<
-                        lInfo->GetSwDpId (0) << " - " << lInfo->GetSwDpId (1));
-
-          // Connect this controller to LinkInfo meter adjusted trace source.
-          lInfo->TraceConnectWithoutContext (
-            "MeterAdjusted", MakeCallback (
-              &RingController::SlicingMeterAdjusted, this));
-
-          // std::ostringstream cmdm1, cmdm2, cmdm3, cmdm4;
-          // uint64_t kbps = 0;
-
-          // if (GetLinkSlicingMode () == OpMode::ON)
-          //   {
-          //     // DFT Non-GBR meter for clockwise FWD direction.
-          //     kbps = lInfo->GetFreeBitRate (LinkInfo::FWD, LinkSlice::DFT);
-          //     cmdm1 << "meter-mod cmd=add,flags=" << OFPMF_KBPS
-          //           << ",meter=1 drop:rate=" << kbps / 1000;
-          //     DpctlSchedule (lInfo->GetSwDpId (0), cmdm1.str ());
-          //     NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::DFT) <<
-          //                   ": " << LinkInfo::DirectionStr (LinkInfo::FWD) <<
-          //                   " link set to " << kbps << " Kbps");
-
-          //     // DFT Non-GBR meter for counterclockwise BWD direction.
-          //     kbps = lInfo->GetFreeBitRate (LinkInfo::BWD, LinkSlice::DFT);
-          //     cmdm2 << "meter-mod cmd=add,flags=" << OFPMF_KBPS
-          //           << ",meter=2 drop:rate=" << kbps / 1000;
-          //     DpctlSchedule (lInfo->GetSwDpId (1), cmdm2.str ());
-          //     NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::DFT) <<
-          //                   ": " << LinkInfo::DirectionStr (LinkInfo::BWD) <<
-          //                   " link set to " << kbps << " Kbps");
-
-          //     // M2M Non-GBR meter for clockwise FWD direction.
-          //     kbps = lInfo->GetFreeBitRate (LinkInfo::FWD, LinkSlice::M2M);
-          //     cmdm3 << "meter-mod cmd=add,flags=" << OFPMF_KBPS
-          //           << ",meter=3 drop:rate=" << kbps / 1000;
-          //     DpctlSchedule (lInfo->GetSwDpId (0), cmdm3.str ());
-          //     NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::M2M) <<
-          //                   ": " << LinkInfo::DirectionStr (LinkInfo::FWD) <<
-          //                   " link set to " << kbps << " Kbps");
-
-          //     // M2M Non-GBR meter for counterclockwise BWD direction.
-          //     kbps = lInfo->GetFreeBitRate (LinkInfo::BWD, LinkSlice::M2M);
-          //     cmdm4 << "meter-mod cmd=add,flags=" << OFPMF_KBPS
-          //           << ",meter=4 drop:rate=" << kbps / 1000;
-          //     DpctlSchedule (lInfo->GetSwDpId (1), cmdm4.str ());
-          //     NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::M2M) <<
-          //                   ": " << LinkInfo::DirectionStr (LinkInfo::BWD) <<
-          //                   " link set to " << kbps << " Kbps");
-          //   }
-          // else if (GetLinkSlicingMode () == OpMode::AUTO)
-          //   {
-          //     // Non-GBR meter for clockwise FWD direction.
-          //     kbps = lInfo->GetFreeBitRate (LinkInfo::FWD, LinkSlice::ALL);
-          //     cmdm1 << "meter-mod cmd=add,flags=" << OFPMF_KBPS
-          //           << ",meter=1 drop:rate=" << kbps / 1000;
-          //     DpctlSchedule (lInfo->GetSwDpId (0), cmdm1.str ());
-          //     NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::ALL) <<
-          //                   ": " << LinkInfo::DirectionStr (LinkInfo::FWD) <<
-          //                   " link set to " << kbps << " Kbps");
-
-          //     // Non-GBR meter for counterclockwise BWD direction.
-          //     kbps = lInfo->GetFreeBitRate (LinkInfo::BWD, LinkSlice::ALL);
-          //     cmdm2 << "meter-mod cmd=add,flags=" << OFPMF_KBPS
-          //           << ",meter=2 drop:rate=" << kbps / 1000;
-          //     DpctlSchedule (lInfo->GetSwDpId (1), cmdm2.str ());
-          //     NS_LOG_DEBUG ("Link slice " << LinkSliceStr (LinkSlice::ALL) <<
-          //                   ": " << LinkInfo::DirectionStr (LinkInfo::BWD) <<
-          //                   " link set to " << kbps << " Kbps");
-          //   }
-        }
     }
 }
 
@@ -443,7 +378,7 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
   NS_LOG_FUNCTION (this << swtch);
 
- // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
   // Table 3 -- Slicing table -- [from higher to lower priority]
   //
   if (GetLinkSlicingMode () == OpMode::ON)
@@ -795,90 +730,65 @@ RingController::SlicingMeterAdjusted (Ptr<const LinkInfo> lInfo,
 }
 
 void
-RingController::SlicingMeterInstall (Ptr<const RemoteSwitch> swtch)
+RingController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
 {
-  NS_LOG_FUNCTION (this << swtch);
+  NS_LOG_FUNCTION (this << lInfo);
 
-  // -------------------------------------------------------------------------
-  // Table 3 -- Slicing table -- [from higher to lower priority]
-  //
+  NS_LOG_DEBUG ("Creating slicing meters for link info " <<
+                lInfo->GetSwDpId (0) << " - " << lInfo->GetSwDpId (1));
+
   if (GetLinkSlicingMode () == OpMode::ON)
     {
-      // FIXME This should be automatic depending on the number of slices.
-      // When the network slicing operation mode is ON, the Non-GBR traffic of
-      // each slice will be monitored independently. Here is how we are using
-      // meter IDs:
-      // DFT slice: meter ID 1 -> clockwise FWD direction
-      //            meter ID 2 -> counterclockwise BWD direction
-      // MTC slice: meter ID 3 -> clockwise FWD direction
-      //            meter ID 4 -> counterclockwise BWD direction
-      // In current implementation we don't have Non-GBR traffic on GBR slice,
-      // so we don't need meters for this slice.
+      // Install meter rules for each slice.
+      for (int s = 0; s < SliceId::ALL; s++)
+        {
+          SliceId slice = static_cast<SliceId> (s);
 
-      // DFT Non-GBR packets are filtered by DSCP fields DSCP_AF11 and
-      // DSCP_BE. Apply Non-GBR meter band. Send the packet to Output table.
-      //
-      // DSCP_AF11 (DSCP decimal 10)
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
-                    " eth_type=0x800,meta=0x1,ip_dscp=10"
-                    " meter:1 goto:4");
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
-                    " eth_type=0x800,meta=0x2,ip_dscp=10"
-                    " meter:2 goto:4");
+          for (int d = 0; d <= LinkInfo::BWD; d++)
+            {
+              LinkInfo::Direction dir = static_cast<LinkInfo::Direction> (d);
 
-      // DSCP_BE (DSCP decimal 0)
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
-                    " eth_type=0x800,meta=0x1,ip_dscp=0"
-                    " meter:1 goto:4");
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
-                    " eth_type=0x800,meta=0x2,ip_dscp=0"
-                    " meter:2 goto:4");
+              // Compose the meter ID.
+              uint32_t meterId = static_cast<uint32_t> (1);
+              meterId <<= 24;
+              meterId |= static_cast<uint32_t> (s);
+              meterId <<= 4;
+              meterId |= static_cast<uint32_t> (d);
 
-      // MTC Non-GBR packets are filtered by DSCP field DSCP_AF31.
-      // Apply MTC Non-GBR meter band. Send the packet to Output table.
-      //
-      // DSCP_AF31 (DSCP decimal 26)
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=15"
-                    " eth_type=0x800,meta=0x1,ip_dscp=26"
-                    " meter:3 goto:4");
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=15"
-                    " eth_type=0x800,meta=0x2,ip_dscp=26"
-                    " meter:4 goto:4");
+              uint64_t kbps = lInfo->GetFreeBitRate (dir, slice);
+              std::ostringstream cmd;
+              cmd << "meter-mod cmd=add,flags=" << OFPMF_KBPS
+                  << ",meter=" << meterId
+                  << " drop:rate=" << kbps / 1000;
+              DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
+              NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) <<
+                            ": " << LinkInfo::DirectionStr (dir) <<
+                            " link set to " << kbps << " Kbps");
+            }
+        }
     }
   else if (GetLinkSlicingMode () == OpMode::AUTO)
     {
-      // When the network slicing operation mode is AUTO, the Non-GBR traffic
-      // of all slices will be monitored together. Here is how we are using
-      // meter IDs:
-      // Meter ID 1 -> clockwise FWD direction
-      // Meter ID 2 -> counterclockwise BWD direction
+      // Install meter rules shared among slices.
+      for (int d = 0; d <= LinkInfo::BWD; d++)
+        {
+          LinkInfo::Direction dir = static_cast<LinkInfo::Direction> (d);
 
-      // Non-GBR packets are filtered by DSCP fields DSCP_AF31, DSCP_AF11, and
-      // DSCP_BE. Apply Non-GBR meter band. Send the packet to Output table.
-      //
-      // DSCP_AF31 (DSCP decimal 26)
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=15"
-                    " eth_type=0x800,meta=0x1,ip_dscp=26"
-                    " meter:1 goto:4");
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=15"
-                    " eth_type=0x800,meta=0x2,ip_dscp=26"
-                    " meter:2 goto:4");
+          // Compose the meter ID.
+          uint32_t meterId = static_cast<uint32_t> (2);
+          meterId <<= 28;
+          meterId |= static_cast<uint32_t> (d);
 
-      // DSCP_AF11 (DSCP decimal 10)
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
-                    " eth_type=0x800,meta=0x1,ip_dscp=10"
-                    " meter:1 goto:4");
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
-                    " eth_type=0x800,meta=0x2,ip_dscp=10"
-                    " meter:2 goto:4");
-
-      // DSCP_BE (DSCP decimal 0)
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
-                    " eth_type=0x800,meta=0x1,ip_dscp=0"
-                    " meter:1 goto:4");
-      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
-                    " eth_type=0x800,meta=0x2,ip_dscp=0"
-                    " meter:2 goto:4");
+          uint64_t kbps = lInfo->GetFreeBitRate (dir, SliceId::ALL);
+          std::ostringstream cmd;
+          cmd << "meter-mod cmd=add,flags=" << OFPMF_KBPS
+              << ",meter=" << meterId
+              << " drop:rate=" << kbps / 1000;
+          DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
+          NS_LOG_DEBUG ("Link slice " << SliceIdStr (SliceId::ALL) <<
+                        ": " << LinkInfo::DirectionStr (dir) <<
+                        " link set to " << kbps << " Kbps");
+        }
     }
 }
 

@@ -146,13 +146,30 @@ private:
   void SlicingMeterAdjusted (Ptr<const LinkInfo> lInfo,
                              LinkInfo::Direction dir, SliceId slice);
 
-  /** FIXME
-   * Install the link slicing rules Notify this controller when the maximum bit rate for best-effort
-   * traffic in any network link is adjusted. This is used to update FIXME
-   * meters bands based on slicing resource reservation.
+  /**
+   * Install the infrastructure slicing meters.
    * \param swtch The OpenFlow switch information.
+   *
+   * \internal
+   * When the network slicing operation mode is active, the traffic of each
+   * slice will be independently monitored by slicing meters using the
+   * following meter ID allocation strategy.
+   * \verbatim
+   * Meter ID has 32 bits length: 0x 1 0 000000
+   *                                |-|-|------|
+   *                                 A B C
+   *
+   *  4 (A) bits are used to identify the meter type.
+   *    - 0x0 is used for individual meters (the meter ID is equal to TEID).
+   *    - 0x1 is used for slicing meters for each slice.
+   *    - 0x2 is used for slicing meters shared among slices.
+   *  4 (B) bits are used to identify the logical slice (slice ID).
+   * 24 (C) bits are used to identify the meter considering network topology.
+   *    - 0x000000 is used for clockwise FWD direction.
+   *    - 0x000001 is used for counterclockwise BWD direction.
+   * \endverbatim
    */
-  void SlicingMeterInstall (Ptr<const RemoteSwitch> swtch);
+  void SlicingMeterInstall (Ptr<const LinkInfo> lInfo);
 
   /**
    * Get the next switch index following the given routing path.

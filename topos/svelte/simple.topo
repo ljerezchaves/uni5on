@@ -1,5 +1,5 @@
 default ns3::BackhaulController::PriorityQueues "off"
-default ns3::BackhaulController::LinkSlicing "off"
+default ns3::BackhaulController::LinkSlicing "on"
 
 default ns3::RadioNetwork::NumCellSites "2"
 default ns3::RingNetwork::NumRingSwitches "3"
