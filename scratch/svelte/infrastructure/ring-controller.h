@@ -134,12 +134,11 @@ private:
   uint16_t HopCounter (uint16_t srcIdx, uint16_t dstIdx,
                        RingInfo::RingPath path) const;
 
-  /** FIXME
-   * Notify this controller when the maximum bit rate for best-effort
-   * traffic in any network link is adjusted. This is used to update
-   * meters bands based on slicing Install the link slicing rules resource
-   * reservation.
-   * \param lInfo The link information. FIXME
+  /**
+   * Notify this controller when the reserved bit rate in any network link and
+   * slice is adjusted, exceeding the AdjustmentStep attribute from LinkInfo
+   * class. This is used to update infrastructure slicing meters.
+   * \param lInfo The link information.
    * \param dir The link direction.
    * \param slice The network slice.
    */

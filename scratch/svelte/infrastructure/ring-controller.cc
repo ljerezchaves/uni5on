@@ -678,52 +678,38 @@ RingController::SlicingMeterAdjusted (Ptr<const LinkInfo> lInfo,
   NS_ASSERT_MSG (GetLinkSlicingMode () != OpMode::OFF, "Not supposed to "
                  "adjust slicing meters when network slicing mode is OFF.");
 
-  uint8_t  swDpId  = (dir == LinkInfo::FWD) ? 0 : 1;
-  uint16_t meterId = (dir == LinkInfo::FWD) ? 1 : 2;
-
-  // FIXME Revisar o link slicing.
-  // if (GetLinkSlicingMode () == OpMode::ON)
-  //   {
-  //     // When the network slicing operation mode is ON, the Non-GBR traffic of
-  //     // each slice will be monitored independently. So we have to identify the
-  //     // meter ID based on the slice parameter.
-  //     // * For the DFT slice, the meter IDs are: 1 for FWD and 2 for BWD.
-  //     // * For the M2M slice, the meter IDs are: 3 for FWD and 4 for BWD.
-  //     // * For the GBR slice, we don't have Non-GBR traffic on this slice, so
-  //     //   we don't have meters to update here.
-  //     if (slice == LinkSlice::GBR)
-  //       {
-  //         return;
-  //       }
-  //     else if (slice == LinkSlice::M2M)
-  //       {
-  //         meterId += 2;
-  //       }
-  //   }
-  // else if (GetLinkSlicingMode () == OpMode::AUTO)
-  //   {
-  //     // When the network slicing operation mode is AUTO, the Non-GBR traffic
-  //     // of all slices will be monitored together. The meter IDs in use are:
-  //     // 1 for FWD and 2 for BWD.
-  //     slice = LinkSlice::ALL;
-  //   }
+  // Identify the meter ID based on slicing operation mode.
+  uint32_t meterId = 0;
+  if (GetLinkSlicingMode () == OpMode::ON)
+    {
+      // Compose the meter ID.
+      meterId = static_cast<uint32_t> (1);
+      meterId <<= 24;
+      meterId |= static_cast<uint32_t> (slice);
+      meterId <<= 4;
+      meterId |= static_cast<uint32_t> (dir);
+    }
+  else if (GetLinkSlicingMode () == OpMode::AUTO)
+    {
+      meterId = static_cast<uint32_t> (2);
+      meterId <<= 28;
+      meterId |= static_cast<uint32_t> (dir);
+    }
 
   NS_LOG_INFO ("Updating slicing meter for link info " <<
                lInfo->GetSwDpId (0) << " - " << lInfo->GetSwDpId (1));
-
-  std::ostringstream cmd;
-  uint64_t kbps = 0;
 
   // -------------------------------------------------------------------------
   // Meter table
   //
   // Update the proper slicing meter.
-  kbps = lInfo->GetFreeBitRate (dir, slice);
+  uint64_t kbps = lInfo->GetFreeBitRate (dir, slice);
+  std::ostringstream cmd;
   cmd << "meter-mod cmd=mod"
       << ",flags=" << OFPMF_KBPS
       << ",meter=" << meterId
       << " drop:rate=" << kbps / 1000;
-  DpctlExecute (lInfo->GetSwDpId (swDpId), cmd.str ());
+  DpctlExecute (lInfo->GetSwDpId (static_cast<uint8_t> (dir)), cmd.str ());
   NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) <<
                 ": " << LinkInfo::DirectionStr (dir) <<
                 " link updated to " << kbps << " Kbps");
