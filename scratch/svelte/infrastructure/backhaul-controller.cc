@@ -252,13 +252,14 @@ BackhaulController::HandleFlowRemoved (
 
   // Check for existing routing information for this bearer.
   Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  NS_ASSERT_MSG (rInfo, "No routing for dedicated bearer teid " << teid);
+  NS_ASSERT_MSG (rInfo, "Routing metadata not found");
 
   // When a flow is removed, check the following situations:
   // 1) The application is stopped and the bearer must be inactive.
   if (!rInfo->IsActive ())
     {
-      NS_LOG_INFO ("Rule removed for inactive bearer teid " << teid);
+      NS_LOG_INFO ("Rule removed for inactive bearer teid " <<
+                   rInfo->GetTeidHex ());
       return 0;
     }
 
@@ -267,7 +268,8 @@ BackhaulController::HandleFlowRemoved (
   // case, the bearer priority should have been increased to avoid conflicts.
   if (rInfo->GetPriority () > prio)
     {
-      NS_LOG_INFO ("Old rule removed for bearer teid " << teid);
+      NS_LOG_INFO ("Old rule removed for bearer teid " <<
+                   rInfo->GetTeidHex ());
       return 0;
     }
 
