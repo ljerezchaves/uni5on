@@ -20,6 +20,7 @@
 
 #include "svelte-client-app.h"
 #include "svelte-server-app.h"
+#include "../svelte-common.h"
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT                             \
@@ -164,9 +165,7 @@ std::string
 SvelteClientApp::GetTeidHex (void) const
 {
   // No log to avoid infinite recursion.
-  char teidStr [11];
-  sprintf (teidStr, "0x%08x", m_teid);
-  return std::string (teidStr);
+  return GetUint32Hex (m_teid);
 }
 
 Ptr<SvelteServerApp>

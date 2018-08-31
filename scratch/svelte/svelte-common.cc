@@ -185,9 +185,23 @@ GetTunnelIdStr (uint32_t teid, Ipv4Address dstIp)
   tunnelId <<= 32;
   tunnelId |= static_cast<uint64_t> (teid);
 
-  char tunnelIdStr [19];
-  sprintf (tunnelIdStr, "0x%016lx", tunnelId);
-  return std::string (tunnelIdStr);
+  return GetUint64Hex (tunnelId);
+}
+
+std::string
+GetUint32Hex (uint32_t value)
+{
+  char valueStr [11];
+  sprintf (valueStr, "0x%08x", value);
+  return std::string (valueStr);
+}
+
+std::string
+GetUint64Hex (uint64_t value)
+{
+  char valueStr [19];
+  sprintf (valueStr, "0x%016lx", value);
+  return std::string (valueStr);
 }
 
 void

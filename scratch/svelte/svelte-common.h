@@ -186,6 +186,20 @@ uint32_t GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint8_t bearerId);
 std::string GetTunnelIdStr (uint32_t teid, Ipv4Address dstIp);
 
 /**
+ * Convert the uint32_t parameter value to a hexadecimal string representation.
+ * \param value The uint32_t value.
+ * \return The hexadecimal string representation.
+ */
+std::string GetUint32Hex (uint32_t value);
+
+/**
+ * Convert the uint64_t parameter value to a hexadecimal string representation.
+ * \param value The uint64_t value.
+ * \return The hexadecimal string representation.
+ */
+std::string GetUint64Hex (uint64_t value);
+
+/**
  * \ingroup svelte
  * Set the devices names identifying the connection between the nodes.
  * \param src The network device in the source node.
