@@ -172,17 +172,16 @@ GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint32_t bearerId)
 }
 
 uint32_t
-GetSvelteMeterId (uint32_t type, SliceId sliceId, uint32_t topoId)
+GetSvelteMeterId (SliceId sliceId, uint32_t meterId)
 {
-  NS_ASSERT_MSG (type <= 0xF, "Meter type cannot exceed 4 bits.");
   NS_ASSERT_MSG (sliceId <= 0xF, "Slice ID cannot exceed 4 bits.");
-  NS_ASSERT_MSG (topoId <= 0xFFFFFF, "Topo meter ID cannot exceed 24 bits.");
+  NS_ASSERT_MSG (meterId <= 0xFFFFFF, "Topo meter ID cannot exceed 24 bits.");
 
-  uint32_t meter = type;
+  uint32_t meter = 0x1;
   meter <<= 4;
   meter |= static_cast<uint32_t> (sliceId);
   meter <<= 24;
-  meter |= topoId;
+  meter |= meterId;
   return meter;
 }
 

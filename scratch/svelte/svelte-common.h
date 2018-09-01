@@ -188,7 +188,7 @@ uint32_t GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint32_t bearerId);
  * infrastructure slicing meters.
  * \param type The slicing meter type.
  * \param sliceId The SVELTE logical slice ID.
- * \param topoId The meter identification considering the network topology.
+ * \param meterId The meter identification considering the network topology.
  * \return The meter ID value.
  *
  * \internal
@@ -201,11 +201,12 @@ uint32_t GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint32_t bearerId);
  *                                 A B C
  *
  *  4 (A) bits are used to identify the meter type.
+ *        - For infrastructure slicing meters these bits are fixed to 0x1.
  *  4 (B) bits are used to identify the logical slice (slice ID).
  * 24 (C) bits are used to identify the meter considering the network topology.
  * \endverbatim
  */
-uint32_t GetSvelteMeterId (uint32_t type, SliceId sliceId, uint32_t topoId);
+uint32_t GetSvelteMeterId (SliceId sliceId, uint32_t meterId);
 
 /**
  * \ingroup svelte
