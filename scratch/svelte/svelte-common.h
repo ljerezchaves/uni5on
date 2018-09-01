@@ -33,9 +33,11 @@ namespace ns3 {
 #define TEID_SLICE_MASK_STR   "0x0F000000"
 #define TEID_IMSI_MASK_STR    "0x00FFFFF0"
 #define TEID_BID_MASK_STR     "0x0000000F"
-#define COOKIE_STRICT_MASK    "0xFFFFFFFFFFFFFFFF"
 
-// GTP-U UDP port number
+// OpenFlow cookie strick mask.
+#define COOKIE_STRICT_MASK_STR  "0xFFFFFFFFFFFFFFFF"
+
+// GTP-U UDP port number.
 #define GTPU_PORT   2152
 
 class Ipv4Address;

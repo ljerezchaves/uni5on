@@ -363,7 +363,7 @@ RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
   std::ostringstream cmd;
   cmd << "flow-mod cmd=del,table=1"
       << ",cookie=" << rInfo->GetTeidHex ()
-      << ",cookie_mask=" << COOKIE_STRICT_MASK;
+      << ",cookie_mask=" << COOKIE_STRICT_MASK_STR;
 
   // Removing rules from switches connected to the eNB, S-GW and P-GW.
   DpctlExecute (GetDpId (ringInfo->GetPgwInfraSwIdx ()), cmd.str ());
