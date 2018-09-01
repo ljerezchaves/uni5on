@@ -41,15 +41,15 @@ typedef std::list<Ptr<LinkInfo> > LinkInfoList_t;
  * \ingroup svelteInfra
  * Metadata associated to a link between two OpenFlow backhaul switches.
  *
- * Each slice have a maximum bit rate assigned to it, and can also have some
- * reserved bit rate for GBR traffic. The amount of reserved bit rate is
- * updated by reserve and release procedures, and are enforced by OpenFlow
- * meters that are regularly updated every time the total reserved bit rate
- * changes over a threshold value indicated by the AdjustmentStep attribute.
- * The bandwidth that is not reserved on any slice is shared among best-effort
- * traffic that don't have strict QoS requirements. Packets traversing this
- * link are monitored for throughput statistics, and average values are
- * periodically updated using EWMAs.
+ * The link is prepared to handle infrastructure network slicing, and each
+ * slice has the following information associated to it:
+ * - The maximum bit rate, adjusted by the backhaul controller;
+ * - The reserved bit rate, updated by reserve/release procedures;
+ * - The transmitted bytes, updated by monitoring port device TX operations;
+ * - The average throughput, periodically updated using EWMA;
+ * - The meter diff, updated by reserve/release procedures and responsible for
+ *   firing the meter adjusted trace source when the total reserved bit rate
+ *   changes over a threshold value indicated by the AdjustmentStep attribute.
  */
 class LinkInfo : public Object
 {
