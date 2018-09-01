@@ -378,105 +378,68 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
   NS_LOG_FUNCTION (this << swtch);
 
-//  // -------------------------------------------------------------------------
-//  // Table 3 -- Slicing table -- [from higher to lower priority]
-//  //
-//  if (GetLinkSlicingMode () == OpMode::ON)
-//    {
-//      // Apply meter rules for Non-GBR traffic of each slice.
-//      for (int s = 0; s < SliceId::ALL; s++)
-//        {
-//          SliceId slice = static_cast<SliceId> (s);
-//          for (int d = 0; d <= LinkInfo::BWD; d++)
-//            {
-//              LinkInfo::Direction direction;
-//              direction = static_cast<LinkInfo::Direction> (d);
-//              uint32_t meterId = GetSvelteMeterId (slice, d);
-//
-//              for (int q = EpsBearer::NGBR_IMS;
-//                   q <= EpsBearer::NGBR_VIDEO_TCP_DEFAULT; q++)
-//                {
-//                  EpsBearer::Qci qci = static_cast<EpsBearer::Qci> (q);
-//                  Ipv4Header::DscpType dscp = Qci2Dscp (qci);
-//
-//                  // FIXME Nem sei se tá certo... to cansado. revisar isso tudo.
-//                  std::ostringstream cmd;
-//                  cmd << "flow-mod cmd=add,table=3,prio=16"
-//                      << " eth_type=0x800,meta=0x1"
-//                      << ",gtpu_teid" << meterId << "/" << TEID_SLICE_MASK_STR
-//                      << ",ip_dscp=" << static_cast<uint16_t> (dscp)
-//                      << " meter:" << meterId
-//                      << " goto:4";
-//                  DpctlExecute (swtch, cmd.str ());
-//                }
-//            }
-//        }
-//
-//      // DFT Non-GBR packets are filtered by DSCP fields DSCP_AF11 and
-//      // DSCP_BE. Apply Non-GBR meter band. Send the packet to Output table.
-//      //
-//      // DSCP_AF11 (DSCP decimal 10)
-//      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
-//                    " eth_type=0x800,meta=0x1,ip_dscp=10"
-//                    " meter:1 goto:4");
-//      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
-//                    " eth_type=0x800,meta=0x2,ip_dscp=10"
-//                    " meter:2 goto:4");
-//
-//      // DSCP_BE (DSCP decimal 0)
-//      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
-//                    " eth_type=0x800,meta=0x1,ip_dscp=0"
-//                    " meter:1 goto:4");
-//      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
-//                    " eth_type=0x800,meta=0x2,ip_dscp=0"
-//                    " meter:2 goto:4");
-//
-//      // MTC Non-GBR packets are filtered by DSCP field DSCP_AF31.
-//      // Apply MTC Non-GBR meter band. Send the packet to Output table.
-//      //
-//      // DSCP_AF31 (DSCP decimal 26)
-//      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=15"
-//                    " eth_type=0x800,meta=0x1,ip_dscp=26"
-//                    " meter:3 goto:4");
-//      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=15"
-//                    " eth_type=0x800,meta=0x2,ip_dscp=26"
-//                    " meter:4 goto:4");
-//    }
-//  else if (GetLinkSlicingMode () == OpMode::AUTO)
-//    {
-//      // When the network slicing operation mode is AUTO, the Non-GBR traffic
-//      // of all slices will be monitored together. Here is how we are using
-//      // meter IDs:
-//      // Meter ID 1 -> clockwise FWD direction
-//      // Meter ID 2 -> counterclockwise BWD direction
-//
-//      // Non-GBR packets are filtered by DSCP fields DSCP_AF31, DSCP_AF11, and
-//      // DSCP_BE. Apply Non-GBR meter band. Send the packet to Output table.
-//      //
-//      // DSCP_AF31 (DSCP decimal 26)
-//      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=15"
-//                    " eth_type=0x800,meta=0x1,ip_dscp=26"
-//                    " meter:1 goto:4");
-//      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=15"
-//                    " eth_type=0x800,meta=0x2,ip_dscp=26"
-//                    " meter:2 goto:4");
-//
-//      // DSCP_AF11 (DSCP decimal 10)
-//      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
-//                    " eth_type=0x800,meta=0x1,ip_dscp=10"
-//                    " meter:1 goto:4");
-//      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=17"
-//                    " eth_type=0x800,meta=0x2,ip_dscp=10"
-//                    " meter:2 goto:4");
-//
-//      // DSCP_BE (DSCP decimal 0)
-//      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
-//                    " eth_type=0x800,meta=0x1,ip_dscp=0"
-//                    " meter:1 goto:4");
-//      DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=16"
-//                    " eth_type=0x800,meta=0x2,ip_dscp=0"
-//                    " meter:2 goto:4");
-//    }
+  // -------------------------------------------------------------------------
+  // Table 3 -- Slicing table -- [from higher to lower priority]
+  //
+  // We are using the IP DSCP field to identify Non-GBR traffic.
+  // Apply Non-GBR meter band. Send the packet to Output table.
+
+  if (GetLinkSlicingMode () == OpMode::ON)
+    {
+      // Apply meter rules for each slice.
+      for (int s = 0; s < SliceId::ALL; s++)
+        {
+          SliceId slice = static_cast<SliceId> (s);
+          for (int d = 0; d <= LinkInfo::BWD; d++)
+            {
+              uint16_t metaValue = static_cast<uint16_t> (d + 1);
+              uint32_t meterId = GetSvelteMeterId (slice, d);
+
+              // Non-GBR QCIs range is [5, 9].
+              for (int q = 5; q <= 9; q++)
+                {
+                  EpsBearer::Qci qci = static_cast<EpsBearer::Qci> (q);
+                  Ipv4Header::DscpType dscp = Qci2Dscp (qci);
+
+                  // Apply this meter to the traffic of this slice only.
+                  std::ostringstream cmd;
+                  cmd << "flow-mod cmd=add,table=3,prio=16"
+                      << " eth_type=0x800,ip_proto=17,meta=" << metaValue
+                      << ",gtpu_teid=" << (meterId & TEID_SLICE_MASK)
+                      << "/" << TEID_SLICE_MASK
+                      << ",ip_dscp=" << static_cast<uint16_t> (dscp)
+                      << " meter:" << meterId
+                      << " goto:4";
+                  DpctlExecute (swtch, cmd.str ());
+                }
+            }
+        }
+    }
+  else if (GetLinkSlicingMode () == OpMode::AUTO)
+    {
+      SliceId slice = SliceId::ALL;
+      for (int d = 0; d <= LinkInfo::BWD; d++)
+        {
+          uint16_t metaValue = static_cast<uint16_t> (d + 1);
+          uint32_t meterId = GetSvelteMeterId (slice, d);
+
+          // Non-GBR QCIs range is [5, 9].
+          for (int q = 5; q <= 9; q++)
+            {
+              EpsBearer::Qci qci = static_cast<EpsBearer::Qci> (q);
+              Ipv4Header::DscpType dscp = Qci2Dscp (qci);
+
+              // Apply this meter to the traffic of all slices.
+              std::ostringstream cmd;
+              cmd << "flow-mod cmd=add,table=3,prio=16"
+                  << " eth_type=0x800,ip_proto=17,meta=" << metaValue
+                  << ",ip_dscp=" << static_cast<uint16_t> (dscp)
+                  << " meter:" << meterId
+                  << " goto:4";
+              DpctlExecute (swtch, cmd.str ());
+            }
+        }
+    }
 
   // Chain up.
   BackhaulController::HandshakeSuccessful (swtch);
