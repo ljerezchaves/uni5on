@@ -174,6 +174,7 @@ Ipv4Header::DscpType Qci2Dscp (EpsBearer::Qci qci);
  *                             A B C     D
  *
  *  4 (A) bits are reserved for slicing meters.
+ *        - For TEID these bits are fixed to 0x0.
  *  4 (B) bits are used to identify the logical slice (slice ID).
  * 20 (C) bits are used to identify the UE (IMSI).
  *  4 (D) bits are used to identify the bearer withing the UE (BID).

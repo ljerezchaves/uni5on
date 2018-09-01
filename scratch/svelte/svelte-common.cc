@@ -161,7 +161,9 @@ GetSvelteTeid (SliceId sliceId, uint32_t ueImsi, uint32_t bearerId)
   NS_ASSERT_MSG (ueImsi <= 0xFFFFF, "UE IMSI cannot exceed 20 bits.");
   NS_ASSERT_MSG (bearerId <= 0xF, "Bearer ID cannot exceed 4 bits.");
 
-  uint32_t teid = static_cast<uint32_t> (sliceId);
+  uint32_t teid = 0x0;
+  teid <<= 4;
+  teid |= static_cast<uint32_t> (sliceId);
   teid <<= 20;
   teid |= ueImsi;
   teid <<= 4;
