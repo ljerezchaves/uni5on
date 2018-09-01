@@ -409,7 +409,7 @@ SvelteHelper::NotifyConstructionCompleted (void)
       NS_LOG_WARN ("TMP slice being ignored by now.");
     }
 
-  NS_ABORT_MSG_IF (quota == 100, "Inconsistent initial quotas.");
+  NS_ABORT_MSG_IF (quota != 100, "Inconsistent initial quotas.");
 
   // Creating the statistic calculators.
   m_admissionStats  = CreateObject<AdmissionStatsCalculator> ();
