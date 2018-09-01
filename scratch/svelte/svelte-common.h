@@ -53,7 +53,7 @@ typedef std::list<BearerContext_t> BearerContextList_t;
  */
 typedef enum
 {
-  // Don't change enum order. S1U and S5 are used as array indices in RingInfo.
+  // Don't change enum order. S1U and S5 are used as array indexes in RingInfo.
   S1U  = 0,   //!< S1-U interface connecting eNB to S-GW.
   S5   = 1,   //!< S5 interface connecting S-GW to P-GW.
   X2   = 2,   //!< X2 interface connecting eNB to eNB.
@@ -116,16 +116,18 @@ std::string SliceIdStr (SliceId slice);
  * \param dscp The IP DSCP value.
  * \return The IP ToS mapped for this DSCP.
  *
- * \internal We are mapping the DSCP
- * value (RFC 2474) to the IP Type of Service (ToS) (RFC 1349) field because
- * the pfifo_fast queue discipline from the traffic control module still uses
- * the old IP ToS definition. Thus, we are 'translating' the DSCP values so
- * we can keep the priority queueing consistency both on traffic control
- * module and OpenFlow port queues.
+ * \internal
+ * We are mapping the DSCP value (RFC 2474) to the IP Type of Service (ToS)
+ * (RFC 1349) field because the pfifo_fast queue discipline from the traffic
+ * control module still uses the old IP ToS definition. Thus, we are
+ * 'translating' the DSCP values so we can keep the priority queuing
+ * consistency both on traffic control module and OpenFlow port queues.
  * \verbatim
  * DSCP_EF   --> ToS 0x10 --> priority 6 --> queue 0 (high priority).
- * DSCP_AF41 --> ToS 0x00 --> priority 0 --> queue 1 (normal priority).
- * DSCP_AF31 --> ToS 0x18 --> priority 4 --> queue 1 (normal priority).
+ * DSCP_AF41 --> ToS 0x18 --> priority 4 --> queue 1 (normal priority).
+ * DSCP_AF31 --> ToS 0x00 --> priority 0 --> queue 1 (normal priority).
+ * DSCP_AF32 --> ToS 0x00 --> priority 0 --> queue 1 (normal priority).
+ * DSCP_AF11 --> ToS 0x00 --> priority 0 --> queue 1 (normal priority).
  * DSCP_AF11 --> ToS 0x00 --> priority 0 --> queue 1 (normal priority).
  * DSCP_BE   --> ToS 0x08 --> priority 2 --> queue 2 (low priority).
  * \endverbatim
@@ -139,13 +141,17 @@ uint8_t Dscp2Tos (Ipv4Header::DscpType dscp);
  * \param qci The EPS bearer QCI.
  * \return The IP DSCP mapped for this QCI.
  *
- * \internal The following EPS QCI --> IP DSCP mapping was adapted from
- * https://ericlajoie.com/epcqos.html to meet our needs.
+ * \internal
+ * The following EPS QCI --> IP DSCP mapping is specified in "GSM Association
+ * IR.34 (2013) Guidelines for IPX Provider networks, Version 9.1, Section 6.2,
+ * May 2013."
  * \verbatim
  *     GBR traffic: QCI 1, 2, 3 --> DSCP_EF
  *                  QCI 4       --> DSCP_AF41
  * Non-GBR traffic: QCI 5       --> DSCP_AF31
- *                  QCI 6, 7, 8 --> DSCP_AF11
+ *                  QCI 6       --> DSCP_AF32
+ *                  QCI 7       --> DSCP_AF21
+ *                  QCI 8       --> DSCP_AF11
  *                  QCI 9       --> DSCP_BE
  * \endverbatim
  */

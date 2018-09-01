@@ -90,23 +90,17 @@ Dscp2Tos (Ipv4Header::DscpType dscp)
 {
   switch (dscp)
     {
-    // Mapping default traffic to low priority queues.
-    case Ipv4Header::DscpDefault:
-      return 0x08;
-
-    // Mapping HTC VoIP and MTC auto pilot traffic to high priority queues.
     case Ipv4Header::DSCP_EF:
       return 0x10;
-
-    // Mapping MTC Non-GBR traffic to normal priority queues.
-    case Ipv4Header::DSCP_AF31:
-      return 0x18;
-
-    // Mapping other HTC traffics to normal priority queues.
     case Ipv4Header::DSCP_AF41:
+      return 0x18;
+    case Ipv4Header::DSCP_AF32:
+    case Ipv4Header::DSCP_AF31:
+    case Ipv4Header::DSCP_AF21:
     case Ipv4Header::DSCP_AF11:
       return 0x00;
-
+    case Ipv4Header::DscpDefault:
+      return 0x08;
     default:
       NS_ABORT_MSG ("No ToS mapped value for DSCP " << dscp);
       return 0x00;
@@ -118,39 +112,39 @@ Qci2Dscp (EpsBearer::Qci qci)
 {
   switch (qci)
     {
-    // QCI 1: used by the HTC VoIP application.
+    // QCI 1: VoIP.
     case EpsBearer::GBR_CONV_VOICE:
       return Ipv4Header::DSCP_EF;
 
-    // QCI 2: not in use.
+    // QCI 2:
     case EpsBearer::GBR_CONV_VIDEO:
       return Ipv4Header::DSCP_EF;
 
-    // QCI 3: used by the MTC auto pilot application.
+    // QCI 3: Auto pilot.
     case EpsBearer::GBR_GAMING:
       return Ipv4Header::DSCP_EF;
 
-    // QCI 4: used by the HTC live video application.
+    // QCI 4: Live video.
     case EpsBearer::GBR_NON_CONV_VIDEO:
       return Ipv4Header::DSCP_AF41;
 
-    // QCI 5: used by the MTC auto pilot application.
+    // QCI 5: Auto pilot.
     case EpsBearer::NGBR_IMS:
       return Ipv4Header::DSCP_AF31;
 
-    // QCI 6: used by the HTC buffered video application.
+    // QCI 6: Buffered video.
     case EpsBearer::NGBR_VIDEO_TCP_OPERATOR:
-      return Ipv4Header::DSCP_AF11;
+      return Ipv4Header::DSCP_AF32;
 
-    // QCI 7: used by the HTC live video application.
+    // QCI 7: Live video.
     case EpsBearer::NGBR_VOICE_VIDEO_GAMING:
-      return Ipv4Header::DSCP_AF11;
+      return Ipv4Header::DSCP_AF21;
 
-    // QCI 8: used by the HTC HTTP application.
+    // QCI 8: HTTP.
     case EpsBearer::NGBR_VIDEO_TCP_PREMIUM:
       return Ipv4Header::DSCP_AF11;
 
-    // QCI 9: used by default bearers and by aggregated traffic.
+    // QCI 9:
     case EpsBearer::NGBR_VIDEO_TCP_DEFAULT:
       return Ipv4Header::DscpDefault;
 
