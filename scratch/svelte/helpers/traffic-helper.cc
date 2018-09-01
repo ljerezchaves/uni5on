@@ -265,26 +265,27 @@ TrafficHelper::InstallApplications ()
         "/NodeList/*/ApplicationList/*/$ns3::SliceController/SessionCreated",
         MakeCallback (&TrafficManager::SessionCreatedCallback, m_ueManager));
 
-      // Install applications into UEs.
+      // Install applications (sorted by QCI) into UEs.
+      if (m_gbrVoip)
+        {
+          // UDP bidirectional VoIP traffic over dedicated GBR EPS bearer.
+          // This QCI 1 is typically associated with conversational voice.
+          GbrQosInformation qos;
+          qos.gbrDl = 47200;  // ~46.09 Kbps
+          qos.gbrUl = 47200;  // ~46.09 Kbps
+          EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
+          InstallVoip (bearer);
+        }
+
       if (m_gbrAutoPilot)
         {
           // UDP uplink auto-pilot traffic over dedicated GBR EPS bearer.
           // This QCI 3 is typically associated with an operator controlled
-          // service, i.e., a service where the data flow aggregate's
-          // uplink/downlink packet filters are known at the point in time
+          // service, i.e., a service where the data flow aggregates
+          // uplink/downlink packet filters are known at the point in time.
           GbrQosInformation qos;
           qos.gbrUl = 150000;  // ~146 Kbps
           EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
-          InstallAutoPilot (bearer);
-        }
-
-      if (m_nonGbrAutoPilot)
-        {
-          // UDP uplink auto-pilot traffic over dedicated Non-GBR EPS bearer.
-          // This QCI 5 is typically associated with IMS signalling, but we are
-          // using it here as the last Non-GBR QCI available so we can uniquely
-          // identify this Non-GBR traffic on the network.
-          EpsBearer bearer (EpsBearer::NGBR_IMS);
           InstallAutoPilot (bearer);
         }
 
@@ -301,15 +302,14 @@ TrafficHelper::InstallApplications ()
           InstallLiveVideo (bearer, GetVideoFilename (videoIdx));
         }
 
-      if (m_gbrVoip)
+      if (m_nonGbrAutoPilot)
         {
-          // UDP bidirectional VoIP traffic over dedicated GBR EPS bearer.
-          // This QCI 1 is typically associated with conversational voice.
-          GbrQosInformation qos;
-          qos.gbrDl = 47200;  // ~46.09 Kbps
-          qos.gbrUl = 47200;  // ~46.09 Kbps
-          EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
-          InstallVoip (bearer);
+          // UDP uplink auto-pilot traffic over dedicated Non-GBR EPS bearer.
+          // This QCI 5 is typically associated with IMS signaling, but we are
+          // using it here as the last Non-GBR QCI available so we can uniquely
+          // identify this Non-GBR traffic on the network.
+          EpsBearer bearer (EpsBearer::NGBR_IMS);
+          InstallAutoPilot (bearer);
         }
 
       if (m_nonGbrBuffVideo)
@@ -322,16 +322,6 @@ TrafficHelper::InstallApplications ()
           InstallBufferedVideo (bearer, GetVideoFilename (videoIdx));
         }
 
-      if (m_nonGbrHttp)
-        {
-          // TCP bidirectional HTTP traffic over dedicated Non-GBR EPS bearer.
-          // This QCI 8 could be used for a dedicated 'premium bearer' for any
-          // subscriber, or could be used for the default bearer of a for
-          // 'premium subscribers'.
-          EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
-          InstallHttp (bearer);
-        }
-
       if (m_nonGbrLiveVideo)
         {
           // UDP downlink live video streaming over dedicated Non-GBR EPS
@@ -340,6 +330,16 @@ TrafficHelper::InstallApplications ()
           int videoIdx = m_videoRng->GetInteger ();
           EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING);
           InstallLiveVideo (bearer, GetVideoFilename (videoIdx));
+        }
+
+      if (m_nonGbrHttp)
+        {
+          // TCP bidirectional HTTP traffic over dedicated Non-GBR EPS bearer.
+          // This QCI 8 could be used for a dedicated 'premium bearer' for any
+          // subscriber, or could be used for the default bearer of a for
+          // 'premium subscribers'.
+          EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
+          InstallHttp (bearer);
         }
     }
   m_ueManager = 0;
