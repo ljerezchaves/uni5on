@@ -38,10 +38,13 @@ BackhaulController::BackhaulController ()
 
   StaticInitialize ();
 
-  // Initializing pointers to slice controllers.
+  // Populating slice controllers map.
   for (int s = 0; s < SliceId::ALL; s++)
     {
-      m_sliceCtrls [s] = 0;
+      SliceId slice = static_cast<SliceId> (s);
+      std::pair<SliceId, Ptr<SliceController> > entry (slice, 0);
+      auto ret = m_sliceCtrlById.insert (entry);
+      NS_ABORT_MSG_IF (ret.second == false, "Existing slice controller.");
     }
 }
 
@@ -131,11 +134,7 @@ BackhaulController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  for (int s = 0; s < SliceId::ALL; s++)
-    {
-      m_sliceCtrls [s] = 0;
-    }
-
+  m_sliceCtrlById.clear ();
   OFSwitch13Controller::DoDispose ();
 }
 
@@ -209,14 +208,21 @@ BackhaulController::NotifyEpcAttach (
 }
 
 void
-BackhaulController::NotifySliceController (Ptr<SliceController> sliceCtrl)
+BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
 {
-  NS_LOG_FUNCTION (this << sliceCtrl);
+  NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG (m_sliceCtrls [sliceCtrl->GetSliceId ()] == 0,
-                 "A controller for this slice is already defined.");
+  ApplicationContainer::Iterator it;
+  for (it = controllers.Begin (); it != controllers.End (); ++it)
+    {
+      Ptr<SliceController> ctrl = DynamicCast<SliceController> (*it);
+      SliceId slice = ctrl->GetSliceId ();
 
-  m_sliceCtrls [sliceCtrl->GetSliceId ()] = sliceCtrl;
+      // Update controller application.
+      auto it = m_sliceCtrlById.find (slice);
+      NS_ASSERT_MSG (it != m_sliceCtrlById.end (), "Invalid slice ID.");
+      it->second = ctrl;
+    }
 }
 
 ofl_err

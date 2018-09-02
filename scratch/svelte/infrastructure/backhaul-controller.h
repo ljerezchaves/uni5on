@@ -45,6 +45,7 @@ class BackhaulController : public OFSwitch13Controller
 {
   friend class BackhaulNetwork;
   friend class SliceController;
+  friend class SvelteHelper;
 
 public:
   BackhaulController ();           //!< Default constructor.
@@ -144,15 +145,16 @@ protected:
                         Ptr<NetDevice> epcDev);
 
   /**
-   * Notify this controller of a new logical slice controller.
-   * \param sliceCtrl The logical slice controller.
+   * Notify this controller that all the logical slices have already been
+   * configured and the slice controllers were created.
+   * \param controllers The logical slice controllers.
    */
-  void NotifySliceController (Ptr<SliceController> sliceCtrl);
+  void NotifySlicesBuilt (ApplicationContainer &controllers);
 
   /**
    * Notify this controller that all backhaul switches have already been
    * configured and the connections between them are finished.
-   * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
+   * \param devices The OpenFlow switch devices.
    */
   virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices) = 0;
 
@@ -191,11 +193,13 @@ private:
   /** Initialize static attributes only once. */
   static void StaticInitialize (void);
 
-  Ptr<SliceController>  m_sliceCtrls [SliceId::ALL];  // Slice controllers.
-
   // Internal mechanisms for performance improvement.
   OpMode                m_priorityQueues; //!< DSCP priority queues mechanism.
   OpMode                m_slicing;        //!< Network slicing mechanism.
+
+  /** Map saving Slice ID / Slice controller application. */
+  typedef std::map<SliceId, Ptr<SliceController> > SliceIdCtrlAppMap_t;
+  SliceIdCtrlAppMap_t   m_sliceCtrlById;  //!< Slice controller mapped values.
 
   /** Map saving IP DSCP value / OpenFlow queue id. */
   typedef std::map<Ipv4Header::DscpType, uint32_t> DscpQueueMap_t;
