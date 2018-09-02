@@ -161,7 +161,6 @@ BackhaulController::GetLinkInfo (uint16_t idx1, uint16_t idx2) const
 {
   NS_LOG_FUNCTION (this << idx1 << idx2);
 
-  // FIXME Salvar esses ponteiros aqui mesmo.
   return LinkInfo::GetPointer (GetDpId (idx1), GetDpId (idx2));
 }
 
