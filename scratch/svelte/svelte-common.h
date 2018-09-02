@@ -49,6 +49,9 @@ typedef EpcS11SapMme::BearerContextCreated BearerContext_t;
 /** List of bearer context created. */
 typedef std::list<BearerContext_t> BearerContextList_t;
 
+/** A pair of switch datapath IDs. */
+typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
+
 /**
  * \ingroup svelte
  * Enumeration of LTE logical interfaces.

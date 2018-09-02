@@ -31,14 +31,8 @@ namespace ns3 {
 
 class LinkInfo;
 
-/** A pair of switch datapath IDs. */
-typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
-
 /** A list of link information objects. */
 typedef std::list<Ptr<LinkInfo> > LinkInfoList_t;
-
-/** Map saving slice ID / slice quota. */
-typedef std::map<SliceId, uint16_t> SliceQuotaMap_t;
 
 /**
  * \ingroup svelteInfra
@@ -57,6 +51,9 @@ typedef std::map<SliceId, uint16_t> SliceQuotaMap_t;
 class LinkInfo : public Object
 {
 public:
+  /** Map saving slice ID / slice quota. */
+  typedef std::map<SliceId, uint16_t> SliceQuotaMap_t;
+
   /** Link direction. */
   enum Direction
   {
