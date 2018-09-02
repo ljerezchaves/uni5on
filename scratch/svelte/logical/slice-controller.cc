@@ -752,7 +752,7 @@ SliceController::PgwAdaptiveMechanism (void)
       for (uint16_t currIdx = 1; currIdx <= activeTfts; currIdx++)
         {
           RoutingInfoList_t bearerList;
-          bearerList = RoutingInfo::GetInstalledList (m_sliceId, currIdx);
+          RoutingInfo::GetInstalledList (bearerList, m_sliceId, currIdx);
           for (auto const &rInfo : bearerList)
             {
               uint16_t destIdx = GetTftIdx (rInfo, futureTfts);

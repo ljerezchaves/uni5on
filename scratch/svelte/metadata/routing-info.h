@@ -178,10 +178,11 @@ protected:
    * filtered by LTE logical slice and P-GW TFT switch index.
    * \param slice The LTE logical slice ID.
    * \param pgwTftIdx The P-GW TFT index.
-   * \return The list of installed bearers.
+   * \param [out] returnList The list of installed bearers.
    */
-  static RoutingInfoList_t GetInstalledList (SliceId slice = SliceId::ALL,
-                                             uint16_t pgwTftIdx = 0);
+  static void GetInstalledList (RoutingInfoList_t &returnList,
+                                SliceId slice = SliceId::ALL,
+                                uint16_t pgwTftIdx = 0);
 
   /**
    * Increase the priority value by one unit.

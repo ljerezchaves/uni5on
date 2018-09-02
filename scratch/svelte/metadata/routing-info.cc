@@ -518,12 +518,13 @@ RoutingInfo::SetTimeout (uint16_t value)
   m_timeout = value;
 }
 
-RoutingInfoList_t
-RoutingInfo::GetInstalledList (SliceId slice, uint16_t pgwTftIdx)
+void
+RoutingInfo::GetInstalledList (RoutingInfoList_t &returnList, SliceId slice,
+                               uint16_t pgwTftIdx)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  RoutingInfoList_t list;
+  NS_ASSERT_MSG (!returnList.size (), "The return list should be empty.");
   for (auto const &it : m_routingInfoByTeid)
     {
       Ptr<RoutingInfo> rInfo = it.second;
@@ -540,9 +541,8 @@ RoutingInfo::GetInstalledList (SliceId slice, uint16_t pgwTftIdx)
         {
           continue;
         }
-      list.push_back (rInfo);
+      returnList.push_back (rInfo);
     }
-  return list;
 }
 
 void
