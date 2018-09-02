@@ -73,7 +73,7 @@ protected:
   bool BearerRequest (Ptr<RoutingInfo> rInfo);
   bool BearerRelease (Ptr<RoutingInfo> rInfo);
   void NotifyBearerCreated (Ptr<RoutingInfo> rInfo);
-  void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices);
+  void NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices);
   bool TopologyRoutingInstall (Ptr<RoutingInfo> rInfo);
   bool TopologyRoutingRemove (Ptr<RoutingInfo> rInfo);
   // Inherited from BackhaulController.

@@ -154,7 +154,7 @@ protected:
    * configured and the connections between them are finished.
    * \param devices The OFSwitch13DeviceContainer for OpenFlow switch devices.
    */
-  virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer devices) = 0;
+  virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices) = 0;
 
   /**
    * Install TEID routing OpenFlow match rules into backhaul switches.

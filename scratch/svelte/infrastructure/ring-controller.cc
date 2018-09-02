@@ -187,7 +187,7 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 }
 
 void
-RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer devices)
+RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
 {
   NS_LOG_FUNCTION (this);
 
