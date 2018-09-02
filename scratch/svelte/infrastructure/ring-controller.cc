@@ -186,6 +186,31 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 }
 
 void
+RingController::NotifySlicesBuilt (ApplicationContainer &controllers)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Chain up first, as we need to update the slice controller map and set
+  // initial slice quotas before configurin slicing meters.
+  BackhaulController::NotifySlicesBuilt (controllers);
+
+  // ---------------------------------------------------------------------
+  // Meter table
+  //
+  // Installing meters entries only if the link slicing mechanism is enabled.
+  if (GetLinkSlicingMode () != OpMode::OFF)
+    {
+      for (auto const &lInfo : LinkInfo::GetList ())
+        {
+          SlicingMeterInstall (lInfo);
+          lInfo->TraceConnectWithoutContext (
+            "MeterAdjusted", MakeCallback (
+              &RingController::SlicingMeterAdjusted, this));
+        }
+    }
+}
+
+void
 RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
 {
   NS_LOG_FUNCTION (this);
@@ -194,24 +219,13 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
   m_switchDevices = devices;
   CreateSpanningTree ();
 
-  // NOTE that following commands works as LINKS ARE CREATED IN CLOCKWISE
-  // DIRECTION, and switches inside each lInfo are saved in the same order.
+  // The following commands works as LINKS ARE CREATED IN CLOCKWISE DIRECTION.
+  // Do not merge the two following loops. Groups must be created first to
+  // avoid OpenFlow error messages with BAD_OUT_GROUP code.
+
+  // Iterate over links configuring the groups.
   for (auto const &lInfo : LinkInfo::GetList ())
     {
-      // ---------------------------------------------------------------------
-      // Meter table
-      //
-      // Installing meters entries when the link slicing mechanism is enabled.
-      if (GetLinkSlicingMode () != OpMode::OFF)
-        {
-          SlicingMeterInstall (lInfo);
-
-          // Connect this controller to LinkInfo meter adjusted trace source.
-          lInfo->TraceConnectWithoutContext (
-            "MeterAdjusted", MakeCallback (
-              &RingController::SlicingMeterAdjusted, this));
-        }
-
       // ---------------------------------------------------------------------
       // Group table
       //
@@ -231,8 +245,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
       DpctlSchedule (lInfo->GetSwDpId (1), cmd2.str ());
     }
 
-  // Do not merge the following loop with the previous one. Groups must be
-  // created first to avoid OpenFlow error messages with BAD_OUT_GROUP code.
+  // Iterate over links configuring the forwarding rules.
   for (auto const &lInfo : LinkInfo::GetList ())
     {
       // ---------------------------------------------------------------------
@@ -375,7 +388,6 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   //
   // We are using the IP DSCP field to identify Non-GBR traffic.
   // Apply Non-GBR meter band. Send the packet to Output table.
-
   if (GetLinkSlicingMode () == OpMode::ON)
     {
       // Apply meter rules for each slice.

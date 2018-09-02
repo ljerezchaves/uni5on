@@ -148,15 +148,15 @@ protected:
    * \param portNo The port number created at the OpenFlow switch.
    * \param epcDev The device created at the EPC node.
    */
-  void NotifyEpcAttach (Ptr<OFSwitch13Device> swDev, uint32_t portNo,
-                        Ptr<NetDevice> epcDev);
+  virtual void NotifyEpcAttach (Ptr<OFSwitch13Device> swDev, uint32_t portNo,
+                                Ptr<NetDevice> epcDev);
 
   /**
    * Notify this controller that all the logical slices have already been
    * configured and the slice controllers were created.
    * \param controllers The logical slice controllers.
    */
-  void NotifySlicesBuilt (ApplicationContainer &controllers);
+  virtual void NotifySlicesBuilt (ApplicationContainer &controllers);
 
   /**
    * Notify this controller that all backhaul switches have already been

@@ -161,6 +161,7 @@ BackhaulController::GetLinkInfo (uint16_t idx1, uint16_t idx2) const
 {
   NS_LOG_FUNCTION (this << idx1 << idx2);
 
+  // FIXME Salvar esses ponteiros aqui mesmo.
   return LinkInfo::GetPointer (GetDpId (idx1), GetDpId (idx2));
 }
 
@@ -222,21 +223,39 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
 {
   NS_LOG_FUNCTION (this);
 
-  // Updating slice controllers map.
+  // Update the slice controller map with configured controller applications.
   ApplicationContainer::Iterator it;
   for (it = controllers.Begin (); it != controllers.End (); ++it)
     {
       Ptr<SliceController> ctrl = DynamicCast<SliceController> (*it);
       SliceId slice = ctrl->GetSliceId ();
 
-      // Update controller application.
       auto it = m_sliceCtrlById.find (slice);
       NS_ASSERT_MSG (it != m_sliceCtrlById.end (), "Invalid slice ID.");
       it->second = ctrl;
     }
 
-  // Setting the initial slice quotas in all links.
-  // TODO
+  // Create the slice quota map for all slices (including those not configured
+  // with null application pointer).
+  LinkInfo::SliceQuotaMap_t quotas;
+  for (auto const &it : m_sliceCtrlById)
+    {
+      UintegerValue quotaValue (0);
+      if (it.second)
+        {
+          it.second->GetAttribute ("Quota", quotaValue);
+        }
+      std::pair<SliceId, uint16_t> entry (it.first, quotaValue.Get ());
+      auto ret = quotas.insert (entry);
+      NS_ABORT_MSG_IF (ret.second == false, "Error setting quota map.");
+    }
+
+  // Iterate over links setting the initial quotas.
+  for (auto const &lInfo : LinkInfo::GetList ())
+    {
+      lInfo->SetSliceQuotas (LinkInfo::FWD, quotas);
+      lInfo->SetSliceQuotas (LinkInfo::BWD, quotas);
+    }
 }
 
 ofl_err
