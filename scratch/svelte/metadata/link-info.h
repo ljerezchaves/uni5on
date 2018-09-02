@@ -50,6 +50,9 @@ typedef std::vector<Ptr<LinkInfo> > LinkInfoList_t;
  */
 class LinkInfo : public Object
 {
+  friend class BackhaulController;
+  friend class RingController;
+
 public:
   /** Map saving slice ID / slice quota. */
   typedef std::map<SliceId, uint16_t> SliceQuotaMap_t;
@@ -99,24 +102,15 @@ public:
   //\}
 
   /**
-   * Get the EWMA throughput bit rate for this link on the given direction,
-   * optionally filtered by the network slice.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \return The EWMA throughput.
+   * For two switches, this methods asserts that both datapath IDs are valid
+   * for this link, and identifies the link direction based on source and
+   * destination datapath IDs.
+   * \param src The source switch datapath ID.
+   * \param dst The destination switch datapath ID.
+   * \return The link direction.
    */
-  uint64_t GetThpBitRate (
-    Direction dir, SliceId slice = SliceId::ALL) const;
-
-  /**
-   * Get the EWMA throughput ratio for this link on the given direction,
-   * optionally filtered by the network slice.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \return The bandwidth usage ratio.
-   */
-  double GetThpSliceRatio (
-    Direction dir, SliceId slice = SliceId::ALL) const;
+  LinkInfo::Direction GetDirection (
+    uint64_t src, uint64_t dst) const;
 
   /**
    * Get the available (not reserved) bit rate for traffic over this link on
@@ -136,6 +130,24 @@ public:
    * \return The available slice ratio.
    */
   double GetFreeSliceRatio (
+    Direction dir, SliceId slice = SliceId::ALL) const;
+
+  /**
+   * Inspect physical channel for the assigned bit rate, which is the same for
+   * both directions in full-duplex links.
+   * \return The channel maximum nominal bit rate (bps).
+   */
+  uint64_t GetLinkBitRate (void) const;
+
+  /**
+   * Get the maximum bit rate for this link on the given direction, optionally
+   * filtered by the network slice. If no slice is given, the this method will
+   * return the GetLinkBitRate ();
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The maximum bit rate.
+   */
+  uint64_t GetMaxBitRate (
     Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
@@ -159,22 +171,31 @@ public:
     Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
-   * Get the maximum bit rate for this link on the given direction, optionally
-   * filtered by the network slice. If no slice is given, the this method will
-   * return the GetLinkBitRate ();
-   * \param dir The link direction.
-   * \param slice The network slice.
-   * \return The maximum bit rate.
-   */
-  uint64_t GetMaxBitRate (
-    Direction dir, SliceId slice = SliceId::ALL) const;
-
-  /**
    * Get the pair of switch datapath IDs for this link, respecting the
    * internal order.
    * \return The pair of switch datapath IDs.
    */
   DpIdPair_t GetSwitchDpIdPair (void) const;
+
+  /**
+   * Get the EWMA throughput bit rate for this link on the given direction,
+   * optionally filtered by the network slice.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The EWMA throughput.
+   */
+  uint64_t GetThpBitRate (
+    Direction dir, SliceId slice = SliceId::ALL) const;
+
+  /**
+   * Get the EWMA throughput ratio for this link on the given direction,
+   * optionally filtered by the network slice.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The bandwidth usage ratio.
+   */
+  double GetThpSliceRatio (
+    Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
    * Get the total number of transmitted bytes over this link on the given
@@ -199,38 +220,10 @@ public:
     uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate) const;
 
   /**
-   * Release the requested bit rate between these two switches on the given
-   * network slice.
-   * \param src The source switch datapath ID.
-   * \param dst The destination switch datapath ID.
-   * \param slice The network slice.
-   * \param bitRate The bit rate to release.
-   * \return True if succeeded, false otherwise.
+   * Inspect physical channel for half-duplex or full-duplex operation mode.
+   * \return True when link in full-duplex mode, false otherwise.
    */
-  bool ReleaseBitRate (
-    uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate);
-
-  /**
-   * Reserve the requested bit rate between these two switches on the given
-   * network slice.
-   * \param src The source switch datapath ID.
-   * \param dst The destination switch datapath ID.
-   * \param slice The network slice.
-   * \param bitRate The bit rate to reserve.
-   * \return True if succeeded, false otherwise.
-   */
-  bool ReserveBitRate (
-    uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate);
-
-  /**
-   * Update the maximum bit rate over this link on the given
-   * direction for each network slice.
-   * \param dir The link direction.
-   * \param quotas The map with slice quotas.
-   * \return True if succeeded, false otherwise.
-   */
-  bool SetSliceQuotas (
-    Direction dir, SliceQuotaMap_t &quotas);
+  bool IsFullDuplexLink (void) const;
 
   /**
    * Get the string representing the given direction.
@@ -283,35 +276,45 @@ private:
   };
 
   /**
-   * For two switches, this methods asserts that both datapath IDs are valid
-   * for this link, and identifies the link direction based on source and
-   * destination datapath IDs.
-   * \param src The source switch datapath ID.
-   * \param dst The destination switch datapath ID.
-   * \return The link direction.
-   */
-  LinkInfo::Direction GetDirection (
-    uint64_t src, uint64_t dst) const;
-
-  /**
-   * Inspect physical channel for the assigned bit rate, which is the same for
-   * both directions in full-duplex links.
-   * \return The channel maximum nominal bit rate (bps).
-   */
-  uint64_t GetLinkBitRate (void) const;
-
-  /**
-   * Inspect physical channel for half-duplex or full-duplex operation mode.
-   * \return True when link in full-duplex mode, false otherwise.
-   */
-  bool IsFullDuplexLink (void) const;
-
-  /**
    * Notify this link of a successfully transmitted packet in link
    * channel. This method will update internal byte counters.
    * \param packet The transmitted packet.
    */
   void NotifyTxPacket (std::string context, Ptr<const Packet> packet);
+
+  /**
+   * Release the requested bit rate between these two switches on the given
+   * network slice.
+   * \param src The source switch datapath ID.
+   * \param dst The destination switch datapath ID.
+   * \param slice The network slice.
+   * \param bitRate The bit rate to release.
+   * \return True if succeeded, false otherwise.
+   */
+  bool ReleaseBitRate (
+    uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate);
+
+  /**
+   * Reserve the requested bit rate between these two switches on the given
+   * network slice.
+   * \param src The source switch datapath ID.
+   * \param dst The destination switch datapath ID.
+   * \param slice The network slice.
+   * \param bitRate The bit rate to reserve.
+   * \return True if succeeded, false otherwise.
+   */
+  bool ReserveBitRate (
+    uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate);
+
+  /**
+   * Update the maximum bit rate over this link on the given
+   * direction for each network slice.
+   * \param dir The link direction.
+   * \param quotas The map with slice quotas.
+   * \return True if succeeded, false otherwise.
+   */
+  bool SetSliceQuotas (
+    Direction dir, SliceQuotaMap_t &quotas);
 
   /**
    * Update the internal meter diff for firing the meter adjusted trace source

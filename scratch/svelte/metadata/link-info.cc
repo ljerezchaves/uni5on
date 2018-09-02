@@ -132,28 +132,22 @@ LinkInfo::GetPortMacAddr (uint8_t idx) const
   return Mac48Address::ConvertFrom (m_switches [idx].portDev->GetAddress ());
 }
 
-uint64_t
-LinkInfo::GetThpBitRate (Direction dir, SliceId slice) const
+LinkInfo::Direction
+LinkInfo::GetDirection (uint64_t src, uint64_t dst) const
 {
-  NS_LOG_FUNCTION (this << dir << slice);
+  NS_LOG_FUNCTION (this << src << dst);
 
-  return m_slices [slice][dir].ewmaThp;
-}
+  NS_ASSERT_MSG ((src == GetSwDpId (0) && dst == GetSwDpId (1))
+                 || (src == GetSwDpId (1) && dst == GetSwDpId (0)),
+                 "Invalid datapath IDs for this connection.");
 
-double
-LinkInfo::GetThpSliceRatio (Direction dir, SliceId slice) const
-{
-  NS_LOG_FUNCTION (this << dir << slice);
-
-  if (GetMaxBitRate (dir, slice) == 0)
+  if (src == GetSwDpId (0))
     {
-      NS_ASSERT_MSG (GetThpBitRate (dir, slice) == 0, "Invalid slice usage.");
-      return 0.0;
+      return LinkInfo::FWD;
     }
   else
     {
-      return static_cast<double> (GetThpBitRate (dir, slice))
-             / GetMaxBitRate (dir, slice);
+      return LinkInfo::BWD;
     }
 }
 
@@ -183,6 +177,22 @@ LinkInfo::GetFreeSliceRatio (Direction dir, SliceId slice) const
 }
 
 uint64_t
+LinkInfo::GetLinkBitRate (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_channel->GetDataRate ().GetBitRate ();
+}
+
+uint64_t
+LinkInfo::GetMaxBitRate (Direction dir, SliceId slice) const
+{
+  NS_LOG_FUNCTION (this << dir << slice);
+
+  return m_slices [slice][dir].maxRate;
+}
+
+uint64_t
 LinkInfo::GetResBitRate (Direction dir, SliceId slice) const
 {
   NS_LOG_FUNCTION (this << dir << slice);
@@ -207,20 +217,37 @@ LinkInfo::GetResSliceRatio (Direction dir, SliceId slice) const
     }
 }
 
-uint64_t
-LinkInfo::GetMaxBitRate (Direction dir, SliceId slice) const
-{
-  NS_LOG_FUNCTION (this << dir << slice);
-
-  return m_slices [slice][dir].maxRate;
-}
-
 DpIdPair_t
 LinkInfo::GetSwitchDpIdPair (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return DpIdPair_t (GetSwDpId (0), GetSwDpId (1));
+}
+
+uint64_t
+LinkInfo::GetThpBitRate (Direction dir, SliceId slice) const
+{
+  NS_LOG_FUNCTION (this << dir << slice);
+
+  return m_slices [slice][dir].ewmaThp;
+}
+
+double
+LinkInfo::GetThpSliceRatio (Direction dir, SliceId slice) const
+{
+  NS_LOG_FUNCTION (this << dir << slice);
+
+  if (GetMaxBitRate (dir, slice) == 0)
+    {
+      NS_ASSERT_MSG (GetThpBitRate (dir, slice) == 0, "Invalid slice usage.");
+      return 0.0;
+    }
+  else
+    {
+      return static_cast<double> (GetThpBitRate (dir, slice))
+             / GetMaxBitRate (dir, slice);
+    }
 }
 
 uint64_t
@@ -241,6 +268,103 @@ LinkInfo::HasBitRate (
   LinkInfo::Direction dir = GetDirection (src, dst);
 
   return (GetFreeBitRate (dir, slice) >= bitRate);
+}
+
+bool
+LinkInfo::IsFullDuplexLink (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_channel->IsFullDuplex ();
+}
+
+std::string
+LinkInfo::DirectionStr (Direction dir)
+{
+  switch (dir)
+    {
+    case LinkInfo::FWD:
+      return "forward";
+    case LinkInfo::BWD:
+      return "backward";
+    default:
+      return "-";
+    }
+}
+
+LinkInfoList_t
+LinkInfo::GetList (void)
+{
+  return LinkInfo::m_linkInfoList;
+}
+
+Ptr<LinkInfo>
+LinkInfo::GetPointer (uint64_t dpId1, uint64_t dpId2)
+{
+  DpIdPair_t key;
+  key.first  = std::min (dpId1, dpId2);
+  key.second = std::max (dpId1, dpId2);
+
+  Ptr<LinkInfo> lInfo = 0;
+  auto ret = LinkInfo::m_linkInfoByDpIds.find (key);
+  if (ret != LinkInfo::m_linkInfoByDpIds.end ())
+    {
+      lInfo = ret->second;
+    }
+  return lInfo;
+}
+
+void
+LinkInfo::DoDispose ()
+{
+  NS_LOG_FUNCTION (this);
+
+  m_switches [0].swDev = 0;
+  m_switches [1].swDev = 0;
+  m_switches [0].portDev = 0;
+  m_switches [1].portDev = 0;
+  m_channel = 0;
+  Object::DoDispose ();
+}
+
+void
+LinkInfo::NotifyConstructionCompleted (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Scheduling the first update statistics.
+  m_lastUpdate = Simulator::Now ();
+  Simulator::Schedule (m_timeout, &LinkInfo::UpdateStatistics, this);
+
+  // Set the maximum bit rate for the fake shared slice.
+  m_slices [SliceId::ALL][0].maxRate = GetLinkBitRate ();
+  m_slices [SliceId::ALL][1].maxRate = GetLinkBitRate ();
+
+  Object::NotifyConstructionCompleted ();
+}
+
+void
+LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
+{
+  NS_LOG_FUNCTION (this << context << packet);
+
+  LinkInfo::Direction dir;
+  dir = (context == "Forward") ? LinkInfo::FWD : LinkInfo::BWD;
+
+  // Update TX packets for the packet slice.
+  EpcGtpuTag gtpuTag;
+  if (packet->PeekPacketTag (gtpuTag))
+    {
+      SliceId slice = RoutingInfo::GetSliceId (gtpuTag.GetTeid ());
+      m_slices [slice][dir].txBytes += packet->GetSize ();
+    }
+  else
+    {
+      NS_LOG_WARN ("GTPU packet tag not found for packet " << packet);
+    }
+
+  // Update TX packets also for fake shared slice.
+  m_slices [SliceId::ALL][dir].txBytes += packet->GetSize ();
 }
 
 bool
@@ -346,130 +470,6 @@ LinkInfo::SetSliceQuotas (
       NS_LOG_DEBUG (SliceIdStr (it.first) << " slice quota: " << it.second);
     }
   return true;
-}
-
-std::string
-LinkInfo::DirectionStr (Direction dir)
-{
-  switch (dir)
-    {
-    case LinkInfo::FWD:
-      return "forward";
-    case LinkInfo::BWD:
-      return "backward";
-    default:
-      return "-";
-    }
-}
-
-LinkInfoList_t
-LinkInfo::GetList (void)
-{
-  return LinkInfo::m_linkInfoList;
-}
-
-Ptr<LinkInfo>
-LinkInfo::GetPointer (uint64_t dpId1, uint64_t dpId2)
-{
-  DpIdPair_t key;
-  key.first  = std::min (dpId1, dpId2);
-  key.second = std::max (dpId1, dpId2);
-
-  Ptr<LinkInfo> lInfo = 0;
-  auto ret = LinkInfo::m_linkInfoByDpIds.find (key);
-  if (ret != LinkInfo::m_linkInfoByDpIds.end ())
-    {
-      lInfo = ret->second;
-    }
-  return lInfo;
-}
-
-void
-LinkInfo::DoDispose ()
-{
-  NS_LOG_FUNCTION (this);
-
-  m_switches [0].swDev = 0;
-  m_switches [1].swDev = 0;
-  m_switches [0].portDev = 0;
-  m_switches [1].portDev = 0;
-  m_channel = 0;
-  Object::DoDispose ();
-}
-
-void
-LinkInfo::NotifyConstructionCompleted (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  // Scheduling the first update statistics.
-  m_lastUpdate = Simulator::Now ();
-  Simulator::Schedule (m_timeout, &LinkInfo::UpdateStatistics, this);
-
-  // Set the maximum bit rate for the fake shared slice.
-  m_slices [SliceId::ALL][0].maxRate = GetLinkBitRate ();
-  m_slices [SliceId::ALL][1].maxRate = GetLinkBitRate ();
-
-  Object::NotifyConstructionCompleted ();
-}
-
-LinkInfo::Direction
-LinkInfo::GetDirection (uint64_t src, uint64_t dst) const
-{
-  NS_LOG_FUNCTION (this << src << dst);
-
-  NS_ASSERT_MSG ((src == GetSwDpId (0) && dst == GetSwDpId (1))
-                 || (src == GetSwDpId (1) && dst == GetSwDpId (0)),
-                 "Invalid datapath IDs for this connection.");
-
-  if (src == GetSwDpId (0))
-    {
-      return LinkInfo::FWD;
-    }
-  else
-    {
-      return LinkInfo::BWD;
-    }
-}
-
-uint64_t
-LinkInfo::GetLinkBitRate (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_channel->GetDataRate ().GetBitRate ();
-}
-
-bool
-LinkInfo::IsFullDuplexLink (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_channel->IsFullDuplex ();
-}
-
-void
-LinkInfo::NotifyTxPacket (std::string context, Ptr<const Packet> packet)
-{
-  NS_LOG_FUNCTION (this << context << packet);
-
-  LinkInfo::Direction dir;
-  dir = (context == "Forward") ? LinkInfo::FWD : LinkInfo::BWD;
-
-  // Update TX packets for the packet slice.
-  EpcGtpuTag gtpuTag;
-  if (packet->PeekPacketTag (gtpuTag))
-    {
-      SliceId slice = RoutingInfo::GetSliceId (gtpuTag.GetTeid ());
-      m_slices [slice][dir].txBytes += packet->GetSize ();
-    }
-  else
-    {
-      NS_LOG_WARN ("GTPU packet tag not found for packet " << packet);
-    }
-
-  // Update TX packets also for fake shared slice.
-  m_slices [SliceId::ALL][dir].txBytes += packet->GetSize ();
 }
 
 void
