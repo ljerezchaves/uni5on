@@ -32,7 +32,7 @@ namespace ns3 {
 class LinkInfo;
 
 /** A list of link information objects. */
-typedef std::list<Ptr<LinkInfo> > LinkInfoList_t;
+typedef std::vector<Ptr<LinkInfo> > LinkInfoList_t;
 
 /**
  * \ingroup svelteInfra

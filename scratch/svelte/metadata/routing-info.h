@@ -35,7 +35,7 @@ class GbrInfo;
 class MeterInfo;
 
 /** List of bearer information. */
-typedef std::list<Ptr<RoutingInfo> > RoutingInfoList_t;
+typedef std::vector<Ptr<RoutingInfo> > RoutingInfoList_t;
 
 /**
  * \ingroup svelteMeta
