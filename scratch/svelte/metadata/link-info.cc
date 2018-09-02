@@ -292,7 +292,7 @@ LinkInfo::DirectionStr (Direction dir)
     }
 }
 
-LinkInfoList_t
+const LinkInfoList_t&
 LinkInfo::GetList (void)
 {
   return LinkInfo::m_linkInfoList;

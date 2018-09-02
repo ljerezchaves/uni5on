@@ -236,7 +236,7 @@ public:
    * Get the entire list of link information.
    * \return The list of link information.
    */
-  static LinkInfoList_t GetList (void);
+  static const LinkInfoList_t& GetList (void);
 
   /**
    * Get the link information from the global map for a pair of OpenFlow
