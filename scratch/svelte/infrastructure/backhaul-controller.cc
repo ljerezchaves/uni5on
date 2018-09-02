@@ -246,14 +246,16 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
         }
       std::pair<SliceId, uint16_t> entry (it.first, quotaValue.Get ());
       auto ret = quotas.insert (entry);
-      NS_ABORT_MSG_IF (ret.second == false, "Error setting quota map.");
+      NS_ABORT_MSG_IF (ret.second == false, "Error when creating quota map.");
     }
 
   // Iterate over links setting the initial quotas.
   for (auto const &lInfo : LinkInfo::GetList ())
     {
-      lInfo->SetSliceQuotas (LinkInfo::FWD, quotas);
-      lInfo->SetSliceQuotas (LinkInfo::BWD, quotas);
+      bool success = true;
+      success &= lInfo->SetSliceQuotas (LinkInfo::FWD, quotas);
+      success &= lInfo->SetSliceQuotas (LinkInfo::BWD, quotas);
+      NS_ASSERT_MSG (success, "Error when setting slice quotas.");
     }
 }
 
