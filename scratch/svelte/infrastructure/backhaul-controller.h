@@ -129,6 +129,13 @@ protected:
   Ptr<LinkInfo> GetLinkInfo (uint16_t idx1, uint16_t idx2) const;
 
   /**
+   * Get the slice controller application for a given slice ID.
+   * \param slice The network slice.
+   * \return The slice controller application.
+   */
+  Ptr<SliceController> GetSliceController (SliceId slice) const;
+
+  /**
    * Notify this controller of a new bearer context created.
    * \param rInfo The routing information to process.
    */

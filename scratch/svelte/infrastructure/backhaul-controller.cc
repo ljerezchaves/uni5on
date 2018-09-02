@@ -164,6 +164,16 @@ BackhaulController::GetLinkInfo (uint16_t idx1, uint16_t idx2) const
   return LinkInfo::GetPointer (GetDpId (idx1), GetDpId (idx2));
 }
 
+Ptr<SliceController>
+BackhaulController::GetSliceController (SliceId slice) const
+{
+  NS_LOG_FUNCTION (this << slice);
+
+  auto it = m_sliceCtrlById.find (slice);
+  NS_ASSERT_MSG (it != m_sliceCtrlById.end (), "Slice controller not found.");
+  return it->second;
+}
+
 void
 BackhaulController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 {
