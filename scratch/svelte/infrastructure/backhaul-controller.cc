@@ -144,7 +144,6 @@ BackhaulController::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Chain up.
   OFSwitch13Controller::NotifyConstructionCompleted ();
 }
 

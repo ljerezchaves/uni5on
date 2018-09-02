@@ -106,6 +106,8 @@ AutoPilotClient::NotifyConstructionCompleted (void)
   NS_LOG_FUNCTION (this);
 
   SetAttribute ("AppName", StringValue ("Pilot"));
+
+  SvelteClientApp::NotifyConstructionCompleted ();
 }
 
 void

@@ -418,7 +418,6 @@ SvelteHelper::NotifyConstructionCompleted (void)
   m_pgwTftStats     = CreateObject<PgwTftStatsCalculator> ();
   m_trafficStats    = CreateObject<TrafficStatsCalculator> ();
 
-  // Chain up.
   Object::NotifyConstructionCompleted ();
 }
 

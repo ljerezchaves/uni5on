@@ -411,7 +411,6 @@ LinkInfo::NotifyConstructionCompleted (void)
   m_slices [SliceId::ALL][0].maxRate = GetLinkBitRate ();
   m_slices [SliceId::ALL][1].maxRate = GetLinkBitRate ();
 
-  // Chain up
   Object::NotifyConstructionCompleted ();
 }
 

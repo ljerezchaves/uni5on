@@ -416,7 +416,6 @@ RadioNetwork::NotifyConstructionCompleted ()
       m_lteHelper->EnableTraces ();
     }
 
-  // Chain up.
   Object::NotifyConstructionCompleted ();
 }
 

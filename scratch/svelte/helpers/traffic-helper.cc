@@ -232,7 +232,6 @@ TrafficHelper::NotifyConstructionCompleted ()
   // Install the applications.
   InstallApplications ();
 
-  // Chain up.
   Object::NotifyConstructionCompleted ();
 }
 

@@ -460,6 +460,8 @@ RoutingInfo::NotifyConstructionCompleted (void)
     {
       m_meterInfo = CreateObject<MeterInfo> (Ptr<RoutingInfo> (this));
     }
+
+  Object::NotifyConstructionCompleted ();
 }
 
 void

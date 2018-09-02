@@ -116,6 +116,8 @@ HttpClient::NotifyConstructionCompleted (void)
   NS_LOG_FUNCTION (this);
 
   SetAttribute ("AppName", StringValue ("Http"));
+
+  SvelteClientApp::NotifyConstructionCompleted ();
 }
 
 void

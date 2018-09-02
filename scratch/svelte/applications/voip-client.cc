@@ -108,6 +108,8 @@ VoipClient::NotifyConstructionCompleted (void)
   NS_LOG_FUNCTION (this);
 
   SetAttribute ("AppName", StringValue ("Voip"));
+
+  SvelteClientApp::NotifyConstructionCompleted ();
 }
 
 void

@@ -171,6 +171,8 @@ TrafficManager::NotifyConstructionCompleted ()
         m_stopRestartAppsAt, &TrafficManager::SetAttribute, this,
         "RestartApps", BooleanValue (false));
     }
+
+  Object::NotifyConstructionCompleted ();
 }
 
 void

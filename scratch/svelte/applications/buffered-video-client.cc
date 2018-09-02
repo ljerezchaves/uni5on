@@ -85,6 +85,8 @@ BufferedVideoClient::NotifyConstructionCompleted (void)
   NS_LOG_FUNCTION (this);
 
   SetAttribute ("AppName", StringValue ("BuffVid"));
+
+  SvelteClientApp::NotifyConstructionCompleted ();
 }
 
 void

@@ -415,7 +415,6 @@ SliceController::NotifyConstructionCompleted (void)
   // Schedule the first timeout operation.
   Simulator::Schedule (m_timeout, &SliceController::ControllerTimeout, this);
 
-  // Chain up.
   OFSwitch13Controller::NotifyConstructionCompleted ();
 }
 

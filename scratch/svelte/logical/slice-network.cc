@@ -285,7 +285,6 @@ SliceNetwork::NotifyConstructionCompleted (void)
   std::string prefix = stringValue.Get ();
   m_switchHelper->EnableDatapathStats (prefix + "ofswitch-stats", true);
 
-  // Chain up.
   Object::NotifyConstructionCompleted ();
 }
 

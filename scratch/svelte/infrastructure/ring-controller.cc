@@ -83,7 +83,6 @@ RingController::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Chain up.
   BackhaulController::NotifyConstructionCompleted ();
 }
 
