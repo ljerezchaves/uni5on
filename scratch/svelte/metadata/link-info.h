@@ -37,6 +37,9 @@ typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
 /** A list of link information objects. */
 typedef std::list<Ptr<LinkInfo> > LinkInfoList_t;
 
+/** Map saving slice ID / slice quota. */
+typedef std::map<SliceId, uint16_t> SliceQuotaMap_t;
+
 /**
  * \ingroup svelteInfra
  * Metadata associated to a link between two OpenFlow backhaul switches.
@@ -221,6 +224,16 @@ public:
    */
   bool ReserveBitRate (
     uint64_t src, uint64_t dst, SliceId slice, uint64_t bitRate);
+
+  /**
+   * Update the maximum bit rate over this link on the given
+   * direction for each network slice.
+   * \param dir The link direction.
+   * \param quotas The map with slice quotas.
+   * \return True if succeeded, false otherwise.
+   */
+  bool SetSliceQuotas (
+    Direction dir, SliceQuotaMap_t &quotas);
 
   /**
    * Get the string representing the given direction.

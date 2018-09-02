@@ -313,6 +313,41 @@ LinkInfo::ReserveBitRate (
   return true;
 }
 
+bool
+LinkInfo::SetSliceQuotas (
+  Direction dir, SliceQuotaMap_t &quotas)
+{
+  NS_LOG_FUNCTION (this << dir);
+
+  // First, check for consistent slice quotas.
+  uint16_t sumQuotas = 0;
+  for (int s = 0; s < SliceId::ALL; s++)
+    {
+      SliceId slice = static_cast<SliceId> (s);
+      SliceQuotaMap_t::iterator it = quotas.find (slice);
+      NS_ASSERT_MSG (it != quotas.end (), "Missing slice quota.");
+      NS_ASSERT_MSG (it->second >= 0 && it->second <= 100, "Invalid quota.");
+
+      sumQuotas += it->second;
+      uint64_t newRate = (GetLinkBitRate () * it->second) / 100;
+      if (GetResBitRate (dir, slice) > newRate)
+        {
+          NS_LOG_WARN ("Can't change the slice quota. The new bit rate is "
+                       "lower than the already reserved bit rate.");
+          return false;
+        }
+    }
+  NS_ABORT_MSG_IF (sumQuotas != 100, "Inconsistent slice quotas.");
+
+  // Then, update slice maximum bit rates.
+  for (auto const &it : quotas)
+    {
+      m_slices [it.first][dir].maxRate = (GetLinkBitRate () * it.second) / 100;
+      NS_LOG_DEBUG (SliceIdStr (it.first) << " slice quota: " << it.second);
+    }
+  return true;
+}
+
 std::string
 LinkInfo::DirectionStr (Direction dir)
 {
@@ -463,7 +498,6 @@ LinkInfo::UpdateMeterDiff (
       // Fire meter adjusted trace source to update meters.
       NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
       m_meterAdjustedTrace (Ptr<LinkInfo> (this), dir, slice);
-      m_slices [slice][dir].meterDiff = 0;
     }
 }
 
