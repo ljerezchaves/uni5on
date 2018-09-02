@@ -314,7 +314,7 @@ private:
    * \return True if succeeded, false otherwise.
    */
   bool SetSliceQuotas (
-    Direction dir, SliceQuotaMap_t &quotas);
+    Direction dir, const SliceQuotaMap_t &quotas);
 
   /**
    * Update the internal meter diff for firing the meter adjusted trace source

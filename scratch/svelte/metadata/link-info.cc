@@ -439,7 +439,7 @@ LinkInfo::ReserveBitRate (
 
 bool
 LinkInfo::SetSliceQuotas (
-  Direction dir, SliceQuotaMap_t &quotas)
+  Direction dir, const SliceQuotaMap_t &quotas)
 {
   NS_LOG_FUNCTION (this << dir);
 
