@@ -484,6 +484,10 @@ RingController::HasBitRate (Ptr<const RingInfo> ringInfo,
       curr = next;
     }
 
+  // FIXME Se o tráfego passa pelo mesmo enlace duas vezes (S1 + S5),
+  // a verificacao de banda tem que considerar isso para não dar erro na hora
+  // da reserva
+
   return success;
 }
 
