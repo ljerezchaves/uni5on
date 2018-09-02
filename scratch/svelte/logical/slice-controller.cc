@@ -409,9 +409,6 @@ SliceController::NotifyConstructionCompleted (void)
   m_s11SapSgw = new MemberEpcS11SapSgw<SliceController> (this);
   m_s11SapMme = m_mme->GetS11SapMme ();
 
-  // Notify the backhaul controller of this new slice controller.
-  m_backhaulCtrl->NotifySliceController (Ptr<SliceController> (this));
-
   // Schedule the first timeout operation.
   Simulator::Schedule (m_timeout, &SliceController::ControllerTimeout, this);
 

@@ -317,10 +317,9 @@ SvelteHelper::NotifyConstructionCompleted (void)
   m_radio = CreateObject<RadioNetwork> (Ptr<SvelteHelper> (this));
 
   Ptr<BackhaulController> backahulCtrl = m_backhaul->GetControllerApp ();
-
-  // Validate slice quotas.
+  ApplicationContainer sliceControllers;
   UintegerValue quotaValue;
-  uint16_t quota = 0;
+  uint16_t sumQuota = 0;
 
   // Create the MTC logical slice controller, network, and traffic helper.
   if (AreFactoriesOk (m_mtcControllerFac, m_mtcNetworkFac, m_mtcTrafficFac))
@@ -329,8 +328,10 @@ SvelteHelper::NotifyConstructionCompleted (void)
       m_mtcControllerFac.Set ("Mme", PointerValue (m_mme));
       m_mtcControllerFac.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
       m_mtcController = m_mtcControllerFac.Create<SliceController> ();
+
+      sliceControllers.Add (m_mtcController);
       m_mtcController->GetAttribute ("Quota", quotaValue);
-      quota += quotaValue.Get ();
+      sumQuota += quotaValue.Get ();
 
       m_mtcNetworkFac.Set ("SliceId", EnumValue (SliceId::MTC));
       m_mtcNetworkFac.Set ("SliceCtrl", PointerValue (m_mtcController));
@@ -358,8 +359,10 @@ SvelteHelper::NotifyConstructionCompleted (void)
       m_htcControllerFac.Set ("Mme", PointerValue (m_mme));
       m_htcControllerFac.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
       m_htcController = m_htcControllerFac.Create<SliceController> ();
+
+      sliceControllers.Add (m_htcController);
       m_htcController->GetAttribute ("Quota", quotaValue);
-      quota += quotaValue.Get ();
+      sumQuota += quotaValue.Get ();
 
       m_htcNetworkFac.Set ("SliceId", EnumValue (SliceId::HTC));
       m_htcNetworkFac.Set ("SliceCtrl", PointerValue (m_htcController));
@@ -387,8 +390,10 @@ SvelteHelper::NotifyConstructionCompleted (void)
       m_tmpControllerFac.Set ("Mme", PointerValue (m_mme));
       m_tmpControllerFac.Set ("BackhaulCtrl", PointerValue (backahulCtrl));
       m_tmpController = m_tmpControllerFac.Create<SliceController> ();
+
+      sliceControllers.Add (m_tmpController);
       m_tmpController->GetAttribute ("Quota", quotaValue);
-      quota += quotaValue.Get ();
+      sumQuota += quotaValue.Get ();
 
       m_tmpNetworkFac.Set ("SliceId", EnumValue (SliceId::TMP));
       m_tmpNetworkFac.Set ("SliceCtrl", PointerValue (m_tmpController));
@@ -409,7 +414,11 @@ SvelteHelper::NotifyConstructionCompleted (void)
       NS_LOG_WARN ("TMP slice being ignored by now.");
     }
 
-  NS_ABORT_MSG_IF (quota != 100, "Inconsistent initial quotas.");
+  // Validate slice quotas.
+  NS_ABORT_MSG_IF (sumQuota != 100, "Inconsistent initial quotas.");
+
+  // Notify the backhaul controller of the slice controllers.
+  backahulCtrl->NotifySlicesBuilt (sliceControllers);
 
   // Creating the statistic calculators.
   m_admissionStats  = CreateObject<AdmissionStatsCalculator> ();
