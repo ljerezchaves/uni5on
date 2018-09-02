@@ -27,7 +27,7 @@ NS_LOG_COMPONENT_DEFINE ("SgwInfo");
 NS_OBJECT_ENSURE_REGISTERED (SgwInfo);
 
 // Initializing SgwInfo static members.
-SgwInfo::SgwIdSgwInfo_t SgwInfo::m_sgwInfoBySgwId;
+SgwInfo::SgwIdSgwInfoMap_t SgwInfo::m_sgwInfoBySgwId;
 
 SgwInfo::SgwInfo (
   uint64_t sgwId, Ipv4Address s1uAddr, Ipv4Address s5Addr, uint32_t s1uPortNo,
@@ -156,7 +156,7 @@ SgwInfo::GetPointer (uint64_t sgwId)
   NS_LOG_FUNCTION_NOARGS ();
 
   Ptr<SgwInfo> sgwInfo = 0;
-  SgwIdSgwInfo_t::iterator ret;
+  SgwIdSgwInfoMap_t::iterator ret;
   ret = SgwInfo::m_sgwInfoBySgwId.find (sgwId);
   if (ret != SgwInfo::m_sgwInfoBySgwId.end ())
     {
@@ -181,7 +181,7 @@ SgwInfo::RegisterSgwInfo (Ptr<SgwInfo> sgwInfo)
 
   uint64_t sgwId = sgwInfo->GetSgwId ();
   std::pair<uint64_t, Ptr<SgwInfo> > entry (sgwId, sgwInfo);
-  std::pair<SgwIdSgwInfo_t::iterator, bool> ret;
+  std::pair<SgwIdSgwInfoMap_t::iterator, bool> ret;
   ret = SgwInfo::m_sgwInfoBySgwId.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing S-GW info for this ID.");
 }

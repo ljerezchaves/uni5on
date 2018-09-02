@@ -84,7 +84,7 @@ TrafficManager::AddSvelteClientApp (Ptr<SvelteClientApp> app)
   // Save the application pointer.
   std::pair<Ptr<SvelteClientApp>, Time> entry (app, Time ());
   std::pair<AppTimeMap_t::iterator, bool> ret;
-  ret = m_appTable.insert (entry);
+  ret = m_timeByApp.insert (entry);
   if (ret.second == false)
     {
       NS_FATAL_ERROR ("Can't save application pointer " << app);
@@ -120,7 +120,7 @@ TrafficManager::SessionCreatedCallback (
   m_defaultTeid = bearerList.front ().sgwFteid.teid;
 
   // For each application, set the corresponding TEID.
-  for (auto const &ait : m_appTable)
+  for (auto const &ait : m_timeByApp)
     {
       Ptr<SvelteClientApp> app = ait.first;
       app->SetTeid (m_defaultTeid);
@@ -155,7 +155,7 @@ TrafficManager::DoDispose ()
   NS_LOG_FUNCTION (this);
   m_poissonRng = 0;
   m_ctrlApp = 0;
-  m_appTable.clear ();
+  m_timeByApp.clear ();
   Object::DoDispose ();
 }
 
@@ -290,8 +290,8 @@ TrafficManager::SetNextAppStartTry (Ptr<SvelteClientApp> app)
   Time nextTry = Seconds (std::max (8.0, rngValue));
 
   // Save the absolute time into application table.
-  AppTimeMap_t::iterator it = m_appTable.find (app);
-  NS_ASSERT_MSG (it != m_appTable.end (), "Can't find app " << app);
+  AppTimeMap_t::iterator it = m_timeByApp.find (app);
+  NS_ASSERT_MSG (it != m_timeByApp.end (), "Can't find app " << app);
   it->second = Simulator::Now () + nextTry;
   NS_LOG_INFO ("Next start try for app " << app->GetNameTeid () <<
                " should occur at " << it->second.GetSeconds () << "s.");
@@ -305,8 +305,8 @@ TrafficManager::GetNextAppStartTry (Ptr<SvelteClientApp> app) const
 {
   NS_LOG_FUNCTION (this << app);
 
-  AppTimeMap_t::const_iterator it = m_appTable.find (app);
-  NS_ASSERT_MSG (it != m_appTable.end (), "Can't find app " << app);
+  AppTimeMap_t::const_iterator it = m_timeByApp.find (app);
+  NS_ASSERT_MSG (it != m_timeByApp.end (), "Can't find app " << app);
   return it->second;
 }
 

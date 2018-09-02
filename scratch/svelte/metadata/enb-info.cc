@@ -27,7 +27,7 @@ NS_LOG_COMPONENT_DEFINE ("EnbInfo");
 NS_OBJECT_ENSURE_REGISTERED (EnbInfo);
 
 // Initializing EnbInfo static members.
-EnbInfo::CellIdEnbInfo_t EnbInfo::m_enbInfoByCellId;
+EnbInfo::CellIdEnbInfoMap_t EnbInfo::m_enbInfoByCellId;
 
 EnbInfo::EnbInfo (uint16_t cellId, Ipv4Address s1uAddr, uint16_t infraSwIdx,
                   uint32_t infraSwS1uPortNo, Ptr<SvelteEnbApplication> enbApp)
@@ -110,7 +110,7 @@ EnbInfo::GetPointer (uint16_t cellId)
   NS_LOG_FUNCTION_NOARGS ();
 
   Ptr<EnbInfo> enbInfo = 0;
-  CellIdEnbInfo_t::iterator ret;
+  CellIdEnbInfoMap_t::iterator ret;
   ret = EnbInfo::m_enbInfoByCellId.find (cellId);
   if (ret != EnbInfo::m_enbInfoByCellId.end ())
     {
@@ -135,7 +135,7 @@ EnbInfo::RegisterEnbInfo (Ptr<EnbInfo> enbInfo)
 
   uint16_t cellId = enbInfo->GetCellId ();
   std::pair<uint16_t, Ptr<EnbInfo> > entry (cellId, enbInfo);
-  std::pair<CellIdEnbInfo_t::iterator, bool> ret;
+  std::pair<CellIdEnbInfoMap_t::iterator, bool> ret;
   ret = EnbInfo::m_enbInfoByCellId.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing eNB info for this cell ID.");
 }

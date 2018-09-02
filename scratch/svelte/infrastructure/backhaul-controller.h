@@ -199,7 +199,7 @@ private:
 
   /** Map saving IP DSCP value / OpenFlow queue id. */
   typedef std::map<Ipv4Header::DscpType, uint32_t> DscpQueueMap_t;
-  static DscpQueueMap_t m_dscpQueueTable; //!< OpenFlow queue id mapped values.
+  static DscpQueueMap_t m_queueByDscp;    //!< OpenFlow queue id mapped values.
 };
 
 } // namespace ns3

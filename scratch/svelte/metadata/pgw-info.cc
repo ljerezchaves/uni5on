@@ -27,7 +27,7 @@ NS_LOG_COMPONENT_DEFINE ("PgwInfo");
 NS_OBJECT_ENSURE_REGISTERED (PgwInfo);
 
 // Initializing PgwInfo static members.
-PgwInfo::PgwIdPgwInfo_t PgwInfo::m_pgwInfoByPgwId;
+PgwInfo::PgwIdPgwInfoMap_t PgwInfo::m_pgwInfoByPgwId;
 
 PgwInfo::PgwInfo (uint64_t pgwId, uint16_t nTfts, uint32_t sgiPortNo,
                   uint16_t infraSwIdx, Ptr<SliceController> ctrlApp)
@@ -283,7 +283,7 @@ PgwInfo::GetPointer (uint64_t pgwId)
   NS_LOG_FUNCTION_NOARGS ();
 
   Ptr<PgwInfo> pgwInfo = 0;
-  PgwIdPgwInfo_t::iterator ret;
+  PgwIdPgwInfoMap_t::iterator ret;
   ret = PgwInfo::m_pgwInfoByPgwId.find (pgwId);
   if (ret != PgwInfo::m_pgwInfoByPgwId.end ())
     {
@@ -330,7 +330,7 @@ PgwInfo::RegisterPgwInfo (Ptr<PgwInfo> pgwInfo)
 
   uint64_t pgwId = pgwInfo->GetPgwId ();
   std::pair<uint64_t, Ptr<PgwInfo> > entry (pgwId, pgwInfo);
-  std::pair<PgwIdPgwInfo_t::iterator, bool> ret;
+  std::pair<PgwIdPgwInfoMap_t::iterator, bool> ret;
   ret = PgwInfo::m_pgwInfoByPgwId.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing P-GW info for this ID.");
 }

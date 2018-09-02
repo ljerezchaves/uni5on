@@ -30,8 +30,8 @@ NS_LOG_COMPONENT_DEFINE ("UeInfo");
 NS_OBJECT_ENSURE_REGISTERED (UeInfo);
 
 // Initializing UeInfo static members.
-UeInfo::ImsiUeInfoMap_t UeInfo::m_ueInfoByImsiMap;
-UeInfo::Ipv4UeInfoMap_t UeInfo::m_ueInfoByIpv4Map;
+UeInfo::ImsiUeInfoMap_t UeInfo::m_ueInfoByImsi;
+UeInfo::Ipv4UeInfoMap_t UeInfo::m_ueInfoByIpv4;
 
 UeInfo::UeInfo (uint64_t imsi, Ipv4Address ueAddr,
                 Ptr<SliceController> sliceCtrl)
@@ -224,8 +224,8 @@ UeInfo::GetPointer (uint64_t imsi)
 
   Ptr<UeInfo> ueInfo = 0;
   ImsiUeInfoMap_t::iterator ret;
-  ret = UeInfo::m_ueInfoByImsiMap.find (imsi);
-  if (ret != UeInfo::m_ueInfoByImsiMap.end ())
+  ret = UeInfo::m_ueInfoByImsi.find (imsi);
+  if (ret != UeInfo::m_ueInfoByImsi.end ())
     {
       ueInfo = ret->second;
     }
@@ -239,8 +239,8 @@ UeInfo::GetPointer (Ipv4Address ipv4)
 
   Ptr<UeInfo> ueInfo = 0;
   Ipv4UeInfoMap_t::iterator ret;
-  ret = UeInfo::m_ueInfoByIpv4Map.find (ipv4);
-  if (ret != UeInfo::m_ueInfoByIpv4Map.end ())
+  ret = UeInfo::m_ueInfoByIpv4.find (ipv4);
+  if (ret != UeInfo::m_ueInfoByIpv4.end ())
     {
       ueInfo = ret->second;
     }
@@ -293,13 +293,13 @@ UeInfo::RegisterUeInfo (Ptr<UeInfo> ueInfo)
   uint64_t imsi = ueInfo->GetImsi ();
   std::pair<uint64_t, Ptr<UeInfo> > entryImsi (imsi, ueInfo);
   std::pair<ImsiUeInfoMap_t::iterator, bool> retImsi;
-  retImsi = UeInfo::m_ueInfoByImsiMap.insert (entryImsi);
+  retImsi = UeInfo::m_ueInfoByImsi.insert (entryImsi);
   NS_ABORT_MSG_IF (retImsi.second == false, "Existing UE info for this ISMI.");
 
   Ipv4Address ipv4 = ueInfo->GetUeAddr ();
   std::pair<Ipv4Address, Ptr<UeInfo> > entryIpv4 (ipv4, ueInfo);
   std::pair<Ipv4UeInfoMap_t::iterator, bool> retIpv4;
-  retIpv4 = UeInfo::m_ueInfoByIpv4Map.insert (entryIpv4);
+  retIpv4 = UeInfo::m_ueInfoByIpv4.insert (entryIpv4);
   NS_ABORT_MSG_IF (retIpv4.second == false, "Existing UE info for this IP.");
 }
 

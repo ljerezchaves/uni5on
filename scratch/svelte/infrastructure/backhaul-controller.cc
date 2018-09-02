@@ -30,7 +30,7 @@ NS_LOG_COMPONENT_DEFINE ("BackhaulController");
 NS_OBJECT_ENSURE_REGISTERED (BackhaulController);
 
 // Initializing BackhaulController static members.
-BackhaulController::DscpQueueMap_t BackhaulController::m_dscpQueueTable;
+BackhaulController::DscpQueueMap_t BackhaulController::m_queueByDscp;
 
 BackhaulController::BackhaulController ()
 {
@@ -360,7 +360,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   if (GetPriorityQueuesMode () == OpMode::ON)
     {
       // Priority output queues rules.
-      for (auto const &it : m_dscpQueueTable)
+      for (auto const &it : m_queueByDscp)
         {
           std::ostringstream cmd;
           cmd << "flow-mod cmd=add,table=4,prio=16 eth_type=0x800,"
@@ -394,23 +394,23 @@ BackhaulController::StaticInitialize ()
       // DSCP_BE   --> OpenFlow queue 0 (low priority)
       //
       // Mapping default and aggregated traffic to low priority queues.
-      BackhaulController::m_dscpQueueTable.insert (
+      BackhaulController::m_queueByDscp.insert (
         std::make_pair (Ipv4Header::DscpDefault, 0));
 
       // Mapping HTC VoIP and MTC auto pilot traffic to high priority queues.
-      BackhaulController::m_dscpQueueTable.insert (
+      BackhaulController::m_queueByDscp.insert (
         std::make_pair (Ipv4Header::DSCP_EF, 2));
 
       // Mapping other traffics to normal priority queues.
-      BackhaulController::m_dscpQueueTable.insert (
+      BackhaulController::m_queueByDscp.insert (
         std::make_pair (Ipv4Header::DSCP_AF41, 1));
-      BackhaulController::m_dscpQueueTable.insert (
+      BackhaulController::m_queueByDscp.insert (
         std::make_pair (Ipv4Header::DSCP_AF32, 1));
-      BackhaulController::m_dscpQueueTable.insert (
+      BackhaulController::m_queueByDscp.insert (
         std::make_pair (Ipv4Header::DSCP_AF31, 1));
-      BackhaulController::m_dscpQueueTable.insert (
+      BackhaulController::m_queueByDscp.insert (
         std::make_pair (Ipv4Header::DSCP_AF21, 1));
-      BackhaulController::m_dscpQueueTable.insert (
+      BackhaulController::m_queueByDscp.insert (
         std::make_pair (Ipv4Header::DSCP_AF11, 1));
     }
 }

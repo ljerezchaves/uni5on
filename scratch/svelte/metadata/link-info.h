@@ -357,9 +357,9 @@ private:
    * The pair of switch datapath IDs are saved in increasing order.
    */
   typedef std::map<DpIdPair_t, Ptr<LinkInfo> > LinkInfoMap_t;
+  static LinkInfoMap_t  m_linkInfoByDpIds;      //!< Global link info map.
 
-  static LinkInfoMap_t  m_linksMap;             //!< Global link info map.
-  static LinkInfoList_t m_linksList;            //!< Global link info list.
+  static LinkInfoList_t m_linkInfoList;         //!< Global link info list.
 };
 
 } // namespace ns3

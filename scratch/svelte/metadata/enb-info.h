@@ -91,8 +91,8 @@ private:
   Ptr<SvelteEnbApplication> m_enbApplication;     //!< eNB application.
 
   /** Map saving cell ID / eNB information. */
-  typedef std::map<uint16_t, Ptr<EnbInfo> > CellIdEnbInfo_t;
-  static CellIdEnbInfo_t    m_enbInfoByCellId;    //!< Global eNB info map.
+  typedef std::map<uint16_t, Ptr<EnbInfo> > CellIdEnbInfoMap_t;
+  static CellIdEnbInfoMap_t m_enbInfoByCellId;    //!< Global eNB info map.
 };
 
 } // namespace ns3

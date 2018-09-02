@@ -36,8 +36,8 @@ NS_LOG_COMPONENT_DEFINE ("LinkInfo");
 NS_OBJECT_ENSURE_REGISTERED (LinkInfo);
 
 // Initializing LinkInfo static members.
-LinkInfo::LinkInfoMap_t LinkInfo::m_linksMap;
-LinkInfoList_t LinkInfo::m_linksList;
+LinkInfo::LinkInfoMap_t LinkInfo::m_linkInfoByDpIds;
+LinkInfoList_t LinkInfo::m_linkInfoList;
 
 LinkInfo::LinkInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel)
   : m_channel (channel)
@@ -365,7 +365,7 @@ LinkInfo::DirectionStr (Direction dir)
 LinkInfoList_t
 LinkInfo::GetList (void)
 {
-  return LinkInfo::m_linksList;
+  return LinkInfo::m_linkInfoList;
 }
 
 Ptr<LinkInfo>
@@ -377,8 +377,8 @@ LinkInfo::GetPointer (uint64_t dpId1, uint64_t dpId2)
 
   Ptr<LinkInfo> lInfo = 0;
   LinkInfoMap_t::iterator ret;
-  ret = LinkInfo::m_linksMap.find (key);
-  if (ret != LinkInfo::m_linksMap.end ())
+  ret = LinkInfo::m_linkInfoByDpIds.find (key);
+  if (ret != LinkInfo::m_linkInfoByDpIds.end ())
     {
       lInfo = ret->second;
     }
@@ -539,10 +539,10 @@ LinkInfo::RegisterLinkInfo (Ptr<LinkInfo> lInfo)
 
   std::pair<DpIdPair_t, Ptr<LinkInfo> > entry (key, lInfo);
   std::pair<LinkInfoMap_t::iterator, bool> ret;
-  ret = LinkInfo::m_linksMap.insert (entry);
+  ret = LinkInfo::m_linkInfoByDpIds.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing connection information.");
 
-  LinkInfo::m_linksList.push_back (lInfo);
+  LinkInfo::m_linkInfoList.push_back (lInfo);
 }
 
 } // namespace ns3

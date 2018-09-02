@@ -146,8 +146,8 @@ private:
   Ptr<SliceController>      m_sliceCtrl;          //!< LTE logical slice ctrl.
 
   /** Map saving P-GW ID / P-GW information. */
-  typedef std::map<uint64_t, Ptr<PgwInfo> > PgwIdPgwInfo_t;
-  static PgwIdPgwInfo_t  m_pgwInfoByPgwId;        //!< Global P-GW info map.
+  typedef std::map<uint64_t, Ptr<PgwInfo> > PgwIdPgwInfoMap_t;
+  static PgwIdPgwInfoMap_t  m_pgwInfoByPgwId;     //!< Global P-GW info map.
 };
 
 } // namespace ns3
