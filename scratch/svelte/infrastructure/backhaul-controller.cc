@@ -212,6 +212,7 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
 {
   NS_LOG_FUNCTION (this);
 
+  // Updating slice controllers map.
   ApplicationContainer::Iterator it;
   for (it = controllers.Begin (); it != controllers.End (); ++it)
     {
@@ -223,6 +224,9 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
       NS_ASSERT_MSG (it != m_sliceCtrlById.end (), "Invalid slice ID.");
       it->second = ctrl;
     }
+
+  // Setting the initial slice quotas in all links.
+  // TODO
 }
 
 ofl_err
