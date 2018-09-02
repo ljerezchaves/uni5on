@@ -324,7 +324,7 @@ LinkInfo::SetSliceQuotas (
   for (int s = 0; s < SliceId::ALL; s++)
     {
       SliceId slice = static_cast<SliceId> (s);
-      SliceQuotaMap_t::iterator it = quotas.find (slice);
+      auto it = quotas.find (slice);
       NS_ASSERT_MSG (it != quotas.end (), "Missing slice quota.");
       NS_ASSERT_MSG (it->second >= 0 && it->second <= 100, "Invalid quota.");
 
@@ -376,8 +376,7 @@ LinkInfo::GetPointer (uint64_t dpId1, uint64_t dpId2)
   key.second = std::max (dpId1, dpId2);
 
   Ptr<LinkInfo> lInfo = 0;
-  LinkInfoMap_t::iterator ret;
-  ret = LinkInfo::m_linkInfoByDpIds.find (key);
+  auto ret = LinkInfo::m_linkInfoByDpIds.find (key);
   if (ret != LinkInfo::m_linkInfoByDpIds.end ())
     {
       lInfo = ret->second;

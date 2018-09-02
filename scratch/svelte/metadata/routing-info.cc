@@ -425,8 +425,7 @@ RoutingInfo::GetPointer (uint32_t teid)
   NS_LOG_FUNCTION_NOARGS ();
 
   Ptr<RoutingInfo> rInfo = 0;
-  TeidRoutingMap_t::iterator ret;
-  ret = RoutingInfo::m_routingInfoByTeid.find (teid);
+  auto ret = RoutingInfo::m_routingInfoByTeid.find (teid);
   if (ret != RoutingInfo::m_routingInfoByTeid.end ())
     {
       rInfo = ret->second;
@@ -561,8 +560,7 @@ RoutingInfo::RegisterRoutingInfo (Ptr<RoutingInfo> rInfo)
 
   uint32_t teid = rInfo->GetTeid ();
   std::pair<uint32_t, Ptr<RoutingInfo> > entry (teid, rInfo);
-  std::pair<TeidRoutingMap_t::iterator, bool> ret;
-  ret = RoutingInfo::m_routingInfoByTeid.insert (entry);
+  auto ret = RoutingInfo::m_routingInfoByTeid.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing routing info for this TEID");
 }
 

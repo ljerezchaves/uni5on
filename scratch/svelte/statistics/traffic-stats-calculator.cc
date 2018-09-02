@@ -317,7 +317,7 @@ TrafficStatsCalculator::GetQosStatsFromTeid (uint32_t teid, bool isDown)
   NS_LOG_FUNCTION (this << teid << isDown);
 
   Ptr<QosStatsCalculator> qosStats = 0;
-  TeidQosMap_t::iterator it = m_qosByTeid.find (teid);
+  auto it = m_qosByTeid.find (teid);
   if (it != m_qosByTeid.end ())
     {
       QosStatsPair_t value = it->second;
@@ -328,8 +328,7 @@ TrafficStatsCalculator::GetQosStatsFromTeid (uint32_t teid, bool isDown)
       QosStatsPair_t pair (CreateObject<QosStatsCalculator> (),
                            CreateObject<QosStatsCalculator> ());
       std::pair<uint32_t, QosStatsPair_t> entry (teid, pair);
-      std::pair<TeidQosMap_t::iterator, bool> ret;
-      ret = m_qosByTeid.insert (entry);
+      auto ret = m_qosByTeid.insert (entry);
       if (ret.second == false)
         {
           NS_FATAL_ERROR ("Existing QoS entry for teid " << teid);

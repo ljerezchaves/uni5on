@@ -330,8 +330,7 @@ PgwInfo::RegisterPgwInfo (Ptr<PgwInfo> pgwInfo)
 
   uint64_t pgwId = pgwInfo->GetPgwId ();
   std::pair<uint64_t, Ptr<PgwInfo> > entry (pgwId, pgwInfo);
-  std::pair<PgwIdPgwInfoMap_t::iterator, bool> ret;
-  ret = PgwInfo::m_pgwInfoByPgwId.insert (entry);
+  auto ret = PgwInfo::m_pgwInfoByPgwId.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing P-GW info for this ID.");
 }
 

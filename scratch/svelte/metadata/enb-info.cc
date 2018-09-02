@@ -110,8 +110,7 @@ EnbInfo::GetPointer (uint16_t cellId)
   NS_LOG_FUNCTION_NOARGS ();
 
   Ptr<EnbInfo> enbInfo = 0;
-  CellIdEnbInfoMap_t::iterator ret;
-  ret = EnbInfo::m_enbInfoByCellId.find (cellId);
+  auto ret = EnbInfo::m_enbInfoByCellId.find (cellId);
   if (ret != EnbInfo::m_enbInfoByCellId.end ())
     {
       enbInfo = ret->second;
@@ -135,8 +134,7 @@ EnbInfo::RegisterEnbInfo (Ptr<EnbInfo> enbInfo)
 
   uint16_t cellId = enbInfo->GetCellId ();
   std::pair<uint16_t, Ptr<EnbInfo> > entry (cellId, enbInfo);
-  std::pair<CellIdEnbInfoMap_t::iterator, bool> ret;
-  ret = EnbInfo::m_enbInfoByCellId.insert (entry);
+  auto ret = EnbInfo::m_enbInfoByCellId.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing eNB info for this cell ID.");
 }
 

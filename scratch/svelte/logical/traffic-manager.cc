@@ -83,8 +83,7 @@ TrafficManager::AddSvelteClientApp (Ptr<SvelteClientApp> app)
 
   // Save the application pointer.
   std::pair<Ptr<SvelteClientApp>, Time> entry (app, Time ());
-  std::pair<AppTimeMap_t::iterator, bool> ret;
-  ret = m_timeByApp.insert (entry);
+  auto ret = m_timeByApp.insert (entry);
   if (ret.second == false)
     {
       NS_FATAL_ERROR ("Can't save application pointer " << app);
@@ -292,7 +291,7 @@ TrafficManager::SetNextAppStartTry (Ptr<SvelteClientApp> app)
   Time nextTry = Seconds (std::max (8.0, rngValue));
 
   // Save the absolute time into application table.
-  AppTimeMap_t::iterator it = m_timeByApp.find (app);
+  auto it = m_timeByApp.find (app);
   NS_ASSERT_MSG (it != m_timeByApp.end (), "Can't find app " << app);
   it->second = Simulator::Now () + nextTry;
   NS_LOG_INFO ("Next start try for app " << app->GetNameTeid () <<
@@ -307,7 +306,7 @@ TrafficManager::GetNextAppStartTry (Ptr<SvelteClientApp> app) const
 {
   NS_LOG_FUNCTION (this << app);
 
-  AppTimeMap_t::const_iterator it = m_timeByApp.find (app);
+  auto it = m_timeByApp.find (app);
   NS_ASSERT_MSG (it != m_timeByApp.end (), "Can't find app " << app);
   return it->second;
 }

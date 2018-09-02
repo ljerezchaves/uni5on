@@ -156,8 +156,7 @@ SgwInfo::GetPointer (uint64_t sgwId)
   NS_LOG_FUNCTION_NOARGS ();
 
   Ptr<SgwInfo> sgwInfo = 0;
-  SgwIdSgwInfoMap_t::iterator ret;
-  ret = SgwInfo::m_sgwInfoBySgwId.find (sgwId);
+  auto ret = SgwInfo::m_sgwInfoBySgwId.find (sgwId);
   if (ret != SgwInfo::m_sgwInfoBySgwId.end ())
     {
       sgwInfo = ret->second;
@@ -181,8 +180,7 @@ SgwInfo::RegisterSgwInfo (Ptr<SgwInfo> sgwInfo)
 
   uint64_t sgwId = sgwInfo->GetSgwId ();
   std::pair<uint64_t, Ptr<SgwInfo> > entry (sgwId, sgwInfo);
-  std::pair<SgwIdSgwInfoMap_t::iterator, bool> ret;
-  ret = SgwInfo::m_sgwInfoBySgwId.insert (entry);
+  auto ret = SgwInfo::m_sgwInfoBySgwId.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing S-GW info for this ID.");
 }
 

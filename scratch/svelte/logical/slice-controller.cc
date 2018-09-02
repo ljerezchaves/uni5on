@@ -332,8 +332,7 @@ SliceController::NotifySgwAttach (Ptr<SgwInfo> sgwInfo)
   // Save the S-GW metadata.
   uint16_t swIdx = sgwInfo->GetInfraSwIdx ();
   std::pair<uint16_t, Ptr<SgwInfo> > entry (swIdx, sgwInfo);
-  std::pair<SwIdxSgwInfoMap_t::iterator, bool> ret;
-  ret = m_sgwInfoBySwIdx.insert (entry);
+  auto ret = m_sgwInfoBySwIdx.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing S-GW info for this index.");
 
   // -------------------------------------------------------------------------
@@ -690,8 +689,7 @@ SliceController::GetSgwInfo (uint16_t infraSwIdx)
   NS_LOG_FUNCTION (this << infraSwIdx);
 
   Ptr<SgwInfo> sgwInfo = 0;
-  SwIdxSgwInfoMap_t::iterator ret;
-  ret = m_sgwInfoBySwIdx.find (infraSwIdx);
+  auto ret = m_sgwInfoBySwIdx.find (infraSwIdx);
   if (ret != m_sgwInfoBySwIdx.end ())
     {
       sgwInfo = ret->second;
