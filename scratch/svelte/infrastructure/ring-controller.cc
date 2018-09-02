@@ -196,12 +196,8 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
 
   // NOTE that following commands works as LINKS ARE CREATED IN CLOCKWISE
   // DIRECTION, and switches inside each lInfo are saved in the same order.
-
-  for (uint16_t swIdx = 0; swIdx < GetNSwitches (); swIdx++)
+  for (auto const &lInfo : LinkInfo::GetList ())
     {
-      uint16_t nextIdx = NextSwitchIndex (swIdx, RingInfo::CLOCK);
-      Ptr<LinkInfo> lInfo = GetLinkInfo (swIdx, nextIdx);
-
       // ---------------------------------------------------------------------
       // Meter table
       //
@@ -237,11 +233,8 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
 
   // Do not merge the following loop with the previous one. Groups must be
   // created first to avoid OpenFlow error messages with BAD_OUT_GROUP code.
-  for (uint16_t swIdx = 0; swIdx < GetNSwitches (); swIdx++)
+  for (auto const &lInfo : LinkInfo::GetList ())
     {
-      uint16_t nextIdx = NextSwitchIndex (swIdx, RingInfo::CLOCK);
-      Ptr<LinkInfo> lInfo = GetLinkInfo (swIdx, nextIdx);
-
       // ---------------------------------------------------------------------
       // Table 2 -- Routing table -- [from higher to lower priority]
       //
