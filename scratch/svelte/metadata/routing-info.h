@@ -151,6 +151,13 @@ public:
   static Ptr<RoutingInfo> GetPointer (uint32_t teid);
 
   /**
+   * Get the slice ID for this GTP TEID.
+   * \param teid The GTP tunnel ID.
+   * \return The slice ID for this tunnel.
+   */
+  static SliceId GetSliceId (uint32_t teid);
+
+  /**
    * TracedCallback signature for Ptr<const RoutingInfo>.
    * \param rInfo The bearer information.
    */

@@ -433,6 +433,14 @@ RoutingInfo::GetPointer (uint32_t teid)
   return rInfo;
 }
 
+SliceId
+RoutingInfo::GetSliceId (uint32_t teid)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  return RoutingInfo::GetPointer (teid)->GetSliceId ();
+}
+
 void
 RoutingInfo::DoDispose ()
 {
