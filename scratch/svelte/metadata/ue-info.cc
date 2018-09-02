@@ -257,6 +257,7 @@ UeInfo::DoDispose ()
   m_pgwInfo = 0;
   m_sliceCtrl = 0;
   m_bearersList.clear ();
+  Object::DoDispose ();
 }
 
 void

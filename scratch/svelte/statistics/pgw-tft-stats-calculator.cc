@@ -66,6 +66,7 @@ PgwTftStatsCalculator::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   m_tftWrapper = 0;
+  Object::DoDispose ();
 }
 
 void

@@ -442,6 +442,7 @@ RoutingInfo::DoDispose ()
   m_gbrInfo = 0;
   m_meterInfo = 0;
   m_ueInfo = 0;
+  Object::DoDispose ();
 }
 
 void

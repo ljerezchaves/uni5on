@@ -136,6 +136,8 @@ void
 MeterInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+
+  Object::DoDispose ();
 }
 
 void

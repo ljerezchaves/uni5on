@@ -184,6 +184,7 @@ TrafficHelper::DoDispose ()
   m_ueDev = 0;
   m_ueNode = 0;
   m_videoRng = 0;
+  Object::DoDispose ();
 }
 
 void

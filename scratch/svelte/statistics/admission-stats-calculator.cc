@@ -170,6 +170,7 @@ AdmissionStatsCalculator::DoDispose ()
 
   m_admWrapper = 0;
   m_brqWrapper = 0;
+  Object::DoDispose ();
 }
 
 void

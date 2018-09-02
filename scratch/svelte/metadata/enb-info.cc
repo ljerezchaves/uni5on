@@ -125,6 +125,7 @@ EnbInfo::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   m_enbApplication = 0;
+  Object::DoDispose ();
 }
 
 void

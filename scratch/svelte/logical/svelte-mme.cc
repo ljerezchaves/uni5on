@@ -60,6 +60,7 @@ SvelteMme::DoDispose ()
 
   delete (m_s1apSapMme);
   delete (m_s11SapMme);
+  Object::DoDispose ();
 }
 
 EpcS1apSapMme*

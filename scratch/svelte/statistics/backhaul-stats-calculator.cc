@@ -97,6 +97,7 @@ BackhaulStatsCalculator::DoDispose ()
   //     m_slices [i].fwdBytes.clear ();
   //     m_slices [i].bwdBytes.clear ();
   //   }
+  Object::DoDispose ();
 }
 
 void

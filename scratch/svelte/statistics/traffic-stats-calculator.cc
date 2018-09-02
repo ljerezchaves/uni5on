@@ -102,6 +102,7 @@ TrafficStatsCalculator::DoDispose ()
 
   m_appWrapper = 0;
   m_epcWrapper = 0;
+  Object::DoDispose ();
 }
 
 void

@@ -167,7 +167,6 @@ BackhaulNetwork::DoDispose (void)
   m_controllerApp = 0;
   m_controllerNode = 0;
   m_switchHelper = 0;
-
   Object::DoDispose ();
 }
 

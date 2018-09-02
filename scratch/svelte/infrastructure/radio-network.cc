@@ -317,7 +317,6 @@ RadioNetwork::DoDispose ()
   m_remHelper = 0;
   m_lteHelper = 0;
   m_epcHelper = 0;
-
   Object::DoDispose ();
 }
 

@@ -156,6 +156,7 @@ TrafficManager::DoDispose ()
   m_poissonRng = 0;
   m_ctrlApp = 0;
   m_appTable.clear ();
+  Object::DoDispose ();
 }
 
 void

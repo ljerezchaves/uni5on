@@ -299,6 +299,7 @@ PgwInfo::DoDispose ()
 
   m_sliceCtrl = 0;
   m_devices.clear ();
+  Object::DoDispose ();
 }
 
 void

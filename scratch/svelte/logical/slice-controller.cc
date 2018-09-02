@@ -391,7 +391,6 @@ SliceController::DoDispose ()
   m_pgwInfo = 0;
   m_backhaulCtrl = 0;
   delete (m_s11SapSgw);
-
   Object::DoDispose ();
 }
 

@@ -107,6 +107,7 @@ HandoverStatsCalculator::DoDispose ()
 
   m_mobWrapper = 0;
   m_rrcWrapper = 0;
+  Object::DoDispose ();
 }
 
 void

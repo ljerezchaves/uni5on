@@ -306,6 +306,8 @@ void
 QosStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+
+  Object::DoDispose ();
 }
 
 } // Namespace ns3

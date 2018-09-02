@@ -211,6 +211,7 @@ RingInfo::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   m_rInfo = 0;
+  Object::DoDispose ();
 }
 
 void

@@ -91,6 +91,8 @@ void
 GbrInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
+
+  Object::DoDispose ();
 }
 
 void

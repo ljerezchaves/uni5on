@@ -395,6 +395,7 @@ LinkInfo::DoDispose ()
   m_switches [0].portDev = 0;
   m_switches [1].portDev = 0;
   m_channel = 0;
+  Object::DoDispose ();
 }
 
 void

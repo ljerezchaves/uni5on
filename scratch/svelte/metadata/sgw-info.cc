@@ -168,8 +168,10 @@ SgwInfo::GetPointer (uint64_t sgwId)
 void
 SgwInfo::DoDispose ()
 {
-  m_sliceCtrl = 0;
   NS_LOG_FUNCTION (this);
+
+  m_sliceCtrl = 0;
+  Object::DoDispose ();
 }
 
 void

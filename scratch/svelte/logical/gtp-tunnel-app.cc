@@ -148,6 +148,7 @@ GtpTunnelApp::DoDispose ()
   m_tunnelSocket = 0;
   m_logicalPort = 0;
   m_physicalDev = 0;
+  Application::DoDispose ();
 }
 
 void
