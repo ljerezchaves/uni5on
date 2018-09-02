@@ -46,8 +46,11 @@ class SliceController;
  */
 class UeInfo : public Object
 {
+  friend class PgwTunnelApp;
   friend class SliceController;
+  friend class SvelteHelper;
   friend class SvelteMme;
+  friend class TrafficStatsCalculator;
 
 public:
   /**
@@ -91,6 +94,32 @@ public:
   //\}
 
   /**
+   * Get the UE information from the global map for a specific IMSI.
+   * \param imsi The IMSI identifier for this UE.
+   * \return The UE information for this IMSI.
+   */
+  static Ptr<UeInfo> GetPointer (uint64_t imsi);
+
+  /**
+   * Get the UE information from the global map for a specific UE IPv4.
+   * \param ipv4 The UE IPv4.
+   * \return The UE information for this IP.
+   */
+  static Ptr<UeInfo> GetPointer (Ipv4Address ipv4);
+
+protected:
+  /** Destructor implementation. */
+  virtual void DoDispose ();
+
+private:
+  /** \name Private member accessors. */
+  //\{
+  void SetEnbInfo (Ptr<EnbInfo> enbInfo, uint64_t enbUeS1Id);
+  void SetSgwInfo (Ptr<SgwInfo> value);
+  void SetPgwInfo (Ptr<PgwInfo> value);
+  //\}
+
+  /**
    * Add an EPS bearer to the list of bearers for this UE.  The bearer will be
    * activated when the UE enters the ECM connected state.
    * \param bearer The bearer info.
@@ -117,32 +146,6 @@ public:
    * \return The GTP tunnel ID for this packet.
    */
   uint32_t Classify (Ptr<Packet> packet);
-
-  /**
-   * Get the UE information from the global map for a specific IMSI.
-   * \param imsi The IMSI identifier for this UE.
-   * \return The UE information for this IMSI.
-   */
-  static Ptr<UeInfo> GetPointer (uint64_t imsi);
-
-  /**
-   * Get the UE information from the global map for a specific UE IPv4.
-   * \param ipv4 The UE IPv4.
-   * \return The UE information for this IP.
-   */
-  static Ptr<UeInfo> GetPointer (Ipv4Address ipv4);
-
-protected:
-  /** Destructor implementation. */
-  virtual void DoDispose ();
-
-private:
-  /** \name Private member accessors. */
-  //\{
-  void SetEnbInfo (Ptr<EnbInfo> enbInfo, uint64_t enbUeS1Id);
-  void SetSgwInfo (Ptr<SgwInfo> value);
-  void SetPgwInfo (Ptr<PgwInfo> value);
-  //\}
 
   /**
    * Register the UE information in global map for further usage.
