@@ -163,7 +163,7 @@ protected:
    * configured and the connections between them are finished.
    * \param devices The OpenFlow switch devices.
    */
-  virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices) = 0;
+  virtual void NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices);
 
   /**
    * Install TEID routing OpenFlow match rules into backhaul switches.
@@ -194,11 +194,11 @@ protected:
   virtual void HandshakeSuccessful (Ptr<const RemoteSwitch> swtch);
   // Inherited from OFSwitch13Controller.
 
-  OFSwitch13DeviceContainer m_switchDevices;  //!< OpenFlow switch devices.
-
 private:
   /** Initialize static attributes only once. */
   static void StaticInitialize (void);
+
+  OFSwitch13DeviceContainer m_switchDevices;  //!< OpenFlow switch devices.
 
   // Internal mechanisms for performance improvement.
   OpMode                m_priorityQueues; //!< DSCP priority queues mechanism.

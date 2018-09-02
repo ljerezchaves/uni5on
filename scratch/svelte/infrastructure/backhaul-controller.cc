@@ -258,6 +258,15 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
     }
 }
 
+void
+BackhaulController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
+{
+  NS_LOG_FUNCTION (this);
+
+  // Save the collection of switch devices.
+  m_switchDevices = devices;
+}
+
 ofl_err
 BackhaulController::HandleError (
   struct ofl_msg_error *msg, Ptr<const RemoteSwitch> swtch,

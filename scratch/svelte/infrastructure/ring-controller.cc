@@ -215,8 +215,10 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
 {
   NS_LOG_FUNCTION (this);
 
-  // Save the collection of switch devices and create the spanning tree.
-  m_switchDevices = devices;
+  // Chain up first, as we need to save the switch devices.
+  BackhaulController::NotifyTopologyBuilt (devices);
+
+  // Create the spanning tree for this topology.
   CreateSpanningTree ();
 
   // The following commands works as LINKS ARE CREATED IN CLOCKWISE DIRECTION.
