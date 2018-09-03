@@ -74,7 +74,6 @@ RingController::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Chain up.
   BackhaulController::DoDispose ();
 }
 
@@ -181,7 +180,6 @@ RingController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
                 "S1-U path to " << RingInfo::RingPathStr (s1uDownPath) <<
                 " and S5 path to " << RingInfo::RingPathStr (s5DownPath));
 
-  // Chain up.
   BackhaulController::NotifyBearerCreated (rInfo);
 }
 
@@ -424,7 +422,6 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
         }
     }
 
-  // Chain up.
   BackhaulController::HandshakeSuccessful (swtch);
 }
 

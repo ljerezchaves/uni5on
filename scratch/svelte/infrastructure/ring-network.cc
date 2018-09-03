@@ -84,7 +84,7 @@ RingNetwork::NotifyConstructionCompleted ()
   m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_linkRate));
   m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_linkDelay));
 
-  // Chain up (the topology creation will be triggered by base class).
+  // The topology creation will be triggered by base class.
   BackhaulNetwork::NotifyConstructionCompleted ();
 }
 

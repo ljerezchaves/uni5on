@@ -107,7 +107,6 @@ SvelteEnbApplication::DoInitialContextSetupRequest (
                     " to S-GW S1-U IP " << m_teidSgwAddrMap [erab.sgwTeid]);
     }
 
-  // Chain up
   EpcEnbApplication::DoInitialContextSetupRequest (
     mmeUeS1Id, enbUeS1Id, erabToBeSetupList);
 }
