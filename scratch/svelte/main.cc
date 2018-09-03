@@ -352,6 +352,10 @@ EnableVerbose (bool enable)
           LOG_PREFIX_FUNC | LOG_PREFIX_TIME | LOG_LEVEL_WARN | LOG_INFO);
       NS_UNUSED (logLevelWarnInfo);
 
+      LogLevel logLevelInfo = static_cast<ns3::LogLevel> (
+          LOG_PREFIX_FUNC | LOG_PREFIX_TIME | LOG_LEVEL_INFO);
+      NS_UNUSED (logLevelInfo);
+
       LogLevel logLevelAll = static_cast<ns3::LogLevel> (
           LOG_PREFIX_FUNC | LOG_PREFIX_TIME | LOG_LEVEL_ALL);
       NS_UNUSED (logLevelAll);
