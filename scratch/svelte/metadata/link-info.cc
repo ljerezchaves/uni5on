@@ -450,11 +450,12 @@ LinkInfo::SetSliceQuotas (
       SliceId slice = static_cast<SliceId> (s);
       auto it = quotas.find (slice);
       NS_ASSERT_MSG (it != quotas.end (), "Missing slice quota.");
-      NS_ASSERT_MSG (it->second >= 0 && it->second <= 100, "Invalid quota.");
 
-      sumQuotas += it->second;
-      uint64_t newRate = (GetLinkBitRate () * it->second) / 100;
-      if (GetResBitRate (dir, slice) > newRate)
+      uint16_t quota = it->second;
+      NS_ASSERT_MSG (quota >= 0 && quota <= 100, "Invalid quota.");
+      sumQuotas += quota;
+
+      if (GetResBitRate (dir, slice) > ((GetLinkBitRate () * quota) / 100))
         {
           NS_LOG_WARN ("Can't change the slice quota. The new bit rate is "
                        "lower than the already reserved bit rate.");
@@ -466,9 +467,26 @@ LinkInfo::SetSliceQuotas (
   // Then, update slice maximum bit rates.
   for (auto const &it : quotas)
     {
-      m_slices [it.first][dir].maxRate = (GetLinkBitRate () * it.second) / 100;
-      NS_LOG_DEBUG (SliceIdStr (it.first) << " slice quota: " << it.second);
+      SliceId slice = it.first;
+      uint16_t quota = it.second;
+      NS_LOG_DEBUG (SliceIdStr (slice) << " slice quota: " << quota);
+
+      // Only update and fire adjusted trace source if the quota changes.
+      uint64_t newRate = (GetLinkBitRate () * quota) / 100;
+      if (newRate != m_slices [slice][dir].maxRate)
+        {
+          m_slices [slice][dir].maxRate = newRate;
+
+          NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
+          m_meterAdjustedTrace (Ptr<LinkInfo> (this), dir, slice);
+          m_slices [slice][dir].meterDiff = 0;
+        }
     }
+    
+  // There's no need to fire the adjusment trace source for the fake shared
+  // slice, as we are updating only the maximum bit rate for each slice,
+  // respecing the already reserved bit rate. So,  the aggregated free bit rate
+  // will remain the same.
   return true;
 }
 
