@@ -23,6 +23,7 @@
 
 #include <ns3/core-module.h>
 #include "../svelte-common.h"
+#include "link-info.h"
 
 namespace ns3 {
 
@@ -81,6 +82,14 @@ public:
    * \return The inverted routing path.
    */
   static RingPath Invert (RingPath path);
+
+  /**
+   * Map the link direction to the corresponding ring routing path.
+   * \param dir The link direction.
+   * \return The routing path.
+   * \attention This works only for links created in clockwise direction.
+   */
+  static RingPath LinkDirToRingPath (LinkInfo::Direction dir);
 
   /**
    * Get the string representing the routing path.
