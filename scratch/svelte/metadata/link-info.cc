@@ -497,6 +497,7 @@ LinkInfo::UpdateMeterDiff (
       // Fire meter adjusted trace source to update meters.
       NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
       m_meterAdjustedTrace (Ptr<LinkInfo> (this), dir, slice);
+      m_slices [slice][dir].meterDiff = 0;
     }
 }
 
