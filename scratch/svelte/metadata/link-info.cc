@@ -490,8 +490,8 @@ LinkInfo::UpdateMeterDiff (
   NS_LOG_DEBUG ("Current " << SliceIdStr (slice) <<
                 " diff bit rate: " << m_slices [slice][dir].meterDiff);
 
-  uint64_t diffAbs = static_cast<uint64_t> (
-      std::abs (m_slices [slice][dir].meterDiff));
+  int64_t diff = m_slices [slice][dir].meterDiff;
+  uint64_t diffAbs = diff >= 0 ? diff : (-1) * diff;
   if (diffAbs >= m_adjustmentStep.GetBitRate ())
     {
       // Fire meter adjusted trace source to update meters.
