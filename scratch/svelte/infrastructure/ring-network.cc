@@ -116,7 +116,7 @@ RingNetwork::CreateTopology (void)
       Names::Add (swName.str (), m_switchNodes.Get (i));
     }
 
-  // Connecting switches in ring topology (clockwise order).
+  // Connecting switches in ring topology (don't change the clockwise order).
   for (uint16_t i = 0; i < m_numNodes; i++)
     {
       uint16_t currIndex = i;

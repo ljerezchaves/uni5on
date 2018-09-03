@@ -398,7 +398,8 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
           SliceId slice = static_cast<SliceId> (s);
           for (int d = 0; d <= LinkInfo::BWD; d++)
             {
-              uint16_t metaValue = static_cast<uint16_t> (d + 1);
+              LinkInfo::Direction dir = static_cast<LinkInfo::Direction> (d);
+              RingInfo::RingPath ringPath = RingInfo::LinkDirToRingPath (dir);
               uint32_t meterId = GetSvelteMeterId (slice, d);
 
               // Non-GBR QCIs range is [5, 9].
@@ -410,7 +411,7 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
                   // Apply this meter to the traffic of this slice only.
                   std::ostringstream cmd;
                   cmd << "flow-mod cmd=add,table=3,prio=16"
-                      << " eth_type=0x800,ip_proto=17,meta=" << metaValue
+                      << " eth_type=0x800,ip_proto=17,meta=" << ringPath
                       << ",gtpu_teid=" << (meterId & TEID_SLICE_MASK)
                       << "/" << TEID_SLICE_MASK
                       << ",ip_dscp=" << static_cast<uint16_t> (dscp)
@@ -426,7 +427,8 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
       SliceId slice = SliceId::ALL;
       for (int d = 0; d <= LinkInfo::BWD; d++)
         {
-          uint16_t metaValue = static_cast<uint16_t> (d + 1);
+          LinkInfo::Direction dir = static_cast<LinkInfo::Direction> (d);
+          RingInfo::RingPath ringPath = RingInfo::LinkDirToRingPath (dir);
           uint32_t meterId = GetSvelteMeterId (slice, d);
 
           // Non-GBR QCIs range is [5, 9].
@@ -438,7 +440,7 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
               // Apply this meter to the traffic of all slices.
               std::ostringstream cmd;
               cmd << "flow-mod cmd=add,table=3,prio=16"
-                  << " eth_type=0x800,ip_proto=17,meta=" << metaValue
+                  << " eth_type=0x800,ip_proto=17,meta=" << ringPath
                   << ",ip_dscp=" << static_cast<uint16_t> (dscp)
                   << " meter:" << meterId
                   << " goto:4";

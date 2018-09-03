@@ -482,7 +482,7 @@ LinkInfo::SetSliceQuotas (
           m_slices [slice][dir].meterDiff = 0;
         }
     }
-    
+
   // There's no need to fire the adjusment trace source for the fake shared
   // slice, as we are updating only the maximum bit rate for each slice,
   // respecing the already reserved bit rate. So,  the aggregated free bit rate
