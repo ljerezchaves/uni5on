@@ -119,7 +119,7 @@ BackhaulController::GetSliceUsage (SliceId slice) const
   uint16_t count = 0;
   for (auto const &lInfo : LinkInfo::GetList ())
     {
-      // FIXME Se não for full duplex só conta no FWD.
+      // We always have full-fuplex links in SVELTE backhaul.
       sliceUsage += lInfo->GetThpSliceRatio (LinkInfo::FWD, slice);
       sliceUsage += lInfo->GetThpSliceRatio (LinkInfo::BWD, slice);
       count += 2;
