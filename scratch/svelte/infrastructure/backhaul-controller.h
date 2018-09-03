@@ -26,6 +26,7 @@
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
 #include <ns3/ofswitch13-module.h>
+#include "../metadata/link-info.h"
 #include "../metadata/routing-info.h"
 #include "../svelte-common.h"
 
@@ -195,6 +196,28 @@ protected:
   // Inherited from OFSwitch13Controller.
 
 private:
+  /**
+   * Notify this controller when the reserved bit rate in any network link and
+   * slice is adjusted, exceeding the AdjustmentStep attribute from LinkInfo
+   * class. This is used to update infrastructure slicing meters.
+   * \param lInfo The link information.
+   * \param dir The link direction.
+   * \param slice The network slice.
+   */
+  void SlicingMeterAdjusted (Ptr<const LinkInfo> lInfo,
+                             LinkInfo::Direction dir, SliceId slice);
+
+  /**
+   * Install the infrastructure slicing meters. When the network slicing
+   * operation mode is ON, the traffic of each slice will be independently
+   * monitored by slicing meters. When the slicing operation mode is AUTO, the
+   * traffic of all slices will be monitored together by the slicing meters,
+   * ensuring a better bandwidth sharing among slices.
+   *
+   * \param swtch The OpenFlow switch information.
+   */
+  void SlicingMeterInstall (Ptr<const LinkInfo> lInfo);
+
   /** Initialize static attributes only once. */
   static void StaticInitialize (void);
 

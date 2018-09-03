@@ -257,6 +257,21 @@ BackhaulController::NotifySlicesBuilt (ApplicationContainer &controllers)
       success &= lInfo->SetSliceQuotas (LinkInfo::BWD, quotas);
       NS_ASSERT_MSG (success, "Error when setting slice quotas.");
     }
+
+  // ---------------------------------------------------------------------
+  // Meter table
+  //
+  // Install slice meters only if the link slicing mechanism is enabled.
+  if (GetLinkSlicingMode () != OpMode::OFF)
+    {
+      for (auto const &lInfo : LinkInfo::GetList ())
+        {
+          SlicingMeterInstall (lInfo);
+          lInfo->TraceConnectWithoutContext (
+            "MeterAdjusted", MakeCallback (
+              &BackhaulController::SlicingMeterAdjusted, this));
+        }
+    }
 }
 
 void
@@ -420,6 +435,106 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
   // Table miss entry. No instructions. This will trigger action set execute.
   DpctlExecute (swtch, "flow-mod cmd=add,table=4,prio=0");
+}
+
+void
+BackhaulController::SlicingMeterAdjusted (
+  Ptr<const LinkInfo> lInfo, LinkInfo::Direction dir, SliceId slice)
+{
+  NS_LOG_FUNCTION (this << lInfo << dir << slice);
+
+  NS_ASSERT_MSG (GetLinkSlicingMode () != OpMode::OFF, "Not supposed to "
+                 "adjust slicing meters when network slicing mode is OFF.");
+
+  // Identify the meter ID based on slicing operation mode. When the slicing
+  // operation mode is ON, the traffic of each slice will be independently
+  // monitored by slicing meters, so we ignore the fake shared slice. When the
+  // slicing operation mode is AUTO, the traffic of all slices are monitored
+  // together by the slicing meters, so we ignore individual slices.
+  if ((GetLinkSlicingMode () == OpMode::ON && slice != SliceId::ALL)
+      || (GetLinkSlicingMode () == OpMode::AUTO && slice == SliceId::ALL))
+    {
+      uint32_t meterId = GetSvelteMeterId (slice, static_cast<uint32_t> (dir));
+      NS_LOG_INFO ("Updating slicing meter ID " << GetUint32Hex (meterId) <<
+                   " for link info " << lInfo->GetSwDpId (0) <<
+                   " to " << lInfo->GetSwDpId (1));
+
+      // ---------------------------------------------------------------------
+      // Meter table
+      //
+      // Update the proper slicing meter.
+      uint64_t kbps = lInfo->GetFreeBitRate (dir, slice);
+      std::ostringstream cmd;
+      cmd << "meter-mod cmd=mod"
+          << ",flags=" << OFPMF_KBPS
+          << ",meter=" << meterId
+          << " drop:rate=" << kbps / 1000;
+
+      DpctlExecute (lInfo->GetSwDpId (dir), cmd.str ());
+      NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) << ": " <<
+                    LinkInfo::DirectionStr (dir) <<
+                    " link set to " << kbps << " Kbps");
+    }
+}
+
+void
+BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
+{
+  NS_LOG_FUNCTION (this << lInfo);
+
+  if (GetLinkSlicingMode () == OpMode::ON)
+    {
+      // Install meter rules for each slice.
+      for (int s = 0; s < SliceId::ALL; s++)
+        {
+          SliceId slice = static_cast<SliceId> (s);
+          for (int d = 0; d <= LinkInfo::BWD; d++)
+            {
+              LinkInfo::Direction dir = static_cast<LinkInfo::Direction> (d);
+              uint32_t meterId = GetSvelteMeterId (slice, d);
+              NS_LOG_INFO ("Creating slicing meter ID " <<
+                           GetUint32Hex (meterId) <<
+                           " for link info " << lInfo->GetSwDpId (0) <<
+                           " to " << lInfo->GetSwDpId (1));
+
+              uint64_t kbps = lInfo->GetFreeBitRate (dir, slice);
+              std::ostringstream cmd;
+              cmd << "meter-mod cmd=add,flags=" << OFPMF_KBPS
+                  << ",meter=" << meterId
+                  << " drop:rate=" << kbps / 1000;
+
+              DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
+              NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) <<
+                            ": " << LinkInfo::DirectionStr (dir) <<
+                            " link set to " << kbps << " Kbps");
+            }
+        }
+    }
+  else if (GetLinkSlicingMode () == OpMode::AUTO)
+    {
+      // Install meter rules shared among slices.
+      SliceId slice = SliceId::ALL;
+      for (int d = 0; d <= LinkInfo::BWD; d++)
+        {
+          LinkInfo::Direction dir = static_cast<LinkInfo::Direction> (d);
+          uint32_t meterId = GetSvelteMeterId (slice, d);
+          NS_LOG_INFO ("Creating slicing meter ID " <<
+                       GetUint32Hex (meterId) <<
+                       " for link info " << lInfo->GetSwDpId (0) <<
+                       " to " << lInfo->GetSwDpId (1));
+
+          uint64_t kbps = lInfo->GetFreeBitRate (dir, slice);
+          std::ostringstream cmd;
+          cmd << "meter-mod cmd=add,flags=" << OFPMF_KBPS
+              << ",meter=" << meterId
+              << " drop:rate=" << kbps / 1000;
+
+          DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
+          NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) <<
+                        ": " << LinkInfo::DirectionStr (dir) <<
+                        " link set to " << kbps << " Kbps");
+        }
+    }
 }
 
 void

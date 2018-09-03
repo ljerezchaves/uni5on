@@ -22,7 +22,6 @@
 #define RING_CONTROLLER_H
 
 #include "backhaul-controller.h"
-#include "../metadata/link-info.h"
 #include "../metadata/ring-info.h"
 #include "../svelte-common.h"
 
@@ -73,7 +72,6 @@ protected:
   bool BearerRequest (Ptr<RoutingInfo> rInfo);
   bool BearerRelease (Ptr<RoutingInfo> rInfo);
   void NotifyBearerCreated (Ptr<RoutingInfo> rInfo);
-  void NotifySlicesBuilt (ApplicationContainer &controllers);
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices);
   bool TopologyRoutingInstall (Ptr<RoutingInfo> rInfo);
   bool TopologyRoutingRemove (Ptr<RoutingInfo> rInfo);
@@ -134,28 +132,6 @@ private:
    */
   uint16_t HopCounter (uint16_t srcIdx, uint16_t dstIdx,
                        RingInfo::RingPath path) const;
-
-  /**
-   * Notify this controller when the reserved bit rate in any network link and
-   * slice is adjusted, exceeding the AdjustmentStep attribute from LinkInfo
-   * class. This is used to update infrastructure slicing meters.
-   * \param lInfo The link information.
-   * \param dir The link direction.
-   * \param slice The network slice.
-   */
-  void SlicingMeterAdjusted (Ptr<const LinkInfo> lInfo,
-                             LinkInfo::Direction dir, SliceId slice);
-
-  /**
-   * Install the infrastructure slicing meters. When the network slicing
-   * operation mode is ON, the traffic of each slice will be independently
-   * monitored by slicing meters. When the slicing operation mode is AUTO, the
-   * traffic of all slices will be monitored together by the slicing meters,
-   * ensuring a better bandwidth sharing among slices.
-   *
-   * \param swtch The OpenFlow switch information.
-   */
-  void SlicingMeterInstall (Ptr<const LinkInfo> lInfo);
 
   /**
    * Get the next switch index following the given routing path.
