@@ -120,6 +120,29 @@ std::ostream & operator << (std::ostream &os, const ObjectFactory &factory)
   os << "]";
   return os;
 }
+
+std::string::size_type
+findNextAtt (std::string &str, size_t pos)
+{
+  int level = 0;
+  for (std::string::size_type i = pos; i < str.size (); i++)
+    {
+      if (level == 0 && str[i] == '|')
+        {
+          return i;
+        }
+      if (str[i] == '[')
+        {
+          level++;
+        }
+      else if (str[i] == ']')
+        {
+          level--;
+        }
+    }
+  return std::string::npos;
+}
+
 std::istream & operator >> (std::istream &is, ObjectFactory &factory)
 {
   std::string v;
@@ -162,7 +185,7 @@ std::istream & operator >> (std::istream &is, ObjectFactory &factory)
             }
           else
             {
-              std::string::size_type next = parameters.find ("|", cur);
+              std::string::size_type next = findNextAtt (parameters, cur);
               std::string value;
               if (next == std::string::npos)
                 {
