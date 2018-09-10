@@ -99,6 +99,12 @@ MobilityHelper::SetMobilityModel (std::string type,
   m_mobility.Set (n9, v9);
 }
 
+void
+MobilityHelper::SetMobilityModel (ObjectFactory model)
+{
+  m_mobility = model;
+}
+
 void 
 MobilityHelper::PushReferenceMobilityModel (Ptr<Object> reference)
 {
