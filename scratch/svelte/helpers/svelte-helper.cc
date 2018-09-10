@@ -37,7 +37,10 @@ NS_LOG_COMPONENT_DEFINE ("SvelteHelper");
 NS_OBJECT_ENSURE_REGISTERED (SvelteHelper);
 
 SvelteHelper::SvelteHelper ()
-  : m_mtcController (0),
+  : m_backhaul (0),
+  m_radio (0),
+  m_mme (0),
+  m_mtcController (0),
   m_mtcNetwork (0),
   m_mtcTraffic (0),
   m_htcController (0),
@@ -45,7 +48,12 @@ SvelteHelper::SvelteHelper ()
   m_htcTraffic (0),
   m_tmpController (0),
   m_tmpNetwork (0),
-  m_tmpTraffic (0)
+  m_tmpTraffic (0),
+  m_admissionStats (0),
+  m_backhaulStats (0),
+  m_handoverStats (0),
+  m_pgwTftStats (0),
+  m_trafficStats (0)
 {
   NS_LOG_FUNCTION (this);
 }
