@@ -301,9 +301,26 @@ SvelteHelper::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
+  // This will force output files to get closed.
+  m_admissionStats->Dispose ();
+  m_backhaulStats->Dispose ();
+  m_handoverStats->Dispose ();
+  m_pgwTftStats->Dispose ();
+  m_trafficStats->Dispose ();
+
   m_mme = 0;
   m_backhaul = 0;
   m_radio = 0;
+
+  m_mtcController = 0;
+  m_mtcNetwork = 0;
+  m_mtcTraffic = 0;
+  m_htcController = 0;
+  m_htcNetwork = 0;
+  m_htcTraffic = 0;
+  m_tmpController = 0;
+  m_tmpNetwork =0;
+  m_tmpTraffic = 0;
 
   m_admissionStats = 0;
   m_backhaulStats = 0;

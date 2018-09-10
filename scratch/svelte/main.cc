@@ -149,7 +149,11 @@ main (int argc, char *argv[])
   std::cout << "Simulating..." << std::endl;
   Simulator::Stop (Seconds (simTime + 1));
   Simulator::Run ();
+
+  // Finish the simulation.
   Simulator::Destroy ();
+  svelteHelper->Dispose ();
+  svelteHelper = 0;
   std::cout << "END OK" << std::endl;
 
   return 0;
