@@ -91,6 +91,9 @@ typedef enum
   NONE = 15  //!< Undefined slice.
 } SliceId;
 
+// Total number of slices + 1 for aggregated metadata.
+#define N_SLICES_ALL (static_cast<uint8_t> (SliceId::ALL) + 1)
+
 /**
  * \ingroup svelte
  * Get the LTE interface name.

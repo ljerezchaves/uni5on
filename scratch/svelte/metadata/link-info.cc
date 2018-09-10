@@ -62,9 +62,8 @@ LinkInfo::LinkInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel)
   m_switches [1].portDev->TraceConnect (
     "PhyTxEnd", "Backward", MakeCallback (&LinkInfo::NotifyTxPacket, this));
 
-  // Preparing slicing metadata structures.
-  uint8_t numSlices = static_cast<uint8_t> (SliceId::ALL) + 1;
-  memset (m_slices, 0, sizeof (SliceData) * numSlices * 2);
+  // Clear slice metadata.
+  memset (m_slices, 0, sizeof (SliceData) * N_SLICES_ALL * 2);
 
   RegisterLinkInfo (Ptr<LinkInfo> (this));
 }

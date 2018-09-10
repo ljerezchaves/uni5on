@@ -341,9 +341,7 @@ private:
   /** Default meter bit rate adjusted trace source. */
   TracedCallback<Ptr<const LinkInfo>, Direction, SliceId> m_meterAdjustedTrace;
 
-  /** Metadata for each network slice. */
-  SliceData         m_slices [static_cast<uint8_t> (SliceId::ALL) + 1][2];
-
+  SliceData         m_slices [N_SLICES_ALL][2]; //!< Metadata for slices.
   SwitchData        m_switches [2];             //!< Metadata for switches.
   Ptr<CsmaChannel>  m_channel;                  //!< The CSMA link channel.
   Time              m_lastUpdate;               //!< Last update time.
