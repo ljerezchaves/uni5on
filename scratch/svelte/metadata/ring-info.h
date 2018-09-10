@@ -86,10 +86,18 @@ public:
   /**
    * Map the link direction to the corresponding ring routing path.
    * \param dir The link direction.
-   * \return The routing path.
+   * \return The ring routing path.
    * \attention This works only for links created in clockwise direction.
    */
   static RingPath LinkDirToRingPath (LinkInfo::Direction dir);
+
+  /**
+   * Map the ring routing path to the corresponding link direction.
+   * \param path The ring routing path.
+   * \return The link direction.
+   * \attention This works only for links created in clockwise direction.
+   */
+  static LinkInfo::Direction RingPathToLinkDir (RingPath path);
 
   /**
    * Get the string representing the routing path.

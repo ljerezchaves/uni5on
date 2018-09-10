@@ -195,6 +195,12 @@ RingInfo::LinkDirToRingPath (LinkInfo::Direction dir)
   return dir == LinkInfo::FWD ? RingInfo::CLOCK : RingInfo::COUNTER;
 }
 
+LinkInfo::Direction
+RingInfo::RingPathToLinkDir (RingPath path)
+{
+  return path == RingInfo::CLOCK ? LinkInfo::FWD : LinkInfo::BWD;
+}
+
 std::string
 RingInfo::RingPathStr (RingPath path)
 {
