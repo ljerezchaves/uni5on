@@ -459,6 +459,27 @@ RoutingInfo::GetPrintHeader (void)
   NS_LOG_FUNCTION_NOARGS ();
 
   std::ostringstream str;
+  str << setw (12) << "TEID"
+
+      << setw (7)  << "Defau"
+      << setw (7)  << "Activ"
+      << setw (7)  << "Insta"
+      << setw (7)  << "Aggre"
+      << setw (7)  << "Block"
+      << setw (10) << "Reason"
+
+      << setw (5)  << "QCI"
+      << setw (7)  << "IsGbr"
+      << setw (6)  << "Dscp"
+
+      << setw (7)  << "DlTff"
+      << setw (9)  << "DlReq"
+      << setw (7)  << "UlTff"
+      << setw (9)  << "UlReq"
+
+      << setw (5)  << "TFT"
+      << setw (7)  << "Prio"
+      << setw (5)  << "Tmo";
   return str.str ();
 }
 
@@ -595,6 +616,27 @@ RoutingInfo::RegisterRoutingInfo (Ptr<RoutingInfo> rInfo)
 
 std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
 {
+  os << setw (12) << rInfo.GetTeidHex ()
+
+     << setw (7)  << rInfo.IsDefault ()
+     << setw (7)  << rInfo.IsActive ()
+     << setw (7)  << rInfo.IsInstalled ()
+     << setw (7)  << rInfo.IsAggregated ()
+     << setw (7)  << rInfo.IsBlocked ()
+     << setw (10) << rInfo.GetBlockReasonStr ()
+
+     << setw (5)  << rInfo.GetQciInfo ()
+     << setw (7)  << rInfo.IsGbr ()
+     << setw (6)  << rInfo.GetDscpStr ()
+
+     << setw (7)  << rInfo.HasDownlinkTraffic ()
+     << setw (9)  << rInfo.m_bearer.bearerLevelQos.gbrQosInfo.gbrDl
+     << setw (7)  << rInfo.HasUplinkTraffic ()
+     << setw (9)  << rInfo.m_bearer.bearerLevelQos.gbrQosInfo.gbrUl
+
+     << setw (5)  << rInfo.GetPgwTftIdx ()
+     << setw (7)  << rInfo.GetPriority ()
+     << setw (5)  << rInfo.GetTimeout ();
   return os;
 }
 

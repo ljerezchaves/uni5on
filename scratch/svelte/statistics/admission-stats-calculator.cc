@@ -231,6 +231,7 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   *m_brqWrapper->GetStream ()
     << fixed << boolalpha << right
     << setw (8)  << "Time(s)"
+    << RoutingInfo::GetPrintHeader ()
  //    << setw (12) << "TEID"
  //    << setw (5)  << "QCI"
  //    << setw (7)  << "IsGBR"
