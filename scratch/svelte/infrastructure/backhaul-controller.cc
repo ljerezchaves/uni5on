@@ -463,12 +463,12 @@ BackhaulController::SlicingMeterAdjusted (
       // Meter table
       //
       // Update the proper slicing meter.
-      uint64_t kbps = lInfo->GetFreeBitRate (dir, slice);
+      uint64_t kbps = lInfo->GetFreeBitRate (dir, slice) / 1000;
       std::ostringstream cmd;
       cmd << "meter-mod cmd=mod"
           << ",flags=" << OFPMF_KBPS
           << ",meter=" << meterId
-          << " drop:rate=" << kbps / 1000;
+          << " drop:rate=" << kbps;
 
       DpctlExecute (lInfo->GetSwDpId (dir), cmd.str ());
       NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) << ": " <<
@@ -497,11 +497,11 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
                            " for link info " << lInfo->GetSwDpId (0) <<
                            " to " << lInfo->GetSwDpId (1));
 
-              uint64_t kbps = lInfo->GetFreeBitRate (dir, slice);
+              uint64_t kbps = lInfo->GetFreeBitRate (dir, slice) / 1000;
               std::ostringstream cmd;
               cmd << "meter-mod cmd=add,flags=" << OFPMF_KBPS
                   << ",meter=" << meterId
-                  << " drop:rate=" << kbps / 1000;
+                  << " drop:rate=" << kbps;
 
               DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
               NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) <<
@@ -523,11 +523,11 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
                        " for link info " << lInfo->GetSwDpId (0) <<
                        " to " << lInfo->GetSwDpId (1));
 
-          uint64_t kbps = lInfo->GetFreeBitRate (dir, slice);
+          uint64_t kbps = lInfo->GetFreeBitRate (dir, slice) / 1000;
           std::ostringstream cmd;
           cmd << "meter-mod cmd=add,flags=" << OFPMF_KBPS
               << ",meter=" << meterId
-              << " drop:rate=" << kbps / 1000;
+              << " drop:rate=" << kbps;
 
           DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
           NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) <<
