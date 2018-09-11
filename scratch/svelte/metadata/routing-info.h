@@ -159,19 +159,27 @@ public:
   static SliceId GetSliceId (uint32_t teid);
 
   /**
-   * TracedCallback signature for Ptr<const RoutingInfo>.
-   * \param rInfo The bearer information.
+   * Get the header for the print operator <<.
+   * \return The header string.
+   * \internal Keep this method consistent with the << operator below.
    */
-  typedef void (*TracedCallback)(Ptr<const RoutingInfo> rInfo);
+  static std::string GetPrintHeader (void);
 
   /**
    * Print the routing metadata on an output stream.
    * \param os The output stream.
    * \param rInfo The RoutingInfo object.
    * \returns The output stream.
+   * \internal Keep this method consistent with the GetPrintHeader () above.
    */
   friend std::ostream & operator << (
     std::ostream &os, const RoutingInfo &rInfo);
+
+  /**
+   * TracedCallback signature for Ptr<const RoutingInfo>.
+   * \param rInfo The bearer information.
+   */
+  typedef void (*TracedCallback)(Ptr<const RoutingInfo> rInfo);
 
 protected:
   /** Destructor implementation. */

@@ -453,6 +453,15 @@ RoutingInfo::GetSliceId (uint32_t teid)
   return RoutingInfo::GetPointer (teid)->GetSliceId ();
 }
 
+std::string
+RoutingInfo::GetPrintHeader (void)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  std::ostringstream str;
+  return str.str ();
+}
+
 void
 RoutingInfo::DoDispose ()
 {
