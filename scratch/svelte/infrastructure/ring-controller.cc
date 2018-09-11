@@ -276,7 +276,7 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
     }
 
   // Configuring downlink routing.
-  if (rInfo->HasDownlinkTraffic ())
+  if (rInfo->HasDlTraffic ())
     {
       // Building the match string for both S1-U and S5 interfaces
       // No match on source IP because we may have several P-GW TFT switches.
@@ -301,7 +301,7 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
     }
 
   // Configuring uplink routing.
-  if (rInfo->HasUplinkTraffic ())
+  if (rInfo->HasUlTraffic ())
     {
       // Building the match string.
       std::ostringstream mS1, mS5;

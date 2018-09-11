@@ -54,8 +54,8 @@ public:
 
   /** \name Private member accessors. */
   //\{
-  bool IsDownInstalled (void) const;
-  bool IsUpInstalled (void) const;
+  bool IsDlInstalled (void) const;
+  bool IsUlInstalled (void) const;
   bool HasDown (void) const;
   bool HasUp (void) const;
   //\}
@@ -65,8 +65,8 @@ public:
    * \return The requested command.
    */
   //\{
-  std::string GetDownAddCmd (void) const;
-  std::string GetUpAddCmd (void) const;
+  std::string GetDlAddCmd (void) const;
+  std::string GetUlAddCmd (void) const;
   std::string GetDelCmd (void) const;
   //\}
 
@@ -76,8 +76,8 @@ protected:
 
   /** \name Private member accessors. */
   //\{
-  void SetDownInstalled (bool value);
-  void SetUpInstalled (bool value);
+  void SetDlInstalled (bool value);
+  void SetUlInstalled (bool value);
   //\}
 
 private:

@@ -857,11 +857,11 @@ SliceController::PgwRulesInstall (
   Ptr<MeterInfo> meterInfo = rInfo->GetMeterInfo ();
   if (meterInfo && meterInfo->HasDown ())
     {
-      if (moveFlag || !meterInfo->IsDownInstalled ())
+      if (moveFlag || !meterInfo->IsDlInstalled ())
         {
           // Install the per-flow meter entry.
-          DpctlExecute (pgwTftDpId, meterInfo->GetDownAddCmd ());
-          meterInfo->SetDownInstalled (true);
+          DpctlExecute (pgwTftDpId, meterInfo->GetDlAddCmd ());
+          meterInfo->SetDlInstalled (true);
         }
 
       // Instruction: meter.
@@ -946,12 +946,12 @@ SliceController::PgwRulesRemove (
 
   // Remove meter entry for this TEID.
   Ptr<MeterInfo> meterInfo = rInfo->GetMeterInfo ();
-  if (meterInfo && meterInfo->IsDownInstalled ())
+  if (meterInfo && meterInfo->IsDlInstalled ())
     {
       DpctlExecute (pgwTftDpId, meterInfo->GetDelCmd ());
       if (!moveFlag)
         {
-          meterInfo->SetDownInstalled (false);
+          meterInfo->SetDlInstalled (false);
         }
     }
   return true;
@@ -965,7 +965,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
   NS_LOG_INFO ("Installing S-GW rules for teid " << rInfo->GetTeidHex ());
 
   // Configure downlink.
-  if (rInfo->HasDownlinkTraffic ())
+  if (rInfo->HasDlTraffic ())
     {
       // Build the dpctl command string.
       std::ostringstream cmd, act;
@@ -1029,7 +1029,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
     }
 
   // Configure uplink.
-  if (rInfo->HasUplinkTraffic ())
+  if (rInfo->HasUlTraffic ())
     {
       // Build the dpctl command string.
       std::ostringstream cmd, act;
@@ -1043,11 +1043,11 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
       Ptr<MeterInfo> meterInfo = rInfo->GetMeterInfo ();
       if (meterInfo && meterInfo->HasUp ())
         {
-          if (!meterInfo->IsUpInstalled ())
+          if (!meterInfo->IsUlInstalled ())
             {
               // Install the per-flow meter entry.
-              DpctlExecute (rInfo->GetSgwDpId (), meterInfo->GetUpAddCmd ());
-              meterInfo->SetUpInstalled (true);
+              DpctlExecute (rInfo->GetSgwDpId (), meterInfo->GetUlAddCmd ());
+              meterInfo->SetUlInstalled (true);
             }
 
           // Instruction: meter.
@@ -1125,10 +1125,10 @@ SliceController::SgwRulesRemove (Ptr<RoutingInfo> rInfo)
 
   // Remove meter entry for this TEID.
   Ptr<MeterInfo> meterInfo = rInfo->GetMeterInfo ();
-  if (meterInfo && meterInfo->IsUpInstalled ())
+  if (meterInfo && meterInfo->IsUlInstalled ())
     {
       DpctlExecute (rInfo->GetSgwDpId (), meterInfo->GetDelCmd ());
-      meterInfo->SetUpInstalled (false);
+      meterInfo->SetUlInstalled (false);
     }
   return true;
 }

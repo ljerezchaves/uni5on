@@ -254,7 +254,7 @@ RoutingInfo::GetTft (void) const
 }
 
 bool
-RoutingInfo::HasDownlinkTraffic (void) const
+RoutingInfo::HasDlTraffic (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -262,7 +262,7 @@ RoutingInfo::HasDownlinkTraffic (void) const
 }
 
 bool
-RoutingInfo::HasUplinkTraffic (void) const
+RoutingInfo::HasUlTraffic (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -639,9 +639,9 @@ std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
      << setw (7)  << rInfo.IsGbr ()
      << setw (6)  << rInfo.GetDscpStr ()
 
-     << setw (7)  << rInfo.HasDownlinkTraffic ()
+     << setw (7)  << rInfo.HasDlTraffic ()
      << setw (9)  << rInfo.m_bearer.bearerLevelQos.gbrQosInfo.gbrDl
-     << setw (7)  << rInfo.HasUplinkTraffic ()
+     << setw (7)  << rInfo.HasUlTraffic ()
      << setw (9)  << rInfo.m_bearer.bearerLevelQos.gbrQosInfo.gbrUl
 
      << setw (5)  << rInfo.GetPgwTftIdx ()

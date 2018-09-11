@@ -142,7 +142,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
   Ptr<const RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
   Ptr<const QosStatsCalculator> epcStats;
 
-  if (rInfo->HasUplinkTraffic ())
+  if (rInfo->HasUlTraffic ())
     {
       // Dump uplink statistics.
       epcStats = GetQosStatsFromTeid (teid, false);
@@ -159,7 +159,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
         << std::endl;
     }
 
-  if (rInfo->HasDownlinkTraffic ())
+  if (rInfo->HasDlTraffic ())
     {
       // Dump downlink statistics.
       epcStats = GetQosStatsFromTeid (teid, true);

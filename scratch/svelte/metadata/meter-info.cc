@@ -69,7 +69,7 @@ MeterInfo::GetTypeId (void)
 }
 
 bool
-MeterInfo::IsDownInstalled (void) const
+MeterInfo::IsDlInstalled (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -77,7 +77,7 @@ MeterInfo::IsDownInstalled (void) const
 }
 
 bool
-MeterInfo::IsUpInstalled (void) const
+MeterInfo::IsUlInstalled (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -101,7 +101,7 @@ MeterInfo::HasUp (void) const
 }
 
 std::string
-MeterInfo::GetDownAddCmd (void) const
+MeterInfo::GetDlAddCmd (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -112,7 +112,7 @@ MeterInfo::GetDownAddCmd (void) const
 }
 
 std::string
-MeterInfo::GetUpAddCmd (void) const
+MeterInfo::GetUlAddCmd (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -141,7 +141,7 @@ MeterInfo::DoDispose ()
 }
 
 void
-MeterInfo::SetDownInstalled (bool value)
+MeterInfo::SetDlInstalled (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -149,7 +149,7 @@ MeterInfo::SetDownInstalled (bool value)
 }
 
 void
-MeterInfo::SetUpInstalled (bool value)
+MeterInfo::SetUlInstalled (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 

@@ -104,8 +104,8 @@ public:
   EpsBearer::Qci GetQciInfo (void) const;
   GbrQosInformation GetQosInfo (void) const;
   Ptr<EpcTft> GetTft (void) const;
-  bool HasDownlinkTraffic (void) const;
-  bool HasUplinkTraffic (void) const;
+  bool HasDlTraffic (void) const;
+  bool HasUlTraffic (void) const;
   bool IsGbr (void) const;
   uint64_t GetGbrDlBitRate (void) const;
   uint64_t GetGbrUlBitRate (void) const;

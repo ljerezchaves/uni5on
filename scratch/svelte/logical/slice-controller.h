@@ -251,7 +251,7 @@ private:
    * \param pgwTftIdx The P-GW TFT switch index. When set to 0, the index will
    *        be get from rInfo->GetPgwTftIdx ().
    * \param moveFlag When true, forces the meter entry install even when
-   *        meterInfo->IsDownInstalled () is true (useful when moving rules
+   *        meterInfo->IsDlInstalled () is true (useful when moving rules
    *        among TFT switches).
    * \return True if succeeded, false otherwise.
    */
@@ -263,7 +263,7 @@ private:
    * \param rInfo The routing information to process.
    * \param pgwTftIdx The P-GW TFT switch index. When set to 0, the index will
    *        be get from rInfo->GetPgwTftIdx ().
-   * \param moveFlag When true, don't set the meterInfo->IsDownInstalled ()
+   * \param moveFlag When true, don't set the meterInfo->IsDlInstalled ()
    *        flag to false when removing the meter entry (useful when moving
    *        rules among TFT switches).
    * \return True if succeeded, false otherwise.
