@@ -18,6 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#include <iomanip>
+#include <iostream>
 #include "routing-info.h"
 #include "enb-info.h"
 #include "gbr-info.h"
@@ -26,6 +28,8 @@
 #include "sgw-info.h"
 #include "ue-info.h"
 #include "../infrastructure/backhaul-controller.h"
+
+using namespace std;
 
 namespace ns3 {
 
@@ -578,6 +582,11 @@ RoutingInfo::RegisterRoutingInfo (Ptr<RoutingInfo> rInfo)
   std::pair<uint32_t, Ptr<RoutingInfo> > entry (teid, rInfo);
   auto ret = RoutingInfo::m_routingInfoByTeid.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing routing info for this TEID");
+}
+
+std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
+{
+  return os;
 }
 
 } // namespace ns3

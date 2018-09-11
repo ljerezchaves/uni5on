@@ -164,6 +164,15 @@ public:
    */
   typedef void (*TracedCallback)(Ptr<const RoutingInfo> rInfo);
 
+  /**
+   * Print the routing metadata on an output stream.
+   * \param os The output stream.
+   * \param rInfo The RoutingInfo object.
+   * \returns The output stream.
+   */
+  friend std::ostream & operator << (
+    std::ostream &os, const RoutingInfo &rInfo);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -219,11 +228,12 @@ private:
   Ptr<MeterInfo>       m_meterInfo;    //!< Meter metadata.
   Ptr<UeInfo>          m_ueInfo;       //!< UE metadata.
 
-
   /** Map saving TEID / routing information. */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
   static TeidRoutingMap_t m_routingInfoByTeid;  //!< Global routing info map.
 };
+
+std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo);
 
 } // namespace ns3
 #endif // ROUTING_INFO_H
