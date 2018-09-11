@@ -319,7 +319,7 @@ SvelteHelper::DoDispose (void)
   m_htcNetwork = 0;
   m_htcTraffic = 0;
   m_tmpController = 0;
-  m_tmpNetwork =0;
+  m_tmpNetwork = 0;
   m_tmpTraffic = 0;
 
   m_admissionStats = 0;
