@@ -280,48 +280,48 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
     {
       // Building the match string for both S1-U and S5 interfaces
       // No match on source IP because we may have several P-GW TFT switches.
-      std::ostringstream mS5, mS1u;
+      std::ostringstream mS5, mS1;
       mS5 << " eth_type=0x800,ip_proto=17"
           << ",ip_dst=" << rInfo->GetSgwS5Addr ()
           << ",gtpu_teid=" << rInfo->GetTeidHex ();
-      mS1u << " eth_type=0x800,ip_proto=17"
-           << ",ip_dst=" << rInfo->GetEnbS1uAddr ()
-           << ",gtpu_teid=" << rInfo->GetTeidHex ();
+      mS1 << " eth_type=0x800,ip_proto=17"
+          << ",ip_dst=" << rInfo->GetEnbS1uAddr ()
+          << ",gtpu_teid=" << rInfo->GetTeidHex ();
 
       // Build the metatada and goto instructions string.
-      std::ostringstream actS5, actS1u;
-      actS5 << " meta:" << ringInfo->GetDownPath (LteIface::S5) << " goto:2";
-      actS1u << " meta:" << ringInfo->GetDownPath (LteIface::S1U) << " goto:2";
+      std::ostringstream actS5, actS1;
+      actS5 << " meta:" << ringInfo->GetDlPath (LteIface::S5) << " goto:2";
+      actS1 << " meta:" << ringInfo->GetDlPath (LteIface::S1U) << " goto:2";
 
       // Installing down rules into switches connected to the P-GW and S-GW.
       DpctlExecute (GetDpId (rInfo->GetPgwInfraSwIdx ()),
                     cmd.str () + mS5.str () + dscp.str () + actS5.str ());
       DpctlExecute (GetDpId (rInfo->GetSgwInfraSwIdx ()),
-                    cmd.str () + mS1u.str () + dscp.str () + actS1u.str ());
+                    cmd.str () + mS1.str () + dscp.str () + actS1.str ());
     }
 
   // Configuring uplink routing.
   if (rInfo->HasUplinkTraffic ())
     {
       // Building the match string.
-      std::ostringstream mS1u, mS5;
-      mS1u << " eth_type=0x800,ip_proto=17"
-           << ",ip_src=" << rInfo->GetEnbS1uAddr ()
-           << ",ip_dst=" << rInfo->GetSgwS1uAddr ()
-           << ",gtpu_teid=" << rInfo->GetTeidHex ();
+      std::ostringstream mS1, mS5;
+      mS1 << " eth_type=0x800,ip_proto=17"
+          << ",ip_src=" << rInfo->GetEnbS1uAddr ()
+          << ",ip_dst=" << rInfo->GetSgwS1uAddr ()
+          << ",gtpu_teid=" << rInfo->GetTeidHex ();
       mS5 << " eth_type=0x800,ip_proto=17"
           << ",ip_src=" << rInfo->GetSgwS5Addr ()
           << ",ip_dst=" << rInfo->GetPgwS5Addr ()
           << ",gtpu_teid=" << rInfo->GetTeidHex ();
 
       // Build the metatada and goto instructions string.
-      std::ostringstream actS1u, actS5;
-      actS1u << " meta:" << ringInfo->GetUpPath (LteIface::S1U) << " goto:2";
-      actS5 << " meta:" << ringInfo->GetUpPath (LteIface::S5) << " goto:2";
+      std::ostringstream actS1, actS5;
+      actS1 << " meta:" << ringInfo->GetUlPath (LteIface::S1U) << " goto:2";
+      actS5 << " meta:" << ringInfo->GetUlPath (LteIface::S5) << " goto:2";
 
       // Installing up rules into switches connected to the eNB and S-GW.
       DpctlExecute (GetDpId (rInfo->GetEnbInfraSwIdx ()),
-                    cmd.str () + mS1u.str () + dscp.str () + actS1u.str ());
+                    cmd.str () + mS1.str () + dscp.str () + actS1.str ());
       DpctlExecute (GetDpId (rInfo->GetSgwInfraSwIdx ()),
                     cmd.str () + mS5.str () + dscp.str () + actS5.str ());
     }
@@ -439,7 +439,7 @@ RingController::HasBitRate (Ptr<const RingInfo> ringInfo)
 
   // S5 interface (from P-GW to S-GW)
   uint16_t curr = rInfo->GetPgwInfraSwIdx ();
-  downPath = ringInfo->GetDownPath (LteIface::S5);
+  downPath = ringInfo->GetDlPath (LteIface::S5);
   while (success && curr != rInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
@@ -452,7 +452,7 @@ RingController::HasBitRate (Ptr<const RingInfo> ringInfo)
     }
 
   // S1-U interface (from S-GW to eNB)
-  downPath = ringInfo->GetDownPath (LteIface::S1U);
+  downPath = ringInfo->GetDlPath (LteIface::S1U);
   while (success && curr != rInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
@@ -487,7 +487,7 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo)
 
   // S5 interface (from P-GW to S-GW)
   uint16_t curr = rInfo->GetPgwInfraSwIdx ();
-  downPath = ringInfo->GetDownPath (LteIface::S5);
+  downPath = ringInfo->GetDlPath (LteIface::S5);
   while (success && curr != rInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
@@ -500,7 +500,7 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo)
     }
 
   // S1-U interface (from S-GW to eNB)
-  downPath = ringInfo->GetDownPath (LteIface::S1U);
+  downPath = ringInfo->GetDlPath (LteIface::S1U);
   while (success && curr != rInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
@@ -533,7 +533,7 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo)
 
   // S5 interface (from P-GW to S-GW)
   uint16_t curr = rInfo->GetPgwInfraSwIdx ();
-  downPath = ringInfo->GetDownPath (LteIface::S5);
+  downPath = ringInfo->GetDlPath (LteIface::S5);
   while (success && curr != rInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
@@ -546,7 +546,7 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo)
     }
 
   // S1-U interface (from S-GW to eNB)
-  downPath = ringInfo->GetDownPath (LteIface::S1U);
+  downPath = ringInfo->GetDlPath (LteIface::S1U);
   while (success && curr != rInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);

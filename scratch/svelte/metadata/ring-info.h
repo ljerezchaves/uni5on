@@ -63,8 +63,8 @@ public:
   /** \name Private member accessors. */
   //\{
   Ptr<RoutingInfo> GetRoutingInfo (void) const;
-  RingPath GetDownPath (LteIface iface) const;
-  RingPath GetUpPath (LteIface iface) const;
+  RingPath GetDlPath (LteIface iface) const;
+  RingPath GetUlPath (LteIface iface) const;
   bool IsDefaultPath (LteIface iface) const;
   bool IsLocalPath (LteIface iface) const;
   bool IsLocalPath (void) const;

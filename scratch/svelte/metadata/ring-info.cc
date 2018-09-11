@@ -63,7 +63,7 @@ RingInfo::GetRoutingInfo (void) const
 }
 
 RingInfo::RingPath
-RingInfo::GetDownPath (LteIface iface) const
+RingInfo::GetDlPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
@@ -74,7 +74,7 @@ RingInfo::GetDownPath (LteIface iface) const
 }
 
 RingInfo::RingPath
-RingInfo::GetUpPath (LteIface iface) const
+RingInfo::GetUlPath (LteIface iface) const
 {
   NS_LOG_FUNCTION (this << iface);
 
