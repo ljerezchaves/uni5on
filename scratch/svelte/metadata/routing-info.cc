@@ -218,6 +218,14 @@ RoutingInfo::GetDscpValue (void) const
   return static_cast<uint16_t> (GetDscp ());
 }
 
+std::string
+RoutingInfo::GetDscpStr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return DscpTypeStr (GetDscp ());
+}
+
 EpsBearer
 RoutingInfo::GetEpsBearer (void) const
 {

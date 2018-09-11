@@ -99,6 +99,7 @@ public:
   //\{
   Ipv4Header::DscpType GetDscp (void) const;
   uint16_t GetDscpValue (void) const;
+  std::string GetDscpStr (void) const;
   EpsBearer GetEpsBearer (void) const;
   EpsBearer::Qci GetQciInfo (void) const;
   GbrQosInformation GetQosInfo (void) const;
