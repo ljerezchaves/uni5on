@@ -167,6 +167,14 @@ Ipv4Header::DscpType Qci2Dscp (EpsBearer::Qci qci);
 
 /**
  * \ingroup svelte
+ * Get the DSCP type name.
+ * \param dscp The DSCP type value.
+ * \return The string with the DSCP type name.
+ */
+std::string DscpTypeStr (Ipv4Header::DscpType dscp);
+
+/**
+ * \ingroup svelte
  * Compute the TEID value globally used in the SVELTE architecture for a EPS
  * bearer considering the slice ID, the UE ISMI and bearer ID.
  * \param sliceId The SVELTE logical slice ID.
