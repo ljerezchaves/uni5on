@@ -23,6 +23,7 @@
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
+#include "../svelte-common.h"
 
 namespace ns3 {
 
@@ -53,6 +54,20 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
 private:
+  /** Metadata associated to a network slice. */
+  struct SliceStats
+  {
+    uint32_t releases;      //!< Number of releases.
+    uint32_t requests;      //!< Number of requests.
+    uint32_t accepted;      //!< Number of requests accepted.
+    uint32_t blocked;       //!< Number of requests blocked.
+    uint32_t aggregated;    //!< Number of requests aggregated.
+    uint32_t activeBearers; //!< Number of active bearers.
+    uint32_t instalBearers; //!< Number of installed bearers.
+    uint32_t aggregBearers; //!< Number of aggregated bearers.
+    Ptr<OutputStreamWrapper> admWrapper;  //!< AdmStats file wrapper.
+  };
+
   /**
    * Notify a new bearer request.
    * \param rInfo The bearer routing information.
@@ -73,19 +88,13 @@ private:
 
   /**
    * Reset internal counters.
+   * \param stats The slice metadata to clear.
    */
-  void ResetCounters ();
+  void ResetCounters (SliceStats &stats);
 
-  uint32_t                 m_releases;      //!< Number of releases.
-  uint32_t                 m_requests;      //!< Number of requests.
-  uint32_t                 m_accepted;      //!< Number of requests accepted.
-  uint32_t                 m_blocked;       //!< Number of requests blocked.
-  uint32_t                 m_aggregated;    //!< Number of requests aggregated.
-  uint32_t                 m_activeBearers; //!< Number of active bearers.
-  uint32_t                 m_instalBearers; //!< Number of installed bearers.
-  uint32_t                 m_aggregBearers; //!< Number of aggregated bearers.
+  /** Metadata for each network slice. */
+  SliceStats               m_slices [N_SLICES_ALL]; //!< Slice metadata.
   std::string              m_admFilename;   //!< AdmStats filename.
-  Ptr<OutputStreamWrapper> m_admWrapper;    //!< AdmStats file wrapper.
   std::string              m_brqFilename;   //!< BrqStats filename.
   Ptr<OutputStreamWrapper> m_brqWrapper;    //!< BrqStats file wrapper.
 };
