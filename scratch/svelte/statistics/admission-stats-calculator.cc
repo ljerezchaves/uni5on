@@ -21,7 +21,6 @@
 #include <iomanip>
 #include <iostream>
 #include "admission-stats-calculator.h"
-#include "../metadata/gbr-info.h"
 #include "../metadata/ring-info.h"
 #include "../metadata/routing-info.h"
 #include "../metadata/ue-info.h"

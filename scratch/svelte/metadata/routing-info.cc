@@ -22,7 +22,6 @@
 #include <iostream>
 #include "routing-info.h"
 #include "enb-info.h"
-#include "gbr-info.h"
 #include "meter-info.h"
 #include "pgw-info.h"
 #include "sgw-info.h"
@@ -49,10 +48,10 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerContext_t bearer,
   m_isBlocked (false),
   m_isDefault (isDefault),
   m_isInstalled (false),
+  m_isReserved (false),
   m_pgwTftIdx (0),
   m_priority (0),
   m_timeout (0),
-  m_gbrInfo (0),
   m_meterInfo (0),
   m_ueInfo (ueInfo)
 {
@@ -103,14 +102,6 @@ RoutingInfo::GetBlockReasonStr (void) const
 }
 
 bool
-RoutingInfo::HasGbrInfo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_gbrInfo;
-}
-
-bool
 RoutingInfo::HasMeterInfo (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -158,6 +149,14 @@ RoutingInfo::IsInstalled (void) const
   return m_isInstalled;
 }
 
+bool
+RoutingInfo::IsReserved (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_isReserved;
+}
+
 uint16_t
 RoutingInfo::GetPgwTftIdx (void) const
 {
@@ -180,14 +179,6 @@ RoutingInfo::GetTimeout (void) const
   NS_LOG_FUNCTION (this);
 
   return m_timeout;
-}
-
-Ptr<GbrInfo>
-RoutingInfo::GetGbrInfo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_gbrInfo;
 }
 
 Ptr<MeterInfo>
@@ -284,6 +275,22 @@ RoutingInfo::IsGbr (void) const
   NS_LOG_FUNCTION (this);
 
   return (!m_isDefault && m_bearer.bearerLevelQos.IsGbr ());
+}
+
+uint64_t
+RoutingInfo::GetGbrDlBitRate (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return GetQosInfo ().gbrDl;
+}
+
+uint64_t
+RoutingInfo::GetGbrUlBitRate (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return GetQosInfo ().gbrUl;
 }
 
 uint64_t
@@ -488,7 +495,6 @@ RoutingInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_gbrInfo = 0;
   m_meterInfo = 0;
   m_ueInfo = 0;
   Object::DoDispose ();
@@ -501,10 +507,6 @@ RoutingInfo::NotifyConstructionCompleted (void)
 
   // Create the GBR and meter metadata, when necessary.
   GbrQosInformation gbrQoS = GetQosInfo ();
-  if (gbrQoS.gbrDl || gbrQoS.gbrUl)
-    {
-      m_gbrInfo = CreateObject<GbrInfo> (Ptr<RoutingInfo> (this));
-    }
   if (gbrQoS.mbrDl || gbrQoS.mbrUl)
     {
       m_meterInfo = CreateObject<MeterInfo> (Ptr<RoutingInfo> (this));
@@ -558,6 +560,14 @@ RoutingInfo::SetPriority (uint16_t value)
   NS_LOG_FUNCTION (this << value);
 
   m_priority = value;
+}
+
+void
+RoutingInfo::SetReserved (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isReserved = value;
 }
 
 void

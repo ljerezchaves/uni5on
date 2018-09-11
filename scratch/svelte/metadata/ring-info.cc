@@ -62,22 +62,6 @@ RingInfo::GetRoutingInfo (void) const
   return m_rInfo;
 }
 
-std::string
-RingInfo::GetTeidHex (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_rInfo->GetTeidHex ();
-}
-
-SliceId
-RingInfo::GetSliceId (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_rInfo->GetSliceId ();
-}
-
 RingInfo::RingPath
 RingInfo::GetDownPath (LteIface iface) const
 {
@@ -148,30 +132,6 @@ RingInfo::GetPathStr (LteIface iface) const
     {
       return "Inverted";
     }
-}
-
-uint16_t
-RingInfo::GetEnbInfraSwIdx (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_rInfo->GetEnbInfraSwIdx ();
-}
-
-uint16_t
-RingInfo::GetPgwInfraSwIdx (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_rInfo->GetPgwInfraSwIdx ();
-}
-
-uint16_t
-RingInfo::GetSgwInfraSwIdx (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_rInfo->GetSgwInfraSwIdx ();
 }
 
 RingInfo::RingPath

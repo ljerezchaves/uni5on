@@ -390,7 +390,6 @@ EnableVerbose (bool enable)
 
       // Metadata components.
       LogComponentEnable ("EnbInfo",                  logLevelWarnInfo);
-      LogComponentEnable ("GbrInfo",                  logLevelWarnInfo);
       LogComponentEnable ("LinkInfo",                 logLevelWarnInfo);
       LogComponentEnable ("MeterInfo",                logLevelWarnInfo);
       LogComponentEnable ("PgwInfo",                  logLevelWarnInfo);

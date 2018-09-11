@@ -84,26 +84,23 @@ private:
   /**
    * Check for the available bit rate on the given slice.
    * \param ringInfo The ring routing information.
-   * \param gbrInfo The GBR information.
    * \return True if there's available GBR bit rate, false otherwise.
    */
-  bool HasBitRate (Ptr<const RingInfo> ringInfo, Ptr<const GbrInfo> gbrInfo);
+  bool HasBitRate (Ptr<const RingInfo> ringInfo);
 
   /**
    * Reserve the bit rate for this bearer in the backhaul network.
    * \param ringInfo The ring routing information.
-   * \param gbrInfo The GBR information.
    * \return True if succeeded, false otherwise.
    */
-  bool BitRateReserve (Ptr<const RingInfo> ringInfo, Ptr<GbrInfo> gbrInfo);
+  bool BitRateReserve (Ptr<RingInfo> ringInfo);
 
   /**
    * Release the bit rate for this bearer in the backhaul network.
    * \param ringInfo The ring routing information.
-   * \param gbrInfo The GBR information.
    * \return True if succeeded, false otherwise.
    */
-  bool BitRateRelease (Ptr<const RingInfo> ringInfo, Ptr<GbrInfo> gbrInfo);
+  bool BitRateRelease (Ptr<RingInfo> ringInfo);
 
   /**
    * To avoid flooding problems when broadcasting packets (like in ARP

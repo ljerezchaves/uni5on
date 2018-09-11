@@ -22,7 +22,6 @@
 #include "../infrastructure/backhaul-controller.h"
 #include "../infrastructure/backhaul-network.h"
 #include "../metadata/enb-info.h"
-#include "../metadata/gbr-info.h"
 #include "../metadata/meter-info.h"
 #include "../metadata/pgw-info.h"
 #include "../metadata/routing-info.h"

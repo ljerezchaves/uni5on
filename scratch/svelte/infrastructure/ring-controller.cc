@@ -20,7 +20,6 @@
 
 #include <string>
 #include "ring-controller.h"
-#include "../metadata/gbr-info.h"
 #include "../metadata/meter-info.h"
 #include "../metadata/routing-info.h"
 #include "backhaul-network.h"
@@ -112,15 +111,14 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
     }
 
   // It only makes sense to check for available bandwidth for GBR bearers.
-  Ptr<GbrInfo> gbrInfo = rInfo->GetGbrInfo ();
-  NS_ASSERT_MSG (gbrInfo, "Invalid configuration for GBR bearer request.");
+  NS_ASSERT_MSG (rInfo->IsGbr (), "Invalid configuration for GBR request.");
 
   // Check for the requested bit rate over the shortest path.
-  if (HasBitRate (ringInfo, gbrInfo))
+  if (HasBitRate (ringInfo))
     {
       NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
                    " over the shortest path");
-      return BitRateReserve (ringInfo, gbrInfo);
+      return BitRateReserve (ringInfo);
     }
 
   // The requested bit rate is not available over the shortest path. When
@@ -130,11 +128,11 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
     {
       // FIXME Qual interface inverter?
       ringInfo->InvertPath (LteIface::S5);
-      if (HasBitRate (ringInfo, gbrInfo))
+      if (HasBitRate (ringInfo))
         {
           NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
                        " over the longest (inverted) path");
-          return BitRateReserve (ringInfo, gbrInfo);
+          return BitRateReserve (ringInfo);
         }
     }
 
@@ -150,13 +148,14 @@ RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo);
 
   // For bearers without reserved resources: nothing to release.
-  Ptr<GbrInfo> gbrInfo = rInfo->GetGbrInfo ();
-  if (!gbrInfo || !gbrInfo->IsReserved ())
+  if (!rInfo->IsReserved ())
     {
       return true;
     }
 
-  return BitRateRelease (rInfo->GetObject<RingInfo> (), gbrInfo);
+  Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
+  NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
+  return BitRateRelease (ringInfo);
 }
 
 void
@@ -295,9 +294,9 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
       actS1u << " meta:" << ringInfo->GetDownPath (LteIface::S1U) << " goto:2";
 
       // Installing down rules into switches connected to the P-GW and S-GW.
-      DpctlExecute (GetDpId (ringInfo->GetPgwInfraSwIdx ()),
+      DpctlExecute (GetDpId (rInfo->GetPgwInfraSwIdx ()),
                     cmd.str () + mS5.str () + dscp.str () + actS5.str ());
-      DpctlExecute (GetDpId (ringInfo->GetSgwInfraSwIdx ()),
+      DpctlExecute (GetDpId (rInfo->GetSgwInfraSwIdx ()),
                     cmd.str () + mS1u.str () + dscp.str () + actS1u.str ());
     }
 
@@ -321,9 +320,9 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
       actS5 << " meta:" << ringInfo->GetUpPath (LteIface::S5) << " goto:2";
 
       // Installing up rules into switches connected to the eNB and S-GW.
-      DpctlExecute (GetDpId (ringInfo->GetEnbInfraSwIdx ()),
+      DpctlExecute (GetDpId (rInfo->GetEnbInfraSwIdx ()),
                     cmd.str () + mS1u.str () + dscp.str () + actS1u.str ());
-      DpctlExecute (GetDpId (ringInfo->GetSgwInfraSwIdx ()),
+      DpctlExecute (GetDpId (rInfo->GetSgwInfraSwIdx ()),
                     cmd.str () + mS5.str () + dscp.str () + actS5.str ());
     }
   return true;
@@ -346,9 +345,9 @@ RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
       << ",cookie_mask=" << COOKIE_STRICT_MASK_STR;
 
   // Removing rules from switches connected to the eNB, S-GW and P-GW.
-  DpctlExecute (GetDpId (ringInfo->GetPgwInfraSwIdx ()), cmd.str ());
-  DpctlExecute (GetDpId (ringInfo->GetSgwInfraSwIdx ()), cmd.str ());
-  DpctlExecute (GetDpId (ringInfo->GetEnbInfraSwIdx ()), cmd.str ());
+  DpctlExecute (GetDpId (rInfo->GetPgwInfraSwIdx ()), cmd.str ());
+  DpctlExecute (GetDpId (rInfo->GetSgwInfraSwIdx ()), cmd.str ());
+  DpctlExecute (GetDpId (rInfo->GetEnbInfraSwIdx ()), cmd.str ());
 
   return true;
 }
@@ -426,21 +425,22 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 }
 
 bool
-RingController::HasBitRate (Ptr<const RingInfo> ringInfo,
-                            Ptr<const GbrInfo> gbrInfo)
+RingController::HasBitRate (Ptr<const RingInfo> ringInfo)
 {
-  NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
+  NS_LOG_FUNCTION (this << ringInfo);
 
-  SliceId slice = ringInfo->GetSliceId ();
-  uint64_t dlRate = gbrInfo->GetDownBitRate ();
-  uint64_t ulRate = gbrInfo->GetUpBitRate ();
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+
+  SliceId slice = rInfo->GetSliceId ();
+  uint64_t dlRate = rInfo->GetGbrDlBitRate ();
+  uint64_t ulRate = rInfo->GetGbrUlBitRate ();
   RingInfo::RingPath downPath;
   bool success = true;
 
   // S5 interface (from P-GW to S-GW)
-  uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
+  uint16_t curr = rInfo->GetPgwInfraSwIdx ();
   downPath = ringInfo->GetDownPath (LteIface::S5);
-  while (success && curr != ringInfo->GetSgwInfraSwIdx ())
+  while (success && curr != rInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
       Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
@@ -453,7 +453,7 @@ RingController::HasBitRate (Ptr<const RingInfo> ringInfo,
 
   // S1-U interface (from S-GW to eNB)
   downPath = ringInfo->GetDownPath (LteIface::S1U);
-  while (success && curr != ringInfo->GetEnbInfraSwIdx ())
+  while (success && curr != rInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
       Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
@@ -472,23 +472,23 @@ RingController::HasBitRate (Ptr<const RingInfo> ringInfo,
 }
 
 bool
-RingController::BitRateReserve (Ptr<const RingInfo> ringInfo,
-                                Ptr<GbrInfo> gbrInfo)
+RingController::BitRateReserve (Ptr<RingInfo> ringInfo)
 {
-  NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
+  NS_LOG_FUNCTION (this << ringInfo);
 
-  NS_LOG_INFO ("Reserving resources for teid " << ringInfo->GetTeidHex ());
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+  NS_LOG_INFO ("Reserving resources for teid " << rInfo->GetTeidHex ());
 
-  SliceId slice = ringInfo->GetSliceId ();
-  uint64_t dlRate = gbrInfo->GetDownBitRate ();
-  uint64_t ulRate = gbrInfo->GetUpBitRate ();
+  SliceId slice = rInfo->GetSliceId ();
+  uint64_t dlRate = rInfo->GetGbrDlBitRate ();
+  uint64_t ulRate = rInfo->GetGbrUlBitRate ();
   RingInfo::RingPath downPath;
   bool success = true;
 
   // S5 interface (from P-GW to S-GW)
-  uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
+  uint16_t curr = rInfo->GetPgwInfraSwIdx ();
   downPath = ringInfo->GetDownPath (LteIface::S5);
-  while (success && curr != ringInfo->GetSgwInfraSwIdx ())
+  while (success && curr != rInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
       Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
@@ -501,7 +501,7 @@ RingController::BitRateReserve (Ptr<const RingInfo> ringInfo,
 
   // S1-U interface (from S-GW to eNB)
   downPath = ringInfo->GetDownPath (LteIface::S1U);
-  while (success && curr != ringInfo->GetEnbInfraSwIdx ())
+  while (success && curr != rInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
       Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
@@ -513,28 +513,28 @@ RingController::BitRateReserve (Ptr<const RingInfo> ringInfo,
     }
 
   NS_ASSERT_MSG (success, "Error when reserving resources.");
-  gbrInfo->SetReserved (success);
+  rInfo->SetReserved (success);
   return success;
 }
 
 bool
-RingController::BitRateRelease (Ptr<const RingInfo> ringInfo,
-                                Ptr<GbrInfo> gbrInfo)
+RingController::BitRateRelease (Ptr<RingInfo> ringInfo)
 {
-  NS_LOG_FUNCTION (this << ringInfo << gbrInfo);
+  NS_LOG_FUNCTION (this << ringInfo);
 
-  NS_LOG_INFO ("Releasing resources for teid " << ringInfo->GetTeidHex ());
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+  NS_LOG_INFO ("Releasing resources for teid " << rInfo->GetTeidHex ());
 
-  SliceId slice = ringInfo->GetSliceId ();
-  uint64_t dlRate = gbrInfo->GetDownBitRate ();
-  uint64_t ulRate = gbrInfo->GetUpBitRate ();
+  SliceId slice = rInfo->GetSliceId ();
+  uint64_t dlRate = rInfo->GetGbrDlBitRate ();
+  uint64_t ulRate = rInfo->GetGbrUlBitRate ();
   RingInfo::RingPath downPath;
   bool success = true;
 
   // S5 interface (from P-GW to S-GW)
-  uint16_t curr = ringInfo->GetPgwInfraSwIdx ();
+  uint16_t curr = rInfo->GetPgwInfraSwIdx ();
   downPath = ringInfo->GetDownPath (LteIface::S5);
-  while (success && curr != ringInfo->GetSgwInfraSwIdx ())
+  while (success && curr != rInfo->GetSgwInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
       Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
@@ -547,7 +547,7 @@ RingController::BitRateRelease (Ptr<const RingInfo> ringInfo,
 
   // S1-U interface (from S-GW to eNB)
   downPath = ringInfo->GetDownPath (LteIface::S1U);
-  while (success && curr != ringInfo->GetEnbInfraSwIdx ())
+  while (success && curr != rInfo->GetEnbInfraSwIdx ())
     {
       uint16_t next = NextSwitchIndex (curr, downPath);
       Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
@@ -559,7 +559,7 @@ RingController::BitRateRelease (Ptr<const RingInfo> ringInfo,
     }
 
   NS_ASSERT_MSG (success, "Error when releasing resources.");
-  gbrInfo->SetReserved (!success);
+  rInfo->SetReserved (!success);
   return success;
 }
 
