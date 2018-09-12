@@ -524,6 +524,14 @@ RoutingInfo::SetActive (bool value)
 }
 
 void
+RoutingInfo::SetAggregated (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isAggregated = value;
+}
+
+void
 RoutingInfo::SetBlocked (bool value, BlockReason reason)
 {
   NS_LOG_FUNCTION (this << value << reason);

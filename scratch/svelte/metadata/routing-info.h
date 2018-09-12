@@ -192,19 +192,26 @@ protected:
 
   /** \name Private member accessors. */
   //\{
-  void SetActive (bool value);
-  void SetBlocked (bool value, BlockReason reason = RoutingInfo::NOTBLOCKED);
-  void SetInstalled (bool value);
-  void SetPgwTftIdx (uint16_t value);
-  void SetPriority (uint16_t value);
-  void SetReserved (bool value);
-  void SetTimeout (uint16_t value);
+  void SetActive      (bool value);
+  void SetAggregated  (bool value);
+  void SetInstalled   (bool value);
+  void SetPgwTftIdx   (uint16_t value);
+  void SetPriority    (uint16_t value);
+  void SetReserved    (bool value);
+  void SetTimeout     (uint16_t value);
   //\}
 
   /**
    * Increase the priority value by one unit.
    */
   void IncreasePriority (void);
+
+  /**
+   * Set the blocked status including the reason.
+   * \param value The value to set.
+   * \param reason The reason for this value.
+   */
+  void SetBlocked (bool value, BlockReason reason = RoutingInfo::NOTBLOCKED);
 
   /**
    * Get a list of the installed bearer routing information, optionally
