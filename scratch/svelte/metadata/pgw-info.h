@@ -60,31 +60,58 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** \name Private member accessors. */
+  /**
+   * \name Private member accessors for P-GW information.
+   * \return The requested information.
+   */
   //\{
-  uint64_t GetPgwId (void) const;
-  SliceId GetSliceId (void) const;
-  Ptr<SliceController> GetSliceCtrl (void) const;
-  uint16_t GetInfraSwIdx (void) const;
-  uint16_t GetNumTfts (void) const;
-  uint32_t GetMainSgiPortNo (void) const;
-  uint64_t GetMainDpId (void) const;
-  Ipv4Address GetMainS5Addr (void) const;
-  uint32_t GetMainS5PortNo (void) const;
-  uint32_t GetMainInfraSwS5PortNo (void) const;
-  uint32_t GetMainToTftPortNo (uint16_t idx) const;
-  uint64_t GetTftDpId (uint16_t idx) const;
-  Ipv4Address GetTftS5Addr (uint16_t idx) const;
-  uint32_t GetTftS5PortNo (uint16_t idx) const;
-  uint32_t GetTftInfraSwS5PortNo (uint16_t idx) const;
-  uint32_t GetFlowEntries (uint16_t idx) const;
-  uint32_t GetFlowTableSize (uint16_t idx) const;
-  double GetFlowTableUsage (uint16_t idx) const;
-  DataRate GetPipeLoad (uint16_t idx) const;
-  DataRate GetPipeCapacity (uint16_t idx) const;
-  double GetPipeCapacityUsage (uint16_t idx) const;
-  double GetTftWorstFlowTableUsage (void) const;
-  double GetTftWorstPipeCapacityUsage (void) const;
+  uint16_t              GetInfraSwIdx                 (void) const;
+  uint16_t              GetNumTfts                    (void) const;
+  uint64_t              GetPgwId                      (void) const;
+  Ptr<SliceController>  GetSliceCtrl                  (void) const;
+  //\}
+
+  /**
+   * \name Private member accessors for P-GW switch datapath information.
+   * \param idx The internal switch index.
+   * \return The requested information.
+   */
+  //\{
+  uint32_t              GetFlowTableCur               (uint16_t idx) const;
+  uint32_t              GetFlowTableMax               (uint16_t idx) const;
+  double                GetFlowTableUsage             (uint16_t idx) const;
+  DataRate              GetPipeCapacityCur            (uint16_t idx) const;
+  DataRate              GetPipeCapacityMax            (uint16_t idx) const;
+  double                GetPipeCapacityUsage          (uint16_t idx) const;
+  double                GetTftWorstFlowTableUsage     (void) const;
+  double                GetTftWorstPipeCapacityUsage  (void) const;
+  //\}
+
+  /**
+   * \name Private member accessors for P-GW main switch information.
+   * \param idx The internal TFT switch index.
+   * \return The requested information.
+   */
+  //\{
+  uint64_t              GetMainDpId                   (void) const;
+  uint32_t              GetMainInfraSwS5PortNo        (void) const;
+  Ipv4Address           GetMainS5Addr                 (void) const;
+  uint32_t              GetMainS5PortNo               (void) const;
+  uint32_t              GetMainSgiPortNo              (void) const;
+  uint32_t              GetMainToTftPortNo            (uint16_t idx) const;
+  //\}
+
+  /**
+   * \name Private member accessors for P-GW TFT switches information.
+   * \param idx The internal TFT switch index.
+   * \return The requested information.
+   */
+  //\{
+  uint64_t              GetTftDpId                    (uint16_t idx) const;
+  uint32_t              GetTftInfraSwS5PortNo         (uint16_t idx) const;
+  Ipv4Address           GetTftS5Addr                  (uint16_t idx) const;
+  uint32_t              GetTftS5PortNo                (uint16_t idx) const;
+  uint32_t              GetTftToMainPortNo            (uint16_t idx) const;
   //\}
 
   /**
@@ -132,22 +159,19 @@ private:
    */
   static void RegisterPgwInfo (Ptr<PgwInfo> pgwInfo);
 
-  /** Vector of OFSwitch13StatsCalculator */
+  /** Vector of OFSwitch13Devices */
   typedef std::vector<Ptr<OFSwitch13Device> > DevicesVector_t;
 
-  /** Vector of OFSwitch13StatsCalculator */
-  typedef std::vector<Ptr<OFSwitch13StatsCalculator> > StatsVector_t;
-
   // P-GW metadata.
-  uint64_t                  m_pgwId;              //!< P-GW ID (main dpId).
-  uint16_t                  m_nTfts;              //!< Number of TFT switches.
-  uint32_t                  m_sgiPortNo;          //!< SGi port number.
-  uint16_t                  m_infraSwIdx;         //!< Backhaul switch index.
   DevicesVector_t           m_devices;            //!< OpenFlow switch devices.
-  std::vector<Ipv4Address>  m_s5Addrs;            //!< S5 dev IP addresses.
-  std::vector<uint32_t>     m_s5PortNos;          //!< S5 port numbers.
+  uint16_t                  m_infraSwIdx;         //!< Backhaul switch index.
   std::vector<uint32_t>     m_infraSwS5PortNos;   //!< Back switch S5 port nos.
   std::vector<uint32_t>     m_mainToTftPortNos;   //!< Main port nos to TFTs.
+  uint16_t                  m_nTfts;              //!< Number of TFT switches.
+  uint64_t                  m_pgwId;              //!< P-GW ID (main dpId).
+  std::vector<Ipv4Address>  m_s5Addrs;            //!< S5 dev IP addresses.
+  std::vector<uint32_t>     m_s5PortNos;          //!< S5 port numbers.
+  uint32_t                  m_sgiPortNo;          //!< SGi port number.
   Ptr<SliceController>      m_sliceCtrl;          //!< LTE logical slice ctrl.
   std::vector<uint32_t>     m_tftToMainPortNos;   //!< TFTs port nos to main.
 
