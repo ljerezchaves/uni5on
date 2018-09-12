@@ -564,14 +564,6 @@ RoutingInfo::DoDispose ()
 }
 
 void
-RoutingInfo::NotifyConstructionCompleted (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  Object::NotifyConstructionCompleted ();
-}
-
-void
 RoutingInfo::SetActive (bool value)
 {
   NS_LOG_FUNCTION (this << value);

@@ -200,9 +200,6 @@ protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
-  // Inherited from ObjectBase.
-  virtual void NotifyConstructionCompleted (void);
-
   /** \name Private member accessors. */
   //\{
   void SetActive          (bool value);
