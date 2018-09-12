@@ -20,7 +20,6 @@
 
 #include <string>
 #include "ring-controller.h"
-#include "../metadata/meter-info.h"
 #include "../metadata/routing-info.h"
 #include "backhaul-network.h"
 

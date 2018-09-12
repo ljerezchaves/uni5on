@@ -31,7 +31,6 @@ namespace ns3 {
 
 class RoutingInfo;
 class UeInfo;
-class MeterInfo;
 
 /** List of bearer information. */
 typedef std::vector<Ptr<RoutingInfo> > RoutingInfoList_t;
@@ -76,14 +75,12 @@ public:
   /** \name Private member accessors. */
   //\{
   std::string     GetBlockReasonStr (void) const;
-  Ptr<MeterInfo>  GetMeterInfo (void) const;
   uint16_t        GetPgwTftIdx (void) const;
   uint16_t        GetPriority (void) const;
   uint32_t        GetTeid (void) const;
   std::string     GetTeidHex (void) const;
   uint16_t        GetTimeout (void) const;
   Ptr<UeInfo>     GetUeInfo (void) const;
-  bool            HasMeterInfo (void) const;
   bool            IsActive (void) const;
   bool            IsAggregated (void) const;
   bool            IsBlocked (void) const;
@@ -108,6 +105,23 @@ public:
   bool                  IsGbr (void) const;
   uint64_t              GetGbrDlBitRate (void) const;
   uint64_t              GetGbrUlBitRate (void) const;
+  //\}
+
+  /**
+   * \name Private member accessors for GBR maximum bit rate information.
+   *       These methods are used for managing meter entries at S/P-GW.
+   * \return The requested information.
+   */
+  //\{
+  std::string GetMbrDelCmd      (void) const;
+  std::string GetMbrDlAddCmd    (void) const;
+  std::string GetMbrUlAddCmd    (void) const;
+  uint64_t    GetMbrDlBitRate   (void) const;
+  uint64_t    GetMbrUlBitRate   (void) const;
+  bool        HasMbrDl          (void) const;
+  bool        HasMbrUl          (void) const;
+  bool        IsMbrDlInstalled  (void) const;
+  bool        IsMbrUlInstalled  (void) const;
   //\}
 
   /**
@@ -194,6 +208,8 @@ protected:
   void SetActive          (bool value);
   void SetAggregated      (bool value);
   void SetGbrReserved     (bool value);
+  void SetMbrDlInstalled  (bool value);
+  void SetMbrUlInstalled  (bool value);
   void SetPgwTftIdx       (uint16_t value);
   void SetPriority        (uint16_t value);
   void SetTimeout         (uint16_t value);
@@ -237,12 +253,13 @@ private:
   bool                 m_isBlocked;    //!< True for blocked request.
   bool                 m_isDefault;    //!< True for default bearer.
   bool                 m_isGbrRes;     //!< True for reserved GBR resources.
+  bool                 m_isMbrDlInst;  //!< Downlink meter installed.
+  bool                 m_isMbrUlInst;  //!< Uplink meter installed.
   bool                 m_isTunnelInst; //!< True for installed GTP tunnel.
   uint16_t             m_pgwTftIdx;    //!< P-GW TFT switch index.
   uint16_t             m_priority;     //!< Flow rule priority.
   uint32_t             m_teid;         //!< GTP TEID.
   uint16_t             m_timeout;      //!< Flow idle timeout.
-  Ptr<MeterInfo>       m_meterInfo;    //!< Meter metadata.
   Ptr<UeInfo>          m_ueInfo;       //!< UE metadata.
 
   /** Map saving TEID / routing information. */

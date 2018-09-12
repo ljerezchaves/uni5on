@@ -22,7 +22,6 @@
 #include <iostream>
 #include "routing-info.h"
 #include "enb-info.h"
-#include "meter-info.h"
 #include "pgw-info.h"
 #include "sgw-info.h"
 #include "ue-info.h"
@@ -47,12 +46,13 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerContext_t bearer,
   m_isBlocked (false),
   m_isDefault (isDefault),
   m_isGbrRes (false),
+  m_isMbrDlInst (false),
+  m_isMbrUlInst (false),
   m_isTunnelInst (false),
   m_pgwTftIdx (0),
   m_priority (0),
   m_teid (teid),
   m_timeout (0),
-  m_meterInfo (0),
   m_ueInfo (ueInfo)
 {
   NS_LOG_FUNCTION (this);
@@ -99,14 +99,6 @@ RoutingInfo::GetBlockReasonStr (void) const
   NS_LOG_FUNCTION (this);
 
   return BlockReasonStr (m_blockReason);
-}
-
-bool
-RoutingInfo::HasMeterInfo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_meterInfo;
 }
 
 bool
@@ -157,6 +149,22 @@ RoutingInfo::IsGbrReserved (void) const
   return m_isGbrRes;
 }
 
+bool
+RoutingInfo::IsMbrDlInstalled (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_isMbrDlInst;
+}
+
+bool
+RoutingInfo::IsMbrUlInstalled (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_isMbrUlInst;
+}
+
 uint16_t
 RoutingInfo::GetPgwTftIdx (void) const
 {
@@ -179,14 +187,6 @@ RoutingInfo::GetTimeout (void) const
   NS_LOG_FUNCTION (this);
 
   return m_timeout;
-}
-
-Ptr<MeterInfo>
-RoutingInfo::GetMeterInfo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_meterInfo;
 }
 
 Ptr<UeInfo>
@@ -291,6 +291,70 @@ RoutingInfo::GetGbrUlBitRate (void) const
   NS_LOG_FUNCTION (this);
 
   return GetQosInfo ().gbrUl;
+}
+
+uint64_t
+RoutingInfo::GetMbrDlBitRate (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return GetQosInfo ().mbrDl;
+}
+
+uint64_t
+RoutingInfo::GetMbrUlBitRate (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return GetQosInfo ().mbrUl;
+}
+
+std::string
+RoutingInfo::GetMbrDlAddCmd (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  std::ostringstream meter;
+  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid
+        << " drop:rate=" << GetMbrDlBitRate () / 1000;
+  return meter.str ();
+}
+
+std::string
+RoutingInfo::GetMbrUlAddCmd (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  std::ostringstream meter;
+  meter << "meter-mod cmd=add,flags=1,meter=" << m_teid
+        << " drop:rate=" << GetMbrUlBitRate () / 1000;
+  return meter.str ();
+}
+
+std::string
+RoutingInfo::GetMbrDelCmd (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  std::ostringstream meter;
+  meter << "meter-mod cmd=del,meter=" << m_teid;
+  return meter.str ();
+}
+
+bool
+RoutingInfo::HasMbrDl (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return GetMbrDlBitRate ();
+}
+
+bool
+RoutingInfo::HasMbrUl (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return GetMbrUlBitRate ();
 }
 
 uint64_t
@@ -495,7 +559,6 @@ RoutingInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_meterInfo = 0;
   m_ueInfo = 0;
   Object::DoDispose ();
 }
@@ -504,13 +567,6 @@ void
 RoutingInfo::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
-
-  // Create the GBR and meter metadata, when necessary.
-  GbrQosInformation gbrQoS = GetQosInfo ();
-  if (gbrQoS.mbrDl || gbrQoS.mbrUl)
-    {
-      m_meterInfo = CreateObject<MeterInfo> (Ptr<RoutingInfo> (this));
-    }
 
   Object::NotifyConstructionCompleted ();
 }
@@ -551,6 +607,22 @@ RoutingInfo::SetTunnelInstalled (bool value)
   NS_LOG_FUNCTION (this << value);
 
   m_isTunnelInst = value;
+}
+
+void
+RoutingInfo::SetMbrDlInstalled (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isMbrDlInst = value;
+}
+
+void
+RoutingInfo::SetMbrUlInstalled (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isMbrUlInst = value;
 }
 
 void
@@ -648,9 +720,9 @@ std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
      << setw (6)  << rInfo.GetDscpStr ()
 
      << setw (7)  << rInfo.HasDlTraffic ()
-     << setw (9)  << rInfo.m_bearer.bearerLevelQos.gbrQosInfo.gbrDl
+     << setw (9)  << rInfo.GetGbrDlBitRate ()
      << setw (7)  << rInfo.HasUlTraffic ()
-     << setw (9)  << rInfo.m_bearer.bearerLevelQos.gbrQosInfo.gbrUl
+     << setw (9)  << rInfo.GetGbrUlBitRate ()
 
      << setw (5)  << rInfo.GetPgwTftIdx ()
      << setw (7)  << rInfo.GetPriority ()
