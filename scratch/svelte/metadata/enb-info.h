@@ -55,14 +55,17 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** \name Private member accessors. */
+  /**
+   * \name Private member accessors for eNB information.
+   * \return The requested information.
+   */
   //\{
-  uint16_t GetCellId (void) const;
-  Ipv4Address GetS1uAddr (void) const;
-  uint16_t GetInfraSwIdx (void) const;
-  uint32_t GetInfraSwS1uPortNo (void) const;
-  Ptr<SvelteEnbApplication> GetEnbApplication (void) const;
-  EpcS1apSapEnb* GetS1apSapEnb (void) const;
+  Ptr<SvelteEnbApplication> GetApplication      (void) const;
+  uint16_t                  GetCellId           (void) const;
+  uint16_t                  GetInfraSwIdx       (void) const;
+  uint32_t                  GetInfraSwS1uPortNo (void) const;
+  EpcS1apSapEnb*            GetS1apSapEnb       (void) const;
+  Ipv4Address               GetS1uAddr          (void) const;
   //\}
 
   /**
@@ -85,10 +88,10 @@ private:
 
   // eNB metadata.
   uint16_t                  m_cellId;             //!< eNB cell ID.
-  Ipv4Address               m_s1uAddr;            //!< eNB S1-U IP address.
+  Ptr<SvelteEnbApplication> m_application;        //!< eNB application.
   uint16_t                  m_infraSwIdx;         //!< Backhaul switch index.
   uint32_t                  m_infraSwS1uPortNo;   //!< Backhaul switch port no.
-  Ptr<SvelteEnbApplication> m_enbApplication;     //!< eNB application.
+  Ipv4Address               m_s1uAddr;            //!< eNB S1-U IP address.
 
   /** Map saving cell ID / eNB information. */
   typedef std::map<uint16_t, Ptr<EnbInfo> > CellIdEnbInfoMap_t;

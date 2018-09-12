@@ -32,10 +32,10 @@ EnbInfo::CellIdEnbInfoMap_t EnbInfo::m_enbInfoByCellId;
 EnbInfo::EnbInfo (uint16_t cellId, Ipv4Address s1uAddr, uint16_t infraSwIdx,
                   uint32_t infraSwS1uPortNo, Ptr<SvelteEnbApplication> enbApp)
   : m_cellId (cellId),
-  m_s1uAddr (s1uAddr),
+  m_application (enbApp),
   m_infraSwIdx (infraSwIdx),
   m_infraSwS1uPortNo (infraSwS1uPortNo),
-  m_enbApplication (enbApp)
+  m_s1uAddr (s1uAddr)
 {
   NS_LOG_FUNCTION (this);
 
@@ -56,20 +56,20 @@ EnbInfo::GetTypeId (void)
   return tid;
 }
 
+Ptr<SvelteEnbApplication>
+EnbInfo::GetApplication (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_application;
+}
+
 uint16_t
 EnbInfo::GetCellId (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_cellId;
-}
-
-Ipv4Address
-EnbInfo::GetS1uAddr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_s1uAddr;
 }
 
 uint16_t
@@ -88,20 +88,20 @@ EnbInfo::GetInfraSwS1uPortNo (void) const
   return m_infraSwS1uPortNo;
 }
 
-Ptr<SvelteEnbApplication>
-EnbInfo::GetEnbApplication (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_enbApplication;
-}
-
 EpcS1apSapEnb*
 EnbInfo::GetS1apSapEnb (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_enbApplication->GetS1apSapEnb ();
+  return m_application->GetS1apSapEnb ();
+}
+
+Ipv4Address
+EnbInfo::GetS1uAddr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s1uAddr;
 }
 
 Ptr<EnbInfo>
@@ -123,7 +123,7 @@ EnbInfo::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_enbApplication = 0;
+  m_application = 0;
   Object::DoDispose ();
 }
 
