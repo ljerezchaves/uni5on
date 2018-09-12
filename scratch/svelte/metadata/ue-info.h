@@ -168,7 +168,6 @@ private:
   Ptr<PgwInfo>           m_pgwInfo;              //!< Serving P-GW info.
   Ptr<SgwInfo>           m_sgwInfo;              //!< Serving S-GW info.
 
-
   // Control-plane communication.
   Ptr<SliceController>   m_sliceCtrl;            //!< LTE logical slice ctrl.
   uint64_t               m_mmeUeS1Id;            //!< ID for S1-AP at MME.

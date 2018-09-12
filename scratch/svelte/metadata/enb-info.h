@@ -87,8 +87,8 @@ private:
   static void RegisterEnbInfo (Ptr<EnbInfo> enbInfo);
 
   // eNB metadata.
-  uint16_t                  m_cellId;             //!< eNB cell ID.
   Ptr<SvelteEnbApplication> m_application;        //!< eNB application.
+  uint16_t                  m_cellId;             //!< eNB cell ID.
   uint16_t                  m_infraSwIdx;         //!< Backhaul switch index.
   uint32_t                  m_infraSwS1uPortNo;   //!< Backhaul switch port no.
   Ipv4Address               m_s1uAddr;            //!< eNB S1-U IP address.

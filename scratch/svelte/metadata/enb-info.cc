@@ -31,8 +31,8 @@ EnbInfo::CellIdEnbInfoMap_t EnbInfo::m_enbInfoByCellId;
 
 EnbInfo::EnbInfo (uint16_t cellId, Ipv4Address s1uAddr, uint16_t infraSwIdx,
                   uint32_t infraSwS1uPortNo, Ptr<SvelteEnbApplication> enbApp)
-  : m_cellId (cellId),
-  m_application (enbApp),
+  : m_application (enbApp),
+  m_cellId (cellId),
   m_infraSwIdx (infraSwIdx),
   m_infraSwS1uPortNo (infraSwS1uPortNo),
   m_s1uAddr (s1uAddr)
