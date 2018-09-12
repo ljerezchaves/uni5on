@@ -48,7 +48,7 @@ class RoutingInfo : public Object
   friend class SliceController;
 
 public:
-  /** Block reason. */
+  /** Block reason. */ // FIXME Refinar
   enum BlockReason
   {
     NOTBLOCKED   = 0,  //!< This bearer was not blocked.
@@ -76,60 +76,60 @@ public:
 
   /** \name Private member accessors. */
   //\{
-  uint32_t GetTeid (void) const;
-  std::string GetTeidHex (void) const;
-  std::string GetBlockReasonStr (void) const;
-  bool HasMeterInfo (void) const;
-  bool IsActive (void) const;
-  bool IsAggregated (void) const;
-  bool IsBlocked (void) const;
-  bool IsDefault (void) const;
-  bool IsInstalled (void) const;
-  bool IsReserved (void) const;
-  uint16_t GetPgwTftIdx (void) const;
-  uint16_t GetPriority (void) const;
-  uint16_t GetTimeout (void) const;
-  Ptr<MeterInfo> GetMeterInfo (void) const;
-  Ptr<UeInfo> GetUeInfo (void) const;
+  std::string     GetBlockReasonStr (void) const;
+  Ptr<MeterInfo>  GetMeterInfo (void) const;
+  uint16_t        GetPgwTftIdx (void) const;
+  uint16_t        GetPriority (void) const;
+  uint32_t        GetTeid (void) const;
+  std::string     GetTeidHex (void) const;
+  uint16_t        GetTimeout (void) const;
+  Ptr<UeInfo>     GetUeInfo (void) const;
+  bool            HasMeterInfo (void) const;
+  bool            IsActive (void) const;
+  bool            IsAggregated (void) const;
+  bool            IsBlocked (void) const;
+  bool            IsDefault (void) const;
+  bool            IsInstalled (void) const;
+  bool            IsReserved (void) const;
   //\}
 
   /**
    * \name Private member accessors for bearer information.
    */
   //\{
-  Ipv4Header::DscpType GetDscp (void) const;
-  uint16_t GetDscpValue (void) const;
-  std::string GetDscpStr (void) const;
-  EpsBearer GetEpsBearer (void) const;
-  EpsBearer::Qci GetQciInfo (void) const;
-  GbrQosInformation GetQosInfo (void) const;
-  Ptr<EpcTft> GetTft (void) const;
-  bool HasDlTraffic (void) const;
-  bool HasUlTraffic (void) const;
-  bool IsGbr (void) const;
-  uint64_t GetGbrDlBitRate (void) const;
-  uint64_t GetGbrUlBitRate (void) const;
+  Ipv4Header::DscpType  GetDscp (void) const;
+  uint16_t              GetDscpValue (void) const;
+  std::string           GetDscpStr (void) const;
+  EpsBearer             GetEpsBearer (void) const;
+  EpsBearer::Qci        GetQciInfo (void) const;
+  GbrQosInformation     GetQosInfo (void) const;
+  Ptr<EpcTft>           GetTft (void) const;
+  bool                  HasDlTraffic (void) const;
+  bool                  HasUlTraffic (void) const;
+  bool                  IsGbr (void) const;
+  uint64_t              GetGbrDlBitRate (void) const;
+  uint64_t              GetGbrUlBitRate (void) const;
   //\}
 
   /**
    * \name Private member accessors for UE and routing information.
    */
   //\{
-  uint64_t GetImsi (void) const;
-  uint16_t GetCellId (void) const;
-  SliceId GetSliceId (void) const;
+  uint64_t    GetImsi (void) const;
+  uint16_t    GetCellId (void) const;
+  SliceId     GetSliceId (void) const;
   std::string GetSliceIdStr (void) const;
   Ipv4Address GetEnbS1uAddr (void) const;
   Ipv4Address GetPgwS5Addr (void) const;
   Ipv4Address GetSgwS1uAddr (void) const;
   Ipv4Address GetSgwS5Addr (void) const;
   Ipv4Address GetUeAddr (void) const;
-  uint64_t GetSgwDpId (void) const;
-  uint32_t GetSgwS1uPortNo (void) const;
-  uint32_t GetSgwS5PortNo (void) const;
-  uint16_t GetEnbInfraSwIdx (void) const;
-  uint16_t GetPgwInfraSwIdx (void) const;
-  uint16_t GetSgwInfraSwIdx (void) const;
+  uint64_t    GetSgwDpId (void) const;
+  uint32_t    GetSgwS1uPortNo (void) const;
+  uint32_t    GetSgwS5PortNo (void) const;
+  uint16_t    GetEnbInfraSwIdx (void) const;
+  uint16_t    GetPgwInfraSwIdx (void) const;
+  uint16_t    GetSgwInfraSwIdx (void) const;
   //\}
 
   /**
@@ -165,7 +165,7 @@ public:
    * \return The header string.
    * \internal Keep this method consistent with the << operator below.
    */
-  static std::string GetPrintHeader (void);
+  static std::string PrintHeader (void);
 
   /**
    * Print the routing metadata on an output stream.
@@ -202,8 +202,13 @@ protected:
   //\}
 
   /**
+   * Increase the priority value by one unit.
+   */
+  void IncreasePriority (void);
+
+  /**
    * Get a list of the installed bearer routing information, optionally
-   * filtered by LTE logical slice and P-GW TFT switch index.
+   * filtered by the LTE logical slice and by the P-GW TFT switch index.
    * \param slice The LTE logical slice ID.
    * \param pgwTftIdx The P-GW TFT index.
    * \param [out] returnList The list of installed bearers.
@@ -211,11 +216,6 @@ protected:
   static void GetInstalledList (RoutingInfoList_t &returnList,
                                 SliceId slice = SliceId::ALL,
                                 uint16_t pgwTftIdx = 0);
-
-  /**
-   * Increase the priority value by one unit.
-   */
-  void IncreasePriority ();
 
 private:
   /**

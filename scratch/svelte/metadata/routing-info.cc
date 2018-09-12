@@ -461,7 +461,7 @@ RoutingInfo::GetSliceId (uint32_t teid)
 }
 
 std::string
-RoutingInfo::GetPrintHeader (void)
+RoutingInfo::PrintHeader (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -579,6 +579,14 @@ RoutingInfo::SetTimeout (uint16_t value)
 }
 
 void
+RoutingInfo::IncreasePriority (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  m_priority++;
+}
+
+void
 RoutingInfo::GetInstalledList (RoutingInfoList_t &returnList, SliceId slice,
                                uint16_t pgwTftIdx)
 {
@@ -603,14 +611,6 @@ RoutingInfo::GetInstalledList (RoutingInfoList_t &returnList, SliceId slice,
         }
       returnList.push_back (rInfo);
     }
-}
-
-void
-RoutingInfo::IncreasePriority ()
-{
-  NS_LOG_FUNCTION (this);
-
-  m_priority++;
 }
 
 void
