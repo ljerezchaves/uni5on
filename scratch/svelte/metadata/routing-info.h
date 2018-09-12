@@ -191,12 +191,12 @@ protected:
 
   /** \name Private member accessors. */
   //\{
-  void SetActive      (bool value);
-  void SetAggregated  (bool value);
-  void SetPgwTftIdx   (uint16_t value);
-  void SetPriority    (uint16_t value);
-  void SetTimeout     (uint16_t value);
+  void SetActive          (bool value);
+  void SetAggregated      (bool value);
   void SetGbrReserved     (bool value);
+  void SetPgwTftIdx       (uint16_t value);
+  void SetPriority        (uint16_t value);
+  void SetTimeout         (uint16_t value);
   void SetTunnelInstalled (bool value);
   //\}
 
@@ -230,17 +230,17 @@ private:
    */
   static void RegisterRoutingInfo (Ptr<RoutingInfo> rInfo);
 
-  uint32_t             m_teid;         //!< GTP TEID.
-  BearerContext_t      m_bearer;       //!< EPS bearer information.
-  BlockReason          m_blockReason;  //!< Bearer blocked reason.
-  bool                 m_isActive;     //!< Bearer active status.
-  bool                 m_isAggregated; //!< Bearer aggregation status.
-  bool                 m_isBlocked;    //!< Bearer request status.
-  bool                 m_isDefault;    //!< This is a default bearer.
+  BearerContext_t      m_bearer;       //!< EPS bearer context information.
+  BlockReason          m_blockReason;  //!< Reason for blocked request.
+  bool                 m_isActive;     //!< True for active bearer.
+  bool                 m_isAggregated; //!< True for aggregated bearer.
+  bool                 m_isBlocked;    //!< True for blocked request.
+  bool                 m_isDefault;    //!< True for default bearer.
   bool                 m_isGbrRes;     //!< True for reserved GBR resources.
   bool                 m_isTunnelInst; //!< True for installed GTP tunnel.
   uint16_t             m_pgwTftIdx;    //!< P-GW TFT switch index.
   uint16_t             m_priority;     //!< Flow rule priority.
+  uint32_t             m_teid;         //!< GTP TEID.
   uint16_t             m_timeout;      //!< Flow idle timeout.
   Ptr<MeterInfo>       m_meterInfo;    //!< Meter metadata.
   Ptr<UeInfo>          m_ueInfo;       //!< UE metadata.

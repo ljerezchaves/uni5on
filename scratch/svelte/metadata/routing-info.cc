@@ -40,17 +40,17 @@ RoutingInfo::TeidRoutingMap_t RoutingInfo::m_routingInfoByTeid;
 
 RoutingInfo::RoutingInfo (uint32_t teid, BearerContext_t bearer,
                           Ptr<UeInfo> ueInfo, bool isDefault)
-  : m_teid (teid),
-  m_bearer (bearer),
+  : m_bearer (bearer),
   m_blockReason (RoutingInfo::NOTBLOCKED),
   m_isActive (false),
   m_isAggregated (false),
   m_isBlocked (false),
   m_isDefault (isDefault),
-  m_isInstalled (false),
-  m_isReserved (false),
+  m_isGbrRes (false),
+  m_isTunnelInst (false),
   m_pgwTftIdx (0),
   m_priority (0),
+  m_teid (teid),
   m_timeout (0),
   m_meterInfo (0),
   m_ueInfo (ueInfo)
