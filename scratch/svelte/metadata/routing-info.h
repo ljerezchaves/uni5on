@@ -223,7 +223,7 @@ protected:
    * \param value The value to set.
    * \param reason The reason for this value.
    */
-  void SetBlocked (bool value, BlockReason reason = RoutingInfo::NOTBLOCKED);
+  void SetBlocked (bool value, BlockReason reason = RoutingInfo::NONE);
 
   /**
    * Get a list of the installed bearer routing information, optionally
