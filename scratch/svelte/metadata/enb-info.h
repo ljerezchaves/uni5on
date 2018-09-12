@@ -75,6 +75,13 @@ public:
    */
   static Ptr<EnbInfo> GetPointer (uint16_t cellId);
 
+  /**
+   * Get the header for the print operator <<.
+   * \return The header string.
+   * \internal Keep this method consistent with the << operator below.
+   */
+  static std::string PrintHeader (void);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -97,6 +104,15 @@ private:
   typedef std::map<uint16_t, Ptr<EnbInfo> > CellIdEnbInfoMap_t;
   static CellIdEnbInfoMap_t m_enbInfoByCellId;    //!< Global eNB info map.
 };
+
+/**
+ * Print the eNB metadata on an output stream.
+ * \param os The output stream.
+ * \param enbInfo The EnbInfo object.
+ * \returns The output stream.
+ * \internal Keep this method consistent with the EnbInfo::PrintHeader ().
+ */
+std::ostream & operator << (std::ostream &os, const EnbInfo &enbInfo);
 
 } // namespace ns3
 #endif // ENB_INFO_H

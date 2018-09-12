@@ -294,6 +294,15 @@ PgwInfo::GetPointer (uint64_t pgwId)
   return pgwInfo;
 }
 
+std::string
+PgwInfo::PrintHeader (void)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  std::ostringstream str;
+  return str.str ();
+}
+
 void
 PgwInfo::DoDispose ()
 {
@@ -335,6 +344,11 @@ PgwInfo::RegisterPgwInfo (Ptr<PgwInfo> pgwInfo)
   std::pair<uint64_t, Ptr<PgwInfo> > entry (pgwId, pgwInfo);
   auto ret = PgwInfo::m_pgwInfoByPgwId.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing P-GW info for this ID.");
+}
+
+std::ostream & operator << (std::ostream &os, const PgwInfo &pgwInfo)
+{
+  return os;
 }
 
 } // namespace ns3

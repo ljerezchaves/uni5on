@@ -156,6 +156,15 @@ SgwInfo::GetPointer (uint64_t sgwId)
   return sgwInfo;
 }
 
+std::string
+SgwInfo::PrintHeader (void)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  std::ostringstream str;
+  return str.str ();
+}
+
 void
 SgwInfo::DoDispose ()
 {
@@ -174,6 +183,11 @@ SgwInfo::RegisterSgwInfo (Ptr<SgwInfo> sgwInfo)
   std::pair<uint64_t, Ptr<SgwInfo> > entry (sgwId, sgwInfo);
   auto ret = SgwInfo::m_sgwInfoBySgwId.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing S-GW info for this ID.");
+}
+
+std::ostream & operator << (std::ostream &os, const SgwInfo &sgwInfo)
+{
+  return os;
 }
 
 } // namespace ns3

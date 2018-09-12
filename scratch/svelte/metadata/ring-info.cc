@@ -169,6 +169,15 @@ RingInfo::RingPathStr (RingPath path)
     }
 }
 
+std::string
+RingInfo::PrintHeader (void)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  std::ostringstream str;
+  return str.str ();
+}
+
 void
 RingInfo::DoDispose ()
 {
@@ -224,6 +233,11 @@ RingInfo::ResetToDefaults ()
     {
       InvertPath (LteIface::S5);
     }
+}
+
+std::ostream & operator << (std::ostream &os, const RingInfo &ringInfo)
+{
+  return os;
 }
 
 } // namespace ns3

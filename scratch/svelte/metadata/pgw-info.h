@@ -121,6 +121,13 @@ public:
    */
   static Ptr<PgwInfo> GetPointer (uint64_t pgwId);
 
+  /**
+   * Get the header for the print operator <<.
+   * \return The header string.
+   * \internal Keep this method consistent with the << operator below.
+   */
+  static std::string PrintHeader (void);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -179,6 +186,15 @@ private:
   typedef std::map<uint64_t, Ptr<PgwInfo> > PgwIdPgwInfoMap_t;
   static PgwIdPgwInfoMap_t  m_pgwInfoByPgwId;     //!< Global P-GW info map.
 };
+
+/**
+ * Print the P-GW metadata on an output stream.
+ * \param os The output stream.
+ * \param pgwInfo The PgwInfo object.
+ * \returns The output stream.
+ * \internal Keep this method consistent with the PgwInfo::PrintHeader ().
+ */
+std::ostream & operator << (std::ostream &os, const PgwInfo &pgwInfo);
 
 } // namespace ns3
 #endif // PGW_INFO_H

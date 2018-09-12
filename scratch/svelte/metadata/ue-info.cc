@@ -198,6 +198,15 @@ UeInfo::GetPointer (Ipv4Address addr)
   return ueInfo;
 }
 
+std::string
+UeInfo::PrintHeader (void)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  std::ostringstream str;
+  return str.str ();
+}
+
 void
 UeInfo::DoDispose ()
 {
@@ -296,6 +305,11 @@ UeInfo::RegisterUeInfo (Ptr<UeInfo> ueInfo)
   std::pair<Ipv4Address, Ptr<UeInfo> > entryIpv4 (ipv4, ueInfo);
   auto retIpv4 = UeInfo::m_ueInfoByAddr.insert (entryIpv4);
   NS_ABORT_MSG_IF (retIpv4.second == false, "Existing UE info for this IP.");
+}
+
+std::ostream & operator << (std::ostream &os, const UeInfo &ueInfo)
+{
+  return os;
 }
 
 } // namespace ns3

@@ -112,6 +112,13 @@ public:
    */
   static Ptr<UeInfo> GetPointer (Ipv4Address addr);
 
+  /**
+   * Get the header for the print operator <<.
+   * \return The header string.
+   * \internal Keep this method consistent with the << operator below.
+   */
+  static std::string PrintHeader (void);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -186,6 +193,15 @@ private:
   typedef std::map<Ipv4Address, Ptr<UeInfo> > Ipv4UeInfoMap_t;
   static Ipv4UeInfoMap_t m_ueInfoByAddr;    //!< Global UE info map by IPv4.
 };
+
+/**
+ * Print the UE metadata on an output stream.
+ * \param os The output stream.
+ * \param ueInfo The UeInfo object.
+ * \returns The output stream.
+ * \internal Keep this method consistent with the UeInfo::PrintHeader ().
+ */
+std::ostream & operator << (std::ostream &os, const UeInfo &ueInfo);
 
 } // namespace ns3
 #endif // UE_INFO_H

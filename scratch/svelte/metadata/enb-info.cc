@@ -118,6 +118,15 @@ EnbInfo::GetPointer (uint16_t cellId)
   return enbInfo;
 }
 
+std::string
+EnbInfo::PrintHeader (void)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  std::ostringstream str;
+  return str.str ();
+}
+
 void
 EnbInfo::DoDispose ()
 {
@@ -136,6 +145,11 @@ EnbInfo::RegisterEnbInfo (Ptr<EnbInfo> enbInfo)
   std::pair<uint16_t, Ptr<EnbInfo> > entry (cellId, enbInfo);
   auto ret = EnbInfo::m_enbInfoByCellId.insert (entry);
   NS_ABORT_MSG_IF (ret.second == false, "Existing eNB info for this cell ID.");
+}
+
+std::ostream & operator << (std::ostream &os, const EnbInfo &enbInfo)
+{
+  return os;
 }
 
 } // namespace ns3

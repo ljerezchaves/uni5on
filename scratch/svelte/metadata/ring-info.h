@@ -109,6 +109,13 @@ public:
    */
   static std::string RingPathStr (RingPath path);
 
+  /**
+   * Get the header for the print operator <<.
+   * \return The header string.
+   * \internal Keep this method consistent with the << operator below.
+   */
+  static std::string PrintHeader (void);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -138,6 +145,15 @@ private:
   bool             m_isLocalPath [2];    //!< True for local path.
   Ptr<RoutingInfo> m_rInfo;              //!< Routing metadata.
 };
+
+/**
+ * Print the ring routing metadata on an output stream.
+ * \param os The output stream.
+ * \param ringInfo The RingInfo object.
+ * \returns The output stream.
+ * \internal Keep this method consistent with the RingInfo::PrintHeader ().
+ */
+std::ostream & operator << (std::ostream &os, const RingInfo &ringInfo);
 
 } // namespace ns3
 #endif // RING_INFO_H

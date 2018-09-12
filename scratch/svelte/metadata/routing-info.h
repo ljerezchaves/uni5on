@@ -226,16 +226,6 @@ public:
   static std::string PrintHeader (void);
 
   /**
-   * Print the routing metadata on an output stream.
-   * \param os The output stream.
-   * \param rInfo The RoutingInfo object.
-   * \returns The output stream.
-   * \internal Keep this method consistent with the PrintHeader () above.
-   */
-  friend std::ostream & operator << (
-    std::ostream &os, const RoutingInfo &rInfo);
-
-  /**
    * TracedCallback signature for Ptr<const RoutingInfo>.
    * \param rInfo The bearer information.
    */
@@ -313,6 +303,13 @@ private:
   static TeidRoutingMap_t m_routingInfoByTeid;  //!< Global routing info map.
 };
 
+/**
+ * Print the routing metadata on an output stream.
+ * \param os The output stream.
+ * \param rInfo The RoutingInfo object.
+ * \returns The output stream.
+ * \internal Keep this method consistent with the RoutingInfo::PrintHeader ().
+ */
 std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo);
 
 } // namespace ns3
