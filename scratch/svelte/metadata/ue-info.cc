@@ -18,11 +18,15 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#include <iomanip>
+#include <iostream>
 #include "ue-info.h"
 #include "enb-info.h"
 #include "pgw-info.h"
 #include "sgw-info.h"
 #include "../logical/slice-controller.h"
+
+using namespace std;
 
 namespace ns3 {
 
@@ -204,6 +208,9 @@ UeInfo::PrintHeader (void)
   NS_LOG_FUNCTION_NOARGS ();
 
   std::ostringstream str;
+  str << setw (7)  << "IMSI"
+      << setw (7)  << "Slice"
+      << setw (12) << "UeAddr";
   return str.str ();
 }
 
@@ -309,6 +316,13 @@ UeInfo::RegisterUeInfo (Ptr<UeInfo> ueInfo)
 
 std::ostream & operator << (std::ostream &os, const UeInfo &ueInfo)
 {
+  // Trick to preserve alignment.
+  std::ostringstream ipStr;
+  ueInfo.GetAddr ().Print (ipStr);
+
+  os << setw (7)  << ueInfo.GetImsi ()
+     << setw (7)  << SliceIdStr (ueInfo.GetSliceId ())
+     << setw (12) << ipStr.str ();
   return os;
 }
 

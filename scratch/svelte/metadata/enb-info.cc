@@ -18,8 +18,12 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#include <iomanip>
+#include <iostream>
 #include "enb-info.h"
 #include "../infrastructure/svelte-enb-application.h"
+
+using namespace std;
 
 namespace ns3 {
 
@@ -124,6 +128,9 @@ EnbInfo::PrintHeader (void)
   NS_LOG_FUNCTION_NOARGS ();
 
   std::ostringstream str;
+  str << setw (7)  << "EnbID"
+      << setw (7)  << "EnbSw"
+      << setw (12) << "EnbS1Addr";
   return str.str ();
 }
 
@@ -149,6 +156,13 @@ EnbInfo::RegisterEnbInfo (Ptr<EnbInfo> enbInfo)
 
 std::ostream & operator << (std::ostream &os, const EnbInfo &enbInfo)
 {
+  // Trick to preserve alignment.
+  std::ostringstream ipStr;
+  enbInfo.GetS1uAddr ().Print (ipStr);
+
+  os << setw (7)  << enbInfo.GetCellId ()
+     << setw (7)  << enbInfo.GetInfraSwIdx ()
+     << setw (12) << ipStr.str ();
   return os;
 }
 

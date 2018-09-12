@@ -18,8 +18,12 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#include <iomanip>
+#include <iostream>
 #include "ring-info.h"
 #include "routing-info.h"
+
+using namespace std;
 
 namespace ns3 {
 
@@ -175,6 +179,7 @@ RingInfo::PrintHeader (void)
   NS_LOG_FUNCTION_NOARGS ();
 
   std::ostringstream str;
+  // TODO
   return str.str ();
 }
 
@@ -237,6 +242,7 @@ RingInfo::ResetToDefaults ()
 
 std::ostream & operator << (std::ostream &os, const RingInfo &ringInfo)
 {
+  // TODO
   return os;
 }
 

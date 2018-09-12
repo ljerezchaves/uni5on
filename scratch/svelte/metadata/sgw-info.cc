@@ -18,8 +18,12 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#include <iomanip>
+#include <iostream>
 #include "sgw-info.h"
 #include "../logical/slice-controller.h"
+
+using namespace std;
 
 namespace ns3 {
 
@@ -162,6 +166,10 @@ SgwInfo::PrintHeader (void)
   NS_LOG_FUNCTION_NOARGS ();
 
   std::ostringstream str;
+  str << setw (7)  << "SgwID"
+      << setw (7)  << "SgwSw"
+      << setw (12) << "SgwS1Addr"
+      << setw (12) << "SgwS5Addr";
   return str.str ();
 }
 
@@ -187,6 +195,15 @@ SgwInfo::RegisterSgwInfo (Ptr<SgwInfo> sgwInfo)
 
 std::ostream & operator << (std::ostream &os, const SgwInfo &sgwInfo)
 {
+  // Trick to preserve alignment.
+  std::ostringstream ipS1Str, ipS5Str;
+  sgwInfo.GetS1uAddr ().Print (ipS1Str);
+  sgwInfo.GetS5Addr ().Print (ipS5Str);
+
+  os << setw (7)  << sgwInfo.GetSgwId ()
+     << setw (7)  << sgwInfo.GetInfraSwIdx ()
+     << setw (12) << ipS1Str.str ()
+     << setw (12) << ipS5Str.str ();
   return os;
 }
 

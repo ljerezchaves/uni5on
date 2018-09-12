@@ -94,9 +94,7 @@ public:
   Ptr<SgwInfo>          GetSgwInfo    (void) const;
   Ptr<SliceController>  GetSliceCtrl  (void) const;
   SliceId               GetSliceId    (void) const;
-
   //\}
-
 
   /**
    * Get the UE information from the global map for a specific IMSI.

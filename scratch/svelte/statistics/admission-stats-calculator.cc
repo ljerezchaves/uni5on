@@ -25,6 +25,11 @@
 #include "../metadata/routing-info.h"
 #include "../metadata/ue-info.h"
 
+// FIXME Vai ficar mesmo?
+#include "../metadata/enb-info.h"
+#include "../metadata/sgw-info.h"
+#include "../metadata/pgw-info.h"
+
 using namespace std;
 
 namespace ns3 {
@@ -130,10 +135,15 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
     << setw (8) << Simulator::Now ().GetSeconds ()
     << setprecision (2)
     << *rInfo
+    << *(rInfo->GetUeInfo ())
+    << *(rInfo->GetUeInfo ()->GetEnbInfo ())
+    << *(rInfo->GetUeInfo ()->GetSgwInfo ())
+    << *(rInfo->GetUeInfo ()->GetPgwInfo ())
+    // FIXME
 //     << setw (12) << rInfo->GetTeidHex ()
 //     << setw (5)  << rInfo->GetQciInfo ()
 //     << setw (7)  << rInfo->IsGbr ()
-// //    << setw (7)  << rInfo->IsMtc ()
+//     << setw (7)  << rInfo->IsMtc ()
 //     << setw (7)  << rInfo->IsDefault ()
 //     << setw (6)  << rInfo->GetImsi ()
 //     << setw (5)  << rInfo->GetCellId ()
@@ -231,6 +241,11 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
     << fixed << boolalpha << right
     << setw (8)  << "Time(s)"
     << RoutingInfo::PrintHeader ()
+    << UeInfo::PrintHeader ()
+    << EnbInfo::PrintHeader ()
+    << SgwInfo::PrintHeader ()
+    << PgwInfo::PrintHeader ()
+    // FIXME
     // << setw (12) << "TEID"
     // << setw (5)  << "QCI"
     // << setw (7)  << "IsGBR"
