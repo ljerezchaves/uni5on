@@ -172,7 +172,7 @@ public:
    * \param os The output stream.
    * \param rInfo The RoutingInfo object.
    * \returns The output stream.
-   * \internal Keep this method consistent with the GetPrintHeader () above.
+   * \internal Keep this method consistent with the PrintHeader () above.
    */
   friend std::ostream & operator << (
     std::ostream &os, const RoutingInfo &rInfo);
