@@ -249,15 +249,15 @@ private:
   bool                 m_isAggregated; //!< True for aggregated bearer.
   bool                 m_isBlocked;    //!< True for blocked request.
   bool                 m_isDefault;    //!< True for default bearer.
-  bool                 m_isGbrRes;     //!< True for reserved GBR resources.
-  bool                 m_isMbrDlInst;  //!< Downlink meter installed.
-  bool                 m_isMbrUlInst;  //!< Uplink meter installed.
-  bool                 m_isTunnelInst; //!< True for installed GTP tunnel.
+  bool                 m_isGbrRes;     //!< True for GBR resources reserved.
+  bool                 m_isMbrDlInst;  //!< True fir downlink meter installed.
+  bool                 m_isMbrUlInst;  //!< True for uplink meter installed.
+  bool                 m_isTunnelInst; //!< True for GTP tunnel installed.
   uint16_t             m_pgwTftIdx;    //!< P-GW TFT switch index.
-  uint16_t             m_priority;     //!< Flow rule priority.
+  uint16_t             m_priority;     //!< Flow table rule priority.
   uint32_t             m_teid;         //!< GTP TEID.
-  uint16_t             m_timeout;      //!< Flow idle timeout.
-  Ptr<UeInfo>          m_ueInfo;       //!< UE metadata.
+  uint16_t             m_timeout;      //!< Flow table idle timeout.
+  Ptr<UeInfo>          m_ueInfo;       //!< UE metadata pointer.
 
   /** Map saving TEID / routing information. */
   typedef std::map<uint32_t, Ptr<RoutingInfo> > TeidRoutingMap_t;
