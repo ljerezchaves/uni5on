@@ -27,8 +27,6 @@
 
 namespace ns3 {
 
-class GbrInfo;
-
 /**
  * \ingroup svelteInfra
  * OpenFlow backhaul controller for ring topology.

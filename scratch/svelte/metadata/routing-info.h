@@ -31,7 +31,6 @@ namespace ns3 {
 
 class RoutingInfo;
 class UeInfo;
-class GbrInfo;
 class MeterInfo;
 
 /** List of bearer information. */
