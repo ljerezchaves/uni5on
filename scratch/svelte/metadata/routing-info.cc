@@ -142,19 +142,19 @@ RoutingInfo::IsDefault (void) const
 }
 
 bool
-RoutingInfo::IsInstalled (void) const
+RoutingInfo::IsTunnelInstalled (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isInstalled;
+  return m_isTunnelInst;
 }
 
 bool
-RoutingInfo::IsReserved (void) const
+RoutingInfo::IsGbrReserved (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isReserved;
+  return m_isGbrRes;
 }
 
 uint16_t
@@ -546,11 +546,11 @@ RoutingInfo::SetBlocked (bool value, BlockReason reason)
 }
 
 void
-RoutingInfo::SetInstalled (bool value)
+RoutingInfo::SetTunnelInstalled (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_isInstalled = value;
+  m_isTunnelInst = value;
 }
 
 void
@@ -571,11 +571,11 @@ RoutingInfo::SetPriority (uint16_t value)
 }
 
 void
-RoutingInfo::SetReserved (bool value)
+RoutingInfo::SetGbrReserved (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_isReserved = value;
+  m_isGbrRes = value;
 }
 
 void
@@ -605,7 +605,7 @@ RoutingInfo::GetInstalledList (RoutingInfoList_t &returnList, SliceId slice,
     {
       Ptr<RoutingInfo> rInfo = it.second;
 
-      if (!rInfo->IsInstalled ())
+      if (!rInfo->IsTunnelInstalled ())
         {
           continue;
         }
@@ -638,7 +638,7 @@ std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
 
      << setw (7)  << rInfo.IsDefault ()
      << setw (7)  << rInfo.IsActive ()
-     << setw (7)  << rInfo.IsInstalled ()
+     << setw (7)  << rInfo.IsTunnelInstalled ()
      << setw (7)  << rInfo.IsAggregated ()
      << setw (7)  << rInfo.IsBlocked ()
      << setw (10) << rInfo.GetBlockReasonStr ()

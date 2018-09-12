@@ -148,7 +148,7 @@ RingController::BearerRelease (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo);
 
   // For bearers without reserved resources: nothing to release.
-  if (!rInfo->IsReserved ())
+  if (!rInfo->IsGbrReserved ())
     {
       return true;
     }
@@ -513,7 +513,7 @@ RingController::BitRateReserve (Ptr<RingInfo> ringInfo)
     }
 
   NS_ASSERT_MSG (success, "Error when reserving resources.");
-  rInfo->SetReserved (success);
+  rInfo->SetGbrReserved (success);
   return success;
 }
 
@@ -559,7 +559,7 @@ RingController::BitRateRelease (Ptr<RingInfo> ringInfo)
     }
 
   NS_ASSERT_MSG (success, "Error when releasing resources.");
-  rInfo->SetReserved (!success);
+  rInfo->SetGbrReserved (!success);
   return success;
 }
 

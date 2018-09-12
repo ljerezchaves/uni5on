@@ -88,8 +88,8 @@ public:
   bool            IsAggregated (void) const;
   bool            IsBlocked (void) const;
   bool            IsDefault (void) const;
-  bool            IsInstalled (void) const;
-  bool            IsReserved (void) const;
+  bool            IsGbrReserved (void) const;
+  bool            IsTunnelInstalled (void) const;
   //\}
 
   /**
@@ -193,11 +193,11 @@ protected:
   //\{
   void SetActive      (bool value);
   void SetAggregated  (bool value);
-  void SetInstalled   (bool value);
   void SetPgwTftIdx   (uint16_t value);
   void SetPriority    (uint16_t value);
-  void SetReserved    (bool value);
   void SetTimeout     (uint16_t value);
+  void SetGbrReserved     (bool value);
+  void SetTunnelInstalled (bool value);
   //\}
 
   /**
@@ -237,8 +237,8 @@ private:
   bool                 m_isAggregated; //!< Bearer aggregation status.
   bool                 m_isBlocked;    //!< Bearer request status.
   bool                 m_isDefault;    //!< This is a default bearer.
-  bool                 m_isInstalled;  //!< Rules installed status.
-  bool                 m_isReserved;   //!< GBR resources reserved status.
+  bool                 m_isGbrRes;     //!< True for reserved GBR resources.
+  bool                 m_isTunnelInst; //!< True for installed GTP tunnel.
   uint16_t             m_pgwTftIdx;    //!< P-GW TFT switch index.
   uint16_t             m_priority;     //!< Flow rule priority.
   uint16_t             m_timeout;      //!< Flow idle timeout.
