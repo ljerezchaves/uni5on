@@ -85,7 +85,7 @@ MeterInfo::IsUlInstalled (void) const
 }
 
 bool
-MeterInfo::HasDown (void) const
+MeterInfo::HasDl (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -93,7 +93,7 @@ MeterInfo::HasDown (void) const
 }
 
 bool
-MeterInfo::HasUp (void) const
+MeterInfo::HasUl (void) const
 {
   NS_LOG_FUNCTION (this);
 

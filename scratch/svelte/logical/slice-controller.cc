@@ -855,7 +855,7 @@ SliceController::PgwRulesInstall (
 
   // Check for meter entry.
   Ptr<MeterInfo> meterInfo = rInfo->GetMeterInfo ();
-  if (meterInfo && meterInfo->HasDown ())
+  if (meterInfo && meterInfo->HasDl ())
     {
       if (moveFlag || !meterInfo->IsDlInstalled ())
         {
@@ -1041,7 +1041,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 
       // Check for meter entry.
       Ptr<MeterInfo> meterInfo = rInfo->GetMeterInfo ();
-      if (meterInfo && meterInfo->HasUp ())
+      if (meterInfo && meterInfo->HasUl ())
         {
           if (!meterInfo->IsUlInstalled ())
             {

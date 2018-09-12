@@ -56,8 +56,8 @@ public:
   //\{
   bool IsDlInstalled (void) const;
   bool IsUlInstalled (void) const;
-  bool HasDown (void) const;
-  bool HasUp (void) const;
+  bool HasDl (void) const;
+  bool HasUl (void) const;
   //\}
 
   /**
