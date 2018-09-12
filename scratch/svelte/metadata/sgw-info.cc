@@ -33,14 +33,14 @@ SgwInfo::SgwInfo (
   uint64_t sgwId, Ipv4Address s1uAddr, Ipv4Address s5Addr, uint32_t s1uPortNo,
   uint32_t s5PortNo, uint16_t infraSwIdx, uint32_t infraSwS1uPortNo,
   uint32_t infraSwS5PortNo, Ptr<SliceController> ctrlApp)
-  : m_sgwId (sgwId),
-  m_s1uAddr (s1uAddr),
-  m_s5Addr (s5Addr),
-  m_s1uPortNo (s1uPortNo),
-  m_s5PortNo (s5PortNo),
-  m_infraSwIdx (infraSwIdx),
+  : m_infraSwIdx (infraSwIdx),
   m_infraSwS1uPortNo (infraSwS1uPortNo),
   m_infraSwS5PortNo (infraSwS5PortNo),
+  m_s1uAddr (s1uAddr),
+  m_s1uPortNo (s1uPortNo),
+  m_s5Addr (s5Addr),
+  m_s5PortNo (s5PortNo),
+  m_sgwId (sgwId),
   m_sliceCtrl (ctrlApp)
 {
   NS_LOG_FUNCTION (this);
@@ -63,59 +63,11 @@ SgwInfo::GetTypeId (void)
 }
 
 uint64_t
-SgwInfo::GetSgwId (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_sgwId;
-}
-
-uint64_t
 SgwInfo::GetDpId (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_sgwId;
-}
-
-SliceId
-SgwInfo::GetSliceId (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_sliceCtrl->GetSliceId ();
-}
-
-Ipv4Address
-SgwInfo::GetS1uAddr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_s1uAddr;
-}
-
-Ipv4Address
-SgwInfo::GetS5Addr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_s5Addr;
-}
-
-uint32_t
-SgwInfo::GetS1uPortNo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_s1uPortNo;
-}
-
-uint32_t
-SgwInfo::GetS5PortNo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_s5PortNo;
 }
 
 uint16_t
@@ -142,8 +94,48 @@ SgwInfo::GetInfraSwS5PortNo (void) const
   return m_infraSwS5PortNo;
 }
 
+Ipv4Address
+SgwInfo::GetS1uAddr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s1uAddr;
+}
+
+uint32_t
+SgwInfo::GetS1uPortNo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s1uPortNo;
+}
+
+Ipv4Address
+SgwInfo::GetS5Addr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s5Addr;
+}
+
+uint32_t
+SgwInfo::GetS5PortNo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_s5PortNo;
+}
+
+uint64_t
+SgwInfo::GetSgwId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sgwId;
+}
+
 Ptr<SliceController>
-SgwInfo::GetSliceCtrl (void) const
+SgwInfo::GetSliceController (void) const
 {
   NS_LOG_FUNCTION (this);
 
