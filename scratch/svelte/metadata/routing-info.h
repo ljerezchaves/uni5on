@@ -85,7 +85,6 @@ public:
   uint32_t    GetTeid           (void) const;
   std::string GetTeidHex        (void) const;
   uint16_t    GetTimeout        (void) const;
-  Ptr<UeInfo> GetUeInfo         (void) const;
   bool        IsActive          (void) const;
   bool        IsAggregated      (void) const;
   bool        IsBlocked         (void) const;
@@ -154,6 +153,7 @@ public:
   //\{
   Ipv4Address GetUeAddr         (void) const;
   uint64_t    GetUeImsi         (void) const;
+  Ptr<UeInfo> GetUeInfo         (void) const;
   //\}
 
   /**

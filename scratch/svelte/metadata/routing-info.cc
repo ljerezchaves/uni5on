@@ -142,14 +142,6 @@ RoutingInfo::GetTimeout (void) const
   return m_timeout;
 }
 
-Ptr<UeInfo>
-RoutingInfo::GetUeInfo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ueInfo;
-}
-
 bool
 RoutingInfo::IsActive (void) const
 {
@@ -404,6 +396,14 @@ RoutingInfo::GetUeImsi (void) const
   NS_LOG_FUNCTION (this);
 
   return m_ueInfo->GetImsi ();
+}
+
+Ptr<UeInfo>
+RoutingInfo::GetUeInfo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo;
 }
 
 uint16_t
