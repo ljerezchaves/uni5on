@@ -387,7 +387,7 @@ RoutingInfo::GetUeAddr (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_ueInfo->GetUeAddr ();
+  return m_ueInfo->GetAddr ();
 }
 
 uint64_t

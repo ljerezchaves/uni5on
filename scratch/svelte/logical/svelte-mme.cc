@@ -135,7 +135,7 @@ SvelteMme::DoPathSwitchRequest (
   uint64_t imsi = mmeUeS1Id;
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
   NS_LOG_INFO ("UE IMSI " << imsi << " handover from "
-               "cell ID " << ueInfo->GetCellId () << " to cell ID " << gci);
+               "cell ID " << ueInfo->GetEnbCellId () << " to cell ID " << gci);
 
   // Update UE metadata.
   ueInfo->SetEnbInfo (EnbInfo::GetPointer (gci), enbUeS1Id);
@@ -215,7 +215,7 @@ SvelteMme::DoModifyBearerResponse (
 
   ueInfo->GetS1apSapEnb ()->PathSwitchRequestAcknowledge (
     ueInfo->GetEnbUeS1Id (), ueInfo->GetMmeUeS1Id (),
-    ueInfo->GetCellId (), erabList);
+    ueInfo->GetEnbCellId (), erabList);
 }
 
 void

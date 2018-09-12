@@ -567,7 +567,7 @@ SliceNetwork::CreateUes (void)
       Ptr<UeInfo> ueInfo = CreateObject<UeInfo> (
           imsiValue.Get (), ueIfaces.GetAddress (i), m_controllerApp);
       NS_LOG_DEBUG ("UE IMSI " << imsiValue.Get () <<
-                    " configured with IP " << ueInfo->GetUeAddr ());
+                    " configured with IP " << ueInfo->GetAddr ());
     }
 
   // Specify static routes for each UE to its default P-GW.

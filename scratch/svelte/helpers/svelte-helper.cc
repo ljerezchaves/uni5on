@@ -165,12 +165,12 @@ SvelteHelper::ActivateEpsBearer (Ptr<NetDevice> ueDevice, uint64_t imsi,
 
       EpcTft::PacketFilter filterTcp;
       filterTcp.protocol = TcpL4Protocol::PROT_NUMBER;
-      filterTcp.localAddress = ueInfo->GetUeAddr ();
+      filterTcp.localAddress = ueInfo->GetAddr ();
       tft->Add (filterTcp);
 
       EpcTft::PacketFilter filterUdp;
       filterUdp.protocol = UdpL4Protocol::PROT_NUMBER;
-      filterUdp.localAddress = ueInfo->GetUeAddr ();
+      filterUdp.localAddress = ueInfo->GetAddr ();
       tft->Add (filterUdp);
     }
 

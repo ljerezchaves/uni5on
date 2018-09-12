@@ -56,10 +56,10 @@ public:
   /**
    * Complete constructor.
    * \param imsi The IMSI identifier.
-   * \param ueAddr The UE IP address.
+   * \param addr The UE IP address.
    * \param sliceCtrl The slice controller application.
    */
-  UeInfo (uint64_t imsi, Ipv4Address ueAddr, Ptr<SliceController> sliceCtrl);
+  UeInfo (uint64_t imsi, Ipv4Address addr, Ptr<SliceController> sliceCtrl);
   virtual ~UeInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
@@ -76,22 +76,27 @@ public:
     uint8_t     bearerId;
   };
 
-  /** \name Private member accessors. */
+  /**
+   * \name Private member accessors for UE information.
+   * \return The requested information.
+   */
   //\{
-  uint64_t GetImsi (void) const;
-  SliceId GetSliceId (void) const;
-  Ipv4Address GetUeAddr (void) const;
-  uint16_t GetCellId (void) const;
-  Ptr<EnbInfo> GetEnbInfo (void) const;
-  Ptr<SgwInfo> GetSgwInfo (void) const;
-  Ptr<PgwInfo> GetPgwInfo (void) const;
-  uint64_t GetMmeUeS1Id (void) const;
-  uint64_t GetEnbUeS1Id (void) const;
-  EpcS11SapSgw* GetS11SapSgw (void) const;
-  EpcS1apSapEnb* GetS1apSapEnb (void) const;
-  Ptr<SliceController> GetSliceCtrl (void) const;
+  Ipv4Address           GetAddr       (void) const;
   std::list<BearerInfo> GetBearerList (void) const;
+  uint16_t              GetEnbCellId  (void) const;
+  Ptr<EnbInfo>          GetEnbInfo    (void) const;
+  uint64_t              GetEnbUeS1Id  (void) const;
+  uint64_t              GetImsi       (void) const;
+  uint64_t              GetMmeUeS1Id  (void) const;
+  Ptr<PgwInfo>          GetPgwInfo    (void) const;
+  EpcS11SapSgw*         GetS11SapSgw  (void) const;
+  EpcS1apSapEnb*        GetS1apSapEnb (void) const;
+  Ptr<SgwInfo>          GetSgwInfo    (void) const;
+  Ptr<SliceController>  GetSliceCtrl  (void) const;
+  SliceId               GetSliceId    (void) const;
+
   //\}
+
 
   /**
    * Get the UE information from the global map for a specific IMSI.
@@ -102,21 +107,24 @@ public:
 
   /**
    * Get the UE information from the global map for a specific UE IPv4.
-   * \param ipv4 The UE IPv4.
+   * \param addr The UE IP address.
    * \return The UE information for this IP.
    */
-  static Ptr<UeInfo> GetPointer (Ipv4Address ipv4);
+  static Ptr<UeInfo> GetPointer (Ipv4Address addr);
 
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
 private:
-  /** \name Private member accessors. */
+  /**
+   * \name Private member accessors for updating internal metadata.
+   * \param value The value to set.
+   */
   //\{
   void SetEnbInfo (Ptr<EnbInfo> enbInfo, uint64_t enbUeS1Id);
-  void SetSgwInfo (Ptr<SgwInfo> value);
   void SetPgwInfo (Ptr<PgwInfo> value);
+  void SetSgwInfo (Ptr<SgwInfo> value);
   //\}
 
   /**
@@ -126,12 +134,6 @@ private:
    * \return The bearer ID.
    */
   uint8_t AddBearer (BearerInfo bearer);
-
-  /**
-   * Remove the bearer context for a specific bearer ID.
-   * \param bearerId The bearer ID.
-   */
-  void RemoveBearer (uint8_t bearerId);
 
   /**
    * Add a TFT entry to the UE TFT classifier.
@@ -148,17 +150,24 @@ private:
   uint32_t Classify (Ptr<Packet> packet);
 
   /**
+   * Remove the bearer context for a specific bearer ID.
+   * \param bearerId The bearer ID.
+   */
+  void RemoveBearer (uint8_t bearerId);
+
+  /**
    * Register the UE information in global map for further usage.
    * \param ueInfo The UE information to save.
    */
   static void RegisterUeInfo (Ptr<UeInfo> ueInfo);
 
   // UE metadata.
+  Ipv4Address            m_addr;                 //!< UE IP address.
   uint64_t               m_imsi;                 //!< UE IMSI.
-  Ipv4Address            m_ueAddr;               //!< UE IP address.
-  Ptr<EnbInfo>           m_enbInfo;              //!< Serving eNB info
-  Ptr<SgwInfo>           m_sgwInfo;              //!< Serving S-GW info.
+  Ptr<EnbInfo>           m_enbInfo;              //!< Serving eNB info.
   Ptr<PgwInfo>           m_pgwInfo;              //!< Serving P-GW info.
+  Ptr<SgwInfo>           m_sgwInfo;              //!< Serving S-GW info.
+
 
   // Control-plane communication.
   Ptr<SliceController>   m_sliceCtrl;            //!< LTE logical slice ctrl.
@@ -176,7 +185,7 @@ private:
 
   /** Map saving UE IPv4 / UE information. */
   typedef std::map<Ipv4Address, Ptr<UeInfo> > Ipv4UeInfoMap_t;
-  static Ipv4UeInfoMap_t m_ueInfoByIpv4;    //!< Global UE info map by IPv4.
+  static Ipv4UeInfoMap_t m_ueInfoByAddr;    //!< Global UE info map by IPv4.
 };
 
 } // namespace ns3
