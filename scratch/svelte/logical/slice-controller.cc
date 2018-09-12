@@ -804,7 +804,7 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
   double tableUsage = m_pgwInfo->GetFlowTableUsage (rInfo->GetPgwTftIdx ());
   if (tableUsage >= m_tftBlockThs)
     {
-      rInfo->SetBlocked (true, RoutingInfo::TFTTABLEFULL);
+      rInfo->SetBlocked (true, RoutingInfo::TFTTABLE);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                    " because the TFT flow table is full.");
     }
@@ -820,7 +820,7 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
       && (m_tftBlockPolicy == OpMode::ON
           || (m_tftBlockPolicy == OpMode::AUTO && rInfo->IsGbr ())))
     {
-      rInfo->SetBlocked (true, RoutingInfo::TFTMAXLOAD);
+      rInfo->SetBlocked (true, RoutingInfo::TFTLOAD);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                    " because the TFT processing capacity is overloaded.");
     }

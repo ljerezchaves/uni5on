@@ -152,7 +152,7 @@ BackhaulController::BlockBearer (
 {
   NS_LOG_FUNCTION (this << rInfo << reason);
 
-  NS_ASSERT_MSG (reason != RoutingInfo::NOTBLOCKED, "Invalid block reason.");
+  NS_ASSERT_MSG (reason != RoutingInfo::NONE, "Invalid block reason.");
   rInfo->SetBlocked (true, reason);
 }
 

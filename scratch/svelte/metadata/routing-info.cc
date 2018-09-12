@@ -40,7 +40,7 @@ RoutingInfo::TeidRoutingMap_t RoutingInfo::m_routingInfoByTeid;
 RoutingInfo::RoutingInfo (uint32_t teid, BearerContext_t bearer,
                           Ptr<UeInfo> ueInfo, bool isDefault)
   : m_bearer (bearer),
-  m_blockReason (RoutingInfo::NOTBLOCKED),
+  m_blockReason (RoutingInfo::NONE),
   m_isActive (false),
   m_isAggregated (false),
   m_isBlocked (false),
@@ -482,13 +482,13 @@ RoutingInfo::BlockReasonStr (BlockReason reason)
 {
   switch (reason)
     {
-    case RoutingInfo::TFTTABLEFULL:
+    case RoutingInfo::TFTTABLE:
       return "TabFull";
-    case RoutingInfo::TFTMAXLOAD:
+    case RoutingInfo::TFTLOAD:
       return "MaxLoad";
-    case RoutingInfo::NOBANDWIDTH:
+    case RoutingInfo::LINKBAND:
       return "SliceFull";
-    case RoutingInfo::NOTBLOCKED:
+    case RoutingInfo::NONE:
     default:
       return "-";
     }
@@ -580,20 +580,6 @@ RoutingInfo::SetAggregated (bool value)
 }
 
 void
-RoutingInfo::SetBlocked (bool value, BlockReason reason)
-{
-  NS_LOG_FUNCTION (this << value << reason);
-
-  NS_ASSERT_MSG (IsDefault () == false || value == false,
-                 "Can't block the default bearer traffic.");
-  NS_ASSERT_MSG (value == false || reason != RoutingInfo::NOTBLOCKED,
-                 "Specify the reason why this bearer was blocked.");
-
-  m_isBlocked = value;
-  m_blockReason = reason;
-}
-
-void
 RoutingInfo::SetTunnelInstalled (bool value)
 {
   NS_LOG_FUNCTION (this << value);
@@ -656,6 +642,20 @@ RoutingInfo::IncreasePriority (void)
   NS_LOG_FUNCTION (this);
 
   m_priority++;
+}
+
+void
+RoutingInfo::SetBlocked (bool value, BlockReason reason)
+{
+  NS_LOG_FUNCTION (this << value << reason);
+
+  NS_ASSERT_MSG (IsDefault () == false || value == false,
+                 "Can't block the default bearer traffic.");
+  NS_ASSERT_MSG (value == false || reason != RoutingInfo::NONE,
+                 "Specify the reason why this bearer was blocked.");
+
+  m_isBlocked = value;
+  m_blockReason = reason;
 }
 
 void

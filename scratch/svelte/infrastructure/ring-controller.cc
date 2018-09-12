@@ -137,7 +137,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
 
   // Nothing more to do. Block the traffic.
   NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex ());
-  BlockBearer (rInfo, RoutingInfo::NOBANDWIDTH);
+  BlockBearer (rInfo, RoutingInfo::LINKBAND);
   return false;
 }
 

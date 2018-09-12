@@ -46,13 +46,13 @@ class RoutingInfo : public Object
   friend class SliceController;
 
 public:
-  /** Block reason. */ // FIXME Refinar
+  /** The reason for any blocked request. */
   enum BlockReason
   {
-    NOTBLOCKED   = 0,  //!< This bearer was not blocked.
-    TFTTABLEFULL = 1,  //!< P-GW TFT flow table is full.
-    TFTMAXLOAD   = 2,  //!< P-GW TFT pipeline load is maximum.
-    NOBANDWIDTH  = 3   //!< No backahul bandwidth available.
+    NONE      = 0,  //!< This bearer id not blocked.
+    TFTTABLE  = 1,  //!< P-GW TFT flow table is full.
+    TFTLOAD   = 2,  //!< P-GW TFT pipeline load is full.
+    LINKBAND  = 3   //!< No backahul bandwidth available.
   };
 
   /**
