@@ -116,10 +116,15 @@ private:
    *        the main switch that is connected to this P-GW switch (when
    *        invoking this function for the P-GW main switch, this parameter can
    *        be left to the default value as it does not make sense).
+   * \param tftToMainPortNo The port number assigned to the physical port on
+   *        this switch that is connected to the P-GW main switch (when
+   *        invoking this function for the P-GW main switch, this parameter can
+   *        be left to the default value as it does not make sense).
    */
   void SaveSwitchInfo (Ptr<OFSwitch13Device> device, Ipv4Address s5Addr,
                        uint32_t s5PortNo, uint32_t infraSwS5PortNo,
-                       uint32_t mainToTftPortNo = 0);
+                       uint32_t mainToTftPortNo = 0,
+                       uint32_t tftToMainPortNo = 0);
 
   /**
    * Register the P-GW information in global map for further usage.
@@ -144,6 +149,7 @@ private:
   std::vector<uint32_t>     m_infraSwS5PortNos;   //!< Back switch S5 port nos.
   std::vector<uint32_t>     m_mainToTftPortNos;   //!< Main port nos to TFTs.
   Ptr<SliceController>      m_sliceCtrl;          //!< LTE logical slice ctrl.
+  std::vector<uint32_t>     m_tftToMainPortNos;   //!< TFTs port nos to main.
 
   /** Map saving P-GW ID / P-GW information. */
   typedef std::map<uint64_t, Ptr<PgwInfo> > PgwIdPgwInfoMap_t;

@@ -449,7 +449,8 @@ SliceNetwork::CreatePgw (void)
       // Saving P-GW TFT metadata.
       m_pgwInfo->SaveSwitchInfo (
         pgwTftOfDev, pgwS5Addr, pgwS5Port->GetPortNo (),
-        infraSwS5Port->GetPortNo (), mainPort->GetPortNo ());
+        infraSwS5Port->GetPortNo (), mainPort->GetPortNo (),
+        tftPort->GetPortNo ());
     }
 
   // Notify the controller of the new P-GW entity.

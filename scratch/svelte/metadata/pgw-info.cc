@@ -305,7 +305,7 @@ PgwInfo::DoDispose ()
 void
 PgwInfo::SaveSwitchInfo (Ptr<OFSwitch13Device> device, Ipv4Address s5Addr,
                          uint32_t s5PortNo, uint32_t infraSwS5PortNo,
-                         uint32_t mainToTftPortNo)
+                         uint32_t mainToTftPortNo, uint32_t tftToMainPortNo)
 {
   NS_LOG_FUNCTION (this << device << s5Addr << s5PortNo << infraSwS5PortNo);
 
@@ -314,6 +314,7 @@ PgwInfo::SaveSwitchInfo (Ptr<OFSwitch13Device> device, Ipv4Address s5Addr,
   m_s5PortNos.push_back (s5PortNo);
   m_infraSwS5PortNos.push_back (infraSwS5PortNo);
   m_mainToTftPortNos.push_back (mainToTftPortNo);
+  m_tftToMainPortNos.push_back (tftToMainPortNo);
 
   // Check for valid P-GW MAIN switch at first index.
   if (m_devices.size () == 1)
