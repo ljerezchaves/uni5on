@@ -72,44 +72,67 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** \name Private member accessors. */
-  //\{
-  std::string     GetBlockReasonStr (void) const;
-  uint16_t        GetPgwTftIdx (void) const;
-  uint16_t        GetPriority (void) const;
-  uint32_t        GetTeid (void) const;
-  std::string     GetTeidHex (void) const;
-  uint16_t        GetTimeout (void) const;
-  Ptr<UeInfo>     GetUeInfo (void) const;
-  bool            IsActive (void) const;
-  bool            IsAggregated (void) const;
-  bool            IsBlocked (void) const;
-  bool            IsDefault (void) const;
-  bool            IsGbrReserved (void) const;
-  bool            IsTunnelInstalled (void) const;
-  //\}
-
   /**
-   * \name Private member accessors for bearer information.
+   * \name Private member accessors for bearer routing information.
+   * \return The requested information.
    */
   //\{
-  Ipv4Header::DscpType  GetDscp (void) const;
-  uint16_t              GetDscpValue (void) const;
-  std::string           GetDscpStr (void) const;
-  EpsBearer             GetEpsBearer (void) const;
-  EpsBearer::Qci        GetQciInfo (void) const;
-  GbrQosInformation     GetQosInfo (void) const;
-  Ptr<EpcTft>           GetTft (void) const;
-  bool                  HasDlTraffic (void) const;
-  bool                  HasUlTraffic (void) const;
-  bool                  IsGbr (void) const;
-  uint64_t              GetGbrDlBitRate (void) const;
-  uint64_t              GetGbrUlBitRate (void) const;
+  std::string GetBlockReasonStr (void) const;
+  uint16_t    GetPgwTftIdx      (void) const;
+  uint16_t    GetPriority       (void) const;
+  SliceId     GetSliceId        (void) const;
+  std::string GetSliceIdStr     (void) const;
+  uint32_t    GetTeid           (void) const;
+  std::string GetTeidHex        (void) const;
+  uint16_t    GetTimeout        (void) const;
+  Ptr<UeInfo> GetUeInfo         (void) const;
+  bool        IsActive          (void) const;
+  bool        IsAggregated      (void) const;
+  bool        IsBlocked         (void) const;
+  bool        IsDefault         (void) const;
+  bool        IsTunnelInstalled (void) const;
   //\}
 
   /**
-   * \name Private member accessors for GBR maximum bit rate information.
-   *       These methods are used for managing meter entries at S/P-GW.
+   * \name Private member accessors for traffic information.
+   * \return The requested information.
+   */
+  //\{
+  Ipv4Header::DscpType  GetDscp       (void) const;
+  std::string           GetDscpStr    (void) const;
+  uint16_t              GetDscpValue  (void) const;
+  bool                  HasDlTraffic  (void) const;
+  bool                  HasUlTraffic  (void) const;
+  //\}
+
+  /**
+   * \name Private member accessors for bearer context information.
+   * \return The requested information.
+   */
+  //\{
+  EpsBearer             GetEpsBearer  (void) const;
+  EpsBearer::Qci        GetQciInfo    (void) const;
+  GbrQosInformation     GetQosInfo    (void) const;
+  Ptr<EpcTft>           GetTft        (void) const;
+  //\}
+
+  /**
+   * \name Private member accessors for bearer guaranteed bit rate information.
+   *       These methods are used for reserving resources at backhaul network.
+   * \return The requested information.
+   */
+  //\{
+  uint64_t    GetGbrDlBitRate   (void) const;
+  uint64_t    GetGbrUlBitRate   (void) const;
+  bool        HasGbrDl          (void) const;
+  bool        HasGbrUl          (void) const;
+  bool        IsGbr             (void) const;
+  bool        IsGbrReserved     (void) const;
+  //\}
+
+  /**
+   * \name Private member accessors for bearer maximum bit rate information.
+   *       These methods are used for installing meter entries at S/P-GW.
    * \return The requested information.
    */
   //\{
@@ -125,24 +148,46 @@ public:
   //\}
 
   /**
-   * \name Private member accessors for UE and routing information.
+   * \name Private member accessors for UE information.
+   * \return The requested information.
    */
   //\{
-  uint64_t    GetImsi (void) const;
-  uint16_t    GetCellId (void) const;
-  SliceId     GetSliceId (void) const;
-  std::string GetSliceIdStr (void) const;
-  Ipv4Address GetEnbS1uAddr (void) const;
-  Ipv4Address GetPgwS5Addr (void) const;
-  Ipv4Address GetSgwS1uAddr (void) const;
-  Ipv4Address GetSgwS5Addr (void) const;
-  Ipv4Address GetUeAddr (void) const;
-  uint64_t    GetSgwDpId (void) const;
-  uint32_t    GetSgwS1uPortNo (void) const;
-  uint32_t    GetSgwS5PortNo (void) const;
-  uint16_t    GetEnbInfraSwIdx (void) const;
-  uint16_t    GetPgwInfraSwIdx (void) const;
-  uint16_t    GetSgwInfraSwIdx (void) const;
+  Ipv4Address GetUeAddr         (void) const;
+  uint64_t    GetUeImsi         (void) const;
+  //\}
+
+  /**
+   * \name Private member accessors for eNB information.
+   * \return The requested information.
+   */
+  //\{
+  uint16_t    GetEnbCellId      (void) const;
+  uint16_t    GetEnbInfraSwIdx  (void) const;
+  Ipv4Address GetEnbS1uAddr     (void) const;
+  //\}
+
+  /**
+   * \name Private member accessors for P-GW information.
+   * \return The requested information.
+   */
+  //\{
+  uint64_t    GetPgwId          (void) const;
+  uint16_t    GetPgwInfraSwIdx  (void) const;
+  Ipv4Address GetPgwS5Addr      (void) const;
+  //\}
+
+  /**
+   * \name Private member accessors for S-GW information.
+   * \return The requested information.
+   */
+  //\{
+  uint64_t    GetSgwDpId        (void) const;
+  uint64_t    GetSgwId          (void) const;
+  uint16_t    GetSgwInfraSwIdx  (void) const;
+  Ipv4Address GetSgwS1uAddr     (void) const;
+  uint32_t    GetSgwS1uPortNo   (void) const;
+  Ipv4Address GetSgwS5Addr      (void) const;
+  uint32_t    GetSgwS5PortNo    (void) const;
   //\}
 
   /**
@@ -200,7 +245,10 @@ protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
 
-  /** \name Private member accessors. */
+  /**
+   * \name Private member accessors for updating internal metadata.
+   * \param value The value to set.
+   */
   //\{
   void SetActive          (bool value);
   void SetAggregated      (bool value);
@@ -255,6 +303,7 @@ private:
   bool                 m_isTunnelInst; //!< True for GTP tunnel installed.
   uint16_t             m_pgwTftIdx;    //!< P-GW TFT switch index.
   uint16_t             m_priority;     //!< Flow table rule priority.
+  SliceId              m_sliceId;      //!< Slice ID for this bearer.
   uint32_t             m_teid;         //!< GTP TEID.
   uint16_t             m_timeout;      //!< Flow table idle timeout.
   Ptr<UeInfo>          m_ueInfo;       //!< UE metadata pointer.

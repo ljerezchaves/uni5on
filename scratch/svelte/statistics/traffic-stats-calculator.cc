@@ -377,7 +377,7 @@ TrafficStatsCalculator::GetStats (
       << setw (8)  << Simulator::Now ().GetSeconds ()
       << setw (9)  << app->GetAppName ()
       << setw (12) << rInfo->GetTeidHex ()
-      << setw (6)  << rInfo->GetImsi ()
+      << setw (6)  << rInfo->GetUeImsi ()
       << setw (7)  << rInfo->GetSliceIdStr ()
       << setw (5)  << rInfo->GetQciInfo ()
       << setw (7)  << rInfo->IsGbr ()

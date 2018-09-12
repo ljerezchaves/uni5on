@@ -51,6 +51,7 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerContext_t bearer,
   m_isTunnelInst (false),
   m_pgwTftIdx (0),
   m_priority (0),
+  m_sliceId (ueInfo->GetSliceId ()),
   m_teid (teid),
   m_timeout (0),
   m_ueInfo (ueInfo)
@@ -77,6 +78,46 @@ RoutingInfo::GetTypeId (void)
   return tid;
 }
 
+std::string
+RoutingInfo::GetBlockReasonStr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return BlockReasonStr (m_blockReason);
+}
+
+uint16_t
+RoutingInfo::GetPgwTftIdx (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwTftIdx;
+}
+
+uint16_t
+RoutingInfo::GetPriority (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_priority;
+}
+
+SliceId
+RoutingInfo::GetSliceId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sliceId;
+}
+
+std::string
+RoutingInfo::GetSliceIdStr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return SliceIdStr (m_sliceId);
+}
+
 uint32_t
 RoutingInfo::GetTeid (void) const
 {
@@ -93,12 +134,20 @@ RoutingInfo::GetTeidHex (void) const
   return GetUint32Hex (m_teid);
 }
 
-std::string
-RoutingInfo::GetBlockReasonStr (void) const
+uint16_t
+RoutingInfo::GetTimeout (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return BlockReasonStr (m_blockReason);
+  return m_timeout;
+}
+
+Ptr<UeInfo>
+RoutingInfo::GetUeInfo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo;
 }
 
 bool
@@ -141,68 +190,20 @@ RoutingInfo::IsTunnelInstalled (void) const
   return m_isTunnelInst;
 }
 
-bool
-RoutingInfo::IsGbrReserved (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_isGbrRes;
-}
-
-bool
-RoutingInfo::IsMbrDlInstalled (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_isMbrDlInst;
-}
-
-bool
-RoutingInfo::IsMbrUlInstalled (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_isMbrUlInst;
-}
-
-uint16_t
-RoutingInfo::GetPgwTftIdx (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_pgwTftIdx;
-}
-
-uint16_t
-RoutingInfo::GetPriority (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_priority;
-}
-
-uint16_t
-RoutingInfo::GetTimeout (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_timeout;
-}
-
-Ptr<UeInfo>
-RoutingInfo::GetUeInfo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ueInfo;
-}
-
 Ipv4Header::DscpType
 RoutingInfo::GetDscp (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return Qci2Dscp (GetQciInfo ());
+}
+
+std::string
+RoutingInfo::GetDscpStr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return DscpTypeStr (GetDscp ());
 }
 
 uint16_t
@@ -213,12 +214,20 @@ RoutingInfo::GetDscpValue (void) const
   return static_cast<uint16_t> (GetDscp ());
 }
 
-std::string
-RoutingInfo::GetDscpStr (void) const
+bool
+RoutingInfo::HasDlTraffic (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return DscpTypeStr (GetDscp ());
+  return GetTft ()->HasDownlinkFilter ();
+}
+
+bool
+RoutingInfo::HasUlTraffic (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return GetTft ()->HasUplinkFilter ();
 }
 
 EpsBearer
@@ -234,7 +243,7 @@ RoutingInfo::GetQciInfo (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_bearer.bearerLevelQos.qci;
+  return GetEpsBearer ().qci;
 }
 
 GbrQosInformation
@@ -242,7 +251,7 @@ RoutingInfo::GetQosInfo (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_bearer.bearerLevelQos.gbrQosInfo;
+  return GetEpsBearer ().gbrQosInfo;
 }
 
 Ptr<EpcTft>
@@ -251,30 +260,6 @@ RoutingInfo::GetTft (void) const
   NS_LOG_FUNCTION (this);
 
   return m_bearer.tft;
-}
-
-bool
-RoutingInfo::HasDlTraffic (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_bearer.tft->HasDownlinkFilter ();
-}
-
-bool
-RoutingInfo::HasUlTraffic (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_bearer.tft->HasUplinkFilter ();
-}
-
-bool
-RoutingInfo::IsGbr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return (!m_isDefault && m_bearer.bearerLevelQos.IsGbr ());
 }
 
 uint64_t
@@ -293,20 +278,46 @@ RoutingInfo::GetGbrUlBitRate (void) const
   return GetQosInfo ().gbrUl;
 }
 
-uint64_t
-RoutingInfo::GetMbrDlBitRate (void) const
+bool
+RoutingInfo::HasGbrDl (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetQosInfo ().mbrDl;
+  return GetGbrDlBitRate ();
 }
 
-uint64_t
-RoutingInfo::GetMbrUlBitRate (void) const
+bool
+RoutingInfo::HasGbrUl (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetQosInfo ().mbrUl;
+  return GetGbrUlBitRate ();
+}
+
+bool
+RoutingInfo::IsGbr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return (!IsDefault () && GetEpsBearer ().IsGbr ());
+}
+
+bool
+RoutingInfo::IsGbrReserved (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_isGbrRes;
+}
+
+std::string
+RoutingInfo::GetMbrDelCmd (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  std::ostringstream meter;
+  meter << "meter-mod cmd=del,meter=" << m_teid;
+  return meter.str ();
 }
 
 std::string
@@ -331,14 +342,20 @@ RoutingInfo::GetMbrUlAddCmd (void) const
   return meter.str ();
 }
 
-std::string
-RoutingInfo::GetMbrDelCmd (void) const
+uint64_t
+RoutingInfo::GetMbrDlBitRate (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  std::ostringstream meter;
-  meter << "meter-mod cmd=del,meter=" << m_teid;
-  return meter.str ();
+  return GetQosInfo ().mbrDl;
+}
+
+uint64_t
+RoutingInfo::GetMbrUlBitRate (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return GetQosInfo ().mbrUl;
 }
 
 bool
@@ -357,68 +374,20 @@ RoutingInfo::HasMbrUl (void) const
   return GetMbrUlBitRate ();
 }
 
-uint64_t
-RoutingInfo::GetImsi (void) const
+bool
+RoutingInfo::IsMbrDlInstalled (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_ueInfo->GetImsi ();
+  return m_isMbrDlInst;
 }
 
-uint16_t
-RoutingInfo::GetCellId (void) const
+bool
+RoutingInfo::IsMbrUlInstalled (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_ueInfo->GetCellId ();
-}
-
-SliceId
-RoutingInfo::GetSliceId (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ueInfo->GetSliceId ();
-}
-
-std::string
-RoutingInfo::GetSliceIdStr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return SliceIdStr (m_ueInfo->GetSliceId ());
-}
-
-Ipv4Address
-RoutingInfo::GetEnbS1uAddr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ueInfo->GetEnbInfo ()->GetS1uAddr ();
-}
-
-Ipv4Address
-RoutingInfo::GetPgwS5Addr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ueInfo->GetPgwInfo ()->GetMainS5Addr ();
-}
-
-Ipv4Address
-RoutingInfo::GetSgwS1uAddr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ueInfo->GetSgwInfo ()->GetS1uAddr ();
-}
-
-Ipv4Address
-RoutingInfo::GetSgwS5Addr (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ueInfo->GetSgwInfo ()->GetS5Addr ();
+  return m_isMbrUlInst;
 }
 
 Ipv4Address
@@ -430,27 +399,19 @@ RoutingInfo::GetUeAddr (void) const
 }
 
 uint64_t
-RoutingInfo::GetSgwDpId (void) const
+RoutingInfo::GetUeImsi (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_ueInfo->GetSgwInfo ()->GetDpId ();
+  return m_ueInfo->GetImsi ();
 }
 
-uint32_t
-RoutingInfo::GetSgwS1uPortNo (void) const
+uint16_t
+RoutingInfo::GetEnbCellId (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_ueInfo->GetSgwInfo ()->GetS1uPortNo ();
-}
-
-uint32_t
-RoutingInfo::GetSgwS5PortNo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_ueInfo->GetSgwInfo ()->GetS5PortNo ();
+  return m_ueInfo->GetEnbInfo ()->GetCellId ();
 }
 
 uint16_t
@@ -461,6 +422,22 @@ RoutingInfo::GetEnbInfraSwIdx (void) const
   return m_ueInfo->GetEnbInfo ()->GetInfraSwIdx ();
 }
 
+Ipv4Address
+RoutingInfo::GetEnbS1uAddr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetEnbInfo ()->GetS1uAddr ();
+}
+
+uint64_t
+RoutingInfo::GetPgwId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetPgwInfo ()->GetPgwId ();
+}
+
 uint16_t
 RoutingInfo::GetPgwInfraSwIdx (void) const
 {
@@ -469,12 +446,68 @@ RoutingInfo::GetPgwInfraSwIdx (void) const
   return m_ueInfo->GetPgwInfo ()->GetInfraSwIdx ();
 }
 
+Ipv4Address
+RoutingInfo::GetPgwS5Addr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetPgwInfo ()->GetMainS5Addr ();
+}
+
+uint64_t
+RoutingInfo::GetSgwDpId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetSgwInfo ()->GetDpId ();
+}
+
+uint64_t
+RoutingInfo::GetSgwId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetSgwInfo ()->GetSgwId ();
+}
+
 uint16_t
 RoutingInfo::GetSgwInfraSwIdx (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_ueInfo->GetSgwInfo ()->GetInfraSwIdx ();
+}
+
+Ipv4Address
+RoutingInfo::GetSgwS1uAddr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetSgwInfo ()->GetS1uAddr ();
+}
+
+uint32_t
+RoutingInfo::GetSgwS1uPortNo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetSgwInfo ()->GetS1uPortNo ();
+}
+
+Ipv4Address
+RoutingInfo::GetSgwS5Addr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetSgwInfo ()->GetS5Addr ();
+}
+
+uint32_t
+RoutingInfo::GetSgwS5PortNo (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_ueInfo->GetSgwInfo ()->GetS5PortNo ();
 }
 
 std::string
@@ -580,11 +613,11 @@ RoutingInfo::SetAggregated (bool value)
 }
 
 void
-RoutingInfo::SetTunnelInstalled (bool value)
+RoutingInfo::SetGbrReserved (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_isTunnelInst = value;
+  m_isGbrRes = value;
 }
 
 void
@@ -621,19 +654,19 @@ RoutingInfo::SetPriority (uint16_t value)
 }
 
 void
-RoutingInfo::SetGbrReserved (bool value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_isGbrRes = value;
-}
-
-void
 RoutingInfo::SetTimeout (uint16_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
   m_timeout = value;
+}
+
+void
+RoutingInfo::SetTunnelInstalled (bool value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_isTunnelInst = value;
 }
 
 void
@@ -673,11 +706,11 @@ RoutingInfo::GetInstalledList (RoutingInfoList_t &returnList, SliceId slice,
         {
           continue;
         }
-      if (pgwTftIdx != 0 && rInfo->GetPgwTftIdx () != pgwTftIdx)
+      if (slice != SliceId::ALL && rInfo->GetSliceId () != slice)
         {
           continue;
         }
-      if (slice != SliceId::ALL && rInfo->GetSliceId () != slice)
+      if (pgwTftIdx != 0 && rInfo->GetPgwTftIdx () != pgwTftIdx)
         {
           continue;
         }
