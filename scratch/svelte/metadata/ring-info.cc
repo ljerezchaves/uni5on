@@ -27,6 +27,7 @@ NS_LOG_COMPONENT_DEFINE ("RingInfo");
 NS_OBJECT_ENSURE_REGISTERED (RingInfo);
 
 RingInfo::RingInfo (Ptr<RoutingInfo> rInfo)
+  : m_rInfo (rInfo)
 {
   NS_LOG_FUNCTION (this);
 
@@ -34,7 +35,6 @@ RingInfo::RingInfo (Ptr<RoutingInfo> rInfo)
                  || (LteIface::S5 == 0 && LteIface::S1U == 1),
                  "Incompatible LteIface enum values.");
 
-  m_rInfo = rInfo;
   AggregateObject (rInfo);
   SetDefaultPath (RingInfo::LOCAL, LteIface::S1U);
   SetDefaultPath (RingInfo::LOCAL, LteIface::S5);
@@ -54,14 +54,6 @@ RingInfo::GetTypeId (void)
   return tid;
 }
 
-Ptr<RoutingInfo>
-RingInfo::GetRoutingInfo (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_rInfo;
-}
-
 RingInfo::RingPath
 RingInfo::GetDlPath (LteIface iface) const
 {
@@ -71,6 +63,26 @@ RingInfo::GetDlPath (LteIface iface) const
                  "Invalid LTE interface. Expected S1-U or S5 interface.");
 
   return m_downPath [iface];
+}
+
+std::string
+RingInfo::GetPathStr (LteIface iface) const
+{
+  NS_LOG_FUNCTION (this << iface);
+
+  bool blocked = m_rInfo->IsBlocked ();
+  if (blocked)
+    {
+      return "-";
+    }
+  else if (IsDefaultPath (iface))
+    {
+      return "Shortest";
+    }
+  else
+    {
+      return "Inverted";
+    }
 }
 
 RingInfo::RingPath
@@ -106,32 +118,12 @@ RingInfo::IsLocalPath (LteIface iface) const
   return m_isLocalPath [iface];
 }
 
-bool
-RingInfo::IsLocalPath (void) const
+Ptr<RoutingInfo>
+RingInfo::GetRoutingInfo (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return (IsLocalPath (LteIface::S1U) && IsLocalPath (LteIface::S5));
-}
-
-std::string
-RingInfo::GetPathStr (LteIface iface) const
-{
-  NS_LOG_FUNCTION (this << iface);
-
-  bool blocked = m_rInfo->IsBlocked ();
-  if (blocked)
-    {
-      return "-";
-    }
-  else if (IsDefaultPath (iface))
-    {
-      return "Shortest";
-    }
-  else
-    {
-      return "Inverted";
-    }
+  return m_rInfo;
 }
 
 RingInfo::RingPath

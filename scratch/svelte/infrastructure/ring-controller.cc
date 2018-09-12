@@ -104,7 +104,8 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   // that only transverse local switch (local routing for both S1-U and S5
   // interfaces): let's accept it without guarantees. Note that in current
   // implementation, these bearers are always routed over the shortest path.
-  if (!rInfo->IsGbr () || ringInfo->IsLocalPath ())
+  if (!rInfo->IsGbr () || (ringInfo->IsLocalPath (LteIface::S1U)
+                           && ringInfo->IsLocalPath (LteIface::S5)))
     {
       return true;
     }

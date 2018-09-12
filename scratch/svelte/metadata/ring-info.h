@@ -60,16 +60,24 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  /** \name Private member accessors. */
+  /**
+   * \name Private member accessors for bearer ring routing information.
+   * \param iface The LTE logical interface.
+   * \return The requested information.
+   */
   //\{
-  Ptr<RoutingInfo> GetRoutingInfo (void) const;
-  RingPath GetDlPath (LteIface iface) const;
-  RingPath GetUlPath (LteIface iface) const;
-  bool IsDefaultPath (LteIface iface) const;
-  bool IsLocalPath (LteIface iface) const;
-  bool IsLocalPath (void) const;
-  std::string GetPathStr (LteIface iface) const;
+  RingPath      GetDlPath     (LteIface iface) const;
+  std::string   GetPathStr    (LteIface iface) const;
+  RingPath      GetUlPath     (LteIface iface) const;
+  bool          IsDefaultPath (LteIface iface) const;
+  bool          IsLocalPath   (LteIface iface) const;
   //\}
+
+  /**
+   * Get the bearer routing information aggregated to this object.
+   * \return The routing information.
+   */
+  Ptr<RoutingInfo> GetRoutingInfo (void) const;
 
   /**
    * Invert the given routing path.
@@ -125,10 +133,10 @@ private:
    */
   void ResetToDefaults ();
 
-  Ptr<RoutingInfo> m_rInfo;              //!< Routing metadata.
   RingPath         m_downPath [2];       //!< Downlink routing path.
   bool             m_isDefaultPath [2];  //!< True for default path.
   bool             m_isLocalPath [2];    //!< True for local path.
+  Ptr<RoutingInfo> m_rInfo;              //!< Routing metadata.
 };
 
 } // namespace ns3
