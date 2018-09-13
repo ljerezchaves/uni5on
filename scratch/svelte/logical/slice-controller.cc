@@ -175,10 +175,10 @@ SliceController::DedicatedBearerRequest (
   bool success = true;
   success &= PgwBearerRequest (rInfo);
   success &= m_backhaulCtrl->BearerRequest (rInfo);
-  m_bearerRequestTrace (rInfo);
   if (!success)
     {
       NS_LOG_INFO ("Bearer request blocked by controller.");
+      m_bearerRequestTrace (rInfo);
       return false;
     }
 
@@ -190,7 +190,9 @@ SliceController::DedicatedBearerRequest (
 
   // Activate and install the bearer.
   rInfo->SetActive (true);
-  return BearerInstall (rInfo);
+  bool installed = BearerInstall (rInfo);
+  m_bearerRequestTrace (rInfo);
+  return installed;
 }
 
 bool
@@ -608,11 +610,11 @@ SliceController::DoCreateSessionRequest (
           success &= PgwBearerRequest (rInfo);
           success &= m_backhaulCtrl->BearerRequest (rInfo);
           NS_ASSERT_MSG (success, "Default bearer must be accepted.");
-          m_bearerRequestTrace (rInfo);
 
           // Activate and install the bearer.
           rInfo->SetActive (true);
           bool installed = BearerInstall (rInfo);
+          m_bearerRequestTrace (rInfo);
           NS_ASSERT_MSG (installed, "Default bearer must be installed.");
         }
       else
