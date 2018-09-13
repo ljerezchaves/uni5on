@@ -564,25 +564,27 @@ RoutingInfo::PrintHeader (void)
 
   std::ostringstream str;
   str << setw (12) << "TEID"
-
-      << setw (7)  << "Defau"
-      << setw (7)  << "Activ"
-      << setw (7)  << "Insta"
-      << setw (7)  << "Aggre"
-      << setw (7)  << "Block"
-      << setw (10) << "Reason"
-
+      << setw (7)  << "Slice"
+      << setw (7)  << "IsDft"
+      << setw (7)  << "IsAct"
+      << setw (7)  << "IsIns"
+      << setw (7)  << "IsAgg"
+      << setw (7)  << "IsBlk"
+      << setw (10) << "BlkReas"
       << setw (5)  << "QCI"
       << setw (7)  << "IsGbr"
       << setw (6)  << "Dscp"
-
-      << setw (7)  << "DlTff"
-      << setw (9)  << "DlReq"
-      << setw (7)  << "UlTff"
-      << setw (9)  << "UlReq"
-
+      << setw (7)  << "Dlink"
+      << setw (9)  << "DlGbr"
+      << setw (9)  << "DlMbr"
+      << setw (7)  << "Ulink"
+      << setw (9)  << "UlGbr"
+      << setw (9)  << "UlMbr"
+      << setw (7)  << "GbrRes"
+      << setw (7)  << "DMbIns"
+      << setw (7)  << "UMbIns"
       << setw (5)  << "TFT"
-      << setw (7)  << "Prio"
+      << setw (8)  << "Prio"
       << setw (5)  << "Tmo";
   return str.str ();
 }
@@ -731,26 +733,31 @@ RoutingInfo::RegisterRoutingInfo (Ptr<RoutingInfo> rInfo)
 
 std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
 {
-  os << setw (12) << rInfo.GetTeidHex ()
+  char prioStr [10];
+  sprintf (prioStr, "0x%x", rInfo.GetPriority ());
 
+  os << setw (12) << rInfo.GetTeidHex ()
+     << setw (7)  << rInfo.GetSliceIdStr ()
      << setw (7)  << rInfo.IsDefault ()
      << setw (7)  << rInfo.IsActive ()
      << setw (7)  << rInfo.IsTunnelInstalled ()
      << setw (7)  << rInfo.IsAggregated ()
      << setw (7)  << rInfo.IsBlocked ()
      << setw (10) << rInfo.GetBlockReasonStr ()
-
      << setw (5)  << rInfo.GetQciInfo ()
      << setw (7)  << rInfo.IsGbr ()
      << setw (6)  << rInfo.GetDscpStr ()
-
      << setw (7)  << rInfo.HasDlTraffic ()
      << setw (9)  << rInfo.GetGbrDlBitRate ()
+     << setw (9)  << rInfo.GetMbrDlBitRate ()
      << setw (7)  << rInfo.HasUlTraffic ()
      << setw (9)  << rInfo.GetGbrUlBitRate ()
-
+     << setw (9)  << rInfo.GetMbrUlBitRate ()
+     << setw (7)  << rInfo.IsGbrReserved ()
+     << setw (7)  << rInfo.IsMbrDlInstalled ()
+     << setw (7)  << rInfo.IsMbrUlInstalled ()
      << setw (5)  << rInfo.GetPgwTftIdx ()
-     << setw (7)  << rInfo.GetPriority ()
+     << setw (8)  << prioStr
      << setw (5)  << rInfo.GetTimeout ();
   return os;
 }
