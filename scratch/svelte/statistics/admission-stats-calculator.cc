@@ -120,15 +120,6 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
         }
     }
 
-  // Preparing bearer request stats for trace source.
-  // double dwBitRate = 0.0, upBitRate = 0.0;
-  // if (rInfo->HasGbrInfo ())
-  //   {
-  //     Ptr<const GbrInfo> gbrInfo = rInfo->GetGbrInfo ();
-  //     dwBitRate = static_cast<double> (gbrInfo->GetDownBitRate ()) / 1000;
-  //     upBitRate = static_cast<double> (gbrInfo->GetUpBitRate ()) / 1000;
-  //   }
-
   // Save request stats into output file.
   *m_brqWrapper->GetStream ()
     << setprecision (3)
@@ -139,30 +130,7 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
     << *(rInfo->GetUeInfo ()->GetEnbInfo ())
     << *(rInfo->GetUeInfo ()->GetSgwInfo ())
     << *(rInfo->GetUeInfo ()->GetPgwInfo ())
-    // FIXME
-//     << setw (12) << rInfo->GetTeidHex ()
-//     << setw (5)  << rInfo->GetQciInfo ()
-//     << setw (7)  << rInfo->IsGbr ()
-//     << setw (7)  << rInfo->IsMtc ()
-//     << setw (7)  << rInfo->IsDefault ()
-//     << setw (6)  << rInfo->GetImsi ()
-//     << setw (5)  << rInfo->GetCellId ()
-//     << setw (7)  << ringInfo->GetSgwSwDpId ()
-//     << setw (7)  << ringInfo->GetPgwSwDpId ()
-//     << setw (7)  << rInfo->GetPgwTftIdx ()
-//     << setw (7)  << rInfo->GetSliceStr ()
-//     << setw (9)  << dwBitRate
-//     << setw (9)  << upBitRate
-//     << setw (7)  << rInfo->IsBlocked ()
-//     << setw (10) << rInfo->GetBlockReasonStr ()
-//     << setw (10) << ringInfo->GetPathStr ()
-//     << setw (7)  << aggInfo->GetSliceUsage ()
-//     << setw (7)  << aggInfo->GetThreshold ()
-//     << setw (7)  << aggInfo->GetOperationModeStr ()
-//     << setw (7)  << rInfo->IsAggregated ()
-//     << setw (7)  << m_activeBearers
-//     << setw (7)  << m_instalBearers
-//     << setw (7)  << m_aggregBearers
+    << *ringInfo
     << std::endl;
 }
 
@@ -245,30 +213,7 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
     << EnbInfo::PrintHeader ()
     << SgwInfo::PrintHeader ()
     << PgwInfo::PrintHeader ()
-    // FIXME
-    // << setw (12) << "TEID"
-    // << setw (5)  << "QCI"
-    // << setw (7)  << "IsGBR"
-    // << setw (7)  << "IsMTC"
-    // << setw (7)  << "IsDft"
-    // << setw (6)  << "IMSI"
-    // << setw (5)  << "CGI"
-    // << setw (7)  << "SGWsw"
-    // << setw (7)  << "PGWsw"
-    // << setw (7)  << "TFTsw"
-    // << setw (7)  << "Slice"
-    // << setw (9)  << "DwReq"
-    // << setw (9)  << "UpReq"
-    // << setw (7)  << "Block"
-    // << setw (10) << "Reason"
-    // << setw (10) << "RingPath"
-    // << setw (7)  << "SlUse"
-    // << setw (7)  << "AggTh"
-    // << setw (7)  << "OpMod"
-    // << setw (7)  << "IsAgg"
-    // << setw (7)  << "#Actv"
-    // << setw (7)  << "#Inst"
-    // << setw (7)  << "#Aggr"
+    << RingInfo::PrintHeader ()
     << std::endl;
 
   TimeValue timeValue;
