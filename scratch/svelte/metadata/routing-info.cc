@@ -736,6 +736,7 @@ std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
   char prioStr [10];
   sprintf (prioStr, "0x%x", rInfo.GetPriority ());
 
+  // FIXME Imprimir em kbps?
   os << setw (12) << rInfo.GetTeidHex ()
      << setw (7)  << rInfo.GetSliceIdStr ()
      << setw (7)  << rInfo.IsDefault ()
