@@ -109,14 +109,14 @@ RingInfo::GetPathStr (void) const
 
   if (m_rInfo->IsBlocked ())
     {
-      return "*";
+      return "-";
     }
 
   std::ostringstream str;
-  str << (IsDefaultPath (LteIface::S1U) ? "s1:dft-" : "s1:inv-")
+  str << (IsDefaultPath (LteIface::S1U) ? "s1:dft+" : "s1:inv+")
       << RingPathShortStr (GetDlPath (LteIface::S1U))
       << "|"
-      << (IsDefaultPath (LteIface::S5) ? "s5:dft-" : "s5:inv-")
+      << (IsDefaultPath (LteIface::S5) ? "s5:dft+" : "s5:inv+")
       << RingPathShortStr (GetDlPath (LteIface::S5));
   return str.str ();
 }
