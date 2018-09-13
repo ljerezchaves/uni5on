@@ -69,26 +69,6 @@ RingInfo::GetDlPath (LteIface iface) const
   return m_downPath [iface];
 }
 
-std::string
-RingInfo::GetPathStr (LteIface iface) const
-{
-  NS_LOG_FUNCTION (this << iface);
-
-  bool blocked = m_rInfo->IsBlocked ();
-  if (blocked)
-    {
-      return "-";
-    }
-  else if (IsDefaultPath (iface))
-    {
-      return "Shortest";
-    }
-  else
-    {
-      return "Inverted";
-    }
-}
-
 RingInfo::RingPath
 RingInfo::GetUlPath (LteIface iface) const
 {
@@ -120,6 +100,25 @@ RingInfo::IsLocalPath (LteIface iface) const
                  "Invalid LTE interface. Expected S1-U or S5 interface.");
 
   return m_isLocalPath [iface];
+}
+
+std::string
+RingInfo::GetPathStr (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  if (m_rInfo->IsBlocked ())
+    {
+      return "*";
+    }
+
+  std::ostringstream str;
+  str << (IsDefaultPath (LteIface::S1U) ? "s1:dft-" : "s1:inv-")
+      << RingPathShortStr (GetDlPath (LteIface::S1U))
+      << "|"
+      << (IsDefaultPath (LteIface::S5) ? "s5:dft-" : "s5:inv-")
+      << RingPathShortStr (GetDlPath (LteIface::S5));
+  return str.str ();
 }
 
 Ptr<RoutingInfo>
@@ -158,6 +157,22 @@ RingInfo::RingPathToLinkDir (RingPath path)
 }
 
 std::string
+RingInfo::RingPathShortStr (RingPath path)
+{
+  switch (path)
+    {
+    case RingInfo::LOCAL:
+      return "loc";
+    case RingInfo::CLOCK:
+      return "clk";
+    case RingInfo::COUNTER:
+      return "cnt";
+    default:
+      return "-";
+    }
+}
+
+std::string
 RingInfo::RingPathStr (RingPath path)
 {
   switch (path)
@@ -179,7 +194,7 @@ RingInfo::PrintHeader (void)
   NS_LOG_FUNCTION_NOARGS ();
 
   std::ostringstream str;
-  // TODO
+  str << setw (23) << "RingPathDesc";
   return str.str ();
 }
 
@@ -242,7 +257,7 @@ RingInfo::ResetToDefaults ()
 
 std::ostream & operator << (std::ostream &os, const RingInfo &ringInfo)
 {
-  // TODO
+  os << setw (23) << ringInfo.GetPathStr ();
   return os;
 }
 

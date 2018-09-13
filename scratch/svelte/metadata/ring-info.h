@@ -67,11 +67,16 @@ public:
    */
   //\{
   RingPath      GetDlPath     (LteIface iface) const;
-  std::string   GetPathStr    (LteIface iface) const;
   RingPath      GetUlPath     (LteIface iface) const;
   bool          IsDefaultPath (LteIface iface) const;
   bool          IsLocalPath   (LteIface iface) const;
   //\}
+
+  /**
+   * Summarize the ring routing path into a single string.
+   * \return The ring routing path.
+   */
+  std::string GetPathStr (void) const;
 
   /**
    * Get the bearer routing information aggregated to this object.
@@ -101,6 +106,13 @@ public:
    * \attention This works only for links created in clockwise direction.
    */
   static LinkInfo::Direction RingPathToLinkDir (RingPath path);
+
+  /**
+   * Get the short string representing the routing path.
+   * \param path The routing path.
+   * \return The short routing path string.
+   */
+  static std::string RingPathShortStr (RingPath path);
 
   /**
    * Get the string representing the routing path.
