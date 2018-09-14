@@ -347,21 +347,9 @@ TrafficStatsCalculator::GetHeader (void)
   str << right
       << setw (8)  << "Time(s)"
       << setw (9)  << "AppName"
-      << setw (12) << "TEID"
-      << setw (6)  << "IMSI"
-      << setw (7)  << "Slice"
-      << setw (5)  << "QCI"
-      << setw (7)  << "IsGBR"
-      << setw (7)  << "IsAgg"
+      << RoutingInfo::PrintHeader ()
       << setw (7)  << "Ul/Dl"
-      << setw (11) << "Active(s)"
-      << setw (11) << "Delay(ms)"
-      << setw (12) << "Jitter(ms)"
-      << setw (8)  << "TxPkts"
-      << setw (8)  << "RxPkts"
-      << setw (9)  << "Loss(%)"
-      << setw (10) << "RxBytes"
-      << setw (12) << "Thp(Kbps)";
+      << QosStatsCalculator::PrintHeader ();
   return str.str ();
 }
 
@@ -376,21 +364,9 @@ TrafficStatsCalculator::GetStats (
   str << fixed << setprecision (3) << boolalpha << right
       << setw (8)  << Simulator::Now ().GetSeconds ()
       << setw (9)  << app->GetAppName ()
-      << setw (12) << rInfo->GetTeidHex ()
-      << setw (6)  << rInfo->GetUeImsi ()
-      << setw (7)  << rInfo->GetSliceIdStr ()
-      << setw (5)  << rInfo->GetQciInfo ()
-      << setw (7)  << rInfo->IsGbr ()
-      << setw (7)  << rInfo->IsAggregated ()
+      << *rInfo
       << setw (7)  << direction
-      << setw (11) << stats->GetActiveTime ().GetSeconds ()
-      << setw (11) << stats->GetRxDelay ().GetSeconds () * 1000
-      << setw (12) << stats->GetRxJitter ().GetSeconds () * 1000
-      << setw (8)  << stats->GetTxPackets ()
-      << setw (8)  << stats->GetRxPackets ()
-      << setw (9)  << stats->GetLossRatio () * 100
-      << setw (10) << stats->GetRxBytes ()
-      << setw (12) << (double)(stats->GetRxThroughput ().GetBitRate ()) / 1000;
+      << *stats;
   return str.str ();
 }
 

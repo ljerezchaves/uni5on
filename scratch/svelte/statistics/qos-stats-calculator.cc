@@ -18,7 +18,11 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#include <iomanip>
+#include <iostream>
 #include "qos-stats-calculator.h"
+
+using namespace std;
 
 namespace ns3 {
 
@@ -302,12 +306,44 @@ QosStatsCalculator::GetQueueDrops (void) const
   return m_queueDrop;
 }
 
+std::string
+QosStatsCalculator::PrintHeader (void)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  // FIXME
+  std::ostringstream str;
+  str << setw (11) << "Active(s)"
+      << setw (11) << "Delay(ms)"
+      << setw (12) << "Jitter(ms)"
+      << setw (8)  << "TxPkts"
+      << setw (8)  << "RxPkts"
+      << setw (9)  << "Loss(%)"
+      << setw (10) << "RxBytes"
+      << setw (12) << "Thp(Kbps)";
+  return str.str ();
+}
+
 void
 QosStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
   Object::DoDispose ();
+}
+
+std::ostream & operator << (std::ostream &os, const QosStatsCalculator &stats)
+{
+  // FIXME
+  os << setw (11) << stats.GetActiveTime ().GetSeconds ()
+     << setw (11) << stats.GetRxDelay ().GetSeconds () * 1000
+     << setw (12) << stats.GetRxJitter ().GetSeconds () * 1000
+     << setw (8)  << stats.GetTxPackets ()
+     << setw (8)  << stats.GetRxPackets ()
+     << setw (9)  << stats.GetLossRatio () * 100
+     << setw (10) << stats.GetRxBytes ()
+     << setw (12) << static_cast<double> (stats.GetRxThroughput ().GetBitRate ()) / 1000;
+  return os;
 }
 
 } // Namespace ns3

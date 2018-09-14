@@ -112,6 +112,13 @@ public:
   //\}
 
   /**
+   * Get the header for the print operator <<.
+   * \return The header string.
+   * \internal Keep this method consistent with the << operator below.
+   */
+  static std::string PrintHeader (void);
+
+  /**
    * TracedCallback signature for QosStatsCalculator.
    * \param stats The statistics.
    */
@@ -139,6 +146,16 @@ private:
   uint32_t           m_sliceDrop;        //!< Drop counter for slicing rules.
   uint32_t           m_queueDrop;        //!< Drop counter for queues.
 };
+
+/**
+ * Print the QoS metadata on an output stream.
+ * \param os The output stream.
+ * \param rInfo The QoS object.
+ * \returns The output stream.
+ * \internal Keep this method consistent with the
+ *           QosStatsCalculator::PrintHeader ().
+ */
+std::ostream & operator << (std::ostream &os, const QosStatsCalculator &stats);
 
 } // namespace ns3
 #endif /* QOS_STATS_CALCULATOR_H */
