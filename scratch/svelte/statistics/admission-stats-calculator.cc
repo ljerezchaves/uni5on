@@ -122,9 +122,7 @@ AdmissionStatsCalculator::NotifyBearerRequest (Ptr<const RoutingInfo> rInfo)
 
   // Save request stats into output file.
   *m_brqWrapper->GetStream ()
-    << setprecision (3)
-    << setw (8) << Simulator::Now ().GetSeconds ()
-    << setprecision (2)
+    << GetTimeStr ()
     << *rInfo
     << *(rInfo->GetUeInfo ())
     << *(rInfo->GetUeInfo ()->GetEnbInfo ())
@@ -191,7 +189,7 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
           m_admFilename + "-" + sliceStr + ".log", std::ios::out);
       *m_slices [s].admWrapper->GetStream ()
         << fixed << boolalpha << right
-        << setw (8) << "Time(s)"
+        << GetTimeHeader ()
         << setw (7) << "Relea"
         << setw (7) << "Reque"
         << setw (7) << "Accep"
@@ -206,8 +204,8 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   m_brqWrapper = Create<OutputStreamWrapper> (
       m_brqFilename + ".log", std::ios::out);
   *m_brqWrapper->GetStream ()
-    << fixed << boolalpha << right
-    << setw (8)  << "Time(s)"
+    << fixed << boolalpha << right << setprecision (3)
+    << GetTimeHeader ()
     << RoutingInfo::PrintHeader ()
     << UeInfo::PrintHeader ()
     << EnbInfo::PrintHeader ()
@@ -235,9 +233,7 @@ AdmissionStatsCalculator::DumpStatistics (Time nextDump)
     {
       SliceStats &stats = m_slices [s];
       *stats.admWrapper->GetStream ()
-        << setprecision (3)
-        << setw (8) << Simulator::Now ().GetSeconds ()
-        << setprecision (2)
+        << GetTimeStr ()
         << setw (7) << stats.releases
         << setw (7) << stats.requests
         << setw (7) << stats.accepted
