@@ -54,7 +54,7 @@ public:
   /**
    * Reset all internal counters.
    */
-  void ResetCounters ();
+  void ResetCounters (void);
 
   /**
    * Update TX counters for a new transmitted packet.
@@ -73,22 +73,22 @@ public:
   /**
    * Increase the meter dropped packet counter by one.
    */
-  void NotifyLoadDrop ();
+  void NotifyLoadDrop (void);
 
   /**
    * Increase the traffic meter dropped packet counter by one.
    */
-  void NotifyMeterDrop ();
+  void NotifyMeterDrop (void);
 
   /**
    * Increase the slicing dropped packet counter by one.
    */
-  void NotifySliceDrop ();
+  void NotifySliceDrop (void);
 
   /**
    * Increase the queue dropped packet counter by one.
    */
-  void NotifyQueueDrop ();
+  void NotifyQueueDrop (void);
 
   /**
    * Get QoS statistics.

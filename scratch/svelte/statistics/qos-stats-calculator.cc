@@ -60,7 +60,7 @@ QosStatsCalculator::GetTypeId (void)
 }
 
 void
-QosStatsCalculator::ResetCounters ()
+QosStatsCalculator::ResetCounters (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -124,7 +124,7 @@ QosStatsCalculator::NotifyRx (uint32_t rxBytes, Time timestamp)
 }
 
 void
-QosStatsCalculator::NotifyLoadDrop ()
+QosStatsCalculator::NotifyLoadDrop (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -132,7 +132,7 @@ QosStatsCalculator::NotifyLoadDrop ()
 }
 
 void
-QosStatsCalculator::NotifyMeterDrop ()
+QosStatsCalculator::NotifyMeterDrop (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -140,7 +140,7 @@ QosStatsCalculator::NotifyMeterDrop ()
 }
 
 void
-QosStatsCalculator::NotifySliceDrop ()
+QosStatsCalculator::NotifySliceDrop (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -148,7 +148,7 @@ QosStatsCalculator::NotifySliceDrop ()
 }
 
 void
-QosStatsCalculator::NotifyQueueDrop ()
+QosStatsCalculator::NotifyQueueDrop (void)
 {
   NS_LOG_FUNCTION (this);
 
