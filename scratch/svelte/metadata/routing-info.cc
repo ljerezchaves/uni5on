@@ -575,11 +575,11 @@ RoutingInfo::PrintHeader (void)
       << setw (7)  << "IsGbr"
       << setw (6)  << "Dscp"
       << setw (7)  << "Dlink"
-      << setw (9)  << "DlGbr"
-      << setw (9)  << "DlMbr"
+      << setw (10) << "DlGbr"
+      << setw (10) << "DlMbr"
       << setw (7)  << "Ulink"
-      << setw (9)  << "UlGbr"
-      << setw (9)  << "UlMbr"
+      << setw (10) << "UlGbr"
+      << setw (10) << "UlMbr"
       << setw (7)  << "GbrRes"
       << setw (7)  << "DMbIns"
       << setw (7)  << "UMbIns"
@@ -736,7 +736,6 @@ std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
   char prioStr [10];
   sprintf (prioStr, "0x%x", rInfo.GetPriority ());
 
-  // FIXME Imprimir em kbps?
   os << setw (12) << rInfo.GetTeidHex ()
      << setw (7)  << rInfo.GetSliceIdStr ()
      << setw (7)  << rInfo.IsDefault ()
@@ -749,11 +748,11 @@ std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
      << setw (7)  << rInfo.IsGbr ()
      << setw (6)  << rInfo.GetDscpStr ()
      << setw (7)  << rInfo.HasDlTraffic ()
-     << setw (9)  << rInfo.GetGbrDlBitRate ()
-     << setw (9)  << rInfo.GetMbrDlBitRate ()
+     << setw (10) << static_cast<double> (rInfo.GetGbrDlBitRate ()) / 1000
+     << setw (10) << static_cast<double> (rInfo.GetMbrDlBitRate ()) / 1000
      << setw (7)  << rInfo.HasUlTraffic ()
-     << setw (9)  << rInfo.GetGbrUlBitRate ()
-     << setw (9)  << rInfo.GetMbrUlBitRate ()
+     << setw (10) << static_cast<double> (rInfo.GetGbrUlBitRate ()) / 1000
+     << setw (10) << static_cast<double> (rInfo.GetMbrUlBitRate ()) / 1000
      << setw (7)  << rInfo.IsGbrReserved ()
      << setw (7)  << rInfo.IsMbrDlInstalled ()
      << setw (7)  << rInfo.IsMbrUlInstalled ()
