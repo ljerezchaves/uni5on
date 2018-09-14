@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef QOS_STATS_CALCULATOR_H
-#define QOS_STATS_CALCULATOR_H
+#ifndef APP_STATS_CALCULATOR_H
+#define APP_STATS_CALCULATOR_H
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -27,23 +27,18 @@
 namespace ns3 {
 
 /**
- * \ingroup svelte
- * \defgroup svelteStats Statistics
- * Statistics calculators for monitoring the SVELTE architecture.
- */
-/**
- * \ingroup svelteStats
+ * \ingroup svelteApps
  * This class monitors some basic QoS statistics in a network traffic flow. It
  * counts the number of transmitted/received bytes and packets, computes the
  * loss ratio, the average delay and the jitter. This class can be used to
  * monitor statistics at application and network level, but keep in mind that
  * it is not aware of duplicated or fragmented packets at lower levels.
  */
-class QosStatsCalculator : public Object
+class AppStatsCalculator : public Object
 {
 public:
-  QosStatsCalculator ();          //!< Default constructor.
-  virtual ~QosStatsCalculator (); //!< Dummy destructor, see DoDispose.
+  AppStatsCalculator ();          //!< Default constructor.
+  virtual ~AppStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -119,10 +114,10 @@ public:
   static std::string PrintHeader (void);
 
   /**
-   * TracedCallback signature for QosStatsCalculator.
+   * TracedCallback signature for AppStatsCalculator.
    * \param stats The statistics.
    */
-  typedef void (*QosStatsCallback)(Ptr<const QosStatsCalculator> stats);
+  typedef void (*AppStatsCallback)(Ptr<const AppStatsCalculator> stats);
 
 protected:
   /** Destructor implementation. */
@@ -153,9 +148,9 @@ private:
  * \param rInfo The QoS object.
  * \returns The output stream.
  * \internal Keep this method consistent with the
- *           QosStatsCalculator::PrintHeader ().
+ *           AppStatsCalculator::PrintHeader ().
  */
-std::ostream & operator << (std::ostream &os, const QosStatsCalculator &stats);
+std::ostream & operator << (std::ostream &os, const AppStatsCalculator &stats);
 
 } // namespace ns3
-#endif /* QOS_STATS_CALCULATOR_H */
+#endif /* APP_STATS_CALCULATOR_H */

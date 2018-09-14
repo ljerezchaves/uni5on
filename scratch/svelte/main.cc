@@ -398,6 +398,7 @@ EnableVerbose (bool enable)
       LogComponentEnable ("UeInfo",                   logLevelWarnInfo);
 
       // Applications.
+      LogComponentEnable ("AppStatsCalculator",       logLevelWarnInfo);
       LogComponentEnable ("AutoPilotClient",          logLevelWarnInfo);
       LogComponentEnable ("AutoPilotServer",          logLevelWarnInfo);
       LogComponentEnable ("BufferedVideoClient",      logLevelWarnInfo);
@@ -416,7 +417,6 @@ EnableVerbose (bool enable)
       LogComponentEnable ("BackhaulStatsCalculator",  logLevelWarnInfo);
       LogComponentEnable ("HandoverStatsCalculator",  logLevelWarnInfo);
       LogComponentEnable ("PgwTftStatsCalculator",    logLevelWarnInfo);
-      LogComponentEnable ("QosStatsCalculator",       logLevelWarnInfo);
       LogComponentEnable ("TrafficStatsCalculator",   logLevelWarnInfo);
 
       // OFSwitch13 module components.

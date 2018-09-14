@@ -33,7 +33,7 @@ NS_LOG_COMPONENT_DEFINE ("SvelteClientApp");
 NS_OBJECT_ENSURE_REGISTERED (SvelteClientApp);
 
 SvelteClientApp::SvelteClientApp ()
-  : m_qosStats (CreateObject<QosStatsCalculator> ()),
+  : m_appStats (CreateObject<AppStatsCalculator> ()),
   m_socket (0),
   m_serverApp (0),
   m_active (false),
@@ -176,21 +176,21 @@ SvelteClientApp::GetServerApp (void) const
   return m_serverApp;
 }
 
-Ptr<const QosStatsCalculator>
-SvelteClientApp::GetQosStats (void) const
+Ptr<const AppStatsCalculator>
+SvelteClientApp::GetAppStats (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_qosStats;
+  return m_appStats;
 }
 
-Ptr<const QosStatsCalculator>
-SvelteClientApp::GetServerQosStats (void) const
+Ptr<const AppStatsCalculator>
+SvelteClientApp::GetServerAppStats (void) const
 {
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (m_serverApp, "Server application undefined.");
-  return m_serverApp->GetQosStats ();
+  return m_serverApp->GetAppStats ();
 }
 
 void
@@ -238,7 +238,7 @@ SvelteClientApp::Start ()
   m_active = true;
 
   // Reset internal statistics.
-  ResetQosStats ();
+  ResetAppStats ();
 
   // Schedule the force stop event.
   m_forceStopFlag = false;
@@ -259,7 +259,7 @@ SvelteClientApp::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
-  m_qosStats = 0;
+  m_appStats = 0;
   m_tft = 0;
   m_socket = 0;
   m_serverApp = 0;
@@ -312,7 +312,7 @@ SvelteClientApp::NotifyTx (uint32_t txBytes)
   NS_LOG_FUNCTION (this << txBytes);
 
   NS_ASSERT_MSG (m_serverApp, "Server application undefined.");
-  return m_serverApp->m_qosStats->NotifyTx (txBytes);
+  return m_serverApp->m_appStats->NotifyTx (txBytes);
 }
 
 void
@@ -320,15 +320,15 @@ SvelteClientApp::NotifyRx (uint32_t rxBytes, Time timestamp)
 {
   NS_LOG_FUNCTION (this << rxBytes << timestamp);
 
-  m_qosStats->NotifyRx (rxBytes, timestamp);
+  m_appStats->NotifyRx (rxBytes, timestamp);
 }
 
 void
-SvelteClientApp::ResetQosStats ()
+SvelteClientApp::ResetAppStats ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_qosStats->ResetCounters ();
+  m_appStats->ResetCounters ();
 }
 
 } // namespace ns3

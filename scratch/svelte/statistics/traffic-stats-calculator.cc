@@ -140,12 +140,12 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
 
   uint32_t teid = app->GetTeid ();
   Ptr<const RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-  Ptr<const QosStatsCalculator> epcStats;
+  Ptr<const AppStatsCalculator> epcStats;
 
   if (rInfo->HasUlTraffic ())
     {
       // Dump uplink statistics.
-      epcStats = GetQosStatsFromTeid (teid, false);
+      epcStats = GetEpcStatsFromTeid (teid, false);
       *m_epcWrapper->GetStream ()
         << GetStats (app, epcStats, rInfo, "up")
         << " " << setw (6)  << epcStats->GetLoadDrops ()
@@ -155,14 +155,14 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
         << std::endl;
 
       *m_appWrapper->GetStream ()
-        << GetStats (app, app->GetServerQosStats (), rInfo, "up")
+        << GetStats (app, app->GetServerAppStats (), rInfo, "up")
         << std::endl;
     }
 
   if (rInfo->HasDlTraffic ())
     {
       // Dump downlink statistics.
-      epcStats = GetQosStatsFromTeid (teid, true);
+      epcStats = GetEpcStatsFromTeid (teid, true);
       *m_epcWrapper->GetStream ()
         << GetStats (app, epcStats, rInfo, "down")
         << " " << setw (6)  << epcStats->GetLoadDrops ()
@@ -172,7 +172,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
         << std::endl;
 
       *m_appWrapper->GetStream ()
-        << GetStats (app, app->GetQosStats (), rInfo, "down")
+        << GetStats (app, app->GetAppStats (), rInfo, "down")
         << std::endl;
     }
 }
@@ -183,8 +183,8 @@ TrafficStatsCalculator::ResetCounters (std::string context,
 {
   NS_LOG_FUNCTION (this << context << app);
 
-  GetQosStatsFromTeid (app->GetTeid (),  true)->ResetCounters ();
-  GetQosStatsFromTeid (app->GetTeid (), false)->ResetCounters ();
+  GetEpcStatsFromTeid (app->GetTeid (),  true)->ResetCounters ();
+  GetEpcStatsFromTeid (app->GetTeid (), false)->ResetCounters ();
 }
 
 void
@@ -196,9 +196,9 @@ TrafficStatsCalculator::LoadDropPacket (std::string context,
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      Ptr<QosStatsCalculator> qosStats =
-        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      qosStats->NotifyLoadDrop ();
+      Ptr<AppStatsCalculator> epcStats =
+        GetEpcStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      epcStats->NotifyLoadDrop ();
     }
   else
     {
@@ -218,9 +218,9 @@ TrafficStatsCalculator::LoadDropPacket (std::string context,
       Ptr<UeInfo> ueInfo = UeInfo::GetPointer (ipv4Header.GetDestination ());
       uint32_t teid = ueInfo->Classify (packetCopy);
 
-      Ptr<QosStatsCalculator> qosStats = GetQosStatsFromTeid (teid, true);
-      qosStats->NotifyTx (packetCopy->GetSize ());
-      qosStats->NotifyLoadDrop ();
+      Ptr<AppStatsCalculator> epcStats = GetEpcStatsFromTeid (teid, true);
+      epcStats->NotifyTx (packetCopy->GetSize ());
+      epcStats->NotifyLoadDrop ();
     }
 }
 
@@ -232,20 +232,20 @@ TrafficStatsCalculator::MeterDropPacket (
 
   uint32_t teid;
   EpcGtpuTag gtpuTag;
-  Ptr<QosStatsCalculator> qosStats;
+  Ptr<AppStatsCalculator> epcStats;
   if (packet->PeekPacketTag (gtpuTag))
     {
       teid = gtpuTag.GetTeid ();
-      qosStats = GetQosStatsFromTeid (teid, gtpuTag.IsDownlink ());
+      epcStats = GetEpcStatsFromTeid (teid, gtpuTag.IsDownlink ());
 
       // Notify the droped packet, based on meter type (traffic or slicing).
       if (teid == meterId)
         {
-          qosStats->NotifyMeterDrop ();
+          epcStats->NotifyMeterDrop ();
         }
       else
         {
-          qosStats->NotifySliceDrop ();
+          epcStats->NotifySliceDrop ();
         }
     }
   else
@@ -257,12 +257,12 @@ TrafficStatsCalculator::MeterDropPacket (
       // To keep consistent log results, we are doing this manually here.
       //
       teid = meterId;
-      qosStats = GetQosStatsFromTeid (teid, true);
-      qosStats->NotifyTx (packet->GetSize ());
+      epcStats = GetEpcStatsFromTeid (teid, true);
+      epcStats->NotifyTx (packet->GetSize ());
 
       // Notify the droped packet (it must be a traffic meter because we only
       // have slicing meters on ring switches, not on the P-GW).
-      qosStats->NotifyMeterDrop ();
+      epcStats->NotifyMeterDrop ();
     }
 }
 
@@ -275,9 +275,9 @@ TrafficStatsCalculator::QueueDropPacket (std::string context,
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      Ptr<QosStatsCalculator> qosStats =
-        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      qosStats->NotifyQueueDrop ();
+      Ptr<AppStatsCalculator> epcStats =
+        GetEpcStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      epcStats->NotifyQueueDrop ();
     }
 }
 
@@ -290,9 +290,9 @@ TrafficStatsCalculator::EpcInputPacket (std::string context,
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      Ptr<QosStatsCalculator> qosStats =
-        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      qosStats->NotifyTx (packet->GetSize ());
+      Ptr<AppStatsCalculator> epcStats =
+        GetEpcStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      epcStats->NotifyTx (packet->GetSize ());
     }
 }
 
@@ -305,37 +305,37 @@ TrafficStatsCalculator::EpcOutputPacket (std::string context,
   EpcGtpuTag gtpuTag;
   if (packet->PeekPacketTag (gtpuTag))
     {
-      Ptr<QosStatsCalculator> qosStats =
-        GetQosStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
-      qosStats->NotifyRx (packet->GetSize (), gtpuTag.GetTimestamp ());
+      Ptr<AppStatsCalculator> epcStats =
+        GetEpcStatsFromTeid (gtpuTag.GetTeid (), gtpuTag.IsDownlink ());
+      epcStats->NotifyRx (packet->GetSize (), gtpuTag.GetTimestamp ());
     }
 }
 
-Ptr<QosStatsCalculator>
-TrafficStatsCalculator::GetQosStatsFromTeid (uint32_t teid, bool isDown)
+Ptr<AppStatsCalculator>
+TrafficStatsCalculator::GetEpcStatsFromTeid (uint32_t teid, bool isDown)
 {
   NS_LOG_FUNCTION (this << teid << isDown);
 
-  Ptr<QosStatsCalculator> qosStats = 0;
+  Ptr<AppStatsCalculator> epcStats = 0;
   auto it = m_qosByTeid.find (teid);
   if (it != m_qosByTeid.end ())
     {
       QosStatsPair_t value = it->second;
-      qosStats = isDown ? value.first : value.second;
+      epcStats = isDown ? value.first : value.second;
     }
   else
     {
-      QosStatsPair_t pair (CreateObject<QosStatsCalculator> (),
-                           CreateObject<QosStatsCalculator> ());
+      QosStatsPair_t pair (CreateObject<AppStatsCalculator> (),
+                           CreateObject<AppStatsCalculator> ());
       std::pair<uint32_t, QosStatsPair_t> entry (teid, pair);
       auto ret = m_qosByTeid.insert (entry);
       if (ret.second == false)
         {
           NS_FATAL_ERROR ("Existing QoS entry for teid " << teid);
         }
-      qosStats = isDown ? pair.first : pair.second;
+      epcStats = isDown ? pair.first : pair.second;
     }
-  return qosStats;
+  return epcStats;
 }
 
 std::string
@@ -349,13 +349,13 @@ TrafficStatsCalculator::GetHeader (void)
       << setw (9)  << "AppName"
       << setw (7)  << "Ul/Dl"
       << RoutingInfo::PrintHeader ()
-      << QosStatsCalculator::PrintHeader ();
+      << AppStatsCalculator::PrintHeader ();
   return str.str ();
 }
 
 std::string
 TrafficStatsCalculator::GetStats (
-  Ptr<const SvelteClientApp> app, Ptr<const QosStatsCalculator> stats,
+  Ptr<const SvelteClientApp> app, Ptr<const AppStatsCalculator> stats,
   Ptr<const RoutingInfo> rInfo, std::string direction)
 {
   NS_LOG_FUNCTION (this << app << stats << rInfo << direction);

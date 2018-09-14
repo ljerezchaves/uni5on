@@ -29,11 +29,11 @@
 #include "../applications/live-video-server.h"
 #include "../applications/voip-client.h"
 #include "../applications/voip-server.h"
+#include "../applications/app-stats-calculator.h"
 #include "../infrastructure/radio-network.h"
 #include "../logical/slice-controller.h"
 #include "../logical/slice-network.h"
 #include "../logical/traffic-manager.h"
-#include "../statistics/qos-stats-calculator.h"
 
 namespace ns3 {
 

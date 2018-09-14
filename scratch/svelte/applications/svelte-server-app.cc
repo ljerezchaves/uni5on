@@ -32,7 +32,7 @@ NS_LOG_COMPONENT_DEFINE ("SvelteServerApp");
 NS_OBJECT_ENSURE_REGISTERED (SvelteServerApp);
 
 SvelteServerApp::SvelteServerApp ()
-  : m_qosStats (CreateObject<QosStatsCalculator> ()),
+  : m_appStats (CreateObject<AppStatsCalculator> ()),
   m_socket (0),
   m_clientApp (0)
 {
@@ -104,12 +104,12 @@ SvelteServerApp::GetClientApp (void) const
   return m_clientApp;
 }
 
-Ptr<const QosStatsCalculator>
-SvelteServerApp::GetQosStats (void) const
+Ptr<const AppStatsCalculator>
+SvelteServerApp::GetAppStats (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_qosStats;
+  return m_appStats;
 }
 
 void
@@ -127,7 +127,7 @@ SvelteServerApp::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
-  m_qosStats = 0;
+  m_appStats = 0;
   m_socket = 0;
   m_clientApp = 0;
   Application::DoDispose ();
@@ -140,7 +140,7 @@ SvelteServerApp::NotifyStart ()
   NS_LOG_INFO ("Starting server application.");
 
   // Reset internal statistics.
-  ResetQosStats ();
+  ResetAppStats ();
 }
 
 void
@@ -156,7 +156,7 @@ SvelteServerApp::NotifyTx (uint32_t txBytes)
   NS_LOG_FUNCTION (this << txBytes);
 
   NS_ASSERT_MSG (m_clientApp, "Client application undefined.");
-  return m_clientApp->m_qosStats->NotifyTx (txBytes);
+  return m_clientApp->m_appStats->NotifyTx (txBytes);
 }
 
 void
@@ -164,15 +164,15 @@ SvelteServerApp::NotifyRx (uint32_t rxBytes, Time timestamp)
 {
   NS_LOG_FUNCTION (this << rxBytes << timestamp);
 
-  m_qosStats->NotifyRx (rxBytes, timestamp);
+  m_appStats->NotifyRx (rxBytes, timestamp);
 }
 
 void
-SvelteServerApp::ResetQosStats ()
+SvelteServerApp::ResetAppStats ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_qosStats->ResetCounters ();
+  m_appStats->ResetCounters ();
 }
 
 } // namespace ns3

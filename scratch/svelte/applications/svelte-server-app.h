@@ -26,7 +26,7 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/lte-module.h>
-#include "../statistics/qos-stats-calculator.h"
+#include "app-stats-calculator.h"
 
 namespace ns3 {
 
@@ -59,7 +59,7 @@ public:
   bool IsForceStop (void) const;
   std::string GetTeidHex (void) const;
   Ptr<SvelteClientApp> GetClientApp (void) const;
-  Ptr<const QosStatsCalculator> GetQosStats (void) const;
+  Ptr<const AppStatsCalculator> GetAppStats (void) const;
   //\}
 
   /**
@@ -102,9 +102,9 @@ protected:
   /**
    * Reset the QoS statistics.
    */
-  void ResetQosStats ();
+  void ResetAppStats ();
 
-  Ptr<QosStatsCalculator> m_qosStats;         //!< QoS statistics.
+  Ptr<AppStatsCalculator> m_appStats;         //!< QoS statistics.
   Ptr<Socket>             m_socket;           //!< Local socket.
   uint16_t                m_localPort;        //!< Local port.
   Address                 m_clientAddress;    //!< Client address.

@@ -26,11 +26,16 @@
 
 namespace ns3 {
 
-class QosStatsCalculator;
+class AppStatsCalculator;
 class RoutingInfo;
 class SvelteClientApp;
 class UeInfo;
 
+/**
+ * \ingroup svelte
+ * \defgroup svelteStats Statistics
+ * Statistics calculators for monitoring the SVELTE architecture.
+ */
 /**
  * \ingroup svelteStats
  * This class monitors the traffic QoS statistics at application L7 level for
@@ -117,7 +122,7 @@ private:
    * \param isDown True for downlink stats, false for uplink.
    * \return The QoS information.
    */
-  Ptr<QosStatsCalculator> GetQosStatsFromTeid (uint32_t teid, bool isDown);
+  Ptr<AppStatsCalculator> GetEpcStatsFromTeid (uint32_t teid, bool isDown);
 
   /**
    * Get the header for common statistics metrics.
@@ -134,7 +139,7 @@ private:
    * \return The commom formatted string.
    */
   std::string GetStats (
-    Ptr<const SvelteClientApp> app, Ptr<const QosStatsCalculator> stats,
+    Ptr<const SvelteClientApp> app, Ptr<const AppStatsCalculator> stats,
     Ptr<const RoutingInfo> rInfo, std::string direction);
 
   std::string               m_appFilename;  //!< AppStats filename.
@@ -142,9 +147,9 @@ private:
   std::string               m_epcFilename;  //!< EpcStats filename.
   Ptr<OutputStreamWrapper>  m_epcWrapper;   //!< EpcStats file wrapper.
 
-  /** A pair of QosStatsCalculator, for downlink and uplink EPC statistics. */
-  typedef std::pair<Ptr<QosStatsCalculator>,
-                    Ptr<QosStatsCalculator> > QosStatsPair_t;
+  /** A pair of AppStatsCalculator, for downlink and uplink EPC statistics. */
+  typedef std::pair<Ptr<AppStatsCalculator>,
+                    Ptr<AppStatsCalculator> > QosStatsPair_t;
 
   /** A Map saving GTP TEID / QoS stats pair. */
   typedef std::map<uint32_t, QosStatsPair_t> TeidQosMap_t;

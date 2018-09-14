@@ -26,7 +26,7 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/lte-module.h>
-#include "../statistics/qos-stats-calculator.h"
+#include "app-stats-calculator.h"
 
 namespace ns3 {
 
@@ -41,7 +41,7 @@ class SvelteServerApp;
  * \ingroup svelteApps
  * This class extends the Application class to proper work with the SVELTE
  * architecture. Only clients applications (those which will be installed into
- * UEs) should extend this class. It includes a QosStatsCalculator for traffic
+ * UEs) should extend this class. It includes a AppStatsCalculator for traffic
  * statistics, and start/stop callbacks to notify the slice controller when the
  * traffic stats/stops. Each application is associated with an EPS bearer, and
  * application traffic is sent within GTP tunnels over EPC interfaces. These
@@ -73,8 +73,8 @@ public:
   uint32_t GetTeid (void) const;
   std::string GetTeidHex (void) const;
   Ptr<SvelteServerApp> GetServerApp (void) const;
-  Ptr<const QosStatsCalculator> GetQosStats (void) const;
-  Ptr<const QosStatsCalculator> GetServerQosStats (void) const;
+  Ptr<const AppStatsCalculator> GetAppStats (void) const;
+  Ptr<const AppStatsCalculator> GetServerAppStats (void) const;
 
   void SetTft (Ptr<EpcTft> value);
   void SetEpsBearer (EpsBearer value);
@@ -134,7 +134,7 @@ protected:
    */
   void NotifyRx (uint32_t rxBytes, Time timestamp = Simulator::Now ());
 
-  Ptr<QosStatsCalculator> m_qosStats;         //!< QoS statistics.
+  Ptr<AppStatsCalculator> m_appStats;         //!< QoS statistics.
   Ptr<Socket>             m_socket;           //!< Local socket.
   uint16_t                m_localPort;        //!< Local port.
   Address                 m_serverAddress;    //!< Server address.
@@ -153,7 +153,7 @@ private:
   /**
    * Reset the QoS statistics.
    */
-  void ResetQosStats ();
+  void ResetAppStats ();
 
   std::string   m_name;           //!< Application name.
   bool          m_active;         //!< Active state.
