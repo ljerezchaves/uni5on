@@ -345,10 +345,10 @@ TrafficStatsCalculator::GetHeader (void)
 
   std::ostringstream str;
   str << right
-      << setw (8)  << "Time(s)"
+      << GetTimeHeader ()
       << setw (9)  << "AppName"
-      << RoutingInfo::PrintHeader ()
       << setw (7)  << "Ul/Dl"
+      << RoutingInfo::PrintHeader ()
       << QosStatsCalculator::PrintHeader ();
   return str.str ();
 }
@@ -362,10 +362,10 @@ TrafficStatsCalculator::GetStats (
 
   std::ostringstream str;
   str << fixed << setprecision (3) << boolalpha << right
-      << setw (8)  << Simulator::Now ().GetSeconds ()
+      << GetTimeStr ()
       << setw (9)  << app->GetAppName ()
-      << *rInfo
       << setw (7)  << direction
+      << *rInfo
       << *stats;
   return str.str ();
 }
