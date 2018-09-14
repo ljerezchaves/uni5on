@@ -18,11 +18,15 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#include <iomanip>
+#include <iostream>
 #include <string>
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include "svelte-common.h"
+
+using namespace std;
 
 namespace ns3 {
 
@@ -236,6 +240,23 @@ GetSvelteMeterId (SliceId sliceId, uint32_t meterId)
   meter <<= 24;
   meter |= meterId;
   return meter;
+}
+
+std::string
+GetTimeHeader (void)
+{
+  std::ostringstream str;
+  str << setw (8) << "Time";
+  return str.str ();
+}
+
+std::string
+GetTimeStr (void)
+{
+  std::ostringstream str;
+  str << fixed << setprecision (3) << right
+      << setw (8) << Simulator::Now ().GetSeconds ();
+  return str.str ();
 }
 
 std::string
