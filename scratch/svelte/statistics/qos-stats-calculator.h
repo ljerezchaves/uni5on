@@ -29,7 +29,7 @@ namespace ns3 {
 /**
  * \ingroup svelte
  * \defgroup svelteStats Statistics
- * Statistics calculators for monitorin the SVELTE architecture.
+ * Statistics calculators for monitoring the SVELTE architecture.
  */
 /**
  * \ingroup svelteStats
@@ -37,7 +37,7 @@ namespace ns3 {
  * counts the number of transmitted/received bytes and packets, computes the
  * loss ratio, the average delay and the jitter. This class can be used to
  * monitor statistics at application and network level, but keep in mind that
- * it is not aware of duplicated of fragmented packets at lower levels.
+ * it is not aware of duplicated or fragmented packets at lower levels.
  */
 class QosStatsCalculator : public Object
 {
