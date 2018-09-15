@@ -113,7 +113,7 @@ public:
   //\}
 
   /**
-   * \name Private member accessors for P-GW TFT switches aggregated
+   * \name Private member accessors for P-GW TFT active switches aggregated
    *       datapath information.
    * \return The requested information.
    */
