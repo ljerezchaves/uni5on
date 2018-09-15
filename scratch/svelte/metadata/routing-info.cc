@@ -575,17 +575,17 @@ RoutingInfo::PrintHeader (void)
       << " " << setw (6)  << "IsGbr"
       << " " << setw (5)  << "Dscp"
       << " " << setw (6)  << "Dlink"
-      << " " << setw (9)  << "DlGbr"
-      << " " << setw (9)  << "DlMbr"
+      << " " << setw (11) << "DlGbr:kbps"
+      << " " << setw (11) << "DlMbr:kbps"
       << " " << setw (6)  << "Ulink"
-      << " " << setw (9)  << "UlGbr"
-      << " " << setw (9)  << "UlMbr"
+      << " " << setw (11) << "UlGbr:kbps"
+      << " " << setw (11) << "UlMbr:kbps"
       << " " << setw (6)  << "GbrRes"
       << " " << setw (6)  << "DMbIns"
       << " " << setw (6)  << "UMbIns"
       << " " << setw (4)  << "TFT"
       << " " << setw (7)  << "Prio"
-      << " " << setw (4)  << "Tmo";
+      << " " << setw (6)  << "Tmo:s";
   return str.str ();
 }
 
@@ -748,17 +748,17 @@ std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
      << " " << setw (6)  << rInfo.IsGbr ()
      << " " << setw (5)  << rInfo.GetDscpStr ()
      << " " << setw (6)  << rInfo.HasDlTraffic ()
-     << " " << setw (9)  << Bps2Kbps (rInfo.GetGbrDlBitRate ())
-     << " " << setw (9)  << Bps2Kbps (rInfo.GetMbrDlBitRate ())
+     << " " << setw (11) << Bps2Kbps (rInfo.GetGbrDlBitRate ())
+     << " " << setw (11) << Bps2Kbps (rInfo.GetMbrDlBitRate ())
      << " " << setw (6)  << rInfo.HasUlTraffic ()
-     << " " << setw (9)  << Bps2Kbps (rInfo.GetGbrUlBitRate ())
-     << " " << setw (9)  << Bps2Kbps (rInfo.GetMbrUlBitRate ())
+     << " " << setw (11) << Bps2Kbps (rInfo.GetGbrUlBitRate ())
+     << " " << setw (11) << Bps2Kbps (rInfo.GetMbrUlBitRate ())
      << " " << setw (6)  << rInfo.IsGbrReserved ()
      << " " << setw (6)  << rInfo.IsMbrDlInstalled ()
      << " " << setw (6)  << rInfo.IsMbrUlInstalled ()
      << " " << setw (4)  << rInfo.GetPgwTftIdx ()
      << " " << setw (7)  << prioStr
-     << " " << setw (4)  << rInfo.GetTimeout ();
+     << " " << setw (6)  << rInfo.GetTimeout ();
   return os;
 }
 

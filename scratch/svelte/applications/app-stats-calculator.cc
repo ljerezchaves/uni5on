@@ -240,14 +240,14 @@ AppStatsCalculator::PrintHeader (void)
   NS_LOG_FUNCTION_NOARGS ();
 
   std::ostringstream str;
-  str << GetTimeHeader ("ActTime")
+  str << GetTimeHeader ("Activ:s")
       << " " << setw (7) << "Dly:ms"
       << " " << setw (7) << "Jit:ms"
       << " " << setw (7) << "TxPkts"
       << " " << setw (7) << "RxPkts"
       << " " << setw (7) << "Loss:%"
       << " " << setw (8) << "RxBytes"
-      << " " << setw (9) << "Through";
+      << " " << setw (9) << "Thp:kbps";
   return str.str ();
 }
 
