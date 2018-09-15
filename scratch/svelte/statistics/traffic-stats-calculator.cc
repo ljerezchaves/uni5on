@@ -339,7 +339,7 @@ TrafficStatsCalculator::LoadDropPacket (std::string context,
   if (packet->PeekPacketTag (gtpuTag))
     {
       epcStats = GetEpcStats (gtpuTag.GetTeid (), GetDirection (gtpuTag));
-      epcStats->NotifyDrop (packet->GetSize (), EpcStatsCalculator::SWTCH);
+      epcStats->NotifyDrop (packet->GetSize (), EpcStatsCalculator::PLOAD);
     }
   else
     {
@@ -361,7 +361,7 @@ TrafficStatsCalculator::LoadDropPacket (std::string context,
 
       epcStats = GetEpcStats (teid, Direction::DLINK);
       epcStats->NotifyTx (packetCopy->GetSize ());
-      epcStats->NotifyDrop (packetCopy->GetSize (), EpcStatsCalculator::SWTCH);
+      epcStats->NotifyDrop (packetCopy->GetSize (), EpcStatsCalculator::PLOAD);
     }
 }
 

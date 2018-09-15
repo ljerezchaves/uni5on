@@ -52,7 +52,7 @@ public:
   /** Reason for packet drops at OpenFlow EPC network. */
   enum DropReason
   {
-    SWTCH = 0,    //!< Switch pipeline capacity overloaded.
+    PLOAD = 0,    //!< Switch pipeline capacity overloaded.
     METER = 1,    //!< EPC bearer MBR meter.
     SLICE = 2,    //!< OpenFlow EPC infrastructure slicing.
     QUEUE = 3,    //!< Network device queues.
