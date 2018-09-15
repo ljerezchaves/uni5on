@@ -113,9 +113,9 @@ private:
 };
 
 /**
- * Print the QoS metadata on an output stream.
+ * Print the application QoS metadata on an output stream.
  * \param os The output stream.
- * \param rInfo The QoS object.
+ * \param stats The AppStatsCalculator object.
  * \returns The output stream.
  * \internal Keep this method consistent with the
  *           AppStatsCalculator::PrintHeader ().
