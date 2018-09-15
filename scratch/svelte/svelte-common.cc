@@ -243,19 +243,19 @@ GetSvelteMeterId (SliceId sliceId, uint32_t meterId)
 }
 
 std::string
-GetTimeHeader (void)
+GetTimeHeader (std::string title)
 {
   std::ostringstream str;
-  str << setw (8) << "Time";
+  str << " " << setw (8) << title;
   return str.str ();
 }
 
 std::string
-GetTimeStr (void)
+GetTimeStr (Time time)
 {
   std::ostringstream str;
   str << fixed << setprecision (3) << right
-      << setw (8) << Simulator::Now ().GetSeconds ();
+      << " " << setw (8) << time.GetSeconds ();
   return str.str ();
 }
 

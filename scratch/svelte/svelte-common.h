@@ -227,17 +227,20 @@ uint32_t GetSvelteMeterId (SliceId sliceId, uint32_t meterId);
 /**
  * \ingroup svelte
  * Get the time header for the GetTimeStr () method.
+ * \param title The title to print.
  * \return The header string.
- * \internal Keep this method consistent with the GetTimeStr () below.
+ * \internal Keep this method consistent with GetTimeStr () method.
  */
-std::string GetTimeHeader (void);
+std::string GetTimeHeader (std::string title = "Time");
 
 /**
  * \ingroup svelte
  * Get the current time in seconds using pre-configured format.
+ * \param time The time to print.
  * \return The time string.
+ * \internal Keep this method consistent with GetSvelteMeterId () method.
  */
-std::string GetTimeStr (void);
+std::string GetTimeStr (Time time = Simulator::Now ());
 
 /**
  * \ingroup svelte
