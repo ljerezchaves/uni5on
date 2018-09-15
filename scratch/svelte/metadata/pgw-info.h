@@ -126,16 +126,18 @@ public:
    * \name Private member accessors for P-GW TFT active switches aggregated
    *       datapath information.
    * \return The requested information.
+   * \internal These methods iterate only over active TFT switches for
+   *           collecting statistics.
    */
   //\{
-  uint32_t              GetTftAvgFlowTableMax         (void) const;
   uint32_t              GetTftAvgFlowTableCur         (void) const;
+  uint32_t              GetTftAvgFlowTableMax         (void) const;
   double                GetTftAvgFlowTableUsage       (void) const;
   DataRate              GetTftAvgPipeCapacityCur      (void) const;
   DataRate              GetTftAvgPipeCapacityMax      (void) const;
   double                GetTftAvgPipeCapacityUsage    (void) const;
-  uint32_t              GetTftMaxFlowTableMax         (void) const;
   uint32_t              GetTftMaxFlowTableCur         (void) const;
+  uint32_t              GetTftMaxFlowTableMax         (void) const;
   double                GetTftMaxFlowTableUsage       (void) const;
   DataRate              GetTftMaxPipeCapacityCur      (void) const;
   DataRate              GetTftMaxPipeCapacityMax      (void) const;
