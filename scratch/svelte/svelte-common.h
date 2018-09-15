@@ -239,7 +239,7 @@ uint32_t GetSvelteMeterId (SliceId sliceId, uint32_t meterId);
  * \return The header string.
  * \internal Keep this method consistent with GetTimeStr () method.
  */
-std::string GetTimeHeader (std::string title = "Time");
+std::string GetTimeHeader (std::string title = "Time:s");
 
 /**
  * \ingroup svelte
