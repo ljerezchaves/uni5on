@@ -49,21 +49,21 @@ public:
   /**
    * Reset all internal counters.
    */
-  void ResetCounters (void);
+  virtual void ResetCounters (void);
 
   /**
    * Update TX counters for a new transmitted packet.
    * \param txBytes The total number of bytes in this packet.
    * \return The next TX sequence number to use.
    */
-  uint32_t NotifyTx (uint32_t txBytes);
+  virtual uint32_t NotifyTx (uint32_t txBytes);
 
   /**
    * Update RX counters for a new received packet.
    * \param rxBytes The total number of bytes in this packet.
    * \param timestamp The timestamp when this packet was sent.
    */
-  void NotifyRx (uint32_t rxBytes, Time timestamp = Simulator::Now ());
+  virtual void NotifyRx (uint32_t rxBytes, Time timestamp = Simulator::Now ());
 
   /**
    * Get QoS statistics.

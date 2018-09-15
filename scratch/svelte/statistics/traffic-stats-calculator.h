@@ -23,10 +23,13 @@
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
+#include "../applications/app-stats-calculator.h"
+
+// Total number of drop reasons + 1 for aggregated metadata.
+#define N_REASONS_ALL (static_cast<uint8_t> (DropReason::ALL) + 1)
 
 namespace ns3 {
 
-class AppStatsCalculator;
 class RoutingInfo;
 class SvelteClientApp;
 class UeInfo;
@@ -36,6 +39,77 @@ class UeInfo;
  * \defgroup svelteStats Statistics
  * Statistics calculators for monitoring the SVELTE architecture.
  */
+
+/**
+ * \ingroup svelteStats
+ * This class extends the AppStatsCalculator to monitor basic QoS statistics at
+ * link level in the OpenFlow EPC network, including packet drops.
+ */
+class EpcStatsCalculator : public AppStatsCalculator
+{
+public:
+  /** Reason for packet drops at OpenFlow EPC network. */
+  enum DropReason
+  {
+    SWTCH = 0,    //!< Switch pipeline capacity overloaded.
+    METER = 1,    //!< EPC bearer MBR meter.
+    SLICE = 2,    //!< OpenFlow EPC infrastructure slicing.
+    QUEUE = 3,    //!< Network device queues.
+    ALL   = 4     //!< ALL previous reasons.
+  };
+
+  EpcStatsCalculator ();          //!< Default constructor.
+  virtual ~EpcStatsCalculator (); //!< Dummy destructor, see DoDispose.
+
+  /**
+   * Register this type.
+   * \return The object TypeId.
+   */
+  static TypeId GetTypeId (void);
+
+  // Inherited from AppStatsCalculator.
+  void ResetCounters (void);
+
+  /**
+   * Update drop counters for a new dropped packet.
+   * \param dpBytes The total number of bytes in this packet.
+   * \param reason The drop reason.
+   */
+  void NotifyDrop (uint32_t dpBytes, DropReason reason);
+
+  /**
+   * Get drop statistics.
+   * \param reason The drop reason.
+   * \return The statistic value.
+   */
+  //\{
+  uint32_t GetDpBytes   (DropReason reason) const;
+  uint32_t GetDpPackets (DropReason reason) const;
+  //\}
+
+  /**
+   * Get the header for the print operator <<.
+   * \return The header string.
+   * \internal Keep this method consistent with the << operator below.
+   */
+  static std::string PrintHeader (void);
+
+  /**
+   * TracedCallback signature for EpcStatsCalculator.
+   * \param stats The statistics.
+   */
+  typedef void (*EpcStatsCallback)(Ptr<const EpcStatsCalculator> stats);
+
+protected:
+  /** Destructor implementation. */
+  virtual void DoDispose ();
+
+private:
+  uint32_t  m_dpPackets [N_REASONS_ALL]; //!< Number of dropped packets.
+  uint32_t  m_dpBytes [N_REASONS_ALL];   //!< Number of dropped bytes.
+};
+
+
 /**
  * \ingroup svelteStats
  * This class monitors the traffic QoS statistics at application L7 level for
@@ -122,7 +196,7 @@ private:
    * \param isDown True for downlink stats, false for uplink.
    * \return The QoS information.
    */
-  Ptr<AppStatsCalculator> GetEpcStatsFromTeid (uint32_t teid, bool isDown);
+  Ptr<EpcStatsCalculator> GetEpcStatsFromTeid (uint32_t teid, bool isDown);
 
   /**
    * Get the header for common statistics metrics.
@@ -147,14 +221,24 @@ private:
   std::string               m_epcFilename;  //!< EpcStats filename.
   Ptr<OutputStreamWrapper>  m_epcWrapper;   //!< EpcStats file wrapper.
 
-  /** A pair of AppStatsCalculator, for downlink and uplink EPC statistics. */
-  typedef std::pair<Ptr<AppStatsCalculator>,
-                    Ptr<AppStatsCalculator> > QosStatsPair_t;
+  /** A pair of EpcStatsCalculator, for downlink and uplink EPC statistics. */
+  typedef std::pair<Ptr<EpcStatsCalculator>,
+                    Ptr<EpcStatsCalculator> > QosStatsPair_t;
 
   /** A Map saving GTP TEID / QoS stats pair. */
   typedef std::map<uint32_t, QosStatsPair_t> TeidQosMap_t;
   TeidQosMap_t              m_qosByTeid;    //!< TEID QoS statistics.
 };
+
+/**
+ * Print the EPC QoS metadata on an output stream.
+ * \param os The output stream.
+ * \param stats The EpcStatsCalculator object.
+ * \returns The output stream.
+ * \internal Keep this method consistent with the
+ *           EpcStatsCalculator::PrintHeader ().
+ */
+std::ostream & operator << (std::ostream &os, const EpcStatsCalculator &stats);
 
 } // namespace ns3
 #endif /* TRAFFIC_STATS_CALCULATOR_H */
