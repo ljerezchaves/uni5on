@@ -175,12 +175,12 @@ TrafficStatsCalculator::GetTypeId (void)
     .AddConstructor<TrafficStatsCalculator> ()
     .AddAttribute ("AppStatsFilename",
                    "Filename for L7 traffic application QoS statistics.",
-                   StringValue ("traffic-qos-l7-app.log"),
+                   StringValue ("traffic-qos-l7-app"),
                    MakeStringAccessor (&TrafficStatsCalculator::m_appFilename),
                    MakeStringChecker ())
     .AddAttribute ("EpcStatsFilename",
                    "Filename for L3 traffic EPC QoS statistics.",
-                   StringValue ("traffic-qos-l3-epc.log"),
+                   StringValue ("traffic-qos-l3-epc"),
                    MakeStringAccessor (&TrafficStatsCalculator::m_epcFilename),
                    MakeStringChecker ())
   ;
@@ -216,11 +216,13 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   SetAttribute ("AppStatsFilename", StringValue (prefix + m_appFilename));
   SetAttribute ("EpcStatsFilename", StringValue (prefix + m_epcFilename));
 
-  m_appWrapper = Create<OutputStreamWrapper> (m_appFilename, std::ios::out);
+  m_appWrapper = Create<OutputStreamWrapper> (
+      m_appFilename + ".log", std::ios::out);
   *m_appWrapper->GetStream ()
     << fixed << setprecision (3) << boolalpha << GetHeader () << std::endl;
 
-  m_epcWrapper = Create<OutputStreamWrapper> (m_epcFilename, std::ios::out);
+  m_epcWrapper = Create<OutputStreamWrapper> (
+      m_epcFilename + ".log", std::ios::out);
   *m_epcWrapper->GetStream ()
     << fixed << setprecision (3) << boolalpha << GetHeader ()
     << setw (7)  << "Load"

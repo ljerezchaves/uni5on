@@ -53,7 +53,7 @@ PgwTftStatsCalculator::GetTypeId (void)
     .AddConstructor<PgwTftStatsCalculator> ()
     .AddAttribute ("LbmStatsFilename",
                    "Filename for EPC P-GW TFT statistics.",
-                   StringValue ("pgw-tft-stats.log"),
+                   StringValue ("pgw-tft-stats"),
                    MakeStringAccessor (&PgwTftStatsCalculator::m_tftFilename),
                    MakeStringChecker ())
   ;
@@ -79,7 +79,8 @@ PgwTftStatsCalculator::NotifyConstructionCompleted (void)
   std::string prefix = stringValue.Get ();
   SetAttribute ("LbmStatsFilename", StringValue (prefix + m_tftFilename));
 
-  m_tftWrapper = Create<OutputStreamWrapper> (m_tftFilename, std::ios::out);
+  m_tftWrapper = Create<OutputStreamWrapper> (
+      m_tftFilename + ".log", std::ios::out);
   *m_tftWrapper->GetStream ()
     << fixed << setprecision (3) << boolalpha
     << left

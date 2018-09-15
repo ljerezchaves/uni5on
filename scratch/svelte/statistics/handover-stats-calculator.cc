@@ -86,13 +86,13 @@ HandoverStatsCalculator::GetTypeId (void)
     .AddConstructor<HandoverStatsCalculator> ()
     .AddAttribute ("MobStatsFilename",
                    "Filename for LTE UE mobility model statistics.",
-                   StringValue ("handover-mobility.log"),
+                   StringValue ("handover-mobility"),
                    MakeStringAccessor (
                      &HandoverStatsCalculator::m_mobFilename),
                    MakeStringChecker ())
     .AddAttribute ("RrcStatsFilename",
                    "Filename for LTE UE RRC procedures statistics.",
-                   StringValue ("handover-connection.log"),
+                   StringValue ("handover-connection"),
                    MakeStringAccessor (
                      &HandoverStatsCalculator::m_rrcFilename),
                    MakeStringChecker ())
@@ -121,7 +121,8 @@ HandoverStatsCalculator::NotifyConstructionCompleted (void)
   SetAttribute ("MobStatsFilename", StringValue (prefix + m_mobFilename));
   SetAttribute ("RrcStatsFilename", StringValue (prefix + m_rrcFilename));
 
-  m_mobWrapper = Create<OutputStreamWrapper> (m_mobFilename, std::ios::out);
+  m_mobWrapper = Create<OutputStreamWrapper> (
+      m_mobFilename + ".log", std::ios::out);
   *m_mobWrapper->GetStream ()
     << fixed << setprecision (4)
     << left
@@ -137,7 +138,8 @@ HandoverStatsCalculator::NotifyConstructionCompleted (void)
     << setw (10) << "VelZ"
     << std::endl;
 
-  m_rrcWrapper = Create<OutputStreamWrapper> (m_rrcFilename, std::ios::out);
+  m_rrcWrapper = Create<OutputStreamWrapper> (
+      m_rrcFilename + ".log", std::ios::out);
   *m_rrcWrapper->GetStream ()
     << fixed << setprecision (4)
     << left
