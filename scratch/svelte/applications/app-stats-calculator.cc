@@ -21,6 +21,7 @@
 #include <iomanip>
 #include <iostream>
 #include "app-stats-calculator.h"
+#include "../svelte-common.h"
 
 using namespace std;
 
@@ -238,16 +239,15 @@ AppStatsCalculator::PrintHeader (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  // FIXME
   std::ostringstream str;
-  str << setw (11) << "Active(s)"
-      << setw (11) << "Delay(ms)"
-      << setw (12) << "Jitter(ms)"
-      << setw (8)  << "TxPkts"
-      << setw (8)  << "RxPkts"
-      << setw (9)  << "Loss(%)"
-      << setw (10) << "RxBytes"
-      << setw (12) << "Thp(Kbps)";
+  str << GetTimeHeader ("ActTime")
+      << " " << setw (7) << "Dly:ms"
+      << " " << setw (7) << "Jit:ms"
+      << " " << setw (7) << "TxPkts"
+      << " " << setw (7) << "RxPkts"
+      << " " << setw (7) << "Loss:%"
+      << " " << setw (8) << "RxBytes"
+      << " " << setw (9) << "Through";
   return str.str ();
 }
 
@@ -261,15 +261,17 @@ AppStatsCalculator::DoDispose ()
 
 std::ostream & operator << (std::ostream &os, const AppStatsCalculator &stats)
 {
-  // FIXME
-  os << setw (11) << stats.GetActiveTime ().GetSeconds ()
-     << setw (11) << stats.GetRxDelay ().GetSeconds () * 1000
-     << setw (12) << stats.GetRxJitter ().GetSeconds () * 1000
-     << setw (8)  << stats.GetTxPackets ()
-     << setw (8)  << stats.GetRxPackets ()
-     << setw (9)  << stats.GetLossRatio () * 100
-     << setw (10) << stats.GetRxBytes ()
-     << setw (12) << static_cast<double> (stats.GetRxThroughput ().GetBitRate ()) / 1000;
+  double throughput = static_cast<double> (
+      stats.GetRxThroughput ().GetBitRate ()) / 1000;
+
+  os << GetTimeStr (stats.GetActiveTime ())
+     << " " << setw (7) << stats.GetRxDelay ().GetSeconds () * 1000
+     << " " << setw (7) << stats.GetRxJitter ().GetSeconds () * 1000
+     << " " << setw (7) << stats.GetTxPackets ()
+     << " " << setw (7) << stats.GetRxPackets ()
+     << " " << setw (7) << stats.GetLossRatio () * 100
+     << " " << setw (8) << stats.GetRxBytes ()
+     << " " << setw (9) << throughput;
   return os;
 }
 
