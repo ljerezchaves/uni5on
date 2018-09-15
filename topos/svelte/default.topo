@@ -87,7 +87,7 @@ default ns3::AdmissionStatsCalculator::AdmStatsFilename "admission-counters"
 default ns3::AdmissionStatsCalculator::BrqStatsFilename "admission-requests"
 default ns3::HandoverStatsCalculator::MobStatsFilename "handover-mobility"
 default ns3::HandoverStatsCalculator::RrcStatsFilename "handover-connection"
-default ns3::PgwTftStatsCalculator::LbmStatsFilename "pgw-tft-stats"
+default ns3::PgwTftStatsCalculator::LbmStatsFilename "pgw-tft-adaptive"
 default ns3::TrafficStatsCalculator::AppStatsFilename "traffic-qos-l7-app"
 default ns3::TrafficStatsCalculator::EpcStatsFilename "traffic-qos-l3-epc"
 
