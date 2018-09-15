@@ -83,8 +83,6 @@ public:
   DataRate              GetPipeCapacityCur            (uint16_t idx) const;
   DataRate              GetPipeCapacityMax            (uint16_t idx) const;
   double                GetPipeCapacityUsage          (uint16_t idx) const;
-  double                GetTftWorstFlowTableUsage     (void) const;
-  double                GetTftWorstPipeCapacityUsage  (void) const;
   //\}
 
   /**
@@ -112,6 +110,26 @@ public:
   Ipv4Address           GetTftS5Addr                  (uint16_t idx) const;
   uint32_t              GetTftS5PortNo                (uint16_t idx) const;
   uint32_t              GetTftToMainPortNo            (uint16_t idx) const;
+  //\}
+
+  /**
+   * \name Private member accessors for P-GW TFT switches aggregated
+   *       datapath information.
+   * \return The requested information.
+   */
+  //\{
+  uint32_t              GetTftAvgFlowTableMax         (void) const;
+  uint32_t              GetTftAvgFlowTableCur         (void) const;
+  double                GetTftAvgFlowTableUsage       (void) const;
+  DataRate              GetTftAvgPipeCapacityCur      (void) const;
+  DataRate              GetTftAvgPipeCapacityMax      (void) const;
+  double                GetTftAvgPipeCapacityUsage    (void) const;
+  uint32_t              GetTftMaxFlowTableMax         (void) const;
+  uint32_t              GetTftMaxFlowTableCur         (void) const;
+  double                GetTftMaxFlowTableUsage       (void) const;
+  DataRate              GetTftMaxPipeCapacityCur      (void) const;
+  DataRate              GetTftMaxPipeCapacityMax      (void) const;
+  double                GetTftMaxPipeCapacityUsage    (void) const;
   //\}
 
   /**

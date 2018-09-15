@@ -152,34 +152,6 @@ PgwInfo::GetPipeCapacityUsage (uint16_t idx) const
          static_cast<double> (GetPipeCapacityMax (idx).GetBitRate ());
 }
 
-double
-PgwInfo::GetTftWorstFlowTableUsage () const
-{
-  NS_LOG_FUNCTION (this);
-
-  // Iterate only over TFT switches for collecting statistics.
-  double tableUsage = 0.0;
-  for (uint16_t idx = 1; idx <= m_nTfts; idx++)
-    {
-      tableUsage = std::max (tableUsage, GetFlowTableUsage (idx));
-    }
-  return tableUsage;
-}
-
-double
-PgwInfo::GetTftWorstPipeCapacityUsage () const
-{
-  NS_LOG_FUNCTION (this);
-
-  // Iterate only over TFT switches for collecting statistics.
-  double pipeUsage = 0.0;
-  for (uint16_t idx = 1; idx <= m_nTfts; idx++)
-    {
-      pipeUsage = std::max (pipeUsage, GetPipeCapacityUsage (idx));
-    }
-  return pipeUsage;
-}
-
 uint64_t
 PgwInfo::GetMainDpId (void) const
 {
@@ -281,6 +253,126 @@ PgwInfo::GetTftToMainPortNo (uint16_t idx) const
   NS_ASSERT_MSG (idx > 0, "Invalid TFT index.");
   NS_ASSERT_MSG (idx < m_tftToMainPortNos.size (), "Invalid TFT index.");
   return m_tftToMainPortNos.at (idx);
+}
+
+uint32_t
+PgwInfo::GetTftAvgFlowTableMax (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  // TODO
+  return 0;
+}
+
+uint32_t
+PgwInfo::GetTftAvgFlowTableCur (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  // TODO
+  return 0;
+}
+
+double
+PgwInfo::GetTftAvgFlowTableUsage (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  // TODO
+  return 0;
+}
+
+DataRate
+PgwInfo::GetTftAvgPipeCapacityCur (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  // TODO
+  return DataRate ();
+}
+
+DataRate
+PgwInfo::GetTftAvgPipeCapacityMax (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  // TODO
+  return DataRate ();
+}
+
+double
+PgwInfo::GetTftAvgPipeCapacityUsage (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  // TODO
+  return 0;
+}
+
+uint32_t
+PgwInfo::GetTftMaxFlowTableMax (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  // TODO
+  return 0;
+}
+
+uint32_t
+PgwInfo::GetTftMaxFlowTableCur (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  // TODO
+  return 0;
+}
+
+double
+PgwInfo::GetTftMaxFlowTableUsage () const
+{
+  NS_LOG_FUNCTION (this);
+
+  // FIXME Somente switches ativos.
+  // Iterate only over active TFT switches for collecting statistics.
+  double tableUsage = 0.0;
+  for (uint16_t idx = 1; idx <= m_nTfts; idx++)
+    {
+      tableUsage = std::max (tableUsage, GetFlowTableUsage (idx));
+    }
+  return tableUsage;
+}
+
+DataRate
+PgwInfo::GetTftMaxPipeCapacityCur (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  // TODO
+  return DataRate ();
+}
+
+DataRate
+PgwInfo::GetTftMaxPipeCapacityMax (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  // TODO
+  return DataRate ();
+}
+
+double
+PgwInfo::GetTftMaxPipeCapacityUsage () const
+{
+  NS_LOG_FUNCTION (this);
+
+  // FIXME Somente switches ativos.
+  // Iterate only over active TFT switches for collecting statistics.
+  double pipeUsage = 0.0;
+  for (uint16_t idx = 1; idx <= m_nTfts; idx++)
+    {
+      pipeUsage = std::max (pipeUsage, GetPipeCapacityUsage (idx));
+    }
+  return pipeUsage;
 }
 
 Ptr<PgwInfo>
