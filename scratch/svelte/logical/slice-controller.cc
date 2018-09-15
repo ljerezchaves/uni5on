@@ -217,11 +217,75 @@ SliceController::DedicatedBearerRelease (
 }
 
 OpMode
-SliceController::GetPgwAdaptiveMode (void) const
+SliceController::GetPgwTftAdaptiveMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_tftAdaptive;
+}
+
+OpMode
+SliceController::GetPgwTftBlockPolicy (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_tftBlockPolicy;
+}
+
+double
+SliceController::GetPgwTftBlockThs (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_tftBlockThs;
+}
+
+uint8_t
+SliceController::GetPgwTftLevel (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_tftLevel;
+}
+
+uint16_t
+SliceController::GetPgwTftSwitches (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return 1 << m_tftLevel;
+}
+
+double
+SliceController::GetPgwTftJoinThs (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_tftJoinThs;
+}
+
+uint32_t
+SliceController::GetPgwTftMaxLevel (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return static_cast<uint32_t> (log2 (GetPgwTftMaxSwitches ()));
+}
+
+uint16_t
+SliceController::GetPgwTftMaxSwitches (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwInfo->GetNumTfts ();
+}
+
+double
+SliceController::GetPgwTftSplitThs (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_tftSplitThs;
 }
 
 EpcS11SapSgw*
@@ -252,18 +316,16 @@ SliceController::NotifyPgwAttach (
 
   // Set the number of P-GW TFT active switches and the
   // adaptive mechanism initial level.
-  switch (GetPgwAdaptiveMode ())
+  switch (GetPgwTftAdaptiveMode ())
     {
     case OpMode::ON:
     case OpMode::AUTO:
       {
-        m_tftSwitches = pgwInfo->GetNumTfts ();
-        m_tftLevel = static_cast<uint8_t> (log2 (m_tftSwitches));
+        m_tftLevel = GetPgwTftMaxLevel ();
         break;
       }
     case OpMode::OFF:
       {
-        m_tftSwitches = 1;
         m_tftLevel = 0;
         break;
       }
@@ -705,7 +767,7 @@ SliceController::GetTftIdx (
 
   if (activeTfts == 0)
     {
-      activeTfts = 1 << m_tftLevel;
+      activeTfts = GetPgwTftSwitches ();
     }
   return 1 + (rInfo->GetUeAddr ().Get () % activeTfts);
 }
@@ -717,17 +779,14 @@ SliceController::PgwAdaptiveMechanism (void)
 
   NS_ASSERT_MSG (m_pgwInfo, "No P-GW attached to this slice.");
 
-  uint32_t maxLevel = static_cast<uint32_t> (log2 (m_tftSwitches));
-  uint16_t activeTfts = 1 << m_tftLevel;
   uint8_t nextLevel = m_tftLevel;
-
-  if (GetPgwAdaptiveMode () == OpMode::AUTO)
+  if (GetPgwTftAdaptiveMode () == OpMode::AUTO)
     {
       double tableUsage = m_pgwInfo->GetTftWorstFlowTableUsage ();
       double pipeUsage = m_pgwInfo->GetTftWorstPipeCapacityUsage ();
 
       // We may increase the level when we hit the split threshold.
-      if ((m_tftLevel < maxLevel)
+      if ((m_tftLevel < GetPgwTftMaxLevel ())
           && (tableUsage >= m_tftSplitThs || pipeUsage >= m_tftSplitThs))
         {
           NS_LOG_INFO ("Increasing the adaptive mechanism level.");
@@ -749,7 +808,7 @@ SliceController::PgwAdaptiveMechanism (void)
     {
       // Identify and move bearers to the correct P-GW TFT switches.
       uint16_t futureTfts = 1 << nextLevel;
-      for (uint16_t currIdx = 1; currIdx <= activeTfts; currIdx++)
+      for (uint16_t currIdx = 1; currIdx <= GetPgwTftSwitches (); currIdx++)
         {
           RoutingInfoList_t bearerList;
           RoutingInfo::GetInstalledList (bearerList, m_sliceId, currIdx);

@@ -91,10 +91,20 @@ public:
                                        uint32_t teid);
 
   /**
-   * Get the P-GW adaptive mechanisms operation mode.
-   * \return The operation mode.
+   * \name Private member accessors for P-GW TFT adaptive mechanisms.
+   * \return The requested information.
    */
-  OpMode GetPgwAdaptiveMode (void) const;
+  //\{
+  OpMode    GetPgwTftAdaptiveMode     (void) const;
+  OpMode    GetPgwTftBlockPolicy      (void) const;
+  double    GetPgwTftBlockThs         (void) const;
+  uint8_t   GetPgwTftLevel            (void) const;
+  uint16_t  GetPgwTftSwitches         (void) const;
+  double    GetPgwTftJoinThs          (void) const;
+  uint32_t  GetPgwTftMaxLevel         (void) const;
+  uint16_t  GetPgwTftMaxSwitches      (void) const;
+  double    GetPgwTftSplitThs         (void) const;
+  //\}
 
   /**
    * Get The S-GW side of the S11 SAP.
@@ -328,7 +338,6 @@ private:
   double                  m_tftBlockThs;    //!< Block threshold.
   double                  m_tftJoinThs;     //!< Join threshold.
   double                  m_tftSplitThs;    //!< Split threshold.
-  uint16_t                m_tftSwitches;    //!< Max number of TFT switches.
 
   // Internal members and attributes.
   Time                    m_timeout;        //!< Controller internal timeout.
