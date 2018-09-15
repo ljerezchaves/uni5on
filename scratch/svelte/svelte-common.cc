@@ -89,6 +89,12 @@ SliceIdStr (SliceId slice)
     }
 }
 
+double
+Bps2Kbps (uint64_t bitrate)
+{
+  return static_cast<double> (bitrate) / 1000;
+}
+
 uint8_t
 Dscp2Tos (Ipv4Header::DscpType dscp)
 {

@@ -120,6 +120,14 @@ std::string SliceIdStr (SliceId slice);
 
 /**
  * \ingroup svelte
+ * Convert the BPS to KBPS without precision loss.
+ * \param bitrate The bit rate in BPS.
+ * \return The bitrate in KBPS.
+ */
+double Bps2Kbps (uint64_t bitrate);
+
+/**
+ * \ingroup svelte
  * Get the mapped IP ToS value for a specific DSCP.
  * \param dscp The IP DSCP value.
  * \return The IP ToS mapped for this DSCP.
