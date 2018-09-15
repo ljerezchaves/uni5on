@@ -463,7 +463,7 @@ BackhaulController::SlicingMeterAdjusted (
       // Meter table
       //
       // Update the proper slicing meter.
-      uint64_t kbps = lInfo->GetFreeBitRate (dir, slice) / 1000;
+      uint64_t kbps = Bps2Kbps (lInfo->GetFreeBitRate (dir, slice));
       std::ostringstream cmd;
       cmd << "meter-mod cmd=mod"
           << ",flags=" << OFPMF_KBPS
@@ -497,7 +497,7 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
                            " for link info " << lInfo->GetSwDpId (0) <<
                            " to " << lInfo->GetSwDpId (1));
 
-              uint64_t kbps = lInfo->GetFreeBitRate (dir, slice) / 1000;
+              uint64_t kbps = Bps2Kbps (lInfo->GetFreeBitRate (dir, slice));
               std::ostringstream cmd;
               cmd << "meter-mod cmd=add,flags=" << OFPMF_KBPS
                   << ",meter=" << meterId
@@ -523,7 +523,7 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
                        " for link info " << lInfo->GetSwDpId (0) <<
                        " to " << lInfo->GetSwDpId (1));
 
-          uint64_t kbps = lInfo->GetFreeBitRate (dir, slice) / 1000;
+          uint64_t kbps = Bps2Kbps (lInfo->GetFreeBitRate (dir, slice));
           std::ostringstream cmd;
           cmd << "meter-mod cmd=add,flags=" << OFPMF_KBPS
               << ",meter=" << meterId

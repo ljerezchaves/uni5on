@@ -128,6 +128,14 @@ double Bps2Kbps (uint64_t bitrate);
 
 /**
  * \ingroup svelte
+ * Convert DataRate BPS to KBPS without precision loss.
+ * \param bitrate The DataRate.
+ * \return The bitrate in KBPS.
+ */
+double Bps2Kbps (DataRate datarate);
+
+/**
+ * \ingroup svelte
  * Get the mapped IP ToS value for a specific DSCP.
  * \param dscp The IP DSCP value.
  * \return The IP ToS mapped for this DSCP.
