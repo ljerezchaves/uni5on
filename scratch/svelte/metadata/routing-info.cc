@@ -748,11 +748,11 @@ std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
      << " " << setw (6)  << rInfo.IsGbr ()
      << " " << setw (5)  << rInfo.GetDscpStr ()
      << " " << setw (6)  << rInfo.HasDlTraffic ()
-     << " " << setw (9)  << static_cast<double> (rInfo.GetGbrDlBitRate ()) / 1000
-     << " " << setw (9)  << static_cast<double> (rInfo.GetMbrDlBitRate ()) / 1000
+     << " " << setw (9)  << Bps2Kbps (rInfo.GetGbrDlBitRate ())
+     << " " << setw (9)  << Bps2Kbps (rInfo.GetMbrDlBitRate ())
      << " " << setw (6)  << rInfo.HasUlTraffic ()
-     << " " << setw (9)  << static_cast<double> (rInfo.GetGbrUlBitRate ()) / 1000
-     << " " << setw (9)  << static_cast<double> (rInfo.GetMbrUlBitRate ()) / 1000
+     << " " << setw (9)  << Bps2Kbps (rInfo.GetGbrUlBitRate ())
+     << " " << setw (9)  << Bps2Kbps (rInfo.GetMbrUlBitRate ())
      << " " << setw (6)  << rInfo.IsGbrReserved ()
      << " " << setw (6)  << rInfo.IsMbrDlInstalled ()
      << " " << setw (6)  << rInfo.IsMbrUlInstalled ()

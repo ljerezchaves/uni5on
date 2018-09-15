@@ -261,9 +261,6 @@ AppStatsCalculator::DoDispose ()
 
 std::ostream & operator << (std::ostream &os, const AppStatsCalculator &stats)
 {
-  double throughput = static_cast<double> (
-      stats.GetRxThroughput ().GetBitRate ()) / 1000;
-
   os << GetTimeStr (stats.GetActiveTime ())
      << " " << setw (7) << stats.GetRxDelay ().GetSeconds () * 1000
      << " " << setw (7) << stats.GetRxJitter ().GetSeconds () * 1000
@@ -271,7 +268,7 @@ std::ostream & operator << (std::ostream &os, const AppStatsCalculator &stats)
      << " " << setw (7) << stats.GetRxPackets ()
      << " " << setw (7) << stats.GetLossRatio () * 100
      << " " << setw (8) << stats.GetRxBytes ()
-     << " " << setw (9) << throughput;
+     << " " << setw (9) << Bps2Kbps (stats.GetRxThroughput ().GetBitRate ());
   return os;
 }
 
