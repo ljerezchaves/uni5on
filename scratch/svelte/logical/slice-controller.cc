@@ -782,8 +782,8 @@ SliceController::PgwAdaptiveMechanism (void)
   uint8_t nextLevel = m_tftLevel;
   if (GetPgwTftAdaptiveMode () == OpMode::AUTO)
     {
-      double tableUsage = m_pgwInfo->GetTftWorstFlowTableUsage ();
-      double pipeUsage = m_pgwInfo->GetTftWorstPipeCapacityUsage ();
+      double tableUsage = m_pgwInfo->GetTftMaxFlowTableUsage ();
+      double pipeUsage = m_pgwInfo->GetTftMaxPipeCapacityUsage ();
 
       // We may increase the level when we hit the split threshold.
       if ((m_tftLevel < GetPgwTftMaxLevel ())
