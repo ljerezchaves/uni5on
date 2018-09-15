@@ -105,14 +105,13 @@ EpcStatsCalculator::PrintHeader (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  // FIXME
   std::ostringstream str;
   str << AppStatsCalculator::PrintHeader ()
-      << setw (7)  << "DpSwt"
-      << setw (7)  << "DpMbr"
-      << setw (7)  << "DpQue"
-      << setw (7)  << "DpSli"
-      << setw (7)  << "DpAll";
+      << " " << setw (6) << "DpLoa"
+      << " " << setw (6) << "DpMbr"
+      << " " << setw (6) << "DpSli"
+      << " " << setw (6) << "DpQue"
+      << " " << setw (6) << "DpAll";
   return str.str ();
 }
 
@@ -122,6 +121,17 @@ EpcStatsCalculator::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   AppStatsCalculator::DoDispose ();
+}
+
+std::ostream & operator << (std::ostream &os, const EpcStatsCalculator &stats)
+{
+  os << static_cast<AppStatsCalculator> (stats);
+  for (int r = 0; r <= EpcStatsCalculator::ALL; r++)
+    {
+      os << " " << setw (6) << stats.GetDpPackets (
+        static_cast<EpcStatsCalculator::DropReason> (r));
+    }
+  return os;
 }
 
 
@@ -479,18 +489,6 @@ TrafficStatsCalculator::GetStats (
       << *rInfo
       << *stats;
   return str.str ();
-}
-
-std::ostream & operator << (std::ostream &os, const EpcStatsCalculator &stats)
-{
-  // FIXME
-  os << static_cast<AppStatsCalculator> (stats);
-  for (int r = 0; r <= EpcStatsCalculator::ALL; r++)
-    {
-      os << setw (8) << stats.GetDpPackets (
-        static_cast<EpcStatsCalculator::DropReason> (r));
-    }
-  return os;
 }
 
 } // Namespace ns3

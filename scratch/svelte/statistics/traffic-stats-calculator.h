@@ -110,6 +110,16 @@ private:
   uint32_t  m_dpBytes [N_REASONS_ALL];   //!< Number of dropped bytes.
 };
 
+/**
+ * Print the EPC QoS metadata on an output stream.
+ * \param os The output stream.
+ * \param stats The EpcStatsCalculator object.
+ * \returns The output stream.
+ * \internal Keep this method consistent with the
+ *           EpcStatsCalculator::PrintHeader ().
+ */
+std::ostream & operator << (std::ostream &os, const EpcStatsCalculator &stats);
+
 
 /**
  * \ingroup svelteStats
@@ -253,16 +263,6 @@ private:
   typedef std::map<uint32_t, EpcStatsPair> TeidEpcStatsMap_t;
   TeidEpcStatsMap_t         m_qosByTeid;    //!< TEID EPC statistics.
 };
-
-/**
- * Print the EPC QoS metadata on an output stream.
- * \param os The output stream.
- * \param stats The EpcStatsCalculator object.
- * \returns The output stream.
- * \internal Keep this method consistent with the
- *           EpcStatsCalculator::PrintHeader ().
- */
-std::ostream & operator << (std::ostream &os, const EpcStatsCalculator &stats);
 
 } // namespace ns3
 #endif /* TRAFFIC_STATS_CALCULATOR_H */
