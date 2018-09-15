@@ -21,6 +21,7 @@
 #include <iomanip>
 #include <iostream>
 #include "pgw-tft-stats-calculator.h"
+#include "../logical/slice-controller.h"
 #include "../metadata/pgw-info.h"
 
 using namespace std;
@@ -82,28 +83,28 @@ PgwTftStatsCalculator::NotifyConstructionCompleted (void)
   m_tftWrapper = Create<OutputStreamWrapper> (
       m_tftFilename + ".log", std::ios::out);
   *m_tftWrapper->GetStream ()
-    << fixed << setprecision (3) << boolalpha
-    << left
-    << setw (12) << "Time(s)"
-    << right
-    << setw (8)  << "CurLev"
-    << setw (8)  << "NexLev"
-    << setw (8)  << "MaxLev"
-    << setw (8)  << "NoTFTs"
-    << setw (8)  << "BeaMov"
-    << setw (8)  << "BloThs"
-    << setw (8)  << "SplThs"
-    << setw (8)  << "JoiThs"
-    << setw (8)  << "TabUse"
-    << setw (8)  << "LoaUse"
-    << setw (8)  << "TabSiz"
-    << setw (8)  << "MaxEnt"
-    << setw (8)  << "SumEnt"
-    << setw (8)  << "AvgEnt"
-    << setw (14) << "PipCap(Kbps)"
-    << setw (14) << "MaxLoa(Kbps)"
-    << setw (14) << "SumLoa(Kbps)"
-    << setw (14) << "AvgLoa(Kbps)"
+    << boolalpha << right << fixed << setprecision (3)
+    << GetTimeHeader ()
+    << " " << setw (7)  << "CurLev"
+    << " " << setw (7)  << "NexLev"
+    << " " << setw (7)  << "MaxLev"
+    << " " << setw (7)  << "NumTFT"
+    << " " << setw (7)  << "BeaMov"
+    << " " << setw (7)  << "BloThs"
+    << " " << setw (7)  << "SplThs"
+    << " " << setw (7)  << "JoiThs"
+    << " " << setw (7)  << "AvgSiz"
+    << " " << setw (7)  << "MaxSiz"
+    << " " << setw (7)  << "AvgEnt"
+    << " " << setw (7)  << "MaxEnt"
+    << " " << setw (9)  << "AvgUse:%"
+    << " " << setw (9)  << "MaxUse:%"
+    << " " << setw (13) << "AvgCap:kbps"
+    << " " << setw (13) << "MaxCap:kbps"
+    << " " << setw (13) << "AvgLoa:kbps"
+    << " " << setw (13) << "MaxLoa:kbps"
+    << " " << setw (9)  << "AvgUse:%"
+    << " " << setw (9)  << "MaxUse:%"
     << std::endl;
 
   Object::NotifyConstructionCompleted ();
@@ -117,29 +118,28 @@ PgwTftStatsCalculator::NotifyPgwTftStats (
   NS_LOG_FUNCTION (this << context << pgwInfo << currLevel <<
                    nextLevel << bearersMoved);
 
-  uint16_t numTfts = 1 << currentLevel;
   *m_tftWrapper->GetStream ()
-    << left
-    << setw (11) << Simulator::Now ().GetSeconds ()
-    << right
-    << " " << setw (8) << currentLevel
-    << " " << setw (7) << nextLevel
-    << " " << setw (7) << maxLevel
-    << " " << setw (7) << numTfts
-    << " " << setw (7) << bearersMoved
-    << " " << setw (7) << blockThrs
-    << " " << setw (7) << splitThrs
-    << " " << setw (7) << joinThrs
-//    << " " << setw (7) << stats.maxEntries / stats.tableSize
-//    << " " << setw (7) << stats.maxLoad / stats.pipeCapacity
-//    << " " << setw (7) << static_cast<uint32_t> (stats.tableSize)
-//    << " " << setw (7) << static_cast<uint32_t> (stats.maxEntries)
-//    << " " << setw (7) << static_cast<uint32_t> (stats.sumEntries)
-//    << " " << setw (7) << static_cast<uint32_t> (stats.sumEntries / numTfts)
-//    << " " << setw (13) << stats.pipeCapacity / 1000
-//    << " " << setw (13) << stats.maxLoad / 1000
-//    << " " << setw (13) << stats.sumLoad / 1000
-//    << " " << setw (13) << stats.sumLoad / 1000 / numTfts
+    << GetTimeStr ()
+    << " " << setw (7)  << currLevel
+    << " " << setw (7)  << nextLevel
+    << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftMaxLevel ()
+    << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftSwitches ()
+    << " " << setw (7)  << bearersMoved
+    << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftBlockThs ()
+    << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftSplitThs ()
+    << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftJoinThs ()
+    << " " << setw (7)  << pgwInfo->GetTftAvgFlowTableMax ()
+    << " " << setw (7)  << pgwInfo->GetTftMaxFlowTableMax ()
+    << " " << setw (7)  << pgwInfo->GetTftAvgFlowTableCur ()
+    << " " << setw (7)  << pgwInfo->GetTftMaxFlowTableCur ()
+    << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableUsage () * 100
+    << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableUsage () * 100
+    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftAvgPipeCapacityMax ())
+    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftMaxPipeCapacityMax ())
+    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftAvgPipeCapacityCur ())
+    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftMaxPipeCapacityCur ())
+    << " " << setw (9)  << pgwInfo->GetTftAvgPipeCapacityUsage () * 100
+    << " " << setw (9)  << pgwInfo->GetTftMaxPipeCapacityUsage () * 100
     << std::endl;
 }
 
