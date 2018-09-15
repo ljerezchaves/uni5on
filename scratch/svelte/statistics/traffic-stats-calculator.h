@@ -143,6 +143,13 @@ public:
    */
   Direction GetDirection (EpcGtpuTag &gtpuTag) const;
 
+  /**
+   * Get the string representing the given direction.
+   * \param dir The link direction.
+   * \return The link direction string.
+   */
+  static std::string DirectionStr (Direction dir);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();

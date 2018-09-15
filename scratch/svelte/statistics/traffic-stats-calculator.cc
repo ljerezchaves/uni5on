@@ -195,6 +195,20 @@ TrafficStatsCalculator::GetDirection (EpcGtpuTag &gtpuTag) const
   return gtpuTag.IsDownlink () ? Direction::DLINK : Direction::ULINK;
 }
 
+std::string
+TrafficStatsCalculator::DirectionStr (Direction dir)
+{
+  switch (dir)
+    {
+    case TrafficStatsCalculator::DLINK:
+      return "Dlink";
+    case TrafficStatsCalculator::ULINK:
+      return "Ulink";
+    default:
+      return "-";
+    }
+}
+
 void
 TrafficStatsCalculator::DoDispose ()
 {
@@ -249,12 +263,12 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       // Dump uplink statistics.
       epcStats = GetEpcStats (teid, Direction::ULINK);
       *m_epcWrapper->GetStream ()
-        << GetStats (app, epcStats, rInfo, "up")
+        << GetStats (app, epcStats, rInfo, DirectionStr (Direction::ULINK))
         << *epcStats
         << std::endl;
 
       *m_appWrapper->GetStream ()
-        << GetStats (app, app->GetServerAppStats (), rInfo, "up")
+        << GetStats (app, app->GetServerAppStats (), rInfo, DirectionStr (Direction::ULINK))
         << std::endl;
     }
 
@@ -263,12 +277,12 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       // Dump downlink statistics.
       epcStats = GetEpcStats (teid, Direction::DLINK);
       *m_epcWrapper->GetStream ()
-        << GetStats (app, epcStats, rInfo, "down")
+        << GetStats (app, epcStats, rInfo, DirectionStr (Direction::DLINK))
         << *epcStats
         << std::endl;
 
       *m_appWrapper->GetStream ()
-        << GetStats (app, app->GetAppStats (), rInfo, "down")
+        << GetStats (app, app->GetAppStats (), rInfo, DirectionStr (Direction::DLINK))
         << std::endl;
     }
 }
