@@ -188,7 +188,7 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
       m_slices [s].admWrapper = Create<OutputStreamWrapper> (
           m_admFilename + "-" + sliceStr + ".log", std::ios::out);
       *m_slices [s].admWrapper->GetStream ()
-        << fixed << boolalpha << right
+        << boolalpha << right << fixed << setprecision (3)
         << GetTimeHeader ()
         << " " << setw (6) << "Relea"
         << " " << setw (6) << "Reque"
@@ -204,7 +204,7 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   m_brqWrapper = Create<OutputStreamWrapper> (
       m_brqFilename + ".log", std::ios::out);
   *m_brqWrapper->GetStream ()
-    << fixed << boolalpha << right << setprecision (3)
+    << boolalpha << right << fixed << setprecision (3)
     << GetTimeHeader ()
     << RoutingInfo::PrintHeader ()
     << UeInfo::PrintHeader ()

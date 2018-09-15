@@ -243,7 +243,7 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   m_appWrapper = Create<OutputStreamWrapper> (
       m_appFilename + ".log", std::ios::out);
   *m_appWrapper->GetStream ()
-    << fixed << boolalpha << right << setprecision (3)
+    << boolalpha << right << fixed << setprecision (3)
     << GetTimeHeader ()
     << " " << setw (8) << "AppName"
     << " " << setw (6) << "Ul/Dl"
@@ -254,7 +254,7 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   m_epcWrapper = Create<OutputStreamWrapper> (
       m_epcFilename + ".log", std::ios::out);
   *m_epcWrapper->GetStream ()
-    << fixed << boolalpha << right << setprecision (3)
+    << boolalpha << right << fixed << setprecision (3)
     << GetTimeHeader ()
     << " " << setw (8) << "AppName"
     << " " << setw (6) << "Ul/Dl"
