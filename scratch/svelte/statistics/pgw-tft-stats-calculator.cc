@@ -66,7 +66,10 @@ PgwTftStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  m_tftWrapper = 0;
+  for (int s = 0; s < SliceId::ALL; s++)
+    {
+      m_slices [s].tftWrapper = 0;
+    }
   Object::DoDispose ();
 }
 
@@ -80,32 +83,36 @@ PgwTftStatsCalculator::NotifyConstructionCompleted (void)
   std::string prefix = stringValue.Get ();
   SetAttribute ("LbmStatsFilename", StringValue (prefix + m_tftFilename));
 
-  m_tftWrapper = Create<OutputStreamWrapper> (
-      m_tftFilename + ".log", std::ios::out);
-  *m_tftWrapper->GetStream ()
-    << boolalpha << right << fixed << setprecision (3)
-    << GetTimeHeader ()
-    << " " << setw (7)  << "CurLev"
-    << " " << setw (7)  << "NexLev"
-    << " " << setw (7)  << "MaxLev"
-    << " " << setw (7)  << "NumTFT"
-    << " " << setw (7)  << "BeaMov"
-    << " " << setw (7)  << "BloThs"
-    << " " << setw (7)  << "SplThs"
-    << " " << setw (7)  << "JoiThs"
-    << " " << setw (7)  << "AvgSiz"
-    << " " << setw (7)  << "MaxSiz"
-    << " " << setw (7)  << "AvgEnt"
-    << " " << setw (7)  << "MaxEnt"
-    << " " << setw (9)  << "AvgUse:%"
-    << " " << setw (9)  << "MaxUse:%"
-    << " " << setw (13) << "AvgCap:kbps"
-    << " " << setw (13) << "MaxCap:kbps"
-    << " " << setw (13) << "AvgLoa:kbps"
-    << " " << setw (13) << "MaxLoa:kbps"
-    << " " << setw (9)  << "AvgUse:%"
-    << " " << setw (9)  << "MaxUse:%"
-    << std::endl;
+  for (int s = 0; s < SliceId::ALL; s++)
+    {
+      std::string sliceStr = SliceIdStr (static_cast<SliceId> (s));
+      m_slices [s].tftWrapper = Create<OutputStreamWrapper> (
+          m_tftFilename + "-" + sliceStr + ".log", std::ios::out);
+      *m_slices [s].tftWrapper->GetStream ()
+        << boolalpha << right << fixed << setprecision (3)
+        << GetTimeHeader ()
+        << " " << setw (7)  << "CurLev"
+        << " " << setw (7)  << "NexLev"
+        << " " << setw (7)  << "MaxLev"
+        << " " << setw (7)  << "NumTFT"
+        << " " << setw (7)  << "BeaMov"
+        << " " << setw (7)  << "BloThs"
+        << " " << setw (7)  << "SplThs"
+        << " " << setw (7)  << "JoiThs"
+        << " " << setw (7)  << "AvgSiz"
+        << " " << setw (7)  << "MaxSiz"
+        << " " << setw (7)  << "AvgEnt"
+        << " " << setw (7)  << "MaxEnt"
+        << " " << setw (9)  << "AvgUse:%"
+        << " " << setw (9)  << "MaxUse:%"
+        << " " << setw (13) << "AvgCap:kbps"
+        << " " << setw (13) << "MaxCap:kbps"
+        << " " << setw (13) << "AvgLoa:kbps"
+        << " " << setw (13) << "MaxLoa:kbps"
+        << " " << setw (9)  << "AvgUse:%"
+        << " " << setw (9)  << "MaxUse:%"
+        << std::endl;
+    }
 
   Object::NotifyConstructionCompleted ();
 }
@@ -117,7 +124,8 @@ PgwTftStatsCalculator::NotifyPgwTftStats (
 {
   NS_LOG_FUNCTION (this << context << pgwInfo << nextLevel << bearersMoved);
 
-  *m_tftWrapper->GetStream ()
+  SliceId slice = pgwInfo->GetSliceCtrl ()->GetSliceId ();
+  *m_slices [slice].tftWrapper->GetStream ()
     << GetTimeStr ()
     << " " << setw (7)  << pgwInfo->GetCurLevel ()
     << " " << setw (7)  << nextLevel

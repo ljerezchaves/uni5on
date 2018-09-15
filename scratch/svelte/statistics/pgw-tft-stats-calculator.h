@@ -23,6 +23,7 @@
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
+#include "../svelte-common.h"
 
 namespace ns3 {
 
@@ -62,8 +63,15 @@ protected:
                           uint32_t nextLevel, uint32_t bearersMoved);
 
 private:
+  /** Metadata associated to a network slice. */
+  struct SliceStats
+  {
+    Ptr<OutputStreamWrapper> tftWrapper;  //!< AdmStats file wrapper.
+  };
+
+  /** Metadata for each network slice. */
+  SliceStats                m_slices [SliceId::ALL]; //!< Slice metadata.
   std::string               m_tftFilename;    //!< TftStats filename.
-  Ptr<OutputStreamWrapper>  m_tftWrapper;     //!< TftStats file wrapper.
 };
 
 } // namespace ns3
