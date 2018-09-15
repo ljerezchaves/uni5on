@@ -111,11 +111,11 @@ PgwTftStatsCalculator::NotifyConstructionCompleted (void)
 
 void
 PgwTftStatsCalculator::NotifyPgwTftStats (
-  std::string context, Ptr<const PgwInfo> pgwInfo, uint32_t currentLevel,
-  uint32_t nextLevel, uint32_t maxLevel, uint32_t bearersMoved,
-  double blockThrs, double joinThrs, double splitThrs)
+  std::string context, Ptr<const PgwInfo> pgwInfo, uint32_t currLevel,
+  uint32_t nextLevel, uint32_t bearersMoved)
 {
-  NS_LOG_FUNCTION (this << context);
+  NS_LOG_FUNCTION (this << context << pgwInfo << currLevel <<
+                   nextLevel << bearersMoved);
 
   uint16_t numTfts = 1 << currentLevel;
   *m_tftWrapper->GetStream ()

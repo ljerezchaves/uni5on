@@ -836,8 +836,7 @@ SliceController::PgwAdaptiveMechanism (void)
     }
 
   // Fire the P-GW TFT adaptation trace source.
-  m_pgwTftAdaptiveTrace (m_pgwInfo, m_tftLevel, nextLevel, maxLevel, moved,
-                         m_tftBlockThs, m_tftJoinThs, m_tftSplitThs);
+  m_pgwTftAdaptiveTrace (m_pgwInfo, m_tftLevel, nextLevel, moved);
 
   // Update the adaptive mechanism level.
   m_tftLevel = nextLevel;
