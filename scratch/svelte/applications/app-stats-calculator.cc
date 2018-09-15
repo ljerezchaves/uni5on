@@ -39,11 +39,7 @@ AppStatsCalculator::AppStatsCalculator ()
   m_lastRxTime (Simulator::Now ()),
   m_lastTimestamp (Simulator::Now ()),
   m_jitter (0),
-  m_delaySum (Time ()),
-  m_loadDrop (0),
-  m_meterDrop (0),
-  m_sliceDrop (0),
-  m_queueDrop (0)
+  m_delaySum (Time ())
 {
   NS_LOG_FUNCTION (this);
 }
@@ -78,11 +74,6 @@ AppStatsCalculator::ResetCounters (void)
   m_lastTimestamp = Simulator::Now ();
   m_jitter = 0;
   m_delaySum = Time ();
-
-  m_loadDrop = 0;
-  m_meterDrop = 0;
-  m_sliceDrop = 0;
-  m_queueDrop = 0;
 }
 
 uint32_t
@@ -125,38 +116,6 @@ AppStatsCalculator::NotifyRx (uint32_t rxBytes, Time timestamp)
 
   // Updating delay sum
   m_delaySum += (now - timestamp);
-}
-
-void
-AppStatsCalculator::NotifyLoadDrop (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  m_loadDrop++;
-}
-
-void
-AppStatsCalculator::NotifyMeterDrop (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  m_meterDrop++;
-}
-
-void
-AppStatsCalculator::NotifySliceDrop (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  m_sliceDrop++;
-}
-
-void
-AppStatsCalculator::NotifyQueueDrop (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  m_queueDrop++;
 }
 
 Time
@@ -272,38 +231,6 @@ AppStatsCalculator::GetRxThroughput (void) const
     {
       return DataRate (0);
     }
-}
-
-uint32_t
-AppStatsCalculator::GetLoadDrops (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_loadDrop;
-}
-
-uint32_t
-AppStatsCalculator::GetMeterDrops (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_meterDrop;
-}
-
-uint32_t
-AppStatsCalculator::GetSliceDrops (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_sliceDrop;
-}
-
-uint32_t
-AppStatsCalculator::GetQueueDrops (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_queueDrop;
 }
 
 std::string

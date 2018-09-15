@@ -66,26 +66,6 @@ public:
   void NotifyRx (uint32_t rxBytes, Time timestamp = Simulator::Now ());
 
   /**
-   * Increase the meter dropped packet counter by one.
-   */
-  void NotifyLoadDrop (void);
-
-  /**
-   * Increase the traffic meter dropped packet counter by one.
-   */
-  void NotifyMeterDrop (void);
-
-  /**
-   * Increase the slicing dropped packet counter by one.
-   */
-  void NotifySliceDrop (void);
-
-  /**
-   * Increase the queue dropped packet counter by one.
-   */
-  void NotifyQueueDrop (void);
-
-  /**
    * Get QoS statistics.
    * \return The statistic value.
    */
@@ -100,10 +80,6 @@ public:
   Time      GetRxDelay      (void) const;
   Time      GetRxJitter     (void) const;
   DataRate  GetRxThroughput (void) const;
-  uint32_t  GetLoadDrops    (void) const;
-  uint32_t  GetMeterDrops   (void) const;
-  uint32_t  GetSliceDrops   (void) const;
-  uint32_t  GetQueueDrops   (void) const;
   //\}
 
   /**
@@ -134,12 +110,6 @@ private:
   Time               m_lastTimestamp;    //!< Last timestamp.
   int64_t            m_jitter;           //!< Jitter estimation.
   Time               m_delaySum;         //!< Sum of packet delays.
-
-  // Fields used by EPC network monitoring.
-  uint32_t           m_loadDrop;         //!< Drop counter for pipe load.
-  uint32_t           m_meterDrop;        //!< Drop counter for meter rules.
-  uint32_t           m_sliceDrop;        //!< Drop counter for slicing rules.
-  uint32_t           m_queueDrop;        //!< Drop counter for queues.
 };
 
 /**
