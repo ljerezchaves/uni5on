@@ -208,10 +208,10 @@ private:
   /**
    * Retrieve the LTE EPC QoS statistics information for the GTP tunnel id.
    * \param teid The GTP tunnel id.
-   * \param isDown True for downlink stats, false for uplink.
+   * \param dir The traffic direction.
    * \return The QoS information.
    */
-  Ptr<EpcStatsCalculator> GetEpcStatsFromTeid (uint32_t teid, bool isDown);
+  Ptr<EpcStatsCalculator> GetEpcStats (uint32_t teid, Direction dir);
 
   /**
    * Get the header for common statistics metrics.
@@ -236,13 +236,15 @@ private:
   std::string               m_epcFilename;  //!< EpcStats filename.
   Ptr<OutputStreamWrapper>  m_epcWrapper;   //!< EpcStats file wrapper.
 
-  /** A pair of EpcStatsCalculator, for downlink and uplink EPC statistics. */
-  typedef std::pair<Ptr<EpcStatsCalculator>,
-                    Ptr<EpcStatsCalculator> > QosStatsPair_t;
+  /** A pair of EpcStatsCalculator, for downlink and uplink traffic. */
+  struct EpcStatsPair
+  {
+    Ptr<EpcStatsCalculator> stats [2];
+  };
 
-  /** A Map saving GTP TEID / QoS stats pair. */
-  typedef std::map<uint32_t, QosStatsPair_t> TeidQosMap_t;
-  TeidQosMap_t              m_qosByTeid;    //!< TEID QoS statistics.
+  /** A Map saving GTP TEID / EPC stats pair. */
+  typedef std::map<uint32_t, EpcStatsPair> TeidEpcStatsMap_t;
+  TeidEpcStatsMap_t         m_qosByTeid;    //!< TEID EPC statistics.
 };
 
 /**
