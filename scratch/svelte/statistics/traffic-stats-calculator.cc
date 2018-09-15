@@ -245,8 +245,8 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   *m_appWrapper->GetStream ()
     << fixed << boolalpha << right << setprecision (3)
     << GetTimeHeader ()
-    << setw (9) << "AppName"
-    << setw (7) << "Ul/Dl"
+    << " " << setw (8) << "AppName"
+    << " " << setw (6) << "Ul/Dl"
     << RoutingInfo::PrintHeader ()
     << AppStatsCalculator::PrintHeader ()
     << std::endl;
@@ -256,8 +256,8 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   *m_epcWrapper->GetStream ()
     << fixed << boolalpha << right << setprecision (3)
     << GetTimeHeader ()
-    << setw (9) << "AppName"
-    << setw (7) << "Ul/Dl"
+    << " " << setw (8) << "AppName"
+    << " " << setw (6) << "Ul/Dl"
     << RoutingInfo::PrintHeader ()
     << EpcStatsCalculator::PrintHeader ()
     << std::endl;
@@ -281,16 +281,16 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       epcStats = GetEpcStats (teid, Direction::ULINK);
       *m_epcWrapper->GetStream ()
         << GetTimeStr ()
-        << setw (9) << app->GetAppName ()
-        << setw (7) << DirectionStr (Direction::ULINK)
+        << " " << setw (8) << app->GetAppName ()
+        << " " << setw (6) << DirectionStr (Direction::ULINK)
         << *rInfo
         << *epcStats
         << std::endl;
 
       *m_appWrapper->GetStream ()
         << GetTimeStr ()
-        << setw (9) << app->GetAppName ()
-        << setw (7) << DirectionStr (Direction::ULINK)
+        << " " << setw (8) << app->GetAppName ()
+        << " " << setw (6) << DirectionStr (Direction::ULINK)
         << *rInfo
         << *app->GetServerAppStats ()
         << std::endl;
@@ -302,16 +302,16 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       epcStats = GetEpcStats (teid, Direction::DLINK);
       *m_epcWrapper->GetStream ()
         << GetTimeStr ()
-        << setw (9) << app->GetAppName ()
-        << setw (7) << DirectionStr (Direction::DLINK)
+        << " " << setw (8) << app->GetAppName ()
+        << " " << setw (6) << DirectionStr (Direction::DLINK)
         << *rInfo
         << *epcStats
         << std::endl;
 
       *m_appWrapper->GetStream ()
         << GetTimeStr ()
-        << setw (9) << app->GetAppName ()
-        << setw (7) << DirectionStr (Direction::DLINK)
+        << " " << setw (8) << app->GetAppName ()
+        << " " << setw (6) << DirectionStr (Direction::DLINK)
         << *rInfo
         << *app->GetAppStats ()
         << std::endl;

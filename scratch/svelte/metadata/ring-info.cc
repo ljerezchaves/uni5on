@@ -194,7 +194,7 @@ RingInfo::PrintHeader (void)
   NS_LOG_FUNCTION_NOARGS ();
 
   std::ostringstream str;
-  str << setw (23) << "RingPathDesc";
+  str << " " << setw (22) << "RingPathDesc";
   return str.str ();
 }
 
@@ -257,7 +257,7 @@ RingInfo::ResetToDefaults ()
 
 std::ostream & operator << (std::ostream &os, const RingInfo &ringInfo)
 {
-  os << setw (23) << ringInfo.GetPathStr ();
+  os << " " << setw (22) << ringInfo.GetPathStr ();
   return os;
 }
 

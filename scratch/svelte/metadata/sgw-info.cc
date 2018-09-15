@@ -166,10 +166,10 @@ SgwInfo::PrintHeader (void)
   NS_LOG_FUNCTION_NOARGS ();
 
   std::ostringstream str;
-  str << setw (7)  << "SgwID"
-      << setw (7)  << "SgwSw"
-      << setw (12) << "SgwS1Addr"
-      << setw (12) << "SgwS5Addr";
+  str << " " << setw (6)  << "SgwID"
+      << " " << setw (6)  << "SgwSw"
+      << " " << setw (11) << "SgwS1Addr"
+      << " " << setw (11) << "SgwS5Addr";
   return str.str ();
 }
 
@@ -200,10 +200,10 @@ std::ostream & operator << (std::ostream &os, const SgwInfo &sgwInfo)
   sgwInfo.GetS1uAddr ().Print (ipS1Str);
   sgwInfo.GetS5Addr ().Print (ipS5Str);
 
-  os << setw (7)  << sgwInfo.GetSgwId ()
-     << setw (7)  << sgwInfo.GetInfraSwIdx ()
-     << setw (12) << ipS1Str.str ()
-     << setw (12) << ipS5Str.str ();
+  os << " " << setw (6)  << sgwInfo.GetSgwId ()
+     << " " << setw (6)  << sgwInfo.GetInfraSwIdx ()
+     << " " << setw (11) << ipS1Str.str ()
+     << " " << setw (11) << ipS5Str.str ();
   return os;
 }
 

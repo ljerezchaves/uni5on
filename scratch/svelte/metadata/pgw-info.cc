@@ -304,9 +304,9 @@ PgwInfo::PrintHeader (void)
   NS_LOG_FUNCTION_NOARGS ();
 
   std::ostringstream str;
-  str << setw (7)  << "PgwID"
-      << setw (7)  << "PgwSw"
-      << setw (12) << "PgwS5Addr";
+  str << " " << setw (6)  << "PgwID"
+      << " " << setw (6)  << "PgwSw"
+      << " " << setw (11) << "PgwS5Addr";
   return str.str ();
 }
 
@@ -359,9 +359,9 @@ std::ostream & operator << (std::ostream &os, const PgwInfo &pgwInfo)
   std::ostringstream ipS5Str;
   pgwInfo.GetMainS5Addr ().Print (ipS5Str);
 
-  os << setw (7)  << pgwInfo.GetPgwId ()
-     << setw (7)  << pgwInfo.GetInfraSwIdx ()
-     << setw (12) << ipS5Str.str ();
+  os << " " << setw (6)  << pgwInfo.GetPgwId ()
+     << " " << setw (6)  << pgwInfo.GetInfraSwIdx ()
+     << " " << setw (11) << ipS5Str.str ();
   return os;
 }
 

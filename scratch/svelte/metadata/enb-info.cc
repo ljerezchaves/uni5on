@@ -128,9 +128,9 @@ EnbInfo::PrintHeader (void)
   NS_LOG_FUNCTION_NOARGS ();
 
   std::ostringstream str;
-  str << setw (7)  << "EnbID"
-      << setw (7)  << "EnbSw"
-      << setw (12) << "EnbS1Addr";
+  str << " " << setw (6)  << "EnbID"
+      << " " << setw (6)  << "EnbSw"
+      << " " << setw (11) << "EnbS1Addr";
   return str.str ();
 }
 
@@ -160,9 +160,9 @@ std::ostream & operator << (std::ostream &os, const EnbInfo &enbInfo)
   std::ostringstream ipStr;
   enbInfo.GetS1uAddr ().Print (ipStr);
 
-  os << setw (7)  << enbInfo.GetCellId ()
-     << setw (7)  << enbInfo.GetInfraSwIdx ()
-     << setw (12) << ipStr.str ();
+  os << " " << setw (6)  << enbInfo.GetCellId ()
+     << " " << setw (6)  << enbInfo.GetInfraSwIdx ()
+     << " " << setw (11) << ipStr.str ();
   return os;
 }
 

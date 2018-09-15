@@ -190,14 +190,14 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
       *m_slices [s].admWrapper->GetStream ()
         << fixed << boolalpha << right
         << GetTimeHeader ()
-        << setw (7) << "Relea"
-        << setw (7) << "Reque"
-        << setw (7) << "Accep"
-        << setw (7) << "Block"
-        << setw (7) << "Aggre"
-        << setw (7) << "#Actv"
-        << setw (7) << "#Inst"
-        << setw (7) << "#Aggr"
+        << " " << setw (6) << "Relea"
+        << " " << setw (6) << "Reque"
+        << " " << setw (6) << "Accep"
+        << " " << setw (6) << "Block"
+        << " " << setw (6) << "Aggre"
+        << " " << setw (6) << "#Actv"
+        << " " << setw (6) << "#Inst"
+        << " " << setw (6) << "#Aggr"
         << std::endl;
     }
 
@@ -234,14 +234,14 @@ AdmissionStatsCalculator::DumpStatistics (Time nextDump)
       SliceStats &stats = m_slices [s];
       *stats.admWrapper->GetStream ()
         << GetTimeStr ()
-        << setw (7) << stats.releases
-        << setw (7) << stats.requests
-        << setw (7) << stats.accepted
-        << setw (7) << stats.blocked
-        << setw (7) << stats.aggregated
-        << setw (7) << stats.activeBearers
-        << setw (7) << stats.instalBearers
-        << setw (7) << stats.aggregBearers
+        << " " << setw (6) << stats.releases
+        << " " << setw (6) << stats.requests
+        << " " << setw (6) << stats.accepted
+        << " " << setw (6) << stats.blocked
+        << " " << setw (6) << stats.aggregated
+        << " " << setw (6) << stats.activeBearers
+        << " " << setw (6) << stats.instalBearers
+        << " " << setw (6) << stats.aggregBearers
         << std::endl;
       ResetCounters (stats);
     }

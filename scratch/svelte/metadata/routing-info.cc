@@ -563,29 +563,29 @@ RoutingInfo::PrintHeader (void)
   NS_LOG_FUNCTION_NOARGS ();
 
   std::ostringstream str;
-  str << setw (12) << "TEID"
-      << setw (7)  << "Slice"
-      << setw (7)  << "IsDft"
-      << setw (7)  << "IsAct"
-      << setw (7)  << "IsIns"
-      << setw (7)  << "IsAgg"
-      << setw (7)  << "IsBlk"
-      << setw (10) << "BlkReas"
-      << setw (5)  << "QCI"
-      << setw (7)  << "IsGbr"
-      << setw (6)  << "Dscp"
-      << setw (7)  << "Dlink"
-      << setw (10) << "DlGbr"
-      << setw (10) << "DlMbr"
-      << setw (7)  << "Ulink"
-      << setw (10) << "UlGbr"
-      << setw (10) << "UlMbr"
-      << setw (7)  << "GbrRes"
-      << setw (7)  << "DMbIns"
-      << setw (7)  << "UMbIns"
-      << setw (5)  << "TFT"
-      << setw (8)  << "Prio"
-      << setw (5)  << "Tmo";
+  str << " " << setw (11) << "TEID"
+      << " " << setw (6)  << "Slice"
+      << " " << setw (6)  << "IsDft"
+      << " " << setw (6)  << "IsAct"
+      << " " << setw (6)  << "IsIns"
+      << " " << setw (6)  << "IsAgg"
+      << " " << setw (6)  << "IsBlk"
+      << " " << setw (9)  << "BlkReas"
+      << " " << setw (4)  << "QCI"
+      << " " << setw (6)  << "IsGbr"
+      << " " << setw (5)  << "Dscp"
+      << " " << setw (6)  << "Dlink"
+      << " " << setw (9)  << "DlGbr"
+      << " " << setw (9)  << "DlMbr"
+      << " " << setw (6)  << "Ulink"
+      << " " << setw (9)  << "UlGbr"
+      << " " << setw (9)  << "UlMbr"
+      << " " << setw (6)  << "GbrRes"
+      << " " << setw (6)  << "DMbIns"
+      << " " << setw (6)  << "UMbIns"
+      << " " << setw (4)  << "TFT"
+      << " " << setw (7)  << "Prio"
+      << " " << setw (4)  << "Tmo";
   return str.str ();
 }
 
@@ -736,29 +736,29 @@ std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
   char prioStr [10];
   sprintf (prioStr, "0x%x", rInfo.GetPriority ());
 
-  os << setw (12) << rInfo.GetTeidHex ()
-     << setw (7)  << rInfo.GetSliceIdStr ()
-     << setw (7)  << rInfo.IsDefault ()
-     << setw (7)  << rInfo.IsActive ()
-     << setw (7)  << rInfo.IsTunnelInstalled ()
-     << setw (7)  << rInfo.IsAggregated ()
-     << setw (7)  << rInfo.IsBlocked ()
-     << setw (10) << rInfo.GetBlockReasonStr ()
-     << setw (5)  << rInfo.GetQciInfo ()
-     << setw (7)  << rInfo.IsGbr ()
-     << setw (6)  << rInfo.GetDscpStr ()
-     << setw (7)  << rInfo.HasDlTraffic ()
-     << setw (10) << static_cast<double> (rInfo.GetGbrDlBitRate ()) / 1000
-     << setw (10) << static_cast<double> (rInfo.GetMbrDlBitRate ()) / 1000
-     << setw (7)  << rInfo.HasUlTraffic ()
-     << setw (10) << static_cast<double> (rInfo.GetGbrUlBitRate ()) / 1000
-     << setw (10) << static_cast<double> (rInfo.GetMbrUlBitRate ()) / 1000
-     << setw (7)  << rInfo.IsGbrReserved ()
-     << setw (7)  << rInfo.IsMbrDlInstalled ()
-     << setw (7)  << rInfo.IsMbrUlInstalled ()
-     << setw (5)  << rInfo.GetPgwTftIdx ()
-     << setw (8)  << prioStr
-     << setw (5)  << rInfo.GetTimeout ();
+  os << " " << setw (11) << rInfo.GetTeidHex ()
+     << " " << setw (6)  << rInfo.GetSliceIdStr ()
+     << " " << setw (6)  << rInfo.IsDefault ()
+     << " " << setw (6)  << rInfo.IsActive ()
+     << " " << setw (6)  << rInfo.IsTunnelInstalled ()
+     << " " << setw (6)  << rInfo.IsAggregated ()
+     << " " << setw (6)  << rInfo.IsBlocked ()
+     << " " << setw (9)  << rInfo.GetBlockReasonStr ()
+     << " " << setw (4)  << rInfo.GetQciInfo ()
+     << " " << setw (6)  << rInfo.IsGbr ()
+     << " " << setw (5)  << rInfo.GetDscpStr ()
+     << " " << setw (6)  << rInfo.HasDlTraffic ()
+     << " " << setw (9)  << static_cast<double> (rInfo.GetGbrDlBitRate ()) / 1000
+     << " " << setw (9)  << static_cast<double> (rInfo.GetMbrDlBitRate ()) / 1000
+     << " " << setw (6)  << rInfo.HasUlTraffic ()
+     << " " << setw (9)  << static_cast<double> (rInfo.GetGbrUlBitRate ()) / 1000
+     << " " << setw (9)  << static_cast<double> (rInfo.GetMbrUlBitRate ()) / 1000
+     << " " << setw (6)  << rInfo.IsGbrReserved ()
+     << " " << setw (6)  << rInfo.IsMbrDlInstalled ()
+     << " " << setw (6)  << rInfo.IsMbrUlInstalled ()
+     << " " << setw (4)  << rInfo.GetPgwTftIdx ()
+     << " " << setw (7)  << prioStr
+     << " " << setw (4)  << rInfo.GetTimeout ();
   return os;
 }
 
