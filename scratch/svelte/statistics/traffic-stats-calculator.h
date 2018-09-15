@@ -24,6 +24,7 @@
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 #include "../applications/app-stats-calculator.h"
+#include "../logical/epc-gtpu-tag.h"
 
 // Total number of drop reasons + 1 for aggregated metadata.
 #define N_REASONS_ALL (static_cast<uint8_t> (DropReason::ALL) + 1)
@@ -119,6 +120,13 @@ private:
 class TrafficStatsCalculator : public Object
 {
 public:
+  /** Traffic direction. */
+  enum Direction
+  {
+    DLINK = 0,  //!< Downlink traffic.
+    ULINK = 1   //!< Uplink traffic.
+  };
+
   TrafficStatsCalculator ();          //!< Default constructor.
   virtual ~TrafficStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
@@ -127,6 +135,13 @@ public:
    * \return The object TypeId.
    */
   static TypeId GetTypeId (void);
+
+  /**
+   * Identify the traffic direction based on the GTPU packet tag.
+   * \param gtpuTag The GTPU packet tag.
+   * \return The traffic direction.
+   */
+  Direction GetDirection (EpcGtpuTag &gtpuTag) const;
 
 protected:
   /** Destructor implementation. */

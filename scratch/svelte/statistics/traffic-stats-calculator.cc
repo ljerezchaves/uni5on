@@ -22,7 +22,6 @@
 #include <iostream>
 #include "traffic-stats-calculator.h"
 #include "../applications/svelte-client-app.h"
-#include "../logical/epc-gtpu-tag.h"
 #include "../metadata/ue-info.h"
 #include "../metadata/routing-info.h"
 
@@ -186,6 +185,14 @@ TrafficStatsCalculator::GetTypeId (void)
                    MakeStringChecker ())
   ;
   return tid;
+}
+
+TrafficStatsCalculator::Direction
+TrafficStatsCalculator::GetDirection (EpcGtpuTag &gtpuTag) const
+{
+  NS_LOG_FUNCTION (this << gtpuTag.GetTeid ());
+
+  return gtpuTag.IsDownlink () ? Direction::DLINK : Direction::ULINK;
 }
 
 void
