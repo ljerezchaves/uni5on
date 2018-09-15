@@ -40,6 +40,7 @@ BackhaulStatsCalculator::~BackhaulStatsCalculator ()
   NS_LOG_FUNCTION (this);
 }
 
+// FIXME Depois de organizar adicionar tudo no default.topo
 TypeId
 BackhaulStatsCalculator::GetTypeId (void)
 {

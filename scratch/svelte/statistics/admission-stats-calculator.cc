@@ -24,8 +24,6 @@
 #include "../metadata/ring-info.h"
 #include "../metadata/routing-info.h"
 #include "../metadata/ue-info.h"
-
-// FIXME Vai ficar mesmo?
 #include "../metadata/enb-info.h"
 #include "../metadata/sgw-info.h"
 #include "../metadata/pgw-info.h"
