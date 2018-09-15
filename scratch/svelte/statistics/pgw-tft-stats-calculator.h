@@ -55,13 +55,11 @@ protected:
    * Notify the statistics for P-GW adaptive mechanism.
    * \param context Trace source context.
    * \param pgwInfo The P-GW metadata.
-   * \param currLevel The current mechanism level.
    * \param nextLevel The mechanism level for next cycle.
    * \param bearersMoved The number of bearers moved.
    */
-  void NotifyPgwTftStats (
-    std::string context, Ptr<const PgwInfo> pgwInfo, uint32_t currLevel,
-    uint32_t nextLevel, uint32_t bearersMoved);
+  void NotifyPgwTftStats (std::string context, Ptr<const PgwInfo> pgwInfo,
+                          uint32_t nextLevel, uint32_t bearersMoved);
 
 private:
   std::string               m_tftFilename;    //!< TftStats filename.

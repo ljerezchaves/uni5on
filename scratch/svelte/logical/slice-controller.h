@@ -98,11 +98,7 @@ public:
   OpMode    GetPgwTftAdaptiveMode     (void) const;
   OpMode    GetPgwTftBlockPolicy      (void) const;
   double    GetPgwTftBlockThs         (void) const;
-  uint8_t   GetPgwTftLevel            (void) const;
-  uint16_t  GetPgwTftSwitches         (void) const;
   double    GetPgwTftJoinThs          (void) const;
-  uint32_t  GetPgwTftMaxLevel         (void) const;
-  uint16_t  GetPgwTftMaxSwitches      (void) const;
   double    GetPgwTftSplitThs         (void) const;
   //\}
 
@@ -148,13 +144,11 @@ public:
   /**
    * TracedCallback signature for the P-GW adaptive mechanism trace source.
    * \param pgwInfo The P-GW metadata.
-   * \param currentLevel The current mechanism level.
    * \param nextLevel The mechanism level for next cycle.
    * \param bearersMoved The number of bearers moved.
    */
   typedef void (*PgwTftStatsTracedCallback)(
-    Ptr<const PgwInfo> pgwInfo, uint32_t currentLevel, uint32_t nextLevel,
-    uint32_t bearersMoved);
+    Ptr<const PgwInfo> pgwInfo, uint32_t nextLevel, uint32_t bearersMoved);
 
   /**
    * TracedCallback signature for session created trace source.
@@ -302,8 +296,7 @@ private:
   TracedCallback<uint64_t, BearerContextList_t> m_sessionCreatedTrace;
 
   /** The P-GW TFT adaptive trace source, fired at PgwAdaptiveMechanism. */
-  TracedCallback<
-    Ptr<const PgwInfo>, uint32_t, uint32_t, uint32_t> m_pgwTftAdaptiveTrace;
+  TracedCallback<Ptr<const PgwInfo>, uint32_t, uint32_t> m_pgwTftAdaptiveTrace;
 
   // Slice identification.
   SliceId                 m_sliceId;        //!< Logical slice ID.
@@ -328,7 +321,6 @@ private:
   // P-GW metadata and TFT adaptive mechanism.
   Ptr<PgwInfo>            m_pgwInfo;        //!< P-GW metadata for this slice.
   OpMode                  m_tftAdaptive;    //!< P-GW adaptive mechanism.
-  uint8_t                 m_tftLevel;       //!< Current adaptive level.
   OpMode                  m_tftBlockPolicy; //!< Overload block policy.
   double                  m_tftBlockThs;    //!< Block threshold.
   double                  m_tftJoinThs;     //!< Join threshold.

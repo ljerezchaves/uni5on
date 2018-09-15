@@ -66,9 +66,19 @@ public:
    */
   //\{
   uint16_t              GetInfraSwIdx                 (void) const;
-  uint16_t              GetNumTfts                    (void) const;
   uint64_t              GetPgwId                      (void) const;
   Ptr<SliceController>  GetSliceCtrl                  (void) const;
+  //\}
+
+  /**
+   * \name Private member accessors for P-GW TFT adaptive mechanism.
+   * \return The requested information.
+   */
+  //\{
+  uint16_t              GetCurLevel                   (void) const;
+  uint16_t              GetCurTfts                    (void) const;
+  uint16_t              GetMaxLevel                   (void) const;
+  uint16_t              GetMaxTfts                    (void) const;
   //\}
 
   /**
@@ -179,6 +189,12 @@ private:
                        uint32_t tftToMainPortNo = 0);
 
   /**
+   * Update the current TFT adaptive mechanism level.
+   * \param value The value to set.
+   */
+  void SetTftLevel (uint16_t value);
+
+  /**
    * Register the P-GW information in global map for further usage.
    * \param pgwInfo The P-GW information to save.
    */
@@ -192,13 +208,16 @@ private:
   uint16_t                  m_infraSwIdx;         //!< Backhaul switch index.
   std::vector<uint32_t>     m_infraSwS5PortNos;   //!< Back switch S5 port nos.
   std::vector<uint32_t>     m_mainToTftPortNos;   //!< Main port nos to TFTs.
-  uint16_t                  m_nTfts;              //!< Number of TFT switches.
   uint64_t                  m_pgwId;              //!< P-GW ID (main dpId).
   std::vector<Ipv4Address>  m_s5Addrs;            //!< S5 dev IP addresses.
   std::vector<uint32_t>     m_s5PortNos;          //!< S5 port numbers.
   uint32_t                  m_sgiPortNo;          //!< SGi port number.
   Ptr<SliceController>      m_sliceCtrl;          //!< LTE logical slice ctrl.
   std::vector<uint32_t>     m_tftToMainPortNos;   //!< TFTs port nos to main.
+
+  // TFT adaptive mechanism.
+  uint16_t                  m_tftSwitches;        //!< Total # of TFT switches.
+  uint8_t                   m_tftLevel;           //!< Current adaptive level.
 
   /** Map saving P-GW ID / P-GW information. */
   typedef std::map<uint64_t, Ptr<PgwInfo> > PgwIdPgwInfoMap_t;

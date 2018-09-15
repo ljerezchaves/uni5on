@@ -240,44 +240,12 @@ SliceController::GetPgwTftBlockThs (void) const
   return m_tftBlockThs;
 }
 
-uint8_t
-SliceController::GetPgwTftLevel (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_tftLevel;
-}
-
-uint16_t
-SliceController::GetPgwTftSwitches (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return 1 << m_tftLevel;
-}
-
 double
 SliceController::GetPgwTftJoinThs (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_tftJoinThs;
-}
-
-uint32_t
-SliceController::GetPgwTftMaxLevel (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return static_cast<uint32_t> (log2 (GetPgwTftMaxSwitches ()));
-}
-
-uint16_t
-SliceController::GetPgwTftMaxSwitches (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_pgwInfo->GetNumTfts ();
 }
 
 double
@@ -321,12 +289,12 @@ SliceController::NotifyPgwAttach (
     case OpMode::ON:
     case OpMode::AUTO:
       {
-        m_tftLevel = GetPgwTftMaxLevel ();
+        pgwInfo->SetTftLevel (pgwInfo->GetMaxLevel ());
         break;
       }
     case OpMode::OFF:
       {
-        m_tftLevel = 0;
+        pgwInfo->SetTftLevel (0);
         break;
       }
     }
@@ -356,17 +324,17 @@ SliceController::NotifyPgwAttach (
   cmdDl << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
         << ",in_port=" << pgwInfo->GetMainSgiPortNo ()
         << ",ip_dst=" << m_ueAddr << "/" << m_ueMask.GetPrefixLength ()
-        << " goto:" << m_tftLevel + 1;
+        << " goto:" << pgwInfo->GetCurLevel () + 1;
   DpctlSchedule (pgwInfo->GetMainDpId (), cmdDl.str ());
 
   // -------------------------------------------------------------------------
   // Table 1..N -- P-GW MAIN adaptive level -- [from higher to lower priority]
   //
-  for (uint16_t tftIdx = 1; tftIdx <= pgwInfo->GetNumTfts (); tftIdx++)
+  for (uint16_t tftIdx = 1; tftIdx <= pgwInfo->GetMaxTfts (); tftIdx++)
     {
       // Configuring the P-GW main switch to forward traffic to different P-GW
       // TFT switches considering all possible adaptive mechanism levels.
-      for (uint16_t tft = pgwInfo->GetNumTfts (); tftIdx <= tft; tft /= 2)
+      for (uint16_t tft = pgwInfo->GetMaxTfts (); tftIdx <= tft; tft /= 2)
         {
           uint16_t lbLevel = static_cast<uint16_t> (log2 (tft));
           uint16_t ipMask = (1 << lbLevel) - 1;
@@ -767,7 +735,7 @@ SliceController::GetTftIdx (
 
   if (activeTfts == 0)
     {
-      activeTfts = GetPgwTftSwitches ();
+      activeTfts = m_pgwInfo->GetCurTfts ();
     }
   return 1 + (rInfo->GetUeAddr ().Get () % activeTfts);
 }
@@ -779,14 +747,14 @@ SliceController::PgwAdaptiveMechanism (void)
 
   NS_ASSERT_MSG (m_pgwInfo, "No P-GW attached to this slice.");
 
-  uint8_t nextLevel = m_tftLevel;
+  uint16_t nextLevel = m_pgwInfo->GetCurLevel ();
   if (GetPgwTftAdaptiveMode () == OpMode::AUTO)
     {
       double tableUsage = m_pgwInfo->GetTftMaxFlowTableUsage ();
       double pipeUsage = m_pgwInfo->GetTftMaxPipeCapacityUsage ();
 
       // We may increase the level when we hit the split threshold.
-      if ((m_tftLevel < GetPgwTftMaxLevel ())
+      if ((m_pgwInfo->GetCurLevel () < m_pgwInfo->GetMaxLevel ())
           && (tableUsage >= m_tftSplitThs || pipeUsage >= m_tftSplitThs))
         {
           NS_LOG_INFO ("Increasing the adaptive mechanism level.");
@@ -794,7 +762,7 @@ SliceController::PgwAdaptiveMechanism (void)
         }
 
       // We may decrease the level when we hit the join threshold.
-      else if ((m_tftLevel > 0)
+      else if ((m_pgwInfo->GetCurLevel () > 0)
                && (tableUsage < m_tftJoinThs) && (pipeUsage < m_tftJoinThs))
         {
           NS_LOG_INFO ("Decreasing the adaptive mechanism level.");
@@ -804,11 +772,11 @@ SliceController::PgwAdaptiveMechanism (void)
 
   // Check if we need to update the adaptive mechanism level.
   uint32_t moved = 0;
-  if (m_tftLevel != nextLevel)
+  if (m_pgwInfo->GetCurLevel () != nextLevel)
     {
       // Identify and move bearers to the correct P-GW TFT switches.
       uint16_t futureTfts = 1 << nextLevel;
-      for (uint16_t currIdx = 1; currIdx <= GetPgwTftSwitches (); currIdx++)
+      for (uint16_t currIdx = 1; currIdx <= m_pgwInfo->GetCurTfts (); currIdx++)
         {
           RoutingInfoList_t bearerList;
           RoutingInfo::GetInstalledList (bearerList, m_sliceId, currIdx);
@@ -836,10 +804,10 @@ SliceController::PgwAdaptiveMechanism (void)
     }
 
   // Fire the P-GW TFT adaptation trace source.
-  m_pgwTftAdaptiveTrace (m_pgwInfo, m_tftLevel, nextLevel, moved);
+  m_pgwTftAdaptiveTrace (m_pgwInfo, nextLevel, moved);
 
   // Update the adaptive mechanism level.
-  m_tftLevel = nextLevel;
+  m_pgwInfo->SetTftLevel (nextLevel);
 }
 
 bool

@@ -36,10 +36,10 @@ PgwInfo::PgwIdPgwInfoMap_t PgwInfo::m_pgwInfoByPgwId;
 PgwInfo::PgwInfo (uint64_t pgwId, uint16_t nTfts, uint32_t sgiPortNo,
                   uint16_t infraSwIdx, Ptr<SliceController> ctrlApp)
   : m_infraSwIdx (infraSwIdx),
-  m_nTfts (nTfts),
   m_pgwId (pgwId),
   m_sgiPortNo (sgiPortNo),
-  m_sliceCtrl (ctrlApp)
+  m_sliceCtrl (ctrlApp),
+  m_tftSwitches (nTfts)
 {
   NS_LOG_FUNCTION (this);
 
@@ -68,14 +68,6 @@ PgwInfo::GetInfraSwIdx (void) const
   return m_infraSwIdx;
 }
 
-uint16_t
-PgwInfo::GetNumTfts (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_nTfts;
-}
-
 uint64_t
 PgwInfo::GetPgwId (void) const
 {
@@ -90,6 +82,38 @@ PgwInfo::GetSliceCtrl (void) const
   NS_LOG_FUNCTION (this);
 
   return m_sliceCtrl;
+}
+
+uint16_t
+PgwInfo::GetCurLevel (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_tftLevel;
+}
+
+uint16_t
+PgwInfo::GetCurTfts (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return 1 << m_tftLevel;
+}
+
+uint16_t
+PgwInfo::GetMaxLevel (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return static_cast<uint16_t> (log2 (GetMaxTfts ()));
+}
+
+uint16_t
+PgwInfo::GetMaxTfts (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_tftSwitches;
 }
 
 uint32_t
@@ -432,6 +456,14 @@ PgwInfo::SaveSwitchInfo (Ptr<OFSwitch13Device> device, Ipv4Address s5Addr,
       NS_ABORT_MSG_IF (m_devices.at (0)->GetDatapathId () != m_pgwId,
                        "Inconsistent P-GW metadata.");
     }
+}
+
+void
+PgwInfo::SetTftLevel (uint16_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_tftLevel = value;
 }
 
 void

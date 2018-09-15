@@ -112,18 +112,17 @@ PgwTftStatsCalculator::NotifyConstructionCompleted (void)
 
 void
 PgwTftStatsCalculator::NotifyPgwTftStats (
-  std::string context, Ptr<const PgwInfo> pgwInfo, uint32_t currLevel,
-  uint32_t nextLevel, uint32_t bearersMoved)
+  std::string context, Ptr<const PgwInfo> pgwInfo, uint32_t nextLevel,
+  uint32_t bearersMoved)
 {
-  NS_LOG_FUNCTION (this << context << pgwInfo << currLevel <<
-                   nextLevel << bearersMoved);
+  NS_LOG_FUNCTION (this << context << pgwInfo << nextLevel << bearersMoved);
 
   *m_tftWrapper->GetStream ()
     << GetTimeStr ()
-    << " " << setw (7)  << currLevel
+    << " " << setw (7)  << pgwInfo->GetCurLevel ()
     << " " << setw (7)  << nextLevel
-    << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftMaxLevel ()
-    << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftSwitches ()
+    << " " << setw (7)  << pgwInfo->GetMaxLevel ()
+    << " " << setw (7)  << pgwInfo->GetCurTfts ()
     << " " << setw (7)  << bearersMoved
     << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftBlockThs ()
     << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftSplitThs ()
