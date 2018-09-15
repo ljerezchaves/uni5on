@@ -243,16 +243,23 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   m_appWrapper = Create<OutputStreamWrapper> (
       m_appFilename + ".log", std::ios::out);
   *m_appWrapper->GetStream ()
-    << fixed << setprecision (3) << boolalpha << GetHeader () << std::endl;
+    << fixed << boolalpha << right << setprecision (3)
+    << GetTimeHeader ()
+    << setw (9) << "AppName"
+    << setw (7) << "Ul/Dl"
+    << RoutingInfo::PrintHeader ()
+    << AppStatsCalculator::PrintHeader ()
+    << std::endl;
 
   m_epcWrapper = Create<OutputStreamWrapper> (
       m_epcFilename + ".log", std::ios::out);
   *m_epcWrapper->GetStream ()
-    << fixed << setprecision (3) << boolalpha << GetHeader ()
-    << setw (7)  << "Load"
-    << setw (7)  << "Meter"
-    << setw (7)  << "Queue"
-    << setw (7)  << "Slice"
+    << fixed << boolalpha << right << setprecision (3)
+    << GetTimeHeader ()
+    << setw (9) << "AppName"
+    << setw (7) << "Ul/Dl"
+    << RoutingInfo::PrintHeader ()
+    << EpcStatsCalculator::PrintHeader ()
     << std::endl;
 
   Object::NotifyConstructionCompleted ();
@@ -273,12 +280,19 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       // Dump uplink statistics.
       epcStats = GetEpcStats (teid, Direction::ULINK);
       *m_epcWrapper->GetStream ()
-        << GetStats (app, epcStats, rInfo, DirectionStr (Direction::ULINK))
+        << GetTimeStr ()
+        << setw (9) << app->GetAppName ()
+        << setw (7) << DirectionStr (Direction::ULINK)
+        << *rInfo
         << *epcStats
         << std::endl;
 
       *m_appWrapper->GetStream ()
-        << GetStats (app, app->GetServerAppStats (), rInfo, DirectionStr (Direction::ULINK))
+        << GetTimeStr ()
+        << setw (9) << app->GetAppName ()
+        << setw (7) << DirectionStr (Direction::ULINK)
+        << *rInfo
+        << *app->GetServerAppStats ()
         << std::endl;
     }
 
@@ -287,12 +301,19 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       // Dump downlink statistics.
       epcStats = GetEpcStats (teid, Direction::DLINK);
       *m_epcWrapper->GetStream ()
-        << GetStats (app, epcStats, rInfo, DirectionStr (Direction::DLINK))
+        << GetTimeStr ()
+        << setw (9) << app->GetAppName ()
+        << setw (7) << DirectionStr (Direction::DLINK)
+        << *rInfo
         << *epcStats
         << std::endl;
 
       *m_appWrapper->GetStream ()
-        << GetStats (app, app->GetAppStats (), rInfo, DirectionStr (Direction::DLINK))
+        << GetTimeStr ()
+        << setw (9) << app->GetAppName ()
+        << setw (7) << DirectionStr (Direction::DLINK)
+        << *rInfo
+        << *app->GetAppStats ()
         << std::endl;
     }
 }
@@ -303,8 +324,8 @@ TrafficStatsCalculator::ResetCounters (std::string context,
 {
   NS_LOG_FUNCTION (this << context << app);
 
-  GetEpcStats (app->GetTeid (), Direction::ULINK)->ResetCounters ();
   GetEpcStats (app->GetTeid (), Direction::DLINK)->ResetCounters ();
+  GetEpcStats (app->GetTeid (), Direction::ULINK)->ResetCounters ();
 }
 
 void
@@ -457,38 +478,6 @@ TrafficStatsCalculator::GetEpcStats (uint32_t teid,
       epcStats = pair.stats [dir];
     }
   return epcStats;
-}
-
-std::string
-TrafficStatsCalculator::GetHeader (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  std::ostringstream str;
-  str << right
-      << GetTimeHeader ()
-      << setw (9)  << "AppName"
-      << setw (7)  << "Ul/Dl"
-      << RoutingInfo::PrintHeader ()
-      << AppStatsCalculator::PrintHeader ();
-  return str.str ();
-}
-
-std::string
-TrafficStatsCalculator::GetStats (
-  Ptr<const SvelteClientApp> app, Ptr<const AppStatsCalculator> stats,
-  Ptr<const RoutingInfo> rInfo, std::string direction)
-{
-  NS_LOG_FUNCTION (this << app << stats << rInfo << direction);
-
-  std::ostringstream str;
-  str << fixed << setprecision (3) << boolalpha << right
-      << GetTimeStr ()
-      << setw (9)  << app->GetAppName ()
-      << setw (7)  << direction
-      << *rInfo
-      << *stats;
-  return str.str ();
 }
 
 } // Namespace ns3

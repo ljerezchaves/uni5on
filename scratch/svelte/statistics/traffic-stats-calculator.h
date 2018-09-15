@@ -230,24 +230,6 @@ private:
    */
   Ptr<EpcStatsCalculator> GetEpcStats (uint32_t teid, Direction dir);
 
-  /**
-   * Get the header for common statistics metrics.
-   * \return The commom formatted string.
-   */
-  std::string GetHeader (void);
-
-  /**
-   * Get the common statistics metrics.
-   * \param app The SVELTE client application.
-   * \param rInfo The routing information for this traffic.
-   * \param stats The QoS statistics.
-   * \param direction The traffic direction (down/up).
-   * \return The commom formatted string.
-   */
-  std::string GetStats (
-    Ptr<const SvelteClientApp> app, Ptr<const AppStatsCalculator> stats,
-    Ptr<const RoutingInfo> rInfo, std::string direction);
-
   std::string               m_appFilename;  //!< AppStats filename.
   Ptr<OutputStreamWrapper>  m_appWrapper;   //!< AppStats file wrapper.
   std::string               m_epcFilename;  //!< EpcStats filename.
