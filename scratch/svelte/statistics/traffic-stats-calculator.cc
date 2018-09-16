@@ -197,14 +197,6 @@ TrafficStatsCalculator::GetTypeId (void)
   return tid;
 }
 
-TrafficStatsCalculator::Direction
-TrafficStatsCalculator::GetDirection (EpcGtpuTag &gtpuTag) const
-{
-  NS_LOG_FUNCTION (this << gtpuTag.GetTeid ());
-
-  return gtpuTag.IsDownlink () ? Direction::DLINK : Direction::ULINK;
-}
-
 std::string
 TrafficStatsCalculator::DirectionStr (Direction dir)
 {
@@ -217,6 +209,12 @@ TrafficStatsCalculator::DirectionStr (Direction dir)
     default:
       return "-";
     }
+}
+
+TrafficStatsCalculator::Direction
+TrafficStatsCalculator::GetDirection (EpcGtpuTag &gtpuTag)
+{
+  return gtpuTag.IsDownlink () ? Direction::DLINK : Direction::ULINK;
 }
 
 void

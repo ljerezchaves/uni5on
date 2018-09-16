@@ -33,7 +33,6 @@ namespace ns3 {
 
 class RoutingInfo;
 class SvelteClientApp;
-class UeInfo;
 
 /**
  * \ingroup svelte
@@ -95,12 +94,6 @@ public:
    */
   static std::string PrintHeader (void);
 
-  /**
-   * TracedCallback signature for EpcStatsCalculator.
-   * \param stats The statistics.
-   */
-  typedef void (*EpcStatsCallback)(Ptr<const EpcStatsCalculator> stats);
-
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -124,8 +117,8 @@ std::ostream & operator << (std::ostream &os, const EpcStatsCalculator &stats);
 /**
  * \ingroup svelteStats
  * This class monitors the traffic QoS statistics at application L7 level for
- * end-to-end traffic, and also at IP network L3 level for traffic within the
- * LTE EPC.
+ * end-to-end traffic, and also at L2 OpenFlow link level for traffic within
+ * the LTE EPC.
  */
 class TrafficStatsCalculator : public Object
 {
@@ -147,18 +140,18 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Identify the traffic direction based on the GTPU packet tag.
-   * \param gtpuTag The GTPU packet tag.
-   * \return The traffic direction.
-   */
-  Direction GetDirection (EpcGtpuTag &gtpuTag) const;
-
-  /**
    * Get the string representing the given direction.
    * \param dir The link direction.
    * \return The link direction string.
    */
   static std::string DirectionStr (Direction dir);
+
+  /**
+   * Identify the traffic direction based on the GTPU packet tag.
+   * \param gtpuTag The GTPU packet tag.
+   * \return The traffic direction.
+   */
+  static Direction GetDirection (EpcGtpuTag &gtpuTag);
 
 protected:
   /** Destructor implementation. */
