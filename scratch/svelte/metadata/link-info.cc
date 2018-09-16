@@ -63,7 +63,7 @@ LinkInfo::LinkInfo (SwitchData sw1, SwitchData sw2, Ptr<CsmaChannel> channel)
     "PhyTxEnd", "Backward", MakeCallback (&LinkInfo::NotifyTxPacket, this));
 
   // Clear slice metadata.
-  memset (m_slices, 0, sizeof (SliceData) * N_SLICES_ALL * 2);
+  memset (m_slices, 0, sizeof (SliceStats) * N_SLICES_ALL * 2);
 
   RegisterLinkInfo (Ptr<LinkInfo> (this));
 }

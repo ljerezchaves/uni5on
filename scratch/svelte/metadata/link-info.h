@@ -265,7 +265,7 @@ protected:
 
 private:
   /** Metadata associated to a network slice. */
-  struct SliceData
+  struct SliceStats
   {
     uint64_t maxRate;           //!< Maximum bit rate.
     uint64_t resRate;           //!< Reserved bit rate.
@@ -341,14 +341,15 @@ private:
   /** Default meter bit rate adjusted trace source. */
   TracedCallback<Ptr<const LinkInfo>, Direction, SliceId> m_meterAdjustedTrace;
 
-  SliceData         m_slices [N_SLICES_ALL][2]; //!< Metadata for slices.
-  SwitchData        m_switches [2];             //!< Metadata for switches.
-  Ptr<CsmaChannel>  m_channel;                  //!< The CSMA link channel.
-  Time              m_lastUpdate;               //!< Last update time.
+  /** Metadata for each network slice. */
+  SliceStats            m_slices [N_SLICES_ALL][2];
+  SwitchData            m_switches [2];         //!< Metadata for switches.
+  Ptr<CsmaChannel>      m_channel;              //!< The CSMA link channel.
+  Time                  m_lastUpdate;           //!< Last update time.
 
-  DataRate          m_adjustmentStep;           //!< Meter adjustment step.
-  double            m_alpha;                    //!< EWMA alpha parameter.
-  Time              m_timeout;                  //!< Update timeout.
+  DataRate              m_adjustmentStep;       //!< Meter adjustment step.
+  double                m_alpha;                //!< EWMA alpha parameter.
+  Time                  m_timeout;              //!< Update timeout.
 
   /**
    * Map saving pair of switch datapath IDs / link information.
