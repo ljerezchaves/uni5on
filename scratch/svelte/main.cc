@@ -115,7 +115,6 @@ main (int argc, char *argv[])
   ForceDefaults ();
 
   // Enable verbose output and progress report for debug purposes.
-  EnableProgress (progress);
   EnableVerbose (verbose);
   EnableOfsLogs (ofsLog);
 
@@ -147,6 +146,7 @@ main (int argc, char *argv[])
 
   // Run the simulation.
   std::cout << "Simulating..." << std::endl;
+  EnableProgress (progress);
   Simulator::Stop (Seconds (simTime + 1));
   Simulator::Run ();
 
