@@ -531,8 +531,6 @@ LinkInfo::UpdateMeterDiff (
 void
 LinkInfo::UpdateStatistics (void)
 {
-  // NS_LOG_FUNCTION (thi);
-
   double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
   uint64_t bytes = 0;
   for (int s = 0; s <= SliceId::ALL; s++)
