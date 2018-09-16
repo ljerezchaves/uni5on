@@ -182,9 +182,14 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
   for (int s = 0; s <= SliceId::ALL; s++)
     {
       std::string sliceStr = SliceIdStr (static_cast<SliceId> (s));
-      m_slices [s].admWrapper = Create<OutputStreamWrapper> (
+      SliceStats &stats = m_slices [s];
+
+      // Create the output file for this slice.
+      stats.admWrapper = Create<OutputStreamWrapper> (
           m_admFilename + "-" + sliceStr + ".log", std::ios::out);
-      *m_slices [s].admWrapper->GetStream ()
+
+      // Print the header in output file.
+      *stats.admWrapper->GetStream ()
         << boolalpha << right << fixed << setprecision (3)
         << " " << setw (8) << "Time:s"
         << " " << setw (6) << "Relea"
@@ -198,8 +203,11 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
         << std::endl;
     }
 
+  // Create the output file for bearer requests.
   m_brqWrapper = Create<OutputStreamWrapper> (
       m_brqFilename + ".log", std::ios::out);
+
+  // Print the header in output file.
   *m_brqWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
     << " " << setw (8) << "Time:s";

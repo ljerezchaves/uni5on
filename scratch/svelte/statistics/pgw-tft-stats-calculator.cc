@@ -86,9 +86,14 @@ PgwTftStatsCalculator::NotifyConstructionCompleted (void)
   for (int s = 0; s < SliceId::ALL; s++)
     {
       std::string sliceStr = SliceIdStr (static_cast<SliceId> (s));
-      m_slices [s].tftWrapper = Create<OutputStreamWrapper> (
+      SliceStats &stats = m_slices [s];
+
+      // Create the output file for this slice.
+      stats.tftWrapper = Create<OutputStreamWrapper> (
           m_tftFilename + "-" + sliceStr + ".log", std::ios::out);
-      *m_slices [s].tftWrapper->GetStream ()
+
+      // Print the header in output file.
+      *stats.tftWrapper->GetStream ()
         << boolalpha << right << fixed << setprecision (3)
         << " " << setw (8)  << "Time:s"
         << " " << setw (7)  << "CurLev"

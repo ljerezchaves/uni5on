@@ -235,8 +235,11 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   SetAttribute ("AppStatsFilename", StringValue (prefix + m_appFilename));
   SetAttribute ("EpcStatsFilename", StringValue (prefix + m_epcFilename));
 
+  // Create the output file for application stats.
   m_appWrapper = Create<OutputStreamWrapper> (
       m_appFilename + ".log", std::ios::out);
+
+  // Print the header in output file.
   *m_appWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
     << " " << setw (8) << "Time:s"
@@ -246,8 +249,11 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
   AppStatsCalculator::PrintHeader (*m_appWrapper->GetStream ());
   *m_appWrapper->GetStream () << std::endl;
 
+  // Create the output file for EPC stats.
   m_epcWrapper = Create<OutputStreamWrapper> (
       m_epcFilename + ".log", std::ios::out);
+
+  // Print the header in output file.
   *m_epcWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
     << " " << setw (8) << "Time:s"
