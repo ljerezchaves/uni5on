@@ -329,6 +329,11 @@ private:
     Direction dir, const SliceQuotaMap_t &quotas);
 
   /**
+   * Update EWMA link throughput statistics.
+   */
+  void UpdateEwmaThp (void);
+
+  /**
    * Update the internal meter diff for firing the meter adjusted trace source
    * depending on current slicing operation mode.
    * \param dir The link direction.
@@ -338,11 +343,6 @@ private:
    */
   void UpdateMeterDiff (
     Direction dir, SliceId slice, uint64_t bitRate, bool reserve);
-
-  /**
-   * Update link statistics.
-   */
-  void UpdateStatistics (void);
 
   /**
    * Register the link information in global map for further usage.
@@ -357,11 +357,12 @@ private:
   SliceStats            m_slices [N_SLICES_ALL][2];
   SwitchData            m_switches [2];         //!< Metadata for switches.
   Ptr<CsmaChannel>      m_channel;              //!< The CSMA link channel.
-  Time                  m_lastUpdate;           //!< Last update time.
-
   DataRate              m_adjustmentStep;       //!< Meter adjustment step.
-  double                m_alpha;                //!< EWMA alpha parameter.
-  Time                  m_timeout;              //!< Update timeout.
+
+  // EWMA throughput calculation.
+  double                m_ewmaAlpha;            //!< EWMA alpha parameter.
+  Time                  m_ewmaTimeout;          //!< EWMA update timeout.
+  Time                  m_ewmaLastTime;         //!< Last EWMA update time.
 
   /**
    * Map saving pair of switch datapath IDs / link information.

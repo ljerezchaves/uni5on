@@ -81,7 +81,7 @@ default ns3::SvelteHelper::TmpTraffic "ns3::TrafficHelper[]"
 
 default ns3::LinkInfo::AdjustmentStep "5Mb/s"
 default ns3::LinkInfo::EwmaAlpha "0.25"
-default ns3::LinkInfo::UpdateTimeout "100ms"
+default ns3::LinkInfo::EwmaTimeout "100ms"
 
 default ns3::AdmissionStatsCalculator::AdmStatsFilename "admission-counters"
 default ns3::AdmissionStatsCalculator::BrqStatsFilename "admission-requests"

@@ -87,12 +87,12 @@ LinkInfo::GetTypeId (void)
     .AddAttribute ("EwmaAlpha",
                    "The EWMA alpha parameter for averaging link statistics.",
                    DoubleValue (0.25),
-                   MakeDoubleAccessor (&LinkInfo::m_alpha),
+                   MakeDoubleAccessor (&LinkInfo::m_ewmaAlpha),
                    MakeDoubleChecker<double> (0.0, 1.0))
-    .AddAttribute ("UpdateTimeout",
-                   "The interval between subsequent link statistics update.",
+    .AddAttribute ("EwmaTimeout",
+                   "The interval between subsequent EWMA statistics update.",
                    TimeValue (MilliSeconds (100)),
-                   MakeTimeAccessor (&LinkInfo::m_timeout),
+                   MakeTimeAccessor (&LinkInfo::m_ewmaTimeout),
                    MakeTimeChecker ())
 
     // Trace source used by controller to update slicing meters.
@@ -340,8 +340,8 @@ LinkInfo::NotifyConstructionCompleted (void)
   NS_LOG_FUNCTION (this);
 
   // Scheduling the first update statistics.
-  m_lastUpdate = Simulator::Now ();
-  Simulator::Schedule (m_timeout, &LinkInfo::UpdateStatistics, this);
+  m_ewmaLastTime = Simulator::Now ();
+  Simulator::Schedule (m_ewmaTimeout, &LinkInfo::UpdateEwmaThp, this);
 
   // Set the maximum bit rate and slice quota for the fake shared slice.
   m_slices [SliceId::ALL][0].maxRate = GetLinkBitRate ();
@@ -500,6 +500,28 @@ LinkInfo::SetSliceQuotas (
 }
 
 void
+LinkInfo::UpdateEwmaThp (void)
+{
+  double elapSecs = (Simulator::Now () - m_ewmaLastTime).GetSeconds ();
+  uint64_t bytes = 0;
+  for (int s = 0; s <= SliceId::ALL; s++)
+    {
+      for (int d = 0; d <= LinkInfo::BWD; d++)
+        {
+          bytes = m_slices [s][d].txBytes - m_slices [s][d].lastTxBytes;
+          m_slices [s][d].lastTxBytes = m_slices [s][d].txBytes;
+
+          m_slices [s][d].ewmaThp = (m_ewmaAlpha * 8 * bytes) / elapSecs +
+            (1 - m_ewmaAlpha) * m_slices [s][d].ewmaThp;
+        }
+    }
+
+  // Scheduling the next update statistics.
+  m_ewmaLastTime = Simulator::Now ();
+  Simulator::Schedule (m_ewmaTimeout, &LinkInfo::UpdateEwmaThp, this);
+}
+
+void
 LinkInfo::UpdateMeterDiff (
   Direction dir, SliceId slice, uint64_t bitRate, bool reserve)
 {
@@ -526,28 +548,6 @@ LinkInfo::UpdateMeterDiff (
       m_meterAdjustedTrace (Ptr<LinkInfo> (this), dir, slice);
       m_slices [slice][dir].meterDiff = 0;
     }
-}
-
-void
-LinkInfo::UpdateStatistics (void)
-{
-  double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
-  uint64_t bytes = 0;
-  for (int s = 0; s <= SliceId::ALL; s++)
-    {
-      for (int d = 0; d <= LinkInfo::BWD; d++)
-        {
-          bytes = m_slices [s][d].txBytes - m_slices [s][d].lastTxBytes;
-          m_slices [s][d].lastTxBytes = m_slices [s][d].txBytes;
-
-          m_slices [s][d].ewmaThp = (m_alpha * 8 * bytes) / elapSecs +
-            (1 - m_alpha) * m_slices [s][d].ewmaThp;
-        }
-    }
-
-  // Scheduling the next update statistics.
-  m_lastUpdate = Simulator::Now ();
-  Simulator::Schedule (m_timeout, &LinkInfo::UpdateStatistics, this);
 }
 
 void
