@@ -216,6 +216,14 @@ LinkInfo::GetResSliceRatio (Direction dir, SliceId slice) const
     }
 }
 
+double
+LinkInfo::GetSliceQuota (Direction dir, SliceId slice) const
+{
+  NS_LOG_FUNCTION (this << dir << slice);
+
+  return static_cast<double> (m_slices [slice][dir].quota) / 100;
+}
+
 DpIdPair_t
 LinkInfo::GetSwitchDpIdPair (void) const
 {
@@ -335,9 +343,11 @@ LinkInfo::NotifyConstructionCompleted (void)
   m_lastUpdate = Simulator::Now ();
   Simulator::Schedule (m_timeout, &LinkInfo::UpdateStatistics, this);
 
-  // Set the maximum bit rate for the fake shared slice.
+  // Set the maximum bit rate and slice quota for the fake shared slice.
   m_slices [SliceId::ALL][0].maxRate = GetLinkBitRate ();
   m_slices [SliceId::ALL][1].maxRate = GetLinkBitRate ();
+  m_slices [SliceId::ALL][0].quota = 100;
+  m_slices [SliceId::ALL][1].quota = 100;
 
   Object::NotifyConstructionCompleted ();
 }
@@ -471,10 +481,10 @@ LinkInfo::SetSliceQuotas (
       NS_LOG_DEBUG (SliceIdStr (slice) << " slice quota: " << quota);
 
       // Only update and fire adjusted trace source if the quota changes.
-      uint64_t newRate = (GetLinkBitRate () * quota) / 100;
-      if (newRate != m_slices [slice][dir].maxRate)
+      if (quota != m_slices [slice][dir].quota)
         {
-          m_slices [slice][dir].maxRate = newRate;
+          m_slices [slice][dir].quota = quota;
+          m_slices [slice][dir].maxRate = (GetLinkBitRate () * quota) / 100;
 
           NS_LOG_DEBUG ("Fire meter adjustment and clear meter diff.");
           m_meterAdjustedTrace (Ptr<LinkInfo> (this), dir, slice);

@@ -171,6 +171,17 @@ public:
     Direction dir, SliceId slice = SliceId::ALL) const;
 
   /**
+   * Get the slice quota for this link on the given direction, optionally
+   * filtered by the network slice. If no slice is given, the this method will
+   * return the maximum quota of 1.0;
+   * \param dir The link direction.
+   * \param slice The network slice.
+   * \return The slice quota.
+   */
+  double GetSliceQuota (
+    Direction dir, SliceId slice = SliceId::ALL) const;
+
+  /**
    * Get the pair of switch datapath IDs for this link, respecting the
    * internal order.
    * \return The pair of switch datapath IDs.
@@ -267,6 +278,7 @@ private:
   /** Metadata associated to a network slice. */
   struct SliceStats
   {
+    uint16_t quota;             //!< Slice quota.
     uint64_t maxRate;           //!< Maximum bit rate.
     uint64_t resRate;           //!< Reserved bit rate.
     uint64_t ewmaThp;           //!< EWMA throughput bit rate.
