@@ -90,7 +90,7 @@ PgwTftStatsCalculator::NotifyConstructionCompleted (void)
           m_tftFilename + "-" + sliceStr + ".log", std::ios::out);
       *m_slices [s].tftWrapper->GetStream ()
         << boolalpha << right << fixed << setprecision (3)
-        << GetTimeHeader ()
+        << " " << setw (8)  << "Time:s"
         << " " << setw (7)  << "CurLev"
         << " " << setw (7)  << "NexLev"
         << " " << setw (7)  << "MaxLev"
@@ -126,7 +126,7 @@ PgwTftStatsCalculator::NotifyPgwTftStats (
 
   SliceId slice = pgwInfo->GetSliceCtrl ()->GetSliceId ();
   *m_slices [slice].tftWrapper->GetStream ()
-    << GetTimeStr ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (7)  << pgwInfo->GetCurLevel ()
     << " " << setw (7)  << nextLevel
     << " " << setw (7)  << pgwInfo->GetMaxLevel ()

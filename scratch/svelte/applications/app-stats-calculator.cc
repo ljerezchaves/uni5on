@@ -261,7 +261,7 @@ AppStatsCalculator::DoDispose ()
 
 std::ostream & operator << (std::ostream &os, const AppStatsCalculator &stats)
 {
-  os << GetTimeStr (stats.GetActiveTime ())
+  os << " " << setw (8) << stats.GetActiveTime ().GetSeconds ()
      << " " << setw (7) << stats.GetRxDelay ().GetSeconds () * 1000
      << " " << setw (7) << stats.GetRxJitter ().GetSeconds () * 1000
      << " " << setw (7) << stats.GetTxPackets ()

@@ -242,24 +242,6 @@ uint32_t GetSvelteMeterId (SliceId sliceId, uint32_t meterId);
 
 /**
  * \ingroup svelte
- * Get the time header for the GetTimeStr () method.
- * \param title The title to print.
- * \return The header string.
- * \internal Keep this method consistent with GetTimeStr () method.
- */
-std::string GetTimeHeader (std::string title = "Time:s");
-
-/**
- * \ingroup svelte
- * Get the current time in seconds using pre-configured format.
- * \param time The time to print.
- * \return The time string.
- * \internal Keep this method consistent with GetSvelteMeterId () method.
- */
-std::string GetTimeStr (Time time = Simulator::Now ());
-
-/**
- * \ingroup svelte
  * Encapsulate the destination address in the 32 MSB of tunnel ID and the
  * TEID in the 32 LSB of tunnel ID.
  * \param dstIp The destination IP address.

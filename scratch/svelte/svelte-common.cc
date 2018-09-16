@@ -255,23 +255,6 @@ GetSvelteMeterId (SliceId sliceId, uint32_t meterId)
 }
 
 std::string
-GetTimeHeader (std::string title)
-{
-  std::ostringstream str;
-  str << " " << setw (8) << title;
-  return str.str ();
-}
-
-std::string
-GetTimeStr (Time time)
-{
-  std::ostringstream str;
-  str << fixed << setprecision (3) << right
-      << " " << setw (8) << time.GetSeconds ();
-  return str.str ();
-}
-
-std::string
 GetTunnelIdStr (uint32_t teid, Ipv4Address dstIp)
 {
   uint64_t tunnelId = static_cast<uint64_t> (dstIp.Get ());

@@ -128,7 +128,7 @@ HandoverStatsCalculator::NotifyConstructionCompleted (void)
       m_mobFilename + ".log", std::ios::out);
   *m_mobWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
-    << GetTimeHeader ()
+    << " " << setw (8)  << "Time:s"
     << " " << setw (8)  << "NodeId"
     << " " << setw (9)  << "NodeName"
     << " " << setw (9)  << "PosX"
@@ -143,7 +143,7 @@ HandoverStatsCalculator::NotifyConstructionCompleted (void)
       m_rrcFilename + ".log", std::ios::out);
   *m_rrcWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
-    << GetTimeHeader ()
+    << " " << setw (8)  << "Time:s"
     << " " << setw (32) << "UE-RRC-event"
     << UeInfo::PrintHeader ()
     << EnbInfo::PrintHeader ()
@@ -159,7 +159,7 @@ HandoverStatsCalculator::NotifyInitialCellSelectionEndOk (
   std::string context, uint64_t imsi, uint16_t cellId)
 {
   *m_rrcWrapper->GetStream ()
-    << GetTimeStr ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (32) << "initial-cell-selection-end-ok"
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
@@ -171,7 +171,7 @@ HandoverStatsCalculator::NotifyInitialCellSelectionEndError (
   std::string context, uint64_t imsi, uint16_t cellId)
 {
   *m_rrcWrapper->GetStream ()
-    << GetTimeStr ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (32) << "initial-cell-selection-end-error"
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
@@ -183,7 +183,7 @@ HandoverStatsCalculator::NotifyConnectionEstablished (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
-    << GetTimeStr ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (32) << "connection-established"
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
@@ -196,7 +196,7 @@ HandoverStatsCalculator::NotifyConnectionTimeout (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
-    << GetTimeStr ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (32) << "connection-timeout"
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
@@ -209,7 +209,7 @@ HandoverStatsCalculator::NotifyConnectionReconfiguration (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
-    << GetTimeStr ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (32) << "connection-reconfiguration"
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
@@ -223,7 +223,7 @@ HandoverStatsCalculator::NotifyHandoverStart (
   uint16_t dstCellId)
 {
   *m_rrcWrapper->GetStream ()
-    << GetTimeStr ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (32) << "handover-start"
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (srcCellId)
@@ -237,7 +237,7 @@ HandoverStatsCalculator::NotifyHandoverEndOk (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
-    << GetTimeStr ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (32) << "handover-end-ok"
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
@@ -250,7 +250,7 @@ HandoverStatsCalculator::NotifyHandoverEndError (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
-    << GetTimeStr ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (32) << "handover-end-error"
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
@@ -267,7 +267,7 @@ HandoverStatsCalculator::NotifyMobilityCourseChange (
   Vector velocity = mobility->GetVelocity ();
 
   *m_mobWrapper->GetStream ()
-    << GetTimeStr ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (8)  << node->GetId ()
     << " " << setw (9)  << Names::FindName (node)
     << " " << setw (9)  << position.x

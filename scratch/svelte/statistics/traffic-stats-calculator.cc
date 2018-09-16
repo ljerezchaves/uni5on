@@ -242,7 +242,7 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
       m_appFilename + ".log", std::ios::out);
   *m_appWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
-    << GetTimeHeader ()
+    << " " << setw (8) << "Time:s"
     << " " << setw (8) << "AppName"
     << " " << setw (6) << "Ul/Dl"
     << RoutingInfo::PrintHeader ()
@@ -253,7 +253,7 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
       m_epcFilename + ".log", std::ios::out);
   *m_epcWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
-    << GetTimeHeader ()
+    << " " << setw (8) << "Time:s"
     << " " << setw (8) << "AppName"
     << " " << setw (6) << "Ul/Dl"
     << RoutingInfo::PrintHeader ()
@@ -278,7 +278,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       // Dump uplink statistics.
       epcStats = GetEpcStats (teid, Direction::ULINK);
       *m_epcWrapper->GetStream ()
-        << GetTimeStr ()
+        << " " << setw (8) << Simulator::Now ().GetSeconds ()
         << " " << setw (8) << app->GetAppName ()
         << " " << setw (6) << DirectionStr (Direction::ULINK)
         << *rInfo
@@ -286,7 +286,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
         << std::endl;
 
       *m_appWrapper->GetStream ()
-        << GetTimeStr ()
+        << " " << setw (8) << Simulator::Now ().GetSeconds ()
         << " " << setw (8) << app->GetAppName ()
         << " " << setw (6) << DirectionStr (Direction::ULINK)
         << *rInfo
@@ -299,7 +299,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
       // Dump downlink statistics.
       epcStats = GetEpcStats (teid, Direction::DLINK);
       *m_epcWrapper->GetStream ()
-        << GetTimeStr ()
+        << " " << setw (8) << Simulator::Now ().GetSeconds ()
         << " " << setw (8) << app->GetAppName ()
         << " " << setw (6) << DirectionStr (Direction::DLINK)
         << *rInfo
@@ -307,7 +307,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
         << std::endl;
 
       *m_appWrapper->GetStream ()
-        << GetTimeStr ()
+        << " " << setw (8) << Simulator::Now ().GetSeconds ()
         << " " << setw (8) << app->GetAppName ()
         << " " << setw (6) << DirectionStr (Direction::DLINK)
         << *rInfo
