@@ -71,9 +71,8 @@ private:
    */
   void DumpStatistics (Time nextDump);
 
-  LinkInfoList_t            m_linkList;     //!< Backhaul connections.
-  Time                      m_lastUpdate;   //!< Last update time.
-
+  /** Metadata for each network slice. */
+  SliceStats                m_slices [N_SLICES_ALL];
   std::string               m_prefix;       //!< Common filename prefix.
   std::string               m_nonSuffix;    //!< Non filename suffix.
   std::string               m_resSuffix;    //!< Res filename suffix.
@@ -83,7 +82,8 @@ private:
   std::string               m_shrFilename;  //!< Shared non stats filename.
   Ptr<OutputStreamWrapper>  m_shrWrapper;   //!< Shared non stats file wrapper.
 
-  SliceStats                m_slices [N_SLICES_ALL];  //!< Slice metadata.
+  LinkInfoList_t            m_linkList;     //!< Backhaul connections.
+  Time                      m_lastUpdate;   //!< Last update time.
 };
 
 } // namespace ns3
