@@ -160,17 +160,14 @@ SgwInfo::GetPointer (uint64_t sgwId)
   return sgwInfo;
 }
 
-std::string
-SgwInfo::PrintHeader (void)
+std::ostream &
+SgwInfo::PrintHeader (std::ostream &os)
 {
-  NS_LOG_FUNCTION_NOARGS ();
-
-  std::ostringstream str;
-  str << " " << setw (6)  << "SgwID"
-      << " " << setw (6)  << "SgwSw"
-      << " " << setw (11) << "SgwS1Addr"
-      << " " << setw (11) << "SgwS5Addr";
-  return str.str ();
+  os << " " << setw (6)  << "SgwID"
+     << " " << setw (6)  << "SgwSw"
+     << " " << setw (11) << "SgwS1Addr"
+     << " " << setw (11) << "SgwS5Addr";
+  return os;
 }
 
 void

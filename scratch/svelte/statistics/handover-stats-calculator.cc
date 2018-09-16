@@ -144,9 +144,10 @@ HandoverStatsCalculator::NotifyConstructionCompleted (void)
   *m_rrcWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
     << " " << setw (8)  << "Time:s"
-    << " " << setw (32) << "UE-RRC-event"
-    << UeInfo::PrintHeader ()
-    << EnbInfo::PrintHeader ()
+    << " " << setw (32) << "UE-RRC-event";
+  UeInfo::PrintHeader (*m_rrcWrapper->GetStream ());
+  EnbInfo::PrintHeader (*m_rrcWrapper->GetStream ());
+  *m_rrcWrapper->GetStream ()
     << " " << setw (5)  << "RNTI"
     << " " << setw (9)  << "TargetCGI"
     << std::endl;

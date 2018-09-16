@@ -557,36 +557,33 @@ RoutingInfo::GetSliceId (uint32_t teid)
   return RoutingInfo::GetPointer (teid)->GetSliceId ();
 }
 
-std::string
-RoutingInfo::PrintHeader (void)
+std::ostream &
+RoutingInfo::PrintHeader (std::ostream &os)
 {
-  NS_LOG_FUNCTION_NOARGS ();
-
-  std::ostringstream str;
-  str << " " << setw (11) << "TEID"
-      << " " << setw (6)  << "Slice"
-      << " " << setw (6)  << "IsDft"
-      << " " << setw (6)  << "IsAct"
-      << " " << setw (6)  << "IsIns"
-      << " " << setw (6)  << "IsAgg"
-      << " " << setw (6)  << "IsBlk"
-      << " " << setw (9)  << "BlkReas"
-      << " " << setw (4)  << "QCI"
-      << " " << setw (6)  << "IsGbr"
-      << " " << setw (5)  << "Dscp"
-      << " " << setw (6)  << "Dlink"
-      << " " << setw (11) << "DlGbr:kbps"
-      << " " << setw (11) << "DlMbr:kbps"
-      << " " << setw (6)  << "Ulink"
-      << " " << setw (11) << "UlGbr:kbps"
-      << " " << setw (11) << "UlMbr:kbps"
-      << " " << setw (6)  << "GbrRes"
-      << " " << setw (6)  << "DMbIns"
-      << " " << setw (6)  << "UMbIns"
-      << " " << setw (4)  << "TFT"
-      << " " << setw (7)  << "Prio"
-      << " " << setw (6)  << "Tmo:s";
-  return str.str ();
+  os << " " << setw (11) << "TEID"
+     << " " << setw (6)  << "Slice"
+     << " " << setw (6)  << "IsDft"
+     << " " << setw (6)  << "IsAct"
+     << " " << setw (6)  << "IsIns"
+     << " " << setw (6)  << "IsAgg"
+     << " " << setw (6)  << "IsBlk"
+     << " " << setw (9)  << "BlkReas"
+     << " " << setw (4)  << "QCI"
+     << " " << setw (6)  << "IsGbr"
+     << " " << setw (5)  << "Dscp"
+     << " " << setw (6)  << "Dlink"
+     << " " << setw (11) << "DlGbr:kbps"
+     << " " << setw (11) << "DlMbr:kbps"
+     << " " << setw (6)  << "Ulink"
+     << " " << setw (11) << "UlGbr:kbps"
+     << " " << setw (11) << "UlMbr:kbps"
+     << " " << setw (6)  << "GbrRes"
+     << " " << setw (6)  << "DMbIns"
+     << " " << setw (6)  << "UMbIns"
+     << " " << setw (4)  << "TFT"
+     << " " << setw (7)  << "Prio"
+     << " " << setw (6)  << "Tmo:s";
+  return os;
 }
 
 void

@@ -188,14 +188,11 @@ RingInfo::RingPathStr (RingPath path)
     }
 }
 
-std::string
-RingInfo::PrintHeader (void)
+std::ostream &
+RingInfo::PrintHeader (std::ostream &os)
 {
-  NS_LOG_FUNCTION_NOARGS ();
-
-  std::ostringstream str;
-  str << " " << setw (22) << "RingPathDesc";
-  return str.str ();
+  os << " " << setw (22) << "RingPathDesc";
+  return os;
 }
 
 void

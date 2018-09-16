@@ -259,6 +259,14 @@ public:
   static Ptr<LinkInfo> GetPointer (uint64_t dpId1, uint64_t dpId2);
 
   /**
+   * Get the header for the print operator <<.
+   * \param os The output stream.
+   * \return The output stream.
+   * \internal Keep this method consistent with the PrintValues () method.
+   */
+  static std::ostream & PrintHeader (std::ostream &os);
+
+  /**
    * TracedCallback signature for meter adjusted traced source.
    * \param lInfo The link information.
    * \param dir The link direction.

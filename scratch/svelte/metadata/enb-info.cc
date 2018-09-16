@@ -122,16 +122,13 @@ EnbInfo::GetPointer (uint16_t cellId)
   return enbInfo;
 }
 
-std::string
-EnbInfo::PrintHeader (void)
+std::ostream &
+EnbInfo::PrintHeader (std::ostream &os)
 {
-  NS_LOG_FUNCTION_NOARGS ();
-
-  std::ostringstream str;
-  str << " " << setw (6)  << "EnbID"
-      << " " << setw (6)  << "EnbSw"
-      << " " << setw (11) << "EnbS1Addr";
-  return str.str ();
+  os << " " << setw (6)  << "EnbID"
+     << " " << setw (6)  << "EnbSw"
+     << " " << setw (11) << "EnbS1Addr";
+  return os;
 }
 
 void

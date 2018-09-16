@@ -450,16 +450,13 @@ PgwInfo::GetPointer (uint64_t pgwId)
   return pgwInfo;
 }
 
-std::string
-PgwInfo::PrintHeader (void)
+std::ostream &
+PgwInfo::PrintHeader (std::ostream &os)
 {
-  NS_LOG_FUNCTION_NOARGS ();
-
-  std::ostringstream str;
-  str << " " << setw (6)  << "PgwID"
-      << " " << setw (6)  << "PgwSw"
-      << " " << setw (11) << "PgwS5Addr";
-  return str.str ();
+  os << " " << setw (6)  << "PgwID"
+     << " " << setw (6)  << "PgwSw"
+     << " " << setw (11) << "PgwS5Addr";
+  return os;
 }
 
 void

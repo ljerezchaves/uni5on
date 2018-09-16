@@ -203,14 +203,14 @@ AdmissionStatsCalculator::NotifyConstructionCompleted (void)
       m_brqFilename + ".log", std::ios::out);
   *m_brqWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
-    << " " << setw (8) << "Time:s"
-    << RoutingInfo::PrintHeader ()
-    << UeInfo::PrintHeader ()
-    << EnbInfo::PrintHeader ()
-    << SgwInfo::PrintHeader ()
-    << PgwInfo::PrintHeader ()
-    << RingInfo::PrintHeader ()
-    << std::endl;
+    << " " << setw (8) << "Time:s";
+  RoutingInfo::PrintHeader (*m_brqWrapper->GetStream ());
+  UeInfo::PrintHeader (*m_brqWrapper->GetStream ());
+  EnbInfo::PrintHeader (*m_brqWrapper->GetStream ());
+  SgwInfo::PrintHeader (*m_brqWrapper->GetStream ());
+  PgwInfo::PrintHeader (*m_brqWrapper->GetStream ());
+  RingInfo::PrintHeader (*m_brqWrapper->GetStream ());
+  *m_brqWrapper->GetStream () << std::endl;
 
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);

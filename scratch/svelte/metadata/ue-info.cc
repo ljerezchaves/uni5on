@@ -202,16 +202,13 @@ UeInfo::GetPointer (Ipv4Address addr)
   return ueInfo;
 }
 
-std::string
-UeInfo::PrintHeader (void)
+std::ostream &
+UeInfo::PrintHeader (std::ostream &os)
 {
-  NS_LOG_FUNCTION_NOARGS ();
-
-  std::ostringstream str;
-  str << " " << setw (6)  << "IMSI"
-      << " " << setw (6)  << "Slice"
-      << " " << setw (11) << "UeAddr";
-  return str.str ();
+  os << " " << setw (6)  << "IMSI"
+     << " " << setw (6)  << "Slice"
+     << " " << setw (11) << "UeAddr";
+  return os;
 }
 
 void

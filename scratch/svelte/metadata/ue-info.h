@@ -112,10 +112,11 @@ public:
 
   /**
    * Get the header for the print operator <<.
-   * \return The header string.
+   * \param os The output stream.
+   * \return The output stream.
    * \internal Keep this method consistent with the << operator below.
    */
-  static std::string PrintHeader (void);
+  static std::ostream & PrintHeader (std::ostream &os);
 
 protected:
   /** Destructor implementation. */

@@ -18,9 +18,13 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
+#include <iomanip>
+#include <iostream>
 #include "link-info.h"
 #include "../logical/epc-gtpu-tag.h"
 #include "../metadata/routing-info.h"
+
+using namespace std;
 
 #undef NS_LOG_APPEND_CONTEXT
 #define NS_LOG_APPEND_CONTEXT                                                 \
@@ -319,6 +323,17 @@ LinkInfo::GetPointer (uint64_t dpId1, uint64_t dpId2)
       lInfo = ret->second;
     }
   return lInfo;
+}
+
+std::ostream &
+LinkInfo::PrintHeader (std::ostream &os)
+{
+  os << " " << setw (9)  << "DpIdFw"
+     << " " << setw (11) << "Link:kbps"
+     << " " << setw (7)  << "Quot:%"
+     << " " << setw (11) << "Max:kbps";
+  // FIXME continuar
+  return os;
 }
 
 void

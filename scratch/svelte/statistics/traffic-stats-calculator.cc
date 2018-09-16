@@ -100,19 +100,16 @@ EpcStatsCalculator::NotifyDrop (uint32_t dpBytes, DropReason reason)
   m_dpBytes [DropReason::ALL] += dpBytes;
 }
 
-std::string
-EpcStatsCalculator::PrintHeader (void)
+std::ostream &
+EpcStatsCalculator::PrintHeader (std::ostream &os)
 {
-  NS_LOG_FUNCTION_NOARGS ();
-
-  std::ostringstream str;
-  str << AppStatsCalculator::PrintHeader ()
-      << " " << setw (6) << "DpLoa"
-      << " " << setw (6) << "DpMbr"
-      << " " << setw (6) << "DpSli"
-      << " " << setw (6) << "DpQue"
-      << " " << setw (6) << "DpAll";
-  return str.str ();
+  AppStatsCalculator::PrintHeader (os);
+  os << " " << setw (6) << "DpLoa"
+     << " " << setw (6) << "DpMbr"
+     << " " << setw (6) << "DpSli"
+     << " " << setw (6) << "DpQue"
+     << " " << setw (6) << "DpAll";
+  return os;
 }
 
 void
@@ -244,10 +241,10 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
     << boolalpha << right << fixed << setprecision (3)
     << " " << setw (8) << "Time:s"
     << " " << setw (8) << "AppName"
-    << " " << setw (6) << "Ul/Dl"
-    << RoutingInfo::PrintHeader ()
-    << AppStatsCalculator::PrintHeader ()
-    << std::endl;
+    << " " << setw (6) << "Ul/Dl";
+  RoutingInfo::PrintHeader (*m_appWrapper->GetStream ());
+  AppStatsCalculator::PrintHeader (*m_appWrapper->GetStream ());
+  *m_appWrapper->GetStream () << std::endl;
 
   m_epcWrapper = Create<OutputStreamWrapper> (
       m_epcFilename + ".log", std::ios::out);
@@ -255,10 +252,10 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
     << boolalpha << right << fixed << setprecision (3)
     << " " << setw (8) << "Time:s"
     << " " << setw (8) << "AppName"
-    << " " << setw (6) << "Ul/Dl"
-    << RoutingInfo::PrintHeader ()
-    << EpcStatsCalculator::PrintHeader ()
-    << std::endl;
+    << " " << setw (6) << "Ul/Dl";
+  RoutingInfo::PrintHeader (*m_epcWrapper->GetStream ());
+  EpcStatsCalculator::PrintHeader (*m_epcWrapper->GetStream ());
+  *m_epcWrapper->GetStream () << std::endl;
 
   Object::NotifyConstructionCompleted ();
 }
