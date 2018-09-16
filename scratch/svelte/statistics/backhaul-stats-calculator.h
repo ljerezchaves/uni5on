@@ -72,7 +72,7 @@ private:
   SliceStats                m_slices [N_SLICES_ALL];
   std::string               m_linFilename;  //!< LinStats filename.
 
-  LinkInfoList_t            m_linkList;     //!< Backhaul connections.
+  uint16_t                  m_numLinks;     //!< Number of links in backahul.
   Time                      m_lastUpdate;   //!< Last update time.
 };
 

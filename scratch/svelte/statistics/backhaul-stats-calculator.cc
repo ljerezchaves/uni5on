@@ -81,96 +81,33 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
   std::string prefix = stringValue.Get ();
   SetAttribute ("LinStatsFilename", StringValue (prefix + m_linFilename));
 
+  m_numLinks = LinkInfo::GetList ().size ();
   for (int s = 0; s <= SliceId::ALL; s++)
     {
       std::string sliceStr = SliceIdStr (static_cast<SliceId> (s));
       SliceStats &stats = m_slices [s];
 
+      // Initialize byte counters for all links.
+      for (uint16_t i = 0; i < m_numLinks; i++)
+        {
+          stats.fwdBytes.push_back (0);
+          stats.bwdBytes.push_back (0);
+        }
+
+      // Create the output file for this slice.
       stats.linWrapper = Create<OutputStreamWrapper> (
           m_linFilename + "-" + sliceStr + ".log", std::ios::out);
 
+      // Print the header in output file.
       *stats.linWrapper->GetStream ()
         << boolalpha << right << fixed << setprecision (3)
         << " " << setw (8) << "Time:s";
       LinkInfo::PrintHeader (*stats.linWrapper->GetStream ());
-      *stats.linWrapper->GetStream () << std::endl;
+      *stats.linWrapper->GetStream ()
+        << " " << setw (14) << "AvgThpFw:kbps"
+        << " " << setw (14) << "AvgThpBw:kbps"
+        << std::endl;
     }
-
-
-
-  // m_shrWrapper = Create<OutputStreamWrapper> (m_shrFilename, std::ios::out);
-  // *m_shrWrapper->GetStream ()
-  //   << left << fixed << setprecision (4)
-  //   << setw (12) << "Time(s)";
-
-  // m_connections = ConnectionInfo::GetList ();
-  // ConnInfoList_t::const_iterator it;
-  // for (it = m_connections.begin (); it != m_connections.end (); it++)
-  //   {
-  //     DpIdPair_t key = (*it)->GetSwitchDpIdPair ();
-
-  //     *m_shrWrapper->GetStream ()
-  //       << right << setw (4) << key.first  << "-"
-  //       << left  << setw (4) << key.second << "   ";
-  //   }
-  // *m_shrWrapper->GetStream () << left << std::endl;
-
-  // for (int i = 0; i < Slice::ALL; i++)
-  //   {
-  //     std::string statsPrefix = m_prefix + SliceStr (static_cast<Slice> (i));
-
-  //     m_slices [i].nonWrapper = Create<OutputStreamWrapper> (
-  //         statsPrefix + m_nonSuffix, std::ios::out);
-  //     *m_slices [i].nonWrapper->GetStream ()
-  //       << left << fixed << setprecision (4)
-  //       << setw (12) << "Time(s)";
-
-  //     m_slices [i].resWrapper = Create<OutputStreamWrapper> (
-  //         statsPrefix + m_resSuffix, std::ios::out);
-  //     *m_slices [i].resWrapper->GetStream ()
-  //       << left << fixed << setprecision (4)
-  //       << setw (12) << "Time(s)";
-
-  //     m_slices [i].thpWrapper = Create<OutputStreamWrapper> (
-  //         statsPrefix + m_thpSuffix, std::ios::out);
-  //     *m_slices [i].thpWrapper->GetStream ()
-  //       << left << fixed << setprecision (4)
-  //       << setw (12) << "Time(s)";
-
-  //     m_slices [i].useWrapper = Create<OutputStreamWrapper> (
-  //         statsPrefix + m_useSuffix, std::ios::out);
-  //     *m_slices [i].useWrapper->GetStream ()
-  //       << left << fixed << setprecision (4)
-  //       << setw (12) << "Time(s)";
-
-  //     for (it = m_connections.begin (); it != m_connections.end (); it++)
-  //       {
-  //         DpIdPair_t key = (*it)->GetSwitchDpIdPair ();
-
-  //         *m_slices [i].nonWrapper->GetStream ()
-  //           << right << setw (4) << key.first  << "-"
-  //           << left  << setw (4) << key.second << "   ";
-
-  //         *m_slices [i].resWrapper->GetStream ()
-  //           << right << setw (4) << key.first  << "-"
-  //           << left  << setw (4) << key.second << "   ";
-
-  //         *m_slices [i].thpWrapper->GetStream ()
-  //           << right << setw (10) << key.first  << "-"
-  //           << left  << setw (10) << key.second << "   ";
-
-  //         *m_slices [i].useWrapper->GetStream ()
-  //           << right << setw (4) << key.first  << "-"
-  //           << left  << setw (4) << key.second << "   ";
-
-  //         m_slices [i].fwdBytes.push_back (0);
-  //         m_slices [i].bwdBytes.push_back (0);
-  //       }
-  //     *m_slices [i].nonWrapper->GetStream () << left << std::endl;
-  //     *m_slices [i].resWrapper->GetStream () << left << std::endl;
-  //     *m_slices [i].thpWrapper->GetStream () << left << std::endl;
-  //     *m_slices [i].useWrapper->GetStream () << left << std::endl;
-  //   }
 
   TimeValue timeValue;
   GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
@@ -185,118 +122,40 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
 {
   NS_LOG_FUNCTION (this);
 
+  double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
+
   // For each network slice, iterate over all links dumping statistics.
   for (int s = 0; s <= SliceId::ALL; s++)
     {
       SliceId slice = static_cast<SliceId> (s);
       SliceStats &stats = m_slices [s];
 
+      uint16_t linkIdx = 0;
       for (auto const &lInfo : LinkInfo::GetList ())
         {
+          // Update byte counters for absolute throughout in last interval.
+          uint64_t fwdBytes = lInfo->GetTxBytes (LinkInfo::FWD, slice);
+          uint64_t bwdBytes = lInfo->GetTxBytes (LinkInfo::BWD, slice);
+          double fwdKbits = static_cast<double> (
+              fwdBytes - stats.fwdBytes.at (linkIdx)) * 8 / 1000;
+          double bwdKbits = static_cast<double> (
+              bwdBytes - stats.bwdBytes.at (linkIdx)) * 8 / 1000;
+          stats.fwdBytes.at (linkIdx) = fwdBytes;
+          stats.bwdBytes.at (linkIdx) = bwdBytes;
+          linkIdx++;
+
           *stats.linWrapper->GetStream ()
             << " " << setw (8) << Simulator::Now ().GetSeconds ();
           lInfo->PrintSliceValues (*stats.linWrapper->GetStream (), slice);
-          *stats.linWrapper->GetStream () << std::endl;
+          *stats.linWrapper->GetStream ()
+            << " " << setw (14) << fwdKbits / elapSecs
+            << " " << setw (14) << bwdKbits / elapSecs
+            << std::endl;
         }
       *stats.linWrapper->GetStream () << std::endl;
     }
 
-  // double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
-
-  // *m_shrWrapper->GetStream ()
-  //   << left << setprecision (4)
-  //   << setw (12) << Simulator::Now ().GetSeconds ()
-  //   << setprecision (2);
-
-  // uint32_t cIdx;
-  // Ptr<ConnectionInfo> cInfo;
-  // ConnInfoList_t::const_iterator it;
-  // for (cIdx = 0, it = m_connections.begin ();
-  //      it != m_connections.end (); ++it, ++cIdx)
-  //   {
-  //     cInfo = *it;
-  //     *m_shrWrapper->GetStream ()
-  //       << right
-  //       << setw (4) << cInfo->GetFreeSliceRatio (
-  //       ConnectionInfo::FWD, Slice::ALL) << " "
-  //       << setw (4) << cInfo->GetFreeSliceRatio (
-  //       ConnectionInfo::BWD, Slice::ALL) << "   ";
-  //   }
-  // *m_shrWrapper->GetStream () << std::endl;
-
-  // for (int i = 0; i < Slice::ALL; i++)
-  //   {
-  //     *m_slices [i].nonWrapper->GetStream ()
-  //       << left << setprecision (4)
-  //       << setw (12) << Simulator::Now ().GetSeconds ()
-  //       << setprecision (2);
-
-  //     *m_slices [i].resWrapper->GetStream ()
-  //       << left << setprecision (4)
-  //       << setw (12) << Simulator::Now ().GetSeconds ()
-  //       << setprecision (2);
-
-  //     *m_slices [i].thpWrapper->GetStream ()
-  //       << left << setprecision (4)
-  //       << setw (12) << Simulator::Now ().GetSeconds ()
-  //       << setprecision (2);
-
-  //     *m_slices [i].useWrapper->GetStream ()
-  //       << left << setprecision (4)
-  //       << setw (12) << Simulator::Now ().GetSeconds ()
-  //       << setprecision (2);
-
-  //     for (cIdx = 0, it = m_connections.begin ();
-  //          it != m_connections.end (); ++it, ++cIdx)
-  //       {
-  //         cInfo = *it;
-  //         uint64_t fwdBytes = cInfo->GetTxBytes (
-  //             ConnectionInfo::FWD, static_cast<Slice> (i));
-  //         uint64_t bwdBytes = cInfo->GetTxBytes (
-  //             ConnectionInfo::BWD, static_cast<Slice> (i));
-
-  //         double fwdKbits = static_cast<double> (
-  //             fwdBytes - m_slices [i].fwdBytes.at (cIdx)) * 8 / 1000;
-  //         double bwdKbits = static_cast<double> (
-  //             bwdBytes - m_slices [i].bwdBytes.at (cIdx)) * 8 / 1000;
-
-  //         m_slices [i].fwdBytes.at (cIdx) = fwdBytes;
-  //         m_slices [i].bwdBytes.at (cIdx) = bwdBytes;
-
-  //         *m_slices [i].thpWrapper->GetStream ()
-  //           << setfill ('0')
-  //           << right
-  //           << setw (10) << fwdKbits / elapSecs << " "
-  //           << setw (10) << bwdKbits / elapSecs << "   ";
-
-  //         *m_slices [i].nonWrapper->GetStream ()
-  //           << right
-  //           << setw (4) << cInfo->GetFreeSliceRatio (
-  //           ConnectionInfo::FWD, static_cast<Slice> (i)) << " "
-  //           << setw (4) << cInfo->GetFreeSliceRatio (
-  //           ConnectionInfo::BWD, static_cast<Slice> (i)) << "   ";
-
-  //         *m_slices [i].resWrapper->GetStream ()
-  //           << right
-  //           << setw (4) << cInfo->GetResSliceRatio (
-  //           ConnectionInfo::FWD, static_cast<Slice> (i)) << " "
-  //           << setw (4) << cInfo->GetResSliceRatio (
-  //           ConnectionInfo::BWD, static_cast<Slice> (i)) << "   ";
-
-  //         *m_slices [i].useWrapper->GetStream ()
-  //           << right
-  //           << setw (4) << cInfo->GetThpSliceRatio (
-  //           ConnectionInfo::FWD, static_cast<Slice> (i)) << " "
-  //           << setw (4) << cInfo->GetThpSliceRatio (
-  //           ConnectionInfo::BWD, static_cast<Slice> (i)) << "   ";
-  //       }
-  //     *m_slices [i].thpWrapper->GetStream () << setfill (' ') << std::endl;
-  //     *m_slices [i].nonWrapper->GetStream () << std::endl;
-  //     *m_slices [i].resWrapper->GetStream () << std::endl;
-  //     *m_slices [i].useWrapper->GetStream () << std::endl;
-  //   }
-
-  // m_lastUpdate = Simulator::Now ();
+  m_lastUpdate = Simulator::Now ();
   Simulator::Schedule (nextDump, &BackhaulStatsCalculator::DumpStatistics,
                        this, nextDump);
 }

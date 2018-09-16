@@ -313,9 +313,9 @@ LinkInfo::PrintSliceValues (std::ostream &os, SliceId slice) const
      << " " << setw (7)  << GetFreeSliceRatio (LinkInfo::FWD, slice) * 100
      << " " << setw (12) << Bps2Kbps (GetFreeBitRate (LinkInfo::BWD, slice))
      << " " << setw (7)  << GetFreeSliceRatio (LinkInfo::BWD, slice) * 100
-     << " " << setw (12) << Bps2Kbps (GetThpBitRate (LinkInfo::FWD, slice))
+     << " " << setw (14) << Bps2Kbps (GetThpBitRate (LinkInfo::FWD, slice))
      << " " << setw (7)  << GetThpSliceRatio (LinkInfo::FWD, slice) * 100
-     << " " << setw (12) << Bps2Kbps (GetThpBitRate (LinkInfo::BWD, slice))
+     << " " << setw (14) << Bps2Kbps (GetThpBitRate (LinkInfo::BWD, slice))
      << " " << setw (7)  << GetThpSliceRatio (LinkInfo::BWD, slice) * 100;
   return os;
 }
@@ -373,9 +373,9 @@ LinkInfo::PrintHeader (std::ostream &os)
      << " " << setw (7)  << "FreFw:%"
      << " " << setw (12) << "FreBw:kbps"
      << " " << setw (7)  << "FreBw:%"
-     << " " << setw (12) << "ThpFw:kbps"
+     << " " << setw (14) << "EmaThpFw:kbps"
      << " " << setw (7)  << "ThpFw:%"
-     << " " << setw (12) << "ThpBw:kbps"
+     << " " << setw (14) << "EmaThpBw:kbps"
      << " " << setw (7)  << "ThpBw:%";
   return os;
 }
