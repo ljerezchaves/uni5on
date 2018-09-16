@@ -33,6 +33,9 @@ BackhaulStatsCalculator::BackhaulStatsCalculator ()
   : m_lastUpdate (Simulator::Now ())
 {
   NS_LOG_FUNCTION (this);
+
+  // Clear slice metadata.
+  memset (m_slices, 0, sizeof (SliceStats) * N_SLICES_ALL);
 }
 
 BackhaulStatsCalculator::~BackhaulStatsCalculator ()
@@ -40,43 +43,17 @@ BackhaulStatsCalculator::~BackhaulStatsCalculator ()
   NS_LOG_FUNCTION (this);
 }
 
-// FIXME Depois de organizar adicionar tudo no default.topo
 TypeId
 BackhaulStatsCalculator::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::BackhaulStatsCalculator")
     .SetParent<Object> ()
     .AddConstructor<BackhaulStatsCalculator> ()
-    .AddAttribute ("ShrStatsFilename",
-                   "Filename for shared non-reserved ratio statistics.",
-                   StringValue ("backhaul-all-non.log"),
+    .AddAttribute ("LinStatsFilename",
+                   "Filename for backhaul link statistics.",
+                   StringValue ("backhaul-link"),
                    MakeStringAccessor (
-                     &BackhaulStatsCalculator::m_shrFilename),
-                   MakeStringChecker ())
-    .AddAttribute ("StatsPrefix",
-                   "Filename prefix for slice statistics.",
-                   StringValue ("backhaul-"),
-                   MakeStringAccessor (&BackhaulStatsCalculator::m_prefix),
-                   MakeStringChecker ())
-    .AddAttribute ("NonStatsSuffix",
-                   "Filename suffix for slice non-reserved ratio statistics.",
-                   StringValue ("-non.log"),
-                   MakeStringAccessor (&BackhaulStatsCalculator::m_nonSuffix),
-                   MakeStringChecker ())
-    .AddAttribute ("ResStatsSuffix",
-                   "Filename suffix for slice reserved ratio statistics.",
-                   StringValue ("-res.log"),
-                   MakeStringAccessor (&BackhaulStatsCalculator::m_resSuffix),
-                   MakeStringChecker ())
-    .AddAttribute ("ThpStatsSuffix",
-                   "Filename suffix for slice throughput statistics.",
-                   StringValue ("-thp.log"),
-                   MakeStringAccessor (&BackhaulStatsCalculator::m_thpSuffix),
-                   MakeStringChecker ())
-    .AddAttribute ("UseStatsSuffix",
-                   "Filename suffix for slice usage ratio statistics.",
-                   StringValue ("-use.log"),
-                   MakeStringAccessor (&BackhaulStatsCalculator::m_useSuffix),
+                     &BackhaulStatsCalculator::m_linFilename),
                    MakeStringChecker ())
   ;
   return tid;
@@ -87,17 +64,10 @@ BackhaulStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
-  // m_shrWrapper = 0;
-  // m_connections.clear ();
-  // for (int i = 0; i < Slice::ALL; i++)
-  //   {
-  //     m_slices [i].nonWrapper = 0;
-  //     m_slices [i].resWrapper = 0;
-  //     m_slices [i].thpWrapper = 0;
-  //     m_slices [i].useWrapper = 0;
-  //     m_slices [i].fwdBytes.clear ();
-  //     m_slices [i].bwdBytes.clear ();
-  //   }
+  for (int s = 0; s <= SliceId::ALL; s++)
+    {
+      m_slices [s].linWrapper = 0;
+    }
   Object::DoDispose ();
 }
 
@@ -106,11 +76,23 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // StringValue stringValue;
-  // GlobalValue::GetValueByName ("OutputPrefix", stringValue);
-  // std::string prefix = stringValue.Get ();
-  // SetAttribute ("ShrStatsFilename", StringValue (prefix + m_shrFilename));
-  // SetAttribute ("StatsPrefix", StringValue (prefix + m_prefix));
+  StringValue stringValue;
+  GlobalValue::GetValueByName ("OutputPrefix", stringValue);
+  std::string prefix = stringValue.Get ();
+  SetAttribute ("LinStatsFilename", StringValue (prefix + m_linFilename));
+
+  for (int s = 0; s <= SliceId::ALL; s++)
+    {
+      std::string sliceStr = SliceIdStr (static_cast<SliceId> (s));
+      m_slices [s].linWrapper = Create<OutputStreamWrapper> (
+          m_linFilename + "-" + sliceStr + ".log", std::ios::out);
+      *m_slices [s].linWrapper->GetStream ()
+        << boolalpha << right << fixed << setprecision (3)
+        << " " << setw (8) << "Time:s";
+      LinkInfo::PrintHeader (*m_slices [s].linWrapper->GetStream ());
+      *m_slices [s].linWrapper->GetStream () << std::endl;
+    }
+
 
   // m_shrWrapper = Create<OutputStreamWrapper> (m_shrFilename, std::ios::out);
   // *m_shrWrapper->GetStream ()
@@ -186,11 +168,11 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
   //     *m_slices [i].useWrapper->GetStream () << left << std::endl;
   //   }
 
-  // TimeValue timeValue;
-  // GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
-  // Time firstDump = timeValue.Get ();
-  // Simulator::Schedule (firstDump, &BackhaulStatsCalculator::DumpStatistics,
-  //                      this, firstDump);
+  TimeValue timeValue;
+  GlobalValue::GetValueByName ("DumpStatsTimeout", timeValue);
+  Time firstDump = timeValue.Get ();
+  Simulator::Schedule (firstDump, &BackhaulStatsCalculator::DumpStatistics,
+                       this, firstDump);
 
   Object::NotifyConstructionCompleted ();
 }
@@ -198,6 +180,15 @@ void
 BackhaulStatsCalculator::DumpStatistics (Time nextDump)
 {
   NS_LOG_FUNCTION (this);
+
+  // Iterate over all slices dumping statistics.
+  for (int s = 0; s <= SliceId::ALL; s++)
+    {
+      SliceStats &stats = m_slices [s];
+      *stats.linWrapper->GetStream ()
+        << " " << setw (8) << Simulator::Now ().GetSeconds ()
+        << std::endl;
+    }
 
   // double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
 
@@ -295,8 +286,8 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
   //   }
 
   // m_lastUpdate = Simulator::Now ();
-  // Simulator::Schedule (nextDump, &BackhaulStatsCalculator::DumpStatistics,
-  //                      this, nextDump);
+  Simulator::Schedule (nextDump, &BackhaulStatsCalculator::DumpStatistics,
+                       this, nextDump);
 }
 
 } // Namespace ns3

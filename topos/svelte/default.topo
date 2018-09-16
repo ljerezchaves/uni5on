@@ -85,6 +85,7 @@ default ns3::LinkInfo::EwmaTimeout "100ms"
 
 default ns3::AdmissionStatsCalculator::AdmStatsFilename "admission-counters"
 default ns3::AdmissionStatsCalculator::BrqStatsFilename "admission-requests"
+default ns3::AdmissionStatsCalculator::LinStatsFilename "backhaul-link"
 default ns3::HandoverStatsCalculator::MobStatsFilename "handover-mobility"
 default ns3::HandoverStatsCalculator::RrcStatsFilename "handover-connection"
 default ns3::PgwTftStatsCalculator::LbmStatsFilename "pgw-tft-adaptive"
