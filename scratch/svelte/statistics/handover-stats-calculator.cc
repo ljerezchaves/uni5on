@@ -22,6 +22,9 @@
 #include <iostream>
 #include <ns3/mobility-model.h>
 #include "handover-stats-calculator.h"
+#include "../svelte-common.h"
+#include "../metadata/enb-info.h"
+#include "../metadata/ue-info.h"
 
 using namespace std;
 
@@ -124,32 +127,28 @@ HandoverStatsCalculator::NotifyConstructionCompleted (void)
   m_mobWrapper = Create<OutputStreamWrapper> (
       m_mobFilename + ".log", std::ios::out);
   *m_mobWrapper->GetStream ()
-    << fixed << setprecision (4)
-    << left
-    << setw (12) << "Time(s)"
-    << right
-    << setw (8)  << "NodeId"
-    << setw (10) << "NodeName"
-    << setw (10) << "PosX"
-    << setw (10) << "PosY"
-    << setw (10) << "PosZ"
-    << setw (10) << "VelX"
-    << setw (10) << "VelY"
-    << setw (10) << "VelZ"
+    << boolalpha << right << fixed << setprecision (3)
+    << GetTimeHeader ()
+    << " " << setw (8)  << "NodeId"
+    << " " << setw (9)  << "NodeName"
+    << " " << setw (9)  << "PosX"
+    << " " << setw (9)  << "PosY"
+    << " " << setw (9)  << "PosZ"
+    << " " << setw (9)  << "VelX"
+    << " " << setw (9)  << "VelY"
+    << " " << setw (9)  << "VelZ"
     << std::endl;
 
   m_rrcWrapper = Create<OutputStreamWrapper> (
       m_rrcFilename + ".log", std::ios::out);
   *m_rrcWrapper->GetStream ()
-    << fixed << setprecision (4)
-    << left
-    << setw (12) << "Time(s)"
-    << setw (30) << "UE RRC event"
-    << right
-    << setw (6)  << "IMSI"
-    << setw (5)  << "CGI"
-    << setw (6)  << "RNTI"
-    << setw (10) << "TargetCGI"
+    << boolalpha << right << fixed << setprecision (3)
+    << GetTimeHeader ()
+    << " " << setw (32) << "UE-RRC-event"
+    << UeInfo::PrintHeader ()
+    << EnbInfo::PrintHeader ()
+    << " " << setw (5)  << "RNTI"
+    << " " << setw (9)  << "TargetCGI"
     << std::endl;
 
   Object::NotifyConstructionCompleted ();
@@ -160,12 +159,10 @@ HandoverStatsCalculator::NotifyInitialCellSelectionEndOk (
   std::string context, uint64_t imsi, uint16_t cellId)
 {
   *m_rrcWrapper->GetStream ()
-    << left
-    << setw (11) << Simulator::Now ().GetSeconds ()
-    << " " << setw (30) << "Initial cell selection OK"
-    << right
-    << " " << setw (5) << imsi
-    << " " << setw (4) << cellId
+    << GetTimeStr ()
+    << " " << setw (32) << "initial-cell-selection-end-ok"
+    << *UeInfo::GetPointer (imsi)
+    << *EnbInfo::GetPointer (cellId)
     << std::endl;
 }
 
@@ -174,12 +171,10 @@ HandoverStatsCalculator::NotifyInitialCellSelectionEndError (
   std::string context, uint64_t imsi, uint16_t cellId)
 {
   *m_rrcWrapper->GetStream ()
-    << left
-    << setw (11) << Simulator::Now ().GetSeconds ()
-    << " " << setw (30) << "Initial cell selection error"
-    << right
-    << " " << setw (5) << imsi
-    << " " << setw (4) << cellId
+    << GetTimeStr ()
+    << " " << setw (32) << "initial-cell-selection-end-error"
+    << *UeInfo::GetPointer (imsi)
+    << *EnbInfo::GetPointer (cellId)
     << std::endl;
 }
 
@@ -188,12 +183,10 @@ HandoverStatsCalculator::NotifyConnectionEstablished (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
-    << left
-    << setw (11) << Simulator::Now ().GetSeconds ()
-    << " " << setw (30) << "Connection established"
-    << right
-    << " " << setw (5) << imsi
-    << " " << setw (4) << cellId
+    << GetTimeStr ()
+    << " " << setw (32) << "connection-established"
+    << *UeInfo::GetPointer (imsi)
+    << *EnbInfo::GetPointer (cellId)
     << " " << setw (5) << rnti
     << std::endl;
 }
@@ -203,12 +196,10 @@ HandoverStatsCalculator::NotifyConnectionTimeout (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
-    << left
-    << setw (11) << Simulator::Now ().GetSeconds ()
-    << " " << setw (30) << "Connection timeout"
-    << right
-    << " " << setw (5) << imsi
-    << " " << setw (4) << cellId
+    << GetTimeStr ()
+    << " " << setw (32) << "connection-timeout"
+    << *UeInfo::GetPointer (imsi)
+    << *EnbInfo::GetPointer (cellId)
     << " " << setw (5) << rnti
     << std::endl;
 }
@@ -218,12 +209,10 @@ HandoverStatsCalculator::NotifyConnectionReconfiguration (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
-    << left
-    << setw (11) << Simulator::Now ().GetSeconds ()
-    << " " << setw (30) << "Connection reconfiguration"
-    << right
-    << " " << setw (5) << imsi
-    << " " << setw (4) << cellId
+    << GetTimeStr ()
+    << " " << setw (32) << "connection-reconfiguration"
+    << *UeInfo::GetPointer (imsi)
+    << *EnbInfo::GetPointer (cellId)
     << " " << setw (5) << rnti
     << std::endl;
 }
@@ -234,12 +223,10 @@ HandoverStatsCalculator::NotifyHandoverStart (
   uint16_t dstCellId)
 {
   *m_rrcWrapper->GetStream ()
-    << left
-    << setw (11) << Simulator::Now ().GetSeconds ()
-    << " " << setw (30) << "Handover start"
-    << right
-    << " " << setw (5) << imsi
-    << " " << setw (4) << srcCellId
+    << GetTimeStr ()
+    << " " << setw (32) << "handover-start"
+    << *UeInfo::GetPointer (imsi)
+    << *EnbInfo::GetPointer (srcCellId)
     << " " << setw (5) << rnti
     << " " << setw (9) << dstCellId
     << std::endl;
@@ -250,12 +237,10 @@ HandoverStatsCalculator::NotifyHandoverEndOk (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
-    << left
-    << setw (11) << Simulator::Now ().GetSeconds ()
-    << " " << setw (30) << "Handover OK"
-    << right
-    << " " << setw (5) << imsi
-    << " " << setw (4) << cellId
+    << GetTimeStr ()
+    << " " << setw (32) << "handover-end-ok"
+    << *UeInfo::GetPointer (imsi)
+    << *EnbInfo::GetPointer (cellId)
     << " " << setw (5) << rnti
     << std::endl;
 }
@@ -265,12 +250,10 @@ HandoverStatsCalculator::NotifyHandoverEndError (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
-    << left
-    << setw (11) << Simulator::Now ().GetSeconds ()
-    << " " << setw (30) << "Handover error"
-    << right
-    << " " << setw (7) << imsi
-    << " " << setw (7) << cellId
+    << GetTimeStr ()
+    << " " << setw (32) << "handover-end-error"
+    << *UeInfo::GetPointer (imsi)
+    << *EnbInfo::GetPointer (cellId)
     << " " << setw (7) << rnti
     << std::endl;
 }
@@ -284,10 +267,8 @@ HandoverStatsCalculator::NotifyMobilityCourseChange (
   Vector velocity = mobility->GetVelocity ();
 
   *m_mobWrapper->GetStream ()
-    << left << setprecision (4)
-    << setw (11) << Simulator::Now ().GetSeconds ()
-    << right << setprecision (2)
-    << " " << setw (8) << node->GetId ()
+    << GetTimeStr ()
+    << " " << setw (8)  << node->GetId ()
     << " " << setw (9)  << Names::FindName (node)
     << " " << setw (9)  << position.x
     << " " << setw (9)  << position.y
