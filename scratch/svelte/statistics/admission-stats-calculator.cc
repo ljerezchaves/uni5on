@@ -165,7 +165,6 @@ AdmissionStatsCalculator::DoDispose ()
     {
       m_slices [s].admWrapper = 0;
     }
-
   Object::DoDispose ();
 }
 

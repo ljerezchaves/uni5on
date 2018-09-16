@@ -237,6 +237,15 @@ public:
   bool IsFullDuplexLink (void) const;
 
   /**
+   * Print the link metadata for a specific network slice.
+   * \param os The output stream.
+   * \param slice The network slice.
+   * \return The output stream.
+   * \internal Keep this method consistent with the PrintHeader () method.
+   */
+  std::ostream & PrintSliceValues (std::ostream &os, SliceId slice) const;
+
+  /**
    * Get the string representing the given direction.
    * \param dir The link direction.
    * \return The link direction string.
@@ -259,10 +268,10 @@ public:
   static Ptr<LinkInfo> GetPointer (uint64_t dpId1, uint64_t dpId2);
 
   /**
-   * Get the header for the print operator <<.
+   * Get the header for the PrintSliceValues () method.
    * \param os The output stream.
    * \return The output stream.
-   * \internal Keep this method consistent with the PrintValues () method.
+   * \internal Keep this method consistent with the PrintSliceValues () method.
    */
   static std::ostream & PrintHeader (std::ostream &os);
 

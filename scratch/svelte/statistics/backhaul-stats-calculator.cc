@@ -84,14 +84,18 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
   for (int s = 0; s <= SliceId::ALL; s++)
     {
       std::string sliceStr = SliceIdStr (static_cast<SliceId> (s));
-      m_slices [s].linWrapper = Create<OutputStreamWrapper> (
+      SliceStats &stats = m_slices [s];
+
+      stats.linWrapper = Create<OutputStreamWrapper> (
           m_linFilename + "-" + sliceStr + ".log", std::ios::out);
-      *m_slices [s].linWrapper->GetStream ()
+
+      *stats.linWrapper->GetStream ()
         << boolalpha << right << fixed << setprecision (3)
         << " " << setw (8) << "Time:s";
-      LinkInfo::PrintHeader (*m_slices [s].linWrapper->GetStream ());
-      *m_slices [s].linWrapper->GetStream () << std::endl;
+      LinkInfo::PrintHeader (*stats.linWrapper->GetStream ());
+      *stats.linWrapper->GetStream () << std::endl;
     }
+
 
 
   // m_shrWrapper = Create<OutputStreamWrapper> (m_shrFilename, std::ios::out);
@@ -181,13 +185,20 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
 {
   NS_LOG_FUNCTION (this);
 
-  // Iterate over all slices dumping statistics.
+  // For each network slice, iterate over all links dumping statistics.
   for (int s = 0; s <= SliceId::ALL; s++)
     {
+      SliceId slice = static_cast<SliceId> (s);
       SliceStats &stats = m_slices [s];
-      *stats.linWrapper->GetStream ()
-        << " " << setw (8) << Simulator::Now ().GetSeconds ()
-        << std::endl;
+
+      for (auto const &lInfo : LinkInfo::GetList ())
+        {
+          *stats.linWrapper->GetStream ()
+            << " " << setw (8) << Simulator::Now ().GetSeconds ();
+          lInfo->PrintSliceValues (*stats.linWrapper->GetStream (), slice);
+          *stats.linWrapper->GetStream () << std::endl;
+        }
+      *stats.linWrapper->GetStream () << std::endl;
     }
 
   // double elapSecs = (Simulator::Now () - m_lastUpdate).GetSeconds ();
