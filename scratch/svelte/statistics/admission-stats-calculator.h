@@ -93,7 +93,7 @@ private:
   void ResetCounters (SliceStats &stats);
 
   /** Metadata for each network slice. */
-  SliceStats               m_slices [N_SLICES_ALL]; //!< Slice metadata.
+  SliceStats               m_slices [N_SLICES_ALL];
   std::string              m_admFilename;   //!< AdmStats filename.
   std::string              m_brqFilename;   //!< BrqStats filename.
   Ptr<OutputStreamWrapper> m_brqWrapper;    //!< BrqStats file wrapper.

@@ -29,25 +29,13 @@
 namespace ns3 {
 
 /**
- * \ingroup sdmnStats
+ * \ingroup svelteStats
  * This class monitors the OpenFlow backhaul network and dump bandwidth usage
  * and resource reservation statistics on links between OpenFlow switches.
  */
 class BackhaulStatsCalculator : public Object
 {
 public:
-  /** Statisctics for a network slice. */
-  struct SliceStats
-  {
-    std::vector<uint64_t>     fwdBytes;     //!< FWD TX bytes per connetion.
-    std::vector<uint64_t>     bwdBytes;     //!< BWD TX bytes per connetion.
-
-    Ptr<OutputStreamWrapper>  nonWrapper;   //!< NonStats file wrapper.
-    Ptr<OutputStreamWrapper>  resWrapper;   //!< RegStats file wrapper.
-    Ptr<OutputStreamWrapper>  thpWrapper;   //!< ThpStats file wrapper.
-    Ptr<OutputStreamWrapper>  useWrapper;   //!< UseStats file wrapper.
-  };
-
   BackhaulStatsCalculator ();          //!< Default constructor.
   virtual ~BackhaulStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
@@ -65,6 +53,18 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
 private:
+  /** Metadata associated to a network slice. */
+  struct SliceStats
+  {
+    std::vector<uint64_t>     fwdBytes;     //!< FWD TX bytes per connetion.
+    std::vector<uint64_t>     bwdBytes;     //!< BWD TX bytes per connetion.
+
+    Ptr<OutputStreamWrapper>  nonWrapper;   //!< NonStats file wrapper.
+    Ptr<OutputStreamWrapper>  resWrapper;   //!< RegStats file wrapper.
+    Ptr<OutputStreamWrapper>  thpWrapper;   //!< ThpStats file wrapper.
+    Ptr<OutputStreamWrapper>  useWrapper;   //!< UseStats file wrapper.
+  };
+
   /**
    * Dump statistics into file.
    * \param nextDump The interval before next dump.
@@ -83,7 +83,7 @@ private:
   std::string               m_shrFilename;  //!< Shared non stats filename.
   Ptr<OutputStreamWrapper>  m_shrWrapper;   //!< Shared non stats file wrapper.
 
-  SliceStats                m_slices [3];  //!< Slice statistics. // FIXME Slices::ALL
+  SliceStats                m_slices [N_SLICES_ALL];  //!< Slice metadata.
 };
 
 } // namespace ns3
