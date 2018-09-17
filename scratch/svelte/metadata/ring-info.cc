@@ -113,11 +113,12 @@ RingInfo::GetPathStr (void) const
     }
 
   std::ostringstream str;
-  str << (IsDefaultPath (LteIface::S1U) ? "s1:dft+" : "s1:inv+")
-      << RingPathShortStr (GetDlPath (LteIface::S1U))
+  str << (IsDefaultPath (LteIface::S5) ? "s5:dft+" : "s5:inv+")
+      << RingPathShortStr (GetDlPath (LteIface::S5))
       << "|"
-      << (IsDefaultPath (LteIface::S5) ? "s5:dft+" : "s5:inv+")
-      << RingPathShortStr (GetDlPath (LteIface::S5));
+      << (IsDefaultPath (LteIface::S1U) ? "s1:dft+" : "s1:inv+")
+      << RingPathShortStr (GetDlPath (LteIface::S1U));
+
   return str.str ();
 }
 
@@ -191,7 +192,7 @@ RingInfo::RingPathStr (RingPath path)
 std::ostream &
 RingInfo::PrintHeader (std::ostream &os)
 {
-  os << " " << setw (22) << "RingPathDesc";
+  os << " " << setw (22) << "RingDownPathDesc";
   return os;
 }
 
