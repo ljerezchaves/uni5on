@@ -56,8 +56,8 @@ private:
   /** Metadata associated to a network slice. */
   struct SliceStats
   {
-    std::vector<uint64_t>     fwdBytes;     //!< FWD TX bytes per connetion.
-    std::vector<uint64_t>     bwdBytes;     //!< BWD TX bytes per connetion.
+    uint64_t                  *fwdBytes;    //!< FWD TX bytes per connetion.
+    uint64_t                  *bwdBytes;    //!< BWD TX bytes per connetion.
 
     Ptr<OutputStreamWrapper>  linWrapper;   //!< LinStats file wrapper.
   };

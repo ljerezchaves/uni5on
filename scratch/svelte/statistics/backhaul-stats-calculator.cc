@@ -66,7 +66,10 @@ BackhaulStatsCalculator::DoDispose ()
 
   for (int s = 0; s <= SliceId::ALL; s++)
     {
-      m_slices [s].linWrapper = 0;
+      SliceStats &stats = m_slices [s];
+      stats.linWrapper = 0;
+      delete stats.fwdBytes;
+      delete stats.bwdBytes;
     }
   Object::DoDispose ();
 }
@@ -88,10 +91,12 @@ BackhaulStatsCalculator::NotifyConstructionCompleted (void)
       SliceStats &stats = m_slices [s];
 
       // Initialize byte counters for all links.
+      stats.fwdBytes = new uint64_t [m_numLinks];
+      stats.bwdBytes = new uint64_t [m_numLinks];
       for (uint16_t i = 0; i < m_numLinks; i++)
         {
-          stats.fwdBytes.push_back (0);
-          stats.bwdBytes.push_back (0);
+          stats.fwdBytes [i] = 0;
+          stats.bwdBytes [i] = 0;
         }
 
       // Create the output file for this slice.
@@ -137,11 +142,11 @@ BackhaulStatsCalculator::DumpStatistics (Time nextDump)
           uint64_t fwdBytes = lInfo->GetTxBytes (LinkInfo::FWD, slice);
           uint64_t bwdBytes = lInfo->GetTxBytes (LinkInfo::BWD, slice);
           double fwdKbits = static_cast<double> (
-              fwdBytes - stats.fwdBytes.at (linkIdx)) * 8 / 1000;
+              fwdBytes - stats.fwdBytes [linkIdx]) * 8 / 1000;
           double bwdKbits = static_cast<double> (
-              bwdBytes - stats.bwdBytes.at (linkIdx)) * 8 / 1000;
-          stats.fwdBytes.at (linkIdx) = fwdBytes;
-          stats.bwdBytes.at (linkIdx) = bwdBytes;
+              bwdBytes - stats.bwdBytes [linkIdx]) * 8 / 1000;
+          stats.fwdBytes [linkIdx] = fwdBytes;
+          stats.bwdBytes [linkIdx] = bwdBytes;
           linkIdx++;
 
           *stats.linWrapper->GetStream ()
