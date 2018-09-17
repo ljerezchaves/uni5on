@@ -439,6 +439,14 @@ RingController::HasBitRate (Ptr<const RingInfo> ringInfo)
   RingInfo::RingPath downPath;
   bool success = true;
 
+  // When checking for the available bit rate on backhaul links, the S5 and
+  // S1-U routing paths may overlap if one of them is CLOCK and the other is
+  // COUNTER. We must ensure that the overlapping links have the requested
+  // bandwidth for both interfaces, otherwise the BitRateReserve () method will
+  // fail. So we save the links used by S5 interface and check them when going
+  // through S1-U interface.
+  std::set<Ptr<LinkInfo> > s5Links;
+
   // S5 interface (from P-GW to S-GW)
   uint16_t curr = rInfo->GetPgwInfraSwIdx ();
   downPath = ringInfo->GetDlPath (LteIface::S5);
@@ -451,6 +459,10 @@ RingController::HasBitRate (Ptr<const RingInfo> ringInfo)
       success &= lInfo->HasBitRate (currId, nextId, slice, dlRate);
       success &= lInfo->HasBitRate (nextId, currId, slice, ulRate);
       curr = next;
+
+      // Save this link as used by S5 interface.
+      auto ret = s5Links.insert (lInfo);
+      NS_ABORT_MSG_IF (ret.second == false, "Error when saving link in map.");
     }
 
   // S1-U interface (from S-GW to eNB)
@@ -461,15 +473,26 @@ RingController::HasBitRate (Ptr<const RingInfo> ringInfo)
       Ptr<LinkInfo> lInfo = GetLinkInfo (curr, next);
       uint64_t currId = GetDpId (curr);
       uint64_t nextId = GetDpId (next);
-      success &= lInfo->HasBitRate (currId, nextId, slice, dlRate);
-      success &= lInfo->HasBitRate (nextId, currId, slice, ulRate);
+
+      // Check if this link was used by S5 interface.
+      auto it = s5Links.find (lInfo);
+      if (it != s5Links.end ())
+        {
+          // When checking for downlink resources for S1-U interface we also
+          // must ensure that the links has uplink resources for S5 interface,
+          // and vice-versa.
+          success &= lInfo->HasBitRate (currId, nextId, slice,
+                                        dlRate + ulRate);
+          success &= lInfo->HasBitRate (nextId, currId, slice,
+                                        ulRate + dlRate);
+        }
+      else
+        {
+          success &= lInfo->HasBitRate (currId, nextId, slice, dlRate);
+          success &= lInfo->HasBitRate (nextId, currId, slice, ulRate);
+        }
       curr = next;
     }
-
-  // FIXME Se o tráfego passa pelo mesmo enlace duas vezes (S1 + S5),
-  // a verificacao de banda tem que considerar isso para não dar erro na hora
-  // da reserva
-
   return success;
 }
 
