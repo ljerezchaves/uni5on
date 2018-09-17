@@ -126,8 +126,10 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   // requested bit rate over the longest path.
   if (m_strategy == RingController::SPF)
     {
-      // FIXME Qual interface inverter?
-      ringInfo->InvertPath (LteIface::S5);
+      // FIXME: By now the S-GW and P-GW are always attached to the same
+      // OpenFlow backhaul switch. So the S5 interface is always a local one.
+      // This way we will invert only the S1-U interface by now.
+      ringInfo->InvertPath (LteIface::S1U);
       if (HasBitRate (ringInfo))
         {
           NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
