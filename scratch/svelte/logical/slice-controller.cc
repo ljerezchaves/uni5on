@@ -588,12 +588,13 @@ SliceController::DoCreateSessionRequest (
   NS_ASSERT_MSG (m_pgwInfo, "P-GW not configure with this controller.");
 
   // This controller is responsible for assigning the S-GW and P-GW elements to
-  // the UE. In current implementation, each slice has a single P-GW. We are
-  // using the S-GW attached to the same OpenFlow backhaul switch where the
-  // UE's serving eNB is also attached. The S-GW may change during handover.
+  // the UE. In current implementation, each slice has a single P-GW and one
+  // S-GW attached to each OpenFlow backhaul switch.
+  // FIXME By now we are using only the S-GW attached to the OpenFlow backhaul
+  // switch where the P-GW is also attached.
   uint64_t imsi = msg.imsi;
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  Ptr<SgwInfo> sgwInfo = GetSgwInfo (ueInfo->GetEnbInfo ()->GetInfraSwIdx ());
+  Ptr<SgwInfo> sgwInfo = GetSgwInfo (m_pgwInfo->GetInfraSwIdx ());
 
   ueInfo->SetPgwInfo (m_pgwInfo);
   ueInfo->SetSgwInfo (sgwInfo);
@@ -703,7 +704,7 @@ SliceController::DoModifyBearerRequest (
 
   // FIXME: We need to identify which is the best S-GW for this UE after the
   // handover procedure. We also need to move the S-GW rules from the old S-GW
-  // switch to the new one. Update the bearer S-GW address.
+  // switch to the new one and update the bearer S-GW address.
   // ueInfo->SetSgwInfo (?);
 
   EpcS11SapMme::ModifyBearerResponseMessage res;
