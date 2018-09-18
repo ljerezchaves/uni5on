@@ -97,19 +97,19 @@ UeRrcStatsCalculator::GetTypeId (void)
     .AddConstructor<UeRrcStatsCalculator> ()
     .AddAttribute ("HvoStatsFilename",
                    "Filename for LTE UE handover statistics.",
-                   StringValue ("handover-xxxxxx"), // FIXME
+                   StringValue ("ue-handover"),
                    MakeStringAccessor (
-                     &UeRrcStatsCalculator::m_mobFilename),
+                     &UeRrcStatsCalculator::m_hvoFilename),
                    MakeStringChecker ())
     .AddAttribute ("MobStatsFilename",
-                   "Filename for LTE UE mobility model statistics.",
-                   StringValue ("handover-mobility"),
+                   "Filename for LTE UE mobility statistics.",
+                   StringValue ("ue-mobility"),
                    MakeStringAccessor (
                      &UeRrcStatsCalculator::m_mobFilename),
                    MakeStringChecker ())
     .AddAttribute ("RrcStatsFilename",
                    "Filename for LTE UE RRC procedures statistics.",
-                   StringValue ("handover-connection"),
+                   StringValue ("ue-rrc-procedures"),
                    MakeStringAccessor (
                      &UeRrcStatsCalculator::m_rrcFilename),
                    MakeStringChecker ())
@@ -136,8 +136,22 @@ UeRrcStatsCalculator::NotifyConstructionCompleted (void)
   StringValue stringValue;
   GlobalValue::GetValueByName ("OutputPrefix", stringValue);
   std::string prefix = stringValue.Get ();
+  SetAttribute ("HvoStatsFilename", StringValue (prefix + m_hvoFilename));
   SetAttribute ("MobStatsFilename", StringValue (prefix + m_mobFilename));
   SetAttribute ("RrcStatsFilename", StringValue (prefix + m_rrcFilename));
+
+  m_hvoWrapper = Create<OutputStreamWrapper> (
+      m_hvoFilename + ".log", std::ios::out);
+  *m_hvoWrapper->GetStream ()
+    << boolalpha << right << fixed << setprecision (3)
+    << " " << setw (8)  << "Time:s"
+    << " " << setw (32) << "HandoverEvent";
+  UeInfo::PrintHeader (*m_hvoWrapper->GetStream ());
+  EnbInfo::PrintHeader (*m_hvoWrapper->GetStream ());
+  *m_hvoWrapper->GetStream ()
+    << " " << setw (5)  << "RNTI"
+    << " " << setw (9)  << "TargetCGI"
+    << std::endl;
 
   m_mobWrapper = Create<OutputStreamWrapper> (
       m_mobFilename + ".log", std::ios::out);
@@ -159,12 +173,11 @@ UeRrcStatsCalculator::NotifyConstructionCompleted (void)
   *m_rrcWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
     << " " << setw (8)  << "Time:s"
-    << " " << setw (32) << "UE-RRC-event";
+    << " " << setw (32) << "UeRrcEvent";
   UeInfo::PrintHeader (*m_rrcWrapper->GetStream ());
   EnbInfo::PrintHeader (*m_rrcWrapper->GetStream ());
   *m_rrcWrapper->GetStream ()
     << " " << setw (5)  << "RNTI"
-    << " " << setw (9)  << "TargetCGI"
     << std::endl;
 
   Object::NotifyConstructionCompleted ();
@@ -214,7 +227,7 @@ UeRrcStatsCalculator::NotifyHandoverStart (
   std::string context, uint64_t imsi, uint16_t srcCellId, uint16_t rnti,
   uint16_t dstCellId)
 {
-  *m_rrcWrapper->GetStream ()
+  *m_hvoWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (32) << "handover-start"
     << *UeInfo::GetPointer (imsi)
@@ -228,7 +241,7 @@ void
 UeRrcStatsCalculator::NotifyHandoverEndOk (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
-  *m_rrcWrapper->GetStream ()
+  *m_hvoWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (32) << "handover-end-ok"
     << *UeInfo::GetPointer (imsi)
@@ -241,7 +254,7 @@ void
 UeRrcStatsCalculator::NotifyHandoverEndError (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
-  *m_rrcWrapper->GetStream ()
+  *m_hvoWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (32) << "handover-end-error"
     << *UeInfo::GetPointer (imsi)
