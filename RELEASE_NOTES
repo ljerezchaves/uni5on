@@ -9,6 +9,48 @@ http://www.nsnam.org including tutorials: http://www.nsnam.org/tutorials.html
 Consult the file CHANGES.html for more detailed information about changed
 API and behavior across ns-3 releases.
 
+Release 3.28.1
+==============
+
+Availability
+------------
+This release is available from:
+https://www.nsnam.org/release/ns-allinone-3.28.1.tar.bz2
+
+Supported platforms
+-------------------
+This release is intended to work on systems with the following minimal
+compiler requirements (other compilers supporting C++11 may also work):
+- g++-4.9 or later
+- Apple LLVM version 7.0.2 or later 
+- clang-3.3 or later
+In addition, a Python 2.7 (Python 2 series) or Python 3.4 (Python 3 series) 
+or later is required.
+
+- Ubuntu 18.04 (64 bit) with g++-7.3.0 and Python 2.7.15
+- Ubuntu 16.04 (64 bit) with g++-5.4.0 and Python 2.7.12
+- Fedora Core 28 (64 bit) with g++-8.1.1 and Python 2.7.15
+- Fedora Core 26 (64 bit) with g++-7.3.1 and g++-7.1.1, and Python 2.7.14
+- macOS High Sierra 10.13.5 with Xcode 9.4.1, Apple LLVM version 9.1.0, Python 2.7.10
+
+New user-visible features
+-------------------------
+This is a maintenance release with no new user-visible features in the models.
+
+Bugs fixed
+----------
+- bug 2938 - add --disable-werror flag to Waf
+- bug 2982 - missing modules cause Waf to run indefinitely
+- various compiler issues and warnings handled for GCC 8
+
+Known issues
+------------
+In general, known issues are tracked on the project tracker available
+at http://www.nsnam.org/bugzilla/
+
+- It has been reported that this release is not compatible with Python 3.7
+- Pyviz visualizer is unsupported for systems based on Ubuntu 18.04
+
 Release 3.28
 ============
 

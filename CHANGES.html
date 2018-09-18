@@ -51,6 +51,16 @@ to this file based on your experience, please contribute a patch or drop
 us a note on ns-developers mailing list.</p>
 
 <hr>
+<h1>Changes from ns-3.28 to ns-3.28.1</h1>
+<h2>Changes to build system:</h2>
+<ul>
+  <li>The '--no32bit-scan' argument is removed from Waf apiscan; generation of ILP32 bindings is now automated from the LP64 bindings.</li>
+  <li> When using on newer compilers, new warnings may trigger build failures.
+The --disable-werror flag can be passed to Waf at configuration time to turn
+off the Werror behavior.</li>
+</ul>
+
+<hr>
 <h1>Changes from ns-3.27 to ns-3.28</h1>
 <h2>New API:</h2>
 <ul>

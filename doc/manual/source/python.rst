@@ -303,6 +303,8 @@ Set up a ``bake`` build environment
 
 Try the following commands::
 
+.. sourcecode:: bash
+
     $ cd bake
     $ export BAKE_HOME=`pwd`
     $ export PATH=$PATH:$BAKE_HOME/build/bin
@@ -315,14 +317,20 @@ Configure
 
 Perform a configuration at the bake level::
 
+.. sourcecode:: bash
+
     $ ./bake.py configure -e ns-3-dev -e pygccxml-1.9.1
 
 The output of ``bake show`` should show something like this: 
 ::
 
+.. sourcecode:: bash
+
     $ ./bake.py show
 
 Should say::
+
+.. sourcecode:: text
 
     -- System Dependencies --
      > clang-dev - OK
@@ -334,11 +342,12 @@ Should say::
      > qt - OK
      > setuptools - OK
 
-
 Download
 ########
 
 Try the following command::
+
+.. sourcecode:: bash
 
     $ ./bake.py download
      >> Searching for system dependency python-dev - OK
@@ -360,6 +369,8 @@ Build
 
 Try the following commands::
 
+.. sourcecode:: text
+
     $ mkdir -p build/lib
     $ ./bake.py build
 
@@ -370,11 +381,15 @@ support is enabled:
 
 ::
 
+.. sourcecode:: text
+
   Python API Scanning Support   : enabled
 
 It may say something like this, if the support is not active:
 
 ::
+
+.. sourcecode:: text
 
   Python API Scanning Support   : not enabled (Missing 'pygccxml' Python module)
 
@@ -388,6 +403,8 @@ Rescan 64-bit
 It is important that you scan the failing module with '--no32bit-scan'; e.g.:
 
 ::
+
+.. sourcecode:: bash
 
     $ cd source/ns-3-dev
     $ ./waf --apiscan=wifi --no32bit-scan
@@ -426,6 +443,8 @@ In summary, to generate LP64 bindings for Linux 64-bit systems, it is
 sufficient to call (e.g. for the ``core`` module):
 
 ::
+
+.. sourcecode:: bash
 
   $ ./waf --apiscan=core --no32bit-scan
 
