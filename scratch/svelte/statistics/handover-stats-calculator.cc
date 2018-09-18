@@ -39,14 +39,6 @@ HandoverStatsCalculator::HandoverStatsCalculator ()
 
   // Connect this stats calculator to required trace sources.
   Config::Connect (
-    "/NodeList/*/DeviceList/*/LteUeRrc/InitialCellSelectionEndOk",
-    MakeCallback (
-      &HandoverStatsCalculator::NotifyInitialCellSelectionEndOk, this));
-  Config::Connect (
-    "/NodeList/*/DeviceList/*/LteUeRrc/InitialCellSelectionEndError",
-    MakeCallback (
-      &HandoverStatsCalculator::NotifyInitialCellSelectionEndError, this));
-  Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionEstablished",
     MakeCallback (
       &HandoverStatsCalculator::NotifyConnectionEstablished, this));
@@ -71,9 +63,25 @@ HandoverStatsCalculator::HandoverStatsCalculator ()
     MakeCallback (
       &HandoverStatsCalculator::NotifyHandoverEndError, this));
   Config::Connect (
+    "/NodeList/*/DeviceList/*/LteUeRrc/InitialCellSelectionEndOk",
+    MakeCallback (
+      &HandoverStatsCalculator::NotifyInitialCellSelectionEndOk, this));
+  Config::Connect (
+    "/NodeList/*/DeviceList/*/LteUeRrc/InitialCellSelectionEndError",
+    MakeCallback (
+      &HandoverStatsCalculator::NotifyInitialCellSelectionEndError, this));
+  Config::Connect (
     "/NodeList/*/$ns3::MobilityModel/CourseChange",
     MakeCallback (
       &HandoverStatsCalculator::NotifyMobilityCourseChange, this));
+  Config::Connect (
+    "/NodeList/*/DeviceList/*/LteUeRrc/RandomAccessSuccessful",
+    MakeCallback (
+      &HandoverStatsCalculator::NotifyRandomAccessSuccessful, this));
+  Config::Connect (
+    "/NodeList/*/DeviceList/*/LteUeRrc/RandomAccessError",
+    MakeCallback (
+      &HandoverStatsCalculator::NotifyRandomAccessError, this));
 }
 
 HandoverStatsCalculator::~HandoverStatsCalculator ()
@@ -156,30 +164,6 @@ HandoverStatsCalculator::NotifyConstructionCompleted (void)
 }
 
 void
-HandoverStatsCalculator::NotifyInitialCellSelectionEndOk (
-  std::string context, uint64_t imsi, uint16_t cellId)
-{
-  *m_rrcWrapper->GetStream ()
-    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (32) << "initial-cell-selection-end-ok"
-    << *UeInfo::GetPointer (imsi)
-    << *EnbInfo::GetPointer (cellId)
-    << std::endl;
-}
-
-void
-HandoverStatsCalculator::NotifyInitialCellSelectionEndError (
-  std::string context, uint64_t imsi, uint16_t cellId)
-{
-  *m_rrcWrapper->GetStream ()
-    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (32) << "initial-cell-selection-end-error"
-    << *UeInfo::GetPointer (imsi)
-    << *EnbInfo::GetPointer (cellId)
-    << std::endl;
-}
-
-void
 HandoverStatsCalculator::NotifyConnectionEstablished (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
@@ -193,12 +177,12 @@ HandoverStatsCalculator::NotifyConnectionEstablished (
 }
 
 void
-HandoverStatsCalculator::NotifyConnectionTimeout (
+HandoverStatsCalculator::NotifyConnectionReconfiguration (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (32) << "connection-timeout"
+    << " " << setw (32) << "connection-reconfiguration"
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
     << " " << setw (5) << rnti
@@ -206,12 +190,12 @@ HandoverStatsCalculator::NotifyConnectionTimeout (
 }
 
 void
-HandoverStatsCalculator::NotifyConnectionReconfiguration (
+HandoverStatsCalculator::NotifyConnectionTimeout (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (32) << "connection-reconfiguration"
+    << " " << setw (32) << "connection-timeout"
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
     << " " << setw (5) << rnti
@@ -255,7 +239,31 @@ HandoverStatsCalculator::NotifyHandoverEndError (
     << " " << setw (32) << "handover-end-error"
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
-    << " " << setw (7) << rnti
+    << " " << setw (5) << rnti
+    << std::endl;
+}
+
+void
+HandoverStatsCalculator::NotifyInitialCellSelectionEndOk (
+  std::string context, uint64_t imsi, uint16_t cellId)
+{
+  *m_rrcWrapper->GetStream ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
+    << " " << setw (32) << "initial-cell-selection-end-ok"
+    << *UeInfo::GetPointer (imsi)
+    << *EnbInfo::GetPointer (cellId)
+    << std::endl;
+}
+
+void
+HandoverStatsCalculator::NotifyInitialCellSelectionEndError (
+  std::string context, uint64_t imsi, uint16_t cellId)
+{
+  *m_rrcWrapper->GetStream ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
+    << " " << setw (32) << "initial-cell-selection-end-error"
+    << *UeInfo::GetPointer (imsi)
+    << *EnbInfo::GetPointer (cellId)
     << std::endl;
 }
 
@@ -277,6 +285,32 @@ HandoverStatsCalculator::NotifyMobilityCourseChange (
     << " " << setw (9)  << velocity.x
     << " " << setw (9)  << velocity.y
     << " " << setw (9)  << velocity.z
+    << std::endl;
+}
+
+void
+HandoverStatsCalculator::NotifyRandomAccessSuccessful (
+  std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
+{
+  *m_rrcWrapper->GetStream ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
+    << " " << setw (32) << "random-access-successfull"
+    << *UeInfo::GetPointer (imsi)
+    << *EnbInfo::GetPointer (cellId)
+    << " " << setw (5) << rnti
+    << std::endl;
+}
+
+void
+HandoverStatsCalculator::NotifyRandomAccessError (
+  std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
+{
+  *m_rrcWrapper->GetStream ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
+    << " " << setw (32) << "random-access-error"
+    << *UeInfo::GetPointer (imsi)
+    << *EnbInfo::GetPointer (cellId)
+    << " " << setw (5) << rnti
     << std::endl;
 }
 

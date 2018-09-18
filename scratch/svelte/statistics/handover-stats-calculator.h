@@ -28,7 +28,8 @@ namespace ns3 {
 
 /**
  * \ingroup svelteStats
- * This class monitors the UEs and dump connections and handover statistics.
+ * This class monitors the UE RRC protocol and mobility model to dump RRC
+ * procedures, including handover statistics and mobility course changes.
  */
 class HandoverStatsCalculator : public Object
 {
@@ -50,24 +51,6 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
   /**
-   * Notify a successful initial cell selection procedure.
-   * \param context Trace source context.
-   * \param imsi The UE IMSI.
-   * \param cellId The serving eNB cell ID.
-   */
-  void NotifyInitialCellSelectionEndOk (
-    std::string context, uint64_t imsi, uint16_t cellId);
-
-  /**
-   * Notify a failed initial cell selection procedure.
-   * \param context Trace source context.
-   * \param imsi The UE IMSI.
-   * \param cellId The serving eNB cell ID.
-   */
-  void NotifyInitialCellSelectionEndError (
-    std::string context, uint64_t imsi, uint16_t cellId);
-
-  /**
    * Notify a successful RRC connection establishment.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
@@ -78,16 +61,6 @@ protected:
     std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
   /**
-   * Notify a timeout RRC connection establishment because of T300.
-   * \param context Trace source context.
-   * \param imsi The UE IMSI.
-   * \param cellId The serving eNB cell ID.
-   * \param rnti The Cell Radio Network Temporary Identifier.
-   */
-  void NotifyConnectionTimeout (
-    std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
-
-  /**
    * Notify a RRC connection reconfiguration.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
@@ -95,6 +68,16 @@ protected:
    * \param rnti The Cell Radio Network Temporary Identifier.
    */
   void NotifyConnectionReconfiguration (
+    std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
+
+  /**
+   * Notify a timeout RRC connection establishment because of T300.
+   * \param context Trace source context.
+   * \param imsi The UE IMSI.
+   * \param cellId The serving eNB cell ID.
+   * \param rnti The Cell Radio Network Temporary Identifier.
+   */
+  void NotifyConnectionTimeout (
     std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
   /**
@@ -130,11 +113,49 @@ protected:
     std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
   /**
+   * Notify a successful initial cell selection procedure.
+   * \param context Trace source context.
+   * \param imsi The UE IMSI.
+   * \param cellId The serving eNB cell ID.
+   */
+  void NotifyInitialCellSelectionEndOk (
+    std::string context, uint64_t imsi, uint16_t cellId);
+
+  /**
+   * Notify a failed initial cell selection procedure.
+   * \param context Trace source context.
+   * \param imsi The UE IMSI.
+   * \param cellId The serving eNB cell ID.
+   */
+  void NotifyInitialCellSelectionEndError (
+    std::string context, uint64_t imsi, uint16_t cellId);
+
+  /**
    * Notify a UE mobility model course change.
    * \param mobility The UE mobility model object.
    */
   void NotifyMobilityCourseChange (
     std::string context, Ptr<const MobilityModel> mobility);
+
+  /**
+   * Notify a successful random access procedure.
+   * \param context Trace source context.
+   * \param imsi The UE IMSI.
+   * \param cellId The serving eNB cell ID.
+   * \param rnti The Cell Radio Network Temporary Identifier.
+   */
+  void NotifyRandomAccessSuccessful (
+    std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
+
+  /**
+   * Notify a failed random access procedure.
+   * \param context Trace source context.
+   * \param imsi The UE IMSI.
+   * \param cellId The serving eNB cell ID.
+   * \param rnti The Cell Radio Network Temporary Identifier.
+   */
+  void NotifyRandomAccessError (
+    std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
 private:
   std::string               m_mobFilename;    //!< MobStats filename.
