@@ -288,8 +288,24 @@ SvelteHelper::AssignUeIpv4Address (NetDeviceContainer ueDevices)
   NS_ABORT_MSG ("Unimplemented method.");
 }
 
+Ipv6InterfaceContainer
+SvelteHelper::AssignUeIpv6Address (NetDeviceContainer ueDevices)
+{
+  NS_LOG_FUNCTION (this);
+
+  NS_ABORT_MSG ("Unimplemented method.");
+}
+
 Ipv4Address
 SvelteHelper::GetUeDefaultGatewayAddress ()
+{
+  NS_LOG_FUNCTION (this);
+
+  NS_ABORT_MSG ("Unimplemented method.");
+}
+
+Ipv6Address
+SvelteHelper::GetUeDefaultGatewayAddress6 ()
 {
   NS_LOG_FUNCTION (this);
 

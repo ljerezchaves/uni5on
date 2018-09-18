@@ -79,7 +79,9 @@ public:
   void AddX2Interface (Ptr<Node> enbNode1, Ptr<Node> enbNode2);
   Ptr<Node> GetPgwNode ();
   Ipv4InterfaceContainer AssignUeIpv4Address (NetDeviceContainer ueDevices);
+  Ipv6InterfaceContainer AssignUeIpv6Address (NetDeviceContainer ueDevices);
   Ipv4Address GetUeDefaultGatewayAddress ();
+  Ipv6Address GetUeDefaultGatewayAddress6 ();
   // Inherited from EpcHelper.
 
 protected:

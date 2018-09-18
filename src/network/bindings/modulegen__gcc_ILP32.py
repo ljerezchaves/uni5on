@@ -296,8 +296,6 @@ def register_types(module):
     module.add_class('PcapFileWrapper', parent=root_module['ns3::Object'])
     ## queue.h (module 'network'): ns3::QueueBase [class]
     module.add_class('QueueBase', parent=root_module['ns3::Object'])
-    ## queue.h (module 'network'): ns3::QueueBase::QueueMode [enumeration]
-    module.add_enum('QueueMode', ['QUEUE_MODE_PACKETS', 'QUEUE_MODE_BYTES'], outer_class=root_module['ns3::QueueBase'])
     ## queue-limits.h (module 'network'): ns3::QueueLimits [class]
     module.add_class('QueueLimits', parent=root_module['ns3::Object'])
     ## radiotap-header.h (module 'network'): ns3::RadiotapHeader [class]
@@ -316,6 +314,14 @@ def register_types(module):
     module.add_enum('VhtKnown', ['VHT_KNOWN_NONE', 'VHT_KNOWN_STBC', 'VHT_KNOWN_TXOP_PS_NOT_ALLOWED', 'VHT_KNOWN_GUARD_INTERVAL', 'VHT_KNOWN_SHORT_GI_NSYM_DISAMBIGUATION', 'VHT_KNOWN_LDPC_EXTRA_OFDM_SYMBOL', 'VHT_KNOWN_BEAMFORMED', 'VHT_KNOWN_BANDWIDTH', 'VHT_KNOWN_GROUP_ID', 'VHT_KNOWN_PARTIAL_AID'], outer_class=root_module['ns3::RadiotapHeader'])
     ## radiotap-header.h (module 'network'): ns3::RadiotapHeader::VhtFlags [enumeration]
     module.add_enum('VhtFlags', ['VHT_FLAGS_NONE', 'VHT_FLAGS_STBC', 'VHT_FLAGS_TXOP_PS_NOT_ALLOWED', 'VHT_FLAGS_GUARD_INTERVAL', 'VHT_FLAGS_SHORT_GI_NSYM_DISAMBIGUATION', 'VHT_FLAGS_LDPC_EXTRA_OFDM_SYMBOL', 'VHT_FLAGS_BEAMFORMED'], outer_class=root_module['ns3::RadiotapHeader'])
+    ## radiotap-header.h (module 'network'): ns3::RadiotapHeader::HeData1 [enumeration]
+    module.add_enum('HeData1', ['HE_DATA1_FORMAT_EXT_SU', 'HE_DATA1_FORMAT_MU', 'HE_DATA1_FORMAT_TRIG', 'HE_DATA1_BSS_COLOR_KNOWN', 'HE_DATA1_BEAM_CHANGE_KNOWN', 'HE_DATA1_UL_DL_KNOWN', 'HE_DATA1_DATA_MCS_KNOWN', 'HE_DATA1_DATA_DCM_KNOWN', 'HE_DATA1_CODING_KNOWN', 'HE_DATA1_LDPC_XSYMSEG_KNOWN', 'HE_DATA1_STBC_KNOWN', 'HE_DATA1_SPTL_REUSE_KNOWN', 'HE_DATA1_SPTL_REUSE2_KNOWN', 'HE_DATA1_SPTL_REUSE3_KNOWN', 'HE_DATA1_SPTL_REUSE4_KNOWN', 'HE_DATA1_BW_RU_ALLOC_KNOWN', 'HE_DATA1_DOPPLER_KNOWN'], outer_class=root_module['ns3::RadiotapHeader'])
+    ## radiotap-header.h (module 'network'): ns3::RadiotapHeader::HeData2 [enumeration]
+    module.add_enum('HeData2', ['HE_DATA2_PRISEC_80_KNOWN', 'HE_DATA2_GI_KNOWN', 'HE_DATA2_NUM_LTF_SYMS_KNOWN', 'HE_DATA2_PRE_FEC_PAD_KNOWN', 'HE_DATA2_TXBF_KNOWN', 'HE_DATA2_PE_DISAMBIG_KNOWN', 'HE_DATA2_TXOP_KNOWN', 'HE_DATA2_MIDAMBLE_KNOWN', 'HE_DATA2_RU_OFFSET', 'HE_DATA2_RU_OFFSET_KNOWN', 'HE_DATA2_PRISEC_80_SEC'], outer_class=root_module['ns3::RadiotapHeader'])
+    ## radiotap-header.h (module 'network'): ns3::RadiotapHeader::HeData3 [enumeration]
+    module.add_enum('HeData3', ['HE_DATA3_BSS_COLOR', 'HE_DATA3_BEAM_CHANGE', 'HE_DATA3_UL_DL', 'HE_DATA3_DATA_MCS', 'HE_DATA3_DATA_DCM', 'HE_DATA3_CODING', 'HE_DATA3_LDPC_XSYMSEG', 'HE_DATA3_STBC'], outer_class=root_module['ns3::RadiotapHeader'])
+    ## radiotap-header.h (module 'network'): ns3::RadiotapHeader::HeData5 [enumeration]
+    module.add_enum('HeData5', ['HE_DATA5_DATA_BW_RU_ALLOC_40MHZ', 'HE_DATA5_DATA_BW_RU_ALLOC_80MHZ', 'HE_DATA5_DATA_BW_RU_ALLOC_160MHZ', 'HE_DATA5_DATA_BW_RU_ALLOC_26T', 'HE_DATA5_DATA_BW_RU_ALLOC_52T', 'HE_DATA5_DATA_BW_RU_ALLOC_106T', 'HE_DATA5_DATA_BW_RU_ALLOC_242T', 'HE_DATA5_DATA_BW_RU_ALLOC_484T', 'HE_DATA5_DATA_BW_RU_ALLOC_996T', 'HE_DATA5_DATA_BW_RU_ALLOC_2x996T', 'HE_DATA5_GI_1_6', 'HE_DATA5_GI_3_2', 'HE_DATA5_LTF_SYM_SIZE', 'HE_DATA5_NUM_LTF_SYMS', 'HE_DATA5_PRE_FEC_PAD', 'HE_DATA5_TXBF', 'HE_DATA5_PE_DISAMBIG'], outer_class=root_module['ns3::RadiotapHeader'])
     ## random-variable-stream.h (module 'core'): ns3::RandomVariableStream [class]
     module.add_class('RandomVariableStream', import_from_module='ns.core', parent=root_module['ns3::Object'])
     ## random-variable-stream.h (module 'core'): ns3::SequentialRandomVariable [class]
@@ -384,6 +390,9 @@ def register_types(module):
     module.add_class('Time', import_from_module='ns.core')
     ## nstime.h (module 'core'): ns3::Time::Unit [enumeration]
     module.add_enum('Unit', ['Y', 'D', 'H', 'MIN', 'S', 'MS', 'US', 'NS', 'PS', 'FS', 'LAST'], outer_class=root_module['ns3::Time'], import_from_module='ns.core')
+    typehandlers.add_type_alias(u'void ( * ) ( ns3::Time )', u'ns3::Time::TracedCallback')
+    typehandlers.add_type_alias(u'void ( * ) ( ns3::Time )*', u'ns3::Time::TracedCallback*')
+    typehandlers.add_type_alias(u'void ( * ) ( ns3::Time )&', u'ns3::Time::TracedCallback&')
     ## nstime.h (module 'core'): ns3::Time [class]
     root_module['ns3::Time'].implicitly_converts_to(root_module['ns3::int64x64_t'])
     ## trace-source-accessor.h (module 'core'): ns3::TraceSourceAccessor [class]
@@ -402,6 +411,12 @@ def register_types(module):
     module.add_class('ZipfRandomVariable', import_from_module='ns.core', parent=root_module['ns3::RandomVariableStream'])
     ## application.h (module 'network'): ns3::Application [class]
     module.add_class('Application', parent=root_module['ns3::Object'])
+    typehandlers.add_type_alias(u'void ( * ) ( ns3::Time const &, ns3::Address const & )', u'ns3::Application::DelayAddressCallback')
+    typehandlers.add_type_alias(u'void ( * ) ( ns3::Time const &, ns3::Address const & )*', u'ns3::Application::DelayAddressCallback*')
+    typehandlers.add_type_alias(u'void ( * ) ( ns3::Time const &, ns3::Address const & )&', u'ns3::Application::DelayAddressCallback&')
+    typehandlers.add_type_alias(u'void ( * ) ( std::string const &, std::string const & )', u'ns3::Application::StateTransitionCallback')
+    typehandlers.add_type_alias(u'void ( * ) ( std::string const &, std::string const & )*', u'ns3::Application::StateTransitionCallback*')
+    typehandlers.add_type_alias(u'void ( * ) ( std::string const &, std::string const & )&', u'ns3::Application::StateTransitionCallback&')
     ## attribute.h (module 'core'): ns3::AttributeAccessor [class]
     module.add_class('AttributeAccessor', import_from_module='ns.core', parent=root_module['ns3::SimpleRefCount< ns3::AttributeAccessor, ns3::empty, ns3::DefaultDeleter<ns3::AttributeAccessor> >'])
     ## attribute.h (module 'core'): ns3::AttributeChecker [class]
@@ -549,6 +564,9 @@ def register_types(module):
     typehandlers.add_type_alias(u'void ( * ) ( ns3::Ptr< ns3::Packet const >, ns3::Address const & )', u'ns3::Packet::AddressTracedCallback')
     typehandlers.add_type_alias(u'void ( * ) ( ns3::Ptr< ns3::Packet const >, ns3::Address const & )*', u'ns3::Packet::AddressTracedCallback*')
     typehandlers.add_type_alias(u'void ( * ) ( ns3::Ptr< ns3::Packet const >, ns3::Address const & )&', u'ns3::Packet::AddressTracedCallback&')
+    typehandlers.add_type_alias(u'void ( * ) ( ns3::Ptr< ns3::Packet const > const, ns3::Address const &, ns3::Address const & )', u'ns3::Packet::TwoAddressTracedCallback')
+    typehandlers.add_type_alias(u'void ( * ) ( ns3::Ptr< ns3::Packet const > const, ns3::Address const &, ns3::Address const & )*', u'ns3::Packet::TwoAddressTracedCallback*')
+    typehandlers.add_type_alias(u'void ( * ) ( ns3::Ptr< ns3::Packet const > const, ns3::Address const &, ns3::Address const & )&', u'ns3::Packet::TwoAddressTracedCallback&')
     typehandlers.add_type_alias(u'void ( * ) ( ns3::Ptr< ns3::Packet const >, ns3::Mac48Address )', u'ns3::Packet::Mac48AddressTracedCallback')
     typehandlers.add_type_alias(u'void ( * ) ( ns3::Ptr< ns3::Packet const >, ns3::Mac48Address )*', u'ns3::Packet::Mac48AddressTracedCallback*')
     typehandlers.add_type_alias(u'void ( * ) ( ns3::Ptr< ns3::Packet const >, ns3::Mac48Address )&', u'ns3::Packet::Mac48AddressTracedCallback&')
@@ -793,12 +811,12 @@ def register_types_ns3_Hash(module):
     
     ## hash-function.h (module 'core'): ns3::Hash::Implementation [class]
     module.add_class('Implementation', import_from_module='ns.core', parent=root_module['ns3::SimpleRefCount< ns3::Hash::Implementation, ns3::empty, ns3::DefaultDeleter<ns3::Hash::Implementation> >'])
-    typehandlers.add_type_alias(u'uint32_t ( * ) ( char const *, size_t const )', u'ns3::Hash::Hash32Function_ptr')
-    typehandlers.add_type_alias(u'uint32_t ( * ) ( char const *, size_t const )*', u'ns3::Hash::Hash32Function_ptr*')
-    typehandlers.add_type_alias(u'uint32_t ( * ) ( char const *, size_t const )&', u'ns3::Hash::Hash32Function_ptr&')
-    typehandlers.add_type_alias(u'uint64_t ( * ) ( char const *, size_t const )', u'ns3::Hash::Hash64Function_ptr')
-    typehandlers.add_type_alias(u'uint64_t ( * ) ( char const *, size_t const )*', u'ns3::Hash::Hash64Function_ptr*')
-    typehandlers.add_type_alias(u'uint64_t ( * ) ( char const *, size_t const )&', u'ns3::Hash::Hash64Function_ptr&')
+    typehandlers.add_type_alias(u'uint32_t ( * ) ( char const *, std::size_t const )', u'ns3::Hash::Hash32Function_ptr')
+    typehandlers.add_type_alias(u'uint32_t ( * ) ( char const *, std::size_t const )*', u'ns3::Hash::Hash32Function_ptr*')
+    typehandlers.add_type_alias(u'uint32_t ( * ) ( char const *, std::size_t const )&', u'ns3::Hash::Hash32Function_ptr&')
+    typehandlers.add_type_alias(u'uint64_t ( * ) ( char const *, std::size_t const )', u'ns3::Hash::Hash64Function_ptr')
+    typehandlers.add_type_alias(u'uint64_t ( * ) ( char const *, std::size_t const )*', u'ns3::Hash::Hash64Function_ptr*')
+    typehandlers.add_type_alias(u'uint64_t ( * ) ( char const *, std::size_t const )&', u'ns3::Hash::Hash64Function_ptr&')
     
     ## Register a nested module for the namespace Function
     
@@ -1237,6 +1255,10 @@ def register_Ns3ApplicationContainer_methods(root_module, cls):
     cls.add_method('Start', 
                    'void', 
                    [param('ns3::Time', 'start')])
+    ## application-container.h (module 'network'): void ns3::ApplicationContainer::StartWithJitter(ns3::Time start, ns3::Ptr<ns3::RandomVariableStream> rv) [member function]
+    cls.add_method('StartWithJitter', 
+                   'void', 
+                   [param('ns3::Time', 'start'), param('ns3::Ptr< ns3::RandomVariableStream >', 'rv')])
     ## application-container.h (module 'network'): void ns3::ApplicationContainer::Stop(ns3::Time stop) [member function]
     cls.add_method('Stop', 
                    'void', 
@@ -2165,18 +2187,18 @@ def register_Ns3Hasher_methods(root_module, cls):
     cls.add_constructor([])
     ## hash.h (module 'core'): ns3::Hasher::Hasher(ns3::Ptr<ns3::Hash::Implementation> hp) [constructor]
     cls.add_constructor([param('ns3::Ptr< ns3::Hash::Implementation >', 'hp')])
-    ## hash.h (module 'core'): uint32_t ns3::Hasher::GetHash32(char const * buffer, size_t const size) [member function]
+    ## hash.h (module 'core'): uint32_t ns3::Hasher::GetHash32(char const * buffer, std::size_t const size) [member function]
     cls.add_method('GetHash32', 
                    'uint32_t', 
-                   [param('char const *', 'buffer'), param('size_t const', 'size')])
+                   [param('char const *', 'buffer'), param('std::size_t const', 'size')])
     ## hash.h (module 'core'): uint32_t ns3::Hasher::GetHash32(std::string const s) [member function]
     cls.add_method('GetHash32', 
                    'uint32_t', 
                    [param('std::string const', 's')])
-    ## hash.h (module 'core'): uint64_t ns3::Hasher::GetHash64(char const * buffer, size_t const size) [member function]
+    ## hash.h (module 'core'): uint64_t ns3::Hasher::GetHash64(char const * buffer, std::size_t const size) [member function]
     cls.add_method('GetHash64', 
                    'uint64_t', 
-                   [param('char const *', 'buffer'), param('size_t const', 'size')])
+                   [param('char const *', 'buffer'), param('std::size_t const', 'size')])
     ## hash.h (module 'core'): uint64_t ns3::Hasher::GetHash64(std::string const s) [member function]
     cls.add_method('GetHash64', 
                    'uint64_t', 
@@ -3045,6 +3067,11 @@ def register_Ns3NodeContainer_methods(root_module, cls):
     cls.add_method('Begin', 
                    'ns3::NodeContainer::Iterator', 
                    [], 
+                   is_const=True)
+    ## node-container.h (module 'network'): bool ns3::NodeContainer::Contains(uint32_t id) const [member function]
+    cls.add_method('Contains', 
+                   'bool', 
+                   [param('uint32_t', 'id')], 
                    is_const=True)
     ## node-container.h (module 'network'): void ns3::NodeContainer::Create(uint32_t n) [member function]
     cls.add_method('Create', 
@@ -4311,19 +4338,19 @@ def register_Ns3TypeId_methods(root_module, cls):
     cls.add_method('AddTraceSource', 
                    'ns3::TypeId', 
                    [param('std::string', 'name'), param('std::string', 'help'), param('ns3::Ptr< ns3::TraceSourceAccessor const >', 'accessor'), param('std::string', 'callback'), param('ns3::TypeId::SupportLevel', 'supportLevel', default_value='::ns3::TypeId::SupportLevel::SUPPORTED'), param('std::string const &', 'supportMsg', default_value='""')])
-    ## type-id.h (module 'core'): ns3::TypeId::AttributeInformation ns3::TypeId::GetAttribute(uint32_t i) const [member function]
+    ## type-id.h (module 'core'): ns3::TypeId::AttributeInformation ns3::TypeId::GetAttribute(std::size_t i) const [member function]
     cls.add_method('GetAttribute', 
                    'ns3::TypeId::AttributeInformation', 
-                   [param('uint32_t', 'i')], 
+                   [param('std::size_t', 'i')], 
                    is_const=True)
-    ## type-id.h (module 'core'): std::string ns3::TypeId::GetAttributeFullName(uint32_t i) const [member function]
+    ## type-id.h (module 'core'): std::string ns3::TypeId::GetAttributeFullName(std::size_t i) const [member function]
     cls.add_method('GetAttributeFullName', 
                    'std::string', 
-                   [param('uint32_t', 'i')], 
+                   [param('std::size_t', 'i')], 
                    is_const=True)
-    ## type-id.h (module 'core'): uint32_t ns3::TypeId::GetAttributeN() const [member function]
+    ## type-id.h (module 'core'): std::size_t ns3::TypeId::GetAttributeN() const [member function]
     cls.add_method('GetAttributeN', 
-                   'uint32_t', 
+                   'std::size_t', 
                    [], 
                    is_const=True)
     ## type-id.h (module 'core'): ns3::Callback<ns3::ObjectBase *, ns3::empty, ns3::empty, ns3::empty, ns3::empty, ns3::empty, ns3::empty, ns3::empty, ns3::empty, ns3::empty> ns3::TypeId::GetConstructor() const [member function]
@@ -4351,14 +4378,14 @@ def register_Ns3TypeId_methods(root_module, cls):
                    'ns3::TypeId', 
                    [], 
                    is_const=True)
-    ## type-id.h (module 'core'): static ns3::TypeId ns3::TypeId::GetRegistered(uint32_t i) [member function]
+    ## type-id.h (module 'core'): static ns3::TypeId ns3::TypeId::GetRegistered(uint16_t i) [member function]
     cls.add_method('GetRegistered', 
                    'ns3::TypeId', 
-                   [param('uint32_t', 'i')], 
+                   [param('uint16_t', 'i')], 
                    is_static=True)
-    ## type-id.h (module 'core'): static uint32_t ns3::TypeId::GetRegisteredN() [member function]
+    ## type-id.h (module 'core'): static uint16_t ns3::TypeId::GetRegisteredN() [member function]
     cls.add_method('GetRegisteredN', 
-                   'uint32_t', 
+                   'uint16_t', 
                    [], 
                    is_static=True)
     ## type-id.h (module 'core'): std::size_t ns3::TypeId::GetSize() const [member function]
@@ -4366,14 +4393,14 @@ def register_Ns3TypeId_methods(root_module, cls):
                    'std::size_t', 
                    [], 
                    is_const=True)
-    ## type-id.h (module 'core'): ns3::TypeId::TraceSourceInformation ns3::TypeId::GetTraceSource(uint32_t i) const [member function]
+    ## type-id.h (module 'core'): ns3::TypeId::TraceSourceInformation ns3::TypeId::GetTraceSource(std::size_t i) const [member function]
     cls.add_method('GetTraceSource', 
                    'ns3::TypeId::TraceSourceInformation', 
-                   [param('uint32_t', 'i')], 
+                   [param('std::size_t', 'i')], 
                    is_const=True)
-    ## type-id.h (module 'core'): uint32_t ns3::TypeId::GetTraceSourceN() const [member function]
+    ## type-id.h (module 'core'): std::size_t ns3::TypeId::GetTraceSourceN() const [member function]
     cls.add_method('GetTraceSourceN', 
-                   'uint32_t', 
+                   'std::size_t', 
                    [], 
                    is_const=True)
     ## type-id.h (module 'core'): uint16_t ns3::TypeId::GetUid() const [member function]
@@ -4435,10 +4462,10 @@ def register_Ns3TypeId_methods(root_module, cls):
                    'bool', 
                    [], 
                    is_const=True)
-    ## type-id.h (module 'core'): bool ns3::TypeId::SetAttributeInitialValue(uint32_t i, ns3::Ptr<const ns3::AttributeValue> initialValue) [member function]
+    ## type-id.h (module 'core'): bool ns3::TypeId::SetAttributeInitialValue(std::size_t i, ns3::Ptr<const ns3::AttributeValue> initialValue) [member function]
     cls.add_method('SetAttributeInitialValue', 
                    'bool', 
-                   [param('uint32_t', 'i'), param('ns3::Ptr< ns3::AttributeValue const >', 'initialValue')])
+                   [param('std::size_t', 'i'), param('ns3::Ptr< ns3::AttributeValue const >', 'initialValue')])
     ## type-id.h (module 'core'): ns3::TypeId ns3::TypeId::SetGroupName(std::string groupName) [member function]
     cls.add_method('SetGroupName', 
                    'ns3::TypeId', 
@@ -5065,24 +5092,9 @@ def register_Ns3QueueBase_methods(root_module, cls):
                    'ns3::QueueSize', 
                    [], 
                    is_const=True)
-    ## queue.h (module 'network'): uint32_t ns3::QueueBase::GetMaxBytes() const [member function]
-    cls.add_method('GetMaxBytes', 
-                   'uint32_t', 
-                   [], 
-                   is_const=True)
-    ## queue.h (module 'network'): uint32_t ns3::QueueBase::GetMaxPackets() const [member function]
-    cls.add_method('GetMaxPackets', 
-                   'uint32_t', 
-                   [], 
-                   is_const=True)
     ## queue.h (module 'network'): ns3::QueueSize ns3::QueueBase::GetMaxSize() const [member function]
     cls.add_method('GetMaxSize', 
                    'ns3::QueueSize', 
-                   [], 
-                   is_const=True)
-    ## queue.h (module 'network'): ns3::QueueBase::QueueMode ns3::QueueBase::GetMode() const [member function]
-    cls.add_method('GetMode', 
-                   'ns3::QueueBase::QueueMode', 
                    [], 
                    is_const=True)
     ## queue.h (module 'network'): uint32_t ns3::QueueBase::GetNBytes() const [member function]
@@ -5149,22 +5161,10 @@ def register_Ns3QueueBase_methods(root_module, cls):
     cls.add_method('ResetStatistics', 
                    'void', 
                    [])
-    ## queue.h (module 'network'): void ns3::QueueBase::SetMaxBytes(uint32_t maxBytes) [member function]
-    cls.add_method('SetMaxBytes', 
-                   'void', 
-                   [param('uint32_t', 'maxBytes')])
-    ## queue.h (module 'network'): void ns3::QueueBase::SetMaxPackets(uint32_t maxPackets) [member function]
-    cls.add_method('SetMaxPackets', 
-                   'void', 
-                   [param('uint32_t', 'maxPackets')])
     ## queue.h (module 'network'): void ns3::QueueBase::SetMaxSize(ns3::QueueSize size) [member function]
     cls.add_method('SetMaxSize', 
                    'void', 
                    [param('ns3::QueueSize', 'size')])
-    ## queue.h (module 'network'): void ns3::QueueBase::SetMode(ns3::QueueBase::QueueMode mode) [member function]
-    cls.add_method('SetMode', 
-                   'void', 
-                   [param('ns3::QueueBase::QueueMode', 'mode')])
     return
 
 def register_Ns3QueueLimits_methods(root_module, cls):
@@ -5209,131 +5209,21 @@ def register_Ns3RadiotapHeader_methods(root_module, cls):
                    'uint32_t', 
                    [param('ns3::Buffer::Iterator', 'start')], 
                    is_virtual=True)
-    ## radiotap-header.h (module 'network'): uint16_t ns3::RadiotapHeader::GetAmpduStatusFlags() const [member function]
-    cls.add_method('GetAmpduStatusFlags', 
-                   'uint16_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint32_t ns3::RadiotapHeader::GetAmpduStatusRef() const [member function]
-    cls.add_method('GetAmpduStatusRef', 
-                   'uint32_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint8_t ns3::RadiotapHeader::GetAntennaNoisePower() const [member function]
-    cls.add_method('GetAntennaNoisePower', 
-                   'uint8_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint8_t ns3::RadiotapHeader::GetAntennaSignalPower() const [member function]
-    cls.add_method('GetAntennaSignalPower', 
-                   'uint8_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint16_t ns3::RadiotapHeader::GetChannelFlags() const [member function]
-    cls.add_method('GetChannelFlags', 
-                   'uint16_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint16_t ns3::RadiotapHeader::GetChannelFrequency() const [member function]
-    cls.add_method('GetChannelFrequency', 
-                   'uint16_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint8_t ns3::RadiotapHeader::GetFrameFlags() const [member function]
-    cls.add_method('GetFrameFlags', 
-                   'uint8_t', 
-                   [], 
-                   is_const=True)
     ## radiotap-header.h (module 'network'): ns3::TypeId ns3::RadiotapHeader::GetInstanceTypeId() const [member function]
     cls.add_method('GetInstanceTypeId', 
                    'ns3::TypeId', 
                    [], 
                    is_const=True, is_virtual=True)
-    ## radiotap-header.h (module 'network'): uint8_t ns3::RadiotapHeader::GetMcsFlags() const [member function]
-    cls.add_method('GetMcsFlags', 
-                   'uint8_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint8_t ns3::RadiotapHeader::GetMcsKnown() const [member function]
-    cls.add_method('GetMcsKnown', 
-                   'uint8_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint8_t ns3::RadiotapHeader::GetMcsRate() const [member function]
-    cls.add_method('GetMcsRate', 
-                   'uint8_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint8_t ns3::RadiotapHeader::GetRate() const [member function]
-    cls.add_method('GetRate', 
-                   'uint8_t', 
-                   [], 
-                   is_const=True)
     ## radiotap-header.h (module 'network'): uint32_t ns3::RadiotapHeader::GetSerializedSize() const [member function]
     cls.add_method('GetSerializedSize', 
                    'uint32_t', 
                    [], 
                    is_const=True, is_virtual=True)
-    ## radiotap-header.h (module 'network'): uint64_t ns3::RadiotapHeader::GetTsft() const [member function]
-    cls.add_method('GetTsft', 
-                   'uint64_t', 
-                   [], 
-                   is_const=True)
     ## radiotap-header.h (module 'network'): static ns3::TypeId ns3::RadiotapHeader::GetTypeId() [member function]
     cls.add_method('GetTypeId', 
                    'ns3::TypeId', 
                    [], 
                    is_static=True)
-    ## radiotap-header.h (module 'network'): uint8_t ns3::RadiotapHeader::GetVhtBandwidth() const [member function]
-    cls.add_method('GetVhtBandwidth', 
-                   'uint8_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint8_t ns3::RadiotapHeader::GetVhtCoding() const [member function]
-    cls.add_method('GetVhtCoding', 
-                   'uint8_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint8_t ns3::RadiotapHeader::GetVhtFlags() const [member function]
-    cls.add_method('GetVhtFlags', 
-                   'uint8_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint8_t ns3::RadiotapHeader::GetVhtGroupId() const [member function]
-    cls.add_method('GetVhtGroupId', 
-                   'uint8_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint16_t ns3::RadiotapHeader::GetVhtKnown() const [member function]
-    cls.add_method('GetVhtKnown', 
-                   'uint16_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint8_t ns3::RadiotapHeader::GetVhtMcsNssUser1() const [member function]
-    cls.add_method('GetVhtMcsNssUser1', 
-                   'uint8_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint8_t ns3::RadiotapHeader::GetVhtMcsNssUser2() const [member function]
-    cls.add_method('GetVhtMcsNssUser2', 
-                   'uint8_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint8_t ns3::RadiotapHeader::GetVhtMcsNssUser3() const [member function]
-    cls.add_method('GetVhtMcsNssUser3', 
-                   'uint8_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint8_t ns3::RadiotapHeader::GetVhtMcsNssUser4() const [member function]
-    cls.add_method('GetVhtMcsNssUser4', 
-                   'uint8_t', 
-                   [], 
-                   is_const=True)
-    ## radiotap-header.h (module 'network'): uint8_t ns3::RadiotapHeader::GetVhtPartialAid() const [member function]
-    cls.add_method('GetVhtPartialAid', 
-                   'uint8_t', 
-                   [], 
-                   is_const=True)
     ## radiotap-header.h (module 'network'): void ns3::RadiotapHeader::Print(std::ostream & os) const [member function]
     cls.add_method('Print', 
                    'void', 
@@ -5364,6 +5254,10 @@ def register_Ns3RadiotapHeader_methods(root_module, cls):
     cls.add_method('SetFrameFlags', 
                    'void', 
                    [param('uint8_t', 'flags')])
+    ## radiotap-header.h (module 'network'): void ns3::RadiotapHeader::SetHeFields(uint16_t data1, uint16_t data2, uint16_t data3, uint16_t data5) [member function]
+    cls.add_method('SetHeFields', 
+                   'void', 
+                   [param('uint16_t', 'data1'), param('uint16_t', 'data2'), param('uint16_t', 'data3'), param('uint16_t', 'data5')])
     ## radiotap-header.h (module 'network'): void ns3::RadiotapHeader::SetMcsFields(uint8_t known, uint8_t flags, uint8_t mcs) [member function]
     cls.add_method('SetMcsFields', 
                    'void', 
@@ -7055,19 +6949,19 @@ def register_Ns3Channel_methods(root_module, cls):
     cls.add_constructor([param('ns3::Channel const &', 'arg0')])
     ## channel.h (module 'network'): ns3::Channel::Channel() [constructor]
     cls.add_constructor([])
-    ## channel.h (module 'network'): ns3::Ptr<ns3::NetDevice> ns3::Channel::GetDevice(uint32_t i) const [member function]
+    ## channel.h (module 'network'): ns3::Ptr<ns3::NetDevice> ns3::Channel::GetDevice(std::size_t i) const [member function]
     cls.add_method('GetDevice', 
                    'ns3::Ptr< ns3::NetDevice >', 
-                   [param('uint32_t', 'i')], 
+                   [param('std::size_t', 'i')], 
                    is_pure_virtual=True, is_const=True, is_virtual=True)
     ## channel.h (module 'network'): uint32_t ns3::Channel::GetId() const [member function]
     cls.add_method('GetId', 
                    'uint32_t', 
                    [], 
                    is_const=True)
-    ## channel.h (module 'network'): uint32_t ns3::Channel::GetNDevices() const [member function]
+    ## channel.h (module 'network'): std::size_t ns3::Channel::GetNDevices() const [member function]
     cls.add_method('GetNDevices', 
-                   'uint32_t', 
+                   'std::size_t', 
                    [], 
                    is_pure_virtual=True, is_const=True, is_virtual=True)
     ## channel.h (module 'network'): static ns3::TypeId ns3::Channel::GetTypeId() [member function]
@@ -7286,10 +7180,10 @@ def register_Ns3DeterministicRandomVariable_methods(root_module, cls):
                    is_static=True)
     ## random-variable-stream.h (module 'core'): ns3::DeterministicRandomVariable::DeterministicRandomVariable() [constructor]
     cls.add_constructor([])
-    ## random-variable-stream.h (module 'core'): void ns3::DeterministicRandomVariable::SetValueArray(double * values, uint64_t length) [member function]
+    ## random-variable-stream.h (module 'core'): void ns3::DeterministicRandomVariable::SetValueArray(double * values, std::size_t length) [member function]
     cls.add_method('SetValueArray', 
                    'void', 
-                   [param('double *', 'values'), param('uint64_t', 'length')])
+                   [param('double *', 'values'), param('std::size_t', 'length')])
     ## random-variable-stream.h (module 'core'): double ns3::DeterministicRandomVariable::GetValue() [member function]
     cls.add_method('GetValue', 
                    'double', 
@@ -10630,14 +10524,14 @@ def register_Ns3SimpleChannel_methods(root_module, cls):
                    'void', 
                    [param('ns3::Ptr< ns3::SimpleNetDevice >', 'from'), param('ns3::Ptr< ns3::SimpleNetDevice >', 'to')], 
                    is_virtual=True)
-    ## simple-channel.h (module 'network'): ns3::Ptr<ns3::NetDevice> ns3::SimpleChannel::GetDevice(uint32_t i) const [member function]
+    ## simple-channel.h (module 'network'): ns3::Ptr<ns3::NetDevice> ns3::SimpleChannel::GetDevice(std::size_t i) const [member function]
     cls.add_method('GetDevice', 
                    'ns3::Ptr< ns3::NetDevice >', 
-                   [param('uint32_t', 'i')], 
+                   [param('std::size_t', 'i')], 
                    is_const=True, is_virtual=True)
-    ## simple-channel.h (module 'network'): uint32_t ns3::SimpleChannel::GetNDevices() const [member function]
+    ## simple-channel.h (module 'network'): std::size_t ns3::SimpleChannel::GetNDevices() const [member function]
     cls.add_method('GetNDevices', 
-                   'uint32_t', 
+                   'std::size_t', 
                    [], 
                    is_const=True, is_virtual=True)
     ## simple-channel.h (module 'network'): static ns3::TypeId ns3::SimpleChannel::GetTypeId() [member function]
@@ -11411,14 +11305,14 @@ def register_Ns3ErrorChannel_methods(root_module, cls):
                    'void', 
                    [param('ns3::Ptr< ns3::SimpleNetDevice >', 'device')], 
                    is_virtual=True)
-    ## error-channel.h (module 'network'): ns3::Ptr<ns3::NetDevice> ns3::ErrorChannel::GetDevice(uint32_t i) const [member function]
+    ## error-channel.h (module 'network'): ns3::Ptr<ns3::NetDevice> ns3::ErrorChannel::GetDevice(std::size_t i) const [member function]
     cls.add_method('GetDevice', 
                    'ns3::Ptr< ns3::NetDevice >', 
-                   [param('uint32_t', 'i')], 
+                   [param('std::size_t', 'i')], 
                    is_const=True, is_virtual=True)
-    ## error-channel.h (module 'network'): uint32_t ns3::ErrorChannel::GetNDevices() const [member function]
+    ## error-channel.h (module 'network'): std::size_t ns3::ErrorChannel::GetNDevices() const [member function]
     cls.add_method('GetNDevices', 
-                   'uint32_t', 
+                   'std::size_t', 
                    [], 
                    is_const=True, is_virtual=True)
     ## error-channel.h (module 'network'): static ns3::TypeId ns3::ErrorChannel::GetTypeId() [member function]
@@ -11595,6 +11489,11 @@ def register_Ns3QueueDiscItem_methods(root_module, cls):
                    'bool', 
                    [], 
                    is_pure_virtual=True, is_virtual=True)
+    ## queue-item.h (module 'network'): uint32_t ns3::QueueDiscItem::Hash(uint32_t perturbation=0) const [member function]
+    cls.add_method('Hash', 
+                   'uint32_t', 
+                   [param('uint32_t', 'perturbation', default_value='0')], 
+                   is_const=True, is_virtual=True)
     return
 
 def register_Ns3HashImplementation_methods(root_module, cls):
@@ -11602,15 +11501,15 @@ def register_Ns3HashImplementation_methods(root_module, cls):
     cls.add_constructor([param('ns3::Hash::Implementation const &', 'arg0')])
     ## hash-function.h (module 'core'): ns3::Hash::Implementation::Implementation() [constructor]
     cls.add_constructor([])
-    ## hash-function.h (module 'core'): uint32_t ns3::Hash::Implementation::GetHash32(char const * buffer, size_t const size) [member function]
+    ## hash-function.h (module 'core'): uint32_t ns3::Hash::Implementation::GetHash32(char const * buffer, std::size_t const size) [member function]
     cls.add_method('GetHash32', 
                    'uint32_t', 
-                   [param('char const *', 'buffer'), param('size_t const', 'size')], 
+                   [param('char const *', 'buffer'), param('std::size_t const', 'size')], 
                    is_pure_virtual=True, is_virtual=True)
-    ## hash-function.h (module 'core'): uint64_t ns3::Hash::Implementation::GetHash64(char const * buffer, size_t const size) [member function]
+    ## hash-function.h (module 'core'): uint64_t ns3::Hash::Implementation::GetHash64(char const * buffer, std::size_t const size) [member function]
     cls.add_method('GetHash64', 
                    'uint64_t', 
-                   [param('char const *', 'buffer'), param('size_t const', 'size')], 
+                   [param('char const *', 'buffer'), param('std::size_t const', 'size')], 
                    is_virtual=True)
     ## hash-function.h (module 'core'): void ns3::Hash::Implementation::clear() [member function]
     cls.add_method('clear', 
@@ -11646,10 +11545,10 @@ def register_Ns3HashFunctionHash32_methods(root_module, cls):
     cls.add_constructor([param('ns3::Hash::Function::Hash32 const &', 'arg0')])
     ## hash-function.h (module 'core'): ns3::Hash::Function::Hash32::Hash32(ns3::Hash::Hash32Function_ptr hp) [constructor]
     cls.add_constructor([param('ns3::Hash::Hash32Function_ptr', 'hp')])
-    ## hash-function.h (module 'core'): uint32_t ns3::Hash::Function::Hash32::GetHash32(char const * buffer, size_t const size) [member function]
+    ## hash-function.h (module 'core'): uint32_t ns3::Hash::Function::Hash32::GetHash32(char const * buffer, std::size_t const size) [member function]
     cls.add_method('GetHash32', 
                    'uint32_t', 
-                   [param('char const *', 'buffer'), param('size_t const', 'size')], 
+                   [param('char const *', 'buffer'), param('std::size_t const', 'size')], 
                    is_virtual=True)
     ## hash-function.h (module 'core'): void ns3::Hash::Function::Hash32::clear() [member function]
     cls.add_method('clear', 
@@ -11663,15 +11562,15 @@ def register_Ns3HashFunctionHash64_methods(root_module, cls):
     cls.add_constructor([param('ns3::Hash::Function::Hash64 const &', 'arg0')])
     ## hash-function.h (module 'core'): ns3::Hash::Function::Hash64::Hash64(ns3::Hash::Hash64Function_ptr hp) [constructor]
     cls.add_constructor([param('ns3::Hash::Hash64Function_ptr', 'hp')])
-    ## hash-function.h (module 'core'): uint32_t ns3::Hash::Function::Hash64::GetHash32(char const * buffer, size_t const size) [member function]
+    ## hash-function.h (module 'core'): uint32_t ns3::Hash::Function::Hash64::GetHash32(char const * buffer, std::size_t const size) [member function]
     cls.add_method('GetHash32', 
                    'uint32_t', 
-                   [param('char const *', 'buffer'), param('size_t const', 'size')], 
+                   [param('char const *', 'buffer'), param('std::size_t const', 'size')], 
                    is_virtual=True)
-    ## hash-function.h (module 'core'): uint64_t ns3::Hash::Function::Hash64::GetHash64(char const * buffer, size_t const size) [member function]
+    ## hash-function.h (module 'core'): uint64_t ns3::Hash::Function::Hash64::GetHash64(char const * buffer, std::size_t const size) [member function]
     cls.add_method('GetHash64', 
                    'uint64_t', 
-                   [param('char const *', 'buffer'), param('size_t const', 'size')], 
+                   [param('char const *', 'buffer'), param('std::size_t const', 'size')], 
                    is_virtual=True)
     ## hash-function.h (module 'core'): void ns3::Hash::Function::Hash64::clear() [member function]
     cls.add_method('clear', 
@@ -11685,15 +11584,15 @@ def register_Ns3HashFunctionMurmur3_methods(root_module, cls):
     cls.add_constructor([param('ns3::Hash::Function::Murmur3 const &', 'arg0')])
     ## hash-murmur3.h (module 'core'): ns3::Hash::Function::Murmur3::Murmur3() [constructor]
     cls.add_constructor([])
-    ## hash-murmur3.h (module 'core'): uint32_t ns3::Hash::Function::Murmur3::GetHash32(char const * buffer, size_t const size) [member function]
+    ## hash-murmur3.h (module 'core'): uint32_t ns3::Hash::Function::Murmur3::GetHash32(char const * buffer, std::size_t const size) [member function]
     cls.add_method('GetHash32', 
                    'uint32_t', 
-                   [param('char const *', 'buffer'), param('size_t const', 'size')], 
+                   [param('char const *', 'buffer'), param('std::size_t const', 'size')], 
                    is_virtual=True)
-    ## hash-murmur3.h (module 'core'): uint64_t ns3::Hash::Function::Murmur3::GetHash64(char const * buffer, size_t const size) [member function]
+    ## hash-murmur3.h (module 'core'): uint64_t ns3::Hash::Function::Murmur3::GetHash64(char const * buffer, std::size_t const size) [member function]
     cls.add_method('GetHash64', 
                    'uint64_t', 
-                   [param('char const *', 'buffer'), param('size_t const', 'size')], 
+                   [param('char const *', 'buffer'), param('std::size_t const', 'size')], 
                    is_virtual=True)
     ## hash-murmur3.h (module 'core'): void ns3::Hash::Function::Murmur3::clear() [member function]
     cls.add_method('clear', 

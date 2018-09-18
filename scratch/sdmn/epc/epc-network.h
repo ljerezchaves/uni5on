@@ -104,7 +104,10 @@ public:
   virtual Ptr<Node> GetPgwNode ();
   virtual Ipv4InterfaceContainer AssignUeIpv4Address (
     NetDeviceContainer ueDevices);
+  virtual Ipv6InterfaceContainer AssignUeIpv6Address (
+    NetDeviceContainer ueDevices);
   virtual Ipv4Address GetUeDefaultGatewayAddress ();
+  virtual Ipv6Address GetUeDefaultGatewayAddress6 ();
   // Inherited from EpcHelper.
 
   /**

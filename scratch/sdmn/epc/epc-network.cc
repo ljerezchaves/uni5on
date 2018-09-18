@@ -621,12 +621,28 @@ EpcNetwork::AssignUeIpv4Address (NetDeviceContainer ueDevices)
   NS_FATAL_ERROR ("Unimplemented method.");
 }
 
+Ipv6InterfaceContainer
+EpcNetwork::AssignUeIpv6Address (NetDeviceContainer ueDevices)
+{
+  NS_LOG_FUNCTION (this);
+
+  NS_FATAL_ERROR ("Unimplemented method.");
+}
+
 Ipv4Address
 EpcNetwork::GetUeDefaultGatewayAddress ()
 {
   NS_LOG_FUNCTION (this);
 
   return m_pgwAddr;
+}
+
+Ipv6Address
+EpcNetwork::GetUeDefaultGatewayAddress6 ()
+{
+  NS_LOG_FUNCTION (this);
+
+  NS_FATAL_ERROR ("Unimplemented method.");
 }
 
 Ipv4InterfaceContainer
