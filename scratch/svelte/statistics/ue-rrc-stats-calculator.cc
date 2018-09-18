@@ -21,7 +21,7 @@
 #include <iomanip>
 #include <iostream>
 #include <ns3/mobility-model.h>
-#include "handover-stats-calculator.h"
+#include "ue-rrc-stats-calculator.h"
 #include "../svelte-common.h"
 #include "../metadata/enb-info.h"
 #include "../metadata/ue-info.h"
@@ -30,10 +30,10 @@ using namespace std;
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("HandoverStatsCalculator");
-NS_OBJECT_ENSURE_REGISTERED (HandoverStatsCalculator);
+NS_LOG_COMPONENT_DEFINE ("UeRrcStatsCalculator");
+NS_OBJECT_ENSURE_REGISTERED (UeRrcStatsCalculator);
 
-HandoverStatsCalculator::HandoverStatsCalculator ()
+UeRrcStatsCalculator::UeRrcStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -41,88 +41,95 @@ HandoverStatsCalculator::HandoverStatsCalculator ()
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionEstablished",
     MakeCallback (
-      &HandoverStatsCalculator::NotifyConnectionEstablished, this));
+      &UeRrcStatsCalculator::NotifyConnectionEstablished, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionTimeout",
     MakeCallback (
-      &HandoverStatsCalculator::NotifyConnectionTimeout, this));
+      &UeRrcStatsCalculator::NotifyConnectionTimeout, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionReconfiguration",
     MakeCallback (
-      &HandoverStatsCalculator::NotifyConnectionReconfiguration, this));
+      &UeRrcStatsCalculator::NotifyConnectionReconfiguration, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/HandoverStart",
     MakeCallback (
-      &HandoverStatsCalculator::NotifyHandoverStart, this));
+      &UeRrcStatsCalculator::NotifyHandoverStart, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/HandoverEndOk",
     MakeCallback (
-      &HandoverStatsCalculator::NotifyHandoverEndOk, this));
+      &UeRrcStatsCalculator::NotifyHandoverEndOk, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/HandoverEndError",
     MakeCallback (
-      &HandoverStatsCalculator::NotifyHandoverEndError, this));
+      &UeRrcStatsCalculator::NotifyHandoverEndError, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/InitialCellSelectionEndOk",
     MakeCallback (
-      &HandoverStatsCalculator::NotifyInitialCellSelectionEndOk, this));
+      &UeRrcStatsCalculator::NotifyInitialCellSelectionEndOk, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/InitialCellSelectionEndError",
     MakeCallback (
-      &HandoverStatsCalculator::NotifyInitialCellSelectionEndError, this));
+      &UeRrcStatsCalculator::NotifyInitialCellSelectionEndError, this));
   Config::Connect (
     "/NodeList/*/$ns3::MobilityModel/CourseChange",
     MakeCallback (
-      &HandoverStatsCalculator::NotifyMobilityCourseChange, this));
+      &UeRrcStatsCalculator::NotifyMobilityCourseChange, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/RandomAccessSuccessful",
     MakeCallback (
-      &HandoverStatsCalculator::NotifyRandomAccessSuccessful, this));
+      &UeRrcStatsCalculator::NotifyRandomAccessSuccessful, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/RandomAccessError",
     MakeCallback (
-      &HandoverStatsCalculator::NotifyRandomAccessError, this));
+      &UeRrcStatsCalculator::NotifyRandomAccessError, this));
 }
 
-HandoverStatsCalculator::~HandoverStatsCalculator ()
+UeRrcStatsCalculator::~UeRrcStatsCalculator ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-HandoverStatsCalculator::GetTypeId (void)
+UeRrcStatsCalculator::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::HandoverStatsCalculator")
+  static TypeId tid = TypeId ("ns3::UeRrcStatsCalculator")
     .SetParent<Object> ()
-    .AddConstructor<HandoverStatsCalculator> ()
+    .AddConstructor<UeRrcStatsCalculator> ()
+    .AddAttribute ("HvoStatsFilename",
+                   "Filename for LTE UE handover statistics.",
+                   StringValue ("handover-xxxxxx"), // FIXME
+                   MakeStringAccessor (
+                     &UeRrcStatsCalculator::m_mobFilename),
+                   MakeStringChecker ())
     .AddAttribute ("MobStatsFilename",
                    "Filename for LTE UE mobility model statistics.",
                    StringValue ("handover-mobility"),
                    MakeStringAccessor (
-                     &HandoverStatsCalculator::m_mobFilename),
+                     &UeRrcStatsCalculator::m_mobFilename),
                    MakeStringChecker ())
     .AddAttribute ("RrcStatsFilename",
                    "Filename for LTE UE RRC procedures statistics.",
                    StringValue ("handover-connection"),
                    MakeStringAccessor (
-                     &HandoverStatsCalculator::m_rrcFilename),
+                     &UeRrcStatsCalculator::m_rrcFilename),
                    MakeStringChecker ())
   ;
   return tid;
 }
 
 void
-HandoverStatsCalculator::DoDispose ()
+UeRrcStatsCalculator::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
+  m_hvoWrapper = 0;
   m_mobWrapper = 0;
   m_rrcWrapper = 0;
   Object::DoDispose ();
 }
 
 void
-HandoverStatsCalculator::NotifyConstructionCompleted (void)
+UeRrcStatsCalculator::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -164,7 +171,7 @@ HandoverStatsCalculator::NotifyConstructionCompleted (void)
 }
 
 void
-HandoverStatsCalculator::NotifyConnectionEstablished (
+UeRrcStatsCalculator::NotifyConnectionEstablished (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
@@ -177,7 +184,7 @@ HandoverStatsCalculator::NotifyConnectionEstablished (
 }
 
 void
-HandoverStatsCalculator::NotifyConnectionReconfiguration (
+UeRrcStatsCalculator::NotifyConnectionReconfiguration (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
@@ -190,7 +197,7 @@ HandoverStatsCalculator::NotifyConnectionReconfiguration (
 }
 
 void
-HandoverStatsCalculator::NotifyConnectionTimeout (
+UeRrcStatsCalculator::NotifyConnectionTimeout (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
@@ -203,7 +210,7 @@ HandoverStatsCalculator::NotifyConnectionTimeout (
 }
 
 void
-HandoverStatsCalculator::NotifyHandoverStart (
+UeRrcStatsCalculator::NotifyHandoverStart (
   std::string context, uint64_t imsi, uint16_t srcCellId, uint16_t rnti,
   uint16_t dstCellId)
 {
@@ -218,7 +225,7 @@ HandoverStatsCalculator::NotifyHandoverStart (
 }
 
 void
-HandoverStatsCalculator::NotifyHandoverEndOk (
+UeRrcStatsCalculator::NotifyHandoverEndOk (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
@@ -231,7 +238,7 @@ HandoverStatsCalculator::NotifyHandoverEndOk (
 }
 
 void
-HandoverStatsCalculator::NotifyHandoverEndError (
+UeRrcStatsCalculator::NotifyHandoverEndError (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
@@ -244,7 +251,7 @@ HandoverStatsCalculator::NotifyHandoverEndError (
 }
 
 void
-HandoverStatsCalculator::NotifyInitialCellSelectionEndOk (
+UeRrcStatsCalculator::NotifyInitialCellSelectionEndOk (
   std::string context, uint64_t imsi, uint16_t cellId)
 {
   *m_rrcWrapper->GetStream ()
@@ -256,7 +263,7 @@ HandoverStatsCalculator::NotifyInitialCellSelectionEndOk (
 }
 
 void
-HandoverStatsCalculator::NotifyInitialCellSelectionEndError (
+UeRrcStatsCalculator::NotifyInitialCellSelectionEndError (
   std::string context, uint64_t imsi, uint16_t cellId)
 {
   *m_rrcWrapper->GetStream ()
@@ -268,7 +275,7 @@ HandoverStatsCalculator::NotifyInitialCellSelectionEndError (
 }
 
 void
-HandoverStatsCalculator::NotifyMobilityCourseChange (
+UeRrcStatsCalculator::NotifyMobilityCourseChange (
   std::string context, Ptr<const MobilityModel> mobility)
 {
   Ptr<Node> node = mobility->GetObject<Node> ();
@@ -289,7 +296,7 @@ HandoverStatsCalculator::NotifyMobilityCourseChange (
 }
 
 void
-HandoverStatsCalculator::NotifyRandomAccessSuccessful (
+UeRrcStatsCalculator::NotifyRandomAccessSuccessful (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()
@@ -302,7 +309,7 @@ HandoverStatsCalculator::NotifyRandomAccessSuccessful (
 }
 
 void
-HandoverStatsCalculator::NotifyRandomAccessError (
+UeRrcStatsCalculator::NotifyRandomAccessError (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   *m_rrcWrapper->GetStream ()

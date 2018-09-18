@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef HANDOVER_STATS_CALCULATOR_H
-#define HANDOVER_STATS_CALCULATOR_H
+#ifndef UE_RRC_STATS_CALCULATOR_H
+#define UE_RRC_STATS_CALCULATOR_H
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -31,11 +31,11 @@ namespace ns3 {
  * This class monitors the UE RRC protocol and mobility model to dump RRC
  * procedures, including handover statistics and mobility course changes.
  */
-class HandoverStatsCalculator : public Object
+class UeRrcStatsCalculator : public Object
 {
 public:
-  HandoverStatsCalculator ();          //!< Default constructor.
-  virtual ~HandoverStatsCalculator (); //!< Dummy destructor, see DoDispose.
+  UeRrcStatsCalculator ();          //!< Default constructor.
+  virtual ~UeRrcStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -158,6 +158,8 @@ protected:
     std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
 private:
+  std::string               m_hvoFilename;    //!< HvoStats filename.
+  Ptr<OutputStreamWrapper>  m_hvoWrapper;     //!< HvoStats file wrapper.
   std::string               m_mobFilename;    //!< MobStats filename.
   Ptr<OutputStreamWrapper>  m_mobWrapper;     //!< MobStats file wrapper.
   std::string               m_rrcFilename;    //!< RrcStats filename.
@@ -165,4 +167,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* HANDOVER_STATS_CALCULATOR_H */
+#endif /* UE_RRC_STATS_CALCULATOR_H */

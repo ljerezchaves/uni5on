@@ -27,9 +27,9 @@
 #include <ns3/ofswitch13-module.h>
 #include "../statistics/admission-stats-calculator.h"
 #include "../statistics/backhaul-stats-calculator.h"
-#include "../statistics/handover-stats-calculator.h"
 #include "../statistics/pgw-tft-stats-calculator.h"
 #include "../statistics/traffic-stats-calculator.h"
+#include "../statistics/ue-rrc-stats-calculator.h"
 #include "../svelte-common.h"
 
 namespace ns3 {
@@ -140,9 +140,9 @@ private:
   // Statistic calculators.
   Ptr<AdmissionStatsCalculator>   m_admissionStats; //!< Admission stats.
   Ptr<BackhaulStatsCalculator>    m_backhaulStats;  //!< Backhaul stats.
-  Ptr<HandoverStatsCalculator>    m_handoverStats;  //!< UE handover stats.
-  Ptr<PgwTftStatsCalculator>      m_pgwTftStats;    //!< P-GW adaptive stats.
+  Ptr<PgwTftStatsCalculator>      m_pgwTftStats;    //!< P-GW TFT stats.
   Ptr<TrafficStatsCalculator>     m_trafficStats;   //!< Traffic stats.
+  Ptr<UeRrcStatsCalculator>       m_ueRrcStats;     //!< UE RRC stats.
 };
 
 } // namespace ns3
