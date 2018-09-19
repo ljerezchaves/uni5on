@@ -14,31 +14,30 @@ SIMDIR="svelte-simulator"
 MACHINE_LIST="atlas castor clio demeter esculapio heracles hercules hestia hydra kratos morfeu pollux satiros tetis"
 
 function PrintHelp () {
-  echo "Usage: $0 <action> [command]"
+  echo "Usage: $0 <action> [command [options]]"
   echo
-  echo "Where ${bold}action${normal} can be:"
-  echo "  ${bold}--all [command]${normal}:"
+  echo "Available ${bold}actions${normal}:"
+  echo "  ${bold}--all [command [options]]${normal}:"
   echo "    Silently execute the command on all LRC machines."
   echo
-  echo "  ${bold}--local [command]${normal}:"
+  echo "  ${bold}--local [command [options]]${normal}:"
   echo "    Execute the command on this local machine."
   echo
   echo "  ${bold}--info${normal}:"
-  echo "    List current configure information."
+  echo "    List current configured information."
   echo
   echo "  ${bold}--help${normal}:"
   echo "    Print this help message and exit."
   echo
-  echo "Where ${bold}command${normal} can be:"
-  echo "  ${bold}up-logs${normal}:"
-  echo "    Update the ${BASEDIR}/${PROGNAME}-logs git repository."
+  echo "Available ${bold}command${normal}:"
+  echo "  ${bold}pull-logs${normal}:"
+  echo "    Pull changes for the ${BASEDIR}/${PROGNAME}-logs git repository."
   echo
-  echo "  ${bold}up-sim${normal}:"
-  echo "    Update the ${BASEDIR}/${SIMDIR} git repository."
+  echo "  ${bold}pull-sim${normal}:"
+  echo "    Pull changes for the ${BASEDIR}/${SIMDIR} git repository."
   echo
-  echo "  ${bold}compile [threads]${normal}:"
+  echo "  ${bold}compile <threads>${normal}:"
   echo "    Compile the ${BASEDIR}/${SIMDIR} simulator with a custom number of threads."
-
   exit 1
 }
 
@@ -55,13 +54,13 @@ case "${WHERE}" in
     OLDPWD=$(pwd)
     cd ${BASEDIR}
     case "${COMMAND}" in
-      up-logs)
+      pull-logs)
         cd ${PROGNAME}-logs/
         git pull
         cd ../
       ;;
 
-      up-sim)
+      pull-sim)
         cd ${SIMDIR}
         git pull --recurse-submodules && git submodule update --recursive
         cd ../
@@ -70,12 +69,18 @@ case "${WHERE}" in
       compile)
         if [ $# -lt 3 ];
         then
+          echo "Number of threads missing."
           PrintHelp
         fi;
         THREADS=$3
         cd ${SIMDIR}
           ./waf -j${THREADS}
         cd ../
+      ;;
+
+      *)
+        echo "Invalid command"
+        PrintHelp
       ;;
     esac
     cd ${OLDPWD}
@@ -106,6 +111,11 @@ case "${WHERE}" in
     echo "Program name: ${PROGNAME}"
     echo "Simulation path: ${BASEDIR}/${SIMDIR}"
     echo "Machine list: ${MACHINE_LIST}"
+  ;;
+
+  *)
+    echo "Invalid action"
+    PrintHelp
   ;;
 esac
 
