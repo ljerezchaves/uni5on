@@ -41,18 +41,6 @@ UeRrcStatsCalculator::UeRrcStatsCalculator ()
 
   // Connect this stats calculator to required trace sources.
   Config::Connect (
-    "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionEstablished",
-    MakeCallback (
-      &UeRrcStatsCalculator::NotifyConnectionEstablished, this));
-  Config::Connect (
-    "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionTimeout",
-    MakeCallback (
-      &UeRrcStatsCalculator::NotifyConnectionTimeout, this));
-  Config::Connect (
-    "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionReconfiguration",
-    MakeCallback (
-      &UeRrcStatsCalculator::NotifyConnectionReconfiguration, this));
-  Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/HandoverStart",
     MakeCallback (
       &UeRrcStatsCalculator::NotifyHandoverStart, this));
@@ -65,6 +53,22 @@ UeRrcStatsCalculator::UeRrcStatsCalculator ()
     MakeCallback (
       &UeRrcStatsCalculator::NotifyHandoverEndError, this));
   Config::Connect (
+    "/NodeList/*/$ns3::MobilityModel/CourseChange",
+    MakeCallback (
+      &UeRrcStatsCalculator::NotifyMobilityCourseChange, this));
+  Config::Connect (
+    "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionEstablished",
+    MakeCallback (
+      &UeRrcStatsCalculator::NotifyConnectionEstablished, this));
+  Config::Connect (
+    "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionTimeout",
+    MakeCallback (
+      &UeRrcStatsCalculator::NotifyConnectionTimeout, this));
+  Config::Connect (
+    "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionReconfiguration",
+    MakeCallback (
+      &UeRrcStatsCalculator::NotifyConnectionReconfiguration, this));
+  Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/InitialCellSelectionEndOk",
     MakeCallback (
       &UeRrcStatsCalculator::NotifyInitialCellSelectionEndOk, this));
@@ -72,10 +76,6 @@ UeRrcStatsCalculator::UeRrcStatsCalculator ()
     "/NodeList/*/DeviceList/*/LteUeRrc/InitialCellSelectionEndError",
     MakeCallback (
       &UeRrcStatsCalculator::NotifyInitialCellSelectionEndError, this));
-  Config::Connect (
-    "/NodeList/*/$ns3::MobilityModel/CourseChange",
-    MakeCallback (
-      &UeRrcStatsCalculator::NotifyMobilityCourseChange, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/RandomAccessSuccessful",
     MakeCallback (
@@ -152,8 +152,11 @@ UeRrcStatsCalculator::NotifyConstructionCompleted (void)
   UeInfo::PrintHeader (*m_hvoWrapper->GetStream ());
   EnbInfo::PrintHeader (*m_hvoWrapper->GetStream ());
   *m_hvoWrapper->GetStream ()
-    << " " << setw (9)  << "TargetCGI"
-    << std::endl;
+    << " " << setw (9)  << "DstEnbId"
+    << " " << setw (9)  << "DstEnbSw";
+  SgwInfo::PrintHeader (*m_hvoWrapper->GetStream ());
+  PgwInfo::PrintHeader (*m_hvoWrapper->GetStream ());
+  *m_hvoWrapper->GetStream () << std::endl;
 
   m_mobWrapper = Create<OutputStreamWrapper> (
       m_mobFilename + ".log", std::ios::out);
@@ -187,9 +190,119 @@ UeRrcStatsCalculator::NotifyConstructionCompleted (void)
 }
 
 void
+UeRrcStatsCalculator::NotifyHandoverEndError (
+  std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
+{
+  NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);
+
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  NS_ASSERT_MSG (ueInfo, "Invalid UE info.");
+  NS_ASSERT_MSG (ueInfo->GetEnbInfo (), "Invalid eNB info.");
+  NS_ASSERT_MSG (ueInfo->GetSgwInfo (), "Invalid S-GW info.");
+  NS_ASSERT_MSG (ueInfo->GetPgwInfo (), "Invalid P-GW info.");
+  NS_ASSERT_MSG (ueInfo->GetEnbInfo ()->GetCellId () == cellId,
+                 "Inconsistente eNB info.");
+
+  *m_hvoWrapper->GetStream ()
+    << " " << setw (8) << Simulator::Now ().GetSeconds ()
+    << " " << setw (6) << "endEr"
+    << " " << setw (5) << rnti
+    << *ueInfo
+    << *ueInfo->GetEnbInfo ()
+    << " " << setw (9) << "-"
+    << " " << setw (9) << "-"
+    << *ueInfo->GetSgwInfo ()
+    << *ueInfo->GetPgwInfo ()
+    << std::endl;
+}
+
+void
+UeRrcStatsCalculator::NotifyHandoverEndOk (
+  std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
+{
+  NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);
+
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  NS_ASSERT_MSG (ueInfo, "Invalid UE info.");
+  NS_ASSERT_MSG (ueInfo->GetEnbInfo (), "Invalid eNB info.");
+  NS_ASSERT_MSG (ueInfo->GetSgwInfo (), "Invalid S-GW info.");
+  NS_ASSERT_MSG (ueInfo->GetPgwInfo (), "Invalid P-GW info.");
+  NS_ASSERT_MSG (ueInfo->GetEnbInfo ()->GetCellId () == cellId,
+                 "Inconsistente eNB info.");
+
+  *m_hvoWrapper->GetStream ()
+    << " " << setw (8) << Simulator::Now ().GetSeconds ()
+    << " " << setw (6) << "endOk"
+    << " " << setw (5) << rnti
+    << *ueInfo
+    << *ueInfo->GetEnbInfo ()
+    << " " << setw (9) << "-"
+    << " " << setw (9) << "-"
+    << *ueInfo->GetSgwInfo ()
+    << *ueInfo->GetPgwInfo ()
+    << std::endl;
+}
+
+void
+UeRrcStatsCalculator::NotifyHandoverStart (
+  std::string context, uint64_t imsi, uint16_t srcCellId, uint16_t rnti,
+  uint16_t dstCellId)
+{
+  NS_LOG_FUNCTION (this << context << imsi << srcCellId << rnti << dstCellId);
+
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  NS_ASSERT_MSG (ueInfo, "Invalid UE info.");
+  NS_ASSERT_MSG (ueInfo->GetEnbInfo (), "Invalid eNB info.");
+  NS_ASSERT_MSG (ueInfo->GetSgwInfo (), "Invalid S-GW info.");
+  NS_ASSERT_MSG (ueInfo->GetPgwInfo (), "Invalid P-GW info.");
+  NS_ASSERT_MSG (ueInfo->GetEnbInfo ()->GetCellId () == srcCellId,
+                 "Inconsistente eNB info.");
+
+  Ptr<EnbInfo> dstEnbInfo = EnbInfo::GetPointer (dstCellId);
+  NS_ASSERT_MSG (ueInfo, "Invalid UE info.");
+
+  *m_hvoWrapper->GetStream ()
+    << " " << setw (8) << Simulator::Now ().GetSeconds ()
+    << " " << setw (6) << "start"
+    << " " << setw (5) << rnti
+    << *ueInfo
+    << *ueInfo->GetEnbInfo ()
+    << " " << setw (9) << dstEnbInfo->GetCellId ()
+    << " " << setw (9) << dstEnbInfo->GetInfraSwIdx ()
+    << *ueInfo->GetSgwInfo ()
+    << *ueInfo->GetPgwInfo ()
+    << std::endl;
+}
+
+void
+UeRrcStatsCalculator::NotifyMobilityCourseChange (
+  std::string context, Ptr<const MobilityModel> mobility)
+{
+  NS_LOG_FUNCTION (this << context << mobility);
+
+  Ptr<Node> node = mobility->GetObject<Node> ();
+  Vector position = mobility->GetPosition ();
+  Vector velocity = mobility->GetVelocity ();
+
+  *m_mobWrapper->GetStream ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
+    << " " << setw (8)  << node->GetId ()
+    << " " << setw (11) << Names::FindName (node)
+    << " " << setw (9)  << position.x
+    << " " << setw (9)  << position.y
+    << " " << setw (9)  << position.z
+    << " " << setw (9)  << velocity.x
+    << " " << setw (9)  << velocity.y
+    << " " << setw (9)  << velocity.z
+    << std::endl;
+}
+
+void
 UeRrcStatsCalculator::NotifyConnectionEstablished (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
+  NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);
+
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
   NS_ASSERT_MSG (ueInfo, "Invalid UE info.");
   NS_ASSERT_MSG (ueInfo->GetEnbInfo (), "Invalid eNB info.");
@@ -213,6 +326,8 @@ void
 UeRrcStatsCalculator::NotifyConnectionReconfiguration (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
+  NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);
+
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
   NS_ASSERT_MSG (ueInfo, "Invalid UE info.");
   NS_ASSERT_MSG (ueInfo->GetEnbInfo (), "Invalid eNB info.");
@@ -236,8 +351,9 @@ void
 UeRrcStatsCalculator::NotifyConnectionTimeout (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
-  NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
+  NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);
 
+  NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (12) << "cnn-tmo"
@@ -248,79 +364,12 @@ UeRrcStatsCalculator::NotifyConnectionTimeout (
 }
 
 void
-UeRrcStatsCalculator::NotifyHandoverStart (
-  std::string context, uint64_t imsi, uint16_t srcCellId, uint16_t rnti,
-  uint16_t dstCellId)
-{
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  Ptr<EnbInfo> srcEnbInfo = ueInfo->GetEnbInfo ();
-  NS_ASSERT (srcEnbInfo->GetCellId () == srcCellId);
-
-  *m_hvoWrapper->GetStream ()
-    << " " << setw (8) << Simulator::Now ().GetSeconds ()
-    << " " << setw (6) << "start"
-    << " " << setw (5) << rnti
-    << *ueInfo
-    << *srcEnbInfo
-    << " " << setw (9) << dstCellId
-    << std::endl;
-}
-
-void
-UeRrcStatsCalculator::NotifyHandoverEndOk (
-  std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
-{
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  Ptr<EnbInfo> enbInfo = ueInfo->GetEnbInfo ();
-  NS_ASSERT (enbInfo->GetCellId () == cellId);
-
-  *m_hvoWrapper->GetStream ()
-    << " " << setw (8) << Simulator::Now ().GetSeconds ()
-    << " " << setw (6) << "endOk"
-    << " " << setw (5) << rnti
-    << *ueInfo
-    << *enbInfo
-    << std::endl;
-}
-
-void
-UeRrcStatsCalculator::NotifyHandoverEndError (
-  std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
-{
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  Ptr<EnbInfo> enbInfo = ueInfo->GetEnbInfo ();
-  NS_ASSERT (enbInfo->GetCellId () == cellId);
-
-  *m_hvoWrapper->GetStream ()
-    << " " << setw (8) << Simulator::Now ().GetSeconds ()
-    << " " << setw (6) << "endEr"
-    << " " << setw (5) << rnti
-    << *ueInfo
-    << *enbInfo
-    << std::endl;
-}
-
-void
-UeRrcStatsCalculator::NotifyInitialCellSelectionEndOk (
-  std::string context, uint64_t imsi, uint16_t cellId)
-{
-  NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
-
-  *m_rrcWrapper->GetStream ()
-    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (12) << "cell-sel-ok"
-    << " " << setw (5)  << "-"
-    << *UeInfo::GetPointer (imsi)
-    << *EnbInfo::GetPointer (cellId)
-    << std::endl;
-}
-
-void
 UeRrcStatsCalculator::NotifyInitialCellSelectionEndError (
   std::string context, uint64_t imsi, uint16_t cellId)
 {
-  NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
+  NS_LOG_FUNCTION (this << context << imsi << cellId);
 
+  NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (12) << "cell-sel-err"
@@ -331,36 +380,16 @@ UeRrcStatsCalculator::NotifyInitialCellSelectionEndError (
 }
 
 void
-UeRrcStatsCalculator::NotifyMobilityCourseChange (
-  std::string context, Ptr<const MobilityModel> mobility)
+UeRrcStatsCalculator::NotifyInitialCellSelectionEndOk (
+  std::string context, uint64_t imsi, uint16_t cellId)
 {
-  Ptr<Node> node = mobility->GetObject<Node> ();
-  Vector position = mobility->GetPosition ();
-  Vector velocity = mobility->GetVelocity ();
+  NS_LOG_FUNCTION (this << context << imsi << cellId);
 
-  *m_mobWrapper->GetStream ()
-    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (8)  << node->GetId ()
-    << " " << setw (11) << Names::FindName (node)
-    << " " << setw (9)  << position.x
-    << " " << setw (9)  << position.y
-    << " " << setw (9)  << position.z
-    << " " << setw (9)  << velocity.x
-    << " " << setw (9)  << velocity.y
-    << " " << setw (9)  << velocity.z
-    << std::endl;
-}
-
-void
-UeRrcStatsCalculator::NotifyRandomAccessSuccessful (
-  std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
-{
   NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
-
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (12) << "rnd-acs-ok"
-    << " " << setw (5)  << rnti
+    << " " << setw (12) << "cell-sel-ok"
+    << " " << setw (5)  << "-"
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
     << std::endl;
@@ -370,11 +399,28 @@ void
 UeRrcStatsCalculator::NotifyRandomAccessError (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
-  NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
+  NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);
 
+  NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (12) << "rnd-acs-err"
+    << " " << setw (5)  << rnti
+    << *UeInfo::GetPointer (imsi)
+    << *EnbInfo::GetPointer (cellId)
+    << std::endl;
+}
+
+void
+UeRrcStatsCalculator::NotifyRandomAccessSuccessful (
+  std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
+{
+  NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);
+
+  NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
+  *m_rrcWrapper->GetStream ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
+    << " " << setw (12) << "rnd-acs-ok"
     << " " << setw (5)  << rnti
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
