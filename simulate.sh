@@ -75,7 +75,7 @@ case "${ACTION}" in
 
     COMMAND="./waf --run=\"${PROGNAME} --RngRun=${SEED} --Prefix=${PREFIX} ${ARGS}\""
     PREFIXBASENAME=$(basename ${PREFIX})
-    OUTFILE=$(mktemp -p /tmp ${PROGNAME}-${PREFIXBASENAME}-${SEED}-tmpXXX-sdmn)
+    OUTFILE=$(mktemp -p /tmp ${PROGNAME}-${PREFIXBASENAME}-${SEED}-tmpXXX-${PROGNAME})
     echo "${COMMAND}" > ${OUTFILE}
 
     echo "${green}[Start]${reset} ${COMMAND}"
