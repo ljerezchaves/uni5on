@@ -8,7 +8,7 @@ reset=$(tput sgr0)
 bold=$(tput bold)
 normal=$(tput sgr0)
 
-PROGNAME="sdmn"
+PROGNAME="svelte"
 
 function PrintHelp () {
   echo "Usage: $0 --action [ARGS]"
