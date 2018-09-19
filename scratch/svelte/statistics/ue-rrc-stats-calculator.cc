@@ -145,11 +145,11 @@ UeRrcStatsCalculator::NotifyConstructionCompleted (void)
   *m_hvoWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
     << " " << setw (8)  << "Time:s"
-    << " " << setw (32) << "HandoverEvent";
+    << " " << setw (6)  << "Event"
+    << " " << setw (5)  << "RNTI";
   UeInfo::PrintHeader (*m_hvoWrapper->GetStream ());
   EnbInfo::PrintHeader (*m_hvoWrapper->GetStream ());
   *m_hvoWrapper->GetStream ()
-    << " " << setw (5)  << "RNTI"
     << " " << setw (9)  << "TargetCGI"
     << std::endl;
 
@@ -159,7 +159,7 @@ UeRrcStatsCalculator::NotifyConstructionCompleted (void)
     << boolalpha << right << fixed << setprecision (3)
     << " " << setw (8)  << "Time:s"
     << " " << setw (8)  << "NodeId"
-    << " " << setw (9)  << "NodeName"
+    << " " << setw (11) << "NodeName"
     << " " << setw (9)  << "PosX"
     << " " << setw (9)  << "PosY"
     << " " << setw (9)  << "PosZ"
@@ -173,12 +173,11 @@ UeRrcStatsCalculator::NotifyConstructionCompleted (void)
   *m_rrcWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
     << " " << setw (8)  << "Time:s"
-    << " " << setw (32) << "UeRrcEvent";
+    << " " << setw (12) << "UeRrcEvent"
+    << " " << setw (5)  << "RNTI";
   UeInfo::PrintHeader (*m_rrcWrapper->GetStream ());
   EnbInfo::PrintHeader (*m_rrcWrapper->GetStream ());
-  *m_rrcWrapper->GetStream ()
-    << " " << setw (5)  << "RNTI"
-    << std::endl;
+  *m_rrcWrapper->GetStream () << std::endl;
 
   Object::NotifyConstructionCompleted ();
 }
@@ -187,12 +186,16 @@ void
 UeRrcStatsCalculator::NotifyConnectionEstablished (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  Ptr<EnbInfo> enbInfo = ueInfo->GetEnbInfo ();
+  NS_ASSERT (enbInfo->GetCellId () == cellId);
+
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (32) << "connection-established"
-    << *UeInfo::GetPointer (imsi)
-    << *EnbInfo::GetPointer (cellId)
-    << " " << setw (5) << rnti
+    << " " << setw (12) << "cnn-est"
+    << " " << setw (5)  << rnti
+    << *ueInfo
+    << *enbInfo
     << std::endl;
 }
 
@@ -200,12 +203,16 @@ void
 UeRrcStatsCalculator::NotifyConnectionReconfiguration (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  Ptr<EnbInfo> enbInfo = ueInfo->GetEnbInfo ();
+  NS_ASSERT (enbInfo->GetCellId () == cellId);
+
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (32) << "connection-reconfiguration"
-    << *UeInfo::GetPointer (imsi)
-    << *EnbInfo::GetPointer (cellId)
-    << " " << setw (5) << rnti
+    << " " << setw (12) << "cnn-reconf"
+    << " " << setw (5)  << rnti
+    << *ueInfo
+    << *enbInfo
     << std::endl;
 }
 
@@ -213,12 +220,16 @@ void
 UeRrcStatsCalculator::NotifyConnectionTimeout (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  Ptr<EnbInfo> enbInfo = ueInfo->GetEnbInfo ();
+  NS_ASSERT (enbInfo->GetCellId () == cellId);
+
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (32) << "connection-timeout"
-    << *UeInfo::GetPointer (imsi)
-    << *EnbInfo::GetPointer (cellId)
-    << " " << setw (5) << rnti
+    << " " << setw (12) << "cnn-tmo"
+    << " " << setw (5)  << rnti
+    << *ueInfo
+    << *enbInfo
     << std::endl;
 }
 
@@ -227,12 +238,16 @@ UeRrcStatsCalculator::NotifyHandoverStart (
   std::string context, uint64_t imsi, uint16_t srcCellId, uint16_t rnti,
   uint16_t dstCellId)
 {
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  Ptr<EnbInfo> srcEnbInfo = ueInfo->GetEnbInfo ();
+  NS_ASSERT (srcEnbInfo->GetCellId () == srcCellId);
+
   *m_hvoWrapper->GetStream ()
-    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (32) << "handover-start"
-    << *UeInfo::GetPointer (imsi)
-    << *EnbInfo::GetPointer (srcCellId)
+    << " " << setw (8) << Simulator::Now ().GetSeconds ()
+    << " " << setw (6) << "start"
     << " " << setw (5) << rnti
+    << *ueInfo
+    << *srcEnbInfo
     << " " << setw (9) << dstCellId
     << std::endl;
 }
@@ -241,12 +256,16 @@ void
 UeRrcStatsCalculator::NotifyHandoverEndOk (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  Ptr<EnbInfo> enbInfo = ueInfo->GetEnbInfo ();
+  NS_ASSERT (enbInfo->GetCellId () == cellId);
+
   *m_hvoWrapper->GetStream ()
-    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (32) << "handover-end-ok"
-    << *UeInfo::GetPointer (imsi)
-    << *EnbInfo::GetPointer (cellId)
+    << " " << setw (8) << Simulator::Now ().GetSeconds ()
+    << " " << setw (6) << "endOk"
     << " " << setw (5) << rnti
+    << *ueInfo
+    << *enbInfo
     << std::endl;
 }
 
@@ -254,12 +273,16 @@ void
 UeRrcStatsCalculator::NotifyHandoverEndError (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  Ptr<EnbInfo> enbInfo = ueInfo->GetEnbInfo ();
+  NS_ASSERT (enbInfo->GetCellId () == cellId);
+
   *m_hvoWrapper->GetStream ()
-    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (32) << "handover-end-error"
-    << *UeInfo::GetPointer (imsi)
-    << *EnbInfo::GetPointer (cellId)
+    << " " << setw (8) << Simulator::Now ().GetSeconds ()
+    << " " << setw (6) << "endEr"
     << " " << setw (5) << rnti
+    << *ueInfo
+    << *enbInfo
     << std::endl;
 }
 
@@ -269,7 +292,8 @@ UeRrcStatsCalculator::NotifyInitialCellSelectionEndOk (
 {
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (32) << "initial-cell-selection-end-ok"
+    << " " << setw (12) << "cell-sel-ok"
+    << " " << setw (5)  << "-"
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
     << std::endl;
@@ -281,7 +305,8 @@ UeRrcStatsCalculator::NotifyInitialCellSelectionEndError (
 {
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (32) << "initial-cell-selection-end-error"
+    << " " << setw (12) << "cell-sel-err"
+    << " " << setw (5)  << "-"
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
     << std::endl;
@@ -298,7 +323,7 @@ UeRrcStatsCalculator::NotifyMobilityCourseChange (
   *m_mobWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (8)  << node->GetId ()
-    << " " << setw (9)  << Names::FindName (node)
+    << " " << setw (11) << Names::FindName (node)
     << " " << setw (9)  << position.x
     << " " << setw (9)  << position.y
     << " " << setw (9)  << position.z
@@ -314,10 +339,10 @@ UeRrcStatsCalculator::NotifyRandomAccessSuccessful (
 {
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (32) << "random-access-successfull"
+    << " " << setw (12) << "rnd-acs-ok"
+    << " " << setw (5)  << rnti
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
-    << " " << setw (5) << rnti
     << std::endl;
 }
 
@@ -327,10 +352,10 @@ UeRrcStatsCalculator::NotifyRandomAccessError (
 {
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (32) << "random-access-error"
+    << " " << setw (12) << "rnd-acs-err"
+    << " " << setw (5)  << rnti
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
-    << " " << setw (5) << rnti
     << std::endl;
 }
 
