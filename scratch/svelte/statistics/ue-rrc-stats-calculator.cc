@@ -25,6 +25,8 @@
 #include "../svelte-common.h"
 #include "../metadata/enb-info.h"
 #include "../metadata/ue-info.h"
+#include "../metadata/sgw-info.h"
+#include "../metadata/pgw-info.h"
 
 using namespace std;
 
@@ -177,6 +179,8 @@ UeRrcStatsCalculator::NotifyConstructionCompleted (void)
     << " " << setw (5)  << "RNTI";
   UeInfo::PrintHeader (*m_rrcWrapper->GetStream ());
   EnbInfo::PrintHeader (*m_rrcWrapper->GetStream ());
+  SgwInfo::PrintHeader (*m_rrcWrapper->GetStream ());
+  PgwInfo::PrintHeader (*m_rrcWrapper->GetStream ());
   *m_rrcWrapper->GetStream () << std::endl;
 
   Object::NotifyConstructionCompleted ();
@@ -187,15 +191,21 @@ UeRrcStatsCalculator::NotifyConnectionEstablished (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  Ptr<EnbInfo> enbInfo = ueInfo->GetEnbInfo ();
-  NS_ASSERT (enbInfo->GetCellId () == cellId);
+  NS_ASSERT_MSG (ueInfo, "Invalid UE info.");
+  NS_ASSERT_MSG (ueInfo->GetEnbInfo (), "Invalid eNB info.");
+  NS_ASSERT_MSG (ueInfo->GetSgwInfo (), "Invalid S-GW info.");
+  NS_ASSERT_MSG (ueInfo->GetPgwInfo (), "Invalid P-GW info.");
+  NS_ASSERT_MSG (ueInfo->GetEnbInfo ()->GetCellId () == cellId,
+                 "Inconsistente eNB info.");
 
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (12) << "cnn-est"
     << " " << setw (5)  << rnti
     << *ueInfo
-    << *enbInfo
+    << *ueInfo->GetEnbInfo ()
+    << *ueInfo->GetSgwInfo ()
+    << *ueInfo->GetPgwInfo ()
     << std::endl;
 }
 
@@ -204,15 +214,21 @@ UeRrcStatsCalculator::NotifyConnectionReconfiguration (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  Ptr<EnbInfo> enbInfo = ueInfo->GetEnbInfo ();
-  NS_ASSERT (enbInfo->GetCellId () == cellId);
+  NS_ASSERT_MSG (ueInfo, "Invalid UE info.");
+  NS_ASSERT_MSG (ueInfo->GetEnbInfo (), "Invalid eNB info.");
+  NS_ASSERT_MSG (ueInfo->GetSgwInfo (), "Invalid S-GW info.");
+  NS_ASSERT_MSG (ueInfo->GetPgwInfo (), "Invalid P-GW info.");
+  NS_ASSERT_MSG (ueInfo->GetEnbInfo ()->GetCellId () == cellId,
+                 "Inconsistente eNB info.");
 
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (12) << "cnn-reconf"
     << " " << setw (5)  << rnti
     << *ueInfo
-    << *enbInfo
+    << *ueInfo->GetEnbInfo ()
+    << *ueInfo->GetSgwInfo ()
+    << *ueInfo->GetPgwInfo ()
     << std::endl;
 }
 
@@ -220,16 +236,14 @@ void
 UeRrcStatsCalculator::NotifyConnectionTimeout (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  Ptr<EnbInfo> enbInfo = ueInfo->GetEnbInfo ();
-  NS_ASSERT (enbInfo->GetCellId () == cellId);
+  NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
 
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (12) << "cnn-tmo"
     << " " << setw (5)  << rnti
-    << *ueInfo
-    << *enbInfo
+    << *UeInfo::GetPointer (imsi)
+    << *EnbInfo::GetPointer (cellId)
     << std::endl;
 }
 
@@ -290,6 +304,8 @@ void
 UeRrcStatsCalculator::NotifyInitialCellSelectionEndOk (
   std::string context, uint64_t imsi, uint16_t cellId)
 {
+  NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
+
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (12) << "cell-sel-ok"
@@ -303,6 +319,8 @@ void
 UeRrcStatsCalculator::NotifyInitialCellSelectionEndError (
   std::string context, uint64_t imsi, uint16_t cellId)
 {
+  NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
+
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (12) << "cell-sel-err"
@@ -337,6 +355,8 @@ void
 UeRrcStatsCalculator::NotifyRandomAccessSuccessful (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
+  NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
+
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (12) << "rnd-acs-ok"
@@ -350,6 +370,8 @@ void
 UeRrcStatsCalculator::NotifyRandomAccessError (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
+  NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
+
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
     << " " << setw (12) << "rnd-acs-err"
