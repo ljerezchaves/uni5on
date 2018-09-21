@@ -504,6 +504,8 @@ SliceNetwork::CreateSgws (void)
   // Connect all S-GW switches to the S1-U and S5 interfaces.
   for (uint16_t sgwIdx = 0; sgwIdx < nSgws; sgwIdx++)
     {
+      uint16_t sgwId = sgwIdx + 1; // S-GW ID.
+
       Ptr<Node> sgwNode = m_sgwNodes.Get (sgwIdx);
       Ptr<OFSwitch13Device> sgwOfDev = m_sgwDevices.Get (sgwIdx);
       uint64_t sgwDpId = sgwOfDev->GetDatapathId ();
@@ -513,15 +515,17 @@ SliceNetwork::CreateSgws (void)
       Ptr<OFSwitch13Port> infraSwS1uPort;
       std::tie (sgwS1uDev, infraSwS1uPort) = m_backhaul->AttachEpcNode (
           sgwNode, sgwIdx, LteIface::S1U);
-      NS_LOG_INFO ("S-GW " << sgwDpId << " attached to the s1u interface " <<
-                   "with IP " << Ipv4AddressHelper::GetAddress (sgwS1uDev));
+      NS_LOG_INFO ("S-GW " << sgwId << " switch dpId " << sgwDpId <<
+                   " attached to the s1u interface with IP " <<
+                   Ipv4AddressHelper::GetAddress (sgwS1uDev));
 
       Ptr<CsmaNetDevice> sgwS5Dev;
       Ptr<OFSwitch13Port> infraSwS5Port;
       std::tie (sgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
           sgwNode, sgwIdx, LteIface::S5);
-      NS_LOG_INFO ("S-GW " << sgwDpId << " attached to the s5 interface " <<
-                   "with IP " << Ipv4AddressHelper::GetAddress (sgwS5Dev));
+      NS_LOG_INFO ("S-GW " << sgwId << " switch dpId " << sgwDpId <<
+                   " attached to the s5 interface with IP " <<
+                   Ipv4AddressHelper::GetAddress (sgwS5Dev));
 
       // Create the logical ports on the S-GW S1-U and S5 interfaces.
       Ptr<VirtualNetDevice> sgwS1uPortDev = CreateObject<VirtualNetDevice> ();
@@ -538,7 +542,7 @@ SliceNetwork::CreateSgws (void)
 
       // Saving S-GW metadata.
       Ptr<SgwInfo> sgwInfo = CreateObject<SgwInfo> (
-          sgwDpId, Ipv4AddressHelper::GetAddress (sgwS1uDev),
+          sgwId, sgwDpId, Ipv4AddressHelper::GetAddress (sgwS1uDev),
           Ipv4AddressHelper::GetAddress (sgwS5Dev), sgwS1uPort->GetPortNo (),
           sgwS5Port->GetPortNo (), sgwIdx, infraSwS1uPort->GetPortNo (),
           infraSwS5Port->GetPortNo (), m_controllerApp);

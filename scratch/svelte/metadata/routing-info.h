@@ -171,7 +171,7 @@ public:
    * \return The requested information.
    */
   //\{
-  uint64_t    GetPgwId          (void) const;
+  uint32_t    GetPgwId          (void) const;
   uint16_t    GetPgwInfraSwIdx  (void) const;
   Ipv4Address GetPgwS5Addr      (void) const;
   //\}
@@ -182,7 +182,7 @@ public:
    */
   //\{
   uint64_t    GetSgwDpId        (void) const;
-  uint64_t    GetSgwId          (void) const;
+  uint32_t    GetSgwId          (void) const;
   uint16_t    GetSgwInfraSwIdx  (void) const;
   Ipv4Address GetSgwS1uAddr     (void) const;
   uint32_t    GetSgwS1uPortNo   (void) const;

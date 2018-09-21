@@ -41,6 +41,7 @@ public:
   /**
    * Complete constructor.
    * \param sgwId The S-GW ID.
+   * \param sgwDpId The S-GW OpenFlow datapath ID.
    * \param s1uAddr The S-S1-U interface IP address.
    * \param s5Addr The S5 interface IP address.
    * \param s1uPortNo The port number for S1-U interface at the S-GW.
@@ -50,10 +51,10 @@ public:
    * \param infraSwS5PortNo The port number for S5 interface at the switch.
    * \param sliceCtrl The slice controller application.
    */
-  SgwInfo (uint64_t sgwId, Ipv4Address s1uAddr, Ipv4Address s5Addr,
-           uint32_t s1uPortNo, uint32_t s5PortNo, uint16_t infraSwIdx,
-           uint32_t infraSwS1uPortNo, uint32_t infraSwS5PortNo,
-           Ptr<SliceController> ctrlApp);
+  SgwInfo (uint32_t sgwId, uint64_t sgwDpId, Ipv4Address s1uAddr,
+           Ipv4Address s5Addr, uint32_t s1uPortNo, uint32_t s5PortNo,
+           uint16_t infraSwIdx, uint32_t infraSwS1uPortNo,
+           uint32_t infraSwS5PortNo, Ptr<SliceController> ctrlApp);
   virtual ~SgwInfo (); //!< Dummy destructor, see DoDispose.
 
   /**
@@ -75,7 +76,7 @@ public:
   uint32_t              GetS1uPortNo        (void) const;
   Ipv4Address           GetS5Addr           (void) const;
   uint32_t              GetS5PortNo         (void) const;
-  uint64_t              GetSgwId            (void) const;
+  uint32_t              GetSgwId            (void) const;
   Ptr<SliceController>  GetSliceController  (void) const;
   //\}
 
@@ -106,6 +107,7 @@ private:
   static void RegisterSgwInfo (Ptr<SgwInfo> sgwInfo);
 
   // S-GW metadata.
+  uint64_t               m_dpId;                 //!< OpenFlow datapath ID.
   uint16_t               m_infraSwIdx;           //!< Backhaul switch index.
   uint32_t               m_infraSwS1uPortNo;     //!< Back switch S1-U port no.
   uint32_t               m_infraSwS5PortNo;      //!< Back switch S5 port no.
@@ -113,7 +115,7 @@ private:
   uint32_t               m_s1uPortNo;            //!< S-GW S1-U port no.
   Ipv4Address            m_s5Addr;               //!< S-GW S5 IP address.
   uint32_t               m_s5PortNo;             //!< S-GW S5 port no.
-  uint64_t               m_sgwId;                //!< S-GW ID.
+  uint32_t               m_sgwId;                //!< S-GW ID.
   Ptr<SliceController>   m_sliceCtrl;            //!< LTE logical slice ctrl.
 
   /** Map saving S-GW ID / S-GW information. */

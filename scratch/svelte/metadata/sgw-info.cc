@@ -34,10 +34,12 @@ NS_OBJECT_ENSURE_REGISTERED (SgwInfo);
 SgwInfo::SgwIdSgwInfoMap_t SgwInfo::m_sgwInfoBySgwId;
 
 SgwInfo::SgwInfo (
-  uint64_t sgwId, Ipv4Address s1uAddr, Ipv4Address s5Addr, uint32_t s1uPortNo,
-  uint32_t s5PortNo, uint16_t infraSwIdx, uint32_t infraSwS1uPortNo,
-  uint32_t infraSwS5PortNo, Ptr<SliceController> ctrlApp)
-  : m_infraSwIdx (infraSwIdx),
+  uint32_t sgwId, uint64_t sgwDpId, Ipv4Address s1uAddr, Ipv4Address s5Addr,
+  uint32_t s1uPortNo, uint32_t s5PortNo, uint16_t infraSwIdx,
+  uint32_t infraSwS1uPortNo, uint32_t infraSwS5PortNo,
+  Ptr<SliceController> ctrlApp)
+  : m_dpId (sgwDpId),
+  m_infraSwIdx (infraSwIdx),
   m_infraSwS1uPortNo (infraSwS1uPortNo),
   m_infraSwS5PortNo (infraSwS5PortNo),
   m_s1uAddr (s1uAddr),
@@ -71,7 +73,7 @@ SgwInfo::GetDpId (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_sgwId;
+  return m_dpId;
 }
 
 uint16_t
@@ -130,7 +132,7 @@ SgwInfo::GetS5PortNo (void) const
   return m_s5PortNo;
 }
 
-uint64_t
+uint32_t
 SgwInfo::GetSgwId (void) const
 {
   NS_LOG_FUNCTION (this);

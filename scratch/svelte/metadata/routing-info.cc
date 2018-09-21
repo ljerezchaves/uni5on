@@ -430,7 +430,7 @@ RoutingInfo::GetEnbS1uAddr (void) const
   return m_ueInfo->GetEnbInfo ()->GetS1uAddr ();
 }
 
-uint64_t
+uint32_t
 RoutingInfo::GetPgwId (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -462,7 +462,7 @@ RoutingInfo::GetSgwDpId (void) const
   return m_ueInfo->GetSgwInfo ()->GetDpId ();
 }
 
-uint64_t
+uint32_t
 RoutingInfo::GetSgwId (void) const
 {
   NS_LOG_FUNCTION (this);
