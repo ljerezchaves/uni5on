@@ -145,8 +145,10 @@ RadioNetwork::GetCoverageArea (uint16_t cellSiteId) const
     }
   else
     {
+      NS_ASSERT_MSG (cellSiteId * 3 <= m_enbNodes.GetN (),
+                     "Cell sice ID is invalid for this RAN network.");
+
       // Get the position of the first eNB on this cell site.
-      NS_ASSERT_MSG (cellSiteId * 3 <= m_enbNodes.GetN (), "Invalid cell site");
       Ptr<Node> enbNode = m_enbNodes.Get ((cellSiteId - 1) * 3);
       Vector pos = enbNode->GetObject<MobilityModel> ()->GetPosition ();
 
