@@ -326,6 +326,9 @@ private:
   double                  m_tftJoinThs;     //!< Join threshold.
   double                  m_tftSplitThs;    //!< Split threshold.
 
+  // S-GW metadata.
+  std::vector<Ptr<SgwInfo> > m_sgwInfo;     //!< S-GW metadata for this slice.
+
   // Internal members and attributes.
   Time                    m_timeout;        //!< Controller internal timeout.
   static const uint16_t   m_flowTimeout;    //!< Timeout for flow entries.
