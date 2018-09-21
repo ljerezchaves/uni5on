@@ -542,7 +542,7 @@ SliceNetwork::CreateSgws (void)
 
       // Saving S-GW metadata.
       Ptr<SgwInfo> sgwInfo = CreateObject<SgwInfo> (
-          sgwId, sgwDpId, Ipv4AddressHelper::GetAddress (sgwS1uDev),
+          sgwId, sgwOfDev, Ipv4AddressHelper::GetAddress (sgwS1uDev),
           Ipv4AddressHelper::GetAddress (sgwS5Dev), sgwS1uPort->GetPortNo (),
           sgwS5Port->GetPortNo (), sgwIdx, infraSwS1uPort->GetPortNo (),
           infraSwS5Port->GetPortNo (), m_controllerApp);

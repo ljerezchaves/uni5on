@@ -25,6 +25,7 @@
 #include <ns3/internet-module.h>
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>
+#include <ns3/ofswitch13-module.h>
 #include "../svelte-common.h"
 
 namespace ns3 {
@@ -41,7 +42,7 @@ public:
   /**
    * Complete constructor.
    * \param sgwId The S-GW ID.
-   * \param sgwDpId The S-GW OpenFlow datapath ID.
+   * \param device The OpenFlow switch device.
    * \param s1uAddr The S-S1-U interface IP address.
    * \param s5Addr The S5 interface IP address.
    * \param s1uPortNo The port number for S1-U interface at the S-GW.
@@ -51,7 +52,7 @@ public:
    * \param infraSwS5PortNo The port number for S5 interface at the switch.
    * \param sliceCtrl The slice controller application.
    */
-  SgwInfo (uint32_t sgwId, uint64_t sgwDpId, Ipv4Address s1uAddr,
+  SgwInfo (uint32_t sgwId, Ptr<OFSwitch13Device> device, Ipv4Address s1uAddr,
            Ipv4Address s5Addr, uint32_t s1uPortNo, uint32_t s5PortNo,
            uint16_t infraSwIdx, uint32_t infraSwS1uPortNo,
            uint32_t infraSwS5PortNo, Ptr<SliceController> ctrlApp);
@@ -94,7 +95,7 @@ protected:
 
 private:
   // S-GW metadata.
-  uint64_t               m_dpId;                 //!< OpenFlow datapath ID.
+  Ptr<OFSwitch13Device>  m_device;               //!< S-GW OpenFlow device.
   uint16_t               m_infraSwIdx;           //!< Backhaul switch index.
   uint32_t               m_infraSwS1uPortNo;     //!< Back switch S1-U port no.
   uint32_t               m_infraSwS5PortNo;      //!< Back switch S5 port no.

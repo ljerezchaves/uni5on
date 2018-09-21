@@ -31,11 +31,11 @@ NS_LOG_COMPONENT_DEFINE ("SgwInfo");
 NS_OBJECT_ENSURE_REGISTERED (SgwInfo);
 
 SgwInfo::SgwInfo (
-  uint32_t sgwId, uint64_t sgwDpId, Ipv4Address s1uAddr, Ipv4Address s5Addr,
-  uint32_t s1uPortNo, uint32_t s5PortNo, uint16_t infraSwIdx,
-  uint32_t infraSwS1uPortNo, uint32_t infraSwS5PortNo,
+  uint32_t sgwId, Ptr<OFSwitch13Device> device, Ipv4Address s1uAddr,
+  Ipv4Address s5Addr, uint32_t s1uPortNo, uint32_t s5PortNo,
+  uint16_t infraSwIdx, uint32_t infraSwS1uPortNo, uint32_t infraSwS5PortNo,
   Ptr<SliceController> ctrlApp)
-  : m_dpId (sgwDpId),
+  : m_device (device),
   m_infraSwIdx (infraSwIdx),
   m_infraSwS1uPortNo (infraSwS1uPortNo),
   m_infraSwS5PortNo (infraSwS5PortNo),
@@ -68,7 +68,7 @@ SgwInfo::GetDpId (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_dpId;
+  return m_device->GetDatapathId ();
 }
 
 uint16_t
