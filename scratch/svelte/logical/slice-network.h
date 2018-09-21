@@ -140,6 +140,7 @@ private:
   Ipv4AddressHelper             m_ueAddrHelper;     //!< UE address helper.
   Ipv4Address                   m_ueAddr;           //!< UE network address.
   Ipv4Mask                      m_ueMask;           //!< UE network mask.
+  uint16_t                      m_ueCellSiteCover;  //!< UE cell site coverage.
 
   // Internet network.
   Ptr<Node>                     m_webNode;          //!< Web server node.

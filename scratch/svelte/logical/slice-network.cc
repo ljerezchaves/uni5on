@@ -98,6 +98,13 @@ SliceNetwork::GetTypeId (void)
                    Ipv4MaskValue ("255.0.0.0"),
                    MakeIpv4MaskAccessor (&SliceNetwork::m_ueMask),
                    MakeIpv4MaskChecker ())
+    .AddAttribute ("UeCellSiteCoverage", "Restrict UE positioning to a "
+                   "specific cell site coverage. When left to 0, the entire "
+                   "RAN coverage is used.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (0),
+                   MakeUintegerAccessor (&SliceNetwork::m_ueCellSiteCover),
+                   MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("UeMobility", "Enable UE random mobility.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (false),
@@ -538,8 +545,10 @@ SliceNetwork::CreateUes (void)
       Names::Add (name.str (), m_ueNodes.Get (i));
     }
 
-  // Configure UE positioning and mobility.
-  Ptr<PositionAllocator> posAllocator = m_radio->GetRandomPositionAllocator ();
+  // Configure UE positioning and mobility, considering possible restrictions
+  // on the LTE RAN coverage area.
+  Ptr<PositionAllocator> posAllocator =
+    m_radio->GetRandomPositionAllocator (m_ueCellSiteCover);
   MobilityHelper mobilityHelper;
   mobilityHelper.SetPositionAllocator (posAllocator);
   if (m_ueMobility)
