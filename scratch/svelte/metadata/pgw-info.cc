@@ -181,7 +181,8 @@ PgwInfo::GetMainDpId (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_pgwId;
+  NS_ASSERT_MSG (m_infraSwS5PortNos.size (), "No P-GW main switch registered");
+  return m_devices.at (0)->GetDatapathId ();
 }
 
 uint32_t
@@ -482,13 +483,6 @@ PgwInfo::SaveSwitchInfo (Ptr<OFSwitch13Device> device, Ipv4Address s5Addr,
   m_infraSwS5PortNos.push_back (infraSwS5PortNo);
   m_mainToTftPortNos.push_back (mainToTftPortNo);
   m_tftToMainPortNos.push_back (tftToMainPortNo);
-
-  // Check for valid P-GW MAIN switch at first index.
-  if (m_devices.size () == 1)
-    {
-      NS_ABORT_MSG_IF (m_devices.at (0)->GetDatapathId () != m_pgwId,
-                       "Inconsistent P-GW metadata.");
-    }
 }
 
 void

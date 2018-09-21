@@ -333,15 +333,21 @@ SliceNetwork::CreatePgw (void)
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (!m_pgwInfo, "P-GW already configured.");
+  uint16_t pgwId = 1; // A single P-GW in current implementation.
 
   // Create the P-GW nodes and configure them as OpenFlow switches.
   m_pgwNodes.Create (m_nTftNodes + 1);
   m_pgwDevices = m_switchHelper->InstallSwitch (m_pgwNodes);
-  for (uint16_t i = 0; i < m_nTftNodes + 1; i++)
+
+  // Naming P-GW nodes.
+  std::ostringstream mainName;
+  mainName << m_sliceIdStr << "_pgw" << pgwId;
+  Names::Add (mainName.str () + "_main", m_pgwNodes.Get (0));
+  for (uint16_t tftIdx = 1; tftIdx <= m_nTftNodes; tftIdx++)
     {
       std::ostringstream name;
-      name << m_sliceIdStr << "_pgw" << i + 1;
-      Names::Add (name.str (), m_pgwNodes.Get (i));
+      name << mainName.str () << "_tft" << tftIdx;
+      Names::Add (name.str (), m_pgwNodes.Get (tftIdx));
     }
   NS_LOG_INFO ("P-GW with main switch + " << m_nTftNodes << " TFT switches.");
 
@@ -399,7 +405,7 @@ SliceNetwork::CreatePgw (void)
   std::tie (pgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
       pgwMainNode, m_pgwInfraSwIdx, LteIface::S5);
   pgwS5Addr = Ipv4AddressHelper::GetAddress (pgwS5Dev);
-  NS_LOG_INFO ("P-GW main switch " << pgwDpId <<
+  NS_LOG_INFO ("P-GW " << pgwId << " main switch dpId " << pgwDpId <<
                " attached to the s5 interface with IP " << pgwS5Addr);
 
   // Create the logical port on the P-GW S5 interface.
@@ -411,7 +417,7 @@ SliceNetwork::CreatePgw (void)
 
   // Saving P-GW metadata.
   m_pgwInfo = CreateObject<PgwInfo> (
-      pgwDpId, m_nTftNodes, pgwSgiPort->GetPortNo (),
+      pgwId, m_nTftNodes, pgwSgiPort->GetPortNo (),
       m_pgwInfraSwIdx, m_controllerApp);
 
   // Saving P-GW MAIN metadata first.
@@ -456,7 +462,7 @@ SliceNetwork::CreatePgw (void)
       std::tie (pgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
           pgwTftNode, m_pgwInfraSwIdx, LteIface::S5);
       pgwS5Addr = Ipv4AddressHelper::GetAddress (pgwS5Dev);
-      NS_LOG_INFO ("P-GW TFT switch " << pgwDpId <<
+      NS_LOG_INFO ("P-GW TFT " << tftIdx << " switch dpId " << pgwDpId <<
                    " attached to the s5 interface with IP " << pgwS5Addr);
 
       // Create the logical port on the P-GW S5 interface.
