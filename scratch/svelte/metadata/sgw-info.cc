@@ -30,9 +30,6 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("SgwInfo");
 NS_OBJECT_ENSURE_REGISTERED (SgwInfo);
 
-// Initializing SgwInfo static members.
-SgwInfo::SgwIdSgwInfoMap_t SgwInfo::m_sgwInfoBySgwId;
-
 SgwInfo::SgwInfo (
   uint32_t sgwId, uint64_t sgwDpId, Ipv4Address s1uAddr, Ipv4Address s5Addr,
   uint32_t s1uPortNo, uint32_t s5PortNo, uint16_t infraSwIdx,
@@ -50,8 +47,6 @@ SgwInfo::SgwInfo (
   m_sliceCtrl (ctrlApp)
 {
   NS_LOG_FUNCTION (this);
-
-  RegisterSgwInfo (Ptr<SgwInfo> (this));
 }
 
 SgwInfo::~SgwInfo ()
@@ -148,20 +143,6 @@ SgwInfo::GetSliceController (void) const
   return m_sliceCtrl;
 }
 
-Ptr<SgwInfo>
-SgwInfo::GetPointer (uint64_t sgwId)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  Ptr<SgwInfo> sgwInfo = 0;
-  auto ret = SgwInfo::m_sgwInfoBySgwId.find (sgwId);
-  if (ret != SgwInfo::m_sgwInfoBySgwId.end ())
-    {
-      sgwInfo = ret->second;
-    }
-  return sgwInfo;
-}
-
 std::ostream &
 SgwInfo::PrintHeader (std::ostream &os)
 {
@@ -179,17 +160,6 @@ SgwInfo::DoDispose ()
 
   m_sliceCtrl = 0;
   Object::DoDispose ();
-}
-
-void
-SgwInfo::RegisterSgwInfo (Ptr<SgwInfo> sgwInfo)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  uint64_t sgwId = sgwInfo->GetSgwId ();
-  std::pair<uint64_t, Ptr<SgwInfo> > entry (sgwId, sgwInfo);
-  auto ret = SgwInfo::m_sgwInfoBySgwId.insert (entry);
-  NS_ABORT_MSG_IF (ret.second == false, "Existing S-GW info for this ID.");
 }
 
 std::ostream & operator << (std::ostream &os, const SgwInfo &sgwInfo)

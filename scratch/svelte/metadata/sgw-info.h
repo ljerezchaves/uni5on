@@ -81,13 +81,6 @@ public:
   //\}
 
   /**
-   * Get the S-GW information from the global map for a specific ID.
-   * \param sgwId The ID for this S-GW.
-   * \return The S-GW information for this ID.
-   */
-  static Ptr<SgwInfo> GetPointer (uint64_t sgwId);
-
-  /**
    * Get the header for the print operator <<.
    * \param os The output stream.
    * \return The output stream.
@@ -100,12 +93,6 @@ protected:
   virtual void DoDispose ();
 
 private:
-  /**
-   * Register the S-GW information in global map for further usage.
-   * \param sgwInfo The S-GW information to save.
-   */
-  static void RegisterSgwInfo (Ptr<SgwInfo> sgwInfo);
-
   // S-GW metadata.
   uint64_t               m_dpId;                 //!< OpenFlow datapath ID.
   uint16_t               m_infraSwIdx;           //!< Backhaul switch index.
@@ -117,10 +104,6 @@ private:
   uint32_t               m_s5PortNo;             //!< S-GW S5 port no.
   uint32_t               m_sgwId;                //!< S-GW ID.
   Ptr<SliceController>   m_sliceCtrl;            //!< LTE logical slice ctrl.
-
-  /** Map saving S-GW ID / S-GW information. */
-  typedef std::map<uint64_t, Ptr<SgwInfo> > SgwIdSgwInfoMap_t;
-  static SgwIdSgwInfoMap_t m_sgwInfoBySgwId;     //!< Global S-GW info map.
 };
 
 /**

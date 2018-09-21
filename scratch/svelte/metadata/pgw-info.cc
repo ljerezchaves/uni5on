@@ -30,9 +30,6 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("PgwInfo");
 NS_OBJECT_ENSURE_REGISTERED (PgwInfo);
 
-// Initializing PgwInfo static members.
-PgwInfo::PgwIdPgwInfoMap_t PgwInfo::m_pgwInfoByPgwId;
-
 PgwInfo::PgwInfo (uint32_t pgwId, uint16_t nTfts, uint32_t sgiPortNo,
                   uint16_t infraSwIdx, Ptr<SliceController> ctrlApp)
   : m_infraSwIdx (infraSwIdx),
@@ -42,8 +39,6 @@ PgwInfo::PgwInfo (uint32_t pgwId, uint16_t nTfts, uint32_t sgiPortNo,
   m_tftSwitches (nTfts)
 {
   NS_LOG_FUNCTION (this);
-
-  RegisterPgwInfo (Ptr<PgwInfo> (this));
 }
 
 PgwInfo::~PgwInfo ()
@@ -436,21 +431,6 @@ PgwInfo::GetTftMaxPipeCapacityUsage () const
   return value;
 }
 
-Ptr<PgwInfo>
-PgwInfo::GetPointer (uint64_t pgwId)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  Ptr<PgwInfo> pgwInfo = 0;
-  PgwIdPgwInfoMap_t::iterator ret;
-  ret = PgwInfo::m_pgwInfoByPgwId.find (pgwId);
-  if (ret != PgwInfo::m_pgwInfoByPgwId.end ())
-    {
-      pgwInfo = ret->second;
-    }
-  return pgwInfo;
-}
-
 std::ostream &
 PgwInfo::PrintHeader (std::ostream &os)
 {
@@ -491,17 +471,6 @@ PgwInfo::SetTftLevel (uint16_t value)
   NS_LOG_FUNCTION (this << value);
 
   m_tftLevel = value;
-}
-
-void
-PgwInfo::RegisterPgwInfo (Ptr<PgwInfo> pgwInfo)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  uint64_t pgwId = pgwInfo->GetPgwId ();
-  std::pair<uint64_t, Ptr<PgwInfo> > entry (pgwId, pgwInfo);
-  auto ret = PgwInfo::m_pgwInfoByPgwId.insert (entry);
-  NS_ABORT_MSG_IF (ret.second == false, "Existing P-GW info for this ID.");
 }
 
 std::ostream & operator << (std::ostream &os, const PgwInfo &pgwInfo)

@@ -145,13 +145,6 @@ public:
   //\}
 
   /**
-   * Get the P-GW information from the global map for a specific ID.
-   * \param pgwId The ID for this P-GW.
-   * \return The P-GW information for this ID.
-   */
-  static Ptr<PgwInfo> GetPointer (uint64_t pgwId);
-
-  /**
    * Get the header for the print operator <<.
    * \param os The output stream.
    * \return The output stream.
@@ -197,12 +190,6 @@ private:
    */
   void SetTftLevel (uint16_t value);
 
-  /**
-   * Register the P-GW information in global map for further usage.
-   * \param pgwInfo The P-GW information to save.
-   */
-  static void RegisterPgwInfo (Ptr<PgwInfo> pgwInfo);
-
   /** Vector of OFSwitch13Devices */
   typedef std::vector<Ptr<OFSwitch13Device> > DevicesVector_t;
 
@@ -221,10 +208,6 @@ private:
   // TFT adaptive mechanism.
   uint16_t                  m_tftSwitches;        //!< Total # of TFT switches.
   uint8_t                   m_tftLevel;           //!< Current adaptive level.
-
-  /** Map saving P-GW ID / P-GW information. */
-  typedef std::map<uint64_t, Ptr<PgwInfo> > PgwIdPgwInfoMap_t;
-  static PgwIdPgwInfoMap_t  m_pgwInfoByPgwId;     //!< Global P-GW info map.
 };
 
 /**
