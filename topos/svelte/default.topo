@@ -86,7 +86,7 @@ default ns3::LinkInfo::EwmaTimeout "100ms"
 
 default ns3::AdmissionStatsCalculator::AdmStatsFilename "admission-counters"
 default ns3::AdmissionStatsCalculator::BrqStatsFilename "admission-requests"
-default ns3::AdmissionStatsCalculator::LinStatsFilename "backhaul-link"
+default ns3::BackhaulStatsCalculator::LinStatsFilename "backhaul-link"
 default ns3::UeRrcStatsCalculator::HvoStatsFilename "ue-handover"
 default ns3::UeRrcStatsCalculator::MobStatsFilename "ue-mobility"
 default ns3::UeRrcStatsCalculator::RrcStatsFilename "ue-rrc-procedures"
