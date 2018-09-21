@@ -129,13 +129,6 @@ public:
                          std::string n9 = "", const AttributeValue &v9 = EmptyAttributeValue ());
 
   /**
-   * Set the mobility model. Calls to MobilityHelper::Install will create an
-   * instance of a matching mobility model for each node.
-   * \param model The mobility model object factory to use.
-   */
-  void SetMobilityModel (ObjectFactory model);
-
-  /**
    * \param reference item to push.
    *
    * Push an item on the top of the stack of "reference mobility models".
