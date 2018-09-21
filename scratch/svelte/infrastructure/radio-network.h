@@ -69,10 +69,13 @@ public:
                                        MobilityHelper mobilityHelper);
 
   /**
-   * Get the LTE RAN coverage area considering the EnbMargin attribute.
+   * Get the LTE RAN coverage area of a specific cell site or the entire RAN
+   * network, considering the EnbMargin attribute.
+   * \param cellSiteId The ID of any LTE cell site (starting at 1). When left
+   *        to 0, the coverage area of the entire RAN network will be returned.
    * \return The coverage area.
    */
-  Rectangle GetCoverageArea (void) const;
+  Rectangle GetCoverageArea (uint16_t cellSiteId = 0) const;
 
   /**
    * Get the LTE helper used to configure this radio network.

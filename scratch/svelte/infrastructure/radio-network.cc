@@ -135,11 +135,29 @@ RadioNetwork::InstallUeDevices (NodeContainer ueNodes,
 }
 
 Rectangle
-RadioNetwork::GetCoverageArea (void) const
+RadioNetwork::GetCoverageArea (uint16_t cellSiteId) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_coverageArea;
+  if (cellSiteId == 0)
+    {
+      return m_ranCoverArea;
+    }
+  else
+    {
+      // Get the position of the first eNB on this cell site.
+      NS_ASSERT_MSG (cellSiteId * 3 <= m_enbNodes.GetN (), "Invalid cell site");
+      Ptr<Node> enbNode = m_enbNodes.Get ((cellSiteId - 1) * 3);
+      Vector pos = enbNode->GetObject<MobilityModel> ()->GetPosition ();
+
+      // Calculate the coverage area considering the eNB margin parameter.
+      DoubleValue doubleValue;
+      m_topoHelper->GetAttribute ("InterSiteDistance", doubleValue);
+      uint32_t adjust = m_enbMargin * doubleValue.Get ();
+      Rectangle coverageArea (round (pos.x - adjust), round (pos.x + adjust),
+                              round (pos.y - adjust), round (pos.y + adjust));
+      return coverageArea;
+    }
 }
 
 Ptr<LteHelper>
