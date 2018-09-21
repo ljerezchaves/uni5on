@@ -82,6 +82,19 @@ public:
   //\}
 
   /**
+   * \name Private member accessors for S-GW switch datapath information.
+   * \return The requested information.
+   */
+  //\{
+  uint32_t              GetFlowTableCur       (void) const;
+  uint32_t              GetFlowTableMax       (void) const;
+  double                GetFlowTableUsage     (void) const;
+  DataRate              GetPipeCapacityCur    (void) const;
+  DataRate              GetPipeCapacityMax    (void) const;
+  double                GetPipeCapacityUsage  (void) const;
+  //\}
+
+  /**
    * Get the header for the print operator <<.
    * \param os The output stream.
    * \return The output stream.
