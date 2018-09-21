@@ -24,7 +24,6 @@
 #include "../metadata/enb-info.h"
 #include "../metadata/pgw-info.h"
 #include "../metadata/routing-info.h"
-#include "../metadata/sgw-info.h"
 #include "../metadata/ue-info.h"
 #include "gtp-tunnel-app.h"
 #include "slice-network.h"
@@ -360,9 +359,9 @@ SliceController::NotifySgwAttach (Ptr<SgwInfo> sgwInfo)
   NS_LOG_FUNCTION (this << sgwInfo << sgwInfo->GetSgwId ());
 
   // Save the S-GW metadata.
-  NS_ASSERT_MSG (m_sgwInfo.size () == sgwInfo->GetSgwId () - 1,
+  NS_ASSERT_MSG (m_sgwInfoList.size () == sgwInfo->GetSgwId () - 1,
                  "Invalid S-GW ID when notifying S-GW attach.");
-  m_sgwInfo.push_back (sgwInfo);
+  m_sgwInfoList.push_back (sgwInfo);
 
   uint16_t swIdx = sgwInfo->GetInfraSwIdx ();
   std::pair<uint16_t, Ptr<SgwInfo> > entry (swIdx, sgwInfo);
@@ -423,6 +422,7 @@ SliceController::DoDispose ()
   m_mme = 0;
   m_pgwInfo = 0;
   m_backhaulCtrl = 0;
+  m_sgwInfoList.clear ();
   delete (m_s11SapSgw);
   Object::DoDispose ();
 }

@@ -26,6 +26,7 @@
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/ofswitch13-module.h>
+#include "../metadata/sgw-info.h"
 #include "../svelte-common.h"
 
 namespace ns3 {
@@ -327,7 +328,7 @@ private:
   double                  m_tftSplitThs;    //!< Split threshold.
 
   // S-GW metadata.
-  std::vector<Ptr<SgwInfo> > m_sgwInfo;     //!< S-GW metadata for this slice.
+  SgwInfoList_t           m_sgwInfoList;    //!< S-GW metadata for this slice.
 
   // Internal members and attributes.
   Time                    m_timeout;        //!< Controller internal timeout.

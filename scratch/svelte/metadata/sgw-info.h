@@ -30,7 +30,11 @@
 
 namespace ns3 {
 
+class SgwInfo;
 class SliceController;
+
+/** List of S-GW information. */
+typedef std::vector<Ptr<SgwInfo> > SgwInfoList_t;
 
 /**
  * \ingroup svelteMeta

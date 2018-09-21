@@ -32,7 +32,7 @@ namespace ns3 {
 class RoutingInfo;
 class UeInfo;
 
-/** List of bearer information. */
+/** List of bearer routing information. */
 typedef std::vector<Ptr<RoutingInfo> > RoutingInfoList_t;
 
 /**
