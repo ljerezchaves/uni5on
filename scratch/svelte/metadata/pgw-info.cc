@@ -33,7 +33,7 @@ NS_OBJECT_ENSURE_REGISTERED (PgwInfo);
 // Initializing PgwInfo static members.
 PgwInfo::PgwIdPgwInfoMap_t PgwInfo::m_pgwInfoByPgwId;
 
-PgwInfo::PgwInfo (uint64_t pgwId, uint16_t nTfts, uint32_t sgiPortNo,
+PgwInfo::PgwInfo (uint32_t pgwId, uint16_t nTfts, uint32_t sgiPortNo,
                   uint16_t infraSwIdx, Ptr<SliceController> ctrlApp)
   : m_infraSwIdx (infraSwIdx),
   m_pgwId (pgwId),
@@ -68,7 +68,7 @@ PgwInfo::GetInfraSwIdx (void) const
   return m_infraSwIdx;
 }
 
-uint64_t
+uint32_t
 PgwInfo::GetPgwId (void) const
 {
   NS_LOG_FUNCTION (this);

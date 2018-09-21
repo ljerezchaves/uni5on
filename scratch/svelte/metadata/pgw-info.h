@@ -50,7 +50,7 @@ public:
    * \param infraSwIdx The OpenFlow backhaul switch index.
    * \param sliceCtrl The slice controller application.
    */
-  PgwInfo (uint64_t pgwId, uint16_t nTfts, uint32_t sgiPortNo,
+  PgwInfo (uint32_t pgwId, uint16_t nTfts, uint32_t sgiPortNo,
            uint16_t infraSwIdx, Ptr<SliceController> ctrlApp);
   virtual ~PgwInfo (); //!< Dummy destructor, see DoDispose.
 
@@ -66,7 +66,7 @@ public:
    */
   //\{
   uint16_t              GetInfraSwIdx                 (void) const;
-  uint64_t              GetPgwId                      (void) const;
+  uint32_t              GetPgwId                      (void) const;
   Ptr<SliceController>  GetSliceCtrl                  (void) const;
   //\}
 
@@ -211,7 +211,7 @@ private:
   uint16_t                  m_infraSwIdx;         //!< Backhaul switch index.
   std::vector<uint32_t>     m_infraSwS5PortNos;   //!< Back switch S5 port nos.
   std::vector<uint32_t>     m_mainToTftPortNos;   //!< Main port nos to TFTs.
-  uint64_t                  m_pgwId;              //!< P-GW ID (main dpId).
+  uint32_t                  m_pgwId;              //!< P-GW ID.
   std::vector<Ipv4Address>  m_s5Addrs;            //!< S5 dev IP addresses.
   std::vector<uint32_t>     m_s5PortNos;          //!< S5 port numbers.
   uint32_t                  m_sgiPortNo;          //!< SGi port number.
