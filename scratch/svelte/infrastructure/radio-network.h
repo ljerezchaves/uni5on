@@ -112,7 +112,7 @@ private:
   NetDeviceContainer  m_enbDevices;     //!< eNB devices.
   NodeContainer       m_ueNodes;        //!< UE nodes.
   NetDeviceContainer  m_ueDevices;      //!< UE devices.
-  Rectangle           m_coverageArea;   //!< LTE radio coverage area.
+  Rectangle           m_ranCoverArea;   //!< LTE radio coverage area.
 
   Ptr<LteHexGridEnbTopologyHelper> m_topoHelper;    //!< Grid topology helper.
   Ptr<RadioEnvironmentMapHelper>   m_remHelper;     //!< Radio map helper.

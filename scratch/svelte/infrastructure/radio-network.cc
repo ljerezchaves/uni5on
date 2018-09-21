@@ -176,11 +176,11 @@ RadioNetwork::GetRandomPositionAllocator (void) const
   // Configure the position allocator for UEs.
   Ptr<RandomVariableStream> posX, posY, posZ;
   posX = CreateObjectWithAttributes<UniformRandomVariable> (
-      "Min", DoubleValue (m_coverageArea.xMin),
-      "Max", DoubleValue (m_coverageArea.xMax));
+      "Min", DoubleValue (m_ranCoverArea.xMin),
+      "Max", DoubleValue (m_ranCoverArea.xMax));
   posY = CreateObjectWithAttributes<UniformRandomVariable> (
-      "Min", DoubleValue (m_coverageArea.yMin),
-      "Max", DoubleValue (m_coverageArea.yMax));
+      "Min", DoubleValue (m_ranCoverArea.yMin),
+      "Max", DoubleValue (m_ranCoverArea.yMax));
   posZ = CreateObjectWithAttributes<ConstantRandomVariable> (
       "Constant", DoubleValue (m_ueHeight));
 
@@ -233,8 +233,8 @@ RadioNetwork::PrintRadioEnvironmentMap (void)
   enbDevice->GetAttribute ("DlBandwidth", dlBandwidthValue);
   m_remHelper->SetAttribute ("Bandwidth", dlBandwidthValue);
 
-  // Adjust the LTE radio coverage area.
-  Rectangle area = m_coverageArea;
+  // Adjust the LTE RAN coverage area.
+  Rectangle area = GetCoverageArea ();
   m_remHelper->SetAttribute ("XMin", DoubleValue (area.xMin));
   m_remHelper->SetAttribute ("XMax", DoubleValue (area.xMax));
   m_remHelper->SetAttribute ("YMin", DoubleValue (area.yMin));
@@ -421,9 +421,9 @@ RadioNetwork::NotifyConstructionCompleted ()
   DoubleValue doubleValue;
   m_topoHelper->GetAttribute ("InterSiteDistance", doubleValue);
   uint32_t adjust = m_enbMargin * doubleValue.Get ();
-  m_coverageArea = Rectangle (round (xMin - adjust), round (xMax + adjust),
+  m_ranCoverArea = Rectangle (round (xMin - adjust), round (xMax + adjust),
                               round (yMin - adjust), round (yMax + adjust));
-  NS_LOG_INFO ("LTE RAN coverage area: " << m_coverageArea);
+  NS_LOG_INFO ("LTE RAN coverage area: " << m_ranCoverArea);
 
   // Make the buildings mobility model consistent.
   BuildingsHelper::MakeMobilityModelConsistent ();
