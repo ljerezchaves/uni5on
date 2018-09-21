@@ -171,18 +171,19 @@ RadioNetwork::GetLteHelper (void) const
 }
 
 Ptr<PositionAllocator>
-RadioNetwork::GetRandomPositionAllocator (void) const
+RadioNetwork::GetRandomPositionAllocator (uint16_t cellSiteId) const
 {
   NS_LOG_FUNCTION (this);
 
   // Configure the position allocator for UEs.
   Ptr<RandomVariableStream> posX, posY, posZ;
+  Rectangle area = GetCoverageArea (cellSiteId);
   posX = CreateObjectWithAttributes<UniformRandomVariable> (
-      "Min", DoubleValue (m_ranCoverArea.xMin),
-      "Max", DoubleValue (m_ranCoverArea.xMax));
+      "Min", DoubleValue (area.xMin),
+      "Max", DoubleValue (area.xMax));
   posY = CreateObjectWithAttributes<UniformRandomVariable> (
-      "Min", DoubleValue (m_ranCoverArea.yMin),
-      "Max", DoubleValue (m_ranCoverArea.yMax));
+      "Min", DoubleValue (area.yMin),
+      "Max", DoubleValue (area.yMax));
   posZ = CreateObjectWithAttributes<ConstantRandomVariable> (
       "Constant", DoubleValue (m_ueHeight));
 

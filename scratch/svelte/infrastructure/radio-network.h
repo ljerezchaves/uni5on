@@ -84,11 +84,15 @@ public:
   Ptr<LteHelper> GetLteHelper (void) const;
 
   /**
-   * Create a position allocator that randomly spreads UE nodes
-   * within the eNB coverage area.
+   * Create a random box position allocator that randomly spreads UE nodes
+   * within the coverage area of a specific cell site ID or the entire RAN
+   * network.
+   * \param cellSiteId The ID of any LTE cell site (starting at 1). When left
+   *        to 0, the coverage area of the entire RAN network will be used.
    * \return The position allocator.
    */
-  Ptr<PositionAllocator> GetRandomPositionAllocator (void) const;
+  Ptr<PositionAllocator> GetRandomPositionAllocator (
+    uint16_t cellSiteId = 0) const;
 
   /**
    * Print LTE radio environment map.
