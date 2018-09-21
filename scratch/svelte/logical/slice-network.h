@@ -135,6 +135,8 @@ private:
   // UEs network.
   uint32_t                      m_nUes;             //!< Number of UEs.
   bool                          m_ueMobility;       //!< Enable UE mobility.
+  Ptr<RandomVariableStream>     m_ueMobPause;       //!< UE random mob pause.
+  Ptr<RandomVariableStream>     m_ueMobSpeed;       //!< UE random mob speed.
   NodeContainer                 m_ueNodes;          //!< UE nodes.
   NetDeviceContainer            m_ueDevices;        //!< UE devices.
   Ipv4AddressHelper             m_ueAddrHelper;     //!< UE address helper.

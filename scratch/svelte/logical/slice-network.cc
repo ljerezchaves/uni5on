@@ -110,6 +110,19 @@ SliceNetwork::GetTypeId (void)
                    BooleanValue (false),
                    MakeBooleanAccessor (&SliceNetwork::m_ueMobility),
                    MakeBooleanChecker ())
+    .AddAttribute ("UeMobilityPause", "A random variable used to pick the UE "
+                   "pause time in the random waypoint mobility model.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   StringValue ("ns3::ExponentialRandomVariable[Mean=25.0]"),
+                   MakePointerAccessor (&SliceNetwork::m_ueMobPause),
+                   MakePointerChecker<RandomVariableStream> ())
+    .AddAttribute ("UeMobilitySpeed", "A random variable used to pick the UE "
+                   "speed in the random waypoint mobility model.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   StringValue (
+                     "ns3::NormalRandomVariable[Mean=1.4|Variance=0.09]"),
+                   MakePointerAccessor (&SliceNetwork::m_ueMobSpeed),
+                   MakePointerChecker<RandomVariableStream> ())
 
     // Internet.
     .AddAttribute ("WebAddress", "The Internet network address.",
@@ -553,11 +566,10 @@ SliceNetwork::CreateUes (void)
   mobilityHelper.SetPositionAllocator (posAllocator);
   if (m_ueMobility)
     {
-      // TODO Use attributes for custom mobility configuration.
       mobilityHelper.SetMobilityModel (
         "ns3::RandomWaypointMobilityModel",
-        "Speed", StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=15.0]"),
-        "Pause", StringValue ("ns3::ExponentialRandomVariable[Mean=25.0]"),
+        "Pause", PointerValue (m_ueMobPause),
+        "Speed", PointerValue (m_ueMobSpeed),
         "PositionAllocator", PointerValue (posAllocator));
     }
 
