@@ -434,7 +434,8 @@ PgwInfo::GetTftMaxPipeCapacityUsage () const
 std::ostream &
 PgwInfo::PrintHeader (std::ostream &os)
 {
-  os << " " << setw (6)  << "PgwID"
+  os << " " << setw (6)  << "PgwId"
+     << " " << setw (6)  << "PgwDp"
      << " " << setw (6)  << "PgwSw"
      << " " << setw (11) << "PgwS5Addr";
   return os;
@@ -480,6 +481,7 @@ std::ostream & operator << (std::ostream &os, const PgwInfo &pgwInfo)
   pgwInfo.GetMainS5Addr ().Print (ipS5Str);
 
   os << " " << setw (6)  << pgwInfo.GetPgwId ()
+     << " " << setw (6)  << pgwInfo.GetMainDpId ()
      << " " << setw (6)  << pgwInfo.GetInfraSwIdx ()
      << " " << setw (11) << ipS5Str.str ();
   return os;

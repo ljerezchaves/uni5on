@@ -202,7 +202,8 @@ SgwInfo::GetPipeCapacityUsage (void) const
 std::ostream &
 SgwInfo::PrintHeader (std::ostream &os)
 {
-  os << " " << setw (6)  << "SgwID"
+  os << " " << setw (6)  << "SgwId"
+     << " " << setw (6)  << "SgwDp"
      << " " << setw (6)  << "SgwSw"
      << " " << setw (11) << "SgwS1Addr"
      << " " << setw (11) << "SgwS5Addr";
@@ -226,6 +227,7 @@ std::ostream & operator << (std::ostream &os, const SgwInfo &sgwInfo)
   sgwInfo.GetS5Addr ().Print (ipS5Str);
 
   os << " " << setw (6)  << sgwInfo.GetSgwId ()
+     << " " << setw (6)  << sgwInfo.GetDpId ()
      << " " << setw (6)  << sgwInfo.GetInfraSwIdx ()
      << " " << setw (11) << ipS1Str.str ()
      << " " << setw (11) << ipS5Str.str ();
