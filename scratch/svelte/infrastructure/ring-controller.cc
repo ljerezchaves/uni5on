@@ -126,15 +126,45 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   // requested bit rate over the longest path.
   if (m_strategy == RingController::SPF)
     {
-      // FIXME: By now the S-GW and P-GW are always attached to the same
-      // OpenFlow backhaul switch. So the S5 interface is always a local one.
-      // This way we will invert only the S1-U interface by now.
-      ringInfo->InvertPath (LteIface::S1U);
-      if (HasBitRate (ringInfo))
+      // Let's try inverting only the S1-U interface.
+      if (!ringInfo->IsLocalPath (LteIface::S1U))
         {
-          NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
-                       " over the longest (inverted) path");
-          return BitRateReserve (ringInfo);
+          ringInfo->ResetToDefaults ();
+          ringInfo->InvertPath (LteIface::S1U);
+          if (HasBitRate (ringInfo))
+            {
+              NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
+                           " over the inverted S1-U path");
+              return BitRateReserve (ringInfo);
+            }
+        }
+
+      // Let's try inverting only the S5 interface.
+      if (!ringInfo->IsLocalPath (LteIface::S5))
+        {
+          ringInfo->ResetToDefaults ();
+          ringInfo->InvertPath (LteIface::S5);
+          if (HasBitRate (ringInfo))
+            {
+              NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
+                           " over the inverted S5 path");
+              return BitRateReserve (ringInfo);
+            }
+        }
+
+      // Let's try inverting both the S1-U and S5 interface.
+      if (!ringInfo->IsLocalPath (LteIface::S1U)
+          && !ringInfo->IsLocalPath (LteIface::S5))
+        {
+          ringInfo->ResetToDefaults ();
+          ringInfo->InvertPath (LteIface::S1U);
+          ringInfo->InvertPath (LteIface::S5);
+          if (HasBitRate (ringInfo))
+            {
+              NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
+                           " over the inverted S1-U and S5 paths");
+              return BitRateReserve (ringInfo);
+            }
         }
     }
 
