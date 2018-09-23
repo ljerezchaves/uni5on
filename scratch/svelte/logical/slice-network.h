@@ -119,6 +119,11 @@ private:
    */
   void CreateUes (void);
 
+  /**
+   * Parse the SgwBackhaulSwitches attribute.
+   */
+  void ParseSgwInfraSwIdxs (void);
+
   // Slice identification.
   SliceId                       m_sliceId;          //!< Logical slice ID.
   std::string                   m_sliceIdStr;       //!< Slice ID string.
@@ -169,6 +174,8 @@ private:
   // S-GW user planes.
   NodeContainer                 m_sgwNodes;         //!< S-GW switch nodes.
   OFSwitch13DeviceContainer     m_sgwDevices;       //!< S-GW switch devices.
+  std::vector<uint16_t>         m_sgwInfraSwIdx;    //!< Backhaul switch idxs.
+  std::string                   m_sgwInfraSwIdxStr; //!< Backhaul switch desc.
 
   // Helper and attributes for CSMA interface.
   CsmaHelper                    m_csmaHelper;       //!< Connection helper.

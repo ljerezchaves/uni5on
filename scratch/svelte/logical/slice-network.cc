@@ -189,6 +189,14 @@ SliceNetwork::GetTypeId (void)
                    MakeTimeAccessor (&SliceNetwork::m_pgwLinkDelay),
                    MakeTimeChecker ())
 
+    // S-GW.
+    .AddAttribute ("SgwBackhaulSwitches",
+                   "The backhaul switch indexes to connect S-GWs.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   StringValue ("1:0"),
+                   MakeStringAccessor (&SliceNetwork::m_sgwInfraSwIdxStr),
+                   MakeStringChecker ())
+
     .AddAttribute ("LinkMtu",
                    "The MTU for CSMA OpenFlow links. "
                    "Consider + 40 byter of GTP/UDP/IP tunnel overhead.",
@@ -488,8 +496,8 @@ SliceNetwork::CreateSgws (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Create a S-GW switch for each OpenFlow backhaul switch.
-  uint32_t nSgws = m_backhaul->GetNSwitches ();
+  ParseSgwInfraSwIdxs ();
+  uint32_t nSgws = m_sgwInfraSwIdx.size ();
 
   // Create the S-GW nodes and configure them as OpenFlow switches.
   m_sgwNodes.Create (nSgws);
@@ -504,7 +512,8 @@ SliceNetwork::CreateSgws (void)
   // Connect all S-GW switches to the S1-U and S5 interfaces.
   for (uint16_t sgwIdx = 0; sgwIdx < nSgws; sgwIdx++)
     {
-      uint16_t sgwId = sgwIdx + 1; // S-GW ID.
+      uint16_t sgwId = sgwIdx + 1;
+      uint16_t infraSwIdx = m_sgwInfraSwIdx.at (sgwIdx);
 
       Ptr<Node> sgwNode = m_sgwNodes.Get (sgwIdx);
       Ptr<OFSwitch13Device> sgwOfDev = m_sgwDevices.Get (sgwIdx);
@@ -514,7 +523,7 @@ SliceNetwork::CreateSgws (void)
       Ptr<CsmaNetDevice> sgwS1uDev;
       Ptr<OFSwitch13Port> infraSwS1uPort;
       std::tie (sgwS1uDev, infraSwS1uPort) = m_backhaul->AttachEpcNode (
-          sgwNode, sgwIdx, LteIface::S1U);
+          sgwNode, infraSwIdx, LteIface::S1U);
       NS_LOG_INFO ("S-GW " << sgwId << " switch dpId " << sgwDpId <<
                    " attached to the s1u interface with IP " <<
                    Ipv4AddressHelper::GetAddress (sgwS1uDev));
@@ -522,7 +531,7 @@ SliceNetwork::CreateSgws (void)
       Ptr<CsmaNetDevice> sgwS5Dev;
       Ptr<OFSwitch13Port> infraSwS5Port;
       std::tie (sgwS5Dev, infraSwS5Port) = m_backhaul->AttachEpcNode (
-          sgwNode, sgwIdx, LteIface::S5);
+          sgwNode, infraSwIdx, LteIface::S5);
       NS_LOG_INFO ("S-GW " << sgwId << " switch dpId " << sgwDpId <<
                    " attached to the s5 interface with IP " <<
                    Ipv4AddressHelper::GetAddress (sgwS5Dev));
@@ -544,7 +553,7 @@ SliceNetwork::CreateSgws (void)
       Ptr<SgwInfo> sgwInfo = CreateObject<SgwInfo> (
           sgwId, sgwOfDev, Ipv4AddressHelper::GetAddress (sgwS1uDev),
           Ipv4AddressHelper::GetAddress (sgwS5Dev), sgwS1uPort->GetPortNo (),
-          sgwS5Port->GetPortNo (), sgwIdx, infraSwS1uPort->GetPortNo (),
+          sgwS5Port->GetPortNo (), infraSwIdx, infraSwS1uPort->GetPortNo (),
           infraSwS5Port->GetPortNo (), m_controllerApp);
 
       // Notify the controller of the new S-GW switch.
@@ -614,6 +623,43 @@ SliceNetwork::CreateUes (void)
 
   // Attach UE to the eNBs using initial cell selection.
   m_radio->AttachUeDevices (m_ueDevices);
+}
+
+void
+SliceNetwork::ParseSgwInfraSwIdxs (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  char ch;
+  size_t max;
+  uint16_t temp;
+
+  m_sgwInfraSwIdx.clear ();
+  std::istringstream is (m_sgwInfraSwIdxStr);
+  is >> max >> ch;
+  if (ch != ':')
+    {
+      is.setstate (std::ios_base::failbit);
+    }
+
+  size_t count = 0;
+  while (!is.eof () && !is.fail ())
+    {
+      is >> temp;
+      m_sgwInfraSwIdx.push_back (temp);
+
+      count++;
+      if (count < max)
+        {
+          is >> ch;
+          if (ch != '+')
+            {
+              is.setstate (std::ios_base::failbit);
+            }
+        }
+    }
+  NS_ABORT_MSG_IF (is.fail () || m_sgwInfraSwIdx.size () != max,
+                   "Failure to parse SgwBackhaulSwitches.");
 }
 
 } // namespace ns3

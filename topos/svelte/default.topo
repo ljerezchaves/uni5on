@@ -53,6 +53,7 @@ default ns3::SliceNetwork::PgwTftPipelineCapacity "100Gb/s"
 default ns3::SliceNetwork::PgwTftTableSize "65535"
 default ns3::SliceNetwork::PgwLinkDataRate "10Gb/s"
 default ns3::SliceNetwork::PgwLinkDelay "50us"
+default ns3::SliceNetwork::SgwBackhaulSwitches "1:0"
 default ns3::SliceNetwork::LinkMtu "1492"
 
 default ns3::TrafficHelper::PoissonInterArrival "ns3::ExponentialRandomVariable[Mean=180.0]"
