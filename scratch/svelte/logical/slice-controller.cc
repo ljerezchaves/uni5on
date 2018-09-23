@@ -592,8 +592,10 @@ SliceController::DoCreateSessionRequest (
   // the UE. In current implementation, each slice has a single P-GW and one or
   // more S-GWs (always attached to different OpenFlow backhaul switches).
 
-  // FIXME By now we are using only the S-GW attached to the OpenFlow backhaul
-  // switch where the P-GW is also attached.
+  // FIXME By now we support only a single S-GW at each network slice.
+  NS_ABORT_MSG_IF (m_sgwInfoList.size () != 1, "Only one S-GW supported.");
+  Ptr<SgwInfo> sgwInfo = m_sgwInfoList.at (0);
+
   uint64_t imsi = msg.imsi;
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
   ueInfo->SetPgwInfo (m_pgwInfo);
@@ -702,11 +704,7 @@ SliceController::DoModifyBearerRequest (
   // In current implementation, this Modify Bearer Request is triggered only by
   // X2 handover procedures. There is no actual bearer modification, for now we
   // just support the minimum needed for path switch request (handover).
-
-  // FIXME: We need to identify which is the best S-GW for this UE after the
-  // handover procedure. We also need to move the S-GW rules from the old S-GW
-  // switch to the new one and update the bearer S-GW address.
-  // ueInfo->SetSgwInfo (?);
+  // FIXME Check whether we need to change the S-GW during a handover.
 
   EpcS11SapMme::ModifyBearerResponseMessage res;
   res.teid = msg.teid;
