@@ -278,7 +278,8 @@ SliceController::NotifyPgwAttach (
   NS_LOG_FUNCTION (this << pgwInfo << pgwInfo->GetPgwId () << webSgiDev);
 
   // Save the P-GW metadata.
-  NS_ASSERT_MSG (!m_pgwInfo, "P-GW already configured with this controller.");
+  NS_ASSERT_MSG (!m_pgwInfo, "P-GW ID " << pgwInfo->GetPgwId () <<
+                 " already configured with this controller.");
   m_pgwInfo = pgwInfo;
 
   // Set the number of P-GW TFT active switches and the
@@ -360,13 +361,9 @@ SliceController::NotifySgwAttach (Ptr<SgwInfo> sgwInfo)
 
   // Save the S-GW metadata.
   NS_ASSERT_MSG (m_sgwInfoList.size () == sgwInfo->GetSgwId () - 1,
-                 "Invalid S-GW ID when notifying S-GW attach.");
+                 "S-GW ID " << sgwInfo->GetSgwId () <<
+                 " already configured with this controller.");
   m_sgwInfoList.push_back (sgwInfo);
-
-  uint16_t swIdx = sgwInfo->GetInfraSwIdx ();
-  std::pair<uint16_t, Ptr<SgwInfo> > entry (swIdx, sgwInfo);
-  auto ret = m_sgwInfoBySwIdx.insert (entry);
-  NS_ABORT_MSG_IF (ret.second == false, "Existing S-GW info for this index.");
 
   // -------------------------------------------------------------------------
   // Table 0 -- S-GW default table -- [from higher to lower priority]
@@ -591,22 +588,22 @@ SliceController::DoCreateSessionRequest (
 
   NS_ASSERT_MSG (m_pgwInfo, "P-GW not configure with this controller.");
 
-  // This controller is responsible for assigning the S-GW and P-GW elements to
-  // the UE. In current implementation, each slice has a single P-GW and one
-  // S-GW attached to each OpenFlow backhaul switch.
+  // This controller is responsible for assigning the serving S-GW and P-GW to
+  // the UE. In current implementation, each slice has a single P-GW and one or
+  // more S-GWs (always attached to different OpenFlow backhaul switches).
+
   // FIXME By now we are using only the S-GW attached to the OpenFlow backhaul
   // switch where the P-GW is also attached.
   uint64_t imsi = msg.imsi;
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  Ptr<SgwInfo> sgwInfo = GetSgwInfo (m_pgwInfo->GetInfraSwIdx ());
-
   ueInfo->SetPgwInfo (m_pgwInfo);
-  ueInfo->SetSgwInfo (sgwInfo);
+  ueInfo->SetSgwInfo (m_sgwInfoList.at (0));
 
   // Iterate over request message and create the response message.
   EpcS11SapMme::CreateSessionResponseMessage res;
   res.teid = imsi;
 
+  NS_ASSERT_MSG (ueInfo->GetSgwInfo (), "UE serving S-GW undefined.");
   for (auto const &bit : msg.bearerContextsToBeCreated)
     {
       uint32_t teid = GetSvelteTeid (m_sliceId, imsi, bit.epsBearerId);
@@ -614,7 +611,7 @@ SliceController::DoCreateSessionRequest (
 
       EpcS11SapMme::BearerContextCreated bearerContext;
       bearerContext.sgwFteid.teid = teid;
-      bearerContext.sgwFteid.address = sgwInfo->GetS1uAddr ();
+      bearerContext.sgwFteid.address = ueInfo->GetSgwInfo ()->GetS1uAddr ();
       bearerContext.epsBearerId = bit.epsBearerId;
       bearerContext.bearerLevelQos = bit.bearerLevelQos;
       bearerContext.tft = bit.tft;
@@ -716,20 +713,6 @@ SliceController::DoModifyBearerRequest (
   res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
 
   m_s11SapMme->ModifyBearerResponse (res);
-}
-
-Ptr<SgwInfo>
-SliceController::GetSgwInfo (uint16_t infraSwIdx)
-{
-  NS_LOG_FUNCTION (this << infraSwIdx);
-
-  Ptr<SgwInfo> sgwInfo = 0;
-  auto ret = m_sgwInfoBySwIdx.find (infraSwIdx);
-  if (ret != m_sgwInfoBySwIdx.end ())
-    {
-      sgwInfo = ret->second;
-    }
-  return sgwInfo;
 }
 
 uint16_t
