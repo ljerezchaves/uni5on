@@ -151,7 +151,7 @@ SgwInfo::GetFlowTableCur (void) const
   Ptr<OFSwitch13StatsCalculator> stats;
   stats = m_device->GetObject<OFSwitch13StatsCalculator> ();
   NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
-  return stats->GetEwmaFlowEntries ();
+  return stats->GetEwmaSumFlowEntries ();
 }
 
 uint32_t

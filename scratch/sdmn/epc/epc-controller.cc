@@ -1100,7 +1100,7 @@ EpcController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
   // Blocks the bearer if the table usage is exceeding the block threshold.
   if (!rInfo->IsAggregated ())
     {
-      uint32_t entries = stats->GetEwmaFlowEntries ();
+      uint32_t entries = stats->GetEwmaSumFlowEntries ();
       double tableUsage = static_cast<double> (entries) / m_tftTableSize;
       if (tableUsage >= m_tftBlockThs)
         {
@@ -1296,7 +1296,7 @@ EpcController::PgwTftCheckUsage (void)
       stats = device->GetObject<OFSwitch13StatsCalculator> ();
       NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
 
-      double entries = stats->GetEwmaFlowEntries ();
+      double entries = stats->GetEwmaSumFlowEntries ();
       maxEntries = std::max (maxEntries, entries);
       sumEntries += entries;
 
