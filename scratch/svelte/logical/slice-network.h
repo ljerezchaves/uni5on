@@ -168,14 +168,20 @@ private:
   Time                          m_pgwLinkDelay;     //!< P-GW link delay.
   uint16_t                      m_pgwInfraSwIdx;    //!< Backhaul switch index.
   uint16_t                      m_nTftNodes;        //!< Number of TFT nodes.
-  DataRate                      m_tftPipeCapacity;  //!< TFT switch capacity.
-  uint32_t                      m_tftTableSize;     //!< TFT switch table size.
+  uint32_t                      m_mainFlowSize;     //!< Main flow table size.
+  DataRate                      m_mainPipeCapacity; //!< Main pipe capacity.
+  uint32_t                      m_tftFlowSize;      //!< TFT flow table size.
+  uint32_t                      m_tftMeterSize;     //!< TFT meter table size.
+  DataRate                      m_tftPipeCapacity;  //!< TFT pipe capacity.
 
   // S-GW user planes.
   NodeContainer                 m_sgwNodes;         //!< S-GW switch nodes.
   OFSwitch13DeviceContainer     m_sgwDevices;       //!< S-GW switch devices.
   std::vector<uint16_t>         m_sgwInfraSwIdx;    //!< Backhaul switch idxs.
   std::string                   m_sgwInfraSwIdxStr; //!< Backhaul switch desc.
+  uint32_t                      m_sgwFlowSize;      //!< S-GW flow table size.
+  uint32_t                      m_sgwMeterSize;     //!< S-GW meter table size.
+  DataRate                      m_sgwPipeCapacity;  //!< S-GW pipe capacity.
 
   // Helper and attributes for CSMA interface.
   CsmaHelper                    m_csmaHelper;       //!< Connection helper.

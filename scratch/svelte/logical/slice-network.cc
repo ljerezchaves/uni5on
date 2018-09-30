@@ -164,18 +164,36 @@ SliceNetwork::GetTypeId (void)
                    UintegerValue (0),
                    MakeUintegerAccessor (&SliceNetwork::m_pgwInfraSwIdx),
                    MakeUintegerChecker<uint16_t> ())
+    .AddAttribute ("PgwMainFlowTableSize",
+                   "Flow table size for the P-GW main switch.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (65535),
+                   MakeUintegerAccessor (&SliceNetwork::m_mainFlowSize),
+                   MakeUintegerChecker<uint16_t> (0, 65535))
+    .AddAttribute ("PgwMainPipelineCapacity",
+                   "Pipeline capacity for the P-GW main switch.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   DataRateValue (DataRate ("100Gb/s")),
+                   MakeDataRateAccessor (&SliceNetwork::m_mainPipeCapacity),
+                   MakeDataRateChecker ())
+    .AddAttribute ("PgwTftFlowTableSize",
+                   "Flow table size for the P-GW TFT switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (65535),
+                   MakeUintegerAccessor (&SliceNetwork::m_tftFlowSize),
+                   MakeUintegerChecker<uint16_t> (0, 65535))
+    .AddAttribute ("PgwTftMeterTableSize",
+                   "Meter table size for the P-GW TFT switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (65535),
+                   MakeUintegerAccessor (&SliceNetwork::m_tftMeterSize),
+                   MakeUintegerChecker<uint16_t> (0, 65535))
     .AddAttribute ("PgwTftPipelineCapacity",
                    "Pipeline capacity for the P-GW TFT switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("100Gb/s")),
                    MakeDataRateAccessor (&SliceNetwork::m_tftPipeCapacity),
                    MakeDataRateChecker ())
-    .AddAttribute ("PgwTftTableSize",
-                   "Flow/Group/Meter table sizes for the P-GW TFT switches.",
-                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (65535),
-                   MakeUintegerAccessor (&SliceNetwork::m_tftTableSize),
-                   MakeUintegerChecker<uint16_t> (1, 65535))
     .AddAttribute ("PgwLinkDataRate",
                    "The data rate for the internal P-GW links.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -196,6 +214,24 @@ SliceNetwork::GetTypeId (void)
                    StringValue ("1:0"),
                    MakeStringAccessor (&SliceNetwork::m_sgwInfraSwIdxStr),
                    MakeStringChecker ())
+    .AddAttribute ("SgwFlowTableSize",
+                   "Flow table size for the S-GW switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (65535),
+                   MakeUintegerAccessor (&SliceNetwork::m_sgwFlowSize),
+                   MakeUintegerChecker<uint16_t> (0, 65535))
+    .AddAttribute ("SgwMeterTableSize",
+                   "Meter table size for the S-GW switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (65535),
+                   MakeUintegerAccessor (&SliceNetwork::m_sgwMeterSize),
+                   MakeUintegerChecker<uint16_t> (0, 65535))
+    .AddAttribute ("SgwPipelineCapacity",
+                   "Pipeline capacity for the S-GW switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   DataRateValue (DataRate ("100Gb/s")),
+                   MakeDataRateAccessor (&SliceNetwork::m_sgwPipeCapacity),
+                   MakeDataRateChecker ())
 
     .AddAttribute ("LinkMtu",
                    "The MTU for CSMA OpenFlow links. "
@@ -444,15 +480,15 @@ SliceNetwork::CreatePgw (void)
       Ptr<OFSwitch13Device> pgwTftOfDev = m_pgwDevices.Get (tftIdx);
       pgwDpId = pgwTftOfDev->GetDatapathId ();
 
-      // Set P-GW TFT attributes.
-      pgwTftOfDev->SetAttribute (
-        "PipelineCapacity", DataRateValue (m_tftPipeCapacity));
-      pgwTftOfDev->SetAttribute (
-        "FlowTableSize", UintegerValue (m_tftTableSize));
-      pgwTftOfDev->SetAttribute (
-        "GroupTableSize", UintegerValue (m_tftTableSize));
-      pgwTftOfDev->SetAttribute (
-        "MeterTableSize", UintegerValue (m_tftTableSize));
+      // Set P-GW TFT attributes. FIXME
+      // pgwTftOfDev->SetAttribute (
+      //   "PipelineCapacity", DataRateValue (m_tftPipeCapacity));
+      // pgwTftOfDev->SetAttribute (
+      //   "FlowTableSize", UintegerValue (m_tftTableSize));
+      // pgwTftOfDev->SetAttribute (
+      //   "GroupTableSize", UintegerValue (m_tftTableSize));
+      // pgwTftOfDev->SetAttribute (
+      //   "MeterTableSize", UintegerValue (m_tftTableSize));
 
       // Connect the P-GW main node to the P-GW TFT node.
       devices = m_csmaHelper.Install (pgwTftNode, pgwMainNode);
