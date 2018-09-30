@@ -157,7 +157,7 @@ SliceNetwork::GetTypeId (void)
                    UintegerValue (2),
                    MakeUintegerAccessor (&SliceNetwork::GetPgwTftNumNodes,
                                          &SliceNetwork::SetPgwTftNumNodes),
-                   MakeUintegerChecker<uint16_t> (1))
+                   MakeUintegerChecker<uint16_t> (1, 32))
     .AddAttribute ("PgwBackhaulSwitch",
                    "The backhaul switch index to connect the P-GW.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
