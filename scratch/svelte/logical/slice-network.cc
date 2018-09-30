@@ -357,7 +357,7 @@ SliceNetwork::GetPgwTftNumNodes (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_nTftNodes;
+  return m_nTfts;
 }
 
 void
@@ -368,7 +368,7 @@ SliceNetwork::SetPgwTftNumNodes (uint32_t value)
   // Check the number of P-GW TFT nodes (must be a power of 2).
   NS_ABORT_MSG_IF ((value & (value - 1)) != 0, "Invalid number of P-GW TFTs.");
 
-  m_nTftNodes = value;
+  m_nTfts = value;
 }
 
 void
@@ -380,20 +380,20 @@ SliceNetwork::CreatePgw (void)
   uint16_t pgwId = 1; // A single P-GW in current implementation.
 
   // Create the P-GW nodes and configure them as OpenFlow switches.
-  m_pgwNodes.Create (m_nTftNodes + 1);
+  m_pgwNodes.Create (m_nTfts + 1);
   m_pgwDevices = m_switchHelper->InstallSwitch (m_pgwNodes);
 
   // Naming P-GW nodes.
   std::ostringstream mainName;
   mainName << m_sliceIdStr << "_pgw" << pgwId;
   Names::Add (mainName.str () + "_main", m_pgwNodes.Get (0));
-  for (uint16_t tftIdx = 1; tftIdx <= m_nTftNodes; tftIdx++)
+  for (uint16_t tftIdx = 1; tftIdx <= m_nTfts; tftIdx++)
     {
       std::ostringstream name;
       name << mainName.str () << "_tft" << tftIdx;
       Names::Add (name.str (), m_pgwNodes.Get (tftIdx));
     }
-  NS_LOG_INFO ("P-GW with main switch + " << m_nTftNodes << " TFT switches.");
+  NS_LOG_INFO ("P-GW with main switch + " << m_nTfts << " TFT switches.");
 
   // Set the default P-GW gateway logical address, which will be used to set
   // the static route at all UEs.
@@ -461,7 +461,7 @@ SliceNetwork::CreatePgw (void)
 
   // Saving P-GW metadata.
   m_pgwInfo = CreateObject<PgwInfo> (
-      pgwId, m_nTftNodes, pgwSgiPort->GetPortNo (),
+      pgwId, m_nTfts, pgwSgiPort->GetPortNo (),
       m_pgwInfraSwIdx, m_controllerApp);
 
   // Saving P-GW MAIN metadata first.
@@ -474,7 +474,7 @@ SliceNetwork::CreatePgw (void)
 
   // Connect all P-GW TFT switches to the P-GW main switch and to the S5
   // interface. Only downlink traffic will be sent to these switches.
-  for (uint16_t tftIdx = 1; tftIdx <= m_nTftNodes; tftIdx++)
+  for (uint16_t tftIdx = 1; tftIdx <= m_nTfts; tftIdx++)
     {
       Ptr<Node> pgwTftNode = m_pgwNodes.Get (tftIdx);
       Ptr<OFSwitch13Device> pgwTftOfDev = m_pgwDevices.Get (tftIdx);
