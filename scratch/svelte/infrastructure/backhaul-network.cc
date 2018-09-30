@@ -75,6 +75,32 @@ BackhaulNetwork::GetTypeId (void)
                    UintegerValue (1492), // Ethernet II - PPoE
                    MakeUintegerAccessor (&BackhaulNetwork::m_linkMtu),
                    MakeUintegerChecker<uint16_t> ())
+
+    // Backhaul switches.
+    .AddAttribute ("FlowTableSize",
+                   "Flow table size for the backhaul switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (65535),
+                   MakeUintegerAccessor (&BackhaulNetwork::m_flowTableSize),
+                   MakeUintegerChecker<uint16_t> (0, 65535))
+    .AddAttribute ("GroupTableSize",
+                   "Group table size for the backhaul switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (65535),
+                   MakeUintegerAccessor (&BackhaulNetwork::m_groupTableSize),
+                   MakeUintegerChecker<uint16_t> (0, 65535))
+    .AddAttribute ("MeterTableSize",
+                   "Meter table size for the backhaul switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   UintegerValue (65535),
+                   MakeUintegerAccessor (&BackhaulNetwork::m_meterTableSize),
+                   MakeUintegerChecker<uint16_t> (0, 65535))
+    .AddAttribute ("PipelineCapacity",
+                   "Pipeline capacity for the backhaul switches.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   DataRateValue (DataRate ("100Gb/s")),
+                   MakeDataRateAccessor (&BackhaulNetwork::m_pipeCapacity),
+                   MakeDataRateChecker ())
   ;
   return tid;
 }
@@ -183,6 +209,19 @@ BackhaulNetwork::NotifyConstructionCompleted (void)
   // Create the OFSwitch13 helper using P2P connections for OpenFlow channel.
   m_switchHelper = CreateObjectWithAttributes<OFSwitch13InternalHelper> (
       "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
+
+  // Configuring OpenFlow helper for backhaul switches.
+  // 5 pipeline tables (input, classification, routing, slicing, and output).
+  m_switchHelper->SetDeviceAttribute (
+    "FlowTableSize", UintegerValue (m_flowTableSize));
+  m_switchHelper->SetDeviceAttribute (
+    "GroupTableSize", UintegerValue (m_groupTableSize));
+  m_switchHelper->SetDeviceAttribute (
+    "MeterTableSize", UintegerValue (m_meterTableSize));
+  m_switchHelper->SetDeviceAttribute (
+    "PipelineCapacity", DataRateValue (m_pipeCapacity));
+  m_switchHelper->SetDeviceAttribute (
+    "PipelineTables", UintegerValue (5));
 
   // Create the OpenFlow backhaul network.
   CreateTopology ();

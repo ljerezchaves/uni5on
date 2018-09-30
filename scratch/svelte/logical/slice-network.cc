@@ -399,7 +399,7 @@ SliceNetwork::CreatePgw (void)
 
   // Configuring OpenFlow helper for P-GW main switch.
   // No meter/group entries and 7 pipeline table (1 + the maximum number of TFT
-  // adaptive levels considering the maximum of 32 TFT switches.
+  // adaptive levels considering the maximum of 32 TFT switches).
   m_switchHelper->SetDeviceAttribute (
     "FlowTableSize", UintegerValue (m_mainFlowSize));
   m_switchHelper->SetDeviceAttribute (

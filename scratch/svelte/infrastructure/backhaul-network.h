@@ -124,6 +124,12 @@ private:
   DataRate                      m_linkRate;       //!< EPC link data rate.
   Time                          m_linkDelay;      //!< EPC link delay.
 
+  // Switch datapath configuration.
+  uint32_t                      m_flowTableSize;  //!< Flow table size.
+  uint32_t                      m_groupTableSize; //!< Group table size.
+  uint32_t                      m_meterTableSize; //!< Meter table size.
+  DataRate                      m_pipeCapacity;   //!< Pipeline capacity.
+
   // IPv4 address helpers for EPC interfaces.
   Ipv4AddressHelper             m_s1uAddrHelper;  //!< S1-U address helper.
   Ipv4AddressHelper             m_s5AddrHelper;   //!< S5 address helper.
