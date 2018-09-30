@@ -379,11 +379,8 @@ SliceNetwork::CreatePgw (void)
   NS_ASSERT_MSG (!m_pgwInfo, "P-GW already configured.");
   uint16_t pgwId = 1; // A single P-GW in current implementation.
 
-  // Create the P-GW nodes and configure them as OpenFlow switches.
+  // Create and name the P-GW nodes
   m_pgwNodes.Create (m_nTfts + 1);
-  m_pgwDevices = m_switchHelper->InstallSwitch (m_pgwNodes);
-
-  // Naming P-GW nodes.
   std::ostringstream mainName;
   mainName << m_sliceIdStr << "_pgw" << pgwId;
   Names::Add (mainName.str () + "_main", m_pgwNodes.Get (0));
@@ -400,8 +397,23 @@ SliceNetwork::CreatePgw (void)
   m_pgwAddress = m_ueAddrHelper.NewAddress ();
   NS_LOG_INFO ("P-GW default IP address: " << m_pgwAddress);
 
-  // Get the P-GW main node and device.
+  // Configuring OpenFlow helper for P-GW main switch.
+  // No meter/group entries and 7 pipeline table (1 + the maximum number of TFT
+  // adaptive levels considering the maximum of 32 TFT switches.
+  m_switchHelper->SetDeviceAttribute (
+    "FlowTableSize", UintegerValue (m_mainFlowSize));
+  m_switchHelper->SetDeviceAttribute (
+    "GroupTableSize", UintegerValue (0));
+  m_switchHelper->SetDeviceAttribute (
+    "MeterTableSize", UintegerValue (0));
+  m_switchHelper->SetDeviceAttribute (
+    "PipelineCapacity", DataRateValue (m_mainPipeCapacity));
+  m_switchHelper->SetDeviceAttribute (
+    "PipelineTables", UintegerValue (7));
+
+  // Configure the P-GW main node as an OpenFlow switch.
   Ptr<Node> pgwMainNode = m_pgwNodes.Get (0);
+  m_pgwDevices = m_switchHelper->InstallSwitch (pgwMainNode);
   Ptr<OFSwitch13Device> pgwMainOfDev = m_pgwDevices.Get (0);
   uint64_t pgwDpId = pgwMainOfDev->GetDatapathId ();
 
@@ -472,23 +484,28 @@ SliceNetwork::CreatePgw (void)
   m_csmaHelper.SetChannelAttribute ("DataRate", DataRateValue (m_pgwLinkRate));
   m_csmaHelper.SetChannelAttribute ("Delay", TimeValue (m_pgwLinkDelay));
 
+  // Configuring OpenFlow helper for P-GW TFT switches.
+  // No group entries and 1 pipeline table.
+  m_switchHelper->SetDeviceAttribute (
+    "FlowTableSize", UintegerValue (m_tftFlowSize));
+  m_switchHelper->SetDeviceAttribute (
+    "GroupTableSize", UintegerValue (0));
+  m_switchHelper->SetDeviceAttribute (
+    "MeterTableSize", UintegerValue (m_tftMeterSize));
+  m_switchHelper->SetDeviceAttribute (
+    "PipelineCapacity", DataRateValue (m_tftPipeCapacity));
+  m_switchHelper->SetDeviceAttribute (
+    "PipelineTables", UintegerValue (1));
+
   // Connect all P-GW TFT switches to the P-GW main switch and to the S5
   // interface. Only downlink traffic will be sent to these switches.
   for (uint16_t tftIdx = 1; tftIdx <= m_nTfts; tftIdx++)
     {
+      // Configure the P-GW TFT node as an OpenFlow switch.
       Ptr<Node> pgwTftNode = m_pgwNodes.Get (tftIdx);
+      m_pgwDevices.Add (m_switchHelper->InstallSwitch (pgwTftNode));
       Ptr<OFSwitch13Device> pgwTftOfDev = m_pgwDevices.Get (tftIdx);
       pgwDpId = pgwTftOfDev->GetDatapathId ();
-
-      // Set P-GW TFT attributes. FIXME
-      // pgwTftOfDev->SetAttribute (
-      //   "PipelineCapacity", DataRateValue (m_tftPipeCapacity));
-      // pgwTftOfDev->SetAttribute (
-      //   "FlowTableSize", UintegerValue (m_tftTableSize));
-      // pgwTftOfDev->SetAttribute (
-      //   "GroupTableSize", UintegerValue (m_tftTableSize));
-      // pgwTftOfDev->SetAttribute (
-      //   "MeterTableSize", UintegerValue (m_tftTableSize));
 
       // Connect the P-GW main node to the P-GW TFT node.
       devices = m_csmaHelper.Install (pgwTftNode, pgwMainNode);
@@ -535,15 +552,30 @@ SliceNetwork::CreateSgws (void)
   ParseSgwInfraSwIdxs ();
   uint32_t nSgws = m_sgwInfraSwIdx.size ();
 
-  // Create the S-GW nodes and configure them as OpenFlow switches.
+  // Create and name the S-GW nodes.
   m_sgwNodes.Create (nSgws);
-  m_sgwDevices = m_switchHelper->InstallSwitch (m_sgwNodes);
   for (uint16_t i = 0; i < nSgws; i++)
     {
       std::ostringstream name;
       name << m_sliceIdStr << "_sgw" << i + 1;
       Names::Add (name.str (), m_sgwNodes.Get (i));
     }
+
+  // Configuring OpenFlow helper for S-GW switches.
+  // No group entries and 3 pipeline tables.
+  m_switchHelper->SetDeviceAttribute (
+    "FlowTableSize", UintegerValue (m_sgwFlowSize));
+  m_switchHelper->SetDeviceAttribute (
+    "GroupTableSize", UintegerValue (0));
+  m_switchHelper->SetDeviceAttribute (
+    "MeterTableSize", UintegerValue (m_sgwMeterSize));
+  m_switchHelper->SetDeviceAttribute (
+    "PipelineCapacity", DataRateValue (m_sgwPipeCapacity));
+  m_switchHelper->SetDeviceAttribute (
+    "PipelineTables", UintegerValue (3));
+
+  // Configure the S-GW nodes as OpenFlow switches.
+  m_sgwDevices = m_switchHelper->InstallSwitch (m_sgwNodes);
 
   // Connect all S-GW switches to the S1-U and S5 interfaces.
   for (uint16_t sgwIdx = 0; sgwIdx < nSgws; sgwIdx++)
