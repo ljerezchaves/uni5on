@@ -65,9 +65,9 @@ public:
    * \return The requested information.
    */
   //\{
-  uint16_t              GetInfraSwIdx                 (void) const;
-  uint32_t              GetPgwId                      (void) const;
-  Ptr<SliceController>  GetSliceCtrl                  (void) const;
+  uint16_t              GetInfraSwIdx   (void) const;
+  uint32_t              GetPgwId        (void) const;
+  Ptr<SliceController>  GetSliceCtrl    (void) const;
   //\}
 
   /**
@@ -75,24 +75,25 @@ public:
    * \return The requested information.
    */
   //\{
-  uint16_t              GetCurLevel                   (void) const;
-  uint16_t              GetCurTfts                    (void) const;
-  uint16_t              GetMaxLevel                   (void) const;
-  uint16_t              GetMaxTfts                    (void) const;
+  uint16_t              GetCurLevel     (void) const;
+  uint16_t              GetCurTfts      (void) const;
+  uint16_t              GetMaxLevel     (void) const;
+  uint16_t              GetMaxTfts      (void) const;
   //\}
 
   /**
    * \name Private member accessors for P-GW switch datapath information.
    * \param idx The internal switch index.
+   * \param tableId The flow table ID.
    * \return The requested information.
    */
   //\{
-  uint32_t              GetFlowTableCur               (uint16_t idx) const;
-  uint32_t              GetFlowTableMax               (uint16_t idx) const;
-  double                GetFlowTableUsage             (uint16_t idx) const;
-  DataRate              GetPipeCapacityCur            (uint16_t idx) const;
-  DataRate              GetPipeCapacityMax            (uint16_t idx) const;
-  double                GetPipeCapacityUsage          (uint16_t idx) const;
+  uint32_t      GetFlowTableCur         (uint16_t idx, uint8_t tableId) const;
+  uint32_t      GetFlowTableMax         (uint16_t idx, uint8_t tableId) const;
+  double        GetFlowTableUsage       (uint16_t idx, uint8_t tableId) const;
+  DataRate      GetPipeCapacityCur      (uint16_t idx) const;
+  DataRate      GetPipeCapacityMax      (uint16_t idx) const;
+  double        GetPipeCapacityUsage    (uint16_t idx) const;
   //\}
 
   /**
@@ -101,12 +102,12 @@ public:
    * \return The requested information.
    */
   //\{
-  uint64_t              GetMainDpId                   (void) const;
-  uint32_t              GetMainInfraSwS5PortNo        (void) const;
-  Ipv4Address           GetMainS5Addr                 (void) const;
-  uint32_t              GetMainS5PortNo               (void) const;
-  uint32_t              GetMainSgiPortNo              (void) const;
-  uint32_t              GetMainToTftPortNo            (uint16_t idx) const;
+  uint64_t      GetMainDpId             (void) const;
+  uint32_t      GetMainInfraSwS5PortNo  (void) const;
+  Ipv4Address   GetMainS5Addr           (void) const;
+  uint32_t      GetMainS5PortNo         (void) const;
+  uint32_t      GetMainSgiPortNo        (void) const;
+  uint32_t      GetMainToTftPortNo      (uint16_t idx) const;
   //\}
 
   /**
@@ -115,33 +116,34 @@ public:
    * \return The requested information.
    */
   //\{
-  uint64_t              GetTftDpId                    (uint16_t idx) const;
-  uint32_t              GetTftInfraSwS5PortNo         (uint16_t idx) const;
-  Ipv4Address           GetTftS5Addr                  (uint16_t idx) const;
-  uint32_t              GetTftS5PortNo                (uint16_t idx) const;
-  uint32_t              GetTftToMainPortNo            (uint16_t idx) const;
+  uint64_t      GetTftDpId              (uint16_t idx) const;
+  uint32_t      GetTftInfraSwS5PortNo   (uint16_t idx) const;
+  Ipv4Address   GetTftS5Addr            (uint16_t idx) const;
+  uint32_t      GetTftS5PortNo          (uint16_t idx) const;
+  uint32_t      GetTftToMainPortNo      (uint16_t idx) const;
   //\}
 
   /**
    * \name Private member accessors for P-GW TFT active switches aggregated
    *       datapath information.
+   * \param tableId The flow table ID.
    * \return The requested information.
    * \internal These methods iterate only over active TFT switches for
    *           collecting statistics.
    */
   //\{
-  uint32_t              GetTftAvgFlowTableCur         (void) const;
-  uint32_t              GetTftAvgFlowTableMax         (void) const;
-  double                GetTftAvgFlowTableUsage       (void) const;
-  DataRate              GetTftAvgPipeCapacityCur      (void) const;
-  DataRate              GetTftAvgPipeCapacityMax      (void) const;
-  double                GetTftAvgPipeCapacityUsage    (void) const;
-  uint32_t              GetTftMaxFlowTableCur         (void) const;
-  uint32_t              GetTftMaxFlowTableMax         (void) const;
-  double                GetTftMaxFlowTableUsage       (void) const;
-  DataRate              GetTftMaxPipeCapacityCur      (void) const;
-  DataRate              GetTftMaxPipeCapacityMax      (void) const;
-  double                GetTftMaxPipeCapacityUsage    (void) const;
+  uint32_t      GetTftAvgFlowTableCur       (uint8_t tableId) const;
+  uint32_t      GetTftAvgFlowTableMax       (uint8_t tableId) const;
+  double        GetTftAvgFlowTableUsage     (uint8_t tableId) const;
+  DataRate      GetTftAvgPipeCapacityCur    (void) const;
+  DataRate      GetTftAvgPipeCapacityMax    (void) const;
+  double        GetTftAvgPipeCapacityUsage  (void) const;
+  uint32_t      GetTftMaxFlowTableCur       (uint8_t tableId) const;
+  uint32_t      GetTftMaxFlowTableMax       (uint8_t tableId) const;
+  double        GetTftMaxFlowTableUsage     (uint8_t tableId) const;
+  DataRate      GetTftMaxPipeCapacityCur    (void) const;
+  DataRate      GetTftMaxPipeCapacityMax    (void) const;
+  double        GetTftMaxPipeCapacityUsage  (void) const;
   //\}
 
   /**
@@ -157,6 +159,13 @@ protected:
   virtual void DoDispose ();
 
 private:
+  /**
+   * Get the OpenFlow switch stats calculator.
+   * \param idx The internal switch index.
+   * \return The OpenFlow switch stats.
+   */
+  Ptr<OFSwitch13StatsCalculator> GetStats (uint16_t idx) const;
+
   /**
    * Save the metadata associated to a single P-GW OpenFlow switch attached to
    * the OpenFlow backhaul network.

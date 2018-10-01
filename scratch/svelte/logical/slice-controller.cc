@@ -738,7 +738,7 @@ SliceController::PgwAdaptiveMechanism (void)
   uint16_t nextLevel = m_pgwInfo->GetCurLevel ();
   if (GetPgwTftAdaptiveMode () == OpMode::AUTO)
     {
-      double tableUsage = m_pgwInfo->GetTftMaxFlowTableUsage ();
+      double tableUsage = m_pgwInfo->GetTftMaxFlowTableUsage (0); // FIXME
       double pipeUsage = m_pgwInfo->GetTftMaxPipeCapacityUsage ();
 
       // We may increase the level when we hit the split threshold.
@@ -817,7 +817,7 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
 
   // First check: OpenFlow switch table usage.
   // Blocks the bearer if the table usage is exceeding the block threshold.
-  double tableUsage = m_pgwInfo->GetFlowTableUsage (rInfo->GetPgwTftIdx ());
+  double tableUsage = m_pgwInfo->GetFlowTableUsage (rInfo->GetPgwTftIdx (), 0); // FIXME
   if (tableUsage >= m_tftBlockThs)
     {
       rInfo->SetBlocked (true, RoutingInfo::TFTTABLE);

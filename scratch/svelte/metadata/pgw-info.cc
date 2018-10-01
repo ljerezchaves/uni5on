@@ -112,33 +112,29 @@ PgwInfo::GetMaxTfts (void) const
 }
 
 uint32_t
-PgwInfo::GetFlowTableCur (uint16_t idx) const
+PgwInfo::GetFlowTableCur (uint16_t idx, uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this << idx);
 
-  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
-  Ptr<OFSwitch13StatsCalculator> stats;
-  stats = m_devices.at (idx)->GetObject<OFSwitch13StatsCalculator> ();
-  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
-  return stats->GetEwmaSumFlowEntries ();
+  return GetStats (idx)->GetEwmaFlowTableEntries (tableId);
 }
 
 uint32_t
-PgwInfo::GetFlowTableMax (uint16_t idx) const
+PgwInfo::GetFlowTableMax (uint16_t idx, uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this << idx);
 
   NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
-  return m_devices.at (idx)->GetFlowTableSize ();
+  return m_devices.at (idx)->GetFlowTableSize (tableId);
 }
 
 double
-PgwInfo::GetFlowTableUsage (uint16_t idx) const
+PgwInfo::GetFlowTableUsage (uint16_t idx, uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this << idx);
 
-  return static_cast<double> (GetFlowTableCur (idx)) /
-         static_cast<double> (GetFlowTableMax (idx));
+  return static_cast<double> (GetFlowTableCur (idx, tableId)) /
+         static_cast<double> (GetFlowTableMax (idx, tableId));
 }
 
 DataRate
@@ -146,11 +142,7 @@ PgwInfo::GetPipeCapacityCur (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
-  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
-  Ptr<OFSwitch13StatsCalculator> stats;
-  stats = m_devices.at (idx)->GetObject<OFSwitch13StatsCalculator> ();
-  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
-  return stats->GetEwmaPipelineLoad ();
+  return GetStats (idx)->GetEwmaPipelineLoad ();
 }
 
 DataRate
@@ -276,40 +268,40 @@ PgwInfo::GetTftToMainPortNo (uint16_t idx) const
 }
 
 uint32_t
-PgwInfo::GetTftAvgFlowTableCur (void) const
+PgwInfo::GetTftAvgFlowTableCur (uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this);
 
   uint32_t value = 0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value += GetFlowTableCur (idx);
+      value += GetFlowTableCur (idx, tableId);
     }
   return value / GetCurTfts ();
 }
 
 uint32_t
-PgwInfo::GetTftAvgFlowTableMax (void) const
+PgwInfo::GetTftAvgFlowTableMax (uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this);
 
   uint32_t value = 0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value += GetFlowTableMax (idx);
+      value += GetFlowTableMax (idx, tableId);
     }
   return value / GetCurTfts ();
 }
 
 double
-PgwInfo::GetTftAvgFlowTableUsage (void) const
+PgwInfo::GetTftAvgFlowTableUsage (uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this);
 
   double value = 0.0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value += GetFlowTableUsage (idx);
+      value += GetFlowTableUsage (idx, tableId);
     }
   return value / GetCurTfts ();
 }
@@ -354,40 +346,40 @@ PgwInfo::GetTftAvgPipeCapacityUsage (void) const
 }
 
 uint32_t
-PgwInfo::GetTftMaxFlowTableMax (void) const
+PgwInfo::GetTftMaxFlowTableMax (uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this);
 
   uint32_t value = 0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value = std::max (value, GetFlowTableMax (idx));
+      value = std::max (value, GetFlowTableMax (idx, tableId));
     }
   return value;
 }
 
 uint32_t
-PgwInfo::GetTftMaxFlowTableCur (void) const
+PgwInfo::GetTftMaxFlowTableCur (uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this);
 
   uint32_t value = 0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value = std::max (value, GetFlowTableCur (idx));
+      value = std::max (value, GetFlowTableCur (idx, tableId));
     }
   return value;
 }
 
 double
-PgwInfo::GetTftMaxFlowTableUsage () const
+PgwInfo::GetTftMaxFlowTableUsage (uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this);
 
   double value = 0.0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value = std::max (value, GetFlowTableUsage (idx));
+      value = std::max (value, GetFlowTableUsage (idx, tableId));
     }
   return value;
 }
@@ -449,6 +441,16 @@ PgwInfo::DoDispose ()
   m_sliceCtrl = 0;
   m_devices.clear ();
   Object::DoDispose ();
+}
+
+Ptr<OFSwitch13StatsCalculator>
+PgwInfo::GetStats (uint16_t idx) const
+{
+  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
+  Ptr<OFSwitch13StatsCalculator> stats;
+  stats = m_devices.at (idx)->GetObject<OFSwitch13StatsCalculator> ();
+  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
+  return stats;
 }
 
 void
