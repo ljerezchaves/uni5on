@@ -140,12 +140,12 @@ PgwTftStatsCalculator::NotifyPgwTftStats (
     << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftBlockThs ()
     << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftSplitThs ()
     << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftJoinThs ()
-    << " " << setw (7)  << pgwInfo->GetTftAvgFlowTableMax (0) // FIXME
-    << " " << setw (7)  << pgwInfo->GetTftMaxFlowTableMax (0)
-    << " " << setw (7)  << pgwInfo->GetTftAvgFlowTableCur (0)
-    << " " << setw (7)  << pgwInfo->GetTftMaxFlowTableCur (0)
-    << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableUsage (0) * 100
-    << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableUsage (0) * 100
+    << " " << setw (7)  << pgwInfo->GetTftAvgFlowTableMax ()
+    << " " << setw (7)  << pgwInfo->GetTftMaxFlowTableMax ()
+    << " " << setw (7)  << pgwInfo->GetTftAvgFlowTableCur ()
+    << " " << setw (7)  << pgwInfo->GetTftMaxFlowTableCur ()
+    << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableUsage () * 100
+    << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableUsage () * 100
     << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftAvgPipeCapacityMax ())
     << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftMaxPipeCapacityMax ())
     << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftAvgPipeCapacityCur ())

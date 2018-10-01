@@ -126,21 +126,22 @@ public:
   /**
    * \name Private member accessors for P-GW TFT active switches aggregated
    *       datapath information.
-   * \param tableId The flow table ID.
+   * \param tableId The flow table ID. The default value of 0 can be used as
+   *        P-GW TFT switches have only one pipeline table.
    * \return The requested information.
    * \internal These methods iterate only over active TFT switches for
    *           collecting statistics.
    */
   //\{
-  uint32_t      GetTftAvgFlowTableCur       (uint8_t tableId) const;
-  uint32_t      GetTftAvgFlowTableMax       (uint8_t tableId) const;
-  double        GetTftAvgFlowTableUsage     (uint8_t tableId) const;
+  uint32_t      GetTftAvgFlowTableCur       (uint8_t tableId = 0) const;
+  uint32_t      GetTftAvgFlowTableMax       (uint8_t tableId = 0) const;
+  double        GetTftAvgFlowTableUsage     (uint8_t tableId = 0) const;
   DataRate      GetTftAvgPipeCapacityCur    (void) const;
   DataRate      GetTftAvgPipeCapacityMax    (void) const;
   double        GetTftAvgPipeCapacityUsage  (void) const;
-  uint32_t      GetTftMaxFlowTableCur       (uint8_t tableId) const;
-  uint32_t      GetTftMaxFlowTableMax       (uint8_t tableId) const;
-  double        GetTftMaxFlowTableUsage     (uint8_t tableId) const;
+  uint32_t      GetTftMaxFlowTableCur       (uint8_t tableId = 0) const;
+  uint32_t      GetTftMaxFlowTableMax       (uint8_t tableId = 0) const;
+  double        GetTftMaxFlowTableUsage     (uint8_t tableId = 0) const;
   DataRate      GetTftMaxPipeCapacityCur    (void) const;
   DataRate      GetTftMaxPipeCapacityMax    (void) const;
   double        GetTftMaxPipeCapacityUsage  (void) const;
