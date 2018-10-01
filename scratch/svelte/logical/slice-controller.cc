@@ -38,9 +38,6 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("SliceController");
 NS_OBJECT_ENSURE_REGISTERED (SliceController);
 
-// Initializing SliceController static members.
-const uint16_t SliceController::m_flowTimeout = 0;
-
 SliceController::SliceController ()
   : m_pgwInfo (0)
 {
@@ -657,7 +654,7 @@ SliceController::DoCreateSessionRequest (
         {
           // Configure this dedicated bearer.
           rInfo->SetPriority (0x1FFF);
-          rInfo->SetTimeout (m_flowTimeout);
+          rInfo->SetTimeout (0);
         }
     }
 

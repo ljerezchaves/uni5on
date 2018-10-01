@@ -332,7 +332,6 @@ private:
 
   // Internal members and attributes.
   Time                    m_timeout;        //!< Controller internal timeout.
-  static const uint16_t   m_flowTimeout;    //!< Timeout for flow entries.
 };
 
 } // namespace ns3
