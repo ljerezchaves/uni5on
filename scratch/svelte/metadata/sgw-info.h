@@ -87,12 +87,13 @@ public:
 
   /**
    * \name Private member accessors for S-GW switch datapath information.
+   * \param tableId The flow table ID.
    * \return The requested information.
    */
   //\{
-  uint32_t              GetFlowTableCur       (void) const;
-  uint32_t              GetFlowTableMax       (void) const;
-  double                GetFlowTableUsage     (void) const;
+  uint32_t              GetFlowTableCur       (uint8_t tableId) const;
+  uint32_t              GetFlowTableMax       (uint8_t tableId) const;
+  double                GetFlowTableUsage     (uint8_t tableId) const;
   DataRate              GetPipeCapacityCur    (void) const;
   DataRate              GetPipeCapacityMax    (void) const;
   double                GetPipeCapacityUsage  (void) const;
@@ -111,6 +112,12 @@ protected:
   virtual void DoDispose ();
 
 private:
+  /**
+   * Get the OpenFlow switch stats calculator.
+   * \return The OpenFlow switch stats.
+   */
+  Ptr<OFSwitch13StatsCalculator> GetStats (void) const;
+
   // S-GW metadata.
   Ptr<OFSwitch13Device>  m_device;               //!< S-GW OpenFlow device.
   uint16_t               m_infraSwIdx;           //!< Backhaul switch index.

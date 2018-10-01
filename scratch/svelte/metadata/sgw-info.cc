@@ -144,31 +144,28 @@ SgwInfo::GetSliceController (void) const
 }
 
 uint32_t
-SgwInfo::GetFlowTableCur (void) const
+SgwInfo::GetFlowTableCur (uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this);
 
-  Ptr<OFSwitch13StatsCalculator> stats;
-  stats = m_device->GetObject<OFSwitch13StatsCalculator> ();
-  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
-  return stats->GetEwmaSumFlowEntries ();
+  return GetStats ()->GetEwmaFlowTableEntries (tableId);
 }
 
 uint32_t
-SgwInfo::GetFlowTableMax (void) const
+SgwInfo::GetFlowTableMax (uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_device->GetFlowTableSize ();
+  return m_device->GetFlowTableSize (tableId);
 }
 
 double
-SgwInfo::GetFlowTableUsage (void) const
+SgwInfo::GetFlowTableUsage (uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this);
 
-  return static_cast<double> (GetFlowTableCur ()) /
-         static_cast<double> (GetFlowTableMax ());
+  return static_cast<double> (GetFlowTableCur (tableId)) /
+         static_cast<double> (GetFlowTableMax (tableId));
 }
 
 DataRate
@@ -176,10 +173,7 @@ SgwInfo::GetPipeCapacityCur (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  Ptr<OFSwitch13StatsCalculator> stats;
-  stats = m_device->GetObject<OFSwitch13StatsCalculator> ();
-  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
-  return stats->GetEwmaPipelineLoad ();
+  return GetStats ()->GetEwmaPipelineLoad ();
 }
 
 DataRate
@@ -217,6 +211,15 @@ SgwInfo::DoDispose ()
 
   m_sliceCtrl = 0;
   Object::DoDispose ();
+}
+
+Ptr<OFSwitch13StatsCalculator>
+SgwInfo::GetStats (void) const
+{
+  Ptr<OFSwitch13StatsCalculator> stats;
+  stats = m_device->GetObject<OFSwitch13StatsCalculator> ();
+  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
+  return stats;
 }
 
 std::ostream & operator << (std::ostream &os, const SgwInfo &sgwInfo)
