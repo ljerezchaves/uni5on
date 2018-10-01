@@ -265,6 +265,13 @@ private:
                        bool moveFlag = false);
 
   /**
+   * Check for available resources on S-GW switch for this bearer request.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool SgwBearerRequest (Ptr<RoutingInfo> rInfo);
+
+  /**
    * Install packet forwarding rules on the S-GW OpenFlow switch.
    * \attention To avoid conflicts with old entries, increase the routing
    *            priority before installing S-GW rules.

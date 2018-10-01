@@ -173,6 +173,7 @@ SliceController::DedicatedBearerRequest (
   // reserve the requested bandwidth (don't change the order!).
   bool success = true;
   success &= PgwBearerRequest (rInfo);
+  success &= SgwBearerRequest (rInfo);
   success &= m_backhaulCtrl->BearerRequest (rInfo);
   if (!success)
     {
@@ -642,6 +643,7 @@ SliceController::DoCreateSessionRequest (
           // For logic consistence, let's check for available resources.
           bool success = true;
           success &= PgwBearerRequest (rInfo);
+          success &= SgwBearerRequest (rInfo);
           success &= m_backhaulCtrl->BearerRequest (rInfo);
           NS_ASSERT_MSG (success, "Default bearer must be accepted.");
 
@@ -965,6 +967,15 @@ SliceController::PgwRulesRemove (
           rInfo->SetMbrDlInstalled (false);
         }
     }
+  return true;
+}
+
+bool
+SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+
+  // TODO
   return true;
 }
 
