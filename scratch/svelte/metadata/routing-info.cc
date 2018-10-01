@@ -515,10 +515,14 @@ RoutingInfo::BlockReasonStr (BlockReason reason)
 {
   switch (reason)
     {
-    case RoutingInfo::TFTTABLE:
-      return "TabFull";
-    case RoutingInfo::TFTLOAD:
-      return "MaxLoad";
+    case RoutingInfo::PGWTABLE:
+      return "PgwTable";
+    case RoutingInfo::PGWLOAD:
+      return "PgwLoad";
+    case RoutingInfo::SGWTABLE:
+      return "SgwTable";
+    case RoutingInfo::SGWLOAD:
+      return "SgwLoad";
     case RoutingInfo::LINKBAND:
       return "SliceFull";
     case RoutingInfo::NONE:

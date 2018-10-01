@@ -812,12 +812,12 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
                  "The split threshold should be smaller than the block "
                  "threshold and two times larger than the join threshold.");
 
-  // First check: OpenFlow switch table usage (P-GW TFT table 0).
+  // First check: OpenFlow switch table usage (TFT has a single table #0).
   // Blocks the bearer if the table usage is exceeding the block threshold.
   double tableUsage = m_pgwInfo->GetFlowTableUsage (rInfo->GetPgwTftIdx (), 0);
   if (tableUsage >= m_tftBlockThs)
     {
-      rInfo->SetBlocked (true, RoutingInfo::TFTTABLE);
+      rInfo->SetBlocked (true, RoutingInfo::PGWTABLE);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                    " because the TFT flow table is full.");
     }
@@ -833,7 +833,7 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
       && (m_tftBlockPolicy == OpMode::ON
           || (m_tftBlockPolicy == OpMode::AUTO && rInfo->IsGbr ())))
     {
-      rInfo->SetBlocked (true, RoutingInfo::TFTLOAD);
+      rInfo->SetBlocked (true, RoutingInfo::PGWLOAD);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
                    " because the TFT processing capacity is overloaded.");
     }

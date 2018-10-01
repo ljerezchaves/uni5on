@@ -50,9 +50,11 @@ public:
   enum BlockReason
   {
     NONE      = 0,  //!< This bearer id not blocked.
-    TFTTABLE  = 1,  //!< P-GW TFT flow table is full.
-    TFTLOAD   = 2,  //!< P-GW TFT pipeline load is full.
-    LINKBAND  = 3   //!< No backahul bandwidth available.
+    PGWTABLE  = 1,  //!< P-GW flow table is full.
+    PGWLOAD   = 2,  //!< P-GW pipeline load is full.
+    SGWTABLE  = 3,  //!< P-GW flow table is full.
+    SGWLOAD   = 4,  //!< P-GW pipeline load is full.
+    LINKBAND  = 5   //!< No backahul bandwidth available.
   };
 
   /**
