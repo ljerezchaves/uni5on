@@ -330,6 +330,12 @@ void ForceDefaults ()
   //
   Config::SetDefault (
     "ns3::OFSwitch13Queue::NumQueues", UintegerValue (3));
+
+  //
+  // Enable detailed OpenFlow datapath statistics.
+  //
+  Config::SetDefault (
+    "ns3::OFSwitch13StatsCalculator::PipelineDetails", BooleanValue (true));
 }
 
 void
