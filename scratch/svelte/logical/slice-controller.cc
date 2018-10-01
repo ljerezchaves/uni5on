@@ -123,6 +123,20 @@ SliceController::GetTypeId (void)
                    MakeDoubleAccessor (&SliceController::m_tftSplitThs),
                    MakeDoubleChecker<double> (0.5, 1.0))
 
+    // S-GW.
+    .AddAttribute ("SgwBlockPolicy",
+                   "S-GW overloaded block policy.",
+                   EnumValue (OpMode::ON),
+                   MakeEnumAccessor (&SliceController::m_sgwBlockPolicy),
+                   MakeEnumChecker (OpMode::OFF,  "none",
+                                    OpMode::ON,   "all",
+                                    OpMode::AUTO, "gbr"))
+    .AddAttribute ("SgwBlockThs",
+                   "The S-GW block threshold.",
+                   DoubleValue (0.95),
+                   MakeDoubleAccessor (&SliceController::m_sgwBlockThs),
+                   MakeDoubleChecker<double> (0.8, 1.0))
+
     .AddAttribute ("TimeoutInterval",
                    "The interval between internal periodic operations.",
                    TimeValue (Seconds (5)),
@@ -251,6 +265,22 @@ SliceController::GetPgwTftSplitThs (void) const
   NS_LOG_FUNCTION (this);
 
   return m_tftSplitThs;
+}
+
+OpMode
+SliceController::GetSgwBlockPolicy (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sgwBlockPolicy;
+}
+
+double
+SliceController::GetSgwBlockThs (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_sgwBlockThs;
 }
 
 EpcS11SapSgw*

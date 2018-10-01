@@ -104,6 +104,15 @@ public:
   //\}
 
   /**
+   * \name Private member accessors for S-GW metadata.
+   * \return The requested information.
+   */
+  //\{
+  OpMode    GetSgwBlockPolicy         (void) const;
+  double    GetSgwBlockThs            (void) const;
+  //\}
+
+  /**
    * Get The S-GW side of the S11 SAP.
    * \return The S-GW side of the S11 SAP.
    */
@@ -321,14 +330,16 @@ private:
 
   // P-GW metadata and TFT adaptive mechanism.
   Ptr<PgwInfo>            m_pgwInfo;        //!< P-GW metadata for this slice.
-  OpMode                  m_pgwBlockPolicy; //!< Overload block policy.
-  double                  m_pgwBlockThs;    //!< Block threshold.
-  OpMode                  m_tftAdaptive;    //!< P-GW adaptive mechanism.
-  double                  m_tftJoinThs;     //!< Join threshold.
-  double                  m_tftSplitThs;    //!< Split threshold.
+  OpMode                  m_pgwBlockPolicy; //!< P-GW overload block policy.
+  double                  m_pgwBlockThs;    //!< P-GW block threshold.
+  OpMode                  m_tftAdaptive;    //!< P-GW TFT adaptive mechanism.
+  double                  m_tftJoinThs;     //!< P-GW TFT join threshold.
+  double                  m_tftSplitThs;    //!< P-GW TFT split threshold.
 
   // S-GW metadata.
   SgwInfoList_t           m_sgwInfoList;    //!< S-GW metadata for this slice.
+  OpMode                  m_sgwBlockPolicy; //!< S-GW overload block policy.
+  double                  m_sgwBlockThs;    //!< S-GW block threshold.
 
   // Internal members and attributes.
   Time                    m_timeout;        //!< Controller internal timeout.
