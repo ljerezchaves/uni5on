@@ -92,13 +92,13 @@ public:
                                        uint32_t teid);
 
   /**
-   * \name Private member accessors for P-GW TFT adaptive mechanisms.
+   * \name Private member accessors for P-GW metadata.
    * \return The requested information.
    */
   //\{
+  OpMode    GetPgwBlockPolicy         (void) const;
+  double    GetPgwBlockThs            (void) const;
   OpMode    GetPgwTftAdaptiveMode     (void) const;
-  OpMode    GetPgwTftBlockPolicy      (void) const;
-  double    GetPgwTftBlockThs         (void) const;
   double    GetPgwTftJoinThs          (void) const;
   double    GetPgwTftSplitThs         (void) const;
   //\}
@@ -321,9 +321,9 @@ private:
 
   // P-GW metadata and TFT adaptive mechanism.
   Ptr<PgwInfo>            m_pgwInfo;        //!< P-GW metadata for this slice.
+  OpMode                  m_pgwBlockPolicy; //!< Overload block policy.
+  double                  m_pgwBlockThs;    //!< Block threshold.
   OpMode                  m_tftAdaptive;    //!< P-GW adaptive mechanism.
-  OpMode                  m_tftBlockPolicy; //!< Overload block policy.
-  double                  m_tftBlockThs;    //!< Block threshold.
   double                  m_tftJoinThs;     //!< Join threshold.
   double                  m_tftSplitThs;    //!< Split threshold.
 

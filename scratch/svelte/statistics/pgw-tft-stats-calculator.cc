@@ -137,7 +137,7 @@ PgwTftStatsCalculator::NotifyPgwTftStats (
     << " " << setw (7)  << pgwInfo->GetMaxLevel ()
     << " " << setw (7)  << pgwInfo->GetCurTfts ()
     << " " << setw (7)  << bearersMoved
-    << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftBlockThs ()
+    << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwBlockThs ()
     << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftSplitThs ()
     << " " << setw (7)  << pgwInfo->GetSliceCtrl ()->GetPgwTftJoinThs ()
     << " " << setw (7)  << pgwInfo->GetTftAvgFlowTableMax ()

@@ -92,6 +92,18 @@ SliceController::GetTypeId (void)
                    MakePointerChecker<SvelteMme> ())
 
     // P-GW.
+    .AddAttribute ("PgwBlockPolicy",
+                   "P-GW overloaded block policy.",
+                   EnumValue (OpMode::ON),
+                   MakeEnumAccessor (&SliceController::m_pgwBlockPolicy),
+                   MakeEnumChecker (OpMode::OFF,  "none",
+                                    OpMode::ON,   "all",
+                                    OpMode::AUTO, "gbr"))
+    .AddAttribute ("PgwBlockThs",
+                   "The P-GW block threshold.",
+                   DoubleValue (0.95),
+                   MakeDoubleAccessor (&SliceController::m_pgwBlockThs),
+                   MakeDoubleChecker<double> (0.8, 1.0))
     .AddAttribute ("PgwTftAdaptiveMode",
                    "P-GW TFT adaptive mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -100,18 +112,6 @@ SliceController::GetTypeId (void)
                    MakeEnumChecker (OpMode::OFF,  "off",
                                     OpMode::ON,   "on",
                                     OpMode::AUTO, "auto"))
-    .AddAttribute ("PgwTftBlockPolicy",
-                   "P-GW TFT overloaded block policy.",
-                   EnumValue (OpMode::ON),
-                   MakeEnumAccessor (&SliceController::m_tftBlockPolicy),
-                   MakeEnumChecker (OpMode::OFF,  "none",
-                                    OpMode::ON,   "all",
-                                    OpMode::AUTO, "gbr"))
-    .AddAttribute ("PgwTftBlockThs",
-                   "The P-GW TFT block threshold.",
-                   DoubleValue (0.95),
-                   MakeDoubleAccessor (&SliceController::m_tftBlockThs),
-                   MakeDoubleChecker<double> (0.8, 1.0))
     .AddAttribute ("PgwTftJoinThs",
                    "The P-GW TFT join threshold.",
                    DoubleValue (0.30),
@@ -214,27 +214,27 @@ SliceController::DedicatedBearerRelease (
 }
 
 OpMode
+SliceController::GetPgwBlockPolicy (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwBlockPolicy;
+}
+
+double
+SliceController::GetPgwBlockThs (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_pgwBlockThs;
+}
+
+OpMode
 SliceController::GetPgwTftAdaptiveMode (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_tftAdaptive;
-}
-
-OpMode
-SliceController::GetPgwTftBlockPolicy (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_tftBlockPolicy;
-}
-
-double
-SliceController::GetPgwTftBlockThs (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_tftBlockThs;
 }
 
 double
@@ -732,6 +732,12 @@ SliceController::PgwAdaptiveMechanism (void)
 
   NS_ASSERT_MSG (m_pgwInfo, "No P-GW attached to this slice.");
 
+  // Check for valid P-GW TFT thresholds attributes.
+  NS_ASSERT_MSG (m_tftSplitThs < m_pgwBlockThs
+                 && m_tftSplitThs > 2 * m_tftJoinThs,
+                 "The split threshold should be smaller than the block "
+                 "threshold and two times larger than the join threshold.");
+
   uint16_t nextLevel = m_pgwInfo->GetCurLevel ();
   if (GetPgwTftAdaptiveMode () == OpMode::AUTO)
     {
@@ -806,16 +812,10 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
       return false;
     }
 
-  // Check for valid P-GW TFT thresholds attributes.
-  NS_ASSERT_MSG (m_tftSplitThs < m_tftBlockThs
-                 && m_tftSplitThs > 2 * m_tftJoinThs,
-                 "The split threshold should be smaller than the block "
-                 "threshold and two times larger than the join threshold.");
-
   // First check: OpenFlow switch table usage (TFT has a single table #0).
   // Blocks the bearer if the table usage is exceeding the block threshold.
   double tableUsage = m_pgwInfo->GetFlowTableUsage (rInfo->GetPgwTftIdx (), 0);
-  if (tableUsage >= m_tftBlockThs)
+  if (tableUsage >= m_pgwBlockThs)
     {
       rInfo->SetBlocked (true, RoutingInfo::PGWTABLE);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
@@ -824,14 +824,14 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
 
   // Second check: OpenFlow switch pipeline load.
   // If the current pipeline load is exceeding the block threshold, block the
-  // bearer accordingly to the PgwTftBlockPolicy attribute:
+  // bearer accordingly to the PgwBlockPolicy attribute:
   // - If OFF (none): don't block the request.
   // - If ON (all)  : block the request.
   // - If AUTO (gbr): block only if GBR request.
   double pipeUsage = m_pgwInfo->GetPipeCapacityUsage (rInfo->GetPgwTftIdx ());
-  if (pipeUsage >= m_tftBlockThs
-      && (m_tftBlockPolicy == OpMode::ON
-          || (m_tftBlockPolicy == OpMode::AUTO && rInfo->IsGbr ())))
+  if (pipeUsage >= m_pgwBlockThs
+      && (m_pgwBlockPolicy == OpMode::ON
+          || (m_pgwBlockPolicy == OpMode::AUTO && rInfo->IsGbr ())))
     {
       rInfo->SetBlocked (true, RoutingInfo::PGWLOAD);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
