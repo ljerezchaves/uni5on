@@ -849,7 +849,7 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
     {
       rInfo->SetBlocked (true, RoutingInfo::PGWTABLE);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because the TFT flow table is full.");
+                   " because the P-GW flow table is full.");
     }
 
   // Second check: OpenFlow switch pipeline load.
@@ -865,7 +865,7 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
     {
       rInfo->SetBlocked (true, RoutingInfo::PGWLOAD);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because the TFT processing capacity is overloaded.");
+                   " because the P-GW is overloaded.");
     }
 
   // Return false if blocked.
@@ -1002,8 +1002,42 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  // TODO
-  return true;
+  // If the bearer is already blocked, there's nothing more to do.
+  if (rInfo->IsBlocked ())
+    {
+      return false;
+    }
+
+  // First check: OpenFlow switch table usage (S-GW dl/ul tables #1 and #2).
+  // Blocks the bearer if the table usage is exceeding the block threshold.
+  Ptr<SgwInfo> sgwInfo = rInfo->GetUeInfo ()->GetSgwInfo ();
+  double dlTableUsage = sgwInfo->GetFlowTableUsage (1);
+  double ulTableUsage = sgwInfo->GetFlowTableUsage (2);
+  if (dlTableUsage >= m_sgwBlockThs || ulTableUsage >= m_sgwBlockThs)
+    {
+      rInfo->SetBlocked (true, RoutingInfo::SGWTABLE);
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                   " because the S-GW flow table is full.");
+    }
+
+  // Second check: OpenFlow switch pipeline load.
+  // If the current pipeline load is exceeding the block threshold, block the
+  // bearer accordingly to the SgwBlockPolicy attribute:
+  // - If OFF (none): don't block the request.
+  // - If ON (all)  : block the request.
+  // - If AUTO (gbr): block only if GBR request.
+  double pipeUsage = sgwInfo->GetPipeCapacityUsage ();
+  if (pipeUsage >= m_sgwBlockThs
+      && (m_sgwBlockPolicy == OpMode::ON
+          || (m_sgwBlockPolicy == OpMode::AUTO && rInfo->IsGbr ())))
+    {
+      rInfo->SetBlocked (true, RoutingInfo::SGWLOAD);
+      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                   " because the S-GW is overloaded.");
+    }
+
+  // Return false if blocked.
+  return !rInfo->IsBlocked ();
 }
 
 bool
