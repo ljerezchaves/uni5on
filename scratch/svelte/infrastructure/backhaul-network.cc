@@ -211,7 +211,8 @@ BackhaulNetwork::NotifyConstructionCompleted (void)
       "ChannelType", EnumValue (OFSwitch13Helper::DEDICATEDP2P));
 
   // Configuring OpenFlow helper for backhaul switches.
-  // 5 pipeline tables (input, classification, routing, slicing, and output).
+  // 5 pipeline tables (input, classification, routing, bandwidth, and output)
+  // plus one extra table for each logical network slice.
   m_switchHelper->SetDeviceAttribute (
     "FlowTableSize", UintegerValue (m_flowTableSize));
   m_switchHelper->SetDeviceAttribute (
@@ -221,7 +222,7 @@ BackhaulNetwork::NotifyConstructionCompleted (void)
   m_switchHelper->SetDeviceAttribute (
     "PipelineCapacity", DataRateValue (m_pipeCapacity));
   m_switchHelper->SetDeviceAttribute (
-    "PipelineTables", UintegerValue (5));
+    "PipelineTables", UintegerValue (5 + static_cast<int> (SliceId::ALL)));
 
   // Create the OpenFlow backhaul network.
   CreateTopology ();
