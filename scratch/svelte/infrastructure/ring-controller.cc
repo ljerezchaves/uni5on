@@ -296,6 +296,9 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
+  // -------------------------------------------------------------------------
+  // Classification table -- [from higher to lower priority]
+  //
   NS_LOG_INFO ("Installing ring rules for teid " << rInfo->GetTeidHex ());
 
   // Getting ring routing information.
@@ -402,6 +405,9 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
   NS_LOG_FUNCTION (this << swtch);
 
+  // -------------------------------------------------------------------------
+  // Routing table -- [from higher to lower priority]
+  //
   // Write the output group into action set based on metadata field.
   // Send the packet to the slicing table.
   {

@@ -446,7 +446,6 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
           DpctlExecute (swtch, cmd.str ());
         }
     }
-
   {
     // Table miss entry. No instructions. This will trigger action set execute.
     std::ostringstream cmd;
@@ -477,15 +476,14 @@ BackhaulController::SlicingMeterAdjusted (
                    " for link info " << lInfo->GetSwDpId (0) <<
                    " to " << lInfo->GetSwDpId (1));
 
-      // ---------------------------------------------------------------------
-      // Meter table
-      //
       // Update the proper slicing meter.
       uint64_t kbps = Bps2Kbps (lInfo->GetFreeBitRate (dir, slice));
       NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) << ": " <<
                     LinkInfo::DirectionStr (dir) <<
                     " link set to " << kbps << " Kbps");
-
+      // ---------------------------------------------------------------------
+      // Meter table
+      //
       std::ostringstream cmd;
       cmd << "meter-mod cmd=mod"
           << ",flags=" << OFPMF_KBPS
@@ -520,6 +518,9 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
                             ": " << LinkInfo::DirectionStr (dir) <<
                             " link set to " << kbps << " Kbps");
 
+              // -------------------------------------------------------------
+              // Meter table
+              //
               std::ostringstream cmd;
               cmd << "meter-mod cmd=add,flags=" << OFPMF_KBPS
                   << ",meter=" << meterId
@@ -546,6 +547,9 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
                         ": " << LinkInfo::DirectionStr (dir) <<
                         " link set to " << kbps << " Kbps");
 
+          // -----------------------------------------------------------------
+          // Meter table
+          //
           std::ostringstream cmd;
           cmd << "meter-mod cmd=add,flags=" << OFPMF_KBPS
               << ",meter=" << meterId
