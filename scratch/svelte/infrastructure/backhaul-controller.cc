@@ -418,14 +418,14 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   }
 
   // -------------------------------------------------------------------------
-  // Slicing table -- [from higher to lower priority]
+  // Bandwidth table -- [from higher to lower priority]
   //
   // Entries will be installed here by the topology HandshakeSuccessful.
   {
     // Table miss entry.
     // Send the packet to the output table.
     std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=0,table=" << SLICE_TAB
+    cmd << "flow-mod cmd=add,prio=0,table=" << BANDW_TAB
         << " goto:" << OUTPT_TAB;
     DpctlExecute (swtch, cmd.str ());
   }

@@ -263,7 +263,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
       // GTP packets being forwarded by this switch. Write the output group
       // into action set based on input port. Write the same group number into
       // metadata field.
-      // Send the packet to the slicing table.
+      // Send the packet to the bandwidth table.
       {
         // Clockwise packet forwarding.
         std::ostringstream cmd;
@@ -273,7 +273,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
             << " meta=0x0,in_port=" << lInfo->GetPortNo (0)
             << " write:group=" << RingInfo::COUNTER
             << " meta:" << RingInfo::COUNTER
-            << " goto:" << SLICE_TAB;
+            << " goto:" << BANDW_TAB;
         DpctlSchedule (lInfo->GetSwDpId (0), cmd.str ());
       }
       {
@@ -285,7 +285,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
             << " meta=0x0,in_port=" << lInfo->GetPortNo (1)
             << " write:group=" << RingInfo::CLOCK
             << " meta:" << RingInfo::CLOCK
-            << " goto:" << SLICE_TAB;
+            << " goto:" << BANDW_TAB;
         DpctlSchedule (lInfo->GetSwDpId (1), cmd.str ());
       }
     }
@@ -409,13 +409,13 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // Routing table -- [from higher to lower priority]
   //
   // Write the output group into action set based on metadata field.
-  // Send the packet to the slicing table.
+  // Send the packet to the bandwidth table.
   {
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=64,table=" << ROUTE_TAB
         << " meta=" << RingInfo::CLOCK
         << " write:group=" << RingInfo::CLOCK
-        << " goto:" << SLICE_TAB;
+        << " goto:" << BANDW_TAB;
     DpctlExecute (swtch, cmd.str ());
   }
   {
@@ -423,12 +423,12 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
     cmd << "flow-mod cmd=add,prio=64,table=" << ROUTE_TAB
         << " meta=" << RingInfo::COUNTER
         << " write:group=" << RingInfo::COUNTER
-        << " goto:" << SLICE_TAB;
+        << " goto:" << BANDW_TAB;
     DpctlExecute (swtch, cmd.str ());
   }
 
   // -------------------------------------------------------------------------
-  // Slicing table -- [from higher to lower priority]
+  // Bandwitdh table -- [from higher to lower priority]
   //
   // We are using the IP DSCP field to identify Non-GBR traffic.
   // Apply Non-GBR meter band.
@@ -453,7 +453,7 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
                   // Apply this meter to the traffic of this slice only.
                   std::ostringstream cmd;
-                  cmd << "flow-mod cmd=add,prio=16,table=" << SLICE_TAB
+                  cmd << "flow-mod cmd=add,prio=16,table=" << BANDW_TAB
                       << " eth_type=0x800,ip_proto=17,meta=" << ringPath
                       << ",gtpu_teid=" << (meterId & TEID_SLICE_MASK)
                       << "/" << TEID_SLICE_MASK
@@ -482,7 +482,7 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
               // Apply this meter to the traffic of all slices.
               std::ostringstream cmd;
-              cmd << "flow-mod cmd=add,prio=16,table=" << SLICE_TAB
+              cmd << "flow-mod cmd=add,prio=16,table=" << BANDW_TAB
                   << " eth_type=0x800,ip_proto=17,meta=" << ringPath
                   << ",ip_dscp=" << static_cast<uint16_t> (dscp)
                   << " meter:" << meterId

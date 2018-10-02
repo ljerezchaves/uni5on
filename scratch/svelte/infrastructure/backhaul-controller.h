@@ -25,7 +25,7 @@
 #define INPUT_TAB 0
 #define CLASS_TAB 1
 #define ROUTE_TAB 2
-#define SLICE_TAB 3
+#define BANDW_TAB 3
 #define OUTPT_TAB 4
 
 #include <ns3/core-module.h>
