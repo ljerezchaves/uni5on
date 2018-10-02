@@ -407,23 +407,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   //
   // Entries will be installed here by NotifyEpcAttach function.
   // Entries will be installed here by NotifyTopologyBuilt function.
-  {
-    // FIXME Deveria mover isso pro ring-controller. São especificas da topo.
-    // GTP packets classified at previous table. Write the output group into
-    // action set based on metadata field.
-    // Send the packet to the slicing table.
-    std::ostringstream cmd1;
-    cmd1 << "flow-mod cmd=add,prio=64,table=" << ROUTE_TAB
-         << " meta=0x1"
-         << " write:group=1 goto:" << SLICE_TAB;
-    DpctlExecute (swtch, cmd1.str ());
-
-    std::ostringstream cmd2;
-    cmd2 << "flow-mod cmd=add,prio=64,table=" << ROUTE_TAB
-         << " meta=0x2"
-         << " write:group=2 goto:" << SLICE_TAB;
-    DpctlExecute (swtch, cmd2.str ());
-  }
+  // Entries will be installed here by the topology HandshakeSuccessful.
   {
     // Table miss entry.
     // Send the packet to the controller.
@@ -436,7 +420,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Slicing table -- [from higher to lower priority]
   //
-  // Entries will be installed here by the topology controller.
+  // Entries will be installed here by the topology HandshakeSuccessful.
   {
     // Table miss entry.
     // Send the packet to the output table.

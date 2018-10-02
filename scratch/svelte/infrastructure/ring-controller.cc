@@ -402,6 +402,25 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 {
   NS_LOG_FUNCTION (this << swtch);
 
+  // Write the output group into action set based on metadata field.
+  // Send the packet to the slicing table.
+  {
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,prio=64,table=" << ROUTE_TAB
+        << " meta=" << RingInfo::CLOCK
+        << " write:group=" << RingInfo::CLOCK
+        << " goto:" << SLICE_TAB;
+    DpctlExecute (swtch, cmd.str ());
+  }
+  {
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,prio=64,table=" << ROUTE_TAB
+        << " meta=" << RingInfo::COUNTER
+        << " write:group=" << RingInfo::COUNTER
+        << " goto:" << SLICE_TAB;
+    DpctlExecute (swtch, cmd.str ());
+  }
+
   // -------------------------------------------------------------------------
   // Slicing table -- [from higher to lower priority]
   //
