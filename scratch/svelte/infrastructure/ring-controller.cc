@@ -264,22 +264,24 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
       //
       // Clockwise packet forwarding.
       std::ostringstream cmd3;
-      cmd3 << "flow-mod cmd=add,table=2,prio=128,flags="
+      cmd3 << "flow-mod cmd=add,table=" << ROUTE_TAB
+           << ",prio=128,flags="
            << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
            << " meta=0x0,in_port=" << lInfo->GetPortNo (0)
            << " write:group=" << RingInfo::COUNTER
            << " meta:" << RingInfo::COUNTER
-           << " goto:3";
+           << " goto:" << SLICE_TAB;
       DpctlSchedule (lInfo->GetSwDpId (0), cmd3.str ());
 
       // Counterclockwise packet forwarding.
       std::ostringstream cmd4;
-      cmd4 << "flow-mod cmd=add,table=2,prio=128,flags="
+      cmd4 << "flow-mod cmd=add,table=" << ROUTE_TAB
+           << ",prio=128,flags="
            << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
            << " meta=0x0,in_port=" << lInfo->GetPortNo (1)
            << " write:group=" << RingInfo::CLOCK
            << " meta:" << RingInfo::CLOCK
-           << " goto:3";
+           << " goto:" << SLICE_TAB;
       DpctlSchedule (lInfo->GetSwDpId (1), cmd4.str ());
     }
 }
@@ -296,7 +298,8 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 
   // Building the dpctl command + arguments string.
   std::ostringstream cmd;
-  cmd << "flow-mod cmd=add,table=1,flags="
+  cmd << "flow-mod cmd=add,table=" << CLASS_TAB
+      << ",flags="
       << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
       << ",cookie=" << rInfo->GetTeidHex ()
       << ",prio=" << rInfo->GetPriority ()
@@ -323,8 +326,10 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 
       // Build the metatada and goto instructions string.
       std::ostringstream actS5, actS1;
-      actS5 << " meta:" << ringInfo->GetDlPath (LteIface::S5) << " goto:2";
-      actS1 << " meta:" << ringInfo->GetDlPath (LteIface::S1U) << " goto:2";
+      actS5 << " meta:" << ringInfo->GetDlPath (LteIface::S5)
+            << " goto:" << ROUTE_TAB;
+      actS1 << " meta:" << ringInfo->GetDlPath (LteIface::S1U)
+            << " goto:" << ROUTE_TAB;
 
       // Installing down rules into switches connected to the P-GW and S-GW.
       DpctlExecute (GetDpId (rInfo->GetPgwInfraSwIdx ()),
@@ -349,8 +354,10 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 
       // Build the metatada and goto instructions string.
       std::ostringstream actS1, actS5;
-      actS1 << " meta:" << ringInfo->GetUlPath (LteIface::S1U) << " goto:2";
-      actS5 << " meta:" << ringInfo->GetUlPath (LteIface::S5) << " goto:2";
+      actS1 << " meta:" << ringInfo->GetUlPath (LteIface::S1U)
+            << " goto:" << ROUTE_TAB;
+      actS5 << " meta:" << ringInfo->GetUlPath (LteIface::S5)
+            << " goto:" << ROUTE_TAB;
 
       // Installing up rules into switches connected to the eNB and S-GW.
       DpctlExecute (GetDpId (rInfo->GetEnbInfraSwIdx ()),
@@ -373,7 +380,7 @@ RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
 
   // Remove flow entries for this TEID.
   std::ostringstream cmd;
-  cmd << "flow-mod cmd=del,table=1"
+  cmd << "flow-mod cmd=del,table=" << CLASS_TAB
       << ",cookie=" << rInfo->GetTeidHex ()
       << ",cookie_mask=" << COOKIE_STRICT_MASK_STR;
 
@@ -416,13 +423,13 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
                   // Apply this meter to the traffic of this slice only.
                   std::ostringstream cmd;
-                  cmd << "flow-mod cmd=add,table=3,prio=16"
+                  cmd << "flow-mod cmd=add,prio=16,table=" << SLICE_TAB
                       << " eth_type=0x800,ip_proto=17,meta=" << ringPath
                       << ",gtpu_teid=" << (meterId & TEID_SLICE_MASK)
                       << "/" << TEID_SLICE_MASK
                       << ",ip_dscp=" << static_cast<uint16_t> (dscp)
                       << " meter:" << meterId
-                      << " goto:4";
+                      << " goto:" << OUTPT_TAB;
                   DpctlExecute (swtch, cmd.str ());
                 }
             }
@@ -445,11 +452,11 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
               // Apply this meter to the traffic of all slices.
               std::ostringstream cmd;
-              cmd << "flow-mod cmd=add,table=3,prio=16"
+              cmd << "flow-mod cmd=add,prio=16,table=" << SLICE_TAB
                   << " eth_type=0x800,ip_proto=17,meta=" << ringPath
                   << ",ip_dscp=" << static_cast<uint16_t> (dscp)
                   << " meter:" << meterId
-                  << " goto:4";
+                  << " goto:" << OUTPT_TAB;
               DpctlExecute (swtch, cmd.str ());
             }
         }

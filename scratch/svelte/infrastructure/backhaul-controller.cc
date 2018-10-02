@@ -193,12 +193,14 @@ BackhaulController::NotifyEpcAttach (
   // GTP packets entering the ring network from any EPC port.
   // Send the packet to the classification table.
   std::ostringstream cmdIn;
-  cmdIn << "flow-mod cmd=add,table=0,prio=64,flags=0x0007"
+  cmdIn << "flow-mod cmd=add,table=" << INPUT_TAB
+        << ",prio=64,flags="
+        << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
         << " eth_type=0x800,ip_proto=17"
         << ",udp_src=" << GTPU_PORT
         << ",udp_dst=" << GTPU_PORT
         << ",in_port=" << portNo
-        << " goto:1";
+        << " goto:" << CLASS_TAB;
   DpctlSchedule (swDev->GetDatapathId (), cmdIn.str ());
 
   // -------------------------------------------------------------------------
@@ -209,11 +211,11 @@ BackhaulController::NotifyEpcAttach (
   // Send the packet directly to the output table.
   Mac48Address epcMac = Mac48Address::ConvertFrom (epcDev->GetAddress ());
   std::ostringstream cmdOut;
-  cmdOut << "flow-mod cmd=add,table=2,prio=256 eth_type=0x800"
-         << ",eth_dst=" << epcMac
+  cmdOut << "flow-mod cmd=add,prio=256,table=" << ROUTE_TAB
+         << " eth_type=0x800,eth_dst=" << epcMac
          << ",ip_dst=" << Ipv4AddressHelper::GetAddress (epcDev)
          << " write:output=" << portNo
-         << " goto:4";
+         << " goto:" << OUTPT_TAB;
   DpctlSchedule (swDev->GetDatapathId (), cmdOut.str ());
 }
 
@@ -372,19 +374,25 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // Input table -- [from higher to lower priority]
   //
   // Entries will be installed here by NotifyEpcAttach function.
-
-  // GTP packets entering the switch from any port other than EPC ports.
-  // Send to Routing table.
-  std::ostringstream cmd;
-  cmd << "flow-mod cmd=add,table=0,prio=32"
-      << " eth_type=0x800,ip_proto=17"
-      << ",udp_src=" << GTPU_PORT
-      << ",udp_dst=" << GTPU_PORT
-      << " goto:2";
-  DpctlExecute (swtch, cmd.str ());
-
-  // Table miss entry. Send to controller.
-  DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
+  {
+    // GTP packets entering the switch from any port other than EPC ports.
+    // Send the packet to the routing table.
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,prio=32,table=" << INPUT_TAB
+        << " eth_type=0x800,ip_proto=17"
+        << ",udp_src=" << GTPU_PORT
+        << ",udp_dst=" << GTPU_PORT
+        << " goto:" << ROUTE_TAB;
+    DpctlExecute (swtch, cmd.str ());
+  }
+  {
+    // Table miss entry.
+    // Send the packet to the controller.
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,prio=0,table=" << INPUT_TAB
+        << " apply:output=ctrl";
+    DpctlExecute (swtch, cmd.str ());
+  }
 
   // -------------------------------------------------------------------------
   // Classification table -- [from higher to lower priority]
@@ -396,26 +404,44 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   //
   // Entries will be installed here by NotifyEpcAttach function.
   // Entries will be installed here by NotifyTopologyBuilt function.
+  {
+    // FIXME Deveria mover isso pro ring-controller. São especificas da topo.
+    // GTP packets classified at previous table. Write the output group into
+    // action set based on metadata field.
+    // Send the packet to the slicing table.
+    std::ostringstream cmd1;
+    cmd1 << "flow-mod cmd=add,prio=64,table=" << ROUTE_TAB
+         << " meta=0x1"
+         << " write:group=1 goto:" << SLICE_TAB;
+    DpctlExecute (swtch, cmd1.str ());
 
-  // GTP packets classified at previous table. Write the output group into
-  // action set based on metadata field. Send the packet to Slicing table.
-  DpctlExecute (swtch, "flow-mod cmd=add,table=2,prio=64"
-                " meta=0x1"
-                " write:group=1 goto:3");
-  DpctlExecute (swtch, "flow-mod cmd=add,table=2,prio=64"
-                " meta=0x2"
-                " write:group=2 goto:3");
-
-  // Table miss entry. Send to controller.
-  DpctlExecute (swtch, "flow-mod cmd=add,table=2,prio=0 apply:output=ctrl");
+    std::ostringstream cmd2;
+    cmd2 << "flow-mod cmd=add,prio=64,table=" << ROUTE_TAB
+         << " meta=0x2"
+         << " write:group=2 goto:" << SLICE_TAB;
+    DpctlExecute (swtch, cmd2.str ());
+  }
+  {
+    // Table miss entry.
+    // Send the packet to the controller.
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,prio=0,table=" << ROUTE_TAB
+        << " apply:output=ctrl";
+    DpctlExecute (swtch, cmd.str ());
+  }
 
   // -------------------------------------------------------------------------
   // Slicing table -- [from higher to lower priority]
   //
   // Entries will be installed here by the topology controller.
-  //
-  // Table miss entry. Send the packet to Output table
-  DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=0 goto:4");
+  {
+    // Table miss entry.
+    // Send the packet to the output table.
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,prio=0,table=" << SLICE_TAB
+        << " goto:" << OUTPT_TAB;
+    DpctlExecute (swtch, cmd.str ());
+  }
 
   // -------------------------------------------------------------------------
   // Output table -- [from higher to lower priority]
@@ -426,15 +452,20 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
       for (auto const &it : m_queueByDscp)
         {
           std::ostringstream cmd;
-          cmd << "flow-mod cmd=add,table=4,prio=16 eth_type=0x800,"
-              << "ip_dscp=" << static_cast<uint16_t> (it.first)
+          cmd << "flow-mod cmd=add,prio=16,table=" << OUTPT_TAB
+              << " eth_type=0x800"
+              << ",ip_dscp=" << static_cast<uint16_t> (it.first)
               << " write:queue=" << static_cast<uint32_t> (it.second);
           DpctlExecute (swtch, cmd.str ());
         }
     }
 
-  // Table miss entry. No instructions. This will trigger action set execute.
-  DpctlExecute (swtch, "flow-mod cmd=add,table=4,prio=0");
+  {
+    // Table miss entry. No instructions. This will trigger action set execute.
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,prio=0,table=" << OUTPT_TAB;
+    DpctlExecute (swtch, cmd.str ());
+  }
 }
 
 void

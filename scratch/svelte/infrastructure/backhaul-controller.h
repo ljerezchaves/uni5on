@@ -21,6 +21,13 @@
 #ifndef BACKHAUL_CONTROLLER_H
 #define BACKHAUL_CONTROLLER_H
 
+// Pipeline tables at OpenFlow backhaul switches.
+#define INPUT_TAB 0
+#define CLASS_TAB 1
+#define ROUTE_TAB 2
+#define SLICE_TAB 3
+#define OUTPT_TAB 4
+
 #include <ns3/core-module.h>
 #include <ns3/internet-module.h>
 #include <ns3/lte-module.h>
