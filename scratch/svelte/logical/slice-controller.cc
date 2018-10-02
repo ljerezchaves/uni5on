@@ -331,29 +331,32 @@ SliceController::NotifyPgwAttach (
   // -------------------------------------------------------------------------
   // Table 0 -- P-GW MAIN default table -- [from higher to lower priority]
   //
-  // IP packets coming from the S-GW (P-GW S5 port) and addressed to the
-  // Internet (Web IP address) have their destination MAC address rewritten to
-  // the Web SGi MAC address (mandatory when using logical ports) and are
-  // forward to the SGi interface port.
-  Mac48Address webMac = Mac48Address::ConvertFrom (webSgiDev->GetAddress ());
-  std::ostringstream cmdUl;
-  cmdUl << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+  {
+    // IP packets coming from the S-GW (P-GW S5 port) and addressed to the
+    // Internet (Web IP address) have their destination MAC address rewritten
+    // to the Web SGi MAC address (mandatory when using logical ports) and are
+    // forward to the SGi interface port.
+    Mac48Address webMac = Mac48Address::ConvertFrom (webSgiDev->GetAddress ());
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
         << ",in_port=" << pgwInfo->GetMainS5PortNo ()
         << ",ip_dst=" << Ipv4AddressHelper::GetAddress (webSgiDev)
         << " write:set_field=eth_dst:" << webMac
         << ",output=" << pgwInfo->GetMainSgiPortNo ();
-  DpctlSchedule (pgwInfo->GetMainDpId (), cmdUl.str ());
-
-  // IP packets coming from the Internet (P-GW SGi port) and addressed to the
-  // UE network are sent to the table corresponding to the current P-GW
-  // adaptive mechanism level. This is the only rule that is updated when the
-  // level changes, sending packets to a different pipeline table.
-  std::ostringstream cmdDl;
-  cmdDl << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+    DpctlSchedule (pgwInfo->GetMainDpId (), cmd.str ());
+  }
+  {
+    // IP packets coming from the Internet (P-GW SGi port) and addressed to the
+    // UE network are sent to the table corresponding to the current P-GW
+    // adaptive mechanism level. This is the only rule that is updated when the
+    // level changes, sending packets to a different pipeline table.
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
         << ",in_port=" << pgwInfo->GetMainSgiPortNo ()
         << ",ip_dst=" << m_ueAddr << "/" << m_ueMask.GetPrefixLength ()
         << " goto:" << pgwInfo->GetCurLevel () + 1;
-  DpctlSchedule (pgwInfo->GetMainDpId (), cmdDl.str ());
+    DpctlSchedule (pgwInfo->GetMainDpId (), cmd.str ());
+  }
 
   // -------------------------------------------------------------------------
   // Table 1..N -- P-GW MAIN adaptive level -- [from higher to lower priority]
@@ -396,25 +399,28 @@ SliceController::NotifySgwAttach (Ptr<SgwInfo> sgwInfo)
   // -------------------------------------------------------------------------
   // Table 0 -- S-GW default table -- [from higher to lower priority]
   //
-  // IP packets coming from the P-GW (S-GW S5 port) and addressed to the UE
-  // network are sent to table 1, where rules will match the flow and set both
-  // TEID and eNB address on tunnel metadata.
-  std::ostringstream cmdDl;
-  cmdDl << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+  {
+    // IP packets coming from the P-GW (S-GW S5 port) and addressed to the UE
+    // network are sent to table 1, where rules will match the flow and set
+    // both TEID and eNB address on tunnel metadata.
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
         << ",in_port=" << sgwInfo->GetS5PortNo ()
         << ",ip_dst=" << m_ueAddr << "/" << m_ueMask.GetPrefixLength ()
         << " goto:1";
-  DpctlSchedule (sgwInfo->GetDpId (), cmdDl.str ());
-
-  // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
-  // Internet are sent to table 2, where rules will match the flow and set both
-  // TEID and P-GW address on tunnel metadata.
-  std::ostringstream cmdUl;
-  cmdUl << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+    DpctlSchedule (sgwInfo->GetDpId (), cmd.str ());
+  }
+  {
+    // IP packets coming from the eNB (S-GW S1-U port) and addressed to the
+    // Internet are sent to table 2, where rules will match the flow and set
+    // both TEID and P-GW address on tunnel metadata.
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
         << ",in_port=" << sgwInfo->GetS1uPortNo ()
         << ",ip_dst=" << m_webAddr << "/" << m_webMask.GetPrefixLength ()
         << " goto:2";
-  DpctlSchedule (sgwInfo->GetDpId (), cmdUl.str ());
+    DpctlSchedule (sgwInfo->GetDpId (), cmd.str ());
+  }
 
   // -------------------------------------------------------------------------
   // Table 1 -- S-GW downlink table -- [from higher to lower priority]
@@ -927,37 +933,31 @@ SliceController::PgwRulesInstall (
       // Install rules for TCP traffic.
       if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
         {
-          std::ostringstream match;
-          match << " eth_type=0x800"
-                << ",ip_proto=6"
-                << ",ip_dst=" << filter.localAddress;
-
+          std::ostringstream mat;
+          mat << " eth_type=0x800"
+              << ",ip_proto=6"
+              << ",ip_dst=" << filter.localAddress;
           if (tft->IsDefaultTft () == false)
             {
-              match << ",ip_src=" << filter.remoteAddress
-                    << ",tcp_src=" << filter.remotePortStart;
+              mat << ",ip_src=" << filter.remoteAddress
+                  << ",tcp_src=" << filter.remotePortStart;
             }
-
-          std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
-          DpctlExecute (pgwTftDpId, cmdTcpStr);
+          DpctlExecute (pgwTftDpId, cmd.str () + mat.str () + act.str ());
         }
 
       // Install rules for UDP traffic.
       else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
         {
-          std::ostringstream match;
-          match << " eth_type=0x800"
-                << ",ip_proto=17"
-                << ",ip_dst=" << filter.localAddress;
-
+          std::ostringstream mat;
+          mat << " eth_type=0x800"
+              << ",ip_proto=17"
+              << ",ip_dst=" << filter.localAddress;
           if (tft->IsDefaultTft () == false)
             {
-              match << ",ip_src=" << filter.remoteAddress
-                    << ",udp_src=" << filter.remotePortStart;
+              mat << ",ip_src=" << filter.remoteAddress
+                  << ",udp_src=" << filter.remotePortStart;
             }
-
-          std::string cmdUdpStr = cmd.str () + match.str () + act.str ();
-          DpctlExecute (pgwTftDpId, cmdUdpStr);
+          DpctlExecute (pgwTftDpId, cmd.str () + mat.str () + act.str ());
         }
     }
   return true;
@@ -1076,37 +1076,33 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
           // Install rules for TCP traffic.
           if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
             {
-              std::ostringstream match;
-              match << " eth_type=0x800"
-                    << ",ip_proto=6"
-                    << ",ip_dst=" << filter.localAddress;
-
+              std::ostringstream mat;
+              mat << " eth_type=0x800"
+                  << ",ip_proto=6"
+                  << ",ip_dst=" << filter.localAddress;
               if (tft->IsDefaultTft () == false)
                 {
-                  match << ",ip_src=" << filter.remoteAddress
-                        << ",tcp_src=" << filter.remotePortStart;
+                  mat << ",ip_src=" << filter.remoteAddress
+                      << ",tcp_src=" << filter.remotePortStart;
                 }
-
-              std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
-              DpctlExecute (rInfo->GetSgwDpId (), cmdTcpStr);
+              DpctlExecute (rInfo->GetSgwDpId (),
+                            cmd.str () + mat.str () + act.str ());
             }
 
           // Install rules for UDP traffic.
           else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
             {
-              std::ostringstream match;
-              match << " eth_type=0x800"
-                    << ",ip_proto=17"
-                    << ",ip_dst=" << filter.localAddress;
-
+              std::ostringstream mat;
+              mat << " eth_type=0x800"
+                  << ",ip_proto=17"
+                  << ",ip_dst=" << filter.localAddress;
               if (tft->IsDefaultTft () == false)
                 {
-                  match << ",ip_src=" << filter.remoteAddress
-                        << ",udp_src=" << filter.remotePortStart;
+                  mat << ",ip_src=" << filter.remoteAddress
+                      << ",udp_src=" << filter.remotePortStart;
                 }
-
-              std::string cmdUdpStr = cmd.str () + match.str () + act.str ();
-              DpctlExecute (rInfo->GetSgwDpId (), cmdUdpStr);
+              DpctlExecute (rInfo->GetSgwDpId (),
+                            cmd.str () + mat.str () + act.str ());
             }
         }
     }
@@ -1154,37 +1150,33 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
           // Install rules for TCP traffic.
           if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
             {
-              std::ostringstream match;
-              match << " eth_type=0x800"
-                    << ",ip_proto=6"
-                    << ",ip_src=" << filter.localAddress;
-
+              std::ostringstream mat;
+              mat << " eth_type=0x800"
+                  << ",ip_proto=6"
+                  << ",ip_src=" << filter.localAddress;
               if (tft->IsDefaultTft () == false)
                 {
-                  match << ",ip_dst=" << filter.remoteAddress
-                        << ",tcp_dst=" << filter.remotePortStart;
+                  mat << ",ip_dst=" << filter.remoteAddress
+                      << ",tcp_dst=" << filter.remotePortStart;
                 }
-
-              std::string cmdTcpStr = cmd.str () + match.str () + act.str ();
-              DpctlExecute (rInfo->GetSgwDpId (), cmdTcpStr);
+              DpctlExecute (rInfo->GetSgwDpId (),
+                            cmd.str () + mat.str () + act.str ());
             }
 
           // Install rules for UDP traffic.
           else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
             {
-              std::ostringstream match;
-              match << " eth_type=0x800"
-                    << ",ip_proto=17"
-                    << ",ip_src=" << filter.localAddress;
-
+              std::ostringstream mat;
+              mat << " eth_type=0x800"
+                  << ",ip_proto=17"
+                  << ",ip_src=" << filter.localAddress;
               if (tft->IsDefaultTft () == false)
                 {
-                  match << ",ip_dst=" << filter.remoteAddress
-                        << ",udp_dst=" << filter.remotePortStart;
+                  mat << ",ip_dst=" << filter.remoteAddress
+                      << ",udp_dst=" << filter.remotePortStart;
                 }
-
-              std::string cmdUdpStr = cmd.str () + match.str () + act.str ();
-              DpctlExecute (rInfo->GetSgwDpId (), cmdUdpStr);
+              DpctlExecute (rInfo->GetSgwDpId (),
+                            cmd.str () + mat.str () + act.str ());
             }
         }
     }

@@ -186,14 +186,14 @@ BackhaulController::NotifyEpcAttach (
 {
   NS_LOG_FUNCTION (this << swDev << portNo << epcDev);
 
-  // Configure port rules.
   // -------------------------------------------------------------------------
   // Input table -- [from higher to lower priority]
   //
-  // GTP packets entering the ring network from any EPC port.
-  // Send the packet to the classification table.
-  std::ostringstream cmdIn;
-  cmdIn << "flow-mod cmd=add,table=" << INPUT_TAB
+  {
+    // GTP packets entering the ring network from any EPC port.
+    // Send the packet to the classification table.
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,table=" << INPUT_TAB
         << ",prio=64,flags="
         << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
         << " eth_type=0x800,ip_proto=17"
@@ -201,22 +201,25 @@ BackhaulController::NotifyEpcAttach (
         << ",udp_dst=" << GTPU_PORT
         << ",in_port=" << portNo
         << " goto:" << CLASS_TAB;
-  DpctlSchedule (swDev->GetDatapathId (), cmdIn.str ());
+    DpctlSchedule (swDev->GetDatapathId (), cmd.str ());
+  }
 
   // -------------------------------------------------------------------------
   // Routing table -- [from higher to lower priority]
   //
-  // GTP packets addressed to EPC elements connected to this switch over EPC
-  // ports. Write the output port into action set.
-  // Send the packet directly to the output table.
-  Mac48Address epcMac = Mac48Address::ConvertFrom (epcDev->GetAddress ());
-  std::ostringstream cmdOut;
-  cmdOut << "flow-mod cmd=add,prio=256,table=" << ROUTE_TAB
-         << " eth_type=0x800,eth_dst=" << epcMac
-         << ",ip_dst=" << Ipv4AddressHelper::GetAddress (epcDev)
-         << " write:output=" << portNo
-         << " goto:" << OUTPT_TAB;
-  DpctlSchedule (swDev->GetDatapathId (), cmdOut.str ());
+  {
+    // GTP packets addressed to EPC elements connected to this switch over EPC
+    // ports. Write the output port into action set.
+    // Send the packet directly to the output table.
+    Mac48Address epcMac = Mac48Address::ConvertFrom (epcDev->GetAddress ());
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,prio=256,table=" << ROUTE_TAB
+        << " eth_type=0x800,eth_dst=" << epcMac
+        << ",ip_dst=" << Ipv4AddressHelper::GetAddress (epcDev)
+        << " write:output=" << portNo
+        << " goto:" << OUTPT_TAB;
+    DpctlSchedule (swDev->GetDatapathId (), cmd.str ());
+  }
 }
 
 void
@@ -495,16 +498,16 @@ BackhaulController::SlicingMeterAdjusted (
       //
       // Update the proper slicing meter.
       uint64_t kbps = Bps2Kbps (lInfo->GetFreeBitRate (dir, slice));
+      NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) << ": " <<
+                    LinkInfo::DirectionStr (dir) <<
+                    " link set to " << kbps << " Kbps");
+
       std::ostringstream cmd;
       cmd << "meter-mod cmd=mod"
           << ",flags=" << OFPMF_KBPS
           << ",meter=" << meterId
           << " drop:rate=" << kbps;
-
       DpctlExecute (lInfo->GetSwDpId (dir), cmd.str ());
-      NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) << ": " <<
-                    LinkInfo::DirectionStr (dir) <<
-                    " link set to " << kbps << " Kbps");
     }
 }
 
@@ -529,15 +532,15 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
                            " to " << lInfo->GetSwDpId (1));
 
               uint64_t kbps = Bps2Kbps (lInfo->GetFreeBitRate (dir, slice));
+              NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) <<
+                            ": " << LinkInfo::DirectionStr (dir) <<
+                            " link set to " << kbps << " Kbps");
+
               std::ostringstream cmd;
               cmd << "meter-mod cmd=add,flags=" << OFPMF_KBPS
                   << ",meter=" << meterId
                   << " drop:rate=" << kbps;
-
               DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
-              NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) <<
-                            ": " << LinkInfo::DirectionStr (dir) <<
-                            " link set to " << kbps << " Kbps");
             }
         }
     }
@@ -555,15 +558,15 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
                        " to " << lInfo->GetSwDpId (1));
 
           uint64_t kbps = Bps2Kbps (lInfo->GetFreeBitRate (dir, slice));
+          NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) <<
+                        ": " << LinkInfo::DirectionStr (dir) <<
+                        " link set to " << kbps << " Kbps");
+
           std::ostringstream cmd;
           cmd << "meter-mod cmd=add,flags=" << OFPMF_KBPS
               << ",meter=" << meterId
               << " drop:rate=" << kbps;
-
           DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
-          NS_LOG_DEBUG ("Link slice " << SliceIdStr (slice) <<
-                        ": " << LinkInfo::DirectionStr (dir) <<
-                        " link set to " << kbps << " Kbps");
         }
     }
 }

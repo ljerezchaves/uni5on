@@ -238,17 +238,20 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
       // Configure groups to keep forwarding packets in the ring until they
       // reach the destination switch.
       //
-      // Routing group for clockwise packet forwarding.
-      std::ostringstream cmd1;
-      cmd1 << "group-mod cmd=add,type=ind,group=" << RingInfo::CLOCK
-           << " weight=0,port=any,group=any output=" << lInfo->GetPortNo (0);
-      DpctlSchedule (lInfo->GetSwDpId (0), cmd1.str ());
-
-      // Routing group for counterclockwise packet forwarding.
-      std::ostringstream cmd2;
-      cmd2 << "group-mod cmd=add,type=ind,group=" << RingInfo::COUNTER
-           << " weight=0,port=any,group=any output=" << lInfo->GetPortNo (1);
-      DpctlSchedule (lInfo->GetSwDpId (1), cmd2.str ());
+      {
+        // Routing group for clockwise packet forwarding.
+        std::ostringstream cmd;
+        cmd << "group-mod cmd=add,type=ind,group=" << RingInfo::CLOCK
+            << " weight=0,port=any,group=any output=" << lInfo->GetPortNo (0);
+        DpctlSchedule (lInfo->GetSwDpId (0), cmd.str ());
+      }
+      {
+        // Routing group for counterclockwise packet forwarding.
+        std::ostringstream cmd;
+        cmd << "group-mod cmd=add,type=ind,group=" << RingInfo::COUNTER
+            << " weight=0,port=any,group=any output=" << lInfo->GetPortNo (1);
+        DpctlSchedule (lInfo->GetSwDpId (1), cmd.str ());
+      }
     }
 
   // Iterate over links configuring the forwarding rules.
@@ -261,28 +264,30 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
       // into action set based on input port. Write the same group number into
       // metadata field.
       // Send the packet to the slicing table.
-      //
-      // Clockwise packet forwarding.
-      std::ostringstream cmd3;
-      cmd3 << "flow-mod cmd=add,table=" << ROUTE_TAB
-           << ",prio=128,flags="
-           << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
-           << " meta=0x0,in_port=" << lInfo->GetPortNo (0)
-           << " write:group=" << RingInfo::COUNTER
-           << " meta:" << RingInfo::COUNTER
-           << " goto:" << SLICE_TAB;
-      DpctlSchedule (lInfo->GetSwDpId (0), cmd3.str ());
-
-      // Counterclockwise packet forwarding.
-      std::ostringstream cmd4;
-      cmd4 << "flow-mod cmd=add,table=" << ROUTE_TAB
-           << ",prio=128,flags="
-           << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
-           << " meta=0x0,in_port=" << lInfo->GetPortNo (1)
-           << " write:group=" << RingInfo::CLOCK
-           << " meta:" << RingInfo::CLOCK
-           << " goto:" << SLICE_TAB;
-      DpctlSchedule (lInfo->GetSwDpId (1), cmd4.str ());
+      {
+        // Clockwise packet forwarding.
+        std::ostringstream cmd;
+        cmd << "flow-mod cmd=add,table=" << ROUTE_TAB
+            << ",prio=128,flags="
+            << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
+            << " meta=0x0,in_port=" << lInfo->GetPortNo (0)
+            << " write:group=" << RingInfo::COUNTER
+            << " meta:" << RingInfo::COUNTER
+            << " goto:" << SLICE_TAB;
+        DpctlSchedule (lInfo->GetSwDpId (0), cmd.str ());
+      }
+      {
+        // Counterclockwise packet forwarding.
+        std::ostringstream cmd;
+        cmd << "flow-mod cmd=add,table=" << ROUTE_TAB
+            << ",prio=128,flags="
+            << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
+            << " meta=0x0,in_port=" << lInfo->GetPortNo (1)
+            << " write:group=" << RingInfo::CLOCK
+            << " meta:" << RingInfo::CLOCK
+            << " goto:" << SLICE_TAB;
+        DpctlSchedule (lInfo->GetSwDpId (1), cmd.str ());
+      }
     }
 }
 
@@ -325,17 +330,17 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
           << ",gtpu_teid=" << rInfo->GetTeidHex ();
 
       // Build the metatada and goto instructions string.
-      std::ostringstream actS5, actS1;
-      actS5 << " meta:" << ringInfo->GetDlPath (LteIface::S5)
-            << " goto:" << ROUTE_TAB;
-      actS1 << " meta:" << ringInfo->GetDlPath (LteIface::S1U)
-            << " goto:" << ROUTE_TAB;
+      std::ostringstream aS5, aS1;
+      aS5 << " meta:" << ringInfo->GetDlPath (LteIface::S5)
+          << " goto:" << ROUTE_TAB;
+      aS1 << " meta:" << ringInfo->GetDlPath (LteIface::S1U)
+          << " goto:" << ROUTE_TAB;
 
       // Installing down rules into switches connected to the P-GW and S-GW.
       DpctlExecute (GetDpId (rInfo->GetPgwInfraSwIdx ()),
-                    cmd.str () + mS5.str () + dscp.str () + actS5.str ());
+                    cmd.str () + mS5.str () + dscp.str () + aS5.str ());
       DpctlExecute (GetDpId (rInfo->GetSgwInfraSwIdx ()),
-                    cmd.str () + mS1.str () + dscp.str () + actS1.str ());
+                    cmd.str () + mS1.str () + dscp.str () + aS1.str ());
     }
 
   // Configuring uplink routing.
@@ -353,17 +358,17 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
           << ",gtpu_teid=" << rInfo->GetTeidHex ();
 
       // Build the metatada and goto instructions string.
-      std::ostringstream actS1, actS5;
-      actS1 << " meta:" << ringInfo->GetUlPath (LteIface::S1U)
-            << " goto:" << ROUTE_TAB;
-      actS5 << " meta:" << ringInfo->GetUlPath (LteIface::S5)
-            << " goto:" << ROUTE_TAB;
+      std::ostringstream aS1, aS5;
+      aS1 << " meta:" << ringInfo->GetUlPath (LteIface::S1U)
+          << " goto:" << ROUTE_TAB;
+      aS5 << " meta:" << ringInfo->GetUlPath (LteIface::S5)
+          << " goto:" << ROUTE_TAB;
 
       // Installing up rules into switches connected to the eNB and S-GW.
       DpctlExecute (GetDpId (rInfo->GetEnbInfraSwIdx ()),
-                    cmd.str () + mS1.str () + dscp.str () + actS1.str ());
+                    cmd.str () + mS1.str () + dscp.str () + aS1.str ());
       DpctlExecute (GetDpId (rInfo->GetSgwInfraSwIdx ()),
-                    cmd.str () + mS5.str () + dscp.str () + actS5.str ());
+                    cmd.str () + mS5.str () + dscp.str () + aS5.str ());
     }
   return true;
 }
@@ -638,17 +643,20 @@ RingController::CreateSpanningTree (void)
   Ptr<LinkInfo> lInfo = GetLinkInfo (half, half + 1);
   NS_LOG_DEBUG ("Disabling link from " << half << " to " <<
                 half + 1 << " for broadcast messages.");
-
-  std::ostringstream cmd1, cmd2;
-  cmd1 << "port-mod port=" << lInfo->GetPortNo (0)
-       << ",addr=" << lInfo->GetPortMacAddr (0)
-       << ",conf=0x00000020,mask=0x00000020";
-  DpctlSchedule (lInfo->GetSwDpId (0), cmd1.str ());
-
-  cmd2 << "port-mod port=" << lInfo->GetPortNo (1)
-       << ",addr=" << lInfo->GetPortMacAddr (1)
-       << ",conf=0x00000020,mask=0x00000020";
-  DpctlSchedule (lInfo->GetSwDpId (1), cmd2.str ());
+  {
+    std::ostringstream cmd;
+    cmd << "port-mod port=" << lInfo->GetPortNo (0)
+        << ",addr=" << lInfo->GetPortMacAddr (0)
+        << ",conf=0x00000020,mask=0x00000020";
+    DpctlSchedule (lInfo->GetSwDpId (0), cmd.str ());
+  }
+  {
+    std::ostringstream cmd;
+    cmd << "port-mod port=" << lInfo->GetPortNo (1)
+        << ",addr=" << lInfo->GetPortMacAddr (1)
+        << ",conf=0x00000020,mask=0x00000020";
+    DpctlSchedule (lInfo->GetSwDpId (1), cmd.str ());
+  }
 }
 
 RingInfo::RingPath
