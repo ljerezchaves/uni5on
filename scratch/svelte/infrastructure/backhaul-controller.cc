@@ -188,10 +188,10 @@ BackhaulController::NotifyEpcAttach (
 
   // Configure port rules.
   // -------------------------------------------------------------------------
-  // Table 0 -- Input table -- [from higher to lower priority]
+  // Input table -- [from higher to lower priority]
   //
-  // GTP packets entering the ring network from any EPC port. Send to the
-  // Classification table.
+  // GTP packets entering the ring network from any EPC port.
+  // Send the packet to the classification table.
   std::ostringstream cmdIn;
   cmdIn << "flow-mod cmd=add,table=0,prio=64,flags=0x0007"
         << " eth_type=0x800,ip_proto=17"
@@ -202,11 +202,11 @@ BackhaulController::NotifyEpcAttach (
   DpctlSchedule (swDev->GetDatapathId (), cmdIn.str ());
 
   // -------------------------------------------------------------------------
-  // Table 2 -- Routing table -- [from higher to lower priority]
+  // Routing table -- [from higher to lower priority]
   //
   // GTP packets addressed to EPC elements connected to this switch over EPC
-  // ports. Write the output port into action set. Send the packet directly to
-  // Output table.
+  // ports. Write the output port into action set.
+  // Send the packet directly to the output table.
   Mac48Address epcMac = Mac48Address::ConvertFrom (epcDev->GetAddress ());
   std::ostringstream cmdOut;
   cmdOut << "flow-mod cmd=add,table=2,prio=256 eth_type=0x800"
@@ -369,7 +369,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
   // For the switches on the backhaul network, install following rules:
   // -------------------------------------------------------------------------
-  // Table 0 -- Input table -- [from higher to lower priority]
+  // Input table -- [from higher to lower priority]
   //
   // Entries will be installed here by NotifyEpcAttach function.
 
@@ -387,12 +387,12 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
 
   // -------------------------------------------------------------------------
-  // Table 1 -- Classification table -- [from higher to lower priority]
+  // Classification table -- [from higher to lower priority]
   //
   // Entries will be installed here by TopologyRoutingInstall function.
 
   // -------------------------------------------------------------------------
-  // Table 2 -- Routing table -- [from higher to lower priority]
+  // Routing table -- [from higher to lower priority]
   //
   // Entries will be installed here by NotifyEpcAttach function.
   // Entries will be installed here by NotifyTopologyBuilt function.
@@ -410,7 +410,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   DpctlExecute (swtch, "flow-mod cmd=add,table=2,prio=0 apply:output=ctrl");
 
   // -------------------------------------------------------------------------
-  // Table 3 -- Slicing table -- [from higher to lower priority]
+  // Slicing table -- [from higher to lower priority]
   //
   // Entries will be installed here by the topology controller.
   //
@@ -418,7 +418,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   DpctlExecute (swtch, "flow-mod cmd=add,table=3,prio=0 goto:4");
 
   // -------------------------------------------------------------------------
-  // Table 4 -- Output table -- [from higher to lower priority]
+  // Output table -- [from higher to lower priority]
   //
   if (GetPriorityQueuesMode () == OpMode::ON)
     {

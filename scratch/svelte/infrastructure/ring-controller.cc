@@ -255,11 +255,12 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
   for (auto const &lInfo : LinkInfo::GetList ())
     {
       // ---------------------------------------------------------------------
-      // Table 2 -- Routing table -- [from higher to lower priority]
+      // Routing table -- [from higher to lower priority]
       //
       // GTP packets being forwarded by this switch. Write the output group
       // into action set based on input port. Write the same group number into
-      // metadata field. Send the packet to slicing table.
+      // metadata field.
+      // Send the packet to the slicing table.
       //
       // Clockwise packet forwarding.
       std::ostringstream cmd3;
@@ -390,10 +391,11 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   NS_LOG_FUNCTION (this << swtch);
 
   // -------------------------------------------------------------------------
-  // Table 3 -- Slicing table -- [from higher to lower priority]
+  // Slicing table -- [from higher to lower priority]
   //
   // We are using the IP DSCP field to identify Non-GBR traffic.
-  // Apply Non-GBR meter band. Send the packet to Output table.
+  // Apply Non-GBR meter band.
+  // Send the packet to the output table.
   if (GetLinkSlicingMode () == OpMode::ON)
     {
       // Apply meter rules for each slice.
