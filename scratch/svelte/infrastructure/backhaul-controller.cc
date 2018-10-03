@@ -388,7 +388,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // Entries will be installed here by NotifyEpcAttach function.
   {
     // GTP packets entering the switch from any port other than EPC ports.
-    // Send the packet to the routing table.
+    // Send the packet directly to the routing table.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=32,table=" << INPUT_TAB
         << " eth_type=0x800,ip_proto=17"
@@ -408,6 +408,25 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
   // -------------------------------------------------------------------------
   // Classification table -- [from higher to lower priority]
+  //
+  // Classify the packet according to the logical slice and send to the
+  // corresponding slice table.
+  for (int s = 0; s < SliceId::ALL; s++)
+    {
+      SliceId slice = static_cast<SliceId> (s);
+      uint32_t sliceMasked = GetSvelteTeid (slice, 0, 0);
+
+      std::ostringstream cmd;
+      cmd << "flow-mod cmd=add,prio=16,table=" << CLASS_TAB
+          << " eth_type=0x800,ip_proto=17"
+          << ",gtpu_teid=" << (sliceMasked & TEID_SLICE_MASK)
+          << "/" << TEID_SLICE_MASK
+          << " goto:" << GetSliceTable (slice);
+      DpctlExecute (swtch, cmd.str ());
+    }
+
+  // -------------------------------------------------------------------------
+  // Slice tables (one for each slice) -- [from higher to lower priority]
   //
   // Entries will be installed here by TopologyRoutingInstall function.
 

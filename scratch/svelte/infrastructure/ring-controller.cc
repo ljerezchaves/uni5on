@@ -306,7 +306,7 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
 
   // Building the dpctl command + arguments string.
   std::ostringstream cmd;
-  cmd << "flow-mod cmd=add,table=" << CLASS_TAB
+  cmd << "flow-mod cmd=add,table=" << GetSliceTable (rInfo->GetSliceId ())
       << ",flags="
       << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
       << ",cookie=" << rInfo->GetTeidHex ()
@@ -388,7 +388,7 @@ RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
 
   // Remove flow entries for this TEID.
   std::ostringstream cmd;
-  cmd << "flow-mod cmd=del,table=" << CLASS_TAB
+  cmd << "flow-mod cmd=del,table=" << GetSliceTable (rInfo->GetSliceId ())
       << ",cookie=" << rInfo->GetTeidHex ()
       << ",cookie_mask=" << COOKIE_STRICT_MASK_STR;
 
