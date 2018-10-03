@@ -170,7 +170,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
 
   // Nothing more to do. Block the traffic.
   NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex ());
-  BlockBearer (rInfo, RoutingInfo::LINKBAND);
+  BlockBearer (rInfo, RoutingInfo::BACKBAND); // FIXME Why? Identificar o motivo
   return false;
 }
 

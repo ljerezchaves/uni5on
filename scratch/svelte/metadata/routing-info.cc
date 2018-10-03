@@ -523,8 +523,12 @@ RoutingInfo::BlockReasonStr (BlockReason reason)
       return "SgwTable";
     case RoutingInfo::SGWLOAD:
       return "SgwLoad";
-    case RoutingInfo::LINKBAND:
-      return "SliceFull";
+    case RoutingInfo::BACKTABLE:
+      return "BackTable";
+    case RoutingInfo::BACKLOAD:
+      return "BackLoad";
+    case RoutingInfo::BACKBAND:
+      return "BackBand";
     case RoutingInfo::NONE:
     default:
       return "-";
