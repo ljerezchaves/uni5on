@@ -58,6 +58,18 @@ BackhaulController::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::BackhaulController")
     .SetParent<OFSwitch13Controller> ()
+    .AddAttribute ("BlockPolicy",
+                   "Switch overloaded block policy.",
+                   EnumValue (OpMode::ON),
+                   MakeEnumAccessor (&BackhaulController::m_blockPolicy),
+                   MakeEnumChecker (OpMode::OFF,  "none",
+                                    OpMode::ON,   "all",
+                                    OpMode::AUTO, "gbr"))
+    .AddAttribute ("BlockThs",
+                   "Switch overloaded block threshold.",
+                   DoubleValue (0.95),
+                   MakeDoubleAccessor (&BackhaulController::m_blockThs),
+                   MakeDoubleChecker<double> (0.8, 1.0))
     .AddAttribute ("PriorityQueues",
                    "Priority output queues mechanism operation mode.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -95,11 +107,19 @@ BackhaulController::GetNSwitches (void) const
 }
 
 OpMode
-BackhaulController::GetPriorityQueuesMode (void) const
+BackhaulController::GetBlockPolicy (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_priorityQueues;
+  return m_blockPolicy;
+}
+
+double
+BackhaulController::GetBlockThreshold (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_blockThs;
 }
 
 OpMode
@@ -108,6 +128,14 @@ BackhaulController::GetLinkSlicingMode (void) const
   NS_LOG_FUNCTION (this);
 
   return m_slicing;
+}
+
+OpMode
+BackhaulController::GetPriorityQueuesMode (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_priorityQueues;
 }
 
 double

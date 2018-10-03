@@ -79,16 +79,15 @@ public:
   uint16_t GetNSwitches (void) const;
 
   /**
-   * Get the priority output queues mechanism operation mode.
-   * \return The operation mode.
+   * \name Attribute accessors.
+   * \return The requested information.
    */
-  OpMode GetPriorityQueuesMode (void) const;
-
-  /**
-   * Get the link slicing mechanism operation mode.
-   * \return The operation mode.
-   */
-  OpMode GetLinkSlicingMode (void) const;
+  //\{
+  OpMode GetBlockPolicy         (void) const;
+  double GetBlockThreshold      (void) const;
+  OpMode GetLinkSlicingMode     (void) const;
+  OpMode GetPriorityQueuesMode  (void) const;
+  //\}
 
   /**
    * Get the average slice usage considering all links in the backhaul network.
@@ -230,7 +229,9 @@ private:
 
   OFSwitch13DeviceContainer m_switchDevices;  //!< OpenFlow switch devices.
 
-  // Internal mechanisms for performance improvement.
+  // Internal mechanisms metadata.
+  OpMode                m_blockPolicy;    //!< Switch overload block policy.
+  double                m_blockThs;       //!< Switch block threshold.
   OpMode                m_priorityQueues; //!< DSCP priority queues mechanism.
   OpMode                m_slicing;        //!< Network slicing mechanism.
 
