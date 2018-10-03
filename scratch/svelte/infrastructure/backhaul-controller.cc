@@ -222,7 +222,7 @@ BackhaulController::GetSliceController (SliceId slice) const
   return it->second;
 }
 
-uint8_t
+uint16_t
 BackhaulController::GetSliceTable (SliceId slice) const
 {
   NS_LOG_FUNCTION (this << slice);

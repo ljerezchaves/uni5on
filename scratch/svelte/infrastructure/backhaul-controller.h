@@ -156,7 +156,7 @@ protected:
    * \param slice The slice ID.
    * \return The pipeline table for this slice.
    */
-  uint8_t GetSliceTable (SliceId slice) const;
+  uint16_t GetSliceTable (SliceId slice) const;
 
   /**
    * Notify this controller of a new bearer context created.
