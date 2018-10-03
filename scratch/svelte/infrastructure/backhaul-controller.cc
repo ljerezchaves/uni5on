@@ -174,6 +174,15 @@ BackhaulController::GetSliceController (SliceId slice) const
   return it->second;
 }
 
+uint16_t
+BackhaulController::GetSliceTable (SliceId slice) const
+{
+  NS_LOG_FUNCTION (this << slice);
+
+  // The first 2 tables are the INPUT_TAB and CLASS_TAB.
+  return static_cast<int> (slice) + 2;
+}
+
 void
 BackhaulController::NotifyBearerCreated (Ptr<RoutingInfo> rInfo)
 {

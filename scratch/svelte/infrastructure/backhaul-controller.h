@@ -144,6 +144,14 @@ protected:
   Ptr<SliceController> GetSliceController (SliceId slice) const;
 
   /**
+   * Get the number of the OpenFlow pipeline table exclusively used by this
+   * slice for GTP tunnel handling (routing and QoS).
+   * \param slice The slice ID.
+   * \return The pipeline table for this slice.
+   */
+  uint16_t GetSliceTable (SliceId slice) const;
+
+  /**
    * Notify this controller of a new bearer context created.
    * \param rInfo The routing information to process.
    */
