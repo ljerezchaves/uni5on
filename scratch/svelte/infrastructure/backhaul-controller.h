@@ -121,14 +121,6 @@ protected:
   virtual bool BearerRelease (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
-   * Block this bearer and notify the reason.
-   * \param rInfo The routing information to process.
-   * \param reason The reason for blocking this bearer.
-   */
-  void BlockBearer (Ptr<RoutingInfo> rInfo,
-                    RoutingInfo::BlockReason reason) const;
-
-  /**
    * Search for link information between two switches by their indexes.
    * \param idx1 First switch index.
    * \param idx2 Second switch index.

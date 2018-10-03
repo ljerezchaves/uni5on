@@ -146,16 +146,6 @@ BackhaulController::NotifyConstructionCompleted (void)
   OFSwitch13Controller::NotifyConstructionCompleted ();
 }
 
-void
-BackhaulController::BlockBearer (
-  Ptr<RoutingInfo> rInfo, RoutingInfo::BlockReason reason) const
-{
-  NS_LOG_FUNCTION (this << rInfo << reason);
-
-  NS_ASSERT_MSG (reason != RoutingInfo::NONE, "Invalid block reason.");
-  rInfo->SetBlocked (true, reason);
-}
-
 Ptr<LinkInfo>
 BackhaulController::GetLinkInfo (uint16_t idx1, uint16_t idx2) const
 {
