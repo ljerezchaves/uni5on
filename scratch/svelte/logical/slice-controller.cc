@@ -862,19 +862,22 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
 
   // Second check: OpenFlow switch pipeline load.
   // Block the bearer if the P-GW TFT switch pipeline load is exceeding
-  // the block threshold, accordingly to the PgwBlockPolicy attribute:
+  // the block threshold, respecting the PgwBlockPolicy attribute:
   // - If OFF (none): don't block the request.
   // - If ON (all)  : block the request.
   // - If AUTO (gbr): block only if GBR request.
-  double pipeUsage = m_pgwInfo->GetPipeCapacityUsage (rInfo->GetPgwTftIdx ());
-  if (pipeUsage >= m_pgwBlockThs
-      && (m_pgwBlockPolicy == OpMode::ON
-          || (m_pgwBlockPolicy == OpMode::AUTO && rInfo->IsGbr ())))
+  if (m_pgwBlockPolicy == OpMode::ON
+      || (m_pgwBlockPolicy == OpMode::AUTO && rInfo->IsGbr ()))
     {
-      rInfo->SetBlocked (true, RoutingInfo::PGWLOAD);
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " with the reason " << rInfo->GetBlockReasonStr ());
-      return false;
+      double pipeUsage =
+        m_pgwInfo->GetPipeCapacityUsage (rInfo->GetPgwTftIdx ());
+      if (pipeUsage >= m_pgwBlockThs)
+        {
+          rInfo->SetBlocked (true, RoutingInfo::PGWLOAD);
+          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                       " with the reason " << rInfo->GetBlockReasonStr ());
+          return false;
+        }
     }
 
   // If we get here it's because all the resources are available.
@@ -1028,19 +1031,21 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
 
   // Second check: OpenFlow switch pipeline load.
   // Block the bearer if the S-GW switch pipeline load is exceeding
-  // the block threshold, accordingly to the SgwBlockPolicy attribute:
+  // the block threshold, respecting the SgwBlockPolicy attribute:
   // - If OFF (none): don't block the request.
   // - If ON (all)  : block the request.
   // - If AUTO (gbr): block only if GBR request.
-  double pipeUsage = sgwInfo->GetPipeCapacityUsage ();
-  if (pipeUsage >= m_sgwBlockThs
-      && (m_sgwBlockPolicy == OpMode::ON
-          || (m_sgwBlockPolicy == OpMode::AUTO && rInfo->IsGbr ())))
+  if (m_sgwBlockPolicy == OpMode::ON
+      || (m_sgwBlockPolicy == OpMode::AUTO && rInfo->IsGbr ()))
     {
-      rInfo->SetBlocked (true, RoutingInfo::SGWLOAD);
-      NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " with the reason " << rInfo->GetBlockReasonStr ());
-      return false;
+      double pipeUsage = sgwInfo->GetPipeCapacityUsage ();
+      if (pipeUsage >= m_sgwBlockThs)
+        {
+          rInfo->SetBlocked (true, RoutingInfo::SGWLOAD);
+          NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+                       " with the reason " << rInfo->GetBlockReasonStr ());
+          return false;
+        }
     }
 
   // If we get here it's because all the resources are available.
