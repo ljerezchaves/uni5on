@@ -120,12 +120,28 @@ protected:
   virtual bool BearerRelease (Ptr<RoutingInfo> rInfo) = 0;
 
   /**
+   * Get the pipeline flow table usage for the given backhaul switch index
+   * and pipeline flow table ID.
+   * \param idx The switch index.
+   * \param tableId The pipeline slice table ID.
+   * \return The flow table usage.
+   */
+  double GetFlowTableUsage (uint16_t idx, uint8_t tableId) const;
+
+  /**
    * Search for link information between two switches by their indexes.
    * \param idx1 First switch index.
    * \param idx2 Second switch index.
    * \return Pointer to link info saved.
    */
   Ptr<LinkInfo> GetLinkInfo (uint16_t idx1, uint16_t idx2) const;
+
+  /**
+   * Get the pipeline capacity usage for the given backhaul switch index.
+   * \param idx The switch index.
+   * \return The pipeline capacity usage.
+   */
+  double GetPipeCapacityUsage (uint16_t idx) const;
 
   /**
    * Get the slice controller application for a given slice ID.

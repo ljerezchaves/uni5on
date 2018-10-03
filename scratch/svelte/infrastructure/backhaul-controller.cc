@@ -174,12 +174,42 @@ BackhaulController::NotifyConstructionCompleted (void)
   OFSwitch13Controller::NotifyConstructionCompleted ();
 }
 
+double
+BackhaulController::GetFlowTableUsage (uint16_t idx, uint8_t tableId) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx < m_switchDevices.GetN (), "Invalid index.");
+  Ptr<OFSwitch13Device> device = m_switchDevices.Get (idx);
+  Ptr<OFSwitch13StatsCalculator> stats;
+  stats = device->GetObject<OFSwitch13StatsCalculator> ();
+  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
+
+  return static_cast<double> (stats->GetEwmaFlowTableEntries (tableId)) /
+         static_cast<double> (device->GetFlowTableSize (tableId));
+}
+
 Ptr<LinkInfo>
 BackhaulController::GetLinkInfo (uint16_t idx1, uint16_t idx2) const
 {
   NS_LOG_FUNCTION (this << idx1 << idx2);
 
   return LinkInfo::GetPointer (GetDpId (idx1), GetDpId (idx2));
+}
+
+double
+BackhaulController::GetPipeCapacityUsage (uint16_t idx) const
+{
+  NS_LOG_FUNCTION (this << idx);
+
+  NS_ASSERT_MSG (idx < m_switchDevices.GetN (), "Invalid index.");
+  Ptr<OFSwitch13Device> device = m_switchDevices.Get (idx);
+  Ptr<OFSwitch13StatsCalculator> stats;
+  stats = device->GetObject<OFSwitch13StatsCalculator> ();
+  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
+
+  return static_cast<double> (stats->GetEwmaPipelineLoad ().GetBitRate ()) /
+         static_cast<double> (device->GetPipelineCapacity ().GetBitRate ());
 }
 
 Ptr<SliceController>
