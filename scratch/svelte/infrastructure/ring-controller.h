@@ -87,14 +87,14 @@ private:
   bool HasAvailableResources (Ptr<const RingInfo> ringInfo);
 
   /**
-   * Reserve the bit rate for this bearer in the backhaul network.
+   * Reserve the bit rate for this bearer.
    * \param ringInfo The ring routing information.
    * \return True if succeeded, false otherwise.
    */
   bool BitRateReserve (Ptr<RingInfo> ringInfo);
 
   /**
-   * Release the bit rate for this bearer in the backhaul network.
+   * Release the bit rate for this bearer.
    * \param ringInfo The ring routing information.
    * \return True if succeeded, false otherwise.
    */

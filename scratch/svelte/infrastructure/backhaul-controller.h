@@ -107,7 +107,7 @@ protected:
   /**
    * Process the bearer request, checking for the available resources in the
    * backhaul network, deciding for the best routing path, and reserving the
-   * bit rate when necessary.
+   * resources when necessary.
    * \param rInfo The routing information to process.
    * \return True if succeeded, false otherwise.
    */
