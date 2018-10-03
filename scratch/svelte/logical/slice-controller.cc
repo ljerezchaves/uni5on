@@ -848,19 +848,21 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
       return false;
     }
 
-  // First check: OpenFlow switch table usage (TFT has a single table #0).
-  // Blocks the bearer if the table usage is exceeding the block threshold.
+  // First check: OpenFlow switch table usage.
+  // Block the bearer if the P-GW TFT switch table (#1) usage is exceeding the
+  // block threshold.
   double tableUsage = m_pgwInfo->GetFlowTableUsage (rInfo->GetPgwTftIdx (), 0);
   if (tableUsage >= m_pgwBlockThs)
     {
       rInfo->SetBlocked (true, RoutingInfo::PGWTABLE);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because the P-GW flow table is full.");
+                   " with the reason " << rInfo->GetBlockReasonStr ());
+      return false;
     }
 
   // Second check: OpenFlow switch pipeline load.
-  // If the current pipeline load is exceeding the block threshold, block the
-  // bearer accordingly to the PgwBlockPolicy attribute:
+  // Block the bearer if the P-GW TFT switch pipeline load is exceeding
+  // the block threshold, accordingly to the PgwBlockPolicy attribute:
   // - If OFF (none): don't block the request.
   // - If ON (all)  : block the request.
   // - If AUTO (gbr): block only if GBR request.
@@ -871,11 +873,13 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
     {
       rInfo->SetBlocked (true, RoutingInfo::PGWLOAD);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because the P-GW is overloaded.");
+                   " with the reason " << rInfo->GetBlockReasonStr ());
+      return false;
     }
 
-  // Return false if blocked.
-  return !rInfo->IsBlocked ();
+  // If we get here it's because all the resources are available.
+  NS_ASSERT_MSG (!rInfo->IsBlocked (), "Error with P-GW resources request.");
+  return true;
 }
 
 bool
@@ -1008,8 +1012,9 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
       return false;
     }
 
-  // First check: OpenFlow switch table usage (S-GW dl/ul tables #1 and #2).
-  // Blocks the bearer if the table usage is exceeding the block threshold.
+  // First check: OpenFlow switch table usage.
+  // Block the bearer if the S-GW switch dl/ul tables (#1 and #2) usage is
+  // exceeding the block threshold.
   Ptr<SgwInfo> sgwInfo = rInfo->GetUeInfo ()->GetSgwInfo ();
   double dlTableUsage = sgwInfo->GetFlowTableUsage (1);
   double ulTableUsage = sgwInfo->GetFlowTableUsage (2);
@@ -1017,12 +1022,13 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
     {
       rInfo->SetBlocked (true, RoutingInfo::SGWTABLE);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because the S-GW flow table is full.");
+                   " with the reason " << rInfo->GetBlockReasonStr ());
+      return false;
     }
 
   // Second check: OpenFlow switch pipeline load.
-  // If the current pipeline load is exceeding the block threshold, block the
-  // bearer accordingly to the SgwBlockPolicy attribute:
+  // Block the bearer if the S-GW switch pipeline load is exceeding
+  // the block threshold, accordingly to the SgwBlockPolicy attribute:
   // - If OFF (none): don't block the request.
   // - If ON (all)  : block the request.
   // - If AUTO (gbr): block only if GBR request.
@@ -1033,11 +1039,13 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
     {
       rInfo->SetBlocked (true, RoutingInfo::SGWLOAD);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
-                   " because the S-GW is overloaded.");
+                   " with the reason " << rInfo->GetBlockReasonStr ());
+      return false;
     }
 
-  // Return false if blocked.
-  return !rInfo->IsBlocked ();
+  // If we get here it's because all the resources are available.
+  NS_ASSERT_MSG (!rInfo->IsBlocked (), "Error with S-GW resources request.");
+  return true;
 }
 
 bool
