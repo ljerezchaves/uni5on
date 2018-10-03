@@ -113,17 +113,17 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
   // It only makes sense to check for available bandwidth for GBR bearers.
   NS_ASSERT_MSG (rInfo->IsGbr (), "Invalid configuration for GBR request.");
 
-  // Check for the requested bit rate over the shortest path.
-  if (HasBitRate (ringInfo))
+  // Check for the available resources over the shortest path.
+  if (HasAvailableResources (ringInfo))
     {
       NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
                    " over the shortest path");
       return BitRateReserve (ringInfo);
     }
 
-  // The requested bit rate is not available over the shortest path. When
+  // The requested resources are not available over the shortest path. When
   // using the SPF routing strategy, invert the routing path and check for the
-  // requested bit rate over the longest path.
+  // requested resources over the longest path.
   if (m_strategy == RingController::SPF)
     {
       // Let's try inverting only the S1-U interface.
@@ -131,7 +131,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
         {
           ringInfo->ResetToDefaults ();
           ringInfo->InvertPath (LteIface::S1U);
-          if (HasBitRate (ringInfo))
+          if (HasAvailableResources (ringInfo))
             {
               NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
                            " over the inverted S1-U path");
@@ -144,7 +144,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
         {
           ringInfo->ResetToDefaults ();
           ringInfo->InvertPath (LteIface::S5);
-          if (HasBitRate (ringInfo))
+          if (HasAvailableResources (ringInfo))
             {
               NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
                            " over the inverted S5 path");
@@ -159,7 +159,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
           ringInfo->ResetToDefaults ();
           ringInfo->InvertPath (LteIface::S1U);
           ringInfo->InvertPath (LteIface::S5);
-          if (HasBitRate (ringInfo))
+          if (HasAvailableResources (ringInfo))
             {
               NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
                            " over the inverted S1-U and S5 paths");
@@ -496,7 +496,7 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 }
 
 bool
-RingController::HasBitRate (Ptr<const RingInfo> ringInfo)
+RingController::HasAvailableResources (Ptr<const RingInfo> ringInfo)
 {
   NS_LOG_FUNCTION (this << ringInfo);
 

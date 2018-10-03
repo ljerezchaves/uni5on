@@ -80,11 +80,11 @@ protected:
 
 private:
   /**
-   * Check for the available bit rate on the given slice.
+   * Check for the available resources on the backhaul insfrastructure.
    * \param ringInfo The ring routing information.
-   * \return True if there's available GBR bit rate, false otherwise.
+   * \return True if there's available resources, false otherwise.
    */
-  bool HasBitRate (Ptr<const RingInfo> ringInfo);
+  bool HasAvailableResources (Ptr<const RingInfo> ringInfo);
 
   /**
    * Reserve the bit rate for this bearer in the backhaul network.
