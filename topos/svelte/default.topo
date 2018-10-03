@@ -8,6 +8,8 @@ default ns3::LiveVideoClient::TrafficLength "ns3::NormalRandomVariable[Mean=90.0
 default ns3::LiveVideoServer::MaxPayloadSize "1400"
 default ns3::VoipClient::TrafficLength "ns3::NormalRandomVariable[Mean=100.0|Variance=100.0]"
 
+default ns3::BackhaulController::BlockPolicy "all"
+default ns3::BackhaulController::BlockThs "0.95"
 default ns3::BackhaulController::PriorityQueues "on"
 default ns3::BackhaulController::LinkSlicing "auto"
 default ns3::BackhaulNetwork::EpcLinkDataRate "10Gb/s"
