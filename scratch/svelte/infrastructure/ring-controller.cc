@@ -94,61 +94,49 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
       return false;
     }
 
+  // Reset the ring routing info to the shortest path.
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
   NS_ASSERT_MSG (ringInfo, "No ringInfo for this bearer.");
-
-  // Reset the ring routing info to the shortest path.
   ringInfo->ResetToDefaults ();
-
-  // For Non-GBR bearers (which includes the default bearer) and for bearers
-  // that only transverse local switch (local routing for both S1-U and S5
-  // interfaces): let's accept it without guarantees. Note that in current
-  // implementation, these bearers are always routed over the shortest path.
-  if (!rInfo->IsGbr () || (ringInfo->IsLocalPath (LteIface::S1U)
-                           && ringInfo->IsLocalPath (LteIface::S5)))
-    {
-      return true;
-    }
-
-  // It only makes sense to check for available bandwidth for GBR bearers.
-  NS_ASSERT_MSG (rInfo->IsGbr (), "Invalid configuration for GBR request.");
 
   // Check for the available resources over the shortest path.
   if (HasAvailableResources (ringInfo))
     {
       NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
                    " over the shortest path");
-      return BitRateReserve (ringInfo);
+      return BearerReserve (ringInfo);
     }
 
   // The requested resources are not available over the shortest path. When
-  // using the SPF routing strategy, invert the routing path and check for the
-  // requested resources over the longest path.
+  // using the SPF routing strategy, invert the path for S1/S5 interfaces and
+  // check for available resources again.
   if (m_strategy == RingController::SPF)
     {
       // Let's try inverting only the S1-U interface.
       if (!ringInfo->IsLocalPath (LteIface::S1U))
         {
+          rInfo->SetBlocked (false);
           ringInfo->ResetToDefaults ();
           ringInfo->InvertPath (LteIface::S1U);
           if (HasAvailableResources (ringInfo))
             {
               NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
                            " over the inverted S1-U path");
-              return BitRateReserve (ringInfo);
+              return BearerReserve (ringInfo);
             }
         }
 
       // Let's try inverting only the S5 interface.
       if (!ringInfo->IsLocalPath (LteIface::S5))
         {
+          rInfo->SetBlocked (false);
           ringInfo->ResetToDefaults ();
           ringInfo->InvertPath (LteIface::S5);
           if (HasAvailableResources (ringInfo))
             {
               NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
                            " over the inverted S5 path");
-              return BitRateReserve (ringInfo);
+              return BearerReserve (ringInfo);
             }
         }
 
@@ -156,6 +144,7 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
       if (!ringInfo->IsLocalPath (LteIface::S1U)
           && !ringInfo->IsLocalPath (LteIface::S5))
         {
+          rInfo->SetBlocked (false);
           ringInfo->ResetToDefaults ();
           ringInfo->InvertPath (LteIface::S1U);
           ringInfo->InvertPath (LteIface::S5);
@@ -163,14 +152,16 @@ RingController::BearerRequest (Ptr<RoutingInfo> rInfo)
             {
               NS_LOG_INFO ("Routing bearer teid " << rInfo->GetTeidHex () <<
                            " over the inverted S1-U and S5 paths");
-              return BitRateReserve (ringInfo);
+              return BearerReserve (ringInfo);
             }
         }
     }
 
-  // Nothing more to do. Block the traffic.
-  NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex ());
-  rInfo->SetBlocked (true, RoutingInfo::BACKBAND);
+  // If we get here it's because at leas one of the resources is not available.
+  // It is expected that the HasAvailableResources method set the block reason.
+  NS_ASSERT_MSG (rInfo->IsBlocked (), "This bearer should be blocked.");
+  NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
+               " with the reason " << rInfo->GetBlockReasonStr ());
   return false;
 }
 
@@ -496,17 +487,56 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 }
 
 bool
-RingController::HasAvailableResources (Ptr<const RingInfo> ringInfo)
+RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
 {
   NS_LOG_FUNCTION (this << ringInfo);
 
   Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
-
   SliceId slice = rInfo->GetSliceId ();
-  uint64_t dlRate = rInfo->GetGbrDlBitRate ();
-  uint64_t ulRate = rInfo->GetGbrUlBitRate ();
   RingInfo::RingPath downPath;
   bool success = true;
+
+  // First check: OpenFlow switch table usage.
+  // Block the bearer if the slice pipeline table usage is exceeding the block
+  // threshold at any of the backhaul switches connected to EPC entitites
+  // serving this bearer.
+  // TODO
+
+  if (!success)
+    {
+      rInfo->SetBlocked (true, RoutingInfo::BACKTABLE);
+      return false;
+    }
+
+  // Second check: OpenFlow switch pipeline load.
+  // Block the bearer if the pipeline load is exceeding the block threshold at
+  // any of the backhaul switches over the routing path for this bearer,
+  // accordingly to the SwBlockPolicy attribute:
+  // - If OFF (none): don't block the request.
+  // - If ON (all)  : block the request.
+  // - If AUTO (gbr): block only if GBR request.
+  // TODO
+
+  if (!success)
+    {
+      rInfo->SetBlocked (true, RoutingInfo::BACKLOAD);
+      return false;
+    }
+
+  // Third check: Available bandwidth over backhaul links.
+  // The only resource that is reserved is the GBR bit rate over links.
+  // For Non-GBR bearers (which includes the default bearer) and for bearers
+  // that only transverse local switch (local routing for both S1-U and S5
+  // interfaces): let's accept it without bandwidth guarantees.
+  if (!rInfo->IsGbr () || (ringInfo->IsLocalPath (LteIface::S1U)
+                           && ringInfo->IsLocalPath (LteIface::S5)))
+    {
+      NS_ASSERT_MSG (!rInfo->IsBlocked (), "Bearer should not be blocked.");
+      return true;
+    }
+
+  // It only makes sense to check for available bandwidth for GBR bearers.
+  NS_ASSERT_MSG (rInfo->IsGbr (), "Invalid request for Non-GBR bearer.");
 
   // When checking for the available bit rate on backhaul links, the S5 and
   // S1-U routing paths may overlap if one of them is CLOCK and the other is
@@ -515,6 +545,9 @@ RingController::HasAvailableResources (Ptr<const RingInfo> ringInfo)
   // fail. So we save the links used by S5 interface and check them when going
   // through S1-U interface.
   std::set<Ptr<LinkInfo> > s5Links;
+
+  uint64_t dlRate = rInfo->GetGbrDlBitRate ();
+  uint64_t ulRate = rInfo->GetGbrUlBitRate ();
 
   // S5 interface (from P-GW to S-GW)
   uint16_t curr = rInfo->GetPgwInfraSwIdx ();
@@ -548,7 +581,7 @@ RingController::HasAvailableResources (Ptr<const RingInfo> ringInfo)
       if (it != s5Links.end ())
         {
           // When checking for downlink resources for S1-U interface we also
-          // must ensure that the links has uplink resources for S5 interface,
+          // must ensure that the link has uplink resources for S5 interface,
           // and vice-versa.
           success &= lInfo->HasBitRate (currId, nextId, slice,
                                         dlRate + ulRate);
@@ -562,7 +595,36 @@ RingController::HasAvailableResources (Ptr<const RingInfo> ringInfo)
         }
       curr = next;
     }
+
+  if (!success)
+    {
+      rInfo->SetBlocked (true, RoutingInfo::BACKBAND);
+      return false;
+    }
+
+  // If we get here it's because all the resources are available.
+  NS_ASSERT_MSG (success, "Error when checking resources.");
   return success;
+}
+
+bool
+RingController::BearerReserve (Ptr<RingInfo> ringInfo)
+{
+  NS_LOG_FUNCTION (this << ringInfo);
+
+  Ptr<RoutingInfo> rInfo = ringInfo->GetRoutingInfo ();
+  NS_ASSERT_MSG (!rInfo->IsBlocked (), "Bearer should not be blocked.");
+
+  // The only resource that is reserved is the GBR bit rate over links.
+  // For Non-GBR bearers (which includes the default bearer) and for bearers
+  // that only transverse local switch (local routing for both S1-U and S5
+  // interfaces): there's nothing to reserve.
+  if (!rInfo->IsGbr () || (ringInfo->IsLocalPath (LteIface::S1U)
+                           && ringInfo->IsLocalPath (LteIface::S5)))
+    {
+      return true;
+    }
+  return BitRateReserve (ringInfo);
 }
 
 bool

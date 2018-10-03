@@ -80,11 +80,20 @@ protected:
 
 private:
   /**
-   * Check for the available resources on the backhaul insfrastructure.
+   * Check for the available resources on the backhaul insfrastructure. When
+   * any of the requested resources is not available, this method must set
+   * the routing information with the block reason.
    * \param ringInfo The ring routing information.
    * \return True if there's available resources, false otherwise.
    */
-  bool HasAvailableResources (Ptr<const RingInfo> ringInfo);
+  bool HasAvailableResources (Ptr<RingInfo> ringInfo);
+
+  /**
+   * Reserve the resources for this bearer.
+   * \param ringInfo The ring routing information.
+   * \return True if succeeded, false otherwise.
+   */
+  bool BearerReserve (Ptr<RingInfo> ringInfo);
 
   /**
    * Reserve the bit rate for this bearer.
