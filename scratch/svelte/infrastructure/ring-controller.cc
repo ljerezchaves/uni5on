@@ -495,14 +495,21 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
   SliceId slice = rInfo->GetSliceId ();
   RingInfo::RingPath downPath;
   bool success = true;
+  uint16_t curr = 0;
 
   // First check: OpenFlow switch table usage.
   // Block the bearer if the slice pipeline table usage is exceeding the block
-  // threshold at any of the backhaul switches connected to EPC entitites
-  // serving this bearer.
-  // TODO
-
-  if (!success)
+  // threshold at any backhaul switch connected to EPC serving entities.
+  uint8_t sliceTable = GetSliceTable (slice);
+  double sgwInfraSwTableUsage =
+    GetFlowTableUsage (rInfo->GetSgwInfraSwIdx (), sliceTable);
+  double pgwInfraSwTableUsage =
+    GetFlowTableUsage (rInfo->GetPgwInfraSwIdx (), sliceTable);
+  double enbInfraSwTableUsage =
+    GetFlowTableUsage (rInfo->GetEnbInfraSwIdx (), sliceTable);
+  if ((rInfo->HasTraffic () && sgwInfraSwTableUsage >= GetBlockPolicy ())
+      || (rInfo->HasDlTraffic () && pgwInfraSwTableUsage >= GetBlockPolicy ())
+      || (rInfo->HasUlTraffic () && enbInfraSwTableUsage >= GetBlockPolicy ()))
     {
       rInfo->SetBlocked (true, RoutingInfo::BACKTABLE);
       return false;
@@ -510,17 +517,39 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
 
   // Second check: OpenFlow switch pipeline load.
   // Block the bearer if the pipeline load is exceeding the block threshold at
-  // any of the backhaul switches over the routing path for this bearer,
-  // accordingly to the SwBlockPolicy attribute:
+  // any backhaul switch over the routing path for this bearer, respecting the
+  // BlockPolicy attribute:
   // - If OFF (none): don't block the request.
   // - If ON (all)  : block the request.
   // - If AUTO (gbr): block only if GBR request.
-  // TODO
-
-  if (!success)
+  if (GetBlockPolicy () == OpMode::ON
+      || (GetBlockPolicy () == OpMode::AUTO && rInfo->IsGbr ()))
     {
-      rInfo->SetBlocked (true, RoutingInfo::BACKLOAD);
-      return false;
+      // S5 interface (from P-GW to S-GW).
+      curr = rInfo->GetPgwInfraSwIdx ();
+      downPath = ringInfo->GetDlPath (LteIface::S5);
+      while (success && curr != rInfo->GetSgwInfraSwIdx ())
+        {
+          success &= (GetPipeCapacityUsage (curr) < GetBlockPolicy ());
+          curr = NextSwitchIndex (curr, downPath);
+        }
+
+      // S1-U interface (from S-GW to eNB).
+      downPath = ringInfo->GetDlPath (LteIface::S1U);
+      while (success && curr != rInfo->GetEnbInfraSwIdx ())
+        {
+          success &= (GetPipeCapacityUsage (curr) < GetBlockPolicy ());
+          curr = NextSwitchIndex (curr, downPath);
+        }
+
+      // The last switch (eNB).
+      success &= (GetPipeCapacityUsage (curr) < GetBlockPolicy ());
+
+      if (!success)
+        {
+          rInfo->SetBlocked (true, RoutingInfo::BACKLOAD);
+          return false;
+        }
     }
 
   // Third check: Available bandwidth over backhaul links.
@@ -550,7 +579,7 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
   uint64_t ulRate = rInfo->GetGbrUlBitRate ();
 
   // S5 interface (from P-GW to S-GW)
-  uint16_t curr = rInfo->GetPgwInfraSwIdx ();
+  curr = rInfo->GetPgwInfraSwIdx ();
   downPath = ringInfo->GetDlPath (LteIface::S5);
   while (success && curr != rInfo->GetSgwInfraSwIdx ())
     {
@@ -564,7 +593,7 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
 
       // Save this link as used by S5 interface.
       auto ret = s5Links.insert (lInfo);
-      NS_ABORT_MSG_IF (ret.second == false, "Error when saving link in map.");
+      NS_ABORT_MSG_IF (ret.second == false, "Error saving link in map.");
     }
 
   // S1-U interface (from S-GW to eNB)
