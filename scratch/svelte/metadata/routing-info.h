@@ -106,6 +106,7 @@ public:
   uint16_t              GetDscpValue  (void) const;
   bool                  HasDlTraffic  (void) const;
   bool                  HasUlTraffic  (void) const;
+  bool                  HasTraffic    (void) const;
   //\}
 
   /**

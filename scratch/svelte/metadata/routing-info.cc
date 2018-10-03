@@ -222,6 +222,14 @@ RoutingInfo::HasUlTraffic (void) const
   return GetTft ()->HasUplinkFilter ();
 }
 
+bool
+RoutingInfo::HasTraffic (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return (HasDlTraffic () || HasUlTraffic ());
+}
+
 EpsBearer
 RoutingInfo::GetEpsBearer (void) const
 {
