@@ -148,7 +148,7 @@ SgwInfo::GetFlowTableCur (uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetStats ()->GetEwmaFlowTableEntries (tableId);
+  return m_device->GetFlowTableEntries (tableId);
 }
 
 uint32_t
@@ -164,12 +164,11 @@ SgwInfo::GetFlowTableUse (uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this);
 
-  return static_cast<double> (GetFlowTableCur (tableId)) /
-         static_cast<double> (GetFlowTableMax (tableId));
+  return m_device->GetFlowTableUsage (tableId);
 }
 
 DataRate
-SgwInfo::GetProcessingCur (void) const
+SgwInfo::GetEwmaProcCur (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -185,11 +184,11 @@ SgwInfo::GetProcessingMax (void) const
 }
 
 double
-SgwInfo::GetProcessingUse (void) const
+SgwInfo::GetEwmaProcUse (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return static_cast<double> (GetProcessingCur ().GetBitRate ()) /
+  return static_cast<double> (GetEwmaProcCur ().GetBitRate ()) /
          static_cast<double> (GetProcessingMax ().GetBitRate ());
 }
 
@@ -218,7 +217,7 @@ SgwInfo::GetStats (void) const
 {
   Ptr<OFSwitch13StatsCalculator> stats;
   stats = m_device->GetObject<OFSwitch13StatsCalculator> ();
-  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
+  NS_ABORT_MSG_IF (!stats, "Enable OFSwitch13 datapath stats.");
   return stats;
 }
 

@@ -137,11 +137,11 @@ protected:
   Ptr<LinkInfo> GetLinkInfo (uint16_t idx1, uint16_t idx2) const;
 
   /**
-   * Get the processing capacity usage for the given backhaul switch index.
+   * Get the EWMA processing capacity usage for the given backhaul switch.
    * \param idx The switch index.
    * \return The pipeline capacity usage.
    */
-  double GetProcessingUse (uint16_t idx) const;
+  double GetEwmaProcUse (uint16_t idx) const;
 
   /**
    * Get the slice controller application for a given slice ID.

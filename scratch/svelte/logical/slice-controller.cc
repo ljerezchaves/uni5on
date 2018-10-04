@@ -778,7 +778,7 @@ SliceController::PgwAdaptiveMechanism (void)
   if (GetPgwTftAdaptiveMode () == OpMode::AUTO)
     {
       double maxTabUse = m_pgwInfo->GetTftMaxFlowTableUse ();
-      double maxPrcUse = m_pgwInfo->GetTftMaxProcessingUse ();
+      double maxPrcUse = m_pgwInfo->GetTftMaxEwmaProcUse ();
 
       // We may increase the level when we hit the split threshold.
       if ((m_pgwInfo->GetCurLevel () < m_pgwInfo->GetMaxLevel ())
@@ -869,7 +869,7 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
   if (m_pgwBlockPolicy == OpMode::ON
       || (m_pgwBlockPolicy == OpMode::AUTO && rInfo->IsGbr ()))
     {
-      double prcUse = m_pgwInfo->GetProcessingUse (rInfo->GetPgwTftIdx ());
+      double prcUse = m_pgwInfo->GetEwmaProcUse (rInfo->GetPgwTftIdx ());
       if (prcUse >= m_pgwBlockThs)
         {
           rInfo->SetBlocked (true, RoutingInfo::PGWLOAD);
@@ -1037,7 +1037,7 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
   if (m_sgwBlockPolicy == OpMode::ON
       || (m_sgwBlockPolicy == OpMode::AUTO && rInfo->IsGbr ()))
     {
-      double prcUse = sgwInfo->GetProcessingUse ();
+      double prcUse = sgwInfo->GetEwmaProcUse ();
       if (prcUse >= m_sgwBlockThs)
         {
           rInfo->SetBlocked (true, RoutingInfo::SGWLOAD);

@@ -116,7 +116,8 @@ PgwInfo::GetFlowTableCur (uint16_t idx, uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this << idx);
 
-  return GetStats (idx)->GetEwmaFlowTableEntries (tableId);
+  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
+  return m_devices.at (idx)->GetFlowTableEntries (tableId);
 }
 
 uint32_t
@@ -133,15 +134,16 @@ PgwInfo::GetFlowTableUse (uint16_t idx, uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this << idx);
 
-  return static_cast<double> (GetFlowTableCur (idx, tableId)) /
-         static_cast<double> (GetFlowTableMax (idx, tableId));
+  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
+  return m_devices.at (idx)->GetFlowTableUsage (tableId);
 }
 
 DataRate
-PgwInfo::GetProcessingCur (uint16_t idx) const
+PgwInfo::GetEwmaProcCur (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
+  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
   return GetStats (idx)->GetEwmaProcessingLoad ();
 }
 
@@ -155,11 +157,11 @@ PgwInfo::GetProcessingMax (uint16_t idx) const
 }
 
 double
-PgwInfo::GetProcessingUse (uint16_t idx) const
+PgwInfo::GetEwmaProcUse (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
-  return static_cast<double> (GetProcessingCur (idx).GetBitRate ()) /
+  return static_cast<double> (GetEwmaProcCur (idx).GetBitRate ()) /
          static_cast<double> (GetProcessingMax (idx).GetBitRate ());
 }
 
@@ -307,14 +309,14 @@ PgwInfo::GetTftAvgFlowTableUse (uint8_t tableId) const
 }
 
 DataRate
-PgwInfo::GetTftAvgProcessingCur (void) const
+PgwInfo::GetTftAvgEwmaProcCur (void) const
 {
   NS_LOG_FUNCTION (this);
 
   uint64_t value = 0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value += GetProcessingCur (idx).GetBitRate ();
+      value += GetEwmaProcCur (idx).GetBitRate ();
     }
   return DataRate (value / GetCurTfts ());
 }
@@ -333,14 +335,14 @@ PgwInfo::GetTftAvgProcessingMax (void) const
 }
 
 double
-PgwInfo::GetTftAvgProcessingUse (void) const
+PgwInfo::GetTftAvgEwmaProcUse (void) const
 {
   NS_LOG_FUNCTION (this);
 
   double value = 0.0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value += GetProcessingUse (idx);
+      value += GetEwmaProcUse (idx);
     }
   return value / GetCurTfts ();
 }
@@ -385,14 +387,14 @@ PgwInfo::GetTftMaxFlowTableUse (uint8_t tableId) const
 }
 
 DataRate
-PgwInfo::GetTftMaxProcessingCur (void) const
+PgwInfo::GetTftMaxEwmaProcCur (void) const
 {
   NS_LOG_FUNCTION (this);
 
   uint64_t value = 0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value = std::max (value, GetProcessingCur (idx).GetBitRate ());
+      value = std::max (value, GetEwmaProcCur (idx).GetBitRate ());
     }
   return DataRate (value);
 }
@@ -411,14 +413,14 @@ PgwInfo::GetTftMaxProcessingMax (void) const
 }
 
 double
-PgwInfo::GetTftMaxProcessingUse () const
+PgwInfo::GetTftMaxEwmaProcUse () const
 {
   NS_LOG_FUNCTION (this);
 
   double value = 0.0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value = std::max (value, GetProcessingUse (idx));
+      value = std::max (value, GetEwmaProcUse (idx));
     }
   return value;
 }
@@ -446,10 +448,9 @@ PgwInfo::DoDispose ()
 Ptr<OFSwitch13StatsCalculator>
 PgwInfo::GetStats (uint16_t idx) const
 {
-  NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
   Ptr<OFSwitch13StatsCalculator> stats;
   stats = m_devices.at (idx)->GetObject<OFSwitch13StatsCalculator> ();
-  NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
+  NS_ABORT_MSG_IF (!stats, "Enable OFSwitch13 datapath stats.");
   return stats;
 }
 
