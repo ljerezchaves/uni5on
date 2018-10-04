@@ -170,11 +170,11 @@ SliceNetwork::GetTypeId (void)
                    UintegerValue (65535),
                    MakeUintegerAccessor (&SliceNetwork::m_mainFlowSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
-    .AddAttribute ("PgwMainPipelineCapacity",
+    .AddAttribute ("PgwMainProcCapacity",
                    "Pipeline capacity for the P-GW main switch.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("100Gb/s")),
-                   MakeDataRateAccessor (&SliceNetwork::m_mainPipeCapacity),
+                   MakeDataRateAccessor (&SliceNetwork::m_mainProcCapy),
                    MakeDataRateChecker ())
     .AddAttribute ("PgwTftFlowTableSize",
                    "Flow table size for the P-GW TFT switches.",
@@ -188,11 +188,11 @@ SliceNetwork::GetTypeId (void)
                    UintegerValue (65535),
                    MakeUintegerAccessor (&SliceNetwork::m_tftMeterSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
-    .AddAttribute ("PgwTftPipelineCapacity",
+    .AddAttribute ("PgwTftProcCapacity",
                    "Pipeline capacity for the P-GW TFT switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("100Gb/s")),
-                   MakeDataRateAccessor (&SliceNetwork::m_tftPipeCapacity),
+                   MakeDataRateAccessor (&SliceNetwork::m_tftProcCapy),
                    MakeDataRateChecker ())
     .AddAttribute ("PgwLinkDataRate",
                    "The data rate for the internal P-GW links.",
@@ -226,11 +226,11 @@ SliceNetwork::GetTypeId (void)
                    UintegerValue (65535),
                    MakeUintegerAccessor (&SliceNetwork::m_sgwMeterSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
-    .AddAttribute ("SgwPipelineCapacity",
+    .AddAttribute ("SgwProcCapacity",
                    "Pipeline capacity for the S-GW switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("100Gb/s")),
-                   MakeDataRateAccessor (&SliceNetwork::m_sgwPipeCapacity),
+                   MakeDataRateAccessor (&SliceNetwork::m_sgwProcCapy),
                    MakeDataRateChecker ())
 
     .AddAttribute ("LinkMtu",
@@ -407,7 +407,7 @@ SliceNetwork::CreatePgw (void)
   m_switchHelper->SetDeviceAttribute (
     "MeterTableSize", UintegerValue (0));
   m_switchHelper->SetDeviceAttribute (
-    "PipelineCapacity", DataRateValue (m_mainPipeCapacity));
+    "ProcessingCapacity", DataRateValue (m_mainProcCapy));
   m_switchHelper->SetDeviceAttribute (
     "PipelineTables", UintegerValue (7));
 
@@ -493,7 +493,7 @@ SliceNetwork::CreatePgw (void)
   m_switchHelper->SetDeviceAttribute (
     "MeterTableSize", UintegerValue (m_tftMeterSize));
   m_switchHelper->SetDeviceAttribute (
-    "PipelineCapacity", DataRateValue (m_tftPipeCapacity));
+    "ProcessingCapacity", DataRateValue (m_tftProcCapy));
   m_switchHelper->SetDeviceAttribute (
     "PipelineTables", UintegerValue (1));
 
@@ -570,7 +570,7 @@ SliceNetwork::CreateSgws (void)
   m_switchHelper->SetDeviceAttribute (
     "MeterTableSize", UintegerValue (m_sgwMeterSize));
   m_switchHelper->SetDeviceAttribute (
-    "PipelineCapacity", DataRateValue (m_sgwPipeCapacity));
+    "ProcessingCapacity", DataRateValue (m_sgwProcCapy));
   m_switchHelper->SetDeviceAttribute (
     "PipelineTables", UintegerValue (3));
 

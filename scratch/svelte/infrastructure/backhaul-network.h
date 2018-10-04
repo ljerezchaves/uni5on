@@ -128,7 +128,7 @@ private:
   uint32_t                      m_flowTableSize;  //!< Flow table size.
   uint32_t                      m_groupTableSize; //!< Group table size.
   uint32_t                      m_meterTableSize; //!< Meter table size.
-  DataRate                      m_pipeCapacity;   //!< Pipeline capacity.
+  DataRate                      m_procCapacity;   //!< Processing capacity.
 
   // IPv4 address helpers for EPC interfaces.
   Ipv4AddressHelper             m_s1uAddrHelper;  //!< S1-U address helper.

@@ -95,11 +95,11 @@ BackhaulNetwork::GetTypeId (void)
                    UintegerValue (65535),
                    MakeUintegerAccessor (&BackhaulNetwork::m_meterTableSize),
                    MakeUintegerChecker<uint16_t> (0, 65535))
-    .AddAttribute ("PipelineCapacity",
-                   "Pipeline capacity for the backhaul switches.",
+    .AddAttribute ("ProcCapacity",
+                   "Processing capacity for the backhaul switches.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    DataRateValue (DataRate ("100Gb/s")),
-                   MakeDataRateAccessor (&BackhaulNetwork::m_pipeCapacity),
+                   MakeDataRateAccessor (&BackhaulNetwork::m_procCapacity),
                    MakeDataRateChecker ())
   ;
   return tid;
@@ -220,7 +220,7 @@ BackhaulNetwork::NotifyConstructionCompleted (void)
   m_switchHelper->SetDeviceAttribute (
     "MeterTableSize", UintegerValue (m_meterTableSize));
   m_switchHelper->SetDeviceAttribute (
-    "PipelineCapacity", DataRateValue (m_pipeCapacity));
+    "ProcessingCapacity", DataRateValue (m_procCapacity));
   m_switchHelper->SetDeviceAttribute (
     "PipelineTables", UintegerValue (5 + static_cast<int> (SliceId::ALL)));
 
