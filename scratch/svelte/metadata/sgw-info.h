@@ -91,12 +91,12 @@ public:
    * \return The requested information.
    */
   //\{
-  uint32_t              GetFlowTableCur       (uint8_t tableId) const;
-  uint32_t              GetFlowTableMax       (uint8_t tableId) const;
-  double                GetFlowTableUsage     (uint8_t tableId) const;
-  DataRate              GetPipeCapacityCur    (void) const;
-  DataRate              GetPipeCapacityMax    (void) const;
-  double                GetPipeCapacityUsage  (void) const;
+  uint32_t              GetFlowTableCur     (uint8_t tableId) const;
+  uint32_t              GetFlowTableMax     (uint8_t tableId) const;
+  double                GetFlowTableUse     (uint8_t tableId) const;
+  DataRate              GetProcessingCur    (void) const;
+  DataRate              GetProcessingMax    (void) const;
+  double                GetProcessingUse    (void) const;
   //\}
 
   /**

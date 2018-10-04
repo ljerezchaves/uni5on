@@ -90,10 +90,10 @@ public:
   //\{
   uint32_t      GetFlowTableCur         (uint16_t idx, uint8_t tableId) const;
   uint32_t      GetFlowTableMax         (uint16_t idx, uint8_t tableId) const;
-  double        GetFlowTableUsage       (uint16_t idx, uint8_t tableId) const;
-  DataRate      GetPipeCapacityCur      (uint16_t idx) const;
-  DataRate      GetPipeCapacityMax      (uint16_t idx) const;
-  double        GetPipeCapacityUsage    (uint16_t idx) const;
+  double        GetFlowTableUse         (uint16_t idx, uint8_t tableId) const;
+  DataRate      GetProcessingCur        (uint16_t idx) const;
+  DataRate      GetProcessingMax        (uint16_t idx) const;
+  double        GetProcessingUse        (uint16_t idx) const;
   //\}
 
   /**
@@ -133,18 +133,18 @@ public:
    *           collecting statistics.
    */
   //\{
-  uint32_t      GetTftAvgFlowTableCur       (uint8_t tableId = 0) const;
-  uint32_t      GetTftAvgFlowTableMax       (uint8_t tableId = 0) const;
-  double        GetTftAvgFlowTableUsage     (uint8_t tableId = 0) const;
-  DataRate      GetTftAvgPipeCapacityCur    (void) const;
-  DataRate      GetTftAvgPipeCapacityMax    (void) const;
-  double        GetTftAvgPipeCapacityUsage  (void) const;
-  uint32_t      GetTftMaxFlowTableCur       (uint8_t tableId = 0) const;
-  uint32_t      GetTftMaxFlowTableMax       (uint8_t tableId = 0) const;
-  double        GetTftMaxFlowTableUsage     (uint8_t tableId = 0) const;
-  DataRate      GetTftMaxPipeCapacityCur    (void) const;
-  DataRate      GetTftMaxPipeCapacityMax    (void) const;
-  double        GetTftMaxPipeCapacityUsage  (void) const;
+  uint32_t      GetTftAvgFlowTableCur   (uint8_t tableId = 0) const;
+  uint32_t      GetTftAvgFlowTableMax   (uint8_t tableId = 0) const;
+  double        GetTftAvgFlowTableUse   (uint8_t tableId = 0) const;
+  DataRate      GetTftAvgProcessingCur  (void) const;
+  DataRate      GetTftAvgProcessingMax  (void) const;
+  double        GetTftAvgProcessingUse  (void) const;
+  uint32_t      GetTftMaxFlowTableCur   (uint8_t tableId = 0) const;
+  uint32_t      GetTftMaxFlowTableMax   (uint8_t tableId = 0) const;
+  double        GetTftMaxFlowTableUse   (uint8_t tableId = 0) const;
+  DataRate      GetTftMaxProcessingCur  (void) const;
+  DataRate      GetTftMaxProcessingMax  (void) const;
+  double        GetTftMaxProcessingUse  (void) const;
   //\}
 
   /**

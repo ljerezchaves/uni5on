@@ -160,7 +160,7 @@ SgwInfo::GetFlowTableMax (uint8_t tableId) const
 }
 
 double
-SgwInfo::GetFlowTableUsage (uint8_t tableId) const
+SgwInfo::GetFlowTableUse (uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -169,7 +169,7 @@ SgwInfo::GetFlowTableUsage (uint8_t tableId) const
 }
 
 DataRate
-SgwInfo::GetPipeCapacityCur (void) const
+SgwInfo::GetProcessingCur (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -177,7 +177,7 @@ SgwInfo::GetPipeCapacityCur (void) const
 }
 
 DataRate
-SgwInfo::GetPipeCapacityMax (void) const
+SgwInfo::GetProcessingMax (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -185,12 +185,12 @@ SgwInfo::GetPipeCapacityMax (void) const
 }
 
 double
-SgwInfo::GetPipeCapacityUsage (void) const
+SgwInfo::GetProcessingUse (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return static_cast<double> (GetPipeCapacityCur ().GetBitRate ()) /
-         static_cast<double> (GetPipeCapacityMax ().GetBitRate ());
+  return static_cast<double> (GetProcessingCur ().GetBitRate ()) /
+         static_cast<double> (GetProcessingMax ().GetBitRate ());
 }
 
 std::ostream &

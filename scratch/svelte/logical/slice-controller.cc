@@ -777,12 +777,12 @@ SliceController::PgwAdaptiveMechanism (void)
   uint16_t nextLevel = m_pgwInfo->GetCurLevel ();
   if (GetPgwTftAdaptiveMode () == OpMode::AUTO)
     {
-      double tableUsage = m_pgwInfo->GetTftMaxFlowTableUsage ();
-      double pipeUsage = m_pgwInfo->GetTftMaxPipeCapacityUsage ();
+      double maxTabUse = m_pgwInfo->GetTftMaxFlowTableUse ();
+      double maxPrcUse = m_pgwInfo->GetTftMaxProcessingUse ();
 
       // We may increase the level when we hit the split threshold.
       if ((m_pgwInfo->GetCurLevel () < m_pgwInfo->GetMaxLevel ())
-          && (tableUsage >= m_tftSplitThs || pipeUsage >= m_tftSplitThs))
+          && (maxTabUse >= m_tftSplitThs || maxPrcUse >= m_tftSplitThs))
         {
           NS_LOG_INFO ("Increasing the adaptive mechanism level.");
           nextLevel++;
@@ -790,7 +790,7 @@ SliceController::PgwAdaptiveMechanism (void)
 
       // We may decrease the level when we hit the join threshold.
       else if ((m_pgwInfo->GetCurLevel () > 0)
-               && (tableUsage < m_tftJoinThs) && (pipeUsage < m_tftJoinThs))
+               && (maxTabUse < m_tftJoinThs) && (maxPrcUse < m_tftJoinThs))
         {
           NS_LOG_INFO ("Decreasing the adaptive mechanism level.");
           nextLevel--;
@@ -851,8 +851,8 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
   // First check: OpenFlow switch table usage.
   // Block the bearer if the P-GW TFT switch table (#1) usage is exceeding the
   // block threshold.
-  double tableUsage = m_pgwInfo->GetFlowTableUsage (rInfo->GetPgwTftIdx (), 0);
-  if (tableUsage >= m_pgwBlockThs)
+  double tabUse = m_pgwInfo->GetFlowTableUse (rInfo->GetPgwTftIdx (), 0);
+  if (tabUse >= m_pgwBlockThs)
     {
       rInfo->SetBlocked (true, RoutingInfo::PGWTABLE);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
@@ -860,8 +860,8 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
       return false;
     }
 
-  // Second check: OpenFlow switch pipeline load.
-  // Block the bearer if the P-GW TFT switch pipeline load is exceeding
+  // Second check: OpenFlow switch processing load.
+  // Block the bearer if the P-GW TFT switch processing load is exceeding
   // the block threshold, respecting the PgwBlockPolicy attribute:
   // - If OFF (none): don't block the request.
   // - If ON (all)  : block the request.
@@ -869,9 +869,8 @@ SliceController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
   if (m_pgwBlockPolicy == OpMode::ON
       || (m_pgwBlockPolicy == OpMode::AUTO && rInfo->IsGbr ()))
     {
-      double pipeUsage =
-        m_pgwInfo->GetPipeCapacityUsage (rInfo->GetPgwTftIdx ());
-      if (pipeUsage >= m_pgwBlockThs)
+      double prcUse = m_pgwInfo->GetProcessingUse (rInfo->GetPgwTftIdx ());
+      if (prcUse >= m_pgwBlockThs)
         {
           rInfo->SetBlocked (true, RoutingInfo::PGWLOAD);
           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
@@ -1019,9 +1018,9 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
   // Block the bearer if the S-GW switch dl/ul tables (#1 and #2) usage is
   // exceeding the block threshold.
   Ptr<SgwInfo> sgwInfo = rInfo->GetUeInfo ()->GetSgwInfo ();
-  double dlTableUsage = sgwInfo->GetFlowTableUsage (1);
-  double ulTableUsage = sgwInfo->GetFlowTableUsage (2);
-  if (dlTableUsage >= m_sgwBlockThs || ulTableUsage >= m_sgwBlockThs)
+  double dlTabUse = sgwInfo->GetFlowTableUse (1);
+  double ulTabUse = sgwInfo->GetFlowTableUse (2);
+  if (dlTabUse >= m_sgwBlockThs || ulTabUse >= m_sgwBlockThs)
     {
       rInfo->SetBlocked (true, RoutingInfo::SGWTABLE);
       NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<
@@ -1029,8 +1028,8 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
       return false;
     }
 
-  // Second check: OpenFlow switch pipeline load.
-  // Block the bearer if the S-GW switch pipeline load is exceeding
+  // Second check: OpenFlow switch processing load.
+  // Block the bearer if the S-GW switch processing load is exceeding
   // the block threshold, respecting the SgwBlockPolicy attribute:
   // - If OFF (none): don't block the request.
   // - If ON (all)  : block the request.
@@ -1038,8 +1037,8 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
   if (m_sgwBlockPolicy == OpMode::ON
       || (m_sgwBlockPolicy == OpMode::AUTO && rInfo->IsGbr ()))
     {
-      double pipeUsage = sgwInfo->GetPipeCapacityUsage ();
-      if (pipeUsage >= m_sgwBlockThs)
+      double prcUse = sgwInfo->GetProcessingUse ();
+      if (prcUse >= m_sgwBlockThs)
         {
           rInfo->SetBlocked (true, RoutingInfo::SGWLOAD);
           NS_LOG_WARN ("Blocking bearer teid " << rInfo->GetTeidHex () <<

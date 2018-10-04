@@ -144,14 +144,14 @@ PgwTftStatsCalculator::NotifyPgwTftStats (
     << " " << setw (7)  << pgwInfo->GetTftMaxFlowTableMax ()
     << " " << setw (7)  << pgwInfo->GetTftAvgFlowTableCur ()
     << " " << setw (7)  << pgwInfo->GetTftMaxFlowTableCur ()
-    << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableUsage () * 100
-    << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableUsage () * 100
-    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftAvgPipeCapacityMax ())
-    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftMaxPipeCapacityMax ())
-    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftAvgPipeCapacityCur ())
-    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftMaxPipeCapacityCur ())
-    << " " << setw (9)  << pgwInfo->GetTftAvgPipeCapacityUsage () * 100
-    << " " << setw (9)  << pgwInfo->GetTftMaxPipeCapacityUsage () * 100
+    << " " << setw (9)  << pgwInfo->GetTftAvgFlowTableUse () * 100
+    << " " << setw (9)  << pgwInfo->GetTftMaxFlowTableUse () * 100
+    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftAvgProcessingMax ())
+    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftMaxProcessingMax ())
+    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftAvgProcessingCur ())
+    << " " << setw (13) << Bps2Kbps (pgwInfo->GetTftMaxProcessingCur ())
+    << " " << setw (9)  << pgwInfo->GetTftAvgProcessingUse () * 100
+    << " " << setw (9)  << pgwInfo->GetTftMaxProcessingUse () * 100
     << std::endl;
 }
 

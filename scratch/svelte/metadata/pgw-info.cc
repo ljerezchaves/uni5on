@@ -129,7 +129,7 @@ PgwInfo::GetFlowTableMax (uint16_t idx, uint8_t tableId) const
 }
 
 double
-PgwInfo::GetFlowTableUsage (uint16_t idx, uint8_t tableId) const
+PgwInfo::GetFlowTableUse (uint16_t idx, uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this << idx);
 
@@ -138,7 +138,7 @@ PgwInfo::GetFlowTableUsage (uint16_t idx, uint8_t tableId) const
 }
 
 DataRate
-PgwInfo::GetPipeCapacityCur (uint16_t idx) const
+PgwInfo::GetProcessingCur (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
@@ -146,7 +146,7 @@ PgwInfo::GetPipeCapacityCur (uint16_t idx) const
 }
 
 DataRate
-PgwInfo::GetPipeCapacityMax (uint16_t idx) const
+PgwInfo::GetProcessingMax (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
@@ -155,12 +155,12 @@ PgwInfo::GetPipeCapacityMax (uint16_t idx) const
 }
 
 double
-PgwInfo::GetPipeCapacityUsage (uint16_t idx) const
+PgwInfo::GetProcessingUse (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
-  return static_cast<double> (GetPipeCapacityCur (idx).GetBitRate ()) /
-         static_cast<double> (GetPipeCapacityMax (idx).GetBitRate ());
+  return static_cast<double> (GetProcessingCur (idx).GetBitRate ()) /
+         static_cast<double> (GetProcessingMax (idx).GetBitRate ());
 }
 
 uint64_t
@@ -294,53 +294,53 @@ PgwInfo::GetTftAvgFlowTableMax (uint8_t tableId) const
 }
 
 double
-PgwInfo::GetTftAvgFlowTableUsage (uint8_t tableId) const
+PgwInfo::GetTftAvgFlowTableUse (uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this);
 
   double value = 0.0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value += GetFlowTableUsage (idx, tableId);
+      value += GetFlowTableUse (idx, tableId);
     }
   return value / GetCurTfts ();
 }
 
 DataRate
-PgwInfo::GetTftAvgPipeCapacityCur (void) const
+PgwInfo::GetTftAvgProcessingCur (void) const
 {
   NS_LOG_FUNCTION (this);
 
   uint64_t value = 0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value += GetPipeCapacityCur (idx).GetBitRate ();
+      value += GetProcessingCur (idx).GetBitRate ();
     }
   return DataRate (value / GetCurTfts ());
 }
 
 DataRate
-PgwInfo::GetTftAvgPipeCapacityMax (void) const
+PgwInfo::GetTftAvgProcessingMax (void) const
 {
   NS_LOG_FUNCTION (this);
 
   uint64_t value = 0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value += GetPipeCapacityMax (idx).GetBitRate ();
+      value += GetProcessingMax (idx).GetBitRate ();
     }
   return DataRate (value / GetCurTfts ());
 }
 
 double
-PgwInfo::GetTftAvgPipeCapacityUsage (void) const
+PgwInfo::GetTftAvgProcessingUse (void) const
 {
   NS_LOG_FUNCTION (this);
 
   double value = 0.0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value += GetPipeCapacityUsage (idx);
+      value += GetProcessingUse (idx);
     }
   return value / GetCurTfts ();
 }
@@ -372,53 +372,53 @@ PgwInfo::GetTftMaxFlowTableCur (uint8_t tableId) const
 }
 
 double
-PgwInfo::GetTftMaxFlowTableUsage (uint8_t tableId) const
+PgwInfo::GetTftMaxFlowTableUse (uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this);
 
   double value = 0.0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value = std::max (value, GetFlowTableUsage (idx, tableId));
+      value = std::max (value, GetFlowTableUse (idx, tableId));
     }
   return value;
 }
 
 DataRate
-PgwInfo::GetTftMaxPipeCapacityCur (void) const
+PgwInfo::GetTftMaxProcessingCur (void) const
 {
   NS_LOG_FUNCTION (this);
 
   uint64_t value = 0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value = std::max (value, GetPipeCapacityCur (idx).GetBitRate ());
+      value = std::max (value, GetProcessingCur (idx).GetBitRate ());
     }
   return DataRate (value);
 }
 
 DataRate
-PgwInfo::GetTftMaxPipeCapacityMax (void) const
+PgwInfo::GetTftMaxProcessingMax (void) const
 {
   NS_LOG_FUNCTION (this);
 
   uint64_t value = 0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value = std::max (value, GetPipeCapacityMax (idx).GetBitRate ());
+      value = std::max (value, GetProcessingMax (idx).GetBitRate ());
     }
   return DataRate (value);
 }
 
 double
-PgwInfo::GetTftMaxPipeCapacityUsage () const
+PgwInfo::GetTftMaxProcessingUse () const
 {
   NS_LOG_FUNCTION (this);
 
   double value = 0.0;
   for (uint16_t idx = 1; idx <= GetCurTfts (); idx++)
     {
-      value = std::max (value, GetPipeCapacityUsage (idx));
+      value = std::max (value, GetProcessingUse (idx));
     }
   return value;
 }
