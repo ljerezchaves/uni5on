@@ -173,7 +173,7 @@ SgwInfo::GetPipeCapacityCur (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return GetStats ()->GetEwmaPipelineLoad ();
+  return GetStats ()->GetEwmaProcessingLoad ();
 }
 
 DataRate
@@ -181,7 +181,7 @@ SgwInfo::GetPipeCapacityMax (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_device->GetPipelineCapacity ();
+  return m_device->GetProcessingCapacity ();
 }
 
 double

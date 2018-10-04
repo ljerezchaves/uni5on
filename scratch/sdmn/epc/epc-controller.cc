@@ -324,7 +324,7 @@ EpcController::NotifyPgwTftAttach (
   m_pgwS5PortsNo.push_back (pgwS5PortNo);
 
   uint32_t tableSize = pgwSwDev->GetFlowTableSize ();
-  DataRate plCapacity = pgwSwDev->GetPipelineCapacity ();
+  DataRate plCapacity = pgwSwDev->GetProcessingCapacity ();
   m_tftTableSize = std::min (m_tftTableSize, tableSize);
   m_tftMaxLoad = std::min (m_tftMaxLoad, plCapacity);
 
@@ -1116,7 +1116,7 @@ EpcController::PgwBearerRequest (Ptr<RoutingInfo> rInfo)
   // - If OFF (none): don't block the request.
   // - If ON (all)  : block the request.
   // - If AUTO (gbr): block only if GBR request.
-  uint64_t rate = stats->GetEwmaPipelineLoad ().GetBitRate ();
+  uint64_t rate = stats->GetEwmaProcessingLoad ().GetBitRate ();
   double loadUsage = static_cast<double> (rate) / m_tftMaxLoad.GetBitRate ();
   if (loadUsage >= m_tftBlockThs
       && (m_tftBlockPolicy == OperationMode::ON
@@ -1300,7 +1300,7 @@ EpcController::PgwTftCheckUsage (void)
       maxEntries = std::max (maxEntries, entries);
       sumEntries += entries;
 
-      double load = stats->GetEwmaPipelineLoad ().GetBitRate ();
+      double load = stats->GetEwmaProcessingLoad ().GetBitRate ();
       maxLoad = std::max (maxLoad, load);
       sumLoad += load;
     }

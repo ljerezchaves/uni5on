@@ -142,7 +142,7 @@ PgwInfo::GetPipeCapacityCur (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 
-  return GetStats (idx)->GetEwmaPipelineLoad ();
+  return GetStats (idx)->GetEwmaProcessingLoad ();
 }
 
 DataRate
@@ -151,7 +151,7 @@ PgwInfo::GetPipeCapacityMax (uint16_t idx) const
   NS_LOG_FUNCTION (this << idx);
 
   NS_ASSERT_MSG (idx < m_devices.size (), "Invalid index.");
-  return m_devices.at (idx)->GetPipelineCapacity ();
+  return m_devices.at (idx)->GetProcessingCapacity ();
 }
 
 double
