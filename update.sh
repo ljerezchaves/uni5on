@@ -11,6 +11,7 @@ normal=$(tput sgr0)
 PROGNAME="svelte"
 BASEDIR="/local1/luciano"
 SIMDIR="svelte-simulator"
+LIBDIR="ofsoftswitch13-gtp"
 MACHINE_LIST="atlas castor clio demeter esculapio heracles hercules hestia hydra kratos morfeu pollux satiros tetis"
 
 function PrintHelp () {
@@ -36,7 +37,10 @@ function PrintHelp () {
   echo "  ${bold}pull-sim${normal}:"
   echo "    Pull changes for the ${BASEDIR}/${SIMDIR} git repository."
   echo
-  echo "  ${bold}compile <threads>${normal}:"
+  echo "  ${bold}compile-lib${normal}:"
+  echo "    Compile the ${BASEDIR}/${LIBDIR} library."
+  echo
+  echo "  ${bold}compile-sim <threads>${normal}:"
   echo "    Compile the ${BASEDIR}/${SIMDIR} simulator with a custom number of threads."
   exit 1
 }
@@ -66,7 +70,7 @@ case "${WHERE}" in
         cd ../
       ;;
 
-      compile)
+      compile-sim)
         if [ $# -lt 3 ];
         then
           echo "Number of threads missing."
@@ -74,8 +78,17 @@ case "${WHERE}" in
         fi;
         THREADS=$3
         cd ${SIMDIR}
-          ./waf -j${THREADS}
+        ./waf -j${THREADS}
         cd ../
+      ;;
+
+      compile-lib)
+        cd ${SIMDIR}/${LIBDIR}
+        # git clean -fxd
+        # ./boot.sh
+        # ./configure --enable-ns3-lib
+        make
+        cd ../../
       ;;
 
       *)
@@ -97,7 +110,8 @@ case "${WHERE}" in
         ssh -q ${MACHINE} exit
         if [ $? -eq 0 ];
         then
-          ssh ${MACHINE} $0 --local ${COMMAND} &>> /dev/null &
+          # ssh ${MACHINE} $0 --local ${COMMAND} $3
+          ssh ${MACHINE} $0 --local ${COMMAND} $3 &>> /dev/null &
           sleep 0.5
         fi;
       done
