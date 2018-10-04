@@ -175,7 +175,7 @@ BackhaulController::NotifyConstructionCompleted (void)
 }
 
 double
-BackhaulController::GetFlowTableUsage (uint16_t idx, uint8_t tableId) const
+BackhaulController::GetFlowTableUse (uint16_t idx, uint8_t tableId) const
 {
   NS_LOG_FUNCTION (this << idx);
 
@@ -198,7 +198,7 @@ BackhaulController::GetLinkInfo (uint16_t idx1, uint16_t idx2) const
 }
 
 double
-BackhaulController::GetPipeCapacityUsage (uint16_t idx) const
+BackhaulController::GetProcessingUse (uint16_t idx) const
 {
   NS_LOG_FUNCTION (this << idx);
 

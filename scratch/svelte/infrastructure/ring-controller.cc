@@ -501,24 +501,21 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
   // Block the bearer if the slice pipeline table usage is exceeding the block
   // threshold at any backhaul switch connected to EPC serving entities.
   uint8_t sliceTable = GetSliceTable (slice);
-  double sgwInfraSwTableUsage =
-    GetFlowTableUsage (rInfo->GetSgwInfraSwIdx (), sliceTable);
-  double pgwInfraSwTableUsage =
-    GetFlowTableUsage (rInfo->GetPgwInfraSwIdx (), sliceTable);
-  double enbInfraSwTableUsage =
-    GetFlowTableUsage (rInfo->GetEnbInfraSwIdx (), sliceTable);
-  if ((rInfo->HasTraffic () && sgwInfraSwTableUsage >= GetBlockPolicy ())
-      || (rInfo->HasDlTraffic () && pgwInfraSwTableUsage >= GetBlockPolicy ())
-      || (rInfo->HasUlTraffic () && enbInfraSwTableUsage >= GetBlockPolicy ()))
+  double sgwTabUse = GetFlowTableUse (rInfo->GetSgwInfraSwIdx (), sliceTable);
+  double pgwTabUse = GetFlowTableUse (rInfo->GetPgwInfraSwIdx (), sliceTable);
+  double enbTabUse = GetFlowTableUse (rInfo->GetEnbInfraSwIdx (), sliceTable);
+  if ((rInfo->HasTraffic () && sgwTabUse >= GetBlockPolicy ())
+      || (rInfo->HasDlTraffic () && pgwTabUse >= GetBlockPolicy ())
+      || (rInfo->HasUlTraffic () && enbTabUse >= GetBlockPolicy ()))
     {
       rInfo->SetBlocked (true, RoutingInfo::BACKTABLE);
       return false;
     }
 
-  // Second check: OpenFlow switch pipeline load.
-  // Block the bearer if the pipeline load is exceeding the block threshold at
-  // any backhaul switch over the routing path for this bearer, respecting the
-  // BlockPolicy attribute:
+  // Second check: OpenFlow switch processing load.
+  // Block the bearer if the processing load is exceeding the block threshold
+  // at any backhaul switch over the routing path for this bearer, respecting
+  // the BlockPolicy attribute:
   // - If OFF (none): don't block the request.
   // - If ON (all)  : block the request.
   // - If AUTO (gbr): block only if GBR request.
@@ -530,7 +527,7 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
       downPath = ringInfo->GetDlPath (LteIface::S5);
       while (success && curr != rInfo->GetSgwInfraSwIdx ())
         {
-          success &= (GetPipeCapacityUsage (curr) < GetBlockPolicy ());
+          success &= (GetProcessingUse (curr) < GetBlockPolicy ());
           curr = NextSwitchIndex (curr, downPath);
         }
 
@@ -538,12 +535,12 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
       downPath = ringInfo->GetDlPath (LteIface::S1U);
       while (success && curr != rInfo->GetEnbInfraSwIdx ())
         {
-          success &= (GetPipeCapacityUsage (curr) < GetBlockPolicy ());
+          success &= (GetProcessingUse (curr) < GetBlockPolicy ());
           curr = NextSwitchIndex (curr, downPath);
         }
 
       // The last switch (eNB).
-      success &= (GetPipeCapacityUsage (curr) < GetBlockPolicy ());
+      success &= (GetProcessingUse (curr) < GetBlockPolicy ());
 
       if (!success)
         {

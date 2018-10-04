@@ -126,7 +126,7 @@ protected:
    * \param tableId The pipeline slice table ID.
    * \return The flow table usage.
    */
-  double GetFlowTableUsage (uint16_t idx, uint8_t tableId) const;
+  double GetFlowTableUse (uint16_t idx, uint8_t tableId) const;
 
   /**
    * Search for link information between two switches by their indexes.
@@ -137,11 +137,11 @@ protected:
   Ptr<LinkInfo> GetLinkInfo (uint16_t idx1, uint16_t idx2) const;
 
   /**
-   * Get the pipeline capacity usage for the given backhaul switch index.
+   * Get the processing capacity usage for the given backhaul switch index.
    * \param idx The switch index.
    * \return The pipeline capacity usage.
    */
-  double GetPipeCapacityUsage (uint16_t idx) const;
+  double GetProcessingUse (uint16_t idx) const;
 
   /**
    * Get the slice controller application for a given slice ID.
