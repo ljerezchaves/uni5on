@@ -43,6 +43,8 @@ topos/*.dat
 topos/*.gpi
 topos/*.pdf
 
+logs/
+
 .DS_Store
 *radio-map.pdf
 *radio-map.gpi
