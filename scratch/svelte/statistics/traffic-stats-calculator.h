@@ -184,7 +184,7 @@ private:
    * \param context Context information.
    * \param packet The dropped packet.
    */
-  void LoadDropPacket (std::string context, Ptr<const Packet> packet);
+  void OverloadDropPacket (std::string context, Ptr<const Packet> packet);
 
   /**
    * Trace sink fired when a packets is dropped by meter band.

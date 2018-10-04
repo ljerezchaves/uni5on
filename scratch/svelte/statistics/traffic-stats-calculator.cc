@@ -150,8 +150,8 @@ TrafficStatsCalculator::TrafficStatsCalculator ()
     "/NodeList/*/ApplicationList/*/$ns3::PgwTunnelApp/S5Tx",
     MakeCallback (&TrafficStatsCalculator::EpcInputPacket, this));
   Config::Connect (
-    "/NodeList/*/$ns3::OFSwitch13Device/LoadDrop",
-    MakeCallback (&TrafficStatsCalculator::LoadDropPacket, this));
+    "/NodeList/*/$ns3::OFSwitch13Device/OverloadDrop",
+    MakeCallback (&TrafficStatsCalculator::OverloadDropPacket, this));
   Config::Connect (
     "/NodeList/*/$ns3::OFSwitch13Device/MeterDrop",
     MakeCallback (&TrafficStatsCalculator::MeterDropPacket, this));
@@ -330,8 +330,8 @@ TrafficStatsCalculator::ResetCounters (std::string context,
 }
 
 void
-TrafficStatsCalculator::LoadDropPacket (std::string context,
-                                        Ptr<const Packet> packet)
+TrafficStatsCalculator::OverloadDropPacket (std::string context,
+                                            Ptr<const Packet> packet)
 {
   NS_LOG_FUNCTION (this << context << packet);
 
