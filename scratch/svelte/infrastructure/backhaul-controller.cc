@@ -208,8 +208,8 @@ BackhaulController::GetPipeCapacityUsage (uint16_t idx) const
   stats = device->GetObject<OFSwitch13StatsCalculator> ();
   NS_ASSERT_MSG (stats, "Enable OFSwitch13 datapath stats.");
 
-  return static_cast<double> (stats->GetEwmaPipelineLoad ().GetBitRate ()) /
-         static_cast<double> (device->GetPipelineCapacity ().GetBitRate ());
+  return static_cast<double> (stats->GetEwmaProcessingLoad ().GetBitRate ()) /
+         static_cast<double> (device->GetProcessingCapacity ().GetBitRate ());
 }
 
 Ptr<SliceController>
