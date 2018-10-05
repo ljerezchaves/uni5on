@@ -504,9 +504,9 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
   double sgwTabUse = GetFlowTableUse (rInfo->GetSgwInfraSwIdx (), sliceTable);
   double pgwTabUse = GetFlowTableUse (rInfo->GetPgwInfraSwIdx (), sliceTable);
   double enbTabUse = GetFlowTableUse (rInfo->GetEnbInfraSwIdx (), sliceTable);
-  if ((rInfo->HasTraffic () && sgwTabUse >= GetBlockPolicy ())
-      || (rInfo->HasDlTraffic () && pgwTabUse >= GetBlockPolicy ())
-      || (rInfo->HasUlTraffic () && enbTabUse >= GetBlockPolicy ()))
+  if ((rInfo->HasTraffic () && sgwTabUse >= GetBlockThreshold ())
+      || (rInfo->HasDlTraffic () && pgwTabUse >= GetBlockThreshold ())
+      || (rInfo->HasUlTraffic () && enbTabUse >= GetBlockThreshold ()))
     {
       rInfo->SetBlocked (true, RoutingInfo::BACKTABLE);
       return false;
@@ -527,7 +527,7 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
       downPath = ringInfo->GetDlPath (LteIface::S5);
       while (success && curr != rInfo->GetSgwInfraSwIdx ())
         {
-          success &= (GetEwmaProcUse (curr) < GetBlockPolicy ());
+          success &= (GetEwmaProcUse (curr) < GetBlockThreshold ());
           curr = NextSwitchIndex (curr, downPath);
         }
 
@@ -535,12 +535,12 @@ RingController::HasAvailableResources (Ptr<RingInfo> ringInfo)
       downPath = ringInfo->GetDlPath (LteIface::S1U);
       while (success && curr != rInfo->GetEnbInfraSwIdx ())
         {
-          success &= (GetEwmaProcUse (curr) < GetBlockPolicy ());
+          success &= (GetEwmaProcUse (curr) < GetBlockThreshold ());
           curr = NextSwitchIndex (curr, downPath);
         }
 
       // The last switch (eNB).
-      success &= (GetEwmaProcUse (curr) < GetBlockPolicy ());
+      success &= (GetEwmaProcUse (curr) < GetBlockThreshold ());
 
       if (!success)
         {
