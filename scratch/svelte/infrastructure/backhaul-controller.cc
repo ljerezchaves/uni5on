@@ -67,7 +67,7 @@ BackhaulController::GetTypeId (void)
                                     OpMode::AUTO, "gbr"))
     .AddAttribute ("BlockThs",
                    "Switch overloaded block threshold.",
-                   DoubleValue (0.95),
+                   DoubleValue (0.9),
                    MakeDoubleAccessor (&BackhaulController::m_blockThs),
                    MakeDoubleChecker<double> (0.8, 1.0))
     .AddAttribute ("PriorityQueues",

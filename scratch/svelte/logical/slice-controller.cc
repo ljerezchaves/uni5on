@@ -101,7 +101,7 @@ SliceController::GetTypeId (void)
                                     OpMode::AUTO, "gbr"))
     .AddAttribute ("PgwBlockThs",
                    "The P-GW block threshold.",
-                   DoubleValue (0.95),
+                   DoubleValue (0.9),
                    MakeDoubleAccessor (&SliceController::m_pgwBlockThs),
                    MakeDoubleChecker<double> (0.8, 1.0))
     .AddAttribute ("PgwTftAdaptiveMode",
@@ -119,7 +119,7 @@ SliceController::GetTypeId (void)
                    MakeDoubleChecker<double> (0.0, 0.5))
     .AddAttribute ("PgwTftSplitThs",
                    "The P-GW TFT split threshold.",
-                   DoubleValue (0.90),
+                   DoubleValue (0.80),
                    MakeDoubleAccessor (&SliceController::m_tftSplitThs),
                    MakeDoubleChecker<double> (0.5, 1.0))
 
@@ -133,7 +133,7 @@ SliceController::GetTypeId (void)
                                     OpMode::AUTO, "gbr"))
     .AddAttribute ("SgwBlockThs",
                    "The S-GW block threshold.",
-                   DoubleValue (0.95),
+                   DoubleValue (0.9),
                    MakeDoubleAccessor (&SliceController::m_sgwBlockThs),
                    MakeDoubleChecker<double> (0.8, 1.0))
 
