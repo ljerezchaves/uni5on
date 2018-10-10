@@ -671,7 +671,7 @@ SliceController::DoCreateSessionRequest (
         {
           // Configure this default bearer.
           rInfo->SetPriority (0x7F);
-          rInfo->SetTimeout (0);
+          rInfo->SetTimeout (OFP_FLOW_PERMANENT);
 
           // For logic consistence, let's check for available resources.
           bool success = true;
@@ -690,7 +690,7 @@ SliceController::DoCreateSessionRequest (
         {
           // Configure this dedicated bearer.
           rInfo->SetPriority (0x1FFF);
-          rInfo->SetTimeout (0);
+          rInfo->SetTimeout (OFP_FLOW_PERMANENT);
         }
     }
 
