@@ -258,11 +258,56 @@ SvelteHelper::AddEnb (Ptr<Node> enb, Ptr<NetDevice> lteEnbNetDevice,
 }
 
 void
-SvelteHelper::AddX2Interface (Ptr<Node> enb1, Ptr<Node> enb2)
+SvelteHelper::AddX2Interface (Ptr<Node> enb1Node, Ptr<Node> enb2Node)
 {
-  NS_LOG_FUNCTION (this << enb1 << enb2);
+  NS_LOG_FUNCTION (this << enb1Node << enb1Node);
 
-  // TODO
+  // Get the eNB device pointer from eNB node poiter.
+  Ptr<LteEnbNetDevice> enb1Dev = 0, enb2Dev = 0;
+  for (uint32_t i = 0; i < enb1Node->GetNDevices (); i++)
+    {
+      enb1Dev = enb1Node->GetDevice (i)->GetObject<LteEnbNetDevice> ();
+      if (enb1Dev)
+        {
+          break;
+        }
+    }
+  for (uint32_t i = 0; i < enb2Node->GetNDevices (); i++)
+    {
+      enb2Dev = enb2Node->GetDevice (i)->GetObject<LteEnbNetDevice> ();
+      if (enb2Dev)
+        {
+          break;
+        }
+    }
+  NS_ASSERT_MSG (enb1Dev, "Lte eNB device not found for node " << enb1Node);
+  NS_ASSERT_MSG (enb2Dev, "Lte eNB device not found for node " << enb2Node);
+
+  // Attach both eNB nodes to the OpenFlow backhaul network over X2 interface.
+  uint16_t enb1CellId = enb1Dev->GetCellId ();
+  uint16_t enb2CellId = enb2Dev->GetCellId ();
+  uint16_t enb1InfraSwIdx = GetEnbInfraSwIdx (enb1CellId);
+  uint16_t enb2InfraSwIdx = GetEnbInfraSwIdx (enb2CellId);
+  Ptr<CsmaNetDevice> enb1X2Dev, enb2X2Dev;
+  Ptr<OFSwitch13Port> enb1InfraSwPort, enb2InfraSwPort;
+  std::tie (enb1X2Dev, enb1InfraSwPort) = m_backhaul->AttachEpcNode (
+      enb1Node, enb1InfraSwIdx, LteIface::X2, "x2_cell" +
+      std::to_string (enb1CellId) + "to" + std::to_string (enb2CellId));
+  std::tie (enb2X2Dev, enb2InfraSwPort) = m_backhaul->AttachEpcNode (
+      enb2Node, enb2InfraSwIdx, LteIface::X2, "x2_cell" +
+      std::to_string (enb2CellId) + "to" + std::to_string (enb1CellId));
+  Ipv4Address enb1X2Addr = Ipv4AddressHelper::GetAddress (enb1X2Dev);
+  Ipv4Address enb2X2Addr = Ipv4AddressHelper::GetAddress (enb2X2Dev);
+  NS_LOG_INFO ("eNB " << enb1Node << " attached to x2 with IP " << enb1X2Addr);
+  NS_LOG_INFO ("eNB " << enb2Node << " attached to x2 with IP " << enb2X2Addr);
+
+  // Add the X2 interface to both eNB X2 entities.
+  Ptr<EpcX2> enb1X2 = enb1Node->GetObject<EpcX2> ();
+  Ptr<EpcX2> enb2X2 = enb2Node->GetObject<EpcX2> ();
+  enb1X2->AddX2Interface (enb1CellId, enb1X2Addr, enb2CellId, enb2X2Addr);
+  enb2X2->AddX2Interface (enb2CellId, enb2X2Addr, enb1CellId, enb1X2Addr);
+  enb1Dev->GetRrc ()->AddX2Neighbour (enb2CellId);
+  enb2Dev->GetRrc ()->AddX2Neighbour (enb1CellId);
 }
 
 void
