@@ -121,7 +121,7 @@ BackhaulNetwork::EnablePcap (std::string prefix, bool promiscuous)
 
 std::pair<Ptr<CsmaNetDevice>, Ptr<OFSwitch13Port> >
 BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
-                                LteIface iface)
+                                LteIface iface, std::string ifaceStr)
 {
   NS_LOG_FUNCTION (this << epcNode << swIdx << iface);
   NS_LOG_INFO ("Attach EPC node " << epcNode << " to backhaul switch index " <<
@@ -141,7 +141,11 @@ BackhaulNetwork::AttachEpcNode (Ptr<Node> epcNode, uint16_t swIdx,
   m_epcDevices.Add (epcDev);
 
   // Set device names for pcap files.
-  SetDeviceNames (swDev, epcDev, "~" + LteIfaceStr (iface) + "~");
+  if (ifaceStr.empty ())
+    {
+      ifaceStr = LteIfaceStr (iface);
+    }
+  SetDeviceNames (swDev, epcDev, "~" + ifaceStr + "~");
 
   // Add the swDev device as OpenFlow switch port on the switch node.
   Ptr<OFSwitch13Port> swPort = swOfDev->AddSwitchPort (swDev);
