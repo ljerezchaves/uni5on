@@ -232,14 +232,14 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
       {
         // Routing group for clockwise packet forwarding.
         std::ostringstream cmd;
-        cmd << "group-mod cmd=add,type=ind,group=" << RingInfo::CLOCK
+        cmd << "group-mod cmd=add,type=ind,group="    << RingInfo::CLOCK
             << " weight=0,port=any,group=any output=" << lInfo->GetPortNo (0);
         DpctlSchedule (lInfo->GetSwDpId (0), cmd.str ());
       }
       {
         // Routing group for counterclockwise packet forwarding.
         std::ostringstream cmd;
-        cmd << "group-mod cmd=add,type=ind,group=" << RingInfo::COUNTER
+        cmd << "group-mod cmd=add,type=ind,group="    << RingInfo::COUNTER
             << " weight=0,port=any,group=any output=" << lInfo->GetPortNo (1);
         DpctlSchedule (lInfo->GetSwDpId (1), cmd.str ());
       }
@@ -259,24 +259,26 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
         // Clockwise packet forwarding.
         std::ostringstream cmd;
         cmd << "flow-mod cmd=add,prio=128"
-            << ",table=" << ROUTE_TAB
-            << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
-            << " meta=0x0,in_port=" << lInfo->GetPortNo (0)
-            << " write:group=" << RingInfo::COUNTER
-            << " meta:" << RingInfo::COUNTER
-            << " goto:" << BANDW_TAB;
+            << ",table="        << ROUTE_TAB
+            << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
+            << " meta=0x0"
+            << ",in_port="      << lInfo->GetPortNo (0)
+            << " write:group="  << RingInfo::COUNTER
+            << " meta:"         << RingInfo::COUNTER
+            << " goto:"         << BANDW_TAB;
         DpctlSchedule (lInfo->GetSwDpId (0), cmd.str ());
       }
       {
         // Counterclockwise packet forwarding.
         std::ostringstream cmd;
         cmd << "flow-mod cmd=add,prio=128"
-            << ",table=" << ROUTE_TAB
-            << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
-            << " meta=0x0,in_port=" << lInfo->GetPortNo (1)
-            << " write:group=" << RingInfo::CLOCK
-            << " meta:" << RingInfo::CLOCK
-            << " goto:" << BANDW_TAB;
+            << ",table="        << ROUTE_TAB
+            << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
+            << " meta=0x0"
+            << ",in_port="      << lInfo->GetPortNo (1)
+            << " write:group="  << RingInfo::CLOCK
+            << " meta:"         << RingInfo::CLOCK
+            << " goto:"         << BANDW_TAB;
         DpctlSchedule (lInfo->GetSwDpId (1), cmd.str ());
       }
     }
@@ -298,11 +300,11 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
   // Building the dpctl command + arguments string.
   std::ostringstream cmd;
   cmd << "flow-mod cmd=add"
-      << ",table=" << GetSliceTable (rInfo->GetSliceId ())
-      << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+      << ",table="  << GetSliceTable (rInfo->GetSliceId ())
+      << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
       << ",cookie=" << rInfo->GetTeidHex ()
-      << ",prio=" << rInfo->GetPriority ()
-      << ",idle=" << rInfo->GetTimeout ();
+      << ",prio="   << rInfo->GetPriority ()
+      << ",idle="   << rInfo->GetTimeout ();
 
   std::ostringstream dscp;
   if (rInfo->GetDscpValue ())
@@ -316,14 +318,14 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
       // Building the match string for both S1-U and S5 interfaces
       // No match on source IP because we may have several P-GW TFT switches.
       std::ostringstream mS5, mS1;
-      mS5 << " eth_type=" << IPV4_PROT_NUM
-          << ",ip_proto=" << UDP_PROT_NUM
-          << ",ip_dst=" << rInfo->GetSgwS5Addr ()
-          << ",gtpu_teid=" << rInfo->GetTeidHex ();
-      mS1 << " eth_type=" << IPV4_PROT_NUM
-          << ",ip_proto=" << UDP_PROT_NUM
-          << ",ip_dst=" << rInfo->GetEnbS1uAddr ()
-          << ",gtpu_teid=" << rInfo->GetTeidHex ();
+      mS5 << " eth_type="   << IPV4_PROT_NUM
+          << ",ip_proto="   << UDP_PROT_NUM
+          << ",ip_dst="     << rInfo->GetSgwS5Addr ()
+          << ",gtpu_teid="  << rInfo->GetTeidHex ();
+      mS1 << " eth_type="   << IPV4_PROT_NUM
+          << ",ip_proto="   << UDP_PROT_NUM
+          << ",ip_dst="     << rInfo->GetEnbS1uAddr ()
+          << ",gtpu_teid="  << rInfo->GetTeidHex ();
 
       // Build the metatada and goto instructions string.
       std::ostringstream aS5, aS1;
@@ -344,16 +346,16 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
     {
       // Building the match string.
       std::ostringstream mS1, mS5;
-      mS1 << " eth_type=" << IPV4_PROT_NUM
-          << ",ip_proto=" << UDP_PROT_NUM
-          << ",ip_src=" << rInfo->GetEnbS1uAddr ()
-          << ",ip_dst=" << rInfo->GetSgwS1uAddr ()
-          << ",gtpu_teid=" << rInfo->GetTeidHex ();
-      mS5 << " eth_type=" << IPV4_PROT_NUM
-          << ",ip_proto=" << UDP_PROT_NUM
-          << ",ip_src=" << rInfo->GetSgwS5Addr ()
-          << ",ip_dst=" << rInfo->GetPgwS5Addr ()
-          << ",gtpu_teid=" << rInfo->GetTeidHex ();
+      mS1 << " eth_type="   << IPV4_PROT_NUM
+          << ",ip_proto="   << UDP_PROT_NUM
+          << ",ip_src="     << rInfo->GetEnbS1uAddr ()
+          << ",ip_dst="     << rInfo->GetSgwS1uAddr ()
+          << ",gtpu_teid="  << rInfo->GetTeidHex ();
+      mS5 << " eth_type="   << IPV4_PROT_NUM
+          << ",ip_proto="   << UDP_PROT_NUM
+          << ",ip_src="     << rInfo->GetSgwS5Addr ()
+          << ",ip_dst="     << rInfo->GetPgwS5Addr ()
+          << ",gtpu_teid="  << rInfo->GetTeidHex ();
 
       // Build the metatada and goto instructions string.
       std::ostringstream aS1, aS5;
@@ -384,9 +386,9 @@ RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
   // Remove flow entries for this TEID.
   std::ostringstream cmd;
   cmd << "flow-mod cmd=del"
-      << ",table=" << GetSliceTable (rInfo->GetSliceId ())
-      << ",cookie=" << rInfo->GetTeidHex ()
-      << ",cookie_mask=" << COOKIE_STRICT_MASK_STR;
+      << ",table="        << GetSliceTable (rInfo->GetSliceId ())
+      << ",cookie="       << rInfo->GetTeidHex ()
+      << ",cookie_mask="  << COOKIE_STRICT_MASK_STR;
 
   // Removing rules from switches connected to the eNB, S-GW and P-GW.
   DpctlExecute (GetDpId (rInfo->GetPgwInfraSwIdx ()), cmd.str ());
@@ -409,21 +411,21 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   {
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=64"
-        << ",table=" << ROUTE_TAB
-        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
-        << " meta=" << RingInfo::CLOCK
-        << " write:group=" << RingInfo::CLOCK
-        << " goto:" << BANDW_TAB;
+        << ",table="        << ROUTE_TAB
+        << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
+        << " meta="         << RingInfo::CLOCK
+        << " write:group="  << RingInfo::CLOCK
+        << " goto:"         << BANDW_TAB;
     DpctlExecute (swtch, cmd.str ());
   }
   {
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=64"
-        << ",table=" << ROUTE_TAB
-        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
-        << " meta=" << RingInfo::COUNTER
-        << " write:group=" << RingInfo::COUNTER
-        << " goto:" << BANDW_TAB;
+        << ",table="        << ROUTE_TAB
+        << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
+        << " meta="         << RingInfo::COUNTER
+        << " write:group="  << RingInfo::COUNTER
+        << " goto:"         << BANDW_TAB;
     DpctlExecute (swtch, cmd.str ());
   }
 
@@ -454,16 +456,16 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
                   // Apply this meter to the traffic of this slice only.
                   std::ostringstream cmd;
                   cmd << "flow-mod cmd=add,prio=16"
-                      << ",table=" << BANDW_TAB
-                      << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
-                      << " eth_type=" << IPV4_PROT_NUM
-                      << ",ip_proto=" << UDP_PROT_NUM
-                      << ",meta=" << ringPath
-                      << ",gtpu_teid=" << (meterId & TEID_SLICE_MASK)
-                      << "/" << TEID_SLICE_MASK
-                      << ",ip_dscp=" << static_cast<uint16_t> (dscp)
-                      << " meter:" << meterId
-                      << " goto:" << OUTPT_TAB;
+                      << ",table="      << BANDW_TAB
+                      << ",flags="      << FLAGS_REMOVED_OVERLAP_RESET
+                      << " eth_type="   << IPV4_PROT_NUM
+                      << ",ip_proto="   << UDP_PROT_NUM
+                      << ",meta="       << ringPath
+                      << ",gtpu_teid="  << (meterId & TEID_SLICE_MASK)
+                      << "/"            << TEID_SLICE_MASK
+                      << ",ip_dscp="    << static_cast<uint16_t> (dscp)
+                      << " meter:"      << meterId
+                      << " goto:"       << OUTPT_TAB;
                   DpctlExecute (swtch, cmd.str ());
                 }
             }
@@ -487,14 +489,14 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
               // Apply this meter to the traffic of all slices.
               std::ostringstream cmd;
               cmd << "flow-mod cmd=add,prio=16"
-                  << ",table=" << BANDW_TAB
-                  << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+                  << ",table="    << BANDW_TAB
+                  << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
                   << " eth_type=" << IPV4_PROT_NUM
                   << ",ip_proto=" << UDP_PROT_NUM
-                  << ",meta=" << ringPath
-                  << ",ip_dscp=" << static_cast<uint16_t> (dscp)
-                  << " meter:" << meterId
-                  << " goto:" << OUTPT_TAB;
+                  << ",meta="     << ringPath
+                  << ",ip_dscp="  << static_cast<uint16_t> (dscp)
+                  << " meter:"    << meterId
+                  << " goto:"     << OUTPT_TAB;
               DpctlExecute (swtch, cmd.str ());
             }
         }

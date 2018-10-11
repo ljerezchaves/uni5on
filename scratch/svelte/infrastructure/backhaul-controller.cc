@@ -246,14 +246,14 @@ BackhaulController::NotifyEpcAttach (
     // Send the packet to the classification table.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=64"
-        << ",table=" << INPUT_TAB
-        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+        << ",table="    << INPUT_TAB
+        << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
         << " eth_type=" << IPV4_PROT_NUM
         << ",ip_proto=" << UDP_PROT_NUM
-        << ",udp_src=" << GTPU_PORT
-        << ",udp_dst=" << GTPU_PORT
-        << ",in_port=" << portNo
-        << " goto:" << CLASS_TAB;
+        << ",udp_src="  << GTPU_PORT
+        << ",udp_dst="  << GTPU_PORT
+        << ",in_port="  << portNo
+        << " goto:"     << CLASS_TAB;
     DpctlSchedule (swDev->GetDatapathId (), cmd.str ());
   }
 
@@ -266,13 +266,13 @@ BackhaulController::NotifyEpcAttach (
     // Send the packet directly to the output table.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=256"
-        << ",table=" << ROUTE_TAB
-        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+        << ",table="    << ROUTE_TAB
+        << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
         << " eth_type=" << IPV4_PROT_NUM
-        << ",eth_dst=" << Mac48Address::ConvertFrom (epcDev->GetAddress ())
-        << ",ip_dst=" << Ipv4AddressHelper::GetAddress (epcDev)
+        << ",eth_dst="  << Mac48Address::ConvertFrom (epcDev->GetAddress ())
+        << ",ip_dst="   << Ipv4AddressHelper::GetAddress (epcDev)
         << " write:output=" << portNo
-        << " goto:" << OUTPT_TAB;
+        << " goto:"     << OUTPT_TAB;
     DpctlSchedule (swDev->GetDatapathId (), cmd.str ());
   }
 }
@@ -437,13 +437,13 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
     // Send the packet directly to the routing table.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=32"
-        << ",table=" << INPUT_TAB
-        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+        << ",table="    << INPUT_TAB
+        << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
         << " eth_type=" << IPV4_PROT_NUM
         << ",ip_proto=" << UDP_PROT_NUM
-        << ",udp_src=" << GTPU_PORT
-        << ",udp_dst=" << GTPU_PORT
-        << " goto:" << ROUTE_TAB;
+        << ",udp_src="  << GTPU_PORT
+        << ",udp_dst="  << GTPU_PORT
+        << " goto:"     << ROUTE_TAB;
     DpctlExecute (swtch, cmd.str ());
   }
   {
@@ -469,13 +469,13 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
       std::ostringstream cmd;
       cmd << "flow-mod cmd=add,prio=16"
-          << ",table=" << CLASS_TAB
-          << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
-          << " eth_type=" << IPV4_PROT_NUM
-          << ",ip_proto=" << UDP_PROT_NUM
-          << ",gtpu_teid=" << (sliceMasked & TEID_SLICE_MASK)
-          << "/" << TEID_SLICE_MASK
-          << " goto:" << GetSliceTable (slice);
+          << ",table="      << CLASS_TAB
+          << ",flags="      << FLAGS_REMOVED_OVERLAP_RESET
+          << " eth_type="   << IPV4_PROT_NUM
+          << ",ip_proto="   << UDP_PROT_NUM
+          << ",gtpu_teid="  << (sliceMasked & TEID_SLICE_MASK)
+          << "/"            << TEID_SLICE_MASK
+          << " goto:"       << GetSliceTable (slice);
       DpctlExecute (swtch, cmd.str ());
     }
 
@@ -510,9 +510,9 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
     // Send the packet to the output table.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=0"
-        << ",table=" << BANDW_TAB
-        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
-        << " goto:" << OUTPT_TAB;
+        << ",table="  << BANDW_TAB
+        << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
+        << " goto:"   << OUTPT_TAB;
     DpctlExecute (swtch, cmd.str ());
   }
 
@@ -526,11 +526,11 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
         {
           std::ostringstream cmd;
           cmd << "flow-mod cmd=add,prio=16"
-              << ",table=" << OUTPT_TAB
-              << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
-              << " eth_type=" << IPV4_PROT_NUM
-              << ",ip_dscp=" << static_cast<uint16_t> (it.first)
-              << " write:queue=" << static_cast<uint32_t> (it.second);
+              << ",table="        << OUTPT_TAB
+              << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
+              << " eth_type="     << IPV4_PROT_NUM
+              << ",ip_dscp="      << static_cast<uint16_t> (it.first)
+              << " write:queue="  << static_cast<uint32_t> (it.second);
           DpctlExecute (swtch, cmd.str ());
         }
     }
@@ -576,9 +576,9 @@ BackhaulController::SlicingMeterAdjusted (
       //
       std::ostringstream cmd;
       cmd << "meter-mod cmd=mod"
-          << ",flags=" << OFPMF_KBPS
-          << ",meter=" << meterId
-          << " drop:rate=" << kbps;
+          << ",flags="      << OFPMF_KBPS
+          << ",meter="      << meterId
+          << " drop:rate="  << kbps;
       DpctlExecute (lInfo->GetSwDpId (dir), cmd.str ());
     }
 }
@@ -613,9 +613,9 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
               //
               std::ostringstream cmd;
               cmd << "meter-mod cmd=add"
-                  << ",flags=" << OFPMF_KBPS
-                  << ",meter=" << meterId
-                  << " drop:rate=" << kbps;
+                  << ",flags="      << OFPMF_KBPS
+                  << ",meter="      << meterId
+                  << " drop:rate="  << kbps;
               DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
             }
         }
@@ -643,9 +643,9 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
           //
           std::ostringstream cmd;
           cmd << "meter-mod cmd=add"
-              << ",flags=" << OFPMF_KBPS
-              << ",meter=" << meterId
-              << " drop:rate=" << kbps;
+              << ",flags="      << OFPMF_KBPS
+              << ",meter="      << meterId
+              << " drop:rate="  << kbps;
           DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
         }
     }
