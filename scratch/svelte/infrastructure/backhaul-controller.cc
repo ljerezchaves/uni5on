@@ -245,10 +245,11 @@ BackhaulController::NotifyEpcAttach (
     // GTP packets entering the ring network from any EPC port.
     // Send the packet to the classification table.
     std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,table=" << INPUT_TAB
-        << ",prio=64,flags="
-        << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
-        << " eth_type=0x800,ip_proto=17"
+    cmd << "flow-mod cmd=add,prio=64"
+        << ",table=" << INPUT_TAB
+        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+        << " eth_type=" << IPV4_PROT_NUM
+        << ",ip_proto=" << UDP_PROT_NUM
         << ",udp_src=" << GTPU_PORT
         << ",udp_dst=" << GTPU_PORT
         << ",in_port=" << portNo
@@ -263,10 +264,12 @@ BackhaulController::NotifyEpcAttach (
     // GTP packets addressed to EPC elements connected to this switch over EPC
     // ports. Write the output port into action set.
     // Send the packet directly to the output table.
-    Mac48Address epcMac = Mac48Address::ConvertFrom (epcDev->GetAddress ());
     std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=256,table=" << ROUTE_TAB
-        << " eth_type=0x800,eth_dst=" << epcMac
+    cmd << "flow-mod cmd=add,prio=256"
+        << ",table=" << ROUTE_TAB
+        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+        << " eth_type=" << IPV4_PROT_NUM
+        << ",eth_dst=" << Mac48Address::ConvertFrom (epcDev->GetAddress ())
         << ",ip_dst=" << Ipv4AddressHelper::GetAddress (epcDev)
         << " write:output=" << portNo
         << " goto:" << OUTPT_TAB;
@@ -433,8 +436,11 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
     // GTP packets entering the switch from any port other than EPC ports.
     // Send the packet directly to the routing table.
     std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=32,table=" << INPUT_TAB
-        << " eth_type=0x800,ip_proto=17"
+    cmd << "flow-mod cmd=add,prio=32"
+        << ",table=" << INPUT_TAB
+        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+        << " eth_type=" << IPV4_PROT_NUM
+        << ",ip_proto=" << UDP_PROT_NUM
         << ",udp_src=" << GTPU_PORT
         << ",udp_dst=" << GTPU_PORT
         << " goto:" << ROUTE_TAB;
@@ -444,7 +450,9 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
     // Table miss entry.
     // Send the packet to the controller.
     std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=0,table=" << INPUT_TAB
+    cmd << "flow-mod cmd=add,prio=0"
+        << ",table=" << INPUT_TAB
+        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
         << " apply:output=ctrl";
     DpctlExecute (swtch, cmd.str ());
   }
@@ -460,8 +468,11 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
       uint32_t sliceMasked = GetSvelteTeid (slice, 0, 0);
 
       std::ostringstream cmd;
-      cmd << "flow-mod cmd=add,prio=16,table=" << CLASS_TAB
-          << " eth_type=0x800,ip_proto=17"
+      cmd << "flow-mod cmd=add,prio=16"
+          << ",table=" << CLASS_TAB
+          << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+          << " eth_type=" << IPV4_PROT_NUM
+          << ",ip_proto=" << UDP_PROT_NUM
           << ",gtpu_teid=" << (sliceMasked & TEID_SLICE_MASK)
           << "/" << TEID_SLICE_MASK
           << " goto:" << GetSliceTable (slice);
@@ -483,7 +494,9 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
     // Table miss entry.
     // Send the packet to the controller.
     std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=0,table=" << ROUTE_TAB
+    cmd << "flow-mod cmd=add,prio=0"
+        << ",table=" << ROUTE_TAB
+        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
         << " apply:output=ctrl";
     DpctlExecute (swtch, cmd.str ());
   }
@@ -496,7 +509,9 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
     // Table miss entry.
     // Send the packet to the output table.
     std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=0,table=" << BANDW_TAB
+    cmd << "flow-mod cmd=add,prio=0"
+        << ",table=" << BANDW_TAB
+        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
         << " goto:" << OUTPT_TAB;
     DpctlExecute (swtch, cmd.str ());
   }
@@ -510,8 +525,10 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
       for (auto const &it : m_queueByDscp)
         {
           std::ostringstream cmd;
-          cmd << "flow-mod cmd=add,prio=16,table=" << OUTPT_TAB
-              << " eth_type=0x800"
+          cmd << "flow-mod cmd=add,prio=16"
+              << ",table=" << OUTPT_TAB
+              << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+              << " eth_type=" << IPV4_PROT_NUM
               << ",ip_dscp=" << static_cast<uint16_t> (it.first)
               << " write:queue=" << static_cast<uint32_t> (it.second);
           DpctlExecute (swtch, cmd.str ());
@@ -520,7 +537,9 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   {
     // Table miss entry. No instructions. This will trigger action set execute.
     std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=0,table=" << OUTPT_TAB;
+    cmd << "flow-mod cmd=add,prio=0"
+        << ",table=" << OUTPT_TAB
+        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET;
     DpctlExecute (swtch, cmd.str ());
   }
 }
@@ -593,7 +612,8 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
               // Meter table
               //
               std::ostringstream cmd;
-              cmd << "meter-mod cmd=add,flags=" << OFPMF_KBPS
+              cmd << "meter-mod cmd=add"
+                  << ",flags=" << OFPMF_KBPS
                   << ",meter=" << meterId
                   << " drop:rate=" << kbps;
               DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());
@@ -622,7 +642,8 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
           // Meter table
           //
           std::ostringstream cmd;
-          cmd << "meter-mod cmd=add,flags=" << OFPMF_KBPS
+          cmd << "meter-mod cmd=add"
+              << ",flags=" << OFPMF_KBPS
               << ",meter=" << meterId
               << " drop:rate=" << kbps;
           DpctlSchedule (lInfo->GetSwDpId (d), cmd.str ());

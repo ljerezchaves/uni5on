@@ -21,6 +21,13 @@
 #ifndef SLICE_CONTROLLER_H
 #define SLICE_CONTROLLER_H
 
+// Pipeline tables at OpenFlow S/P-GW switches.
+#define PGW_MAIN_TAB  0
+#define PGW_TFT_TAB   0
+#define SGW_MAIN_TAB  0
+#define SGW_DL_TAB    1
+#define SGW_UL_TAB    2
+
 #include <ns3/core-module.h>
 #include <ns3/lte-module.h>
 #include <ns3/network-module.h>

@@ -338,7 +338,10 @@ SliceController::NotifyPgwAttach (
     // forward to the SGi interface port.
     Mac48Address webMac = Mac48Address::ConvertFrom (webSgiDev->GetAddress ());
     std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+    cmd << "flow-mod cmd=add,prio=64"
+        << ",table=" << PGW_MAIN_TAB
+        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+        << " eth_type=" << IPV4_PROT_NUM
         << ",in_port=" << pgwInfo->GetMainS5PortNo ()
         << ",ip_dst=" << Ipv4AddressHelper::GetAddress (webSgiDev)
         << " write:set_field=eth_dst:" << webMac
@@ -351,7 +354,10 @@ SliceController::NotifyPgwAttach (
     // adaptive mechanism level. This is the only rule that is updated when the
     // level changes, sending packets to a different pipeline table.
     std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+    cmd << "flow-mod cmd=add,prio=64"
+        << ",table=" << PGW_MAIN_TAB
+        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+        << " eth_type=" << IPV4_PROT_NUM
         << ",in_port=" << pgwInfo->GetMainSgiPortNo ()
         << ",ip_dst=" << m_ueAddr << "/" << m_ueMask.GetPrefixLength ()
         << " goto:" << pgwInfo->GetCurLevel () + 1;
@@ -370,9 +376,11 @@ SliceController::NotifyPgwAttach (
           uint16_t lbLevel = static_cast<uint16_t> (log2 (tft));
           uint16_t ipMask = (1 << lbLevel) - 1;
           std::ostringstream cmd;
-          cmd << "flow-mod cmd=add,prio=64,table=" << lbLevel + 1
-              << " eth_type=0x800,ip_dst=0.0.0." << tftIdx - 1
-              << "/0.0.0." << ipMask
+          cmd << "flow-mod cmd=add,prio=64"
+              << ",table=" << lbLevel + 1
+              << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+              << " eth_type=" << IPV4_PROT_NUM
+              << ",ip_dst=0.0.0." << tftIdx - 1 << "/0.0.0." << ipMask
               << " apply:output=" << pgwInfo->GetMainToTftPortNo (tftIdx);
           DpctlSchedule (pgwInfo->GetMainDpId (), cmd.str ());
         }
@@ -404,7 +412,10 @@ SliceController::NotifySgwAttach (Ptr<SgwInfo> sgwInfo)
     // network are sent to table 1, where rules will match the flow and set
     // both TEID and eNB address on tunnel metadata.
     std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+    cmd << "flow-mod cmd=add,prio=64"
+        << ",table=" << SGW_MAIN_TAB
+        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+        << " eth_type=" << IPV4_PROT_NUM
         << ",in_port=" << sgwInfo->GetS5PortNo ()
         << ",ip_dst=" << m_ueAddr << "/" << m_ueMask.GetPrefixLength ()
         << " goto:1";
@@ -415,7 +426,10 @@ SliceController::NotifySgwAttach (Ptr<SgwInfo> sgwInfo)
     // Internet are sent to table 2, where rules will match the flow and set
     // both TEID and P-GW address on tunnel metadata.
     std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,table=0,prio=64 eth_type=0x800"
+    cmd << "flow-mod cmd=add,prio=64"
+        << ",table=" << SGW_MAIN_TAB
+        << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+        << " eth_type=" << IPV4_PROT_NUM
         << ",in_port=" << sgwInfo->GetS1uPortNo ()
         << ",ip_dst=" << m_webAddr << "/" << m_webMask.GetPrefixLength ()
         << " goto:2";
@@ -564,7 +578,12 @@ SliceController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   NS_LOG_FUNCTION (this << swtch);
 
   // Table miss entry. Send to controller.
-  DpctlExecute (swtch, "flow-mod cmd=add,table=0,prio=0 apply:output=ctrl");
+  std::ostringstream cmd;
+  cmd << "flow-mod cmd=add,prio=0"
+      << ",table=0"
+      << ",flags=" << FLAGS_REMOVED_OVERLAP_RESET
+      << " apply:output=ctrl";
+  DpctlExecute (swtch, cmd.str ());
 }
 
 bool
@@ -823,7 +842,9 @@ SliceController::PgwAdaptiveMechanism (void)
 
       // Update the P-GW main switch.
       std::ostringstream cmd;
-      cmd << "flow-mod cmd=mods,table=0,prio=64 eth_type=0x800"
+      cmd << "flow-mod cmd=mods,prio=64"
+          << ",table=" << PGW_MAIN_TAB
+          << " eth_type=" << IPV4_PROT_NUM
           << ",in_port=" << m_pgwInfo->GetMainSgiPortNo ()
           << ",ip_dst=" << m_ueAddr << "/" << m_ueMask.GetPrefixLength ()
           << " goto:" << nextLevel + 1;
@@ -901,8 +922,9 @@ SliceController::PgwRulesInstall (
 
   // Build the dpctl command string
   std::ostringstream cmd, act;
-  cmd << "flow-mod cmd=add,table=0"
-      << ",flags=" << (OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
+  cmd << "flow-mod cmd=add"
+      << ",table=" << PGW_TFT_TAB
+      << ",flags=" << FLAGS_OVERLAP_RESET
       << ",cookie=" << rInfo->GetTeidHex ()
       << ",prio=" << rInfo->GetPriority ()
       << ",idle=" << rInfo->GetTimeout ();
@@ -940,8 +962,8 @@ SliceController::PgwRulesInstall (
       if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
         {
           std::ostringstream mat;
-          mat << " eth_type=0x800"
-              << ",ip_proto=6"
+          mat << " eth_type=" << IPV4_PROT_NUM
+              << ",ip_proto=" << TCP_PROT_NUM
               << ",ip_dst=" << filter.localAddress;
           if (tft->IsDefaultTft () == false)
             {
@@ -955,8 +977,8 @@ SliceController::PgwRulesInstall (
       else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
         {
           std::ostringstream mat;
-          mat << " eth_type=0x800"
-              << ",ip_proto=17"
+          mat << " eth_type=" << IPV4_PROT_NUM
+              << ",ip_proto=" << UDP_PROT_NUM
               << ",ip_dst=" << filter.localAddress;
           if (tft->IsDefaultTft () == false)
             {
@@ -986,7 +1008,8 @@ SliceController::PgwRulesRemove (
 
   // Remove P-GW TFT flow entries for this TEID.
   std::ostringstream cmd;
-  cmd << "flow-mod cmd=del,table=0"
+  cmd << "flow-mod cmd=del"
+      << ",table=" << PGW_TFT_TAB
       << ",cookie=" << rInfo->GetTeidHex ()
       << ",cookie_mask=" << COOKIE_STRICT_MASK_STR;
   DpctlExecute (pgwTftDpId, cmd.str ());
@@ -1064,8 +1087,9 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
     {
       // Build the dpctl command string.
       std::ostringstream cmd, act;
-      cmd << "flow-mod cmd=add,table=1,flags="
-          << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
+      cmd << "flow-mod cmd=add"
+          << ",table=" << SGW_DL_TAB
+          << ",flags=" << FLAGS_OVERLAP_RESET
           << ",cookie=" << rInfo->GetTeidHex ()
           << ",prio=" << rInfo->GetPriority ()
           << ",idle=" << rInfo->GetTimeout ();
@@ -1089,8 +1113,8 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
           if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
             {
               std::ostringstream mat;
-              mat << " eth_type=0x800"
-                  << ",ip_proto=6"
+              mat << " eth_type=" << IPV4_PROT_NUM
+                  << ",ip_proto=" << TCP_PROT_NUM
                   << ",ip_dst=" << filter.localAddress;
               if (tft->IsDefaultTft () == false)
                 {
@@ -1105,8 +1129,8 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
           else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
             {
               std::ostringstream mat;
-              mat << " eth_type=0x800"
-                  << ",ip_proto=17"
+              mat << " eth_type=" << IPV4_PROT_NUM
+                  << ",ip_proto=" << UDP_PROT_NUM
                   << ",ip_dst=" << filter.localAddress;
               if (tft->IsDefaultTft () == false)
                 {
@@ -1124,8 +1148,9 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
     {
       // Build the dpctl command string.
       std::ostringstream cmd, act;
-      cmd << "flow-mod cmd=add,table=2,flags="
-          << (OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS)
+      cmd << "flow-mod cmd=add"
+          << ",table=" << SGW_UL_TAB
+          << ",flags=" << FLAGS_OVERLAP_RESET
           << ",cookie=" << rInfo->GetTeidHex ()
           << ",prio=" << rInfo->GetPriority ()
           << ",idle=" << rInfo->GetTimeout ();
@@ -1163,8 +1188,8 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
           if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
             {
               std::ostringstream mat;
-              mat << " eth_type=0x800"
-                  << ",ip_proto=6"
+              mat << " eth_type=" << IPV4_PROT_NUM
+                  << ",ip_proto=" << TCP_PROT_NUM
                   << ",ip_src=" << filter.localAddress;
               if (tft->IsDefaultTft () == false)
                 {
@@ -1179,8 +1204,8 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
           else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
             {
               std::ostringstream mat;
-              mat << " eth_type=0x800"
-                  << ",ip_proto=17"
+              mat << " eth_type=" << IPV4_PROT_NUM
+                  << ",ip_proto=" << UDP_PROT_NUM
                   << ",ip_src=" << filter.localAddress;
               if (tft->IsDefaultTft () == false)
                 {
@@ -1204,7 +1229,7 @@ SliceController::SgwRulesRemove (Ptr<RoutingInfo> rInfo)
 
   // Remove flow entries for this TEID.
   std::ostringstream cmd;
-  cmd << "flow-mod cmd=del,"
+  cmd << "flow-mod cmd=del"
       << ",cookie=" << rInfo->GetTeidHex ()
       << ",cookie_mask=" << COOKIE_STRICT_MASK_STR;
   DpctlExecute (rInfo->GetSgwDpId (), cmd.str ());

@@ -30,15 +30,26 @@
 namespace ns3 {
 
 // SVELTE TEID masks for OpenFlow matching.
-#define TEID_SLICE_MASK     0x0F000000
-#define TEID_IMSI_MASK      0x00FFFFF0
-#define TEID_BID_MASK       0x0000000F
+#define TEID_SLICE_MASK   0x0F000000
+#define TEID_IMSI_MASK    0x00FFFFF0
+#define TEID_BID_MASK     0x0000000F
+
+// GTP-U UDP port number.
+#define GTPU_PORT         2152
+
+// Protocol numbers.
+#define IPV4_PROT_NUM     (static_cast<uint16_t> (Ipv4L3Protocol::PROT_NUMBER))
+#define UDP_PROT_NUM      (static_cast<uint16_t> (UdpL4Protocol::PROT_NUMBER))
+#define TCP_PROT_NUM      (static_cast<uint16_t> (TcpL4Protocol::PROT_NUMBER))
 
 // OpenFlow cookie strick mask.
 #define COOKIE_STRICT_MASK_STR  "0xFFFFFFFFFFFFFFFF"
 
-// GTP-U UDP port number.
-#define GTPU_PORT   2152
+// Flow-mod flags.
+#define FLAGS_REMOVED_OVERLAP_RESET \
+  ((OFPFF_SEND_FLOW_REM | OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS))
+#define FLAGS_OVERLAP_RESET \
+  ((OFPFF_CHECK_OVERLAP | OFPFF_RESET_COUNTS))
 
 class Ipv4Address;
 class NetDevice;
