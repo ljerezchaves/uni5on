@@ -261,10 +261,11 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
       {
         // Counterclockwise packet forwarding.
         std::ostringstream cmd;
-        cmd << "flow-mod cmd=add,prio=32"
+        cmd << "flow-mod cmd=add,prio=64"
             << ",table="        << ROUTE_TAB
             << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
-            << " meta=0x0"
+            << " eth_type="     << IPV4_PROT_NUM
+            << ",meta=0x0"
             << ",in_port="      << lInfo->GetPortNo (0)
             << " write:group="  << RingInfo::COUNTER
             << " meta:"         << RingInfo::COUNTER
@@ -274,10 +275,11 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
       {
         // Clockwise packet forwarding.
         std::ostringstream cmd;
-        cmd << "flow-mod cmd=add,prio=32"
+        cmd << "flow-mod cmd=add,prio=64"
             << ",table="        << ROUTE_TAB
             << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
-            << " meta=0x0"
+            << " eth_type="     << IPV4_PROT_NUM
+            << ",meta=0x0"
             << ",in_port="      << lInfo->GetPortNo (1)
             << " write:group="  << RingInfo::CLOCK
             << " meta:"         << RingInfo::CLOCK
@@ -418,22 +420,41 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // Send the packet to the bandwidth table.
   {
     std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=64"
+    cmd << "flow-mod cmd=add,prio=128"
         << ",table="        << ROUTE_TAB
         << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
-        << " meta="         << RingInfo::CLOCK
+        << " eth_type="     << IPV4_PROT_NUM
+        << ",meta="         << RingInfo::CLOCK
         << " write:group="  << RingInfo::CLOCK
         << " goto:"         << BANDW_TAB;
     DpctlExecute (swtch, cmd.str ());
   }
   {
     std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=64"
+    cmd << "flow-mod cmd=add,prio=128"
         << ",table="        << ROUTE_TAB
         << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
-        << " meta="         << RingInfo::COUNTER
+        << " eth_type="     << IPV4_PROT_NUM
+        << ",meta="         << RingInfo::COUNTER
         << " write:group="  << RingInfo::COUNTER
         << " goto:"         << BANDW_TAB;
+    DpctlExecute (swtch, cmd.str ());
+  }
+
+  // X2-C packets entering the backhaul network at this switch. Route the
+  // packet in the clockwise direction.
+  // Send the packet directly to the output table.
+  {
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,prio=32"
+        << ",table="        << ROUTE_TAB
+        << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
+        << " eth_type="     << IPV4_PROT_NUM
+        << ",ip_proto="     << UDP_PROT_NUM
+        << ",udp_src="      << X2C_PORT
+        << ",udp_dst="      << X2C_PORT
+        << " write:group="  << RingInfo::CLOCK
+        << " goto:"         << OUTPT_TAB;
     DpctlExecute (swtch, cmd.str ());
   }
 

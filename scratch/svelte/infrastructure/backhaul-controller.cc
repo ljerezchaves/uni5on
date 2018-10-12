@@ -248,9 +248,6 @@ BackhaulController::NotifyEpcAttach (
         << ",table="    << INPUT_TAB
         << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
         << " eth_type=" << IPV4_PROT_NUM
-        << ",ip_proto=" << UDP_PROT_NUM
-        << ",udp_src="  << GTPU_PORT
-        << ",udp_dst="  << GTPU_PORT
         << ",in_port="  << portNo
         << " goto:"     << CLASS_TAB;
     DpctlSchedule (swDev->GetDatapathId (), cmd.str ());
@@ -264,7 +261,7 @@ BackhaulController::NotifyEpcAttach (
     // Write the output port into action set.
     // Send the packet directly to the output table.
     std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=128"
+    cmd << "flow-mod cmd=add,prio=256"
         << ",table="        << ROUTE_TAB
         << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
         << " eth_type="     << IPV4_PROT_NUM
@@ -440,9 +437,6 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
         << ",table="    << INPUT_TAB
         << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
         << " eth_type=" << IPV4_PROT_NUM
-        << ",ip_proto=" << UDP_PROT_NUM
-        << ",udp_src="  << GTPU_PORT
-        << ",udp_dst="  << GTPU_PORT
         << " goto:"     << ROUTE_TAB;
     DpctlExecute (swtch, cmd.str ());
   }
@@ -460,24 +454,45 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Classification table -- [from higher to lower priority]
   //
-  // Classify the packet according to the logical slice and send to the
-  // corresponding slice table.
+  // GTP-U packets entering the backhaul network. Classify the packet on the
+  // corresponding logical slice based on the GTP-U TEID masked value.
+  // Send the packet to the corresponding slice table.
   for (int s = 0; s < SliceId::ALL; s++)
     {
       SliceId slice = static_cast<SliceId> (s);
       uint32_t sliceMasked = GetSvelteTeid (slice, 0, 0);
 
       std::ostringstream cmd;
-      cmd << "flow-mod cmd=add,prio=32"
+      cmd << "flow-mod cmd=add,prio=64"
           << ",table="      << CLASS_TAB
           << ",flags="      << FLAGS_REMOVED_OVERLAP_RESET
           << " eth_type="   << IPV4_PROT_NUM
           << ",ip_proto="   << UDP_PROT_NUM
+          << ",udp_src="    << GTPU_PORT
+          << ",udp_dst="    << GTPU_PORT
           << ",gtpu_teid="  << (sliceMasked & TEID_SLICE_MASK)
           << "/"            << TEID_SLICE_MASK
           << " goto:"       << GetSliceTable (slice);
       DpctlExecute (swtch, cmd.str ());
     }
+
+  // X2-C packets entering the backhaul network (identified by the UDP port
+  // number as ns-3 currently offers no support for SCTP protocol). Set the
+  // DSCP field for Expedited Forwarding.
+  // Send the packet directly to the routing table.
+  {
+    std::ostringstream cmd;
+    cmd << "flow-mod cmd=add,prio=32"
+        << ",table="                    << CLASS_TAB
+        << ",flags="                    << FLAGS_REMOVED_OVERLAP_RESET
+        << " eth_type="                 << IPV4_PROT_NUM
+        << ",ip_proto="                 << UDP_PROT_NUM
+        << ",udp_src="                  << X2C_PORT
+        << ",udp_dst="                  << X2C_PORT
+        << " apply:set_field=ip_dscp:"  << Ipv4Header::DSCP_EF
+        << " goto:"                     << ROUTE_TAB;
+    DpctlExecute (swtch, cmd.str ());
+  }
 
   // -------------------------------------------------------------------------
   // Slice tables (one for each slice) -- [from higher to lower priority]
