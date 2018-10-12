@@ -34,8 +34,9 @@ namespace ns3 {
 #define TEID_IMSI_MASK    0x00FFFFF0
 #define TEID_BID_MASK     0x0000000F
 
-// GTP-U UDP port number.
+// UDP port numbers.
 #define GTPU_PORT         2152
+#define X2C_PORT          4444
 
 // Protocol numbers.
 #define IPV4_PROT_NUM     (static_cast<uint16_t> (Ipv4L3Protocol::PROT_NUMBER))
