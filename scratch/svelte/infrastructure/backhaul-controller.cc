@@ -268,7 +268,6 @@ BackhaulController::NotifyEpcAttach (
         << ",table="        << ROUTE_TAB
         << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
         << " eth_type="     << IPV4_PROT_NUM
-        << ",eth_dst="  << Mac48Address::ConvertFrom (epcDev->GetAddress ())
         << ",ip_dst="       << Ipv4AddressHelper::GetAddress (epcDev)
         << " write:output=" << portNo
         << " goto:"         << OUTPT_TAB;
