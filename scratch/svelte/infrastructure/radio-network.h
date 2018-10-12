@@ -110,6 +110,7 @@ private:
   uint32_t            m_nSites;         //!< Number of cell sites.
   double              m_enbMargin;      //!< eNB coverage margin.
   double              m_ueHeight;       //!< UE height.
+  bool                m_handover;       //!< Enable UE handover.
   bool                m_lteTrace;       //!< Enable LTE ASCII traces.
   std::string         m_remFilename;    //!< LTE REM filename.
   NodeContainer       m_enbNodes;       //!< eNB nodes.

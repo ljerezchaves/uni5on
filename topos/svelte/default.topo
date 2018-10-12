@@ -22,6 +22,7 @@ default ns3::BackhaulNetwork::ProcCapacity "100Gb/s"
 
 default ns3::RadioNetwork::NumCellSites "2"
 default ns3::RadioNetwork::UeHeight "1.5"
+default ns3::RadioNetwork::EnableHandover "true"
 default ns3::RadioNetwork::EnbMargin "0.5"
 default ns3::RadioNetwork::LteTrace "false"
 default ns3::RadioNetwork::RemFilename "radio-map"

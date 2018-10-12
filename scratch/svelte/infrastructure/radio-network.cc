@@ -86,6 +86,11 @@ RadioNetwork::GetTypeId (void)
                    DoubleValue (1.5),
                    MakeDoubleAccessor (&RadioNetwork::m_ueHeight),
                    MakeDoubleChecker<double> ())
+    .AddAttribute ("EnableHandover", "Enable UE handover.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&RadioNetwork::m_handover),
+                   MakeBooleanChecker ())
     .AddAttribute ("EnbMargin", "How much the eNB coverage area extends, "
                    "expressed as fraction of the inter-site distance.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
@@ -372,6 +377,17 @@ RadioNetwork::NotifyConstructionCompleted ()
   m_lteHelper->SetEnbAntennaModelAttribute ("Beamwidth", DoubleValue (70));
   m_lteHelper->SetEnbAntennaModelAttribute (
     "MaxAttenuation", DoubleValue (20.0));
+
+  // Configure the handover algorithm.
+  if (m_handover)
+    {
+      m_lteHelper->SetHandoverAlgorithmType (
+        "ns3::A3RsrpHandoverAlgorithm");
+      m_lteHelper->SetHandoverAlgorithmAttribute (
+        "Hysteresis", DoubleValue (3.0));
+      m_lteHelper->SetHandoverAlgorithmAttribute (
+        "TimeToTrigger", TimeValue (MilliSeconds (512)));
+    }
 
   // Create the topology helper used to group eNBs in three-sector sites layed
   // out on an hexagonal grid.
