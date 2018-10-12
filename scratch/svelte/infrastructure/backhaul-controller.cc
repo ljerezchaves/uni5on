@@ -222,7 +222,6 @@ BackhaulController::GetSliceTable (SliceId slice) const
 {
   NS_LOG_FUNCTION (this << slice);
 
-  // The first 2 tables are the INPUT_TAB and CLASS_TAB.
   return static_cast<int> (slice) + 2;
 }
 
@@ -242,7 +241,7 @@ BackhaulController::NotifyEpcAttach (
   // Input table -- [from higher to lower priority]
   //
   {
-    // GTP packets entering the ring network from any EPC port.
+    // IP packets entering the ring network from this EPC port.
     // Send the packet to the classification table.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=64"
@@ -261,18 +260,18 @@ BackhaulController::NotifyEpcAttach (
   // Routing table -- [from higher to lower priority]
   //
   {
-    // GTP packets addressed to EPC elements connected to this switch over EPC
-    // ports. Write the output port into action set.
+    // IP packets addressed to EPC elements connected to this EPC port.
+    // Write the output port into action set.
     // Send the packet directly to the output table.
     std::ostringstream cmd;
-    cmd << "flow-mod cmd=add,prio=256"
-        << ",table="    << ROUTE_TAB
-        << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
-        << " eth_type=" << IPV4_PROT_NUM
+    cmd << "flow-mod cmd=add,prio=128"
+        << ",table="        << ROUTE_TAB
+        << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
+        << " eth_type="     << IPV4_PROT_NUM
         << ",eth_dst="  << Mac48Address::ConvertFrom (epcDev->GetAddress ())
-        << ",ip_dst="   << Ipv4AddressHelper::GetAddress (epcDev)
+        << ",ip_dst="       << Ipv4AddressHelper::GetAddress (epcDev)
         << " write:output=" << portNo
-        << " goto:"     << OUTPT_TAB;
+        << " goto:"         << OUTPT_TAB;
     DpctlSchedule (swDev->GetDatapathId (), cmd.str ());
   }
 }
@@ -433,7 +432,9 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   //
   // Entries will be installed here by NotifyEpcAttach function.
   {
-    // GTP packets entering the switch from any port other than EPC ports.
+    // IP packets entering the switch from any port, except for those coming
+    // from EPC elements connected to EPC ports (a high-priority match rule was
+    // installed by NotifyEpcAttach function for this case).
     // Send the packet directly to the routing table.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add,prio=32"
@@ -468,7 +469,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
       uint32_t sliceMasked = GetSvelteTeid (slice, 0, 0);
 
       std::ostringstream cmd;
-      cmd << "flow-mod cmd=add,prio=16"
+      cmd << "flow-mod cmd=add,prio=32"
           << ",table="      << CLASS_TAB
           << ",flags="      << FLAGS_REMOVED_OVERLAP_RESET
           << " eth_type="   << IPV4_PROT_NUM
@@ -525,7 +526,7 @@ BackhaulController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
       for (auto const &it : m_queueByDscp)
         {
           std::ostringstream cmd;
-          cmd << "flow-mod cmd=add,prio=16"
+          cmd << "flow-mod cmd=add,prio=32"
               << ",table="        << OUTPT_TAB
               << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
               << " eth_type="     << IPV4_PROT_NUM

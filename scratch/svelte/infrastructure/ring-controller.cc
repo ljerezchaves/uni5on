@@ -226,9 +226,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
       // ---------------------------------------------------------------------
       // Group table
       //
-      // Configure groups to keep forwarding packets in the ring until they
-      // reach the destination switch.
-      //
+      // Configure groups to forward packets in both ring directions.
       {
         // Routing group for clockwise packet forwarding.
         std::ostringstream cmd;
@@ -251,14 +249,19 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
       // ---------------------------------------------------------------------
       // Routing table -- [from higher to lower priority]
       //
-      // GTP packets being forwarded by this switch. Write the output group
-      // into action set based on input port. Write the same group number into
-      // metadata field.
+      // IP packets being forwarded by this switch, except for those addressed
+      // to EPC elements connected to EPC ports (a high-priority match rule was
+      // installed by NotifyEpcAttach function for this case) and for those
+      // just classified by the corresponding slice table (a high-priority
+      // match rule was installed by HandshakeSuccessful function for this
+      // case). Write the output group into action set based on the input port,
+      // forwarding the packet in the same ring direction so it can reach the
+      // destination switch. Write the same group number into metadata field.
       // Send the packet to the bandwidth table.
       {
         // Clockwise packet forwarding.
         std::ostringstream cmd;
-        cmd << "flow-mod cmd=add,prio=128"
+        cmd << "flow-mod cmd=add,prio=32"
             << ",table="        << ROUTE_TAB
             << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
             << " meta=0x0"
@@ -271,7 +274,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
       {
         // Counterclockwise packet forwarding.
         std::ostringstream cmd;
-        cmd << "flow-mod cmd=add,prio=128"
+        cmd << "flow-mod cmd=add,prio=32"
             << ",table="        << ROUTE_TAB
             << ",flags="        << FLAGS_REMOVED_OVERLAP_RESET
             << " meta=0x0"
@@ -406,7 +409,12 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
   // -------------------------------------------------------------------------
   // Routing table -- [from higher to lower priority]
   //
-  // Write the output group into action set based on metadata field.
+  // IP packets being forwarded by this switch, except for those addressed to
+  // EPC elements connected to EPC ports (a high-priority match rule was
+  // installed by NotifyEpcAttach function for this case). These packets were
+  // classified by the corresponding slice table and the metadata field has now
+  // the necessary information for the routing decision. Write the output group
+  // into action set based on metadata field.
   // Send the packet to the bandwidth table.
   {
     std::ostringstream cmd;
@@ -455,7 +463,7 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
                   // Apply this meter to the traffic of this slice only.
                   std::ostringstream cmd;
-                  cmd << "flow-mod cmd=add,prio=16"
+                  cmd << "flow-mod cmd=add,prio=32"
                       << ",table="      << BANDW_TAB
                       << ",flags="      << FLAGS_REMOVED_OVERLAP_RESET
                       << " eth_type="   << IPV4_PROT_NUM
@@ -488,7 +496,7 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
 
               // Apply this meter to the traffic of all slices.
               std::ostringstream cmd;
-              cmd << "flow-mod cmd=add,prio=16"
+              cmd << "flow-mod cmd=add,prio=32"
                   << ",table="    << BANDW_TAB
                   << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
                   << " eth_type=" << IPV4_PROT_NUM
