@@ -259,7 +259,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
       // destination switch. Write the same group number into metadata field.
       // Send the packet to the bandwidth table.
       {
-        // Clockwise packet forwarding.
+        // Counterclockwise packet forwarding.
         std::ostringstream cmd;
         cmd << "flow-mod cmd=add,prio=32"
             << ",table="        << ROUTE_TAB
@@ -272,7 +272,7 @@ RingController::NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices)
         DpctlSchedule (lInfo->GetSwDpId (0), cmd.str ());
       }
       {
-        // Counterclockwise packet forwarding.
+        // Clockwise packet forwarding.
         std::ostringstream cmd;
         cmd << "flow-mod cmd=add,prio=32"
             << ",table="        << ROUTE_TAB
