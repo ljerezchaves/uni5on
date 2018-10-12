@@ -591,7 +591,8 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
 
   if (GetLinkSlicingMode () == OpMode::ON)
     {
-      // Install meter rules for each slice.
+      // When the link slicing is ON, install individual Non-GBR meter entries
+      // for each slice on each port direction (FWD and BWD).
       for (int s = 0; s < SliceId::ALL; s++)
         {
           SliceId slice = static_cast<SliceId> (s);
@@ -623,7 +624,8 @@ BackhaulController::SlicingMeterInstall (Ptr<const LinkInfo> lInfo)
     }
   else if (GetLinkSlicingMode () == OpMode::AUTO)
     {
-      // Install meter rules shared among slices.
+      // When the link slicing is AUTO, install shared Non-GBR meter entries
+      // among all slice on each port direction (FWD and BWD).
       SliceId slice = SliceId::ALL;
       for (int d = 0; d <= LinkInfo::BWD; d++)
         {
