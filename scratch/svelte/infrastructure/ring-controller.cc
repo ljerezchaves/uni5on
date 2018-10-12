@@ -468,11 +468,11 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
                       << ",table="      << BANDW_TAB
                       << ",flags="      << FLAGS_REMOVED_OVERLAP_RESET
                       << " eth_type="   << IPV4_PROT_NUM
-                      << ",ip_proto="   << UDP_PROT_NUM
                       << ",meta="       << ringPath
+                      << ",ip_dscp="    << static_cast<uint16_t> (dscp)
+                      << ",ip_proto="   << UDP_PROT_NUM
                       << ",gtpu_teid="  << (meterId & TEID_SLICE_MASK)
                       << "/"            << TEID_SLICE_MASK
-                      << ",ip_dscp="    << static_cast<uint16_t> (dscp)
                       << " meter:"      << meterId
                       << " goto:"       << OUTPT_TAB;
                   DpctlExecute (swtch, cmd.str ());
@@ -500,14 +500,13 @@ RingController::HandshakeSuccessful (Ptr<const RemoteSwitch> swtch)
               // Apply this meter to the traffic of all slices.
               std::ostringstream cmd;
               cmd << "flow-mod cmd=add,prio=32"
-                  << ",table="    << BANDW_TAB
-                  << ",flags="    << FLAGS_REMOVED_OVERLAP_RESET
-                  << " eth_type=" << IPV4_PROT_NUM
-                  << ",ip_proto=" << UDP_PROT_NUM
-                  << ",meta="     << ringPath
-                  << ",ip_dscp="  << static_cast<uint16_t> (dscp)
-                  << " meter:"    << meterId
-                  << " goto:"     << OUTPT_TAB;
+                  << ",table="      << BANDW_TAB
+                  << ",flags="      << FLAGS_REMOVED_OVERLAP_RESET
+                  << " eth_type="   << IPV4_PROT_NUM
+                  << ",meta="       << ringPath
+                  << ",ip_dscp="    << static_cast<uint16_t> (dscp)
+                  << " meter:"      << meterId
+                  << " goto:"       << OUTPT_TAB;
               DpctlExecute (swtch, cmd.str ());
             }
         }
