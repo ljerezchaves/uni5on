@@ -169,7 +169,8 @@ LteRrcStatsCalculator::NotifyConstructionCompleted (void)
   *m_hvoWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
     << " " << setw (8)  << "Time:s"
-    << " " << setw (9)  << "Event"
+    << " " << setw (5)  << "Node"
+    << " " << setw (7)  << "Event"
     << " " << setw (5)  << "RNTI";
   UeInfo::PrintHeader (*m_hvoWrapper->GetStream ());
   EnbInfo::PrintHeader (*m_hvoWrapper->GetStream ());
@@ -200,7 +201,8 @@ LteRrcStatsCalculator::NotifyConstructionCompleted (void)
   *m_rrcWrapper->GetStream ()
     << boolalpha << right << fixed << setprecision (3)
     << " " << setw (8)  << "Time:s"
-    << " " << setw (14) << "RrcEvent"
+    << " " << setw (5)  << "Node"
+    << " " << setw (10) << "RrcEvent"
     << " " << setw (5)  << "RNTI";
   UeInfo::PrintHeader (*m_rrcWrapper->GetStream ());
   EnbInfo::PrintHeader (*m_rrcWrapper->GetStream ());
@@ -248,9 +250,16 @@ LteRrcStatsCalculator::NotifyHandoverEndError (
   NS_ASSERT_MSG (ueInfo->GetEnbInfo ()->GetCellId () == cellId,
                  "Inconsistente eNB info.");
 
+  std::string node = "UE";
+  if (context.find ("LteEnbRrc") != std::string::npos)
+    {
+      node = "eNB";
+    }
+
   *m_hvoWrapper->GetStream ()
     << " " << setw (8) << Simulator::Now ().GetSeconds ()
-    << " " << setw (9) << "UeEndEr"
+    << " " << setw (5) << node
+    << " " << setw (7) << "EndErr"
     << " " << setw (5) << rnti
     << *ueInfo
     << *ueInfo->GetEnbInfo ()
@@ -277,9 +286,16 @@ LteRrcStatsCalculator::NotifyHandoverEndOk (
   NS_ASSERT_MSG (ueInfo->GetEnbInfo ()->GetCellId () == cellId,
                  "Inconsistente eNB info.");
 
+  std::string node = "UE";
+  if (context.find ("LteEnbRrc") != std::string::npos)
+    {
+      node = "eNB";
+    }
+
   *m_hvoWrapper->GetStream ()
     << " " << setw (8) << Simulator::Now ().GetSeconds ()
-    << " " << setw (9) << "UeEndOk"
+    << " " << setw (5) << node
+    << " " << setw (7) << "EndOk"
     << " " << setw (5) << rnti
     << *ueInfo
     << *ueInfo->GetEnbInfo ()
@@ -308,9 +324,16 @@ LteRrcStatsCalculator::NotifyHandoverStart (
   Ptr<EnbInfo> dstEnbInfo = EnbInfo::GetPointer (dstCellId);
   NS_ASSERT_MSG (ueInfo, "Invalid UE info.");
 
+  std::string node = "UE";
+  if (context.find ("LteEnbRrc") != std::string::npos)
+    {
+      node = "eNB";
+    }
+
   *m_hvoWrapper->GetStream ()
     << " " << setw (8) << Simulator::Now ().GetSeconds ()
-    << " " << setw (9) << "UeStart"
+    << " " << setw (5) << node
+    << " " << setw (7) << "Start"
     << " " << setw (5) << rnti
     << *ueInfo
     << *ueInfo->GetEnbInfo ()
@@ -344,9 +367,16 @@ LteRrcStatsCalculator::NotifyConnectionEstablished (
   NS_ASSERT_MSG (ueInfo->GetEnbInfo ()->GetCellId () == cellId,
                  "Inconsistente eNB info.");
 
+  std::string node = "UE";
+  if (context.find ("LteEnbRrc") != std::string::npos)
+    {
+      node = "eNB";
+    }
+
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (14) << "UeCnnEst"
+    << " " << setw (5)  << node
+    << " " << setw (10) << "CnnEstab"
     << " " << setw (5)  << rnti
     << *ueInfo
     << *ueInfo->GetEnbInfo ()
@@ -369,9 +399,16 @@ LteRrcStatsCalculator::NotifyConnectionReconfiguration (
   NS_ASSERT_MSG (ueInfo->GetEnbInfo ()->GetCellId () == cellId,
                  "Inconsistente eNB info.");
 
+  std::string node = "UE";
+  if (context.find ("LteEnbRrc") != std::string::npos)
+    {
+      node = "eNB";
+    }
+
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (14) << "UeCnnReconf"
+    << " " << setw (5)  << node
+    << " " << setw (10) << "CnnReconf"
     << " " << setw (5)  << rnti
     << *ueInfo
     << *ueInfo->GetEnbInfo ()
@@ -389,7 +426,8 @@ LteRrcStatsCalculator::NotifyUeConnectionTimeout (
   NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (14) << "UeCnnTmo"
+    << " " << setw (5)  << "UE"
+    << " " << setw (10) << "CnnTmout"
     << " " << setw (5)  << rnti
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
@@ -405,7 +443,8 @@ LteRrcStatsCalculator::NotifyUeInitialCellSelectionEndError (
   NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (14) << "UeCellSelErr"
+    << " " << setw (5)  << "UE"
+    << " " << setw (10) << "CellSelErr"
     << " " << setw (5)  << "-"
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
@@ -421,7 +460,8 @@ LteRrcStatsCalculator::NotifyUeInitialCellSelectionEndOk (
   NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (14) << "UeCellSelOk"
+    << " " << setw (5)  << "UE"
+    << " " << setw (10) << "CellSelOk"
     << " " << setw (5)  << "-"
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
@@ -437,7 +477,8 @@ LteRrcStatsCalculator::NotifyUeRandomAccessError (
   NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (14) << "UeRndAcsErr"
+    << " " << setw (5)  << "UE"
+    << " " << setw (10) << "RndAcsErr"
     << " " << setw (5)  << rnti
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
@@ -453,7 +494,8 @@ LteRrcStatsCalculator::NotifyUeRandomAccessSuccessful (
   NS_ASSERT_MSG (imsi && cellId, "Invalid IMSI or CellId.");
   *m_rrcWrapper->GetStream ()
     << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (14) << "UeRndAcsOk"
+    << " " << setw (5)  << "UE"
+    << " " << setw (10) << "RndAcsOk"
     << " " << setw (5)  << rnti
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
