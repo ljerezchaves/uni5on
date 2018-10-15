@@ -350,7 +350,18 @@ LteRrcStatsCalculator::NotifyEnbNewUeContext (
 {
   NS_LOG_FUNCTION (this << context << cellId << rnti);
 
-  // TODO
+  NS_ASSERT_MSG (cellId && rnti, "Invalid CellId or RNTI.");
+  *m_rrcWrapper->GetStream ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
+    << " " << setw (5)  << "eNB"
+    << " " << setw (10) << "NewUeCtx"
+    << " " << setw (5)  << rnti;
+  UeInfo::PrintNull (*m_rrcWrapper->GetStream ());
+  *m_rrcWrapper->GetStream ()
+    << *EnbInfo::GetPointer (cellId);
+  SgwInfo::PrintNull (*m_rrcWrapper->GetStream ());
+  PgwInfo::PrintNull (*m_rrcWrapper->GetStream ());
+  *m_rrcWrapper->GetStream () << std::endl;
 }
 
 void
