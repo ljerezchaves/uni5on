@@ -203,6 +203,17 @@ SgwInfo::PrintHeader (std::ostream &os)
   return os;
 }
 
+std::ostream &
+SgwInfo::PrintNull (std::ostream &os)
+{
+  os << " " << setw (6)  << "-"
+     << " " << setw (6)  << "-"
+     << " " << setw (6)  << "-"
+     << " " << setw (11) << "-"
+     << " " << setw (11) << "-";
+  return os;
+}
+
 void
 SgwInfo::DoDispose ()
 {

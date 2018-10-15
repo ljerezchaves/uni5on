@@ -211,6 +211,15 @@ UeInfo::PrintHeader (std::ostream &os)
   return os;
 }
 
+std::ostream &
+UeInfo::PrintNull (std::ostream &os)
+{
+  os << " " << setw (6)  << "-"
+     << " " << setw (6)  << "-"
+     << " " << setw (11) << "-";
+  return os;
+}
+
 void
 UeInfo::DoDispose ()
 {

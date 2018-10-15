@@ -131,6 +131,15 @@ EnbInfo::PrintHeader (std::ostream &os)
   return os;
 }
 
+std::ostream &
+EnbInfo::PrintNull (std::ostream &os)
+{
+  os << " " << setw (6)  << "-"
+     << " " << setw (6)  << "-"
+     << " " << setw (11) << "-";
+  return os;
+}
+
 void
 EnbInfo::DoDispose ()
 {

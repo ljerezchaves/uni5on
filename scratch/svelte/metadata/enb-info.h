@@ -83,6 +83,14 @@ public:
    */
   static std::ostream & PrintHeader (std::ostream &os);
 
+  /**
+   * Get the empty string for the print operator <<.
+   * \param os The output stream.
+   * \return The output stream.
+   * \internal Keep this method consistent with the << operator below.
+   */
+  static std::ostream & PrintNull (std::ostream &os);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
