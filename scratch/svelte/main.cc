@@ -421,9 +421,9 @@ EnableVerbose (bool enable)
       // Statistic components.
       LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);
       LogComponentEnable ("BackhaulStatsCalculator",  logLevelWarnInfo);
+      LogComponentEnable ("LteRrcStatsCalculator",    logLevelWarnInfo);
       LogComponentEnable ("PgwTftStatsCalculator",    logLevelWarnInfo);
       LogComponentEnable ("TrafficStatsCalculator",   logLevelWarnInfo);
-      LogComponentEnable ("UeRrcStatsCalculator",     logLevelWarnInfo);
 
       // OFSwitch13 module components.
       LogComponentEnable ("OFSwitch13Controller",     logLevelWarn);

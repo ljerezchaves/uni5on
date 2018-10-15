@@ -51,9 +51,9 @@ SvelteHelper::SvelteHelper ()
   m_tmpTraffic (0),
   m_admissionStats (0),
   m_backhaulStats (0),
+  m_lteRrcStats (0),
   m_pgwTftStats (0),
-  m_trafficStats (0),
-  m_ueRrcStats (0)
+  m_trafficStats (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -366,7 +366,7 @@ SvelteHelper::DoDispose (void)
   m_backhaulStats->Dispose ();
   m_pgwTftStats->Dispose ();
   m_trafficStats->Dispose ();
-  m_ueRrcStats->Dispose ();
+  m_lteRrcStats->Dispose ();
 
   m_mme = 0;
   m_backhaul = 0;
@@ -386,7 +386,7 @@ SvelteHelper::DoDispose (void)
   m_backhaulStats = 0;
   m_pgwTftStats = 0;
   m_trafficStats = 0;
-  m_ueRrcStats = 0;
+  m_lteRrcStats = 0;
 
   Object::DoDispose ();
 }
@@ -508,9 +508,9 @@ SvelteHelper::NotifyConstructionCompleted (void)
   // Creating the statistic calculators.
   m_admissionStats  = CreateObject<AdmissionStatsCalculator> ();
   m_backhaulStats   = CreateObject<BackhaulStatsCalculator> ();
+  m_lteRrcStats     = CreateObject<LteRrcStatsCalculator> ();
   m_pgwTftStats     = CreateObject<PgwTftStatsCalculator> ();
   m_trafficStats    = CreateObject<TrafficStatsCalculator> ();
-  m_ueRrcStats      = CreateObject<UeRrcStatsCalculator> ();
 
   Object::NotifyConstructionCompleted ();
 }

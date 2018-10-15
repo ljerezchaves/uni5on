@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef UE_RRC_STATS_CALCULATOR_H
-#define UE_RRC_STATS_CALCULATOR_H
+#ifndef LTE_RRC_STATS_CALCULATOR_H
+#define LTE_RRC_STATS_CALCULATOR_H
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -28,14 +28,14 @@ namespace ns3 {
 
 /**
  * \ingroup svelteStats
- * This class monitors the UE RRC protocol and mobility model to dump RRC
+ * This class monitors the LTE RRC protocol and mobility model to dump RRC
  * procedures, including handover statistics and mobility course changes.
  */
-class UeRrcStatsCalculator : public Object
+class LteRrcStatsCalculator : public Object
 {
 public:
-  UeRrcStatsCalculator ();          //!< Default constructor.
-  virtual ~UeRrcStatsCalculator (); //!< Dummy destructor, see DoDispose.
+  LteRrcStatsCalculator ();          //!< Default constructor.
+  virtual ~LteRrcStatsCalculator (); //!< Dummy destructor, see DoDispose.
 
   /**
    * Register this type.
@@ -167,4 +167,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* UE_RRC_STATS_CALCULATOR_H */
+#endif /* LTE_RRC_STATS_CALCULATOR_H */
