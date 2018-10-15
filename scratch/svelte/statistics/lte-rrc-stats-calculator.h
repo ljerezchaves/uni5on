@@ -23,6 +23,7 @@
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
+#include <ns3/lte-module.h>
 
 namespace ns3 {
 
@@ -156,6 +157,19 @@ protected:
    */
   void NotifyUeRandomAccessSuccessful (
     std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
+
+  /**
+   * Notify a UE RRC state change.
+   * \param context Trace source context.
+   * \param imsi The UE IMSI.
+   * \param cellId The serving eNB cell ID.
+   * \param rnti The Cell Radio Network Temporary Identifier.
+   * \param oldState The old UE RRC state.
+   * \param newState The new UE RRC state.
+   */
+  void NotifyUeStateTransition (
+    std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti,
+    LteUeRrc::State oldState, LteUeRrc::State newState);
 
 private:
   std::string               m_hvoFilename;    //!< HvoStats filename.

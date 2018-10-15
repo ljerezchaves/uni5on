@@ -84,6 +84,10 @@ LteRrcStatsCalculator::LteRrcStatsCalculator ()
     "/NodeList/*/DeviceList/*/LteUeRrc/RandomAccessError",
     MakeCallback (
       &LteRrcStatsCalculator::NotifyUeRandomAccessError, this));
+  Config::Connect (
+    "/NodeList/*/DeviceList/*/LteUeRrc/StateTransition",
+    MakeCallback (
+      &LteRrcStatsCalculator::NotifyUeStateTransition, this));
 }
 
 LteRrcStatsCalculator::~LteRrcStatsCalculator ()
@@ -427,6 +431,38 @@ LteRrcStatsCalculator::NotifyUeRandomAccessSuccessful (
     << *UeInfo::GetPointer (imsi)
     << *EnbInfo::GetPointer (cellId)
     << std::endl;
+}
+
+// Map each UE RRC state to its string representation.
+static const std::string g_ueRrcStateName [LteUeRrc::NUM_STATES] =
+{
+  "IDLE_START",
+  "IDLE_CELL_SEARCH",
+  "IDLE_WAIT_MIB_SIB1",
+  "IDLE_WAIT_MIB",
+  "IDLE_WAIT_SIB1",
+  "IDLE_CAMPED_NORMALLY",
+  "IDLE_WAIT_SIB2",
+  "IDLE_RANDOM_ACCESS",
+  "IDLE_CONNECTING",
+  "CONNECTED_NORMALLY",
+  "CONNECTED_HANDOVER",
+  "CONNECTED_PHY_PROBLEM",
+  "CONNECTED_REESTABLISHING"
+};
+
+void
+LteRrcStatsCalculator::NotifyUeStateTransition (
+  std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti,
+  LteUeRrc::State oldState, LteUeRrc::State newState)
+{
+  NS_LOG_FUNCTION (this << context << imsi << cellId <<
+                   rnti << oldState << newState);
+
+  // Just log this state transition on the screen.
+  NS_LOG_DEBUG ("UE RRC for IMSI " << imsi <<
+                " changed state from " << g_ueRrcStateName [oldState] <<
+                " to " << g_ueRrcStateName [newState]);
 }
 
 } // Namespace ns3
