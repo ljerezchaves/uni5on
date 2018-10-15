@@ -96,7 +96,7 @@ SvelteEnbApplication::DoInitialContextSetupRequest (
   uint64_t mmeUeS1Id, uint16_t enbUeS1Id,
   std::list<EpcS1apSapEnb::ErabToBeSetupItem> erabToBeSetupList)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << mmeUeS1Id << enbUeS1Id);
 
   // Save the mapping TEID --> S-GW S1-U IP address.
   for (auto const &erab : erabToBeSetupList)
@@ -109,6 +109,47 @@ SvelteEnbApplication::DoInitialContextSetupRequest (
 
   EpcEnbApplication::DoInitialContextSetupRequest (
     mmeUeS1Id, enbUeS1Id, erabToBeSetupList);
+}
+
+void
+SvelteEnbApplication::DoPathSwitchRequestAcknowledge (
+  uint64_t enbUeS1Id, uint64_t mmeUeS1Id, uint16_t cgi,
+  std::list<EpcS1apSapEnb::ErabSwitchedInUplinkItem>
+  erabToBeSwitchedInUplinkList)
+{
+  NS_LOG_FUNCTION (this << enbUeS1Id << mmeUeS1Id << cgi);
+
+  // TODO Update the mapping TEID --> S-GW S1-U IP address.
+  for (auto const &erab : erabToBeSwitchedInUplinkList)
+    {
+      // Side effect: create entry if it does not exist.
+      m_teidSgwAddrMap [erab.enbTeid] = erab.transportLayerAddress;
+      NS_LOG_DEBUG ("eNB mapping TEID " << erab.enbTeid <<
+                    " to S-GW S1-U IP " << m_teidSgwAddrMap [erab.enbTeid]);
+    }
+
+  EpcEnbApplication::DoPathSwitchRequestAcknowledge (
+    enbUeS1Id, mmeUeS1Id, cgi, erabToBeSwitchedInUplinkList);
+}
+
+void
+SvelteEnbApplication::DoUeContextRelease (uint16_t rnti)
+{
+  NS_LOG_FUNCTION (this << rnti);
+
+  // TODO Remove the mapping TEID --> S-GW S1-U IP address.
+  auto rntiIt = m_rbidTeidMap.find (rnti);
+  if (rntiIt != m_rbidTeidMap.end ())
+    {
+      for (auto const &bidIt : rntiIt->second)
+        {
+          uint32_t teid = bidIt.second;
+          m_teidSgwAddrMap.erase (teid);
+          NS_LOG_DEBUG ("Removed TEID " << teid << " from S-GW S1-U mapping.");
+        }
+    }
+
+  EpcEnbApplication::DoUeContextRelease (rnti);
 }
 
 void

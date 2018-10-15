@@ -64,10 +64,17 @@ protected:
   /** Destructor implementation. */
   void DoDispose (void);
 
-  // S1-AP SAP ENB methods
+  // Inherited from EpcEnbApplication.
   void DoInitialContextSetupRequest (
     uint64_t mmeUeS1Id, uint16_t enbUeS1Id,
     std::list<EpcS1apSapEnb::ErabToBeSetupItem> erabToBeSetupList);
+
+  void DoPathSwitchRequestAcknowledge (
+    uint64_t enbUeS1Id, uint64_t mmeUeS1Id, uint16_t cgi,
+    std::list<EpcS1apSapEnb::ErabSwitchedInUplinkItem>
+    erabToBeSwitchedInUplinkList);
+
+  void DoUeContextRelease (uint16_t rnti);
 
   /**
    * Send a packet to the S-GW via the S1-U interface
