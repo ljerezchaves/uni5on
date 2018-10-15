@@ -51,34 +51,34 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
   /**
-   * Notify a failure of a handover procedure.
+   * Notify a UE failure of a handover procedure.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
    * \param cellId The serving eNB cell ID.
    * \param rnti The Cell Radio Network Temporary Identifier.
    */
-  void NotifyHandoverEndError (
+  void NotifyUeHandoverEndError (
     std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
   /**
-   * Notify a successful termination of a handover procedure.
+   * Notify a UE successful termination of a handover procedure.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
    * \param cellId The serving eNB cell ID.
    * \param rnti The Cell Radio Network Temporary Identifier.
    */
-  void NotifyHandoverEndOk (
+  void NotifyUeHandoverEndOk (
     std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
   /**
-   * Notify the start of a handover procedure.
+   * Notify a UE start of a handover procedure.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
    * \param srcCellId The current serving eNB cell ID.
    * \param rnti The Cell Radio Network Temporary Identifier.
    * \param dstCellId The target eNB cell ID.
    */
-  void NotifyHandoverStart (
+  void NotifyUeHandoverStart (
     std::string context, uint64_t imsi, uint16_t srcCellId, uint16_t rnti,
     uint16_t dstCellId);
 
@@ -86,75 +86,75 @@ protected:
    * Notify a UE mobility model course change.
    * \param mobility The UE mobility model object.
    */
-  void NotifyMobilityCourseChange (
+  void NotifyUeMobilityCourseChange (
     std::string context, Ptr<const MobilityModel> mobility);
 
   /**
-   * Notify a successful RRC connection establishment.
+   * Notify a UE successful RRC connection establishment.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
    * \param cellId The serving eNB cell ID.
    * \param rnti The Cell Radio Network Temporary Identifier.
    */
-  void NotifyConnectionEstablished (
+  void NotifyUeConnectionEstablished (
     std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
   /**
-   * Notify a RRC connection reconfiguration.
+   * Notify a UE RRC connection reconfiguration.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
    * \param cellId The serving eNB cell ID.
    * \param rnti The Cell Radio Network Temporary Identifier.
    */
-  void NotifyConnectionReconfiguration (
+  void NotifyUeConnectionReconfiguration (
     std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
   /**
-   * Notify a timeout RRC connection establishment because of T300.
+   * Notify a UE timeout RRC connection establishment because of T300.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
    * \param cellId The serving eNB cell ID.
    * \param rnti The Cell Radio Network Temporary Identifier.
    */
-  void NotifyConnectionTimeout (
+  void NotifyUeConnectionTimeout (
     std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
   /**
-   * Notify a failed initial cell selection procedure.
+   * Notify a UE failed initial cell selection procedure.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
    * \param cellId The serving eNB cell ID.
    */
-  void NotifyInitialCellSelectionEndError (
+  void NotifyUeInitialCellSelectionEndError (
     std::string context, uint64_t imsi, uint16_t cellId);
 
   /**
-   * Notify a successful initial cell selection procedure.
+   * Notify a UE successful initial cell selection procedure.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
    * \param cellId The serving eNB cell ID.
    */
-  void NotifyInitialCellSelectionEndOk (
+  void NotifyUeInitialCellSelectionEndOk (
     std::string context, uint64_t imsi, uint16_t cellId);
 
   /**
-   * Notify a failed random access procedure.
+   * Notify a UE failed random access procedure.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
    * \param cellId The serving eNB cell ID.
    * \param rnti The Cell Radio Network Temporary Identifier.
    */
-  void NotifyRandomAccessError (
+  void NotifyUeRandomAccessError (
     std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
   /**
-   * Notify a successful random access procedure.
+   * Notify a UE successful random access procedure.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
    * \param cellId The serving eNB cell ID.
    * \param rnti The Cell Radio Network Temporary Identifier.
    */
-  void NotifyRandomAccessSuccessful (
+  void NotifyUeRandomAccessSuccessful (
     std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
 private:
