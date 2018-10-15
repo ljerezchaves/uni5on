@@ -644,19 +644,22 @@ SliceController::DoCreateSessionRequest (
   NS_LOG_FUNCTION (this << msg.imsi);
 
   NS_ASSERT_MSG (m_pgwInfo, "P-GW not configure with this controller.");
-
-  // This controller is responsible for assigning the serving S-GW and P-GW to
-  // the UE. In current implementation, each slice has a single P-GW and one or
-  // more S-GWs (always attached to different OpenFlow backhaul switches).
-
-  // FIXME By now we support only a single S-GW at each network slice.
   NS_ABORT_MSG_IF (m_sgwInfoList.size () != 1, "Only one S-GW supported.");
-  Ptr<SgwInfo> sgwInfo = m_sgwInfoList.at (0);
 
   uint64_t imsi = msg.imsi;
+  uint16_t cellId = msg.uli.gci;
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-  ueInfo->SetPgwInfo (m_pgwInfo);
-  ueInfo->SetSgwInfo (m_sgwInfoList.at (0));
+
+  // This controller is responsible for assigning the serving eNB, S-GW and
+  // P-GW elements to the UE. In current implementation, each slice has a
+  // single P-GW and S-GW.
+  Ptr<PgwInfo> pgwInfo = m_pgwInfo;
+  Ptr<SgwInfo> sgwInfo = m_sgwInfoList.at (0);
+  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
+
+  ueInfo->SetEnbInfo (enbInfo);
+  ueInfo->SetSgwInfo (sgwInfo);
+  ueInfo->SetPgwInfo (pgwInfo);
 
   // Iterate over request message and create the response message.
   EpcS11SapMme::CreateSessionResponseMessage res;
@@ -759,10 +762,23 @@ SliceController::DoModifyBearerRequest (
 {
   NS_LOG_FUNCTION (this << msg.teid);
 
-  // In current implementation, this Modify Bearer Request is triggered only by
-  // X2 handover procedures. There is no actual bearer modification, for now we
-  // just support the minimum needed for path switch request (handover).
-  // FIXME Check whether we need to change the S-GW during a handover.
+  // This Modify Bearer Request is triggered only by X2 handover procedures.
+  // There is no actual bearer modification.
+
+  uint64_t imsi = msg.teid;
+  uint16_t cellId = msg.uli.gci;
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+
+  Ptr<EnbInfo> srcEnbInfo = ueInfo->GetEnbInfo ();
+  Ptr<EnbInfo> dstEnbInfo = EnbInfo::GetPointer (cellId);
+
+  // Check wheter we need to change the backhaul routing path.
+  if (srcEnbInfo->GetInfraSwIdx () != dstEnbInfo->GetInfraSwIdx ())
+    {
+      // TODO
+    }
+
+  ueInfo->SetEnbInfo (dstEnbInfo);
 
   EpcS11SapMme::ModifyBearerResponseMessage res;
   res.teid = msg.teid;

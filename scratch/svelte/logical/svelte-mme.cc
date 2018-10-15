@@ -93,7 +93,6 @@ SvelteMme::DoInitialUeMessage (
 
   // Update UE metadata.
   ueInfo->SetEnbUeS1Id (enbUeS1Id);
-  ueInfo->SetEnbInfo (EnbInfo::GetPointer (ecgi));
 
   EpcS11SapSgw::CreateSessionRequestMessage msg;
   msg.imsi = imsi;
@@ -140,7 +139,6 @@ SvelteMme::DoPathSwitchRequest (
 
   // Update UE metadata.
   ueInfo->SetEnbUeS1Id (enbUeS1Id);
-  ueInfo->SetEnbInfo (EnbInfo::GetPointer (gci));
 
   EpcS11SapSgw::ModifyBearerRequestMessage msg;
   msg.teid = imsi;
