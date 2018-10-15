@@ -173,8 +173,9 @@ LteRrcStatsCalculator::NotifyConstructionCompleted (void)
     << " " << setw (7)  << "Event"
     << " " << setw (5)  << "RNTI";
   UeInfo::PrintHeader (*m_hvoWrapper->GetStream ());
-  EnbInfo::PrintHeader (*m_hvoWrapper->GetStream ());
   *m_hvoWrapper->GetStream ()
+    << " " << setw (9)  << "SrcEnbId"
+    << " " << setw (9)  << "SrcEnbSw"
     << " " << setw (9)  << "DstEnbId"
     << " " << setw (9)  << "DstEnbSw";
   SgwInfo::PrintHeader (*m_hvoWrapper->GetStream ());
@@ -244,11 +245,11 @@ LteRrcStatsCalculator::NotifyHandoverEndError (
 
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
   NS_ASSERT_MSG (ueInfo, "Invalid UE info.");
-  NS_ASSERT_MSG (ueInfo->GetEnbInfo (), "Invalid eNB info.");
   NS_ASSERT_MSG (ueInfo->GetSgwInfo (), "Invalid S-GW info.");
   NS_ASSERT_MSG (ueInfo->GetPgwInfo (), "Invalid P-GW info.");
-  NS_ASSERT_MSG (ueInfo->GetEnbInfo ()->GetCellId () == cellId,
-                 "Inconsistente eNB info.");
+
+  Ptr<EnbInfo> srcEnbInfo = EnbInfo::GetPointer (cellId);
+  NS_ASSERT_MSG (srcEnbInfo, "Invalid eNB info.");
 
   std::string node = "UE";
   if (context.find ("LteEnbRrc") != std::string::npos)
@@ -262,7 +263,8 @@ LteRrcStatsCalculator::NotifyHandoverEndError (
     << " " << setw (7) << "EndErr"
     << " " << setw (5) << rnti
     << *ueInfo
-    << *ueInfo->GetEnbInfo ()
+    << " " << setw (9) << srcEnbInfo->GetCellId ()
+    << " " << setw (9) << srcEnbInfo->GetInfraSwIdx ()
     << " " << setw (9) << "-"
     << " " << setw (9) << "-"
     << *ueInfo->GetSgwInfo ()
@@ -278,18 +280,18 @@ LteRrcStatsCalculator::NotifyHandoverEndOk (
 
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
   NS_ASSERT_MSG (ueInfo, "Invalid UE info.");
-  NS_ASSERT_MSG (ueInfo->GetEnbInfo (), "Invalid eNB info.");
   NS_ASSERT_MSG (ueInfo->GetSgwInfo (), "Invalid S-GW info.");
   NS_ASSERT_MSG (ueInfo->GetPgwInfo (), "Invalid P-GW info.");
 
-  // FIXME Breaking simulation.
-  // NS_ASSERT_MSG (ueInfo->GetEnbInfo ()->GetCellId () == cellId,
-  //                "Inconsistente eNB info.");
+  Ptr<EnbInfo> dstEnbInfo = EnbInfo::GetPointer (cellId);
+  NS_ASSERT_MSG (dstEnbInfo, "Invalid eNB info.");
 
   std::string node = "UE";
   if (context.find ("LteEnbRrc") != std::string::npos)
     {
       node = "eNB";
+      NS_ASSERT_MSG (ueInfo->GetEnbInfo ()->GetCellId () == cellId,
+                     "Inconsistente eNB info.");
     }
 
   *m_hvoWrapper->GetStream ()
@@ -298,9 +300,10 @@ LteRrcStatsCalculator::NotifyHandoverEndOk (
     << " " << setw (7) << "EndOk"
     << " " << setw (5) << rnti
     << *ueInfo
-    << *ueInfo->GetEnbInfo ()
     << " " << setw (9) << "-"
     << " " << setw (9) << "-"
+    << " " << setw (9) << dstEnbInfo->GetCellId ()
+    << " " << setw (9) << dstEnbInfo->GetInfraSwIdx ()
     << *ueInfo->GetSgwInfo ()
     << *ueInfo->GetPgwInfo ()
     << std::endl;
@@ -315,14 +318,14 @@ LteRrcStatsCalculator::NotifyHandoverStart (
 
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
   NS_ASSERT_MSG (ueInfo, "Invalid UE info.");
-  NS_ASSERT_MSG (ueInfo->GetEnbInfo (), "Invalid eNB info.");
   NS_ASSERT_MSG (ueInfo->GetSgwInfo (), "Invalid S-GW info.");
   NS_ASSERT_MSG (ueInfo->GetPgwInfo (), "Invalid P-GW info.");
   NS_ASSERT_MSG (ueInfo->GetEnbInfo ()->GetCellId () == srcCellId,
                  "Inconsistente eNB info.");
 
+  Ptr<EnbInfo> srcEnbInfo = EnbInfo::GetPointer (srcCellId);
   Ptr<EnbInfo> dstEnbInfo = EnbInfo::GetPointer (dstCellId);
-  NS_ASSERT_MSG (ueInfo, "Invalid UE info.");
+  NS_ASSERT_MSG (srcEnbInfo && dstEnbInfo, "Invalid eNB info.");
 
   std::string node = "UE";
   if (context.find ("LteEnbRrc") != std::string::npos)
@@ -336,7 +339,8 @@ LteRrcStatsCalculator::NotifyHandoverStart (
     << " " << setw (7) << "Start"
     << " " << setw (5) << rnti
     << *ueInfo
-    << *ueInfo->GetEnbInfo ()
+    << " " << setw (9) << srcEnbInfo->GetCellId ()
+    << " " << setw (9) << srcEnbInfo->GetInfraSwIdx ()
     << " " << setw (9) << dstEnbInfo->GetCellId ()
     << " " << setw (9) << dstEnbInfo->GetInfraSwIdx ()
     << *ueInfo->GetSgwInfo ()
