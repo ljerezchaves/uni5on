@@ -41,6 +41,11 @@ LteRrcStatsCalculator::LteRrcStatsCalculator ()
 
   // Connect this stats calculator to required trace sources.
   Config::Connect (
+    "/NodeList/*/$ns3::MobilityModel/CourseChange",
+    MakeCallback (
+      &LteRrcStatsCalculator::NotifyUeMobilityCourseChange, this));
+
+  Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/HandoverStart",
     MakeCallback (
       &LteRrcStatsCalculator::NotifyUeHandoverStart, this));
@@ -52,10 +57,6 @@ LteRrcStatsCalculator::LteRrcStatsCalculator ()
     "/NodeList/*/DeviceList/*/LteUeRrc/HandoverEndError",
     MakeCallback (
       &LteRrcStatsCalculator::NotifyUeHandoverEndError, this));
-  Config::Connect (
-    "/NodeList/*/$ns3::MobilityModel/CourseChange",
-    MakeCallback (
-      &LteRrcStatsCalculator::NotifyUeMobilityCourseChange, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionEstablished",
     MakeCallback (
@@ -194,6 +195,29 @@ LteRrcStatsCalculator::NotifyConstructionCompleted (void)
 }
 
 void
+LteRrcStatsCalculator::NotifyUeMobilityCourseChange (
+  std::string context, Ptr<const MobilityModel> mobility)
+{
+  NS_LOG_FUNCTION (this << context << mobility);
+
+  Ptr<Node> node = mobility->GetObject<Node> ();
+  Vector position = mobility->GetPosition ();
+  Vector velocity = mobility->GetVelocity ();
+
+  *m_mobWrapper->GetStream ()
+    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
+    << " " << setw (8)  << node->GetId ()
+    << " " << setw (11) << Names::FindName (node)
+    << " " << setw (9)  << position.x
+    << " " << setw (9)  << position.y
+    << " " << setw (9)  << position.z
+    << " " << setw (9)  << velocity.x
+    << " " << setw (9)  << velocity.y
+    << " " << setw (9)  << velocity.z
+    << std::endl;
+}
+
+void
 LteRrcStatsCalculator::NotifyUeHandoverEndError (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
@@ -277,29 +301,6 @@ LteRrcStatsCalculator::NotifyUeHandoverStart (
     << " " << setw (9) << dstEnbInfo->GetInfraSwIdx ()
     << *ueInfo->GetSgwInfo ()
     << *ueInfo->GetPgwInfo ()
-    << std::endl;
-}
-
-void
-LteRrcStatsCalculator::NotifyUeMobilityCourseChange (
-  std::string context, Ptr<const MobilityModel> mobility)
-{
-  NS_LOG_FUNCTION (this << context << mobility);
-
-  Ptr<Node> node = mobility->GetObject<Node> ();
-  Vector position = mobility->GetPosition ();
-  Vector velocity = mobility->GetVelocity ();
-
-  *m_mobWrapper->GetStream ()
-    << " " << setw (8)  << Simulator::Now ().GetSeconds ()
-    << " " << setw (8)  << node->GetId ()
-    << " " << setw (11) << Names::FindName (node)
-    << " " << setw (9)  << position.x
-    << " " << setw (9)  << position.y
-    << " " << setw (9)  << position.z
-    << " " << setw (9)  << velocity.x
-    << " " << setw (9)  << velocity.y
-    << " " << setw (9)  << velocity.z
     << std::endl;
 }
 

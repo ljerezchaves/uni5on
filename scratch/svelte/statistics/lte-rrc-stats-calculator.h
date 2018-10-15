@@ -52,6 +52,13 @@ protected:
   virtual void NotifyConstructionCompleted (void);
 
   /**
+   * Notify a UE mobility model course change.
+   * \param mobility The UE mobility model object.
+   */
+  void NotifyUeMobilityCourseChange (
+    std::string context, Ptr<const MobilityModel> mobility);
+
+  /**
    * Notify a UE failure of a handover procedure.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
@@ -82,13 +89,6 @@ protected:
   void NotifyUeHandoverStart (
     std::string context, uint64_t imsi, uint16_t srcCellId, uint16_t rnti,
     uint16_t dstCellId);
-
-  /**
-   * Notify a UE mobility model course change.
-   * \param mobility The UE mobility model object.
-   */
-  void NotifyUeMobilityCourseChange (
-    std::string context, Ptr<const MobilityModel> mobility);
 
   /**
    * Notify a UE successful RRC connection establishment.
