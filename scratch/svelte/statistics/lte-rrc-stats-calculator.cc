@@ -46,6 +46,14 @@ LteRrcStatsCalculator::LteRrcStatsCalculator ()
       &LteRrcStatsCalculator::NotifyUeMobilityCourseChange, this));
 
   Config::Connect (
+    "/NodeList/*/DeviceList/*/LteEnbRrc/HandoverStart",
+    MakeCallback (
+      &LteRrcStatsCalculator::NotifyHandoverStart, this));
+  Config::Connect (
+    "/NodeList/*/DeviceList/*/LteEnbRrc/HandoverEndOk",
+    MakeCallback (
+      &LteRrcStatsCalculator::NotifyHandoverEndOk, this));
+  Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/HandoverStart",
     MakeCallback (
       &LteRrcStatsCalculator::NotifyHandoverStart, this));
@@ -57,6 +65,19 @@ LteRrcStatsCalculator::LteRrcStatsCalculator ()
     "/NodeList/*/DeviceList/*/LteUeRrc/HandoverEndError",
     MakeCallback (
       &LteRrcStatsCalculator::NotifyHandoverEndError, this));
+
+  Config::Connect (
+    "/NodeList/*/DeviceList/*/LteEnbRrc/NewUeContext",
+    MakeCallback (
+      &LteRrcStatsCalculator::NotifyEnbNewUeContext, this));
+  Config::Connect (
+    "/NodeList/*/DeviceList/*/LteEnbRrc/ConnectionEstablished",
+    MakeCallback (
+      &LteRrcStatsCalculator::NotifyConnectionEstablished, this));
+  Config::Connect (
+    "/NodeList/*/DeviceList/*/LteEnbRrc/ConnectionReconfiguration",
+    MakeCallback (
+      &LteRrcStatsCalculator::NotifyConnectionReconfiguration, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionEstablished",
     MakeCallback (
@@ -298,6 +319,15 @@ LteRrcStatsCalculator::NotifyHandoverStart (
     << *ueInfo->GetSgwInfo ()
     << *ueInfo->GetPgwInfo ()
     << std::endl;
+}
+
+void
+LteRrcStatsCalculator::NotifyEnbNewUeContext (
+  std::string context, uint16_t cellId, uint16_t rnti)
+{
+  NS_LOG_FUNCTION (this << context << cellId << rnti);
+
+  // TODO
 }
 
 void

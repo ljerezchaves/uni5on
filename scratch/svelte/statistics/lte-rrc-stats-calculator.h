@@ -90,6 +90,15 @@ protected:
     uint16_t dstCellId);
 
   /**
+   * Notify an eNB new UE context.
+   * \param context Trace source context.
+   * \param cellId The serving eNB cell ID.
+   * \param rnti The Cell Radio Network Temporary Identifier.
+   */
+  void NotifyEnbNewUeContext (
+    std::string context, uint16_t cellId, uint16_t rnti);
+
+  /**
    * Notify a successful RRC connection establishment.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
