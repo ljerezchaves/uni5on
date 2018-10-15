@@ -430,8 +430,10 @@ LteRrcStatsCalculator::NotifyUeConnectionTimeout (
     << " " << setw (10) << "CnnTmout"
     << " " << setw (5)  << rnti
     << *UeInfo::GetPointer (imsi)
-    << *EnbInfo::GetPointer (cellId)
-    << std::endl;
+    << *EnbInfo::GetPointer (cellId);
+  SgwInfo::PrintNull (*m_rrcWrapper->GetStream ());
+  PgwInfo::PrintNull (*m_rrcWrapper->GetStream ());
+  *m_rrcWrapper->GetStream () << std::endl;
 }
 
 void
@@ -447,8 +449,10 @@ LteRrcStatsCalculator::NotifyUeInitialCellSelectionEndError (
     << " " << setw (10) << "CellSelErr"
     << " " << setw (5)  << "-"
     << *UeInfo::GetPointer (imsi)
-    << *EnbInfo::GetPointer (cellId)
-    << std::endl;
+    << *EnbInfo::GetPointer (cellId);
+  SgwInfo::PrintNull (*m_rrcWrapper->GetStream ());
+  PgwInfo::PrintNull (*m_rrcWrapper->GetStream ());
+  *m_rrcWrapper->GetStream () << std::endl;
 }
 
 void
@@ -464,8 +468,10 @@ LteRrcStatsCalculator::NotifyUeInitialCellSelectionEndOk (
     << " " << setw (10) << "CellSelOk"
     << " " << setw (5)  << "-"
     << *UeInfo::GetPointer (imsi)
-    << *EnbInfo::GetPointer (cellId)
-    << std::endl;
+    << *EnbInfo::GetPointer (cellId);
+  SgwInfo::PrintNull (*m_rrcWrapper->GetStream ());
+  PgwInfo::PrintNull (*m_rrcWrapper->GetStream ());
+  *m_rrcWrapper->GetStream () << std::endl;
 }
 
 void
@@ -481,8 +487,10 @@ LteRrcStatsCalculator::NotifyUeRandomAccessError (
     << " " << setw (10) << "RndAcsErr"
     << " " << setw (5)  << rnti
     << *UeInfo::GetPointer (imsi)
-    << *EnbInfo::GetPointer (cellId)
-    << std::endl;
+    << *EnbInfo::GetPointer (cellId);
+  SgwInfo::PrintNull (*m_rrcWrapper->GetStream ());
+  PgwInfo::PrintNull (*m_rrcWrapper->GetStream ());
+  *m_rrcWrapper->GetStream () << std::endl;
 }
 
 void
@@ -498,8 +506,10 @@ LteRrcStatsCalculator::NotifyUeRandomAccessSuccessful (
     << " " << setw (10) << "RndAcsOk"
     << " " << setw (5)  << rnti
     << *UeInfo::GetPointer (imsi)
-    << *EnbInfo::GetPointer (cellId)
-    << std::endl;
+    << *EnbInfo::GetPointer (cellId);
+  SgwInfo::PrintNull (*m_rrcWrapper->GetStream ());
+  PgwInfo::PrintNull (*m_rrcWrapper->GetStream ());
+  *m_rrcWrapper->GetStream () << std::endl;
 }
 
 } // Namespace ns3
