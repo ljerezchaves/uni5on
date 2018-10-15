@@ -136,9 +136,10 @@ private:
    * \param value The value to set.
    */
   //\{
-  void SetEnbInfo (Ptr<EnbInfo> enbInfo, uint64_t enbUeS1Id);
-  void SetPgwInfo (Ptr<PgwInfo> value);
-  void SetSgwInfo (Ptr<SgwInfo> value);
+  void SetEnbUeS1Id (uint64_t value);
+  void SetEnbInfo   (Ptr<EnbInfo> value);
+  void SetPgwInfo   (Ptr<PgwInfo> value);
+  void SetSgwInfo   (Ptr<SgwInfo> value);
   //\}
 
   /**

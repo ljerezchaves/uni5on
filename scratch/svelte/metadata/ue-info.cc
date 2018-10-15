@@ -234,12 +234,19 @@ UeInfo::DoDispose ()
 }
 
 void
-UeInfo::SetEnbInfo (Ptr<EnbInfo> enbInfo, uint64_t enbUeS1Id)
+UeInfo::SetEnbUeS1Id (uint64_t value)
 {
-  NS_LOG_FUNCTION (this << enbInfo << enbUeS1Id);
+  NS_LOG_FUNCTION (this << value);
 
-  m_enbInfo = enbInfo;
-  m_enbUeS1Id = enbUeS1Id;
+  m_enbUeS1Id = value;
+}
+
+void
+UeInfo::SetEnbInfo (Ptr<EnbInfo> value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_enbInfo = value;
 }
 
 void
