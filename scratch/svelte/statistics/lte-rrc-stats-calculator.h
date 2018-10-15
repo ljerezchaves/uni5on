@@ -58,55 +58,55 @@ protected:
     std::string context, Ptr<const MobilityModel> mobility);
 
   /**
-   * Notify a UE failure of a handover procedure.
+   * Notify a failure of a handover procedure.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
    * \param cellId The serving eNB cell ID.
    * \param rnti The Cell Radio Network Temporary Identifier.
    */
-  void NotifyUeHandoverEndError (
+  void NotifyHandoverEndError (
     std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
   /**
-   * Notify a UE successful termination of a handover procedure.
+   * Notify a successful termination of a handover procedure.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
    * \param cellId The serving eNB cell ID.
    * \param rnti The Cell Radio Network Temporary Identifier.
    */
-  void NotifyUeHandoverEndOk (
+  void NotifyHandoverEndOk (
     std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
   /**
-   * Notify a UE start of a handover procedure.
+   * Notify a start of a handover procedure.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
    * \param srcCellId The current serving eNB cell ID.
    * \param rnti The Cell Radio Network Temporary Identifier.
    * \param dstCellId The target eNB cell ID.
    */
-  void NotifyUeHandoverStart (
+  void NotifyHandoverStart (
     std::string context, uint64_t imsi, uint16_t srcCellId, uint16_t rnti,
     uint16_t dstCellId);
 
   /**
-   * Notify a UE successful RRC connection establishment.
+   * Notify a successful RRC connection establishment.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
    * \param cellId The serving eNB cell ID.
    * \param rnti The Cell Radio Network Temporary Identifier.
    */
-  void NotifyUeConnectionEstablished (
+  void NotifyConnectionEstablished (
     std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
   /**
-   * Notify a UE RRC connection reconfiguration.
+   * Notify a RRC connection reconfiguration.
    * \param context Trace source context.
    * \param imsi The UE IMSI.
    * \param cellId The serving eNB cell ID.
    * \param rnti The Cell Radio Network Temporary Identifier.
    */
-  void NotifyUeConnectionReconfiguration (
+  void NotifyConnectionReconfiguration (
     std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti);
 
   /**

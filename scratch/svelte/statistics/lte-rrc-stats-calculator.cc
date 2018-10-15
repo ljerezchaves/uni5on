@@ -48,27 +48,27 @@ LteRrcStatsCalculator::LteRrcStatsCalculator ()
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/HandoverStart",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyUeHandoverStart, this));
+      &LteRrcStatsCalculator::NotifyHandoverStart, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/HandoverEndOk",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyUeHandoverEndOk, this));
+      &LteRrcStatsCalculator::NotifyHandoverEndOk, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/HandoverEndError",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyUeHandoverEndError, this));
+      &LteRrcStatsCalculator::NotifyHandoverEndError, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionEstablished",
     MakeCallback (
-      &LteRrcStatsCalculator::NotifyUeConnectionEstablished, this));
+      &LteRrcStatsCalculator::NotifyConnectionEstablished, this));
+  Config::Connect (
+    "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionReconfiguration",
+    MakeCallback (
+      &LteRrcStatsCalculator::NotifyConnectionReconfiguration, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionTimeout",
     MakeCallback (
       &LteRrcStatsCalculator::NotifyUeConnectionTimeout, this));
-  Config::Connect (
-    "/NodeList/*/DeviceList/*/LteUeRrc/ConnectionReconfiguration",
-    MakeCallback (
-      &LteRrcStatsCalculator::NotifyUeConnectionReconfiguration, this));
   Config::Connect (
     "/NodeList/*/DeviceList/*/LteUeRrc/InitialCellSelectionEndOk",
     MakeCallback (
@@ -214,7 +214,7 @@ LteRrcStatsCalculator::NotifyUeMobilityCourseChange (
 }
 
 void
-LteRrcStatsCalculator::NotifyUeHandoverEndError (
+LteRrcStatsCalculator::NotifyHandoverEndError (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);
@@ -241,7 +241,7 @@ LteRrcStatsCalculator::NotifyUeHandoverEndError (
 }
 
 void
-LteRrcStatsCalculator::NotifyUeHandoverEndOk (
+LteRrcStatsCalculator::NotifyHandoverEndOk (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);
@@ -270,7 +270,7 @@ LteRrcStatsCalculator::NotifyUeHandoverEndOk (
 }
 
 void
-LteRrcStatsCalculator::NotifyUeHandoverStart (
+LteRrcStatsCalculator::NotifyHandoverStart (
   std::string context, uint64_t imsi, uint16_t srcCellId, uint16_t rnti,
   uint16_t dstCellId)
 {
@@ -301,7 +301,7 @@ LteRrcStatsCalculator::NotifyUeHandoverStart (
 }
 
 void
-LteRrcStatsCalculator::NotifyUeConnectionEstablished (
+LteRrcStatsCalculator::NotifyConnectionEstablished (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);
@@ -326,7 +326,7 @@ LteRrcStatsCalculator::NotifyUeConnectionEstablished (
 }
 
 void
-LteRrcStatsCalculator::NotifyUeConnectionReconfiguration (
+LteRrcStatsCalculator::NotifyConnectionReconfiguration (
   std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << context << imsi << cellId << rnti);
