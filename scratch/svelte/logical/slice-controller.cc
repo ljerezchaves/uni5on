@@ -310,7 +310,7 @@ SliceController::NotifyPgwAttach (
   NS_LOG_FUNCTION (this << pgwInfo << pgwInfo->GetPgwId () << webSgiDev);
 
   // Save the P-GW metadata.
-  NS_ASSERT_MSG (!m_pgwInfo, "P-GW ID " << pgwInfo->GetPgwId () <<
+  NS_ASSERT_MSG (!m_pgwInfo, "P-GW ID " << m_pgwInfo->GetPgwId () <<
                  " already configured with this controller.");
   m_pgwInfo = pgwInfo;
 

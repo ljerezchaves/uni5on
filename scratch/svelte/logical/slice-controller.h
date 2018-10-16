@@ -132,7 +132,7 @@ public:
   SliceId GetSliceId (void) const;
 
   /**
-   * Notify this controller of the P-GW  connected to the OpenFlow backhaul
+   * Notify this controller of the P-GW connected to the OpenFlow backhaul
    * network over the S5 interface, and to the web server over the SGi
    * interface.
    * \param pgwInfo The P-GW metadata.
