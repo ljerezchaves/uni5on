@@ -774,6 +774,11 @@ SliceController::DoModifyBearerRequest (
   res.teid = imsi;
   res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
 
+  // Check the number of modified bearers.
+  NS_ASSERT_MSG (
+    msg.bearerContextsToBeModified.size () == ueInfo->GetNBearers (),
+    "Inconsistent number of modified EPS bearers.");
+
   for (auto const &bit : msg.bearerContextsToBeModified)
     {
       // Check for consistent eNB S1-U address after handover procedure.
