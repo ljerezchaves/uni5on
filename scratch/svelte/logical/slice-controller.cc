@@ -1116,6 +1116,77 @@ SliceController::SgwBearerRequest (Ptr<RoutingInfo> rInfo)
 }
 
 bool
+SliceController::SgwHandoverUpdate (Ptr<RoutingInfo> rInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+
+  NS_LOG_INFO ("Updating S-GW rules for teid " << rInfo->GetTeidHex ());
+  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
+
+  // Configure downlink.
+  if (rInfo->HasDlTraffic ())
+    {
+      // Build the dpctl command string.
+      std::ostringstream cmd, act;
+      cmd << "flow-mod cmd=mods"
+          << ",table="  << SGW_DL_TAB
+          << ",flags="  << OFPFF_CHECK_OVERLAP
+          << ",cookie=" << rInfo->GetTeidHex ()
+          << ",prio="   << rInfo->GetPriority ()
+          << ",idle="   << rInfo->GetTimeout ();
+
+      // Instruction: apply action: set tunnel ID, output port.
+      act << " apply:set_field=tunn_id:"
+          << GetTunnelIdStr (rInfo->GetTeid (), rInfo->GetEnbS1uAddr ())
+          << ",output=" << rInfo->GetSgwS1uPortNo ();
+
+      // Modify each downlink dedicated bearer rule.
+      Ptr<EpcTft> tft = rInfo->GetTft ();
+      for (uint8_t i = 0; i < tft->GetNFilters (); i++)
+        {
+          EpcTft::PacketFilter filter = tft->GetFilter (i);
+          if (filter.direction == EpcTft::UPLINK)
+            {
+              continue;
+            }
+
+          // Install rules for TCP traffic.
+          if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
+            {
+              std::ostringstream mat;
+              mat << " eth_type=" << IPV4_PROT_NUM
+                  << ",ip_proto=" << TCP_PROT_NUM
+                  << ",ip_dst="   << filter.localAddress;
+              if (tft->IsDefaultTft () == false)
+                {
+                  mat << ",ip_src="  << filter.remoteAddress
+                      << ",tcp_src=" << filter.remotePortStart;
+                }
+              DpctlExecute (rInfo->GetSgwDpId (),
+                            cmd.str () + mat.str () + act.str ());
+            }
+
+          // Install rules for UDP traffic.
+          else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
+            {
+              std::ostringstream mat;
+              mat << " eth_type=" << IPV4_PROT_NUM
+                  << ",ip_proto=" << UDP_PROT_NUM
+                  << ",ip_dst="   << filter.localAddress;
+              if (tft->IsDefaultTft () == false)
+                {
+                  mat << ",ip_src="  << filter.remoteAddress
+                      << ",udp_src=" << filter.remotePortStart;
+                }
+              DpctlExecute (rInfo->GetSgwDpId (),
+                            cmd.str () + mat.str () + act.str ());
+            }
+        }
+    }
+  return true;
+}
+
+bool
 SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());

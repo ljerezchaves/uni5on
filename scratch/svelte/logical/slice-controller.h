@@ -296,6 +296,14 @@ private:
   bool SgwBearerRequest (Ptr<RoutingInfo> rInfo);
 
   /**
+   * Update packet forwarding rules on the S-GW OpenFlow switch after a
+   * handover procedure.
+   * \param rInfo The routing information to process.
+   * \return True if succeeded, false otherwise.
+   */
+  bool SgwHandoverUpdate (Ptr<RoutingInfo> rInfo);
+
+  /**
    * Install packet forwarding rules on the S-GW OpenFlow switch.
    * \attention To avoid conflicts with old entries, increase the routing
    *            priority before installing S-GW rules.
