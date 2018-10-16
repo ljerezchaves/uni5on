@@ -762,7 +762,7 @@ SliceController::DoModifyBearerRequest (
 {
   NS_LOG_FUNCTION (this << msg.teid);
 
-  // This Modify Bearer Request is triggered only by X2 handover procedures.
+  // The Modify Bearer Request procedure is triggered only by X2 handover.
   // There is no actual bearer modification.
 
   uint64_t imsi = msg.teid;
@@ -772,18 +772,30 @@ SliceController::DoModifyBearerRequest (
   Ptr<EnbInfo> srcEnbInfo = ueInfo->GetEnbInfo ();
   Ptr<EnbInfo> dstEnbInfo = EnbInfo::GetPointer (cellId);
 
-  // Check wheter we need to change the backhaul routing path.
-  if (srcEnbInfo->GetInfraSwIdx () != dstEnbInfo->GetInfraSwIdx ())
-    {
-      // TODO
-    }
-
+  // TODO Check wheter we need to change the backhaul routing path.
   ueInfo->SetEnbInfo (dstEnbInfo);
 
+  // Iterate over request message and create the response message.
   EpcS11SapMme::ModifyBearerResponseMessage res;
-  res.teid = msg.teid;
+  res.teid = imsi;
   res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
 
+  for (auto const &bit : msg.bearerContextsToBeModified)
+    {
+      // Check for consistent eNB S1-U address after handover procedure.
+      NS_ASSERT_MSG (bit.enbFteid.address == dstEnbInfo->GetS1uAddr (),
+                     "Inconsistent eNB S1-U IPv4 address.");
+
+      EpcS11SapMme::BearerContextModified bearerContext;
+      bearerContext.sgwFteid.address = ueInfo->GetSgwInfo ()->GetS1uAddr ();
+      bearerContext.sgwFteid.teid = bit.enbFteid.teid;
+      bearerContext.epsBearerId = bit.epsBearerId;
+      res.bearerContextsModified.push_back (bearerContext);
+
+      // TODO Update OpenFlow rules.
+    }
+
+  // Forward the response message to the MME.
   m_s11SapMme->ModifyBearerResponse (res);
 }
 
