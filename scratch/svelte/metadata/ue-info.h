@@ -82,7 +82,6 @@ public:
    */
   //\{
   Ipv4Address           GetAddr       (void) const;
-  std::list<BearerInfo> GetBearerList (void) const;
   uint16_t              GetEnbCellId  (void) const;
   Ptr<EnbInfo>          GetEnbInfo    (void) const;
   uint64_t              GetEnbUeS1Id  (void) const;
@@ -95,6 +94,12 @@ public:
   Ptr<SliceController>  GetSliceCtrl  (void) const;
   SliceId               GetSliceId    (void) const;
   //\}
+
+  /**
+   * Get the list of bearers for this UE.
+   * \return The const reference to the list of beares.
+   */
+  const std::list<BearerInfo>& GetBearerList (void) const;
 
   /**
    * Get the UE information from the global map for a specific IMSI.

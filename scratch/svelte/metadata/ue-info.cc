@@ -76,14 +76,6 @@ UeInfo::GetAddr (void) const
   return m_addr;
 }
 
-std::list<UeInfo::BearerInfo>
-UeInfo::GetBearerList (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_bearersList;
-}
-
 uint16_t
 UeInfo::GetEnbCellId (void) const
 {
@@ -172,6 +164,14 @@ UeInfo::GetSliceCtrl (void) const
   NS_LOG_FUNCTION (this);
 
   return m_sliceCtrl;
+}
+
+const std::list<UeInfo::BearerInfo>&
+UeInfo::GetBearerList (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_bearersList;
 }
 
 Ptr<UeInfo>
