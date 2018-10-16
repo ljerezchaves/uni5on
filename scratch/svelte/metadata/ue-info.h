@@ -148,7 +148,7 @@ private:
   //\}
 
   /**
-   * Add an EPS bearer to the list of bearers for this UE.  The bearer will be
+   * Add an EPS bearer to the list of bearers for this UE. The bearer will be
    * activated when the UE enters the ECM connected state.
    * \param bearer The bearer info.
    * \return The bearer ID.
@@ -168,12 +168,6 @@ private:
    * \return The GTP tunnel ID for this packet.
    */
   uint32_t Classify (Ptr<Packet> packet);
-
-  /**
-   * Remove the bearer context for a specific bearer ID.
-   * \param bearerId The bearer ID.
-   */
-  void RemoveBearer (uint8_t bearerId);
 
   /**
    * Register the UE information in global map for further usage.

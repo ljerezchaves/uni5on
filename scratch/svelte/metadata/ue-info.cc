@@ -297,21 +297,6 @@ UeInfo::Classify (Ptr<Packet> packet)
 }
 
 void
-UeInfo::RemoveBearer (uint8_t bearerId)
-{
-  NS_LOG_FUNCTION (this << bearerId);
-
-  for (auto it = m_bearersList.begin (); it != m_bearersList.end (); ++it)
-    {
-      if (it->bearerId == bearerId)
-        {
-          m_bearersList.erase (it);
-          break;
-        }
-    }
-}
-
-void
 UeInfo::RegisterUeInfo (Ptr<UeInfo> ueInfo)
 {
   NS_LOG_FUNCTION_NOARGS ();
