@@ -668,12 +668,12 @@ SliceController::DoCreateSessionRequest (
   NS_ASSERT_MSG (ueInfo->GetSgwInfo (), "UE serving S-GW undefined.");
   for (auto const &bit : msg.bearerContextsToBeCreated)
     {
+      // Allocate an unique (system-wide) TEID for this EPS bearer.
       uint32_t teid = GetSvelteTeid (m_sliceId, imsi, bit.epsBearerId);
-      bool isDefault = res.bearerContextsCreated.empty ();
 
       EpcS11SapMme::BearerContextCreated bearerContext;
-      bearerContext.sgwFteid.teid = teid;
       bearerContext.sgwFteid.address = ueInfo->GetSgwInfo ()->GetS1uAddr ();
+      bearerContext.sgwFteid.teid = teid;
       bearerContext.epsBearerId = bit.epsBearerId;
       bearerContext.bearerLevelQos = bit.bearerLevelQos;
       bearerContext.tft = bit.tft;
@@ -683,6 +683,7 @@ SliceController::DoCreateSessionRequest (
       ueInfo->AddTft (bit.tft, teid);
 
       // Saving bearer metadata.
+      bool isDefault = res.bearerContextsCreated.empty ();
       Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
           teid, bearerContext, ueInfo, isDefault);
       NS_LOG_DEBUG ("Saving bearer info for UE IMSI " << imsi << ", slice " <<
