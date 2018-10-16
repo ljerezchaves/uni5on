@@ -665,7 +665,6 @@ SliceController::DoCreateSessionRequest (
   EpcS11SapMme::CreateSessionResponseMessage res;
   res.teid = imsi;
 
-  NS_ASSERT_MSG (ueInfo->GetSgwInfo (), "UE serving S-GW undefined.");
   for (auto const &bit : msg.bearerContextsToBeCreated)
     {
       // Allocate an unique (system-wide) TEID for this EPS bearer.
