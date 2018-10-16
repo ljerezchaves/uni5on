@@ -792,6 +792,13 @@ SliceController::DoModifyBearerRequest (
       bearerContext.epsBearerId = bit.epsBearerId;
       res.bearerContextsModified.push_back (bearerContext);
 
+      // Update the S-GW downlink OpenFlow rule with the new eNB S1-U address.
+      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (bit.enbFteid.teid);
+      if (rInfo->IsActive ())
+        {
+          SgwHandoverUpdate (rInfo);
+        }
+
       // TODO Update OpenFlow rules.
       if (changeInfraSwIdx)
         {
