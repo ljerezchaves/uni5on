@@ -212,10 +212,6 @@ SvelteMme::DoModifyBearerResponse (
 {
   NS_LOG_FUNCTION (this << msg.teid);
 
-  NS_ASSERT_MSG (
-    msg.cause == EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED,
-    "Invalid message cause.");
-
   uint64_t imsi = msg.teid;
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
 
