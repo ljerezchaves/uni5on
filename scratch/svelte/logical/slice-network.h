@@ -109,20 +109,15 @@ private:
   void CreatePgw (void);
 
   /**
-   * Create the S-GWs using OpenFlow switches, connecting them
+   * Create the S-GW using an OpenFlow switch, connecting it
    * to the OpenFlow backhaul network.
    */
-  void CreateSgws (void);
+  void CreateSgw (void);
 
   /**
    * Create the UEs, connecting them to the LTE RAN network.
    */
   void CreateUes (void);
-
-  /**
-   * Parse the SgwBackhaulSwitches attribute.
-   */
-  void ParseSgwInfraSwIdxs (void);
 
   // Slice identification.
   SliceId                       m_sliceId;          //!< Logical slice ID.
@@ -175,10 +170,10 @@ private:
   DataRate                      m_tftProcCapy;      //!< TFT proc capacity.
 
   // S-GW user planes.
-  NodeContainer                 m_sgwNodes;         //!< S-GW switch nodes.
-  OFSwitch13DeviceContainer     m_sgwDevices;       //!< S-GW switch devices.
-  std::vector<uint16_t>         m_sgwInfraSwIdx;    //!< Backhaul switch idxs.
-  std::string                   m_sgwInfraSwIdxStr; //!< Backhaul switch desc.
+  Ptr<SgwInfo>                  m_sgwInfo;          //!< S-GW metadata.
+  Ptr<Node>                     m_sgwNode;          //!< S-GW switch node.
+  Ptr<OFSwitch13Device>         m_sgwDevice;        //!< S-GW switch device.
+  uint16_t                      m_sgwInfraSwIdx;    //!< Backhaul switch idx.
   uint32_t                      m_sgwFlowSize;      //!< S-GW flow table size.
   uint32_t                      m_sgwMeterSize;     //!< S-GW meter table size.
   DataRate                      m_sgwProcCapy;      //!< S-GW proc capacity.

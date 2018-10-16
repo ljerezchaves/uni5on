@@ -405,10 +405,9 @@ SliceController::NotifySgwAttach (Ptr<SgwInfo> sgwInfo)
   NS_LOG_FUNCTION (this << sgwInfo << sgwInfo->GetSgwId ());
 
   // Save the S-GW metadata.
-  NS_ASSERT_MSG (m_sgwInfoList.size () == sgwInfo->GetSgwId () - 1,
-                 "S-GW ID " << sgwInfo->GetSgwId () <<
+  NS_ASSERT_MSG (!m_sgwInfo, "S-GW ID " << m_sgwInfo->GetSgwId () <<
                  " already configured with this controller.");
-  m_sgwInfoList.push_back (sgwInfo);
+  m_sgwInfo = sgwInfo;
 
   // -------------------------------------------------------------------------
   // Table 0 -- S-GW default table -- [from higher to lower priority]
@@ -473,9 +472,9 @@ SliceController::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   m_mme = 0;
-  m_pgwInfo = 0;
   m_backhaulCtrl = 0;
-  m_sgwInfoList.clear ();
+  m_pgwInfo = 0;
+  m_sgwInfo = 0;
   delete (m_s11SapSgw);
   Object::DoDispose ();
 }
@@ -648,19 +647,18 @@ SliceController::DoCreateSessionRequest (
   NS_LOG_FUNCTION (this << msg.imsi);
 
   NS_ASSERT_MSG (m_pgwInfo, "P-GW not configure with this controller.");
-  NS_ABORT_MSG_IF (m_sgwInfoList.size () != 1, "Only one S-GW supported.");
+  NS_ASSERT_MSG (m_sgwInfo, "S-GW not configure with this controller.");
 
   uint64_t imsi = msg.imsi;
   uint16_t cellId = msg.uli.gci;
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
 
-  // This controller is responsible for assigning the serving eNB, S-GW and
-  // P-GW elements to the UE. In current implementation, each slice has a
-  // single P-GW and S-GW.
   Ptr<PgwInfo> pgwInfo = m_pgwInfo;
-  Ptr<SgwInfo> sgwInfo = m_sgwInfoList.at (0);
+  Ptr<SgwInfo> sgwInfo = m_sgwInfo;
   Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
 
+  // This controller is responsible for assigning the serving eNB to the UE.
+  // In current implementation, each slice has a single P-GW and S-GW nodes.
   ueInfo->SetEnbInfo (enbInfo);
   ueInfo->SetSgwInfo (sgwInfo);
   ueInfo->SetPgwInfo (pgwInfo);

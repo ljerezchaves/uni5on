@@ -355,7 +355,7 @@ private:
   double                  m_tftSplitThs;    //!< P-GW TFT split threshold.
 
   // S-GW metadata.
-  SgwInfoList_t           m_sgwInfoList;    //!< S-GW metadata for this slice.
+  Ptr<SgwInfo>            m_sgwInfo;        //!< S-GW metadata for this slice.
   OpMode                  m_sgwBlockPolicy; //!< S-GW overload block policy.
   double                  m_sgwBlockThs;    //!< S-GW block threshold.
 
