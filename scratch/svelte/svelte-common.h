@@ -61,6 +61,12 @@ typedef EpcS11SapMme::BearerContextCreated BearerCreated_t;
 /** List of EPS bearer contexts created. */
 typedef std::list<BearerCreated_t> BearerCreatedList_t;
 
+/** EPS bearer context modified. */
+typedef EpcS11SapMme::BearerContextModified BearerModified_t;
+
+/** List of EPS bearer contexts modified. */
+typedef std::list<BearerModified_t> BearerModifiedList_t;
+
 /** A pair of switch datapath IDs. */
 typedef std::pair<uint64_t, uint64_t> DpIdPair_t;
 

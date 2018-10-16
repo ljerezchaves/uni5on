@@ -155,6 +155,10 @@ SliceController::GetTypeId (void)
                      MakeTraceSourceAccessor (
                        &SliceController::m_sessionCreatedTrace),
                      "ns3::SliceController::SessionCreatedTracedCallback")
+    .AddTraceSource ("SessionModified", "The session modified trace source.",
+                     MakeTraceSourceAccessor (
+                       &SliceController::m_sessionModifiedTrace),
+                     "ns3::SliceController::SessionModifiedTracedCallback")
     .AddTraceSource ("PgwTftAdaptive", "The P-GW TFT adaptive trace source.",
                      MakeTraceSourceAccessor (
                        &SliceController::m_pgwTftAdaptiveTrace),
@@ -794,6 +798,9 @@ SliceController::DoModifyBearerRequest (
 
       // TODO Update OpenFlow rules.
     }
+
+  // Fire trace source notifying the modified session.
+  m_sessionModifiedTrace (imsi, res.bearerContextsModified);
 
   // Forward the response message to the MME.
   m_s11SapMme->ModifyBearerResponse (res);

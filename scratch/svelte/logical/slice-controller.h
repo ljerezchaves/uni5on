@@ -175,6 +175,14 @@ public:
   typedef void (*SessionCreatedTracedCallback)(
     uint64_t imsi, BearerCreatedList_t bearerList);
 
+  /**
+   * TracedCallback signature for session modified trace source.
+   * \param imsi The IMSI UE identifier.
+   * \param bearerList The list of bearer contexts modified.
+   */
+  typedef void (*SessionModifiedTracedCallback)(
+    uint64_t imsi, BearerModifiedList_t bearerList);
+
 protected:
   /** Destructor implementation. */
   virtual void DoDispose ();
@@ -311,6 +319,9 @@ private:
 
   /** The context created trace source, fired at DoCreateSessionRequest. */
   TracedCallback<uint64_t, BearerCreatedList_t> m_sessionCreatedTrace;
+
+  /** The context modified trace source, fired at DoModifyBearerRequest. */
+  TracedCallback<uint64_t, BearerModifiedList_t> m_sessionModifiedTrace;
 
   /** The P-GW TFT adaptive trace source, fired at PgwAdaptiveMechanism. */
   TracedCallback<Ptr<const PgwInfo>, uint32_t, uint32_t> m_pgwTftAdaptiveTrace;
