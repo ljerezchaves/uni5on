@@ -253,8 +253,8 @@ public:
   static std::string DirectionStr (Direction dir);
 
   /**
-   * Get the entire list of link information.
-   * \return The list of link information.
+   * Get the list of link information.
+   * \return The const reference to the list of link information.
    */
   static const LinkInfoList_t& GetList (void);
 
