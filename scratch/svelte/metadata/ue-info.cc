@@ -117,6 +117,14 @@ UeInfo::GetMmeUeS1Id (void) const
   return m_mmeUeS1Id;
 }
 
+uint16_t
+UeInfo::GetNBearers (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_bearerCounter;
+}
+
 Ptr<PgwInfo>
 UeInfo::GetPgwInfo (void) const
 {
