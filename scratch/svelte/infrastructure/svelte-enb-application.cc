@@ -78,9 +78,15 @@ SvelteEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
   uint32_t teid = gtpu.GetTeid ();
   m_rxS1uSocketPktTrace (packet->Copy ());
 
-  // Send the packet to the UE over the LTE socket.
+  // Check for UE context information.
   auto it = m_teidRbidMap.find (teid);
-  NS_ASSERT_MSG (it != m_teidRbidMap.end (), "TEID not found in map.");
+  if (it == m_teidRbidMap.end ())
+    {
+      NS_LOG_ERROR ("TEID not found in map. Discarding packet.");
+      return;
+    }
+
+  // Send the packet to the UE over the LTE socket.
   SendToLteSocket (packet, it->second.m_rnti, it->second.m_bid);
 }
 
@@ -172,9 +178,15 @@ SvelteEnbApplication::SendToS1uSocket (Ptr<Packet> packet, uint32_t teid)
   packet->AddPacketTag (teidTag);
   m_txS1uTrace (packet);
 
-  // Send the packet to the S-GW over the S1-U socket.
+  // Check for UE context information.
   auto it = m_teidSgwAddrMap.find (teid);
-  NS_ASSERT_MSG (it != m_teidSgwAddrMap.end (), "Teid not found in map.");
+  if (it == m_teidSgwAddrMap.end ())
+    {
+      NS_LOG_ERROR ("TEID not found in map. Discarding packet.");
+      return;
+    }
+
+  // Send the packet to the S-GW over the S1-U socket.
   m_s1uSocket->SendTo (packet, 0, InetSocketAddress (it->second, GTPU_PORT));
 }
 
