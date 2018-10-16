@@ -60,9 +60,9 @@ public:
    * Trace sink notified when new session is created.
    * This will be used to get the teid for each bearer created.
    * \param imsi The IMSI UE identifier.
-   * \param bearerList The list of context bearers created.
+   * \param bearerList The list of beare contexts created.
    */
-  void SessionCreatedCallback (uint64_t imsi, BearerContextList_t bearerList);
+  void SessionCreatedCallback (uint64_t imsi, BearerCreatedList_t bearerList);
 
   /**
    * Set the IMSI attribute.

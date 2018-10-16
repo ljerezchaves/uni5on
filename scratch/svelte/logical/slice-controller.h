@@ -170,10 +170,10 @@ public:
   /**
    * TracedCallback signature for session created trace source.
    * \param imsi The IMSI UE identifier.
-   * \param bearerList The list of context bearers created.
+   * \param bearerList The list of bearer contexts created.
    */
   typedef void (*SessionCreatedTracedCallback)(
-    uint64_t imsi, BearerContextList_t bearerList);
+    uint64_t imsi, BearerCreatedList_t bearerList);
 
 protected:
   /** Destructor implementation. */
@@ -309,8 +309,8 @@ private:
   /** The bearer release trace source, fired at ReleaseDedicatedBearer. */
   TracedCallback<Ptr<const RoutingInfo> > m_bearerReleaseTrace;
 
-  /** The context created trace source, fired at NotifySessionCreated. */
-  TracedCallback<uint64_t, BearerContextList_t> m_sessionCreatedTrace;
+  /** The context created trace source, fired at DoCreateSessionRequest. */
+  TracedCallback<uint64_t, BearerCreatedList_t> m_sessionCreatedTrace;
 
   /** The P-GW TFT adaptive trace source, fired at PgwAdaptiveMechanism. */
   TracedCallback<Ptr<const PgwInfo>, uint32_t, uint32_t> m_pgwTftAdaptiveTrace;

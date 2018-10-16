@@ -62,11 +62,11 @@ public:
   /**
    * Complete constructor.
    * \param teid The TEID value.
-   * \param bearer The bearer context.
+   * \param bearer The bearer context created.
    * \param ueInfo The UE metadata.
    * \param isDefault True for default bearer.
    */
-  RoutingInfo (uint32_t teid, BearerContext_t bearer,
+  RoutingInfo (uint32_t teid, BearerCreated_t bearer,
                Ptr<UeInfo> ueInfo, bool isDefault);
   virtual ~RoutingInfo (); //!< Dummy destructor, see DoDispose.
 
@@ -287,7 +287,7 @@ private:
    */
   static void RegisterRoutingInfo (Ptr<RoutingInfo> rInfo);
 
-  BearerContext_t      m_bearer;       //!< EPS bearer context information.
+  BearerCreated_t      m_bearer;       //!< EPS bearer context created.
   BlockReason          m_blockReason;  //!< Reason for blocked request.
   bool                 m_isActive;     //!< True for active bearer.
   bool                 m_isAggregated; //!< True for aggregated bearer.

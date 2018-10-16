@@ -37,7 +37,7 @@ NS_OBJECT_ENSURE_REGISTERED (RoutingInfo);
 // Initializing RoutingInfo static members.
 RoutingInfo::TeidRoutingMap_t RoutingInfo::m_routingInfoByTeid;
 
-RoutingInfo::RoutingInfo (uint32_t teid, BearerContext_t bearer,
+RoutingInfo::RoutingInfo (uint32_t teid, BearerCreated_t bearer,
                           Ptr<UeInfo> ueInfo, bool isDefault)
   : m_bearer (bearer),
   m_blockReason (RoutingInfo::NONE),
