@@ -182,8 +182,7 @@ SvelteMme::DoCreateSessionResponse (
   uint64_t imsi = msg.teid;
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
 
-  std::list<EpcS1apSapEnb::ErabToBeSetupItem> erabToBeSetupList;
-
+  std::list<EpcS1apSapEnb::ErabToBeSetupItem> erabList;
   for (auto const &bit : msg.bearerContextsCreated)
     {
       EpcS1apSapEnb::ErabToBeSetupItem erab;
@@ -191,11 +190,11 @@ SvelteMme::DoCreateSessionResponse (
       erab.erabLevelQosParameters = bit.bearerLevelQos;
       erab.transportLayerAddress = bit.sgwFteid.address;
       erab.sgwTeid = bit.sgwFteid.teid;
-      erabToBeSetupList.push_back (erab);
+      erabList.push_back (erab);
     }
 
   ueInfo->GetS1apSapEnb ()->InitialContextSetupRequest (
-    ueInfo->GetMmeUeS1Id (), ueInfo->GetEnbUeS1Id (), erabToBeSetupList);
+    ueInfo->GetMmeUeS1Id (), ueInfo->GetEnbUeS1Id (), erabList);
 }
 
 void
