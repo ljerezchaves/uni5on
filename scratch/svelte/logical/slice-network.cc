@@ -377,9 +377,9 @@ SliceNetwork::CreatePgw (void)
   NS_LOG_FUNCTION (this);
 
   NS_ASSERT_MSG (!m_pgwInfo, "P-GW already configured.");
-  uint16_t pgwId = 1; // A single P-GW in current implementation.
+  const uint16_t pgwId = 1; // A single P-GW in current implementation.
 
-  // Create and name the P-GW nodes
+  // Create and name the P-GW nodes.
   m_pgwNodes.Create (m_nTfts + 1);
   std::ostringstream mainName;
   mainName << m_sliceIdStr << "_pgw" << pgwId;

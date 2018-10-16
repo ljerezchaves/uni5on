@@ -160,7 +160,7 @@ private:
 
   // P-GW user plane.
   Ptr<PgwInfo>                  m_pgwInfo;          //!< P-GW metadata.
-  Ipv4Address                   m_pgwAddress;       //!< P-GW S5 address.
+  Ipv4Address                   m_pgwAddress;       //!< P-GW logical address.
   NodeContainer                 m_pgwNodes;         //!< P-GW switch nodes.
   OFSwitch13DeviceContainer     m_pgwDevices;       //!< P-GW switch devices.
   NetDeviceContainer            m_pgwIntDevices;    //!< P-GW int port devices.
