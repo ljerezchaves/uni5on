@@ -133,6 +133,12 @@ public:
 
 
 
+  /// BearerContextModified structure
+  struct BearerContextModified
+  {    
+    EpcS11Sap::Fteid sgwFteid; ///< FTEID
+    uint8_t epsBearerId; ///< EPS bearer ID
+  };
 
   /**     
    * Modify Bearer Response message, see 3GPP TS 29.274 7.2.7
@@ -146,6 +152,8 @@ public:
       REQUEST_REJECTED,
       CONTEXT_NOT_FOUND
     } cause; ///< the cause
+
+    std::list<BearerContextModified> bearerContextsModified; ///< list of bearer context modified
   };
 
   /** 
@@ -234,12 +242,20 @@ public:
     */
   virtual void DeleteBearerResponse (DeleteBearerResponseMessage msg) = 0;
 
+  /// BearerContextToBeModified structure
+  struct BearerContextToBeModified
+  {    
+    EpcS11Sap::Fteid enbFteid; ///< FTEID
+    uint8_t epsBearerId; ///< EPS bearer ID
+  };
+
   /**     
    * Modify Bearer Request message, see 3GPP TS 29.274 7.2.7
    */
   struct ModifyBearerRequestMessage : public GtpcMessage
   {
     Uli uli; ///< ULI
+    std::list<BearerContextToBeModified> bearerContextsToBeModified;  ///< list of bearer contexts to be modified
   };
 
   /** 
