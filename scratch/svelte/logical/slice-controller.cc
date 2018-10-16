@@ -767,17 +767,18 @@ SliceController::DoModifyBearerRequest (
   if (srcEnbInfo->GetInfraSwIdx () != dstEnbInfo->GetInfraSwIdx ())
     {
       changeInfraSwIdx = true;
+      NS_LOG_DEBUG ("Handover to an eNB at a different backhaul switch.");
     }
-
-  // Iterate over request message and create the response message.
-  EpcS11SapMme::ModifyBearerResponseMessage res;
-  res.teid = imsi;
-  res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
 
   // Check the number of modified bearers.
   NS_ASSERT_MSG (
     msg.bearerContextsToBeModified.size () == ueInfo->GetNBearers (),
     "Inconsistent number of modified EPS bearers.");
+
+  // Iterate over request message and create the response message.
+  EpcS11SapMme::ModifyBearerResponseMessage res;
+  res.teid = imsi;
+  res.cause = EpcS11SapMme::ModifyBearerResponseMessage::REQUEST_ACCEPTED;
 
   for (auto const &bit : msg.bearerContextsToBeModified)
     {
