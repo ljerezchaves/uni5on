@@ -235,21 +235,7 @@ SvelteMme::DoDeleteBearerRequest (EpcS11SapMme::DeleteBearerRequestMessage msg)
 {
   NS_LOG_FUNCTION (this);
 
-  uint64_t imsi = msg.teid;
-  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
-
-  EpcS11SapSgw::DeleteBearerResponseMessage res;
-  res.teid = imsi;
-
-  for (auto const &bit : msg.bearerContextsRemoved)
-    {
-      EpcS11SapSgw::BearerContextRemovedSgwPgw bearerContext;
-      bearerContext.epsBearerId = bit.epsBearerId;
-      res.bearerContextsRemoved.push_back (bearerContext);
-      ueInfo->RemoveBearer (bearerContext.epsBearerId);
-    }
-
-  ueInfo->GetS11SapSgw ()->DeleteBearerResponse (res);
+  NS_ABORT_MSG ("Unsupported method.");
 }
 
 } // namespace ns3

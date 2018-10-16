@@ -737,18 +737,7 @@ SliceController::DoDeleteBearerCommand (
 {
   NS_LOG_FUNCTION (this << msg.teid);
 
-  EpcS11SapMme::DeleteBearerRequestMessage res;
-  res.teid = msg.teid;
-
-  for (auto const &bit : msg.bearerContextsToBeRemoved)
-    {
-      EpcS11SapMme::BearerContextRemoved bearerContext;
-      bearerContext.epsBearerId = bit.epsBearerId;
-      res.bearerContextsRemoved.push_back (bearerContext);
-    }
-
-  // Forward the response message to the MME.
-  m_s11SapMme->DeleteBearerRequest (res);
+  NS_ABORT_MSG ("Unsupported method.");
 }
 
 void
@@ -757,7 +746,7 @@ SliceController::DoDeleteBearerResponse (
 {
   NS_LOG_FUNCTION (this << msg.teid);
 
-  // Nothing to do here.
+  NS_ABORT_MSG ("Unsupported method.");
 }
 
 void
