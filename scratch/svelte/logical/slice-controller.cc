@@ -653,15 +653,12 @@ SliceController::DoCreateSessionRequest (
   uint16_t cellId = msg.uli.gci;
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
 
-  Ptr<PgwInfo> pgwInfo = m_pgwInfo;
-  Ptr<SgwInfo> sgwInfo = m_sgwInfo;
-  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
-
-  // This controller is responsible for assigning the serving eNB to the UE.
+  // This controller is responsible for configuring the eNB info in the UE.
   // In current implementation, each slice has a single P-GW and S-GW nodes.
+  Ptr<EnbInfo> enbInfo = EnbInfo::GetPointer (cellId);
   ueInfo->SetEnbInfo (enbInfo);
-  ueInfo->SetSgwInfo (sgwInfo);
-  ueInfo->SetPgwInfo (pgwInfo);
+  ueInfo->SetSgwInfo (m_sgwInfo);
+  ueInfo->SetPgwInfo (m_pgwInfo);
 
   // Iterate over request message and create the response message.
   EpcS11SapMme::CreateSessionResponseMessage res;
@@ -760,11 +757,17 @@ SliceController::DoModifyBearerRequest (
   uint16_t cellId = msg.uli.gci;
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
 
+  // This controller is responsible for updating the eNB info in the UE.
   Ptr<EnbInfo> srcEnbInfo = ueInfo->GetEnbInfo ();
   Ptr<EnbInfo> dstEnbInfo = EnbInfo::GetPointer (cellId);
-
-  // TODO Check wheter we need to change the backhaul routing path.
   ueInfo->SetEnbInfo (dstEnbInfo);
+
+  // Check wheter we need to change the backhaul routing path.
+  bool changeInfraSwIdx = false;
+  if (srcEnbInfo->GetInfraSwIdx () != dstEnbInfo->GetInfraSwIdx ())
+    {
+      changeInfraSwIdx = true;
+    }
 
   // Iterate over request message and create the response message.
   EpcS11SapMme::ModifyBearerResponseMessage res;
@@ -784,6 +787,10 @@ SliceController::DoModifyBearerRequest (
       res.bearerContextsModified.push_back (bearerContext);
 
       // TODO Update OpenFlow rules.
+      if (changeInfraSwIdx)
+        {
+          // TODO Update backhaul routing path.
+        }
     }
 
   // Fire trace source notifying the modified session.
