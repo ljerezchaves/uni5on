@@ -103,7 +103,8 @@ SvelteEnbApplication::DoInitialContextSetupRequest (
     {
       // Side effect: create entry if it does not exist.
       m_teidSgwAddrMap [erab.sgwTeid] = erab.transportLayerAddress;
-      NS_LOG_DEBUG ("eNB mapping TEID " << erab.sgwTeid <<
+      NS_LOG_DEBUG ("eNB cell ID " << m_cellId <<
+                    " mapping TEID " << erab.sgwTeid <<
                     " to S-GW S1-U IP " << m_teidSgwAddrMap [erab.sgwTeid]);
     }
 
@@ -124,7 +125,8 @@ SvelteEnbApplication::DoPathSwitchRequestAcknowledge (
     {
       // Side effect: create entry if it does not exist.
       m_teidSgwAddrMap [erab.enbTeid] = erab.transportLayerAddress;
-      NS_LOG_DEBUG ("eNB mapping TEID " << erab.enbTeid <<
+      NS_LOG_DEBUG ("eNB cell ID " << m_cellId <<
+                    " mapping TEID " << erab.enbTeid <<
                     " to S-GW S1-U IP " << m_teidSgwAddrMap [erab.enbTeid]);
     }
 
@@ -145,7 +147,9 @@ SvelteEnbApplication::DoUeContextRelease (uint16_t rnti)
         {
           uint32_t teid = bidIt.second;
           m_teidSgwAddrMap.erase (teid);
-          NS_LOG_DEBUG ("Removed TEID " << teid << " from S-GW S1-U mapping.");
+          NS_LOG_DEBUG ("eNB cell ID " << m_cellId <<
+                        " removed TEID " << teid <<
+                        " from S-GW S1-U mapping.");
         }
     }
 
