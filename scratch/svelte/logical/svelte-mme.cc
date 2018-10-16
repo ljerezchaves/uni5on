@@ -144,6 +144,15 @@ SvelteMme::DoPathSwitchRequest (
   msg.teid = imsi;
   msg.uli.gci = gci;
 
+  for (auto const &bit : erabList)
+    {
+      EpcS11SapSgw::BearerContextToBeModified bearerContext;
+      bearerContext.epsBearerId = bit.erabId;
+      bearerContext.enbFteid.address = bit.enbTransportLayerAddress;
+      bearerContext.enbFteid.teid = bit.enbTeid;
+      msg.bearerContextsToBeModified.push_back (bearerContext);
+    }
+
   ueInfo->GetS11SapSgw ()->ModifyBearerRequest (msg);
 }
 
@@ -211,6 +220,14 @@ SvelteMme::DoModifyBearerResponse (
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
 
   std::list<EpcS1apSapEnb::ErabSwitchedInUplinkItem> erabList;
+  for (auto const &bit : msg.bearerContextsModified)
+    {
+      EpcS1apSapEnb::ErabSwitchedInUplinkItem erab;
+      erab.erabId = bit.epsBearerId;
+      erab.transportLayerAddress = bit.sgwFteid.address;
+      erab.enbTeid = bit.sgwFteid.teid;
+      erabList.push_back (erab);
+    }
 
   ueInfo->GetS1apSapEnb ()->PathSwitchRequestAcknowledge (
     ueInfo->GetEnbUeS1Id (), ueInfo->GetMmeUeS1Id (),
