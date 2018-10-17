@@ -97,10 +97,16 @@ public:
   //\}
 
   /**
-   * Get the list of bearers for this UE.
-   * \return The const reference to the list of beares.
+   * Get the bearer for this UE.
+   * \return The const reference to the bearer.
    */
-  const std::list<BearerInfo>& GetBearerList (void) const;
+  const BearerInfo& GetBearer (uint8_t bearerId) const;
+
+  /**
+   * Get the list of bearers for this UE.
+   * \return The const reference to the list of bearers.
+   */
+  const std::vector<BearerInfo>& GetBearerList (void) const;
 
   /**
    * Get the UE information from the global map for a specific IMSI.
@@ -177,21 +183,20 @@ private:
   static void RegisterUeInfo (Ptr<UeInfo> ueInfo);
 
   // UE metadata.
-  Ipv4Address            m_addr;                 //!< UE IP address.
-  uint64_t               m_imsi;                 //!< UE IMSI.
-  Ptr<EnbInfo>           m_enbInfo;              //!< Serving eNB info.
-  Ptr<PgwInfo>           m_pgwInfo;              //!< Serving P-GW info.
-  Ptr<SgwInfo>           m_sgwInfo;              //!< Serving S-GW info.
+  Ipv4Address             m_addr;                 //!< UE IP address.
+  uint64_t                m_imsi;                 //!< UE IMSI.
+  Ptr<EnbInfo>            m_enbInfo;              //!< Serving eNB info.
+  Ptr<PgwInfo>            m_pgwInfo;              //!< Serving P-GW info.
+  Ptr<SgwInfo>            m_sgwInfo;              //!< Serving S-GW info.
 
   // Control-plane communication.
-  Ptr<SliceController>   m_sliceCtrl;            //!< LTE logical slice ctrl.
-  uint64_t               m_mmeUeS1Id;            //!< ID for S1-AP at MME.
-  uint16_t               m_enbUeS1Id;            //!< ID for S1-AP at eNB.
+  Ptr<SliceController>    m_sliceCtrl;            //!< LTE logical slice ctrl.
+  uint64_t                m_mmeUeS1Id;            //!< ID for S1-AP at MME.
+  uint16_t                m_enbUeS1Id;            //!< ID for S1-AP at eNB.
 
   // Bearers and TFTs.
-  uint16_t               m_bearerCounter;        //!< Number of bearers.
-  std::list<BearerInfo>  m_bearersList;          //!< Bearer contexts.
-  EpcTftClassifier       m_tftClassifier;        //!< P-GW TFT classifier.
+  std::vector<BearerInfo> m_bearersList;          //!< Bearer contexts.
+  EpcTftClassifier        m_tftClassifier;        //!< P-GW TFT classifier.
 
   /** Map saving UE IMSI / UE information. */
   typedef std::map<uint64_t, Ptr<UeInfo> > ImsiUeInfoMap_t;

@@ -46,8 +46,7 @@ UeInfo::UeInfo (uint64_t imsi, Ipv4Address addr,
   m_sgwInfo (0),
   m_sliceCtrl (sliceCtrl),
   m_mmeUeS1Id (imsi),
-  m_enbUeS1Id (0),
-  m_bearerCounter (0)
+  m_enbUeS1Id (0)
 {
   NS_LOG_FUNCTION (this);
 
@@ -122,7 +121,7 @@ UeInfo::GetNBearers (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_bearerCounter;
+  return m_bearersList.size ();
 }
 
 Ptr<PgwInfo>
@@ -174,7 +173,17 @@ UeInfo::GetSliceCtrl (void) const
   return m_sliceCtrl;
 }
 
-const std::list<UeInfo::BearerInfo>&
+const UeInfo::BearerInfo&
+UeInfo::GetBearer (uint8_t bearerId) const
+{
+  NS_LOG_FUNCTION (this);
+
+  NS_ASSERT_MSG (bearerId >= 1 && bearerId <= GetNBearers (),
+                 "Invalid bearer ID.");
+  return m_bearersList.at (bearerId - 1);
+}
+
+const std::vector<UeInfo::BearerInfo>&
 UeInfo::GetBearerList (void) const
 {
   NS_LOG_FUNCTION (this);
@@ -278,8 +287,8 @@ UeInfo::AddBearer (BearerInfo bearer)
 {
   NS_LOG_FUNCTION (this << bearer.bearerId);
 
-  NS_ASSERT_MSG (m_bearerCounter < 11, "No more bearers allowed!");
-  bearer.bearerId = ++m_bearerCounter;
+  NS_ABORT_MSG_IF (GetNBearers () >= 11, "No more bearers allowed.");
+  bearer.bearerId = GetNBearers () + 1;
   m_bearersList.push_back (bearer);
   return bearer.bearerId;
 }
