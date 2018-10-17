@@ -23,6 +23,7 @@
 #include "ue-info.h"
 #include "enb-info.h"
 #include "pgw-info.h"
+#include "routing-info.h"
 #include "sgw-info.h"
 #include "../logical/slice-controller.h"
 
@@ -247,6 +248,7 @@ UeInfo::DoDispose ()
   m_pgwInfo = 0;
   m_sliceCtrl = 0;
   m_bearersList.clear ();
+  m_rInfoByBid.clear ();
   Object::DoDispose ();
 }
 
@@ -294,11 +296,21 @@ UeInfo::AddBearer (BearerInfo bearer)
 }
 
 void
-UeInfo::AddTft (Ptr<EpcTft> tft, uint32_t teid)
+UeInfo::AddRoutingInfo (Ptr<RoutingInfo> rInfo)
 {
-  NS_LOG_FUNCTION (this << tft << teid);
+  NS_LOG_FUNCTION (this << rInfo);
 
-  m_tftClassifier.Add (tft, teid);
+  NS_ASSERT_MSG (GetBearer (rInfo->GetBearerId ()).tft == rInfo->GetTft (),
+                 "Inconsistent bearer TFTs for this bearer ID.");
+
+  // Save routing info.
+  std::pair<uint8_t, Ptr<RoutingInfo> > entry (rInfo->GetBearerId (), rInfo);
+  auto ret = m_rInfoByBid.insert (entry);
+  NS_ABORT_MSG_IF (ret.second == false, "Existing routing info for this bid.");
+
+  // Add TFT to the classifier.
+  m_tftClassifier.Add (rInfo->GetTft (), rInfo->GetTeid ());
+
 }
 
 uint32_t

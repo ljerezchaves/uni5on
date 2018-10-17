@@ -62,6 +62,9 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerCreated_t bearer,
 
   // Register this routing information object.
   RegisterRoutingInfo (Ptr<RoutingInfo> (this));
+
+  // Save this routing information object into UeInfo.
+  ueInfo->AddRoutingInfo (Ptr<RoutingInfo> (this));
 }
 
 RoutingInfo::~RoutingInfo ()

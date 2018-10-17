@@ -677,10 +677,7 @@ SliceController::DoCreateSessionRequest (
       bearerContext.tft = bit.tft;
       res.bearerContextsCreated.push_back (bearerContext);
 
-      // Add the TFT entry to the UeInfo (don't move this command from here).
-      ueInfo->AddTft (bit.tft, teid);
-
-      // Saving bearer metadata.
+      // Creating bearer routing metadata.
       Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
           teid, bearerContext, ueInfo, bit.tft->IsDefaultTft ());
       NS_LOG_DEBUG ("Saving bearer info for UE IMSI " << imsi << ", slice " <<

@@ -32,6 +32,7 @@ namespace ns3 {
 class EnbInfo;
 class PgwInfo;
 class SgwInfo;
+class RoutingInfo;
 class SliceController;
 
 /**
@@ -47,6 +48,7 @@ class SliceController;
 class UeInfo : public Object
 {
   friend class PgwTunnelApp;
+  friend class RoutingInfo;
   friend class SliceController;
   friend class SvelteHelper;
   friend class SvelteMme;
@@ -163,11 +165,11 @@ private:
   uint8_t AddBearer (BearerInfo bearer);
 
   /**
-   * Add a TFT entry to the UE TFT classifier.
-   * \param tft The bearer Traffic Flow Template.
-   * \param teid The GTP tunnel ID.
+   * Add an EPS routing metadata to the list of routing contexts for this UE.
+   * The corresponding TFT will be automatically added to the TFT classifier.
+   * \param rInfo The routing info.
    */
-  void AddTft (Ptr<EpcTft> tft, uint32_t teid);
+  void AddRoutingInfo (Ptr<RoutingInfo> rInfo);
 
   /**
    * Classify the packet using the UE TFT classifier.
@@ -198,13 +200,17 @@ private:
   std::vector<BearerInfo> m_bearersList;          //!< Bearer contexts.
   EpcTftClassifier        m_tftClassifier;        //!< P-GW TFT classifier.
 
+  /** Map saving Bearer ID / Routing information. */
+  typedef std::map<uint8_t, Ptr<RoutingInfo> > BidRInfoMap_t;
+  BidRInfoMap_t           m_rInfoByBid;     //!< Routing info map by BID.
+
   /** Map saving UE IMSI / UE information. */
   typedef std::map<uint64_t, Ptr<UeInfo> > ImsiUeInfoMap_t;
-  static ImsiUeInfoMap_t m_ueInfoByImsi;    //!< Global UE info map by IMSI.
+  static ImsiUeInfoMap_t  m_ueInfoByImsi;   //!< Global UE info map by IMSI.
 
   /** Map saving UE IPv4 / UE information. */
   typedef std::map<Ipv4Address, Ptr<UeInfo> > Ipv4UeInfoMap_t;
-  static Ipv4UeInfoMap_t m_ueInfoByAddr;    //!< Global UE info map by IPv4.
+  static Ipv4UeInfoMap_t  m_ueInfoByAddr;   //!< Global UE info map by IPv4.
 };
 
 /**
