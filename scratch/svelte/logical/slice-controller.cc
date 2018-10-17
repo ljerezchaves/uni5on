@@ -681,9 +681,8 @@ SliceController::DoCreateSessionRequest (
       ueInfo->AddTft (bit.tft, teid);
 
       // Saving bearer metadata.
-      bool isDefault = res.bearerContextsCreated.empty ();
       Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
-          teid, bearerContext, ueInfo, isDefault);
+          teid, bearerContext, ueInfo, bit.tft->IsDefaultTft ());
       NS_LOG_DEBUG ("Saving bearer info for UE IMSI " << imsi << ", slice " <<
                     SliceIdStr (m_sliceId) << ", internal bearer id " <<
                     static_cast<uint16_t> (bit.epsBearerId) << ", teid " <<
