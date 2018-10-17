@@ -114,6 +114,7 @@ public:
    * \return The requested information.
    */
   //\{
+  uint8_t               GetBearerId   (void) const;
   EpsBearer             GetEpsBearer  (void) const;
   EpsBearer::Qci        GetQciInfo    (void) const;
   GbrQosInformation     GetQosInfo    (void) const;

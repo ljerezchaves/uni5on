@@ -230,6 +230,14 @@ RoutingInfo::HasTraffic (void) const
   return (HasDlTraffic () || HasUlTraffic ());
 }
 
+uint8_t
+RoutingInfo::GetBearerId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_bearer.epsBearerId;
+}
+
 EpsBearer
 RoutingInfo::GetEpsBearer (void) const
 {
