@@ -179,8 +179,7 @@ UeInfo::GetBearer (uint8_t bearerId) const
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ASSERT_MSG (bearerId >= 1 && bearerId <= GetNBearers (),
-                 "Invalid bearer ID.");
+  NS_ASSERT_MSG (bearerId >= 1 && bearerId <= GetNBearers (), "Invalid BID.");
   return m_bearersList.at (bearerId - 1);
 }
 

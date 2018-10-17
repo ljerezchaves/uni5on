@@ -99,7 +99,8 @@ public:
   //\}
 
   /**
-   * Get the bearer for this UE.
+   * Get the bearer for this bearer ID.
+   * \param bearerId The bearer ID.
    * \return The const reference to the bearer.
    */
   const BearerInfo& GetBearer (uint8_t bearerId) const;
