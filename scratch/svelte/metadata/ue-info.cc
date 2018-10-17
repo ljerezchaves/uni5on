@@ -191,6 +191,29 @@ UeInfo::GetBearerList (void) const
   return m_bearersList;
 }
 
+Ptr<const RoutingInfo>
+UeInfo::GetRoutingInfo (uint8_t bearerId) const
+{
+  NS_LOG_FUNCTION (this);
+
+  NS_ASSERT_MSG (bearerId >= 1 && bearerId <= GetNBearers (), "Invalid BID.");
+  Ptr<const RoutingInfo> rInfo = 0;
+  auto ret = m_rInfoByBid.find (bearerId);
+  if (ret != m_rInfoByBid.end ())
+    {
+      rInfo = ret->second;
+    }
+  return rInfo;
+}
+
+const BidRInfoMap_t&
+UeInfo::GetRoutingInfoMap (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_rInfoByBid;
+}
+
 Ptr<UeInfo>
 UeInfo::GetPointer (uint64_t imsi)
 {

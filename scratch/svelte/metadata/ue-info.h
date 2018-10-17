@@ -35,6 +35,9 @@ class SgwInfo;
 class RoutingInfo;
 class SliceController;
 
+/** Map saving Bearer ID / Routing information. */
+typedef std::map<uint8_t, Ptr<RoutingInfo> > BidRInfoMap_t;
+
 /**
  * \ingroup svelte
  * \defgroup svelteMeta Metadata
@@ -110,6 +113,19 @@ public:
    * \return The const reference to the list of bearers.
    */
   const std::vector<BearerInfo>& GetBearerList (void) const;
+
+  /**
+   * Get the routing information for this bearer ID.
+   * \param bearerId The bearer ID.
+   * \return The const reference to the routing information.
+   */
+  Ptr<const RoutingInfo> GetRoutingInfo (uint8_t bearerId) const;
+
+  /**
+   * Get the map of routing information for this UE.
+   * \return The const reference to the map of routing information.
+   */
+  const BidRInfoMap_t& GetRoutingInfoMap (void) const;
 
   /**
    * Get the UE information from the global map for a specific IMSI.
@@ -200,10 +216,7 @@ private:
   // Bearers and TFTs.
   std::vector<BearerInfo> m_bearersList;          //!< Bearer contexts.
   EpcTftClassifier        m_tftClassifier;        //!< P-GW TFT classifier.
-
-  /** Map saving Bearer ID / Routing information. */
-  typedef std::map<uint8_t, Ptr<RoutingInfo> > BidRInfoMap_t;
-  BidRInfoMap_t           m_rInfoByBid;     //!< Routing info map by BID.
+  BidRInfoMap_t           m_rInfoByBid;           //!< Routing info map by BID.
 
   /** Map saving UE IMSI / UE information. */
   typedef std::map<uint64_t, Ptr<UeInfo> > ImsiUeInfoMap_t;
