@@ -44,6 +44,7 @@ class RoutingInfo : public Object
   friend class BackhaulController;
   friend class RingController;
   friend class SliceController;
+  friend class TrafficManager;
 
 public:
   /** The reason for any blocked request. */
