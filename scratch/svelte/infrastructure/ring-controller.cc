@@ -383,6 +383,7 @@ RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
+  NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules must be installed.");
   NS_LOG_INFO ("Removing ring rules for teid " << rInfo->GetTeidHex ());
 
   // Getting ring routing information.

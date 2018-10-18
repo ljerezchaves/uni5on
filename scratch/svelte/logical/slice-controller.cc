@@ -203,8 +203,7 @@ SliceController::DedicatedBearerRequest (
   // we can even use new routing paths when necessary.
   NS_LOG_INFO ("Bearer request accepted by controller.");
 
-  // Activate and install the bearer.
-  rInfo->SetActive (true);
+  // Install the bearer.
   bool installed = BearerInstall (rInfo);
   m_bearerRequestTrace (rInfo);
   return installed;
@@ -220,14 +219,13 @@ SliceController::DedicatedBearerRelease (
 
   // This bearer must be active.
   NS_ASSERT_MSG (!rInfo->IsDefault (), "Can't release the default bearer.");
-  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
+  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should not be active.");
 
   m_backhaulCtrl->BearerRelease (rInfo);
   m_bearerReleaseTrace (rInfo);
   NS_LOG_INFO ("Bearer released by controller.");
 
-  // Deactivate and remove the bearer.
-  rInfo->SetActive (false);
+  // Remove the bearer.
   return BearerRemove (rInfo);
 }
 
@@ -598,8 +596,7 @@ SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
-  rInfo->SetInstalled (false);
+  NS_ASSERT_MSG (!rInfo->IsInstalled (), "Rules should not be installed.");
 
   // Increasing the priority every time we (re)install routing rules.
   rInfo->IncreasePriority ();
@@ -618,7 +615,8 @@ SliceController::BearerRemove (Ptr<RoutingInfo> rInfo)
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should be inactive.");
+  NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules should be installed.");
+  NS_ASSERT_MSG (!rInfo->IsActive (), "Bearer should not be active.");
 
   // Remove the rules.
   bool success = true;
@@ -701,7 +699,7 @@ SliceController::DoCreateSessionRequest (
           success &= m_backhaulCtrl->BearerRequest (rInfo);
           NS_ASSERT_MSG (success, "Default bearer must be accepted.");
 
-          // Activate and install the bearer.
+          // Activate and install the default bearer.
           rInfo->SetActive (true);
           bool installed = BearerInstall (rInfo);
           m_bearerRequestTrace (rInfo);

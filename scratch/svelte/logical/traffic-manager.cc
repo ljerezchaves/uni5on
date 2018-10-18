@@ -21,6 +21,7 @@
 #include "traffic-manager.h"
 #include "slice-controller.h"
 #include "../applications/svelte-client-app.h"
+#include "../metadata/routing-info.h"
 #include "../metadata/ue-info.h"
 
 #undef NS_LOG_APPEND_CONTEXT
@@ -189,7 +190,8 @@ TrafficManager::AppStartTry (Ptr<SvelteClientApp> app)
   SetNextAppStartTry (app);
 
   bool authorized = true;
-  if (app->GetTeid () != m_defaultTeid)
+  uint32_t teid = app->GetTeid ();
+  if (teid != m_defaultTeid)
     {
       // No resource request for traffic over default bearer.
       authorized = m_ctrlApp->DedicatedBearerRequest (
@@ -199,6 +201,10 @@ TrafficManager::AppStartTry (Ptr<SvelteClientApp> app)
   // No retries are performed for a non-authorized traffic.
   if (authorized)
     {
+      // Activate the routing info.
+      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+      rInfo->SetActive (true);
+
       // Schedule the application start for +1 second.
       Simulator::Schedule (Seconds (1), &SvelteClientApp::Start, app);
       NS_LOG_INFO ("App " << app->GetNameTeid () << " will start in +1 sec.");
@@ -216,13 +222,17 @@ TrafficManager::NotifyAppStop (Ptr<SvelteClientApp> app)
   NS_LOG_FUNCTION (this << app);
 
   // No resource release for traffic over default bearer.
-  uint32_t appTeid = app->GetTeid ();
-  if (appTeid != m_defaultTeid)
+  uint32_t teid = app->GetTeid ();
+  if (teid != m_defaultTeid)
     {
+      // Deactivate the routing info.
+      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+      rInfo->SetActive (false);
+
       // Schedule the resource release procedure for +1 second.
       Simulator::Schedule (
         Seconds (1), &SliceController::DedicatedBearerRelease,
-        m_ctrlApp, app->GetEpsBearer (), m_imsi, appTeid);
+        m_ctrlApp, app->GetEpsBearer (), m_imsi, teid);
     }
 
   // Schedule the next start attempt for this application,
