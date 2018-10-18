@@ -48,7 +48,7 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerCreated_t bearer,
   m_isGbrRes (false),
   m_isMbrDlInst (false),
   m_isMbrUlInst (false),
-  m_isTunnelInst (false),
+  m_isInstalled (false),
   m_pgwTftIdx (0),
   m_priority (0),
   m_sliceId (ueInfo->GetSliceId ()),
@@ -178,11 +178,11 @@ RoutingInfo::IsDefault (void) const
 }
 
 bool
-RoutingInfo::IsTunnelInstalled (void) const
+RoutingInfo::IsInstalled (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  return m_isTunnelInst;
+  return m_isInstalled;
 }
 
 Ipv4Header::DscpType
@@ -688,11 +688,11 @@ RoutingInfo::SetTimeout (uint16_t value)
 }
 
 void
-RoutingInfo::SetTunnelInstalled (bool value)
+RoutingInfo::SetInstalled (bool value)
 {
   NS_LOG_FUNCTION (this << value);
 
-  m_isTunnelInst = value;
+  m_isInstalled = value;
 }
 
 void
@@ -728,7 +728,7 @@ RoutingInfo::GetInstalledList (RoutingInfoList_t &returnList, SliceId slice,
     {
       Ptr<RoutingInfo> rInfo = it.second;
 
-      if (!rInfo->IsTunnelInstalled ())
+      if (!rInfo->IsInstalled ())
         {
           continue;
         }
@@ -764,7 +764,7 @@ std::ostream & operator << (std::ostream &os, const RoutingInfo &rInfo)
      << " " << setw (6)  << rInfo.GetSliceIdStr ()
      << " " << setw (6)  << rInfo.IsDefault ()
      << " " << setw (6)  << rInfo.IsActive ()
-     << " " << setw (6)  << rInfo.IsTunnelInstalled ()
+     << " " << setw (6)  << rInfo.IsInstalled ()
      << " " << setw (6)  << rInfo.IsAggregated ()
      << " " << setw (6)  << rInfo.IsBlocked ()
      << " " << setw (9)  << rInfo.GetBlockReasonStr ()

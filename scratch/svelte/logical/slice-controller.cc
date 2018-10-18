@@ -599,7 +599,7 @@ SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
   NS_ASSERT_MSG (rInfo->IsActive (), "Bearer should be active.");
-  rInfo->SetTunnelInstalled (false);
+  rInfo->SetInstalled (false);
 
   // Increasing the priority every time we (re)install routing rules.
   rInfo->IncreasePriority ();
@@ -609,7 +609,7 @@ SliceController::BearerInstall (Ptr<RoutingInfo> rInfo)
   success &= PgwRulesInstall (rInfo);
   success &= SgwRulesInstall (rInfo);
   success &= m_backhaulCtrl->TopologyRoutingInstall (rInfo);
-  rInfo->SetTunnelInstalled (success);
+  rInfo->SetInstalled (success);
   return success;
 }
 
@@ -625,7 +625,7 @@ SliceController::BearerRemove (Ptr<RoutingInfo> rInfo)
   success &= PgwRulesRemove (rInfo);
   success &= SgwRulesRemove (rInfo);
   success &= m_backhaulCtrl->TopologyRoutingRemove (rInfo);
-  rInfo->SetTunnelInstalled (!success);
+  rInfo->SetInstalled (!success);
   return success;
 }
 

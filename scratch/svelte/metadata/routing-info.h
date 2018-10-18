@@ -93,7 +93,7 @@ public:
   bool        IsAggregated      (void) const;
   bool        IsBlocked         (void) const;
   bool        IsDefault         (void) const;
-  bool        IsTunnelInstalled (void) const;
+  bool        IsInstalled       (void) const;
   //\}
 
   /**
@@ -255,7 +255,7 @@ protected:
   void SetPgwTftIdx       (uint16_t value);
   void SetPriority        (uint16_t value);
   void SetTimeout         (uint16_t value);
-  void SetTunnelInstalled (bool value);
+  void SetInstalled       (bool value);
   //\}
 
   /**
@@ -297,7 +297,7 @@ private:
   bool                 m_isGbrRes;     //!< True for GBR resources reserved.
   bool                 m_isMbrDlInst;  //!< True fir downlink meter installed.
   bool                 m_isMbrUlInst;  //!< True for uplink meter installed.
-  bool                 m_isTunnelInst; //!< True for GTP tunnel installed.
+  bool                 m_isInstalled;  //!< True for OpenFlow rules installed.
   uint16_t             m_pgwTftIdx;    //!< P-GW TFT switch index.
   uint16_t             m_priority;     //!< Flow table rule priority.
   SliceId              m_sliceId;      //!< Slice ID for this bearer.
