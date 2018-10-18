@@ -126,7 +126,7 @@ SvelteEnbApplication::DoPathSwitchRequestAcknowledge (
 {
   NS_LOG_FUNCTION (this << enbUeS1Id << mmeUeS1Id << cgi);
 
-  // TODO Update the mapping TEID --> S-GW S1-U IP address.
+  // Update the mapping TEID --> S-GW S1-U IP address.
   for (auto const &erab : erabToBeSwitchedInUplinkList)
     {
       // Side effect: create entry if it does not exist.
@@ -145,7 +145,7 @@ SvelteEnbApplication::DoUeContextRelease (uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << rnti);
 
-  // TODO Remove the mapping TEID --> S-GW S1-U IP address.
+  // Remove the mapping TEID --> S-GW S1-U IP address.
   auto rntiIt = m_rbidTeidMap.find (rnti);
   if (rntiIt != m_rbidTeidMap.end ())
     {
