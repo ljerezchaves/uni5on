@@ -27,6 +27,8 @@
 
 namespace ns3 {
 
+class EnbInfo;
+
 /**
  * \ingroup svelteInfra
  * OpenFlow backhaul controller for ring topology.
@@ -73,6 +75,7 @@ protected:
   void NotifyTopologyBuilt (OFSwitch13DeviceContainer &devices);
   bool TopologyRoutingInstall (Ptr<RoutingInfo> rInfo);
   bool TopologyRoutingRemove (Ptr<RoutingInfo> rInfo);
+  bool TopologyRoutingUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo);
   // Inherited from BackhaulController.
 
   // Inherited from OFSwitch13Controller.

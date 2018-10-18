@@ -39,6 +39,7 @@
 
 namespace ns3 {
 
+class EnbInfo;
 class LinkInfo;
 class SliceController;
 
@@ -203,6 +204,16 @@ protected:
    * \return True if succeeded, false otherwise.
    */
   virtual bool TopologyRoutingRemove (Ptr<RoutingInfo> rInfo) = 0;
+
+  /**
+   * Update TEID routing OpenFlow match rules from backhaul switches after a
+   * successful handover procedure.
+   * \param rInfo The routing information to process.
+   * \param dstEnbInfo The destination eNB after the handover procedure.
+   * \return True if succeeded, false otherwise.
+   */
+  virtual bool TopologyRoutingUpdate (Ptr<RoutingInfo> rInfo,
+                                      Ptr<EnbInfo> dstEnbInfo) = 0;
 
   // Inherited from OFSwitch13Controller.
   virtual ofl_err HandleError (

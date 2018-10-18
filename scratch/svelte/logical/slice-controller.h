@@ -39,6 +39,7 @@
 namespace ns3 {
 
 class BackhaulController;
+class EnbInfo;
 class RoutingInfo;
 class SvelteMme;
 class SgwInfo;
@@ -296,14 +297,6 @@ private:
   bool SgwBearerRequest (Ptr<RoutingInfo> rInfo);
 
   /**
-   * Update packet forwarding rules on the S-GW OpenFlow switch after a
-   * handover procedure.
-   * \param rInfo The routing information to process.
-   * \return True if succeeded, false otherwise.
-   */
-  bool SgwHandoverUpdate (Ptr<RoutingInfo> rInfo);
-
-  /**
    * Install packet forwarding rules on the S-GW OpenFlow switch.
    * \attention To avoid conflicts with old entries, increase the routing
    *            priority before installing S-GW rules.
@@ -318,6 +311,15 @@ private:
    * \return True if succeeded, false otherwise.
    */
   bool SgwRulesRemove (Ptr<RoutingInfo> rInfo);
+
+  /**
+   * Update packet forwarding rules on the S-GW OpenFlow switch after a
+   * successful handover procedure.
+   * \param rInfo The routing information to process.
+   * \param dstEnbInfo The destination eNB after the handover procedure.
+   * \return True if succeeded, false otherwise.
+   */
+  bool SgwRulesUpdate (Ptr<RoutingInfo> rInfo, Ptr<EnbInfo> dstEnbInfo);
 
   /** The bearer request trace source, fired at RequestDedicatedBearer. */
   TracedCallback<Ptr<const RoutingInfo> > m_bearerRequestTrace;

@@ -20,6 +20,7 @@
 
 #include <string>
 #include "ring-controller.h"
+#include "../metadata/enb-info.h"
 #include "../metadata/routing-info.h"
 #include "backhaul-network.h"
 
@@ -398,6 +399,31 @@ RingController::TopologyRoutingRemove (Ptr<RoutingInfo> rInfo)
   DpctlExecute (GetDpId (rInfo->GetSgwInfraSwIdx ()), cmd.str ());
   DpctlExecute (GetDpId (rInfo->GetEnbInfraSwIdx ()), cmd.str ());
 
+  return true;
+}
+
+bool
+RingController::TopologyRoutingUpdate (Ptr<RoutingInfo> rInfo,
+                                       Ptr<EnbInfo> dstEnbInfo)
+{
+  NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
+
+  NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules must be installed.");
+  NS_LOG_INFO ("Updating ring rules for teid " << rInfo->GetTeidHex ());
+
+  // We can't just modify the OpenFlow rules in the backhaul switches because
+  // we need to change the match fields. So, we are going to install new rules with higher priority (it is expectecte)
+  // TopologyRoutingInstall (rInfo);
+
+  // Instead of removing all old entries (which would require )
+
+  // Check whether the eNB OpenFlow backhaul switch has changed.
+  if (dstEnbInfo->GetInfraSwIdx () != rInfo->GetEnbInfraSwIdx ())
+    {
+      NS_LOG_DEBUG ("Handover to an eNB at a different backhaul switch.");
+    }
+
+  // TODO
   return true;
 }
 
