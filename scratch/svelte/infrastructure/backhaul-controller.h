@@ -208,6 +208,9 @@ protected:
   /**
    * Update TEID routing OpenFlow match rules from backhaul switches after a
    * successful handover procedure.
+   * \attention Don't increase the routing priority and don't update the
+   *            rInfo->GetEnbInfo () to the destination eNB metadata before
+   *            invoking this method.
    * \param rInfo The routing information to process.
    * \param dstEnbInfo The destination eNB after the handover procedure.
    * \return True if succeeded, false otherwise.
