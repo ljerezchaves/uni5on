@@ -86,20 +86,20 @@ public:
    * \return The requested information.
    */
   //\{
-  Ipv4Address           GetAddr       (void) const;
-  uint16_t              GetEnbCellId  (void) const;
-  Ptr<EnbInfo>          GetEnbInfo    (void) const;
-  uint64_t              GetEnbUeS1Id  (void) const;
-  uint64_t              GetImsi       (void) const;
-  uint64_t              GetMmeUeS1Id  (void) const;
-  uint16_t              GetNBearers   (void) const;
-  Ptr<PgwInfo>          GetPgwInfo    (void) const;
-  EpcS11SapSgw*         GetS11SapSgw  (void) const;
-  EpcS1apSapEnb*        GetS1apSapEnb (void) const;
-  Ptr<SgwInfo>          GetSgwInfo    (void) const;
-  Ptr<SliceController>  GetSliceCtrl  (void) const;
-  SliceId               GetSliceId    (void) const;
+  Ipv4Address           GetAddr         (void) const;
   uint32_t              GetDefaultTeid  (void) const;
+  uint16_t              GetEnbCellId    (void) const;
+  Ptr<EnbInfo>          GetEnbInfo      (void) const;
+  uint64_t              GetEnbUeS1Id    (void) const;
+  uint64_t              GetImsi         (void) const;
+  uint64_t              GetMmeUeS1Id    (void) const;
+  uint16_t              GetNBearers     (void) const;
+  Ptr<PgwInfo>          GetPgwInfo      (void) const;
+  EpcS11SapSgw*         GetS11SapSgw    (void) const;
+  EpcS1apSapEnb*        GetS1apSapEnb   (void) const;
+  Ptr<SgwInfo>          GetSgwInfo      (void) const;
+  Ptr<SliceController>  GetSliceCtrl    (void) const;
+  SliceId               GetSliceId      (void) const;
   //\}
 
   /**
