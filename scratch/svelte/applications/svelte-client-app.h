@@ -70,6 +70,7 @@ public:
   bool IsForceStop (void) const;
   Ptr<EpcTft> GetTft (void) const;
   EpsBearer GetEpsBearer (void) const;
+  uint8_t GetEpsBearerId (void) const;
   uint32_t GetTeid (void) const;
   std::string GetTeidHex (void) const;
   Ptr<SvelteServerApp> GetServerApp (void) const;
@@ -78,6 +79,7 @@ public:
 
   void SetTft (Ptr<EpcTft> value);
   void SetEpsBearer (EpsBearer value);
+  void SetEpsBearerId (uint8_t value);
   void SetTeid (uint32_t value);
   //\}
 
@@ -161,9 +163,10 @@ private:
   EventId       m_forceStop;      //!< Max duration stop event.
   bool          m_forceStopFlag;  //!< Force stop flag.
 
-  // LTE EPC metadata
+  // LTE EPS metadata
   Ptr<EpcTft>   m_tft;            //!< Traffic flow template for this app.
   EpsBearer     m_bearer;         //!< EPS bearer info.
+  uint8_t       m_bearerId;       //!< EPS bearer ID.
   uint32_t      m_teid;           //!< GTP TEID associated with this app.
 };
 

@@ -40,6 +40,7 @@ SvelteClientApp::SvelteClientApp ()
   m_forceStop (EventId ()),
   m_forceStopFlag (false),
   m_tft (0),
+  m_bearerId (0),
   m_teid (0)
 {
   NS_LOG_FUNCTION (this);
@@ -153,6 +154,14 @@ SvelteClientApp::GetEpsBearer (void) const
   return m_bearer;
 }
 
+uint8_t
+SvelteClientApp::GetEpsBearerId (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return m_bearerId;
+}
+
 uint32_t
 SvelteClientApp::GetTeid (void) const
 {
@@ -207,6 +216,14 @@ SvelteClientApp::SetEpsBearer (EpsBearer value)
   NS_LOG_FUNCTION (this);
 
   m_bearer = value;
+}
+
+void
+SvelteClientApp::SetEpsBearerId (uint8_t value)
+{
+  NS_LOG_FUNCTION (this << value);
+
+  m_bearerId = value;
 }
 
 void
