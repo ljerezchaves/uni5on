@@ -116,27 +116,15 @@ TrafficManager::NotifySessionCreated (
       return;
     }
 
-  m_ctrlApp = UeInfo::GetPointer (imsi)->GetSliceCtrl ();
-  m_defaultTeid = bearerList.front ().sgwFteid.teid;
+  Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
+  m_ctrlApp = ueInfo->GetSliceCtrl ();
+  m_defaultTeid = ueInfo->GetDefaultTeid ();
 
   // For each application, set the corresponding TEID.
   for (auto const &ait : m_timeByApp)
     {
       Ptr<SvelteClientApp> app = ait.first;
-      app->SetTeid (m_defaultTeid);
-
-      // Using the TFT to match bearers and applications.
-      Ptr<EpcTft> tft = app->GetTft ();
-      if (tft)
-        {
-          for (auto const &bit : bearerList)
-            {
-              if (bit.tft == tft)
-                {
-                  app->SetTeid (bit.sgwFteid.teid);
-                }
-            }
-        }
+      app->SetTeid (ueInfo->GetTeid (app->GetEpsBearerId ()));
       NS_LOG_INFO ("App " << app->GetNameTeid ());
     }
 }
