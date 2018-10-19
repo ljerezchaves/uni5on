@@ -99,6 +99,7 @@ public:
   Ptr<SgwInfo>          GetSgwInfo    (void) const;
   Ptr<SliceController>  GetSliceCtrl  (void) const;
   SliceId               GetSliceId    (void) const;
+  uint32_t              GetDefaultTeid  (void) const;
   //\}
 
   /**

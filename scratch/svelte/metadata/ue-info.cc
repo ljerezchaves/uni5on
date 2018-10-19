@@ -76,6 +76,17 @@ UeInfo::GetAddr (void) const
   return m_addr;
 }
 
+uint32_t
+UeInfo::GetDefaultTeid (void) const
+{
+  NS_LOG_FUNCTION (this);
+
+  Ptr<const RoutingInfo> rInfo = GetRoutingInfo (1);
+  NS_ASSERT_MSG (rInfo, "No default bearer added to this UE yet.");
+  NS_ASSERT_MSG (rInfo->IsDefault (), "Inconsistent BID for default bearer.");
+  return rInfo->GetTeid ();
+}
+
 uint16_t
 UeInfo::GetEnbCellId (void) const
 {
