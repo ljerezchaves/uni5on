@@ -196,15 +196,15 @@ TrafficManager::AppStartTry (Ptr<SvelteClientApp> app)
       // No resource request for traffic over default bearer.
       authorized = m_ctrlApp->DedicatedBearerRequest (
           app->GetEpsBearer (), m_imsi, app->GetTeid ());
+
+      // Activate the dedicated routing info.
+      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
+      rInfo->SetActive (authorized);
     }
 
   // No retries are performed for a non-authorized traffic.
   if (authorized)
     {
-      // Activate the routing info.
-      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (teid);
-      rInfo->SetActive (true);
-
       // Schedule the application start for +1 second.
       Simulator::Schedule (Seconds (1), &SvelteClientApp::Start, app);
       NS_LOG_INFO ("App " << app->GetNameTeid () << " will start in +1 sec.");
