@@ -40,7 +40,7 @@ SvelteClientApp::SvelteClientApp ()
   m_forceStop (EventId ()),
   m_forceStopFlag (false),
   m_tft (0),
-  m_bearerId (0),
+  m_bearerId (1),   // This is the default BID.
   m_teid (0)
 {
   NS_LOG_FUNCTION (this);
