@@ -744,27 +744,15 @@ SliceController::DoModifyBearerRequest (
 {
   NS_LOG_FUNCTION (this << msg.teid);
 
-  // The Modify Bearer Request procedure is triggered only by X2 handover.
-  // There is no actual bearer modification.
-
   uint64_t imsi = msg.teid;
   uint16_t cellId = msg.uli.gci;
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
 
-  // This controller is responsible for updating the eNB info in the UE.
-  Ptr<EnbInfo> srcEnbInfo = ueInfo->GetEnbInfo ();
+  // The Modify Bearer Request procedure is triggered only by X2 handover, and
+  // this controller is the responsible for updating the eNB info in the UE.
   Ptr<EnbInfo> dstEnbInfo = EnbInfo::GetPointer (cellId);
-  ueInfo->SetEnbInfo (dstEnbInfo);
 
-  // Check wheter we need to change the backhaul routing path.
-  bool changeInfraSwIdx = false;
-  if (srcEnbInfo->GetInfraSwIdx () != dstEnbInfo->GetInfraSwIdx ())
-    {
-      changeInfraSwIdx = true;
-      NS_LOG_DEBUG ("Handover to an eNB at a different backhaul switch.");
-    }
-
-  // Check the number of modified bearers.
+  // Check for consistent the number of modified bearers.
   NS_ASSERT_MSG (
     msg.bearerContextsToBeModified.size () == ueInfo->GetNBearers (),
     "Inconsistent number of modified EPS bearers.");
@@ -785,20 +773,25 @@ SliceController::DoModifyBearerRequest (
       bearerContext.sgwFteid.teid = bit.enbFteid.teid;
       bearerContext.epsBearerId = bit.epsBearerId;
       res.bearerContextsModified.push_back (bearerContext);
+    }
 
-      // Update the S-GW downlink OpenFlow rule with the new eNB S1-U address.
-      Ptr<RoutingInfo> rInfo = RoutingInfo::GetPointer (bit.enbFteid.teid);
+  // Iterate over routing infos and update OpenFlow rules for active bearers.
+  for (auto const &rit : ueInfo->GetRoutingInfoMap ())
+    {
+      Ptr<RoutingInfo> rInfo = rit.second;
       if (rInfo->IsActive ())
         {
-          SgwHandoverUpdate (rInfo);
-        }
-
-      // TODO Update OpenFlow rules.
-      if (changeInfraSwIdx)
-        {
-          // TODO Update backhaul routing path.
+          // Each slice has a single P-GW and S-GW, so handover only changes
+          // the eNB. Thus, we need to modify the S-GW and backhaul S1-U rules.
+          bool success = true;
+          success &= SgwRulesUpdate (rInfo, dstEnbInfo);
+          success &= m_backhaulCtrl->TopologyRoutingUpdate (rInfo, dstEnbInfo);
+          NS_ASSERT_MSG (success, "Error in OpenFlow rules after handover.");
         }
     }
+
+  // Finally, update the EnbInfo in the UeInfo (don't move this from here).
+  ueInfo->SetEnbInfo (dstEnbInfo);
 
   // Fire trace source notifying the modified session.
   m_sessionModifiedTrace (imsi, res.bearerContextsModified);
