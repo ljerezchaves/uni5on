@@ -57,12 +57,12 @@ public:
   void AddSvelteClientApp (Ptr<SvelteClientApp> app);
 
   /**
-   * Trace sink notified when new session is created.
-   * This will be used to get the teid for each bearer created.
+   * Notify this manager when a new session is created in the controller.
+   * This will be used to assign the teid to each application.
    * \param imsi The IMSI UE identifier.
-   * \param bearerList The list of beare contexts created.
+   * \param bearerList The list of bearer contexts created.
    */
-  void SessionCreatedCallback (uint64_t imsi, BearerCreatedList_t bearerList);
+  void NotifySessionCreated (uint64_t imsi, BearerCreatedList_t bearerList);
 
   /**
    * Set the IMSI attribute.

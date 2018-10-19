@@ -263,7 +263,7 @@ TrafficHelper::InstallApplications ()
       // Connect the manager to the controller session created trace source.
       Config::ConnectWithoutContext (
         "/NodeList/*/ApplicationList/*/$ns3::SliceController/SessionCreated",
-        MakeCallback (&TrafficManager::SessionCreatedCallback, m_ueManager));
+        MakeCallback (&TrafficManager::NotifySessionCreated, m_ueManager));
 
       // Install applications (sorted by QCI) into UEs.
       if (m_gbrVoip)

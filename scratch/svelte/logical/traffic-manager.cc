@@ -105,7 +105,7 @@ TrafficManager::AddSvelteClientApp (Ptr<SvelteClientApp> app)
 }
 
 void
-TrafficManager::SessionCreatedCallback (
+TrafficManager::NotifySessionCreated (
   uint64_t imsi, BearerCreatedList_t bearerList)
 {
   NS_LOG_FUNCTION (this);
