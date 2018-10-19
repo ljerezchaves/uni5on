@@ -380,6 +380,7 @@ TrafficHelper::InstallAutoPilot (EpsBearer bearer)
   uint16_t port = GetNextPortNo ();
   Ptr<SvelteClientApp> cApp = m_autoPilotHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
+  m_ueManager->AddSvelteClientApp (cApp);
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
@@ -396,10 +397,8 @@ TrafficHelper::InstallAutoPilot (EpsBearer bearer)
   tft->Add (filter);
 
   uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
-
   cApp->SetEpsBearer (bearer);
   cApp->SetEpsBearerId (bid);
-  m_ueManager->AddSvelteClientApp (cApp);
 }
 
 void
@@ -411,6 +410,7 @@ TrafficHelper::InstallBufferedVideo (EpsBearer bearer, std::string name)
   m_buffVideoHelper.SetServerAttribute ("TraceFilename", StringValue (name));
   Ptr<SvelteClientApp> cApp = m_buffVideoHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
+  m_ueManager->AddSvelteClientApp (cApp);
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
@@ -427,10 +427,8 @@ TrafficHelper::InstallBufferedVideo (EpsBearer bearer, std::string name)
   tft->Add (filter);
 
   uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
-
   cApp->SetEpsBearer (bearer);
   cApp->SetEpsBearerId (bid);
-  m_ueManager->AddSvelteClientApp (cApp);
 }
 
 void
@@ -441,6 +439,7 @@ TrafficHelper::InstallHttp (EpsBearer bearer)
   uint16_t port = GetNextPortNo ();
   Ptr<SvelteClientApp> cApp = m_httpHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
+  m_ueManager->AddSvelteClientApp (cApp);
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
@@ -457,10 +456,8 @@ TrafficHelper::InstallHttp (EpsBearer bearer)
   tft->Add (filter);
 
   uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
-
   cApp->SetEpsBearer (bearer);
   cApp->SetEpsBearerId (bid);
-  m_ueManager->AddSvelteClientApp (cApp);
 }
 
 void
@@ -472,6 +469,7 @@ TrafficHelper::InstallLiveVideo (EpsBearer bearer, std::string name)
   m_liveVideoHelper.SetServerAttribute ("TraceFilename", StringValue (name));
   Ptr<SvelteClientApp> cApp = m_liveVideoHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
+  m_ueManager->AddSvelteClientApp (cApp);
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
@@ -488,10 +486,8 @@ TrafficHelper::InstallLiveVideo (EpsBearer bearer, std::string name)
   tft->Add (filter);
 
   uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
-
   cApp->SetEpsBearer (bearer);
   cApp->SetEpsBearerId (bid);
-  m_ueManager->AddSvelteClientApp (cApp);
 }
 
 void
@@ -502,6 +498,7 @@ TrafficHelper::InstallVoip (EpsBearer bearer)
   uint16_t port = GetNextPortNo ();
   Ptr<SvelteClientApp> cApp = m_voipHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
+  m_ueManager->AddSvelteClientApp (cApp);
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
@@ -518,10 +515,8 @@ TrafficHelper::InstallVoip (EpsBearer bearer)
   tft->Add (filter);
 
   uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
-
   cApp->SetEpsBearer (bearer);
   cApp->SetEpsBearerId (bid);
-  m_ueManager->AddSvelteClientApp (cApp);
 }
 
 } // namespace ns3
