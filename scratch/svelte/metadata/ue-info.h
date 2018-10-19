@@ -103,24 +103,20 @@ public:
   //\}
 
   /**
-   * Get the bearer for this bearer ID.
-   * \param bearerId The bearer ID.
-   * \return The const reference to the bearer.
+   * \name Private member accessors for bearer related information.
+   * \param bearerId The EPS bearer ID.
+   * \return The requested information.
    */
-  const BearerInfo& GetBearer (uint8_t bearerId) const;
+  //\{
+  const BearerInfo&     GetBearer       (uint8_t bearerId) const;
+  Ptr<RoutingInfo>      GetRoutingInfo  (uint8_t bearerId) const;
+  //\}
 
   /**
    * Get the list of bearers for this UE.
    * \return The const reference to the list of bearers.
    */
   const std::vector<BearerInfo>& GetBearerList (void) const;
-
-  /**
-   * Get the routing information for this bearer ID.
-   * \param bearerId The bearer ID.
-   * \return The const reference to the routing information.
-   */
-  Ptr<const RoutingInfo> GetRoutingInfo (uint8_t bearerId) const;
 
   /**
    * Get the map of routing information for this UE.

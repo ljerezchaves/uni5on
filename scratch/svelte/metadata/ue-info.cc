@@ -82,7 +82,6 @@ UeInfo::GetDefaultTeid (void) const
   NS_LOG_FUNCTION (this);
 
   Ptr<const RoutingInfo> rInfo = GetRoutingInfo (1);
-  NS_ASSERT_MSG (rInfo, "No default bearer added to this UE yet.");
   NS_ASSERT_MSG (rInfo->IsDefault (), "Inconsistent BID for default bearer.");
   return rInfo->GetTeid ();
 }
@@ -194,27 +193,23 @@ UeInfo::GetBearer (uint8_t bearerId) const
   return m_bearersList.at (bearerId - 1);
 }
 
+Ptr<RoutingInfo>
+UeInfo::GetRoutingInfo (uint8_t bearerId) const
+{
+  NS_LOG_FUNCTION (this);
+
+  auto ret = m_rInfoByBid.find (bearerId);
+  NS_ASSERT_MSG (ret != m_rInfoByBid.end (), "No routing info for this BID.");
+
+  return ret->second;
+}
+
 const std::vector<UeInfo::BearerInfo>&
 UeInfo::GetBearerList (void) const
 {
   NS_LOG_FUNCTION (this);
 
   return m_bearersList;
-}
-
-Ptr<const RoutingInfo>
-UeInfo::GetRoutingInfo (uint8_t bearerId) const
-{
-  NS_LOG_FUNCTION (this);
-
-  NS_ASSERT_MSG (bearerId >= 1 && bearerId <= GetNBearers (), "Invalid BID.");
-  Ptr<const RoutingInfo> rInfo = 0;
-  auto ret = m_rInfoByBid.find (bearerId);
-  if (ret != m_rInfoByBid.end ())
-    {
-      rInfo = ret->second;
-    }
-  return rInfo;
 }
 
 const BidRInfoMap_t&
@@ -339,7 +334,7 @@ UeInfo::AddRoutingInfo (Ptr<RoutingInfo> rInfo)
   // Save routing info.
   std::pair<uint8_t, Ptr<RoutingInfo> > entry (rInfo->GetBearerId (), rInfo);
   auto ret = m_rInfoByBid.insert (entry);
-  NS_ABORT_MSG_IF (ret.second == false, "Existing routing info for this bid.");
+  NS_ABORT_MSG_IF (ret.second == false, "Existing routing info for this BID.");
 
   // Add TFT to the classifier.
   m_tftClassifier.Add (rInfo->GetTft (), rInfo->GetTeid ());
