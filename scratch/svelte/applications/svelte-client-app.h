@@ -68,7 +68,6 @@ public:
   bool IsActive (void) const;
   Time GetMaxOnTime (void) const;
   bool IsForceStop (void) const;
-  Ptr<EpcTft> GetTft (void) const;
   EpsBearer GetEpsBearer (void) const;
   uint8_t GetEpsBearerId (void) const;
   uint32_t GetTeid (void) const;
@@ -77,7 +76,6 @@ public:
   Ptr<const AppStatsCalculator> GetAppStats (void) const;
   Ptr<const AppStatsCalculator> GetServerAppStats (void) const;
 
-  void SetTft (Ptr<EpcTft> value);
   void SetEpsBearer (EpsBearer value);
   void SetEpsBearerId (uint8_t value);
   void SetTeid (uint32_t value);
@@ -164,7 +162,6 @@ private:
   bool          m_forceStopFlag;  //!< Force stop flag.
 
   // LTE EPS metadata
-  Ptr<EpcTft>   m_tft;            //!< Traffic flow template for this app.
   EpsBearer     m_bearer;         //!< EPS bearer info.
   uint8_t       m_bearerId;       //!< EPS bearer ID.
   uint32_t      m_teid;           //!< GTP TEID associated with this app.

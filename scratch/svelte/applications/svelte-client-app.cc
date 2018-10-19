@@ -39,7 +39,6 @@ SvelteClientApp::SvelteClientApp ()
   m_active (false),
   m_forceStop (EventId ()),
   m_forceStopFlag (false),
-  m_tft (0),
   m_bearerId (1),   // This is the default BID.
   m_teid (0)
 {
@@ -138,14 +137,6 @@ SvelteClientApp::IsForceStop (void) const
   return m_forceStopFlag;
 }
 
-Ptr<EpcTft>
-SvelteClientApp::GetTft (void) const
-{
-  NS_LOG_FUNCTION (this);
-
-  return m_tft;
-}
-
 EpsBearer
 SvelteClientApp::GetEpsBearer (void) const
 {
@@ -200,14 +191,6 @@ SvelteClientApp::GetServerAppStats (void) const
 
   NS_ASSERT_MSG (m_serverApp, "Server application undefined.");
   return m_serverApp->GetAppStats ();
-}
-
-void
-SvelteClientApp::SetTft (Ptr<EpcTft> value)
-{
-  NS_LOG_FUNCTION (this << value);
-
-  m_tft = value;
 }
 
 void
@@ -277,7 +260,6 @@ SvelteClientApp::DoDispose (void)
   NS_LOG_FUNCTION (this);
 
   m_appStats = 0;
-  m_tft = 0;
   m_socket = 0;
   m_serverApp = 0;
   m_forceStop.Cancel ();

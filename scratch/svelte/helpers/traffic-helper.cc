@@ -397,7 +397,6 @@ TrafficHelper::InstallAutoPilot (EpsBearer bearer)
 
   uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 
-  cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
   cApp->SetEpsBearerId (bid);
   m_ueManager->AddSvelteClientApp (cApp);
@@ -429,7 +428,6 @@ TrafficHelper::InstallBufferedVideo (EpsBearer bearer, std::string name)
 
   uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 
-  cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
   cApp->SetEpsBearerId (bid);
   m_ueManager->AddSvelteClientApp (cApp);
@@ -460,7 +458,6 @@ TrafficHelper::InstallHttp (EpsBearer bearer)
 
   uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 
-  cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
   cApp->SetEpsBearerId (bid);
   m_ueManager->AddSvelteClientApp (cApp);
@@ -492,7 +489,6 @@ TrafficHelper::InstallLiveVideo (EpsBearer bearer, std::string name)
 
   uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 
-  cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
   cApp->SetEpsBearerId (bid);
   m_ueManager->AddSvelteClientApp (cApp);
@@ -523,7 +519,6 @@ TrafficHelper::InstallVoip (EpsBearer bearer)
 
   uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 
-  cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
   cApp->SetEpsBearerId (bid);
   m_ueManager->AddSvelteClientApp (cApp);
