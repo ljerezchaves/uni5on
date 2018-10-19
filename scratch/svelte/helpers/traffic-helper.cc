@@ -395,11 +395,12 @@ TrafficHelper::InstallAutoPilot (EpsBearer bearer)
   filter.localPortEnd = 65535;
   tft->Add (filter);
 
+  uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
+  cApp->SetEpsBearerId (bid);
   m_ueManager->AddSvelteClientApp (cApp);
-
-  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
 void
@@ -426,11 +427,12 @@ TrafficHelper::InstallBufferedVideo (EpsBearer bearer, std::string name)
   filter.localPortEnd = 65535;
   tft->Add (filter);
 
+  uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
+  cApp->SetEpsBearerId (bid);
   m_ueManager->AddSvelteClientApp (cApp);
-
-  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
 void
@@ -456,11 +458,12 @@ TrafficHelper::InstallHttp (EpsBearer bearer)
   filter.localPortEnd = 65535;
   tft->Add (filter);
 
+  uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
+  cApp->SetEpsBearerId (bid);
   m_ueManager->AddSvelteClientApp (cApp);
-
-  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
 void
@@ -487,11 +490,12 @@ TrafficHelper::InstallLiveVideo (EpsBearer bearer, std::string name)
   filter.localPortEnd = 65535;
   tft->Add (filter);
 
+  uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
+  cApp->SetEpsBearerId (bid);
   m_ueManager->AddSvelteClientApp (cApp);
-
-  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
 void
@@ -517,11 +521,12 @@ TrafficHelper::InstallVoip (EpsBearer bearer)
   filter.localPortEnd = 65535;
   tft->Add (filter);
 
+  uint8_t bid = m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
+
   cApp->SetTft (tft);
   cApp->SetEpsBearer (bearer);
+  cApp->SetEpsBearerId (bid);
   m_ueManager->AddSvelteClientApp (cApp);
-
-  m_lteHelper->ActivateDedicatedEpsBearer (m_ueDev, bearer, tft);
 }
 
 } // namespace ns3
