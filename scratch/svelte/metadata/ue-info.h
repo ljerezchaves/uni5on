@@ -110,6 +110,7 @@ public:
   //\{
   const BearerInfo&     GetBearer       (uint8_t bearerId) const;
   Ptr<RoutingInfo>      GetRoutingInfo  (uint8_t bearerId) const;
+  uint32_t              GetTeid         (uint8_t bearerId) const;
   //\}
 
   /**

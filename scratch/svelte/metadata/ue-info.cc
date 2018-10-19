@@ -204,6 +204,14 @@ UeInfo::GetRoutingInfo (uint8_t bearerId) const
   return ret->second;
 }
 
+uint32_t
+UeInfo::GetTeid (uint8_t bearerId) const
+{
+  NS_LOG_FUNCTION (this);
+
+  return GetRoutingInfo (bearerId)->GetTeid ();
+}
+
 const std::vector<UeInfo::BearerInfo>&
 UeInfo::GetBearerList (void) const
 {
