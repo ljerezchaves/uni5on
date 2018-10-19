@@ -60,6 +60,14 @@ RoutingInfo::RoutingInfo (uint32_t teid, BearerCreated_t bearer,
 
   NS_ASSERT_MSG (m_ueInfo, "Invalid UeInfo pointer.");
 
+  // Validate the default bearer.
+  if (IsDefault ())
+    {
+      NS_ABORT_MSG_IF (GetBearerId () != 1, "Invalid default BID.");
+      NS_ABORT_MSG_IF (GetQciInfo () != EpsBearer::NGBR_VIDEO_TCP_DEFAULT,
+                       "Invalid default QCI");
+    }
+
   // Register this routing information object.
   RegisterRoutingInfo (Ptr<RoutingInfo> (this));
 
