@@ -1127,7 +1127,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
       std::ostringstream cmd, act;
       cmd << "flow-mod cmd=add"
           << ",table="  << SGW_DL_TAB
-          << ",flags="  << FLAGS_OVERLAP_RESET
+          << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
           << ",cookie=" << rInfo->GetTeidHex ()
           << ",prio="   << rInfo->GetPriority ()
           << ",idle="   << rInfo->GetTimeout ();
@@ -1188,7 +1188,7 @@ SliceController::SgwRulesInstall (Ptr<RoutingInfo> rInfo)
       std::ostringstream cmd, act;
       cmd << "flow-mod cmd=add"
           << ",table="  << SGW_UL_TAB
-          << ",flags="  << FLAGS_OVERLAP_RESET
+          << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
           << ",cookie=" << rInfo->GetTeidHex ()
           << ",prio="   << rInfo->GetPriority ()
           << ",idle="   << rInfo->GetTimeout ();
