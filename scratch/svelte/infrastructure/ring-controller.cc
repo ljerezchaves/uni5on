@@ -303,7 +303,7 @@ RingController::TopologyRoutingInstall (Ptr<RoutingInfo> rInfo)
   // Getting ring routing information.
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
 
-  // Building the dpctl command + arguments string.
+  // Building the dpctl command.
   std::ostringstream cmd;
   cmd << "flow-mod cmd=add"
       << ",table="  << GetSliceTable (rInfo->GetSliceId ())
@@ -418,13 +418,13 @@ RingController::TopologyRoutingUpdate (Ptr<RoutingInfo> rInfo,
   Ptr<RingInfo> ringInfo = rInfo->GetObject<RingInfo> ();
 
   // We can't just modify the OpenFlow rules in the backhaul switches because
-  // we need to change the match fields. So, we are going to install new rules
-  // using the rInfo with higher priority and the dstEnbInfo, and then we can
-  // manually remove the old rules.
+  // we need to change the match fields. So, we will install new rules using
+  // the rInfo with higher priority and the dstEnbInfo, and then we will remove
+  // the old rules with lower priority.
   //
   // Install new high-priority OpenFlow rules.
   {
-    // Building the dpctl command + arguments string.
+    // Building the dpctl command.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=add"
         << ",table="  << GetSliceTable (rInfo->GetSliceId ())
@@ -501,7 +501,7 @@ RingController::TopologyRoutingUpdate (Ptr<RoutingInfo> rInfo,
 
   // Remove old low-priority OpenFlow rules.
   {
-    // Building the dpctl command + arguments string.
+    // Building the dpctl command.
     std::ostringstream cmd;
     cmd << "flow-mod cmd=dels"
         << ",table="  << GetSliceTable (rInfo->GetSliceId ())
