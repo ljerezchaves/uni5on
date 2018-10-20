@@ -1389,7 +1389,6 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
                     mat << ",ip_src="  << filter.remoteAddress
                         << ",tcp_src=" << filter.remotePortStart;
                   }
-                mat << " ";
                 DpctlExecute (rInfo->GetSgwDpId (), cmd.str () + mat.str ());
               }
 
@@ -1405,7 +1404,6 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
                     mat << ",ip_src="  << filter.remoteAddress
                         << ",udp_src=" << filter.remotePortStart;
                   }
-                mat << " ";
                 DpctlExecute (rInfo->GetSgwDpId (), cmd.str () + mat.str ());
               }
           }
