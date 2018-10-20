@@ -1287,72 +1287,129 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
 {
   NS_LOG_FUNCTION (this << rInfo->GetTeidHex ());
 
-  NS_LOG_INFO ("Updating S-GW S1-U rules for teid " << rInfo->GetTeidHex ());
   NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules must be installed.");
+  NS_LOG_INFO ("Updating S-GW S1-U rules for teid " << rInfo->GetTeidHex ());
 
-  // Manually adjusting the priority to the previous value.
-  uint16_t oldPriority = rInfo->GetPriority () - 1;
-
-  // Configure downlink.
+  // We will install new rules using the rInfo with higher priority and the
+  // dstEnbInfo, and then we will remove the old rules with lower priority.
+  //
+  // We only need to change the S1-U interface in the downlink direction.
   if (rInfo->HasDlTraffic ())
     {
-      // Build the dpctl command string.
-      std::ostringstream cmd, act;
-      cmd << "flow-mod cmd=mods"
-          << ",table="  << SGW_DL_TAB
-          << ",flags="  << OFPFF_CHECK_OVERLAP
-          << ",cookie=" << rInfo->GetTeidHex ()
-          << ",prio="   << oldPriority
-          << ",idle="   << rInfo->GetTimeout ();
+      // Install new high-priority OpenFlow rules.
+      {
+        // Build the dpctl command string.
+        std::ostringstream cmd, act;
+        cmd << "flow-mod cmd=add"
+            << ",table="  << SGW_DL_TAB
+            << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
+            << ",cookie=" << rInfo->GetTeidHex ()
+            << ",prio="   << rInfo->GetPriority ()
+            << ",idle="   << rInfo->GetTimeout ();
 
-      // Instruction: apply action: set tunnel ID, output port.
-      // Note we are using the destination eNB S1-U IP address here.
-      act << " apply:set_field=tunn_id:"
-          << GetTunnelIdStr (rInfo->GetTeid (), dstEnbInfo->GetS1uAddr ())
-          << ",output=" << rInfo->GetSgwS1uPortNo ();
+        // Instruction: apply action: set tunnel ID, output port.
+        act << " apply:set_field=tunn_id:"        // Target eNB
+            << GetTunnelIdStr (rInfo->GetTeid (), dstEnbInfo->GetS1uAddr ())
+            << ",output=" << rInfo->GetSgwS1uPortNo ();
 
-      // Modify each downlink dedicated bearer rule.
-      Ptr<EpcTft> tft = rInfo->GetTft ();
-      for (uint8_t i = 0; i < tft->GetNFilters (); i++)
-        {
-          EpcTft::PacketFilter filter = tft->GetFilter (i);
-          if (filter.direction == EpcTft::UPLINK)
-            {
-              continue;
-            }
+        // Install one downlink dedicated bearer rule for each packet filter.
+        Ptr<EpcTft> tft = rInfo->GetTft ();
+        for (uint8_t i = 0; i < tft->GetNFilters (); i++)
+          {
+            EpcTft::PacketFilter filter = tft->GetFilter (i);
+            if (filter.direction == EpcTft::UPLINK)
+              {
+                continue;
+              }
 
-          // Install rules for TCP traffic.
-          if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
-            {
-              std::ostringstream mat;
-              mat << " eth_type=" << IPV4_PROT_NUM
-                  << ",ip_proto=" << TCP_PROT_NUM
-                  << ",ip_dst="   << filter.localAddress;
-              if (tft->IsDefaultTft () == false)
-                {
-                  mat << ",ip_src="  << filter.remoteAddress
-                      << ",tcp_src=" << filter.remotePortStart;
-                }
-              DpctlExecute (rInfo->GetSgwDpId (),
-                            cmd.str () + mat.str () + act.str ());
-            }
+            // Install rules for TCP traffic.
+            if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
+              {
+                std::ostringstream mat;
+                mat << " eth_type=" << IPV4_PROT_NUM
+                    << ",ip_proto=" << TCP_PROT_NUM
+                    << ",ip_dst="   << filter.localAddress;
+                if (tft->IsDefaultTft () == false)
+                  {
+                    mat << ",ip_src="  << filter.remoteAddress
+                        << ",tcp_src=" << filter.remotePortStart;
+                  }
+                DpctlExecute (rInfo->GetSgwDpId (),
+                              cmd.str () + mat.str () + act.str ());
+              }
 
-          // Install rules for UDP traffic.
-          else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
-            {
-              std::ostringstream mat;
-              mat << " eth_type=" << IPV4_PROT_NUM
-                  << ",ip_proto=" << UDP_PROT_NUM
-                  << ",ip_dst="   << filter.localAddress;
-              if (tft->IsDefaultTft () == false)
-                {
-                  mat << ",ip_src="  << filter.remoteAddress
-                      << ",udp_src=" << filter.remotePortStart;
-                }
-              DpctlExecute (rInfo->GetSgwDpId (),
-                            cmd.str () + mat.str () + act.str ());
-            }
-        }
+            // Install rules for UDP traffic.
+            else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
+              {
+                std::ostringstream mat;
+                mat << " eth_type=" << IPV4_PROT_NUM
+                    << ",ip_proto=" << UDP_PROT_NUM
+                    << ",ip_dst="   << filter.localAddress;
+                if (tft->IsDefaultTft () == false)
+                  {
+                    mat << ",ip_src="  << filter.remoteAddress
+                        << ",udp_src=" << filter.remotePortStart;
+                  }
+                DpctlExecute (rInfo->GetSgwDpId (),
+                              cmd.str () + mat.str () + act.str ());
+              }
+          }
+      }
+
+      // Remove old low-priority OpenFlow rules.
+      {
+        // Build the dpctl command string.
+        std::ostringstream cmd;
+        cmd << "flow-mod cmd=dels"
+            << ",table="  << SGW_DL_TAB
+            << ",flags="  << FLAGS_REMOVED_OVERLAP_RESET
+            << ",cookie=" << rInfo->GetTeidHex ()
+            << ",prio="   << rInfo->GetPriority () - 1 // Old priority!
+            << ",idle="   << rInfo->GetTimeout ();
+
+        // Remove the downlink dedicated bearer rule for each packet filter.
+        Ptr<EpcTft> tft = rInfo->GetTft ();
+        for (uint8_t i = 0; i < tft->GetNFilters (); i++)
+          {
+            EpcTft::PacketFilter filter = tft->GetFilter (i);
+            if (filter.direction == EpcTft::UPLINK)
+              {
+                continue;
+              }
+
+            // Remove rules for TCP traffic.
+            if (filter.protocol == TcpL4Protocol::PROT_NUMBER)
+              {
+                std::ostringstream mat;
+                mat << " eth_type=" << IPV4_PROT_NUM
+                    << ",ip_proto=" << TCP_PROT_NUM
+                    << ",ip_dst="   << filter.localAddress;
+                if (tft->IsDefaultTft () == false)
+                  {
+                    mat << ",ip_src="  << filter.remoteAddress
+                        << ",tcp_src=" << filter.remotePortStart;
+                  }
+                mat << " ";
+                DpctlExecute (rInfo->GetSgwDpId (), cmd.str () + mat.str ());
+              }
+
+            // Remove rules for UDP traffic.
+            else if (filter.protocol == UdpL4Protocol::PROT_NUMBER)
+              {
+                std::ostringstream mat;
+                mat << " eth_type=" << IPV4_PROT_NUM
+                    << ",ip_proto=" << UDP_PROT_NUM
+                    << ",ip_dst="   << filter.localAddress;
+                if (tft->IsDefaultTft () == false)
+                  {
+                    mat << ",ip_src="  << filter.remoteAddress
+                        << ",udp_src=" << filter.remotePortStart;
+                  }
+                mat << " ";
+                DpctlExecute (rInfo->GetSgwDpId (), cmd.str () + mat.str ());
+              }
+          }
+      }
     }
   return true;
 }
