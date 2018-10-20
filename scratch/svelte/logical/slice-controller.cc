@@ -749,7 +749,8 @@ SliceController::DoModifyBearerRequest (
   Ptr<UeInfo> ueInfo = UeInfo::GetPointer (imsi);
 
   // The Modify Bearer Request procedure is triggered only by X2 handover, and
-  // this controller is the responsible for updating the eNB info in the UE.
+  // this controller is responsible for updating the UE's eNB info only after
+  // updating the OpenFlow rules.
   Ptr<EnbInfo> dstEnbInfo = EnbInfo::GetPointer (cellId);
 
   // Check for consistent the number of modified bearers.
@@ -781,6 +782,9 @@ SliceController::DoModifyBearerRequest (
       Ptr<RoutingInfo> rInfo = rit.second;
       if (rInfo->IsActive ())
         {
+          // Increasing the priority every time we update routing rules.
+          rInfo->IncreasePriority ();
+
           // Each slice has a single P-GW and S-GW, so handover only changes
           // the eNB. Thus, we need to modify the S-GW and backhaul S1-U rules.
           bool success = true;
@@ -790,7 +794,7 @@ SliceController::DoModifyBearerRequest (
         }
     }
 
-  // Finally, update the EnbInfo in the UeInfo (don't move this from here).
+  // Finally, update the UE's eNB info (only after updating OpenFlow rules).
   ueInfo->SetEnbInfo (dstEnbInfo);
 
   // Fire trace source notifying the modified session.
@@ -1286,6 +1290,9 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
   NS_LOG_INFO ("Updating S-GW S1-U rules for teid " << rInfo->GetTeidHex ());
   NS_ASSERT_MSG (rInfo->IsInstalled (), "Rules must be installed.");
 
+  // Manually adjusting the priority to the previous value.
+  uint16_t oldPriority = rInfo->GetPriority () - 1;
+
   // Configure downlink.
   if (rInfo->HasDlTraffic ())
     {
@@ -1295,7 +1302,7 @@ SliceController::SgwRulesUpdate (Ptr<RoutingInfo> rInfo,
           << ",table="  << SGW_DL_TAB
           << ",flags="  << OFPFF_CHECK_OVERLAP
           << ",cookie=" << rInfo->GetTeidHex ()
-          << ",prio="   << rInfo->GetPriority ()
+          << ",prio="   << oldPriority
           << ",idle="   << rInfo->GetTimeout ();
 
       // Instruction: apply action: set tunnel ID, output port.

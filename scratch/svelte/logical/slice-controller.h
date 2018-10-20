@@ -315,6 +315,8 @@ private:
   /**
    * Update packet forwarding rules on the S-GW OpenFlow switch after a
    * successful handover procedure.
+   * \attention To avoid conflicts with old entries, increase the routing
+   *            priority before updating S-GW rules.
    * \param rInfo The routing information to process.
    * \param dstEnbInfo The destination eNB after the handover procedure.
    * \return True if succeeded, false otherwise.
