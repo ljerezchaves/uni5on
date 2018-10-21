@@ -34,7 +34,7 @@ TypeId
 SvelteUdpClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SvelteUdpClient")
-    .SetParent<SvelteClientApp> ()
+    .SetParent<SvelteClient> ()
     .AddConstructor<SvelteUdpClient> ()
 
     // These attributes must be configured for the desired traffic pattern.
@@ -82,7 +82,7 @@ SvelteUdpClient::Start ()
   NS_LOG_INFO ("Set traffic length to " << sTime.GetSeconds () << "s.");
 
   // Chain up to reset statistics, notify server, and fire start trace source.
-  SvelteClientApp::Start ();
+  SvelteClient::Start ();
 
   // Start traffic.
   m_sendEvent.Cancel ();
@@ -98,7 +98,7 @@ SvelteUdpClient::DoDispose (void)
   m_lengthRng = 0;
   m_stopEvent.Cancel ();
   m_sendEvent.Cancel ();
-  SvelteClientApp::DoDispose ();
+  SvelteClient::DoDispose ();
 }
 
 void
@@ -111,7 +111,7 @@ SvelteUdpClient::ForceStop ()
   m_sendEvent.Cancel ();
 
   // Chain up to notify server.
-  SvelteClientApp::ForceStop ();
+  SvelteClient::ForceStop ();
 
   // Notify the stopped application one second later.
   Simulator::Schedule (Seconds (1), &SvelteUdpClient::NotifyStop, this, false);

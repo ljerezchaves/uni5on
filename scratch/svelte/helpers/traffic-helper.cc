@@ -443,9 +443,9 @@ TrafficHelper::InstallAutoPilot (EpsBearer bearer)
   NS_LOG_FUNCTION (this);
 
   uint16_t port = GetNextPortNo ();
-  Ptr<SvelteClientApp> cApp = m_autoPilotHelper.Install (
+  Ptr<SvelteClient> cApp = m_autoPilotHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  m_ueManager->AddSvelteClientApp (cApp);
+  m_ueManager->AddSvelteClient (cApp);
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
@@ -473,9 +473,9 @@ TrafficHelper::InstallBufferedVideo (EpsBearer bearer, std::string name)
 
   uint16_t port = GetNextPortNo ();
   m_buffVideoHelper.SetServerAttribute ("TraceFilename", StringValue (name));
-  Ptr<SvelteClientApp> cApp = m_buffVideoHelper.Install (
+  Ptr<SvelteClient> cApp = m_buffVideoHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  m_ueManager->AddSvelteClientApp (cApp);
+  m_ueManager->AddSvelteClient (cApp);
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
@@ -502,9 +502,9 @@ TrafficHelper::InstallHttp (EpsBearer bearer)
   NS_LOG_FUNCTION (this);
 
   uint16_t port = GetNextPortNo ();
-  Ptr<SvelteClientApp> cApp = m_httpHelper.Install (
+  Ptr<SvelteClient> cApp = m_httpHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  m_ueManager->AddSvelteClientApp (cApp);
+  m_ueManager->AddSvelteClient (cApp);
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
@@ -532,9 +532,9 @@ TrafficHelper::InstallLiveVideo (EpsBearer bearer, std::string name)
 
   uint16_t port = GetNextPortNo ();
   m_liveVideoHelper.SetServerAttribute ("TraceFilename", StringValue (name));
-  Ptr<SvelteClientApp> cApp = m_liveVideoHelper.Install (
+  Ptr<SvelteClient> cApp = m_liveVideoHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  m_ueManager->AddSvelteClientApp (cApp);
+  m_ueManager->AddSvelteClient (cApp);
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;
@@ -561,9 +561,9 @@ TrafficHelper::InstallVoip (EpsBearer bearer)
   NS_LOG_FUNCTION (this);
 
   uint16_t port = GetNextPortNo ();
-  Ptr<SvelteClientApp> cApp = m_voipHelper.Install (
+  Ptr<SvelteClient> cApp = m_voipHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
-  m_ueManager->AddSvelteClientApp (cApp);
+  m_ueManager->AddSvelteClient (cApp);
 
   Ptr<EpcTft> tft = CreateObject<EpcTft> ();
   EpcTft::PacketFilter filter;

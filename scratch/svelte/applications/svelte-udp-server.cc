@@ -34,7 +34,7 @@ TypeId
 SvelteUdpServer::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SvelteUdpServer")
-    .SetParent<SvelteServerApp> ()
+    .SetParent<SvelteServer> ()
     .AddConstructor<SvelteUdpServer> ()
 
     // These attributes must be configured for the desired traffic pattern.
@@ -70,7 +70,7 @@ SvelteUdpServer::DoDispose (void)
   NS_LOG_FUNCTION (this);
 
   m_sendEvent.Cancel ();
-  SvelteServerApp::DoDispose ();
+  SvelteServer::DoDispose ();
 }
 
 void
@@ -106,7 +106,7 @@ SvelteUdpServer::NotifyStart ()
   NS_LOG_FUNCTION (this);
 
   // Chain up to reset statistics.
-  SvelteServerApp::NotifyStart ();
+  SvelteServer::NotifyStart ();
 
   // Start traffic.
   m_sendEvent.Cancel ();
@@ -120,7 +120,7 @@ SvelteUdpServer::NotifyForceStop ()
   NS_LOG_FUNCTION (this);
 
   // Chain up just for log.
-  SvelteServerApp::NotifyForceStop ();
+  SvelteServer::NotifyForceStop ();
 
   // Stop traffic.
   m_sendEvent.Cancel ();

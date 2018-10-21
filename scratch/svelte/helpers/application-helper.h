@@ -24,8 +24,8 @@
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
-#include "../applications/svelte-client-app.h"
-#include "../applications/svelte-server-app.h"
+#include "../applications/svelte-client.h"
+#include "../applications/svelte-server.h"
 
 namespace ns3 {
 
@@ -70,7 +70,7 @@ public:
    * \param dscp The DSCP value used to set the socket type of service field.
    * \return The client application created.
    */
-  Ptr<SvelteClientApp> Install (
+  Ptr<SvelteClient> Install (
     Ptr<Node> clientNode, Ptr<Node> serverNode, Ipv4Address clientAddr,
     Ipv4Address serverAddr, uint16_t port,
     Ipv4Header::DscpType dscp = Ipv4Header::DscpDefault);

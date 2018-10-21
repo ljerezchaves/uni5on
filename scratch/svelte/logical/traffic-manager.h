@@ -30,7 +30,7 @@
 namespace ns3 {
 
 class SliceController;
-class SvelteClientApp;
+class SvelteClient;
 
 /**
  * \ingroup svelteLogical
@@ -54,7 +54,7 @@ public:
    * Add a new application to this manager.
    * \param app The application pointer.
    */
-  void AddSvelteClientApp (Ptr<SvelteClientApp> app);
+  void AddSvelteClient (Ptr<SvelteClient> app);
 
   /**
    * Notify this manager when a new session is created in the controller.
@@ -86,7 +86,7 @@ private:
    * application associated with each bearer/tunnel.
    * \param app The application pointer.
    */
-  void AppStartTry (Ptr<SvelteClientApp> app);
+  void AppStartTry (Ptr<SvelteClient> app);
 
   /**
    * Member function called by applications to notify this manager when traffic
@@ -94,7 +94,7 @@ private:
    * application restart attempt.
    * \param app The application pointer.
    */
-  void NotifyAppStop (Ptr<SvelteClientApp> app);
+  void NotifyAppStop (Ptr<SvelteClient> app);
 
   /**
    * Set the time for the next attempt to start the application.
@@ -104,13 +104,13 @@ private:
    * simulation.
    * \param app The application pointer.
    */
-  void SetNextAppStartTry (Ptr<SvelteClientApp> app);
+  void SetNextAppStartTry (Ptr<SvelteClient> app);
 
   /**
    * Get the absolute time for the next attemp to start the application.
    * \param app The application pointer.
    */
-  Time GetNextAppStartTry (Ptr<SvelteClientApp> app) const;
+  Time GetNextAppStartTry (Ptr<SvelteClient> app) const;
 
   Ptr<RandomVariableStream> m_poissonRng;       //!< Inter-arrival traffic.
   bool                      m_restartApps;      //!< Continuously restart apps.
@@ -121,7 +121,7 @@ private:
   uint32_t                  m_defaultTeid;      //!< Default UE tunnel TEID.
 
   /** Map saving application pointer / next start time. */
-  typedef std::map<Ptr<SvelteClientApp>, Time> AppTimeMap_t;
+  typedef std::map<Ptr<SvelteClient>, Time> AppTimeMap_t;
   AppTimeMap_t              m_timeByApp;        //!< Application map.
 };
 

@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "svelte-client-app.h"
-#include "svelte-server-app.h"
+#include "svelte-client.h"
+#include "svelte-server.h"
 #include "../svelte-common.h"
 
 #undef NS_LOG_APPEND_CONTEXT
@@ -29,10 +29,10 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("SvelteClientApp");
-NS_OBJECT_ENSURE_REGISTERED (SvelteClientApp);
+NS_LOG_COMPONENT_DEFINE ("SvelteClient");
+NS_OBJECT_ENSURE_REGISTERED (SvelteClient);
 
-SvelteClientApp::SvelteClientApp ()
+SvelteClient::SvelteClient ()
   : m_appStats (CreateObject<AppStatsCalculator> ()),
   m_socket (0),
   m_serverApp (0),
@@ -45,67 +45,57 @@ SvelteClientApp::SvelteClientApp ()
   NS_LOG_FUNCTION (this);
 }
 
-SvelteClientApp::~SvelteClientApp ()
+SvelteClient::~SvelteClient ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-SvelteClientApp::GetTypeId (void)
+SvelteClient::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::SvelteClientApp")
+  static TypeId tid = TypeId ("ns3::SvelteClient")
     .SetParent<Application> ()
-    .AddConstructor<SvelteClientApp> ()
-    .AddAttribute ("MaxOnTime",
-                   "A hard duration time threshold.",
+    .AddConstructor<SvelteClient> ()
+    .AddAttribute ("MaxOnTime", "A hard duration time threshold.",
                    TimeValue (Time ()),
-                   MakeTimeAccessor (&SvelteClientApp::m_maxOnTime),
+                   MakeTimeAccessor (&SvelteClient::m_maxOnTime),
                    MakeTimeChecker ())
-    .AddAttribute ("AppName",
-                   "The application name.",
+    .AddAttribute ("AppName", "The application name.",
                    StringValue ("NoName"),
-                   MakeStringAccessor (&SvelteClientApp::m_name),
+                   MakeStringAccessor (&SvelteClient::m_name),
                    MakeStringChecker ())
 
-    .AddAttribute ("ServerAddress",
-                   "The server socket address.",
+    .AddAttribute ("ServerAddress", "The server socket address.",
                    AddressValue (),
-                   MakeAddressAccessor (&SvelteClientApp::m_serverAddress),
+                   MakeAddressAccessor (&SvelteClient::m_serverAddress),
                    MakeAddressChecker ())
-    .AddAttribute ("LocalPort",
-                   "Local port.",
+    .AddAttribute ("LocalPort", "Local port.",
                    UintegerValue (10000),
-                   MakeUintegerAccessor (&SvelteClientApp::m_localPort),
+                   MakeUintegerAccessor (&SvelteClient::m_localPort),
                    MakeUintegerChecker<uint16_t> ())
 
-    .AddTraceSource ("AppStart",
-                     "SvelteClientApp start trace source.",
-                     MakeTraceSourceAccessor (
-                       &SvelteClientApp::m_appStartTrace),
-                     "ns3::SvelteClientApp::EpcAppTracedCallback")
-    .AddTraceSource ("AppStop",
-                     "SvelteClientApp stop trace source.",
-                     MakeTraceSourceAccessor (
-                       &SvelteClientApp::m_appStopTrace),
-                     "ns3::SvelteClientApp::EpcAppTracedCallback")
-    .AddTraceSource ("AppError",
-                     "SvelteClientApp error trace source.",
-                     MakeTraceSourceAccessor (
-                       &SvelteClientApp::m_appErrorTrace),
-                     "ns3::SvelteClientApp::EpcAppTracedCallback")
+    .AddTraceSource ("AppStart", "SvelteClient start trace source.",
+                     MakeTraceSourceAccessor (&SvelteClient::m_appStartTrace),
+                     "ns3::SvelteClient::EpcAppTracedCallback")
+    .AddTraceSource ("AppStop", "SvelteClient stop trace source.",
+                     MakeTraceSourceAccessor (&SvelteClient::m_appStopTrace),
+                     "ns3::SvelteClient::EpcAppTracedCallback")
+    .AddTraceSource ("AppError", "SvelteClient error trace source.",
+                     MakeTraceSourceAccessor (&SvelteClient::m_appErrorTrace),
+                     "ns3::SvelteClient::EpcAppTracedCallback")
   ;
   return tid;
 }
 
 std::string
-SvelteClientApp::GetAppName (void) const
+SvelteClient::GetAppName (void) const
 {
   // No log to avoid infinite recursion.
   return m_name;
 }
 
 std::string
-SvelteClientApp::GetNameTeid (void) const
+SvelteClient::GetNameTeid (void) const
 {
   // No log to avoid infinite recursion.
   std::ostringstream value;
@@ -114,7 +104,7 @@ SvelteClientApp::GetNameTeid (void) const
 }
 
 bool
-SvelteClientApp::IsActive (void) const
+SvelteClient::IsActive (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -122,7 +112,7 @@ SvelteClientApp::IsActive (void) const
 }
 
 Time
-SvelteClientApp::GetMaxOnTime (void) const
+SvelteClient::GetMaxOnTime (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -130,7 +120,7 @@ SvelteClientApp::GetMaxOnTime (void) const
 }
 
 bool
-SvelteClientApp::IsForceStop (void) const
+SvelteClient::IsForceStop (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -138,7 +128,7 @@ SvelteClientApp::IsForceStop (void) const
 }
 
 EpsBearer
-SvelteClientApp::GetEpsBearer (void) const
+SvelteClient::GetEpsBearer (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -146,7 +136,7 @@ SvelteClientApp::GetEpsBearer (void) const
 }
 
 uint8_t
-SvelteClientApp::GetEpsBearerId (void) const
+SvelteClient::GetEpsBearerId (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -154,7 +144,7 @@ SvelteClientApp::GetEpsBearerId (void) const
 }
 
 uint32_t
-SvelteClientApp::GetTeid (void) const
+SvelteClient::GetTeid (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -162,14 +152,14 @@ SvelteClientApp::GetTeid (void) const
 }
 
 std::string
-SvelteClientApp::GetTeidHex (void) const
+SvelteClient::GetTeidHex (void) const
 {
   // No log to avoid infinite recursion.
   return GetUint32Hex (m_teid);
 }
 
-Ptr<SvelteServerApp>
-SvelteClientApp::GetServerApp (void) const
+Ptr<SvelteServer>
+SvelteClient::GetServerApp (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -177,7 +167,7 @@ SvelteClientApp::GetServerApp (void) const
 }
 
 Ptr<const AppStatsCalculator>
-SvelteClientApp::GetAppStats (void) const
+SvelteClient::GetAppStats (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -185,7 +175,7 @@ SvelteClientApp::GetAppStats (void) const
 }
 
 Ptr<const AppStatsCalculator>
-SvelteClientApp::GetServerAppStats (void) const
+SvelteClient::GetServerAppStats (void) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -194,7 +184,7 @@ SvelteClientApp::GetServerAppStats (void) const
 }
 
 void
-SvelteClientApp::SetEpsBearer (EpsBearer value)
+SvelteClient::SetEpsBearer (EpsBearer value)
 {
   NS_LOG_FUNCTION (this);
 
@@ -202,7 +192,7 @@ SvelteClientApp::SetEpsBearer (EpsBearer value)
 }
 
 void
-SvelteClientApp::SetEpsBearerId (uint8_t value)
+SvelteClient::SetEpsBearerId (uint8_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -210,7 +200,7 @@ SvelteClientApp::SetEpsBearerId (uint8_t value)
 }
 
 void
-SvelteClientApp::SetTeid (uint32_t value)
+SvelteClient::SetTeid (uint32_t value)
 {
   NS_LOG_FUNCTION (this << value);
 
@@ -218,8 +208,7 @@ SvelteClientApp::SetTeid (uint32_t value)
 }
 
 void
-SvelteClientApp::SetServer (Ptr<SvelteServerApp> serverApp,
-                            Address serverAddress)
+SvelteClient::SetServer (Ptr<SvelteServer> serverApp, Address serverAddress)
 {
   NS_LOG_FUNCTION (this << serverApp << serverAddress);
 
@@ -228,7 +217,7 @@ SvelteClientApp::SetServer (Ptr<SvelteServerApp> serverApp,
 }
 
 void
-SvelteClientApp::Start ()
+SvelteClient::Start ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Starting client application.");
@@ -245,7 +234,7 @@ SvelteClientApp::Start ()
   if (!m_maxOnTime.IsZero ())
     {
       m_forceStop =
-        Simulator::Schedule (m_maxOnTime, &SvelteClientApp::ForceStop, this);
+        Simulator::Schedule (m_maxOnTime, &SvelteClient::ForceStop, this);
     }
 
   // Notify the server and fire start trace source.
@@ -255,7 +244,7 @@ SvelteClientApp::Start ()
 }
 
 void
-SvelteClientApp::DoDispose (void)
+SvelteClient::DoDispose (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -267,7 +256,7 @@ SvelteClientApp::DoDispose (void)
 }
 
 void
-SvelteClientApp::ForceStop ()
+SvelteClient::ForceStop ()
 {
   NS_LOG_FUNCTION (this);
   NS_LOG_INFO ("Forcing the client application to stop.");
@@ -283,7 +272,7 @@ SvelteClientApp::ForceStop ()
 }
 
 void
-SvelteClientApp::NotifyStop (bool withError)
+SvelteClient::NotifyStop (bool withError)
 {
   NS_LOG_FUNCTION (this << withError);
   NS_LOG_INFO ("Client application stopped.");
@@ -306,7 +295,7 @@ SvelteClientApp::NotifyStop (bool withError)
 }
 
 uint32_t
-SvelteClientApp::NotifyTx (uint32_t txBytes)
+SvelteClient::NotifyTx (uint32_t txBytes)
 {
   NS_LOG_FUNCTION (this << txBytes);
 
@@ -315,7 +304,7 @@ SvelteClientApp::NotifyTx (uint32_t txBytes)
 }
 
 void
-SvelteClientApp::NotifyRx (uint32_t rxBytes, Time timestamp)
+SvelteClient::NotifyRx (uint32_t rxBytes, Time timestamp)
 {
   NS_LOG_FUNCTION (this << rxBytes << timestamp);
 
@@ -323,7 +312,7 @@ SvelteClientApp::NotifyRx (uint32_t rxBytes, Time timestamp)
 }
 
 void
-SvelteClientApp::ResetAppStats ()
+SvelteClient::ResetAppStats ()
 {
   NS_LOG_FUNCTION (this);
 

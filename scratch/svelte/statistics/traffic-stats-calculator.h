@@ -32,7 +32,7 @@
 namespace ns3 {
 
 class RoutingInfo;
-class SvelteClientApp;
+class SvelteClient;
 
 /**
  * \ingroup svelte
@@ -168,7 +168,7 @@ private:
    * \param context Context information.
    * \param app The client application.
    */
-  void DumpStatistics (std::string context, Ptr<SvelteClientApp> app);
+  void DumpStatistics (std::string context, Ptr<SvelteClient> app);
 
   /**
    * Reset internal counters.
@@ -176,7 +176,7 @@ private:
    * \param context Context information.
    * \param app The client application.
    */
-  void ResetCounters (std::string context, Ptr<SvelteClientApp> app);
+  void ResetCounters (std::string context, Ptr<SvelteClient> app);
 
   /**
    * Trace sink fired when a packet is dropped while exceeding pipeline load

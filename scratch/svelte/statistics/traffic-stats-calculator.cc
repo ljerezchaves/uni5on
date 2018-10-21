@@ -21,7 +21,7 @@
 #include <iomanip>
 #include <iostream>
 #include "traffic-stats-calculator.h"
-#include "../applications/svelte-client-app.h"
+#include "../applications/svelte-client.h"
 #include "../metadata/ue-info.h"
 #include "../metadata/routing-info.h"
 
@@ -159,13 +159,13 @@ TrafficStatsCalculator::TrafficStatsCalculator ()
     "/NodeList/*/$ns3::OFSwitch13Device/PortList/*/PortQueue/Drop",
     MakeCallback (&TrafficStatsCalculator::QueueDropPacket, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::SvelteClientApp/AppStart",
+    "/NodeList/*/ApplicationList/*/$ns3::SvelteClient/AppStart",
     MakeCallback (&TrafficStatsCalculator::ResetCounters, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::SvelteClientApp/AppStop",
+    "/NodeList/*/ApplicationList/*/$ns3::SvelteClient/AppStop",
     MakeCallback (&TrafficStatsCalculator::DumpStatistics, this));
   Config::Connect (
-    "/NodeList/*/ApplicationList/*/$ns3::SvelteClientApp/AppError",
+    "/NodeList/*/ApplicationList/*/$ns3::SvelteClient/AppError",
     MakeCallback (&TrafficStatsCalculator::DumpStatistics, this));
 }
 
@@ -268,7 +268,7 @@ TrafficStatsCalculator::NotifyConstructionCompleted (void)
 
 void
 TrafficStatsCalculator::DumpStatistics (std::string context,
-                                        Ptr<SvelteClientApp> app)
+                                        Ptr<SvelteClient> app)
 {
   NS_LOG_FUNCTION (this << context << app->GetTeidHex ());
 
@@ -321,7 +321,7 @@ TrafficStatsCalculator::DumpStatistics (std::string context,
 
 void
 TrafficStatsCalculator::ResetCounters (std::string context,
-                                       Ptr<SvelteClientApp> app)
+                                       Ptr<SvelteClient> app)
 {
   NS_LOG_FUNCTION (this << context << app);
 

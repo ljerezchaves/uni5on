@@ -20,7 +20,7 @@
 #ifndef SVELTE_UDP_CLIENT_H
 #define SVELTE_UDP_CLIENT_H
 
-#include "svelte-client-app.h"
+#include "svelte-client.h"
 
 namespace ns3 {
 
@@ -29,7 +29,7 @@ namespace ns3 {
  * This is the client side of a generic UDP traffic generator, sending and
  * receiving UDP datagrams following the configure traffic pattern.
  */
-class SvelteUdpClient : public SvelteClientApp
+class SvelteUdpClient : public SvelteClient
 {
 public:
   /**
@@ -41,14 +41,14 @@ public:
   SvelteUdpClient ();             //!< Default constructor.
   virtual ~SvelteUdpClient ();    //!< Dummy destructor, see DoDispose.
 
-  // Inherited from SvelteClientApp.
+  // Inherited from SvelteClient.
   void Start ();
 
 protected:
   // Inherited from Object.
   virtual void DoDispose (void);
 
-  // Inherited from SvelteClientApp.
+  // Inherited from SvelteClient.
   void ForceStop ();
 
 private:

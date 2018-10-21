@@ -404,18 +404,16 @@ EnableVerbose (bool enable)
 
       // Applications.
       LogComponentEnable ("AppStatsCalculator",       logLevelWarnInfo);
-      LogComponentEnable ("AutoPilotClient",          logLevelWarnInfo);
-      LogComponentEnable ("AutoPilotServer",          logLevelWarnInfo);
       LogComponentEnable ("BufferedVideoClient",      logLevelWarnInfo);
       LogComponentEnable ("BufferedVideoServer",      logLevelWarnInfo);
       LogComponentEnable ("HttpClient",               logLevelWarnInfo);
       LogComponentEnable ("HttpServer",               logLevelWarnInfo);
       LogComponentEnable ("LiveVideoClient",          logLevelWarnInfo);
       LogComponentEnable ("LiveVideoServer",          logLevelWarnInfo);
-      LogComponentEnable ("SvelteClientApp",          logLevelWarnInfo);
-      LogComponentEnable ("SvelteServerApp",          logLevelWarnInfo);
-      LogComponentEnable ("VoipClient",               logLevelWarnInfo);
-      LogComponentEnable ("VoipServer",               logLevelWarnInfo);
+      LogComponentEnable ("SvelteClient",             logLevelWarnInfo);
+      LogComponentEnable ("SvelteServer",             logLevelWarnInfo);
+      LogComponentEnable ("SvelteUdpClient",          logLevelWarnInfo);
+      LogComponentEnable ("SvelteUdpServer",          logLevelWarnInfo);
 
       // Statistic components.
       LogComponentEnable ("AdmissionStatsCalculator", logLevelWarnInfo);

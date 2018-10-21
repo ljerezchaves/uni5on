@@ -20,7 +20,7 @@
 #ifndef SVELTE_UDP_SERVER_H
 #define SVELTE_UDP_SERVER_H
 
-#include "svelte-server-app.h"
+#include "svelte-server.h"
 
 namespace ns3 {
 
@@ -29,7 +29,7 @@ namespace ns3 {
  * This is the server side of a generic UDP traffic generator, sending and
  * receiving UDP datagrams following the configure traffic pattern.
  */
-class SvelteUdpServer : public SvelteServerApp
+class SvelteUdpServer : public SvelteServer
 {
 public:
   /**
@@ -50,7 +50,7 @@ private:
   virtual void StartApplication (void);
   virtual void StopApplication (void);
 
-  // Inherited from SvelteServerApp.
+  // Inherited from SvelteServer.
   void NotifyStart ();
   void NotifyForceStop ();
 
