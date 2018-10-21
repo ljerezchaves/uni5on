@@ -19,16 +19,14 @@
  */
 
 #include "traffic-helper.h"
-#include "../applications/auto-pilot-client.h"
-#include "../applications/auto-pilot-server.h"
 #include "../applications/buffered-video-client.h"
 #include "../applications/buffered-video-server.h"
 #include "../applications/http-client.h"
 #include "../applications/http-server.h"
 #include "../applications/live-video-client.h"
 #include "../applications/live-video-server.h"
-#include "../applications/voip-client.h"
-#include "../applications/voip-server.h"
+#include "../applications/svelte-udp-client.h"
+#include "../applications/svelte-udp-server.h"
 #include "../applications/app-stats-calculator.h"
 #include "../infrastructure/radio-network.h"
 #include "../logical/slice-controller.h"
@@ -192,7 +190,7 @@ TrafficHelper::NotifyConstructionCompleted ()
 {
   NS_LOG_FUNCTION (this);
 
-  NS_ABORT_MSG_IF (!m_radio, "No LTE RAN network.");
+  NS_ABORT_MSG_IF (!m_radio, "No radio network.");
   NS_ABORT_MSG_IF (!m_slice, "No slice network.");
 
   // Saving pointers.
@@ -217,17 +215,84 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_videoRng->SetAttribute ("Min", DoubleValue (0));
   m_videoRng->SetAttribute ("Max", DoubleValue (14));
 
-  // Configuring application helpers.
-  m_autoPilotHelper = ApplicationHelper (
-      AutoPilotClient::GetTypeId (), AutoPilotServer::GetTypeId ());
+  // Configuring HTC application helpers.
+  //
+  // BufferedVideo, HTTP, and LiveVideo applications have their own custom
+  // implementation with internal attributes already configured. We just
+  // instantiate their helpers here.
   m_buffVideoHelper = ApplicationHelper (
-      BufferedVideoClient::GetTypeId (), BufferedVideoServer::GetTypeId ());
+      BufferedVideoClient::GetTypeId (),
+      BufferedVideoServer::GetTypeId ());
   m_httpHelper = ApplicationHelper (
-      HttpClient::GetTypeId (), HttpServer::GetTypeId ());
+      HttpClient::GetTypeId (),
+      HttpServer::GetTypeId ());
   m_liveVideoHelper = ApplicationHelper (
-      LiveVideoClient::GetTypeId (), LiveVideoServer::GetTypeId ());
+      LiveVideoClient::GetTypeId (),
+      LiveVideoServer::GetTypeId ());
+
+  // The VoIP application simulating the G.729 codec (~8.0 kbps for payload).
+  //
   m_voipHelper = ApplicationHelper (
-      VoipClient::GetTypeId (), VoipServer::GetTypeId ());
+      SvelteUdpClient::GetTypeId (),
+      SvelteUdpServer::GetTypeId ());
+  m_voipHelper.SetClientAttribute ("AppName", StringValue ("Voip"));
+
+  // For traffic length, we are considering an estimative from Vodafone that
+  // the average call length is 1 min and 40 sec. We are including a normal
+  // standard deviation of 10 sec. See http://tinyurl.com/pzmyys2 and
+  // http://www.theregister.co.uk/2013/01/30/mobile_phone_calls_shorter for
+  // more information on this topic.
+  m_voipHelper.SetClientAttribute (
+    "TrafficLength",
+    StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=100.0]"));
+
+  // Model chosen: 20B packets sent in both directions every 0.02 seconds.
+  m_voipHelper.SetClientAttribute (
+    "PktSize",
+    StringValue ("ns3::ConstantRandomVariable[Constant=20]"));
+  m_voipHelper.SetClientAttribute (
+    "PktInterval",
+    StringValue ("ns3::ConstantRandomVariable[Constant=0.02]"));
+  m_voipHelper.SetServerAttribute (
+    "PktSize",
+    StringValue ("ns3::ConstantRandomVariable[Constant=20]"));
+  m_voipHelper.SetServerAttribute (
+    "PktInterval",
+    StringValue ("ns3::ConstantRandomVariable[Constant=0.02]"));
+
+  // Configuring MTC application helpers.
+  //
+  // The auto-pilot includes both vehicle collision detection and avoidance on
+  // highways. Clients sending data on position, in time intervals depending on
+  // vehicle speed, while server performs calculations, collision detection
+  // etc., and sends back control information.
+  m_autoPilotHelper = ApplicationHelper (
+      SvelteUdpClient::GetTypeId (),
+      SvelteUdpServer::GetTypeId ());
+  m_autoPilotHelper.SetClientAttribute ("AppName", StringValue ("Pilot"));
+
+  // For traffic length, we are using a synthetic average length of 90 seconds
+  // with 10 sec stdev. This will force the application to periodically stop
+  // and report statistics.
+  m_autoPilotHelper.SetClientAttribute (
+    "TrafficLength",
+    StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=100.0]"));
+
+  // Model chosen: 1kB packets sent towards the server with uniformly
+  // distributed inter-arrival time ranging from 0.025 to 0.1s, server responds
+  // every second with 1kB message.
+  m_autoPilotHelper.SetClientAttribute (
+    "PktSize",
+    StringValue ("ns3::ConstantRandomVariable[Constant=1024]"));
+  m_autoPilotHelper.SetClientAttribute (
+    "PktInterval",
+    StringValue ("ns3::UniformRandomVariable[Min=0.025|Max=0.1]"));
+  m_autoPilotHelper.SetServerAttribute (
+    "PktSize",
+    StringValue ("ns3::ConstantRandomVariable[Constant=1024]"));
+  m_autoPilotHelper.SetServerAttribute (
+    "PktInterval",
+    StringValue ("ns3::UniformRandomVariable[Min=0.999|Max=1.001]"));
 
   // Install the applications.
   InstallApplications ();
