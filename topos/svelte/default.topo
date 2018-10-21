@@ -1,12 +1,10 @@
 global DumpStatsTimeout "1s"
 
-default ns3::AutoPilotClient::TrafficLength "ns3::NormalRandomVariable[Mean=90.0|Variance=100.0]"
 default ns3::BufferedVideoServer::TrafficLength "ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"
 default ns3::HttpClient::MaxPages "3"
 default ns3::HttpClient::MaxReadingTime "10"
 default ns3::LiveVideoClient::TrafficLength "ns3::NormalRandomVariable[Mean=90.0|Variance=225.0]"
 default ns3::LiveVideoServer::MaxPayloadSize "1400"
-default ns3::VoipClient::TrafficLength "ns3::NormalRandomVariable[Mean=100.0|Variance=100.0]"
 default ns3::SvelteUdpClient::PktInterval "ns3::ConstantRandomVariable[Constant=1]"
 default ns3::SvelteUdpClient::PktSize "ns3::ConstantRandomVariable[Constant=100]"
 default ns3::SvelteUdpClient::TrafficLength "ns3::ConstantRandomVariable[Constant=30.0]"
