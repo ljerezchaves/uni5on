@@ -237,12 +237,13 @@ void ConfigureDefaults ()
     "ns3::LteEnbRrc::DefaultTransmissionMode", UintegerValue (1));
 
   //
-  // Using the Channel and QoS Aware (CQA) Scheduler as the LTE MAC downlink
-  // scheduling algorithm, which considers the head of line delay, the GBR
-  // parameters and channel quality over different subbands.
+  // Using the Proportional Fair (PF) Scheduler as the LTE MAC downlink
+  // scheduling algorithm, which works by scheduling a user when its
+  // instantaneous channel quality is high relative to its own average channel
+  // condition over time.
   //
   Config::SetDefault (
-    "ns3::LteHelper::Scheduler", StringValue ("ns3::CqaFfMacScheduler"));
+    "ns3::LteHelper::Scheduler", StringValue ("ns3::PfFfMacScheduler"));
 
   //
   // Disabling error models for both control and data planes.
