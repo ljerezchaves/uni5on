@@ -67,10 +67,10 @@ private:
    */
   void SendPacket ();
 
-  Ptr<RandomVariableStream>   m_intervalRng;  //!< Pkt inter-arrival time.
+  Ptr<RandomVariableStream>   m_lengthRng;    //!< Traffic length.
+  Ptr<RandomVariableStream>   m_pktInterRng;  //!< Pkt inter-arrival time.
   Ptr<RandomVariableStream>   m_pktSizeRng;   //!< Pkt size.
   EventId                     m_sendEvent;    //!< SendPacket event.
-  Ptr<RandomVariableStream>   m_lengthRng;    //!< Traffic length.
   EventId                     m_stopEvent;    //!< Stop event.
 };
 

@@ -38,16 +38,16 @@ SvelteUdpServer::GetTypeId (void)
     .AddConstructor<SvelteUdpServer> ()
 
     // These attributes must be configured for the desired traffic pattern.
-    .AddAttribute ("PktSize",
-                   "A random variable used to pick the packet size [bytes].",
-                   StringValue ("ns3::ConstantRandomVariable[Constant=100]"),
-                   MakePointerAccessor (&SvelteUdpServer::m_pktSizeRng),
-                   MakePointerChecker <RandomVariableStream> ())
     .AddAttribute ("PktInterval",
                    "A random variable used to pick the packet "
                    "inter-arrival time [s].",
                    StringValue ("ns3::ConstantRandomVariable[Constant=1]"),
-                   MakePointerAccessor (&SvelteUdpServer::m_intervalRng),
+                   MakePointerAccessor (&SvelteUdpServer::m_pktInterRng),
+                   MakePointerChecker <RandomVariableStream> ())
+    .AddAttribute ("PktSize",
+                   "A random variable used to pick the packet size [bytes].",
+                   StringValue ("ns3::ConstantRandomVariable[Constant=100]"),
+                   MakePointerAccessor (&SvelteUdpServer::m_pktSizeRng),
                    MakePointerChecker <RandomVariableStream> ())
   ;
   return tid;
@@ -110,7 +110,7 @@ SvelteUdpServer::NotifyStart ()
 
   // Start traffic.
   m_sendEvent.Cancel ();
-  m_sendEvent = Simulator::Schedule (Seconds (m_intervalRng->GetValue ()),
+  m_sendEvent = Simulator::Schedule (Seconds (m_pktInterRng->GetValue ()),
                                      &SvelteUdpServer::SendPacket, this);
 }
 
@@ -149,7 +149,7 @@ SvelteUdpServer::SendPacket ()
     }
 
   // Schedule next packet transmission.
-  m_sendEvent = Simulator::Schedule (Seconds (m_intervalRng->GetValue ()),
+  m_sendEvent = Simulator::Schedule (Seconds (m_pktInterRng->GetValue ()),
                                      &SvelteUdpServer::SendPacket, this);
 }
 
