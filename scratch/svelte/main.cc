@@ -258,8 +258,6 @@ void ConfigureDefaults ()
   // with a single site in even rows.
   //
   Config::SetDefault (
-    "ns3::RadioNetwork::EnbMargin", DoubleValue (0.5));
-  Config::SetDefault (
     "ns3::LteHexGridEnbTopologyHelper::InterSiteDistance", DoubleValue (500));
   Config::SetDefault (
     "ns3::LteHexGridEnbTopologyHelper::SectorOffset", DoubleValue (0));
