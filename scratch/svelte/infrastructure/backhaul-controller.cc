@@ -376,8 +376,8 @@ BackhaulController::HandleFlowRemoved (
   // 1) The application is stopped and the bearer must be inactive.
   if (!rInfo->IsActive ())
     {
-      NS_LOG_INFO ("Rule removed for inactive bearer teid " <<
-                   rInfo->GetTeidHex ());
+      NS_LOG_INFO ("Rule removed from switch dp " << swtch->GetDpId () <<
+                   " for inactive bearer teid " << rInfo->GetTeidHex ());
       return 0;
     }
 
@@ -386,8 +386,9 @@ BackhaulController::HandleFlowRemoved (
   // case, the bearer priority should have been increased to avoid conflicts.
   if (rInfo->GetPriority () > prio)
     {
-      NS_LOG_INFO ("Old rule removed for bearer teid " <<
-                   rInfo->GetTeidHex ());
+      NS_LOG_INFO ("Rule removed from switch dp " << swtch->GetDpId () <<
+                   " for bearer teid " << rInfo->GetTeidHex () <<
+                   " with old priority " << prio);
       return 0;
     }
 
@@ -395,7 +396,7 @@ BackhaulController::HandleFlowRemoved (
   // critical situation. For some reason, the traffic absence lead to flow
   // expiration, and we are going to abort the program to avoid wrong results.
   NS_ASSERT_MSG (rInfo->GetPriority () == prio, "Invalid flow priority.");
-  NS_ABORT_MSG ("Should not get here :/");
+  NS_ABORT_MSG ("Rule removed for active bearer.");
 }
 
 ofl_err
