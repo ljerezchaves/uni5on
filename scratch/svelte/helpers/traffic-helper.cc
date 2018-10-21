@@ -218,15 +218,15 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_videoRng->SetAttribute ("Max", DoubleValue (14));
 
   // Configuring application helpers.
-  m_autoPilotHelper = SvelteAppHelper (
+  m_autoPilotHelper = ApplicationHelper (
       AutoPilotClient::GetTypeId (), AutoPilotServer::GetTypeId ());
-  m_buffVideoHelper = SvelteAppHelper (
+  m_buffVideoHelper = ApplicationHelper (
       BufferedVideoClient::GetTypeId (), BufferedVideoServer::GetTypeId ());
-  m_httpHelper = SvelteAppHelper (
+  m_httpHelper = ApplicationHelper (
       HttpClient::GetTypeId (), HttpServer::GetTypeId ());
-  m_liveVideoHelper = SvelteAppHelper (
+  m_liveVideoHelper = ApplicationHelper (
       LiveVideoClient::GetTypeId (), LiveVideoServer::GetTypeId ());
-  m_voipHelper = SvelteAppHelper (
+  m_voipHelper = ApplicationHelper (
       VoipClient::GetTypeId (), VoipServer::GetTypeId ());
 
   // Install the applications.

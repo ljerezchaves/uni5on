@@ -23,36 +23,36 @@
 
 namespace ns3 {
 
-SvelteAppHelper::SvelteAppHelper ()
+ApplicationHelper::ApplicationHelper ()
 {
   m_clientFactory.SetTypeId (SvelteClientApp::GetTypeId ());
   m_serverFactory.SetTypeId (SvelteServerApp::GetTypeId ());
 }
 
-SvelteAppHelper::SvelteAppHelper (TypeId clientType, TypeId serverType)
+ApplicationHelper::ApplicationHelper (TypeId clientType, TypeId serverType)
 {
   m_clientFactory.SetTypeId (clientType);
   m_serverFactory.SetTypeId (serverType);
 }
 
 void
-SvelteAppHelper::SetClientAttribute (std::string name,
-                                     const AttributeValue &value)
+ApplicationHelper::SetClientAttribute (std::string name,
+                                       const AttributeValue &value)
 {
   m_clientFactory.Set (name, value);
 }
 
 void
-SvelteAppHelper::SetServerAttribute (std::string name,
-                                     const AttributeValue &value)
+ApplicationHelper::SetServerAttribute (std::string name,
+                                       const AttributeValue &value)
 {
   m_serverFactory.Set (name, value);
 }
 
 Ptr<SvelteClientApp>
-SvelteAppHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
-                          Ipv4Address clientAddr, Ipv4Address serverAddr,
-                          uint16_t port, Ipv4Header::DscpType dscp)
+ApplicationHelper::Install (Ptr<Node> clientNode, Ptr<Node> serverNode,
+                            Ipv4Address clientAddr, Ipv4Address serverAddr,
+                            uint16_t port, Ipv4Header::DscpType dscp)
 {
   Ptr<SvelteClientApp> clientApp;
   clientApp = m_clientFactory.Create ()->GetObject<SvelteClientApp> ();

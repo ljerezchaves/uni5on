@@ -18,8 +18,8 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#ifndef SVELTE_APP_HELPER_H
-#define SVELTE_APP_HELPER_H
+#ifndef APPLICATION_HELPER_H
+#define APPLICATION_HELPER_H
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -34,17 +34,17 @@ namespace ns3 {
  * This helper will make life easier for people trying to set up client/server
  * applications on the SVELTE architecture.
  */
-class SvelteAppHelper
+class ApplicationHelper
 {
 public:
-  SvelteAppHelper ();     //!< Default constructor.
+  ApplicationHelper ();     //!< Default constructor.
 
   /**
    * Complete constructor.
    * \param clientType The TypeId of client application class.
    * \param serverType The TypeId of server application class.
    */
-  SvelteAppHelper (TypeId clientType, TypeId serverType);
+  ApplicationHelper (TypeId clientType, TypeId serverType);
 
   /**
    * Record an attribute to be set in each client application.
@@ -81,4 +81,4 @@ private:
 };
 
 } // namespace ns3
-#endif /* SVELTE_APP_HELPER_H */
+#endif /* APPLICATION_HELPER_H */

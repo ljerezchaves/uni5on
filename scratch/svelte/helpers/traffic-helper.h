@@ -170,11 +170,11 @@ private:
   bool                m_nonGbrBuffVideo;    //!< Non-GBR buffered video enable.
   bool                m_nonGbrHttp;         //!< Non-GBR HTTP enable.
   bool                m_nonGbrLiveVideo;    //!< Non-GBR live video enable.
-  SvelteAppHelper     m_autoPilotHelper;    //!< Auto-pilot app helper.
-  SvelteAppHelper     m_buffVideoHelper;    //!< Buffered video app helper.
-  SvelteAppHelper     m_httpHelper;         //!< HTTP app helper.
-  SvelteAppHelper     m_liveVideoHelper;    //!< Live video app helper.
-  SvelteAppHelper     m_voipHelper;         //!< Voip app helper.
+  ApplicationHelper   m_autoPilotHelper;    //!< Auto-pilot app helper.
+  ApplicationHelper   m_buffVideoHelper;    //!< Buffered video app helper.
+  ApplicationHelper   m_httpHelper;         //!< HTTP app helper.
+  ApplicationHelper   m_liveVideoHelper;    //!< Live video app helper.
+  ApplicationHelper   m_voipHelper;         //!< Voip app helper.
 
   // Temporary variables used only when installing applications.
   Ptr<LteHelper>            m_lteHelper;    //!< LTE helper.
