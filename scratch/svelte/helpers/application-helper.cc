@@ -18,7 +18,7 @@
  * Author: Luciano Chaves <luciano@lrc.ic.unicamp.br>
  */
 
-#include "svelte-app-helper.h"
+#include "application-helper.h"
 #include "../svelte-common.h"
 
 namespace ns3 {

@@ -24,8 +24,8 @@
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 #include <ns3/internet-module.h>
-#include "svelte-client-app.h"
-#include "svelte-server-app.h"
+#include "../applications/svelte-client-app.h"
+#include "../applications/svelte-server-app.h"
 
 namespace ns3 {
 
