@@ -679,10 +679,10 @@ SliceController::DoCreateSessionRequest (
       // Creating bearer routing metadata.
       Ptr<RoutingInfo> rInfo = CreateObject<RoutingInfo> (
           teid, bearerContext, ueInfo, bit.tft->IsDefaultTft ());
-      NS_LOG_DEBUG ("Saving bearer info for UE IMSI " << imsi << ", slice " <<
-                    SliceIdStr (m_sliceId) << ", internal bearer id " <<
-                    static_cast<uint16_t> (bit.epsBearerId) << ", teid " <<
-                    rInfo->GetTeidHex ());
+      NS_LOG_DEBUG ("Saving bearer info for ue imsi " << imsi <<
+                    " slice " << SliceIdStr (m_sliceId) <<
+                    " bid " << static_cast<uint16_t> (bit.epsBearerId) <<
+                    " teid " << rInfo->GetTeidHex ());
 
       rInfo->SetPgwTftIdx (GetTftIdx (rInfo));
       m_backhaulCtrl->NotifyBearerCreated (rInfo);
