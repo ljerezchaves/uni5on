@@ -781,7 +781,7 @@ SliceController::DoModifyBearerRequest (
   for (auto const &rit : ueInfo->GetRoutingInfoMap ())
     {
       Ptr<RoutingInfo> rInfo = rit.second;
-      if (rInfo->IsActive ())
+      if (rInfo->IsInstalled ())
         {
           // Increasing the priority every time we update routing rules.
           rInfo->IncreasePriority ();
