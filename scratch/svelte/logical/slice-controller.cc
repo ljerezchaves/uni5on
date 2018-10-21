@@ -73,7 +73,7 @@ SliceController::GetTypeId (void)
     .AddAttribute ("Quota",
                    "Infrastructure quota for this slice.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
-                   UintegerValue (100),
+                   UintegerValue (0),
                    MakeUintegerAccessor (&SliceController::m_sliceQuota),
                    MakeUintegerChecker<uint16_t> (0, 100))
 
