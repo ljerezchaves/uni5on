@@ -122,6 +122,11 @@ SliceController::GetTypeId (void)
                    DoubleValue (0.80),
                    MakeDoubleAccessor (&SliceController::m_tftSplitThs),
                    MakeDoubleChecker<double> (0.5, 1.0))
+    .AddAttribute ("PgwTftTimeout",
+                   "The interval between P-GW TFT adaptive operations.",
+                   TimeValue (Seconds (5)),
+                   MakeTimeAccessor (&SliceController::m_tftTimeout),
+                   MakeTimeChecker ())
 
     // S-GW.
     .AddAttribute ("SgwBlockPolicy",
@@ -136,12 +141,6 @@ SliceController::GetTypeId (void)
                    DoubleValue (0.9),
                    MakeDoubleAccessor (&SliceController::m_sgwBlockThs),
                    MakeDoubleChecker<double> (0.8, 1.0))
-
-    .AddAttribute ("TimeoutInterval",
-                   "The interval between internal periodic operations.",
-                   TimeValue (Seconds (5)),
-                   MakeTimeAccessor (&SliceController::m_timeout),
-                   MakeTimeChecker ())
 
     .AddTraceSource ("BearerRequest", "The bearer request trace source.",
                      MakeTraceSourceAccessor (
@@ -492,8 +491,9 @@ SliceController::NotifyConstructionCompleted (void)
   m_s11SapSgw = new MemberEpcS11SapSgw<SliceController> (this);
   m_s11SapMme = m_mme->GetS11SapMme ();
 
-  // Schedule the first timeout operation.
-  Simulator::Schedule (m_timeout, &SliceController::ControllerTimeout, this);
+  // Schedule the first adaptive operation.
+  Simulator::Schedule (
+    m_tftTimeout, &SliceController::PgwAdaptiveMechanism, this);
 
   OFSwitch13Controller::NotifyConstructionCompleted ();
 }
@@ -626,17 +626,6 @@ SliceController::BearerRemove (Ptr<RoutingInfo> rInfo)
   success &= m_backhaulCtrl->TopologyRoutingRemove (rInfo);
   rInfo->SetInstalled (!success);
   return success;
-}
-
-void
-SliceController::ControllerTimeout (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  PgwAdaptiveMechanism ();
-
-  // Schedule the next timeout operation.
-  Simulator::Schedule (m_timeout, &SliceController::ControllerTimeout, this);
 }
 
 void
@@ -895,6 +884,10 @@ SliceController::PgwAdaptiveMechanism (void)
 
   // Update the adaptive mechanism level.
   m_pgwInfo->SetTftLevel (nextLevel);
+
+  // Schedule the next adaptive operation.
+  Simulator::Schedule (
+    m_tftTimeout, &SliceController::PgwAdaptiveMechanism, this);
 }
 
 bool

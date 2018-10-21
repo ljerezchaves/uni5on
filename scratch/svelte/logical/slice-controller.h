@@ -220,11 +220,6 @@ private:
   bool BearerRemove (Ptr<RoutingInfo> rInfo);
 
   /**
-   * Periodic controller timeout operations.
-   */
-  void ControllerTimeout (void);
-
-  /**
    * \name Methods for the S11 SAP S-GW control plane.
    * \param msg The message sent here by the MME entity.
    * \internal Note the trick to avoid the need for allocating TEID on the S11
@@ -365,14 +360,12 @@ private:
   OpMode                  m_tftAdaptive;    //!< P-GW TFT adaptive mechanism.
   double                  m_tftJoinThs;     //!< P-GW TFT join threshold.
   double                  m_tftSplitThs;    //!< P-GW TFT split threshold.
+  Time                    m_tftTimeout;     //!< P-GW adaptive timeout.
 
   // S-GW metadata.
   Ptr<SgwInfo>            m_sgwInfo;        //!< S-GW metadata for this slice.
   OpMode                  m_sgwBlockPolicy; //!< S-GW overload block policy.
   double                  m_sgwBlockThs;    //!< S-GW block threshold.
-
-  // Internal members and attributes.
-  Time                    m_timeout;        //!< Controller internal timeout.
 };
 
 } // namespace ns3
