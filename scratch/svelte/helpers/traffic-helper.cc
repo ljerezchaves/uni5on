@@ -484,17 +484,6 @@ TrafficHelper::InstallApplications ()
         MakeCallback (&TrafficManager::NotifySessionCreated, m_ueManager));
 
       // Install enabled applications into UEs.
-      if (m_gbrVoipCall)
-        {
-          // UDP bidirectional VoIP traffic over dedicated GBR EPS bearer.
-          // This QCI 1 is typically associated with conversational voice.
-          GbrQosInformation qos;
-          qos.gbrDl = 47200;  // ~46.09 Kbps
-          qos.gbrUl = 47200;  // ~46.09 Kbps
-          EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
-          InstallVoip (bearer);
-        }
-
       if (m_gbrAutPilot)
         {
           // UDP uplink auto-pilot traffic over dedicated GBR EPS bearer.
@@ -520,6 +509,17 @@ TrafficHelper::InstallApplications ()
           InstallLiveVideo (bearer, GetVideoFilename (videoIdx));
         }
 
+      if (m_gbrVoipCall)
+        {
+          // UDP bidirectional VoIP traffic over dedicated GBR EPS bearer.
+          // This QCI 1 is typically associated with conversational voice.
+          GbrQosInformation qos;
+          qos.gbrDl = 47200;  // ~46.09 Kbps
+          qos.gbrUl = 47200;  // ~46.09 Kbps
+          EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
+          InstallVoip (bearer);
+        }
+
       if (m_nonAutPilot)
         {
           // UDP uplink auto-pilot traffic over dedicated Non-GBR EPS bearer.
@@ -540,16 +540,6 @@ TrafficHelper::InstallApplications ()
           InstallBufferedVideo (bearer, GetVideoFilename (videoIdx));
         }
 
-      if (m_nonLivVideo)
-        {
-          // UDP downlink live video streaming over dedicated Non-GBR EPS
-          // bearer. This QCI 7 is typically associated with voice, live video
-          // streaming and interactive games.
-          int videoIdx = m_videoRng->GetInteger ();
-          EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING);
-          InstallLiveVideo (bearer, GetVideoFilename (videoIdx));
-        }
-
       if (m_nonHttpPage)
         {
           // TCP bidirectional HTTP traffic over dedicated Non-GBR EPS bearer.
@@ -559,7 +549,18 @@ TrafficHelper::InstallApplications ()
           EpsBearer bearer (EpsBearer::NGBR_VIDEO_TCP_PREMIUM);
           InstallHttp (bearer);
         }
+
+      if (m_nonLivVideo)
+        {
+          // UDP downlink live video streaming over dedicated Non-GBR EPS
+          // bearer. This QCI 7 is typically associated with voice, live video
+          // streaming and interactive games.
+          int videoIdx = m_videoRng->GetInteger ();
+          EpsBearer bearer (EpsBearer::NGBR_VOICE_VIDEO_GAMING);
+          InstallLiveVideo (bearer, GetVideoFilename (videoIdx));
+        }
     }
+
   m_ueManager = 0;
   m_ueNode = 0;
   m_ueDev = 0;
