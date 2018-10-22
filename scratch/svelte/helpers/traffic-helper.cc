@@ -122,47 +122,71 @@ TrafficHelper::GetTypeId (void)
                    MakeTimeChecker ())
 
     // Applications to be installed.
-    .AddAttribute ("EnableGbrAutoPilot",
-                   "Enable GBR auto-pilot traffic over UDP.",
+    .AddAttribute ("EnableGbrAutPilot",
+                   "Enable GBR auto-pilot traffic.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_gbrAutoPilot),
+                   MakeBooleanAccessor (&TrafficHelper::m_gbrAutPilot),
                    MakeBooleanChecker ())
-    .AddAttribute ("EnableGbrLiveVideo",
-                   "Enable GBR live video streaming traffic over UDP.",
+    .AddAttribute ("EnableGbrGameOpen",
+                   "Enable GBR game Open Arena traffic.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_gbrLiveVideo),
+                   MakeBooleanAccessor (&TrafficHelper::m_gbrGameOpen),
                    MakeBooleanChecker ())
-    .AddAttribute ("EnableGbrVoip",
-                   "Enable GBR VoIP traffic over UDP.",
+    .AddAttribute ("EnableGbrGameTeam",
+                   "Enable GBR game Team Fortress traffic.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_gbrVoip),
+                   MakeBooleanAccessor (&TrafficHelper::m_gbrGameTeam),
                    MakeBooleanChecker ())
-    .AddAttribute ("EnableNonGbrAutoPilot",
-                   "Enable Non-GBR auto-pilot traffic over UDP.",
+    .AddAttribute ("EnableGbrLivVideo",
+                   "Enable GBR live video streaming traffic.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_nonGbrAutoPilot),
+                   MakeBooleanAccessor (&TrafficHelper::m_gbrLivVideo),
                    MakeBooleanChecker ())
-    .AddAttribute ("EnableNonGbrBufferedVideo",
-                   "Enable Non-GBR buffered video traffic over TCP.",
+    .AddAttribute ("EnableGbrVoipCall",
+                   "Enable GBR VoIP call traffic.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_nonGbrBuffVideo),
+                   MakeBooleanAccessor (&TrafficHelper::m_gbrVoipCall),
                    MakeBooleanChecker ())
-    .AddAttribute ("EnableNonGbrHttp",
-                   "Enable Non-GBR HTTP traffic over TCP.",
+    .AddAttribute ("EnableNonAutPilot",
+                   "Enable Non-GBR auto-pilot traffic.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_nonGbrHttp),
+                   MakeBooleanAccessor (&TrafficHelper::m_nonAutPilot),
                    MakeBooleanChecker ())
-    .AddAttribute ("EnableNonGbrLiveVideo",
-                   "Enable Non-GBR live video streaming traffic over UDP.",
+    .AddAttribute ("EnableNonBikeRace",
+                   "Enable Non-GBR bicycle race traffic.",
                    TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
                    BooleanValue (true),
-                   MakeBooleanAccessor (&TrafficHelper::m_nonGbrLiveVideo),
+                   MakeBooleanAccessor (&TrafficHelper::m_nonBikeRace),
+                   MakeBooleanChecker ())
+    .AddAttribute ("EnableNonBufVideo",
+                   "Enable Non-GBR buffered video traffic.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_nonBufVideo),
+                   MakeBooleanChecker ())
+    .AddAttribute ("EnableNonGpsTrack",
+                   "Enable Non-GBR GPS team tracking traffic.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_nonGpsTrack),
+                   MakeBooleanChecker ())
+    .AddAttribute ("EnableNonHttpPage",
+                   "Enable Non-GBR HTTP webpage traffic.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_nonHttpPage),
+                   MakeBooleanChecker ())
+    .AddAttribute ("EnableNonLivVideo",
+                   "Enable Non-GBR live video streaming traffic.",
+                   TypeId::ATTR_GET | TypeId::ATTR_CONSTRUCT,
+                   BooleanValue (true),
+                   MakeBooleanAccessor (&TrafficHelper::m_nonLivVideo),
                    MakeBooleanChecker ())
   ;
   return tid;
@@ -221,96 +245,96 @@ TrafficHelper::NotifyConstructionCompleted ()
   // BufferedVideo, HTTP, and LiveVideo applications have their own custom
   // implementation with internal attributes already configured. We just
   // instantiate their helpers here.
-  m_buffVideoHelper = ApplicationHelper (
+  m_bufVideoHelper = ApplicationHelper (
       BufferedVideoClient::GetTypeId (),
       BufferedVideoServer::GetTypeId ());
-  m_httpHelper = ApplicationHelper (
+  m_httpPageHelper = ApplicationHelper (
       HttpClient::GetTypeId (),
       HttpServer::GetTypeId ());
-  m_liveVideoHelper = ApplicationHelper (
+  m_livVideoHelper = ApplicationHelper (
       LiveVideoClient::GetTypeId (),
       LiveVideoServer::GetTypeId ());
 
   // The VoIP application simulating the G.729 codec (~8.0 kbps for payload).
-  m_voipHelper = ApplicationHelper (
+  m_voipCallHelper = ApplicationHelper (
       SvelteUdpClient::GetTypeId (),
       SvelteUdpServer::GetTypeId ());
-  m_voipHelper.SetClientAttribute ("AppName", StringValue ("VoipCall"));
+  m_voipCallHelper.SetClientAttribute ("AppName", StringValue ("VoipCall"));
 
   // For traffic length, we are considering an estimative from Vodafone that
   // the average call length is 1 min and 40 sec. We are including a normal
   // standard deviation of 10 sec. See http://tinyurl.com/pzmyys2 and
   // http://www.theregister.co.uk/2013/01/30/mobile_phone_calls_shorter for
   // more information on this topic.
-  m_voipHelper.SetClientAttribute (
+  m_voipCallHelper.SetClientAttribute (
     "TrafficLength",
     StringValue ("ns3::NormalRandomVariable[Mean=100.0|Variance=100.0]"));
 
   // Model chosen: 20B packets sent in both directions every 0.02 seconds.
-  m_voipHelper.SetClientAttribute (
+  m_voipCallHelper.SetClientAttribute (
     "PktSize",
     StringValue ("ns3::ConstantRandomVariable[Constant=20]"));
-  m_voipHelper.SetClientAttribute (
+  m_voipCallHelper.SetClientAttribute (
     "PktInterval",
     StringValue ("ns3::ConstantRandomVariable[Constant=0.02]"));
-  m_voipHelper.SetServerAttribute (
+  m_voipCallHelper.SetServerAttribute (
     "PktSize",
     StringValue ("ns3::ConstantRandomVariable[Constant=20]"));
-  m_voipHelper.SetServerAttribute (
+  m_voipCallHelper.SetServerAttribute (
     "PktInterval",
     StringValue ("ns3::ConstantRandomVariable[Constant=0.02]"));
 
   // The online game Open Arena.
-  m_openArenaHelper = ApplicationHelper (
+  m_gameOpenHelper = ApplicationHelper (
       SvelteUdpClient::GetTypeId (),
       SvelteUdpServer::GetTypeId ());
-  m_openArenaHelper.SetClientAttribute ("AppName", StringValue ("GameOpen"));
+  m_gameOpenHelper.SetClientAttribute ("AppName", StringValue ("GameOpen"));
 
   // For traffic length, we are using a synthetic average length of 90 seconds
   // with 10 sec stdev. This will force the application to periodically stop
   // and report statistics.
-  m_openArenaHelper.SetClientAttribute (
+  m_gameOpenHelper.SetClientAttribute (
     "TrafficLength",
     StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=100.0]"));
 
   // Traffic model.
-  m_openArenaHelper.SetClientAttribute (
+  m_gameOpenHelper.SetClientAttribute (
     "PktSize",
     StringValue ("ns3::NormalRandomVariable[Mean=42.199|Variance=4.604]"));
-  m_openArenaHelper.SetClientAttribute (
+  m_gameOpenHelper.SetClientAttribute (
     "PktInterval",
     StringValue ("ns3::UniformRandomVariable[Min=0.069|Max=0.103]"));
-  m_openArenaHelper.SetServerAttribute (
+  m_gameOpenHelper.SetServerAttribute (
     "PktSize",
     StringValue ("ns3::NormalRandomVariable[Mean=172.400|Variance=85.821]"));
-  m_openArenaHelper.SetServerAttribute (
+  m_gameOpenHelper.SetServerAttribute (
     "PktInterval",
     StringValue ("ns3::UniformRandomVariable[Min=0.041|Max=0.047]"));
 
   // The online game Team Fortress.
-  m_fortressHelper = ApplicationHelper (
+  m_gameTeamHelper = ApplicationHelper (
       SvelteUdpClient::GetTypeId (),
       SvelteUdpServer::GetTypeId ());
-  m_fortressHelper.SetClientAttribute ("AppName", StringValue ("GameTeam"));
+  m_gameTeamHelper.SetClientAttribute ("AppName", StringValue ("GameTeam"));
 
   // For traffic length, we are using a synthetic average length of 90 seconds
   // with 10 sec stdev. This will force the application to periodically stop
   // and report statistics.
-  m_fortressHelper.SetClientAttribute (
+  m_gameTeamHelper.SetClientAttribute (
     "TrafficLength",
     StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=100.0]"));
 
   // Traffic model.
-  m_fortressHelper.SetClientAttribute (
+  m_gameTeamHelper.SetClientAttribute (
     "PktSize",
     StringValue ("ns3::NormalRandomVariable[Mean=76.523|Variance=13.399]"));
-  m_fortressHelper.SetClientAttribute (
+  m_gameTeamHelper.SetClientAttribute (
     "PktInterval",
     StringValue ("ns3::UniformRandomVariable[Min=0.031|Max=0.042]"));
-  m_fortressHelper.SetServerAttribute (
+  m_gameTeamHelper.SetServerAttribute (
     "PktSize",
     StringValue ("ns3::NormalRandomVariable[Mean=240.752|Variance=79.339]"));
-  m_fortressHelper.SetServerAttribute (
+  m_gameTeamHelper.SetServerAttribute (
     "PktInterval",
     StringValue ("ns3::UniformRandomVariable[Min=0.039|Max=0.046]"));
 
@@ -321,31 +345,31 @@ TrafficHelper::NotifyConstructionCompleted ()
   // highways. Clients sending data on position, in time intervals depending on
   // vehicle speed, while server performs calculations, collision detection
   // etc., and sends back control information.
-  m_autoPilotHelper = ApplicationHelper (
+  m_autPilotHelper = ApplicationHelper (
       SvelteUdpClient::GetTypeId (),
       SvelteUdpServer::GetTypeId ());
-  m_autoPilotHelper.SetClientAttribute ("AppName", StringValue ("AutPilot"));
+  m_autPilotHelper.SetClientAttribute ("AppName", StringValue ("AutPilot"));
 
   // For traffic length, we are using a synthetic average length of 90 seconds
   // with 10 sec stdev. This will force the application to periodically stop
   // and report statistics.
-  m_autoPilotHelper.SetClientAttribute (
+  m_autPilotHelper.SetClientAttribute (
     "TrafficLength",
     StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=100.0]"));
 
   // Model chosen: 1kB packets sent towards the server with uniformly
   // distributed inter-arrival time ranging from 0.025 to 0.1s, server responds
   // every second with 1kB message.
-  m_autoPilotHelper.SetClientAttribute (
+  m_autPilotHelper.SetClientAttribute (
     "PktSize",
     StringValue ("ns3::ConstantRandomVariable[Constant=1024]"));
-  m_autoPilotHelper.SetClientAttribute (
+  m_autPilotHelper.SetClientAttribute (
     "PktInterval",
     StringValue ("ns3::UniformRandomVariable[Min=0.025|Max=0.1]"));
-  m_autoPilotHelper.SetServerAttribute (
+  m_autPilotHelper.SetServerAttribute (
     "PktSize",
     StringValue ("ns3::ConstantRandomVariable[Constant=1024]"));
-  m_autoPilotHelper.SetServerAttribute (
+  m_autPilotHelper.SetServerAttribute (
     "PktInterval",
     StringValue ("ns3::UniformRandomVariable[Min=0.999|Max=1.001]"));
 
@@ -382,30 +406,30 @@ TrafficHelper::NotifyConstructionCompleted ()
 
   // The GPS Keep Alive messages in Team Tracking application model clients
   // with team members sending data on position, depending on activity.
-  m_teamTrackHelper = ApplicationHelper (
+  m_gpsTrackHelper = ApplicationHelper (
       SvelteUdpClient::GetTypeId (),
       SvelteUdpServer::GetTypeId ());
-  m_teamTrackHelper.SetClientAttribute ("AppName", StringValue ("GpsTrack"));
+  m_gpsTrackHelper.SetClientAttribute ("AppName", StringValue ("GpsTrack"));
 
   // For traffic length, we are using a synthetic average length of 90 seconds
   // with 10 sec stdev. This will force the application to periodically stop
   // and report statistics.
-  m_teamTrackHelper.SetClientAttribute (
+  m_gpsTrackHelper.SetClientAttribute (
     "TrafficLength",
     StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=100.0]"));
 
   // Model chosen: 0.5kB packets sent with uniform inter-arrival time
   // distribution ranging from 1s to 25s.
-  m_teamTrackHelper.SetClientAttribute (
+  m_gpsTrackHelper.SetClientAttribute (
     "PktSize",
     StringValue ("ns3::ConstantRandomVariable[Constant=512]"));
-  m_teamTrackHelper.SetClientAttribute (
+  m_gpsTrackHelper.SetClientAttribute (
     "PktInterval",
     StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=25.0]"));
-  m_teamTrackHelper.SetServerAttribute (
+  m_gpsTrackHelper.SetServerAttribute (
     "PktSize",
     StringValue ("ns3::ConstantRandomVariable[Constant=512]"));
-  m_teamTrackHelper.SetServerAttribute (
+  m_gpsTrackHelper.SetServerAttribute (
     "PktInterval",
     StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=25.0]"));
 
@@ -446,7 +470,7 @@ TrafficHelper::InstallApplications ()
         MakeCallback (&TrafficManager::NotifySessionCreated, m_ueManager));
 
       // Install applications (sorted by QCI) into UEs.
-      if (m_gbrVoip)
+      if (m_gbrVoipCall)
         {
           // UDP bidirectional VoIP traffic over dedicated GBR EPS bearer.
           // This QCI 1 is typically associated with conversational voice.
@@ -457,7 +481,7 @@ TrafficHelper::InstallApplications ()
           InstallVoip (bearer);
         }
 
-      if (m_gbrAutoPilot)
+      if (m_gbrAutPilot)
         {
           // UDP uplink auto-pilot traffic over dedicated GBR EPS bearer.
           // This QCI 3 is typically associated with an operator controlled
@@ -469,7 +493,7 @@ TrafficHelper::InstallApplications ()
           InstallAutoPilot (bearer);
         }
 
-      if (m_gbrLiveVideo)
+      if (m_gbrLivVideo)
         {
           // UDP downlink live video streaming over dedicated GBR EPS bearer.
           // This QCI 4 is typically associated with non-conversational video
@@ -482,7 +506,7 @@ TrafficHelper::InstallApplications ()
           InstallLiveVideo (bearer, GetVideoFilename (videoIdx));
         }
 
-      if (m_nonGbrAutoPilot)
+      if (m_nonAutPilot)
         {
           // UDP uplink auto-pilot traffic over dedicated Non-GBR EPS bearer.
           // This QCI 5 is typically associated with IMS signaling, but we are
@@ -492,7 +516,7 @@ TrafficHelper::InstallApplications ()
           InstallAutoPilot (bearer);
         }
 
-      if (m_nonGbrBuffVideo)
+      if (m_nonBufVideo)
         {
           // TCP bidirectional buffered video streaming over dedicated Non-GBR
           // EPC bearer. This QCI 6 could be used for prioritization of non
@@ -502,7 +526,7 @@ TrafficHelper::InstallApplications ()
           InstallBufferedVideo (bearer, GetVideoFilename (videoIdx));
         }
 
-      if (m_nonGbrLiveVideo)
+      if (m_nonLivVideo)
         {
           // UDP downlink live video streaming over dedicated Non-GBR EPS
           // bearer. This QCI 7 is typically associated with voice, live video
@@ -512,7 +536,7 @@ TrafficHelper::InstallApplications ()
           InstallLiveVideo (bearer, GetVideoFilename (videoIdx));
         }
 
-      if (m_nonGbrHttp)
+      if (m_nonHttpPage)
         {
           // TCP bidirectional HTTP traffic over dedicated Non-GBR EPS bearer.
           // This QCI 8 could be used for a dedicated 'premium bearer' for any
@@ -558,7 +582,7 @@ TrafficHelper::InstallAutoPilot (EpsBearer bearer)
   NS_LOG_FUNCTION (this);
 
   uint16_t port = GetNextPortNo ();
-  Ptr<SvelteClient> cApp = m_autoPilotHelper.Install (
+  Ptr<SvelteClient> cApp = m_autPilotHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
   m_ueManager->AddSvelteClient (cApp);
 
@@ -587,8 +611,8 @@ TrafficHelper::InstallBufferedVideo (EpsBearer bearer, std::string name)
   NS_LOG_FUNCTION (this);
 
   uint16_t port = GetNextPortNo ();
-  m_buffVideoHelper.SetServerAttribute ("TraceFilename", StringValue (name));
-  Ptr<SvelteClient> cApp = m_buffVideoHelper.Install (
+  m_bufVideoHelper.SetServerAttribute ("TraceFilename", StringValue (name));
+  Ptr<SvelteClient> cApp = m_bufVideoHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
   m_ueManager->AddSvelteClient (cApp);
 
@@ -617,7 +641,7 @@ TrafficHelper::InstallHttp (EpsBearer bearer)
   NS_LOG_FUNCTION (this);
 
   uint16_t port = GetNextPortNo ();
-  Ptr<SvelteClient> cApp = m_httpHelper.Install (
+  Ptr<SvelteClient> cApp = m_httpPageHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
   m_ueManager->AddSvelteClient (cApp);
 
@@ -646,8 +670,8 @@ TrafficHelper::InstallLiveVideo (EpsBearer bearer, std::string name)
   NS_LOG_FUNCTION (this);
 
   uint16_t port = GetNextPortNo ();
-  m_liveVideoHelper.SetServerAttribute ("TraceFilename", StringValue (name));
-  Ptr<SvelteClient> cApp = m_liveVideoHelper.Install (
+  m_livVideoHelper.SetServerAttribute ("TraceFilename", StringValue (name));
+  Ptr<SvelteClient> cApp = m_livVideoHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
   m_ueManager->AddSvelteClient (cApp);
 
@@ -676,7 +700,7 @@ TrafficHelper::InstallVoip (EpsBearer bearer)
   NS_LOG_FUNCTION (this);
 
   uint16_t port = GetNextPortNo ();
-  Ptr<SvelteClient> cApp = m_voipHelper.Install (
+  Ptr<SvelteClient> cApp = m_voipCallHelper.Install (
       m_ueNode, m_webNode, m_ueAddr, m_webAddr, port, Qci2Dscp (bearer.qci));
   m_ueManager->AddSvelteClient (cApp);
 

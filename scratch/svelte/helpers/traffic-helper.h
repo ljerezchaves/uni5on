@@ -162,35 +162,40 @@ private:
   Time                      m_startAppsAfter;    //!< Time before start apps.
   Time                      m_stopRestartAppsAt; //!< Stop restart apps time.
 
-  // Applications.
-  bool                m_gbrAutoPilot;       //!< GBR auto-pilot enable.
-  bool                m_gbrLiveVideo;       //!< GBR live video enable.
-  bool                m_gbrVoip;            //!< GBR VoIP enable.
-  bool                m_nonGbrAutoPilot;    //!< Non-GBR auto-pilot enable.
-  bool                m_nonGbrBuffVideo;    //!< Non-GBR buffered video enable.
-  bool                m_nonGbrHttp;         //!< Non-GBR HTTP enable.
-  bool                m_nonGbrLiveVideo;    //!< Non-GBR live video enable.
+  // Enabled applications.
+  bool                m_gbrAutPilot;        //!< GBR auto-pilot enable.
+  bool                m_gbrGameOpen;        //!< GBR game open enable.
+  bool                m_gbrGameTeam;        //!< GBR game team enable.
+  bool                m_gbrLivVideo;        //!< GBR live video enable.
+  bool                m_gbrVoipCall;        //!< GBR VoIP call enable.
+  bool                m_nonAutPilot;        //!< Non-GBR auto-pilot enable.
+  bool                m_nonBikeRace;        //!< Non-GBR bicycle race enable.
+  bool                m_nonBufVideo;        //!< Non-GBR buffered video enable.
+  bool                m_nonGpsTrack;        //!< Non-GBR GPS team track enable.
+  bool                m_nonHttpPage;        //!< Non-GBR HTTP enable.
+  bool                m_nonLivVideo;        //!< Non-GBR live video enable.
 
-  ApplicationHelper   m_autoPilotHelper;    //!< Auto-pilot app helper.
-  ApplicationHelper   m_bikeRaceHelper;     //!< Bicycle race app helper.
-  ApplicationHelper   m_buffVideoHelper;    //!< Buffered video app helper.
-  ApplicationHelper   m_fortressHelper;     //!< Team Fortress game app helper.
-  ApplicationHelper   m_httpHelper;         //!< HTTP app helper.
-  ApplicationHelper   m_liveVideoHelper;    //!< Live video app helper.
-  ApplicationHelper   m_openArenaHelper;    //!< Open Arena game app helper.
-  ApplicationHelper   m_teamTrackHelper;    //!< Team tracking app helper.
-  ApplicationHelper   m_voipHelper;         //!< Voip app helper.
+  // Application helpers.
+  ApplicationHelper   m_autPilotHelper;     //!< Auto-pilot helper.
+  ApplicationHelper   m_bikeRaceHelper;     //!< Bicycle race helper.
+  ApplicationHelper   m_bufVideoHelper;     //!< Buffered video helper.
+  ApplicationHelper   m_gameOpenHelper;     //!< Game Open Arena helper.
+  ApplicationHelper   m_gameTeamHelper;     //!< Game Team Fortress helper.
+  ApplicationHelper   m_gpsTrackHelper;     //!< GPS team tracking helper.
+  ApplicationHelper   m_httpPageHelper;     //!< HTTP page helper.
+  ApplicationHelper   m_livVideoHelper;     //!< Live video helper.
+  ApplicationHelper   m_voipCallHelper;     //!< Voip call helper.
 
   // Temporary variables used only when installing applications.
-  Ptr<LteHelper>            m_lteHelper;    //!< LTE helper.
-  Ptr<Node>                 m_webNode;      //!< Server node.
-  Ipv4Address               m_webAddr;      //!< Server address.
-  Ipv4Mask                  m_webMask;      //!< Server address mask.
-  Ptr<TrafficManager>       m_ueManager;    //!< Traffic manager instance.
-  Ptr<NetDevice>            m_ueDev;        //!< Client dev.
-  Ptr<Node>                 m_ueNode;       //!< Client node.
-  Ipv4Address               m_ueAddr;       //!< Client address.
-  Ipv4Mask                  m_ueMask;       //!< Client address mask.
+  Ptr<LteHelper>              m_lteHelper;      //!< LTE helper.
+  Ptr<Node>                   m_webNode;        //!< Server node.
+  Ipv4Address                 m_webAddr;        //!< Server address.
+  Ipv4Mask                    m_webMask;        //!< Server address mask.
+  Ptr<TrafficManager>         m_ueManager;      //!< Traffic manager instance.
+  Ptr<NetDevice>              m_ueDev;          //!< Client dev.
+  Ptr<Node>                   m_ueNode;         //!< Client node.
+  Ipv4Address                 m_ueAddr;         //!< Client address.
+  Ipv4Mask                    m_ueMask;         //!< Client address mask.
 
   // Video traces.
   Ptr<UniformRandomVariable>  m_videoRng;       //!< Random video selection.
