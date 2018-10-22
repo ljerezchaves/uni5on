@@ -235,7 +235,7 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_voipHelper = ApplicationHelper (
       SvelteUdpClient::GetTypeId (),
       SvelteUdpServer::GetTypeId ());
-  m_voipHelper.SetClientAttribute ("AppName", StringValue ("Voip"));
+  m_voipHelper.SetClientAttribute ("AppName", StringValue ("VoipCall"));
 
   // For traffic length, we are considering an estimative from Vodafone that
   // the average call length is 1 min and 40 sec. We are including a normal
@@ -260,11 +260,11 @@ TrafficHelper::NotifyConstructionCompleted ()
     "PktInterval",
     StringValue ("ns3::ConstantRandomVariable[Constant=0.02]"));
 
-  // The online gaming Open Arena.
+  // The online game Open Arena.
   m_openArenaHelper = ApplicationHelper (
       SvelteUdpClient::GetTypeId (),
       SvelteUdpServer::GetTypeId ());
-  m_openArenaHelper.SetClientAttribute ("AppName", StringValue ("Arena"));
+  m_openArenaHelper.SetClientAttribute ("AppName", StringValue ("GameOpen"));
 
   // For traffic length, we are using a synthetic average length of 90 seconds
   // with 10 sec stdev. This will force the application to periodically stop
@@ -287,11 +287,11 @@ TrafficHelper::NotifyConstructionCompleted ()
     "PktInterval",
     StringValue ("ns3::UniformRandomVariable[Min=0.041|Max=0.047]"));
 
-  // The online gaming Team Fortress.
+  // The online game Team Fortress.
   m_fortressHelper = ApplicationHelper (
       SvelteUdpClient::GetTypeId (),
       SvelteUdpServer::GetTypeId ());
-  m_fortressHelper.SetClientAttribute ("AppName", StringValue ("Teamf"));
+  m_fortressHelper.SetClientAttribute ("AppName", StringValue ("GameTeam"));
 
   // For traffic length, we are using a synthetic average length of 90 seconds
   // with 10 sec stdev. This will force the application to periodically stop
@@ -324,7 +324,7 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_autoPilotHelper = ApplicationHelper (
       SvelteUdpClient::GetTypeId (),
       SvelteUdpServer::GetTypeId ());
-  m_autoPilotHelper.SetClientAttribute ("AppName", StringValue ("Pilot"));
+  m_autoPilotHelper.SetClientAttribute ("AppName", StringValue ("AutPilot"));
 
   // For traffic length, we are using a synthetic average length of 90 seconds
   // with 10 sec stdev. This will force the application to periodically stop
@@ -356,7 +356,7 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_bikeRaceHelper = ApplicationHelper (
       SvelteUdpClient::GetTypeId (),
       SvelteUdpServer::GetTypeId ());
-  m_bikeRaceHelper.SetClientAttribute ("AppName", StringValue ("Bike"));
+  m_bikeRaceHelper.SetClientAttribute ("AppName", StringValue ("BikeRace"));
 
   // For traffic length, we are using a synthetic average length of 90 seconds
   // with 10 sec stdev. This will force the application to periodically stop
@@ -385,7 +385,7 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_teamTrackHelper = ApplicationHelper (
       SvelteUdpClient::GetTypeId (),
       SvelteUdpServer::GetTypeId ());
-  m_teamTrackHelper.SetClientAttribute ("AppName", StringValue ("Track"));
+  m_teamTrackHelper.SetClientAttribute ("AppName", StringValue ("GpsTrack"));
 
   // For traffic length, we are using a synthetic average length of 90 seconds
   // with 10 sec stdev. This will force the application to periodically stop

@@ -94,7 +94,7 @@ LiveVideoClient::NotifyConstructionCompleted (void)
 {
   NS_LOG_FUNCTION (this);
 
-  SetAttribute ("AppName", StringValue ("LiveVid"));
+  SetAttribute ("AppName", StringValue ("LivVideo"));
 
   SvelteClient::NotifyConstructionCompleted ();
 }
