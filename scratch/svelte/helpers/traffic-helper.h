@@ -151,58 +151,58 @@ private:
   void InstallVoip (EpsBearer bearer);
 
   // Traffic helper.
-  Ptr<RadioNetwork>         m_radio;        //!< LTE radio network.
-  Ptr<SliceNetwork>         m_slice;        //!< LTE logical slice network.
-  static uint16_t           m_port;         //!< Port numbers for apps.
+  Ptr<RadioNetwork>           m_radio;            //!< LTE radio network.
+  Ptr<SliceNetwork>           m_slice;            //!< LTE slice network.
+  static uint16_t             m_port;             //!< Port numbers for apps.
 
   // Traffic manager.
-  ObjectFactory             m_managerFac;        //!< Traffic manager factory.
-  Ptr<RandomVariableStream> m_poissonRng;        //!< Inter-arrival traffic.
-  bool                      m_restartApps;       //!< Continuous restart apps.
-  Time                      m_startAppsAfter;    //!< Time before start apps.
-  Time                      m_stopRestartAppsAt; //!< Stop restart apps time.
+  ObjectFactory               m_managerFac;       //!< Traffic manager factory.
+  Ptr<RandomVariableStream>   m_poissonRng;       //!< Inter-arrival traffic.
+  bool                        m_restartApps;      //!< Continuous restart apps.
+  Time                        m_startAppsAfter;   //!< Time before start apps.
+  Time                        m_stopRestartAppsAt; //!< Stop restart apps time.
 
   // Enabled applications.
-  bool                m_gbrAutPilot;        //!< GBR auto-pilot enable.
-  bool                m_gbrGameOpen;        //!< GBR game open enable.
-  bool                m_gbrGameTeam;        //!< GBR game team enable.
-  bool                m_gbrLivVideo;        //!< GBR live video enable.
-  bool                m_gbrVoipCall;        //!< GBR VoIP call enable.
-  bool                m_nonAutPilot;        //!< Non-GBR auto-pilot enable.
-  bool                m_nonBikeRace;        //!< Non-GBR bicycle race enable.
-  bool                m_nonBufVideo;        //!< Non-GBR buffered video enable.
-  bool                m_nonGpsTrack;        //!< Non-GBR GPS team track enable.
-  bool                m_nonHttpPage;        //!< Non-GBR HTTP enable.
-  bool                m_nonLivVideo;        //!< Non-GBR live video enable.
+  bool                        m_gbrAutPilot;      //!< GBR auto-pilot.
+  bool                        m_gbrGameOpen;      //!< GBR game open.
+  bool                        m_gbrGameTeam;      //!< GBR game team.
+  bool                        m_gbrLivVideo;      //!< GBR live video.
+  bool                        m_gbrVoipCall;      //!< GBR VoIP call.
+  bool                        m_nonAutPilot;      //!< Non-GBR auto-pilot.
+  bool                        m_nonBikeRace;      //!< Non-GBR bicycle race.
+  bool                        m_nonBufVideo;      //!< Non-GBR buffered video.
+  bool                        m_nonGpsTrack;      //!< Non-GBR GPS team track.
+  bool                        m_nonHttpPage;      //!< Non-GBR HTTP.
+  bool                        m_nonLivVideo;      //!< Non-GBR live video.
 
   // Application helpers.
-  ApplicationHelper   m_autPilotHelper;     //!< Auto-pilot helper.
-  ApplicationHelper   m_bikeRaceHelper;     //!< Bicycle race helper.
-  ApplicationHelper   m_bufVideoHelper;     //!< Buffered video helper.
-  ApplicationHelper   m_gameOpenHelper;     //!< Game Open Arena helper.
-  ApplicationHelper   m_gameTeamHelper;     //!< Game Team Fortress helper.
-  ApplicationHelper   m_gpsTrackHelper;     //!< GPS team tracking helper.
-  ApplicationHelper   m_httpPageHelper;     //!< HTTP page helper.
-  ApplicationHelper   m_livVideoHelper;     //!< Live video helper.
-  ApplicationHelper   m_voipCallHelper;     //!< Voip call helper.
+  ApplicationHelper           m_autPilotHelper;   //!< Auto-pilot helper.
+  ApplicationHelper           m_bikeRaceHelper;   //!< Bicycle race helper.
+  ApplicationHelper           m_bufVideoHelper;   //!< Buffered video helper.
+  ApplicationHelper           m_gameOpenHelper;   //!< Open Arena helper.
+  ApplicationHelper           m_gameTeamHelper;   //!< Team Fortress helper.
+  ApplicationHelper           m_gpsTrackHelper;   //!< GPS tracking helper.
+  ApplicationHelper           m_httpPageHelper;   //!< HTTP page helper.
+  ApplicationHelper           m_livVideoHelper;   //!< Live video helper.
+  ApplicationHelper           m_voipCallHelper;   //!< VoIP call helper.
 
   // Temporary variables used only when installing applications.
-  Ptr<LteHelper>              m_lteHelper;      //!< LTE helper.
-  Ptr<Node>                   m_webNode;        //!< Server node.
-  Ipv4Address                 m_webAddr;        //!< Server address.
-  Ipv4Mask                    m_webMask;        //!< Server address mask.
-  Ptr<TrafficManager>         m_ueManager;      //!< Traffic manager instance.
-  Ptr<NetDevice>              m_ueDev;          //!< Client dev.
-  Ptr<Node>                   m_ueNode;         //!< Client node.
-  Ipv4Address                 m_ueAddr;         //!< Client address.
-  Ipv4Mask                    m_ueMask;         //!< Client address mask.
+  Ptr<LteHelper>              m_lteHelper;        //!< LTE helper.
+  Ptr<Node>                   m_webNode;          //!< Server node.
+  Ipv4Address                 m_webAddr;          //!< Server address.
+  Ipv4Mask                    m_webMask;          //!< Server address mask.
+  Ptr<TrafficManager>         m_ueManager;        //!< Traffic manager obj.
+  Ptr<NetDevice>              m_ueDev;            //!< Client dev.
+  Ptr<Node>                   m_ueNode;           //!< Client node.
+  Ipv4Address                 m_ueAddr;           //!< Client address.
+  Ipv4Mask                    m_ueMask;           //!< Client address mask.
 
   // Video traces.
-  Ptr<UniformRandomVariable>  m_videoRng;       //!< Random video selection.
-  static const std::string    m_videoDir;       //!< Video trace directory.
-  static const std::string    m_videoTrace [];  //!< Video trace filenames.
-  static const uint64_t       m_gbrBitRate [];  //!< Video gbr bit rate.
-  static const uint64_t       m_mbrBitRate [];  //!< Video max bit rate.
+  Ptr<UniformRandomVariable>  m_videoRng;         //!< Random video selection.
+  static const std::string    m_videoDir;         //!< Video trace directory.
+  static const std::string    m_videoTrace [];    //!< Video trace filenames.
+  static const uint64_t       m_gbrBitRate [];    //!< Video gbr bit rate.
+  static const uint64_t       m_mbrBitRate [];    //!< Video max bit rate.
 };
 
 } // namespace ns3
