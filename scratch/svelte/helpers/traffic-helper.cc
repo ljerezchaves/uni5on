@@ -491,7 +491,8 @@ TrafficHelper::InstallApplications ()
           // service, i.e., a service where the data flow aggregates
           // uplink/downlink packet filters are known at the point in time.
           GbrQosInformation qos;
-          qos.gbrUl = 150000;  // ~146 Kbps
+          qos.gbrDl = 12000;   //  12 Kbps
+          qos.gbrUl = 150000;  // 150 Kbps
           EpsBearer bearer (EpsBearer::GBR_GAMING, qos);
           InstallAutoPilot (bearer);
         }
@@ -514,8 +515,8 @@ TrafficHelper::InstallApplications ()
           // UDP bidirectional VoIP traffic over dedicated GBR EPS bearer.
           // This QCI 1 is typically associated with conversational voice.
           GbrQosInformation qos;
-          qos.gbrDl = 47200;  // ~46.09 Kbps
-          qos.gbrUl = 47200;  // ~46.09 Kbps
+          qos.gbrDl = 45000;  // 45 Kbps
+          qos.gbrUl = 45000;  // 45 Kbps
           EpsBearer bearer (EpsBearer::GBR_CONV_VOICE, qos);
           InstallVoip (bearer);
         }
