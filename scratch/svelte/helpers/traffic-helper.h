@@ -60,6 +60,11 @@ protected:
 
 private:
   /**
+   * Configure helpers for all applications.
+   */
+  void ConfigureHelpers ();
+
+  /**
    * Install applications and traffic manager into each UE. It creates
    * the client/server application pair, and install them in the respective
    * nodes. It also configure the TFT and EPS bearers.

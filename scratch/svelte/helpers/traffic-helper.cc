@@ -227,17 +227,29 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_webAddr = Ipv4AddressHelper::GetAddress (webDev);
   m_webMask = Ipv4AddressHelper::GetMask (webDev);
 
-  // Configuring the traffic manager object factory.
+  // Configure the traffic manager object factory.
   m_managerFac.SetTypeId (TrafficManager::GetTypeId ());
   m_managerFac.Set ("PoissonInterArrival", PointerValue (m_poissonRng));
   m_managerFac.Set ("RestartApps", BooleanValue (m_restartApps));
   m_managerFac.Set ("StartAppsAfter", TimeValue (m_startAppsAfter));
   m_managerFac.Set ("StopRestartAppsAt", TimeValue (m_stopRestartAppsAt));
 
-  // Random video selection.
+  // Configure random video selection.
   m_videoRng = CreateObject<UniformRandomVariable> ();
   m_videoRng->SetAttribute ("Min", DoubleValue (0));
   m_videoRng->SetAttribute ("Max", DoubleValue (14));
+
+  // Configure the helpers and install the applications.
+  ConfigureHelpers ();
+  InstallApplications ();
+
+  Object::NotifyConstructionCompleted ();
+}
+
+void
+TrafficHelper::ConfigureHelpers ()
+{
+  NS_LOG_FUNCTION (this);
 
   // -------------------------------------------------------------------------
   // Configuring HTC application helpers.
@@ -254,6 +266,7 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_livVideoHelper = ApplicationHelper (
       LiveVideoClient::GetTypeId (),
       LiveVideoServer::GetTypeId ());
+
 
   // The VoIP application simulating the G.729 codec (~8.0 kbps for payload).
   m_voipCallHelper = ApplicationHelper (
@@ -284,6 +297,7 @@ TrafficHelper::NotifyConstructionCompleted ()
     "PktInterval",
     StringValue ("ns3::ConstantRandomVariable[Constant=0.02]"));
 
+
   // The online game Open Arena.
   m_gameOpenHelper = ApplicationHelper (
       SvelteUdpClient::GetTypeId (),
@@ -311,6 +325,7 @@ TrafficHelper::NotifyConstructionCompleted ()
     "PktInterval",
     StringValue ("ns3::UniformRandomVariable[Min=0.041|Max=0.047]"));
 
+
   // The online game Team Fortress.
   m_gameTeamHelper = ApplicationHelper (
       SvelteUdpClient::GetTypeId (),
@@ -337,6 +352,7 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_gameTeamHelper.SetServerAttribute (
     "PktInterval",
     StringValue ("ns3::UniformRandomVariable[Min=0.039|Max=0.046]"));
+
 
   // -------------------------------------------------------------------------
   // Configuring MTC application helpers.
@@ -373,6 +389,7 @@ TrafficHelper::NotifyConstructionCompleted ()
     "PktInterval",
     StringValue ("ns3::UniformRandomVariable[Min=0.999|Max=1.001]"));
 
+
   // The bicycle race is a virtual game where two or more players exchange real
   // data on bicycle position, speed etc. They are used by the application to
   // calculate the equivalent positions of the participants and to show them
@@ -404,6 +421,7 @@ TrafficHelper::NotifyConstructionCompleted ()
     "PktInterval",
     StringValue ("ns3::UniformRandomVariable[Min=0.1|Max=0.5]"));
 
+
   // The GPS Keep Alive messages in Team Tracking application model clients
   // with team members sending data on position, depending on activity.
   m_gpsTrackHelper = ApplicationHelper (
@@ -433,10 +451,6 @@ TrafficHelper::NotifyConstructionCompleted ()
     "PktInterval",
     StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=25.0]"));
 
-  // Install the applications.
-  InstallApplications ();
-
-  Object::NotifyConstructionCompleted ();
 }
 
 void
@@ -447,7 +461,7 @@ TrafficHelper::InstallApplications ()
   NodeContainer ueNodes = m_slice->GetUeNodes ();
   NetDeviceContainer ueDevices = m_slice->GetUeDevices ();
 
-  // Install manager and applications into nodes.
+  // Install traffic manager and applications into UE nodes.
   for (uint32_t u = 0; u < ueNodes.GetN (); u++)
     {
       m_ueNode = ueNodes.Get (u);
@@ -469,7 +483,7 @@ TrafficHelper::InstallApplications ()
         "/NodeList/*/ApplicationList/*/$ns3::SliceController/SessionCreated",
         MakeCallback (&TrafficManager::NotifySessionCreated, m_ueManager));
 
-      // Install applications (sorted by QCI) into UEs.
+      // Install enabled applications into UEs.
       if (m_gbrVoipCall)
         {
           // UDP bidirectional VoIP traffic over dedicated GBR EPS bearer.
