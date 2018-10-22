@@ -170,10 +170,15 @@ private:
   bool                m_nonGbrBuffVideo;    //!< Non-GBR buffered video enable.
   bool                m_nonGbrHttp;         //!< Non-GBR HTTP enable.
   bool                m_nonGbrLiveVideo;    //!< Non-GBR live video enable.
+
   ApplicationHelper   m_autoPilotHelper;    //!< Auto-pilot app helper.
+  ApplicationHelper   m_bikeRaceHelper;     //!< Bicycle race app helper.
   ApplicationHelper   m_buffVideoHelper;    //!< Buffered video app helper.
+  ApplicationHelper   m_fortressHelper;     //!< Team Fortress game app helper.
   ApplicationHelper   m_httpHelper;         //!< HTTP app helper.
   ApplicationHelper   m_liveVideoHelper;    //!< Live video app helper.
+  ApplicationHelper   m_openArenaHelper;    //!< Open Arena game app helper.
+  ApplicationHelper   m_teamTrackHelper;    //!< Team tracking app helper.
   ApplicationHelper   m_voipHelper;         //!< Voip app helper.
 
   // Temporary variables used only when installing applications.

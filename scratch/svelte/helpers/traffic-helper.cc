@@ -215,6 +215,7 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_videoRng->SetAttribute ("Min", DoubleValue (0));
   m_videoRng->SetAttribute ("Max", DoubleValue (14));
 
+  // -------------------------------------------------------------------------
   // Configuring HTC application helpers.
   //
   // BufferedVideo, HTTP, and LiveVideo applications have their own custom
@@ -231,7 +232,6 @@ TrafficHelper::NotifyConstructionCompleted ()
       LiveVideoServer::GetTypeId ());
 
   // The VoIP application simulating the G.729 codec (~8.0 kbps for payload).
-  //
   m_voipHelper = ApplicationHelper (
       SvelteUdpClient::GetTypeId (),
       SvelteUdpServer::GetTypeId ());
@@ -260,6 +260,61 @@ TrafficHelper::NotifyConstructionCompleted ()
     "PktInterval",
     StringValue ("ns3::ConstantRandomVariable[Constant=0.02]"));
 
+  // The online gaming Open Arena.
+  m_openArenaHelper = ApplicationHelper (
+      SvelteUdpClient::GetTypeId (),
+      SvelteUdpServer::GetTypeId ());
+  m_openArenaHelper.SetClientAttribute ("AppName", StringValue ("Arena"));
+
+  // For traffic length, we are using a synthetic average length of 90 seconds
+  // with 10 sec stdev. This will force the application to periodically stop
+  // and report statistics.
+  m_openArenaHelper.SetClientAttribute (
+    "TrafficLength",
+    StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=100.0]"));
+
+  // Traffic model.
+  m_openArenaHelper.SetClientAttribute (
+    "PktSize",
+    StringValue ("ns3::NormalRandomVariable[Mean=42.199|Variance=4.604]"));
+  m_openArenaHelper.SetClientAttribute (
+    "PktInterval",
+    StringValue ("ns3::UniformRandomVariable[Min=0.069|Max=0.103]"));
+  m_openArenaHelper.SetServerAttribute (
+    "PktSize",
+    StringValue ("ns3::NormalRandomVariable[Mean=172.400|Variance=85.821]"));
+  m_openArenaHelper.SetServerAttribute (
+    "PktInterval",
+    StringValue ("ns3::UniformRandomVariable[Min=0.041|Max=0.047]"));
+
+  // The online gaming Team Fortress.
+  m_fortressHelper = ApplicationHelper (
+      SvelteUdpClient::GetTypeId (),
+      SvelteUdpServer::GetTypeId ());
+  m_fortressHelper.SetClientAttribute ("AppName", StringValue ("Teamf"));
+
+  // For traffic length, we are using a synthetic average length of 90 seconds
+  // with 10 sec stdev. This will force the application to periodically stop
+  // and report statistics.
+  m_fortressHelper.SetClientAttribute (
+    "TrafficLength",
+    StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=100.0]"));
+
+  // Traffic model.
+  m_fortressHelper.SetClientAttribute (
+    "PktSize",
+    StringValue ("ns3::NormalRandomVariable[Mean=76.523|Variance=13.399]"));
+  m_fortressHelper.SetClientAttribute (
+    "PktInterval",
+    StringValue ("ns3::UniformRandomVariable[Min=0.031|Max=0.042]"));
+  m_fortressHelper.SetServerAttribute (
+    "PktSize",
+    StringValue ("ns3::NormalRandomVariable[Mean=240.752|Variance=79.339]"));
+  m_fortressHelper.SetServerAttribute (
+    "PktInterval",
+    StringValue ("ns3::UniformRandomVariable[Min=0.039|Max=0.046]"));
+
+  // -------------------------------------------------------------------------
   // Configuring MTC application helpers.
   //
   // The auto-pilot includes both vehicle collision detection and avoidance on
@@ -293,6 +348,66 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_autoPilotHelper.SetServerAttribute (
     "PktInterval",
     StringValue ("ns3::UniformRandomVariable[Min=0.999|Max=1.001]"));
+
+  // The bicycle race is a virtual game where two or more players exchange real
+  // data on bicycle position, speed etc. They are used by the application to
+  // calculate the equivalent positions of the participants and to show them
+  // the corresponding state of the race.
+  m_bikeRaceHelper = ApplicationHelper (
+      SvelteUdpClient::GetTypeId (),
+      SvelteUdpServer::GetTypeId ());
+  m_bikeRaceHelper.SetClientAttribute ("AppName", StringValue ("Bike"));
+
+  // For traffic length, we are using a synthetic average length of 90 seconds
+  // with 10 sec stdev. This will force the application to periodically stop
+  // and report statistics.
+  m_bikeRaceHelper.SetClientAttribute (
+    "TrafficLength",
+    StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=100.0]"));
+
+  // Model chosen: 1kB packets exchanged with uniformly distributed inter-
+  // arrival time ranging from 0.1 to 0.5s.
+  m_bikeRaceHelper.SetClientAttribute (
+    "PktSize",
+    StringValue ("ns3::ConstantRandomVariable[Constant=1024]"));
+  m_bikeRaceHelper.SetClientAttribute (
+    "PktInterval",
+    StringValue ("ns3::UniformRandomVariable[Min=0.1|Max=0.5]"));
+  m_bikeRaceHelper.SetServerAttribute (
+    "PktSize",
+    StringValue ("ns3::ConstantRandomVariable[Constant=1024]"));
+  m_bikeRaceHelper.SetServerAttribute (
+    "PktInterval",
+    StringValue ("ns3::UniformRandomVariable[Min=0.1|Max=0.5]"));
+
+  // The GPS Keep Alive messages in Team Tracking application model clients
+  // with team members sending data on position, depending on activity.
+  m_teamTrackHelper = ApplicationHelper (
+      SvelteUdpClient::GetTypeId (),
+      SvelteUdpServer::GetTypeId ());
+  m_teamTrackHelper.SetClientAttribute ("AppName", StringValue ("Track"));
+
+  // For traffic length, we are using a synthetic average length of 90 seconds
+  // with 10 sec stdev. This will force the application to periodically stop
+  // and report statistics.
+  m_teamTrackHelper.SetClientAttribute (
+    "TrafficLength",
+    StringValue ("ns3::NormalRandomVariable[Mean=90.0|Variance=100.0]"));
+
+  // Model chosen: 0.5kB packets sent with uniform inter-arrival time
+  // distribution ranging from 1s to 25s.
+  m_teamTrackHelper.SetClientAttribute (
+    "PktSize",
+    StringValue ("ns3::ConstantRandomVariable[Constant=512]"));
+  m_teamTrackHelper.SetClientAttribute (
+    "PktInterval",
+    StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=25.0]"));
+  m_teamTrackHelper.SetServerAttribute (
+    "PktSize",
+    StringValue ("ns3::ConstantRandomVariable[Constant=512]"));
+  m_teamTrackHelper.SetServerAttribute (
+    "PktInterval",
+    StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=25.0]"));
 
   // Install the applications.
   InstallApplications ();
