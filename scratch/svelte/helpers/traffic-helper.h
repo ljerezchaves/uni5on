@@ -203,7 +203,8 @@ private:
   Ipv4Mask                    m_ueMask;           //!< Client address mask.
 
   // Video traces.
-  Ptr<UniformRandomVariable>  m_videoRng;         //!< Random video selection.
+  Ptr<UniformRandomVariable>  m_gbrVidRng;        //!< GBR random live video.
+  Ptr<UniformRandomVariable>  m_nonVidRng;        //!< Non-GBR random video.
   static const std::string    m_videoDir;         //!< Video trace directory.
   static const std::string    m_videoTrace [];    //!< Video trace filenames.
   static const uint64_t       m_gbrBitRate [];    //!< Video gbr bit rate.

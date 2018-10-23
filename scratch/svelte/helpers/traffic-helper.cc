@@ -205,7 +205,8 @@ TrafficHelper::DoDispose ()
   m_ueManager = 0;
   m_ueDev = 0;
   m_ueNode = 0;
-  m_videoRng = 0;
+  m_gbrVidRng = 0;
+  m_nonVidRng = 0;
   Object::DoDispose ();
 }
 
@@ -234,10 +235,14 @@ TrafficHelper::NotifyConstructionCompleted ()
   m_managerFac.Set ("StartAppsAfter", TimeValue (m_startAppsAfter));
   m_managerFac.Set ("StopRestartAppsAt", TimeValue (m_stopRestartAppsAt));
 
-  // Configure random video selection.
-  m_videoRng = CreateObject<UniformRandomVariable> ();
-  m_videoRng->SetAttribute ("Min", DoubleValue (0));
-  m_videoRng->SetAttribute ("Max", DoubleValue (14));
+  // Configure random video selections.
+  m_gbrVidRng = CreateObject<UniformRandomVariable> ();
+  m_gbrVidRng->SetAttribute ("Min", DoubleValue (0));
+  m_gbrVidRng->SetAttribute ("Max", DoubleValue (2));
+
+  m_nonVidRng = CreateObject<UniformRandomVariable> ();
+  m_nonVidRng->SetAttribute ("Min", DoubleValue (3));
+  m_nonVidRng->SetAttribute ("Max", DoubleValue (14));
 
   // Configure the helpers and install the applications.
   ConfigureHelpers ();
